@@ -3,9 +3,6 @@ English| [简体中文](./README_cn.md)
 Clip
 =======
 
-Clip
-=======
-
 # 1. Model introduction
 
 CLIP (Contrastive Language-Image Pre-training) is a MultiModal Machine Learning (Text and Image) pre-training model developed by OpenAI. The CLIP model achieves cross-modal understanding by learning how to compare text and images. This contrastive learning method enables CLIP to learn the semantic relationship between text and images without any supervised labels.
