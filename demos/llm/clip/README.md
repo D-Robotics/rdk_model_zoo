@@ -26,7 +26,7 @@ Characteristics of CLIP model:
 - image encoder: TODO
 - text encoder: TODO
 
-img_encoder bin and text_encoder onnx are in the same directory as the current README.md.
+img_encoder.bin and text_encoder.onnx should be in the same directory as the current README.md.
 
 # 3. Input and Output Data
 
