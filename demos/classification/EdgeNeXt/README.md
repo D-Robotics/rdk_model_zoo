@@ -35,13 +35,12 @@ EdgeNeXt model features :
 
 The following table shows the performance data obtained from actual testing on RDK X5 & RDK X5 Module. You can weigh the size of the model according to your own reasoning about the actual performance and accuracy required
 
-
-| Model              | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) |
-| ------------------ | ------- | ---------- | --------- | ------------------------ | --------------------- | ------------------------------------ | ----------------------------------- |
-| EdgeNeXt_base      | 224x224 | 1000       | 18.51     | 97.02                    | 98.89                 | 8.80                                 | 32.31                               |
-| EdgeNeXt_small     | 224x224 | 1000       | 5.59      | 93.30                    | 91.31                 | 4.41                                 | 14.93                               |
-| EdgeNeXt_x_small   | 224x224 | 1000       | 2.34      | 93.20                    | 91.57                 | 2.88                                 | 9.63                                |
-| EdgeNeXt_xx_small  | 224x224 | 1000       | 1.33      | 84.29                    | 84.15                 | 2.47                                 | 7.24                                |
+| Model              | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
+| ------------------ | ------- | ---------- | --------- | ------------------------ | --------------------- | ------------------------------------ | ----------------------------------- | --------------- |
+| EdgeNeXt_base      | 224x224 | 1000       | 18.51     | 97.02                    | 98.89                 | 8.80                                 | 32.31                               | 113.35          |
+| EdgeNeXt_small     | 224x224 | 1000       | 5.59      | 93.30                    | 91.31                 | 4.41                                 | 14.93                               | 226.15          |
+| EdgeNeXt_x_small   | 224x224 | 1000       | 2.34      | 93.20                    | 91.57                 | 2.88                                 | 9.63                                | 345.73          |
+| EdgeNeXt_xx_small  | 224x224 | 1000       | 1.33      | 84.29                    | 84.15                 | 2.47                                 | 7.24                                | 403.73          |
 
 Description:
 1. X5 is in the best state: CPU is 8xA55@1.8G, full core Performance scheduling, BPU is 1xBayes-e@1G, a total of 10TOPS equivalent int8 computing power.
