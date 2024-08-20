@@ -13,88 +13,59 @@
 # limitations under the License.
 
 model_parameters:
-  onnx_model: './edgenext_xx_small_deploy.onnx'
+  onnx_model: './efficientformerv2_s2_deploy.onnx'
   march: "bayes-e"
   layer_out_dump: False
-  working_dir: 'EdgeNeXt_xx_small-deploy_224x224_nv12'
-  output_model_file_prefix: 'EdgeNeXt_xx_small-deploy_224x224_nv12'
+  working_dir: 'EfficientFormerv2_s2-deploy_224x224_nv12'
+  output_model_file_prefix: 'EfficientFormerv2_s2-deploy_224x224_nv12'
+
   node_info: {
-    "/stages/stages.1/blocks/blocks.1/xca/Softmax": {
+    "/stages/stages.2/blocks/blocks.8/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stages/stages.2/blocks/blocks.5/xca/Softmax": {
+    "/stages/stages.2/blocks/blocks.9/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stages/stages.3/blocks/blocks.1/xca/Softmax": {
+    "/stages/stages.2/blocks/blocks.10/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stages/stages.3/blocks/blocks.1/mlp/fc1/MatMul": {
+    "/stages/stages.2/blocks/blocks.11/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stages/stages.3/blocks/blocks.1/norm/Div_mul": {
+    "/stages/stages.3/downsample/attn/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stages/stages.3/blocks/blocks.1/norm/Pow": {
+    "/stages/stages.3/blocks/blocks.4/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stages/stages.0/blocks/blocks.0/conv_dw/Conv": {
+    "/stages/stages.3/blocks/blocks.5/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stem/stem.1/Mul": {
+    "/stages/stages.3/blocks/blocks.7/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stem/stem.1/Sub": {
+    "/stages/stages.3/blocks/blocks.4/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
     },
-    "/stem/stem.1/Pow": {
-      'ON': 'BPU',
-      'InputType': 'int16',
-      'OutputType': 'int16'
-    },
-    "/stages/stages.3/downsample/downsample.0/ReduceMean": {
-      'ON': 'BPU',
-      'InputType': 'int16',
-      'OutputType': 'int16'
-    },
-    "/stages/stages.3/downsample/downsample.0/Sub": {
-      'ON': 'BPU',
-      'InputType': 'int16',
-      'OutputType': 'int16'
-    },
-    "/stages/stages.3/blocks/blocks.1/norm_xca/ReduceMean_1": {
-      'ON': 'BPU',
-      'InputType': 'int16',
-      'OutputType': 'int16'
-    },
-    "/stages/stages.3/downsample/downsample.0/ReduceMean_1": {
-      'ON': 'BPU',
-      'InputType': 'int16',
-      'OutputType': 'int16'
-    },
-    "/stages/stages.3/blocks/blocks.1/mlp/fc2/MatMul": {
-      'ON': 'BPU',
-      'InputType': 'int16',
-      'OutputType': 'int16'
-    },
-    "/stages/stages.2/blocks/blocks.5/norm_xca/ReduceMean_1": {
+    "/stages/stages.3/blocks/blocks.6/token_mixer/Softmax": {
       'ON': 'BPU',
       'InputType': 'int16',
       'OutputType': 'int16'
@@ -106,6 +77,7 @@ input_parameters:
   input_type_rt: 'nv12'
   input_type_train: 'rgb'
   input_layout_train: 'NCHW'
+  input_shape: ''
   norm_type: 'data_mean_and_scale'
   mean_value: 123.675 116.28 103.53
   scale_value: 0.01712475 0.017507 0.01742919
@@ -114,7 +86,7 @@ calibration_parameters:
   cal_data_dir: './calibration_data_rgb_f32'
   cal_data_type: 'float32'
   calibration_type: 'max'
-  max_percentile: 0.999
+  max_percentile: 0.9995
 
 compiler_parameters:
   compile_mode: 'latency'

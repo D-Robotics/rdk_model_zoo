@@ -2,17 +2,16 @@ English | [简体中文](./README_cn.md)
 
 # Transformer - EdgeNeXt
 
-## Table of Contents
-
-- [1. Model Introduction](#1-introduction)
-- [2. Model performance data](#2-model-performance-data)
-- [3. Model Download](#3-model-download)
-- [4. Deployment Testing](#4-deployment-testing)
-- [5. Model Quantitation Experiment](#5-model-quantitation-experiment)
+- [Transformer - EdgeNeXt](#transformer---edgenext)
+  - [1. Introduction](#1-introduction)
+  - [2. Model performance data](#2-model-performance-data)
+  - [3. Model download](#3-model-download)
+  - [4. Deployment Testing](#4-deployment-testing)
+  - [5. Model Quantitation Experiment](#5-model-quantitation-experiment)
 
 ## 1. Introduction
 
-- Paper Address: [EdgeNeXt: Efficiently Amalgamated CNN-Transformer Architecture for Mobile Vision Applications](https://arxiv.org/abs/2206.10589)
+- Paper: [EdgeNeXt: Efficiently Amalgamated CNN-Transformer Architecture for Mobile Vision Applications](https://arxiv.org/abs/2206.10589)
 
 - GitHub repository: [EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)
 
@@ -47,7 +46,7 @@ Description:
 2. Single-threaded delay is the ideal situation for single frame, single-threaded, and single-BPU core delay, and BPU inference for a task.
 3. The frame rate of a 4-thread project is when 4 threads simultaneously send tasks to a dual-core BPU. In a typical project, 4 threads can control the single frame delay to be small, while consuming all BPUs to 100%, achieving a good balance between throughput (FPS) and frame delay.
 4. The maximum frame rate of 8 threads is for 8 threads to simultaneously load tasks into the dual-core BPU of X3. The purpose is to test the maximum performance of the BPU. Generally, 4 cores are already full. If 8 threads are much better than 4 threads, it indicates that the model structure needs to improve the "calculation/memory access" ratio or optimize the DDR bandwidth when compiling.
-5. Floating-point/fixed-point mAP: Floating-point accuracy uses the inference Confidence Level of onnx before the model is quantized, while quantized accuracy is the Confidence Level of the actual inference of the model after quantization.
+5. Floating-point/fixed-point precision: Floating-point accuracy uses the inference Confidence Level of onnx before the model is quantized, while quantized accuracy is the Confidence Level of the actual inference of the model after quantization.
 
 ## 3. Model download
 
