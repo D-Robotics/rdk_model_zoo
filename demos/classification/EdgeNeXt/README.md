@@ -11,9 +11,9 @@ English | [简体中文](./README_cn.md)
 
 ## 1. Introduction
 
-- Paper: [EdgeNeXt: Efficiently Amalgamated CNN-Transformer Architecture for Mobile Vision Applications](https://arxiv.org/abs/2206.10589)
+- **Paper**: [EdgeNeXt: Efficiently Amalgamated CNN-Transformer Architecture for Mobile Vision Applications](https://arxiv.org/abs/2206.10589)
 
-- GitHub repository: [EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)
+- **GitHub repository**: [EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)
 
 ![](./data/EdgeNeXt_architecture.png)
 
@@ -24,7 +24,7 @@ The overall architecture adopts the standard "four-stage" pyramid paradigm desig
 
 In the self-attention calculation section, by applying dot product operation to the channel dimension, an output that takes into account both computational complexity and global attention is obtained, which is a core point supporting the network. From the perspective of classification performance, the effect is indeed good, but when combined with detection and segmentation tasks, there are slightly fewer models for comparison, and only some lightweight network comparisons are provided.
 
-EdgeNeXt model features :
+**EdgeNeXt model features**:
 
 - The hybrid structure of Transformer and CNN maintains the accuracy of Transformer while maintaining the inference speed of CNN.
 - Four-stage structure pyramid, quantitative deployment is more friendly
@@ -35,24 +35,24 @@ EdgeNeXt model features :
 The following table shows the performance data obtained from actual testing on RDK X5 & RDK X5 Module. You can weigh the size of the model according to your own reasoning about the actual performance and accuracy required
 
 | Model              | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
-| ------------------ | ------- | ---------- | --------- | ------------------------ | --------------------- | ------------------------------------ | ----------------------------------- | --------------- |
-| EdgeNeXt_base      | 224x224 | 1000       | 18.51     | 97.02                    | 98.89                 | 8.80                                 | 32.31                               | 113.35          |
-| EdgeNeXt_small     | 224x224 | 1000       | 5.59      | 93.30                    | 91.31                 | 4.41                                 | 14.93                               | 226.15          |
-| EdgeNeXt_x_small   | 224x224 | 1000       | 2.34      | 93.20                    | 91.57                 | 2.88                                 | 9.63                                | 345.73          |
-| EdgeNeXt_xx_small  | 224x224 | 1000       | 1.33      | 84.29                    | 84.15                 | 2.47                                 | 7.24                                | 403.73          |
+| ----------------- | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------ |
+| EdgeNeXt_base     | 224x224 | 1000 | 18.51  | 78.21 | 74.52 | 8.80        | 32.31       | 113.35 |
+| EdgeNeXt_small    | 224x224 | 1000 | 5.59   | 76.50 | 71.75 | 4.41        | 14.93       | 226.15 |
+| EdgeNeXt_x_small  | 224x224 | 1000 | 2.34   | 71.75 | 66.25 | 2.88        | 9.63        | 345.73 |
+| EdgeNeXt_xx_small | 224x224 | 1000 | 1.33   | 69.50 | 64.25 | 2.47        | 7.24        | 403.49 |
 
 Description:
 1. X5 is in the best state: CPU is 8xA55@1.8G, full core Performance scheduling, BPU is 1xBayes-e@1G, a total of 10TOPS equivalent int8 computing power.
 2. Single-threaded delay is the ideal situation for single frame, single-threaded, and single-BPU core delay, and BPU inference for a task.
 3. The frame rate of a 4-thread project is when 4 threads simultaneously send tasks to a dual-core BPU. In a typical project, 4 threads can control the single frame delay to be small, while consuming all BPUs to 100%, achieving a good balance between throughput (FPS) and frame delay.
 4. The maximum frame rate of 8 threads is for 8 threads to simultaneously load tasks into the dual-core BPU of X3. The purpose is to test the maximum performance of the BPU. Generally, 4 cores are already full. If 8 threads are much better than 4 threads, it indicates that the model structure needs to improve the "calculation/memory access" ratio or optimize the DDR bandwidth when compiling.
-5. Floating-point/fixed-point precision: Floating-point accuracy uses the inference Confidence Level of onnx before the model is quantized, while quantized accuracy is the Confidence Level of the actual inference of the model after quantization.
+5. Floating-point/fixed-point precision: Floating-point accuracy uses the Top-1 inference Confidence Level of onnx before the model is quantized, while quantized accuracy is the Confidence Level of the actual inference of the model after quantization.
 
 ## 3. Model download
 
-.Bin file download :
+**.Bin file download** :
 
-You can use the script [download_bin.sh] (./model/download_bin.sh) to download all .bin model files for this model structure with one click, making it easy to change models directly. Alternatively, use one of the following command lines to select a single model for download:
+You can use the script [download_bin.sh](./model/download_bin.sh) to download all .bin model files for this model structure with one click, making it easy to change models directly. Alternatively, use one of the following command lines to select a single model for download:
 
 ```shell
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_base-deploy_224x224_nv12.bin
@@ -61,9 +61,9 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_x_sma
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_xx_small-deploy_224x224_nv12.bin
 ```
 
-ONNX file download :
+**ONNX file download** :
 
-Similarly to the .bin file, use [download_onnx.sh] (./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
+Similarly to the .bin file, use [download_onnx.sh](./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
 
 ```shell
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_base_deploy.onnx

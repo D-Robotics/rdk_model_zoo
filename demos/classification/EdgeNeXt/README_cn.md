@@ -11,9 +11,9 @@
 
 ## 1. 简介
 
-- 论文地址: [EdgeNeXt: Efficiently Amalgamated CNN-Transformer Architecture for Mobile Vision Applications](https://arxiv.org/abs/2206.10589)
+- **论文地址**: [EdgeNeXt: Efficiently Amalgamated CNN-Transformer Architecture for Mobile Vision Applications](https://arxiv.org/abs/2206.10589)
 
-- Github 仓库: [EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)
+- **Github 仓库**: [EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)
 
 ![](./data/EdgeNeXt_architecture.png)
 
@@ -35,10 +35,10 @@ EdgeNeXt 网络从轻量化角度出发，设计了卷积与transformer的混合
 
 | 模型 | 尺寸(像素)  | 类别数  | 参数量(M) | 浮点精度  | 量化精度  | 延迟/吞吐量(单线程) | 延迟/吞吐量(多线程) | 帧率 |
 | ----------------- | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------ |
-| EdgeNeXt_base     | 224x224 | 1000 | 18.51  | 97.02 | 98.89 | 8.80        | 32.31       | 113.35 |
-| EdgeNeXt_small    | 224x224 | 1000 | 5.59   | 93.30 | 91.31 | 4.41        | 14.93       | 226.15 |
-| EdgeNeXt_x_small  | 224x224 | 1000 | 2.34   | 93.20 | 91.57 | 2.88        | 9.63        | 345.73 |
-| EdgeNeXt_xx_small | 224x224 | 1000 | 1.33   | 84.29 | 84.15 | 2.47        | 7.24        | 403.49 |
+| EdgeNeXt_base     | 224x224 | 1000 | 18.51  | 78.21 | 74.52 | 8.80        | 32.31       | 113.35 |
+| EdgeNeXt_small    | 224x224 | 1000 | 5.59   | 76.50 | 71.75 | 4.41        | 14.93       | 226.15 |
+| EdgeNeXt_x_small  | 224x224 | 1000 | 2.34   | 71.75 | 66.25 | 2.88        | 9.63        | 345.73 |
+| EdgeNeXt_xx_small | 224x224 | 1000 | 1.33   | 69.50 | 64.25 | 2.47        | 7.24        | 403.49 |
 
 
 说明: 
@@ -46,7 +46,7 @@ EdgeNeXt 网络从轻量化角度出发，设计了卷积与transformer的混合
 2. 单线程延迟为单帧，单线程，单BPU核心的延迟，BPU推理一个任务最理想的情况。
 3. 4线程工程帧率为4个线程同时向双核心BPU塞任务，一般工程中4个线程可以控制单帧延迟较小，同时吃满所有BPU到100%，在吞吐量(FPS)和帧延迟间得到一个较好的平衡。
 4. 8线程极限帧率为8个线程同时向X3的双核心BPU塞任务，目的是为了测试BPU的极限性能，一般来说4核心已经占满，如果8线程比4线程还要好很多，说明模型结构需要提高"计算/访存"比，或者编译时选择优化DDR带宽。
-5. 浮点/定点精度：浮点精度使用的是模型未量化前onnx的推理置信度，量化精度则为量化后模型实际推理的置信度。
+5. 浮点/定点精度：浮点精度使用的是模型未量化前onnx的 Top-1 推理置信度，量化精度则为量化后模型实际推理的置信度。
 
 ## 3. 模型下载
 
