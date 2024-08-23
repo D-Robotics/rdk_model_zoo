@@ -1,8 +1,8 @@
 [English](./README.md) | 简体中文
 
-# Transformer - RepVGG
+# CNN - RepVGG
 
-- [Transformer - RepVGG](#transformer---repvgg)
+- [CNN - RepVGG](#cnn---repvgg)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)
   - [3. 模型下载](#3-模型下载)
