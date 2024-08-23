@@ -11,9 +11,9 @@
 
 ## 1. 简介
 
-- 论文地址: [EfficientFormerV2: Rethinking Vision Transformers for MobileNet Size and Speed](https://arxiv.org/abs/2212.08059)
+- **论文地址**: [EfficientFormerV2: Rethinking Vision Transformers for MobileNet Size and Speed](https://arxiv.org/abs/2212.08059)
 
-- Github 仓库: [EfficientFormer](https://github.com/snap-research/EfficientFormer)
+- **Github 仓库**: [EfficientFormer](https://github.com/snap-research/EfficientFormer)
 
 ![](./data/EfficientFormerV2_architecture.png)
 
@@ -34,9 +34,9 @@ EfficientFormerV2 直接将原来的 Pooling 层删掉了(下采样越大，�
 
 | 模型  | 尺寸(像素)   | 类别数   | 参数量(M) | 浮点精度   | 量化精度   | 延迟/吞吐量(单线程) | 延迟/吞吐量(多线程) | 帧率     |
 | -------------------- | -------- | ----- | ------ | ------ | ------ | ----------- | ----------- | ------ |
-| EfficientFormerv2_s2 | 224x224  | 1000  | 12.6   | 99.59  | 98.56  | 6.99        | 26.01       | 152.40 |
-| EfficientFormerv2_s1 | 224x224  | 1000  | 6.1    | 99.20  | 88.52  | 4.24        | 14.35       | 275.95 |
-| EfficientFormerv2_s0 | 224x224  | 1000  | 3.5    | 97.38  | 86.77  | 5.79        | 19.96       | 198.45 |
+| EfficientFormerv2_s2 | 224x224  | 1000  | 12.6   | 77.50  | 70.75  | 6.99        | 26.01       | 152.40 |
+| EfficientFormerv2_s1 | 224x224  | 1000  | 6.1    | 77.25  | 68.75  | 4.24        | 14.35       | 275.95 |
+| EfficientFormerv2_s0 | 224x224  | 1000  | 3.5    | 74.25  | 68.50  | 5.79        | 19.96       | 198.45 |
 
 
 说明: 
@@ -44,7 +44,7 @@ EfficientFormerV2 直接将原来的 Pooling 层删掉了(下采样越大，�
 2. 单线程延迟为单帧，单线程，单BPU核心的延迟，BPU推理一个任务最理想的情况。
 3. 4线程工程帧率为4个线程同时向双核心BPU塞任务，一般工程中4个线程可以控制单帧延迟较小，同时吃满所有BPU到100%，在吞吐量(FPS)和帧延迟间得到一个较好的平衡。
 4. 8线程极限帧率为8个线程同时向X3的双核心BPU塞任务，目的是为了测试BPU的极限性能，一般来说4核心已经占满，如果8线程比4线程还要好很多，说明模型结构需要提高"计算/访存"比，或者编译时选择优化DDR带宽。
-5. 浮点/定点精度：浮点精度使用的是模型未量化前onnx的推理置信度，量化精度则为量化后模型实际推理的置信度。
+5. 浮点/定点精度：浮点精度使用的是模型未量化前onnx的 Top-1 推理置信度，量化精度则为量化后模型实际推理的置信度。
 
 
 ## 3. 模型下载
@@ -62,6 +62,7 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientForme
 **ONNX文件下载**：
 
 与.bin文件同理，使用 [download_onnx.sh](./model/download_onnx.sh)一键下载所有此模型结构的 .onnx 模型文件，或下载单个 .onnx 模型进行量化实验：
+
 ```shell
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformerv2_s2_deploy.onnx
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformerv2_s1_deploy.onnx
