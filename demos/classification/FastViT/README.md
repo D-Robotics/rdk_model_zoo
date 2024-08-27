@@ -74,7 +74,7 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_t8_dep
 
 ## 4. Deployment Testing
 
-After downloading the .bin file, you can execute the EdgeNeXt model jupyter script file of the test_EdgeNeXt_ * .ipynb series to experience the actual test effect on the board. If you need to change the test picture, you can download the dataset separately and put it in the data folder and change the path of the picture in the jupyter file
+After downloading the .bin file, you can execute the FastViT model jupyter script file of the test_FastViT_ * .ipynb series to experience the actual test effect on the board. If you need to change the test picture, you can download the dataset separately and put it in the data folder and change the path of the picture in the jupyter file
 
 ![alt text](./data/inference.png)
 
