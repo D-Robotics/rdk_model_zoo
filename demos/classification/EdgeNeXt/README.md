@@ -66,10 +66,10 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_xx_sm
 Similarly to the .bin file, use [download_onnx.sh](./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_base_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_small_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_x_small_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_xx_small_deploy.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_base.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_small.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_x_small.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/edgenext_xx_small.onnx
 ```
 
 ## 4. Deployment Testing
