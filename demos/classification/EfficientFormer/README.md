@@ -64,8 +64,8 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientForme
 Similarly to the .bin file, use [download_onnx.sh](./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l1_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l3_deploy.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l1.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l3.onnx
 ```
 
 ## 4. Deployment Testing

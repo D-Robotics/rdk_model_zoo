@@ -67,8 +67,8 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientForme
 与.bin文件同理，使用 [download_onnx.sh](./model/download_onnx.sh)一键下载所有此模型结构的 .onnx 模型文件，或下载单个 .onnx 模型进行量化实验：
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l1_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l3_deploy.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l1.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientformer_l3.onnx
 ```
 
 ## 4. 部署测试
