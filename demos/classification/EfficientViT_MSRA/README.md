@@ -65,7 +65,7 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientvit_m
 Similarly to the .bin file, use [download_onnx.sh](./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientvit_m5_deploy.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficientvit_m5.onnx
 ```
 
 ## 4. Deployment Testing
