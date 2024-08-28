@@ -55,11 +55,11 @@ MobileOne 是一种借助了结构重参数化技术的，在端侧设备上很�
 可以使用脚本 [download_bin.sh](./model/download_bin.sh) 一键下载所有此模型结构的 .bin 模型文件，方便直接更换模型。或者使用以下命令行中的一个，选取单个模型进行下载：
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S0-deploy_224x224_nv12.bin
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S1-deploy_224x224_nv12.bin
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S2-deploy_224x224_nv12.bin
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S3-deploy_224x224_nv12.bin
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S4-deploy_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S0_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S1_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S2_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S3_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileOne_S4_224x224_nv12.bin
 ```
 
 **ONNX文件下载**：
