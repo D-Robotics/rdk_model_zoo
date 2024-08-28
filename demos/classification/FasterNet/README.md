@@ -70,10 +70,10 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/FasterNet_T2_2
 Similarly to the .bin file, use [download_onnx.sh](./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_s_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t2_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t1_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t0_deploy.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_s.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t2.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t1.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t0.onnx
 ```
 
 ## 4. Deployment Testing
