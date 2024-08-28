@@ -63,10 +63,10 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/FastViT_T8_224
 与.bin文件同理，使用 [download_onnx.sh](./model/download_onnx.sh)一键下载所有此模型结构的 .onnx 模型文件，或下载单个 .onnx 模型进行量化实验：
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_sa12_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_s12_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_t12_deploy.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_t8_deploy.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_sa12.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_s12.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_t12.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fastvit_t8.onnx
 ```
 
 ## 4. 部署测试
