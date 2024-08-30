@@ -1,6 +1,53 @@
 English | [简体中文](./README_cn.md)
 
 # YOLOv8 Instance Segmentation
+- [YOLOv8 Instance Segmentation](#yolov8-instance-segmentation)
+  - [Introduction to YOLO](#introduction-to-yolo)
+  - [Model download](#model-download)
+  - [Input / Output Data](#input--output-data)
+  - [Original Processing Flow](#original-processing-flow)
+  - [Optimized Processing Flow](#optimized-processing-flow)
+  - [Steps Reference](#steps-reference)
+    - [Environment and Project Preparation](#environment-and-project-preparation)
+    - [Export to ONNX](#export-to-onnx)
+    - [PTQ Quantization Transformation](#ptq-quantization-transformation)
+    - [Remove Dequantize Nodes for Bounding Box and Mask Coefficients Output Heads](#remove-dequantize-nodes-for-bounding-box-and-mask-coefficients-output-heads)
+    - [Partial Compilation Log Reference](#partial-compilation-log-reference)
+  - [Model Training](#model-training)
+  - [Performance Data](#performance-data)
+  - [FAQ](#faq)
+  - [Reference](#reference)
+
+
+## Introduction to YOLO
+YOLO (You Only Look Once), a popular object detection and image segmentation model, was developed by Joseph Redmon and Ali Farhadi at the University of Washington. Launched in 2015, YOLO quickly gained popularity for its high speed and accuracy.
+
+ - YOLOv2, released in 2016, improved the original model by incorporating batch normalization, anchor boxes, and dimension clusters.
+ - YOLOv3, launched in 2018, further enhanced the model's performance using a more efficient backbone network, multiple anchors and spatial pyramid pooling.
+ - YOLOv4 was released in 2020, introducing innovations like Mosaic data augmentation, a new anchor-free detection head, and a new loss function.
+ - YOLOv5 further improved the model's performance and added new features such as hyperparameter optimization, integrated experiment tracking and automatic export to popular export formats.
+ - YOLOv6 was open-sourced by Meituan in 2022 and is in use in many of the company's autonomous delivery robots.
+ - YOLOv7 added additional tasks such as pose estimation on the COCO keypoints dataset.
+ - YOLOv8 is the latest version of YOLO by Ultralytics. As a cutting-edge, state-of-the-art (SOTA) model, YOLOv8 builds on the success of previous versions, introducing new features and improvements for enhanced performance, flexibility, and efficiency. YOLOv8 supports a full range of vision AI tasks, including detection, segmentation, pose estimation, tracking, and classification. This versatility allows users to leverage YOLOv8's capabilities across diverse applications and domains.
+ - YOLOv9 introduces innovative methods like Programmable Gradient Information (PGI) and the Generalized Efficient Layer Aggregation Network (GELAN).
+ - YOLOv10 is created by researchers from Tsinghua University using the Ultralytics Python package. This version provides real-time object detection advancements by introducing an End-to-End head that eliminates Non-Maximum Suppression (NMS) requirements.
+
+## Model download
+Reference to `./model/download.md`
+
+## Input / Output Data
+- Input: 1x3x640x640, dtype=UINT8
+- Output 0: [1, 80, 80, 64], dtype=INT32
+- Output 1: [1, 40, 40, 64], dtype=INT32
+- Output 2: [1, 20, 20, 64], dtype=INT32
+- Output 3: [1, 80, 80, 80], dtype=FLOAT32
+- Output 4: [1, 40, 40, 80], dtype=FLOAT32
+- Output 5: [1, 20, 20, 80], dtype=FLOAT32
+- Output 6: [1, 80, 80, 32], dtype=INT32
+- Output 7: [1, 40, 40, 32], dtype=INT32
+- Output 8: [1, 20, 20, 32], dtype=INT32
+- Output 9: [1, 160, 160, 32], dtype=FLOAT32
+
 ## Original Processing Flow
 ![](imgs/YOLOv8_Instance_Segmentation_Origin.png)
 
@@ -468,9 +515,21 @@ Instance Segmentation (COCO)
 | YOLOv8x-seg | 640×640 | 80 | 71.8 | 53.4/43.4 |  |  |
 
 Notes:  
-1. The X5 is in its optimal state: CPU is 8×A55@1.8G, all cores are under Performance scheduling, BPU is 1×Bayes-e@1G, with a total equivalent int8 computing power of 10TOPS.
-2. Single-threaded latency is for a single frame, single thread, and single BPU core, representing the most ideal delay for BPU inference of a task.
-3. The quad-threaded engineering frame rate involves four threads simultaneously feeding tasks to the dual-core BPU. Typically, in an engineering setting, four threads can control single-frame latency while keeping both BPU cores at 100%, achieving a good balance between throughput (FPS) and frame latency.
-4. The octo-threaded extreme frame rate involves eight threads simultaneously feeding tasks to the dual-core BPU of the X3. The purpose is to test the BPU’s maximum performance. Generally, four cores are already saturated, and if the eight-thread performance is much better than the quad-thread, it suggests that the model structure needs to improve the “computation/memory access” ratio, or the compilation should be optimized for DDR bandwidth.
-5. FP/INT8 mAP: 50-95 precision is calculated using pycocotools, based on the COCO dataset. This can be referenced from Microsoft’s papers, and here it is used to evaluate the degree of precision drop in the board-end deployment.
+1. The X5 is in its optimal state: CPU is 8 × A55 @ 1.8G with full-core Performance scheduling, BPU is 1 × Bayes-e @ 1G with a total equivalent int8 computing power of 10 TOPS.
+2. Single-threaded latency is for a single frame, single thread, and single BPU core, representing the ideal delay for BPU inference of a single task.
+3. Four-thread engineering frame rate is when four threads simultaneously feed tasks to the dual-core BPU. In general engineering scenarios, four threads can minimize single-frame latency while fully utilizing all BPU cores at 100%, achieving a good balance between throughput (FPS) and frame latency. X5 BPU overall is more powerful, generally 2 threads can eat BPU full, frame delay and throughput are very good.
+4. Eight-thread extreme frame rate is when eight threads simultaneously feed tasks to the dual-core BPU on the X3, aiming to test the BPU’s extreme performance. Typically, four cores are already saturated; if eight threads perform significantly better than four, it suggests that the model structure needs to improve the "compute/memory access" ratio, or that DDR bandwidth optimization should be selected during compilation.
+5. FP/Q mAP: 50-95 precision is calculated using pycocotools and comes from the COCO dataset. This can refer to Microsoft’s paper, and is used here to assess the degree of accuracy degradation for deployment on the board.
+6. Run the following command to test the bin model throughput on the board
+```bash
+hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
+```
+7. Regarding post-processing: At present, the post-processing of Python reconstruction on X5 only requires a single-core single-thread serial about 5ms to complete, that is, it only needs to occupy 2 CPU cores (200% CPU usage, maximum 800% CPU usage), and can complete 400 frames of image post-processing per minute, and post-processing will not constitute a bottleneck.
 
+## FAQ
+
+[D-Robotics Developer Community](developer.d-robotics.cc)
+
+## Reference
+
+[ultralytics](https://docs.ultralytics.com/)

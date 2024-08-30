@@ -1,6 +1,53 @@
 [English](./README.md) | 简体中文
 
 # YOLOv8 Instance Segmentation
+- [YOLOv8 Instance Segmentation](#yolov8-instance-segmentation)
+  - [YOLO介绍](#yolo介绍)
+  - [模型下载地址](#模型下载地址)
+  - [输入输出数据](#输入输出数据)
+  - [公版处理流程](#公版处理流程)
+  - [优化处理流程](#优化处理流程)
+  - [步骤参考](#步骤参考)
+    - [环境、项目准备](#环境项目准备)
+    - [导出为onnx](#导出为onnx)
+    - [PTQ方案量化转化](#ptq方案量化转化)
+    - [移除Bounding Box信息3个输出头和Mask Coefficients信息3个输出头的反量化节点](#移除bounding-box信息3个输出头和mask-coefficients信息3个输出头的反量化节点)
+    - [部分编译日志参考](#部分编译日志参考)
+  - [模型训练](#模型训练)
+  - [性能数据](#性能数据)
+  - [反馈](#反馈)
+  - [参考](#参考)
+
+
+## YOLO介绍
+YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，由华盛顿大学的约瑟夫-雷德蒙（Joseph Redmon）和阿里-法哈迪（Ali Farhadi）开发。YOLO 于 2015 年推出，因其高速度和高精确度而迅速受到欢迎。
+
+ - 2016 年发布的YOLOv2 通过纳入批量归一化、锚框和维度集群改进了原始模型。
+2018 年推出的YOLOv3 使用更高效的骨干网络、多锚和空间金字塔池进一步增强了模型的性能。
+ - YOLOv4于 2020 年发布，引入了 Mosaic 数据增强、新的无锚检测头和新的损失函数等创新技术。
+ - YOLOv5进一步提高了模型的性能，并增加了超参数优化、集成实验跟踪和自动导出为常用导出格式等新功能。
+ - YOLOv6于 2022 年由美团开源，目前已用于该公司的许多自主配送机器人。
+ - YOLOv7增加了额外的任务，如 COCO 关键点数据集的姿势估计。
+ - YOLOv8是YOLO 的最新版本，由Ultralytics 提供。YOLOv8 YOLOv8 支持全方位的视觉 AI 任务，包括检测、分割、姿态估计、跟踪和分类。这种多功能性使用户能够在各种应用和领域中利用YOLOv8 的功能。
+ - YOLOv9 引入了可编程梯度信息 （PGI） 和广义高效层聚合网络 （GELAN） 等创新方法。
+ - YOLOv10是由清华大学的研究人员使用该软件包创建的。 UltralyticsPython 软件包创建的。该版本通过引入端到端头（End-to-End head），消除了非最大抑制（NMS）要求，实现了实时目标检测的进步。
+
+## 模型下载地址
+请参考`./model/download.md`
+
+## 输入输出数据
+- Input: 1x3x640x640, dtype=UINT8
+- Output 0: [1, 80, 80, 64], dtype=INT32
+- Output 1: [1, 40, 40, 64], dtype=INT32
+- Output 2: [1, 20, 20, 64], dtype=INT32
+- Output 3: [1, 80, 80, 80], dtype=FLOAT32
+- Output 4: [1, 40, 40, 80], dtype=FLOAT32
+- Output 5: [1, 20, 20, 80], dtype=FLOAT32
+- Output 6: [1, 80, 80, 32], dtype=INT32
+- Output 7: [1, 40, 40, 32], dtype=INT32
+- Output 8: [1, 20, 20, 32], dtype=INT32
+- Output 9: [1, 160, 160, 32], dtype=FLOAT32
+
 ## 公版处理流程
 ![](imgs/YOLOv8_Instance_Segmentation_Origin.png)
 
@@ -472,10 +519,23 @@ RDK X5 & RDK X5 Module
 
 
 
-
 说明: 
-1. X5的状态为最佳状态：CPU为8×A55@1.8G, 全核心Performance调度, BPU为1×Bayes-e@1G, 共10TOPS等效int8算力。
+1. X5的状态为最佳状态：CPU为8 × A55@1.8G, 全核心Performance调度, BPU为1 × Bayes-e@1G, 共10TOPS等效int8算力。
 2. 单线程延迟为单帧，单线程，单BPU核心的延迟，BPU推理一个任务最理想的情况。
-3. 4线程工程帧率为4个线程同时向双核心BPU塞任务，一般工程中4个线程可以控制单帧延迟较小，同时吃满两个BPU到100%，在吞吐量(FPS)和帧延迟间得到一个较好的平衡。
-4. 8线程极限帧率为8个线程同时向X3的双核心BPU塞任务，目的是为了测试BPU的极限性能，一般来说4核心已经占满，如果8线程比4线程还要好很多，说明模型结构需要提高"计算/访存"比，或者编译时选择优化DDR带宽。
+3. 多线程帧率为多个线程同时向BPU塞任务, 每个BPU核心可以处理多个线程的任务, 一般工程中4个线程可以控制单帧延迟较小，同时吃满所有BPU到100%，在吞吐量(FPS)和帧延迟间得到一个较好的平衡。X5的BPU整体比较厉害, 一般2个线程就可以将BPU吃满, 帧延迟和吞吐量都非常出色。
+4. 8线程极限帧率为8个线程同时向BPU塞任务，目的是为了测试BPU的极限性能，一般来说4线程已经占满，如果8线程比4线程还要好很多，说明模型结构需要提高"计算/访存"比，或者编译时选择优化DDR带宽。
 5. 浮点/定点mAP：50-95精度使用pycocotools计算，来自于COCO数据集，可以参考微软的论文，此处用于评估板端部署的精度下降程度。
+6. bin模型吞吐量使用以下命令在板端测试
+```bash
+hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
+```
+7. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行5ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成400帧图像的后处理, 后处理不会构成瓶颈.
+
+## 反馈
+本文如果有表达不清楚的地方欢迎前往地瓜开发者社区进行提问和交流.
+
+[地瓜机器人开发者社区](developer.d-robotics.cc).
+
+## 参考
+
+[ultralytics](https://docs.ultralytics.com/)

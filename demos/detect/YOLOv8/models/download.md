@@ -70,9 +70,10 @@ YOLOv8x - Detect
 ```
 
 ## Bayes
-
+TODO: RDK Ultra
 
 ## Nash-e
+TODO: RDK S100
 
 ## Nash-m
-
+TODO: RDK S100
