@@ -59,7 +59,7 @@ EfficientFormer 可以在移动设备上以 MobileNet 的速度运行，在一�
 
 ```shell
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientFormer_l1_224x224_nv12.bin
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientFormer_l1_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientFormer_l3_224x224_nv12.bin
 ```
 
 **ONNX文件下载**：
