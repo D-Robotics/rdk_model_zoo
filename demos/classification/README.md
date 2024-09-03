@@ -7,7 +7,7 @@ English | [简体中文](./README_cn.md)
   - [2. Model Performance Data](#2-model-performance-data)
   - [3. Model Download Link](#3-model-download-link)
   - [4. Input/Output Data](#4-inputoutput-data)
-  - [5. PTQ quantification process](#5-ptq-quantification-process)
+  - [5. PTQ Quantification Process](#5-ptq-quantification-process)
 
 ## 1. Introduction to Model Classification
 
@@ -134,7 +134,7 @@ Model download shell script In the model folder of each classification model, yo
 The input data shape of the pre-trained pth model is `1x3x224x224` ，and the output data shape is `1x1000`, which meets the format output requirements of ImageNet classification model. Specifically, for the quantization step, the input data format of the bin file of the model quantization is unified as `nv12`'. The format conversion function has been built into the model preprocessing part `bpu_libdnn`, which can be directly called to process the model data.
 
 
-## 5. PTQ quantification process
+## 5. PTQ Quantification Process
 
 Model quantization is a technique that **converts floating-point operations into fixed-point operations** of neural networks. It is mainly used to **reduce computational complexity and model size**. It is suitable for resource-constrained embedded devices such as smartphones, drones, and robots. These devices usually have strict requirements for memory, power consumption, and inference time. Model quantization solves these problems by reducing bits.
 
