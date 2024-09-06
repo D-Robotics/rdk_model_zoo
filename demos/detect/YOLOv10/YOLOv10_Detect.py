@@ -37,7 +37,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='models/yolov8s_detect_bayese_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='models/yolov10n_detect_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
@@ -54,7 +54,7 @@ def main():
     logger.info(opt)
 
     # 实例化
-    model = YOLOv8_Detect(opt.model_path, opt.conf_thres, opt.iou_thres)
+    model = YOLOv10_Detect(opt.model_path, opt.conf_thres, opt.iou_thres)
     # 读图
     img = cv2.imread(opt.test_img)
     # 准备输入数据
@@ -177,7 +177,7 @@ class BaseModel:
         logger.debug("\033[1;31m" + f"c to numpy time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
         return outputs
 
-class YOLOv8_Detect(BaseModel):
+class YOLOv10_Detect(BaseModel):
     def __init__(self, 
                 model_file: str, 
                 conf: float, 
@@ -189,12 +189,12 @@ class YOLOv8_Detect(BaseModel):
         self.s_bboxes_scale = self.quantize_model[0].outputs[0].properties.scale_data[np.newaxis, :]
         self.m_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
         self.l_bboxes_scale = self.quantize_model[0].outputs[2].properties.scale_data[np.newaxis, :]
-        logger.info(f"{self.s_bboxes_scale.shape=}, {self.m_bboxes_scale.shape=}, {self.l_bboxes_scale.shape=}")
+        logger.debug(f"{self.s_bboxes_scale.shape=}, {self.m_bboxes_scale.shape=}, {self.l_bboxes_scale.shape=}")
 
         # DFL求期望的系数, 只需要生成一次
         # DFL calculates the expected coefficients, which only needs to be generated once.
         self.weights_static = np.array([i for i in range(16)]).astype(np.float32)[np.newaxis, np.newaxis, :]
-        logger.info(f"{self.weights_static.shape = }")
+        logger.debug(f"{self.weights_static.shape = }")
 
         # anchors, 只需要生成一次
         self.s_anchor = np.stack([np.tile(np.linspace(0.5, 79.5, 80), reps=80), 
@@ -203,15 +203,15 @@ class YOLOv8_Detect(BaseModel):
                             np.repeat(np.arange(0.5, 40.5, 1), 40)], axis=0).transpose(1,0)
         self.l_anchor = np.stack([np.tile(np.linspace(0.5, 19.5, 20), reps=20), 
                             np.repeat(np.arange(0.5, 20.5, 1), 20)], axis=0).transpose(1,0)
-        logger.info(f"{self.s_anchor.shape = }, {self.m_anchor.shape = }, {self.l_anchor.shape = }")
+        logger.debug(f"{self.s_anchor.shape = }, {self.m_anchor.shape = }, {self.l_anchor.shape = }")
 
         # 输入图像大小, 一些阈值, 提前计算好
         self.input_image_size = 640
         self.conf = conf
         self.iou = iou
         self.conf_inverse = -np.log(1/conf - 1)
-        logger.info("iou threshol = %.2f, conf threshol = %.2f"%(iou, conf))
-        logger.info("sigmoid_inverse threshol = %.2f"%self.conf_inverse)
+        logger.debug("iou threshol = %.2f, conf threshol = %.2f"%(iou, conf))
+        logger.debug("sigmoid_inverse threshol = %.2f"%self.conf_inverse)
     
 
     def postProcess(self, outputs: list[np.ndarray]) -> tuple[list]:
@@ -274,17 +274,15 @@ class YOLOv8_Detect(BaseModel):
         scores = np.concatenate((s_scores, m_scores, l_scores), axis=0)
         ids = np.concatenate((s_ids, m_ids, l_ids), axis=0)
 
-        # nms
-        indices = cv2.dnn.NMSBoxes(dbboxes, scores, self.conf, self.iou)
+        # YOLOv10无需nms
 
-        # 还原到原始的img尺度
-        bboxes = dbboxes[indices] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])
+        # 还原到原始的img尺度，并进行clip
+        bboxes = dbboxes[:] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])
         bboxes = bboxes.astype(np.int32)
 
         logger.debug("\033[1;31m" + f"Post Process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
 
-        return ids[indices], scores[indices], bboxes
-
+        return ids[:], scores[:], bboxes
 
 coco_names = [
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", 

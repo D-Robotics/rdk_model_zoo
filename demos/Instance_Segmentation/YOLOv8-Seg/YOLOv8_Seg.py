@@ -37,7 +37,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='models/yolov8s_detect_bayese_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='models/yolov8n_instance_seg_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
@@ -54,7 +54,7 @@ def main():
     logger.info(opt)
 
     # 实例化
-    model = YOLOv8_Detect(opt.model_path, opt.conf_thres, opt.iou_thres)
+    model = YOLOv8_Seg(opt.model_path, opt.conf_thres, opt.iou_thres)
     # 读图
     img = cv2.imread(opt.test_img)
     # 准备输入数据
@@ -62,15 +62,24 @@ def main():
     # 推理
     outputs = model.c2numpy(model.forward(input_tensor))
     # 后处理
-    ids, scores, bboxes = model.postProcess(outputs)
+    ids, scores, bboxes, corpes, mces, protos = model.postProcess(outputs)
     # 渲染
     logger.info("\033[1;32m" + "Draw Results: " + "\033[0m")
-    for class_id, score, bbox in zip(ids, scores, bboxes):
+    zeros = np.zeros((160,160,3), dtype=np.uint8)
+    for class_id, score, bbox, corp, mc in zip(ids, scores, bboxes, corpes, mces):
+        # detect
         x1, y1, x2, y2 = bbox
-        logger.info("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
+        print("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
         draw_detection(img, (x1, y1, x2, y2), score, class_id)
+        # mask
+        x1_corp, y1_corp, x2_corp, y2_corp = corp
+        mask = (np.sum(mc[np.newaxis, np.newaxis, :]*protos[y1_corp:y2_corp,x1_corp:x2_corp,:], axis=2) > 0.0).astype(np.int32)
+        zeros[y1_corp:y2_corp,x1_corp:x2_corp, :][mask == 1] = rdk_colors[class_id%20]
     # 保存结果
-    cv2.imwrite(opt.img_save_path, img)
+    img_h, img_w = img.shape[0:2]
+    zeros = cv2.resize(zeros, (img_w, img_h),cv2.INTER_LANCZOS4)
+    add_result = np.clip(img + 0.3*zeros, 0, 255).astype(np.uint8)
+    cv2.imwrite(opt.img_save_path, np.hstack((img, zeros, add_result)))
     logger.info("\033[1;32m" + f"saved in path: \"./{opt.img_save_path}\"" + "\033[0m")
 
 class BaseModel:
@@ -177,7 +186,7 @@ class BaseModel:
         logger.debug("\033[1;31m" + f"c to numpy time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
         return outputs
 
-class YOLOv8_Detect(BaseModel):
+class YOLOv8_Seg(BaseModel):
     def __init__(self, 
                 model_file: str, 
                 conf: float, 
@@ -186,9 +195,14 @@ class YOLOv8_Detect(BaseModel):
         super().__init__(model_file)
         # 将反量化系数准备好, 只需要准备一次
         # prepare the quantize scale, just need to generate once
-        self.s_bboxes_scale = self.quantize_model[0].outputs[0].properties.scale_data[np.newaxis, :]
-        self.m_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
-        self.l_bboxes_scale = self.quantize_model[0].outputs[2].properties.scale_data[np.newaxis, :]
+        self.s_mces_scale = self.quantize_model[0].outputs[0].properties.scale_data[np.newaxis, :]
+        self.m_mces_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
+        self.l_mces_scale = self.quantize_model[0].outputs[2].properties.scale_data[np.newaxis, :]
+        logger.info(f"{self.s_mces_scale.shape=}, {self.m_mces_scale.shape=}, {self.l_mces_scale.shape=}")
+
+        self.s_bboxes_scale = self.quantize_model[0].outputs[3].properties.scale_data[np.newaxis, :]
+        self.m_bboxes_scale = self.quantize_model[0].outputs[4].properties.scale_data[np.newaxis, :]
+        self.l_bboxes_scale = self.quantize_model[0].outputs[5].properties.scale_data[np.newaxis, :]
         logger.info(f"{self.s_bboxes_scale.shape=}, {self.m_bboxes_scale.shape=}, {self.l_bboxes_scale.shape=}")
 
         # DFL求期望的系数, 只需要生成一次
@@ -213,18 +227,26 @@ class YOLOv8_Detect(BaseModel):
         logger.info("iou threshol = %.2f, conf threshol = %.2f"%(iou, conf))
         logger.info("sigmoid_inverse threshol = %.2f"%self.conf_inverse)
     
+        # mask 切片 corp 缩放系数
+        self.x_scale_corp, self.y_scale_corp = 160/self.model_input_height, 160/self.model_input_weight
+    
 
     def postProcess(self, outputs: list[np.ndarray]) -> tuple[list]:
         begin_time = time()
-        # reshape
-        s_bboxes = outputs[0].reshape(-1, 64)
-        m_bboxes = outputs[1].reshape(-1, 64)
-        l_bboxes = outputs[2].reshape(-1, 64)
-        s_clses = outputs[3].reshape(-1, 80)
-        m_clses = outputs[4].reshape(-1, 80)
-        l_clses = outputs[5].reshape(-1, 80)
 
-        # classify: 利用numpy向量化操作完成阈值筛选(优化版 2.0)
+        # reshape
+        s_mces = outputs[0].reshape(-1, 32)
+        m_mces = outputs[1].reshape(-1, 32)
+        l_mces = outputs[2].reshape(-1, 32)
+        s_bboxes = outputs[3].reshape(-1, 64)
+        m_bboxes = outputs[4].reshape(-1, 64)
+        l_bboxes = outputs[5].reshape(-1, 64)
+        s_clses = outputs[6].reshape(-1, 80)
+        m_clses = outputs[7].reshape(-1, 80)
+        l_clses = outputs[8].reshape(-1, 80)
+        protos = outputs[9][0,:,:,:]
+
+        # classify: 利用numpy向量化操作完成阈值筛选 (优化版 2.0)=
         s_max_scores = np.max(s_clses, axis=1)
         s_valid_indices = np.flatnonzero(s_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
         s_ids = np.argmax(s_clses[s_valid_indices, : ], axis=1)
@@ -250,7 +272,7 @@ class YOLOv8_Detect(BaseModel):
         m_bboxes_float32 = m_bboxes[m_valid_indices,:].astype(np.float32) * self.m_bboxes_scale
         l_bboxes_float32 = l_bboxes[l_valid_indices,:].astype(np.float32) * self.l_bboxes_scale
 
-        # 3个Bounding Box分支：dist2bbox (ltrb2xyxy)
+        # 3个Bounding Box分支：dist2bbox (ltrb2xyxy) transpose
         s_ltrb_indices = np.sum(softmax(s_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
         s_anchor_indices = self.s_anchor[s_valid_indices, :]
         s_x1y1 = s_anchor_indices - s_ltrb_indices[:, 0:2]
@@ -269,21 +291,29 @@ class YOLOv8_Detect(BaseModel):
         l_x2y2 = l_anchor_indices + l_ltrb_indices[:, 2:4]
         l_dbboxes = np.hstack([l_x1y1, l_x2y2])*32
 
+        s_mces_float32 = (s_mces[s_valid_indices,:].astype(np.float32) * self.s_mces_scale)
+        m_mces_float32 = (m_mces[m_valid_indices,:].astype(np.float32) * self.m_mces_scale)
+        l_mces_float32 = (l_mces[l_valid_indices,:].astype(np.float32) * self.l_mces_scale)
+
         # 大中小特征层阈值筛选结果拼接
         dbboxes = np.concatenate((s_dbboxes, m_dbboxes, l_dbboxes), axis=0)
         scores = np.concatenate((s_scores, m_scores, l_scores), axis=0)
         ids = np.concatenate((s_ids, m_ids, l_ids), axis=0)
+        mces = np.concatenate((s_mces_float32, m_mces_float32, l_mces_float32), axis=0)
 
         # nms
         indices = cv2.dnn.NMSBoxes(dbboxes, scores, self.conf, self.iou)
 
-        # 还原到原始的img尺度
-        bboxes = dbboxes[indices] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])
-        bboxes = bboxes.astype(np.int32)
+        # 还原到原始的尺度
+        bboxes = (dbboxes[indices] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])).astype(np.int32)
+        scores = scores[indices]
+        ids = ids[indices]
+        corpes = (dbboxes[indices] * np.array([self.x_scale_corp, self.y_scale_corp, self.x_scale_corp, self.y_scale_corp])).astype(np.int32)
+        mces = mces[indices]
 
         logger.debug("\033[1;31m" + f"Post Process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
 
-        return ids[indices], scores[indices], bboxes
+        return ids, scores, bboxes, corpes, mces, protos
 
 
 coco_names = [

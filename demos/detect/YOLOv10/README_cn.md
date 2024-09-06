@@ -3,6 +3,7 @@
 # YOLOv10 Detect
 - [YOLOv10 Detect](#yolov10-detect)
   - [YOLO介绍](#yolo介绍)
+  - [性能数据 (简要)](#性能数据-简要)
   - [模型下载地址](#模型下载地址)
   - [输入输出数据](#输入输出数据)
   - [公版处理流程](#公版处理流程)
@@ -19,6 +20,9 @@
   - [参考](#参考)
 
 ## YOLO介绍
+
+![](imgs/demo_rdkx5_yolov10n_detect.jpg)
+
 YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，由华盛顿大学的约瑟夫-雷德蒙（Joseph Redmon）和阿里-法哈迪（Ali Farhadi）开发。YOLO 于 2015 年推出，因其高速度和高精确度而迅速受到欢迎。
 
  - 2016 年发布的YOLOv2 通过纳入批量归一化、锚框和维度集群改进了原始模型。
@@ -28,8 +32,20 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，�
  - YOLOv6于 2022 年由美团开源，目前已用于该公司的许多自主配送机器人。
  - YOLOv7增加了额外的任务，如 COCO 关键点数据集的姿势估计。
  - YOLOv8是YOLO 的最新版本，由Ultralytics 提供。YOLOv8 YOLOv8 支持全方位的视觉 AI 任务，包括检测、分割、姿态估计、跟踪和分类。这种多功能性使用户能够在各种应用和领域中利用YOLOv8 的功能。
- - YOLOv9 引入了可编程梯度信息 （PGI） 和广义高效层聚合网络 （GELAN） 等创新方法。
- - YOLOv10是由清华大学的研究人员使用该软件包创建的。 UltralyticsPython 软件包创建的。该版本通过引入端到端头（End-to-End head），消除了非最大抑制（NMS）要求，实现了实时目标检测的进步。
+ - YOLOv9 引入了可编程梯度信息(PGI) 和广义高效层聚合网络(GELAN)等创新方法。
+ - YOLOv10是由清华大学的研究人员使用该软件包创建的。 UltralyticsPython 软件包创建的。该版本通过引入端到端头(End-to-End head),消除了非最大抑制(NMS)要求，实现了实时目标检测的进步。
+  
+## 性能数据 (简要)
+RDK X5 & RDK X5 Module
+目标检测 Detection (COCO)
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量(M) | 吞吐量(FPS) | 后处理时间(Python) | 
+| --- | --- | --- | --- | --- | --- |
+| YOLOv10n | 640×640 | 80 | 6.7  |  | 4.5 ms | 
+| YOLOv10s | 640×640 | 80 | 21.6 |  | 4.5 ms |  
+| YOLOv10m | 640×640 | 80 | 59.1 |  | 4.5 ms |  
+| YOLOv10b | 640×640 | 80 | 92.0 |  | 4.5 ms |  
+| YOLOv10l | 640×640 | 80 | 120.3 |  | 4.5 ms |  
+| YOLOv10x | 640×640 | 80 | 160.4 |  | 4.5 ms |  
 
 ## 模型下载地址
 请参考`./model/download.md`
@@ -123,7 +139,8 @@ model_parameters:
  
  - 模型编译:
 ```bash
-(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov10_detect_bayese_640x640_nchw.yaml
+(bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolov10n.onnx
+(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov10_detect_bayese_640x640_nv12.yaml
 ```
 
 ### 移除Bounding Box信息3个输出头的反量化节点
@@ -148,11 +165,11 @@ Graph output:
 
  - 进入编译产物的目录
 ```bash
-$ cd yolov10n_detect_bayese_640x640_nchw
+$ cd yolov10n_detect_bayese_640x640_nv12
 ```
  - 查看可以被移除的反量化节点
 ```bash
-$ hb_model_modifier yolov10n_detect_bayese_640x640_nchw.bin
+$ hb_model_modifier yolov10n_detect_bayese_640x640_nv12.bin
 ```
  - 在生成的hb_model_modifier.log文件中，找到以下信息。主要是找到大小为[1, 64, 80, 80], [1, 64, 40, 40], [1, 64, 20, 20]的三个输出头的名称。当然，也可以通过netron等工具查看onnx模型，获得输出头的名称。
  此处的名称为：
@@ -208,6 +225,8 @@ $ hb_model_modifier yolov10n_detect_bayese_640x640_nchw.bin \
 
 
 ### 部分编译日志参考
+
+可以观察到, SoftMax算子已经被BPU支持, 余弦相似度保持在0.9以上, 整个bin模型只有一个BPU子图。
 ```bash
 2024-08-16 17:34:04,753 file: build.py func: build line No: 36 Start to Horizon NN Model Convert.
 2024-08-16 17:34:04,753 file: model_debug.py func: model_debug line No: 61 Loading horizon_nn debug methods:[]
@@ -487,7 +506,7 @@ UNIT_CONV_FOR_/model.22/m.0/Add                     BPU  id(0)     Conv         
 /model.23/one2one_cv3.2/one2one_cv3.2.2/Conv        BPU  id(0)     Conv          0.997476           17.939869   int8/int32
 
 ```
-可以观察到, SoftMax算子已经被BPU支持, 余弦相似度保持在0.9以上, 整个bin模型只有一个BPU子图。
+
 
 ## 模型训练
 

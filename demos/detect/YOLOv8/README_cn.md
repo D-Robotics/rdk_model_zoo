@@ -3,6 +3,7 @@
 # YOLOv8 Detect
 - [YOLOv8 Detect](#yolov8-detect)
   - [YOLO介绍](#yolo介绍)
+  - [性能数据 (简要)](#性能数据-简要)
   - [模型下载地址](#模型下载地址)
   - [输入输出数据](#输入输出数据)
   - [公版处理流程](#公版处理流程)
@@ -20,18 +21,35 @@
   - [参考](#参考)
 
 
+
 ## YOLO介绍
-YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，由华盛顿大学的约瑟夫-雷德蒙（Joseph Redmon）和阿里-法哈迪（Ali Farhadi）开发。YOLO 于 2015 年推出，因其高速度和高精确度而迅速受到欢迎。
+
+![](imgs/demo_rdkx5_yolov8n_detect.jpg)
+
+YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由华盛顿大学的约瑟夫-雷德蒙（Joseph Redmon）和阿里-法哈迪（Ali Farhadi）开发。YOLO 于 2015 年推出,因其高速度和高精确度而迅速受到欢迎。
 
  - 2016 年发布的YOLOv2 通过纳入批量归一化、锚框和维度集群改进了原始模型。
 2018 年推出的YOLOv3 使用更高效的骨干网络、多锚和空间金字塔池进一步增强了模型的性能。
- - YOLOv4于 2020 年发布，引入了 Mosaic 数据增强、新的无锚检测头和新的损失函数等创新技术。
- - YOLOv5进一步提高了模型的性能，并增加了超参数优化、集成实验跟踪和自动导出为常用导出格式等新功能。
- - YOLOv6于 2022 年由美团开源，目前已用于该公司的许多自主配送机器人。
- - YOLOv7增加了额外的任务，如 COCO 关键点数据集的姿势估计。
- - YOLOv8是YOLO 的最新版本，由Ultralytics 提供。YOLOv8 YOLOv8 支持全方位的视觉 AI 任务，包括检测、分割、姿态估计、跟踪和分类。这种多功能性使用户能够在各种应用和领域中利用YOLOv8 的功能。
- - YOLOv9 引入了可编程梯度信息 （PGI） 和广义高效层聚合网络 （GELAN） 等创新方法。
- - YOLOv10是由清华大学的研究人员使用该软件包创建的。 UltralyticsPython 软件包创建的。该版本通过引入端到端头（End-to-End head），消除了非最大抑制（NMS）要求，实现了实时目标检测的进步。
+ - YOLOv4于 2020 年发布,引入了 Mosaic 数据增强、新的无锚检测头和新的损失函数等创新技术。
+ - YOLOv5进一步提高了模型的性能,并增加了超参数优化、集成实验跟踪和自动导出为常用导出格式等新功能。
+ - YOLOv6于 2022 年由美团开源,目前已用于该公司的许多自主配送机器人。
+ - YOLOv7增加了额外的任务,如 COCO 关键点数据集的姿势估计。
+ - YOLOv8是YOLO 的最新版本,由Ultralytics 提供。YOLOv8 YOLOv8 支持全方位的视觉 AI 任务,包括检测、分割、姿态估计、跟踪和分类。这种多功能性使用户能够在各种应用和领域中利用YOLOv8 的功能。
+ - YOLOv9 引入了可编程梯度信息(PGI)和广义高效层聚合网络(GELAN)等创新方法。
+ - YOLOv10是由清华大学的研究人员使用该软件包创建的。 UltralyticsPython 软件包创建的。该版本通过引入端到端头(End-to-End head), 消除了非最大抑制(NMS)要求, 实现了实时目标检测的进步.
+
+## 性能数据 (简要)
+RDK X5 & RDK X5 Module
+目标检测 Detection (COCO)
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量(M) | 吞吐量(FPS) | 后处理时间(Python) | 
+|---------|---------|-------|---------|---------|----------|
+| YOLOv8n | 640×640 | 80 | 3.2 | 263.6 | 5 ms |
+| YOLOv8s | 640×640 | 80 | 11.2 | 194.9 | 5 ms |
+| YOLOv8m | 640×640 | 80 | 25.9 | 35.7 | 5 ms |
+| YOLOv8l | 640×640 | 80 | 43.7 | 17.9 | 5 ms |
+| YOLOv8x | 640×640 | 80 | 68.2 | 11.2 | 5 ms |
+
+注: 详细性能数据见文末.
 
 ## 模型下载地址
 请参考`./model/download.md`
@@ -45,81 +63,82 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，�
 - Output 4: [1, 40, 40, 80], dtype=FLOAT32
 - Output 5: [1, 20, 20, 80], dtype=FLOAT32
 
+
 ## 公版处理流程
 ![](imgs/YOLOv8_Detect_Origin.png)
 
 ## 优化处理流程
 ![](imgs/YOLOv8_Detect_Quantize.png)
 
- - Classify部分，Dequantize操作
-在模型编译时，如果选择了移除所有的反量化算子，这里需要在后处理中手动对Classify部分的三个输出头进行反量化。查看反量化系数的方式有多种，可以查看`hb_mapper`时产物的日志，也可通过BPU推理接口的API来获取。
-注意，这里每一个C维度的反量化系数都是不同的，每个头都有80个反量化系数，可以使用numpy的广播直接乘。
-此处反量化在bin模型中实现，所以拿到的输出是float32的。
+ - Classify部分,Dequantize操作
+在模型编译时,如果选择了移除所有的反量化算子,这里需要在后处理中手动对Classify部分的三个输出头进行反量化。查看反量化系数的方式有多种,可以查看`hb_mapper`时产物的日志,也可通过BPU推理接口的API来获取。
+注意,这里每一个C维度的反量化系数都是不同的,每个头都有80个反量化系数,可以使用numpy的广播直接乘。
+此处反量化在bin模型中实现,所以拿到的输出是float32的。
 
- - Classify部分，ReduceMax操作
-ReduceMax操作是沿着Tensor的某一个维度找到最大值，此操作用于找到8400个Grid Cell的80个分数的最大值。操作对象是每个Grid Cell的80类别的值，在C维度操作。注意，这步操作给出的是最大值，并不是80个值中最大值的索引。
-激活函数Sigmoid具有单调性，所以Sigmoid作用前的80个分数的大小关系和Sigmoid作用后的80个分数的大小关系不会改变。
+ - Classify部分,ReduceMax操作
+ReduceMax操作是沿着Tensor的某一个维度找到最大值,此操作用于找到8400个Grid Cell的80个分数的最大值。操作对象是每个Grid Cell的80类别的值,在C维度操作。注意,这步操作给出的是最大值,并不是80个值中最大值的索引。
+激活函数Sigmoid具有单调性,所以Sigmoid作用前的80个分数的大小关系和Sigmoid作用后的80个分数的大小关系不会改变。
 $$Sigmoid(x)=\frac{1}{1+e^{-x}}$$
 $$Sigmoid(x_1) > Sigmoid(x_2) \Leftrightarrow x_1 > x_2$$
-综上，bin模型直接输出的最大值(反量化完成)的位置就是最终分数最大值的位置，bin模型输出的最大值经过Sigmoid计算后就是原来onnx模型的最大值。
+综上,bin模型直接输出的最大值(反量化完成)的位置就是最终分数最大值的位置,bin模型输出的最大值经过Sigmoid计算后就是原来onnx模型的最大值。
 
- - Classify部分，Threshold（TopK）操作
-此操作用于找到8400个Grid Cell中，符合要求的Grid Cell。操作对象为8400个Grid Cell，在H和W的维度操作。如果您有阅读我的程序，你会发现我将后面H和W维度拉平了，这样只是为了程序设计和书面表达的方便，它们并没有本质上的不同。
-我们假设某一个Grid Cell的某一个类别的分数记为$x$，激活函数作用完的整型数据为$y$，阈值筛选的过程会给定一个阈值，记为$C$，那么此分数合格的**充分必要条件**为：
+ - Classify部分,Threshold（TopK）操作
+此操作用于找到8400个Grid Cell中,符合要求的Grid Cell。操作对象为8400个Grid Cell,在H和W的维度操作。如果您有阅读我的程序,你会发现我将后面H和W维度拉平了,这样只是为了程序设计和书面表达的方便,它们并没有本质上的不同。
+我们假设某一个Grid Cell的某一个类别的分数记为$x$,激活函数作用完的整型数据为$y$,阈值筛选的过程会给定一个阈值,记为$C$,那么此分数合格的**充分必要条件**为：
 $$y=Sigmoid(x)=\frac{1}{1+e^{-x}}>C$$
 由此可以得出此分数合格的**充分必要条件**为：
 $$x > -ln\left(\frac{1}{C}-1\right)$$
-此操作会符合条件的Grid Cell的索引（indices）和对应Grid Cell的最大值，这个最大值经过Sigmoid计算后就是这个Grid Cell对应类别的分数了。
+此操作会符合条件的Grid Cell的索引（indices）和对应Grid Cell的最大值,这个最大值经过Sigmoid计算后就是这个Grid Cell对应类别的分数了。
 
- - Classify部分，GatherElements操作和ArgMax操作
-使用Threshold（TopK）操作得到的符合条件的Grid Cell的索引（indices），在GatherElements操作中获得符合条件的Grid Cell，使用ArgMax操作得到具体是80个类别中哪一个最大，得到这个符合条件的Grid Cell的类别。
+ - Classify部分,GatherElements操作和ArgMax操作
+使用Threshold(TopK)操作得到的符合条件的Grid Cell的索引(indices),在GatherElements操作中获得符合条件的Grid Cell,使用ArgMax操作得到具体是80个类别中哪一个最大,得到这个符合条件的Grid Cell的类别。
 
- - Bounding Box部分，GatherElements操作和Dequantize操作
-使用Threshold（TopK）操作得到的符合条件的Grid Cell的索引（indices），在GatherElements操作中获得符合条件的Grid Cell，这里每一个C维度的反量化系数都是不同的，每个头都有64个反量化系数，可以使用numpy的广播直接乘，得到1×64×k×1的bbox信息。
+ - Bounding Box部分,GatherElements操作和Dequantize操作
+使用Threshold(TopK)操作得到的符合条件的Grid Cell的索引(indices),在GatherElements操作中获得符合条件的Grid Cell,这里每一个C维度的反量化系数都是不同的,每个头都有64个反量化系数,可以使用numpy的广播直接乘,得到1×64×k×1的bbox信息。
 
- - Bounding Box部分，DFL：SoftMax+Conv操作
-每一个Grid Cell会有4个数字来确定这个框框的位置，DFL结构会对每个框的某条边基于anchor的位置给出16个估计，对16个估计求SoftMax，然后通过一个卷积操作来求期望，这也是Anchor Free的核心设计，即每个Grid Cell仅仅负责预测1个Bounding box。假设在对某一条边偏移量的预测中，这16个数字为 $ l_p $ 或者$(t_p, t_p, b_p)$，其中$p = 0,1,...,15$那么偏移量的计算公式为：
+ - Bounding Box部分,DFL：SoftMax+Conv操作
+每一个Grid Cell会有4个数字来确定这个框框的位置,DFL结构会对每个框的某条边基于anchor的位置给出16个估计,对16个估计求SoftMax,然后通过一个卷积操作来求期望,这也是Anchor Free的核心设计,即每个Grid Cell仅仅负责预测1个Bounding box。假设在对某一条边偏移量的预测中,这16个数字为 $ l_p $ 或者$(t_p, t_p, b_p)$,其中$p = 0,1,...,15$那么偏移量的计算公式为：
 $$\hat{l} = \sum_{p=0}^{15}{\frac{p·e^{l_p}}{S}}, S =\sum_{p=0}^{15}{e^{l_p}}$$
 
- - Bounding Box部分，Decode：dist2bbox(ltrb2xyxy)操作
-此操作将每个Bounding Box的ltrb描述解码为xyxy描述，ltrb分别表示左上右下四条边距离相对于Grid Cell中心的距离，相对位置还原成绝对位置后，再乘以对应特征层的采样倍数，即可还原成xyxy坐标，xyxy表示Bounding Box的左上角和右下角两个点坐标的预测值。
+ - Bounding Box部分,Decode：dist2bbox(ltrb2xyxy)操作
+此操作将每个Bounding Box的ltrb描述解码为xyxy描述,ltrb分别表示左上右下四条边距离相对于Grid Cell中心的距离,相对位置还原成绝对位置后,再乘以对应特征层的采样倍数,即可还原成xyxy坐标,xyxy表示Bounding Box的左上角和右下角两个点坐标的预测值。
 ![](imgs/ltrb2xyxy.jpg)
 
-图片输入为$Size=640$，对于Bounding box预测分支的第$i$个特征图$(i=1, 2, 3)$，对应的下采样倍数记为$Stride(i)$，在YOLOv8 - Detect中，$Stride(1)=8, Stride(2)=16, Stride(3)=32$，对应特征图的尺寸记为$n_i = {Size}/{Stride(i)}$，即尺寸为$n_1 = 80, n_2 = 40 ,n_3 = 20$三个特征图，一共有$n_1^2+n_2^2+n_3^3=8400$个Grid Cell，负责预测8400个Bounding Box。
-对特征图i，第x行y列负责预测对应尺度Bounding Box的检测框，其中$x,y \in [0, n_i)\bigcap{Z}$，$Z$为整数的集合。DFL结构后的Bounding Box检测框描述为$ltrb$描述，而我们需要的是$xyxy$描述，具体的转化关系如下：
+图片输入为$Size=640$,对于Bounding box预测分支的第$i$个特征图$(i=1, 2, 3)$,对应的下采样倍数记为$Stride(i)$,在YOLOv8 - Detect中,$Stride(1)=8, Stride(2)=16, Stride(3)=32$,对应特征图的尺寸记为$n_i = {Size}/{Stride(i)}$,即尺寸为$n_1 = 80, n_2 = 40 ,n_3 = 20$三个特征图,一共有$n_1^2+n_2^2+n_3^3=8400$个Grid Cell,负责预测8400个Bounding Box。
+对特征图i,第x行y列负责预测对应尺度Bounding Box的检测框,其中$x,y \in [0, n_i)\bigcap{Z}$,$Z$为整数的集合。DFL结构后的Bounding Box检测框描述为$ltrb$描述,而我们需要的是$xyxy$描述,具体的转化关系如下：
 $$x_1 = (x+0.5-l)\times{Stride(i)}$$
 $$y_1 = (y+0.5-t)\times{Stride(i)}$$
 $$x_2 = (x+0.5+r)\times{Stride(i)}$$
 $$y_1 = (y+0.5+b)\times{Stride(i)}$$
 
-YOLOv8，v9，会有一个nms操作去去掉重复识别的目标，YOLOv10不需要。最终的检测结果了，包括类别(id)，分数(score)和位置(xyxy)。
+YOLOv8,v9,会有一个nms操作去去掉重复识别的目标,YOLOv10不需要。最终的检测结果了,包括类别(id),分数(score)和位置(xyxy)。
 
 ## 步骤参考
 
-注：任何No such file or directory, No module named "xxx", command not found.等报错请仔细检查，请勿逐条复制运行，如果对修改过程不理解请前往开发者社区从YOLOv5开始了解。
+注：任何No such file or directory, No module named "xxx", command not found.等报错请仔细检查,请勿逐条复制运行,如果对修改过程不理解请前往开发者社区从YOLOv5开始了解。
 ### 环境、项目准备
- - 下载ultralytics/ultralytics仓库，并参考YOLOv8官方文档，配置好环境
+ - 下载ultralytics/ultralytics仓库,并参考YOLOv8官方文档,配置好环境
 ```bash
 git clone https://github.com/ultralytics/ultralytics.git
 ```
- - 进入本地仓库，下载官方的预训练权重，这里以320万参数的YOLOv8n-Detect模型为例
+ - 进入本地仓库,下载官方的预训练权重,这里以320万参数的YOLOv8n-Detect模型为例
 ```bash
 cd ultralytics
 wget https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n.pt
 ```
 
 ### 导出为onnx
- - 卸载yolo相关的命令行命令，这样直接修改`./ultralytics/ultralytics`目录即可生效。
+ - 卸载yolo相关的命令行命令,这样直接修改`./ultralytics/ultralytics`目录即可生效。
 ```bash
 $ conda list | grep ultralytics
 $ pip list | grep ultralytics # 或者
-# 如果存在，则卸载
+# 如果存在,则卸载
 $ conda uninstall ultralytics 
 $ pip uninstall ultralytics   # 或者
 ```
- - 修改Detect的输出头，直接将三个特征层的Bounding Box信息和Classify信息分开输出，一共6个输出头。
-文件目录：./ultralytics/ultralytics/nn/modules/head.py，约第51行，vDetect类的forward方法替换成以下内容.
-注：建议您保留好原本的`forward`方法，例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
+ - 修改Detect的输出头,直接将三个特征层的Bounding Box信息和Classify信息分开输出,一共6个输出头。
+文件目录：`./ultralytics/ultralytics/nn/modules/head.py`,约第51行,`Detect`类的`forward`方法替换成以下内容.
+注：建议您保留好原本的`forward`方法,例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
 ```python
 def forward(self, x):
     bboxes = [self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
@@ -127,14 +146,14 @@ def forward(self, x):
     return (bboxes, clses)
 ```
 
- - 运行以下Python脚本，如果有**No module named onnxsim**报错，安装一个即可
+ - 运行以下Python脚本,如果有**No module named onnxsim**报错,安装一个即可
 ```python
 from ultralytics import YOLO
 YOLO('yolov8n.pt').export(imgsz=640, format='onnx', simplify=True, opset=11)
 ```
 
 ### PTQ方案量化转化
- - 参考天工开物工具链手册和OE包，对模型进行检查，所有算子均在BPU上，进行编译即可。对应的yaml文件在`./ptq_yamls`目录下。
+ - 参考天工开物工具链手册和OE包, 对模型进行检查, 所有算子均在BPU上, 进行编译即可. 对应的yaml文件在`./ptq_yamls`目录下. 
 ```bash
 (bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolov8n.onnx
 (bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov8_detect_nchw.yaml
@@ -142,7 +161,7 @@ YOLO('yolov8n.pt').export(imgsz=640, format='onnx', simplify=True, opset=11)
 
 ### 移除bbox信息3个输出头的反量化节点
  - 查看bbox信息的3个输出头的反量化节点名称
-通过hb_mapper makerbin时的日志，看到大小为[1, 64, 80, 80], [1, 64, 40, 40], [1, 64, 20, 20]的三个输出的名称为output0, 326, 334。
+通过hb_mapper makerbin时的日志,看到大小为[1, 64, 80, 80], [1, 64, 40, 40], [1, 64, 20, 20]的三个输出的名称为output0, 326, 334。
 ```bash
 ONNX IR version:          9
 Opset version:            ['ai.onnx v11', 'horizon v1']
@@ -162,17 +181,18 @@ Graph output:
 
  - 进入编译产物的目录
 ```bash
-$ cd yolov8n_bayese_640x640_nchw
+$ cd yolov8n_bayese_640x640_nv12
 ```
  - 查看可以被移除的反量化节点
 ```bash
-$ hb_model_modifier yolov8n_bayese_640x640_nchw.bin
+$ hb_model_modifier yolov8n_bayese_640x640_nv12.bin
 ```
- - 在生成的hb_model_modifier.log文件中，找到以下信息。主要是找到大小为[1, 64, 80, 80], [1, 64, 40, 40], [1, 64, 20, 20]的三个输出头的名称。当然，也可以通过netron等工具查看onnx模型，获得输出头的名称。
+ - 在生成的hb_model_modifier.log文件中,找到以下信息。主要是找到大小为[1, 64, 80, 80], [1, 64, 40, 40], [1, 64, 20, 20]的三个输出头的名称。当然,也可以通过netron等工具查看onnx模型,获得输出头的名称。
  此处的名称为:
  > "/model.22/cv2.0/cv2.0.2/Conv_output_0_quantized"
  > "/model.22/cv2.1/cv2.1.2/Conv_output_0_quantized"
  > "/model.22/cv2.2/cv2.2.2/Conv_output_0_quantized"
+
 ```bash
 2024-08-14 15:50:25,193 file: hb_model_modifier.py func: hb_model_modifier line No: 409 input: "/model.22/cv2.0/cv2.0.2/Conv_output_0_quantized"
 input: "/model.22/cv2.0/cv2.0.2/Conv_x_scale"
@@ -191,7 +211,7 @@ output: "334"
 name: "/model.22/cv2.2/cv2.2.2/Conv_output_0_HzDequantize"
 op_type: "Dequantize"
 ```
- - 使用以下命令移除上述三个反量化节点，注意，导出时这些名称可能不同，请仔细确认。
+ - 使用以下命令移除上述三个反量化节点,注意,导出时这些名称可能不同,请仔细确认。
 ```bash
 $ hb_model_modifier yolov8n_bayese_640x640_nchw.bin \
 -r /model.22/cv2.0/cv2.0.2/Conv_output_0_HzDequantize \
@@ -216,7 +236,7 @@ $ hb_model_modifier yolov8n_bayese_640x640_nchw.bin \
 
  - 接下来得到的bin模型名称为yolov8n_bayese_640x640_nchw_modified.bin, 这个是最终的模型。
  - NCHW输入的模型可以使用OpenCV和numpy来准备输入数据。
- - nv12输入的模型可以使用codec, jpu, vpu, gpu等硬件设备来准备输入数据，或者直接给TROS对应的功能包使用。
+ - nv12输入的模型可以使用codec, jpu, vpu, gpu等硬件设备来准备输入数据,或者直接给TROS对应的功能包使用。
 
 ### 使用hb_perf命令对bin模型进行可视化, hrt_model_exec命令检查bin模型的输入输出情况
  - 移除反量化系数前的bin模型
@@ -314,7 +334,7 @@ stride: (128000,6400,320,4,)
 
  - 移除目标反量化系数后的bin模型
 ```bash
-hb_perf yolov8n_detect_bayese_640x640_nv12_modified
+hb_perf yolov8n_detect_bayese_640x640_nv12_modified.bin
 ```
 在`hb_perf_result`目录下可以找到以下结果。
 ![](./imgs/yolov8n_detect_bayese_640x640_nv12_modified.png)
@@ -700,14 +720,14 @@ UNIT_CONV_FOR_/model.8/m.0/Add                      BPU  id(0)     Conv         
 
 ## 模型训练
 
- - 模型训练请参考ultralytics官方文档，这个文档由ultralytics维护，质量非常的高。网络上也有非常多的参考材料，得到一个像官方一样的预训练权重的模型并不困难。
- - 请注意，训练时无需修改任何程序，无需修改forward方法。
+ - 模型训练请参考ultralytics官方文档,这个文档由ultralytics维护,质量非常的高。网络上也有非常多的参考材料,得到一个像官方一样的预训练权重的模型并不困难。
+ - 请注意,训练时无需修改任何程序,无需修改forward方法。
 
 ## 性能数据
 
 RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度(mAP:50-95) | 量化精度(mAP:50-95) | 延迟/吞吐量(单线程) | 延迟/吞吐量(多线程) | 后处理时间(Python) |
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度(mAP:50-95) | 量化精度(mAP:50-95) | 平均BPU延迟/吞吐量(单线程) | 平均BPU延迟/吞吐量(多线程) | 后处理时间(Python) |
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|-------------|
 | YOLOv8n | 640×640 | 80 | 3.2 | 37.3 |  | 5.6ms/178.0FPS(1 thread) | 7.5ms/263.6FPS(2 threads) | 5 ms |
 | YOLOv8s | 640×640 | 80 | 11.2 | 44.9 |  | 12.4ms/80.2FPS(1 thread) | 21ms/94.9FPS(2 threads) | 5 ms |
@@ -726,10 +746,10 @@ TODO: 目标检测 Detection (Open Image V7)
 
 说明: 
 1. X5的状态为最佳状态：CPU为8 × A55@1.8G, 全核心Performance调度, BPU为1 × Bayes-e@1G, 共10TOPS等效int8算力。
-2. 单线程延迟为单帧，单线程，单BPU核心的延迟，BPU推理一个任务最理想的情况。
-3. 多线程帧率为多个线程同时向BPU塞任务, 每个BPU核心可以处理多个线程的任务, 一般工程中4个线程可以控制单帧延迟较小，同时吃满所有BPU到100%，在吞吐量(FPS)和帧延迟间得到一个较好的平衡。X5的BPU整体比较厉害, 一般2个线程就可以将BPU吃满, 帧延迟和吞吐量都非常出色。
-4. 8线程极限帧率为8个线程同时向BPU塞任务，目的是为了测试BPU的极限性能，一般来说4线程已经占满，如果8线程比4线程还要好很多，说明模型结构需要提高"计算/访存"比，或者编译时选择优化DDR带宽。
-5. 浮点/定点mAP：50-95精度使用pycocotools计算，来自于COCO数据集，可以参考微软的论文，此处用于评估板端部署的精度下降程度。
+2. 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况。
+3. 多线程帧率为多个线程同时向BPU塞任务, 每个BPU核心可以处理多个线程的任务, 一般工程中4个线程可以控制单帧延迟较小,同时吃满所有BPU到100%,在吞吐量(FPS)和帧延迟间得到一个较好的平衡。X5的BPU整体比较厉害, 一般2个线程就可以将BPU吃满, 帧延迟和吞吐量都非常出色。
+4. 8线程极限帧率为8个线程同时向BPU塞任务,目的是为了测试BPU的极限性能,一般来说4线程已经占满,如果8线程比4线程还要好很多,说明模型结构需要提高"计算/访存"比,或者编译时选择优化DDR带宽。
+5. 浮点/定点mAP：50-95精度使用pycocotools计算,来自于COCO数据集,可以参考微软的论文,此处用于评估板端部署的精度下降程度。
 6. bin模型吞吐量使用以下命令在板端测试
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin

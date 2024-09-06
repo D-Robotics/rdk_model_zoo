@@ -3,6 +3,7 @@ English | [简体中文](./README_cn.md)
 # YOLOv8 Instance Segmentation
 - [YOLOv8 Instance Segmentation](#yolov8-instance-segmentation)
   - [Introduction to YOLO](#introduction-to-yolo)
+  - [Performance Data (Summary)](#performance-data-summary)
   - [Model download](#model-download)
   - [Input / Output Data](#input--output-data)
   - [Original Processing Flow](#original-processing-flow)
@@ -12,6 +13,7 @@ English | [简体中文](./README_cn.md)
     - [Export to ONNX](#export-to-onnx)
     - [PTQ Quantization Transformation](#ptq-quantization-transformation)
     - [Remove Dequantize Nodes for Bounding Box and Mask Coefficients Output Heads](#remove-dequantize-nodes-for-bounding-box-and-mask-coefficients-output-heads)
+    - [Use the hb\_perf command to visualize the bin model and the hrt\_model\_exec command to check the input/output situation of the bin model](#use-the-hb_perf-command-to-visualize-the-bin-model-and-the-hrt_model_exec-command-to-check-the-inputoutput-situation-of-the-bin-model)
     - [Partial Compilation Log Reference](#partial-compilation-log-reference)
   - [Model Training](#model-training)
   - [Performance Data](#performance-data)
@@ -19,7 +21,11 @@ English | [简体中文](./README_cn.md)
   - [Reference](#reference)
 
 
+
 ## Introduction to YOLO
+
+![](imgs/demo_rdkx5_yolov8n_seg.jpg)
+
 YOLO (You Only Look Once), a popular object detection and image segmentation model, was developed by Joseph Redmon and Ali Farhadi at the University of Washington. Launched in 2015, YOLO quickly gained popularity for its high speed and accuracy.
 
  - YOLOv2, released in 2016, improved the original model by incorporating batch normalization, anchor boxes, and dimension clusters.
@@ -32,20 +38,33 @@ YOLO (You Only Look Once), a popular object detection and image segmentation mod
  - YOLOv9 introduces innovative methods like Programmable Gradient Information (PGI) and the Generalized Efficient Layer Aggregation Network (GELAN).
  - YOLOv10 is created by researchers from Tsinghua University using the Ultralytics Python package. This version provides real-time object detection advancements by introducing an End-to-End head that eliminates Non-Maximum Suppression (NMS) requirements.
 
+## Performance Data (Summary)
+RDK X5 & RDK X5 Module
+Instance Segmentation (COCO)
+| Model (Official) | Size (px) | Classes | Params (M) | Throughput (FPS) | Post-processing Time (Python) |
+|---------|---------|-------|-------------------|--------------------|---|
+| YOLOv8n-seg | 640×640 | 80 | 3.4  | 175.3 | 6 ms |
+| YOLOv8s-seg | 640×640 | 80 | 11.8 | 67.7 | 6 ms |
+| YOLOv8m-seg | 640×640 | 80 | 27.3 | 27.0 | 6 ms |
+| YOLOv8l-seg | 640×640 | 80 | 46.0 | 14.4 | 6 ms |
+| YOLOv8x-seg | 640×640 | 80 | 71.8 | 8.9 | 6 ms |
+
+Note: Detailed performance data is at the end of the document.
+
 ## Model download
 Reference to `./model/download.md`
 
 ## Input / Output Data
 - Input: 1x3x640x640, dtype=UINT8
-- Output 0: [1, 80, 80, 64], dtype=INT32
-- Output 1: [1, 40, 40, 64], dtype=INT32
-- Output 2: [1, 20, 20, 64], dtype=INT32
-- Output 3: [1, 80, 80, 80], dtype=FLOAT32
-- Output 4: [1, 40, 40, 80], dtype=FLOAT32
-- Output 5: [1, 20, 20, 80], dtype=FLOAT32
-- Output 6: [1, 80, 80, 32], dtype=INT32
-- Output 7: [1, 40, 40, 32], dtype=INT32
-- Output 8: [1, 20, 20, 32], dtype=INT32
+- Output 0: [1, 80, 80, 32], dtype=INT32
+- Output 1: [1, 40, 40, 32], dtype=INT32
+- Output 2: [1, 20, 20, 32], dtype=INT32
+- Output 3: [1, 80, 80, 64], dtype=INT32
+- Output 4: [1, 40, 40, 64], dtype=INT32
+- Output 5: [1, 20, 20, 64], dtype=INT32
+- Output 6: [1, 80, 80, 80], dtype=FLOAT32
+- Output 7: [1, 40, 40, 80], dtype=FLOAT32
+- Output 8: [1, 20, 20, 80], dtype=FLOAT32
 - Output 9: [1, 160, 160, 32], dtype=FLOAT32
 
 ## Original Processing Flow
@@ -120,7 +139,7 @@ YOLO('yolov8n-seg.pt').export(imgsz=640, format='onnx', simplify=True, opset=11)
 - Refer to the Tian Gong Kai Wu toolchain manual and OE package to check the model. All operators are on the BPU, so it can be compiled directly. The corresponding YAML file is located in the `./ptq_yamls` directory.
 ```bash
 (bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolov8n-seg.onnx
-(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov8_instance_seg_bayese_640x640_nchw.yaml
+(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov8_instance_seg_bayese_640x640_nv12.yaml
 ```
 
 ### Remove Dequantize Nodes for Bounding Box and Mask Coefficients Output Heads
@@ -151,11 +170,11 @@ Graph output:
 
 - Enter the compiled product directory.
 ```bash
-$ cd yolov8n_instance_seg_bayese_640x640_nchw
+$ cd yolov8n_instance_seg_bayese_640x640_nv12
 ```
 - Identify the dequantize nodes that can be removed.
 ```bash
-$ hb_model_modifier yolov8n_instance_seg_bayese_640x640_nchw.bin
+$ hb_model_modifier yolov8n_instance_seg_bayese_640x640_nv12.bin
 ```
 - In the generated `hb_model_modifier.log` file, find the following information. Primarily locate the names of the three output heads with sizes `[1, 64, 80, 80]`, `[1, 64, 40, 40]`, and `[1, 64, 20, 20]` and the three output heads with sizes `[1, 80, 80, 32]`, `[1, 40, 40, 32]`, and `[1, 20, 20, 32]`. You can also use tools like Netron to inspect the ONNX model and obtain the output head names.
 The names are:
@@ -205,7 +224,7 @@ op_type: "Dequantize"
 ```
 - Use the following command to remove the aforementioned six dequantize nodes. Note that the names may differ during export, so please confirm them carefully.
 ```bash
-$ hb_model_modifier yolov8n_instance_seg_bayese_640x640_nchw.bin \
+$ hb_model_modifier yolov8n_instance_seg_bayese_640x640_nv12.bin \
 -r "/model.22/cv4.0/cv4.0.2/Conv_output_0_HzDequantize" \
 -r "/model.22/cv4.1/cv4.1.2/Conv_output_0_HzDequantize" \
 -r "/model.22/cv4.2/cv4.2.2/Conv_output_0_HzDequantize" \
@@ -215,7 +234,7 @@ $ hb_model_modifier yolov8n_instance_seg_bayese_640x640_nchw.bin \
 ```
 - Successful removal will display the following log:
 ```bash
-2024-08-16 14:45:18,923 INFO log will be stored in /open_explorer/yolov8n_instance_seg_bayese_640x640_nchw/hb_model_modifier.log
+2024-08-16 14:45:18,923 INFO log will be stored in /open_explorer/yolov8n_instance_seg_bayese_640x640_nv12/hb_model_modifier.log
 2024-08-16 14:45:18,929 INFO Nodes that will be removed from this model: ['/model.22/cv4.0/cv4.0.2/Conv_output_0_HzDequantize', '/model.22/cv4.1/cv4.1.2/Conv_output_0_HzDequantize', '/model.22/cv4.2/cv4.2.2/Conv_output_0_HzDequantize', '/model.22/cv2.0/cv2.0.2/Conv_output_0_HzDequantize', '/model.22/cv2.1/cv2.1.2/Conv_output_0_HzDequantize', '/model.22/cv2.2/cv2.2.2/Conv_output_0_HzDequantize']
 2024-08-16 14:45:18,929 INFO Node '/model.22/cv4.0/cv4.0.2/Conv_output_0_HzDequantize' found, its OP type is 'Dequantize'
 2024-08-16 14:45:18,929 INFO scale: /model.22/cv4.0/cv4.0.2/Conv_x_scale; zero point: 0. node info details are stored in hb_model_modifier log file
@@ -235,12 +254,294 @@ $ hb_model_modifier yolov8n_instance_seg_bayese_640x640_nchw.bin \
 2024-08-16 14:45:18,932 INFO Node '/model.22/cv2.2/cv2.2.2/Conv_output_0_HzDequantize' found, its OP type is 'Dequantize'
 2024-08-16 14:45:18,932 INFO scale: /model.22/cv2.2/cv2.2.2/Conv_x_scale; zero point: 0. node info details are stored in hb_model_modifier log file
 2024-08-16 14:45:18,933 INFO Node '/model.22/cv2.2/cv2.2.2/Conv_output_0_HzDequantize' is removed
-2024-08-16 14:45:18,936 INFO modified model saved as yolov8n_instance_seg_bayese_640x640_nchw_modified.bin
+2024-08-16 14:45:18,936 INFO modified model saved as yolov8n_instance_seg_bayese_640x640_nv12_modified.bin
 ```
 
-- The resulting bin model name is `yolov8n_instance_seg_bayese_640x640_nchw_modified.bin`, which is the final model.
+- The resulting bin model name is `yolov8n_instance_seg_bayese_640x640_nv12_modified.bin`, which is the final model.
 - An NCHW input model can prepare input data using OpenCV and numpy.
 - An NV12 input model can prepare input data using hardware devices such as codec, JPU, VPU, GPU, or directly use the corresponding functionality provided by TROS.
+
+
+### Use the hb_perf command to visualize the bin model and the hrt_model_exec command to check the input/output situation of the bin model
+ - Bin model before removing the dequantization coefficients
+```bash
+hb_perf yolov8n_instance_seg_bayese_640x640_nv12.bin
+```
+The following results can be found in the `hb_perf_result` directory:
+![](./imgs/yolov8n_instance_seg_bayese_640x640_nv12.png)
+
+```bash
+hrt_model_exec model_info --model_file yolov8n_instance_seg_bayese_640x640_nv12.bin
+```
+The input/output information of this bin model before removing the dequantization coefficients can be seen.
+
+```bash
+[HBRT] set log level as 0. version = 3.15.54.0
+[DNN] Runtime version = 1.23.10_(3.15.54 HBRT)
+[A][DNN][packed_model.cpp:247][Model](2024-09-05,20:19:38.923.719) [HorizonRT] The model builder version = 1.23.8
+Load model to DDR cost 82.155ms.
+This model file has 1 model:
+[yolov8n_instance_seg_bayese_640x640_nv12]
+---------------------------------------------------------------------
+[model name]: yolov8n_instance_seg_bayese_640x640_nv12
+
+input[0]: 
+name: images
+input source: HB_DNN_INPUT_FROM_PYRAMID
+valid shape: (1,3,640,640,)
+aligned shape: (1,3,640,640,)
+aligned byte size: 614400
+tensor type: HB_DNN_IMG_TYPE_NV12
+tensor layout: HB_DNN_LAYOUT_NCHW
+quanti type: NONE
+stride: (0,0,0,0,)
+
+output[0]: 
+name: output0
+valid shape: (1,80,80,32,)
+aligned shape: (1,80,80,32,)
+aligned byte size: 819200
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (819200,10240,128,4,)
+
+output[1]: 
+name: output1
+valid shape: (1,40,40,32,)
+aligned shape: (1,40,40,32,)
+aligned byte size: 204800
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (204800,5120,128,4,)
+
+output[2]: 
+name: 371
+valid shape: (1,20,20,32,)
+aligned shape: (1,20,20,32,)
+aligned byte size: 51200
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (51200,2560,128,4,)
+
+output[3]: 
+name: 379
+valid shape: (1,80,80,64,)
+aligned shape: (1,80,80,64,)
+aligned byte size: 1638400
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (1638400,20480,256,4,)
+
+output[4]: 
+name: 387
+valid shape: (1,40,40,64,)
+aligned shape: (1,40,40,64,)
+aligned byte size: 409600
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (409600,10240,256,4,)
+
+output[5]: 
+name: 395
+valid shape: (1,20,20,64,)
+aligned shape: (1,20,20,64,)
+aligned byte size: 102400
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (102400,5120,256,4,)
+
+output[6]: 
+name: 403
+valid shape: (1,80,80,80,)
+aligned shape: (1,80,80,80,)
+aligned byte size: 2048000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (2048000,25600,320,4,)
+
+output[7]: 
+name: 411
+valid shape: (1,40,40,80,)
+aligned shape: (1,40,40,80,)
+aligned byte size: 512000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (512000,12800,320,4,)
+
+output[8]: 
+name: 419
+valid shape: (1,20,20,80,)
+aligned shape: (1,20,20,80,)
+aligned byte size: 128000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (128000,6400,320,4,)
+
+output[9]: 
+name: 347
+valid shape: (1,160,160,32,)
+aligned shape: (1,160,160,32,)
+aligned byte size: 3276800
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NCHW
+quanti type: NONE
+stride: (3276800,20480,128,4,)
+```
+
+- Bin model after removing the target dequantization coefficients
+```bash
+hb_perf yolov8n_instance_seg_bayese_640x640_nv12_modified.bin
+```
+The following results can be found in the `hb_perf_result` directory.
+![](./imgs/yolov8n_instance_seg_bayese_640x640_nv12_modified.png)
+
+```bash
+hrt_model_exec model_info --model_file yolov8n_instance_seg_bayese_640x640_nv12_modified.bin
+```
+You can see the input/output information of the bin model before removing the dequantization coefficients, as well as all dequantization coefficients after removing the dequantization nodes. This also indicates that these pieces of information are stored within the bin model, which can be obtained using the inference library's API, making it convenient for us to perform corresponding pre-processing and post-processing.
+```bash
+[HBRT] set log level as 0. version = 3.15.54.0
+[DNN] Runtime version = 1.23.10_(3.15.54 HBRT)
+[A][DNN][packed_model.cpp:247][Model](2024-09-05,20:23:34.609.289) [HorizonRT] The model builder version = 1.23.8
+Load model to DDR cost 58.145ms.
+This model file has 1 model:
+[yolov8n_instance_seg_bayese_640x640_nv12]
+---------------------------------------------------------------------
+[model name]: yolov8n_instance_seg_bayese_640x640_nv12
+
+input[0]: 
+name: images
+input source: HB_DNN_INPUT_FROM_PYRAMID
+valid shape: (1,3,640,640,)
+aligned shape: (1,3,640,640,)
+aligned byte size: 614400
+tensor type: HB_DNN_IMG_TYPE_NV12
+tensor layout: HB_DNN_LAYOUT_NCHW
+quanti type: NONE
+stride: (0,0,0,0,)
+
+output[0]: 
+name: output0
+valid shape: (1,80,80,32,)
+aligned shape: (1,80,80,32,)
+aligned byte size: 819200
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (819200,10240,128,4,)
+scale data: 7.71352e-05,6.07225e-05,2.95032e-05,5.58383e-05,7.43631e-05,9.22278e-05,4.893e-05,0.000101732,0.000100324,6.93909e-05,5.39902e-05,7.04029e-05,7.95993e-05,7.46271e-05,0.000114229,9.27558e-05,5.67183e-05,7.71792e-05,0.000101908,1.84368e-05,8.22834e-05,3.88756e-05,8.82676e-05,0.000147318,7.66951e-05,6.02825e-05,0.000102612,5.50903e-05,5.64103e-05,2.4047e-05,9.21398e-05,9.01157e-05,
+quantizeAxis: 3
+
+output[1]: 
+name: output1
+valid shape: (1,40,40,32,)
+aligned shape: (1,40,40,32,)
+aligned byte size: 204800
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (204800,5120,128,4,)
+scale data: 6.88908e-05,4.62553e-05,6.49062e-05,4.89437e-05,4.97838e-05,8.45413e-05,7.92605e-05,5.61688e-05,9.07823e-05,6.22178e-05,8.31011e-05,5.7561e-05,0.000138742,5.78971e-05,0.000128468,9.38067e-05,5.83772e-05,5.42965e-05,0.000133461,3.46614e-05,0.000118003,9.47669e-05,5.39605e-05,0.000163898,0.000109169,3.71098e-05,0.00016457,7.02831e-05,5.1032e-05,6.23618e-05,6.9947e-05,0.000107249,
+quantizeAxis: 3
+
+output[2]: 
+name: 371
+valid shape: (1,20,20,32,)
+aligned shape: (1,20,20,32,)
+aligned byte size: 51200
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (51200,2560,128,4,)
+scale data: 3.81096e-05,4.75399e-05,6.76698e-05,6.72553e-05,7.14005e-05,8.66858e-05,0.000110365,1.86144e-05,4.79544e-05,5.81359e-05,8.86547e-05,5.12705e-05,0.000140936,4.57264e-05,0.000156169,5.24882e-05,5.4768e-05,4.50269e-05,0.000116997,6.70481e-05,8.64785e-05,0.000140936,2.61016e-05,0.000128086,0.000155133,4.40942e-05,0.000138967,9.08309e-05,7.05196e-05,7.67892e-05,3.45344e-05,7.88618e-05,
+quantizeAxis: 3
+
+output[3]: 
+name: 379
+valid shape: (1,80,80,64,)
+aligned shape: (1,80,80,64,)
+aligned byte size: 1638400
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (1638400,20480,256,4,)
+scale data: 0.000473418,0.000497131,0.000458026,0.000399369,0.000295574,0.000334263,0.000279558,0.000260422,0.00025335,0.000227973,0.000188036,0.0001637,0.000144563,0.000133539,0.000120123,0.000123763,0.000430985,0.000422457,0.000392089,0.000358392,0.000321367,0.00026167,0.000277478,0.000199996,0.000280806,0.000231925,0.000178572,0.000164324,0.000168588,0.000156003,0.000137595,0.00018866,0.000447626,0.000442218,0.000393337,0.000382728,0.000425161,0.000289542,0.000249605,0.000304103,0.000214245,0.000208941,0.000194588,0.000160059,0.000154547,0.000133955,0.000121891,0.000179508,0.00044721,0.000421417,0.000392921,0.0003586,0.00026583,0.000296406,0.000276438,0.000341335,0.000236085,0.000259174,0.000257718,0.000223397,0.000194484,0.000163492,0.000132603,0.000145603,
+quantizeAxis: 3
+
+output[4]: 
+name: 387
+valid shape: (1,40,40,64,)
+aligned shape: (1,40,40,64,)
+aligned byte size: 409600
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (409600,10240,256,4,)
+scale data: 0.000640138,0.000619084,0.000571003,0.000522637,0.00050898,0.000574701,0.000470288,0.000470003,0.000407981,0.000409119,0.000311249,0.000236709,0.000288346,0.000316655,0.00032519,0.000382944,0.000633309,0.000623067,0.000539138,0.000514671,0.000478538,0.000539992,0.000497316,0.000380384,0.000357054,0.000289484,0.000249511,0.000201857,0.000208543,0.000216082,0.000205129,0.00028792,0.000685658,0.000679399,0.000656639,0.000577546,0.000498169,0.000523206,0.000493617,0.000404851,0.000313525,0.000352502,0.000312103,0.000266582,0.000223621,0.000252925,0.000253779,0.000384652,0.000612825,0.000645828,0.000592341,0.000487358,0.000486789,0.000487358,0.000495324,0.000341122,0.000327466,0.000353925,0.000197589,0.000251787,0.000279811,0.00029048,0.000287066,0.000324905,
+quantizeAxis: 3
+
+output[5]: 
+name: 395
+valid shape: (1,20,20,64,)
+aligned shape: (1,20,20,64,)
+aligned byte size: 102400
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (102400,5120,256,4,)
+scale data: 0.000630608,0.000700143,0.000625813,0.000592844,0.000644395,0.000569166,0.000403721,0.000453774,0.000509522,0.000326394,0.000410315,0.000401323,0.00027754,0.000400125,0.000442984,0.000449578,0.000644395,0.00069235,0.000694748,0.00071393,0.000647992,0.000590746,0.00064979,0.000683958,0.000462466,0.000551482,0.000308411,0.000444183,0.000340181,0.000254461,0.000144989,6.73618e-05,0.000698944,0.0007463,0.000633006,0.00052181,0.000580555,0.000587449,0.00045797,0.000441486,0.000619818,0.000470259,0.00046936,0.000441785,0.000390234,0.000451077,0.000480149,0.000462766,0.000678563,0.000653986,0.000598239,0.000613225,0.000450477,0.000529004,0.00058595,0.000441186,0.000392332,0.000595541,0.000443883,0.000408816,0.000347074,0.000332688,0.000313806,0.000277989,
+quantizeAxis: 3
+
+output[6]: 
+name: 403
+valid shape: (1,80,80,80,)
+aligned shape: (1,80,80,80,)
+aligned byte size: 2048000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (2048000,25600,320,4,)
+
+output[7]: 
+name: 411
+valid shape: (1,40,40,80,)
+aligned shape: (1,40,40,80,)
+aligned byte size: 512000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (512000,12800,320,4,)
+
+output[8]: 
+name: 419
+valid shape: (1,20,20,80,)
+aligned shape: (1,20,20,80,)
+aligned byte size: 128000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (128000,6400,320,4,)
+
+output[9]: 
+name: 347
+valid shape: (1,160,160,32,)
+aligned shape: (1,160,160,32,)
+aligned byte size: 3276800
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NCHW
+quanti type: NONE
+stride: (3276800,20480,128,4,)
+```
+
 
 
 ### Partial Compilation Log Reference
@@ -271,10 +572,10 @@ Graph output:
     419:                  shape=[1, 20, 20, 80], dtype=FLOAT32
     347:                  shape=[1, 160, 160, 32], dtype=FLOAT32
 2024-08-16 14:14:00,230 file: build.py func: build line No: 39 End to prepare the onnx model.
-2024-08-16 14:14:00,471 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nchw_original_float_model.onnx.
+2024-08-16 14:14:00,471 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nv12_original_float_model.onnx.
 2024-08-16 14:14:00,472 file: build.py func: build line No: 36 Start to optimize the model.
 2024-08-16 14:14:00,742 file: build.py func: build line No: 39 End to optimize the model.
-2024-08-16 14:14:00,755 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nchw_optimized_float_model.onnx.
+2024-08-16 14:14:00,755 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nv12_optimized_float_model.onnx.
 2024-08-16 14:14:00,755 file: build.py func: build line No: 36 Start to calibrate the model.
 2024-08-16 14:14:01,026 file: calibration_data_set.py func: calibration_data_set line No: 82 input name: images,  number_of_samples: 50
 2024-08-16 14:14:01,026 file: calibration_data_set.py func: calibration_data_set line No: 93 There are 50 samples in the calibration data set.
@@ -284,10 +585,10 @@ Graph output:
 2024-08-16 14:15:18,218 file: calibrater.py func: calibrater line No: 235 Calibration using batch 8
 2024-08-16 14:15:54,739 file: default_calibrater.py func: default_calibrater line No: 211 Select kl:num_bins=1024 method.
 2024-08-16 14:15:58,749 file: build.py func: build line No: 39 End to calibrate the model.
-2024-08-16 14:15:58,775 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nchw_calibrated_model.onnx.
+2024-08-16 14:15:58,775 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nv12_calibrated_model.onnx.
 2024-08-16 14:15:58,775 file: build.py func: build line No: 36 Start to quantize the model.
 2024-08-16 14:15:59,721 file: build.py func: build line No: 39 End to quantize the model.
-2024-08-16 14:15:59,825 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nchw_quantized_model.onnx.
+2024-08-16 14:15:59,825 file: build.py func: build line No: 186 Saving model: yolov8n_instance_seg_bayese_640x640_nv12_quantized_model.onnx.
 2024-08-16 14:16:00,120 file: build.py func: build line No: 36 Start to compile the model with march bayes-e.
 2024-08-16 14:16:00,278 file: hybrid_build.py func: hybrid_build line No: 133 Compile submodel: main_graph_subgraph_0
 2024-08-16 14:16:00,477 file: hbdk_cc.py func: hbdk_cc line No: 115 hbdk-cc parameters:['--O3', '--core-num', '1', '--fast', '--input-layout', 'NHWC', '--output-layout', 'NHWC', '--input-source', 'ddr']
@@ -506,13 +807,13 @@ UNIT_CONV_FOR_/model.8/m.0/Add                      BPU  id(0)     Conv         
 
 RDK X5 & RDK X5 Module  
 Instance Segmentation (COCO)  
-| Model | Size (px) | Num Classes | Params (M) | FP Precision (box/mask) | INT8 Precision (box/mask) | Latency/Throughput (Single-threaded) | Latency/Throughput (Multi-threaded) |
+| Model | Size (px) | Num Classes | Params (M) | FP Precision (box/mask) | INT8 Precision (box/mask) | Latency/Throughput (Single-threaded) | Latency/Throughput (Multi-threaded) | Post-processing Time (Python) |
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOv8n-seg | 640×640 | 80 | 3.4  | 36.7/30.5 |  |  |  |
-| YOLOv8s-seg | 640×640 | 80 | 11.8 | 44.6/36.8 |  |  |  |
-| YOLOv8m-seg | 640×640 | 80 | 27.3 | 49.9/40.8 |  |  |  |
-| YOLOv8l-seg | 640×640 | 80 | 46.0 | 52.3/42.6 |  |  |  |
-| YOLOv8x-seg | 640×640 | 80 | 71.8 | 53.4/43.4 |  |  |
+| YOLOv8n-seg | 640×640 | 80 | 3.4  | 36.7/30.5 |  | 9 ms / 109.7 FPS (1 thread) | 11.4 ms / 175.3 FPS (2 threads) | 6 ms |
+| YOLOv8s-seg | 640×640 | 80 | 11.8 | 44.6/36.8 |  | 18.1 ms / 55.1 FPS (1 thread) | 29.4 ms / 67.7 FPS (2 threads) | 6 ms |
+| YOLOv8m-seg | 640×640 | 80 | 27.3 | 49.9/40.8 |  | 40.4 ms / 24.7 FPS (1 thread) | 73.8 ms / 27.0 FPS (2 threads) | 6 ms |
+| YOLOv8l-seg | 640×640 | 80 | 46.0 | 52.3/42.6 |  | 72.7 ms / 13.7 FPS (1 thread) | 138.2 ms / 14.4 FPS (2 threads) | 6 ms |
+| YOLOv8x-seg | 640×640 | 80 | 71.8 | 53.4/43.4 |  | 115.7 ms / 8.6 FPS (1 thread) | 223.8 ms / 8.9 FPS (2 threads) | 6 ms |
 
 Notes:  
 1. The X5 is in its optimal state: CPU is 8 × A55 @ 1.8G with full-core Performance scheduling, BPU is 1 × Bayes-e @ 1G with a total equivalent int8 computing power of 10 TOPS.
