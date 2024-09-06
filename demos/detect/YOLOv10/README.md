@@ -3,6 +3,7 @@ English | [简体中文](./README_cn.md)
 # YOLOv10 Detect
 - [YOLOv10 Detect](#yolov10-detect)
   - [Introduction to YOLO](#introduction-to-yolo)
+  - [Performance Data (Summary)](#performance-data-summary)
   - [Model download](#model-download)
   - [Input / Output Data](#input--output-data)
   - [Original Processing Flow](#original-processing-flow)
@@ -18,7 +19,11 @@ English | [简体中文](./README_cn.md)
   - [FAQ](#faq)
   - [Reference](#reference)
 
+
 ## Introduction to YOLO
+
+![](imgs/demo_rdkx5_yolov10n_detect.jpg)
+
 YOLO (You Only Look Once), a popular object detection and image segmentation model, was developed by Joseph Redmon and Ali Farhadi at the University of Washington. Launched in 2015, YOLO quickly gained popularity for its high speed and accuracy.
 
  - YOLOv2, released in 2016, improved the original model by incorporating batch normalization, anchor boxes, and dimension clusters.
@@ -30,6 +35,19 @@ YOLO (You Only Look Once), a popular object detection and image segmentation mod
  - YOLOv8 is the latest version of YOLO by Ultralytics. As a cutting-edge, state-of-the-art (SOTA) model, YOLOv8 builds on the success of previous versions, introducing new features and improvements for enhanced performance, flexibility, and efficiency. YOLOv8 supports a full range of vision AI tasks, including detection, segmentation, pose estimation, tracking, and classification. This versatility allows users to leverage YOLOv8's capabilities across diverse applications and domains.
  - YOLOv9 introduces innovative methods like Programmable Gradient Information (PGI) and the Generalized Efficient Layer Aggregation Network (GELAN).
  - YOLOv10 is created by researchers from Tsinghua University using the Ultralytics Python package. This version provides real-time object detection advancements by introducing an End-to-End head that eliminates Non-Maximum Suppression (NMS) requirements.
+
+## Performance Data (Summary)
+RDK X5 & RDK X5 Module
+Object Detection (COCO)
+| Model (Official) | Size (px) | Classes | Params (M) | Throughput (FPS) | Post Process Time (Python) |
+|---------|---------|-------|-------------------|--------------------|---|
+| YOLOv10n | 640×640 | 80 | 6.7  | 132.7 | 4.5 ms | 
+| YOLOv10s | 640×640 | 80 | 21.6 | 71.0 | 4.5 ms |  
+| YOLOv10m | 640×640 | 80 | 59.1 | 34.5 | 4.5 ms |  
+| YOLOv10b | 640×640 | 80 | 92.0 | 25.4 | 4.5 ms |  
+| YOLOv10l | 640×640 | 80 | 120.3 | 20.0 | 4.5 ms |  
+| YOLOv10x | 640×640 | 80 | 160.4 | 14.5 | 4.5 ms |  
+
 
 ## Model download
 Reference to `./model/download.md`
@@ -123,7 +141,8 @@ model_parameters:
 
 - Compile the model:
 ```bash
-(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov10_detect_bayese_640x640_nchw.yaml
+(bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolov10n.onnx
+(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov10_detect_bayese_640x640_nv12.yaml
 ```
 
 ### Remove Dequantize Nodes for the Three Bounding Box Output Heads
@@ -207,6 +226,8 @@ $ hb_model_modifier yolov10n_detect_bayese_640x640_nchw.bin \
 - An NV12 input model can prepare input data using hardware devices such as codec, JPU, VPU, GPU, or directly use the corresponding TROS functionality packages.
 
 ### Partial Compilation Log Reference
+
+It can be observed that the SoftMax operator is now supported by the BPU, with cosine similarity maintained above 0.9, and the entire bin model consists of only one BPU subgraph.
 
 ```bash
 2024-08-16 17:34:04,753 file: build.py func: build line No: 36 Start to Horizon NN Model Convert.
@@ -487,7 +508,7 @@ UNIT_CONV_FOR_/model.22/m.0/Add                     BPU  id(0)     Conv         
 /model.23/one2one_cv3.2/one2one_cv3.2.2/Conv        BPU  id(0)     Conv          0.997476           17.939869   int8/int32
 
 ```
-It can be observed that the SoftMax operator is now supported by the BPU, with cosine similarity maintained above 0.9, and the entire bin model consists of only one BPU subgraph.
+
 
 ## Model Training
 
@@ -500,12 +521,12 @@ RDK X5 & RDK X5 Module
 Object Detection (COCO)  
 | Model | Size (px) | Num Classes | FLOPs (G) | FP Precision | INT8 Precision (box/mask) | Latency/Throughput (Single-threaded) | Latency/Throughput (Multi-threaded) | Post Process Time(Python) |
 |---------|---------|------------|---------|-------------|---------------------------|-------------------------------------|-------------------------------------|--|
-| YOLOv10n | 640×640 | 80 |  6.7  | 38.5 |  | 10.4ms/95.2FPS(1 thread) | 15.0ms/133.1FPS(2 threads) | 4.5 ms |
-| YOLOv10s | 640×640 | 80 |  21.6 | 46.3 |  | 20.4ms/49.0FPS(1 thread) | 28.0ms/71.1FPS(2 threads) | 4.5 ms |
-| YOLOv10m | 640×640 | 80 |  59.1 | 51.1 |  |  |  | 4.5 ms |
-| YOLOv10b | 640×640 | 80 |  92.0 | 52.3 |  |  |  | 4.5 ms |
-| YOLOv10l | 640×640 | 80 | 120.3 | 53.2 |  |  |  | 4.5 ms |
-| YOLOv10x | 640×640 | 80 | 160.4 | 54.4 |  |  |  | 4.5 ms |
+| YOLOv10n | 640×640 | 80 | 6.7  | 38.5 |  | 9.3 ms / 107.0 FPS (1 thread) | 15.0 ms / 132.7 FPS (2 threads) | 4.5 ms |
+| YOLOv10s | 640×640 | 80 | 21.6 | 46.3 |  | 15.8 ms / 63.0 FPS (1 thread) | 28.1 ms / 71.0 FPS (2 threads) | 4.5 ms |
+| YOLOv10m | 640×640 | 80 | 59.1 | 51.1 |  | 30.8 ms / 32.4 FPS (1 thread) | 51.8 ms / 34.5 FPS (2 threads) | 4.5 ms |
+| YOLOv10b | 640×640 | 80 | 92.0 | 52.3 |  | 41.1 ms / 24.3 FPS (1 thread) | 78.4 ms / 25.4 FPS (2 threads) | 4.5 ms |
+| YOLOv10l | 640×640 | 80 | 120.3 | 53.2 |  | 52.0 ms / 19.2 FPS (1 thread) | 100.0 ms / 20.0 FPS (2 threads) | 4.5 ms |
+| YOLOv10x | 640×640 | 80 | 160.4 | 54.4 |  | 70.7 ms / 14.1 FPS (1 thread) | 137.3 ms / 14.5 FPS (2 threads) | 4.5 ms |
 
 Notes:  
 1. The X5 is in its optimal state: CPU is 8 × A55 @ 1.8G with full-core Performance scheduling, BPU is 1 × Bayes-e @ 1G with a total equivalent int8 computing power of 10 TOPS.

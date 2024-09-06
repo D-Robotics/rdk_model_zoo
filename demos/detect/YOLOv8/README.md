@@ -3,6 +3,7 @@ English | [简体中文](./README_cn.md)
 # YOLOv8 Detect
 - [YOLOv8 Detect](#yolov8-detect)
   - [Introduction to YOLO](#introduction-to-yolo)
+  - [Performance Data (Summary)](#performance-data-summary)
   - [Model download](#model-download)
   - [Input / Output Data](#input--output-data)
   - [Public Version Processing Flow](#public-version-processing-flow)
@@ -12,6 +13,7 @@ English | [简体中文](./README_cn.md)
     - [Exporting to ONNX](#exporting-to-onnx)
     - [PTQ Quantization Transformation](#ptq-quantization-transformation)
     - [Removing Dequantization Nodes for the Three BBox Output Heads](#removing-dequantization-nodes-for-the-three-bbox-output-heads)
+    - [Use the hb\_perf command to visualize the bin model and the hrt\_model\_exec command to check the input/output situation of the bin model](#use-the-hb_perf-command-to-visualize-the-bin-model-and-the-hrt_model_exec-command-to-check-the-inputoutput-situation-of-the-bin-model)
     - [Partial Compilation Log Reference](#partial-compilation-log-reference)
   - [Model Training](#model-training)
   - [Performance Data](#performance-data)
@@ -20,6 +22,9 @@ English | [简体中文](./README_cn.md)
 
 
 ## Introduction to YOLO
+
+![](imgs/demo_rdkx5_yolov8n_detect.jpg)
+
 YOLO (You Only Look Once), a popular object detection and image segmentation model, was developed by Joseph Redmon and Ali Farhadi at the University of Washington. Launched in 2015, YOLO quickly gained popularity for its high speed and accuracy.
 
  - YOLOv2, released in 2016, improved the original model by incorporating batch normalization, anchor boxes, and dimension clusters.
@@ -32,8 +37,23 @@ YOLO (You Only Look Once), a popular object detection and image segmentation mod
  - YOLOv9 introduces innovative methods like Programmable Gradient Information (PGI) and the Generalized Efficient Layer Aggregation Network (GELAN).
  - YOLOv10 is created by researchers from Tsinghua University using the Ultralytics Python package. This version provides real-time object detection advancements by introducing an End-to-End head that eliminates Non-Maximum Suppression (NMS) requirements.
 
+
+## Performance Data (Summary)
+RDK X5 & RDK X5 Module
+Object Detection (COCO)
+| Model (Official) | Size (px) | Classes | Params (M) | Throughput (FPS) | Post Process Time (Python) |
+|---------|---------|-------|-------------------|--------------------|---|
+| YOLOv8n | 640×640 | 80 | 3.2 | 263.6 | 5 ms |
+| YOLOv8s | 640×640 | 80 | 11.2 | 194.9 | 5 ms |
+| YOLOv8m | 640×640 | 80 | 25.9 | 35.7 | 5 ms |
+| YOLOv8l | 640×640 | 80 | 43.7 | 17.9 | 5 ms |
+| YOLOv8x | 640×640 | 80 | 68.2 | 11.2 | 5 ms |
+
+Note: Detailed performance data is at the end of the document.
+
 ## Model download
 Reference to `./model/download.md`
+
 
 ## Input / Output Data
 - Input: 1x3x640x640, dtype=UINT8
@@ -50,19 +70,19 @@ Reference to `./model/download.md`
 ## Optimized Processing Flow
 ![](imgs/YOLOv8_Detect_Quantize.png)
 
- - **Classification Part: Dequantization Operation**
+ - Classification Part, Dequantization Operation
 In model compilation, if all dequantization operators were removed, manual dequantization of the three output heads of the classification part is required in post-processing. There are several ways to view the dequantization coefficients, including examining the logs produced during `hb_mapper` execution or obtaining them through the API of the BPU inference interface.
 Note that each C dimension has different dequantization coefficients, with 80 dequantization coefficients per head, which can be directly multiplied using numpy broadcasting.
 This dequantization is implemented in the bin model, so the obtained outputs are float32.
 
- - **Classification Part: ReduceMax Operation**
+ - Classification Part, ReduceMax Operation
 The ReduceMax operation finds the maximum value along a specific dimension of the Tensor, used here to find the maximum score among the 80 scores for each of the 8400 Grid Cells. The operation targets the values of the 80 categories for each Grid Cell, operating on the C dimension. Note that this operation yields the maximum value but not the index of the maximum value among the 80 values.
 The activation function Sigmoid is monotonic, meaning the relative order of the 80 scores before and after the Sigmoid function does not change.
 $$Sigmoid(x) = \frac{1}{1 + e^{-x}}$$
 $$Sigmoid(x_1) > Sigmoid(x_2) \Leftrightarrow x_1 > x_2$$
 Therefore, the position of the maximum value (after dequantization) output by the bin model corresponds to the position of the maximum score, and the maximum value output by the bin model, after Sigmoid calculation, is the same as the maximum value from the original onnx model.
 
- - **Classification Part: Threshold (TopK) Operation**
+ - Classification Part: Threshold (TopK) Operation
 This operation identifies the Grid Cells meeting certain criteria among the 8400 Grid Cells. The operation targets the 8400 Grid Cells, operating on the H and W dimensions. If you have read my code, you will notice that I flattened the H and W dimensions for convenience in programming and documentation, but there is no fundamental difference.
 Let's assume the score of a category within a Grid Cell is denoted as $x$, and the integer data after activation function application is $y$. A threshold, denoted as $C$, is given, and the condition for a score to be valid is:
 $$y = Sigmoid(x) = \frac{1}{1 + e^{-x}} > C$$
@@ -70,17 +90,17 @@ Thus, the necessary and sufficient condition for a score to be valid is:
 $$x > -\ln\left(\frac{1}{C} - 1\right)$$
 This operation returns the indices of the qualifying Grid Cells and the corresponding maximum value, which, after Sigmoid calculation, represents the score for the category of that Grid Cell.
 
- - **Classification Part: GatherElements and ArgMax Operations**
+ - Classification Part: GatherElements and ArgMax Operations
 Using the indices of the qualifying Grid Cells obtained from the Threshold (TopK) operation, the GatherElements operation retrieves the qualifying Grid Cells, and the ArgMax operation determines which of the 80 categories has the highest value, thus identifying the category of the qualifying Grid Cell.
 
- - **Bounding Box Part: GatherElements and Dequantization Operations**
+ - Bounding Box Part: GatherElements and Dequantization Operations
 Using the indices of the qualifying Grid Cells obtained from the Threshold (TopK) operation, the GatherElements operation retrieves the qualifying Grid Cells. Here, each C dimension has different dequantization coefficients, with 64 dequantization coefficients per head, which can be directly multiplied using numpy broadcasting, resulting in 1×64×k×1 bounding box information.
 
- - **Bounding Box Part: DFL: Softmax + Conv Operation**
+ - Bounding Box Part: DFL: Softmax + Conv Operation
 Each Grid Cell provides four numbers to determine the location of the bounding box. The DFL structure gives 16 estimates for each side of the bounding box based on the anchor position. The Softmax is applied to these 16 estimates, followed by a convolution operation to compute the expectation. This is a core design of Anchor-Free, where each Grid Cell is responsible for predicting only one bounding box. Assuming the 16 numbers for the prediction of an offset for a particular edge are $l_p$ or $(t_p, t_p, b_p)$, where $p = 0,1,...,15$, the offset formula is:
 $$\hat{l} = \sum_{p=0}^{15}{\frac{p·e^{l_p}}{S}}, S =\sum_{p=0}^{15}{e^{l_p}}$$
 
- - **Bounding Box Part: Decode: dist2bbox(ltrb2xyxy) Operation**
+ - Bounding Box Part: Decode: dist2bbox(ltrb2xyxy) Operation
 This operation decodes the ltrb description of each bounding box into xyxy description. ltrb represent the distances from the center of the Grid Cell to the left, top, right, and bottom edges, respectively. After converting the relative positions to absolute positions and multiplying by the sampling factor of the corresponding feature layer, the xyxy coordinates can be restored, where xyxy denotes the predicted coordinates of the top-left and bottom-right corners of the bounding box.
 ![](imgs/ltrb2xyxy.jpg)
 
@@ -118,7 +138,7 @@ $ conda uninstall ultralytics
 $ pip uninstall ultralytics   # or
 ```
 - Modify the Detect output head to separate the Bounding Box information and Classify information into six output heads.
-File location: `./ultralytics/ultralytics/nn/modules/head.py`, around line 51, replace the `vDetect` class's `forward` method with the following content.
+File location: `./ultralytics/ultralytics/nn/modules/head.py`, around line 51, replace the `Detect` class's `forward` method with the following content.
 Note: It is recommended that you keep the original `forward` method, for example by renaming it to `forward_`, to make it easy to switch back when training.
 ```python
 def forward(self, x):
@@ -218,8 +238,208 @@ $ hb_model_modifier yolov8n_bayese_640x640_nchw.bin \
 - Models with NCHW input can prepare input data using OpenCV and numpy.
 - Models with NV12 input can prepare input data using hardware devices such as codec, JPU, VPU, GPU, or can be directly used with the corresponding TROS functionality packages.
 
-### Partial Compilation Log Reference
+### Use the hb_perf command to visualize the bin model and the hrt_model_exec command to check the input/output situation of the bin model
+ - Bin model before removing the dequantization coefficients
+```bash
+hb_perf yolov8n_detect_bayese_640x640_nv12.bin
+```
+The following results can be found in the `hb_perf_result` directory:
+![](./imgs/yolov8n_detect_bayese_640x640_nv12.png)
 
+
+```bash
+hrt_model_exec model_info --model_file yolov8n_detect_bayese_640x640_nv12.bin
+```
+The input/output information of this bin model before removing the dequantization coefficients can be seen
+```bash
+[HBRT] set log level as 0. version = 3.15.54.0
+[DNN] Runtime version = 1.23.10_(3.15.54 HBRT)
+[A][DNN][packed_model.cpp:247][Model](2024-08-27,16:54:41.477.582) [HorizonRT] The model builder version = 1.23.8
+Load model to DDR cost 27.689ms.
+This model file has 1 model:
+[yolov8n_detect_bayese_640x640_nv12]
+---------------------------------------------------------------------
+[model name]: yolov8n_detect_bayese_640x640_nv12
+
+input[0]: 
+name: images
+input source: HB_DNN_INPUT_FROM_PYRAMID
+valid shape: (1,3,640,640,)
+aligned shape: (1,3,640,640,)
+aligned byte size: 614400
+tensor type: HB_DNN_IMG_TYPE_NV12
+tensor layout: HB_DNN_LAYOUT_NCHW
+quanti type: NONE
+stride: (0,0,0,0,)
+
+output[0]: 
+name: output0
+valid shape: (1,80,80,64,)
+aligned shape: (1,80,80,64,)
+aligned byte size: 1638400
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (1638400,20480,256,4,)
+
+output[1]: 
+name: 326
+valid shape: (1,40,40,64,)
+aligned shape: (1,40,40,64,)
+aligned byte size: 409600
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (409600,10240,256,4,)
+
+output[2]: 
+name: 334
+valid shape: (1,20,20,64,)
+aligned shape: (1,20,20,64,)
+aligned byte size: 102400
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (102400,5120,256,4,)
+
+output[3]: 
+name: 342
+valid shape: (1,80,80,80,)
+aligned shape: (1,80,80,80,)
+aligned byte size: 2048000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (2048000,25600,320,4,)
+
+output[4]: 
+name: 350
+valid shape: (1,40,40,80,)
+aligned shape: (1,40,40,80,)
+aligned byte size: 512000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (512000,12800,320,4,)
+
+output[5]: 
+name: 358
+valid shape: (1,20,20,80,)
+aligned shape: (1,20,20,80,)
+aligned byte size: 128000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (128000,6400,320,4,)
+```
+
+
+- Bin model after removing the target dequantization coefficients
+```bash
+hb_perf yolov8n_detect_bayese_640x640_nv12_modified.bin
+```
+The following results can be found in the `hb_perf_result` directory.
+![](./imgs/yolov8n_detect_bayese_640x640_nv12_modified.png)
+
+```bash
+hrt_model_exec model_info --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
+```
+The input/output information of the bin model before removing the dequantization coefficients, as well as all dequantization coefficients after removing the dequantization nodes, can be seen. This also indicates that these pieces of information are stored within the bin model, which can be obtained using the inference library's API, making it convenient for us to perform corresponding pre-processing and post-processing.
+```bash
+[HBRT] set log level as 0. version = 3.15.54.0
+[DNN] Runtime version = 1.23.10_(3.15.54 HBRT)
+[A][DNN][packed_model.cpp:247][Model](2024-08-27,17:03:38.761.972) [HorizonRT] The model builder version = 1.23.8
+Load model to DDR cost 25.791ms.
+This model file has 1 model:
+[yolov8n_detect_bayese_640x640_nv12]
+---------------------------------------------------------------------
+[model name]: yolov8n_detect_bayese_640x640_nv12
+
+input[0]: 
+name: images
+input source: HB_DNN_INPUT_FROM_PYRAMID
+valid shape: (1,3,640,640,)
+aligned shape: (1,3,640,640,)
+aligned byte size: 614400
+tensor type: HB_DNN_IMG_TYPE_NV12
+tensor layout: HB_DNN_LAYOUT_NCHW
+quanti type: NONE
+stride: (0,0,0,0,)
+
+output[0]: 
+name: output0
+valid shape: (1,80,80,64,)
+aligned shape: (1,80,80,64,)
+aligned byte size: 1638400
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (1638400,20480,256,4,)
+scale data: 0.000318929,0.00032147,0.000303427,0.000281826,0.000237608,0.000196948,0.000192247,0.000155271,0.000198091,0.000214101,0.000143454,0.000127381,0.000122235,9.83469e-05,8.10663e-05,8.29722e-05,0.000302664,0.000309272,0.000280555,0.000250569,0.000223504,0.000290721,0.000195931,0.000159083,0.000185004,0.00017738,0.000118804,0.00012179,0.000118423,0.000104954,9.37726e-05,0.000122235,0.000314354,0.000319945,0.000282843,0.000243453,0.000244724,0.000179667,0.000201903,0.000133289,0.000208129,0.00018475,0.000123251,0.000120583,0.000112514,9.0469e-05,7.85886e-05,0.0001047,0.000297074,0.000273186,0.000267595,0.000225664,0.000214483,0.000301648,0.000234304,0.000173695,0.000156034,0.000156415,8.93254e-05,0.000109592,0.000106542,8.76736e-05,7.52849e-05,8.96431e-05,
+quantizeAxis: 3
+
+output[1]: 
+name: 326
+valid shape: (1,40,40,64,)
+aligned shape: (1,40,40,64,)
+aligned byte size: 409600
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (409600,10240,256,4,)
+scale data: 0.000231898,0.000221052,0.000178184,0.000175,0.000157353,0.000143408,0.000150209,0.000144097,0.000126451,0.000105533,9.24493e-05,8.53047e-05,9.22772e-05,9.12442e-05,8.67681e-05,9.78723e-05,0.000230349,0.00022329,0.00020332,0.000170609,0.000165359,0.000140051,0.000157095,0.000147196,0.000107427,0.000124815,9.03834e-05,7.26511e-05,8.08717e-05,7.97096e-05,7.42866e-05,9.11582e-05,0.000233964,0.000235341,0.000227078,0.000174655,0.000139363,0.000147971,0.000156148,0.00011965,0.000129033,0.000107169,8.014e-05,8.16894e-05,9.69255e-05,0.000106394,0.000108891,0.000122663,0.00022088,0.000211239,0.000213649,0.000175602,0.000164067,0.000149606,0.000143753,0.000119306,0.00010209,0.000156492,0.000102865,7.32967e-05,8.8834e-05,9.81306e-05,0.000100971,0.000115691,
+quantizeAxis: 3
+
+output[2]: 
+name: 334
+valid shape: (1,20,20,64,)
+aligned shape: (1,20,20,64,)
+aligned byte size: 102400
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (102400,5120,256,4,)
+scale data: 0.00026432,0.000255302,0.000239413,0.000278062,0.000228032,0.000182512,0.000184122,0.000209567,0.00022245,0.000162758,0.000213754,0.000158678,0.000157926,0.000162758,0.000150519,0.000126792,0.000250793,0.000232971,0.000260455,0.00025702,0.000219873,0.000179291,0.000224812,0.000158678,0.000193999,0.000245425,0.000159107,0.00015943,0.000128295,0.000118525,9.5443e-05,6.18393e-05,0.000251008,0.000281068,0.000253155,0.000264535,0.000242204,0.000195825,0.000253799,0.000159644,0.00018176,0.000177573,0.000224597,0.000158249,0.00012486,0.000168985,0.000186914,0.000174889,0.000273983,0.000269044,0.000255731,0.000202803,0.000206668,0.000221591,0.000227388,0.000172742,0.000206131,0.000199045,0.00017242,0.000148694,0.000138172,0.000151378,0.000143326,0.000127436,
+quantizeAxis: 3
+
+output[3]: 
+name: 342
+valid shape: (1,80,80,80,)
+aligned shape: (1,80,80,80,)
+aligned byte size: 2048000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (2048000,25600,320,4,)
+
+output[4]: 
+name: 350
+valid shape: (1,40,40,80,)
+aligned shape: (1,40,40,80,)
+aligned byte size: 512000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (512000,12800,320,4,)
+
+output[5]: 
+name: 358
+valid shape: (1,20,20,80,)
+aligned shape: (1,20,20,80,)
+aligned byte size: 128000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (128000,6400,320,4,)
+```
+
+
+### Partial Compilation Log Reference
+As can be seen:
+- On the X5, YOLOv8n can achieve approximately 260 FPS. However, due to preprocessing, quantization nodes, and some dequantization nodes being executed on the CPU, it runs slightly slower. In practice, three threads can achieve a throughput of 252 FPS.
+- The tail transpose node satisfies passive quantization logic and supports acceleration by the BPU, without affecting its parent Convolution operator's ability to output in high int32 precision.
+- The cosine similarity of all nodes is greater than 0.9, meeting expectations.
+- All operators are on the BPU, and the entire bin model contains only one BPU subgraph.
 ```bash
 2024-08-14 15:08:32,181 file: build.py func: build line No: 36 Start to Horizon NN Model Convert.
 2024-08-14 15:08:32,181 file: model_debug.py func: model_debug line No: 61 Loading horizon_nn debug methods:[]
@@ -450,11 +670,6 @@ UNIT_CONV_FOR_/model.8/m.0/Add                      BPU  id(0)     Conv         
 
 ```
 
-As can be seen:
-- On the X5, YOLOv8n can achieve approximately 260 FPS. However, due to preprocessing, quantization nodes, and some dequantization nodes being executed on the CPU, it runs slightly slower. In practice, three threads can achieve a throughput of 252 FPS.
-- The tail transpose node satisfies passive quantization logic and supports acceleration by the BPU, without affecting its parent Convolution operator's ability to output in high int32 precision.
-- The cosine similarity of all nodes is greater than 0.9, meeting expectations.
-- All operators are on the BPU, and the entire bin model contains only one BPU subgraph.
 
 ## Model Training
 
@@ -465,7 +680,7 @@ As can be seen:
 
 RDK X5 & RDK X5 Module  
 Object Detection (COCO)  
-| Model | Size (px) | Num. Classes | Params (M) | FP Precision | Q Precision | Latency/Throughput (Single-threaded) | Latency/Throughput (Multi-threaded) | Post Process Time(Python) |
+| Model | Size (px) | Num. Classes | Params (M) | FP Precision | Q Precision | Latency/Throughput (Single-threaded) | Latency/Throughput (Multi-threaded) | Post Process Time (Python) |
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|--------------|
 | YOLOv8n | 640×640 | 80 | 3.2 | 37.3 |  | 5.6ms/178.0FPS(1 thread) | 7.5ms/263.6FPS(2 threads) | 5 ms |
 | YOLOv8s | 640×640 | 80 | 11.2 | 44.9 |  | 12.4ms/80.2FPS(1 thread) | 21ms/94.9FPS(2 threads) | 5 ms |

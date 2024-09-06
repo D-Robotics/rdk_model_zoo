@@ -26,7 +26,7 @@
 
 ![](imgs/demo_rdkx5_yolov8n_detect.jpg)
 
-YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由华盛顿大学的约瑟夫-雷德蒙（Joseph Redmon）和阿里-法哈迪（Ali Farhadi）开发。YOLO 于 2015 年推出,因其高速度和高精确度而迅速受到欢迎。
+YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由华盛顿大学的约瑟夫-雷德蒙(Joseph Redmon)和阿里-法哈迪(Ali Farhadi)开发。YOLO 于 2015 年推出,因其高速度和高精确度而迅速受到欢迎。
 
  - 2016 年发布的YOLOv2 通过纳入批量归一化、锚框和维度集群改进了原始模型。
 2018 年推出的YOLOv3 使用更高效的骨干网络、多锚和空间金字塔池进一步增强了模型的性能。

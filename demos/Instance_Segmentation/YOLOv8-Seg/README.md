@@ -41,7 +41,7 @@ YOLO (You Only Look Once), a popular object detection and image segmentation mod
 ## Performance Data (Summary)
 RDK X5 & RDK X5 Module
 Instance Segmentation (COCO)
-| Model (Official) | Size (px) | Classes | Params (M) | Throughput (FPS) | Post-processing Time (Python) |
+| Model (Official) | Size (px) | Classes | Params (M) | Throughput (FPS) | Post Process Time (Python) |
 |---------|---------|-------|-------------------|--------------------|---|
 | YOLOv8n-seg | 640×640 | 80 | 3.4  | 175.3 | 6 ms |
 | YOLOv8s-seg | 640×640 | 80 | 11.8 | 67.7 | 6 ms |
@@ -808,7 +808,7 @@ UNIT_CONV_FOR_/model.8/m.0/Add                      BPU  id(0)     Conv         
 RDK X5 & RDK X5 Module  
 Instance Segmentation (COCO)  
 | Model | Size (px) | Num Classes | Params (M) | FP Precision (box/mask) | INT8 Precision (box/mask) | Latency/Throughput (Single-threaded) | Latency/Throughput (Multi-threaded) | Post-processing Time (Python) |
-|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
+|---------|---------|-------|---------|---------|----------|--------------------|--------------------|-------|
 | YOLOv8n-seg | 640×640 | 80 | 3.4  | 36.7/30.5 |  | 9 ms / 109.7 FPS (1 thread) | 11.4 ms / 175.3 FPS (2 threads) | 6 ms |
 | YOLOv8s-seg | 640×640 | 80 | 11.8 | 44.6/36.8 |  | 18.1 ms / 55.1 FPS (1 thread) | 29.4 ms / 67.7 FPS (2 threads) | 6 ms |
 | YOLOv8m-seg | 640×640 | 80 | 27.3 | 49.9/40.8 |  | 40.4 ms / 24.7 FPS (1 thread) | 73.8 ms / 27.0 FPS (2 threads) | 6 ms |
