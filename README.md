@@ -45,7 +45,7 @@ The RDK Model Zoo is divided into the following modules:
 
 1. **[Image classification](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3/demos/classification)**
 2. **[Object Detection](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3/demos/detect)**
-3. **[Key point detection](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3/demos/Instance_Segmentation)**
+3. **[Instance Segmentation](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3/demos/Instance_Segmentation)**
 
 Developers can jump into the corresponding module to experience the deployment of the model on RDK series board.
 
