@@ -69,15 +69,68 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_B1g4_22
 
 **ONNX文件下载**：
 
-与.bin文件同理，使用 [download_onnx.sh](./model/download_onnx.sh)一键下载所有此模型结构的 .onnx 模型文件，或下载单个 .onnx 模型进行量化实验：
+onnx 模型使用的是 RepVGG 模型源码进行转换的，使用以下命令安装所需要的包：
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_A0_224x224_nv12.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_A1_224x224_nv12.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_A2_224x224_nv12.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_B0_224x224_nv12.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_B1g2_224x224_nv12.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_B1g4_224x224_nv12.onnx
+pip install timm onnx
+```
+
+模型源码下载使用以下命令：
+
+```shell
+git clone https://github.com/DingXiaoH/RepVGG.git
+```
+
+模型转换以 RepVGG-B1g2 为例，其余五个模型同理：
+
+```Python
+from repvgg import *
+import torch
+import onnx
+import torch.onnx
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+    
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+    
+    return total_params
+
+if __name__ == "__main__":
+    model_path = "RepVGG-B1g2-train.pth"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_RepVGG_B1g2(deploy=False)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    model = repvgg_model_convert(model)
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "RepVGG-B1g2.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # input name
+        output_names=["output"],  # output name
+    )
+    
+    param_count = count_parameters(onnx_file_path)
+    print(f'Total number of parameters: {param_count}')
 ```
 
 ## 4. 部署测试

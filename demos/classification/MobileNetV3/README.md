@@ -48,7 +48,7 @@ Description:
 
 ## 3. Model download
 
-**.Bin file download** :
+**.Bin file download**:
 
 You can use the script [download_bin.sh](./model/download_bin.sh) to download all .bin model files for this model structure with one click, making it easy to change models directly. Alternatively, use one of the following command lines to select a single model for download:
 
@@ -56,12 +56,78 @@ You can use the script [download_bin.sh](./model/download_bin.sh) to download al
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/MobileNetV3_224x224_nv12.bin
 ```
 
-**ONNX file download** :
+**ONNX file download**:
 
-Similarly to the .bin file, use [download_onnx.sh](./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/mobilenetv3_large_100.onnx
+pip install timm onnx
+```
+
+Model transformation takes mobilenetv3_large_100 as an example:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.mobilenetv3 import mobilenetv3_large_100
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+    
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+    
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('mobilenetv3_large_100', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "mobilenetv3_large_100.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+    
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "mobilenetv3_large_100.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+        
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
 ```
 
 ## 4. Deployment Testing

@@ -6,7 +6,7 @@ English | [简体中文](./README_cn.md)
   - [1. Introduction](#1-introduction)
   - [2. Model performance data](#2-model-performance-data)
   - [3. Model download](#3-model-download)
-  - [4. Deployment Testing](#4ment-testing)
+  - [4. Deployment Testing](#4-deployment-testing)
   - [5. Model Quantitation Experiment](#5-model-quantitation-experiment)
 
 
@@ -67,13 +67,83 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/FasterNet_T2_2
 
 **ONNX file download** :
 
-Similarly to the .bin file, use [download_onnx.sh](./model/download_onnx.sh) to download all .onnx model files of this model structure with one click, or download a single .onnx model for quantization experiments:
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_s.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t2.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t1.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasternet_t0.onnx
+pip install timm onnx
+```
+
+Download the model source code using the following command:
+
+```shell
+git clone https://github.com/JierunChen/FasterNet.git
+```
+
+Model transformation takes fasternet_t2 as an example, and the other three models are the same:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+
+from models.fasternet import *
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+    
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+    
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model_path = "fasternet_t2-epoch.289-val_acc1.78.8860.pth"
+    model = fasternet_t2()
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+
+    # print(model)
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "fasternet_t2.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # input name
+        output_names=["output"],  # output name
+    )
+    
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "fasternet_t2.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+        
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
 ```
 
 ## 4. Deployment Testing

@@ -54,7 +54,79 @@ Go into the model folder and use the following command line to download the ResN
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ResNeXt50_32x4d_224x224_nv12.bin
 ```
 
-Due to the fact that this model is the output obtained by model quantization by the Horizon Reference algorithm, the model does not provide onnx format files. If you need ResNeXt model quantization conversion, you can refer to the conversion steps of other models in this repository.
+**ONNX file download** :
+
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
+
+```shell
+pip install timm onnx
+```
+
+Model transformation takes resnext50_32x4d as an example:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.resnet import resnext50_32x4d
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+    
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+    
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('resnext50_32x4d', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "resnext50_32x4d.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+    
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "resnext50_32x4d.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+        
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
 
 ## 4. Deployment Testing
 
