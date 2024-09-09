@@ -52,7 +52,7 @@ EdgeNeXt 网络从轻量化角度出发，设计了卷积与transformer的混合
 
 **.bin 文件下载**：
 
-可以使用脚本 [download_bin.sh](./model/download_bin.sh) 一键下载所有此模型结构的 .bin 模型文件，方便直接更换模型。或者使用以下命令行中的一个，选取单个模型进行下载：
+可以使用脚本 [download.sh](./model/download.sh) 一键下载所有此模型结构的 .bin 模型文件，方便直接更换模型。或者使用以下命令行中的一个，选取单个模型进行下载：
 
 ```shell
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_base_224x224_nv12.bin

@@ -127,7 +127,7 @@ ILSVRC2012 是ImageNet的子集，而ImageNet本身有超过1400多万张图片�
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_x_small_224x224_nv12.bin
 ```
 
-模型下载shell脚本在各个分类模型的 model 文件夹中，可以执行 `sh download_bin.sh` 或 `sh download_onnx.sh` 命令下载 onnx/bin 文件。
+模型下载shell脚本在各个分类模型的 model 文件夹中，可以执行 `sh download.sh` 命令下载 bin 文件。
 
 ## 4. 输入输出数据
 

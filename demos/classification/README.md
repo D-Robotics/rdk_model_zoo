@@ -125,7 +125,7 @@ Download example:
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_x_small_224x224_nv12.bin
 ```
 
-Model download shell script In the model folder of each classification model, you can execute the `sh download_bin.sh` or `sh download_onnx.sh` command to download the onnx/bin file.
+Model download shell script In the model folder of each classification model, you can execute the `sh download.sh` command to download the bin file.
 
 ## 4. Input/Output Data
 
