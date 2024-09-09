@@ -56,7 +56,7 @@ You can use the script [download.sh](./model/download.sh) to download all .bin m
 
 ```shell
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientFormer_l1_224x224_nv12.bin
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientFormer_l1_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientFormer_l3_224x224_nv12.bin
 ```
 
 **ONNX file download**:
