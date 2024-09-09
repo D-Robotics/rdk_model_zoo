@@ -1,6 +1,6 @@
 English| [简体中文](./README_cn.md)
 
-RDK X5 Model Zoo
+RDK Model Zoo
 =======
 
 ## 1. Product Introduction
