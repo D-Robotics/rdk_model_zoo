@@ -14,12 +14,39 @@ Through this repository, developers can access the following resources:
 
 ## 2. Environmental Preparation
 
-Developers first prepare a corresponding RDK development board according to the branch, and go to [D-robotics official website](https://developer.d-robotics.cc/) to complete hardware preparation, driver installation, software download, and mirroring burning.
+Developers first prepare a corresponding RDK development board according to the branch, and go to D-robotics official website to complete [hardware preparation, driver installation, software download, and mirroring flashing](https://developer.d-robotics.cc/rdk_doc/Quick_start/install_os). For RDK X3 and RDK X5, please choose mirror version >= 3.0.0.
 
-After completing the hardware connection and network configuration, log in to the development board using MobaXTerm, connect to the network of the development kit, and then use the following command to clone the Model Zoo repository:
+After completing the hardware connection and network configuration, [log in remotely](https://developer.d-robotics.cc/rdk_doc/Quick_start/remote_login) to the development board using MobaXTerm, [connect to the network](https://developer.d-robotics.cc/rdk_doc/System_configuration/network_blueteeth).
+
+Use pip to complete the installation of two packages:
+
+1. bpu_infer_lib
+
+with RDK X5：
+```
+pip install bpu_infer_x5 -i http://archive.d-robotics.cc:8080/simple/ --trusted-host archive.d-robotics.cc
+```
+
+with RDK X3：
+```
+pip install bpu_infer_x3 -i http://archive.d-robotics.cc:8080/simple/ --trusted-host archive.d-robotics.cc
+```
+
+2. jupyterlab
+```
+pip install jupyterlab
+```
+
+Then use the following command to clone the Model Zoo repository:
 
 ```
 git clone https://github.com/D-Robotics/rdk_model_zoo
+```
+
+Note: by default, git clone will get the RDK X5 version of the model zoo. If you are using other products of RDK series, please use `git checkout` command to switch the branch. For example, if you are using RDK X3, please execute the following command
+
+```
+git checkout rdk_x3
 ```
 
 After the clone is complete, use the following command to enter the Model Zoo directory:
