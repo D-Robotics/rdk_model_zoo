@@ -1,10 +1,10 @@
 [English](./README.md) | 简体中文
 
-# Transformer X5 - EfficientFormer
+# Transformer - EfficientFormer
 
 ## 目录
 
-- [Transformer X5 - EfficientFormer](#transformer-x5---efficientformer)
+- [Transformer - EfficientFormer](#transformer---efficientformer)
   - [目录](#目录)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)

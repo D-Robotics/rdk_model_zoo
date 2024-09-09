@@ -1,8 +1,8 @@
 English | [简体中文](./README_cn.md)
 
-# CNN X5 - FasterNet
+# CNN - FasterNet
 
-- [CNN X5 - FasterNet](#cnn-x5---fasternet)
+- [CNN - FasterNet](#cnn---fasternet)
   - [1. Introduction](#1-introduction)
   - [2. Model performance data](#2-model-performance-data)
   - [3. Model download](#3-model-download)

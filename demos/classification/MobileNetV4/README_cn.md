@@ -1,8 +1,8 @@
 [English](./README.md) | 简体中文
 
-# CNN X5 - MobileNetV4
+# CNN - MobileNetV4
 
-- [CNN X5 - MobileNetV4](#cnn-x5---mobilenetv4)
+- [CNN - MobileNetV4](#cnn---mobilenetv4)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)
   - [3. 模型下载](#3-模型下载)

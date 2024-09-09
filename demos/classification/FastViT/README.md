@@ -1,8 +1,8 @@
 English | [简体中文](./README_cn.md)
 
-# Transformer X5 - FastViT
+# Transformer - FastViT
 
-- [Transformer X5 - FastViT](#transformer-x5---fastvit)
+- [Transformer - FastViT](#transformer---fastvit)
   - [1. Introduction](#1-introduction)
   - [2. Model performance data](#2-model-performance-data)
   - [3. Model download](#3-model-download)

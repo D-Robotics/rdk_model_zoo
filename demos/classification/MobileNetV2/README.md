@@ -1,8 +1,8 @@
 English | [简体中文](./README_cn.md)
 
-# CNN X5 - MobilenetV2
+# CNN - MobilenetV2
 
-- [CNN X5 - MobilenetV2](#cnn-x5---mobilenetv2)
+- [CNN - MobilenetV2](#cnn---mobilenetv2)
   - [1. Introduction](#1-introduction)
   - [2. Model performance data](#2-model-performance-data)
   - [3. Model download](#3-model-download)

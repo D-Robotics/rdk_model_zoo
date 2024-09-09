@@ -1,8 +1,8 @@
 [English](./README.md) | 简体中文
 
-# Transformer X5 - EfficientViT_MSRA
+# Transformer - EfficientViT_MSRA
 
-- [Transformer X5 - EfficientViT\_MSRA](#transformer-x5---efficientvit_msra)
+- [Transformer - EfficientViT\_MSRA](#transformer---efficientvit_msra)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)
   - [3. 模型下载](#3-模型下载)

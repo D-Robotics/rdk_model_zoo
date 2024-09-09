@@ -1,8 +1,8 @@
 [English](./README.md) | 简体中文
 
-# Transformer X5 - EfficientFormerV2
+# Transformer - EfficientFormerV2
 
-- [Transformer X5 - EfficientFormerV2](#transformer-x5---efficientformerv2)
+- [Transformer - EfficientFormerV2](#transformer---efficientformerv2)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)
   - [3. 模型下载](#3-模型下载)

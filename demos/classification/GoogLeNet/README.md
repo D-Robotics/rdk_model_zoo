@@ -1,8 +1,8 @@
 English | [简体中文](./README_cn.md)
 
-# CNN X5 - GoogLeNet
+# CNN - GoogLeNet
 
-- [CNN X5 - GoogLeNet](#cnn-x5---googlenet)
+- [CNN - GoogLeNet](#cnn---googlenet)
   - [1. Introduction](#1-introduction)
   - [2. Model performance data](#2-model-performance-data)
   - [3. Model download](#3-model-download)

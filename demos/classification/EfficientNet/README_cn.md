@@ -1,8 +1,8 @@
 [English](./README.md) | 简体中文
 
-# CNN X5 - EfficientNet
+# CNN - EfficientNet
 
-- [CNN X5 - EfficientNet](#cnn-x5---efficientnet)
+- [CNN - EfficientNet](#cnn---efficientnet)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)
   - [3. 模型下载](#3-模型下载)

@@ -1,8 +1,8 @@
 English | [简体中文](./README_cn.md)
 
-# CNN X5 - RepGhost
+# CNN - RepGhost
 
-- [CNN X5 - RepGhost](#cnn-x5---repghost)
+- [CNN - RepGhost](#cnn---repghost)
   - [1. Introduction](#1-introduction)
   - [2. Model performance data](#2-model-performance-data)
   - [3. Model download](#3-model-download)

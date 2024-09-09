@@ -1,8 +1,8 @@
 [English](./README.md) | 简体中文
 
-# CNN X5 - ResNeXt
+# CNN - ResNeXt
 
-- [CNN X5 - ResNeXt](#cnn-x5---resnext)
+- [CNN - ResNeXt](#cnn---resnext)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)
   - [3. 模型下载](#3-模型下载)
