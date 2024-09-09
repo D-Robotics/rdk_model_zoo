@@ -30,7 +30,7 @@ ILSVRC（ImageNet Large-Scale Visual Recognition Challenge）是基于 ImageNet 
 
 ImageNet 官方下载地址：https://image-net.org/
 
-![](../../data/ImageNet.png)
+![](../../resource/imgs/ImageNet.png)
 
 由于该仓库提供的模型均是预训练模型进行模型转换后得到的 onnx/bin 文件，故无需再进行模型训练操作（缺乏训练资源也是一个很大的问题），由于数据集非常大，使用 ImageNet 数据集是作为后续模型量化操作中校准数据集的构建，下表是 ImageNet ILSVRC2012 数据集的大小情况：
 

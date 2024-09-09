@@ -29,7 +29,7 @@ ILSVRC (ImageNet Large-Scale Visual Recognition Challenge) is a competition base
 
 ImageNet official download address：https://image-net.org/
 
-![](../../data/ImageNet.png)
+![](../../resource/imgs/ImageNet.png)
 
 Due to the fact that the models provided by this repository are all onnx/bin files obtained after pre-training models are transformed, there is no need to perform Model Training operations again (lack of training resources is also a big problem). Due to the large dataset, the ImageNet dataset is used as a calibration dataset for subsequent model quantization operations. The following table shows the size of the ImageNet ILSVRC2012 dataset.
 
