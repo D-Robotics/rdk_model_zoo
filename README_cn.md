@@ -14,11 +14,38 @@ RDK X5 Model Zoo
 
 ## 2. 环境准备
 
-开发者首先根据所在分支，准备一块对应的RDK 开发板，并前往[地瓜机器人官网](https://developer.d-robotics.cc/)完成硬件准备、驱动安装、软件下载、和镜像烧录。
+开发者首先根据所在分支，准备一块对应的RDK 开发板，并前往地瓜机器人官网完成[硬件准备、驱动安装、软件下载、和镜像烧录](https://developer.d-robotics.cc/rdk_doc/Quick_start/install_os)。对于X3和X5的镜像，请选择3.0.0以上的版本。
 
-在完成硬件连接和网络配置后，使用MobaXTerm登录开发板，对开发板进行网络连接，即可使用如下命令拉取Model Zoo仓库：
+在完成硬件连接和网络配置后，使用MobaXTerm[远程登录开发板](https://developer.d-robotics.cc/rdk_doc/Quick_start/remote_login)。对开发板进行[网络连接](https://developer.d-robotics.cc/rdk_doc/System_configuration/network_blueteeth)。
+
+使用pip完成相应python库的安装：
+
+1. bpu_infer_lib
+
+如使用RDK X5：
+```
+pip install bpu_infer_x5 -i http://archive.d-robotics.cc:8080/simple/ --trusted-host archive.d-robotics.cc
+```
+
+如使用RDK X3：
+```
+pip install bpu_infer_x3 -i http://archive.d-robotics.cc:8080/simple/ --trusted-host archive.d-robotics.cc
+```
+
+2. jupyterlab
+```
+pip install jupyterlab
+```
+
+随后即可使用如下命令拉取Model Zoo仓库：
 ```
 git clone https://github.com/D-Robotics/rdk_model_zoo
+```
+
+注：这里git clone拉下来的分支默认为RDK X5分支，如实际使用的开发板为RDK系列的其他产品，请使用git checkout命令进行切换，这里以X3为例，如想切换至RDK X3对应的分支，请执行如下命令：
+
+```
+git checkout rdk_x3
 ```
 
 拉取完成后，使用如下命令进入Model Zoo目录：
