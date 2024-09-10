@@ -1,8 +1,8 @@
 English | [简体中文](./README_cn.md)
 
-# CNN - MobileOne
+# CNN - RepGhost
 
-- [CNN - MobileOne](#cnn---mobileone)
+- [CNN - RepGhost](#cnn---repghost)
   - [1. Introduction](#1-introduction)
   - [2. Model performance data](#2-model-performance-data)
   - [3. Model download](#3-model-download)
@@ -12,31 +12,32 @@ English | [简体中文](./README_cn.md)
 
 ## 1. Introduction
 
-- **Paper**: [MobileOne: An Improved One millisecond Mobile Backbone](http://arxiv.org/abs/2206.04040)
+- **Paper**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
 
-- **GitHub repository**: [apple/ml-mobileone: This repository contains the official implementation of the research paper, "An Improved One millisecond Mobile Backbone". (github.com)](https://github.com/apple/ml-mobileone)
+- **GitHub repository**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization (github.com)](https://github.com/ChengpengChen/RepGhost)
 
-![](./data/MobileOne_architecture.png)
+![](./data/RepGhost_architecture.png)
 
-MobileOne is an efficient visual backbone architecture on end-side devices that utilizes structural re-parameterization technology (iPhone 12, MobileOne's inference time is only 1 millisecond). Moreover, compared with existing architectures deployed on mobile devices, it adopts a **structural re-parameterization** method and does not add commonly used residual connections to speed up inference. MobileOne can be extended to multiple tasks: image classification, object detection, and semantic segmentation, with significant improvements in latency and accuracy. The core module of MobileOne is designed based on MobileNetV1 and absorbs the idea of re-parameterization. The basic architecture used is 3x3 depthwise convolution + 1x1 pointwise convolution
+The feature-to-reuse technique extends the feature space by connecting feature maps of different layers. For example, in DenseNet, the feature maps of early layers are repurposed and passed to subsequent layers, while GhostNet generates more feature maps through inexpensive operations and connects them with the original feature maps (Concat), thereby expanding the number of channels and network capacity while maintaining low FLOPs. Although the Concat operation does not increase the number of parameters and FLOPs, in hardware, due to complex memory replication, the computational efficiency of Concat is lower than that of addition operations. Therefore, it is necessary to explore more efficient feature-to-reuse methods.
+
+To this end, RepGhost introduces structural reparameterization technology, which improves model performance by using complex structures during training, and then converts them into simplified structures during inference, thereby achieving efficient feature to reuse. In this way, feature to reuse is transferred from feature space to weight space, removing the Concat operation and improving hardware efficiency。
 
 
-**MobileOne model features**:
+**RepGhost model features**:
 
-- It can run in 1ms on mobile devices (iPhone 12) and achieve SOTA in image classification tasks compared to other efficient/lightweight networks.
-- The role of reparameterized branching and regularized dynamic relaxation in training time is analyzed.
-- Model Generalization Ability and Performance
+- **Structural re-parameterization**: RepGhost uses complex structures during the training phase to improve performance, and then converts them into simpler and more efficient structures during the inference phase.
+- **Implicit feature reuse**: By structural re-parameterization, the feature to reuse process is transferred from the feature space to the weight space, removing the Concat operation and improving hardware efficiency.
+- **Efficient computing**: Compared with the traditional feature to reuse method, the RepGhost module reduces memory copy operations, reduces hardware computing costs, and adapts to low computing resource environments.
+- **Network lightweighted**: while maintaining network performance, reducing the number of FLOPs and parameters of the model, suitable for mobile devices and embedded systems.
 
 
 ## 2. Model performance data
 
-The following table shows the performance data obtained from actual testing on RDK X3 & RDK X3 Module. 
+The following table shows the performance data obtained from actual testing on RDK X3 & RDK X3 Module.
 
-
-| Model        | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
-| ------------ | ------- | ---------- | --------- | ------------------------ | --------------------- | ------------------------------------ | ----------------------------------- | --------------- |
-| MobileOne | 224x224 | 1000 | 4.8    | 72.00 | 71.00 | 4.50        | 8.70        | 455.87 |
-
+| Model       | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
+| ----------- | ------- | ---------- | --------- | ------------------------ | --------------------- | ------------------------------------ | ----------------------------------- | --------------- |
+| RepGhost | 224x224 | 1000 | 4.07   | 72.50 | 72.25 | 2.09        | 4.56        | 855.18 |
 
 Description:
 1. X3 is in the best state: CPU is 4xA53@1.5G, full core Performance scheduling, BPU is 2xBernoulli@1G, a total of 5TOPS equivalent int8 computing power.
@@ -53,7 +54,7 @@ Description:
 You can use the script [download.sh](./model/download.sh) to download all .bin model files for this model structure with one click, making it easy to change models directly. Alternatively, use one of the following command lines to select a single model for download:
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/MobileOne_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/RepGhost_224x224_nv12.bin
 ```
 
 **ONNX file download** :
@@ -70,15 +71,16 @@ Download the model source code using the following command:
 git clone https://github.com/apple/ml-mobileone.git
 ```
 
-Model transformation takes mobileone_s0 as an example:
+Model transformation takes repghostnet_100 as an example, and the other five models are the same:
 
 ```Python
 import torch
 import torch.onnx
 import onnx
 from onnxsim import simplify
+from timm.models import create_model
 
-from mobileone import *
+from timm.models.repghost import repghostnet_100, repghostnet_111, repghostnet_130, repghostnet_150, repghostnet_200
 
 def count_parameters(onnx_model_path):
     # Load the ONNX model
@@ -101,16 +103,13 @@ def count_parameters(onnx_model_path):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_path = "mobileone_s0_unfused.pth.tar"
-    model = mobileone(variant='s0')
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model = create_model('repghostnet_100', pretrained=True)
     model.eval()
-    model = reparameterize_model(model)
 
-    # print(model)
+    # print the model structure
 
     dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
-    onnx_file_path = "mobileone_s0.onnx"
+    onnx_file_path = "repghostnet_100.onnx"
 
     torch.onnx.export(
         model,
@@ -118,9 +117,8 @@ if __name__ == "__main__":
         onnx_file_path,
         opset_version=11,
         verbose=True,
-        input_names=["data"],  # input name
-        output_names=["output"],  # output name
-        keep_initializers_as_inputs=True
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
     )
     
     # Simplify the ONNX model
@@ -128,23 +126,22 @@ if __name__ == "__main__":
 
     if check:
         print("Simplified model is valid.")
-        simplified_onnx_file_path = "mobileone_s0.onnx"
+        simplified_onnx_file_path = "repghostnet_100.onnx"
         onnx.save(model_simp, simplified_onnx_file_path)
         print(f"Simplified model saved to {simplified_onnx_file_path}")
     else:
         print("Simplified model is invalid!")
-    
+        
     onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
     total_params = count_parameters(onnx_model_path)
     print(f"Total number of parameters in the model: {total_params}")
 ```
 
-
 ## 4. Deployment Testing
 
-After downloading the .bin file, you can execute the MobileOne model jupyter script file of the test_MobileOne.ipynb series to experience the actual test effect on the board. If you need to change the test picture, you can download the dataset separately and put it in the data folder and change the path of the picture in the jupyter file
+After downloading the .bin file, you can execute the RepGhost model jupyter script file of the test_RepGhost.ipynb series to experience the actual test effect on the board. If you need to change the test picture, you can download the dataset separately and put it in the data folder and change the path of the picture in the jupyter file
 
-![](./data/inference.png)
+![alt text](./data/inference.png)
 
 ## 5. Model Quantitation Experiment
 

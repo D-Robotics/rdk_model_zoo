@@ -1,8 +1,8 @@
 [English](./README.md) | 简体中文
 
-# CNN - MobileOne
+# CNN - RepGhost
 
-- [CNN - MobileOne](#cnn---mobileone)
+- [CNN - RepGhost](#cnn---repghost)
   - [1. 简介](#1-简介)
   - [2. 模型性能数据](#2-模型性能数据)
   - [3. 模型下载](#3-模型下载)
@@ -11,20 +11,24 @@
 
 ## 1. 简介
 
-- **论文地址**: [MobileOne: An Improved One millisecond Mobile Backbone](http://arxiv.org/abs/2206.04040)
+- **论文地址**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
 
-- **Github 仓库**: [apple/ml-mobileone: This repository contains the official implementation of the research paper, "An Improved One millisecond Mobile Backbone". (github.com)](https://github.com/apple/ml-mobileone)
+- **Github 仓库**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization (github.com)](https://github.com/ChengpengChen/RepGhost)
 
-![](./data/MobileOne_architecture.png)
-
-MobileOne 是一种借助了结构重参数化技术的，在端侧设备上很高效的视觉骨干架构（iPhone 12上MobileOne的推理时间只有1毫秒）。而且，与部署在移动设备上的现有架构相比，采用了**结构重参数化**的方法，为了加快推理速度没有加入常用的残差连接。MobileOne 可以推广到多个任务：图像分类、对象检测和语义分割，在延迟和准确性方面有显著改进。MobileOne的核心模块基于MobileNetV1而设计，同时吸收了重参数思想。采用的基本架构是 3x3 depthwise convolution + 1x1 pointwise convolution
+![](./data/RepGhost_architecture.png)
 
 
-**MobileOne 模型特点**：
+特征复用技术通过连接不同层的特征图来扩展特征空间。例如，DenseNet 中早期层的特征图被重复利用并传递到后续层，GhostNet 则通过廉价操作生成更多特征图并与原始特征图进行连接（Concat），从而扩大 channel 数量和网络容量，同时保持较低的 FLOPs。虽然 Concat 操作不会增加参数量和 FLOPs，但在硬件上，由于复杂的内存复制，Concat 的计算效率低于加法操作。因此，有必要探索更高效的特征复用方法。
 
-- 在移动设备上(iphone12)可以在1ms内运行，且与其他有效/轻量级网络在图像分类任务上相比可达到SOTA；
-- 分析了训练时间可重参数化分支和正则化动态松弛在训练中的作用；
-- 模型泛化能力更优，性能更好
+为此，RepGhost 引入了结构重参数化技术，通过在训练期间使用复杂结构，提升模型性能，然后在推理时转换为简化的结构，从而实现高效的特征复用。通过这种方式，特征复用从特征空间转移到权重空间，去除 Concat 操作，提高了硬件效率
+
+
+**RepGhost 模型特点**：
+
+- **结构重参数化**：RepGhost 在训练阶段使用复杂结构，提升性能，然后在推理阶段将其转换为更简单、高效的结构。
+- **特征隐式重用**：通过结构重参数化，将特征复用过程从特征空间转移到权重空间，去除 Concat 操作，提升硬件效率。
+- **高效计算**：相比传统的特征复用方法，RepGhost 模块减少了内存复制操作，降低了硬件计算成本，适配低计算资源环境。
+- **网络轻量化**：在保持网络性能的同时，减少了模型的 FLOPs 和参数量，适用于移动设备和嵌入式系统。
 
 
 ## 2. 模型性能数据
@@ -33,8 +37,8 @@ MobileOne 是一种借助了结构重参数化技术的，在端侧设备上很�
 
 
 | 模型           | 尺寸(像素)  | 类别数  | 参数量(M) | 浮点Top-1  | 量化Top-1  | 延迟/吞吐量(单线程) | 延迟/吞吐量(多线程) | 帧率      |
-| --------- | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------- |
-| MobileOne | 224x224 | 1000 | 4.8    | 72.00 | 71.00 | 4.50        | 8.70        | 455.87 |
+| -------- | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------- |
+| RepGhost | 224x224 | 1000 | 4.07   | 72.50 | 72.25 | 2.09        | 4.56        | 855.18 |
 
 
 说明: 
@@ -51,32 +55,27 @@ MobileOne 是一种借助了结构重参数化技术的，在端侧设备上很�
 可以使用脚本 [download.sh](./model/download.sh) 一键下载所有此模型结构的 .bin 模型文件，方便直接更换模型。或者使用以下命令行中的一个，选取单个模型进行下载：
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/MobileOne_224x224_nv12.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/RepGhost_224x224_nv12.bin
 ```
 
 **ONNX文件下载**：
 
-onnx 模型使用的是 MobileOne 模型源码进行转换的，使用以下命令安装所需要的包：
+onnx 模型使用的是 timm 库 (PyTorch Image Models) 中的模型进行转换的，使用以下命令安装所需要的包：
 
 ```shell
 pip install timm onnx
 ```
 
-模型源码下载使用以下命令：
-
-```shell
-git clone https://github.com/apple/ml-mobileone.git
-```
-
-模型转换以 mobileone_s0 为例：
+模型转换以 repghostnet_100 为例：
 
 ```Python
 import torch
 import torch.onnx
 import onnx
 from onnxsim import simplify
+from timm.models import create_model
 
-from mobileone import *
+from timm.models.repghost import repghostnet_100, repghostnet_111, repghostnet_130, repghostnet_150, repghostnet_200
 
 def count_parameters(onnx_model_path):
     # Load the ONNX model
@@ -99,16 +98,13 @@ def count_parameters(onnx_model_path):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_path = "mobileone_s0_unfused.pth.tar"
-    model = mobileone(variant='s0')
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model = create_model('repghostnet_100', pretrained=True)
     model.eval()
-    model = reparameterize_model(model)
 
-    # print(model)
+    # print the model structure
 
     dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
-    onnx_file_path = "mobileone_s0.onnx"
+    onnx_file_path = "repghostnet_100.onnx"
 
     torch.onnx.export(
         model,
@@ -116,9 +112,8 @@ if __name__ == "__main__":
         onnx_file_path,
         opset_version=11,
         verbose=True,
-        input_names=["data"],  # 输入名
-        output_names=["output"],  # 输出名
-        keep_initializers_as_inputs=True
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
     )
     
     # Simplify the ONNX model
@@ -126,12 +121,12 @@ if __name__ == "__main__":
 
     if check:
         print("Simplified model is valid.")
-        simplified_onnx_file_path = "mobileone_s0.onnx"
+        simplified_onnx_file_path = "repghostnet_100.onnx"
         onnx.save(model_simp, simplified_onnx_file_path)
         print(f"Simplified model saved to {simplified_onnx_file_path}")
     else:
         print("Simplified model is invalid!")
-    
+        
     onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
     total_params = count_parameters(onnx_model_path)
     print(f"Total number of parameters in the model: {total_params}")
@@ -139,7 +134,7 @@ if __name__ == "__main__":
 
 ## 4. 部署测试
 
-在下载完毕 .bin 文件后，可以执行 test_MobileOne.ipynb 系列的 MobileOne 模型 jupyter 脚本文件，在板端实际运行体验实际测试效果。需要更改测试图片，可额外下载数据集后，放入到data文件夹下并更改 jupyter 文件中图片的路径
+在下载完毕 .bin 文件后，可以执行 test_RepGhost.ipynb 系列的 RepGhost 模型 jupyter 脚本文件，在板端实际运行体验实际测试效果。需要更改测试图片，可额外下载数据集后，放入到data文件夹下并更改 jupyter 文件中图片的路径
 
 ![](./data/inference.png)
 
