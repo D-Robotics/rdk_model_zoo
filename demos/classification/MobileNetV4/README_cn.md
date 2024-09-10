@@ -46,7 +46,7 @@ MobileNetV4 基于MobileNet的经典组件如可分离的深度卷积（DW）和
 
 **.bin 文件下载**：
 
-可以使用脚本 [download.sh](./model/download.sh) 一键下载所有此模型结构的 .bin 模型文件，方便直接更换模型。或者使用以下命令行中的一个，选取单个模型进行下载：
+可以使用脚本 [download.sh](./model/download.sh) 一键下载所有此模型结构的 .bin 模型文件，方便直接更换模型。：
 
 ```shell
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/MobileNetV4_224x224_nv12.bin
