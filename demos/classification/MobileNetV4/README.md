@@ -27,8 +27,7 @@ MobileNetV4 is based on classic components of MobileNet, such as separable deep 
 
 ## 2. Model performance data
 
-The following table shows the performance data obtained from actual testing on RDK X3 & RDK X3 Module. You can weigh the size of the model according to your own reasoning about the actual performance and accuracy required
-
+The following table shows the performance data obtained from actual testing on RDK X3 & RDK X3 Module. 
 
 | Model        | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
 | ------------ | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------- |
