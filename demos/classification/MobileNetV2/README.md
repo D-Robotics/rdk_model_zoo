@@ -35,7 +35,7 @@ The following table shows the performance data obtained from actual testing on R
 
 | Model       | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
 | ----------- | ------- | ---------- | --------- | ------------------------ | --------------------- | ------------------------------------ | ----------------------------------- | --------------- |
-| Mobilenetv4 | 224x224 | 1000 | 3.76   | 70.50 | 70.26 | 1.43        | 2.96        | 1309.17 |
+| Mobilenetv2 | 224x224 | 1000 | 3.4    | 72.0 | 68.17 | 2.41        | 4.42        | 890.99 |
 
 Description:
 1. X3 is in the best state: CPU is 4xA53@1.5G, full core Performance scheduling, BPU is 2xBernoulli@1G, a total of 5TOPS equivalent int8 computing power.
