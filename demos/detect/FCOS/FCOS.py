@@ -50,7 +50,7 @@ def main():
     parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
     parser.add_argument('--iou-thres', type=float, default=0.6, help='IoU threshold.')
     parser.add_argument('--conf-thres', type=float, default=0.5, help='confidence threshold.')
-    parser.add_argument('--is-stride', type=bool, default=True, help='True: X5, False: X3')
+    parser.add_argument('--is-stride', type=bool, default=False, help='True: X5, False: X3')
     parser.add_argument('--strides', type=lambda s: list(map(int, s.split(','))), 
                         default=[8, 16, 32, 64, 128],
                         help='--anchors 8,16,32,64,128')
