@@ -27,6 +27,7 @@ from time import time
 import argparse
 import logging 
 
+
 # 日志模块配置
 # logging configs
 logging.basicConfig(
@@ -37,7 +38,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='models/yolov10n_detect_bernoulli2_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='models/yolov5s_tag_v2.0_detect_640x640_bernoulli2_nv12.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
@@ -47,14 +48,19 @@ def main():
     parser.add_argument('--test-img', type=str, default='../../../resource/assets/bus.jpg', help='Path to Load Test Image.')
     parser.add_argument('--img-save-path', type=str, default='jupyter_result.jpg', help='Path to Load Test Image.')
     parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
-    parser.add_argument('--reg', type=int, default=16, help='DFL reg layer.')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='IoU threshold.')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold.')
+    parser.add_argument('--anchors', type=lambda s: list(map(int, s.split(','))), 
+                        default=[10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326],
+                        help='--anchors 10,13,16,30,33,23,30,61,62,45,59,119,116,90,156,198,373,326')
+    parser.add_argument('--strides', type=lambda s: list(map(int, s.split(','))), 
+                        default=[8, 16, 32],
+                        help='--strides 8,16,32')
     opt = parser.parse_args()
     logger.info(opt)
 
     # 实例化
-    model = YOLOv10_Detect(opt.model_path, opt.conf_thres, opt.iou_thres)
+    model = YOLOv5_Detect(opt.model_path, opt.conf_thres, opt.iou_thres, opt.classes_num, opt.anchors, opt.strides)
     # 读图
     img = cv2.imread(opt.test_img)
     # 准备输入数据
@@ -177,112 +183,110 @@ class BaseModel:
         logger.debug("\033[1;31m" + f"c to numpy time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
         return outputs
 
-class YOLOv10_Detect(BaseModel):
+class YOLOv5_Detect(BaseModel):
     def __init__(self, 
                 model_file: str, 
                 conf: float, 
-                iou: float
+                iou: float,
+                nc: int,
+                anchors: list,
+                strides: list
                 ):
         super().__init__(model_file)
-        # 将反量化系数准备好, 只需要准备一次
-        # prepare the quantize scale, just need to generate once
-        self.s_bboxes_scale = self.quantize_model[0].outputs[0].properties.scale_data[np.newaxis, :]
-        self.m_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
-        self.l_bboxes_scale = self.quantize_model[0].outputs[2].properties.scale_data[np.newaxis, :]
-        logger.debug(f"{self.s_bboxes_scale.shape=}, {self.m_bboxes_scale.shape=}, {self.l_bboxes_scale.shape=}")
-
-        # DFL求期望的系数, 只需要生成一次
-        # DFL calculates the expected coefficients, which only needs to be generated once.
-        self.weights_static = np.array([i for i in range(16)]).astype(np.float32)[np.newaxis, np.newaxis, :]
-        logger.debug(f"{self.weights_static.shape = }")
-
-        # anchors, 只需要生成一次
-        self.s_anchor = np.stack([np.tile(np.linspace(0.5, 79.5, 80), reps=80), 
-                            np.repeat(np.arange(0.5, 80.5, 1), 80)], axis=0).transpose(1,0)
-        self.m_anchor = np.stack([np.tile(np.linspace(0.5, 39.5, 40), reps=40), 
-                            np.repeat(np.arange(0.5, 40.5, 1), 40)], axis=0).transpose(1,0)
-        self.l_anchor = np.stack([np.tile(np.linspace(0.5, 19.5, 20), reps=20), 
-                            np.repeat(np.arange(0.5, 20.5, 1), 20)], axis=0).transpose(1,0)
-        logger.debug(f"{self.s_anchor.shape = }, {self.m_anchor.shape = }, {self.l_anchor.shape = }")
-
-        # 输入图像大小, 一些阈值, 提前计算好
-        self.input_image_size = 640
+        # 配置项目
         self.conf = conf
         self.iou = iou
-        self.conf_inverse = -np.log(1/conf - 1)
-        logger.debug("iou threshol = %.2f, conf threshol = %.2f"%(iou, conf))
-        logger.debug("sigmoid_inverse threshol = %.2f"%self.conf_inverse)
-    
+        self.nc = 80
+        self.strides = np.array(strides) 
+        input_h, input_w = self.model_input_height, self.model_input_weight
+
+        # strides的grid网格, 只需要生成一次
+        s_grid = np.stack([np.tile(np.linspace(0.5, input_w//strides[0] - 0.5, input_w//strides[0]), reps=input_h//strides[0]), 
+                            np.repeat(np.arange(0.5, input_h//strides[0] + 0.5, 1), input_w//strides[0])], axis=0).transpose(1,0)
+        self.s_grid = np.hstack([s_grid, s_grid, s_grid]).reshape(-1, 2)
+
+        m_grid = np.stack([np.tile(np.linspace(0.5, input_w//strides[1] - 0.5, input_w//strides[1]), reps=input_h//strides[1]), 
+                            np.repeat(np.arange(0.5, input_h//strides[1] + 0.5, 1), input_w//strides[1])], axis=0).transpose(1,0)
+        self.m_grid = np.hstack([m_grid, m_grid, m_grid]).reshape(-1, 2)
+
+        l_grid = np.stack([np.tile(np.linspace(0.5, input_w//strides[2] - 0.5, input_w//strides[2]), reps=input_h//strides[2]), 
+                            np.repeat(np.arange(0.5, input_h//strides[2] + 0.5, 1), input_w//strides[2])], axis=0).transpose(1,0)
+        self.l_grid = np.hstack([l_grid, l_grid, l_grid]).reshape(-1, 2)
+
+        logger.info(f"{self.s_grid.shape = }  {self.m_grid.shape = }  {self.l_grid.shape = }")
+
+        # 用于广播的anchors, 只需要生成一次
+        anchors = np.array(anchors).reshape(3, -1)
+        self.s_anchors = np.tile(anchors[0], input_w//strides[0] * input_h//strides[0]).reshape(-1, 2)
+        self.m_anchors = np.tile(anchors[1], input_w//strides[1] * input_h//strides[1]).reshape(-1, 2)
+        self.l_anchors = np.tile(anchors[2], input_w//strides[2] * input_h//strides[2]).reshape(-1, 2)
+
+        logger.info(f"{self.s_anchors.shape = }  {self.m_anchors.shape = }  {self.l_anchors.shape = }")
+
 
     def postProcess(self, outputs: list[np.ndarray]) -> tuple[list]:
         begin_time = time()
         # reshape
-        s_bboxes = outputs[0].reshape(-1, 64)
-        m_bboxes = outputs[1].reshape(-1, 64)
-        l_bboxes = outputs[2].reshape(-1, 64)
-        s_clses = outputs[3].reshape(-1, 80)
-        m_clses = outputs[4].reshape(-1, 80)
-        l_clses = outputs[5].reshape(-1, 80)
+        s_pred = outputs[0].reshape([-1, (5 + self.nc)])
+        m_pred = outputs[1].reshape([-1, (5 + self.nc)])
+        l_pred = outputs[2].reshape([-1, (5 + self.nc)])
 
-        # classify: 利用numpy向量化操作完成阈值筛选(优化版 2.0)
-        s_max_scores = np.max(s_clses, axis=1)
-        s_valid_indices = np.flatnonzero(s_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
-        s_ids = np.argmax(s_clses[s_valid_indices, : ], axis=1)
+        # classify: 利用numpy向量化操作完成阈值筛选 (优化版 2.0)
+        s_raw_max_scores = np.max(s_pred[:, 5:], axis=1)
+        s_max_scores = 1 / ((1 + np.exp(-s_pred[:, 4]))*(1 + np.exp(-s_raw_max_scores)))
+        # s_max_scores = sigmoid(s_pred[:, 4])*sigmoid(s_pred[:, 4])
+        s_valid_indices = np.flatnonzero(s_max_scores >= self.conf)
+        s_ids = np.argmax(s_pred[s_valid_indices, 5:], axis=1)
         s_scores = s_max_scores[s_valid_indices]
 
-        m_max_scores = np.max(m_clses, axis=1)
-        m_valid_indices = np.flatnonzero(m_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
-        m_ids = np.argmax(m_clses[m_valid_indices, : ], axis=1)
+        m_raw_max_scores = np.max(m_pred[:, 5:], axis=1)
+        m_max_scores = 1 / ((1 + np.exp(-m_pred[:, 4]))*(1 + np.exp(-m_raw_max_scores)))
+        # m_max_scores = sigmoid(m_pred[:, 4])*sigmoid(m_pred[:, 4])
+        m_valid_indices = np.flatnonzero(m_max_scores >= self.conf)
+        m_ids = np.argmax(m_pred[m_valid_indices, 5:], axis=1)
         m_scores = m_max_scores[m_valid_indices]
 
-        l_max_scores = np.max(l_clses, axis=1)
-        l_valid_indices = np.flatnonzero(l_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
-        l_ids = np.argmax(l_clses[l_valid_indices, : ], axis=1)
+        l_raw_max_scores = np.max(l_pred[:, 5:], axis=1)
+        l_max_scores = 1 / ((1 + np.exp(-l_pred[:, 4]))*(1 + np.exp(-l_raw_max_scores)))
+        # l_max_scores = sigmoid(l_pred[:, 4])*sigmoid(l_pred[:, 4])
+        l_valid_indices = np.flatnonzero(l_max_scores >= self.conf)
+        l_ids = np.argmax(l_pred[l_valid_indices, 5:], axis=1)
         l_scores = l_max_scores[l_valid_indices]
 
-        # 3个Classify分类分支：Sigmoid计算
-        s_scores = 1 / (1 + np.exp(-s_scores))
-        m_scores = 1 / (1 + np.exp(-m_scores))
-        l_scores = 1 / (1 + np.exp(-l_scores))
+        # 特征解码
+        s_dxyhw = 1 / (1 + np.exp(-s_pred[s_valid_indices, :4]))
+        # s_dxyhw = sigmoid(s_pred[s_valid_indices, :4])
+        s_xy = (s_dxyhw[:, 0:2] * 2.0 + self.s_grid[s_valid_indices,:] - 1.0) * self.strides[0]
+        s_wh = (s_dxyhw[:, 2:4] * 2.0) ** 2 * self.s_anchors[s_valid_indices, :]
+        s_xyxy = np.concatenate([s_xy - s_wh * 0.5, s_xy + s_wh * 0.5], axis=-1)
 
-        # 3个Bounding Box分支：反量化
-        s_bboxes_float32 = s_bboxes[s_valid_indices,:].astype(np.float32) * self.s_bboxes_scale
-        m_bboxes_float32 = m_bboxes[m_valid_indices,:].astype(np.float32) * self.m_bboxes_scale
-        l_bboxes_float32 = l_bboxes[l_valid_indices,:].astype(np.float32) * self.l_bboxes_scale
+        m_dxyhw = 1 / (1 + np.exp(-m_pred[m_valid_indices, :4]))
+        # m_dxyhw = sigmoid(m_pred[m_valid_indices, :4])
+        m_xy = (m_dxyhw[:, 0:2] * 2.0 + self.m_grid[m_valid_indices,:] - 1.0) * self.strides[1]
+        m_wh = (m_dxyhw[:, 2:4] * 2.0) ** 2 * self.m_anchors[m_valid_indices, :]
+        m_xyxy = np.concatenate([m_xy - m_wh * 0.5, m_xy + m_wh * 0.5], axis=-1)
 
-        # 3个Bounding Box分支：dist2bbox (ltrb2xyxy)
-        s_ltrb_indices = np.sum(softmax(s_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
-        s_anchor_indices = self.s_anchor[s_valid_indices, :]
-        s_x1y1 = s_anchor_indices - s_ltrb_indices[:, 0:2]
-        s_x2y2 = s_anchor_indices + s_ltrb_indices[:, 2:4]
-        s_dbboxes = np.hstack([s_x1y1, s_x2y2])*8
-
-        m_ltrb_indices = np.sum(softmax(m_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
-        m_anchor_indices = self.m_anchor[m_valid_indices, :]
-        m_x1y1 = m_anchor_indices - m_ltrb_indices[:, 0:2]
-        m_x2y2 = m_anchor_indices + m_ltrb_indices[:, 2:4]
-        m_dbboxes = np.hstack([m_x1y1, m_x2y2])*16
-
-        l_ltrb_indices = np.sum(softmax(l_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
-        l_anchor_indices = self.l_anchor[l_valid_indices,:]
-        l_x1y1 = l_anchor_indices - l_ltrb_indices[:, 0:2]
-        l_x2y2 = l_anchor_indices + l_ltrb_indices[:, 2:4]
-        l_dbboxes = np.hstack([l_x1y1, l_x2y2])*32
+        l_dxyhw = 1 / (1 + np.exp(-l_pred[l_valid_indices, :4]))
+        # l_dxyhw = sigmoid(l_pred[l_valid_indices, :4])
+        l_xy = (l_dxyhw[:, 0:2] * 2.0 + self.l_grid[l_valid_indices,:] - 1.0) * self.strides[2]
+        l_wh = (l_dxyhw[:, 2:4] * 2.0) ** 2 * self.l_anchors[l_valid_indices, :]
+        l_xyxy = np.concatenate([l_xy - l_wh * 0.5, l_xy + l_wh * 0.5], axis=-1)
 
         # 大中小特征层阈值筛选结果拼接
-        dbboxes = np.concatenate((s_dbboxes, m_dbboxes, l_dbboxes), axis=0)
+        xyxy = np.concatenate((s_xyxy, m_xyxy, l_xyxy), axis=0)
         scores = np.concatenate((s_scores, m_scores, l_scores), axis=0)
         ids = np.concatenate((s_ids, m_ids, l_ids), axis=0)
 
-        # YOLOv10无需nms
+        # nms
+        indices = cv2.dnn.NMSBoxes(xyxy, scores, self.conf, self.iou)
 
-        # 还原到原始的img尺度，并进行clip
-        bboxes = dbboxes[:] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])
-        bboxes = bboxes.astype(np.int32)
+        # 还原到原始的img尺度
+        bboxes = (xyxy[indices] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])).astype(np.int32)
 
         logger.debug("\033[1;31m" + f"Post Process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
 
-        return ids[:], scores[:], bboxes
+        return ids[indices], scores[indices], bboxes
+
 
 coco_names = [
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", 
@@ -301,7 +305,7 @@ rdk_colors = [
     (133, 0, 82), (255, 56, 203), (200, 149, 255), (199, 55, 255)]
 
 def draw_detection(img: np.array, 
-                   bbox: tuple[int, int, int, int],
+                   bbox,#: tuple[int, int, int, int],
                    score: float, 
                    class_id: int) -> None:
     """

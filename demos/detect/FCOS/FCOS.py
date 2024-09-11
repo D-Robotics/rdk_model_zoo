@@ -23,9 +23,10 @@ from scipy.special import softmax
 # from scipy.special import expit as sigmoid
 from hobot_dnn import pyeasy_dnn as dnn  # BSP Python API
 
-from time import time
+from time import time 
 import argparse
 import logging 
+
 
 # 日志模块配置
 # logging configs
@@ -37,7 +38,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='models/yolov10n_detect_bernoulli2_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='models/fcos_512x512_nv12.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
@@ -47,14 +48,17 @@ def main():
     parser.add_argument('--test-img', type=str, default='../../../resource/assets/bus.jpg', help='Path to Load Test Image.')
     parser.add_argument('--img-save-path', type=str, default='jupyter_result.jpg', help='Path to Load Test Image.')
     parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
-    parser.add_argument('--reg', type=int, default=16, help='DFL reg layer.')
-    parser.add_argument('--iou-thres', type=float, default=0.45, help='IoU threshold.')
-    parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold.')
+    parser.add_argument('--iou-thres', type=float, default=0.6, help='IoU threshold.')
+    parser.add_argument('--conf-thres', type=float, default=0.5, help='confidence threshold.')
+    parser.add_argument('--is-stride', type=bool, default=False, help='True: X5, False: X3')
+    parser.add_argument('--strides', type=lambda s: list(map(int, s.split(','))), 
+                        default=[8, 16, 32, 64, 128],
+                        help='--anchors 8,16,32,64,128')
     opt = parser.parse_args()
     logger.info(opt)
 
     # 实例化
-    model = YOLOv10_Detect(opt.model_path, opt.conf_thres, opt.iou_thres)
+    model = FCOS(opt.model_path, opt.conf_thres, opt.iou_thres, opt.classes_num, opt.strides, opt.is_stride)
     # 读图
     img = cv2.imread(opt.test_img)
     # 准备输入数据
@@ -99,6 +103,20 @@ class BaseModel:
             logger.info(f"output[{i}], name={quantize_input.name}, type={quantize_input.properties.dtype}, shape={quantize_input.properties.shape}")
 
         self.model_input_height, self.model_input_weight = self.quantize_model[0].inputs[0].properties.shape[2:4]
+        self.trans = [_ for _ in range(15)]
+
+        # 反量化系数(如果有)
+        self.scale_datas = [ output.properties.scale_data for output in self.quantize_model[0].outputs]
+    
+    def trans_outputs(self, order_we_want, len_outputs):
+        for i in range(15):
+            # 寻找输出shape的第几个符合order_we_want
+            for j in range(15):
+                h,w,c = self.quantize_model[0].outputs[j].properties.shape[1:]
+                if h==order_we_want[i][0] and w==order_we_want[i][1] and c==order_we_want[i][2]:
+                    self.trans[i] = j
+                    break
+        logger.info(f"trans: {self.trans}")
 
     def resizer(self, img: np.ndarray)->np.ndarray:
         img_h, img_w = img.shape[0:2]
@@ -171,118 +189,127 @@ class BaseModel:
         return quantize_outputs
 
 
+    # def c2numpy(self, outputs) -> list[np.array]:
+    #     begin_time = time()
+    #     outputs = [dnnTensor.buffer for dnnTensor in outputs]
+    #     logger.debug("\033[1;31m" + f"c to numpy time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+    #     return outputs
+
     def c2numpy(self, outputs) -> list[np.array]:
         begin_time = time()
-        outputs = [dnnTensor.buffer for dnnTensor in outputs]
+        outputs = [outputs[self.trans[i]].buffer for i in range(len(outputs))]
         logger.debug("\033[1;31m" + f"c to numpy time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
         return outputs
 
-class YOLOv10_Detect(BaseModel):
+class FCOS(BaseModel):
     def __init__(self, 
                 model_file: str, 
                 conf: float, 
-                iou: float
+                iou: float,
+                nc: int,
+                strides: list,
+                is_stride: bool,
                 ):
         super().__init__(model_file)
-        # 将反量化系数准备好, 只需要准备一次
-        # prepare the quantize scale, just need to generate once
-        self.s_bboxes_scale = self.quantize_model[0].outputs[0].properties.scale_data[np.newaxis, :]
-        self.m_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
-        self.l_bboxes_scale = self.quantize_model[0].outputs[2].properties.scale_data[np.newaxis, :]
-        logger.debug(f"{self.s_bboxes_scale.shape=}, {self.m_bboxes_scale.shape=}, {self.l_bboxes_scale.shape=}")
-
-        # DFL求期望的系数, 只需要生成一次
-        # DFL calculates the expected coefficients, which only needs to be generated once.
-        self.weights_static = np.array([i for i in range(16)]).astype(np.float32)[np.newaxis, np.newaxis, :]
-        logger.debug(f"{self.weights_static.shape = }")
-
-        # anchors, 只需要生成一次
-        self.s_anchor = np.stack([np.tile(np.linspace(0.5, 79.5, 80), reps=80), 
-                            np.repeat(np.arange(0.5, 80.5, 1), 80)], axis=0).transpose(1,0)
-        self.m_anchor = np.stack([np.tile(np.linspace(0.5, 39.5, 40), reps=40), 
-                            np.repeat(np.arange(0.5, 40.5, 1), 40)], axis=0).transpose(1,0)
-        self.l_anchor = np.stack([np.tile(np.linspace(0.5, 19.5, 20), reps=20), 
-                            np.repeat(np.arange(0.5, 20.5, 1), 20)], axis=0).transpose(1,0)
-        logger.debug(f"{self.s_anchor.shape = }, {self.m_anchor.shape = }, {self.l_anchor.shape = }")
-
-        # 输入图像大小, 一些阈值, 提前计算好
-        self.input_image_size = 640
+        # 配置项目
         self.conf = conf
         self.iou = iou
-        self.conf_inverse = -np.log(1/conf - 1)
-        logger.debug("iou threshol = %.2f, conf threshol = %.2f"%(iou, conf))
-        logger.debug("sigmoid_inverse threshol = %.2f"%self.conf_inverse)
-    
+        self.nc = nc
+        self.strides = np.array(strides) 
+        self.nl = len(strides)
+        model_h, model_w = self.model_input_height, self.model_input_weight
+        self.is_stride = is_stride
 
-    def postProcess(self, outputs: list[np.ndarray]) -> tuple[list]:
+        # strides的grid网格, 只需要生成一次
+        self.grids = []
+        for stride in strides:
+            h, w = model_h//stride, model_w//stride
+            yv, xv = np.meshgrid(np.arange(h), np.arange(w))
+            self.grids.append(((np.stack((yv, xv), 2) + 0.5) * stride).reshape(-1, 2))
+
+        for stride, grid in zip(strides, self.grids):
+            logger.info(f"stride {stride}: {grid.shape=}")    
+
+        # 调整输出的顺序
+        order_we_want = []
+        for stride in strides:
+            order_we_want.append([model_h//stride, model_w//stride, nc])
+        for stride in strides:
+            order_we_want.append([model_h//stride, model_w//stride, 4])
+        for stride in strides:
+            order_we_want.append([model_h//stride, model_w//stride, 1])
+        self.trans_outputs(order_we_want, 15)
+
+        # 准备反量化系数(如果有), 只需要准备一次
+        # 反量化系数
+        self.clses_scales, self.bboxes_scales, self.centers_scales = [], [], []
+        for i in range(self.nl):
+            if len(self.scale_datas[self.trans[i]])!=0:
+                self.clses_scales.append(self.scale_datas[self.trans[i]][np.newaxis, :])
+            else:
+                self.clses_scales.append(None)
+
+            if len(self.scale_datas[self.trans[i+5]])!=0:
+                self.bboxes_scales.append(self.scale_datas[self.trans[i+5]][np.newaxis, :])
+            else:
+                self.bboxes_scales.append(None)
+
+            if len(self.scale_datas[self.trans[i+10]])!=0:
+                self.centers_scales.append(self.scale_datas[self.trans[i+10]][np.newaxis, :])
+            else:
+                self.centers_scales.append(None)
+
+        for stride, clses_scale, bboxes_scale, centers_scale in zip(strides, self.clses_scales, self.bboxes_scales, self.centers_scales):
+            if clses_scale is not None and bboxes_scale is not None and centers_scale is not None:
+                logger.info(f"stride {stride}: {clses_scale.shape=}  {bboxes_scale.shape=}  {centers_scale.shape=}")
+            else:
+                logger.info(f"stride {stride}: Needn't Dequantized")
+
+    # def postProcess(self, outputs: list[np.ndarray]) -> tuple[list]:
+    def postProcess(self, outputs):
         begin_time = time()
         # reshape
-        s_bboxes = outputs[0].reshape(-1, 64)
-        m_bboxes = outputs[1].reshape(-1, 64)
-        l_bboxes = outputs[2].reshape(-1, 64)
-        s_clses = outputs[3].reshape(-1, 80)
-        m_clses = outputs[4].reshape(-1, 80)
-        l_clses = outputs[5].reshape(-1, 80)
+        clses = [outputs[i].reshape(-1, self.nc) for i in range(self.nl)]
+        bboxes = [outputs[i+5].reshape(-1, 4) for i in range(self.nl)]
+        centers = [outputs[i+10].reshape(-1, 1) for i in range(self.nl)]
 
-        # classify: 利用numpy向量化操作完成阈值筛选(优化版 2.0)
-        s_max_scores = np.max(s_clses, axis=1)
-        s_valid_indices = np.flatnonzero(s_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
-        s_ids = np.argmax(s_clses[s_valid_indices, : ], axis=1)
-        s_scores = s_max_scores[s_valid_indices]
+        # classify: 利用numpy向量化操作完成阈值筛选 (优化版 2.0)
+        scores, ids, indices = [], [], []
+        for cls, center, clses_scale, centers_scale in zip(clses, centers, self.clses_scales, self.centers_scales):
+            cls = cls if clses_scale is None else cls.astype(np.float32)*clses_scale
+            center = center if centers_scale is None else center.astype(np.float32)*centers_scale
+            raw_max_scores = np.max(cls, axis=1)
+            max_scores = np.sqrt(1 / ((1 + np.exp(-center[:,0]))*(1 + np.exp(-raw_max_scores))))
+            valid_indices = np.flatnonzero(max_scores >= self.conf)
+            ids.append(np.argmax(cls[valid_indices, :], axis=1))
+            scores.append(max_scores[valid_indices])
+            indices.append(valid_indices)
 
-        m_max_scores = np.max(m_clses, axis=1)
-        m_valid_indices = np.flatnonzero(m_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
-        m_ids = np.argmax(m_clses[m_valid_indices, : ], axis=1)
-        m_scores = m_max_scores[m_valid_indices]
-
-        l_max_scores = np.max(l_clses, axis=1)
-        l_valid_indices = np.flatnonzero(l_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
-        l_ids = np.argmax(l_clses[l_valid_indices, : ], axis=1)
-        l_scores = l_max_scores[l_valid_indices]
-
-        # 3个Classify分类分支：Sigmoid计算
-        s_scores = 1 / (1 + np.exp(-s_scores))
-        m_scores = 1 / (1 + np.exp(-m_scores))
-        l_scores = 1 / (1 + np.exp(-l_scores))
-
-        # 3个Bounding Box分支：反量化
-        s_bboxes_float32 = s_bboxes[s_valid_indices,:].astype(np.float32) * self.s_bboxes_scale
-        m_bboxes_float32 = m_bboxes[m_valid_indices,:].astype(np.float32) * self.m_bboxes_scale
-        l_bboxes_float32 = l_bboxes[l_valid_indices,:].astype(np.float32) * self.l_bboxes_scale
-
-        # 3个Bounding Box分支：dist2bbox (ltrb2xyxy)
-        s_ltrb_indices = np.sum(softmax(s_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
-        s_anchor_indices = self.s_anchor[s_valid_indices, :]
-        s_x1y1 = s_anchor_indices - s_ltrb_indices[:, 0:2]
-        s_x2y2 = s_anchor_indices + s_ltrb_indices[:, 2:4]
-        s_dbboxes = np.hstack([s_x1y1, s_x2y2])*8
-
-        m_ltrb_indices = np.sum(softmax(m_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
-        m_anchor_indices = self.m_anchor[m_valid_indices, :]
-        m_x1y1 = m_anchor_indices - m_ltrb_indices[:, 0:2]
-        m_x2y2 = m_anchor_indices + m_ltrb_indices[:, 2:4]
-        m_dbboxes = np.hstack([m_x1y1, m_x2y2])*16
-
-        l_ltrb_indices = np.sum(softmax(l_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
-        l_anchor_indices = self.l_anchor[l_valid_indices,:]
-        l_x1y1 = l_anchor_indices - l_ltrb_indices[:, 0:2]
-        l_x2y2 = l_anchor_indices + l_ltrb_indices[:, 2:4]
-        l_dbboxes = np.hstack([l_x1y1, l_x2y2])*32
+        # 特征解码
+        xyxys = []
+        for indic, grid, stride, bbox, bboxes_scale in zip(indices, self.grids, self.strides, bboxes, self.bboxes_scales):
+            grid_indices = grid[indic, :]
+            bbox = bbox[indic, :] if bboxes_scale is None else bbox[indic, :].astype(np.float32)*bboxes_scale
+            bbox = bbox*stride if self.is_stride else bbox
+            x1y1 = grid_indices - bbox[:, 0:2]
+            x2y2 = grid_indices + bbox[:, 2:4]
+            xyxys.append(np.hstack([x1y1, x2y2]))
 
         # 大中小特征层阈值筛选结果拼接
-        dbboxes = np.concatenate((s_dbboxes, m_dbboxes, l_dbboxes), axis=0)
-        scores = np.concatenate((s_scores, m_scores, l_scores), axis=0)
-        ids = np.concatenate((s_ids, m_ids, l_ids), axis=0)
+        xyxy = np.concatenate([_ for _ in xyxys], axis=0)
+        scores = np.concatenate([_ for _ in scores], axis=0)
+        ids = np.concatenate([_ for _ in ids], axis=0)
 
-        # YOLOv10无需nms
+        # nms
+        indices = cv2.dnn.NMSBoxes(xyxy, scores, self.conf, self.iou)
 
-        # 还原到原始的img尺度，并进行clip
-        bboxes = dbboxes[:] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])
-        bboxes = bboxes.astype(np.int32)
+        # 还原到原始的img尺度
+        bboxes = (xyxy[indices] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])).astype(np.int32)
 
         logger.debug("\033[1;31m" + f"Post Process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
 
-        return ids[:], scores[:], bboxes
+        return ids[indices], scores[indices], bboxes
+
 
 coco_names = [
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", 
@@ -301,7 +328,7 @@ rdk_colors = [
     (133, 0, 82), (255, 56, 203), (200, 149, 255), (199, 55, 255)]
 
 def draw_detection(img: np.array, 
-                   bbox: tuple[int, int, int, int],
+                   bbox,#: tuple[int, int, int, int],
                    score: float, 
                    class_id: int) -> None:
     """
