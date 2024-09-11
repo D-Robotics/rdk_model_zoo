@@ -7,6 +7,7 @@
   - [Nash-e (RDK S100)](#nash-e-rdk-s100)
   - [Nash-m (RDK S100P)](#nash-m-rdk-s100p)
   - [Bernoulli2 (RDK X3 \& RDK X3 Module)](#bernoulli2-rdk-x3--rdk-x3-module)
+    - [bin - nv12](#bin---nv12-1)
 
 
 
@@ -47,3 +48,8 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolov10x_detec
 
 
 ## Bernoulli2 (RDK X3 & RDK X3 Module)
+### bin - nv12
+YOLOv10n - Detect
+```bash
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/yolov10n_detect_bernoulli2_640x640_nv12_modified.bin
+```

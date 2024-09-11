@@ -42,3 +42,8 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolov8x_detect
 
 
 ## Bernoulli2 (RDK X3 & RDK X3 Module)
+
+YOLOv8n - Detect
+```bash
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/yolov8n_detect_bernoulli2_640x640_nv12_modified.bin
+```

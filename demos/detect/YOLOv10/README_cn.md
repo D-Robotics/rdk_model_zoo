@@ -4,6 +4,8 @@
 - [YOLOv10 Detect](#yolov10-detect)
   - [YOLO介绍](#yolo介绍)
   - [性能数据 (简要)](#性能数据-简要)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-1)
   - [模型下载地址](#模型下载地址)
   - [输入输出数据](#输入输出数据)
   - [公版处理流程](#公版处理流程)
@@ -16,6 +18,8 @@
     - [部分编译日志参考](#部分编译日志参考)
   - [模型训练](#模型训练)
   - [性能数据](#性能数据)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-2)
+    - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module)
   - [反馈](#反馈)
   - [参考](#参考)
 
@@ -37,16 +41,22 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，�
  - YOLOv10是由清华大学的研究人员使用该软件包创建的。 UltralyticsPython 软件包创建的。该版本通过引入端到端头(End-to-End head),消除了非最大抑制(NMS)要求，实现了实时目标检测的进步。
   
 ## 性能数据 (简要)
-RDK X5 & RDK X5 Module
+### RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型(公版) | 尺寸(像素) | 类别数 | 参数量(M) | 吞吐量(FPS) | 后处理时间(Python) | 
-| --- | --- | --- | --- | --- | --- |
-| YOLOv10n | 640×640 | 80 | 6.7  | 132.7 | 4.5 ms | 
-| YOLOv10s | 640×640 | 80 | 21.6 | 71.0 | 4.5 ms |  
-| YOLOv10m | 640×640 | 80 | 59.1 | 34.5 | 4.5 ms |  
-| YOLOv10b | 640×640 | 80 | 92.0 | 25.4 | 4.5 ms |  
-| YOLOv10l | 640×640 | 80 | 120.3 | 20.0 | 4.5 ms |  
-| YOLOv10x | 640×640 | 80 | 160.4 | 14.5 | 4.5 ms |  
+| 模型(公版) | 尺寸(像素) | 类别数 | FLOPs (G) | BPU吞吐量 | 后处理时间(Python) |
+|---------|---------|-------|---------|---------|----------|
+| YOLOv10n | 640×640 | 80 | 6.7 G | 132.7 FPS | 4.5 ms | 
+| YOLOv10s | 640×640 | 80 | 21.6 G | 71.0 FPS | 4.5 ms |  
+| YOLOv10m | 640×640 | 80 | 59.1 G | 34.5 FPS | 4.5 ms |  
+| YOLOv10b | 640×640 | 80 | 92.0 G | 25.4 FPS | 4.5 ms |  
+| YOLOv10l | 640×640 | 80 | 120.3 G | 20.0 FPS | 4.5 ms |  
+| YOLOv10x | 640×640 | 80 | 160.4 G | 14.5 FPS | 4.5 ms |  
+
+### RDK X5 & RDK X5 Module
+目标检测 Detection (COCO)
+| 模型(公版) | 尺寸(像素) | 类别数 | FLOPs (G) | BPU吞吐量 | 后处理时间(Python) |
+|---------|---------|-------|---------|---------|----------|
+| YOLOv10n | 640×640 | 80 | 6.7 G | 18.1 FPS | 5 ms | 
 
 ## 模型下载地址
 请参考`./model/download.md`
@@ -516,16 +526,22 @@ UNIT_CONV_FOR_/model.22/m.0/Add                     BPU  id(0)     Conv         
 
 ## 性能数据
 
-RDK X5 & RDK X5 Module
+### RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度(mAP:50-95) | 量化精度(mAP:50-95) | 平均BPU延迟/吞吐量(单线程) | 平均BPU延迟/吞吐量(多线程) | 后处理时间(Python) |
-|---------|---------|-------|---------|---------|----------|--------------------|--------------------|-------------|
-| YOLOv10n | 640×640 | 80 | 6.7  | 38.5 |  | 9.3 ms / 107.0 FPS (1 thread) | 15.0 ms / 132.7 FPS (2 threads) | 4.5 ms |
-| YOLOv10s | 640×640 | 80 | 21.6 | 46.3 |  | 15.8 ms / 63.0 FPS (1 thread) | 28.1 ms / 71.0 FPS (2 threads) | 4.5 ms |
-| YOLOv10m | 640×640 | 80 | 59.1 | 51.1 |  | 30.8 ms / 32.4 FPS (1 thread) | 51.8 ms / 34.5 FPS (2 threads) | 4.5 ms |
-| YOLOv10b | 640×640 | 80 | 92.0 | 52.3 |  | 41.1 ms / 24.3 FPS (1 thread) | 78.4 ms / 25.4 FPS (2 threads) | 4.5 ms |
-| YOLOv10l | 640×640 | 80 | 120.3 | 53.2 |  | 52.0 ms / 19.2 FPS (1 thread) | 100.0 ms / 20.0 FPS (2 threads) | 4.5 ms |
-| YOLOv10x | 640×640 | 80 | 160.4 | 54.4 |  | 70.7 ms / 14.1 FPS (1 thread) | 137.3 ms / 14.5 FPS (2 threads) | 4.5 ms |
+| 模型 | 尺寸(像素) | 类别数 | FLOPs (G) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
+|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
+| YOLOv10n | 640×640 | 80 | 6.7  | 38.5 G |  | 9.3 ms / 107.0 FPS (1 thread) <br/> 15.0 ms / 132.7 FPS (2 threads) | 4.5 ms |
+| YOLOv10s | 640×640 | 80 | 21.6 | 46.3 G |  | 15.8 ms / 63.0 FPS (1 thread) <br/> 28.1 ms / 71.0 FPS (2 threads) | 4.5 ms |
+| YOLOv10m | 640×640 | 80 | 59.1 | 51.1 G |  | 30.8 ms / 32.4 FPS (1 thread) <br/> 51.8 ms / 34.5 FPS (2 threads) | 4.5 ms |
+| YOLOv10b | 640×640 | 80 | 92.0 | 52.3 G |  | 41.1 ms / 24.3 FPS (1 thread) <br/> 78.4 ms / 25.4 FPS (2 threads) | 4.5 ms |
+| YOLOv10l | 640×640 | 80 | 120.3 | 53.2 G |  | 52.0 ms / 19.2 FPS (1 thread) <br/> 100.0 ms / 20.0 FPS (2 threads) | 4.5 ms |
+| YOLOv10x | 640×640 | 80 | 160.4 | 54.4 G |  | 70.7 ms / 14.1 FPS (1 thread) <br/> 137.3 ms / 14.5 FPS (2 threads) | 4.5 ms |
+
+### RDK X3 & RDK X3 Module
+目标检测 Detection (COCO)
+| 模型 | 尺寸(像素) | 类别数 | FLOPs (G) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
+|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
+| YOLOv10n | 640×640 | 80 | 6.7  | 38.5 G |  | 174.7 ms / 5.7 FPS (1 thread) <br/> 181.5 ms / 11.0 FPS (2 threads) <br/> 240.1 ms / 16.2 FPS (4 threads) <br/> 421.0 ms / 18.1 FPS (8 threads) | 5 ms |
 
 说明: 
 1. X5的状态为最佳状态：CPU为8 × A55@1.8G, 全核心Performance调度, BPU为1 × Bayes-e@1G, 共10TOPS等效int8算力。
