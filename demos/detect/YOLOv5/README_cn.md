@@ -636,7 +636,7 @@ TODO: 训练流程
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
 ```
-1. 测试板卡均为最佳状态。
+2. 测试板卡均为最佳状态。
  - X5的状态为最佳状态：CPU为8 × A55@1.8G, 全核心Performance调度, BPU为1 × Bayes-e@10TOPS.
 ```bash
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
@@ -647,8 +647,8 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 ```
-1. 浮点/定点mAP：50-95精度使用pycocotools计算,来自于COCO数据集,可以参考微软的论文,此处用于评估板端部署的精度下降程度。
-2. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行12ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成166帧图像的后处理, 后处理不会构成瓶颈.
+3. 浮点/定点mAP：50-95精度使用pycocotools计算,来自于COCO数据集,可以参考微软的论文,此处用于评估板端部署的精度下降程度。
+4. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行12ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成166帧图像的后处理, 后处理不会构成瓶颈.
 
 
 ## 反馈
