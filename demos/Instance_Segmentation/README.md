@@ -7,7 +7,7 @@ Instance segmentation: distinguish different instances and label them with masks
 
 ## Performance Data (in brief)
 ### RDK X5 & RDK X5 Module
-### Instance Segmentation (COCO)
+Instance Segmentation (COCO)
 | model (public) | size (pixels) | number of classes | number of parameters | BPU throughput | post-processing time (Python) |
 |---------|---------|-------|---------|---------|----------|
 | YOLOv8n-seg | 640×640 | 80 | 3.4 M  | 175.3 FPS | 6 ms |
