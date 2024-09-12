@@ -1,6 +1,8 @@
-[English](./README.md) | 简体中文
 
 ![](resource/imgs/model_zoo_logo.jpg)
+
+[English](./README.md) | 简体中文
+
 
 ## RDK Model Zoo 简介
 
@@ -8,10 +10,11 @@ RDK Model Zoo 基于[RDK](https://d-robotics.cc/rdkRobotDevKit)开发, 提供大
 
 **RDK Model Zoo 目前提供以下类型模型参考.**
 
- - [大模型]([rdk_model_zoo/llm](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/)): `./rdk_model_zoo/demos/llm`
+
  - [图像分类](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/classification): `./rdk_model_zoo/demos/classification`
  - [目标检测](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/detect): `./rdk_model_zoo/demos/detect`
  - [实例分割](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Instance_Segmentation): `./rdk_model_zoo/demos/Instance_Segmentation`
+  - [大模型]([rdk_model_zoo/llm](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/)): `./rdk_model_zoo/demos/llm`
 
 **RDK Model Zoo 支持如下平台.**
  - 支持 [RDK X5](https://developer.d-robotics.cc/rdkx5), [RDK Ultra](https://developer.d-robotics.cc/rdkultra) 平台 (Bayse)
