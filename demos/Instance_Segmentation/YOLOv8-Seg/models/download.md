@@ -43,3 +43,8 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolov8x_instan
 
 
 ## Bernoulli2 (RDK X3 & RDK X3 Module)
+
+### bin - nv12
+```bash
+wget http://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/yolov8n_instance_seg_bernoulli2_640x640_nv12_modified.bin
+```
