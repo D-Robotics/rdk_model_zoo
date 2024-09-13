@@ -226,12 +226,12 @@ Install the bpu_infer_lib library using pip
 
 with RDK X5：
 ```bash
-pip install bpu_infer_x5 -i http://archive.d-robotics.cc:8080/simple/ --trusted-host archive.d-robotics.cc
+pip install bpu_infer_lib_x5 -i http://archive.d-robotics.cc/simple/ --trusted-host archive.d-robotics.cc
 ```
 
 with RDK X3：
 ```bash
-pip install bpu_infer_x3 -i http://archive.d-robotics.cc:8080/simple/ --trusted-host archive.d-robotics.cc
+pip install bpu_infer_lib_x3 -i http://archive.d-robotics.cc/simple/ --trusted-host archive.d-robotics.cc
 ```
 
 ### D-Robotics System Software BSP C/C++ & Python API (Reference)
