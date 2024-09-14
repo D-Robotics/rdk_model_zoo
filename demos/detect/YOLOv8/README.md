@@ -44,7 +44,7 @@ Object Detection (COCO)
 | Model (Official) | Size (px) | Classes | Params (M) | Throughput (FPS) | Post Process Time (Python) |
 |---------|---------|-------|-------------------|--------------------|---|
 | YOLOv8n | 640×640 | 80 | 3.2 | 263.6 | 5 ms |
-| YOLOv8s | 640×640 | 80 | 11.2 | 194.9 | 5 ms |
+| YOLOv8s | 640×640 | 80 | 11.2 | 94.9 | 5 ms |
 | YOLOv8m | 640×640 | 80 | 25.9 | 35.7 | 5 ms |
 | YOLOv8l | 640×640 | 80 | 43.7 | 17.9 | 5 ms |
 | YOLOv8x | 640×640 | 80 | 68.2 | 11.2 | 5 ms |

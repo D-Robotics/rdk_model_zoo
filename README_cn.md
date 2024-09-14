@@ -151,7 +151,7 @@ RDK Model Zoo 基于[RDK](https://d-robotics.cc/rdkRobotDevKit)开发, 提供大
 | YOLOv5l_v7.0 | 640×640 | 80 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 13.1 FPS | 12 ms |
 | YOLOv8n | 640×640 | 80 | 3.2 M | **263.6** FPS | 5 ms |
-| YOLOv8s | 640×640 | 80 | 11.2 M | 194.9 FPS | 5 ms |
+| YOLOv8s | 640×640 | 80 | 11.2 M | 94.9 FPS | 5 ms |
 | YOLOv8m | 640×640 | 80 | 25.9 M | 35.7 FPS | 5 ms |
 | YOLOv8l | 640×640 | 80 | 43.7 M | 17.9 FPS | 5 ms |
 | YOLOv8x | 640×640 | 80 | 68.2 M | 11.2 FPS | 5 ms |

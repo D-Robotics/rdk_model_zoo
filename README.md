@@ -8,7 +8,7 @@ Welcome to the RDK Model Zoo GitHub
 
 ## Introduction to RDK Model Zoo
 
-RDK Model Zoo [RDK] (https://d-robotics.cc/rdkRobotDevKit) based development, provide the most mainstream deployment routines of the algorithm. The routines contain processes for exporting D-Robotics *.bin models, reasoning about D-robotics *.bin models using apis such as Python. Some models also include data acquisition, model training, export, transformation, and deployment processes.
+RDK Model Zoo [RDK](https://d-robotics.cc/rdkRobotDevKit) based development, provide the most mainstream deployment routines of the algorithm. The routines contain processes for exporting D-Robotics *.bin models, reasoning about D-robotics *.bin models using apis such as Python. Some models also include data acquisition, model training, export, transformation, and deployment processes.
 
 **RDK Model Zoo currently provides the following types of model references**
 
@@ -43,11 +43,11 @@ RDK Model Zoo [RDK] (https://d-robotics.cc/rdkRobotDevKit) based development, pr
     - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module)
     - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module)
   - [Object Detection](#object-detection)
-  - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-1)
-  - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module-1)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-1)
+    - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module-1)
   - [Instance Segmentation](#instance-segmentation)
-  - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-2)
-  - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module-2)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-2)
+    - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module-2)
   - [Semantic segmentation](#semantic-segmentation)
   - [Panoramic segmentation](#panoramic-segmentation)
   - [Keypoint detection](#keypoint-detection)
@@ -137,7 +137,7 @@ RDK Model Zoo [RDK] (https://d-robotics.cc/rdkRobotDevKit) based development, pr
 |     | ResNet18                   | 224x224     | 1000     | 11.2      | 71.49     | 70.50     | 8.87        | 17.07       | 232.74      |
 
 ### Object Detection
-### RDK X5 & RDK X5 Module
+#### RDK X5 & RDK X5 Module
 Object Detection (COCO)
 | model (public) | size (pixels) | number of classes | number of parameters | BPU throughput | post-processing time (Python) |
 |---------|---------|-------|---------|---------|----------|
@@ -154,7 +154,7 @@ Object Detection (COCO)
 | YOLOv5l_v7.0 | 640×640 | 80 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 13.1 FPS | 12 ms |
 | YOLOv8n | 640×640 | 80 | 3.2 M | 263.6 FPS | 5 ms |
-| YOLOv8s | 640×640 | 80 | 11.2 M | 194.9 FPS | 5 ms |
+| YOLOv8s | 640×640 | 80 | 11.2 M | 94.9 FPS | 5 ms |
 | YOLOv8m | 640×640 | 80 | 25.9 M | 35.7 FPS | 5 ms |
 | YOLOv8l | 640×640 | 80 | 43.7 M | 17.9 FPS | 5 ms |
 | YOLOv8x | 640×640 | 80 | 68.2 M | 11.2 FPS | 5 ms |
@@ -166,7 +166,7 @@ Object Detection (COCO)
 | YOLOv10x | 640×640 | 80 | 160.4 G | 14.5 FPS | 4.5 ms |  
 
 
-### RDK X3 & RDK X3 Module
+#### RDK X3 & RDK X3 Module
 Object Detection (COCO)
 | model (public) | size (pixels) | number of classes | number of parameters | BPU throughput | post-processing time (Python) |
 |---------|---------|-------|---------|---------|----------|
@@ -182,7 +182,7 @@ Object Detection (COCO)
 The model details, including BPU frame latency, BPU throughput, post-processing time, test conditions, etc. are in the `README.md` folder corresponding to `demos/detect`.
 
 ### Instance Segmentation
-### RDK X5 & RDK X5 Module
+#### RDK X5 & RDK X5 Module
 Instance Segmentation (COCO)
 | model (public) | size (pixels) | number of classes | number of parameters | BPU throughput | post-processing time (Python) |
 |---------|---------|-------|---------|---------|----------|
@@ -193,7 +193,7 @@ Instance Segmentation (COCO)
 | YOLOv8x-seg | 640×640 | 80 | 71.8 M | 8.9 FPS | 6 ms |
 
 
-### RDK X3 & RDK X3 Module
+#### RDK X3 & RDK X3 Module
 Instance Segmentation (COCO) Instance Segmentation
 | model (public) | size (pixels) | number of classes | number of parameters | BPU throughput | post-processing time (Python) |
 |---------|---------|-------|---------|---------|----------|
@@ -238,7 +238,7 @@ pip install bpu_infer_lib_x3 -i http://archive.d-robotics.cc/simple/ --trusted-h
 
 Burn with the system, managed as a debian package.
 ```bash
-sudo apt update # Make sure you have an archive.d-robotics.cc source
+sudo apt update # Make sure you have an archive.d-robotics.cc apt source
 sudo apt install hobot-spdev
 sudo apt show hobot-spdev
 ```
