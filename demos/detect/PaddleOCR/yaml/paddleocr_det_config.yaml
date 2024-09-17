@@ -1,0 +1,45 @@
+# Copyright (c) 2021-2024 D-Robotics Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+model_parameters:
+  onnx_model: './en_PP-OCRv3_det_infer.onnx'
+  march: "bayes-e"
+  layer_out_dump: False
+  working_dir: 'model_output'
+  output_model_file_prefix: 'en_PP-OCRv3_det_infer-deploy_640x640_nv12'
+
+
+input_parameters:
+  input_name: ""
+  input_type_rt: 'nv12'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW'
+  input_shape: ''
+  norm_type: 'data_mean_and_scale'
+  mean_value: 123.675 116.28 103.53
+  scale_value: 0.01712475 0.017507 0.01742919
+
+
+calibration_parameters:
+  cal_data_dir: './calibration_data_rgb_f32'
+  cal_data_type: 'float32'
+  calibration_type: 'default'
+
+
+compiler_parameters:
+  compile_mode: 'latency'
+  debug: False
+  optimize_level: 'O3'
+  
