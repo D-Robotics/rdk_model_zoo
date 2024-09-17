@@ -9,7 +9,11 @@ YOLO (You Only Look Once) 是一种实时目标检测系统，其核心理念是
 
 # 2. 模型下载地址
 
-- yolo_world.bin: TODO
+地瓜异构.bin模型文件已经上传至云服务器中，可通过 wget 命令在服务器网站中下载：
+
+```shell
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolo_world.bin
+```
 
 将yolo_world.bin放入与当前README.md的同级目录即可。
 
