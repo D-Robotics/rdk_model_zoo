@@ -9,7 +9,11 @@ YOLO (You Only Look Once) is a real-time object detection system whose core conc
 
 # 2. Model download link
 
-- yolo_world.bin: TODO
+D-Robotics .bin model file has been uploaded to the cloud server, you can use `wget` to download from the server:
+
+```shell
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolo_world.bin
+```
 
 yolo_world.bin should be in the same directory as the current README.md.
 

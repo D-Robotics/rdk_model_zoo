@@ -23,8 +23,12 @@ Characteristics of CLIP model:
 
 # 2. Model download link
 
-- image encoder: TODO
-- text encoder: TODO
+D-Robotics .bin model file has been uploaded to the cloud server, you can use `wget` to download from the server:
+
+```shell
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/text_encoder.onnx
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/img_encoder.bin
+```
 
 img_encoder.bin and text_encoder.onnx should be in the same directory as the current README.md.
 
