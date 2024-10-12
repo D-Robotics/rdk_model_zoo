@@ -16,7 +16,7 @@ RDK Model Zoo [RDK](https://d-robotics.cc/rdkRobotDevKit) based development, pro
  - [Image classification](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/classification): `./rdk_model_zoo/demos/classification`
  - [Object Detection](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/detect): `./rdk_model_zoo/demos/detect`
  - [Instance_Segmentation](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Instance_Segmentation): `./rdk_model_zoo/demos/Instance_Segmentation`
-  - [Large Model]([rdk_model_zoo/llm](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/)): `./rdk_model_zoo/demos/llm`
+  - [Large Model](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/llm): `./rdk_model_zoo/demos/llm`
 
 **RDK Model Zoo supports the following platforms**
 - Support [RDK X5](https://developer.d-robotics.cc/rdkx5), [RDK Ultra](https://developer.d-robotics.cc/rdkultra) platforms (Bayse)
