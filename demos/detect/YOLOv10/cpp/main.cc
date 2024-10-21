@@ -21,7 +21,7 @@ limitations under the License.
 
 // D-Robotics *.bin 模型路径
 // Path of D-Robotics *.bin model.
-#define MODEL_PATH "../../models/yolov8x_detect_bayese_640x640_nv12_modified.bin"
+#define MODEL_PATH "../../models/yolov10x_detect_bayese_640x640_nv12_modified.bin"
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
@@ -424,9 +424,10 @@ int main()
 
     // 7. YOLOv8-Detect 后处理
     // 7. Postprocess
-    float CONF_THRES_RAW = -log(1 / SCORE_THRESHOLD - 1);     // 利用反函数作用阈值，利用单调性筛选
-    std::vector<std::vector<cv::Rect2d>> bboxes(CLASSES_NUM); // 每个id的xyhw 信息使用一个std::vector<cv::Rect2d>存储
-    std::vector<std::vector<float>> scores(CLASSES_NUM);      // 每个id的score信息使用一个std::vector<float>存储
+    float CONF_THRES_RAW = -log(1 / SCORE_THRESHOLD - 1); // 利用反函数作用阈值，利用单调性筛选
+    std::vector<cv::Rect2d> bboxes;
+    std::vector<float> scores;
+    std::vector<int> class_ids;
 
     begin_time = std::chrono::system_clock::now();
 
@@ -511,13 +512,12 @@ int main()
                 ltrb[i] /= sum;
             }
 
-            // 7.1.9 剔除不合格的框   if(x1 >= x2 || y1 >=y2) continue;
+            // 7.1.9 剔除不合格的框   if(x1 >= x2 || y1 >= y2) continue;
             // 7.1.9 Remove unqualified boxes
             if (ltrb[2] + ltrb[0] <= 0 || ltrb[3] + ltrb[1] <= 0)
             {
                 continue;
             }
-
             // 7.1.10 dist 2 bbox (ltrb 2 xyxy)
             float x1 = (w + 0.5 - ltrb[0]) * 8.0;
             float y1 = (h + 0.5 - ltrb[1]) * 8.0;
@@ -526,8 +526,9 @@ int main()
 
             // 7.1.11 对应类别加入到对应的std::vector中
             // 7.1.11 Add the corresponding class to the corresponding std::vector.
-            bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
-            scores[cls_id].push_back(score);
+            bboxes.push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
+            scores.push_back(score);
+            class_ids.push_back(cls_id);
         }
     }
 
@@ -587,7 +588,9 @@ int main()
             // 7.2.6 不合格则直接跳过, 避免无用的反量化, DFL和dist2bbox计算
             // 7.2.6 If not qualified, skip to avoid unnecessary dequantization, DFL and dist2bbox calculation
             if (cur_m_cls_raw[cls_id] < CONF_THRES_RAW)
+            {
                 continue;
+            }
 
             // 7.2.7 计算这个目标的分数
             // 7.2.7 Calculate the score of the target
@@ -609,7 +612,7 @@ int main()
                 ltrb[i] /= sum;
             }
 
-            // 7.2.9 剔除不合格的框   if(x1 >= x2 || y1 >=y2) continue;
+            // 7.2.9 剔除不合格的框   if(x1 >= x2 || y1 >= y2) continue;
             // 7.2.9 Remove unqualified boxes
             if (ltrb[2] + ltrb[0] <= 0 || ltrb[3] + ltrb[1] <= 0)
             {
@@ -624,8 +627,9 @@ int main()
 
             // 7.2.11 对应类别加入到对应的std::vector中
             // 7.2.11 Add the corresponding class to the corresponding std::vector.
-            bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
-            scores[cls_id].push_back(score);
+            bboxes.push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
+            scores.push_back(score);
+            class_ids.push_back(cls_id);
         }
     }
 
@@ -723,52 +727,46 @@ int main()
 
             // 7.3.11 对应类别加入到对应的std::vector中
             // 7.3.11 Add the corresponding class to the corresponding std::vector.
-            bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
-            scores[cls_id].push_back(score);
+            bboxes.push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
+            scores.push_back(score);
+            class_ids.push_back(cls_id);
         }
     }
 
-    // 7.4 对每一个类别进行NMS
-    // 7.4 NMS
-    std::vector<std::vector<int>> indices(CLASSES_NUM);
-    for (int i = 0; i < CLASSES_NUM; i++)
-    {
-        cv::dnn::NMSBoxes(bboxes[i], scores[i], SCORE_THRESHOLD, NMS_THRESHOLD, indices[i], 1.f, NMS_TOP_K);
-    }
+    // 7.4 YOLOv10 无需 NMS
+    // 7.4 YOLOv10 needn't NMS
+
     std::cout << "\033[31m Post Process time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
 
     // 8. 渲染
     // 8. Render
     begin_time = std::chrono::system_clock::now();
-    for (int cls_id = 0; cls_id < CLASSES_NUM; cls_id++)
+    for (size_t i = 0; i < bboxes.size(); i++)
     {
-        // 8.1 每一个类别分别渲染
-        // 8.1 Render for each class
-        for (std::vector<int>::iterator it = indices[cls_id].begin(); it != indices[cls_id].end(); ++it)
-        {
-            // 8.2 获取基本的 bbox 信息
-            // 8.2 Get basic bbox information
-            float x1 = (bboxes[cls_id][*it].x - x_shift) / x_scale;
-            float y1 = (bboxes[cls_id][*it].y - y_shift) / y_scale;
-            float x2 = x1 + (bboxes[cls_id][*it].width) / x_scale;
-            float y2 = y1 + (bboxes[cls_id][*it].height) / y_scale;
-            float score = scores[cls_id][*it];
-            std::string name = object_names[cls_id % CLASSES_NUM];
+        // 8.2 获取基本的 bbox 信息
+        // 8.2 Get basic bbox information
+        float x1 = (bboxes[i].x - x_shift) / x_scale;
+        float y1 = (bboxes[i].y - y_shift) / y_scale;
+        float x2 = x1 + (bboxes[i].width) / x_scale;
+        float y2 = y1 + (bboxes[i].height) / y_scale;
+        float score = scores[i];
+        int cls_id = class_ids[i];
+        std::string name = object_names[cls_id % CLASSES_NUM];
 
-            // 8.3 绘制矩形
-            // 8.3 Draw rect
-            cv::rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(255, 0, 0), LINE_SIZE);
+        // 8.3 绘制矩形
+        // 8.3 Draw rect
+        cv::rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(255, 0, 0), LINE_SIZE);
 
-            // 8.4 绘制字体
-            // 8.4 Draw text
-            std::string text = name + ": " + std::to_string(static_cast<int>(score * 100)) + "%";
-            cv::putText(img, text, cv::Point(x1, y1 - 5), cv::FONT_HERSHEY_SIMPLEX, FONT_SIZE, cv::Scalar(0, 0, 255), FONT_THICKNESS, cv::LINE_AA);
+        // 8.4 绘制字体
+        // 8.4 Draw text
+        std::string text = name + ": " + std::to_string(static_cast<int>(score * 100)) + "%";
+        cv::putText(img, text, cv::Point(x1, y1 - 5), cv::FONT_HERSHEY_SIMPLEX, FONT_SIZE, cv::Scalar(0, 0, 255), FONT_THICKNESS, cv::LINE_AA);
 
-            // 8.5 打印检测信息
-            // 8.5 Print detection information
-            std::cout << "(" << x1 << " " << y1 << " " << x2 << " " << y2 << "): \t" << text << std::endl;
-        }
+        // 8.5 打印检测信息
+        // 8.5 Print detection information
+        std::cout << "(" << x1 << " " << y1 << " " << x2 << " " << y2 << "): \t" << text << std::endl;
     }
+
     std::cout << "\033[31m Draw Result time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
 
     // 9. 保存
