@@ -1,0 +1,1 @@
+BEV_LSS感知算法是使用OpenExplorer在nuscenes数据集上训练出来的BEV多任务模型.
