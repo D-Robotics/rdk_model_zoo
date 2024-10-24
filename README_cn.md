@@ -56,6 +56,7 @@ RDK Model Zoo 基于[RDK](https://d-robotics.cc/rdkRobotDevKit)开发, 提供大
   - [D-Robotics ToolChain C API (参考)](#d-robotics-toolchain-c-api-参考)
 - [使用 Jupyter 体验RDK Model Zoo (推荐)](#使用-jupyter-体验rdk-model-zoo-推荐)
 - [使用VSCode体验RDK Model Zoo (参考)](#使用vscode体验rdk-model-zoo-参考)
+- [RDK算法工具链资源](#rdk算法工具链资源)
 - [反馈](#反馈)
 
 
@@ -302,7 +303,21 @@ jupyter lab --allow-root --ip 192.168.1.10
 ![](resource/imgs/demo_rdkx5_yolov10n_detect.jpg)
 
 
+## RDK算法工具链资源
 
+[社区资源中心](https://developer.d-robotics.cc/resource)
+
+[RDK X3 算法工具链社区手册](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
+
+[RDK X3 OpenExplore 产品发布](https://developer.d-robotics.cc/forumDetail/136488103547258769)
+
+[RDK Ultra 算法工具链社区手册](https://developer.d-robotics.cc/api/v1/fileData/horizon_j5_open_explorer_cn_doc/index.html)
+
+[RDK Ultra OpenExplore 产品发布](https://developer.d-robotics.cc/forumDetail/118363912788935318)
+
+[RDK X5 算法工具链社区手册](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
+
+[RDK X5 OpenExplore 产品发布](https://developer.d-robotics.cc/forumDetail/251934919646096384)
 
 
 ## 反馈
