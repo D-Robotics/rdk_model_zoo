@@ -1,7 +1,7 @@
 [English](./README.md) | 简体中文
 
-# YOLOv10 Detect
-- [YOLOv10 Detect](#yolov10-detect)
+# YOLOv11 Detect
+- [YOLOv11 Detect](#yolov11-detect)
   - [YOLO介绍](#yolo介绍)
   - [性能数据 (简要)](#性能数据-简要)
     - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module)
@@ -13,6 +13,7 @@
     - [环境、项目准备](#环境项目准备)
     - [导出为onnx](#导出为onnx)
     - [PTQ方案量化转化](#ptq方案量化转化)
+    - [移除bbox信息3个输出头的反量化节点](#移除bbox信息3个输出头的反量化节点)
     - [使用hb\_perf命令对bin模型进行可视化, hrt\_model\_exec命令检查bin模型的输入输出情况](#使用hb_perf命令对bin模型进行可视化-hrt_model_exec命令检查bin模型的输入输出情况)
   - [使用TROS高效部署YOLOv11](#使用tros高效部署yolov11)
     - [安装或更新tros-humble-hobot-dnn等功能包](#安装或更新tros-humble-hobot-dnn等功能包)
@@ -25,6 +26,7 @@
     - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module)
   - [反馈](#反馈)
   - [参考](#参考)
+
 
 
 
@@ -50,11 +52,11 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，�
 目标检测 Detection (COCO)
 | 模型(公版) | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | BPU吞吐量 | 后处理时间(Python) |
 |---------|---------|-------|---------|---------|----------|
-| YOLOv11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | 138.9 FPS | 5 ms |
-| YOLOv11s | 640×640 | 80 | 9.4 M  / 21.5 B | 47.0 | 66.4 FPS | 5 ms |
-| YOLOv11m | 640×640 | 80 | 20.1 M / 68.0 B | 51.5 | 29.2 FPS | 5 ms |
-| YOLOv11l | 640×640 | 80 | 25.3 M / 86.9 B | 53.4 | 21.6 FPS | 5 ms |
-| YOLOv11x | 640×640 | 80 | 56.9 M / 194.9 B| 54.7 | 10.2 FPS | 5 ms |
+| YOLOv11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 138.9 FPS | 5 ms |
+| YOLOv11s | 640×640 | 80 | 9.4 M  / 21.5 B | 66.4 FPS | 5 ms |
+| YOLOv11m | 640×640 | 80 | 20.1 M / 68.0 B | 29.2 FPS | 5 ms |
+| YOLOv11l | 640×640 | 80 | 25.3 M / 86.9 B | 21.6 FPS | 5 ms |
+| YOLOv11x | 640×640 | 80 | 56.9 M / 194.9 B| 10.2 FPS | 5 ms |
 
 
 ## 模型下载地址
@@ -62,12 +64,14 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，�
 
 ## 输入输出数据
 - Input: 1x3x640x640, dtype=UINT8
-- Output 0: [1, 80, 80, 64], dtype=FLOAT32
-- Output 1: [1, 40, 40, 64], dtype=FLOAT32
-- Output 2: [1, 20, 20, 64], dtype=FLOAT32
-- Output 3: [1, 80, 80, 80], dtype=FLOAT32
-- Output 4: [1, 40, 40, 80], dtype=FLOAT32
-- Output 5: [1, 20, 20, 80], dtype=FLOAT32
+- Output 0: [1, 80, 80, 80], dtype=FLOAT32
+- Output 1: [1, 80, 80, 64], dtype=INT32
+- Output 2: [1, 40, 40, 80], dtype=FLOAT32
+- Output 3: [1, 40, 40, 64], dtype=INT32
+- Output 4: [1, 20, 20, 80], dtype=FLOAT32
+- Output 5: [1, 20, 20, 64], dtype=INT32
+
+
 
 
 ## 公版处理流程
@@ -146,36 +150,47 @@ $ pip list | grep ultralytics # 或者
 $ conda uninstall ultralytics 
 $ pip uninstall ultralytics   # 或者
 ```
+如果不是很顺利，可以通过以下Python命令确认需要修改的`ultralytics`目录的位置:
+```bash
+>>> import ultralytics
+>>> ultralytics.__path__
+['/home/wuchao/miniconda3/envs/yolo/lib/python3.11/site-packages/ultralytics']
+# 或者
+['/home/wuchao/YOLO11/ultralytics_v11/ultralytics']
+```
+
  - 修改Detect的输出头，直接将三个特征层的Bounding Box信息和Classify信息分开输出，一共6个输出头。
 
-文件目录：./ultralytics/ultralytics/nn/modules/head.py，约第58行，`=Detect`类的forward方法替换成以下内容.
+文件目录：./ultralytics/ultralytics/nn/modules/head.py，约第58行，`Detect`类的forward方法替换成以下内容.
 注：建议您保留好原本的`forward`方法，例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
 ```python
 def forward(self, x):
-    bboxes = [self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
-    clses = [self.cv3[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
-    return (bboxes, clses)
+    return [(
+            self.cv3[i](x[i]).permute(0, 2, 3, 1).contiguous(), 
+            self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous()
+            ) for i in range(self.nl) ]
+
 ```
 
  - 运行以下Python脚本，如果有**No module named onnxsim**报错，安装一个即可
  - 注意，如果生成的onnx模型显示ir版本过高，可以将simplify=False。两种设置对最终bin模型没有影响，打开后可以提升onnx模型在netron中的可读性。
 ```python
 from ultralytics import YOLO
-YOLO('yolov10n.pt').export(imgsz=640, format='onnx', simplify=True, opset=11)
+YOLO('yolov11n.pt').export(imgsz=640, format='onnx', simplify=False, opset=11)
 ```
 
 ### PTQ方案量化转化
- - 参考天工开物工具链手册和OE包，对模型进行检查，所有算子均在BPU上，进行编译即可。对应的yaml文件在`./ptq_yamls`目录下。
+ - 参考天工开物工具链手册和OE包，对模型进行检查，所有算子均在BPU上，进行编译即可。对应的yaml文件在GitHub仓库中，YOLOv11对于文件夹的`./ptq_yamls`目录下。
 ```bash
 (bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolo11n.onnx
 ```
  - 根据模型检查结果，找到手动量化算子Softmax, 应有这样的内容, Softmax算子将模型拆为了两个BPU子图。这里的Softmax算子名称为"/model.10/m/m.0/attn/Softmax".
 ```bash
-/model.10/m/m.0/attn/MatMul                  BPU  id(0)     HzSQuantizedMatmul         --                 1.0        int8      
-/model.10/m/m.0/attn/Mul                     BPU  id(0)     HzSQuantizedConv           --                 1.0        int8      
-/model.10/m/m.0/attn/Softmax                 CPU  --        Softmax                    --                 --         float     
-/model.10/m/m.0/attn/Transpose_1             BPU  id(1)     Transpose                  --                 --         int8      
-/model.10/m/m.0/attn/MatMul_1                BPU  id(1)     HzSQuantizedMatmul         --                 1.0        int8      
+/model.10/m/m.0/attn/MatMul      BPU  id(0)  HzSQuantizedMatmul   --   1.0  int8      
+/model.10/m/m.0/attn/Mul         BPU  id(0)  HzSQuantizedConv     --   1.0  int8      
+/model.10/m/m.0/attn/Softmax     CPU  --     Softmax              --   --   float     
+/model.10/m/m.0/attn/Transpose_1 BPU  id(1)  Transpose            --   --   int8      
+/model.10/m/m.0/attn/MatMul_1    BPU  id(1)  HzSQuantizedMatmul   --   1.0  int8      
 ```
 在对应的yaml文件中修改以下内容:
 ```yaml
@@ -193,30 +208,107 @@ model_parameters:
 ```bash
 (bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolo11_detect_bayese_640x640_nv12.yaml
 ```
- - 接下来得到的bin模型名称为yolov8n_instance_seg_bayese_640x640_nchw_modified.bin, 这个是最终的模型。
+
+### 移除bbox信息3个输出头的反量化节点
+ - 查看bbox信息的3个输出头的反量化节点名称
+通过hb_mapper makerbin时的日志,看到大小为[1, 80, 80, 64], [1, 40, 40, 64], [1, 20, 20, 64]的三个输出的名称为475, 497, 519.
+```bash
+ONNX IR version:          9
+Opset version:            ['ai.onnx v11', 'horizon v1']
+Producer:                 pytorch v2.1.1
+Domain:                   None
+Version:                  None
+Graph input:
+    images:               shape=[1, 3, 640, 640], dtype=FLOAT32
+Graph output:
+    output0:              shape=[1, 80, 80, 80], dtype=FLOAT32
+    475:                  shape=[1, 80, 80, 64], dtype=FLOAT32
+    489:                  shape=[1, 40, 40, 80], dtype=FLOAT32
+    497:                  shape=[1, 40, 40, 64], dtype=FLOAT32
+    511:                  shape=[1, 20, 20, 80], dtype=FLOAT32
+    519:                  shape=[1, 20, 20, 64], dtype=FLOAT32
+
+```
+
+ - 进入编译产物的目录
+```bash
+$ cd yolo11n_detect_bayese_640x640_nv12
+```
+ - 查看可以被移除的反量化节点
+```bash
+$ hb_model_modifier yolo11n_detect_bayese_640x640_nv12.bin
+```
+ - 在生成的hb_model_modifier.log文件中,找到以下信息。主要是找到大小为[1, 80, 80, 64], [1, 40, 40, 64], [1, 20, 20, 64]的三个输出头的名称。当然,也可以通过netron等工具查看onnx模型,获得输出头的名称。
+ 此处的名称为:
+ > "/model.23/cv2.0/cv2.0.2/Conv_output_0_HzDequantize"
+ > "/model.23/cv2.1/cv2.1.2/Conv_output_0_HzDequantize"
+ > "/model.23/cv2.2/cv2.2.2/Conv_output_0_HzDequantize"
+
+```bash
+2024-10-24 14:03:23,588 file: hb_model_modifier.py func: hb_model_modifier line No: 409 input: "/model.23/cv2.0/cv2.0.2/Conv_output_0_quantized"
+input: "/model.23/cv2.0/cv2.0.2/Conv_x_scale"
+output: "475"
+name: "/model.23/cv2.0/cv2.0.2/Conv_output_0_HzDequantize"
+op_type: "Dequantize"
+
+2024-10-24 14:03:23,588 file: hb_model_modifier.py func: hb_model_modifier line No: 409 input: "/model.23/cv2.1/cv2.1.2/Conv_output_0_quantized"
+input: "/model.23/cv2.1/cv2.1.2/Conv_x_scale"
+output: "497"
+name: "/model.23/cv2.1/cv2.1.2/Conv_output_0_HzDequantize"
+op_type: "Dequantize"
+
+2024-10-24 14:03:23,588 file: hb_model_modifier.py func: hb_model_modifier line No: 409 input: "/model.23/cv2.2/cv2.2.2/Conv_output_0_quantized"
+input: "/model.23/cv2.2/cv2.2.2/Conv_x_scale"
+output: "519"
+name: "/model.23/cv2.2/cv2.2.2/Conv_output_0_HzDequantize"
+op_type: "Dequantize"
+```
+ - 使用以下命令移除上述三个反量化节点,注意,导出时这些名称可能不同,请仔细确认。
+```bash
+$ hb_model_modifier yolo11n_detect_bayese_640x640_nv12.bin \
+-r /model.23/cv2.0/cv2.0.2/Conv_output_0_HzDequantize \
+-r /model.23/cv2.1/cv2.1.2/Conv_output_0_HzDequantize \
+-r /model.23/cv2.2/cv2.2.2/Conv_output_0_HzDequantize
+```
+ - 移除成功会显示以下日志
+```bash
+2024-10-24 14:19:59,425 INFO log will be stored in /open_explorer/bin_dir/yolo11n_detect_bayese_640x640_nv12/hb_model_modifier.log
+2024-10-24 14:19:59,430 INFO Nodes that will be removed from this model: ['/model.23/cv2.0/cv2.0.2/Conv_output_0_HzDequantize', '/model.23/cv2.1/cv2.1.2/Conv_output_0_HzDequantize', '/model.23/cv2.2/cv2.2.2/Conv_output_0_HzDequantize']
+2024-10-24 14:19:59,431 INFO Node '/model.23/cv2.0/cv2.0.2/Conv_output_0_HzDequantize' found, its OP type is 'Dequantize'
+2024-10-24 14:19:59,431 INFO scale: /model.23/cv2.0/cv2.0.2/Conv_x_scale; zero point: 0. node info details are stored in hb_model_modifier log file
+2024-10-24 14:19:59,431 INFO Node '/model.23/cv2.0/cv2.0.2/Conv_output_0_HzDequantize' is removed
+2024-10-24 14:19:59,431 INFO Node '/model.23/cv2.1/cv2.1.2/Conv_output_0_HzDequantize' found, its OP type is 'Dequantize'
+2024-10-24 14:19:59,432 INFO scale: /model.23/cv2.1/cv2.1.2/Conv_x_scale; zero point: 0. node info details are stored in hb_model_modifier log file
+2024-10-24 14:19:59,432 INFO Node '/model.23/cv2.1/cv2.1.2/Conv_output_0_HzDequantize' is removed
+2024-10-24 14:19:59,432 INFO Node '/model.23/cv2.2/cv2.2.2/Conv_output_0_HzDequantize' found, its OP type is 'Dequantize'
+2024-10-24 14:19:59,433 INFO scale: /model.23/cv2.2/cv2.2.2/Conv_x_scale; zero point: 0. node info details are stored in hb_model_modifier log file
+2024-10-24 14:19:59,433 INFO Node '/model.23/cv2.2/cv2.2.2/Conv_output_0_HzDequantize' is removed
+2024-10-24 14:19:59,436 INFO modified model saved as yolo11n_detect_bayese_640x640_nv12_modified.bin
+```
+
+ - 接下来得到的bin模型名称为yolo11n_detect_bayese_640x640_nv12_modified.bin, 这个是最终的模型。
  - NCHW输入的模型可以使用OpenCV和numpy来准备输入数据。
  - nv12输入的模型可以使用codec, jpu, vpu, gpu等硬件设备来准备输入数据，或者直接给TROS对应的功能包使用。
 
 
-
 ### 使用hb_perf命令对bin模型进行可视化, hrt_model_exec命令检查bin模型的输入输出情况
- - hb_perf
+
+ - 移除反量化系数前的bin模型
 ```bash
 hb_perf yolo11n_detect_bayese_640x640_nv12.bin
 ```
-在`hb_perf_result`目录下可以找到以下结果, 可以看到，模型一共6个输出头，每个输出头会有一个CPU算子，用于作反量化计算。输入有一个YUV420转YUV444的算子，这是编译器自动帮我们实现的nv12转化算子，NCHW-YUV444会通过一个卷积算子转化为NCHW-RGB，这里对应着onnx模型的输入。
+在`hb_perf_result`目录下可以找到以下结果：
 ![](./imgs/yolo11n_detect_bayese_640x640_nv12.png)
- 
- - hrt_model_exec
+
 ```bash
 hrt_model_exec model_info --model_file yolo11n_detect_bayese_640x640_nv12.bin
 ```
-可以看到这个bin模型的输入输出信息
+可以看到这个移除反量化系数前的bin模型的输入输出信息
 ```bash
-[HBRT] set log level as 0. version = 3.15.54.0
-[DNN] Runtime version = 1.24.4_(3.15.54 HBRT)
-[A][DNN][packed_model.cpp:247][Model](2024-09-30,20:26:23.164.884) [HorizonRT] The model builder version = 1.24.2
-Load model to DDR cost 47.974ms.
+[HBRT] set log level as 0. version = 3.15.55.0
+[DNN] Runtime version = 1.24.5_(3.15.55 HBRT)
+[A][DNN][packed_model.cpp:247][Model](2024-10-24,14:27:27.649.970) [HorizonRT] The model builder version = 1.24.3
+Load model to DDR cost 32.671ms.
 This model file has 1 model:
 [yolo11n_detect_bayese_640x640_nv12]
 ---------------------------------------------------------------------
@@ -235,36 +327,6 @@ stride: (0,0,0,0,)
 
 output[0]: 
 name: output0
-valid shape: (1,80,80,64,)
-aligned shape: (1,80,80,64,)
-aligned byte size: 1638400
-tensor type: HB_DNN_TENSOR_TYPE_F32
-tensor layout: HB_DNN_LAYOUT_NHWC
-quanti type: NONE
-stride: (1638400,20480,256,4,)
-
-output[1]: 
-name: 469
-valid shape: (1,40,40,64,)
-aligned shape: (1,40,40,64,)
-aligned byte size: 409600
-tensor type: HB_DNN_TENSOR_TYPE_F32
-tensor layout: HB_DNN_LAYOUT_NHWC
-quanti type: NONE
-stride: (409600,10240,256,4,)
-
-output[2]: 
-name: 477
-valid shape: (1,20,20,64,)
-aligned shape: (1,20,20,64,)
-aligned byte size: 102400
-tensor type: HB_DNN_TENSOR_TYPE_F32
-tensor layout: HB_DNN_LAYOUT_NHWC
-quanti type: NONE
-stride: (102400,5120,256,4,)
-
-output[3]: 
-name: 491
 valid shape: (1,80,80,80,)
 aligned shape: (1,80,80,80,)
 aligned byte size: 2048000
@@ -273,8 +335,18 @@ tensor layout: HB_DNN_LAYOUT_NHWC
 quanti type: NONE
 stride: (2048000,25600,320,4,)
 
-output[4]: 
-name: 505
+output[1]: 
+name: 475
+valid shape: (1,80,80,64,)
+aligned shape: (1,80,80,64,)
+aligned byte size: 1638400
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (1638400,20480,256,4,)
+
+output[2]: 
+name: 489
 valid shape: (1,40,40,80,)
 aligned shape: (1,40,40,80,)
 aligned byte size: 512000
@@ -283,8 +355,18 @@ tensor layout: HB_DNN_LAYOUT_NHWC
 quanti type: NONE
 stride: (512000,12800,320,4,)
 
-output[5]: 
-name: 519
+output[3]: 
+name: 497
+valid shape: (1,40,40,64,)
+aligned shape: (1,40,40,64,)
+aligned byte size: 409600
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (409600,10240,256,4,)
+
+output[4]: 
+name: 511
 valid shape: (1,20,20,80,)
 aligned shape: (1,20,20,80,)
 aligned byte size: 128000
@@ -292,7 +374,118 @@ tensor type: HB_DNN_TENSOR_TYPE_F32
 tensor layout: HB_DNN_LAYOUT_NHWC
 quanti type: NONE
 stride: (128000,6400,320,4,)
+
+output[5]: 
+name: 519
+valid shape: (1,20,20,64,)
+aligned shape: (1,20,20,64,)
+aligned byte size: 102400
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (102400,5120,256,4,)
 ```
+
+ - 移除目标反量化系数后的bin模型
+```bash
+hb_perf yolo11n_detect_bayese_640x640_nv12_modified.bin
+```
+在`hb_perf_result`目录下可以找到以下结果。
+![](./imgs/yolo11n_detect_bayese_640x640_nv12_modified.png)
+
+
+```bash
+hrt_model_exec model_info --model_file yolo11n_detect_bayese_640x640_nv12_modified.bin
+```
+可以看到这个移除反量化系数前的bin模型的输入输出信息, 以及移除反量化节点的所有反量化系数, 这也说明bin模型中是存储着这些信息的, 可以使用推理库的API获得, 方便我们进行对应的前后处理.
+```bash
+[HBRT] set log level as 0. version = 3.15.55.0
+[DNN] Runtime version = 1.24.5_(3.15.55 HBRT)
+[A][DNN][packed_model.cpp:247][Model](2024-10-24,14:27:47.191.283) [HorizonRT] The model builder version = 1.24.3
+Load model to DDR cost 26.723ms.
+This model file has 1 model:
+[yolo11n_detect_bayese_640x640_nv12]
+---------------------------------------------------------------------
+[model name]: yolo11n_detect_bayese_640x640_nv12
+
+input[0]: 
+name: images
+input source: HB_DNN_INPUT_FROM_PYRAMID
+valid shape: (1,3,640,640,)
+aligned shape: (1,3,640,640,)
+aligned byte size: 614400
+tensor type: HB_DNN_IMG_TYPE_NV12
+tensor layout: HB_DNN_LAYOUT_NCHW
+quanti type: NONE
+stride: (0,0,0,0,)
+
+output[0]: 
+name: output0
+valid shape: (1,80,80,80,)
+aligned shape: (1,80,80,80,)
+aligned byte size: 2048000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (2048000,25600,320,4,)
+
+output[1]: 
+name: 475
+valid shape: (1,80,80,64,)
+aligned shape: (1,80,80,64,)
+aligned byte size: 1638400
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (1638400,20480,256,4,)
+scale data: 0.000562654,0.000563576,0.000520224,0.000490708,0.000394319,0.000409077,0.000273487,0.000322834,0.000290781,0.000224716,0.0001839,0.000253425,0.000245584,0.000213301,0.000184822,0.000230596,0.000426833,0.000469723,0.000417609,0.000438362,0.000391782,0.000347508,0.000300697,0.000262418,0.000196583,0.000230596,0.000243048,0.000228751,0.000205115,0.000179403,0.000153577,0.000170871,0.000506388,0.000524836,0.000505927,0.00034059,0.000308768,0.000404465,0.000313841,0.000359499,0.000293548,0.00023613,0.000253886,0.000228174,0.000198312,0.000175137,0.000157958,0.000210995,0.000551124,0.000522069,0.000512845,0.000378869,0.000458885,0.000320067,0.000335747,0.000299313,0.000355348,0.000298852,0.000203155,0.000186437,0.000162109,0.000139395,0.000123138,0.000208574,
+quantizeAxis: 3
+
+output[2]: 
+name: 489
+valid shape: (1,40,40,80,)
+aligned shape: (1,40,40,80,)
+aligned byte size: 512000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (512000,12800,320,4,)
+
+output[3]: 
+name: 497
+valid shape: (1,40,40,64,)
+aligned shape: (1,40,40,64,)
+aligned byte size: 409600
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (409600,10240,256,4,)
+scale data: 0.000606957,0.000609319,0.000573893,0.000428649,0.000335125,0.000327568,0.000299228,0.000375038,0.000271359,0.000310091,0.00026144,0.000226369,0.000198737,0.000197792,0.000187637,0.000247742,0.000555944,0.000539413,0.000461949,0.0004662,0.000497374,0.000392515,0.000368662,0.000314342,0.000262621,0.000224007,0.000236288,0.000221528,0.000200627,0.000178308,0.00015481,0.000162485,0.000624434,0.000620655,0.00051863,0.000449668,0.000437623,0.000371023,0.000345281,0.000274902,0.000324498,0.000285057,0.000224598,0.000184685,0.000227078,0.000243491,0.000239358,0.000305368,0.000515323,0.000524298,0.000455808,0.000439749,0.000389445,0.000483204,0.000369134,0.000284585,0.000360159,0.000290017,0.000231801,0.000187637,0.000180906,0.000190235,0.000183977,0.000234517,
+quantizeAxis: 3
+
+output[4]: 
+name: 511
+valid shape: (1,20,20,80,)
+aligned shape: (1,20,20,80,)
+aligned byte size: 128000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: NONE
+stride: (128000,6400,320,4,)
+
+output[5]: 
+name: 519
+valid shape: (1,20,20,64,)
+aligned shape: (1,20,20,64,)
+aligned byte size: 102400
+tensor type: HB_DNN_TENSOR_TYPE_S32
+tensor layout: HB_DNN_LAYOUT_NHWC
+quanti type: SCALE
+stride: (102400,5120,256,4,)
+scale data: 0.000758878,0.000750577,0.000652753,0.000580126,0.000583387,0.000641489,0.00064801,0.00067469,0.00054159,0.000423608,0.000500385,0.000371731,0.000463627,0.000396632,0.000415901,0.000483784,0.000732791,0.000820536,0.000659868,0.000661054,0.000562933,0.000596134,0.000448212,0.000432205,0.000445544,0.000504831,0.000355131,0.000350092,0.000324005,0.000273759,0.00017801,8.41139e-05,0.000806307,0.000808086,0.000591095,0.00062726,0.000571826,0.00054159,0.000581609,0.000391,0.000415308,0.000553447,0.000406711,0.000471038,0.000344459,0.000296585,0.000320152,0.000345941,0.000716191,0.000649789,0.000591984,0.000567676,0.000583091,0.000597616,0.000638524,0.000523803,0.00056738,0.000534772,0.000559376,0.000401375,0.000401672,0.000345941,0.00037766,0.000407304,
+quantizeAxis: 3
+```
+
 
 ## 使用TROS高效部署YOLOv11
 
@@ -339,66 +532,71 @@ ros2 launch dnn_node_example dnn_node_example.launch.py dnn_example_config_file:
 
 可以观察到, SoftMax算子已经被BPU支持, 余弦相似度保持在0.95以上, 整个bin模型只有一个BPU子图。
 ```bash
-2024-09-30 12:47:28,752 file: model_builder.py func: model_builder line No: 32 Start to Horizon NN Model Convert.
-2024-09-30 12:47:28,859 file: model_debugger.py func: model_debugger line No: 66 Loading horizon_nn debug methods:[]
-2024-09-30 12:47:28,859 file: quantization_config.py func: quantization_config line No: 294 The input of node /model.10/m/m.0/attn/Softmax are set to : int16
-2024-09-30 12:47:28,859 file: quantization_config.py func: quantization_config line No: 315 The output of node /model.10/m/m.0/attn/Softmax are set to : int16
-2024-09-30 12:47:28,859 file: quantization_config.py func: quantization_config line No: 327 There are 1 nodes designated to run on the bpu: ['/model.10/m/m.0/attn/Softmax'].
-2024-09-30 12:47:28,860 file: input_dict_parser.py func: input_dict_parser line No: 240 input images is from pyramid. Its layout is set to NHWC
-2024-09-30 12:47:28,860 file: model_builder.py func: model_builder line No: 189 The specified model compilation architecture: bayes-e.
-2024-09-30 12:47:28,860 file: model_builder.py func: model_builder line No: 193 The specified model compilation optimization parameters: [].
-2024-09-30 12:47:28,860 file: model_builder.py func: model_builder line No: 32 Start to prepare the onnx model.
-2024-09-30 12:47:28,936 file: prepare.py func: prepare line No: 145 Input ONNX Model Information:
+2024-10-24 11:38:15,017 file: quantization_config.py func: quantization_config line No: 305 The activation calibration parameters:
+    calibration_type:     ['max', 'kl']
+    max_percentile:       [0.99995, 1.0]
+    per_channel:          [True, False]
+    asymmetric:           [True, False]
+The modelwise search parameters:
+    similarity:           0.995
+    metric:               cosine-similarity
+The input of node /model.10/m/m.0/attn/Softmax are set to : int16
+The output of node /model.10/m/m.0/attn/Softmax are set to : int16
+There are 1 nodes designated to run on the bpu: ['/model.10/m/m.0/attn/Softmax'].
+2024-10-24 11:38:15,017 file: input_dict_parser.py func: input_dict_parser line No: 240 input images is from pyramid. Its layout is set to NHWC
+2024-10-24 11:38:15,017 file: model_builder.py func: model_builder line No: 197 The specified model compilation architecture: bayes-e.
+2024-10-24 11:38:15,017 file: model_builder.py func: model_builder line No: 207 The specified model compilation optimization parameters: [].
+2024-10-24 11:38:15,017 file: model_builder.py func: model_builder line No: 35 Start to prepare the onnx model.
+2024-10-24 11:38:15,055 file: prepare.py func: prepare line No: 106 Input ONNX Model Information:
 ONNX IR version:          9
 Opset version:            ['ai.onnx v11', 'horizon v1']
 Producer:                 pytorch v2.1.1
 Domain:                   None
-Model version:            None
+Version:                  None
 Graph input:
     images:               shape=[1, 3, 640, 640], dtype=FLOAT32
 Graph output:
-    output0:              shape=[1, 80, 80, 64], dtype=FLOAT32
-    469:                  shape=[1, 40, 40, 64], dtype=FLOAT32
-    477:                  shape=[1, 20, 20, 64], dtype=FLOAT32
-    491:                  shape=[1, 80, 80, 80], dtype=FLOAT32
-    505:                  shape=[1, 40, 40, 80], dtype=FLOAT32
-    519:                  shape=[1, 20, 20, 80], dtype=FLOAT32
-2024-09-30 12:47:29,251 file: model_builder.py func: model_builder line No: 35 End to prepare the onnx model.
-2024-09-30 12:47:29,285 file: model_builder.py func: model_builder line No: 239 Saving model to: yolo11n_detect_bayese_640x640_nv12_original_float_model.onnx.
-2024-09-30 12:47:29,285 file: model_builder.py func: model_builder line No: 32 Start to optimize the onnx model.
-2024-09-30 12:47:29,470 file: constant_folding.py func: constant_folding line No: 66 Summary info for constant_folding:
-2024-09-30 12:47:29,471 file: constant_folding.py func: constant_folding line No: 67   After constant_folding, the number of nodes has changed from 303 to 303.
-2024-09-30 12:47:29,471 file: constant_folding.py func: constant_folding line No: 71   After constant_folding, the number of parameters has changed from 2616265 to 2616265.
-2024-09-30 12:47:29,471 file: constant_folding.py func: constant_folding line No: 76 Detailed info for constant_folding:
-2024-09-30 12:47:29,471 file: constant_folding.py func: constant_folding line No: 88 
-2024-09-30 12:47:29,815 file: model_builder.py func: model_builder line No: 35 End to optimize the onnx model.
-2024-09-30 12:47:29,843 file: model_builder.py func: model_builder line No: 239 Saving model to: yolo11n_detect_bayese_640x640_nv12_optimized_float_model.onnx.
-2024-09-30 12:47:29,843 file: model_builder.py func: model_builder line No: 32 Start to calibrate the model.
-2024-09-30 12:47:30,007 file: tool_utils.py func: tool_utils line No: 321 The input1 of Node(name:/model.10/m/m.0/attn/MatMul_1, type:MatMul) does not support data type: int16
-2024-09-30 12:47:30,056 file: calibration_data_set.py func: calibration_data_set line No: 82 input name: images,  number_of_samples: 50
-2024-09-30 12:47:30,056 file: calibration_data_set.py func: calibration_data_set line No: 96 There are 50 samples in the calibration data set.
-2024-09-30 12:47:30,056 file: infer_thresholds.py func: infer_thresholds line No: 84 Run calibration model with default calibration method.
-2024-09-30 12:47:30,654 file: base.py func: base line No: 138 Calibration using batch 8
-2024-09-30 12:47:35,004 file: ort.py func: ort line No: 212 Reset batch_size=1 and execute forward again...
-2024-09-30 12:53:12,061 file: modelwise_search.py func: modelwise_search line No: 75 Select max-percentile:percentile=0.99995 method.
-2024-09-30 12:53:12,943 file: model_builder.py func: model_builder line No: 35 End to calibrate the model.
-2024-09-30 12:53:13,097 file: model_builder.py func: model_builder line No: 239 Saving model to: yolo11n_detect_bayese_640x640_nv12_calibrated_model.onnx.
-2024-09-30 12:53:13,098 file: model_builder.py func: model_builder line No: 32 Start to quantize the model.
-2024-09-30 12:53:16,002 file: constant_folding.py func: constant_folding line No: 66 Summary info for constant_folding:
-2024-09-30 12:53:16,002 file: constant_folding.py func: constant_folding line No: 67   After constant_folding, the number of nodes has changed from 257 to 257.
-2024-09-30 12:53:16,002 file: constant_folding.py func: constant_folding line No: 71   After constant_folding, the number of parameters has changed from 2644673 to 2644673.
-2024-09-30 12:53:16,002 file: constant_folding.py func: constant_folding line No: 76 Detailed info for constant_folding:
-2024-09-30 12:53:16,002 file: constant_folding.py func: constant_folding line No: 88 
-2024-09-30 12:53:16,852 file: model_builder.py func: model_builder line No: 35 End to quantize the model.
-2024-09-30 12:53:17,108 file: model_builder.py func: model_builder line No: 239 Saving model to: yolo11n_detect_bayese_640x640_nv12_quantized_model.onnx.
-2024-09-30 12:53:17,108 file: model_builder.py func: model_builder line No: 32 Start to compile the model with march bayes-e.
-2024-09-30 12:53:18,199 file: hybrid_build.py func: hybrid_build line No: 110 Compile submodel: main_graph_subgraph_0
-2024-09-30 12:53:18,386 file: hbdk_cc.py func: hbdk_cc line No: 126 hbdk-cc parameters:['--O3', '--core-num', '1', '--fast', '--input-layout', 'NHWC', '--output-layout', 'NHWC', '--input-source', 'pyramid']
-2024-09-30 12:53:18,386 file: hbdk_cc.py func: hbdk_cc line No: 127 hbdk-cc command used:hbdk-cc -f hbir -m /tmp/tmpm3dpo46c/main_graph_subgraph_0.hbir -o /tmp/tmpm3dpo46c/main_graph_subgraph_0.hbm --march bayes-e --progressbar --O3 --core-num 1 --fast --input-layout NHWC --output-layout NHWC --input-source pyramid
-2024-09-30 12:57:10,610 file: tool_utils.py func: tool_utils line No: 326 consumed time 232.202
-2024-09-30 12:57:10,702 file: tool_utils.py func: tool_utils line No: 326 FPS=141.88, latency = 7048.0 us, DDR = 21471792 bytes   (see main_graph_subgraph_0.html)
-2024-09-30 12:57:10,780 file: model_builder.py func: model_builder line No: 35 End to compile the model with march bayes-e.
-2024-09-30 12:57:14,450 file: print_info_dict.py func: print_info_dict line No: 72 The main quantized node information:
+    output0:              shape=[1, 80, 80, 80], dtype=FLOAT32
+    475:                  shape=[1, 80, 80, 64], dtype=FLOAT32
+    489:                  shape=[1, 40, 40, 80], dtype=FLOAT32
+    497:                  shape=[1, 40, 40, 64], dtype=FLOAT32
+    511:                  shape=[1, 20, 20, 80], dtype=FLOAT32
+    519:                  shape=[1, 20, 20, 64], dtype=FLOAT32
+2024-10-24 11:38:15,425 file: model_builder.py func: model_builder line No: 38 End to prepare the onnx model.
+2024-10-24 11:38:15,473 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo11n_detect_bayese_640x640_nv12_original_float_model.onnx.
+2024-10-24 11:38:15,474 file: model_builder.py func: model_builder line No: 35 Start to optimize the onnx model.
+2024-10-24 11:38:15,672 file: constant_folding.py func: constant_folding line No: 66 Summary info for constant_folding:
+2024-10-24 11:38:15,672 file: constant_folding.py func: constant_folding line No: 67   After constant_folding, the number of nodes has changed from 303 to 303.
+2024-10-24 11:38:15,672 file: constant_folding.py func: constant_folding line No: 71   After constant_folding, the number of parameters has changed from 2616265 to 2616265.
+2024-10-24 11:38:15,672 file: constant_folding.py func: constant_folding line No: 76 Detailed info for constant_folding:
+2024-10-24 11:38:15,672 file: constant_folding.py func: constant_folding line No: 88 
+2024-10-24 11:38:16,034 file: model_builder.py func: model_builder line No: 38 End to optimize the onnx model.
+2024-10-24 11:38:16,063 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo11n_detect_bayese_640x640_nv12_optimized_float_model.onnx.
+2024-10-24 11:38:16,064 file: model_builder.py func: model_builder line No: 35 Start to calibrate the model.
+2024-10-24 11:38:16,309 file: calibration_data_set.py func: calibration_data_set line No: 111 input name: images,  number_of_samples: 50
+2024-10-24 11:38:16,309 file: calibration_data_set.py func: calibration_data_set line No: 123 There are 50 samples in the data set.
+2024-10-24 11:38:16,310 file: infer_thresholds.py func: infer_thresholds line No: 84 Run calibration model with modelwise search method.
+2024-10-24 11:38:16,847 file: base.py func: base line No: 138 Calibration using batch 8
+2024-10-24 11:38:21,275 file: ort.py func: ort line No: 207 Reset batch_size=1 and execute forward again...
+2024-10-24 11:44:14,576 file: modelwise_search.py func: modelwise_search line No: 75 Select max-percentile:percentile=0.99995 method.
+2024-10-24 11:44:15,915 file: model_builder.py func: model_builder line No: 38 End to calibrate the model.
+2024-10-24 11:44:16,061 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo11n_detect_bayese_640x640_nv12_calibrated_model.onnx.
+2024-10-24 11:44:16,061 file: model_builder.py func: model_builder line No: 35 Start to quantize the model.
+2024-10-24 11:44:18,398 file: constant_folding.py func: constant_folding line No: 66 Summary info for constant_folding:
+2024-10-24 11:44:18,398 file: constant_folding.py func: constant_folding line No: 67   After constant_folding, the number of nodes has changed from 257 to 257.
+2024-10-24 11:44:18,398 file: constant_folding.py func: constant_folding line No: 71   After constant_folding, the number of parameters has changed from 2644673 to 2644673.
+2024-10-24 11:44:18,398 file: constant_folding.py func: constant_folding line No: 76 Detailed info for constant_folding:
+2024-10-24 11:44:18,398 file: constant_folding.py func: constant_folding line No: 88 
+2024-10-24 11:44:18,743 file: model_builder.py func: model_builder line No: 38 End to quantize the model.
+2024-10-24 11:44:18,850 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo11n_detect_bayese_640x640_nv12_quantized_model.onnx.
+2024-10-24 11:44:18,851 file: model_builder.py func: model_builder line No: 35 Start to compile the model with march bayes-e.
+2024-10-24 11:44:19,613 file: hybrid_build.py func: hybrid_build line No: 111 Compile submodel: main_graph_subgraph_0
+2024-10-24 11:44:19,639 file: hbdk_cc.py func: hbdk_cc line No: 126 hbdk-cc parameters:['--O3', '--core-num', '1', '--fast', '--input-layout', 'NHWC', '--output-layout', 'NHWC', '--input-source', 'pyramid']
+2024-10-24 11:44:19,639 file: hbdk_cc.py func: hbdk_cc line No: 127 hbdk-cc command used:hbdk-cc -f hbir -m /tmp/tmp6y8892di/main_graph_subgraph_0.hbir -o /tmp/tmp6y8892di/main_graph_subgraph_0.hbm --march bayes-e --progressbar --O3 --core-num 1 --fast --input-layout NHWC --output-layout NHWC --input-source pyramid
+2024-10-24 11:48:09,669 file: tool_utils.py func: tool_utils line No: 326 consumed time 230.009
+2024-10-24 11:48:09,769 file: tool_utils.py func: tool_utils line No: 326 FPS=139.9, latency = 7147.9 us, DDR = 23130672 bytes   (see main_graph_subgraph_0.html)
+2024-10-24 11:48:09,843 file: model_builder.py func: model_builder line No: 38 End to compile the model with march bayes-e.
+2024-10-24 11:48:13,359 file: print_info_dict.py func: print_info_dict line No: 72 The main quantized node information:
 ======================================================================================================================================
 Node                                                ON   Subgraph  Type                       Cosine Similarity  Threshold  DataType  
 --------------------------------------------------------------------------------------------------------------------------------------
@@ -503,8 +701,8 @@ HZ_PREPROCESS_FOR_images                            BPU  id(0)     HzSQuantizedP
 /model.10/m/m.0/attn/qkv/conv/Conv                  BPU  id(0)     HzSQuantizedConv           0.980026           7.72851    int8      
 /model.10/m/m.0/attn/Reshape                        BPU  id(0)     Reshape                    0.980026           7.32172    int8      
 /model.10/m/m.0/attn/Split                          BPU  id(0)     Split                      0.984775           7.32172    int8      
-/model.10/m/m.0/attn/Transpose                      BPU  id(0)     Transpose                  0.984775           --         int8      
-/model.10/m/m.0/attn/Reshape_2                      BPU  id(0)     Reshape                    0.978787           --         int8      
+/model.10/m/m.0/attn/Transpose                      BPU  id(0)     Transpose                  0.984775           7.32172    int8      
+/model.10/m/m.0/attn/Reshape_2                      BPU  id(0)     Reshape                    0.978787           7.32172    int8      
 /model.10/m/m.0/attn/MatMul                         BPU  id(0)     HzSQuantizedMatmul         0.980598           7.32172    int8      
 /model.10/m/m.0/attn/Mul                            BPU  id(0)     HzSQuantizedConv           0.980595           71.25      int8      
 ...0/attn/Softmax_reducemax_FROM_QUANTIZED_SOFTMAX  BPU  id(0)     HzQuantizedReduceMax       0.996334           12.5953    int16     
@@ -514,7 +712,7 @@ HZ_PREPROCESS_FOR_images                            BPU  id(0)     HzSQuantizedP
 .../attn/Softmax_reciprocal_FROM_QUANTIZED_SOFTMAX  BPU  id(0)     HzLut2Layer                0.962614           154.198    int16     
 ...0/m/m.0/attn/Softmax_mul_FROM_QUANTIZED_SOFTMAX  BPU  id(0)     HzSElementwiseMul          0.955308           1.0        int16     
 /model.10/m/m.0/attn/Transpose_1                    BPU  id(0)     Transpose                  0.955309           0.319208   int8      
-/model.10/m/m.0/attn/MatMul_1                       BPU  id(0)     HzSQuantizedMatmul         0.983485           0.319208   int8      
+/model.10/m/m.0/attn/MatMul_1                       BPU  id(0)     HzSQuantizedMatmul         0.983485           7.32172    int8      
 /model.10/m/m.0/attn/Reshape_1                      BPU  id(0)     Reshape                    0.983485           6.21897    int8      
 /model.10/m/m.0/attn/pe/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.978828           7.32172    int8      
 /model.10/m/m.0/attn/proj/conv/Conv                 BPU  id(0)     HzSQuantizedConv           0.958753           3.48163    int8      
@@ -531,7 +729,7 @@ HZ_PREPROCESS_FOR_images                            BPU  id(0)     HzSQuantizedP
 /model.12/Concat                                    BPU  id(0)     Concat                     0.977764           4.94341    int8      
 /model.13/cv1/conv/Conv                             BPU  id(0)     HzSQuantizedConv           0.988461           4.78533    int8      
 /model.13/cv1/act/Mul                               BPU  id(0)     HzLut                      0.986347           6.07126    int8      
-/model.13/Split                                     BPU  id(0)     Split                      0.989110           3.71593    int8      
+/model.13/Split                                     BPU  id(0)     Split                      0.984986           3.71593    int8      
 /model.13/m.0/cv1/conv/Conv                         BPU  id(0)     HzSQuantizedConv           0.988744           3.71593    int8      
 /model.13/m.0/cv1/act/Mul                           BPU  id(0)     HzLut                      0.988606           4.50702    int8      
 /model.13/m.0/cv2/conv/Conv                         BPU  id(0)     HzSQuantizedConv           0.985706           3.77763    int8      
@@ -548,7 +746,7 @@ HZ_PREPROCESS_FOR_images                            BPU  id(0)     HzSQuantizedP
 /model.15/Concat                                    BPU  id(0)     Concat                     0.983539           3.30647    int8      
 /model.16/cv1/conv/Conv                             BPU  id(0)     HzSQuantizedConv           0.993958           2.99206    int8      
 /model.16/cv1/act/Mul                               BPU  id(0)     HzLut                      0.996099           5.27966    int8      
-/model.16/Split                                     BPU  id(0)     Split                      0.995161           2.46678    int8      
+/model.16/Split                                     BPU  id(0)     Split                      0.996525           2.46678    int8      
 /model.16/m.0/cv1/conv/Conv                         BPU  id(0)     HzSQuantizedConv           0.989346           2.46678    int8      
 /model.16/m.0/cv1/act/Mul                           BPU  id(0)     HzLut                      0.993471           3.61891    int8      
 /model.16/m.0/cv2/conv/Conv                         BPU  id(0)     HzSQuantizedConv           0.987653           3.35749    int8      
@@ -560,20 +758,20 @@ HZ_PREPROCESS_FOR_images                            BPU  id(0)     HzSQuantizedP
 /model.16/cv2/conv/Conv                             BPU  id(0)     HzSQuantizedConv           0.991002           3.72278    int8      
 /model.16/cv2/act/Mul                               BPU  id(0)     HzLut                      0.993470           5.90382    int8      
 /model.17/conv/Conv                                 BPU  id(0)     HzSQuantizedConv           0.986840           3.22176    int8      
-/model.23/cv2.0/cv2.0.0/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.987314           3.22176    int8      
 /model.23/cv3.0/cv3.0.0/cv3.0.0.0/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.998249           3.22176    int8      
+/model.23/cv2.0/cv2.0.0/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.987314           3.22176    int8      
 /model.17/act/Mul                                   BPU  id(0)     HzLut                      0.983275           5.51073    int8      
-/model.23/cv2.0/cv2.0.0/act/Mul                     BPU  id(0)     HzLut                      0.985141           7.79426    int8      
 /model.23/cv3.0/cv3.0.0/cv3.0.0.0/act/Mul           BPU  id(0)     HzLut                      0.998788           6.10244    int8      
+/model.23/cv2.0/cv2.0.0/act/Mul                     BPU  id(0)     HzLut                      0.985141           7.79426    int8      
 /model.18/Concat                                    BPU  id(0)     Concat                     0.983579           3.30647    int8      
-/model.23/cv2.0/cv2.0.1/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.974319           3.42345    int8      
 /model.23/cv3.0/cv3.0.0/cv3.0.0.1/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.987381           4.65344    int8      
+/model.23/cv2.0/cv2.0.1/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.974319           3.42345    int8      
 /model.19/cv1/conv/Conv                             BPU  id(0)     HzSQuantizedConv           0.986139           3.30647    int8      
-/model.23/cv2.0/cv2.0.1/act/Mul                     BPU  id(0)     HzLut                      0.977009           30.4902    int8      
 /model.23/cv3.0/cv3.0.0/cv3.0.0.1/act/Mul           BPU  id(0)     HzLut                      0.983935           5.92542    int8      
+/model.23/cv2.0/cv2.0.1/act/Mul                     BPU  id(0)     HzLut                      0.977009           30.4902    int8      
 /model.19/cv1/act/Mul                               BPU  id(0)     HzLut                      0.985027           5.54872    int8      
-/model.23/cv2.0/cv2.0.2/Conv                        BPU  id(0)     HzSQuantizedConv           0.992660           30.4683    int8      
 /model.23/cv3.0/cv3.0.1/cv3.0.1.0/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.995845           5.5708     int8      
+/model.23/cv2.0/cv2.0.2/Conv                        BPU  id(0)     HzSQuantizedConv           0.992660           30.4683    int8      
 /model.19/Split                                     BPU  id(0)     Split                      0.982556           3.96869    int8      
 /model.19/m.0/cv1/conv/Conv                         BPU  id(0)     HzSQuantizedConv           0.987297           3.96869    int8      
 /model.23/cv3.0/cv3.0.1/cv3.0.1.0/act/Mul           BPU  id(0)     HzLut                      0.995598           5.85514    int8      
@@ -590,21 +788,21 @@ HZ_PREPROCESS_FOR_images                            BPU  id(0)     HzSQuantizedP
 /model.19/cv2/conv/Conv                             BPU  id(0)     HzSQuantizedConv           0.984651           5.91035    int8      
 /model.19/cv2/act/Mul                               BPU  id(0)     HzLut                      0.981582           7.7809     int8      
 /model.20/conv/Conv                                 BPU  id(0)     HzSQuantizedConv           0.984363           4.14417    int8      
-/model.23/cv2.1/cv2.1.0/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.979823           4.14417    int8      
 /model.23/cv3.1/cv3.1.0/cv3.1.0.0/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.993887           4.14417    int8      
+/model.23/cv2.1/cv2.1.0/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.979823           4.14417    int8      
 /model.20/act/Mul                                   BPU  id(0)     HzLut                      0.976112           6.96854    int8      
-/model.23/cv2.1/cv2.1.0/act/Mul                     BPU  id(0)     HzLut                      0.965504           13.0348    int8      
 /model.23/cv3.1/cv3.1.0/cv3.1.0.0/act/Mul           BPU  id(0)     HzLut                      0.994163           7.11306    int8      
+/model.23/cv2.1/cv2.1.0/act/Mul                     BPU  id(0)     HzLut                      0.965504           13.0348    int8      
 /model.21/Concat                                    BPU  id(0)     Concat                     0.975206           4.94341    int8      
-/model.23/cv2.1/cv2.1.1/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.967981           6.49638    int8      
 /model.23/cv3.1/cv3.1.0/cv3.1.0.1/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.981275           6.67258    int8      
+/model.23/cv2.1/cv2.1.1/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.967981           6.49638    int8      
 /model.22/cv1/conv/Conv                             BPU  id(0)     HzSQuantizedConv           0.979492           4.94341    int8      
-/model.23/cv2.1/cv2.1.1/act/Mul                     BPU  id(0)     HzLut                      0.971353           31.211     int8      
 /model.23/cv3.1/cv3.1.0/cv3.1.0.1/act/Mul           BPU  id(0)     HzLut                      0.973697           8.84567    int8      
+/model.23/cv2.1/cv2.1.1/act/Mul                     BPU  id(0)     HzLut                      0.971353           31.211     int8      
 /model.22/cv1/act/Mul                               BPU  id(0)     HzLut                      0.961878           7.79788    int8      
-/model.23/cv2.1/cv2.1.2/Conv                        BPU  id(0)     HzSQuantizedConv           0.991685           31.2049    int8      
 /model.23/cv3.1/cv3.1.1/cv3.1.1.0/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.987852           6.83263    int8      
-/model.22/Split                                     BPU  id(0)     Split                      0.971116           5.70576    int8      
+/model.23/cv2.1/cv2.1.2/Conv                        BPU  id(0)     HzSQuantizedConv           0.991685           31.2049    int8      
+/model.22/Split                                     BPU  id(0)     Split                      0.951142           5.70576    int8      
 /model.22/m.0/cv1/conv/Conv                         BPU  id(0)     HzSQuantizedConv           0.992612           5.70576    int8      
 /model.22/m.0/cv2/conv/Conv                         BPU  id(0)     HzSQuantizedConv           0.972329           5.70576    int8      
 /model.23/cv3.1/cv3.1.1/cv3.1.1.0/act/Mul           BPU  id(0)     HzLut                      0.991579           7.24524    int8      
@@ -631,75 +829,76 @@ HZ_PREPROCESS_FOR_images                            BPU  id(0)     HzSQuantizedP
 /model.22/Concat                                    BPU  id(0)     Concat                     0.968646           5.70576    int8      
 /model.22/cv2/conv/Conv                             BPU  id(0)     HzSQuantizedConv           0.982940           6.71757    int8      
 /model.22/cv2/act/Mul                               BPU  id(0)     HzLut                      0.973625           10.2932    int8      
-/model.23/cv2.2/cv2.2.0/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.982796           7.29855    int8      
 /model.23/cv3.2/cv3.2.0/cv3.2.0.0/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.982890           7.29855    int8      
-/model.23/cv2.2/cv2.2.0/act/Mul                     BPU  id(0)     HzLut                      0.975357           11.0742    int8      
+/model.23/cv2.2/cv2.2.0/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.982796           7.29855    int8      
 /model.23/cv3.2/cv3.2.0/cv3.2.0.0/act/Mul           BPU  id(0)     HzLut                      0.980544           10.9172    int8      
-/model.23/cv2.2/cv2.2.1/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.979640           8.60664    int8      
+/model.23/cv2.2/cv2.2.0/act/Mul                     BPU  id(0)     HzLut                      0.975357           11.0742    int8      
 /model.23/cv3.2/cv3.2.0/cv3.2.0.1/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.982564           8.95003    int8      
-/model.23/cv2.2/cv2.2.1/act/Mul                     BPU  id(0)     HzLut                      0.982324           39.1678    int8      
+/model.23/cv2.2/cv2.2.1/conv/Conv                   BPU  id(0)     HzSQuantizedConv           0.979640           8.60664    int8      
 /model.23/cv3.2/cv3.2.0/cv3.2.0.1/act/Mul           BPU  id(0)     HzLut                      0.981057           18.3423    int8      
-/model.23/cv2.2/cv2.2.2/Conv                        BPU  id(0)     HzSQuantizedConv           0.995127           39.1678    int8      
+/model.23/cv2.2/cv2.2.1/act/Mul                     BPU  id(0)     HzLut                      0.982324           39.1678    int8      
 /model.23/cv3.2/cv3.2.1/cv3.2.1.0/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.995427           7.98731    int8      
+/model.23/cv2.2/cv2.2.2/Conv                        BPU  id(0)     HzSQuantizedConv           0.995127           39.1678    int8      
 /model.23/cv3.2/cv3.2.1/cv3.2.1.0/act/Mul           BPU  id(0)     HzLut                      0.994932           12.8399    int8      
 /model.23/cv3.2/cv3.2.1/cv3.2.1.1/conv/Conv         BPU  id(0)     HzSQuantizedConv           0.984494           12.2868    int8      
 /model.23/cv3.2/cv3.2.1/cv3.2.1.1/act/Mul           BPU  id(0)     HzLut                      0.987047           40.0072    int8      
 /model.23/cv3.2/cv3.2.2/Conv                        BPU  id(0)     HzSQuantizedConv           0.999681           40.0072    int8
-2024-09-30 12:57:14,451 file: print_info_dict.py func: print_info_dict line No: 72 The quantized model output:
+2024-10-24 11:48:13,360 file: print_info_dict.py func: print_info_dict line No: 72 The quantized model output:
 =============================================================================
 Output      Cosine Similarity  L1 Distance  L2 Distance  Chebyshev Distance  
 -----------------------------------------------------------------------------
-output0     0.992659           0.179470     0.000446     5.521544            
-469         0.991685           0.165712     0.000868     5.761001            
-477         0.995127           0.128040     0.001322     5.555207            
-491         0.999806           0.245257     0.000457     3.454550            
-505         0.999583           0.297463     0.001200     11.744269           
-519         0.999681           0.255511     0.001975     4.547106
-2024-09-30 12:57:14,460 file: model_builder.py func: model_builder line No: 35 End to Horizon NN Model Convert.
-2024-09-30 12:57:14,495 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 601 start convert to *.bin file....
-2024-09-30 12:57:14,520 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4326 ONNX model output num : 6
-2024-09-30 12:57:14,521 file: layout_util.py func: layout_util line No: 15 set_featuremap_layout start
-2024-09-30 12:57:14,521 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4060 model_deps_info: {'hb_mapper_version': '1.24.2', 'hbdk_version': '3.49.14', 'hbdk_runtime_version': ' 3.15.54.0', 'horizon_nn_version': '1.0.9', 'onnx_model': '/open_explorer/weights/detect/yolo11n.onnx', 'march': 'bayes-e', 'layer_out_dump': False, 'log_level': 'DEBUG', 'working_dir': '/open_explorer/bin_dir/yolo11n_detect_bayese_640x640_nv12', 'model_prefix': 'yolo11n_detect_bayese_640x640_nv12', 'node_info': {'/model.10/m/m.0/attn/Softmax': {'ON': 'BPU', 'InputType': 'int16', 'OutputType': 'int16'}}, 'input_names': ['images'], 'input_type_rt': ['nv12'], 'input_space_and_range': ['regular'], 'input_type_train': ['rgb'], 'input_layout_rt': [''], 'input_layout_train': ['NCHW'], 'norm_type': ['data_scale'], 'scale_value': ['0.003921568627451,'], 'mean_value': [''], 'input_shape': ['1x3x640x640'], 'input_batch': [], 'cal_dir': ['/open_explorer/calibration_data_rgb_f32_coco_640'], 'cal_data_type': ['float32'], 'preprocess_on': False, 'calibration_type': 'default', 'per_channel': 'False', 'hbdk_params': {'hbdk_pass_through_params': '--O3 --core-num 1 --fast ', 'input-source': {'images': 'pyramid', '_default_value': 'ddr'}}, 'debug': False, 'compile_mode': 'latency'}
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4183 ############# model deps info #############
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4184 hb_mapper version   : 1.24.2
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4187 hbdk version        : 3.49.14
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4189 hbdk runtime version: 3.15.54.0
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4192 horizon_nn version  : 1.0.9
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4196 ############# model_parameters info #############
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4202 onnx_model          : /open_explorer/weights/detect/yolo11n.onnx
-2024-09-30 12:57:14,522 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4203 BPU march           : bayes-e
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4204 layer_out_dump      : False
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4205 log_level           : DEBUG
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4206 working dir         : /open_explorer/bin_dir/yolo11n_detect_bayese_640x640_nv12
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4207 output_model_file_prefix: yolo11n_detect_bayese_640x640_nv12
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4226 node info  : {'/model.10/m/m.0/attn/Softmax': {'ON': 'BPU', 'InputType': 'int16', 'OutputType': 'int16'}}
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4228 ############# input_parameters info #############
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4246 ------------------------------------------
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4248 ---------input info : images ---------
-2024-09-30 12:57:14,523 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4249 input_name          : images
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4250 input_type_rt       : nv12
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4252 input_space&range   : regular
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4254 input_layout_rt     : None
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4255 input_type_train    : rgb
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4256 input_layout_train  : NCHW
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4257 norm_type           : data_scale
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4258 input_shape         : 1x3x640x640
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4266 scale_value         : 0.003921568627451,
-2024-09-30 12:57:14,524 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4268 cal_data_dir        : /open_explorer/calibration_data_rgb_f32_coco_640
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4270 cal_data_type       : float32
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4271 ---------input info : images end -------
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4272 ------------------------------------------
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4274 ############# calibration_parameters info #############
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4275 preprocess_on       : False
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4276 calibration_type:   : default
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4284 per_channel         : False
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4303 ############# compiler_parameters info #############
-2024-09-30 12:57:14,525 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4305 debug               : False
-2024-09-30 12:57:14,526 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4307 compile_mode        : latency
-2024-09-30 12:57:14,526 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4310 hbdk_pass_through_params: --O3 --core-num 1 --fast
-2024-09-30 12:57:14,526 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4310 input-source        : {'images': 'pyramid', '_default_value': 'ddr'}
-2024-09-30 12:57:14,528 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 783 Convert to runtime bin file successfully!
-2024-09-30 12:57:14,528 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 784 End Model Convert
+output0     0.999806           0.245257     0.000457     3.454550            
+475         0.992659           0.179470     0.000446     5.521544            
+489         0.999583           0.297463     0.001200     11.744269           
+497         0.991685           0.165712     0.000868     5.761001            
+511         0.999681           0.255511     0.001975     4.547106            
+519         0.995127           0.128040     0.001322     5.555207
+2024-10-24 11:48:13,368 file: model_builder.py func: model_builder line No: 38 End to Horizon NN Model Convert.
+2024-10-24 11:48:13,380 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 601 start convert to *.bin file....
+2024-10-24 11:48:13,405 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4326 ONNX model output num : 6
+2024-10-24 11:48:13,407 file: layout_util.py func: layout_util line No: 15 set_featuremap_layout start
+2024-10-24 11:48:13,407 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4060 model_deps_info: {'hb_mapper_version': '1.24.3', 'hbdk_version': '3.49.15', 'hbdk_runtime_version': ' 3.15.55.0', 'horizon_nn_version': '1.1.0', 'onnx_model': '/open_explorer/weights/detect/yolo11n.onnx', 'march': 'bayes-e', 'layer_out_dump': False, 'log_level': 'DEBUG', 'working_dir': '/open_explorer/bin_dir/yolo11n_detect_bayese_640x640_nv12', 'model_prefix': 'yolo11n_detect_bayese_640x640_nv12', 'node_info': {'/model.10/m/m.0/attn/Softmax': {'ON': 'BPU', 'InputType': 'int16', 'OutputType': 'int16'}}, 'input_names': ['images'], 'input_type_rt': ['nv12'], 'input_space_and_range': ['regular'], 'input_type_train': ['rgb'], 'input_layout_rt': [''], 'input_layout_train': ['NCHW'], 'norm_type': ['data_scale'], 'scale_value': ['0.003921568627451,'], 'mean_value': [''], 'input_shape': ['1x3x640x640'], 'input_batch': [], 'cal_dir': ['/open_explorer/calibration_data_rgb_f32_coco_640'], 'cal_data_type': ['float32'], 'preprocess_on': False, 'calibration_type': 'default', 'per_channel': 'False', 'hbdk_params': {'hbdk_pass_through_params': '--O3 --core-num 1 --fast ', 'input-source': {'images': 'pyramid', '_default_value': 'ddr'}}, 'debug': False, 'compile_mode': 'latency'}
+2024-10-24 11:48:13,407 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4183 ############# model deps info #############
+2024-10-24 11:48:13,407 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4184 hb_mapper version   : 1.24.3
+2024-10-24 11:48:13,407 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4187 hbdk version        : 3.49.15
+2024-10-24 11:48:13,407 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4189 hbdk runtime version: 3.15.55.0
+2024-10-24 11:48:13,407 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4192 horizon_nn version  : 1.1.0
+2024-10-24 11:48:13,407 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4196 ############# model_parameters info #############
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4202 onnx_model          : /open_explorer/weights/detect/yolo11n.onnx
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4203 BPU march           : bayes-e
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4204 layer_out_dump      : False
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4205 log_level           : DEBUG
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4206 working dir         : /open_explorer/bin_dir/yolo11n_detect_bayese_640x640_nv12
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4207 output_model_file_prefix: yolo11n_detect_bayese_640x640_nv12
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4226 node info  : {'/model.10/m/m.0/attn/Softmax': {'ON': 'BPU', 'InputType': 'int16', 'OutputType': 'int16'}}
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4228 ############# input_parameters info #############
+2024-10-24 11:48:13,408 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4246 ------------------------------------------
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4248 ---------input info : images ---------
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4249 input_name          : images
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4250 input_type_rt       : nv12
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4252 input_space&range   : regular
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4254 input_layout_rt     : None
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4255 input_type_train    : rgb
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4256 input_layout_train  : NCHW
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4257 norm_type           : data_scale
+2024-10-24 11:48:13,409 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4258 input_shape         : 1x3x640x640
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4266 scale_value         : 0.003921568627451,
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4268 cal_data_dir        : /open_explorer/calibration_data_rgb_f32_coco_640
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4270 cal_data_type       : float32
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4271 ---------input info : images end -------
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4272 ------------------------------------------
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4274 ############# calibration_parameters info #############
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4275 preprocess_on       : False
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4276 calibration_type:   : default
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4284 per_channel         : False
+2024-10-24 11:48:13,410 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4303 ############# compiler_parameters info #############
+2024-10-24 11:48:13,411 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4305 debug               : False
+2024-10-24 11:48:13,411 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4307 compile_mode        : latency
+2024-10-24 11:48:13,411 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4310 hbdk_pass_through_params: --O3 --core-num 1 --fast
+2024-10-24 11:48:13,411 file: onnx2horizonrt.py func: onnx2horizonrt line No: 4310 input-source        : {'images': 'pyramid', '_default_value': 'ddr'}
+2024-10-24 11:48:13,413 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 783 Convert to runtime bin file successfully!
+2024-10-24 11:48:13,413 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 784 End Model Convert
+
 ```
 
 
