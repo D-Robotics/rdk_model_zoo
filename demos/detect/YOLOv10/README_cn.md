@@ -112,15 +112,30 @@ $ pip list | grep ultralytics # 或者
 $ conda uninstall ultralytics 
 $ pip uninstall ultralytics   # 或者
 ```
+
+如果不是很顺利，可以通过以下Python命令确认需要修改的`ultralytics`目录的位置:
+```bash
+>>> import ultralytics
+>>> ultralytics.__path__
+['/home/wuchao/miniconda3/envs/yolo/lib/python3.11/site-packages/ultralytics']
+# 或者
+['/home/wuchao/YOLO11/ultralytics_v11/ultralytics']
+```
+
  - 修改Detect的输出头，直接将三个特征层的Bounding Box信息和Classify信息分开输出，一共6个输出头。
 
 文件目录：./ultralytics/ultralytics/nn/modules/head.py，约第51行，`v10Detect`类的forward方法替换成以下内容.
 注：建议您保留好原本的`forward`方法，例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
 ```python
 def forward(self, x):
-    bboxes = [self.one2one_cv2[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
-    clses = [self.one2one_cv3[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
-    return (bboxes, clses)
+    result = []
+    for i in range(self.nl):
+        result.append(self.one2one_cv2[i](x[i]).permute(0, 2, 3, 1).contiguous())
+        result.append(self.one2one_cv3[i](x[i]).permute(0, 2, 3, 1).contiguous())
+    return result
+    # bboxes = [self.one2one_cv2[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
+    # clses = [self.one2one_cv3[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
+    # return (bboxes, clses)
 ```
 
  - 运行以下Python脚本，如果有**No module named onnxsim**报错，安装一个即可

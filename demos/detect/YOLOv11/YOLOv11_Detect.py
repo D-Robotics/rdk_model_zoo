@@ -37,7 +37,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='models/yolo11n_detect_bayese_640x640_nv12.bin', 
+    parser.add_argument('--model-path', type=str, default='models/yolo11x_detect_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
@@ -186,9 +186,9 @@ class YOLO11_Detect(BaseModel):
         super().__init__(model_file)
         # 将反量化系数准备好, 只需要准备一次
         # prepare the quantize scale, just need to generate once
-        self.s_bboxes_scale = self.quantize_model[0].outputs[0].properties.scale_data[np.newaxis, :]
-        self.m_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
-        self.l_bboxes_scale = self.quantize_model[0].outputs[2].properties.scale_data[np.newaxis, :]
+        self.s_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
+        self.m_bboxes_scale = self.quantize_model[0].outputs[3].properties.scale_data[np.newaxis, :]
+        self.l_bboxes_scale = self.quantize_model[0].outputs[5].properties.scale_data[np.newaxis, :]
         logger.info(f"{self.s_bboxes_scale.shape=}, {self.m_bboxes_scale.shape=}, {self.l_bboxes_scale.shape=}")
 
         # DFL求期望的系数, 只需要生成一次
@@ -217,12 +217,12 @@ class YOLO11_Detect(BaseModel):
     def postProcess(self, outputs: list[np.ndarray]) -> tuple[list]:
         begin_time = time()
         # reshape
-        s_bboxes = outputs[0].reshape(-1, 64)
-        m_bboxes = outputs[1].reshape(-1, 64)
-        l_bboxes = outputs[2].reshape(-1, 64)
-        s_clses = outputs[3].reshape(-1, 80)
-        m_clses = outputs[4].reshape(-1, 80)
-        l_clses = outputs[5].reshape(-1, 80)
+        s_clses = outputs[0].reshape(-1, 80)
+        s_bboxes = outputs[1].reshape(-1, 64)
+        m_clses = outputs[2].reshape(-1, 80)
+        m_bboxes = outputs[3].reshape(-1, 64)
+        l_clses = outputs[4].reshape(-1, 80)
+        l_bboxes = outputs[5].reshape(-1, 64)
 
         # classify: 利用numpy向量化操作完成阈值筛选(优化版 2.0)
         s_max_scores = np.max(s_clses, axis=1)
@@ -246,9 +246,9 @@ class YOLO11_Detect(BaseModel):
         l_scores = 1 / (1 + np.exp(-l_scores))
 
         # 3个Bounding Box分支：筛选
-        s_bboxes_float32 = s_bboxes[s_valid_indices,:]#.astype(np.float32) * self.s_bboxes_scale
-        m_bboxes_float32 = m_bboxes[m_valid_indices,:]#.astype(np.float32) * self.m_bboxes_scale
-        l_bboxes_float32 = l_bboxes[l_valid_indices,:]#.astype(np.float32) * self.l_bboxes_scale
+        s_bboxes_float32 = s_bboxes[s_valid_indices,:].astype(np.float32) * self.s_bboxes_scale
+        m_bboxes_float32 = m_bboxes[m_valid_indices,:].astype(np.float32) * self.m_bboxes_scale
+        l_bboxes_float32 = l_bboxes[l_valid_indices,:].astype(np.float32) * self.l_bboxes_scale
 
         # 3个Bounding Box分支：dist2bbox (ltrb2xyxy)
         s_ltrb_indices = np.sum(softmax(s_bboxes_float32.reshape(-1, 4, 16), axis=2) * self.weights_static, axis=2)
