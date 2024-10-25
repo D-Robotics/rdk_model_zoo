@@ -51,7 +51,7 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，�
 ## 性能数据 (简要)
 ### RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型(公版) | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | BPU吞吐量 | 后处理时间(Python) |
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | BPU吞吐量 | 后处理时间(C/C++) |
 |---------|---------|-------|---------|---------|----------|
 | YOLOv11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 138.2 FPS | 3 ms |
 | YOLOv11s | 640×640 | 80 | 9.4 M  / 21.5 B | 65.4 FPS | 3 ms |
@@ -59,6 +59,16 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型，�
 | YOLOv11l | 640×640 | 80 | 25.3 M / 86.9 B | 21.6 FPS | 3 ms |
 | YOLOv11x | 640×640 | 80 | 56.9 M / 194.9 B| 10.4 FPS | 3 ms |
 
+
+### RDK Ultra & RDK Ultra Module
+目标检测 Detection (COCO)
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | BPU吞吐量 | 后处理时间(Python) |
+|---------|---------|-------|---------|---------|----------|
+| YOLOv11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 450.0 FPS | 6 ms |
+| YOLOv11s | 640×640 | 80 | 9.4 M  / 21.5 B | 262.2 FPS | 6 ms |
+| YOLOv11m | 640×640 | 80 | 20.1 M / 68.0 B | 159.9 FPS | 6 ms |
+| YOLOv11l | 640×640 | 80 | 25.3 M / 86.9 B | 105.6 FPS | 6 ms |
+| YOLOv11x | 640×640 | 80 | 56.9 M / 194.9 B| 57.0  FPS | 6 ms |
 
 
 ## 模型下载地址
@@ -913,13 +923,13 @@ output0     0.999806           0.245257     0.000457     3.454550
 
 ### RDK Ultra & RDK Ultra Module
 目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOv11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - |  ms / FPS (1 thread) <br/> ms / FPS (2 threads) | 3 ms |
-| YOLOv11s | 640×640 | 80 | 9.4 M  / 21.5 B | 47.0 | - |  ms / FPS (1 thread) <br/> ms / FPS (2 threads) | 3 ms |
-| YOLOv11m | 640×640 | 80 | 20.1 M / 68.0 B | 51.5 | - |  ms / FPS (1 thread) <br/> ms / FPS (2 threads) | 3 ms |
-| YOLOv11l | 640×640 | 80 | 25.3 M / 86.9 B | 53.4 | - |  ms / FPS (1 thread) <br/> ms / FPS (2 threads) | 3 ms |
-| YOLOv11n | 1440×2560 | 80 | 56.9 M / 194.9 B| 54.7 | - |  ms / FPS (1 thread) <br/> ms / FPS (2 threads) | 3 ms |
+| YOLOv11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 6.8 ms / 145.8 FPS (1 thread) <br/> 7.0 ms / 283.5 FPS (2 threads) <br/> 7.0 ms / 421.8 FPS (3 threads) <br/> 8.8 ms / 450.0 FPS (4 threads) | 6 ms |
+| YOLOv11s | 640×640 | 80 | 9.4 M  / 21.5 B | 47.0 | - | 9.6 ms / 104.2 FPS (1 thread) <br/> 9.9 ms / 202.3 FPS (2 threads) <br/> 11.1 ms / 266.8 FPS (3 threads) <br/> 15.1 ms / 262.2 FPS (4 threads) | 6 ms |
+| YOLOv11m | 640×640 | 80 | 20.1 M / 68.0 B | 51.5 | - | 14.1 ms / 70.8 FPS (1 thread) <br/> 15.0 ms / 133.2 FPS (2 threads) <br/> 19.8 ms / 150.6 FPS (3 threads) <br/> 24.8 ms / 159.9 FPS (4 threads) | 6 ms |
+| YOLOv11l | 640×640 | 80 | 25.3 M / 86.9 B | 53.4 | - | 20.0 ms / 49.9 FPS (1 thread) <br/> 21.1 ms / 94.6 FPS (2 threads) <br/> 29.0 ms / 103.1 FPS (3 threads) <br/> 37.6 ms / 105.6 FPS (4 threads) | 6 ms |
+| YOLOv11x | 640×640 | 80 | 56.9 M / 194.9 B| 54.7 | - | 35.8 ms / 27.9 FPS (1 thread) <br/> 38.1 ms / 52.4 FPS (2 threads) <br/> 54.0 ms / 55.3 FPS (3 threads) <br/> 69.8 ms / 57.0 FPS (4 threads) | 6 ms |
 
 
 ### RDK X5 & RDK X5 Module
@@ -953,6 +963,17 @@ hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv
 ```bash
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
+```
+ - Ultra的状态为最佳状态：CPU为8 × A53@1.2G, 全核心Performance调度, BPU为2 × Bayes@96TOPS.
+```bash
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor"
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy1/scaling_governor"
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy2/scaling_governor"
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy3/scaling_governor"
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor"
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy5/scaling_governor"
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy6/scaling_governor"
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy7/scaling_governor"
 ```
  - X3的状态为最佳状态：CPU为4 × A53@1.8G, 全核心Performance调度, BPU为2 × Bernoulli2@5TOPS.
 ```bash

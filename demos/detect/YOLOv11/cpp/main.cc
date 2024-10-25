@@ -21,7 +21,7 @@ limitations under the License.
 
 // D-Robotics *.bin 模型路径
 // Path of D-Robotics *.bin model.
-#define MODEL_PATH "../../models/yolo11n_detect_bayese_640x640_nv12_modified.bin"
+#define MODEL_PATH "../../models/yolo11x_detect_bayes_640x640_nv12_modified.bin"
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.

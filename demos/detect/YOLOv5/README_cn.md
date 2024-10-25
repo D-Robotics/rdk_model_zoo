@@ -285,6 +285,13 @@ wget https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n.pt
 
 #### 导出为onnx
 打开export.py文件，作如下修改. 建议您在修改前先复制一份留存.
+ - 修改输出头，确保为4维的NHWC输出
+修改`./models/yolo.py`文件, `Detect`类, `forward`方法, 约22行.
+注：建议您保留好原本的`forward`方法,例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
+```bash
+def forward(self, x):
+    return [self.m[i](x[i]).permute(0,2,3,1).contiguous() for i in range(self.nl)]
+```
  - 约612行，作如下修改
 ```python
 parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s_tag6.2.pt', help='model.pt path(s)')
