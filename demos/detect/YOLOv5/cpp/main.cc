@@ -21,7 +21,8 @@ limitations under the License.
 
 // D-Robotics *.bin 模型路径
 // Path of D-Robotics *.bin model.
-#define MODEL_PATH "../../models/yolov8n_detect_bayese_640x640_nv12_modified.bin"
+// #define MODEL_PATH "../../models/yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin"
+#define MODEL_PATH "../../models/yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin"
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
@@ -42,6 +43,10 @@ limitations under the License.
 // Number of classes in the model, default is 80
 #define CLASSES_NUM 80
 
+// 模型的anchors
+// anchors
+#define ANCHORS 10.0, 13.0, 16.0, 30.0, 33.0, 23.0, 30.0, 61.0, 62.0, 45.0, 59.0, 119.0, 116.0, 90.0, 156.0, 198.0, 373.0, 326.0
+
 // NMS的阈值, 默认0.45
 // Non-Maximum Suppression (NMS) threshold, default is 0.45
 #define NMS_THRESHOLD 0.45
@@ -53,10 +58,6 @@ limitations under the License.
 // NMS选取的前K个框数, 默认300
 // Number of top-K boxes selected by NMS, default is 300
 #define NMS_TOP_K 300
-
-// 控制回归部分离散化程度的超参数, 默认16
-// A hyperparameter that controls the discretization level of the regression part, default is 16
-#define REG 16
 
 // 绘制标签的字体尺寸, 默认1.0
 // Font size for drawing labels, default is 1.0.
@@ -157,15 +158,15 @@ int main()
         hbDNNGetInputTensorProperties(&input_properties, dnn_handle, 0),
         "hbDNNGetInputTensorProperties failed");
 
-    // 2.3.1 D-Robotics YOLOv8 *.bin 模型应该为单输入
-    // 2.3.1 D-Robotics YOLOv8 *.bin model should have only one input
+    // 2.3.1 D-Robotics YOLOv5-Detect *.bin 模型应该为单输入
+    // 2.3.1 D-Robotics YOLOv5-Detect *.bin model should have only one input
     if (input_count > 1)
     {
         std::cout << "Your Model have more than 1 input, please check!" << std::endl;
         return -1;
     }
 
-    // 2.3.2 D-Robotics YOLOv8 *.bin 模型输入Tensor类型应为nv12
+    // 2.3.2 D-Robotics YOLOv5-Detect *.bin 模型输入Tensor类型应为nv12
     // tensor type: HB_DNN_IMG_TYPE_NV12
     if (input_properties.validShape.numDimensions == 4)
     {
@@ -177,7 +178,7 @@ int main()
         return -1;
     }
 
-    // 2.3.3 D-Robotics YOLOv8 *.bin 模型输入Tensor数据排布应为NCHW
+    // 2.3.3 D-Robotics YOLOv5-Detect *.bin 模型输入Tensor数据排布应为NCHW
     // tensor layout: HB_DNN_LAYOUT_NCHW
     if (input_properties.tensorType == 1)
     {
@@ -189,7 +190,7 @@ int main()
         return -1;
     }
 
-    // 2.3.4 D-Robotics YOLOv8 *.bin 模型输入Tensor数据的valid shape应为(1,3,H,W)
+    // 2.3.4 D-Robotics YOLOv5-Detect *.bin 模型输入Tensor数据的valid shape应为(1,3,H,W)
     // valid shape: (1,3,640,640)
     int32_t input_H, input_W;
     if (input_properties.validShape.numDimensions == 4)
@@ -214,11 +215,11 @@ int main()
         hbDNNGetOutputCount(&output_count, dnn_handle),
         "hbDNNGetOutputCount failed");
 
-    // 2.4.1 D-Robotics YOLOv8 *.bin 模型应该有6个输出
-    // 2.4.1 D-Robotics YOLOv8 *.bin model should have 6 outputs
-    if (output_count == 6)
+    // 2.4.1 D-Robotics YOLOv5-Detect *.bin 模型应该有 3 个输出
+    // 2.4.1 D-Robotics YOLOv5-Detect *.bin model should have 3 outputs
+    if (output_count == 3)
     {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 3; i++)
         {
             hbDNNTensorProperties output_properties;
             RDK_CHECK_SUCCESS(
@@ -239,13 +240,13 @@ int main()
     }
     else
     {
-        std::cout << "Your Model's outputs num is not 6, please check!" << std::endl;
+        std::cout << "Your Model's outputs num is not 3, please check!" << std::endl;
         return -1;
     }
 
     // 2.4.2 调整输出头顺序的映射
     // 2.4.2 Adjust the mapping of output order
-    int order[6] = {0, 1, 2, 3, 4, 5};
+    int order[3] = {0, 1, 2};
     int32_t H_8 = input_H / 8;
     int32_t H_16 = input_H / 16;
     int32_t H_32 = input_H / 32;
@@ -253,16 +254,13 @@ int main()
     int32_t W_16 = input_W / 16;
     int32_t W_32 = input_W / 32;
     int32_t order_we_want[6][3] = {
-        {H_8, W_8, 64},            // output[order[0]]: (1, H // 8,  W // 8,  64)
-        {H_16, W_16, 64},          // output[order[1]]: (1, H // 16, W // 16, 64)
-        {H_32, W_32, 64},          // output[order[2]]: (1, H // 32, W // 32, 64)
-        {H_8, W_8, CLASSES_NUM},   // output[order[3]]: (1, H // 8,  W // 8,  CLASSES_NUM)
-        {H_16, W_16, CLASSES_NUM}, // output[order[4]]: (1, H // 16, W // 16, CLASSES_NUM)
-        {H_32, W_32, CLASSES_NUM}, // output[order[5]]: (1, H // 32, W // 32, CLASSES_NUM)
+        {H_8, W_8, 3 * (5 * CLASSES_NUM)},   // output[order[0]]: (1, H // 8,  W // 8,  3 × (5 + CLASSES_NUM))
+        {H_16, W_16, 3 * (5 * CLASSES_NUM)}, // output[order[1]]: (1, H // 16, W // 16, 3 × (5 + CLASSES_NUM))
+        {H_32, W_32, 3 * (5 * CLASSES_NUM)}, // output[order[2]]: (1, H // 32, W // 32, 3 × (5 + CLASSES_NUM))
     };
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 3; i++)
     {
-        for (int j = 0; j < 6; j++)
+        for (int j = 0; j < 3; j++)
         {
             hbDNNTensorProperties output_properties;
             RDK_CHECK_SUCCESS(
@@ -281,11 +279,11 @@ int main()
 
     // 2.4.3 打印并检查调整后的输出头顺序的映射
     // 2.4.3 Print and check the mapping of output order
-    if (order[0] + order[1] + order[2] + order[3] + order[4] + order[5] == 0 + 1 + 2 + 3 + 4 + 5)
+    if (order[0] + order[1] + order[2] == 0 + 1 + 2)
     {
         std::cout << "Outputs order check SUCCESS, continue." << std::endl;
         std::cout << "order = {";
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 3; i++)
         {
             std::cout << order[i] << ", ";
         }
@@ -294,7 +292,7 @@ int main()
     else
     {
         std::cout << "Outputs order check FAILED, use default" << std::endl;
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 3; i++)
             order[i] = i;
     }
 
@@ -402,7 +400,7 @@ int main()
     // 4. 准备模型输出数据的空间
     // 4. Prepare the space for model output data
     hbDNNTensor *output = new hbDNNTensor[output_count];
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 3; i++)
     {
         hbDNNTensorProperties &output_properties = output[i].properties;
         hbDNNGetOutputTensorProperties(&output_properties, dnn_handle, i);
@@ -423,309 +421,232 @@ int main()
     hbDNNWaitTaskDone(task_handle, 0);
     std::cout << "\033[31m forward time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
 
-    // 7. YOLOv8-Detect 后处理
+    // 7. YOLOv5-Detect 后处理
     // 7. Postprocess
-    float CONF_THRES_RAW = -log(1 / SCORE_THRESHOLD - 1);     // 利用反函数作用阈值，利用单调性筛选
-    std::vector<std::vector<cv::Rect2d>> bboxes(CLASSES_NUM); // 每个id的xyhw 信息使用一个std::vector<cv::Rect2d>存储
+    std::vector<std::vector<cv::Rect2d>> bboxes(CLASSES_NUM); // 每个id的 xyhw 信息使用一个std::vector<cv::Rect2d>存储
     std::vector<std::vector<float>> scores(CLASSES_NUM);      // 每个id的score信息使用一个std::vector<float>存储
+    std::vector<float> anchors = {ANCHORS};                   // 锚框信息
+    if (anchors.size() != 18)
+    {
+        std::cout << "Anchors size is not 18, please check!" << std::endl;
+        return -1;
+    }
+    std::cout << "anchors: ";
+    for (auto it = anchors.begin(); it != anchors.end(); ++it)
+    {
+        std::cout << *it << "  ";
+    }
+    std::cout << std::endl;
+    std::vector<std::pair<double, double>> s_anchors = {{anchors[0], anchors[1]},
+                                                        {anchors[2], anchors[3]},
+                                                        {anchors[4], anchors[5]}};
+    std::vector<std::pair<double, double>> m_anchors = {{anchors[6], anchors[7]},
+                                                        {anchors[8], anchors[9]},
+                                                        {anchors[10], anchors[11]}};
+    std::vector<std::pair<double, double>> l_anchors = {{anchors[12], anchors[13]},
+                                                        {anchors[14], anchors[15]},
+                                                        {anchors[16], anchors[17]}};
 
     begin_time = std::chrono::system_clock::now();
 
     // 7.1 小目标特征图
     // 7.1 Small Object Feature Map
-    // output[order[0]]: (1, H // 8,  W // 8,  4 * REG)
-    // output[order[3]]: (1, H // 8,  W // 8,  CLASSES_NUM)
+    // output[order[0]]: (1, H // 8,  W // 8,  3 × (5 + CLASSES_NUM))
 
     // 7.1.1 检查反量化类型是否符合RDK Model Zoo的README导出的bin模型规范
     // 7.1.1 Check if the dequantization type complies with the bin model specification exported in the RDK Model Zoo README.
-    if (output[order[0]].properties.quantiType != SCALE)
+    if (output[order[0]].properties.quantiType != NONE)
     {
-        std::cout << "output[order[0]] QuantiType is not SCALE, please check!" << std::endl;
-        return -1;
-    }
-    if (output[order[3]].properties.quantiType != NONE)
-    {
-        std::cout << "output[order[3]] QuantiType is not NONE, please check!" << std::endl;
+        std::cout << "output[order[0]] QuantiType should be NONE, please check!" << std::endl;
         return -1;
     }
 
     // 7.1.2 对缓存的BPU内存进行刷新
     // 7.1.2 Flush the cached BPU memory
     hbSysFlushMem(&(output[order[0]].sysMem[0]), HB_SYS_MEM_CACHE_INVALIDATE);
-    hbSysFlushMem(&(output[order[3]].sysMem[0]), HB_SYS_MEM_CACHE_INVALIDATE);
 
     // 7.1.3 将BPU推理完的内存地址转换为对应类型的指针
     // 7.1.3 Convert the memory address of BPU inference to a pointer of the corresponding type
-    auto *s_bbox_raw = reinterpret_cast<int32_t *>(output[order[0]].sysMem[0].virAddr);
-    auto *s_bbox_scale = reinterpret_cast<float *>(output[order[0]].properties.scale.scaleData);
-    auto *s_cls_raw = reinterpret_cast<float *>(output[order[3]].sysMem[0].virAddr);
+    auto *s_raw = reinterpret_cast<float *>(output[order[0]].sysMem[0].virAddr);
     for (int h = 0; h < H_8; h++)
     {
         for (int w = 0; w < W_8; w++)
         {
-            // 7.1.4 取对应H和W位置的C通道, 记为数组的形式
-            // cls对应CLASSES_NUM个分数RAW值, 也就是Sigmoid计算之前的值，这里利用函数单调性先筛选, 再计算
-            // bbox对应4个坐标乘以REG的RAW值, 也就是DFL计算之前的值, 仅仅分数合格了, 才会进行这部分的计算
-            // 7.1.4 Get the C channel at the corresponding H and W positions, represented as an array.
-            // cls corresponds to CLASSES_NUM raw score values, which are the values before Sigmoid calculation. Here, we use the monotonicity of the function to filter first, then calculate.
-            // bbox corresponds to the raw values of 4 coordinates multiplied by REG, which are the values before DFL calculation. This part of the calculation is only performed if the score is qualified.
-            float *cur_s_cls_raw = s_cls_raw;
-            int32_t *cur_s_bbox_raw = s_bbox_raw;
-            s_cls_raw += CLASSES_NUM;
-            s_bbox_raw += REG * 4;
 
-            // 7.1.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
-            // 7.1.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
-            int cls_id = 0;
-            for (int i = 1; i < CLASSES_NUM; i++)
+            for (auto anchor = s_anchors.begin(); anchor != s_anchors.end(); anchor++)
             {
-                if (cur_s_cls_raw[i] > cur_s_cls_raw[cls_id])
+                // 7.1.4 取对应H, W, anchor位置的C通道, 记为数组的形式
+                // 7.1.4 Extract the C channel corresponding to the H, W, and anchor positions, represented as an array.
+                float *cur_s_raw = s_raw;
+                s_raw += (5 + CLASSES_NUM);
+
+                // 7.1.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
+                // 7.1.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
+                int cls_id = 5;
+                int end = CLASSES_NUM + 5;
+                for (int i = 6; i < end; i++)
                 {
-                    cls_id = i;
+                    if (cur_s_raw[i] > cur_s_raw[cls_id])
+                    {
+                        cls_id = i;
+                    }
                 }
+                float score = 1.0 / (1.0 + std::exp(-cur_s_raw[4])) / (1.0 + std::exp(-cur_s_raw[cls_id]));
+
+                // 7.1.6 不合格则直接跳过, 避免无用的dist2bbox计算
+                // 7.1.6 Skip if not qualified to avoid unnecessary dist2bbox calculation
+                if (score < SCORE_THRESHOLD)
+                    continue;
+                cls_id -= 5;
+
+                // 7.1.7 特征解码计算
+                // 7.1.7 Feature decoding calculation
+                float center_x = ((1.0 / (1.0 + std::exp(-cur_s_raw[0]))) * 2 - 0.5 + w) * 8;
+                float center_y = ((1.0 / (1.0 + std::exp(-cur_s_raw[1]))) * 2 - 0.5 + h) * 8;
+                float bbox_w = std::pow((1.0 / (1.0 + std::exp(-cur_s_raw[2]))) * 2, 2) * (*anchor).first;
+                float bbox_h = std::pow((1.0 / (1.0 + std::exp(-cur_s_raw[3]))) * 2, 2) * (*anchor).second;
+                float bbox_x = center_x - bbox_w / 2.0;
+                float bbox_y = center_y - bbox_h / 2.0;
+
+                // 7.1.8 对应类别加入到对应的std::vector中
+                // 7.1.8 Add the corresponding class to the corresponding std::vector.
+                bboxes[cls_id].push_back(cv::Rect2d(bbox_x, bbox_y, bbox_w, bbox_h));
+                scores[cls_id].push_back(score);
             }
-
-            // 7.1.6 不合格则直接跳过, 避免无用的反量化, DFL和dist2bbox计算
-            // 7.1.6 If not qualified, skip to avoid unnecessary dequantization, DFL and dist2bbox calculation
-            if (cur_s_cls_raw[cls_id] < CONF_THRES_RAW)
-            {
-                continue;
-            }
-
-            // 7.1.7 计算这个目标的分数
-            // 7.1.7 Calculate the score of the target
-            float score = 1 / (1 + std::exp(-cur_s_cls_raw[cls_id]));
-
-            // 7.1.8 对bbox_raw信息进行反量化, DFL计算
-            // 7.1.8 Dequantize bbox_raw information, DFL calculation
-            float ltrb[4], sum, dfl;
-            for (int i = 0; i < 4; i++)
-            {
-                ltrb[i] = 0.;
-                sum = 0.;
-                for (int j = 0; j < REG; j++)
-                {
-                    dfl = std::exp(float(cur_s_bbox_raw[REG * i + j]) * s_bbox_scale[j]);
-                    ltrb[i] += dfl * j;
-                    sum += dfl;
-                }
-                ltrb[i] /= sum;
-            }
-
-            // 7.1.9 剔除不合格的框   if(x1 >= x2 || y1 >=y2) continue;
-            // 7.1.9 Remove unqualified boxes
-            if (ltrb[2] + ltrb[0] <= 0 || ltrb[3] + ltrb[1] <= 0)
-            {
-                continue;
-            }
-
-            // 7.1.10 dist 2 bbox (ltrb 2 xyxy)
-            float x1 = (w + 0.5 - ltrb[0]) * 8.0;
-            float y1 = (h + 0.5 - ltrb[1]) * 8.0;
-            float x2 = (w + 0.5 + ltrb[2]) * 8.0;
-            float y2 = (h + 0.5 + ltrb[3]) * 8.0;
-
-            // 7.1.11 对应类别加入到对应的std::vector中
-            // 7.1.11 Add the corresponding class to the corresponding std::vector.
-            bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
-            scores[cls_id].push_back(score);
         }
     }
 
     // 7.2 中目标特征图
     // 7.2 Media Object Feature Map
-    // output[order[1]]: (1, H // 16,  W // 16,  4 * REG)
-    // output[order[4]]: (1, H // 16,  W // 16,  CLASSES_NUM)
+    // output[order[0]]: (1, H // 16,  W // 16,  3 × (5 + CLASSES_NUM))
 
     // 7.2.1 检查反量化类型是否符合RDK Model Zoo的README导出的bin模型规范
     // 7.2.1 Check if the dequantization type complies with the bin model specification exported in the RDK Model Zoo README.
-    if (output[order[1]].properties.quantiType != SCALE)
+    if (output[order[1]].properties.quantiType != NONE)
     {
-        std::cout << "output[order[1]] QuantiType is not SCALE, please check!" << std::endl;
-        return -1;
-    }
-    if (output[order[4]].properties.quantiType != NONE)
-    {
-        std::cout << "output[order[4]] QuantiType is not NONE, please check!" << std::endl;
+        std::cout << "output[order[0]] QuantiType should be NONE, please check!" << std::endl;
         return -1;
     }
 
     // 7.2.2 对缓存的BPU内存进行刷新
     // 7.2.2 Flush the cached BPU memory
     hbSysFlushMem(&(output[order[1]].sysMem[0]), HB_SYS_MEM_CACHE_INVALIDATE);
-    hbSysFlushMem(&(output[order[4]].sysMem[0]), HB_SYS_MEM_CACHE_INVALIDATE);
 
     // 7.2.3 将BPU推理完的内存地址转换为对应类型的指针
     // 7.2.3 Convert the memory address of BPU inference to a pointer of the corresponding type
-    auto *m_bbox_raw = reinterpret_cast<int32_t *>(output[order[1]].sysMem[0].virAddr);
-    auto *m_bbox_scale = reinterpret_cast<float *>(output[order[1]].properties.scale.scaleData);
-    auto *m_cls_raw = reinterpret_cast<float *>(output[order[4]].sysMem[0].virAddr);
+    auto *m_raw = reinterpret_cast<float *>(output[order[1]].sysMem[0].virAddr);
     for (int h = 0; h < H_16; h++)
     {
         for (int w = 0; w < W_16; w++)
         {
-            // 7.2.4 取对应H和W位置的C通道, 记为数组的形式
-            // cls对应CLASSES_NUM个分数RAW值, 也就是Sigmoid计算之前的值，这里利用函数单调性先筛选, 再计算
-            // bbox对应4个坐标乘以REG的RAW值, 也就是DFL计算之前的值, 仅仅分数合格了, 才会进行这部分的计算
-            // 7.2.4 Get the C channel at the corresponding H and W positions, represented as an array.
-            // cls corresponds to CLASSES_NUM raw score values, which are the values before Sigmoid calculation. Here, we use the monotonicity of the function to filter first, then calculate.
-            // bbox corresponds to the raw values of 4 coordinates multiplied by REG, which are the values before DFL calculation. This part of the calculation is only performed if the score is qualified.
-            float *cur_m_cls_raw = m_cls_raw;
-            int32_t *cur_m_bbox_raw = m_bbox_raw;
-            m_cls_raw += CLASSES_NUM;
-            m_bbox_raw += REG * 4;
 
-            // 7.2.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
-            // 7.2.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
-            int cls_id = 0;
-            for (int i = 1; i < CLASSES_NUM; i++)
+            for (auto anchor = m_anchors.begin(); anchor != m_anchors.end(); anchor++)
             {
-                if (cur_m_cls_raw[i] > cur_m_cls_raw[cls_id])
+                // 7.2.4 取对应H, W, anchor位置的C通道, 记为数组的形式
+                // 7.2.4 Extract the C channel corresponding to the H, W, and anchor positions, represented as an array.
+                float *cur_m_raw = m_raw;
+                m_raw += (5 + CLASSES_NUM);
+
+                // 7.2.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
+                // 7.2.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
+                int cls_id = 5;
+                int end = CLASSES_NUM + 5;
+                for (int i = 6; i < end; i++)
                 {
-                    cls_id = i;
+                    if (cur_m_raw[i] > cur_m_raw[cls_id])
+                    {
+                        cls_id = i;
+                    }
                 }
+                float score = 1.0 / (1.0 + std::exp(-cur_m_raw[4])) / (1.0 + std::exp(-cur_m_raw[cls_id]));
+
+                // 7.2.6 不合格则直接跳过, 避免无用的dist2bbox计算
+                // 7.2.6 Skip if not qualified to avoid unnecessary dist2bbox calculation
+                if (score < SCORE_THRESHOLD)
+                    continue;
+                cls_id -= 5;
+
+                // 7.2.7 特征解码计算
+                // 7.2.7 Feature decoding calculation
+                float center_x = ((1.0 / (1.0 + std::exp(-cur_m_raw[0]))) * 2 - 0.5 + w) * 16;
+                float center_y = ((1.0 / (1.0 + std::exp(-cur_m_raw[1]))) * 2 - 0.5 + h) * 16;
+                float bbox_w = std::pow((1.0 / (1.0 + std::exp(-cur_m_raw[2]))) * 2, 2) * (*anchor).first;
+                float bbox_h = std::pow((1.0 / (1.0 + std::exp(-cur_m_raw[3]))) * 2, 2) * (*anchor).second;
+                float bbox_x = center_x - bbox_w / 2.0;
+                float bbox_y = center_y - bbox_h / 2.0;
+
+                // 7.2.8 对应类别加入到对应的std::vector中
+                // 7.2.8 Add the corresponding class to the corresponding std::vector.
+                bboxes[cls_id].push_back(cv::Rect2d(bbox_x, bbox_y, bbox_w, bbox_h));
+                scores[cls_id].push_back(score);
             }
-            // 7.2.6 不合格则直接跳过, 避免无用的反量化, DFL和dist2bbox计算
-            // 7.2.6 If not qualified, skip to avoid unnecessary dequantization, DFL and dist2bbox calculation
-            if (cur_m_cls_raw[cls_id] < CONF_THRES_RAW)
-                continue;
-
-            // 7.2.7 计算这个目标的分数
-            // 7.2.7 Calculate the score of the target
-            float score = 1 / (1 + std::exp(-cur_m_cls_raw[cls_id]));
-
-            // 7.2.8 对bbox_raw信息进行反量化, DFL计算
-            // 7.2.8 Dequantize bbox_raw information, DFL calculation
-            float ltrb[4], sum, dfl;
-            for (int i = 0; i < 4; i++)
-            {
-                ltrb[i] = 0.;
-                sum = 0.;
-                for (int j = 0; j < REG; j++)
-                {
-                    dfl = std::exp(float(cur_m_bbox_raw[REG * i + j]) * m_bbox_scale[j]);
-                    ltrb[i] += dfl * j;
-                    sum += dfl;
-                }
-                ltrb[i] /= sum;
-            }
-
-            // 7.2.9 剔除不合格的框   if(x1 >= x2 || y1 >=y2) continue;
-            // 7.2.9 Remove unqualified boxes
-            if (ltrb[2] + ltrb[0] <= 0 || ltrb[3] + ltrb[1] <= 0)
-            {
-                continue;
-            }
-
-            // 7.2.10 dist 2 bbox (ltrb 2 xyxy)
-            float x1 = (w + 0.5 - ltrb[0]) * 16.0;
-            float y1 = (h + 0.5 - ltrb[1]) * 16.0;
-            float x2 = (w + 0.5 + ltrb[2]) * 16.0;
-            float y2 = (h + 0.5 + ltrb[3]) * 16.0;
-
-            // 7.2.11 对应类别加入到对应的std::vector中
-            // 7.2.11 Add the corresponding class to the corresponding std::vector.
-            bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
-            scores[cls_id].push_back(score);
         }
     }
 
     // 7.3 大目标特征图
-    // 7.3 Big Object Feature Map
-    // output[order[2]]: (1, H // 32,  W // 32,  4 * REG)
-    // output[order[5]]: (1, H // 32,  W // 32,  CLASSES_NUM)
+    // 7.3 Large Object Feature Map
+    // output[order[0]]: (1, H // 32,  W // 32,  3 × (5 + CLASSES_NUM))
 
     // 7.3.1 检查反量化类型是否符合RDK Model Zoo的README导出的bin模型规范
     // 7.3.1 Check if the dequantization type complies with the bin model specification exported in the RDK Model Zoo README.
-    if (output[order[2]].properties.quantiType != SCALE)
+    if (output[order[2]].properties.quantiType != NONE)
     {
-        std::cout << "output[order[0]] QuantiType is not SCALE, please check!" << std::endl;
-        return -1;
-    }
-    if (output[order[5]].properties.quantiType != NONE)
-    {
-        std::cout << "output[order[3]] QuantiType is not NONE, please check!" << std::endl;
+        std::cout << "output[order[0]] QuantiType should be NONE, please check!" << std::endl;
         return -1;
     }
 
     // 7.3.2 对缓存的BPU内存进行刷新
     // 7.3.2 Flush the cached BPU memory
     hbSysFlushMem(&(output[order[2]].sysMem[0]), HB_SYS_MEM_CACHE_INVALIDATE);
-    hbSysFlushMem(&(output[order[5]].sysMem[0]), HB_SYS_MEM_CACHE_INVALIDATE);
 
     // 7.3.3 将BPU推理完的内存地址转换为对应类型的指针
     // 7.3.3 Convert the memory address of BPU inference to a pointer of the corresponding type
-    auto *l_bbox_raw = reinterpret_cast<int32_t *>(output[order[2]].sysMem[0].virAddr);
-    auto *l_bbox_scale = reinterpret_cast<float *>(output[order[2]].properties.scale.scaleData);
-    auto *l_cls_raw = reinterpret_cast<float *>(output[order[5]].sysMem[0].virAddr);
+    auto *l_raw = reinterpret_cast<float *>(output[order[2]].sysMem[0].virAddr);
     for (int h = 0; h < H_32; h++)
     {
         for (int w = 0; w < W_32; w++)
         {
-            // 7.3.4 取对应H和W位置的C通道, 记为数组的形式
-            // cls对应CLASSES_NUM个分数RAW值, 也就是Sigmoid计算之前的值，这里利用函数单调性先筛选, 再计算
-            // bbox对应4个坐标乘以REG的RAW值, 也就是DFL计算之前的值, 仅仅分数合格了, 才会进行这部分的计算
-            // 7.3.4 Get the C channel at the corresponding H and W positions, represented as an array.
-            // cls corresponds to CLASSES_NUM raw score values, which are the values before Sigmoid calculation. Here, we use the monotonicity of the function to filter first, then calculate.
-            // bbox corresponds to the raw values of 4 coordinates multiplied by REG, which are the values before DFL calculation. This part of the calculation is only performed if the score is qualified.
-            float *cur_l_cls_raw = l_cls_raw;
-            int32_t *cur_l_bbox_raw = l_bbox_raw;
-            l_cls_raw += CLASSES_NUM;
-            l_bbox_raw += REG * 4;
 
-            // 7.3.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
-            // 7.3.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
-            int cls_id = 0;
-            for (int i = 1; i < CLASSES_NUM; i++)
+            for (auto anchor = l_anchors.begin(); anchor != l_anchors.end(); anchor++)
             {
-                if (cur_l_cls_raw[i] > cur_l_cls_raw[cls_id])
+                // 7.3.4 取对应H, W, anchor位置的C通道, 记为数组的形式
+                // 7.1.4 Extract the C channel corresponding to the H, W, and anchor positions, represented as an array.
+                float *cur_l_raw = l_raw;
+                l_raw += (5 + CLASSES_NUM);
+
+                // 7.3.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
+                // 7.3.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
+                int cls_id = 5;
+                int end = CLASSES_NUM + 5;
+                for (int i = 6; i < end; i++)
                 {
-                    cls_id = i;
+                    if (cur_l_raw[i] > cur_l_raw[cls_id])
+                    {
+                        cls_id = i;
+                    }
                 }
+                float score = 1.0 / (1.0 + std::exp(-cur_l_raw[4])) / (1.0 + std::exp(-cur_l_raw[cls_id]));
+
+                // 7.3.6 不合格则直接跳过, 避免无用的dist2bbox计算
+                // 7.1.6 Skip if not qualified to avoid unnecessary dist2bbox calculation
+                if (score < SCORE_THRESHOLD)
+                    continue;
+                cls_id -= 5;
+
+                // 7.3.7 特征解码计算
+                // 7.3.7 Feature decoding calculation
+                float center_x = ((1.0 / (1.0 + std::exp(-cur_l_raw[0]))) * 2 - 0.5 + w) * 32;
+                float center_y = ((1.0 / (1.0 + std::exp(-cur_l_raw[1]))) * 2 - 0.5 + h) * 32;
+                float bbox_w = std::pow((1.0 / (1.0 + std::exp(-cur_l_raw[2]))) * 2, 2) * (*anchor).first;
+                float bbox_h = std::pow((1.0 / (1.0 + std::exp(-cur_l_raw[3]))) * 2, 2) * (*anchor).second;
+                float bbox_x = center_x - bbox_w / 2.0;
+                float bbox_y = center_y - bbox_h / 2.0;
+
+                // 7.3.8 对应类别加入到对应的std::vector中
+                // 7.3.8 Add the corresponding class to the corresponding std::vector.
+                bboxes[cls_id].push_back(cv::Rect2d(bbox_x, bbox_y, bbox_w, bbox_h));
+                scores[cls_id].push_back(score);
             }
-
-            // 7.3.6 不合格则直接跳过, 避免无用的反量化, DFL和dist2bbox计算
-            // 7.3.6 If not qualified, skip to avoid unnecessary dequantization, DFL and dist2bbox calculation
-            if (cur_l_cls_raw[cls_id] < CONF_THRES_RAW)
-                continue;
-
-            // 7.3.7 计算这个目标的分数
-            // 7.3.7 Calculate the score of the target
-            float score = 1 / (1 + std::exp(-cur_l_cls_raw[cls_id]));
-
-            // 7.3.8 对bbox_raw信息进行反量化, DFL计算
-            // 7.3.8 Dequantize bbox_raw information, DFL calculation
-            float ltrb[4], sum, dfl;
-            for (int i = 0; i < 4; i++)
-            {
-                ltrb[i] = 0.;
-                sum = 0.;
-                for (int j = 0; j < REG; j++)
-                {
-                    dfl = std::exp(float(cur_l_bbox_raw[REG * i + j]) * l_bbox_scale[j]);
-                    ltrb[i] += dfl * j;
-                    sum += dfl;
-                }
-                ltrb[i] /= sum;
-            }
-
-            // 7.3.9 剔除不合格的框   if(x1 >= x2 || y1 >=y2) continue;
-            // 7.3.9 Remove unqualified boxes
-            if (ltrb[2] + ltrb[0] <= 0 || ltrb[3] + ltrb[1] <= 0)
-            {
-                continue;
-            }
-
-            // 7.3.10 dist 2 bbox (ltrb 2 xyxy)
-            float x1 = (w + 0.5 - ltrb[0]) * 32.0;
-            float y1 = (h + 0.5 - ltrb[1]) * 32.0;
-            float x2 = (w + 0.5 + ltrb[2]) * 32.0;
-            float y2 = (h + 0.5 + ltrb[3]) * 32.0;
-
-            // 7.3.11 对应类别加入到对应的std::vector中
-            // 7.3.11 Add the corresponding class to the corresponding std::vector.
-            bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
-            scores[cls_id].push_back(score);
         }
     }
 
