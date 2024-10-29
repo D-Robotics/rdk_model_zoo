@@ -26,8 +26,8 @@ limitations under the License.
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
-#define TESR_IMG_PATH "../../../../../resource/assets/kite.jpg"
-// #define TESR_IMG_PATH "../../../../../resource/assets/bus.jpg"
+// #define TESR_IMG_PATH "../../../../../resource/assets/kite.jpg"
+#define TESR_IMG_PATH "../../../../../resource/assets/bus.jpg"
 
 // 前处理方式选择, 0:Resize, 1:LetterBox
 // Preprocessing method selection, 0: Resize, 1: LetterBox
@@ -423,6 +423,7 @@ int main()
 
     // 7. YOLOv5-Detect 后处理
     // 7. Postprocess
+    float CONF_THRES_RAW = -log(1 / SCORE_THRESHOLD - 1);     // 利用反函数作用阈值，利用单调性筛选
     std::vector<std::vector<cv::Rect2d>> bboxes(CLASSES_NUM); // 每个id的 xyhw 信息使用一个std::vector<cv::Rect2d>存储
     std::vector<std::vector<float>> scores(CLASSES_NUM);      // 每个id的score信息使用一个std::vector<float>存储
     std::vector<float> anchors = {ANCHORS};                   // 锚框信息
@@ -480,8 +481,13 @@ int main()
                 float *cur_s_raw = s_raw;
                 s_raw += (5 + CLASSES_NUM);
 
-                // 7.1.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
-                // 7.1.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
+                // 7.1.5 如果条件概率小于conf, 则全概率一定小于conf, 舍去
+                // 7.1.5 If the conditional probability is less than conf, all probabilities must be less than conf, so it is discarded
+                if (cur_s_raw[4] < CONF_THRES_RAW)
+                    continue;
+
+                // 7.1.6 找到分数的最大值索引, 如果最大值小于阈值，则舍去
+                // 7.1.6 Find the index of the maximum score value and discard if the maximum value is less than the threshold
                 int cls_id = 5;
                 int end = CLASSES_NUM + 5;
                 for (int i = 6; i < end; i++)
@@ -493,14 +499,14 @@ int main()
                 }
                 float score = 1.0 / (1.0 + std::exp(-cur_s_raw[4])) / (1.0 + std::exp(-cur_s_raw[cls_id]));
 
-                // 7.1.6 不合格则直接跳过, 避免无用的dist2bbox计算
-                // 7.1.6 Skip if not qualified to avoid unnecessary dist2bbox calculation
+                // 7.1.7 不合格则直接跳过, 避免无用的dist2bbox计算
+                // 7.1.7 Skip if not qualified to avoid unnecessary dist2bbox calculation
                 if (score < SCORE_THRESHOLD)
                     continue;
                 cls_id -= 5;
 
-                // 7.1.7 特征解码计算
-                // 7.1.7 Feature decoding calculation
+                // 7.1.8 特征解码计算
+                // 7.1.8 Feature decoding calculation
                 float center_x = ((1.0 / (1.0 + std::exp(-cur_s_raw[0]))) * 2 - 0.5 + w) * 8;
                 float center_y = ((1.0 / (1.0 + std::exp(-cur_s_raw[1]))) * 2 - 0.5 + h) * 8;
                 float bbox_w = std::pow((1.0 / (1.0 + std::exp(-cur_s_raw[2]))) * 2, 2) * (*anchor).first;
@@ -508,8 +514,8 @@ int main()
                 float bbox_x = center_x - bbox_w / 2.0;
                 float bbox_y = center_y - bbox_h / 2.0;
 
-                // 7.1.8 对应类别加入到对应的std::vector中
-                // 7.1.8 Add the corresponding class to the corresponding std::vector.
+                // 7.1.9 对应类别加入到对应的std::vector中
+                // 7.1.9 Add the corresponding class to the corresponding std::vector.
                 bboxes[cls_id].push_back(cv::Rect2d(bbox_x, bbox_y, bbox_w, bbox_h));
                 scores[cls_id].push_back(score);
             }
@@ -547,8 +553,13 @@ int main()
                 float *cur_m_raw = m_raw;
                 m_raw += (5 + CLASSES_NUM);
 
-                // 7.2.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
-                // 7.2.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
+                // 7.2.5 如果条件概率小于conf, 则全概率一定小于conf, 舍去
+                // 7.2.5 If the conditional probability is less than conf, all probabilities must be less than conf, so it is discarded
+                if (cur_m_raw[4] < CONF_THRES_RAW)
+                    continue;
+
+                // 7.2.6 找到分数的最大值索引, 如果最大值小于阈值，则舍去
+                // 7.2.6 Find the index of the maximum score value and discard if the maximum value is less than the threshold
                 int cls_id = 5;
                 int end = CLASSES_NUM + 5;
                 for (int i = 6; i < end; i++)
@@ -560,14 +571,14 @@ int main()
                 }
                 float score = 1.0 / (1.0 + std::exp(-cur_m_raw[4])) / (1.0 + std::exp(-cur_m_raw[cls_id]));
 
-                // 7.2.6 不合格则直接跳过, 避免无用的dist2bbox计算
-                // 7.2.6 Skip if not qualified to avoid unnecessary dist2bbox calculation
+                // 7.2.7 不合格则直接跳过, 避免无用的dist2bbox计算
+                // 7.2.7 Skip if not qualified to avoid unnecessary dist2bbox calculation
                 if (score < SCORE_THRESHOLD)
                     continue;
                 cls_id -= 5;
 
-                // 7.2.7 特征解码计算
-                // 7.2.7 Feature decoding calculation
+                // 7.2.8 特征解码计算
+                // 7.2.8 Feature decoding calculation
                 float center_x = ((1.0 / (1.0 + std::exp(-cur_m_raw[0]))) * 2 - 0.5 + w) * 16;
                 float center_y = ((1.0 / (1.0 + std::exp(-cur_m_raw[1]))) * 2 - 0.5 + h) * 16;
                 float bbox_w = std::pow((1.0 / (1.0 + std::exp(-cur_m_raw[2]))) * 2, 2) * (*anchor).first;
@@ -575,8 +586,8 @@ int main()
                 float bbox_x = center_x - bbox_w / 2.0;
                 float bbox_y = center_y - bbox_h / 2.0;
 
-                // 7.2.8 对应类别加入到对应的std::vector中
-                // 7.2.8 Add the corresponding class to the corresponding std::vector.
+                // 7.2.9 对应类别加入到对应的std::vector中
+                // 7.2.9 Add the corresponding class to the corresponding std::vector.
                 bboxes[cls_id].push_back(cv::Rect2d(bbox_x, bbox_y, bbox_w, bbox_h));
                 scores[cls_id].push_back(score);
             }
@@ -614,8 +625,13 @@ int main()
                 float *cur_l_raw = l_raw;
                 l_raw += (5 + CLASSES_NUM);
 
-                // 7.3.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
-                // 7.3.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
+                // 7.3.5 如果条件概率小于conf, 则全概率一定小于conf, 舍去
+                // 7.3.5 If the conditional probability is less than conf, all probabilities must be less than conf, so it is discarded
+                if (cur_l_raw[4] < CONF_THRES_RAW)
+                    continue;
+
+                // 7.3.6 找到分数的最大值索引, 如果最大值小于阈值，则舍去
+                // 7.3.6 Find the index of the maximum score value and discard if the maximum value is less than the threshold
                 int cls_id = 5;
                 int end = CLASSES_NUM + 5;
                 for (int i = 6; i < end; i++)
@@ -627,14 +643,14 @@ int main()
                 }
                 float score = 1.0 / (1.0 + std::exp(-cur_l_raw[4])) / (1.0 + std::exp(-cur_l_raw[cls_id]));
 
-                // 7.3.6 不合格则直接跳过, 避免无用的dist2bbox计算
-                // 7.1.6 Skip if not qualified to avoid unnecessary dist2bbox calculation
+                // 7.3.7 不合格则直接跳过, 避免无用的dist2bbox计算
+                // 7.1.7 Skip if not qualified to avoid unnecessary dist2bbox calculation
                 if (score < SCORE_THRESHOLD)
                     continue;
                 cls_id -= 5;
 
-                // 7.3.7 特征解码计算
-                // 7.3.7 Feature decoding calculation
+                // 7.3.8 特征解码计算
+                // 7.3.8 Feature decoding calculation
                 float center_x = ((1.0 / (1.0 + std::exp(-cur_l_raw[0]))) * 2 - 0.5 + w) * 32;
                 float center_y = ((1.0 / (1.0 + std::exp(-cur_l_raw[1]))) * 2 - 0.5 + h) * 32;
                 float bbox_w = std::pow((1.0 / (1.0 + std::exp(-cur_l_raw[2]))) * 2, 2) * (*anchor).first;
@@ -642,8 +658,8 @@ int main()
                 float bbox_x = center_x - bbox_w / 2.0;
                 float bbox_y = center_y - bbox_h / 2.0;
 
-                // 7.3.8 对应类别加入到对应的std::vector中
-                // 7.3.8 Add the corresponding class to the corresponding std::vector.
+                // 7.3.9 对应类别加入到对应的std::vector中
+                // 7.3.9 Add the corresponding class to the corresponding std::vector.
                 bboxes[cls_id].push_back(cv::Rect2d(bbox_x, bbox_y, bbox_w, bbox_h));
                 scores[cls_id].push_back(score);
             }
