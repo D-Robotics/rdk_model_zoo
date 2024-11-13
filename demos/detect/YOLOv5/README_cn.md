@@ -29,6 +29,7 @@
     - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module-1)
   - [反馈](#反馈)
   - [参考](#参考)
+  - [致谢（按照发帖时间）](#致谢按照发帖时间)
 
 
 
@@ -52,27 +53,27 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由�
 ## 性能数据 (简要)
 ### RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间(Python) |
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间 |
 |---------|---------|-------|---------|---------|----------|
-| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | 106.8 FPS | 12 ms |
-| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 M | 45.2 FPS | 12 ms |
-| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 M | 21.8 FPS | 12 ms |
-| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | 12.3 FPS | 12 ms |
-| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 277.2 FPS | 12 ms |
-| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 124.2 FPS | 12 ms |
-| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 M | 48.4 FPS | 12 ms |
-| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 M | 23.3 FPS | 12 ms |
-| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 13.1 FPS | 12 ms |
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | 106.8 FPS | 2.3 ms |
+| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 M | 45.2 FPS | 2.3 ms |
+| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 M | 21.8 FPS | 2.3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | 12.3 FPS | 2.3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 277.2 FPS | 2.3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 124.2 FPS | 2.3 ms |
+| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 M | 48.4 FPS | 2.3 ms |
+| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 M | 23.3 FPS | 2.3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 13.1 FPS | 2.3 ms |
 
 ### RDK X3 & RDK X3 Module
 目标检测 Detection (COCO)
-| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间(Python) |
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间 |
 |---------|---------|-------|---------|---------|----------|
-| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | 38.2 FPS | 13 ms |
-| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | 3.9 FPS | 13 ms |
-| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 37.2 FPS | 13 ms |
-| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 20.9 FPS | 13 ms |
-| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 3.6 FPS | 13 ms |
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | 38.2 FPS | 3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | 3.9 FPS | 3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 37.2 FPS | 3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 20.9 FPS | 3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 3.6 FPS | 3 ms |
 
 注: 详细性能数据见文末.
 
@@ -611,27 +612,27 @@ TODO: 训练流程
 ## 性能数据
 ### RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOv5s_v2.0 | 640×640 | 80 | 7.5  | - | - | 14.3 ms / 70.0 FPS(1 thread) <br/> 18.7 ms / 106.8 FPS(2 threads) | 12 ms |
-| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 | - | - | 27.0 ms / 37.0 FPS(1 thread) <br/> 44.1 ms / 45.2 FPS(2 threads) | 12 ms |
-| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 | - | - | 50.8 ms / 19.7 FPS(1 thread) <br/> 91.5 ms / 21.8 FPS(2 threads) | 12 ms |
-| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 | - | - | 86.3 ms / 11.6 FPS(1 thread) <br/> 162.1 ms / 12.3 FPS(2 threads) | 12 ms |
-| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 | 28.0 | - | 8.5 ms / 117.4 FPS(1 thread) <br/> 8.9 ms / 223.0 FPS(2 threads) <br/> 10.7 ms / 277.2 FPS(3 threads) | 12 ms |
-| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 | 37.4 | - | 13.0 ms / 76.6 FPS(1 thread) <br/> 16.0 ms / 124.2 FPS(2 threads) | 12 ms |
-| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 45.4 | - | 25.7 ms / 38.8 FPS(1 thread) <br/> 41.2 ms / 48.4 FPS(2 threads) | 12 ms |
-| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 49.0 | - | 47.9 ms / 20.9 FPS(1 thread) <br/> 85.7 ms / 23.3 FPS(2 threads) | 12 ms |
-| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 50.7 | - | 81.1 ms / 12.3 FPS(1 thread) <br/> 151.9 ms / 13.1 FPS(2 threads) | 12 ms |
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5  | - | - | 14.3 ms / 70.0 FPS(1 thread) <br/> 18.7 ms / 106.8 FPS(2 threads) | 2.3 ms |
+| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 | - | - | 27.0 ms / 37.0 FPS(1 thread) <br/> 44.1 ms / 45.2 FPS(2 threads) | 2.3 ms |
+| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 | - | - | 50.8 ms / 19.7 FPS(1 thread) <br/> 91.5 ms / 21.8 FPS(2 threads) | 2.3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 | - | - | 86.3 ms / 11.6 FPS(1 thread) <br/> 162.1 ms / 12.3 FPS(2 threads) | 2.3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 | 28.0 | - | 8.5 ms / 117.4 FPS(1 thread) <br/> 8.9 ms / 223.0 FPS(2 threads) <br/> 10.7 ms / 277.2 FPS(3 threads) | 2.3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 | 37.4 | - | 13.0 ms / 76.6 FPS(1 thread) <br/> 16.0 ms / 124.2 FPS(2 threads) | 2.3 ms |
+| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 45.4 | - | 25.7 ms / 38.8 FPS(1 thread) <br/> 41.2 ms / 48.4 FPS(2 threads) | 2.3 ms |
+| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 49.0 | - | 47.9 ms / 20.9 FPS(1 thread) <br/> 85.7 ms / 23.3 FPS(2 threads) | 2.3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 50.7 | - | 81.1 ms / 12.3 FPS(1 thread) <br/> 151.9 ms / 13.1 FPS(2 threads) | 2.3 ms |
 
 ### RDK X3 & RDK X3 Module
 目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | - | - | 55.7 ms / 17.9 FPS(1 thread) <br/> 61.1 ms / 32.7 FPS(2 threads) <br/> 78.1 ms / 38.2 FPS(3 threads)| 13 ms |
-| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | - | - | 512.4 ms / 2.0 FPS(1 thread) <br/> 519.7 ms / 3.8 FPS(2 threads) <br/> 762.1 ms / 3.9 FPS(3 threads) | 13 ms |
-| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 28.0 | - | 85.4 ms / 11.7 FPS(1 thread) <br/> 88.9 ms / 22.4 FPS(2 threads) <br/> 121.9 ms / 32.7 FPS(4 threads) <br/> 213.0 ms / 37.2 FPS(8 threads) | 13 ms |
-| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 37.4 | - | 175.4 ms / 5.7 FPS(1 thread) <br/> 182.3 ms / 11.0 FPS(2 threads) <br/> 217.9 ms / 18.2 FPS(4 threads) <br/> 378.0 ms / 20.9 FPS(8 threads) | 13 ms |
-| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 50.7 | - | 1021.5 ms / 1.0 FPS(1 thread) <br/> 1024.3 ms / 2.0 FPS(2 threads) <br/> 1238.0 ms / 3.1 FPS(4 threads)<br/> 2070.0 ms / 3.6 FPS(8 threads) | 13 ms |
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | - | - | 55.7 ms / 17.9 FPS(1 thread) <br/> 61.1 ms / 32.7 FPS(2 threads) <br/> 78.1 ms / 38.2 FPS(3 threads)| 3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | - | - | 512.4 ms / 2.0 FPS(1 thread) <br/> 519.7 ms / 3.8 FPS(2 threads) <br/> 762.1 ms / 3.9 FPS(3 threads) | 3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 28.0 | - | 85.4 ms / 11.7 FPS(1 thread) <br/> 88.9 ms / 22.4 FPS(2 threads) <br/> 121.9 ms / 32.7 FPS(4 threads) <br/> 213.0 ms / 37.2 FPS(8 threads) | 3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 37.4 | - | 175.4 ms / 5.7 FPS(1 thread) <br/> 182.3 ms / 11.0 FPS(2 threads) <br/> 217.9 ms / 18.2 FPS(4 threads) <br/> 378.0 ms / 20.9 FPS(8 threads) | 3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 50.7 | - | 1021.5 ms / 1.0 FPS(1 thread) <br/> 1024.3 ms / 2.0 FPS(2 threads) <br/> 1238.0 ms / 3.1 FPS(4 threads)<br/> 2070.0 ms / 3.6 FPS(8 threads) | 3 ms |
 
 说明: 
 
@@ -644,18 +645,19 @@ TODO: 训练流程
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
 ```
 2. 测试板卡均为最佳状态。
- - X5的状态为最佳状态：CPU为8 × A55@1.8G, 全核心Performance调度, BPU为1 × Bayes-e@10TOPS.
+ - X5的状态为最佳状态：CPU为8 × A55@1.8G, 全核心Performance调度, BPU为1 × Bayes-e@1.2G.
+```bash
+sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # CPU: 1.8Ghz
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
+echo 1200000000 > /sys/kernel/debug/clk/bpu_mclk_2x_clk/clk_rate # BPU: 1.2GHz
+```
+ - X3的状态为最佳状态：CPU为4 × A53@1.8G, 全核心Performance调度, BPU为2 × Bernoulli2@1.0G.
 ```bash
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 ```
- - X3的状态为最佳状态：CPU为4 × A53@1.8G, 全核心Performance调度, BPU为2 × Bernoulli2@5TOPS.
-```bash
-sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
-sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
-```
-3. 浮点/定点mAP：50-95精度使用pycocotools计算,来自于COCO数据集,可以参考微软的论文,此处用于评估板端部署的精度下降程度。
-4. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行12ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成166帧图像的后处理, 后处理不会构成瓶颈.
+1. 浮点/定点mAP：50-95精度使用pycocotools计算,来自于COCO数据集,可以参考微软的论文,此处用于评估板端部署的精度下降程度。
+2. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行12ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成166帧图像的后处理, 后处理不会构成瓶颈.
 
 
 ## 反馈
@@ -671,3 +673,14 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 
 [3] [ultralytics docs](https://docs.ultralytics.com/models/yolov5/) 
 
+
+## 致谢（按照发帖时间）
+从X3派时代开始，众多才华横溢的社区开发者们为YOLOv5在BPU上的成功部署投入了大量心血和智慧，他们的卓越贡献不仅推动了项目的进展，也为后续的研究工作奠定了坚实的基础。在此，我们要衷心感谢每一位参与者的辛勤付出和不懈努力。
+
+ - [[BPU部署教程] 教你搞定YOLOV5部署 (版本_ 6.2)](https://developer.d-robotics.cc/forumDetail/112555549341653639)
+ - [yolov5-7.0 实例分割 python 部署代码](https://developer.d-robotics.cc/forumDetail/118363914936418940)
+ - [yolov5-7.0 实例分割 cpp 部署代码](https://developer.d-robotics.cc/forumDetail/118363914936418979)
+ - [【模型提速】如何在X3pi使用yolov5模型50ms推理](https://developer.d-robotics.cc/forumDetail/163807123501918330)
+ - [YOLOv5较新版本的部署方法](https://developer.d-robotics.cc/forumDetail/177840589839214598)
+ - [YOLOV5 在地平线RDK X3的高效部署](https://developer.d-robotics.cc/forumDetail/198686198578007656)
+ - [RDK X3使用TROS快速部署YOLOv5刷爆 30 fps ](https://developer.d-robotics.cc/forumDetail/198685796998563332)
