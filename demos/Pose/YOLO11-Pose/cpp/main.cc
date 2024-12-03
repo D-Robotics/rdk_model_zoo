@@ -54,6 +54,14 @@ limitations under the License.
 // kpt Score threshold, default is 0.25
 #define KPT_SCORE_THRESHOLD 0.5
 
+// kpt 的个数
+// num of kpt
+#define KPT_NUM 17
+
+// kpt 的编码，2:x,y, 3:x,y,vis
+// encode type of kpt
+#define KPT_ENCODE 3
+
 // NMS选取的前K个框数, 默认300
 // Number of top-K boxes selected by NMS, default is 300
 #define NMS_TOP_K 300
@@ -263,9 +271,9 @@ int main()
         {H_16, W_16, CLASSES_NUM}, // output[order[3]]: (1, H // 16, W // 16, CLASSES_NUM)
         {H_32, W_32, 64},          // output[order[4]]: (1, H // 32, W // 32, 64)
         {H_32, W_32, CLASSES_NUM}, // output[order[5]]: (1, H // 32, W // 32, CLASSES_NUM)
-        {H_8, W_8, 51},            // output[order[6]]: (1, H // 8 , W // 8 , 51)
-        {H_16, W_16, 51},          // output[order[7]]: (1, H // 16, W // 16, 51)
-        {H_32, W_32, 51},          // output[order[8]]: (1, H // 32, W // 32, 51)
+        {H_8, W_8, KPT_NUM * KPT_ENCODE},            // output[order[6]]: (1, H // 8 , W // 8 , KPT_NUM * KPT_ENCODE)
+        {H_16, W_16, KPT_NUM * KPT_ENCODE},          // output[order[7]]: (1, H // 16, W // 16, KPT_NUM * KPT_ENCODE)
+        {H_32, W_32, KPT_NUM * KPT_ENCODE},          // output[order[8]]: (1, H // 32, W // 32, KPT_NUM * KPT_ENCODE)
     };
     for (int i = 0; i < 9; i++)
     {
@@ -445,7 +453,7 @@ int main()
     // 7.1 Small Object Feature Map
     // output[order[0]]: (1, H // 8,  W // 8,  4 * REG)
     // output[order[1]]: (1, H // 8,  W // 8,  CLASSES_NUM)
-    // output[order[6]]: (1, H // 8,  W // 8,  51)
+    // output[order[6]]: (1, H // 8,  W // 8,  KPT_NUM * KPT_ENCODE)
 
     // 7.1.1 检查反量化类型是否符合RDK Model Zoo的README导出的bin模型规范
     // 7.1.1 Check if the dequantization type complies with the bin model specification exported in the RDK Model Zoo README.
@@ -476,7 +484,7 @@ int main()
     // 7.1.3 Convert the memory address of BPU inference to a pointer of the corresponding type
     auto *s_bbox_raw = reinterpret_cast<int32_t *>(output[order[0]].sysMem[0].virAddr);
     auto *s_cls_raw = reinterpret_cast<float *>(output[order[1]].sysMem[0].virAddr);
-    auto *s_kpts_raw = reinterpret_cast<float *>(output[order[2]].sysMem[0].virAddr);
+    auto *s_kpts_raw = reinterpret_cast<float *>(output[order[6]].sysMem[0].virAddr);
     auto *s_bbox_scale = reinterpret_cast<float *>(output[order[0]].properties.scale.scaleData);
     for (int h = 0; h < H_8; h++)
     {
@@ -493,7 +501,7 @@ int main()
             float *cur_s_kpts_raw = s_kpts_raw;
             s_cls_raw += CLASSES_NUM;
             s_bbox_raw += REG * 4;
-            s_kpts_raw += 64; // padding 后的tensor是64起跳, 不是51
+            s_kpts_raw += KPT_NUM * KPT_ENCODE; 
 
             // 7.1.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
             // 7.1.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
@@ -548,15 +556,15 @@ int main()
 
             // 7.1.11 kpts的处理
             // 7.1.11 Process kpts
-            std::vector<cv::Point2f> kpt_xy(17);
-            std::vector<float> kpt_score(17);
-            for (int j = 0; j < 17; j++)
+            std::vector<cv::Point2f> kpt_xy(KPT_NUM);
+            std::vector<float> kpt_score(KPT_NUM);
+            for (int j = 0; j < KPT_NUM; j++)
             {
-                float x = (cur_s_kpts_raw[3 * j] * 2.0 + w) * 32.0;
-                float y = (cur_s_kpts_raw[3 * j + 1] * 2.0 + h) * 32.0;
+                float x = (cur_s_kpts_raw[KPT_ENCODE * j] * 2.0 + w) * 8.0;
+                float y = (cur_s_kpts_raw[KPT_ENCODE * j + 1] * 2.0 + h) * 8.0;
 
                 kpt_xy[j] = cv::Point2f(x, y);
-                kpt_score[j] = cur_s_kpts_raw[3 * j + 2];
+                kpt_score[j] = cur_s_kpts_raw[KPT_ENCODE * j + 2];
             }
 
             // 7.1.12 对应类别加入到对应的std::vector中
@@ -572,7 +580,7 @@ int main()
     // 7.2 Media Object Feature Map
     // output[order[2]]: (1, H // 16,  W // 16,  4 * REG)
     // output[order[3]]: (1, H // 16,  W // 16,  CLASSES_NUM)
-    // output[order[7]]: (1, H // 16,  W // 16,  51)
+    // output[order[7]]: (1, H // 16,  W // 16,  KPT_NUM * KPT_ENCODE)
 
     // 7.2.1 检查反量化类型是否符合RDK Model Zoo的README导出的bin模型规范
     // 7.2.1 Check if the dequantization type complies with the bin model specification exported in the RDK Model Zoo README.
@@ -619,7 +627,7 @@ int main()
             float *cur_m_kpts_raw = m_kpts_raw;
             m_cls_raw += CLASSES_NUM;
             m_bbox_raw += REG * 4;
-            m_kpts_raw += 51; 
+            m_kpts_raw += KPT_NUM * KPT_ENCODE; 
             
             // 7.2.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
             // 7.2.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
@@ -674,15 +682,15 @@ int main()
 
             // 7.2.11 kpts的处理
             // 7.2.11 Process kpts
-            std::vector<cv::Point2f> kpt_xy(17);
-            std::vector<float> kpt_score(17);
-            for (int j = 0; j < 17; j++)
+            std::vector<cv::Point2f> kpt_xy(KPT_NUM);
+            std::vector<float> kpt_score(KPT_NUM);
+            for (int j = 0; j < KPT_NUM; j++)
             {
-                float x = (cur_m_kpts_raw[3 * j] * 2.0 + w) * 16.0;
-                float y = (cur_m_kpts_raw[3 * j + 1] * 2.0 + h) * 16.0;
+                float x = (cur_m_kpts_raw[KPT_ENCODE * j] * 2.0 + w) * 16.0;
+                float y = (cur_m_kpts_raw[KPT_ENCODE * j + 1] * 2.0 + h) * 16.0;
 
                 kpt_xy[j] = cv::Point2f(x, y);
-                kpt_score[j] = cur_m_kpts_raw[3 * j + 2];
+                kpt_score[j] = cur_m_kpts_raw[KPT_ENCODE * j + 2];
             }
 
             // 7.2.12 对应类别加入到对应的std::vector中
@@ -698,7 +706,7 @@ int main()
     // 7.3 Big Object Feature Map
     // output[order[4]]: (1, H // 32,  W // 32,  4 * REG)
     // output[order[5]]: (1, H // 32,  W // 32,  CLASSES_NUM)
-    // output[order[8]]: (1, H // 32,  W // 32,  51)
+    // output[order[8]]: (1, H // 32,  W // 32,  KPT_NUM * KPT_ENCODE)
 
     // 7.3.1 检查反量化类型是否符合RDK Model Zoo的README导出的bin模型规范
     // 7.3.1 Check if the dequantization type complies with the bin model specification exported in the RDK Model Zoo README.
@@ -746,7 +754,7 @@ int main()
             float *cur_l_kpts_raw = l_kpts_raw;
             l_cls_raw += CLASSES_NUM;
             l_bbox_raw += REG * 4;
-            l_kpts_raw += 51; 
+            l_kpts_raw += KPT_NUM * KPT_ENCODE; 
             
             // 7.3.5 找到分数的最大值索引, 如果最大值小于阈值，则舍去
             // 7.3.5 Find the index of the maximum score value and discard if the maximum value is less than the threshold
@@ -801,15 +809,15 @@ int main()
 
             // 7.3.11 kpts的处理
             // 7.3.11 Process kpts
-            std::vector<cv::Point2f> kpt_xy(17);
-            std::vector<float> kpt_score(17);
-            for (int j = 0; j < 17; j++)
+            std::vector<cv::Point2f> kpt_xy(KPT_NUM);
+            std::vector<float> kpt_score(KPT_NUM);
+            for (int j = 0; j < KPT_NUM; j++)
             {
-                float x = (cur_l_kpts_raw[3 * j] * 2.0 + w) * 32.0;
-                float y = (cur_l_kpts_raw[3 * j + 1] * 2.0 + h) * 32.0;
+                float x = (cur_l_kpts_raw[KPT_ENCODE * j] * 2.0 + w) * 32.0;
+                float y = (cur_l_kpts_raw[KPT_ENCODE * j + 1] * 2.0 + h) * 32.0;
 
                 kpt_xy[j] = cv::Point2f(x, y);
-                kpt_score[j] = cur_l_kpts_raw[3 * j + 2];
+                kpt_score[j] = cur_l_kpts_raw[KPT_ENCODE * j + 2];
             }
 
             // 7.3.12 对应类别加入到对应的std::vector中
@@ -852,7 +860,7 @@ int main()
 
         // 8.5 绘制关键点
         // 8.5 Draw Key Points
-        for (int j = 0; j < 17; ++j)
+        for (int j = 0; j < KPT_NUM; ++j)
         {
             if (kpts_score[*it][j] < KPT_CONF_THRES_RAW)
             {
