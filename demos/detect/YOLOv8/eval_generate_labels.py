@@ -37,27 +37,27 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='models/patch_yolov8n_detect_bayese_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='models/yolov8x_detect_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
-                                RDK X3(Module): Bernoulli2.  
-                                RDK Ultra: Bayes.  
-                                RDK X5(Module): Bayes-e.  
-                                RDK S100: Nash-e.  
+                                RDK X3(Module): Bernoulli2.
+                                RDK Ultra: Bayes.
+                                RDK X5(Module): Bayes-e.
+                                RDK S100: Nash-e.
                                 RDK S100P: Nash-m.""") 
     parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
     parser.add_argument('--reg', type=int, default=16, help='DFL reg layer.')
-    parser.add_argument('--iou-thres', type=float, default=0.45, help='IoU threshold.')
-    parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold.')
-    parser.add_argument('--image-path', type=str, default="../../../resource/DataSets/COCO2017_Val/val2017", help='COCO2017 val source image path.')
+    parser.add_argument('--nms-thres', type=float, default=0.8, help='IoU threshold.')
+    parser.add_argument('--score-thres', type=float, default=0.25, help='confidence threshold.')
+    parser.add_argument('--image-path', type=str, default="../../../resource/DataSets/val2017", help='COCO2017 val source image path.')
     parser.add_argument('--result-image-dump', type=bool, default=False, help='dump image result or not')
     parser.add_argument('--result-image-path', type=str, default="coco2017_image_result", help='COCO2017 val image result saving path.')
-    parser.add_argument('--json-path', type=str, default="patch_yolov8n_coco2017_val_pridect.json", help='convert to json save path.')
+    parser.add_argument('--json-path', type=str, default="yolov8x_detect_bayese_640x640_nv12_modified_coco2017_val_pridect.json", help='convert to json save path.')
     parser.add_argument('--max-num', type=int, default=50000, help='max num of images which will be precessed.')
     opt = parser.parse_args()
     logger.info(opt)
 
     # 实例化
-    model = YOLOv8_Detect(opt.model_path, opt.conf_thres, opt.iou_thres)
+    model = YOLOv8_Detect(opt)
 
     # 创建 result* 目录存储结果
     if opt.result_image_dump:
@@ -84,23 +84,20 @@ def main():
         logger.info("\033[1;32m" + f"[{cnt}/{img_num}] Processing image: \"{img_name}\"" + "\033[0m")
         # 端到端推理
         img = cv2.imread(os.path.join(opt.image_path, img_name))
-        input_tensor = model.bgr2nv12(img)
-
+        input_tensor = model.preprocess(img)
         outputs = model.c2numpy(model.forward(input_tensor))
-        ids, scores, bboxes = model.postProcess(outputs)
+        results = model.postProcess(outputs)
         # 渲染结果并保存
         if opt.result_image_dump:
             logger.info("\033[1;32m" + "Draw Results: " + "\033[0m")
-            for class_id, score, bbox in zip(ids, scores, bboxes):
-                x1, y1, x2, y2 = bbox
+            for class_id, score, x1, y1, x2, y2 in results:
                 logger.info("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
                 draw_detection(img, (x1, y1, x2, y2), score, class_id)
                 save_path = os.path.join(result_image_path, img_name[:-4] + "_result.jpg")
                 cv2.imwrite(save_path, img)
                 logger.info("\033[1;32m" + f"result image saved: \"./{save_path}\"" + "\033[0m")
         id_cnt = 0
-        for class_id, score, bbox in zip(ids, scores, bboxes):
-            x1, y1, x2, y2 = bbox
+        for class_id, score, x1, y1, x2, y2 in results:
             width = max(0, x2 - x1)
             height = max(0, y2 - y1)
             x1, y1, x2, y2, width, height = float(x1), float(y1), float(x2), float(y2), float(width), float(height)

@@ -37,55 +37,52 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='models/yolov8s_detect_bayese_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='models/yolov8x_detect_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
                                 RDK X5(Module): Bayes-e.
                                 RDK S100: Nash-e.
                                 RDK S100P: Nash-m.""") 
-    parser.add_argument('--test-img', type=str, default='../../../resource/assets/bus.jpg', help='Path to Load Test Image.')
+    parser.add_argument('--test-img', type=str, default='../../../resource/DataSets/val2017/000000001000.jpg', help='Path to Load Test Image.')
     parser.add_argument('--img-save-path', type=str, default='jupyter_result.jpg', help='Path to Load Test Image.')
     parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
     parser.add_argument('--reg', type=int, default=16, help='DFL reg layer.')
-    parser.add_argument('--iou-thres', type=float, default=0.45, help='IoU threshold.')
-    parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold.')
+    parser.add_argument('--nms-thres', type=float, default=0.8, help='IoU threshold.')
+    parser.add_argument('--score-thres', type=float, default=0.25, help='confidence threshold.')
     opt = parser.parse_args()
     logger.info(opt)
 
     # 实例化
-    model = YOLOv8_Detect(opt.model_path, opt.conf_thres, opt.iou_thres)
+    model = YOLOv8_Detect(opt)
     # 读图
     img = cv2.imread(opt.test_img)
     # 准备输入数据
-    input_tensor = model.bgr2nv12(img)
+    input_tensor = model.preprocess(img)
     # 推理
     outputs = model.c2numpy(model.forward(input_tensor))
     # 后处理
-    ids, scores, bboxes = model.postProcess(outputs)
+    results = model.postProcess(outputs)
     # 渲染
     logger.info("\033[1;32m" + "Draw Results: " + "\033[0m")
-    for class_id, score, bbox in zip(ids, scores, bboxes):
-        x1, y1, x2, y2 = bbox
-        logger.info("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
+    for class_id, score, x1, y1, x2, y2 in results:
+        print("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
         draw_detection(img, (x1, y1, x2, y2), score, class_id)
     # 保存结果
     cv2.imwrite(opt.img_save_path, img)
     logger.info("\033[1;32m" + f"saved in path: \"./{opt.img_save_path}\"" + "\033[0m")
 
-class BaseModel:
-    def __init__(
-        self,
-        model_file: str
-        ) -> None:
+
+class YOLOv8_Detect():
+    def __init__(self, opt):
         # 加载BPU的bin模型, 打印相关参数
         # Load the quantized *.bin model and print its parameters
         try:
             begin_time = time()
-            self.quantize_model = dnn.load(model_file)
+            self.quantize_model = dnn.load(opt.model_path)
             logger.debug("\033[1;31m" + "Load D-Robotics Quantize model time = %.2f ms"%(1000*(time() - begin_time)) + "\033[0m")
         except Exception as e:
-            logger.error("❌ Failed to load model file: %s"%(model_file))
+            logger.error("❌ Failed to load model file: %s"%(opt.model_path))
             logger.error("You can download the model file from the following docs: ./models/download.md") 
             logger.error(e)
             exit(1)
@@ -99,96 +96,11 @@ class BaseModel:
             logger.info(f"output[{i}], name={quantize_input.name}, type={quantize_input.properties.dtype}, shape={quantize_input.properties.shape}")
 
         self.model_input_height, self.model_input_weight = self.quantize_model[0].inputs[0].properties.shape[2:4]
-
-    def resizer(self, img: np.ndarray)->np.ndarray:
-        img_h, img_w = img.shape[0:2]
-        self.y_scale, self.x_scale = img_h/self.model_input_height, img_w/self.model_input_weight
-        return cv2.resize(img, (self.model_input_height, self.model_input_weight), interpolation=cv2.INTER_NEAREST) # 利用resize重新开辟内存
-    
-    def preprocess(self, img: np.ndarray)->np.array:
-        """
-        Preprocesses an input image to prepare it for model inference.
-
-        Args:
-            img (np.ndarray): The input image in BGR format as a NumPy array.
-
-        Returns:
-            np.array: The preprocessed image tensor in NCHW format ready for model input.
-
-        Procedure:
-            1. Resizes the image to a specified dimension (`input_image_size`) using nearest neighbor interpolation.
-            2. Converts the image color space from BGR to RGB.
-            3. Transposes the dimensions of the image tensor to channel-first order (CHW).
-            4. Adds a batch dimension, thus conforming to the NCHW format expected by many models.
-            Note: Normalization to [0, 1] is assumed to be handled elsewhere based on configuration.
-        """
-        begin_time = time()
-
-        input_tensor = self.resizer(img)
-        input_tensor = cv2.cvtColor(input_tensor, cv2.COLOR_BGR2RGB)
-        # input_tensor = np.array(input_tensor) / 255.0  # yaml文件中已经配置前处理
-        input_tensor = np.transpose(input_tensor, (2, 0, 1))
-        input_tensor = np.expand_dims(input_tensor, axis=0).astype(np.uint8)  # NCHW
-
-        logger.debug("\033[1;31m" + f"pre process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
-        return input_tensor
-
-    def bgr2nv12(self, bgr_img: np.ndarray) -> np.ndarray:
-        """
-        Convert a BGR image to the NV12 format.
-
-        NV12 is a common video encoding format where the Y component (luminance) is full resolution,
-        and the UV components (chrominance) are half-resolution and interleaved. This function first
-        converts the BGR image to YUV 4:2:0 planar format, then rearranges the UV components to fit
-        the NV12 format.
-
-        Parameters:
-        bgr_img (np.ndarray): The input BGR image array.
-
-        Returns:
-        np.ndarray: The converted NV12 format image array.
-        """
-        begin_time = time()
-        bgr_img = self.resizer(bgr_img)
-        height, width = bgr_img.shape[0], bgr_img.shape[1]
-        area = height * width
-        yuv420p = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2YUV_I420).reshape((area * 3 // 2,))
-        y = yuv420p[:area]
-        uv_planar = yuv420p[area:].reshape((2, area // 4))
-        uv_packed = uv_planar.transpose((1, 0)).reshape((area // 2,))
-        nv12 = np.zeros_like(yuv420p)
-        nv12[:height * width] = y
-        nv12[height * width:] = uv_packed
-
-        logger.debug("\033[1;31m" + f"bgr8 to nv12 time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
-        return nv12
-
-
-    def forward(self, input_tensor: np.array) -> list[dnn.pyDNNTensor]:
-        begin_time = time()
-        quantize_outputs = self.quantize_model[0].forward(input_tensor)
-        logger.debug("\033[1;31m" + f"forward time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
-        return quantize_outputs
-
-
-    def c2numpy(self, outputs) -> list[np.array]:
-        begin_time = time()
-        outputs = [dnnTensor.buffer for dnnTensor in outputs]
-        logger.debug("\033[1;31m" + f"c to numpy time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
-        return outputs
-
-class YOLOv8_Detect(BaseModel):
-    def __init__(self, 
-                model_file: str, 
-                conf: float, 
-                iou: float
-                ):
-        super().__init__(model_file)
         # 将反量化系数准备好, 只需要准备一次
         # prepare the quantize scale, just need to generate once
-        self.s_bboxes_scale = self.quantize_model[0].outputs[0].properties.scale_data[np.newaxis, :]
-        self.m_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
-        self.l_bboxes_scale = self.quantize_model[0].outputs[2].properties.scale_data[np.newaxis, :]
+        self.s_bboxes_scale = self.quantize_model[0].outputs[1].properties.scale_data[np.newaxis, :]
+        self.m_bboxes_scale = self.quantize_model[0].outputs[3].properties.scale_data[np.newaxis, :]
+        self.l_bboxes_scale = self.quantize_model[0].outputs[5].properties.scale_data[np.newaxis, :]
         logger.info(f"{self.s_bboxes_scale.shape=}, {self.m_bboxes_scale.shape=}, {self.l_bboxes_scale.shape=}")
 
         # DFL求期望的系数, 只需要生成一次
@@ -207,36 +119,150 @@ class YOLOv8_Detect(BaseModel):
 
         # 输入图像大小, 一些阈值, 提前计算好
         self.input_image_size = 640
-        self.conf = conf
-        self.iou = iou
-        self.conf_inverse = -np.log(1/conf - 1)
-        logger.info("iou threshol = %.2f, conf threshol = %.2f"%(iou, conf))
-        logger.info("sigmoid_inverse threshol = %.2f"%self.conf_inverse)
-    
+        self.SCORE_THRESHOLD = opt.score_thres
+        self.NMS_THRESHOLD = opt.nms_thres
+        self.CONF_THRES_RAW = -np.log(1/self.SCORE_THRESHOLD - 1)
+        logger.info("SCORE_THRESHOLD  = %.2f, NMS_THRESHOLD = %.2f"%(self.SCORE_THRESHOLD, self.NMS_THRESHOLD))
+        logger.info("CONF_THRES_RAW = %.2f"%self.CONF_THRES_RAW)
 
-    def postProcess(self, outputs: list[np.ndarray]) -> tuple[list]:
+        self.input_H, self.input_W = self.quantize_model[0].inputs[0].properties.shape[2:4]
+        logger.info(f"{self.input_H = }, {self.input_W = }")
+
+        self.REG = opt.reg
+        print(f"{self.REG = }")
+
+        self.CLASSES_NUM = opt.classes_num
+        print(f"{self.CLASSES_NUM = }")
+
+    def preprocess(self, img):
+        """
+        Preprocesses an input image to prepare it for model inference.
+
+        Args:
+            img (np.ndarray): The input image in BGR format as a NumPy array.
+
+        Returns:
+            np.array: The preprocessed image tensor in NCHW format ready for model input.
+
+        Procedure:
+            1. Resizes the image to a specified dimension (`input_image_size`) using nearest neighbor interpolation.
+            2. Converts the image color space from BGR to RGB.
+            3. Transposes the dimensions of the image tensor to channel-first order (CHW).
+            4. Adds a batch dimension, thus conforming to the NCHW format expected by many models.
+            Note: Normalization to [0, 1] is assumed to be handled elsewhere based on configuration.
+        """
+        RESIZE_TYPE = 0
+        LETTERBOX_TYPE = 1
+        PREPROCESS_TYPE = LETTERBOX_TYPE
+        logger.info(f"illegal PREPROCESS_TYPE = {PREPROCESS_TYPE}")
+
+        begin_time = time()
+        self.img_h, self.img_w = img.shape[0:2]
+        if PREPROCESS_TYPE == RESIZE_TYPE:
+            # 利用resize的方式进行前处理, 准备nv12的输入数据
+            begin_time = time()
+            input_tensor = cv2.resize(img, (self.input_W, self.input_H), interpolation=cv2.INTER_NEAREST) # 利用resize重新开辟内存节约一次
+            input_tensor = self.bgr2nv12(input_tensor)
+            self.y_scale = 1.0 * self.input_H / self.img_h
+            self.x_scale = 1.0 * self.input_W / self.img_w
+            self.y_shift = 0
+            self.x_shift = 0
+            print("\033[1;31m" + f"pre process(resize) time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+            print(f"{input_tensor.shape = }")
+        elif PREPROCESS_TYPE == LETTERBOX_TYPE:
+            # 利用 letter box 的方式进行前处理, 准备nv12的输入数据
+            begin_time = time()
+            self.x_scale = min(1.0 * self.input_H / self.img_h, 1.0 * self.input_W / self.img_w)
+            self.y_scale = self.x_scale
+            
+            if self.x_scale <= 0 or self.y_scale <= 0:
+                raise ValueError("Invalid scale factor.")
+            
+            new_w = int(self.img_w * self.x_scale)
+            self.x_shift = (self.input_W - new_w) // 2
+            x_other = self.input_W - new_w - self.x_shift
+            
+            new_h = int(self.img_h * self.y_scale)
+            self.y_shift = (self.input_H - new_h) // 2
+            y_other = self.input_H - new_h - self.y_shift
+            
+            input_tensor = cv2.resize(img, (new_w, new_h))
+            
+            input_tensor = cv2.copyMakeBorder(input_tensor, self.y_shift, y_other, self.x_shift, x_other, cv2.BORDER_CONSTANT, value=[127, 127, 127])
+            input_tensor = self.bgr2nv12(input_tensor)
+            print("\033[1;31m" + f"pre process(letter box) time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+            print(f"{input_tensor.shape = }")
+        else:
+            print(f"illegal PREPROCESS_TYPE = {PREPROCESS_TYPE}")
+            exit(-1)
+
+        logger.debug("\033[1;31m" + f"pre process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+        return input_tensor
+
+    def bgr2nv12(self, bgr_img):
+        """
+        Convert a BGR image to the NV12 format.
+
+        NV12 is a common video encoding format where the Y component (luminance) is full resolution,
+        and the UV components (chrominance) are half-resolution and interleaved. This function first
+        converts the BGR image to YUV 4:2:0 planar format, then rearranges the UV components to fit
+        the NV12 format.
+
+        Parameters:
+        bgr_img (np.ndarray): The input BGR image array.
+
+        Returns:
+        np.ndarray: The converted NV12 format image array.
+        """
+        begin_time = time()
+        height, width = bgr_img.shape[0], bgr_img.shape[1]
+        area = height * width
+        yuv420p = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2YUV_I420).reshape((area * 3 // 2,))
+        y = yuv420p[:area]
+        uv_planar = yuv420p[area:].reshape((2, area // 4))
+        uv_packed = uv_planar.transpose((1, 0)).reshape((area // 2,))
+        nv12 = np.zeros_like(yuv420p)
+        nv12[:height * width] = y
+        nv12[height * width:] = uv_packed
+
+        logger.debug("\033[1;31m" + f"bgr8 to nv12 time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+        return nv12
+
+    def forward(self, input_tensor):
+        begin_time = time()
+        quantize_outputs = self.quantize_model[0].forward(input_tensor)
+        logger.debug("\033[1;31m" + f"forward time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+        return quantize_outputs
+
+    def c2numpy(self, outputs):
+        begin_time = time()
+        outputs = [dnnTensor.buffer for dnnTensor in outputs]
+        logger.debug("\033[1;31m" + f"c to numpy time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+        return outputs
+
+    def postProcess(self, outputs):
         begin_time = time()
         # reshape
-        s_bboxes = outputs[0].reshape(-1, 64)
-        m_bboxes = outputs[1].reshape(-1, 64)
-        l_bboxes = outputs[2].reshape(-1, 64)
-        s_clses = outputs[3].reshape(-1, 80)
-        m_clses = outputs[4].reshape(-1, 80)
-        l_clses = outputs[5].reshape(-1, 80)
+        s_clses = outputs[0].reshape(-1, self.CLASSES_NUM)
+        s_bboxes = outputs[1].reshape(-1, self.REG * 4)
+        m_clses = outputs[2].reshape(-1, self.CLASSES_NUM)
+        m_bboxes = outputs[3].reshape(-1, self.REG * 4)
+        l_clses = outputs[4].reshape(-1, self.CLASSES_NUM)
+        l_bboxes = outputs[5].reshape(-1, self.REG * 4)
 
         # classify: 利用numpy向量化操作完成阈值筛选(优化版 2.0)
         s_max_scores = np.max(s_clses, axis=1)
-        s_valid_indices = np.flatnonzero(s_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
+        s_valid_indices = np.flatnonzero(s_max_scores >= self.CONF_THRES_RAW)  # 得到大于阈值分数的索引，此时为小数字
         s_ids = np.argmax(s_clses[s_valid_indices, : ], axis=1)
         s_scores = s_max_scores[s_valid_indices]
 
         m_max_scores = np.max(m_clses, axis=1)
-        m_valid_indices = np.flatnonzero(m_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
+        m_valid_indices = np.flatnonzero(m_max_scores >= self.CONF_THRES_RAW)  # 得到大于阈值分数的索引，此时为小数字
         m_ids = np.argmax(m_clses[m_valid_indices, : ], axis=1)
         m_scores = m_max_scores[m_valid_indices]
 
         l_max_scores = np.max(l_clses, axis=1)
-        l_valid_indices = np.flatnonzero(l_max_scores >= self.conf_inverse)  # 得到大于阈值分数的索引，此时为小数字
+        l_valid_indices = np.flatnonzero(l_max_scores >= self.CONF_THRES_RAW)  # 得到大于阈值分数的索引，此时为小数字
         l_ids = np.argmax(l_clses[l_valid_indices, : ], axis=1)
         l_scores = l_max_scores[l_valid_indices]
 
@@ -274,6 +300,26 @@ class YOLOv8_Detect(BaseModel):
         scores = np.concatenate((s_scores, m_scores, l_scores), axis=0)
         ids = np.concatenate((s_ids, m_ids, l_ids), axis=0)
 
+        # 分类别nms
+        results = []
+        for i in range(self.CLASSES_NUM):
+            id_indices = ids==i
+            indices = cv2.dnn.NMSBoxes(dbboxes[id_indices,:], scores[id_indices], self.SCORE_THRESHOLD, self.NMS_THRESHOLD)
+            if len(indices) == 0:
+                continue
+            for indic in indices:
+                x1, y1, x2, y2 = dbboxes[id_indices,:][indic]
+                x1 = int((x1 - self.x_shift) / self.x_scale)
+                y1 = int((y1 - self.y_shift) / self.y_scale)
+                x2 = int((x2 - self.x_shift) / self.x_scale)
+                y2 = int((y2 - self.y_shift) / self.y_scale)
+                results.append((i, scores[id_indices][indic], x1, y1, x2, y2))
+
+        logger.debug("\033[1;31m" + f"Post Process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+
+        return results
+    
+
         # nms
         indices = cv2.dnn.NMSBoxes(dbboxes, scores, self.conf, self.iou)
 
@@ -281,7 +327,7 @@ class YOLOv8_Detect(BaseModel):
         bboxes = dbboxes[indices] * np.array([self.x_scale, self.y_scale, self.x_scale, self.y_scale])
         bboxes = bboxes.astype(np.int32)
 
-        logger.debug("\033[1;31m" + f"Post Process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
+        
 
         return ids[indices], scores[indices], bboxes
 
@@ -302,10 +348,7 @@ rdk_colors = [
     (52, 147, 26), (187, 212, 0), (168, 153, 44), (255, 194, 0),(147, 69, 52), (255, 115, 100), (236, 24, 0), (255, 56, 132),
     (133, 0, 82), (255, 56, 203), (200, 149, 255), (199, 55, 255)]
 
-def draw_detection(img: np.array, 
-                   bbox: tuple[int, int, int, int],
-                   score: float, 
-                   class_id: int) -> None:
+def draw_detection(img, bbox, score, class_id) -> None:
     """
     Draws a detection bounding box and label on the image.
 

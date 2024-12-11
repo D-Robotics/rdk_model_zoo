@@ -164,12 +164,9 @@ $ pip uninstall ultralytics   # 或者
 def forward(self, x):
     result = []
     for i in range(self.nl):
-        result.append(self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous())
         result.append(self.cv3[i](x[i]).permute(0, 2, 3, 1).contiguous())
+        result.append(self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous())
     return result
-    # bboxes = [self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
-    # clses = [self.cv3[i](x[i]).permute(0, 2, 3, 1).contiguous() for i in range(self.nl)]
-    # return (bboxes, clses)
 ```
 
  - 运行以下Python脚本,如果有**No module named onnxsim**报错,安装一个即可
@@ -182,7 +179,7 @@ YOLO('yolov8n.pt').export(imgsz=640, format='onnx', simplify=True, opset=11)
  - 参考天工开物工具链手册和OE包, 对模型进行检查, 所有算子均在BPU上, 进行编译即可. 对应的yaml文件在`./ptq_yamls`目录下. 
 ```bash
 (bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolov8n.onnx
-(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov8_detect_nchw.yaml
+(bpu_docker) $ hb_mapper makertbin --model-type onnx --config yolov8_detect_nv12.yaml
 ```
 
 ### 移除bbox信息3个输出头的反量化节点
@@ -239,7 +236,7 @@ op_type: "Dequantize"
 ```
  - 使用以下命令移除上述三个反量化节点,注意,导出时这些名称可能不同,请仔细确认。
 ```bash
-$ hb_model_modifier yolov8n_bayese_640x640_nchw.bin \
+$ hb_model_modifier yolov8n_bayese_640x640_nv12.bin \
 -r /model.22/cv2.0/cv2.0.2/Conv_output_0_HzDequantize \
 -r /model.22/cv2.1/cv2.1.2/Conv_output_0_HzDequantize \
 -r /model.22/cv2.2/cv2.2.2/Conv_output_0_HzDequantize
