@@ -66,7 +66,7 @@ def main():
         input_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         input_tensor = cv2.resize(img, (opt.width, opt.height))
         input_tensor = np.transpose(input_tensor, (2, 0, 1))
-        input_tensor = np.expand_dims(input_tensor, axis=0).astype(np.uint8)  # NCHW
+        input_tensor = np.expand_dims(input_tensor, axis=0).astype(np.float32)  # NCHW
         dst_path = os.path.join(opt.dist, img_name + '.rgbchw')
         input_tensor.tofile(dst_path)
         logger.info("write:%s" % dst_path)
