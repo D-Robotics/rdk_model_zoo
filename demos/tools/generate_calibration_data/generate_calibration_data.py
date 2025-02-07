@@ -60,16 +60,15 @@ def main():
     for img_name in os.listdir(opt.src):
         img_path = os.path.join(opt.src, img_name)
         img = cv2.imread(img_path)
-        # 此处的前处理以ONNX的前处理为基础
+        # 此处的前处理以ONNX的前处理为基础，总的来说是和训练时的前处理保持一致
         # 如果yaml中有配置mean和scale, 则此处无须计算mean和scale.
-        # 如果yaml中配置input_type_rt为nv12, 只需要准备YUV444的数据.
-        input_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        input_tensor = cv2.resize(img, (opt.width, opt.height))
-        input_tensor = np.transpose(input_tensor, (2, 0, 1))
-        input_tensor = np.expand_dims(input_tensor, axis=0).astype(np.float32)  # NCHW
-        dst_path = os.path.join(opt.dist, img_name + '.rgbchw')
+        input_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)     # BGR2RGB
+        input_tensor = cv2.resize(img, (opt.width, opt.height)) # resize
+        input_tensor = np.transpose(input_tensor, (2, 0, 1))    # HWC2CHW
+        input_tensor = np.expand_dims(input_tensor, axis=0).astype(np.float32)  # CHW -> NCHW
+        dst_path = os.path.join(opt.dist, img_name + '.rgbchw') # tofile
         input_tensor.tofile(dst_path)
-        logger.info("write:%s" % dst_path)
+        logger.info("write: %s" % dst_path)
 
 if __name__ == "__main__":
     main()
