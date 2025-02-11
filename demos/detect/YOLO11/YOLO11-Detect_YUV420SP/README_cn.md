@@ -183,14 +183,18 @@ YOLO('yolov11n.pt').export(imgsz=640, format='onnx', simplify=False, opset=11)
 在对应的yaml文件中修改以下内容:
 ```yaml
 model_parameters:
+  node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'}}
+# 如果精度不达标，则考虑使用以下配置，或者直接删除掉node_info配置项，使用FP32去计算Softmax算子。
+model_parameters:
   node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int16','OutputType': 'int16'}}
 ```
 如果是YOLOv11的l和x模型，需要指定两个SoftMax算子到BPU上
 ```yaml
 model_parameters:
-  node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int16','OutputType': 'int16'},
-              "/model.10/m/m.1/attn/Softmax": {'ON': 'BPU','InputType': 'int16','OutputType': 'int16'}}
+  node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'},
+              "/model.10/m/m.1/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'}}
 ```
+  注：这里可以选择使用int8量化softmax算子，在COCO2017数据集的5000张照片的验证集上验证mAP：.5-.95精度一致。如果使用int8无法控制精度掉点，则可以考虑使用int16, 或者不写这一项，使用FP32去计算Softmax。文末以YOLO11n模型为例，给出了这三种配置方式的性能数据。
  
  - 模型编译:
 ```bash
@@ -938,7 +942,7 @@ sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # CPU: 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 echo 1200000000 > /sys/kernel/debug/clk/bpu_mclk_2x_clk/clk_rate # BPU: 1.2GHz
 ```
- - Ultra的状态为最佳状态：CPU为8 × A53@1.2G, 全核心Performance调度, BPU为2 × Bayes@96TOPS.
+ - Ultra的状态为最佳状态：CPU为8 × A55@1.2G, 全核心Performance调度, BPU为2 × Bayes@96TOPS.
 ```bash
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor"
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy1/scaling_governor"

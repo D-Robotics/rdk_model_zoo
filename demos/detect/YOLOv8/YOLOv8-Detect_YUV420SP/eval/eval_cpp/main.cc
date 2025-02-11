@@ -32,7 +32,7 @@ limitations under the License.
 
 //
 // COCO2017 val source image path.
-#define IMAGE_PATH "../../../../../datasets/COCO2017/val2017"
+#define IMAGE_PATH "../../../../../../../resource/datasets/COCO2017/val2017"
 
 // 前处理方式选择, 0:Resize, 1:LetterBox
 // Preprocessing method selection, 0: Resize, 1: LetterBox
