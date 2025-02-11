@@ -15,23 +15,28 @@
 ### bin - nv12
 YOLOv11n - Detect
 ```bash
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolo11n_detect_bayese_640x640_nv12_modified.bin
+# 使用FP32精度计算Softmax算子
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/AAA_RDK_YOLO/yolo11_detect_nv12/yolo11n_detect_bayese_640x640_nv12_fp32softmax_modified.bin
+# 使用int16精度计算Softmax算子
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/AAA_RDK_YOLO/yolo11_detect_nv12/yolo11n_detect_bayese_640x640_nv12_int16softmax_modified.bin
+# 使用int8精度计算Softmax算子
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/AAA_RDK_YOLO/yolo11_detect_nv12/yolo11n_detect_bayese_640x640_nv12_modified.bin
 ```
 YOLOv11s - Detect
 ```bash
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolo11s_detect_bayese_640x640_nv12_modified.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/AAA_RDK_YOLO/yolo11_detect_nv12/yolo11s_detect_bayese_640x640_nv12_modified.bin
 ```
 YOLOv11m - Detect
 ```bash
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolo11m_detect_bayese_640x640_nv12_modified.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/AAA_RDK_YOLO/yolo11_detect_nv12/yolo11m_detect_bayese_640x640_nv12_modified.bin
 ```
 YOLOv11l - Detect
 ```bash
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolo11l_detect_bayese_640x640_nv12_modified.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/AAA_RDK_YOLO/yolo11_detect_nv12/yolo11l_detect_bayese_640x640_nv12_modified.bin
 ```
 YOLOv11x - Detect
 ```bash
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolo11x_detect_bayese_640x640_nv12_modified.bin
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/AAA_RDK_YOLO/yolo11_detect_nv12/yolo11x_detect_bayese_640x640_nv12_modified.bin
 ```
 
 ## Bayes (RDK Ultra & RDK Ultra Module)

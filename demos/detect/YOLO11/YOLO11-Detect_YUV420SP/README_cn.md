@@ -183,14 +183,18 @@ YOLO('yolov11n.pt').export(imgsz=640, format='onnx', simplify=False, opset=11)
 在对应的yaml文件中修改以下内容:
 ```yaml
 model_parameters:
+  node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'}}
+# 如果精度不达标，则考虑使用以下配置，或者直接删除掉node_info配置项，使用FP32去计算Softmax算子。
+model_parameters:
   node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int16','OutputType': 'int16'}}
 ```
 如果是YOLOv11的l和x模型，需要指定两个SoftMax算子到BPU上
 ```yaml
 model_parameters:
-  node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int16','OutputType': 'int16'},
-              "/model.10/m/m.1/attn/Softmax": {'ON': 'BPU','InputType': 'int16','OutputType': 'int16'}}
+  node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'},
+              "/model.10/m/m.1/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'}}
 ```
+  注：这里可以选择使用int8量化softmax算子，在COCO2017数据集的5000张照片的验证集上验证mAP：.5-.95精度一致。如果使用int8无法控制精度掉点，则可以考虑使用int16, 或者不写这一项，使用FP32去计算Softmax。文末以YOLO11n模型为例，给出了这三种配置方式的性能数据。
  
  - 模型编译:
 ```bash
@@ -912,11 +916,13 @@ output0     0.999806           0.245257     0.000457     3.454550
 目标检测 Detection (COCO)
 | 模型 | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(C/C++) |
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOv11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 7.9 ms / 126.8 FPS (1 thread  ) <br/> 12.1 ms / 165.0 FPS (2 threads) | 3 ms |
-| YOLOv11s | 640×640 | 80 | 9.4 M  / 21.5 B | 47.0 | - | 14.6 ms / 68.2 FPS (1 thread  ) <br/> 25.6 ms / 77.9 FPS (2 threads) | 3 ms |
-| YOLOv11m | 640×640 | 80 | 20.1 M / 68.0 B | 51.5 | - | 30.2 ms / 33.1 FPS (1 thread  ) <br/> 56.5 ms / 35.3 FPS (2 threads) | 3 ms |
-| YOLOv11l | 640×640 | 80 | 25.3 M / 86.9 B | 53.4 | - | 40.8 ms / 24.5 FPS (1 thread  ) <br/> 77.6 ms / 25.7 FPS (2 threads) | 3 ms |
-| YOLOv11x | 640×640 | 80 | 56.9 M / 194.9 B| 54.7 | - | 82.8 ms / 12.1 FPS (1 thread  ) <br/> 161.3 ms / 12.4 FPS (2 threads) | 3 ms |
+| YOLO11n_fp32softmax | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 23.3 ms / 42.9 FPS (1 thread  ) <br/> 24.0 ms / 83.3 FPS (2 threads) <br/> 38.8 ms / 201.6 FPS (7 threads) | 3 ms |
+| YOLOv11n_int16softmax | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 8.0 ms / 125.0 FPS (1 thread  ) <br/> 12.2 ms / 163.1 FPS (2 threads) | 3 ms |
+| YOLO11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 7.5 ms / 132.9 FPS (1 thread  ) <br/> 11.3 ms / 177.0 FPS (2 threads) | 3 ms |
+| YOLO11s | 640×640 | 80 | 9.4 M  / 21.5 B | 47.0 | - | 14.1 ms / 71.0 FPS (1 thread  ) <br/> 24.4 ms / 81.7 FPS (2 threads) | 3 ms |
+| YOLO11m | 640×640 | 80 | 20.1 M / 68.0 B | 51.5 | - | 29.9 ms / 33.4 FPS (1 thread  ) <br/> 55.9 ms / 35.7 FPS (2 threads) | 3 ms |
+| YOLO11l | 640×640 | 80 | 25.3 M / 86.9 B | 53.4 | - | 39.6 ms / 25.2 FPS (1 thread  ) <br/> 75.2 ms / 26.5 FPS (2 threads) | 3 ms |
+| YOLO11x | 640×640 | 80 | 56.9 M / 194.9 B| 54.7 | - | 81.2 ms / 12.3 FPS (1 thread  ) <br/> 158.2 ms / 12.6 FPS (2 threads) | 3 ms |
 
 
 
@@ -938,7 +944,7 @@ sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # CPU: 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 echo 1200000000 > /sys/kernel/debug/clk/bpu_mclk_2x_clk/clk_rate # BPU: 1.2GHz
 ```
- - Ultra的状态为最佳状态：CPU为8 × A53@1.2G, 全核心Performance调度, BPU为2 × Bayes@96TOPS.
+ - Ultra的状态为最佳状态：CPU为8 × A55@1.2G, 全核心Performance调度, BPU为2 × Bayes@96TOPS.
 ```bash
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor"
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy1/scaling_governor"

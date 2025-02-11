@@ -10,14 +10,21 @@ Microsoft Common Objects in Context, originating from the Microsoft COCO dataset
 
 
 ## COCO2017数据集下载 (Download COCO2017)
-- train2017：http://images.cocodataset.org/zips/train2017.zip
-- train2017 annotations：http://images.cocodataset.org/annotations/annotations_trainval2017.zip
-      
-- val2017：http://images.cocodataset.org/zips/val2017.zip
-- val2017 annotations：http://images.cocodataset.org/annotations/stuff_annotations_trainval2017.zip
-       
-- test2017：http://images.cocodataset.org/zips/test2017.zip
-- test2017 info：http://images.cocodataset.org/annotations/image_info_test2017.zip
+	
+### Images
+
+2017 Train images [118K/18GB]: http://images.cocodataset.org/zips/train2017.zip
+
+2017 Val images [5K/1GB]: http://images.cocodataset.org/zips/val2017.zip
+
+2017 Test images [41K/6GB]: http://images.cocodataset.org/zips/test2017.zip
+
+### Annotations
+2017 Train/Val annotations [241MB]: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+
+2017 Stuff Train/Val annotations [1.1GB]: http://images.cocodataset.org/annotations/stuff_annotations_trainval2017.zip
+
+2017 Panoptic Train/Val annotations [821MB]: http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip
 
 
 ## 参考 (Reference)
