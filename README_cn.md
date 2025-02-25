@@ -58,6 +58,7 @@ RDK Model Zoo 基于[RDK](https://d-robotics.cc/rdkRobotDevKit)开发, 提供大
 - [使用VSCode体验RDK Model Zoo (参考)](#使用vscode体验rdk-model-zoo-参考)
 - [RDK算法工具链资源](#rdk算法工具链资源)
 - [反馈](#反馈)
+- [Star History](#star-history)
 
 
 ## RDK Model Zoo 模型数据参考
@@ -324,9 +325,9 @@ jupyter lab --allow-root --ip 192.168.1.10
 如果您有任何问题或遇到任何问题, 我们热烈欢迎您将它们发布到[地瓜开发者社区](https://developer.d-robotics.cc)或直接在此仓库中提交issue/comment. 您的反馈对我们来说是无价的, 我们一直渴望帮助您, 并改善我们的资源.
 
 
+## Star History
 
-
-
+[![Star History Chart](https://api.star-history.com/svg?repos=D-Robotics/rdk_model_zoo&type=Date)](https://star-history.com/#D-Robotics/rdk_model_zoo&Date)
 
 
 
