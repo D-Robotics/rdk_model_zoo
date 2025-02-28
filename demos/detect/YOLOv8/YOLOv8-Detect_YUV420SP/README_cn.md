@@ -16,10 +16,11 @@
   - [性能数据](#性能数据)
     - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module)
     - [RDK X3 \& RDK X3 Module](#rdk-x3--rdk-x3-module)
+  - [精度数据](#精度数据)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-1)
+    - [测试方法](#测试方法)
   - [反馈](#反馈)
   - [参考](#参考)
-
-
 
 ## YOLO介绍
 
@@ -132,7 +133,6 @@ $ pip uninstall ultralytics   # 或者
 # 或者
 ['/home/wuchao/YOLO11/ultralytics_v11/ultralytics']
 ```
-
 
  - 修改Detect的输出头,直接将三个特征层的Bounding Box信息和Classify信息分开输出,一共6个输出头。
 文件目录：`./ultralytics/ultralytics/nn/modules/head.py`,约第51行,`Detect`类的`forward`方法替换成以下内容.
@@ -351,7 +351,6 @@ hb_perf yolov8n_detect_bayese_640x640_nv12_modified.bin
 ```
 在`hb_perf_result`目录下可以找到以下结果。
 ![](./imgs/yolov8n_detect_bayese_640x640_nv12_modified.png)
-
 
 ```bash
 hrt_model_exec model_info --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
@@ -738,7 +737,6 @@ output0     0.999588           0.333628     0.000637     4.750465
 2024-12-25 16:17:30,065 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 784 End Model Convert
 ```
 
-
 ## 模型训练
 
  - 模型训练请参考ultralytics官方文档,这个文档由ultralytics维护,质量非常的高。网络上也有非常多的参考材料,得到一个像官方一样的预训练权重的模型并不困难。
@@ -755,7 +753,6 @@ output0     0.999588           0.333628     0.000637     4.750465
 | YOLOv8m | 640×640 | 80 | 25.9 M | 25.2 ms / 39.6 FPS (1 thread  ) <br/> 46.6 ms / 42.8 FPS (2 threads) | 5 ms |
 | YOLOv8l | 640×640 | 80 | 43.7 M | 49.4 ms / 20.2 FPS (1 thread  ) <br/> 94.8 ms / 21.0 FPS (2 threads) | 5 ms |
 | YOLOv8x | 640×640 | 80 | 68.2 M | 77.1 ms / 13.0 FPS (1 thread  ) <br/> 149.9 ms / 13.3 FPS (2 threads) | 5 ms |
-
 
 ### RDK X3 & RDK X3 Module
 目标检测 Detection (COCO)
@@ -787,7 +784,27 @@ echo 1200000000 > /sys/kernel/debug/clk/bpu_mclk_2x_clk/clk_rate # BPU: 1.2GHz
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 ```
-3. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行5ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成400帧图像的后处理, 后处理不会构成瓶颈.
+
+## 精度数据
+
+### RDK X5 & RDK X5 Module
+目标检测 Detection (COCO2017)
+| 模型 | Pytorch | YUV420SP<br/>Python | YUV420SP<br/>C/C++ | NCHWRGB<br/>C/C++ |
+|---------|---------|-------|---------|---------|
+| YOLOv8n | 0.306 | 0.292(95.42%) | 0.294(96.08%) | 0.300(98.04%) |
+| YOLOv8s | 0.384 | 0.371(96.36%) | 0.374(97.14%) | 0.378(98.18%) |
+| YOLOv8m | 0.433 | 0.421(97.00%) | 0.425(97.03%) | 0.430(99.08%) |
+| YOLOv8l | 0.454 | 0.436(95.40%) | 0.441(96.50%) | 0.446(97.59%) |
+| YOLOv8x | 0.465 | 0.446(95.50%) | 0.452(96.79%) | 0.459(98.28%) |
+
+### 测试方法
+1. 所有的精度数据使用微软官方的无修改的`pycocotools`库进行计算，取的精度标准为`Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]`的数据。
+2. 所有的测试数据均使用`COCO2017`数据集的val验证集的5000张照片, 在板端直接推理, dump保存为json文件, 送入第三方测试工具`pycocotools`库进行计算，分数的阈值为0.25, nms的阈值为0.7。
+3. pycocotools计算的精度比ultralytics计算的精度会低一些是正常现象, 主要原因是pycocotools是取矩形面积, ultralytics是取梯形面积, 我们主要是关注同样的一套计算方式去测试定点模型和浮点模型的精度, 从而来评估量化过程中的精度损失. 
+4. BPU模型在量化NCHW-RGB888输入转换为YUV420SP(nv12)输入后, 也会有一部分精度损失, 这是由于色彩空间转化导致的, 在训练时加入这种色彩空间转化的损失可以避免这种精度损失。
+5. Python接口和C/C++接口的精度结果有细微差异, 主要在于Python和C/C++的一些数据结构进行memcpy和转化的过程中, 对浮点数的处理方式不同, 导致的细微差异.
+6. 测试脚本请参考RDK Model Zoo的eval部分: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
+7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 用于模拟普通开发者第一次直接编译的精度情况, 并没有进行精度调优或者QAT(量化感知训练), 满足常规使用验证需求, 不代表精度上限.
 
 ## 反馈
 本文如果有表达不清楚的地方欢迎前往地瓜开发者社区进行提问和交流.

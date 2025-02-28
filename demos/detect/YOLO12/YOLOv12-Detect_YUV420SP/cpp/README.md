@@ -1,6 +1,6 @@
 
 
-注: 所有的Terminal命令基于以下目录`./rdk_model_zoo/demos/detect/YOLOv12/YOLOv12-Detect_NCHWRGB/cpp`
+注: 所有的Terminal命令基于以下目录`./rdk_model_zoo/demos/detect/YOLOv8/cpp`
 
 安装依赖
 ```bash

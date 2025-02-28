@@ -21,7 +21,7 @@ limitations under the License.
 
 // D-Robotics *.bin 模型路径
 // Path of D-Robotics *.bin model.
-#define MODEL_PATH "../../ptq_models/yolov12n_detect_bayese_640x640_nchwrgb_modified.bin"
+#define MODEL_PATH "../../ptq_models/YOLO12n_detect_bayese_640x640_nchwrgb_modified.bin"
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
@@ -163,15 +163,15 @@ int main()
         hbDNNGetInputTensorProperties(&input_properties, dnn_handle, 0),
         "hbDNNGetInputTensorProperties failed");
 
-    // 2.3.1 D-Robotics YOLOv12 *.bin 模型应该为单输入
-    // 2.3.1 D-Robotics YOLOv12 *.bin model should have only one input
+    // 2.3.1 D-Robotics YOLO12 *.bin 模型应该为单输入
+    // 2.3.1 D-Robotics YOLO12 *.bin model should have only one input
     if (input_count > 1)
     {
         std::cout << "Your Model have more than 1 input, please check!" << std::endl;
         return -1;
     }
 
-    // 2.3.2 D-Robotics YOLOv12 *.bin 模型输入Tensor类型应为RGB
+    // 2.3.2 D-Robotics YOLO12 *.bin 模型输入Tensor类型应为RGB
     // tensor type: HB_DNN_IMG_TYPE_RGB
     if (input_properties.tensorType == HB_DNN_IMG_TYPE_RGB)
     {
@@ -183,7 +183,7 @@ int main()
         return -1;
     }
 
-    // 2.3.3 D-Robotics YOLOv12 *.bin 模型输入Tensor数据排布应为NCHW
+    // 2.3.3 D-Robotics YOLO12 *.bin 模型输入Tensor数据排布应为NCHW
     // tensor layout: HB_DNN_LAYOUT_NCHW
     std::cout << "input_properties.tensorType: " << input_properties.tensorType << std::endl;
     if (input_properties.tensorLayout == HB_DNN_LAYOUT_NCHW)
@@ -196,7 +196,7 @@ int main()
         return -1;
     }
 
-    // 2.3.4 D-Robotics YOLOv12 *.bin 模型输入Tensor数据的valid shape应为(1,3,H,W)
+    // 2.3.4 D-Robotics YOLO12 *.bin 模型输入Tensor数据的valid shape应为(1,3,H,W)
     // valid shape: (1,3,640,640)
     int32_t input_H, input_W;
     if (input_properties.validShape.numDimensions == 4)
@@ -221,8 +221,8 @@ int main()
         hbDNNGetOutputCount(&output_count, dnn_handle),
         "hbDNNGetOutputCount failed");
 
-    // 2.4.1 D-Robotics YOLOv12 *.bin 模型应该有6个输出
-    // 2.4.1 D-Robotics YOLOv12 *.bin model should have 6 outputs
+    // 2.4.1 D-Robotics YOLO12 *.bin 模型应该有6个输出
+    // 2.4.1 D-Robotics YOLO12 *.bin model should have 6 outputs
     if (output_count == 6)
     {
         for (int i = 0; i < 6; i++)
@@ -428,7 +428,7 @@ int main()
     hbDNNWaitTaskDone(task_handle, 0);
     std::cout << "\033[31m forward time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
 
-    // 7. YOLOv12-Detect 后处理
+    // 7. YOLO12-Detect 后处理
     // 7. Postprocess
     float CONF_THRES_RAW = -log(1 / SCORE_THRESHOLD - 1);     // 利用反函数作用阈值，利用单调性筛选
     std::vector<std::vector<cv::Rect2d>> bboxes(CLASSES_NUM); // 每个id的xyhw 信息使用一个std::vector<cv::Rect2d>存储

@@ -8,10 +8,11 @@
   - [步骤参考](#步骤参考)
     - [环境、项目准备](#环境项目准备)
     - [导出为onnx](#导出为onnx)
+    - [准备校准数据](#准备校准数据)
     - [PTQ方案量化转化](#ptq方案量化转化)
     - [移除bbox信息3个输出头的反量化节点](#移除bbox信息3个输出头的反量化节点)
     - [使用hb\_perf命令对bin模型进行可视化, hrt\_model\_exec命令检查bin模型的输入输出情况](#使用hb_perf命令对bin模型进行可视化-hrt_model_exec命令检查bin模型的输入输出情况)
-  - [使用TROS高效部署YOLOv11](#使用tros高效部署yolov11)
+  - [使用TROS高效部署YOLO11](#使用tros高效部署yolo11)
     - [安装或更新tros-humble-hobot-dnn等功能包](#安装或更新tros-humble-hobot-dnn等功能包)
     - [拷贝tros-humble-hobot-dnn 的配置文件](#拷贝tros-humble-hobot-dnn-的配置文件)
     - [运行YOLOv8的推理节点](#运行yolov8的推理节点)
@@ -20,6 +21,10 @@
   - [性能数据](#性能数据)
     - [RDK Ultra \& RDK Ultra Module](#rdk-ultra--rdk-ultra-module)
     - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module)
+    - [测试方法](#测试方法)
+  - [精度数据](#精度数据)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module-1)
+    - [测试方法](#测试方法-1)
   - [反馈](#反馈)
   - [参考](#参考)
 
@@ -137,6 +142,30 @@ $ pip uninstall ultralytics   # 或者
 # 或者
 ['/home/wuchao/YOLO11/ultralytics_v11/ultralytics']
 ```
+ - 修改优化后的Attntion模块
+文件目录：`ultralytics/nn/modules/block.py`, 约第868行, `Attntion`类的`forward`方法替换成以下内容. 主要的优化点是去除了一些无用的数据搬运操作，同时将Reduce的维度变为C维度，对BPU更加友好, 目前可以将BPU吞吐量翻倍, 并且不需要重新训练模.
+注：建议您保留好原本的`forward`方法,例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
+```python
+class AAttn(nn.Module):
+    def forward(self, x):  # RDK
+        print(f"{x.shape = }")
+        B, C, H, W = x.shape
+        N = H * W
+        qkv = self.qkv(x)
+        q, k, v = qkv.view(B, self.num_heads, self.key_dim * 2 + self.head_dim, N).split(
+            [self.key_dim, self.key_dim, self.head_dim], dim=2
+        )
+        attn = (q.transpose(-2, -1) @ k) * self.scale
+        attn = attn.permute(0, 3, 1, 2).contiguous()  # CHW2HWC like
+        max_attn = attn.max(dim=1, keepdim=True).values 
+        exp_attn = torch.exp(attn - max_attn)
+        sum_attn = exp_attn.sum(dim=1, keepdim=True)
+        attn = exp_attn / sum_attn
+        attn = attn.permute(0, 2, 3, 1).contiguous()  # HWC2CHW like
+        x = (v @ attn.transpose(-2, -1)).view(B, C, H, W) + self.pe(v.reshape(B, C, H, W))
+        x = self.proj(x)
+        return x
+```
 
  - 修改Detect的输出头，直接将三个特征层的Bounding Box信息和Classify信息分开输出，一共6个输出头。
 
@@ -167,12 +196,15 @@ from ultralytics import YOLO
 YOLO('yolov11n.pt').export(imgsz=640, format='onnx', simplify=False, opset=11)
 ```
 
+### 准备校准数据
+参考RDK Model Zoo提供的极简的校准数据准备脚本：`https://github.com/D-Robotics/rdk_model_zoo/blob/main/demos/tools/generate_calibration_data/generate_calibration_data.py `进行校准数据的准备。
+
 ### PTQ方案量化转化
  - 参考天工开物工具链手册和OE包，对模型进行检查，所有算子均在BPU上，进行编译即可。对应的yaml文件在GitHub仓库中，YOLOv11对于文件夹的`./ptq_yamls`目录下。
 ```bash
 (bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolo11n.onnx
 ```
- - 根据模型检查结果，找到手动量化算子Softmax, 应有这样的内容, Softmax算子将模型拆为了两个BPU子图。这里的Softmax算子名称为"/model.10/m/m.0/attn/Softmax".
+ - 根据模型检查结果，找到手动量化算子Softmax, 应有这样的内容, Softmax算子将模型拆为了两个BPU子图。这里的Softmax算子名称为"/model.10/m/m.0/attn/Softmax". 如果您对已经对Attention模块进行改写, 则这一步不会有Softmax算子出现，可以直接进行模型编译. 
 ```bash
 /model.10/m/m.0/attn/MatMul      BPU  id(0)  HzSQuantizedMatmul   --   1.0  int8      
 /model.10/m/m.0/attn/Mul         BPU  id(0)  HzSQuantizedConv     --   1.0  int8      
@@ -194,7 +226,7 @@ model_parameters:
   node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'},
               "/model.10/m/m.1/attn/Softmax": {'ON': 'BPU','InputType': 'int8','OutputType': 'int8'}}
 ```
-  注：这里可以选择使用int8量化softmax算子，在COCO2017数据集的5000张照片的验证集上验证mAP：.5-.95精度一致。如果使用int8无法控制精度掉点，则可以考虑使用int16, 或者不写这一项，使用FP32去计算Softmax。文末以YOLO11n模型为例，给出了这三种配置方式的性能数据。
+  注：这里可以选择使用int8量化softmax算子，在COCO2017数据集的5000张照片的验证集上验证mAP：.50-.95精度一致。如果使用int8无法控制精度掉点，则可以考虑使用int16, 或者不写这一项，使用FP32去计算Softmax。文末以YOLO11n模型为例，给出了这三种配置方式的性能数据。
  
  - 模型编译:
 ```bash
@@ -479,7 +511,7 @@ quantizeAxis: 3
 ```
 
 
-## 使用TROS高效部署YOLOv11
+## 使用TROS高效部署YOLO11
 
 ### 安装或更新tros-humble-hobot-dnn等功能包
 ```bash
@@ -913,20 +945,18 @@ output0     0.999806           0.245257     0.000457     3.454550
 
 
 ### RDK X5 & RDK X5 Module
-目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(C/C++) |
-|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLO11n_fp32softmax | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 23.3 ms / 42.9 FPS (1 thread  ) <br/> 24.0 ms / 83.3 FPS (2 threads) <br/> 38.8 ms / 201.6 FPS (7 threads) | 3 ms |
-| YOLOv11n_int16softmax | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 8.0 ms / 125.0 FPS (1 thread  ) <br/> 12.2 ms / 163.1 FPS (2 threads) | 3 ms |
-| YOLO11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 39.5 | - | 7.5 ms / 132.9 FPS (1 thread  ) <br/> 11.3 ms / 177.0 FPS (2 threads) | 3 ms |
-| YOLO11s | 640×640 | 80 | 9.4 M  / 21.5 B | 47.0 | - | 14.1 ms / 71.0 FPS (1 thread  ) <br/> 24.4 ms / 81.7 FPS (2 threads) | 3 ms |
-| YOLO11m | 640×640 | 80 | 20.1 M / 68.0 B | 51.5 | - | 29.9 ms / 33.4 FPS (1 thread  ) <br/> 55.9 ms / 35.7 FPS (2 threads) | 3 ms |
-| YOLO11l | 640×640 | 80 | 25.3 M / 86.9 B | 53.4 | - | 39.6 ms / 25.2 FPS (1 thread  ) <br/> 75.2 ms / 26.5 FPS (2 threads) | 3 ms |
-| YOLO11x | 640×640 | 80 | 56.9 M / 194.9 B| 54.7 | - | 81.2 ms / 12.3 FPS (1 thread  ) <br/> 158.2 ms / 12.6 FPS (2 threads) | 3 ms |
+目标检测 Detection (COCO2017)
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) |  BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(C/C++) |
+|---------|---------|-------|---------|---------|----------|
+| YOLO11n_fp32softmax | 640×640 | 80 | 2.6 M  / 6.5 B | 23.3 ms / 42.9 FPS (1 thread  ) <br/> 24.0 ms / 83.3 FPS (2 threads) <br/> 38.8 ms / 201.6 FPS (7 threads) | 3 ms |
+| YOLOv11n_int16softmax | 640×640 | 80 | 2.6 M  / 6.5 B  | 8.0 ms / 125.0 FPS (1 thread  ) <br/> 12.2 ms / 163.1 FPS (2 threads) | 3 ms |
+| YOLO11n | 640×640 | 80 | 2.6 M  / 6.5 B  | 6.7 ms / 148.5 FPS (1 thread  ) <br/> 9.7 ms / 204.3 FPS (2 threads) | 3 ms |
+| YOLO11s | 640×640 | 80 | 9.4 M  / 21.5 B  | 13.0 ms / 77.0 FPS (1 thread  ) <br/> 22.1 ms / 90.3 FPS (2 threads) | 3 ms |
+| YOLO11m | 640×640 | 80 | 20.1 M / 68.0 B  | 28.6 ms / 34.9 FPS (1 thread  ) <br/> 53.3 ms / 37.4 FPS (2 threads) | 3 ms |
+| YOLO11l | 640×640 | 80 | 25.3 M / 86.9 B  | 37.6 ms / 26.6 FPS (1 thread  ) <br/> 71.2 ms / 28.0 FPS (2 threads) | 3 ms |
+| YOLO11x | 640×640 | 80 | 56.9 M / 194.9 B | 80.4 ms / 12.4 FPS (1 thread  ) <br/> 156.4 ms / 12.7 FPS (2 threads) | 3 ms |
 
-
-
-说明: 
+### 测试方法
 1. BPU延迟与BPU吞吐量。
  - 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况。
  - 多线程帧率为多个线程同时向BPU塞任务, 每个BPU核心可以处理多个线程的任务, 一般工程中4个线程可以控制单帧延迟较小,同时吃满所有BPU到100%,在吞吐量(FPS)和帧延迟间得到一个较好的平衡。X5的BPU整体比较厉害, 一般2个线程就可以将BPU吃满, 帧延迟和吞吐量都非常出色。
@@ -960,8 +990,27 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy7/scaling
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 ```
-1. 浮点/定点mAP：50-95精度使用pycocotools计算,来自于COCO数据集,可以参考微软的论文,此处用于评估板端部署的精度下降程度。
-2. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行5ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成400帧图像的后处理, 后处理不会构成瓶颈.
+
+
+## 精度数据
+### RDK X5 & RDK X5 Module
+目标检测 Detection (COCO2017)
+| 模型 | Pytorch | YUV420SP<br/>Python | YUV420SP<br/>C/C++ | NCHWRGB<br/>C/C++ |
+|---------|---------|-------|---------|---------|
+| YOLO11n | 0.323 | 0.308（95.36%） | 0.310（95.98%） | 0.311（96.28%） |
+| YOLO11s | 0.394 | 0.375（95.18%） | 0.379（96.19%） | 0.381（96.70%） |
+| YOLO11m | 0.436 | 0.418（95.87%） | 0.422（96.79%） | 0.428（98.17%） |
+| YOLO11l | 0.452 | 0.429（94.91%） | 0.434（96.02%） | 0.444（98.23%） |
+| YOLO11x | 0.466 | 0.445（95.49%） | 0.449（96.35%） | 0.456（97.85%） |
+
+### 测试方法
+1. 所有的精度数据使用微软官方的无修改的`pycocotools`库进行计算，取的精度标准为`Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]`的数据。
+2. 所有的测试数据均使用`COCO2017`数据集的val验证集的5000张照片, 在板端直接推理, dump保存为json文件, 送入第三方测试工具`pycocotools`库进行计算，分数的阈值为0.25, nms的阈值为0.7。
+3. pycocotools计算的精度比ultralytics计算的精度会低一些是正常现象, 主要原因是pycocotools是取矩形面积, ultralytics是取梯形面积, 我们主要是关注同样的一套计算方式去测试定点模型和浮点模型的精度, 从而来评估量化过程中的精度损失. 
+4. BPU模型在量化NCHW-RGB888输入转换为YUV420SP(nv12)输入后, 也会有一部分精度损失, 这是由于色彩空间转化导致的, 在训练时加入这种色彩空间转化的损失可以避免这种精度损失。
+5. Python接口和C/C++接口的精度结果有细微差异, 主要在于Python和C/C++的一些数据结构进行memcpy和转化的过程中, 对浮点数的处理方式不同, 导致的细微差异.
+6. 测试脚本请参考RDK Model Zoo的eval部分: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
+7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 用于模拟普通开发者第一次直接编译的精度情况, 并没有进行精度调优或者QAT(量化感知训练), 满足常规使用验证需求, 不代表精度上限.
 
 ## 反馈
 本文如果有表达不清楚的地方欢迎前往地瓜开发者社区进行提问和交流.

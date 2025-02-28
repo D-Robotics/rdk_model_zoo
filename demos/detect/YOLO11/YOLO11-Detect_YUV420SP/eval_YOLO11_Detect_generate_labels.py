@@ -17,7 +17,7 @@
 # 注意: 此程序在RDK板端运行
 # Attention: This program runs on RDK board.
 
-from YOLOv11_Detect_YUV420SP import *
+from YOLO11_Detect_YUV420SP import *
 
 import json
 

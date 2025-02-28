@@ -1,7 +1,7 @@
 [English](./README.md) | 简体中文
 
-# YOLOv12 Detect
-- [YOLOv12 Detect](#yolov12-detect)
+# yolo12 Detect
+- [yolo12 Detect](#yolo12-detect)
   - [YOLO介绍](#yolo介绍)
   - [步骤参考](#步骤参考)
     - [环境、项目准备](#环境项目准备)
@@ -11,7 +11,7 @@
     - [移除bbox信息3个输出头的反量化节点](#移除bbox信息3个输出头的反量化节点)
     - [使用hb\_perf命令对bin模型进行可视化, hrt\_model\_exec命令检查bin模型的输入输出情况](#使用hb_perf命令对bin模型进行可视化-hrt_model_exec命令检查bin模型的输入输出情况)
     - [部分编译日志参考](#部分编译日志参考)
-  - [使用TROS高效部署YOLOv12](#使用tros高效部署yolov12)
+  - [使用TROS高效部署yolo12](#使用tros高效部署yolo12)
     - [安装或更新tros-humble-hobot-dnn等功能包](#安装或更新tros-humble-hobot-dnn等功能包)
     - [拷贝tros-humble-hobot-dnn 的配置文件](#拷贝tros-humble-hobot-dnn-的配置文件)
     - [运行YOLOv8的推理节点](#运行yolov8的推理节点)
@@ -37,23 +37,23 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由�
  - YOLOv9 引入了可编程梯度信息(PGI)和广义高效层聚合网络(GELAN)等创新方法。
  - YOLOv10是由清华大学的研究人员使用该软件包创建的。 UltralyticsPython 软件包创建的。该版本通过引入端到端头(End-to-End head), 消除了非最大抑制(NMS)要求, 实现了实时目标检测的进步.
  - YOLO11 NEW 🚀：Ultralytics的最新YOLO模型在多个任务上实现了最先进的（SOTA）性能。
- - YOLOv12构建以注意力为核心的YOLO框架，通过创新方法和架构改进，打破CNN模型在YOLO系列中的主导地位，实现具有快速推理速度和更高检测精度的实时目标检测。
+ - YOLO12构建以注意力为核心的YOLO框架，通过创新方法和架构改进，打破CNN模型在YOLO系列中的主导地位，实现具有快速推理速度和更高检测精度的实时目标检测。
 
-YOLOv12论文：https://arxiv.org/abs/2502.12524 (发布时间：18 Feb 2025 04:20:14 UTC)
-YOLOv12代码仓库：https://github.com/sunsmarterjie/yolov12
+YOLO12论文：https://arxiv.org/abs/2502.12524 (发布时间：18 Feb 2025 04:20:14 UTC)
+YOLO12论文代码仓库：https://github.com/sunsmarterjie/yolo12
 
 ## 步骤参考
 
 注：任何No such file or directory, No module named "xxx", command not found.等报错请仔细检查,请勿逐条复制运行,如果对修改过程不理解请前往开发者社区从YOLOv5开始了解。
 ### 环境、项目准备
- - 下载sunsmarterjie/yolov12，未来可能是ultralytics/ultralytics仓库, 参考YOLO11官方文档, 配置好环境. 注意，导出时可以先不按照作者的 requirements.txt 准备环境, 只需要ultralytics所需要的环境.
+ - 下载ultralytics/ultralytics仓库, 参考Ultralytics官方文档, 配置好环境. 注意，导出时可以先不按照作者的 requirements.txt 准备环境, 只需要ultralytics所需要的环境.
 ```bash
-git clone https://github.com/sunsmarterjie/yolov12.git
+git clone https://github.com/ultralytics/ultralytics.git
 ```
- - 进入本地仓库,下载官方的预训练权重,这里以YOLOv12n-Detect模型为例
+ - 进入本地仓库,下载官方的预训练权重,这里以YOLO12n-Detect模型为例
 ```bash
-cd yolov12
-wget https://github.com/sunsmarterjie/yolov12/releases/download/v1.0/yolov12n.pt
+cd ultralytics
+wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo12n.pt
 ```
 
 ### 导出为onnx
@@ -75,19 +75,9 @@ $ pip uninstall ultralytics   # 或者
 ['/home/wuchao/YOLO11/ultralytics_v11/ultralytics']
 ```
 
- - 注释掉FlashAttention模块的导入
-文件目录：`yolov12/ultralytics/nn/modules/block.py`, 约第1160行，注释掉以下内容，我们在训练时可以按照原作者的意图去使用Flash Attention，导出时可以不使用。
-```python
-# try:
-#     from flash_attn.flash_attn_interface import flash_attn_func
-# except Exception:
-#     assert False, "import FlashAttention error! Please install FlashAttention first."
-# from timm.models.layers import trunc_normal_
-```
-
  - 修改优化后的AAttn模块
-文件目录：`ultralytics/nn/modules/block.py`, 约第1166行, `AAttn`类的`forward`方法替换成以下内容. 主要的优化点是去除了一些无用的数据搬运操作，同时将Reduce的维度变为C维度，对BPU更加友好。并且不需要重新训练模型。
-目前可以将BPU吞吐量优化到超过30FPS，从而实现实时目标检测。未来Bayes BPU会专门针对 Area Attention 结构进行优化，从而实现YOLOv8那样近300FPS的吞吐量。
+文件目录：`ultralytics/nn/modules/block.py`, 约第1159行, `AAttn`类的`forward`方法替换成以下内容. 主要的优化点是去除了一些无用的数据搬运操作，同时将Reduce的维度变为C维度，对BPU更加友好。并且不需要重新训练模型。
+目前可以将BPU吞吐量优化到超过60FPS，从而实现实时目标检测。未来Bayes BPU会专门针对 Area Attention 结构进行优化，从而实现YOLOv8那样近300FPS的吞吐量。
 注：建议您保留好原本的`forward`方法,例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
 ```python
 class AAttn(nn.Module):
@@ -133,7 +123,7 @@ class AAttn(nn.Module):
 注: 输出头顺序不能乱, 否则会报错. 另外不同版本的依赖库内部细节有一些不同, 如果发现输出头顺序与README的不同, 可以尝试修改append的顺序, 从而调转onnx输出头的顺序
 
 ```python
-def forward(self, x):
+def forward(self, x):  # RDK
     result = []
     for i in range(self.nl):
         result.append(self.cv3[i](x[i]).permute(0, 2, 3, 1).contiguous())
@@ -153,7 +143,7 @@ def forward(self, x):
  - 运行以下Python脚本,如果有**No module named onnxsim**报错,安装一个即可
 ```python
 from ultralytics import YOLO
-YOLO('yolov12n.pt').export(imgsz=640, format='onnx', simplify=False, opset=11)
+YOLO('yolo12n.pt').export(imgsz=640, format='onnx', simplify=False, opset=11)
 ```
 
 ### 准备校准数据
@@ -162,8 +152,8 @@ YOLO('yolov12n.pt').export(imgsz=640, format='onnx', simplify=False, opset=11)
 ### PTQ方案量化转化
  - 参考天工开物工具链手册和OE包(OpenExplore), 对模型进行检查, 所有算子均在BPU上, 进行编译即可.
 ```bash
-(bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolov12n.onnx
-(bpu_docker) $ hb_mapper makertbin --model-type onnx --config config_yolov12_detect_nv12.yaml
+(bpu_docker) $ hb_mapper checker --model-type onnx --march bayes-e --model yolo12n.onnx
+(bpu_docker) $ hb_mapper makertbin --model-type onnx --config config_yolo12_detect_nv12.yaml
 ```
 
 ### 移除bbox信息3个输出头的反量化节点
@@ -189,11 +179,11 @@ Graph output:
 
  - 进入编译产物的目录
 ```bash
-$ cd yolov12n_detect_bayese_640x640_nv12
+$ cd yolo12n_detect_bayese_640x640_nv12
 ```
  - 查看可以被移除的反量化节点
 ```bash
-$ hb_model_modifier yolov12n_detect_bayese_640x640_nv12.bin
+$ hb_model_modifier yolo12n_detect_bayese_640x640_nv12.bin
 ```
  - 在生成的hb_model_modifier.log文件中,找到以下信息。主要是找到大小为[1, 80, 80, 64], [1, 40, 40, 64], [1, 20, 20, 64]的三个输出头的名称。当然, 也可以通过netron等工具查看onnx模型,获得输出头的名称。
  此处的名称为:
@@ -222,14 +212,14 @@ op_type: "Dequantize"
 ```
  - 使用以下命令移除上述三个反量化节点,注意,导出时这些名称可能不同,请仔细确认。
 ```bash
-$ hb_model_modifier yolov12n_detect_bayese_640x640_nv12.bin \
+$ hb_model_modifier yolo12n_detect_bayese_640x640_nv12.bin \
 -r /model.21/cv2.0/cv2.0.2/Conv_output_0_HzDequantize \
 -r /model.21/cv2.1/cv2.1.2/Conv_output_0_HzDequantize \
 -r /model.21/cv2.2/cv2.2.2/Conv_output_0_HzDequantize
 ```
  - 移除成功会显示以下日志
 ```bash
-2025-02-20 02:00:57,469 INFO log will be stored in /open_explorer/yolov12n_detect_bayese_640x640_nv12/hb_model_modifier.log
+2025-02-20 02:00:57,469 INFO log will be stored in /open_explorer/yolo12n_detect_bayese_640x640_nv12/hb_model_modifier.log
 2025-02-20 02:00:57,474 INFO Nodes that will be removed from this model: ['/model.21/cv2.0/cv2.0.2/Conv_output_0_HzDequantize', '/model.21/cv2.1/cv2.1.2/Conv_output_0_HzDequantize', '/model.21/cv2.2/cv2.2.2/Conv_output_0_HzDequantize']
 2025-02-20 02:00:57,474 INFO Node '/model.21/cv2.0/cv2.0.2/Conv_output_0_HzDequantize' found, its OP type is 'Dequantize'
 2025-02-20 02:00:57,475 INFO scale: /model.21/cv2.0/cv2.0.2/Conv_x_scale; zero point: 0. node info details are stored in hb_model_modifier log file
@@ -240,7 +230,7 @@ $ hb_model_modifier yolov12n_detect_bayese_640x640_nv12.bin \
 2025-02-20 02:00:57,476 INFO Node '/model.21/cv2.2/cv2.2.2/Conv_output_0_HzDequantize' found, its OP type is 'Dequantize'
 2025-02-20 02:00:57,476 INFO scale: /model.21/cv2.2/cv2.2.2/Conv_x_scale; zero point: 0. node info details are stored in hb_model_modifier log file
 2025-02-20 02:00:57,476 INFO Node '/model.21/cv2.2/cv2.2.2/Conv_output_0_HzDequantize' is removed
-2025-02-20 02:00:57,481 INFO modified model saved as yolov12n_detect_bayese_640x640_nv12_modified.bin
+2025-02-20 02:00:57,481 INFO modified model saved as yolo12n_detect_bayese_640x640_nv12_modified.bin
 ```
 
  - 接下来得到的bin模型名称为yolov8n_bayese_640x640_nchw_modified.bin, 这个是最终的模型。
@@ -250,13 +240,13 @@ $ hb_model_modifier yolov12n_detect_bayese_640x640_nv12.bin \
 ### 使用hb_perf命令对bin模型进行可视化, hrt_model_exec命令检查bin模型的输入输出情况
  - 移除反量化系数前的bin模型
 ```bash
-hb_perf yolov12n_detect_bayese_640x640_nv12.bin
+hb_perf yolo12n_detect_bayese_640x640_nv12.bin
 ```
 在`hb_perf_result`目录下可以找到以下结果：
-![](./imgs/yolov12n_detect_bayese_640x640_nv12.png)
+![](./imgs/yolo12n_detect_bayese_640x640_nv12.png)
 
 ```bash
-hrt_model_exec model_info --model_file yolov12n_detect_bayese_640x640_nv12.bin
+hrt_model_exec model_info --model_file yolo12n_detect_bayese_640x640_nv12.bin
 ```
 可以看到这个移除反量化系数前的bin模型的输入输出信息
 ```bash
@@ -265,9 +255,9 @@ hrt_model_exec model_info --model_file yolov12n_detect_bayese_640x640_nv12.bin
 [A][DNN][packed_model.cpp:247][Model](2025-02-20,02:07:03.901.572) [HorizonRT] The model builder version = 1.24.3
 Load model to DDR cost 36.964ms.
 This model file has 1 model:
-[yolov12n_detect_bayese_640x640_nv12]
+[yolo12n_detect_bayese_640x640_nv12]
 ---------------------------------------------------------------------
-[model name]: yolov12n_detect_bayese_640x640_nv12
+[model name]: yolo12n_detect_bayese_640x640_nv12
 
 input[0]: 
 name: images
@@ -343,14 +333,14 @@ stride: (102400,5120,256,4,)
 
  - 移除目标反量化系数后的bin模型
 ```bash
-hb_perf yolov12n_detect_bayese_640x640_nv12_modified.bin
+hb_perf yolo12n_detect_bayese_640x640_nv12_modified.bin
 ```
 在`hb_perf_result`目录下可以找到以下结果。
-![](./imgs/yolov12n_detect_bayese_640x640_nv12_modified.png)
+![](./imgs/yolo12n_detect_bayese_640x640_nv12_modified.png)
 
 
 ```bash
-hrt_model_exec model_info --model_file yolov12n_detect_bayese_640x640_nv12_modified.bin
+hrt_model_exec model_info --model_file yolo12n_detect_bayese_640x640_nv12_modified.bin
 ```
 可以看到这个移除反量化系数后的bin模型的输入输出信息, 以及移除反量化节点的所有反量化系数, 这也说明bin模型中是存储着这些信息的, 可以使用推理库的API获得, 方便我们进行对应的前后处理.
 ```bash
@@ -359,9 +349,9 @@ hrt_model_exec model_info --model_file yolov12n_detect_bayese_640x640_nv12_modif
 [A][DNN][packed_model.cpp:247][Model](2025-02-20,02:07:20.123.684) [HorizonRT] The model builder version = 1.24.3
 Load model to DDR cost 29.838ms.
 This model file has 1 model:
-[yolov12n_detect_bayese_640x640_nv12]
+[yolo12n_detect_bayese_640x640_nv12]
 ---------------------------------------------------------------------
-[model name]: yolov12n_detect_bayese_640x640_nv12
+[model name]: yolo12n_detect_bayese_640x640_nv12
 
 input[0]: 
 name: images
@@ -464,7 +454,7 @@ Graph output:
     1087:                 shape=[1, 20, 20, 80], dtype=FLOAT32
     1095:                 shape=[1, 20, 20, 64], dtype=FLOAT32
 2025-02-20 01:32:30,405 file: model_builder.py func: model_builder line No: 38 End to prepare the onnx model.
-2025-02-20 01:32:30,454 file: model_builder.py func: model_builder line No: 265 Saving model to: yolov12n_detect_bayese_640x640_nv12_original_float_model.onnx.
+2025-02-20 01:32:30,454 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo12n_detect_bayese_640x640_nv12_original_float_model.onnx.
 2025-02-20 01:32:30,454 file: model_builder.py func: model_builder line No: 35 Start to optimize the onnx model.
 2025-02-20 01:32:30,873 file: constant_folding.py func: constant_folding line No: 66 Summary info for constant_folding:
 2025-02-20 01:32:30,873 file: constant_folding.py func: constant_folding line No: 67   After constant_folding, the number of nodes has changed from 635 to 531.
@@ -487,7 +477,7 @@ Graph output:
   After folding node (op_name: /model.8/m.1/m.1.0/attn/Slice, op_type: Slice), the number of increased parameters is -5.
   After folding node (op_name: /model.8/m.1/m.1.1/attn/Slice, op_type: Slice), the number of increased parameters is -5.
 2025-02-20 01:32:31,253 file: model_builder.py func: model_builder line No: 38 End to optimize the onnx model.
-2025-02-20 01:32:31,288 file: model_builder.py func: model_builder line No: 265 Saving model to: yolov12n_detect_bayese_640x640_nv12_optimized_float_model.onnx.
+2025-02-20 01:32:31,288 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo12n_detect_bayese_640x640_nv12_optimized_float_model.onnx.
 2025-02-20 01:32:31,288 file: model_builder.py func: model_builder line No: 35 Start to calibrate the model.
 2025-02-20 01:32:31,689 file: calibration_data_set.py func: calibration_data_set line No: 111 input name: images,  number_of_samples: 50
 2025-02-20 01:32:31,690 file: calibration_data_set.py func: calibration_data_set line No: 123 There are 50 samples in the data set.
@@ -501,7 +491,7 @@ Graph output:
 2025-02-20 01:45:45,908 file: modelwise_search.py func: modelwise_search line No: 75 Select max-percentile:percentile=0.99995,per_channel method.
 2025-02-20 01:45:45,908 file: modelwise_search.py func: modelwise_search line No: 79 Perchannel quantization is enabled.
 2025-02-20 01:45:47,569 file: model_builder.py func: model_builder line No: 38 End to calibrate the model.
-2025-02-20 01:45:47,732 file: model_builder.py func: model_builder line No: 265 Saving model to: yolov12n_detect_bayese_640x640_nv12_calibrated_model.onnx.
+2025-02-20 01:45:47,732 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo12n_detect_bayese_640x640_nv12_calibrated_model.onnx.
 2025-02-20 01:45:47,732 file: model_builder.py func: model_builder line No: 35 Start to quantize the model.
 2025-02-20 01:45:50,972 file: constant_folding.py func: constant_folding line No: 66 Summary info for constant_folding:
 2025-02-20 01:45:50,972 file: constant_folding.py func: constant_folding line No: 67   After constant_folding, the number of nodes has changed from 440 to 440.
@@ -509,7 +499,7 @@ Graph output:
 2025-02-20 01:45:50,972 file: constant_folding.py func: constant_folding line No: 76 Detailed info for constant_folding:
 2025-02-20 01:45:50,972 file: constant_folding.py func: constant_folding line No: 88 
 2025-02-20 01:45:51,346 file: model_builder.py func: model_builder line No: 38 End to quantize the model.
-2025-02-20 01:45:51,487 file: model_builder.py func: model_builder line No: 265 Saving model to: yolov12n_detect_bayese_640x640_nv12_quantized_model.onnx.
+2025-02-20 01:45:51,487 file: model_builder.py func: model_builder line No: 265 Saving model to: yolo12n_detect_bayese_640x640_nv12_quantized_model.onnx.
 2025-02-20 01:45:51,487 file: model_builder.py func: model_builder line No: 35 Start to compile the model with march bayes-e.
 2025-02-20 01:45:52,289 file: hybrid_build.py func: hybrid_build line No: 111 Compile submodel: main_graph_subgraph_0
 2025-02-20 01:45:52,325 file: hbdk_cc.py func: hbdk_cc line No: 126 hbdk-cc parameters:['--O3', '--core-num', '1', '--fast', '--input-layout', 'NHWC', '--output-layout', 'NHWC', '--input-source', 'pyramid']
@@ -927,7 +917,7 @@ output0     0.998886           0.468851     0.001009     4.919658
 2025-02-20 01:49:59,080 file: model_builder.py func: model_builder line No: 38 End to Horizon NN Model Convert.
 ```
 
-## 使用TROS高效部署YOLOv12
+## 使用TROS高效部署yolo12
 ### 安装或更新tros-humble-hobot-dnn等功能包
 ```bash
 sudo apt update # 确保有地瓜apt源
@@ -954,7 +944,7 @@ cp -r /opt/tros/humble/lib/dnn_node_example/config .
 ```
 
 ### 运行YOLOv8的推理节点
-注：YOLOv12的后处理与YOLOv8相同，可以直接使用YOLOv8的推理节点
+注：yolo12的后处理与YOLOv8相同，可以直接使用YOLOv8的推理节点
 ```bash
 # 配置MIPI摄像头
 export CAM_TYPE=mipi
@@ -979,7 +969,7 @@ ros2 launch dnn_node_example dnn_node_example.launch.py dnn_example_config_file:
 目标检测 Detection (COCO)
 | 模型 | 尺寸(像素) | 类别数 | 参数量 | BPU任务延迟/BPU吞吐量(线程数) |  后处理时间 |
 |---------|---------|---------|----------|--------------------|--------------------|
-| YOLOv12n | 640×640 | 80 | 2.6 M  | 17.7 ms / 56.3 FPS (1 thread  ) <br/> 31.6 ms / 63.0 FPS (2 threads) | 3 ms |
+| YOLO12n | 640×640 | 80 | 2.6 M  | 17.7 ms / 56.3 FPS (1 thread  ) <br/> 31.6 ms / 63.0 FPS (2 threads) | 3 ms |
 
 
 说明: 
@@ -989,7 +979,7 @@ ros2 launch dnn_node_example dnn_node_example.launch.py dnn_example_config_file:
  - 表格中一般记录到吞吐量不再随线程数明显增加的数据。
  - BPU延迟和BPU吞吐量使用以下命令在板端测试
 ```bash
-hrt_model_exec perf --thread_num 2 --model_file yolov12n_detect_bayese_640x640_nv12_modified.bin
+hrt_model_exec perf --thread_num 2 --model_file yolo12n_detect_bayese_640x640_nv12_modified.bin
 
 python3 ../../../tools/batch_perf/batch_perf.py --max 3 --file ptq_models
 ```
@@ -1005,7 +995,7 @@ echo 1200000000 > /sys/kernel/debug/clk/bpu_mclk_2x_clk/clk_rate # BPU: 1.2GHz
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 ```
-3. 关于后处理: 目前在X5上使用Python重构的后处理, 仅需要单核心单线程串行5ms左右即可完成, 也就是说只需要占用2个CPU核心(200%的CPU占用, 最大800%的CPU占用), 每分钟可完成400帧图像的后处理, 后处理不会构成瓶颈.
+
 
 ## 反馈
 本文如果有表达不清楚的地方欢迎前往地瓜开发者社区进行提问和交流.
@@ -1015,5 +1005,5 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 ## 参考
 
 [ultralytics](https://docs.ultralytics.com/)
-[Github: yolov12](https://github.com/sunsmarterjie/yolov12)
-[YOLOv12: Attention-Centric Real-Time Object Detectors](https://arxiv.org/abs/2502.12524)
+[Github: yolo12](https://github.com/sunsmarterjie/yolo12)
+[yolo12: Attention-Centric Real-Time Object Detectors](https://arxiv.org/abs/2502.12524)
