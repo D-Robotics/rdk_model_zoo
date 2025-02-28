@@ -1,5 +1,5 @@
 
-!![](resource/imgs/model_zoo_logo.jpg)
+![](resource/imgs/model_zoo_logo.jpg)
 
 English | [简体中文](./README_cn.md)
 
