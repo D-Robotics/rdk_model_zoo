@@ -17,7 +17,7 @@
 # 注意: 此程序在RDK板端运行
 # Attention: This program runs on RDK board.
 
-from YOLOv12_Detect_YUV420SP import *
+from YOLO12_Detect_YUV420SP import *
 
 import json
 
@@ -36,7 +36,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='ptq_models/yolov12n_detect_bayese_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='ptq_models/yolo12n_detect_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
@@ -50,7 +50,7 @@ def main():
     parser.add_argument('--image-path', type=str, default="../../../../resource/datasets/COCO2017/val2017", help='COCO2017 val source image path.')
     parser.add_argument('--result-image-dump', type=bool, default=False, help='dump image result or not')
     parser.add_argument('--result-image-path', type=str, default="coco2017_image_result", help='COCO2017 val image result saving path.')
-    parser.add_argument('--json-path', type=str, default="YOLOv12n_detect_bayese_640x640_nv12_coco2017_val_pridect.json", help='convert to json save path.')
+    parser.add_argument('--json-path', type=str, default="YOLO12n_detect_bayese_640x640_nv12_coco2017_val_pridect.json", help='convert to json save path.')
     parser.add_argument('--max-num', type=int, default=50000, help='max num of images which will be precessed.')
     opt = parser.parse_args()
     logger.info(opt)
@@ -64,7 +64,7 @@ def run(opt):
 
 
     # 实例化
-    model = YOLOv12_Detect(opt)
+    model = YOLO12_Detect(opt)
 
     # 创建 result* 目录存储结果
     if opt.result_image_dump:

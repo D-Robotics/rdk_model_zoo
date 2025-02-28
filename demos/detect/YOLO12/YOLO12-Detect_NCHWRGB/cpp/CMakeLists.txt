@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(rdk_yolov12_detect_nchwrgb)
+project(rdk_yolo12_detect_nchwrgb)
 
 
 # 设置OpenCV包

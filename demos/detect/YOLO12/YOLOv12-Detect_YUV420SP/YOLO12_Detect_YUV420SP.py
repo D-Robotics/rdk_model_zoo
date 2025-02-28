@@ -54,7 +54,7 @@ def main():
     logger.info(opt)
 
     # 实例化
-    model = YOLOv12_Detect(opt)
+    model = YOLO12_Detect(opt)
     # 读图
     img = cv2.imread(opt.test_img)
     # 准备输入数据
@@ -73,7 +73,7 @@ def main():
     logger.info("\033[1;32m" + f"saved in path: \"./{opt.img_save_path}\"" + "\033[0m")
 
 
-class YOLOv12_Detect():
+class YOLO12_Detect():
     def __init__(self, opt):
         # 加载BPU的bin模型, 打印相关参数
         # Load the quantized *.bin model and print its parameters
