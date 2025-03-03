@@ -3,6 +3,28 @@ English | [简体中文](./README_cn.md)
 # YOLO12 Detect
 
 
+- [YOLO12 Detect](#yolo12-detect)
+  - [Introduction to YOLO](#introduction-to-yolo)
+  - [Reference Steps](#reference-steps)
+    - [Environment and Project Preparation](#environment-and-project-preparation)
+    - [Export to ONNX](#export-to-onnx)
+    - [Prepare Calibration Data](#prepare-calibration-data)
+    - [PTQ Quantization Conversion](#ptq-quantization-conversion)
+    - [Remove Dequantization Nodes for bbox Information Output Heads](#remove-dequantization-nodes-for-bbox-information-output-heads)
+    - [Use `hb_perf` command to visualize the bin model, and `hrt_model_exec` command to check the input/output details of the bin model](#use-hb_perf-command-to-visualize-the-bin-model-and-hrt_model_exec-command-to-check-the-inputoutput-details-of-the-bin-model)
+    - [Partial compilation log reference](#partial-compilation-log-reference)
+  - [Efficient Deployment of YOLO12 with TROS](#efficient-deployment-of-yolo12-with-tros)
+    - [Install or Update Packages like tros-humble-hobot-dnn](#install-or-update-packages-like-tros-humble-hobot-dnn)
+    - [Copy Configuration Files for tros-humble-hobot-dnn](#copy-configuration-files-for-tros-humble-hobot-dnn)
+    - [Run the YOLOv8 Inference Node](#run-the-yolov8-inference-node)
+  - [Model Training](#model-training)
+  - [Performance Data](#performance-data)
+    - [RDK X5 \& RDK X5 Module (Temporary Solution, Not Representative of Final Area Attention Optimized Performance)](#rdk-x5--rdk-x5-module-temporary-solution-not-representative-of-final-area-attention-optimized-performance)
+  - [Accuracy Data](#accuracy-data)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module)
+    - [Testing Methodology](#testing-methodology)
+  - [Feedback](#feedback)
+  - [References](#references)
 
 
 ## Introduction to YOLO
