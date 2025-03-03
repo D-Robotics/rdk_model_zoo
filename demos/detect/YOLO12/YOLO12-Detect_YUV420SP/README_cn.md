@@ -18,6 +18,9 @@
   - [模型训练](#模型训练)
   - [性能数据](#性能数据)
     - [RDK X5 \& RDK X5 Module (临时方案，不代表最终Area Attention优化后的性能数据)](#rdk-x5--rdk-x5-module-临时方案不代表最终area-attention优化后的性能数据)
+  - [精度数据](#精度数据)
+    - [RDK X5 \& RDK X5 Module](#rdk-x5--rdk-x5-module)
+    - [测试方法](#测试方法)
   - [反馈](#反馈)
   - [参考](#参考)
 
@@ -46,7 +49,7 @@ YOLO12论文代码仓库：https://github.com/sunsmarterjie/yolo12
 
 注：任何No such file or directory, No module named "xxx", command not found.等报错请仔细检查,请勿逐条复制运行,如果对修改过程不理解请前往开发者社区从YOLOv5开始了解。
 ### 环境、项目准备
- - 下载ultralytics/ultralytics仓库, 参考Ultralytics官方文档, 配置好环境. 注意，导出时可以先不按照作者的 requirements.txt 准备环境, 只需要ultralytics所需要的环境.
+ - 下载ultralytics/ultralytics仓库, 参考Ultralytics官方文档, 配置好环境. 
 ```bash
 git clone https://github.com/ultralytics/ultralytics.git
 ```
@@ -995,6 +998,22 @@ echo 1200000000 > /sys/kernel/debug/clk/bpu_mclk_2x_clk/clk_rate # BPU: 1.2GHz
 sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost"  # 1.8Ghz
 sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
 ```
+
+## 精度数据
+### RDK X5 & RDK X5 Module
+目标检测 Detection (COCO2017)
+| 模型 | Pytorch | YUV420SP<br/>Python | YUV420SP<br/>C/C++ | NCHWRGB<br/>C/C++ |
+|---------|---------|-------|---------|---------|
+| YOLO12n | 0.334 | 0.312（93.41%） | 0.314（94.02%） | 0.319（95.51%） |
+
+### 测试方法
+1. 所有的精度数据使用微软官方的无修改的`pycocotools`库进行计算，取的精度标准为`Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]`的数据。
+2. 所有的测试数据均使用`COCO2017`数据集的val验证集的5000张照片, 在板端直接推理, dump保存为json文件, 送入第三方测试工具`pycocotools`库进行计算，分数的阈值为0.25, nms的阈值为0.7。
+3. pycocotools计算的精度比ultralytics计算的精度会低一些是正常现象, 主要原因是pycocotools是取矩形面积, ultralytics是取梯形面积, 我们主要是关注同样的一套计算方式去测试定点模型和浮点模型的精度, 从而来评估量化过程中的精度损失. 
+4. BPU模型在量化NCHW-RGB888输入转换为YUV420SP(nv12)输入后, 也会有一部分精度损失, 这是由于色彩空间转化导致的, 在训练时加入这种色彩空间转化的损失可以避免这种精度损失。
+5. Python接口和C/C++接口的精度结果有细微差异, 主要在于Python和C/C++的一些数据结构进行memcpy和转化的过程中, 对浮点数的处理方式不同, 导致的细微差异.
+6. 测试脚本请参考RDK Model Zoo的eval部分: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
+7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 用于模拟普通开发者第一次直接编译的精度情况, 并没有进行精度调优或者QAT(量化感知训练), 满足常规使用验证需求, 不代表精度上限.
 
 
 ## 反馈

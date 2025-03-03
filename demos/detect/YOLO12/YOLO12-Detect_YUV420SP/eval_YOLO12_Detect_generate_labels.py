@@ -36,7 +36,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='ptq_models/yolo12n_detect_bayese_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='ptq_models/yolov12n_detect_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
