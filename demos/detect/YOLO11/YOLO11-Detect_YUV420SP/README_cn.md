@@ -146,8 +146,7 @@ $ pip uninstall ultralytics   # 或者
 文件目录：`ultralytics/nn/modules/block.py`, 约第868行, `Attntion`类的`forward`方法替换成以下内容. 主要的优化点是去除了一些无用的数据搬运操作，同时将Reduce的维度变为C维度，对BPU更加友好, 目前可以将BPU吞吐量翻倍, 并且不需要重新训练模型.
 注：建议您保留好原本的`forward`方法,例如改一个其他的名字`forward_`, 方便在训练的时候换回来。
 ```python
-class AAttn(nn.Module):
-    def forward(self, x):  # RDK
+class Attention(nn.Module):   # RDK
         print(f"{x.shape = }")
         B, C, H, W = x.shape
         N = H * W

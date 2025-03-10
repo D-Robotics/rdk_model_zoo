@@ -1098,16 +1098,23 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 
 ## 精度数据
 ### RDK X5 & RDK X5 Module
-目标检测 Detection (COCO2017)
+实例分割 Instance Segmentation (COCO2017)
 | 模型 | Pytorch<br/>BBox / Mask | YUV420SP - Python<br/>BBox / Mask | YUV420SP - C/C++<br/>BBox / Mask | NCHWRGB - C/C++<br/>BBox / Mask |
 |---------|---------|-------|---------|---------|
-| YOLO11n-Seg | 0.319 / 0.258 |  |  |  |
-| YOLO11s-Seg | 0.388 / 0.306 |  |  |  |
-| YOLO11m-Seg | 0.436 / 0.340 |  |  |  |
-| YOLO11l-Seg | 0.452 / 0.350 |  |  |  |
-| YOLO11x-Seg | 0.466 / 0.358 |  |  |  |
+| YOLO11n-Seg | 0.319 / 0.258 | 0.294(92.16%) / 0.226(87.60%) |  |  |
+| YOLO11s-Seg | 0.388 / 0.306 | 0.374(96.39%) / 0.291(95.10%) |  |
+| YOLO11m-Seg | 0.436 / 0.340 | 0.418(95.87%) / 0.321(94.41%) |  |  |
+| YOLO11l-Seg | 0.452 / 0.350 | 0.429(94.91%) / 0.328(93.71%) |  |  |
+| YOLO11x-Seg | 0.466 / 0.358 | 0.445(97.64%) / 0.338(94.41%) |  |  |
 
 ### 测试方法
+```bash
+python3 ../../../tools/batch_eval_pycocotools/eval_batch_python.py \
+      --eval-script eval_YOLO11_Seg_generate_labels.py \
+      --bin-paths ptq_models \
+      --str py_coco2017_val_pridect \
+      --types nv12
+```
 1. 所有的精度数据使用微软官方的无修改的`pycocotools`库进行计算，取的精度标准为`Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]`的数据。
 2. 所有的测试数据均使用`COCO2017`数据集的val验证集的5000张照片, 在板端直接推理, dump保存为json文件, 送入第三方测试工具`pycocotools`库进行计算，分数的阈值为0.25, nms的阈值为0.7。
 3. pycocotools计算的精度比ultralytics计算的精度会低一些是正常现象, 主要原因是pycocotools是取矩形面积, ultralytics是取梯形面积, 我们主要是关注同样的一套计算方式去测试定点模型和浮点模型的精度, 从而来评估量化过程中的精度损失. 
