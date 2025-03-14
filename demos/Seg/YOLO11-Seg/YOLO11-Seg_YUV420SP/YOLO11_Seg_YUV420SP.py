@@ -37,7 +37,7 @@ logger = logging.getLogger("RDK_YOLO")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='ptq_models/yolo11nseg_detect_bayese_640x640_nv12_modified.bin', 
+    parser.add_argument('--model-path', type=str, default='ptq_models/yolo11n_seg_bayese_640x640_nv12_modified.bin', 
                         help="""Path to BPU Quantized *.bin Model.
                                 RDK X3(Module): Bernoulli2.
                                 RDK Ultra: Bayes.
@@ -72,16 +72,17 @@ def main():
     logger.info("\033[1;32m" + "Draw Results: " + "\033[0m")
     # 绘制
     draw_img = img.copy()
-    zeros = np.zeros((160,160,3), dtype=np.uint8)
-    for class_id, score, x1, y1, x2, y2, x1_corp, y1_corp, x2_corp, y2_corp, mask in results:
+    zeros = np.zeros((img.shape[0],img.shape[1],3), dtype=np.uint8)
+    for class_id, score, x1, y1, x2, y2, mask in results:
         # Detect
         print("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
         draw_detection(draw_img, (x1, y1, x2, y2), score, class_id)
         # Instance Segment
         if mask.size == 0:
             continue
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, model.kernel_for_morphologyEx, 1) if opt.is_open else mask
-        zeros[y1_corp:y2_corp,x1_corp:x2_corp, :][mask == 1] = rdk_colors[class_id%20]
+        mask = cv2.resize(mask, (int(x2-x1), int(y2-y1)), interpolation=cv2.INTER_LANCZOS4)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, model.kernel_for_morphologyEx, 1) if opt.is_open else mask      
+        zeros[y1:y2,x1:x2, :][mask == 1] = rdk_colors[(class_id-1)%20]
         # points
         if not opt.is_point:
             continue
@@ -93,18 +94,13 @@ def main():
                 contour = np.vstack((contour, contours[i], np.array([contours[i][0]])))
             # 轮廓投射回原来的图像大小
             merged_points = contour[:,0,:]
-            merged_points[:,0] = merged_points[:,0] + x1_corp
-            merged_points[:,1] = merged_points[:,1] + y1_corp
-            merged_points *= 4 # 还原到640
-            merged_points[:,0] = (merged_points[:,0] - model.x_shift) / model.x_scale
-            merged_points[:,1] = (merged_points[:,1] - model.y_shift) / model.y_scale
+            merged_points[:,0] = merged_points[:,0] + x1
+            merged_points[:,1] = merged_points[:,1] + y1
             points = np.array([[[int(x), int(y)] for x, y in merged_points]], dtype=np.int32)
             # 绘制轮廓
             cv2.polylines(draw_img, points, isClosed=True, color=rdk_colors[(class_id-1)%20], thickness=4)
     
-    
     # 可视化, 这里采用直接相加的方式，实际应用中对Mask一般不需要Resize这些操作
-    zeros = cv2.resize(zeros[int(model.y_shift*model.y_scale_corp):model.Mask_H-int(model.y_shift*model.y_scale_corp), int(model.x_shift*model.x_scale_corp):model.Mask_W-int(model.x_shift*model.x_scale_corp),:], (model.img_w, model.img_h),cv2.INTER_LANCZOS4)
     add_result = np.clip(draw_img + 0.3*zeros, 0, 255).astype(np.uint8)
     # 保存结果
     cv2.imwrite(opt.img_save_path, np.hstack((draw_img, zeros, add_result)))
@@ -384,7 +380,7 @@ class YOLO11_Seg():
                 mc = mces[id_indices][indic]
                 mask = (np.sum(mc[np.newaxis, np.newaxis, :]*protos_float32[y1_corp:y2_corp,x1_corp:x2_corp,:], axis=2) > 0.5).astype(np.uint8)
                 # append
-                results.append((i, scores[id_indices][indic], x1, y1, x2, y2, x1_corp, y1_corp, x2_corp, y2_corp, mask))
+                results.append((i, scores[id_indices][indic], x1, y1, x2, y2, mask))
 
         logger.debug("\033[1;31m" + f"Post Process time = {1000*(time() - begin_time):.2f} ms" + "\033[0m")
 
