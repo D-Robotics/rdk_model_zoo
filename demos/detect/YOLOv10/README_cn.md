@@ -543,14 +543,14 @@ UNIT_CONV_FOR_/model.22/m.0/Add                     BPU  id(0)     Conv         
 
 ### RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | FLOPs (G) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
-|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOv10n | 640×640 | 80 | 6.7  | 38.5 G |  | 9.3 ms / 107.0 FPS (1 thread) <br/> 15.0 ms / 132.7 FPS (2 threads) | 4.5 ms |
-| YOLOv10s | 640×640 | 80 | 21.6 | 46.3 G |  | 15.8 ms / 63.0 FPS (1 thread) <br/> 28.1 ms / 71.0 FPS (2 threads) | 4.5 ms |
-| YOLOv10m | 640×640 | 80 | 59.1 | 51.1 G |  | 30.8 ms / 32.4 FPS (1 thread) <br/> 51.8 ms / 34.5 FPS (2 threads) | 4.5 ms |
-| YOLOv10b | 640×640 | 80 | 92.0 | 52.3 G |  | 41.1 ms / 24.3 FPS (1 thread) <br/> 78.4 ms / 25.4 FPS (2 threads) | 4.5 ms |
-| YOLOv10l | 640×640 | 80 | 120.3 | 53.2 G |  | 52.0 ms / 19.2 FPS (1 thread) <br/> 100.0 ms / 20.0 FPS (2 threads) | 4.5 ms |
-| YOLOv10x | 640×640 | 80 | 160.4 | 54.4 G |  | 70.7 ms / 14.1 FPS (1 thread) <br/> 137.3 ms / 14.5 FPS (2 threads) | 4.5 ms |
+| 模型 | 尺寸(像素) | 类别数 | FLOPs (G) | BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
+|---------|---------|-------|---------|-----------------------|------------------------|
+| YOLOv10n | 640×640 | 80 | 6.7   | 8.2 ms / 122.2 FPS (1 thread  ) <br/> 12.6 ms / 157.7 FPS (2 threads) | 4.5 ms | 
+| YOLOv10s | 640×640 | 80 | 21.6  | 13.6 ms / 73.2 FPS (1 thread  ) <br/> 23.6 ms / 84.5 FPS (2 threads) | 4.5 ms | 
+| YOLOv10m | 640×640 | 80 | 59.1  | 26.3 ms / 38.0 FPS (1 thread  ) <br/> 48.7 ms / 40.9 FPS (2 threads) | 4.5 ms | 
+| YOLOv10b | 640×640 | 80 | 92.0  | 35.0 ms / 28.6 FPS (1 thread  ) <br/> 66.0 ms / 30.2 FPS (2 threads) | 4.5 ms | 
+| YOLOv10l | 640×640 | 80 | 120.3 | 44.3 ms / 22.6 FPS (1 thread  ) <br/> 84.5 ms / 23.6 FPS (2 threads) | 4.5 ms | 
+| YOLOv10x | 640×640 | 80 | 160.4 |  60.3 ms / 16.6 FPS (1 thread  ) <br/> 116.4 ms / 17.1 FPS (2 threads)| 4.5 ms | 
 
 ### RDK X3 & RDK X3 Module
 目标检测 Detection (COCO)

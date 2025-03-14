@@ -35,7 +35,7 @@ logger = logging.getLogger("RDK_YOLO")
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model-path', type=str, default='../pt/YOLOv8/detect_weights/yolov8s.pt', 
-                        help="""Path to ONNX Model.""") 
+                        help="""Path to Detect Pytorch Model.""") 
     parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
     parser.add_argument('--reg', type=int, default=16, help='DFL reg layer.')
     parser.add_argument('--nms-thres', type=float, default=0.7, help='IoU threshold.')

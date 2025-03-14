@@ -612,17 +612,17 @@ TODO: 训练流程
 ## 性能数据
 ### RDK X5 & RDK X5 Module
 目标检测 Detection (COCO)
-| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
-|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOv5s_v2.0 | 640×640 | 80 | 7.5  | - | - | 14.3 ms / 70.0 FPS(1 thread) <br/> 18.7 ms / 106.8 FPS(2 threads) | 2.3 ms |
-| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 | - | - | 27.0 ms / 37.0 FPS(1 thread) <br/> 44.1 ms / 45.2 FPS(2 threads) | 2.3 ms |
-| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 | - | - | 50.8 ms / 19.7 FPS(1 thread) <br/> 91.5 ms / 21.8 FPS(2 threads) | 2.3 ms |
-| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 | - | - | 86.3 ms / 11.6 FPS(1 thread) <br/> 162.1 ms / 12.3 FPS(2 threads) | 2.3 ms |
-| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 | 28.0 | - | 8.5 ms / 117.4 FPS(1 thread) <br/> 8.9 ms / 223.0 FPS(2 threads) <br/> 10.7 ms / 277.2 FPS(3 threads) | 2.3 ms |
-| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 | 37.4 | - | 13.0 ms / 76.6 FPS(1 thread) <br/> 16.0 ms / 124.2 FPS(2 threads) | 2.3 ms |
-| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 45.4 | - | 25.7 ms / 38.8 FPS(1 thread) <br/> 41.2 ms / 48.4 FPS(2 threads) | 2.3 ms |
-| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 49.0 | - | 47.9 ms / 20.9 FPS(1 thread) <br/> 85.7 ms / 23.3 FPS(2 threads) | 2.3 ms |
-| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 50.7 | - | 81.1 ms / 12.3 FPS(1 thread) <br/> 151.9 ms / 13.1 FPS(2 threads) | 2.3 ms |
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
+|-----|----------|-------|----------|------------------------|----------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5  | 13.0 ms / 76.6 FPS (1 thread  ) <br/> 16.0 ms / 124.8 FPS (2 threads) | 2.3 ms |
+| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 | 23.9 ms / 41.7 FPS (1 thread  ) <br/> 37.7 ms / 52.9 FPS (2 threads) | 2.3 ms |
+| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 | 44.0 ms / 22.7 FPS (1 thread  ) <br/> 78.2 ms / 25.5 FPS (2 threads) | 2.3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 | 74.1 ms / 13.5 FPS (1 thread  ) <br/> 137.6 ms / 14.5 FPS (2 threads) | 2.3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 | 8.1 ms / 122.7 FPS (1 thread  ) <br/> 8.6 ms / 232.3 FPS (2 threads) <br/> 9.7 ms / 307.9 FPS (3 threads) | 2.3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 | 11.9 ms / 83.8 FPS (1 thread  ) <br/> 13.7 ms / 145.3 FPS (2 threads) | 2.3 ms |
+| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 22.7 ms / 44.0 FPS (1 thread  ) <br/> 35.3 ms / 56.6 FPS (2 threads) | 2.3 ms |
+| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 41.6 ms / 24.0 FPS (1 thread  ) <br/> 73.1 ms / 27.3 FPS (2 threads) | 2.3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 69.7 ms / 14.4 FPS (1 thread  ) <br/> 129.0 ms / 15.5 FPS (2 threads) | 2.3 ms |
 
 ### RDK X3 & RDK X3 Module
 目标检测 Detection (COCO)
@@ -643,6 +643,7 @@ TODO: 训练流程
  - BPU延迟和BPU吞吐量使用以下命令在板端测试
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
+python3 ../../tools/batch_perf/batch_perf.py --file models/ --max 4
 ```
 2. 测试板卡均为最佳状态。
  - X5的状态为最佳状态：CPU为8 × A55@1.8G, 全核心Performance调度, BPU为1 × Bayes-e@1.2G.
