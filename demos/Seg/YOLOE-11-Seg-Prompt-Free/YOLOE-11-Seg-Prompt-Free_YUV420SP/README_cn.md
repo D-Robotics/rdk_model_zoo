@@ -48,69 +48,19 @@ git clone https://github.com/ultralytics/ultralytics.git
 cd ultralytics
 wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yoloe-11s-seg.pt
 ```
-
 ### 导出为onnx
-运行以下Python脚本, 该脚本内会自动等价替换相关模块, 并且不需要重新训练.
+
+使用RDK Model Zoo提供的导出脚本：`https://github.com/D-Robotics/rdk_model_zoo/blob/main/demos/Seg/YOLOE-11-Seg-Prompt-Free/YOLOE-11-Seg-Prompt-Free_YUV420SP/cauchy_yoloe11segPF_export.py`，该脚本内会自动等价替换相关模块, 并且不需要重新训练.
+
 ```bash
 python3 cauchy_yoloe11segPF_export.py
-```
-```python
-# Copyright (c) 2025，WuChao D-Robotics.
-# Licensed under the Apache License, Version 2.0 (the "License");
-
-from ultralytics import YOLO
-from types import MethodType
-import torch.nn as nn
-
-# Initialize a YOLOE model
-model = YOLO("yoloe-11s-seg-pf.pt")
-
-# replace some module without retraining
-def linear2conv(linear):
-    assert isinstance(linear, nn.Linear), "Input must be a Linear layer."
-    conv = nn.Conv2d(
-        in_channels=linear.in_features, 
-        out_channels=linear.out_features,
-        kernel_size=1,
-        stride=1,
-        padding=0,
-        bias=True if linear.bias is not None else False 
-    )
-    conv.weight.data = linear.weight.view(linear.out_features, linear.in_features, 1, 1).data
-    conv.bias.data = linear.bias.data if linear.bias is not None else conv.bias.data
-    return conv
-
-def cauchy_rdk_forward(self, x, text): # RDK
-    results = []
-    for i in range(self.nl):
-        results.append(self.lrpc[i].vocab(self.cv3[i](x[i])).permute(0, 2, 3, 1).contiguous())
-        results.append(self.lrpc[i].loc(self.cv2[i](x[i])).permute(0, 2, 3, 1).contiguous())
-        results.append(self.cv5[i](x[i]).permute(0, 2, 3, 1).contiguous())
-    results.append(self.proto(x[0]).permute(0, 2, 3, 1).contiguous())
-    return results
-
-model.model.model[23].lrpc[0].vocab = linear2conv(model.model.model[23].lrpc[0].vocab)
-model.model.model[23].lrpc[1].vocab = linear2conv(model.model.model[23].lrpc[1].vocab)
-model.model.model[23].forward = MethodType(cauchy_rdk_forward, model.model.model[23])
-
-# save names
-names = ""
-for value in model.names.values():
-    print(value)
-    names += f"{value}\n"
-
-with open("model_names.txt", "w", encoding="utf-8") as file:
-    file.write(names)
-print("model_names.txt saved.")
-
-# export
-model.export(imgsz=640, format='onnx', simplify=True, opset=11)
 ```
 
 ### 准备校准数据
 参考RDK Model Zoo提供的极简的校准数据准备脚本：`https://github.com/D-Robotics/rdk_model_zoo/blob/main/demos/tools/generate_calibration_data/generate_calibration_data.py `进行校准数据的准备。
 
 ### PTQ方案量化转化
+在OpenExplore的Docker中, 使用hb_mapper工具进行量化转化.
 
 ```bash
 (bpu_docker) $ hb_mapper makertbin --model-type onnx --config config_yolo11e_seg_pf_bayese_640x640_nv12.yaml
@@ -127,8 +77,9 @@ model.export(imgsz=640, format='onnx', simplify=True, opset=11)
 ### RDK X5 & RDK X5 Module
 实例分割 Instance Segmentation (COCO)
 | 模型 | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) |  BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(C/C++) |
-|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
-| YOLOE-11S-Seg | 640×640 | 4585 | 13.69 M | 142.9 ms / 7.0 FPS (1 thread  ) <br/> 149.5 ms / 13.3 FPS (2 threads) <br/> 167.4 ms / 17.8 FPS (3 threads)  | 300 ms |
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M)/FLOPs(B) |  BPU延迟/BPU吞吐量(线程) |  后处理时间<br/>(Python) |
+|---------|---------|-------|---------|---------|----------|
+YOLOE-11S-Seg | 640×640 | 4585 | 13.69 M | 142.9 ms / 7.0 FPS (1 thread  ) <br/> 149.5 ms / 13.3 FPS (2 threads) <br/> 167.4 ms / 17.8 FPS (3 threads)  | 300 ms |
 
 ### 测试方法
 1. BPU延迟与BPU吞吐量。
