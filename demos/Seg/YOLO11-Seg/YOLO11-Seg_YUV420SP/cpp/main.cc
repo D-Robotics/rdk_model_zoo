@@ -125,7 +125,6 @@ int main()
 {
     std::cout << "这个代码分割的mask的问题已经修复，请放心使用！" << std::endl;
     std::cout << "The problem with the split mask has been fixed, please use it with confidence!" << std::endl;
-    // return -1;
     std::ofstream debug;
     debug.open("proto.txt");
 
