@@ -24,14 +24,12 @@ limitations under the License.
 
 // D-Robotics *.bin 模型路径
 // Path of D-Robotics *.bin model.
-// #define MODEL_PATH "../../ptq_models/yolo11n_seg_bayese_640x640_nv12_modified.bin"
-#define MODEL_PATH "/root/Working/dataset/input/yolo11n_seg_bayese_640x640_nv12_modified.bin"
+#define MODEL_PATH "../../ptq_models/yolo11n_seg_bayese_640x640_nv12_modified.bin"
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
 // #define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/bus.jpg"
-// define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/zidane.jpg"
-#define TESR_IMG_PATH "/root/Working/dataset/input/tennis_images/tennis_1_frame_0003_1.jpg"
+#define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/zidane.jpg"
 
 // 前处理方式选择, 0:Resize, 1:LetterBox
 // Preprocessing method selection, 0: Resize, 1: LetterBox
@@ -45,7 +43,7 @@ limitations under the License.
 
 // 模型的类别数量, 默认80
 // Number of classes in the model, default is 80
-#define CLASSES_NUM 1
+#define CLASSES_NUM 80
 
 // NMS的阈值, 默认0.45
 // Non-Maximum Suppression (NMS) threshold, default is 0.45
@@ -493,10 +491,12 @@ int main()
 
     // 7.0.4 反量化
     // 7.0.4 Dequantization
+    begin_time = std::chrono::system_clock::now();
     std::vector<float> proto(H_4 * W_4 * MCES);
-    for (int w = 0; w < W_4; w++)
+
+    for (int h = 0; h < H_4; h++)
     {
-        for (int h = 0; h < H_4; h++)
+        for (int w = 0; w < W_4; w++)
         {
             for (int c = 0; c < MCES; c++)
             {
@@ -506,25 +506,7 @@ int main()
             }
         }
     }
-    // debug
-    for(int i=0; i < H_4 * W_4 * MCES; i++){
-        debug << proto[i] << "   ";
-    }
-
-    // debug
-    // for (int c = 0; c < MCES; c++)
-    // {
-    //     for (int h = 0; h < H_4; h++)
-    //     {
-    //         for (int w = 0; w < W_4; w++)
-    //         {
-    //             int index = (h  * MCES) + (w * H_4 * MCES) + c;
-    //             debug << proto[index] << "   ";
-    //         }
-    //         debug << std::endl;
-    //     }
-    //     debug << "\n\n\n" <<std::endl;
-    // }
+    std::cout << "\033[31m Proto dequantization time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
 
     // 7.1 小目标特征图
     // 7.1 Small Object Feature Map
@@ -943,11 +925,20 @@ int main()
         }
     }
 
+    // 现在开始掩膜处理，记录开始时间
+    begin_time = std::chrono::system_clock::now();
+
     // 9. 进行绘制
     // 9. Drawing
     // 使用已有的rdk_colors变量
     std::vector<cv::Scalar>& colors = rdk_colors;
 
+    // 预分配掩膜矩阵内存
+    std::vector<cv::Mat> all_masks;
+    std::vector<cv::Rect> all_rois;
+    std::vector<int> all_cls_ids;
+
+    // 首先收集所有需要处理的掩膜和矩形框
     for (int cls_id = 0; cls_id < CLASSES_NUM; cls_id++)
     {
         for (int i = 0; i < nms_bboxes[cls_id].size(); i++)
@@ -974,63 +965,95 @@ int main()
             if (x1 + mask_w > input_W || y1 + mask_h > input_H)
                 continue;
 
-            // 创建掩码矩阵
-            cv::Mat mask = cv::Mat::zeros(mask_h, mask_w, CV_32F);
-
+            // 将需要处理的信息保存起来
+            all_cls_ids.push_back(cls_id);
+            all_rois.push_back(cv::Rect(static_cast<int>(x1), static_cast<int>(y1), mask_w, mask_h));
+            
             // 获取掩码系数
             std::vector<float>& mask_coeffs = nms_maskes[cls_id][i];
-
-            // 加载原型矩阵并应用掩码系数
+            
+            // 创建掩码矩阵
+            cv::Mat mask = cv::Mat::zeros(mask_h, mask_w, CV_32F);
+            
+            // 局部缓存proto数组索引，减少重复计算
+            std::vector<int> proto_indices(mask_h * mask_w * MCES, -1);
+            
+            // 预计算每个位置对应的原型矩阵索引
             for (int h = 0; h < mask_h; h++) {
                 for (int w = 0; w < mask_w; w++) {
-                    float val = 0.0f;
-                    
                     // 确定原型矩阵中的位置
                     int mask_y = static_cast<int>((h + y1) / 4);
                     int mask_x = static_cast<int>((w + x1) / 4);
                     
                     if (mask_y < H_4 && mask_x < W_4) {
-                        // 计算掩码值
                         for (int c = 0; c < MCES; c++) {
-                            // 正确获取proto数据
-                            int index = (mask_y * W_4 * MCES) + (mask_x * MCES) + c;
-                            // 使用之前计算好的proto数组，而不是从output中获取
-                            float proto_data = proto[index];
-                            val += mask_coeffs[c] * proto_data;
+                            int idx = h * mask_w * MCES + w * MCES + c;
+                            proto_indices[idx] = (mask_y * W_4 * MCES) + (mask_x * MCES) + c;
                         }
-                        
-                        // 应用Sigmoid激活函数
-                        mask.at<float>(h, w) = 1.0f / (1.0f + std::exp(-val));
                     }
                 }
             }
 
+            // 使用OpenMP并行处理掩码计算
+            #pragma omp parallel for collapse(2)
+            for (int h = 0; h < mask_h; h++) {
+                for (int w = 0; w < mask_w; w++) {
+                    float val = 0.0f;
+                    
+                    // 使用预计算的索引获取proto数据
+                    for (int c = 0; c < MCES; c++) {
+                        int idx = h * mask_w * MCES + w * MCES + c;
+                        int proto_idx = proto_indices[idx];
+                        
+                        if (proto_idx >= 0) {
+                            val += mask_coeffs[c] * proto[proto_idx];
+                        }
+                    }
+                    
+                    // 应用Sigmoid激活函数
+                    mask.at<float>(h, w) = 1.0f / (1.0f + std::exp(-val));
+                }
+            }
+            
             // 应用阈值获取二值掩码
             cv::Mat binary_mask;
             cv::threshold(mask, binary_mask, 0.5, 1.0, cv::THRESH_BINARY);
             binary_mask.convertTo(binary_mask, CV_8U, 255);
             
-            // 应用高斯模糊平滑边缘
-            cv::GaussianBlur(binary_mask, binary_mask, cv::Size(7, 7), 0);
-
-            // 创建彩色掩码
-            cv::Mat color_mask = cv::Mat::zeros(mask_h, mask_w, CV_8UC3);
-            color_mask.setTo(cv::Scalar(colors[cls_id % colors.size()][0], colors[cls_id % colors.size()][1], colors[cls_id % colors.size()][2]));
+            // 应用高斯模糊平滑边缘 (减小模糊核大小以提高性能)
+            cv::GaussianBlur(binary_mask, binary_mask, cv::Size(5, 5), 0);
             
-            // 将掩码应用于颜色
-            cv::Mat color_instance_mask;
-            cv::bitwise_and(color_mask, color_mask, color_instance_mask, binary_mask);
-            
-            // 确保ROI有效
-            if (x1 >= 0 && y1 >= 0 && x1 + mask_w <= input_W && y1 + mask_h <= input_H) {
-                // 将掩码复制到零图像上的正确位置
-                cv::Rect roi(static_cast<int>(x1), static_cast<int>(y1), mask_w, mask_h);
-                cv::Mat zeros_roi = zeros(roi);
+            // 保存处理好的掩膜
+            all_masks.push_back(binary_mask);
+        }
+    }
+    
+    // 单独一步应用所有掩膜，避免频繁地修改zeros图像
+    #pragma omp parallel for
+    for (int i = 0; i < all_masks.size(); i++) {
+        int cls_id = all_cls_ids[i];
+        cv::Rect roi = all_rois[i];
+        cv::Mat binary_mask = all_masks[i];
+        
+        // 创建彩色掩码
+        cv::Mat color_mask = cv::Mat::zeros(roi.height, roi.width, CV_8UC3);
+        color_mask.setTo(cv::Scalar(colors[cls_id % colors.size()][0], colors[cls_id % colors.size()][1], colors[cls_id % colors.size()][2]));
+        
+        // 将掩码应用于颜色
+        cv::Mat color_instance_mask;
+        cv::bitwise_and(color_mask, color_mask, color_instance_mask, binary_mask);
+        
+        // 确保ROI有效
+        if (roi.x >= 0 && roi.y >= 0 && roi.x + roi.width <= input_W && roi.y + roi.height <= input_H) {
+            // 将掩码复制到零图像上的正确位置
+            cv::Mat zeros_roi = zeros(roi);
+            #pragma omp critical
+            {
                 cv::addWeighted(zeros_roi, 1.0, color_instance_mask, 0.7, 0, zeros_roi);
             }
         }
     }
-
+    
     // 将掩码覆盖到检测图上创建最终结果图
     cv::Mat final_result;
     cv::addWeighted(img_display, 0.7, zeros, 0.3, 0, final_result);
