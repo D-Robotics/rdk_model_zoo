@@ -24,12 +24,14 @@ limitations under the License.
 
 // D-Robotics *.bin 模型路径
 // Path of D-Robotics *.bin model.
-#define MODEL_PATH "../../ptq_models/yolo11n_seg_bayese_640x640_nv12_modified.bin"
+// #define MODEL_PATH "../../ptq_models/yolo11n_seg_bayese_640x640_nv12_modified.bin"
+#define MODEL_PATH "/root/Working/dataset/input/yolo11n_seg_bayese_640x640_nv12_modified.bin"
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
 // #define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/bus.jpg"
-#define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/zidane.jpg"
+// define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/zidane.jpg"
+#define TESR_IMG_PATH "/root/Working/dataset/input/tennis_images/tennis_1_frame_0003_1.jpg"
 
 // 前处理方式选择, 0:Resize, 1:LetterBox
 // Preprocessing method selection, 0: Resize, 1: LetterBox
@@ -43,7 +45,7 @@ limitations under the License.
 
 // 模型的类别数量, 默认80
 // Number of classes in the model, default is 80
-#define CLASSES_NUM 80
+#define CLASSES_NUM 1
 
 // NMS的阈值, 默认0.45
 // Non-Maximum Suppression (NMS) threshold, default is 0.45
@@ -123,9 +125,9 @@ std::vector<cv::Scalar> rdk_colors = {
 
 int main()
 {
-    std::cout << "这个代码还有一些问题，分割的mask无法正确处理，如果您有idea，欢迎PR！" << std::endl;
-    std::cout << "There are still some problems with this code, the split mask cannot be handled correctly, if you have an idea, welcome PR!" << std::endl;
-    return -1;
+    std::cout << "这个代码分割的mask的问题已经修复，请放心使用！" << std::endl;
+    std::cout << "The problem with the split mask has been fixed, please use it with confidence!" << std::endl;
+    // return -1;
     std::ofstream debug;
     debug.open("proto.txt");
 
@@ -498,8 +500,8 @@ int main()
         {
             for (int c = 0; c < MCES; c++)
             {
-                // int index = (h * W_4 * MCES) + (w * MCES) + c;
-                int index = (w * H_4 * MCES) + (h  * MCES) + c;
+                // 注意: 索引计算需要修正，根据tensor的存储布局 (h, w, c)
+                int index = (h * W_4 * MCES) + (w * MCES) + c;
                 proto[index] = static_cast<float>(proto_data[index]) * proto_scale_data;
             }
         }
@@ -592,6 +594,7 @@ int main()
             {
                 s_cls_raw += CLASSES_NUM;
                 s_bbox_raw += REG * 4;
+                s_mces_raw += MCES;
                 continue;
             }
 
@@ -622,6 +625,7 @@ int main()
             {
                 s_cls_raw += CLASSES_NUM;
                 s_bbox_raw += REG * 4;
+                s_mces_raw += MCES;
                 continue;
             }
 
@@ -636,39 +640,13 @@ int main()
             bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
             scores[cls_id].push_back(score);
 
-            // Mask的处理
-            // int x1_corp = int(x1 * X_SCALE_CORP);
-            // int x2_corp = int(x2 * X_SCALE_CORP);
-            // int y1_corp = int(y1 * Y_SCALE_CORP);
-            // int y2_corp = int(y2 * Y_SCALE_CORP);
-            // cv::Mat mask(y2 - y1, x2 - x1, CV_8UC1, cv::Scalar(0));
-            // for (int y = y1_corp; y < y2_corp; y++)
-            // {
-            //     for (int x = x1_corp; x < x2_corp; x++)
-            //     {
-            //         float sum = 0.0;
-            //         for (int i = 0; i < MCES; i++)
-            //         {
-            //             int index = y * W_4 * MCES + x * MCES + i;
-            //             sum += proto[index] * float(cur_s_mces_raw[i]) * s_mces_scale[i];
-            //             if (sum > 0.5)
-            //             {
-            //                 mask.at<uint8_t>(y - y1_corp, x - x1_corp) = 1;
-            //                 break;
-            //             }
-            //         }
-            //         // if (sum > 0.5)
-            //         // {
-            //         //     mask.at<uint8_t>(y - y1_corp, x - x1_corp) = 1;
-            //         // }
-            //     }
-            // }
-            std::vector<float> mc(MCES);
+            // 提取掩码系数并反量化
+            std::vector<float> mask_coeffs(MCES);
             for (int i = 0; i < MCES; i++)
             {
-                mc[i] = float(cur_s_mces_raw[i]) * s_mces_scale[i];
+                mask_coeffs[i] = float(cur_s_mces_raw[i]) * s_mces_scale[i];
             }
-            maskes[cls_id].push_back(mc);
+            maskes[cls_id].push_back(mask_coeffs);
 
             s_cls_raw += CLASSES_NUM;
             s_bbox_raw += REG * 4;
@@ -745,6 +723,7 @@ int main()
             {
                 m_cls_raw += CLASSES_NUM;
                 m_bbox_raw += REG * 4;
+                m_mces_raw += MCES;
                 continue;
             }
 
@@ -775,6 +754,7 @@ int main()
             {
                 m_cls_raw += CLASSES_NUM;
                 m_bbox_raw += REG * 4;
+                m_mces_raw += MCES;
                 continue;
             }
 
@@ -789,42 +769,13 @@ int main()
             bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
             scores[cls_id].push_back(score);
 
-            // // Mask的处理
-            // int x1_corp = int(x1 * X_SCALE_CORP);
-            // int x2_corp = int(x2 * X_SCALE_CORP);
-            // int y1_corp = int(y1 * Y_SCALE_CORP);
-            // int y2_corp = int(y2 * Y_SCALE_CORP);
-            // cv::Mat mask(y2 - y1, x2 - x1, CV_8UC1, cv::Scalar(0));
-            // for (int y = y1_corp; y < y2_corp; y++)
-            // {
-            //     for (int x = x1_corp; x < x2_corp; x++)
-            //     {
-            //         float sum = 0.0;
-            //         for (int i = 0; i < MCES; i++)
-            //         {
-            //             int index = y * W_4 * MCES + x * MCES + i;
-            //             sum += proto[index] * float(cur_m_mces_raw[i]) * m_mces_scale[i];
-            //             if (sum > 0.5)
-            //             {
-            //                 mask.at<uint8_t>(y - y1_corp, x - x1_corp) = 1;
-            //                 break;
-            //             }
-            //         }
-            //         // if (sum > 0.5)
-            //         // {
-            //         //     mask.at<uint8_t>(y - y1_corp, x - x1_corp) = 1;
-            //         // }
-            //     }
-            // }
-
-            // maskes[cls_id].push_back(mask);
-
-            std::vector<float> mc(MCES);
+            // 提取掩码系数并反量化
+            std::vector<float> mask_coeffs(MCES);
             for (int i = 0; i < MCES; i++)
             {
-                mc[i] = float(cur_m_mces_raw[i]) * m_mces_scale[i];
+                mask_coeffs[i] = float(cur_m_mces_raw[i]) * m_mces_scale[i];
             }
-            maskes[cls_id].push_back(mc);
+            maskes[cls_id].push_back(mask_coeffs);
 
             m_cls_raw += CLASSES_NUM;
             m_bbox_raw += REG * 4;
@@ -870,17 +821,6 @@ int main()
     auto *l_mces_raw = reinterpret_cast<int32_t *>(output[order[8]].sysMem[0].virAddr);
     auto *l_mces_scale = reinterpret_cast<float *>(output[order[8]].properties.scale.scaleData);
 
-    // debug
-    for (int i=0; i<H_32*W_32*MCES; i++){
-        l_mces << l_mces_raw[i] << ", ";
-    }
-    l_mces << std::endl;
-    std::cout << "\nl_mces: ";
-    for(int i=0; i<MCES;i++){
-        std::cout << std::fixed << std::setprecision(10)<< l_mces_scale[i] << ", ";
-    }
-    std::cout << std::endl << std::endl;
-
     for (int h = 0; h < H_32; h++)
     {
         for (int w = 0; w < W_32; w++)
@@ -912,6 +852,7 @@ int main()
             {
                 l_cls_raw += CLASSES_NUM;
                 l_bbox_raw += REG * 4;
+                l_mces_raw += MCES;
                 continue;
             }
 
@@ -942,6 +883,7 @@ int main()
             {
                 l_cls_raw += CLASSES_NUM;
                 l_bbox_raw += REG * 4;
+                l_mces_raw += MCES;
                 continue;
             }
 
@@ -956,21 +898,13 @@ int main()
             bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
             scores[cls_id].push_back(score);
 
-            // Mask的处理
-            std::vector<float> mc(MCES);
+            // 提取掩码系数并反量化
+            std::vector<float> mask_coeffs(MCES);
             for (int i = 0; i < MCES; i++)
             {
-                mc[i] = float(cur_l_mces_raw[i]) * l_mces_scale[i];
+                mask_coeffs[i] = float(cur_l_mces_raw[i]) * l_mces_scale[i];
             }
-            maskes[cls_id].push_back(mc);
-
-                        // // debug
-                        // std::cout << "mcs:" << std::endl;
-                        // for (int i = 0; i < MCES; i++)
-                        // {
-                        //     std::cout << mc[i] << " ";
-                        // }
-                        // std::cout << std::endl;
+            maskes[cls_id].push_back(mask_coeffs);
 
             l_cls_raw += CLASSES_NUM;
             l_bbox_raw += REG * 4;
@@ -978,127 +912,135 @@ int main()
         }
     }
 
-    // 7.4 对每一个类别进行NMS
-    // 7.4 NMS
-    std::vector<std::vector<int>> indices(CLASSES_NUM);
-    for (int i = 0; i < CLASSES_NUM; i++)
-    {
-        cv::dnn::NMSBoxes(bboxes[i], scores[i], SCORE_THRESHOLD, NMS_THRESHOLD, indices[i], 1.f, NMS_TOP_K);
-    }
-    std::cout << "\033[31m Post Process time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
+    cv::Mat img_display = resize_img.clone(); 
+    // 创建掩膜图像
+    cv::Mat zeros = cv::Mat::zeros(input_H, input_W, CV_8UC3);
+    // 创建最终合成图像（原图+掩膜）
+    cv::Mat result_overlay;
 
-    // 8. 渲染
-    // 8. Render
-    begin_time = std::chrono::system_clock::now();
-    cv::Mat zeros(img.size(), img.type(), cv::Scalar(0, 0, 0));
-
-    // debug
-    std::cout << "img (cols, rows, channels): (";
-    std::cout << img.rows << ", ";
-    std::cout << img.cols << ", ";
-    std::cout << img.channels() << ")" << std::endl;
-
-    std::cout << "zeros (cols, rows, channels): (";
-    std::cout << zeros.rows << ", ";
-    std::cout << zeros.cols << ", ";
-    std::cout << zeros.channels() << ")" << std::endl;
+    // 8. 使用OpenCV的NMS进行过滤
+    // 8. Use OpenCV's NMS for filtering
+    std::vector<std::vector<cv::Rect2d>> nms_bboxes(CLASSES_NUM);
+    std::vector<std::vector<float>> nms_scores(CLASSES_NUM);
+    std::vector<std::vector<std::vector<float>>> nms_maskes(CLASSES_NUM);
 
     for (int cls_id = 0; cls_id < CLASSES_NUM; cls_id++)
     {
-        // 8.1 每一个类别分别渲染
-        // 8.1 Render for each class
-        for (std::vector<int>::iterator it = indices[cls_id].begin(); it != indices[cls_id].end(); ++it)
+        if (bboxes[cls_id].size() == 0)
         {
-            // 8.2 获取基本的 bbox 信息
-            // 8.2 Get basic bbox information
-            // float x1 = (bboxes[cls_id][*it].x - x_shift) / x_scale;
-            // float y1 = (bboxes[cls_id][*it].y - y_shift) / y_scale;
-            // float x2 = x1 + (bboxes[cls_id][*it].width) / x_scale;
-            // float y2 = y1 + (bboxes[cls_id][*it].height) / y_scale;
-            int x1 = int((bboxes[cls_id][*it].x - x_shift) / x_scale);
-            int y1 = int((bboxes[cls_id][*it].y - y_shift) / y_scale);
-            x1 = std::max(0, x1);
-            y1 = std::max(0, y1);
-            int x2 = int(x1 + (bboxes[cls_id][*it].width) / x_scale);
-            int y2 = int(y1 + (bboxes[cls_id][*it].height) / y_scale);
-            x2 = std::min(int(img.cols - 1), x2);
-            y2 = std::min(int(img.rows - 1), y2);
-            float score = scores[cls_id][*it];
-            std::string name = object_names[cls_id % CLASSES_NUM];
+            continue;
+        }
 
-            // 8.3 绘制矩形
-            // 8.3 Draw rect
-            cv::rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), rdk_colors[cls_id % 20], LINE_SIZE);
+        // 创建原始检测结果的索引
+        std::vector<int> indices;
+        cv::dnn::NMSBoxes(bboxes[cls_id], scores[cls_id], SCORE_THRESHOLD, NMS_THRESHOLD, indices);
 
-            // 8.4 绘制字体
-            // 8.4 Draw text
-            std::string text = name + ": " + std::to_string(static_cast<int>(score * 100)) + "%";
-            cv::putText(img, text, cv::Point(x1, y1 - 5), cv::FONT_HERSHEY_SIMPLEX, FONT_SIZE, rdk_colors[(cls_id + 1) % 20], FONT_THICKNESS + 5, cv::LINE_AA);
-            cv::putText(img, text, cv::Point(x1, y1 - 5), cv::FONT_HERSHEY_SIMPLEX, FONT_SIZE, rdk_colors[cls_id % 20], FONT_THICKNESS, cv::LINE_AA);
+        for (const auto idx : indices)
+        {
+            nms_bboxes[cls_id].push_back(bboxes[cls_id][idx]);
+            nms_scores[cls_id].push_back(scores[cls_id][idx]);
+            nms_maskes[cls_id].push_back(maskes[cls_id][idx]);
+        }
+    }
 
-            // 8.5 打印检测信息
-            // 8.5 Print detection information
-            std::cout << std::endl;
-            std::cout << "(" << x1 << " " << y1 << " " << x2 << " " << y2 << "): \t" << text << std::endl;
+    // 9. 进行绘制
+    // 9. Drawing
+    // 使用已有的rdk_colors变量
+    std::vector<cv::Scalar>& colors = rdk_colors;
 
-            // 8.6 对Mask进行合成和缩放 [TODO: GPU 加速]
-            int x1_corp = int(bboxes[cls_id][*it].x * X_SCALE_CORP);
-            int y1_corp = int(bboxes[cls_id][*it].y * X_SCALE_CORP);
-            int x2_corp = int((bboxes[cls_id][*it].x + bboxes[cls_id][*it].width) * Y_SCALE_CORP);
-            int y2_corp = int((bboxes[cls_id][*it].y + bboxes[cls_id][*it].height) * Y_SCALE_CORP);
+    for (int cls_id = 0; cls_id < CLASSES_NUM; cls_id++)
+    {
+        for (int i = 0; i < nms_bboxes[cls_id].size(); i++)
+        {
+            // 绘制边界框
+            // Draw bounding box
+            cv::rectangle(img_display, nms_bboxes[cls_id][i], cv::Scalar(colors[cls_id % colors.size()][0], colors[cls_id % colors.size()][1], colors[cls_id % colors.size()][2]), 2);
+            cv::putText(img_display, object_names[cls_id] + ": " + std::to_string(nms_scores[cls_id][i]).substr(0, 5), cv::Point(nms_bboxes[cls_id][i].x, nms_bboxes[cls_id][i].y - 2), cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(colors[cls_id % colors.size()][0], colors[cls_id % colors.size()][1], colors[cls_id % colors.size()][2]), 2);
 
-            std::cout << "x1_corp: " << x1_corp << ", x2_corp: " << x2_corp << ", y1_corp: " << y1_corp << ", y2_corp: " << y2_corp << std::endl;
-            cv::Mat mask(y2 - y1, x2 - x1, CV_8UC1, cv::Scalar(0));
-            // debug
-            std::cout << "mcs:" << std::endl;
-            for (int i = 0; i < MCES; i++)
-            {
-                std::cout << maskes[cls_id][*it][i] << " ";
-            }
-            std::cout << std::endl;
-            double a[] = {-0.5078671, -1.7792891, 0.22384067, -0.031085026, 0.040541567, 0.42481288, 0.004164445, -0.019916827, 0.07834157, -1.5329591, -0.6799558, -1.3593721, 0.27600715, 0.7392442, 0.40653914, 0.094646804, -0.16810837, 0.85772616, -0.20207602, 0.0013240166, -0.06012171, 0.04421918, -0.023318088, 0.16049749, -0.07510812, -0.57381636, -0.27384806, -1.015032, 0.10577665, -1.3185172, -0.8278994, -0.019991808,};
+            // 应用掩码
+            // Apply mask
+            float x1 = std::max(0.0, nms_bboxes[cls_id][i].x);
+            float y1 = std::max(0.0, nms_bboxes[cls_id][i].y);
+            float x2 = std::min(static_cast<double>(input_W), nms_bboxes[cls_id][i].x + nms_bboxes[cls_id][i].width);
+            float y2 = std::min(static_cast<double>(input_H), nms_bboxes[cls_id][i].y + nms_bboxes[cls_id][i].height);
 
-            
-            for (int x = x1_corp; x < x2_corp; x++)
-            {
-                for (int y = y1_corp; y < y2_corp; y++)
-                {
-                    float sum = 0.0;
-                    for (int i = 0; i < MCES; i++)
-                    {
-                        // int index = y * W_4 * MCES + x * MCES + i;
-                        int index = (x * H_4 * MCES) + (y  * MCES) + i;
-                        // std::cout << proto[index] << " ";
-                        // sum += proto[index] * maskes[cls_id][*it][i];
-                        sum += a[i] * proto[index];
-                    }
-                    if (sum > 0.0)
-                    {
-                        mask.at<uint8_t>(y - y1_corp, x - x1_corp) = 1;
+            int mask_h = static_cast<int>(y2 - y1);
+            int mask_w = static_cast<int>(x2 - x1);
+
+            if (mask_h <= 0 || mask_w <= 0)
+                continue;
+
+            // 确保ROI不超出图像边界
+            if (x1 + mask_w > input_W || y1 + mask_h > input_H)
+                continue;
+
+            // 创建掩码矩阵
+            cv::Mat mask = cv::Mat::zeros(mask_h, mask_w, CV_32F);
+
+            // 获取掩码系数
+            std::vector<float>& mask_coeffs = nms_maskes[cls_id][i];
+
+            // 加载原型矩阵并应用掩码系数
+            for (int h = 0; h < mask_h; h++) {
+                for (int w = 0; w < mask_w; w++) {
+                    float val = 0.0f;
+                    
+                    // 确定原型矩阵中的位置
+                    int mask_y = static_cast<int>((h + y1) / 4);
+                    int mask_x = static_cast<int>((w + x1) / 4);
+                    
+                    if (mask_y < H_4 && mask_x < W_4) {
+                        // 计算掩码值
+                        for (int c = 0; c < MCES; c++) {
+                            // 正确获取proto数据
+                            int index = (mask_y * W_4 * MCES) + (mask_x * MCES) + c;
+                            // 使用之前计算好的proto数组，而不是从output中获取
+                            float proto_data = proto[index];
+                            val += mask_coeffs[c] * proto_data;
+                        }
+                        
+                        // 应用Sigmoid激活函数
+                        mask.at<float>(h, w) = 1.0f / (1.0f + std::exp(-val));
                     }
                 }
             }
-            cv::Mat mask_resized;
-            cv::resize(mask, mask_resized, cv::Size(x2 - x1, y2 - y1));
 
-            // debug
-            std::cout << "mask_resized (cols, rows, channels): (";
-            std::cout << mask_resized.rows << ", ";
-            std::cout << mask_resized.cols << ", ";
-            std::cout << mask_resized.channels() << ")" << std::endl;
+            // 应用阈值获取二值掩码
+            cv::Mat binary_mask;
+            cv::threshold(mask, binary_mask, 0.5, 1.0, cv::THRESH_BINARY);
+            binary_mask.convertTo(binary_mask, CV_8U, 255);
+            
+            // 应用高斯模糊平滑边缘
+            cv::GaussianBlur(binary_mask, binary_mask, cv::Size(7, 7), 0);
 
-            std::cout << "x1, y1, x2, y2: (" << x1 << ", " << y1 << ", " << x2 << ", " << y2 << ")" << std::endl;
-            std::cout << "(x2 - x1, y2 - y1)" << ": (" << (x2 - x1) << ", " << (y2 - y1) << ")" << std::endl;
-
-            zeros(cv::Rect(x1, y1, x2 - x1, y2 - y1)).setTo(rdk_colors[(cls_id + 21) % 20], mask_resized == 1);
+            // 创建彩色掩码
+            cv::Mat color_mask = cv::Mat::zeros(mask_h, mask_w, CV_8UC3);
+            color_mask.setTo(cv::Scalar(colors[cls_id % colors.size()][0], colors[cls_id % colors.size()][1], colors[cls_id % colors.size()][2]));
+            
+            // 将掩码应用于颜色
+            cv::Mat color_instance_mask;
+            cv::bitwise_and(color_mask, color_mask, color_instance_mask, binary_mask);
+            
+            // 确保ROI有效
+            if (x1 >= 0 && y1 >= 0 && x1 + mask_w <= input_W && y1 + mask_h <= input_H) {
+                // 将掩码复制到零图像上的正确位置
+                cv::Rect roi(static_cast<int>(x1), static_cast<int>(y1), mask_w, mask_h);
+                cv::Mat zeros_roi = zeros(roi);
+                cv::addWeighted(zeros_roi, 1.0, color_instance_mask, 0.7, 0, zeros_roi);
+            }
         }
     }
-    cv::Mat add_result;
-    cv::addWeighted(img, 1.0, zeros, 0.3, 0, add_result);
+
+    // 将掩码覆盖到检测图上创建最终结果图
+    cv::Mat final_result;
+    cv::addWeighted(img_display, 0.7, zeros, 0.3, 0, final_result);
+
+    // 创建三图并排的结果图：检测图、掩膜图、最终结果图
     cv::Mat concatenated_result;
-    cv::hconcat(img, zeros, concatenated_result);
-    cv::hconcat(concatenated_result, add_result, concatenated_result);
-    std::cout << "\033[31m Draw Result time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
+    cv::hconcat(img_display, zeros, concatenated_result);  // 先拼接检测图和掩膜图
+    cv::hconcat(concatenated_result, final_result, concatenated_result);  // 再拼接最终结果图
+    
+    std::cout << "\033[31m Mask Result time = " << std::fixed << std::setprecision(2) << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin_time).count() / 1000.0 << " ms\033[0m" << std::endl;
 
     // 9. 保存
     // 9. Save
