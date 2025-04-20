@@ -24,12 +24,11 @@ limitations under the License.
 
 // D-Robotics *.bin 模型路径
 // Path of D-Robotics *.bin model.
-#define MODEL_PATH "../../ptq_models/yolo11n_seg_bayese_640x640_nv12_modified.bin"
+#define MODEL_PATH "yolo11n_seg_bayese_640x640_nv12_modified.bin"
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
-// #define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/bus.jpg"
-#define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/zidane.jpg"
+#define TESR_IMG_PATH "../../../../../../resource/datasets/COCO2017/assets/bus.jpg"
 
 // 前处理方式选择, 0:Resize, 1:LetterBox
 // Preprocessing method selection, 0: Resize, 1: LetterBox
@@ -43,7 +42,7 @@ limitations under the License.
 
 // 模型的类别数量, 默认80
 // Number of classes in the model, default is 80
-#define CLASSES_NUM 80
+#define CLASSES_NUM 1
 
 // NMS的阈值, 默认0.45
 // Non-Maximum Suppression (NMS) threshold, default is 0.45
@@ -125,11 +124,6 @@ int main()
 {
     std::cout << "这个代码分割的mask的问题已经修复，请放心使用！" << std::endl;
     std::cout << "The problem with the split mask has been fixed, please use it with confidence!" << std::endl;
-    std::ofstream debug;
-    debug.open("proto.txt");
-
-    std::ofstream l_mces;
-    l_mces.open("l_mces.txt");
     // 0. 加载bin模型
     auto begin_time = std::chrono::system_clock::now();
     hbPackedDNNHandle_t packed_dnn_handle;
@@ -1081,8 +1075,6 @@ int main()
     // 12. 释放模型
     // 12. Release model
     hbDNNRelease(packed_dnn_handle);
-
-    debug.close();
 
     return 0;
 }
