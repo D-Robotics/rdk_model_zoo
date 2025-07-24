@@ -37,7 +37,7 @@ def main():
             if not name.endswith("json"):
                 continue
             try:
-                coco_true = COCO(annotation_file='eval/instances_val2017.json')  # 标准数据集（真值）
+                coco_true = COCO(annotation_file=opt.truth)  # 标准数据集（真值）
                 coco_pre = coco_true.loadRes(os.path.join(opt.json, name))  # 预测数据集（预测值）
                 coco_evaluator = COCOeval(cocoGt=coco_true, cocoDt=coco_pre, iouType="bbox")    #计算bbox值
                 coco_evaluator.evaluate()
