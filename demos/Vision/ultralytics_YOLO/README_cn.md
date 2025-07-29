@@ -26,9 +26,7 @@ Ultralytics YOLO Version: >= 8.3.0
 
 ![](source/imgs/ultralytics_yolo_detect_performance_comparison.png)
 
-
 YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由华盛顿大学的约瑟夫-雷德蒙(Joseph Redmon)和阿里-法哈迪(Ali Farhadi)开发. YOLO 于 2015 年推出,因其高速度和高精确度而迅速受到欢迎. 
-
 
  - 2016 年发布的YOLOv2 通过纳入批量归一化、锚框和维度集群改进了原始模型. 
 2018 年推出的YOLOv3 使用更高效的骨干网络、多锚和空间金字塔池进一步增强了模型的性能. 
@@ -59,31 +57,31 @@ YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由�
 ### 实例分割 (Instance Segmentation)
 ![](source/imgs/instance-segmentation-examples.jpg)
 ```bash
-YOLOv8 - Seg: n, s, m, l, x
-YOLOv9 - Seg:          c, e
-YOLO11 - Seg: n, s, m, l, x
+YOLOv8 - Seg, Size: n, s, m, l, x
+YOLOv9 - Seg, Size:          c, e
+YOLO11 - Seg, Size: n, s, m, l, x
 ```
 
 ### 姿态估计 (Pose Estimation)
 ![](source/imgs/pose-estimation-examples.jpg)
 ```bash
-YOLOv8 - Pose: n, s, m, l, x
-YOLO11 - Pose: n, s, m, l, x
+YOLOv8 - Pose, Size: n, s, m, l, x
+YOLO11 - Pose, Size: n, s, m, l, x
 ```
 
 ### 图像分类
 ![](source/imgs/image-classification-examples.jpg)
 ```bash
 # TODO
-YOLOv8 - CLS: n, s, m, l, x
-YOLO11 - CLS: n, s, m, l, x
+YOLOv8 - CLS, Size: n, s, m, l, x
+YOLO11 - CLS, Size: n, s, m, l, x
 ```
 
 ### 定向边框对象检测 (Oriented Bounding Boxes Object Detection)
 ![](source/imgs/ships-detection-using-obb.jpg)
 ```bash
-YOLOv8 - OBB: n, s, m, l, x
-YOLO11 - OBB: n, s, m, l, x
+YOLOv8 - OBB, Size: n, s, m, l, x
+YOLO11 - OBB, Size: n, s, m, l, x
 ```
 
 

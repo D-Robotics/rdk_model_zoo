@@ -26,22 +26,14 @@ import types
 import os
 
 def main():
-    p = "pt"
-    for name in os.listdir(p):
-        if name.endswith(".pt"):
-            print(f"[Cauchy] Processing {name}")
-            m = YOLO(os.path.join(p, name))
-            modelZooOptimizer(m.model.model)
-            m.export(imgsz=640, format='onnx', simplify=False, opset=11)
+    # Init Ultralytics YOLO Model
+    m = YOLO("pt_s/yolo12x.pt")
 
-    # # Init Ultralytics YOLO Model
-    # m = YOLO("pt_s/yolo12x.pt")
+    # Replace some efficient modules
+    modelZooOptimizer(m.model.model)
 
-    # # Replace some efficient modules
-    # modelZooOptimizer(m.model.model)
-
-    # # Export to ONNX
-    # m.export(imgsz=640, format='onnx', simplify=False, opset=11)
+    # Export to ONNX
+    m.export(imgsz=640, format='onnx', simplify=False, opset=11)
 
 def modelZooOptimizer(model):  # Monkey Patch
     for name, child in model.named_children():
