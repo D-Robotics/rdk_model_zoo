@@ -69,6 +69,12 @@ def main():
     opt = parser.parse_args()
     logger.info(opt)
 
+    # quick demo
+    if not os.path.exists(opt.model_path):
+        print(f"file {opt.model_path} does not exist. downloading ...")
+        os.system("wget -c https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolov13n_detect_bayese_640x640_nv12.bin")
+        opt.model_path = 'yolov13n_detect_bayese_640x640_nv12.bin'
+
     # 实例化
     model = Ultralytics_YOLO_Detect_Bayese_YUV420SP(
         model_path=opt.model_path,

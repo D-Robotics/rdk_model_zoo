@@ -1,6 +1,6 @@
 #!/user/bin/env python
 
-# Copyright (c) 2024，WuChao D-Robotics.
+# Copyright (c) 2024, WuChao D-Robotics.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 # 注意: 此程序在RDK板端端运行
 # Attention: This program runs on RDK board.
 
+import os
 import cv2
 import numpy as np
 from scipy.special import softmax
@@ -57,6 +58,12 @@ def main():
                         help='--strides 8, 16, 32')
     opt = parser.parse_args()
     logger.info(opt)
+
+    # quick demo
+    if not os.path.exists(opt.model_path):
+        print(f"file {opt.model_path} does not exist. downloading ...")
+        os.system("wget -c https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11n_pose_bayese_640x640_nv12.bin")
+        opt.model_path = 'yolo11n_pose_bayese_640x640_nv12.bin'
 
     # 实例化
     model = Ultralytics_YOLO_Pose_Bayese_YUV420SP(

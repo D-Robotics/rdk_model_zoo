@@ -2,19 +2,15 @@
 
 # Ultralytics YOLO: 你只需要看一次
 
+## Summary
 ```bash
 D-Robotics OpenExplore(RDK X5, Bayes-e BPU) Version: >= 1.2.8
 Ultralytics YOLO Version: >= 8.3.0
 ```
 
-## Contributors
+## Suggestions
 
- - Cauchy: 吴超
- - SkyXZ: 熊旗
-
-## 阅读建议
-
-1. 阅读本文前, 请您确保您已经掌握基本的Linux系统使用, 有一定的机器学习或深度学习基础知识, 掌握基本的Python或者C/C++开发的基础知识.
+1. 阅读本文前, 请您确保您已经掌握基本的Linux系统使用, 有一定的机器学习或深度学习基础知识, 掌握基本的Python或者C/C++开发的基础知识. 任何 `No such file or directory`, `No module named "xxx"`, `command not found`, `permission denied`, `SyntaxError: invalid syntax` 等报错请仔细检查, 请勿逐条复制运行.
 
 2. 请确保您已经通读了RDK手册的前3章, 同时也体验了OpenExplore包和BPU算法工具链手册的基础章节, 成功使用OpenExplore包转化过1～2个您喜欢的预置的ONNX模型.
 
@@ -22,27 +18,27 @@ Ultralytics YOLO Version: >= 8.3.0
 
 4. 请注意, Ultralytics YOLO采用AGPL-3.0协议, 请遵循相关协议约定使用, 更多请参考: [https://www.ultralytics.com/license](https://www.ultralytics.com/license)
 
-## YOLO介绍
+## Introduction to YOLO
 
 ![](source/imgs/ultralytics_yolo_detect_performance_comparison.png)
 
-YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由华盛顿大学的约瑟夫-雷德蒙(Joseph Redmon)和阿里-法哈迪(Ali Farhadi)开发. YOLO 于 2015 年推出,因其高速度和高精确度而迅速受到欢迎. 
-
+ - YOLO(You Only Look Once)是一种流行的物体检测和图像分割模型,由华盛顿大学的约瑟夫-雷德蒙(Joseph Redmon)和阿里-法哈迪(Ali Farhadi)开发. YOLO 于 2015 年推出,因其高速度和高精确度而迅速受到欢迎. 
  - 2016 年发布的YOLOv2 通过纳入批量归一化、锚框和维度集群改进了原始模型. 
-2018 年推出的YOLOv3 使用更高效的骨干网络、多锚和空间金字塔池进一步增强了模型的性能. 
- - YOLOv4于 2020 年发布, 引入了 Mosaic 数据增强、新的无锚检测头和新的损失函数等创新技术. 
- - YOLOv5进一步提高了模型的性能, 并增加了超参数优化、集成实验跟踪和自动导出为常用导出格式等新功能. 
- - YOLOv6于 2022 年由美团开源, 目前已用于该公司的许多自主配送机器人. 
- - YOLOv7增加了额外的任务, 如 COCO 关键点数据集的姿势估计. 
- - YOLOv8是YOLO 的最新版本, 由Ultralytics 提供. YOLOv8支持全方位的视觉 AI 任务, 包括检测、分割、姿态估计、跟踪和分类. 这种多功能性使用户能够在各种应用和领域中利用YOLOv8 的功能. 
+ - 2018 年推出的YOLOv3 使用更高效的骨干网络、多锚和空间金字塔池进一步增强了模型的性能. 
+ - YOLOv4 于 2020 年发布, 引入了 Mosaic 数据增强、新的无锚检测头和新的损失函数等创新技术. 
+ - YOLOv5 进一步提高了模型的性能, 并增加了超参数优化、集成实验跟踪和自动导出为常用导出格式等新功能. 
+ - YOLOv6 于 2022 年由美团开源, 目前已用于该公司的许多自主配送机器人. 
+ - YOLOv7 增加了额外的任务, 如 COCO 关键点数据集的姿势估计. 
+ - YOLOv8 是YOLO 的最新版本, 由Ultralytics 提供. YOLOv8支持全方位的视觉 AI 任务, 包括检测、分割、姿态估计、跟踪和分类. 这种多功能性使用户能够在各种应用和领域中利用YOLOv8 的功能. 
  - YOLOv9 引入了可编程梯度信息(PGI) 和广义高效层聚合网络(GELAN)等创新方法. 
- - YOLOv10是由清华大学的研究人员使用Ultralytics Python 软件包创建的. 该版本通过引入端到端头(End-to-End head),消除了非最大抑制(NMS)要求, 实现了实时目标检测的进步. 
- - YOLO11 NEW 🚀: Ultralytics的最新YOLO模型在多个任务上实现了最先进的（SOTA）性能. 
- - YOLO12构建以注意力为核心的YOLO框架, 通过创新方法和架构改进, 打破CNN模型在YOLO系列中的主导地位, 实现具有快速推理速度和更高检测精度的实时目标检测. 
+ - YOLOv10 是由清华大学的研究人员使用Ultralytics Python 软件包创建的. 该版本通过引入端到端头(End-to-End head),消除了非最大抑制(NMS)要求, 实现了实时目标检测的进步. 
+ - YOLO11 NEW 🚀: Ultralytics的最新YOLO模型在多个任务上实现了最先进的(SOTA)性能. 
+ - YOLO12 构建以注意力为核心的YOLO框架, 通过创新方法和架构改进, 打破CNN模型在YOLO系列中的主导地位, 实现具有快速推理速度和更高检测精度的实时目标检测. 
+ - YOLO13 是清华大学智能媒体与认知实验室推出的新一代实时目标检测模型, 具备卓越的性能与效率. 其核心技术包括 HyperACE(基于超图的自适应相关性增强), FullPAD(全管道聚合与分布范式)以及轻量级卷积替换. 轻量化设计则在保持感受野的同时减少计算量, 加快推理速度. 实验表明, YOLO13 在 COCO 数据集上表现优异, 尤其在精度、速度和参数效率方面优于现有模型. 
 
 ## Support Models
 
-### 目标检测 (Obeject Detection）
+### 目标检测 (Obeject Detection)
 ![](source/imgs/object-detection-examples.jpg)
 ```bash
 - YOLOv5u - Detect, Size: n, s, m, l, x
@@ -69,10 +65,9 @@ YOLOv8 - Pose, Size: n, s, m, l, x
 YOLO11 - Pose, Size: n, s, m, l, x
 ```
 
-### 图像分类
+### 图像分类 (Image Classification)
 ![](source/imgs/image-classification-examples.jpg)
 ```bash
-# TODO
 YOLOv8 - CLS, Size: n, s, m, l, x
 YOLO11 - CLS, Size: n, s, m, l, x
 ```
@@ -80,11 +75,10 @@ YOLO11 - CLS, Size: n, s, m, l, x
 ### 定向边框对象检测 (Oriented Bounding Boxes Object Detection)
 ![](source/imgs/ships-detection-using-obb.jpg)
 ```bash
+# TODO: I need someone help me to check postprocess code.
 YOLOv8 - OBB, Size: n, s, m, l, x
 YOLO11 - OBB, Size: n, s, m, l, x
 ```
-
-
 
 ## 快速体验
 
@@ -95,47 +89,79 @@ $ cd demos/Vision/ultralytics_YOLO
 # Check your workspace
 $ tree -L 2
 .
-|-- README.md     # English Document
-|-- README_cn.md  # Chinese Document
-|-- py
-|   |-- eval_ultralytics_YOLO_Detect_YUV420SP.py # Advance Evaluation
-|   `-- ultralytics_YOLO_Detect_YUV420SP.py      # Quick Start Python
-|-- cpp
-|   |   |-- CMakeLists.txt # infer C++ CmakeList
-|   |   `-- main.cc # Quick Start C++
-`-- source
-|   |-- imgs
-|   |-- reference_hbm_models    # Reference HBM Models
-|   |-- reference_logs          # Reference logs
-|   `-- reference_yamls         # Reference yaml configs
+├── py
+│   ├── eval_batch.py
+│   ├── eval_Ultralytics_YOLO_Classify_YUV420SP.py   # Advance Evaluation for Classify
+│   ├── eval_Ultralytics_YOLO_Detect_YUV420SP.py     # Advance Evaluation for Detect
+│   ├── eval_Ultralytics_YOLO_Pose_YUV420SP.py       # Advance Evaluation for Pose
+│   ├── eval_Ultralytics_YOLO_Seg_YUV420SP.py        # Advance Evaluation for Seg
+│   ├── Ultralytics_YOLO_Classify_YUV420SP.py        # Quick Start Python for Classify
+│   ├── Ultralytics_YOLO_Detect_YUV420SP.py          # Quick Start Python for Detect
+│   ├── Ultralytics_YOLO_OBB_YUV420SP.py             # Quick Start Python for OBB
+│   ├── Ultralytics_YOLO_Pose_YUV420SP.py            # Quick Start Python for Pose
+│   └── Ultralytics_YOLO_Seg_YUV420SP.py             # Quick Start Python for Seg
+├── README_cn.md    # Chinese Document
+├── README.md       # English Document
+├── source
+│   ├── imgs
+│   ├── reference_bin_models   # Reference bin Models: CLS, Detect, Seg, Pose, OBB
+│   ├── reference_logs         # Reference logs: hb_mapper log, hrt_model_exec log
+│   └── reference_yamls        # Reference yaml configs
+└── x86
+    ├── export_monkey_patch.py
+    └── mapper.py
 ```
+
 ### Python 体验
-直接运行, 会自动下载模型文件.
+直接运行对应的视觉任务, 会自动下载模型文件.
 
 ```bash
+# Classify
 $ python3 py/ultralytics_YOLO_Detect_YUV420SP.py 
+
+# Detect
+$ python3 py/ultralytics_YOLO_Detect_YUV420SP.py 
+
+# Instance Segmentation
+$ python3 py/ultralytics_YOLO_Seg_YUV420SP.py
+
+# Pose Estimation
+$ python3 py/ultralytics_YOLO_Pose_YUV420SP.py 
 ```
 
-如果您想替换其他的模型, 或者使用其他的图片, 可以修改脚本文件内的参数.
+如果您想替换其他的模型, 或者使用其他的图片, 可以修改脚本文件内的参数, 以目标检测为例, 可修改模型路径, 测试图片路径等参数.
 ```bash
 $ python3 py/ultralytics_YOLO_Detect_YUV420SP.py -h
 
 options:
-  -h, --help            show this help message and exit
-  --model-path MODEL_PATH
-                        Path to BPU Quantized *.bin Model. RDK X3(Module): Bernoulli2. RDK Ultra: Bayes. RDK X5(Module): Bayes-e. RDK S100: Nash-e. RDK S100P: Nash-m.
-  --test-img TEST_IMG   Path to Load Test Image.
-  --img-save-path IMG_SAVE_PATH
-                        Path to Load Test Image.
-  --classes-num CLASSES_NUM
-                        Classes Num to Detect.
-  --nms-thres NMS_THRES
-                        IoU threshold.
-  --score-thres SCORE_THRES
-                        confidence threshold.
-  --reg REG             DFL reg layer.
+  -h, --help                     show this help message and exit
+  --model-path MODEL_PATH        Path to BPU Quantized *.bin Model. RDK X3(Module): Bernoulli2. RDK Ultra: Bayes. 
+                                 RDK X5(Module): Bayes-e. RDK S100: Nash-e. RDK S100P: Nash-m.
+  --test-img TEST_IMG            Path to Load Test Image.
+  --img-save-path IMG_SAVE_PATH  Path to Load Test Image.
+  --classes-num CLASSES_NUM      Classes Num to Detect.
+  --nms-thres NMS_THRES          IoU threshold.
+  --score-thres SCORE_THRES      confidence threshold.
+  --reg REG                      DFL reg layer.
 ```
 
+结果分析
+
+程序自动下载 YOLO11n - CLS 的 BPU *.bin 模型, 并完成了对图片的分类, 在终端中以绿色字体打印出了图像分类的TOP5结果.
+
+![](source/imgs/ultralytics_YOLO_CLS_demo.png)
+
+程序自动下载 YOLO13n - Detect 的 BPU *.bin 模型, 并完成了对图片的目标检测任务, 可视化结果保存在当前目录下的`py_result.jpg`文件.
+
+![](source/imgs/ultralytics_YOLO_Detect_demo.jpg)
+
+程序自动下载 YOLO11n - Pose 的 BPU *.bin 模型, 并完成了对图片的人体关键点检测任务, 可视化结果保存在当前目录下的`py_result.jpg`文件.
+
+![](source/imgs/ultralytics_YOLO_Pose_demo.jpg)
+
+程序自动下载 YOLO11n - Seg 的 BPU *.bin 模型, 并完成了对图片的实例分割任务, 可视化结果保存在当前目录下的`py_result.jpg`文件.
+
+![](source/imgs/ultralytics_YOLO_Seg_demo.jpg)
 
 
 ## BenchMark - Performance
@@ -356,7 +382,7 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 
 #### Oriented Bounding Boxes Object Detection
 
-TODO: 如果您愿意补充这部分，欢迎您PR.
+TODO: 如果您愿意补充这部分, 欢迎您PR.
 
 ### Accuracy Test Instructions
 
@@ -372,7 +398,7 @@ TODO: 如果您愿意补充这部分，欢迎您PR.
 
 ### 高性能计算流程介绍
 
-#### 目标检测 (Obeject Detection）
+#### 目标检测 (Obeject Detection)
 ![](source/imgs/ultralytics_YOLO_Detect_DataFlow.png)
 
 公版处理流程中, 是会对8400个bbox完全计算分数, 类别和xyxy坐标, 这样才能根据GT去计算损失函数. 但是我们在部署中, 只需要合格的bbox就好了, 并不需要对8400个bbox完全计算. 
@@ -390,7 +416,7 @@ $$Sigmoid(x)=\frac{1}{1+e^{-x}}$$
 $$Sigmoid(x_1) > Sigmoid(x_2) \Leftrightarrow x_1 > x_2$$
 综上,bin模型直接输出的最大值(反量化完成)的位置就是最终分数最大值的位置,bin模型输出的最大值经过Sigmoid计算后就是原来onnx模型的最大值. 
 
- - Classify部分,Threshold（TopK）操作
+ - Classify部分,Threshold(TopK)操作
 此操作用于找到8400个Grid Cell中,符合要求的Grid Cell. 操作对象为8400个Grid Cell,在H和W的维度操作. 如果您有阅读我的程序,你会发现我将后面H和W维度拉平了,这样只是为了程序设计和书面表达的方便,它们并没有本质上的不同. 
 我们假设某一个Grid Cell的某一个类别的分数记为$x$,激活函数作用完的整型数据为$y$,阈值筛选的过程会给定一个阈值,记为$C$,那么此分数合格的**充分必要条件**为: 
 
@@ -400,7 +426,7 @@ $$y=Sigmoid(x)=\frac{1}{1+e^{-x}}>C$$
 
 $$x > -ln\left(\frac{1}{C}-1\right)$$
 
-此操作会符合条件的Grid Cell的索引（indices）和对应Grid Cell的最大值,这个最大值经过Sigmoid计算后就是这个Grid Cell对应类别的分数了. 
+此操作会符合条件的Grid Cell的索引(indices)和对应Grid Cell的最大值,这个最大值经过Sigmoid计算后就是这个Grid Cell对应类别的分数了. 
 
  - Classify部分,GatherElements操作和ArgMax操作
 使用Threshold(TopK)操作得到的符合条件的Grid Cell的索引(indices),在GatherElements操作中获得符合条件的Grid Cell,使用ArgMax操作得到具体是80个类别中哪一个最大,得到这个符合条件的Grid Cell的类别. 
@@ -434,13 +460,13 @@ $$y_1 = (y+0.5+b)\times{Stride(i)}$$
 ![](source/imgs/ultralytics_YOLO_Seg_DataFlow.png)
 
  - Mask Coefficients 部分, 两次GatherElements操作,
-用于得到最终符合要求的Grid Cell的Mask Coefficients信息，也就是32个系数.
-这32个系数与Mask Protos部分作一个线性组合，也可以认为是加权求和，就可以得到这个Grid Cell对应目标的Mask信息。
+用于得到最终符合要求的Grid Cell的Mask Coefficients信息, 也就是32个系数.
+这32个系数与Mask Protos部分作一个线性组合, 也可以认为是加权求和, 就可以得到这个Grid Cell对应目标的Mask信息. 
 
 #### 姿态估计 (Pose Estimation)
 ![](source/imgs/ultralytics_YOLO_Pose_DataFlow.png)
 
-Ultralytics YOLO Pose 的关键点基于目标检测，kpt的定义参考如下
+Ultralytics YOLO Pose 的关键点基于目标检测, kpt的定义参考如下
 ```python
 COCO_keypoint_indexes = {
     0: 'nose',
@@ -465,30 +491,95 @@ COCO_keypoint_indexes = {
 
 Ultralytics YOLO Pose 模型的目标检测部分与 Ultralytics YOLO Detect一致, 对应的感受野会多出Channel = 57的特征图, 对应着17个Key Points, 分别是相对于特征图下采样倍数的坐标x, y和这个点对应的分数score.
 
-我们通过目标检测部分, 得知在某个位置的Key Points符合要求后, 将其乘以对应感受野的下采样倍数，即可得到基于输入尺寸的Key Points坐标.
+我们通过目标检测部分, 得知在某个位置的Key Points符合要求后, 将其乘以对应感受野的下采样倍数, 即可得到基于输入尺寸的Key Points坐标.
 
 
+### 环境准备与模型训练
 
-### 环境、项目准备
-
-注: 任何No such file or directory, No module named "xxx", command not found.等报错请仔细检查, 请勿逐条复制运行, 如果对修改过程不理解请前往开发者社区从YOLOv5开始了解. 
-
- - 下载ultralytics/ultralytics仓库, 并参考ultralytics官方文档, 配置好环境.
+下载ultralytics/ultralytics仓库, 并参考ultralytics官方文档, 配置好环境.
 ```bash
 git clone https://github.com/ultralytics/ultralytics.git
 ```
- - 进入本地仓库, 下载ultralytics官方的预训练权重, 这里以YOLO11n-Detect模型为例.
+
+模型训练请参考ultralytics官方文档, 这个文档由ultralytics维护, 质量非常的高. 网络上也有非常多的参考材料, 得到一个像官方一样的预训练权重的模型并不困难. 请注意, 训练时无需修改任何程序, 无需修改forward方法. 
+
+Ultralytics YOLO 官方文档: 
+
+- 快速入门: [https://docs.ultralytics.com/quickstart/](https://docs.ultralytics.com/quickstart/)
+- 模型训练: [https://docs.ultralytics.com/modes/train/](https://docs.ultralytics.com/modes/train/)
+
+
+### 模型导出
+
+
+进入本地仓库, 下载ultralytics官方的预训练权重, 这里以YOLO11n-Detect模型为例.
 ```bash
 cd ultralytics
 wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt
 ```
 
-### 模型训练
+在Ultralytics YOLO的训练环境中, 运行RDK Model Zoo 提供的一键YOLO导出脚本`demos/Vision/ultralytics_YOLO/x86/mapper.py`, 对模型进行导出. 这个脚本会使用`ultralytics.YOLO`类对YOLO的`pt`模型进行加载, 使用猴子补丁(Monkey Patch)的方法对模型在PyTorch层面进行替换, 进行并调用`ultralytics.YOLO.export`方法对模型进行导出. 导出的ONNX模型会保存在pt模型同级目录下.
 
- - 模型训练请参考ultralytics官方文档, 这个文档由ultralytics维护, 质量非常的高. 网络上也有非常多的参考材料, 得到一个像官方一样的预训练权重的模型并不困难. 
- - 请注意, 训练时无需修改任何程序, 无需修改forward方法. 
+```bash
+python3 export_monkey_patch.py --pt yolo11n.pt
+```
 
-Ultralytics YOLO 官方文档: https://docs.ultralytics.com/modes/train/
+
+### 模型编译
+
+安装RDK X5的OpenExplore的工具链环境, 这里提供两种安装方式
+
+- Docker安装(推荐)
+
+RDK X5 OpenExplore 1.2.8版本
+```bash
+docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
+```
+
+- pip安装裁剪的工具链
+
+请您准备一份Ubuntu Python 3.10.x版本的环境, 工具链目前只支持这个Python版本.
+
+```bash
+# Get the OpenExplore ToolChain *.whl packages
+wget -c https://archive.d-robotics.cc/downloads/rdk_model_zoo/toolchain/X5_OpenExplore_1.2.8_ToolChain_PTQ_whl_Packages.tar.gz
+tar -xvf X5_OpenExplore_1.2.8_ToolChain_PTQ_whl_Packages.tar.gz ai_toolchain/
+cd ai_toolchain
+pip install hbdk-3.49.15-cp310-cp310-linux_x86_64.whl
+pip install horizon_nn-1.1.0-cp310-cp310-linux_x86_64.whl
+pip3 install cython==0.29.33 setuptools==59.6.0 wheel==0.43.0 pyyaml numpy==1.23.0
+pip install horizon_tc_ui-1.24.3-cp310-cp310-linux_x86_64.whl 
+```
+
+如果您访问PyPI下载失败, 可以使用阿里源来安装
+```bash
+pip install hbdk-3.49.15-cp310-cp310-linux_x86_64.whl
+pip install horizon_nn-1.1.0-cp310-cp310-linux_x86_64.whl -i https://mirrors.aliyun.com/pypi/simple
+pip3 install cython==0.29.33 setuptools==59.6.0 wheel==0.43.0 pyyaml numpy==1.23.0  -i https://mirrors.aliyun.com/pypi/simple
+pip install horizon_tc_ui-1.24.3-cp310-cp310-linux_x86_64.whl  -i https://mirrors.aliyun.com/pypi/simple
+```
+
+在OpenExplore的工具链环境中运行RDK Model Zoo 提供的一键YOLO转化脚本`demos/Vision/ultralytics_YOLO/x86/mapper.py`
+对于这个脚本, 您需要准备用于校准的图片, 
+
+```bash
+python3 mapper.py 
+```
+
+
+### 模型部署
+
+#### Python程序部署
+
+
+
+#### TROS部署
+
+
+
+
+## 原理解读
+
 
 
 ### 导出为onnx
@@ -510,6 +601,12 @@ YOLO('yolov11n.pt').export(imgsz=640, format='onnx', simplify=False, opset=19)
 
 ### 异常处理
 
+
+
+## Contributors
+
+ - Cauchy: 吴超
+ - SkyXZ: 熊旗
 
 
 ## 参考

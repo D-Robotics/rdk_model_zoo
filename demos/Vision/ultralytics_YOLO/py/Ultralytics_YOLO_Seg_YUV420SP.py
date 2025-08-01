@@ -67,9 +67,15 @@ def main():
                         default=[8, 16 ,32],
                         help='--strides 8, 16, 32')
     parser.add_argument('--is-open', type=bool, default=True, help='Ture: morphologyEx')
-    parser.add_argument('--is-point', type=bool, default=True, help='Ture: Draw edge points')
+    parser.add_argument('--is-point', type=bool, default=False, help='Ture: Draw edge points')
     opt = parser.parse_args()
     logger.info(opt)
+
+    # quick demo
+    if not os.path.exists(opt.model_path):
+        print(f"file {opt.model_path} does not exist. downloading ...")
+        os.system("wget -c https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11n_seg_bayese_640x640_nv12.bin")
+        opt.model_path = 'yolo11n_seg_bayese_640x640_nv12.bin'
 
     # 实例化
     model = Ultralytics_YOLO_Seg_Bayese_YUV420SP(

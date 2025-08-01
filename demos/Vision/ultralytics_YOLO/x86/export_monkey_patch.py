@@ -17,8 +17,10 @@
 # 注意: 此程序在Ultralytics模型的训练环境中运行
 # Attention: This program runs on Ultralytics training Environment.
 
+import argparse
+
 from ultralytics import YOLO
-from ultralytics.nn.modules.head import Detect, v10Detect, Segment, OBB, Pose
+from ultralytics.nn.modules.head import Detect, v10Detect, Segment, OBB, Pose, Classify
 from ultralytics.nn.modules.block import Attention, AAttn
 
 import torch
@@ -26,19 +28,28 @@ import types
 import os
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--pt', type=str, default='./yolo11n.pt', help='path to *.pt model.')
+    parser.add_argument('--optse', type=int, default=11, help='opset version.')
+    opt = parser.parse_args()
+
     # Init Ultralytics YOLO Model
-    m = YOLO("pt_s/yolo12x.pt")
+    m = YOLO(opt.pt)
 
     # Replace some efficient modules
     modelZooOptimizer(m.model.model)
 
     # Export to ONNX
-    m.export(imgsz=640, format='onnx', simplify=False, opset=11)
+    m.export(format='onnx', simplify=False, opset=11)
+
 
 def modelZooOptimizer(model):  # Monkey Patch
     for name, child in model.named_children():
         # print(name)
-        if type(child) == Detect:
+        if type(child) == Classify:
+            child.forward = types.MethodType(Classify_forward, child)
+            print("\033[1;31m" + f"[Cauchy] Replaced Classify_forward in {name}" + "\033[0m")
+        elif type(child) == Detect:
             child.forward = types.MethodType(Detect_forward, child)
             print("\033[1;31m" + f"[Cauchy] Replaced Detect_forward in {name}" + "\033[0m")
         elif type(child) == v10Detect:
@@ -61,9 +72,9 @@ def modelZooOptimizer(model):  # Monkey Patch
             print("\033[1;31m" + f"[Cauchy] Replaced Attention_forward in {name}" + "\033[0m")
         modelZooOptimizer(child)
 
+
+
 def Attention_forward(self, x): 
-    # Copy and edit from: github.com/ultralytics/ultralytics
-    # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
     # Effieicient for Bayes-e BPU
     B, C, H, W = x.shape
     N = H * W
@@ -81,8 +92,6 @@ def Attention_forward(self, x):
     return x
 
 def AAttn_forward(self, x):
-    # Copy and edit from: github.com/ultralytics/ultralytics
-    # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
     # Effieicient for Bayes-e BPU
     B, C, H, W = x.shape
     N = H * W
@@ -110,9 +119,12 @@ def AAttn_forward(self, x):
     x = x + self.pe(v)
     return self.proj(x)
 
+def Classify_forward(self, x):
+    # Effieicient for Bernoulli2, Bayes, Bayes-e, Nash-{e/m/p} BPU
+    x = torch.cat(x, 1) if isinstance(x, list) else x
+    return self.linear(self.drop(self.pool(self.conv(x)).flatten(1)))
+
 def Detect_forward(self, x):
-    # Copy and edit from: github.com/ultralytics/ultralytics
-    # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
     # Effieicient for Bernoulli2, Bayes, Bayes-e, Nash-{e/m/p} BPU
     result = []
     for i in range(self.nl):
@@ -120,8 +132,6 @@ def Detect_forward(self, x):
         result.append(self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous())  # bbox
     return result
 def v10Detect_forward(self, x):
-    # Copy and edit from: github.com/ultralytics/ultralytics
-    # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
     # Effieicient for Bernoulli2, Bayes, Bayes-e, Nash-{e/m/p} BPU
     result = []
     for i in range(self.nl):
@@ -130,8 +140,6 @@ def v10Detect_forward(self, x):
     return result
 
 def Segment_forward(self, x):
-    # Copy and edit from: github.com/ultralytics/ultralytics
-    # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
     # Effieicient for Bernoulli2, Bayes, Bayes-e, Nash-{e/m/p} BPU
     result = []
     for i in range(self.nl):
@@ -142,8 +150,6 @@ def Segment_forward(self, x):
     return result
 
 def Pose_forward(self, x):
-    # Copy and edit from: github.com/ultralytics/ultralytics
-    # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
     # Effieicient for Bernoulli2, Bayes, Bayes-e, Nash-{e/m/p} BPU
     result = []
     for i in range(self.nl):
@@ -153,8 +159,6 @@ def Pose_forward(self, x):
     return result
 
 def OBB_forward(self, x):
-    # Copy and edit from: github.com/ultralytics/ultralytics
-    # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
     # Effieicient for Bernoulli2, Bayes, Bayes-e, Nash-{e/m/p} BPU
     # TODO: Test and PostProcess Code in Model Zoo.
     result = []
@@ -163,6 +167,7 @@ def OBB_forward(self, x):
         result.append(self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous())  # bbox
         result.append(self.cv4[i](x[i]).permute(0, 2, 3, 1).contiguous())  # theta logits
     return result
+
 
 if __name__ == '__main__':
     main()
