@@ -11,6 +11,8 @@
 ```bash
 D-Robotics OpenExplore(RDK X5, Bayes-e BPU) Version: >= 1.2.8
 Ultralytics YOLO Version: >= 8.3.0
+Ubuntu 22.04
+Python 3.10
 ```
 
 ## Suggestions
@@ -80,6 +82,12 @@ YOLO11 - CLS, Size: n, s, m, l, x
 ## 快速体验
 
 ```bash
+# Download RDK Model Zoo
+https://github.com/D-Robotics/rdk_model_zoo
+
+# Clone this repo (Optional)
+git clone https://github.com/D-Robotics/rdk_model_zoo.git
+
 # Make Sure your are in this file
 $ cd demos/Vision/ultralytics_YOLO
 
@@ -237,7 +245,7 @@ options:
 | YOLO11x-Pose | 640×640 | 1 | 97.8 ms / 10.2 FPS (1 thread  ) <br/> 189.4 ms / 10.5 FPS (2 threads) | 10 ms | 58.8 M | 203.3 B |
 
 
-### 图像分类
+### 图像分类 (Image Classification)
 | Model | Size(Pixels) | Classes |  BPU Task Latency  /<br>BPU Throughput (Threads) | CPU Latency<br>(Single Core) | params(M) | FLOPs(B) |
 |----------|---------|----|---------|---------|----------|----------|
 | YOLOv8n-CLS | 224x224 | 1000 | 0.7 ms / 1374.6 FPS (1 thread  ) <br/> 1.0 ms / 2023.2 FPS (2 threads) | 0.5 ms | 2.7  M | 4.3   B |
@@ -341,7 +349,7 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 | YOLO11x-Pose | 0.672 | 0.654(97.32%) | (%) |
 
 
-#### Classification (ImageNet2012)
+#### Image Classification (ImageNet2012)
 | Model | Pytorch | YUV420SP - Python<br/>TOP1 / TOP5 | YUV420SP - C/C++<br/>TOP1 / TOP5 |
 |---------|---------|-------|---------|
 | YOLOv8n-CLS | 0.690 / 0.883 | 0.525(76.09%) / 0.762(86.30%) | (%) / (%) |
@@ -491,7 +499,7 @@ cd ultralytics
 wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt
 ```
 
-在Ultralytics YOLO的训练环境中, 运行RDK Model Zoo 提供的一键YOLO导出脚本`demos/Vision/ultralytics_YOLO/x86/mapper.py`, 对模型进行导出. 这个脚本会使用`ultralytics.YOLO`类对YOLO的`pt`模型进行加载, 使用猴子补丁(Monkey Patch)的方法对模型在PyTorch层面进行替换, 进行并调用`ultralytics.YOLO.export`方法对模型进行导出. 导出的ONNX模型会保存在pt模型同级目录下.
+在Ultralytics YOLO的训练环境中, 运行RDK Model Zoo 提供的一键YOLO导出脚本`https://github.com/D-Robotics/rdk_model_zoo/blob/main/demos/Vision/ultralytics_YOLO/x86/export_monkey_patch.py`, 对模型进行导出. 这个脚本会使用`ultralytics.YOLO`类对YOLO的`pt`模型进行加载, 使用猴子补丁(Monkey Patch)的方法对模型在PyTorch层面进行替换, 进行并调用`ultralytics.YOLO.export`方法对模型进行导出. 导出的ONNX模型会保存在pt模型同级目录下.
 
 ```bash
 python3 export_monkey_patch.py --pt yolo11n.pt
@@ -533,7 +541,13 @@ note: This is an issue with network connectivity, not pip.
 hint: Consider using --resume-retries to enable download resumption
 ```
 
-在OpenExplore的工具链环境中运行RDK Model Zoo 提供的一键YOLO转化脚本`demos/Vision/ultralytics_YOLO/x86/mapper.py`
+键入hb_mapper命令验证安装成功
+```bash
+$ hb_mapper --version
+hb_mapper, version 1.24.3
+```
+
+在OpenExplore的工具链环境中运行RDK Model Zoo 提供的一键YOLO转化脚本`https://github.com/D-Robotics/rdk_model_zoo/blob/main/demos/Vision/ultralytics_YOLO/x86/mapper.py`
 对于这个脚本, 您需要准备用于校准的图片和ONNX模型. 然后就是正常的帮您准备校准数据和编译的yaml配置文件, 最后转换好的bin模型会在onnx模型同级目录下.
 
 ```bash
@@ -567,9 +581,9 @@ options:
 
 #### Python程序部署
 
-注: 此操作在板卡进行, 使用板卡的全局Python解释器. 请确保您使用的是[地瓜开发者社区](developer.d-robotics.cc)提供的最新的RDK X5的系统镜像. 
+注: 此操作在板卡进行, 使用板卡的全局Python解释器. 请确保您使用的是[地瓜开发者社区](developer.d-robotics.cc)提供的最新的RDK X5的系统镜像和miniboot. 
 
-使用`demos/Vision/ultralytics_YOLO/py/*`中的脚本即可. 运行效果参考本文档快速体验章节.
+使用`https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Vision/ultralytics_YOLO/py`中的脚本即可. 运行效果参考本文档快速体验章节.
 
 
 ## 参考
