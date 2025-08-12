@@ -41,7 +41,7 @@ def main():
     logger.info(opt)
 
     logger.info(f"--str: {opt.str}")
-    logger.info(f"Detected bin models:")
+    logger.info(f"Detected pt models:")
     for i, pt_name in enumerate(os.listdir(opt.pt_paths)):
         if pt_name.endswith(".pt"):
             logger.info(f"[{i}]:")
