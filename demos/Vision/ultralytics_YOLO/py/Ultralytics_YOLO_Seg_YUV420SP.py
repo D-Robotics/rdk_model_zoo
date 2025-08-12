@@ -308,15 +308,17 @@ class Ultralytics_YOLO_Seg_Bayese_YUV420SP():
         ids = np.concatenate((ids), axis=0)
         mces = np.concatenate((mces), axis=0)
 
-        xy = (dbboxes[:,2:4] + dbboxes[:,0:2])/2.0
+        # xy = (dbboxes[:,2:4] + dbboxes[:,0:2])/2.0
+        # hw = (dbboxes[:,2:4] - dbboxes[:,0:2])
+        # xyhw = np.hstack([xy, hw])
         hw = (dbboxes[:,2:4] - dbboxes[:,0:2])
-        xyhw = np.hstack([xy, hw])
+        xyhw2 = np.hstack([dbboxes[:,0:2], hw])
 
         # 分类别nms
         results = []
         for i in range(self.CLASSES_NUM):
             id_indices = ids==i
-            indices = cv2.dnn.NMSBoxes(xyhw[id_indices,:], scores[id_indices], self.SCORE_THRESHOLD, self.NMS_THRESHOLD)
+            indices = cv2.dnn.NMSBoxes(xyhw2[id_indices,:], scores[id_indices], self.SCORE_THRESHOLD, self.NMS_THRESHOLD)
             if len(indices) == 0:
                 continue
             for indic in indices:

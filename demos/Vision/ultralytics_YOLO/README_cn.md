@@ -121,21 +121,21 @@ $ tree -L 2
 
 ```bash
 # Classify
-$ python3 py/ultralytics_YOLO_Detect_YUV420SP.py 
+$ python3 py/Ultralytics_YOLO_Classify_YUV420SP.py
 
 # Detect
-$ python3 py/ultralytics_YOLO_Detect_YUV420SP.py 
+$ python3 py/Ultralytics_YOLO_Detect_YUV420SP.py 
 
 # Instance Segmentation
-$ python3 py/ultralytics_YOLO_Seg_YUV420SP.py
+$ python3 py/Ultralytics_YOLO_Seg_YUV420SP.py
 
 # Pose Estimation
-$ python3 py/ultralytics_YOLO_Pose_YUV420SP.py 
+$ python3 py/Ultralytics_YOLO_Pose_YUV420SP.py 
 ```
 
 如果您想替换其他的模型, 或者使用其他的图片, 可以修改脚本文件内的参数, 以目标检测为例, 可修改模型路径, 测试图片路径等参数.
 ```bash
-$ python3 py/ultralytics_YOLO_Detect_YUV420SP.py -h
+$ python3 py/Ultralytics_YOLO_Detect_YUV420SP.py -h
 
 options:
   -h, --help                     show this help message and exit

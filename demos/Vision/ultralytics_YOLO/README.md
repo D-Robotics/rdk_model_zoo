@@ -125,22 +125,22 @@ Run it directly and the model file will be downloaded automatically.
 
 ```bash
 # Classify
-$ python3 py/ultralytics_YOLO_Detect_YUV420SP.py 
+$ python3 py/Ultralytics_YOLO_Detect_YUV420SP.py 
 
 # Detect
-$ python3 py/ultralytics_YOLO_Detect_YUV420SP.py 
+$ python3 py/Ultralytics_YOLO_Detect_YUV420SP.py 
 
 # Instance Segmentation
-$ python3 py/ultralytics_YOLO_Seg_YUV420SP.py
+$ python3 py/Ultralytics_YOLO_Seg_YUV420SP.py
 
 # Pose Estimation
-$ python3 py/ultralytics_YOLO_Pose_YUV420SP.py 
+$ python3 py/Ultralytics_YOLO_Pose_YUV420SP.py 
 ```
 
 If you want to replace other models or use other pictures, you can modify the parameters in the script file.
 
 ```bash
-$ python3 py/ultralytics_YOLO_Detect_YUV420SP.py -h
+$ python3 py/Ultralytics_YOLO_Detect_YUV420SP.py -h
 
 options:
   -h, --help                     show this help message and exit
