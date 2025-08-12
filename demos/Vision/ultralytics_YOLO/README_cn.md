@@ -2,6 +2,11 @@
 
 # Ultralytics YOLO: 你只需要看一次
 
+## Contributors
+
+ - Cauchy: 吴超
+ - SkyXZ: 熊旗
+
 ## Summary
 ```bash
 D-Robotics OpenExplore(RDK X5, Bayes-e BPU) Version: >= 1.2.8
@@ -72,14 +77,6 @@ YOLOv8 - CLS, Size: n, s, m, l, x
 YOLO11 - CLS, Size: n, s, m, l, x
 ```
 
-### 定向边框对象检测 (Oriented Bounding Boxes Object Detection)
-![](source/imgs/ships-detection-using-obb.jpg)
-```bash
-# TODO: I need someone help me to check postprocess code.
-YOLOv8 - OBB, Size: n, s, m, l, x
-YOLO11 - OBB, Size: n, s, m, l, x
-```
-
 ## 快速体验
 
 ```bash
@@ -97,14 +94,13 @@ $ tree -L 2
 │   ├── eval_Ultralytics_YOLO_Seg_YUV420SP.py        # Advance Evaluation for Seg
 │   ├── Ultralytics_YOLO_Classify_YUV420SP.py        # Quick Start Python for Classify
 │   ├── Ultralytics_YOLO_Detect_YUV420SP.py          # Quick Start Python for Detect
-│   ├── Ultralytics_YOLO_OBB_YUV420SP.py             # Quick Start Python for OBB
 │   ├── Ultralytics_YOLO_Pose_YUV420SP.py            # Quick Start Python for Pose
 │   └── Ultralytics_YOLO_Seg_YUV420SP.py             # Quick Start Python for Seg
 ├── README_cn.md    # Chinese Document
 ├── README.md       # English Document
 ├── source
 │   ├── imgs
-│   ├── reference_bin_models   # Reference bin Models: CLS, Detect, Seg, Pose, OBB
+│   ├── reference_bin_models   # Reference bin Models: CLS, Detect, Seg, Pose
 │   ├── reference_logs         # Reference logs: hb_mapper log, hrt_model_exec log
 │   └── reference_yamls        # Reference yaml configs
 └── x86
@@ -240,24 +236,8 @@ options:
 | YOLO11l-Pose | 640×640 | 1 | 46.3 ms / 21.6 FPS (1 thread  ) <br/> 86.6 ms / 23.0 FPS (2 threads)  | 10 ms | 26.2 M | 90.7  B |
 | YOLO11x-Pose | 640×640 | 1 | 97.8 ms / 10.2 FPS (1 thread  ) <br/> 189.4 ms / 10.5 FPS (2 threads) | 10 ms | 58.8 M | 203.3 B |
 
-#### 定向边框对象检测 (Oriented Bounding Boxes Object Detection)
-
-| Model | Size(Pixels) | Classes |  BPU Task Latency  /<br>BPU Throughput (Threads) | CPU Latency<br>(Single Core) | params(M) | FLOPs(B) |
-|----------|---------|----|---------|---------|----------|----------|
-| YOLOv8n-OBB | 1024×1024 | 15 | 13.9 ms / 71.9 FPS (1 thread  ) <br/> 18.3 ms / 109.1 FPS (2 threads) | 100 ms | 3.08 M | 8.3   B |
-| YOLOv8s-OBB | 1024×1024 | 15 | 30.6 ms / 32.7 FPS (1 thread  ) <br/> 51.6 ms / 38.6 FPS (2 threads)  | 100 ms | 11.4 M | 29.4  B |
-| YOLOv8m-OBB | 1024×1024 | 15 | 73.9 ms / 13.5 FPS (1 thread  ) <br/> 138.2 ms / 14.4 FPS (2 threads) | 100 ms | 26.4 M | 80.9  B |
-| YOLOv8l-OBB | 1024×1024 | 15 | 144.6 ms / 6.9 FPS (1 thread  ) <br/> 279.2 ms / 7.1 FPS (2 threads)  | 100 ms | 44.5 M | 168.6 B |
-| YOLOv8x-OBB | 1024×1024 | 15 | 230.7 ms / 4.3 FPS (1 thread  ) <br/> 450.8 ms / 4.4 FPS (2 threads)  | 100 ms | 69.5 M | 263.2 B |
-| YOLO11n-OBB | 1024×1024 | 15 | 19.7 ms / 50.6 FPS (1 thread  ) <br/> 30.2 ms / 65.9 FPS (2 threads)  | 100 ms | 2.7  M | 6.6   B |
-| YOLO11s-OBB | 1024×1024 | 15 | 38.6 ms / 25.9 FPS (1 thread  ) <br/> 67.7 ms / 29.5 FPS (2 threads)  | 100 ms | 9.7  M | 22.3  B |
-| YOLO11m-OBB | 1024×1024 | 15 | 87.7 ms / 11.4 FPS (1 thread  ) <br/> 165.5 ms / 12.1 FPS (2 threads) | 100 ms | 20.9 M | 71.4  B |
-| YOLO11l-OBB | 1024×1024 | 15 | 115.3 ms / 8.7 FPS (1 thread  ) <br/> 220.5 ms / 9.0 FPS (2 threads)  | 100 ms | 26.1 M | 90.3  B |
-| YOLO11x-OBB | 1024×1024 | 15 | 267.9 ms / 3.7 FPS (1 thread  ) <br/> 525.2 ms / 3.8 FPS (2 threads)  | 100 ms | 58.8 M | 202.8 B |
-
 
 ### 图像分类
-
 | Model | Size(Pixels) | Classes |  BPU Task Latency  /<br>BPU Throughput (Threads) | CPU Latency<br>(Single Core) | params(M) | FLOPs(B) |
 |----------|---------|----|---------|---------|----------|----------|
 | YOLOv8n-CLS | 224x224 | 1000 | 0.7 ms / 1374.6 FPS (1 thread  ) <br/> 1.0 ms / 2023.2 FPS (2 threads) | 0.5 ms | 2.7  M | 4.3   B |
@@ -273,7 +253,7 @@ options:
 
 
 ### Performance Test Instructions
-1. 此处测试的均为YUV420SP (nv12) 输入的模型的性能数据. NCHWRGB输入的模型的性能数据与其无明显差距.
+1. 此处测试的均为YUV420SP (nv12) 输入的模型的性能数据. 
 2. BPU延迟与BPU吞吐量. 
  - 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况. 
  - 多线程帧率为多个线程同时向BPU塞任务, 每个BPU核心可以处理多个线程的任务, 一般工程中2个线程可以控制单帧延迟较小,同时吃满所有BPU到100%,在吞吐量(FPS)和帧延迟间得到一个较好的平衡.
@@ -289,9 +269,7 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 
 
 ## Benchmark - Accuracy
-
 ### RDK X5
-
 #### Object Detection (COCO2017)
 | Model | Pytorch | YUV420SP<br/>Python | YUV420SP<br/>C/C++ |
 |---------|---------|-------|---------|
@@ -332,7 +310,6 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 | YOLOv13x | 0.473 | 0.459(97.04%) | (%) |
 
 #### Instance Segmentation (COCO2017)
-
 | Model | Pytorch<br/>BBox / Mask | YUV420SP - Python<br/>BBox / Mask | YUV420SP - C/C++<br/>BBox / Mask |
 |---------|---------|-------|---------|
 | YOLOv8n-Seg | 0.300 / 0.241 | 0.284(94.67%) / 0.219(90.87%) | (%) / (%) |
@@ -350,7 +327,6 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 
 
 #### Pose Estimation (COCO2017)
-
 | Model | Pytorch | YUV420SP - Python | YUV420SP - C/C++ |
 |---------|---------|-------|---------|
 | YOLOv8n-Pose | 0.476 | 0.462(97.06%) | (%) |
@@ -366,7 +342,6 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 
 
 #### Classification (ImageNet2012)
-
 | Model | Pytorch | YUV420SP - Python<br/>TOP1 / TOP5 | YUV420SP - C/C++<br/>TOP1 / TOP5 |
 |---------|---------|-------|---------|
 | YOLOv8n-CLS | 0.690 / 0.883 | 0.525(76.09%) / 0.762(86.30%) | (%) / (%) |
@@ -380,9 +355,6 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 | YOLO11l-CLS | 0.783 / 0.943 | 0.707(90.29%) / 0.902(95.65%) | (%) / (%) |
 | YOLO11x-CLS | 0.795 / 0.949 | 0.732(92.08%) / 0.917(96.63%) | (%) / (%) |
 
-#### Oriented Bounding Boxes Object Detection
-
-TODO: 如果您愿意补充这部分, 欢迎您PR.
 
 ### Accuracy Test Instructions
 
@@ -395,9 +367,7 @@ TODO: 如果您愿意补充这部分, 欢迎您PR.
 7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 用于模拟普通开发者第一次直接编译的精度情况, 并没有进行精度调优或者QAT(量化感知训练), 满足常规使用验证需求, 不代表精度上限.
 
 ## 进阶开发
-
 ### 高性能计算流程介绍
-
 #### 目标检测 (Obeject Detection)
 ![](source/imgs/ultralytics_YOLO_Detect_DataFlow.png)
 
@@ -496,7 +466,9 @@ Ultralytics YOLO Pose 模型的目标检测部分与 Ultralytics YOLO Detect一�
 
 ### 环境准备与模型训练
 
-下载ultralytics/ultralytics仓库, 并参考ultralytics官方文档, 配置好环境.
+注: 此操作在x86机器进行, 推荐使用含有硬件加速的机器进行训练, 例如支持CUDA的GPU, torch.cuda.is_available() 为 True的机器. 推荐使用Ubuntu 22.04, Python 3.10的环境.
+
+下载ultralytics/ultralytics仓库, 并参考ultralytics官方文档, 配置好环境. 
 ```bash
 git clone https://github.com/ultralytics/ultralytics.git
 ```
@@ -511,8 +483,9 @@ Ultralytics YOLO 官方文档:
 
 ### 模型导出
 
+注: 此操作在x86机器进行, 推荐使用Ubuntu 22.04, Python 3.10的环境.
 
-进入本地仓库, 下载ultralytics官方的预训练权重, 这里以YOLO11n-Detect模型为例.
+进入本地仓库, 下载ultralytics官方的预训练权重, 这里以YOLO11n-Detect模型为例. 
 ```bash
 cd ultralytics
 wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt
@@ -524,46 +497,69 @@ wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt
 python3 export_monkey_patch.py --pt yolo11n.pt
 ```
 
-
 ### 模型编译
 
 安装RDK X5的OpenExplore的工具链环境, 这里提供两种安装方式
 
-- Docker安装(推荐)
+- Docker安装 (推荐)
 
 RDK X5 OpenExplore 1.2.8版本
 ```bash
 docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
 ```
 
-- pip安装裁剪的工具链
+或者前往地瓜开发者社区获取离线版本的Docker镜像: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)
 
-请您准备一份Ubuntu Python 3.10.x版本的环境, 工具链目前只支持这个Python版本.
+- pip安装裁剪的工具链 (备选)
 
+注: 此操作在x86机器进行, 推荐使用Ubuntu 22.04, Python 3.10的环境. 注意, 模型转换和编译涉及到多种优化策略和程序, 请不要在板端安装运行.
 ```bash
-# Get the OpenExplore ToolChain *.whl packages
-wget -c https://archive.d-robotics.cc/downloads/rdk_model_zoo/toolchain/X5_OpenExplore_1.2.8_ToolChain_PTQ_whl_Packages.tar.gz
-tar -xvf X5_OpenExplore_1.2.8_ToolChain_PTQ_whl_Packages.tar.gz ai_toolchain/
-cd ai_toolchain
-pip install hbdk-3.49.15-cp310-cp310-linux_x86_64.whl
-pip install horizon_nn-1.1.0-cp310-cp310-linux_x86_64.whl
-pip3 install cython==0.29.33 setuptools==59.6.0 wheel==0.43.0 pyyaml numpy==1.23.0
-pip install horizon_tc_ui-1.24.3-cp310-cp310-linux_x86_64.whl 
+pip install rdkx5-yolo-mapper
 ```
 
 如果您访问PyPI下载失败, 可以使用阿里源来安装
 ```bash
-pip install hbdk-3.49.15-cp310-cp310-linux_x86_64.whl
-pip install horizon_nn-1.1.0-cp310-cp310-linux_x86_64.whl -i https://mirrors.aliyun.com/pypi/simple
-pip3 install cython==0.29.33 setuptools==59.6.0 wheel==0.43.0 pyyaml numpy==1.23.0  -i https://mirrors.aliyun.com/pypi/simple
-pip install horizon_tc_ui-1.24.3-cp310-cp310-linux_x86_64.whl  -i https://mirrors.aliyun.com/pypi/simple
+pip install rdkx5-yolo-mapper -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+```
+
+常见问题: 出现以下问题一般是在安装较大的包, 例如torch时, 网络连接不稳定导致的, 这时只需要重新运行安装命令即可, 已经安装过的包会自动跳过, 不会重复安装.
+```bash
+error: incomplete-download
+
+× Download failed because not enough bytes were received (552.3 MB/594.3 MB)
+╰─> URL: https://...
+
+note: This is an issue with network connectivity, not pip.
+hint: Consider using --resume-retries to enable download resumption
 ```
 
 在OpenExplore的工具链环境中运行RDK Model Zoo 提供的一键YOLO转化脚本`demos/Vision/ultralytics_YOLO/x86/mapper.py`
-对于这个脚本, 您需要准备用于校准的图片, 
+对于这个脚本, 您需要准备用于校准的图片和ONNX模型. 然后就是正常的帮您准备校准数据和编译的yaml配置文件, 最后转换好的bin模型会在onnx模型同级目录下.
 
 ```bash
-python3 mapper.py 
+python3 mapper.py --onnx [*.onnx] --cal-images [cal images path]
+```
+
+
+这个脚本暴露了一些常见的参数, 默认值已经满足大多数需求.
+
+```bash
+$ python3 mapper.py -h
+usage: mapper.py [-h] [--cal-images CAL_IMAGES] [--onnx ONNX] [--quantized QUANTIZED] [--jobs JOBS] [--optimize-level OPTIMIZE_LEVEL]
+                 [--cal-sample CAL_SAMPLE] [--cal-sample-num CAL_SAMPLE_NUM] [--save-cache SAVE_CACHE] [--cal CAL] [--ws WS]
+
+options:
+  -h, --help                        show this help message and exit
+  --cal-images CAL_IMAGES           *.jpg, *.png calibration images path, 20 ~ 50 pictures is OK.
+  --onnx ONNX                       origin float onnx model path.
+  --quantized QUANTIZED             int8 first / int16 first
+  --jobs JOBS                       model combine jobs.
+  --optimize-level OPTIMIZE_LEVEL   O0, O1, O2, O3
+  --cal-sample CAL_SAMPLE           sample calibration data or not.
+  --cal-sample-num CAL_SAMPLE_NUM   num of sample calibration data.
+  --save-cache SAVE_CACHE           remove bpu output files or not.
+  --cal CAL                         calibration_data_temporary_folder
+  --ws WS                           temporary workspace
 ```
 
 
@@ -571,42 +567,9 @@ python3 mapper.py
 
 #### Python程序部署
 
+注: 此操作在板卡进行, 使用板卡的全局Python解释器. 请确保您使用的是[地瓜开发者社区](developer.d-robotics.cc)提供的最新的RDK X5的系统镜像. 
 
-
-#### TROS部署
-
-
-
-
-## 原理解读
-
-
-
-### 导出为onnx
-
-使用x86文件内Python脚本进行ONNX导出
-如果有**No module named onnxsim**报错, 安装一个即可. 注意, 如果生成的onnx模型显示ir版本过高, 可以将simplify=False. 两种设置对最终bin模型没有影响, 打开后可以提升onnx模型在netron中的可读性.
-
-```python
-from ultralytics import YOLO
-YOLO('yolov11n.pt').export(imgsz=640, format='onnx', simplify=False, opset=19)
-```
-
-
-
-### 模型编译
-```bash
-(bpu_docker) $ hb_compile --config config.yaml
-```
-
-### 异常处理
-
-
-
-## Contributors
-
- - Cauchy: 吴超
- - SkyXZ: 熊旗
+使用`demos/Vision/ultralytics_YOLO/py/*`中的脚本即可. 运行效果参考本文档快速体验章节.
 
 
 ## 参考

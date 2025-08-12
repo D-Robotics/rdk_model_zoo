@@ -163,29 +163,6 @@ https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yo
 
 https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11x_cls_detect_bayese_640x640_nv12.bin
 
-# YOLOv8 - OBB: n, s, m, l, x
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolov8n_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolov8s_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolov8m_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolov8l_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolov8x_obb_detect_bayese_640x640_nv12.bin
-
-# YOLO11 - OBB: n, s, m, l, x
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11n_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11s_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11m_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11l_obb_detect_bayese_640x640_nv12.bin
-
-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11x_obb_detect_bayese_640x640_nv12.bin
 ```
 
 

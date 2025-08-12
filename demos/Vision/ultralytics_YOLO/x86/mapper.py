@@ -61,7 +61,7 @@ def main():
     parser.add_argument('--optimize-level', type=str, default='O3', help='O0, O1, O2, O3')
     parser.add_argument('--cal-sample', type=bool, default=True, help='sample calibration data or not.') 
     parser.add_argument('--cal-sample-num', type=int, default=20, help='num of sample calibration data.') 
-    parser.add_argument('--bin-only', type=bool, default=True, help='remove bpu output files or not.') 
+    parser.add_argument('--save-cache', type=bool, default=False, help='remove bpu output files or not.') 
     # private settings
     parser.add_argument('--cal', type=str, default='.calibration_data_temporary_folder', help='calibration_data_temporary_folder')
     parser.add_argument('--ws', type=str, default='.temporary_workspace', help='temporary workspace')
@@ -228,8 +228,8 @@ compiler_parameters:
     # clean the work space
     logger.info("Cleaning up...")
     
-    os.system("rm config.yaml")
-    if opt.bin_only:
+    if not opt.save_cache:
+        os.system("rm config.yaml")
         os.system("rm -rf " + opt.ws)
     logger.info("Cleaning up completed.")
 
