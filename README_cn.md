@@ -20,14 +20,11 @@ RDK Model Zoo 基于[RDK](https://d-robotics.cc/rdkRobotDevKit)开发, 提供大
  - [大模型](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/llm): `./rdk_model_zoo/demos/llm`
 
 **RDK Model Zoo 支持如下平台.**
- - 支持 [RDK X5](https://developer.d-robotics.cc/rdkx5), [RDK Ultra](https://developer.d-robotics.cc/rdkultra) 平台 (Bayse)
- - 支持 [RDK S100](), [RDK S100P]() 平台 (Nash)
- - 部分支持 [RDK X3](https://developer.d-robotics.cc/rdkx3) 平台 (Bernoulli2)
+ - 支持 [RDK X5](https://developer.d-robotics.cc/rdkx5)平台 (Bayse-e)
+ - RDK S100 Model Zoo: [https://github.com/d-Robotics/rdk_model_zoo_s](https://github.com/d-Robotics/rdk_model_zoo_s)
 
 **推荐系统版本**
-- RDK X3: RDK OS 3.0.0, Based on Ubuntu 22.04 aarch64, TROS-Humble.
-- RDK X5: RDK OS 3.0.0, Based on Ubuntu 22.04 aarch64, TROS-Humble.
-- RDK Ultra: RDK OS 1.0.0, Based on Ubuntu 20.04 aarch64, TROS-Foxy.
+- RDK X5: RDK OS >= 3.2.3, Based on Ubuntu 22.04 aarch64, TROS-Humble.
 
 ## ⭐️ RDK板卡准备
 
