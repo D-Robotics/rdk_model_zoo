@@ -214,7 +214,7 @@ def main():
     # ensure output directory exists
     os.makedirs(opt.output_dir, exist_ok=True)
 
-    # 获取模型文件名（不带扩展名）用于生成输出文件名
+    # 获取模型文件名用于生成输出文件名
     model_name = os.path.splitext(os.path.basename(opt.onnx))[0]
     output_model_prefix = f"{model_name}_bayese_{width}x{height}_nv12"
     
@@ -266,6 +266,7 @@ compiler_parameters:
             continue
             
         # 此处的前处理以ONNX的前处理为基础，总的来说是和训练时的前处理保持一致
+        # 如果yaml中有配置mean和scale, 则此处无须计算mean和scale.
         input_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)     # BGR2RGB
         input_tensor = cv2.resize(input_tensor, (width, height)) # resize
         input_tensor = np.transpose(input_tensor, (2, 0, 1))    # HWC2CHW
