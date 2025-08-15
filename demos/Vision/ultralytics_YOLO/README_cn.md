@@ -2,11 +2,6 @@
 
 # Ultralytics YOLO: 你只需要看一次
 
-## Contributors
-
- - Cauchy: 吴超
- - SkyXZ: 熊旗
-
 ## Summary
 ```bash
 D-Robotics OpenExplore(RDK X5, Bayes-e BPU) Version: >= 1.2.8
@@ -585,6 +580,12 @@ options:
 
 使用`https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Vision/ultralytics_YOLO/py`中的脚本即可. 运行效果参考本文档快速体验章节.
 
+## Contributors
+
+ - Cauchy @吴超
+ - SkyXZ @熊旗
+ - Marcelo @马超
+ - Suai @苏明超
 
 ## 参考
 

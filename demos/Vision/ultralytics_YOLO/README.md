@@ -3,11 +3,6 @@ English| [简体中文](./README_cn.md)
 
 # Ultralytics YOLO: You Only Look Once
 
-## Contributors
-
- - Cauchy: 吴超
- - SkyXZ: 熊旗
-
 ## Summary
 ```bash
 D-Robotics OpenExplore(RDK X5, Bayes-e BPU) Version: >= 1.2.8
@@ -593,6 +588,13 @@ options:
 Note: This operation is performed on the board, using the board's global Python interpreter. Ensure you are using the latest RDK X5 system image and miniboot provided by [Digua Developer Community](developer.d-robotics.cc).
 
 Use the scripts in `https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Vision/ultralytics_YOLO/py`. The running effect refers to the quick experience section of this document.
+
+## Contributors
+
+ - Cauchy @吴超
+ - SkyXZ @熊旗
+ - Marcelo @马超
+ - Suai @苏明超
 
 ## References
 

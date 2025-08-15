@@ -21,7 +21,7 @@ RDK Model Zoo is developed based on [RDK](https://d-robotics.cc/rdkRobotDevKit),
 
 **RDK Model Zoo supports the following platforms:**
 - Supports [RDK X5](https://developer.d-robotics.cc/rdkx5) (Bayse-e)
-- RDK S100: [https://github.com/d-Robotics/rdk_model_zoo_s](https://github.com/d-Robotics/rdk_model_zoo_s)
+- RDK S100 Model Zoo: [https://github.com/d-Robotics/rdk_model_zoo_s](https://github.com/d-Robotics/rdk_model_zoo_s)
 
 **Recommended System Versions**
 - RDK X5: RDK OS >= 3.2.3, Based on Ubuntu 22.04 aarch64, TROS-Humble.
