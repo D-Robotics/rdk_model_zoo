@@ -580,6 +580,7 @@ options:
 
 使用`https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Vision/ultralytics_YOLO/py`中的脚本即可. 运行效果参考本文档快速体验章节.
 
+
 ## Contributors
 
  - Cauchy @吴超
@@ -587,11 +588,24 @@ options:
  - Marcelo @马超
  - Suai @苏明超
 
-## 参考
+## References
 
-[ultralytics](https://docs.ultralytics.com/)
+[Ultralytics](https://docs.ultralytics.com/)
 
-[Github: yolo12](https://github.com/sunsmarterjie/yolo12)
+[Ultralytics LICENSE](https://www.ultralytics.com/license)
+
+[GitHub: YOLOv9](https://github.com/WongKinYiu/yolov9)
+
+[GitHub: YOLOv10](https://github.com/THU-MIG/yolov10)
+
+[GitHub: YOLOv12](https://github.com/sunsmarterjie/yolo12)
+
+[GitHub: YOLOv13](https://github.com/iMoonLab/yolov13)
+
+[YOLOv9: Learning What You Want to Learn Using Programmable Gradient Information](https://arxiv.org/abs/2402.13616)
+
+[YOLOv10: Real-Time End-to-End Object Detection](https://arxiv.org/abs/2405.14458)
 
 [YOLOv12: Attention-Centric Real-Time Object Detectors](https://arxiv.org/abs/2502.12524)
 
+[YOLOv13: Real-Time Object Detection with Hypergraph-Enhanced Adaptive Visual Perception](https://arxiv.org/abs/2506.17733)
