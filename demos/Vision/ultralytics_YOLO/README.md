@@ -5,8 +5,10 @@ English| [简体中文](./README_cn.md)
 
 ## Contributors
 
- - Cauchy: 吴超
- - SkyXZ: 熊旗
+ - Cauchy @吴超
+ - SkyXZ @熊旗
+ - Marcelo @马超
+ - Suai @苏明超
 
 ## Summary
 ```bash
