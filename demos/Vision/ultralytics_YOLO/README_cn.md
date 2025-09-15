@@ -76,6 +76,8 @@ YOLO11 - CLS, Size: n, s, m, l, x
 
 ## 快速体验
 
+快速体验环境为RDK X5板卡烧录社区提供的最新的RDK OS系统后, 正常联网和更新, 下载RDK X5 Model Zoo的`demos/Vision/ultralytics_YOLO`文件夹, 即可使用系统的全局Python解释器来体验. 如果您想使用conda等虚拟环境体验, 可以参考本文后的"模型部署"章节.
+
 ```bash
 # Download RDK Model Zoo
 https://github.com/D-Robotics/rdk_model_zoo
@@ -129,6 +131,7 @@ $ python3 py/Ultralytics_YOLO_Pose_YUV420SP.py
 ```
 
 如果您想替换其他的模型, 或者使用其他的图片, 可以修改脚本文件内的参数, 以目标检测为例, 可修改模型路径, 测试图片路径等参数.
+
 ```bash
 $ python3 py/Ultralytics_YOLO_Detect_YUV420SP.py -h
 
@@ -144,7 +147,7 @@ options:
   --reg REG                      DFL reg layer.
 ```
 
-结果分析
+### 结果分析
 
 程序自动下载 YOLO11n - CLS 的 BPU *.bin 模型, 并完成了对图片的分类, 在终端中以绿色字体打印出了图像分类的TOP5结果.
 
@@ -375,12 +378,7 @@ python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin
 ![](source/imgs/ultralytics_YOLO_Detect_DataFlow.png)
 
 公版处理流程中, 是会对8400个bbox完全计算分数, 类别和xyxy坐标, 这样才能根据GT去计算损失函数. 但是我们在部署中, 只需要合格的bbox就好了, 并不需要对8400个bbox完全计算. 
-优化处理流程中, 主要就是利用Sigmoid函数单调性做到了先筛选, 再计算. 同时利用Python的numpy的高级索引, 对DFL和特征解码的部分也做到了先筛选, 再计算, 节约了大量的计算, 从而后处理在CPU上, 利用numpy, 可以做到单核单帧单线程5毫秒. 
-
- - Classify部分,Dequantize操作
-在模型编译时,如果选择了移除所有的反量化算子,这里需要在后处理中手动对Classify部分的三个输出头进行反量化在. 查看反量化系数的方式有多种, 可以查看`hb_combine`时产物的日志, 也可通过BPU推理接口的API来获取. 
-注意,这里每一个C维度的反量化系数都是不同的,每个头都有80个反量化系数,可以使用numpy的广播直接乘. 
-此处反量化在bin模型中实现,所以拿到的输出是float32的. 
+优化处理流程中, 主要就是利用Sigmoid函数单调性做到了先筛选, 再计算. 对DFL和特征解码的部分也做到了先筛选, 再计算, 节约了大量的计算. 从而使得inference time大大缩短.  
 
  - Classify部分,ReduceMax操作
 ReduceMax操作是沿着Tensor的某一个维度找到最大值,此操作用于找到8400个Grid Cell的80个分数的最大值. 操作对象是每个Grid Cell的80类别的值,在C维度操作. 注意,这步操作给出的是最大值,并不是80个值中最大值的索引. 
@@ -404,8 +402,8 @@ $$x > -ln\left(\frac{1}{C}-1\right)$$
  - Classify部分,GatherElements操作和ArgMax操作
 使用Threshold(TopK)操作得到的符合条件的Grid Cell的索引(indices),在GatherElements操作中获得符合条件的Grid Cell,使用ArgMax操作得到具体是80个类别中哪一个最大,得到这个符合条件的Grid Cell的类别. 
 
- - Bounding Box部分,GatherElements操作和Dequantize操作
-使用Threshold(TopK)操作得到的符合条件的Grid Cell的索引(indices),在GatherElements操作中获得符合条件的Grid Cell,这里每一个C维度的反量化系数都是不同的,每个头都有64个反量化系数,可以使用numpy的广播直接乘,得到1×64×k×1的bbox信息. 
+ - Bounding Box部分,GatherElements操作
+使用Threshold(TopK)操作得到的符合条件的Grid Cell的索引(indices), 在GatherElements操作中获得符合条件的Grid Cell, 得到1×64×k×1的bbox信息. 
 
  - Bounding Box部分,DFL: SoftMax+Conv操作
 每一个Grid Cell会有4个数字来确定这个框框的位置,DFL结构会对每个框的某条边基于anchor的位置给出16个估计,对16个估计求SoftMax,然后通过一个卷积操作来求期望,这也是Anchor Free的核心设计,即每个Grid Cell仅仅负责预测1个Bounding box. 假设在对某一条边偏移量的预测中,这16个数字为 $ l_p $ 或者$(t_p, t_p, b_p)$,其中$p = 0,1,...,15$那么偏移量的计算公式为: 
@@ -579,6 +577,32 @@ options:
 注: 此操作在板卡进行, 使用板卡的全局Python解释器. 请确保您使用的是[地瓜开发者社区](developer.d-robotics.cc)提供的最新的RDK X5的系统镜像和miniboot. 
 
 使用`https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Vision/ultralytics_YOLO/py`中的脚本即可. 运行效果参考本文档快速体验章节.
+
+如果您想完整的安装这个环境, 可以参考以下步骤.
+
+```bash
+# Download RDK Model Zoo
+https://github.com/D-Robotics/rdk_model_zoo
+
+# Clone this repo (Optional)
+git clone https://github.com/D-Robotics/rdk_model_zoo.git
+
+# Make Sure your are in this file
+$ cd demos/Vision/ultralytics_YOLO
+
+# Create conda env (optional)
+conda create -n rdkx5_yolo python=3.10
+conda activate rdkx5_yolo
+
+# Install requirements
+pip install hobot_dnn_rdkx5 numpy==1.26.4 opencv-python scipy 
+
+# Using Alibaba PyPI Source. (optional)
+pip install hobot_dnn_rdkx5 numpy==1.26.4 opencv-python scipy -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+```
+
+随后, 便可以在这个环境中使用hobot_dnn_rdkx5库了. 请注意, 系统内自带的库的名称为hobot_dnn, 从PyPI源上安装的库的名称为hobot_dnn_rdkx5. 除此之外, 两者的使用方法完全相同. 当然, 您也可以在系统的全局Python解释器中安装hobot_dnn_rdkx5库, 以确保您的使用习惯一致.
+
 
 
 ## Contributors

@@ -30,10 +30,13 @@ except:
 
 # hobot_dnn
 try:
-    from hobot_dnn import pyeasy_dnn as dnn  # BSP Python API
+    try:
+        from hobot_dnn import pyeasy_dnn as dnn  # BSP Python API
+    except:
+        from hobot_dnn_rdkx5 import pyeasy_dnn as dnn  # BSP Python API from PyPI
 except:
-    print("Your python environment is not ready, please use system python3 to run this program.")
-    exit()
+    print("pip install hobot-dnn-rdkx5")
+    from hobot_dnn_rdkx5 import pyeasy_dnn as dnn
 
 
 from time import time

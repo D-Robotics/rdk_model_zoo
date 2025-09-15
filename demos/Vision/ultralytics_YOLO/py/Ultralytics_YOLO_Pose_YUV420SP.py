@@ -20,9 +20,24 @@
 import os
 import cv2
 import numpy as np
-from scipy.special import softmax
-# from scipy.special import expit as sigmoid
-from hobot_dnn import pyeasy_dnn as dnn  # BSP Python API
+
+# scipy
+try:
+    from scipy.special import softmax
+except:
+    print("scipy is  not installed, installing.")
+    os.system("pip install scipy")
+    from scipy.special import softmax
+
+# hobot_dnn
+try:
+    try:
+        from hobot_dnn import pyeasy_dnn as dnn  # BSP Python API
+    except:
+        from hobot_dnn_rdkx5 import pyeasy_dnn as dnn  # BSP Python API from PyPI
+except:
+    print("pip install hobot-dnn-rdkx5")
+    from hobot_dnn_rdkx5 import pyeasy_dnn as dnn
 
 from time import time
 import argparse
