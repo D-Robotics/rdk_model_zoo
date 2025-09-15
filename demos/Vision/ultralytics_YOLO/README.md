@@ -1,4 +1,4 @@
-English| [简体中文](./README_cn.md)
+English | [简体中文](./README_cn.md)
 
 
 # Ultralytics YOLO: You Only Look Once
@@ -79,6 +79,8 @@ YOLO11 - CLS, Size: n, s, m, l, x
 ```
 
 ## Quick Experience
+
+After flashing the latest RDK OS system provided by the community onto the RDK X5 board, connect it to the network and update normally. Then, download the `demos/Vision/ultralytics_YOLO` folder from the RDK X5 Model Zoo to experience the system using the global Python interpreter. If you prefer to use a virtual environment such as conda, please refer to the "Model Deployment" section later in this document.
 
 ```bash
 # Download RDK Model Zoo
@@ -387,13 +389,9 @@ sudo bash -c "echo performance > /sys/devices/system/bpu/bpu0/devfreq/28108000.b
 #### Object Detection
 ![](source/imgs/ultralytics_YOLO_Detect_DataFlow.png)
 
-In the standard processing flow, scores, categories, and xyxy coordinates are fully calculated for all 8,400 bounding boxes to compute the loss function based on ground truth (GT). However, in deployment, we only need qualified bounding boxes, not full calculations for all 8,400 boxes.
-The optimized processing flow primarily leverages the monotonicity of the Sigmoid function to achieve filtering before calculation. Simultaneously, using Python's numpy advanced indexing, the DFL and feature decoding parts are also optimized to filter first, then calculate, saving substantial computation. This allows the post-processing, using numpy on the CPU, to achieve 5 milliseconds per frame on a single core with a single thread.
+In the standard processing flow, scores, categories, and xyxy coordinates are fully computed for all 8400 bounding boxes (bbox) to calculate the loss function based on ground truth (GT). However, during deployment, we only need the qualified bboxes, so it's unnecessary to compute all 8400 bboxes completely. 
 
- - Classify part, Dequantize operation
-During model compilation, if all dequantization operators are removed, manual dequantization of the three output heads in the Classify part must be performed in the post-processing. There are multiple ways to view the dequantization coefficients; you can check the log output during `hb_combine`, or obtain them through the BPU inference interface API.
-Note that the dequantization coefficient for each C dimension is different, with each head having 80 dequantization coefficients, which can be directly multiplied using numpy broadcasting.
-This dequantization is implemented in the bin model, so the obtained output is float32.
+The optimization primarily leverages the monotonicity of the Sigmoid function to perform filtering before calculation. This approach also applies to the DFL and feature decoding stages—filtering first, then computing—which saves substantial computational effort. As a result, the inference time is significantly reduced.
 
  - Classify part, ReduceMax operation
 The ReduceMax operation finds the maximum value along a specific dimension of a Tensor. This operation is used to find the maximum value among the 80 scores of 8,400 Grid Cells. The operation object is the 80 category values of each Grid Cell, operating on the C dimension. Note, this operation provides the maximum value, not the index of the maximum value among the 80 values.
@@ -417,8 +415,8 @@ This operation will obtain the indices of the qualified Grid Cells and their cor
  - Classify part, GatherElements operation and ArgMax operation
 Using the indices of the qualified Grid Cells obtained from the Threshold(TopK) operation, the GatherElements operation retrieves the qualified Grid Cells, and the ArgMax operation determines which of the 80 categories is the largest, obtaining the category of this qualified Grid Cell.
 
- - Bounding Box part, GatherElements operation and Dequantize operation
-Using the indices of the qualified Grid Cells obtained from the Threshold(TopK) operation, the GatherElements operation retrieves the qualified Grid Cells. Here, the dequantization coefficient for each C dimension is different, with each head having 64 dequantization coefficients, which can be directly multiplied using numpy broadcasting, resulting in 1×64×k×1 bbox information.
+ - Bounding Box part, GatherElements operation:  
+Using the indices of qualified grid cells obtained from the Threshold (TopK) operation, the GatherElements operation retrieves these qualified grid cells, resulting in bbox information of shape 1×64×k×1.
 
  - Bounding Box part, DFL: SoftMax+Conv operation
 Each Grid Cell will have 4 numbers to determine the position of this box. The DFL structure provides 16 estimates for the offset of a certain edge of the box based on the anchor position. SoftMax is applied to the 16 estimates, and then a convolution operation is used to calculate the expectation. This is the core design of Anchor Free, meaning each Grid Cell is only responsible for predicting 1 Bounding box. Assuming in the prediction of the offset of a certain edge, these 16 numbers are $ l_p $ or $(t_p, t_p, b_p)$, where $p = 0,1,...,15$, the calculation formula for the offset is:
@@ -588,6 +586,31 @@ options:
 Note: This operation is performed on the board, using the board's global Python interpreter. Ensure you are using the latest RDK X5 system image and miniboot provided by [Digua Developer Community](developer.d-robotics.cc).
 
 Use the scripts in `https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Vision/ultralytics_YOLO/py`. The running effect refers to the quick experience section of this document.
+
+If you want to install this environment completely, you can refer to the following steps.
+
+```bash
+# Download RDK Model Zoo
+https://github.com/D-Robotics/rdk_model_zoo
+
+# Clone this repo (Optional)
+git clone https://github.com/D-Robotics/rdk_model_zoo.git
+
+# Make Sure your are in this file
+$ cd demos/Vision/ultralytics_YOLO
+
+# Create conda env (optional)
+conda create -n rdkx5_yolo python=3.10
+conda activate rdkx5_yolo
+
+# Install requirements
+pip install hobot_dnn_rdkx5 numpy==1.26.4 opencv-python scipy 
+
+# Using Alibaba PyPI Source. (optional)
+pip install hobot_dnn_rdkx5 numpy==1.26.4 opencv-python scipy -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+```
+
+Then, the hobot_dnn_rdkx5 library can be used in this environment. Please note that the name of the library built into the system is hobot_dnn, and the name of the library installed from the PyPI source is hobot_dnn_rdkx5. In addition, the usage methods of the two are exactly the same. Of course, you can also install the hobot_dnn_rdkx5 library in the system's global Python interpreter to ensure that your usage habits are consistent.
 
 ## Contributors
 
