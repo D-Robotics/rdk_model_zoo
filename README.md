@@ -7,7 +7,7 @@ English | [简体中文](./README_cn.md)
 
 ## Introduction to RDK Model Zoo
 
-RDK Model Zoo is developed based on [RDK](https://d-robotics.cc/rdkRobotDevKit), providing deployment routines for most mainstream algorithms. These routines include exporting D-Robotics *.bin models and using Python APIs to infer D-Robotics *.bin models. Some models also encompass data collection, model training, exportation, conversion, and deployment processes.
+RDK Model Zoo is developed based on [RDK](https://en.d-robotics.cc/), providing deployment routines for most mainstream algorithms. These routines include exporting D-Robotics *.bin models and using Python APIs to infer D-Robotics *.bin models. Some models also encompass data collection, model training, exportation, conversion, and deployment processes.
 
 **RDK Model Zoo currently provides reference for the following types of models:**
 
