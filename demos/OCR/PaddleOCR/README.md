@@ -1,4 +1,4 @@
-English | [简体中文](./README_cn.md)
+English | [简体中文](./README_cn.md) | [日本語](./READMD_jp.md)
 
 # PaddleOCR text recognition
 
