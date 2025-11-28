@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文 | [日本語](./READMD_jp.md)
+[English](./README.md) | 简体中文 | [日本語](./README_jp.md)
 
 # PaddleOCR 文字识别
 
