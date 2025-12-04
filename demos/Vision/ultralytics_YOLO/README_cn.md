@@ -91,6 +91,11 @@ $ cd demos/Vision/ultralytics_YOLO
 # Check your workspace
 $ tree -L 2
 .
+├── cpp                                              # Cpp 示例
+│   ├── classify
+│   ├── detect
+│   ├── pose
+│   └── segment
 ├── py
 │   ├── eval_batch.py
 │   ├── eval_Ultralytics_YOLO_Classify_YUV420SP.py   # Advance Evaluation for Classify
@@ -110,8 +115,7 @@ $ tree -L 2
 │   └── reference_yamls        # Reference yaml configs
 └── x86
     ├── export_monkey_patch.py
-    └── mapper.py
-```
+    └── mapper.py```
 
 ### Python 体验
 直接运行对应的视觉任务, 会自动下载模型文件.
@@ -146,6 +150,37 @@ options:
   --score-thres SCORE_THRES      confidence threshold.
   --reg REG                      DFL reg layer.
 ```
+
+### Cpp 体验
+编译并运行 Cpp 示例。
+
+```bash
+# 分类
+$ cd cpp/classify
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_classify
+
+# 目标检测
+$ cd cpp/detect
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_detect
+
+# 实例分割
+$ cd cpp/segment
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_segment
+
+# 姿态估计
+$ cd cpp/pose
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_pose
+```
+
+如果您想替换其他的模型, 或者使用其他的图片, 可以修改 `main.cc` 源码并重新编译.
 
 ### 结果分析
 

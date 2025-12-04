@@ -1,34 +1,42 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
+
 project(ultralytics_yolo_pose)
 
+# C++11 standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# OpenCV
+# Compiler flags
+# libdnn.so depends on system software dynamic link library
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,-unresolved-symbols=ignore-in-shared-libs")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3")
+
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+# Find OpenCV
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-# BPU DNN library
-include_directories(/usr/include/horizon/dnn)
-link_directories(/usr/lib/hbmedia)
+# D-Robotics BPU DNN library
+set(DNN_PATH "/usr/include/dnn")
+set(DNN_LIB_PATH "/usr/lib/")
 
-# Source files
-set(SOURCES main.cc)
+include_directories(${DNN_PATH})
+link_directories(${DNN_LIB_PATH})
 
-# Executable
-add_executable(ultralytics_yolo_pose ${SOURCES})
+# Add executable
+add_executable(ultralytics_yolo_pose main.cc)
 
 # Link libraries
 target_link_libraries(ultralytics_yolo_pose
     ${OpenCV_LIBS}
     dnn
+    pthread
+    rt
+    dl
 )
-
-# Set build type to Release for optimization
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
-
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "OpenCV version: ${OpenCV_VERSION}")
-message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")

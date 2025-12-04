@@ -95,6 +95,11 @@ $ cd demos/Vision/ultralytics_YOLO
 # Check your workspace
 $ tree -L 2
 .
+├── cpp                                              # Cpp Examples
+│   ├── classify
+│   ├── detect
+│   ├── pose
+│   └── segment
 ├── py
 │   ├── eval_batch.py
 │   ├── eval_Ultralytics_YOLO_Classify_YUV420SP.py   # Advance Evaluation for Classify
@@ -114,8 +119,7 @@ $ tree -L 2
 │   └── reference_yamls        # Reference yaml configs
 └── x86
     ├── export_monkey_patch.py
-    └── mapper.py
-```
+    └── mapper.py```
 
 ### Python Experience
 Run it directly and the model file will be downloaded automatically.
@@ -150,6 +154,37 @@ options:
   --score-thres SCORE_THRES      confidence threshold.
   --reg REG                      DFL reg layer.
 ```
+
+### Cpp Experience
+Compile and run the Cpp examples.
+
+```bash
+# Classify
+$ cd cpp/classify
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_classify
+
+# Detect
+$ cd cpp/detect
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_detect
+
+# Instance Segmentation
+$ cd cpp/segment
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_segment
+
+# Pose Estimation
+$ cd cpp/pose
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./ultralytics_yolo_pose
+```
+
+If you want to replace other models or use other pictures, you can modify the `main.cc` source code and recompile it.
 
 
 ### Result Analysis
