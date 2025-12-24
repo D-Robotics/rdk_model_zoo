@@ -28,34 +28,19 @@
 
 ## 仓库目录结构
 
-本仓库采用分层清晰、职责明确的目录结构，以便用户快速定位所需内容并开始使用。其中，samples/ 是仓库的核心，集中提供运行在 BPU 上的各类模型示例；docs/ 提供了**本仓库的用户手册**及接口层面的说明文档；datasets/ 用于存放示例与评测所需的数据集；utils/ 则沉淀了可复用的通用工具，便于批量维护。
+本仓库采用分层清晰、职责明确的目录结构，以便用户快速定位所需内容并开始使用。其中，samples/ 是仓库的核心，集中提供运行在 BPU 上的各类模型示例；docs/ 提供了本仓库的规范说明及接口层面的说明文档；datasets/ 用于存放示例与评测所需的数据集；utils/ 则沉淀了可复用的通用工具，便于批量维护。
 
-以下仅展示 前两级目录结构，用于快速理解仓库整体组织方式：
+以下展示顶层目录结构，用于快速理解仓库整体组织方式：
 ```bash
 .
-|-- datasets                            # 公共数据集与示例数据
-|   |-- coco                            # COCO 数据集及相关样例
-|   `-- imagenet                        # ImageNet 数据集
-|-- docs                                # 项目文档与用户指南
-|   |-- images                          # 文档图片资源
-|   |-- Model_Zoo_User_Guide.md         # Model Zoo 使用总览
-|   |-- Python_API_User_Guide.md        # BPU Python API 文档
-|   |-- README.md                       # docs 目录说明
-|   `-- UCP_User_Guide.md               # UCP 接口与使用说明
-|-- samples                             # 模型示例（核心内容）
-|   |-- llm                             # 大语言模型示例
-|   |-- speech                          # 语音模型示例
-|   |-- vision                          # 视觉模型示例
-|   |-- vla                             # VLA 模型示例
-|   `-- vlm                             # VLM 模型示例
-|-- tools                               # 转换/构建/辅助工具
-|-- tros                                # TROS/ROS 相关适配
-|   `-- README.md                       # TROS 说明
-|-- utils                               # 通用工具库
-|   |-- c_utils                         # C/C++ 工具
-|   `-- py_utils                        # Python 工具
-|-- LICENSE                             # 许可证
-`-- README.md                           # 顶层说明
+|-- datasets                               # 公共数据集与示例数据
+|-- docs                                   # 项目文档与用户指南
+|-- samples                                # 模型示例（核心内容）
+|-- tools                                  # 转换/构建/辅助工具
+|-- tros                                   # TROS/ROS 相关适配
+|-- utils                                  # 通用工具库
+|-- LICENSE                                # 许可证
+`-- README.md                              # 顶层说明
 
 ```
 
