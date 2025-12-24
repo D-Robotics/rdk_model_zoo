@@ -1,193 +1,101 @@
+# Model Zoo
+## 仓库简介
 
-![](resource/imgs/model_zoo_logo.jpg)
+本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向 运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者 快速上手 BPU、快速跑通模型推理流程。
 
-English | [简体中文](./README_cn.md)
+仓库中收录了覆盖多个 AI 领域（如计算机视觉、语音）的 BPU 可运行模型，并提供从 模型准备 → 推理运行 → 结果解析 → 示例验证 的完整参考实现，帮助用户以最小成本理解并使用 BPU 能力。
 
-# ⭐️ Give a Star for Guidance, Thanks for Your Attention ⭐️
+当前主要支持的平台包括：
 
-## Introduction to RDK Model Zoo
+- RDKS100
 
-RDK Model Zoo is developed based on [RDK](https://en.d-robotics.cc/), providing deployment routines for most mainstream algorithms. These routines include exporting D-Robotics *.bin models and using Python APIs to infer D-Robotics *.bin models. Some models also encompass data collection, model training, exportation, conversion, and deployment processes.
+- RDKS600
 
-**RDK Model Zoo currently provides reference for the following types of models:**
+仓库核心价值
 
-- [Image Classification](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/classification): `./rdk_model_zoo/demos/classification`
-  
-- [Object Detection](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/detect): `./rdk_model_zoo/demos/detect`
+- 🚀 快速把 BPU 用起来
 
-- [Instance Segmentation](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Instance_Segmentation): `./rdk_model_zoo/demos/Instance_Segmentation`
+    提供可直接运行的模型与示例工程，帮助用户在最短时间内完成 BPU 推理验证。
 
-- [Large Models](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/llm): `./rdk_model_zoo/demos/llm`
+- 🧩 完整端到端示例
 
-**RDK Model Zoo supports the following platforms:**
-- Supports [RDK X5](https://developer.d-robotics.cc/rdkx5) (Bayse-e)
-- RDK S100 Model Zoo: [https://github.com/d-Robotics/rdk_model_zoo_s](https://github.com/d-Robotics/rdk_model_zoo_s)
+    覆盖模型加载、前处理、BPU 推理执行、后处理与结果可视化，支持 C/C++ 与 Python 双语言接口。
 
-**Recommended System Versions**
-- RDK X5: RDK OS >= 3.2.3, Based on Ubuntu 22.04 aarch64, TROS-Humble.
+- 📐 规范化设计与完整接口文档
 
-## ⭐️ Preparation of RDK Board
+    提供统一的目录结构与示例代码规范，并配套详细的接口文档与使用说明，便于客户快速理解、二次开发，降低集成与维护成本。
 
-Refer to the [RDK User Manual](https://developer.d-robotics.cc/information) to ensure the board can access the internet normally, ensuring one of the following conditions can be met.
 
-- Use SSH to connect to the RDK board, allowing commands to be input through Terminal, knowing the IP address of the RDK board. Including but not limited to MobaXtern, Windows Terminal, etc.
-- Use VSCode Remote SSH plugin to remotely connect to the RDK board, enabling normal use of VSCode or other IDEs.
-- Access the board via VNC, operating it through the xfce graphical interface.
-- Connect to the board via HDMI, operating it through the xfce graphical interface.
+## 仓库目录结构
 
-## ⭐️ Dependency Installation Reference
+本仓库采用分层清晰、职责明确的目录结构，以便用户快速定位所需内容并开始使用。其中，samples/ 是仓库的核心，集中提供运行在 BPU 上的各类模型示例；docs/ 提供了**本仓库的用户手册**及接口层面的说明文档；datasets/ 用于存放示例与评测所需的数据集；utils/ 则沉淀了可复用的通用工具，便于批量维护。
 
-### RDK Model Zoo Python API (Recommended)
-Install the bpu_infer_lib library using pip.
-
-For RDK X5:
+以下仅展示 前两级目录结构，用于快速理解仓库整体组织方式：
 ```bash
-pip install bpu_infer_lib_x5 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
+.
+|-- datasets                            # 公共数据集与示例数据
+|   |-- coco                            # COCO 数据集及相关样例
+|   `-- imagenet                        # ImageNet 数据集
+|-- docs                                # 项目文档与用户指南
+|   |-- images                          # 文档图片资源
+|   |-- Model_Zoo_User_Guide.md         # Model Zoo 使用总览
+|   |-- Python_API_User_Guide.md        # BPU Python API 文档
+|   |-- README.md                       # docs 目录说明
+|   `-- UCP_User_Guide.md               # UCP 接口与使用说明
+|-- samples                             # 模型示例（核心内容）
+|   |-- llm                             # 大语言模型示例
+|   |-- speech                          # 语音模型示例
+|   |-- vision                          # 视觉模型示例
+|   |-- vla                             # VLA 模型示例
+|   `-- vlm                             # VLM 模型示例
+|-- tools                               # 转换/构建/辅助工具
+|-- tros                                # TROS/ROS 相关适配
+|   `-- README.md                       # TROS 说明
+|-- utils                               # 通用工具库
+|   |-- c_utils                         # C/C++ 工具
+|   `-- py_utils                        # Python 工具
+|-- LICENSE                             # 许可证
+`-- README.md                           # 顶层说明
+
 ```
 
-For RDK X3:
+## 快速开始
+
+本仓库中的模型均已按领域进行分类，并汇总在下方的 模型列表 中。
+用户可通过如下步骤快速运行目标模型：
+- 根据自身需求，在模型列表中查找目标模型；
+- 根据表格中提供的路径进入对应的模型目录；
+- 进入模型目录后，阅读该目录下的 README.md，其中包含该模型的功能说明、使用方式以及完整的运行指引；
+
+
+以YOLOv5为例
+- 在下方模型列表中定位 YOLOv5；
+- 进入模型目录：
+
+    ```bash
+    cd samples/vision/yolov5
+    ```
+- 阅读相应的README文档
+
+- 即可按照模型自身的说明完成推理示例的运行与验证。
+
+
+如需对本仓库的整体结构、BPU 使用方式及接口能力进行系统了解，建议参考：
 ```bash
-pip install bpu_infer_lib_x3 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
+docs/Model_Zoo_User_Guide.md
 ```
 
-### D-Robotics System Software BSP C/C++ & Python API (Reference)
+## 模型列表
 
-Managed as Debian packages with system flashing.
-```bash
-sudo apt update # Ensure the archive.d-robotics.cc source is available
-sudo apt install hobot-spdev
-sudo apt show hobot-spdev
-```
+下表按 应用领域 对当前仓库中已提供的模型进行分类，方便快速查找与定位。
+每个模型的详细说明、使用方法和示例，请点击对应的 详情链接 查看该模型目录下的 README.md。
 
-### D-Robotics ToolChain C API (Reference)
-Included with system flashing, this is the most basic C API.
-Refer to the [RDK User Manual Algorithm Toolchain](https://developer.d-robotics.cc/rdk_doc/04_toolchain_development) section for obtaining OE packages, from which libdnn.so and its header files can be extracted.
+| 类别         | 模型名称 | 模型路径                     | 详情 |
+|--------------|----------|------------------------------|------|
+| 目标检测     | YOLOv5x  | samples/vision/yolov5        | [README](samples/vision/yolov5/README.md) |
+| 图像分类     | ResNet50 | samples/vision/resnet50      | [README](samples/vision/resnet50/README.md) |
+| 语音识别     | ASR-XXX  | samples/speech/asr_xxx       | [README](samples/speech/asr_xxx/README.md) |
 
-## ⭐️ Experience RDK Model Zoo Using Jupyter (Recommended)
-Install jupyterlab:
-```bash
-pip install jupyterlab
-```
 
-Then use the following command to pull the Model Zoo repository:
-```bash
-git clone https://github.com/D-Robotics/rdk_model_zoo
-```
-
-Note: The default branch pulled by git clone is the RDK X5 branch. If you are using another product in the RDK series, switch branches using git checkout. For example, to switch to the RDK X3 branch, execute:
-```bash
-git checkout rdk_x3
-```
-
-After pulling, enter the Model Zoo directory:
-```bash
-cd rdk_model_zoo
-```
-
-Then start Jupyter Lab (note: replace the IP address with your actual login IP):
-```bash
-jupyter lab --allow-root --ip 192.168.1.10
-```
-![](resource/imgs/jupyter_start.png)
-
-After executing the command, click the link shown in the log while holding down Ctrl to enter Jupyter Lab (as shown below). Double-click 'demos' to select models and experience the RDK Model Zoo.
-
-![](resource/imgs/into_jupyter.png)
-
-Developers can navigate to the corresponding module to experience model deployment on RDK development boards.
-
-Selecting a model's notebook in Jupyter Lab will bring up an interface similar to the following:
-
-![](resource/imgs/basic_usage.png)
-
-Taking the YOLO World model as an example, clicking the double triangle button runs all cells. Scrolling down reveals the results:
-
-![](resource/imgs/basic_usage_res.png)
-
-Developers can also choose to run cells individually by pressing Shift + Enter, which executes the current cell and moves to the next.
-
-## ⭐️ Experience RDK Model Zoo Using VSCode (Reference)
-
-Use the VSCode Remote SSH plugin to log into the board remotely, open the folder corresponding to the RDK Model Zoo repository, enter the specific model folder, view READMEs, edit programs, and run them.
-![](resource/imgs/vscode_demo.jpg)
-
-Note: All program relative paths start from the model's directory.
-
-![](resource/imgs/demo_rdkx5_yolov10n_detect.jpg)
-
-## ⭐️ RDK Reference Resources
-
-[D-Robotics](https://d-robotics.cc/)
-
-[D-Robotics Developer Community](https://developer.d-robotics.cc/)
-
-[RDK User Manual](https://developer.d-robotics.cc/information)
-
-[Community Resource Center](https://developer.d-robotics.cc/resource)
-
-[RDK X3 Algorithm Toolchain Community Manual](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
-
-[RDK X3 OpenExplore Product Release](https://developer.d-robotics.cc/forumDetail/136488103547258769)
-
-[RDK Ultra Algorithm Toolchain Community Manual](https://developer.d-robotics.cc/api/v1/fileData/horizon_j5_open_explorer_cn_doc/index.html)
-
-[RDK Ultra OpenExplore Product Release](https://developer.d-robotics.cc/forumDetail/118363912788935318)
-
-[RDK X5 Algorithm Toolchain Community Manual](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
-
-[RDK X5 OpenExplore Product Release](https://developer.d-robotics.cc/forumDetail/251934919646096384)
-
-## ⭐️ Feedback
-If you have any questions or encounter issues, we warmly welcome you to post them on the [D-Robotics Developer Community](https://developer.d-robotics.cc) or submit an issue/comment directly in this repository. Your feedback is invaluable to us, and we are always eager to assist you and improve our resources.
-
-## ⭐️ FAQ
-
-### The Precision of Self-trained Models Does Not Meet Expectations
-
-- Please check if both the Docker version of the OpenExplore toolchain and the version of libdnn.so on the board are the latest released versions.
-- When exporting models, ensure that you follow the requirements specified in the README files within the corresponding examples folders.
-- Ensure that the cosine similarity of each output node reaches above 0.999 (a minimum of 0.99).
-
-### The Speed of Self-trained Models Does Not Meet Expectations
-
-- The inference performance using Python APIs is weaker; please test performance using C/C++ APIs.
-- Performance data does not include preprocessing and postprocessing steps, which differ from the total time taken by complete demos. Generally, models with nv12 input can achieve end-to-end throughput equal to BPU throughput.
-- Ensure that the board has been set to the highest frequency specified in the corresponding README.
-- Check if other applications are occupying CPU/BPU and DDR bandwidth resources, as this can degrade inference performance.
-
-### How to Address Model Quantization Loss of Precision
-
-- According to the platform version, first refer to the relevant documentation for the specific platform, particularly the PTQ section on precision debugging, to debug precision issues.
-- If int8 quantization leads to a loss of precision due to model structure characteristics or weight distribution, consider using hybrid quantization or QAT quantization.
-
-### Can't Reshape 1354752 in (1,3,640,640)
-Please modify the resolution in the preprocess.py file located in the same directory to match the resolution of the ONNX model you intend to convert. Delete all calibration datasets and rerun script 02 to regenerate the calibration dataset. Currently, the calibration dataset for this example comes from the ../../../01common/calibration data/coco directory and is generated in the ./calibration_data_rgb_f32 directory.
-
-### Why Are There No Demos for Other Models? Is It Because They Are Not Supported?
-
-Hello, no.
-
-- Due to project scheduling constraints, we have selected frequently asked models as demo examples to cater to the needs of most D-Robotics developers. If you have better model recommendations, feel free to provide feedback on the D-Robotics Developer Community.
-- Additionally, BPU and algorithm toolchain-related resources have already been released on the developer community, allowing custom models to be converted independently.
-
-### mAP Precision Is Lower Compared to Ultralytics Official Results
-
-- Ultralytics measures mAP using dynamic shape models, whereas BPU uses fixed shape models, resulting in lower mAP test results compared to dynamic shapes.
-- It's normal for the precision calculated by RDK Solutions using pycocotools to be slightly lower than that calculated by Ultralytics due to minor differences in calculation methods. We focus on using the same calculation method to test the precision of quantized and floating-point models to assess precision loss during quantization.
-- After quantization and converting NCHW-RGB888 input to YUV420SP(nv12) input, BPU models also experience some precision loss.
-
-### Can ONNX Exported Without Modifying YOLO Model Structure Be Used?
-
-Yes, but it's not recommended.
-
-- For public model structures or self-designed output head structures, you need to design the post-processing code yourself.
-- The adjustments made to model structures in the RDK Solutions repository have been considered for both precision and performance. Other modifications have not been tested yet, but we welcome explorations of more high-performance and high-precision modification methods.
-
-### Do Models Need to Be Converted to ONNX First Before Quantization/How to Use Horizon Toolchain?
-Under the PTQ scheme, models need to be exported to ONNX or Caffe first, then converted to bin models. Under the QAT scheme, a new Torch model needs to be built for quantization-aware training, converting from pt models to hbm models.
-
-### Is It Necessary to Modify Output Heads During Training?
-During training, follow the public version entirely and only modify when exporting. This ensures that the training loss function calculations align, and deployment will match the post-processing code running on the board.
-
-### Does Model Inference Involve CPU Processing?
-During model conversion, operators that cannot be quantized or do not meet BPU constraints will fallback to CPU computation. Specifically, for a fully BPU operator-based bin model, there will be quantization and dequantization nodes before and after the model, responsible for converting float to int and vice versa, which are computed by the CPU.
+## 许可证
+[Apache License 2.0](LICENSE) |
