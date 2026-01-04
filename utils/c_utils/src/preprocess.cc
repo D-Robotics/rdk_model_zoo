@@ -27,7 +27,7 @@
 
 // BPU requires w stride alignment, S600 is aligned to 64, and the rest are aligned to 32.
 #define ALIGN(value, alignment) (((value) + ((alignment)-1)) & ~((alignment)-1))
-#ifdef PLATFORM_S600
+#ifdef SOC_S600
 #define ALIGN_64(value) ALIGN(value, 64)
 #define BPU_ALIGN(value) ALIGN_64(value)
 #else

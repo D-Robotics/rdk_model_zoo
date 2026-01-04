@@ -781,3 +781,74 @@ TODO
     - 普通开发人员；
 
 ## 跨平台规范
+
+### 代码跨平台规范
+
+#### C/C++
+
+在 C/C++ 代码中，不同平台之间的差异通过编译期宏定义进行区分与控制。构建阶段由 CMake 自动识别当前运行平台的 SoC 名称，并根据读取到的平台信息生成对应的宏定义，开发者无需手动配置平台宏。
+
+具体做法是：在 CMakeLists.txt 中读取系统提供的 SoC 名称（如 S100、S600），统一转换为大写后，通过编译选项注入形如 SOC_<SOC_NAME> 的宏定义（例如 SOC_S100、SOC_S600）。在源码中即可通过这些宏在编译期选择不同平台的实现逻辑，从而实现同一份代码在不同 SoC 平台上的差异化编译。
+```MakeFile
+# Set device model macro definition
+file(READ "/sys/class/boardinfo/soc_name" SOC_NAME_RAW)
+string(TOUPPER "${SOC_NAME_RAW}" SOC_NAME_UPPER)
+add_definitions(-DSOC_${SOC_NAME_UPPER})
+```
+
+在具体代码实现中，开发者可基于平台宏对硬件相关差异进行隔离。例如，不同 SoC 平台对 BPU 内存对齐要求不同，可通过平台宏在编译期选择对应的对齐策略，避免在运行时引入额外判断。
+
+```c
+// BPU requires w stride alignment, S600 is aligned to 64, and the rest are aligned to 32.
+#define ALIGN(value, alignment) (((value) + ((alignment)-1)) & ~((alignment)-1))
+#ifdef SOC_S600
+#define ALIGN_64(value) ALIGN(value, 64)
+#define BPU_ALIGN(value) ALIGN_64(value)
+#else
+#define ALIGN_32(value) ALIGN(value, 32)
+#define BPU_ALIGN(value) ALIGN_32(value)
+#endif
+```
+
+通过上述方式，可以在保证代码统一性的前提下，清晰、可维护地支持多平台差异，避免在业务逻辑中混入大量平台判断，从而提升代码可读性与可扩展性。
+
+#### python
+
+通过读取系统提供的 SoC 名称来识别当前运行平台，并据此在代码中实现平台差异化处理。系统在运行时从 /sys/class/boardinfo/soc_name 读取当前设备的 SoC 型号（如 s100、s600），作为平台判定依据，从而避免硬编码平台信息。
+
+在 Python 侧，通过统一的接口获取 SoC 名称，当系统信息读取失败时提供默认值，保证程序在异常场景下仍可正常运行。
+
+```python
+def get_soc_name() -> str:
+    """
+    @brief Get the SoC (System-on-Chip) name of the current device.
+
+    @param None This function has no input parameters.
+    @return The SoC name as a string; returns "s100" if reading fails.
+    """
+    soc_path = "/sys/class/boardinfo/soc_name"
+    try:
+        # Attempt to read the SoC name from the system information file
+        with open(soc_path, "r") as f:
+            # Strip trailing whitespace and return the content
+            return f.read().strip()
+    except Exception:
+        # Return a default SoC name when the system file cannot be read
+        return "s100"
+```
+
+在具体业务逻辑中，基于获取到的 SoC 名称动态构造平台相关路径或参数，例如模型文件路径，从而实现同一份代码在不同平台上的自动适配。
+
+```python
+    soc = common.get_soc_name().lower()
+
+    parser.add_argument('--model-path', type=str,
+                        default=f'/opt/hobot/model/{soc}/basic/yolov5x_672x672_nv12.hbm',
+                        help="""Path to BPU Quantized *.hbm Model.""")
+```
+通过上述方式，目前 S100 与 S600 平台已实现一套代码的统一兼容，无需为不同平台维护独立分支代码，仅通过运行时平台识别即可完成差异化适配，提升了代码复用性与维护效率。
+
+
+### 文档跨平台规范
+
+文档默认描述通用行为，平台差异作为显式例外进行标注，避免重复说明，确保文档的可读性与可维护性。
