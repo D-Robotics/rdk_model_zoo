@@ -16,29 +16,14 @@ COCO 数据集以**复杂场景、丰富类别和真实上下文关系**为特�
 
 ```text
 coco/
-├── samples/                         # 小样本数据（用于快速跑通流程）
-│   ├── annotations/                 # 示例标注文件（COCO JSON 格式）
-│   └── images/                      # 示例图片
 ├── README.md                        # 本说明文档
 ├── download_full_coco.sh            # 下载完整 COCO 数据集脚本
-└── labels.txt                       # COCO 类别标签文件（80 类）
+└── coco_classes.names               # COCO 类别标签文件（80 类）
 ```
 
-### 1.1 samples/
+### 1.1 coco_classes.names
 
-samples/ 目录提供 小规模示例数据，用于：
-
-    - 快速验证数据加载与预处理流程
-
-    - 验证推理 / 评估 / 可视化代码是否正常工作
-
-    - 在资源受限环境下进行功能联调
-
-    - samples/ 不用于正式训练或评测。
-
-### 1.2 labels.txt
-
-labels.txt 文件包含 COCO 数据集的 类别名称列表（通常为 80 类），顺序与模型输出的 class_id 对应，例如：
+coco_classes.names 文件包含 COCO 数据集的 类别名称列表（通常为 80 类），顺序与模型输出的 class_id 对应，例如：
 
 ```text
 person
