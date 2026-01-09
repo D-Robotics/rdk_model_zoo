@@ -17,6 +17,7 @@
 import os
 import cv2
 import numpy as np
+from typing import Dict
 
 def download_model_if_needed(model_path: str, download_url: str) -> None:
     """
@@ -75,3 +76,32 @@ def load_class_names(path: str) -> list:
         # Strip whitespace and filter out empty lines
         class_names = [line.strip() for line in f.readlines() if line.strip()]
     return class_names
+
+
+def load_labels(label_path: str) -> Dict[int, str]:
+    """
+    @brief Load labels from file. Supports dictionary format string or line-separated list.
+    @param label_path Path to the label file.
+    @return Dictionary of labels {index: name}.
+    """
+    labels = {}
+    if not os.path.exists(label_path):
+        print(f"Warning: Label file not found: {label_path}")
+        return labels
+
+    try:
+        with open(label_path, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+        
+        if content.startswith('{'):
+            # Handle python dictionary string format (e.g. ImageNet labels)
+            labels = eval(content)
+        else:
+            # Handle standard line-separated format
+            lines = [line.strip() for line in content.split('\n') if line.strip()]
+            labels = {i: name for i, name in enumerate(lines)}
+            
+    except Exception as e:
+        print(f"Warning: Failed to load labels from {label_path}: {e}")
+
+    return labels
