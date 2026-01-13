@@ -170,8 +170,8 @@ def main() -> None:
     if not os.path.exists(opt.model_path):
         print(f"File {opt.model_path} does not exist. Downloading MobileNetV2 model...")
         os.system("wget -c https://archive.d-robotics.cc/downloads/rdk_model_zoo/"
-                  "rdk_s100/MobileNet/mobilenetv2_224x224_nv12.hbm")
-        opt.model_path = 'mobilenetv2_224x224_nv12.hbm'
+                  "rdk_s100/MobileNet/mobilenetv2_224x224_nv12.bin")
+        opt.model_path = 'mobilenetv2_224x224_nv12.bin'
 
     # Load class index-to-label mapping if available
     idx2label: Optional[Dict[int, str]] = None
