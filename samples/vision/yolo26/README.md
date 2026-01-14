@@ -1,3 +1,5 @@
+English | [简体中文](./README_cn.md)
+
 # YOLO26 RDK Model Zoo Sample
 
 This directory contains scripts for exporting, converting, and running inference for YOLO26 models on RDK X5 hardware.

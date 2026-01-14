@@ -1,3 +1,4 @@
+[English](./README.md) | 简体中文
 # YOLO26 RDK Model Zoo 示例
 
 本目录包含了在 RDK X5 硬件上导出、转换和运行 YOLO26 模型推理的脚本。
