@@ -63,7 +63,7 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/resnet18_224x2
 
 ## 4. 部署测试
 
-在下载完毕 .bin 文件后，可以执行 test_ResNet18.ipynb ResNet 模型 jupyter 脚本文件，在板端实际运行体验实际测试效果。需要更改测试图片，可额外下载数据集后，放入到data文件夹下并更改 jupyter 文件中图片的路径
+在下载完毕 .bin 文件后，可以执行 main.py ，在板端实际运行体验实际测试效果。需要更改测试图片，可额外下载数据集后，放入到data文件夹下并更改 main.py 文件中图片的路径
 
 ![](./data/inference.png)
 
