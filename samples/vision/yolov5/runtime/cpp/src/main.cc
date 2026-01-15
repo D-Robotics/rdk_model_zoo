@@ -14,6 +14,25 @@
  * limitations under the License.
  */
 
+/**
+ * @file main.cc
+ * @brief Provide a command-line demo application for running YOLOv5x object detection.
+ *
+ *        This file implements the executable entry point that wires together the
+ *        full YOLOv5x sample workflow. It parses command-line flags (model path,
+ *        input image, label file, and thresholds), initializes the YOLOv5x runtime,
+ *        and runs the standard pipeline: preprocess -> inference -> postprocess.
+ *
+ *        The program loads a BGR test image, prepares model input tensors (including
+ *        resize/format conversion as required by the compiled model), executes BPU
+ *        inference via the runtime APIs, decodes and filters detections (score/NMS),
+ *        draws visualization overlays, and saves the final result image to disk.
+ *
+ *        This sample is intended as a minimal reference for integrating the YOLOv5x
+ *        wrapper and related utilities into an application with clear, end-to-end
+ *        execution flow and configurable runtime parameters.
+ */
+
 #include <iostream>
 #include <string>
 #include <vector>

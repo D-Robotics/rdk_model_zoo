@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * @file preprocess.cc
+ * @brief Provide preprocessing utilities for preparing model inputs and tensor buffers.
+ *
+ * This file implements common preprocessing helpers used before inference, including
+ * tensor buffer preparation and image-to-tensor data preparation. The utilities are
+ * designed to be reusable across different model samples and to match device/runtime
+ * requirements (e.g., alignment, stride handling, and input format expectations).
+ */
+
 #include <cmath>
 #include <vector>
 #include <cstdint>

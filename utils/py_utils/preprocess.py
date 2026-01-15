@@ -14,17 +14,45 @@
 
 # flake8: noqa: E501
 
+"""
+preprocess: Preprocessing utilities for vision model inputs.
+
+This module provides reusable preprocessing helpers to convert raw inputs
+into model-ready representations, including image resizing strategies and
+format conversions. It is designed to be shared across multiple samples and
+runtimes to keep preprocessing consistent and easy to maintain.
+
+Key Features:
+    - Convert between common image formats and planar representations.
+    - Resize inputs with optional aspect-ratio preservation (e.g., letterbox).
+    - Split and manipulate NV12 data into components suitable for inference.
+
+Notes:
+    - The module focuses on generic preprocessing building blocks; task- or
+      model-specific preprocessing policies should be implemented at the
+      sample level.
+    - Helper coverage may evolve as new input formats and models are added.
+"""
+
+
 import cv2
 import numpy as np
 
 
 def bgr_to_nv12_planes(image: np.ndarray) -> tuple:
-    """
-    @brief Convert a BGR image to NV12 format (Y and UV planes).
-    @param image Input BGR image as a NumPy array of shape (H, W, 3).
-    @return A tuple of:
-        - y: Y plane with shape (1, H, W, 1)
-        - uv: UV plane with shape (1, H/2, W/2, 2)
+    """Convert a BGR image to NV12 format (Y and UV planes).
+
+    This function converts a BGR image into NV12 format by first transforming
+    it into planar YUV420 (I420) format and then interleaving the U and V
+    planes to form the UV plane.
+
+    Args:
+        image: Input BGR image as a NumPy array with shape `(H, W, 3)`.
+
+    Returns:
+        A tuple containing:
+            - y: Y plane with shape `(1, H, W, 1)`.
+            - uv: UV plane with shape `(1, H/2, W/2, 2)`.
     """
     height, width = image.shape[:2]
     area = height * width
@@ -51,14 +79,26 @@ def bgr_to_nv12_planes(image: np.ndarray) -> tuple:
 def resized_image(img: np.ndarray, input_W: int, input_H: int,
                   resize_type: int = 1,
                   interpolation=cv2.INTER_NEAREST) -> np.ndarray:
-    """
-    @brief Resize image with either direct resize or letterbox strategy.
-    @param img Input image (H, W, 3).
-    @param input_W Target width.
-    @param input_H Target height.
-    @param resize_type Resize method: 0 for direct resize, 1 for letterbox padding.
-    @param interpolation Interpolation method (default: nearest).
-    @return Resized image with shape (input_H, input_W, 3).
+    """Resize an image using direct resize or letterbox strategy.
+
+    This function resizes the input image to the target resolution required
+    by the model. It supports either direct resizing or letterbox resizing
+    with padding to preserve the aspect ratio.
+
+    Args:
+        img: Input image array with shape `(H, W, 3)`.
+        input_W: Target image width.
+        input_H: Target image height.
+        resize_type: Resize strategy used during preprocessing.
+            - 0: Direct resize.
+            - 1: Letterbox resize with padding to preserve aspect ratio.
+        interpolation: OpenCV interpolation method used for resizing.
+
+    Returns:
+        The resized image with shape `(input_H, input_W, 3)`.
+
+    Raises:
+        ValueError: If an invalid `resize_type` is provided.
     """
     img_h, img_w = img.shape[:2]
 
@@ -85,14 +125,20 @@ def resized_image(img: np.ndarray, input_W: int, input_H: int,
 
 
 def split_nv12_bytes(nv12_bytes: bytes, width: int, height: int) -> tuple:
-    """
-    @brief Split raw NV12 bytes into Y and UV planes.
-    @param nv12_bytes Input NV12-encoded byte stream.
-    @param width Width of the image.
-    @param height Height of the image.
-    @return Tuple (y, uv), where:
-        - y: shape (H, W), dtype uint8
-        - uv: shape (H/2, W), dtype uint8 (interleaved UV)
+    """Split raw NV12 bytes into Y and UV planes.
+
+    This function parses a raw NV12-encoded byte stream and separates it
+    into the Y (luma) plane and the interleaved UV (chroma) plane.
+
+    Args:
+        nv12_bytes: Raw NV12-encoded byte stream.
+        width: Image width.
+        height: Image height.
+
+    Returns:
+        A tuple containing:
+            - y: Y plane with shape `(H, W)` and dtype `uint8`.
+            - uv: Interleaved UV plane with shape `(H/2, W)` and dtype `uint8`.
     """
     y_size = width * height
     uv_size = y_size // 2
@@ -105,12 +151,20 @@ def split_nv12_bytes(nv12_bytes: bytes, width: int, height: int) -> tuple:
 
 
 def letterbox_resize_gray(gray_img: np.ndarray, target_w: int, target_h: int) -> np.ndarray:
-    """
-    @brief Resize a grayscale image using letterbox (aspect ratio preserving) strategy.
-    @param gray_img Input grayscale image of shape (H, W).
-    @param target_w Target width.
-    @param target_h Target height.
-    @return Resized and padded grayscale image of shape (target_h, target_w).
+    """Resize a grayscale image using letterbox (aspect-ratio preserving) strategy.
+
+    This function resizes a grayscale image while preserving its aspect ratio,
+    then pads the resized image with a constant gray value to match the target
+    resolution.
+
+    Args:
+        gray_img: Input grayscale image with shape `(H, W)`.
+        target_w: Target image width.
+        target_h: Target image height.
+
+    Returns:
+        The resized and padded grayscale image with shape
+        `(target_h, target_w)`.
     """
     h, w = gray_img.shape
     scale = min(target_w / w, target_h / h)
@@ -131,16 +185,25 @@ def letterbox_resize_gray(gray_img: np.ndarray, target_w: int, target_h: int) ->
 def resize_nv12_yuv(y: np.ndarray, uv: np.ndarray,
                     target_h: int = 672, target_w: int = 672,
                     keep_ratio: bool = True) -> tuple:
-    """
-    @brief Resize Y and UV planes of an NV12 image to target resolution.
-    @param y Y plane of shape (H, W).
-    @param uv Interleaved UV plane of shape (H/2, W).
-    @param target_h Target height.
-    @param target_w Target width.
-    @param keep_ratio Whether to preserve aspect ratio (uses letterbox if True).
-    @return Tuple of resized:
-        - y_resized: shape (target_h, target_w)
-        - uv_resized: shape (target_h/2, target_w/2, 2)
+    """Resize the Y and UV planes of an NV12 image to a target resolution.
+
+    This function resizes the luma (Y) and chroma (UV) planes of an NV12 image.
+    When `keep_ratio` is enabled, letterbox resizing is applied to preserve
+    the original aspect ratio; otherwise, direct resizing is used.
+
+    Args:
+        y: Y (luma) plane with shape `(H, W)`.
+        uv: Interleaved UV (chroma) plane with shape `(H/2, W)`.
+        target_h: Target image height.
+        target_w: Target image width.
+        keep_ratio: Whether to preserve the aspect ratio using letterbox
+            resizing. If `False`, direct resizing is applied.
+
+    Returns:
+        A tuple containing:
+            - y_resized: Resized Y plane with shape `(target_h, target_w)`.
+            - uv_resized: Resized UV plane with shape
+              `(target_h/2, target_w/2, 2)`.
     """
     # Resize Y
     if keep_ratio:

@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-#pragma once
+/**
+ * @file postprocess.hpp
+ * @brief Declare postprocessing interfaces for model inference results.
+ *
+ * This file provides common interfaces for converting raw model outputs
+ * into application-level inference results.
+ */
 
+#pragma once
 
 #include <cstdint>
 #include <array>

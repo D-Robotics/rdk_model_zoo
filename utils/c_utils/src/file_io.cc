@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * @file file_io.cc
+ * @brief Provide common file input utilities for loading images, labels, and related resources.
+ *
+ * This file implements a set of generic file I/O helpers used by samples and runtime code.
+ * It focuses on reading external data (such as images and label files) into in-memory
+ * representations required by the inference pipeline.
+ */
+
 #include <fstream>
 #include <iostream>
 #include <iterator>

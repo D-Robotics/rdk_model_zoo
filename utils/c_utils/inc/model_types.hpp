@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * @file model_types.hpp
+ * @brief Define common data structures for representing model inference results.
+ *
+ * This file provides shared result data types used across inference,
+ * postprocessing, and visualization modules.
+ */
+
 #pragma once
 
 /**

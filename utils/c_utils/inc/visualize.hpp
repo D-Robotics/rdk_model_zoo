@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * @file visualize.hpp
+ * @brief Visualization interface declarations for inference results.
+ *
+ * This header declares common visualization utilities used to render
+ * model inference outputs, such as bounding boxes, masks, keypoints,
+ * and text overlays, onto images or display backends.
+ */
+
 #pragma once
 
 #include <map>

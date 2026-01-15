@@ -14,6 +14,27 @@
  * limitations under the License.
  */
 
+/**
+ * @file yolov5.cc
+ * @brief Implement the YOLOv5x inference pipeline using HB-DNN / UCP runtime APIs.
+ *
+ *        This file contains the concrete implementation of the YOLOv5x wrapper
+ *        and its end-to-end inference flow on Horizon Robotics platforms:
+ *        - Initialize and load a packed *.hbm model, query tensor properties,
+ *          and allocate stride-aware tensor buffers.
+ *        - Preprocess input images (letterbox resize and BGR->NV12 conversion)
+ *          and write data into input tensor memory with proper cache handling.
+ *        - Execute synchronous inference tasks on BPU via hbDNNInferV2() and UCP
+ *          scheduling APIs, then invalidate output caches for CPU-side access.
+ *        - Postprocess raw outputs by dequantization, decoding, thresholding,
+ *          NMS, and coordinate scaling back to the original image space.
+ *
+ *        The implementation is designed as a reference pipeline that separates
+ *        preprocessing, runtime execution, and postprocessing into reusable steps
+ *        while keeping resource ownership and cleanup explicit.
+ */
+
+
 #include "yolov5.hpp"
 #include <chrono>
 

@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * @file nn_math.hpp
+ * @brief Declare common mathematical helper interfaces for neural network
+ *        inference and result processing.
+ *
+ * This file provides lightweight math utilities shared across inference
+ * and postprocessing components.
+ */
+
 #pragma once
 
 #include <cmath>

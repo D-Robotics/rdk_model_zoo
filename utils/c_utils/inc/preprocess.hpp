@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * @file preprocess.hpp
+ * @brief Declare preprocessing helpers for preparing model input tensors.
+ *
+ * This file provides common helper interfaces used to prepare and populate
+ * inference input tensors before model execution.
+ */
+
 #pragma once
 
 #include <cstdint>

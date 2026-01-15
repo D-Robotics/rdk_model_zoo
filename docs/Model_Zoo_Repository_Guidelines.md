@@ -339,55 +339,123 @@ TODO
 ### Python 注释规范
 本规范用于统一代码中的注释风格与 Docstring 书写方式，确保代码语义清晰、行为可理解、接口可复用，便于长期维护与外部开发者直接基于源码进行使用与二次开发。
 
--  Docstring 总体要求
-    - 所有 类、函数、方法 必须编写 docstring。
-    - 统一采用 Doxygen 风格或类 C 注释风格（包含 @brief、@param、@return 等标签）。
-    - Docstring 必须简明描述功能、参数含义及返回值结构。
-    - 示例
+注意，开发者完整代码注释及开发后需及时更新源码说明文档，更新方法见[源码文档说明](docs/source_reference/README.md)；
+
+- 整体注释应遵守如下几个原则：
+
+    1. Python Sample中的代码必须使用 **Google-style docstring** 风格的注释，便于直接生成接口文档；
+    2. 为了便于开发者理解和上手，理论上自己开发的每个类、方法等都应有注释，且注释风格更遵循本小结规范；
+    3. 对复杂流程用块注释写“步骤概览”；
+
+- 文件注释规范
+
+    -  必须满足
+
+        - 每个对外可见的 .py 文件必须包含 module docstring
+        - Docstring 位于文件最顶部（除 shebang / encoding 外）
+        - 第一行必须是摘要（summary line）
+        - 内容需准确描述模块职责
+
+    - 推荐
+        - 给出 典型使用示例（Typical Usage）
+        - 示例代码使用 >>> doctest 风格
+        - 说明限制或注意事项（Notes）
+        - 列出模块提供的主要能力（Key Features）
+
+    - 示例（模板）
         ```python
-        def forward(self, inputs):"""
-            @brief Run model inference.
-            @param inputs (dict)
-                Preprocessed input tensor dictionary.
-            @return dict
-                Output tensors keyed by output tensor name.
-            """
+        """
+        Module summary in one line.
+
+        Detailed description of the module responsibility and usage context.
+
+        Key Features:
+            - Feature 1
+            - Feature 2
+
+        Typical Usage:
+            >>> from mypkg.runtime import Runner
+            >>> runner = Runner(cfg)
+            >>> outputs = runner.infer(inputs)
+
+        Notes:
+            - Any constraints or assumptions.
+        """
         ```
 
 - 类注释规范
 
-    - 简要说明核心功能；
-    - 简要说明使用方式；
-    - 示例：
+    -  必须满足
+
+        - 所有 public class 必须包含 docstring
+
+        - 第一行必须说明类的职责
+
+        - 若构造参数非显然（>1 个、或含配置对象），必须在 docstring 说明
+
+        - Attributes: 写关键成员（只列“读者关心的”）
+
+    - 推荐
+        - 说明限制或注意事项（Notes）
+
+    - 示例（模板）
         ```python
-        class YoloV5X:"""
-            @brief Wrapper class for YOLOv5X inference on HB_HBMRuntime.
-            Provides unified preprocessing, inference, and postprocessing interfaces.
-            Designed to work with YOLOv5 models compiled into .hbm format.
+        class Runner:
+            """
+            <One-line responsibility summary>.
+
+            Briefly describe what this class encapsulates and how it should be used.
+
+            Args:
+                config (Any): Configuration object or parameters for initialization.
+
+            Attributes:
+                <name> (<type>): Optional key attributes that users may access.
+
+            Notes:
+                Optional constraints, lifecycle, or usage tips.
             """
         ```
 
-- 函数与方法注释规范
+- 函数/方法注释规范
 
-    - @brief：一段话概述函数的目的；
-    - @param：所有输入参数的说明与类型；
-    - @return：返回值结构说明，对于相同任务的返回值，多元组数据必须按固定顺序返回（如检测任务固定为bboxes、classes、scores）；
-    - 如有异常情况，需在注释中明确抛出的异常类型；
-    - 示例
+    -  必须满足
+
+        - Summary：简要说明功能
+
+        - Args：每个参数至少说明“语义”
+
+        - Returns：返回什么
+
+    - 推荐
+
+        - 给出参数的合法范围/单位/默认行为（如果会导致误用）
+
+        - 对复杂返回结构写清字段语义
+
+        - 说明限制或注意事项（Notes）
+
+    - 示例（模板）
         ```python
-        def set_scheduling_params(self,
-                                priority: Optional[int] = None,
-                                bpu_cores: Optional[list] = None) -> None:
+        def func(arg1, arg2):
             """
-            @brief Configure inference scheduling parameters.
+            <One-line summary starting with a verb>.
 
-            @param priority (int, optional)
-                Inference priority in range [0, 255].
-            @param bpu_cores (list[int], optional)
-                BPU core indices used for inference.
-            @return None
+            Args:
+                arg1 (<type>): What this argument represents.
+                arg2 (<type>): What this argument represents.
+
+            Returns:
+                <type>: What the function returns at a conceptual level.
+
+            Raises:
+                <ExceptionType>: When and why it can happen.  # Optional but recommended
+
+            Notes:
+                Optional side effects, assumptions, or usage tips.
             """
         ```
+
 - 行内注释规范
     - 行内注释用于解释关键步骤或逻辑，不应冗长，注释使用英文。
     - 示例
@@ -400,53 +468,164 @@ TODO
 
 本规范用于统一 C/C++ Sample 中模型代码、配置结构体及预处理/后处理模块的注释风格，通过明确、规范的注释约定，提升代码的可读性、可维护性与跨团队协作效率。
 
-- 类与结构体注释
-    - 必须使用 Doxygen 风格注释；
-    - 必须说明类型的用途；
-    - 示例：
-        ```c++
-        /**
-         * @class YOLOv5x
-        * @brief Wrapper class for YOLOv5x inference using Horizon Robotics DNN APIs.
-        *
-        * This class encapsulates the complete inference pipeline, including:
-        * - Model loading and initialization
-        * - Input preprocessing
-        * - BPU inference execution
-        * - Output postprocessing (decode, thresholding, NMS)
-        */
-        ```
-- 函数方法注释规范
-    - @brief：一段话说明用途；
-    - @param：参数含义说明，明确标注其输入 / 输出特性([in][out])；
-    - @return：返回值结构说明（如有），同一任务类型需保持统一返回格式；
-    - 示例：
-        ```c++
-        /**
-         * @brief Preprocess an input image into model input tensor buffers.
-        *
-        * Current implementation:
-        * - Letterbox resize to model input resolution (input_w/input_h)
-        * - Convert BGR image to NV12 as required by the compiled model
-        * - Write the converted data into input_tensors[0].sysMem
-        *
-        * @param input_tensors [in,out] Model input tensors to be filled.
-        * @param input_w [in] Model input width in pixels.
-        * @param input_h [in] Model input height in pixels.
-        * @param img [in] Input image (OpenCV Mat).
-        * @param image_format [in] Input image format string (only "BGR" is supported).
-        *
-        * @return int32_t 0 on success, non-zero on failure.
-        */
-        int32_t pre_process(std::vector<hbDNNTensor>& input_tensors,
-                            cv::Mat& img,
-                            const int input_w, const int input_h,
-                            const std::string& image_format = "BGR");
-        ```
-- 行内注释规范
-    - 行内注释用于解释关键逻辑或原因；
-    - 注释统一使用英文。
+- 整体注释应遵守如下几个原则：
 
+    1. C/C++ Sample中的代码必须使用 **Doxgen** 风格的注释，便于直接生成接口文档；
+    2. 为了便于开发者理解和上手，理论上自己开发的每个函数都应有注释，且注释风格更遵循本小结规范；
+    3. 为了便于开发者学习，建议注释在头文件和源码中均存放；
+
+- 文件级注释规范
+
+    文件级注释用于说明文件整体职责，必须写在文件顶部（#include 之前），使用 /** ... */。
+
+    - 必须包含
+
+        @file：文件名（与实际文件名一致）
+
+        @brief：简要说明文件做什么（动词开头）
+
+    - 推荐包含
+
+        @ingroup：所属模块
+
+        @see：关联接口或文件
+
+        @warning：高风险或误用后果
+
+        @note: 约束说明，如描述线程安全、生命周期、平台或使用限制
+
+    - 示例（推荐模板）
+
+        ```hpp
+
+        /**
+        * @file hb_bpu_runtime.h
+        * @brief Provide public APIs for BPU model loading and inference execution.
+        *
+        * This header defines the runtime context, tensor descriptors, and the public
+        * APIs to load HBM models, prepare input/output tensors, and run inference.
+        *
+        * @note Thread-safety: runtime contexts are NOT thread-safe unless stated otherwise.
+        *       Do not call inference APIs concurrently on the same context.
+        * @note Ownership: the caller owns input/output buffers; the runtime does not free them.
+        * @see hb_bpu_runtime_create()
+        * @see hb_bpu_runtime_destroy()
+        */
+
+        ```
+
+- 类与结构体注释规范
+
+    类（class）与结构体（struct）注释用于说明类型的语义、职责与使用约束，必须写在类型定义之前，使用 /** ... */。
+
+    - 必须包含:
+
+        @brief：简要说明该类型表示什么/负责什么
+
+        正文说明：1–2 行，说明用途、使用场景或生命周期
+
+        成员说明：所有 public 成员/字段必须有说明（使用 ///< 或块注释）
+
+    - 推荐包含:
+
+        @note：线程安全、生命周期、所有权（ownership）等约束
+
+        @warning：误用风险
+
+        @see：关联类型或接口
+
+    - 示例（结构体）:
+        ```hpp
+        /**
+        * @brief Detection result.
+        *
+        * Represents a single object detection output.
+        *
+        * @note Coordinates are in pixel space.
+        */
+        struct Detection {
+            float bbox[4];   ///< x1, y1, x2, y2
+            float score;     ///< confidence score
+            int   class_id;  ///< class index
+        };
+
+        ```
+    - 示例（类）
+        ```hpp
+        /**
+        * @brief BPU runtime context.
+        *
+        * Manages model loading, tensor preparation, and inference execution.
+        * One instance represents an independent inference runtime.
+        *
+        * @note Not thread-safe. One context per thread is recommended.
+        */
+        class BpuRuntime {
+        public:
+            /**
+            * @brief Run inference once.
+            *
+            * @return 0 on success, negative value on failure.
+            */
+            int run();
+
+            void* model_;        ///< Loaded HBM model handle.
+            void* input_tensor_; ///< Input tensor buffer for inference.
+            void* output_tensor_;///< Output tensor buffer for inference.
+            bool  initialized_; ///< Whether the runtime has been initialized.
+        };
+
+        ```
+
+- 函数/方法注释规范
+
+    函数/方法注释用于说明接口语义与使用方式，必须写在声明处（头文件），使用 /** ... */。
+
+    - 必须包含
+
+        @brief：简要说明函数做什么
+
+        @param：每个参数都必须说明（含语义、必要时单位/范围/是否可空、输入输出属性）
+
+        返回值说明：
+
+            @return：返回值
+
+            @retval：返回错误码（推荐）
+
+    - 推荐包含
+
+        @note：注意事项，如线程安全、性能、前置条件、生命周期约束
+
+        @warning：误用风险、未定义行为
+
+        @see：关联接口（如 create/destroy、init/deinit）
+
+    - 示例（返回错误码风格）
+
+        ```hpp
+        /**
+        * @brief Run inference once.
+        *
+        * @param[in]  ctx   Runtime context.
+        * @param[in]  input Input tensor.
+        * @param[out] output Output tensor to receive results.
+        * @retval 0        Success.
+        * @retval -EINVAL  Invalid argument.
+        * @retval -EIO     Runtime failure.
+        */
+        int run(BpuContext* ctx, const Tensor* input, Tensor* output);
+
+    - 示例（返回值风格）
+
+        ```hpp
+        /**
+        * @brief Get model input tensor count.
+        *
+        * @return Number of input tensors.
+        */
+        int get_input_count() const;
+        ```
 
 ## 文档规范
 文档规范主要约束 ModelZoo 仓库中各级目录下的 README.md 编写形式与内容结构，涵盖仓库说明、数据集说明、模型示例、工具模块及运行时示例等文档。
@@ -668,7 +847,7 @@ TODO
         - 说明评估目录的用途，并指向 evaluator README。
 
     8. 推理结果
-        - 若有示例结果，直接展示
+        - 展示一下推理结果，主要是便于用户确认示例是否正确运行。
 
     9. License
     遵循 ModelZoo 顶层 License。
@@ -742,10 +921,9 @@ TODO
             - 默认参数运行 ；
             - 指定参数运行 ；
             - 明确输出产物与路径（如 build/result.jpg）；
-    7. 接口说明
-        - 每个接口固定三段：功能 / 参数 / 返回值；
-        - 顺序固定：接口名 → 函数/结构体声明代码块 → 功能 → 参数 → 返回值；
-        - 参数使用表格（参数名/类型/说明），返回值用表格（返回值/说明）；
+    7. 代码文档
+        - 此处不写细节，指引用户去`docs/source_reference`目录查阅，如：- 阅读[源码文档说明](../docs/source_reference/README.md)，根据说明查看源码参考文档；
+
     8. 注意事项（可选）
         - 仅列真实会踩坑的点（如模型路径、运行权限、输出位置）；
 
@@ -763,7 +941,7 @@ TODO
 
 此文件主要说明各文件存放什么类别的通用函数，以及提供快速索引表格，供开发者快速查找有无可用接口；
 
-注意：**开发者一般只需维护接口列表，在新增接口后便于用户查找**；
+注意：**开发者一般只需在新增文件后更新即可**；
 
 - 路径：
     - utils/c_utils/README.md
@@ -771,11 +949,10 @@ TODO
 
 - 规范
     - 包含目录中各文件的说明；
-    - 每个通用函数均添加到第二部分索引表格中；
+    - 指引用户去`docs/source_reference`目录查阅支持的函数列表及相应的接口介绍；
 
 - 更新场景：
-    - 新增模型样例；
-    - 样例模型发生改变时；
+    - 新增文件夹；
 
 - 相关人员
     - 普通开发人员；

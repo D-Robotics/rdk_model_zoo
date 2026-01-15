@@ -14,12 +14,45 @@
 
 # flake8: noqa: E501
 
-def get_soc_name() -> str:
-    """
-    @brief Get the SoC (System-on-Chip) name of the current device.
+"""
+inspect: Runtime and system inspection utilities.
 
-    @param None This function has no input parameters.
-    @return The SoC name as a string; returns "s100" if reading fails.
+This module provides helper functions for inspecting runtime and system-level
+information at execution time. It is primarily used to query platform metadata
+and to introspect loaded models, exposing detailed information for debugging,
+verification, and demonstration purposes.
+
+Key Features:
+    - Query basic system or platform identification information.
+    - Inspect runtime-managed models and print detailed metadata.
+    - Assist developers in understanding model inputs, outputs, and scheduling
+      configurations.
+
+Typical Usage:
+    >>> from inspect import get_soc_name
+    >>> soc = get_soc_name()
+
+    >>> from inspect import print_model_info
+    >>> print_model_info(models)
+
+Notes:
+    - This module is intended for inspection, debugging, and informational
+      purposes only, and should not be relied on for performance-critical logic.
+    - The output format is human-readable and may change as inspection
+      requirements evolve.
+"""
+
+
+def get_soc_name() -> str:
+    """Get the SoC (System-on-Chip) name of the current device.
+
+    The SoC name is read from the system file
+    `/sys/class/boardinfo/soc_name`. If the file cannot be read, a default
+    value is returned.
+
+    Returns:
+        The SoC name as a string. Returns `"s100"` if reading the system
+        information fails.
     """
     soc_path = "/sys/class/boardinfo/soc_name"
     try:
@@ -33,9 +66,32 @@ def get_soc_name() -> str:
 
 
 def print_model_info(models: object) -> None:
-    """Print detailed information about input and \
-        output tensors of all models in the system."""
 
+    """Print detailed input and output tensor information for all models.
+
+    This utility function prints comprehensive metadata for each model
+    managed by the runtime, including:
+
+    - Model names and total model count
+    - Input tensor information:
+        - Names, shapes, data types
+        - Quantization parameters
+        - Strides and descriptions
+    - Output tensor information:
+        - Names, shapes, data types
+        - Quantization parameters
+        - Strides and descriptions
+    - Model-level and HBM-level descriptions
+    - Runtime scheduling parameters (priority, BPU cores, etc.)
+
+    Args:
+        models: Runtime model container object that provides model metadata
+            such as inputs, outputs, quantization info, and scheduling
+            parameters.
+
+    Returns:
+        None
+    """
     # 1. Model Name List
     print("=== Model Name List ===")
     model_names = models.model_names

@@ -14,6 +14,28 @@
 
 # flake8: noqa: E501
 
+
+"""
+visualize: Visualization utilities for model results.
+
+This module provides reusable helpers for rendering model outputs onto images
+or display devices, including drawing bounding boxes, masks, contours,
+keypoints, and text annotations. It is intended to support debugging,
+verification, and demo visualization across multiple samples and runtimes.
+
+Key Features:
+    - Draw detection results (boxes, labels, scores) on images or displays.
+    - Overlay segmentation results (masks, contours) with configurable styles.
+    - Render keypoints and simple geometric annotations for visualization.
+
+Notes:
+    - The module focuses on generic visualization building blocks; task- or
+      product-specific UI policies should be implemented at the sample level.
+    - Visual styles and color mappings may evolve as new tasks and models are
+      added.
+"""
+
+
 import cv2
 import numpy as np
 
@@ -29,13 +51,21 @@ rdk_colors = [
 def print_topk_predictions(output: np.ndarray,
                            idx2label: dict,
                            topk: int = 5) -> None:
-    """
-    @brief Print top-k classification predictions.
-    @details Uses softmax to compute probability and selects top-k.
-    @param output Raw logits as NumPy array (shape: [num_classes]).
-    @param idx2label Dictionary mapping class indices to labels.
-    @param topk Number of top predictions to display.
-    @return None
+    """Print the top-k classification predictions.
+
+    This function applies softmax to the raw classification logits,
+    selects the top-k classes with the highest probabilities, and prints
+    their labels and confidence scores.
+
+    Args:
+        output: Raw classification logits as a NumPy array with shape
+            `(num_classes,)`.
+        idx2label: Dictionary mapping class indices to human-readable
+            label strings.
+        topk: Number of top predictions to display.
+
+    Returns:
+        None
     """
     # Softmax with stability adjustment
     exp_logits = np.exp(output - np.max(output))
@@ -55,15 +85,23 @@ def print_topk_predictions(output: np.ndarray,
 
 def draw_boxes(image: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
                scores: np.ndarray, class_names: list, colors: list) -> np.ndarray:
-    """
-    @brief Draw bounding boxes with class names and scores on the image.
-    @param image Input image as a NumPy array.
-    @param boxes Bounding boxes as a NumPy array of shape (N, 4), format: [x1, y1, x2, y2].
-    @param cls_ids List or array of class indices corresponding to boxes.
-    @param scores List or array of confidence scores for each detection.
-    @param class_names List of class name strings.
-    @param colors List of RGB color tuples for each class.
-    @return Image with drawn boxes and labels.
+    """Draw bounding boxes with class names and confidence scores on an image.
+
+    This function draws rectangular bounding boxes on the input image and
+    overlays the corresponding class name and confidence score for each
+    detected object.
+
+    Args:
+        image: Input image as a NumPy array.
+        boxes: Bounding boxes with shape `(N, 4)` in `(x1, y1, x2, y2)` format.
+        cls_ids: Class indices corresponding to each bounding box.
+        scores: Confidence scores for each detection.
+        class_names: List of class name strings indexed by class ID.
+        colors: List of RGB color tuples used for visualization. Colors are
+            cycled if the number of classes exceeds the list length.
+
+    Returns:
+        The input image with bounding boxes and labels drawn on it.
     """
     for box, cls_id, score in zip(boxes, cls_ids, scores):
         x1, y1, x2, y2 = map(int, box)
@@ -83,15 +121,27 @@ def draw_boxes(image: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
 
 def draw_masks(image: np.ndarray, boxes: np.ndarray, masks: list,
                cls_ids: list, colors: list, alpha: float = 0.3) -> None:
-    """
-    @brief Overlay semi-transparent instance masks on the image.
-    @param image Input image to draw on (modified in-place).
-    @param boxes Bounding boxes corresponding to masks, shape: (N, 4).
-    @param masks List of binary masks, each with shape matching box region.
-    @param cls_ids List of class indices for each instance.
-    @param colors List of RGB color tuples for each class.
-    @param alpha Transparency level for the masks (0: transparent, 1: opaque).
-    @return None
+    """Overlay semi-transparent instance masks on an image.
+
+    This function blends instance segmentation masks onto the input image
+    using alpha compositing. Each mask is rendered with a class-specific
+    color inside its corresponding bounding box. The input image is modified
+    in place.
+
+    Args:
+        image: Input image array to draw on. The image is modified in place.
+        boxes: Bounding boxes corresponding to each mask with shape `(N, 4)`
+            in `(x1, y1, x2, y2)` format.
+        masks: List of binary mask arrays, each corresponding to a bounding
+            box region.
+        cls_ids: List of class indices for each detected instance.
+        colors: List of RGB color tuples used for visualization. Colors are
+            cycled if the number of classes exceeds the list length.
+        alpha: Transparency factor for mask blending. A value of `0` means
+            fully transparent, while `1` means fully opaque.
+
+    Returns:
+        None
     """
     for class_id, box, mask in zip(cls_ids, boxes, masks):
         x1, y1, x2, y2 = map(int, box)
@@ -117,15 +167,25 @@ def draw_masks(image: np.ndarray, boxes: np.ndarray, masks: list,
 
 def draw_contours(img: np.ndarray, boxes: np.ndarray, masks: list,
                   cls_ids: list, colors: list, thickness: int = 2) -> None:
-    """
-    @brief Draw contour outlines of instance masks on the image.
-    @param img Input image to draw on (modified in-place).
-    @param boxes Bounding boxes for each mask, shape: (N, 4).
-    @param masks List of binary masks for each instance.
-    @param cls_ids List of class indices for each instance.
-    @param colors List of RGB color tuples.
-    @param thickness Thickness of contour lines.
-    @return None
+    """Draw contour outlines of instance masks on an image.
+
+    This function extracts the external contours from each instance mask
+    and draws their outlines on the input image. The contours are shifted
+    from local (box-relative) coordinates to global image coordinates.
+    The input image is modified in place.
+
+    Args:
+        img: Input image array to draw on. The image is modified in place.
+        boxes: Bounding boxes corresponding to each mask with shape `(N, 4)`
+            in `(x1, y1, x2, y2)` format.
+        masks: List of binary mask arrays for each detected instance.
+        cls_ids: List of class indices for each instance.
+        colors: List of RGB color tuples used for visualization. Colors are
+            cycled if the number of classes exceeds the list length.
+        thickness: Thickness of the contour lines.
+
+    Returns:
+        None
     """
     for class_id, box, mask in zip(cls_ids, boxes, masks):
         x1, y1, x2, y2 = map(int, box)
@@ -149,11 +209,16 @@ def draw_contours(img: np.ndarray, boxes: np.ndarray, masks: list,
 
 
 def rgb_to_disp_color(rgb_tuple: tuple) -> int:
-    """
-    @brief Convert RGB tuple to 32-bit ARGB display color format.
-    @details Format is ARGB: alpha in high 8 bits, followed by R, G, B.
-    @param rgb_tuple Tuple of (R, G, B) values.
-    @return 32-bit ARGB integer color value.
+    """Convert an RGB tuple to a 32-bit ARGB display color value.
+
+    The output color format is ARGB, where the highest 8 bits represent
+    the alpha channel, followed by red, green, and blue channels.
+
+    Args:
+        rgb_tuple: A tuple of `(R, G, B)` values, each in the range `[0, 255]`.
+
+    Returns:
+        A 32-bit integer representing the color in ARGB format.
     """
     r, g, b = rgb_tuple
     alpha = 255
@@ -163,16 +228,25 @@ def rgb_to_disp_color(rgb_tuple: tuple) -> int:
 def draw_detections_on_disp(disp, boxes: np.ndarray, cls_ids: list,
                             scores: list, class_names: list,
                             colors: list, chn: int = 2) -> None:
-    """
-    @brief Draw detection boxes and labels on a hardware display.
-    @param disp Display device object with `set_graph_rect` and `set_graph_word` methods.
-    @param boxes Array of bounding boxes (N, 4).
-    @param cls_ids List of class indices.
-    @param scores List of detection confidence scores.
-    @param class_names List of class name strings.
-    @param colors List of RGB color tuples.
-    @param chn Display channel index.
-    @return None
+    """Draw detection boxes and labels on a hardware display.
+
+    This function renders detection results directly onto a hardware display
+    device by drawing bounding boxes and overlaying class names with
+    confidence scores. The display canvas is cleared before drawing.
+
+    Args:
+        disp: Display device object that provides `set_graph_rect` and
+            `set_graph_word` methods for drawing graphics and text.
+        boxes: Bounding boxes with shape `(N, 4)` in `(x1, y1, x2, y2)` format.
+        cls_ids: List of class indices corresponding to each bounding box.
+        scores: List of detection confidence scores.
+        class_names: List of class name strings indexed by class ID.
+        colors: List of RGB color tuples used for visualization. Colors are
+            cycled if the number of classes exceeds the list length.
+        chn: Display channel index.
+
+    Returns:
+        None
     """
     # Clear canvas
     disp.set_graph_rect(0, 0, 0, 0, 2, 1, 0, 3)
@@ -192,15 +266,24 @@ def draw_detections_on_disp(disp, boxes: np.ndarray, cls_ids: list,
 def draw_keypoints(image: np.ndarray, kpts_xy: np.ndarray,
                    kpts_score: np.ndarray, kpt_conf_thresh: float = 0.5,
                    radius_outer: int = 5, radius_inner: int = 2) -> None:
-    """
-    @brief Draw keypoints with confidence scores on an image.
-    @param image Input/output image in-place modification.
-    @param kpts_xy Keypoints coordinates, shape (N, K, 2).
-    @param kpts_score Keypoints confidence scores, shape (N, K, 1).
-    @param kpt_conf_thresh Confidence threshold to show keypoints.
-    @param radius_outer Outer circle radius.
-    @param radius_inner Inner circle radius.
-    @return None
+    """Draw keypoints with confidence scores on an image.
+
+    This function visualizes keypoints by drawing concentric circles at
+    each keypoint location and annotating them with their index. Only
+    keypoints whose confidence exceeds the given threshold are rendered.
+    The input image is modified in place.
+
+    Args:
+        image: Input image array to draw on. The image is modified in place.
+        kpts_xy: Keypoint coordinates with shape `(N, K, 2)`, where `N` is
+            the number of instances and `K` is the number of keypoints.
+        kpts_score: Keypoint confidence scores with shape `(N, K, 1)`.
+        kpt_conf_thresh: Confidence threshold for displaying keypoints.
+        radius_outer: Radius of the outer circle drawn for each keypoint.
+        radius_inner: Radius of the inner circle drawn for each keypoint.
+
+    Returns:
+        None
     """
     # Convert threshold to logit space (same as sigmoid(score) > threshold)
     kpt_conf_inverse = -np.log(1 / kpt_conf_thresh - 1)
@@ -226,13 +309,20 @@ def draw_keypoints(image: np.ndarray, kpts_xy: np.ndarray,
 def draw_polygon_boxes(img: np.ndarray, bboxes: list,
                        color: tuple = (128, 240, 128),
                        thickness: int = 3) -> np.ndarray:
-    """
-    @brief Draw polygon-style bounding boxes on a copy of the image.
-    @param img Input image (BGR format).
-    @param bboxes List of polygon boxes, each is an ndarray of shape (N, 2).
-    @param color Polygon color (B, G, R).
-    @param thickness Line thickness.
-    @return Image with drawn polygons.
+    """Draw polygon-style bounding boxes on a copy of the image.
+
+    This function draws closed polygon outlines on a copy of the input image.
+    Each polygon is defined by a sequence of vertex coordinates.
+
+    Args:
+        img: Input image in BGR format.
+        bboxes: List of polygon bounding boxes. Each element is a NumPy array
+            with shape `(N, 2)` representing polygon vertices.
+        color: Polygon color in `(B, G, R)` format.
+        thickness: Line thickness used to draw polygon edges.
+
+    Returns:
+        A copy of the input image with polygon bounding boxes drawn on it.
     """
     img_copy = img.copy()
     for bbox in bboxes:
