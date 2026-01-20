@@ -40,14 +40,8 @@ RDK Model Zoo 基于[RDK](https://d-robotics.cc)开发, 提供大多数主流算
 ### RDK Model Zoo Python API (推荐)
 使用pip完成bpu_infer_lib库的安装
 
-如使用RDK X5：
 ```bash
-pip install bpu_infer_lib_x5 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
-```
-
-使用 RDK X3：
-```bash
-pip install bpu_infer_lib_x3 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
+pip install bpu-infer-lib-x3==1.0.3
 ```
 
 ### D-Robotics System Software BSP C/C++ & Python API (参考)

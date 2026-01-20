@@ -40,14 +40,8 @@ Refer to the [RDK User Manual](https://developer.d-robotics.cc/information) to e
 ### RDK Model Zoo Python API (Recommended)
 Install the bpu_infer_lib library using pip.
 
-For RDK X5:
 ```bash
-pip install bpu_infer_lib_x5 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
-```
-
-For RDK X3:
-```bash
-pip install bpu_infer_lib_x3 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
+pip install bpu-infer-lib-x3==1.0.3
 ```
 
 ### D-Robotics System Software BSP C/C++ & Python API (Reference)
