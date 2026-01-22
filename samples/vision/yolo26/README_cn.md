@@ -1,127 +1,57 @@
+# YOLO26 模型说明
+
 [English](./README.md) | 简体中文
 
-# YOLO26 RDK Model Zoo 示例
+## 算法介绍
+YOLO26 是一系列通用且高性能的实时模型。本示例提供了在 D-Robotics RDK 硬件上运行多种任务的部署例程，包括：目标检测 (Detection)、实例分割 (Segmentation)、姿态估计 (Pose)、旋转框检测 (OBB) 以及图像分类 (Classification)。
 
-本目录包含了在 RDK X5 硬件上导出、转换和运行 YOLO26 模型（目标检测、实例分割、姿态估计、图像分类）的脚本。
+更多算法细节请参考 [Ultralytics](https://github.com/ultralytics/ultralytics) 官方资源。
 
-## 项目结构
-
-```
+## 目录结构
+```bash
 .
-├── cls/                # 图像分类任务脚本
-│   ├── export_yolo26_cls_bpu.py
-│   └── YOLO26_Cls_Inference.py
-├── detect/             # 目标检测任务脚本
-│   ├── export_yolo26_detect_bpu.py
-│   └── YOLO26_Detect_Inference.py
-├── pose/               # 姿态估计任务脚本
-│   ├── export_yolo26_pose_bpu.py
-│   └── YOLO26_Pose_Inference.py
-├── seg/                # 实例分割任务脚本
-│   ├── export_yolo26_seg_bpu.py
-│   └── YOLO26_Seg_Inference.py
-├── mapper.py           # 用于将 ONNX 转换为 BPU BIN 模型的通用工具
-└── README_cn.md
+├── conversion/     # 模型转换流程说明 (ONNX -> BIN)
+├── evaluator/      # 模型评估相关内容
+├── model/          # 模型文件及下载脚本
+├── runtime/        # 推理示例 (Python / C++)
+│   └── python/     # Python 推理实现
+├── test_data/      # 测试用数据（图片/标签）
+└── README.md       # 当前模型总览说明
 ```
 
-## 工作流程概览
+## 快速体验
+如果您想快速体验 YOLO26 模型，可以在 RDK 开发板上直接运行推理脚本。
 
-部署过程主要包含三个步骤：
-1.  **导出 (Export)**：将 PyTorch (`.pt`) 模型导出为针对 BPU 优化的 ONNX 格式。
-2.  **转换 (Convert)**：使用 `mapper.py` 将 ONNX 模型转换为兼容 BPU 的 `.bin` 模型。
-3.  **推理 (Inference)**：在 RDK 板端使用特定任务的推理脚本运行模型。
-
-## 1. 目标检测 (Detect)
-
-### 第一步：导出 ONNX
+### Python
+1. 确保开发板已安装必要的依赖。
+2. 运行统一的推理入口：
 ```bash
-cd detect
-python3 export_yolo26_detect_bpu.py
-# 生成文件示例: yolo26n_detect_bpu.onnx
+cd runtime/python
+python3 main.py --task detect --model-path ../../model/yolo26n_bpu_bayese_640x640_nv12.bin --test-img ../../test_data/bus.jpg
 ```
+关于参数说明和环境配置的更多细节，请参考 [runtime/python/README.md](./runtime/python/README.md)。
 
-### 第二步：转换为 BIN
-使用根目录下的 `mapper.py` 工具。
-```bash
-cd ..
-python3 mapper.py --onnx detect/yolo26n_detect_bpu.onnx --cal-images /path/to/calibration_data
-# 生成文件示例: yolo26n_detect_bayese_640x640_nv12.bin
-```
+## 模型转换
+我们提供了已经转换好的 BPU 模型。如果您需要转换自定义模型：
+1. 使用转换工具将模型导出为 ONNX 格式。
+2. 使用工具链将 ONNX 转换为 `.bin` 格式。
+详细步骤请参考 [conversion/README.md](./conversion/README.md)。
 
-### 第三步：板端推理
-将生成的 `.bin` 文件拷贝到 RDK 板端。
-```bash
-python3 detect/YOLO26_Detect_Inference.py --model-path yolo26n_detect_bayese_640x640_nv12.bin --test-img bus.jpg
-```
+## 模型推理 (Runtime)
+本示例为多种任务提供了标准化的推理封装：
+- **Python**: 基于 `pyeasy_dnn` 后端实现（采用规范的 Config 和 Model 类结构）。
+- **C++**: (即将推出)。
 
----
+详细说明请查阅：
+- [Python 推理说明](./runtime/python/README.md)
 
-## 2. 实例分割 (Seg)
+## 推理结果
+运行示例后，推理结果将保存为图片（例如 `result.jpg`），根据任务不同展示检测框、分割掩码或人体关键点。
 
-### 第一步：导出 ONNX
-```bash
-cd seg
-python3 export_yolo26_seg_bpu.py
-```
+## 模型评估 (Evaluator)
+`evaluator/` 目录包含了用于评估模型精度、性能及数值一致性的脚本。您可以直接在开发板上运行这些脚本，以获取模型在标准数据集（如 COCO, ImageNet）上的 mAP 和准确率等指标。
 
-### 第二步：转换为 BIN
-```bash
-cd ..
-python3 mapper.py --onnx seg/yolo26n_seg_bpu.onnx --cal-images /path/to/calibration_data
-```
+详细评估指南请参考：[模型评估说明](./evaluator/README_cn.md)
 
-### 第三步：板端推理
-```bash
-python3 seg/YOLO26_Seg_Inference.py --model-path yolo26n_seg_bayese_640x640_nv12.bin --test-img bus.jpg
-```
-
----
-
-## 3. 姿态估计 (Pose)
-
-### 第一步：导出 ONNX
-```bash
-cd pose
-python3 export_yolo26_pose_bpu.py
-```
-
-### 第二步：转换为 BIN
-```bash
-cd ..
-python3 mapper.py --onnx pose/yolo26n_pose_bpu.onnx --cal-images /path/to/calibration_data
-```
-
-### 第三步：板端推理
-```bash
-python3 pose/YOLO26_Pose_Inference.py --model-path yolo26n_pose_bayese_640x640_nv12.bin --test-img bus.jpg
-```
-
----
-
-## 4. 图像分类 (Cls)
-
-### 第一步：导出 ONNX
-```bash
-cd cls
-python3 export_yolo26_cls_bpu.py
-```
-
-### 第二步：转换为 BIN
-```bash
-cd ..
-python3 mapper.py --onnx cls/yolo26n_cls_bpu.onnx --cal-images /path/to/calibration_data
-```
-
-### 第三步：板端推理
-```bash
-python3 cls/YOLO26_Cls_Inference.py --model-path yolo26n_cls_bayese_224x224_nv12.bin --test-img bus.jpg
-```
-
-## 关于 `mapper.py`
-`mapper.py` 脚本是 `hb_mapper` 的封装工具，负责处理校准数据准备和模型转换。
-- `--onnx`：输入 ONNX 模型的路径。
-- `--cal-images`：包含校准图像（JPG/PNG）的目录路径。
-- `--output-dir`：（可选）保存输出 `.bin` 模型的目录。
-- `--quantized`：（可选）`int8`（默认）或 `int16`。
-
-请确保在安装了 `hb_mapper` 的环境（例如 OpenExplore Docker）中运行 `mapper.py`。
+## License
+本示例遵循 [Apache 2.0 License](../../../LICENSE)。
