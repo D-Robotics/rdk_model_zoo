@@ -1,9 +1,45 @@
+# Copyright (c) 2025 D-Robotics Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+"""YOLOv5X image inference entry script.
+
+This script runs a BPU-quantized YOLOv5X (.hbm) model on a single input image.
+
+Workflow:
+    1) Parse CLI arguments.
+    2) Download the model file if missing (based on SoC type).
+    3) Create YOLOv5Config and initialize YoloV5X runtime wrapper.
+    4) Preprocess image -> BPU inference -> postprocess detections.
+    5) Draw bounding boxes and save the result image.
+
+Notes:
+    - The project root is appended to sys.path to import shared utilities under
+      `utils/py_utils/`.
+    - This script is designed to be executed from the sample directory so that
+      relative paths (e.g., `../../../../../`) resolve correctly.
+
+Example:
+    python main.py \
+        --test-img /app/res/assets/kite.jpg \
+        --img-save-path result.jpg \
+        --score-thres 0.25 \
+        --nms-thres 0.45
+"""
 import os
 import cv2
 import sys
 import argparse
-import numpy as np
 
 # Add project root to sys.path so we can import utility modules.
 # Source files:
@@ -18,14 +54,15 @@ from yolov5 import YoloV5X, YOLOv5Config
 
 
 def main() -> None:
-    """
-    @brief Run YOLOv5X object detection on a single image.
+    """Run YOLOv5X object detection on a single image.
 
     This function parses command-line arguments, loads the YOLOv5X model,
-    preprocesses the image, performs inference, postprocesses the results,
-    and saves the output image with bounding boxes.
+    preprocesses the input image, performs inference on the BPU,
+    postprocesses detection results, and saves the output image with
+    bounding boxes.
 
-    @return None
+    Returns:
+        None
     """
     soc = inspect.get_soc_name().lower()
 
@@ -94,7 +131,7 @@ def main() -> None:
 
     # boxes, cls_ids, scores = yolov5x(img)
 
-    # # visualize detection results on image
+    # visualize detection results on image
     image = visualize.draw_boxes(img, boxes, cls_ids, scores, coco_names, visualize.rdk_colors)
 
     # Save the resulting image

@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * @file runtime.hpp
+ * @brief Common runtime helpers for inference execution.
+ *
+ * This file provides basic runtime utilities and error-checking macros
+ * used when interacting with HBDNN and UCP APIs.
+ */
+
 #pragma once
 
 #include <cstdint>

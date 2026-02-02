@@ -14,6 +14,27 @@
 
 # flake8: noqa: E501
 
+"""
+postprocess: Postprocessing utilities for vision model outputs.
+
+This module provides reusable postprocessing helpers to convert raw model
+outputs into task-level results, including coordinate scaling, quantization
+recovery, prediction filtering, and optional decoding for different output
+types. It is designed to be shared across multiple samples and runtimes.
+
+Key Features:
+    - Recover/rescale results back to the original image space.
+    - Dequantize and decode raw outputs into usable representations.
+    - Apply common filtering and suppression strategies (e.g., NMS).
+    - Provide optional utilities for masks, keypoints, and geometric handling.
+
+Notes:
+    - The module focuses on generic postprocessing building blocks; task- or
+      model-specific policies should be implemented at the sample level.
+    - Output formats and helper coverage may evolve as new models are added.
+"""
+
+
 import cv2
 import numpy as np
 from hbm_runtime import QuantParams
@@ -24,14 +45,25 @@ def recover_to_original_size(img: np.ndarray,
                              orig_w: int,
                              orig_h: int,
                              resize_type: int = 1) -> np.ndarray:
-    """
-    @brief Restore resized image back to original size.
-    @details Supports direct resize or reverse letterbox removal.
-    @param img Input image of shape (H, W, C).
-    @param orig_w Original image width.
-    @param orig_h Original image height.
-    @param resize_type Resize type used before: 0 (direct) or 1 (letterbox).
-    @return Resized image of shape (orig_h, orig_w, C).
+    """Restore a resized image back to its original size.
+
+    This function reverses the resizing operation applied during preprocessing.
+    It supports both direct resizing and letterbox-based resizing with padding
+    removal.
+
+    Args:
+        img: Input image array with shape `(H, W, C)` after preprocessing.
+        orig_w: Original image width.
+        orig_h: Original image height.
+        resize_type: Resize strategy used during preprocessing.
+            - 0: Direct resize.
+            - 1: Letterbox resize with padding.
+
+    Returns:
+        The image resized back to shape `(orig_h, orig_w, C)`.
+
+    Raises:
+        ValueError: If an invalid `resize_type` is provided.
     """
     h, w = img.shape[:2]  # current size after preprocess
 
@@ -62,12 +94,19 @@ def recover_to_original_size(img: np.ndarray,
 
 
 def dequantize_tensor(q_tensor: np.ndarray, quant_info: QuantParams) -> np.ndarray:
-    """
-    @brief Dequantize a quantized tensor to floating-point values.
-    @details Supports both per-tensor and per-channel dequantization based on quant_info.
-    @param q_tensor Quantized tensor (e.g., int8 or uint8).
-    @param quant_info Quantization parameters (scale, zero_point, axis, type).
-    @return Dequantized tensor (float32).
+    """Dequantize a quantized tensor to floating-point values.
+
+    This function converts a quantized tensor (e.g., int8 or uint8) into
+    floating-point values using the provided quantization parameters.
+    Both per-tensor and per-channel dequantization are supported.
+
+    Args:
+        q_tensor: Quantized input tensor.
+        quant_info: Quantization parameters including scale, zero point,
+            quantization axis, and quantization type.
+
+    Returns:
+        A float32 NumPy array containing the dequantized tensor values.
     """
     if quant_info.quant_type != 1:  # 1 indicates linear scale quantization
         return q_tensor
@@ -85,11 +124,20 @@ def dequantize_tensor(q_tensor: np.ndarray, quant_info: QuantParams) -> np.ndarr
 
 
 def dequantize_outputs(outputs: dict, quan_infos: dict) -> dict:
-    """
-    @brief Dequantize a dictionary of quantized model outputs.
-    @param outputs Dictionary of quantized output tensors.
-    @param quan_infos Dictionary of quantization parameters per output.
-    @return Dictionary of dequantized float32 outputs.
+    """Dequantize a dictionary of quantized model outputs.
+
+    This function applies tensor dequantization to each model output using
+    its corresponding quantization parameters and returns the results as
+    floating-point tensors.
+
+    Args:
+        outputs: Dictionary mapping output tensor names to quantized tensors.
+        quan_infos: Dictionary mapping output tensor names to their
+            corresponding quantization parameters.
+
+    Returns:
+        A dictionary mapping output tensor names to dequantized float32
+        NumPy arrays.
     """
     fp32_outputs = {}
     for name, output in outputs.items():
@@ -104,15 +152,29 @@ def scale_coords_back(xyxy: np.ndarray,
                       input_w: int,
                       input_h: int,
                       resize_type: int = 1) -> np.ndarray:
-    """
-    @brief Map coordinates from resized image back to original image scale.
-    @param xyxy Bounding boxes (N, 4) in resized image.
-    @param img_w Original image width.
-    @param img_h Original image height.
-    @param input_w Network input width.
-    @param input_h Network input height.
-    @param resize_type Resize strategy: 0 (resize), 1 (letterbox).
-    @return Bounding boxes rescaled to original image dimensions.
+    """Map bounding box coordinates back to the original image scale.
+
+    This function converts bounding box coordinates from the resized
+    (model input) image space back to the original image resolution.
+    Both direct resize and letterbox resize strategies are supported.
+
+    Args:
+        xyxy: Bounding boxes with shape `(N, 4)` in the resized image space,
+            formatted as `(xmin, ymin, xmax, ymax)`.
+        img_w: Original image width.
+        img_h: Original image height.
+        input_w: Network input width.
+        input_h: Network input height.
+        resize_type: Resize strategy used during preprocessing.
+            - 0: Direct resize.
+            - 1: Letterbox resize with padding.
+
+    Returns:
+        Bounding boxes rescaled to the original image dimensions with
+        shape `(N, 4)`.
+
+    Raises:
+        ValueError: If an invalid `resize_type` is provided.
     """
     if resize_type == 0:
         # Direct resize
@@ -141,14 +203,23 @@ def NMS(xyxy: np.ndarray,
         score: np.ndarray,
         cls: np.ndarray,
         iou_thresh: float = 0.45) -> list:
-    """
-    @brief Perform class-wise Non-Maximum Suppression (NMS).
-    @details Keeps boxes with highest scores and removes overlaps above IoU threshold.
-    @param xyxy Bounding boxes (N, 4).
-    @param score Confidence scores (N,).
-    @param cls Class IDs for each box (N,).
-    @param iou_thresh IoU threshold for suppression.
-    @return List of indices to keep.
+    """Perform class-wise Non-Maximum Suppression (NMS).
+
+    This function applies Non-Maximum Suppression independently for each
+    class. For each class, bounding boxes are sorted by confidence score,
+    and boxes with an Intersection over Union (IoU) greater than the given
+    threshold are suppressed.
+
+    Args:
+        xyxy: Bounding boxes with shape `(N, 4)`, formatted as
+            `(xmin, ymin, xmax, ymax)`.
+        score: Confidence scores for each bounding box with shape `(N,)`.
+        cls: Class IDs for each bounding box with shape `(N,)`.
+        iou_thresh: IoU threshold used to suppress overlapping boxes.
+
+    Returns:
+        A list of indices corresponding to the bounding boxes that are kept
+        after Non-Maximum Suppression.
     """
     keep = []
     for c in np.unique(cls):
@@ -175,10 +246,19 @@ def NMS(xyxy: np.ndarray,
 
 
 def xywh_to_xyxy(xywh: np.ndarray) -> np.ndarray:
-    """
-    @brief Convert bounding boxes from (x_center, y_center, w, h) to (x1, y1, x2, y2).
-    @param xywh (N, 4) array in [center_x, center_y, width, height] format.
-    @return (N, 4) array in [x1, y1, x2, y2] format.
+    """Convert bounding boxes from center format to corner format.
+
+    This function converts bounding boxes from
+    `(center_x, center_y, width, height)` format to
+    `(x1, y1, x2, y2)` format, where `(x1, y1)` is the top-left corner
+    and `(x2, y2)` is the bottom-right corner.
+
+    Args:
+        xywh: Bounding boxes with shape `(N, 4)` in
+            `(center_x, center_y, width, height)` format.
+
+    Returns:
+        Bounding boxes with shape `(N, 4)` in `(x1, y1, x2, y2)` format.
     """
     x1y1 = xywh[:, :2] - xywh[:, 2:] / 2
     x2y2 = xywh[:, :2] + xywh[:, 2:] / 2
@@ -186,14 +266,24 @@ def xywh_to_xyxy(xywh: np.ndarray) -> np.ndarray:
 
 
 def filter_classification(cls_output: np.ndarray, conf_thres_raw: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    @brief Filter classification outputs using raw confidence threshold.
-    @param cls_output Classification logits of shape (N, C).
-    @param conf_thres_raw Threshold applied to max logit (before sigmoid).
-    @return Tuple of:
-        - scores: Sigmoid confidence scores of selected predictions
-        - ids: Class indices of selected predictions
-        - valid_indices: Original indices of selected predictions
+    """Filter classification outputs using a raw confidence threshold.
+
+    This function selects classification predictions whose maximum logit
+    value exceeds a given threshold, then computes sigmoid confidence
+    scores for the selected predictions.
+
+    Args:
+        cls_output: Classification logits with shape `(N, C)`, where `N`
+            is the number of predictions and `C` is the number of classes.
+        conf_thres_raw: Threshold applied to the maximum logit value
+            (before sigmoid).
+
+    Returns:
+        A tuple containing:
+            - scores: Sigmoid confidence scores of the selected predictions.
+            - ids: Class indices of the selected predictions.
+            - valid_indices: Indices of the selected predictions in the
+              original input array.
     """
     cls_output = cls_output.reshape(-1, cls_output.shape[-1])
     max_scores = np.max(cls_output, axis=1)
@@ -205,11 +295,19 @@ def filter_classification(cls_output: np.ndarray, conf_thres_raw: float) -> tupl
 
 
 def filter_mces(mces_output: np.ndarray, valid_indices: np.ndarray) -> np.ndarray:
-    """
-    @brief Extract MCES features from selected predictions.
-    @param mces_output.
-    @param valid_indices Indices of valid predictions.
-    @return Filtered MCES tensor of shape (K, D), K = len(valid_indices).
+    """Extract MCES features for selected predictions.
+
+    This function selects MCES feature vectors corresponding to the given
+    valid prediction indices.
+
+    Args:
+        mces_output: MCES output tensor, where the last dimension represents
+            the feature dimension.
+        valid_indices: Indices of valid predictions to be selected.
+
+    Returns:
+        A NumPy array of shape `(K, D)` containing the filtered MCES features,
+        where `K = len(valid_indices)` and `D` is the feature dimension.
     """
     mces_output = mces_output.reshape(-1, mces_output.shape[-1])
     mces = mces_output[valid_indices, :]
@@ -217,14 +315,26 @@ def filter_mces(mces_output: np.ndarray, valid_indices: np.ndarray) -> np.ndarra
 
 
 def filter_predictions(pred: np.ndarray, score_thres: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    @brief Filter detection predictions by confidence threshold.
-    @param pred Tensor of shape (N, 5 + C): [x, y, w, h, obj_conf, class_probs...].
-    @param score_thres Threshold on (obj_conf * class_conf).
-    @return Tuple of:
-        - xyxy: Filtered bounding boxes (Nf, 4)
-        - score: Filtered scores (Nf,)
-        - cls: Class indices (Nf,)
+    """Filter detection predictions by confidence threshold.
+
+    This function combines objectness scores and class probabilities to
+    compute final confidence scores, then filters out predictions whose
+    confidence is below the given threshold.
+
+    Args:
+        pred: Prediction tensor with shape `(N, 5 + C)`, formatted as
+            `[x, y, w, h, objectness, class_probs...]`.
+        score_thres: Confidence threshold applied to
+            `(objectness * class_probability)`.
+
+    Returns:
+        A tuple containing:
+            - xyxy: Filtered bounding boxes with shape `(Nf, 4)` in
+              `(x1, y1, x2, y2)` format.
+            - score: Confidence scores of the filtered predictions with
+              shape `(Nf,)`.
+            - cls: Class indices of the filtered predictions with
+              shape `(Nf,)`.
     """
     xywh = pred[:, :4]
 
@@ -238,10 +348,18 @@ def filter_predictions(pred: np.ndarray, score_thres: float) -> tuple[np.ndarray
 
 
 def gen_anchor(grid_size: int) -> np.ndarray:
-    """
-    @brief Generate anchor center positions on a square grid.
-    @param grid_size Size of the square grid (e.g., 80 for 80x80).
-    @return (N, 2) array of anchor coordinates [x, y].
+    """Generate anchor center positions on a square grid.
+
+    This function generates evenly spaced anchor center coordinates for a
+    square grid of size `grid_size x grid_size`. The centers are placed at
+    half-integer positions (e.g., 0.5, 1.5, ...) along both axes.
+
+    Args:
+        grid_size: Size of the square grid (e.g., `80` for an `80 x 80` grid).
+
+    Returns:
+        A NumPy array of shape `(N, 2)` containing anchor center coordinates
+        in `(x, y)` format, where `N = grid_size * grid_size`.
     """
     x = np.tile(np.linspace(0.5, grid_size - 0.5, grid_size), reps=grid_size)
     y = np.repeat(np.linspace(0.5, grid_size - 0.5, grid_size), grid_size)
@@ -253,14 +371,27 @@ def decode_boxes(boxes_output: np.ndarray,
                  grid_size: int,
                  stride: int,
                  weights_static: np.ndarray) -> np.ndarray:
-    """
-    @brief Decode bounding boxes from distributional predictions.
-    @param boxes_output Tensor of shape (N, 4 * 16).
-    @param valid_indices Indices of valid predictions.
-    @param grid_size Feature map grid size.
-    @param stride Downsampling factor.
-    @param weights_static Discrete location weights (e.g., 0~15).
-    @return Decoded bounding boxes in xyxy format (M, 4).
+    """Decode bounding boxes from distributional predictions.
+
+    This function decodes bounding box coordinates from distribution-based
+    regression outputs (e.g., 16-bin discrete distributions per side).
+    It applies softmax to each distribution, computes the expected offsets,
+    and converts them into bounding boxes in `(x1, y1, x2, y2)` format.
+
+    Args:
+        boxes_output: Bounding box output tensor with shape `(N, 4 * 16)`,
+            representing discrete distributions for left, top, right, and
+            bottom offsets.
+        valid_indices: Indices of valid predictions to be decoded.
+        grid_size: Feature map grid size (e.g., width or height of the grid).
+        stride: Downsampling factor used to map grid coordinates to the
+            original image scale.
+        weights_static: Discrete location weights used to compute expectations
+            (e.g., values from `0` to `15`).
+
+    Returns:
+        A NumPy array of shape `(M, 4)` containing decoded bounding boxes in
+        `(x1, y1, x2, y2)` format, where `M = len(valid_indices)`.
     """
     bboxes = boxes_output.reshape(-1, boxes_output.shape[-1])
     bboxes_float32 = bboxes[valid_indices]
@@ -281,17 +412,26 @@ def decode_masks(mces: np.ndarray,
                  mask_w: int,
                  mask_h: int,
                  mask_thresh: float = 0.5) -> list[np.ndarray]:
-    """
-    @brief Decode instance segmentation masks.
-    @param mces Mask coefficients for each detection (M, C).
-    @param boxes Bounding boxes (M, 4).
-    @param protos Mask prototype feature map (H, W, C).
-    @param input_w Width of the input image.
-    @param input_h Height of the input image.
-    @param mask_w Width of the mask proto.
-    @param mask_h Height of the mask proto.
-    @param mask_thresh Threshold to binarize masks.
-    @return List of (H, W) binary mask arrays.
+    """Decode instance segmentation masks.
+
+    This function generates instance-level binary masks by linearly combining
+    mask prototype features with per-instance mask coefficients (MCES).
+    The resulting masks are cropped according to the corresponding bounding
+    boxes and binarized using a threshold.
+
+    Args:
+        mces: Mask coefficients for each detection with shape `(M, C)`.
+        boxes: Bounding boxes with shape `(M, 4)` in `(x1, y1, x2, y2)` format.
+        protos: Mask prototype feature map with shape `(H, W, C)`.
+        input_w: Width of the input image.
+        input_h: Height of the input image.
+        mask_w: Width of the mask prototype feature map.
+        mask_h: Height of the mask prototype feature map.
+        mask_thresh: Threshold used to binarize the decoded masks.
+
+    Returns:
+        A list of binary mask arrays, where each element has shape `(H_i, W_i)`
+        corresponding to one detected instance.
     """
     masks = []
     x_scale = mask_w / input_w
@@ -319,16 +459,27 @@ def decode_kpts(kpts_output: np.ndarray,
                 grid_size: int,
                 stride: int,
                 anchor: np.ndarray = None) -> tuple[np.ndarray, np.ndarray]:
-    """
-    @brief Decode keypoint coordinates from model output.
-    @param kpts_output Keypoint tensor of shape (N, 17*3).
-    @param valid_indices Indices of valid predictions.
-    @param grid_size Size of feature map grid.
-    @param stride Downsampling factor (e.g., 8, 16, 32).
-    @param anchor Optional anchor points. If None, generated automatically.
-    @return Tuple:
-            - kpts_xy: (M, 17, 2) pixel coordinates of keypoints.
-            - kpts_score: (M, 17, 1) keypoint confidence scores.
+    """Decode keypoint coordinates from model output.
+
+    This function decodes keypoint predictions from the model output tensor
+    into pixel coordinates using anchor points and the given stride. Each
+    keypoint consists of `(x, y, score)` values.
+
+    Args:
+        kpts_output: Keypoint output tensor with shape `(N, 17 * 3)`, where
+            each keypoint is represented by `(x, y, score)`.
+        valid_indices: Indices of valid predictions to be decoded.
+        grid_size: Size of the feature map grid.
+        stride: Downsampling factor used to map grid coordinates to the
+            original image scale (e.g., 8, 16, 32).
+        anchor: Optional anchor center coordinates with shape `(M, 2)`.
+            If `None`, anchor points are generated automatically based on
+            `grid_size`.
+
+    Returns:
+        A tuple containing:
+            - kpts_xy: Keypoint pixel coordinates with shape `(M, 17, 2)`.
+            - kpts_score: Keypoint confidence scores with shape `(M, 17, 1)`.
     """
     kpts_output = kpts_output.reshape(-1, kpts_output.shape[-1])
     kpts = kpts_output[valid_indices].reshape(-1, 17, 3)  # (M, 17, 3)
@@ -349,13 +500,24 @@ def decode_layer(feat: np.ndarray,
                  stride: int,
                  anchor: np.ndarray,
                  classes_num: int = 80) -> np.ndarray:
-    """
-    @brief Decode a single feature layer from detection head.
-    @param feat Raw model output tensor of shape (1, na, h, w, c).
-    @param stride Stride of the feature layer.
-    @param anchor Anchor sizes for this layer (na, 2).
-    @param classes_num Number of output classes.
-    @return Decoded prediction array of shape (N, 5 + num_classes).
+    """Decode a single feature layer from the detection head.
+
+    This function decodes the raw output tensor of one detection layer into
+    bounding box predictions in the original image scale. The decoded output
+    includes bounding box center coordinates, width and height, objectness
+    score, and per-class confidence scores.
+
+    Args:
+        feat: Raw model output tensor with shape
+            `(1, na, h, w, 5 + classes_num)`, where `na` is the number of anchors.
+        stride: Stride of the feature layer relative to the input image.
+        anchor: Anchor sizes for this feature layer with shape `(na, 2)`,
+            formatted as `(width, height)`.
+        classes_num: Number of object classes.
+
+    Returns:
+        A NumPy array of shape `(N, 5 + classes_num)` containing decoded
+        predictions, where `N = na * h * w`.
     """
     _, _, h, w, _ = feat.shape  #  h/w: feature map size
 
@@ -393,14 +555,26 @@ def decode_outputs(output_names: list[str],
                    strides: list[int],
                    anchors: list[np.ndarray],
                    classes_num: int = 80) -> np.ndarray:
-    """
-    @brief Decode all feature maps from model output.
-    @param output_names List of output tensor names.
-    @param fp32_outputs Dict of decoded tensors from model.
-    @param strides Stride values for each output head.
-    @param anchors Anchor arrays for each head.
-    @param classes_num Number of output classes.
-    @return Concatenated prediction tensor of shape (N, 5 + classes).
+    """Decode all feature maps from the model output.
+
+    This function iterates over all detection heads, reshapes and reorders
+    the raw output tensors, decodes each feature map using its corresponding
+    stride and anchor configuration, and concatenates the results into a
+    single prediction tensor.
+
+    Args:
+        output_names: List of output tensor names corresponding to detection heads.
+        fp32_outputs: Dictionary mapping output tensor names to FP32 NumPy arrays
+            produced by the model.
+        strides: List of stride values for each detection head.
+        anchors: List of anchor arrays for each detection head, where each element
+            has shape `(na, 2)`.
+        classes_num: Number of object classes.
+
+    Returns:
+        A NumPy array of shape `(N, 5 + classes_num)` containing all decoded
+        predictions, where `N` is the total number of predictions across
+        all detection heads.
     """
     decoded = []
     for i, key in enumerate(output_names):
@@ -413,11 +587,20 @@ def decode_outputs(output_names: list[str],
 
 
 def get_bounding_boxes(dilated_polys: list[np.ndarray], min_area: float) -> list[np.ndarray]:
-    """
-    @brief Extract minimum area bounding boxes from polygon contours.
-    @param dilated_polys List of polygon contours. Each element is a NumPy array of shape (N, 1, 2).
-    @param min_area Minimum area threshold to filter small boxes.
-    @return List of bounding boxes. Each is a NumPy array of shape (4, 2), type int.
+    """Extract minimum-area bounding boxes from polygon contours.
+
+    This function computes the minimum-area bounding rectangle for each
+    polygon contour and filters out boxes whose area is smaller than the
+    specified threshold.
+
+    Args:
+        dilated_polys: List of polygon contours. Each element is a NumPy array
+            with shape `(N, 1, 2)`.
+        min_area: Minimum area threshold used to filter out small bounding boxes.
+
+    Returns:
+        A list of bounding boxes. Each bounding box is a NumPy array with
+        shape `(4, 2)` and integer coordinates.
     """
     boxes_list = []
     for cnt in dilated_polys:
@@ -434,15 +617,25 @@ def resize_masks_to_boxes(masks: list[np.ndarray],
                           img_w: int, img_h: int,
                           interpolation: int = cv2.INTER_LANCZOS4,
                           do_morph: bool = True) -> list[np.ndarray]:
-    """
-    @brief Resize binary masks to fit inside their corresponding bounding boxes.
-    @param masks List of binary mask arrays of shape (H, W), dtype=uint8.
-    @param boxes List of bounding boxes in (x1, y1, x2, y2) format.
-    @param img_w Width of the original image.
-    @param img_h Height of the original image.
-    @param interpolation OpenCV interpolation method used for resizing.
-    @param do_morph Whether to apply morphological open to smooth the mask.
-    @return List of resized binary masks cropped to box size.
+    """Resize binary masks to fit inside their corresponding bounding boxes.
+
+    This function resizes each binary mask to match the size of its
+    corresponding bounding box. Optionally, a morphological open operation
+    can be applied to smooth the resized masks.
+
+    Args:
+        masks: List of binary mask arrays with shape `(H, W)` and dtype
+            `uint8`.
+        boxes: List of bounding boxes in `(x1, y1, x2, y2)` format.
+        img_w: Width of the original image.
+        img_h: Height of the original image.
+        interpolation: OpenCV interpolation method used for resizing.
+        do_morph: Whether to apply a morphological open operation to smooth
+            the resized masks.
+
+    Returns:
+        A list of resized binary masks, each cropped to the size of its
+        corresponding bounding box.
     """
     resized_masks = []
     for mask, (x1, y1, x2, y2) in zip(masks, boxes):
@@ -466,21 +659,32 @@ def resize_masks_to_boxes(masks: list[np.ndarray],
 
 def scale_keypoints_to_original_image(kpts_xy: np.ndarray,
                                       kpts_score: np.ndarray,
-                                      boxes: list[tuple[float, float, float, float]],
                                       img_w: int, img_h: int,
                                       input_w: int, input_h: int,
                                       resize_type: int = 1) -> tuple[np.ndarray, np.ndarray]:
-    """
-    @brief Scale keypoints back to original image coordinates.
-    @param kpts_xy Keypoint coordinates of shape (M, 17, 2), float32.
-    @param kpts_score Keypoint scores of shape (M, 17, 1), float32.
-    @param boxes List of bounding boxes, not used here.
-    @param img_w Width of the original image.
-    @param img_h Height of the original image.
-    @param input_w Width of model input.
-    @param input_h Height of model input.
-    @param resize_type 0 = direct resize, 1 = letterbox resize.
-    @return Tuple of (scaled keypoints, scores), both NumPy arrays.
+    """Scale keypoints back to the original image coordinates.
+
+    This function maps keypoint coordinates from the model input space back
+    to the original image resolution. Both direct resize and letterbox resize
+    strategies are supported.
+
+    Args:
+        kpts_xy: Keypoint coordinates with shape `(M, 17, 2)` in the model
+            input space.
+        kpts_score: Keypoint confidence scores with shape `(M, 17, 1)`.
+        img_w: Width of the original image.
+        img_h: Height of the original image.
+        input_w: Width of the model input.
+        input_h: Height of the model input.
+        resize_type: Resize strategy used during preprocessing.
+            - 0: Direct resize.
+            - 1: Letterbox resize with padding.
+
+    Returns:
+        A tuple containing:
+            - scaled_kpts: Keypoints scaled to the original image coordinates
+              with shape `(M, 17, 2)`.
+            - kpts_score: Keypoint confidence scores with shape `(M, 17, 1)`.
     """
     scaled_kpts = kpts_xy.copy()
 
@@ -508,11 +712,20 @@ def scale_keypoints_to_original_image(kpts_xy: np.ndarray,
 
 
 def crop_and_rotate_image(img: np.ndarray, box: np.ndarray) -> np.ndarray:
-    """
-    @brief Crop and rotate a region from the image using a rotated bounding box.
-    @param img Input image array of shape (H, W, C), dtype=uint8.
-    @param box Bounding box as 4-point array of shape (4, 2).
-    @return Cropped and rotated region image as a NumPy array.
+    """Crop and rotate a region from an image using a rotated bounding box.
+
+    This function extracts a rotated rectangular region defined by a
+    four-point bounding box. It applies a perspective transformation to
+    obtain an upright cropped image and optionally rotates the result
+    based on the bounding box angle.
+
+    Args:
+        img: Input image array with shape `(H, W, C)` and dtype `uint8`.
+        box: Rotated bounding box represented as a four-point array with
+            shape `(4, 2)`.
+
+    Returns:
+        A NumPy array representing the cropped and rotated image region.
     """
     rect = cv2.minAreaRect(box)
     box = cv2.boxPoints(rect).astype(np.intp)

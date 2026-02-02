@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * @file nn_math.cc
+ * @brief Provide lightweight neural network related math utilities.
+ *
+ * This file implements common mathematical helpers used during model
+ * postprocessing, such as activation functions and probability normalization.
+ * The implementations are designed to be simple, efficient, and reusable
+ * across different model samples.
+ */
+
 #include <vector>
 #include <cmath>
 

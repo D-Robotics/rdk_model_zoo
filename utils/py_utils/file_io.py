@@ -14,18 +14,53 @@
 
 # flake8: noqa: E501
 
+
+"""
+file_io: File and resource I/O utilities.
+
+This module defines a collection of helper functions for interacting with
+files and external resources. It serves as a common utility layer for
+handling file existence checks, resource loading, and basic data access,
+and is intended to be reused across different samples and runtimes.
+
+Key Features:
+    - Provide unified interfaces for file and resource access.
+    - Encapsulate common file-related operations to reduce duplication.
+    - Remain independent of specific models or tasks.
+
+Typical Usage:
+    >>> from file_io import download_model_if_needed
+    >>> download_model_if_needed(model_path, download_url)
+
+Notes:
+    - This module focuses on general-purpose I/O utilities and should not
+      include algorithm-specific or business-specific logic.
+    - New file or resource related helpers should follow the same design
+      principles and be added to this module when appropriate.
+"""
+
+
 import os
 import cv2
 import numpy as np
 from typing import Dict
 
 def download_model_if_needed(model_path: str, download_url: str) -> None:
-    """
-    @brief Ensure the model file exists locally; download it automatically if missing.
+    """Ensure that the model file exists locally, downloading it if necessary.
 
-    @param model_path Full local path where the model should be saved.
-    @param download_url The URL used to download the model file.
-    @return None
+    If the model file specified by `model_path` does not exist, this function
+    downloads it from the given URL and saves it to the target location.
+
+    Args:
+        model_path: Full local path where the model file should be saved.
+        download_url: URL used to download the model file.
+
+    Returns:
+        None
+
+    Raises:
+        RuntimeError: If the download fails or the model file does not exist
+            after the download attempt.
     """
     # Return immediately if the model file already exists
     if os.path.exists(model_path):
@@ -54,11 +89,19 @@ def download_model_if_needed(model_path: str, download_url: str) -> None:
 
 
 def load_image(img_path: str) -> np.ndarray:
-    """
-    @brief Load an image from file path using OpenCV.
-    @param img_path Path to the image file.
-    @return Image as a NumPy ndarray in BGR format.
-    @throws FileNotFoundError if the image cannot be loaded.
+    """Load an image from a file path using OpenCV.
+
+    The image is loaded in BGR color format, which is the default format
+    used by OpenCV.
+
+    Args:
+        img_path: Path to the image file.
+
+    Returns:
+        The loaded image as a NumPy array in BGR format.
+
+    Raises:
+        FileNotFoundError: If the image cannot be loaded from the given path.
     """
     img = cv2.imread(img_path)
     if img is None:
@@ -67,10 +110,17 @@ def load_image(img_path: str) -> np.ndarray:
 
 
 def load_class_names(path: str) -> list:
-    """
-    @brief Load class names from a file.
-    @param path Path to the label file, each line contains a class name.
-    @return List of class name strings.
+    """Load class names from a label file.
+
+    Each line in the file is treated as a single class name. Empty lines
+    are ignored.
+
+    Args:
+        path: Path to the label file. Each non-empty line contains one
+            class name.
+
+    Returns:
+        A list of class name strings.
     """
     with open(path, 'r') as f:
         # Strip whitespace and filter out empty lines

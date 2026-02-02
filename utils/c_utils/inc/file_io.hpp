@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * @file file_io.hpp
+ * @brief Provide reusable interfaces for file-based resource loading.
+ *
+ * This file declares common utilities for loading external resources
+ * required at runtime, such as images, labels, or other data files.
+ */
+
 #pragma once
 
 #include <map>

@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * @file visualize.cpp
+ * @brief Provide visualization utilities for rendering model inference results.
+ *
+ * This file implements common drawing and formatting helpers used to present
+ * inference outputs (e.g., classification results, detections, masks, keypoints,
+ * and text overlays) on images and, when enabled, on hardware display overlays.
+ */
+
 #include "visualize.hpp"
 #include "nn_math.hpp"
 

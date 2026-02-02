@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * @file postprocess.cc
+ * @brief Provide postprocessing utilities for converting raw model outputs into semantic results.
+ *
+ * This file implements common postprocessing helpers used after inference to
+ * interpret output tensors and produce application-friendly results such as
+ * classifications, detections, and keypoints.
+ */
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>

@@ -82,5 +82,12 @@ docs/Model_Zoo_User_Guide.md
 | 语音识别     | ASR-XXX  | samples/speech/asr_xxx       | [README](samples/speech/asr_xxx/README.md) |
 
 
+## 文档说明
+
+- 每个模型的顶层目录的`README.md`中，都有该模型的整体介绍，如果想快速了解某个模型，可直接到相关目录查看；
+- 每个模型都有详细的接口介绍，如关系代码层面的接口信息，可阅读[源码文档说明](docs/source_reference/README.md)，根据介绍构建或浏览代码文档；
+- 如需提交自己的模型Sample，请于仔细阅读[rdk_model_zoo](docs/Model_Zoo_Repository_Guidelines.md)仓库规范；
+
+
 ## 许可证
 [Apache License 2.0](LICENSE)

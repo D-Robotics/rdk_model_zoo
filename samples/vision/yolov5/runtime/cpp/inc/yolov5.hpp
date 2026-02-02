@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
+/**
+ * @file yolov5x.hpp
+ * @brief Define a high-level inference wrapper and pipeline interfaces for
+ *        the YOLOv5x object detection model.
+ *
+ *        This file provides a structured C++ interface that encapsulates the
+ *        complete YOLOv5x inference workflow on Horizon Robotics platforms,
+ *        including model configuration, runtime resource management,
+ *        preprocessing, inference execution, and postprocessing. It serves
+ *        as an integration layer that connects low-level runtime utilities
+ *        with application-level usage in a clear and reusable manner.
+ */
+
 #pragma once
 
 #include "file_io.hpp"
