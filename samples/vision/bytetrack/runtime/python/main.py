@@ -36,7 +36,7 @@ def main() -> None:
     parser.add_argument('--model-path', type=str,
                         default=f'/opt/hobot/model/{soc}/basic/yolov5x_672x672_nv12.hbm',
                         help="""Path to BPU Quantized *.hbm Model.""")
-    parser.add_argument('--input', type=str, default='../../test_data/test_video.mp4',
+    parser.add_argument('--input', type=str, default='../../test_data/track_test.mp4',
                         help='Path to input video.')
     parser.add_argument('--output', type=str, default='result.mp4',
                         help='Path to output video.')

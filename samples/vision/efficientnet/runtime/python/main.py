@@ -48,9 +48,9 @@ def main() -> None:
                         help='Model priority (0~255). 0 is lowest, 255 is highest.')
     parser.add_argument('--bpu-cores', nargs='+', type=int, default=[0],
                         help='List of BPU core indexes to run inference, e.g., --bpu-cores 0 1.')
-    parser.add_argument('--test-img', type=str, default='../../test_data/Scottish_deerhound.JPEG',
+    parser.add_argument('--test-img', type=str, default='../../../../../datasets/imagenet/asset/scottish_deerhound.JPEG',
                         help='Path to load test image.')
-    parser.add_argument('--label-file', type=str, default='../../../../../datasets/imagenet/imagenet1000_clsidx_to_labels.txt',
+    parser.add_argument('--label-file', type=str, default='../../../../../datasets/imagenet/imagenet_classes.names',
                         help='Path to load label file.')
     parser.add_argument('--topk', type=int, default=5,
                         help='Number of top predictions to display.')

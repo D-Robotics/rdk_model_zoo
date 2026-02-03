@@ -19,33 +19,31 @@ pip install -r ../../requirements.txt
 
 | 参数           | 说明                                                     | 默认值                                      |
 |----------------|----------------------------------------------------------|---------------------------------------------|
-| `--model-path` | 模型文件路径（.hbm 格式）                                  | `/opt/hobot/model/s600/basic/yolov5x_672x672_nv12.hbm` |
-| `--test-img`   | 测试图片路径                                              | `/app/res/assets/kite.jpg`                     |
-| `--label-file` | 类别标签路径（每行一个类别）                                | `/app/res/labels/coco_classes.names`           |
-| `--img-save-path` | 检测结果图像保存路径                                    | `result.jpg`                                |
+| `--model-path` | 模型文件路径（.hbm 格式）                                  | `/opt/hobot/model/s100/basic/yolov5x_672x672_nv12.hbm` |
+| `--test-img`   | 测试图片路径                                              | `../../../../../datasets/coco/assets/kite.jpg`                     |
+| `--label-file` | 类别标签路径（每行一个类别）                                | `../../../../../datasets/coco/coco_classes.names`           |
+| `--img-save-path` | 结果图片保存路径                                          | `result.jpg`                                |
 | `--priority`  | 模型调度优先级（0~255）                                     | `0`                                         |
 | `--bpu-cores` | 使用的 BPU 核心编号列表（如 `--bpu-cores 0 1`）              | `[0]`                                      |
-| `--nms-thres`   | 非极大值抑制（NMS）阈值                                    | `0.45`                                    |
-| `--score-thres` | 置信度阈值                                                | `0.25`                                    |
+| `--nms-thres` | 非极大值抑制（NMS）的 IoU 阈值                             | `0.45`                                      |
+| `--score-thres` | 目标检测的置信度阈值                                       | `0.25`                                      |
 
 
 ## 快速运行
 - 运行模型
     - 使用默认参数
         ```bash
-        python yolov5.py
+        python main.py
         ```
     - 指定参数运行
         ```bash
-        python yolov5.py \
-            --model-path /opt/hobot/model/s600/basic/yolov5x_672x672_nv12.hbm \
-            --test-img /app/res/assets/kite.jpg \
-            --label-file /app/res/labels/coco_classes.names \
+        python main.py \
+            --model-path ../../model/yolov5x_672x672_nv12.hbm \
+            --test-img ../../../../../datasets/coco/assets/kite.jpg \
+            --label-file ../../../../../datasets/coco/coco_classes.names \
             --img-save-path result.jpg \
-            --priority 0 \
-            --bpu-cores 0 \
-            --nms-thres 0.45 \
-            --score-thres 0.25
+            --score-thres 0.25 \
+            --nms-thres 0.45
         ```
 - 查看结果
 

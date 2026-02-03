@@ -32,27 +32,18 @@ import utils.py_utils.preprocess as pre_utils
 
 @dataclass
 class EfficientNetConfig:
-    """
-    @brief Configuration for initializing EfficientNet model.
+    """Configuration for initializing the EfficientNet model.
 
-    Contains model path and all runtime parameters required for preprocessing
-    and postprocessing.
+    This dataclass contains the model path and all runtime parameters required
+    for preprocessing and postprocessing.
 
-    Fields:
-        model_path (str):
-            Path to the compiled EfficientNet .hbm model.
-
-        num_classes (int):
-            Number of output classes. Default: 1000.
-
-        topk (int):
-            Number of top predictions to return. Default: 5.
-
-        resize_type (int):
-            Image resize mode used during preprocessing.
-            0 = stretch resize
-            1 = keep aspect ratio with padding (letterbox).
-            Default: 1.
+    Attributes:
+        model_path: Path to the compiled EfficientNet `.hbm` model.
+        num_classes: Number of output classes. Default: 1000.
+        topk: Number of top predictions to return. Default: 5.
+        resize_type: Image resize mode used during preprocessing.
+            0: Stretch resize.
+            1: Keep aspect ratio with padding (letterbox). Default: 1.
     """
     model_path: str
     num_classes: int = 1000
@@ -61,19 +52,17 @@ class EfficientNetConfig:
 
 
 class EfficientNet:
-    """
-    @brief EfficientNet image classification wrapper using HB_HBMRuntime.
+    """EfficientNet image classification wrapper using HB_HBMRuntime.
 
-    Provides a unified inference pipeline including input preprocessing,
-    model execution, and postprocessing (Softmax + TopK).
+    This class provides a unified inference pipeline for EfficientNet, including
+    input preprocessing, model execution, and postprocessing (Softmax + TopK).
     """
 
     def __init__(self, config: EfficientNetConfig):
-        """
-        @brief Initialize the EfficientNet model with a provided configuration.
+        """Initialize the EfficientNet model with the given configuration.
 
-        @param config (EfficientNetConfig)
-            Configuration object containing model path and parameters.
+        Args:
+            config: Configuration object containing model path and parameters.
         """
         self.cfg = config
 
@@ -93,14 +82,14 @@ class EfficientNet:
     def set_scheduling_params(self,
                               priority: Optional[int] = None,
                               bpu_cores: Optional[list] = None) -> None:
-        """
-        @brief Configure inference scheduling parameters.
+        """Configure inference scheduling parameters.
 
-        @param priority (int, optional)
-            Inference priority in range [0, 255].
-        @param bpu_cores (list[int], optional)
-            BPU core indices used for inference.
-        @return None
+        Args:
+            priority: Inference priority in the range [0, 255].
+            bpu_cores: List of BPU core indices used for inference.
+
+        Returns:
+            None
         """
         kwargs = {}
         if priority is not None:
@@ -115,21 +104,24 @@ class EfficientNet:
                     resize_type: Optional[int] = None,
                     image_format: Optional[str] = "BGR"
                     ) -> Dict[str, Dict[str, np.ndarray]]:
-        """
-        @brief Preprocess input image into model-required tensor format.
+        """Preprocess an input image into model-required tensor format.
 
-        The input image is resized according to resize_type and converted
-        from BGR to NV12 (Y + UV planes).
+        The input image is resized according to the specified resize strategy
+        and converted from BGR format to NV12 (Y and UV planes).
 
-        @param img (np.ndarray)
-            Input image array.
-        @param resize_type (int, optional)
-            Resize strategy. If None, uses the value from configuration.
-        @param image_format (str, optional)
-            Input image format. Currently only "BGR" is supported.
-        @return dict
-            Nested input tensor dictionary:
-            {model_name: {input_name: tensor}}
+        Args:
+            img: Input image array.
+            resize_type: Resize strategy override. If `None`, the value from
+                the configuration is used.
+            image_format: Input image format. Currently, only `"BGR"` is
+                supported.
+
+        Returns:
+            A nested input tensor dictionary in the form:
+            `{model_name: {input_name: tensor}}`.
+
+        Raises:
+            ValueError: If an unsupported image format is provided.
         """
         if resize_type is None:
             resize_type = self.cfg.resize_type
@@ -149,13 +141,14 @@ class EfficientNet:
         }
 
     def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
-        """
-        @brief Execute model inference.
+        """Execute model inference.
 
-        @param input_tensor (dict)
-            Preprocessed input tensor dictionary produced by pre_process().
-        @return dict
-            Raw output tensors returned by the runtime.
+        Args:
+            input_tensor: Preprocessed input tensor dictionary produced by
+                `pre_process()`.
+
+        Returns:
+            A dictionary containing raw output tensors returned by the runtime.
         """
         outputs = self.model.run(input_tensor)
         return outputs
@@ -164,18 +157,19 @@ class EfficientNet:
                      outputs: Dict[str, Dict[str, np.ndarray]],
                      topk: Optional[int] = None
                      ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        @brief Convert raw model outputs into final classification results.
+        """Convert raw model outputs into final classification results.
 
         Performs Softmax and extracts Top-K probabilities and indices.
 
-        @param outputs (dict)
-            Raw output tensors from inference.
-        @param topk (int, optional)
-            Number of top predictions. If None, uses configuration value.
-        @return Tuple:
-            - topk_probs (np.ndarray): Top-K probabilities (K,).
-            - topk_indices (np.ndarray): Top-K class indices (K,).
+        Args:
+            outputs: Raw output tensors from inference.
+            topk: Number of top predictions to return. If `None`, the value
+                from the configuration is used.
+
+        Returns:
+            A tuple containing:
+                - topk_probs: Top-K probabilities with shape `(K,)`.
+                - topk_indices: Top-K class indices with shape `(K,)`.
         """
         if topk is None:
             topk = self.cfg.topk
@@ -203,20 +197,18 @@ class EfficientNet:
                 resize_type: Optional[int] = None,
                 topk: Optional[int] = None
                 ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        @brief Run a complete classification pipeline on a single image.
+        """Run the complete classification pipeline on a single image.
 
-        @param img (np.ndarray)
-            Input image array.
-        @param image_format (str)
-            Input image format.
-        @param resize_type (int, optional)
-            Resize strategy override.
-        @param topk (int, optional)
-            Top-K override.
-        @return Tuple:
-            - topk_probs (np.ndarray)
-            - topk_indices (np.ndarray)
+        Args:
+            img: Input image array.
+            image_format: Input image format.
+            resize_type: Resize strategy override.
+            topk: Top-K override.
+
+        Returns:
+            A tuple containing:
+                - topk_probs: Top-K probabilities.
+                - topk_indices: Top-K class indices.
         """
         # 1) Preprocess
         input_tensor = self.pre_process(img, resize_type, image_format)
@@ -233,9 +225,17 @@ class EfficientNet:
                  resize_type: Optional[int] = None,
                  topk: Optional[int] = None
                  ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        @brief Callable interface for the classification pipeline.
+        """Callable interface for the classification pipeline.
 
-        Equivalent to calling predict().
+        This method is functionally equivalent to calling `predict()`.
+
+        Args:
+            img: Input image array.
+            image_format: Input image format.
+            resize_type: Resize strategy override.
+            topk: Top-K override.
+
+        Returns:
+            Same return values as `predict()`.
         """
         return self.predict(img, image_format, resize_type, topk)

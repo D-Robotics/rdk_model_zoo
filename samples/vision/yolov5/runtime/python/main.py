@@ -31,7 +31,7 @@ Notes:
 
 Example:
     python main.py \
-        --test-img /app/res/assets/kite.jpg \
+        --test-img ../../../../../datasets/coco/assets/kite.jpg \
         --img-save-path result.jpg \
         --score-thres 0.25 \
         --nms-thres 0.45
@@ -69,15 +69,15 @@ def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model-path', type=str,
-                        default=f'/opt/hobot/model/{soc}/basic/yolov5x_672x672_nv12.hbm',
+                        default=f'../../model/yolov5x_672x672_nv12.hbm',
                         help="""Path to BPU Quantized *.hbm Model.""")
     parser.add_argument('--priority', type=int, default=0,
                         help='Model priority (0~255). 0 is lowest, 255 is highest.')
     parser.add_argument('--bpu-cores', nargs='+', type=int, default=[0],
                         help="List of BPU core indexes to run inference, e.g., --bpu-cores 0 1.")
-    parser.add_argument('--test-img', type=str, default='/app/res/assets/kite.jpg',
+    parser.add_argument('--test-img', type=str, default='../../../../../datasets/coco/assets/kite.jpg',
                         help='Path to load test image.')
-    parser.add_argument('--label-file', type=str, default='/app/res/labels/coco_classes.names',
+    parser.add_argument('--label-file', type=str, default='../../../../../datasets/coco/coco_classes.names',
                         help='Path to load COCO label file.')
     parser.add_argument('--img-save-path', type=str, default='result.jpg',
                         help='Path to save output image with detection results.')

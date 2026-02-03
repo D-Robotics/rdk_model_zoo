@@ -45,11 +45,11 @@
 
 #include "yolov5.hpp"
 
-DEFINE_string(model_path, "/opt/hobot/model/s100/basic/yolov5x_672x672_nv12.hbm",
+DEFINE_string(model_path, "../../model/yolov5x_672x672_nv12.hbm",
               "Path to BPU Quantized *.hbm model file");
-DEFINE_string(test_img, "/app/res/assets/kite.jpg",
+DEFINE_string(test_img, "../../../../../datasets/coco/assets/kite.jpg",
               "Path to load the test image.");
-DEFINE_string(label_file, "/app/res/labels/coco_classes.names",
+DEFINE_string(label_file, "../../../../../datasets/coco/coco_classes.names",
               "Path to load class name list (one label per line, e.g., COCO).");
 DEFINE_double(score_thres, 0.25, "Confidence score threshold for filtering detections.");
 DEFINE_double(nms_thres, 0.45, "IoU threshold for Non-Maximum Suppression.");

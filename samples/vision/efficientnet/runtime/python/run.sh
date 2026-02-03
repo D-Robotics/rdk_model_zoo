@@ -10,9 +10,10 @@ PYTHON_BIN=python3
 PIP_BIN=pip3
 
 REQUIREMENTS=(
-  "numpy==1.26.4"
-  "opencv-python==4.11.0.86"
-  "scipy==1.15.3"
+  "numpy>=1.26.4"
+  "opencv-python>=4.11.0.86"
+  "scipy>=1.15.3"
+  "hbm_runtime>=0.1.0.post1"
 )
 
 check_and_install() {
@@ -39,18 +40,21 @@ for pkg in "${REQUIREMENTS[@]}"; do
 done
 
 # Model Download
-# Local model path configuration
-MODEL_PATH="../../model/efficientnet_lite0_224x224_nv12.hbm"
-MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/EfficientNet/efficientnet_lite0_224x224_nv12.hbm"
+# Default model: efficientnet_lite0
+MODEL_NAME="efficientnet_lite0"
+MODEL_RES="224x224"
+MODEL_FILE="${MODEL_NAME}_${MODEL_RES}_nv12.hbm"
+MODEL_PATH="../../model/${MODEL_FILE}"
+MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${SOC}/EfficientNet/${MODEL_FILE}"
 
 echo "Model path : $MODEL_PATH"
+echo "Model Url: $MODEL_URL"
 
 if [[ ! -f "$MODEL_PATH" ]]; then
-  echo "Model not found, downloading..."
+  echo "Model not found, downloading default model..."
 
   mkdir -p "$(dirname "$MODEL_PATH")"
 
-  # Use curl to download the model
   curl -fL "$MODEL_URL" -o "$MODEL_PATH"
 
   echo "Model downloaded successfully"
@@ -58,16 +62,11 @@ else
   echo "Model already exists, skip download"
 fi
 
-# Test data check (Optional: could download if missing)
-TEST_IMG="../../test_data/Scottish_deerhound.JPEG"
-LABEL_FILE="../../../../../datasets/imagenet/imagenet1000_clsidx_to_labels.txt"
-
 # Model Execution
-$PYTHON_BIN main.py \
+python3 main.py \
     --model-path "$MODEL_PATH" \
-    --test-img "$TEST_IMG" \
-    --label-file "$LABEL_FILE" \
+    --test-img ../../../../../datasets/imagenet/asset/scottish_deerhound.JPEG \
+    --label-file ../../../../../datasets/imagenet/imagenet_classes.names \
     --topk 5 \
-    --resize-type 1 \
     --priority 0 \
     --bpu-cores 0

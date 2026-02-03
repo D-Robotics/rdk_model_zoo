@@ -54,7 +54,7 @@ YOLOv5 无官方论文，其官方实现地址如下：
 |       |-- main.py                     # Python 推理入口脚本
 |       |-- run.sh                      # Python 示例运行脚本
 |       `-- yolov5.py                   # YOLOv5 推理与后处理实现
-|-- test_data                           # 推理结果与示例数据
+|-- test_data                           # 推理结果
 |   `-- result.jpg                      # 示例推理结果图像
 `-- README.md                           # YOLOv5 示例整体说明与快速指引
 ```

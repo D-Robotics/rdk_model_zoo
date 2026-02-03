@@ -57,12 +57,12 @@ else
 fi
 
 # Model Execution
-python main.py \
-    --model-path /opt/hobot/model/$SOC/basic/yolov5x_672x672_nv12.hbm \
-    --test-img /app/res/assets/kite.jpg \
-    --label-file /app/res/labels/coco_classes.names \
+python3 main.py \
+    --model-path "$MODEL_PATH" \
+    --test-img ../../../../../datasets/coco/assets/kite.jpg \
+    --label-file ../../../../../datasets/coco/coco_classes.names \
     --img-save-path result.jpg \
-    --priority 0 \
-    --bpu-cores 0 \
+    --score-thres 0.25 \
     --nms-thres 0.45 \
-    --score-thres 0.25
+    --priority 0 \
+    --bpu-cores 0

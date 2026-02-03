@@ -15,6 +15,13 @@
 # flake8: noqa: E501
 # flake8: noqa: E402
 
+"""Provide a YOLOv5X inference wrapper and pipeline utilities.
+
+This module defines a lightweight YOLOv5X runtime wrapper built on HBM runtime.
+It includes configuration definitions and a complete inference pipeline
+(preprocess, forward, postprocess), along with minimal decoding helpers.
+"""
+
 import os
 import cv2
 import sys
@@ -34,10 +41,15 @@ import utils.py_utils.postprocess as post_utils
 
 
 def sigmoid(x: np.ndarray) -> np.ndarray:
-    """
-    @brief Compute the sigmoid activation function.
-    @param x Input NumPy array.
-    @return NumPy array after applying sigmoid function element-wise.
+    """Compute the sigmoid activation function.
+
+    Applies the sigmoid function element-wise to the input NumPy array.
+
+    Args:
+        x: Input NumPy array.
+
+    Returns:
+        A NumPy array with the sigmoid function applied element-wise.
     """
     return 1.0 / (1.0 + cv2.exp(-x))
 
@@ -46,13 +58,29 @@ def decode_layer(feat: np.ndarray,
                  stride: int,
                  anchor: np.ndarray,
                  classes_num: int = 80) -> np.ndarray:
-    """
-    @brief Decode a single feature layer from detection head.
-    @param feat Raw model output tensor of shape (1, na, h, w, c).
-    @param stride Stride of the feature layer.
-    @param anchor Anchor sizes for this layer (na, 2).
-    @param classes_num Number of output classes.
-    @return Decoded prediction array of shape (N, 5 + num_classes).
+    """Decode a single feature layer from the detection head.
+
+    This function decodes the raw output tensor of one detection layer
+    (corresponding to a specific stride) into bounding box predictions
+    in the original image scale.
+
+    The decoded output includes:
+        - Bounding box center coordinates (x, y)
+        - Bounding box width and height (w, h)
+        - Objectness score
+        - Per-class confidence scores
+
+    Args:
+        feat: Raw model output tensor with shape
+            `(1, na, h, w, 5 + num_classes)`, where `na` is the number of anchors.
+        stride: Stride of the feature layer relative to the input image.
+        anchor: Anchor sizes for this feature layer with shape `(na, 2)`,
+            formatted as `(width, height)`.
+        classes_num: Number of object classes.
+
+    Returns:
+        A NumPy array of shape `(N, 5 + num_classes)` containing decoded
+        predictions, where `N = na * h * w`.
     """
     _, _, h, w, _ = feat.shape  #  h/w: feature map size
 
@@ -90,14 +118,26 @@ def decode_outputs(output_names: list[str],
                    strides: list[int],
                    anchors: list[np.ndarray],
                    classes_num: int = 80) -> np.ndarray:
-    """
-    @brief Decode all feature maps from model output.
-    @param output_names List of output tensor names.
-    @param fp32_outputs Dict of decoded tensors from model.
-    @param strides Stride values for each output head.
-    @param anchors Anchor arrays for each head.
-    @param classes_num Number of output classes.
-    @return Concatenated prediction tensor of shape (N, 5 + classes).
+    """Decode all feature maps from the model output.
+
+    This function iterates over all detection heads, reshapes and reorders
+    the raw output tensors, decodes each feature map using its corresponding
+    stride and anchor configuration, and concatenates the results into a
+    single prediction tensor.
+
+    Args:
+        output_names: List of output tensor names corresponding to detection heads.
+        fp32_outputs: Dictionary mapping output tensor names to FP32 NumPy arrays
+            produced by the model.
+        strides: List of stride values for each detection head.
+        anchors: List of anchor arrays for each detection head, where each element
+            has shape `(na, 2)`.
+        classes_num: Number of object classes.
+
+    Returns:
+        A NumPy array of shape `(N, 5 + classes_num)` containing all decoded
+        predictions, where `N` is the total number of predictions across
+        all detection heads.
     """
     decoded = []
     for i, key in enumerate(output_names):
@@ -111,35 +151,23 @@ def decode_outputs(output_names: list[str],
 
 @dataclass
 class YOLOv5Config:
-    """
-    @brief Configuration for initializing YoloV5X model.
+    """Configuration for initializing the YoloV5X model.
 
-    Contains model path and all runtime parameters required for preprocessing,
-    inference, and postprocessing.
+    This dataclass stores the model path and all runtime parameters required
+    for preprocessing, inference, and postprocessing in the YOLOv5 pipeline.
 
-    Fields:
-        model_path (str):
-            Path to the compiled YOLOv5 .hbm model.
-
-        classes_num (int):
-            Number of detection categories. Default: 80.
-
-        resize_type (int):
-            Image resize mode used during preprocessing.
-            0 = stretch resize
-            1 = keep aspect ratio with padding
-
-        score_thres (float):
-            Minimum confidence threshold for filtering candidates.
-
-        nms_thres (float):
-            IoU threshold used for Non-Maximum Suppression.
-
-        strides (np.ndarray):
-            Feature map strides, default [8,16,32].
-
-        anchors (np.ndarray):
-            YOLO anchor definitions with shape (3, 3, 2).
+    Attributes:
+        model_path: Path to the compiled YOLOv5 `.hbm` model.
+        classes_num: Number of detection classes. Defaults to 80.
+        resize_type: Image resize mode used during preprocessing.
+            - 0: Stretch resize.
+            - 1: Keep aspect ratio with padding.
+        score_thres: Minimum confidence threshold for filtering detections.
+        nms_thres: IoU threshold used for Non-Maximum Suppression.
+        strides: Feature map strides for each detection scale.
+            Defaults to `[8, 16, 32]`.
+        anchors: Anchor box definitions for each detection scale with shape
+            `(3, 3, 2)`.
     """
     model_path: str
     classes_num: int = 80
@@ -161,22 +189,20 @@ class YOLOv5Config:
 
 
 class YoloV5X:
-    """
-    @brief YOLOv5X object detection wrapper using HB_HBMRuntime.
+    """YOLOv5X object detection wrapper based on HB_HBMRuntime.
 
-    Provides a unified inference pipeline including input preprocessing,
-    model execution, and postprocessing (decode, confidence filtering,
-    and Non-Maximum Suppression).
+    This class provides a unified inference pipeline for YOLOv5X, including
+    input preprocessing, model execution, and postprocessing steps such as
+    decoding, confidence filtering, and Non-Maximum Suppression (NMS).
     """
 
     def __init__(self, config: YOLOv5Config):
-        """
-        @brief Initialize the YOLOv5X model with a provided configuration.
+        """Initialize the YOLOv5X model with the given configuration.
 
-        @param config (YOLOv5Config)
-            Configuration object containing model path, preprocessing,
-            and postprocessing parameters. All field descriptions and
-            constraints are defined within the YOLOv5Config dataclass.
+        Args:
+            config: Configuration object containing model path, preprocessing
+                parameters, and postprocessing parameters. All field semantics
+                and constraints are defined in the `YOLOv5Config` dataclass.
         """
 
         # Load model and extract metadata
@@ -198,14 +224,14 @@ class YoloV5X:
     def set_scheduling_params(self,
                               priority: Optional[int] = None,
                               bpu_cores: Optional[list] = None) -> None:
-        """
-        @brief Configure inference scheduling parameters.
+        """Configure inference scheduling parameters.
 
-        @param priority (int, optional)
-            Inference priority in range [0, 255].
-        @param bpu_cores (list[int], optional)
-            BPU core indices used for inference.
-        @return None
+        Args:
+            priority: Inference priority in the range [0, 255].
+            bpu_cores: List of BPU core indices used for inference.
+
+        Returns:
+            None
         """
         kwargs = {}
         if priority is not None:
@@ -220,22 +246,25 @@ class YoloV5X:
                     resize_type: Optional[int] = None,
                     image_format: Optional[str] = "BGR"
                     ) -> Dict[str, Dict[str, np.ndarray]]:
-        """
-        @brief Preprocess input image into model-required tensor format.
+        """Preprocess an input image into model-required tensor format.
 
-        The input image is resized according to resize_type and converted
-        from BGR to NV12 (Y + UV planes).
+        The input image is resized according to the specified resize strategy
+        and converted from BGR format to NV12 (Y and UV planes).
 
-        @param img (np.ndarray)
-            Input image array.
-        @param resize_type (int, optional)
-            Resize strategy. If None, uses the value from configuration.
-            If provided, the configuration value will be updated.
-        @param image_format (str, optional)
-            Input image format. Currently only "BGR" is supported.
-        @return dict
-            Nested input tensor dictionary:
-            {model_name: {input_name: tensor}}
+        Args:
+            img: Input image array.
+            resize_type: Resize strategy override. If `None`, the value from
+                the configuration is used. If provided, the configuration
+                value will be updated.
+            image_format: Input image format. Currently, only `"BGR"` is
+                supported.
+
+        Returns:
+            A nested input tensor dictionary in the form:
+            `{model_name: {input_name: tensor}}`.
+
+        Raises:
+            ValueError: If an unsupported image format is provided.
         """
         if resize_type == None:
             resize_type = self.cfg.resize_type
@@ -257,13 +286,14 @@ class YoloV5X:
         }
 
     def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
-        """
-        @brief Execute model inference.
+        """Execute model inference.
 
-        @param input_tensor (dict)
-            Preprocessed input tensor dictionary produced by pre_process().
-        @return dict
-            Raw output tensors returned by the runtime.
+        Args:
+            input_tensor: Preprocessed input tensor dictionary produced by
+                `pre_process()`.
+
+        Returns:
+            A dictionary containing raw output tensors returned by the runtime.
         """
         outputs = self.model.run(input_tensor)
         return outputs
@@ -275,26 +305,27 @@ class YoloV5X:
                      score_thres: Optional[float] = None,
                      nms_thres: Optional[float] = None,
                      ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        @brief Convert raw model outputs into final detection results.
+        """Convert raw model outputs into final detection results.
 
-        This includes dequantization, decoding, confidence filtering,
-        Non-Maximum Suppression (NMS), and coordinate scaling.
+        This step includes dequantization, decoding, confidence filtering,
+        Non-Maximum Suppression (NMS), and coordinate scaling back to the
+        original image resolution.
 
-        @param outputs (dict)
-            Raw output tensors from inference.
-        @param ori_img_w (int)
-            Width of the original input image.
-        @param ori_img_h (int)
-            Height of the original input image.
-        @param score_thres (float, optional)
-            Confidence threshold. If None, uses configuration value.
-        @param nms_thres (float, optional)
-            NMS IoU threshold. If None, uses configuration value.
-        @return Tuple:
-            - xyxy (np.ndarray): Bounding boxes (N, 4) in original image coordinates.
-            - cls (np.ndarray): Class indices (N).
-            - score (np.ndarray): Confidence scores (N).
+        Args:
+            outputs: Raw output tensors from inference.
+            ori_img_w: Width of the original input image.
+            ori_img_h: Height of the original input image.
+            score_thres: Confidence threshold override. If `None`, the value
+                from the configuration is used.
+            nms_thres: IoU threshold for NMS. If `None`, the value from the
+                configuration is used.
+
+        Returns:
+            A tuple containing:
+                - xyxy: Bounding boxes with shape `(N, 4)` in original image
+                  coordinates.
+                - score: Confidence scores with shape `(N,)`.
+                - cls: Class indices with shape `(N,)`.
         """
         score_thres = score_thres or self.cfg.score_thres
         nms_thres = nms_thres or self.cfg.nms_thres
@@ -325,26 +356,23 @@ class YoloV5X:
                 score_thres: Optional[float] = None,
                 nms_thres: Optional[float] = None,
                 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        @brief Run a complete detection pipeline on a single image.
+        """Run the complete detection pipeline on a single image.
 
-        This method internally performs preprocessing, inference,
-        and postprocessing.
+        This method internally performs preprocessing, inference, and
+        postprocessing.
 
-        @param img (np.ndarray)
-            Input image array.
-        @param image_format (str)
-            Input image format. Currently supports "BGR".
-        @param resize_type (int, optional)
-            Resize strategy override.
-        @param score_thres (float, optional)
-            Confidence threshold override.
-        @param nms_thres (float, optional)
-            NMS IoU threshold override.
-        @return Tuple:
-            - xyxy (np.ndarray): Bounding boxes (N, 4).
-            - cls (np.ndarray): Class indices (N).
-            - score (np.ndarray): Confidence scores (N).
+        Args:
+            img: Input image array.
+            image_format: Input image format. Currently supports `"BGR"`.
+            resize_type: Resize strategy override.
+            score_thres: Confidence threshold override.
+            nms_thres: IoU threshold override for NMS.
+
+        Returns:
+            A tuple containing:
+                - xyxy: Bounding boxes with shape `(N, 4)`.
+                - score: Confidence scores with shape `(N,)`.
+                - cls: Class indices with shape `(N,)`.
         """
         # Original image size
         ori_img_h, ori_img_w = img.shape[:2]
@@ -368,15 +396,18 @@ class YoloV5X:
                  score_thres: Optional[float] = None,
                  nms_thres: Optional[float] = None,
                  ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        @brief Callable interface for the detection pipeline.
+        """Callable interface for the detection pipeline.
 
-        Equivalent to calling predict().
+        This method is functionally equivalent to calling `predict()`.
 
-        @param img (np.ndarray)
-            Input image.
-        @param image_format (str)
-            Input image format.
-        @return Same as predict().
+        Args:
+            img: Input image array.
+            image_format: Input image format.
+            resize_type: Resize strategy override.
+            score_thres: Confidence threshold override.
+            nms_thres: IoU threshold override for NMS.
+
+        Returns:
+            Same return values as `predict()`.
         """
         return self.predict(img, image_format, resize_type, score_thres, nms_thres)

@@ -6,11 +6,17 @@
 - RDK 平台
 - Python 3.8+
 - hbm_runtime
-- numpy, opencv-python, scipy, lap
+- numpy>=1.24.0
+- opencv-python>=4.5.0
+- scipy>=1.7.0
+- lap>=0.4.0
+- Cython>=3.2.4
+- cython_bbox>=0.1.5
+
 
 安装命令：
 ```bash
-pip install numpy opencv-python scipy lap
+pip install "numpy>=1.24.0" "opencv-python>=4.5.0" "scipy>=1.7.0" "lap>=0.4.0" "cython_bbox>=0.1.5" "Cython>=3.2.4" "hbm_runtime"
 ```
 
 ## 目录结构
@@ -29,8 +35,8 @@ pip install numpy opencv-python scipy lap
 | 参数           | 说明                                                     | 默认值                                      |
 |----------------|----------------------------------------------------------|---------------------------------------------|
 | `--model-path` | 检测模型文件路径（.hbm 格式）                               | `../../model/yolov5x_672x672_nv12.hbm` |
-| `--input`      | 输入视频路径                                              | `../../test_data/test_video.mp4`            |
-| `--output`     | 输出视频路径                                              | `result.mp4`                                |
+| `--input`      | 输入视频路径                                              | `../../test_data/track_test.mp4`            |
+| `--output`     | 输出视频路径                                              | `../../test_data/result.mp4`                                |
 | `--priority`   | 模型调度优先级（0~255）                                     | `0`                                         |
 | `--bpu-cores`  | 使用的 BPU 核心编号列表（如 `--bpu-cores 0 1`）              | `[0]`                                      |
 | `--score-thres`| 检测置信度阈值                                            | `0.25`                                      |
@@ -47,78 +53,22 @@ pip install numpy opencv-python scipy lap
         ```bash
         python main.py \
             --model-path ../../model/yolov5x_672x672_nv12.hbm \
-            --input ../../test_data/test_video.mp4 \
-            --output result.mp4 \
+            --input ../../test_data/track_test.mp4 \
+            --output ../../test_data/result.mp4 \
             --score-thres 0.25 \
             --track-thresh 0.3
-        ```
+        ``` 
 - 查看结果
 
-    运行成功后，将在当前目录下生成 `result.mp4`，包含跟踪轨迹和 ID。
+    运行成功后，将在`test_data`目录下生成 `result.mp4`，包含跟踪轨迹和 ID。
+    运行效果如图:![result](../../test_data/result.jpg)
 
 
 ## 接口说明
-
-### ByteTrackConfig类
-
-```python
-@dataclass
-class ByteTrackConfig
-```
-
-- 功能
-
-    配置 ByteTrack 及其检测器的参数。继承自 `YOLOv5Config`。
-
-- 参数（新增字段）
-
-    | 字段名           | 类型           | 说明                      |
-    | ------------- | ------------ | ----------------------- |
-    | `track_thresh`| `float`      | 跟踪置信度阈值               |
-    | `track_buffer`| `int`        | 轨迹保留帧数                |
-    | `match_thresh`| `float`      | 匹配阈值                   |
-
-
-### ByteTrack类
-
-#### ByteTrack构造函数
-
-```python
-def __init__(self, config: ByteTrackConfig)
-```
-
-- 功能
-
-    加载 YOLOv5 检测模型并初始化跟踪器。
-
-- 参数
-
-    | 参数名      | 类型             | 说明   |
-    | -------- | -------------- | ---- |
-    | `config` | `ByteTrackConfig` | 配置对象 |
-
-
-#### ByteTrack.predict
-
-```python
-def predict(self, img: np.ndarray) -> List[STrack]
-```
-
-- 功能
-
-    执行完整的跟踪流程：预处理 → 检测推理（YOLOv5） → 后处理 → 轨迹更新。
-
-- 参数
-
-    | 参数名 | 类型 | 说明 |
-    | --- | --- | --- |
-    | `img` | `np.ndarray` | 输入图像 (BGR) |
-
-- 返回值
-
-    | 返回值 | 类型 | 说明 |
-    | --- | --- | --- |
-    | `tracks` | `List[STrack]` | 当前帧的跟踪目标列表 |
+阅读[源码文档说明](../../../../../docs/source_reference/README.md)，根据说明查看源码参考文档；
+本示例代码提供了详细的注释。为了获取最准确、最新的接口定义，请直接查阅源码中的文档字符串：
+- **ByteTrackConfig** 与 **ByteTrack**: 详见 `bytetrack.py`
+- **YOLOv5Config** 与 **YoloV5X**: 详见 `yolov5.py`
 
 ## 注意事项
  无
