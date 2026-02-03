@@ -31,13 +31,14 @@ sudo apt install libgflags-dev
     ```
 
 ## 参数说明
-| 参数              | 说明                       | 默认值                                     |
-| --------------- | --------------------------- | ------------------------------------------ |
-| `--model-path`  | 模型文件路径（.hbm 格式）     | `/opt/hobot/model/s100/basic/yolov5x_672x672_nv12.hbm` |
-| `--test-img`    | 测试图片路径                 | `/app/res/assets/kite.jpg`                 |
-| `--label-file`  | 类别标签文件路径             | `/app/res/labels/coco_classes.names`       |
-| `--score-thres` | 置信度阈值 (过滤低分框)      | `0.25`                                     |
-| `--nms-thres`   | IoU 阈值 (NMS 非极大值抑制)  | `0.45`                                     |
+| 参数           | 说明                         | 默认值                                     |
+|----------------|------------------------------|--------------------------------------------|
+| `--model_path` | 模型文件路径（.hbm 格式）    | `../../model/yolov5x_672x672_nv12.hbm`    |
+| `--test-img`    | 测试图片路径                 | `../../../../../datasets/coco/assets/kite.jpg`                 |
+| `--label_file`  | 类别标签路径（每行一个类别） | `../../../../../datasets/coco/coco_classes.names`              |
+| `--score_thres` | 置信度阈值                   | `0.25`                                     |
+| `--nms_thres`   | NMS IoU 阈值                 | `0.45`                                     |
+
 
 ## 快速运行
 - 运行模型
@@ -48,11 +49,11 @@ sudo apt install libgflags-dev
     - 指定参数运行
         ```bash
         ./yolov5 \
-            --model-path /opt/hobot/model/s100/basic/yolov5x_672x672_nv12.hbm \
-            --test-img /app/res/assets/kite.jpg \
-            --label-file /app/res/labels/coco_classes.names \
-            --score-thres 0.25 \
-            --nms-thres 0.45
+            --model_path ../../model/yolov5x_672x672_nv12.hbm \
+            --test-img ../../../../../datasets/coco/assets/kite.jpg \
+            --label_file ../../../../../datasets/coco/coco_classes.names \
+            --score_thres 0.25 \
+            --nms_thres 0.45
         ```
 - 查看结果
 
