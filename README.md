@@ -11,13 +11,15 @@ RDK Model Zoo is developed based on [RDK](https://en.d-robotics.cc/), providing 
 
 **RDK Model Zoo currently provides reference for the following types of models:**
 
-- [Image Classification](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/classification): `./rdk_model_zoo/demos/classification`
+- [Image Classification](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/vision/classification): `./samples/vision/classification`
   
-- [Object Detection](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/detect): `./rdk_model_zoo/demos/detect`
+- [Object Detection](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/vision): `./samples/vision`
 
-- [Instance Segmentation](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/Instance_Segmentation): `./rdk_model_zoo/demos/Instance_Segmentation`
+- [Instance Segmentation](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/vision): `./samples/vision`
 
-- [Large Models](https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/llm): `./rdk_model_zoo/demos/llm`
+- [Large Models](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/llm): `./samples/llm`
+
+- [Solutions](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/solutions): `./samples/solutions`
 
 **RDK Model Zoo supports the following platforms:**
 - Supports [RDK X5](https://developer.d-robotics.cc/rdkx5) (Bayse-e)
