@@ -26,8 +26,8 @@ limitations under the License.
 
 // 推理使用的测试图片路径
 // Path of the test image used for inference.
-// #define TESR_IMG_PATH "../../../../../resource/assets/kite.jpg"
-#define TESR_IMG_PATH "../../../../../resource/assets/bus.jpg"
+// #define TESR_IMG_PATH "../../../../../datasets/coco/assets/kite.jpg"
+#define TESR_IMG_PATH "../../../../datasets/coco/assets/bus.jpg"
 
 // 前处理方式选择, 0:Resize, 1:LetterBox
 // Preprocessing method selection, 0: Resize, 1: LetterBox

@@ -29,7 +29,7 @@ limitations under the License.
 
 // 测试图片路径
 // Path to test image
-#define TEST_IMG_PATH "../../../resource/datasets/ImageNet/asset/zebra_cls.jpg"
+#define TEST_IMG_PATH "../../../../datasets/imagenet/asset/zebra_cls.jpg"
 
 // 前处理方式: 0=Resize, 1=LetterBox
 // Preprocessing method: 0=Resize, 1=LetterBox

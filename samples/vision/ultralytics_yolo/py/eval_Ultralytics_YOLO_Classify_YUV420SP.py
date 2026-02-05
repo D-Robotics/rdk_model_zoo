@@ -47,7 +47,7 @@ def main():
                                 RDK X5(Module): Bayes-e.
                                 RDK S100: Nash-e.
                                 RDK S100P: Nash-m.""") 
-    parser.add_argument('--image-path', type=str, default="../../../resource/datasets/ImageNet/val_images", help='COCO2017 val source image path.')
+    parser.add_argument('--image-path', type=str, default="../../../../datasets/imagenet/val_images", help='COCO2017 val source image path.')
     parser.add_argument('--json-path', type=str, default="yolo11n_cls_detect_bayese_640x640_nv12_py_coco2017_val_pridect.json", help='convert to json save path.')
     parser.add_argument('--max-num', type=int, default=100000, help='max num of images which will be precessed.')
     opt = parser.parse_args()

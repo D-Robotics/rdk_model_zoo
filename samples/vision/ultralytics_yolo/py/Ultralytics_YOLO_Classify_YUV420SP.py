@@ -60,7 +60,7 @@ def main():
                                 RDK X5(Module): Bayes-e.
                                 RDK S100: Nash-e.
                                 RDK S100P: Nash-m.""") 
-    parser.add_argument('--test-img', type=str, default='../../../resource/datasets/ImageNet/asset/zebra_cls.jpg', help='Path to Load Test Image.')
+    parser.add_argument('--test-img', type=str, default='../../../../datasets/imagenet/asset/zebra_cls.jpg', help='Path to Load Test Image.')
     opt = parser.parse_args()
     logger.info(opt)
 

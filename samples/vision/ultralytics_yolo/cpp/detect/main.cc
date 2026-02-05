@@ -29,7 +29,7 @@ limitations under the License.
 
 // 测试图片路径
 // Path to test image
-#define TEST_IMG_PATH "../../../resource/datasets/COCO2017/assets/bus.jpg"
+#define TEST_IMG_PATH "../../../../datasets/coco/assets/bus.jpg"
 
 // 结果保存路径
 // Path to save result

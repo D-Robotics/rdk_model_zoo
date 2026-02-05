@@ -43,7 +43,7 @@ def main():
                                 RDK X5(Module): Bayes-e.
                                 RDK S100: Nash-e.
                                 RDK S100P: Nash-m.""") 
-    parser.add_argument('--test-img', type=str, default='../../../../resource/datasets/COCO2017/assets/bus.jpg', help='Path to Load Test Image.')
+    parser.add_argument('--test-img', type=str, default='../../../../datasets/coco/assets/bus.jpg', help='Path to Load Test Image.')
     parser.add_argument('--img-save-path', type=str, default='py_result.jpg', help='Path to Load Test Image.')
     parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
     parser.add_argument('--nms-thres', type=float, default=0.7, help='IoU threshold.')
@@ -55,7 +55,7 @@ def main():
                         help='--strides 8, 16, 32')
     parser.add_argument('--is-open', type=bool, default=False, help='Ture: morphologyEx')
     parser.add_argument('--is-point', type=bool, default=True, help='Ture: Draw edge points')
-    parser.add_argument('--image-path', type=str, default="../../../resource/datasets/COCO2017/val2017", help='COCO2017 val source image path.')
+    parser.add_argument('--image-path', type=str, default="../../../../datasets/coco/val2017", help='COCO2017 val source image path.')
     parser.add_argument('--result-image-dump', type=bool, default=False, help='dump image result or not')
     parser.add_argument('--result-image-path', type=str, default="coco2017_image_result", help='COCO2017 val image result saving path.')
     parser.add_argument('--json-path', type=str, default="yolo11n_seg2_bayese_640x640_nv12_coco2017_val_pridect_0_5.json", help='convert to json save path.')
