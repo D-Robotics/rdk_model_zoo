@@ -15,8 +15,8 @@ sudo apt install libgflags-dev
 |-- inc                # 头文件目录
 |   `-- yolov5.hpp     # YOLOv5 模型封装类声明
 |-- src                # 源码目录
-|   |-- main.cc        # 推理程序入口（参数解析与流程控制）
-|   `-- yolov5.cc      # YOLOv5 推理与后处理实现
+|   |-- main.cpp       # 推理程序入口（参数解析与流程控制）
+|   `-- yolov5.cpp     # YOLOv5 推理与后处理实现
 |-- CMakeLists.txt     # CMake 构建配置文件
 |-- README.md          # C++ 推理示例使用说明
 `-- run.sh             # 示例运行脚本
@@ -34,8 +34,8 @@ sudo apt install libgflags-dev
 | 参数              | 说明                       | 默认值                                     |
 | --------------- | --------------------------- | ------------------------------------------ |
 | `--model-path`  | 模型文件路径（.hbm 格式）     | `/opt/hobot/model/s100/basic/yolov5x_672x672_nv12.hbm` |
-| `--test-img`    | 测试图片路径                 | `/app/res/assets/kite.jpg`                 |
-| `--label-file`  | 类别标签文件路径             | `/app/res/labels/coco_classes.names`       |
+| `--test-img`    | 测试图片路径                 | `../../../test_data/kite.jpg`              |
+| `--label-file`  | 类别标签文件路径             | `../../../test_data/coco_classes.names`    |
 | `--score-thres` | 置信度阈值 (过滤低分框)      | `0.25`                                     |
 | `--nms-thres`   | IoU 阈值 (NMS 非极大值抑制)  | `0.45`                                     |
 
@@ -49,8 +49,8 @@ sudo apt install libgflags-dev
         ```bash
         ./yolov5 \
             --model-path /opt/hobot/model/s100/basic/yolov5x_672x672_nv12.hbm \
-            --test-img /app/res/assets/kite.jpg \
-            --label-file /app/res/labels/coco_classes.names \
+            --test-img ../../../test_data/kite.jpg \
+            --label-file ../../../test_data/coco_classes.names \
             --score-thres 0.25 \
             --nms-thres 0.45
         ```

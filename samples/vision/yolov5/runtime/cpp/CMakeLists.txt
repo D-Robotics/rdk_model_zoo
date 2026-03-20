@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Set device model macro definition
 file(READ "/sys/class/boardinfo/soc_name" SOC_NAME_RAW)
 string(TOUPPER "${SOC_NAME_RAW}" SOC_NAME_UPPER)
-add_definitions(-DPLATFORM_${SOC_NAME_UPPER})
+add_definitions(-DSOC_${SOC_NAME_UPPER})
 
 # Include directories for header file search
 include_directories(
@@ -25,13 +25,13 @@ link_directories(/usr/hobot/lib)
 
 # Define the executable target and its source files
 add_executable(yolov5
-    src/main.cc
-    src/yolov5.cc
-    ../../../../../utils/c_utils/src/file_io.cc
-    ../../../../../utils/c_utils/src/nn_math.cc
-    ../../../../../utils/c_utils/src/preprocess.cc
-    ../../../../../utils/c_utils/src/postprocess.cc
-    ../../../../../utils/c_utils/src/visualize.cc
+    src/main.cpp
+    src/yolov5.cpp
+    ../../../../../utils/c_utils/src/file_io.cpp
+    ../../../../../utils/c_utils/src/nn_math.cpp
+    ../../../../../utils/c_utils/src/preprocess.cpp
+    ../../../../../utils/c_utils/src/postprocess.cpp
+    ../../../../../utils/c_utils/src/visualize.cpp
 )
 
 # Find package (required)

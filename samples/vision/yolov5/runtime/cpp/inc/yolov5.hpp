@@ -15,7 +15,7 @@
  */
 
 /**
- * @file yolov5x.hpp
+ * @file yolov5.hpp
  * @brief Define a high-level inference wrapper and pipeline interfaces for
  *        the YOLOv5x object detection model.
  *
@@ -36,49 +36,33 @@
 #include "postprocess.hpp"
 
 /**
- * @class YOLOv5x
- * @brief Runtime resource wrapper for YOLOv5x model using HB-DNN / UCP APIs.
+ * @brief Configuration parameters for YOLOv5x preprocessing and postprocessing.
  *
- * Responsibilities:
- * - Load a packed *.hbm model and select a model handle
- * - Query input/output tensor properties
- * - Allocate and own tensor buffers (hbUCPSysMem)
+ * Stores all parameters required for the YOLOv5x inference pipeline,
+ * including feature map strides, anchor definitions, detection thresholds,
+ * and preprocessing options. Default values cover the recommended typical
+ * usage scenario and allow the sample to run without modification.
  */
 struct Yolov5Config
 {
-    // Feature map strides for each detection scale
-    // Default values correspond to YOLOv5 (P3, P4, P5)
-    std::vector<int> strides{8, 16, 32};
+    std::vector<int> strides{8, 16, 32};  ///< Feature map strides for P3/P4/P5 detection scales
 
-    // Anchor definitions per scale:
-    // anchors[scale][anchor_id] = {anchor_width, anchor_height}
     std::vector<std::vector<std::array<float, 2>>> anchors{
         { {10, 13}, {16, 30}, {33, 23} },
         { {30, 61}, {62, 45}, {59, 119} },
         { {116, 90}, {156, 198}, {373, 326} }
-    };
+    };  ///< Anchor sizes per scale: anchors[scale][anchor_id] = {width, height}
 
-    // Feature map spatial resolution (height, width) for each detection scale
-    // Must match the output tensor layout of the compiled model
     std::vector<std::pair<int, int>> hw_list = {
         {84, 84},
         {42, 42},
         {21, 21}
-    };
+    };  ///< Feature map spatial resolution (H, W) per scale; must match compiled model output
 
-    // Confidence threshold for filtering candidate detections
-    float score_thresh{0.25f};
-
-    // IoU threshold used during Non-Maximum Suppression (NMS)
-    float nms_thresh{0.45f};
-
-    // Number of object categories predicted by the model
-    int num_classes{80};
-
-    // Image resize mode used during preprocessing
-    // 0 = stretch resize
-    // 1 = keep aspect ratio with padding (letterbox)
-    int resize_mode{1};
+    float score_thresh{0.25f};  ///< Confidence threshold for filtering candidate detections
+    float nms_thresh{0.45f};    ///< IoU threshold used during Non-Maximum Suppression (NMS)
+    int num_classes{80};        ///< Number of object categories predicted by the model
+    int resize_mode{1};         ///< Image resize mode: 0 = stretch resize, 1 = letterbox (keep aspect ratio)
 };
 
 /**
@@ -94,34 +78,16 @@ struct Yolov5Config
 class YOLOv5x
 {
 public:
-    // Number of models contained in the packed DNN handle
-    int model_count{0};
-
-    // Packed DNN handle (may contain multiple models)
-    hbDNNPackedHandle_t packed_dnn_handle{nullptr};
-
-    // Handle of the YOLOv5x model used for inference
-    hbDNNHandle_t dnn_handle{nullptr};
-
-    // Number of input tensors required by the model
-    int32_t input_count{0};
-
-    // Number of output tensors produced by the model
-    int32_t output_count{0};
-
-    // Input tensor descriptors and memory
-    std::vector<hbDNNTensor> input_tensors;
-
-    // Output tensor descriptors and memory
-    std::vector<hbDNNTensor> output_tensors;
-
-    // Model input height (pixels)
-    int input_h{0};
-
-    // Model input width (pixels)
-    int input_w{0};
-
-    bool inited{false};
+    int model_count{0};                          ///< Number of models contained in the packed DNN handle
+    hbDNNPackedHandle_t packed_dnn_handle{nullptr};  ///< Packed DNN handle (may contain multiple models)
+    hbDNNHandle_t dnn_handle{nullptr};           ///< Handle of the YOLOv5x model used for inference
+    int32_t input_count{0};                      ///< Number of input tensors required by the model
+    int32_t output_count{0};                     ///< Number of output tensors produced by the model
+    std::vector<hbDNNTensor> input_tensors;      ///< Input tensor descriptors and memory
+    std::vector<hbDNNTensor> output_tensors;     ///< Output tensor descriptors and memory
+    int input_h{0};                              ///< Model input height (pixels)
+    int input_w{0};                              ///< Model input width (pixels)
+    bool inited{false};                          ///< Whether the model has been initialized via init()
 
     /**
     * @brief Construct a YOLOv5x instance.

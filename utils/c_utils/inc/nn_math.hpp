@@ -28,6 +28,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include "runtime.hpp"
 #include "model_types.hpp"
 
 
@@ -62,8 +63,34 @@ inline void softmax(const float* input, float* output, int len = 16)
 }
 
 /**
- * @brief Convert logits into probabilities using softmax normalization.
+ * @brief Convert classification logits to probabilities using stable softmax.
  *
- * @param[in,out] top_k_cls Vector of classification results to normalize in-place.
+ * This function applies softmax over the entire logit vector and outputs
+ * per-class probabilities without sorting or top-k selection.
+ *
+ * @param[in]  tensor    Output tensor containing float logits.
+ * @param[out] results   Classification results in (class_id, probability) form.
+ *
+ * @note
+ * - Assumes tensor output type is float32 and quantiType == NONE.
+ * - Dequantization is not handled here.
  */
-void logits_to_probabilities(std::vector<Classification> &top_k_cls);
+void logits_to_probabilities(hbDNNTensor& tensor,
+                             std::vector<Classification>& results);
+
+/**
+ * @brief Read float tensor data directly as classification results without softmax.
+ *
+ * Use this function when the model output node already contains post-softmax
+ * probabilities (e.g., MobileNetV2 "prob" output), so no further normalization
+ * is needed.
+ *
+ * @param[in]  tensor    Output tensor containing float probability values.
+ * @param[out] results   Classification results in (class_id, probability) form.
+ *
+ * @note
+ * - Assumes tensor output type is float32 and quantiType == NONE.
+ * - No softmax or any other transformation is applied.
+ */
+void tensor_to_cls_results(hbDNNTensor& tensor,
+                            std::vector<Classification>& results);

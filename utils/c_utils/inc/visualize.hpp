@@ -180,10 +180,10 @@ cv::Mat draw_polygon_boxes(const cv::Mat& img,
 cv::Mat colorize_mask(const cv::Mat& seg_mask, const std::vector<cv::Scalar>& colors);
 
 /**
- * @brief Print top-k classification results in a friendly format.
+ * @brief Print top-k classification results.
  *
- * @param[in] top_k_cls Vector of top-k (id, score) pairs.
- * @param[in] label_map Optional mapping from id to human-readable label.
+ * @param[in] top_k_cls Top-k classification results.
+ * @param[in] labels   Label list, index = class_id.
  */
 void print_topk_results(const std::vector<Classification>& top_k_cls,
-                               const std::map<int, std::string>& label_map);
+                        const std::vector<std::string>& labels);

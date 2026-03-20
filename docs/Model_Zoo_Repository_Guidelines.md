@@ -3,6 +3,47 @@
 
 本文档适用对象：仓库开发者、仓库维护者
 
+## 目录
+
+- [目录和文件规范](#目录和文件规范)
+  - [目录规范](#目录规范)
+  - [文件规范](#文件规范)
+    - [Sample 源码命名规范](#sample-源码命名规范)
+    - [模型文件命名规范](#模型文件命名规范)
+- [编码规范](#编码规范)
+  - [整体框架规范](#整体框架规范)
+    - [Python 规范](#python规范)
+    - [C/C++ 规范](#cc规范)
+    - [运行脚本规范](#运行脚本规范)
+  - [各类任务规范](#各类任务规范)
+    - [目标检测模型规范](#目标检测模型规范)
+    - [分类模型规范](#分类模型规范)
+    - [分割模型规范](#分割模型规范)
+    - [实例分割模型规范](#实例分割模型规范)
+    - [姿态 / 关键点模型规范](#姿态--关键点模型规范)
+    - [OCR 模型规范](#ocr-模型规范)
+    - [ASR 语音识别模型规范](#asr-语音识别模型规范)
+- [注释规范](#注释规范)
+  - [Python 注释规范](#python-注释规范)
+  - [C / C++ 注释规范](#c--c-注释规范)
+- [文档规范](#文档规范)
+  - [顶层 README](#顶层readme)
+  - [datasets/coco/README.md](#datasetscococreadmemd)
+  - [docs/README.md](#docsreadmemd)
+  - [docs/Model_Zoo_Repository_Guidelines.md](#docsmodel_zoo_repository_guidelinesmd)
+  - [docs/Python_API_User_Guide.md](#docspython_api_user_guidemd)
+  - [docs/UCP_User_Guide.md](#docsucp_user_guidemd)
+  - [samples/vision/yolov5/README.md](#samplesvisionyolov5readmemd)
+  - [samples/vision/yolov5/conversion](#samplesvisionyolov5conversion)
+  - [samples/vision/yolov5/evaluator](#samplesvisionyolov5evaluator)
+  - [samples/vision/yolov5/model/README.md](#samplesvisionyolov5modelreadmemd)
+  - [samples/vision/yolov5/runtime/python(cpp)/README.md](#samplesvisionyolov5runtimepythoncppreadmemd)
+  - [tros](#tros)
+  - [utils/c\_utils(py\_utils)/README.md](#utilsc_utilspy_utilsreadmemd)
+- [跨平台规范](#跨平台规范)
+  - [代码跨平台规范](#代码跨平台规范)
+  - [文档跨平台规范](#文档跨平台规范)
+
 ## 目录和文件规范
 ### 目录规范
 
@@ -325,13 +366,176 @@ struct Detection {
 返回值的顺序必须严格遵循 (boxes, scores, cls_ids)，以保证不同模型在 Python 侧具有一致的使用方式。
 
 #### 分类模型规范
-TODO
+图像分类算法用于预测输入图像所属的类别，是计算机视觉中最基础的任务之一。在 ModelZoo 中，所有分类模型均以统一的结果输出格式对外提供推理结果，以便于模型之间的对比、替换与集成。因此，分类模型在完成推理与后处理后，必须按照以下规范返回分类结果。
+
+##### C++ 输出规范
+在 C++ 示例中，分类结果以结构体形式表示，用于描述单个分类预测，结构体定义及字段含义如下（定义在 `utils/c_utils/inc/model_types.hpp`）：
+
+```c++
+typedef struct {
+    float probability;  /**< Classification probability */
+    int   class_id;     /**< Class index */
+} Classification;
+```
+
+模型应以 `std::vector<Classification>` 的形式返回 Top-K 分类结果，并按照 `probability` 由高到低排序。
+
+##### Python 输出规范
+在 Python 示例中，分类结果以 Python list 的形式返回，具体要求如下：
+
+- 返回类型：`List[Tuple[int, float]]`
+- 每个元素为 `(class_id, probability)` 元组
+- 列表按 `probability` 由高到低排序
+- 列表长度为 Top-K（由调用方指定）
+
+其中 `class_id` 为类别索引（与模型类别定义对应），`probability` 为对应的分类概率，取值范围通常为 `[0, 1]`。
 
 #### 分割模型规范
-TODO
+语义分割算法用于对输入图像中的每个像素进行类别预测，是计算机视觉中的基础任务之一。在 ModelZoo 中，所有语义分割模型均以统一的结果输出格式对外提供推理结果，以便于模型之间的对比、替换与集成。因此，语义分割模型在完成推理与后处理后，必须按照以下规范返回分割结果。
+
+##### C++ 输出规范
+在 C++ 示例中，语义分割结果以结构体形式表示，用于描述逐像素类别预测，结构体定义及字段含义如下（定义在 `utils/c_utils/inc/model_types.hpp`）：
+
+```c++
+struct SegmentationMask {
+    cv::Mat class_ids;  ///< Per-pixel class ID map, CV_32S, shape (orig_h × orig_w)
+};
+```
+
+- `class_ids`：`cv::Mat`，类型为 `CV_32S`（`int32_t` 每像素），形状为 `(orig_img_h, orig_img_w)`
+- 每个元素为该像素对应的类别索引，取值范围为 `[0, num_classes - 1]`
+
+`post_process` 以 `SegmentationMask` 为返回值，返回原始语义掩码，可视化（上色、叠加）应在 `main.cpp` 中完成。
+
+##### Python 输出规范
+在 Python 示例中，语义分割结果以 NumPy 数组的形式返回，具体约定如下：
+
+- 返回类型：`np.ndarray`
+- 形状：`(H, W)`，与原始输入图像尺寸一致
+- dtype：`np.int32`
+- 每个元素为该像素对应的类别索引，取值范围为 `[0, num_classes - 1]`
+
+`post_process` 返回原始语义掩码（class ID map），可视化（上色、叠加）应在 `predict()` 或 `main.py` 中完成。
+
+#### 实例分割模型规范
+实例分割算法在目标检测的基础上为每个检测目标生成逐像素的实例掩码，能够区分同类别的不同个体。在 ModelZoo 中，所有实例分割模型均以统一的结果输出格式对外提供推理结果，以便于模型之间的对比、替换与集成。因此，实例分割模型在完成推理与后处理后，必须按照以下规范返回分割结果。
+
+##### C++ 输出规范
+在 C++ 示例中，实例分割结果以结构体形式返回，用于描述所有检测实例及对应掩码，结构体定义及字段含义如下（定义在 `utils/c_utils/inc/model_types.hpp`）：
+
+```c++
+struct InstanceSegResult {
+    std::vector<Detection> detections;  ///< 检测结果，含 bbox/score/class_id，与 masks 下标对齐
+    std::vector<cv::Mat>   masks;       ///< 逐实例二值掩码（CV_8UC1，0/1），与 detections 下标对齐
+};
+```
+
+- `detections`：`std::vector<Detection>`，每个元素描述一个检测目标（边界框、置信度、类别），结构体定义见目标检测规范
+- `masks`：`std::vector<cv::Mat>`，每个 `cv::Mat` 类型为 CV_8UC1（0/1 值），尺寸为对应边界框大小 `(box_h, box_w)`
+
+`detections` 与 `masks` 下标严格对齐，即 `detections[i]` 与 `masks[i]` 描述同一个实例。`post_process` 以 `InstanceSegResult` 为返回值，可视化（掩码叠加、轮廓绘制）应在 `main.cpp` 中完成。
+
+##### Python 输出规范
+在 Python 示例中，实例分割结果以固定顺序的 tuple 形式返回，具体约定如下：
+
+- `boxes`：`np.ndarray`，形状为 `(N, 4)`，格式 `[x1, y1, x2, y2]`，像素坐标
+- `scores`：`np.ndarray`，形状为 `(N,)`，置信度
+- `cls_ids`：`np.ndarray`，形状为 `(N,)`，类别索引
+- `masks`：`List[np.ndarray]`，长度为 N，每个元素为该实例的二值掩码（dtype `uint8`，0/1 值），尺寸为对应边界框大小 `(box_h, box_w)`
+
+返回值的顺序必须严格遵循 `(boxes, scores, cls_ids, masks)`。四个输出下标对齐，即 `boxes[i]`、`scores[i]`、`cls_ids[i]` 与 `masks[i]` 描述同一个实例。可视化（掩码叠加、轮廓绘制）应在 `predict()` 或 `main.py` 中完成。
 
 #### 姿态 / 关键点模型规范
-TODO
+姿态估计算法在目标检测的基础上为每个检测目标预测人体关键点坐标及置信度。在 ModelZoo 中，所有姿态估计模型均以统一的结果输出格式对外提供推理结果，以便于模型之间的对比、替换与集成。因此，姿态估计模型在完成推理与后处理后，必须按照以下规范返回推理结果。
+
+##### C++ 输出规范
+在 C++ 示例中，姿态估计结果以结构体形式返回，用于描述所有检测到的人体实例及对应关键点，结构体定义及字段含义如下（定义在 `utils/c_utils/inc/model_types.hpp`）：
+
+```c++
+struct PoseResult {
+    std::vector<Detection>              detections;  ///< 检测结果，含 bbox/score/class_id，与 keypoints 下标对齐
+    std::vector<std::vector<Keypoint>>  keypoints;   ///< 逐实例关键点列表，与 detections 下标对齐
+};
+```
+
+其中 `Keypoint` 定义如下：
+
+```c++
+struct Keypoint {
+    float x;      ///< X 坐标（像素）
+    float y;      ///< Y 坐标（像素）
+    float score;  ///< 原始 logit（可视化前需 sigmoid 处理）
+};
+```
+
+- `detections`：`std::vector<Detection>`，每个元素描述一个检测目标（边界框、置信度、类别），结构体定义见目标检测规范
+- `keypoints`：`std::vector<std::vector<Keypoint>>`，每个内层 vector 包含该实例的所有关键点（如 17 个 COCO 关键点）
+
+`detections` 与 `keypoints` 下标严格对齐，即 `detections[i]` 与 `keypoints[i]` 描述同一个实例。`post_process` 以 `PoseResult` 为返回值，可视化（骨架连线、关键点标注）应在 `main.cpp` 中完成。
+
+##### Python 输出规范
+在 Python 示例中，姿态估计结果以固定顺序的 tuple 形式返回，具体约定如下：
+
+- `boxes`：`np.ndarray`，形状为 `(N, 4)`，格式 `[x1, y1, x2, y2]`，像素坐标
+- `scores`：`np.ndarray`，形状为 `(N,)`，置信度
+- `cls_ids`：`np.ndarray`，形状为 `(N,)`，类别索引
+- `kpts_xy`：`np.ndarray`，形状为 `(N, K, 2)`，每个实例的关键点坐标（x, y），K 为关键点数量（如 17）
+- `kpts_score`：`np.ndarray`，形状为 `(N, K, 1)`，每个关键点的原始 logit（可视化前需 sigmoid 处理）
+
+返回值的顺序必须严格遵循 `(boxes, scores, cls_ids, kpts_xy, kpts_score)`。五个输出下标对齐，即 `boxes[i]`、`scores[i]`、`cls_ids[i]`、`kpts_xy[i]` 与 `kpts_score[i]` 描述同一个实例。可视化（骨架连线、关键点标注）应在 `predict()` 或 `main.py` 中完成。
+
+#### OCR 模型规范
+OCR（光学字符识别）算法通常采用两阶段级联架构：文本检测阶段定位图像中的文本区域，文本识别阶段将各区域解码为字符串。在 ModelZoo 中，所有完整 OCR 模型（同时完成检测与识别）均以统一的结果输出格式对外提供推理结果，以便于模型之间的对比、替换与集成。因此，OCR 模型在完成推理与后处理后，必须按照以下规范返回完整的检测+识别结果。
+
+> **注意**：纯文本检测模型（无识别）或纯文本识别模型（无检测）不属于本规范范畴，应分别参照目标检测或分类规范。
+
+##### C++ 输出规范
+在 C++ 示例中，OCR 完整结果以结构体形式返回，用于描述所有检测到的文本区域及其识别文本，结构体定义及字段含义如下（定义在 `utils/c_utils/inc/model_types.hpp`）：
+
+```c++
+struct OCRResult {
+    std::vector<std::vector<cv::Point>> boxes;  ///< 检测到的文本区域多边形（4-point boxes），与 texts 下标对齐
+    std::vector<std::string>            texts;  ///< 识别出的 UTF-8 文本字符串，与 boxes 下标对齐
+};
+```
+
+- `boxes`：`std::vector<std::vector<cv::Point>>`，每个元素为一个 4 点顺时针多边形，表示检测到的文本区域（像素坐标）
+- `texts`：`std::vector<std::string>`，每个元素为对应区域的 UTF-8 识别文本
+
+`boxes` 与 `texts` 下标严格对齐，即 `boxes[i]` 与 `texts[i]` 描述同一个文本区域。可视化（多边形绘制、文本渲染）应在 `main.cpp` 中完成。
+
+##### Python 输出规范
+在 Python 示例中，OCR 完整结果以固定顺序的 tuple 形式返回，具体约定如下：
+
+- `boxes`：`List[np.ndarray]`，长度为 N，每个元素为形状 `(4, 2)` 的整数多边形顶点数组，格式 `(x, y)`
+- `texts`：`List[str]`，长度为 N，每个元素为对应区域的识别文本字符串
+
+返回值的顺序必须严格遵循 `(boxes, texts)`。两个输出下标对齐，即 `boxes[i]` 与 `texts[i]` 描述同一个文本区域。可视化（多边形绘制、文本渲染）应在 `predict()` 或 `main.py` 中完成。
+
+#### ASR 语音识别模型规范
+
+ASR（自动语音识别）算法将音频输入逐 chunk 解码为文本字符串，是语音类任务中的基础任务。在 ModelZoo 中，所有 ASR 模型均以统一的结果输出格式对外提供推理结果，以便于模型之间的对比、替换与集成。因此，ASR 模型在完成推理与后处理后，必须按照以下规范返回识别结果。
+
+##### C++ 输出规范
+
+在 C++ 示例中，`post_process` 的返回值为 `std::string`，表示当前音频 chunk 解码后的 UTF-8 文本字符串（特殊 token 如 `<pad>` 已去除）。
+
+对于流式推理，每次调用 `post_process` 返回当前 chunk 的识别文本，调用方负责将各 chunk 文本拼接为完整转录结果：
+
+```c++
+std::string full_text;
+while (reader.next(chunk)) {
+    pre_process(asr.input_tensors, chunk);
+    infer(asr.output_tensors, asr.input_tensors, asr.dnn_handle);
+    full_text += post_process(asr.output_tensors, id2token, asr.seq_length, asr.vocab_size);
+}
+```
+
+##### Python 输出规范
+
+在 Python 示例中，`post_process` 的返回值为 `str`，表示当前音频 chunk 解码后的 UTF-8 文本字符串（特殊 token 如 `<pad>` 已去除）。
+
+`predict` 负责迭代所有 chunk 并拼接结果，返回完整转录文本（`str`）。可视化或进一步处理应在 `predict()` 或 `main.py` 中完成。
 
 ## 注释规范
 

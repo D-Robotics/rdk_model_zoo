@@ -38,6 +38,7 @@ Notes:
 
 import cv2
 import numpy as np
+from typing import List, Tuple, Dict
 
 # List of predefined RGB color tuples used for bounding box visualization.
 rdk_colors = [
@@ -48,39 +49,57 @@ rdk_colors = [
     (133, 0, 82), (255, 56, 203), (200, 149, 255), (199, 55, 255)]
 
 
-def print_topk_predictions(output: np.ndarray,
-                           idx2label: dict,
-                           topk: int = 5) -> None:
-    """Print the top-k classification predictions.
-
-    This function applies softmax to the raw classification logits,
-    selects the top-k classes with the highest probabilities, and prints
-    their labels and confidence scores.
+def get_topk_predictions(
+    output: np.ndarray,
+    topk: int = 5
+) -> List[Tuple[int, float]]:
+    """Get top-k classification results in a normalized format.
 
     Args:
         output: Raw classification logits as a NumPy array with shape
-            `(num_classes,)`.
-        idx2label: Dictionary mapping class indices to human-readable
-            label strings.
-        topk: Number of top predictions to display.
+            (num_classes,) or (1, num_classes).
+        topk: Number of top predictions to return.
 
     Returns:
-        None
+        List of (class_id, probability), sorted by probability descending.
     """
-    # Softmax with stability adjustment
-    exp_logits = np.exp(output - np.max(output))
+    x = output
+    if x.ndim == 2:
+        x = x[0]  # [1, C] -> [C]
+
+    # Softmax (numerically stable)
+    exp_logits = np.exp(x - np.max(x))
     probabilities = exp_logits / np.sum(exp_logits)
 
-    # Top-k indices
-    topk_idx = np.argsort(probabilities)[-topk:][::-1]
-    topk_prob = probabilities[topk_idx]
+    # Top-k
+    topk_idx = np.argsort(-probabilities)[:topk]
 
-    print(f"Top-{topk} Predictions:")
-    for i in range(topk):
-        idx = topk_idx[i]
-        prob = topk_prob[i]
-        label = idx2label[idx] if idx2label and idx in idx2label else f"Class {idx}"
-        print(f"{label}: {prob:.4f}")
+    return [(int(idx), float(probabilities[idx])) for idx in topk_idx]
+
+
+def print_classification_results(
+    results: List[Tuple[int, float]],
+    idx2label: Dict[int, str],
+    topk: int | None = None
+) -> None:
+    """Print classification results using label names instead of class IDs.
+
+    Args:
+        results: List of (class_id, probability), sorted by probability descending.
+        idx2label: Mapping from class_id to label name.
+        topk: Number of results to print. If None, print all.
+    """
+    if not results:
+        print("No classification results.")
+        return
+
+    k = min(topk if topk is not None else len(results), len(results))
+
+    print(f"Top-{k} Classification Results:")
+    for i in range(k):
+        class_id, prob = results[i]
+        label = idx2label.get(class_id, f"Unknown({class_id})")
+        print(f"  [{i}] {label}: {prob:.4f}")
 
 
 def draw_boxes(image: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
@@ -197,15 +216,14 @@ def draw_contours(img: np.ndarray, boxes: np.ndarray, masks: list,
         if not contours:
             continue
 
-        # Merge all contours and shift to global coordinates
-        merged_points = np.vstack([c for c in contours])
-        merged_points[:, 0, 0] += x1
-        merged_points[:, 0, 1] += y1
-
-        # Draw the contour line on the image
-        cv2.polylines(img, [merged_points], isClosed=True,
-                      color=colors[(class_id - 1) % len(colors)],
-                      thickness=thickness)
+        # Shift each contour to global coordinates and draw separately
+        color = colors[(class_id - 1) % len(colors)]
+        for contour in contours:
+            shifted = contour.copy()
+            shifted[:, 0, 0] += x1
+            shifted[:, 0, 1] += y1
+            cv2.polylines(img, [shifted], isClosed=True,
+                          color=color, thickness=thickness)
 
 
 def rgb_to_disp_color(rgb_tuple: tuple) -> int:
@@ -304,6 +322,52 @@ def draw_keypoints(image: np.ndarray, kpts_xy: np.ndarray,
                         0.5, (0, 0, 255), 3, cv2.LINE_AA)
             cv2.putText(image, f"{j}", (x, y), cv2.FONT_HERSHEY_SIMPLEX,
                         0.5, (0, 255, 255), 1, cv2.LINE_AA)
+
+
+def draw_text(img: np.ndarray,
+              texts: List[str],
+              boxes: List[np.ndarray],
+              font_path: str,
+              font_size: int = 20,
+              color: Tuple[int, int, int] = (0, 0, 0)) -> np.ndarray:
+    """Draw text strings centered on bounding boxes using a TrueType font.
+
+    Converts the image to PIL for rendering, draws each text string centered
+    on its corresponding bounding box, then converts back to a BGR NumPy array.
+
+    Args:
+        img: Input image in BGR format with shape ``(H, W, 3)``.
+        texts: List of text strings to render.
+        boxes: List of bounding boxes aligned with ``texts``. Each box is a
+            ``(4, 2)`` array of polygon vertices in ``(x, y)`` order.
+        font_path: Filesystem path to a TrueType ``.ttf`` font file.
+        font_size: Point size to use when rendering the font.
+        color: Text color as an ``(R, G, B)`` tuple.
+
+    Returns:
+        A copy of ``img`` (BGR) with text annotations drawn on it.
+    """
+    from PIL import Image, ImageDraw, ImageFont
+    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(img_pil)
+    font = ImageFont.truetype(font_path, font_size)
+
+    for text, box in zip(texts, boxes):
+        center_x = int((box[0][0] + box[2][0]) / 2)
+        center_y = int((box[0][1] + box[2][1]) / 2)
+
+        try:
+            bbox = draw.textbbox((0, 0), text, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+        except AttributeError:
+            text_width, text_height = draw.textsize(text, font=font)  # type: ignore[attr-defined]
+
+        text_x = center_x - text_width // 2
+        text_y = center_y - text_height // 2
+        draw.text((text_x, text_y), text, font=font, fill=color)
+
+    return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
 
 def draw_polygon_boxes(img: np.ndarray, bboxes: list,

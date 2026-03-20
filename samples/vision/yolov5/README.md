@@ -44,8 +44,8 @@ YOLOv5 无官方论文，其官方实现地址如下：
 |   |   |-- inc                         # C++ 头文件
 |   |   |   `-- yolov5.hpp              # YOLOv5 模型封装接口
 |   |   |-- src                         # C++ 源码
-|   |   |   |-- main.cc                 # 推理入口程序
-|   |   |   `-- yolov5.cc               # YOLOv5 推理实现
+|   |   |   |-- main.cpp                # 推理入口程序
+|   |   |   `-- yolov5.cpp              # YOLOv5 推理实现
 |   |   |-- CMakeLists.txt              # CMake 构建配置
 |   |   |-- README.md                   # C++ 推理示例使用说明
 |   |   `-- run.sh                      # C++ 示例运行脚本
@@ -54,7 +54,9 @@ YOLOv5 无官方论文，其官方实现地址如下：
 |       |-- main.py                     # Python 推理入口脚本
 |       |-- run.sh                      # Python 示例运行脚本
 |       `-- yolov5.py                   # YOLOv5 推理与后处理实现
-|-- test_data                           # 推理结果与示例数据
+|-- test_data                           # 测试数据与推理结果
+|   |-- kite.jpg                        # 示例测试图片
+|   |-- coco_classes.names              # COCO 类别标签文件
 |   `-- result.jpg                      # 示例推理结果图像
 `-- README.md                           # YOLOv5 示例整体说明与快速指引
 ```
