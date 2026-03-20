@@ -41,22 +41,13 @@ using json = nlohmann::json;
 cv::Mat load_bgr_image(const std::string& image_file);
 
 /**
- * @brief Load an ImageNet-1000 label map dumped as "{123: 'label'}" text.
+ * @brief Load classification labels from a text file.
  *
- * Expected file format (single object): {0: 'label0', 1: 'label1', ...}
- *
- * @param[in] label_path Path to label file.
- * @return std::map<int,std::string> Mapping from class id to label string. Returns empty map on failure.
- */
-std::map<int, std::string> load_imagenet1000_label_map(const std::string &label_path);
-
-/**
- * @brief Load labels line-by-line from a plain text file.
- *
- * Each non-empty line is considered one label. Trailing '\r' is stripped.
+ * Each line in the file represents one label. The line index (0-based)
+ * is treated as the corresponding class ID.
  *
  * @param[in] filename Path to the label text file.
- * @return std::vector<std::string> All labels in order of appearance.
+ * @return Vector of label strings. Returns an empty vector on failure.
  */
 std::vector<std::string> load_linewise_labels(const std::string& filename);
 

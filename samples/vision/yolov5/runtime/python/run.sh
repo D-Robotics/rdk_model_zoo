@@ -59,8 +59,8 @@ fi
 # Model Execution
 python main.py \
     --model-path /opt/hobot/model/$SOC/basic/yolov5x_672x672_nv12.hbm \
-    --test-img /app/res/assets/kite.jpg \
-    --label-file /app/res/labels/coco_classes.names \
+    --test-img ../../test_data/kite.jpg \
+    --label-file ../../test_data/coco_classes.names \
     --img-save-path result.jpg \
     --priority 0 \
     --bpu-cores 0 \

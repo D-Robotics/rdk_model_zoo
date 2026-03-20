@@ -20,12 +20,12 @@ c_utils
 ### 文件职责说明
 | 文件名                     | 说明        | 包含内容                                                  |
 | ----------------------- | --------- | ----------------------------------------------------- |
-| `file_io.hpp / .cc`     | 文件与资源读写工具 | 图像加载、标签文件读取等                                          |
+| `file_io.hpp / .cpp`     | 文件与资源读写工具 | 图像加载、标签文件读取等                                          |
 | `model_types.hpp`       | 公共数据结构定义  | `Classification` / `Detection` / `Keypoint` 等模型相关基础类型 |
-| `nn_math.hpp / .cc`     | 数学与数值计算工具 | sigmoid/softmax、数值归一化等通用数学计算                     |
-| `preprocess.hpp / .cc`  | 推理前数据预处理  | resize/letterbox、颜色空间转换、tensor 写入与输入输出 tensor 内存准备    |
-| `postprocess.hpp / .cc` | 推理后结果处理   | Top-K、反量化、解码、过滤、NMS、坐标映射等                             |
-| `visualize.hpp / .cc`   | 可视化工具     | 分类结果打印、检测框/分割/关键点绘制、文本/多边形渲染等                         |
+| `nn_math.hpp / .cpp`     | 数学与数值计算工具 | sigmoid/softmax、数值归一化等通用数学计算                     |
+| `preprocess.hpp / .cpp`  | 推理前数据预处理  | resize/letterbox、颜色空间转换、tensor 写入与输入输出 tensor 内存准备    |
+| `postprocess.hpp / .cpp` | 推理后结果处理   | Top-K、反量化、解码、过滤、NMS、坐标映射等                             |
+| `visualize.hpp / .cpp`   | 可视化工具     | 分类结果打印、检测框/分割/关键点绘制、文本/多边形渲染等                         |
 | `runtime.hpp`           | 运行时辅助宏    | HB-DNN / HB-UCP API 调用检查宏（统一错误打印与返回码处理）               |
 
 

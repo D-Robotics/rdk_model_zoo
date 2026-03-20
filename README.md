@@ -75,11 +75,19 @@ docs/Model_Zoo_User_Guide.md
 下表按 应用领域 对当前仓库中已提供的模型进行分类，方便快速查找与定位。
 每个模型的详细说明、使用方法和示例，请点击对应的 详情链接 查看该模型目录下的 README.md。
 
-| 类别         | 模型名称 | 模型路径                     | 详情 |
-|--------------|----------|------------------------------|------|
-| 目标检测     | YOLOv5x  | samples/vision/yolov5        | [README](samples/vision/yolov5/README.md) |
-| 图像分类     | ResNet50 | samples/vision/resnet50      | [README](samples/vision/resnet50/README.md) |
-| 语音识别     | ASR-XXX  | samples/speech/asr_xxx       | [README](samples/speech/asr_xxx/README.md) |
+| 类别         | 模型名称      | 模型路径                        | 支持平台     | 详情 |
+|--------------|---------------|---------------------------------|-------------|------|
+| 目标检测     | YOLOv5x       | samples/vision/yolov5           | S100 / S600 | [README](samples/vision/yolov5/README.md) |
+| 目标检测     | YOLO11        | samples/vision/yolo11           | S100 / S600 | [README](samples/vision/yolo11/README.md) |
+| 实例分割     | YOLO11-Seg    | samples/vision/yolo11_seg       | S100 / S600 | [README](samples/vision/yolo11_seg/README.md) |
+| 实例分割     | YOLOe11-Seg   | samples/vision/yoloe11_seg      | S100        | [README](samples/vision/yoloe11_seg/README.md) |
+| 姿态估计     | YOLO11-Pose   | samples/vision/yolo11_pose      | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
+| 图像分类     | ResNet18      | samples/vision/resnet18         | S100 / S600 | [README](samples/vision/resnet18/README.md) |
+| 图像分类     | MobileNetV2   | samples/vision/mobilenetv2      | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
+| 语义分割     | UnetMobileNet | samples/vision/unetmobilenet    | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
+| 车道线检测   | LaneNet       | samples/vision/lanenet          | S100        | [README](samples/vision/lanenet/README.md) |
+| 文字识别     | PaddleOCR     | samples/vision/paddle_ocr       | S100        | [README](samples/vision/paddle_ocr/README.md) |
+| 语音识别     | ASR           | samples/speech/asr              | S100 / S600 | [README](samples/speech/asr/README.md) |
 
 
 ## 文档说明

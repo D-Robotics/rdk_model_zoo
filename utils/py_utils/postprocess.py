@@ -749,5 +749,4 @@ def crop_and_rotate_image(img: np.ndarray, box: np.ndarray) -> np.ndarray:
     else:
         rotated = warped
 
-    print("width:", rotated.shape[1], "height:", rotated.shape[0])
     return rotated

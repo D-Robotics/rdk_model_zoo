@@ -54,14 +54,15 @@ else
   echo "Model already exists, skip download"
 fi
 
-# 4. Model Execution
+# 4. Model Compilation
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
 
+# 5. Quick Run
 ./yolov5 \
     --model-path /opt/hobot/model/${SOC}/basic/yolov5x_672x672_nv12.hbm \
-    --test-img /app/res/assets/kite.jpg \
-    --label-file /app/res/labels/coco_classes.names \
+    --test-img ../../../test_data/kite.jpg \
+    --label-file ../../../test_data/coco_classes.names \
     --score-thres 0.25 \
     --nms-thres 0.45
