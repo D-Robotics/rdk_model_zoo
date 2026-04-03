@@ -294,6 +294,30 @@ def filter_classification(cls_output: np.ndarray, conf_thres_raw: float) -> tupl
     return scores, ids, valid_indices
 
 
+def decode_ltrb_boxes(anchor: np.ndarray,
+                      box_output: np.ndarray,
+                      stride: int) -> np.ndarray:
+    """Decode anchor-relative LTRB regression outputs to `xyxy` boxes.
+
+    This helper converts YOLO-style left, top, right, and bottom distances
+    predicted on a feature grid into corner-format boxes in the model input
+    coordinate system.
+
+    Args:
+        anchor: Grid center coordinates with shape `(N, 2)` in `(x, y)` format.
+        box_output: Box regression outputs with shape `(N, 4)` formatted as
+            `(left, top, right, bottom)`.
+        stride: Feature stride used to project the grid coordinates back to the
+            input image scale.
+
+    Returns:
+        A NumPy array with shape `(N, 4)` in `(x1, y1, x2, y2)` format.
+    """
+    x1y1 = anchor - box_output[:, :2]
+    x2y2 = anchor + box_output[:, 2:]
+    return np.hstack([x1y1, x2y2]) * stride
+
+
 def filter_mces(mces_output: np.ndarray, valid_indices: np.ndarray) -> np.ndarray:
     """Extract MCES features for selected predictions.
 

@@ -171,24 +171,34 @@ def draw_seg_yolo26(img: np.ndarray, results: list, class_names: list,
     """Draw YOLO26 segmentation results and log details."""
     if not results: return img
 
-    boxes, ids, scores, masks = [], [], [], []
+    boxes, ids, scores = [], [], []
     for r in results:
         x1, y1, x2, y2 = map(int, r['box'])
         cid, score = int(r['id']), r['score']
         name = class_names[cid] if cid < len(class_names) else str(cid)
         logger.info(f"({x1}, {y1}, {x2}, {y2}) -> {name}: {score:.2f}")
         
-        boxes.append([x1, y1, x2, y2]); ids.append(cid); scores.append(score)
-        
-        # Binary mask preparation
-        if r['mask'].size > 0:
-            prob_mask = cv2.resize(r['mask'], (x2 - x1, y2 - y1), interpolation=cv2.INTER_LANCZOS4)
-            masks.append((prob_mask > 0.5).astype(np.uint8))
-        else:
-            masks.append(np.zeros((0, 0), dtype=np.uint8))
+        boxes.append([x1, y1, x2, y2])
+        ids.append(cid)
+        scores.append(score)
+
+        if r['mask'].size == 0:
+            continue
+
+        mask = r['mask'].astype(bool)
+        if mask.shape[:2] != img.shape[:2]:
+            full_mask = np.zeros(img.shape[:2], dtype=bool)
+            h = min(mask.shape[0], img.shape[0])
+            w = min(mask.shape[1], img.shape[1])
+            full_mask[:h, :w] = mask[:h, :w]
+            mask = full_mask
+
+        color = np.array(colors[cid % len(colors)], dtype=np.uint8)
+        color_patch = np.zeros_like(img, dtype=np.uint8)
+        color_patch[:] = color
+        img[mask] = ((1 - 0.3) * img[mask] + 0.3 * color_patch[mask]).astype(np.uint8)
 
     draw_boxes(img, np.array(boxes), np.array(ids), np.array(scores), class_names, colors)
-    draw_masks(img, np.array(boxes), masks, ids, colors)
     return img
 
 
