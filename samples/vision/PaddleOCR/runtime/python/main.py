@@ -3,9 +3,21 @@ import numpy as np
 import cv2
 import argparse
 import pyclipper
-import bpu_infer_lib
+from hbm_runtime import HB_HBMRuntime
 import matplotlib.pyplot as plt
 import collections
+
+def bgr2nv12(image):
+    h, w = image.shape[:2]
+    yuv_i420 = cv2.cvtColor(image, cv2.COLOR_BGR2YUV_I420)
+    y = yuv_i420[:h, :]
+    u = yuv_i420[h:h+h//4, :].reshape(h//2, w//2)
+    v = yuv_i420[h+h//4:, :].reshape(h//2, w//2)
+    nv12 = np.zeros((h + h // 2, w), dtype=np.uint8)
+    nv12[:h, :] = y
+    nv12[h:, 0::2] = u
+    nv12[h:, 1::2] = v
+    return nv12
 
 
 class DetectionModel:
@@ -19,9 +31,11 @@ class DetectionModel:
             ratio_prime: Ratio used for dilation of contours.
             input_size: Desired input size for the model.
         """
-        self.model = bpu_infer_lib.Infer(False)
-        if not self.model.load_model(model_path):
-            raise RuntimeError(f"Failed to load model from '{model_path}'.")
+        self.model = HB_HBMRuntime(model_path)
+        self.model_name = self.model.model_names[0]
+        self.input_name = self.model.input_names[self.model_name][0]
+        self.input_shape = self.model.input_shapes[self.model_name][self.input_name]
+        self.output_name = self.model.output_names[self.model_name][0]
         
         self.threshold = threshold
         self.ratio_prime = ratio_prime
@@ -42,11 +56,18 @@ class DetectionModel:
         """
         img_shape = img.shape[:2]
         
-        self.model.read_img_to_nv12(img_path, 0)
-        self.model.forward()
+        resized_img = cv2.resize(img, self.input_size)
+        nv12_data = bgr2nv12(resized_img)
+        try:
+            input_tensor = nv12_data.reshape(self.input_shape)
+        except ValueError:
+            input_tensor = nv12_data
+            
+        outputs = self.model.run({self.input_name: input_tensor})
+        preds = outputs[self.model_name][self.output_name]
         
         # preds = self.model.get_infer_res_np_float32(0, self.input_size[0] * self.input_size[1]).reshape(1, *self.input_size)
-        preds = self.model.get_infer_res_np_float32(0).reshape(1, *self.input_size)
+        preds = preds.reshape(1, *self.input_size)
         preds = np.where(preds > self.threshold, 255, 0).astype(np.uint8).squeeze()
         preds = cv2.resize(preds, (img_shape[1], img_shape[0]))
 
@@ -176,9 +197,10 @@ class rec_model:
             converter (strLabelConverter): Object to handle string and label conversion.
             output_size (tuple): Output size of the model.
         """
-        self.model = bpu_infer_lib.Infer(False)
-        if not self.model.load_model(model_path):
-            raise RuntimeError(f"Failed to load model from '{model_path}'.")
+        self.model = HB_HBMRuntime(model_path)
+        self.model_name = self.model.model_names[0]
+        self.input_name = self.model.input_names[self.model_name][0]
+        self.output_name = self.model.output_names[self.model_name][0]
 
         self.converter = converter
         self.output_size = output_size
@@ -197,12 +219,20 @@ class rec_model:
             str: Simplified prediction result.
         """
         # Read the image and convert to NV12 format for inference
-        self.model.read_img_to_nv12(img_path, 0)
-        self.model.forward()
+        img = cv2.imread(img_path)
+        resized_img = cv2.resize(img, (self.input_size[1], self.input_size[0]))
+        nv12_data = bgr2nv12(resized_img)
+        try:
+            input_tensor = nv12_data.reshape(self.model.input_shapes[self.model_name][self.input_name])
+        except ValueError:
+            input_tensor = nv12_data
+            
+        outputs = self.model.run({self.input_name: input_tensor})
+        preds = outputs[self.model_name][self.output_name]
         
         # Get the model inference result and reshape it
         # preds = self.model.get_infer_res_np_float32(0, self.output_size[0] * self.output_size[1]).reshape(1, *self.output_size)
-        preds = self.model.get_infer_res_np_float32(0).reshape(1, *self.output_size)
+        preds = preds.reshape(1, *self.output_size)
         print(preds.shape)
         
         # Transpose and get the argmax to obtain final prediction
@@ -235,12 +265,12 @@ class rec_model:
         input_image = input_image[None].transpose(0, 3, 1, 2) # NHWC -> HCHW
         
         
-        self.model.read_numpy_arr_float32(input_image, 0)
-        self.model.forward(more=True)
+        outputs = self.model.run({self.input_name: input_image})
+        preds = outputs[self.model_name][self.output_name]
         
         # Get the model inference result and reshape it
         # preds = self.model.get_infer_res_np_float32(0, self.output_size[0] * self.output_size[1]).reshape(1, *self.output_size)
-        preds = self.model.get_infer_res_np_float32(0).reshape(1, *self.output_size)
+        preds = preds.reshape(1, *self.output_size)
         print("shape:", preds.shape)
         
         # Transpose and get the argmax to obtain final prediction
@@ -346,10 +376,10 @@ def draw_text_on_image(img, texts, boxes, font_scale=0.7, color=(0, 0, 0), font_
 
 def init_args():
     parser = argparse.ArgumentParser(description='paddleocr')
-    parser.add_argument('--det_model_path', default='model/en_PP-OCRv3_det_640x640_nv12.bin', type=str)
-    parser.add_argument('--rec_model_path', default='model/en_PP-OCRv3_rec_48x320_rgb.bin', type=str)
-    parser.add_argument('--image_path', default='data/paddleocr_test.jpg', type=str, help='img path for predict')
-    parser.add_argument('--output_folder', default='output/predict.jpg', type=str, help='img path for output')
+    parser.add_argument('--det_model_path', default='../../model/en_PP-OCRv3_det_640x640_nv12.bin', type=str)
+    parser.add_argument('--rec_model_path', default='../../model/en_PP-OCRv3_rec_48x320_rgb.bin', type=str)
+    parser.add_argument('--image_path', default='../../test_data/paddleocr_test.jpg', type=str, help='img path for predict')
+    parser.add_argument('--output_folder', default='../../test_data/output/predict.jpg', type=str, help='img path for output')
     args = parser.parse_args()
     return args
 

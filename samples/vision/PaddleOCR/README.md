@@ -19,7 +19,7 @@ In practical applications, the workflow of PaddleOCR includes the following step
 - **Text detection**: Detect text areas in images through deep learning models to generate detection boxes.
 - **Text recognition**: Recognize the text content in the detection box and generate the final text result.
 
-The examples provided in this repository are based on the cases provided by PaddleOCR official. After model transformation, model quantization, and image post-processing, the characters can be clearly recognized and the model inference results can be obtained by running the jupyter script file.
+The examples provided in this repository are based on the algorithm structure from the official PaddleOCR. After model conversion and quantization, high-precision on-device text detection and recognition can be achieved. You can navigate to `runtime/python` and execute the Python script to obtain the inference results.
 
 GitHub: https://github.com/PaddlePaddle/PaddleOCR
 
@@ -52,16 +52,31 @@ Dataset ICDAR2019-ArT
 
 **.Bin file download**:
 
-You can download all .bin model files for this model structure with one click using the script [download.sh](./model/download.sh):
+You can download all .bin model files for this model structure with one click using the script [download_model.sh](./model/download_model.sh):
 
 ```shell
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/en_PP-OCRv3_det_640x640_nv12.bin
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x3/en_PP-OCRv3_rec_48x320_rgb.bin
+cd model
+bash download_model.sh
 ```
-
 
 ## 4. Deploy tests
 
-After downloading the .bin file, you can execute the Python/Jupyter script file to experience the actual test effect on the board. If you need to change the test image, you can download the dataset separately, put it in the data folder, and change the path of the image in the Python/Jupyter file
+After downloading the .bin file, navigate to the `runtime/python` directory and execute the Python script to experience the actual testing effect on the board:
 
-![paddleocr](./data/paddleocr.png)
+```shell
+# Navigate to the runtime python directory
+cd runtime/python
+
+# Use the default script to run directly
+bash run.sh
+
+# Or you can run the primary script manually configuring the parameters
+python3 main.py --det_model_path ../../model/en_PP-OCRv3_det_640x640_nv12.bin \
+                --rec_model_path ../../model/en_PP-OCRv3_rec_48x320_rgb.bin \
+                --image_path ../../test_data/paddleocr_test.jpg \
+                --output_folder ../../test_data/output/predict.jpg
+```
+
+To change the test image, place your custom images in the `test_data` folder and adjust the `image_path` parameter in your execution command.
+
+![paddleocr](./test_data/paddleocr.png)
