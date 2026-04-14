@@ -1,0 +1,22 @@
+# 所有tag版本的yolov5均可使用此yaml文件
+model_parameters:
+  onnx_model: './onnx/yolov5n_tag_v7.0_detect.onnx'
+  march: "bayes-e"  # X3: Bernoulli2, Ultra: Bayes, S100: Nash-e, S100P: Nash-m
+  layer_out_dump: False
+  working_dir: 'yolov5n_tag_v7.0_detect_640x640_bayese_nv12'
+  output_model_file_prefix: 'yolov5n_tag_v7.0_detect_640x640_bayese_nv12'
+input_parameters:
+  input_type_rt: 'rgb'
+  input_layout_rt: 'NCHW'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW'
+  norm_type: 'data_scale'
+  scale_value: 0.003921568627451
+calibration_parameters:
+  cal_data_dir: './calibration_data_rgb_f32_coco_640'
+  cal_data_type: 'float32'
+  calibration_type: 'default'
+compiler_parameters:
+  compile_mode: 'latency'
+  debug: False
+  optimize_level: 'O3'
