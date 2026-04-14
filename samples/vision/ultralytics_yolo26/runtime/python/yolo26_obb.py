@@ -50,19 +50,6 @@ import utils.py_utils.postprocess as post_utils
 logger = logging.getLogger("YOLO26_OBB")
 
 
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    """
-    Apply the sigmoid activation element-wise.
-
-    Args:
-        x (np.ndarray): Input tensor in logit space.
-
-    Returns:
-        np.ndarray: Tensor converted to probability space.
-    """
-    return 1.0 / (1.0 + np.exp(-x))
-
-
 @dataclass
 class YOLO26OBBConfig:
     """
@@ -323,7 +310,7 @@ class YOLO26OBB:
             v_angle = angle_data[valid_indices][:, 0]
             grid = self.grids[stride][valid_indices]
 
-            a_rad = (sigmoid(v_angle) - 0.25) * math.pi * self.cfg.angle_sign + self.angle_offset_rad
+            a_rad = (post_utils.sigmoid(v_angle) - 0.25) * math.pi * self.cfg.angle_sign + self.angle_offset_rad
             l, t, r, b = v_box.T
             xf, yf = (r - l) / 2.0, (b - t) / 2.0
             c, s = np.cos(a_rad), np.sin(a_rad)

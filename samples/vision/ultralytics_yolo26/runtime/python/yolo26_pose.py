@@ -47,19 +47,6 @@ import utils.py_utils.postprocess as post_utils
 logger = logging.getLogger("YOLO26_Pose")
 
 
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    """
-    Apply the sigmoid activation element-wise.
-
-    Args:
-        x (np.ndarray): Input tensor in logit space.
-
-    Returns:
-        np.ndarray: Tensor converted to probability space.
-    """
-    return 1.0 / (1.0 + np.exp(-x))
-
-
 @dataclass
 class YOLO26PoseConfig:
     """
@@ -223,7 +210,7 @@ class YOLO26Pose:
             xyxy = post_utils.decode_ltrb_boxes(grid, valid_box, stride)
 
             kpt_xy = (valid_kpts[:, :, :2] + grid[:, None, :]) * stride
-            kpt_conf = sigmoid(valid_kpts[:, :, 2:3])
+            kpt_conf = post_utils.sigmoid(valid_kpts[:, :, 2:3])
             decoded_kpts = np.concatenate([kpt_xy, kpt_conf], axis=-1)
 
             for box, score, kpts in zip(xyxy, valid_scores, decoded_kpts):

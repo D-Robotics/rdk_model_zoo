@@ -41,6 +41,18 @@ from hbm_runtime import QuantParams
 from scipy.special import softmax
 
 
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    """Apply the sigmoid activation function element-wise.
+
+    Args:
+        x: Input tensor in logit space.
+
+    Returns:
+        Tensor converted to probability space.
+    """
+    return 1.0 / (1.0 + np.exp(-x))
+
+
 def recover_to_original_size(img: np.ndarray,
                              orig_w: int,
                              orig_h: int,
@@ -290,7 +302,7 @@ def filter_classification(cls_output: np.ndarray, conf_thres_raw: float) -> tupl
     valid_indices = np.flatnonzero(max_scores >= conf_thres_raw)
     ids = np.argmax(cls_output[valid_indices], axis=1)
     # Apply sigmoid
-    scores = 1 / (1 + np.exp(-max_scores[valid_indices]))
+    scores = sigmoid(max_scores[valid_indices])
     return scores, ids, valid_indices
 
 

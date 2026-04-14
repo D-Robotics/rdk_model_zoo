@@ -13,17 +13,19 @@
 # limitations under the License.
 
 """
-YOLO26 Inference Entry Script.
+Ultralytics YOLO Inference Entry Script.
 
-This script demonstrates the standard BPU inference pipeline for YOLO26
-on a single input image, following the RDK Model Zoo engineering standards.
+This script demonstrates the standard BPU inference pipeline for Ultralytics
+YOLO on a single input image, following the RDK Model Zoo engineering
+standards.
 
 Workflow:
     1) Parse CLI arguments for model, task, and runtime parameters.
-    2) Initialize the corresponding YOLO26Config and task wrapper.
-    3) Configure runtime scheduling (BPU cores, priority).
+    2) Initialize the corresponding configuration and task wrapper.
+    3) Configure runtime scheduling with BPU cores and priority.
     4) Load image and labels, then execute the full pipeline.
-    5) Visualize and save results for vision tasks, or print logs for classification.
+    5) Visualize and save results for vision tasks, or print Top-K logs for
+       classification.
 
 Notes:
     - The project root is appended to sys.path to import shared utilities under
@@ -36,6 +38,7 @@ import argparse
 import logging
 import os
 import sys
+
 import cv2
 import numpy as np
 
@@ -45,43 +48,41 @@ sys.path.append(os.path.abspath("../../../../../"))
 import utils.py_utils.file_io as file_io
 import utils.py_utils.inspect as inspect
 import utils.py_utils.visualize as visualize
-from yolo26_det import YOLO26Detect, YOLO26Config
-from yolo26_seg import YOLO26Seg, YOLO26SegConfig
-from yolo26_pose import YOLO26Pose, YOLO26PoseConfig
-from yolo26_cls import YOLO26Cls, YOLO26ClsConfig
-from yolo26_obb import YOLO26OBB, YOLO26OBBConfig
+from ultralytics_yolo_cls import UltralyticsYOLOCls, UltralyticsYOLOClsConfig
+from ultralytics_yolo_det import UltralyticsYOLODetect, UltralyticsYOLODetectConfig
+from ultralytics_yolo_pose import UltralyticsYOLOPose, UltralyticsYOLOPoseConfig
+from ultralytics_yolo_seg import UltralyticsYOLOSeg, UltralyticsYOLOSegConfig
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "../../../../../"))
 MODEL_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../model"))
-TEST_DATA_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, "datasets/coco/assets"))
-RESULT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../test_data"))
+TEST_DATA_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../test_data"))
 
-DEFAULT_MODEL_PATH = os.path.join(MODEL_DIR, "yolo26n_detect_bayese_640x640_nv12.bin")
+DEFAULT_MODEL_PATH = os.path.join(MODEL_DIR, "yolo11n_detect_bayese_640x640_nv12.bin")
 DEFAULT_TEST_IMAGE = os.path.join(TEST_DATA_DIR, "bus.jpg")
-DEFAULT_RESULT_IMAGE = os.path.join(RESULT_DIR, "result_detect.jpg")
+DEFAULT_RESULT_IMAGE = os.path.join(TEST_DATA_DIR, "result_detect.jpg")
 DEFAULT_LABEL_FILES = {
     "detect": os.path.join(PROJECT_ROOT, "datasets/coco/coco_classes.names"),
     "seg": os.path.join(PROJECT_ROOT, "datasets/coco/coco_classes.names"),
     "pose": os.path.join(PROJECT_ROOT, "datasets/coco/coco_classes.names"),
     "cls": os.path.join(PROJECT_ROOT, "datasets/imagenet/imagenet_classes.names"),
-    "obb": os.path.join(PROJECT_ROOT, "datasets/dotav1/dota_classes.names"),
 }
 
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(name)s] [%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s',
-    datefmt='%H:%M:%S'
+    format="[%(name)s] [%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
 )
+logger = logging.getLogger("Ultralytics_YOLO")
 
 
 def save_image(path: str, image: np.ndarray) -> None:
     """Save an image to the target path.
 
     Args:
-        path (str): Output image path.
-        image (np.ndarray): Image array to save.
+        path: Output image path.
+        image: Image array to save.
 
     Raises:
         RuntimeError: If OpenCV fails to write the image.
@@ -94,7 +95,7 @@ def save_image(path: str, image: np.ndarray) -> None:
 
 
 def main() -> None:
-    """Run YOLO26 inference on a single image.
+    """Run Ultralytics YOLO inference on a single image.
 
     This function orchestrates the complete inference process:
     - Argument parsing
@@ -104,8 +105,8 @@ def main() -> None:
     - Inference execution
     - Result visualization and saving
     """
-    parser = argparse.ArgumentParser(description="YOLO26 Inference")
-    parser.add_argument("--task", type=str, default="detect", choices=["detect", "seg", "pose", "cls", "obb"],
+    parser = argparse.ArgumentParser(description="Ultralytics YOLO Inference")
+    parser.add_argument("--task", type=str, default="detect", choices=["detect", "seg", "pose", "cls"],
                         help="Task type to run.")
     parser.add_argument("--model-path", type=str, default=DEFAULT_MODEL_PATH,
                         help="Path to the model file used by hbm_runtime.")
@@ -114,10 +115,10 @@ def main() -> None:
     parser.add_argument("--label-file", type=str, default="",
                         help="Path to the label file. Empty means using the default labels for the task.")
     parser.add_argument("--img-save-path", type=str, default=DEFAULT_RESULT_IMAGE,
-                        help="Path to save the output result image.")
+                        help="Path to save the output result image for detect, seg, and pose tasks.")
     parser.add_argument("--priority", type=int, default=0,
                         help="Model priority in the range 0 to 255.")
-    parser.add_argument("--bpu-cores", type=int, nargs="+", default=[0],
+    parser.add_argument("--bpu-cores", nargs="+", type=int, default=[0],
                         help="BPU core indexes used for inference.")
     parser.add_argument("--classes-num", type=int, default=80,
                         help="Number of classes used by detection-style tasks.")
@@ -127,17 +128,20 @@ def main() -> None:
                         help="NMS threshold used to suppress overlapping boxes.")
     parser.add_argument("--strides", type=str, default="8,16,32",
                         help="Comma-separated strides used by the decoder.")
+    parser.add_argument("--reg", type=int, default=16,
+                        help="DFL regression channel count.")
+    parser.add_argument("--mc", type=int, default=32,
+                        help="Segmentation mask coefficient count.")
+    parser.add_argument("--nkpt", type=int, default=17,
+                        help="Number of pose keypoints.")
+    parser.add_argument("--kpt-conf-thres", type=float, default=0.50,
+                        help="Keypoint confidence threshold used by pose visualization.")
     parser.add_argument("--topk", type=int, default=5,
                         help="Top-K results returned by classification.")
-    parser.add_argument("--kpt-conf-thres", type=float, default=0.50,
-                        help="Keypoint confidence threshold used by pose.")
-    parser.add_argument("--angle-sign", type=float, default=1.0,
-                        help="Angle sign used by OBB decoding.")
-    parser.add_argument("--angle-offset", type=float, default=0.0,
-                        help="Angle offset used by OBB decoding.")
-    parser.add_argument("--regularize", type=int, default=1,
-                        help="Whether to regularize OBB angles, 1 for enabled and 0 for disabled.")
+    parser.add_argument("--resize-type", type=int, default=1,
+                        help="Resize policy, 0 for direct resize and 1 for letterbox.")
     args = parser.parse_args()
+    logger.info(args)
 
     label_file = args.label_file or DEFAULT_LABEL_FILES[args.task]
     strides = [int(item) for item in args.strides.split(",")]
@@ -151,82 +155,82 @@ def main() -> None:
             labels = file_io.load_class_names(label_file)
 
     if args.task == "detect":
-        cfg = YOLO26Config(
+        cfg = UltralyticsYOLODetectConfig(
             model_path=args.model_path,
             classes_num=args.classes_num,
             score_thres=args.score_thres,
             nms_thres=args.nms_thres,
+            reg=args.reg,
+            resize_type=args.resize_type,
             strides=strides,
         )
-        model = YOLO26Detect(cfg)
+        model = UltralyticsYOLODetect(cfg)
         model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         inspect.print_model_info(model.model)
         boxes, scores, cls_ids = model.predict(img)
-        visualize.draw_detect_yolo26(img, boxes, cls_ids, scores, labels, visualize.rdk_colors)
+        visualize.draw_detection_results(img, boxes, cls_ids, scores, labels, visualize.rdk_colors)
         save_image(args.img_save_path, img)
         return
 
     if args.task == "seg":
-        cfg = YOLO26SegConfig(
+        cfg = UltralyticsYOLOSegConfig(
             model_path=args.model_path,
             classes_num=args.classes_num,
             score_thres=args.score_thres,
             nms_thres=args.nms_thres,
-            strides=np.array(strides, dtype=np.int32),
+            reg=args.reg,
+            mc=args.mc,
+            resize_type=args.resize_type,
+            strides=strides,
         )
-        model = YOLO26Seg(cfg)
+        model = UltralyticsYOLOSeg(cfg)
         model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         inspect.print_model_info(model.model)
-        xyxy, score, cls, masks = model.predict(img)
-        results = [{"box": box, "score": sc, "id": cid, "mask": mask.astype(np.uint8)}
-                   for box, sc, cid, mask in zip(xyxy, score, cls, masks)]
-        visualize.draw_seg_yolo26(img, results, labels, visualize.rdk_colors)
+        boxes, scores, cls_ids, masks = model.predict(img)
+        visualize.draw_masks(img, boxes, masks, cls_ids, visualize.rdk_colors)
+        visualize.draw_boxes(img, boxes, cls_ids, scores, labels, visualize.rdk_colors)
         save_image(args.img_save_path, img)
         return
 
     if args.task == "pose":
-        cfg = YOLO26PoseConfig(
+        cfg = UltralyticsYOLOPoseConfig(
             model_path=args.model_path,
+            classes_num=1,
             score_thres=args.score_thres,
             nms_thres=args.nms_thres,
-            kpt_conf_thres=args.kpt_conf_thres,
+            reg=args.reg,
+            nkpt=args.nkpt,
+            resize_type=args.resize_type,
             strides=strides,
         )
-        model = YOLO26Pose(cfg)
+        model = UltralyticsYOLOPose(cfg)
         model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         inspect.print_model_info(model.model)
-        results = model.predict(img)
-        visualize.draw_pose_yolo26(img, results, visualize.COCO_SKELETON, args.kpt_conf_thres)
+        boxes, scores, kpts = model.predict(img)
+        visualize.draw_pose(
+            img,
+            boxes,
+            kpts,
+            skeleton=visualize.COCO_SKELETON,
+            kpt_conf_thres=args.kpt_conf_thres,
+            scores=scores,
+        )
         save_image(args.img_save_path, img)
         return
 
-    if args.task == "cls":
-        cfg = YOLO26ClsConfig(
-            model_path=args.model_path,
-            topk=args.topk,
-        )
-        model = YOLO26Cls(cfg)
-        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        inspect.print_model_info(model.model)
-        results = model.predict(img)
-        visualize.draw_cls_yolo26(img, results, labels)
-        return
-
-    cfg = YOLO26OBBConfig(
+    cfg = UltralyticsYOLOClsConfig(
         model_path=args.model_path,
-        score_thres=args.score_thres,
-        nms_thres=args.nms_thres,
-        angle_sign=args.angle_sign,
-        angle_offset=args.angle_offset,
-        regularize=bool(args.regularize),
-        strides=strides,
+        topk=args.topk,
+        resize_type=args.resize_type,
     )
-    model = YOLO26OBB(cfg)
+    model = UltralyticsYOLOCls(cfg)
     model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
     inspect.print_model_info(model.model)
     results = model.predict(img)
-    visualize.draw_obb_yolo26(img, results, labels, visualize.rdk_colors)
-    save_image(args.img_save_path, img)
+    logger.info("Top-%d results:", len(results))
+    for rank, (class_id, score) in enumerate(results, start=1):
+        class_name = labels.get(class_id, str(class_id))
+        logger.info("Rank %d -> id: %d, score: %.4f, name: %s", rank, class_id, score, class_name)
 
 
 if __name__ == "__main__":

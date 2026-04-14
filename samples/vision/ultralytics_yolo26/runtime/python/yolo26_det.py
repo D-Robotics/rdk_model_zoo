@@ -47,19 +47,6 @@ import utils.py_utils.postprocess as post_utils
 logger = logging.getLogger("YOLO26")
 
 
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    """
-    Apply the sigmoid activation element-wise.
-
-    Args:
-        x (np.ndarray): Input tensor in logit space.
-
-    Returns:
-        np.ndarray: Tensor converted to probability space.
-    """
-    return 1.0 / (1.0 + np.exp(-x))
-
-
 @dataclass
 class YOLO26Config:
     """
@@ -193,7 +180,7 @@ class YOLO26Detect:
                      ori_img_h: int,
                      score_thres: Optional[float] = None,
                      nms_thres: Optional[float] = None
-                     ) -> List[Tuple[int, float, int, int, int, int]]:
+                     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Convert raw model outputs to final detection results.
 
@@ -205,8 +192,10 @@ class YOLO26Detect:
             nms_thres (Optional[float]): Override NMS threshold.
 
         Returns:
-            List[Tuple[int, float, int, int, int, int]]: Detection results in
-            `(class_id, score, x1, y1, x2, y2)` format.
+            A tuple containing:
+                - bounding boxes in `(x1, y1, x2, y2)` format
+                - confidence scores
+                - class ids
         """
         t0 = time.time()
         score_thres = self.cfg.score_thres if score_thres is None else score_thres
@@ -231,7 +220,9 @@ class YOLO26Detect:
 
             dets.extend(np.hstack([xyxy, valid_score[:, None], valid_cls_id[:, None]]))
 
-        final_res = []
+        final_boxes = []
+        final_scores = []
+        final_cls_ids = []
         if dets:
             dets = np.array(dets, dtype=np.float32)
             for cls_id in np.unique(dets[:, 5]):
@@ -249,14 +240,25 @@ class YOLO26Detect:
                     self.input_h,
                     self.cfg.resize_type,
                 )
-                for box, det in zip(boxes, kept):
-                    x1, y1, x2, y2 = box.astype(int)
-                    final_res.append((int(det[5]), float(det[4]), x1, y1, x2, y2))
+                final_boxes.append(boxes.astype(np.float32))
+                final_scores.append(kept[:, 4].astype(np.float32))
+                final_cls_ids.append(kept[:, 5].astype(np.int32))
 
         logger.info(f"\033[1;31mPost Process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return final_res
+        if not final_boxes:
+            return (
+                np.empty((0, 4), dtype=np.float32),
+                np.empty((0,), dtype=np.float32),
+                np.empty((0,), dtype=np.int32),
+            )
 
-    def predict(self, img: np.ndarray) -> List[Tuple[int, float, int, int, int, int]]:
+        return (
+            np.concatenate(final_boxes, axis=0),
+            np.concatenate(final_scores, axis=0),
+            np.concatenate(final_cls_ids, axis=0),
+        )
+
+    def predict(self, img: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         High-level interface for one-click inference.
 
@@ -264,14 +266,14 @@ class YOLO26Detect:
             img (np.ndarray): Input image.
 
         Returns:
-            List[Tuple[int, float, int, int, int, int]]: Detection results.
+            Detection results in `(boxes, scores, cls_ids)` format.
         """
         ori_img_h, ori_img_w = img.shape[:2]
         input_tensor = self.pre_process(img)
         outputs = self.forward(input_tensor)
         return self.post_process(outputs, ori_img_w, ori_img_h)
 
-    def __call__(self, img: np.ndarray) -> List[Tuple[int, float, int, int, int, int]]:
+    def __call__(self, img: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Provide functional-style calling capability.
 
@@ -279,7 +281,6 @@ class YOLO26Detect:
             img (np.ndarray): Input image in BGR format.
 
         Returns:
-            List[Tuple[int, float, int, int, int, int]]: Detection results from
-            `predict()` in `(class_id, score, x1, y1, x2, y2)` format.
+            Detection results from `predict()` in `(boxes, scores, cls_ids)` format.
         """
         return self.predict(img)

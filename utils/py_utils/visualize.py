@@ -64,6 +64,17 @@ def draw_boxes(image: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
     return image
 
 
+def draw_detection_results(image: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
+                           scores: np.ndarray, class_names: list,
+                           colors: list = rdk_colors) -> np.ndarray:
+    """Log and draw detection results from `(boxes, scores, cls_ids)` arrays."""
+    for box, cls_id, score in zip(boxes, cls_ids, scores):
+        x1, y1, x2, y2 = map(int, box)
+        name = class_names[cls_id] if cls_id < len(class_names) else str(cls_id)
+        logger.info(f"({x1}, {y1}, {x2}, {y2}) -> {name}: {score:.2f}")
+    return draw_boxes(image, boxes, cls_ids, scores, class_names, colors)
+
+
 def draw_masks(image: np.ndarray, boxes: np.ndarray, masks: list,
                cls_ids: list, colors: list, alpha: float = 0.3) -> None:
     """Overlay semi-transparent instance masks."""
@@ -150,20 +161,11 @@ def draw_classification(img: np.ndarray, results: list, labels: dict,
 # 2. YOLO26 Specific Wrappers (Result Dict/Tuple Based + Logging)
 # ==============================================================================
 
-def draw_detect_yolo26(img: np.ndarray, results: list, class_names: list,
+def draw_detect_yolo26(img: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
+                       scores: np.ndarray, class_names: list,
                        colors: list = rdk_colors) -> np.ndarray:
-    """Draw YOLO26 detection results and log details."""
-    if not results: return img
-    
-    # Unpack and Log
-    boxes, ids, scores = [], [], []
-    for r in results:
-        cid, score, x1, y1, x2, y2 = int(r[0]), r[1], int(r[2]), int(r[3]), int(r[4]), int(r[5])
-        name = class_names[cid] if cid < len(class_names) else str(cid)
-        logger.info(f"({x1}, {y1}, {x2}, {y2}) -> {name}: {score:.2f}")
-        ids.append(cid); scores.append(score); boxes.append([x1, y1, x2, y2])
-    
-    return draw_boxes(img, np.array(boxes), np.array(ids), np.array(scores), class_names, colors)
+    """Draw YOLO26 detection results from `(boxes, scores, cls_ids)` arrays."""
+    return draw_detection_results(img, boxes, cls_ids, scores, class_names, colors)
 
 
 def draw_seg_yolo26(img: np.ndarray, results: list, class_names: list,

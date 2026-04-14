@@ -51,19 +51,6 @@ import utils.py_utils.postprocess as post_utils
 logger = logging.getLogger("YOLO26_Seg")
 
 
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    """
-    Apply the sigmoid activation element-wise.
-
-    Args:
-        x (np.ndarray): Input tensor in logit space.
-
-    Returns:
-        np.ndarray: Tensor converted to probability space.
-    """
-    return 1.0 / (1.0 + np.exp(-x))
-
-
 def crop_mask(masks: np.ndarray, boxes: np.ndarray) -> np.ndarray:
     """
     Crop instance masks using their corresponding bounding boxes.
@@ -105,7 +92,7 @@ def process_mask(protos: np.ndarray,
     ih, iw = shape
 
     masks = (masks_in @ protos.reshape(c, -1)).reshape(-1, mh, mw)
-    masks = sigmoid(masks)
+    masks = post_utils.sigmoid(masks)
     downsampled_bboxes = bboxes * (mh / 640.0) 
     masks = crop_mask(masks, downsampled_bboxes)
 
@@ -159,7 +146,7 @@ def decode_seg_layer(box_feat: np.ndarray,
     valid_box = box_feat[mask]
     valid_mc = mc_feat[mask]
     valid_cls_logits = cls_feat[mask]
-    valid_cls_scores = sigmoid(valid_cls_logits)
+    valid_cls_scores = post_utils.sigmoid(valid_cls_logits)
     valid_score = np.max(valid_cls_scores, axis=-1)
     valid_cls_id = np.argmax(valid_cls_scores, axis=-1)
     grid_center_x = valid_grid_x.astype(np.float32) + 0.5
