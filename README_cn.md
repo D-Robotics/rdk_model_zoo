@@ -1,197 +1,204 @@
+<div align="center">
+  <p><b>⚠️ 注意：本仓库目前正处于迁移重构中，部分功能和文档暂未完全开发完成，敬请谅解。</b></p>
+</div>
 
-![](resource/imgs/model_zoo_logo.jpg)
+<div align="center">
+  <img src="resource/imgs/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
+</div>
 
-[English](./README.md) | 简体中文
+<div align="center">
+  <h1 align="center">RDK Model Zoo</h1>
+  <p align="center">
+    <b>基于 D-Robotics BPU 的开箱即用 AI 模型部署 Pipeline 与全链路转换教程</b>
+  </p>
+</div>
 
-# ⭐️ 点个Star不迷路, 感谢您的关注 ⭐️
+<div align="center">
 
-## RDK Model Zoo 简介
+[English](./README.md) | **简体中文**
 
-RDK Model Zoo 基于[RDK](https://d-robotics.cc)开发, 提供大多数主流算法的部署例程. 例程包含导出D-Robotics *.bin模型, 使用 Python 等 API 推理 D-Robotics *.bin模型的流程. 部分模型还包括数据采集, 模型训练, 导出, 转化, 部署流程.
+<p align="center">
+  <a href="https://github.com/D-Robotics/rdk_model_zoo/stargazers"><img src="https://img.shields.io/github/stars/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Stars"></a>
+  <a href="https://github.com/D-Robotics/rdk_model_zoo/network/members"><img src="https://img.shields.io/github/forks/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Forks"></a>
+  <a href="https://github.com/D-Robotics/rdk_model_zoo/pulls"><img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome"></a>
+  <a href="https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5/LICENSE"><img src="https://img.shields.io/github/license/D-Robotics/rdk_model_zoo?style=flat-square" alt="License"></a>
+  <a href="https://developer.d-robotics.cc"><img src="https://img.shields.io/badge/Community-D--Robotics-orange.svg?style=flat-square" alt="Community"></a>
+</p>
 
-**RDK Model Zoo 目前提供以下类型模型参考.**
+</div>
 
- - [图像分类](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/vision/classification): `./samples/vision/classification`
-  
- - [目标检测](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/vision): `./samples/vision`
+## 仓库简介 (Introduction)
 
- - [实例分割](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/vision): `./samples/vision`
+> **使命**：致力于为地瓜机器人开发者提供极致性能、开箱即用、覆盖全场景的 AI 部署验证体验。
 
- - [大模型](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/llm): `./samples/llm`
+本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者**快速上手 BPU**、**快速跑通模型推理流程**。
 
- - [综合方案](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/solutions): `./samples/solutions`
+仓库中收录了覆盖多个 AI 领域的 BPU 可运行模型，并提供从 **原始模型 (PyTorch/ONNX) -> 定点量化转换 → 推理运行 → 结果解析 → 示例验证** 的完整参考实现，帮助用户以最小成本理解并使用 BPU 能力。
 
-**RDK Model Zoo 支持如下平台.**
- - 支持 [RDK X5](https://developer.d-robotics.cc/rdkx5)平台 (Bayse-e)
- - RDK S100 Model Zoo: [https://github.com/d-Robotics/rdk_model_zoo_s](https://github.com/d-Robotics/rdk_model_zoo_s)
+### 仓库核心价值
+- 🚀 **快速把 BPU 用起来**：提供开箱即用的推理 Pipeline，帮助用户在最短时间内完成 BPU 推理验证及性能评估。
+- 🧩 **完整端到端示例**：覆盖从算法导出、定点量化转换到板端高效运行 (`.bin` / `.hbm`) 的全过程。包含模型加载、前处理、BPU 推理执行、后处理与结果可视化。
+- 📐 **规范化设计与接口文档**：提供统一的目录结构与示例代码规范，支持 Python (`hbm_runtime`) 与 C/C++ 接口，便于客户快速理解、二次开发，降低集成与维护成本。
+- **🌐 全场景覆盖**：涵盖分类、检测、分割、姿态估计、OCR 及 LLM 等前沿多模态模型。
 
-**推荐系统版本**
-- RDK X5: RDK OS >= 3.2.3, Based on Ubuntu 22.04 aarch64, TROS-Humble.
+### 硬件与系统支持
+- **RDK X5 (Bayse-e)**: 推荐使用 RDK OS >= 3.5.0 (基于 Ubuntu 22.04 aarch64, TROS-Humble)。
+- **RDK S100/S600**: 请参考专用仓库 [RDK Model Zoo S](https://github.com/d-Robotics/rdk_model_zoo_s)。
 
-## ⭐️ RDK板卡准备
+---
 
-参考[RDK用户手册](https://developer.d-robotics.cc/information), 使得板卡能正常访问互联网从, 确保能做到以下条件之一.
+## 仓库目录结构
 
- - 利用ssh连接RDK板卡, 可以通过Termianl向RDK板卡输入命令, 知道RDK板卡的IP地址. 包括但是不限于MobaXtern, Windows Terminal等.
- - 利用VSCode Remote SSH插件远程连接RDK板卡, 可以正常的使用VSCode, 也可使用其他的IDE.
- - 利用VNC访问板卡, 能通过xfce的图形化界面操作板卡.
- - 利用HDMI连接板卡, 能通过xfce的图形化界面操作板卡.
+本仓库采用分层清晰、职责明确的目录结构，以便用户快速定位所需内容并开始使用。
 
-## ⭐️ 依赖库安装参考
+<details>
+<summary><b>📂 点击展开查看项目目录架构</b></summary>
 
-### RDK Model Zoo Python API (推荐)
-使用pip完成bpu_infer_lib库的安装
-
-如使用RDK X5：
-```bash
-pip install bpu_infer_lib_x5 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
-```
-
-使用 RDK X3：
-```bash
-pip install bpu_infer_lib_x3 -i  http://sdk.d-robotics.cc:8080/simple/  --trusted-host sdk.d-robotics.cc
-```
-
-### D-Robotics System Software BSP C/C++ & Python API (参考)
-
-随系统烧录, 以debian包的形式管理.
-```bash
-sudo apt update # 确保有 archive.d-robotics.cc 源
-sudo apt install hobot-spdev
-sudo apt show hobot-spdev
-```
-
-### D-Robotics ToolChain C API (参考)
-随系统烧录, 是最基本的C API.
-还可以参考[RDK用户手册算法工具链](https://developer.d-robotics.cc/rdk_doc/04_toolchain_development)章节, 获取OE包, 从OE包中获取libdnn.so及其头文件.
-
-## ⭐️ 使用 Jupyter 体验RDK Model Zoo (推荐)
-安装jupyterlab
-```bash
-pip install jupyterlab
-```
-
-随后即可使用如下命令拉取Model Zoo仓库：
-```bash
-git clone https://github.com/D-Robotics/rdk_model_zoo
-```
-
-注：这里git clone拉下来的分支默认为RDK X5分支，如实际使用的开发板为RDK系列的其他产品，请使用git checkout命令进行切换，这里以X3为例，如想切换至RDK X3对应的分支，请执行如下命令：
+<br>
 
 ```bash
-git checkout rdk_x3
+rdk_model_zoo/
+├── demos/                 # 🚀 核心模型示例区 (按任务分类)
+│   ├── classification/    # 分类网络 (MobileNet, ResNet, ConvNeXt...)
+│   ├── detect/            # 检测网络 (YOLOv5~v12, FCOS...)
+│   ├── Seg/               # 分割网络 (YOLO-Seg...)
+│   ├── Pose/              # 姿态估计
+│   ├── OCR/               # 文字识别 (PaddleOCR)
+│   ├── llm/               # 大语言/多模态模型 (CLIP, YOLO-World)
+│   └── tools/             # 批量性能测试与评测工具
+├── docs/                  # 📖 规范指南与参考文档
+├── datasets/              # 🗂️ 示例数据集及下载脚本
+├── utils/                 # 🛠️ C++/Python 跨项目通用前后处理工具库
+└── resource/              # 🖼️ 静态资源 (测试图片、Logo 等)
 ```
+</details>
 
-拉取完成后，使用如下命令进入Model Zoo目录：
-```bash
-cd rdk_model_zoo
-```
+---
 
-随后使用如下命令启动Jupyter Lab（注：ip地址为板子实际登录时使用的ip）:
-```bash
-jupyter lab --allow-root --ip 192.168.1.10
-```
-![](resource/imgs/jupyter_start.png)
+## 快速开始 (Quick Start)
 
-使用命令后，会出现以上日志，按住Ctrl，鼠标左键点击上图所示的链接，即可进入Jupyter Lab（如下图所示），双击demos后，即可选择模型体验RDK Model Zoo。
+本仓库中的模型均已按领域进行分类，并汇总在下方的 **模型支持矩阵** 中。用户可通过如下步骤快速运行目标模型：
 
-![](resource/imgs/into_jupyter.png)
+1. **查找模型**：根据自身需求，在下方的模型列表中查找目标模型。
+2. **连接硬件**：确保 RDK 板卡已通电联网。推荐使用 SSH (Windows Terminal / MobaXterm) 或 VSCode Remote SSH 插件连接板卡。
+3. **安装依赖**：在 RDK 板卡终端执行命令安装基础库 (RDK OS >= 3.5.0 系统已内置，可跳过)：`pip install hbm_runtime`
+4. **运行示例**：根据表格中提供的路径进入对应的模型目录，**仔细阅读该目录下的 `README.md`**，按照指引即可完成推理示例的运行与验证。
 
-开发者可跳转至对应的模块，体验模型在RDK 系列开发板的部署。
+> **以 YOLO11 目标检测为例：**
+> ```bash
+> # 1. 克隆仓库
+> git clone https://github.com/D-Robotics/rdk_model_zoo.git
+> cd rdk_model_zoo
+> 
+> # 2. 进入模型目录并阅读该目录下的 README
+> cd demos/detect/YOLO11/YOLO11-Detect_YUV420SP
+> 
+> # 3. 运行推理代码 (脚本将自动下载量化模型并执行推理)
+> python3 YOLO11_Detect_YUV420SP.py --model-path ./model/yolo11n_det_640x640_nv12.bin --test-img ./data/bus.jpg
+> ```
 
-在Jupyter Lab中选择一个模型的notebook进入后，开发者会进入到类似如下的界面：
+**推理结果展示:**
+<div align="center">
+  <img src="resource/imgs/demo_rdkx5_yolov10n_detect.jpg" width="80%" alt="Inference Result"/>
+</div>
 
-![](resource/imgs/basic_usage.png)
+---
 
-这里以yolo world模型为例，用户只需要点击上图中的双三角按钮，即可运行全部cell。鼠标拖动到下方，即可看到结果展示：
+## 模型支持矩阵 (Model Zoo Matrix)
 
-![](resource/imgs/basic_usage_res.png)
+下表按 **任务类型** 对当前仓库中已提供的模型进行分类，方便快速查找与定位。每个模型的详细说明、使用方法和示例，请点击对应的 `Code` 链接进入目录查看。
 
-开发者也可以选择逐cell运行，此时只需要按下Shift + Enter，即可完成当前cell运行，并跳转至下一个cell。
+| 任务类型 (Task) | 代表模型 (Models) | 示例代码 (Code) |
+| :--- | :--- | :---: |
+| **图像分类** | MobileNet (V1-V4), EfficientNet, ConvNeXt, ResNet, FastViT 等 20+ 模型 | [Code](./demos/classification) |
+| **目标检测** | YOLOv5, YOLOv8, YOLOv10, YOLO11, YOLO12, FCOS, LPRNet | [Code](./demos/detect) |
+| **实例分割** | YOLOv8-Seg, YOLO11-Seg, YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
+| **姿态估计** | YOLO11-Pose | [Code](./demos/Pose) |
+| **大模型 (LLMs)** | CLIP, YOLO-World | [Code](./demos/llm) |
+| **文字识别 (OCR)** | PaddleOCR | [Code](./demos/OCR) |
+| **视觉专项** | MODNet (人像抠图) | [Code](./demos/Vision) |
 
-## ⭐️ 使用VSCode体验RDK Model Zoo (参考)
+*(持续更新中... 欢迎提交 PR 补充更多模型)*
 
-使用VSCode Remote SSH插件, 远程登录进板卡, 打开RDK Model Zoo的仓库对应的文件夹, 进入对应的模型文件夹, 可以查看README, 编辑程序, 运行程序.
-![](resource/imgs/vscode_demo.jpg)
+---
 
-注: 所有的程序中, 相对路径均以模型所在的目录开始计算.
+## 文档说明与学习资源
 
-![](resource/imgs/demo_rdkx5_yolov10n_detect.jpg)
+为了帮助您更好地理解和使用 RDK 平台及本仓库代码，请参考以下文档：
 
-## ⭐️ RDK参考资源
+- **模型说明**：每个模型的顶层目录的 `README.md` 中，都有该模型的整体介绍及运行指引，请直接到相关目录查看。
+- **源码参考**：每个模型都有详细的接口介绍。如需了解代码层面的接口信息，请阅读 **[源码文档说明](docs/source_reference/README.md)**，根据介绍构建或浏览代码 API 文档。
+- **开发规范**：如需二次开发或提交自己的模型 Sample，请仔细阅读 **[Model Zoo 仓库规范指南](./docs/Model_Zoo_Repository_Guidelines.md)**。
+- **工具链手册**：
+  - [RDK X5 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
+  - [RDK X3 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
+- **开发者论坛**：[地瓜开发者社区](https://developer.d-robotics.cc/)
+- **入门指南**: [RDK 用户手册](https://developer.d-robotics.cc/information)
 
-[地瓜机器人](https://d-robotics.cc/)
+---
 
-[地瓜开发者社区](https://developer.d-robotics.cc/)
+## 常见问题解答 (FAQ)
 
-[RDK用户手册](https://developer.d-robotics.cc/information)
+<details>
+<summary><b>1. 自己训练模型的精度不满足预期？</b></summary>
+<br>
 
-[社区资源中心](https://developer.d-robotics.cc/resource)
+- 请检查 OpenExplorer 工具链 Docker、板端 `libdnn.so` 的版本是否均为目前发布的最新版本。
+- 请检查在导出模型时，是否有按照对应示例文件夹内 README 的要求进行结构调整或算子替换。
+- 检查量化验证阶段，每一个输出节点的余弦相似度是否均达到 0.999 以上 (保底 0.99)。
+</details>
 
-[RDK X3 算法工具链社区手册](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
+<details>
+<summary><b>2. 自己训练模型的速度不满足预期？</b></summary>
+<br>
 
-[RDK X3 OpenExplore 产品发布](https://developer.d-robotics.cc/forumDetail/136488103547258769)
+- Python API 的推理性能会弱于 C/C++ API。如对极致性能有要求，请基于 C/C++ API 测试。
+- 性能数据(纯前向)不包含前后处理，与完整 demo 的端到端耗时存在差异。通常采用 **NV12** 输入的模型可以做到极高吞吐量。
+- 确认板卡是否已通过命令定频到最高频率。
+- 检查是否有其他应用占用了 CPU/BPU 或 DDR 带宽资源。
+</details>
 
-[RDK Ultra 算法工具链社区手册](https://developer.d-robotics.cc/api/v1/fileData/horizon_j5_open_explorer_cn_doc/index.html)
+<details>
+<summary><b>3. 如何解决模型量化掉精度问题？</b></summary>
+<br>
 
-[RDK Ultra OpenExplore 产品发布](https://developer.d-robotics.cc/forumDetail/118363912788935318)
+- 根据平台版本，先参考对应平台的文档中的 PTQ 精度 debug 章节进行分析。
+- 如果是由于模型结构特性、权重分布导致 int8 量化掉精度严重，请考虑使用混合量化 (Mixed Precision) 或 QAT (量化感知训练)。
+</details>
 
-[RDK X5 算法工具链社区手册](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
+<details>
+<summary><b>4. 报错 "Can't reshape 1354752 in (1,3,640,640)" 怎么解决？</b></summary>
+<br>
 
-[RDK X5 OpenExplore 产品发布](https://developer.d-robotics.cc/forumDetail/251934919646096384)
+请修改同级目录下 `preprocess.py` 文件中的分辨率设置，修改为准备转化的 onnx 对应的输入分辨率大小。同时删除之前生成的旧校准数据集，并重新运行校准数据生成脚本。
+</details>
 
-## ⭐️ 反馈
-如果您有任何问题或遇到任何问题, 我们热烈欢迎您将它们发布到[地瓜开发者社区](https://developer.d-robotics.cc)或直接在此仓库中提交issue/comment. 您的反馈对我们来说是无价的, 我们一直渴望帮助您, 并改善我们的资源.
+<details>
+<summary><b>5. mAP 精度相比官方结果（如 ultralytics）低一些是正常的吗？</b></summary>
+<br>
 
-## ⭐️ FAQ
+是的，这属于正常现象。主要原因包括：
+- 官方测试通常使用动态 shape 和高精度浮点运算，而部署时使用了固定 shape 且经过了 INT8 量化。
+- 我们使用 `pycocotools` 的评估脚本与官方评估脚本在细节实现上可能存在细微差异。
+- NCHW-RGB888 输入格式转换为针对 BPU 优化的 YUV420SP (NV12) 输入格式时，会带来极少量的像素级精度损失。
+</details>
 
-### 自己训练模型的精度不满足预期
+<details>
+<summary><b>6. 模型进行推理时会使用 CPU 处理吗？</b></summary>
+<br>
 
-- 请检查OpenExplore工具链Docker, 板端libdnn.so的版本是否均为目前发布的最新版本.
-- 请检查在导出模型时，是否有按照对应examples的文件夹内的README的要求进行。
-- 每一个输出节点的余弦相似度是否均达到0.999以上(保底0.99).
+会的。在模型转化的过程中，无法量化的算子、不满足 BPU 硬件约束的算子，或者不满足被动量化逻辑的算子，会**回退 (Fallback)** 到 CPU 计算。此外，对于纯 BPU 算子组成的 `.bin` 模型，输入/输出端通常会带有量化 (Float->Int) 和反量化 (Int->Float) 节点，这些转换工作是由 CPU 执行的。
+</details>
 
-### 自己训练模型的速度不满足预期
+---
 
-- Python API 的推理性能会较弱一些，请基于 C/C++ API 测试性能。
-- 性能数据不包含前后处理，与完整demo的耗时是存在差异的，一般来说采用nv12输入的模型可以做到end2end吞吐量等于BPU吞吐量。
-- 板子是否已经定频到对应README内的最高频率。
-- 是否有其他应用占用了 CPU/BPU 及 DDR 带宽资源，这会导致推理性能减弱。
+## 社区与贡献 (Community & Contribution)
 
-### 如何解决模型量化掉精度问题
+### Star 增长趋势
+[![Star History Chart](https://api.star-history.com/svg?repos=D-Robotics/rdk_model_zoo&type=Date)](https://star-history.com/#D-Robotics/rdk_model_zoo&Date)
 
-- 根据平台版本，先参考对应平台的文档，参考PTQ章节的精度debug章节进行精度debug。
-- 如果是模型结构特性、权重分布导致 int8 量化掉精度，请考虑使用混合量化或QAT量化。
+我们非常欢迎开发者参与共建 RDK Model Zoo！如果您有任何问题或建议，请随时在 [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) 提出，或在[地瓜开发者社区](https://developer.d-robotics.cc/)发帖交流。
 
-### Can't reshape 1354752 in (1,3,640,640)
-您好，请修改同级目录下preprocess.py文件中的分辨率，修改为准备转化的onnx一样大小的分辨率，并删除所有的校准数据集，再重新运行02脚本，生成校准数据集。
-目前这个示例的校准数据集来自../../../01common/calibration data/coco目录，生成在./calibration_data_rgb_f32目录
+## 许可证 (License)
 
-### 为什么其他模型没有demo，是因为不支持吗
-
-你好，不是。
-
-- 受限于项目排期，为了照顾大部分地瓜开发者的需求，我们挑选了提问频率较高的模型作为demo示例。如果有更好的模型推荐，欢迎前往地瓜开发者社区反馈。
-- 同时，BPU及算法工具链相关资源均已经在开发者社区进行释放，自定义的模型完全可以自己进行转化。
-
-### mAP 精度相比ultralytics官方的结果低一些
-
-- ultralytics官方测mAP时，使用动态shape模型, 而BPU使用了固定shape模型，map测试结果会比动态shape的低一些。
-- RDK Solutions使用pycocotools计算的精度比ultralytics计算的精度会低一些是正常现象, 主要原因是两者计算方法有细微差异, 我们主要是关注同样的一套计算方式去测试定点模型和浮点模型的精度, 从而来评估量化过程中的精度损失.
-- BPU 模型在量化和NCHW-RGB888输入转换为YUV420SP(nv12)输入后, 也会有一部分精度损失。
-
-### 不修改YOLO模型结构直接导出的ONNX可以使用吗
-
-可以，但不推荐。
-
-- 公版的模型结构或者自己设计的输出头结构，需要自行对后处理代码进行程序设计。
-- RDK Solutions仓库提供的模型结构的调整方式是经过了精度和性能的考虑, 其他的修改方法暂未经过测试，也欢迎大家探索更多的高性能和高精度的修改方法。
-
-### 模型要先转onnx才能量化吗/地平线工具链如何使用
-PTQ方案下需要先导出为onnx或者caffe，将onnx或者caffe转化为bin模型。QAT方案下需要重新搭建torch模型进行量化感知训练，从pt模型转为hbm模型。
-
-### 训练的时候需要修改输出头吗？
-训练的适合全部按照公版的来，只有导出的时候再修改，这样训练的适合和训练的损失函数计算那套就能对上，部署的适合就能和板子上跑的代码的后处理那套对上。
-
-### 模型进行推理时会进行cpu处理吗
-你好，在模型转化的过程中，无法量化的算子或者不满足BPU约束，不满足被动量化逻辑的算子会回退到CPU计算。特别的，对于一个全部都是BPU算子的bin模型，bin模型的前后会有量化和反量化节点，负责将float转int，和int转float，这两种节点是由CPU来计算的。
+本项目采用 [Apache License 2.0](./LICENSE) 开源协议。
