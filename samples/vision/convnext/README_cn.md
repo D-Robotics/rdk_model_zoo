@@ -82,7 +82,7 @@ ConvNeXt 网络结构中使用了更大的卷积核（7x7）、ReLU 替换为 GE
     chmod +x run.sh
     ./run.sh
     ```
-- 若想了解 `python` 代码的详细使用方法，请参考 `runtime/python/README_cn.md`
+- 若想了解 `python` 代码的详细使用方法，请参考 [runtime/python/README_cn.md](./runtime/python/README_cn.md)
 
 ---
 
@@ -90,7 +90,7 @@ ConvNeXt 网络结构中使用了更大的卷积核（7x7）、ReLU 替换为 GE
 
 - ModelZoo 已提供适配完成的 BIN 模型文件，用户可直接运行 `model` 目录下的 `download.sh` 脚本下载并使用，如不关心模型转换流程，**可跳过本小节**。
 
-- 如需自定义模型转换参数，或了解完整的模型转换流程，请参考 `conversion/README_cn.md`。
+- 如需自定义模型转换参数，或了解完整的模型转换流程，请参考 [conversion/README_cn.md](./conversion/README_cn.md)。
 
 ---
 
@@ -102,13 +102,13 @@ ConvNeXt 模型推理示例提供 Python 实现方式。
 
 - 以脚本形式提供，适合快速验证模型效果与算法流程
 - 示例中展示了模型加载、推理执行、后处理以及结果可视化的完整过程
-- 具体使用方法、参数说明及接口说明请参考 `runtime/python/README_cn.md`
+- 具体使用方法、参数说明及接口说明请参考 [runtime/python/README_cn.md](./runtime/python/README_cn.md)
 
 ---
 
 ## 模型评估（Evaluator）
 
-`evaluator/` 用于模型精度、性能及数值一致性评估，详细说明请参考该目录 `README_cn.md`。
+`evaluator/` 用于模型精度、性能及数值一致性评估，详细说明请参考 [evaluator/README_cn.md](./evaluator/README_cn.md)。
 
 ---
 

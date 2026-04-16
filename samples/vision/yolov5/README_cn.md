@@ -71,7 +71,7 @@ chmod +x run.sh
 
 ## 模型转换
 
-Model Zoo 已提供可直接运行的 `.bin` 模型文件，用户可以在 `model/` 目录下通过下载脚本直接获取并运行。
+Model Zoo 已提供可直接运行的 `.bin` 模型文件，用户可以在 [model/README_cn.md](./model/README_cn.md) 中查看下载脚本与模型说明。
 
 如果需要从 YOLOv5 项目重新完成导出与转换，请参考 [conversion/README_cn.md](./conversion/README_cn.md)。文档包含以下内容：
 

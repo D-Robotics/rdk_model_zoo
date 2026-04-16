@@ -69,7 +69,7 @@ For a quick experience, the Python sample provides a `run.sh` script that allows
   chmod +x run.sh
   ./run.sh
   ```
-- For detailed usage of the Python code, please refer to `runtime/python/README.md`
+- For detailed usage of the Python code, please refer to [runtime/python/README.md](./runtime/python/README.md)
 
 ---
 
@@ -77,7 +77,7 @@ For a quick experience, the Python sample provides a `run.sh` script that allows
 
 ModelZoo provides pre-adapted BIN model files. Users can directly run the download script in the `model` directory to download and use them.
 
-If you need to reproduce the conversion flow from the YOLOv5 project, refer to `conversion/README.md` for:
+If you need to reproduce the conversion flow from the YOLOv5 project, refer to [conversion/README.md](./conversion/README.md) for:
 
 - `v2.0` and `v7.0` branch preparation
 - ONNX export adjustments for NHWC detection outputs
@@ -95,13 +95,13 @@ YOLOv5 runtime inference sample currently provides a Python implementation.
 
 - Provided in script form, suitable for rapid verification of model effects and algorithm flows
 - The sample demonstrates the complete process of model loading, inference execution, post-processing, and result visualization
-- For detailed usage, parameter descriptions, and interface specifications, please refer to `runtime/python/README.md`
+- For detailed usage, parameter descriptions, and interface specifications, please refer to [runtime/python/README.md](./runtime/python/README.md)
 
 ---
 
 ## Evaluator
 
-`evaluator/` is used for benchmark data, runtime validation records, and performance descriptions. Please refer to `evaluator/README.md` for details.
+`evaluator/` is used for benchmark data, runtime validation records, and performance descriptions. Please refer to [evaluator/README.md](./evaluator/README.md) for details.
 
 ---
 

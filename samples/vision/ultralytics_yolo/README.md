@@ -87,8 +87,7 @@ For detailed arguments and task examples, refer to
 
 This sample provides pre-converted `.bin` models for RDK X5.
 
-- If you only want to run inference, download models from `model/` and skip
-  conversion.
+- If you only want to run inference, download models from [model/README.md](./model/README.md) and skip conversion.
 - If you need to export ONNX, prepare calibration data, or compile the model,
   refer to [conversion/README.md](./conversion/README.md).
 
@@ -138,7 +137,7 @@ this directory:
   `YOLOv8 / YOLO11`
 
 Detailed benchmark data and validation summaries are maintained in
-`evaluator/README.md`.
+[evaluator/README.md](./evaluator/README.md).
 
 ---
 

@@ -1,23 +1,31 @@
 # Model Files
 
-This directory contains the compiled BPU model files and scripts to download them.
+This directory provides the prebuilt deployment model for the ConvNeXt sample on `RDK X5`.
+
+The current runtime path uses `.bin` models with `hbm_runtime`.
 
 ## Directory Structure
 
 ```text
 .
-├── download.sh            # Script to download HBM models
-├── README.md              # Documentation (English)
-└── README_cn.md           # Documentation (Chinese)
+├── download.sh
+├── README.md
+└── README_cn.md
 ```
 
-## Download Models
+## Default Model
 
-To download the pre-compiled ConvNeXt models for RDK X5, run:
+The default model used by `runtime/python/run.sh` and `runtime/python/main.py` is:
+
+- `ConvNeXt_atto_224x224_nv12.bin`
+
+## Download Model
+
+Run the following script to download the default model:
 
 ```bash
 chmod +x download.sh
 ./download.sh
 ```
 
-The script will download the `.bin` files into this directory.
+The script downloads the `.bin` model file into this directory.

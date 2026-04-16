@@ -85,7 +85,7 @@ chmod +x run.sh
 
 本 sample 提供了适用于 RDK X5 的预编译 `.bin` 模型。
 
-- 如果只需要运行推理，可直接从 `model/` 目录下载模型并跳过转换流程。
+- 如果只需要运行推理，可直接从 [model/README_cn.md](./model/README_cn.md) 下载模型并跳过转换流程。
 - 如果需要导出 ONNX、准备校准数据或重新编译模型，请参考
   [conversion/README_cn.md](./conversion/README_cn.md)。
 
@@ -132,7 +132,7 @@ C++ 目录作为参考实现保留，详见
 - CLS:
   `YOLOv8 / YOLO11`
 
-详细 benchmark 和验证汇总维护在 `evaluator/README_cn.md` 中。
+详细 benchmark 和验证汇总维护在 [evaluator/README_cn.md](./evaluator/README_cn.md) 中。
 
 ---
 

@@ -75,8 +75,8 @@ For detailed parameters and task examples, refer to [runtime/python/README.md](.
 
 This sample provides pre-converted `.bin` model files for RDK X5.
 
-- If you only want to run inference, download models from the `model/` directory and skip conversion.
-- If you need to understand or customize conversion, refer to the files under `conversion/`.
+- If you only want to run inference, download models from [model/README.md](./model/README.md) and skip conversion.
+- If you need to understand or customize conversion, refer to [conversion/README.md](./conversion/README.md).
 
 ---
 
@@ -96,7 +96,7 @@ For detailed usage, refer to [runtime/python/README.md](./runtime/python/README.
 
 ## Evaluator
 
-The `evaluator/` directory is used for task-level accuracy and result export verification. Refer to the corresponding scripts and documentation in that directory for details.
+The `evaluator/` directory is used for task-level accuracy and result export verification. Refer to [evaluator/README.md](./evaluator/README.md) for details.
 
 ---
 

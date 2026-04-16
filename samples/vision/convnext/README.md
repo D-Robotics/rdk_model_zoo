@@ -82,7 +82,7 @@ For a quick experience, each model provides a `run.sh` script that allows you to
     chmod +x run.sh
     ./run.sh
     ```
-- For detailed usage of the `python` code, please refer to `runtime/python/README_cn.md`
+- For detailed usage of the `python` code, please refer to [runtime/python/README.md](./runtime/python/README.md)
 
 ---
 
@@ -90,7 +90,7 @@ For a quick experience, each model provides a `run.sh` script that allows you to
 
 - ModelZoo provides pre-adapted BIN model files. Users can directly run the `download.sh` script in the `model` directory to download and use them. If you are not concerned about the model conversion process, **you can skip this section**.
 
-- If you need to customize model conversion parameters or understand the complete conversion process, please refer to `conversion/README_cn.md`.
+- If you need to customize model conversion parameters or understand the complete conversion process, please refer to [conversion/README.md](./conversion/README.md).
 
 ---
 
@@ -102,13 +102,13 @@ ConvNeXt model inference sample provides Python implementation.
 
 - Provided in script form, suitable for rapid verification of model effects and algorithm flows
 - The sample demonstrates the complete process of model loading, inference execution, post-processing, and result visualization
-- For detailed usage, parameter descriptions, and interface specifications, please refer to `runtime/python/README_cn.md`
+- For detailed usage, parameter descriptions, and interface specifications, please refer to [runtime/python/README.md](./runtime/python/README.md)
 
 ---
 
 ## Evaluator
 
-`evaluator/` is used for model accuracy, performance, and numerical consistency evaluation. Please refer to the directory `README_cn.md` for details.
+`evaluator/` is used for model accuracy, performance, and numerical consistency evaluation. Please refer to [evaluator/README.md](./evaluator/README.md) for details.
 
 ---
 

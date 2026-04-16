@@ -75,8 +75,8 @@ chmod +x run.sh
 
 本示例已经提供了适配 RDK X5 的 `.bin` 模型文件。
 
-- 如果只关注推理，可以直接使用 `model/` 目录中的下载脚本，跳过转换流程。
-- 如果需要了解或自定义模型转换，可参考 `conversion/` 目录中的内容。
+- 如果只关注推理，可以直接使用 [model/README_cn.md](./model/README_cn.md) 中的下载脚本，跳过转换流程。
+- 如果需要了解或自定义模型转换，可参考 [conversion/README_cn.md](./conversion/README_cn.md)。
 
 ---
 
@@ -96,7 +96,7 @@ chmod +x run.sh
 
 ## 评测
 
-`evaluator/` 目录用于任务级精度评测和结果导出验证，具体使用方式请参考该目录中的脚本和说明文档。
+`evaluator/` 目录用于任务级精度评测和结果导出验证，具体使用方式请参考 [evaluator/README_cn.md](./evaluator/README_cn.md)。
 
 ---
 
