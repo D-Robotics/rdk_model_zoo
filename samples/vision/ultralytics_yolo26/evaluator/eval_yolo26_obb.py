@@ -139,7 +139,7 @@ def main():
 
         nv12 = model.pre_process(img)
         outputs = model.forward(nv12)
-        results = model.post_process(outputs) # list of dict {'rrect', 'score', 'id'}
+        results = model.post_process(outputs, img_w, img_h) # list of dict {'rrect', 'score', 'id'}
 
         for res in results:
             rrect = res['rrect'] # (cx, cy, w, h, angle_rad)

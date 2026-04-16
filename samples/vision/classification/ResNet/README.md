@@ -61,7 +61,7 @@ Due to the fact that this model is the output obtained by model quantization by 
 
 ## 4. Deployment Testing
 
-After downloading the .bin file, you can execute the ResNet18 model jupyter script file of the test_ResNet18.ipynb to experience the actual test effect on the board. If you need to change the test picture, you can download the dataset separately and put it in the data folder and change the path of the picture in the jupyter file
+After downloading the .bin file, you can execute main.py to conduct actual operation on the board and test the actual effect. If you need to change the test images, you can download the dataset separately, place it in the data folder, and modify the path of the images in the main.py file.
 
 ![](./data/inference.png)
 

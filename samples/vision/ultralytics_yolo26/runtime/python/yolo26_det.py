@@ -12,249 +12,275 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""YOLO26 Detection Model Implementation.
+"""
+YOLO26 Detection Inference Module.
 
-This module provides the YOLO26Detect class for performing object detection
-inference using the pyeasy_dnn backend. It encapsulates model loading,
-preprocessing (Letterbox -> NV12), forward inference, and postprocessing
-(Anchor-Free decoding + NMS).
+This module implements the YOLO26 object detection pipeline on BPU,
+including pre-processing, forward execution, and post-processing.
+
+Key Features:
+    - Optimized for RDK X5 single-input NV12 models.
+    - Supports standard YOLO26 anchor-free box decoding.
+    - Provides a complete `predict()` pipeline for Python samples.
+
+Typical Usage:
+    >>> from yolo26_det import YOLO26Config, YOLO26Detect
+    >>> config = YOLO26Config(model_path="path/to/yolo26_detect.bin")
+    >>> model = YOLO26Detect(config)
+    >>> results = model.predict(image)
 """
 
+import os
+import sys
 import time
 import logging
-import cv2
+import hbm_runtime
 import numpy as np
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Union
+from typing import Dict, List, Optional, Tuple
 
-# Import hobot_dnn, handling potential import errors gracefully in main scope if needed,
-# but here we assume it's available as per the sample requirements.
-try:
-    from hobot_dnn import pyeasy_dnn as dnn
-except ImportError:
-    from hobot_dnn_rdkx5 import pyeasy_dnn as dnn
+# Add project root to sys.path to import shared utilities.
+sys.path.append(os.path.abspath("../../../../../"))
+import utils.py_utils.preprocess as pre_utils
+import utils.py_utils.postprocess as post_utils
 
-# Configure logger
 logger = logging.getLogger("YOLO26")
 
 
 @dataclass
 class YOLO26Config:
-    """Configuration for YOLO26 Detection Model.
+    """
+    Configuration for YOLO26 detection inference.
 
-    Attributes:
-        model_path (str): Path to the .bin model file.
-        classes_num (int): Number of object classes. Default is 80 (COCO).
-        score_thres (float): Confidence threshold for filtering detections.
-        nms_thres (float): IoU threshold for Non-Maximum Suppression.
-        strides (List[int]): List of strides for the feature maps.
+    Args:
+        model_path (str): Path to the compiled BIN model file.
+        classes_num (int): Number of detection classes.
+        score_thres (float): Confidence threshold.
+        nms_thres (float): IoU threshold for NMS.
+        resize_type (int): Resize strategy (0: direct, 1: letterbox).
+        strides (List[int]): Detection head strides.
     """
     model_path: str
     classes_num: int = 80
     score_thres: float = 0.25
     nms_thres: float = 0.7
+    resize_type: int = 1
     strides: List[int] = field(default_factory=lambda: [8, 16, 32])
 
 
 class YOLO26Detect:
-    """YOLO26 Object Detection Model Wrapper.
+    """
+    YOLO26 detection wrapper based on hbm_runtime.
 
-    This class handles the complete inference pipeline:
-    1. Model Loading
-    2. Preprocessing (Resize, Pad, Color Conversion)
-    3. Inference (BPU Forward)
-    4. Postprocessing (Decoding, NMS, Coordinate Rescaling)
+    This class follows the RDK Model Zoo coding standards for Python samples.
     """
 
     def __init__(self, config: YOLO26Config):
-        """Initialize the YOLO26 detector.
+        """
+        Initialize the model, load metadata, and precompute decoding grids.
 
         Args:
-            config (YOLO26Config): Configuration object containing model path
-                and inference parameters.
+            config (YOLO26Config): Configuration object containing model path and params.
         """
         self.cfg = config
-        self.conf_raw = -np.log(1 / self.cfg.score_thres - 1)
+        self.conf_raw = -np.log(1.0 / self.cfg.score_thres - 1.0)
 
-        # Load Model
-        try:
-            t0 = time.time()
-            self.model = dnn.load(self.cfg.model_path)[0]
-            logger.info(f"\033[1;31mLoad D-Robotics Quantize model time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
-            raise e
+        t0 = time.time()
+        self.model = hbm_runtime.HB_HBMRuntime(self.cfg.model_path)
+        logger.info(f"\033[1;31mLoad Model time = {1000 * (time.time() - t0):.2f} ms\033[0m")
 
-        # Get Input Shape (NCHW or NHWC)
-        shape = self.model.inputs[0].properties.shape
-        if shape[3] == 3:  # NHWC
-            self.m_h, self.m_w = shape[1], shape[2]
-        else:  # NCHW
-            self.m_h, self.m_w = shape[2], shape[3]
+        self.model_name = self.model.model_names[0]
+        self.input_names = self.model.input_names[self.model_name]
+        self.output_names = self.model.output_names[self.model_name]
+        self.input_shapes = self.model.input_shapes[self.model_name]
 
-        # Pre-compute Anchor-Free Grids
-        logger.info("Pre-computing Anchor-Free Grids...")
+        input_shape = self.input_shapes[self.input_names[0]]
+        if input_shape[1] == 3:
+            self.input_h = input_shape[2]
+            self.input_w = input_shape[3]
+        else:
+            self.input_h = input_shape[1]
+            self.input_w = input_shape[2]
+
         self.grids = {}
-        for s in self.cfg.strides:
-            grid_h, grid_w = self.m_h // s, self.m_w // s
-            # np.indices returns (y_grid, x_grid), we need (x, y) order, so [::-1]
+        for stride in self.cfg.strides:
+            grid_h, grid_w = self.input_h // stride, self.input_w // stride
             grid = np.stack(np.indices((grid_h, grid_w))[::-1], axis=-1)
-            self.grids[s] = grid.reshape(-1, 2).astype(np.float32) + 0.5
+            self.grids[stride] = grid.reshape(-1, 2).astype(np.float32) + 0.5
 
-        # Initialize preprocessing state variables
-        self.scale = 1.0
-        self.x_shift = 0
-        self.y_shift = 0
-        self.orig_h = 0
-        self.orig_w = 0
-
-    def pre_process(self, img: np.ndarray) -> np.ndarray:
-        """Preprocess image for model input.
-
-        Performs letterbox resizing (padding) and converts BGR to NV12.
+    def set_scheduling_params(self,
+                              priority: Optional[int] = None,
+                              bpu_cores: Optional[list] = None) -> None:
+        """
+        Set BPU scheduling parameters like priority and core affinity.
 
         Args:
-            img (np.ndarray): Input BGR image.
-
-        Returns:
-            np.ndarray: Flattened NV12 data ready for inference.
+            priority (Optional[int]): Scheduling priority (0-255).
+            bpu_cores (Optional[list]): BPU core indexes to run inference.
         """
-        t0 = time.time()
-        self.orig_h, self.orig_w = img.shape[:2]
-        
-        # Calculate scaling and padding
-        self.scale = min(self.m_h / self.orig_h, self.m_w / self.orig_w)
-        nw, nh = int(self.orig_w * self.scale), int(self.orig_h * self.scale)
-        self.x_shift, self.y_shift = (self.m_w - nw) // 2, (self.m_h - nh) // 2
+        kwargs = {}
+        if priority is not None:
+            kwargs["priority"] = {self.model_name: priority}
+        if bpu_cores is not None:
+            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
+        if kwargs:
+            self.model.set_scheduling_params(**kwargs)
 
-        # Resize and Pad
-        resized_img = cv2.resize(img, (nw, nh))
-        input_tensor = cv2.copyMakeBorder(
-            resized_img,
-            self.y_shift, self.m_h - nh - self.y_shift,
-            self.x_shift, self.m_w - nw - self.x_shift,
-            cv2.BORDER_CONSTANT, value=127
-        )
-
-        # Convert to NV12
-        yuv = cv2.cvtColor(input_tensor, cv2.COLOR_BGR2YUV_I420).flatten()
-        nv12 = np.empty((self.m_h * self.m_w * 3 // 2,), dtype=np.uint8)
-        y_size = self.m_h * self.m_w
-        nv12[:y_size] = yuv[:y_size]
-        nv12[y_size::2] = yuv[y_size:y_size + y_size // 4]
-        nv12[y_size + 1::2] = yuv[y_size + y_size // 4:]
-
-        logger.info(f"\033[1;31mpre process(Letterbox -> NV12) time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return nv12
-
-    def forward(self, nv12: np.ndarray) -> List[np.ndarray]:
-        """Run forward inference.
+    def pre_process(self,
+                    img: np.ndarray,
+                    resize_type: Optional[int] = None,
+                    image_format: str = "BGR") -> Dict[str, Dict[str, np.ndarray]]:
+        """
+        Convert a BGR image to packed NV12 input for hbm_runtime.
 
         Args:
-            nv12 (np.ndarray): Preprocessed NV12 data.
+            img (np.ndarray): Input image in BGR format.
+            resize_type (Optional[int]): Override default resize strategy.
+            image_format (str): Input image format.
 
         Returns:
-            List[np.ndarray]: Raw model outputs.
+            Dict[str, Dict[str, np.ndarray]]: Prepared input tensors for hbm_runtime.run().
         """
         t0 = time.time()
-        out = self.model.forward(nv12)
-        logger.info(f"\033[1;31mforward time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return out
+        resize_type = self.cfg.resize_type if resize_type is None else resize_type
 
-    def post_process(self, outputs) -> List[Tuple[int, float, int, int, int, int]]:
-        """Process model outputs to generate detection results.
+        if image_format != "BGR":
+            raise ValueError(f"Unsupported image_format: {image_format}")
 
-        Performs decoding, filtering, and NMS.
+        resize_img = pre_utils.resized_image(img, self.input_w, self.input_h, resize_type)
+        y, uv = pre_utils.bgr_to_nv12_planes(resize_img)
+
+        logger.info(f"\033[1;31mPre-process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
+
+        packed_nv12 = np.concatenate([y.reshape(-1), uv.reshape(-1)]).astype(np.uint8)
+        return {
+            self.model_name: {
+                self.input_names[0]: packed_nv12,
+            }
+        }
+
+    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, Dict[str, np.ndarray]]:
+        """
+        Execute inference on BPU using hbm_runtime.
 
         Args:
-            outputs: Raw outputs from the model.
+            input_tensor (Dict[str, Dict[str, np.ndarray]]): Prepared input tensors.
 
         Returns:
-            List[Tuple]: Detected objects formatted as (class_id, score, x1, y1, x2, y2).
+            Dict[str, Dict[str, np.ndarray]]: Raw output tensors from the runtime.
         """
         t0 = time.time()
-        
-        # Check output shape assumption
-        if outputs[1].buffer.shape[-1] != 4:
-            logger.warning("⚠️ Model output shape mismatch! Expected index 1, 3, 5 to be 4 (bbox).")
+        outputs = self.model.run(input_tensor)
+        logger.info(f"\033[1;31mForward time = {1000 * (time.time() - t0):.2f} ms\033[0m")
+        return outputs
 
+    def post_process(self,
+                     outputs: Dict[str, Dict[str, np.ndarray]],
+                     ori_img_w: int,
+                     ori_img_h: int,
+                     score_thres: Optional[float] = None,
+                     nms_thres: Optional[float] = None
+                     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Convert raw model outputs to final detection results.
+
+        Args:
+            outputs (Dict[str, Dict[str, np.ndarray]]): Raw model outputs.
+            ori_img_w (int): Original image width.
+            ori_img_h (int): Original image height.
+            score_thres (Optional[float]): Override confidence threshold.
+            nms_thres (Optional[float]): Override NMS threshold.
+
+        Returns:
+            A tuple containing:
+                - bounding boxes in `(x1, y1, x2, y2)` format
+                - confidence scores
+                - class ids
+        """
+        t0 = time.time()
+        score_thres = self.cfg.score_thres if score_thres is None else score_thres
+        nms_thres = self.cfg.nms_thres if nms_thres is None else nms_thres
+        conf_raw = -np.log(1.0 / score_thres - 1.0)
+
+        raw_outputs = outputs[self.model_name]
         dets = []
-        # Group outputs: Cls [0, 2, 4], Box [1, 3, 5] corresponding to strides 8, 16, 32
-        # Note: This assumes specific output order from the model export.
-        clses = [outputs[i].buffer.reshape(-1, self.cfg.classes_num) for i in [0, 2, 4]]
-        bboxes = [outputs[i].buffer.reshape(-1, 4) for i in [1, 3, 5]]
 
-        for box_data, cls_data, stride in zip(bboxes, clses, self.cfg.strides):
-            max_scores = np.max(cls_data, axis=1)
-            mask = max_scores >= self.conf_raw
-            if not np.any(mask):
+        for i, stride in enumerate(self.cfg.strides):
+            base_idx = i * 2
+            cls_data = raw_outputs[self.output_names[base_idx]].reshape(-1, self.cfg.classes_num)
+            box_data = raw_outputs[self.output_names[base_idx + 1]].reshape(-1, 4)
+
+            valid_score, valid_cls_id, valid_indices = post_utils.filter_classification(cls_data, conf_raw)
+            if valid_indices.size == 0:
                 continue
 
-            # Decode boxes
-            grid = self.grids[stride][mask]
-            v_box = box_data[mask]
-            v_score = 1 / (1 + np.exp(-max_scores[mask]))
-            v_id = np.argmax(cls_data[mask], axis=1)
+            grid = self.grids[stride][valid_indices]
+            valid_box = box_data[valid_indices]
+            xyxy = post_utils.decode_ltrb_boxes(grid, valid_box, stride)
 
-            # xyxy calculation: (grid +/- box) * stride
-            xyxy = np.hstack([(grid - v_box[:, :2]), (grid + v_box[:, 2:])]) * stride
-            
-            # Append to detections
-            dets.extend(np.hstack([xyxy, v_score[:, None], v_id[:, None]]))
+            dets.extend(np.hstack([xyxy, valid_score[:, None], valid_cls_id[:, None]]))
 
-        final_res = []
+        final_boxes = []
+        final_scores = []
+        final_cls_ids = []
         if dets:
-            dets = np.array(dets)
-            # Apply NMS per class
-            for i in np.unique(dets[:, 5]):
-                cls_dets = dets[dets[:, 5] == i]
-                # Convert xyxy to xywh for NMS
-                xywh = cls_dets[:, :4].copy()
-                xywh[:, 2:] -= xywh[:, :2]
-                
-                indices = cv2.dnn.NMSBoxes(
-                    xywh.tolist(), 
-                    cls_dets[:, 4].tolist(), 
-                    self.cfg.score_thres, 
-                    self.cfg.nms_thres
+            dets = np.array(dets, dtype=np.float32)
+            for cls_id in np.unique(dets[:, 5]):
+                cls_dets = dets[dets[:, 5] == cls_id]
+                indices = post_utils.NMS(cls_dets[:, :4], cls_dets[:, 4], cls_dets[:, 5], nms_thres)
+                if not indices:
+                    continue
+
+                kept = cls_dets[indices]
+                boxes = post_utils.scale_coords_back(
+                    kept[:, :4].copy(),
+                    ori_img_w,
+                    ori_img_h,
+                    self.input_w,
+                    self.input_h,
+                    self.cfg.resize_type,
                 )
+                final_boxes.append(boxes.astype(np.float32))
+                final_scores.append(kept[:, 4].astype(np.float32))
+                final_cls_ids.append(kept[:, 5].astype(np.int32))
 
-                if len(indices) > 0:
-                    for idx in indices.flatten():
-                        d = cls_dets[idx]
-                        # Rescale coords back to original image
-                        x1, y1, x2, y2 = (d[:4] - [self.x_shift, self.y_shift, self.x_shift, self.y_shift]) / self.scale
-                        
-                        final_res.append((
-                            int(d[5]),  # class_id
-                            d[4],       # score
-                            int(np.clip(x1, 0, self.orig_w)),
-                            int(np.clip(y1, 0, self.orig_h)),
-                            int(np.clip(x2, 0, self.orig_w)),
-                            int(np.clip(y2, 0, self.orig_h))
-                        ))
+        logger.info(f"\033[1;31mPost Process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
+        if not final_boxes:
+            return (
+                np.empty((0, 4), dtype=np.float32),
+                np.empty((0,), dtype=np.float32),
+                np.empty((0,), dtype=np.int32),
+            )
 
-    def predict(self, img: np.ndarray) -> List[Tuple[int, float, int, int, int, int]]:
-        """End-to-end prediction pipeline.
+        return (
+            np.concatenate(final_boxes, axis=0),
+            np.concatenate(final_scores, axis=0),
+            np.concatenate(final_cls_ids, axis=0),
+        )
 
-        Args:
-            img (np.ndarray): Input BGR image.
-
-        Returns:
-            List[Tuple]: Detected objects formatted as (class_id, score, x1, y1, x2, y2).
+    def predict(self, img: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        nv12 = self.pre_process(img)
-        outputs = self.forward(nv12)
-        results = self.post_process(outputs)
-        return results
-
-    def __call__(self, img: np.ndarray) -> List[Tuple[int, float, int, int, int, int]]:
-        """Callable interface for prediction.
+        High-level interface for one-click inference.
 
         Args:
-            img (np.ndarray): Input BGR image.
+            img (np.ndarray): Input image.
 
         Returns:
-            List[Tuple]: Detected objects formatted as (class_id, score, x1, y1, x2, y2).
+            Detection results in `(boxes, scores, cls_ids)` format.
+        """
+        ori_img_h, ori_img_w = img.shape[:2]
+        input_tensor = self.pre_process(img)
+        outputs = self.forward(input_tensor)
+        return self.post_process(outputs, ori_img_w, ori_img_h)
+
+    def __call__(self, img: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Provide functional-style calling capability.
+
+        Args:
+            img (np.ndarray): Input image in BGR format.
+
+        Returns:
+            Detection results from `predict()` in `(boxes, scores, cls_ids)` format.
         """
         return self.predict(img)

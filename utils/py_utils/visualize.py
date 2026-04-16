@@ -64,6 +64,17 @@ def draw_boxes(image: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
     return image
 
 
+def draw_detection_results(image: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
+                           scores: np.ndarray, class_names: list,
+                           colors: list = rdk_colors) -> np.ndarray:
+    """Log and draw detection results from `(boxes, scores, cls_ids)` arrays."""
+    for box, cls_id, score in zip(boxes, cls_ids, scores):
+        x1, y1, x2, y2 = map(int, box)
+        name = class_names[cls_id] if cls_id < len(class_names) else str(cls_id)
+        logger.info(f"({x1}, {y1}, {x2}, {y2}) -> {name}: {score:.2f}")
+    return draw_boxes(image, boxes, cls_ids, scores, class_names, colors)
+
+
 def draw_masks(image: np.ndarray, boxes: np.ndarray, masks: list,
                cls_ids: list, colors: list, alpha: float = 0.3) -> None:
     """Overlay semi-transparent instance masks."""
@@ -150,20 +161,11 @@ def draw_classification(img: np.ndarray, results: list, labels: dict,
 # 2. YOLO26 Specific Wrappers (Result Dict/Tuple Based + Logging)
 # ==============================================================================
 
-def draw_detect_yolo26(img: np.ndarray, results: list, class_names: list,
+def draw_detect_yolo26(img: np.ndarray, boxes: np.ndarray, cls_ids: np.ndarray,
+                       scores: np.ndarray, class_names: list,
                        colors: list = rdk_colors) -> np.ndarray:
-    """Draw YOLO26 detection results and log details."""
-    if not results: return img
-    
-    # Unpack and Log
-    boxes, ids, scores = [], [], []
-    for r in results:
-        cid, score, x1, y1, x2, y2 = int(r[0]), r[1], int(r[2]), int(r[3]), int(r[4]), int(r[5])
-        name = class_names[cid] if cid < len(class_names) else str(cid)
-        logger.info(f"({x1}, {y1}, {x2}, {y2}) -> {name}: {score:.2f}")
-        ids.append(cid); scores.append(score); boxes.append([x1, y1, x2, y2])
-    
-    return draw_boxes(img, np.array(boxes), np.array(ids), np.array(scores), class_names, colors)
+    """Draw YOLO26 detection results from `(boxes, scores, cls_ids)` arrays."""
+    return draw_detection_results(img, boxes, cls_ids, scores, class_names, colors)
 
 
 def draw_seg_yolo26(img: np.ndarray, results: list, class_names: list,
@@ -171,24 +173,34 @@ def draw_seg_yolo26(img: np.ndarray, results: list, class_names: list,
     """Draw YOLO26 segmentation results and log details."""
     if not results: return img
 
-    boxes, ids, scores, masks = [], [], [], []
+    boxes, ids, scores = [], [], []
     for r in results:
         x1, y1, x2, y2 = map(int, r['box'])
         cid, score = int(r['id']), r['score']
         name = class_names[cid] if cid < len(class_names) else str(cid)
         logger.info(f"({x1}, {y1}, {x2}, {y2}) -> {name}: {score:.2f}")
         
-        boxes.append([x1, y1, x2, y2]); ids.append(cid); scores.append(score)
-        
-        # Binary mask preparation
-        if r['mask'].size > 0:
-            prob_mask = cv2.resize(r['mask'], (x2 - x1, y2 - y1), interpolation=cv2.INTER_LANCZOS4)
-            masks.append((prob_mask > 0.5).astype(np.uint8))
-        else:
-            masks.append(np.zeros((0, 0), dtype=np.uint8))
+        boxes.append([x1, y1, x2, y2])
+        ids.append(cid)
+        scores.append(score)
+
+        if r['mask'].size == 0:
+            continue
+
+        mask = r['mask'].astype(bool)
+        if mask.shape[:2] != img.shape[:2]:
+            full_mask = np.zeros(img.shape[:2], dtype=bool)
+            h = min(mask.shape[0], img.shape[0])
+            w = min(mask.shape[1], img.shape[1])
+            full_mask[:h, :w] = mask[:h, :w]
+            mask = full_mask
+
+        color = np.array(colors[cid % len(colors)], dtype=np.uint8)
+        color_patch = np.zeros_like(img, dtype=np.uint8)
+        color_patch[:] = color
+        img[mask] = ((1 - 0.3) * img[mask] + 0.3 * color_patch[mask]).astype(np.uint8)
 
     draw_boxes(img, np.array(boxes), np.array(ids), np.array(scores), class_names, colors)
-    draw_masks(img, np.array(boxes), masks, ids, colors)
     return img
 
 

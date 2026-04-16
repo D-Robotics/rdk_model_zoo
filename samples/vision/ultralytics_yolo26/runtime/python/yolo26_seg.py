@@ -12,240 +12,398 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""YOLO26 Segmentation Model Implementation.
+# flake8: noqa: E501
+# flake8: noqa: E402
 
-This module provides the YOLO26Seg class for instance segmentation inference.
-It encapsulates model loading, preprocessing, BPU inference, and postprocessing
-(including mask generation and NMS).
+"""
+YOLO26 Segmentation Inference Module.
+
+This module implements the YOLO26 instance segmentation pipeline on BPU,
+including pre-processing, forward execution, box decoding, and mask assembly.
+
+Key Features:
+    - Optimized for RDK X5 single-input NV12 models.
+    - Supports YOLO26 segmentation head decoding and prototype masks.
+    - Generates binary instance masks aligned to the original image size.
+
+Typical Usage:
+    >>> from yolo26_seg import YOLO26SegConfig, YOLO26Seg
+    >>> config = YOLO26SegConfig(model_path="path/to/yolo26_seg.bin")
+    >>> model = YOLO26Seg(config)
+    >>> xyxy, score, cls, masks = model.predict(image)
 """
 
-import time
-import logging
+import os
 import cv2
+import time
+import sys
+import logging
+import hbm_runtime
 import numpy as np
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict, Union
+from typing import Optional, Dict, Tuple, List
 
-try:
-    from hobot_dnn import pyeasy_dnn as dnn
-except ImportError:
-    from hobot_dnn_rdkx5 import pyeasy_dnn as dnn
+# Add project root to sys.path to import shared utilities.
+sys.path.append(os.path.abspath("../../../../../"))
+import utils.py_utils.preprocess as pre_utils
+import utils.py_utils.postprocess as post_utils
 
 logger = logging.getLogger("YOLO26_Seg")
 
 
+def crop_mask(masks: np.ndarray, boxes: np.ndarray) -> np.ndarray:
+    """
+    Crop instance masks using their corresponding bounding boxes.
+
+    Args:
+        masks (np.ndarray): Predicted masks with shape `(N, H, W)`.
+        boxes (np.ndarray): Bounding boxes with shape `(N, 4)` in `xyxy` format.
+
+    Returns:
+        np.ndarray: Cropped masks constrained to their bounding boxes.
+    """
+    n, h, w = masks.shape
+    x1, y1, x2, y2 = np.split(boxes[:, :, None], 4, axis=1)
+
+    r = np.arange(w, dtype=np.float32)[None, None, :]
+    c = np.arange(h, dtype=np.float32)[None, :, None]
+    return masks * ((r >= x1) * (r < x2) * (c >= y1) * (c < y2))
+
+
+def process_mask(protos: np.ndarray, 
+                 masks_in: np.ndarray, 
+                 bboxes: np.ndarray, 
+                 shape: Tuple[int, int], 
+                 upsample: bool = False) -> np.ndarray:
+    """
+    Build instance masks from prototype features and mask coefficients.
+
+    Args:
+        protos (np.ndarray): Prototype feature map with shape `(C, H, W)`.
+        masks_in (np.ndarray): Mask coefficients for each detection.
+        bboxes (np.ndarray): Bounding boxes in model input coordinates.
+        shape (Tuple[int, int]): Target `(height, width)` for output masks.
+        upsample (bool): Whether to resize masks to the target image shape.
+
+    Returns:
+        np.ndarray: Binary instance masks aligned to the target image shape.
+    """
+    c, mh, mw = protos.shape
+    ih, iw = shape
+
+    masks = (masks_in @ protos.reshape(c, -1)).reshape(-1, mh, mw)
+    masks = post_utils.sigmoid(masks)
+    downsampled_bboxes = bboxes * (mh / 640.0) 
+    masks = crop_mask(masks, downsampled_bboxes)
+
+    if upsample:
+        resized_masks = []
+        for m in masks:
+            m_res = cv2.resize(m, (iw, ih), interpolation=cv2.INTER_LINEAR)
+            resized_masks.append(m_res)
+        masks = np.array(resized_masks)
+
+    return masks > 0.5
+
+
+def decode_seg_layer(box_feat: np.ndarray,
+                     cls_feat: np.ndarray,
+                     mc_feat: np.ndarray,
+                     stride: int,
+                     score_thres: float,
+                     classes_num: int = 80) -> np.ndarray:
+    """
+    Decode one segmentation head output.
+
+    Args:
+        box_feat (np.ndarray): Bounding box branch output tensor.
+        cls_feat (np.ndarray): Classification branch output tensor.
+        mc_feat (np.ndarray): Mask coefficient branch output tensor.
+        stride (int): Feature stride for the current segmentation head.
+        score_thres (float): Confidence threshold used for filtering.
+        classes_num (int): Number of segmentation classes.
+
+    Returns:
+        np.ndarray: Decoded proposals in
+        `(x1, y1, x2, y2, score, class_id, mask_coeffs...)` format.
+    """
+    if box_feat.shape[0] == 1: box_feat = box_feat[0]
+    if cls_feat.shape[0] == 1: cls_feat = cls_feat[0]
+    if mc_feat.shape[0] == 1: mc_feat = mc_feat[0]
+
+    h, w, _ = box_feat.shape
+    safe_thres = np.clip(score_thres, 1e-6, 1.0 - 1e-6)
+    logit_thres = -np.log(1.0 / safe_thres - 1.0)
+    max_logits = np.max(cls_feat, axis=-1)
+    mask = max_logits >= logit_thres
+
+    if not np.any(mask):
+        return np.empty((0, 6 + 32), dtype=np.float32)
+
+    grid_y, grid_x = np.indices((h, w))
+    valid_grid_x = grid_x[mask]
+    valid_grid_y = grid_y[mask]
+    valid_box = box_feat[mask]
+    valid_mc = mc_feat[mask]
+    valid_cls_logits = cls_feat[mask]
+    valid_cls_scores = post_utils.sigmoid(valid_cls_logits)
+    valid_score = np.max(valid_cls_scores, axis=-1)
+    valid_cls_id = np.argmax(valid_cls_scores, axis=-1)
+    grid_center_x = valid_grid_x.astype(np.float32) + 0.5
+    grid_center_y = valid_grid_y.astype(np.float32) + 0.5
+    x1 = (grid_center_x - valid_box[:, 0]) * stride
+    y1 = (grid_center_y - valid_box[:, 1]) * stride
+    x2 = (grid_center_x + valid_box[:, 2]) * stride
+    y2 = (grid_center_y + valid_box[:, 3]) * stride
+
+    out = np.stack([x1, y1, x2, y2, valid_score, valid_cls_id], axis=-1)
+    out = np.concatenate([out, valid_mc], axis=-1)
+    return out
+
+
 @dataclass
 class YOLO26SegConfig:
-    """Configuration for YOLO26 Segmentation Model.
+    """
+    Configuration for YOLO26 segmentation inference.
 
-    Attributes:
-        model_path (str): Path to the .bin model file.
-        classes_num (int): Number of object classes. Default is 80 (COCO).
-        score_thres (float): Confidence threshold for filtering detections.
-        nms_thres (float): IoU threshold for Non-Maximum Suppression.
-        strides (List[int]): List of strides for the feature maps.
+    Args:
+        model_path (str): Path to the compiled BIN model file.
+        classes_num (int): Number of segmentation classes.
+        score_thres (float): Confidence threshold.
+        nms_thres (float): IoU threshold for NMS.
+        resize_type (int): Resize strategy (0: direct, 1: letterbox).
+        strides (np.ndarray): Detection head strides.
     """
     model_path: str
     classes_num: int = 80
     score_thres: float = 0.25
-    nms_thres: float = 0.7
-    strides: List[int] = field(default_factory=lambda: [8, 16, 32])
+    nms_thres: float = 0.65
+    resize_type: int = 1
+    strides: np.ndarray = field(
+        default_factory=lambda: np.array([8, 16, 32], dtype=np.int32)
+    )
 
 
 class YOLO26Seg:
-    """YOLO26 Instance Segmentation Model Wrapper.
+    """
+    YOLO26 segmentation wrapper based on hbm_runtime.
 
-    This class handles the complete inference pipeline:
-    1. Model Loading
-    2. Preprocessing (Resize, Pad, Color Conversion)
-    3. Inference (BPU Forward)
-    4. Postprocessing (Box Decoding, Mask Proto-mask combination, NMS)
+    This class follows the RDK Model Zoo coding standards for Python samples.
     """
 
     def __init__(self, config: YOLO26SegConfig):
-        """Initialize the YOLO26 segmentation model.
+        """
+        Initialize the model and extract runtime metadata.
 
         Args:
-            config (YOLO26SegConfig): Configuration object.
+            config (YOLO26SegConfig): Configuration object containing model path and params.
         """
+        t0 = time.time()
         self.cfg = config
-        self.conf_raw = -np.log(1 / self.cfg.score_thres - 1)
+        self.model = hbm_runtime.HB_HBMRuntime(self.cfg.model_path)
+        logger.info(f"\033[1;31m[Seg] Load Model time = {1000 * (time.time() - t0):.2f} ms\033[0m")
 
-        # Load Model
-        try:
-            t0 = time.time()
-            self.model = dnn.load(self.cfg.model_path)[0]
-            logger.info(f"\033[1;31mLoad Model time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
-            raise e
+        self.model_name = self.model.model_names[0]
+        self.input_names = self.model.input_names[self.model_name]
+        self.output_names = self.model.output_names[self.model_name]
+        self.input_shapes = self.model.input_shapes[self.model_name]
 
-        # Input Shape
-        shape = self.model.inputs[0].properties.shape
-        if shape[3] == 3:  # NHWC
-            self.m_h, self.m_w = shape[1], shape[2]
-        else:  # NCHW
-            self.m_h, self.m_w = shape[2], shape[3]
-        
-        self.proto_h, self.proto_w = self.m_h // 4, self.m_w // 4
+        input_shape = self.input_shapes[self.input_names[0]]
+        if input_shape[1] == 3:
+            self.input_h = input_shape[2]
+            self.input_w = input_shape[3]
+        else:
+            self.input_h = input_shape[1]
+            self.input_w = input_shape[2]
 
-        # Pre-compute Grids
-        logger.info("Pre-computing Anchor-Free Grids...")
-        self.grids = {}
-        for s in self.cfg.strides:
-            grid_h, grid_w = self.m_h // s, self.m_w // s
-            grid = np.stack(np.indices((grid_h, grid_w))[::-1], axis=-1)
-            self.grids[s] = grid.reshape(-1, 2).astype(np.float32) + 0.5
-        
-        # Init scale params
-        self.scale = 1.0
-        self.orig_h = 0
-        self.orig_w = 0
-
-    def pre_process(self, img: np.ndarray) -> np.ndarray:
-        """Preprocess image for model input.
+    def set_scheduling_params(self,
+                              priority: Optional[int] = None,
+                              bpu_cores: Optional[list] = None) -> None:
+        """
+        Set BPU scheduling parameters like priority and core affinity.
 
         Args:
-            img (np.ndarray): Input BGR image.
-
-        Returns:
-            np.ndarray: Flattened NV12 data ready for inference.
+            priority (Optional[int]): Scheduling priority (0-255).
+            bpu_cores (Optional[list]): BPU core indexes to run inference.
         """
-        t0 = time.time()
-        self.orig_h, self.orig_w = img.shape[:2]
-        self.scale = min(self.m_h / self.orig_h, self.m_w / self.orig_w)
-        nw, nh = int(self.orig_w * self.scale), int(self.orig_h * self.scale)
-        
-        input_tensor = cv2.copyMakeBorder(
-            cv2.resize(img, (nw, nh)), 
-            0, self.m_h - nh, 0, self.m_w - nw, 
-            cv2.BORDER_CONSTANT, value=(114, 114, 114)
-        )
-        
-        yuv = cv2.cvtColor(input_tensor, cv2.COLOR_BGR2YUV_I420).flatten()
-        nv12 = np.empty((self.m_h * self.m_w * 3 // 2,), dtype=np.uint8)
-        y_size = self.m_h * self.m_w
-        nv12[:y_size] = yuv[:y_size]
-        nv12[y_size::2] = yuv[y_size:y_size + y_size // 4]
-        nv12[y_size + 1::2] = yuv[y_size + y_size // 4:]
-        
-        logger.info(f"\033[1;31mPre-process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return nv12
+        kwargs = {}
+        if priority is not None:
+            kwargs["priority"] = {self.model_name: priority}
+        if bpu_cores is not None:
+            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
+        if kwargs:
+            self.model.set_scheduling_params(**kwargs)
 
-    def forward(self, nv12: np.ndarray) -> List[np.ndarray]:
-        """Run forward inference.
+    def pre_process(self, img: np.ndarray,
+                    resize_type: Optional[int] = None,
+                    image_format: Optional[str] = "BGR"
+                    ) -> Dict[str, Dict[str, np.ndarray]]:
+        """
+        Convert a BGR image to packed NV12 input for hbm_runtime.
 
         Args:
-            nv12 (np.ndarray): Preprocessed NV12 data.
+            img (np.ndarray): Input image in BGR format.
+            resize_type (Optional[int]): Override default resize strategy.
+            image_format (Optional[str]): Input image format.
 
         Returns:
-            List[np.ndarray]: Raw model outputs.
+            Dict[str, Dict[str, np.ndarray]]: Prepared input tensors for hbm_runtime.run().
         """
         t0 = time.time()
-        out = self.model.forward(nv12)
-        logger.info(f"\033[1;31mForward time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return out
+        if resize_type is None:
+            resize_type = self.cfg.resize_type
 
-    def post_process(self, outputs) -> List[Dict]:
-        """Process model outputs to generate segmentation results.
+        if image_format == "BGR":
+            resize_img = pre_utils.resized_image(img, self.input_w, self.input_h, resize_type)
+            y, uv = pre_utils.bgr_to_nv12_planes(resize_img)
+        else:
+            raise ValueError(f"Unsupported image_format: {image_format}")
+
+        logger.info(f"\033[1;31m[Seg] Pre-process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
+        
+        packed_nv12 = np.concatenate([y.reshape(-1), uv.reshape(-1)]).astype(np.uint8)
+        return {
+            self.model_name: {
+                self.input_names[0]: packed_nv12
+            }
+        }
+
+    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
+        """
+        Execute inference on BPU using hbm_runtime.
 
         Args:
-            outputs: Raw outputs from the model.
+            input_tensor (Dict[str, Dict[str, np.ndarray]]): Prepared input tensors.
 
         Returns:
-            List[Dict]: List of detection dicts containing:
-                - 'box': Bounding box [x1, y1, x2, y2]
-                - 'score': Confidence score
-                - 'id': Class ID
-                - 'mask': Cropped mask area (float32)
+            Dict[str, np.ndarray]: Raw output tensors from the runtime.
         """
         t0 = time.time()
-        feats = {}
-        protos = None
+        outputs = self.model.run(input_tensor)
+        logger.info(f"\033[1;31m[Seg] Forward time = {1000 * (time.time() - t0):.2f} ms\033[0m")
+        return outputs
+
+    def post_process(self,
+                     outputs: Dict[str, Dict[str, np.ndarray]],
+                     ori_img_w: int,
+                     ori_img_h: int,
+                     score_thres: Optional[float] = None,
+                     nms_thres: Optional[float] = None,
+                     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Convert raw model outputs to final segmentation results.
+
+        Args:
+            outputs (Dict[str, Dict[str, np.ndarray]]): Raw model outputs.
+            ori_img_w (int): Original image width.
+            ori_img_h (int): Original image height.
+            score_thres (Optional[float]): Override confidence threshold.
+            nms_thres (Optional[float]): Override NMS threshold.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                - xyxy: Bounding boxes.
+                - score: Confidence scores.
+                - cls: Class indices.
+                - masks: Binary segmentation masks.
+        """
+        t0 = time.time()
+        score_thres = score_thres or self.cfg.score_thres
+        nms_thres = nms_thres or self.cfg.nms_thres
+        raw_outputs = outputs[self.model_name]
+        decoded = []
+
+        for i, stride in enumerate(self.cfg.strides):
+            base_idx = i * 3
+            cls_feat = raw_outputs[self.output_names[base_idx]]
+            box_feat = raw_outputs[self.output_names[base_idx + 1]]
+            mc_feat = raw_outputs[self.output_names[base_idx + 2]]
+            
+            layer_pred = decode_seg_layer(box_feat, cls_feat, mc_feat, 
+                                          stride, score_thres, self.cfg.classes_num)
+            decoded.append(layer_pred)
+
+        proto_tensor = raw_outputs[self.output_names[9]]
+        if proto_tensor.shape[0] == 1: 
+            proto_tensor = proto_tensor[0]
+        proto_tensor = np.transpose(proto_tensor, (2, 0, 1))
+
+        if not decoded:
+             return np.array([]), np.array([]), np.array([]), np.array([])
         
-        # Parse outputs
-        for out in outputs:
-            h, w, c = out.properties.shape[1], out.properties.shape[2], out.properties.shape[3]
-            if h == self.proto_h and w == self.proto_w and c == 32:
-                protos = out.buffer.reshape(self.proto_h, self.proto_w, 32)
-                continue
-            
-            stride = self.m_h // h
-            if stride not in self.cfg.strides:
-                continue
-            
-            if stride not in feats:
-                feats[stride] = {}
-            
-            if c == 4:
-                feats[stride]['box'] = out.buffer.reshape(-1, 4)
-            elif c == self.cfg.classes_num:
-                feats[stride]['cls'] = out.buffer.reshape(-1, c)
-            else:
-                feats[stride]['mc'] = out.buffer.reshape(-1, c)
+        pred = np.concatenate(decoded, axis=0)
+        if pred.shape[0] == 0:
+             return np.array([]), np.array([]), np.array([]), np.array([])
 
-        if protos is None:
-            logger.warning("Proto head not found!")
-            return []
+        xyxy = pred[:, :4]
+        score = pred[:, 4]
+        cls = pred[:, 5]
+        mask_coefs = pred[:, 6:]
 
-        # Decode
-        dets = []
-        for stride, f in feats.items():
-            if not all(k in f for k in ['box', 'cls', 'mc']):
-                continue
-            
-            max_scores = np.max(f['cls'], axis=1)
-            mask = max_scores >= self.conf_raw
-            if not np.any(mask):
-                continue
-            
-            grid = self.grids[stride][mask]
-            v_box = f['box'][mask]
-            v_score = 1 / (1 + np.exp(-max_scores[mask]))
-            v_id = np.argmax(f['cls'][mask], axis=1)
-            v_mc = f['mc'][mask]
-            
-            xyxy = np.hstack([(grid - v_box[:, :2]), (grid + v_box[:, 2:])]) * stride
-            
-            for b, s, i, m in zip(xyxy, v_score, v_id, v_mc):
-                dets.append({'box': b, 'score': s, 'id': i, 'mc': m})
+        keep = post_utils.NMS(xyxy, score, cls, nms_thres)
 
-        # NMS and Mask Processing
-        final_res = []
-        if dets:
-            boxes = np.array([d['box'] for d in dets])
-            scores = np.array([d['score'] for d in dets])
-            xywh = boxes.copy()
-            xywh[:, 2:] -= xywh[:, :2]
+        if not keep:
+            return np.array([]), np.array([]), np.array([]), np.array([])
             
-            indices = cv2.dnn.NMSBoxes(
-                xywh.tolist(), scores.tolist(), 
-                self.cfg.score_thres, self.cfg.nms_thres
-            )
-            
-            scale_p = self.proto_h / self.m_h
-            
-            if len(indices) > 0:
-                for i in indices.flatten():
-                    d = dets[i]
-                    # Process mask
-                    mask_prob = 1 / (1 + np.exp(-np.dot(protos, d['mc'])))
-                    px1 = int(max(0, d['box'][0] * scale_p))
-                    py1 = int(max(0, d['box'][1] * scale_p))
-                    px2 = int(min(self.proto_w, d['box'][2] * scale_p))
-                    py2 = int(min(self.proto_h, d['box'][3] * scale_p))
-                    
-                    if px2 > px1 and py2 > py1:
-                        mask_crop = mask_prob[py1:py2, px1:px2]
-                    else:
-                        mask_crop = np.zeros((0, 0), np.float32)
+        xyxy = xyxy[keep]
+        score = score[keep]
+        cls = cls[keep]
+        mask_coefs = mask_coefs[keep]
 
-                    final_res.append({
-                        'box': np.clip(d['box'] / self.scale, 0, [self.orig_w, self.orig_h, self.orig_w, self.orig_h]).astype(int),
-                        'score': d['score'],
-                        'id': d['id'],
-                        'mask': mask_crop
-                    })
+        masks = process_mask(proto_tensor, mask_coefs, xyxy, 
+                             (ori_img_h, ori_img_w), upsample=True)
 
-        logger.info(f"\033[1;31mPost Process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return final_res
+        xyxy = post_utils.scale_coords_back(xyxy, ori_img_w, ori_img_h,
+                                            self.input_w, self.input_h, self.cfg.resize_type)
+
+        logger.info(f"\033[1;31m[Seg] Post Process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
+        
+        return xyxy, score, cls.astype(int), masks
+
+    def predict(self,
+                img: np.ndarray,
+                image_format: str = "BGR",
+                resize_type: Optional[int] = None,
+                score_thres: Optional[float] = None,
+                nms_thres: Optional[float] = None,
+                ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Run the complete segmentation pipeline on a single image.
+
+        Args:
+            img (np.ndarray): Input image.
+            image_format (str): Input image format.
+            resize_type (Optional[int]): Resize strategy.
+            score_thres (Optional[float]): Confidence threshold.
+            nms_thres (Optional[float]): NMS threshold.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: Segmentation results.
+        """
+        ori_img_h, ori_img_w = img.shape[:2]
+        inp = self.pre_process(img, resize_type, image_format)
+        out = self.forward(inp)
+        return self.post_process(out, ori_img_w, ori_img_h, score_thres, nms_thres)
+
+    def __call__(self,
+                 img: np.ndarray,
+                 image_format: str = "BGR",
+                 resize_type: Optional[int] = None,
+                 score_thres: Optional[float] = None,
+                 nms_thres: Optional[float] = None,
+                 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Provide functional-style calling capability.
+
+        Args:
+            img (np.ndarray): Input image in BGR format.
+            image_format (str): Input image format.
+            resize_type (Optional[int]): Resize strategy.
+            score_thres (Optional[float]): Confidence threshold.
+            nms_thres (Optional[float]): NMS threshold.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                Segmentation results from `predict()`.
+        """
+        return self.predict(img, image_format, resize_type, score_thres, nms_thres)

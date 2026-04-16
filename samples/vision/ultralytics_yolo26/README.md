@@ -1,61 +1,117 @@
-# YOLO26 Model Sample
-
 English | [简体中文](./README_cn.md)
 
-## Algorithm Overview
-YOLO26 is a versatile and high-performance real-time model series. This sample provides deployment routines for multiple tasks including Detection, Instance Segmentation, Pose Estimation, Oriented Bounding Box (OBB), and Image Classification on D-Robotics RDK hardware.
+# YOLO26 Model Description
 
-For more information, please refer to the official [Ultralytics](https://github.com/ultralytics/ultralytics) resources.
+This directory describes the complete workflow of YOLO26 in this Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluator usage.
+
+---
+
+## Algorithm Overview
+
+YOLO26 is a real-time vision model series from Ultralytics. This sample provides RDK X5 deployment examples for the following tasks:
+
+- Object Detection
+- Instance Segmentation
+- Pose Estimation
+- Oriented Bounding Box Detection
+- Image Classification
+
+- **Official Implementation**: [ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)
+
+### Platform Notes
+
+- Target platform: `RDK X5`
+- Runtime backend: `hbm_runtime`
+- Inference model format: `.bin`
+- Input format: `NV12`
+
+---
 
 ## Directory Structure
+
 ```bash
 .
-├── conversion/     # Model conversion workflow (ONNX -> BIN)
-├── evaluator/      # Accuracy and performance evaluation
-├── model/          # Model files and download scripts
-│   ├── download_model.sh  # Script to download Nano models (Fast)
-│   └── fulldownload.sh    # Script to download ALL models
-├── runtime/        # Inference implementation (Python)
-│   └── python/     # Python inference sample (includes run.sh)
-├── test_data/      # Directory for saving inference results
-└── README.md       # Current model overview documentation
+├── conversion/                     # Model conversion workflow
+├── evaluator/                      # Accuracy and evaluator scripts
+├── model/                          # Model files and download scripts
+│   ├── download_model.sh           # Download nano models
+│   ├── fulldownload.sh             # Download all models
+│   └── README.md                   # Model file description
+├── runtime/                        # Runtime samples
+│   └── python/                     # Python inference sample
+│       ├── main.py                 # Python entry script
+│       ├── yolo26_det.py           # Detection wrapper
+│       ├── yolo26_seg.py           # Segmentation wrapper
+│       ├── yolo26_pose.py          # Pose wrapper
+│       ├── yolo26_obb.py           # OBB wrapper
+│       ├── yolo26_cls.py           # Classification wrapper
+│       ├── run.sh                  # One-click execution script
+│       └── README.md               # Runtime documentation
+├── test_data/                      # Inference results
+└── README.md                       # Current overview document
 ```
 
-## Quick Start
-To experience the YOLO26 model quickly, you can run the provided shell script which handles model downloading and execution automatically.
+---
+
+## QuickStart
+
+For a quick experience, run the one-click script under `runtime/python`.
 
 ### Python
-1. Ensure the requirements are installed on your board.
-2. Run the one-click script:
+
 ```bash
 cd runtime/python
-sh run.sh
+chmod +x run.sh
+./run.sh
 ```
-This will download the `yolo26n` detection model (if missing), run inference on a sample image, and save the result to `test_data/result_detect.jpg`.
 
-For more details (parameters, manual execution), please refer to [runtime/python/README.md](./runtime/python/README.md).
+The script downloads the default `yolo26n` detection model if needed and saves the output image into `test_data/`.
+
+For detailed parameters and task examples, refer to [runtime/python/README.md](./runtime/python/README.md).
+
+---
 
 ## Model Conversion
-We provide pre-converted BPU models. If you need to convert your custom models:
-1. Export your model to ONNX using the scripts previously located in task folders (now migrating to `conversion/`).
-2. Use the toolchain to convert ONNX to `.bin` format.
-Detailed instructions can be found in [conversion/README.md](./conversion/README.md).
 
-## Runtime
-This sample provides a standardized runtime wrapper for multiple tasks:
-- **Python**: Uses `pyeasy_dnn` backend with standardized `Config` and `Model` classes. Each model supports `predict()` and callable interfaces.
-- **C++**: (Coming soon).
+This sample provides pre-converted `.bin` model files for RDK X5.
 
-Detailed runtime documentation:
-- [Python Runtime](./runtime/python/README.md)
+- If you only want to run inference, download models from [model/README.md](./model/README.md) and skip conversion.
+- If you need to understand or customize conversion, refer to [conversion/README.md](./conversion/README.md).
 
-## Inference Results
-After running the sample, the output image will be saved in the `test_data/` directory (e.g., `result_detect.jpg`), showing bounding boxes, masks, or keypoints depending on the selected task.
+---
 
-## Model Evaluation (Evaluator)
-The `evaluator/` directory contains scripts for assessing model accuracy, performance, and numerical consistency. You can run these scripts directly on your RDK board to obtain metrics such as mAP and accuracy on standard datasets (e.g., COCO, ImageNet).
+## Runtime Inference
 
-For detailed instructions, please refer to: [Model Evaluation README](./evaluator/README.md)
+The current sample provides Python runtime implementation.
+
+### Python Version
+
+- Uses `hbm_runtime` as the inference backend
+- Provides a unified `Config + Model` wrapper style for all tasks
+- Supports zero-argument default execution from `main.py`
+
+For detailed usage, refer to [runtime/python/README.md](./runtime/python/README.md).
+
+---
+
+## Evaluator
+
+The `evaluator/` directory is used for task-level accuracy and result export verification. Refer to [evaluator/README.md](./evaluator/README.md) for details.
+
+---
+
+## Validation Status
+
+The current Python sample has been verified on `RDK X5` with the following `.bin` models:
+
+- `detect`: `n / s / m / l / x`
+- `seg`: `n / s / m / l / x`
+- `pose`: `n / s / m / l / x`
+- `obb`: `n / s / m / l / x`
+- `cls`: `n / s / m / l / x`
+
+---
 
 ## License
-This sample follows the [Apache 2.0 License](../../../LICENSE).
+
+Follows the Model Zoo top-level License.

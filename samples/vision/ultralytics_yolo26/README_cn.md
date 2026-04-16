@@ -1,57 +1,117 @@
-# YOLO26 模型说明
-
 [English](./README.md) | 简体中文
 
-## 算法介绍
-YOLO26 是一系列通用且高性能的实时模型。本示例提供了在 D-Robotics RDK 硬件上运行多种任务的部署例程，包括：目标检测 (Detection)、实例分割 (Segmentation)、姿态估计 (Pose)、旋转框检测 (OBB) 以及图像分类 (Classification)。
+# YOLO26 模型说明
 
-更多算法细节请参考 [Ultralytics](https://github.com/ultralytics/ultralytics) 官方资源。
+本目录给出了 YOLO26 在当前 Model Zoo 中的完整使用说明，包括算法概览、模型转换、运行时推理、模型文件管理和评测脚本使用方式。
+
+---
+
+## 算法概览
+
+YOLO26 是 Ultralytics 提供的一套实时视觉模型系列。本示例在 RDK X5 平台上提供了以下任务的部署样例：
+
+- 目标检测
+- 实例分割
+- 姿态估计
+- 旋转框检测
+- 图像分类
+
+- **官方实现**: [ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)
+
+### 平台说明
+
+- 目标平台：`RDK X5`
+- 推理后端：`hbm_runtime`
+- 推理模型格式：`.bin`
+- 输入格式：`NV12`
+
+---
 
 ## 目录结构
+
 ```bash
 .
-├── conversion/     # 模型转换流程说明 (ONNX -> BIN)
-├── evaluator/      # 模型评估相关内容
-├── model/          # 模型文件及下载脚本
-├── runtime/        # 推理示例 (Python / C++)
-│   └── python/     # Python 推理实现
-├── test_data/      # 测试用数据（图片/标签）
-└── README.md       # 当前模型总览说明
+├── conversion/                     # 模型转换流程
+├── evaluator/                      # 精度评测和结果导出脚本
+├── model/                          # 模型文件和下载脚本
+│   ├── download_model.sh           # 下载 nano 模型
+│   ├── fulldownload.sh             # 下载全部模型
+│   └── README.md                   # 模型文件说明
+├── runtime/                        # 运行时样例
+│   └── python/                     # Python 推理样例
+│       ├── main.py                 # Python 入口脚本
+│       ├── yolo26_det.py           # 检测封装
+│       ├── yolo26_seg.py           # 分割封装
+│       ├── yolo26_pose.py          # 姿态封装
+│       ├── yolo26_obb.py           # 旋转框封装
+│       ├── yolo26_cls.py           # 分类封装
+│       ├── run.sh                  # 一键运行脚本
+│       └── README.md               # 运行时说明
+├── test_data/                      # 推理结果目录
+└── README.md                       # 当前总览文档
 ```
 
-## 快速体验
-如果您想快速体验 YOLO26 模型，可以在 RDK 开发板上直接运行推理脚本。
+---
+
+## 快速开始
+
+如果只是想快速体验，可以直接运行 `runtime/python` 下的一键脚本。
 
 ### Python
-1. 确保开发板已安装必要的依赖。
-2. 运行统一的推理入口：
+
 ```bash
 cd runtime/python
-python3 main.py --task detect --model-path ../../model/yolo26n_bpu_bayese_640x640_nv12.bin --test-img ../../test_data/bus.jpg
+chmod +x run.sh
+./run.sh
 ```
-关于参数说明和环境配置的更多细节，请参考 [runtime/python/README.md](./runtime/python/README.md)。
+
+脚本会在模型不存在时自动下载默认的 `yolo26n` 检测模型，并将结果图保存到 `test_data/`。
+
+详细参数和任务示例请参考 [runtime/python/README_cn.md](./runtime/python/README_cn.md)。
+
+---
 
 ## 模型转换
-我们提供了已经转换好的 BPU 模型。如果您需要转换自定义模型：
-1. 使用转换工具将模型导出为 ONNX 格式。
-2. 使用工具链将 ONNX 转换为 `.bin` 格式。
-详细步骤请参考 [conversion/README.md](./conversion/README.md)。
 
-## 模型推理 (Runtime)
-本示例为多种任务提供了标准化的推理封装：
-- **Python**: 基于 `pyeasy_dnn` 后端实现（采用规范的 Config 和 Model 类结构）。
-- **C++**: (即将推出)。
+本示例已经提供了适配 RDK X5 的 `.bin` 模型文件。
 
-详细说明请查阅：
-- [Python 推理说明](./runtime/python/README.md)
+- 如果只关注推理，可以直接使用 [model/README_cn.md](./model/README_cn.md) 中的下载脚本，跳过转换流程。
+- 如果需要了解或自定义模型转换，可参考 [conversion/README_cn.md](./conversion/README_cn.md)。
 
-## 推理结果
-运行示例后，推理结果将保存为图片（例如 `result.jpg`），根据任务不同展示检测框、分割掩码或人体关键点。
+---
 
-## 模型评估 (Evaluator)
-`evaluator/` 目录包含了用于评估模型精度、性能及数值一致性的脚本。您可以直接在开发板上运行这些脚本，以获取模型在标准数据集（如 COCO, ImageNet）上的 mAP 和准确率等指标。
+## 运行时推理
 
-详细评估指南请参考：[模型评估说明](./evaluator/README_cn.md)
+当前示例提供 Python 版本运行时实现。
+
+### Python 版本
+
+- 使用 `hbm_runtime` 作为推理后端
+- 所有任务统一采用 `Config + Model` 的封装方式
+- `main.py` 支持零参数默认运行
+
+详细使用方法请参考 [runtime/python/README_cn.md](./runtime/python/README_cn.md)。
+
+---
+
+## 评测
+
+`evaluator/` 目录用于任务级精度评测和结果导出验证，具体使用方式请参考 [evaluator/README_cn.md](./evaluator/README_cn.md)。
+
+---
+
+## 验证状态
+
+当前 Python 样例已经在 `RDK X5` 板端完成以下 `.bin` 模型验证：
+
+- `detect`: `n / s / m / l / x`
+- `seg`: `n / s / m / l / x`
+- `pose`: `n / s / m / l / x`
+- `obb`: `n / s / m / l / x`
+- `cls`: `n / s / m / l / x`
+
+---
 
 ## License
-本示例遵循 [Apache 2.0 License](../../../LICENSE)。
+
+遵循 Model Zoo 顶层 License。

@@ -12,259 +12,275 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""YOLO26 Pose Estimation Model Implementation.
+"""
+YOLO26 Pose Inference Module.
 
-This module provides the YOLO26Pose class for pose estimation inference.
-It encapsulates model loading, preprocessing, BPU inference, and postprocessing
-(including keypoint decoding and NMS).
+This module implements the YOLO26 pose estimation pipeline on BPU,
+including pre-processing, forward execution, and post-processing.
+
+Key Features:
+    - Optimized for RDK X5 single-input NV12 models.
+    - Supports YOLO26 keypoint decoding on multi-stride feature heads.
+    - Maps boxes and keypoints back to original image coordinates.
+
+Typical Usage:
+    >>> from yolo26_pose import YOLO26PoseConfig, YOLO26Pose
+    >>> config = YOLO26PoseConfig(model_path="path/to/yolo26_pose.bin")
+    >>> model = YOLO26Pose(config)
+    >>> results = model.predict(image)
 """
 
+import os
+import sys
 import time
 import logging
-import cv2
+import hbm_runtime
 import numpy as np
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict, Union
+from typing import Dict, List, Optional
 
-try:
-    from hobot_dnn import pyeasy_dnn as dnn
-except ImportError:
-    from hobot_dnn_rdkx5 import pyeasy_dnn as dnn
+# Add project root to sys.path to import shared utilities.
+sys.path.append(os.path.abspath("../../../../../"))
+import utils.py_utils.preprocess as pre_utils
+import utils.py_utils.postprocess as post_utils
 
 logger = logging.getLogger("YOLO26_Pose")
 
 
 @dataclass
 class YOLO26PoseConfig:
-    """Configuration for YOLO26 Pose Model.
+    """
+    Configuration for YOLO26 pose inference.
 
-    Attributes:
-        model_path (str): Path to the .bin model file.
-        score_thres (float): Confidence threshold for filtering detections.
-        nms_thres (float): IoU threshold for Non-Maximum Suppression.
-        kpt_conf_thres (float): Threshold for keypoint visibility.
-        strides (List[int]): List of strides for the feature maps.
+    Args:
+        model_path (str): Path to the compiled BIN model file.
+        score_thres (float): Confidence threshold.
+        nms_thres (float): IoU threshold for NMS.
+        kpt_conf_thres (float): Keypoint confidence threshold.
+        resize_type (int): Resize strategy (0: direct, 1: letterbox).
+        strides (List[int]): Detection head strides.
     """
     model_path: str
     score_thres: float = 0.25
     nms_thres: float = 0.7
     kpt_conf_thres: float = 0.5
+    resize_type: int = 1
     strides: List[int] = field(default_factory=lambda: [8, 16, 32])
 
 
 class YOLO26Pose:
-    """YOLO26 Pose Estimation Model Wrapper.
+    """
+    YOLO26 pose wrapper based on hbm_runtime.
 
-    This class handles the complete inference pipeline:
-    1. Model Loading
-    2. Preprocessing (Resize, Pad, Color Conversion)
-    3. Inference (BPU Forward)
-    4. Postprocessing (Box/Keypoint Decoding, NMS)
+    This class follows the RDK Model Zoo coding standards for Python samples.
     """
 
     def __init__(self, config: YOLO26PoseConfig):
-        """Initialize the YOLO26 pose estimation model.
+        """
+        Initialize the model, load metadata, and precompute decoding grids.
 
         Args:
-            config (YOLO26PoseConfig): Configuration object.
+            config (YOLO26PoseConfig): Configuration object containing model path and params.
         """
         self.cfg = config
-        self.conf_raw = -np.log(1 / self.cfg.score_thres - 1)
-        
-        # Load Model
-        try:
-            t0 = time.time()
-            self.model = dnn.load(self.cfg.model_path)[0]
-            logger.info(f"\033[1;31mLoad Model time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
-            raise e
-        
-        # Input Shape
-        shape = self.model.inputs[0].properties.shape
-        if shape[3] == 3:
-            self.m_h, self.m_w = shape[1], shape[2]
+        self.conf_raw = -np.log(1.0 / self.cfg.score_thres - 1.0)
+
+        t0 = time.time()
+        self.model = hbm_runtime.HB_HBMRuntime(self.cfg.model_path)
+        logger.info(f"\033[1;31mLoad Model time = {1000 * (time.time() - t0):.2f} ms\033[0m")
+
+        self.model_name = self.model.model_names[0]
+        self.input_names = self.model.input_names[self.model_name]
+        self.output_names = self.model.output_names[self.model_name]
+        self.input_shapes = self.model.input_shapes[self.model_name]
+
+        input_shape = self.input_shapes[self.input_names[0]]
+        if input_shape[1] == 3:
+            self.input_h = input_shape[2]
+            self.input_w = input_shape[3]
         else:
-            self.m_h, self.m_w = shape[2], shape[3]
+            self.input_h = input_shape[1]
+            self.input_w = input_shape[2]
 
-        # Pre-compute Grids
-        logger.info("Pre-computing Anchor-Free Grids...")
         self.grids = {}
-        for s in self.cfg.strides:
-            grid_h, grid_w = self.m_h // s, self.m_w // s
+        for stride in self.cfg.strides:
+            grid_h, grid_w = self.input_h // stride, self.input_w // stride
             grid = np.stack(np.indices((grid_h, grid_w))[::-1], axis=-1)
-            self.grids[s] = grid.reshape(-1, 2).astype(np.float32) + 0.5
+            self.grids[stride] = grid.reshape(-1, 2).astype(np.float32) + 0.5
 
-        # Init scale params
-        self.scale = 1.0
-        self.orig_h = 0
-        self.orig_w = 0
-
-    def pre_process(self, img: np.ndarray) -> np.ndarray:
-        """Preprocess image for model input.
+    def set_scheduling_params(self,
+                              priority: Optional[int] = None,
+                              bpu_cores: Optional[list] = None) -> None:
+        """
+        Set BPU scheduling parameters like priority and core affinity.
 
         Args:
-            img (np.ndarray): Input BGR image.
+            priority (Optional[int]): Scheduling priority in range [0, 255].
+            bpu_cores (Optional[list]): BPU core indexes used for inference.
+        """
+        kwargs = {}
+        if priority is not None:
+            kwargs["priority"] = {self.model_name: priority}
+        if bpu_cores is not None:
+            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
+        if kwargs:
+            self.model.set_scheduling_params(**kwargs)
+
+    def pre_process(self,
+                    img: np.ndarray,
+                    resize_type: Optional[int] = None,
+                    image_format: str = "BGR") -> Dict[str, Dict[str, np.ndarray]]:
+        """
+        Convert a BGR image to packed NV12 input for hbm_runtime.
+
+        Args:
+            img (np.ndarray): Input image in BGR format.
+            resize_type (Optional[int]): Override default resize strategy.
+            image_format (str): Input image format expected by the wrapper.
 
         Returns:
-            np.ndarray: Flattened NV12 data ready for inference.
+            Dict[str, Dict[str, np.ndarray]]: Prepared runtime input tensors.
         """
         t0 = time.time()
-        self.orig_h, self.orig_w = img.shape[:2]
-        self.scale = min(self.m_h / self.orig_h, self.m_w / self.orig_w)
-        nw, nh = int(self.orig_w * self.scale), int(self.orig_h * self.scale)
-        
-        input_tensor = cv2.copyMakeBorder(
-            cv2.resize(img, (nw, nh)), 
-            0, self.m_h - nh, 0, self.m_w - nw, 
-            cv2.BORDER_CONSTANT, value=(114, 114, 114)
-        )
-        
-        yuv = cv2.cvtColor(input_tensor, cv2.COLOR_BGR2YUV_I420).flatten()
-        nv12 = np.empty((self.m_h * self.m_w * 3 // 2,), dtype=np.uint8)
-        y_size = self.m_h * self.m_w
-        nv12[:y_size] = yuv[:y_size]
-        nv12[y_size::2] = yuv[y_size:y_size + y_size // 4]
-        nv12[y_size + 1::2] = yuv[y_size + y_size // 4:]
-        
+        resize_type = self.cfg.resize_type if resize_type is None else resize_type
+
+        if image_format != "BGR":
+            raise ValueError(f"Unsupported image_format: {image_format}")
+
+        resize_img = pre_utils.resized_image(img, self.input_w, self.input_h, resize_type)
+        y, uv = pre_utils.bgr_to_nv12_planes(resize_img)
         logger.info(f"\033[1;31mPre-process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return nv12
 
-    def forward(self, nv12: np.ndarray) -> List[np.ndarray]:
-        """Run forward inference.
+        packed_nv12 = np.concatenate([y.reshape(-1), uv.reshape(-1)]).astype(np.uint8)
+        return {
+            self.model_name: {
+                self.input_names[0]: packed_nv12,
+            }
+        }
+
+    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, Dict[str, np.ndarray]]:
+        """
+        Execute inference on BPU using hbm_runtime.
 
         Args:
-            nv12 (np.ndarray): Preprocessed NV12 data.
+            input_tensor (Dict[str, Dict[str, np.ndarray]]): Prepared input tensors.
 
         Returns:
-            List[np.ndarray]: Raw model outputs.
+            Dict[str, Dict[str, np.ndarray]]: Raw output tensors from the runtime.
         """
         t0 = time.time()
-        out = self.model.forward(nv12)
+        outputs = self.model.run(input_tensor)
         logger.info(f"\033[1;31mForward time = {1000 * (time.time() - t0):.2f} ms\033[0m")
-        return out
+        return outputs
 
-    def post_process(self, outputs) -> List[Dict]:
-        """Process model outputs to generate pose results.
+    def post_process(self,
+                     outputs: Dict[str, Dict[str, np.ndarray]],
+                     ori_img_w: int,
+                     ori_img_h: int) -> List[Dict]:
+        """
+        Convert raw outputs to final pose estimation results.
 
         Args:
-            outputs: Raw outputs from the model.
+            outputs (Dict[str, Dict[str, np.ndarray]]): Raw model outputs.
+            ori_img_w (int): Original image width.
+            ori_img_h (int): Original image height.
 
         Returns:
-            List[Dict]: List of pose dicts containing:
-                - 'box': Bounding box [x1, y1, x2, y2]
-                - 'score': Confidence score
-                - 'kpts': Keypoints array (K, 3) where last dim is (x, y, conf)
+            List[Dict]: Pose results containing the bounding box, score, and
+            decoded keypoints in original image coordinates.
         """
         t0 = time.time()
-        features = {}
-        for out in outputs:
-            h, w, c = out.properties.shape[1], out.properties.shape[2], out.properties.shape[3]
-            stride = self.m_h // h
-            
-            if stride not in self.cfg.strides:
-                continue
-            if stride not in features:
-                features[stride] = {}
-            
-            if c == 4:
-                features[stride]['box'] = out.buffer.reshape(-1, 4)
-            elif c == 51:
-                features[stride]['kpt'] = out.buffer.reshape(-1, 17, 3)
-            else:
-                features[stride]['cls'] = out.buffer.reshape(-1, c)
-
+        raw_outputs = outputs[self.model_name]
         detections = []
-        for stride, feats in features.items():
-            if not all(k in feats for k in ['box', 'cls', 'kpt']):
-                continue
-            
-            box_data, cls_data, kpt_data = feats['box'], feats['cls'], feats['kpt']
-            
-            if cls_data.shape[1] == 1:
-                scores = cls_data[:, 0]
-            else:
-                scores = np.max(cls_data, axis=1)
 
-            mask = scores >= self.conf_raw
-            if not np.any(mask):
+        for i, stride in enumerate(self.cfg.strides):
+            base_idx = i * 3
+            cls_data = raw_outputs[self.output_names[base_idx]].reshape(-1, 1)
+            box_data = raw_outputs[self.output_names[base_idx + 1]].reshape(-1, 4)
+            kpt_data = raw_outputs[self.output_names[base_idx + 2]].reshape(-1, 17, 3)
+
+            valid_scores, _, valid_indices = post_utils.filter_classification(cls_data, self.conf_raw)
+            if valid_indices.size == 0:
                 continue
 
-            v_scores = 1 / (1 + np.exp(-scores[mask]))
-            v_box = box_data[mask]
-            v_kpts = kpt_data[mask]
-            grid = self.grids[stride][mask]
-            
-            xyxy = np.hstack([(grid - v_box[:, :2]), (grid + v_box[:, 2:])]) * stride
-            
-            # Keypoints decoding
-            kpt_xy = (v_kpts[:, :, :2] + grid[:, None, :]) * stride
-            kpt_conf = 1 / (1 + np.exp(-v_kpts[:, :, 2:3]))
+            grid = self.grids[stride][valid_indices]
+            valid_box = box_data[valid_indices]
+            valid_kpts = kpt_data[valid_indices]
+
+            xyxy = post_utils.decode_ltrb_boxes(grid, valid_box, stride)
+
+            kpt_xy = (valid_kpts[:, :, :2] + grid[:, None, :]) * stride
+            kpt_conf = post_utils.sigmoid(valid_kpts[:, :, 2:3])
             decoded_kpts = np.concatenate([kpt_xy, kpt_conf], axis=-1)
 
-            for box, score, kpts in zip(xyxy, v_scores, decoded_kpts):
-                detections.append({'box': box, 'score': score, 'kpts': kpts})
+            for box, score, kpts in zip(xyxy, valid_scores, decoded_kpts):
+                detections.append({"box": box, "score": score, "kpts": kpts})
 
         final_res = []
         if detections:
-            boxes = np.array([d['box'] for d in detections])
-            scores = np.array([d['score'] for d in detections])
-            xywh = boxes.copy()
-            xywh[:, 2:] -= xywh[:, :2]
-            
-            indices = cv2.dnn.NMSBoxes(
-                xywh.tolist(), scores.tolist(), 
-                self.cfg.score_thres, self.cfg.nms_thres
-            )
-            
-            if len(indices) > 0:
-                for i in indices.flatten():
-                    det = detections[i]
-                    x1 = max(0, min(self.orig_w, det['box'][0] / self.scale))
-                    y1 = max(0, min(self.orig_h, det['box'][1] / self.scale))
-                    x2 = max(0, min(self.orig_w, det['box'][2] / self.scale))
-                    y2 = max(0, min(self.orig_h, det['box'][3] / self.scale))
-                    
-                    kpts = det['kpts'].copy()
-                    kpts[:, 0] /= self.scale
-                    kpts[:, 1] /= self.scale
-                    
-                    final_res.append({
-                        'box': np.array([x1, y1, x2, y2], dtype=int),
-                        'score': det['score'],
-                        'kpts': kpts
-                    })
-        
+            boxes = np.array([d["box"] for d in detections], dtype=np.float32)
+            scores = np.array([d["score"] for d in detections], dtype=np.float32)
+            cls = np.zeros(len(boxes), dtype=np.int32)
+            keep = post_utils.NMS(boxes, scores, cls, self.cfg.nms_thres)
+
+            for idx in keep:
+                det = detections[idx]
+                box = post_utils.scale_coords_back(
+                    det["box"][None, :].copy(),
+                    ori_img_w,
+                    ori_img_h,
+                    self.input_w,
+                    self.input_h,
+                    self.cfg.resize_type,
+                )[0]
+
+                kpt_xy, kpt_score = post_utils.scale_keypoints_to_original_image(
+                    det["kpts"][:, :2][None, :, :],
+                    det["kpts"][:, 2:3][None, :, :],
+                    ori_img_w,
+                    ori_img_h,
+                    self.input_w,
+                    self.input_h,
+                    self.cfg.resize_type,
+                )
+                kpts = np.concatenate([kpt_xy[0], kpt_score[0]], axis=-1)
+                final_res.append({
+                    "box": box.astype(int),
+                    "score": float(det["score"]),
+                    "kpts": kpts,
+                })
+
         logger.info(f"\033[1;31mPost Process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
         return final_res
 
     def predict(self, img: np.ndarray) -> List[Dict]:
-        """End-to-end prediction pipeline.
+        """
+        Run the complete pose inference pipeline on a single image.
+
+        This method orchestrates the full workflow:
+        - Pre-process the input image.
+        - Execute BPU inference.
+        - Decode boxes and keypoints on the original image scale.
 
         Args:
-            img (np.ndarray): Input BGR image.
+            img (np.ndarray): Input image in BGR format.
 
         Returns:
-            List[Dict]: List of pose dicts containing:
-                - 'box': Bounding box [x1, y1, x2, y2]
-                - 'score': Confidence score
-                - 'kpts': Keypoints array (K, 3) where last dim is (x, y, conf)
+            List[Dict]: Pose estimation results from `post_process()`.
         """
-        nv12 = self.pre_process(img)
-        outputs = self.forward(nv12)
-        results = self.post_process(outputs)
-        return results
+        ori_img_h, ori_img_w = img.shape[:2]
+        input_tensor = self.pre_process(img)
+        outputs = self.forward(input_tensor)
+        return self.post_process(outputs, ori_img_w, ori_img_h)
 
     def __call__(self, img: np.ndarray) -> List[Dict]:
-        """Callable interface for prediction.
+        """
+        Provide functional-style calling capability.
 
         Args:
-            img (np.ndarray): Input BGR image.
+            img (np.ndarray): Input image in BGR format.
 
         Returns:
-            List[Dict]: List of pose dicts containing:
-                - 'box': Bounding box [x1, y1, x2, y2]
-                - 'score': Confidence score
-                - 'kpts': Keypoints array (K, 3) where last dim is (x, y, conf)
+            List[Dict]: Pose estimation results from `predict()`.
         """
         return self.predict(img)
