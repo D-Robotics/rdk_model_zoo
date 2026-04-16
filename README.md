@@ -49,27 +49,33 @@ The repository includes BPU-ready models across multiple AI domains and provides
 
 ## Directory Structure
 
-This repository adopts a clear, layered, and task-oriented directory structure for quick navigation.
+This repository keeps **fully standardized delivery samples** under `samples/` and preserves **legacy or in-progress examples** under `demos/`.
 
 <details>
-<summary><b>📂 Click to expand project directory architecture</b></summary>
+<summary><b>Click to expand project directory architecture</b></summary>
 
 <br>
 
 ```bash
 rdk_model_zoo/
-├── demos/                 # 🚀 Core Model Examples (Categorized by task)
-│   ├── classification/    # Classification (MobileNet, ResNet, ConvNeXt...)
-│   ├── detect/            # Detection (YOLOv5~v12, FCOS...)
-│   ├── Seg/               # Segmentation (YOLO-Seg...)
-│   ├── Pose/              # Pose Estimation
-│   ├── OCR/               # Optical Character Recognition (PaddleOCR)
-│   ├── llm/               # Large Language/Multi-modal Models (CLIP, YOLO-World)
-│   └── tools/             # Batch testing and evaluation tools
-├── docs/                  # 📖 Project guidelines and reference documentation
-├── datasets/              # 🗂️ Sample datasets and download scripts
-├── utils/                 # 🛠️ Universal C++/Python utility library (Pre/post-processing, viz, etc.)
-└── resource/              # 🖼️ Static resources (Test images, Logo, etc.)
+??? samples/               # Standardized delivery samples
+?   ??? vision/
+?       ??? convnext/
+?       ??? PaddleOCR/
+?       ??? ultralytics_yolo/
+?       ??? ultralytics_yolo26/
+?       ??? yolov5/
+??? demos/                 # Legacy or in-progress examples not yet normalized
+?   ??? classification/    # Classification model collection (20+ models)
+?   ??? detect/            # FCOS, LPRNet and other detection demos
+?   ??? Seg/               # Segmentation demos pending standardization
+?   ??? Vision/            # Vision-specific demos such as MODNet
+?   ??? llm/               # LLM / multi-modal demos
+?   ??? solutions/         # End-to-end solution demos
+??? docs/                  # Project guidelines and reference documentation
+??? datasets/              # Sample datasets and download scripts
+??? utils/                 # Shared C++ / Python utilities
+??? resource/              # Static resources (images, logos, etc.)
 ```
 </details>
 
@@ -77,24 +83,26 @@ rdk_model_zoo/
 
 ## Quick Start
 
-Models in this repository are categorized by task and summarized in the **Model Zoo Matrix** below. Follow these steps to quickly run a model:
+Use `samples/` for standardized delivery examples. Use `demos/` only when the target model has not yet been migrated to the standard sample layout.
 
-1. **Find Model**: Locate your desired model in the matrix below.
-2. **Connect Hardware**: Ensure your RDK board is powered and network-connected. SSH or VSCode Remote SSH is recommended.
-3. **Install Dependencies**: Run the following command on the RDK board terminal (pre-installed on RDK OS >= 3.5.0): `pip install hbm_runtime`
-4. **Run Example**: Navigate to the model directory, **carefully read the `README.md` there**, and follow the instructions.
+1. **Choose the right path**:
+   - Standardized samples: `samples/vision/...`
+   - Legacy / in-progress demos: `demos/...`
+2. **Connect hardware**: Ensure your RDK board is powered and network-connected. SSH or VSCode Remote SSH is recommended.
+3. **Install dependencies**: Run `pip install hbm_runtime` on the RDK board terminal if the runtime is not already present.
+4. **Read the model README first**: Always open the target directory `README.md` before running commands.
 
-> **Example: YOLO11 Object Detection**
+> **Example: standardized YOLOv5 sample**
 > ```bash
 > # 1. Clone repository
 > git clone https://github.com/D-Robotics/rdk_model_zoo.git
 > cd rdk_model_zoo
-> 
-> # 2. Enter model directory and read its README
-> cd demos/detect/YOLO11/YOLO11-Detect_YUV420SP
-> 
-> # 3. Run inference (Model will be downloaded automatically)
-> python3 YOLO11_Detect_YUV420SP.py --model-path ./model/yolo11n_det_640x640_nv12.bin --test-img ./data/bus.jpg
+>
+> # 2. Enter the standardized sample directory
+> cd samples/vision/yolov5/runtime/python
+>
+> # 3. Run inference (the script will download the default model automatically)
+> bash run.sh
 > ```
 
 **Inference Result:**
@@ -106,19 +114,29 @@ Models in this repository are categorized by task and summarized in the **Model 
 
 ## Model Zoo Matrix
 
-Categorized by **Task Type**. Click the `Code` link to view the detailed README and examples for each model.
+### Standardized Samples
 
-| Task Type | Representative Models | Demo Code |
+These directories have been migrated to the standard sample layout and are the recommended entry points.
+
+| Category | Models | Path |
 | :--- | :--- | :---: |
-| **Classification** | MobileNet (V1-V4), EfficientNet, ConvNeXt, ResNet, FastViT (20+ models) | [Code](./demos/classification) |
-| **Object Detection** | YOLOv5, YOLOv8, YOLOv10, YOLO11, YOLO12, FCOS, LPRNet | [Code](./demos/detect) |
-| **Segmentation** | YOLOv8-Seg, YOLO11-Seg, YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
-| **Pose Estimation** | YOLO11-Pose | [Code](./demos/Pose) |
-| **Large Models** | CLIP, YOLO-World | [Code](./demos/llm) |
-| **OCR** | PaddleOCR | [Code](./demos/OCR) |
-| **Vision Specifics** | MODNet (Portrait Matting) | [Code](./demos/Vision) |
+| **Classification** | ConvNeXt | [Code](./samples/vision/convnext) |
+| **Object Detection** | YOLOv5 | [Code](./samples/vision/yolov5) |
+| **Ultralytics YOLO** | YOLOv5u, YOLOv8, YOLOv9, YOLOv10, YOLO11, YOLO12, YOLO13, YOLO26 | [Code](./samples/vision/ultralytics_yolo), [YOLO26](./samples/vision/ultralytics_yolo26) |
+| **OCR** | PaddleOCR | [Code](./samples/vision/PaddleOCR) |
 
-*(Continuously updating... PRs for new models are welcome!)*
+### Legacy / In-Progress Demos
+
+These directories have been moved back to `demos/` because they have not yet been fully refactored to the standard sample layout.
+
+| Category | Representative Models | Path |
+| :--- | :--- | :---: |
+| **Classification** | MobileNet (V1-V4), EfficientNet, ResNet, RepViT, FastViT and other classification models | [Code](./demos/classification) |
+| **Object Detection** | FCOS, LPRNet | [Code](./demos/detect) |
+| **Segmentation** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
+| **Vision Specifics** | MODNet | [Code](./demos/Vision) |
+| **Large Models** | CLIP, YOLO-World | [Code](./demos/llm) |
+| **Solutions** | RDK LLM Solutions, RDK Video Solutions | [Code](./demos/solutions) |
 
 ---
 
