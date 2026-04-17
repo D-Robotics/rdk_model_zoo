@@ -108,7 +108,9 @@ rdk_model_zoo/
 > **示例 B：查看旧版 / 待重构 Demo（`demos/`）**
 > ```bash
 > # 进入旧版 demo 目录
-> cd demos/detect/LPRNet
+> cd demos/detect
+>
+> # ??????? demo??? README ????
 >
 > # 阅读该 demo 的 README 并按说明运行
 > ```

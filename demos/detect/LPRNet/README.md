@@ -3,6 +3,10 @@ English| [简体中文](./README_cn.md)
 Yolo World
 =======
 
+> Legacy notice:
+> This directory is kept as a legacy reference only.
+> The standardized RDK X5 sample has been migrated to [samples/vision/lprnet](../../../samples/vision/lprnet).
+
 # 1. Model introduction
 
 LPRNet is a lightweight end-to-end license plate recognition model proposed by Intel. It can directly output character sequences from input license plate images without the need for traditional character segmentation. The network adopts a fully convolutional design and leverages CTC loss for sequence prediction, which reduces parameter size while improving computational efficiency, making it suitable for real-time deployment on embedded or low-power devices. Moreover, LPRNet demonstrates strong robustness against challenges such as varying illumination, angles, and blurriness, and is widely applied in intelligent transportation, parking management, and urban vehicle monitoring.

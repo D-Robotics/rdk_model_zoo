@@ -62,13 +62,14 @@ rdk_model_zoo/
 ?   ??? vision/
 ?       ??? convnext/
 ?       ??? fcos/
+?       ??? lprnet/
 ?       ??? PaddleOCR/
 ?       ??? ultralytics_yolo/
 ?       ??? ultralytics_yolo26/
 ?       ??? yolov5/
 ??? demos/                 # Legacy or in-progress examples not yet normalized
 ?   ??? classification/    # Classification model collection (20+ models)
-?   ??? detect/            # LPRNet and other detection demos
+?   ??? detect/            # Other detection demos not yet standardized
 ?   ??? Seg/               # Segmentation demos pending standardization
 ?   ??? Vision/            # Vision-specific demos such as MODNet
 ?   ??? llm/               # LLM / multi-modal demos
@@ -105,7 +106,9 @@ Use `samples/` for standardized delivery examples. Use `demos/` only when the ta
 > **Example B: legacy / in-progress demo (`demos/`)**
 > ```bash
 > # Enter a legacy demo directory
-> cd demos/detect/LPRNet
+> cd demos/detect
+>
+> # Select a legacy demo and follow its README
 >
 > # Read the demo README and follow its run instructions
 > ```
@@ -127,6 +130,7 @@ These directories have been migrated to the standard sample layout and are the r
 | :--- | :--- | :---: |
 | **Classification** | ConvNeXt | [Code](./samples/vision/convnext) |
 | **Object Detection** | FCOS | [Code](./samples/vision/fcos) |
+| **Recognition** | LPRNet | [Code](./samples/vision/lprnet) |
 | **Object Detection** | YOLOv5 | [Code](./samples/vision/yolov5) |
 | **Ultralytics YOLO** | YOLOv5u, YOLOv8, YOLOv9, YOLOv10, YOLO11, YOLO12, YOLO13, YOLO26 | [Code](./samples/vision/ultralytics_yolo), [YOLO26](./samples/vision/ultralytics_yolo26) |
 | **OCR** | PaddleOCR | [Code](./samples/vision/PaddleOCR) |
@@ -138,7 +142,7 @@ These directories have been moved back to `demos/` because they have not yet bee
 | Category | Representative Models | Path |
 | :--- | :--- | :---: |
 | **Classification** | MobileNet (V1-V4), EfficientNet, ResNet, RepViT, FastViT and other classification models | [Code](./demos/classification) |
-| **Object Detection** | LPRNet | [Code](./demos/detect) |
+| **Object Detection** | Other legacy detection demos | [Code](./demos/detect) |
 | **Segmentation** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
 | **Vision Specifics** | MODNet | [Code](./demos/Vision) |
 | **Large Models** | CLIP, YOLO-World | [Code](./demos/llm) |
