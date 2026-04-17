@@ -120,18 +120,27 @@ def dequantize_tensor(q_tensor: np.ndarray, quant_info: QuantParams) -> np.ndarr
     Returns:
         A float32 NumPy array containing the dequantized tensor values.
     """
-    if quant_info.quant_type != 1:  # 1 indicates linear scale quantization
+    quant_type = quant_info.quant_type
+    quant_type_name = getattr(quant_type, "name", str(quant_type))
+    if quant_type_name not in ("SCALE", "1"):
         return q_tensor
+
+    zero_point = quant_info.zero_point.astype(np.float32)
+    if zero_point.size == 0:
+        zero_point = np.zeros((1,), dtype=np.float32)
 
     if quant_info.scale.ndim == 0 or q_tensor.ndim == 1 or quant_info.scale.size == 1:
         # Per-tensor dequantization
-        return (q_tensor.astype(np.float32) - quant_info.zero_point.astype(np.float32)) * quant_info.scale
+        return (q_tensor.astype(np.float32) - zero_point.reshape(-1)[0]) * quant_info.scale
     else:
         # Per-channel dequantization
         shape = [1] * q_tensor.ndim
         shape[quant_info.axis] = -1
         scale = quant_info.scale.reshape(shape)
-        zero_point = quant_info.zero_point.reshape(shape)
+        if zero_point.size == 1:
+            zero_point = np.zeros_like(scale, dtype=np.float32)
+        else:
+            zero_point = zero_point.reshape(shape)
         return (q_tensor.astype(np.float32) - zero_point.astype(np.float32)) * scale
 
 
