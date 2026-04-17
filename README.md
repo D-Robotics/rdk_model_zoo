@@ -64,6 +64,7 @@ rdk_model_zoo/
 ?       ??? fcos/
 ?       ??? lprnet/
 ?       ??? PaddleOCR/
+?       ??? resnet/
 ?       ??? ultralytics_yolo/
 ?       ??? ultralytics_yolo26/
 ?       ??? yolov5/
@@ -129,6 +130,7 @@ These directories have been migrated to the standard sample layout and are the r
 | Category | Models | Path |
 | :--- | :--- | :---: |
 | **Classification** | ConvNeXt | [Code](./samples/vision/convnext) |
+| **Classification** | ResNet | [Code](./samples/vision/resnet) |
 | **Object Detection** | FCOS | [Code](./samples/vision/fcos) |
 | **Recognition** | LPRNet | [Code](./samples/vision/lprnet) |
 | **Object Detection** | YOLOv5 | [Code](./samples/vision/yolov5) |
@@ -141,7 +143,7 @@ These directories have been moved back to `demos/` because they have not yet bee
 
 | Category | Representative Models | Path |
 | :--- | :--- | :---: |
-| **Classification** | MobileNet (V1-V4), EfficientNet, ResNet, RepViT, FastViT and other classification models | [Code](./demos/classification) |
+| **Classification** | MobileNet (V1-V4), EfficientNet, RepViT, FastViT and other classification models | [Code](./demos/classification) |
 | **Object Detection** | Other legacy detection demos | [Code](./demos/detect) |
 | **Segmentation** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
 | **Vision Specifics** | MODNet | [Code](./demos/Vision) |

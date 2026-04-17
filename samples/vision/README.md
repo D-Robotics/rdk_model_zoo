@@ -5,6 +5,7 @@
 - convnext
 - fcos
 - lprnet
+- resnet
 - ultralytics_yolo
 - ultralytics_yolo26
 - yolov5

@@ -41,6 +41,8 @@ Notes:
 
 
 import os
+import ast
+import json
 import cv2
 import numpy as np
 
@@ -147,12 +149,20 @@ def load_imagenet_labels(path: str) -> dict:
     try:
         with open(path, 'r', encoding='utf-8') as f:
             content = f.read().strip()
-            # Check if content looks like a dictionary
-            if content.startswith('{'):
-                return eval(content)
-            else:
-                # Fallback: assume one label per line
-                return {i: line.strip() for i, line in enumerate(content.split('\n'))}
+
+            if content.startswith('{') or content.startswith('['):
+                try:
+                    parsed = json.loads(content)
+                except Exception:
+                    parsed = ast.literal_eval(content)
+
+                if isinstance(parsed, dict):
+                    return {int(k): v for k, v in parsed.items()}
+                if isinstance(parsed, list):
+                    return {i: str(label) for i, label in enumerate(parsed)}
+
+            # Fallback: assume one label per line
+            return {i: line.strip() for i, line in enumerate(content.split('\n')) if line.strip()}
     except Exception as e:
         print(f"Warning: Failed to load ImageNet labels from {path}: {e}")
         return {}
