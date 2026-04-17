@@ -61,13 +61,14 @@ rdk_model_zoo/
 ├── samples/               # 已完成标准化重构的交付样例
 │   └── vision/
 │       ├── convnext/
+│       ├── fcos/
 │       ├── PaddleOCR/
 │       ├── ultralytics_yolo/
 │       ├── ultralytics_yolo26/
 │       └── yolov5/
 ├── demos/                 # 尚未完成标准化重构的旧版或过渡内容
 │   ├── classification/    # 分类模型集合（20+ 模型）
-│   ├── detect/            # FCOS、LPRNet 等检测类 demo
+│   ├── detect/            # LPRNet 等检测类 demo
 │   ├── Seg/               # 分割类旧版 demo
 │   ├── Vision/            # MODNet 等视觉类 demo
 │   ├── llm/               # LLM / 多模态 demo
@@ -88,24 +89,28 @@ rdk_model_zoo/
 1. **选择正确目录**
    - 标准化样例：`samples/vision/...`
    - 旧版 / 待重构内容：`demos/...`
-2. **连接硬件**
+2. **检查系统版本**
+   - 确保目标板卡系统版本满足 `RDK OS >= 3.5.0`。
+3. **连接硬件**
    - 确保 RDK 板卡上电并可通过 SSH 或 VSCode Remote SSH 访问。
-3. **安装运行依赖**
-   - 若板端未预装运行时，可执行 `pip install hbm_runtime`。
 4. **先阅读对应 README**
    - 进入目标目录后先阅读 `README.md` / `README_cn.md`，再执行命令。
 
-> **示例：运行标准化 YOLOv5 Sample**
+> **示例 A：运行标准化 Sample（`samples/`）**
 > ```bash
-> # 1. 克隆仓库
-> git clone https://github.com/D-Robotics/rdk_model_zoo.git
-> cd rdk_model_zoo
->
-> # 2. 进入标准化 Sample 目录
+> # 进入标准化 Sample 目录
 > cd samples/vision/yolov5/runtime/python
 >
-> # 3. 运行推理（脚本会自动下载默认模型）
+> # 运行推理（脚本会自动下载默认模型）
 > bash run.sh
+> ```
+
+> **示例 B：查看旧版 / 待重构 Demo（`demos/`）**
+> ```bash
+> # 进入旧版 demo 目录
+> cd demos/detect/LPRNet
+>
+> # 阅读该 demo 的 README 并按说明运行
 > ```
 
 **推理结果示例：**
@@ -124,6 +129,7 @@ rdk_model_zoo/
 | 类别 | 模型 | 路径 |
 | :--- | :--- | :---: |
 | **分类** | ConvNeXt | [Code](./samples/vision/convnext) |
+| **检测** | FCOS | [Code](./samples/vision/fcos) |
 | **检测** | YOLOv5 | [Code](./samples/vision/yolov5) |
 | **Ultralytics YOLO** | YOLOv5u、YOLOv8、YOLOv9、YOLOv10、YOLO11、YOLO12、YOLO13、YOLO26 | [Code](./samples/vision/ultralytics_yolo)、[YOLO26](./samples/vision/ultralytics_yolo26) |
 | **OCR** | PaddleOCR | [Code](./samples/vision/PaddleOCR) |
@@ -135,7 +141,7 @@ rdk_model_zoo/
 | 类别 | 代表模型 | 路径 |
 | :--- | :--- | :---: |
 | **分类** | MobileNet（V1-V4）、EfficientNet、ResNet、RepViT、FastViT 等分类模型 | [Code](./demos/classification) |
-| **检测** | FCOS、LPRNet | [Code](./demos/detect) |
+| **检测** | LPRNet | [Code](./demos/detect) |
 | **分割** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
 | **视觉特化** | MODNet | [Code](./demos/Vision) |
 | **大模型 / 多模态** | CLIP、YOLO-World | [Code](./demos/llm) |
