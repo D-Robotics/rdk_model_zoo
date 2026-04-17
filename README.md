@@ -88,21 +88,25 @@ Use `samples/` for standardized delivery examples. Use `demos/` only when the ta
 1. **Choose the right path**:
    - Standardized samples: `samples/vision/...`
    - Legacy / in-progress demos: `demos/...`
-2. **Connect hardware**: Ensure your RDK board is powered and network-connected. SSH or VSCode Remote SSH is recommended.
-3. **Install dependencies**: Run `pip install hbm_runtime` on the RDK board terminal if the runtime is not already present.
+2. **Check system version**: Ensure the target board is running `RDK OS >= 3.5.0`.
+3. **Connect hardware**: Ensure your RDK board is powered and network-connected. SSH or VSCode Remote SSH is recommended.
 4. **Read the model README first**: Always open the target directory `README.md` before running commands.
 
-> **Example: standardized YOLOv5 sample**
+> **Example A: standardized sample (`samples/`)**
 > ```bash
-> # 1. Clone repository
-> git clone https://github.com/D-Robotics/rdk_model_zoo.git
-> cd rdk_model_zoo
->
-> # 2. Enter the standardized sample directory
+> # Enter the standardized sample directory
 > cd samples/vision/yolov5/runtime/python
 >
-> # 3. Run inference (the script will download the default model automatically)
+> # Run inference (the script will download the default model automatically)
 > bash run.sh
+> ```
+
+> **Example B: legacy / in-progress demo (`demos/`)**
+> ```bash
+> # Enter a legacy demo directory
+> cd demos/detect/FCOS
+>
+> # Read the demo README and follow its run instructions
 > ```
 
 **Inference Result:**

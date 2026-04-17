@@ -88,24 +88,28 @@ rdk_model_zoo/
 1. **选择正确目录**
    - 标准化样例：`samples/vision/...`
    - 旧版 / 待重构内容：`demos/...`
-2. **连接硬件**
+2. **检查系统版本**
+   - 确保目标板卡系统版本满足 `RDK OS >= 3.5.0`。
+3. **连接硬件**
    - 确保 RDK 板卡上电并可通过 SSH 或 VSCode Remote SSH 访问。
-3. **安装运行依赖**
-   - 若板端未预装运行时，可执行 `pip install hbm_runtime`。
 4. **先阅读对应 README**
    - 进入目标目录后先阅读 `README.md` / `README_cn.md`，再执行命令。
 
-> **示例：运行标准化 YOLOv5 Sample**
+> **示例 A：运行标准化 Sample（`samples/`）**
 > ```bash
-> # 1. 克隆仓库
-> git clone https://github.com/D-Robotics/rdk_model_zoo.git
-> cd rdk_model_zoo
->
-> # 2. 进入标准化 Sample 目录
+> # 进入标准化 Sample 目录
 > cd samples/vision/yolov5/runtime/python
 >
-> # 3. 运行推理（脚本会自动下载默认模型）
+> # 运行推理（脚本会自动下载默认模型）
 > bash run.sh
+> ```
+
+> **示例 B：查看旧版 / 待重构 Demo（`demos/`）**
+> ```bash
+> # 进入旧版 demo 目录
+> cd demos/detect/FCOS
+>
+> # 阅读该 demo 的 README 并按说明运行
 > ```
 
 **推理结果示例：**
