@@ -62,7 +62,14 @@ rdk_model_zoo/
 │   └── vision/
 │       ├── convnext/
 │       ├── fcos/
+│       ├── lprnet/
+│       ├── mobilenetv1/
+│       ├── mobilenetv2/
+│       ├── mobilenetv3/
+│       ├── mobilenetv4/
+│       ├── googlenet/
 │       ├── PaddleOCR/
+│       ├── resnet/
 │       ├── ultralytics_yolo/
 │       ├── ultralytics_yolo26/
 │       └── yolov5/
@@ -108,7 +115,7 @@ rdk_model_zoo/
 > **示例 B：查看旧版 / 待重构 Demo（`demos/`）**
 > ```bash
 > # 进入旧版 demo 目录
-> cd demos/detect/LPRNet
+> cd demos/detect
 >
 > # 阅读该 demo 的 README 并按说明运行
 > ```
@@ -129,7 +136,14 @@ rdk_model_zoo/
 | 类别 | 模型 | 路径 |
 | :--- | :--- | :---: |
 | **分类** | ConvNeXt | [Code](./samples/vision/convnext) |
+| **分类** | MobileNetV1 | [Code](./samples/vision/mobilenetv1) |
+| **分类** | MobileNetV2 | [Code](./samples/vision/mobilenetv2) |
+| **分类** | MobileNetV3 | [Code](./samples/vision/mobilenetv3) |
+| **分类** | MobileNetV4 | [Code](./samples/vision/mobilenetv4) |
+| **分类** | GoogLeNet | [Code](./samples/vision/googlenet) |
+| **分类** | ResNet | [Code](./samples/vision/resnet) |
 | **检测** | FCOS | [Code](./samples/vision/fcos) |
+| **识别** | LPRNet | [Code](./samples/vision/lprnet) |
 | **检测** | YOLOv5 | [Code](./samples/vision/yolov5) |
 | **Ultralytics YOLO** | YOLOv5u、YOLOv8、YOLOv9、YOLOv10、YOLO11、YOLO12、YOLO13、YOLO26 | [Code](./samples/vision/ultralytics_yolo)、[YOLO26](./samples/vision/ultralytics_yolo26) |
 | **OCR** | PaddleOCR | [Code](./samples/vision/PaddleOCR) |
@@ -140,8 +154,8 @@ rdk_model_zoo/
 
 | 类别 | 代表模型 | 路径 |
 | :--- | :--- | :---: |
-| **分类** | MobileNet（V1-V4）、EfficientNet、ResNet、RepViT、FastViT 等分类模型 | [Code](./demos/classification) |
-| **检测** | LPRNet | [Code](./demos/detect) |
+| **分类** | EfficientNet、RepViT、FastViT 等分类模型 | [Code](./demos/classification) |
+| **检测** | 其他旧版检测 demo | [Code](./demos/detect) |
 | **分割** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
 | **视觉特化** | MODNet | [Code](./demos/Vision) |
 | **大模型 / 多模态** | CLIP、YOLO-World | [Code](./demos/llm) |

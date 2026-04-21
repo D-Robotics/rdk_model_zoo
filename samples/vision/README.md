@@ -1,9 +1,19 @@
-后续将逐步把符合交付标准的视觉 sample 收口到本目录。
+# Vision Samples
 
-当前已完成：
+This directory contains vision samples that have been migrated to the standard sample layout.
 
-- convnext
-- fcos
-- ultralytics_yolo
-- ultralytics_yolo26
-- yolov5
+Current samples:
+
+- [convnext](./convnext)
+- [fcos](./fcos)
+- [lprnet](./lprnet)
+- [mobilenetv1](./mobilenetv1)
+- [mobilenetv2](./mobilenetv2)
+- [mobilenetv3](./mobilenetv3)
+- [mobilenetv4](./mobilenetv4)
+- [googlenet](./googlenet)
+- [PaddleOCR](./PaddleOCR)
+- [resnet](./resnet)
+- [ultralytics_yolo](./ultralytics_yolo)
+- [ultralytics_yolo26](./ultralytics_yolo26)
+- [yolov5](./yolov5)

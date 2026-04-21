@@ -2,9 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # Ultralytics YOLO Model Description
 
-This directory describes the Ultralytics YOLO sample in the Model Zoo,
-including algorithm overview, model conversion, runtime inference, model file
-management, and evaluator usage.
+This directory provides the complete usage guide for the Ultralytics YOLO sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
 ---
 

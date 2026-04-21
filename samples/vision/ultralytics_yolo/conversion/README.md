@@ -26,6 +26,8 @@ docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
 docker run -it --rm -v /path/to/rdk_model_zoo:/data openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
+Or download the offline Docker image from the [D-Robotics Developer Community](https://forum.d-robotics.cc/t/topic/28035).
+
 ## Conversion Workflow
 
 ### 1. Export ONNX
