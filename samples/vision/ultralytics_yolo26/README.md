@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # YOLO26 Model Description
 
-This directory describes the complete workflow of YOLO26 in this Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluator usage.
+This directory provides the complete usage guide for the YOLO26 sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
 ---
 

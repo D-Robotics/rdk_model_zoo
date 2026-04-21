@@ -25,6 +25,8 @@ docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
 docker run -it --rm -v /path/to/rdk_model_zoo:/data openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
+或者前往地瓜开发者社区获取离线版本的 Docker 镜像: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)
+
 ## 转换流程
 
 ### 1. 导出 ONNX

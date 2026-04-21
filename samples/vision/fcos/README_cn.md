@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # FCOS 模型说明
 
-本目录描述 FCOS 在本仓库中的标准化工作流，包括模型介绍、转换说明、运行推理和 benchmark 信息，面向 RDK X5 平台。
+本目录给出 FCOS sample 在 Model Zoo 中的完整使用说明，包括算法概览、模型转换、运行时推理、模型文件管理和评测说明。
 
 ## 算法概述
 

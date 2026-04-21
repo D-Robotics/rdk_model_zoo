@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # ResNet Model Description
 
-This directory describes the standardized ResNet sample on `RDK X5`, including model conversion references, Python runtime inference, evaluation information, and reusable test assets.
+This directory provides the complete usage guide for the ResNet sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
 ## Algorithm Overview
 

@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # FCOS Model Description
 
-This directory describes the standardized FCOS workflow in this Model Zoo, including model overview, conversion notes, runtime inference, and benchmark information for RDK X5.
+This directory provides the complete usage guide for the FCOS sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
 ## Algorithm Overview
 
@@ -41,7 +41,7 @@ Model Zoo provides prebuilt `.bin` models for direct use. If you need to underst
 
 This sample currently provides a Python runtime implementation on RDK X5.
 
-- standardized entry: [runtime/python/main.py](./runtime/python/main.py)
+- runtime entry: [runtime/python/main.py](./runtime/python/main.py)
 - runtime guide: [runtime/python/README.md](./runtime/python/README.md)
 
 ## Evaluator

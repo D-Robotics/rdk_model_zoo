@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # YOLOv5 Model Description
 
-This directory describes the complete workflow of YOLOv5 in this Model Zoo, including: algorithm introduction, model conversion, runtime inference (Python), reusable pre/post-processing interfaces, and model evaluation steps.
+This directory provides the complete usage guide for the YOLOv5 sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
 ---
 

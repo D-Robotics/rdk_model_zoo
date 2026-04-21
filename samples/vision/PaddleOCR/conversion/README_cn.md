@@ -1,240 +1,98 @@
-[English](./README.md) | [简体中文](./README_cn.md)
+[English](./README.md) | 简体中文
 
 # 模型转换
 
-本文档介绍如何将训练模型转换为 D-Robotics BPU 可运行的 BIN 模型文件。
-
----
+本目录给出 PaddleOCR sample 的模型转换说明，包括 PTQ 配置文件、OpenExplorer 编译环境要求、模型编译命令和结果验证步骤。
 
 ## 目录结构
 
+```text
+conversion/
+|-- README.md
+|-- README_cn.md
+`-- ptq_yamls/
+    |-- paddleocr_det_config.yaml
+    `-- paddleocr_rec_config.yaml
 ```
-
-```conversion/
-├── README.md              # 英文
-├── README_cn.md           # 中文（本文件）
-└── ptq_yamls/             # PTQ 配置文件
-    ├── paddleocr_det_config.yaml  # 检测模型配置文件
-    └── paddleocr_rec_config.yaml  # 识别模型配置文件
-
----
 
 ## 转换流程
 
+```text
+PaddleOCR 模型 -> ONNX 导出 -> 校准数据准备 -> hb_mapper checker -> hb_mapper makertbin -> .bin 模型
 ```
-浮点预训练模型 → ONNX导出 → 校准数据集准备 → PTQ量化 → 编译为BIN
-```
-
----
 
 ## 编译环境
 
-为了转换模型，您需要安装 **RDK X5 OpenExplore 工具链**。我们提供两种安装方式，**推荐使用方式一**。
+模型检查和编译请使用官方 OpenExplorer Docker 镜像，或等价的 OE 包编译环境。
 
-### 方式一：Pip 安装 (推荐)
-
-此方式在 x86 Linux 机器上安装经过裁剪的轻量级工具链，建议配合 Miniconda 使用。
-
-**注意**: 此操作仅在 x86 开发机（推荐 Ubuntu 22.04）上进行，**切勿**在 RDK 板端安装。
-
-1. **创建 Python 环境 (Miniconda)**
-   
-   强烈建议使用虚拟环境以避免依赖冲突。
-   ```bash
-   # 创建名为 rdk_env 的 Python 3.10 环境
-   conda create -n rdk_env python=3.10 -y
-   
-   # 激活环境
-   conda activate rdk_env
-   ```
-
-2. **安装工具链**
-   
-   ```bash
-   pip install rdkx5-yolo-mapper
-   ```
-   
-   *(可选) 如果下载速度慢，请使用阿里云镜像:*
-   ```bash
-   pip install rdkx5-yolo-mapper -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
-   ```
-
-3. **验证安装**
-   
-   ```bash
-   hb_mapper --version
-   # 预期输出: hb_mapper, version 1.24.3 (或更新版本)
-   ```
-
-**常见问题**: 如果出现 `incomplete-download` 或下载失败的错误，通常是网络连接不稳定导致的。重新运行安装命令即可，Pip 会自动跳过已下载的包。
-
----
-
-### 方式二：Docker 安装 (备选)
-
-如果您希望环境完全隔离，或者方式一遇到依赖问题，可以使用官方 Docker 镜像。
-
-**RDK X5 OpenExplore 1.2.8**
 ```bash
 docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
-```
-或者前往地瓜开发者社区获取离线版本的 Docker 镜像: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)
-
-**启动容器**:
-```bash
-# 挂载您的 model zoo 目录到容器中
 docker run -it --rm -v /path/to/rdk_model_zoo:/data openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
----
+或者前往地瓜开发者社区获取离线版本的 Docker 镜像: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)
 
+以下转换命令应在 Docker 容器或 OE 编译环境中执行，不应在 RDK 板端执行。
 
-## 一键转换脚本 (推荐)
+## 现有 PTQ 配置
 
-我们提供了 `mapper.py` 脚本，可以自动完成校准数据准备、配置文件生成以及调用 `hb_mapper` 进行编译的全过程。
+| 文件 | 模型 | 运行时输入 | 输出模型前缀 |
+| --- | --- | --- | --- |
+| `ptq_yamls/paddleocr_det_config.yaml` | OCR 检测模型 | `nv12` | `en_PP-OCRv3_det_infer-deploy_640x640_nv12` |
+| `ptq_yamls/paddleocr_rec_config.yaml` | OCR 识别模型 | `featuremap` | `en_PP-OCRv3_rec_infer-deploy_48x320_rgb` |
 
-### 准备工作
+这些 YAML 文件是 `hb_mapper makertbin` 使用的 PTQ 参考配置。实际转换时需要根据本地模型文件更新 `onnx_model`、校准数据路径和输出前缀。
 
-- 已经导出为 BPU 适配的 ONNX 模型。
-- 准备一个文件夹，包含 20~50 张用于量化校准的图片（`.jpg` 或 `.png`）。
+## 校准数据
 
-### 运行转换
+编译前需要准备具有代表性的校准数据。
 
-```bash
-python3 mapper.py --onnx model.onnx --cal-images /path/to/calibration/images
-```
-
-转换成功后，生成的 `.bin` 模型文件将位于 ONNX 模型的同级目录下。
-
-### 脚本参数说明
-
-```bash
-python3 mapper.py -h
-```
-
-| 参数 | 说明 |
-| :--- | :--- |
-| `--onnx` | 原始浮点 ONNX 模型的路径。 |
-| `--cal-images` | 包含校准图片的目录路径（建议 20~50 张）。 |
-| `--quantized` | 量化精度：`int8`（默认，推荐）或 `int16`。 |
-| `--jobs` | 模型编译时的并发任务数。 |
-| `--optimize-level` | 编译器优化等级：`O0`, `O1`, `O2` (默认), `O3`。 |
-| `--cal-sample` | 是否从目录中采样图片（默认：True）。 |
-| `--save-cache` | 是否保留 BPU 编译过程中的临时文件（默认：False）。 |
-
----
-
-## 生成校准数据集
-
-模型量化需要校准数据集来统计激活值分布。
-
-### 数据集要求
-
-- 数量：建议 20-50 张图片
-- 来源：从训练数据集中选取典型样本
-- 格式：RGB 图像，JPEG/PNG 格式
-- 尺寸：与模型输入分辨率一致（如 640x640）
-
-### 准备步骤
-
-```bash
-# 1. 创建校准数据目录
-mkdir -p calibration_data_rgb_f32_640
-
-# 2. 将图片放入目录（每张图片需 resize 到模型输入尺寸）
-#    图片命名格式：0001.jpg, 0002.jpg, ...
-
-# 3. 验证数据
-ls calibration_data_rgb_f32_640 | wc -l
-```
-
-> **注意**：请勿使用验证集/测试集图片作为校准数据，应从训练集中随机选取。
-
----
+- 检测模型：图片需匹配 `paddleocr_det_config.yaml` 中定义的预处理协议。
+- 识别模型：featuremap 校准数据需匹配 `paddleocr_rec_config.yaml` 中定义的识别模型输入协议。
+- 校准样本数量需结合数据集和模型稳定性确定，建议使用训练域内的代表性样本。
 
 ## 模型检查
 
-在编译前验证模型算子是否被 BPU 支持：
+编译前使用 `hb_mapper checker` 检查算子支持情况。
 
 ```bash
-hb_mapper checker --model-type onnx --march bayes-e --model model.onnx
+hb_mapper checker --model-type onnx --march bayes-e --model en_PP-OCRv3_det_infer.onnx
+hb_mapper checker --model-type onnx --march bayes-e --model en_PP-OCRv3_rec_infer.onnx
 ```
-
-### 常见问题处理
-
-- **算子不支持**：部分算子会 fallback 到 CPU 计算，可能影响性能
-- **精度问题**：检查 cosine similarity 是否 ≥ 0.999
-
----
 
 ## 模型编译
 
-### 使用配置文件编译
+使用现有 PTQ YAML 作为编译入口。
 
 ```bash
-hb_mapper makertbin --model-type onnx --config <config>.yaml
+hb_mapper makertbin --model-type onnx --config ptq_yamls/paddleocr_det_config.yaml
+hb_mapper makertbin --model-type onnx --config ptq_yamls/paddleocr_rec_config.yaml
 ```
 
----
+编译完成后，生成的 `.bin` 文件位于 YAML 中配置的 `working_dir` 目录。
 
-## 输出产物
+## 结果验证
 
-编译完成后，在配置的 `build_dir` 目录下生成以下文件：
-
-```
-output/
-├── model_name.bin           # 可运行的 BIN 模型文件
-└── hb_mapper_makertbin.log  # 转换日志
-```
-
-### 日志关键信息
-
-日志中包含以下重要信息，请务必保存：
-- 输入输出 tensor 的名称和形状
-- 量化参数（scale/zero_point）
-- 算子分布统计（BPU/CPU）
-
----
-
-## 验证方法
-
-### 使用 hb_perf 可视化
+查看模型信息：
 
 ```bash
-hb_perf model_name.bin
+hrt_model_exec model_info --model_file model_output/en_PP-OCRv3_det_infer-deploy_640x640_nv12.bin
+hrt_model_exec model_info --model_file model_output/en_PP-OCRv3_rec_infer-deploy_48x320_rgb.bin
 ```
 
-生成性能分析报告，包括算子分布、内存占用等信息。
-
-### 使用 hrt_model_exec 查看模型信息
+检查性能信息：
 
 ```bash
-hrt_model_exec model_info --model_file model_name.bin
+hb_perf model_output/en_PP-OCRv3_det_infer-deploy_640x640_nv12.bin
+hb_perf model_output/en_PP-OCRv3_rec_infer-deploy_48x320_rgb.bin
 ```
 
-输出示例：
-```
-input[0]:
-  name: images
-  valid shape: (1,3,640,640,)
-  tensor type: HB_DNN_IMG_TYPE_NV12
+## 运行模型格式
 
-output[0]:
-  name: output0
-  valid shape: (1,80,80,255,)
-  tensor type: HB_DNN_TENSOR_TYPE_F32
-```
+本 sample 在 `RDK X5` 上使用 `.bin` 模型。
 
----
-
-## 相关文档
-
-- [RDK X5 算法工具链手册](https://developer.d-robotics.cc)
-- [OpenExplorer 工具链下载](https://developer.d-robotics.cc)
-- [地瓜开发者社区](https://forum.d-robotics.cc)
-
----
+预编译模型可通过 [model](../model/README_cn.md) 目录下载。只有在需要基于自定义 ONNX 或校准数据重新生成模型时，才需要执行转换编译流程。
 
 ## License
 
-本目录下的工具遵循 [Apache 2.0 License](../../../../LICENSE)。
+本目录中的工具和文档遵循仓库顶层 License。

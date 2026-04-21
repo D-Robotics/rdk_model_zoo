@@ -58,27 +58,32 @@ This repository keeps **fully standardized delivery samples** under `samples/` a
 
 ```bash
 rdk_model_zoo/
-??? samples/               # Standardized delivery samples
-?   ??? vision/
-?       ??? convnext/
-?       ??? fcos/
-?       ??? lprnet/
-?       ??? PaddleOCR/
-?       ??? resnet/
-?       ??? ultralytics_yolo/
-?       ??? ultralytics_yolo26/
-?       ??? yolov5/
-??? demos/                 # Legacy or in-progress examples not yet normalized
-?   ??? classification/    # Classification model collection (20+ models)
-?   ??? detect/            # Other detection demos not yet standardized
-?   ??? Seg/               # Segmentation demos pending standardization
-?   ??? Vision/            # Vision-specific demos such as MODNet
-?   ??? llm/               # LLM / multi-modal demos
-?   ??? solutions/         # End-to-end solution demos
-??? docs/                  # Project guidelines and reference documentation
-??? datasets/              # Sample datasets and download scripts
-??? utils/                 # Shared C++ / Python utilities
-??? resource/              # Static resources (images, logos, etc.)
+|-- samples/               # Standardized delivery samples
+|   `-- vision/
+|       |-- convnext/
+|       |-- fcos/
+|       |-- lprnet/
+|       |-- mobilenetv1/
+|       |-- mobilenetv2/
+|       |-- mobilenetv3/
+|       |-- mobilenetv4/
+|       |-- googlenet/
+|       |-- PaddleOCR/
+|       |-- resnet/
+|       |-- ultralytics_yolo/
+|       |-- ultralytics_yolo26/
+|       `-- yolov5/
+|-- demos/                 # Legacy or in-progress examples not yet normalized
+|   |-- classification/    # Classification model collection
+|   |-- detect/            # Other detection demos not yet standardized
+|   |-- Seg/               # Segmentation demos pending standardization
+|   |-- Vision/            # Vision-specific demos such as MODNet
+|   |-- llm/               # LLM / multi-modal demos
+|   `-- solutions/         # End-to-end solution demos
+|-- docs/                  # Project guidelines and reference documentation
+|-- datasets/              # Sample datasets and download scripts
+|-- utils/                 # Shared C++ / Python utilities
+`-- resource/              # Static resources (images, logos, etc.)
 ```
 </details>
 
@@ -130,6 +135,11 @@ These directories have been migrated to the standard sample layout and are the r
 | Category | Models | Path |
 | :--- | :--- | :---: |
 | **Classification** | ConvNeXt | [Code](./samples/vision/convnext) |
+| **Classification** | MobileNetV1 | [Code](./samples/vision/mobilenetv1) |
+| **Classification** | MobileNetV2 | [Code](./samples/vision/mobilenetv2) |
+| **Classification** | MobileNetV3 | [Code](./samples/vision/mobilenetv3) |
+| **Classification** | MobileNetV4 | [Code](./samples/vision/mobilenetv4) |
+| **Classification** | GoogLeNet | [Code](./samples/vision/googlenet) |
 | **Classification** | ResNet | [Code](./samples/vision/resnet) |
 | **Object Detection** | FCOS | [Code](./samples/vision/fcos) |
 | **Recognition** | LPRNet | [Code](./samples/vision/lprnet) |
@@ -143,7 +153,7 @@ These directories have been moved back to `demos/` because they have not yet bee
 
 | Category | Representative Models | Path |
 | :--- | :--- | :---: |
-| **Classification** | MobileNet (V1-V4), EfficientNet, RepViT, FastViT and other classification models | [Code](./demos/classification) |
+| **Classification** | EfficientNet, RepViT, FastViT and other classification models | [Code](./demos/classification) |
 | **Object Detection** | Other legacy detection demos | [Code](./demos/detect) |
 | **Segmentation** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
 | **Vision Specifics** | MODNet | [Code](./demos/Vision) |

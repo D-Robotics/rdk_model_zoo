@@ -2,7 +2,7 @@
 
 # LPRNet 模型说明
 
-本目录提供面向 RDK X5 的标准化 LPRNet 示例，包括模型介绍、运行推理与 benchmark 说明。
+本目录给出 LPRNet sample 在 Model Zoo 中的完整使用说明，包括算法概览、模型转换、运行时推理、模型文件管理和评测说明。
 
 ## 算法概述
 

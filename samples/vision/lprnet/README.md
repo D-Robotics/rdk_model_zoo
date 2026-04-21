@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # LPRNet Model Description
 
-This directory provides the standardized LPRNet sample for RDK X5, including model description, runtime inference, and benchmark notes.
+This directory provides the complete usage guide for the LPRNet sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
 ## Algorithm Overview
 
@@ -40,7 +40,7 @@ This sample ships with a ready-to-run `.bin` model. For conversion-side notes, r
 
 This sample currently provides a Python runtime implementation on RDK X5.
 
-- standardized entry: [runtime/python/main.py](./runtime/python/main.py)
+- runtime entry: [runtime/python/main.py](./runtime/python/main.py)
 - runtime guide: [runtime/python/README.md](./runtime/python/README.md)
 
 ## Evaluator
