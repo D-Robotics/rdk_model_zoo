@@ -70,7 +70,7 @@ For evaluation metrics (mIoU, Pixel Accuracy, etc.) and evaluation scripts, plea
 
 Below is an example of the UNet-resnet50 segmentation output on a sample image:
 
-![](test_data/UNet_Segmentation_Origin.png)
+![](imgs/unet_result.jpg)
 
 *Input image and segmentation visualization with class overlay.*
 

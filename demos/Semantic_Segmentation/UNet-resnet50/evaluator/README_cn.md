@@ -1,6 +1,6 @@
 # UNet-resnet50 模型评估
 
-[English](./README.md) | 简体中文
+[English](./README.md) | [简体中文](./README_cn.md)
 
 ## 概述
 

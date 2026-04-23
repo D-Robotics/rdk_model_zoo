@@ -9,8 +9,8 @@ set -e
 # 0. Environment configuration
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MODEL_DIR="${SCRIPT_DIR}/../../model"
-TEST_DATA_DIR="${SCRIPT_DIR}/../../test_data"
+MODEL_DIR="${SCRIPT_DIR}/model"
+TEST_DATA_DIR="${SCRIPT_DIR}/test_data"
 
 echo "[INFO] Script directory: ${SCRIPT_DIR}"
 
@@ -38,7 +38,7 @@ fi
 # ---------------------------------------------------------------------------
 # 2. Check test data
 # ---------------------------------------------------------------------------
-TEST_IMAGE="${TEST_DATA_DIR}/UNet_Segmentation_Origin.png"
+TEST_IMAGE="${TEST_DATA_DIR}/1.jpg"
 if [ ! -f "${TEST_IMAGE}" ]; then
     echo "[WARN] Test image not found: ${TEST_IMAGE}"
     echo "[WARN] Please provide a test image."

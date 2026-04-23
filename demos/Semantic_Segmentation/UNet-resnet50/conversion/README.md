@@ -1,6 +1,6 @@
 # UNet-resnet50 Model Conversion
 
-[English](./README.md) | [简体中文](./README_cn.md)
+[English] | [简体中文](./README_cn.md)
 
 ## Overview
 

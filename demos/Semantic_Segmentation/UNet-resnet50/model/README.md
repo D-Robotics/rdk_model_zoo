@@ -1,6 +1,6 @@
 # UNet-resnet50 Model Download
 
-[English](./README.md) | 简体中文
+English | [简体中文](./README_cn.md)
 
 ## Pre-converted Model
 

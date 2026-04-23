@@ -31,8 +31,8 @@ UNet-resnet50 模型执行像素级语义分割，为输入图像中的每个像
 
 | 参数           | 说明                                                 | 默认值                                                     |
 | -------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| `--model-path` | BPU 量化 *.bin 模型文件路径                          | `../../model/unet_resnet50_512x512_nv12.bin`               |
-| `--img-path`   | 待推理的输入图像路径                                 | `../../test_data/UNet_Segmentation_Origin.png`             |
+| `--model-path` | BPU 量化 *.bin 模型文件路径                          | `./model/unet_resnet50_512x512_nv12.bin`               |
+| `--img-path`   | 待推理的输入图像路径                                 | `./test_data/1.jpg`             |
 | `--save-path`  | 可视化结果的保存路径                                 | `unet_result.jpg`                                          |
 | `--mask-path`  | 原始分割掩码的保存路径                               | `unet_mask.png`                                            |
 | `--num-classes`| 分割类别数（含背景）                                 | `21`                                                       |

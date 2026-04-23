@@ -31,8 +31,8 @@ No additional Python packages are required beyond the standard Horizon runtime e
 
 | Parameter      | Description                                          | Default Value                                              |
 | -------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| `--model-path` | Path to the BPU quantized *.bin model file           | `../../model/unet_resnet50_512x512_nv12.bin`               |
-| `--img-path`   | Path to the input image for inference                | `../../test_data/UNet_Segmentation_Origin.png`             |
+| `--model-path` | Path to the BPU quantized *.bin model file           | `./model/unet_resnet50_512x512_nv12.bin`                |
+| `--img-path`   | Path to the input image for inference                | `./test_data/UNet_Segmentation_Origin.png`             |
 | `--save-path`  | Path to save the visualization result                | `unet_result.jpg`                                          |
 | `--mask-path`  | Path to save the raw segmentation mask               | `unet_mask.png`                                            |
 | `--num-classes`| Number of segmentation classes (including background)| `21`                                                       |

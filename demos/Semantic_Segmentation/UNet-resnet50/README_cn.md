@@ -70,7 +70,7 @@ bash run.sh
 
 以下是 UNet-resnet50 在示例图像上的分割效果：
 
-![](test_data/UNet_Segmentation_Origin.png)
+![](imgs/unet_result.jpg)
 
 *输入图像与带类别叠加的分割可视化结果。*
 
