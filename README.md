@@ -68,8 +68,16 @@ rdk_model_zoo/
 |       |-- mobilenetv3/
 |       |-- mobilenetv4/
 |       |-- googlenet/
-|       |-- PaddleOCR/
+|       |-- edgenext/
+|       |-- efficientformer/
+|       |-- efficientformerv2/
+|       |-- efficientnet/
+|       |-- fasternet/
+|       |-- fastvit/
+|       |-- paddleocr/
+|       |-- repvit/
 |       |-- resnet/
+|       |-- resnext/
 |       |-- ultralytics_yolo/
 |       |-- ultralytics_yolo26/
 |       `-- yolov5/
@@ -140,12 +148,20 @@ These directories have been migrated to the standard sample layout and are the r
 | **Classification** | MobileNetV3 | [Code](./samples/vision/mobilenetv3) |
 | **Classification** | MobileNetV4 | [Code](./samples/vision/mobilenetv4) |
 | **Classification** | GoogLeNet | [Code](./samples/vision/googlenet) |
+| **Classification** | EdgeNeXt | [Code](./samples/vision/edgenext) |
+| **Classification** | EfficientFormer | [Code](./samples/vision/efficientformer) |
+| **Classification** | EfficientFormerV2 | [Code](./samples/vision/efficientformerv2) |
+| **Classification** | EfficientNet | [Code](./samples/vision/efficientnet) |
+| **Classification** | FasterNet | [Code](./samples/vision/fasternet) |
+| **Classification** | FastViT | [Code](./samples/vision/fastvit) |
+| **Classification** | RepViT | [Code](./samples/vision/repvit) |
 | **Classification** | ResNet | [Code](./samples/vision/resnet) |
+| **Classification** | ResNeXt | [Code](./samples/vision/resnext) |
 | **Object Detection** | FCOS | [Code](./samples/vision/fcos) |
 | **Recognition** | LPRNet | [Code](./samples/vision/lprnet) |
 | **Object Detection** | YOLOv5 | [Code](./samples/vision/yolov5) |
 | **Ultralytics YOLO** | YOLOv5u, YOLOv8, YOLOv9, YOLOv10, YOLO11, YOLO12, YOLO13, YOLO26 | [Code](./samples/vision/ultralytics_yolo), [YOLO26](./samples/vision/ultralytics_yolo26) |
-| **OCR** | PaddleOCR | [Code](./samples/vision/PaddleOCR) |
+| **OCR** | PaddleOCR | [Code](./samples/vision/paddleocr) |
 
 ### Legacy / In-Progress Demos
 
@@ -153,7 +169,7 @@ These directories have been moved back to `demos/` because they have not yet bee
 
 | Category | Representative Models | Path |
 | :--- | :--- | :---: |
-| **Classification** | EfficientNet, RepViT, FastViT and other classification models | [Code](./demos/classification) |
+| **Classification** | Other legacy classification models | [Code](./demos/classification) |
 | **Object Detection** | Other legacy detection demos | [Code](./demos/detect) |
 | **Segmentation** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
 | **Vision Specifics** | MODNet | [Code](./demos/Vision) |
