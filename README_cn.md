@@ -72,9 +72,12 @@ rdk_model_zoo/
 │       ├── efficientformer/
 │       ├── efficientformerv2/
 │       ├── efficientnet/
+│       ├── fasternet/
 │       ├── fastvit/
 │       ├── paddleocr/
+│       ├── repvit/
 │       ├── resnet/
+│       ├── resnext/
 │       ├── ultralytics_yolo/
 │       ├── ultralytics_yolo26/
 │       └── yolov5/
@@ -150,8 +153,11 @@ rdk_model_zoo/
 | **分类** | EfficientFormer | [Code](./samples/vision/efficientformer) |
 | **分类** | EfficientFormerV2 | [Code](./samples/vision/efficientformerv2) |
 | **分类** | EfficientNet | [Code](./samples/vision/efficientnet) |
+| **分类** | FasterNet | [Code](./samples/vision/fasternet) |
 | **分类** | FastViT | [Code](./samples/vision/fastvit) |
+| **分类** | RepViT | [Code](./samples/vision/repvit) |
 | **分类** | ResNet | [Code](./samples/vision/resnet) |
+| **分类** | ResNeXt | [Code](./samples/vision/resnext) |
 | **检测** | FCOS | [Code](./samples/vision/fcos) |
 | **识别** | LPRNet | [Code](./samples/vision/lprnet) |
 | **检测** | YOLOv5 | [Code](./samples/vision/yolov5) |
@@ -164,7 +170,7 @@ rdk_model_zoo/
 
 | 类别 | 代表模型 | 路径 |
 | :--- | :--- | :---: |
-| **分类** | RepViT 等分类模型 | [Code](./demos/classification) |
+| **分类** | 其他旧版分类模型 | [Code](./demos/classification) |
 | **检测** | 其他旧版检测 demo | [Code](./demos/detect) |
 | **分割** | YOLOE-11-Seg-Prompt-Free | [Code](./demos/Seg) |
 | **视觉特化** | MODNet | [Code](./demos/Vision) |
