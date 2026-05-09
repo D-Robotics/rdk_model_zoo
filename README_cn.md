@@ -19,8 +19,6 @@ RDK Model Zoo 基于[RDK](https://d-robotics.cc)开发, 提供大多数主流算
 
  - [大模型](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/llm): `./samples/llm`
 
- - [综合方案](https://github.com/D-Robotics/rdk_model_zoo/tree/main/samples/solutions): `./samples/solutions`
-
 **RDK Model Zoo 支持如下平台.**
  - 支持 [RDK X5](https://developer.d-robotics.cc/rdkx5)平台 (Bayse-e)
  - RDK S100 Model Zoo: [https://github.com/d-Robotics/rdk_model_zoo_s](https://github.com/d-Robotics/rdk_model_zoo_s)
