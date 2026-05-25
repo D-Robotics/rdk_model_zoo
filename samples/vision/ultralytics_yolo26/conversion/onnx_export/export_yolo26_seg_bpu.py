@@ -68,7 +68,9 @@ def bpu_segment_forward(self, x):
         res.append(box_layers[i](feat).permute(0, 2, 3, 1))
         res.append(mc_layers[i](feat).permute(0, 2, 3, 1))
         
-    proto = self.proto(x[0] if isinstance(x, list) else x) 
+    proto = self.proto(x)
+    if isinstance(proto, (list, tuple)):
+        proto = proto[0]
     res.append(proto.permute(0, 2, 3, 1))
     
     return res
