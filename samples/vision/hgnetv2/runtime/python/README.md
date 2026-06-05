@@ -1,5 +1,7 @@
 # HGNetV2 Image Classification Python Example
 
+English | [简体中文](./README_cn.md)
+
 This example demonstrates how to perform ImageNet-1k image classification tasks on the BPU using a quantized HGNetV2 model.
 
 ## Directory Structure

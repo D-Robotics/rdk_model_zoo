@@ -1,6 +1,6 @@
-[English](./README.md) | 简体中文
-
 # HGNetV2 图像分类 Python 示例
+
+[English](./README.md) | 简体中文
 
 本示例展示如何在 BPU 上使用量化后的 HGNetV2 模型执行 ImageNet-1k 图像分类任务。
 
