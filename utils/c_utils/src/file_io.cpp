@@ -71,12 +71,26 @@ std::vector<std::string> load_linewise_labels(const std::string& label_path)
 
     std::string line;
     while (std::getline(infile, line)) {
-        // 去掉可能的 CR（Windows 文本）
+        // Remove carriage return (CR) from Windows text files
         if (!line.empty() && line.back() == '\r') {
             line.pop_back();
         }
 
-        // 可选：跳过空行
+        if (line.empty()) {
+            continue;
+        }
+
+        // Compatible with Python dict-like formats like {0: 'label', 1: 'label'} or 0: 'label'
+        size_t first_quote = line.find('\'');
+        size_t last_quote = line.rfind('\'');
+        if (first_quote != std::string::npos && last_quote != std::string::npos && last_quote > first_quote) {
+            line = line.substr(first_quote + 1, last_quote - first_quote - 1);
+        } else {
+            if (line.front() == '{') line = line.substr(1);
+            if (line.back() == '}') line.pop_back();
+            if (line.back() == ',') line.pop_back();
+        }
+
         if (line.empty()) {
             continue;
         }

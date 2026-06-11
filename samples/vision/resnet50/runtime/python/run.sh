@@ -35,7 +35,7 @@ for pkg in "${REQUIREMENTS[@]}"; do
 done
 
 # Model Download
-MODEL_PATH="../../model/s100/resnet18_224x224_nv12.hbm"
+MODEL_PATH="../../model/s100/resnet50_224x224_nv12.hbm"
 
 echo "Model path : $MODEL_PATH"
 

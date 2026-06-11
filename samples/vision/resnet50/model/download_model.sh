@@ -4,13 +4,13 @@ set -e
 SOC="${1:-s100}"
 
 if [[ "$SOC" != "s100" ]]; then
-  echo "Only the S100 ResNet18 HBM file is available in this sample."
+  echo "Only the S100 ResNet50 HBM file is available in this sample."
   echo "Requested SoC: $SOC"
   exit 1
 fi
 
 MODEL_DIR="./s100"
-MODEL_NAME="resnet18_224x224_nv12"
+MODEL_NAME="resnet50_224x224_nv12"
 MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/${MODEL_NAME}.hbm"
 MODEL_PATH="${MODEL_DIR}/${MODEL_NAME}.hbm"
 

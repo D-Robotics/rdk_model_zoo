@@ -1,17 +1,17 @@
 English | [简体中文](./README_cn.md)
 
-# ResNet18 Model Description
+# ResNet50 Model Description
 
-ResNet18 is an ImageNet classification sample for the RDK S100 model zoo. It
-provides sample-local model download, Python and C++ runtime examples, preserved
-original documentation assets, and validation notes.
+ResNet50 is an ImageNet classification sample for the RDK S100 model zoo. It
+provides sample-local model download, a Python runtime example, preserved
+original documentation assets, and evaluation notes.
 
 ## Algorithm Overview
 
-ResNet was proposed by Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
-The key idea is residual learning with shortcut connections, which reduces the
-optimization difficulty of deep convolutional networks and avoids degradation as
-the network becomes deeper.
+ResNet uses residual learning with shortcut connections to reduce the
+optimization difficulty of deep convolutional networks. ResNet50 uses bottleneck
+residual blocks with `1x1`, `3x3`, and `1x1` convolutions to build a deeper
+network with controlled computation.
 
 ![ResNet architecture](./test_data/resnet_architecture.png)
 
@@ -19,7 +19,7 @@ Resources:
 
 - Paper: [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
 - PyTorch implementation: [torchvision.models.resnet](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)
-- TorchVision ResNet18 model: [torchvision ResNet18](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html)
+- TorchVision ResNet50 model: [torchvision ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html)
 
 ### Algorithm Capabilities
 
@@ -29,7 +29,7 @@ Resources:
 ### Algorithm Features
 
 - **Residual connections**: use shortcut connections to reduce deep-network optimization difficulty.
-- **Lightweight residual network**: the 18-layer variant is suitable for quick classification validation.
+- **Bottleneck blocks**: improve feature representation efficiency in deeper networks.
 - **NV12 input**: runtime feeds Y and UV planes as two HBM input tensors.
 
 ## Directory Structure
@@ -49,21 +49,11 @@ Resources:
 |   |-- README_cn.md
 |   `-- download_model.sh
 |-- runtime
-|   |-- cpp
-|   |   |-- CMakeLists.txt
-|   |   |-- README.md
-|   |   |-- README_cn.md
-|   |   |-- inc
-|   |   |   `-- resnet18.hpp
-|   |   |-- run.sh
-|   |   `-- src
-|   |       |-- main.cpp
-|   |       `-- resnet18.cpp
 |   `-- python
 |       |-- README.md
 |       |-- README_cn.md
 |       |-- main.py
-|       |-- resnet18.py
+|       |-- resnet50.py
 |       `-- run.sh
 `-- test_data
     |-- resnet_architecture.png
@@ -74,17 +64,8 @@ Resources:
 
 ## Quick Start
 
-Python:
-
 ```bash
 cd runtime/python
-bash run.sh
-```
-
-C++:
-
-```bash
-cd runtime/cpp
 bash run.sh
 ```
 
@@ -92,7 +73,7 @@ Direct Python entry:
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s100/resnet18_224x224_nv12.hbm \
+  --model-path ../../model/s100/resnet50_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../../../../datasets/imagenet/imagenet_classes.names \
   --top-k 5
@@ -105,14 +86,11 @@ python3 main.py \
 
 ## Runtime
 
-This sample currently maintains Python and C++ runtime paths:
-
-- [runtime/python/README.md](./runtime/python/README.md)
-- [runtime/cpp/README.md](./runtime/cpp/README.md)
+This sample currently maintains the Python runtime path. See [runtime/python/README.md](./runtime/python/README.md) for details.
 
 | Model | Input | Runtime model |
 | --- | --- | --- |
-| ResNet18 | 224x224 NV12 | `model/s100/resnet18_224x224_nv12.hbm` |
+| ResNet50 | 224x224 NV12 | `model/s100/resnet50_224x224_nv12.hbm` |
 
 ## Model Evaluation
 

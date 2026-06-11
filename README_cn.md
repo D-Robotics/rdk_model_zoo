@@ -87,7 +87,9 @@ docs/Model_Zoo_User_Guide.md
 | 实例分割     | YOLO11-Seg    | samples/vision/yolo11_seg       | S100 / S600 | [README](samples/vision/yolo11_seg/README.md) |
 | 实例分割     | YOLOe11-Seg   | samples/vision/yoloe11_seg      | S100        | [README](samples/vision/yoloe11_seg/README.md) |
 | 姿态估计     | YOLO11-Pose   | samples/vision/yolo11_pose      | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
-| 图像分类     | ResNet18      | samples/vision/resnet18         | S100 / S600 | [README](samples/vision/resnet18/README.md) |
+| 图像分类     | ResNet18      | samples/vision/resnet18         | S100 / S600 | [README](samples/vision/resnet18/README_cn.md) |
+| 图像分类     | ResNet50      | samples/vision/resnet50         | S100        | [README](samples/vision/resnet50/README_cn.md) |
+| 图像分类     | ResNet152     | samples/vision/resnet152        | S100        | [README](samples/vision/resnet152/README_cn.md) |
 | 图像分类     | MobileNetV2   | samples/vision/mobilenetv2      | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
 | 语义分割     | UnetMobileNet | samples/vision/unetmobilenet    | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
 | 车道线检测   | LaneNet       | samples/vision/lanenet          | S100        | [README](samples/vision/lanenet/README.md) |

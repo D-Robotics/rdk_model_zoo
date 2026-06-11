@@ -15,15 +15,15 @@
 # flake8: noqa: E501
 # flake8: noqa: E402
 
-"""ResNet18 image classification runtime wrapper.
+"""ResNet50 image classification runtime wrapper.
 
-This module provides a lightweight ResNet18 inference wrapper built on
+This module provides a lightweight ResNet50 inference wrapper built on
 HB_HBMRuntime. It defines model configuration and implements a complete
 classification pipeline, including preprocessing, inference, and top-K
 postprocessing utilities.
 
 Key Features:
-    - ResNet18 HBM model loading and runtime execution
+    - ResNet50 HBM model loading and runtime execution
     - NV12-based image preprocessing
     - Top-K classification result extraction
     - Optional runtime scheduling configuration
@@ -42,38 +42,29 @@ import utils.py_utils.visualize as visualize
 
 
 @dataclass
-class Resnet18Config:
-    """Configuration for initializing a ResNet18 classification model.
-
-    This dataclass defines the configuration parameters required to load
-    and run a ResNet18 HBM model, including model path and preprocessing options.
+class Resnet50Config:
+    """Configuration for initializing a ResNet50 classification model.
 
     Attributes:
-        model_path: Path to the compiled ResNet18 `.hbm` model.
+        model_path: Path to the compiled ResNet50 `.hbm` model.
         resize_type: Image resize mode used during preprocessing.
             - 0: Stretch resize.
             - 1: Keep aspect ratio with padding.
     """
-    model_path: str = "../../model/s100/resnet18_224x224_nv12.hbm"
+    model_path: str = "../../model/s100/resnet50_224x224_nv12.hbm"
     resize_type: int = 1
 
 
-class Resnet18:
-    """ResNet18 image classification wrapper based on HB_HBMRuntime.
+class Resnet50:
+    """ResNet50 image classification wrapper based on HB_HBMRuntime."""
 
-    This class provides a unified inference pipeline for ResNet18, including
-    input preprocessing, model execution, and top-K classification postprocessing.
-    """
-
-    def __init__(self, config: Resnet18Config):
-        """Initialize the ResNet18 model with the given configuration.
+    def __init__(self, config: Resnet50Config):
+        """Initialize the ResNet50 model with the given configuration.
 
         Args:
             config: Configuration object that specifies the model path and
                 preprocessing options.
         """
-
-        # Load model and extract metadata
         self.model = hbm_runtime.HB_HBMRuntime(config.model_path)
 
         self.model_name = self.model.model_names[0]
@@ -81,11 +72,9 @@ class Resnet18:
         self.output_names = self.model.output_names[self.model_name]
         self.input_shapes = self.model.input_shapes[self.model_name]
 
-        # Model input resolution (H, W) inferred from model input tensor
         self.input_h = self.input_shapes[self.input_names[0]][1]
         self.input_w = self.input_shapes[self.input_names[0]][2]
 
-        # Classification and preprocessing configuration
         self.cfg = config
 
     def set_scheduling_params(self,
@@ -96,9 +85,6 @@ class Resnet18:
         Args:
             priority: Inference priority in the range [0, 255].
             bpu_cores: List of BPU core indices used for inference.
-
-        Returns:
-            None
         """
         kwargs = {}
         if priority is not None:
@@ -115,28 +101,19 @@ class Resnet18:
                     ) -> Dict[str, Dict[str, np.ndarray]]:
         """Preprocess an input image into model input tensors.
 
-        The input image is resized to the model input resolution and converted
-        from BGR format to NV12 planes as required by the runtime.
-
         Args:
             img: Input image array.
-            resize_type: Resize strategy override. If None, the value from
-                the configuration is used.
+            resize_type: Resize strategy override.
             image_format: Input image format. Currently only "BGR" is supported.
 
         Returns:
-            A nested dictionary in the form:
-            {model_name: {input_name: input_tensor}}.
-
-        Raises:
-            ValueError: If an unsupported image format is provided.
+            A nested dictionary: {model_name: {input_name: input_tensor}}.
         """
         if resize_type is None:
             resize_type = self.cfg.resize_type
         else:
             self.cfg.resize_type = resize_type
 
-        # Resize and convert to NV12
         if image_format == "BGR":
             resize_img = pre_utils.resized_image(img, self.input_w, self.input_h, resize_type)
             y, uv = pre_utils.bgr_to_nv12_planes(resize_img)
@@ -154,8 +131,7 @@ class Resnet18:
         """Execute model inference.
 
         Args:
-            input_tensor: Preprocessed input tensor dictionary produced by
-                `pre_process()`.
+            input_tensor: Preprocessed input tensor dictionary.
 
         Returns:
             A nested dictionary containing raw output tensors returned by the runtime.
@@ -174,8 +150,7 @@ class Resnet18:
             topk: Number of top classes to return.
 
         Returns:
-            A list of (class_id, probability) tuples sorted by confidence
-            in descending order.
+            A list of (class_id, probability) tuples sorted by confidence.
         """
         return visualize.get_topk_predictions(outputs[self.model_name][self.output_names[0]][0], topk)
 
@@ -187,27 +162,18 @@ class Resnet18:
                 ) -> List[Tuple[int, float]]:
         """Run the complete classification pipeline on a single image.
 
-        This method performs preprocessing, inference, and postprocessing
-        internally and returns top-K classification results.
-
         Args:
             img: Input image array.
-            image_format: Input image format. Currently supports "BGR".
+            image_format: Input image format.
             resize_type: Resize strategy override.
             topk: Number of top classes to return.
 
         Returns:
             A list of (class_id, probability) tuples.
         """
-        # 1) Preprocess
         input_tensor = self.pre_process(img, resize_type, image_format)
-
-        # 2) Inference
         outputs = self.forward(input_tensor)
-
-        # 3) Postprocess
         cls_results = self.post_process(outputs, topk)
-
         return cls_results
 
     def __call__(self,
@@ -217,8 +183,6 @@ class Resnet18:
                 topk: Optional[int] = None
                 ) -> List[Tuple[int, float]]:
         """Callable interface for image classification.
-
-        This method is equivalent to calling `predict()`.
 
         Args:
             img: Input image array.

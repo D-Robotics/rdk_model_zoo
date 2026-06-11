@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文
+English | [简体中文](./README_cn.md)
 
 # Model Zoo
 ## Repository Introduction
@@ -88,6 +88,8 @@ For detailed descriptions, usage, and examples of each model, click the correspo
 | Instance Segmentation | YOLOe11-Seg | samples/vision/yoloe11_seg | S100 | [README](samples/vision/yoloe11_seg/README.md) |
 | Pose Estimation | YOLO11-Pose | samples/vision/yolo11_pose | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
 | Image Classification | ResNet18 | samples/vision/resnet18 | S100 / S600 | [README](samples/vision/resnet18/README.md) |
+| Image Classification | ResNet50 | samples/vision/resnet50 | S100 | [README](samples/vision/resnet50/README.md) |
+| Image Classification | ResNet152 | samples/vision/resnet152 | S100 | [README](samples/vision/resnet152/README.md) |
 | Image Classification | MobileNetV2 | samples/vision/mobilenetv2 | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
 | Semantic Segmentation | UnetMobileNet | samples/vision/unetmobilenet | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
 | Lane Detection | LaneNet | samples/vision/lanenet | S100 | [README](samples/vision/lanenet/README.md) |

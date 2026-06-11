@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""ResNet18 image classification command line sample.
+"""ResNet152 image classification command line sample.
 
 The entry script parses arguments, loads the test image and labels, builds a
 configuration object, runs ``predict()``, and prints Top-K ImageNet results.
@@ -28,19 +28,15 @@ sys.path.append(os.path.abspath("../../../../../"))
 import utils.py_utils.file_io as file_io
 import utils.py_utils.inspect as inspect
 import utils.py_utils.visualize as visualize
-from resnet18 import Resnet18Config, Resnet18
+from resnet152 import Resnet152Config, Resnet152
 
 
 def main() -> None:
-    """Run a ResNet18 image classification demo.
-
-    Returns:
-        None
-    """
+    """Run a ResNet152 image classification demo."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model-path', type=str,
-                        default="../../model/s100/resnet18_224x224_nv12.hbm",
+                        default="../../model/s100/resnet152_224x224_nv12.hbm",
                         help="Path to the compiled HBM model.")
     parser.add_argument('--priority', type=int, default=0,
                         help="Model priority (0~255). 0 is lowest, 255 is highest.")
@@ -57,28 +53,21 @@ def main() -> None:
 
     opt = parser.parse_args()
 
-    # Init config parameter
-    config = Resnet18Config(
+    config = Resnet152Config(
         model_path=opt.model_path
     )
 
-    # Load label mapping if available
     idx2label: Dict[int, str] = {}
     if os.path.exists(opt.label_file):
         idx2label = file_io.load_labels(opt.label_file)
 
-    # Initialize ResNet18 model instance
-    resnet18 = Resnet18(config)
+    resnet152 = Resnet152(config)
+    resnet152.set_scheduling_params(priority=opt.priority, bpu_cores=opt.bpu_cores)
 
-    # Set runtime scheduling parameters
-    resnet18.set_scheduling_params(priority=opt.priority, bpu_cores=opt.bpu_cores)
-
-    # Print model information (e.g., input/output names, shape)
-    inspect.print_model_info(resnet18.model)
+    inspect.print_model_info(resnet152.model)
 
     img: np.ndarray = file_io.load_image(opt.test_img)
-
-    cls_results = resnet18.predict(img, topk=opt.top_k)
+    cls_results = resnet152.predict(img, topk=opt.top_k)
 
     visualize.print_classification_results(cls_results, idx2label)
 
