@@ -45,7 +45,7 @@ DEFINE_string(model_path, "/opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm
 
 DEFINE_string(test_img, "../../../test_data/zebra_cls.jpg",
               "Path to load the test image.");
-DEFINE_string(label_file, "../../../test_data/imagenet1000_labels.txt",
+DEFINE_string(label_file, "../../../../../../datasets/imagenet/imagenet_classes.names",
               "Path to load ImageNet label mapping file.");
 DEFINE_int32(top_k, 5, "Top k classes, 5 by default");
 

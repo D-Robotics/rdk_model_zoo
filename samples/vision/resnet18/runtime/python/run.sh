@@ -1,10 +1,6 @@
 #!/bin/bash
 set -e
 
-# Read SOC information
-SOC=$(tr 'A-Z' 'a-z' </sys/class/boardinfo/soc_name)
-echo "SOC        : $SOC"
-
 # Environment Setup
 PYTHON_BIN=python3
 PIP_BIN=pip3
@@ -39,25 +35,21 @@ for pkg in "${REQUIREMENTS[@]}"; do
 done
 
 # Model Download
-MODEL_PATH="/opt/hobot/model/${SOC}/basic/resnet18_224x224_nv12.hbm"
-MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${SOC}/ResNet/resnet18_224x224_nv12.hbm"
+MODEL_PATH="../../model/s100/resnet18_224x224_nv12.hbm"
 
 echo "Model path : $MODEL_PATH"
 
 if [[ ! -f "$MODEL_PATH" ]]; then
-  echo "Model not found, downloading..."
-
-  mkdir -p "$(dirname "$MODEL_PATH")"
-
-  curl -fL "$MODEL_URL" -o "$MODEL_PATH"
-
-  echo "Model downloaded successfully"
+  echo "Model not found, downloading to sample-local model directory..."
+  (cd ../../model && bash download_model.sh s100)
 else
   echo "Model already exists, skip download"
 fi
 
 # Model Execution
 python main.py \
-  --model-path /opt/hobot/model/$SOC/basic/resnet18_224x224_nv12.hbm \
+  --model-path "$MODEL_PATH" \
   --test-img ../../test_data/zebra_cls.jpg \
-  --label-file ../../test_data/imagenet1000_labels.txt
+  --label-file ../../../../../datasets/imagenet/imagenet_classes.names \
+  --top-k 5 \
+  "$@"

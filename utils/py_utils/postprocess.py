@@ -39,6 +39,7 @@ import cv2
 import numpy as np
 from hbm_runtime import QuantParams
 from scipy.special import softmax
+from .nn_math import sigmoid
 
 
 def recover_to_original_size(img: np.ndarray,
@@ -108,18 +109,27 @@ def dequantize_tensor(q_tensor: np.ndarray, quant_info: QuantParams) -> np.ndarr
     Returns:
         A float32 NumPy array containing the dequantized tensor values.
     """
-    if quant_info.quant_type != 1:  # 1 indicates linear scale quantization
+    quant_type = quant_info.quant_type
+    quant_type_name = getattr(quant_type, "name", str(quant_type))
+    if quant_type_name not in ("SCALE", "1"):
         return q_tensor
+
+    zero_point = quant_info.zero_point.astype(np.float32)
+    if zero_point.size == 0:
+        zero_point = np.zeros((1,), dtype=np.float32)
 
     if quant_info.scale.ndim == 0 or q_tensor.ndim == 1 or quant_info.scale.size == 1:
         # Per-tensor dequantization
-        return (q_tensor.astype(np.float32) - quant_info.zero_point.astype(np.float32)) * quant_info.scale
+        return (q_tensor.astype(np.float32) - zero_point.reshape(-1)[0]) * quant_info.scale
     else:
         # Per-channel dequantization
         shape = [1] * q_tensor.ndim
         shape[quant_info.axis] = -1
         scale = quant_info.scale.reshape(shape)
-        zero_point = quant_info.zero_point.reshape(shape)
+        if zero_point.size == 1:
+            zero_point = np.zeros_like(scale, dtype=np.float32)
+        else:
+            zero_point = zero_point.reshape(shape)
         return (q_tensor.astype(np.float32) - zero_point.astype(np.float32)) * scale
 
 
@@ -290,8 +300,32 @@ def filter_classification(cls_output: np.ndarray, conf_thres_raw: float) -> tupl
     valid_indices = np.flatnonzero(max_scores >= conf_thres_raw)
     ids = np.argmax(cls_output[valid_indices], axis=1)
     # Apply sigmoid
-    scores = 1 / (1 + np.exp(-max_scores[valid_indices]))
+    scores = sigmoid(max_scores[valid_indices])
     return scores, ids, valid_indices
+
+
+def decode_ltrb_boxes(anchor: np.ndarray,
+                      box_output: np.ndarray,
+                      stride: int) -> np.ndarray:
+    """Decode anchor-relative LTRB regression outputs to `xyxy` boxes.
+
+    This helper converts YOLO-style left, top, right, and bottom distances
+    predicted on a feature grid into corner-format boxes in the model input
+    coordinate system.
+
+    Args:
+        anchor: Grid center coordinates with shape `(N, 2)` in `(x, y)` format.
+        box_output: Box regression outputs with shape `(N, 4)` formatted as
+            `(left, top, right, bottom)`.
+        stride: Feature stride used to project the grid coordinates back to the
+            input image scale.
+
+    Returns:
+        A NumPy array with shape `(N, 4)` in `(x1, y1, x2, y2)` format.
+    """
+    x1y1 = anchor - box_output[:, :2]
+    x2y2 = anchor + box_output[:, 2:]
+    return np.hstack([x1y1, x2y2]) * stride
 
 
 def filter_mces(mces_output: np.ndarray, valid_indices: np.ndarray) -> np.ndarray:
@@ -711,6 +745,51 @@ def scale_keypoints_to_original_image(kpts_xy: np.ndarray,
     return scaled_kpts, kpts_score
 
 
+def scale_coords_back_obb(rrects: np.ndarray,
+                          img_w: int,
+                          img_h: int,
+                          input_w: int,
+                          input_h: int,
+                          resize_type: int = 1) -> np.ndarray:
+    """Map OBB coordinates (cx, cy, w, h) back to the original image scale.
+
+    Args:
+        rrects: OBB boxes with shape `(N, 4)` or `(N, 5)` (angle ignored)
+            in the resized image space, formatted as `(cx, cy, w, h, ...)`.
+        img_w: Original image width.
+        img_h: Original image height.
+        input_w: Network input width.
+        input_h: Network input height.
+        resize_type: Resize strategy used during preprocessing.
+            - 0: Direct resize.
+            - 1: Letterbox resize with padding.
+
+    Returns:
+        Rescaled coordinates with the same shape as input.
+    """
+    res = rrects.copy()
+
+    if resize_type == 0:
+        scale_x = img_w / input_w
+        scale_y = img_h / input_h
+        res[:, 0] *= scale_x
+        res[:, 2] *= scale_x
+        res[:, 1] *= scale_y
+        res[:, 3] *= scale_y
+    elif resize_type == 1:
+        scale = min(input_w / img_w, input_h / img_h)
+        pad_w = (input_w - img_w * scale) / 2
+        pad_h = (input_h - img_h * scale) / 2
+        res[:, 0] = (res[:, 0] - pad_w) / scale
+        res[:, 1] = (res[:, 1] - pad_h) / scale
+        res[:, 2] /= scale
+        res[:, 3] /= scale
+    else:
+        raise ValueError("resize_type must be 0 or 1")
+
+    return res
+
+
 def crop_and_rotate_image(img: np.ndarray, box: np.ndarray) -> np.ndarray:
     """Crop and rotate a region from an image using a rotated bounding box.
 
@@ -750,3 +829,199 @@ def crop_and_rotate_image(img: np.ndarray, box: np.ndarray) -> np.ndarray:
         rotated = warped
 
     return rotated
+
+
+def crop_mask(masks: np.ndarray, boxes: np.ndarray) -> np.ndarray:
+    """Crop masks to bounding boxes to remove background noise.
+
+    Args:
+        masks: Generated masks `(N, H, W)`.
+        boxes: Bounding boxes `(N, 4)` in `[x1, y1, x2, y2]`.
+
+    Returns:
+        Cropped masks `(N, H, W)`.
+    """
+    n, h, w = masks.shape
+    x1, y1, x2, y2 = np.split(boxes[:, :, None], 4, axis=1)
+
+    r = np.arange(w, dtype=np.float32)[None, None, :]
+    c = np.arange(h, dtype=np.float32)[None, :, None]
+
+    return masks * ((r >= x1) * (r < x2) * (c >= y1) * (c < y2))
+
+
+def process_mask(protos: np.ndarray, masks_in: np.ndarray,
+                 bboxes: np.ndarray, shape: tuple[int, int],
+                 input_h: int, input_w: int,
+                 resize_type: int = 1) -> np.ndarray:
+    """Process masks with letterbox/padding removal.
+
+    Args:
+        protos: Prototype masks `(32, 160, 160)`.
+        masks_in: Mask coefficients `(N, 32)`.
+        bboxes: Bounding boxes `(N, 4)` in model input scale.
+        shape: Original image shape `(orig_h, orig_w)`.
+        input_h: Model input height.
+        input_w: Model input width.
+        resize_type: 0=stretch, 1=letterbox.
+
+    Returns:
+        Binary masks `(N, H, W)`.
+    """
+    c, mh, mw = protos.shape
+    orig_h, orig_w = shape
+
+    masks = (masks_in @ protos.reshape(c, -1)).reshape(-1, mh, mw)
+    masks = sigmoid(masks)
+
+    masks_input_scale = []
+    for m in masks:
+        m_resized = cv2.resize(m, (input_w, input_h), interpolation=cv2.INTER_LINEAR)
+        masks_input_scale.append(m_resized)
+    masks = np.array(masks_input_scale)
+
+    masks = crop_mask(masks, bboxes)
+
+    if resize_type == 0:
+        final_masks = []
+        for m in masks:
+            final_masks.append(cv2.resize(m, (orig_w, orig_h), interpolation=cv2.INTER_LINEAR))
+        masks = np.array(final_masks)
+    elif resize_type == 1:
+        scale = min(input_w / orig_w, input_h / orig_h)
+        nw = int(orig_w * scale)
+        nh = int(orig_h * scale)
+        pad_w = (input_w - nw) // 2
+        pad_h = (input_h - nh) // 2
+
+        masks_cropped = masks[:, pad_h:pad_h + nh, pad_w:pad_w + nw]
+        final_masks = []
+        for m in masks_cropped:
+            final_masks.append(cv2.resize(m, (orig_w, orig_h), interpolation=cv2.INTER_LINEAR))
+        masks = np.array(final_masks)
+
+    return masks > 0.5
+
+
+def decode_seg_layer(box_feat: np.ndarray, cls_feat: np.ndarray,
+                     mc_feat: np.ndarray, stride: int,
+                     score_thres: float, classes_num: int = 80) -> np.ndarray:
+    """Decode a single segmentation feature layer.
+
+    Args:
+        box_feat: Raw box output `(1, H, W, 4)`.
+        cls_feat: Raw cls output `(1, H, W, num_classes)`.
+        mc_feat: Raw mask coefficient output `(1, H, W, 32)`.
+        stride: Feature stride.
+        score_thres: Confidence threshold.
+        classes_num: Number of object classes.
+
+    Returns:
+        Array of shape `(N, 38)` with `[x1, y1, x2, y2, score, cls, mc0..mc31]`.
+    """
+    if box_feat.shape[0] == 1:
+        box_feat = box_feat[0]
+    if cls_feat.shape[0] == 1:
+        cls_feat = cls_feat[0]
+    if mc_feat.shape[0] == 1:
+        mc_feat = mc_feat[0]
+
+    h, w, _ = box_feat.shape
+
+    safe_thres = np.clip(score_thres, 1e-6, 1.0 - 1e-6)
+    logit_thres = -np.log(1.0 / safe_thres - 1.0)
+
+    max_logits = np.max(cls_feat, axis=-1)
+    mask = max_logits >= logit_thres
+
+    if not np.any(mask):
+        return np.empty((0, 6 + 32), dtype=np.float32)
+
+    grid_y, grid_x = np.indices((h, w))
+    valid_grid_x = grid_x[mask]
+    valid_grid_y = grid_y[mask]
+
+    valid_box = box_feat[mask]
+    valid_mc = mc_feat[mask]
+    valid_cls_logits = cls_feat[mask]
+
+    valid_cls_scores = sigmoid(valid_cls_logits)
+    valid_score = np.max(valid_cls_scores, axis=-1)
+    valid_cls_id = np.argmax(valid_cls_scores, axis=-1)
+
+    grid_center_x = valid_grid_x.astype(np.float32) + 0.5
+    grid_center_y = valid_grid_y.astype(np.float32) + 0.5
+
+    x1 = (grid_center_x - valid_box[:, 0]) * stride
+    y1 = (grid_center_y - valid_box[:, 1]) * stride
+    x2 = (grid_center_x + valid_box[:, 2]) * stride
+    y2 = (grid_center_y + valid_box[:, 3]) * stride
+
+    out = np.stack([x1, y1, x2, y2, valid_score, valid_cls_id], axis=-1)
+    return np.concatenate([out, valid_mc], axis=-1)
+
+
+def decode_pose_layer(box_feat: np.ndarray, cls_feat: np.ndarray,
+                      kpt_feat: np.ndarray, stride: int,
+                      score_thres: float) -> np.ndarray:
+    """Decode a single pose feature layer.
+
+    Args:
+        box_feat: Raw box output `(1, H, W, 4)`.
+        cls_feat: Raw cls output `(1, H, W, 1)`.
+        kpt_feat: Raw keypoint output `(1, H, W, 51)`.
+        stride: Feature stride.
+        score_thres: Confidence threshold.
+
+    Returns:
+        Array of shape `(N, 57)` with `[x1,y1,x2,y2,score,cls,kpt(51)]`.
+    """
+    if box_feat.shape[0] == 1:
+        box_feat = box_feat[0]
+    if cls_feat.shape[0] == 1:
+        cls_feat = cls_feat[0]
+    if kpt_feat.shape[0] == 1:
+        kpt_feat = kpt_feat[0]
+
+    h, w, _ = box_feat.shape
+
+    safe_thres = np.clip(score_thres, 1e-6, 1.0 - 1e-6)
+    logit_thres = -np.log(1.0 / safe_thres - 1.0)
+
+    raw_logits = cls_feat[..., 0]
+    mask = raw_logits >= logit_thres
+    if not np.any(mask):
+        return np.empty((0, 6 + 51), dtype=np.float32)
+
+    grid_y, grid_x = np.indices((h, w))
+    valid_grid_x = grid_x[mask]
+    valid_grid_y = grid_y[mask]
+
+    valid_box = box_feat[mask]
+    valid_kpt = kpt_feat[mask]
+    valid_logits = raw_logits[mask]
+
+    valid_score = sigmoid(valid_logits)
+    valid_cls_id = np.zeros_like(valid_score)
+
+    grid_center_x = valid_grid_x.astype(np.float32) + 0.5
+    grid_center_y = valid_grid_y.astype(np.float32) + 0.5
+
+    x1 = (grid_center_x - valid_box[:, 0]) * stride
+    y1 = (grid_center_y - valid_box[:, 1]) * stride
+    x2 = (grid_center_x + valid_box[:, 2]) * stride
+    y2 = (grid_center_y + valid_box[:, 3]) * stride
+
+    num_kpts = valid_kpt.shape[1] // 3
+    valid_kpt = valid_kpt.reshape(-1, num_kpts, 3)
+
+    grid_stack = np.stack([valid_grid_x, valid_grid_y], axis=-1)[:, None, :]
+    grid_stack = grid_stack.astype(np.float32) + 0.5
+
+    kpt_xy = (valid_kpt[..., :2] + grid_stack) * stride
+    kpt_conf = sigmoid(valid_kpt[..., 2:3])
+
+    decoded_kpt_flat = np.concatenate([kpt_xy, kpt_conf], axis=-1).reshape(-1, num_kpts * 3)
+
+    out = np.stack([x1, y1, x2, y2, valid_score, valid_cls_id], axis=-1)
+    return np.concatenate([out, decoded_kpt_flat], axis=-1)

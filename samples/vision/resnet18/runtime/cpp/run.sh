@@ -1,11 +1,7 @@
 #!/bin/bash
 set -e
 
-# 1. Read SOC information
-SOC=$(tr 'A-Z' 'a-z' </sys/class/boardinfo/soc_name)
-echo "SOC        : $SOC"
-
-# 2. Environment Setup
+# 1. Environment Setup
 PKGS=(
   libgflags-dev
 )
@@ -36,32 +32,26 @@ for pkg in "${PKGS[@]}"; do
   fi
 done
 
-# 3. Model Download
-MODEL_PATH="/opt/hobot/model/${SOC}/basic/resnet18_224x224_nv12.hbm"
-MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${SOC}/ResNet/resnet18_224x224_nv12.hbm"
+# 2. Model Download
+MODEL_PATH="../../model/s100/resnet18_224x224_nv12.hbm"
 
 echo "Model path : $MODEL_PATH"
 
 if [[ ! -f "$MODEL_PATH" ]]; then
-  echo "Model not found, downloading..."
-
-  mkdir -p "$(dirname "$MODEL_PATH")"
-
-  curl -fL "$MODEL_URL" -o "$MODEL_PATH"
-
-  echo "Model downloaded successfully"
+  echo "Model not found, downloading to sample-local model directory..."
+  (cd ../../model && bash download_model.sh s100)
 else
   echo "Model already exists, skip download"
 fi
 
-# 4. Model Compilation
+# 3. Model Compilation
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
 
-# 5. Quick Run
+# 4. Quick Run
 ./resnet18 \
-  --model_path /opt/hobot/model/${SOC}/basic/resnet18_224x224_nv12.hbm \
+  --model_path ../../../model/s100/resnet18_224x224_nv12.hbm \
   --test_img   ../../../test_data/zebra_cls.jpg \
-  --label_file ../../../test_data/imagenet1000_labels.txt \
+  --label_file ../../../../../../datasets/imagenet/imagenet_classes.names \
   --top_k 5

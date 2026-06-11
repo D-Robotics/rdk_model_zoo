@@ -41,6 +41,8 @@ Notes:
 
 
 import os
+import ast
+import json
 import cv2
 import numpy as np
 
@@ -125,3 +127,50 @@ def load_class_names(path: str) -> list:
         # Strip whitespace and filter out empty lines
         class_names = [line.strip() for line in f.readlines() if line.strip()]
     return class_names
+
+
+def load_labels(label_path: str) -> dict:
+    """Load labels from a label file into a dict mapping index to name.
+
+    Supports two formats:
+        - Python dict string format (e.g. ``{0: 'tench', 1: 'goldfish', ...}``).
+        - Line-separated list where line index becomes the key.
+
+    Args:
+        label_path: Path to the label file.
+
+    Returns:
+        A dictionary mapping ``{class_index: label_name}``.
+    """
+    labels = {}
+    if not os.path.exists(label_path):
+        print(f"Warning: Label file not found: {label_path}")
+        return labels
+
+    try:
+        with open(label_path, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+
+        if content.startswith('{') or content.startswith('['):
+            try:
+                labels = json.loads(content)
+            except Exception:
+                labels = ast.literal_eval(content)
+
+            if isinstance(labels, dict):
+                labels = {int(k): v for k, v in labels.items()}
+            elif isinstance(labels, list):
+                labels = {i: str(name) for i, name in enumerate(labels)}
+        else:
+            lines = [line.strip() for line in content.split('\n') if line.strip()]
+            labels = {i: name for i, name in enumerate(lines)}
+
+    except Exception as e:
+        print(f"Warning: Failed to load labels from {label_path}: {e}")
+
+    return labels
+
+
+def load_imagenet_labels(path: str) -> dict:
+    """(Deprecated) Alias for load_labels. Use load_labels instead."""
+    return load_labels(path)

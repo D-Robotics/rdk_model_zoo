@@ -30,21 +30,14 @@ Key Features:
 """
 
 import os
-import cv2
 import sys
 import hbm_runtime
 import numpy as np
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Tuple, Literal, List
+from dataclasses import dataclass
+from typing import Optional, Dict, Tuple, List
 
-# Add project root to sys.path so we can import utility modules.
-# Source files:
-#   utils/py_utils/preprocess_utils.py
-#   utils/py_utils/postprocess_utils.py
-# (Check these files for preprocessing/postprocessing implementations.)
 sys.path.append(os.path.abspath("../../../../../"))
 import utils.py_utils.preprocess as pre_utils
-import utils.py_utils.postprocess as post_utils
 import utils.py_utils.visualize as visualize
 
 
@@ -61,7 +54,7 @@ class Resnet18Config:
             - 0: Stretch resize.
             - 1: Keep aspect ratio with padding.
     """
-    model_path: str
+    model_path: str = "../../model/s100/resnet18_224x224_nv12.hbm"
     resize_type: int = 1
 
 
@@ -157,7 +150,7 @@ class Resnet18:
             }
         }
 
-    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
+    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, Dict[str, np.ndarray]]:
         """Execute model inference.
 
         Args:
@@ -165,7 +158,7 @@ class Resnet18:
                 `pre_process()`.
 
         Returns:
-            A dictionary containing raw output tensors returned by the runtime.
+            A nested dictionary containing raw output tensors returned by the runtime.
         """
         outputs = self.model.run(input_tensor)
         return outputs

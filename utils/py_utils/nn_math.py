@@ -38,7 +38,7 @@ def sigmoid(x: np.ndarray) -> np.ndarray:
     Returns:
         A NumPy array with the sigmoid function applied element-wise.
     """
-    return 1.0 / (1.0 + cv2.exp(-x))
+    return 1.0 / (1.0 + np.exp(-x))
 
 
 def zscore_normalize_lastdim(x: np.ndarray) -> np.ndarray:

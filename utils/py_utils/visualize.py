@@ -37,6 +37,7 @@ Notes:
 
 
 import cv2
+import math
 import numpy as np
 from typing import List, Tuple, Dict
 
@@ -394,3 +395,131 @@ def draw_polygon_boxes(img: np.ndarray, bboxes: list,
         # Draw closed polygon on image
         cv2.polylines(img_copy, [bbox], isClosed=True, color=color, thickness=thickness)
     return img_copy
+
+
+def print_obb_detections(results: list, class_names: list = None):
+    """Print OBB detection results in a readable format.
+
+    Args:
+        results: List of dicts with keys 'rrect', 'score', 'id'.
+        class_names: List of class names (optional).
+    """
+    num_dets = len(results)
+    print(f"\nOBB Detection Report: {num_dets} objects found")
+
+    if num_dets == 0:
+        return
+
+    for i, res in enumerate(results):
+        rrect = res['rrect']
+        score = res['score']
+        cid = int(res['id'])
+        name = class_names[cid] if class_names and cid < len(class_names) else str(cid)
+        angle_deg = math.degrees(rrect[4])
+        print(f"  [{i}] {name}: {score:.2f} | Angle: {angle_deg:.1f} deg | "
+              f"Box ({rrect[0]:.1f}, {rrect[1]:.1f}, {rrect[2]:.1f}, {rrect[3]:.1f})")
+
+
+def draw_obb(img: np.ndarray, results: list, class_names: list,
+             colors: list = rdk_colors) -> np.ndarray:
+    """Draw OBB detection results on an image.
+
+    Args:
+        img: Input image in BGR format.
+        results: List of dicts with keys 'rrect', 'score', 'id'.
+        class_names: List of class name strings indexed by class ID.
+        colors: List of RGB color tuples.
+
+    Returns:
+        Image with OBB detections drawn on it.
+    """
+    if not results:
+        return img
+
+    for r in results:
+        cid, score = int(r['id']), r['score']
+        rrect = r['rrect']
+        cx, cy, w, h, angle_rad = rrect
+        name = class_names[cid] if cid < len(class_names) else str(cid)
+        color = colors[cid % len(colors)]
+
+        # Convert to OpenCV rotated rect format and draw
+        rect = ((cx, cy), (w, h), math.degrees(angle_rad))
+        box = cv2.boxPoints(rect).astype(np.intp)
+        cv2.drawContours(img, [box], 0, color, 2)
+        cv2.putText(img, f"{name} {score:.2f}", (int(cx), int(cy) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+
+    return img
+
+
+def draw_pose(image: np.ndarray, boxes: np.ndarray, kpts: np.ndarray,
+              kpt_conf_thres: float = 0.5, scores: np.ndarray = None,
+              class_ids: np.ndarray = None, colors: list = rdk_colors) -> np.ndarray:
+    """Draw pose estimation results with bounding boxes and keypoints.
+
+    Args:
+        image: Input image in BGR format.
+        boxes: Bounding boxes with shape `(N, 4)` in `(x1, y1, x2, y2)` format.
+        kpts: Keypoints with shape `(N, 17, 3)` where last dim is `(x, y, conf)`.
+        kpt_conf_thres: Confidence threshold for keypoint visibility.
+        scores: Detection confidence scores with shape `(N,)`.
+        class_ids: Class indices with shape `(N,)`.
+        colors: List of RGB color tuples.
+
+    Returns:
+        Image with pose detections drawn on it.
+    """
+    for i in range(len(boxes)):
+        x1, y1, x2, y2 = map(int, boxes[i])
+        color = colors[int(class_ids[i]) % len(colors)] if class_ids is not None else (0, 255, 0)
+
+        cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+        if scores is not None:
+            label = f"{scores[i]:.2f}"
+            cv2.putText(image, label, (x1, max(y1 - 5, 0)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+
+        # Draw keypoints
+        for j in range(kpts.shape[1]):
+            kpt_x, kpt_y, kpt_conf = kpts[i, j]
+            if kpt_conf < kpt_conf_thres:
+                continue
+            cv2.circle(image, (int(kpt_x), int(kpt_y)), 4, (0, 0, 255), -1)
+            cv2.circle(image, (int(kpt_x), int(kpt_y)), 2, (0, 255, 255), -1)
+
+    return image
+
+
+def print_pose_detections(boxes: np.ndarray, scores: np.ndarray,
+                          kpts: np.ndarray, kpt_thres: float = 0.5):
+    """Print pose detection results.
+
+    Args:
+        boxes: Bounding boxes with shape `(N, 4)`.
+        scores: Confidence scores with shape `(N,)`.
+        kpts: Keypoints with shape `(N, 17, 3)`.
+        kpt_thres: Confidence threshold for keypoint visibility.
+    """
+    print(f"\nPose Detection Report: {len(boxes)} persons found")
+    for i in range(len(boxes)):
+        visible_kpts = int(np.sum(kpts[i, :, 2] >= kpt_thres))
+        print(f"  [{i}] Score: {scores[i]:.2f} | Visible keypoints: {visible_kpts}/17")
+
+
+def print_detections(boxes: np.ndarray, scores: np.ndarray,
+                     cls_ids: np.ndarray, class_names: list = None):
+    """Print detection results.
+
+    Args:
+        boxes: Bounding boxes with shape `(N, 4)`.
+        scores: Confidence scores with shape `(N,)`.
+        cls_ids: Class indices with shape `(N,)`.
+        class_names: List of class name strings indexed by class ID.
+    """
+    print(f"\nDetection Report: {len(boxes)} objects found")
+    for i in range(len(boxes)):
+        cid = int(cls_ids[i])
+        name = class_names[cid] if class_names and cid < len(class_names) else str(cid)
+        print(f"  [{i}] {name}: {scores[i]:.2f} | Box ({boxes[i][0]:.1f}, {boxes[i][1]:.1f}, "
+              f"{boxes[i][2]:.1f}, {boxes[i][3]:.1f})")

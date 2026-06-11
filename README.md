@@ -1,101 +1,109 @@
+English | [简体中文](./README_cn.md)
+
 # Model Zoo
-## 仓库简介
+## Repository Introduction
 
-本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向 运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者 快速上手 BPU、快速跑通模型推理流程。
+This repository is the official BPU model example and tool collection (Model Zoo) provided by D-Robotics, oriented towards AI model deployment and application development running on BPU (Brain Processing Unit), helping developers quickly get started with BPU and fast-track model inference workflows.
 
-仓库中收录了覆盖多个 AI 领域（如计算机视觉、语音）的 BPU 可运行模型，并提供从 模型准备 → 推理运行 → 结果解析 → 示例验证 的完整参考实现，帮助用户以最小成本理解并使用 BPU 能力。
+The repository includes BPU-runnable models covering multiple AI domains (such as computer vision, speech, and embodied AI), and provides complete reference implementations from model preparation → inference execution → result parsing → example validation, helping users understand and utilize BPU capabilities at minimal cost.
 
-当前主要支持的平台包括：
+Currently supported platforms:
 
 - RDKS100
+- RDKS100P
 
 - RDKS600
 
-仓库核心价值
+Core Value
 
-- 🚀 快速把 BPU 用起来
+- 🚀 Quick BPU Adoption
 
-    提供可直接运行的模型与示例工程，帮助用户在最短时间内完成 BPU 推理验证。
+    Provides ready-to-run models and example projects, helping users complete BPU inference validation in the shortest time.
 
-- 🧩 完整端到端示例
+- 🧩 Complete End-to-End Examples
 
-    覆盖模型加载、前处理、BPU 推理执行、后处理与结果可视化，支持 C/C++ 与 Python 双语言接口。
+    Covers model loading, preprocessing, BPU inference execution, postprocessing, and result visualization, supporting both C/C++ and Python interfaces.
 
-- 📐 规范化设计与完整接口文档
+- 📐 Standardized Design & Complete Interface Documentation
 
-    提供统一的目录结构与示例代码规范，并配套详细的接口文档与使用说明，便于客户快速理解、二次开发，降低集成与维护成本。
+    Provides unified directory structures and sample code specifications, along with detailed interface documentation and usage instructions, making it easy for customers to quickly understand, perform secondary development, and reduce integration and maintenance costs.
 
 
-## 仓库目录结构
+## Repository Directory Structure
 
-本仓库采用分层清晰、职责明确的目录结构，以便用户快速定位所需内容并开始使用。其中，samples/ 是仓库的核心，集中提供运行在 BPU 上的各类模型示例；docs/ 提供了本仓库的规范说明及接口层面的说明文档；datasets/ 用于存放示例与评测所需的数据集；utils/ 则沉淀了可复用的通用工具，便于批量维护。
+This repository adopts a layered, clearly defined directory structure to help users quickly locate the content they need and get started. The `samples/` directory is the core of the repository, providing various model examples running on BPU; `docs/` provides specification and interface documentation; `datasets/` stores datasets needed for examples and evaluation; `utils/` consolidates reusable common tools for batch maintenance.
 
-以下展示顶层目录结构，用于快速理解仓库整体组织方式：
+The following shows the top-level directory structure for a quick overview:
 ```bash
 .
-|-- datasets                               # 公共数据集与示例数据
-|-- docs                                   # 项目文档与用户指南
-|-- samples                                # 模型示例（核心内容）
-|-- tools                                  # 转换/构建/辅助工具
-|-- tros                                   # TROS/ROS 相关适配
-|-- utils                                  # 通用工具库
-|-- LICENSE                                # 许可证
-`-- README.md                              # 顶层说明
+|-- datasets                               # Public datasets and sample data
+|-- docs                                   # Project documentation and user guides
+|-- samples                                # Model examples (core content)
+|-- tools                                  # Conversion/build/helper tools
+|-- tros                                   # TROS/ROS related adapters
+|-- utils                                  # Common utility library
+|-- LICENSE                                # License
+`-- README.md                              # Top-level readme
 
 ```
 
-## 快速开始
+## Quick Start
 
-本仓库中的模型均已按领域进行分类，并汇总在下方的 模型列表 中。
-用户可通过如下步骤快速运行目标模型：
-- 根据自身需求，在模型列表中查找目标模型；
-- 根据表格中提供的路径进入对应的模型目录；
-- 进入模型目录后，阅读该目录下的 README.md，其中包含该模型的功能说明、使用方式以及完整的运行指引；
+Models in this repository are categorized by domain and summarized in the Model List below.
+Users can quickly run a target model by following these steps:
+- Find the target model in the model list based on your needs;
+- Navigate to the corresponding model directory using the path provided in the table;
+- After entering the model directory, read the README.md, which contains the model's functionality description, usage instructions, and complete run guide;
 
 
-以YOLOv5为例
-- 在下方模型列表中定位 YOLOv5；
-- 进入模型目录：
+Example: YOLOv5
+- Locate YOLOv5 in the model list below;
+- Enter the model directory:
 
     ```bash
     cd samples/vision/yolov5
     ```
-- 阅读相应的README文档
+- Read the corresponding README documentation
 
-- 即可按照模型自身的说明完成推理示例的运行与验证。
+- Follow the model's instructions to complete the inference example run and validation.
 
 
-如需对本仓库的整体结构、BPU 使用方式及接口能力进行系统了解，建议参考：
+For a systematic understanding of the repository's overall structure, BPU usage, and interface capabilities, refer to:
 ```bash
 docs/Model_Zoo_User_Guide.md
 ```
 
-## 模型列表
+## Model List
 
-下表按 应用领域 对当前仓库中已提供的模型进行分类，方便快速查找与定位。
-每个模型的详细说明、使用方法和示例，请点击对应的 详情链接 查看该模型目录下的 README.md。
+The following table categorizes the models currently available in this repository by application domain for quick lookup.
+For detailed descriptions, usage, and examples of each model, click the corresponding detail link to view the README.md in that model's directory.
 
-| 类别         | 模型名称      | 模型路径                        | 支持平台     | 详情 |
-|--------------|---------------|---------------------------------|-------------|------|
-| 目标检测     | YOLOv5x       | samples/vision/yolov5           | S100 / S600 | [README](samples/vision/yolov5/README.md) |
-| 目标检测     | YOLO11        | samples/vision/yolo11           | S100 / S600 | [README](samples/vision/yolo11/README.md) |
-| 实例分割     | YOLO11-Seg    | samples/vision/yolo11_seg       | S100 / S600 | [README](samples/vision/yolo11_seg/README.md) |
-| 实例分割     | YOLOe11-Seg   | samples/vision/yoloe11_seg      | S100        | [README](samples/vision/yoloe11_seg/README.md) |
-| 姿态估计     | YOLO11-Pose   | samples/vision/yolo11_pose      | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
-| 图像分类     | ResNet18      | samples/vision/resnet18         | S100 / S600 | [README](samples/vision/resnet18/README.md) |
-| 图像分类     | MobileNetV2   | samples/vision/mobilenetv2      | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
-| 语义分割     | UnetMobileNet | samples/vision/unetmobilenet    | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
-| 车道线检测   | LaneNet       | samples/vision/lanenet          | S100        | [README](samples/vision/lanenet/README.md) |
-| 文字识别     | PaddleOCR     | samples/vision/paddle_ocr       | S100        | [README](samples/vision/paddle_ocr/README.md) |
-| 语音识别     | ASR           | samples/speech/asr              | S100 / S600 | [README](samples/speech/asr/README.md) |
-
-
-## 文档说明
-
-- 每个模型的顶层目录的`README.md`中，都有该模型的整体介绍，如果想快速了解某个模型，可直接到相关目录查看；
-- 每个模型都有详细的接口介绍，如关系代码层面的接口信息，可阅读[源码文档说明](docs/source_reference/README.md)，根据介绍构建或浏览代码文档；
-- 如需提交自己的模型Sample，请于仔细阅读[rdk_model_zoo](docs/Model_Zoo_Repository_Guidelines.md)仓库规范；
+| Category | Model Name | Model Path | Supported Platforms | Details |
+|---|---|---|---|---|
+| Vision Multi-task | Ultralytics YOLO (YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12) | samples/vision/ultralytics_yolo | S100 / S100P | [README](samples/vision/ultralytics_yolo/README.md) |
+| Vision Multi-task | YOLO26 | samples/vision/ultralytics_yolo26 | S100 / S100P | [README](samples/vision/ultralytics_yolo26/README.md) |
+| Object Detection | YOLOv5x | samples/vision/yolov5 | S100 / S600 | [README](samples/vision/yolov5/README.md) |
+| Object Detection | YOLO11 | samples/vision/yolo11 | S100 / S600 | [README](samples/vision/yolo11/README.md) |
+| Instance Segmentation | YOLO11-Seg | samples/vision/yolo11_seg | S100 / S600 | [README](samples/vision/yolo11_seg/README.md) |
+| Instance Segmentation | YOLOe11-Seg | samples/vision/yoloe11_seg | S100 | [README](samples/vision/yoloe11_seg/README.md) |
+| Pose Estimation | YOLO11-Pose | samples/vision/yolo11_pose | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
+| Image Classification | ResNet18 | samples/vision/resnet18 | S100 / S600 | [README](samples/vision/resnet18/README.md) |
+| Image Classification | ResNet50 | samples/vision/resnet50 | S100 | [README](samples/vision/resnet50/README.md) |
+| Image Classification | ResNet152 | samples/vision/resnet152 | S100 | [README](samples/vision/resnet152/README.md) |
+| Image Classification | MobileNetV2 | samples/vision/mobilenetv2 | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
+| Semantic Segmentation | UnetMobileNet | samples/vision/unetmobilenet | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
+| Lane Detection | LaneNet | samples/vision/lanenet | S100 | [README](samples/vision/lanenet/README.md) |
+| Text Recognition | PaddleOCR | samples/vision/paddle_ocr | S100 | [README](samples/vision/paddle_ocr/README.md) |
+| Speech Recognition | ASR | samples/speech/asr | S100 / S600 | [README](samples/speech/asr/README.md) |
+| Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | samples/vla/act | S100 | [README](samples/vla/act/README.md) |
 
 
-## 许可证
+## Documentation
+
+- Each model's top-level directory contains a `README.md` with an overall introduction to the model. If you want to quickly learn about a specific model, navigate directly to the relevant directory;
+- Each model has detailed interface descriptions. For code-level interface information, read the [source code documentation](docs/source_reference/README.md) and follow the instructions to build or browse the code documentation;
+- To submit your own model sample, please carefully read the [rdk_model_zoo](docs/Model_Zoo_Repository_Guidelines.md) repository specifications;
+
+
+## License
 [Apache License 2.0](LICENSE)

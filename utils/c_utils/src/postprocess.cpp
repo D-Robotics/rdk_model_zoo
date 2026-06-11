@@ -64,7 +64,7 @@ void get_topk_result(const std::vector<Classification>& results,
         k = results.size();
     }
 
-    // 拷贝一份用于排序
+    // Copy for sorting
     topk_results = results;
 
     std::partial_sort(
@@ -72,7 +72,7 @@ void get_topk_result(const std::vector<Classification>& results,
         topk_results.begin() + k,
         topk_results.end(),
         [](const Classification& a, const Classification& b) {
-            return a.probability > b.probability;  // 降序
+            return a.probability > b.probability;  // Descending
         }
     );
 
