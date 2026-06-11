@@ -5,7 +5,7 @@ English | [简体中文](./README_cn.md)
 
 This repository is the official BPU model example and tool collection (Model Zoo) provided by D-Robotics, oriented towards AI model deployment and application development running on BPU (Brain Processing Unit), helping developers quickly get started with BPU and fast-track model inference workflows.
 
-The repository includes BPU-runnable models covering multiple AI domains (such as computer vision, speech), and provides complete reference implementations from model preparation → inference execution → result parsing → example validation, helping users understand and utilize BPU capabilities at minimal cost.
+The repository includes BPU-runnable models covering multiple AI domains (such as computer vision, speech, and embodied AI), and provides complete reference implementations from model preparation → inference execution → result parsing → example validation, helping users understand and utilize BPU capabilities at minimal cost.
 
 Currently supported platforms:
 
@@ -95,6 +95,7 @@ For detailed descriptions, usage, and examples of each model, click the correspo
 | Lane Detection | LaneNet | samples/vision/lanenet | S100 | [README](samples/vision/lanenet/README.md) |
 | Text Recognition | PaddleOCR | samples/vision/paddle_ocr | S100 | [README](samples/vision/paddle_ocr/README.md) |
 | Speech Recognition | ASR | samples/speech/asr | S100 / S600 | [README](samples/speech/asr/README.md) |
+| Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | samples/vla/act | S100 | [README](samples/vla/act/README.md) |
 
 
 ## Documentation

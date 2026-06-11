@@ -5,7 +5,7 @@
 
 本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向 运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者 快速上手 BPU、快速跑通模型推理流程。
 
-仓库中收录了覆盖多个 AI 领域（如计算机视觉、语音）的 BPU 可运行模型，并提供从 模型准备 → 推理运行 → 结果解析 → 示例验证 的完整参考实现，帮助用户以最小成本理解并使用 BPU 能力。
+仓库中收录了覆盖多个 AI 领域（如计算机视觉、语音、具身智能）的 BPU 可运行模型，并提供从 模型准备 → 推理运行 → 结果解析 → 示例验证 的完整参考实现，帮助用户以最小成本理解并使用 BPU 能力。
 
 当前主要支持的平台包括：
 
@@ -95,6 +95,7 @@ docs/Model_Zoo_User_Guide.md
 | 车道线检测   | LaneNet       | samples/vision/lanenet          | S100        | [README](samples/vision/lanenet/README.md) |
 | 文字识别     | PaddleOCR     | samples/vision/paddle_ocr       | S100        | [README](samples/vision/paddle_ocr/README.md) |
 | 语音识别     | ASR           | samples/speech/asr              | S100 / S600 | [README](samples/speech/asr/README.md) |
+| 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | samples/vla/act | S100 | [README](samples/vla/act/README.md) |
 
 
 ## 文档说明
