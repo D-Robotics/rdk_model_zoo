@@ -2,11 +2,11 @@ English | [简体中文](./README_cn.md)
 
 # YOLO26 Python Inference Sample
 
-This sample demonstrates how to run YOLO26 task models on RDK S100/S100P with `hbm_runtime`.
+This sample demonstrates how to run YOLO26 task models on RDK S100/S100P/S600 with `hbm_runtime`.
 
 ## Environment Dependencies
 
-This sample has no special extra dependencies. Make sure the RDK S100/S100P Python environment is ready.
+This sample has no special extra dependencies. Make sure the RDK S100/S100P/S600 Python environment is ready.
 
 ```bash
 pip install numpy opencv-python hbm-runtime scipy
@@ -44,7 +44,7 @@ pip install numpy opencv-python hbm-runtime scipy
 | `--angle-sign` | Angle decoding sign multiplier (OBB) | `1.0` |
 | `--angle-offset`| Angle decoding offset (OBB) | `0.0` |
 
-> **Note**: The default `--model-path` is determined automatically based on `--task` and the detected SoC. S100 uses the `nashe` suffix; S100P uses the `nashm` suffix.
+> **Note**: The default `--model-path` is determined automatically based on `--task` and the detected SoC. S100 uses the `nashe` suffix; S100P uses the `nashm` suffix; S600 uses the `nashp` suffix.
 
 ## Quick Run
 

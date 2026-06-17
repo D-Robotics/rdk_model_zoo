@@ -18,13 +18,13 @@
 YOLO26 Model Conversion Script (Mapper)
 
 This script automates the model conversion process for D-Robotics RDK platforms.
-It supports RDK S100/S100P (Nash architecture).
+It supports RDK S100/S100P/S600 (Nash architecture).
 
 Key Features:
 - Automates calibration data preparation (Image -> NPY).
 - Generates architecture-specific configuration files (yaml).
 - Invokes the appropriate compiler tool:
-    - `hb_compile` for Nash (S100/S100P) -> Output: *.hbm
+    - `hb_compile` for Nash (S100/S100P/S600) -> Output: *.hbm
 
 Usage:
     python3 mapper.py --onnx model.onnx --cal-images ./images --march nash-e
@@ -83,8 +83,8 @@ def main():
     parser.add_argument('--output-dir', type=str, default='.', help='Directory to save the converted model.')
     
     # Architecture selection
-    parser.add_argument('--march', type=str, default="nash-e", 
-                        help='Target Architecture: "nash-e" (RDK S100), "nash-m" (RDK S100P). Default: nash-e')
+    parser.add_argument('--march', type=str, default="nash-e",
+                        help='Target Architecture: "nash-e" (RDK S100), "nash-m" (RDK S100P), "nash-p" (RDK S600). Default: nash-e')
     
     parser.add_argument('--quantized', type=str, default="int8", help='Quantization precision: "int8" (default) or "int16".')
     parser.add_argument('--jobs', type=int, default=16, help='Number of parallel compilation jobs.')
@@ -118,7 +118,7 @@ def main():
 
 def run_nash(opt):
     """
-    Workflow for RDK S100/S100P (Nash Architecture).
+    Workflow for RDK S100/S100P/S600 (Nash Architecture).
     Uses `hb_compile` toolchain.
     Generates `.hbm` model files.
     Calibration data format: `.npy` files (normalized 0-1).
@@ -138,12 +138,12 @@ def run_nash(opt):
     logger.info(f"  Calibration images: {opt.cal_images}")
     logger.info(f"  Output directory: {opt.output_dir}")
 
-    # Check for hb_compile (S100 Toolchain)
+    # Check for hb_compile (S100/S600 Toolchain)
     try:
         subprocess.run(['hb_compile', '--help'], capture_output=True, text=True, check=True)
         logger.info("hb_compile is available.")
     except (subprocess.CalledProcessError, FileNotFoundError):
-        logger.error("hb_compile is not available. Please ensure RDK S100 Toolchain is installed/sourced.")
+        logger.error("hb_compile is not available. Please ensure RDK S100/S600 Toolchain is installed/sourced.")
         exit(1)
 
     # Validate ONNX model
@@ -261,7 +261,7 @@ compiler_parameters:
         img = cv2.imread(img_path)
         if img is None: continue
             
-        # S100 preprocessing matches ONNX export (RGB + Normalize)
+        # Nash preprocessing matches ONNX export (RGB + Normalize)
         input_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)     # BGR2RGB
         input_tensor = cv2.resize(input_tensor, (width, height)) # resize
         input_tensor = np.transpose(input_tensor, (2, 0, 1))    # HWC2CHW
@@ -280,7 +280,7 @@ compiler_parameters:
             logger.error("hb_compile failed.")
             exit(1)
 
-        # Move Output (.hbm for S100)
+        # Move Output (.hbm for S100/S600)
         output_bin_path = os.path.join(bpu_output_dir, f"{output_model_prefix}.hbm")
         final_output_path = os.path.join(opt.output_dir, f"{output_model_prefix}.hbm")
         
