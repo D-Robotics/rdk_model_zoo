@@ -2,9 +2,9 @@ English | [简体中文](./README_cn.md)
 
 # ResNet18 Model Description
 
-ResNet18 is an ImageNet classification sample for the RDK S100 model zoo. It
-provides sample-local model download, Python and C++ runtime examples, preserved
-original documentation assets, and validation notes.
+ResNet18 is an ImageNet classification sample for the RDK Model Zoo. It targets
+RDK S100 and RDK S600, providing sample-local model download, Python and C++
+runtime examples, preserved original documentation assets, and validation notes.
 
 ## Algorithm Overview
 
@@ -112,7 +112,7 @@ This sample currently maintains Python and C++ runtime paths:
 
 | Model | Input | Runtime model |
 | --- | --- | --- |
-| ResNet18 | 224x224 NV12 | `model/s100/resnet18_224x224_nv12.hbm` |
+| ResNet18 | 224x224 NV12 | `model/s100/resnet18_224x224_nv12.hbm` (S100) <br/> `model/s600/resnet18_224x224_nv12.hbm` (S600) |
 
 ## Model Evaluation
 

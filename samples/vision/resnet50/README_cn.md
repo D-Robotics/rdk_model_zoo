@@ -2,8 +2,8 @@
 
 # ResNet50 模型说明
 
-ResNet50 是 RDK S100 Model Zoo 的 ImageNet 分类 sample。本目录提供 sample
-内模型下载、Python runtime、保留的原始文档资产以及评测说明。
+ResNet50 是 RDK Model Zoo 的 ImageNet 分类 sample，已支持 RDK S100 与 RDK S600。
+本目录提供 sample 内模型下载、Python runtime、保留的原始文档资产以及评测说明。
 
 ## 算法介绍
 
@@ -88,7 +88,7 @@ python3 main.py \
 
 | 模型 | 输入 | 运行模型 |
 | --- | --- | --- |
-| ResNet50 | 224x224 NV12 | `model/s100/resnet50_224x224_nv12.hbm` |
+| ResNet50 | 224x224 NV12 | `model/s100/resnet50_224x224_nv12.hbm`（S100）<br/>`model/s600/resnet50_224x224_nv12.hbm`（S600）|
 
 ## 模型评估
 

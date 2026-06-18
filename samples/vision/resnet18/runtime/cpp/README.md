@@ -43,7 +43,10 @@ bash run.sh
 ```
 
 The script downloads the model through `../../../model/download_model.sh`,
-builds the executable, and runs with the sample-local model path.
+builds the executable, and runs with the sample-local model path. It defaults
+to the S100 model; for RDK S600, run
+`bash ../../../model/download_model.sh s600` first and override `--model_path`
+to `../../../model/s600/resnet18_224x224_nv12.hbm`.
 
 ## Direct Run
 

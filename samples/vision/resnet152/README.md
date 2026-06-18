@@ -59,11 +59,11 @@ resnet152/
 
 ## Quick Start
 
-Download the model into the sample-local model directory:
+Download the model into the sample-local model directory (pass `s100` or `s600` for the target SoC):
 
 ```bash
 cd model
-bash download_model.sh s100
+bash download_model.sh s100   # or: bash download_model.sh s600
 ```
 
 Run the Python sample:
@@ -94,9 +94,9 @@ This sample currently maintains the Python runtime path. See [runtime/python/REA
 
 | Model | Input | Runtime input type | Output | Download path |
 | --- | --- | --- | --- | --- |
-| ResNet152 | 224x224 | NV12 Y/UV planes | ImageNet 1000-class logits | `model/s100/resnet152_224x224_nv12.hbm` |
+| ResNet152 | 224x224 | NV12 Y/UV planes | ImageNet 1000-class logits | `model/s100/resnet152_224x224_nv12.hbm` (S100) <br/> `model/s600/resnet152_224x224_nv12.hbm` (S600) |
 
-This sample uses the public S100 HBM model downloaded into the sample-local `model/s100` directory.
+This sample uses the public RDK ResNet152 HBM model downloaded into the sample-local `model/<soc>` directory.
 
 ## Model Evaluation
 

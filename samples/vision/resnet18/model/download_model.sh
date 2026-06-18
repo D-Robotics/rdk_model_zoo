@@ -3,15 +3,21 @@ set -e
 
 SOC="${1:-s100}"
 
-if [[ "$SOC" != "s100" ]]; then
-  echo "Only the S100 ResNet18 HBM file is available in this sample."
-  echo "Requested SoC: $SOC"
-  exit 1
-fi
+# Supported SoC -> model directory (also doubles as URL sub-path).
+#   s100 -> rdk_s100/ResNet
+#   s600 -> rdk_s600/ResNet
+case "$SOC" in
+  s100|s600) ;;
+  *)
+    echo "Unsupported SoC: $SOC"
+    echo "Available: s100, s600"
+    exit 1
+    ;;
+esac
 
-MODEL_DIR="./s100"
+MODEL_DIR="./${SOC}"
 MODEL_NAME="resnet18_224x224_nv12"
-MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/${MODEL_NAME}.hbm"
+MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${SOC}/ResNet/${MODEL_NAME}.hbm"
 MODEL_PATH="${MODEL_DIR}/${MODEL_NAME}.hbm"
 
 mkdir -p "$MODEL_DIR"
@@ -21,6 +27,6 @@ if [[ -f "$MODEL_PATH" ]]; then
   exit 0
 fi
 
-echo "Downloading ${MODEL_NAME}.hbm..."
+echo "Downloading ${MODEL_NAME}.hbm for ${SOC}..."
 wget -c "$MODEL_URL" -O "$MODEL_PATH"
 echo "Downloaded to ${MODEL_PATH}"

@@ -42,7 +42,9 @@ bash run.sh
 ```
 
 脚本会通过 `../../../model/download_model.sh` 下载模型，构建可执行文件，并使用
-sample 内模型路径运行。
+sample 内模型路径运行。默认下载 S100 模型，RDK S600 用户请先执行
+`bash ../../../model/download_model.sh s600`，并将 `--model_path` 改为
+`../../../model/s600/resnet18_224x224_nv12.hbm`。
 
 ## 直接运行
 

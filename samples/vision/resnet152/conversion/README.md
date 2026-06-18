@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # ResNet152 Conversion
 
-This directory preserves the conversion materials from the original S100 ResNet152 demo and places them in the standard sample layout.
+This directory preserves the conversion materials from the original RDK ResNet152 demo and places them in the standard sample layout. The provided `resnet152_config.yaml` targets `nash-e` (RDK S100); switch `march` to `nash-p` when recompiling for RDK S600.
 
 ## Files
 
@@ -69,12 +69,12 @@ The runtime sample downloads the published HBM artifact, so rebuilding the model
 
 ## OE Toolchain
 
-Run model conversion on an x86 Linux host with the RDK S100 OpenExplore environment. Model conversion is not intended to run on the board.
+Run model conversion on an x86 Linux host with the RDK OpenExplore environment (S100 and S600 share the same toolchain). Model conversion is not intended to run on the board.
 
 - OE Docker documentation: <https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>
 - OE toolchain download: <https://toolchain.d-robotics.cc/>
 
-Download the OpenExplore CPU Docker image for RDK S100/S100P from the OE Docker documentation, then load the actual image file:
+Download the OpenExplore CPU Docker image for the target SoC (S100/S100P/S600) from the OE Docker documentation, then load the actual image file:
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
@@ -95,7 +95,7 @@ English | [简体中文](./README_cn.md)
 
 # ResNet152 Conversion
 
-This directory preserves the conversion materials from the original S100 ResNet152 demo and places them in the standard sample layout.
+This directory preserves the conversion materials from the original RDK ResNet152 demo and places them in the standard sample layout. The provided `resnet152_config.yaml` targets `nash-e` (RDK S100); switch `march` to `nash-p` when recompiling for RDK S600.
 
 ## Files
 

@@ -2,16 +2,21 @@ English | [简体中文](./README_cn.md)
 
 # ResNet18 Model Download
 
-Run the download script from this directory:
+Run the download script from this directory, passing the target SoC (`s100` or `s600`):
 
 ```bash
+# RDK S100
 bash download_model.sh s100
+
+# RDK S600
+bash download_model.sh s600
 ```
 
-The script downloads the S100 HBM file to `./s100/`:
+The script downloads the HBM file to `./<soc>/`:
 
-| Model | URL |
-| --- | --- |
-| `resnet18_224x224_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm` |
+| SoC | Local path | URL |
+| --- | --- | --- |
+| `s100` | `./s100/resnet18_224x224_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm` |
+| `s600` | `./s600/resnet18_224x224_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm` |
 
-This sample uses the public S100 HBM model.
+This sample uses the public RDK ResNet18 HBM model. The file name is the same across SoCs; only the archive sub-directory differs.

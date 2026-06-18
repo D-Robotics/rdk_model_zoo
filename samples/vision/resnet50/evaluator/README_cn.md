@@ -2,8 +2,8 @@
 
 # ResNet50 评测
 
-本目录记录 ResNet50 的验证方式。当前 sample 提供 notebook 和
-runtime 脚本，但没有独立精度评测脚本。
+本目录记录 ResNet50 在 RDK S100 / RDK S600 上的验证方式。当前 sample 提供
+notebook 和 runtime 脚本，但没有独立精度评测脚本。
 
 ## 功能验证
 
@@ -21,6 +21,8 @@ python3 main.py \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
 ```
+
+RDK S600 用户请将 `--model-path` 改为 `../../model/s600/resnet50_224x224_nv12.hbm`。
 
 只有 Top-1 或 Top-5 与测试图语义匹配时，才认为结果正确。对于
 `zebra_cls.jpg`，`zebra` 应出现在结果中，且置信度为有限非零值。

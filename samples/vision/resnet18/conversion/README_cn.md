@@ -36,30 +36,33 @@ resnet18_224x224_nv12.hbm
 | --- | --- |
 | 运行时输入 | NV12 |
 | 输入尺寸 | 224x224 |
-| 目标 march | `nash-e` |
-| 运行模型 | `../model/s100/resnet18_224x224_nv12.hbm` |
+| 目标 march | `nash-e`（RDK S100）/ `nash-p`（RDK S600）|
+| 运行模型 | `../model/s100/resnet18_224x224_nv12.hbm`（S100）<br/>`../model/s600/resnet18_224x224_nv12.hbm`（S600）|
 
 ## 下载
 
 原始下载 URL 保留在 `../model/download_model.sh`：
 
 ```bash
+# RDK S100
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
+# RDK S600
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
 ```
 
 ## 模型说明
 
-本 sample 使用公开 S100 HBM 模型。如需重新生成模型，请参考上面的 OE SDK
-转换说明。
+本 sample 使用公开 RDK ResNet18 HBM 模型，S100 和 S600 模型文件名相同，仅
+archive 子目录不同。如需重新生成模型，请参考上面的 OE SDK 转换说明。
 
 ## OE 工具链
 
-模型转换请在 x86 Linux 主机的 RDK S100 OpenExplore 环境中完成，不建议在板端执行转换。
+模型转换请在 x86 Linux 主机的 RDK OpenExplore 环境中完成，不建议在板端执行转换（S100/S600 共用同一套 OE 工具链）。
 
 - OE Docker 下载文档：<https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>
 - OE 工具链下载：<https://toolchain.d-robotics.cc/>
 
-请从 OE Docker 下载文档获取适配 RDK S100/S100P 的 OpenExplore CPU Docker 镜像，并按实际文件名加载：
+请从 OE Docker 下载文档获取适配目标 SoC（S100/S100P/S600）的 OpenExplore CPU Docker 镜像，并按实际文件名加载：
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
@@ -114,18 +117,21 @@ resnet18_224x224_nv12.hbm
 | --- | --- |
 | 运行时输入 | NV12 |
 | 输入尺寸 | 224x224 |
-| 目标 march | `nash-e` |
-| 运行模型 | `../model/s100/resnet18_224x224_nv12.hbm` |
+| 目标 march | `nash-e`（RDK S100）/ `nash-p`（RDK S600）|
+| 运行模型 | `../model/s100/resnet18_224x224_nv12.hbm`（S100）<br/>`../model/s600/resnet18_224x224_nv12.hbm`（S600）|
 
 ## 下载
 
 原始下载 URL 保留在 `../model/download_model.sh`：
 
 ```bash
+# RDK S100
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
+# RDK S600
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
 ```
 
 ## 模型说明
 
-本 sample 使用公开 S100 HBM 模型。如需重新生成模型，请参考上面的 OE SDK
-转换说明。
+本 sample 使用公开 RDK ResNet18 HBM 模型，S100 和 S600 模型文件名相同，仅
+archive 子目录不同。如需重新生成模型，请参考上面的 OE SDK 转换说明。
