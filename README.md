@@ -123,7 +123,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Category | Model Name | Model Path | Supported Platforms | Details |
 | :--- | :--- | :--- | :--- | :---: |
 | Vision Multi-task | Ultralytics YOLO (YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12) | `samples/vision/ultralytics_yolo` | S100 / S100P | [Details](./samples/vision/ultralytics_yolo) |
-| Vision Multi-task | YOLO26 | `samples/vision/ultralytics_yolo26` | S100 / S100P | [Details](./samples/vision/ultralytics_yolo26) |
+| Vision Multi-task | YOLO26 | `samples/vision/ultralytics_yolo26` | S100 / S100P / S600 | [Details](./samples/vision/ultralytics_yolo26) |
 | Object Detection | YOLOv5x | `samples/vision/yolov5` | S100 / S600 | [Details](./samples/vision/yolov5) |
 | Object Detection | YOLO11 | `samples/vision/yolo11` | S100 / S600 | [Details](./samples/vision/yolo11) |
 | Object Detection | YOLOv13 (iMoonLab) | `samples/vision/yolov13_imoonlab` | S100 | [Details](./samples/vision/yolov13_imoonlab) |
@@ -132,8 +132,8 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Instance Segmentation | YOLOe11-Seg (Prompt-Free) | `samples/vision/yoloe11_seg` | S100 | [Details](./samples/vision/yoloe11_seg) |
 | Pose Estimation | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [Details](./samples/vision/yolo11_pose) |
 | Image Classification | ResNet18 | `samples/vision/resnet18` | S100 / S600 | [Details](./samples/vision/resnet18) |
-| Image Classification | ResNet50 | `samples/vision/resnet50` | S100 | [Details](./samples/vision/resnet50) |
-| Image Classification | ResNet152 | `samples/vision/resnet152` | S100 | [Details](./samples/vision/resnet152) |
+| Image Classification | ResNet50 | `samples/vision/resnet50` | S100 / S600 | [Details](./samples/vision/resnet50) |
+| Image Classification | ResNet152 | `samples/vision/resnet152` | S100 / S600 | [Details](./samples/vision/resnet152) |
 | Image Classification | MobileNetV1 | `samples/vision/mobilenetv1` | S100 | [Details](./samples/vision/mobilenetv1) |
 | Image Classification | MobileNetV2 | `samples/vision/mobilenetv2` | S100 / S600 | [Details](./samples/vision/mobilenetv2) |
 | Image Classification | MobileNetV3 | `samples/vision/mobilenetv3` | S100 | [Details](./samples/vision/mobilenetv3) |

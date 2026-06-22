@@ -123,7 +123,7 @@ bash run.sh
 | 类别 | 模型名称 | 模型路径 | 支持平台 | 详情 |
 | :--- | :--- | :--- | :--- | :---: |
 | 视觉多任务 | Ultralytics YOLO（YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12） | `samples/vision/ultralytics_yolo` | S100 / S100P | [详情](./samples/vision/ultralytics_yolo) |
-| 视觉多任务 | YOLO26 | `samples/vision/ultralytics_yolo26` | S100 / S100P | [详情](./samples/vision/ultralytics_yolo26) |
+| 视觉多任务 | YOLO26 | `samples/vision/ultralytics_yolo26` | S100 / S100P / S600 | [详情](./samples/vision/ultralytics_yolo26) |
 | 目标检测 | YOLOv5x | `samples/vision/yolov5` | S100 / S600 | [详情](./samples/vision/yolov5) |
 | 目标检测 | YOLO11 | `samples/vision/yolo11` | S100 / S600 | [详情](./samples/vision/yolo11) |
 | 目标检测 | YOLOv13（iMoonLab） | `samples/vision/yolov13_imoonlab` | S100 | [详情](./samples/vision/yolov13_imoonlab) |
@@ -132,8 +132,8 @@ bash run.sh
 | 实例分割 | YOLOe11-Seg（无提示词） | `samples/vision/yoloe11_seg` | S100 | [详情](./samples/vision/yoloe11_seg) |
 | 姿态估计 | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [详情](./samples/vision/yolo11_pose) |
 | 图像分类 | ResNet18 | `samples/vision/resnet18` | S100 / S600 | [详情](./samples/vision/resnet18) |
-| 图像分类 | ResNet50 | `samples/vision/resnet50` | S100 | [详情](./samples/vision/resnet50) |
-| 图像分类 | ResNet152 | `samples/vision/resnet152` | S100 | [详情](./samples/vision/resnet152) |
+| 图像分类 | ResNet50 | `samples/vision/resnet50` | S100 / S600 | [详情](./samples/vision/resnet50) |
+| 图像分类 | ResNet152 | `samples/vision/resnet152` | S100 / S600 | [详情](./samples/vision/resnet152) |
 | 图像分类 | MobileNetV1 | `samples/vision/mobilenetv1` | S100 | [详情](./samples/vision/mobilenetv1) |
 | 图像分类 | MobileNetV2 | `samples/vision/mobilenetv2` | S100 / S600 | [详情](./samples/vision/mobilenetv2) |
 | 图像分类 | MobileNetV3 | `samples/vision/mobilenetv3` | S100 | [详情](./samples/vision/mobilenetv3) |
