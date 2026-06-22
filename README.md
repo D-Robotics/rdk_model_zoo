@@ -84,17 +84,29 @@ For detailed descriptions, usage, and examples of each model, click the correspo
 | Vision Multi-task | YOLO26 | samples/vision/ultralytics_yolo26 | S100 / S100P | [README](samples/vision/ultralytics_yolo26/README.md) |
 | Object Detection | YOLOv5x | samples/vision/yolov5 | S100 / S600 | [README](samples/vision/yolov5/README.md) |
 | Object Detection | YOLO11 | samples/vision/yolo11 | S100 / S600 | [README](samples/vision/yolo11/README.md) |
+| Object Detection | YOLOv13 (iMoonLab) | samples/vision/yolov13_imoonlab | S100 | [README](samples/vision/yolov13_imoonlab/README.md) |
+| Multi-Object Tracking | ByteTrack | samples/vision/bytetrack | S100 / S100P / S600 | [README](samples/vision/bytetrack/README.md) |
 | Instance Segmentation | YOLO11-Seg | samples/vision/yolo11_seg | S100 / S600 | [README](samples/vision/yolo11_seg/README.md) |
 | Instance Segmentation | YOLOe11-Seg | samples/vision/yoloe11_seg | S100 | [README](samples/vision/yoloe11_seg/README.md) |
 | Pose Estimation | YOLO11-Pose | samples/vision/yolo11_pose | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
 | Image Classification | ResNet18 | samples/vision/resnet18 | S100 / S600 | [README](samples/vision/resnet18/README.md) |
 | Image Classification | ResNet50 | samples/vision/resnet50 | S100 | [README](samples/vision/resnet50/README.md) |
 | Image Classification | ResNet152 | samples/vision/resnet152 | S100 | [README](samples/vision/resnet152/README.md) |
+| Image Classification | MobileNetV1 | samples/vision/mobilenetv1 | S100 | [README](samples/vision/mobilenetv1/README.md) |
 | Image Classification | MobileNetV2 | samples/vision/mobilenetv2 | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
+| Image Classification | MobileNetV3 | samples/vision/mobilenetv3 | S100 | [README](samples/vision/mobilenetv3/README.md) |
+| Image Classification | MobileNetV4 | samples/vision/mobilenetv4 | S100 | [README](samples/vision/mobilenetv4/README.md) |
+| Image Classification | EfficientNet-Lite | samples/vision/efficientnet | S100 | [README](samples/vision/efficientnet/README.md) |
+| Image Classification | ViT | samples/vision/vit | S100 | [README](samples/vision/vit/README.md) |
+| Image Classification | 3D ResNet (Video Action) | samples/vision/3dresnet | S100 | [README](samples/vision/3dresnet/README.md) |
 | Semantic Segmentation | UnetMobileNet | samples/vision/unetmobilenet | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
+| Monocular Depth | Depth Anything V2 | samples/vision/depth_anything_v2 | S100 / S600 | [README](samples/vision/depth_anything_v2/README.md) |
+| Vision Encoder | SigLIP | samples/vision/siglip | S100 / S100P | [README](samples/vision/siglip/README.md) |
+| Point Cloud Segmentation | PointNet | samples/vision/pointnet | S100 | [README](samples/vision/pointnet/README.md) |
 | Lane Detection | LaneNet | samples/vision/lanenet | S100 | [README](samples/vision/lanenet/README.md) |
 | Text Recognition | PaddleOCR | samples/vision/paddle_ocr | S100 | [README](samples/vision/paddle_ocr/README.md) |
 | Speech Recognition | ASR | samples/speech/asr | S100 / S600 | [README](samples/speech/asr/README.md) |
+| Keyword Spotting | KWS | samples/speech/kws | S100 | [README](samples/speech/kws/README.md) |
 | Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | samples/vla/act | S100 | [README](samples/vla/act/README.md) |
 
 

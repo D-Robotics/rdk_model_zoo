@@ -78,23 +78,35 @@ docs/Model_Zoo_User_Guide.md
 下表按 应用领域 对当前仓库中已提供的模型进行分类，方便快速查找与定位。
 每个模型的详细说明、使用方法和示例，请点击对应的 详情链接 查看该模型目录下的 README.md。
 
-| 类别         | 模型名称      | 模型路径                        | 支持平台     | 详情 |
-|--------------|---------------|---------------------------------|-------------|------|
-| 视觉多任务   | Ultralytics YOLO（YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12） | samples/vision/ultralytics_yolo | S100 / S100P | [README](samples/vision/ultralytics_yolo/README.md) |
-| 视觉多任务   | YOLO26        | samples/vision/ultralytics_yolo26 | S100 / S100P | [README](samples/vision/ultralytics_yolo26/README.md) |
-| 目标检测     | YOLOv5x       | samples/vision/yolov5           | S100 / S600 | [README](samples/vision/yolov5/README.md) |
-| 目标检测     | YOLO11        | samples/vision/yolo11           | S100 / S600 | [README](samples/vision/yolo11/README.md) |
-| 实例分割     | YOLO11-Seg    | samples/vision/yolo11_seg       | S100 / S600 | [README](samples/vision/yolo11_seg/README.md) |
-| 实例分割     | YOLOe11-Seg   | samples/vision/yoloe11_seg      | S100        | [README](samples/vision/yoloe11_seg/README.md) |
-| 姿态估计     | YOLO11-Pose   | samples/vision/yolo11_pose      | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
-| 图像分类     | ResNet18      | samples/vision/resnet18         | S100 / S600 | [README](samples/vision/resnet18/README_cn.md) |
-| 图像分类     | ResNet50      | samples/vision/resnet50         | S100        | [README](samples/vision/resnet50/README_cn.md) |
-| 图像分类     | ResNet152     | samples/vision/resnet152        | S100        | [README](samples/vision/resnet152/README_cn.md) |
-| 图像分类     | MobileNetV2   | samples/vision/mobilenetv2      | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
-| 语义分割     | UnetMobileNet | samples/vision/unetmobilenet    | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
-| 车道线检测   | LaneNet       | samples/vision/lanenet          | S100        | [README](samples/vision/lanenet/README.md) |
-| 文字识别     | PaddleOCR     | samples/vision/paddle_ocr       | S100        | [README](samples/vision/paddle_ocr/README.md) |
-| 语音识别     | ASR           | samples/speech/asr              | S100 / S600 | [README](samples/speech/asr/README.md) |
+| 类别 | 模型名称 | 模型路径 | 支持平台 | 详情 |
+|---|---|---|---|---|
+| 视觉多任务 | Ultralytics YOLO（YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12） | samples/vision/ultralytics_yolo | S100 / S100P | [README](samples/vision/ultralytics_yolo/README.md) |
+| 视觉多任务 | YOLO26 | samples/vision/ultralytics_yolo26 | S100 / S100P | [README](samples/vision/ultralytics_yolo26/README.md) |
+| 目标检测 | YOLOv5x | samples/vision/yolov5 | S100 / S600 | [README](samples/vision/yolov5/README.md) |
+| 目标检测 | YOLO11 | samples/vision/yolo11 | S100 / S600 | [README](samples/vision/yolo11/README.md) |
+| 目标检测 | YOLOv13（iMoonLab） | samples/vision/yolov13_imoonlab | S100 | [README](samples/vision/yolov13_imoonlab/README.md) |
+| 多目标追踪 | ByteTrack | samples/vision/bytetrack | S100 / S100P / S600 | [README](samples/vision/bytetrack/README.md) |
+| 实例分割 | YOLO11-Seg | samples/vision/yolo11_seg | S100 / S600 | [README](samples/vision/yolo11_seg/README.md) |
+| 实例分割 | YOLOe11-Seg | samples/vision/yoloe11_seg | S100 | [README](samples/vision/yoloe11_seg/README.md) |
+| 姿态估计 | YOLO11-Pose | samples/vision/yolo11_pose | S100 / S600 | [README](samples/vision/yolo11_pose/README.md) |
+| 图像分类 | ResNet18 | samples/vision/resnet18 | S100 / S600 | [README](samples/vision/resnet18/README_cn.md) |
+| 图像分类 | ResNet50 | samples/vision/resnet50 | S100 | [README](samples/vision/resnet50/README_cn.md) |
+| 图像分类 | ResNet152 | samples/vision/resnet152 | S100 | [README](samples/vision/resnet152/README_cn.md) |
+| 图像分类 | MobileNetV1 | samples/vision/mobilenetv1 | S100 | [README](samples/vision/mobilenetv1/README_cn.md) |
+| 图像分类 | MobileNetV2 | samples/vision/mobilenetv2 | S100 / S600 | [README](samples/vision/mobilenetv2/README.md) |
+| 图像分类 | MobileNetV3 | samples/vision/mobilenetv3 | S100 | [README](samples/vision/mobilenetv3/README_cn.md) |
+| 图像分类 | MobileNetV4 | samples/vision/mobilenetv4 | S100 | [README](samples/vision/mobilenetv4/README_cn.md) |
+| 图像分类 | EfficientNet-Lite | samples/vision/efficientnet | S100 | [README](samples/vision/efficientnet/README_cn.md) |
+| 图像分类 | ViT | samples/vision/vit | S100 | [README](samples/vision/vit/README_cn.md) |
+| 图像分类 | 3D ResNet（视频动作分类） | samples/vision/3dresnet | S100 | [README](samples/vision/3dresnet/README_cn.md) |
+| 语义分割 | UnetMobileNet | samples/vision/unetmobilenet | S100 / S600 | [README](samples/vision/unetmobilenet/README.md) |
+| 单目深度估计 | Depth Anything V2 | samples/vision/depth_anything_v2 | S100 / S600 | [README](samples/vision/depth_anything_v2/README_cn.md) |
+| 视觉编码器 | SigLIP | samples/vision/siglip | S100 / S100P | [README](samples/vision/siglip/README_cn.md) |
+| 点云分割 | PointNet | samples/vision/pointnet | S100 | [README](samples/vision/pointnet/README_cn.md) |
+| 车道线检测 | LaneNet | samples/vision/lanenet | S100 | [README](samples/vision/lanenet/README.md) |
+| 文字识别 | PaddleOCR | samples/vision/paddle_ocr | S100 | [README](samples/vision/paddle_ocr/README.md) |
+| 语音识别 | ASR | samples/speech/asr | S100 / S600 | [README](samples/speech/asr/README.md) |
+| 关键词唤醒 | KWS | samples/speech/kws | S100 | [README](samples/speech/kws/README.md) |
 | 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | samples/vla/act | S100 | [README](samples/vla/act/README.md) |
 
 
