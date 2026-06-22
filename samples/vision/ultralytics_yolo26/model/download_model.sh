@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Optional explicit march override from the caller (e.g. run.sh).
+# When provided, skip board auto-detection and trust the caller.
+#   $1 ∈ { nash-e, nash-m, nash-p }
+MARCH_OVERRIDE="${1:-}"
+
 # Detect board variant.
 #   RDK S100  -> nash-e (file suffix: nashe)
 #   RDK S100P -> nash-m (file suffix: nashm)
@@ -28,6 +33,20 @@ if [[ "$SOC" == "s600" ]]; then
 elif [[ "$SOC" == "s100p" || "$BOARD_TYPE" == *"p"* ]]; then
   MODEL_MARCH="nash-m"
   MODEL_SUFFIX="nashm"
+fi
+
+# Explicit override takes precedence over auto-detection so callers (run.sh)
+# can keep a single source of truth for the march.
+if [[ -n "$MARCH_OVERRIDE" ]]; then
+  case "$MARCH_OVERRIDE" in
+    nash-e) SOC_DIR="rdk_s100"; MODEL_MARCH="nash-e"; MODEL_SUFFIX="nashe" ;;
+    nash-m) SOC_DIR="rdk_s100"; MODEL_MARCH="nash-m"; MODEL_SUFFIX="nashm" ;;
+    nash-p) SOC_DIR="rdk_s600"; MODEL_MARCH="nash-p"; MODEL_SUFFIX="nashp" ;;
+    *)
+      echo "Unknown march override: $MARCH_OVERRIDE (expected nash-e/nash-m/nash-p)"
+      exit 1
+      ;;
+  esac
 fi
 
 echo "Detected SoC: ${SOC}"

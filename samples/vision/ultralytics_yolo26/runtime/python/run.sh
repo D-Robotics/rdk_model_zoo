@@ -92,7 +92,7 @@ echo "Model path : $MODEL_PATH"
 
 if [[ ! -f "$MODEL_PATH" ]]; then
   echo "Model not found, downloading..."
-  (cd ../../model && bash download_model.sh)
+  (cd ../../model && bash download_model.sh "$MODEL_MARCH")
 else
   echo "Model already exists, skip download"
 fi

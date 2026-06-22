@@ -16,7 +16,17 @@ case "${SOC}" in
 esac
 
 MODEL_DIR="./${SOC}"
+MODEL_NAME="resnet152_224x224_nv12"
+MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${SOC}/ResNet/${MODEL_NAME}.hbm"
+MODEL_PATH="${MODEL_DIR}/${MODEL_NAME}.hbm"
+
 mkdir -p "${MODEL_DIR}"
 
-wget -c -P "${MODEL_DIR}" \
-  "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${SOC}/ResNet/resnet152_224x224_nv12.hbm"
+if [[ -f "${MODEL_PATH}" ]]; then
+  echo "${MODEL_PATH} already exists, skip"
+  exit 0
+fi
+
+echo "Downloading ${MODEL_NAME}.hbm for ${SOC}..."
+wget -c "${MODEL_URL}" -O "${MODEL_PATH}"
+echo "Downloaded to ${MODEL_PATH}"
