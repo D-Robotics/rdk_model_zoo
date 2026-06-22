@@ -1,0 +1,33 @@
+model_parameters:
+  onnx_model: 'yolov13n.onnx'
+  march: nash-e  # S100: nash-e, S100P: nash-m.
+  layer_out_dump: False
+  working_dir: 'bpu_outputs'
+  output_model_file_prefix: 'yolo13n_detect_nashe_640x640_nv12'
+  remove_node_name: "/model.32/cv2.0/cv2.2.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;"  # Depend on your onnx model.
+  # Reference remove_node_name
+  # YOLOv13n: /model.32/cv2.0/cv2.2.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+  # YOLOv13s: /model.32/cv2.0/cv2.0.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+  # YOLOv13l: /model.32/cv2.0/cv2.0.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+  # YOLOv13x: /model.32/cv2.0/cv2.0.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+input_parameters:
+  input_name: ''
+  input_type_rt: 'nv12'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW;'
+  input_shape: ''
+  norm_type: 'data_scale'
+  mean_value: ''
+  scale_value: 0.003921568627451
+calibration_parameters:
+  cal_data_dir: '/open_explorer/calibration_data_rgb_f32_640'
+  cal_data_type: 'float32'
+  calibration_type: 'default'
+  quant_config: {"op_config": {"softmax": {"qtype": "int8"}}}
+compiler_parameters:
+  extra_params: {'input_no_padding': True, 'output_no_padding': True}
+  jobs: 8
+  compile_mode: 'latency'
+  debug: True
+  advice: 1
+  optimize_level: 'O2'

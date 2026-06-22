@@ -1,0 +1,25 @@
+model_parameters:
+  onnx_model: './vit_cifar10_batch1.onnx'
+  march: "nash-e"
+  layer_out_dump: False
+  working_dir: './vit_cifar10_batch1'
+  output_model_file_prefix: 'vit_cifar10_batch1'
+input_parameters:
+  input_name: ""
+  input_type_rt: 'nv12'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW'
+  norm_type: 'data_mean_and_scale'
+  mean_value: 0.4914 0.4822 0.4465
+  scale_value: 4.943153707865546 5.014042553191489 4.975124378109453
+calibration_parameters:
+  cal_data_dir: './calibration_data_rgb'
+  cal_data_type: 'float32'
+  quant_config: {"op_config": {"softmax": {"qtype": "int32"}}}
+compiler_parameters:
+  extra_params: {'input_no_padding': True, 'output_no_padding': True}
+  compile_mode: 'latency'
+  debug: False
+  jobs: 8
+  optimize_level: 'O2'
+  advice: 1

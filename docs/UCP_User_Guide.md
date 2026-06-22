@@ -19,10 +19,10 @@
 对应的官方接口文档如下：
 
 - **BPU（`hb_dnn`）接口文档**
-  👉 [DNN API Overview](http://j6.doc.oe.hobot.cc/guide/ucp/runtime/bpu_sdk_api/bpu_sdk_api_overview.html)
+  👉 [DNN API Overview](https://toolchain.d-robotics.cc/guide/ucp/runtime/bpu_sdk_api/bpu_sdk_api_overview.html)
 
 - **UCP（`hb_ucp`）接口文档**
-  👉 [UCP API Overview](http://j6.doc.oe.hobot.cc/guide/ucp/ucp_api_reference/ucp_api_overview.html)
+  👉 [UCP API Overview](https://toolchain.d-robotics.cc/guide/ucp/ucp_api_reference/ucp_api_overview.html)
 
 
 如需进一步了解 BPU DNN 和 UCP 的完整能力，请优先查阅上述官方文档。

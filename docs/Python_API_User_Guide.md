@@ -10,4 +10,4 @@
 对应的官方接口文档如下：
 
 - **`hbm_runtime` BPU Python API 使用文档**
-  👉 [hbm_runtime Python API 文档](https://developer.d-robotics.cc/rdk_doc/rdk_s/Algorithm_Application/python-api)
+  👉 [hbm_runtime Python API 文档](https://developer.d-robotics.cc/rdk_s_doc/Algorithm_Application/python-api)

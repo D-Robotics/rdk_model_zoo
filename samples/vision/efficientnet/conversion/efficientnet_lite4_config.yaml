@@ -1,0 +1,24 @@
+
+model_parameters:
+  onnx_model: './tf_efficientnet_lite4.onnx'
+  march: "nash-e"
+  working_dir: './model_output'
+  output_model_file_prefix: 'efficientnet_lite4_380x380_nv12'
+
+input_parameters:
+  input_name: ""
+  input_type_rt: 'nv12'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW'
+  input_shape: ''
+  norm_type: 'data_mean_and_scale'
+  mean_value: 127 127 127
+  scale_value: 0.007843 0.007843 0.007843
+
+calibration_parameters:
+  cal_data_dir: './calibration_data_rgb'
+  cal_data_type: 'float32'
+  calibration_type: 'max'
+
+compiler_parameters:
+  optimize_level: 'O2'
