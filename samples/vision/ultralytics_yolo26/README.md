@@ -8,7 +8,7 @@ This directory provides the complete usage guide for the YOLO26 sample in Model 
 
 ## Algorithm Overview
 
-YOLO26 is a real-time vision model series from Ultralytics. This sample provides RDK S100/S100P deployment examples for the following tasks:
+YOLO26 is a real-time vision model series from Ultralytics. This sample provides RDK S100/S100P/S600 deployment examples for the following tasks:
 
 - Object Detection
 - Instance Segmentation
@@ -34,7 +34,7 @@ YOLO26 is a real-time vision model series from Ultralytics. This sample provides
 
 ### Platform Notes
 
-- Target platforms: `RDK S100` / `RDK S100P`
+- Target platforms: `RDK S100` / `RDK S100P` / `RDK S600`
 - Runtime backend: `hbm_runtime`
 - Inference model format: `.hbm`
 - Input format: `NV12` (Y + UV as two separate tensors)
@@ -85,7 +85,7 @@ For detailed parameters and task examples, refer to [runtime/python/README.md](.
 
 ## Model Conversion
 
-This sample provides pre-converted `.hbm` model files for RDK S100/S100P.
+This sample provides pre-converted `.hbm` model files for RDK S100/S100P/S600.
 
 - If you only want to run inference, download models from [model/README.md](./model/README.md) and skip conversion.
 - If you need to understand or customize conversion, refer to [conversion/README.md](./conversion/README.md).
@@ -114,7 +114,7 @@ The `evaluator/` directory is used for task-level accuracy and result export ver
 
 ## Inference Result
 
-The Python runtime provides `run.sh` coverage for the following `RDK S100` / `RDK S100P` `.hbm` models:
+The Python runtime provides `run.sh` coverage for the following `RDK S100` / `RDK S100P` / `RDK S600` `.hbm` models:
 
 - `detect`: `n`
 - `seg`: `n`

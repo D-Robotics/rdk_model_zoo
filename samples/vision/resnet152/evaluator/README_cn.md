@@ -23,6 +23,8 @@ python3 main.py \
   --top-k 5
 ```
 
+RDK S600 用户请将 `--model-path` 改为 `../../model/s600/resnet152_224x224_nv12.hbm`。
+
 对于 `test_data/zebra_cls.jpg`，Top-K 输出应包含与 zebra 相关的 ImageNet 类别，并具有较高置信度。输出数值应为有限值、非全 0，并且同一输入下重复运行结果稳定。
 
 ## 原始记录

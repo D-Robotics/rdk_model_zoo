@@ -21,13 +21,17 @@ runtime/python/
 
 ## 环境说明
 
-请在包含 `hbm_runtime`、`numpy` 和 OpenCV 的 RDK S100 Python 环境中运行。本示例复用 `utils/py_utils` 中的公共工具。
+请在包含 `hbm_runtime`、`numpy` 和 OpenCV 的 RDK Python 环境（S100 或 S600）中运行。本示例复用 `utils/py_utils` 中的公共工具。
 
 ## 运行
 
 ```bash
 bash run.sh
 ```
+
+`run.sh` 默认下载并使用 S100 模型。RDK S600 用户请先执行
+`bash ../../model/download_model.sh s600`，并将 `--model-path` 改为
+`../../model/s600/resnet152_224x224_nv12.hbm`。
 
 ## 直接运行入口
 

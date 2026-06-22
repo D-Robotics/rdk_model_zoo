@@ -2,7 +2,7 @@
 
 # YOLO26 模型转换与编译指南
 
-本目录提供 YOLO26 模型导出、量化编译和 HBM 产物检查所需的脚本和说明，目标产物为适配 RDK S100/S100P 的 BPU 量化 `.hbm` 模型。
+本目录提供 YOLO26 模型导出、量化编译和 HBM 产物检查所需的脚本和说明，目标产物为适配 RDK S100/S100P/S600 的 BPU 量化 `.hbm` 模型。
 
 ## 目录结构
 
@@ -21,7 +21,7 @@
 
 ## 模型编译环境
 
-模型转换请在 x86 Linux 主机的 RDK S100 OpenExplore Docker 环境中完成，不建议在板端安装编译工具链。
+模型转换请在 x86 Linux 主机的 OpenExplore Docker 环境中完成，不建议在板端安装编译工具链。RDK S100/S100P/S600 共用同一套 Nash 工具链（`hb_compile`），仅 `--march` 不同。
 
 工具链入口：
 
@@ -127,14 +127,18 @@ python3 mapper.py --onnx yolo26n_detect.onnx --cal-images ./cal_images --march n
 
 # RDK S100P (Nash-M)
 python3 mapper.py --onnx yolo26n_detect.onnx --cal-images ./cal_images --march nash-m
+
+# RDK S600 (Nash-P)
+python3 mapper.py --onnx yolo26n_detect.onnx --cal-images ./cal_images --march nash-p
 ```
 
 生成的 `.hbm` 文件建议命名为：
 
 - S100: `*_nashe_*_nv12.hbm`
 - S100P: `*_nashm_*_nv12.hbm`
+- S600: `*_nashp_*_nv12.hbm`
 
-模型文件需放入 sample 的 `model/nash-e/` 或 `model/nash-m/` 目录，供 `runtime/python/run.sh` 和 `runtime/python/main.py` 使用。
+模型文件需放入 sample 的 `model/nash-e/`、`model/nash-m/` 或 `model/nash-p/` 目录，供 `runtime/python/run.sh` 和 `runtime/python/main.py` 使用。
 
 ### 5. 脚本参数说明
 
@@ -147,7 +151,7 @@ python3 mapper.py -h
 | `--onnx` | 浮点 ONNX 模型路径。 | `./yolo11n.onnx` |
 | `--output-dir` | 转换后模型输出目录。 | `.` |
 | `--cal-images` | 校准图片目录。 | `./cal_images` |
-| `--march` | 目标架构：`nash-e` 为 RDK S100，`nash-m` 为 RDK S100P。 | `nash-e` |
+| `--march` | 目标架构：`nash-e` 为 RDK S100，`nash-m` 为 RDK S100P，`nash-p` 为 RDK S600。 | `nash-e` |
 | `--quantized` | 量化精度：`int8` 或 `int16`。 | `int8` |
 | `--jobs` | 编译并发任务数。 | `16` |
 | `--optimize-level` | 编译优化等级，Nash 架构支持 `O0` 到 `O2`。 | `O2` |

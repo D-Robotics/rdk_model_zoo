@@ -21,13 +21,17 @@ runtime/python/
 
 ## Environment
 
-Run this sample in the RDK S100 Python environment where `hbm_runtime`, `numpy`, and OpenCV are available. The script reuses shared helpers from `utils/py_utils`.
+Run this sample in the RDK Python environment (S100 or S600) where `hbm_runtime`, `numpy`, and OpenCV are available. The script reuses shared helpers from `utils/py_utils`.
 
 ## Run
 
 ```bash
 bash run.sh
 ```
+
+`run.sh` defaults to the S100 model. For RDK S600, run
+`bash ../../model/download_model.sh s600` first and pass
+`--model-path ../../model/s600/resnet152_224x224_nv12.hbm` to `main.py`.
 
 ## Direct Command
 

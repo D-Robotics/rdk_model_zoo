@@ -1,7 +1,15 @@
 #!/bin/bash
 set -e
 
-# Detect S100 board variant. S100 uses nash-e; S100P uses nash-m.
+# Optional explicit march override from the caller (e.g. run.sh).
+# When provided, skip board auto-detection and trust the caller.
+#   $1 ∈ { nash-e, nash-m, nash-p }
+MARCH_OVERRIDE="${1:-}"
+
+# Detect board variant.
+#   RDK S100  -> nash-e (file suffix: nashe)
+#   RDK S100P -> nash-m (file suffix: nashm)
+#   RDK S600  -> nash-p (file suffix: nashp)
 if [[ -r /sys/class/boardinfo/soc_name ]]; then
   SOC=$(tr 'A-Z' 'a-z' </sys/class/boardinfo/soc_name)
 else
@@ -13,11 +21,32 @@ else
   BOARD_TYPE="$SOC"
 fi
 
+# Default to S100 / nash-e
+SOC_DIR="rdk_s100"
 MODEL_MARCH="nash-e"
 MODEL_SUFFIX="nashe"
-if [[ "$SOC" == "s100p" || "$BOARD_TYPE" == *"p"* ]]; then
+
+if [[ "$SOC" == "s600" ]]; then
+  SOC_DIR="rdk_s600"
+  MODEL_MARCH="nash-p"
+  MODEL_SUFFIX="nashp"
+elif [[ "$SOC" == "s100p" || "$BOARD_TYPE" == *"p"* ]]; then
   MODEL_MARCH="nash-m"
   MODEL_SUFFIX="nashm"
+fi
+
+# Explicit override takes precedence over auto-detection so callers (run.sh)
+# can keep a single source of truth for the march.
+if [[ -n "$MARCH_OVERRIDE" ]]; then
+  case "$MARCH_OVERRIDE" in
+    nash-e) SOC_DIR="rdk_s100"; MODEL_MARCH="nash-e"; MODEL_SUFFIX="nashe" ;;
+    nash-m) SOC_DIR="rdk_s100"; MODEL_MARCH="nash-m"; MODEL_SUFFIX="nashm" ;;
+    nash-p) SOC_DIR="rdk_s600"; MODEL_MARCH="nash-p"; MODEL_SUFFIX="nashp" ;;
+    *)
+      echo "Unknown march override: $MARCH_OVERRIDE (expected nash-e/nash-m/nash-p)"
+      exit 1
+      ;;
+  esac
 fi
 
 echo "Detected SoC: ${SOC}"
@@ -25,7 +54,7 @@ echo "Board type  : ${BOARD_TYPE}"
 echo "Model march : ${MODEL_MARCH}"
 echo "Model suffix: ${MODEL_SUFFIX}"
 
-BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/${MODEL_MARCH}"
+BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/${SOC_DIR}/Ultralytics_YOLO_OE_3.7.0/${MODEL_MARCH}"
 
 MODELS=(
   "yolo26n_detect_${MODEL_SUFFIX}_640x640_nv12.hbm"

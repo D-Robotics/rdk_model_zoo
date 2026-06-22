@@ -23,6 +23,8 @@ python3 main.py \
   --top-k 5
 ```
 
+On RDK S600, swap the model path to `../../model/s600/resnet152_224x224_nv12.hbm`.
+
 For `test_data/zebra_cls.jpg`, the Top-K output should contain a zebra-related ImageNet class with a high confidence score. The output should be finite, non-zero, and stable across repeated runs with the same input.
 
 ## Original Records

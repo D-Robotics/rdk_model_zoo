@@ -51,8 +51,22 @@ def main() -> None:
             board_type = f.read().strip().lower()
     except Exception:
         board_type = soc
-    model_march = "nash-m" if soc == "s100p" or "p" in board_type else "nash-e"
-    model_suffix = "nashm" if model_march == "nash-m" else "nashe"
+    # Map SoC -> march / file suffix:
+    #   S100  -> nash-e / nashe
+    #   S100P -> nash-m / nashm
+    #   S600  -> nash-p / nashp
+    if soc == "s600":
+        model_march = "nash-p"
+        model_suffix = "nashp"
+        soc_dir = "rdk_s600"
+    elif soc == "s100p" or "p" in board_type:
+        model_march = "nash-m"
+        model_suffix = "nashm"
+        soc_dir = "rdk_s100"
+    else:
+        model_march = "nash-e"
+        model_suffix = "nashe"
+        soc_dir = "rdk_s100"
 
     parser = argparse.ArgumentParser(description="YOLO26 Unified Inference")
 
@@ -101,7 +115,7 @@ def main() -> None:
     if not os.path.exists(opt.model_path):
         model_file = task_model_map.get(opt.task, task_model_map['detect'])
         download_url = ("https://archive.d-robotics.cc/downloads/rdk_model_zoo/"
-                        f"rdk_s100/Ultralytics_YOLO_OE_3.7.0/{model_march}/{model_file}")
+                        f"{soc_dir}/Ultralytics_YOLO_OE_3.7.0/{model_march}/{model_file}")
         file_io.download_model_if_needed(opt.model_path, download_url)
 
     # Load image

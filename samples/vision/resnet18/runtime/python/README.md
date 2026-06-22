@@ -34,7 +34,9 @@ bash run.sh
 ```
 
 The script downloads the model through `../../model/download_model.sh` and uses
-the sample-local `../../model/s100/` directory.
+the sample-local `../../model/s100/` directory by default. For RDK S600, run
+`bash ../../model/download_model.sh s600` first and override `--model-path` to
+`../../model/s600/resnet18_224x224_nv12.hbm`.
 
 ## Direct Run
 

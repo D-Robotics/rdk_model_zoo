@@ -8,7 +8,7 @@
 
 ## 算法介绍
 
-YOLO26 是 Ultralytics 推出的实时视觉模型系列。本示例提供了在 RDK S100/S100P 平台上的部署示例，支持以下任务：
+YOLO26 是 Ultralytics 推出的实时视觉模型系列。本示例提供了在 RDK S100/S100P/S600 平台上的部署示例，支持以下任务：
 
 - 目标检测
 - 实例分割
@@ -34,7 +34,7 @@ YOLO26 是 Ultralytics 推出的实时视觉模型系列。本示例提供了在
 
 ### 平台说明
 
-- 目标平台：`RDK S100` / `RDK S100P`
+- 目标平台：`RDK S100` / `RDK S100P` / `RDK S600`
 - 运行时后端：`hbm_runtime`
 - 推理模型格式：`.hbm`
 - 输入格式：`NV12`（Y + UV 两个独立输入张量）
@@ -85,7 +85,7 @@ bash run.sh detect
 
 ## 模型转换
 
-本示例已提供 RDK S100/S100P 的预编译 `.hbm` 模型文件。
+本示例已提供 RDK S100/S100P/S600 的预编译 `.hbm` 模型文件。
 
 - 如仅需推理，可从 [model/README.md](./model/README.md) 下载模型，跳过转换步骤。
 - 如需了解或自定义转换流程，请参考 [conversion/README.md](./conversion/README.md)。
@@ -114,7 +114,7 @@ bash run.sh detect
 
 ## 推理结果
 
-Python runtime 的 `run.sh` 覆盖以下 `RDK S100` / `RDK S100P` `.hbm` 模型：
+Python runtime 的 `run.sh` 覆盖以下 `RDK S100` / `RDK S100P` / `RDK S600` `.hbm` 模型：
 
 - `detect`：`n`
 - `seg`：`n`

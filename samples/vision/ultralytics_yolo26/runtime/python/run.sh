@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Read S100 board information
+# Read board information
 SOC=$(tr 'A-Z' 'a-z' </sys/class/boardinfo/soc_name)
 if [[ -r /sys/class/boardinfo/board_type ]]; then
   BOARD_TYPE=$(tr 'A-Z' 'a-z' </sys/class/boardinfo/board_type)
@@ -11,10 +11,16 @@ fi
 echo "SOC        : $SOC"
 echo "Board type : $BOARD_TYPE"
 
-# Model suffix differs by platform: S100 uses nashe; S100P uses nashm.
+# Model suffix differs by platform:
+#   S100  -> nash-e / nashe
+#   S100P -> nash-m / nashm
+#   S600  -> nash-p / nashp
 MODEL_MARCH="nash-e"
 MODEL_SUFFIX="nashe"
-if [[ "$SOC" == "s100p" || "$BOARD_TYPE" == *"p"* ]]; then
+if [[ "$SOC" == "s600" ]]; then
+  MODEL_MARCH="nash-p"
+  MODEL_SUFFIX="nashp"
+elif [[ "$SOC" == "s100p" || "$BOARD_TYPE" == *"p"* ]]; then
   MODEL_MARCH="nash-m"
   MODEL_SUFFIX="nashm"
 fi
@@ -86,7 +92,7 @@ echo "Model path : $MODEL_PATH"
 
 if [[ ! -f "$MODEL_PATH" ]]; then
   echo "Model not found, downloading..."
-  (cd ../../model && bash download_model.sh)
+  (cd ../../model && bash download_model.sh "$MODEL_MARCH")
 else
   echo "Model already exists, skip download"
 fi

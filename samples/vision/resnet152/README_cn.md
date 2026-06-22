@@ -59,11 +59,11 @@ resnet152/
 
 ## 快速体验
 
-下载模型到当前 sample 的 `model` 目录：
+下载模型到当前 sample 的 `model` 目录（通过参数指定 `s100` 或 `s600`）：
 
 ```bash
 cd model
-bash download_model.sh s100
+bash download_model.sh s100   # 或：bash download_model.sh s600
 ```
 
 运行 Python 示例：
@@ -94,9 +94,9 @@ python3 main.py \
 
 | 模型 | 输入 | 运行时输入类型 | 输出 | 下载路径 |
 | --- | --- | --- | --- | --- |
-| ResNet152 | 224x224 | NV12 Y/UV planes | ImageNet 1000 类 logits | `model/s100/resnet152_224x224_nv12.hbm` |
+| ResNet152 | 224x224 | NV12 Y/UV planes | ImageNet 1000 类 logits | `model/s100/resnet152_224x224_nv12.hbm`（S100）<br/>`model/s600/resnet152_224x224_nv12.hbm`（S600）|
 
-本示例使用公开 S100 HBM 模型，模型下载到当前 sample 内的 `model/s100` 目录。
+本示例使用公开 RDK ResNet152 HBM 模型，模型下载到当前 sample 内的 `model/<soc>` 目录。
 
 ## 模型评估
 

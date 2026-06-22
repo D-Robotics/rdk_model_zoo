@@ -2,16 +2,21 @@
 
 # ResNet50 模型下载
 
-在本目录运行下载脚本：
+在本目录运行下载脚本，并通过参数指定目标 SoC（`s100` 或 `s600`）：
 
 ```bash
+# RDK S100
 bash download_model.sh s100
+
+# RDK S600
+bash download_model.sh s600
 ```
 
-脚本会将 S100 HBM 文件下载到 `./s100/`：
+脚本会将 HBM 文件下载到 `./<soc>/`：
 
-| 模型 | URL |
-| --- | --- |
-| `resnet50_224x224_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm` |
+| SoC | 本地路径 | URL |
+| --- | --- | --- |
+| `s100` | `./s100/resnet50_224x224_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm` |
+| `s600` | `./s600/resnet50_224x224_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet50_224x224_nv12.hbm` |
 
-本 sample 使用公开 S100 HBM 模型。
+本 sample 使用公开 RDK ResNet50 HBM 模型，S100/S600 模型文件名相同，仅 archive 子目录不同。

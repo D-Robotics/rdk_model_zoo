@@ -2,9 +2,9 @@ English | [简体中文](./README_cn.md)
 
 # ResNet50 Model Description
 
-ResNet50 is an ImageNet classification sample for the RDK S100 model zoo. It
-provides sample-local model download, a Python runtime example, preserved
-original documentation assets, and evaluation notes.
+ResNet50 is an ImageNet classification sample for the RDK Model Zoo. It targets
+RDK S100 and RDK S600, providing sample-local model download, a Python runtime
+example, preserved original documentation assets, and evaluation notes.
 
 ## Algorithm Overview
 
@@ -90,7 +90,7 @@ This sample currently maintains the Python runtime path. See [runtime/python/REA
 
 | Model | Input | Runtime model |
 | --- | --- | --- |
-| ResNet50 | 224x224 NV12 | `model/s100/resnet50_224x224_nv12.hbm` |
+| ResNet50 | 224x224 NV12 | `model/s100/resnet50_224x224_nv12.hbm` (S100) <br/> `model/s600/resnet50_224x224_nv12.hbm` (S600) |
 
 ## Model Evaluation
 

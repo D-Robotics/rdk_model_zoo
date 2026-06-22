@@ -2,11 +2,11 @@
 
 # YOLO26 Python 推理示例
 
-本示例演示如何在 RDK S100/S100P 上使用 `hbm_runtime` 运行 YOLO26 任务模型。
+本示例演示如何在 RDK S100/S100P/S600 上使用 `hbm_runtime` 运行 YOLO26 任务模型。
 
 ## 环境依赖
 
-本示例无额外依赖。请确保 RDK S100/S100P Python 环境已就绪。
+本示例无额外依赖。请确保 RDK S100/S100P/S600 Python 环境已就绪。
 
 ```bash
 pip install numpy opencv-python hbm-runtime scipy
@@ -44,7 +44,7 @@ pip install numpy opencv-python hbm-runtime scipy
 | `--angle-sign` | 角度解码符号乘数 (OBB) | `1.0` |
 | `--angle-offset`| 角度解码偏移量 (OBB) | `0.0` |
 
-> **注意**：`--model-path` 默认值根据 `--task` 和检测到的 SoC 自动确定。S100 使用 `nashe` 后缀，S100P 使用 `nashm` 后缀。
+> **注意**：`--model-path` 默认值根据 `--task` 和检测到的 SoC 自动确定。S100 使用 `nashe` 后缀，S100P 使用 `nashm` 后缀，S600 使用 `nashp` 后缀。
 
 ## 快速运行
 

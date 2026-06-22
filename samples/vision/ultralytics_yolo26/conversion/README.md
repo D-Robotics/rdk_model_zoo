@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # YOLO26 Model Conversion and Compilation Guide
 
-This directory provides the scripts and instructions required for YOLO26 model export, quantized compilation, and HBM artifact inspection. The target artifact is a BPU-quantized `.hbm` model for RDK S100/S100P.
+This directory provides the scripts and instructions required for YOLO26 model export, quantized compilation, and HBM artifact inspection. The target artifact is a BPU-quantized `.hbm` model for RDK S100/S100P/S600.
 
 ## Directory Structure
 
@@ -21,7 +21,7 @@ This directory provides the scripts and instructions required for YOLO26 model e
 
 ## Model Compilation Environment
 
-Run conversion on an x86 Linux host with the RDK S100 OpenExplore Docker environment. Do not install the compiler toolchain on the board.
+Run conversion on an x86 Linux host with the OpenExplore Docker environment. Do not install the compiler toolchain on the board. RDK S100/S100P/S600 share the same Nash toolchain (`hb_compile`); only `--march` differs.
 
 Toolchain entry points:
 
@@ -39,7 +39,7 @@ sudo docker run --rm hello-world
 
 ### 2. Obtain and Load the Offline Image
 
-Download the OpenExplore CPU Docker image for RDK S100/S100P from the OE Docker documentation, then load the actual image file:
+Download the OpenExplore CPU Docker image for RDK S100/S100P/S600 from the OE Docker documentation, then load the actual image file:
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
@@ -98,14 +98,18 @@ python3 mapper.py --onnx yolo26n_detect.onnx --cal-images ./cal_images --march n
 
 # RDK S100P (Nash-M)
 python3 mapper.py --onnx yolo26n_detect.onnx --cal-images ./cal_images --march nash-m
+
+# RDK S600 (Nash-P)
+python3 mapper.py --onnx yolo26n_detect.onnx --cal-images ./cal_images --march nash-p
 ```
 
 Recommended output naming:
 
 - S100: `*_nashe_*_nv12.hbm`
 - S100P: `*_nashm_*_nv12.hbm`
+- S600: `*_nashp_*_nv12.hbm`
 
-Place converted models in `model/nash-e/` or `model/nash-m/` so that `runtime/python/run.sh` and `runtime/python/main.py` can use them directly.
+Place converted models in `model/nash-e/`, `model/nash-m/` or `model/nash-p/` so that `runtime/python/run.sh` and `runtime/python/main.py` can use them directly.
 
 ### 4. Script Arguments
 
@@ -118,7 +122,7 @@ python3 mapper.py -h
 | `--onnx` | Floating-point ONNX model path. | `./yolo11n.onnx` |
 | `--output-dir` | Output directory for converted models. | `.` |
 | `--cal-images` | Calibration image directory. | `./cal_images` |
-| `--march` | Target architecture: `nash-e` for RDK S100, `nash-m` for RDK S100P. | `nash-e` |
+| `--march` | Target architecture: `nash-e` for RDK S100, `nash-m` for RDK S100P, `nash-p` for RDK S600. | `nash-e` |
 | `--quantized` | Quantization precision: `int8` or `int16`. | `int8` |
 | `--jobs` | Number of parallel compilation jobs. | `16` |
 | `--optimize-level` | Compiler optimization level. Nash supports `O0` to `O2`. | `O2` |
