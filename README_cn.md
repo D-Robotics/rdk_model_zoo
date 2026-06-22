@@ -160,7 +160,7 @@ bash run.sh
 - **仓库规范**：贡献或开发前，请仔细阅读 **[Model Zoo 仓库规范](./docs/Model_Zoo_Repository_Guidelines.md)**。
 - **BPU Python API**：`hbm_runtime` 使用方式，请参阅 **[Python API 用户手册](./docs/Python_API_User_Guide.md)**。
 - **UCP 接口**：`libdnn` / `libucp` 接口说明，请参阅 **[UCP 用户手册](./docs/UCP_User_Guide.md)**。
-- **工具链手册**：[RDK S 系列 OE 工具链文档](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
+- **工具链手册**：[RDK S 系列 OE 工具链文档](https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/overview)
 - **开发者社区**：[D-Robotics 开发者社区](https://developer.d-robotics.cc/)
 
 ---

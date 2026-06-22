@@ -160,7 +160,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 - **Guidelines**: To contribute or develop, please read the **[Model Zoo Repository Guidelines](./docs/Model_Zoo_Repository_Guidelines.md)**.
 - **BPU Python API**: See **[Python API User Guide](./docs/Python_API_User_Guide.md)** for `hbm_runtime` usage.
 - **UCP Interface**: See **[UCP User Guide](./docs/UCP_User_Guide.md)** for `libdnn` / `libucp` interface details.
-- **Toolchain Manual**: [RDK S Series OE Toolchain](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
+- **Toolchain Manual**: [RDK S Series OE Toolchain](https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/overview)
 - **Developer Forum**: [D-Robotics Developer Community](https://developer.d-robotics.cc/)
 
 ---
