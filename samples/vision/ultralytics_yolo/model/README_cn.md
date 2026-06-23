@@ -2,7 +2,7 @@
 
 # 模型文件
 
-本目录包含 RDK S100/S100P 的预编译 YOLO 模型文件和下载脚本。
+本目录包含 RDK S100、RDK S100P 和 RDK S600 的预编译 YOLO 模型文件与下载脚本。
 
 ## 目录结构
 
@@ -25,6 +25,8 @@ bash download_model.sh s100p yolov8 seg
 bash download_model.sh s100 yolov8 pose
 bash download_model.sh s100p yolo11 cls
 bash download_model.sh s100p yolov5u detect x
+bash download_model.sh s600 yolo11 detect x
+bash download_model.sh s600 yolov9 detect s
 ```
 
 ## 说明
@@ -39,23 +41,28 @@ bash download_model.sh s100p yolov5u detect x
 
 ### 目标检测
 
-- `yolov5{n|s|m|l|x}u_detect_{nashe|nashm}_640x640_nv12.hbm`
-- `yolov8{n|s|m|l|x}_detect_{nashe|nashm}_640x640_nv12.hbm`
-- `yolov10{n|s|m|b|l|x}_detect_{nashe|nashm}_640x640_nv12.hbm`
-- `yolo11{n|s|m|l|x}_detect_{nashe|nashm}_640x640_nv12.hbm`
-- `yolo12{n|s|m|l|x}_detect_{nashe|nashm}_640x640_nv12.hbm`
+- `yolov5{n|s|m|l|x}u_detect_{nashe|nashm|nashp}_640x640_nv12.hbm`
+- `yolov8{n|s|m|l|x}_detect_{nashe|nashm|nashp}_640x640_nv12.hbm`
+- `yolov9{s|m|c|e}_{detect|seg}_{nashe|nashm}_640x640_nv12.hbm`（其中 `seg` 当前仅公开发布于 S100/S100P）
+- `yolov9{s|m|c|e}_detect_nashp_640x640_nv12.hbm`（S600 公开模型）
+- `yolov9t_detect_{nashe|nashm}_640x640_nv12.hbm`（S100/S100P 公开模型）
+- `yolov10{n|s|m|b|l|x}_detect_{nashe|nashm|nashp}_640x640_nv12.hbm`
+- `yolo11{n|s|m|l|x}_detect_{nashe|nashm|nashp}_640x640_nv12.hbm`
+- `yolo12{n|s|m|l|x}_detect_{nashe|nashm|nashp}_640x640_nv12.hbm`
 
 ### 实例分割
 
-- `yolov8{n|s|m|l|x}_seg_{nashe|nashm}_640x640_nv12.hbm`
-- `yolo11{n|s|m|l|x}_seg_{nashe|nashm}_640x640_nv12.hbm`
+- `yolov8{n|s|m|l|x}_seg_{nashe|nashm|nashp}_640x640_nv12.hbm`
+- `yolo11{n|s|m|l|x}_seg_{nashe|nashm|nashp}_640x640_nv12.hbm`
 
 ### 姿态估计
 
-- `yolov8{n|s|m|l|x}_pose_{nashe|nashm}_640x640_nv12.hbm`
-- `yolo11{n|s|m|l|x}_pose_{nashe|nashm}_640x640_nv12.hbm`
+- `yolov8{n|s|m|l|x}_pose_{nashe|nashm|nashp}_640x640_nv12.hbm`
+- `yolo11{n|s|m|l|x}_pose_{nashe|nashm|nashp}_640x640_nv12.hbm`
 
 ### 图像分类
 
-- `yolov8{n|s|m|l|x}_cls_{nashe|nashm}_640x640_nv12.hbm`
-- `yolo11{n|s|m|l|x}_cls_{nashe|nashm}_640x640_nv12.hbm`
+- `yolov8{n|s|m|l|x}_cls_{nashe|nashm}_224x224_nv12.hbm`
+- `yolo11{n|s|m|l|x}_cls_{nashe|nashm}_224x224_nv12.hbm`
+- `yolov8{n|s|m|l|x}_cls_nashp_224x224_nv12.hbm`
+- `yolo11{n|s|m|l|x}_cls_nashp_224x224_nv12.hbm`

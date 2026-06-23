@@ -2,11 +2,11 @@ English | [简体中文](./README_cn.md)
 
 # Ultralytics YOLO Python Runtime
 
-This sample demonstrates how to run Ultralytics YOLO task models on RDK S100/S100P with `hbm_runtime`.
+This sample demonstrates how to run Ultralytics YOLO task models on RDK S100/S100P/S600 with `hbm_runtime`.
 
 ## Environment Dependencies
 
-This sample has no special extra dependencies. Make sure the RDK S100/S100P Python environment is ready.
+This sample has no special extra dependencies. Make sure the RDK S Python environment is ready.
 
 ```bash
 pip install numpy opencv-python hbm-runtime scipy
@@ -17,7 +17,7 @@ pip install numpy opencv-python hbm-runtime scipy
 ```text
 .
 ├── main.py                # Inference entry script
-├── yolo_detect.py         # DFL-based detection wrapper (v5u/v8/v11/v12)
+├── yolo_detect.py         # DFL-based detection wrapper (v5u/v8/v9/v11/v12)
 ├── yolo_seg.py            # Instance segmentation wrapper
 ├── yolo_pose.py           # Pose estimation wrapper
 ├── yolo_cls.py            # Classification wrapper
@@ -42,8 +42,8 @@ pip install numpy opencv-python hbm-runtime scipy
 | `--topk` | Top-K results for classification | `5` |
 | `--kpt-conf-thres` | Keypoint confidence threshold for pose | `0.50` |
 
-> **Note**: The default `--model-path` is determined automatically based on `--task` and the detected SoC. S100 uses the `nashe` suffix; S100P uses the `nashm` suffix. Model family and scale are selected by `--model-path`.
-> Public S100P models are available for `yolov5u detect`, `yolov8 detect/seg/pose/cls`, `yolov10 detect`, `yolo11 detect/seg/pose/cls`, and `yolo12 detect`.
+> **Note**: The default `--model-path` is determined automatically based on `--task` and the detected SoC. S100 uses the `nashe` suffix, S100P uses `nashm`, and S600 uses `nashp`. Model family and scale are selected by `--model-path`.
+> Public RDK S archives currently provide `yolov5u detect`, `yolov8 detect/seg/pose/cls`, `yolov9 detect`, `yolov10 detect`, `yolo11 detect/seg/pose/cls`, and `yolo12 detect`. `YOLOv9 seg` is currently published on S100/S100P only.
 
 ## Quick Run
 
@@ -71,6 +71,13 @@ pip install numpy opencv-python hbm-runtime scipy
         --model-path ../../model/nash-m/yolo11n_detect_nashm_640x640_nv12.hbm \
         --test-img ../../test_data/bus.jpg
     ```
+  - Run detection explicitly on RDK S600
+    ```bash
+    python3 main.py \
+        --task detect \
+        --model-path ../../model/nash-p/yolo11n_detect_nashp_640x640_nv12.hbm \
+        --test-img ../../test_data/bus.jpg
+    ```
 
 ## Task Examples
 
@@ -89,6 +96,15 @@ python3 main.py \
 python3 main.py \
     --task detect \
     --model-path ../../model/nash-e/yolov10n_detect_nashe_640x640_nv12.hbm \
+    --test-img ../../test_data/bus.jpg
+```
+
+### YOLOv9 Detection
+
+```bash
+python3 main.py \
+    --task detect \
+    --model-path ../../model/nash-e/yolov9s_detect_nashe_640x640_nv12.hbm \
     --test-img ../../test_data/bus.jpg
 ```
 

@@ -122,7 +122,7 @@ bash run.sh
 
 | 类别 | 模型名称 | 模型路径 | 支持平台 | 详情 |
 | :--- | :--- | :--- | :--- | :---: |
-| 视觉多任务 | Ultralytics YOLO（YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12） | `samples/vision/ultralytics_yolo` | S100 / S100P | [详情](./samples/vision/ultralytics_yolo) |
+| 视觉多任务 | Ultralytics YOLO（YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12） | `samples/vision/ultralytics_yolo` | S100 / S100P / S600 | [详情](./samples/vision/ultralytics_yolo) |
 | 视觉多任务 | YOLO26 | `samples/vision/ultralytics_yolo26` | S100 / S100P / S600 | [详情](./samples/vision/ultralytics_yolo26) |
 | 目标检测 | YOLOv5x | `samples/vision/yolov5` | S100 / S600 | [详情](./samples/vision/yolov5) |
 | 目标检测 | YOLO11 | `samples/vision/yolo11` | S100 / S600 | [详情](./samples/vision/yolo11) |
@@ -149,7 +149,7 @@ bash run.sh
 | 文字识别 | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [详情](./samples/vision/paddle_ocr) |
 | 语音识别 | ASR（Wav2Vec2） | `samples/speech/asr` | S100 / S600 | [详情](./samples/speech/asr) |
 | 关键词唤醒 | KWS（MDTC） | `samples/speech/kws` | S100 | [详情](./samples/speech/kws) |
-| 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | `samples/vla/act` | S100 | [详情](./samples/vla/act) |
+| 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | `samples/vla/act` | S100 / S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 
 ---
 

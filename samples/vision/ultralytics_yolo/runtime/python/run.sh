@@ -21,7 +21,10 @@ fi
 
 MODEL_MARCH="nash-e"
 MODEL_SUFFIX="nashe"
-if [[ "${SOC}" == "s100p" || "${BOARD_TYPE}" == *"p"* ]]; then
+if [[ "${SOC}" == "s600" ]]; then
+  MODEL_MARCH="nash-p"
+  MODEL_SUFFIX="nashp"
+elif [[ "${SOC}" == "s100p" || "${BOARD_TYPE}" == *"p"* ]]; then
   MODEL_MARCH="nash-m"
   MODEL_SUFFIX="nashm"
 fi

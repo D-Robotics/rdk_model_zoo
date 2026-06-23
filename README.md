@@ -122,7 +122,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 
 | Category | Model Name | Model Path | Supported Platforms | Details |
 | :--- | :--- | :--- | :--- | :---: |
-| Vision Multi-task | Ultralytics YOLO (YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12) | `samples/vision/ultralytics_yolo` | S100 / S100P | [Details](./samples/vision/ultralytics_yolo) |
+| Vision Multi-task | Ultralytics YOLO (YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12) | `samples/vision/ultralytics_yolo` | S100 / S100P / S600 | [Details](./samples/vision/ultralytics_yolo) |
 | Vision Multi-task | YOLO26 | `samples/vision/ultralytics_yolo26` | S100 / S100P / S600 | [Details](./samples/vision/ultralytics_yolo26) |
 | Object Detection | YOLOv5x | `samples/vision/yolov5` | S100 / S600 | [Details](./samples/vision/yolov5) |
 | Object Detection | YOLO11 | `samples/vision/yolo11` | S100 / S600 | [Details](./samples/vision/yolo11) |
@@ -149,7 +149,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Text Recognition | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [Details](./samples/vision/paddle_ocr) |
 | Speech Recognition | ASR (Wav2Vec2) | `samples/speech/asr` | S100 / S600 | [Details](./samples/speech/asr) |
 | Keyword Spotting | KWS (MDTC) | `samples/speech/kws` | S100 | [Details](./samples/speech/kws) |
-| Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | `samples/vla/act` | S100 | [Details](./samples/vla/act) |
+| Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | `samples/vla/act` | S100 / S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 
 ---
 

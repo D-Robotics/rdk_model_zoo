@@ -2,7 +2,7 @@
 
 # Ultralytics YOLO 模型转换与编译指南
 
-本目录提供 Ultralytics YOLO 模型导出、量化编译和 HBM 产物检查所需的脚本、资源和说明，目标产物为适配 RDK S100/S100P 的 BPU 量化 `.hbm` 模型。
+本目录提供 Ultralytics YOLO 模型导出、量化编译和 HBM 产物检查所需的脚本、资源和说明，目标产物为适配 RDK S100/S100P/S600 的 BPU 量化 `.hbm` 模型。
 
 ## 目录结构
 
@@ -17,11 +17,12 @@
 
 ## 模型编译环境
 
-模型编译请在 x86 Linux 主机的 RDK S100 OpenExplore Docker 环境中完成，不建议在板端安装编译工具链。
+模型编译请在 x86 Linux 主机的对应 RDK S OpenExplore Docker 环境中完成，不建议在板端安装编译工具链。
 
 工具链入口：
 
-- OE Docker 下载文档：<https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>
+- OE Docker 下载（S100 / S100P）：<https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100>
+- OE Docker 下载（S600）：<https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600>
 - OE 工具链下载：<https://toolchain.d-robotics.cc/>
 
 ### 1. 安装 Docker
@@ -35,7 +36,10 @@ sudo docker run --rm hello-world
 
 ### 2. 获取并加载离线镜像
 
-请访问 [D-Robotics 开发者文档](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview#docker-%E9%95%9C%E5%83%8F) 下载适配 RDK S100 系列的 CPU 版本 Docker 镜像。
+请访问 D-Robotics 开发者文档并下载对应平台的 OE Docker 镜像：
+
+- RDK S100 / S100P：<https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100>
+- RDK S600：<https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600>
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
@@ -188,11 +192,12 @@ Ultralytics YOLO Pose 模型的目标检测部分与 Ultralytics YOLO Detect一�
 
 ### 3. 模型编译 (mapper)
 
-模型编译请在 RDK S100/S100P OpenExplore 工具链环境中执行。建议使用 OE Docker 离线镜像，不在板端安装和运行编译工具链。
+模型编译请在对应的 RDK S OpenExplore 工具链环境中执行。建议使用 OE Docker 离线镜像，不在板端安装和运行编译工具链。
 
 工具链入口：
 
-- OE Docker 下载：[S100 算法工具链](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
+- OE Docker 下载（S100 / S100P）：[https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100](https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100)
+- OE Docker 下载（S600）：[https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600](https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600)
 - OE 工具链在线手册：[https://toolchain.d-robotics.cc/](https://toolchain.d-robotics.cc/)
 
 在 OpenExplore 工具链环境中运行本目录下的 `mapper.py`。需要准备校准图片和 ONNX 模型；脚本会自动准备校准数据和编译 YAML 配置文件，转换完成的 `.hbm` 模型会保存在 ONNX 模型同级目录或 `--output-dir` 指定目录。
@@ -205,6 +210,9 @@ python3 mapper.py --onnx yolo11n.onnx --cal-images ./cal_images --march nash-e
 
 # RDK S100P (Nash-M)
 python3 mapper.py --onnx yolo11n.onnx --cal-images ./cal_images --march nash-m
+
+# RDK S600 (Nash-P)
+python3 mapper.py --onnx yolo11n.onnx --cal-images ./cal_images --march nash-p
 ```
 
 这个脚本暴露了一些常见参数，默认值已经满足大多数需求。
@@ -218,7 +226,7 @@ options:
   -h, --help                        show this help message and exit
   --cal-images CAL_IMAGES           *.jpg, *.png calibration images path, 20 ~ 50 pictures is OK.
   --onnx ONNX                       origin float onnx model path.
-  --march MARCH                     S100: nash-e, S100P: nash-m
+  --march MARCH                     S100: nash-e, S100P: nash-m, S600: nash-p
   --quantized QUANTIZED             int8 first / int16 first
   --jobs JOBS                       model combine jobs.
   --optimize-level OPTIMIZE_LEVEL   O0, O1, O2
@@ -233,8 +241,9 @@ options:
 
 - S100: `*_nashe_*_nv12.hbm`
 - S100P: `*_nashm_*_nv12.hbm`
+- S600: `*_nashp_*_nv12.hbm`
 
-模型文件需放入 sample 的 `model/nash-e/` 或 `model/nash-m/` 目录，供 `runtime/python/run.sh` 和 `runtime/python/main.py` 使用。
+模型文件需放入 sample 的 `model/nash-e/`、`model/nash-m/` 或 `model/nash-p/` 目录，供 `runtime/python/run.sh` 和 `runtime/python/main.py` 使用。
 ## 输入输出协议
 
 ### 输入协议
@@ -262,6 +271,7 @@ Python runtime 按固定索引解析输出：
 | :--- | :---: | :---: | :---: | :---: |
 | YOLOv5u | 支持 | 不支持 | 不支持 | 不支持 |
 | YOLOv8 | 支持 | 支持 | 支持 | 支持 |
+| YOLOv9 | 支持 | 不支持 | 不支持 | 不支持 |
 | YOLOv10 | 支持 | 不支持 | 不支持 | 不支持 |
 | YOLO11 | 支持 | 支持 | 支持 | 支持 |
 | YOLO12 | 支持 | 不支持 | 不支持 | 不支持 |

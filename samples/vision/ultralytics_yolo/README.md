@@ -10,11 +10,11 @@ This directory provides the complete usage guide for the Ultralytics YOLO sample
 
 Ultralytics YOLO is a real-time vision model family covering object detection,
 instance segmentation, pose estimation, and image classification. This sample
-provides RDK S100/S100P deployment examples for the following public model
-families:
+provides RDK S100/S100P/S600 deployment examples for the following public
+model families:
 
 - Detection:
-  `YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12`
+  `YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12`
 - Instance Segmentation:
   `YOLOv8 / YOLO11`
 - Pose Estimation:
@@ -41,7 +41,7 @@ YOLOv5u detect covers the public `yolov5nu/su/mu/lu/xu` model family.
 
 ### Platform Notes
 
-- Target platforms: `RDK S100` / `RDK S100P`
+- Target platforms: `RDK S100` / `RDK S100P` / `RDK S600`
 - Runtime backend: `hbm_runtime`
 - Inference model format: `.hbm`
 - Input format: `NV12` (Y + UV as two separate tensors)
@@ -95,7 +95,7 @@ For detailed arguments and task examples, refer to
 
 ## Model Conversion
 
-This sample provides pre-converted `.hbm` models for RDK S100/S100P.
+This sample provides pre-converted `.hbm` models for RDK S100/S100P/S600.
 
 - If you only want to run inference, download models from [model/README.md](./model/README.md) and skip conversion.
 - If you need to export ONNX, prepare calibration data, or compile the model,
@@ -130,10 +130,10 @@ Refer to [evaluator/README.md](./evaluator/README.md) for details.
 ## Inference Result
 
 The Python runtime provides `run.sh` coverage for the following documented
-models on `RDK S100` / `RDK S100P`:
+models on `RDK S100` / `RDK S100P` / `RDK S600`:
 
 - Detect:
-  `YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12`
+  `YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12`
 - Seg:
   `YOLOv8 / YOLO11`
 - Pose:

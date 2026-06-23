@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # Ultralytics YOLO Model Conversion and Compilation Guide
 
-This directory provides the scripts, resources, and instructions for exporting Ultralytics YOLO models, running quantized compilation, and checking HBM artifacts for RDK S100/S100P BPU deployment.
+This directory provides the scripts, resources, and instructions for exporting Ultralytics YOLO models, running quantized compilation, and checking HBM artifacts for RDK S100/S100P/S600 BPU deployment.
 
 ## Directory Structure
 
@@ -17,7 +17,7 @@ This directory provides the scripts, resources, and instructions for exporting U
 
 ## Compilation Environment
 
-Run model compilation on an x86 Linux host with the RDK S100 OpenExplore Docker environment. Installing the compiler toolchain on the board is not recommended.
+Run model compilation on an x86 Linux host with the corresponding RDK S OpenExplore Docker environment. Installing the compiler toolchain on the board is not recommended.
 
 Toolchain entry points:
 
@@ -35,7 +35,10 @@ sudo docker run --rm hello-world
 
 ### 2. Download and Load the Offline Image
 
-Visit the [D-Robotics developer documentation](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview#docker-%E9%95%9C%E5%83%8F) and download the CPU Docker image for the RDK S100 series.
+Visit the D-Robotics developer documentation and download the matching OE Docker image:
+
+- RDK S100 / S100P: <https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100>
+- RDK S600: <https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600>
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
@@ -186,7 +189,7 @@ python3 export_monkey_patch.py --pt yolo11n.pt
 
 ### 3. Model Compilation
 
-Run model compilation in the RDK S100/S100P OpenExplore toolchain environment. The OE Docker offline image is recommended. Do not install or run the compiler toolchain on the board.
+Run model compilation in the matching RDK S OpenExplore toolchain environment. The OE Docker offline image is recommended. Do not install or run the compiler toolchain on the board.
 
 Toolchain entry points:
 
@@ -203,6 +206,9 @@ python3 mapper.py --onnx yolo11n.onnx --cal-images ./cal_images --march nash-e
 
 # RDK S100P (Nash-M)
 python3 mapper.py --onnx yolo11n.onnx --cal-images ./cal_images --march nash-m
+
+# RDK S600 (Nash-P)
+python3 mapper.py --onnx yolo11n.onnx --cal-images ./cal_images --march nash-p
 ```
 
 The script exposes common parameters, and the defaults cover most cases.
@@ -216,7 +222,7 @@ options:
   -h, --help                        show this help message and exit
   --cal-images CAL_IMAGES           *.jpg, *.png calibration images path, 20 ~ 50 pictures is OK.
   --onnx ONNX                       origin float onnx model path.
-  --march MARCH                     S100: nash-e, S100P: nash-m
+  --march MARCH                     S100: nash-e, S100P: nash-m, S600: nash-p
   --quantized QUANTIZED             int8 first / int16 first
   --jobs JOBS                       model combine jobs.
   --optimize-level OPTIMIZE_LEVEL   O0, O1, O2
@@ -231,8 +237,9 @@ Recommended `.hbm` file names:
 
 - S100: `*_nashe_*_nv12.hbm`
 - S100P: `*_nashm_*_nv12.hbm`
+- S600: `*_nashp_*_nv12.hbm`
 
-Place model files under `model/nash-e/` or `model/nash-m/` in this sample so that `runtime/python/run.sh` and `runtime/python/main.py` can use them directly.
+Place model files under `model/nash-e/`, `model/nash-m/`, or `model/nash-p/` in this sample so that `runtime/python/run.sh` and `runtime/python/main.py` can use them directly.
 ## Input and Output Protocol
 
 ### Input Protocol
@@ -260,6 +267,7 @@ The current runtime covers the following model families and task combinations:
 | :--- | :---: | :---: | :---: | :---: |
 | YOLOv5u | Supported | Not supported | Not supported | Not supported |
 | YOLOv8 | Supported | Supported | Supported | Supported |
+| YOLOv9 | Supported | Not supported | Not supported | Not supported |
 | YOLOv10 | Supported | Not supported | Not supported | Not supported |
 | YOLO11 | Supported | Supported | Supported | Supported |
 | YOLO12 | Supported | Not supported | Not supported | Not supported |
