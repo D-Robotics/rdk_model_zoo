@@ -34,6 +34,7 @@
  * @see paddle_ocr.hpp
  */
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -138,8 +139,27 @@ int main(int argc, char** argv)
         return ret;
     }
 
-    // Load dictionary and prepend CTC blank at index 0
-    std::vector<std::string> id2token = load_linewise_labels(FLAGS_label_file);
+    // Load dictionary and prepend CTC blank at index 0.
+    // NOTE: PaddleOCR's ppocr_keys_v1.txt contains single-character lines that
+    // are exactly '{', '}' or ',' (lines 34, 4078, 5489). The generic
+    // load_linewise_labels() strips these characters as if they were dict
+    // delimiters and then skips the resulting empty line, which silently
+    // shifts every subsequent character id by 1–3 and produces garbled CTC
+    // decodes. Read the file verbatim (one line == one token) here.
+    std::vector<std::string> id2token;
+    {
+        std::ifstream label_ifs(FLAGS_label_file);
+        if (!label_ifs.is_open()) {
+            fprintf(stderr, "Failed to open label file: %s\n",
+                    FLAGS_label_file.c_str());
+            return -1;
+        }
+        std::string line;
+        while (std::getline(label_ifs, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            id2token.push_back(line);
+        }
+    }
     id2token.insert(id2token.begin(), "blank");
 
     std::vector<std::string> recognized_texts;

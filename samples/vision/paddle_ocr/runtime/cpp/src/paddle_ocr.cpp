@@ -54,17 +54,24 @@
 /**
  * @brief Threshold an int16 prediction map and resize to the original image size.
  *
- * Values greater than @p threshold are set to 255, all others to 0.
- * The result is resized to (img_h, img_w) using bilinear interpolation.
+ * The detection model output is quantized int16 with a per-tensor scale
+ * (``properties.scale.scaleData[0]``); the dequantized value is
+ * ``raw_int16 * scale``. To compare in the int16 domain we convert the
+ * float threshold once via ``threshold / scale`` instead of dequantizing
+ * every pixel.
+ *
+ * Values whose dequantized magnitude exceeds @p threshold are set to 255,
+ * all others to 0. The result is resized to (img_h, img_w) using bilinear
+ * interpolation.
  *
  * @param[in] tensor     hbDNNTensor holding int16 prediction data.
- * @param[in] threshold  Binarization threshold in int16 domain.
+ * @param[in] threshold  Binarization threshold in the dequantized (float) domain.
  * @param[in] img_w      Target width to resize to.
  * @param[in] img_h      Target height to resize to.
  * @return cv::Mat       Binary mask (CV_8UC1) at (img_h, img_w).
  */
 static cv::Mat process_and_resize_pred(const hbDNNTensor& tensor,
-                                       int16_t threshold,
+                                       float threshold,
                                        int img_w, int img_h)
 {
     const hbDNNTensorShape& shape = tensor.properties.validShape;
@@ -73,11 +80,16 @@ static cv::Mat process_and_resize_pred(const hbDNNTensor& tensor,
 
     const int16_t* data = reinterpret_cast<const int16_t*>(tensor.sysMem.virAddr);
 
+    // Convert the float threshold into the int16 quantized domain once,
+    // so the per-pixel comparison stays an integer compare.
+    const float scale = tensor.properties.scale.scaleData[0];
+    const int32_t int_threshold = static_cast<int32_t>(threshold / scale);
+
     cv::Mat preds_bin(H, W, CV_8UC1);
     for (int y = 0; y < H; ++y) {
         for (int x = 0; x < W; ++x) {
             int idx = y * W + x;
-            preds_bin.at<uint8_t>(y, x) = (data[idx] > threshold) ? 255 : 0;
+            preds_bin.at<uint8_t>(y, x) = (static_cast<int32_t>(data[idx]) > int_threshold) ? 255 : 0;
         }
     }
 
@@ -400,7 +412,7 @@ TextDetResult post_process_det(std::vector<hbDNNTensor>& output_tensors,
 {
     // 1) Threshold int16 prediction map and resize to original image size
     auto preds = process_and_resize_pred(output_tensors[0],
-                                         static_cast<int16_t>(threshold),
+                                         threshold,
                                          image.cols, image.rows);
 
     // 2) Find external contours
@@ -438,18 +450,16 @@ int32_t pre_process_rec(std::vector<hbDNNTensor>& input_tensors,
     cv::Mat resized;
     cv::resize(rgb_mat, resized, cv::Size(input_w, input_h), 0, 0, cv::INTER_AREA);
 
-    // 3. To float32 in [0,1]
+    // 3. To float32 in [0,1].
+    //    The recognition model is exported with NORM_TYPE="no_preprocess" and
+    //    was calibrated on raw [0,1] crops, so we MUST NOT apply ImageNet
+    //    mean/std normalization here — doing so shifts the input off the
+    //    calibration range and produces garbled CTC decodes.
     resized.convertTo(resized, CV_32F, 1.0f / 255.0f);
 
-    // 4. Per-channel ImageNet normalization
+    // 4. Split into CHW planes
     std::vector<cv::Mat> channels(3);
     cv::split(resized, channels);  // R, G, B
-
-    const float mean[3] = {0.485f, 0.456f, 0.406f};
-    const float std_val[3]  = {0.229f, 0.224f, 0.225f};
-    for (int c = 0; c < 3; ++c) {
-        channels[c] = (channels[c] - mean[c]) / std_val[c];
-    }
 
     // 5. Write CHW float32 into input tensor
     write_chw32_to_tensor(channels, input_tensors);

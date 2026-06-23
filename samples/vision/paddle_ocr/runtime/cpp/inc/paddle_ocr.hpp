@@ -287,8 +287,9 @@ int32_t infer(std::vector<hbDNNTensor>& output_tensors,
  * @brief Postprocess detection output tensors into cropped regions and polygon boxes.
  *
  * Steps:
- * 1. Threshold the int16 prediction map at ``static_cast<int16_t>(threshold)``
- *    and resize to the original image dimensions (binary mask).
+ * 1. Threshold the int16 prediction map at @p threshold (interpreted in the
+ *    dequantized float domain via the tensor's per-tensor scale) and resize
+ *    to the original image dimensions (binary mask).
  * 2. Find external contours on the binary mask.
  * 3. Dilate polygons using ClipperLib offset with @p ratio_prime.
  * 4. Convert dilated polygons to minimum-area bounding boxes (min_area = 100).
@@ -296,7 +297,7 @@ int32_t infer(std::vector<hbDNNTensor>& output_tensors,
  *
  * @param[in] output_tensors  Detection model output tensors.
  * @param[in] image           Original BGR image used for cropping.
- * @param[in] threshold       Float binarization threshold (cast to int16 internally).
+ * @param[in] threshold       Binarization threshold in the dequantized (float) domain.
  * @param[in] ratio_prime     Contour dilation scale factor.
  * @return TextDetResult containing crops and boxes, index-aligned.
  */
@@ -312,8 +313,11 @@ TextDetResult post_process_det(std::vector<hbDNNTensor>& output_tensors,
  * 1. BGR -> RGB
  * 2. Resize to ``(input_w, input_h)`` using INTER_AREA
  * 3. Convert to float32 in [0, 1]
- * 4. Per-channel ImageNet normalization (mean 0.485/0.456/0.406, std 0.229/0.224/0.225)
- * 5. Write CHW layout into recognition model input tensor
+ * 4. Write CHW layout into recognition model input tensor
+ *
+ * @note The recognition model is exported with NORM_TYPE="no_preprocess" and
+ *       was calibrated on raw [0, 1] crops — do NOT apply ImageNet mean/std
+ *       normalization here.
  *
  * @param[in,out] input_tensors  Recognition model input tensors (one: float32 NCHW).
  * @param[in]     img            Cropped text region in BGR format.
