@@ -10,7 +10,7 @@ This directory documents the benchmark and validation settings for LPRNet on RDK
 ## Dataset Preparation
 
 - This sample uses a bundled binary input tensor:
-  - `../test_data/test.bin`
+  - `../test_data/test_input.dat`
 - The corresponding visual reference image is:
   - `../test_data/example.jpg`
 
@@ -34,5 +34,5 @@ bash run.sh
 The runtime validation for this sample should confirm:
 
 - the model loads successfully on RDK X5
-- the input tensor can be read from `test.bin`
+- the input tensor can be read from `test_input.dat`
 - the runtime prints a decoded license plate string

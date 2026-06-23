@@ -3,10 +3,11 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_FILE="${SCRIPT_DIR}/lpr.bin"
+MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/LPRNet/lpr.bin"
 
 if [ ! -f "${MODEL_FILE}" ]; then
-  echo "[Error] lpr.bin is expected to be bundled with this sample." >&2
-  exit 1
+  echo "[Info] Downloading LPRNet model from: ${MODEL_URL}"
+  wget -O "${MODEL_FILE}" "${MODEL_URL}"
 fi
 
-echo "[Info] Using bundled model: ${MODEL_FILE}"
+echo "[Info] Model ready: ${MODEL_FILE}"

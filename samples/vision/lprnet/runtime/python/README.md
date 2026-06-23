@@ -25,7 +25,7 @@ This sample demonstrates how to run LPRNet recognition on RDK X5 with `hbm_runti
 | `--model-path` | Path to the LPRNet `.bin` model | `../../model/lpr.bin` |
 | `--priority` | Runtime scheduling priority | `5` |
 | `--bpu-cores` | BPU core indexes | `0` |
-| `--test-bin` | Path to the packed float32 input tensor | `../../test_data/test.bin` |
+| `--test-bin` | Path to the packed float32 input tensor | `../../test_data/test_input.dat` |
 
 ## Quick Run
 
@@ -45,8 +45,14 @@ chmod +x run.sh
   ```bash
   python3 main.py \
     --model-path ../../model/lpr.bin \
-    --test-bin ../../test_data/test.bin
+    --test-bin ../../test_data/test_input.dat
   ```
+
+## Test Data Placement
+
+The bundled runtime input tensor is stored under the sample-level `test_data` directory:
+
+- `../../test_data/test_input.dat`
 
 ## Interface Description
 

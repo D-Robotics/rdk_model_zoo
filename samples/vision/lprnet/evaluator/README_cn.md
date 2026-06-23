@@ -10,7 +10,7 @@
 ## 数据准备
 
 - 本示例使用仓库内自带的二进制输入张量：
-  - `../test_data/test.bin`
+  - `../test_data/test_input.dat`
 - 对应的可视化参考图为：
   - `../test_data/example.jpg`
 
@@ -34,5 +34,5 @@ bash run.sh
 该示例的运行验证应确认：
 
 - 模型可在 RDK X5 上正常加载
-- 可以从 `test.bin` 读取输入张量
+- 可以从 `test_input.dat` 读取输入张量
 - runtime 能输出解码后的车牌字符串
