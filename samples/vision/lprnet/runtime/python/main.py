@@ -27,7 +27,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../model"))
 TEST_DATA_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../test_data"))
 DEFAULT_MODEL_PATH = os.path.join(MODEL_DIR, "lpr.bin")
-DEFAULT_TEST_BIN = os.path.join(TEST_DATA_DIR, "test.bin")
+DEFAULT_TEST_BIN = os.path.join(TEST_DATA_DIR, "test_input.dat")
 
 
 def main() -> None:

@@ -8,6 +8,8 @@
 
 ## 模型交付方式
 
-由于模型文件体积较小，默认 `.bin` 模型已直接随本目录提供。
+当本地缺少默认 `.bin` 模型时，可通过 `download_model.sh` 自动下载。
 
-无需额外下载。
+默认下载地址：
+
+- `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/LPRNet/lpr.bin`

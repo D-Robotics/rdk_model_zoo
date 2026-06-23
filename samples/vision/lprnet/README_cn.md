@@ -18,7 +18,15 @@ LPRNet 是一种轻量级端到端车牌识别网络，输入车牌裁剪图后�
 ├── evaluator
 ├── model
 ├── runtime
+│   └── python
+│       ├── lprnet.py
+│       ├── main.py
+│       ├── README.md
+│       ├── README_cn.md
+│       └── run.sh
 ├── test_data
+│   ├── example.jpg
+│   └── test_input.dat
 ├── README.md
 └── README_cn.md
 ```
@@ -34,7 +42,7 @@ bash run.sh
 
 ## 模型转换
 
-本示例已提供可直接运行的 `.bin` 模型。转换侧说明请参考 [conversion/README_cn.md](./conversion/README_cn.md)。
+本示例在缺少模型时会通过 `model/download_model.sh` 自动下载 `lpr.bin`，运行时附带的测试输入保存在 `test_data/test_input.dat`。转换侧说明请参考 [conversion/README_cn.md](./conversion/README_cn.md)。
 
 ## 运行推理
 

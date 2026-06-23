@@ -18,7 +18,15 @@ LPRNet is a lightweight end-to-end license plate recognition network. It directl
 ├── evaluator
 ├── model
 ├── runtime
+│   └── python
+│       ├── lprnet.py
+│       ├── main.py
+│       ├── README.md
+│       ├── README_cn.md
+│       └── run.sh
 ├── test_data
+│   ├── example.jpg
+│   └── test_input.dat
 ├── README.md
 └── README_cn.md
 ```
@@ -34,7 +42,7 @@ For runtime details, refer to [runtime/python/README.md](./runtime/python/README
 
 ## Model Conversion
 
-This sample ships with a ready-to-run `.bin` model. For conversion-side notes, refer to [conversion/README.md](./conversion/README.md).
+This sample downloads `lpr.bin` on demand through `model/download_model.sh`. The bundled runtime test input is stored at `test_data/test_input.dat`. For conversion-side notes, refer to [conversion/README.md](./conversion/README.md).
 
 ## Runtime Inference
 

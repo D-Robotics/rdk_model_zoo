@@ -25,7 +25,7 @@
 | `--model-path` | LPRNet `.bin` 模型路径 | `../../model/lpr.bin` |
 | `--priority` | Runtime 调度优先级 | `5` |
 | `--bpu-cores` | BPU 核心索引 | `0` |
-| `--test-bin` | 打包好的 `float32` 输入张量路径 | `../../test_data/test.bin` |
+| `--test-bin` | 打包好的 `float32` 输入张量路径 | `../../test_data/test_input.dat` |
 
 ## 快速运行
 
@@ -45,8 +45,14 @@ chmod +x run.sh
   ```bash
   python3 main.py \
     --model-path ../../model/lpr.bin \
-    --test-bin ../../test_data/test.bin
+    --test-bin ../../test_data/test_input.dat
   ```
+
+## 测试数据放置位置
+
+运行时附带的输入张量统一放在 sample 级别的 `test_data` 目录：
+
+- `../../test_data/test_input.dat`
 
 ## 接口说明
 

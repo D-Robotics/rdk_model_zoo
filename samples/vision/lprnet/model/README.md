@@ -8,6 +8,8 @@ This directory contains the runtime model file for LPRNet on RDK X5.
 
 ## Model Delivery
 
-The default `.bin` model is bundled directly in this directory because the file size is small.
+The default `.bin` model is downloaded by `download_model.sh` when missing.
 
-No additional download step is required.
+Default download URL:
+
+- `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/LPRNet/lpr.bin`
