@@ -22,7 +22,7 @@
  * This file provides structured C++ interfaces encapsulating the complete
  * two-stage OCR inference workflow on D-Robotics S100 platforms:
  *
- *  - @ref PaddleOCRDet  — DB-algorithm text detection (NV12 input, int16 output)
+ *  - @ref PaddleOCRDet  — DB-algorithm text detection (NV12 input, int16/float32 output)
  *  - @ref PaddleOCRRec  — CRNN text recognition (F32 NCHW input, CTC F32 output)
  *
  * Free functions for preprocessing, inference, and postprocessing are declared

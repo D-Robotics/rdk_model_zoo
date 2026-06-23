@@ -141,11 +141,17 @@ def dilate_contours(contours: List[np.ndarray], ratio_prime: float) -> List[np.n
 
         pco = pyclipper.PyclipperOffset()
         pco.AddPath(poly, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
-        dilated_poly = np.array(pco.Execute(D_prime))
+        solution = pco.Execute(D_prime)
 
-        if dilated_poly.size == 0 or dilated_poly.dtype != np.int_ or len(dilated_poly) != 1:
+        # pco.Execute returns a list of polygons; each polygon is a list of
+        # [x, y] pairs and different polygons may have different lengths.
+        # np.array() over such a ragged list raises a ValueError on
+        # numpy >= 1.24 (e.g. S600 stock image), so filter empty / multi-
+        # polygon results BEFORE converting to ndarray.
+        if len(solution) != 1 or len(solution[0]) == 0:
             continue
 
+        dilated_poly = np.array(solution, dtype=np.int64)
         dilated_polys.append(dilated_poly)
 
     return dilated_polys

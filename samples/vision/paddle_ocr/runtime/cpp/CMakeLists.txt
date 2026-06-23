@@ -4,10 +4,16 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# SOC macro
+# SOC macro; handle boards where soc_name reads as "(null)"
 file(READ "/sys/class/boardinfo/soc_name" SOC_NAME_RAW)
-string(TOUPPER "${SOC_NAME_RAW}" SOC_NAME_UPPER)
-add_definitions(-DSOC_${SOC_NAME_UPPER})
+string(STRIP "${SOC_NAME_RAW}" SOC_NAME_STRIPPED)
+string(TOUPPER "${SOC_NAME_STRIPPED}" SOC_NAME_UPPER)
+if(SOC_NAME_UPPER STREQUAL "(NULL)")
+    set(SOC_NAME_UPPER "")
+endif()
+if(SOC_NAME_UPPER)
+    add_definitions(-DSOC_${SOC_NAME_UPPER})
+endif()
 
 include_directories(
     /usr/hobot/include

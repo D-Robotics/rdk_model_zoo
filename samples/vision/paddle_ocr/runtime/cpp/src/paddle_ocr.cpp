@@ -23,13 +23,18 @@
  *  - PaddleOCRRec  — model init, destructor
  *  - pre_process_det  — BGR -> NV12 tensor preparation
  *  - infer            — synchronous BPU inference
- *  - post_process_det — int16 mask -> contours -> dilated boxes -> crops
+ *  - post_process_det — int16/float32 mask -> contours -> dilated boxes -> crops
  *  - pre_process_rec  — BGR -> RGB -> float32 CHW -> tensor
  *  - post_process_rec — CTC greedy decode
  *
  * Local helper functions (process_and_resize_pred, dilate_contours,
  * get_bounding_boxes, crop_and_rotate_image, ctc_greedy_decode_from_tensor)
  * are defined at file scope and are not exposed in the header.
+ *
+ * The detection model output can be either:
+ *  - int16 with HB_DNN_TENSOR_TYPE_S16 + SCALE quantization (PP-OCRv3), or
+ *  - float32 with HB_DNN_TENSOR_TYPE_F32 + NONE quantization (PP-OCRv6).
+ * process_and_resize_pred() handles both transparently.
  *
  * @see paddle_ocr.hpp
  */
@@ -52,19 +57,23 @@
 // ===========================================================================
 
 /**
- * @brief Threshold an int16 prediction map and resize to the original image size.
+ * @brief Threshold a prediction map (int16 or float32) and resize to original size.
  *
- * The detection model output is quantized int16 with a per-tensor scale
- * (``properties.scale.scaleData[0]``); the dequantized value is
- * ``raw_int16 * scale``. To compare in the int16 domain we convert the
- * float threshold once via ``threshold / scale`` instead of dequantizing
- * every pixel.
+ * Supports both quantized int16 and float32 output by dispatching on
+ * ``tensor.properties.quantiType``:
  *
- * Values whose dequantized magnitude exceeds @p threshold are set to 255,
- * all others to 0. The result is resized to (img_h, img_w) using bilinear
- * interpolation.
+ * - ``HB_DNN_TENSOR_TYPE_S16`` + ``SCALE`` (PP-OCRv3):
+ *   Dequantized value = ``raw_int16 * scaleData[0]``. The float @p threshold is
+ *   converted to the quantized domain once as ``threshold / scale`` and compared
+ *   as integers.
  *
- * @param[in] tensor     hbDNNTensor holding int16 prediction data.
+ * - ``HB_DNN_TENSOR_TYPE_F32`` + ``NONE`` (PP-OCRv6):
+ *   The buffer contains raw float32 values; compared directly.
+ *
+ * In both cases, values exceeding @p threshold are set to 255, others to 0.
+ * The binary mask is resized to (img_h, img_w) using bilinear interpolation.
+ *
+ * @param[in] tensor     hbDNNTensor holding prediction data.
  * @param[in] threshold  Binarization threshold in the dequantized (float) domain.
  * @param[in] img_w      Target width to resize to.
  * @param[in] img_h      Target height to resize to.
@@ -78,18 +87,32 @@ static cv::Mat process_and_resize_pred(const hbDNNTensor& tensor,
     int H = shape.dimensionSize[shape.numDimensions - 2];
     int W = shape.dimensionSize[shape.numDimensions - 1];
 
-    const int16_t* data = reinterpret_cast<const int16_t*>(tensor.sysMem.virAddr);
-
-    // Convert the float threshold into the int16 quantized domain once,
-    // so the per-pixel comparison stays an integer compare.
-    const float scale = tensor.properties.scale.scaleData[0];
-    const int32_t int_threshold = static_cast<int32_t>(threshold / scale);
-
     cv::Mat preds_bin(H, W, CV_8UC1);
-    for (int y = 0; y < H; ++y) {
-        for (int x = 0; x < W; ++x) {
-            int idx = y * W + x;
-            preds_bin.at<uint8_t>(y, x) = (static_cast<int32_t>(data[idx]) > int_threshold) ? 255 : 0;
+
+    // Dispatch on output quantisation type:
+    // - PP-OCRv3 (S100): S16 + SCALE → int16 threshold comparison
+    // - PP-OCRv6 (S600): F32 + NONE  → direct float comparison
+    if (tensor.properties.quantiType == HB_DNN_TENSOR_TYPE_S16) {
+        // ── int16 quantised path (PP-OCRv3) ──
+        const int16_t* data = reinterpret_cast<const int16_t*>(tensor.sysMem.virAddr);
+        const float scale = tensor.properties.scale.scaleData[0];
+        const int32_t int_threshold = static_cast<int32_t>(threshold / scale);
+
+        for (int y = 0; y < H; ++y) {
+            for (int x = 0; x < W; ++x) {
+                int idx = y * W + x;
+                preds_bin.at<uint8_t>(y, x) =
+                    (static_cast<int32_t>(data[idx]) > int_threshold) ? 255 : 0;
+            }
+        }
+    } else {
+        // ── float32 path (PP-OCRv6 / dequantised runtime) ──
+        const float* data = reinterpret_cast<const float*>(tensor.sysMem.virAddr);
+        for (int y = 0; y < H; ++y) {
+            for (int x = 0; x < W; ++x) {
+                int idx = y * W + x;
+                preds_bin.at<uint8_t>(y, x) = (data[idx] > threshold) ? 255 : 0;
+            }
         }
     }
 
@@ -410,7 +433,7 @@ TextDetResult post_process_det(std::vector<hbDNNTensor>& output_tensors,
                                float threshold,
                                float ratio_prime)
 {
-    // 1) Threshold int16 prediction map and resize to original image size
+    // 1) Threshold prediction map (int16 or float32) and resize to original image size
     auto preds = process_and_resize_pred(output_tensors[0],
                                          threshold,
                                          image.cols, image.rows);
