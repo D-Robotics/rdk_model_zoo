@@ -22,6 +22,7 @@ Supported model variants:
     - yolov5u: YOLOv5u (anchor-free DFL head, detect)
     - yolov8:  YOLOv8
     - yolov10: YOLOv10 (NMS-free detection)
+    - yolov9:  YOLOv9
     - yolo11:  YOLO11
     - yolo12:  YOLO12
 
@@ -36,6 +37,7 @@ Example:
     python main.py --task seg --model-path ../../model/nash-m/yolov8n_seg_nashm_640x640_nv12.hbm
     python main.py --task detect --model-path ../../model/nash-m/yolo12n_detect_nashm_640x640_nv12.hbm
     python main.py --task cls --model-path ../../model/nash-m/yolo11n_cls_nashm_640x640_nv12.hbm
+    python main.py --task detect --model-path ../../model/nash-p/yolo11n_detect_nashp_640x640_nv12.hbm
 """
 
 import argparse
@@ -58,7 +60,7 @@ import utils.py_utils.inspect as inspect
 
 
 # Model file naming conventions per variant and task.
-# These names match the public S100 model archive; unsupported task/model
+# These names match the public RDK S model archives; unsupported task/model
 # combinations are intentionally omitted instead of guessed.
 MODEL_FILE_PATTERNS = {
     "yolov5u": {
@@ -72,6 +74,9 @@ MODEL_FILE_PATTERNS = {
     },
     "yolov10": {
         "detect": "yolov10n_detect_{suffix}_640x640_nv12.hbm",
+    },
+    "yolov9": {
+        "detect": "yolov9s_detect_{suffix}_640x640_nv12.hbm",
     },
     "yolo11": {
         "detect": "yolo11n_detect_{suffix}_640x640_nv12.hbm",
@@ -89,17 +94,20 @@ DOWNLOAD_URL_BASE = {
     "yolov5u": "Ultralytics_YOLO_OE_3.7.0",
     "yolov8":  "Ultralytics_YOLO_OE_3.7.0",
     "yolov10": "Ultralytics_YOLO_OE_3.7.0",
+    "yolov9":  "Ultralytics_YOLO_OE_3.7.0",
     "yolo11":  "Ultralytics_YOLO_OE_3.7.0",
     "yolo12":  "Ultralytics_YOLO_OE_3.7.0",
 }
 
 def get_model_march_and_suffix(soc: str) -> tuple[str, str]:
-    """Return S100 model architecture directory and filename suffix."""
+    """Return model architecture directory and filename suffix for the SoC."""
     try:
         with open("/sys/class/boardinfo/board_type", "r", encoding="utf-8") as f:
             board_type = f.read().strip().lower()
     except Exception:
         board_type = soc
+    if soc == "s600":
+        return "nash-p", "nashp"
     if soc == "s100p" or "p" in board_type:
         return "nash-m", "nashm"
     return "nash-e", "nashe"
@@ -147,8 +155,9 @@ def get_download_url(task: str, model_march: str, suffix: str) -> str:
 
     model_file = MODEL_FILE_PATTERNS[default_yolo_type][task].format(suffix=suffix)
     url_base = DOWNLOAD_URL_BASE[default_yolo_type]
+    soc_dir = "rdk_s600" if suffix == "nashp" else "rdk_s100"
     return ("https://archive.d-robotics.cc/downloads/rdk_model_zoo/"
-            f"rdk_s100/{url_base}/{model_march}/{model_file}")
+            f"{soc_dir}/{url_base}/{model_march}/{model_file}")
 
 
 def main() -> None:

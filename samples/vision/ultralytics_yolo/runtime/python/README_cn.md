@@ -2,11 +2,11 @@
 
 # Ultralytics YOLO Python 运行时
 
-本示例演示如何在 RDK S100/S100P 上使用 `hbm_runtime` 运行 Ultralytics YOLO 任务模型。
+本示例演示如何在 RDK S100/S100P/S600 上使用 `hbm_runtime` 运行 Ultralytics YOLO 任务模型。
 
 ## 环境依赖
 
-本示例无额外依赖。请确保 RDK S100/S100P Python 环境已就绪。
+本示例无额外依赖。请确保 RDK S 系列 Python 环境已就绪。
 
 ```bash
 pip install numpy opencv-python hbm-runtime scipy
@@ -42,8 +42,8 @@ pip install numpy opencv-python hbm-runtime scipy
 | `--topk` | 分类 Top-K 结果数 | `5` |
 | `--kpt-conf-thres` | 姿态关键点置信度阈值 | `0.50` |
 
-> **注意**：`--model-path` 默认值根据 `--task` 和检测到的 SoC 自动确定。S100 使用 `nashe` 后缀，S100P 使用 `nashm` 后缀。具体模型家族和尺寸由 `--model-path` 选择。
-> 公开归档中 S100P 模型覆盖 `yolov5u detect`、`yolov8 detect/seg/pose/cls`、`yolov10 detect`、`yolo11 detect/seg/pose/cls`、`yolo12 detect`。
+> **注意**：`--model-path` 默认值根据 `--task` 和检测到的 SoC 自动确定。S100 使用 `nashe` 后缀，S100P 使用 `nashm` 后缀，S600 使用 `nashp` 后缀。具体模型家族和尺寸由 `--model-path` 选择。
+> 当前 RDK S 公共归档覆盖 `yolov5u detect`、`yolov8 detect/seg/pose/cls`、`yolov9 detect`、`yolov10 detect`、`yolo11 detect/seg/pose/cls`、`yolo12 detect`。其中 `YOLOv9 seg` 当前仅公开发布于 S100/S100P。
 
 ## 快速运行
 
@@ -69,6 +69,13 @@ pip install numpy opencv-python hbm-runtime scipy
     python3 main.py \
         --task detect \
         --model-path ../../model/nash-m/yolo11n_detect_nashm_640x640_nv12.hbm \
+        --test-img ../../test_data/bus.jpg
+    ```
+  - 在 RDK S600 上显式运行检测
+    ```bash
+    python3 main.py \
+        --task detect \
+        --model-path ../../model/nash-p/yolo11n_detect_nashp_640x640_nv12.hbm \
         --test-img ../../test_data/bus.jpg
     ```
 
@@ -101,6 +108,15 @@ python3 main.py \
     --test-img ../../test_data/bus.jpg
 ```
 
+### YOLOv9 目标检测
+
+```bash
+python3 main.py \
+    --task detect \
+    --model-path ../../model/nash-e/yolov9s_detect_nashe_640x640_nv12.hbm \
+    --test-img ../../test_data/bus.jpg
+```
+
 ### 姿态估计
 
 ```bash
@@ -115,7 +131,7 @@ python3 main.py \
 ```bash
 python3 main.py \
     --task cls \
-    --model-path ../../model/nash-e/yolo11n_cls_nashe_640x640_nv12.hbm \
+    --model-path ../../model/nash-e/yolo11n_cls_nashe_224x224_nv12.hbm \
     --test-img ../../test_data/bus.jpg
 ```
 

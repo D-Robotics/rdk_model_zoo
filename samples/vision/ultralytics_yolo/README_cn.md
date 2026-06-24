@@ -8,10 +8,10 @@
 
 ## 算法介绍
 
-Ultralytics YOLO 是一个实时视觉模型家族，涵盖目标检测、实例分割、姿态估计和图像分类。本示例提供了在 RDK S100/S100P 平台上的公开模型部署示例，支持以下模型系列：
+Ultralytics YOLO 是一个实时视觉模型家族，涵盖目标检测、实例分割、姿态估计和图像分类。本示例提供了在 RDK S100/S100P/S600 平台上的公开模型部署示例，支持以下模型系列。
 
 - 目标检测：
-  `YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12`
+  `YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12`
 - 实例分割：
   `YOLOv8 / YOLO11`
 - 姿态估计：
@@ -38,7 +38,7 @@ YOLOv5u detect 覆盖公开的 `yolov5nu/su/mu/lu/xu` 模型族。
 
 ### 平台说明
 
-- 目标平台：`RDK S100` / `RDK S100P`
+- 目标平台：`RDK S100` / `RDK S100P` / `RDK S600`
 - 运行时后端：`hbm_runtime`
 - 推理模型格式：`.hbm`
 - 输入格式：`NV12`（Y + UV 两个独立输入张量）
@@ -90,7 +90,7 @@ bash run.sh detect
 
 ## 模型转换
 
-本示例已提供 RDK S100/S100P 的预编译 `.hbm` 模型文件。
+本示例已提供 RDK S100/S100P/S600 的预编译 `.hbm` 模型文件。
 
 - 如仅需推理，可从 [model/README.md](./model/README.md) 下载模型，跳过转换步骤。
 - 如需导出 ONNX、准备校准数据或编译模型，请参考 [conversion/README.md](./conversion/README.md)。
@@ -121,10 +121,10 @@ bash run.sh detect
 
 ## 推理结果
 
-Python runtime 的 `run.sh` 覆盖以下 `RDK S100` / `RDK S100P` 文档化模型：
+Python runtime 的 `run.sh` 覆盖以下 `RDK S100` / `RDK S100P` / `RDK S600` 文档化模型：
 
 - 检测：
-  `YOLOv5u / YOLOv8 / YOLOv10 / YOLO11 / YOLO12`
+  `YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12`
 - 分割：
   `YOLOv8 / YOLO11`
 - 姿态：

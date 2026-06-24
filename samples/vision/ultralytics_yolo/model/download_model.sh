@@ -5,14 +5,15 @@
 #   bash download_model.sh [soc] [yolo_type] [task] [model_size]
 #
 # Arguments:
-#   soc       - Target SoC: s100 (default) or s100p
-#   yolo_type - Model variant: yolov5u, yolov8, yolov10, yolo11, yolo12
+#   soc       - Target SoC: s100 (default), s100p, or s600
+#   yolo_type - Model variant: yolov5u, yolov8, yolov9, yolov10, yolo11, yolo12
 #   task      - Task type: detect, seg, pose, cls
 #   model_size - Model scale: n, s, m, l, x (default: n); yolov10 also supports b
 #
 # Examples:
 #   bash download_model.sh s100 yolo11 detect
 #   bash download_model.sh s100p yolov5u detect s
+#   bash download_model.sh s600 yolo11 detect x
 
 set -e
 
@@ -38,10 +39,15 @@ else
   BOARD_TYPE="$SOC"
 fi
 
-# Model suffix differs by platform: S100 uses nashe; S100P uses nashm.
+# Model suffix differs by platform: S100 uses nashe; S100P uses nashm; S600 uses nashp.
 MODEL_MARCH="nash-e"
 MODEL_SUFFIX="nashe"
-if [[ "$SOC" == "s100p" || "$BOARD_TYPE" == *"p"* ]]; then
+SOC_DIR="rdk_s100"
+if [[ "$SOC" == "s600" ]]; then
+  MODEL_MARCH="nash-p"
+  MODEL_SUFFIX="nashp"
+  SOC_DIR="rdk_s600"
+elif [[ "$SOC" == "s100p" || "$BOARD_TYPE" == *"p"* ]]; then
   MODEL_MARCH="nash-m"
   MODEL_SUFFIX="nashm"
 fi
@@ -72,6 +78,13 @@ case "$YOLO_TYPE" in
       *)      echo "YOLOv10 only supports detect task"; exit 1 ;;
     esac
     ;;
+  yolov9)
+    URL_BASE="Ultralytics_YOLO_OE_3.7.0/${MODEL_MARCH}"
+    case "$TASK" in
+      detect) MODEL_FILE="yolov9${MODEL_SIZE}_detect_${MODEL_SUFFIX}_640x640_nv12.hbm" ;;
+      *)      echo "YOLOv9 public models in this sample only support detect task"; exit 1 ;;
+    esac
+    ;;
   yolo11)
     URL_BASE="Ultralytics_YOLO_OE_3.7.0/${MODEL_MARCH}"
     case "$TASK" in
@@ -95,7 +108,7 @@ case "$YOLO_TYPE" in
     ;;
 esac
 
-MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/${URL_BASE}/${MODEL_FILE}"
+MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/${SOC_DIR}/${URL_BASE}/${MODEL_FILE}"
 OUTPUT_DIR="$(dirname "$0")"
 OUTPUT_DIR="${OUTPUT_DIR}/${MODEL_MARCH}"
 OUTPUT_PATH="${OUTPUT_DIR}/${MODEL_FILE}"
