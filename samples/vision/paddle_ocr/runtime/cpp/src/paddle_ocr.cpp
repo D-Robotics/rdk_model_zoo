@@ -90,10 +90,10 @@ static cv::Mat process_and_resize_pred(const hbDNNTensor& tensor,
     cv::Mat preds_bin(H, W, CV_8UC1);
 
     // Dispatch on output quantisation type:
-    // - PP-OCRv3 (S100): S16 + SCALE → int16 threshold comparison
-    // - PP-OCRv6 (S600): F32 + NONE  → direct float comparison
+    // - Legacy PP-OCRv3:  S16 + SCALE → int16 threshold comparison
+    // - PP-OCRv6 (default): F32 + NONE → direct float comparison
     if (tensor.properties.quantiType == HB_DNN_TENSOR_TYPE_S16) {
-        // ── int16 quantised path (PP-OCRv3) ──
+        // ── int16 quantised path (legacy PP-OCRv3) ──
         const int16_t* data = reinterpret_cast<const int16_t*>(tensor.sysMem.virAddr);
         const float scale = tensor.properties.scale.scaleData[0];
         const int32_t int_threshold = static_cast<int32_t>(threshold / scale);

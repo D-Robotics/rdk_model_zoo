@@ -2,7 +2,7 @@
 
 本目录描述 PaddleOCR 在本 Model Zoo 中的完整使用流程，包括：算法介绍、模型转换、运行时推理（C++ 和 Python）、前后处理接口说明，以及模型评估步骤。
 
-> ⚠️ **平台说明**：本模型仅支持 **RDK S100** 平台。若使用 RDK S600，请参阅[平台兼容性说明](#平台兼容性)。
+> 默认使用 **PP-OCRv6**（检测 + 识别），运行脚本会读取 `/sys/class/boardinfo/soc_name`，根据当前板卡自动选择对应的预编译模型。
 
 ---
 
@@ -19,7 +19,7 @@ PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用�
 - **DB 文本检测**：可微分二值化使模型在训练时直接学习二值化阈值，提升小文本检测精度
 - **CRNN + CTC 识别**：序列建模结合 CTC 解码，天然支持不定长文本识别
 - **中文支持**：词典包含常用汉字及符号，支持中英文混合场景
-- **端侧高效**：已针对 RDK S100 BPU 完成量化与编译适配
+- **端侧高效**：已针对 RDK S100 / S600 BPU 完成 PP-OCRv6 量化与编译适配
 
 ### 原始资料
 
@@ -31,12 +31,16 @@ PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用�
 
 ## 平台兼容性
 
-| 平台       | 是否支持 | 说明                                            |
-|-----------|---------|------------------------------------------------|
-| RDK S100  | ✅ 支持  | 模型已针对 S100 BPU 编译，推荐使用               |
-| RDK S600  | ❌ 不支持 | 当前无 S600 编译版本，不可直接使用本目录下的模型  |
+本示例默认下载 **PP-OCRv6** 检测/识别模型，根据 `/sys/class/boardinfo/soc_name` 自动选择对应的预编译版本：
 
-> 若需在 RDK S600 上运行 OCR，需重新使用 S600 工具链对原始 ONNX/浮点模型进行量化编译。
+| 平台       | 是否支持 | 模型变体                                          |
+|-----------|---------|--------------------------------------------------|
+| RDK S100  | ✅ 支持 | `archive.d-robotics.cc/.../rdk_s100/paddle_ocr/`  |
+| RDK S100P | ✅ 支持 | 复用 `rdk_s100/paddle_ocr/` 的预编译模型           |
+| RDK S600  | ✅ 支持 | `archive.d-robotics.cc/.../rdk_s600/paddle_ocr/`  |
+
+> 板卡读取 `soc_name` 失败或返回 `(null)` 时，脚本会回退到 S100 模型。
+> 如需在自定义平台上运行 OCR，请使用对应的 OE 工具链重新量化编译模型，参考 [conversion/README.md](./conversion/README.md)。
 
 ---
 
@@ -45,11 +49,13 @@ PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用�
 ```bash
 .
 |-- conversion                              # 模型转换流程
+|   |-- paddleocr_det_configs.yaml          # PP-OCRv6 检测模型量化配置
+|   |-- paddleocr_rec_configs.yaml          # PP-OCRv6 识别模型量化配置
 |   `-- README.md                           # 模型转换使用说明
 |-- evaluator                               # 模型评估相关内容
 |   `-- README.md                           # 模型评估说明
 |-- model                                   # 模型文件及下载脚本
-|   |-- download_model.sh                   # HBM 模型下载脚本（仅 S100）
+|   |-- download_model.sh                   # SOC 自适应 HBM 模型下载脚本
 |   `-- README.md                           # 模型下载说明
 |-- runtime                                 # 模型推理示例
 |   |-- cpp                                 # C++ 推理工程
@@ -68,7 +74,9 @@ PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用�
 |       `-- paddle_ocr.py                   # PaddleOCR 推理与后处理实现
 |-- test_data                               # 测试数据
 |   |-- gt_2322.jpg                         # 示例测试图片（含中文文本）
-|   |-- ppocr_keys_v1.txt                   # 中文字符词典
+|   |-- ppocrv6_dict.txt                    # PP-OCRv6 默认字符词典
+|   |-- ppocrv6_tiny_dict.txt               # PP-OCRv6 Tiny 备用词典
+|   |-- ppocr_keys_v1.txt                   # PP-OCRv3 历史词典（兼容保留）
 |   `-- FangSong.ttf                        # 仿宋字体文件（用于结果可视化）
 `-- README.md                               # PaddleOCR 示例整体说明与快速指引
 ```
@@ -79,6 +87,7 @@ PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用�
 
 为了便于用户快速上手体验，每个模型均提供了 `run.sh` 脚本，用户运行此脚本即可一键运行相应模型，此脚本主要进行如下操作：
 - 检测系统环境是否满足要求，若不满足则自动安装相应包；
+- 读取板卡 SOC 信息，自动选择 S100 或 S600 对应的 PP-OCRv6 模型；
 - 检测推理所需的 hbm 模型文件是否存在，不存在则自动下载；
 - 创建 build 目录，编译 C++ 项目（仅 C++ 项目）；
 - 运行编译好的可执行文件或相应的 Python 脚本；
@@ -109,7 +118,7 @@ PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用�
 
 ## 模型转换（Model Conversion）
 
-- ModelZoo 已提供适配完成的 HBM 模型文件（仅 S100），用户可直接运行 `model` 目录下的 `download_model.sh` 脚本下载并使用，如不关心模型转换流程，**可跳过本小节**。
+- ModelZoo 已提供适配完成的 PP-OCRv6 HBM 模型文件（S100 / S600），用户可直接运行 `model` 目录下的 `download_model.sh` 脚本下载并使用，如不关心模型转换流程，**可跳过本小节**。
 
 - 如需自定义模型转换参数，或了解完整的模型转换流程，请参考 `conversion/README.md`。
 
@@ -123,11 +132,13 @@ PaddleOCR 模型推理示例同时提供 C++ 和 Python 两种实现方式，分
 
 - 提供完整的工程化示例，适合集成到实际应用中；
 - 包含模型封装类、参数解析、推理流程及构建方式说明；
+- 默认模型路径在编译期根据 SOC 解析（S100/S600），可通过 `--det_model_path` / `--rec_model_path` 显式覆盖；
 - 具体编译、运行方式及接口说明请参考 `runtime/cpp/README.md`；
 
 ### Python 版本
 
 - 以脚本形式提供，适合快速验证模型效果与算法流程；
+- 默认模型路径在运行时根据 SOC 解析（S100/S600），可通过 `--det-model-path` / `--rec-model-path` 显式覆盖；
 - 示例中展示了模型加载、推理执行、后处理以及结果保存的完整过程；
 - 具体使用方法、参数说明及接口说明请参考 `runtime/python/README.md`；
 
@@ -148,11 +159,11 @@ PaddleOCR 模型推理示例同时提供 C++ 和 Python 两种实现方式，分
 
 C++ 推理结果示例：
 
-![C++ result](test_data/cpp_result.jpg)
+![C++ result](test_data/cpp_demo.jpg)
 
 Python 推理结果示例：
 
-![Python result](test_data/python_result.jpg)
+![Python result](test_data/python_demo.jpg)
 
 ---
 

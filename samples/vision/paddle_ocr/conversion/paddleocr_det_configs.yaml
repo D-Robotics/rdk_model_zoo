@@ -14,12 +14,14 @@
 
 
 model_parameters:
-  onnx_model: './../PaddleOCR/inference/det_onnx/modelv3.onnx'
-  march: "nash-e"
+  onnx_model: '../onnx/model_detv6.onnx'
+  march: "nash-e"          # nash-e (S100) / nash-m (S100P) / nash-p (S600)
   layer_out_dump: False
   working_dir: 'model_output'
-  output_model_file_prefix: 'cn_PP-OCRv3_det_infer-deploy_640x640_nv12'
-  remove_node_type: "Dequantize"
+  output_model_file_prefix: 'PP-OCRv6_det_infer-deploy_640x640_nv12'
+  # remove_node_type: "Dequantize"   # 注意：删掉这一行，让输出端的 Dequantize 留在图里。
+                                     # 否则 fetch_name_0 会以 si8 形式输出，板上 outputs[0].buffer
+                                     # 当 float 概率比较 >0.2 时几乎全是前景，导致一堆杂乱框。
 
 input_parameters:
   input_name: "x"

@@ -31,7 +31,6 @@ Key Features:
     - Float32 RGB NCHW preprocessing for the recognition model
     - Pyclipper-based contour dilation for robust box extraction
     - Pure NumPy CTC greedy decode (no PaddlePaddle dependency)
-    - Supports RDK S100 platform only
 
 Typical Usage:
     >>> from paddle_ocr import PaddleOCRDet, PaddleOCRDetConfig
@@ -40,11 +39,6 @@ Typical Usage:
     >>> img_boxes, crops, boxes = det.predict(img)
     >>> rec = PaddleOCRRec(PaddleOCRRecConfig(model_path='...'))
     >>> text = rec.predict(crops[0], char_list)
-
-Notes:
-    - This sample only supports RDK S100 platform.
-    - RDK S600 users: the S100 model is not compatible with S600 BPU. Refer to
-      README.md for platform compatibility details.
 """
 
 import os
@@ -84,11 +78,8 @@ class PaddleOCRDetConfig:
             Larger values produce wider bounding boxes.
         threshold: Binarization threshold applied to the float prediction map.
             Pixels whose value exceeds this threshold are treated as foreground.
-
-    Notes:
-        - This model only supports RDK S100 platform.
     """
-    model_path: str = '/opt/hobot/model/s100/basic/cn_PP-OCRv3_det_infer-deploy_640x640_nv12.hbm'
+    model_path: str = '/opt/hobot/model/s100/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm'
     ratio_prime: float = 2.7
     threshold: float = 0.5
 
@@ -99,11 +90,8 @@ class PaddleOCRRecConfig:
 
     Attributes:
         model_path: Path to the compiled recognition `.hbm` model (RGB F32 input).
-
-    Notes:
-        - This model only supports RDK S100 platform.
     """
-    model_path: str = '/opt/hobot/model/s100/basic/cn_PP-OCRv3_rec_infer-deploy_48x320_rgb.hbm'
+    model_path: str = '/opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm'
 
 
 # ---------------------------------------------------------------------------
@@ -219,7 +207,6 @@ class PaddleOCRDet:
         ratio_prime: Contour dilation ratio.
 
     Notes:
-        - This model only supports RDK S100 platform.
         - The detection model takes two NV12 inputs: Y plane and UV plane.
           Input shape layout is ``(1, H, W, 1)`` for Y and ``(1, H/2, W/2, 2)``
           for UV; height/width are read from indices ``[1]`` and ``[2]``.
@@ -416,7 +403,6 @@ class PaddleOCRRec:
         num_classes: Output vocabulary size V (including blank).
 
     Notes:
-        - This model only supports RDK S100 platform.
         - Input tensor layout is NCHW; height and width are at indices 2 and 3.
         - Output tensor shape is ``[1, T, V]`` (float32 logits).
     """
