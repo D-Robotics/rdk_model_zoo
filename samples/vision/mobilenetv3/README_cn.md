@@ -45,15 +45,15 @@ cd runtime/python
 bash run.sh
 ```
 
-脚本会将已发布的 S100 HBM 模型下载到 `model/s100/`，并使用
+脚本会按当前板卡的 SOC 下载 S100 或 S600 HBM 模型到 `model/<soc>/`，并使用
 `test_data/zebra_cls.jpg` 执行分类推理。
 
-直接运行入口：
+直接运行入口（把 `<soc>` 替换为 `s100` 或 `s600`）：
 
 ```bash
 cd runtime/python
 python3 main.py \
-  --model-path ../../model/s100/mobilenetv3_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv3_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names
 ```
@@ -69,9 +69,9 @@ python3 main.py \
 
 | 模型 | 任务 | 输入 | 类别数 | 已发布 HBM |
 | --- | --- | --- | --- | --- |
-| MobileNetV3-Large | 图像分类 | 224x224 NV12 (Y + UV) | ImageNet 1000 | S100 |
+| MobileNetV3-Large | 图像分类 | 224x224 NV12 (Y + UV) | ImageNet 1000 | S100 / S600 |
 
-本 sample 使用公开 S100 HBM 模型，并下载到 sample 内 `model/s100/` 目录。
+本 sample 根据当前板卡 SOC 自动选择对应的公开 HBM 模型，并下载到 sample 内 `model/<soc>/` 目录。
 
 ## 模型评估
 

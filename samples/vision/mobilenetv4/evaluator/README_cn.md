@@ -15,12 +15,12 @@ bash run.sh
 bash run.sh medium
 ```
 
-直接入口示例：
+直接入口示例（把 `<soc>` 替换为 `s100` 或 `s600`）：
 
 ```bash
 python3 main.py \
   --model-variant small \
-  --model-path ../../model/s100/mobilenetv4_small_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_small_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -29,7 +29,7 @@ python3 main.py \
 ```bash
 python3 main.py \
   --model-variant medium \
-  --model-path ../../model/s100/mobilenetv4_medium_256x256_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_medium_256x256_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5

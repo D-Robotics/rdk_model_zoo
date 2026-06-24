@@ -56,9 +56,11 @@ def main() -> None:
     opt = parser.parse_args()
 
     if not opt.model_path:
+        soc = inspect.get_soc_name().lower().strip("()").strip()
+        model_soc = "s600" if soc == "s600" else "s100"
         model_map = {
-            'small': '../../model/s100/mobilenetv4_small_224x224_nv12.hbm',
-            'medium': '../../model/s100/mobilenetv4_medium_256x256_nv12.hbm',
+            'small':  f'../../model/{model_soc}/mobilenetv4_small_224x224_nv12.hbm',
+            'medium': f'../../model/{model_soc}/mobilenetv4_medium_256x256_nv12.hbm',
         }
         opt.model_path = model_map[opt.model_variant]
 

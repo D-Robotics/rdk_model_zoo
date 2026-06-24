@@ -11,10 +11,12 @@
 ```bash
 cd ../runtime/python
 python3 main.py \
-  --model-path ../../model/s100/mobilenetv3_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv3_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names
 ```
+
+`<soc>` 取 `s100`（默认）或 `s600`，对应当前板卡发布的 HBM。
 
 通过标准：
 

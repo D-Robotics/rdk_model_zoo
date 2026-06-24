@@ -3,7 +3,7 @@
 # MobileNetV4 Python 运行示例
 
 本示例使用 `hbm_runtime` 运行 MobileNetV4 图像分类模型，并打印 ImageNet
-Top-K 结果。当前支持 S100 small 和 medium HBM 模型。
+Top-K 结果。支持 S100 / S600 small 和 medium HBM 模型，运行时根据 SOC 自动识别。
 
 ## 目录结构
 
@@ -21,7 +21,7 @@ Top-K 结果。当前支持 S100 small 和 medium HBM 模型。
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
 | `--model-variant` | 模型版本：`small` 或 `medium` | `small` |
-| `--model-path` | HBM 模型路径；为空时按 `--model-variant` 选择 sample 内模型 | `small`: `../../model/s100/mobilenetv4_small_224x224_nv12.hbm` |
+| `--model-path` | HBM 模型路径；为空时按 `--model-variant` 选择 sample 内模型 | `small`: `../../model/<soc>/mobilenetv4_small_224x224_nv12.hbm` |
 | `--test-img` | 输入图片路径 | `../../test_data/zebra_cls.jpg` |
 | `--label-file` | ImageNet 标签文件 | `../../test_data/imagenet_classes.names` |
 | `--top-k` | 打印的分类结果数量 | `5` |
@@ -43,14 +43,16 @@ bash run.sh medium
 ```
 
 脚本会通过 `../../model/download_model.sh` 下载模型，并使用 sample 内
-`../../model/s100/` 目录。
+`../../model/<soc>/` 目录（`<soc>` ∈ {`s100`, `s600`}）。
 
 ## 直接运行
+
+把 `<soc>` 替换为 `s100` 或 `s600`：
 
 ```bash
 python3 main.py \
   --model-variant small \
-  --model-path ../../model/s100/mobilenetv4_small_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_small_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -59,7 +61,7 @@ python3 main.py \
 ```bash
 python3 main.py \
   --model-variant medium \
-  --model-path ../../model/s100/mobilenetv4_medium_256x256_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_medium_256x256_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5

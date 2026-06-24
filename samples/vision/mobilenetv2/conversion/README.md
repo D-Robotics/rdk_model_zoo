@@ -4,6 +4,11 @@ English | [简体中文](./README_cn.md)
 
 This directory provides the quantization YAML configuration and full conversion workflow notes for MobileNetV2 on RDK S100.
 
+> The shipped `mobilenetv2_config.yaml` targets **S100** (`march: "nash-e"`).
+> The S600 build published under `rdk_s600/MobileNet/` is produced from the
+> same source ONNX with the same quantization configuration — only `march`
+> is changed to `nash-p`.
+
 ## Source Model
 
 MobileNetV2 uses the timm library (PyTorch Image Models). Install dependencies:

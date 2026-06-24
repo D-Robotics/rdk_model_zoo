@@ -22,7 +22,7 @@ prediction, and result printing. `mobilenetv1.py` implements the
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `--model-path` | HBM model path | `../../model/s100/mobilenetv1_224x224_nv12.hbm` |
+| `--model-path` | HBM model path | `../../model/<soc>/mobilenetv1_224x224_nv12.hbm` |
 | `--test-img` | Input image path | `../../test_data/zebra_cls.jpg` |
 | `--label-file` | ImageNet label file | `../../test_data/imagenet_classes.names` |
 | `--top-k` | Number of classification results to print | `5` |
@@ -37,11 +37,11 @@ One-command run:
 bash run.sh
 ```
 
-Direct run:
+Direct run (substitute `<soc>` with `s100` or `s600`):
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s100/mobilenetv1_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv1_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
