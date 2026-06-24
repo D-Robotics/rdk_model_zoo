@@ -23,8 +23,9 @@ Single-thread latency: measured per frame, using a single thread and a single BP
 Multi-thread throughput: multiple threads concurrently submit tasks to the BPU. Each BPU core can handle tasks from multiple threads. In practical engineering scenarios, using 2 threads typically achieves minimal per-frame latency while fully utilizing all BPU cores (100% utilization), striking a good balance between throughput (FPS) and frame latency.
 The table generally records results up to the point where throughput no longer increases significantly with additional threads.
 BPU latency and throughput were measured on-device using the following command. The hrt_model_exec tool is provided by the OE package, with source code located in package/board/hrt_model_exec/src within the OE package:
-bash
+```bash
 hrt_model_exec perf --thread_num 2 --model_file <model.bin / model.hbm>
+```
 Due to varying experimental conditions, reproduced results may differ. All measurements reported here were conducted under the optimal device state specified in the "Platform Details" section.
 The hrt_model_exec performance test accounts for cache warm-up and proper multi-threaded program design. The measured time spans from when the user application submits a BPU task until the task completes.
 For streaming inference, input and output memory buffers should be allocated once and reused across frames. Do not include memory allocation/deallocation time in inference timing, nor repeatedly allocate/free memory during streaming inference—this constitutes poor software design.
@@ -33,7 +34,7 @@ For streaming inference, input and output memory buffers should be allocated onc
 
 7. params(M) and FLOPs(B) represent the parameter count and computational complexity (in floating-point operations) of the original floating-point model. These values are obtained from logs printed by the Ultralytics YOLO package when calling YOLO.export() after loading a .pt model. Note that the final fixed-point BPU model’s parameters and FLOPs depend on model structure optimization, graph optimization, and compiler optimizations. Although correlated with the floating-point model’s metrics, they are not strictly proportional. Therefore, floating-point FLOPs are uniformly recorded here as a reference.
 
-Accuracy Test Instructions
+### Accuracy Test Instructions
 
 1. The meanings of the Device and Model columns are identical to those described in the "Performance Test Instructions" section.
 
@@ -47,30 +48,85 @@ Accuracy bbox-all mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=all 
 Accuracy bbox-small mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=small maxDets=100 ]
 Accuracy bbox-medium mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=medium maxDets=100 ]
 Accuracy bbox-large mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=large maxDets=100 ]
-Accuracy mask-all mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=all maxDets=100 ]
-Accuracy mask-small mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=small maxDets=100 ]
-Accuracy mask-medium mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=medium maxDets=100 ]
-Accuracy mask-large mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=large maxDets=100 ]
 Accuracy pose-all mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=all maxDets=20 ]
 Accuracy pose-medium mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=medium maxDets=20 ]
 Accuracy pose-large mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=large maxDets=20 ]
-
-3. AP (Average Precision) emphasizes quality: it requires both high recall (finding targets) and high precision (accurate bounding boxes and correct classification). In contrast, AR (Average Recall) emphasizes quantity: it counts any detection that overlaps a ground truth, without penalizing false positives. Thus, a model can have high AR but low AP (e.g., by generating many low-quality detections) or high AP but low AR (e.g., by only outputting high-confidence predictions and missing many targets). This document uses AP as the primary accuracy metric.
-
-4. All tests used the 5,000 images from the COCO2017 validation set. Inference was performed directly on the device, and results were dumped to JSON files for evaluation using the third-party pycocotools library. A confidence threshold of 0.25 and an NMS IoU threshold of 0.7 were applied.
-
-5. It is normal for pycocotools to report slightly lower accuracy than Ultralytics’ own evaluation tools. This discrepancy arises because pycocotools computes the AP integral using rectangular approximation, whereas Ultralytics uses trapezoidal approximation. Our focus is on using a consistent evaluation method to compare fixed-point (quantized) and floating-point models, thereby assessing quantization-induced accuracy loss.
-
-6. For classification tasks, the ImageNet-1k dataset was used, with Top-1 and Top-5 accuracy reported to evaluate quantization-induced accuracy degradation.
-
-7. Converting BPU model input from NCHW-RGB888 to YUV420SP (NV12) introduces minor accuracy loss due to color-space transformation. This loss can be mitigated by incorporating such color-space conversion during model training.
-
-8. Minor numerical discrepancies may exist between Python and C/C++ API results, primarily due to subtle differences in how floating-point data is handled during memory copying and type conversions between the two implementations.
-
-9. The results in this table were obtained using Post-Training Quantization (PTQ) with calibration on 50 images, simulating the typical experience of a developer performing their first direct compilation without further accuracy tuning or Quantization-Aware Training (QAT). These results satisfy general validation requirements but do not represent the upper bound of achievable accuracy.
-
+Accuracy TOP1 / TOP5: Top-1 / Top-5 classification accuracy on ImageNet-1k.
 
 ## Performance
+### RDK S600
+#### Obeject Detection
+| Device   | Model           | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-----------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S600     | YOLO11l Detect | 640×640        |       80 | 3.229 ms / 307.877 FPS (1 thread ) <br/> 9.113 ms / 1277.270 FPS (12 threads) | 2.0 ms                         | 25.3 M      | 86.9 M     |
+| S600     | YOLO11m Detect | 640×640        |       80 | 2.584 ms / 384.284 FPS (1 thread ) <br/> 7.054 ms / 1642.643 FPS (12 threads) | 2.0 ms                         | 20.1 M      | 68.0 M     |
+| S600     | YOLO11n Detect | 640×640        |       80 | 0.800 ms / 1221.628 FPS (1 thread ) <br/> 1.798 ms / 6142.695 FPS (12 threads) | 2.0 ms                         | 2.6 M       | 6.5 M      |
+| S600     | YOLO11s Detect | 640×640        |       80 | 1.204 ms / 817.752 FPS (1 thread ) <br/> 3.008 ms / 3761.944 FPS (12 threads) | 2.0 ms                         | 9.4 M       | 21.5 M     |
+| S600     | YOLO11x Detect | 640×640        |       80 | 6.543 ms / 152.382 FPS (1 thread ) <br/> 18.792 ms / 622.258 FPS (12 threads) | 2.0 ms                         | 56.9 M      | 194.9 M    |
+| S600     | YOLO12l Detect | 640×640        |       80 | 6.296 ms / 158.364 FPS (1 thread ) <br/> 19.661 ms / 595.057 FPS (12 threads) | 2.0 ms                         | 26.4 M      | 88.9 M     |
+| S600     | YOLO12m Detect | 640×640        |       80 | 4.027 ms / 247.181 FPS (1 thread ) <br/> 12.026 ms / 969.575 FPS (12 threads) | 2.0 ms                         | 20.2 M      | 67.5 M     |
+| S600     | YOLO12n Detect | 640×640        |       80 | 1.207 ms / 819.555 FPS (1 thread ) <br/> 2.986 ms / 3779.575 FPS (12 threads) | 2.0 ms                         | 2.6 M       | 7.7 M      |
+| S600     | YOLO12s Detect | 640×640        |       80 | 1.957 ms / 505.866 FPS (1 thread ) <br/> 5.155 ms / 2235.861 FPS (12 threads) | 2.0 ms                         | 9.3 M       | 21.4 M     |
+| S600     | YOLO12x Detect | 640×640        |       80 | 11.073 ms / 90.110 FPS (1 thread ) <br/> 35.574 ms / 329.594 FPS (12 threads) | 2.0 ms                         | 59.1 M      | 199.0 M    |
+| S600     | YOLOv10b Detect | 640×640        |       80 | 2.972 ms / 334.349 FPS (1 thread ) <br/> 8.042 ms / 1442.637 FPS (12 threads) | 2.0 ms                         | 19.1 M      | 92.0 M     |
+| S600     | YOLOv10l Detect | 640×640        |       80 | 3.723 ms / 267.232 FPS (1 thread ) <br/> 10.360 ms / 1123.873 FPS (12 threads) | 2.0 ms                         | 24.4 M      | 120.3 M    |
+| S600     | YOLOv10m Detect | 640×640        |       80 | 2.342 ms / 423.743 FPS (1 thread ) <br/> 6.201 ms / 1867.309 FPS (12 threads) | 2.0 ms                         | 15.4 M      | 59.1 M     |
+| S600     | YOLOv10n Detect | 640×640        |       80 | 0.781 ms / 1251.157 FPS (1 thread ) <br/> 1.690 ms / 6457.445 FPS (12 threads) | 2.0 ms                         | 2.3 M       | 6.7 M      |
+| S600     | YOLOv10s Detect | 640×640        |       80 | 1.166 ms / 847.781 FPS (1 thread ) <br/> 2.802 ms / 4025.117 FPS (12 threads) | 2.0 ms                         | 7.2 M       | 21.6 M     |
+| S600     | YOLOv10x Detect | 640×640        |       80 | 5.314 ms / 187.525 FPS (1 thread ) <br/> 15.173 ms / 769.177 FPS (12 threads) | 2.0 ms                         | 29.5 M      | 160.4 M    |
+| S600     | YOLOv5lu Detect | 640×640        |       80 | 3.980 ms / 250.292 FPS (1 thread ) <br/> 11.117 ms / 1048.306 FPS (12 threads) | 2.0 ms                         | 53.2 M      | 135.0 M    |
+| S600     | YOLOv5mu Detect | 640×640        |       80 | 2.240 ms / 442.539 FPS (1 thread ) <br/> 5.935 ms / 1941.804 FPS (12 threads) | 2.0 ms                         | 25.1 M      | 64.2 M     |
+| S600     | YOLOv5nu Detect | 640×640        |       80 | 0.719 ms / 1355.583 FPS (1 thread ) <br/> 1.528 ms / 7182.102 FPS (12 threads) | 2.0 ms                         | 2.6 M       | 7.7 M      |
+| S600     | YOLOv5su Detect | 640×640        |       80 | 1.096 ms / 898.017 FPS (1 thread ) <br/> 2.656 ms / 4213.542 FPS (12 threads) | 2.0 ms                         | 9.1 M       | 24.0 M     |
+| S600     | YOLOv5xu Detect | 640×640        |       80 | 7.333 ms / 136.001 FPS (1 thread ) <br/> 21.084 ms / 554.451 FPS (12 threads) | 2.0 ms                         | 97.2 M      | 246.4 M    |
+| S600     | YOLOv8l Detect | 640×640        |       80 | 4.514 ms / 220.583 FPS (1 thread ) <br/> 12.603 ms / 924.740 FPS (12 threads) | 2.0 ms                         | 43.7 M      | 165.2 M    |
+| S600     | YOLOv8m Detect | 640×640        |       80 | 2.677 ms / 371.027 FPS (1 thread ) <br/> 7.180 ms / 1614.922 FPS (12 threads) | 2.0 ms                         | 25.9 M      | 78.9 M     |
+| S600     | YOLOv8n Detect | 640×640        |       80 | 0.776 ms / 1258.503 FPS (1 thread ) <br/> 1.674 ms / 6512.325 FPS (12 threads) | 2.0 ms                         | 3.2 M       | 8.7 M      |
+| S600     | YOLOv8s Detect | 640×640        |       80 | 1.223 ms / 805.412 FPS (1 thread ) <br/> 2.934 ms / 3839.066 FPS (12 threads) | 2.0 ms                         | 11.2 M      | 28.6 M     |
+| S600     | YOLOv8x Detect | 640×640        |       80 | 7.210 ms / 138.386 FPS (1 thread ) <br/> 20.629 ms / 567.201 FPS (12 threads) | 2.0 ms                         | 68.2 M      | 257.8 M    |
+| S600     | YOLOv9c Detect | 640×640        |       80 | 3.149 ms / 316.157 FPS (1 thread ) <br/> 8.773 ms / 1325.812 FPS (12 threads) | 2.0 ms                         | 25.3 M      | 102.7 M    |
+| S600     | YOLOv9e Detect | 640×640        |       80 | 8.560 ms / 116.557 FPS (1 thread ) <br/> 31.421 ms / 372.969 FPS (12 threads) | 2.0 ms                         | 57.4 M      | 189.5 M    |
+| S600     | YOLOv9m Detect | 640×640        |       80 | 2.747 ms / 361.925 FPS (1 thread ) <br/> 7.518 ms / 1541.699 FPS (12 threads) | 2.0 ms                         | 20.1 M      | 76.8 M     |
+| S600     | YOLOv9s Detect | 640×640        |       80 | 1.468 ms / 672.601 FPS (1 thread ) <br/> 3.911 ms / 2921.499 FPS (12 threads) | 2.0 ms                         | 7.2 M       | 26.9 M     |
+#### Segmentation
+| Device   | Model        | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|--------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S600     | YOLO11l Seg | 640×640        |       80 | 4.268 ms / 233.082 FPS (1 thread ) <br/> 12.015 ms / 967.109 FPS (12 threads) | 5.0 ms                         | 27.6 M      | 142.2 M    |
+| S600     | YOLO11m Seg | 640×640        |       80 | 3.624 ms / 274.240 FPS (1 thread ) <br/> 9.977 ms / 1161.123 FPS (12 threads) | 5.0 ms                         | 22.4 M      | 123.3 M    |
+| S600     | YOLO11n Seg | 640×640        |       80 | 0.959 ms / 1024.863 FPS (1 thread ) <br/> 2.379 ms / 4586.104 FPS (12 threads) | 5.0 ms                         | 2.9 M       | 10.4 M     |
+| S600     | YOLO11s Seg | 640×640        |       80 | 1.513 ms / 651.042 FPS (1 thread ) <br/> 3.845 ms / 2908.329 FPS (12 threads) | 5.0 ms                         | 10.1 M      | 35.5 M     |
+| S600     | YOLO11x Seg | 640×640        |       80 | 8.831 ms / 112.923 FPS (1 thread ) <br/> 25.480 ms / 459.263 FPS (12 threads) | 5.0 ms                         | 62.1 M      | 319.0 M    |
+| S600     | YOLOv8l Seg | 640×640        |       80 | 5.585 ms / 178.335 FPS (1 thread ) <br/> 15.661 ms / 743.323 FPS (12 threads) | 5.0 ms                         | 46.0 M      | 220.5 M    |
+| S600     | YOLOv8m Seg | 640×640        |       80 | 3.298 ms / 301.000 FPS (1 thread ) <br/> 8.931 ms / 1296.706 FPS (12 threads) | 5.0 ms                         | 27.3 M      | 100.2 M    |
+| S600     | YOLOv8n Seg | 640×640        |       80 | 0.940 ms / 1038.438 FPS (1 thread ) <br/> 2.236 ms / 4790.304 FPS (12 threads) | 5.0 ms                         | 3.4 M       | 12.6 M     |
+| S600     | YOLOv8s Seg | 640×640        |       80 | 1.540 ms / 642.329 FPS (1 thread ) <br/> 3.883 ms / 2873.027 FPS (12 threads) | 5.0 ms                         | 11.8 M      | 42.6 M     |
+| S600     | YOLOv8x Seg | 640×640        |       80 | 8.884 ms / 112.265 FPS (1 thread ) <br/> 25.517 ms / 458.336 FPS (12 threads) | 5.0 ms                         | 71.8 M      | 344.1 M    |
+#### Pose Estimation
+| Device   | Model        | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|--------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S600     | YOLO11l Pose | 640×640        |       80 | 3.319 ms / 299.436 FPS (1 thread ) <br/> 9.278 ms / 1250.641 FPS (12 threads) | 1.0 ms                         | 26.2 M      | 90.7 M     |
+| S600     | YOLO11m Pose | 640×640        |       80 | 2.667 ms / 371.922 FPS (1 thread ) <br/> 7.232 ms / 1596.972 FPS (12 threads) | 1.0 ms                         | 20.9 M      | 71.7 M     |
+| S600     | YOLO11n Pose | 640×640        |       80 | 0.846 ms / 1159.078 FPS (1 thread ) <br/> 1.925 ms / 5680.205 FPS (12 threads) | 1.0 ms                         | 2.9 M       | 7.6 M      |
+| S600     | YOLO11s Pose | 640×640        |       80 | 1.275 ms / 771.542 FPS (1 thread ) <br/> 3.146 ms / 3565.380 FPS (12 threads) | 1.0 ms                         | 9.9 M       | 23.2 M     |
+| S600     | YOLO11x Pose | 640×640        |       80 | 6.768 ms / 147.282 FPS (1 thread ) <br/> 19.390 ms / 602.593 FPS (12 threads) | 1.0 ms                         | 58.8 M      | 203.3 M    |
+| S600     | YOLOv8l Pose | 640×640        |       80 | 4.621 ms / 215.565 FPS (1 thread ) <br/> 12.895 ms / 902.833 FPS (12 threads) | 1.0 ms                         | 44.4 M      | 168.6 M    |
+| S600     | YOLOv8m Pose | 640×640        |       80 | 2.760 ms / 360.059 FPS (1 thread ) <br/> 7.384 ms / 1565.411 FPS (12 threads) | 1.0 ms                         | 26.4 M      | 81.0 M     |
+| S600     | YOLOv8n Pose | 640×640        |       80 | 0.808 ms / 1204.101 FPS (1 thread ) <br/> 1.733 ms / 6280.026 FPS (12 threads) | 1.0 ms                         | 3.3 M       | 9.2 M      |
+| S600     | YOLOv8s Pose | 640×640        |       80 | 1.292 ms / 761.464 FPS (1 thread ) <br/> 3.148 ms / 3553.976 FPS (12 threads) | 1.0 ms                         | 11.6 M      | 30.2 M     |
+| S600     | YOLOv8x Pose | 640×640        |       80 | 7.392 ms / 134.881 FPS (1 thread ) <br/> 21.121 ms / 553.125 FPS (12 threads) | 1.0 ms                         | 69.4 M      | 263.2 M    |
+#### Image Classification
+| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-------------|----------------|-----------|------------------------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S600     | YOLO11l CLS | 224×224        |     1000 | 0.654 ms / 1497.623 FPS (1 thread ) <br/> 1.418 ms / 7986.583 FPS (12 threads)          | 0.5 ms                         | 42.6 M      | 50.4 M     |
+| S600     | YOLO11m CLS | 224×224        |     1000 | 0.534 ms / 1830.295 FPS (1 thread ) <br/> 1.042 ms / 10636.601 FPS (12 threads)         | 0.5 ms                         | 32.8 M      | 39.3 M     |
+| S600     | YOLO11n CLS | 224×224        |     1000 | 0.345 ms / 2788.428 FPS (1 thread ) <br/> 0.761 ms / 13779.799 FPS (12 threads)         | 0.5 ms                         | 5.0 M       | 5.5 M      |
+| S600     | YOLO11s CLS | 224×224        |     1000 | 0.407 ms / 2380.216 FPS (1 thread ) <br/> 0.771 ms / 14041.000 FPS (12 threads)         | 0.5 ms                         | 13.1 M      | 14.4 M     |
+| S600     | YOLO11x CLS | 224×224        |     1000 | 0.994 ms / 991.985 FPS (1 thread ) <br/> 2.669 ms / 4295.902 FPS (12 threads)           | 0.5 ms                         | 97.7 M      | 113.2 M    |
+| S600     | YOLOv8l CLS | 224×224        |     1000 | 0.877 ms / 1123.179 FPS (1 thread ) <br/> 2.737 ms / 4181.651 FPS (12 threads)          | 0.5 ms                         | 36.3 M      | 99.0 M     |
+| S600     | YOLOv8m CLS | 224×224        |     1000 | 0.568 ms / 1718.996 FPS (1 thread ) <br/> 1.359 ms / 8276.775 FPS (12 threads)          | 0.5 ms                         | 17.0 M      | 42.8 M     |
+| S600     | YOLOv8n CLS | 224×224        |     1000 | 0.315 ms / 3054.368 FPS (1 thread ) <br/> 0.612 ms / 17488.633 FPS (12 threads)         | 0.5 ms                         | 2.7 M       | 4.3 M      |
+| S600     | YOLOv8s CLS | 224×224        |     1000 | 0.362 ms / 2695.563 FPS (1 thread ) <br/> 0.697 ms / 15550.891 FPS (12 threads)         | 0.5 ms                         | 6.4 M       | 13.5 M     |
+| S600     | YOLOv8x CLS | 224×224        |     1000 | 1.249 ms / 792.299 FPS (1 thread ) <br/> 4.156 ms / 2775.157 FPS (12 threads)           | 0.5 ms                         | 57.4 M      | 154.8 M    |
 ### RDK S100P
 #### Obeject Detection
 | Device   | Model           | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
@@ -147,7 +203,246 @@ Accuracy pose-large mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=la
 | S100P    | YOLOv8m CLS | 640×640        |        80 | 0.80 ms / 1218.07 FPS (1 thread ) <br/> 1.05 ms / 1876.12 FPS (2 threads)                                         | 0.5 ms                         | 17.0 M      | 42.7 M     |
 | S100P    | YOLOv8l CLS | 640×640        |        80 | 1.44 ms / 683.65 FPS (1 thread ) <br/> 2.34 ms / 842.80 FPS (2 threads)                                           | 0.5 ms                         | 37.5 M      | 99.7 M     |
 | S100P    | YOLOv8x CLS | 640×640        |        80 | 2.09 ms / 470.34 FPS (1 thread ) <br/> 3.55 ms / 559.63 FPS (2 threads)                                           | 0.5 ms                         | 57.4 M      | 154.8 M    |
+### RDK S100
+#### Obeject Detection
+| Device   | Model           | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-----------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S100     | YOLO12n Detect  | 640×640        |        80 | 2.65 ms / 368.54 FPS (1 thread ) <br/> 4.43 ms / 443.33 FPS (2 threads)  | 2.0 ms                         | 2.6 M       | 7.7 M      |
+| S100     | YOLO12s Detect  | 640×640        |        80 | 4.48 ms / 220.08 FPS (1 thread ) <br/> 8.10 ms / 244.66 FPS (2 threads)  | 2.0 ms                         | 9.3 M       | 21.4 M     |
+| S100     | YOLO12m Detect  | 640×640        |        80 | 9.27 ms / 107.09 FPS (1 thread ) <br/> 17.56 ms / 113.12 FPS (2 threads) | 2.0 ms                         | 20.2 M      | 67.5 M     |
+| S100     | YOLO12l Detect  | 640×640        |        80 | 14.66 ms / 67.85 FPS (1 thread ) <br/> 28.30 ms / 70.28 FPS (2 threads)  | 2.0 ms                         | 26.4 M      | 88.9 M     |
+| S100     | YOLO12x Detect  | 640×640        |        80 | 24.72 ms / 40.33 FPS (1 thread ) <br/> 48.27 ms / 41.26 FPS (2 threads)  | 2.0 ms                         | 59.1 M      | 199.0 M    |
+| S100     | YOLO11n Detect  | 640×640        |        80 | 1.62 ms / 596.53 FPS (1 thread ) <br/> 2.39 ms / 813.87 FPS (2 threads)  | 2.0 ms                         | 2.6 M       | 6.5 M      |
+| S100     | YOLO11s Detect  | 640×640        |        80 | 2.63 ms / 371.42 FPS (1 thread ) <br/> 4.39 ms / 448.18 FPS (2 threads)  | 2.0 ms                         | 9.4 M       | 21.5 M     |
+| S100     | YOLO11m Detect  | 640×640        |        80 | 5.63 ms / 175.69 FPS (1 thread ) <br/> 10.35 ms / 191.62 FPS (2 threads) | 2.0 ms                         | 20.1 M      | 68.0 M     |
+| S100     | YOLO11l Detect  | 640×640        |        80 | 6.96 ms / 142.36 FPS (1 thread ) <br/> 13.02 ms / 152.41 FPS (2 threads) | 2.0 ms                         | 25.3 M      | 86.9 M     |
+| S100     | YOLO11x Detect  | 640×640        |        80 | 13.13 ms / 75.78 FPS (1 thread ) <br/> 25.24 ms / 78.82 FPS (2 threads)  | 2.0 ms                         | 56.9 M      | 194.9 M    |
+| S100     | YOLOv10n Detect | 640×640        |        80 | 1.58 ms / 608.94 FPS (1 thread ) <br/> 2.32 ms / 837.04 FPS (2 threads)  | 2.0 ms                         | 2.3 M       | 6.7 M      |
+| S100     | YOLOv10s Detect | 640×640        |        80 | 2.53 ms / 385.50 FPS (1 thread ) <br/> 4.18 ms / 471.09 FPS (2 threads)  | 2.0 ms                         | 7.2 M       | 21.6 M     |
+| S100     | YOLOv10m Detect | 640×640        |        80 | 4.49 ms / 219.98 FPS (1 thread ) <br/> 8.11 ms / 244.17 FPS (2 threads)  | 2.0 ms                         | 15.4 M      | 59.1 M     |
+| S100     | YOLOv10b Detect | 640×640        |        80 | 6.28 ms / 157.57 FPS (1 thread ) <br/> 11.65 ms / 170.32 FPS (2 threads) | 2.0 ms                         | 19.1 M      | 92.0 M     |
+| S100     | YOLOv10l Detect | 640×640        |        80 | 7.95 ms / 124.70 FPS (1 thread ) <br/> 14.98 ms / 132.53 FPS (2 threads) | 2.0 ms                         | 24.4 M      | 120.3 M    |
+| S100     | YOLOv10x Detect | 640×640        |        80 | 10.83 ms / 91.79 FPS (1 thread ) <br/> 20.66 ms / 96.17 FPS (2 threads)  | 2.0 ms                         | 29.5 M      | 160.4 M    |
+| S100     | YOLOv9t Detect  | 640×640        |        80 | 1.77 ms / 546.03 FPS (1 thread ) <br/> 2.67 ms / 730.68 FPS (2 threads)  | 2.0 ms                         | 2.1 M       | 8.2 M      |
+| S100     | YOLOv9s Detect  | 640×640        |        80 | 2.74 ms / 357.91 FPS (1 thread ) <br/> 4.62 ms / 425.97 FPS (2 threads)  | 2.0 ms                         | 7.2 M       | 26.9 M     |
+| S100     | YOLOv9m Detect  | 640×640        |        80 | 5.52 ms / 179.23 FPS (1 thread ) <br/> 10.13 ms / 195.30 FPS (2 threads) | 2.0 ms                         | 20.1 M      | 76.8 M     |
+| S100     | YOLOv9c Detect  | 640×640        |        80 | 6.98 ms / 142.00 FPS (1 thread ) <br/> 13.05 ms / 151.95 FPS (2 threads) | 2.0 ms                         | 25.3 M      | 102.7 M    |
+| S100     | YOLOv9e Detect  | 640×640        |        80 | 17.75 ms / 56.15 FPS (1 thread ) <br/> 34.41 ms / 57.85 FPS (2 threads)  | 2.0 ms                         | 57.4 M      | 189.5 M    |
+| S100     | YOLOv8n Detect  | 640×640        |        80 | 1.53 ms / 632.06 FPS (1 thread ) <br/> 2.24 ms / 868.87 FPS (2 threads)  | 2.0 ms                         | 3.2 M       | 8.7 M      |
+| S100     | YOLOv8s Detect  | 640×640        |        80 | 2.63 ms / 371.16 FPS (1 thread ) <br/> 4.41 ms / 446.48 FPS (2 threads)  | 2.0 ms                         | 11.2 M      | 28.6 M     |
+| S100     | YOLOv8m Detect  | 640×640        |        80 | 5.18 ms / 190.64 FPS (1 thread ) <br/> 9.45 ms / 209.80 FPS (2 threads)  | 2.0 ms                         | 25.9 M      | 78.9 M     |
+| S100     | YOLOv8l Detect  | 640×640        |        80 | 9.97 ms / 99.68 FPS (1 thread ) <br/> 19.00 ms / 104.65 FPS (2 threads)  | 2.0 ms                         | 43.7 M      | 165.2 M    |
+| S100     | YOLOv8x Detect  | 640×640        |        80 | 15.77 ms / 63.15 FPS (1 thread ) <br/> 30.53 ms / 65.20 FPS (2 threads)  | 2.0 ms                         | 68.2 M      | 257.8 M    |
+| S100     | YOLOv5nu Detect | 640×640        |        80 | 1.42 ms / 674.92 FPS (1 thread ) <br/> 2.02 ms / 959.05 FPS (2 threads)  | 2.0 ms                         | 2.6 M       | 7.7 M      |
+| S100     | YOLOv5su Detect | 640×640        |        80 | 2.31 ms / 420.83 FPS (1 thread ) <br/> 3.79 ms / 519.22 FPS (2 threads)  | 2.0 ms                         | 9.1 M       | 24.0 M     |
+| S100     | YOLOv5mu Detect | 640×640        |        80 | 4.50 ms / 218.77 FPS (1 thread ) <br/> 8.11 ms / 244.06 FPS (2 threads)  | 2.0 ms                         | 25.1 M      | 64.2 M     |
+| S100     | YOLOv5lu Detect | 640×640        |        80 | 8.96 ms / 110.78 FPS (1 thread ) <br/> 16.97 ms / 117.15 FPS (2 threads) | 2.0 ms                         | 53.2 M      | 135.0 M    |
+| S100     | YOLOv5xu Detect | 640×640        |        80 | 15.97 ms / 62.32 FPS (1 thread ) <br/> 30.90 ms / 64.41 FPS (2 threads)  | 2.0 ms                         | 97.2 M      | 246.4 M    |
+#### Instance Segmentation
+| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S100     | YOLO11n Seg | 640×640        |        80 | 2.06 ms / 463.93 FPS (1 thread ) <br/> 3.17 ms / 613.76 FPS (2 threads)  | 5.0 ms                         | 2.9 M       | 10.4 M     |
+| S100     | YOLO11s Seg | 640×640        |        80 | 3.34 ms / 291.16 FPS (1 thread ) <br/> 5.69 ms / 344.91 FPS (2 threads)  | 5.0 ms                         | 10.1 M      | 35.5 M     |
+| S100     | YOLO11m Seg | 640×640        |        80 | 7.86 ms / 125.63 FPS (1 thread ) <br/> 14.67 ms / 135.16 FPS (2 threads) | 5.0 ms                         | 22.4 M      | 123.3 M    |
+| S100     | YOLO11l Seg | 640×640        |        80 | 9.17 ms / 108.00 FPS (1 thread ) <br/> 17.29 ms / 114.67 FPS (2 threads) | 5.0 ms                         | 27.6 M      | 142.2 M    |
+| S100     | YOLO11x Seg | 640×640        |        80 | 17.74 ms / 56.07 FPS (1 thread ) <br/> 34.33 ms / 57.96 FPS (2 threads)  | 5.0 ms                         | 62.1 M      | 319.0 M    |
+| S100     | YOLOv9c Seg | 640×640        |        80 | 9.07 ms / 109.16 FPS (1 thread ) <br/> 17.12 ms / 115.80 FPS (2 threads) | 5.0 ms                         | 27.7 M      | 158.0 M    |
+| S100     | YOLOv9e Seg | 640×640        |        80 | 20.15 ms / 49.38 FPS (1 thread ) <br/> 39.07 ms / 50.91 FPS (2 threads)  | 5.0 ms                         | 59.7 M      | 244.8 M    |
+| S100     | YOLOv8n Seg | 640×640        |        80 | 1.93 ms / 495.35 FPS (1 thread ) <br/> 2.98 ms / 652.21 FPS (2 threads)  | 5.0 ms                         | 3.4 M       | 12.6 M     |
+| S100     | YOLOv8s Seg | 640×640        |        80 | 3.37 ms / 288.70 FPS (1 thread ) <br/> 5.76 ms / 341.12 FPS (2 threads)  | 5.0 ms                         | 11.8 M      | 42.6 M     |
+| S100     | YOLOv8m Seg | 640×640        |        80 | 6.65 ms / 148.28 FPS (1 thread ) <br/> 12.29 ms / 161.07 FPS (2 threads) | 5.0 ms                         | 27.3 M      | 100.2 M    |
+| S100     | YOLOv8l Seg | 640×640        |        80 | 12.21 ms / 81.34 FPS (1 thread ) <br/> 23.32 ms / 85.17 FPS (2 threads)  | 5.0 ms                         | 46.0 M      | 220.5 M    |
+| S100     | YOLOv8x Seg | 640×640        |        80 | 19.51 ms / 51.00 FPS (1 thread ) <br/> 37.80 ms / 52.62 FPS (2 threads)  | 5.0 ms                         | 71.8 M      | 344.1 M    |
+#### Pose Estimation
+| Device   | Model        | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|--------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S100     | YOLO11n Pose | 640×640        |        80 | 1.69 ms / 568.00 FPS (1 thread ) <br/> 2.48 ms / 780.47 FPS (2 threads)  | 1.0 ms                         | 2.9 M       | 7.6 M      |
+| S100     | YOLO11s Pose | 640×640        |        80 | 2.76 ms / 354.06 FPS (1 thread ) <br/> 4.62 ms / 424.92 FPS (2 threads)  | 1.0 ms                         | 9.9 M       | 23.2 M     |
+| S100     | YOLO11m Pose | 640×640        |        80 | 5.89 ms / 167.50 FPS (1 thread ) <br/> 10.79 ms / 183.34 FPS (2 threads) | 1.0 ms                         | 20.9 M      | 71.7 M     |
+| S100     | YOLO11l Pose | 640×640        |        80 | 7.23 ms / 136.91 FPS (1 thread ) <br/> 13.48 ms / 147.21 FPS (2 threads) | 1.0 ms                         | 26.2 M      | 90.7 M     |
+| S100     | YOLO11x Pose | 640×640        |        80 | 13.61 ms / 73.02 FPS (1 thread ) <br/> 26.16 ms / 76.04 FPS (2 threads)  | 1.0 ms                         | 58.8 M      | 203.3 M    |
+| S100     | YOLOv8n Pose | 640×640        |        80 | 1.62 ms / 587.59 FPS (1 thread ) <br/> 2.31 ms / 837.95 FPS (2 threads)  | 1.0 ms                         | 3.3 M       | 9.2 M      |
+| S100     | YOLOv8s Pose | 640×640        |        80 | 2.83 ms / 344.35 FPS (1 thread ) <br/> 4.71 ms / 417.72 FPS (2 threads)  | 1.0 ms                         | 11.6 M      | 30.2 M     |
+| S100     | YOLOv8m Pose | 640×640        |        80 | 5.47 ms / 180.46 FPS (1 thread ) <br/> 9.92 ms / 199.50 FPS (2 threads)  | 1.0 ms                         | 26.4 M      | 81.0 M     |
+| S100     | YOLOv8l Pose | 640×640        |        80 | 10.31 ms / 96.20 FPS (1 thread ) <br/> 19.55 ms / 101.60 FPS (2 threads) | 1.0 ms                         | 44.4 M      | 168.6 M    |
+| S100     | YOLOv8x Pose | 640×640        |        80 | 16.07 ms / 61.88 FPS (1 thread ) <br/> 31.01 ms / 64.14 FPS (2 threads)  | 1.0 ms                         | 69.4 M      | 263.2 M    |
+#### Image Classification
+| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                                                                   | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-------------|----------------|-----------|-------------------------------------------------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| S100     | YOLO11n CLS | 640×640        |        80 | 0.53 ms / 1827.92 FPS (1 thread ) <br/> 0.62 ms / 3115.65 FPS (2 threads) <br/> 0.70 ms / 4141.22 FPS (3 threads) | 0.5 ms                         | 2.8 M       | 4.2 M      |
+| S100     | YOLO11s CLS | 640×640        |        80 | 0.68 ms / 1415.98 FPS (1 thread ) <br/> 0.76 ms / 2553.99 FPS (2 threads) <br/> 1.05 ms / 2767.63 FPS (3 threads) | 0.5 ms                         | 6.7 M       | 13.0 M     |
+| S100     | YOLO11m CLS | 640×640        |        80 | 1.02 ms / 955.28 FPS (1 thread ) <br/> 1.35 ms / 1445.18 FPS (2 threads)                                          | 0.5 ms                         | 11.6 M      | 40.3 M     |
+| S100     | YOLO11l CLS | 640×640        |        80 | 1.21 ms / 805.52 FPS (1 thread ) <br/> 1.73 ms / 1139.48 FPS (2 threads)                                          | 0.5 ms                         | 14.1 M      | 50.4 M     |
+| S100     | YOLO11x CLS | 640×640        |        80 | 1.97 ms / 501.49 FPS (1 thread ) <br/> 3.23 ms / 612.29 FPS (2 threads)                                           | 0.5 ms                         | 29.6 M      | 111.3 M    |
+| S100     | YOLOv8n CLS | 640×640        |        80 | 0.49 ms / 1928.23 FPS (1 thread ) <br/> 0.57 ms / 3399.86 FPS (2 threads) <br/> 0.66 ms / 4410.92 FPS (3 threads) | 0.5 ms                         | 2.7 M       | 4.3 M      |
+| S100     | YOLOv8s CLS | 640×640        |        80 | 0.62 ms / 1562.83 FPS (1 thread ) <br/> 0.71 ms / 2712.53 FPS (2 threads) <br/> 0.89 ms / 3279.66 FPS (3 threads) | 0.5 ms                         | 6.4 M       | 13.5 M     |
+| S100     | YOLOv8m CLS | 640×640        |        80 | 1.00 ms / 970.04 FPS (1 thread ) <br/> 1.31 ms / 1500.86 FPS (2 threads)                                          | 0.5 ms                         | 17.0 M      | 42.7 M     |
+| S100     | YOLOv8l CLS | 640×640        |        80 | 1.98 ms / 497.58 FPS (1 thread ) <br/> 3.22 ms / 614.92 FPS (2 threads)                                           | 0.5 ms                         | 37.5 M      | 99.7 M     |
+| S100     | YOLOv8x CLS | 640×640        |        80 | 2.77 ms / 357.03 FPS (1 thread ) <br/> 4.81 ms / 412.60 FPS (2 threads)                                           | 0.5 ms                         | 57.4 M      | 154.8 M    |
+### RDK X5
+#### Obeject Detection
+| Device   | Model           | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-----------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| X5       | YOLO12n Detect  | 640×640        |        80 | 39.70 ms / 25.17 FPS (1 thread ) <br/> 73.19 ms / 27.24 FPS (2 threads)  | 5.0 ms                         | 2.6 M       | 7.7 M      |
+| X5       | YOLO12s Detect  | 640×640        |        80 | 63.74 ms / 15.68 FPS (1 thread ) <br/> 121.24 ms / 16.45 FPS (2 threads) | 5.0 ms                         | 9.3 M       | 21.4 M     |
+| X5       | YOLO12m Detect  | 640×640        |        80 | 103.02 ms / 9.70 FPS (1 thread ) <br/> 199.58 ms / 9.99 FPS (2 threads)  | 5.0 ms                         | 20.2 M      | 67.5 M     |
+| X5       | YOLO12l Detect  | 640×640        |        80 | 183.00 ms / 5.46 FPS (1 thread ) <br/> 359.03 ms / 5.56 FPS (2 threads)  | 5.0 ms                         | 26.4 M      | 88.9 M     |
+| X5       | YOLO12x Detect  | 640×640        |        80 | 315.16 ms / 3.17 FPS (1 thread )                                         | 5.0 ms                         | 59.1 M      | 199.0 M    |
+| X5       | YOLO11n Detect  | 640×640        |        80 | 8.25 ms / 121.05 FPS (1 thread ) <br/> 10.56 ms / 188.57 FPS (2 threads) | 5.0 ms                         | 2.6 M       | 6.5 M      |
+| X5       | YOLO11s Detect  | 640×640        |        80 | 15.81 ms / 63.16 FPS (1 thread ) <br/> 25.74 ms / 77.43 FPS (2 threads)  | 5.0 ms                         | 9.4 M       | 21.5 M     |
+| X5       | YOLO11m Detect  | 640×640        |        80 | 34.68 ms / 28.82 FPS (1 thread ) <br/> 63.30 ms / 31.51 FPS (2 threads)  | 5.0 ms                         | 20.1 M      | 68.0 M     |
+| X5       | YOLO11l Detect  | 640×640        |        80 | 45.23 ms / 22.10 FPS (1 thread ) <br/> 84.30 ms / 23.66 FPS (2 threads)  | 5.0 ms                         | 25.3 M      | 86.9 M     |
+| X5       | YOLO11x Detect  | 640×640        |        80 | 96.70 ms / 10.34 FPS (1 thread ) <br/> 186.76 ms / 10.68 FPS (2 threads) | 5.0 ms                         | 56.9 M      | 194.9 M    |
+| X5       | YOLOv10n Detect | 640×640        |        80 | 8.75 ms / 114.19 FPS (1 thread ) <br/> 11.60 ms / 171.72 FPS (2 threads) | 5.0 ms                         | 2.3 M       | 6.7 M      |
+| X5       | YOLOv10s Detect | 640×640        |        80 | 14.84 ms / 67.32 FPS (1 thread ) <br/> 23.85 ms / 83.58 FPS (2 threads)  | 5.0 ms                         | 7.2 M       | 21.6 M     |
+| X5       | YOLOv10m Detect | 640×640        |        80 | 29.40 ms / 33.99 FPS (1 thread ) <br/> 52.83 ms / 37.75 FPS (2 threads)  | 5.0 ms                         | 15.4 M      | 59.1 M     |
+| X5       | YOLOv10b Detect | 640×640        |        80 | 40.14 ms / 24.90 FPS (1 thread ) <br/> 74.20 ms / 26.88 FPS (2 threads)  | 5.0 ms                         | 19.1 M      | 92.0 M     |
+| X5       | YOLOv10l Detect | 640×640        |        80 | 49.89 ms / 20.04 FPS (1 thread ) <br/> 93.66 ms / 21.30 FPS (2 threads)  | 5.0 ms                         | 24.4 M      | 120.3 M    |
+| X5       | YOLOv10x Detect | 640×640        |        80 | 68.92 ms / 14.51 FPS (1 thread ) <br/> 131.54 ms / 15.16 FPS (2 threads) | 5.0 ms                         | 29.5 M      | 160.4 M    |
+| X5       | YOLOv9t Detect  | 640×640        |        80 | 6.97 ms / 143.14 FPS (1 thread ) <br/> 7.96 ms / 250.11 FPS (2 threads)  | 5.0 ms                         | 2.1 M       | 8.2 M      |
+| X5       | YOLOv9s Detect  | 640×640        |        80 | 13.00 ms / 76.81 FPS (1 thread ) <br/> 20.16 ms / 98.81 FPS (2 threads)  | 5.0 ms                         | 7.2 M       | 26.9 M     |
+| X5       | YOLOv9m Detect  | 640×640        |        80 | 32.63 ms / 30.63 FPS (1 thread ) <br/> 59.31 ms / 33.62 FPS (2 threads)  | 5.0 ms                         | 20.1 M      | 76.8 M     |
+| X5       | YOLOv9c Detect  | 640×640        |        80 | 40.46 ms / 24.71 FPS (1 thread ) <br/> 74.77 ms / 26.67 FPS (2 threads)  | 5.0 ms                         | 25.3 M      | 102.7 M    |
+| X5       | YOLOv9e Detect  | 640×640        |        80 | 119.80 ms / 8.35 FPS (1 thread ) <br/> 233.08 ms / 8.56 FPS (2 threads)  | 5.0 ms                         | 57.4 M      | 189.5 M    |
+| X5       | YOLOv8n Detect  | 640×640        |        80 | 7.00 ms / 142.60 FPS (1 thread ) <br/> 8.06 ms / 246.82 FPS (2 threads)  | 5.0 ms                         | 3.2 M       | 8.7 M      |
+| X5       | YOLOv8s Detect  | 640×640        |        80 | 13.63 ms / 73.30 FPS (1 thread ) <br/> 21.38 ms / 93.20 FPS (2 threads)  | 5.0 ms                         | 11.2 M      | 28.6 M     |
+| X5       | YOLOv8m Detect  | 640×640        |        80 | 30.74 ms / 32.51 FPS (1 thread ) <br/> 55.51 ms / 35.93 FPS (2 threads)  | 5.0 ms                         | 25.9 M      | 78.9 M     |
+| X5       | YOLOv8l Detect  | 640×640        |        80 | 59.51 ms / 16.80 FPS (1 thread ) <br/> 112.80 ms / 17.68 FPS (2 threads) | 5.0 ms                         | 43.7 M      | 165.2 M    |
+| X5       | YOLOv8x Detect  | 640×640        |        80 | 92.72 ms / 10.78 FPS (1 thread ) <br/> 178.95 ms / 11.15 FPS (2 threads) | 5.0 ms                         | 68.2 M      | 257.8 M    |
+| X5       | YOLOv5nu Detect | 640×640        |        80 | 6.33 ms / 157.59 FPS (1 thread ) <br/> 6.80 ms / 291.89 FPS (2 threads)  | 5.0 ms                         | 2.6 M       | 7.7 M      |
+| X5       | YOLOv5su Detect | 640×640        |        80 | 12.33 ms / 81.04 FPS (1 thread ) <br/> 18.88 ms / 105.56 FPS (2 threads) | 5.0 ms                         | 9.1 M       | 24.0 M     |
+| X5       | YOLOv5mu Detect | 640×640        |        80 | 26.57 ms / 37.62 FPS (1 thread ) <br/> 47.20 ms / 42.24 FPS (2 threads)  | 5.0 ms                         | 25.1 M      | 64.2 M     |
+| X5       | YOLOv5lu Detect | 640×640        |        80 | 52.83 ms / 18.92 FPS (1 thread ) <br/> 99.42 ms / 20.06 FPS (2 threads)  | 5.0 ms                         | 53.2 M      | 135.0 M    |
+| X5       | YOLOv5xu Detect | 640×640        |        80 | 91.55 ms / 10.92 FPS (1 thread ) <br/> 176.49 ms / 11.30 FPS (2 threads) | 5.0 ms                         | 97.2 M      | 246.4 M    |
+#### Instance Segmentation
+| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| X5       | YOLO11n Seg | 640×640        |        80 | 11.55 ms / 86.39 FPS (1 thread ) <br/> 12.83 ms / 155.10 FPS (2 threads) | 20.0 ms                        | 2.9 M       | 10.4 M     |
+| X5       | YOLO11s Seg | 640×640        |        80 | 21.62 ms / 46.22 FPS (1 thread ) <br/> 33.12 ms / 60.20 FPS (2 threads)  | 20.0 ms                        | 10.1 M      | 35.5 M     |
+| X5       | YOLO11m Seg | 640×640        |        80 | 50.43 ms / 19.82 FPS (1 thread ) <br/> 90.49 ms / 22.04 FPS (2 threads)  | 20.0 ms                        | 22.4 M      | 123.3 M    |
+| X5       | YOLO11l Seg | 640×640        |        80 | 60.60 ms / 16.50 FPS (1 thread ) <br/> 110.99 ms / 17.97 FPS (2 threads) | 20.0 ms                        | 27.6 M      | 142.2 M    |
+| X5       | YOLO11x Seg | 640×640        |        80 | 130.40 ms / 7.67 FPS (1 thread ) <br/> 249.71 ms / 7.99 FPS (2 threads)  | 20.0 ms                        | 62.1 M      | 319.0 M    |
+| X5       | YOLOv9c Seg | 640×640        |        80 | 55.85 ms / 17.90 FPS (1 thread ) <br/> 101.47 ms / 19.65 FPS (2 threads) | 20.0 ms                        | 27.7 M      | 158.0 M    |
+| X5       | YOLOv9e Seg | 640×640        |        80 | 135.34 ms / 7.39 FPS (1 thread ) <br/> 260.08 ms / 7.67 FPS (2 threads)  | 20.0 ms                        | 59.7 M      | 244.8 M    |
+| X5       | YOLOv8n Seg | 640×640        |        80 | 10.40 ms / 96.02 FPS (1 thread ) <br/> 10.75 ms / 185.21 FPS (2 threads) | 20.0 ms                        | 3.4 M       | 12.6 M     |
+| X5       | YOLOv8s Seg | 640×640        |        80 | 19.56 ms / 51.08 FPS (1 thread ) <br/> 28.99 ms / 68.76 FPS (2 threads)  | 20.0 ms                        | 11.8 M      | 42.6 M     |
+| X5       | YOLOv8m Seg | 640×640        |        80 | 40.52 ms / 24.67 FPS (1 thread ) <br/> 70.70 ms / 28.21 FPS (2 threads)  | 20.0 ms                        | 27.3 M      | 100.2 M    |
+| X5       | YOLOv8l Seg | 640×640        |        80 | 75.00 ms / 13.33 FPS (1 thread ) <br/> 139.61 ms / 14.29 FPS (2 threads) | 20.0 ms                        | 46.0 M      | 220.5 M    |
+| X5       | YOLOv8x Seg | 640×640        |        80 | 115.94 ms / 8.62 FPS (1 thread ) <br/> 221.06 ms / 9.02 FPS (2 threads)  | 20.0 ms                        | 71.8 M      | 344.1 M    |
+#### Pose Estimation
+| Device   | Model        | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|--------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| X5       | YOLO11n Pose | 640×640        |        80 | 8.36 ms / 119.43 FPS (1 thread ) <br/> 10.97 ms / 181.61 FPS (2 threads) | 10.0 ms                        | 2.9 M       | 7.6 M      |
+| X5       | YOLO11s Pose | 640×640        |        80 | 16.35 ms / 61.11 FPS (1 thread ) <br/> 26.99 ms / 73.85 FPS (2 threads)  | 10.0 ms                        | 9.9 M       | 23.2 M     |
+| X5       | YOLO11m Pose | 640×640        |        80 | 35.74 ms / 27.97 FPS (1 thread ) <br/> 65.60 ms / 30.40 FPS (2 threads)  | 10.0 ms                        | 20.9 M      | 71.7 M     |
+| X5       | YOLO11l Pose | 640×640        |        80 | 46.38 ms / 21.55 FPS (1 thread ) <br/> 86.82 ms / 22.97 FPS (2 threads)  | 10.0 ms                        | 26.2 M      | 90.7 M     |
+| X5       | YOLO11x Pose | 640×640        |        80 | 98.88 ms / 10.11 FPS (1 thread ) <br/> 191.38 ms / 10.42 FPS (2 threads) | 10.0 ms                        | 58.8 M      | 203.3 M    |
+| X5       | YOLOv8n Pose | 640×640        |        80 | 6.95 ms / 143.64 FPS (1 thread ) <br/> 8.23 ms / 241.76 FPS (2 threads)  | 10.0 ms                        | 3.3 M       | 9.2 M      |
+| X5       | YOLOv8s Pose | 640×640        |        80 | 14.16 ms / 70.54 FPS (1 thread ) <br/> 22.62 ms / 88.09 FPS (2 threads)  | 10.0 ms                        | 11.6 M      | 30.2 M     |
+| X5       | YOLOv8m Pose | 640×640        |        80 | 31.60 ms / 31.62 FPS (1 thread ) <br/> 57.34 ms / 34.78 FPS (2 threads)  | 10.0 ms                        | 26.4 M      | 81.0 M     |
+| X5       | YOLOv8l Pose | 640×640        |        80 | 60.37 ms / 16.56 FPS (1 thread ) <br/> 114.73 ms / 17.38 FPS (2 threads) | 10.0 ms                        | 44.4 M      | 168.6 M    |
+| X5       | YOLOv8x Pose | 640×640        |        80 | 94.15 ms / 10.62 FPS (1 thread ) <br/> 182.08 ms / 10.96 FPS (2 threads) | 10.0 ms                        | 69.4 M      | 263.2 M    |
+#### Image Classification
+| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                           | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
+|----------|-------------|----------------|-----------|---------------------------------------------------------------------------|--------------------------------|-------------|------------|
+| X5       | YOLO11n CLS | 640×640        |        80 | 1.06 ms / 939.95 FPS (1 thread ) <br/> 1.61 ms / 1236.07 FPS (2 threads)  | 0.5 ms                         | 2.8 M       | 4.2 M      |
+| X5       | YOLO11s CLS | 640×640        |        80 | 2.01 ms / 495.14 FPS (1 thread ) <br/> 3.49 ms / 569.44 FPS (2 threads)   | 0.5 ms                         | 6.7 M       | 13.0 M     |
+| X5       | YOLO11m CLS | 640×640        |        80 | 3.82 ms / 261.13 FPS (1 thread ) <br/> 7.09 ms / 280.82 FPS (2 threads)   | 0.5 ms                         | 11.6 M      | 40.3 M     |
+| X5       | YOLO11l CLS | 640×640        |        80 | 5.02 ms / 199.15 FPS (1 thread ) <br/> 9.49 ms / 210.12 FPS (2 threads)   | 0.5 ms                         | 14.1 M      | 50.4 M     |
+| X5       | YOLO11x CLS | 640×640        |        80 | 10.04 ms / 99.49 FPS (1 thread ) <br/> 19.48 ms / 102.39 FPS (2 threads)  | 0.5 ms                         | 29.6 M      | 111.3 M    |
+| X5       | YOLOv8n CLS | 640×640        |        80 | 0.74 ms / 1348.98 FPS (1 thread ) <br/> 0.98 ms / 2018.94 FPS (2 threads) | 0.5 ms                         | 2.7 M       | 4.3 M      |
+| X5       | YOLOv8s CLS | 640×640        |        80 | 1.44 ms / 690.86 FPS (1 thread ) <br/> 2.36 ms / 842.52 FPS (2 threads)   | 0.5 ms                         | 6.4 M       | 13.5 M     |
+| X5       | YOLOv8m CLS | 640×640        |        80 | 3.66 ms / 272.72 FPS (1 thread ) <br/> 6.78 ms / 294.01 FPS (2 threads)   | 0.5 ms                         | 17.0 M      | 42.7 M     |
+| X5       | YOLOv8l CLS | 640×640        |        80 | 7.98 ms / 125.23 FPS (1 thread ) <br/> 15.38 ms / 129.63 FPS (2 threads)  | 0.5 ms                         | 37.5 M      | 99.7 M     |
+| X5       | YOLOv8x CLS | 640×640        |        80 | 13.12 ms / 76.18 FPS (1 thread ) <br/> 25.64 ms / 77.78 FPS (2 threads)   | 0.5 ms                         | 57.4 M      | 154.8 M    |
+
 ## Accuracy
+### RDK S600
+#### Obeject Detection
+| Device   | Model           | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
+|----------|-----------------|---------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|
+| S600     | YOLO12n Detect  | 0.338 / 0.320 (94.7 %)                                  | 0.128 / 0.104 (81.3 %)                                    | 0.374 / 0.350 (93.6 %)                                     | 0.524 / 0.514 (98.1 %)                                    |
+| S600     | YOLO12s Detect  | 0.403 / 0.385 (95.5 %)                                  | 0.201 / 0.158 (78.6 %)                                    | 0.450 / 0.436 (96.9 %)                                     | 0.602 / 0.586 (97.3 %)                                    |
+| S600     | YOLO12m Detect  | 0.452 / 0.436 (96.5 %)                                  | 0.251 / 0.228 (90.8 %)                                    | 0.509 / 0.497 (97.6 %)                                     | 0.638 / 0.626 (98.1 %)                                    |
+| S600     | YOLO12l Detect  | 0.463 / 0.441 (95.2 %)                                  | 0.268 / 0.226 (84.3 %)                                    | 0.522 / 0.505 (96.7 %)                                     | 0.646 / 0.640 (99.1 %)                                    |
+| S600     | YOLO12x Detect  | 0.475 / 0.455 (95.8 %)                                  | 0.276 / 0.238 (86.2 %)                                    | 0.536 / 0.527 (98.3 %)                                     | 0.659 / 0.618 (93.8 %)                                    |
+| S600     | YOLO11s Detect  | 0.400 / 0.382 (95.5 %)                                  | 0.198 / 0.165 (83.3 %)                                    | 0.445 / 0.430 (96.6 %)                                     | 0.587 / 0.586 (99.8 %)                                    |
+| S600     | YOLO11m Detect  | 0.444 / 0.429 (96.6 %)                                  | 0.247 / 0.220 (89.1 %)                                    | 0.497 / 0.488 (98.2 %)                                     | 0.627 / 0.610 (97.3 %)                                    |
+| S600     | YOLO11l Detect  | 0.460 / 0.448 (97.4 %)                                  | 0.267 / 0.238 (89.1 %)                                    | 0.520 / 0.514 (98.8 %)                                     | 0.638 / 0.622 (97.5 %)                                    |
+| S600     | YOLO11x Detect  | 0.474 / 0.457 (96.4 %)                                  | 0.283 / 0.244 (86.2 %)                                    | 0.529 / 0.517 (97.7 %)                                     | 0.652 / 0.639 (98.0 %)                                    |
+| S600     | YOLOv10n Detect | 0.303 / 0.285 (94.1 %)                                  | 0.099 / 0.075 (75.8 %)                                    | 0.330 / 0.306 (92.7 %)                                     | 0.478 / 0.469 (98.1 %)                                    |
+| S600     | YOLOv10s Detect | 0.386 / 0.363 (94.0 %)                                  | 0.175 / 0.144 (82.3 %)                                    | 0.434 / 0.410 (94.5 %)                                     | 0.574 / 0.528 (92.0 %)                                    |
+| S600     | YOLOv10m Detect | 0.425 / 0.389 (91.5 %)                                  | 0.221 / 0.202 (91.4 %)                                    | 0.481 / 0.450 (93.6 %)                                     | 0.603 / 0.505 (83.7 %)                                    |
+| S600     | YOLOv10b Detect | 0.443 / 0.388 (87.6 %)                                  | 0.242 / 0.189 (78.1 %)                                    | 0.498 / 0.447 (89.8 %)                                     | 0.618 / 0.496 (80.3 %)                                    |
+| S600     | YOLOv10l Detect | 0.445 / 0.392 (88.1 %)                                  | 0.258 / 0.215 (83.3 %)                                    | 0.498 / 0.463 (93.0 %)                                     | 0.626 / 0.492 (78.6 %)                                    |
+| S600     | YOLOv10x Detect | 0.459 / 0.424 (92.4 %)                                  | 0.258 / 0.228 (88.4 %)                                    | 0.518 / 0.490 (94.6 %)                                     | 0.639 / 0.546 (85.4 %)                                    |
+| S600     | YOLOv9s Detect  | 0.400 / 0.387 (96.8 %)                                  | 0.191 / 0.169 (88.5 %)                                    | 0.444 / 0.433 (97.5 %)                                     | 0.583 / 0.564 (96.7 %)                                    |
+| S600     | YOLOv9m Detect  | 0.449 / 0.441 (98.2 %)                                  | 0.253 / 0.232 (91.7 %)                                    | 0.504 / 0.496 (98.4 %)                                     | 0.617 / 0.611 (99.0 %)                                    |
+| S600     | YOLOv9c Detect  | 0.461 / 0.451 (97.8 %)                                  | 0.269 / 0.251 (93.3 %)                                    | 0.512 / 0.509 (99.4 %)                                     | 0.640 / 0.612 (95.6 %)                                    |
+| S600     | YOLOv9e Detect  | 0.481 / 0.470 (97.7 %)                                  | 0.298 / 0.273 (91.6 %)                                    | 0.538 / 0.525 (97.6 %)                                     | 0.662 / 0.650 (98.2 %)                                    |
+| S600     | YOLOv8s Detect  | 0.391 / 0.376 (96.2 %)                                  | 0.195 / 0.169 (86.7 %)                                    | 0.437 / 0.423 (96.8 %)                                     | 0.566 / 0.558 (98.6 %)                                    |
+| S600     | YOLOv8m Detect  | 0.441 / 0.429 (97.3 %)                                  | 0.249 / 0.222 (89.2 %)                                    | 0.494 / 0.486 (98.4 %)                                     | 0.618 / 0.607 (98.2 %)                                    |
+| S600     | YOLOv8l Detect  | 0.461 / 0.448 (97.2 %)                                  | 0.271 / 0.245 (90.4 %)                                    | 0.516 / 0.505 (97.9 %)                                     | 0.651 / 0.642 (98.6 %)                                    |
+| S600     | YOLOv8x Detect  | 0.474 / 0.459 (96.8 %)                                  | 0.280 / 0.253 (90.4 %)                                    | 0.527 / 0.516 (97.9 %)                                     | 0.658 / 0.647 (98.3 %)                                    |
+| S600     | YOLOv5nu Detect | 0.278 / 0.269 (96.8 %)                                  | 0.093 / 0.083 (89.2 %)                                    | 0.309 / 0.296 (95.8 %)                                     | 0.417 / 0.412 (98.8 %)                                    |
+| S600     | YOLOv5su Detect | 0.367 / 0.355 (96.7 %)                                  | 0.169 / 0.140 (82.8 %)                                    | 0.416 / 0.406 (97.6 %)                                     | 0.530 / 0.531 (100.2 %)                                   |
+| S600     | YOLOv5mu Detect | 0.425 / 0.415 (97.6 %)                                  | 0.226 / 0.207 (91.6 %)                                    | 0.477 / 0.470 (98.5 %)                                     | 0.603 / 0.604 (100.2 %)                                   |
+| S600     | YOLOv5lu Detect | 0.458 / 0.451 (98.5 %)                                  | 0.260 / 0.238 (91.5 %)                                    | 0.516 / 0.511 (99.0 %)                                     | 0.641 / 0.637 (99.4 %)                                    |
+| S600     | YOLOv5xu Detect | 0.466 / 0.454 (97.4 %)                                  | 0.281 / 0.246 (87.5 %)                                    | 0.523 / 0.517 (98.9 %)                                     | 0.645 / 0.647 (100.3 %)                                   |
+
+#### Instance Segmentation
+##### bbox
+| Device   | Model       | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
+|----------|-------------|---------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|
+| S600     | YOLO11s Seg | 0.394 / 0.383 (97.2 %)                                  | 0.184 / 0.162 (88.0 %)                                    | 0.442 / 0.434 (98.2 %)                                     | 0.582 / 0.581 (99.8 %)                                    |
+| S600     | YOLO11m Seg | 0.443 / 0.427 (96.4 %)                                  | 0.246 / 0.224 (91.1 %)                                    | 0.497 / 0.484 (97.4 %)                                     | 0.627 / 0.607 (96.8 %)                                    |
+| S600     | YOLO11l Seg | 0.460 / 0.443 (96.3 %)                                  | 0.267 / 0.236 (88.4 %)                                    | 0.520 / 0.508 (97.7 %)                                     | 0.638 / 0.614 (96.2 %)                                    |
+| S600     | YOLO11x Seg | 0.474 / 0.456 (96.2 %)                                  | 0.283 / 0.244 (86.2 %)                                    | 0.529 / 0.515 (97.4 %)                                     | 0.652 / 0.636 (97.5 %)                                    |
+| S600     | YOLOv8s Seg | 0.386 / 0.375 (97.2 %)                                  | 0.180 / 0.162 (90.0 %)                                    | 0.432 / 0.419 (97.0 %)                                     | 0.564 / 0.560 (99.3 %)                                    |
+| S600     | YOLOv8m Seg | 0.431 / 0.420 (97.4 %)                                  | 0.228 / 0.209 (91.7 %)                                    | 0.486 / 0.478 (98.4 %)                                     | 0.608 / 0.605 (99.5 %)                                    |
+| S600     | YOLOv8l Seg | 0.453 / 0.435 (96.0 %)                                  | 0.258 / 0.223 (86.4 %)                                    | 0.502 / 0.496 (98.8 %)                                     | 0.626 / 0.611 (97.6 %)                                    |
+| S600     | YOLOv8x Seg | 0.465 / 0.454 (97.6 %)                                  | 0.268 / 0.236 (88.1 %)                                    | 0.520 / 0.514 (98.8 %)                                     | 0.641 / 0.633 (98.8 %)                                    |
+
+##### mask
+| Device   | Model       | Accuracy mask-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy mask-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy mask-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy mask-large mAP@.50:.95 <br/> FP32 / BPU Python   |
+|----------|-------------|---------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|
+| S600     | YOLO11s Seg | 0.311 / 0.295 (94.9 %)                                  | 0.099 / 0.088 (88.9 %)                                    | 0.350 / 0.327 (93.4 %)                                     | 0.509 / 0.486 (95.5 %)                                    |
+| S600     | YOLO11m Seg | 0.347 / 0.322 (92.8 %)                                  | 0.136 / 0.123 (90.4 %)                                    | 0.396 / 0.362 (91.4 %)                                     | 0.549 / 0.506 (92.2 %)                                    |
+| S600     | YOLO11l Seg | 0.357 / 0.331 (92.7 %)                                  | 0.143 / 0.126 (88.1 %)                                    | 0.409 / 0.377 (92.2 %)                                     | 0.560 / 0.511 (91.3 %)                                    |
+| S600     | YOLO11x Seg | 0.366 / 0.339 (92.6 %)                                  | 0.149 / 0.124 (83.2 %)                                    | 0.420 / 0.384 (91.4 %)                                     | 0.572 / 0.529 (92.5 %)                                    |
+| S600     | YOLOv8s Seg | 0.305 / 0.290 (95.1 %)                                  | 0.096 / 0.085 (88.5 %)                                    | 0.343 / 0.317 (92.4 %)                                     | 0.496 / 0.476 (96.0 %)                                    |
+| S600     | YOLOv8m Seg | 0.337 / 0.319 (94.7 %)                                  | 0.121 / 0.109 (90.1 %)                                    | 0.386 / 0.360 (93.3 %)                                     | 0.533 / 0.506 (94.9 %)                                    |
+| S600     | YOLOv8l Seg | 0.351 / 0.331 (94.3 %)                                  | 0.137 / 0.119 (86.9 %)                                    | 0.398 / 0.374 (94.0 %)                                     | 0.550 / 0.516 (93.8 %)                                    |
+| S600     | YOLOv8x Seg | 0.358 / 0.338 (94.4 %)                                  | 0.139 / 0.122 (87.8 %)                                    | 0.409 / 0.382 (93.4 %)                                     | 0.562 / 0.529 (94.1 %)                                    |
+
+#### Pose Estimation
+| Device   | Model        | Accuracy pose-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy pose-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy pose-large mAP@.50:.95 <br/> FP32 / BPU Python   |
+|----------|--------------|---------------------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|
+| S600     | YOLO11n Pose | 0.465 / 0.448 (96.3 %)                                  | 0.386 / 0.374 (96.9 %)                                     | 0.597 / 0.572 (95.8 %)                                    |
+| S600     | YOLO11s Pose | 0.559 / 0.541 (96.8 %)                                  | 0.495 / 0.476 (96.2 %)                                     | 0.672 / 0.648 (96.4 %)                                    |
+| S600     | YOLO11m Pose | 0.627 / 0.605 (96.5 %)                                  | 0.586 / 0.566 (96.6 %)                                     | 0.711 / 0.688 (96.8 %)                                    |
+| S600     | YOLO11l Pose | 0.636 / 0.617 (97.0 %)                                  | 0.592 / 0.568 (95.9 %)                                     | 0.726 / 0.707 (97.4 %)                                    |
+| S600     | YOLO11x Pose | 0.672 / 0.651 (96.9 %)                                  | 0.634 / 0.610 (96.2 %)                                     | 0.750 / 0.731 (97.5 %)                                    |
+| S600     | YOLOv8n Pose | 0.476 / 0.461 (96.8 %)                                  | 0.391 / 0.373 (95.4 %)                                     | 0.610 / 0.593 (97.2 %)                                    |
+| S600     | YOLOv8s Pose | 0.578 / 0.552 (95.5 %)                                  | 0.510 / 0.486 (95.3 %)                                     | 0.692 / 0.667 (96.4 %)                                    |
+| S600     | YOLOv8m Pose | 0.630 / 0.605 (96.0 %)                                  | 0.578 / 0.552 (95.5 %)                                     | 0.724 / 0.703 (97.1 %)                                    |
+| S600     | YOLOv8l Pose | 0.657 / 0.633 (96.3 %)                                  | 0.607 / 0.581 (95.7 %)                                     | 0.747 / 0.719 (96.3 %)                                    |
+| S600     | YOLOv8x Pose | 0.671 / 0.651 (97.0 %)                                  | 0.624 / 0.603 (96.6 %)                                     | 0.757 / 0.739 (97.6 %)                                    |
+
+#### Image Classification
+| Device   | Model       | Accuracy TOP1 <br/> FP32 / BPU Python   | Accuracy TOP5 <br/> FP32 / BPU Python   |
+|----------|-------------|-----------------------------------------|-----------------------------------------|
+| S600     | YOLO11n CLS | 0.700 / 0.556 (79.4 %)                  | 0.894 / 0.794 (88.9 %)                  |
+| S600     | YOLO11s CLS | 0.754 / 0.666 (88.3 %)                  | 0.927 / 0.875 (94.3 %)                  |
+| S600     | YOLO11m CLS | 0.773 / 0.700 (90.5 %)                  | 0.939 / 0.897 (95.5 %)                  |
+| S600     | YOLO11l CLS | 0.783 / 0.718 (91.7 %)                  | 0.942 / 0.908 (96.4 %)                  |
+| S600     | YOLO11x CLS | 0.795 / 0.731 (92.0 %)                  | 0.949 / 0.917 (96.6 %)                  |
+| S600     | YOLOv8n CLS | 0.689 / 0.571 (82.9 %)                  | 0.883 / 0.803 (90.9 %)                  |
+| S600     | YOLOv8s CLS | 0.737 / 0.626 (84.9 %)                  | 0.917 / 0.844 (92.0 %)                  |
+| S600     | YOLOv8m CLS | 0.768 / 0.700 (91.1 %)                  | 0.935 / 0.899 (96.1 %)                  |
+| S600     | YOLOv8l CLS | 0.783 / 0.723 (92.3 %)                  | 0.942 / 0.909 (96.5 %)                  |
+| S600     | YOLOv8x CLS | 0.790 / 0.737 (93.3 %)                  | 0.945 / 0.920 (97.4 %)                  |
+### RDK S100P
 #### Obeject Detection
 | Device   | Model           | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
 |----------|-----------------|---------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|
@@ -239,84 +534,8 @@ Accuracy pose-large mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=la
 | S100P    | YOLOv8m CLS | 0.768 / 0.703 (91.6 %)                  | 0.935 / 0.899 (96.2 %)                  |
 | S100P    | YOLOv8l CLS | 0.783 / 0.723 (92.3 %)                  | 0.942 / 0.910 (96.6 %)                  |
 | S100P    | YOLOv8x CLS | 0.790 / 0.742 (93.9 %)                  | 0.945 / 0.923 (97.6 %)                  |
-## Performance
+
 ### RDK S100
-#### Obeject Detection
-| Device   | Model           | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|-----------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| S100     | YOLO12n Detect  | 640×640        |        80 | 2.65 ms / 368.54 FPS (1 thread ) <br/> 4.43 ms / 443.33 FPS (2 threads)  | 2.0 ms                         | 2.6 M       | 7.7 M      |
-| S100     | YOLO12s Detect  | 640×640        |        80 | 4.48 ms / 220.08 FPS (1 thread ) <br/> 8.10 ms / 244.66 FPS (2 threads)  | 2.0 ms                         | 9.3 M       | 21.4 M     |
-| S100     | YOLO12m Detect  | 640×640        |        80 | 9.27 ms / 107.09 FPS (1 thread ) <br/> 17.56 ms / 113.12 FPS (2 threads) | 2.0 ms                         | 20.2 M      | 67.5 M     |
-| S100     | YOLO12l Detect  | 640×640        |        80 | 14.66 ms / 67.85 FPS (1 thread ) <br/> 28.30 ms / 70.28 FPS (2 threads)  | 2.0 ms                         | 26.4 M      | 88.9 M     |
-| S100     | YOLO12x Detect  | 640×640        |        80 | 24.72 ms / 40.33 FPS (1 thread ) <br/> 48.27 ms / 41.26 FPS (2 threads)  | 2.0 ms                         | 59.1 M      | 199.0 M    |
-| S100     | YOLO11n Detect  | 640×640        |        80 | 1.62 ms / 596.53 FPS (1 thread ) <br/> 2.39 ms / 813.87 FPS (2 threads)  | 2.0 ms                         | 2.6 M       | 6.5 M      |
-| S100     | YOLO11s Detect  | 640×640        |        80 | 2.63 ms / 371.42 FPS (1 thread ) <br/> 4.39 ms / 448.18 FPS (2 threads)  | 2.0 ms                         | 9.4 M       | 21.5 M     |
-| S100     | YOLO11m Detect  | 640×640        |        80 | 5.63 ms / 175.69 FPS (1 thread ) <br/> 10.35 ms / 191.62 FPS (2 threads) | 2.0 ms                         | 20.1 M      | 68.0 M     |
-| S100     | YOLO11l Detect  | 640×640        |        80 | 6.96 ms / 142.36 FPS (1 thread ) <br/> 13.02 ms / 152.41 FPS (2 threads) | 2.0 ms                         | 25.3 M      | 86.9 M     |
-| S100     | YOLO11x Detect  | 640×640        |        80 | 13.13 ms / 75.78 FPS (1 thread ) <br/> 25.24 ms / 78.82 FPS (2 threads)  | 2.0 ms                         | 56.9 M      | 194.9 M    |
-| S100     | YOLOv10n Detect | 640×640        |        80 | 1.58 ms / 608.94 FPS (1 thread ) <br/> 2.32 ms / 837.04 FPS (2 threads)  | 2.0 ms                         | 2.3 M       | 6.7 M      |
-| S100     | YOLOv10s Detect | 640×640        |        80 | 2.53 ms / 385.50 FPS (1 thread ) <br/> 4.18 ms / 471.09 FPS (2 threads)  | 2.0 ms                         | 7.2 M       | 21.6 M     |
-| S100     | YOLOv10m Detect | 640×640        |        80 | 4.49 ms / 219.98 FPS (1 thread ) <br/> 8.11 ms / 244.17 FPS (2 threads)  | 2.0 ms                         | 15.4 M      | 59.1 M     |
-| S100     | YOLOv10b Detect | 640×640        |        80 | 6.28 ms / 157.57 FPS (1 thread ) <br/> 11.65 ms / 170.32 FPS (2 threads) | 2.0 ms                         | 19.1 M      | 92.0 M     |
-| S100     | YOLOv10l Detect | 640×640        |        80 | 7.95 ms / 124.70 FPS (1 thread ) <br/> 14.98 ms / 132.53 FPS (2 threads) | 2.0 ms                         | 24.4 M      | 120.3 M    |
-| S100     | YOLOv10x Detect | 640×640        |        80 | 10.83 ms / 91.79 FPS (1 thread ) <br/> 20.66 ms / 96.17 FPS (2 threads)  | 2.0 ms                         | 29.5 M      | 160.4 M    |
-| S100     | YOLOv9t Detect  | 640×640        |        80 | 1.77 ms / 546.03 FPS (1 thread ) <br/> 2.67 ms / 730.68 FPS (2 threads)  | 2.0 ms                         | 2.1 M       | 8.2 M      |
-| S100     | YOLOv9s Detect  | 640×640        |        80 | 2.74 ms / 357.91 FPS (1 thread ) <br/> 4.62 ms / 425.97 FPS (2 threads)  | 2.0 ms                         | 7.2 M       | 26.9 M     |
-| S100     | YOLOv9m Detect  | 640×640        |        80 | 5.52 ms / 179.23 FPS (1 thread ) <br/> 10.13 ms / 195.30 FPS (2 threads) | 2.0 ms                         | 20.1 M      | 76.8 M     |
-| S100     | YOLOv9c Detect  | 640×640        |        80 | 6.98 ms / 142.00 FPS (1 thread ) <br/> 13.05 ms / 151.95 FPS (2 threads) | 2.0 ms                         | 25.3 M      | 102.7 M    |
-| S100     | YOLOv9e Detect  | 640×640        |        80 | 17.75 ms / 56.15 FPS (1 thread ) <br/> 34.41 ms / 57.85 FPS (2 threads)  | 2.0 ms                         | 57.4 M      | 189.5 M    |
-| S100     | YOLOv8n Detect  | 640×640        |        80 | 1.53 ms / 632.06 FPS (1 thread ) <br/> 2.24 ms / 868.87 FPS (2 threads)  | 2.0 ms                         | 3.2 M       | 8.7 M      |
-| S100     | YOLOv8s Detect  | 640×640        |        80 | 2.63 ms / 371.16 FPS (1 thread ) <br/> 4.41 ms / 446.48 FPS (2 threads)  | 2.0 ms                         | 11.2 M      | 28.6 M     |
-| S100     | YOLOv8m Detect  | 640×640        |        80 | 5.18 ms / 190.64 FPS (1 thread ) <br/> 9.45 ms / 209.80 FPS (2 threads)  | 2.0 ms                         | 25.9 M      | 78.9 M     |
-| S100     | YOLOv8l Detect  | 640×640        |        80 | 9.97 ms / 99.68 FPS (1 thread ) <br/> 19.00 ms / 104.65 FPS (2 threads)  | 2.0 ms                         | 43.7 M      | 165.2 M    |
-| S100     | YOLOv8x Detect  | 640×640        |        80 | 15.77 ms / 63.15 FPS (1 thread ) <br/> 30.53 ms / 65.20 FPS (2 threads)  | 2.0 ms                         | 68.2 M      | 257.8 M    |
-| S100     | YOLOv5nu Detect | 640×640        |        80 | 1.42 ms / 674.92 FPS (1 thread ) <br/> 2.02 ms / 959.05 FPS (2 threads)  | 2.0 ms                         | 2.6 M       | 7.7 M      |
-| S100     | YOLOv5su Detect | 640×640        |        80 | 2.31 ms / 420.83 FPS (1 thread ) <br/> 3.79 ms / 519.22 FPS (2 threads)  | 2.0 ms                         | 9.1 M       | 24.0 M     |
-| S100     | YOLOv5mu Detect | 640×640        |        80 | 4.50 ms / 218.77 FPS (1 thread ) <br/> 8.11 ms / 244.06 FPS (2 threads)  | 2.0 ms                         | 25.1 M      | 64.2 M     |
-| S100     | YOLOv5lu Detect | 640×640        |        80 | 8.96 ms / 110.78 FPS (1 thread ) <br/> 16.97 ms / 117.15 FPS (2 threads) | 2.0 ms                         | 53.2 M      | 135.0 M    |
-| S100     | YOLOv5xu Detect | 640×640        |        80 | 15.97 ms / 62.32 FPS (1 thread ) <br/> 30.90 ms / 64.41 FPS (2 threads)  | 2.0 ms                         | 97.2 M      | 246.4 M    |
-#### Instance Segmentation
-| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|-------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| S100     | YOLO11n Seg | 640×640        |        80 | 2.06 ms / 463.93 FPS (1 thread ) <br/> 3.17 ms / 613.76 FPS (2 threads)  | 5.0 ms                         | 2.9 M       | 10.4 M     |
-| S100     | YOLO11s Seg | 640×640        |        80 | 3.34 ms / 291.16 FPS (1 thread ) <br/> 5.69 ms / 344.91 FPS (2 threads)  | 5.0 ms                         | 10.1 M      | 35.5 M     |
-| S100     | YOLO11m Seg | 640×640        |        80 | 7.86 ms / 125.63 FPS (1 thread ) <br/> 14.67 ms / 135.16 FPS (2 threads) | 5.0 ms                         | 22.4 M      | 123.3 M    |
-| S100     | YOLO11l Seg | 640×640        |        80 | 9.17 ms / 108.00 FPS (1 thread ) <br/> 17.29 ms / 114.67 FPS (2 threads) | 5.0 ms                         | 27.6 M      | 142.2 M    |
-| S100     | YOLO11x Seg | 640×640        |        80 | 17.74 ms / 56.07 FPS (1 thread ) <br/> 34.33 ms / 57.96 FPS (2 threads)  | 5.0 ms                         | 62.1 M      | 319.0 M    |
-| S100     | YOLOv9c Seg | 640×640        |        80 | 9.07 ms / 109.16 FPS (1 thread ) <br/> 17.12 ms / 115.80 FPS (2 threads) | 5.0 ms                         | 27.7 M      | 158.0 M    |
-| S100     | YOLOv9e Seg | 640×640        |        80 | 20.15 ms / 49.38 FPS (1 thread ) <br/> 39.07 ms / 50.91 FPS (2 threads)  | 5.0 ms                         | 59.7 M      | 244.8 M    |
-| S100     | YOLOv8n Seg | 640×640        |        80 | 1.93 ms / 495.35 FPS (1 thread ) <br/> 2.98 ms / 652.21 FPS (2 threads)  | 5.0 ms                         | 3.4 M       | 12.6 M     |
-| S100     | YOLOv8s Seg | 640×640        |        80 | 3.37 ms / 288.70 FPS (1 thread ) <br/> 5.76 ms / 341.12 FPS (2 threads)  | 5.0 ms                         | 11.8 M      | 42.6 M     |
-| S100     | YOLOv8m Seg | 640×640        |        80 | 6.65 ms / 148.28 FPS (1 thread ) <br/> 12.29 ms / 161.07 FPS (2 threads) | 5.0 ms                         | 27.3 M      | 100.2 M    |
-| S100     | YOLOv8l Seg | 640×640        |        80 | 12.21 ms / 81.34 FPS (1 thread ) <br/> 23.32 ms / 85.17 FPS (2 threads)  | 5.0 ms                         | 46.0 M      | 220.5 M    |
-| S100     | YOLOv8x Seg | 640×640        |        80 | 19.51 ms / 51.00 FPS (1 thread ) <br/> 37.80 ms / 52.62 FPS (2 threads)  | 5.0 ms                         | 71.8 M      | 344.1 M    |
-#### Pose Estimation
-| Device   | Model        | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|--------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| S100     | YOLO11n Pose | 640×640        |        80 | 1.69 ms / 568.00 FPS (1 thread ) <br/> 2.48 ms / 780.47 FPS (2 threads)  | 1.0 ms                         | 2.9 M       | 7.6 M      |
-| S100     | YOLO11s Pose | 640×640        |        80 | 2.76 ms / 354.06 FPS (1 thread ) <br/> 4.62 ms / 424.92 FPS (2 threads)  | 1.0 ms                         | 9.9 M       | 23.2 M     |
-| S100     | YOLO11m Pose | 640×640        |        80 | 5.89 ms / 167.50 FPS (1 thread ) <br/> 10.79 ms / 183.34 FPS (2 threads) | 1.0 ms                         | 20.9 M      | 71.7 M     |
-| S100     | YOLO11l Pose | 640×640        |        80 | 7.23 ms / 136.91 FPS (1 thread ) <br/> 13.48 ms / 147.21 FPS (2 threads) | 1.0 ms                         | 26.2 M      | 90.7 M     |
-| S100     | YOLO11x Pose | 640×640        |        80 | 13.61 ms / 73.02 FPS (1 thread ) <br/> 26.16 ms / 76.04 FPS (2 threads)  | 1.0 ms                         | 58.8 M      | 203.3 M    |
-| S100     | YOLOv8n Pose | 640×640        |        80 | 1.62 ms / 587.59 FPS (1 thread ) <br/> 2.31 ms / 837.95 FPS (2 threads)  | 1.0 ms                         | 3.3 M       | 9.2 M      |
-| S100     | YOLOv8s Pose | 640×640        |        80 | 2.83 ms / 344.35 FPS (1 thread ) <br/> 4.71 ms / 417.72 FPS (2 threads)  | 1.0 ms                         | 11.6 M      | 30.2 M     |
-| S100     | YOLOv8m Pose | 640×640        |        80 | 5.47 ms / 180.46 FPS (1 thread ) <br/> 9.92 ms / 199.50 FPS (2 threads)  | 1.0 ms                         | 26.4 M      | 81.0 M     |
-| S100     | YOLOv8l Pose | 640×640        |        80 | 10.31 ms / 96.20 FPS (1 thread ) <br/> 19.55 ms / 101.60 FPS (2 threads) | 1.0 ms                         | 44.4 M      | 168.6 M    |
-| S100     | YOLOv8x Pose | 640×640        |        80 | 16.07 ms / 61.88 FPS (1 thread ) <br/> 31.01 ms / 64.14 FPS (2 threads)  | 1.0 ms                         | 69.4 M      | 263.2 M    |
-#### Image Classification
-| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                                                                   | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|-------------|----------------|-----------|-------------------------------------------------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| S100     | YOLO11n CLS | 640×640        |        80 | 0.53 ms / 1827.92 FPS (1 thread ) <br/> 0.62 ms / 3115.65 FPS (2 threads) <br/> 0.70 ms / 4141.22 FPS (3 threads) | 0.5 ms                         | 2.8 M       | 4.2 M      |
-| S100     | YOLO11s CLS | 640×640        |        80 | 0.68 ms / 1415.98 FPS (1 thread ) <br/> 0.76 ms / 2553.99 FPS (2 threads) <br/> 1.05 ms / 2767.63 FPS (3 threads) | 0.5 ms                         | 6.7 M       | 13.0 M     |
-| S100     | YOLO11m CLS | 640×640        |        80 | 1.02 ms / 955.28 FPS (1 thread ) <br/> 1.35 ms / 1445.18 FPS (2 threads)                                          | 0.5 ms                         | 11.6 M      | 40.3 M     |
-| S100     | YOLO11l CLS | 640×640        |        80 | 1.21 ms / 805.52 FPS (1 thread ) <br/> 1.73 ms / 1139.48 FPS (2 threads)                                          | 0.5 ms                         | 14.1 M      | 50.4 M     |
-| S100     | YOLO11x CLS | 640×640        |        80 | 1.97 ms / 501.49 FPS (1 thread ) <br/> 3.23 ms / 612.29 FPS (2 threads)                                           | 0.5 ms                         | 29.6 M      | 111.3 M    |
-| S100     | YOLOv8n CLS | 640×640        |        80 | 0.49 ms / 1928.23 FPS (1 thread ) <br/> 0.57 ms / 3399.86 FPS (2 threads) <br/> 0.66 ms / 4410.92 FPS (3 threads) | 0.5 ms                         | 2.7 M       | 4.3 M      |
-| S100     | YOLOv8s CLS | 640×640        |        80 | 0.62 ms / 1562.83 FPS (1 thread ) <br/> 0.71 ms / 2712.53 FPS (2 threads) <br/> 0.89 ms / 3279.66 FPS (3 threads) | 0.5 ms                         | 6.4 M       | 13.5 M     |
-| S100     | YOLOv8m CLS | 640×640        |        80 | 1.00 ms / 970.04 FPS (1 thread ) <br/> 1.31 ms / 1500.86 FPS (2 threads)                                          | 0.5 ms                         | 17.0 M      | 42.7 M     |
-| S100     | YOLOv8l CLS | 640×640        |        80 | 1.98 ms / 497.58 FPS (1 thread ) <br/> 3.22 ms / 614.92 FPS (2 threads)                                           | 0.5 ms                         | 37.5 M      | 99.7 M     |
-| S100     | YOLOv8x CLS | 640×640        |        80 | 2.77 ms / 357.03 FPS (1 thread ) <br/> 4.81 ms / 412.60 FPS (2 threads)                                           | 0.5 ms                         | 57.4 M      | 154.8 M    |
-## Accuracy
 #### Obeject Detection
 | Device   | Model           | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
 |----------|-----------------|---------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|
@@ -408,84 +627,8 @@ Accuracy pose-large mAP@.50:.95: Average Precision (AP) @[ IoU=0.50:0.95 area=la
 | S100     | YOLOv8m CLS | 0.768 / 0.702 (91.4 %)                  | 0.935 / 0.899 (96.2 %)                  |
 | S100     | YOLOv8l CLS | 0.783 / 0.723 (92.3 %)                  | 0.942 / 0.909 (96.5 %)                  |
 | S100     | YOLOv8x CLS | 0.790 / 0.742 (93.9 %)                  | 0.945 / 0.921 (97.5 %)                  |
-## Performance
+
 ### RDK X5
-#### Obeject Detection
-| Device   | Model           | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|-----------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| X5       | YOLO12n Detect  | 640×640        |        80 | 39.70 ms / 25.17 FPS (1 thread ) <br/> 73.19 ms / 27.24 FPS (2 threads)  | 5.0 ms                         | 2.6 M       | 7.7 M      |
-| X5       | YOLO12s Detect  | 640×640        |        80 | 63.74 ms / 15.68 FPS (1 thread ) <br/> 121.24 ms / 16.45 FPS (2 threads) | 5.0 ms                         | 9.3 M       | 21.4 M     |
-| X5       | YOLO12m Detect  | 640×640        |        80 | 103.02 ms / 9.70 FPS (1 thread ) <br/> 199.58 ms / 9.99 FPS (2 threads)  | 5.0 ms                         | 20.2 M      | 67.5 M     |
-| X5       | YOLO12l Detect  | 640×640        |        80 | 183.00 ms / 5.46 FPS (1 thread ) <br/> 359.03 ms / 5.56 FPS (2 threads)  | 5.0 ms                         | 26.4 M      | 88.9 M     |
-| X5       | YOLO12x Detect  | 640×640        |        80 | 315.16 ms / 3.17 FPS (1 thread )                                         | 5.0 ms                         | 59.1 M      | 199.0 M    |
-| X5       | YOLO11n Detect  | 640×640        |        80 | 8.25 ms / 121.05 FPS (1 thread ) <br/> 10.56 ms / 188.57 FPS (2 threads) | 5.0 ms                         | 2.6 M       | 6.5 M      |
-| X5       | YOLO11s Detect  | 640×640        |        80 | 15.81 ms / 63.16 FPS (1 thread ) <br/> 25.74 ms / 77.43 FPS (2 threads)  | 5.0 ms                         | 9.4 M       | 21.5 M     |
-| X5       | YOLO11m Detect  | 640×640        |        80 | 34.68 ms / 28.82 FPS (1 thread ) <br/> 63.30 ms / 31.51 FPS (2 threads)  | 5.0 ms                         | 20.1 M      | 68.0 M     |
-| X5       | YOLO11l Detect  | 640×640        |        80 | 45.23 ms / 22.10 FPS (1 thread ) <br/> 84.30 ms / 23.66 FPS (2 threads)  | 5.0 ms                         | 25.3 M      | 86.9 M     |
-| X5       | YOLO11x Detect  | 640×640        |        80 | 96.70 ms / 10.34 FPS (1 thread ) <br/> 186.76 ms / 10.68 FPS (2 threads) | 5.0 ms                         | 56.9 M      | 194.9 M    |
-| X5       | YOLOv10n Detect | 640×640        |        80 | 8.75 ms / 114.19 FPS (1 thread ) <br/> 11.60 ms / 171.72 FPS (2 threads) | 5.0 ms                         | 2.3 M       | 6.7 M      |
-| X5       | YOLOv10s Detect | 640×640        |        80 | 14.84 ms / 67.32 FPS (1 thread ) <br/> 23.85 ms / 83.58 FPS (2 threads)  | 5.0 ms                         | 7.2 M       | 21.6 M     |
-| X5       | YOLOv10m Detect | 640×640        |        80 | 29.40 ms / 33.99 FPS (1 thread ) <br/> 52.83 ms / 37.75 FPS (2 threads)  | 5.0 ms                         | 15.4 M      | 59.1 M     |
-| X5       | YOLOv10b Detect | 640×640        |        80 | 40.14 ms / 24.90 FPS (1 thread ) <br/> 74.20 ms / 26.88 FPS (2 threads)  | 5.0 ms                         | 19.1 M      | 92.0 M     |
-| X5       | YOLOv10l Detect | 640×640        |        80 | 49.89 ms / 20.04 FPS (1 thread ) <br/> 93.66 ms / 21.30 FPS (2 threads)  | 5.0 ms                         | 24.4 M      | 120.3 M    |
-| X5       | YOLOv10x Detect | 640×640        |        80 | 68.92 ms / 14.51 FPS (1 thread ) <br/> 131.54 ms / 15.16 FPS (2 threads) | 5.0 ms                         | 29.5 M      | 160.4 M    |
-| X5       | YOLOv9t Detect  | 640×640        |        80 | 6.97 ms / 143.14 FPS (1 thread ) <br/> 7.96 ms / 250.11 FPS (2 threads)  | 5.0 ms                         | 2.1 M       | 8.2 M      |
-| X5       | YOLOv9s Detect  | 640×640        |        80 | 13.00 ms / 76.81 FPS (1 thread ) <br/> 20.16 ms / 98.81 FPS (2 threads)  | 5.0 ms                         | 7.2 M       | 26.9 M     |
-| X5       | YOLOv9m Detect  | 640×640        |        80 | 32.63 ms / 30.63 FPS (1 thread ) <br/> 59.31 ms / 33.62 FPS (2 threads)  | 5.0 ms                         | 20.1 M      | 76.8 M     |
-| X5       | YOLOv9c Detect  | 640×640        |        80 | 40.46 ms / 24.71 FPS (1 thread ) <br/> 74.77 ms / 26.67 FPS (2 threads)  | 5.0 ms                         | 25.3 M      | 102.7 M    |
-| X5       | YOLOv9e Detect  | 640×640        |        80 | 119.80 ms / 8.35 FPS (1 thread ) <br/> 233.08 ms / 8.56 FPS (2 threads)  | 5.0 ms                         | 57.4 M      | 189.5 M    |
-| X5       | YOLOv8n Detect  | 640×640        |        80 | 7.00 ms / 142.60 FPS (1 thread ) <br/> 8.06 ms / 246.82 FPS (2 threads)  | 5.0 ms                         | 3.2 M       | 8.7 M      |
-| X5       | YOLOv8s Detect  | 640×640        |        80 | 13.63 ms / 73.30 FPS (1 thread ) <br/> 21.38 ms / 93.20 FPS (2 threads)  | 5.0 ms                         | 11.2 M      | 28.6 M     |
-| X5       | YOLOv8m Detect  | 640×640        |        80 | 30.74 ms / 32.51 FPS (1 thread ) <br/> 55.51 ms / 35.93 FPS (2 threads)  | 5.0 ms                         | 25.9 M      | 78.9 M     |
-| X5       | YOLOv8l Detect  | 640×640        |        80 | 59.51 ms / 16.80 FPS (1 thread ) <br/> 112.80 ms / 17.68 FPS (2 threads) | 5.0 ms                         | 43.7 M      | 165.2 M    |
-| X5       | YOLOv8x Detect  | 640×640        |        80 | 92.72 ms / 10.78 FPS (1 thread ) <br/> 178.95 ms / 11.15 FPS (2 threads) | 5.0 ms                         | 68.2 M      | 257.8 M    |
-| X5       | YOLOv5nu Detect | 640×640        |        80 | 6.33 ms / 157.59 FPS (1 thread ) <br/> 6.80 ms / 291.89 FPS (2 threads)  | 5.0 ms                         | 2.6 M       | 7.7 M      |
-| X5       | YOLOv5su Detect | 640×640        |        80 | 12.33 ms / 81.04 FPS (1 thread ) <br/> 18.88 ms / 105.56 FPS (2 threads) | 5.0 ms                         | 9.1 M       | 24.0 M     |
-| X5       | YOLOv5mu Detect | 640×640        |        80 | 26.57 ms / 37.62 FPS (1 thread ) <br/> 47.20 ms / 42.24 FPS (2 threads)  | 5.0 ms                         | 25.1 M      | 64.2 M     |
-| X5       | YOLOv5lu Detect | 640×640        |        80 | 52.83 ms / 18.92 FPS (1 thread ) <br/> 99.42 ms / 20.06 FPS (2 threads)  | 5.0 ms                         | 53.2 M      | 135.0 M    |
-| X5       | YOLOv5xu Detect | 640×640        |        80 | 91.55 ms / 10.92 FPS (1 thread ) <br/> 176.49 ms / 11.30 FPS (2 threads) | 5.0 ms                         | 97.2 M      | 246.4 M    |
-#### Instance Segmentation
-| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|-------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| X5       | YOLO11n Seg | 640×640        |        80 | 11.55 ms / 86.39 FPS (1 thread ) <br/> 12.83 ms / 155.10 FPS (2 threads) | 20.0 ms                        | 2.9 M       | 10.4 M     |
-| X5       | YOLO11s Seg | 640×640        |        80 | 21.62 ms / 46.22 FPS (1 thread ) <br/> 33.12 ms / 60.20 FPS (2 threads)  | 20.0 ms                        | 10.1 M      | 35.5 M     |
-| X5       | YOLO11m Seg | 640×640        |        80 | 50.43 ms / 19.82 FPS (1 thread ) <br/> 90.49 ms / 22.04 FPS (2 threads)  | 20.0 ms                        | 22.4 M      | 123.3 M    |
-| X5       | YOLO11l Seg | 640×640        |        80 | 60.60 ms / 16.50 FPS (1 thread ) <br/> 110.99 ms / 17.97 FPS (2 threads) | 20.0 ms                        | 27.6 M      | 142.2 M    |
-| X5       | YOLO11x Seg | 640×640        |        80 | 130.40 ms / 7.67 FPS (1 thread ) <br/> 249.71 ms / 7.99 FPS (2 threads)  | 20.0 ms                        | 62.1 M      | 319.0 M    |
-| X5       | YOLOv9c Seg | 640×640        |        80 | 55.85 ms / 17.90 FPS (1 thread ) <br/> 101.47 ms / 19.65 FPS (2 threads) | 20.0 ms                        | 27.7 M      | 158.0 M    |
-| X5       | YOLOv9e Seg | 640×640        |        80 | 135.34 ms / 7.39 FPS (1 thread ) <br/> 260.08 ms / 7.67 FPS (2 threads)  | 20.0 ms                        | 59.7 M      | 244.8 M    |
-| X5       | YOLOv8n Seg | 640×640        |        80 | 10.40 ms / 96.02 FPS (1 thread ) <br/> 10.75 ms / 185.21 FPS (2 threads) | 20.0 ms                        | 3.4 M       | 12.6 M     |
-| X5       | YOLOv8s Seg | 640×640        |        80 | 19.56 ms / 51.08 FPS (1 thread ) <br/> 28.99 ms / 68.76 FPS (2 threads)  | 20.0 ms                        | 11.8 M      | 42.6 M     |
-| X5       | YOLOv8m Seg | 640×640        |        80 | 40.52 ms / 24.67 FPS (1 thread ) <br/> 70.70 ms / 28.21 FPS (2 threads)  | 20.0 ms                        | 27.3 M      | 100.2 M    |
-| X5       | YOLOv8l Seg | 640×640        |        80 | 75.00 ms / 13.33 FPS (1 thread ) <br/> 139.61 ms / 14.29 FPS (2 threads) | 20.0 ms                        | 46.0 M      | 220.5 M    |
-| X5       | YOLOv8x Seg | 640×640        |        80 | 115.94 ms / 8.62 FPS (1 thread ) <br/> 221.06 ms / 9.02 FPS (2 threads)  | 20.0 ms                        | 71.8 M      | 344.1 M    |
-#### Pose Estimation
-| Device   | Model        | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                          | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|--------------|----------------|-----------|--------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| X5       | YOLO11n Pose | 640×640        |        80 | 8.36 ms / 119.43 FPS (1 thread ) <br/> 10.97 ms / 181.61 FPS (2 threads) | 10.0 ms                        | 2.9 M       | 7.6 M      |
-| X5       | YOLO11s Pose | 640×640        |        80 | 16.35 ms / 61.11 FPS (1 thread ) <br/> 26.99 ms / 73.85 FPS (2 threads)  | 10.0 ms                        | 9.9 M       | 23.2 M     |
-| X5       | YOLO11m Pose | 640×640        |        80 | 35.74 ms / 27.97 FPS (1 thread ) <br/> 65.60 ms / 30.40 FPS (2 threads)  | 10.0 ms                        | 20.9 M      | 71.7 M     |
-| X5       | YOLO11l Pose | 640×640        |        80 | 46.38 ms / 21.55 FPS (1 thread ) <br/> 86.82 ms / 22.97 FPS (2 threads)  | 10.0 ms                        | 26.2 M      | 90.7 M     |
-| X5       | YOLO11x Pose | 640×640        |        80 | 98.88 ms / 10.11 FPS (1 thread ) <br/> 191.38 ms / 10.42 FPS (2 threads) | 10.0 ms                        | 58.8 M      | 203.3 M    |
-| X5       | YOLOv8n Pose | 640×640        |        80 | 6.95 ms / 143.64 FPS (1 thread ) <br/> 8.23 ms / 241.76 FPS (2 threads)  | 10.0 ms                        | 3.3 M       | 9.2 M      |
-| X5       | YOLOv8s Pose | 640×640        |        80 | 14.16 ms / 70.54 FPS (1 thread ) <br/> 22.62 ms / 88.09 FPS (2 threads)  | 10.0 ms                        | 11.6 M      | 30.2 M     |
-| X5       | YOLOv8m Pose | 640×640        |        80 | 31.60 ms / 31.62 FPS (1 thread ) <br/> 57.34 ms / 34.78 FPS (2 threads)  | 10.0 ms                        | 26.4 M      | 81.0 M     |
-| X5       | YOLOv8l Pose | 640×640        |        80 | 60.37 ms / 16.56 FPS (1 thread ) <br/> 114.73 ms / 17.38 FPS (2 threads) | 10.0 ms                        | 44.4 M      | 168.6 M    |
-| X5       | YOLOv8x Pose | 640×640        |        80 | 94.15 ms / 10.62 FPS (1 thread ) <br/> 182.08 ms / 10.96 FPS (2 threads) | 10.0 ms                        | 69.4 M      | 263.2 M    |
-#### Image Classification
-| Device   | Model       | Size(Pixels)   |   Classes | BPU Task Latency  /<br>BPU Throughput (Threads)                           | CPU Latency<br>(Single Core)   | params(M)   | FLOPs(B)   |
-|----------|-------------|----------------|-----------|---------------------------------------------------------------------------|--------------------------------|-------------|------------|
-| X5       | YOLO11n CLS | 640×640        |        80 | 1.06 ms / 939.95 FPS (1 thread ) <br/> 1.61 ms / 1236.07 FPS (2 threads)  | 0.5 ms                         | 2.8 M       | 4.2 M      |
-| X5       | YOLO11s CLS | 640×640        |        80 | 2.01 ms / 495.14 FPS (1 thread ) <br/> 3.49 ms / 569.44 FPS (2 threads)   | 0.5 ms                         | 6.7 M       | 13.0 M     |
-| X5       | YOLO11m CLS | 640×640        |        80 | 3.82 ms / 261.13 FPS (1 thread ) <br/> 7.09 ms / 280.82 FPS (2 threads)   | 0.5 ms                         | 11.6 M      | 40.3 M     |
-| X5       | YOLO11l CLS | 640×640        |        80 | 5.02 ms / 199.15 FPS (1 thread ) <br/> 9.49 ms / 210.12 FPS (2 threads)   | 0.5 ms                         | 14.1 M      | 50.4 M     |
-| X5       | YOLO11x CLS | 640×640        |        80 | 10.04 ms / 99.49 FPS (1 thread ) <br/> 19.48 ms / 102.39 FPS (2 threads)  | 0.5 ms                         | 29.6 M      | 111.3 M    |
-| X5       | YOLOv8n CLS | 640×640        |        80 | 0.74 ms / 1348.98 FPS (1 thread ) <br/> 0.98 ms / 2018.94 FPS (2 threads) | 0.5 ms                         | 2.7 M       | 4.3 M      |
-| X5       | YOLOv8s CLS | 640×640        |        80 | 1.44 ms / 690.86 FPS (1 thread ) <br/> 2.36 ms / 842.52 FPS (2 threads)   | 0.5 ms                         | 6.4 M       | 13.5 M     |
-| X5       | YOLOv8m CLS | 640×640        |        80 | 3.66 ms / 272.72 FPS (1 thread ) <br/> 6.78 ms / 294.01 FPS (2 threads)   | 0.5 ms                         | 17.0 M      | 42.7 M     |
-| X5       | YOLOv8l CLS | 640×640        |        80 | 7.98 ms / 125.23 FPS (1 thread ) <br/> 15.38 ms / 129.63 FPS (2 threads)  | 0.5 ms                         | 37.5 M      | 99.7 M     |
-| X5       | YOLOv8x CLS | 640×640        |        80 | 13.12 ms / 76.18 FPS (1 thread ) <br/> 25.64 ms / 77.78 FPS (2 threads)   | 0.5 ms                         | 57.4 M      | 154.8 M    |
-## Accuracy
 #### Obeject Detection
 | Device   | Model           | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
 |----------|-----------------|---------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|

@@ -93,7 +93,7 @@ python3 eval_yolo26_obb.py \
 
 ## Benchmark Results
 
-### RDK S100/S100P Performance Data (Performance @ NV12)
+### RDK S100 Performance Data (Performance @ NV12)
 
 | Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | Params <br> (M) | FLOPs <br> (G) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -122,11 +122,46 @@ python3 eval_yolo26_obb.py \
 | S100 | YOLO26m Obb | 640x640 | 15 | 6.16 ms / 157.61 FPS (1 thread) <br> 11.27 ms / 175.02 FPS (2 threads) | - | 23.49 | 82.2 |
 | S100 | YOLO26l Obb | 640x640 | 15 | 7.46 ms / 130.74 FPS (1 thread) <br> 13.79 ms / 143.34 FPS (2 threads) | - | 27.90 | 100.6 |
 | S100 | YOLO26x Obb | 640x640 | 15 | 13.81 ms / 71.33 FPS (1 thread) <br> 26.95 ms / 73.69 FPS (2 threads) | - | 62.66 | 225.3 |
+
+### RDK S100 Performance Data (Performance @ NV12)
+
+| Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | Params <br> (M) | FLOPs <br> (G) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | S100P | YOLO26n Detect | 640x640 | 80 | - | - | 2.57 | 6.1 |
 | S100P | YOLO26s Detect | 640x640 | 80 | - | - | 10.01 | 22.8 |
 | S100P | YOLO26m Detect | 640x640 | 80 | - | - | 21.90 | 75.4 |
 | S100P | YOLO26l Detect | 640x640 | 80 | - | - | 26.30 | 93.8 |
 | S100P | YOLO26x Detect | 640x640 | 80 | - | - | 58.99 | 209.5 |
+
+### RDK S600 Performance Data (Performance @ NV12)
+
+| Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | Params <br> (M) | FLOPs <br> (G) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| S600 | YOLO26n Detect | 640x640 | 80 | 0.83 ms / 1170.57 FPS (1 thread) <br> 1.85 ms / 6023.19 FPS (12 threads) | - | 2.57 | 6.1 |
+| S600 | YOLO26s Detect | 640x640 | 80 | 1.27 ms / 780.57 FPS (1 thread) <br> 3.17 ms / 3576.09 FPS (12 threads) | - | 10.01 | 22.8 |
+| S600 | YOLO26m Detect | 640x640 | 80 | 2.61 ms / 380.65 FPS (1 thread) <br> 7.19 ms / 1612.92 FPS (12 threads) | - | 21.90 | 75.4 |
+| S600 | YOLO26l Detect | 640x640 | 80 | 3.21 ms / 309.74 FPS (1 thread) <br> 9.02 ms / 1291.03 FPS (12 threads) | - | 26.30 | 93.8 |
+| S600 | YOLO26x Detect | 640x640 | 80 | 6.57 ms / 151.87 FPS (1 thread) <br> 19.20 ms / 609.19 FPS (12 threads) | - | 58.99 | 209.5 |
+| S600 | YOLO26n Seg | 640x640 | 80 | 1.02 ms / 966.75 FPS (1 thread) <br> 2.54 ms / 4353.03 FPS (12 threads) | - | 3.13 | 10.5 |
+| S600 | YOLO26s Seg | 640x640 | 80 | 1.70 ms / 579.68 FPS (1 thread) <br> 4.38 ms / 2585.38 FPS (12 threads) | - | 11.51 | 37.4 |
+| S600 | YOLO26m Seg | 640x640 | 80 | 3.91 ms / 254.03 FPS (1 thread) <br> 10.87 ms / 1069.46 FPS (12 threads) | - | 27.11 | 132.5 |
+| S600 | YOLO26l Seg | 640x640 | 80 | 4.58 ms / 217.11 FPS (1 thread) <br> 13.00 ms / 895.80 FPS (12 threads) | - | 31.52 | 150.9 |
+| S600 | YOLO26x Seg | 640x640 | 80 | 9.32 ms / 107.13 FPS (1 thread) <br> 26.92 ms / 434.77 FPS (12 threads) | - | 70.69 | 337.7 |
+| S600 | YOLO26n Pose | 640x640 | 1 | 0.86 ms / 1129.76 FPS (1 thread) <br> 1.93 ms / 5634.91 FPS (12 threads) | - | 3.68 | 10.3 |
+| S600 | YOLO26s Pose | 640x640 | 1 | 1.36 ms / 725.97 FPS (1 thread) <br> 3.33 ms / 3384.84 FPS (12 threads) | - | 11.81 | 29.2 |
+| S600 | YOLO26m Pose | 640x640 | 1 | 2.73 ms / 363.75 FPS (1 thread) <br> 7.41 ms / 1550.53 FPS (12 threads) | - | 24.22 | 85.2 |
+| S600 | YOLO26l Pose | 640x640 | 1 | 3.31 ms / 299.85 FPS (1 thread) <br> 9.26 ms / 1252.19 FPS (12 threads) | - | 28.63 | 103.6 |
+| S600 | YOLO26x Pose | 640x640 | 1 | 6.80 ms / 146.52 FPS (1 thread) <br> 19.60 ms / 596.04 FPS (12 threads) | - | 62.73 | 225.3 |
+| S600 | YOLO26n Cls | 224x224 | 1000 | 0.34 ms / 2890.55 FPS (1 thread) <br> 0.68 ms / 15743.07 FPS (12 threads) | - | 2.81 | 0.5 |
+| S600 | YOLO26s Cls | 224x224 | 1000 | 0.40 ms / 2459.18 FPS (1 thread) <br> 0.78 ms / 13540.05 FPS (12 threads) | - | 6.72 | 1.6 |
+| S600 | YOLO26m Cls | 224x224 | 1000 | 0.54 ms / 1825.63 FPS (1 thread) <br> 1.06 ms / 10526.32 FPS (12 threads) | - | 11.63 | 5.0 |
+| S600 | YOLO26l Cls | 224x224 | 1000 | 0.65 ms / 1516.99 FPS (1 thread) <br> 1.43 ms / 7924.24 FPS (12 threads) | - | 14.12 | 6.2 |
+| S600 | YOLO26x Cls | 224x224 | 1000 | 0.99 ms / 998.72 FPS (1 thread) <br> 2.57 ms / 4463.59 FPS (12 threads) | - | 29.64 | 13.7 |
+| S600 | YOLO26n Obb | 640x640 | 15 | 0.79 ms / 1230.91 FPS (1 thread) <br> 1.65 ms / 6496.46 FPS (12 threads) | - | 2.65 | 6.3 |
+| S600 | YOLO26s Obb | 640x640 | 15 | 1.26 ms / 784.60 FPS (1 thread) <br> 3.11 ms / 3610.24 FPS (12 threads) | - | 10.53 | 24.5 |
+| S600 | YOLO26m Obb | 640x640 | 15 | 2.66 ms / 372.64 FPS (1 thread) <br> 7.21 ms / 1601.00 FPS (12 threads) | - | 23.49 | 82.2 |
+| S600 | YOLO26l Obb | 640x640 | 15 | 3.27 ms / 304.08 FPS (1 thread) <br> 9.15 ms / 1266.96 FPS (12 threads) | - | 27.90 | 100.6 |
+| S600 | YOLO26x Obb | 640x640 | 15 | 6.73 ms / 148.08 FPS (1 thread) <br> 19.31 ms / 604.86 FPS (12 threads) | - | 62.66 | 225.3 |
 
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Detection)
 

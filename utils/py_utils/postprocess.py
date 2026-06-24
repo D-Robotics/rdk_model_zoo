@@ -673,24 +673,24 @@ def resize_masks_to_boxes(masks: list[np.ndarray],
     """
     resized_masks = []
     for mask, (x1, y1, x2, y2) in zip(masks, boxes):
-        # Clamp coordinates to image bounds
         x1, y1 = max(int(x1), 0), max(int(y1), 0)
         x2, y2 = min(int(x2), img_w), min(int(y2), img_h)
 
         target_w = max(x2 - x1, 1)
         target_h = max(y2 - y1, 1)
 
+        if mask is None or getattr(mask, "size", 0) == 0:
+            resized_masks.append(np.zeros((target_h, target_w), dtype=np.uint8))
+            continue
+
         resized = cv2.resize(mask, (target_w, target_h), interpolation=interpolation)
 
-        if do_morph:
-            # Apply morphological filtering
+        if do_morph and resized.size > 0:
             resized = cv2.morphologyEx(resized, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
 
         resized_masks.append(resized)
 
     return resized_masks
-
-
 def scale_keypoints_to_original_image(kpts_xy: np.ndarray,
                                       kpts_score: np.ndarray,
                                       img_w: int, img_h: int,
@@ -1025,3 +1025,4 @@ def decode_pose_layer(box_feat: np.ndarray, cls_feat: np.ndarray,
 
     out = np.stack([x1, y1, x2, y2, valid_score, valid_cls_id], axis=-1)
     return np.concatenate([out, decoded_kpt_flat], axis=-1)
+
