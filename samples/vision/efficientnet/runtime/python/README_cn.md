@@ -35,7 +35,7 @@ S100 设备：
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s100/efficientnet_lite0_224x224_nv12.hbm \
+  --model-path /opt/hobot/model/s100/basic/efficientnet_lite0_224x224_nv12.hbm \
   --test-img ../../test_data/Scottish_deerhound.JPEG \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -45,7 +45,7 @@ S600 设备：
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s600/efficientnet_lite0_224x224_nv12.hbm \
+  --model-path /opt/hobot/model/s600/basic/efficientnet_lite0_224x224_nv12.hbm \
   --test-img ../../test_data/Scottish_deerhound.JPEG \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5

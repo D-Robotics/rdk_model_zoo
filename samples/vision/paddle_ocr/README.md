@@ -1,6 +1,6 @@
 English | [简体中文](./README_cn.md)
 
-# PaddleOCR
+# PaddleOCR Model Description
 
 This directory describes the complete usage of PaddleOCR in this Model Zoo, including algorithm overview, model conversion, runtime inference (C++ and Python), pre/post-processing interface documentation, and model evaluation.
 
@@ -12,22 +12,27 @@ This directory describes the complete usage of PaddleOCR in this Model Zoo, incl
 
 PaddleOCR is an ultra-lightweight Chinese/English OCR system open-sourced by Baidu PaddlePaddle. It uses a two-stage cascaded architecture:
 
-- **Text Detection (Detection)**: Uses the DB (Differentiable Binarization) algorithm, producing a segmentation probability map of text regions, then extracts polygonal text boxes through thresholding, contour extraction, and minimum-area rectangle fitting.
-- **Text Recognition (Recognition)**: Uses the CRNN (Convolutional Recurrent Neural Network) architecture, outputting per-timestep class probabilities (logits), decoded into text strings via CTC greedy decoding.
+- **Text Detection**: Uses the DB (Differentiable Binarization) algorithm, producing a segmentation probability map of text regions, then extracts polygonal text boxes through thresholding, contour extraction, and minimum-area rectangle fitting.
+- **Text Recognition**: Uses the CRNN (Convolutional Recurrent Neural Network) architecture, outputting per-timestep class probabilities (logits), decoded into text strings via CTC greedy decoding.
 
-### Features
+- **Papers**:
+  - DB: [Real-time Scene Text Detection with Differentiable Binarization](https://arxiv.org/abs/1911.08947)
+  - CRNN: [An End-to-End Trainable Neural Network for Image-based Sequence Recognition](https://arxiv.org/abs/1507.05717)
+- **Reference Implementation**: [PaddlePaddle/PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
+
+### Algorithm Capabilities
+
+- Chinese / English text detection and recognition on a single image
+- Polygon text bounding boxes plus per-line recognised text
+- Supports mixed-language scenes with the PP-OCRv6 default dictionary
+
+### Algorithm Features
 
 - **Two-stage decoupled**: detection and recognition run independently, making it easy to swap each stage's model
 - **DB text detection**: differentiable binarisation lets the model learn the binarisation threshold directly during training, improving small-text detection accuracy
 - **CRNN + CTC recognition**: sequence modelling combined with CTC decoding, natively supporting variable-length text
 - **Chinese support**: dictionary covers common Chinese characters and symbols, supporting mixed Chinese/English scenarios
 - **Edge-optimised**: PP-OCRv6 has been quantised and compiled for RDK S100 / S600 BPU
-
-### References
-
-- DB paper: [Real-time Scene Text Detection with Differentiable Binarization](https://arxiv.org/abs/1911.08947)
-- CRNN paper: [An End-to-End Trainable Neural Network for Image-based Sequence Recognition](https://arxiv.org/abs/1507.05717)
-- PaddleOCR project: [PaddlePaddle/PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
 
 ---
 
@@ -85,7 +90,7 @@ This sample defaults to **PP-OCRv6** detection/recognition models, automatically
 
 ---
 
-## QuickStart
+## Quick Start
 
 Each model provides a `run.sh` script for one-click execution:
 
@@ -142,7 +147,7 @@ PaddleOCR provides both C++ and Python inference samples. Both produce identical
 
 ---
 
-## Evaluation
+## Model Evaluation
 
 The `evaluator/` directory provides model accuracy, performance, and numerical consistency checks. See the README there for details.
 

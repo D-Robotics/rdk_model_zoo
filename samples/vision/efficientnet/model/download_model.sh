@@ -21,13 +21,22 @@ echo "SOC           : $SOC"
 echo "Model variant : rdk_${MODEL_SOC}"
 
 MODEL_BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${MODEL_SOC}/EfficientNet"
-OUTPUT_DIR="$(dirname "$0")/${MODEL_SOC}"
+# Unified install path: aligned with runtime/python/run.sh and the default
+# model_path resolved by EfficientNetConfig.
+OUTPUT_DIR="/opt/hobot/model/${MODEL_SOC}/basic"
 mkdir -p "${OUTPUT_DIR}"
+
+echo "Download dir  : ${OUTPUT_DIR}"
 
 download_one() {
   local model_file="$1"
   local output_path="${OUTPUT_DIR}/${model_file}"
   local url="${MODEL_BASE_URL}/${model_file}"
+
+  if [[ -f "$output_path" ]]; then
+    echo "${model_file} already exists, skip download"
+    return
+  fi
 
   echo "Downloading ${model_file} ..."
   wget -c "$url" -O "$output_path"

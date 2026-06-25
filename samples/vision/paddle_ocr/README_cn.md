@@ -15,6 +15,12 @@ PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用�
 - **文本检测（Detection）**：使用 DB（Differentiable Binarization）算法，输出文本区域的分割概率图，经阈值化、轮廓提取和最小面积矩形拟合后得到多边形文本框。
 - **文本识别（Recognition）**：使用 CRNN（Convolutional Recurrent Neural Network）架构，输出各时间步的类别概率（logits），通过 CTC 贪婪解码还原文字字符串。
 
+### 算法功能
+
+- 单张图像的中英文文本检测与识别
+- 输出多边形文本框及每条文本的识别结果
+- 支持 PP-OCRv6 默认词典下的中英文混合场景
+
 ### 算法特性
 
 - **两阶段解耦**：检测与识别独立推理，便于灵活替换各阶段模型

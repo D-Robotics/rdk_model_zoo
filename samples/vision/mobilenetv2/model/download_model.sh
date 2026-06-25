@@ -15,10 +15,26 @@ case "$SOC" in
   *)    MODEL_SOC="s100" ;;
 esac
 
-MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${MODEL_SOC}/MobileNet/mobilenetv2_224x224_nv12.hbm"
+MODEL_FILE="mobilenetv2_224x224_nv12.hbm"
+MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${MODEL_SOC}/MobileNet/${MODEL_FILE}"
+
+# Unified install path: aligned with runtime/{python,cpp}/run.sh and the
+# default --model-path in main.py / main.cpp so all entry points read from
+# the same location.
+OUTPUT_DIR="/opt/hobot/model/${MODEL_SOC}/basic"
+OUTPUT_PATH="${OUTPUT_DIR}/${MODEL_FILE}"
+
+mkdir -p "$OUTPUT_DIR"
 
 echo "SOC           : $SOC"
 echo "Model variant : rdk_${MODEL_SOC}"
 echo "Model URL     : $MODEL_URL"
+echo "Output        : $OUTPUT_PATH"
 
-wget "$MODEL_URL"
+if [[ -f "$OUTPUT_PATH" ]]; then
+  echo "Model already exists, skip download"
+  exit 0
+fi
+
+wget -c "$MODEL_URL" -O "$OUTPUT_PATH"
+echo "Model downloaded successfully"
