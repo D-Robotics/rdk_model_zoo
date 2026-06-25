@@ -1,161 +1,175 @@
-# PaddleOCR 模型说明
+English | [简体中文](./README_cn.md)
 
-本目录描述 PaddleOCR 在本 Model Zoo 中的完整使用流程，包括：算法介绍、模型转换、运行时推理（C++ 和 Python）、前后处理接口说明，以及模型评估步骤。
+# PaddleOCR Model Description
 
-> ⚠️ **平台说明**：本模型仅支持 **RDK S100** 平台。若使用 RDK S600，请参阅[平台兼容性说明](#平台兼容性)。
+This directory describes the complete usage of PaddleOCR in this Model Zoo, including algorithm overview, model conversion, runtime inference (C++ and Python), pre/post-processing interface documentation, and model evaluation.
 
----
-
-## 算法介绍（Algorithm Overview）
-
-PaddleOCR 是百度飞桨团队开源的超轻量中英文 OCR 系统，采用两阶段级联架构：
-
-- **文本检测（Detection）**：使用 DB（Differentiable Binarization）算法，输出文本区域的分割概率图，经阈值化、轮廓提取和最小面积矩形拟合后得到多边形文本框。
-- **文本识别（Recognition）**：使用 CRNN（Convolutional Recurrent Neural Network）架构，输出各时间步的类别概率（logits），通过 CTC 贪婪解码还原文字字符串。
-
-### 算法特性
-
-- **两阶段解耦**：检测与识别独立推理，便于灵活替换各阶段模型
-- **DB 文本检测**：可微分二值化使模型在训练时直接学习二值化阈值，提升小文本检测精度
-- **CRNN + CTC 识别**：序列建模结合 CTC 解码，天然支持不定长文本识别
-- **中文支持**：词典包含常用汉字及符号，支持中英文混合场景
-- **端侧高效**：已针对 RDK S100 BPU 完成量化与编译适配
-
-### 原始资料
-
-- DB 论文：[Real-time Scene Text Detection with Differentiable Binarization](https://arxiv.org/abs/1911.08947)
-- CRNN 论文：[An End-to-End Trainable Neural Network for Image-based Sequence Recognition](https://arxiv.org/abs/1507.05717)
-- PaddleOCR 项目：[PaddlePaddle/PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
+> Defaults to **PP-OCRv6** (detection + recognition). The run script reads `/sys/class/boardinfo/soc_name` and automatically selects the matching prebuilt model for the current board.
 
 ---
 
-## 平台兼容性
+## Algorithm Overview
 
-| 平台       | 是否支持 | 说明                                            |
-|-----------|---------|------------------------------------------------|
-| RDK S100  | ✅ 支持  | 模型已针对 S100 BPU 编译，推荐使用               |
-| RDK S600  | ❌ 不支持 | 当前无 S600 编译版本，不可直接使用本目录下的模型  |
+PaddleOCR is an ultra-lightweight Chinese/English OCR system open-sourced by Baidu PaddlePaddle. It uses a two-stage cascaded architecture:
 
-> 若需在 RDK S600 上运行 OCR，需重新使用 S600 工具链对原始 ONNX/浮点模型进行量化编译。
+- **Text Detection**: Uses the DB (Differentiable Binarization) algorithm, producing a segmentation probability map of text regions, then extracts polygonal text boxes through thresholding, contour extraction, and minimum-area rectangle fitting.
+- **Text Recognition**: Uses the CRNN (Convolutional Recurrent Neural Network) architecture, outputting per-timestep class probabilities (logits), decoded into text strings via CTC greedy decoding.
+
+- **Papers**:
+  - DB: [Real-time Scene Text Detection with Differentiable Binarization](https://arxiv.org/abs/1911.08947)
+  - CRNN: [An End-to-End Trainable Neural Network for Image-based Sequence Recognition](https://arxiv.org/abs/1507.05717)
+- **Reference Implementation**: [PaddlePaddle/PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
+
+### Algorithm Capabilities
+
+- Chinese / English text detection and recognition on a single image
+- Polygon text bounding boxes plus per-line recognised text
+- Supports mixed-language scenes with the PP-OCRv6 default dictionary
+
+### Algorithm Features
+
+- **Two-stage decoupled**: detection and recognition run independently, making it easy to swap each stage's model
+- **DB text detection**: differentiable binarisation lets the model learn the binarisation threshold directly during training, improving small-text detection accuracy
+- **CRNN + CTC recognition**: sequence modelling combined with CTC decoding, natively supporting variable-length text
+- **Chinese support**: dictionary covers common Chinese characters and symbols, supporting mixed Chinese/English scenarios
+- **Edge-optimised**: PP-OCRv6 has been quantised and compiled for RDK S100 / S600 BPU
 
 ---
 
-## 目录结构（Directory Structure）
+## Platform Compatibility
+
+This sample defaults to **PP-OCRv6** detection/recognition models, automatically selecting the matching prebuilt variant based on `/sys/class/boardinfo/soc_name`:
+
+| Platform | Supported | Model variant |
+|---|---|---|
+| RDK S100 | ✅ Supported | `archive.d-robotics.cc/.../rdk_s100/paddle_ocr/` |
+| RDK S100P | ✅ Supported | Reuses `rdk_s100/paddle_ocr/` prebuilt models |
+| RDK S600 | ✅ Supported | `archive.d-robotics.cc/.../rdk_s600/paddle_ocr/` |
+
+> When `soc_name` read fails or returns `(null)`, the script falls back to S100 models.
+> To run OCR on a custom platform, re-quantise and compile using the matching OE toolchain; see [conversion/README.md](./conversion/README.md).
+
+---
+
+## Directory Structure
 
 ```bash
 .
-|-- conversion                              # 模型转换流程
-|   `-- README.md                           # 模型转换使用说明
-|-- evaluator                               # 模型评估相关内容
-|   `-- README.md                           # 模型评估说明
-|-- model                                   # 模型文件及下载脚本
-|   |-- download_model.sh                   # HBM 模型下载脚本（仅 S100）
-|   `-- README.md                           # 模型下载说明
-|-- runtime                                 # 模型推理示例
-|   |-- cpp                                 # C++ 推理工程
-|   |   |-- inc                             # C++ 头文件
-|   |   |   `-- paddle_ocr.hpp              # PaddleOCR 模型封装接口
-|   |   |-- src                             # C++ 源码
-|   |   |   |-- main.cpp                    # 推理入口程序
-|   |   |   `-- paddle_ocr.cpp              # PaddleOCR 推理实现
-|   |   |-- CMakeLists.txt                  # CMake 构建配置
-|   |   |-- README.md                       # C++ 推理示例使用说明
-|   |   `-- run.sh                          # C++ 示例运行脚本
-|   `-- python                              # Python 推理示例
-|       |-- README.md                       # Python 推理示例使用说明
-|       |-- main.py                         # Python 推理入口脚本
-|       |-- run.sh                          # Python 示例运行脚本
-|       `-- paddle_ocr.py                   # PaddleOCR 推理与后处理实现
-|-- test_data                               # 测试数据
-|   |-- gt_2322.jpg                         # 示例测试图片（含中文文本）
-|   |-- ppocr_keys_v1.txt                   # 中文字符词典
-|   `-- FangSong.ttf                        # 仿宋字体文件（用于结果可视化）
-`-- README.md                               # PaddleOCR 示例整体说明与快速指引
+|-- conversion                          # Model conversion workflow
+|   |-- paddleocr_det_configs.yaml      # PP-OCRv6 detection quantisation config
+|   |-- paddleocr_rec_configs.yaml      # PP-OCRv6 recognition quantisation config
+|   `-- README.md                       # Conversion guide
+|-- evaluator                           # Model evaluation
+|   `-- README.md                       # Evaluation guide
+|-- model                               # Model artifacts and download script
+|   |-- download_model.sh               # SOC-aware HBM download script
+|   `-- README.md                       # Model download guide
+|-- runtime                             # Inference samples
+|   |-- cpp                             # C++ inference project
+|   |   |-- inc                         # C++ headers
+|   |   |   `-- paddle_ocr.hpp          # PaddleOCR C++ wrapper interface
+|   |   |-- src                         # C++ source
+|   |   |   |-- main.cpp                # Inference entry
+|   |   |   `-- paddle_ocr.cpp          # PaddleOCR inference implementation
+|   |   |-- CMakeLists.txt              # CMake build configuration
+|   |   |-- README.md                   # C++ inference guide
+|   |   `-- run.sh                      # C++ run script
+|   `-- python                          # Python inference sample
+|       |-- README.md                   # Python inference guide
+|       |-- main.py                     # Python inference entry
+|       |-- run.sh                      # Python run script
+|       `-- paddle_ocr.py               # PaddleOCR inference & post-processing
+|-- test_data                           # Test data
+|   |-- gt_2322.jpg                     # Sample test image (with Chinese text)
+|   |-- ppocrv6_dict.txt                # PP-OCRv6 default character dictionary
+|   |-- ppocrv6_tiny_dict.txt           # PP-OCRv6 Tiny fallback dictionary
+|   |-- ppocr_keys_v1.txt               # PP-OCRv3 legacy dictionary (compat)
+|   `-- FangSong.ttf                    # FangSong font file (for result visualisation)
+`-- README.md                           # This file — overall guide
 ```
 
 ---
 
-## 快速体验（QuickStart）
+## Quick Start
 
-为了便于用户快速上手体验，每个模型均提供了 `run.sh` 脚本，用户运行此脚本即可一键运行相应模型，此脚本主要进行如下操作：
-- 检测系统环境是否满足要求，若不满足则自动安装相应包；
-- 检测推理所需的 hbm 模型文件是否存在，不存在则自动下载；
-- 创建 build 目录，编译 C++ 项目（仅 C++ 项目）；
-- 运行编译好的可执行文件或相应的 Python 脚本；
+Each model provides a `run.sh` script for one-click execution:
+
+- Detects system environment and installs missing dependencies automatically
+- Reads the board SOC and auto-selects PP-OCRv6 model for S100 or S600
+- Checks for HBM model files and downloads them if missing
+- Creates the `build` directory and compiles the C++ project (C++ only)
+- Runs the compiled binary or Python script
 
 ### C++
 
-- 进入 `runtime` 目录下的 `cpp` 目录，运行 `run.sh` 脚本，即可快速体验
+```bash
+cd runtime/cpp/
+./run.sh
+```
 
-    ```bash
-    cd runtime/cpp/
-    ./run.sh
-    ```
-
-- 若想了解 C++ 代码的详细使用方法，或 step by step 运行模型请参考 `runtime/cpp/README.md`；
+For detailed step-by-step guidance, see `runtime/cpp/README.md`.
 
 ### Python
 
-- 进入 `runtime` 目录下的 `python` 目录，运行 `run.sh` 脚本，即可快速体验
+```bash
+cd runtime/python/
+./run.sh
+```
 
-    ```bash
-    cd runtime/python/
-    ./run.sh
-    ```
-
-- 若想了解 Python 代码的详细使用方法，或 step by step 运行模型请参考 `runtime/python/README.md`；
+For detailed step-by-step guidance, see `runtime/python/README.md`.
 
 ---
 
-## 模型转换（Model Conversion）
+## Model Conversion
 
-- ModelZoo 已提供适配完成的 HBM 模型文件（仅 S100），用户可直接运行 `model` 目录下的 `download_model.sh` 脚本下载并使用，如不关心模型转换流程，**可跳过本小节**。
-
-- 如需自定义模型转换参数，或了解完整的模型转换流程，请参考 `conversion/README.md`。
-
----
-
-## 模型推理（Runtime）
-
-PaddleOCR 模型推理示例同时提供 C++ 和 Python 两种实现方式，分别面向不同的使用场景与开发需求。两种版本在模型能力与推理结果上保持一致，但在使用方式和工程形态上有所区别。
-
-### C++ 版本
-
-- 提供完整的工程化示例，适合集成到实际应用中；
-- 包含模型封装类、参数解析、推理流程及构建方式说明；
-- 具体编译、运行方式及接口说明请参考 `runtime/cpp/README.md`；
-
-### Python 版本
-
-- 以脚本形式提供，适合快速验证模型效果与算法流程；
-- 示例中展示了模型加载、推理执行、后处理以及结果保存的完整过程；
-- 具体使用方法、参数说明及接口说明请参考 `runtime/python/README.md`；
+- Pre-built PP-OCRv6 HBM models (S100 / S600) are available through `model/download_model.sh`. If you do not need to customise conversion parameters, **skip this section**.
+- For custom conversion parameters or the full conversion workflow, see `conversion/README.md`.
 
 ---
 
-## 模型评估（Evaluator）
+## Runtime
 
-`evaluator/` 用于模型精度、性能及数值一致性评估，详细说明请参考该目录。
+PaddleOCR provides both C++ and Python inference samples. Both produce identical results.
+
+### C++ Version
+
+- Full engineering project, suitable for production integration
+- Includes model wrapper, argument parsing, inference pipeline, and build instructions
+- Default model path is resolved at compile time based on SOC (S100/S600), overridable via `--det_model_path` / `--rec_model_path`
+- See `runtime/cpp/README.md` for details
+
+### Python Version
+
+- Script-based, suitable for quick prototyping and algorithm validation
+- Default model path is resolved at runtime based on SOC (S100/S600), overridable via `--det-model-path` / `--rec-model-path`
+- Demonstrates model loading, inference, post-processing, and result saving
+- See `runtime/python/README.md` for details
 
 ---
 
-## 推理结果
+## Model Evaluation
 
-推理完成后，将在运行目录下生成 `result.jpg` 结果图像：
+The `evaluator/` directory provides model accuracy, performance, and numerical consistency checks. See the README there for details.
 
-- **左半部分**：原图上叠加检测到的文本框（绿色多边形轮廓），每个框对应一处检测到的文本区域
-- **右半部分**：白色画布上使用仿宋字体渲染的识别文字，每条文字位置与左侧对应检测框中心对齐
+---
 
-C++ 推理结果示例：
+## Inference Result
 
-![C++ result](test_data/cpp_result.jpg)
+After inference, `result.jpg` is generated in the working directory:
 
-Python 推理结果示例：
+- **Left half**: original image with detected text boxes overlaid (green polygon outlines), each box marks a detected text region
+- **Right half**: white canvas with recognised text rendered in FangSong font, each line's vertical position aligned with the corresponding detection box centre
 
-![Python result](test_data/python_result.jpg)
+C++ inference result example:
+
+![C++ result](test_data/cpp_demo.jpg)
+
+Python inference result example:
+
+![Python result](test_data/python_demo.jpg)
 
 ---
 
 ## License
 
-遵循 Model Zoo 顶层 License。
+Follows the top-level Model Zoo License.

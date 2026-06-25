@@ -1,22 +1,45 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-SOC=${1:-s100}
+# Resolve target SoC: explicit CLI arg wins, otherwise read /sys/class/boardinfo/soc_name.
+# Only s100 and s600 prebuilt HBM files are published; anything else (s100p,
+# (null), unknown) falls back to the S100 build.
+if [[ -n "${1:-}" ]]; then
+  SOC_RAW="$(echo "$1" | tr 'A-Z' 'a-z')"
+else
+  SOC_RAW=$(cat /sys/class/boardinfo/soc_name 2>/dev/null | tr 'A-Z' 'a-z' | tr -d '()' | xargs)
+fi
+SOC="${SOC_RAW:-s100}"
+case "$SOC" in
+  s600) MODEL_SOC="s600" ;;
+  *)    MODEL_SOC="s100" ;;
+esac
+
 VARIANT=${2:-all}
 
-if [ "${SOC}" != "s100" ]; then
-  echo "Unsupported SOC: ${SOC}"
-  echo "This sample provides the public S100 model artifacts."
-  exit 1
-fi
+echo "SOC           : $SOC"
+echo "Model variant : rdk_${MODEL_SOC}"
 
-MODEL_DIR="./s100"
-mkdir -p "${MODEL_DIR}"
+MODEL_BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${MODEL_SOC}/EfficientNet"
+# Unified install path: aligned with runtime/python/run.sh and the default
+# model_path resolved by EfficientNetConfig.
+OUTPUT_DIR="/opt/hobot/model/${MODEL_SOC}/basic"
+mkdir -p "${OUTPUT_DIR}"
+
+echo "Download dir  : ${OUTPUT_DIR}"
 
 download_one() {
   local model_file="$1"
-  wget -c -P "${MODEL_DIR}" \
-    "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/EfficientNet/${model_file}"
+  local output_path="${OUTPUT_DIR}/${model_file}"
+  local url="${MODEL_BASE_URL}/${model_file}"
+
+  if [[ -f "$output_path" ]]; then
+    echo "${model_file} already exists, skip download"
+    return
+  fi
+
+  echo "Downloading ${model_file} ..."
+  wget -c "$url" -O "$output_path"
 }
 
 case "${VARIANT}" in

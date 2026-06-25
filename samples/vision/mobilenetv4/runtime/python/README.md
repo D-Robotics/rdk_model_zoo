@@ -3,7 +3,8 @@ English | [简体中文](./README_cn.md)
 # MobileNetV4 Python Runtime
 
 This sample runs MobileNetV4 image classification with `hbm_runtime` and prints
-Top-K ImageNet predictions. It supports the S100 small and medium HBM models.
+Top-K ImageNet predictions. It supports the S100 / S600 small and medium HBM
+models, with the SoC auto-detected at runtime.
 
 ## Directory Structure
 
@@ -21,7 +22,7 @@ Top-K ImageNet predictions. It supports the S100 small and medium HBM models.
 | Parameter | Description | Default |
 | --- | --- | --- |
 | `--model-variant` | Model variant: `small` or `medium` | `small` |
-| `--model-path` | HBM model path. Empty value resolves to the sample-local model for `--model-variant` | `small`: `../../model/s100/mobilenetv4_small_224x224_nv12.hbm` |
+| `--model-path` | HBM model path. Empty value resolves to the sample-local model for `--model-variant` | `small`: `../../model/<soc>/mobilenetv4_small_224x224_nv12.hbm` |
 | `--test-img` | Input image path | `../../test_data/zebra_cls.jpg` |
 | `--label-file` | ImageNet label file | `../../test_data/imagenet_classes.names` |
 | `--top-k` | Number of classification results to print | `5` |
@@ -43,14 +44,16 @@ bash run.sh medium
 ```
 
 The script downloads models through `../../model/download_model.sh` and uses the
-sample-local `../../model/s100/` directory.
+sample-local `../../model/<soc>/` directory (`<soc>` ∈ {`s100`, `s600`}).
 
 ## Direct Run
+
+Substitute `<soc>` with `s100` or `s600`:
 
 ```bash
 python3 main.py \
   --model-variant small \
-  --model-path ../../model/s100/mobilenetv4_small_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_small_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -59,7 +62,7 @@ python3 main.py \
 ```bash
 python3 main.py \
   --model-variant medium \
-  --model-path ../../model/s100/mobilenetv4_medium_256x256_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_medium_256x256_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5

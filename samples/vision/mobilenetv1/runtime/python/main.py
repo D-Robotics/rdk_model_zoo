@@ -31,12 +31,28 @@ import utils.py_utils.visualize as visualize
 from mobilenetv1 import MobileNetV1Config, MobileNetV1
 
 
+def _resolve_model_soc() -> str:
+    """Map the runtime SoC name to the published HBM variant directory.
+
+    The MobileNet samples publish ``rdk_s100/MobileNet/`` and
+    ``rdk_s600/MobileNet/``. Any other SoC (s100p, (null), unknown) falls
+    back to the S100 build.
+    """
+    try:
+        with open("/sys/class/boardinfo/soc_name", "r") as f:
+            soc = f.read().strip().lower().strip("()").strip()
+    except Exception:
+        soc = ""
+    return "s600" if soc == "s600" else "s100"
+
+
 def main() -> None:
     """Run a MobileNetV1 image classification demo."""
+    model_soc = _resolve_model_soc()
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model-path', type=str,
-                        default='../../model/s100/mobilenetv1_224x224_nv12.hbm',
+                        default=f'../../model/{model_soc}/mobilenetv1_224x224_nv12.hbm',
                         help='Path to the BPU-compiled .hbm model file.')
     parser.add_argument('--priority', type=int, default=0,
                         help="Model priority (0~255). 0 is lowest, 255 is highest.")

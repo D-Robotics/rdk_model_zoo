@@ -68,6 +68,10 @@ The runtime sample downloads published HBM artifacts, so rebuilding is only requ
 
 All variants use NV12 runtime input, RGB training input, NCHW training layout, mean `127 127 127`, scale `0.007843 0.007843 0.007843`, and `nash-e` march.
 
+> **Note on S600 builds**: The S600 publish under ``rdk_s600/EfficientNet/``
+> is produced from the same source ONNX with the same quantization
+> configuration — only ``march`` is changed to ``nash-p``.
+
 ## OE Toolchain
 
 Run model conversion on an x86 Linux host with the RDK S100 OpenExplore environment. Model conversion is not intended to run on the board.
@@ -75,7 +79,8 @@ Run model conversion on an x86 Linux host with the RDK S100 OpenExplore environm
 - OE resource entry point (Docker + OE development package): <https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>
 - OE toolchain online manual: <https://toolchain.d-robotics.cc/>
 
-Download the OpenExplore CPU Docker image for RDK S100/S100P from the OE resource entry point, then load the actual image file:
+Download the OpenExplore CPU Docker image for the target RDK platform from
+the OE resource entry point, then load the actual image file:
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
@@ -92,3 +97,7 @@ sudo docker run -it --rm \
   --workdir /workspace \
   <docker-image-name> /bin/bash
 ```
+
+> To compile for S600, change ``march`` from ``nash-e`` to ``nash-p`` in the
+> YAML config before running ``hb_compile``, or pass ``--march nash-p`` on
+> the command line.

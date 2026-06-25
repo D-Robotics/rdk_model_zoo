@@ -20,17 +20,18 @@
  *        PaddleOCR text detection and recognition models.
  *
  * This file provides structured C++ interfaces encapsulating the complete
- * two-stage OCR inference workflow on D-Robotics S100 platforms:
+ * two-stage OCR inference workflow on D-Robotics platforms:
  *
- *  - @ref PaddleOCRDet  — DB-algorithm text detection (NV12 input, int16 output)
+ *  - @ref PaddleOCRDet  — DB-algorithm text detection (NV12 input, float32 output)
  *  - @ref PaddleOCRRec  — CRNN text recognition (F32 NCHW input, CTC F32 output)
  *
  * Free functions for preprocessing, inference, and postprocessing are declared
  * alongside the class wrappers so that they can be used independently or
  * composed into custom pipelines.
  *
- * @note This sample only supports RDK S100 platform.
- *       RDK S600 is NOT supported; the models were compiled for S100 BPU.
+ * @note Default models are PP-OCRv6 with SOC-aware paths. RDK S100, S100P (via
+ *       the S100 build) and S600 are supported; pass an explicit
+ *       ``--det_model_path`` / ``--rec_model_path`` to override.
  *
  * @see paddle_ocr.cpp
  */
@@ -51,21 +52,17 @@
 
 /**
  * @brief Configuration parameters for the PaddleOCR text detection pipeline.
- *
- * @note This model only supports RDK S100 platform.
  */
 struct PaddleOCRDetConfig
 {
     float ratio_prime{2.7f};   ///< Contour dilation ratio (D' = area * ratio_prime / perimeter)
-    float threshold{0.5f};     ///< Binarization threshold for the int16 prediction map
+    float threshold{0.5f};     ///< Binarization threshold for the prediction map (float domain)
 };
 
 /**
  * @brief Configuration parameters for the PaddleOCR text recognition pipeline.
  *
  * No model-specific hyperparameters are required beyond the model path.
- *
- * @note This model only supports RDK S100 platform.
  */
 struct PaddleOCRRecConfig
 {
@@ -104,13 +101,13 @@ struct TextDetResult
  * Typical usage:
  * @code
  *   PaddleOCRDet det;
- *   det.init("/opt/hobot/model/s100/basic/cn_PP-OCRv3_det_infer-deploy_640x640_nv12.hbm");
+ *   det.init("/opt/hobot/model/s100/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm");
  *   pre_process_det(det.input_tensors, img, det.input_w, det.input_h);
  *   infer(det.output_tensors, det.input_tensors, det.dnn_handle);
  *   TextDetResult result = post_process_det(det.output_tensors, img, threshold, ratio_prime);
  * @endcode
  *
- * @note This model only supports RDK S100 platform. Not thread-safe.
+ * @note Not thread-safe.
  */
 class PaddleOCRDet
 {
@@ -140,7 +137,7 @@ public:
      *   (dimensionSize[1] = H, dimensionSize[2] = W)
      * - Allocating input/output tensor memory buffers
      *
-     * @param[in] model_path Path to the quantized *.hbm detection model file (S100 only).
+     * @param[in] model_path Path to the quantized *.hbm detection model file.
      * @retval 0        Success.
      * @retval non-zero DNN or UCP API error.
      */
@@ -177,13 +174,13 @@ private:
  * Typical usage:
  * @code
  *   PaddleOCRRec rec;
- *   rec.init("/opt/hobot/model/s100/basic/cn_PP-OCRv3_rec_infer-deploy_48x320_rgb.hbm");
+ *   rec.init("/opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm");
  *   pre_process_rec(rec.input_tensors, crop, rec.input_w, rec.input_h);
  *   infer(rec.output_tensors, rec.input_tensors, rec.dnn_handle);
  *   auto text = post_process_rec(rec.output_tensors, id2token, rec.seq_len, rec.num_classes);
  * @endcode
  *
- * @note This model only supports RDK S100 platform. Not thread-safe.
+ * @note Not thread-safe.
  */
 class PaddleOCRRec
 {
@@ -217,7 +214,7 @@ public:
      *   size (dimensionSize[2])
      * - Allocating input/output tensor memory buffers
      *
-     * @param[in] model_path Path to the quantized *.hbm recognition model file (S100 only).
+     * @param[in] model_path Path to the quantized *.hbm recognition model file.
      * @retval 0        Success.
      * @retval non-zero DNN or UCP API error.
      */
@@ -287,8 +284,8 @@ int32_t infer(std::vector<hbDNNTensor>& output_tensors,
  * @brief Postprocess detection output tensors into cropped regions and polygon boxes.
  *
  * Steps:
- * 1. Threshold the int16 prediction map at ``static_cast<int16_t>(threshold)``
- *    and resize to the original image dimensions (binary mask).
+ * 1. Threshold the float prediction map at @p threshold and resize to the
+ *    original image dimensions (binary mask).
  * 2. Find external contours on the binary mask.
  * 3. Dilate polygons using ClipperLib offset with @p ratio_prime.
  * 4. Convert dilated polygons to minimum-area bounding boxes (min_area = 100).
@@ -296,7 +293,7 @@ int32_t infer(std::vector<hbDNNTensor>& output_tensors,
  *
  * @param[in] output_tensors  Detection model output tensors.
  * @param[in] image           Original BGR image used for cropping.
- * @param[in] threshold       Float binarization threshold (cast to int16 internally).
+ * @param[in] threshold       Binarization threshold in the float domain.
  * @param[in] ratio_prime     Contour dilation scale factor.
  * @return TextDetResult containing crops and boxes, index-aligned.
  */
@@ -312,8 +309,11 @@ TextDetResult post_process_det(std::vector<hbDNNTensor>& output_tensors,
  * 1. BGR -> RGB
  * 2. Resize to ``(input_w, input_h)`` using INTER_AREA
  * 3. Convert to float32 in [0, 1]
- * 4. Per-channel ImageNet normalization (mean 0.485/0.456/0.406, std 0.229/0.224/0.225)
- * 5. Write CHW layout into recognition model input tensor
+ * 4. Write CHW layout into recognition model input tensor
+ *
+ * @note The recognition model is exported with NORM_TYPE="no_preprocess" and
+ *       was calibrated on raw [0, 1] crops — do NOT apply ImageNet mean/std
+ *       normalization here.
  *
  * @param[in,out] input_tensors  Recognition model input tensors (one: float32 NCHW).
  * @param[in]     img            Cropped text region in BGR format.

@@ -2,14 +2,20 @@ English | [简体中文](./README_cn.md)
 
 # Model Conversion
 
-The Model Zoo provides a pre-compiled S100 HBM model for MobileNetV1. Users who
-only need runtime inference can download the model from `../model/`.
+The Model Zoo provides pre-compiled HBM models for MobileNetV1 on RDK S100
+and RDK S600. Users who only need runtime inference can download the model
+from `../model/`.
+
+> The notes below describe the **S100** conversion path (`march: "nash-e"`).
+> The S600 build is produced from the same source ONNX with the same
+> quantization configuration; only `march` is changed to `nash-p` and the
+> output is uploaded under `rdk_s600/MobileNet/` on the archive.
 
 ## Published Artifact
 
-| File | Input | Runtime |
-| --- | --- | --- |
-| `mobilenetv1_224x224_nv12.hbm` | 224x224 NV12 (Y + UV) | `hbm_runtime` |
+| File | Platform | Input | Runtime |
+| --- | --- | --- | --- |
+| `mobilenetv1_224x224_nv12.hbm` | S100 / S600 | 224x224 NV12 (Y + UV) | `hbm_runtime` |
 
 ## Regeneration Notes
 

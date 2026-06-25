@@ -21,6 +21,11 @@ This module provides a lightweight EfficientNet-Lite inference wrapper built on
 HB_HBMRuntime. It defines model configuration and implements the complete
 classification pipeline, including preprocessing, inference, and Top-K
 postprocessing utilities.
+
+Model paths are auto-resolved per SoC: S600 uses its own published HBM build
+at ``/opt/hobot/model/s600/basic/``; everything else (S100, S100P, etc.)
+defaults to ``/opt/hobot/model/s100/basic/``.  Callers can override by passing
+an explicit ``model_path``.
 """
 
 import os
@@ -35,17 +40,44 @@ import utils.py_utils.preprocess as pre_utils
 import utils.py_utils.visualize as visualize
 
 
+def _resolve_model_soc() -> str:
+    """Map the runtime SoC name to the published HBM variant directory.
+
+    The EfficientNet sample publishes ``rdk_s100/EfficientNet/`` and
+    ``rdk_s600/EfficientNet/``. Any other SoC (S100P, (null), unknown)
+    falls back to the S100 build.
+
+    Returns:
+        ``"s600"`` when running on an S600 board, ``"s100"`` otherwise.
+    """
+    try:
+        with open("/sys/class/boardinfo/soc_name", "r") as f:
+            soc = f.read().strip().lower().strip("()").strip()
+    except Exception:
+        soc = ""
+    return "s600" if soc == "s600" else "s100"
+
+
 @dataclass
 class EfficientNetConfig:
     """Configuration for initializing an EfficientNet-Lite model.
 
+    The default ``model_path`` is resolved at import time based on the
+    board's SoC (see :func:`_resolve_model_soc`), so callers that are
+    satisfied with the published build can simply write::
+
+        config = EfficientNetConfig()
+        model = EfficientNet(config)
+
     Attributes:
         model_path: Path to the compiled EfficientNet `.hbm` model.
+            Defaults to ``/opt/hobot/model/<soc>/basic/efficientnet_lite0_224x224_nv12.hbm``
+            where ``<soc>`` is auto-detected.
         resize_type: Image resize mode used during preprocessing.
             - 0: Stretch resize.
             - 1: Keep aspect ratio with padding.
     """
-    model_path: str = "../../model/s100/efficientnet_lite0_224x224_nv12.hbm"
+    model_path: str = f"/opt/hobot/model/{_resolve_model_soc()}/basic/efficientnet_lite0_224x224_nv12.hbm"
     resize_type: int = 1
 
 

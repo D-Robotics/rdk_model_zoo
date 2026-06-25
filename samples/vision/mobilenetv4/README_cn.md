@@ -2,7 +2,7 @@
 
 # MobileNetV4 模型说明
 
-MobileNetV4 是 RDK S100 Model Zoo 的 ImageNet 分类 sample。本目录提供基于
+MobileNetV4 是 RDK Model Zoo 的 ImageNet 分类 sample，通过 SOC 自适应下载同时支持 S100 与 S600 平台。本目录提供基于
 `hbm_runtime` 的标准 Python runtime、sample 内模型下载、保留的转换资产以及
 验证说明。
 
@@ -75,12 +75,12 @@ bash run.sh
 bash run.sh medium
 ```
 
-直接入口：
+直接入口（把 `<soc>` 替换为 `s100` 或 `s600`）：
 
 ```bash
 python3 main.py \
   --model-variant small \
-  --model-path ../../model/s100/mobilenetv4_small_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_small_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -104,8 +104,10 @@ Top-5 Classification Results:
 
 | 版本 | 输入 | 运行模型 |
 | --- | --- | --- |
-| Small | 224x224 NV12 | `model/s100/mobilenetv4_small_224x224_nv12.hbm` |
-| Medium | 256x256 NV12 | `model/s100/mobilenetv4_medium_256x256_nv12.hbm` |
+| Small | 224x224 NV12 | `model/<soc>/mobilenetv4_small_224x224_nv12.hbm` |
+| Medium | 256x256 NV12 | `model/<soc>/mobilenetv4_medium_256x256_nv12.hbm` |
+
+`<soc>` 取 `s100` 或 `s600`，根据 `/sys/class/boardinfo/soc_name` 自动决定。
 
 ## 模型评估
 

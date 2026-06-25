@@ -2,14 +2,18 @@
 
 # 模型转换
 
-Model Zoo 已提供 MobileNetV1 的 S100 HBM 模型。只需要运行推理的用户可以
+Model Zoo 已提供 MobileNetV1 的 S100 与 S600 HBM 模型。只需要运行推理的用户可以
 直接在 `../model/` 目录下载模型。
+
+> 下文记录的是 **S100** 转换流程（`march: "nash-e"`）。
+> S600 版本基于同一份源 ONNX、同一套量化配置，只需把 `march` 改成 `nash-p` 即可，
+> 产物会被上传到 archive 的 `rdk_s600/MobileNet/` 路径下。
 
 ## 已发布产物
 
-| 文件 | 输入 | 运行时 |
-| --- | --- | --- |
-| `mobilenetv1_224x224_nv12.hbm` | 224x224 NV12 (Y + UV) | `hbm_runtime` |
+| 文件 | 平台 | 输入 | 运行时 |
+| --- | --- | --- | --- |
+| `mobilenetv1_224x224_nv12.hbm` | S100 / S600 | 224x224 NV12 (Y + UV) | `hbm_runtime` |
 
 ## 重新生成说明
 

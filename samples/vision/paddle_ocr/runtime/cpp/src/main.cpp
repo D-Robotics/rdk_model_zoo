@@ -27,13 +27,14 @@
  *   2) Recognition: for each crop: preprocess (BGR->RGB->F32) -> infer -> CTC decode
  *   3) Visualization: draw polygon boxes + render recognized text with FreeType font
  *
- * Results are saved to disk as a side-by-side image.
- *
- * @note This sample only supports RDK S100 platform.
+ * Results are saved to disk as a side-by-side image. The default model paths
+ * are SOC-aware (resolved at compile time from -DSOC_S100 / -DSOC_S600;
+ * S100P and unknown SoCs fall back to the S100 build).
  *
  * @see paddle_ocr.hpp
  */
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -47,19 +48,38 @@
 #include "file_io.hpp"
 
 // ---------------------------------------------------------------------------
+// SOC-aware default model paths
+//
+// The CMakeLists.txt defines one of:
+//   -DSOC_S100 / -DSOC_S100P / -DSOC_S600
+// based on /sys/class/boardinfo/soc_name. Only S100 and S600 have published
+// PP-OCRv6 model variants; S100P / unknown fall back to the S100 build.
+// ---------------------------------------------------------------------------
+#if defined(SOC_S600)
+#  define PADDLE_OCR_MODEL_SOC "s600"
+#else
+#  define PADDLE_OCR_MODEL_SOC "s100"
+#endif
+
+#define PADDLE_OCR_DEFAULT_DET_MODEL \
+    "/opt/hobot/model/" PADDLE_OCR_MODEL_SOC "/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm"
+#define PADDLE_OCR_DEFAULT_REC_MODEL \
+    "/opt/hobot/model/" PADDLE_OCR_MODEL_SOC "/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm"
+
+// ---------------------------------------------------------------------------
 // Command-line flags
 // ---------------------------------------------------------------------------
 DEFINE_string(det_model_path,
-              "/opt/hobot/model/s100/basic/cn_PP-OCRv3_det_infer-deploy_640x640_nv12.hbm",
-              "Path to BPU quantized text detection model (*.hbm). S100 only.");
+              PADDLE_OCR_DEFAULT_DET_MODEL,
+              "Path to BPU quantized text detection model (*.hbm).");
 DEFINE_string(rec_model_path,
-              "/opt/hobot/model/s100/basic/cn_PP-OCRv3_rec_infer-deploy_48x320_rgb.hbm",
-              "Path to BPU quantized text recognition model (*.hbm). S100 only.");
+              PADDLE_OCR_DEFAULT_REC_MODEL,
+              "Path to BPU quantized text recognition model (*.hbm).");
 DEFINE_string(test_image,
               "../../../test_data/gt_2322.jpg",
               "Path to the test input image.");
 DEFINE_string(label_file,
-              "../../../test_data/ppocr_keys_v1.txt",
+              "../../../test_data/ppocrv6_dict.txt",
               "Path to the character vocabulary file (one token per line).");
 DEFINE_double(threshold,
               0.5,
@@ -138,9 +158,30 @@ int main(int argc, char** argv)
         return ret;
     }
 
-    // Load dictionary and prepend CTC blank at index 0
-    std::vector<std::string> id2token = load_linewise_labels(FLAGS_label_file);
+    // Load dictionary and prepend CTC blank at index 0.
+    // NOTE: PaddleOCR vocab files (ppocr_keys_v1.txt, ppocrv6_dict.txt, …)
+    // contain single-character lines that are exactly '{', '}' or ','. The
+    // generic load_linewise_labels() strips these characters as if they were
+    // dict delimiters and then skips the resulting empty line, which silently
+    // shifts every subsequent character id and produces garbled CTC decodes.
+    // Read the file verbatim (one line == one token) here.
+    std::vector<std::string> id2token;
+    {
+        std::ifstream label_ifs(FLAGS_label_file);
+        if (!label_ifs.is_open()) {
+            fprintf(stderr, "Failed to open label file: %s\n",
+                    FLAGS_label_file.c_str());
+            return -1;
+        }
+        std::string line;
+        while (std::getline(label_ifs, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            id2token.push_back(line);
+        }
+    }
     id2token.insert(id2token.begin(), "blank");
+    // Append trailing space to match model output class count (blank + dict + space).
+    id2token.push_back(" ");
 
     std::vector<std::string> recognized_texts;
     recognized_texts.reserve(cropped_images.size());

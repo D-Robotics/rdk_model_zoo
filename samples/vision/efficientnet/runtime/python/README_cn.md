@@ -6,7 +6,7 @@ Python runtime 包含一个命令行入口和一个可复用 wrapper：
 
 - `main.py`：参数解析、图片和标签读取、配置构造、调用 `predict()`、打印结果。
 - `efficientnet.py`：基于 `hbm_runtime` 的 `EfficientNetConfig` 和 `EfficientNet` wrapper。
-- `run.sh`：默认运行命令，推理前会下载 sample 内 Lite0 模型。
+- `run.sh`：默认运行命令，自动检测目标 SoC、下载对应模型并执行推理。
 
 ## 目录结构
 
@@ -21,7 +21,7 @@ runtime/python/
 
 ## 环境说明
 
-请在包含 `hbm_runtime`、`numpy` 和 OpenCV 的 RDK S100 Python 环境中运行。本示例复用 `utils/py_utils` 中的公共工具。
+请在包含 `hbm_runtime`、`numpy` 和 OpenCV 的 RDK Python 环境中运行。本示例复用 `utils/py_utils` 中的公共工具。
 
 ## 运行
 
@@ -31,9 +31,21 @@ bash run.sh
 
 ## 直接运行入口
 
+S100 设备：
+
 ```bash
 python3 main.py \
-  --model-path ../../model/s100/efficientnet_lite0_224x224_nv12.hbm \
+  --model-path /opt/hobot/model/s100/basic/efficientnet_lite0_224x224_nv12.hbm \
+  --test-img ../../test_data/Scottish_deerhound.JPEG \
+  --label-file ../../test_data/imagenet_classes.names \
+  --top-k 5
+```
+
+S600 设备：
+
+```bash
+python3 main.py \
+  --model-path /opt/hobot/model/s600/basic/efficientnet_lite0_224x224_nv12.hbm \
   --test-img ../../test_data/Scottish_deerhound.JPEG \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -43,7 +55,7 @@ python3 main.py \
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `--model-path` | `../../model/s100/efficientnet_lite0_224x224_nv12.hbm` | 编译后的 HBM 模型路径。 |
+| `--model-path` | 根据 SoC 自动适配（默认 Lite0） | 编译后的 HBM 模型路径。 |
 | `--test-img` | `../../test_data/Scottish_deerhound.JPEG` | 输入图片路径。 |
 | `--label-file` | `../../test_data/imagenet_classes.names` | ImageNet 标签文件。 |
 | `--top-k` | `5` | 打印的分类结果数量。 |

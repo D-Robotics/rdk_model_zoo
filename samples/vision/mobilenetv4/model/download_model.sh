@@ -1,16 +1,25 @@
 #!/bin/bash
 set -e
 
-SOC="${1:-s100}"
-
-if [[ "$SOC" != "s100" ]]; then
-  echo "Only S100 MobileNetV4 HBM files are available in the public archive."
-  echo "Requested SoC: $SOC"
-  exit 1
+# Resolve target SoC: explicit CLI arg wins, otherwise read /sys/class/boardinfo/soc_name.
+# Only s100 and s600 prebuilt HBM files are published; anything else (s100p,
+# (null), unknown) falls back to the S100 build.
+if [[ -n "${1:-}" ]]; then
+  SOC_RAW="$(echo "$1" | tr 'A-Z' 'a-z')"
+else
+  SOC_RAW=$(cat /sys/class/boardinfo/soc_name 2>/dev/null | tr 'A-Z' 'a-z' | tr -d '()' | xargs)
 fi
+SOC="${SOC_RAW:-s100}"
+case "$SOC" in
+  s600) MODEL_SOC="s600" ;;
+  *)    MODEL_SOC="s100" ;;
+esac
 
-MODEL_URL_BASE="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet"
-MODEL_DIR="./s100"
+echo "SOC           : $SOC"
+echo "Model variant : rdk_${MODEL_SOC}"
+
+MODEL_URL_BASE="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${MODEL_SOC}/MobileNet"
+MODEL_DIR="$(dirname "$0")/${MODEL_SOC}"
 
 mkdir -p "$MODEL_DIR"
 

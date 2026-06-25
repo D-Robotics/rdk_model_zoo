@@ -65,6 +65,11 @@ cd samples/vision/efficientnet/model
 bash download_model.sh s100 lite0
 ```
 
+On S600:
+```bash
+bash download_model.sh s600 lite0
+```
+
 Run the Python sample:
 
 ```bash
@@ -76,7 +81,16 @@ Run the entry script directly:
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s100/efficientnet_lite0_224x224_nv12.hbm \
+  --model-path /opt/hobot/model/s100/basic/efficientnet_lite0_224x224_nv12.hbm \
+  --test-img ../../test_data/Scottish_deerhound.JPEG \
+  --label-file ../../test_data/imagenet_classes.names \
+  --top-k 5
+```
+
+On S600:
+```bash
+python3 main.py \
+  --model-path /opt/hobot/model/s600/basic/efficientnet_lite0_224x224_nv12.hbm \
   --test-img ../../test_data/Scottish_deerhound.JPEG \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -91,15 +105,15 @@ python3 main.py \
 
 This sample currently maintains the Python runtime path. See [runtime/python/README.md](./runtime/python/README.md) for details.
 
-| Variant | Input | Runtime input type | Download path |
-| --- | --- | --- | --- |
-| EfficientNet-Lite0 | 224x224 | NV12 Y/UV planes | `model/s100/efficientnet_lite0_224x224_nv12.hbm` |
-| EfficientNet-Lite1 | 240x240 | NV12 Y/UV planes | `model/s100/efficientnet_lite1_240x240_nv12.hbm` |
-| EfficientNet-Lite2 | 260x260 | NV12 Y/UV planes | `model/s100/efficientnet_lite2_260x260_nv12.hbm` |
-| EfficientNet-Lite3 | 300x300 | NV12 Y/UV planes | `model/s100/efficientnet_lite3_300x300_nv12.hbm` |
-| EfficientNet-Lite4 | 380x380 | NV12 Y/UV planes | `model/s100/efficientnet_lite4_380x380_nv12.hbm` |
+| Variant | Input | Runtime input type | S100 download path | S600 download path |
+| --- | --- | --- | --- | --- |
+| EfficientNet-Lite0 | 224x224 | NV12 Y/UV planes | `model/s100/efficientnet_lite0_224x224_nv12.hbm` | `model/s600/efficientnet_lite0_224x224_nv12.hbm` |
+| EfficientNet-Lite1 | 240x240 | NV12 Y/UV planes | `model/s100/efficientnet_lite1_240x240_nv12.hbm` | `model/s600/efficientnet_lite1_240x240_nv12.hbm` |
+| EfficientNet-Lite2 | 260x260 | NV12 Y/UV planes | `model/s100/efficientnet_lite2_260x260_nv12.hbm` | `model/s600/efficientnet_lite2_260x260_nv12.hbm` |
+| EfficientNet-Lite3 | 300x300 | NV12 Y/UV planes | `model/s100/efficientnet_lite3_300x300_nv12.hbm` | `model/s600/efficientnet_lite3_300x300_nv12.hbm` |
+| EfficientNet-Lite4 | 380x380 | NV12 Y/UV planes | `model/s100/efficientnet_lite4_380x380_nv12.hbm` | `model/s600/efficientnet_lite4_380x380_nv12.hbm` |
 
-This sample uses public S100 HBM models downloaded into the sample-local `model/s100` directory.
+This sample uses public S100 / S600 HBM models downloaded into the sample-local `model/<soc>` directory. The `run.sh` script auto-detects the device SoC and downloads the matching variant.
 
 ## Model Evaluation
 

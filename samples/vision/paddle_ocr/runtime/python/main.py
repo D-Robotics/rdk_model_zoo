@@ -18,9 +18,17 @@ This script runs a two-stage OCR pipeline on a single input image using
 BPU-quantized PaddleOCR models (.hbm) and saves a side-by-side result image
 showing detected text boxes on the left and recognized text on the right.
 
+The default models are PP-OCRv6, with the model variant selected automatically
+from the SoC name read from ``/sys/class/boardinfo/soc_name``:
+
+    - RDK S100  -> rdk_s100/paddle_ocr/...
+    - RDK S100P -> rdk_s100/paddle_ocr/...   (reuses the S100 build)
+    - RDK S600  -> rdk_s600/paddle_ocr/...
+    - unknown   -> rdk_s100/paddle_ocr/...   (fallback)
+
 Workflow:
     1) Parse CLI arguments.
-    2) Check platform compatibility (S100 only).
+    2) Resolve the model variant from the current SoC.
     3) Download detection and recognition models if missing.
     4) Load character list from label file (prepend blank token).
     5) Initialize PaddleOCRDet and run detection pipeline.
@@ -29,16 +37,13 @@ Workflow:
     8) Save result to disk.
 
 Notes:
-    - This sample only supports RDK S100 platform.
-    - If running on RDK S600, inference will not produce correct results.
-      Please refer to README.md for platform compatibility details.
     - The project root is appended to sys.path to import shared utilities
       under ``utils/py_utils/``.
 
 Example:
     python3 main.py \\
         --test-img ../../test_data/gt_2322.jpg \\
-        --label-file ../../test_data/ppocr_keys_v1.txt \\
+        --label-file ../../test_data/ppocrv6_dict.txt \\
         --img-save-path result.jpg
 """
 
@@ -59,41 +64,58 @@ import utils.py_utils.visualize as vis_utils
 from paddle_ocr import PaddleOCRDet, PaddleOCRDetConfig, PaddleOCRRec, PaddleOCRRecConfig
 
 
-SUPPORTED_SOC = "s100"
-DET_MODEL_URL = ("https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/"
-                 "paddle_ocr/cn_PP-OCRv3_det_infer-deploy_640x640_nv12.hbm")
-REC_MODEL_URL = ("https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/"
-                 "paddle_ocr/cn_PP-OCRv3_rec_infer-deploy_48x320_rgb.hbm")
+def _resolve_model_soc() -> str:
+    """Map the runtime SoC name to the PP-OCRv6 model variant directory.
+
+    PP-OCRv6 is published under ``rdk_s100/paddle_ocr/`` and
+    ``rdk_s600/paddle_ocr/``. S100P boards reuse the S100 build, and any
+    unknown / unreadable SoC name falls back to S100.
+
+    Returns:
+        ``"s100"`` or ``"s600"``.
+    """
+    soc = inspect.get_soc_name().lower().strip("()").strip()
+    if soc == "s600":
+        return "s600"
+    return "s100"
 
 
 def main() -> None:
     """Run the PaddleOCR detection + recognition pipeline on a single image.
 
-    This function parses command-line arguments, validates platform
-    compatibility, downloads missing models, runs the two-stage OCR pipeline,
+    This function parses command-line arguments, resolves the SoC-specific
+    model variant, downloads missing models, runs the two-stage OCR pipeline,
     visualizes the results, and saves the output image.
 
     Returns:
         None
     """
-    soc = inspect.get_soc_name().lower()
+    model_soc = _resolve_model_soc()
+    det_model_url = (
+        "https://archive.d-robotics.cc/downloads/rdk_model_zoo/"
+        f"rdk_{model_soc}/paddle_ocr/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm"
+    )
+    rec_model_url = (
+        "https://archive.d-robotics.cc/downloads/rdk_model_zoo/"
+        f"rdk_{model_soc}/paddle_ocr/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm"
+    )
 
     parser = argparse.ArgumentParser(
-        description="PaddleOCR text detection and recognition demo (S100 only).")
+        description="PaddleOCR text detection and recognition demo (PP-OCRv6).")
 
     parser.add_argument('--det-model-path', type=str,
-                        default='/opt/hobot/model/s100/basic/cn_PP-OCRv3_det_infer-deploy_640x640_nv12.hbm',
-                        help='Path to BPU quantized detection model (*.hbm). S100 only.')
+                        default=f'/opt/hobot/model/{model_soc}/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm',
+                        help='Path to BPU quantized detection model (*.hbm).')
     parser.add_argument('--rec-model-path', type=str,
-                        default='/opt/hobot/model/s100/basic/cn_PP-OCRv3_rec_infer-deploy_48x320_rgb.hbm',
-                        help='Path to BPU quantized recognition model (*.hbm). S100 only.')
+                        default=f'/opt/hobot/model/{model_soc}/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm',
+                        help='Path to BPU quantized recognition model (*.hbm).')
     parser.add_argument('--priority', type=int, default=0,
                         help='Model scheduling priority (0~255). 0 is lowest, 255 is highest.')
     parser.add_argument('--bpu-cores', nargs='+', type=int, default=[0],
                         help='List of BPU core indexes to run inference, e.g., --bpu-cores 0 1.')
     parser.add_argument('--test-img', type=str, default='../../test_data/gt_2322.jpg',
                         help='Path to the test input image.')
-    parser.add_argument('--label-file', type=str, default='../../test_data/ppocr_keys_v1.txt',
+    parser.add_argument('--label-file', type=str, default='../../test_data/ppocrv6_dict.txt',
                         help='Path to the character vocabulary file (one token per line).')
     parser.add_argument('--img-save-path', type=str, default='result.jpg',
                         help='Path to save the final result image.')
@@ -104,20 +126,16 @@ def main() -> None:
 
     opt = parser.parse_args()
 
-    # Platform compatibility check: PaddleOCR only supports S100
-    if soc != SUPPORTED_SOC:
-        print(f"[WARNING] Current platform: {soc}. PaddleOCR only supports RDK S100 (s100).")
-        print(f"[WARNING] The model was compiled for S100 BPU.")
-        print(f"[WARNING] Inference results on {soc} may be incorrect or fail.")
-        print(f"[WARNING] Please refer to README.md for platform compatibility details.")
+    # Download models if missing
+    file_io.download_model_if_needed(opt.det_model_path, det_model_url)
+    file_io.download_model_if_needed(opt.rec_model_path, rec_model_url)
 
-    # Download models if missing (S100 only)
-    file_io.download_model_if_needed(opt.det_model_path, DET_MODEL_URL)
-    file_io.download_model_if_needed(opt.rec_model_path, REC_MODEL_URL)
-
-    # Build character list: read label file line by line, prepend blank token
+    # Build character list: read label file line by line, prepend blank token.
+    # PaddleOCR vocab layout is [blank, *dict, ' ']; append trailing space to
+    # match the model output class count (e.g. 18710 = 1 blank + 18708 dict + 1 space).
     with open(opt.label_file, 'r', encoding='utf-8') as f:
         char_list = ['blank'] + [line.rstrip('\n') for line in f]
+    char_list.append(' ')
 
     # --- Detection stage ---------------------------------------------------
     det_config = PaddleOCRDetConfig(

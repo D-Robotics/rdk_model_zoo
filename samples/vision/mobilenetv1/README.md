@@ -45,15 +45,16 @@ cd runtime/python
 bash run.sh
 ```
 
-The script downloads the published S100 HBM model to `model/s100/` and runs
-classification on `test_data/zebra_cls.jpg`.
+The script auto-detects the current SoC and downloads the matching HBM model
+(S100 or S600) to `model/<soc>/`, then runs classification on
+`test_data/zebra_cls.jpg`.
 
-For direct execution:
+For direct execution (substitute `<soc>` with `s100` or `s600`):
 
 ```bash
 cd runtime/python
 python3 main.py \
-  --model-path ../../model/s100/mobilenetv1_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv1_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names
 ```
@@ -69,10 +70,10 @@ This sample currently maintains the Python runtime path. See [runtime/python/REA
 
 | Model | Task | Input | Classes | Published HBM |
 | --- | --- | --- | --- | --- |
-| MobileNetV1 | Image classification | 224x224 NV12 (Y + UV) | ImageNet 1000 | S100 |
+| MobileNetV1 | Image classification | 224x224 NV12 (Y + UV) | ImageNet 1000 | S100 / S600 |
 
-This sample uses the public S100 HBM model downloaded into the sample-local
-`model/s100/` directory.
+This sample uses the public HBM model downloaded into the sample-local
+`model/<soc>/` directory based on the detected platform.
 
 ## Model Evaluation
 

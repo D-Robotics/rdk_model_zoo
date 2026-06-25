@@ -12,10 +12,12 @@ and postprocessing logic from `runtime/python/mobilenetv1.py`.
 ```bash
 cd ../runtime/python
 python3 main.py \
-  --model-path ../../model/s100/mobilenetv1_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv1_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names
 ```
+
+`<soc>` is `s100` (default) or `s600`, matching the published HBM variant.
 
 Pass criteria:
 

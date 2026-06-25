@@ -6,10 +6,17 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Set device model macro definition
+# Set device model macro definition; tolerate (null) on S100 (UCP returns it
+# when boardinfo is not provisioned).
 file(READ "/sys/class/boardinfo/soc_name" SOC_NAME_RAW)
-string(TOUPPER "${SOC_NAME_RAW}" SOC_NAME_UPPER)
-add_definitions(-DSOC_${SOC_NAME_UPPER})
+string(STRIP "${SOC_NAME_RAW}" SOC_NAME_STRIPPED)
+string(TOUPPER "${SOC_NAME_STRIPPED}" SOC_NAME_UPPER)
+if(SOC_NAME_UPPER STREQUAL "(NULL)")
+    set(SOC_NAME_UPPER "")
+endif()
+if(SOC_NAME_UPPER)
+    add_definitions(-DSOC_${SOC_NAME_UPPER})
+endif()
 
 # Include directories for header file search
 include_directories(

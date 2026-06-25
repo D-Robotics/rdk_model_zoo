@@ -62,12 +62,15 @@ def main() -> None:
     Returns:
         None
     """
-    soc = inspect.get_soc_name().lower()
+    # Resolve published HBM variant: s600 has its own build; everything else
+    # (s100, s100p, (null), unknown) falls back to the S100 build.
+    raw_soc = inspect.get_soc_name().lower().strip("()").strip()
+    model_soc = "s600" if raw_soc == "s600" else "s100"
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model-path', type=str,
-                    default=f"/opt/hobot/model/{soc}/basic/mobilenetv2_224x224_nv12.hbm",
+                    default=f"/opt/hobot/model/{model_soc}/basic/mobilenetv2_224x224_nv12.hbm",
                     help="""Path to BPU *.hbm Model.""")
     parser.add_argument('--priority', type=int, default=0,
                         help="Model priority (0~255). 0 is lowest, 255 is highest.")

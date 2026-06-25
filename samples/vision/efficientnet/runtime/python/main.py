@@ -16,6 +16,14 @@
 
 The entry script parses arguments, loads the test image and labels, builds a
 configuration object, runs ``predict()``, and prints Top-K ImageNet results.
+
+The default ``--model-path`` auto-resolves per SoC via
+:class:`EfficientNetConfig`, so simply running ::
+
+    python3 main.py
+
+works on both S100 and S600 boards with the published HBM model installed at
+``/opt/hobot/model/<soc>/basic/``.
 """
 
 import os
@@ -36,8 +44,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model-path', type=str,
-                        default='../../model/s100/efficientnet_lite0_224x224_nv12.hbm',
-                        help='Path to the compiled HBM model.')
+                        default=None,
+                        help='Path to the compiled HBM model. '
+                             'Defaults to /opt/hobot/model/<soc>/basic/efficientnet_lite0_224x224_nv12.hbm '
+                             'with <soc> auto-detected.')
     parser.add_argument('--priority', type=int, default=0,
                         help='Model priority (0~255). 0 is lowest, 255 is highest.')
     parser.add_argument('--bpu-cores', nargs='+', type=int, default=[0],
@@ -56,7 +66,7 @@ def main() -> None:
     opt = parser.parse_args()
 
     config = EfficientNetConfig(
-        model_path=opt.model_path,
+        model_path=opt.model_path if opt.model_path else EfficientNetConfig.model_path,
         resize_type=opt.resize_type
     )
 

@@ -21,7 +21,7 @@
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| `--model-path` | HBM 模型路径 | `../../model/s100/mobilenetv1_224x224_nv12.hbm` |
+| `--model-path` | HBM 模型路径 | `../../model/<soc>/mobilenetv1_224x224_nv12.hbm` |
 | `--test-img` | 输入图片路径 | `../../test_data/zebra_cls.jpg` |
 | `--label-file` | ImageNet 标签文件 | `../../test_data/imagenet_classes.names` |
 | `--top-k` | 打印的分类结果数量 | `5` |
@@ -36,11 +36,11 @@
 bash run.sh
 ```
 
-直接运行：
+直接运行（把 `<soc>` 替换为 `s100` 或 `s600`）：
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s100/mobilenetv1_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv1_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5

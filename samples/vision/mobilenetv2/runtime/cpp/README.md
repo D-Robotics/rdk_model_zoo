@@ -1,56 +1,68 @@
-# MobileNetV2 图像分类示例（C++）
+English | [简体中文](./README_cn.md)
 
-本示例展示如何在 BPU 上使用量化后的 MobileNetV2 模型执行图像分类，输出 Top-K 类别及对应置信度。
+# MobileNetV2 Image Classification Sample (C++)
 
-## 环境依赖
-请先确保系统已安装以下依赖：
+This sample demonstrates how to run a quantised MobileNetV2 model on the BPU for image classification, outputting Top-K class labels with confidence scores.
+
+## Dependencies
+
+Make sure the following packages are installed:
+
 ```bash
 sudo apt update
 sudo apt install libgflags-dev
 ```
 
-## 目录结构
+## Directory Structure
+
 ```bash
 .
-|-- inc                    # 头文件目录
-|   `-- mobilenetv2.hpp    # MobileNetV2 模型封装类声明
-|-- src                    # 源码目录
-|   |-- main.cpp           # 推理程序入口（参数解析与流程控制）
-|   `-- mobilenetv2.cpp    # MobileNetV2 推理与后处理实现
-|-- CMakeLists.txt         # CMake 构建配置文件
-|-- README.md              # C++ 推理示例使用说明
-`-- run.sh                 # 示例运行脚本
+|-- inc                    # Header directory
+|   `-- mobilenetv2.hpp    # MobileNetV2 wrapper class declaration
+|-- src                    # Source directory
+|   |-- main.cpp           # Inference entry (argument parsing & flow control)
+|   `-- mobilenetv2.cpp    # MobileNetV2 inference & post-processing
+|-- CMakeLists.txt         # CMake build configuration
+|-- README.md              # C++ inference guide
+`-- run.sh                 # Run script
 ```
 
-## 编译工程
-- 配置与编译
+## Build
+
+- Configure and compile:
+
     ```bash
     mkdir build && cd build
     cmake ..
     make -j$(nproc)
     ```
 
-## 参数说明
-| 参数             | 说明                        | 默认值                                                               |
-| --------------- | --------------------------- | -------------------------------------------------------------------- |
-| `--model_path`  | 模型文件路径（.hbm 格式）    | `/opt/hobot/model/<soc>/basic/mobilenetv2_224x224_nv12.hbm`         |
-| `--test_img`    | 测试图片路径                 | `../../../test_data/zebra_cls.jpg`                                   |
-| `--label_file`  | 类别标签文件路径             | `../../../test_data/imagenet1000_labels.txt`                         |
-| `--top_k`       | 输出 Top-K 分类结果数量      | `5`                                                                  |
+## Arguments
 
-> **注意**：`--model_path` 默认值中的 `<soc>` 会在编译时根据当前设备 SoC 自动注入（如 `s100`、`s600`）。
+| Argument | Description | Default |
+| --- | --- | --- |
+| `--model_path` | Path to `.hbm` model file | `/opt/hobot/model/<soc>/basic/mobilenetv2_224x224_nv12.hbm` |
+| `--test_img` | Test image path | `../../../test_data/zebra_cls.jpg` |
+| `--label_file` | Label file path | `../../../test_data/imagenet1000_labels.txt` |
+| `--top_k` | Number of Top-K results to print | `5` |
 
-## 快速运行
-- 运行模型
-    - 使用脚本自动运行（自动安装依赖、下载模型、编译并运行）
+> **Note**: The `<soc>` in the default `--model_path` is injected by CMake at build time based on the current board SoC (e.g. `s100`, `s600`).
+
+## Quick Run
+
+- Run the model
+    - One-click via script (auto-installs dependencies, downloads model, builds, and runs):
+
         ```bash
         ./run.sh
         ```
-    - 使用默认参数（在 `build/` 目录下执行）
+    - Run with defaults (inside `build/`):
+
         ```bash
         ./mobilenetv2
         ```
-    - 指定参数运行
+    - Run with custom arguments:
+
         ```bash
         ./mobilenetv2 \
             --model_path /opt/hobot/model/s100/basic/mobilenetv2_224x224_nv12.hbm \
@@ -58,9 +70,11 @@ sudo apt install libgflags-dev
             --label_file ../../../test_data/imagenet1000_labels.txt \
             --top_k 5
         ```
-- 查看结果
 
-    运行成功后，将在终端打印 Top-K 分类结果：
+- View results
+
+    On success, the Top-K classification results are printed to the terminal:
+
     ```bash
     TOP-1: label=zebra, prob=0.992246
     TOP-2: label=tiger, Panthera tigris, prob=0.00404656
@@ -69,5 +83,6 @@ sudo apt install libgflags-dev
     TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
     ```
 
-## 接口说明
-阅读[源码文档说明](../../../../../docs/source_reference/README.md)，根据说明查看源码参考文档；
+## API Reference
+
+See the [source reference docs](../../../../../docs/source_reference/README.md) for detailed API documentation.

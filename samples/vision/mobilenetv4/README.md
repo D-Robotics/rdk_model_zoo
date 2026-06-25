@@ -2,7 +2,8 @@ English | [简体中文](./README_cn.md)
 
 # MobileNetV4 Model Description
 
-MobileNetV4 is an ImageNet classification sample for the RDK S100 model zoo.
+MobileNetV4 is an ImageNet classification sample for the RDK model zoo,
+supporting both S100 and S600 platforms via SOC-aware HBM download.
 It provides a standard Python runtime based on `hbm_runtime`, sample-local model
 download, preserved conversion assets, and validation notes.
 
@@ -76,12 +77,12 @@ Run the medium model:
 bash run.sh medium
 ```
 
-Direct entry:
+Direct entry (substitute `<soc>` with `s100` or `s600`):
 
 ```bash
 python3 main.py \
   --model-variant small \
-  --model-path ../../model/s100/mobilenetv4_small_224x224_nv12.hbm \
+  --model-path ../../model/<soc>/mobilenetv4_small_224x224_nv12.hbm \
   --test-img ../../test_data/zebra_cls.jpg \
   --label-file ../../test_data/imagenet_classes.names \
   --top-k 5
@@ -105,8 +106,10 @@ This sample currently maintains the Python runtime path. See [runtime/python/REA
 
 | Variant | Input | Runtime model |
 | --- | --- | --- |
-| Small | 224x224 NV12 | `model/s100/mobilenetv4_small_224x224_nv12.hbm` |
-| Medium | 256x256 NV12 | `model/s100/mobilenetv4_medium_256x256_nv12.hbm` |
+| Small | 224x224 NV12 | `model/<soc>/mobilenetv4_small_224x224_nv12.hbm` |
+| Medium | 256x256 NV12 | `model/<soc>/mobilenetv4_medium_256x256_nv12.hbm` |
+
+`<soc>` is `s100` or `s600`, resolved automatically from `/sys/class/boardinfo/soc_name`.
 
 ## Model Evaluation
 
