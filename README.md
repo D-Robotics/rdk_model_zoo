@@ -90,6 +90,8 @@ rdk_model_zoo/                       # rdk_s branch
 |   |-- speech/
 |   |   |-- asr/                     # Automatic speech recognition
 |   |   `-- kws/                    # Keyword spotting
+|   |-- llm/
+|   |   `-- gemma4-e2b/             # Gemma4-E2B VLM (Vision + Text)
 |   `-- vla/
 |       `-- act/                    # Action Chunking Transformer (robot policy)
 |-- docs/                            # Project guidelines and reference documentation
@@ -149,6 +151,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Text Recognition | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [Details](./samples/vision/paddle_ocr) |
 | Speech Recognition | ASR (Wav2Vec2) | `samples/speech/asr` | S100 / S600 | [Details](./samples/speech/asr) |
 | Keyword Spotting | KWS (MDTC) | `samples/speech/kws` | S100 | [Details](./samples/speech/kws) |
+| Vision-Language Model | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P | [Details](./samples/llm/gemma4-e2b) |
 | Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | `samples/vla/act` | S100 / S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 
 ---

@@ -1,0 +1,200 @@
+name: Build Wheels
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+  release:
+    types: [ created ]
+
+permissions:
+  contents: read
+
+jobs:
+  build_wheels:
+    outputs:
+      digests-linux: ${{ steps.hash-linux.outputs.digests }}
+      digests-macos: ${{ steps.hash-macos.outputs.digests }}
+      digests-windows: ${{ steps.hash-windows.outputs.digests }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-latest]
+    runs-on: ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }}
+
+    permissions:
+      contents: write # svenstaro/upload-release-action
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.x"
+
+      - name: Build for Windows (Win32/x64)
+        if: runner.os == 'Windows' && runner.arch != 'ARM64'
+        run: |
+          cmake -A Win32 -B build_win32 -DSPM_ENABLE_SHARED=OFF -DSPM_DISABLE_EMBEDDED_DATA=ON -DCMAKE_INSTALL_PREFIX=build_win32/root
+          cmake --build build_win32 --config Release --target install --parallel 8
+          cmake -A x64   -B build_amd64 -DSPM_ENABLE_SHARED=OFF -DSPM_DISABLE_EMBEDDED_DATA=ON -DCMAKE_INSTALL_PREFIX=build_amd64/root
+          cmake --build build_amd64 --config Release --target install --parallel 8
+
+      - name: Build for Windows (ARM64)
+        if: runner.os == 'Windows' && runner.arch == 'ARM64'
+        run: |
+          cmake -A arm64 -B build_arm64 -DSPM_ENABLE_SHARED=OFF -DSPM_DISABLE_EMBEDDED_DATA=ON -DCMAKE_INSTALL_PREFIX=build_arm64/root
+          cmake --build build_arm64 --config Release --target install --parallel 8
+
+      - name: Build for Mac
+        if: runner.os == 'macOS'
+        run: |
+          cmake -B build -DSPM_ENABLE_SHARED=OFF -DSPM_DISABLE_EMBEDDED_DATA=ON -DCMAKE_INSTALL_PREFIX=build/root
+          cmake --build build --config Release --target install --parallel 8
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 10.13
+          CMAKE_OSX_ARCHITECTURES: arm64;x86_64
+
+      - name: Install cibuildwheel
+        working-directory: python
+        run: |
+          python -m pip install --require-hashes --no-dependencies -r ../.github/workflows/requirements/base.txt
+          python -m pip install --require-hashes --no-dependencies -r ../.github/workflows/requirements/cibuildwheel.txt
+
+      - name: Build wheels
+        working-directory: python
+        run: |
+          mkdir -p src/sentencepiece/package_data
+          cp ../data/*.bin src/sentencepiece/package_data
+          python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS_LINUX: auto
+          CIBW_ARCHS_MACOS: x86_64 universal2 arm64
+          CIBW_ARCHS_WINDOWS: auto
+          CIBW_SKIP: "*-musllinux_*"
+          CIBW_ENVIRONMENT: "CMAKE_BUILD_PARALLEL_LEVEL=8"
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_ENABLE: cpython-freethreading
+
+      - name: Build sdist archive
+        working-directory: python
+        run: |
+          sh build_sdist.sh
+
+      - name: Fetch sdist archive
+        uses: tj-actions/glob@2deae40528141fc53131606d56b4e4ce2a486b29 # v22.0.2
+        id: sdist
+        with:
+          files: python/dist/*.tar.gz
+
+      - name: Build wheel from sdist
+        run: python -m pip wheel "${{ steps.sdist.outputs.paths }}" --verbose
+
+      - name: Copy sdist
+        working-directory: python
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p wheelhouse
+          cp -f dist/*.tar.gz wheelhouse/
+
+      - name: Validate artifact
+        run: |
+          python -m pip install twine
+          twine check --strict python/wheelhouse/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: artifacts-${{ matrix.os }}
+          path: python/wheelhouse/*
+          overwrite: true
+
+      - name: Upload wheel release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2.11.5
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: python/wheelhouse/*
+          tag: ${{ github.ref }}
+          overwrite: true
+          prerelease: true
+          file_glob: true
+
+      - name: Generate SLSA subjects - Macos
+        id: hash-macos
+        if: runner.os == 'macOS'
+        run: echo "digests=$(shasum -a 256 python/wheelhouse/* | base64)" >> $GITHUB_OUTPUT
+
+      - name: Generate SLSA subjects - Linux
+        id: hash-linux
+        if: runner.os == 'Linux'
+        run: echo "digests=$(sha256sum python/wheelhouse/* | base64 -w0)" >> $GITHUB_OUTPUT
+
+      - name: Generate SLSA subjects - Windows
+        id: hash-windows
+        if: runner.os == 'Windows'
+        run: echo "digests=$(sha256sum python/wheelhouse/* | base64 -w0)" >> $GITHUB_OUTPUT
+
+  free-threading:
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          sparse-checkout: |
+            python/test
+            data/botchan.txt
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13t"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: python/wheelhouse
+          merge-multiple: true
+
+      - name: Install sentencepiece wheel
+        run: pip install --find-links=python/wheelhouse sentencepiece
+
+      - name: Install test dependencies
+        run: pip install pytest pytest-run-parallel
+      
+      - name: Run free-threading tests
+        working-directory: python
+        run: pytest -v --parallel-threads 4
+        
+  gather-digests:
+    needs: [build_wheels]
+    outputs:
+      digests: ${{ steps.hash.outputs.digests }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge results
+        id: hash
+        env:
+          LINUX_DIGESTS: "${{ needs.build_wheels.outputs.digests-linux }}"
+          MACOS_DIGESTS: "${{ needs.build_wheels.outputs.digests-macos }}"
+          WINDOWS_DIGESTS: "${{ needs.build_wheels.outputs.digests-windows }}"
+        run: |
+          set -euo pipefail
+          echo "$LINUX_DIGESTS" | base64 -d > checksums.txt
+          echo "$MACOS_DIGESTS" | base64 -d >> checksums.txt
+          echo "$WINDOWS_DIGESTS" | base64 -d >> checksums.txt
+          echo "digests=$(cat checksums.txt | base64 -w0)" >> $GITHUB_OUTPUT
+
+  provenance:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build_wheels, gather-digests]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: "${{ needs.gather-digests.outputs.digests }}"
+      upload-assets: true # Optional: Upload to a new release
