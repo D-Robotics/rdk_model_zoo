@@ -68,6 +68,9 @@ hb_compile --config efficientnet_lite0_config.yaml
 
 所有变体均使用 NV12 运行时输入、RGB 训练输入、NCHW 训练布局、mean `127 127 127`、scale `0.007843 0.007843 0.007843`，march 为 `nash-e`。
 
+> **关于 S600 构建**：S600 发布在 ``rdk_s600/EfficientNet/`` 下的模型使用
+> 相同的源 ONNX 和量化配置编译，仅将 ``march`` 改为 ``nash-p``。
+
 ## OE 工具链
 
 模型转换请在 x86 Linux 主机的 RDK S100 OpenExplore 环境中完成，不建议在板端执行转换。
@@ -75,7 +78,7 @@ hb_compile --config efficientnet_lite0_config.yaml
 - OE 资源入口（docker+OE开发包）：<https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>
 - OE 工具链在线手册：<https://toolchain.d-robotics.cc/>
 
-请从 OE 资源入口获取适配 RDK S100/S100P 的 OpenExplore CPU Docker 镜像，并按实际文件名加载：
+请从 OE 资源入口获取适配目标 RDK 平台的 OpenExplore CPU Docker 镜像，并按实际文件名加载：
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
@@ -92,3 +95,6 @@ sudo docker run -it --rm \
   --workdir /workspace \
   <docker-image-name> /bin/bash
 ```
+
+> 如需编译 S600 版本，将 YAML 配置中的 ``march`` 从 ``nash-e`` 改为
+> ``nash-p``，或在 ``hb_compile`` 命令行传入 ``--march nash-p``。
