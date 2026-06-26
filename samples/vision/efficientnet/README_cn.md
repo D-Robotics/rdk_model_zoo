@@ -58,7 +58,8 @@ efficientnet/
 
 ## 快速体验
 
-下载默认模型到当前 sample 的 `model` 目录：
+下载默认模型。`download_model.sh` 会把模型写入板端共享模型目录
+`/opt/hobot/model/<soc>/basic/`：
 
 ```bash
 cd samples/vision/efficientnet/model
@@ -107,15 +108,15 @@ python3 main.py \
 
 本 sample 当前维护 Python 推理路径，详细说明请参考 [runtime/python/README_cn.md](./runtime/python/README_cn.md)。
 
-| 变体 | 输入 | 运行时输入类型 | S100 下载路径 | S600 下载路径 |
-| --- | --- | --- | --- | --- |
-| EfficientNet-Lite0 | 224x224 | NV12 Y/UV planes | `model/s100/efficientnet_lite0_224x224_nv12.hbm` | `model/s600/efficientnet_lite0_224x224_nv12.hbm` |
-| EfficientNet-Lite1 | 240x240 | NV12 Y/UV planes | `model/s100/efficientnet_lite1_240x240_nv12.hbm` | `model/s600/efficientnet_lite1_240x240_nv12.hbm` |
-| EfficientNet-Lite2 | 260x260 | NV12 Y/UV planes | `model/s100/efficientnet_lite2_260x260_nv12.hbm` | `model/s600/efficientnet_lite2_260x260_nv12.hbm` |
-| EfficientNet-Lite3 | 300x300 | NV12 Y/UV planes | `model/s100/efficientnet_lite3_300x300_nv12.hbm` | `model/s600/efficientnet_lite3_300x300_nv12.hbm` |
-| EfficientNet-Lite4 | 380x380 | NV12 Y/UV planes | `model/s100/efficientnet_lite4_380x380_nv12.hbm` | `model/s600/efficientnet_lite4_380x380_nv12.hbm` |
+| 变体 | 输入 | 运行时输入类型 | 下载路径 |
+| --- | --- | --- | --- |
+| EfficientNet-Lite0 | 224x224 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite1 | 240x240 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite2 | 260x260 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite3 | 300x300 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite4 | 380x380 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
 
-本示例使用公开 S100 / S600 HBM 模型，模型下载到当前 sample 内的 `model/<soc>` 目录。`run.sh` 会自动检测当前设备 SoC 并下载对应版本。
+本示例使用公开 S100 / S600 HBM 模型，模型下载到 `/opt/hobot/model/<soc>/basic/`（`<soc>` 取 `s100` 或 `s600`）。`run.sh` 会自动检测当前设备 SoC 并下载对应版本。
 
 ## 模型评估
 

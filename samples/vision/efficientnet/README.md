@@ -58,7 +58,8 @@ efficientnet/
 
 ## Quick Start
 
-Download the default model into the sample-local model directory:
+Download the default model. `download_model.sh` writes the model to
+`/opt/hobot/model/<soc>/basic/` (the shared on-board model directory):
 
 ```bash
 cd samples/vision/efficientnet/model
@@ -105,15 +106,15 @@ python3 main.py \
 
 This sample currently maintains the Python runtime path. See [runtime/python/README.md](./runtime/python/README.md) for details.
 
-| Variant | Input | Runtime input type | S100 download path | S600 download path |
-| --- | --- | --- | --- | --- |
-| EfficientNet-Lite0 | 224x224 | NV12 Y/UV planes | `model/s100/efficientnet_lite0_224x224_nv12.hbm` | `model/s600/efficientnet_lite0_224x224_nv12.hbm` |
-| EfficientNet-Lite1 | 240x240 | NV12 Y/UV planes | `model/s100/efficientnet_lite1_240x240_nv12.hbm` | `model/s600/efficientnet_lite1_240x240_nv12.hbm` |
-| EfficientNet-Lite2 | 260x260 | NV12 Y/UV planes | `model/s100/efficientnet_lite2_260x260_nv12.hbm` | `model/s600/efficientnet_lite2_260x260_nv12.hbm` |
-| EfficientNet-Lite3 | 300x300 | NV12 Y/UV planes | `model/s100/efficientnet_lite3_300x300_nv12.hbm` | `model/s600/efficientnet_lite3_300x300_nv12.hbm` |
-| EfficientNet-Lite4 | 380x380 | NV12 Y/UV planes | `model/s100/efficientnet_lite4_380x380_nv12.hbm` | `model/s600/efficientnet_lite4_380x380_nv12.hbm` |
+| Variant | Input | Runtime input type | Download path |
+| --- | --- | --- | --- |
+| EfficientNet-Lite0 | 224x224 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite1 | 240x240 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite2 | 260x260 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite3 | 300x300 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
+| EfficientNet-Lite4 | 380x380 | NV12 Y/UV planes | `/opt/hobot/model/<soc>/basic/` |
 
-This sample uses public S100 / S600 HBM models downloaded into the sample-local `model/<soc>` directory. The `run.sh` script auto-detects the device SoC and downloads the matching variant.
+This sample uses public S100 / S600 HBM models downloaded into `/opt/hobot/model/<soc>/basic/` (`<soc>` is `s100` or `s600`). The `run.sh` script auto-detects the device SoC and downloads the matching variant.
 
 ## Model Evaluation
 
