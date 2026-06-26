@@ -183,6 +183,16 @@ python3 eval_yolo26_obb.py \
 | S100P | YOLO26l Detect | 0.456 / 0.437 (96.0 %) | 0.260 / 0.234 (89.8 %) | 0.499 / 0.484 (97.1 %) | 0.627 / 0.609 (97.0 %) |
 | S100P | YOLO26x Detect | 0.484 / 0.466 (96.2 %) | 0.292 / 0.271 (92.8 %) | 0.528 / 0.502 (95.1 %) | 0.669 / 0.654 (97.8 %) |
 
+### RDK S600 Accuracy Data (Accuracy @ NV12 - Detection)
+
+| Device | Model | Accuracy bbox-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| S600 | YOLO26n Detect | 0.319 / 0.285 (89.3 %) | 0.107 / 0.080 (74.8 %) | 0.349 / 0.304 (87.1 %) | 0.508 / 0.460 (90.6 %) |
+| S600 | YOLO26s Detect | 0.395 / 0.368 (93.2 %) | 0.183 / 0.172 (94.0 %) | 0.440 / 0.414 (94.1 %) | 0.583 / 0.526 (90.2 %) |
+| S600 | YOLO26m Detect | 0.442 / 0.417 (94.3 %) | 0.242 / 0.211 (87.2 %) | 0.489 / 0.460 (94.1 %) | 0.629 / 0.600 (95.4 %) |
+| S600 | YOLO26l Detect | 0.456 / 0.429 (94.1 %) | 0.260 / 0.222 (85.4 %) | 0.499 / 0.473 (94.8 %) | 0.627 / 0.610 (97.3 %) |
+| S600 | YOLO26x Detect | 0.484 / 0.452 (93.4 %) | 0.292 / 0.246 (84.2 %) | 0.528 / 0.490 (92.8 %) | 0.669 / 0.645 (96.4 %) |
+
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Pose Estimation)
 
 | Device | Model | Accuracy kpt-all <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-medium <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-large <br> mAP @.50:.95 <br> (BPU Python) |
@@ -199,6 +209,16 @@ python3 eval_yolo26_obb.py \
 | :--- | :--- | :--- | :--- | :--- |
 | S100P | YOLO26n Pose | - | - | - |
 
+### RDK S600 Accuracy Data (Accuracy @ NV12 - Pose Estimation)
+
+| Device | Model | Accuracy kpt-all <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-medium <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-large <br> mAP @.50:.95 <br> (BPU Python) |
+| :--- | :--- | :--- | :--- | :--- |
+| S600 | YOLO26n Pose | 0.507 | 0.416 | 0.649 |
+| S600 | YOLO26s Pose | 0.578 | 0.505 | 0.697 |
+| S600 | YOLO26m Pose | 0.621 | 0.551 | 0.737 |
+| S600 | YOLO26l Pose | 0.640 | 0.583 | 0.740 |
+| S600 | YOLO26x Pose | 0.665 | 0.604 | 0.769 |
+
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Segmentation)
 
 | Device | Model | Accuracy mask-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
@@ -214,6 +234,16 @@ python3 eval_yolo26_obb.py \
 | Device | Model | Accuracy mask-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | S100P | YOLO26n Seg | - / - (- %) | - / - (- %) | - / - (- %) | - / - (- %) |
+
+### RDK S600 Accuracy Data (Accuracy @ NV12 - Segmentation)
+
+| Device | Model | Accuracy mask-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| S600 | YOLO26n Seg | - / 0.255 | - / 0.061 | - / 0.274 | - / 0.422 |
+| S600 | YOLO26s Seg | - / 0.331 | - / 0.121 | - / 0.370 | - / 0.508 |
+| S600 | YOLO26m Seg | - / 0.358 | - / 0.156 | - / 0.398 | - / 0.538 |
+| S600 | YOLO26l Seg | - / 0.371 | - / 0.158 | - / 0.417 | - / 0.559 |
+| S600 | YOLO26x Seg | - / 0.382 | - / 0.171 | - / 0.429 | - / 0.571 |
 
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Classification)
 
