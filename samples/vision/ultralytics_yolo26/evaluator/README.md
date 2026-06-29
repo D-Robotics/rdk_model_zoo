@@ -261,6 +261,16 @@ python3 eval_yolo26_obb.py \
 | :--- | :--- | :--- | :--- |
 | S100P | YOLO26n Cls | - | - |
 
+### RDK S600 Accuracy Data (Accuracy @ NV12 - Classification)
+
+| Device | Model | Accuracy TOP1 <br> (BPU Python) | Accuracy TOP5 <br> (BPU Python) |
+| :--- | :--- | :--- | :--- |
+| S600 | YOLO26n Cls | 0.600 | 0.823 |
+| S600 | YOLO26s Cls | 0.649 | 0.863 |
+| S600 | YOLO26m Cls | 0.650 | 0.867 |
+| S600 | YOLO26l Cls | 0.689 | 0.890 |
+| S600 | YOLO26x Cls | 0.666 | 0.876 |
+
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - OBB)
 
 | Device | Model | Accuracy mAP50 <br> (BPU Python) | Accuracy mAP50-95 <br> (BPU Python) |
