@@ -24,7 +24,16 @@ python -u conversion/scripts/verify/quick_text_verify.py
 
 ## 板端（golden mask / KV 对齐）
 
-编译 `runtime/cpp` 后：
+需编译 **全部** runtime 目标（不只 `main`）：
+
+```bash
+cd samples/llm/gemma4-e2b/runtime/cpp
+mkdir -p build && cd build
+cmake ..
+make -j"$(nproc)"
+```
+
+然后运行 golden 校验：
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
@@ -39,9 +48,11 @@ cd runtime/cpp/build
 ```bash
 cd runtime/cpp/build
 export GEMMA4_HOME=~/gemma4_e2b
-./gemma4_chat
+./main
 # /image ../../test_data/image1.jpg
 # 你看到什么？
 ```
+
+> **说明：** 主对话入口已按 Model Zoo 规范改名为 `main`，`./gemma4_chat` 不再存在。
 
 预期结果见 [docs/QUANTIZATION_TUTORIAL_zh.md §9.4](../docs/QUANTIZATION_TUTORIAL_zh.md)。

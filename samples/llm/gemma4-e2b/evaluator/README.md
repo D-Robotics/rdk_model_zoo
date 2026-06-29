@@ -24,7 +24,16 @@ Scripts live under [conversion/scripts/verify/](../conversion/scripts/verify/).
 
 ## Board-side (golden mask / KV)
 
-After building `runtime/cpp`:
+Build **all** runtime targets (not only `main`):
+
+```bash
+cd samples/llm/gemma4-e2b/runtime/cpp
+mkdir -p build && cd build
+cmake ..
+make -j"$(nproc)"
+```
+
+Then run the golden verifier:
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
@@ -39,9 +48,11 @@ Expected: `ALL PASSED` for input_ids, masks, and inputs_embeds.
 ```bash
 cd runtime/cpp/build
 export GEMMA4_HOME=~/gemma4_e2b
-./gemma4_chat
+./main
 # /image ../../test_data/image1.jpg
 # What do you see?
 ```
+
+> **Note:** The primary chat entry was renamed to `main` (Model Zoo convention). `./gemma4_chat` no longer exists.
 
 See [docs/QUANTIZATION_TUTORIAL.md §9.4](../docs/QUANTIZATION_TUTORIAL.md) for expected output.
