@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_tokenizer.h
+ * @brief Tokenizer bridge backed by native C++ tokenizers-cpp.
+ *
+ * Keeps the original TokenizerBridge API (EncodeMessagesJson / DecodeIds)
+ * but is backed by the native C++ tokenizer (tokenizers-cpp), matching the
+ * OpenExplorer_LLM-s600 reference implementation. No Python required.
+ */
 #pragma once
 
 #include <cstdint>
@@ -9,9 +17,12 @@
 
 namespace gemma4 {
 
-// Bridge that keeps the original TokenizerBridge API (EncodeMessagesJson /
-// DecodeIds) but is backed by the native C++ tokenizer (tokenizers-cpp),
-// matching the OpenExplorer_LLM-s600 reference implementation. No Python.
+/**
+ * @brief Native C++ tokenizer bridge for Gemma4-E2B chat.
+ *
+ * Encodes chat messages (JSON format) into token IDs and decodes token IDs
+ * back to text, using the vendored tokenizers-cpp HuggingFace binding.
+ */
 class TokenizerBridge {
  public:
   explicit TokenizerBridge(const std::string& tokenizer_dir = "");

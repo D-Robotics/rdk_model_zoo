@@ -1,4 +1,4 @@
-# Gemma4-E2B VLM
+# Gemma4-E2B VLM 模型说明
 
 [简体中文](./README_cn.md) | **English**
 
@@ -22,7 +22,18 @@ Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-R
 
 ## Algorithm Overview
 
-Gemma4-E2B is a lightweight multimodal model (Vision ViT + 2B Text LLM):
+Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT encoder with a 2B-parameter Text LLM decoder. Official materials:
+
+- Model card: https://huggingface.co/google/gemma-4-e2b
+- Upstream deployment project: https://github.com/shockley6668/gemma4-e2b-rdk-s100p
+
+### Algorithm Capabilities
+
+- Multimodal understanding: image + text → text
+- Multi-turn text chat with KV cache reuse
+- Streaming token output on BPU
+
+### Algorithm Features
 
 - **Vision**: 16-layer ViT → 280 soft tokens per image
 - **Text**: 35-layer decoder with PLE + KV cache (4096 context)
@@ -53,7 +64,7 @@ samples/llm/gemma4-e2b/
 │   ├── scripts/
 │   └── README.md
 ├── runtime/
-│   └── cpp/                     ★ Board-side C++ inference (gemma4_chat)
+│   └── cpp/                     ★ Board-side C++ inference (main)
 │       ├── run.sh
 │       └── README.md
 ├── evaluator/                   Accuracy / golden verification
@@ -62,8 +73,9 @@ samples/llm/gemma4-e2b/
 │   ├── QUANTIZATION_TUTORIAL.md
 │   └── QUANTIZATION_TUTORIAL_zh.md
 ├── test_data/                   VLM test images (red panda, etc.)
-└── third_party/
-    └── tokenizers-cpp/          Vendored HF tokenizers C++ binding
+└── third_party/                 tokenizers-cpp (downloaded at build time)
+    ├── install_tokenizers_cpp.sh
+    └── README.md
 ```
 
 ---
@@ -81,8 +93,9 @@ The script will:
 
 1. Install build dependencies (`cmake`, `g++`, `libopencv-dev`, `cargo`)
 2. Download pre-compiled models from HuggingFace if missing (`~/gemma4_e2b` by default)
-3. Build `gemma4_chat` (first build compiles `tokenizers-cpp`, ~few minutes)
-4. Launch interactive VLM chat
+3. Download `tokenizers-cpp` source (pinned commit)
+4. Build `main` (first build compiles `tokenizers-cpp`, ~few minutes)
+5. Launch interactive VLM chat
 
 Example session:
 
@@ -97,15 +110,46 @@ For step-by-step details see [runtime/cpp/README.md](./runtime/cpp/README.md).
 
 ---
 
-## Re-quantize from Source
+## Model Conversion
 
-Requires a PC with **128 GB RAM** and the **OE-LLM SDK**. Full guide:
+ModelZoo already provides pre-compiled HBM models. Users can download them
+directly via `model/download_model.sh` and **skip this section** if they
+only want to run inference.
+
+For custom re-quantization (requires a PC with 128 GB RAM + OE-LLM SDK),
+see [conversion/README.md](./conversion/README.md) and the full guide:
 
 - [QUANTIZATION_TUTORIAL.md](./docs/QUANTIZATION_TUTORIAL.md) (English)
 - [QUANTIZATION_TUTORIAL_zh.md](./docs/QUANTIZATION_TUTORIAL_zh.md) (中文)
 
 ---
 
-## License Note
+## Runtime
 
-Runtime C++ code in this sample is MIT-licensed (see upstream [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)). Pre-compiled models are distributed separately on HuggingFace.
+This sample provides a **C++** board-side runtime only (LLM inference is
+C++-native; no Python path is provided). For build, parameters, and
+detailed usage, see [runtime/cpp/README.md](./runtime/cpp/README.md).
+
+---
+
+## Model Evaluation
+
+The `evaluator/` directory documents accuracy / golden-tensor verification.
+See [evaluator/README.md](./evaluator/README.md).
+
+---
+
+## Inference Result
+
+![VLM demo](./docs/test1.jpg)
+
+*VLM chat on S100P: image + Chinese prompt → streamed BPU reply.*
+
+---
+
+## License
+
+Runtime C++ code in this sample is MIT-licensed (see upstream
+[gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)).
+Pre-compiled models are distributed separately on HuggingFace. The sample
+itself follows the Model Zoo top-level License.

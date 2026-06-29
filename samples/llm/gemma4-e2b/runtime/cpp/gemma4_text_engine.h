@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_text_engine.h
+ * @brief Text LLM engine for Gemma4-E2B (prefill + decode + KV cache).
+ *
+ * Wraps the Horizon BPU DNN APIs to run the Gemma4-E2B text decoder on the
+ * S100P BPU. Manages prefill (chunked) and decode steps, zero-copy KV cache,
+ * and logits→token sampling.
+ */
 #pragma once
 
 #include <cstdint>
@@ -12,12 +20,15 @@
 
 namespace gemma4 {
 
+/**
+ * @brief Benchmark timing result for a single prompt run.
+ */
 struct BenchmarkResult {
-  double load_ms = 0;
-  double prefill_ms = 0;
-  double decode_ms = 0;
-  int decode_steps = 0;
-  double tokens_per_sec = 0;
+  double load_ms = 0;          ///< Model load time (ms)
+  double prefill_ms = 0;       ///< Prefill time (ms)
+  double decode_ms = 0;        ///< Decode time (ms, sum of all steps)
+  int decode_steps = 0;        ///< Number of decode steps
+  double tokens_per_sec = 0;   ///< Decode throughput (tokens/sec)
 };
 
 struct PrefillChunkTensors {

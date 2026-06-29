@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_vision_engine.h
+ * @brief Vision ViT engine for Gemma4-E2B.
+ *
+ * Loads the Vision HBM and runs the ViT encoder to produce 280 soft image
+ * tokens per image, which are injected into the text decoder's input
+ * embeddings at image soft-token positions.
+ */
 #pragma once
 
 #include <cstdint>
@@ -8,6 +16,12 @@
 
 namespace gemma4 {
 
+/**
+ * @brief Vision ViT inference engine for Gemma4-E2B.
+ *
+ * Loads the vision HBM model, preprocesses the input image, and returns
+ * the ViT output features to be injected into the text decoder.
+ */
 class VisionEngine {
  public:
   explicit VisionEngine(const std::string& vision_hbm);

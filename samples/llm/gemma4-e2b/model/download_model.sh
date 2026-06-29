@@ -16,8 +16,15 @@ if [[ -f "$GEMMA4_HOME/model/gemma4-e2b_vit_ptq.hbm" && \
 fi
 
 if ! command -v hf >/dev/null 2>&1; then
-  echo "Installing huggingface_hub..."
-  pip install -q huggingface_hub
+  echo "ERROR: huggingface_hub CLI (hf) not found."
+  echo
+  echo "Install it once, then re-run ./run.sh:"
+  echo "  python3 -m pip install --user 'huggingface_hub>=0.26.0'"
+  echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+  echo
+  echo "Or on systems with PEP 668 restrictions:"
+  echo "  python3 -m pip install --user --break-system-packages 'huggingface_hub>=0.26.0'"
+  exit 1
 fi
 
 echo "Downloading pre-compiled HBM models from HuggingFace..."

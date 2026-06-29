@@ -1,6 +1,6 @@
 # C++ Runtime
 
-[中文](./README_zh.md) | **English**
+[中文](./README_cn.md) | **English**
 
 C++ inference runtime for Gemma4-E2B VLM on D-Robotics RDK S100P (`march=nash-m`). Loads pre-compiled HBM models and runs real-time Vision-Language inference on the BPU.
 
@@ -43,14 +43,14 @@ runtime/cpp/                      C++ source code (this directory)
     ├── gemma4_native_tokenizer.* Native C++ tokenizer (from OE-LLM-s600)
     ├── gemma4_tokenizer.*        TokenizerBridge: chat template + image expand
     ├── hb_utils.h                Horizon BPU helpers (tensor, flush, infer)
-    ├── gemma4_chat.cpp           ★ Interactive VLM chat (primary entry)
+    ├── main.cpp                  ★ Interactive VLM chat (primary entry)
     ├── gemma4_server.cpp         HTTP API server
     ├── gemma4_demo.cpp           Single-shot VLM demo
     ├── gemma4_text_bench.cpp     Text-only benchmark
     └── gemma4_golden_verify.cpp  Golden mask/KV alignment checker
 
 ../../third_party/
-└── tokenizers-cpp/               Vendored HF tokenizers C++ binding + sentencepiece
+└── tokenizers-cpp/               Downloaded at build time (see third_party/README.md)
 ```
 
 ## Build
@@ -71,7 +71,7 @@ cmake ..
 make -j$(nproc)
 ```
 
-The first build compiles the vendored `tokenizers-cpp` (HF tokenizers Rust
+The first build downloads and compiles `tokenizers-cpp` (HF tokenizers Rust
 binding + sentencepiece + abseil), which takes a few minutes. Subsequent
 builds are incremental and fast.
 
@@ -79,7 +79,7 @@ This produces 5 executables in `build/`:
 
 | Binary | Description |
 |--------|-------------|
-| `gemma4_chat` | Interactive VLM chat with streaming output |
+| `main` | Interactive VLM chat with streaming output (primary entry) |
 | `gemma4_server` | HTTP API server for programmatic access |
 | `gemma4_demo` | Single-shot: image + prompt → text |
 | `gemma4_text_bench` | Text-only inference benchmark |
@@ -88,7 +88,8 @@ This produces 5 executables in `build/`:
 ## Download Pre-compiled Models
 
 ```bash
-pip install huggingface_hub
+python3 -m pip install --user 'huggingface_hub>=0.26.0'
+export PATH="$HOME/.local/bin:$PATH"
 hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
 ```
 
@@ -115,7 +116,7 @@ Set `GEMMA4_HOME` to point at the model directory, then run:
 export GEMMA4_HOME=~/gemma4_e2b
 
 # Interactive VLM chat
-./gemma4_chat
+./main
 
 # Inside the chat:
 #   /image /path/to/photo.jpg   Load an image

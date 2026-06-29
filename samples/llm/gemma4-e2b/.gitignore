@@ -8,8 +8,6 @@ __pycache__/
 *.hbm
 *.hbo
 *.bin
-# Exception: sentencepiece embedded normalizer rules are build inputs.
-!third_party/tokenizers-cpp/sentencepiece/data/*.bin
 
 # Calibration data (download via scripts)
 calibration_data/images/
@@ -19,23 +17,9 @@ calibration_data/text/*.json
 output/
 runtime/cpp/build/
 
-# tokenizers-cpp: keep the prebuilt libtokenizers_c.a, ignore cargo
-# intermediates (deps/, incremental/, build scripts, .rlib, .d files).
-third_party/tokenizers-cpp/rust/target/**/deps/
-third_party/tokenizers-cpp/rust/target/**/build/
-third_party/tokenizers-cpp/rust/target/**/incremental/
-third_party/tokenizers-cpp/rust/target/**/*.d
-third_party/tokenizers-cpp/rust/target/**/*.rlib
-# Force-keep the prebuilt static lib even though it lives under rust/target.
-!third_party/tokenizers-cpp/rust/target/**/release/libtokenizers_c.a
-# sentencepiece bundled docs / examples we don't use
-third_party/tokenizers-cpp/sentencepiece/doc/
-third_party/tokenizers-cpp/sentencepiece/python/
-third_party/tokenizers-cpp/sentencepiece/contrib/
-third_party/tokenizers-cpp/web/
-third_party/tokenizers-cpp/example/
-# abseil-cpp docs (vendored as a build dep, docs not needed)
-third_party/tokenizers-cpp/sentencepiece/third_party/abseil-cpp/*.md
+# tokenizers-cpp: downloaded at build time by install_tokenizers_cpp.sh,
+# not vendored in git. Ignore the whole downloaded tree.
+third_party/tokenizers-cpp/
 
 # OS
 .DS_Store

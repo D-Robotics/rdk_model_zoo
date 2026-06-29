@@ -36,10 +36,24 @@ find_package(OpenCV REQUIRED COMPONENTS core imgcodecs imgproc)
 
 include_directories(${HOBOT_INCLUDE_DIR})
 
-# ── Native C++ tokenizer (tokenizers-cpp, vendored) ──────────────────────────
+# ── Native C++ tokenizer (tokenizers-cpp) ─────────────────────────────────────
 # Provides tokenizers_cpp + tokenizers_c (Rust HF tokenizers C binding) +
 # sentencepiece. Matches the OpenExplorer_LLM-s600 reference stack.
+# Source is NOT vendored in git; it is downloaded by install_tokenizers_cpp.sh
+# (pinned commit). run.sh calls it before cmake; this block makes manual
+# `cmake ..` also work by auto-fetching if the dir is missing.
 set(TOKENIZERS_CPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/tokenizers-cpp)
+if(NOT EXISTS "${TOKENIZERS_CPP_ROOT}/CMakeLists.txt")
+  message(STATUS "tokenizers-cpp not found, running installer...")
+  execute_process(
+    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/install_tokenizers_cpp.sh
+    RESULT_VARIABLE _install_rc)
+  if(NOT _install_rc EQUAL 0)
+    message(FATAL_ERROR
+      "Failed to download tokenizers-cpp.\n"
+      "Run manually: bash third_party/install_tokenizers_cpp.sh")
+  endif()
+endif()
 add_subdirectory(${TOKENIZERS_CPP_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/tokenizers-cpp)
 
 # ── Static library: core inference engine ────────────────────────────────────
@@ -64,9 +78,9 @@ target_link_libraries(gemma4_runtime PUBLIC
 
 # ── Executables ──────────────────────────────────────────────────────────────
 
-# Interactive VLM chat (primary entry point)
-add_executable(gemma4_chat gemma4_chat.cpp)
-target_link_libraries(gemma4_chat PRIVATE gemma4_runtime)
+# Interactive VLM chat (Model Zoo standard entry: main.cpp -> main)
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE gemma4_runtime)
 
 # HTTP API server
 add_executable(gemma4_server gemma4_server.cpp)
@@ -85,7 +99,7 @@ add_executable(gemma4_golden_verify gemma4_golden_verify.cpp)
 target_link_libraries(gemma4_golden_verify PRIVATE gemma4_runtime)
 
 set_target_properties(
-  gemma4_chat gemma4_server gemma4_text_bench gemma4_demo gemma4_golden_verify
+  main gemma4_server gemma4_text_bench gemma4_demo gemma4_golden_verify
   PROPERTIES
   BUILD_RPATH "/usr/hobot/lib"
   INSTALL_RPATH "/usr/hobot/lib"

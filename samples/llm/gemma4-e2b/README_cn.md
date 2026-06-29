@@ -1,4 +1,4 @@
-# Gemma4-E2B VLM
+# Gemma4-E2B VLM 模型说明
 
 **简体中文** | [English](./README.md)
 
@@ -22,7 +22,18 @@ Google **Gemma4-E2B** 视觉语言模型在 **地瓜 RDK S100P**（`march=nash-m
 
 ## 算法介绍
 
-Gemma4-E2B 是轻量多模态模型（Vision ViT + 2B Text LLM）：
+Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器与 2B 参数 Text LLM decoder 组成。官方资料：
+
+- 模型卡：https://huggingface.co/google/gemma-4-e2b
+- 上游部署项目：https://github.com/shockley6668/gemma4-e2b-rdk-s100p
+
+### 算法功能
+
+- 多模态理解：图片 + 文本 → 文本
+- 多轮文本对话，复用 KV cache
+- BPU 上流式 token 输出
+
+### 算法特性
 
 - **Vision**：16 层 ViT → 每张图 280 个 soft token
 - **Text**：35 层 Decoder + PLE + KV cache（4096 上下文）
@@ -53,7 +64,7 @@ samples/llm/gemma4-e2b/
 │   ├── scripts/
 │   └── README.md
 ├── runtime/
-│   └── cpp/                     ★ 板端 C++ 推理（gemma4_chat）
+│   └── cpp/                     ★ 板端 C++ 推理（main）
 │       ├── run.sh
 │       └── README.md
 ├── evaluator/                   精度 / golden 验证
@@ -62,13 +73,14 @@ samples/llm/gemma4-e2b/
 │   ├── QUANTIZATION_TUTORIAL.md
 │   └── QUANTIZATION_TUTORIAL_zh.md
 ├── test_data/                   VLM 测试图片（红熊猫等）
-└── third_party/
-    └── tokenizers-cpp/          自带的 HF tokenizers C++ 绑定
+└── third_party/                 tokenizers-cpp（构建时下载）
+    ├── install_tokenizers_cpp.sh
+    └── README.md
 ```
 
 ---
 
-## 快速体验
+## 快速体验（QuickStart）
 
 板端一键运行：
 
@@ -81,8 +93,9 @@ cd samples/llm/gemma4-e2b/runtime/cpp
 
 1. 安装编译依赖（`cmake`、`g++`、`libopencv-dev`、`cargo`）
 2. 若本地无模型，从 HuggingFace 下载预编译 HBM（默认 `~/gemma4_e2b`）
-3. 编译 `gemma4_chat`（首次编译 `tokenizers-cpp`，耗时数分钟）
-4. 启动交互式 VLM 对话
+3. 下载 `tokenizers-cpp` 源码（固定 commit）
+4. 编译 `main`（首次编译 `tokenizers-cpp`，耗时数分钟）
+5. 启动交互式 VLM 对话
 
 交互示例：
 
@@ -93,19 +106,41 @@ gemma4> /reset
 gemma4> /quit
 ```
 
-详细步骤见 [runtime/cpp/README_zh.md](./runtime/cpp/README_zh.md)。
+详细步骤见 [runtime/cpp/README_cn.md](./runtime/cpp/README_cn.md)。
 
 ---
 
-## 从源码重新量化
+## 模型转换（Model Conversion）
 
-需要 **128 GB 内存 PC** + **OE-LLM SDK**。完整教程：
+ModelZoo 已提供适配完成的 HBM 模型，用户可直接运行 `model/download_model.sh` 下载使用，如不关心模型转换流程，**可跳过本小节**。
+
+如需自定义重新量化（需要 128 GB 内存的 PC + OE-LLM SDK），请参考 [conversion/README.md](./conversion/README.md) 及完整教程：
 
 - [QUANTIZATION_TUTORIAL_zh.md](./docs/QUANTIZATION_TUTORIAL_zh.md)（中文）
 - [QUANTIZATION_TUTORIAL.md](./docs/QUANTIZATION_TUTORIAL.md)（English）
 
 ---
 
-## 许可证说明
+## 模型推理（Runtime）
 
-本示例中的 C++ runtime 代码为 MIT 许可（见上游 [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)）。预编译模型单独发布在 HuggingFace。
+本示例仅提供 **C++** 板端推理（LLM 推理为 C++ 原生，不提供 Python 路径）。编译、参数及详细用法请参考 [runtime/cpp/README_cn.md](./runtime/cpp/README_cn.md)。
+
+---
+
+## 模型评估（Evaluator）
+
+`evaluator/` 目录记录精度 / golden 张量校验，详见 [evaluator/README.md](./evaluator/README.md)。
+
+---
+
+## 推理结果
+
+![VLM 演示](./docs/test1.jpg)
+
+*S100P 板端 VLM 对话：图片 + 中文提问 → BPU 流式回复。*
+
+---
+
+## License
+
+本示例中的 C++ runtime 代码为 MIT 许可（见上游 [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)）。预编译模型单独发布在 HuggingFace。示例本身遵循 Model Zoo 顶层 License。
