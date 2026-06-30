@@ -73,6 +73,7 @@ rdk_model_zoo/
 |   |   |-- fastvit/              # 图像分类
 |   |   |-- fcos/                 # 目标检测
 |   |   |-- googlenet/            # 图像分类
+|   |   |-- hgnetv2/              # 图像分类
 |   |   |-- lprnet/               # 车牌识别
 |   |   |-- mobilenetv1/          # 图像分类
 |   |   |-- mobilenetv2/          # 图像分类
@@ -143,6 +144,7 @@ python3 main.py \
 | 图像分类 | FasterNet | `samples/vision/fasternet` | RDK X5 | [详情](./samples/vision/fasternet) |
 | 图像分类 | FastViT | `samples/vision/fastvit` | RDK X5 | [详情](./samples/vision/fastvit) |
 | 图像分类 | GoogLeNet | `samples/vision/googlenet` | RDK X5 | [详情](./samples/vision/googlenet) |
+| 图像分类 | HGNetV2 | `samples/vision/hgnetv2` | RDK X5 | [详情](./samples/vision/hgnetv2) |
 | 图像分类 | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 | [详情](./samples/vision/mobilenetv1) |
 | 图像分类 | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 | [详情](./samples/vision/mobilenetv2) |
 | 图像分类 | MobileNetV3 | `samples/vision/mobilenetv3` | RDK X5 | [详情](./samples/vision/mobilenetv3) |
