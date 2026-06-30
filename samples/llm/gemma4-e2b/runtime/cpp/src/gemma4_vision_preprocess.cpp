@@ -1,4 +1,4 @@
-#include "gemma4_vision_preprocess.h"
+#include "gemma4_vision_preprocess.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -8,7 +8,7 @@
 #include <opencv2/imgproc.hpp>
 #include <stdexcept>
 
-#include "gemma4_config.h"
+#include "gemma4_config.hpp"
 
 namespace gemma4 {
 

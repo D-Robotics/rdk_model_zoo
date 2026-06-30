@@ -15,8 +15,8 @@
 
 #include "hobot/dnn/hb_dnn.h"
 
-#include "gemma4_embeddings.h"
-#include "gemma4_kv_cache.h"
+#include "gemma4_embeddings.hpp"
+#include "gemma4_kv_cache.hpp"
 
 namespace gemma4 {
 

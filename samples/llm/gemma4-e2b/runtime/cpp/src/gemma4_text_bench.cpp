@@ -5,19 +5,21 @@
 #include <string>
 #include <vector>
 
-#include "gemma4_config.h"
-#include "gemma4_text_engine.h"
+#include "gflags/gflags.h"
+
+#include "gemma4_config.hpp"
+#include "gemma4_text_engine.hpp"
 
 namespace {
 
 void PrintUsage(const char* prog) {
   std::cerr
       << "Usage:\n"
-      << "  " << prog << " bench --hbm PATH --embed PATH [options]\n"
-      << "  " << prog << " generate --hbm PATH --embed PATH [options]\n\n"
+      << "  " << prog << " bench --text_hbm PATH --tok_embeddings PATH [options]\n"
+      << "  " << prog << " generate --text_hbm PATH --tok_embeddings PATH [options]\n\n"
       << "Options:\n"
-      << "  --token-ids 9259,1234   prompt token ids (default: 9259 = \"Hello\")\n"
-      << "  --max-tokens N          new tokens to generate (default: 8)\n"
+      << "  --token_ids 9259,1234   prompt token ids (default: 9259 = \"Hello\")\n"
+      << "  --max_tokens N          new tokens to generate (default: 8)\n"
       << "  --warmup N              decode warmup steps before timing (default: 2)\n"
       << std::endl;
 }
@@ -36,42 +38,46 @@ std::vector<int64_t> ParseTokenIds(const std::string& s) {
 
 }  // namespace
 
+// -------------------- Command-line flags --------------------
+DEFINE_string(text_hbm, "",
+              "Path to text LLM *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm");
+DEFINE_string(tok_embeddings, "",
+              "Path to tok_embeddings.bin. Default: $GEMMA4_HOME/model/tok_embeddings.bin");
+DEFINE_string(token_ids, "9259",
+              "Prompt token ids, comma-separated (default: 9259 = \"Hello\").");
+DEFINE_int32(max_tokens, 8, "Maximum new tokens to generate.");
+DEFINE_int32(warmup, 2, "Decode warmup steps before timing.");
+
 int main(int argc, char** argv) {
+  gflags::SetUsageMessage(
+      "Gemma4-E2B text-only benchmark / generate.\n"
+      "Usage: ./gemma4_text_bench {bench|generate} [--text_hbm PATH] "
+      "[--tok_embeddings PATH] [--token_ids 1,2,3] [--max_tokens N] [--warmup N]");
+
   if (argc < 2) {
     PrintUsage(argv[0]);
     return 1;
   }
 
   const std::string mode = argv[1];
+  // Strip mode before gflags parses the rest.
+  argv[1] = argv[0];
+  ++argv;
+  --argc;
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
   const char* env_home = std::getenv("GEMMA4_HOME");
   const std::string home = (env_home && *env_home) ? env_home : ".";
-  std::string hbm = home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm";
-  std::string embed = home + "/model/tok_embeddings.bin";
-  std::string token_ids_str = "9259";
-  int max_tokens = 8;
-  int warmup = 2;
-
-  for (int i = 2; i < argc; ++i) {
-    std::string arg = argv[i];
-    if ((arg == "--hbm" || arg == "--embed" || arg == "--token-ids") &&
-        i + 1 < argc) {
-      const std::string val = argv[++i];
-      if (arg == "--hbm") {
-        hbm = val;
-      } else if (arg == "--embed") {
-        embed = val;
-      } else if (arg == "--token-ids") {
-        token_ids_str = val;
-      }
-    } else if (arg == "--max-tokens" && i + 1 < argc) {
-      max_tokens = std::stoi(argv[++i]);
-    } else if (arg == "--warmup" && i + 1 < argc) {
-      warmup = std::stoi(argv[++i]);
-    } else if (arg == "--help" || arg == "-h") {
-      PrintUsage(argv[0]);
-      return 0;
-    }
-  }
+  const std::string hbm = FLAGS_text_hbm.empty()
+      ? home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm"
+      : FLAGS_text_hbm;
+  const std::string embed = FLAGS_tok_embeddings.empty()
+      ? home + "/model/tok_embeddings.bin"
+      : FLAGS_tok_embeddings;
+  const std::string& token_ids_str = FLAGS_token_ids;
+  const int max_tokens = FLAGS_max_tokens;
+  const int warmup = FLAGS_warmup;
 
   try {
     const std::vector<int64_t> ids = ParseTokenIds(token_ids_str);

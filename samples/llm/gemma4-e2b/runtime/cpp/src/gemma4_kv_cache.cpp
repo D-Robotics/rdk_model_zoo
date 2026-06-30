@@ -1,10 +1,10 @@
-#include "gemma4_kv_cache.h"
+#include "gemma4_kv_cache.hpp"
 
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
 
-#include "hb_utils.h"
+#include "hb_utils.hpp"
 
 namespace gemma4 {
 

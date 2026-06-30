@@ -3,7 +3,7 @@
  * All rights reserved
  */
 
-#include "gemma4_native_tokenizer.h"
+#include "gemma4_native_tokenizer.hpp"
 
 #include <algorithm>
 #include <cstdio>

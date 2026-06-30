@@ -1,4 +1,4 @@
-#include "gemma4_vision_engine.h"
+#include "gemma4_vision_engine.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -7,9 +7,9 @@
 #include <stdexcept>
 #include <vector>
 
-#include "gemma4_config.h"
-#include "gemma4_vision_preprocess.h"
-#include "hb_utils.h"
+#include "gemma4_config.hpp"
+#include "gemma4_vision_preprocess.hpp"
+#include "hb_utils.hpp"
 
 namespace gemma4 {
 

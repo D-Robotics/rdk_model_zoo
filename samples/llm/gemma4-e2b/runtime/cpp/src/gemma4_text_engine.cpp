@@ -1,4 +1,4 @@
-#include "gemma4_text_engine.h"
+#include "gemma4_text_engine.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -9,8 +9,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "gemma4_config.h"
-#include "hb_utils.h"
+#include "gemma4_config.hpp"
+#include "hb_utils.hpp"
 
 namespace gemma4 {
 

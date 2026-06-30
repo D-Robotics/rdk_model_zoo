@@ -742,7 +742,7 @@ cd samples/llm/gemma4-e2b/runtime/cpp
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
-# Outputs: gemma4_chat, gemma4_server, gemma4_demo, gemma4_text_bench, gemma4_golden_verify
+# Outputs: main, gemma4_server, gemma4_demo, gemma4_text_bench, gemma4_golden_verify
 ```
 
 > **Note**: Board build only needs gcc, cmake, OpenCV, and Horizon BPU runtime headers (`/usr/hobot/`). **No** PC-side `hbdk4_compiler` or `leap_llm`.
@@ -751,7 +751,7 @@ make -j$(nproc)
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
-./gemma4_chat
+./main
 ```
 
 Example session:
@@ -833,12 +833,12 @@ ALL PASSED
 
 #### VLM image test
 
-Use `docs/image1.jpg` (red panda) on board:
+Use `test_data/image1.jpg` (red panda) on board:
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
 cd runtime/cpp/build
-./gemma4_chat
+./main
 ```
 
 ```

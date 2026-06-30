@@ -43,4 +43,4 @@ python -u "$OELLM_BUILD" \
     --core_num 1 \
     2>&1 | tee "$OUTPUT_DIR/text_compile.log"
 
-echo "Done: $OUTPUT_DIR/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm"
+echo "Done: $OUTPUT_DIR/gemma4-e2b_lm_chunk_${CHUNK_SIZE}_cache_${CACHE_LEN}_ptq.hbm"

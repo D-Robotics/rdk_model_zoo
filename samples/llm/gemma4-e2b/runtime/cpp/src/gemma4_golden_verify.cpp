@@ -8,8 +8,10 @@
 #include <string>
 #include <vector>
 
-#include "gemma4_config.h"
-#include "gemma4_text_engine.h"
+#include "gflags/gflags.h"
+
+#include "gemma4_config.hpp"
+#include "gemma4_text_engine.hpp"
 
 namespace {
 
@@ -123,31 +125,36 @@ bool CompareI32(const std::string& name, const std::vector<int32_t>& got,
 
 }  // namespace
 
+// -------------------- Command-line flags --------------------
+DEFINE_string(golden_root, "",
+              "Root directory of golden_mask_kv tensors. Default: $GEMMA4_HOME/golden_mask_kv");
+DEFINE_string(prompt_id, "prompt_0",
+              "Prompt id sub-directory under golden_root (e.g. prompt_0).");
+DEFINE_string(text_hbm, "",
+              "Path to text LLM *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm");
+DEFINE_string(tok_embeddings, "",
+              "Path to tok_embeddings.bin. Default: $GEMMA4_HOME/model/tok_embeddings.bin");
+
 int main(int argc, char** argv) {
+  gflags::SetUsageMessage(
+      "Verify board-side prefill tensors against PC-side golden data.\n"
+      "Usage: ./gemma4_golden_verify [--golden_root DIR] [--prompt_id ID] "
+      "[--text_hbm PATH] [--tok_embeddings PATH]");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
   const char* env_home = std::getenv("GEMMA4_HOME");
   const std::string home = (env_home && *env_home) ? env_home : ".";
-  std::string golden_root = home + "/golden_mask_kv";
-  std::string prompt_id = "prompt_0";
-  std::string hbm = home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm";
-  std::string embed = home + "/model/tok_embeddings.bin";
-
-  for (int i = 1; i < argc; ++i) {
-    const std::string arg = argv[i];
-    if ((arg == "--golden-root" || arg == "--prompt" || arg == "--hbm" ||
-         arg == "--embed") &&
-        i + 1 < argc) {
-      const std::string val = argv[++i];
-      if (arg == "--golden-root") {
-        golden_root = val;
-      } else if (arg == "--prompt") {
-        prompt_id = val;
-      } else if (arg == "--hbm") {
-        hbm = val;
-      } else if (arg == "--embed") {
-        embed = val;
-      }
-    }
-  }
+  const std::string golden_root = FLAGS_golden_root.empty()
+      ? home + "/golden_mask_kv"
+      : FLAGS_golden_root;
+  const std::string& prompt_id = FLAGS_prompt_id;
+  const std::string hbm = FLAGS_text_hbm.empty()
+      ? home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm"
+      : FLAGS_text_hbm;
+  const std::string embed = FLAGS_tok_embeddings.empty()
+      ? home + "/model/tok_embeddings.bin"
+      : FLAGS_tok_embeddings;
 
   try {
     const std::string chunk_dir =

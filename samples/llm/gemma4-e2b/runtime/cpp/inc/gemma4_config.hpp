@@ -1,3 +1,12 @@
+/**
+ * @file gemma4_config.hpp
+ * @brief Compile-time constants for Gemma4-E2B (model dims, special token IDs,
+ *        quantization scales, KV-cache flush indices).
+ *
+ * Centralizes every "magic number" tied to the pre-compiled HBM models so
+ * the runtime code stays free of literals. If you re-compile with different
+ * `chunk_size` / `cache_len`, update kChunkSize / kCacheLen here too.
+ */
 #pragma once
 
 #include <cstdint>

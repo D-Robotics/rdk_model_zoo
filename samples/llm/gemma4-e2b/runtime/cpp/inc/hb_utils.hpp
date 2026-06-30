@@ -1,3 +1,15 @@
+/**
+ * @file hb_utils.hpp
+ * @brief Lightweight helpers around the Horizon BPU (libdnn / libucp) C API.
+ *
+ * Provides:
+ *   - HBDNN_CHECK / HBUCP_CHECK macros that turn non-zero return codes into
+ *     `std::runtime_error` with a human-readable description.
+ *   - ElementSize / ProdSize / stride-aware copy helpers used by the prefill
+ *     and decode paths to populate BPU input tensors.
+ *
+ * @note Header-only; safe to include from any translation unit.
+ */
 #pragma once
 
 #include <cstdint>
@@ -30,10 +42,6 @@
                                ": " + hbUCPGetErrorDesc(_rc) + " (" + (ctx) + ")"); \
     }                                                                              \
   } while (0)
-
-inline uint32_t Align64(uint32_t w) {
-  return (w + 63U) & ~63U;
-}
 
 inline int32_t ElementSize(int32_t type) {
   switch (type) {

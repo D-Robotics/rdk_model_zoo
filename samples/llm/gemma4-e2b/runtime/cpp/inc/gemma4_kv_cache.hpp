@@ -1,3 +1,14 @@
+/**
+ * @file gemma4_kv_cache.hpp
+ * @brief Zero-copy KV cache for the Gemma4-E2B text decoder.
+ *
+ * Owns BPU-allocated K/V tensors for every decoder layer with per-layer
+ * aligned byte sizes. Pointers are shared with the model's prefill / decode
+ * input slots, so prefill writes the cache in-place and decode reads from
+ * it without any memcpy between steps.
+ *
+ * @note Not thread-safe; one cache per text engine.
+ */
 #pragma once
 
 #include <cstdint>
@@ -6,7 +17,7 @@
 #include "hobot/hb_ucp.h"
 #include "hobot/hb_ucp_sys.h"
 
-#include "gemma4_config.h"
+#include "gemma4_config.hpp"
 
 namespace gemma4 {
 

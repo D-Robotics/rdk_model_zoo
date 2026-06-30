@@ -19,10 +19,28 @@
 #include <string>
 #include <vector>
 
-#include "gemma4_tokenizer.h"
-#include "gemma4_config.h"
-#include "gemma4_text_engine.h"
-#include "gemma4_vision_engine.h"
+#include "gflags/gflags.h"
+
+#include "gemma4_tokenizer.hpp"
+#include "gemma4_config.hpp"
+#include "gemma4_text_engine.hpp"
+#include "gemma4_vision_engine.hpp"
+
+// -------------------- Command-line flags --------------------
+// Empty default => resolved at runtime from $GEMMA4_HOME.
+DEFINE_string(text_hbm, "",
+              "Path to text LLM *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm");
+DEFINE_string(vision_hbm, "",
+              "Path to vision ViT *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_vit_ptq.hbm");
+DEFINE_string(tok_embeddings, "",
+              "Path to tok_embeddings.bin (external token embedding table). "
+              "Default: $GEMMA4_HOME/model/tok_embeddings.bin");
+DEFINE_string(tokenizer_path, "",
+              "Path to tokenizer.json. Default: $GEMMA4_HOME/tokenizer/tokenizer.json");
+DEFINE_int32(max_tokens, gemma4::kCacheLen,
+             "Maximum new tokens to generate per turn (bounded by KV cache length).");
 
 namespace {
 
@@ -91,7 +109,7 @@ void PrintBanner() {
     "\033[38;5;33m",  "\033[38;5;99m",  "\033[38;5;201m",
   };
 
-  const char* title = "        Gemma on RDK S100";
+  const char* title = "        Gemma on RDK S100P";
 
   std::cout << "\n" << DIM
             << "================================================================\n" << RST
@@ -114,32 +132,29 @@ void PrintBanner() {
 }  // namespace
 
 int main(int argc, char** argv) {
-  // Default model paths: $GEMMA4_HOME/model/ and $GEMMA4_HOME/tokenizer/
+  // Parse gflags first (consumes recognized --flag args, leaves the rest).
+  gflags::SetUsageMessage(
+      "Interactive VLM chat for Gemma4-E2B on RDK S100P.\n"
+      "Usage: ./main [--text_hbm PATH] [--vision_hbm PATH] "
+      "[--tok_embeddings PATH] [--tokenizer_path PATH] [--max_tokens N]");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+  // Resolve default paths from $GEMMA4_HOME when the corresponding flag is empty.
   const char* env_home = std::getenv("GEMMA4_HOME");
   const std::string home = (env_home && *env_home) ? env_home : ".";
-  std::string text_hbm = home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm";
-  std::string vision_hbm = home + "/model/gemma4-e2b_vit_ptq.hbm";
-  std::string embed = home + "/model/tok_embeddings.bin";
-  std::string tokenizer_json = home + "/tokenizer/tokenizer.json";
-  int max_tokens = gemma4::kCacheLen;  // bounded by KV cache capacity
-
-  for (int i = 1; i < argc; ++i) {
-    std::string arg = argv[i];
-    if ((arg == "--text-hbm" || arg == "--vision-hbm" || arg == "--embed" ||
-         arg == "--tokenizer") &&
-        i + 1 < argc) {
-      const std::string val = argv[++i];
-      if (arg == "--text-hbm")      text_hbm = val;
-      else if (arg == "--vision-hbm") vision_hbm = val;
-      else if (arg == "--embed")    embed = val;
-      else if (arg == "--tokenizer") tokenizer_json = val;
-    } else if (arg == "--max-tokens" && i + 1 < argc) {
-      max_tokens = std::stoi(argv[++i]);
-    } else if (arg == "--help" || arg == "-h") {
-      PrintHelp();
-      return 0;
-    }
-  }
+  const std::string text_hbm = FLAGS_text_hbm.empty()
+      ? home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm"
+      : FLAGS_text_hbm;
+  const std::string vision_hbm = FLAGS_vision_hbm.empty()
+      ? home + "/model/gemma4-e2b_vit_ptq.hbm"
+      : FLAGS_vision_hbm;
+  const std::string embed = FLAGS_tok_embeddings.empty()
+      ? home + "/model/tok_embeddings.bin"
+      : FLAGS_tok_embeddings;
+  const std::string tokenizer_json = FLAGS_tokenizer_path.empty()
+      ? home + "/tokenizer/tokenizer.json"
+      : FLAGS_tokenizer_path;
+  const int max_tokens = FLAGS_max_tokens;
 
   try {
     PrintBanner();

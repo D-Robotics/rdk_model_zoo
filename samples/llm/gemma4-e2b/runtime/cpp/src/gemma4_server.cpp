@@ -6,9 +6,11 @@
 #include <string>
 #include <vector>
 
-#include "gemma4_text_engine.h"
-#include "gemma4_tokenizer.h"
-#include "gemma4_vision_engine.h"
+#include "gflags/gflags.h"
+
+#include "gemma4_text_engine.hpp"
+#include "gemma4_tokenizer.hpp"
+#include "gemma4_vision_engine.hpp"
 
 namespace {
 
@@ -69,30 +71,38 @@ std::string BuildMessagesJson(
 
 }  // namespace
 
+// -------------------- Command-line flags --------------------
+// Empty default => resolved at runtime from $GEMMA4_HOME.
+DEFINE_string(text_hbm, "",
+              "Path to text LLM *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm");
+DEFINE_string(vision_hbm, "",
+              "Path to vision ViT *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_vit_ptq.hbm");
+DEFINE_string(tok_embeddings, "",
+              "Path to tok_embeddings.bin. Default: $GEMMA4_HOME/model/tok_embeddings.bin");
+DEFINE_int32(max_tokens, 128,
+             "Maximum new tokens to generate per turn.");
+
 int main(int argc, char** argv) {
+  gflags::SetUsageMessage(
+      "Gemma4-E2B chat server (models loaded once, KV cache reused).\n"
+      "Usage: ./gemma4_server [--text_hbm PATH] [--vision_hbm PATH] "
+      "[--tok_embeddings PATH] [--max_tokens N]");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
   const char* env_home = std::getenv("GEMMA4_HOME");
   const std::string home = (env_home && *env_home) ? env_home : ".";
-  std::string text_hbm = home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm";
-  std::string vision_hbm = home + "/model/gemma4-e2b_vit_ptq.hbm";
-  std::string embed = home + "/model/tok_embeddings.bin";
-  int max_tokens = 128;
-
-  for (int i = 1; i < argc; ++i) {
-    std::string arg = argv[i];
-    if ((arg == "--text-hbm" || arg == "--vision-hbm" || arg == "--embed") &&
-        i + 1 < argc) {
-      const std::string val = argv[++i];
-      if (arg == "--text-hbm") {
-        text_hbm = val;
-      } else if (arg == "--vision-hbm") {
-        vision_hbm = val;
-      } else if (arg == "--embed") {
-        embed = val;
-      }
-    } else if (arg == "--max-tokens" && i + 1 < argc) {
-      max_tokens = std::stoi(argv[++i]);
-    }
-  }
+  const std::string text_hbm = FLAGS_text_hbm.empty()
+      ? home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm"
+      : FLAGS_text_hbm;
+  const std::string vision_hbm = FLAGS_vision_hbm.empty()
+      ? home + "/model/gemma4-e2b_vit_ptq.hbm"
+      : FLAGS_vision_hbm;
+  const std::string embed = FLAGS_tok_embeddings.empty()
+      ? home + "/model/tok_embeddings.bin"
+      : FLAGS_tok_embeddings;
+  const int max_tokens = FLAGS_max_tokens;
 
   try {
     std::cout << "Loading Text HBM (one-time, ~60s) ..." << std::endl;

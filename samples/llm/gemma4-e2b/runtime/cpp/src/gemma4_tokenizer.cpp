@@ -1,4 +1,4 @@
-#include "gemma4_tokenizer.h"
+#include "gemma4_tokenizer.hpp"
 
 #include <cstdlib>
 #include <filesystem>

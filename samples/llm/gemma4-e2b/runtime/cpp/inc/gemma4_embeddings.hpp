@@ -1,10 +1,19 @@
+/**
+ * @file gemma4_embeddings.hpp
+ * @brief External token embedding lookup table for Gemma4-E2B.
+ *
+ * Loads `tok_embeddings.bin` from disk (f32 or f16 format auto-detected)
+ * and provides per-token-id row lookup. Used by the text engine to feed
+ * `inputs_embeds` at prefill / decode time, with optional vision-feature
+ * injection at image-token positions.
+ */
 #pragma once
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
-#include "gemma4_config.h"
+#include "gemma4_config.hpp"
 
 namespace gemma4 {
 

@@ -776,7 +776,7 @@ cd samples/llm/gemma4-e2b/runtime/cpp
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
-# 产出：gemma4_chat, gemma4_server, gemma4_demo, gemma4_text_bench, gemma4_golden_verify
+# 产出：main, gemma4_server, gemma4_demo, gemma4_text_bench, gemma4_golden_verify
 ```
 
 > **注意**：板端编译只需要 `gcc`、`cmake`、`libopencv-dev` 和 Horizon BPU runtime 头文件（`/usr/hobot/`），**不需要** PC 端的 `hbdk4_compiler` 或 `leap_llm`。分词走原生 C++ `tokenizers-cpp`，**不依赖 Python**。
@@ -785,7 +785,7 @@ make -j$(nproc)
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
-./gemma4_chat
+./main
 ```
 
 交互示例：
@@ -867,12 +867,12 @@ ALL PASSED
 
 #### VLM 图像测试
 
-使用 `docs/image1.jpg`（红熊猫）在板端验证：
+使用 `test_data/image1.jpg`（红熊猫）在板端验证：
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
 cd runtime/cpp/build
-./gemma4_chat
+./main
 ```
 
 ```

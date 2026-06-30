@@ -1,4 +1,4 @@
-#include "gemma4_embeddings.h"
+#include "gemma4_embeddings.hpp"
 
 #include <algorithm>
 #include <cmath>

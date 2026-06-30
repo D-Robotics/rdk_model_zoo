@@ -4,11 +4,12 @@
 #include <string>
 #include <vector>
 
-#include "gemma4_config.h"
-#include "gemma4_text_engine.h"
-#include "gemma4_tokenizer.h"
-#include "gemma4_tokenizer.h"
-#include "gemma4_vision_engine.h"
+#include "gflags/gflags.h"
+
+#include "gemma4_config.hpp"
+#include "gemma4_text_engine.hpp"
+#include "gemma4_tokenizer.hpp"
+#include "gemma4_vision_engine.hpp"
 
 namespace {
 
@@ -16,12 +17,12 @@ void PrintUsage(const char* prog) {
   std::cerr
       << "Usage:\n"
       << "  " << prog << " text --prompt \"...\" [options]\n"
-      << "  " << prog << " vlm --image PATH --prompt \"...\" [options]\n\n"
+      << "  " << prog << " vlm --image_path PATH --prompt \"...\" [options]\n\n"
       << "Options:\n"
-      << "  --text-hbm PATH     Text HBM path\n"
-      << "  --vision-hbm PATH   Vision HBM path\n"
-      << "  --embed PATH        tok_embeddings.bin path\n"
-      << "  --max-tokens N      new tokens to generate (default: 32)\n"
+      << "  --text_hbm PATH       Text HBM path\n"
+      << "  --vision_hbm PATH     Vision HBM path\n"
+      << "  --tok_embeddings PATH tok_embeddings.bin path\n"
+      << "  --max_tokens N        new tokens to generate (default: 32)\n"
       << std::endl;
 }
 
@@ -64,53 +65,58 @@ std::string BuildVlmMessagesJson(const std::string& prompt) {
 
 }  // namespace
 
+// -------------------- Command-line flags --------------------
+DEFINE_string(text_hbm, "",
+              "Path to text LLM *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm");
+DEFINE_string(vision_hbm, "",
+              "Path to vision ViT *.hbm. Default: $GEMMA4_HOME/model/"
+              "gemma4-e2b_vit_ptq.hbm");
+DEFINE_string(tok_embeddings, "",
+              "Path to tok_embeddings.bin. Default: $GEMMA4_HOME/model/tok_embeddings.bin");
+DEFINE_string(prompt, "", "User prompt text (required).");
+DEFINE_string(image_path, "", "Image path (required when mode is 'vlm').");
+DEFINE_int32(max_tokens, 32, "Maximum new tokens to generate.");
+
 int main(int argc, char** argv) {
+  gflags::SetUsageMessage(
+      "Gemma4-E2B single-shot demo.\n"
+      "Usage:\n"
+      "  ./gemma4_demo text --prompt \"...\" [--text_hbm PATH] [--tok_embeddings PATH] [--max_tokens N]\n"
+      "  ./gemma4_demo vlm  --image_path PATH --prompt \"...\" [--vision_hbm PATH] [--text_hbm PATH] [--max_tokens N]");
   if (argc < 2) {
     PrintUsage(argv[0]);
     return 1;
   }
 
   const std::string mode = argv[1];
+  // Strip mode from argv before gflags parses the rest.
+  argv[1] = argv[0];
+  ++argv;
+  --argc;
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
   const char* env_home = std::getenv("GEMMA4_HOME");
   const std::string home = (env_home && *env_home) ? env_home : ".";
-  std::string text_hbm = home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm";
-  std::string vision_hbm = home + "/model/gemma4-e2b_vit_ptq.hbm";
-  std::string embed = home + "/model/tok_embeddings.bin";
-  std::string prompt;
-  std::string image_path;
-  int max_tokens = 32;
-
-  for (int i = 2; i < argc; ++i) {
-    std::string arg = argv[i];
-    if ((arg == "--text-hbm" || arg == "--vision-hbm" || arg == "--embed" ||
-         arg == "--prompt" || arg == "--image") &&
-        i + 1 < argc) {
-      const std::string val = argv[++i];
-      if (arg == "--text-hbm") {
-        text_hbm = val;
-      } else if (arg == "--vision-hbm") {
-        vision_hbm = val;
-      } else if (arg == "--embed") {
-        embed = val;
-      } else if (arg == "--prompt") {
-        prompt = val;
-      } else if (arg == "--image") {
-        image_path = val;
-      }
-    } else if (arg == "--max-tokens" && i + 1 < argc) {
-      max_tokens = std::stoi(argv[++i]);
-    } else if (arg == "--help" || arg == "-h") {
-      PrintUsage(argv[0]);
-      return 0;
-    }
-  }
+  const std::string text_hbm = FLAGS_text_hbm.empty()
+      ? home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm"
+      : FLAGS_text_hbm;
+  const std::string vision_hbm = FLAGS_vision_hbm.empty()
+      ? home + "/model/gemma4-e2b_vit_ptq.hbm"
+      : FLAGS_vision_hbm;
+  const std::string embed = FLAGS_tok_embeddings.empty()
+      ? home + "/model/tok_embeddings.bin"
+      : FLAGS_tok_embeddings;
+  const std::string& prompt = FLAGS_prompt;
+  const std::string& image_path = FLAGS_image_path;
+  const int max_tokens = FLAGS_max_tokens;
 
   if (prompt.empty()) {
     std::cerr << "ERROR: --prompt is required\n";
     return 1;
   }
   if (mode == "vlm" && image_path.empty()) {
-    std::cerr << "ERROR: --image is required for vlm mode\n";
+    std::cerr << "ERROR: --image_path is required for vlm mode\n";
     return 1;
   }
 

@@ -20,7 +20,7 @@ ls /usr/include/hobot/dnn/hb_dnn.h
 System dependencies (usually pre-installed on OE-LLM images):
 
 ```bash
-sudo apt install cmake g++ libopencv-dev cargo
+sudo apt install cmake g++ libopencv-dev libgflags-dev cargo
 # nlohmann-json is provided by the system; if missing: sudo apt install nlohmann-json3-dev
 ```
 
@@ -31,26 +31,29 @@ sudo apt install cmake g++ libopencv-dev cargo
 ## Directory Layout
 
 ```
-runtime/cpp/                      C++ source code (this directory)
-    ├── CMakeLists.txt            Build entry point (pulls in tokenizers-cpp)
-    ├── run.sh                    One-click build + interactive chat
-    ├── gemma4_config.h           Model constants (image token IDs, dims, ...)
-    ├── gemma4_text_engine.*      Text LLM engine (prefill + decode + KV cache)
-    ├── gemma4_vision_engine.*    Vision ViT engine
-    ├── gemma4_embeddings.*       Token embedding lookup + vision injection
-    ├── gemma4_kv_cache.*         Zero-copy KV cache management
-    ├── gemma4_vision_preprocess.* Image resize + patchify
-    ├── gemma4_native_tokenizer.* Native C++ tokenizer (from OE-LLM-s600)
-    ├── gemma4_tokenizer.*        TokenizerBridge: chat template + image expand
-    ├── hb_utils.h                Horizon BPU helpers (tensor, flush, infer)
-    ├── main.cpp                  ★ Interactive VLM chat (primary entry)
-    ├── gemma4_server.cpp         HTTP API server
-    ├── gemma4_demo.cpp           Single-shot VLM demo
-    ├── gemma4_text_bench.cpp     Text-only benchmark
-    └── gemma4_golden_verify.cpp  Golden mask/KV alignment checker
+runtime/cpp/                            C++ source code (this directory)
+├── CMakeLists.txt                      Build entry (pulls in tokenizers-cpp + gflags)
+├── run.sh                              One-click build + interactive chat
+├── inc/                                Public headers
+│   ├── gemma4_config.hpp               Model constants (image token IDs, dims, ...)
+│   ├── gemma4_text_engine.hpp          Text LLM engine (prefill + decode + KV cache)
+│   ├── gemma4_vision_engine.hpp        Vision ViT engine
+│   ├── gemma4_embeddings.hpp           Token embedding lookup + vision injection
+│   ├── gemma4_kv_cache.hpp             Zero-copy KV cache management
+│   ├── gemma4_vision_preprocess.hpp    Image resize + patchify
+│   ├── gemma4_native_tokenizer.hpp     Native C++ tokenizer (from OE-LLM-s600)
+│   ├── gemma4_tokenizer.hpp            TokenizerBridge: chat template + image expand
+│   └── hb_utils.hpp                    Horizon BPU helpers (tensor, flush, infer)
+└── src/                                Implementation + executables
+    ├── main.cpp                        ★ Interactive VLM chat (primary entry)
+    ├── gemma4_server.cpp               HTTP API server
+    ├── gemma4_demo.cpp                 Single-shot VLM demo
+    ├── gemma4_text_bench.cpp           Text-only benchmark
+    ├── gemma4_golden_verify.cpp        Golden mask/KV alignment checker
+    └── gemma4_*.cpp                    Engine implementations
 
 ../../third_party/
-└── tokenizers-cpp/               Downloaded at build time (see third_party/README.md)
+└── tokenizers-cpp/                     Downloaded at build time (see third_party/README.md)
 ```
 
 ## Build
@@ -115,14 +118,14 @@ Set `GEMMA4_HOME` to point at the model directory, then run:
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
 
-# Interactive VLM chat
+# Interactive VLM chat (zero-arg default uses $GEMMA4_HOME)
 ./main
 
 # Inside the chat:
-#   /image /path/to/photo.jpg   Load an image
+#   /image /path/to/photo.jpg        Load an image
 #   What do you see in this image?   Ask a question
-#   /reset                       Clear conversation
-#   /quit                        Exit
+#   /reset                            Clear conversation
+#   /quit                             Exit
 ```
 
 Example output:
@@ -134,6 +137,72 @@ Image loaded (430080 features).
 gemma4> Describe this image
 This is a photograph of a Red Panda resting on a wooden structure...
 ```
+
+## Command-line Parameters
+
+All five binaries use [gflags](https://github.com/gflags/gflags) for argument
+parsing. Flag names use `snake_case` per the Model Zoo guideline. Every flag
+has a default that makes the binary runnable with zero arguments once
+`GEMMA4_HOME` is exported.
+
+### `main` — interactive VLM chat
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--text_hbm` | string | `$GEMMA4_HOME/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm` | Path to text LLM HBM |
+| `--vision_hbm` | string | `$GEMMA4_HOME/model/gemma4-e2b_vit_ptq.hbm` | Path to vision ViT HBM |
+| `--tok_embeddings` | string | `$GEMMA4_HOME/model/tok_embeddings.bin` | External token embedding table |
+| `--tokenizer_path` | string | `$GEMMA4_HOME/tokenizer/tokenizer.json` | HF tokenizer JSON |
+| `--max_tokens` | int | `4096` (`kCacheLen`) | Max new tokens per turn |
+
+### `gemma4_demo` — single-shot text or VLM
+
+```
+./gemma4_demo {text|vlm} --prompt "..." [--image_path PATH] [other flags]
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--text_hbm` | string | same as `main` | Text LLM HBM |
+| `--vision_hbm` | string | same as `main` | Vision ViT HBM (vlm only) |
+| `--tok_embeddings` | string | same as `main` | Token embedding table |
+| `--prompt` | string | `""` (required) | User prompt text |
+| `--image_path` | string | `""` | Image path (required when mode = `vlm`) |
+| `--max_tokens` | int | `32` | Max new tokens |
+
+### `gemma4_server` — long-running chat server
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--text_hbm` | string | same as `main` | Text LLM HBM |
+| `--vision_hbm` | string | same as `main` | Vision ViT HBM |
+| `--tok_embeddings` | string | same as `main` | Token embedding table |
+| `--max_tokens` | int | `128` | Max new tokens per request |
+
+### `gemma4_text_bench` — text-only throughput / smoke test
+
+```
+./gemma4_text_bench {bench|generate} [flags]
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--text_hbm` | string | same as `main` | Text LLM HBM |
+| `--tok_embeddings` | string | same as `main` | Token embedding table |
+| `--token_ids` | string | `9259` (= `Hello`) | Prompt token ids, comma-separated |
+| `--max_tokens` | int | `8` | New tokens to generate |
+| `--warmup` | int | `2` | Decode warmup steps before timing |
+
+### `gemma4_golden_verify` — prefill golden alignment check
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--golden_root` | string | `$GEMMA4_HOME/golden_mask_kv` | Root dir of golden tensors |
+| `--prompt_id` | string | `prompt_0` | Prompt sub-directory |
+| `--text_hbm` | string | same as `main` | Text LLM HBM |
+| `--tok_embeddings` | string | same as `main` | Token embedding table |
+
+Pass `--help` to any binary to see the gflags-generated full help.
 
 ## Key Design Decisions
 
@@ -153,6 +222,6 @@ To verify board inference matches the PC golden data:
 
 ```bash
 # Place golden_mask_kv/ under $GEMMA4_HOME/golden_mask_kv/
-./gemma4_golden_verify --prompt prompt_0
+./gemma4_golden_verify --prompt_id prompt_0
 # Expected: ALL PASSED (cosine=1.0 for all 5 tensors)
 ```
