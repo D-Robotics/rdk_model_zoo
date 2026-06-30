@@ -19,12 +19,12 @@ This example demonstrates how to perform ImageNet-1k image classification tasks 
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `--model-path` | Path to the quantized `.bin` model file. | `./model/HGNetV2_b0_224x224_nv12.bin` |
-| `--label-file` | Path to the ImageNet label file. | `./datasets/imagenet/classname.txt` |
+| `--model-path` | Path to the quantized `.bin` model file. | `../../model/hgnetv2_b0_224x224_nv12.bin` |
+| `--label-file` | Path to the ImageNet label file. | `../../../../../datasets/imagenet/imagenet_classes.names` |
 | `--priority` | Model priority, range `0~255`. | `0` |
 | `--bpu-cores` | BPU core index used for inference. | `0` |
-| `--test-img` | Path to the test input image. | `./test_data/sandbar.JPEG` |
-| `--img-save-path` | Path to save the output visualization image. | `./test_data/result.jpg` |
+| `--test-img` | Path to the test input image. | `../../test_data/sandbar.JPEG` |
+| `--img-save-path` | Path to save the output visualization image. | `../../test_data/result.jpg` |
 | `--resize-type` | Resize strategy (`0`: direct resize, `1`: letterbox). | `0` |
 | `--topk` | Number of top-K categories to display. | `5` |
 
@@ -48,9 +48,15 @@ python3 main.py
 ```bash
 python3 main.py \
     --model-path ../../model/hgnetv2_b0_224x224_nv12.bin \
-    --test-img ./test_data/great_grey_owl.JPEG \
-    --img-save-path ./test_data/result.jpg \
+    --test-img ../../test_data/sandbar.JPEG \
+    --img-save-path ../../test_data/result.jpg \
     --topk 5
+```
+
+- Switch to a different variant (b1..b4):
+
+```bash
+python3 main.py --model-path ../../model/hgnetv2_b4_224x224_nv12.bin
 ```
 
 ## API Description

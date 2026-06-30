@@ -73,6 +73,7 @@ rdk_model_zoo/
 |   |   |-- fastvit/              # Image classification
 |   |   |-- fcos/                 # Object detection
 |   |   |-- googlenet/            # Image classification
+|   |   |-- hgnetv2/              # Image classification
 |   |   |-- lprnet/               # License plate recognition
 |   |   |-- mobilenetv1/          # Image classification
 |   |   |-- mobilenetv2/          # Image classification
@@ -140,6 +141,7 @@ python3 main.py \
 | Image Classification | FasterNet | `samples/vision/fasternet` | RDK X5 | [Details](./samples/vision/fasternet) |
 | Image Classification | FastViT | `samples/vision/fastvit` | RDK X5 | [Details](./samples/vision/fastvit) |
 | Image Classification | GoogLeNet | `samples/vision/googlenet` | RDK X5 | [Details](./samples/vision/googlenet) |
+| Image Classification | HGNetV2 | `samples/vision/hgnetv2` | RDK X5 | [Details](./samples/vision/hgnetv2) |
 | Image Classification | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 | [Details](./samples/vision/mobilenetv1) |
 | Image Classification | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 | [Details](./samples/vision/mobilenetv2) |
 | Image Classification | MobileNetV3 | `samples/vision/mobilenetv3` | RDK X5 | [Details](./samples/vision/mobilenetv3) |

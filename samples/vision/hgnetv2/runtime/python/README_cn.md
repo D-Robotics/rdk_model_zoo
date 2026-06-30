@@ -19,12 +19,12 @@
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| `--model-path` | 量化 `.bin` 模型文件路径。 | `./model/HGNetV2_b0_224x224_nv12.bin` |
-| `--label-file` | ImageNet 标签文件路径。 | `./datasets/imagenet/classname.txt` |
+| `--model-path` | 量化 `.bin` 模型文件路径。 | `../../model/hgnetv2_b0_224x224_nv12.bin` |
+| `--label-file` | ImageNet 标签文件路径。 | `../../../../../datasets/imagenet/imagenet_classes.names` |
 | `--priority` | 模型优先级，范围 `0~255`。 | `0` |
 | `--bpu-cores` | 用于推理的 BPU 核索引。 | `0` |
-| `--test-img` | 测试输入图像路径。 | `./test_data/sandbar.JPEG` |
-| `--img-save-path` | 输出可视化图像保存路径。 | `./test_data/result.jpg` |
+| `--test-img` | 测试输入图像路径。 | `../../test_data/sandbar.JPEG` |
+| `--img-save-path` | 输出可视化图像保存路径。 | `../../test_data/result.jpg` |
 | `--resize-type` | 缩放策略（`0`：直接缩放，`1`：letterbox）。 | `0` |
 | `--topk` | 显示的 Top-K 类别数量。 | `5` |
 
@@ -48,9 +48,15 @@ python3 main.py
 ```bash
 python3 main.py \
     --model-path ../../model/hgnetv2_b0_224x224_nv12.bin \
-    --test-img ./test_data/great_grey_owl.JPEG \
-    --img-save-path ./test_data/result.jpg \
+    --test-img ../../test_data/sandbar.JPEG \
+    --img-save-path ../../test_data/result.jpg \
     --topk 5
+```
+
+- 切换其他变种 (b1..b4)：
+
+```bash
+python3 main.py --model-path ../../model/hgnetv2_b4_224x224_nv12.bin
 ```
 
 ## 接口说明
