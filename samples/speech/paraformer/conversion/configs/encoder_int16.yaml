@@ -1,0 +1,42 @@
+# Encoder INT16 hb_compile config (S100 / nash-e)
+#
+# Prerequisites:
+#   - ./encoder_only.onnx (produced by scripts/08_extract_encoder.py)
+#   - ./calib_data/speech/*.npy (50 samples, produced by scripts/09_gen_calib_features.py)
+#
+# Run:
+#   hb_compile -c encoder_int16.yaml
+#
+# Produces:
+#   ./encoder_int16_output/paraformer_encoder_int16.hbm       (~211 MB)
+#   ./encoder_int16_output/paraformer_encoder_int16_ptq_model.onnx  (for CER eval)
+
+model_parameters:
+  onnx_model: ./encoder_only.onnx
+  march: nash-e
+  output_model_file_prefix: paraformer_encoder_int16
+  working_dir: ./encoder_int16_output
+
+input_parameters:
+  input_name: speech
+  input_shape: 1x400x560
+  input_type_rt: featuremap
+  input_type_train: featuremap
+  input_layout_train: NCHW
+  separate_batch: false
+
+calibration_parameters:
+  cal_data_dir: ./calib_data/speech
+  calibration_type: max
+  quant_config:
+    model_config:
+      all_node_type: int16
+      activation:
+        calibration_type: max
+
+compiler_parameters:
+  optimize_level: O2
+  compile_mode: latency
+  core_num: 1                # S100 单 BPU 核
+  jobs: 32                   # 按机器 CPU 核数调整
+  cache_mode: disable
