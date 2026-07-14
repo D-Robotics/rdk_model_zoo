@@ -1,6 +1,8 @@
-# gemma4 model registrations for leap_llm/apis/model/model_factory.py
-# Append this block to model_factory.py (before the last model or at end)
-# Generated from working OE-LLM 1.0.0 + Gemma4 E2B/E4B setup
+"""Register Gemma4 model builders with the Leap LLM model factory.
+
+Copy this extension block into Leap LLM's ``model_factory.py`` as described by
+the conversion documentation.
+"""
 
 @register_model("gemma4-e2b-vision", ["nash-e", "nash-m", "nash-p"])
 def _build_gemma4_e2b_vision(args):

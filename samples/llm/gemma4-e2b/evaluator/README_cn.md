@@ -24,6 +24,8 @@ python -u conversion/scripts/verify/quick_text_verify.py
 
 ## 板端（golden mask / KV 对齐）
 
+`golden_mask_kv/` 为可选的内部校验数据，不包含在公开模型服务器中。
+
 需编译 **全部** runtime 目标（不只 `main`）：
 
 ```bash
@@ -55,4 +57,4 @@ export GEMMA4_HOME=~/gemma4_e2b
 
 > **说明：** 主对话入口已按 Model Zoo 规范改名为 `main`，`./gemma4_chat` 不再存在。
 
-预期结果见 [docs/QUANTIZATION_TUTORIAL_zh.md §9.4](../docs/QUANTIZATION_TUTORIAL_zh.md)。
+预期结果见 [QUANTIZATION_TUTORIAL_zh.md §9.4](../conversion/QUANTIZATION_TUTORIAL_zh.md)。

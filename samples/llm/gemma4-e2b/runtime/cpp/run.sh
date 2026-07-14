@@ -18,7 +18,7 @@ if [[ -r /sys/class/boardinfo/soc_name ]]; then
   echo "SOC         : $SOC"
 fi
 
-PKGS=(cmake g++ libopencv-dev cargo)
+PKGS=(cmake g++ libopencv-dev libgflags-dev nlohmann-json3-dev cargo wget)
 need_update=false
 for pkg in "${PKGS[@]}"; do
   if ! dpkg -s "$pkg" >/dev/null 2>&1; then

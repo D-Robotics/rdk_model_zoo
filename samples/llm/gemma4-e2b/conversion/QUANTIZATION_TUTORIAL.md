@@ -10,11 +10,11 @@
 
 ## Demo
 
-![Text chat on S100P](./test3.jpg)
+![Text chat on S100P](../test_data/results/test3.jpg)
 
 *Text chat on S100P: ask in Chinese, stream the reply on BPU (~6.9 tok/s).*
 
-![VLM demo on RDK S100P](./test1.jpg)
+![VLM demo on RDK S100P](../test_data/results/test1.jpg)
 
 *VLM chat on S100P: load an image, ask in Chinese, stream the reply on BPU (86% BPU utilization).*
 
@@ -719,9 +719,12 @@ How to deploy compiled HBM models on S100P and run Gemma4-E2B VLM inference.
 On S100P:
 
 ```bash
-pip install huggingface_hub
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b
+bash model/download_model.sh
 ```
+
+The script downloads the three runtime model files and the two required
+tokenizer files from the D-Robotics model archive.
 
 Verify integrity (optional):
 
@@ -847,7 +850,7 @@ gemma4> What do you see?
 gemma4> 你看到什么，说中文
 ```
 
-![On-board VLM red panda test](./test2.jpg)
+![On-board VLM red panda test](../test_data/results/test2.jpg)
 
 | Test image | Expected | Actual |
 | --- | --- | --- |
@@ -893,11 +896,12 @@ KV capacity `kCacheLen=4096` is fixed at HBM compile time. prompt + output ≤ 4
 
 ## Appendix: Model File Download
 
-Pre-compiled HBM models on HuggingFace:
+Pre-compiled runtime model files are available from the D-Robotics model
+archive:
 
 ```bash
-pip install huggingface_hub
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ./gemma4_e2b_deploy
+export GEMMA4_HOME=./gemma4_e2b_deploy
+bash model/download_model.sh
 ```
 
 | File | Description |
@@ -905,7 +909,7 @@ hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ./gemma4_e2b_deploy
 | `gemma4-e2b_vit_ptq.hbm` | Vision HBM (329 MB) |
 | `gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm` | Text HBM (4.5 GB) |
 | `tok_embeddings.bin` | Token embedding table (1.5 GB) |
-| `tokenizer/` | Tokenizer files |
+| `tokenizer/` | `tokenizer.json` and `tokenizer_config.json` |
 
 Verify integrity:
 

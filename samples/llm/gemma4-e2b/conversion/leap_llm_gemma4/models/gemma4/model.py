@@ -1,3 +1,5 @@
+"""Define Gemma4 vision and text models used by the Leap LLM converter."""
+
 import json
 import math
 import os
@@ -35,6 +37,7 @@ from .blocks import (
 
 @dataclass
 class Gemma4VisionConfig:
+    """Store architecture settings for the Gemma4 vision encoder."""
     hidden_size: int = 768
     intermediate_size: int = 3072
     num_hidden_layers: int = 16
@@ -618,6 +621,7 @@ class Gemma4Vision:
 
 @dataclass
 class Gemma4TextConfig:
+    """Store architecture settings for the Gemma4 text decoder."""
     hidden_size: int = 1536
     intermediate_size: int = 6144
     num_attention_heads: int = 8
@@ -686,6 +690,7 @@ class Gemma4TextConfig:
 
 
 class Gemma4TextScaledEmbedding(Module):
+    """Apply scaled token embeddings with conversion-time fake quantization."""
     def __init__(self, num_embeddings: int, embedding_dim: int, embed_scale: float):
         super().__init__()
         self.weight = nn.Parameter(torch.empty(num_embeddings, embedding_dim))
@@ -705,6 +710,7 @@ class Gemma4TextScaledEmbedding(Module):
 
 
 class Gemma4TextLMHead(FakeQuantLinear):
+    """Implement the bias-free Gemma4 text language-model projection head."""
     def __init__(self, in_features: int, out_features: int):
         super().__init__(in_features, out_features, bias=False)
 
@@ -715,6 +721,7 @@ class Gemma4TextLMHead(FakeQuantLinear):
 
 
 class Gemma4TextModel(Model):
+    """Build the Gemma4 text decoder graph and manage KV cache tensors."""
     def __init__(self, config: Gemma4TextConfig, cache_len: int):
         super().__init__()
         self.config = config
@@ -1060,6 +1067,7 @@ class Gemma4TextModel(Model):
 
 
 class Gemma4Text:
+    """Provide the top-level Gemma4 text model for conversion and verification."""
     def __init__(self, model: Gemma4TextModel, config: Gemma4TextConfig, cache_len: int):
         self.model = model
         self.config = config

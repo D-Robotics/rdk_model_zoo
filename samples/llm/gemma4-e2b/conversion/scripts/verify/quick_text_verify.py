@@ -27,6 +27,8 @@ DEVICE = "cpu"
 
 
 def prepare_chunk_inputs(text_model, preparer, prompt, bc_meta):
+    """Build one prefill chunk and its BC-runtime input tensor mapping."""
+    """Build one prefill chunk and its BC-runtime input tensor mapping."""
     chunks, pos, full_masks, sliding_masks = preparer.prepare_inputs(prompt)
     if not chunks:
         raise ValueError("empty prompt")
@@ -59,6 +61,8 @@ def prepare_chunk_inputs(text_model, preparer, prompt, bc_meta):
 
 
 def main():
+    """Compare Gemma4 text BC logits with the PyTorch reference output."""
+    """Compare Gemma4 text BC logits with the PyTorch reference output."""
     parser = argparse.ArgumentParser(description="Text BC lightweight verification")
     parser.add_argument("--model-dir", default=str(REPO_ROOT / "gemma4-e2b"))
     parser.add_argument("--bc-path", default=str(REPO_ROOT / "output/gemma4_e2b_text/gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill_convert.bc"))

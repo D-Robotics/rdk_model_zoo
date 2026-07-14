@@ -45,8 +45,8 @@ CHUNK_SIZE=512 CACHE_LEN=8192 bash conversion/scripts/compile/run_text_compile.s
 
 含踩坑记录的逐步指南：
 
-- [docs/QUANTIZATION_TUTORIAL_zh.md](../docs/QUANTIZATION_TUTORIAL_zh.md)（中文）
-- [docs/QUANTIZATION_TUTORIAL.md](../docs/QUANTIZATION_TUTORIAL.md)（English）
+- [QUANTIZATION_TUTORIAL_zh.md](./QUANTIZATION_TUTORIAL_zh.md)（中文）
+- [QUANTIZATION_TUTORIAL.md](./QUANTIZATION_TUTORIAL.md)（English）
 
 将 Gemma4 适配代码安装到 OE-LLM 环境：
 

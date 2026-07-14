@@ -20,8 +20,7 @@ ls /usr/include/hobot/dnn/hb_dnn.h
 System dependencies (usually pre-installed on OE-LLM images):
 
 ```bash
-sudo apt install cmake g++ libopencv-dev libgflags-dev cargo
-# nlohmann-json is provided by the system; if missing: sudo apt install nlohmann-json3-dev
+sudo apt install cmake g++ libopencv-dev libgflags-dev nlohmann-json3-dev cargo wget
 ```
 
 > **No Python required.** Tokenization is done in native C++ via
@@ -91,12 +90,12 @@ This produces 5 executables in `build/`:
 ## Download Pre-compiled Models
 
 ```bash
-python3 -m pip install --user 'huggingface_hub>=0.26.0'
-export PATH="$HOME/.local/bin:$PATH"
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b
+bash ../../model/download_model.sh
 ```
 
-This downloads 3 model files + tokenizer:
+This downloads the 3 runtime model files and the 2 required tokenizer files
+from the D-Robotics model archive.
 
 ```
 ~/gemma4_e2b/
@@ -105,10 +104,8 @@ This downloads 3 model files + tokenizer:
 │   ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm      # 4.5 GB  Text
 │   └── tok_embeddings.bin                               # 1.5 GB  Embedding
 └── tokenizer/
-    ├── tokenizer.json                                   # 32 MB
-    ├── tokenizer_config.json
-    ├── chat_template.jinja
-    └── config.json
+    ├── tokenizer.json
+    └── tokenizer_config.json
 ```
 
 ## Run
@@ -221,7 +218,8 @@ Pass `--help` to any binary to see the gflags-generated full help.
 To verify board inference matches the PC golden data:
 
 ```bash
-# Place golden_mask_kv/ under $GEMMA4_HOME/golden_mask_kv/
+# Optional internal verification data: place golden_mask_kv/ under
+# $GEMMA4_HOME/golden_mask_kv/. It is not included in the public model archive.
 ./gemma4_golden_verify --prompt_id prompt_0
 # Expected: ALL PASSED (cosine=1.0 for all 5 tensors)
 ```

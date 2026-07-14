@@ -18,6 +18,8 @@ DEFAULT_OUT = Path(__file__).resolve().parent.parent.parent / "calibration_data"
 
 
 def main() -> int:
+    """Generate normalized image inputs for Gemma4 vision calibration."""
+    """Generate normalized image inputs for Gemma4 vision calibration."""
     parser = argparse.ArgumentParser(description="Generate synthetic calibration images")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args()

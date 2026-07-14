@@ -1,3 +1,5 @@
+"""Implement fake-quantized Gemma4 attention blocks for conversion."""
+
 import torch
 from hbdk4.compiler import leap
 
@@ -285,6 +287,7 @@ class Gemma4VisionAttention(Module):
 
 
 class Gemma4TextRotaryPosEmb(Module):
+    """Apply Gemma4 rotary positional embeddings to text attention tensors."""
     def __init__(self):
         super().__init__()
         self.rotate_half = RotateHalf()
@@ -307,6 +310,7 @@ class Gemma4TextRotaryPosEmb(Module):
 
 
 class Gemma4TextAttention(Module):
+    """Implement fake-quantized Gemma4 text attention for conversion."""
     def __init__(
         self,
         hidden_size,

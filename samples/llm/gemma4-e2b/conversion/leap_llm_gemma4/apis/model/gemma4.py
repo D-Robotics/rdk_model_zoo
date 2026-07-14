@@ -1,3 +1,5 @@
+"""Provide Leap LLM API adapters for Gemma4-E2B vision and text conversion."""
+
 import os
 from pathlib import Path
 
@@ -135,6 +137,7 @@ class Gemma4VisionApi:
 
 
 class Gemma4TextCalibrationDataPreparer:
+    """Prepare Gemma4 text prompts, masks, and cache inputs for calibration."""
     def __init__(
         self,
         model_dir: str,
@@ -246,6 +249,7 @@ class Gemma4TextCalibrationDataPreparer:
 
 
 class Gemma4TextApi:
+    """Expose Gemma4 text conversion through the Leap LLM model API."""
     def __init__(
         self,
         input_model_path: str,

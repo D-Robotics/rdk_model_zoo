@@ -2,18 +2,21 @@
 
 **简体中文** | [English](./README.md)
 
-Gemma4-E2B 预编译 HBM 模型（解压约 6 GB）托管在 HuggingFace：
+Gemma4-E2B 预编译运行模型文件（约 6 GB）托管在地瓜机器人模型服务器：
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b   # 可选，默认值
 bash download_model.sh
 ```
 
-或手动下载：
+脚本会下载以下运行时文件：
 
 ```bash
-pip install huggingface_hub
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
+model/gemma4-e2b_vit_ptq.hbm
+model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+model/tok_embeddings.bin
+tokenizer/tokenizer.json
+tokenizer/tokenizer_config.json
 ```
 
 ## 文件清单

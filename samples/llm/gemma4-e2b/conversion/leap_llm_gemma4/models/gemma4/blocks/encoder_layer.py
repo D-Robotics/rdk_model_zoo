@@ -1,3 +1,5 @@
+"""Implement Gemma4 vision encoder and text decoder conversion layers."""
+
 import torch
 from hbdk4.compiler import leap
 
@@ -76,6 +78,7 @@ class Gemma4VisionEncoderLayer(Module):
 
 
 class Gemma4TextDecoderLayer(Module):
+    """Compose one Gemma4 text decoder layer for the conversion graph."""
     def __init__(
         self,
         config,

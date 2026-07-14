@@ -24,6 +24,9 @@ Scripts live under [conversion/scripts/verify/](../conversion/scripts/verify/).
 
 ## Board-side (golden mask / KV)
 
+`golden_mask_kv/` is optional internal verification data and is not included in
+the public model archive.
+
 Build **all** runtime targets (not only `main`):
 
 ```bash
@@ -55,4 +58,4 @@ export GEMMA4_HOME=~/gemma4_e2b
 
 > **Note:** The primary chat entry was renamed to `main` (Model Zoo convention). `./gemma4_chat` no longer exists.
 
-See [docs/QUANTIZATION_TUTORIAL.md §9.4](../docs/QUANTIZATION_TUTORIAL.md) for expected output.
+See [QUANTIZATION_TUTORIAL.md §9.4](../conversion/QUANTIZATION_TUTORIAL.md) for expected output.

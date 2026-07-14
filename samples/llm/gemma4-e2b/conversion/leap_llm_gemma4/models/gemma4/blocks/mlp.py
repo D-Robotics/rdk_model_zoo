@@ -1,3 +1,5 @@
+"""Implement fake-quantized Gemma4 vision and text MLP conversion blocks."""
+
 import torch
 from hbdk4.compiler import leap
 
@@ -30,6 +32,7 @@ class Gemma4VisionMLP(Module):
 
 
 class Gemma4TextMLP(Module):
+    """Implement the fake-quantized Gemma4 text feed-forward network."""
     def __init__(
         self,
         hidden_size,

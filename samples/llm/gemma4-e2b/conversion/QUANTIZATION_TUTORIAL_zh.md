@@ -10,11 +10,11 @@
 
 ## 效果展示
 
-![纯文本对话演示](./test3.jpg)
+![纯文本对话演示](../test_data/results/test3.jpg)
 
 *S100P 板端纯文本对话：中文提问，BPU 流式输出（约 6.9 tok/s）。*
 
-![VLM 演示](./test1.jpg)
+![VLM 演示](../test_data/results/test1.jpg)
 
 *S100P 板端 VLM 对话：加载图片、中文提问、BPU 流式输出（截图中 BPU 利用率 86%）。*
 
@@ -752,9 +752,11 @@ gemma4_e2b_deploy/
 在 S100P 板端执行：
 
 ```bash
-pip install huggingface_hub
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b
+bash model/download_model.sh
 ```
+
+该脚本从地瓜机器人模型服务器下载 3 个运行模型文件和 2 个必需的 tokenizer 文件。
 
 下载完成后检查文件完整性：
 
@@ -881,7 +883,7 @@ gemma4> What do you see?
 gemma4> 你看到什么，说中文
 ```
 
-![板端 VLM 红熊猫测试](./test2.jpg)
+![板端 VLM 红熊猫测试](../test_data/results/test2.jpg)
 
 | 测试图 | 预期输出 | 板端实际输出 |
 | ------ | -------- | ------------ |
@@ -929,11 +931,11 @@ KV cache 容量 `kCacheLen=4096` 是 HBM 编译时固定的。prompt + 输出 �
 
 ## 附录：模型文件下载
 
-预编译 HBM 模型已上传 HuggingFace：
+预编译运行模型文件已上传至地瓜机器人模型服务器：
 
 ```bash
-pip install huggingface_hub
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ./gemma4_e2b_deploy
+export GEMMA4_HOME=./gemma4_e2b_deploy
+bash model/download_model.sh
 ```
 
 | 文件 | 说明 |
@@ -941,11 +943,10 @@ hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ./gemma4_e2b_deploy
 | `gemma4-e2b_vit_ptq.hbm` | Vision HBM（329 MB） |
 | `gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm` | Text HBM（4.5 GB） |
 | `tok_embeddings.bin` | Token embedding 表（1.5 GB） |
-| `tokenizer/` | Tokenizer 文件 |
+| `tokenizer/` | `tokenizer.json` 和 `tokenizer_config.json` |
 
 校验完整性：
 
 ```bash
 sha256sum gemma4_e2b_deploy/model/*.hbm
 ```
-

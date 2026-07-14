@@ -26,6 +26,8 @@ SEED = 42
 
 
 def download_annotations() -> None:
+    """Download and extract the COCO validation annotation file."""
+    """Download and extract the COCO validation annotation file."""
     if ANN_JSON.exists() and ANN_JSON.stat().st_size > 1_000_000:
         print(f"Using cached {ANN_JSON}")
         return
@@ -41,6 +43,8 @@ def download_annotations() -> None:
 
 
 def pick_diverse_images(n: int) -> list[dict]:
+    """Select a deterministic category-diverse subset of COCO images."""
+    """Select a deterministic category-diverse subset of COCO images."""
     with open(ANN_JSON, encoding="utf-8") as f:
         coco = json.load(f)
 
@@ -95,6 +99,8 @@ def pick_diverse_images(n: int) -> list[dict]:
 
 
 def download_images(images: list[dict], out_dir: Path) -> None:
+    """Download selected COCO images and write their local manifest."""
+    """Download selected COCO images and write their local manifest."""
     out_dir.mkdir(parents=True, exist_ok=True)
     root = out_dir.parent
     manifest = []
@@ -125,6 +131,8 @@ def download_images(images: list[dict], out_dir: Path) -> None:
 
 
 def main() -> int:
+    """Parse CLI arguments and prepare the calibration image set."""
+    """Parse CLI arguments and prepare the calibration image set."""
     parser = argparse.ArgumentParser(description="Download COCO calibration images")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUT, help="Output image directory")
     args = parser.parse_args()

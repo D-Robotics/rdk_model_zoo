@@ -1,18 +1,18 @@
-# Gemma4-E2B VLM 模型说明
+# Gemma4-E2B VLM Model Description
 
 [简体中文](./README_cn.md) | **English**
 
 <p align="center">
-  <img src="./docs/image.jpg" alt="Gemma4-E2B on RDK S100P" width="960">
+  <img src="./test_data/results/image.jpg" alt="Gemma4-E2B on RDK S100P" width="960">
 </p>
 
 Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-Robotics RDK S100P** (`march=nash-m`). Runs fully on-device via the BPU — text chat and image+text (VLM) in one interactive runtime.
 
-![Text chat demo](./docs/test3.jpg)
+![Text chat demo](./test_data/results/test3.jpg)
 
 *Text chat on S100P: Chinese prompt, BPU streaming output (~6.9 tok/s).*
 
-![VLM demo](./docs/test1.jpg)
+![VLM demo](./test_data/results/test1.jpg)
 
 *VLM chat: load an image, ask in Chinese, stream the reply (86% BPU utilization).*
 
@@ -59,7 +59,9 @@ samples/llm/gemma4-e2b/
 ├── model/                       Pre-compiled HBM download
 │   ├── download_model.sh
 │   └── README.md
-├── conversion/                  PC-side PTQ compile (128 GB RAM + OE-LLM SDK)
+├── conversion/                  PC-side PTQ compile and quantization tutorial
+│   ├── QUANTIZATION_TUTORIAL.md
+│   ├── QUANTIZATION_TUTORIAL_zh.md
 │   ├── leap_llm_gemma4/
 │   ├── scripts/
 │   └── README.md
@@ -69,10 +71,8 @@ samples/llm/gemma4-e2b/
 │       └── README.md
 ├── evaluator/                   Accuracy / golden verification
 │   └── README.md
-├── docs/                        Full quantization & deployment tutorial
-│   ├── QUANTIZATION_TUTORIAL.md
-│   └── QUANTIZATION_TUTORIAL_zh.md
-├── test_data/                   VLM test images (red panda, etc.)
+├── test_data/                   VLM test images and result screenshots
+│   └── results/
 └── third_party/                 tokenizers-cpp (downloaded at build time)
     ├── install_tokenizers_cpp.sh
     └── README.md
@@ -91,8 +91,8 @@ cd samples/llm/gemma4-e2b/runtime/cpp
 
 The script will:
 
-1. Install build dependencies (`cmake`, `g++`, `libopencv-dev`, `cargo`)
-2. Download pre-compiled models from HuggingFace if missing (`~/gemma4_e2b` by default)
+1. Install build dependencies (`cmake`, `g++`, `libopencv-dev`, `libgflags-dev`, `nlohmann-json3-dev`, `cargo`, `wget`)
+2. Download pre-compiled runtime model files from the D-Robotics model archive if missing (`~/gemma4_e2b` by default)
 3. Download `tokenizers-cpp` source (pinned commit)
 4. Build `main` (first build compiles `tokenizers-cpp`, ~few minutes)
 5. Launch interactive VLM chat
@@ -119,8 +119,8 @@ only want to run inference.
 For custom re-quantization (requires a PC with 128 GB RAM + OE-LLM SDK),
 see [conversion/README.md](./conversion/README.md) and the full guide:
 
-- [QUANTIZATION_TUTORIAL.md](./docs/QUANTIZATION_TUTORIAL.md) (English)
-- [QUANTIZATION_TUTORIAL_zh.md](./docs/QUANTIZATION_TUTORIAL_zh.md) (中文)
+- [QUANTIZATION_TUTORIAL.md](./conversion/QUANTIZATION_TUTORIAL.md) (English)
+- [QUANTIZATION_TUTORIAL_zh.md](./conversion/QUANTIZATION_TUTORIAL_zh.md) (中文)
 
 ---
 
@@ -141,7 +141,7 @@ See [evaluator/README.md](./evaluator/README.md).
 
 ## Inference Result
 
-![VLM demo](./docs/test1.jpg)
+![VLM demo](./test_data/results/test1.jpg)
 
 *VLM chat on S100P: image + Chinese prompt → streamed BPU reply.*
 
@@ -151,5 +151,5 @@ See [evaluator/README.md](./evaluator/README.md).
 
 Runtime C++ code in this sample is MIT-licensed (see upstream
 [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)).
-Pre-compiled models are distributed separately on HuggingFace. The sample
+Pre-compiled models are distributed separately through the D-Robotics model archive. The sample
 itself follows the Model Zoo top-level License.

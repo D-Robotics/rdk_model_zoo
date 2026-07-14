@@ -21,6 +21,8 @@ CACHE_PATH = os.path.join(OUT_DIR, "compile_cache")
 
 
 def log(msg):
+    """Print a flush-enabled progress message for vision compilation."""
+    """Print a flush-enabled progress message for vision compilation."""
     print(msg, flush=True)
 
 

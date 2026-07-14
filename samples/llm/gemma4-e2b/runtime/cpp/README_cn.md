@@ -20,8 +20,7 @@ ls /usr/include/hobot/dnn/hb_dnn.h
 系统依赖：
 
 ```bash
-sudo apt install cmake g++ libopencv-dev libgflags-dev cargo
-# nlohmann-json 系统自带；若缺失：sudo apt install nlohmann-json3-dev
+sudo apt install cmake g++ libopencv-dev libgflags-dev nlohmann-json3-dev cargo wget
 ```
 
 > **无需 Python**。分词走原生 C++ `tokenizers-cpp`（构建时下载，见 `third_party/README_cn.md`），与 OpenExplorer_LLM-s600 参考实现一致。
@@ -87,12 +86,11 @@ make -j$(nproc)
 ## 下载预编译模型
 
 ```bash
-python3 -m pip install --user 'huggingface_hub>=0.26.0'
-export PATH="$HOME/.local/bin:$PATH"
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b
+bash ../../model/download_model.sh
 ```
 
-下载 3 个模型文件 + tokenizer：
+脚本从地瓜机器人模型服务器下载 3 个运行模型文件和 2 个必需的 tokenizer 文件。
 
 ```
 ~/gemma4_e2b/
@@ -101,10 +99,8 @@ hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
 │   ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm      # 4.5 GB  Text
 │   └── tok_embeddings.bin                               # 1.5 GB  Embedding
 └── tokenizer/
-    ├── tokenizer.json                                   # 32 MB
-    ├── tokenizer_config.json
-    ├── chat_template.jinja
-    └── config.json
+    ├── tokenizer.json
+    └── tokenizer_config.json
 ```
 
 ## 运行
@@ -214,7 +210,8 @@ This is a photograph of a Red Panda resting on a wooden structure...
 验证板端推理与 PC golden 数据是否一致：
 
 ```bash
-# 将 golden_mask_kv/ 放到 $GEMMA4_HOME/golden_mask_kv/
+# 可选内部校验数据：将 golden_mask_kv/ 放到
+# $GEMMA4_HOME/golden_mask_kv/。该数据不包含在公开模型服务器中。
 ./gemma4_golden_verify --prompt_id prompt_0
 # 预期：ALL PASSED（全部 5 个张量 cosine=1.0）
 ```

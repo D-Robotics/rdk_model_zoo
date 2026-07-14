@@ -26,10 +26,14 @@ MARCH = os.environ.get("HBDK_MARCH", "nash-m")
 
 
 def log(msg: str) -> None:
+    """Print a flush-enabled progress message for the compile workflow."""
+    """Print a flush-enabled progress message for the compile workflow."""
     print(msg, flush=True)
 
 
 def main() -> int:
+    """Compile the Gemma4 text decode graph from command-line options."""
+    """Compile the Gemma4 text decode graph from command-line options."""
     for path, name in [
         (DECODE_BC, "decode BC"),
         (PREFILL_HBO, "prefill HBO"),

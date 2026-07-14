@@ -3,16 +3,16 @@
 **简体中文** | [English](./README.md)
 
 <p align="center">
-  <img src="./docs/image.jpg" alt="Gemma4-E2B on RDK S100P" width="960">
+  <img src="./test_data/results/image.jpg" alt="Gemma4-E2B on RDK S100P" width="960">
 </p>
 
 Google **Gemma4-E2B** 视觉语言模型在 **地瓜 RDK S100P**（`march=nash-m`）上的实时 VLM 推理示例。完全在 BPU 上运行，支持纯文本对话和图文多模态对话。
 
-![纯文本对话演示](./docs/test3.jpg)
+![纯文本对话演示](./test_data/results/test3.jpg)
 
 *S100P 板端纯文本对话：中文提问，BPU 流式输出（约 6.9 tok/s）。*
 
-![VLM 演示](./docs/test1.jpg)
+![VLM 演示](./test_data/results/test1.jpg)
 
 *VLM 对话：加载图片、中文提问、BPU 流式输出（BPU 利用率 86%）。*
 
@@ -59,7 +59,9 @@ samples/llm/gemma4-e2b/
 ├── model/                       预编译 HBM 下载
 │   ├── download_model.sh
 │   └── README.md
-├── conversion/                  PC 端 PTQ 量化编译（128GB RAM + OE-LLM SDK）
+├── conversion/                  PC 端 PTQ 量化编译和完整量化教程
+│   ├── QUANTIZATION_TUTORIAL.md
+│   ├── QUANTIZATION_TUTORIAL_zh.md
 │   ├── leap_llm_gemma4/
 │   ├── scripts/
 │   └── README.md
@@ -69,10 +71,8 @@ samples/llm/gemma4-e2b/
 │       └── README.md
 ├── evaluator/                   精度 / golden 验证
 │   └── README.md
-├── docs/                        完整量化部署教程
-│   ├── QUANTIZATION_TUTORIAL.md
-│   └── QUANTIZATION_TUTORIAL_zh.md
-├── test_data/                   VLM 测试图片（红熊猫等）
+├── test_data/                   VLM 测试图片和结果截图
+│   └── results/
 └── third_party/                 tokenizers-cpp（构建时下载）
     ├── install_tokenizers_cpp.sh
     └── README.md
@@ -91,8 +91,8 @@ cd samples/llm/gemma4-e2b/runtime/cpp
 
 脚本会自动：
 
-1. 安装编译依赖（`cmake`、`g++`、`libopencv-dev`、`cargo`）
-2. 若本地无模型，从 HuggingFace 下载预编译 HBM（默认 `~/gemma4_e2b`）
+1. 安装编译依赖（`cmake`、`g++`、`libopencv-dev`、`libgflags-dev`、`nlohmann-json3-dev`、`cargo`、`wget`）
+2. 若本地无模型，从地瓜机器人模型服务器下载预编译运行模型文件（默认 `~/gemma4_e2b`）
 3. 下载 `tokenizers-cpp` 源码（固定 commit）
 4. 编译 `main`（首次编译 `tokenizers-cpp`，耗时数分钟）
 5. 启动交互式 VLM 对话
@@ -116,8 +116,8 @@ ModelZoo 已提供适配完成的 HBM 模型，用户可直接运行 `model/down
 
 如需自定义重新量化（需要 128 GB 内存的 PC + OE-LLM SDK），请参考 [conversion/README.md](./conversion/README.md) 及完整教程：
 
-- [QUANTIZATION_TUTORIAL_zh.md](./docs/QUANTIZATION_TUTORIAL_zh.md)（中文）
-- [QUANTIZATION_TUTORIAL.md](./docs/QUANTIZATION_TUTORIAL.md)（English）
+- [QUANTIZATION_TUTORIAL_zh.md](./conversion/QUANTIZATION_TUTORIAL_zh.md)（中文）
+- [QUANTIZATION_TUTORIAL.md](./conversion/QUANTIZATION_TUTORIAL.md)（English）
 
 ---
 
@@ -135,7 +135,7 @@ ModelZoo 已提供适配完成的 HBM 模型，用户可直接运行 `model/down
 
 ## 推理结果
 
-![VLM 演示](./docs/test1.jpg)
+![VLM 演示](./test_data/results/test1.jpg)
 
 *S100P 板端 VLM 对话：图片 + 中文提问 → BPU 流式回复。*
 
@@ -143,4 +143,4 @@ ModelZoo 已提供适配完成的 HBM 模型，用户可直接运行 `model/down
 
 ## License
 
-本示例中的 C++ runtime 代码为 MIT 许可（见上游 [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)）。预编译模型单独发布在 HuggingFace。示例本身遵循 Model Zoo 顶层 License。
+本示例中的 C++ runtime 代码为 MIT 许可（见上游 [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)）。预编译模型单独发布在地瓜机器人模型服务器。示例本身遵循 Model Zoo 顶层 License。

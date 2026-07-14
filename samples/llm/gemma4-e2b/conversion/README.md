@@ -45,8 +45,8 @@ Then sync `kChunkSize` / `kCacheLen` in `runtime/cpp/gemma4_config.h` and rebuil
 
 See the step-by-step guide with pitfalls and solutions:
 
-- [docs/QUANTIZATION_TUTORIAL.md](../docs/QUANTIZATION_TUTORIAL.md) (English)
-- [docs/QUANTIZATION_TUTORIAL_zh.md](../docs/QUANTIZATION_TUTORIAL_zh.md) (中文)
+- [QUANTIZATION_TUTORIAL.md](./QUANTIZATION_TUTORIAL.md) (English)
+- [QUANTIZATION_TUTORIAL_zh.md](./QUANTIZATION_TUTORIAL_zh.md) (中文)
 
 Install Gemma4 adapters into your OE-LLM environment:
 

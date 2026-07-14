@@ -2,18 +2,22 @@
 
 [简体中文](./README_cn.md) | **English**
 
-Pre-compiled Gemma4-E2B HBM models (~6 GB unpacked) are hosted on HuggingFace:
+Pre-compiled Gemma4-E2B runtime model files (~6 GB) are hosted on the
+D-Robotics model archive:
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b   # optional, this is the default
 bash download_model.sh
 ```
 
-Or manually:
+The script downloads these runtime files:
 
 ```bash
-pip install huggingface_hub
-hf download ShockleyWong/gemma4-e2b-rdk-s100p --local-dir ~/gemma4_e2b
+model/gemma4-e2b_vit_ptq.hbm
+model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+model/tok_embeddings.bin
+tokenizer/tokenizer.json
+tokenizer/tokenizer_config.json
 ```
 
 ## Files
