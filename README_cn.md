@@ -90,6 +90,8 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |-- speech/
 |   |   |-- asr/                     # 自动语音识别
 |   |   `-- kws/                    # 关键词唤醒
+|   |-- llm/
+|   |   `-- gemma4-e2b/             # Gemma4-E2B VLM（视觉 + 语言）
 |   `-- vla/
 |       `-- act/                    # Action Chunking Transformer（机器人策略）
 |-- docs/                            # 项目规范与参考文档
@@ -149,6 +151,7 @@ bash run.sh
 | 文字识别 | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [详情](./samples/vision/paddle_ocr) |
 | 语音识别 | ASR（Wav2Vec2） | `samples/speech/asr` | S100 / S600 | [详情](./samples/speech/asr) |
 | 关键词唤醒 | KWS（MDTC） | `samples/speech/kws` | S100 | [详情](./samples/speech/kws) |
+| 视觉语言模型 | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P | [详情](./samples/llm/gemma4-e2b) |
 | 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | `samples/vla/act` | S100 / S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 
 ---
