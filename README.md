@@ -67,6 +67,8 @@ rdk_model_zoo/
 |   |   |-- edgenext/             # Image classification
 |   |   |-- efficientformer/      # Image classification
 |   |   |-- efficientformerv2/    # Image classification
+|   |   |-- efficient_sam/        # Promptable image segmentation
+|   |   |-- mobile_sam/           # Promptable image segmentation
 |   |   |-- efficientnet/         # Image classification
 |   |   |-- efficientvit/         # Image classification
 |   |   |-- fasternet/            # Image classification
@@ -153,6 +155,8 @@ python3 main.py \
 | Image Classification | ResNet | `samples/vision/resnet` | RDK X5 | [Details](./samples/vision/resnet) |
 | Image Classification | ResNeXt | `samples/vision/resnext` | RDK X5 | [Details](./samples/vision/resnext) |
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
+| Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 | [Details](./samples/vision/efficient_sam) |
+| Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 | [Details](./samples/vision/mobile_sam) |
 | Object Detection | FCOS | `samples/vision/fcos` | RDK X5 | [Details](./samples/vision/fcos) |
 | Object Detection | YOLOv5 | `samples/vision/yolov5` | RDK X5 | [Details](./samples/vision/yolov5) |
 | Object Detection / Instance Segmentation / Pose Estimation / Image Classification | Ultralytics YOLO (`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13`) | `samples/vision/ultralytics_yolo` | RDK X5 | [Details](./samples/vision/ultralytics_yolo) |
