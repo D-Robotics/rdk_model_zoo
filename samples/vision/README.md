@@ -34,6 +34,12 @@ This directory contains maintained vision samples for RDK X5. Each sample provid
 - [yolov5](./yolov5)
 - [yoloworld](./yoloworld)
 
+## Segmentation
+
+- [efficient_sam](./efficient_sam): EfficientSAM-Tiny encoder + fixed-prompt decoder dual `.bin` full-mask demo
+- [mobile_sam](./mobile_sam): MobileSAM encoder + box-prompt decoder dual `.bin` full-mask demo
+
+
 ## OCR, Recognition, And Matting
 
 - [lprnet](./lprnet)

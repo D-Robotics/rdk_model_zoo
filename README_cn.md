@@ -67,6 +67,8 @@ rdk_model_zoo/
 |   |   |-- edgenext/             # 图像分类
 |   |   |-- efficientformer/      # 图像分类
 |   |   |-- efficientformerv2/    # 图像分类
+|   |   |-- efficient_sam/        # 提示式图像分割
+|   |   |-- mobile_sam/           # 提示式图像分割
 |   |   |-- efficientnet/         # 图像分类
 |   |   |-- efficientvit/         # 图像分类
 |   |   |-- fasternet/            # 图像分类
@@ -156,6 +158,8 @@ python3 main.py \
 | 图像分类 | ResNet | `samples/vision/resnet` | RDK X5 | [详情](./samples/vision/resnet) |
 | 图像分类 | ResNeXt | `samples/vision/resnext` | RDK X5 | [详情](./samples/vision/resnext) |
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
+| 提示式图像分割 | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 | [详情](./samples/vision/efficient_sam) |
+| 提示式图像分割 | MobileSAM | `samples/vision/mobile_sam` | RDK X5 | [详情](./samples/vision/mobile_sam) |
 | 目标检测 | FCOS | `samples/vision/fcos` | RDK X5 | [详情](./samples/vision/fcos) |
 | 目标检测 | YOLOv5 | `samples/vision/yolov5` | RDK X5 | [详情](./samples/vision/yolov5) |
 | 目标检测 / 实例分割 / 姿态估计 / 图像分类 | Ultralytics YOLO（`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13`） | `samples/vision/ultralytics_yolo` | RDK X5 | [详情](./samples/vision/ultralytics_yolo) |
