@@ -47,7 +47,7 @@ EfficientNet 部署模型以 RDK X5 `.bin` 文件提供。本目录保留用于 
 - `hb_perf`
 - `hrt_model_exec`
 
-Docker 镜像也可以通过地瓜开发者社区离线获取：[https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)。
+Docker 镜像也可以通过地瓜开发者社区离线获取：[https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229)。
 
 ## 输出协议
 

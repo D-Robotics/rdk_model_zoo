@@ -12,9 +12,10 @@
 
 **RDK X5 OpenExplore 1.2.8**
 ```bash
-docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
+docker load -i docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
 ```
-或者前往地瓜开发者社区获取离线版本的 Docker 镜像: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)
+或者前往地瓜开发者社区获取离线版本的 Docker 镜像: [https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229)
 
 **启动容器**（将 model zoo 挂载进容器以共享工作目录）:
 ```bash

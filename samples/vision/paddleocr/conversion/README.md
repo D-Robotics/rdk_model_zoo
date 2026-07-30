@@ -26,11 +26,12 @@ PaddleOCR model -> ONNX export -> calibration data preparation -> hb_mapper chec
 Use the official OpenExplorer Docker image or an equivalent OE package environment for model checking and compilation.
 
 ```bash
-docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
+docker load -i docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
 docker run -it --rm -v /path/to/rdk_model_zoo:/data openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
-Or download the offline Docker image from the [D-Robotics Developer Community](https://forum.d-robotics.cc/t/topic/28035).
+Or download the offline Docker image from the [D-Robotics Developer Community](https://forum.d-robotics.cc/t/topic/35229).
 
 The conversion commands below should be executed inside the Docker container or OE compilation environment, not on the RDK board.
 

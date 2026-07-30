@@ -50,9 +50,10 @@ If you prefer an isolated container environment or encounter dependency issues w
 
 **RDK X5 OpenExplore 1.2.8**
 ```bash
-docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
+docker load -i docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
 ```
-Or download the offline image from the [D-Robotics Developer Community](https://forum.d-robotics.cc/t/topic/28035).
+Or download the offline image from the [D-Robotics Developer Community](https://forum.d-robotics.cc/t/topic/35229).
 
 **Running the Container**:
 ```bash

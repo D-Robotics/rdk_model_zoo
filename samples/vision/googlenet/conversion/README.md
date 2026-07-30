@@ -28,7 +28,7 @@ Please follow the OE package for:
 - `hb_perf`
 - `hrt_model_exec`
 
-Offline Docker images can also be obtained from the D-Robotics developer forum: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035).
+Offline Docker images can also be obtained from the D-Robotics developer forum: [https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229).
 
 ## Output Protocol
 
