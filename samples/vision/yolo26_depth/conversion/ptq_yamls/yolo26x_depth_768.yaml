@@ -1,0 +1,34 @@
+model_parameters:
+  march: bayes-e
+  output_model_file_prefix: yolo26x_depth_bayese_768x768_nv12
+  working_dir: ./workspace_x_768
+  layer_out_dump: false
+  onnx_model: ./yolo26x-depth-log.onnx
+  node_info:
+    /model.23/head/head.3/Conv:
+      'ON': BPU
+      OutputType: int16
+input_parameters:
+  input_name: images
+  input_type_train: rgb
+  input_layout_train: NCHW
+  input_shape: 1x3x768x768
+  input_type_rt: nv12
+  input_batch: 1
+  norm_type: data_scale
+  input_layout_rt: NHWC
+  input_space_and_range: regular
+  scale_value: '0.003921568627451'
+calibration_parameters:
+  calibration_type: max
+  cal_data_dir: ./sunrgbd_train100_calibration_768
+  cal_data_type: uint8
+  max_percentile: 0.9999
+compiler_parameters:
+  compile_mode: latency
+  debug: false
+  core_num: 1
+  optimize_level: O3
+  input_source:
+    images: pyramid
+  jobs: 16

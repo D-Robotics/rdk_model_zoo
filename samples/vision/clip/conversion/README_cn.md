@@ -39,4 +39,4 @@ CLIP sample 使用两个部署资产：
 
 如需重新生成图像 encoder `.bin`，请使用 OpenExplorer Docker 或对应 OE 包编译环境。文本 encoder 在本 sample 中仍作为 ONNX runtime 资产保留。
 
-Docker 离线镜像也可以前往地瓜开发者社区获取：[https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)。
+Docker 离线镜像也可以前往地瓜开发者社区获取：[https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229)。

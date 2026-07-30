@@ -37,4 +37,4 @@ This sample does not provide conversion YAML files or export scripts in the repo
 
 If you need to regenerate the image encoder `.bin`, use OpenExplorer Docker or the corresponding OE package compilation environment. The text encoder remains an ONNX runtime asset in this sample.
 
-Offline Docker images can also be obtained from the D-Robotics developer forum: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035).
+Offline Docker images can also be obtained from the D-Robotics developer forum: [https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229).

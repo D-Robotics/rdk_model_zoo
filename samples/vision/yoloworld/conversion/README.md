@@ -26,4 +26,4 @@ The deployed model is `yolo_world.bin`, compiled for RDK X5. The original demo p
 
 If you need to regenerate the `.bin` model, use OpenExplorer Docker or the corresponding OE package compilation environment.
 
-Offline Docker images can also be obtained from the D-Robotics developer forum: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035).
+Offline Docker images can also be obtained from the D-Robotics developer forum: [https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229).

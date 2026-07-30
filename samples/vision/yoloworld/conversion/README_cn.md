@@ -28,4 +28,4 @@
 
 如需重新生成 `.bin` 模型，请使用 OpenExplorer Docker 或对应 OE 包编译环境。
 
-Docker 离线镜像也可以前往地瓜开发者社区获取：[https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)。
+Docker 离线镜像也可以前往地瓜开发者社区获取：[https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229)。

@@ -25,13 +25,7 @@ cd PaddleSeg && pip install -e .
 
 ### 1.2 OpenExplorer Docker 安装
 
-**方式 A — Docker Hub（无需登录）：**
-
-```bash
-docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
-```
-
-**方式 B — 离线 tar.gz（无法访问网络时使用）：**
+**离线 Docker 镜像包：**
 
 ```bash
 wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz

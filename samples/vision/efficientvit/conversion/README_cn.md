@@ -50,7 +50,7 @@ EfficientViT 的部署模型以 `RDK X5` `.bin` 文件形式提供。本目录�
 - `hb_perf`
 - `hrt_model_exec`
 
-如果需要离线 Docker 镜像，也可以前往地瓜开发者社区获取：[https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)。
+如果需要离线 Docker 镜像，也可以前往地瓜开发者社区获取：[https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229)。
 
 ## 输出协议
 

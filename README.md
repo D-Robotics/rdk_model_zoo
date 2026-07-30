@@ -92,6 +92,7 @@ rdk_model_zoo/
 |   |   |-- ultralytics_yolo/     # Detection, segmentation, pose, classification
 |   |   |-- ultralytics_yolo26/   # Detection, segmentation, pose, classification
 |   |   |-- vargconvnet/          # Image classification
+|   |   |-- yolo26_depth/         # Monocular depth estimation
 |   |   |-- yoloe/                # Instance segmentation
 |   |   |-- yolov5/               # Object detection
 |   |   `-- yoloworld/           # Open-vocabulary object detection
@@ -161,6 +162,7 @@ python3 main.py \
 | Object Detection | YOLOv5 | `samples/vision/yolov5` | RDK X5 | [Details](./samples/vision/yolov5) |
 | Object Detection / Instance Segmentation / Pose Estimation / Image Classification | Ultralytics YOLO (`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13`) | `samples/vision/ultralytics_yolo` | RDK X5 | [Details](./samples/vision/ultralytics_yolo) |
 | Object Detection / Instance Segmentation / Pose Estimation / Image Classification | Ultralytics YOLO26 | `samples/vision/ultralytics_yolo26` | RDK X5 | [Details](./samples/vision/ultralytics_yolo26) |
+| Monocular Depth Estimation | YOLO26 Depth | `samples/vision/yolo26_depth` | RDK X5 | [Details](./samples/vision/yolo26_depth) |
 | Instance Segmentation | YOLOE | `samples/vision/yoloe` | RDK X5 | [Details](./samples/vision/yoloe) |
 | Image Matting | MODNet | `samples/vision/modnet` | RDK X5 | [Details](./samples/vision/modnet) |
 | OCR Text Detection and Recognition | PaddleOCR | `samples/vision/paddleocr` | RDK X5 | [Details](./samples/vision/paddleocr) |

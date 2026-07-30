@@ -26,11 +26,12 @@ PaddleOCR 模型 -> ONNX 导出 -> 校准数据准备 -> hb_mapper checker -> hb
 模型检查和编译请使用官方 OpenExplorer Docker 镜像，或等价的 OE 包编译环境。
 
 ```bash
-docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
+docker load -i docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
 docker run -it --rm -v /path/to/rdk_model_zoo:/data openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
-或者前往地瓜开发者社区获取离线版本的 Docker 镜像: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)
+或者前往地瓜开发者社区获取离线版本的 Docker 镜像: [https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229)
 
 以下转换命令应在 Docker 容器或 OE 编译环境中执行，不应在 RDK 板端执行。
 

@@ -92,6 +92,7 @@ rdk_model_zoo/
 |   |   |-- ultralytics_yolo/     # 检测、分割、姿态、分类
 |   |   |-- ultralytics_yolo26/   # 检测、分割、姿态、分类
 |   |   |-- vargconvnet/          # 图像分类
+|   |   |-- yolo26_depth/         # 单目深度估计
 |   |   |-- yoloe/                # 实例分割
 |   |   |-- yolov5/               # 目标检测
 |   |   `-- yoloworld/           # 开放词表目标检测
@@ -164,6 +165,7 @@ python3 main.py \
 | 目标检测 | YOLOv5 | `samples/vision/yolov5` | RDK X5 | [详情](./samples/vision/yolov5) |
 | 目标检测 / 实例分割 / 姿态估计 / 图像分类 | Ultralytics YOLO（`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13`） | `samples/vision/ultralytics_yolo` | RDK X5 | [详情](./samples/vision/ultralytics_yolo) |
 | 目标检测 / 实例分割 / 姿态估计 / 图像分类 | Ultralytics YOLO26 | `samples/vision/ultralytics_yolo26` | RDK X5 | [详情](./samples/vision/ultralytics_yolo26) |
+| 单目深度估计 | YOLO26 Depth | `samples/vision/yolo26_depth` | RDK X5 | [详情](./samples/vision/yolo26_depth) |
 | 实例分割 | YOLOE | `samples/vision/yoloe` | RDK X5 | [详情](./samples/vision/yoloe) |
 | 图像抠图 | MODNet | `samples/vision/modnet` | RDK X5 | [详情](./samples/vision/modnet) |
 | OCR 文字检测与识别 | PaddleOCR | `samples/vision/paddleocr` | RDK X5 | [详情](./samples/vision/paddleocr) |

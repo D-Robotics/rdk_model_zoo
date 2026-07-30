@@ -12,9 +12,10 @@ To convert models, you need to install the **RDK X5 OpenExplore Toolchain**.
 
 **RDK X5 OpenExplore 1.2.8**
 ```bash
-docker pull openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
+docker load -i docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
 ```
-Alternatively, obtain the offline Docker image from the D-Robotics Developer Community: [https://forum.d-robotics.cc/t/topic/28035](https://forum.d-robotics.cc/t/topic/28035)
+Alternatively, obtain the offline Docker image from the D-Robotics Developer Community: [https://forum.d-robotics.cc/t/topic/35229](https://forum.d-robotics.cc/t/topic/35229)
 
 **Start the container** (mount your model zoo so the workspace is shared):
 ```bash
