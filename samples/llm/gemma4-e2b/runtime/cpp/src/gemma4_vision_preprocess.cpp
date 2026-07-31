@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_vision_preprocess.cpp
+ * @brief Prepare input images for Gemma4-E2B vision inference.
+ *
+ * The implementation loads, resizes, normalizes, and arranges image tensors in
+ * the layout expected by the compiled vision HBM.
+ */
+
 #include "gemma4_vision_preprocess.hpp"
 
 #include <algorithm>

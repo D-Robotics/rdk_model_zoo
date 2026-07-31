@@ -90,6 +90,7 @@ target_include_directories(gemma4_runtime PUBLIC
 )
 target_link_libraries(gemma4_runtime PUBLIC
   ${DNN_LIB} ${HBUCP_LIB} ${OpenCV_LIBS}
+  ${CMAKE_DL_LIBS}
   tokenizers_cpp
 )
 

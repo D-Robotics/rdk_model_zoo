@@ -3,6 +3,14 @@
  * All rights reserved
  */
 
+/**
+ * @file gemma4_native_tokenizer.cpp
+ * @brief Implement the native tokenizers-cpp wrapper for Gemma4-E2B.
+ *
+ * The implementation loads tokenizer metadata and provides encoding, decoding,
+ * token lookup, and incremental text reconstruction.
+ */
+
 #include "gemma4_native_tokenizer.hpp"
 
 #include <algorithm>
@@ -19,14 +27,17 @@
 
 #include <nlohmann/json.hpp>
 
+#include "gemma4_config.hpp"
+
 #define TAG "tokenizer"
 // Local logging shims (no hlog dependency).
 #define LOGE(tag, fmt, ...) fprintf(stderr, "[E][" tag "] " fmt "\n", ##__VA_ARGS__)
-#ifndef NDEBUG
-#define LOGD(tag, fmt, ...) fprintf(stderr, "[D][" tag "] " fmt "\n", ##__VA_ARGS__)
-#else
-#define LOGD(tag, fmt, ...) ((void)0)
-#endif
+#define LOGD(tag, fmt, ...)                                                   \
+  do {                                                                        \
+    if (::gemma4::RuntimeDebugEnabled()) {                                    \
+      fprintf(stderr, "[D][" tag "] " fmt "\n", ##__VA_ARGS__);             \
+    }                                                                         \
+  } while (0)
 
 namespace {
 /* @brief The method to post-process the tokens to their original strings.

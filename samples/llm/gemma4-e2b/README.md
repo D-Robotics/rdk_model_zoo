@@ -6,7 +6,7 @@
   <img src="./test_data/results/image.jpg" alt="Gemma4-E2B on RDK S100P" width="960">
 </p>
 
-Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-Robotics RDK S100P** (`march=nash-m`). Runs fully on-device via the BPU — text chat and image+text (VLM) in one interactive runtime.
+Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-Robotics RDK S100P and S600**. It runs fully on-device via the BPU and provides multi-turn text chat plus image+text VLM chat in one interactive runtime.
 
 ![Text chat demo](./test_data/results/test3.jpg)
 
@@ -16,7 +16,7 @@ Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-R
 
 *VLM chat: load an image, ask in Chinese, stream the reply (86% BPU utilization).*
 
-> Supported platform: **RDK S100P** (community sample; upstream: [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p))
+> Supported platforms: **RDK S100P / S600**. Both use the same C++ runtime, but each board requires HBM files compiled for its SoC.
 
 ---
 
@@ -31,6 +31,7 @@ Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT
 
 - Multimodal understanding: image + text → text
 - Multi-turn text chat with KV cache reuse
+- Automatic budgeting across the full 4096-token context, with `/context` reporting and complete-turn history trimming
 - Streaming token output on BPU
 
 ### Algorithm Features
@@ -47,7 +48,12 @@ Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT
 | Platform | Support | Notes |
 | --- | --- | --- |
 | RDK S100P | ✅ | Primary target (`nash-m`, `core_num=1`) |
-| RDK S100 / S600 | ❌ | Not validated in this sample |
+| RDK S600 | ✅ | `nash-p`; matching public S600 HBMs, with Vision and Text loaded once at startup and kept resident |
+| RDK S100 | ⚠️ | SoC runtime branch retained, but board validation is not complete |
+
+On-board regression for this update was run only on RDK S600. S100/S100P
+coverage is limited to shared-source target-matrix and compatibility checks;
+no S100 board connection is required or claimed.
 
 ---
 
@@ -86,25 +92,30 @@ Each sample provides a `run.sh` for one-click experience on board:
 
 ```bash
 cd samples/llm/gemma4-e2b/runtime/cpp
-./run.sh
+./run.sh                              # interactive VLM chat
+./run.sh server --port=8000           # OpenAI / ChatBox API
+./run.sh --max_tokens=512             # pass gflags to main
 ```
 
 The script will:
 
-1. Install build dependencies (`cmake`, `g++`, `libopencv-dev`, `libgflags-dev`, `nlohmann-json3-dev`, `cargo`, `wget`)
-2. Download pre-compiled runtime model files from the D-Robotics model archive if missing (`~/gemma4_e2b` by default)
+1. Install build dependencies (`cmake`, `g++`, `libopencv-dev`, `libgflags-dev`, `nlohmann-json3-dev`, `cargo`, `wget`, `git`, `curl`)
+2. Resolve the SoC-specific model files under `~/gemma4_e2b`: S100P and S600 download matching HBMs from the public archive; S100 uses pre-placed HBMs or `GEMMA4_MODEL_BASE_URL`
 3. Download `tokenizers-cpp` source (pinned commit)
-4. Build `main` (first build compiles `tokenizers-cpp`, ~few minutes)
-5. Launch interactive VLM chat
+4. Build all five runtime targets (the first build compiles `tokenizers-cpp`)
+5. Launch the selected entry; zero arguments still start interactive `main`
 
 Example session:
 
 ```
 gemma4> /image ../../test_data/image1.jpg
 gemma4> Describe this image
+gemma4> /context
 gemma4> /reset
 gemma4> /quit
 ```
+
+`main` defaults to `--max_tokens=0`, which uses all KV capacity remaining after the current prompt while keeping `prompt + output <= 4096`. On S600, `download_model.sh` selects the public `nash-p` Vision/Text HBMs automatically.
 
 For step-by-step details see [runtime/cpp/README.md](./runtime/cpp/README.md).
 
@@ -112,9 +123,10 @@ For step-by-step details see [runtime/cpp/README.md](./runtime/cpp/README.md).
 
 ## Model Conversion
 
-ModelZoo already provides pre-compiled HBM models. Users can download them
-directly via `model/download_model.sh` and **skip this section** if they
-only want to run inference.
+Pre-compiled HBM models can be used directly, so users who only need
+inference may **skip this section**. The download helper selects the public
+S100P and S600 assets automatically; S100 requires matching HBMs supplied locally
+or through `GEMMA4_MODEL_BASE_URL`.
 
 For custom re-quantization (requires a PC with 128 GB RAM + OE-LLM SDK),
 see [conversion/README.md](./conversion/README.md) and the full guide:
@@ -128,7 +140,7 @@ see [conversion/README.md](./conversion/README.md) and the full guide:
 
 This sample provides a **C++** board-side runtime only (LLM inference is
 C++-native; no Python path is provided). For build, parameters, and
-detailed usage, see [runtime/cpp/README.md](./runtime/cpp/README.md).
+interactive / OpenAI-compatible chat usage, see [runtime/cpp/README.md](./runtime/cpp/README.md).
 
 ---
 

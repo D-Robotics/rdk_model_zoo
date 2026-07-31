@@ -2,13 +2,13 @@
 
 [中文](./README_cn.md) | **English**
 
-C++ inference runtime for Gemma4-E2B VLM on D-Robotics RDK S100P (`march=nash-m`). Loads pre-compiled HBM models and runs real-time Vision-Language inference on the BPU.
+C++ inference runtime for Gemma4-E2B VLM on D-Robotics RDK S100P and S600. It loads pre-compiled HBM models built for the matching SoC and runs real-time Vision-Language inference on the BPU.
 
 > Part of [Gemma4-E2B sample](../../README.md). Full upstream project: [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p).
 
 ## Prerequisites
 
-The S100P board must have the OE-LLM runtime installed:
+The board must have the OE-LLM runtime installed:
 
 ```bash
 # Verify Horizon BPU SDK
@@ -20,11 +20,11 @@ ls /usr/include/hobot/dnn/hb_dnn.h
 System dependencies (usually pre-installed on OE-LLM images):
 
 ```bash
-sudo apt install cmake g++ libopencv-dev libgflags-dev nlohmann-json3-dev cargo wget
+sudo apt install cmake g++ libopencv-dev libgflags-dev nlohmann-json3-dev cargo wget git curl
 ```
 
 > **No Python required.** Tokenization is done in native C++ via
-> `tokenizers-cpp` (vendored in `third_party/`), matching the
+> `tokenizers-cpp` (downloaded into `third_party/` at build time), matching the
 > OpenExplorer_LLM-s600 reference implementation.
 
 ## Directory Layout
@@ -61,8 +61,14 @@ Quick start (recommended):
 
 ```bash
 cd samples/llm/gemma4-e2b/runtime/cpp
-./run.sh
+./run.sh                              # interactive main
+./run.sh server --port=8000           # OpenAI-compatible HTTP API
+./run.sh demo text --prompt "Hello"  # single-shot diagnostic
 ```
+
+If the first argument starts with `-`, it is forwarded to `main`. The named
+entries `server`, `demo`, `text_bench`, and `golden_verify` select the other
+binaries while keeping the same dependency, model-download, and build flow.
 
 Manual build:
 
@@ -75,7 +81,16 @@ make -j$(nproc)
 
 The first build downloads and compiles `tokenizers-cpp` (HF tokenizers Rust
 binding + sentencepiece + abseil), which takes a few minutes. Subsequent
-builds are incremental and fast.
+builds are incremental and fast. The Rust binding requires Rust 1.79 or
+newer; if the system toolchain is older, the installer places the current
+stable rustup toolchain under `$HOME/.cargo`.
+
+For an offline build with a separately installed Abseil package, prevent
+SentencePiece from fetching Abseil again:
+
+```bash
+GEMMA4_ABSL_PREFIX=/opt/abseil ./run.sh
+```
 
 This produces 5 executables in `build/`:
 
@@ -94,13 +109,14 @@ export GEMMA4_HOME=~/gemma4_e2b
 bash ../../model/download_model.sh
 ```
 
-This downloads the 3 runtime model files and the 2 required tokenizer files
-from the D-Robotics model archive.
+On S100P and S600 this downloads the validated public HBM files plus the
+shared embedding and tokenizer assets. On S100, pre-place matching HBMs or
+set `GEMMA4_MODEL_BASE_URL`; missing shared assets are still downloaded.
 
 ```
 ~/gemma4_e2b/
 ├── model/
-│   ├── gemma4-e2b_vit_ptq.hbm                          # 329 MB  Vision
+│   ├── gemma4-e2b_vit_ptq.hbm                          # 329-377 MB Vision
 │   ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm      # 4.5 GB  Text
 │   └── tok_embeddings.bin                               # 1.5 GB  Embedding
 └── tokenizer/
@@ -115,12 +131,17 @@ Set `GEMMA4_HOME` to point at the model directory, then run:
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
 
+# Manual S600 launch: run.sh applies these settings automatically
+unset LD_LIBRARY_PATH GEMMA4_USE_DNN_V3
+export HB_DNN_USER_DEFINED_L2M_SIZES=6:6:6:6
+
 # Interactive VLM chat (zero-arg default uses $GEMMA4_HOME)
 ./main
 
 # Inside the chat:
 #   /image /path/to/photo.jpg        Load an image
 #   What do you see in this image?   Ask a question
+#   /context                          Show KV-cache usage
 #   /reset                            Clear conversation
 #   /quit                             Exit
 ```
@@ -134,6 +155,16 @@ Image loaded (430080 features).
 gemma4> Describe this image
 This is a photograph of a Red Panda resting on a wooden structure...
 ```
+
+### 4096-token context
+
+- The Text HBM has a fixed 4096-token capacity, so `prompt_tokens + output_tokens <= 4096`.
+- `--max_tokens=0` is the default for both `main` and `gemma4_server`. It gives each turn all capacity remaining after the prompt, so a short prompt can receive an output budget close to 4096 tokens.
+- The next turn reserves at least `--min_response_tokens` tokens (256 by default). When needed, the oldest complete user/assistant pairs are removed and the KV cache is rebuilt.
+- `/context` reports used tokens, remaining capacity, and turn count. Stop tokens are neither printed nor stored in assistant text.
+- `main` loads both Text and Vision before entering the interactive loop and keeps both resident for the process lifetime. S100, S100P, and S600 share this lifecycle; `/image` only runs image preprocessing and Vision inference and never reloads either model.
+- Multimodal follow-ups retain the original image turn and explicitly inject the same Vision features beside the latest user question, with at most two 280-token image blocks in the prompt.
+- Internal diagnostics are quiet by default. Set `GEMMA4_DEBUG=1` to enable `[DEBUG]` and `[VLM-FIX]` output.
 
 ## Command-line Parameters
 
@@ -150,7 +181,8 @@ has a default that makes the binary runnable with zero arguments once
 | `--vision_hbm` | string | `$GEMMA4_HOME/model/gemma4-e2b_vit_ptq.hbm` | Path to vision ViT HBM |
 | `--tok_embeddings` | string | `$GEMMA4_HOME/model/tok_embeddings.bin` | External token embedding table |
 | `--tokenizer_path` | string | `$GEMMA4_HOME/tokenizer/tokenizer.json` | HF tokenizer JSON |
-| `--max_tokens` | int | `4096` (`kCacheLen`) | Max new tokens per turn |
+| `--max_tokens` | int | `0` | Max new tokens per turn; `0` uses all KV capacity remaining after the prompt |
+| `--min_response_tokens` | int | `256` | Minimum reply capacity preserved while trimming old history |
 
 ### `gemma4_demo` — single-shot text or VLM
 
@@ -167,14 +199,44 @@ has a default that makes the binary runnable with zero arguments once
 | `--image_path` | string | `""` | Image path (required when mode = `vlm`) |
 | `--max_tokens` | int | `32` | Max new tokens |
 
-### `gemma4_server` — long-running chat server
+### `gemma4_server` — OpenAI-compatible text chat
+
+`gemma4_server` keeps the Text HBM resident and exposes a serialized OpenAI-compatible HTTP API. Consecutive requests reuse the KV cache when their token prefixes match. The endpoint is text-only; image messages return HTTP 400 and should be handled with the interactive `main` executable.
+
+~~~bash
+cd samples/llm/gemma4-e2b/runtime/cpp
+./run.sh server --host=0.0.0.0 --port=8000
+~~~
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Readiness, model id, context size, and cached-token count |
+| `GET` | `/v1/models` | OpenAI-compatible model list |
+| `POST` | `/v1/chat/completions` | Non-streaming JSON or SSE streaming chat completion |
+
+Non-streaming request:
+
+~~~bash
+curl http://127.0.0.1:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gemma4-e2b","messages":[{"role":"user","content":"Write a long introduction to the RDK S600."}],"max_tokens":0}'
+~~~
+
+`max_tokens: 0` is a sample extension meaning “use every token remaining in the fixed 4096-token KV cache.” For SSE output, add `"stream": true`; `stream_options.include_usage` is also supported.
+
+For ChatBox, set the API type to OpenAI-compatible, the base URL to `http://BOARD_IP:8000/v1`, and the model to `gemma4-e2b`. If the client requires an API key, any non-empty placeholder is accepted because the server does not validate the `Authorization` header.
 
 | Flag | Type | Default | Description |
 |---|---|---|---|
+| `--host` | string | `0.0.0.0` | HTTP listen address |
+| `--port` | int | `8000` | HTTP listen port |
+| `--model` | string | `gemma4-e2b` | Model id exposed by `/v1/models` |
 | `--text_hbm` | string | same as `main` | Text LLM HBM |
-| `--vision_hbm` | string | same as `main` | Vision ViT HBM |
 | `--tok_embeddings` | string | same as `main` | Token embedding table |
-| `--max_tokens` | int | `128` | Max new tokens per request |
+| `--tokenizer_path` | string | same as `main` | HF tokenizer JSON |
+| `--max_tokens` | int | `0` | Default output limit; `0` uses all capacity remaining after the prompt |
+| `--min_response_tokens` | int | `256` | Reply capacity preserved while trimming old complete turns |
+| `--request_limit_mb` | int | `4` | Maximum HTTP request body size |
 
 ### `gemma4_text_bench` — text-only throughput / smoke test
 
@@ -212,6 +274,10 @@ Pass `--help` to any binary to see the gflags-generated full help.
 4. **Zero-copy KV cache** — KV cache memory is allocated once and shared between prefill and decode via pointer assignment, avoiding per-step memcpy.
 
 5. **Chunked prefill** — Prompts longer than `chunk_size=256` tokens are automatically split into multiple prefill chunks.
+
+6. **Full KV budgeting** — The interactive entry computes the output limit from the current prompt, can use the cache through `4096/4096`, and trims history by complete turns on the next request.
+
+7. **Unified dual-model lifecycle** — `main` always loads Vision before Text and keeps both resident for the process lifetime. This order avoids the S600 cross-core IOVA mapping conflict while preserving identical chat control flow on S100, S100P, and S600; only the matching HBMs, CMake SoC macros, and `run.sh` environment setup differ.
 
 ## Verification
 

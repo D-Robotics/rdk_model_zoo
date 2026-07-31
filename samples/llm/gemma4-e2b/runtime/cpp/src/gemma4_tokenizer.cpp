@@ -1,11 +1,22 @@
+/**
+ * @file gemma4_tokenizer.cpp
+ * @brief Convert structured chat messages to and from Gemma4-E2B tokens.
+ *
+ * The bridge applies the tokenizer chat template and delegates native token
+ * encoding and decoding to the tokenizers-cpp wrapper.
+ */
+
 #include "gemma4_tokenizer.hpp"
 
 #include <cstdlib>
 #include <filesystem>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
 #include <nlohmann/json.hpp>
+
+#include "gemma4_config.hpp"
 
 namespace gemma4 {
 
@@ -28,8 +39,15 @@ constexpr int kSoftImageTokens = 280;
 // well-known relative locations. The directory must contain tokenizer.json
 // and tokenizer_config.json.
 std::string ResolveTokenizerDir(const std::string& hint) {
-  if (!hint.empty() && fs::exists(fs::path(hint) / "tokenizer.json")) {
-    return hint;
+  if (!hint.empty()) {
+    const fs::path hint_path(hint);
+    if (fs::is_regular_file(hint_path) &&
+        fs::exists(hint_path.parent_path() / "tokenizer.json")) {
+      return hint_path.parent_path().string();
+    }
+    if (fs::exists(hint_path / "tokenizer.json")) {
+      return hint;
+    }
   }
   const char* env = std::getenv("GEMMA4_HOME");
   if (env && *env) {
@@ -42,28 +60,6 @@ std::string ResolveTokenizerDir(const std::string& hint) {
   throw std::runtime_error(
       "TokenizerBridge: cannot locate tokenizer.json. Set GEMMA4_HOME or pass "
       "the tokenizer directory explicitly.");
-}
-
-// JSON string unescape (inverse of JsonEscape in chat.cpp).
-std::string JsonUnescape(const std::string& s) {
-  std::string out;
-  out.reserve(s.size());
-  for (size_t i = 0; i < s.size(); ++i) {
-    if (s[i] == '\\' && i + 1 < s.size()) {
-      switch (s[++i]) {
-        case '\\': out += '\\'; break;
-        case '"':  out += '"'; break;
-        case 'n':  out += '\n'; break;
-        case 'r':  out += '\r'; break;
-        case 't':  out += '\t'; break;
-        case '/':  out += '/'; break;
-        default:   out += s[i]; break;
-      }
-    } else {
-      out += s[i];
-    }
-  }
-  return out;
 }
 
 // Render messages_json to the Gemma prompt text. Supports:
@@ -80,12 +76,12 @@ std::string RenderChat(const std::string& messages_json) {
 
     const auto& content = m["content"];
     if (content.is_string()) {
-      out += JsonUnescape(content.get<std::string>());
+      out += content.get<std::string>();
     } else if (content.is_array()) {
       for (const auto& part : content) {
         const std::string type = part.value("type", "");
         if (type == "text") {
-          out += JsonUnescape(part.value("text", std::string{}));
+          out += part.value("text", std::string{});
         } else if (type == "image") {
           out += kImageMark;
         }
@@ -139,9 +135,16 @@ std::vector<int64_t> TokenizerBridge::EncodeMessagesJson(
   if (expand_images) {
     rendered = ExpandImageTokens(rendered);
   }
+  if (RuntimeDebugEnabled()) {
+    std::cerr << "[DEBUG] Rendered chat begin\n"
+              << rendered << "\n[DEBUG] Rendered chat end" << std::endl;
+  }
   // The tokenizer's added_tokens table makes special tokens (<bos>, <|turn>,
   // <|image>, <image|>) match as single tokens even with add_special_tokens off.
   const auto ids = tokenizer_->Encode(rendered);
+  if (RuntimeDebugEnabled()) {
+    std::cerr << "[DEBUG] Encoded prompt tokens=" << ids.size() << std::endl;
+  }
   return std::vector<int64_t>(ids.begin(), ids.end());
 }
 

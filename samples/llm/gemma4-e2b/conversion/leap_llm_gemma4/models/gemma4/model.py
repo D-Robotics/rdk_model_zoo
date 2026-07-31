@@ -579,9 +579,19 @@ class Gemma4Vision:
         model = self.model
         assert model.is_compiled, "Model must be in compile mode before compiling."
 
+        if isinstance(vit_core_num, (list, tuple)):
+            vit_core_num = vit_core_num[0]
+
+        is_nash_p = kwargs.get("march") == "nash-p"
+        dynamic_quant = kwargs.pop("dynamic_quant", None)
         kwargs["core_num"] = vit_core_num
         if vit_core_num > 1:
-            kwargs["max_l2m_size"] = 25165824
+            kwargs.setdefault(
+                "max_l2m_size",
+                int(os.environ.get("GEMMA4_MAX_L2M_SIZE", "25165824")),
+            )
+        if is_nash_p:
+            kwargs.setdefault("opt", 1)
 
         inputs = self.get_leap_inputs(dtype)
 
@@ -593,10 +603,13 @@ class Gemma4Vision:
         # Step 2: Convert MLIR
         convert_bc_path = str(Path(output_model_path).with_suffix(".convert.bc"))
         print("[Gemma4Vision] Converting MLIR...")
+        convert_kwargs = {"march": kwargs["march"]}
+        if dynamic_quant is not None:
+            convert_kwargs["dynamic_quant"] = dynamic_quant
+        elif is_nash_p:
+            convert_kwargs["dynamic_quant"] = True
         mlir_module = model.convert_mlir(
-            bc_module,
-            save_path=convert_bc_path,
-            march=kwargs["march"],
+            bc_module, save_path=convert_bc_path, **convert_kwargs
         )
         statistics(mlir_module)
 
@@ -1280,6 +1293,19 @@ class Gemma4Text:
     ):
         assert self.model.is_compiled, "Model must be compiled before compiling."
 
+        if isinstance(prefill_core_num, (list, tuple)):
+            prefill_core_num = prefill_core_num[0]
+        if isinstance(decode_core_num, (list, tuple)):
+            decode_core_num = decode_core_num[0]
+
+        is_nash_p = kwargs.get("march") == "nash-p"
+        dynamic_quant = kwargs.pop("dynamic_quant", None)
+        stop_after = os.environ.get("GEMMA4_STOP_AFTER", "link").lower()
+        if stop_after not in {"export", "convert", "compile", "link"}:
+            raise ValueError(
+                "GEMMA4_STOP_AFTER must be export, convert, compile, or link"
+            )
+
         model_list = []
         stages = []
         if stage in {"prefill", "all"}:
@@ -1298,17 +1324,27 @@ class Gemma4Text:
             bc_module = self.model.export_module(inputs, stage_name, bc_path)
             model_list.append(bc_module)
 
+        if stop_after == "export":
+            print("[Gemma4Text] Stopped after BC export (GEMMA4_STOP_AFTER=export).")
+            return model_list
+
+        converted_models = []
         hbos = []
         for bc_module in model_list:
             func_name = bc_module.functions[0].name
             convert_bc_path = str(
                 Path(output_model_path).with_suffix(f".{func_name}_convert.bc")
             )
+            convert_kwargs = {
+                "enable_vpu": enable_vpu,
+                "march": kwargs["march"],
+            }
+            if dynamic_quant is not None:
+                convert_kwargs["dynamic_quant"] = dynamic_quant
+            elif is_nash_p:
+                convert_kwargs["dynamic_quant"] = True
             mlir_module = self.model.convert_mlir(
-                bc_module,
-                convert_bc_path,
-                enable_vpu=enable_vpu,
-                march=kwargs["march"],
+                bc_module, convert_bc_path, **convert_kwargs
             )
 
             func = mlir_module.functions[0]
@@ -1317,15 +1353,36 @@ class Gemma4Text:
                 Path(output_model_path).with_suffix(f".{func_name}_convert_removed.bc")
             )
             save(mlir_module, convert_removed_bc_path)
+            converted_models.append(mlir_module)
+
+            if stop_after == "convert":
+                continue
 
             hbo_path = str(Path(output_model_path).with_suffix(f".{func_name}.hbo"))
             compile_kwargs = kwargs.copy()
             compile_kwargs["core_num"] = (
                 prefill_core_num if "prefill" in func_name else decode_core_num
             )
+            is_decode = "decode" in func_name
+            if is_nash_p:
+                compile_kwargs.setdefault("enable_hpc", True)
+                compile_kwargs.setdefault("input_no_padding", is_decode)
+                compile_kwargs.setdefault("output_no_padding", is_decode)
             if compile_kwargs["core_num"] > 1:
-                compile_kwargs["max_l2m_size"] = 25165824
+                compile_kwargs.setdefault(
+                    "max_l2m_size",
+                    int(os.environ.get("GEMMA4_MAX_L2M_SIZE", "25165824")),
+                )
+            if is_nash_p:
+                compile_kwargs.setdefault("opt", 1)
             hbo_model = self.model.compile_hbo(mlir_module, hbo_path, **compile_kwargs)
             hbos.append(hbo_model)
+
+        if stop_after == "convert":
+            print("[Gemma4Text] Stopped after MLIR conversion.")
+            return converted_models
+        if stop_after == "compile":
+            print("[Gemma4Text] Stopped after HBO compilation.")
+            return hbos
 
         return self.model.link_models(hbos, output_model_path)

@@ -1,5 +1,5 @@
 /**
- * @file gemma4_tokenizer.h
+ * @file gemma4_tokenizer.hpp
  * @brief Tokenizer bridge backed by native C++ tokenizers-cpp.
  *
  * Keeps the original TokenizerBridge API (EncodeMessagesJson / DecodeIds)

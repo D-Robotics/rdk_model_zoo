@@ -1,9 +1,9 @@
 /**
- * @file gemma4_text_engine.h
+ * @file gemma4_text_engine.hpp
  * @brief Text LLM engine for Gemma4-E2B (prefill + decode + KV cache).
  *
- * Wraps the Horizon BPU DNN APIs to run the Gemma4-E2B text decoder on the
- * S100P BPU. Manages prefill (chunked) and decode steps, zero-copy KV cache,
+ * Wraps the Horizon BPU DNN APIs to run the Gemma4-E2B text decoder on
+ * supported RDK S targets. Manages prefill (chunked) and decode steps, zero-copy KV cache,
  * and logits→token sampling.
  */
 #pragma once
@@ -31,6 +31,9 @@ struct BenchmarkResult {
   double tokens_per_sec = 0;   ///< Decode throughput (tokens/sec)
 };
 
+/**
+ * @brief Hold one exported prefill chunk for conversion/runtime verification.
+ */
 struct PrefillChunkTensors {
   std::vector<int64_t> input_ids;
   std::vector<int32_t> position_ids;
@@ -39,6 +42,9 @@ struct PrefillChunkTensors {
   std::vector<float> sliding_mask;
 };
 
+/**
+ * @brief Own the DNN handle and tensors for one compiled text subgraph.
+ */
 struct ModelIo {
   hbDNNHandle_t handle = nullptr;
   std::vector<hbDNNTensor> inputs;
@@ -49,6 +55,12 @@ struct ModelIo {
 // Called for each newly generated token id. Return false to stop early.
 using TokenCallback = std::function<bool(int64_t token_id)>;
 
+/**
+ * @brief Run Gemma4-E2B text generation with reusable KV-cache state.
+ *
+ * A TextEngine owns the prefill/decode models, embedding table, and one chat
+ * session. Callers must serialize access to an instance.
+ */
 class TextEngine {
  public:
   TextEngine(const std::string& text_hbm, const std::string& embed_path);

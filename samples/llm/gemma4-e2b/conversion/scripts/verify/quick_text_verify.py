@@ -3,12 +3,14 @@
 
 Usage:
     python quick_text_verify.py \
+        --target-soc s600 \
         --model-dir ../../gemma4-e2b \
-        --bc-path ../../output/gemma4_e2b_text/gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill_convert.bc \
+        --bc-path ../../output/gemma4_e2b_text_s600/gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill_convert.bc \
         --prompts ../../calibration_data/text_verify/calibration.json
 """
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -27,7 +29,6 @@ DEVICE = "cpu"
 
 
 def prepare_chunk_inputs(text_model, preparer, prompt, bc_meta):
-    """Build one prefill chunk and its BC-runtime input tensor mapping."""
     """Build one prefill chunk and its BC-runtime input tensor mapping."""
     chunks, pos, full_masks, sliding_masks = preparer.prepare_inputs(prompt)
     if not chunks:
@@ -62,13 +63,28 @@ def prepare_chunk_inputs(text_model, preparer, prompt, bc_meta):
 
 def main():
     """Compare Gemma4 text BC logits with the PyTorch reference output."""
-    """Compare Gemma4 text BC logits with the PyTorch reference output."""
     parser = argparse.ArgumentParser(description="Text BC lightweight verification")
+    parser.add_argument(
+        "--target-soc",
+        choices=("s100", "s100p", "s600"),
+        default=os.environ.get("TARGET_SOC", "s100p").lower(),
+        help="Target SoC used to select the default BC output directory.",
+    )
     parser.add_argument("--model-dir", default=str(REPO_ROOT / "gemma4-e2b"))
-    parser.add_argument("--bc-path", default=str(REPO_ROOT / "output/gemma4_e2b_text/gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill_convert.bc"))
+    parser.add_argument("--bc-path", default=None)
     parser.add_argument("--prompts", default=str(REPO_ROOT / "calibration_data/text_verify/calibration.json"))
-    parser.add_argument("--output", default=str(REPO_ROOT / "output/e2b_text_verify_quick.json"))
+    parser.add_argument("--output", default=None)
     args = parser.parse_args()
+    if args.bc_path is None:
+        args.bc_path = str(
+            REPO_ROOT
+            / f"output/gemma4_e2b_text_{args.target_soc}"
+            / "gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill_convert.bc"
+        )
+    if args.output is None:
+        args.output = str(
+            REPO_ROOT / f"output/e2b_text_verify_quick_{args.target_soc}.json"
+        )
 
     with open(args.prompts, encoding="utf-8") as f:
         prompts = [x["text"] for x in json.load(f)]
@@ -122,7 +138,7 @@ def main():
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump({"results": results, "mean_cosine": mean}, f, indent=2, ensure_ascii=False)
     print(f"Saved: {args.output}")
-    return 0 if mean and mean >= 0.99 else 1
+    return 0 if mean is not None and mean >= 0.99 else 1
 
 
 if __name__ == "__main__":

@@ -1,3 +1,13 @@
+/**
+ * @file gemma4_text_engine.cpp
+ * @brief Execute Gemma4-E2B text prefill, decode, and KV-cache reuse.
+ *
+ * The implementation prepares model tensors, manages prompt suffix prefill,
+ * performs greedy decoding, and preserves reusable conversation prefixes.
+ *
+ * @note TextEngine instances are not thread-safe.
+ */
+
 #include "gemma4_text_engine.hpp"
 
 #include <algorithm>
@@ -72,7 +82,7 @@ TextEngine::~TextEngine() {
     decode_.inputs[5 + i].sysMem.virAddr = nullptr;
     decode_.inputs[20 + i].sysMem.virAddr = nullptr;
   }
-  
+
   FreeTensors(prefill_.inputs);
   FreeTensors(prefill_.outputs);
   FreeTensors(decode_.inputs);
@@ -93,7 +103,7 @@ TextEngine::~TextEngine() {
 //   col = cache_col_start + (abs_pos - cache_start_abs)
 //
 void TextEngine::BuildFullMask(const KvCache& /*kv*/, float* mask,
-                               int cache_start, int chunk_start,
+                               int /*cache_start*/, int chunk_start,
                                int chunk_valid, int seq_len) {
   const int total = seq_len * kCacheLen;
   std::fill(mask, mask + total, kMaskValue);
@@ -122,7 +132,7 @@ void TextEngine::BuildFullMask(const KvCache& /*kv*/, float* mask,
 }
 
 void TextEngine::BuildSlidingMask(const KvCache& /*kv*/, float* mask,
-                                  int cache_start, int chunk_start,
+                                  int /*cache_start*/, int chunk_start,
                                   int chunk_valid, int seq_len) {
   const int total = seq_len * kCacheLen;
   std::fill(mask, mask + total, kMaskValue);
@@ -214,8 +224,10 @@ void TextEngine::FillCommonInputs(ModelIo& io,
       float* dst = hidden.data() + static_cast<size_t>(i) * kHiddenSize;
       std::copy(src, src + kHiddenSize, dst);
     }
-    std::cerr << "[DEBUG] FillCommonInputs: using prebuilt_hidden, chunk_start=" << chunk_start
-              << " chunk_valid=" << chunk_valid << std::endl;
+    if (RuntimeDebugEnabled()) {
+      std::cerr << "[DEBUG] FillCommonInputs: using prebuilt_hidden, chunk_start="
+                << chunk_start << " chunk_valid=" << chunk_valid << std::endl;
+    }
   } else {
     embeddings_.Lookup(ple_padded, hidden.data());
   }
@@ -290,8 +302,8 @@ void TextEngine::RunPrefillChunk(const std::vector<int64_t>& chunk,
   const int chunk_valid = static_cast<int>(chunk.size());
   FillCommonInputs(prefill_, chunk, chunk_start, chunk_valid, false,
                    prebuilt_hidden);
-  // Selective flush: only flush non-KV input tensors (embedding/token/pos/masks).
-  // KV cache inputs are BPU-owned, no CPU write happened.
+  // KV rows are rolled into the cache on CPU after every inference, so all
+  // inputs must be cleaned before the BPU reads the cache again.
   static const std::vector<int> flush_in = PrefillFlushIndices();
   // Flush ALL outputs — we need logits (0) + KV outputs (1..30) for CPU read.
   RunInferSelective(prefill_.handle, prefill_.inputs, prefill_.outputs, flush_in);
@@ -382,7 +394,7 @@ bool TextEngine::AutoTruncate(int new_prompt_tokens, int max_new_tokens) {
 
   // Perform context shift to make room for new tokens
   ContextShift(n_keep_);
-  
+
   // The caller should now re-prefill the recent history using PrefillSuffix
   return true;
 }
@@ -404,8 +416,24 @@ std::vector<int64_t> TextEngine::ContinueGenerate(
 std::vector<int64_t> TextEngine::ContinueGenerateStream(
     const std::vector<int64_t>& full_ids, int max_new_tokens,
     TokenCallback on_token, const std::vector<float>* full_hidden) {
+  if (max_new_tokens <= 0) {
+    return full_ids;
+  }
+
   if (static_cast<int>(full_ids.size()) < processed_tokens_) {
     throw std::runtime_error("full_ids shorter than processed prefix");
+  }
+
+  if (static_cast<int>(full_ids.size()) > processed_tokens_ &&
+      processed_tokens_ % kChunkSize != 0) {
+    const int aligned_prefix =
+        (processed_tokens_ / kChunkSize) * kChunkSize;
+    const int replay_tokens = processed_tokens_ - aligned_prefix;
+    ContextShift(aligned_prefix);
+    if (RuntimeDebugEnabled()) {
+      std::cerr << "[DEBUG] KV reuse aligned to prefill boundary: keep="
+                << aligned_prefix << " replay=" << replay_tokens << std::endl;
+    }
   }
 
   if (static_cast<int>(full_ids.size()) > processed_tokens_) {
@@ -427,8 +455,7 @@ std::vector<int64_t> TextEngine::ContinueGenerateStream(
   std::vector<int64_t> out = full_ids;
   int64_t next = ArgmaxLogits(prefill_.outputs[0], last_idx);
   out.push_back(next);
-  processed_tokens_ += 1;
-  
+
   if (on_token && !on_token(next)) {
     return out;
   }
@@ -440,13 +467,13 @@ std::vector<int64_t> TextEngine::ContinueGenerateStream(
   int64_t last = next;
   for (int i = 1; i < max_new_tokens; ++i) {
     next = RunDecodeStep(last);
-    out.push_back(next);
     processed_tokens_ += 1;
-    
+    out.push_back(next);
+
     if (on_token && !on_token(next)) {
       break;
     }
-    
+
     if (IsEos(next)) {
       break;
     }
@@ -530,13 +557,12 @@ PrefillChunkTensors TextEngine::ExportPrefillChunk(
 int64_t TextEngine::RunDecodeStep(int64_t token_id) {
   const int pos = token_offset_;
   FillDecodeInputs(token_id, pos);
-  // Selective flush: only flush non-KV input tensors.
-  // KV cache inputs are shared with BPU — no CPU write happened.
+  // KV rows are rolled into the cache on CPU after every inference, so all
+  // inputs must be cleaned before the BPU reads the cache again.
   static const std::vector<int> flush_in = DecodeFlushIndices();
-  // Decode only needs logits output (0) — KV outputs write to shared memory.
-  static const std::vector<int> flush_out = {static_cast<int>(kLogitsOutputIndex)};
-  RunInferSelective(decode_.handle, decode_.inputs, decode_.outputs,
-                    flush_in, flush_out);
+  // CPU copies decode KV outputs into the rolling cache, so invalidate every
+  // output before reading it rather than only invalidating logits.
+  RunInferSelective(decode_.handle, decode_.inputs, decode_.outputs, flush_in);
 
   const int8_t* k_outs[kNumKvLayers];
   const int8_t* v_outs[kNumKvLayers];

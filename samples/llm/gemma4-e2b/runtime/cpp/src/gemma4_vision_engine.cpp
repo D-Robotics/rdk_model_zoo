@@ -1,3 +1,13 @@
+/**
+ * @file gemma4_vision_engine.cpp
+ * @brief Execute the Gemma4-E2B vision HBM and return image features.
+ *
+ * The implementation preprocesses an image, submits BPU inference, and
+ * converts the encoder output into features consumed by the text runtime.
+ *
+ * @note VisionEngine instances are not thread-safe.
+ */
+
 #include "gemma4_vision_engine.hpp"
 
 #include <chrono>
@@ -77,7 +87,7 @@ std::vector<float> VisionEngine::Infer(const std::string& image_path) {
   const std::vector<float> patches = PreprocessImage(image_path);
 
   // Debug: patch statistics
-  {
+  if (RuntimeDebugEnabled()) {
     double sum = 0, sq = 0;
     float pmin = patches[0], pmax = patches[0];
     for (size_t i = 0; i < patches.size(); ++i) {
@@ -99,7 +109,7 @@ std::vector<float> VisionEngine::Infer(const std::string& image_path) {
   }
 
   // Debug: print input tensor properties
-  {
+  if (RuntimeDebugEnabled()) {
     const auto& props = inputs_[0].properties;
     std::cerr << "[DEBUG] input tensor: type=" << props.tensorType
               << " ndim=" << props.validShape.numDimensions
@@ -119,15 +129,21 @@ std::vector<float> VisionEngine::Infer(const std::string& image_path) {
       ProdSize(props.validShape.dimensionSize, props.validShape.numDimensions);
 
   // Debug: output tensor properties
-  std::cerr << "[DEBUG] output tensor: type=" << props.tensorType
-            << " ndim=" << props.validShape.numDimensions
-            << " shape=[";
-  for (int d = 0; d < props.validShape.numDimensions; ++d) {
-    if (d) std::cerr << ",";
-    std::cerr << props.validShape.dimensionSize[d];
+  if (RuntimeDebugEnabled()) {
+    std::cerr << "[DEBUG] output tensor: type=" << props.tensorType
+              << " ndim=" << props.validShape.numDimensions
+              << " shape=[";
+    for (int dimension = 0; dimension < props.validShape.numDimensions;
+         ++dimension) {
+      if (dimension != 0) {
+        std::cerr << ",";
+      }
+      std::cerr << props.validShape.dimensionSize[dimension];
+    }
+    std::cerr << "] elems=" << elems
+              << " elem_size=" << ElementSize(props.tensorType)
+              << " aligned_bytes=" << props.alignedByteSize << std::endl;
   }
-  std::cerr << "] elems=" << elems << " elem_size=" << ElementSize(props.tensorType)
-            << " aligned_bytes=" << props.alignedByteSize << std::endl;
 
   std::vector<float> out(static_cast<size_t>(elems));
   const void* raw_out = outputs_[0].sysMem.virAddr;
@@ -156,14 +172,14 @@ std::vector<float> VisionEngine::Infer(const std::string& image_path) {
     }
   } else {
     // Fallback: try float
-    std::cerr << "[DEBUG] WARNING: unexpected tensor type " << props.tensorType
-              << ", trying float cast" << std::endl;
+    std::cerr << "[WARN] Unexpected Vision output tensor type "
+              << props.tensorType << "; trying float cast." << std::endl;
     const auto* src = static_cast<const float*>(raw_out);
     std::copy(src, src + elems, out.data());
   }
 
   // Debug: output statistics
-  {
+  if (RuntimeDebugEnabled()) {
     double sum = 0, sq = 0;
     float omin = out[0], omax = out[0];
     for (size_t i = 0; i < out.size(); ++i) {

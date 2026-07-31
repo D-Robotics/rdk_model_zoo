@@ -3,6 +3,16 @@
  * All rights reserved
  */
 
+/**
+ * @file gemma4_native_tokenizer.hpp
+ * @brief Declare the native tokenizers-cpp wrapper used by Gemma4-E2B.
+ *
+ * The wrapper exposes encoding, decoding, vocabulary lookup, and incremental
+ * decoding helpers for the board-side C++ runtime.
+ *
+ * @note Tokenizer instances serialize incremental decoding state internally.
+ */
+
 #pragma once
 
 #include <memory>
@@ -15,6 +25,9 @@
 
 namespace gemma4 {
 
+/**
+ * @brief Describe a shared native tokenizer instance and its metadata.
+ */
 struct TokenizerInfo {
   std::string tokenizer_path;
   std::shared_ptr<tokenizers::Tokenizer> tokenizer;
@@ -23,6 +36,12 @@ struct TokenizerInfo {
   size_t ref_count;
 };
 
+/**
+ * @brief Encode and decode Gemma4-E2B tokens through tokenizers-cpp.
+ *
+ * Instances share loaded tokenizer resources while retaining independent
+ * incremental decoding buffers.
+ */
 class Tokenizer {
  public:
   Tokenizer() = default;

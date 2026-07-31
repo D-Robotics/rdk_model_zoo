@@ -1,10 +1,11 @@
-# Gemma4-E2B 在 RDK S100P 上的量化部署实战教程
+# Gemma4-E2B 在 RDK S100/S100P/S600 上的量化部署教程
 
 [English](./QUANTIZATION_TUTORIAL.md) | **中文**
 
-> 从零到板端 VLM 推理通过的完整指南。  
-> 基于 Google Gemma4-E2B（Vision + Text，不含 Audio）+ 地瓜 OE-LLM 1.0.0 + RDK S100P（`march=nash-m`）。  
-> 最后更新：2026-06-25
+> 从零到板端 VLM 推理通过的完整指南。
+> 基于 Google Gemma4-E2B（Vision + Text，不含 Audio）与地瓜 OE-LLM 1.0.0。
+> 同一套代码支持 S100（`nash-e`）、S100P（`nash-m`）和 S600（`nash-p`）。
+> 最后更新：2026-07-30
 
 ---
 
@@ -22,7 +23,8 @@
 
 ## 0. 前言
 
-本文记录将 Gemma4-E2B 多模态模型量化编译并部署到 RDK S100P 的完整过程，包含环境搭建、模型分析、校准数据准备、编译、精度验证、打包交付等所有步骤，以及我们在实践中踩过的坑和解决方案。
+本文记录将 Gemma4-E2B 多模态模型量化编译并部署到 RDK S100、S100P、S600
+的完整过程，包含环境搭建、模型分析、校准数据准备、编译、精度验证与打包交付。
 
 **目标读者**：有 Linux/Python 基础、对地瓜 RDK 平台有一定了解的开发者。
 
@@ -32,7 +34,7 @@
 - 能够在自己的 PC 上完成 PTQ 量化编译
 - 掌握校准数据选择对精度的影响
 - 知道如何验证量化精度（包括端到端融合验证）
-- 产出可直接部署到 S100P 的 HBM 模型包
+- 产出与 S100、S100P 或 S600 匹配的 HBM 模型包
 
 ---
 
@@ -54,16 +56,18 @@ Google Gemma4 是 2026 年3月31日发布的多模态模型家族，E2B 是其�
 
 E2B 的 Vision 和 Text 是**独立定义**的（`Gemma4Config`），这与 12B 的统一架构（`Gemma4UnifiedConfig`）不同，适配方式也不同。
 
-### 1.2 RDK S100P 硬件约束
+### 1.2 RDK 目标平台矩阵
 
-本文量化与板端部署均在 **RDK S100P** 上完成，编译参数 `--march nash-m`。
+转换脚本通过 `TARGET_SOC` 自动选择 march 和核数：
 
+| 目标平台 | HBDK march | Vision 核数 | Text prefill / decode | 板端内存说明 |
+| --- | --- | ---: | ---: | --- |
+| S100 | `nash-e` | 1 | 1 / 1 | 编译或提供匹配的 S100 HBM |
+| S100P | `nash-m` | 1 | 1 / 1 | 保持原样例行为 |
+| S600 | `nash-p` | 4 | 2 / 2 | 实测可用 23 GiB（标称 24 GB），不是 64 GB |
 
-| 项      | 值              | 量化影响                          |
-| ------ | -------------- | ----------------------------- |
-| RAM    | 12 GB LPDDR5   | 模型+KV+系统需控制在 ~10GB            |
-| BPU    | Nash-M，80 TOPS | `march=nash-m`                |
-| BPU 核数 | **1**          | `core_num=1`、`vit_core_num=1` |
+动态量化、`opt=1`、HPC 与 decode no-padding 仅在 `nash-p` 启用，不会改变
+S100/S100P 的原单核编译行为。
 
 
 ### 1.3 OE-LLM 工具链
@@ -340,17 +344,20 @@ PTQ 的工作原理：
 
 ### 4.2 Vision 校准
 
-Vision 校准使用 **50 张 COCO val2017 真实图像**，保存到 `calibration_data/images/`。下载脚本：
+Vision 校准使用 **50 张 COCO val2017 真实图像**，保存到 `calibration_data/images/`。在样例根目录执行：
 
 ```bash
-python download_coco_calib_images.py
+python3 conversion/scripts/calibration/download_coco_images.py
 ```
 
-也可以手动准备自己的图像，放入 `calibration_data/images/` 目录，支持 jpg/png/bmp/webp。
+编译脚本会校验来源清单、COCO 下载地址、每张图片的 SHA256，以及完整的
+50 张图片集合；多余、缺失、合成或未登记图片都会被拒绝。除非明确替换整套
+来源校验流程，否则不要向该目录混入自定义图片。
 
 ### 4.3 Text 校准
 
-Text 校准需要多样化的 prompt 文本，OELLM 的格式是 JSON：
+Text 校准必须使用人工确认过的自备语料，OELLM 的格式是 JSON。本样例不会
+自动生成替代 prompt：
 
 ```json
 [
@@ -360,17 +367,20 @@ Text 校准需要多样化的 prompt 文本，OELLM 的格式是 JSON：
 ]
 ```
 
-建议准备 100-200 条，覆盖不同语言、不同长度、不同话题。我们使用了 150 条（703 行 JSON 文件中每条一个 `text` 字段）。
+应使用固定语料，覆盖实际业务中的语言、长度和主题。已验证的参考语料包含
+234 条；S600 本次续编译复用了已有量化 BC，没有生成新文本，也没有重新执行
+Text 校准。
 
 ### 4.4 校准数据目录结构
 
 ```
 calibration_data/
-├── images/              # Vision 校准图像（50 张 COCO）
+├── images_coco_manifest.json  # COCO 来源与每张图片的 SHA256
+├── images/              # Vision 校准图像（固定 50 张 COCO）
 │   ├── coco_00_000000000802.jpg
 │   ├── coco_01_000000280325.jpg
 │   └── ...
-├── text/                # Text 校准文本（150 条）
+├── text/                # 已审核文本语料（参考运行使用 234 条）
 │   └── calibration.json
 └── text_verify/         # Text 精度验证（2 条短 prompt）
     └── calibration.json
@@ -386,18 +396,12 @@ calibration_data/
 cd ~/gemma
 conda activate oellm
 
-# 增大栈大小（hbdk4 compile_hbo 需要，否则可能 segfault）
-ulimit -s unlimited
+# 下载固定、类别多样的 50 张真实 COCO val2017 图片并生成来源清单。
+# 编译脚本会拒绝合成图或未登记图片。
+python3 conversion/scripts/calibration/download_coco_images.py
 
-python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_llm.__file__))")/apis/oellm_build.py \
-    --model_name gemma4-e2b-vision \
-    --march nash-m \
-    --input_model_path ./gemma4-e2b \
-    --output_model_path ./output/gemma4_e2b_vision \
-    --calib_image_path ./calibration_data/images \
-    --device cuda:0 \
-    --vit_core_num 1 \
-    2>&1 | tee output/vision_compile.log
+# 其他平台将 s600 改成 s100 或 s100p。
+TARGET_SOC=s600 bash conversion/scripts/compile/run_vision_compile.sh
 ```
 
 参数说明：
@@ -406,12 +410,12 @@ python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_ll
 | 参数                    | 值                   | 说明                                |
 | --------------------- | ------------------- | --------------------------------- |
 | `--model_name`        | `gemma4-e2b-vision` | 已在 model_factory.py 注册            |
-| `--march`             | `nash-m`            | S100P 对应 march                    |
+| `TARGET_SOC`          | `s100` / `s100p` / `s600` | 选择 march 与默认核数 |
 | `--input_model_path`  | HuggingFace 权重目录    | 含 config.json + model.safetensors |
-| `--output_model_path` | 输出目录                | 编译产出会写到这里                         |
-| `--calib_image_path`  | COCO 图目录            | 50 张真实图像                          |
+| `OUTPUT_DIR`          | 按平台区分的输出目录       | 避免不同 SoC 产物互相覆盖 |
+| `CALIB_IMAGE_DIR`     | COCO 图目录            | 固定 50 张有 manifest 的真实图像 |
 | `--device`            | `cuda:0`            | GPU 加速校准 forward（CPU 也可，更慢）       |
-| `--vit_core_num`      | `1`                 | 本文编译使用 1 核                        |
+| `VIT_CORE_NUM`        | 平台矩阵默认值           | 可显式覆盖 |
 
 
 **不要加 `--verifier`**：编译后 verifier 会报 `gemma4-e2b-vision does not support LLM`（它试图用 LLM 验证逻辑验证 VLM），HBM 本身是有效的，单独跑 verifier_cli.py 即可。
@@ -441,7 +445,7 @@ Function 'convert_mlir' done in 19.3s
 Function 'compile_hbo' done in 6620.3s     ← 约 110 分钟
 [Gemma4Vision] Linking HBM...
 Function 'link_models' done in 10.5s
-[Gemma4Vision] Done: ./output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.hbm
+[Gemma4Vision] Done: ./output/gemma4_e2b_vision_s600/gemma4-e2b_vit_ptq.hbm
 ```
 
 `compile_hbo` 是纯 CPU 单核运算（ViT 模型特性），`HBDK_JOBS` 参数对它基本无影响。
@@ -449,7 +453,7 @@ Function 'link_models' done in 10.5s
 ### 5.3 编译产出
 
 ```
-output/gemma4_e2b_vision/
+output/gemma4_e2b_vision_s600/
 ├── gemma4-e2b_vit_ptq.bc              # 620 MB  导出的 BC 计算图
 ├── gemma4-e2b_vit_ptq.convert.bc      # 202 MB  MLIR 转换后
 ├── gemma4-e2b_vit_ptq.hbo             # 363 MB  HBO 二进制
@@ -490,7 +494,7 @@ PYTHONUNBUFFERED=1 python -u ... | tee output/vision_compile.log
 
 ```python
 from hbdk4.compiler import load
-bc = load("output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.bc")
+bc = load("output/gemma4_e2b_vision_s600/gemma4-e2b_vit_ptq.bc")
 for inp in bc.functions[0].inputs:
     print(inp.name, list(inp.type.shape), inp.type.np_dtype)
 for out in bc.functions[0].outputs:
@@ -507,19 +511,9 @@ Text 分 prefill 和 decode 两个阶段，OELLM 会自动编译两阶段并 lin
 
 ```bash
 conda activate oellm
-ulimit -s unlimited
 
-python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_llm.__file__))")/apis/oellm_build.py \
-    --model_name gemma4-e2b-text \
-    --march nash-m \
-    --input_model_path ./gemma4-e2b \
-    --output_model_path ./output/gemma4_e2b_text \
-    --calib_text_path ./calibration_data/text \
-    --chunk_size 256 \
-    --cache_len 4096 \
-    --device cpu \
-    --core_num 1 \
-    2>&1 | tee output/text_compile.log
+# 沿用已有文本校准语料，不自行生成替代 prompt。
+TARGET_SOC=s600 bash conversion/scripts/compile/run_text_compile.sh
 ```
 
 参数说明：
@@ -531,7 +525,8 @@ python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_ll
 | `--chunk_size` | `256`             | prefill 每次处理 256 tokens  |
 | `cache_len`    | `4096`            | KV cache 最大长度            |
 | `--device`     | `cpu`             | Text 校准无 GPU 加速优势，CPU 即可 |
-| `--core_num`   | `1`               | 本文编译使用 1 核               |
+| `PREFILL_CORE_NUM` | 平台矩阵默认值 | S600 为 2，S100/S100P 为 1 |
+| `DECODE_CORE_NUM` | 平台矩阵默认值 | S600 为 2，S100/S100P 为 1 |
 
 
 编译会自动导出 `tok_embeddings.bin`：
@@ -539,13 +534,13 @@ python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_ll
 ```python
 # 在 Gemma4TextApi.__init__ 中自动执行
 tok_embs = model.embed_tokens.weight.data * model.embed_tokens.embed_scale
-tok_embs.detach().cpu().numpy().tofile("output/gemma4_e2b_text/tok_embeddings.bin")
+tok_embs.detach().cpu().numpy().tofile("output/gemma4_e2b_text_s600/tok_embeddings.bin")
 ```
 
 ### 6.2 编译产出
 
 ```
-output/gemma4_e2b_text/
+output/gemma4_e2b_text_s600/
 ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill.bc          # 18.5 GB
 ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill_convert.bc  # 4.7 GB
 ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill.hbo          # 4.8 GB
@@ -592,25 +587,19 @@ Text HBM 的几个关键参数是**编译时固定**的，决定了板端推理�
 | Prefill 分块大小 | 环境变量 `CHUNK_SIZE` | 256  | 每次 prefill 处理的 token 数。越大步数越少、峰值显存越高。 |
 
 
-这两个参数对应板端的 `gemma4_config.h` 里的 `kCacheLen` / `kChunkSize`，改了 HBM 编译参数后必须同步改源码配置，否则推理会错位。
+这两个参数对应板端 `runtime/cpp/inc/gemma4_config.hpp` 里的
+`kCacheLen` / `kChunkSize`，改了 HBM 编译参数后必须同步改源码配置，否则
+推理会错位。
 
-**示例：把上下文从 4096 扩到 8192**
+**当前交付：用满现有 4096-token KV 预算**
 
-```bash
-# 1. 重新编译 Text HBM（PC 上，耗时数小时）
-CHUNK_SIZE=512 CACHE_LEN=8192 bash conversion/scripts/compile/run_text_compile.sh
-```
-
-```cpp
-// 2. 更新板端 runtime 配置（runtime/cpp/gemma4_config.h）
-constexpr int kChunkSize = 512;   // 必须和上面的 CHUNK_SIZE 一致
-constexpr int kCacheLen  = 8192;  // 必须和上面的 CACHE_LEN 一致
-```
+当前提供的 Text HBM 固定为 `CHUNK_SIZE=256`、`CACHE_LEN=4096`，本次交付
+不包含 8K/16K HBM。交互入口使用默认参数 `--max_tokens=0` 时，每轮都会把
+编码后的 prompt 之外全部剩余 KV 容量用于输出；后续轮次空间不足时，`main`
+会按完整 user/assistant 对裁剪最旧历史，并继续在同一个 4096-token 上限内聊天。
 
 ```bash
-# 3. 重新编译 runtime
-cd runtime/cpp && mkdir build && cd build
-cmake .. && make -j$(nproc)
+./main --max_tokens=0
 ```
 
 **仅 runtime 可调的参数**（无需重编 HBM）：
@@ -619,7 +608,7 @@ cmake .. && make -j$(nproc)
 | 参数         | 在哪改                   | 默认值         | 说明                                   |
 | ---------- | --------------------- | ----------- | ------------------------------------ |
 | 滑动窗口       | `kSlidingWindow`      | 512         | decode 时滑动注意力的窗口大小，必须 ≤ `kCacheLen`。 |
-| 最大输出 token | `--max-tokens N` 启动参数 | `kCacheLen` | 限制每轮生成长度，运行时传入即可。                    |
+| 最大输出 token | `--max_tokens N` 启动参数 | `0` | `0` 表示使用 prompt 之后全部剩余 KV 容量。 |
 
 
 > **内存代价**：`CACHE_LEN` 翻倍，KV cache 占用的 DDR 也会翻倍。请先确认板端空闲内存足够再加大。
@@ -647,26 +636,29 @@ cmake .. && make -j$(nproc)
 **Vision BC**
 
 ```bash
-cd ~/gemma && conda activate oellm
+cd samples/llm/gemma4-e2b/conversion
+conda activate oellm
+export TARGET_SOC=s600  # 需要时替换为 s100 或 s100p
 
-python -u leap_llm/apis/verifier_cli.py \
+python -m leap_llm.apis.verifier_cli \
     --model_name gemma4-e2b-vision \
     --model_dir ./gemma4-e2b \
-    --quant_vlm_model_path ./output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.bc \
+    --quant_vlm_model_path ./output/gemma4_e2b_vision_${TARGET_SOC}/gemma4-e2b_vit_ptq.bc \
     --input_image_path ./calibration_data/images/coco_00_000000000802.jpg
 ```
 
 **Text BC**（纯文本，不含 Vision）
 
 ```bash
-python -u quick_text_verify.py
-# 结果：output/e2b_text_verify_quick.json
+python -u scripts/verify/quick_text_verify.py --target-soc "$TARGET_SOC"
+# 结果：output/e2b_text_verify_quick_${TARGET_SOC}.json
 ```
 
 若开发机与板端同网段，还可在板端 BPU 上跑 HBM 对比：
 
 ```bash
-bash run_remote_hbm_verify.sh   # 需 --remote_ip 指定板子 IP
+BOARD_IP=<板端IP> TARGET_SOC="$TARGET_SOC" \
+  bash scripts/verify/run_remote_hbm_verify.sh
 ```
 
 ---
@@ -679,13 +671,13 @@ bash run_remote_hbm_verify.sh   # 需 --remote_ip 指定板子 IP
 mkdir -p gemma4_e2b_deploy/{model,tokenizer}
 
 # 模型文件（3 个大文件）
-cp output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.hbm \
+cp output/gemma4_e2b_vision_s600/gemma4-e2b_vit_ptq.hbm \
    gemma4_e2b_deploy/model/
 
-cp output/gemma4_e2b_text/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm \
+cp output/gemma4_e2b_text_s600/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm \
    gemma4_e2b_deploy/model/
 
-cp output/gemma4_e2b_text/tok_embeddings.bin \
+cp output/gemma4_e2b_text_s600/tok_embeddings.bin \
    gemma4_e2b_deploy/model/
 
 # Tokenizer 文件
@@ -731,7 +723,8 @@ gemma4_e2b_deploy/
 
 ## 9. 板端部署与 VLM 推理
 
-本节介绍如何将编译好的 HBM 模型部署到 S100P 板端，并运行 Gemma4-E2B VLM 推理。
+本节介绍如何把与目标 SoC 匹配的 HBM 部署到板端，并使用同一套 C++ runtime
+运行 Gemma4-E2B VLM 推理。
 
 ### 9.1 两条路径：直接跑 vs 自己编译
 
@@ -749,25 +742,28 @@ gemma4_e2b_deploy/
 
 #### Step 1：下载预编译模型
 
-在 S100P 板端执行：
+S100P 可直接下载已验证的公共 `nash-m` HBM；S600 会从 S600 模型目录
+自动下载已验证的公共 `nash-p` HBM。S100 需要先把匹配的 HBM 放入
+`$GEMMA4_HOME/model`，或设置 `GEMMA4_MODEL_BASE_URL`；脚本不会用其他
+目标平台的 HBM 替代当前平台模型。
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_SOC=s600  # 板端可从 /sys/class/boardinfo/soc_name 自动识别
 bash model/download_model.sh
 ```
 
-该脚本从地瓜机器人模型服务器下载 3 个运行模型文件和 2 个必需的 tokenizer 文件。
+缺少共享的 token embedding 或 tokenizer 文件时，脚本会从公开归档补齐。
 
 下载完成后检查文件完整性：
 
 ```bash
 # 验证 SHA256（可选）
 sha256sum ~/gemma4_e2b/model/*.hbm
-
-# 预期输出：
-# 470791849d21cffadb388cc61c8f4b1452078c1722d302fd8a8ac775ee9769f1  ...vit_ptq.hbm
-# 3e4d4940051e4e8dc0cb434e972e7aae75d49504da3fac435e303f68af73a25f  ...lm_..._ptq.hbm
 ```
+
+不同 SoC 的 HBM 哈希不同，应使用对应模型包提供的校验值，不能拿 S100 哈希
+校验 S600 文件。
 
 #### Step 2：编译 C++ runtime
 

@@ -10,9 +10,24 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdlib>
+#include <string_view>
 #include <vector>
 
 namespace gemma4 {
+
+inline bool RuntimeDebugEnabled() {
+  static const bool enabled = [] {
+    const char* value = std::getenv("GEMMA4_DEBUG");
+    if (value == nullptr) {
+      return false;
+    }
+    const std::string_view setting(value);
+    return !setting.empty() && setting != "0" && setting != "false" &&
+           setting != "FALSE";
+  }();
+  return enabled;
+}
 
 constexpr int kChunkSize = 256;
 constexpr int kCacheLen = 4096;
@@ -43,17 +58,26 @@ constexpr int kHeadDims[kNumKvLayers] = {
 };
 
 // Input tensor indices that need cache flush before each BPU inference.
-// KV cache tensors (indices 5..34) are BPU-owned and don't need CPU flush.
+// The runtime rolls newly produced KV rows into inputs 5..34 on CPU, so all
+// text inputs must be cleaned before the BPU reads them again.
 constexpr int kKvInputStart = 5;  // first KV cache input tensor index
 constexpr int kLogitsOutputIndex = 0;
 
-// Indices to flush: embedding, token_ids, position_ids, full_mask, sliding_mask
+inline std::vector<int> TextInputFlushIndices() {
+  std::vector<int> indices;
+  indices.reserve(kKvInputStart + 2 * kNumKvLayers);
+  for (int index = 0; index < kKvInputStart + 2 * kNumKvLayers; ++index) {
+    indices.push_back(index);
+  }
+  return indices;
+}
+
 inline std::vector<int> PrefillFlushIndices() {
-  return {0, 1, 2, 3, 4};
+  return TextInputFlushIndices();
 }
 
 inline std::vector<int> DecodeFlushIndices() {
-  return {0, 1, 2, 3, 4};
+  return TextInputFlushIndices();
 }
 
 }  // namespace gemma4

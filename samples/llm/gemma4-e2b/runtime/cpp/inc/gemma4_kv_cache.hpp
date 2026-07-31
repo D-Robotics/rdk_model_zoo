@@ -21,6 +21,14 @@
 
 namespace gemma4 {
 
+/**
+ * @brief Own the per-layer BPU key-value cache for one text session.
+ *
+ * The cache exposes model input buffers, appends prefill/decode outputs, and
+ * compacts retained tokens after whole conversation turns are removed.
+ *
+ * @note Instances are not thread-safe.
+ */
 class KvCache {
  public:
   KvCache();

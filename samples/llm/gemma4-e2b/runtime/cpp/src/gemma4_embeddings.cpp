@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_embeddings.cpp
+ * @brief Load token embeddings and construct Gemma4-E2B prompt tensors.
+ *
+ * The implementation reads the external embedding table and injects optional
+ * vision features into text prompt hidden states.
+ */
+
 #include "gemma4_embeddings.hpp"
 
 #include <algorithm>
@@ -101,16 +109,21 @@ std::vector<float> TokenEmbeddings::BuildPromptHidden(
                              " expected " + std::to_string(expected));
   }
 
-  // Debug: count image tokens in ids
-  int img_count = 0;
-  for (size_t i = 0; i < seq_len; ++i) {
-    if (ids[i] == static_cast<int64_t>(kImageTokenId)) ++img_count;
+  if (RuntimeDebugEnabled()) {
+    int image_token_count = 0;
+    for (size_t index = 0; index < seq_len; ++index) {
+      if (ids[index] == static_cast<int64_t>(kImageTokenId)) {
+        ++image_token_count;
+      }
+    }
+    fprintf(stderr,
+            "[DEBUG] BuildPromptHidden: seq_len=%zu, image_tokens=%d, "
+            "vision_features.size=%zu\n",
+            seq_len, image_token_count, vision_features.size());
   }
-  fprintf(stderr, "[DEBUG] BuildPromptHidden: seq_len=%zu, image_tokens=%d, vision_features.size=%zu\n",
-          seq_len, img_count, vision_features.size());
 
   // Debug: vision feature statistics
-  {
+  if (RuntimeDebugEnabled()) {
     double sum = 0, sq = 0;
     float vmin = vision_features[0], vmax = vision_features[0];
     for (size_t i = 0; i < vision_features.size(); ++i) {
@@ -141,8 +154,11 @@ std::vector<float> TokenEmbeddings::BuildPromptHidden(
       // PLE token-identity path uses pad embedding at image positions
       // (Gemma4Model.forward replaces image token ids with pad_token_id).
       // Vision HBM output [280,1536] is injected raw — no L2-norm / sqrt scaling.
-      fprintf(stderr, "[VLM-FIX] Injecting raw vision features at positions [%d, %d)\n",
-              run_start, run_start + kVisionSoftTokens);
+      if (RuntimeDebugEnabled()) {
+        fprintf(stderr,
+                "[DEBUG] Injecting raw vision features at positions [%d, %d)\n",
+                run_start, run_start + kVisionSoftTokens);
+      }
 
       for (int t = 0; t < kVisionSoftTokens; ++t) {
         const float* src = vision_features.data() +
@@ -152,8 +168,8 @@ std::vector<float> TokenEmbeddings::BuildPromptHidden(
         std::copy(src, src + kHiddenSize, dst);
       }
 
-      // Self-check: injected vision features std and L2/row (per fix doc §4 P0)
-      {
+      // Self-check: injected vision features std and L2/row.
+      if (RuntimeDebugEnabled()) {
         double inj_sq = 0, inj_l2_sum = 0;
         for (int t = 0; t < kVisionSoftTokens; ++t) {
           const float* row = hidden.data() +
@@ -180,7 +196,7 @@ std::vector<float> TokenEmbeddings::BuildPromptHidden(
   }
 
   // Debug: hidden buffer statistics after injection
-  {
+  if (RuntimeDebugEnabled()) {
     double sum = 0, sq = 0;
     float hmin = hidden[0], hmax = hidden[0];
     for (size_t i = 0; i < hidden.size(); ++i) {
