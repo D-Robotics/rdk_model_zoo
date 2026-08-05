@@ -26,16 +26,20 @@ python3 -c "import hbm_runtime, numpy, cv2"
 
 ## 参数说明
 
-| 参数 | 说明 | 默认值 |
-| --- | --- | --- |
-| `--platform` | `auto`、`s100p` 或 `s600` | `auto` |
-| `--model-path` | 平台对应的 HBM 路径 | 自动选择 `../../model/<platform>/` |
-| `--input-npz` | 四路 float32 输入 | `../../test_data/reference_inputs.npz` |
-| `--output-npz` | 解码张量输出 | `./diffusiondrive_outputs.npz` |
-| `--img-save-path`、`--output-image` | 可视化输出，两个参数名都支持 | `./diffusiondrive_result.png` |
-| `--agent-score-thres` | 目标 sigmoid 阈值 | `0.5` |
-| `--priority` | 调度优先级 | `0` |
-| `--bpu-cores` | BPU 核编号 | `0` |
+
+| 参数                                 | 说明                      | 默认值                                    |
+| ---------------------------------- | ----------------------- | -------------------------------------- |
+| `--platform`                       | `auto`、`s100p` 或 `s600` | `auto`                                 |
+| `--model-path`                     | 平台对应的 HBM 路径            | 自动选择 `../../model/<platform>/`         |
+| `--input-npz`                      | 四路 float32 输入           | `../../test_data/reference_inputs.npz` |
+| `--output-npz`                     | 解码张量输出                  | `./diffusiondrive_outputs.npz`         |
+| `--img-save-path`、`--output-image` | 可视化输出，两个参数名都支持          | `./diffusiondrive_result.png`          |
+| `--agent-score-thres`              | 目标 sigmoid 阈值           | `0.5`                                  |
+| `--priority`                       | 调度优先级                   | `0`                                    |
+| `--bpu-cores`                      | BPU 核编号                 | `0`                                    |
+
+
+
 
 ## 快速运行
 
@@ -68,10 +72,9 @@ bash run_all_cases.sh
 
 ## 代码文档
 
-二次集成接口为 `DiffusionDriveConfig` 及 `DiffusionDrive.pre_process`、`forward`、`post_process`、`predict`。源码文档生成方式见仓库 [source documentation guide](../../../../../docs/source_reference/README.md)。
-
-## 注意事项
+二次集成接口为 `DiffusionDriveConfig` 及 `DiffusionDrive.pre_process`、`forward`、`post_process`、`predict`。
 
 - 生产程序应只加载一次模型并复用实例，进程启动时间不是 BPU 推理耗时。
 - `noise` 是显式输入；需要复现结果时必须固定。
 - 本示例只可视化模型张量。完整 NAVSIM 地图、标注、GIF 和 PDM Score 需在有 NAVSIM 数据的 x86 主机运行。
+
