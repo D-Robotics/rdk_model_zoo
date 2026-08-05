@@ -46,6 +46,7 @@
     }                                                                              \
   } while (0)
 
+/// Return the byte size of one element for a Horizon tensor type.
 inline int32_t ElementSize(int32_t type) {
   switch (type) {
     case HB_DNN_TENSOR_TYPE_BOOL8:
@@ -69,6 +70,7 @@ inline int32_t ElementSize(int32_t type) {
   }
 }
 
+/// Compute the product of all dimensions (total element count).
 inline int64_t ProdSize(const int32_t* dim, int ndim) {
   int64_t p = 1;
   for (int i = 0; i < ndim; ++i) {
@@ -113,6 +115,7 @@ inline void CopyWithStridePadding(void* dst, const void* src,
   rec(dst, src, 0);
 }
 
+/// Zero the aligned memory of a tensor.
 inline void ZeroTensorMem(hbDNNTensor& tensor) {
   if (tensor.sysMem.virAddr && tensor.properties.alignedByteSize > 0) {
     std::memset(tensor.sysMem.virAddr, 0,
@@ -120,19 +123,23 @@ inline void ZeroTensorMem(hbDNNTensor& tensor) {
   }
 }
 
+/// Copy @p src into an input tensor's BPU buffer, applying stride padding.
 inline void WriteInputTensor(hbDNNTensor& tensor, const void* src) {
   ZeroTensorMem(tensor);
   CopyWithStridePadding(tensor.sysMem.virAddr, src, tensor.properties);
 }
 
+/// Flush CPU dirty cache lines before BPU reads a buffer.
 inline void FlushClean(hbUCPSysMem& mem) {
   HBUCP_CHECK(hbUCPMemFlush(&mem, HB_SYS_MEM_CACHE_CLEAN), "flush clean");
 }
 
+/// Invalidate CPU cache lines after BPU writes a buffer.
 inline void FlushInvalidate(hbUCPSysMem& mem) {
   HBUCP_CHECK(hbUCPMemFlush(&mem, HB_SYS_MEM_CACHE_INVALIDATE), "flush invalidate");
 }
 
+/// Allocate and zero a tensor buffer for a model input or output slot.
 inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
   hbDNNTensor tensor{};
   if (is_input) {
@@ -148,6 +155,7 @@ inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
   return tensor;
 }
 
+/// Release all BPU buffers owned by a tensor vector.
 inline void FreeTensors(std::vector<hbDNNTensor>& tensors) {
   for (auto& t : tensors) {
     if (t.sysMem.virAddr != nullptr) {

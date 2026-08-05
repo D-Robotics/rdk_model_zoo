@@ -81,7 +81,7 @@ make -j$(nproc)
 
 The first build downloads and compiles `tokenizers-cpp` (HF tokenizers Rust
 binding + sentencepiece + abseil), which takes a few minutes. Subsequent
-builds are incremental and fast. The Rust binding requires Rust 1.79 or
+builds are incremental and fast. The Rust binding requires Rust 1.80 or
 newer; if the system toolchain is older, the installer places the current
 stable rustup toolchain under `$HOME/.cargo`.
 

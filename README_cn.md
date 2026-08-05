@@ -153,7 +153,7 @@ bash run.sh
 | 语音识别 | ASR（Wav2Vec2） | `samples/speech/asr` | S100 / S600 | [详情](./samples/speech/asr) |
 | 语音识别 | Paraformer（中文 ASR，WAV 输入，三段 INT16 HBM） | `samples/speech/paraformer` | S100 | [详情](./samples/speech/paraformer) |
 | 关键词唤醒 | KWS（MDTC） | `samples/speech/kws` | S100 | [详情](./samples/speech/kws) |
-| 视觉语言模型 | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P | [详情](./samples/llm/gemma4-e2b) |
+| 视觉语言模型 | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P / S600 | [详情](./samples/llm/gemma4-e2b) |
 | 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | `samples/vla/act` | S100 / S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 
 ---

@@ -78,6 +78,9 @@ class HttpError : public std::runtime_error {
   int status_;
 };
 
+/**
+ * @brief Represent a parsed HTTP request.
+ */
 struct HttpRequest {
   std::string method;
   std::string path;
@@ -85,11 +88,17 @@ struct HttpRequest {
   std::string body;
 };
 
+/**
+ * @brief Represent a single chat message (role + content).
+ */
 struct ChatMessage {
   std::string role;
   std::string content;
 };
 
+/**
+ * @brief Represent a parsed OpenAI-style chat completion request.
+ */
 struct ChatRequest {
   std::vector<ChatMessage> messages;
   int max_tokens = 0;
@@ -97,12 +106,18 @@ struct ChatRequest {
   bool include_usage = false;
 };
 
+/**
+ * @brief Represent a prepared prompt ready for one inference call.
+ */
 struct PreparedChat {
   std::vector<int64_t> prompt_ids;
   int max_new_tokens = 0;
   size_t trimmed_messages = 0;
 };
 
+/**
+ * @brief Represent the decoded result of one chat completion.
+ */
 struct ChatResult {
   std::string text;
   std::string finish_reason;
@@ -223,6 +238,17 @@ void SendError(int file_descriptor, int status, const std::string& message) {
   SendResponse(file_descriptor, status, body.dump());
 }
 
+/**
+ * @brief Read one HTTP request from a client socket.
+ *
+ * @param file_descriptor Open client socket file descriptor.
+ * @param max_body_bytes Maximum accepted request body size in bytes.
+ *
+ * @return Parsed HTTP request (method, path, headers, body).
+ *
+ * @throws HttpError On malformed headers, unsupported HTTP version, or a
+ *         request body larger than @p max_body_bytes.
+ */
 HttpRequest ReadHttpRequest(int file_descriptor, size_t max_body_bytes) {
   std::string received;
   received.reserve(8192);
@@ -398,6 +424,18 @@ int ReadRequestMaxTokens(const json& request, int default_max_tokens) {
       requested, std::numeric_limits<int>::max()));
 }
 
+/**
+ * @brief Parse a JSON chat-completion request body.
+ *
+ * @param body Raw JSON request body.
+ * @param default_max_tokens Fallback output limit when the request omits
+ *        `max_tokens`.
+ *
+ * @return Parsed chat request.
+ *
+ * @throws HttpError On invalid JSON, a missing `messages` array, or a
+ *         negative `max_tokens`.
+ */
 ChatRequest ParseChatRequest(const std::string& body,
                              int default_max_tokens) {
   json request;
@@ -509,6 +547,12 @@ bool PrefixMatches(const std::vector<int64_t>& prompt,
   return true;
 }
 
+/**
+ * @brief Own the text engine and tokenizer, and serve chat completions.
+ *
+ * Loads the Text HBM once at construction and keeps it resident. Consecutive
+ * requests that share a token prefix reuse the KV cache.
+ */
 class ChatService {
  public:
   ChatService(const std::string& text_hbm, const std::string& embeddings,
@@ -520,6 +564,19 @@ class ChatService {
     std::cout << "Text ready (" << engine_->LoadMs() << " ms)" << std::endl;
   }
 
+  /**
+   * @brief Encode messages into a prompt that fits the KV cache.
+   *
+   * Trims the oldest complete turns until the prompt plus the requested
+   * output reserve fit into the fixed 4096-token KV cache.
+   *
+   * @param request Parsed chat request.
+   * @param min_response_tokens Minimum output capacity to preserve.
+   *
+   * @return Prepared prompt with the final output budget.
+   *
+   * @throws HttpError If the prompt itself still exceeds the KV cache.
+   */
   PreparedChat Prepare(const ChatRequest& request,
                        int min_response_tokens) const {
     std::vector<ChatMessage> messages = request.messages;
@@ -563,6 +620,17 @@ class ChatService {
     return prepared;
   }
 
+  /**
+   * @brief Run inference for a prepared chat and return the decoded result.
+   *
+   * Reuses the KV cache when the new prompt shares a token prefix with the
+   * previously processed context; otherwise resets the cache first.
+   *
+   * @param prepared Prepared prompt and output budget.
+   * @param on_text Optional streaming callback invoked per generated chunk.
+   *
+   * @return Decoded completion text, finish reason, and token accounting.
+   */
   ChatResult Generate(
       const PreparedChat& prepared,
       const std::function<bool(const std::string&)>& on_text = nullptr) {
@@ -668,6 +736,21 @@ json CompletionChunk(const std::string& id, int64_t created,
   return chunk;
 }
 
+/**
+ * @brief Handle one POST /v1/chat/completions request.
+ *
+ * Parses the request, prepares the prompt, runs inference, and writes either
+ * a single JSON response or an SSE stream depending on the request's
+ * `stream` flag.
+ *
+ * @param file_descriptor Client socket to write the response to.
+ * @param request Parsed HTTP request.
+ * @param service Shared chat service holding the resident text engine.
+ * @param model Model ID to report in the response.
+ * @param default_max_tokens Fallback output token limit.
+ * @param min_response_tokens Minimum output capacity preserved while
+ *        trimming history.
+ */
 void HandleChatCompletion(int file_descriptor, const HttpRequest& request,
                           ChatService* service, const std::string& model,
                           int default_max_tokens,
@@ -754,6 +837,21 @@ void HandleChatCompletion(int file_descriptor, const HttpRequest& request,
   }
 }
 
+/**
+ * @brief Serve one client connection until the request is answered.
+ *
+ * Reads a single HTTP request, dispatches it to the matching endpoint
+ * (`/health`, `/v1/models`, `/v1/chat/completions`), and writes the response.
+ * Any HttpError is converted into the corresponding HTTP error body.
+ *
+ * @param file_descriptor Client socket.
+ * @param max_body_bytes Maximum accepted request body size.
+ * @param service Shared chat service.
+ * @param model Model ID to report.
+ * @param default_max_tokens Fallback output token limit.
+ * @param min_response_tokens Minimum output capacity preserved while
+ *        trimming history.
+ */
 void HandleClient(int file_descriptor, size_t max_body_bytes,
                   ChatService* service, const std::string& model,
                   int default_max_tokens, int min_response_tokens) {
@@ -815,6 +913,17 @@ void HandleClient(int file_descriptor, size_t max_body_bytes,
   }
 }
 
+/**
+ * @brief Create and bind a listening TCP socket.
+ *
+ * @param host Bind address (e.g. "0.0.0.0").
+ * @param port Listen port.
+ *
+ * @return The listening socket file descriptor.
+ *
+ * @throws std::runtime_error On socket creation, bind, listen, or
+ *         SO_REUSEADDR failure.
+ */
 int CreateListenSocket(const std::string& host, int port) {
   struct addrinfo hints {};
   hints.ai_family = AF_UNSPEC;

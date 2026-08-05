@@ -1,6 +1,9 @@
 /*
  * Copyright (C) 2024 Shanghai Gua Technology Co., Ltd.
  * All rights reserved
+ *
+ * This source is adapted from the reference OpenExplorer_LLM-s600
+ * tokenizer stack and retains the original third-party copyright notice.
  */
 
 /**

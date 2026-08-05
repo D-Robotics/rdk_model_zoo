@@ -77,7 +77,7 @@ cmake ..
 make -j$(nproc)
 ```
 
-首次编译会下载并构建 `tokenizers-cpp`（HF tokenizers Rust 绑定 + sentencepiece + abseil），耗时数分钟；之后增量编译很快。 Rust binding 需要 Rust 1.79 或更高版本；若系统工具链过旧，安装脚本会在 `$HOME/.cargo` 下安装当前稳定版 rustup 工具链。
+首次编译会下载并构建 `tokenizers-cpp`（HF tokenizers Rust 绑定 + sentencepiece + abseil），耗时数分钟；之后增量编译很快。 Rust binding 需要 Rust 1.80 或更高版本；若系统工具链过旧，安装脚本会在 `$HOME/.cargo` 下安装当前稳定版 rustup 工具链。
 
 离线环境若已安装独立 Abseil，可避免 SentencePiece 再次联网下载：
 
