@@ -71,6 +71,7 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- yoloe11_seg/             # 实例分割（无提示词）
 |   |   |-- yolov13_imoonlab/        # 目标检测
 |   |   |-- bytetrack/               # 多目标追踪
+|   |   |-- diffusiondrive/          # 端到端自动驾驶
 |   |   |-- resnet18/                # 图像分类
 |   |   |-- resnet50/                # 图像分类
 |   |   |-- resnet152/               # 图像分类
@@ -131,6 +132,7 @@ bash run.sh
 | 目标检测 | YOLO11 | `samples/vision/yolo11` | S100 / S600 | [详情](./samples/vision/yolo11) |
 | 目标检测 | YOLOv13（iMoonLab） | `samples/vision/yolov13_imoonlab` | S100 | [详情](./samples/vision/yolov13_imoonlab) |
 | 多目标追踪 | ByteTrack | `samples/vision/bytetrack` | S100 / S100P / S600 | [详情](./samples/vision/bytetrack) |
+| 端到端自动驾驶 | DiffusionDrive R34 | `samples/vision/diffusiondrive` | S600 | [详情](./samples/vision/diffusiondrive) |
 | 实例分割 | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [详情](./samples/vision/yolo11_seg) |
 | 实例分割 | YOLOe11-Seg（无提示词） | `samples/vision/yoloe11_seg` | S100 | [详情](./samples/vision/yoloe11_seg) |
 | 姿态估计 | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [详情](./samples/vision/yolo11_pose) |

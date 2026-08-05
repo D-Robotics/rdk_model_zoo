@@ -1,0 +1,33 @@
+# OpenExplorer v3.7.0 full-INT16 PTQ configuration for RDK S600.
+model_parameters:
+  onnx_model: ./build/diffusiondrive_navsim_bpu_clean_float.onnx
+  march: nash-p
+  output_model_file_prefix: diffusiondrive_r34_256x1024_s600
+  working_dir: ./build/hbm
+
+input_parameters:
+  input_name: camera;lidar;status;noise
+  input_shape: 1x3x256x1024;1x1x256x256;1x8;1x20x8x2
+  input_type_rt: featuremap;featuremap;featuremap;featuremap
+  input_type_train: featuremap;featuremap;featuremap;featuremap
+  input_layout_train: NCHW;NCHW;NCHW;NCHW
+  separate_batch: false
+
+calibration_parameters:
+  cal_data_dir: ./calibration_data/camera;./calibration_data/lidar;./calibration_data/status;./calibration_data/noise
+  calibration_type: max
+  quant_config:
+    model_config:
+      all_node_type: int16
+      activation:
+        calibration_type: max
+
+compiler_parameters:
+  optimize_level: O2
+  compile_mode: latency
+  core_num: 1
+  jobs: 32
+  cache_mode: enable
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true
