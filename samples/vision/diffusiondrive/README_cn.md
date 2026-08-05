@@ -2,7 +2,7 @@
 
 # DiffusionDrive 模型示例
 
-DiffusionDrive 是面向实时端到端自动驾驶的截断扩散策略。本示例在 RDK S600 上运行确定性的 NAVSIM 规划网络，并可视化规划轨迹、周围目标及七类 BEV 语义结果。
+DiffusionDrive 是面向实时端到端自动驾驶的截断扩散策略。本示例在 RDK S100P 和 S600 上运行确定性的 NAVSIM 规划网络，并可视化规划轨迹、周围目标及七类 BEV 语义结果。
 
 ## 算法介绍
 
@@ -16,9 +16,9 @@ DiffusionDrive 是面向实时端到端自动驾驶的截断扩散策略。本�
 
 ```text
 .
-|-- conversion/                 # OpenExplorer v3.7.0 全 INT16 PTQ 配置
+|-- conversion/                 # OpenExplorer v3.7.0 INT16 优先的 BPU PTQ 配置
 |-- evaluator/                  # 浮点与板端输出对比
-|-- model/                      # S600 HBM 放置目录和下载脚本
+|-- model/                      # S100P/S600 HBM 放置目录和下载脚本
 |-- runtime/python/             # hbm_runtime 推理与可视化
 |-- test_data/                  # 四输入 NAVSIM 样例和参考结果
 |-- README.md                   # 英文说明
@@ -27,7 +27,7 @@ DiffusionDrive 是面向实时端到端自动驾驶的截断扩散策略。本�
 
 ## 快速体验
 
-确认模型位于 `model/s600/diffusiondrive_r34_256x1024_s600.hbm`，然后执行：
+启动脚本会读取 `/sys/class/boardinfo/soc_name` 自动识别 S100P 或 S600，在缺少模型时下载对应 HBM，然后执行推理：
 
 ```bash
 cd runtime/python
@@ -58,23 +58,26 @@ bash run_all_cases.sh
 
 ## 模型转换
 
-目标开发板已放置转换好的 HBM。如需重新生成，请参考 [conversion/README_cn.md](conversion/README_cn.md)。最终采用全图 INT16 激活和 max 校准，所有模型分段都在 BPU 上运行，不引入 CPU fallback。
+已提供 `nash-m`/S100P 和 `nash-p`/S600 两个 HBM。如需重新生成，请参考 [conversion/README_cn.md](conversion/README_cn.md)。两个模型都请求全图 INT16 激活 PTQ 和 max 校准；由于该工具链不支持 INT16 GridSample，HMCT 会把 GridSample 保持为 INT8。最终所有模型分段都在 BPU 上运行，不引入 CPU fallback。
 
 ## 模型评估
 
 参考 [evaluator/README_cn.md](evaluator/README_cn.md) 对比板端解码结果与浮点参考输出。
 
-本示例已在 S600 开发板完成验证：
+下表精度统一使用 `case_000`，便于直接比较两个平台。性能使用真实 `case_017` 输入、单线程、固定 BPU 核心和 200 帧测得。
 
-| 指标 | 结果 |
-| --- | ---: |
-| 轨迹 cosine similarity | 0.999833 |
-| 目标状态 cosine similarity | 0.997052 |
-| BEV cosine similarity | 0.998918 |
-| BEV 像素一致率 | 0.944061 |
-| BEV mean IoU | 0.868425 |
-| 单线程时延 / 吞吐 | 7.229 ms / 138.060 FPS |
-| CPU 推理耗时 | 0.0 ms |
+| 指标 | S100P | S600 |
+| --- | ---: | ---: |
+| 轨迹 cosine similarity | 0.999857 | 0.999833 |
+| 目标状态 cosine similarity | 0.996879 | 0.997052 |
+| BEV cosine similarity | 0.998913 | 0.998918 |
+| BEV 像素一致率 | 0.943726 | 0.944061 |
+| BEV mean IoU | 0.865501 | 0.868425 |
+| 单线程时延 | 14.367 ms | 7.229 ms |
+| 单线程吞吐 | 69.375 FPS | 138.060 FPS |
+| CPU 推理耗时 | 0.0 ms | 0.0 ms |
+
+在全部 5 个随附场景上，S100P 的轨迹、目标状态和 BEV cosine 均值分别为 `0.999785`、`0.997986`、`0.998799`；BEV 像素一致率均值为 `0.955664`，mean IoU 均值为 `0.819837`。
 
 ## 推理结果
 

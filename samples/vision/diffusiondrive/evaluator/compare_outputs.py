@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare decoded S600 outputs with DiffusionDrive float reference tensors."""
+"""Compare decoded S100P/S600 outputs with DiffusionDrive float references."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def main() -> None:
         None.
     """
 
-    parser = argparse.ArgumentParser(description="Compare DiffusionDrive S600 and float outputs")
+    parser = argparse.ArgumentParser(description="Compare DiffusionDrive board and float outputs")
     parser.add_argument("--reference-npz", type=str, required=True, help="Path to float reference output NPZ.")
     parser.add_argument("--board-npz", type=str, required=True, help="Path to decoded board output NPZ.")
     args = parser.parse_args()

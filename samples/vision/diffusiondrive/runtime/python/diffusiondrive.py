@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""DiffusionDrive trajectory-planning runtime wrapper for RDK S600.
+"""DiffusionDrive trajectory-planning runtime wrapper for RDK S100P/S600.
 
 The wrapper discovers tensor names, shapes, data types, and quantization scales
 from the HBM model. Float32 NAVSIM features are quantized before inference, and
@@ -49,7 +49,7 @@ BEV_PALETTE_BGR = np.asarray(
 
 @dataclass
 class DiffusionDriveConfig:
-    """Configure the DiffusionDrive S600 runtime.
+    """Configure the DiffusionDrive RDK S runtime.
 
     Args:
         model_path: Path to the compiled DiffusionDrive HBM model.
@@ -329,6 +329,7 @@ def render_result(
     features: Dict[str, np.ndarray],
     result: Dict[str, np.ndarray],
     output_path: str,
+    platform_name: str = "RDK S",
 ) -> None:
     """Save camera, BEV semantic, LiDAR, trajectory, and agent visualization.
 
@@ -336,6 +337,7 @@ def render_result(
         features: Original float input feature dictionary.
         result: Post-processed result returned by ``DiffusionDrive.predict``.
         output_path: Destination PNG or JPEG path.
+        platform_name: Board name shown in the visualization title.
 
     Returns:
         None.
@@ -371,7 +373,16 @@ def render_result(
     canvas[320:576, :512] = semantic
     canvas[320:576, 512:] = lidar
     font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(canvas, "S600 DiffusionDrive - camera input", (12, 21), font, 0.5, (240, 240, 240), 1, cv2.LINE_AA)
+    cv2.putText(
+        canvas,
+        f"{platform_name} DiffusionDrive - camera input",
+        (12, 21),
+        font,
+        0.5,
+        (240, 240, 240),
+        1,
+        cv2.LINE_AA,
+    )
     cv2.putText(canvas, "Predicted BEV semantics", (12, 309), font, 0.5, (240, 240, 240), 1, cv2.LINE_AA)
     count = int(result["agent_mask"].sum())
     cv2.putText(canvas, f"LiDAR + trajectory (orange) + agents (red, count={count})", (524, 309), font, 0.5, (240, 240, 240), 1, cv2.LINE_AA)

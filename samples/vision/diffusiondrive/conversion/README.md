@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # DiffusionDrive Model Conversion
 
-This directory records the reproducible PTQ configuration used for the S600 model. Conversion runs on an x86 Linux host with:
+This directory records the reproducible PTQ configuration used for the S100P and S600 models. Conversion runs on an x86 Linux host with:
 
 ```text
 registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
@@ -27,19 +27,24 @@ Use at least 100 real NAVSIM mini samples. Each input has a separate directory u
 
 ## Compile
 
-From this directory inside the v3.7.0 container:
+From this directory inside the v3.7.0 container, select the target configuration:
 
 ```bash
 hb_compile -c configs/diffusiondrive_r34_256x1024_s600.yaml
+hb_compile -c configs/diffusiondrive_r34_256x1024_s100p.yaml
 ```
 
-The accepted configuration uses INT16 activations throughout the graph and max calibration. This is intentional: all-INT8 PTQ reduced the final BEV cosine to `0.370948`, while keeping only the four BEV-head nodes in INT16 still produced `0.371840` cosine and `0.143013` mean IoU. The upstream fused feature at `/_backbone/Add_6` had already degraded, so changing only the last head could not recover the semantic map.
+S600 uses `march: nash-p`; S100P uses `march: nash-m`. All other PTQ inputs and accuracy settings are shared.
 
-With full INT16 and max calibration, board-versus-float BEV cosine reaches `0.998918`, pixel agreement reaches `0.944061`, and mean IoU reaches `0.868425`. Compiler reports and board profiling confirm that every segment runs on the BPU with `0.0 ms` CPU inference time.
+The accepted configuration requests INT16 activations for the whole graph and uses max calibration. HMCT keeps GridSample at INT8 because v3.7.0 does not support INT16 GridSample; this INT16-first graph still compiles entirely to the BPU. The choice is intentional: all-INT8 PTQ reduced the final BEV cosine to `0.370948`, while keeping only the four BEV-head nodes in INT16 still produced `0.371840` cosine and `0.143013` mean IoU. The upstream fused feature at `/_backbone/Add_6` had already degraded, so changing only the last head could not recover the semantic map.
+
+With INT16-first max calibration, the S600 `case_000` board-versus-float BEV cosine reaches `0.998918`, pixel agreement reaches `0.944061`, and mean IoU reaches `0.868425`. The corresponding S100P values are `0.998913`, `0.943726`, and `0.865501`; its five-case mean values are `0.998799`, `0.955664`, and `0.819837`. Compiler reports and board profiling confirm that every segment runs on the BPU with `0.0 ms` CPU inference time. With a real input, S100P single-thread latency is `14.367 ms` (`69.375 FPS`).
 
 Validate the generated model with:
 
 ```bash
-hrt_model_exec model_info --model_file build/hbm/diffusiondrive_r34_256x1024_s600.hbm
-hrt_model_exec perf --model_file build/hbm/diffusiondrive_r34_256x1024_s600.hbm --thread_num 1 --core_id 0
+hrt_model_exec model_info --model_file build/s600/hbm/diffusiondrive_r34_256x1024_s600.hbm
+hrt_model_exec perf --model_file build/s600/hbm/diffusiondrive_r34_256x1024_s600.hbm --thread_num 1 --core_id 1
+hrt_model_exec model_info --model_file build/s100p/hbm/diffusiondrive_r34_256x1024_s100p.hbm
+hrt_model_exec perf --model_file build/s100p/hbm/diffusiondrive_r34_256x1024_s100p.hbm --thread_num 1 --core_id 1
 ```

@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # DiffusionDrive Model Sample
 
-DiffusionDrive is a truncated diffusion policy for real-time end-to-end autonomous driving. This sample runs a deterministic NAVSIM planning graph on RDK S600 and visualizes the planned trajectory, predicted agents, and seven-class BEV semantics.
+DiffusionDrive is a truncated diffusion policy for real-time end-to-end autonomous driving. This sample runs a deterministic NAVSIM planning graph on RDK S100P and S600 and visualizes the planned trajectory, predicted agents, and seven-class BEV semantics.
 
 ## Algorithm Overview
 
@@ -16,9 +16,9 @@ The model fuses a three-camera panorama, LiDAR BEV histogram, ego status, and ex
 
 ```text
 .
-|-- conversion/                 # OpenExplorer v3.7.0 full-INT16 PTQ configuration
+|-- conversion/                 # OpenExplorer v3.7.0 INT16-first BPU PTQ configuration
 |-- evaluator/                  # Float-versus-board output comparison
-|-- model/                      # S600 HBM placement and download helper
+|-- model/                      # S100P/S600 HBM placement and download helper
 |-- runtime/python/             # hbm_runtime inference and visualization
 |-- test_data/                  # Four-input NAVSIM sample and reference result
 |-- README.md                   # English overview
@@ -27,7 +27,7 @@ The model fuses a three-camera panorama, LiDAR BEV histogram, ego status, and ex
 
 ## QuickStart
 
-The S600 HBM model must be present at `model/s600/diffusiondrive_r34_256x1024_s600.hbm`. Then run:
+The launcher detects S100P or S600 from `/sys/class/boardinfo/soc_name`, downloads the matching HBM when necessary, and then runs inference:
 
 ```bash
 cd runtime/python
@@ -58,23 +58,26 @@ bash run_all_cases.sh
 
 ## Model Conversion
 
-A converted HBM is provided on the target development board. To regenerate it, follow [conversion/README.md](conversion/README.md). The accepted configuration uses INT16 activations throughout the graph with max calibration. Every model segment remains on the BPU; no CPU fallback is introduced.
+Converted HBM files are provided for `nash-m`/S100P and `nash-p`/S600. To regenerate them, follow [conversion/README.md](conversion/README.md). Both request graph-wide INT16 activation PTQ with max calibration; HMCT keeps GridSample at INT8 because this toolchain does not support INT16 GridSample. Every resulting model segment remains on the BPU, with no CPU fallback.
 
 ## Evaluation
 
 Use [evaluator/README.md](evaluator/README.md) to compare decoded board outputs against float reference tensors.
 
-The checked-in sample was validated on an S600 board with the following results:
+The accuracy columns below use `case_000` for a direct platform comparison. Runtime was measured with a real `case_017` input, one thread, a fixed BPU core, and 200 frames.
 
-| Metric | Result |
-| --- | ---: |
-| Trajectory cosine similarity | 0.999833 |
-| Agent-state cosine similarity | 0.997052 |
-| BEV cosine similarity | 0.998918 |
-| BEV pixel agreement | 0.944061 |
-| BEV mean IoU | 0.868425 |
-| Single-thread latency / throughput | 7.229 ms / 138.060 FPS |
-| CPU inference time | 0.0 ms |
+| Metric | S100P | S600 |
+| --- | ---: | ---: |
+| Trajectory cosine similarity | 0.999857 | 0.999833 |
+| Agent-state cosine similarity | 0.996879 | 0.997052 |
+| BEV cosine similarity | 0.998913 | 0.998918 |
+| BEV pixel agreement | 0.943726 | 0.944061 |
+| BEV mean IoU | 0.865501 | 0.868425 |
+| Single-thread latency | 14.367 ms | 7.229 ms |
+| Single-thread throughput | 69.375 FPS | 138.060 FPS |
+| CPU inference time | 0.0 ms | 0.0 ms |
+
+Across all five packaged cases, the S100P mean trajectory, agent-state, and BEV cosine similarities are `0.999785`, `0.997986`, and `0.998799`; mean BEV pixel agreement is `0.955664` and mean IoU is `0.819837`.
 
 ## Inference Result
 

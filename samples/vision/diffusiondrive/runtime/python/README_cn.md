@@ -6,7 +6,7 @@
 
 ## 环境依赖
 
-S600 系统需提供 Python 3、`hbm_runtime`、NumPy 和 OpenCV：
+S100P/S600 系统需提供 Python 3、`hbm_runtime`、NumPy 和 OpenCV：
 
 ```bash
 python3 -c "import hbm_runtime, numpy, cv2"
@@ -28,7 +28,8 @@ python3 -c "import hbm_runtime, numpy, cv2"
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| `--model-path` | S600 HBM 路径 | `../../model/s600/diffusiondrive_r34_256x1024_s600.hbm` |
+| `--platform` | `auto`、`s100p` 或 `s600` | `auto` |
+| `--model-path` | 平台对应的 HBM 路径 | 自动选择 `../../model/<platform>/` |
 | `--input-npz` | 四路 float32 输入 | `../../test_data/reference_inputs.npz` |
 | `--output-npz` | 解码张量输出 | `./diffusiondrive_outputs.npz` |
 | `--img-save-path`、`--output-image` | 可视化输出，两个参数名都支持 | `./diffusiondrive_result.png` |
@@ -48,13 +49,14 @@ bash run.sh
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s600/diffusiondrive_r34_256x1024_s600.hbm \
+  --platform s100p \
+  --model-path ../../model/s100p/diffusiondrive_r34_256x1024_s100p.hbm \
   --input-npz ../../test_data/reference_inputs.npz \
   --output-npz ../../test_data/my_outputs.npz \
   --img-save-path ../../test_data/my_result.png
 ```
 
-输入 NPZ 必须包含 `camera`、`lidar`、`status`、`noise`。代码从 HBM metadata 动态读取量化 scale，不硬编码模型参数。
+输入 NPZ 必须包含 `camera`、`lidar`、`status`、`noise`。代码从所选 HBM metadata 动态读取量化 scale，不硬编码模型参数。`run.sh` 会自动识别板卡，在模型缺失时下载对应文件，并把平台信息传给 `main.py`。
 
 运行全部已打包场景：
 

@@ -6,7 +6,7 @@ This Python sample uses `hbm_runtime` to run one four-input DiffusionDrive infer
 
 ## Dependencies
 
-The S600 board image must provide Python 3, `hbm_runtime`, NumPy, and OpenCV:
+The S100P/S600 board image must provide Python 3, `hbm_runtime`, NumPy, and OpenCV:
 
 ```bash
 python3 -c "import hbm_runtime, numpy, cv2"
@@ -28,7 +28,8 @@ python3 -c "import hbm_runtime, numpy, cv2"
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `--model-path` | S600 HBM model path | `../../model/s600/diffusiondrive_r34_256x1024_s600.hbm` |
+| `--platform` | `auto`, `s100p`, or `s600` | `auto` |
+| `--model-path` | Platform-specific HBM path | Auto-selected from `../../model/<platform>/` |
 | `--input-npz` | Four float32 input tensors | `../../test_data/reference_inputs.npz` |
 | `--output-npz` | Decoded tensor output | `./diffusiondrive_outputs.npz` |
 | `--img-save-path`, `--output-image` | Visualization output; both names are accepted | `./diffusiondrive_result.png` |
@@ -48,13 +49,14 @@ Explicit paths:
 
 ```bash
 python3 main.py \
-  --model-path ../../model/s600/diffusiondrive_r34_256x1024_s600.hbm \
+  --platform s100p \
+  --model-path ../../model/s100p/diffusiondrive_r34_256x1024_s100p.hbm \
   --input-npz ../../test_data/reference_inputs.npz \
   --output-npz ../../test_data/my_outputs.npz \
   --img-save-path ../../test_data/my_result.png
 ```
 
-The input NPZ must contain `camera`, `lidar`, `status`, and `noise`. Quantization scales are read from the HBM model instead of being hard-coded.
+The input NPZ must contain `camera`, `lidar`, `status`, and `noise`. Quantization scales are read from the selected HBM model instead of being hard-coded. `run.sh` detects the board, downloads the matching model if absent, and passes the platform to `main.py`.
 
 Run all packaged demo cases:
 

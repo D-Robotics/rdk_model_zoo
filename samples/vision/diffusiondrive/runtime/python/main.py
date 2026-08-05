@@ -1,7 +1,7 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # Licensed under the Apache License, Version 2.0.
 
-"""Run the DiffusionDrive S600 trajectory-planning sample."""
+"""Run the DiffusionDrive trajectory-planning sample on RDK S boards."""
 
 from __future__ import annotations
 
@@ -15,10 +15,46 @@ from diffusiondrive import DiffusionDrive, DiffusionDriveConfig, INPUT_NAMES, re
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SAMPLE_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../.."))
-DEFAULT_MODEL_PATH = os.path.join(SAMPLE_DIR, "model", "s600", "diffusiondrive_r34_256x1024_s600.hbm")
 DEFAULT_INPUT_PATH = os.path.join(SAMPLE_DIR, "test_data", "reference_inputs.npz")
 DEFAULT_OUTPUT_PATH = os.path.join(SCRIPT_DIR, "diffusiondrive_outputs.npz")
 DEFAULT_IMAGE_PATH = os.path.join(SCRIPT_DIR, "diffusiondrive_result.png")
+MODEL_FILENAMES = {
+    "s600": "diffusiondrive_r34_256x1024_s600.hbm",
+    "s100p": "diffusiondrive_r34_256x1024_s100p.hbm",
+}
+
+
+def detect_platform() -> str:
+    """Detect the RDK S platform from an override or board information.
+
+    Returns:
+        Lowercase platform name supported by this sample.
+    """
+
+    override = os.environ.get("RDK_SOC", "").strip().lower()
+    if override in MODEL_FILENAMES:
+        return override
+    try:
+        with open("/sys/class/boardinfo/soc_name", "r", encoding="utf-8") as soc_file:
+            detected = soc_file.read().strip().lower()
+    except OSError:
+        detected = ""
+    if detected in MODEL_FILENAMES:
+        return detected
+    return "s600"
+
+
+def platform_model_path(platform: str) -> str:
+    """Return the conventional Model Zoo HBM path for a platform.
+
+    Args:
+        platform: Lowercase RDK platform name.
+
+    Returns:
+        Absolute path to the platform-specific HBM file.
+    """
+
+    return os.path.join(SAMPLE_DIR, "model", platform, MODEL_FILENAMES[platform])
 
 
 def parse_args() -> argparse.Namespace:
@@ -28,8 +64,9 @@ def parse_args() -> argparse.Namespace:
         Parsed command-line namespace.
     """
 
-    parser = argparse.ArgumentParser(description="DiffusionDrive trajectory planning on RDK S600")
-    parser.add_argument("--model-path", type=str, default=DEFAULT_MODEL_PATH, help="Path to the S600 DiffusionDrive HBM model.")
+    parser = argparse.ArgumentParser(description="DiffusionDrive trajectory planning on RDK S100P/S600")
+    parser.add_argument("--platform", choices=("auto", "s100p", "s600"), default="auto", help="Target platform; auto reads boardinfo.")
+    parser.add_argument("--model-path", type=str, default=None, help="HBM path; defaults to the detected platform model directory.")
     parser.add_argument("--input-npz", type=str, default=DEFAULT_INPUT_PATH, help="Path to four float32 NAVSIM input tensors in NPZ format.")
     parser.add_argument("--output-npz", type=str, default=DEFAULT_OUTPUT_PATH, help="Path used to save decoded output tensors.")
     parser.add_argument(
@@ -43,7 +80,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--agent-score-thres", type=float, default=0.5, help="Sigmoid threshold for predicted agents.")
     parser.add_argument("--priority", type=int, default=0, help="Model scheduling priority.")
     parser.add_argument("--bpu-cores", nargs="+", type=int, default=[0], help="BPU core indexes used by hbm_runtime.")
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.platform = detect_platform() if args.platform == "auto" else args.platform
+    if args.model_path is None:
+        args.model_path = platform_model_path(args.platform)
+    return args
 
 
 def main() -> None:
@@ -64,8 +105,9 @@ def main() -> None:
     os.makedirs(os.path.dirname(os.path.abspath(args.output_npz)), exist_ok=True)
     np.savez(args.output_npz, **result)
     os.makedirs(os.path.dirname(os.path.abspath(args.img_save_path)), exist_ok=True)
-    render_result(features, result, args.img_save_path)
+    render_result(features, result, args.img_save_path, platform_name=args.platform.upper())
 
+    print("Platform:", args.platform.upper())
     print("Model:", model.model_name)
     print("Trajectory [x, y, heading]:")
     print(result["trajectory"][0])

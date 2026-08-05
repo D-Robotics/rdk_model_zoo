@@ -11,7 +11,7 @@ for case_dir in "${SAMPLE_DIR}"/test_data/case_*; do
   case_result_dir="${RESULT_DIR}/${case_name}"
   mkdir -p "${case_result_dir}"
   echo "[Run] ${case_name}"
-  python3 "${SCRIPT_DIR}/main.py" \
+  bash "${SCRIPT_DIR}/run.sh" \
     --input-npz "${case_dir}/inputs.npz" \
     --output-npz "${case_result_dir}/outputs.npz" \
     --output-image "${case_result_dir}/result.png"
