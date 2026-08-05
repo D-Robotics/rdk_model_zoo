@@ -95,7 +95,8 @@ rdk_model_zoo/                       # rdk_s branch
 |   |-- llm/
 |   |   `-- gemma4-e2b/             # Gemma4-E2B VLM (Vision + Text)
 |   `-- vla/
-|       `-- act/                    # Action Chunking Transformer (robot policy)
+|       |-- act/                    # Action Chunking Transformer (robot policy)
+|       `-- pi0/                    # rdk_LeRobot_tools s600 submodule; Pi0 is under models/pi0
 |-- docs/                            # Project guidelines and reference documentation
 |-- datasets/                        # Sample datasets and download scripts
 |-- tros/                            # TROS integration guides and examples
@@ -157,6 +158,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Keyword Spotting | KWS (MDTC) | `samples/speech/kws` | S100 | [Details](./samples/speech/kws) |
 | Vision-Language Model | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P | [Details](./samples/llm/gemma4-e2b) |
 | Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | `samples/vla/act` | S100 / S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools) |
+| Embodied AI / Robot Policy | Pi0 | `samples/vla/pi0/models/pi0` | S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools/tree/s600/models/pi0) |
 
 ---
 
