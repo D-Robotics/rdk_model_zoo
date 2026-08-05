@@ -64,7 +64,7 @@ Converted HBM files are provided for `nash-m`/S100P and `nash-p`/S600. To regene
 
 Use [evaluator/README.md](evaluator/README.md) to compare decoded board outputs against float reference tensors.
 
-The accuracy columns below use `case_000` for a direct platform comparison. Runtime was measured with a real `case_017` input, one thread, a fixed BPU core, and 200 frames.
+The accuracy columns below use `case_000` for a direct platform comparison. Performance uses valid INT16 inputs generated from the real `case_017`, a fixed BPU core, and 200 frames. Single-thread results characterize latency; two concurrent submission threads characterize aggregate BPU throughput following the Model Zoo convention.
 
 | Metric | S100P | S600 |
 | --- | ---: | ---: |
@@ -73,9 +73,13 @@ The accuracy columns below use `case_000` for a direct platform comparison. Runt
 | BEV cosine similarity | 0.998913 | 0.998918 |
 | BEV pixel agreement | 0.943726 | 0.944061 |
 | BEV mean IoU | 0.865501 | 0.868425 |
-| Single-thread latency | 14.367 ms | 7.229 ms |
-| Single-thread throughput | 69.375 FPS | 138.060 FPS |
+| Single-thread latency | 14.370 ms | 7.215 ms |
+| Single-thread throughput | 69.375 FPS | 138.247 FPS |
+| Two-thread average task latency | 28.024 ms | 13.856 ms |
+| Two-thread aggregate throughput | 71.109 FPS | 143.767 FPS |
 | CPU inference time | 0.0 ms | 0.0 ms |
+
+`--thread_num` controls the number of concurrent host threads submitting BPU tasks; it is not the CPU-core count. There is no separate "all threads" mode. Two threads are reported because both platforms are already close to BPU saturation at that point.
 
 Across all five packaged cases, the S100P mean trajectory, agent-state, and BEV cosine similarities are `0.999785`, `0.997986`, and `0.998799`; mean BEV pixel agreement is `0.955664` and mean IoU is `0.819837`.
 
