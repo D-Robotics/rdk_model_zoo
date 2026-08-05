@@ -1,3 +1,13 @@
+/**
+ * @file gemma4_kv_cache.cpp
+ * @brief Manage Gemma4-E2B BPU key-value cache storage and compaction.
+ *
+ * The implementation allocates cache tensors, appends prefill/decode results,
+ * and shifts retained tokens when conversation history is truncated.
+ *
+ * @note KvCache instances are not thread-safe.
+ */
+
 #include "gemma4_kv_cache.hpp"
 
 #include <algorithm>
@@ -150,29 +160,51 @@ int KvCache::PhysicalIndex(int global_pos) const {
 }
 
 void KvCache::CompactShift(int n_keep, int discard) {
-  if (discard <= 0) return;
+  if (discard <= 0) {
+    return;
+  }
 
-  // Truncate the KV cache to only keep the first n_keep tokens.
-  // The caller will re-prefill the recent history with correct positions.
-  // This is necessary because RoPE positions are baked into the int8 K cache.
-  
   if (n_keep <= 0) {
-    // Keep nothing
+    for (int layer = 0; layer < kNumKvLayers; ++layer) {
+      const size_t total_bytes = static_cast<size_t>(layer_bytes_[layer]);
+      std::memset(KLayer(layer), 0, total_bytes);
+      std::memset(VLayer(layer), 0, total_bytes);
+    }
     phys_of_global_.clear();
     occupied_len_ = 0;
     cache_start_ = 0;
     return;
   }
 
-  // Truncate phys_of_global_ to only keep [0, n_keep)
-  if (static_cast<int>(phys_of_global_.size()) > n_keep) {
-    phys_of_global_.resize(n_keep, -1);
+  const int cached_tokens = std::min(occupied_len_, kCacheLen);
+  if (n_keep > cached_tokens) {
+    throw std::runtime_error("KV compact keep exceeds cached tokens");
+  }
+
+  // KV rows are right-aligned. Move the retained prefix from the beginning of
+  // the occupied range to the end of the cache before replaying the suffix.
+  for (int layer = 0; layer < kNumKvLayers; ++layer) {
+    const size_t row_bytes = static_cast<size_t>(kHeadDims[layer]);
+    const size_t keep_bytes = static_cast<size_t>(n_keep) * row_bytes;
+    const size_t total_bytes = static_cast<size_t>(layer_bytes_[layer]);
+    const size_t source_offset =
+        total_bytes - static_cast<size_t>(cached_tokens) * row_bytes;
+    const size_t target_offset = total_bytes - keep_bytes;
+    std::memmove(KLayer(layer) + target_offset,
+                 KLayer(layer) + source_offset, keep_bytes);
+    std::memmove(VLayer(layer) + target_offset,
+                 VLayer(layer) + source_offset, keep_bytes);
+    std::memset(KLayer(layer), 0, target_offset);
+    std::memset(VLayer(layer), 0, target_offset);
+  }
+
+  phys_of_global_.assign(static_cast<size_t>(n_keep), -1);
+  const int physical_start = kCacheLen - n_keep;
+  for (int index = 0; index < n_keep; ++index) {
+    phys_of_global_[static_cast<size_t>(index)] = physical_start + index;
   }
   occupied_len_ = n_keep;
   cache_start_ = 0;
-  
-  // Note: We don't zero out the physical buffer beyond n_keep because
-  // it will be overwritten when the caller re-prefills the tail.
 }
 
 }  // namespace gemma4

@@ -1,10 +1,11 @@
-# Gemma4-E2B Quantization & Deployment on RDK S100P
+# Gemma4-E2B Quantization & Deployment on RDK S100/S100P/S600
 
 [中文](./QUANTIZATION_TUTORIAL_zh.md) | **English**
 
-> A complete guide from zero to working on-board VLM inference.  
-> Based on Google Gemma4-E2B (Vision + Text, no Audio) + D-Robotics OE-LLM 1.0.0 + RDK S100P (`march=nash-m`).  
-> Last updated: 2026-06-25
+> A complete guide from zero to working on-board VLM inference.
+> Based on Google Gemma4-E2B (Vision + Text, no Audio) and D-Robotics OE-LLM 1.0.0.
+> One source tree targets S100 (`nash-e`), S100P (`nash-m`) and S600 (`nash-p`).
+> Last updated: 2026-07-30
 
 ---
 
@@ -22,7 +23,9 @@
 
 ## 0. Introduction
 
-This document walks through quantizing and deploying the Gemma4-E2B multimodal model on the RDK S100P — environment setup, model analysis, calibration data, compilation, accuracy verification, packaging, and on-board deployment — including pitfalls we hit and how we fixed them.
+This document walks through quantizing and deploying Gemma4-E2B on RDK S100,
+S100P and S600: environment setup, model analysis, calibration data,
+compilation, accuracy verification, packaging and on-board deployment.
 
 **Audience**: developers comfortable with Linux/Python who have some familiarity with the D-Robotics RDK platform.
 
@@ -32,7 +35,7 @@ This document walks through quantizing and deploying the Gemma4-E2B multimodal m
 - Run PTQ quantization compilation on your own PC
 - Know how calibration data affects accuracy
 - Verify quantized accuracy (including end-to-end fusion checks)
-- Produce an HBM model package ready for S100P deployment
+- Produce an HBM model package matched to S100, S100P or S600
 
 ---
 
@@ -52,15 +55,20 @@ Google Gemma4 is a multimodal model family released on March 31, 2026. E2B is th
 
 E2B Vision and Text are **defined separately** (`Gemma4Config`), unlike the unified 12B architecture (`Gemma4UnifiedConfig`). Adaptation differs accordingly.
 
-### 1.2 RDK S100P Hardware Constraints
+### 1.2 RDK Target Matrix
 
-Quantization and on-board deployment in this guide target the **RDK S100P** with `--march nash-m`.
+The conversion scripts select the correct march and core counts through
+`TARGET_SOC`:
 
-| Item | Value | Quantization impact |
-| --- | --- | --- |
-| RAM | 12 GB LPDDR5 | Model + KV + system should stay under ~10 GB |
-| BPU | Nash-M, 80 TOPS | `march=nash-m` |
-| BPU cores | **1** | `core_num=1`, `vit_core_num=1` |
+| Target | HBDK march | Vision cores | Text prefill / decode | Board-memory note |
+| --- | --- | ---: | ---: | --- |
+| S100 | `nash-e` | 1 | 1 / 1 | Compile or provide matching S100 HBMs |
+| S100P | `nash-m` | 1 | 1 / 1 | Original sample behavior |
+| S600 | `nash-p` | 4 | 2 / 2 | 23 GiB usable (24 GB nominal), not 64 GB |
+
+S600-only compiler options (dynamic quantization, `opt=1`, HPC and decode
+no-padding) are isolated behind `nash-p`; they do not alter S100/S100P
+compilation.
 
 ### 1.3 OE-LLM Toolchain
 
@@ -325,17 +333,21 @@ If calibration distribution diverges from inference (e.g. solid color blocks vs 
 
 ### 4.2 Vision Calibration
 
-Vision calibration uses **50 real COCO val2017 images** in `calibration_data/images/`. Download script:
+Vision calibration uses **50 real COCO val2017 images** in `calibration_data/images/`. Run the downloader from the sample root:
 
 ```bash
-python download_coco_calib_images.py
+python3 conversion/scripts/calibration/download_coco_images.py
 ```
 
-You can also add your own images (jpg/png/bmp/webp) to `calibration_data/images/`.
+The compile wrapper verifies the generated provenance manifest, COCO source URLs,
+SHA256 hashes, and the exact 50-file set. It rejects extra, missing, synthetic, or
+otherwise untracked images; do not mix custom images into this directory unless
+you intentionally replace the verification workflow.
 
 ### 4.3 Text Calibration
 
-Text calibration needs diverse prompts in OELLM JSON format:
+Text calibration must be a user-supplied, reviewed corpus in OELLM JSON format.
+This sample does not generate replacement prompts:
 
 ```json
 [
@@ -345,17 +357,20 @@ Text calibration needs diverse prompts in OELLM JSON format:
 ]
 ```
 
-Prepare 100–200 entries covering languages, lengths, and topics. We used 150 entries.
+Use a stable corpus covering representative languages, lengths, and topics. The
+validated reference corpus contained 234 entries. The S600 resume flow reused
+existing quantized BC and did not generate or recalibrate from fresh text.
 
 ### 4.4 Calibration Directory Layout
 
 ```
 calibration_data/
-├── images/              # Vision calibration (50 COCO images)
+├── images_coco_manifest.json  # COCO provenance and per-image SHA256
+├── images/              # Vision calibration (exactly 50 COCO images)
 │   ├── coco_00_000000000802.jpg
 │   ├── coco_01_000000280325.jpg
 │   └── ...
-├── text/                # Text calibration (150 prompts)
+├── text/                # Reviewed text corpus (234 entries in reference run)
 │   └── calibration.json
 └── text_verify/         # Text accuracy check (2 short prompts)
     └── calibration.json
@@ -371,29 +386,23 @@ calibration_data/
 cd ~/gemma
 conda activate oellm
 
-# Increase stack size (required by hbdk4 compile_hbo; otherwise segfault)
-ulimit -s unlimited
+# Downloads a deterministic category-diverse set and writes its provenance
+# manifest. The compile script refuses synthetic or untracked images.
+python3 conversion/scripts/calibration/download_coco_images.py
 
-python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_llm.__file__))")/apis/oellm_build.py \
-    --model_name gemma4-e2b-vision \
-    --march nash-m \
-    --input_model_path ./gemma4-e2b \
-    --output_model_path ./output/gemma4_e2b_vision \
-    --calib_image_path ./calibration_data/images \
-    --device cuda:0 \
-    --vit_core_num 1 \
-    2>&1 | tee output/vision_compile.log
+# Replace s600 with s100 or s100p for the other targets.
+TARGET_SOC=s600 bash conversion/scripts/compile/run_vision_compile.sh
 ```
 
 | Parameter | Value | Notes |
 | --- | --- | --- |
 | `--model_name` | `gemma4-e2b-vision` | Registered in model_factory.py |
-| `--march` | `nash-m` | S100P march |
+| `TARGET_SOC` | `s100` / `s100p` / `s600` | Selects march and core defaults |
 | `--input_model_path` | HuggingFace weights dir | config.json + model.safetensors |
-| `--output_model_path` | Output directory | Compile artifacts |
-| `--calib_image_path` | COCO image dir | 50 real images |
+| `OUTPUT_DIR` | Per-target output directory | Compile artifacts do not overwrite another SoC |
+| `CALIB_IMAGE_DIR` | COCO image dir | Exactly 50 manifest-backed real images |
 | `--device` | `cuda:0` | GPU for calibration forward (CPU works, slower) |
-| `--vit_core_num` | `1` | Single core in this guide |
+| `VIT_CORE_NUM` | Matrix default | Optional explicit override |
 
 **Do not use `--verifier` here**: post-compile verifier reports `gemma4-e2b-vision does not support LLM` (it applies LLM verification to VLM). The HBM is valid — run `verifier_cli.py` separately.
 
@@ -422,7 +431,7 @@ Function 'convert_mlir' done in 19.3s
 Function 'compile_hbo' done in 6620.3s     ← ~110 min
 [Gemma4Vision] Linking HBM...
 Function 'link_models' done in 10.5s
-[Gemma4Vision] Done: ./output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.hbm
+[Gemma4Vision] Done: ./output/gemma4_e2b_vision_s600/gemma4-e2b_vit_ptq.hbm
 ```
 
 `compile_hbo` is CPU single-threaded for ViT; `HBDK_JOBS` has little effect.
@@ -430,7 +439,7 @@ Function 'link_models' done in 10.5s
 ### 5.3 Artifacts
 
 ```
-output/gemma4_e2b_vision/
+output/gemma4_e2b_vision_s600/
 ├── gemma4-e2b_vit_ptq.bc              # 620 MB  exported BC
 ├── gemma4-e2b_vit_ptq.convert.bc      # 202 MB  after MLIR convert
 ├── gemma4-e2b_vit_ptq.hbo             # 363 MB  HBO binary
@@ -471,7 +480,7 @@ Inspect with:
 
 ```python
 from hbdk4.compiler import load
-bc = load("output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.bc")
+bc = load("output/gemma4_e2b_vision_s600/gemma4-e2b_vit_ptq.bc")
 for inp in bc.functions[0].inputs:
     print(inp.name, list(inp.type.shape), inp.type.np_dtype)
 for out in bc.functions[0].outputs:
@@ -488,19 +497,9 @@ Text has prefill and decode phases; OELLM compiles both and links one `.hbm`:
 
 ```bash
 conda activate oellm
-ulimit -s unlimited
 
-python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_llm.__file__))")/apis/oellm_build.py \
-    --model_name gemma4-e2b-text \
-    --march nash-m \
-    --input_model_path ./gemma4-e2b \
-    --output_model_path ./output/gemma4_e2b_text \
-    --calib_text_path ./calibration_data/text \
-    --chunk_size 256 \
-    --cache_len 4096 \
-    --device cpu \
-    --core_num 1 \
-    2>&1 | tee output/text_compile.log
+# Uses the existing text calibration corpus; it does not synthesize prompts.
+TARGET_SOC=s600 bash conversion/scripts/compile/run_text_compile.sh
 ```
 
 | Parameter | Value | Notes |
@@ -509,20 +508,21 @@ python -u $(python -c "import leap_llm; import os; print(os.path.dirname(leap_ll
 | `--chunk_size` | `256` | Prefill processes 256 tokens per step |
 | `cache_len` | `4096` | Max KV cache length |
 | `--device` | `cpu` | Text calibration has little GPU benefit |
-| `--core_num` | `1` | Single core in this guide |
+| `PREFILL_CORE_NUM` | Matrix default | S600 uses 2; S100/S100P use 1 |
+| `DECODE_CORE_NUM` | Matrix default | S600 uses 2; S100/S100P use 1 |
 
 `tok_embeddings.bin` is exported automatically:
 
 ```python
 # Runs in Gemma4TextApi.__init__
 tok_embs = model.embed_tokens.weight.data * model.embed_tokens.embed_scale
-tok_embs.detach().cpu().numpy().tofile("output/gemma4_e2b_text/tok_embeddings.bin")
+tok_embs.detach().cpu().numpy().tofile("output/gemma4_e2b_text_s600/tok_embeddings.bin")
 ```
 
 ### 6.2 Artifacts
 
 ```
-output/gemma4_e2b_text/
+output/gemma4_e2b_text_s600/
 ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill.bc          # 18.5 GB
 ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill_convert.bc  # 4.7 GB
 ├── gemma4-e2b_lm_chunk_256_cache_4096_ptq.prefill.hbo          # 4.8 GB
@@ -567,25 +567,21 @@ Key Text HBM parameters are **fixed at compile time** and define on-board contex
 | KV cache length | env `CACHE_LEN` | 4096 | Shared budget for input + output tokens. Larger → more DDR, longer compile. |
 | Prefill chunk size | env `CHUNK_SIZE` | 256 | Tokens per prefill step. Larger → fewer steps, higher peak memory. |
 
-These map to `kCacheLen` / `kChunkSize` in `runtime/cpp/gemma4_config.h`. After recompiling HBM, update the runtime config or inference will misalign.
+These map to `kCacheLen` / `kChunkSize` in
+`runtime/cpp/inc/gemma4_config.hpp`. After recompiling HBM, update the runtime
+config or inference will misalign.
 
-**Example: extend context from 4096 to 8192**
+**Current deliverable: use the complete 4096-token KV budget**
 
-```bash
-# 1. Recompile Text HBM on PC (hours)
-CHUNK_SIZE=512 CACHE_LEN=8192 bash conversion/scripts/compile/run_text_compile.sh
-```
-
-```cpp
-// 2. Update board runtime (runtime/cpp/gemma4_config.h)
-constexpr int kChunkSize = 512;   // must match CHUNK_SIZE above
-constexpr int kCacheLen  = 8192;  // must match CACHE_LEN above
-```
+The provided Text HBM is fixed at `CHUNK_SIZE=256` and `CACHE_LEN=4096`.
+No 8K/16K HBM is included in this deliverable. Run the interactive entry with
+its default `--max_tokens=0`; each turn then receives all capacity remaining
+after the encoded prompt. When later turns need more room, `main` removes the
+oldest complete user/assistant turns and continues within the same 4096-token
+limit.
 
 ```bash
-# 3. Rebuild runtime
-cd runtime/cpp && mkdir build && cd build
-cmake .. && make -j$(nproc)
+./main --max_tokens=0
 ```
 
 **Runtime-only parameters** (no HBM recompile):
@@ -593,7 +589,7 @@ cmake .. && make -j$(nproc)
 | Parameter | Where | Default | Notes |
 | --- | --- | --- | --- |
 | Sliding window | `kSlidingWindow` | 512 | Decode sliding-attention window; must be ≤ `kCacheLen`. |
-| Max output tokens | `--max-tokens N` | `kCacheLen` | Per-turn generation limit at runtime. |
+| Max output tokens | `--max_tokens N` | `0` | `0` uses all KV capacity remaining after the prompt. |
 
 > **Memory cost**: doubling `CACHE_LEN` doubles KV cache DDR usage. Confirm free board memory before increasing.  
 > HBM filename `gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm` keeps the old naming pattern; contents reflect whatever `CHUNK_SIZE` / `CACHE_LEN` you used.
@@ -618,26 +614,29 @@ Separate checks for Vision and Text vs float outputs.
 **Vision BC**
 
 ```bash
-cd ~/gemma && conda activate oellm
+cd samples/llm/gemma4-e2b/conversion
+conda activate oellm
+export TARGET_SOC=s600  # replace with s100 or s100p when needed
 
-python -u leap_llm/apis/verifier_cli.py \
+python -m leap_llm.apis.verifier_cli \
     --model_name gemma4-e2b-vision \
     --model_dir ./gemma4-e2b \
-    --quant_vlm_model_path ./output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.bc \
+    --quant_vlm_model_path ./output/gemma4_e2b_vision_${TARGET_SOC}/gemma4-e2b_vit_ptq.bc \
     --input_image_path ./calibration_data/images/coco_00_000000000802.jpg
 ```
 
 **Text BC** (text only, no vision)
 
 ```bash
-python -u quick_text_verify.py
-# Output: output/e2b_text_verify_quick.json
+python -u scripts/verify/quick_text_verify.py --target-soc "$TARGET_SOC"
+# Output: output/e2b_text_verify_quick_${TARGET_SOC}.json
 ```
 
 If dev machine and board share a network, you can also run HBM verification on BPU:
 
 ```bash
-bash run_remote_hbm_verify.sh   # pass --remote_ip for board IP
+BOARD_IP=<board-ip> TARGET_SOC="$TARGET_SOC" \
+  bash scripts/verify/run_remote_hbm_verify.sh
 ```
 
 ---
@@ -650,13 +649,13 @@ bash run_remote_hbm_verify.sh   # pass --remote_ip for board IP
 mkdir -p gemma4_e2b_deploy/{model,tokenizer}
 
 # Model files (3 large files)
-cp output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.hbm \
+cp output/gemma4_e2b_vision_s600/gemma4-e2b_vit_ptq.hbm \
    gemma4_e2b_deploy/model/
 
-cp output/gemma4_e2b_text/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm \
+cp output/gemma4_e2b_text_s600/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm \
    gemma4_e2b_deploy/model/
 
-cp output/gemma4_e2b_text/tok_embeddings.bin \
+cp output/gemma4_e2b_text_s600/tok_embeddings.bin \
    gemma4_e2b_deploy/model/
 
 # Tokenizer files
@@ -700,7 +699,8 @@ Packed size ~**4.3 GB** (gzip); unpacked ~**6.3 GB**.
 
 ## 9. On-Board Deployment & VLM Inference
 
-How to deploy compiled HBM models on S100P and run Gemma4-E2B VLM inference.
+How to deploy the HBM files matching the detected SoC and run Gemma4-E2B VLM
+inference with the same C++ runtime.
 
 ### 9.1 Two Paths: Run Prebuilt vs Compile Yourself
 
@@ -716,25 +716,28 @@ How to deploy compiled HBM models on S100P and run Gemma4-E2B VLM inference.
 
 #### Step 1: Download Prebuilt Models
 
-On S100P:
+On S100P, the script downloads the validated public `nash-m` HBM archive.
+On S600, it downloads the validated public `nash-p` HBMs from the S600 model directory.
+For S100, place matching HBMs in `$GEMMA4_HOME/model` first or set
+`GEMMA4_MODEL_BASE_URL`; the script never substitutes another target's HBM.
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_SOC=s600  # optional when /sys/class/boardinfo/soc_name is present
 bash model/download_model.sh
 ```
 
-The script downloads the three runtime model files and the two required
-tokenizer files from the D-Robotics model archive.
+Shared token embeddings and tokenizer files are downloaded from the public
+archive when missing.
 
 Verify integrity (optional):
 
 ```bash
 sha256sum ~/gemma4_e2b/model/*.hbm
-
-# Expected:
-# 470791849d21cffadb388cc61c8f4b1452078c1722d302fd8a8ac775ee9769f1  ...vit_ptq.hbm
-# 3e4d4940051e4e8dc0cb434e972e7aae75d49504da3fac435e303f68af73a25f  ...lm_..._ptq.hbm
 ```
+
+Hashes are SoC-specific; use the values distributed with the selected model
+package rather than comparing an S600 file against an S100 checksum.
 
 #### Step 2: Build C++ Runtime
 

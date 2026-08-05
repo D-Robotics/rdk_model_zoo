@@ -21,4 +21,6 @@ bash third_party/install_tokenizers_cpp.sh
 ```
 
 This requires `curl` and network access. The build itself additionally
-needs `cargo` (Rust toolchain) to compile the tokenizers Rust binding.
+needs `cargo` (Rust toolchain) to compile the tokenizers Rust binding. Rust 1.80 or newer is required;
+when the system version is older, the installer bootstraps the current stable
+rustup toolchain under `$HOME/.cargo`.

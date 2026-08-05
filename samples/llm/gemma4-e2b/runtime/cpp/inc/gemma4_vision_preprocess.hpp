@@ -14,6 +14,12 @@
 
 namespace gemma4 {
 
+/**
+ * @brief Load and transform an image into the vision HBM input tensor.
+ * @param image_path Path to an image readable by OpenCV.
+ * @return Flattened normalized patch tensor expected by the vision model.
+ * @throws std::runtime_error If the image cannot be loaded or transformed.
+ */
 std::vector<float> PreprocessImage(const std::string& image_path);
 
 }  // namespace gemma4

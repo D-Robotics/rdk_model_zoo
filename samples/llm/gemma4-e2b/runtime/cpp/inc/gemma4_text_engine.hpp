@@ -1,9 +1,9 @@
 /**
- * @file gemma4_text_engine.h
+ * @file gemma4_text_engine.hpp
  * @brief Text LLM engine for Gemma4-E2B (prefill + decode + KV cache).
  *
- * Wraps the Horizon BPU DNN APIs to run the Gemma4-E2B text decoder on the
- * S100P BPU. Manages prefill (chunked) and decode steps, zero-copy KV cache,
+ * Wraps the Horizon BPU DNN APIs to run the Gemma4-E2B text decoder on
+ * supported RDK S targets. Manages prefill (chunked) and decode steps, zero-copy KV cache,
  * and logits→token sampling.
  */
 #pragma once
@@ -31,6 +31,9 @@ struct BenchmarkResult {
   double tokens_per_sec = 0;   ///< Decode throughput (tokens/sec)
 };
 
+/**
+ * @brief Hold one exported prefill chunk for conversion/runtime verification.
+ */
 struct PrefillChunkTensors {
   std::vector<int64_t> input_ids;
   std::vector<int32_t> position_ids;
@@ -39,6 +42,9 @@ struct PrefillChunkTensors {
   std::vector<float> sliding_mask;
 };
 
+/**
+ * @brief Own the DNN handle and tensors for one compiled text subgraph.
+ */
 struct ModelIo {
   hbDNNHandle_t handle = nullptr;
   std::vector<hbDNNTensor> inputs;
@@ -49,6 +55,12 @@ struct ModelIo {
 // Called for each newly generated token id. Return false to stop early.
 using TokenCallback = std::function<bool(int64_t token_id)>;
 
+/**
+ * @brief Run Gemma4-E2B text generation with reusable KV-cache state.
+ *
+ * A TextEngine owns the prefill/decode models, embedding table, and one chat
+ * session. Callers must serialize access to an instance.
+ */
 class TextEngine {
  public:
   TextEngine(const std::string& text_hbm, const std::string& embed_path);
@@ -57,61 +69,159 @@ class TextEngine {
   TextEngine(const TextEngine&) = delete;
   TextEngine& operator=(const TextEngine&) = delete;
 
+  /**
+   * @brief Run one-shot greedy text generation for a prompt.
+   *
+   * @param prompt_ids Token IDs of the prompt.
+   * @param max_new_tokens Maximum number of new tokens to generate.
+   *
+   * @return Generated token IDs (excluding the prompt).
+   */
   std::vector<int64_t> Generate(const std::vector<int64_t>& prompt_ids,
                                 int max_new_tokens);
 
-  // Streaming version: calls on_token for each generated token.
+  /**
+   * @brief Generate text with a per-token streaming callback.
+   *
+   * @param prompt_ids Token IDs of the prompt.
+   * @param max_new_tokens Maximum number of new tokens to generate.
+   * @param on_token Callback invoked with each newly generated token ID.
+   *        Returning false stops generation early.
+   *
+   * @return Generated token IDs (excluding the prompt).
+   */
   std::vector<int64_t> GenerateStream(const std::vector<int64_t>& prompt_ids,
                                        int max_new_tokens, TokenCallback on_token);
 
+  /**
+   * @brief Generate text starting from prebuilt prompt hidden states.
+   *
+   * @param prompt_ids Token IDs of the prompt.
+   * @param prompt_hidden Prebuilt inputs_embeds for the prompt.
+   * @param max_new_tokens Maximum number of new tokens to generate.
+   *
+   * @return Generated token IDs (excluding the prompt).
+   */
   std::vector<int64_t> GenerateWithPromptEmbeddings(
       const std::vector<int64_t>& prompt_ids,
       const std::vector<float>& prompt_hidden, int max_new_tokens);
 
-  // Incremental chat: prefill only new suffix, keep KV cache.
+  /**
+   * @brief Incremental chat generation reusing the existing KV cache.
+   *
+   * Prefills only the new suffix of @p full_ids and keeps the previous KV
+   * cache intact, enabling multi-turn chat without re-encoding history.
+   *
+   * @param full_ids Full token sequence including prior context.
+   * @param max_new_tokens Maximum number of new tokens to generate.
+   * @param full_hidden Optional prebuilt hidden states for the suffix.
+   *
+   * @return Generated token IDs.
+   */
   std::vector<int64_t> ContinueGenerate(
       const std::vector<int64_t>& full_ids, int max_new_tokens,
       const std::vector<float>* full_hidden = nullptr);
 
-  // Streaming incremental generation.
+  /**
+   * @brief Streaming variant of @ref ContinueGenerate.
+   *
+   * @param full_ids Full token sequence including prior context.
+   * @param max_new_tokens Maximum number of new tokens to generate.
+   * @param on_token Per-token streaming callback.
+   * @param full_hidden Optional prebuilt hidden states for the suffix.
+   *
+   * @return Generated token IDs.
+   */
   std::vector<int64_t> ContinueGenerateStream(
       const std::vector<int64_t>& full_ids, int max_new_tokens,
       TokenCallback on_token,
       const std::vector<float>* full_hidden = nullptr);
 
+  /// Clear all KV-cache and session state.
   void ResetSession();
 
+  /// Number of tokens currently processed and held in the KV cache.
   int ProcessedTokens() const { return processed_tokens_; }
 
   // Context management for multi-turn chat
+  /// Set the number of leading tokens preserved during a context shift.
   void SetKeepTokens(int n) { n_keep_ = n; }
+  /// Number of leading tokens preserved during a context shift.
   int KeepTokens() const { return n_keep_; }
 
-  // Perform context shift: keep first n_keep tokens, discard middle,
-  // and compact KV cache. Returns the number of tokens discarded.
+  /**
+   * @brief Compact the KV cache to make room for new context.
+   *
+   * Keeps the first @p n_keep tokens, discards the middle, and compacts the
+   * KV cache so generation can continue without exceeding capacity.
+   *
+   * @param n_keep Number of leading tokens to preserve.
+   *
+   * @return Number of tokens discarded.
+   */
   int ContextShift(int n_keep);
 
-  // Check if new tokens would exceed capacity and auto-truncate if needed.
-  // Returns true if truncation occurred.
+  /**
+   * @brief Check whether new tokens would exceed KV capacity.
+   *
+   * Auto-truncates the pending input if needed so generation stays within
+   * the fixed cache length.
+   *
+   * @param new_prompt_tokens Number of prompt tokens about to be added.
+   * @param max_new_tokens Requested output length.
+   *
+   * @return True if truncation occurred.
+   */
   bool AutoTruncate(int new_prompt_tokens, int max_new_tokens);
 
   // Chat history management
+  /// Append a full turn (e.g. user+assistant tokens) to chat history.
   void AddToHistory(const std::vector<int64_t>& tokens);
+  /// Clear the chat history used for truncation decisions.
   void ClearHistory();
+  /// Full chat history accumulated for truncation decisions.
   const std::vector<int64_t>& GetHistory() const { return chat_history_; }
 
+  /**
+   * @brief Build prompt hidden states by injecting vision features.
+   *
+   * @param prompt_ids Token IDs of the text prompt.
+   * @param vision_features Vision soft-token features to inject.
+   *
+   * @return inputs_embeds for the full prompt.
+   */
   std::vector<float> BuildPromptHidden(
       const std::vector<int64_t>& prompt_ids,
       const std::vector<float>& vision_features) const;
 
-  // Build prefill tensors without running BPU (for golden_mask_kv alignment).
+  /**
+   * @brief Export one prefill chunk's tensors without running the BPU.
+   *
+   * Used for golden mask/KV alignment verification against PC-side data.
+   *
+   * @param prompt_ids Full prompt token IDs.
+   * @param chunk_start Start offset of the chunk within the prompt.
+   * @param chunk_valid Number of valid tokens in the chunk.
+   *
+   * @return The exported chunk tensors.
+   */
   PrefillChunkTensors ExportPrefillChunk(const std::vector<int64_t>& prompt_ids,
                                          int chunk_start,
                                          int chunk_valid) const;
 
+  /**
+   * @brief Benchmark prefill and decode latency for a prompt.
+   *
+   * @param prompt_ids Token IDs of the prompt.
+   * @param max_new_tokens Number of decode steps to time.
+   * @param warmup_decode Decode warmup steps performed before timing.
+   *
+   * @return Benchmark timing result.
+   */
   BenchmarkResult Benchmark(const std::vector<int64_t>& prompt_ids,
                             int max_new_tokens, int warmup_decode = 0);
 
+  /// Model load time in milliseconds.
   double LoadMs() const { return load_ms_; }
 
  private:

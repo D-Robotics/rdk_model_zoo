@@ -9,8 +9,22 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+PY_BIN=""
+for candidate in python python3; do
+  if "$candidate" -c "import leap_llm" >/dev/null 2>&1; then
+    PY_BIN="$candidate"
+    break
+  fi
+done
+if [[ -z "$PY_BIN" ]]; then
+  echo "ERROR: leap_llm is not importable by python or python3."
+  echo "Activate the OE-LLM environment before running this installer."
+  exit 1
+fi
+echo "[install] using interpreter: $PY_BIN"
+
 # Locate leap_llm package
-LEAP_LLM_PATH=$(python -c "import leap_llm, os; print(os.path.dirname(leap_llm.__file__))")
+LEAP_LLM_PATH=$("$PY_BIN" -c "import leap_llm, os; print(os.path.dirname(leap_llm.__file__))")
 if [ -z "$LEAP_LLM_PATH" ]; then
     echo "ERROR: leap_llm not found. Activate the oellm conda env first."
     exit 1
@@ -41,7 +55,7 @@ fi
 
 # 4. Verify
 echo "[install] Verifying ..."
-python -c "
+"$PY_BIN" -c "
 from leap_llm.apis.model.model_factory import get_marches_with_model
 for m in ['gemma4-e2b-vision', 'gemma4-e2b-text', 'gemma4-e4b-vision', 'gemma4-e4b-text']:
     print(f'  {m}: {get_marches_with_model(m)}')

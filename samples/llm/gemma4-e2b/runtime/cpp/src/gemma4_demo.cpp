@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_demo.cpp
+ * @brief Run single-shot text or vision-language Gemma4-E2B inference.
+ *
+ * This executable provides a compact diagnostic entry for text prompts and
+ * image-plus-text prompts using the shared runtime classes.
+ */
+
 #include <iostream>
 #include <cstdlib>
 #include <sstream>

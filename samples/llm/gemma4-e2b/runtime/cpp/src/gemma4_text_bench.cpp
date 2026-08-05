@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_text_bench.cpp
+ * @brief Benchmark Gemma4-E2B text prefill and decode performance.
+ *
+ * The executable loads the text HBM, runs a configurable prompt, and reports
+ * model load time, prefill latency, decode latency, and throughput.
+ */
+
 #include <chrono>
 #include <cstdlib>
 #include <iostream>

@@ -17,6 +17,12 @@
 
 namespace gemma4 {
 
+/**
+ * @brief Own and query the external Gemma4-E2B token embedding table.
+ *
+ * The table is loaded once at construction and can build text-only or
+ * vision-injected hidden states for prefill.
+ */
 class TokenEmbeddings {
  public:
   explicit TokenEmbeddings(const std::string& path);

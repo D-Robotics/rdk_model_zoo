@@ -1,5 +1,5 @@
 /**
- * @file gemma4_vision_engine.h
+ * @file gemma4_vision_engine.hpp
  * @brief Vision ViT engine for Gemma4-E2B.
  *
  * Loads the Vision HBM and runs the ViT encoder to produce 280 soft image

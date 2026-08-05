@@ -12,6 +12,9 @@
  */
 #pragma once
 
+#include <dlfcn.h>
+
+#include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -43,6 +46,7 @@
     }                                                                              \
   } while (0)
 
+/// Return the byte size of one element for a Horizon tensor type.
 inline int32_t ElementSize(int32_t type) {
   switch (type) {
     case HB_DNN_TENSOR_TYPE_BOOL8:
@@ -66,6 +70,7 @@ inline int32_t ElementSize(int32_t type) {
   }
 }
 
+/// Compute the product of all dimensions (total element count).
 inline int64_t ProdSize(const int32_t* dim, int ndim) {
   int64_t p = 1;
   for (int i = 0; i < ndim; ++i) {
@@ -110,6 +115,7 @@ inline void CopyWithStridePadding(void* dst, const void* src,
   rec(dst, src, 0);
 }
 
+/// Zero the aligned memory of a tensor.
 inline void ZeroTensorMem(hbDNNTensor& tensor) {
   if (tensor.sysMem.virAddr && tensor.properties.alignedByteSize > 0) {
     std::memset(tensor.sysMem.virAddr, 0,
@@ -117,19 +123,23 @@ inline void ZeroTensorMem(hbDNNTensor& tensor) {
   }
 }
 
+/// Copy @p src into an input tensor's BPU buffer, applying stride padding.
 inline void WriteInputTensor(hbDNNTensor& tensor, const void* src) {
   ZeroTensorMem(tensor);
   CopyWithStridePadding(tensor.sysMem.virAddr, src, tensor.properties);
 }
 
+/// Flush CPU dirty cache lines before BPU reads a buffer.
 inline void FlushClean(hbUCPSysMem& mem) {
   HBUCP_CHECK(hbUCPMemFlush(&mem, HB_SYS_MEM_CACHE_CLEAN), "flush clean");
 }
 
+/// Invalidate CPU cache lines after BPU writes a buffer.
 inline void FlushInvalidate(hbUCPSysMem& mem) {
   HBUCP_CHECK(hbUCPMemFlush(&mem, HB_SYS_MEM_CACHE_INVALIDATE), "flush invalidate");
 }
 
+/// Allocate and zero a tensor buffer for a model input or output slot.
 inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
   hbDNNTensor tensor{};
   if (is_input) {
@@ -145,6 +155,7 @@ inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
   return tensor;
 }
 
+/// Release all BPU buffers owned by a tensor vector.
 inline void FreeTensors(std::vector<hbDNNTensor>& tensors) {
   for (auto& t : tensors) {
     if (t.sysMem.virAddr != nullptr) {
@@ -155,8 +166,62 @@ inline void FreeTensors(std::vector<hbDNNTensor>& tensors) {
   tensors.clear();
 }
 
-// OE model_inference flow: hbDNNInferV2 -> hbUCPSubmitTask -> hbUCPWaitTaskDone
-// -> hbDNNGetTaskOutputTensorProperties -> hbUCPReleaseTask
+/**
+ * @brief Mirror the optional DNN V3 inference parameter ABI.
+ *
+ * The compatibility layout allows the sample to select V2 or V3 inference
+ * without requiring newer SDK headers on every supported board image.
+ */
+struct DNNInferV3ParamCompat {
+  bool enable_pre_submit{false};
+  bool enable_poll{false};
+};
+
+using DNNInferV3Fn = int32_t (*)(hbUCPTaskHandle_t*, hbDNNTensor*,
+                                const hbDNNTensor*, hbDNNHandle_t,
+                                const DNNInferV3ParamCompat*);
+
+inline int32_t DNNInfer(hbUCPTaskHandle_t* task, hbDNNTensor* outputs,
+                        const hbDNNTensor* inputs, hbDNNHandle_t handle) {
+#if defined(SOC_S600)
+  if (std::getenv("HB_DNN_USER_DEFINED_L2M_SIZES") == nullptr) {
+    setenv("HB_DNN_USER_DEFINED_L2M_SIZES", "6:6:6:6", 0);
+  }
+#endif
+  const char* use_v3 = std::getenv("GEMMA4_USE_DNN_V3");
+  if (use_v3 != nullptr && std::strcmp(use_v3, "1") == 0) {
+    static const auto infer_v3 = reinterpret_cast<DNNInferV3Fn>(
+        dlsym(RTLD_DEFAULT, "hbDNNInferV3"));
+    if (infer_v3 != nullptr) {
+      const DNNInferV3ParamCompat params{};
+      return infer_v3(task, outputs, inputs, handle, &params);
+    }
+  }
+  return hbDNNInferV2(task, outputs, inputs, handle);
+}
+
+inline uint64_t DNNBpuBackend(hbDNNHandle_t handle) {
+#if defined(SOC_S600)
+  int32_t core_count = 0;
+  HBDNN_CHECK(hbDNNGetCompileBpuCoreNum(&core_count, handle),
+              "get compile BPU core count");
+  if (core_count < 1 || core_count > 4) {
+    throw std::runtime_error("unsupported BPU core count " +
+                             std::to_string(core_count));
+  }
+  uint64_t backend = 0;
+  for (int32_t core = 0; core < core_count; ++core) {
+    backend |= HB_UCP_BPU_CORE_0 << core;
+  }
+  return backend;
+#else
+  static_cast<void>(handle);
+  return HB_UCP_BPU_CORE_ANY;
+#endif
+}
+
+// OE model_inference flow: hbDNNInferV2 (or opt-in V3) -> hbUCPSubmitTask
+// -> hbUCPWaitTaskDone -> hbDNNGetTaskOutputTensorProperties -> hbUCPReleaseTask
 // Flushes ALL input tensors before inference and ALL output tensors after.
 inline void RunInfer(hbDNNHandle_t handle, std::vector<hbDNNTensor>& inputs,
                      std::vector<hbDNNTensor>& outputs) {
@@ -165,11 +230,11 @@ inline void RunInfer(hbDNNHandle_t handle, std::vector<hbDNNTensor>& inputs,
   }
 
   hbUCPTaskHandle_t task = nullptr;
-  HBDNN_CHECK(hbDNNInferV2(&task, outputs.data(), inputs.data(), handle), "infer");
+  HBDNN_CHECK(DNNInfer(&task, outputs.data(), inputs.data(), handle), "infer");
 
   hbUCPSchedParam sched{};
   HB_UCP_INITIALIZE_SCHED_PARAM(&sched);
-  sched.backend = HB_UCP_BPU_CORE_ANY;
+  sched.backend = DNNBpuBackend(handle);
   HBUCP_CHECK(hbUCPSubmitTask(task, &sched), "submit");
   HBUCP_CHECK(hbUCPWaitTaskDone(task, 0), "wait");
 
@@ -198,11 +263,11 @@ inline void RunInferSelective(hbDNNHandle_t handle,
   }
 
   hbUCPTaskHandle_t task = nullptr;
-  HBDNN_CHECK(hbDNNInferV2(&task, outputs.data(), inputs.data(), handle), "infer");
+  HBDNN_CHECK(DNNInfer(&task, outputs.data(), inputs.data(), handle), "infer");
 
   hbUCPSchedParam sched{};
   HB_UCP_INITIALIZE_SCHED_PARAM(&sched);
-  sched.backend = HB_UCP_BPU_CORE_ANY;
+  sched.backend = DNNBpuBackend(handle);
   HBUCP_CHECK(hbUCPSubmitTask(task, &sched), "submit");
   HBUCP_CHECK(hbUCPWaitTaskDone(task, 0), "wait");
 

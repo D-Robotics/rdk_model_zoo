@@ -1,3 +1,11 @@
+/**
+ * @file gemma4_golden_verify.cpp
+ * @brief Verify Gemma4-E2B prefill tensors against reference golden data.
+ *
+ * The executable exports prefill inputs and reports numerical agreement for
+ * model-conversion and runtime-alignment diagnostics.
+ */
+
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>

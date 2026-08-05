@@ -9,18 +9,29 @@ Tools and workflows to verify quantized accuracy and on-board tensor alignment.
 From your OE-LLM conda environment:
 
 ```bash
+cd samples/llm/gemma4-e2b/conversion
+conda activate oellm
+export TARGET_SOC=s600  # replace with s100 or s100p when needed
+
 # Vision BC cosine similarity
-python -u leap_llm/apis/verifier_cli.py \
+python -m leap_llm.apis.verifier_cli \
     --model_name gemma4-e2b-vision \
     --model_dir ./gemma4-e2b \
-    --quant_vlm_model_path ./output/gemma4_e2b_vision/gemma4-e2b_vit_ptq.bc \
+    --quant_vlm_model_path ./output/gemma4_e2b_vision_${TARGET_SOC}/gemma4-e2b_vit_ptq.bc \
     --input_image_path ./calibration_data/images/coco_00_000000000802.jpg
 
 # Text BC quick check
-python -u conversion/scripts/verify/quick_text_verify.py
+python -u scripts/verify/quick_text_verify.py --target-soc "$TARGET_SOC"
+# Output: output/e2b_text_verify_quick_${TARGET_SOC}.json
 ```
 
 Scripts live under [conversion/scripts/verify/](../conversion/scripts/verify/).
+For on-board HBM comparison, provide the board address explicitly:
+
+```bash
+BOARD_IP=<board-ip> TARGET_SOC="$TARGET_SOC" \
+  bash scripts/verify/run_remote_hbm_verify.sh
+```
 
 ## Board-side (golden mask / KV)
 

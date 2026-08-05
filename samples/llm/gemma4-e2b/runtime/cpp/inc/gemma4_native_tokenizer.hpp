@@ -1,6 +1,19 @@
 /*
  * Copyright (C) 2024 Shanghai Gua Technology Co., Ltd.
  * All rights reserved
+ *
+ * This header is adapted from the reference OpenExplorer_LLM-s600
+ * tokenizer stack and retains the original third-party copyright notice.
+ */
+
+/**
+ * @file gemma4_native_tokenizer.hpp
+ * @brief Declare the native tokenizers-cpp wrapper used by Gemma4-E2B.
+ *
+ * The wrapper exposes encoding, decoding, vocabulary lookup, and incremental
+ * decoding helpers for the board-side C++ runtime.
+ *
+ * @note Tokenizer instances serialize incremental decoding state internally.
  */
 
 #pragma once
@@ -15,6 +28,9 @@
 
 namespace gemma4 {
 
+/**
+ * @brief Describe a shared native tokenizer instance and its metadata.
+ */
 struct TokenizerInfo {
   std::string tokenizer_path;
   std::shared_ptr<tokenizers::Tokenizer> tokenizer;
@@ -23,6 +39,12 @@ struct TokenizerInfo {
   size_t ref_count;
 };
 
+/**
+ * @brief Encode and decode Gemma4-E2B tokens through tokenizers-cpp.
+ *
+ * Instances share loaded tokenizer resources while retaining independent
+ * incremental decoding buffers.
+ */
 class Tokenizer {
  public:
   Tokenizer() = default;
@@ -87,9 +109,24 @@ class Tokenizer {
    */
   size_t GetVocabSize() const { return tokenizer_->GetVocabSize(); }
 
-  // TODO(cdliang): 这两个接口不对输出的token做后处理
-  //                第三方库(tokenizers)也分为Decode/ IdToToken 两种
+  /**
+   * @brief Map a single token ID to its raw token string.
+   *
+   * @note Unlike @ref Decode, this returns the raw token without any
+   *       post-processing (e.g. ignore-special-token handling). The
+   *       underlying tokenizers library exposes both Decode and IdToToken.
+   *
+   * @param token_id Input token ID.
+   * @return Raw token string for the given ID.
+   */
   std::string IdToToken(int32_t token_id) const;
+
+  /**
+   * @brief Map a raw token string to its token ID.
+   *
+   * @param token Input token string.
+   * @return Token ID for the given string.
+   */
   int32_t TokenToId(std::string const &token) const;
 
   int32_t inline eos_token_id() const { return stop_token_id_; }

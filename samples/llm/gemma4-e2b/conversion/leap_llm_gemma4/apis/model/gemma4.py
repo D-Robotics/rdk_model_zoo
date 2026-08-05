@@ -14,6 +14,11 @@ from leap_llm.apis.calibration.data_loader import load_text_data
 from leap_llm.models.gemma4.model import Gemma4Text, Gemma4Vision, Gemma4VisionConfig
 
 
+def _first_device(device):
+    """Return the first device when OE-LLM supplies a parsed device list."""
+    return device[0] if isinstance(device, (list, tuple)) else device
+
+
 def _patchify_image(image_tensor, patch_size=16):
     """Convert image tensor [1, 3, H, W] -> [1, num_patches, 3*patch_size^2].
 
@@ -84,7 +89,7 @@ class Gemma4VisionApi:
         self.input_model_path = input_model_path
         self.output_model_path = output_model_path
         self.calib_image_path = calib_image_path
-        self.device = device
+        self.device = _first_device(device)
         self.model_type = model_type
         self.core_num = core_num
 
@@ -108,9 +113,11 @@ class Gemma4VisionApi:
         )
         print(f"[Gemma4VisionApi] Loaded {len(self.calib_images)} calibration images")
 
-    def compile(self, **kwargs):
+    def compile(self, vit_kwargs=None, llm_kwargs=None, **kwargs):
         device = self.device if torch.cuda.is_available() else "cpu"
         dtype = torch.float32
+        compile_kwargs = dict(kwargs)
+        compile_kwargs.update(vit_kwargs or {})
 
         vit = self.vit_model
 
@@ -129,7 +136,7 @@ class Gemma4VisionApi:
             dtype=leap.float16,
             output_model_path=self.vit_file_name,
             vit_core_num=self.core_num,
-            **kwargs,
+            **compile_kwargs,
         )
 
     def get_hbm_path(self):
@@ -151,7 +158,7 @@ class Gemma4TextCalibrationDataPreparer:
         self.chunk_size = chunk_size
         self.cache_len = cache_len
         self.sliding_window = sliding_window
-        self.device = device
+        self.device = _first_device(device)
         self.mask_value = mask_value
         self.pad_token_id = self.tokenizer.pad_token_id
         if self.pad_token_id is None:
@@ -267,7 +274,7 @@ class Gemma4TextApi:
         self.calib_text_data = list(load_text_data(calib_text_path))
         self.chunk_size = chunk_size
         self.cache_len = cache_len
-        self.device = device
+        self.device = _first_device(device)
         self.model_type = model_type
         self.prefill_core_num = prefill_core_num
         self.decode_core_num = decode_core_num
@@ -299,9 +306,11 @@ class Gemma4TextApi:
             os.path.join(output_model_path, "tok_embeddings.bin")
         )
 
-    def compile(self, **kwargs):
+    def compile(self, vit_kwargs=None, llm_kwargs=None, **kwargs):
         device = self.device if torch.cuda.is_available() else "cpu"
         dtype = torch.float32
+        compile_kwargs = dict(kwargs)
+        compile_kwargs.update(llm_kwargs or {})
 
         text = self.text_model
         text.set_model_device(device, dtype=dtype)
@@ -345,7 +354,7 @@ class Gemma4TextApi:
             output_model_path=self.lm_file_name,
             prefill_core_num=self.prefill_core_num,
             decode_core_num=self.decode_core_num,
-            **kwargs,
+            **compile_kwargs,
         )
 
     def get_hbm_path(self):
