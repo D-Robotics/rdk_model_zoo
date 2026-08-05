@@ -71,6 +71,7 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- yoloe11_seg/             # 实例分割（无提示词）
 |   |   |-- yolov13_imoonlab/        # 目标检测
 |   |   |-- bytetrack/               # 多目标追踪
+|   |   |-- diffusiondrive/          # 端到端自动驾驶
 |   |   |-- resnet18/                # 图像分类
 |   |   |-- resnet50/                # 图像分类
 |   |   |-- resnet152/               # 图像分类
@@ -94,7 +95,8 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |-- llm/
 |   |   `-- gemma4-e2b/             # Gemma4-E2B VLM（视觉 + 语言）
 |   `-- vla/
-|       `-- act/                    # Action Chunking Transformer（机器人策略）
+|       |-- act/                    # Action Chunking Transformer（机器人策略）
+|       `-- pi0/                    # rdk_LeRobot_tools s600 子模块；Pi0 位于 models/pi0
 |-- docs/                            # 项目规范与参考文档
 |-- datasets/                        # 示例数据集与下载脚本
 |-- tros/                            # TROS 集成指南与示例
@@ -131,6 +133,7 @@ bash run.sh
 | 目标检测 | YOLO11 | `samples/vision/yolo11` | S100 / S600 | [详情](./samples/vision/yolo11) |
 | 目标检测 | YOLOv13（iMoonLab） | `samples/vision/yolov13_imoonlab` | S100 | [详情](./samples/vision/yolov13_imoonlab) |
 | 多目标追踪 | ByteTrack | `samples/vision/bytetrack` | S100 / S100P / S600 | [详情](./samples/vision/bytetrack) |
+| 端到端自动驾驶 | DiffusionDrive R34 | `samples/vision/diffusiondrive` | S100P / S600 | [详情](./samples/vision/diffusiondrive) |
 | 实例分割 | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [详情](./samples/vision/yolo11_seg) |
 | 实例分割 | YOLOe11-Seg（无提示词） | `samples/vision/yoloe11_seg` | S100 | [详情](./samples/vision/yoloe11_seg) |
 | 姿态估计 | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [详情](./samples/vision/yolo11_pose) |
@@ -155,6 +158,7 @@ bash run.sh
 | 关键词唤醒 | KWS（MDTC） | `samples/speech/kws` | S100 | [详情](./samples/speech/kws) |
 | 视觉语言模型 | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P | [详情](./samples/llm/gemma4-e2b) |
 | 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | `samples/vla/act` | S100 / S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools) |
+| 具身智能 / 机器人策略 | Pi0 | `samples/vla/pi0/models/pi0` | S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools/tree/s600/models/pi0) |
 
 ---
 
