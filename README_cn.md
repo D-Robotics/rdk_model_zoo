@@ -252,7 +252,7 @@ python3 main.py \
 
 ### Star 增长趋势
 
-[![Star History Chart](https://api.star-history.com/svg?repos=D-Robotics/rdk_model_zoo&type=Date)](https://star-history.com/#D-Robotics/rdk_model_zoo&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=D-Robotics/rdk_model_zoo&type=Date)](https://star-history.dera.page/#D-Robotics/rdk_model_zoo&Date)
 
 欢迎参与共建 RDK Model Zoo。如有问题或建议，请通过 [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) 提出，或在 [D-Robotics 开发者社区](https://developer.d-robotics.cc/) 交流。
 

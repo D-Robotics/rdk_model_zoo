@@ -241,7 +241,7 @@ Yes. Non-quantizable or BPU-unsupported operators **fallback** to CPU. Even for 
 
 ### Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=D-Robotics/rdk_model_zoo&type=Date)](https://star-history.com/#D-Robotics/rdk_model_zoo&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=D-Robotics/rdk_model_zoo&type=Date)](https://star-history.dera.page/#D-Robotics/rdk_model_zoo&Date)
 
 We warmly welcome contributions! Please raise an issue on [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) or discuss on the [Developer Community](https://developer.d-robotics.cc/).
 
