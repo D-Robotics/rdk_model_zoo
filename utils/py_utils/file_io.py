@@ -110,6 +110,23 @@ def load_image(img_path: str) -> np.ndarray:
     return img
 
 
+def save_image(path: str, image: np.ndarray) -> None:
+    """Save an image array to a file path using OpenCV.
+
+    Args:
+        path: Destination file path.
+        image: Image array to write in BGR format.
+
+    Returns:
+        None
+
+    Raises:
+        RuntimeError: If the image cannot be written.
+    """
+    if not cv2.imwrite(path, image):
+        raise RuntimeError(f"Failed to save image: {path}")
+
+
 def load_class_names(path: str) -> list:
     """Load class names from a label file.
 

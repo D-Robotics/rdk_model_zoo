@@ -83,6 +83,8 @@ rdk_model_zoo/                       # rdk_s branch
 |   |   |-- vit/                     # Image classification
 |   |   |-- 3dresnet/                # Video action classification
 |   |   |-- unetmobilenet/           # Semantic segmentation
+|   |   |-- mobile_sam/              # Promptable segmentation (box prompt)
+|   |   |-- efficient_sam/           # Promptable segmentation (fixed prompt)
 |   |   |-- depth_anything_v2/       # Monocular depth estimation
 |   |   |-- siglip/                  # Vision encoder for VLM / VLA
 |   |   |-- pointnet/                # Point cloud part segmentation
@@ -136,6 +138,8 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | End-to-End Autonomous Driving | DiffusionDrive R34 | `samples/vision/diffusiondrive` | S100P / S600 | [Details](./samples/vision/diffusiondrive) |
 | Instance Segmentation | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [Details](./samples/vision/yolo11_seg) |
 | Instance Segmentation | YOLOe11-Seg (Prompt-Free) | `samples/vision/yoloe11_seg` | S100 | [Details](./samples/vision/yoloe11_seg) |
+| Promptable Segmentation | MobileSAM (box prompt) | `samples/vision/mobile_sam` | S100 / S100P / S600 | [Details](./samples/vision/mobile_sam) |
+| Promptable Segmentation | EfficientSAM (ViT-T, fixed prompt) | `samples/vision/efficient_sam` | S100 / S100P / S600 | [Details](./samples/vision/efficient_sam) |
 | Pose Estimation | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [Details](./samples/vision/yolo11_pose) |
 | Image Classification | ResNet18 | `samples/vision/resnet18` | S100 / S600 | [Details](./samples/vision/resnet18) |
 | Image Classification | ResNet50 | `samples/vision/resnet50` | S100 / S600 | [Details](./samples/vision/resnet50) |

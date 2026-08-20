@@ -65,6 +65,49 @@ def get_soc_name() -> str:
         return "s100"
 
 
+def resolve_platform(soc_name: str, board_type: str = "") -> tuple[str, str, str, str]:
+    """Resolve an S-series SoC to its ``(platform, march, suffix, repo_dir)`` tuple.
+
+    RDK S-series boards map onto OpenExplorer ``--march`` values, a model
+    filename suffix, and a Model Zoo repository directory:
+
+        - S100  -> ``nash-e`` / ``nashe`` / ``rdk_s100``
+        - S100P -> ``nash-m`` / ``nashm`` / ``rdk_s100``
+        - S600  -> ``nash-p`` / ``nashp`` / ``rdk_s600``
+
+    ``board_type`` takes precedence for an S100P board because some images
+    expose the base SoC name as ``S100`` while carrying the P variant in the
+    board descriptor.
+
+    Args:
+        soc_name: Raw SoC name, e.g. from :func:`get_soc_name`.
+        board_type: Raw board type descriptor, e.g. the contents of
+            ``/sys/class/boardinfo/board_type``.
+
+    Returns:
+        A ``(platform, march, filename_suffix, repo_dir)`` tuple, e.g.
+        ``("S600", "nash-p", "nashp", "rdk_s600")``.
+
+    Raises:
+        ValueError: If the SoC is not a recognized S-series platform.
+    """
+    platforms = {
+        "s100": ("S100", "nash-e", "nashe", "rdk_s100"),
+        "s100p": ("S100P", "nash-m", "nashm", "rdk_s100"),
+        "s600": ("S600", "nash-p", "nashp", "rdk_s600"),
+    }
+    soc = soc_name.strip().lower()
+    board = board_type.strip().lower()
+    if "s100p" in board or soc == "s100p":
+        return platforms["s100p"]
+    if soc in platforms:
+        return platforms[soc]
+    raise ValueError(
+        "Unsupported S-series platform: "
+        f"soc_name={soc_name!r}, board_type={board_type!r}"
+    )
+
+
 def print_model_info(models: object) -> None:
 
     """Print detailed input and output tensor information for all models.

@@ -1,0 +1,28 @@
+model_parameters:
+  onnx_model: './mobile_sam_image_encoder_norm_512_op11.onnx'
+  march: nash-p
+  layer_out_dump: false
+  working_dir: 'bpu_model_output_encoder_nashp'
+  output_model_file_prefix: 'mobile_sam_image_encoder_norm_512x512_nashp'
+input_parameters:
+  input_name: 'normalized_images'
+  input_type_rt: 'featuremap'
+  input_type_train: 'featuremap'
+  input_layout_train: 'NCHW'
+  input_layout_rt: 'NCHW'
+  input_shape: '1x3x512x512'
+  norm_type: 'no_preprocess'
+calibration_parameters:
+  cal_data_dir: './calibration_data_norm_512/normalized_images'
+  cal_data_type: 'float32'
+  optimization: 'set_all_nodes_int16'
+  calibration_type: 'max'
+  max_percentile: 0.9999
+compiler_parameters:
+  jobs: 8
+  compile_mode: 'latency'
+  debug: true
+  optimize_level: 'O2'
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true

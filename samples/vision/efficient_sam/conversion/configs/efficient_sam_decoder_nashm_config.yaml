@@ -1,0 +1,28 @@
+model_parameters:
+  onnx_model: './efficient_sam_vitt_decoder_512_op11.onnx'
+  march: nash-m
+  layer_out_dump: false
+  working_dir: 'bpu_model_output_decoder_nashm'
+  output_model_file_prefix: 'efficient_sam_vitt_decoder_512_nashm'
+input_parameters:
+  input_name: 'image_embeddings'
+  input_type_rt: 'featuremap'
+  input_type_train: 'featuremap'
+  input_layout_train: 'NCHW'
+  input_layout_rt: 'NCHW'
+  input_shape: '1x256x32x32'
+  norm_type: 'no_preprocess'
+calibration_parameters:
+  cal_data_dir: './decoder_calibration/image_embeddings'
+  cal_data_type: 'float32'
+  optimization: 'set_all_nodes_int16'
+  calibration_type: 'max'
+  max_percentile: 0.9999
+compiler_parameters:
+  jobs: 8
+  compile_mode: 'latency'
+  debug: true
+  optimize_level: 'O2'
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true

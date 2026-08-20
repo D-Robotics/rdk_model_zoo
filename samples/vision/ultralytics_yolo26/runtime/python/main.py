@@ -44,29 +44,14 @@ import utils.py_utils.inspect as inspect
 
 def main() -> None:
     """Run YOLO26 inference on a single image."""
-    soc = inspect.get_soc_name().lower()
     board_type = ""
     try:
         with open("/sys/class/boardinfo/board_type", "r", encoding="utf-8") as f:
             board_type = f.read().strip().lower()
     except Exception:
-        board_type = soc
-    # Map SoC -> march / file suffix:
-    #   S100  -> nash-e / nashe
-    #   S100P -> nash-m / nashm
-    #   S600  -> nash-p / nashp
-    if soc == "s600":
-        model_march = "nash-p"
-        model_suffix = "nashp"
-        soc_dir = "rdk_s600"
-    elif soc == "s100p" or "p" in board_type:
-        model_march = "nash-m"
-        model_suffix = "nashm"
-        soc_dir = "rdk_s100"
-    else:
-        model_march = "nash-e"
-        model_suffix = "nashe"
-        soc_dir = "rdk_s100"
+        board_type = ""
+    # Resolve SoC -> (platform, march, filename suffix, repo dir) via shared utils.
+    _, model_march, model_suffix, soc_dir = inspect.resolve_platform(inspect.get_soc_name(), board_type)
 
     parser = argparse.ArgumentParser(description="YOLO26 Unified Inference")
 

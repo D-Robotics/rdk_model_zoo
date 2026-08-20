@@ -83,6 +83,8 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- vit/                     # 图像分类
 |   |   |-- 3dresnet/                # 视频动作分类
 |   |   |-- unetmobilenet/           # 语义分割
+|   |   |-- mobile_sam/              # 可提示分割（框提示）
+|   |   |-- efficient_sam/           # 可提示分割（固定提示）
 |   |   |-- depth_anything_v2/       # 单目深度估计
 |   |   |-- siglip/                  # VLM / VLA 视觉编码器
 |   |   |-- pointnet/                # 点云零件分割
@@ -136,6 +138,8 @@ bash run.sh
 | 端到端自动驾驶 | DiffusionDrive R34 | `samples/vision/diffusiondrive` | S100P / S600 | [详情](./samples/vision/diffusiondrive) |
 | 实例分割 | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [详情](./samples/vision/yolo11_seg) |
 | 实例分割 | YOLOe11-Seg（无提示词） | `samples/vision/yoloe11_seg` | S100 | [详情](./samples/vision/yoloe11_seg) |
+| 可提示分割 | MobileSAM（框提示） | `samples/vision/mobile_sam` | S100 / S100P / S600 | [详情](./samples/vision/mobile_sam) |
+| 可提示分割 | EfficientSAM（ViT-T，固定提示） | `samples/vision/efficient_sam` | S100 / S100P / S600 | [详情](./samples/vision/efficient_sam) |
 | 姿态估计 | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [详情](./samples/vision/yolo11_pose) |
 | 图像分类 | ResNet18 | `samples/vision/resnet18` | S100 / S600 | [详情](./samples/vision/resnet18) |
 | 图像分类 | ResNet50 | `samples/vision/resnet50` | S100 / S600 | [详情](./samples/vision/resnet50) |
