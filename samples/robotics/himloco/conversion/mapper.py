@@ -13,7 +13,6 @@ from pathlib import Path
 
 import yaml
 
-
 INPUT_NAME = "obs_history"
 INPUT_SHAPE = "1x270"
 SAMPLE_BYTES = 270 * 4
@@ -21,7 +20,14 @@ MODEL_PREFIX = "himloco_go2_bayese_1x270"
 
 
 def sha256(path: Path) -> str:
-    """Return the SHA256 digest of one artifact."""
+    """Return the SHA256 digest of one artifact.
+
+    Args:
+        path: Artifact to hash.
+
+    Returns:
+        Lowercase hexadecimal SHA256 digest.
+    """
 
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -31,7 +37,19 @@ def sha256(path: Path) -> str:
 
 
 def execute(command: list[str], cwd: Path, log: Path) -> None:
-    """Run one command and stream its combined output to the terminal and log."""
+    """Run one command and stream combined output to the terminal and log.
+
+    Args:
+        command: Executable and arguments.
+        cwd: Command working directory.
+        log: New file receiving combined standard output and error.
+
+    Returns:
+        None.
+
+    Raises:
+        subprocess.CalledProcessError: If the command exits unsuccessfully.
+    """
 
     command_header = "$ " + " ".join(command) + "\n\n"
     print(command_header, end="", flush=True)
@@ -58,7 +76,14 @@ def execute(command: list[str], cwd: Path, log: Path) -> None:
 
 
 def tool_version(command: list[str]) -> str:
-    """Return compact version output without making it a build prerequisite."""
+    """Return compact version output without creating a build prerequisite.
+
+    Args:
+        command: Version command and arguments.
+
+    Returns:
+        First reported version line, or ``unreported`` when empty.
+    """
 
     result = subprocess.run(command, text=True, capture_output=True)
     output = (result.stdout + "\n" + result.stderr).strip()
@@ -66,7 +91,17 @@ def tool_version(command: list[str]) -> str:
 
 
 def parse_compile_metrics(log: Path) -> dict[str, float | int | str]:
-    """Extract output cosine and compiler estimates from a Mapper log."""
+    """Extract output cosine and compiler estimates from a Mapper log.
+
+    Args:
+        log: Mapper build log.
+
+    Returns:
+        Output cosine and any available latency, FPS, and DDR estimates.
+
+    Raises:
+        ValueError: If output cosine cannot be located.
+    """
 
     ansi = re.compile(r"\x1b\[[0-9;]*m")
     lines = ansi.sub("", log.read_text(encoding="utf-8", errors="replace")).splitlines()
@@ -104,7 +139,19 @@ def parse_compile_metrics(log: Path) -> dict[str, float | int | str]:
 
 
 def validate_calibration(calibration_dir: Path) -> tuple[list[Path], Path, dict]:
-    """Validate raw files and their calibration manifest."""
+    """Validate raw calibration files and their manifest.
+
+    Args:
+        calibration_dir: Directory containing raw float32 ``.bin`` files.
+
+    Returns:
+        Validated file paths, manifest path, and parsed manifest.
+
+    Raises:
+        FileNotFoundError: If the manifest is missing.
+        NotADirectoryError: If ``calibration_dir`` is not a directory.
+        ValueError: If file sizes or manifest fields do not match the contract.
+    """
 
     if not calibration_dir.is_dir():
         raise NotADirectoryError(calibration_dir)
@@ -138,7 +185,20 @@ def build_config(
     optimize_level: str,
     jobs: int,
 ) -> dict:
-    """Build the complete Mapper configuration from validated CLI arguments."""
+    """Build the complete Mapper configuration.
+
+    Args:
+        onnx_path: Fused fixed-shape ONNX policy.
+        calibration_dir: Validated calibration tensor directory.
+        working_dir: Mapper working directory.
+        calibration_type: Mapper calibration algorithm.
+        max_percentile: MIX calibration percentile bound.
+        optimize_level: Compiler optimization level.
+        jobs: Compiler worker count.
+
+    Returns:
+        Complete RDK X5 Mapper configuration mapping.
+    """
 
     return {
         "model_parameters": {
@@ -176,7 +236,11 @@ def build_config(
 
 
 def main() -> None:
-    """Create an isolated Mapper run and write a reproducible compile receipt."""
+    """Create an isolated Mapper run and write a reproducible compile receipt.
+
+    Returns:
+        None.
+    """
 
     parser = argparse.ArgumentParser(
         description="Compile HIMLoco ONNX for RDK X5 Bayes-e."
@@ -324,9 +388,9 @@ def main() -> None:
             if deployed_quantized
             else None
         ),
-        "quantized_onnx_sha256": sha256(deployed_quantized)
-        if deployed_quantized
-        else None,
+        "quantized_onnx_sha256": (
+            sha256(deployed_quantized) if deployed_quantized else None
+        ),
         "calibration_type": args.calibration_type,
         "max_percentile": args.max_percentile,
         "optimize_level": args.optimize_level,

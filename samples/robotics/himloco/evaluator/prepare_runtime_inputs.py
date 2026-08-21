@@ -15,7 +15,11 @@ INPUT_BYTES = INPUT_WIDTH * np.dtype(np.float32).itemsize
 
 
 def main() -> None:
-    """Write source-indexed raw inputs without changing the native rollout."""
+    """Write source-indexed raw inputs without changing the native rollout.
+
+    Returns:
+        None.
+    """
 
     parser = argparse.ArgumentParser(
         description="Prepare source-indexed X5 input dumps from a held-out rollout .pt."

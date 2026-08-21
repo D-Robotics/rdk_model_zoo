@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README_cn.md)
 
-# RDK X5 HIMLoco
+# HIMLoco 模型说明
 
 本示例为 Unitree Go2 HIMLoco 策略提供融合模型导出、PTQ 转换、数值评测以及
 RDK X5 Python/C++ 离线推理。
@@ -68,22 +68,25 @@ himloco/
 
 ## 快速开始
 
-下载 RDK X5 模型，或按 [模型转换说明](conversion/README_cn.md) 复现模型转换：
+两个脚本都会在默认模型缺失时自动下载模型、使用随附测试输入，并将结果写入被忽略的
+带时间戳 `runs/` 目录。
+
+### Python
 
 ```bash
-cd model
-bash download_model.sh
+bash runtime/python/run.sh
 ```
 
-在 RDK X5 上使用显式的模型、输入、输出和报告路径运行任一 Runtime：
+参数与集成方式详见 [Python Runtime](runtime/python/README_cn.md)。
+
+### C++
 
 ```bash
-cd runtime/python
-bash run.sh --help
-
-cd ../cpp
-bash run.sh --help
+bash runtime/cpp/run.sh
 ```
+
+脚本会先配置并完成 Release 构建，再执行推理。构建和参数详见
+[C++ Runtime](runtime/cpp/README_cn.md)。
 
 随附的 `test_data/obs_history` 包含独立原生 rollout 中编号 0 至 20 的样本。更多 Runtime
 输入可通过 `evaluator/prepare_runtime_inputs.py` 生成。解释板端输出前请先阅读
@@ -91,7 +94,8 @@ bash run.sh --help
 
 ## 模型转换
 
-支持的转换链路为：
+转换完成的 RDK X5 模型已通过 `model/download_model.sh` 提供，普通 Runtime 用户可以
+跳过模型转换。如需复现，请阅读 [模型转换说明](conversion/README_cn.md)。支持的转换链路为：
 
 ```text
 policy.pt -> 融合 ONNX -> 代表性校准 -> MIX PTQ -> Bayes-e BIN
@@ -107,6 +111,19 @@ policy.pt -> 融合 ONNX -> 代表性校准 -> MIX PTQ -> Bayes-e BIN
 
 两个实现都会检查单输入/单输出模型合同，并写出 12 维 float32 action 文件。这些 action
 dump 是 evaluator 使用的临时数值证据，不是模型资产，不能提交到仓库。
+
+## 推理结果
+
+默认运行成功后会处理随附的 21 个输入，并生成：
+
+```text
+runs/<timestamp>/
+├── action_dumps/000000.bin ... 000020.bin  # 每个输入对应 12 个 float32 action
+└── python-report.json 或 cpp-report.json   # 模型、Runtime 和延迟证据
+```
+
+将 action 作为精度证据前，应使用 `evaluator/compare_action_dumps.py` 与 TorchScript
+参考结果比较。
 
 ## 评测与性能
 

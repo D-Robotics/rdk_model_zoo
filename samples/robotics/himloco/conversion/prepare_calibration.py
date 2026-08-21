@@ -11,13 +11,19 @@ from pathlib import Path
 import numpy as np
 import torch
 
-
 INPUT_WIDTH = 270
 SAMPLE_BYTES = INPUT_WIDTH * np.dtype(np.float32).itemsize
 
 
 def sha256(path: Path) -> str:
-    """Return the SHA256 digest of one file."""
+    """Return the SHA256 digest of one file.
+
+    Args:
+        path: File to hash.
+
+    Returns:
+        Lowercase hexadecimal SHA256 digest.
+    """
 
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -27,7 +33,20 @@ def sha256(path: Path) -> str:
 
 
 def load_observations(path: Path, key: str) -> torch.Tensor:
-    """Load a native rollout tensor or a tensor stored under one dictionary key."""
+    """Load policy observations from a native rollout artifact.
+
+    Args:
+        path: Native rollout ``.pt`` artifact.
+        key: Dictionary key used when the artifact contains a mapping.
+
+    Returns:
+        Finite contiguous CPU float32 observations with shape ``[N,270]``.
+
+    Raises:
+        KeyError: If ``key`` is absent from a dictionary artifact.
+        TypeError: If the artifact or selected value is not a tensor.
+        ValueError: If shape, sample count, or finite-value checks fail.
+    """
 
     artifact = torch.load(path, map_location="cpu", weights_only=True)
     if isinstance(artifact, torch.Tensor):
@@ -54,7 +73,11 @@ def load_observations(path: Path, key: str) -> torch.Tensor:
 
 
 def main() -> None:
-    """Select deterministic rollout samples and write raw Mapper inputs."""
+    """Select deterministic rollout samples and write raw Mapper inputs.
+
+    Returns:
+        None.
+    """
 
     parser = argparse.ArgumentParser(
         description="Prepare HIMLoco obs_history calibration data from a native .pt rollout."

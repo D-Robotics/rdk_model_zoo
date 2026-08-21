@@ -20,13 +20,16 @@ from metrics import (
     write_report,
 )
 
-
 INPUT_NAME = "obs_history"
 OUTPUT_NAME = "actions"
 
 
 def main() -> None:
-    """Run held-out samples through both floating-point model formats."""
+    """Run held-out samples through both floating-point model formats.
+
+    Returns:
+        None.
+    """
 
     parser = argparse.ArgumentParser(
         description="Compare HIMLoco policy.pt and fused ONNX on held-out rollout data."

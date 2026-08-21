@@ -9,14 +9,20 @@ from pathlib import Path
 import numpy as np
 import torch
 
-
 INPUT_WIDTH = 270
 OUTPUT_WIDTH = 12
 ACTION_SCALE = 0.25
 
 
 def sha256(path: Path) -> str:
-    """Return the SHA256 digest of one artifact."""
+    """Return the SHA256 digest of one artifact.
+
+    Args:
+        path: Artifact to hash.
+
+    Returns:
+        Lowercase hexadecimal SHA256 digest.
+    """
 
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -30,7 +36,21 @@ def load_rollout(
     observation_key: str,
     action_key: str | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor | None]:
-    """Load policy inputs and optional recorded actions from a native rollout."""
+    """Load policy inputs and optional actions from a native rollout.
+
+    Args:
+        path: Native rollout ``.pt`` artifact.
+        observation_key: Dictionary key for policy observations.
+        action_key: Optional dictionary key for recorded policy actions.
+
+    Returns:
+        Validated observations and optional actions as CPU float32 tensors.
+
+    Raises:
+        KeyError: If the observation key is absent.
+        TypeError: If the artifact does not contain supported tensors.
+        ValueError: If tensor contracts or sample counts differ.
+    """
 
     artifact = torch.load(path, map_location="cpu", weights_only=True)
     if isinstance(artifact, torch.Tensor):
@@ -53,7 +73,20 @@ def load_rollout(
 
 
 def validate_tensor(value: object, name: str, width: int) -> torch.Tensor:
-    """Validate one finite rank-two tensor and normalize it to CPU float32."""
+    """Validate and normalize one finite rank-two tensor.
+
+    Args:
+        value: Candidate tensor object.
+        name: Tensor name used in validation errors.
+        width: Required feature width.
+
+    Returns:
+        Contiguous CPU float32 tensor.
+
+    Raises:
+        TypeError: If ``value`` is not a tensor.
+        ValueError: If shape, sample count, or finite-value checks fail.
+    """
 
     if not isinstance(value, torch.Tensor):
         raise TypeError(f"{name!r} must be a Tensor")
@@ -68,7 +101,19 @@ def validate_tensor(value: object, name: str, width: int) -> torch.Tensor:
 
 
 def select_indices(total: int, count: int, seed: int) -> np.ndarray:
-    """Select sorted deterministic indices; zero means the complete rollout."""
+    """Select sorted deterministic sample indices.
+
+    Args:
+        total: Available sample count.
+        count: Requested count; zero selects every sample.
+        seed: Random sampling seed.
+
+    Returns:
+        Sorted int64 source indices.
+
+    Raises:
+        ValueError: If the requested count is invalid.
+    """
 
     selected = total if count == 0 else count
     if selected < 1 or selected > total:
@@ -80,7 +125,15 @@ def select_indices(total: int, count: int, seed: int) -> np.ndarray:
 
 
 def cosine_similarity(candidate: np.ndarray, reference: np.ndarray) -> float:
-    """Calculate cosine similarity with deterministic zero-vector handling."""
+    """Calculate cosine similarity with deterministic zero-vector handling.
+
+    Args:
+        candidate: Candidate numerical output.
+        reference: Reference numerical output.
+
+    Returns:
+        Cosine similarity in the inclusive range [-1, 1].
+    """
 
     candidate64 = candidate.astype(np.float64).ravel()
     reference64 = reference.astype(np.float64).ravel()
@@ -94,7 +147,18 @@ def cosine_similarity(candidate: np.ndarray, reference: np.ndarray) -> float:
 def numerical_metrics(
     reference: np.ndarray, candidate: np.ndarray
 ) -> dict[str, float | int]:
-    """Calculate action and joint-target error metrics."""
+    """Calculate action and joint-target error metrics.
+
+    Args:
+        reference: Reference actions with shape ``[N,12]``.
+        candidate: Candidate actions with the same shape.
+
+    Returns:
+        Action errors, cosine similarity, and scaled joint-target errors.
+
+    Raises:
+        ValueError: If shapes differ or values are non-finite.
+    """
 
     reference = np.asarray(reference, dtype=np.float32)
     candidate = np.asarray(candidate, dtype=np.float32)
@@ -135,7 +199,18 @@ def numerical_metrics(
 
 
 def write_report(path: Path, report: dict) -> None:
-    """Write one new JSON report without replacing prior evidence."""
+    """Write one new JSON report without replacing prior evidence.
+
+    Args:
+        path: New JSON report path.
+        report: JSON-serializable report mapping.
+
+    Returns:
+        None.
+
+    Raises:
+        FileExistsError: If ``path`` already exists.
+    """
 
     if path.exists():
         raise FileExistsError(path)

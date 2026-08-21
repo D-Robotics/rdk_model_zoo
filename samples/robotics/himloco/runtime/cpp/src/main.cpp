@@ -4,9 +4,9 @@
  */
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -19,11 +19,25 @@
 #include <utility>
 #include <vector>
 
+#include <gflags/gflags.h>
 #include <sys/utsname.h>
 
 #include "himloco.hpp"
 
 namespace fs = std::filesystem;
+
+DEFINE_string(model_path,
+              "../../model/bayes-e/himloco_go2_bayese_1x270.bin",
+              "Path to the RDK X5 Bayes-e HIMLoco .bin model.");
+DEFINE_string(input_path, "../../test_data/obs_history",
+              "One raw float32 input file or a directory of input files.");
+DEFINE_string(output_dir, "",
+              "New action dump directory; empty creates a timestamped run.");
+DEFINE_string(report, "",
+              "New JSON report path; empty creates it with the action dumps.");
+DEFINE_int32(warmup, 10, "Number of unmeasured inference calls before timing.");
+DEFINE_int32(priority, -1,
+             "DNN task priority in [0,255], or -1 for Runtime default.");
 
 namespace {
 
@@ -32,84 +46,50 @@ constexpr std::uintmax_t kInputBytes =
 constexpr std::uintmax_t kOutputBytes =
     static_cast<std::uintmax_t>(himloco::kOutputElements) * sizeof(float);
 
+/** @brief Store effective CLI paths and Runtime scheduling options. */
 struct Options {
-  fs::path model_path;
-  fs::path input_path;
-  fs::path output_dir;
-  fs::path report_path;
-  int warmup = 10;
-  int priority = -1;
+  fs::path model_path;   ///< X5 Bayes-e model path.
+  fs::path input_path;   ///< One input file or source-indexed directory.
+  fs::path output_dir;   ///< New action dump directory.
+  fs::path report_path;  ///< New JSON report path.
+  int warmup = 10;       ///< Number of unmeasured inference calls.
+  int priority = -1;     ///< DNN priority, or -1 for Runtime default.
 };
 
+/** @brief Associate one rollout source index with an input file. */
 struct InputRecord {
-  std::int64_t source_index = 0;
-  fs::path path;
+  std::int64_t source_index = 0;  ///< Original rollout sample index.
+  fs::path path;                  ///< Raw float32 observation path.
 };
 
+/** @brief Record one generated action dump and its Runtime latency. */
 struct OutputRecord {
-  std::int64_t source_index = 0;
-  fs::path input_path;
-  fs::path output_path;
-  double latency_ms = 0.0;
+  std::int64_t source_index = 0;  ///< Original rollout sample index.
+  fs::path input_path;            ///< Input file used for inference.
+  fs::path output_path;           ///< Generated float32 action file.
+  double latency_ms = 0.0;        ///< BPU inference latency in milliseconds.
 };
 
-void PrintUsage(const char* program) {
-  std::cout
-      << "Usage: " << program << " --model-path MODEL.bin --input-path PATH "
-      << "--output-dir DIR --report REPORT.json [--warmup N] "
-      << "[--priority N]\n\n"
-      << "PATH may be one numerically named float32 .bin file or a directory "
-      << "of them. Each input must contain exactly 270 float32 values.\n";
-}
-
-int ParseInt(const std::string& text, const std::string& option) {
-  std::size_t parsed = 0;
-  int value = 0;
-  try {
-    value = std::stoi(text, &parsed);
-  } catch (const std::exception&) {
-    throw std::invalid_argument(option + " requires an integer, got: " + text);
-  }
-  if (parsed != text.size()) {
-    throw std::invalid_argument(option + " requires an integer, got: " + text);
-  }
-  return value;
-}
-
-Options ParseOptions(int argc, char** argv) {
+/**
+ * @brief Convert validated gflags values into one run configuration.
+ * @return Effective command-line options with timestamped output defaults.
+ */
+Options OptionsFromFlags() {
   Options options;
-  for (int index = 1; index < argc; ++index) {
-    const std::string option = argv[index];
-    if (option == "--help" || option == "-h") {
-      PrintUsage(argv[0]);
-      std::exit(0);
-    }
-    if (index + 1 >= argc) {
-      throw std::invalid_argument("missing value for " + option);
-    }
-    const std::string value = argv[++index];
-    if (option == "--model-path") {
-      options.model_path = value;
-    } else if (option == "--input-path") {
-      options.input_path = value;
-    } else if (option == "--output-dir") {
-      options.output_dir = value;
-    } else if (option == "--report") {
-      options.report_path = value;
-    } else if (option == "--warmup") {
-      options.warmup = ParseInt(value, option);
-    } else if (option == "--priority") {
-      options.priority = ParseInt(value, option);
-    } else {
-      throw std::invalid_argument("unknown option: " + option);
-    }
-  }
-
-  if (options.model_path.empty() || options.input_path.empty() ||
-      options.output_dir.empty() || options.report_path.empty()) {
-    throw std::invalid_argument(
-        "--model-path, --input-path, --output-dir, and --report are required");
-  }
+  options.model_path = FLAGS_model_path;
+  options.input_path = FLAGS_input_path;
+  options.warmup = FLAGS_warmup;
+  options.priority = FLAGS_priority;
+  const auto run_id = std::chrono::duration_cast<std::chrono::microseconds>(
+                          std::chrono::system_clock::now().time_since_epoch())
+                          .count();
+  const fs::path run_directory = fs::path("runs") / std::to_string(run_id);
+  options.output_dir = FLAGS_output_dir.empty()
+                           ? run_directory / "action_dumps"
+                           : fs::path(FLAGS_output_dir);
+  options.report_path = FLAGS_report.empty()
+                            ? run_directory / "cpp-report.json"
+                            : fs::path(FLAGS_report);
   if (options.warmup < 0) {
     throw std::invalid_argument("--warmup must be non-negative");
   }
@@ -119,6 +99,11 @@ Options ParseOptions(int argc, char** argv) {
   return options;
 }
 
+/**
+ * @brief Parse a rollout source index from one input filename.
+ * @param[in] path Numerically named raw input file.
+ * @return Non-negative rollout source index.
+ */
 std::int64_t ParseSourceIndex(const fs::path& path) {
   const std::string stem = path.stem().string();
   std::size_t parsed = 0;
@@ -138,6 +123,11 @@ std::int64_t ParseSourceIndex(const fs::path& path) {
   return source_index;
 }
 
+/**
+ * @brief Discover and validate source-indexed raw inputs.
+ * @param[in] input_path One raw input file or a directory of input files.
+ * @return Inputs sorted by rollout source index.
+ */
 std::vector<InputRecord> DiscoverInputs(const fs::path& input_path) {
   std::vector<fs::path> paths;
   if (fs::is_regular_file(input_path)) {
@@ -180,6 +170,11 @@ std::vector<InputRecord> DiscoverInputs(const fs::path& input_path) {
   return records;
 }
 
+/**
+ * @brief Load one finite 270-value float32 observation.
+ * @param[in] path Raw observation file.
+ * @return Validated logical observation values.
+ */
 std::vector<float> LoadInput(const fs::path& path) {
   std::ifstream stream(path, std::ios::binary);
   if (!stream) {
@@ -198,12 +193,23 @@ std::vector<float> LoadInput(const fs::path& path) {
   return observation;
 }
 
+/**
+ * @brief Build the action filename for one rollout source index.
+ * @param[in] directory Action dump directory.
+ * @param[in] source_index Original rollout sample index.
+ * @return Zero-padded ``.bin`` output path.
+ */
 fs::path OutputPath(const fs::path& directory, std::int64_t source_index) {
   std::ostringstream filename;
   filename << std::setfill('0') << std::setw(6) << source_index << ".bin";
   return directory / filename.str();
 }
 
+/**
+ * @brief Write exactly 12 float32 actions to one raw output file.
+ * @param[in] path New action dump path.
+ * @param[in] actions Finite policy actions.
+ */
 void WriteOutput(const fs::path& path, const std::vector<float>& actions) {
   if (actions.size() != static_cast<std::size_t>(himloco::kOutputElements)) {
     throw std::runtime_error("internal error: unexpected action count");
@@ -219,6 +225,11 @@ void WriteOutput(const fs::path& path, const std::vector<float>& actions) {
   }
 }
 
+/**
+ * @brief Escape one string for JSON output.
+ * @param[in] value Unescaped string value.
+ * @return Quoted JSON string literal.
+ */
 std::string JsonString(const std::string& value) {
   std::ostringstream escaped;
   escaped << '"';
@@ -258,6 +269,11 @@ std::string JsonString(const std::string& value) {
   return escaped.str();
 }
 
+/**
+ * @brief Serialize one tensor shape as a JSON array.
+ * @param[in] shape Tensor dimensions.
+ * @return JSON array text.
+ */
 std::string ShapeJson(const std::vector<int>& shape) {
   std::ostringstream stream;
   stream << '[';
@@ -271,6 +287,11 @@ std::string ShapeJson(const std::vector<int>& shape) {
   return stream.str();
 }
 
+/**
+ * @brief Read a compact text file used for environment metadata.
+ * @param[in] path Text file path.
+ * @return Trimmed content, or ``unreported`` when unavailable.
+ */
 std::string ReadTextFile(const fs::path& path) {
   std::ifstream stream(path);
   if (!stream) {
@@ -286,6 +307,7 @@ std::string ReadTextFile(const fs::path& path) {
   return result.empty() ? "unreported" : result;
 }
 
+/** @brief Return the current machine architecture or ``unreported``. */
 std::string MachineName() {
   struct utsname information {};
   if (uname(&information) != 0) {
@@ -294,6 +316,12 @@ std::string MachineName() {
   return information.machine;
 }
 
+/**
+ * @brief Interpolate one percentile from sorted latency values.
+ * @param[in] sorted Non-empty sorted latency values.
+ * @param[in] percentile Fraction in the inclusive range [0,1].
+ * @return Interpolated percentile value.
+ */
 double Percentile(const std::vector<double>& sorted, double percentile) {
   if (sorted.empty()) {
     throw std::invalid_argument("cannot summarize empty latency values");
@@ -306,6 +334,12 @@ double Percentile(const std::vector<double>& sorted, double percentile) {
   return sorted[lower] * (1.0 - fraction) + sorted[upper] * fraction;
 }
 
+/**
+ * @brief Write the complete JSON Runtime evidence report.
+ * @param[in] options Effective run paths and scheduling configuration.
+ * @param[in] model Initialized HIMLoco Runtime wrapper.
+ * @param[in] records Source-indexed inference records.
+ */
 void WriteReport(const Options& options, const himloco::HimLoco& model,
                  const std::vector<OutputRecord>& records) {
   std::vector<double> latencies;
@@ -394,6 +428,10 @@ void WriteReport(const Options& options, const himloco::HimLoco& model,
   }
 }
 
+/**
+ * @brief Validate model and output paths before inference.
+ * @param[in] options Effective run paths.
+ */
 void ValidateOutputTargets(const Options& options) {
   if (!fs::is_regular_file(options.model_path)) {
     throw std::runtime_error("model does not exist: " +
@@ -420,16 +458,27 @@ void ValidateOutputTargets(const Options& options) {
 
 }  // namespace
 
+/**
+ * @brief Parse gflags, run source-indexed inference, and write evidence.
+ * @param[in] argc Number of command-line arguments.
+ * @param[in] argv Command-line argument values.
+ * @return Zero on success, otherwise a non-zero error code.
+ */
 int main(int argc, char** argv) {
-  if (argc == 1) {
-    PrintUsage(argv[0]);
-    return 2;
-  }
+  gflags::SetUsageMessage(
+      "Run source-indexed HIMLoco policy inputs on RDK X5 BPU.");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
   try {
-    const Options options = ParseOptions(argc, argv);
+    const Options options = OptionsFromFlags();
     ValidateOutputTargets(options);
     const std::vector<InputRecord> inputs = DiscoverInputs(options.input_path);
-    himloco::HimLoco model(options.model_path.string(), options.priority);
+    himloco::HimLoco model;
+    himloco::HimLocoConfig config;
+    config.model_path = options.model_path.string();
+    config.priority = options.priority;
+    if (model.init(config) != 0) {
+      throw std::runtime_error(model.last_error());
+    }
 
     const std::vector<float> warmup_input = LoadInput(inputs.front().path);
     std::cout << "[INFO] model=" << model.model_name()
@@ -437,7 +486,10 @@ int main(int argc, char** argv) {
               << " samples=" << inputs.size() << " warmup=" << options.warmup
               << std::endl;
     for (int index = 0; index < options.warmup; ++index) {
-      model.Infer(warmup_input);
+      himloco::InferenceResult warmup_result;
+      if (model.predict(warmup_input, warmup_result) != 0) {
+        throw std::runtime_error(model.last_error());
+      }
     }
     if (options.warmup > 0) {
       std::cout << "[INFO] warmup complete" << std::endl;
@@ -448,7 +500,10 @@ int main(int argc, char** argv) {
     outputs.reserve(inputs.size());
     for (std::size_t index = 0; index < inputs.size(); ++index) {
       const InputRecord& input = inputs[index];
-      const himloco::InferenceResult result = model.Infer(LoadInput(input.path));
+      himloco::InferenceResult result;
+      if (model.predict(LoadInput(input.path), result) != 0) {
+        throw std::runtime_error(model.last_error());
+      }
       const fs::path output_path = OutputPath(options.output_dir, input.source_index);
       WriteOutput(output_path, result.actions);
       outputs.push_back({input.source_index, input.path, fs::absolute(output_path),
@@ -474,7 +529,9 @@ int main(int argc, char** argv) {
               << " report=" << fs::absolute(options.report_path) << std::endl;
   } catch (const std::exception& error) {
     std::cerr << "[ERROR] " << error.what() << std::endl;
+    gflags::ShutDownCommandLineFlags();
     return 1;
   }
+  gflags::ShutDownCommandLineFlags();
   return 0;
 }

@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Run HIMLoco rollout input dumps through an RDK X5 BPU model."""
+"""Run source-indexed HIMLoco observations through an RDK X5 BPU model.
+
+The default arguments consume the bundled test data and write each invocation
+to a timestamped, ignored run directory next to this script.
+"""
 
 from __future__ import annotations
 
@@ -22,17 +26,34 @@ import hashlib
 import json
 import platform
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 
-from himloco import INPUT_WIDTH, OUTPUT_WIDTH, HimLoco
+from himloco import INPUT_WIDTH, OUTPUT_WIDTH, HimLoco, HimLocoConfig
 
 INPUT_BYTES = INPUT_WIDTH * np.dtype(np.float32).itemsize
+SCRIPT_DIR = Path(__file__).resolve().parent
+SAMPLE_ROOT = SCRIPT_DIR.parents[1]
+DEFAULT_MODEL_PATH = SAMPLE_ROOT / "model" / "bayes-e" / "himloco_go2_bayese_1x270.bin"
+DEFAULT_INPUT_PATH = SAMPLE_ROOT / "test_data" / "obs_history"
+DEFAULT_RUN_DIRECTORY = (
+    SCRIPT_DIR / "runs" / datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+)
+DEFAULT_OUTPUT_DIRECTORY = DEFAULT_RUN_DIRECTORY / "action_dumps"
+DEFAULT_REPORT_PATH = DEFAULT_RUN_DIRECTORY / "python-report.json"
 
 
 def sha256(path: Path) -> str:
-    """Return the SHA256 digest of one file."""
+    """Return the SHA256 digest of one file.
+
+    Args:
+        path: File whose content is hashed.
+
+    Returns:
+        Lowercase hexadecimal SHA256 digest.
+    """
 
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -42,7 +63,18 @@ def sha256(path: Path) -> str:
 
 
 def discover_inputs(path: Path) -> list[tuple[int, Path]]:
-    """Find raw input dumps and parse source rollout indexes from their stems."""
+    """Find raw input dumps and parse source rollout indexes.
+
+    Args:
+        path: One raw input file or a directory of ``.bin`` files.
+
+    Returns:
+        Source indexes and paths sorted by source index.
+
+    Raises:
+        FileNotFoundError: If ``path`` does not exist.
+        ValueError: If files are missing, malformed, duplicated, or mis-sized.
+    """
 
     if path.is_file():
         files = [path]
@@ -78,7 +110,18 @@ def discover_inputs(path: Path) -> list[tuple[int, Path]]:
 def validate_input_manifest(
     input_path: Path, input_records: list[tuple[int, Path]]
 ) -> dict[str, str] | None:
-    """Validate a colocated Runtime input manifest when one is available."""
+    """Validate a colocated Runtime input manifest when available.
+
+    Args:
+        input_path: File or directory selected for inference.
+        input_records: Source-indexed files discovered under ``input_path``.
+
+    Returns:
+        Manifest provenance for the report, or ``None`` when no manifest exists.
+
+    Raises:
+        ValueError: If the manifest contract, records, or hashes do not match.
+    """
 
     input_directory = input_path if input_path.is_dir() else input_path.parent
     manifest_path = input_directory.parent / "runtime-input-manifest.json"
@@ -113,7 +156,17 @@ def validate_input_manifest(
 
 
 def load_input(path: Path) -> np.ndarray:
-    """Load one finite raw float32 policy input."""
+    """Load one finite raw float32 policy input.
+
+    Args:
+        path: Raw file containing one 270-value observation.
+
+    Returns:
+        One-dimensional float32 observation.
+
+    Raises:
+        ValueError: If the observation size or finite-value check fails.
+    """
 
     observation = np.fromfile(path, dtype=np.float32)
     if observation.size != INPUT_WIDTH:
@@ -124,7 +177,14 @@ def load_input(path: Path) -> np.ndarray:
 
 
 def latency_summary(latencies: list[float]) -> dict[str, float]:
-    """Summarize synchronous Runtime call latency in milliseconds."""
+    """Summarize synchronous Runtime call latency.
+
+    Args:
+        latencies: Non-empty latency values in milliseconds.
+
+    Returns:
+        Minimum, mean, p50, p95, and maximum latency values.
+    """
 
     values = np.asarray(latencies, dtype=np.float64)
     return {
@@ -137,7 +197,11 @@ def latency_summary(latencies: list[float]) -> dict[str, float]:
 
 
 def environment_metadata() -> dict[str, str]:
-    """Collect the board and Python environment recorded with each run."""
+    """Collect board and Python environment metadata.
+
+    Returns:
+        Board OS, machine architecture, Python, and NumPy versions.
+    """
 
     version_path = Path("/etc/version")
     board_version = (
@@ -154,23 +218,58 @@ def environment_metadata() -> dict[str, str]:
 
 
 def main() -> None:
-    """Validate the model contract, run input dumps, and write action evidence."""
+    """Run bundled or user-selected inputs and write action evidence.
+
+    Returns:
+        None.
+    """
 
     parser = argparse.ArgumentParser(
         description="Run fused HIMLoco policy input dumps on RDK X5."
     )
-    parser.add_argument("--model-path", required=True, type=Path)
+    parser.add_argument(
+        "--model-path",
+        type=Path,
+        default=DEFAULT_MODEL_PATH,
+        help="Path to the RDK X5 Bayes-e HIMLoco .bin model.",
+    )
     parser.add_argument(
         "--input-path",
-        required=True,
         type=Path,
+        default=DEFAULT_INPUT_PATH,
         help="One numerically named raw float32 .bin file or a directory of them.",
     )
-    parser.add_argument("--output-dir", required=True, type=Path)
-    parser.add_argument("--report", required=True, type=Path)
-    parser.add_argument("--warmup", type=int, default=10)
-    parser.add_argument("--priority", type=int)
-    parser.add_argument("--bpu-cores", nargs="+", type=int)
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=DEFAULT_OUTPUT_DIRECTORY,
+        help="New directory for source-indexed float32 action dumps.",
+    )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=DEFAULT_REPORT_PATH,
+        help="New JSON evidence report path.",
+    )
+    parser.add_argument(
+        "--warmup",
+        type=int,
+        default=10,
+        help="Number of unmeasured Runtime calls before inference.",
+    )
+    parser.add_argument(
+        "--priority",
+        type=int,
+        default=None,
+        help="Optional DNN task priority in the range 0 to 255.",
+    )
+    parser.add_argument(
+        "--bpu-cores",
+        nargs="+",
+        type=int,
+        default=None,
+        help="Optional BPU core indexes; omit to keep Runtime scheduling.",
+    )
     args = parser.parse_args()
 
     model_path = args.model_path.expanduser().resolve()
@@ -190,8 +289,13 @@ def main() -> None:
 
     input_records = discover_inputs(input_path)
     input_manifest = validate_input_manifest(input_path, input_records)
-    model = HimLoco(model_path)
-    model.set_scheduling_params(args.priority, args.bpu_cores)
+    model = HimLoco(
+        HimLocoConfig(
+            model_path=model_path,
+            priority=args.priority,
+            bpu_cores=(tuple(args.bpu_cores) if args.bpu_cores is not None else None),
+        )
+    )
     first_observation = load_input(input_records[0][1])
     model.warmup(first_observation, args.warmup)
 
@@ -199,7 +303,7 @@ def main() -> None:
     latencies = []
     records = []
     for source_index, input_file in input_records:
-        result = model.infer(load_input(input_file))
+        result = model.predict(load_input(input_file))
         output_file = output_dir / f"{source_index:06d}.bin"
         result.actions.tofile(output_file)
         if output_file.stat().st_size != OUTPUT_WIDTH * np.dtype(np.float32).itemsize:

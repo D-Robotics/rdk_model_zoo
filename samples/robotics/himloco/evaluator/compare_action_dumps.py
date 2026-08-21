@@ -12,7 +12,6 @@ import torch
 
 from metrics import load_rollout, numerical_metrics, sha256, write_report
 
-
 OUTPUT_WIDTH = 12
 OUTPUT_BYTES = OUTPUT_WIDTH * np.dtype(np.float32).itemsize
 
@@ -20,7 +19,20 @@ OUTPUT_BYTES = OUTPUT_WIDTH * np.dtype(np.float32).itemsize
 def load_candidate_dumps(
     directory: Path, sample_count: int
 ) -> tuple[np.ndarray, list[int], list[dict]]:
-    """Load float32 action dumps whose numeric stems identify source samples."""
+    """Load source-indexed float32 action dumps.
+
+    Args:
+        directory: Directory containing numerically named ``.bin`` actions.
+        sample_count: Source rollout sample count used to bound indexes.
+
+    Returns:
+        Stacked actions, source indexes, and per-file provenance records.
+
+    Raises:
+        NotADirectoryError: If ``directory`` is invalid.
+        ValueError: If files are missing, malformed, duplicated, or non-finite.
+        IndexError: If a source index falls outside the rollout.
+    """
 
     if not directory.is_dir():
         raise NotADirectoryError(directory)
@@ -60,7 +72,11 @@ def load_candidate_dumps(
 
 
 def main() -> None:
-    """Evaluate candidate output dumps against JIT or captured rollout actions."""
+    """Evaluate candidate dumps against JIT or captured rollout actions.
+
+    Returns:
+        None.
+    """
 
     parser = argparse.ArgumentParser(
         description="Compare X5 float32 action dumps with HIMLoco held-out references."

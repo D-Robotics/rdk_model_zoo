@@ -9,9 +9,13 @@ set(CMAKE_CXX_FLAGS
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc /usr/include)
 link_directories(/usr/lib)
+find_library(GFLAGS_LIBRARY NAMES gflags)
+if(NOT GFLAGS_LIBRARY)
+  message(FATAL_ERROR "libgflags is required; install libgflags-dev")
+endif()
 
 add_executable(himloco_cpp
   src/main.cpp
-  src/himloco.cpp
+  src/himloco.cc
 )
-target_link_libraries(himloco_cpp PRIVATE dnn pthread rt dl)
+target_link_libraries(himloco_cpp PRIVATE dnn pthread rt dl ${GFLAGS_LIBRARY})

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README_cn.md)
 
-# HIMLoco for RDK X5
+# HIMLoco Model Guide
 
 This sample provides fused-model export, PTQ conversion, numerical evaluation,
 and Python/C++ offline inference for a Unitree Go2 HIMLoco policy on RDK X5.
@@ -77,24 +77,25 @@ action dumps, and reports must be stored outside the repository. The downloaded
 
 ## Quick Start
 
-Download the RDK X5 model, or reproduce it by following
-[conversion/README.md](conversion/README.md):
+Both scripts download the default model when missing, use the bundled test
+inputs, and write results to an ignored timestamped `runs/` directory.
+
+### Python
 
 ```bash
-cd model
-bash download_model.sh
+bash runtime/python/run.sh
 ```
 
-On RDK X5, run either Runtime with explicit model, input, output, and report
-paths:
+See [Python Runtime](runtime/python/README.md) for parameters and integration.
+
+### C++
 
 ```bash
-cd runtime/python
-bash run.sh --help
-
-cd ../cpp
-bash run.sh --help
+bash runtime/cpp/run.sh
 ```
+
+The script configures a Release build before inference. See
+[C++ Runtime](runtime/cpp/README.md) for build and parameter details.
 
 The included `test_data/obs_history` contains source indices 0 through 20 from
 a held-out native rollout. Additional Runtime inputs can be generated with
@@ -104,7 +105,10 @@ accuracy evidence.
 
 ## Model Conversion
 
-The supported path is:
+The converted RDK X5 model is already available through
+`model/download_model.sh`; ordinary Runtime users can skip conversion. To
+reproduce it, follow [conversion/README.md](conversion/README.md). The supported
+path is:
 
 ```text
 policy.pt -> fused ONNX -> representative calibration -> MIX PTQ -> Bayes-e BIN
@@ -122,6 +126,19 @@ Both implementations validate the single-input/single-output model contract and
 write 12-value float32 action files. These action dumps are temporary numerical
 evidence consumed by the evaluator; they are not model assets and must not be
 committed.
+
+## Inference Result
+
+A successful default run processes the 21 bundled inputs and creates:
+
+```text
+runs/<timestamp>/
+├── action_dumps/000000.bin ... 000020.bin  # 12 float32 actions per input
+└── python-report.json or cpp-report.json   # Model, Runtime, and latency evidence
+```
+
+Use `evaluator/compare_action_dumps.py` to compare these actions with the
+TorchScript reference before treating them as accuracy evidence.
 
 ## Evaluation and Performance
 

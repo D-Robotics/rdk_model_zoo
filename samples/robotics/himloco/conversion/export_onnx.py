@@ -15,7 +15,6 @@ import onnx
 import torch
 from onnx.reference import ReferenceEvaluator
 
-
 INPUT_NAME = "obs_history"
 OUTPUT_NAME = "actions"
 INPUT_SHAPE = (1, 270)
@@ -23,7 +22,14 @@ OUTPUT_SHAPE = (1, 12)
 
 
 def sha256(path: Path) -> str:
-    """Return the SHA256 digest of one artifact."""
+    """Return the SHA256 digest of one artifact.
+
+    Args:
+        path: Artifact to hash.
+
+    Returns:
+        Lowercase hexadecimal SHA256 digest.
+    """
 
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -33,7 +39,17 @@ def sha256(path: Path) -> str:
 
 
 def fixed_shape(value_info: onnx.ValueInfoProto) -> tuple[int, ...]:
-    """Read a fully static tensor shape from ONNX value information."""
+    """Read a fully static tensor shape from ONNX value information.
+
+    Args:
+        value_info: ONNX tensor value information.
+
+    Returns:
+        Static tensor dimensions.
+
+    Raises:
+        ValueError: If any tensor dimension is dynamic.
+    """
 
     dimensions = value_info.type.tensor_type.shape.dim
     if any(not dimension.HasField("dim_value") for dimension in dimensions):
@@ -42,7 +58,15 @@ def fixed_shape(value_info: onnx.ValueInfoProto) -> tuple[int, ...]:
 
 
 def cosine_similarity(candidate: np.ndarray, reference: np.ndarray) -> float:
-    """Calculate cosine similarity with deterministic zero-vector handling."""
+    """Calculate cosine similarity with deterministic zero-vector handling.
+
+    Args:
+        candidate: Candidate numerical output.
+        reference: Reference numerical output.
+
+    Returns:
+        Cosine similarity in the inclusive range [-1, 1].
+    """
 
     candidate64 = candidate.astype(np.float64).ravel()
     reference64 = reference.astype(np.float64).ravel()
@@ -59,7 +83,17 @@ def validate_export(
     samples: int,
     seed: int,
 ) -> dict[str, float | int | bool]:
-    """Compare TorchScript and ONNX ReferenceEvaluator outputs."""
+    """Compare TorchScript and ONNX ReferenceEvaluator outputs.
+
+    Args:
+        jit_model: Loaded fused TorchScript policy.
+        onnx_model: Exported fused ONNX model.
+        samples: Positive number of validation samples.
+        seed: CPU random generator seed.
+
+    Returns:
+        Numerical comparison metrics and an all-close result.
+    """
 
     evaluator = ReferenceEvaluator(onnx_model)
     generator = torch.Generator(device="cpu").manual_seed(seed)
@@ -108,7 +142,11 @@ def validate_export(
 
 
 def main() -> None:
-    """Export, validate, and report one fused HIMLoco ONNX model."""
+    """Export, validate, and report one fused HIMLoco ONNX model.
+
+    Returns:
+        None.
+    """
 
     parser = argparse.ArgumentParser(
         description="Export fused HIMLoco policy.pt to fixed-shape ONNX."
