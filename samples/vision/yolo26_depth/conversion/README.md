@@ -65,7 +65,7 @@ python3 prepare_calibration.py --images ./sunrgbd_subset --contract lite \
   --output ./calibration_lite --manifest ./calibration_manifest_lite.json \
   --report ./calibration_report_lite.md
 
-# NV12 profile (n / s / m): 114-letterbox, full-range 0..255
+# NV12 profile (n / s / m): 114-letterbox, /255
 python3 prepare_calibration.py --images ./sunrgbd_subset --contract nv12 \
   --output ./calibration_nv12 --manifest ./calibration_manifest_nv12.json \
   --report ./calibration_report_nv12.md
