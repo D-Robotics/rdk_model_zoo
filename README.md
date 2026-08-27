@@ -61,6 +61,8 @@ This repository uses hardware-specific branches to keep maintained samples, lega
 ```bash
 rdk_model_zoo/
 |-- samples/
+|   |-- robotics/
+|   |   `-- himloco/              # Unitree Go2 locomotion policy
 |   |-- vision/
 |   |   |-- clip/                 # Image-text multimodal matching
 |   |   |-- convnext/             # Image classification
@@ -169,6 +171,7 @@ python3 main.py \
 | License Plate Recognition | LPRNet | `samples/vision/lprnet` | RDK X5 | [Details](./samples/vision/lprnet) |
 | Image-Text Multimodal Matching | CLIP | `samples/vision/clip` | RDK X5 | [Details](./samples/vision/clip) |
 | Open-Vocabulary Object Detection | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [Details](./samples/vision/yoloworld) |
+| Legged Locomotion | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [Details](./samples/robotics/himloco) |
 
 ## Documentation & Resources
 

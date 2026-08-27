@@ -61,6 +61,8 @@
 ```bash
 rdk_model_zoo/
 |-- samples/
+|   |-- robotics/
+|   |   `-- himloco/              # Unitree Go2 运动控制策略
 |   |-- vision/
 |   |   |-- clip/                 # 图文多模态匹配
 |   |   |-- convnext/             # 图像分类
@@ -172,6 +174,7 @@ python3 main.py \
 | 车牌识别 | LPRNet | `samples/vision/lprnet` | RDK X5 | [详情](./samples/vision/lprnet) |
 | 图文多模态匹配 | CLIP | `samples/vision/clip` | RDK X5 | [详情](./samples/vision/clip) |
 | 开放词表目标检测 | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [详情](./samples/vision/yoloworld) |
+| 足式机器人运动控制 | HIMLoco（Unitree Go2） | `samples/robotics/himloco` | RDK X5 | [详情](./samples/robotics/himloco) |
 
 ## 文档说明与学习资源
 

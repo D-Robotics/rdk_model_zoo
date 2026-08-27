@@ -52,6 +52,26 @@
 │   │       │       └── yolov5.py
 │   │       ├── test_data                            # 测试用数据（图片/标签）
 │   │       └── README.md                            # YOLOv5 模型说明文档
+│   ├── robotics                                     # 机器人模型示例
+│   │   └── himloco                                  # HIMLoco 模型示例
+│   │       ├── conversion                           # 模型转换脚本（ONNX → HBM）
+│   │       ├── evaluator                            # 精度/性能评估与双 runtime 一致性对比
+│   │       ├── model                                # 模型文件及下载脚本
+│   │       │   └── download_model.sh                # 下载预训练模型
+│   │       ├── runtime                              # 推理示例（C++/Python）
+│   │       │   ├── cpp                              # C++ 推理实现
+│   │       │   │   ├── inc                          # 前后处理头文件
+│   │       │   │   ├── src                          # 前后处理与推理实现
+│   │       │   │   ├── CMakeLists.txt               # C++ 构建脚本
+│   │       │   │   ├── run.sh                       # 一键运行脚本
+│   │       │   │   └── README.md                    # C++ 推理说明
+│   │       │   └── python                           # Python 推理实现
+│   │       │       ├── README.md                    # Python 推理说明
+│   │       │       ├── run.sh                       # 一键运行脚本
+│   │       │       ├── main.py                      # 主推理入口
+│   │       │       └── himloco.py
+│   │       ├── test_data                            # 测试用数据（观测序列/输入清单）
+│   │       └── README.md                            # HIMLoco 模型说明文档
 │   ├── vla                                          # Vision-Language-Action 模型示例
 │   └── vlm                                          # Vision-Language 模型示例
 ├── tools                                            # 工具脚本（构建/管理/调试）
@@ -73,6 +93,19 @@
 - Model Zoo 示例开发者
 - 仓库维护与评审人员
 - 文档与工具贡献者
+
+#### robotics 类别规范
+
+robotics 类别收纳机器人模型示例，标准布局以 `samples/robotics/himloco` 为参考，目录构成与 vision 类别一致，要求如下：
+
+- `conversion`：模型转换脚本（ONNX → HBM），README 需说明转换所需的 OE 环境与步骤；
+- `evaluator`：精度/性能评估，机器人模型需额外提供 Python 与 C++ runtime 输出的一致性对比工具，保证双 runtime 结果逐位一致；
+- `model`：模型下载脚本（`download_model.sh`）与说明，模型不直接入库，下载时须做哈希校验；
+- `runtime`：Python 与 C++ 双实现，输入输出协议需完全一致，编码与注释规范遵循本文档 vision 样例约定；
+- `test_data`：测试输入数据（如观测序列）及输入清单；
+- `README.md`：需提供中英文双语版本。
+
+其余编码、注释、文档规范与 vision 类别一致。
 
 ### 文件规范
 #### 规范说明
@@ -646,6 +679,20 @@ TODO
 |   |-- Python_API_User_Guide.md
 |   `-- UCP_User_Guide.md
 |-- samples
+|   |-- robotics
+|   |   `-- himloco
+|   |       |-- README.md
+|   |       |-- conversion
+|   |       |   `-- README.md
+|   |       |-- evaluator
+|   |       |   `-- README.md
+|   |       |-- model
+|   |       |   `-- README.md
+|   |       `-- runtime
+|   |           |-- cpp
+|   |           |   `-- README.md
+|   |           `-- python
+|   |               `-- README.md
 |   `-- vision
 |       `-- yolov5
 |           |-- README.md
