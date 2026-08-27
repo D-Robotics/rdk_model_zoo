@@ -91,6 +91,7 @@ rdk_model_zoo/
 |   |   |-- repvit/               # Image classification
 |   |   |-- resnet/               # Image classification
 |   |   |-- resnext/              # Image classification
+|   |   |-- unet/                 # Semantic segmentation
 |   |   |-- ultralytics_yolo/     # Detection, segmentation, pose, classification
 |   |   |-- ultralytics_yolo26/   # Detection, segmentation, pose, classification
 |   |   |-- vargconvnet/          # Image classification
@@ -160,6 +161,7 @@ python3 main.py \
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 | [Details](./samples/vision/efficient_sam) |
 | Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 | [Details](./samples/vision/mobile_sam) |
+| Semantic Segmentation | UNet ResNet Family | `samples/vision/unet` | RDK X5 | [Details](./samples/vision/unet) |
 | Object Detection | FCOS | `samples/vision/fcos` | RDK X5 | [Details](./samples/vision/fcos) |
 | Object Detection | YOLOv5 | `samples/vision/yolov5` | RDK X5 | [Details](./samples/vision/yolov5) |
 | Object Detection / Instance Segmentation / Pose Estimation / Image Classification | Ultralytics YOLO (`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13`) | `samples/vision/ultralytics_yolo` | RDK X5 | [Details](./samples/vision/ultralytics_yolo) |
