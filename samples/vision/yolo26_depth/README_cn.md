@@ -44,6 +44,20 @@ bash run.sh l          # 规格 `l`(lite 档位)
 
 运行时按规格自动选择输入契约(`n`/`s`/`m` 走 NV12，`l`/`x` 走 featuremap)，两个档位输出一致。
 
+## 性能数据
+
+`bus.jpg` 板端实测（768×768，单 BPU 核）：
+
+| 规格 | 档位 | raw cosine 对 FP32 | 延迟 S100 (nash-e) | 延迟 S100P (nash-m) | 延迟 S600 (nash-p) |
+| --- | --- | --- | --- | --- | --- |
+| n | NV12 | 0.9996 | — | — | — |
+| s | NV12 | 0.9984 | — | — | — |
+| m | NV12 | 0.9996 | — | — | — |
+| l | lite | 0.9997 | 11.0 ms | 8.1 ms | — |
+| x | lite | 0.9997 | 20.6 ms | 13.7 ms | 10.8 ms |
+
+验收线为 raw cosine ≥ 0.999 且全板零饱和像素；混合档位是五规格全部通过的唯一组合。
+
 ## 转换
 
 见 [`conversion/README_cn.md`](./conversion/README_cn.md)。两种 ONNX 边界出自同一上游权重：导出校准 log-depth ONNX(NV12 档位，`n`/`s`/`m`)或 raw-logit lite ONNX(`l`/`x`)，准备对应校准数据，执行 `hb_compile --config <yaml>`，拷贝 `.hbm` 到 `model/<march>/`。

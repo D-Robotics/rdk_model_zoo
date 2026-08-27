@@ -86,6 +86,7 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- mobile_sam/              # 可提示分割（框提示）
 |   |   |-- efficient_sam/           # 可提示分割（固定提示）
 |   |   |-- depth_anything_v2/       # 单目深度估计
+|   |   |-- yolo26_depth/            # YOLO26 单目深度估计
 |   |   |-- siglip/                  # VLM / VLA 视觉编码器
 |   |   |-- pointnet/                # 点云零件分割
 |   |   |-- lanenet/                 # 车道线检测
@@ -153,6 +154,7 @@ bash run.sh
 | 图像分类 | 3D ResNet（视频动作分类） | `samples/vision/3dresnet` | S100 | [详情](./samples/vision/3dresnet) |
 | 语义分割 | UnetMobileNet | `samples/vision/unetmobilenet` | S100 / S600 | [详情](./samples/vision/unetmobilenet) |
 | 单目深度估计 | Depth Anything V2 | `samples/vision/depth_anything_v2` | S100 | [详情](./samples/vision/depth_anything_v2) |
+| 单目深度估计 | YOLO26 Depth | `samples/vision/yolo26_depth` | S100 / S100P / S600 | [详情](./samples/vision/yolo26_depth) |
 | 视觉编码器 | SigLIP | `samples/vision/siglip` | S100 / S100P | [详情](./samples/vision/siglip) |
 | 点云分割 | PointNet | `samples/vision/pointnet` | S100 | [详情](./samples/vision/pointnet) |
 | 车道线检测 | LaneNet | `samples/vision/lanenet` | S100 | [详情](./samples/vision/lanenet) |

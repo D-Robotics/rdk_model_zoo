@@ -56,6 +56,21 @@ bash run.sh l          # variant `l` (lite profile)
 The runtime picks the input contract automatically from the variant: NV12 for
 `n`/`s`/`m`, featuremap for `l`/`x`. Outputs are identical across profiles.
 
+## Performance
+
+Board-measured on `bus.jpg` (768×768, single BPU core):
+
+| Variant | Profile | raw cosine vs FP32 | Latency S100 (nash-e) | Latency S100P (nash-m) | Latency S600 (nash-p) |
+| --- | --- | --- | --- | --- | --- |
+| n | NV12 | 0.9996 | — | — | — |
+| s | NV12 | 0.9984 | — | — | — |
+| m | NV12 | 0.9996 | — | — | — |
+| l | lite | 0.9997 | 11.0 ms | 8.1 ms | — |
+| x | lite | 0.9997 | 20.6 ms | 13.7 ms | 10.8 ms |
+
+The acceptance bar is raw cosine ≥ 0.999 with zero saturated pixels on every
+board; the mixed profile is the only combination where all five variants pass.
+
 ## Conversion
 
 See [`conversion/README.md`](./conversion/README.md). Both ONNX boundaries come

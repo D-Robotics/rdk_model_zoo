@@ -86,6 +86,7 @@ rdk_model_zoo/                       # rdk_s branch
 |   |   |-- mobile_sam/              # Promptable segmentation (box prompt)
 |   |   |-- efficient_sam/           # Promptable segmentation (fixed prompt)
 |   |   |-- depth_anything_v2/       # Monocular depth estimation
+|   |   |-- yolo26_depth/            # YOLO26 monocular depth estimation
 |   |   |-- siglip/                  # Vision encoder for VLM / VLA
 |   |   |-- pointnet/                # Point cloud part segmentation
 |   |   |-- lanenet/                 # Lane detection
@@ -153,6 +154,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Image Classification | 3D ResNet (Video Action) | `samples/vision/3dresnet` | S100 | [Details](./samples/vision/3dresnet) |
 | Semantic Segmentation | UnetMobileNet | `samples/vision/unetmobilenet` | S100 / S600 | [Details](./samples/vision/unetmobilenet) |
 | Monocular Depth Estimation | Depth Anything V2 | `samples/vision/depth_anything_v2` | S100 | [Details](./samples/vision/depth_anything_v2) |
+| Monocular Depth Estimation | YOLO26 Depth | `samples/vision/yolo26_depth` | S100 / S100P / S600 | [Details](./samples/vision/yolo26_depth) |
 | Vision Encoder | SigLIP | `samples/vision/siglip` | S100 / S100P | [Details](./samples/vision/siglip) |
 | Point Cloud Segmentation | PointNet | `samples/vision/pointnet` | S100 | [Details](./samples/vision/pointnet) |
 | Lane Detection | LaneNet | `samples/vision/lanenet` | S100 | [Details](./samples/vision/lanenet) |

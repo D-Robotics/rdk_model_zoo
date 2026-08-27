@@ -1,9 +1,15 @@
-"""Download upstream YOLO26 Depth ONNX assets for RDK-S quantization.
+"""Download pre-exported YOLO26 Depth ONNX assets for RDK-S quantization.
 
 Pure stdlib (``urllib``) so it runs inside the OpenExplorer Docker image without
-extra Python dependencies. Fetches the pre-exported per-variant ONNX so the user
-can skip the torch-based export step; to rebuild from the Ultralytics checkpoint
-instead, see ``../export.py``.
+extra Python dependencies. The filename follows the mixed release profile:
+
+- ``n`` / ``s`` / ``m`` -> ``yolo26{v}-depth-log.onnx`` (NV12 boundary,
+  calibrated log-depth in-graph)
+- ``l`` / ``x`` -> ``yolo26{v}-depth_op11_lite.onnx`` (lite boundary, raw
+  192x192 depth logit)
+
+To rebuild any ONNX from the Ultralytics checkpoint instead, see
+``../export.py`` (``--boundary`` follows the same variant mapping).
 """
 
 from __future__ import annotations
@@ -14,6 +20,14 @@ from pathlib import Path
 
 BASE_URL = "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s/yolo26_depth"
 VARIANTS = ("n", "s", "m", "l", "x")
+LITE_VARIANTS = ("l", "x")
+
+
+def asset_name(variant: str) -> str:
+    """Return the pre-exported ONNX filename for one variant."""
+    if variant in LITE_VARIANTS:
+        return f"yolo26{variant}-depth_op11_lite.onnx"
+    return f"yolo26{variant}-depth-log.onnx"
 
 
 def download(url: str, dest: Path) -> None:
@@ -36,7 +50,7 @@ def main() -> None:
 
     variants = [args.variant] if args.variant else list(VARIANTS)
     for v in variants:
-        name = f"yolo26{v}-depth-log.onnx"
+        name = asset_name(v)
         download(f"{BASE_URL}/{name}", args.out / name)
     print("[done] YOLO26 Depth ONNX assets ready")
 
