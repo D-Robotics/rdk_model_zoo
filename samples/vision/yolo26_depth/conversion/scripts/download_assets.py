@@ -10,6 +10,10 @@ extra Python dependencies. The filename follows the mixed release profile:
 
 To rebuild any ONNX from the Ultralytics checkpoint instead, see
 ``../export.py`` (``--boundary`` follows the same variant mapping).
+
+The ONNX assets are march-independent (one copy serves all three marches) and
+live under the ``rdk_s100`` server tree: ``onnx/`` beside the per-march model
+directories.
 """
 
 from __future__ import annotations
@@ -18,7 +22,7 @@ import argparse
 import urllib.request
 from pathlib import Path
 
-BASE_URL = "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s/yolo26_depth"
+BASE_URL = "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/onnx"
 VARIANTS = ("n", "s", "m", "l", "x")
 LITE_VARIANTS = ("l", "x")
 

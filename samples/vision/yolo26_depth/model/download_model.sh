@@ -5,8 +5,10 @@ set -e
 # March is auto-detected when omitted; pass nash-e|nash-m|nash-p as the first
 # arg. An optional second arg restricts the download to one variant (n|s|m|l|x);
 # omit to download all five variants for that march.
+# Model server layout: rdk_model_zoo/rdk_s100/yolo26_depth/{nash-e,nash-m}/ and
+# rdk_model_zoo/rdk_s600/yolo26_depth/nash-p/ (S100P models live under rdk_s100).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s/yolo26_depth"
+# SOC_DIR is derived below from the march's platform (rdk_s100 / rdk_s600).
 
 march="${1:-}"
 if [ -z "${march}" ]; then
@@ -19,7 +21,8 @@ if [ -z "${march}" ]; then
     *) march="nash-e" ;;
   esac
 fi
-case "${march}" in nash-m) suffix=nashm;; nash-p) suffix=nashp;; *) suffix=nashe;; esac
+case "${march}" in nash-m) suffix=nashm; soc_dir=rdk_s100;; nash-p) suffix=nashp; soc_dir=rdk_s600;; *) suffix=nashe; soc_dir=rdk_s100;; esac
+BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/${soc_dir}/yolo26_depth"
 variants="${2:-n s m l x}"
 
 mkdir -p "${SCRIPT_DIR}/${march}"
