@@ -33,18 +33,7 @@ python3 export.py --weights /path/to/yolo26n-depth.pt --variant n --output-dir .
 # -> ./onnx/yolo26n-depth-log.onnx
 ```
 
-### 2. 或直接下载预导出 ONNX
-
-跳过 torch 导出：
-
-```bash
-python3 scripts/download_assets.py --out ./onnx        # 全部五个，混合边界
-python3 scripts/download_assets.py --out ./onnx --variant l
-```
-
-`scripts/download_assets.py` 按混合档位拉取各规格的预导出 ONNX（`n`/`s`/`m` 为 log 边界，`l`/`x` 为 lite 边界）。
-
-### 3. 备校准数据
+### 2. 备校准数据
 
 ```bash
 python3 extract_sunrgbd_subset.py --src /path/to/sunrgbd --out ./sunrgbd_subset
@@ -62,7 +51,7 @@ python3 prepare_calibration.py --images ./sunrgbd_subset --contract nv12 \
 
 `--contract` 选择校准预处理；两份输出必须放不同目录——两契约不可互换。
 
-### 4. 用 hb_compile 量化
+### 3. 用 hb_compile 量化
 
 `ptq_yamls/` 下 24 份 committed YAML(9 份 NV12 对应 n/s/m + 15 份 lite；lite 的 n/s/m YAML 保留作实验用)。
 
@@ -72,7 +61,7 @@ python3 scripts/quantize.py --variant l                  # lite profile
 python3 scripts/quantize.py                               # 发布全集:5 规格 × 3 march
 ```
 
-### 5. 拷贝 .hbm 到模型目录
+### 4. 拷贝 .hbm 到模型目录
 
 ```bash
 cp bpu_model_output_yolo26n_nv12_nashe/yolo26n_depth_nashe_768x768_nv12.hbm ../model/nash-e/

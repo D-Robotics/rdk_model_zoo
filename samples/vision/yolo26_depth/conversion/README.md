@@ -43,19 +43,7 @@ python3 export.py --weights /path/to/yolo26n-depth.pt --variant n --output-dir .
 `export.py` produces the boundary matching the `--boundary` selection (default
 follows the mixed profile: lite for `l`/`x`, log-depth for `n`/`s`/`m`).
 
-### 2. Or download the pre-exported ONNX
-
-Skip the torch-based export entirely:
-
-```bash
-python3 scripts/download_assets.py --out ./onnx        # all five, mixed boundaries
-python3 scripts/download_assets.py --out ./onnx --variant l
-```
-
-`scripts/download_assets.py` fetches each variant's pre-exported ONNX with the
-correct boundary (log for `n`/`s`/`m`, lite for `l`/`x`) from the model server.
-
-### 3. Prepare calibration data
+### 2. Prepare calibration data
 
 ```bash
 python3 extract_sunrgbd_subset.py --src /path/to/sunrgbd --out ./sunrgbd_subset
@@ -74,7 +62,7 @@ python3 prepare_calibration.py --images ./sunrgbd_subset --contract nv12 \
 `--contract` selects the calibration preprocessing; the two outputs must stay
 in separate directories because the contracts are not interchangeable.
 
-### 4. Quantize with hb_compile
+### 3. Quantize with hb_compile
 
 24 committed YAMLs live under `ptq_yamls/` (9 NV12 for n/s/m + 15 lite for
 all five variants; the lite n/s/m YAMLs are retained for experiments).
@@ -85,7 +73,7 @@ python3 scripts/quantize.py --variant l                  # lite profile
 python3 scripts/quantize.py                               # release set: 5 variants × 3 marches
 ```
 
-### 5. Copy the .hbm into the model directory
+### 4. Copy the .hbm into the model directory
 
 ```bash
 cp bpu_model_output_yolo26n_nv12_nashe/yolo26n_depth_nashe_768x768_nv12.hbm ../model/nash-e/
