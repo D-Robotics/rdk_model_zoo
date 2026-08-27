@@ -535,8 +535,12 @@ def draw_mask_result(image: np.ndarray, mask: np.ndarray, iou: float,
     plus the predicted IoU).
 
     Args:
-        image: Original BGR input image with shape ``(H, W, 3)``.
-        mask: Boolean full-resolution mask.
+        image: Original BGR input image with shape ``(H, W, 3)`` of any
+            resolution; it is resized onto the ``512x512`` canvas.
+        mask: Boolean mask with shape ``(512, 512)`` matching the canvas,
+            typically produced by a model whose input resolution is 512x512
+            (e.g. the SAM-family post-processing output). Passing a mask at
+            the original image resolution raises ``IndexError``.
         iou: Predicted IoU of the selected mask.
         mask_index: Index of the selected decoder mask.
         title: First caption line describing the model or pipeline.

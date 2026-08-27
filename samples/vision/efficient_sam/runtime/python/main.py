@@ -84,7 +84,10 @@ def main() -> None:
     if args.encoder_model_path is None or args.decoder_model_path is None:
         board_type = Path("/sys/class/boardinfo/board_type")
         board_text = board_type.read_text(encoding="utf-8") if board_type.exists() else ""
-        _, march, suffix, _ = inspect.resolve_platform(inspect.get_soc_name(), board_text)
+        # Fallback-free SoC read: a non-S board must fail here with a clear
+        # platform error instead of silently resolving to the S100 march.
+        _, march, suffix, _ = inspect.resolve_platform(
+            inspect.get_soc_name_fallback_free(), board_text)
         model_dir = os.path.join(SAMPLE_DIR, "model", march)
         args.encoder_model_path = args.encoder_model_path or os.path.join(
             model_dir, f"efficient_sam_vitt_encoder_512x512_{suffix}.hbm")

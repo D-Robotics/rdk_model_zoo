@@ -51,7 +51,10 @@ def main() -> None:
     except Exception:
         board_type = ""
     # Resolve SoC -> (platform, march, filename suffix, repo dir) via shared utils.
-    _, model_march, model_suffix, soc_dir = inspect.resolve_platform(inspect.get_soc_name(), board_type)
+    # Fallback-free SoC read: a non-S board must fail here with a clear
+    # platform error instead of silently resolving to the S100 march.
+    _, model_march, model_suffix, soc_dir = inspect.resolve_platform(
+        inspect.get_soc_name_fallback_free(), board_type)
 
     parser = argparse.ArgumentParser(description="YOLO26 Unified Inference")
 
