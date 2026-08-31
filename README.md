@@ -88,6 +88,7 @@ rdk_model_zoo/                       # rdk_s branch
 |   |   |-- depth_anything_v2/       # Monocular depth estimation
 |   |   |-- yolo26_depth/            # YOLO26 monocular depth estimation
 |   |   |-- siglip/                  # Vision encoder for VLM / VLA
+|   |   |-- dinov2/                  # Self-supervised vision encoder (image embedding)
 |   |   |-- pointnet/                # Point cloud part segmentation
 |   |   |-- lanenet/                 # Lane detection
 |   |   `-- paddle_ocr/             # OCR text detection and recognition
@@ -156,6 +157,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Monocular Depth Estimation | Depth Anything V2 | `samples/vision/depth_anything_v2` | S100 | [Details](./samples/vision/depth_anything_v2) |
 | Monocular Depth Estimation | YOLO26 Depth | `samples/vision/yolo26_depth` | S100 / S100P / S600 | [Details](./samples/vision/yolo26_depth) |
 | Vision Encoder | SigLIP | `samples/vision/siglip` | S100 / S100P | [Details](./samples/vision/siglip) |
+| Vision Encoder | DINOv2 | `samples/vision/dinov2` | S100 / S100P / S600 | [Details](./samples/vision/dinov2) |
 | Point Cloud Segmentation | PointNet | `samples/vision/pointnet` | S100 | [Details](./samples/vision/pointnet) |
 | Lane Detection | LaneNet | `samples/vision/lanenet` | S100 | [Details](./samples/vision/lanenet) |
 | Text Recognition | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [Details](./samples/vision/paddle_ocr) |
