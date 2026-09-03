@@ -41,21 +41,25 @@ register-token（`_reg4`）变体已实测且有意不发布：在 per-tensor �
 在 x86 主机的 OE docker 镜像内执行：
 
 ```bash
-# 1. 获取固定版本的源码与官方 Apache-2.0 权重。
+# 1. OE 3.7 镜像提供 Torch 2.6，请保留该版本。exporter 支持 Torch >=2.4，
+# 本配置已使用下列 ONNX 包完成真实导出验证。
+python3 -c "import torch; print(torch.__version__)"
+pip install --upgrade onnx==1.19.0 onnxruntime==1.23.2
+python3 -c "import onnx, onnxruntime; print(onnx.__version__, onnxruntime.__version__)"
+
+# 2. 获取固定版本的源码与官方 Apache-2.0 权重。
 git clone https://github.com/facebookresearch/dinov2.git
 cd dinov2
 git checkout 7764ea0f912e53c92e82eb78a2a1631e92725fc8
-pip install torch onnx onnxruntime
-pip install -r requirements.txt
 cd ..
 wget https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
 printf '%s  %s\n' \
   b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
   dinov2_vits14_pretrain.pth | sha256sum -c -
 
-# 2. 将 50 张多样的真实图片（如 COCO val2017）放入 ./cal_images。
+# 3. 将 50 张多样的真实图片（如 COCO val2017）放入 ./cal_images。
 
-# 3. 转换。
+# 4. 转换。
 python3 mapper.py \
     --weights ./dinov2_vits14_pretrain.pth \
     --weights-sha256 b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
@@ -66,8 +70,14 @@ python3 mapper.py \
     --output-dir ./output
 ```
 
-导出器的 `--weights` 同时接受本地路径和 HTTP(S) URL。下载 HTTP(S) 权重时会
-原子写入，并在加载 checkpoint 前校验 SHA-256。为保证可复现性，请保持上述
+不要运行 `pip install torch` 或 `pip install -r requirements.txt`。固定的上游
+DINOv2 requirements 会安装 torch 2.0，这会降级 OE 的 Torch 环境，并与本
+exporter 的 `dynamo=False` 路径不兼容。请保留 OE 3.7 的 Torch 2.6，只安装
+上面经过真实导出验证的 `onnx==1.19.0` 和 `onnxruntime==1.23.2`。
+
+导出器的 `--weights` 同时接受本地路径和 HTTP(S) URL。对于 HTTP(S) URL，
+它会流式下载到临时文件，完整 SHA-256 校验后才加载，并在 `finally` 中删除
+临时文件；不保留最终 checkpoint 到磁盘。为保证可复现性，请保持上述
 `--repo-revision` 与 `--weights-sha256` 固定。
 
 校准图片必须是真实照片。随机或合成数据会破坏该骨干的 int16 校准。

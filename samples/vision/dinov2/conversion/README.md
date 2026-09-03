@@ -44,21 +44,25 @@ dense-feature quality.
 Run inside the OE docker image on an x86 host:
 
 ```bash
-# 1. Fetch the pinned source and official Apache-2.0 checkpoint.
+# 1. The OE 3.7 image provides Torch 2.6; preserve it. The exporter supports
+# Torch >=2.4 and this setup was validated with these ONNX packages.
+python3 -c "import torch; print(torch.__version__)"
+pip install --upgrade onnx==1.19.0 onnxruntime==1.23.2
+python3 -c "import onnx, onnxruntime; print(onnx.__version__, onnxruntime.__version__)"
+
+# 2. Fetch the pinned source and official Apache-2.0 checkpoint.
 git clone https://github.com/facebookresearch/dinov2.git
 cd dinov2
 git checkout 7764ea0f912e53c92e82eb78a2a1631e92725fc8
-pip install torch onnx onnxruntime
-pip install -r requirements.txt
 cd ..
 wget https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
 printf '%s  %s\n' \
   b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
   dinov2_vits14_pretrain.pth | sha256sum -c -
 
-# 2. Put 50 diverse real images (e.g. COCO val2017) into ./cal_images.
+# 3. Put 50 diverse real images (e.g. COCO val2017) into ./cal_images.
 
-# 3. Convert.
+# 4. Convert.
 python3 mapper.py \
     --weights ./dinov2_vits14_pretrain.pth \
     --weights-sha256 b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
@@ -69,10 +73,17 @@ python3 mapper.py \
     --output-dir ./output
 ```
 
-The exporter accepts either a local `--weights` path or an HTTP(S) URL. It
-downloads HTTP(S) weights atomically and verifies the SHA-256 before loading
-the checkpoint. Keep `--repo-revision` and `--weights-sha256` pinned as above
-for reproducible conversion.
+Do not run `pip install torch` or `pip install -r requirements.txt`. The
+pinned upstream DINOv2 requirements install torch 2.0, which would downgrade
+the OE Torch environment and is incompatible with this exporter's
+`dynamo=False` path. Keep the OE 3.7 Torch 2.6 installation and install only
+the validated `onnx==1.19.0` and `onnxruntime==1.23.2` additions above.
+
+The exporter accepts either a local `--weights` path or an HTTP(S) URL. For an
+HTTP(S) URL, it streams the download to a temporary file, verifies the complete
+SHA-256 before loading, and removes the temporary file in `finally`; it does
+not leave a final checkpoint on disk. Keep `--repo-revision` and
+`--weights-sha256` pinned as above for reproducible conversion.
 
 Calibration images must be real photographs. Random or synthetic data breaks
 int16 calibration on this backbone. Their preprocessing matches evaluation:
