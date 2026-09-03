@@ -20,7 +20,15 @@ if [ -z "${march}" ]; then
     *) march="nash-e" ;;
   esac
 fi
-case "${march}" in nash-m) suffix=nashm; soc_dir=rdk_s100;; nash-p) suffix=nashp; soc_dir=rdk_s600;; *) suffix=nashe; soc_dir=rdk_s100;; esac
+case "${march}" in
+  nash-e) suffix=nashe; soc_dir=rdk_s100 ;;
+  nash-m) suffix=nashm; soc_dir=rdk_s100 ;;
+  nash-p) suffix=nashp; soc_dir=rdk_s600 ;;
+  *)
+    echo "[Error] Unsupported march '${march}'. Expected one of: nash-e|nash-m|nash-p." >&2
+    exit 2
+    ;;
+esac
 BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/${soc_dir}/dinov2"
 variants="${2:-vits14_224_int16}"
 
@@ -36,8 +44,9 @@ mkdir -p "${SCRIPT_DIR}/${march}"
 for v in ${variants}; do
   name="dinov2_${v}_${suffix}.hbm"
   dest="${SCRIPT_DIR}/${march}/${name}"
-  if [ ! -f "${dest}" ]; then
+  if [ ! -s "${dest}" ]; then
     echo "[Info] Downloading ${name} from ${BASE_URL}/${march}/${name}"
+    rm -f "${dest}"
     download_tmp="$(mktemp "${dest}.download.XXXXXX")"
     if ! wget -O "${download_tmp}" "${BASE_URL}/${march}/${name}"; then
       echo "[Error] Download failed for ${name}" >&2
