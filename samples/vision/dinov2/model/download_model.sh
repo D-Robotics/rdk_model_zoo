@@ -24,13 +24,31 @@ case "${march}" in nash-m) suffix=nashm; soc_dir=rdk_s100;; nash-p) suffix=nashp
 BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/${soc_dir}/dinov2"
 variants="${2:-vits14_224_int16}"
 
+download_tmp=""
+cleanup_download() {
+  if [ -n "${download_tmp}" ]; then
+    rm -f "${download_tmp}"
+  fi
+}
+trap cleanup_download EXIT INT TERM
+
 mkdir -p "${SCRIPT_DIR}/${march}"
 for v in ${variants}; do
   name="dinov2_${v}_${suffix}.hbm"
   dest="${SCRIPT_DIR}/${march}/${name}"
   if [ ! -f "${dest}" ]; then
     echo "[Info] Downloading ${name} from ${BASE_URL}/${march}/${name}"
-    wget -O "${dest}" "${BASE_URL}/${march}/${name}"
+    download_tmp="$(mktemp "${dest}.download.XXXXXX")"
+    if ! wget -O "${download_tmp}" "${BASE_URL}/${march}/${name}"; then
+      echo "[Error] Download failed for ${name}" >&2
+      exit 1
+    fi
+    if [ ! -s "${download_tmp}" ]; then
+      echo "[Error] Download produced an empty file for ${name}" >&2
+      exit 1
+    fi
+    mv -f "${download_tmp}" "${dest}"
+    download_tmp=""
   fi
 done
 echo "[Info] DINOv2 ${march} models ready in ${SCRIPT_DIR}/${march}"
