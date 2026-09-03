@@ -46,7 +46,11 @@ DEFAULT_SECOND_IMAGE = os.path.join(TEST_DATA_DIR, "bus.jpg")
 
 
 def default_model_path() -> str:
-    """Resolve the default model path from the on-board SoC name."""
+    """Resolve the default model path from the on-board SoC name.
+
+    Returns:
+        The absolute path to the platform-specific quantized DINOv2 HBM.
+    """
 
     board_type = ""
     try:
@@ -61,7 +65,12 @@ def default_model_path() -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments."""
+    """Parse command-line arguments for DINOv2 inference.
+
+    Returns:
+        argparse.Namespace: Parsed runtime, input, output, and scheduling
+            options.
+    """
 
     parser = argparse.ArgumentParser(description="DINOv2 Vision Encoder")
     parser.add_argument("--model-path", type=str, default=default_model_path(), help="Path to the quantized DINOv2 .hbm model.")
@@ -74,7 +83,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def embedding_summary(tensor: "np.ndarray", name: str) -> dict:
-    """Build a printable summary of one output tensor."""
+    """Build a printable summary of one output tensor.
+
+    Args:
+        tensor: DINOv2 output tensor to summarize.
+        name: Name of the selected DINOv2 output.
+
+    Returns:
+        dict: Summary fields `output`, `shape`, `dtype`, `mean`, `std`,
+            `min`, `max`, and `l2_norm`.
+    """
 
     flat = tensor.reshape(-1).astype("float32")
     return {

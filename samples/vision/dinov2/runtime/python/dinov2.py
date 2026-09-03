@@ -185,6 +185,14 @@ class Dinov2:
         return self.post_process(outputs)
 
     def __call__(self, img: np.ndarray, image_format: str = "BGR") -> np.ndarray:
-        """Callable interface for `predict()`."""
+        """Run DINOv2 inference through the callable interface.
+
+        Args:
+            img: Input image as a NumPy array.
+            image_format: Input image color format. Only ``BGR`` is supported.
+
+        Returns:
+            np.ndarray: The selected feature tensor from `predict()`.
+        """
 
         return self.predict(img, image_format)
