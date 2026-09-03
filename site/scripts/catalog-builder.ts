@@ -76,6 +76,18 @@ function validateReleaseTags(modelsTag: string, benchmarksTag: string): void {
   }
 }
 
+function validateSourceRefs(releaseTag: string, benchmarks: BenchmarkRecord[]): void {
+  for (const benchmark of benchmarks) {
+    const sourceRef = benchmark.source.ref;
+    if (sourceRef !== releaseTag && !/^[a-f0-9]{40}$/i.test(sourceRef)) {
+      throw new CatalogValidationError(
+        "INVALID_SOURCE_REF",
+        `Benchmark ${benchmark.id} source ref must match release tag ${releaseTag} or be a full Git commit SHA: ${sourceRef}`
+      );
+    }
+  }
+}
+
 function validateUniqueIds(models: ModelsDocument["models"], benchmarks: BenchmarkRecord[]): void {
   validateUniqueCollection(models, "model", "DUPLICATE_MODEL_ID");
   validateUniqueCollection(benchmarks, "benchmark", "DUPLICATE_BENCHMARK_ID");
@@ -170,6 +182,7 @@ export async function buildCatalog(options: BuildCatalogOptions): Promise<Catalo
   const models = modelsDocument as ModelsDocument;
   const benchmarks = benchmarksDocument as BenchmarksDocument;
   validateReleaseTags(models.release.tag, benchmarks.release.tag);
+  validateSourceRefs(models.release.tag, benchmarks.benchmarks);
   validateUniqueIds(models.models, benchmarks.benchmarks);
   validateModelAndAssetReferences(models.models, benchmarks.benchmarks);
   await validateRepositorySources(options.repositoryRoot, benchmarks.benchmarks);

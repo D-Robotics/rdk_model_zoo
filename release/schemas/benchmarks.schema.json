@@ -59,7 +59,11 @@
             "additionalProperties": false,
             "required": ["ref", "path", "section", "provenance"],
             "properties": {
-              "ref": { "type": "string", "minLength": 1 },
+              "ref": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$",
+                "description": "A release tag or full Git commit SHA; runtime validation requires the release tag to match or the SHA to be immutable."
+              },
               "path": { "type": "string", "minLength": 1 },
               "section": { "type": "string", "minLength": 1 },
               "provenance": { "const": "existing-repository-documentation" }

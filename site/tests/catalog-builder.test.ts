@@ -27,4 +27,16 @@ describe("buildCatalog", () => {
       code: "UNKNOWN_SAMPLE"
     }));
   });
+
+  it("rejects a benchmark whose source ref is a mutable branch", async () => {
+    await expect(buildCatalog({
+      repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),
+      modelsPath: "models.valid.yaml",
+      benchmarksPath: "benchmarks.mutable-ref.yaml",
+      modelsSchemaPath: "../../../release/schemas/models.schema.json",
+      benchmarksSchemaPath: "../../../release/schemas/benchmarks.schema.json"
+    })).rejects.toEqual(expect.objectContaining({
+      code: "INVALID_SOURCE_REF"
+    }));
+  });
 });
