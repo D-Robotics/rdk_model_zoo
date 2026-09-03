@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import shlex
 import subprocess
 import tempfile
 import types
@@ -122,6 +123,15 @@ def load_checkpoint(weights: str, expected_sha256: str):
                 pass
 
 
+def _checkout_command(repo: str, revision: str) -> str:
+    """Format a shell-ready checkout command for the current platform."""
+
+    command = ["git", "-C", repo, "checkout", revision]
+    if os.name == "nt":
+        return subprocess.list2cmdline(command)
+    return shlex.join(command)
+
+
 def verify_repo_revision(repo: str, expected_revision: str) -> None:
     """Require a DINOv2 source checkout to match the pinned revision.
 
@@ -133,7 +143,7 @@ def verify_repo_revision(repo: str, expected_revision: str) -> None:
         RuntimeError: If ``repo`` is not checked out at ``expected_revision``.
     """
 
-    checkout = f"git -C {repo} checkout {expected_revision}"
+    checkout = _checkout_command(repo, expected_revision)
     try:
         actual_revision = subprocess.check_output(
             ["git", "-C", repo, "rev-parse", "HEAD"], text=True, stderr=subprocess.STDOUT
