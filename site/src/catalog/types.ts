@@ -1,5 +1,5 @@
 export type Locale = "zh" | "en";
-export type MetricUnit = "ms" | "fps" | "percent" | "ratio" | "mae" | "rmse";
+export type MetricUnit = "ms" | "us" | "fps" | "percent" | "ratio" | "mae" | "rmse";
 
 export interface MetricRecord {
   metric: string;

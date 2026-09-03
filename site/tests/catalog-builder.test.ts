@@ -23,7 +23,8 @@ describe("buildCatalog", () => {
     expect(cpp?.performance).toContainEqual(expect.objectContaining({
       metric: "throughput",
       value: 2853.09,
-      unit: "fps"
+      unit: "fps",
+      qualifier: "exact"
     }));
     const text = JSON.stringify(catalog).toLowerCase();
     expect(text).not.toContain("yoloe");
