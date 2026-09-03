@@ -1672,3 +1672,171 @@ benchmarks:
       - { metric: "latency", value: 1.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
       - { metric: "throughput", value: 1156.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
     source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: fcos-efficientnetb0-single-thread-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb0-512
+    display_name: FCOS EfficientNet B0 512x512 Single Thread
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 3.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU" }, { metric: throughput, value: 298.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU" }]
+    source: &fcos_evaluator_source { ref: x5-v1.0.0, path: samples/vision/fcos/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: fcos-efficientnetb0-two-thread-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb0-512
+    display_name: FCOS EfficientNet B0 512x512 Two Threads
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 6.2, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU" }, { metric: throughput, value: 323.0, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU" }]
+    source: *fcos_evaluator_source
+  - id: fcos-efficientnetb2-single-thread-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb2-768
+    display_name: FCOS EfficientNet B2 768x768 Single Thread
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 14.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU" }, { metric: throughput, value: 69.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU" }]
+    source: *fcos_evaluator_source
+  - id: fcos-efficientnetb2-two-thread-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb2-768
+    display_name: FCOS EfficientNet B2 768x768 Two Threads
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 28.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU" }, { metric: throughput, value: 70.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU" }]
+    source: *fcos_evaluator_source
+  - id: fcos-efficientnetb3-single-thread-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb3-896
+    display_name: FCOS EfficientNet B3 896x896 Single Thread
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 26.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU" }, { metric: throughput, value: 38.2, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU" }]
+    source: *fcos_evaluator_source
+  - id: fcos-efficientnetb3-two-thread-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb3-896
+    display_name: FCOS EfficientNet B3 896x896 Two Threads
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 51.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU" }, { metric: throughput, value: 38.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU" }]
+    source: *fcos_evaluator_source
+  - id: lprnet-resource-usage-x5
+    sample_id: lprnet
+    variant_id: lprnet-1x3x24x94
+    display_name: LPRNet 24x94 BPU Usage
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: bpu_usage, value: 9, unit: percent, qualifier: exact }]
+    source: { ref: x5-v1.0.0, path: samples/vision/lprnet/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: paddleocr-v3-det-x3
+    sample_id: paddleocr
+    variant_id: pp-ocrv3-det-640
+    display_name: PP-OCRv3 Detection 640x640 RDK X3
+    environment: { hardware: RDK X3 }
+    performance: [{ metric: throughput, value: 41.96, unit: fps, qualifier: exact, scope: "BPU throughput" }]
+    source: &paddleocr_x3_source { ref: x5-v1.0.0, path: samples/vision/paddleocr/README.md, section: "## 2. Performance data", provenance: existing-repository-documentation }
+  - id: paddleocr-v3-rec-x3
+    sample_id: paddleocr
+    variant_id: pp-ocrv3-rec-48x320
+    display_name: PP-OCRv3 Recognition 48x320 RDK X3
+    environment: { hardware: RDK X3 }
+    performance: [{ metric: throughput, value: 78.92, unit: fps, qualifier: exact, scope: "BPU throughput" }]
+    source: *paddleocr_x3_source
+  - id: pp-liteseg-stdc1-openexplorer-x5
+    sample_id: pp_liteseg
+    variant_id: pp-liteseg-stdc1-cityscapes-1024x512
+    display_name: PP-LiteSeg-STDC1 1024x512 OpenExplorer
+    environment: { hardware: RDK X5, runtime: "OpenExplorer Docker" }
+    performance: [{ metric: throughput, value: 95, unit: fps, qualifier: approximate, scope: "1024×512, single core" }, { metric: latency, value: 10.5, unit: ms, qualifier: approximate, scope: "1024×512, single core" }]
+    source: { ref: x5-v1.0.0, path: samples/vision/pp_liteseg/evaluator/README.md, section: "## Performance Validation", provenance: existing-repository-documentation }
+  - id: unet-resnet18-pytorch-fp32-x5
+    sample_id: unet
+    variant_id: unet-resnet18-voc-512
+    display_name: UNet ResNet18 Pascal VOC PyTorch FP32
+    environment: { hardware: RDK X5, runtime: PyTorch }
+    accuracy: [{ metric: miou, value: 0.619695, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: pixel_accuracy, value: 0.911532, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }]
+    source: &unet_reference_source { ref: x5-v1.0.0, path: samples/vision/unet/README.md, section: "## Reference Results", provenance: existing-repository-documentation }
+  - id: unet-resnet18-onnx-fp32-x5
+    sample_id: unet
+    variant_id: unet-resnet18-voc-512
+    display_name: UNet ResNet18 Pascal VOC ONNX Runtime FP32
+    environment: { hardware: RDK X5, runtime: "ONNX Runtime" }
+    accuracy: [{ metric: miou, value: 0.619694, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: pixel_accuracy, value: 0.911532, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }]
+    source: *unet_reference_source
+  - id: unet-resnet34-release-x5
+    sample_id: unet
+    variant_id: unet-resnet34-voc-512
+    display_name: UNet ResNet34 Pascal VOC Release Results
+    environment: { hardware: RDK X5, runtime: PyTorch }
+    accuracy: [{ metric: miou, value: 0.689319, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: pixel_accuracy, value: 0.930947, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: cosine_similarity, value: 0.998328, unit: ratio, qualifier: exact, model_stage: quantized, scope: "PTQ output" }]
+    source: &unet_release_source { ref: x5-v1.0.0, path: samples/vision/unet/README.md, section: "### ResNet34/50/101/152 Release Results", provenance: existing-repository-documentation }
+  - id: unet-resnet50-release-x5
+    sample_id: unet
+    variant_id: unet-resnet50-voc-512
+    display_name: UNet ResNet50 Pascal VOC Release Results
+    environment: { hardware: RDK X5, runtime: PyTorch }
+    accuracy: [{ metric: miou, value: 0.683826, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: pixel_accuracy, value: 0.928404, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: cosine_similarity, value: 0.995292, unit: ratio, qualifier: exact, model_stage: quantized, scope: "PTQ output" }]
+    source: *unet_release_source
+  - id: unet-resnet101-release-x5
+    sample_id: unet
+    variant_id: unet-resnet101-voc-512
+    display_name: UNet ResNet101 Pascal VOC Release Results
+    environment: { hardware: RDK X5, runtime: PyTorch }
+    accuracy: [{ metric: miou, value: 0.709437, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: pixel_accuracy, value: 0.935887, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: cosine_similarity, value: 0.996384, unit: ratio, qualifier: exact, model_stage: quantized, scope: "PTQ output" }]
+    source: *unet_release_source
+  - id: unet-resnet152-release-x5
+    sample_id: unet
+    variant_id: unet-resnet152-voc-512
+    display_name: UNet ResNet152 Pascal VOC Release Results
+    environment: { hardware: RDK X5, runtime: PyTorch }
+    accuracy: [{ metric: miou, value: 0.740002, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: pixel_accuracy, value: 0.942805, unit: ratio, qualifier: exact, model_stage: float, dataset: "Pascal VOC" }, { metric: cosine_similarity, value: 0.996070, unit: ratio, qualifier: exact, model_stage: quantized, scope: "PTQ output" }]
+    source: *unet_release_source
+  - id: yolov5-v2-s-x5
+    sample_id: yolov5
+    variant_id: yolov5s-v2-640
+    display_name: YOLOv5s v2.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 106.8, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: &yolov5_source { ref: x5-v1.0.0, path: samples/vision/yolov5/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: yolov5-v2-m-x5
+    sample_id: yolov5
+    variant_id: yolov5m-v2-640
+    display_name: YOLOv5m v2.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 45.2, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *yolov5_source
+  - id: yolov5-v2-l-x5
+    sample_id: yolov5
+    variant_id: yolov5l-v2-640
+    display_name: YOLOv5l v2.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 21.8, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *yolov5_source
+  - id: yolov5-v2-x-x5
+    sample_id: yolov5
+    variant_id: yolov5x-v2-640
+    display_name: YOLOv5x v2.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 12.3, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *yolov5_source
+  - id: yolov5-v7-s-x5
+    sample_id: yolov5
+    variant_id: yolov5s-v7-640
+    display_name: YOLOv5s v7.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 124.2, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *yolov5_source
+  - id: yolov5-v7-m-x5
+    sample_id: yolov5
+    variant_id: yolov5m-v7-640
+    display_name: YOLOv5m v7.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 48.4, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *yolov5_source
+  - id: yolov5-v7-l-x5
+    sample_id: yolov5
+    variant_id: yolov5l-v7-640
+    display_name: YOLOv5l v7.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 23.3, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *yolov5_source
+  - id: yolov5-v7-x-x5
+    sample_id: yolov5
+    variant_id: yolov5x-v7-640
+    display_name: YOLOv5x v7.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 13.1, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *yolov5_source

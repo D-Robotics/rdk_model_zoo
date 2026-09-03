@@ -111,6 +111,31 @@ describe("buildCatalog", () => {
     ]));
   });
 
+  it("includes FCOS evaluator timing for the distinct two-thread BPU condition", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const record = catalog.models.find((model) => model.id === "fcos")
+      ?.benchmarks.find((benchmark) => benchmark.id === "fcos-efficientnetb0-two-thread-x5");
+    expect(record?.performance).toEqual(expect.arrayContaining([
+      expect.objectContaining({ metric: "latency", value: 6.2, unit: "ms", concurrency: 2 }),
+      expect.objectContaining({ metric: "throughput", value: 323, unit: "fps", concurrency: 2 })
+    ]));
+  });
+
+  it("includes UNet ResNet34 published float accuracy and PTQ consistency", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const record = catalog.models.find((model) => model.id === "unet")
+      ?.benchmarks.find((benchmark) => benchmark.id === "unet-resnet34-release-x5");
+    expect(record?.accuracy).toEqual(expect.arrayContaining([
+      expect.objectContaining({ metric: "miou", value: 0.689319, unit: "ratio", model_stage: "float" }),
+      expect.objectContaining({ metric: "cosine_similarity", value: 0.998328, unit: "ratio", model_stage: "quantized", scope: "PTQ output" })
+    ]));
+  });
+
+  it("keeps CLIP empty when its sources publish no numeric benchmark", async () => {
+    const catalog = await buildRepositoryCatalog();
+    expect(catalog.models.find((model) => model.id === "clip")?.benchmarks).toEqual([]);
+  });
+
   it("joins models and benchmarks and preserves the release tag", async () => {
     const catalog = await buildCatalog({
       repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),
