@@ -77,6 +77,16 @@ describe("catalog application", () => {
     app.destroy();
   });
 
+  it("rejects a catalog whose declared asset total disagrees with its models", () => {
+    const inconsistentCatalog: Catalog = {
+      ...catalog,
+      summary: { ...catalog.summary, asset_count: 3 }
+    };
+
+    expect(() => mountCatalog(root(), inconsistentCatalog, { locale: "en" }))
+      .toThrow("Catalog summary declares 3 assets but contains 2.");
+  });
+
   it("shows explicit performance and accuracy empty states", () => {
     mountCatalog(root(), catalogWithoutBenchmarks, { locale: "en" });
 
@@ -95,6 +105,16 @@ describe("catalog application", () => {
 
     expect(search.value).toBe("");
     expect(document.querySelectorAll("article[data-model-id]")).toHaveLength(2);
+  });
+
+  it("explains when published conditions prevent the requested numeric sort", () => {
+    mountCatalog(root(), catalog, { locale: "en" });
+    const sort = document.querySelector<HTMLSelectElement>("#catalog-sort")!;
+    sort.value = "fps";
+    sort.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(document.querySelector(".sort-notice")?.textContent)
+      .toContain("published benchmark conditions are not comparable");
   });
 
   it("uses bilingual task labels from the manifest mapping", () => {
@@ -145,6 +165,27 @@ describe("catalog application", () => {
     expect(card.textContent).toContain("lower bound");
     expect(card.textContent).toContain("RDK X5");
     expect(card.textContent).toContain("single-thread runtime");
+  });
+
+  it("keeps representative latency and throughput visible when several timings exist", () => {
+    const timingCatalog: Catalog = {
+      ...catalogWithoutBenchmarks,
+      models: [createModelFixture({
+        benchmarks: [benchmarkFixture({
+          performance: [
+            { metric: "latency", value: 2, unit: "ms", scope: "single frame", concurrency: 1 },
+            { metric: "latency", value: 3, unit: "ms", scope: "end to end", concurrency: 1 },
+            { metric: "throughput", value: 500, unit: "fps", scope: "four threads", concurrency: 4 }
+          ]
+        })]
+      })]
+    };
+
+    mountCatalog(root(), timingCatalog, { locale: "en" });
+
+    const card = document.querySelector<HTMLElement>(".model-card")!;
+    expect(card.textContent).toContain("Latency: 2 ms");
+    expect(card.textContent).toContain("Throughput: 500 FPS");
   });
 
   it("removes registered event listeners when destroyed", () => {

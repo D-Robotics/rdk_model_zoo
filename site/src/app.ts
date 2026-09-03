@@ -37,12 +37,16 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
   const resultStatus = document.createElement("p");
   resultStatus.className = "result-count";
   resultStatus.setAttribute("aria-live", "polite");
+  const sortNotice = document.createElement("p");
+  sortNotice.className = "sort-notice";
+  sortNotice.setAttribute("role", "status");
+  sortNotice.hidden = true;
   const results = document.createElement("section");
   results.className = "catalog-results";
   results.setAttribute("aria-label", t(options.locale, "summary.models"));
   const grid = document.createElement("div");
   grid.className = "model-grid";
-  results.append(resultStatus, grid);
+  results.append(resultStatus, sortNotice, grid);
 
   let renderedCards: RenderedModelCard[] = [];
   let destroyed = false;
@@ -54,6 +58,12 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
     clearCards();
     const queryResult = queryModels(catalog.models, state.query);
     resultStatus.textContent = t(options.locale, "filter.resultCount", { count: queryResult.models.length });
+    sortNotice.hidden = queryResult.reason === undefined;
+    sortNotice.textContent = queryResult.reason === "missing-benchmarks"
+      ? t(options.locale, "filter.sortMissing")
+      : queryResult.reason === "incomparable-benchmarks"
+        ? t(options.locale, "filter.sortIncomparable")
+        : "";
     grid.replaceChildren();
     if (queryResult.models.length === 0) {
       const empty = document.createElement("div");

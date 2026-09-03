@@ -49,6 +49,8 @@ const englishTranslations = {
   "filter.resultCount": "{count} models",
   "filter.noResults": "No matching models",
   "filter.noResultsHint": "Try changing the search or filters.",
+  "filter.sortMissing": "Numeric sort is unavailable because some models have no matching published benchmark.",
+  "filter.sortIncomparable": "Numeric sort is unavailable because the published benchmark conditions are not comparable.",
 
   "model.tasks": "Tasks",
   "model.platform": "Platform",
@@ -295,6 +297,8 @@ const chineseTranslations: TranslationDictionary = {
   "filter.resultCount": "{count} 个模型",
   "filter.noResults": "没有匹配的模型",
   "filter.noResultsHint": "请尝试调整搜索词或筛选条件。",
+  "filter.sortMissing": "部分模型没有对应的公开 Benchmark，无法按数值排序。",
+  "filter.sortIncomparable": "公开 Benchmark 的测试条件不可比较，无法按数值排序。",
 
   "model.tasks": "任务",
   "model.platform": "平台",

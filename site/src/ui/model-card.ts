@@ -105,6 +105,20 @@ function metricGroup(
   return group;
 }
 
+function representativePerformance<T extends { metric: MetricRecord }>(metrics: T[]): T[] {
+  const latency = metrics.find((entry) => entry.metric.metric.toLocaleLowerCase() === "latency");
+  const throughput = metrics.find((entry) => {
+    const metric = entry.metric.metric.toLocaleLowerCase();
+    return metric === "throughput" || metric === "fps";
+  });
+  const selected = [latency, throughput].filter((entry): entry is T => entry !== undefined);
+  for (const entry of metrics) {
+    if (selected.length >= 2) break;
+    if (!selected.includes(entry)) selected.push(entry);
+  }
+  return selected;
+}
+
 export function renderModelCard(
   model: ModelRecord,
   platform: string,
@@ -156,7 +170,13 @@ export function renderModelCard(
   const metrics = document.createElement("div");
   metrics.className = "model-metrics";
   metrics.append(
-    metricGroup(t(locale, "details.performance"), t(locale, "model.performanceMissing"), performance, locale, 2),
+    metricGroup(
+      t(locale, "details.performance"),
+      t(locale, "model.performanceMissing"),
+      representativePerformance(performance),
+      locale,
+      2
+    ),
     metricGroup(t(locale, "details.accuracy"), t(locale, "model.accuracyMissing"), accuracy, locale, 1)
   );
 

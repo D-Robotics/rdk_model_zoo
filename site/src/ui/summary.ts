@@ -9,6 +9,7 @@ export interface SummaryStats {
 }
 
 export function catalogSummaryStats(catalog: Catalog): SummaryStats {
+  const totalAssets = catalog.models.reduce((total, model) => total + model.assets.length, 0);
   const stats = {
     models: catalog.models.length,
     tasks: new Set(catalog.models.flatMap((model) => model.tasks)).size,
@@ -17,12 +18,16 @@ export function catalogSummaryStats(catalog: Catalog): SummaryStats {
   };
 
   const declaredModels = catalog.summary.sample_count;
+  const declaredTotalAssets = catalog.summary.asset_count;
   const declaredAssets = catalog.summary.downloadable_asset_count;
   if (declaredModels !== undefined && declaredModels !== stats.models) {
     throw new Error(`Catalog summary declares ${declaredModels} models but contains ${stats.models}.`);
   }
   if (declaredAssets !== undefined && declaredAssets !== stats.assets) {
     throw new Error(`Catalog summary declares ${declaredAssets} downloadable assets but contains ${stats.assets}.`);
+  }
+  if (declaredTotalAssets !== undefined && declaredTotalAssets !== totalAssets) {
+    throw new Error(`Catalog summary declares ${declaredTotalAssets} assets but contains ${totalAssets}.`);
   }
   return stats;
 }
