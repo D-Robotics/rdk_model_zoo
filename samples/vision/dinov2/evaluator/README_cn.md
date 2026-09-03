@@ -15,21 +15,42 @@
 | RDK S100P | dinov2_vits14_224_int16 | 1x3x224x224 | 3.02 ms / 329.53 FPS（1 线程）<br> 357.63 FPS（2 线程） |
 | RDK S600 | dinov2_vits14_224_int16 | 1x3x224x224 | 2.25 ms / 441.64 FPS（1 线程）<br> 1898.42 FPS（12 线程，`--core_id 1,2,3,4`） |
 
-模型参数量：22.06 M。延迟为纯 BPU 前向；板端 CPU 预处理（resize +
-ImageNet 归一化）另计。
+模型参数量：22.06 M。延迟为纯 BPU 前向；板端 CPU 预处理另计。标准 CPU
+预处理为：OpenCV BGR 转 RGB，按比例 bicubic 将短边 resize 到 256，中心 crop
+为 224 x 224，`/255`、ImageNet mean/std 归一化，并转换为 contiguous float32
+NCHW。
 
 ## 性能测试方法
 
-先锁频，再运行 perf 工具：
+先锁频，再运行 perf 工具。以下命令完整对应表格中的线程和核心设置：
 
 ```bash
-# 板端：
+# RDK S100（nash-e）：1 线程和 2 线程
 hrt_model_exec perf \
     --model_file ../model/nash-e/dinov2_vits14_224_int16_nashe.hbm \
     --thread_num 1
+hrt_model_exec perf \
+    --model_file ../model/nash-e/dinov2_vits14_224_int16_nashe.hbm \
+    --thread_num 2
+
+# RDK S100P（nash-m）：1 线程和 2 线程
+hrt_model_exec perf \
+    --model_file ../model/nash-m/dinov2_vits14_224_int16_nashm.hbm \
+    --thread_num 1
+hrt_model_exec perf \
+    --model_file ../model/nash-m/dinov2_vits14_224_int16_nashm.hbm \
+    --thread_num 2
+
+# RDK S600（nash-p）：1 线程，以及四个 BPU 核上的 12 线程
+hrt_model_exec perf \
+    --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.hbm \
+    --thread_num 1
+hrt_model_exec perf \
+    --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.hbm \
+    --thread_num 12 \
+    --core_id 1,2,3,4
 ```
 
-S100/S100P 报 1 与 2 线程；S600 报 1 与 12 线程并加 `--core_id 1,2,3,4`。
 锁频命令见仓库顶层 README FAQ。
 
 ## 精度数据

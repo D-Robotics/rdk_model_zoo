@@ -22,7 +22,8 @@ block（融合 qkv 注意力 + GELU MLP + LayerScale）、最终 LayerNorm。部
 
 ## 算法特性
 
-- int16 PTQ + 默认（KL）校准：板端端到端输出 cosine 0.998+（见
+- int16 PTQ + 默认（KL）校准：板端执行的 cosine 范围为 `cls_feat`
+  0.9987-0.9989、`patch_feat` 0.9975-0.9986（见
   [evaluator](./evaluator/README_cn.md)）。
 - 100% BPU 执行，无 CPU 算子回退（nash-e 上 800/800 算子）。
 - 每个 march 一份 `.hbm`（Nash-E / Nash-M / Nash-P），板端自动选择。

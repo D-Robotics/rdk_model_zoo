@@ -41,22 +41,39 @@ register-token（`_reg4`）变体已实测且有意不发布：在 per-tensor �
 在 x86 主机的 OE docker 镜像内执行：
 
 ```bash
-# 1. 获取 Apache-2.0 权重与源码仓。
-wget https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
+# 1. 获取固定版本的源码与官方 Apache-2.0 权重。
 git clone https://github.com/facebookresearch/dinov2.git
+cd dinov2
+git checkout 7764ea0f912e53c92e82eb78a2a1631e92725fc8
+pip install torch onnx onnxruntime
+pip install -r requirements.txt
+cd ..
+wget https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
+printf '%s  %s\n' \
+  b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
+  dinov2_vits14_pretrain.pth | sha256sum -c -
 
 # 2. 将 50 张多样的真实图片（如 COCO val2017）放入 ./cal_images。
 
 # 3. 转换。
 python3 mapper.py \
     --weights ./dinov2_vits14_pretrain.pth \
+    --weights-sha256 b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
     --repo ./dinov2 \
+    --repo-revision 7764ea0f912e53c92e82eb78a2a1631e92725fc8 \
     --cal-images ./cal_images \
     --march nash-e \
     --output-dir ./output
 ```
 
+导出器的 `--weights` 同时接受本地路径和 HTTP(S) URL。下载 HTTP(S) 权重时会
+原子写入，并在加载 checkpoint 前校验 SHA-256。为保证可复现性，请保持上述
+`--repo-revision` 与 `--weights-sha256` 固定。
+
 校准图片必须是真实照片。随机或合成数据会破坏该骨干的 int16 校准。
+校准预处理与评测一致：OpenCV BGR 转 RGB，按比例 bicubic 将短边 resize 到
+256，中心 crop 为 224 x 224，`/255`、ImageNet mean/std 归一化，并转换为
+contiguous float32 NCHW。
 
 ## OE 资源
 

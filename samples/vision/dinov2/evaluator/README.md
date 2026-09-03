@@ -17,22 +17,44 @@ Measured with `hrt_model_exec perf` (200 frames, performance governor locked).
 | RDK S600 | dinov2_vits14_224_int16 | 1x3x224x224 | 2.25 ms / 441.64 FPS (1 thread) <br> 1898.42 FPS (12 threads, `--core_id 1,2,3,4`) |
 
 Model parameters: 22.06 M. Latency is pure BPU forward; board-side CPU
-preprocessing (resize + ImageNet normalization) is additional.
+preprocessing is additional. The canonical CPU transform is OpenCV BGR to RGB,
+bicubic resize of the short side to 256 while preserving aspect ratio, center
+crop 224 by 224, `/255`, ImageNet mean/std normalization, and contiguous
+float32 NCHW layout.
 
 ## Performance Test Method
 
-Lock frequencies first, then run the perf tool:
+Lock frequencies first, then run the perf tool. These commands reproduce the
+thread and core settings reported in the table:
 
 ```bash
-# On the board:
+# RDK S100 (nash-e): 1 and 2 threads
 hrt_model_exec perf \
     --model_file ../model/nash-e/dinov2_vits14_224_int16_nashe.hbm \
     --thread_num 1
+hrt_model_exec perf \
+    --model_file ../model/nash-e/dinov2_vits14_224_int16_nashe.hbm \
+    --thread_num 2
+
+# RDK S100P (nash-m): 1 and 2 threads
+hrt_model_exec perf \
+    --model_file ../model/nash-m/dinov2_vits14_224_int16_nashm.hbm \
+    --thread_num 1
+hrt_model_exec perf \
+    --model_file ../model/nash-m/dinov2_vits14_224_int16_nashm.hbm \
+    --thread_num 2
+
+# RDK S600 (nash-p): 1 thread, then 12 threads on four BPU cores
+hrt_model_exec perf \
+    --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.hbm \
+    --thread_num 1
+hrt_model_exec perf \
+    --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.hbm \
+    --thread_num 12 \
+    --core_id 1,2,3,4
 ```
 
-S100/S100P report 1 and 2 threads; S600 reports 1 and 12 threads with
-`--core_id 1,2,3,4`. Frequency-locking commands are listed in the repository
-top-level README FAQ.
+Frequency-locking commands are listed in the repository top-level README FAQ.
 
 ## Accuracy Data
 

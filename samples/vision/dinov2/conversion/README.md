@@ -44,23 +44,41 @@ dense-feature quality.
 Run inside the OE docker image on an x86 host:
 
 ```bash
-# 1. Fetch the Apache-2.0 checkpoint and the source repo.
-wget https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
+# 1. Fetch the pinned source and official Apache-2.0 checkpoint.
 git clone https://github.com/facebookresearch/dinov2.git
+cd dinov2
+git checkout 7764ea0f912e53c92e82eb78a2a1631e92725fc8
+pip install torch onnx onnxruntime
+pip install -r requirements.txt
+cd ..
+wget https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
+printf '%s  %s\n' \
+  b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
+  dinov2_vits14_pretrain.pth | sha256sum -c -
 
 # 2. Put 50 diverse real images (e.g. COCO val2017) into ./cal_images.
 
 # 3. Convert.
 python3 mapper.py \
     --weights ./dinov2_vits14_pretrain.pth \
+    --weights-sha256 b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
     --repo ./dinov2 \
+    --repo-revision 7764ea0f912e53c92e82eb78a2a1631e92725fc8 \
     --cal-images ./cal_images \
     --march nash-e \
     --output-dir ./output
 ```
 
+The exporter accepts either a local `--weights` path or an HTTP(S) URL. It
+downloads HTTP(S) weights atomically and verifies the SHA-256 before loading
+the checkpoint. Keep `--repo-revision` and `--weights-sha256` pinned as above
+for reproducible conversion.
+
 Calibration images must be real photographs. Random or synthetic data breaks
-int16 calibration on this backbone.
+int16 calibration on this backbone. Their preprocessing matches evaluation:
+OpenCV BGR to RGB, bicubic short-side resize to 256 while preserving aspect
+ratio, center crop 224 by 224, `/255`, ImageNet mean/std normalization, then
+contiguous float32 NCHW.
 
 ## OE Resources
 

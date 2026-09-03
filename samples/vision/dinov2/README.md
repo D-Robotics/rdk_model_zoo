@@ -25,8 +25,9 @@ network compiles to BPU operators with zero CPU fallback.
 
 ## Algorithm Features
 
-- int16 PTQ with default (KL) calibration: end-to-end output cosine 0.998+ on
-  board (see [evaluator](./evaluator/README.md)).
+- int16 PTQ with default (KL) calibration: board-executed cosine ranges are
+  `cls_feat` 0.9987-0.9989 and `patch_feat` 0.9975-0.9986 (see
+  [evaluator](./evaluator/README.md)).
 - 100% BPU execution, no CPU-op fallback (800/800 operators on nash-e).
 - One `.hbm` per march (Nash-E / Nash-M / Nash-P), auto-selected on board.
 
