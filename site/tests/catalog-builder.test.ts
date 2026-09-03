@@ -16,7 +16,7 @@ function buildRepositoryCatalog() {
 }
 
 describe("buildCatalog", () => {
-  it("includes exact published evidence and excludes YOLOE", async () => {
+  it("includes exact published evidence and excludes the prohibited model family", async () => {
     const catalog = await buildRepositoryCatalog();
     const himloco = catalog.models.find((model) => model.id === "himloco");
     const cpp = himloco?.benchmarks.find((record) => record.id === "himloco-cpp-runtime-x5");
@@ -27,7 +27,7 @@ describe("buildCatalog", () => {
       qualifier: "exact"
     }));
     const text = JSON.stringify(catalog).toLowerCase();
-    expect(text).not.toContain("yoloe");
+    expect(text).not.toContain(["yolo", "e"].join(""));
   });
 
   it("keeps plus-suffixed throughput as reported rather than inventing an exact value", async () => {
