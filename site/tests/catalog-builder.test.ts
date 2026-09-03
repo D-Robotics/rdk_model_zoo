@@ -121,14 +121,12 @@ describe("buildCatalog", () => {
     ]));
   });
 
-  it("includes UNet ResNet34 published float accuracy and PTQ consistency", async () => {
+  it("omits UNet accuracy whose source does not publish a usable unit and environment", async () => {
     const catalog = await buildRepositoryCatalog();
-    const record = catalog.models.find((model) => model.id === "unet")
-      ?.benchmarks.find((benchmark) => benchmark.id === "unet-resnet34-release-x5");
-    expect(record?.accuracy).toEqual(expect.arrayContaining([
-      expect.objectContaining({ metric: "miou", value: 0.689319, unit: "ratio", model_stage: "float" }),
-      expect.objectContaining({ metric: "cosine_similarity", value: 0.998328, unit: "ratio", model_stage: "quantized", scope: "PTQ output" })
-    ]));
+    const records = catalog.models.find((model) => model.id === "unet")?.benchmarks ?? [];
+    expect(records).toHaveLength(1);
+    expect(records[0]?.id).toBe("unet-resnet18-x5");
+    expect(records[0]?.accuracy).toBeUndefined();
   });
 
   it("keeps CLIP empty when its sources publish no numeric benchmark", async () => {
