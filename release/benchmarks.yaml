@@ -1,0 +1,247 @@
+schema_version: 1
+release:
+  platform: x5
+  version: 1.0.0
+  tag: x5-v1.0.0
+benchmarks:
+  - id: himloco-python-runtime-x5
+    sample_id: himloco
+    variant_id: himloco-go2-bayese
+    display_name: HIMLoco Go2 Python Runtime
+    environment: { hardware: RDK X5, rdk_os: 3.5.0-beta, runtime: hbm_runtime }
+    performance:
+      - { metric: latency, value: 0.885, unit: ms, qualifier: exact, statistic: mean, scope: "synchronous HB_HBMRuntime.run; 100 inputs; 10 warm-up runs" }
+      - { metric: throughput, value: 1129.37, unit: fps, qualifier: exact, scope: "sequential; 100 inputs; 10 warm-up runs" }
+    accuracy:
+      - { metric: cosine_similarity, value: 0.999606, unit: ratio, qualifier: exact, model_stage: quantized, scope: "MIX PTQ compilation output" }
+    source: &himloco_source { ref: x5-v1.0.0, path: samples/robotics/himloco/README.md, section: "## Evaluation and Performance", provenance: existing-repository-documentation }
+  - id: himloco-cpp-runtime-x5
+    sample_id: himloco
+    variant_id: himloco-go2-bayese
+    display_name: HIMLoco Go2 C++ Runtime
+    environment: { hardware: RDK X5, rdk_os: 3.5.0-beta, runtime: hbm_runtime }
+    performance:
+      - { metric: latency, value: 0.350, unit: ms, qualifier: exact, statistic: mean, scope: "hbDNNInfer plus hbDNNWaitTaskDone; 100 inputs; 10 warm-up runs" }
+      - { metric: throughput, value: 2853.09, unit: fps, qualifier: exact, scope: "sequential; 100 inputs; 10 warm-up runs" }
+    source: *himloco_source
+  - id: convnext-nano-x5
+    sample_id: convnext
+    variant_id: convnext-nano-224
+    display_name: ConvNeXt Nano 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 5.71, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core" }, { metric: throughput, value: 200, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" }]
+    accuracy: [{ metric: top-1, value: 77.37, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 71.75, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: &convnext_source { ref: x5-v1.0.0, path: samples/vision/convnext/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: convnext-pico-x5
+    sample_id: convnext
+    variant_id: convnext-pico-224
+    display_name: ConvNeXt Pico 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 3.37, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core" }, { metric: throughput, value: 364, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" }]
+    accuracy: [{ metric: top-1, value: 77.25, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 71.03, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *convnext_source
+  - id: convnext-femto-x5
+    sample_id: convnext
+    variant_id: convnext-femto-224
+    display_name: ConvNeXt Femto 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 2.46, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core" }, { metric: throughput, value: 556, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" }]
+    accuracy: [{ metric: top-1, value: 73.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 72.25, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *convnext_source
+  - id: convnext-atto-x5
+    sample_id: convnext
+    variant_id: convnext-atto-224
+    display_name: ConvNeXt Atto 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 1.96, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core" }, { metric: throughput, value: 732, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" }]
+    accuracy: [{ metric: top-1, value: 73.25, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 69.75, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *convnext_source
+  - id: edgenext-base-x5
+    sample_id: edgenext
+    variant_id: edgenext-base-224
+    display_name: EdgeNeXt Base 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 8.80, unit: ms, qualifier: exact }, { metric: throughput, value: 113.35, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 78.21, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 74.52, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: &edgenext_source { ref: x5-v1.0.0, path: samples/vision/edgenext/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: edgenext-small-x5
+    sample_id: edgenext
+    variant_id: edgenext-small-224
+    display_name: EdgeNeXt Small 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 4.41, unit: ms, qualifier: exact }, { metric: throughput, value: 226.15, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 76.50, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 71.75, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *edgenext_source
+  - id: edgenext-x-small-x5
+    sample_id: edgenext
+    variant_id: edgenext-x-small-224
+    display_name: EdgeNeXt X-Small 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 2.88, unit: ms, qualifier: exact }, { metric: throughput, value: 345.73, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 71.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 66.25, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *edgenext_source
+  - id: edgenext-xx-small-x5
+    sample_id: edgenext
+    variant_id: edgenext-xx-small-224
+    display_name: EdgeNeXt XX-Small 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 2.47, unit: ms, qualifier: exact }, { metric: throughput, value: 403.49, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 69.50, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 64.25, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *edgenext_source
+  - id: efficientformer-l3-x5
+    sample_id: efficientformer
+    variant_id: efficientformer-l3-224
+    display_name: EfficientFormer L3 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 17.55, unit: ms, qualifier: exact }, { metric: throughput, value: 60.52, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 76.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 76.05, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: &efficientformer_source { ref: x5-v1.0.0, path: samples/vision/efficientformer/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: efficientformer-l1-x5
+    sample_id: efficientformer
+    variant_id: efficientformer-l1-224
+    display_name: EfficientFormer L1 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 5.88, unit: ms, qualifier: exact }, { metric: throughput, value: 191.605, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 76.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 67.72, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *efficientformer_source
+  - id: efficientformerv2-s2-x5
+    sample_id: efficientformerv2
+    variant_id: efficientformerv2-s2-224
+    display_name: EfficientFormerV2 S2 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 6.99, unit: ms, qualifier: exact }, { metric: throughput, value: 152.40, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 77.50, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 70.75, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: &efficientformerv2_source { ref: x5-v1.0.0, path: samples/vision/efficientformerv2/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: efficientformerv2-s1-x5
+    sample_id: efficientformerv2
+    variant_id: efficientformerv2-s1-224
+    display_name: EfficientFormerV2 S1 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 4.24, unit: ms, qualifier: exact }, { metric: throughput, value: 275.95, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 77.25, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 68.75, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *efficientformerv2_source
+  - id: efficientformerv2-s0-x5
+    sample_id: efficientformerv2
+    variant_id: efficientformerv2-s0-224
+    display_name: EfficientFormerV2 S0 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 5.79, unit: ms, qualifier: exact }, { metric: throughput, value: 198.45, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 74.25, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 68.50, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *efficientformerv2_source
+  - id: efficientnet-b4-x5
+    sample_id: efficientnet
+    variant_id: efficientnet-b4-224
+    display_name: EfficientNet B4 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 5.44, unit: ms, qualifier: exact }, { metric: throughput, value: 212.75, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 74.25, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 71.75, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: &efficientnet_source { ref: x5-v1.0.0, path: samples/vision/efficientnet/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: efficientnet-b3-x5
+    sample_id: efficientnet
+    variant_id: efficientnet-b3-224
+    display_name: EfficientNet B3 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 3.96, unit: ms, qualifier: exact }, { metric: throughput, value: 310.30, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 76.22, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 74.05, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *efficientnet_source
+  - id: efficientnet-b2-x5
+    sample_id: efficientnet
+    variant_id: efficientnet-b2-224
+    display_name: EfficientNet B2 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 3.31, unit: ms, qualifier: exact }, { metric: throughput, value: 376.77, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 76.50, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 73.25, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: *efficientnet_source
+  - id: efficientvit-m5-x5
+    sample_id: efficientvit
+    variant_id: efficientvit-m5-224
+    display_name: EfficientViT M5 224x224
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 6.34, unit: ms, qualifier: exact }, { metric: throughput, value: 174.70, unit: fps, qualifier: exact }]
+    accuracy: [{ metric: top-1, value: 73.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 72.50, unit: percent, qualifier: exact, model_stage: quantized }]
+    source: { ref: x5-v1.0.0, path: samples/vision/efficientvit/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: fcos-efficientnetb0-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb0-512
+    display_name: FCOS EfficientNet B0 512x512
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 323.0, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 9, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: &fcos_source { ref: x5-v1.0.0, path: samples/vision/fcos/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: fcos-efficientnetb2-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb2-768
+    display_name: FCOS EfficientNet B2 768x768
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 70.9, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 16, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *fcos_source
+  - id: fcos-efficientnetb3-x5
+    sample_id: fcos
+    variant_id: fcos-efficientnetb3-896
+    display_name: FCOS EfficientNet B3 896x896
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 38.7, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 20, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: *fcos_source
+  - id: lprnet-x5
+    sample_id: lprnet
+    variant_id: lprnet-1x3x24x94
+    display_name: LPRNet 24x94
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 3.75, unit: ms, qualifier: exact }, { metric: throughput, value: 266, unit: fps, qualifier: exact }]
+    source: { ref: x5-v1.0.0, path: samples/vision/lprnet/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: modnet-single-thread-x5
+    sample_id: modnet
+    variant_id: modnet-512-float32
+    display_name: MODNet 512x512 Single Thread
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 89.88, unit: ms, qualifier: exact, concurrency: 1, scope: "single-frame, single-thread, single-BPU-core" }, { metric: throughput, value: 11.12, unit: fps, qualifier: exact, concurrency: 1 }]
+    source: &modnet_source { ref: x5-v1.0.0, path: samples/vision/modnet/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: modnet-two-thread-x5
+    sample_id: modnet
+    variant_id: modnet-512-float32
+    display_name: MODNet 512x512 Two Threads
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 130.49, unit: ms, qualifier: exact, concurrency: 2 }, { metric: throughput, value: 15.27, unit: fps, qualifier: exact, concurrency: 2, scope: "two-thread concurrent inference" }]
+    source: *modnet_source
+  - id: paddleocr-v3-det-x5
+    sample_id: paddleocr
+    variant_id: pp-ocrv3-det-640
+    display_name: PP-OCRv3 Detection 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 158.12, unit: fps, qualifier: exact, scope: "BPU throughput" }]
+    source: &paddleocr_source { ref: x5-v1.0.0, path: samples/vision/paddleocr/README.md, section: "## 2. Performance data", provenance: existing-repository-documentation }
+  - id: paddleocr-v3-rec-x5
+    sample_id: paddleocr
+    variant_id: pp-ocrv3-rec-48x320
+    display_name: PP-OCRv3 Recognition 48x320
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 245.68, unit: fps, qualifier: exact, scope: "BPU throughput" }]
+    source: *paddleocr_source
+  - id: yolov5-v7-n-x5
+    sample_id: yolov5
+    variant_id: yolov5n-v7-640
+    display_name: YOLOv5n v7.0 640x640
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 277.2, unit: fps, qualifier: exact, scope: "BPU throughput" }, { metric: post_process_latency, value: 12, unit: ms, qualifier: exact, scope: "Python post-process" }]
+    source: { ref: x5-v1.0.0, path: samples/vision/yolov5/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+  - id: unet-resnet18-x5
+    sample_id: unet
+    variant_id: unet-resnet18-voc-512
+    display_name: UNet ResNet18 Pascal VOC 512x512
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 52.72, unit: ms, qualifier: exact, statistic: mean, concurrency: 1, scope: "hrt_model_exec; one thread; 200 frames; packed NV12 input" }, { metric: throughput, value: 18.96, unit: fps, qualifier: exact, concurrency: 1, scope: "hrt_model_exec; one thread; 200 frames; packed NV12 input" }]
+    accuracy: [{ metric: miou, value: 0.617198, unit: ratio, qualifier: exact, model_stage: quantized, dataset: "Pascal VOC" }, { metric: pixel_accuracy, value: 0.910332, unit: ratio, qualifier: exact, model_stage: quantized, dataset: "Pascal VOC" }]
+    source: { ref: x5-v1.0.0, path: samples/vision/unet/README.md, section: "## Evaluation", provenance: existing-repository-documentation }
+  - id: yolo26-depth-n-single-thread-x5
+    sample_id: yolo26_depth
+    variant_id: yolo26n-depth-768
+    display_name: YOLO26n Depth 768x768 Single Thread
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: latency, value: 23.194, unit: ms, qualifier: exact, concurrency: 1, scope: "model execution only" }, { metric: throughput, value: 43.085, unit: fps, qualifier: exact, concurrency: 1, scope: "model execution only" }]
+    source: &yolo26depth_source { ref: x5-v1.0.0, path: samples/vision/yolo26_depth/evaluator/README.md, section: "## RDK X5 Performance Data", provenance: existing-repository-documentation }
+  - id: yolo26-depth-n-two-thread-x5
+    sample_id: yolo26_depth
+    variant_id: yolo26n-depth-768
+    display_name: YOLO26n Depth 768x768 Two Threads
+    environment: { hardware: RDK X5 }
+    performance: [{ metric: throughput, value: 45.682, unit: fps, qualifier: exact, concurrency: 2, scope: "model execution only" }]
+    source: *yolo26depth_source

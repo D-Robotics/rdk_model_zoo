@@ -3,7 +3,44 @@ import { describe, expect, it } from "vitest";
 import { fileURLToPath } from "node:url";
 import { buildCatalog } from "../scripts/catalog-builder";
 
+const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+
+function buildRepositoryCatalog() {
+  return buildCatalog({
+    repositoryRoot,
+    modelsPath: "release/models.yaml",
+    benchmarksPath: "release/benchmarks.yaml",
+    modelsSchemaPath: "release/schemas/models.schema.json",
+    benchmarksSchemaPath: "release/schemas/benchmarks.schema.json"
+  });
+}
+
 describe("buildCatalog", () => {
+  it("includes exact published evidence and excludes YOLOE", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const himloco = catalog.models.find((model) => model.id === "himloco");
+    const cpp = himloco?.benchmarks.find((record) => record.id === "himloco-cpp-runtime-x5");
+    expect(cpp?.performance).toContainEqual(expect.objectContaining({
+      metric: "throughput",
+      value: 2853.09,
+      unit: "fps"
+    }));
+    const text = JSON.stringify(catalog).toLowerCase();
+    expect(text).not.toContain("yoloe");
+  });
+
+  it("keeps plus-suffixed throughput as reported rather than inventing an exact value", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const atto = catalog.models.find((model) => model.id === "convnext")
+      ?.benchmarks.find((record) => record.variant_id === "convnext-atto-224");
+    expect(atto?.performance).toContainEqual(expect.objectContaining({
+      metric: "throughput",
+      value: 732,
+      unit: "fps",
+      qualifier: "lower-bound"
+    }));
+  });
+
   it("joins models and benchmarks and preserves the release tag", async () => {
     const catalog = await buildCatalog({
       repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),

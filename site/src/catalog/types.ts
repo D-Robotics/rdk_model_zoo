@@ -5,6 +5,7 @@ export interface MetricRecord {
   metric: string;
   value: number;
   unit: MetricUnit;
+  qualifier?: "exact" | "lower-bound" | "upper-bound" | "approximate";
   statistic?: "min" | "mean" | "p50" | "p95" | "max";
   scope?: string;
   concurrency?: number;

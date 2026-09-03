@@ -21,3 +21,7 @@
 5. Freeze the manifest with the platform release tag. Later corrections require a patch release; published tags are not moved.
 
 The X5 manifest includes every sample in the release's top-level model list, including samples with manual model provisioning and assets without a repository-maintained checksum.
+
+## Benchmark manifest
+
+`benchmarks.yaml` records performance and accuracy values already published in repository documentation. Each record references a model in `models.yaml` and an immutable release source. Missing fields mean that the source did not publish that condition; they must not be inferred. A metric qualifier preserves claims such as `200+ FPS` as a lower bound.
