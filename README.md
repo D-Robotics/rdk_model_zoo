@@ -49,6 +49,8 @@ This repository uses hardware-specific branches to keep maintained samples, lega
 | RDK X3 | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Branch for RDK X3 devices. |
 | RDK S series | [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Branch for RDK S series boards. Historical archived demos for RDK S series boards are kept in [RDK Model Zoo S](https://github.com/d-Robotics/rdk_model_zoo_s). |
 
+**Current X5 release:** [`x5-v1.0.0`](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/x5-v1.0.0) · [Version](./VERSION) · [Changelog](./CHANGELOG.md) · [Model manifest](./release/models.yaml) · [Release policy](./docs/RELEASE.md)
+
 ---
 
 ## Directory Structure
@@ -86,6 +88,7 @@ rdk_model_zoo/
 |   |   |-- mobileone/            # Image classification
 |   |   |-- modnet/               # Image matting
 |   |   |-- paddleocr/            # OCR text detection and recognition
+|   |   |-- pp_liteseg/           # Semantic segmentation
 |   |   |-- repghost/             # Image classification
 |   |   |-- repvgg/               # Image classification
 |   |   |-- repvit/               # Image classification
@@ -96,7 +99,6 @@ rdk_model_zoo/
 |   |   |-- ultralytics_yolo26/   # Detection, segmentation, pose, classification
 |   |   |-- vargconvnet/          # Image classification
 |   |   |-- yolo26_depth/         # Monocular depth estimation
-|   |   |-- yoloe/                # Instance segmentation
 |   |   |-- yolov5/               # Object detection
 |   |   `-- yoloworld/           # Open-vocabulary object detection
 |-- docs/                  # Project guidelines and reference documentation
@@ -161,13 +163,13 @@ python3 main.py \
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 | [Details](./samples/vision/efficient_sam) |
 | Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 | [Details](./samples/vision/mobile_sam) |
+| Semantic Segmentation | PP-LiteSeg | `samples/vision/pp_liteseg` | RDK X5 | [Details](./samples/vision/pp_liteseg) |
 | Semantic Segmentation | UNet ResNet Family | `samples/vision/unet` | RDK X5 | [Details](./samples/vision/unet) |
 | Object Detection | FCOS | `samples/vision/fcos` | RDK X5 | [Details](./samples/vision/fcos) |
 | Object Detection | YOLOv5 | `samples/vision/yolov5` | RDK X5 | [Details](./samples/vision/yolov5) |
 | Object Detection / Instance Segmentation / Pose Estimation / Image Classification | Ultralytics YOLO (`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13`) | `samples/vision/ultralytics_yolo` | RDK X5 | [Details](./samples/vision/ultralytics_yolo) |
 | Object Detection / Instance Segmentation / Pose Estimation / Image Classification | Ultralytics YOLO26 | `samples/vision/ultralytics_yolo26` | RDK X5 | [Details](./samples/vision/ultralytics_yolo26) |
 | Monocular Depth Estimation | YOLO26 Depth | `samples/vision/yolo26_depth` | RDK X5 | [Details](./samples/vision/yolo26_depth) |
-| Instance Segmentation | YOLOE | `samples/vision/yoloe` | RDK X5 | [Details](./samples/vision/yoloe) |
 | Image Matting | MODNet | `samples/vision/modnet` | RDK X5 | [Details](./samples/vision/modnet) |
 | OCR Text Detection and Recognition | PaddleOCR | `samples/vision/paddleocr` | RDK X5 | [Details](./samples/vision/paddleocr) |
 | License Plate Recognition | LPRNet | `samples/vision/lprnet` | RDK X5 | [Details](./samples/vision/lprnet) |
@@ -180,6 +182,7 @@ python3 main.py \
 - **Model Docs**: Each model's top-level `README.md` provides an overview and run guide.
 - **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.
 - **Guidelines**: To contribute or develop, please read the **[Model Zoo Repository Guidelines](./docs/Model_Zoo_Repository_Guidelines.md)**.
+- **Releases**: See the **[release policy](./docs/RELEASE.md)**, **[changelog](./CHANGELOG.md)**, and versioned **[model manifest](./release/models.yaml)**.
 - **Toolchain Manuals**:
   - [RDK X5 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
   - [RDK X3 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)

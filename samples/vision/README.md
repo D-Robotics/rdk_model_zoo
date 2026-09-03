@@ -13,6 +13,7 @@ This directory contains maintained vision samples for RDK X5. Each sample provid
 - [fasternet](./fasternet)
 - [fastvit](./fastvit)
 - [googlenet](./googlenet)
+- [hgnetv2](./hgnetv2)
 - [mobilenetv1](./mobilenetv1)
 - [mobilenetv2](./mobilenetv2)
 - [mobilenetv3](./mobilenetv3)
@@ -30,7 +31,6 @@ This directory contains maintained vision samples for RDK X5. Each sample provid
 - [fcos](./fcos)
 - [ultralytics_yolo](./ultralytics_yolo)
 - [ultralytics_yolo26](./ultralytics_yolo26)
-- [yoloe](./yoloe)
 - [yolov5](./yolov5)
 - [yoloworld](./yoloworld)
 
@@ -38,6 +38,7 @@ This directory contains maintained vision samples for RDK X5. Each sample provid
 
 - [efficient_sam](./efficient_sam): EfficientSAM-Tiny encoder + fixed-prompt decoder dual `.bin` full-mask demo
 - [mobile_sam](./mobile_sam): MobileSAM encoder + box-prompt decoder dual `.bin` full-mask demo
+- [pp_liteseg](./pp_liteseg): PP-LiteSeg semantic segmentation
 - [unet](./unet): UNet with ResNet18/34/50/101/152 backbones
 
 ## Depth Estimation

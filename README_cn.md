@@ -49,6 +49,8 @@
 | RDK X3 | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | RDK X3 设备请切换到该分支。 |
 | RDK S 系列 | [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | RDK S 系列板卡请切换到该分支。RDK S 系列板卡的历史 demo 保留在 [RDK Model Zoo S](https://github.com/d-Robotics/rdk_model_zoo_s) 仓库。 |
 
+**当前 X5 版本：** [`x5-v1.0.0`](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/x5-v1.0.0) · [版本号](./VERSION) · [变更日志](./CHANGELOG.md) · [模型清单](./release/models.yaml) · [发版规范](./docs/RELEASE_cn.md)
+
 ---
 
 ## 仓库目录结构
@@ -86,6 +88,7 @@ rdk_model_zoo/
 |   |   |-- mobileone/            # 图像分类
 |   |   |-- modnet/               # 图像抠图
 |   |   |-- paddleocr/            # OCR 文字检测与识别
+|   |   |-- pp_liteseg/           # 语义分割
 |   |   |-- repghost/             # 图像分类
 |   |   |-- repvgg/               # 图像分类
 |   |   |-- repvit/               # 图像分类
@@ -96,7 +99,6 @@ rdk_model_zoo/
 |   |   |-- ultralytics_yolo26/   # 检测、分割、姿态、分类
 |   |   |-- vargconvnet/          # 图像分类
 |   |   |-- yolo26_depth/         # 单目深度估计
-|   |   |-- yoloe/                # 实例分割
 |   |   |-- yolov5/               # 目标检测
 |   |   `-- yoloworld/           # 开放词表目标检测
 |-- docs/                  # 项目规范与参考文档
@@ -164,13 +166,13 @@ python3 main.py \
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
 | 提示式图像分割 | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 | [详情](./samples/vision/efficient_sam) |
 | 提示式图像分割 | MobileSAM | `samples/vision/mobile_sam` | RDK X5 | [详情](./samples/vision/mobile_sam) |
+| 语义分割 | PP-LiteSeg | `samples/vision/pp_liteseg` | RDK X5 | [详情](./samples/vision/pp_liteseg) |
 | 语义分割 | UNet ResNet 系列 | `samples/vision/unet` | RDK X5 | [详情](./samples/vision/unet) |
 | 目标检测 | FCOS | `samples/vision/fcos` | RDK X5 | [详情](./samples/vision/fcos) |
 | 目标检测 | YOLOv5 | `samples/vision/yolov5` | RDK X5 | [详情](./samples/vision/yolov5) |
 | 目标检测 / 实例分割 / 姿态估计 / 图像分类 | Ultralytics YOLO（`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13`） | `samples/vision/ultralytics_yolo` | RDK X5 | [详情](./samples/vision/ultralytics_yolo) |
 | 目标检测 / 实例分割 / 姿态估计 / 图像分类 | Ultralytics YOLO26 | `samples/vision/ultralytics_yolo26` | RDK X5 | [详情](./samples/vision/ultralytics_yolo26) |
 | 单目深度估计 | YOLO26 Depth | `samples/vision/yolo26_depth` | RDK X5 | [详情](./samples/vision/yolo26_depth) |
-| 实例分割 | YOLOE | `samples/vision/yoloe` | RDK X5 | [详情](./samples/vision/yoloe) |
 | 图像抠图 | MODNet | `samples/vision/modnet` | RDK X5 | [详情](./samples/vision/modnet) |
 | OCR 文字检测与识别 | PaddleOCR | `samples/vision/paddleocr` | RDK X5 | [详情](./samples/vision/paddleocr) |
 | 车牌识别 | LPRNet | `samples/vision/lprnet` | RDK X5 | [详情](./samples/vision/lprnet) |
@@ -188,6 +190,8 @@ python3 main.py \
   - 如需了解代码级接口说明，请参考 **[源码文档说明](./docs/source_reference/README.md)**。
 - **开发规范**
   - 如需新增或开发 Sample，请先阅读 **[Model Zoo 仓库规范指南](./docs/Model_Zoo_Repository_Guidelines.md)**。
+- **版本发布**
+  - 请参考 **[发版规范](./docs/RELEASE_cn.md)**、**[变更日志](./CHANGELOG.md)** 与版本化的 **[模型清单](./release/models.yaml)**。
 - **工具链文档**
   - [RDK X5 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
   - [RDK X3 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
