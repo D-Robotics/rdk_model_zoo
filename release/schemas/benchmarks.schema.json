@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RDK Model Zoo release benchmarks manifest",
+  "type": "object",
+  "required": ["schema_version", "release", "benchmarks"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "release": {
+      "type": "object",
+      "required": ["platform", "version", "tag"],
+      "properties": {
+        "platform": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1 },
+        "branch": { "type": "string" },
+        "source_ref": { "type": "string" },
+        "released_at": { "type": "string" }
+      }
+    },
+    "benchmarks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "sample_id", "variant_id", "display_name", "environment", "source"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "sample_id": { "type": "string", "minLength": 1 },
+          "variant_id": { "type": "string", "minLength": 1 },
+          "display_name": { "type": "string", "minLength": 1 },
+          "asset_filename": { "type": "string", "minLength": 1 },
+          "model_format": { "type": "string", "minLength": 1 },
+          "precision": { "type": "string", "minLength": 1 },
+          "input": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "shape": { "type": "array", "items": { "type": "integer", "exclusiveMinimum": 0 } },
+              "layout": { "type": "string", "minLength": 1 },
+              "format": { "type": "string", "minLength": 1 }
+            }
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["hardware"],
+            "properties": {
+              "hardware": { "type": "string", "minLength": 1 },
+              "rdk_os": { "type": "string", "minLength": 1 },
+              "runtime": { "type": "string", "minLength": 1 },
+              "cpu_mode": { "type": "string", "minLength": 1 },
+              "bpu_cores": { "type": "integer", "exclusiveMinimum": 0 }
+            }
+          },
+          "performance": { "$ref": "#/$defs/metrics" },
+          "accuracy": { "$ref": "#/$defs/metrics" },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ref", "path", "section", "provenance"],
+            "properties": {
+              "ref": { "type": "string", "minLength": 1 },
+              "path": { "type": "string", "minLength": 1 },
+              "section": { "type": "string", "minLength": 1 },
+              "provenance": { "const": "existing-repository-documentation" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric", "value", "unit"],
+        "properties": {
+          "metric": { "type": "string", "minLength": 1 },
+          "value": { "type": "number" },
+          "unit": { "enum": ["ms", "fps", "percent", "ratio", "mae", "rmse"] },
+          "statistic": { "enum": ["min", "mean", "p50", "p95", "max"] },
+          "scope": { "type": "string", "minLength": 1 },
+          "concurrency": { "type": "integer", "exclusiveMinimum": 0 },
+          "dataset": { "type": "string", "minLength": 1 },
+          "model_stage": { "enum": ["float", "quantized", "compiled", "runtime"] }
+        }
+      }
+    }
+  }
+}
