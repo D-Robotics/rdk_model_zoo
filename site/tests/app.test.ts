@@ -229,6 +229,9 @@ describe("catalog application", () => {
     window.history.pushState({}, "", "/?model=missing-model");
     window.dispatchEvent(new PopStateEvent("popstate"));
     expect(document.body.textContent).toContain("Model not found");
+    const missingPanel = document.querySelector<HTMLElement>(".model-not-found")!;
+    expect(missingPanel.getAttribute("aria-labelledby")).toBeTruthy();
+    expect(document.getElementById(missingPanel.getAttribute("aria-labelledby")!)).not.toBeNull();
     document.querySelector<HTMLButtonElement>('[data-action="clear-model"]')!.click();
     expect(new URL(window.location.href).searchParams.get("model")).toBeNull();
     expect(document.querySelector(".model-details")).toBeNull();

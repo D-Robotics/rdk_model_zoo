@@ -82,7 +82,9 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
       panel.setAttribute("role", "dialog");
       panel.setAttribute("aria-modal", "true");
       const heading = document.createElement("h2");
+      heading.id = "model-details-not-found";
       heading.textContent = t(options.locale, "details.notFound");
+      panel.setAttribute("aria-labelledby", heading.id);
       const message = document.createElement("p");
       message.textContent = t(options.locale, "error.modelNotFound");
       const clear = document.createElement("button");

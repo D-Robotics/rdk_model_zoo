@@ -80,10 +80,9 @@ function sourceCell(record: BenchmarkRecord, context: DetailContext): HTMLTableC
 }
 
 function metricValue(metric: MetricRecord, locale: Locale): string {
-  const number = new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
+  return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
     maximumFractionDigits: 6
   }).format(metric.value);
-  return `${number} ${metric.unit}`;
 }
 
 function metricConditions(record: BenchmarkRecord, metric: MetricRecord, locale: Locale): string {
@@ -118,6 +117,7 @@ function appendMetricRows(
         cell(record.display_name),
         cell(metric.metric),
         cell(metricValue(metric, context.locale)),
+        cell(metric.unit),
         cell(t(context.locale, qualifierKeys[metric.qualifier ?? "exact"])),
         cell(metricConditions(record, metric, context.locale)),
         cell(metric.dataset ?? t(context.locale, "missing.unspecified")),
@@ -170,7 +170,8 @@ function metricTable(model: ModelRecord, kind: "performance" | "accuracy", conte
     t(context.locale, "details.variants"),
     t(context.locale, "details.metric"),
     t(context.locale, "details.value"),
-    t(context.locale, "details.published"),
+    t(context.locale, "details.unit"),
+    t(context.locale, "details.qualifier"),
     t(context.locale, "details.conditions"),
     t(context.locale, "details.dataset"),
     t(context.locale, "details.modelStage"),
@@ -181,7 +182,7 @@ function metricTable(model: ModelRecord, kind: "performance" | "accuracy", conte
     emptyTableRow(
       table,
       t(context.locale, kind === "performance" ? "details.noPerformanceData" : "details.noAccuracyData"),
-      8
+      9
     );
   }
   return wrapTable(table, t(context.locale, captionKey));

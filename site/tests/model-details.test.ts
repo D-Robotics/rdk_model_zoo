@@ -43,6 +43,8 @@ describe("model details", () => {
       "Assets"
     ]));
     expect(element.querySelectorAll('a[data-testid="benchmark-source"]')).toHaveLength(3);
+    const headers = [...element.querySelectorAll("th")].map((header) => header.textContent);
+    expect(headers).toEqual(expect.arrayContaining(["Value", "Unit", "Qualifier"]));
   });
 
   it("renders assets without a URL as manual downloads", () => {
