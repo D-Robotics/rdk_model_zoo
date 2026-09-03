@@ -191,6 +191,21 @@ const englishTranslations = {
   "task.ocr": "OCR",
   "task.embedding": "Embedding",
   "task.keypoints": "Keypoints",
+  "task.imageClassification": "Image classification",
+  "task.imageTextSimilarity": "Image-text similarity",
+  "task.instanceSegmentation": "Instance segmentation",
+  "task.leggedLocomotionControl": "Legged locomotion control",
+  "task.licensePlateRecognition": "License plate recognition",
+  "task.monocularDepthEstimation": "Monocular depth estimation",
+  "task.objectDetection": "Object detection",
+  "task.ocrTextDetection": "OCR text detection",
+  "task.ocrTextRecognition": "OCR text recognition",
+  "task.openVocabularyObjectDetection": "Open-vocabulary object detection",
+  "task.orientedBoundingBoxDetection": "Oriented bounding box detection",
+  "task.portraitMatting": "Portrait matting",
+  "task.poseEstimation": "Pose estimation",
+  "task.promptableImageSegmentation": "Promptable image segmentation",
+  "task.semanticSegmentation": "Semantic segmentation",
   "task.unknown": "Task",
 
   "condition.singleFrame": "single-frame",
@@ -422,6 +437,21 @@ const chineseTranslations: TranslationDictionary = {
   "task.ocr": "文字识别",
   "task.embedding": "特征嵌入",
   "task.keypoints": "关键点",
+  "task.imageClassification": "图像分类",
+  "task.imageTextSimilarity": "图文相似度",
+  "task.instanceSegmentation": "实例分割",
+  "task.leggedLocomotionControl": "足式运动控制",
+  "task.licensePlateRecognition": "车牌识别",
+  "task.monocularDepthEstimation": "单目深度估计",
+  "task.objectDetection": "目标检测",
+  "task.ocrTextDetection": "OCR 文本检测",
+  "task.ocrTextRecognition": "OCR 文本识别",
+  "task.openVocabularyObjectDetection": "开放词汇目标检测",
+  "task.orientedBoundingBoxDetection": "旋转目标检测",
+  "task.portraitMatting": "人像抠图",
+  "task.poseEstimation": "姿态估计",
+  "task.promptableImageSegmentation": "提示式图像分割",
+  "task.semanticSegmentation": "语义分割",
   "task.unknown": "任务",
 
   "condition.singleFrame": "单帧",
@@ -461,10 +491,53 @@ const chineseTranslations: TranslationDictionary = {
 export type TranslationKey = keyof typeof englishTranslations;
 export type Translations = Record<Locale, Record<TranslationKey, string>>;
 
+export type ManifestTaskId =
+  | "image-classification"
+  | "image-text-similarity"
+  | "instance-segmentation"
+  | "legged-locomotion-control"
+  | "license-plate-recognition"
+  | "monocular-depth-estimation"
+  | "object-detection"
+  | "ocr-text-detection"
+  | "ocr-text-recognition"
+  | "open-vocabulary-object-detection"
+  | "oriented-bounding-box-detection"
+  | "portrait-matting"
+  | "pose-estimation"
+  | "promptable-image-segmentation"
+  | "semantic-segmentation";
+
+export const manifestTaskTranslationKeys: Record<ManifestTaskId, TranslationKey> = {
+  "image-classification": "task.imageClassification",
+  "image-text-similarity": "task.imageTextSimilarity",
+  "instance-segmentation": "task.instanceSegmentation",
+  "legged-locomotion-control": "task.leggedLocomotionControl",
+  "license-plate-recognition": "task.licensePlateRecognition",
+  "monocular-depth-estimation": "task.monocularDepthEstimation",
+  "object-detection": "task.objectDetection",
+  "ocr-text-detection": "task.ocrTextDetection",
+  "ocr-text-recognition": "task.ocrTextRecognition",
+  "open-vocabulary-object-detection": "task.openVocabularyObjectDetection",
+  "oriented-bounding-box-detection": "task.orientedBoundingBoxDetection",
+  "portrait-matting": "task.portraitMatting",
+  "pose-estimation": "task.poseEstimation",
+  "promptable-image-segmentation": "task.promptableImageSegmentation",
+  "semantic-segmentation": "task.semanticSegmentation"
+};
+
 export const translations: Translations = {
   en: englishTranslations,
   zh: chineseTranslations
 };
+
+export function taskTranslationKey(task: string): TranslationKey {
+  if (Object.prototype.hasOwnProperty.call(manifestTaskTranslationKeys, task)) {
+    return manifestTaskTranslationKeys[task as ManifestTaskId];
+  }
+
+  return "task.unknown";
+}
 
 const placeholderPattern = /\{([a-zA-Z0-9_.-]+)\}/g;
 
