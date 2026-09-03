@@ -114,10 +114,15 @@ class Dinov2:
 
         image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         height, width = image.shape[:2]
-        scale = 256 / min(height, width)
+        if height <= width:
+            resized_height = 256
+            resized_width = int(256 * width / height)
+        else:
+            resized_height = int(256 * height / width)
+            resized_width = 256
         image = cv2.resize(
             image,
-            (int(width * scale), int(height * scale)),
+            (resized_width, resized_height),
             interpolation=cv2.INTER_CUBIC,
         )
         crop_y = (image.shape[0] - 224) // 2
