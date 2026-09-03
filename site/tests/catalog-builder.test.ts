@@ -42,6 +42,41 @@ describe("buildCatalog", () => {
     }));
   });
 
+  it("includes an exact FasterNet classification latency from the root documentation", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const record = catalog.models.find((model) => model.id === "fasternet")
+      ?.benchmarks.find((benchmark) => benchmark.id === "fasternet-s-x5");
+    expect(record?.performance).toContainEqual(expect.objectContaining({
+      metric: "latency",
+      value: 6.73,
+      unit: "ms",
+      qualifier: "exact"
+    }));
+  });
+
+  it("includes the distinct FasterNet evaluator multi-thread latency", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const record = catalog.models.find((model) => model.id === "fasternet")
+      ?.benchmarks.find((benchmark) => benchmark.id === "fasternet-s-multithread-x5");
+    expect(record?.performance).toContainEqual(expect.objectContaining({
+      metric: "latency",
+      value: 24.34,
+      unit: "ms",
+      qualifier: "exact",
+      scope: "multi-thread"
+    }));
+  });
+
+  it("includes the published FasterNet float and quantized Top-1 pair", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const record = catalog.models.find((model) => model.id === "fasternet")
+      ?.benchmarks.find((benchmark) => benchmark.id === "fasternet-s-x5");
+    expect(record?.accuracy).toEqual(expect.arrayContaining([
+      expect.objectContaining({ metric: "top-1", value: 77.04, unit: "percent", model_stage: "float" }),
+      expect.objectContaining({ metric: "top-1", value: 76.15, unit: "percent", model_stage: "quantized" })
+    ]));
+  });
+
   it("joins models and benchmarks and preserves the release tag", async () => {
     const catalog = await buildCatalog({
       repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),
