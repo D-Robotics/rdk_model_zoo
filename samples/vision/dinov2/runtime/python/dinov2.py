@@ -156,8 +156,10 @@ class Dinov2:
         """
 
         tensor = outputs[self.model_name][self.cfg.output]
-        quant_info = self.model.output_quants[self.model_name][self.cfg.output]
-        tensor = postprocess.dequantize_tensor(tensor, quant_info).astype(np.float32, copy=False)
+        if np.issubdtype(tensor.dtype, np.integer):
+            quant_info = self.model.output_quants[self.model_name][self.cfg.output]
+            tensor = postprocess.dequantize_tensor(tensor, quant_info)
+        tensor = tensor.astype(np.float32, copy=False)
         if not np.isfinite(tensor).all():
             raise ValueError("DINOv2 output contains NaN or Inf values.")
         return tensor
