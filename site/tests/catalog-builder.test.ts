@@ -77,6 +77,40 @@ describe("buildCatalog", () => {
     ]));
   });
 
+  it("keeps Ultralytics YOLO BPU throughput scoped to its published thread count", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const record = catalog.models.find((model) => model.id === "ultralytics_yolo")
+      ?.benchmarks.find((benchmark) => benchmark.id === "ultralytics-yolo11n-detect-x5");
+    expect(record?.variant_id).toBe("yolo11n-detect-640");
+    expect(record?.performance).toContainEqual(expect.objectContaining({
+      metric: "throughput",
+      value: 188.9,
+      unit: "fps",
+      qualifier: "exact",
+      concurrency: 2,
+      scope: "BPU task"
+    }));
+  });
+
+  it("keeps Ultralytics YOLO task variants distinct", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const records = catalog.models.find((model) => model.id === "ultralytics_yolo")?.benchmarks ?? [];
+    expect(records.find((benchmark) => benchmark.id === "ultralytics-yolov8n-seg-x5"))
+      .toEqual(expect.objectContaining({ variant_id: "yolov8n-seg-640" }));
+    expect(records.find((benchmark) => benchmark.id === "ultralytics-yolov8n-pose-x5"))
+      .toEqual(expect.objectContaining({ variant_id: "yolov8n-pose-640" }));
+  });
+
+  it("includes the explicit YOLO26 FP32 and BPU Python detection accuracy", async () => {
+    const catalog = await buildRepositoryCatalog();
+    const record = catalog.models.find((model) => model.id === "ultralytics_yolo26")
+      ?.benchmarks.find((benchmark) => benchmark.id === "ultralytics-yolo26n-detect-x5");
+    expect(record?.accuracy).toEqual(expect.arrayContaining([
+      expect.objectContaining({ metric: "bbox-all-map-50-95", value: 0.319, unit: "ratio", model_stage: "float" }),
+      expect.objectContaining({ metric: "bbox-all-map-50-95", value: 0.284, unit: "ratio", model_stage: "quantized" })
+    ]));
+  });
+
   it("joins models and benchmarks and preserves the release tag", async () => {
     const catalog = await buildCatalog({
       repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),

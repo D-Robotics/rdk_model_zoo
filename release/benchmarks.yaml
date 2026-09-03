@@ -350,3 +350,1325 @@ benchmarks:
   - { id: mobilenetv4-conv-small-x5, sample_id: mobilenetv4, variant_id: mobilenetv4-conv-small-224, display_name: MobileNetV4 Conv Small 224x224, environment: { hardware: RDK X5 }, performance: [ { metric: latency, value: 1.18, unit: ms, qualifier: exact }, { metric: throughput, value: 1436, unit: fps, qualifier: lower-bound } ], accuracy: [ { metric: top-1, value: 70.8, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 68.8, unit: percent, qualifier: exact, model_stage: quantized } ], source: { ref: x5-v1.0.0, path: samples/vision/mobilenetv4/README.md, section: "## Performance Data", provenance: existing-repository-documentation } }
   - { id: mobilenetv4-conv-medium-evaluator-x5, sample_id: mobilenetv4, variant_id: mobilenetv4-conv-medium-224, display_name: MobileNetV4 Conv Medium 224x224 Evaluator, environment: { hardware: RDK X5 }, performance: [ { metric: latency, value: 6.91, unit: ms, qualifier: exact, scope: multi-thread }, { metric: throughput, value: 572.36, unit: fps, qualifier: exact } ], accuracy: [ { metric: top-1, value: 76.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 75.14, unit: percent, qualifier: exact, model_stage: quantized } ], source: { ref: x5-v1.0.0, path: samples/vision/mobilenetv4/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation } }
   - { id: mobilenetv4-conv-small-evaluator-x5, sample_id: mobilenetv4, variant_id: mobilenetv4-conv-small-224, display_name: MobileNetV4 Conv Small 224x224 Evaluator, environment: { hardware: RDK X5 }, performance: [ { metric: latency, value: 2.74, unit: ms, qualifier: exact, scope: multi-thread }, { metric: throughput, value: 1436.22, unit: fps, qualifier: exact } ], accuracy: [ { metric: top-1, value: 70.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 68.75, unit: percent, qualifier: exact, model_stage: quantized } ], source: { ref: x5-v1.0.0, path: samples/vision/mobilenetv4/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation } }
+
+  - id: ultralytics-yolov5nu-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov5nu-detect-640
+    display_name: YOLOv5nu Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 6.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 157.4, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 6.8, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 291.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.275, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.260, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 94.55, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov5su-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov5su-detect-640
+    display_name: YOLOv5su Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 12.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 81.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 18.9, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 105.6, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.362, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.354, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 97.79, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov5mu-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov5mu-detect-640
+    display_name: YOLOv5mu Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 26.5, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 37.7, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 47.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 42.4, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.417, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.407, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 97.60, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov5lu-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov5lu-detect-640
+    display_name: YOLOv5lu Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 52.7, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 19.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 99.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 20.1, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.449, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.442, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 98.44, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov5xu-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov5xu-detect-640
+    display_name: YOLOv5xu Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 91.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 11.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 175.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 11.4, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.458, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.443, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.72, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8n-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8n-detect-640
+    display_name: YOLOv8n Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 7.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 141.9, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 8.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 247.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.306, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.292, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.42, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8s-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8s-detect-640
+    display_name: YOLOv8s Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 13.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 73.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 21.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 93.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.384, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.372, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.88, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8m-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8m-detect-640
+    display_name: YOLOv8m Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 30.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 32.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 55.3, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 36.1, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.433, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.423, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 97.69, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8l-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8l-detect-640
+    display_name: YOLOv8l Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 59.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 16.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 112.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 17.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.454, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.440, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.92, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8x-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8x-detect-640
+    display_name: YOLOv8x Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 92.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 10.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 178.3, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 11.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.465, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.448, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.34, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov9t-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov9t-detect-640
+    display_name: YOLOv9t Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 6.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 144.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 7.9, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 250.6, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.357, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.346, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.92, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov9s-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov9s-detect-640
+    display_name: YOLOv9s Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 13.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 77.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 20.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 98.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.460, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.446, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.96, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov9m-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov9m-detect-640
+    display_name: YOLOv9m Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 32.5, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 30.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 59.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 33.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.504, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.485, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.23, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov9c-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov9c-detect-640
+    display_name: YOLOv9c Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 40.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 24.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 74.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 26.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.530, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.515, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 97.17, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov9e-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov9e-detect-640
+    display_name: YOLOv9e Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 119.5, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 8.4, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 232.5, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 8.6, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.555, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.530, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.50, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov10n-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov10n-detect-640
+    display_name: YOLOv10n Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 8.7, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 114.2, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 11.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 171.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.387, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.357, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 92.25, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov10s-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov10s-detect-640
+    display_name: YOLOv10s Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 14.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 67.1, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 23.8, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 83.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.469, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.444, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 94.67, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov10m-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov10m-detect-640
+    display_name: YOLOv10m Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 29.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 34.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 52.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 37.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.510, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.482, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 94.50, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov10b-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov10b-detect-640
+    display_name: YOLOv10b Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 40.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 25.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 74.2, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 26.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.525, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.504, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.00, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov10l-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov10l-detect-640
+    display_name: YOLOv10l Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 49.8, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 20.1, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 93.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 21.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.540, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.517, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.74, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov10x-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov10x-detect-640
+    display_name: YOLOv10x Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 68.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 14.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 131.5, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 15.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.541, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.522, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.49, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11n-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11n-detect-640
+    display_name: YOLO11n Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 8.2, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 121.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 10.5, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 188.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.323, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.308, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.36, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11s-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11s-detect-640
+    display_name: YOLO11s Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 15.7, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 63.4, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 25.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 77.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.394, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.380, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.45, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11m-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11m-detect-640
+    display_name: YOLO11m Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 34.5, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 29.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 63.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 31.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.437, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.422, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.57, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11l-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11l-detect-640
+    display_name: YOLO11l Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 45.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 22.2, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 84.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 23.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.452, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.432, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.58, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11x-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11x-detect-640
+    display_name: YOLO11x Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 95.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 10.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 184.8, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 10.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.466, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.446, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.71, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo12n-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo12n-detect-640
+    display_name: YOLO12n Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 39.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 25.3, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 72.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 27.4, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.410, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.383, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 93.41, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo12s-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo12s-detect-640
+    display_name: YOLO12s Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 63.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 15.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 120.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 16.5, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.487, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.465, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.48, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo12m-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo12m-detect-640
+    display_name: YOLO12m Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 102.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 9.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 198.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 10.1, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.533, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.513, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 96.25, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo12l-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo12l-detect-640
+    display_name: YOLO12l Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 181.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 5.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 356.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 5.6, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.545, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.523, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.96, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo12x-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo12x-detect-640
+    display_name: YOLO12x Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 311.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 3.2, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 616.3, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 3.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.557, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.532, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.51, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov13n-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov13n-detect-640
+    display_name: YOLOv13n Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 44.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 22.4, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 83.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 24.0, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.409, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.385, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 94.13, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov13s-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov13s-detect-640
+    display_name: YOLOv13s Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 63.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 15.7, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 120.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 16.5, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.485, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.458, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 94.43, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov13l-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov13l-detect-640
+    display_name: YOLOv13l Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 171.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 5.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 336.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 5.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.538, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.510, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 94.80, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov13x-detect-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov13x-detect-640
+    display_name: YOLOv13x Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 308.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 3.2, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 609.2, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 3.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.551, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.526, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 95.46, unit: percent, qualifier: exact, dataset: "COCO2017" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8n-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8n-seg-640
+    display_name: YOLOv8n-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 10.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 96.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 10.9, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 181.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.300, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.241, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.284, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.219, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8s-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8s-seg-640
+    display_name: YOLOv8s-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 19.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 50.9, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 29.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 68.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.380, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.299, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.371, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.287, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8m-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8m-seg-640
+    display_name: YOLOv8m-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 40.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 24.7, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 70.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 28.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.423, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.330, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.408, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.311, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8l-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8l-seg-640
+    display_name: YOLOv8l-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 74.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 13.3, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 139.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 14.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.444, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.344, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.431, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.332, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8x-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8x-seg-640
+    display_name: YOLOv8x-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 115.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 8.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 221.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 9.0, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.456, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.351, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.439, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.336, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov9c-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov9c-seg-640
+    display_name: YOLOv9c-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 55.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 17.9, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 101.3, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 19.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.446, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.345, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.423, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.321, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov9e-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov9e-seg-640
+    display_name: YOLOv9e-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 135.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 7.4, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 260.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 7.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.471, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.118, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.332, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.268, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11n-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11n-seg-640
+    display_name: YOLO11n-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 11.7, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 85.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 13.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 152.6, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.319, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.258, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.296, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.227, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11s-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11s-seg-640
+    display_name: YOLO11s-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 21.7, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 46.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 33.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 60.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.388, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.306, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.377, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.291, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11m-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11m-seg-640
+    display_name: YOLO11m-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 50.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 19.9, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 90.2, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 22.1, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.436, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.340, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.422, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.322, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11l-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11l-seg-640
+    display_name: YOLO11l-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 60.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 16.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 110.8, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 18.0, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.452, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.350, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.432, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.328, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11x-seg-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11x-seg-640
+    display_name: YOLO11x-Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 129.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 7.7, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 247.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 8.1, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 20, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.466, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "mask-all-map-50-95", value: 0.358, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.447, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+      - { metric: "mask-all-map-50-95", value: 0.338, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8n-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8n-pose-640
+    display_name: YOLOv8n-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 7.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 143.1, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 8.2, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 241.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.476, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.462, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8s-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8s-pose-640
+    display_name: YOLOv8s-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 14.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 70.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 22.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 88.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.578, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.553, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8m-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8m-pose-640
+    display_name: YOLOv8m-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 31.5, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 31.7, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 57.2, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 34.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.631, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.605, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8l-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8l-pose-640
+    display_name: YOLOv8l-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 60.2, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 16.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 114.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 17.4, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.656, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.636, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8x-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8x-pose-640
+    display_name: YOLOv8x-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 93.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 10.7, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 181.5, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 11.0, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.670, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.655, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11n-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11n-pose-640
+    display_name: YOLO11n-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 8.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 119.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 10.9, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 182.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.465, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.452, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11s-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11s-pose-640
+    display_name: YOLO11s-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 16.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 61.1, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 27.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 73.9, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.560, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.530, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11m-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11m-pose-640
+    display_name: YOLO11m-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 35.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 28.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 65.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 30.5, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.626, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.600, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11l-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11l-pose-640
+    display_name: YOLO11l-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 46.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 21.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 86.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 23.0, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.636, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.619, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11x-pose-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11x-pose-640
+    display_name: YOLO11x-Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 97.8, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 10.2, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 189.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 10.5, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 10, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.672, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: float }
+      - { metric: "keypoints-all-map-50-95", value: 0.654, unit: ratio, qualifier: exact, dataset: "COCO2017", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8n-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8n-cls-224
+    display_name: YOLOv8n-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 0.7, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 1374.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 1.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 2023.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.690, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.883, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.525, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.762, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8s-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8s-cls-224
+    display_name: YOLOv8s-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 1.4, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 701.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 2.3, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 848.0, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.738, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.917, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.611, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.837, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8m-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8m-cls-224
+    display_name: YOLOv8m-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 3.7, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 269.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 6.9, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 290.6, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.768, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.935, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.682, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.883, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8l-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8l-cls-224
+    display_name: YOLOv8l-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 7.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 126.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 15.2, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 130.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.768, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.935, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.724, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.909, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolov8x-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolov8x-cls-224
+    display_name: YOLOv8x-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 13.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 76.4, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 25.5, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 78.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.790, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.946, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.737, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.917, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11n-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11n-cls-224
+    display_name: YOLO11n-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 1.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 949.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 1.6, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 1238.4, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.700, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.894, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.495, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.736, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11s-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11s-cls-224
+    display_name: YOLO11s-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 2.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 484.3, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 3.5, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 572.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.754, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.927, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.665, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.873, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11m-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11m-cls-224
+    display_name: YOLO11m-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 3.8, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 262.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 7.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 282.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.773, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.939, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.695, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.896, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11l-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11l-cls-224
+    display_name: YOLO11l-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 5.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 200.3, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 9.4, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 211.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.783, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.943, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.707, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.902, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo11x-cls-x5
+    sample_id: ultralytics_yolo
+    variant_id: yolo11x-cls-224
+    display_name: YOLO11x-CLS
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 10.0, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 100.2, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 19.3, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 103.2, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "post_process_latency", value: 0.5, unit: ms, qualifier: exact, scope: "single-core CPU" }
+    accuracy:
+      - { metric: "top-1", value: 0.795, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-5", value: 0.949, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: float }
+      - { metric: "top-1", value: 0.732, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+      - { metric: "top-5", value: 0.917, unit: ratio, qualifier: exact, dataset: "ImageNet2012", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26n-detect-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26n-detect-640
+    display_name: YOLO26n Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 11.6, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 86.3, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 19.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 104.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.319, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.284, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 89.0, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-small-map-50-95", value: 0.107, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-small-map-50-95", value: 0.075, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-small-map-50-95-retention", value: 70.1, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-medium-map-50-95", value: 0.349, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-medium-map-50-95", value: 0.299, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-medium-map-50-95-retention", value: 85.7, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-large-map-50-95", value: 0.508, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-large-map-50-95", value: 0.467, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-large-map-50-95-retention", value: 91.9, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26s-detect-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26s-detect-640
+    display_name: YOLO26s Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 20.9, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 47.7, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 37.8, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 52.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.395, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.357, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 90.4, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-small-map-50-95", value: 0.183, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-small-map-50-95", value: 0.154, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-small-map-50-95-retention", value: 84.2, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-medium-map-50-95", value: 0.440, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-medium-map-50-95", value: 0.393, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-medium-map-50-95-retention", value: 89.3, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-large-map-50-95", value: 0.583, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-large-map-50-95", value: 0.534, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-large-map-50-95-retention", value: 91.6, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26m-detect-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26m-detect-640
+    display_name: YOLO26m Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 40.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 24.8, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 76.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 26.1, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.442, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.413, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 93.4, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-small-map-50-95", value: 0.242, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-small-map-50-95", value: 0.206, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-small-map-50-95-retention", value: 85.1, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-medium-map-50-95", value: 0.489, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-medium-map-50-95", value: 0.454, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-medium-map-50-95-retention", value: 92.8, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-large-map-50-95", value: 0.629, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-large-map-50-95", value: 0.605, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-large-map-50-95-retention", value: 96.1, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26l-detect-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26l-detect-640
+    display_name: YOLO26l Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 51.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 19.5, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 98.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 20.3, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.456, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.431, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 94.5, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-small-map-50-95", value: 0.260, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-small-map-50-95", value: 0.215, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-small-map-50-95-retention", value: 82.7, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-medium-map-50-95", value: 0.499, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-medium-map-50-95", value: 0.479, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-medium-map-50-95-retention", value: 96.0, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-large-map-50-95", value: 0.627, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-large-map-50-95", value: 0.618, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-large-map-50-95-retention", value: 98.6, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26x-detect-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26x-detect-640
+    display_name: YOLO26x Detect
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 103.3, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 9.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 202.0, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 9.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    accuracy:
+      - { metric: "bbox-all-map-50-95", value: 0.484, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-all-map-50-95", value: 0.438, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-all-map-50-95-retention", value: 90.5, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-small-map-50-95", value: 0.292, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-small-map-50-95", value: 0.230, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-small-map-50-95-retention", value: 78.8, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-medium-map-50-95", value: 0.528, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-medium-map-50-95", value: 0.479, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-medium-map-50-95-retention", value: 90.7, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+      - { metric: "bbox-large-map-50-95", value: 0.669, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: float }
+      - { metric: "bbox-large-map-50-95", value: 0.635, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "bbox-large-map-50-95-retention", value: 94.9, unit: percent, qualifier: exact, dataset: "COCO2017 validation set" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26n-seg-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26n-seg-640
+    display_name: YOLO26n Seg
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 15.5, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 64.3, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 22.8, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 87.6, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    accuracy:
+      - { metric: "mask-all-map-50-95", value: 0.285, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "mask-small-map-50-95", value: 0.090, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "mask-medium-map-50-95", value: 0.307, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "mask-large-map-50-95", value: 0.464, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26n-pose-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26n-pose-640
+    display_name: YOLO26n Pose
+    input: { shape: [640, 640], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 12.5, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 79.6, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 20.1, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 98.7, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    accuracy:
+      - { metric: "keypoints-all-map-50-95", value: 0.498, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "keypoints-medium-map-50-95", value: 0.404, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+      - { metric: "keypoints-large-map-50-95", value: 0.647, unit: ratio, qualifier: exact, dataset: "COCO2017 validation set", model_stage: quantized }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26n-cls-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26n-cls-224
+    display_name: YOLO26n Cls
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance:
+      - { metric: "latency", value: 1.1, unit: ms, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "throughput", value: 906.0, unit: fps, qualifier: exact, concurrency: 1, scope: "BPU task" }
+      - { metric: "latency", value: 1.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
+      - { metric: "throughput", value: 1156.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
+    source: { ref: x5-v1.0.0, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
