@@ -88,6 +88,7 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- depth_anything_v2/       # 单目深度估计
 |   |   |-- yolo26_depth/            # YOLO26 单目深度估计
 |   |   |-- siglip/                  # VLM / VLA 视觉编码器
+|   |   |-- dinov2/                  # 自监督视觉编码器（图像 embedding）
 |   |   |-- pointnet/                # 点云零件分割
 |   |   |-- lanenet/                 # 车道线检测
 |   |   `-- paddle_ocr/             # OCR 文字检测与识别
@@ -156,6 +157,7 @@ bash run.sh
 | 单目深度估计 | Depth Anything V2 | `samples/vision/depth_anything_v2` | S100 | [详情](./samples/vision/depth_anything_v2) |
 | 单目深度估计 | YOLO26 Depth | `samples/vision/yolo26_depth` | S100 / S100P / S600 | [详情](./samples/vision/yolo26_depth) |
 | 视觉编码器 | SigLIP | `samples/vision/siglip` | S100 / S100P | [详情](./samples/vision/siglip) |
+| 视觉编码器 | DINOv2 | `samples/vision/dinov2` | S100 / S100P / S600 | [详情](./samples/vision/dinov2) |
 | 点云分割 | PointNet | `samples/vision/pointnet` | S100 | [详情](./samples/vision/pointnet) |
 | 车道线检测 | LaneNet | `samples/vision/lanenet` | S100 | [详情](./samples/vision/lanenet) |
 | 文字识别 | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [详情](./samples/vision/paddle_ocr) |
