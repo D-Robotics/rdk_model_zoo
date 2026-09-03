@@ -58,6 +58,7 @@ function root(): HTMLElement {
 
 describe("catalog application", () => {
   beforeEach(() => {
+    window.history.replaceState({}, "", "/");
     document.documentElement.lang = "";
     document.body.innerHTML = '<main id="app"></main>';
   });
@@ -197,6 +198,47 @@ describe("catalog application", () => {
     search.dispatchEvent(new Event("input", { bubbles: true }));
 
     expect(document.querySelectorAll("article[data-model-id]")).toHaveLength(2);
+  });
+
+  it("opens and closes shareable details while preserving unrelated URL parameters and focus", () => {
+    window.history.replaceState({}, "", "/?view=cards");
+    mountCatalog(root(), catalog, { locale: "en" });
+    const opener = document.querySelector<HTMLButtonElement>(
+      '[data-model-id="himloco"] [data-action="open-details"]'
+    )!;
+    opener.focus();
+    opener.click();
+
+    expect(new URL(window.location.href).searchParams.get("model")).toBe("himloco");
+    expect(document.querySelector('.model-details[data-model-id="himloco"]')).not.toBeNull();
+
+    document.querySelector<HTMLButtonElement>('[data-action="close-details"]')!.click();
+
+    expect(new URL(window.location.href).searchParams.get("model")).toBeNull();
+    expect(new URL(window.location.href).searchParams.get("view")).toBe("cards");
+    expect(document.querySelector(".model-details")).toBeNull();
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it("restores details on popstate and recovers from an unknown model id", () => {
+    mountCatalog(root(), catalog, { locale: "en" });
+    window.history.pushState({}, "", "/?model=convnext");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(document.querySelector('.model-details[data-model-id="convnext"]')).not.toBeNull();
+
+    window.history.pushState({}, "", "/?model=missing-model");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(document.body.textContent).toContain("Model not found");
+    document.querySelector<HTMLButtonElement>('[data-action="clear-model"]')!.click();
+    expect(new URL(window.location.href).searchParams.get("model")).toBeNull();
+    expect(document.querySelector(".model-details")).toBeNull();
+  });
+
+  it("opens an initial deep link from the model query parameter", () => {
+    window.history.replaceState({}, "", "/?model=himloco");
+    mountCatalog(root(), catalog, { locale: "en" });
+
+    expect(document.querySelector('.model-details[data-model-id="himloco"]')).not.toBeNull();
   });
 
   it("renders a recoverable localized error when catalog loading fails", async () => {
