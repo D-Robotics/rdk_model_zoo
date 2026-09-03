@@ -67,7 +67,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-path", type=str, default=default_model_path(), help="Path to the quantized DINOv2 .hbm model.")
     parser.add_argument("--test-img", type=str, default=DEFAULT_TEST_IMAGE, help="Path to the first test image.")
     parser.add_argument("--second-img", type=str, default=DEFAULT_SECOND_IMAGE, help="Path to the second test image for the similarity demo.")
-    parser.add_argument("--image-size", type=int, default=224, help="Square input resolution expected by the DINOv2 model.")
     parser.add_argument("--output", type=str, default=CLS_FEAT, choices=[CLS_FEAT, PATCH_FEAT], help="Model output to inspect.")
     parser.add_argument("--priority", type=int, default=0, help="Runtime priority in the range 0 to 255.")
     parser.add_argument("--bpu-cores", nargs="+", type=int, default=[0], help="BPU core indexes used by hbm_runtime.")
@@ -98,7 +97,6 @@ def main() -> None:
 
     config = Dinov2Config(
         model_path=args.model_path,
-        image_size=args.image_size,
         output=args.output,
     )
     model = Dinov2(config)

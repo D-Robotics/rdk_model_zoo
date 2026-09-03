@@ -22,6 +22,7 @@ from typing import Dict, List, Optional
 import cv2
 import hbm_runtime
 import numpy as np
+import utils.py_utils.postprocess as postprocess
 
 CLS_FEAT = "cls_feat"
 PATCH_FEAT = "patch_feat"
@@ -38,12 +39,10 @@ class Dinov2Config:
 
     Args:
         model_path: Path to the quantized `.hbm` model.
-        image_size: Square input resolution expected by the model.
         output: Model output to return: `cls_feat` or `patch_feat`.
     """
 
     model_path: str
-    image_size: int = 224
     output: str = CLS_FEAT
 
 
@@ -59,8 +58,7 @@ class Dinov2:
         """Initialize the DINOv2 HBM runtime.
 
         Args:
-            config: Runtime configuration with model path, input size, and
-                selected output.
+            config: Runtime configuration with model path and selected output.
 
         Raises:
             ValueError: If the requested output name is not supported.
@@ -71,6 +69,7 @@ class Dinov2:
 
         self.cfg = config
         self.model = hbm_runtime.HB_HBMRuntime(config.model_path)
+        self.model_name = self.model.model_names[0]
 
     def set_scheduling_params(
         self,
@@ -86,18 +85,18 @@ class Dinov2:
 
         kwargs = {}
         if priority is not None:
-            kwargs["priority"] = priority
+            kwargs["priority"] = {self.model_name: priority}
         if bpu_cores is not None:
-            kwargs["bpu_cores"] = bpu_cores
+            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
         if kwargs:
             self.model.set_scheduling_params(**kwargs)
 
     def pre_process(self, img: np.ndarray, image_format: str = "BGR") -> Dict[str, Dict[str, np.ndarray]]:
         """Convert one image to the DINOv2 float32 NCHW RGB input.
 
-        The preprocessing matches the DINOv2 evaluation pipeline: square
-        resize, BGR to RGB, scale to ``[0, 1]``, then ImageNet mean/std
-        normalization.
+        The preprocessing matches the DINOv2 evaluation pipeline: BGR to RGB,
+        bicubic resize of the short side to 256, centered 224 by 224 crop,
+        scale to ``[0, 1]``, then ImageNet mean/std normalization.
 
         Args:
             img: Input image as a NumPy array.
@@ -114,15 +113,20 @@ class Dinov2:
             raise ValueError(f"Unsupported image_format: {image_format}")
 
         image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        height, width = image.shape[:2]
+        scale = 256 / min(height, width)
         image = cv2.resize(
             image,
-            (self.cfg.image_size, self.cfg.image_size),
+            (int(width * scale), int(height * scale)),
             interpolation=cv2.INTER_CUBIC,
         )
+        crop_y = (image.shape[0] - 224) // 2
+        crop_x = (image.shape[1] - 224) // 2
+        image = image[crop_y:crop_y + 224, crop_x:crop_x + 224]
         tensor = np.transpose(image, (2, 0, 1))[None, :, :, :].astype(np.float32)
         tensor = tensor / 255.0
         tensor = (tensor - IMAGENET_MEAN[None, :, None, None]) / IMAGENET_STD[None, :, None, None]
-        return {self._model_name(): {INPUT_NAME: np.ascontiguousarray(tensor)}}
+        return {self.model_name: {INPUT_NAME: np.ascontiguousarray(tensor)}}
 
     def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, Dict[str, np.ndarray]]:
         """Run DINOv2 inference with hbm_runtime.
@@ -151,7 +155,9 @@ class Dinov2:
             ValueError: If the output tensor contains NaN or Inf values.
         """
 
-        tensor = outputs[self._model_name()][self.cfg.output]
+        tensor = outputs[self.model_name][self.cfg.output]
+        quant_info = self.model.output_quants[self.model_name][self.cfg.output]
+        tensor = postprocess.dequantize_tensor(tensor, quant_info).astype(np.float32, copy=False)
         if not np.isfinite(tensor).all():
             raise ValueError("DINOv2 output contains NaN or Inf values.")
         return tensor
@@ -175,9 +181,3 @@ class Dinov2:
         """Callable interface for `predict()`."""
 
         return self.predict(img, image_format)
-
-    def _model_name(self) -> str:
-        """Return the single submodel name of the loaded HBM model."""
-
-        names = self.model.model_names
-        return names[0] if isinstance(names, list) and names else ""
