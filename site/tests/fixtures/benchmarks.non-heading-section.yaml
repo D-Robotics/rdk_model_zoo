@@ -1,0 +1,35 @@
+schema_version: 1
+release:
+  platform: x5
+  version: 1.0.0
+  tag: x5-v1.0.0
+benchmarks:
+  - id: convnext-atto
+    sample_id: convnext
+    variant_id: atto-224x224-nv12
+    display_name: ConvNeXt Atto 224x224 NV12
+    asset_filename: ConvNeXt_atto_224x224_nv12.bin
+    model_format: bin
+    precision: int8
+    input:
+      shape: [1, 3, 224, 224]
+      layout: NCHW
+      format: NV12
+    environment:
+      hardware: RDK X5
+      rdk_os: ">= 3.5.0"
+      runtime: hobot_dnn
+      cpu_mode: performance
+      bpu_cores: 2
+    performance:
+      - metric: latency
+        value: 3.2
+        unit: ms
+        statistic: mean
+        concurrency: 1
+        model_stage: runtime
+    source:
+      ref: x5-v1.0.0
+      path: samples/vision/convnext/non-heading.md
+      section: "## Benchmark"
+      provenance: existing-repository-documentation

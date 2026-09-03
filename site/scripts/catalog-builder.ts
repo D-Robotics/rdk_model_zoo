@@ -120,6 +120,40 @@ function isSafeRelativePath(path: string): boolean {
   return !isAbsolute(path) && !win32.isAbsolute(path) && win32.parse(path).root === "" && !path.split(/[\\/]+/).includes("..");
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasExactMarkdownAtxHeading(content: string, section: string): boolean {
+  const normalizedSection = section.trim();
+  if (!/^#{1,6}(?:[\t ]+|$)/.test(normalizedSection)) {
+    return false;
+  }
+
+  const headingLine = new RegExp(`^ {0,3}${escapeRegExp(normalizedSection)}[\\t ]*$`);
+  let fence: { character: string; length: number } | undefined;
+
+  for (const line of content.split(/\r?\n/)) {
+    const fenceMatch = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (fenceMatch) {
+      const marker = fenceMatch[1]!;
+      const remainder = fenceMatch[2]!;
+      if (!fence) {
+        fence = { character: marker[0]!, length: marker.length };
+      } else if (marker[0] === fence.character && marker.length >= fence.length && remainder.trim() === "") {
+        fence = undefined;
+      }
+      continue;
+    }
+
+    if (!fence && headingLine.test(line)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 async function validateRepositorySources(repositoryRoot: string, benchmarks: BenchmarkRecord[]): Promise<void> {
   const root = resolve(repositoryRoot);
   for (const benchmark of benchmarks) {
@@ -138,7 +172,7 @@ async function validateRepositorySources(repositoryRoot: string, benchmarks: Ben
     } catch {
       throw new CatalogValidationError("SOURCE_NOT_FOUND", `Benchmark ${benchmark.id} source does not exist: ${sourcePath}`);
     }
-    if (!content.includes(benchmark.source.section)) {
+    if (!hasExactMarkdownAtxHeading(content, benchmark.source.section)) {
       throw new CatalogValidationError("SOURCE_SECTION_NOT_FOUND", `Benchmark ${benchmark.id} source section is missing: ${benchmark.source.section}`);
     }
   }

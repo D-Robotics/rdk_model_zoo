@@ -146,6 +146,18 @@ describe("buildCatalog", () => {
     expect(catalog.models[0]?.benchmarks[0]?.sample_id).toBe("convnext");
   });
 
+  it("rejects source section text that is not an exact Markdown ATX heading", async () => {
+    await expect(buildCatalog({
+      repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),
+      modelsPath: "models.valid.yaml",
+      benchmarksPath: "benchmarks.non-heading-section.yaml",
+      modelsSchemaPath: "../../../release/schemas/models.schema.json",
+      benchmarksSchemaPath: "../../../release/schemas/benchmarks.schema.json"
+    })).rejects.toEqual(expect.objectContaining({
+      code: "SOURCE_SECTION_NOT_FOUND"
+    }));
+  });
+
   it("rejects a benchmark whose sample_id is absent from models.yaml", async () => {
     await expect(buildCatalog({
       repositoryRoot: fileURLToPath(new URL("fixtures/invalid-reference/", import.meta.url)),
