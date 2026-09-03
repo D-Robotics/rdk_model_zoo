@@ -66,6 +66,34 @@ describe("queryModels", () => {
       .toEqual(["manual-model"]);
   });
 
+  it("uses OR within a facet and AND across facets", () => {
+    const result = queryModels(catalogFilterFixtures, {
+      ...baseQuery,
+      tasks: ["image-classification", "object-detection"],
+      formats: ["onnx"],
+      precisions: ["float32"]
+    });
+    expect(result.models.map((model) => model.id)).toEqual(["detector"]);
+  });
+
+  it("filters formats published only by a benchmark", () => {
+    const result = queryModels([
+      createModelFixture({
+        id: "benchmark-format",
+        name: "Benchmark format",
+        assets: [{
+          filename: "model.bin",
+          format: "bin",
+          url: "https://archive.example.test/model.bin",
+          sha256: null
+        }],
+        benchmarks: [benchmarkFixture({ model_format: "onnx" })]
+      })
+    ], { ...baseQuery, formats: ["onnx"] });
+
+    expect(result.models.map((model) => model.id)).toEqual(["benchmark-format"]);
+  });
+
   it("sorts names deterministically and does not mutate the input array", () => {
     const models = [createModelFixture({ id: "zeta", name: "Zeta" }), createModelFixture({ id: "alpha", name: "Alpha" })];
     const result = queryModels(models, baseQuery);
@@ -83,6 +111,81 @@ describe("queryModels", () => {
     expect(result.sortApplied).toBe(true);
     expect(result.reason).toBeUndefined();
   });
+
+  it("sorts comparable latency metrics in ascending order", () => {
+    const result = queryModels([
+      createModelFixture({
+        id: "slower",
+        name: "Slower",
+        benchmarks: [benchmarkFixture({
+          performance: [{
+            metric: "latency",
+            value: 5,
+            unit: "ms",
+            statistic: "mean",
+            scope: "single-frame, single-thread, single-BPU-core",
+            concurrency: 1
+          }]
+        })]
+      }),
+      createModelFixture({
+        id: "faster",
+        name: "Faster",
+        benchmarks: [benchmarkFixture({
+          performance: [{
+            metric: "latency",
+            value: 2,
+            unit: "ms",
+            statistic: "mean",
+            scope: "single-frame, single-thread, single-BPU-core",
+            concurrency: 1
+          }]
+        })]
+      })
+    ], { ...baseQuery, sort: "latency" });
+
+    expect(result.models.map((model) => model.id)).toEqual(["faster", "slower"]);
+    expect(result.sortApplied).toBe(true);
+  });
+
+  it.each(["lower-bound", "upper-bound", "approximate"] as const)(
+    "does not numerically sort %s FPS metrics",
+    (qualifier) => {
+      const result = queryModels([
+        createModelFixture({
+          id: "alpha",
+          name: "Alpha",
+          benchmarks: [benchmarkFixture({
+            performance: [{
+              metric: "throughput",
+              value: 100,
+              unit: "fps",
+              qualifier,
+              scope: "four-thread concurrent",
+              concurrency: 4
+            }]
+          })]
+        }),
+        createModelFixture({
+          id: "beta",
+          name: "Beta",
+          benchmarks: [benchmarkFixture({
+            performance: [{
+              metric: "throughput",
+              value: 300,
+              unit: "fps",
+              scope: "four-thread concurrent",
+              concurrency: 4
+            }]
+          })]
+        })
+      ], { ...baseQuery, sort: "fps" });
+
+      expect(result.models.map((model) => model.id)).toEqual(["alpha", "beta"]);
+      expect(result.sortApplied).toBe(false);
+      expect(result.reason).toBe("incomparable-benchmarks");
+    }
+  );
 
   it("sorts comparable accuracy metrics in descending order", () => {
     const result = queryModels(comparableAccuracyModels, {

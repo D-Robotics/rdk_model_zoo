@@ -263,6 +263,10 @@ function sortByNumericMetric(
       missingMetric = true;
       continue;
     }
+    if (metric.qualifier !== undefined && metric.qualifier !== "exact") {
+      ambiguousMetric = true;
+      continue;
+    }
     const benchmark = benchmarkValues(model).find((candidate) =>
       (sort === "accuracy" ? candidate.accuracy : candidate.performance)?.some((value) => value === metric)
     );
