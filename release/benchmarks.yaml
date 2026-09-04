@@ -1,0 +1,1117 @@
+schema_version: 1
+release:
+  platform: s
+  version: 1.0.0
+  tag: s-v1.0.0
+  branch: rdk_s
+  source_ref: s-v1.0.0
+  released_at: 2026-09-04
+
+benchmarks:
+  - id: asr-s100
+    sample_id: asr
+    variant_id: asr-s100
+    display_name: ASR Wav2Vec2 on RDK S100
+    asset_filename: s100/asr.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 34.426, unit: ms, statistic: mean, scope: 100 frames }
+      - { metric: throughput, value: 29.008, unit: fps, scope: 100 frames }
+    source:
+      ref: s-v1.0.0
+      path: samples/speech/asr/evaluator/README.md
+      section: "## Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: kws-s100
+    sample_id: kws
+    variant_id: kws-s100
+    display_name: KWS MDTC on RDK S100
+    asset_filename: s100/kws.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 1.176, unit: ms, statistic: mean, scope: 100 frames }
+      - { metric: throughput, value: 830.875, unit: fps, scope: 100 frames }
+    accuracy:
+      - { metric: keyword-confidence, value: 98.5, unit: percent, qualifier: approximate, dataset: bundled sample.wav, scope: "keyword: hey snips" }
+    source:
+      ref: s-v1.0.0
+      path: samples/speech/kws/evaluator/README.md
+      section: "## Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: paraformer-s100
+    sample_id: paraformer
+    variant_id: paraformer-large-contextual-s100
+    display_name: Paraformer large contextual ASR on RDK S100
+    asset_filename: s100/paraformer_large_encoder_400x560_s100.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: "hbm_runtime / C++ UCP" }
+    performance:
+      - { metric: encoder-latency, value: 33.63, unit: ms, scope: hbm_runtime }
+      - { metric: predictor-latency, value: 1.44, unit: ms, scope: hbm_runtime }
+      - { metric: cpu-cif-latency, value: 3.41, unit: ms, scope: hbm_runtime }
+      - { metric: decoder-latency, value: 7.12, unit: ms, scope: hbm_runtime }
+      - { metric: end-to-end-latency, value: 45.61, unit: ms, scope: hbm_runtime }
+      - { metric: end-to-end-latency, value: 40.81, unit: ms, scope: "C++ UCP" }
+    accuracy:
+      - { metric: cer, value: 3.13, unit: percent, dataset: "AISHELL dev, 300 utterances, 40 speakers", scope: "Python hbm_runtime and C++ UCP" }
+    source:
+      ref: s-v1.0.0
+      path: samples/speech/paraformer/evaluator/README.md
+      section: "## Completed Validation"
+      provenance: existing-repository-documentation
+
+  - id: 3dresnet-s100
+    sample_id: 3dresnet
+    variant_id: r3d-18-s100
+    display_name: 3D ResNet-18 on RDK S100
+    asset_filename: s100/r3d_18.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 182.68, unit: ms, concurrency: 1, scope: 100 frames }
+      - { metric: throughput, value: 5.47, unit: fps, concurrency: 1, scope: 100 frames }
+      - { metric: latency, value: 182.93, unit: ms, concurrency: 2, scope: 100 frames }
+      - { metric: throughput, value: 10.82, unit: fps, concurrency: 2, scope: 100 frames }
+      - { metric: latency, value: 185.03, unit: ms, concurrency: 4, scope: 100 frames }
+      - { metric: throughput, value: 21.07, unit: fps, concurrency: 4, scope: 100 frames }
+      - { metric: latency, value: 249.19, unit: ms, concurrency: 8, scope: 100 frames }
+      - { metric: throughput, value: 30.74, unit: fps, concurrency: 8, scope: 100 frames }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/3dresnet/evaluator/README.md
+      section: "## Performance Record"
+      provenance: existing-repository-documentation
+
+  - id: bytetrack-s100
+    sample_id: bytetrack
+    variant_id: tracker-update-s100
+    display_name: ByteTrack tracker update on RDK S100
+    asset_filename: s100/yolov5x_672x672_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100 }
+    performance:
+      - { metric: tracker-update-latency, value: 2.37, unit: ms, statistic: mean, scope: tracker update only }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/bytetrack/evaluator/README.md
+      section: "## Tracker Performance Record"
+      provenance: existing-repository-documentation
+
+  - id: depth-anything-v2-s100
+    sample_id: depth_anything_v2
+    variant_id: depth-anything-v2-s100
+    display_name: Depth Anything V2 on RDK S100
+    asset_filename: s100/depth_any.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 137.38, unit: ms, concurrency: 1, scope: 100 frames }
+      - { metric: throughput, value: 7.27, unit: fps, concurrency: 1, scope: 100 frames }
+      - { metric: latency, value: 263.74, unit: ms, concurrency: 2, scope: 100 frames }
+      - { metric: throughput, value: 7.54, unit: fps, concurrency: 2, scope: 100 frames }
+      - { metric: latency, value: 521.90, unit: ms, concurrency: 4, scope: 100 frames }
+      - { metric: throughput, value: 7.54, unit: fps, concurrency: 4, scope: 100 frames }
+      - { metric: latency, value: 1020.35, unit: ms, concurrency: 8, scope: 100 frames }
+      - { metric: throughput, value: 7.54, unit: fps, concurrency: 8, scope: 100 frames }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/depth_anything_v2/evaluator/README.md
+      section: "## Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: diffusiondrive-s100p
+    sample_id: diffusiondrive
+    variant_id: diffusiondrive-r34-s100p
+    display_name: DiffusionDrive R34 on RDK S100P
+    asset_filename: s100p/diffusiondrive_r34_256x1024_s100p.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hbm_runtime }
+    performance:
+      - { metric: latency, value: 14.370, unit: ms, concurrency: 1, scope: "single-thread, case_017 valid INT16 input" }
+      - { metric: throughput, value: 69.375, unit: fps, concurrency: 1, scope: "single-thread, case_017 valid INT16 input" }
+      - { metric: latency, value: 28.024, unit: ms, concurrency: 2, scope: "two-thread average task latency" }
+      - { metric: throughput, value: 71.109, unit: fps, concurrency: 2, scope: "two-thread aggregate throughput" }
+      - { metric: cpu-inference-time, value: 0.0, unit: ms, scope: board inference }
+    accuracy:
+      - { metric: trajectory-cosine-similarity, value: 0.999857, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: agent-state-cosine-similarity, value: 0.996879, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: bev-cosine-similarity, value: 0.998913, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: bev-pixel-agreement, value: 0.943726, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: bev-mean-iou, value: 0.865501, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/diffusiondrive/README.md
+      section: "## Evaluation"
+      provenance: existing-repository-documentation
+
+  - id: diffusiondrive-s600
+    sample_id: diffusiondrive
+    variant_id: diffusiondrive-r34-s600
+    display_name: DiffusionDrive R34 on RDK S600
+    asset_filename: s600/diffusiondrive_r34_256x1024_s600.hbm
+    model_format: hbm
+    environment: { hardware: RDK S600, runtime: hbm_runtime }
+    performance:
+      - { metric: latency, value: 7.215, unit: ms, concurrency: 1, scope: "single-thread, case_017 valid INT16 input" }
+      - { metric: throughput, value: 138.247, unit: fps, concurrency: 1, scope: "single-thread, case_017 valid INT16 input" }
+      - { metric: latency, value: 13.856, unit: ms, concurrency: 2, scope: "two-thread average task latency" }
+      - { metric: throughput, value: 143.767, unit: fps, concurrency: 2, scope: "two-thread aggregate throughput" }
+      - { metric: cpu-inference-time, value: 0.0, unit: ms, scope: board inference }
+    accuracy:
+      - { metric: trajectory-cosine-similarity, value: 0.999833, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: agent-state-cosine-similarity, value: 0.997052, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: bev-cosine-similarity, value: 0.998918, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: bev-pixel-agreement, value: 0.944061, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+      - { metric: bev-mean-iou, value: 0.868425, unit: ratio, dataset: NAVSIM, scope: case_000 direct platform comparison }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/diffusiondrive/README.md
+      section: "## Evaluation"
+      provenance: existing-repository-documentation
+
+  - id: dinov2-s100
+    sample_id: dinov2
+    variant_id: dinov2-vits14-224-s100
+    display_name: DINOv2 ViT-S/14 on RDK S100
+    asset_filename: nash-e/dinov2_vits14_224_int16_nashe.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 3.73, unit: ms, concurrency: 1, scope: 200 frames }
+      - { metric: throughput, value: 267.44, unit: fps, concurrency: 1, scope: 200 frames }
+      - { metric: throughput, value: 288.26, unit: fps, concurrency: 2, scope: 200 frames }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/dinov2/evaluator/README.md
+      section: "## Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: dinov2-s100p
+    sample_id: dinov2
+    variant_id: dinov2-vits14-224-s100p
+    display_name: DINOv2 ViT-S/14 on RDK S100P
+    asset_filename: nash-m/dinov2_vits14_224_int16_nashm.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 3.02, unit: ms, concurrency: 1, scope: 200 frames }
+      - { metric: throughput, value: 329.53, unit: fps, concurrency: 1, scope: 200 frames }
+      - { metric: throughput, value: 357.63, unit: fps, concurrency: 2, scope: 200 frames }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/dinov2/evaluator/README.md
+      section: "## Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: dinov2-s600
+    sample_id: dinov2
+    variant_id: dinov2-vits14-224-s600
+    display_name: DINOv2 ViT-S/14 on RDK S600
+    asset_filename: nash-p/dinov2_vits14_224_int16_nashp.hbm
+    model_format: hbm
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 2.25, unit: ms, concurrency: 1, scope: 200 frames }
+      - { metric: throughput, value: 441.64, unit: fps, concurrency: 1, scope: 200 frames }
+      - { metric: throughput, value: 1898.42, unit: fps, concurrency: 12, scope: "200 frames, core_id 1,2,3,4" }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/dinov2/evaluator/README.md
+      section: "## Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: dinov2-ptq-nash-e
+    sample_id: dinov2
+    variant_id: dinov2-vits14-224-ptq
+    display_name: DINOv2 ViT-S/14 PTQ cosine reference
+    model_format: onnx/hbm
+    environment: { hardware: "OpenExplore nash-e toolchain", runtime: quantization report }
+    accuracy:
+      - { metric: cls-feature-cosine-similarity, value: 0.9989, unit: ratio, model_stage: quantized, scope: against float ONNX }
+      - { metric: patch-feature-cosine-similarity, value: 0.9983, unit: ratio, model_stage: quantized, scope: against float ONNX }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/dinov2/evaluator/README.md
+      section: "### PTQ per-output cosine (toolchain report)"
+      provenance: existing-repository-documentation
+
+  - id: efficient-sam-s100
+    sample_id: efficient_sam
+    variant_id: efficient-sam-encoder-decoder-s100
+    display_name: EfficientSAM encoder and decoder on RDK S100
+    asset_filename: nash-e/efficient_sam_vitt_encoder_512x512_nashe.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 11.78, unit: ms, concurrency: 1, scope: encoder }
+      - { metric: throughput, value: 84.75, unit: fps, concurrency: 1, scope: encoder }
+      - { metric: latency, value: 22.93, unit: ms, concurrency: 2, scope: encoder }
+      - { metric: throughput, value: 86.95, unit: fps, concurrency: 2, scope: encoder }
+      - { metric: latency, value: 3.25, unit: ms, concurrency: 1, scope: decoder }
+      - { metric: throughput, value: 306.31, unit: fps, concurrency: 1, scope: decoder }
+      - { metric: latency, value: 5.94, unit: ms, concurrency: 2, scope: decoder }
+      - { metric: throughput, value: 334.44, unit: fps, concurrency: 2, scope: decoder }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficient_sam/evaluator/README.md
+      section: "### RDK S100 Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: efficient-sam-s100p
+    sample_id: efficient_sam
+    variant_id: efficient-sam-encoder-decoder-s100p
+    display_name: EfficientSAM encoder and decoder on RDK S100P
+    asset_filename: nash-m/efficient_sam_vitt_encoder_512x512_nashm.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 9.36, unit: ms, concurrency: 1, scope: encoder }
+      - { metric: throughput, value: 106.69, unit: fps, concurrency: 1, scope: encoder }
+      - { metric: latency, value: 18.20, unit: ms, concurrency: 2, scope: encoder }
+      - { metric: throughput, value: 109.52, unit: fps, concurrency: 2, scope: encoder }
+      - { metric: latency, value: 2.49, unit: ms, concurrency: 1, scope: decoder }
+      - { metric: throughput, value: 399.96, unit: fps, concurrency: 1, scope: decoder }
+      - { metric: latency, value: 4.47, unit: ms, concurrency: 2, scope: decoder }
+      - { metric: throughput, value: 445.74, unit: fps, concurrency: 2, scope: decoder }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficient_sam/evaluator/README.md
+      section: "### RDK S100P Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: efficient-sam-s600
+    sample_id: efficient_sam
+    variant_id: efficient-sam-encoder-decoder-s600
+    display_name: EfficientSAM encoder and decoder on RDK S600
+    asset_filename: nash-p/efficient_sam_vitt_encoder_512x512_nashp.hbm
+    model_format: hbm
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 6.72, unit: ms, concurrency: 1, scope: encoder }
+      - { metric: throughput, value: 148.60, unit: fps, concurrency: 1, scope: encoder }
+      - { metric: latency, value: 19.58, unit: ms, concurrency: 12, scope: encoder }
+      - { metric: throughput, value: 598.44, unit: fps, concurrency: 12, scope: encoder }
+      - { metric: latency, value: 1.50, unit: ms, concurrency: 1, scope: decoder }
+      - { metric: throughput, value: 662.55, unit: fps, concurrency: 1, scope: decoder }
+      - { metric: latency, value: 4.08, unit: ms, concurrency: 12, scope: decoder }
+      - { metric: throughput, value: 2831.10, unit: fps, concurrency: 12, scope: decoder }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficient_sam/evaluator/README.md
+      section: "### RDK S600 Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: efficientnet-lite0
+    sample_id: efficientnet
+    variant_id: efficientnet-lite0-224
+    display_name: EfficientNet-Lite0 224x224
+    asset_filename: s100/efficientnet_lite0_224x224_nv12.hbm
+    model_format: hbm
+    environment: { hardware: "unspecified in source documentation", runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.448, unit: ms, concurrency: 1 }
+      - { metric: throughput, value: 2107.815, unit: fps, concurrency: 1 }
+      - { metric: latency, value: 0.591, unit: ms, concurrency: 2 }
+      - { metric: throughput, value: 4827.886, unit: fps, concurrency: 2 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficientnet/evaluator/README.md
+      section: "## Performance Records"
+      provenance: existing-repository-documentation
+
+  - id: efficientnet-lite1
+    sample_id: efficientnet
+    variant_id: efficientnet-lite1-240
+    display_name: EfficientNet-Lite1 240x240
+    asset_filename: s100/efficientnet_lite1_240x240_nv12.hbm
+    model_format: hbm
+    environment: { hardware: "unspecified in source documentation", runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.489, unit: ms, concurrency: 1 }
+      - { metric: throughput, value: 1948.957, unit: fps, concurrency: 1 }
+      - { metric: latency, value: 0.708, unit: ms, concurrency: 2 }
+      - { metric: throughput, value: 4086.470, unit: fps, concurrency: 2 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficientnet/evaluator/README.md
+      section: "## Performance Records"
+      provenance: existing-repository-documentation
+
+  - id: efficientnet-lite2
+    sample_id: efficientnet
+    variant_id: efficientnet-lite2-260
+    display_name: EfficientNet-Lite2 260x260
+    asset_filename: s100/efficientnet_lite2_260x260_nv12.hbm
+    model_format: hbm
+    environment: { hardware: "unspecified in source documentation", runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.565, unit: ms, concurrency: 1 }
+      - { metric: throughput, value: 1702.519, unit: fps, concurrency: 1 }
+      - { metric: latency, value: 0.935, unit: ms, concurrency: 2 }
+      - { metric: throughput, value: 3123.682, unit: fps, concurrency: 2 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficientnet/evaluator/README.md
+      section: "## Performance Records"
+      provenance: existing-repository-documentation
+
+  - id: efficientnet-lite3
+    sample_id: efficientnet
+    variant_id: efficientnet-lite3-300
+    display_name: EfficientNet-Lite3 300x300
+    asset_filename: s100/efficientnet_lite3_300x300_nv12.hbm
+    model_format: hbm
+    environment: { hardware: "unspecified in source documentation", runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.668, unit: ms, concurrency: 1 }
+      - { metric: throughput, value: 1451.031, unit: fps, concurrency: 1 }
+      - { metric: latency, value: 1.249, unit: ms, concurrency: 2 }
+      - { metric: throughput, value: 2345.518, unit: fps, concurrency: 2 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficientnet/evaluator/README.md
+      section: "## Performance Records"
+      provenance: existing-repository-documentation
+
+  - id: efficientnet-lite4
+    sample_id: efficientnet
+    variant_id: efficientnet-lite4-380
+    display_name: EfficientNet-Lite4 380x380
+    asset_filename: s100/efficientnet_lite4_380x380_nv12.hbm
+    model_format: hbm
+    environment: { hardware: "unspecified in source documentation", runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.915, unit: ms, concurrency: 1 }
+      - { metric: throughput, value: 1064.339, unit: fps, concurrency: 1 }
+      - { metric: latency, value: 1.979, unit: ms, concurrency: 2 }
+      - { metric: throughput, value: 1487.055, unit: fps, concurrency: 2 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/efficientnet/evaluator/README.md
+      section: "## Performance Records"
+      provenance: existing-repository-documentation
+
+  - id: lanenet-s100
+    sample_id: lanenet
+    variant_id: lanenet-256x512-s100
+    display_name: LaneNet 256x512 on RDK S100
+    asset_filename: s100/lanenet256x512.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 14.245, unit: ms, scope: 200 frames }
+      - { metric: throughput, value: 69.894, unit: fps, scope: 200 frames }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/lanenet/conversion/README.md
+      section: "## Performance Reference"
+      provenance: existing-repository-documentation
+
+  - id: mobile-sam-s100
+    sample_id: mobile_sam
+    variant_id: mobile-sam-encoder-decoder-s100
+    display_name: MobileSAM encoder and decoder on RDK S100
+    asset_filename: nash-e/mobile_sam_image_encoder_norm_512x512_nashe.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 10.97, unit: ms, concurrency: 1, scope: encoder }
+      - { metric: throughput, value: 91.03, unit: fps, concurrency: 1, scope: encoder }
+      - { metric: latency, value: 21.29, unit: ms, concurrency: 2, scope: encoder }
+      - { metric: throughput, value: 93.61, unit: fps, concurrency: 2, scope: encoder }
+      - { metric: latency, value: 3.30, unit: ms, concurrency: 1, scope: decoder }
+      - { metric: throughput, value: 297.47, unit: fps, concurrency: 1, scope: decoder }
+      - { metric: latency, value: 4.42, unit: ms, concurrency: 2, scope: decoder }
+      - { metric: throughput, value: 443.42, unit: fps, concurrency: 2, scope: decoder }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/mobile_sam/evaluator/README.md
+      section: "### RDK S100 Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: mobile-sam-s100p
+    sample_id: mobile_sam
+    variant_id: mobile-sam-encoder-decoder-s100p
+    display_name: MobileSAM encoder and decoder on RDK S100P
+    asset_filename: nash-m/mobile_sam_image_encoder_norm_512x512_nashm.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 8.52, unit: ms, concurrency: 1, scope: encoder }
+      - { metric: throughput, value: 117.26, unit: fps, concurrency: 1, scope: encoder }
+      - { metric: latency, value: 16.50, unit: ms, concurrency: 2, scope: encoder }
+      - { metric: throughput, value: 120.79, unit: fps, concurrency: 2, scope: encoder }
+      - { metric: latency, value: 2.84, unit: ms, concurrency: 1, scope: decoder }
+      - { metric: throughput, value: 345.15, unit: fps, concurrency: 1, scope: decoder }
+      - { metric: latency, value: 3.88, unit: ms, concurrency: 2, scope: decoder }
+      - { metric: throughput, value: 505.87, unit: fps, concurrency: 2, scope: decoder }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/mobile_sam/evaluator/README.md
+      section: "### RDK S100P Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: mobile-sam-s600
+    sample_id: mobile_sam
+    variant_id: mobile-sam-encoder-decoder-s600
+    display_name: MobileSAM encoder and decoder on RDK S600
+    asset_filename: nash-p/mobile_sam_image_encoder_norm_512x512_nashp.hbm
+    model_format: hbm
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 5.52, unit: ms, concurrency: 1, scope: encoder }
+      - { metric: throughput, value: 180.70, unit: fps, concurrency: 1, scope: encoder }
+      - { metric: latency, value: 15.87, unit: ms, concurrency: 12, scope: encoder }
+      - { metric: throughput, value: 738.48, unit: fps, concurrency: 12, scope: encoder }
+      - { metric: latency, value: 2.58, unit: ms, concurrency: 1, scope: decoder }
+      - { metric: throughput, value: 381.09, unit: fps, concurrency: 1, scope: decoder }
+      - { metric: latency, value: 6.42, unit: ms, concurrency: 12, scope: decoder }
+      - { metric: throughput, value: 1772.04, unit: fps, concurrency: 12, scope: decoder }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/mobile_sam/evaluator/README.md
+      section: "### RDK S600 Performance Data"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv2-s100-ptq
+    sample_id: mobilenetv2
+    variant_id: mobilenetv2-100-224-s100
+    display_name: MobileNetV2 224x224 PTQ reference
+    asset_filename: s100/mobilenetv2_224x224_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    performance:
+      - { metric: latency, value: 0.2, unit: ms, scope: 1 core toolchain reference }
+      - { metric: throughput, value: 4968.89, unit: fps, scope: 1 core toolchain reference }
+    accuracy:
+      - { metric: cosine-similarity, value: 0.988877, unit: ratio, model_stage: quantized, scope: output tensor vs float reference }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/mobilenetv2/conversion/README.md
+      section: "## Quantization Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv3-s100-ptq
+    sample_id: mobilenetv3
+    variant_id: mobilenetv3-large-100-224-s100
+    display_name: MobileNetV3 large 224x224 PTQ reference
+    asset_filename: s100/mobilenetv3_224x224_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    performance:
+      - { metric: latency, value: 0.38, unit: ms, scope: 1 core toolchain reference }
+      - { metric: throughput, value: 2616.81, unit: fps, scope: 1 core toolchain reference }
+    accuracy:
+      - { metric: cosine-similarity, value: 0.909042, unit: ratio, model_stage: quantized, scope: output tensor vs float reference }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/mobilenetv3/conversion/README.md
+      section: "## Compile"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv4-small-s100
+    sample_id: mobilenetv4
+    variant_id: mobilenetv4-conv-small-224-s100
+    display_name: MobileNetV4 Conv Small 224x224 PTQ reference
+    asset_filename: s100/mobilenetv4_small_224x224_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    performance:
+      - { metric: latency, value: 0.18, unit: ms, scope: 1 core toolchain reference }
+      - { metric: throughput, value: 5698.18, unit: fps, scope: 1 core toolchain reference }
+    accuracy:
+      - { metric: cosine-similarity, value: 0.99988, unit: ratio, model_stage: quantized, scope: output tensor vs float reference }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/mobilenetv4/conversion/README.md
+      section: "## Original Quantization Record"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv4-medium-s100
+    sample_id: mobilenetv4
+    variant_id: mobilenetv4-conv-medium-256-s100
+    display_name: MobileNetV4 Conv Medium 256x256 PTQ reference
+    asset_filename: s100/mobilenetv4_medium_256x256_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    performance:
+      - { metric: latency, value: 0.41, unit: ms, scope: 1 core toolchain reference }
+      - { metric: throughput, value: 2468.07, unit: fps, scope: 1 core toolchain reference }
+    accuracy:
+      - { metric: cosine-similarity, value: 0.999863, unit: ratio, model_stage: quantized, scope: output tensor vs float reference }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/mobilenetv4/conversion/README.md
+      section: "## Original Quantization Record"
+      provenance: existing-repository-documentation
+
+  - id: pointnet-s100
+    sample_id: pointnet
+    variant_id: pointnet-chair-s100
+    display_name: PointNet chair part segmentation reference
+    asset_filename: s100/pointnet.hbm
+    model_format: hbm
+    environment: { hardware: "unspecified in source documentation", runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 1.43, unit: ms, concurrency: 1, scope: 100 frames }
+      - { metric: throughput, value: 689.61, unit: fps, concurrency: 1, scope: 100 frames }
+      - { metric: latency, value: 2.16, unit: ms, concurrency: 2, scope: 100 frames }
+      - { metric: throughput, value: 914.32, unit: fps, concurrency: 2, scope: 100 frames }
+      - { metric: latency, value: 4.30, unit: ms, concurrency: 4, scope: 100 frames }
+      - { metric: throughput, value: 910.70, unit: fps, concurrency: 4, scope: 100 frames }
+      - { metric: latency, value: 8.35, unit: ms, concurrency: 8, scope: 100 frames }
+      - { metric: throughput, value: 910.84, unit: fps, concurrency: 8, scope: 100 frames }
+    accuracy:
+      - { metric: trans-cosine-similarity, value: 0.9999, unit: ratio, qualifier: lower-bound, scope: int16 quantization notes }
+      - { metric: pred-cosine-similarity, value: 0.98, unit: ratio, qualifier: lower-bound, scope: int16 quantization notes }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/pointnet/evaluator/README.md
+      section: "## Accuracy Record"
+      provenance: existing-repository-documentation
+
+  - id: resnet152-s100
+    sample_id: resnet152
+    variant_id: resnet152-224-s100
+    display_name: ResNet152 224x224 conversion reference
+    asset_filename: s100/resnet152_224x224_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    performance:
+      - { metric: latency, value: 2.23, unit: ms, scope: toolchain reference }
+      - { metric: throughput, value: 449.03, unit: fps, scope: toolchain reference }
+    accuracy:
+      - { metric: cosine-similarity, value: 0.992285, unit: ratio, model_stage: quantized, scope: conversion record }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/resnet152/conversion/README.md
+      section: "## Original Conversion Records"
+      provenance: existing-repository-documentation
+
+  - id: siglip-base-224-s100
+    sample_id: siglip
+    variant_id: siglip-base-patch16-224-s100
+    display_name: SigLIP base patch16 224 on RDK S100
+    asset_filename: s100/bpu-siglip-base-patch16-224.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 26.8, unit: ms, scope: pooler output }
+      - { metric: latency, value: 26.0, unit: ms, scope: last hidden state }
+    accuracy:
+      - { metric: top-1, value: 0.7118, unit: ratio, dataset: ImageNet-1k, scope: pooler output zero-shot classification on BPU }
+      - { metric: top-5, value: 0.9144, unit: ratio, dataset: ImageNet-1k, scope: pooler output zero-shot classification on BPU }
+      - { metric: cosine-similarity, value: 0.991, unit: ratio, dataset: COCO2014, scope: last hidden state mean; source also reports range and 1% low }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/siglip/evaluator/README.md
+      section: "### pooler output"
+      provenance: existing-repository-documentation
+
+  - id: siglip-base-384-s100
+    sample_id: siglip
+    variant_id: siglip-base-patch16-384-s100
+    display_name: SigLIP base patch16 384 on RDK S100
+    asset_filename: s100/bpu-siglip-base-patch16-384.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 46.7, unit: ms, scope: pooler output }
+      - { metric: latency, value: 45.9, unit: ms, scope: last hidden state }
+    accuracy:
+      - { metric: top-1, value: 0.7418, unit: ratio, dataset: ImageNet-1k, scope: pooler output zero-shot classification on BPU }
+      - { metric: top-5, value: 0.9319, unit: ratio, dataset: ImageNet-1k, scope: pooler output zero-shot classification on BPU }
+      - { metric: cosine-similarity, value: 0.989, unit: ratio, dataset: COCO2014, scope: last hidden state mean; source also reports range and 1% low }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/siglip/evaluator/README.md
+      section: "### pooler output"
+      provenance: existing-repository-documentation
+
+  - id: vit-s100-hbm
+    sample_id: vit
+    variant_id: vit-cifar10-batch1-hbm
+    display_name: ViT CIFAR-10 HBM
+    asset_filename: s100/vit_cifar10_batch1_int8.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hbm_runtime }
+    accuracy:
+      - { metric: top-1, value: 72.62, unit: percent, dataset: CIFAR-10, model_stage: runtime }
+      - { metric: top-5, value: 98.03, unit: percent, dataset: CIFAR-10, model_stage: runtime }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/vit/evaluator/README.md
+      section: "## Accuracy Data"
+      provenance: existing-repository-documentation
+
+  - id: yolo26-depth-l-s100
+    sample_id: yolo26_depth
+    variant_id: yolo26l-depth-lite-s100
+    display_name: YOLO26 Depth l lite on RDK S100
+    asset_filename: nash-e/yolo26l_depth_lite_nashe_768x768.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 9.790, unit: ms, concurrency: 1, scope: measured latency table }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/yolo26_depth/evaluator/README.md
+      section: "### Measured latency"
+      provenance: existing-repository-documentation
+
+  - id: yolo26-depth-l-accuracy
+    sample_id: yolo26_depth
+    variant_id: yolo26l-depth-lite-accuracy
+    display_name: YOLO26 Depth l lite raw cosine reference
+    model_format: hbm
+    environment: { hardware: RDK S100/S100P/S600, runtime: board evaluation }
+    accuracy:
+      - { metric: raw-cosine-vs-fp32, value: 0.9997, unit: ratio, dataset: SUNRGBD, scope: lite profile; board-measured value reported for l/x }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/yolo26_depth/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: yolo26-depth-x-s100p
+    sample_id: yolo26_depth
+    variant_id: yolo26x-depth-lite-s100p
+    display_name: YOLO26 Depth x lite on RDK S100P
+    asset_filename: nash-m/yolo26x_depth_lite_nashm_768x768.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 12.853, unit: ms, concurrency: 1, scope: measured latency table }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/yolo26_depth/evaluator/README.md
+      section: "### Measured latency"
+      provenance: existing-repository-documentation
+
+  - id: yolo26-depth-x-accuracy
+    sample_id: yolo26_depth
+    variant_id: yolo26x-depth-lite-accuracy
+    display_name: YOLO26 Depth x lite raw cosine reference
+    model_format: hbm
+    environment: { hardware: RDK S100/S100P/S600, runtime: board evaluation }
+    accuracy:
+      - { metric: raw-cosine-vs-fp32, value: 0.9997, unit: ratio, dataset: SUNRGBD, scope: lite profile; board-measured value reported for l/x }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/yolo26_depth/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: yolov13-n-s100
+    sample_id: yolov13_imoonlab
+    variant_id: yolov13n-detect-640-s100
+    display_name: YOLOv13n Detect 640x640 on RDK S100
+    asset_filename: s100/yolo13n_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hbm_runtime }
+    performance:
+      - { metric: latency, value: 3.8, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 262.0, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 5.2, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 378.3, unit: fps, concurrency: 2, scope: BPU task }
+    accuracy:
+      - { metric: bbox-map-50-95, value: 0.342, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-map-50-95, value: 0.319, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/yolov13_imoonlab/evaluator/README.md
+      section: "### RDK S100"
+      provenance: existing-repository-documentation
+
+  - id: yolov13-s-s100
+    sample_id: yolov13_imoonlab
+    variant_id: yolov13s-detect-640-s100
+    display_name: YOLOv13s Detect 640x640 on RDK S100
+    asset_filename: s100/yolo13s_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hbm_runtime }
+    performance:
+      - { metric: latency, value: 5.8, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 169.5, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 9.7, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 204.9, unit: fps, concurrency: 2, scope: BPU task }
+    accuracy:
+      - { metric: bbox-map-50-95, value: 0.402, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-map-50-95, value: 0.381, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/yolov13_imoonlab/evaluator/README.md
+      section: "### RDK S100"
+      provenance: existing-repository-documentation
+
+  - id: yolov13-n-s100p
+    sample_id: yolov13_imoonlab
+    variant_id: yolov13n-detect-640-s100p
+    display_name: YOLOv13n Detect 640x640 on RDK S100P
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hbm_runtime }
+    performance:
+      - { metric: latency, value: 2.8, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 353.5, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 3.9, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 509.0, unit: fps, concurrency: 2, scope: BPU task }
+    accuracy:
+      - { metric: bbox-map-50-95, value: 0.342, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-map-50-95, value: 0.319, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/yolov13_imoonlab/evaluator/README.md
+      section: "### RDK S100P"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nu-s100-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov5nu-detect-640-s100
+    display_name: YOLOv5nu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5nu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 1.42, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 674.92, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 2.02, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 959.05, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nu-s100-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov5nu-detect-640-s100
+    display_name: YOLOv5nu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5nu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.278, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.261, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.093, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.081, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.309, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.287, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.417, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.400, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5ns-s100-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov5su-detect-640-s100
+    display_name: YOLOv5su Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5su_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 2.31, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 420.83, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 3.79, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 519.22, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5ns-s100-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov5su-detect-640-s100
+    display_name: YOLOv5su Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5su_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.367, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.352, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.169, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.144, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.416, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.402, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.530, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.521, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nm-s100-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov5mu-detect-640-s100
+    display_name: YOLOv5mu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5mu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 4.50, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 218.77, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 8.11, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 244.06, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nm-s100-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov5mu-detect-640-s100
+    display_name: YOLOv5mu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5mu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.425, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.406, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.226, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.195, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.477, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.465, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.603, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.594, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nl-s100-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov5lu-detect-640-s100
+    display_name: YOLOv5lu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5lu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 8.96, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 110.78, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 16.97, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 117.15, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nl-s100-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov5lu-detect-640-s100
+    display_name: YOLOv5lu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5lu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.458, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.437, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.260, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.226, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.516, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.499, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.641, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.628, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nx-s100-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov5xu-detect-640-s100
+    display_name: YOLOv5xu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5xu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 15.97, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 62.32, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 30.90, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 64.41, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nx-s100-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov5xu-detect-640-s100
+    display_name: YOLOv5xu Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolov5xu_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.466, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.445, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.281, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.238, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.523, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.506, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.645, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.634, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nu-s100p-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov5nu-detect-640-s100p
+    display_name: YOLOv5nu Detect 640x640 on RDK S100P
+    asset_filename: nash-m/yolov5nu_detect_nashm_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.99, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 954.28, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 1.34, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 1418.24, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nu-s100p-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov5nu-detect-640-s100p
+    display_name: YOLOv5nu Detect 640x640 on RDK S100P
+    asset_filename: nash-m/yolov5nu_detect_nashm_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.278, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.264, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.093, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.080, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.309, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.293, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.417, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.406, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nu-s600-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov5nu-detect-640-s600
+    display_name: YOLOv5nu Detect 640x640 on RDK S600
+    asset_filename: nash-p/yolov5nu_detect_nashp_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.719, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 1355.583, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 1.528, unit: ms, concurrency: 12, scope: BPU task }
+      - { metric: throughput, value: 7182.102, unit: fps, concurrency: 12, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov5nu-s600-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov5nu-detect-640-s600
+    display_name: YOLOv5nu Detect 640x640 on RDK S600
+    asset_filename: nash-p/yolov5nu_detect_nashp_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.278, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.269, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.093, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-small-map-50-95, value: 0.083, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.309, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-medium-map-50-95, value: 0.296, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.417, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-large-map-50-95, value: 0.412, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov8n-s100-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolov8n-detect-640-s100
+    display_name: YOLOv8n Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolo8n_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 1.53, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 632.06, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 2.24, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 868.87, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolov8n-s100-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolov8n-detect-640-s100
+    display_name: YOLOv8n Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolo8n_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.309, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.291, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo11n-s100-performance
+    sample_id: ultralytics_yolo
+    variant_id: yolo11n-detect-640-s100
+    display_name: YOLO11n Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolo11n_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 1.62, unit: ms, concurrency: 1, scope: BPU task }
+      - { metric: throughput, value: 596.53, unit: fps, concurrency: 1, scope: BPU task }
+      - { metric: latency, value: 2.39, unit: ms, concurrency: 2, scope: BPU task }
+      - { metric: throughput, value: 813.87, unit: fps, concurrency: 2, scope: BPU task }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Performance"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo11n-s100-accuracy
+    sample_id: ultralytics_yolo
+    variant_id: yolo11n-detect-640-s100
+    display_name: YOLO11n Detect 640x640 on RDK S100
+    asset_filename: nash-e/yolo11n_detect_nashe_640x640_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    accuracy:
+      - { metric: bbox-all-map-50-95, value: 0.327, unit: ratio, model_stage: float, dataset: COCO2017 }
+      - { metric: bbox-all-map-50-95, value: 0.309, unit: ratio, model_stage: quantized, dataset: COCO2017 }
+    source:
+      ref: s-v1.0.0
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Accuracy"
+      provenance: existing-repository-documentation

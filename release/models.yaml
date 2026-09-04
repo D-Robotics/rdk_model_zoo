@@ -1,0 +1,1584 @@
+schema_version: 1
+release:
+  platform: s
+  version: 1.0.0
+  tag: s-v1.0.0
+  branch: rdk_s
+  source_ref: s-v1.0.0
+  released_at: 2026-09-04
+  model_archive_root: https://archive.d-robotics.cc/downloads/rdk_model_zoo/
+  compatibility:
+    hardware: RDK S100/S100P/S600
+  validation:
+    repository_wide_board_test: false
+    statement: This manifest inventories published model references and does not
+      certify runtime behavior or board compatibility.
+summary:
+  sample_count: 33
+  download_script_count: 33
+  asset_count: 308
+  downloadable_asset_count: 306
+  manual_asset_count: 2
+  sha256_recorded_count: 2
+  sha256_unrecorded_count: 306
+  benchmark_count: 58
+  performance_metric_count: 188
+  accuracy_metric_count: 97
+models:
+  - id: asr
+    name: ASR (Wav2Vec2)
+    tasks:
+      - speech-recognition
+    sample_path: samples/speech/asr
+    download_scripts:
+      - samples/speech/asr/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/asr.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/asr/asr.hbm
+        sha256: null
+      - filename: s600/asr.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/asr/asr.hbm
+        sha256: null
+  - id: kws
+    name: KWS (MDTC)
+    tasks:
+      - keyword-spotting
+    sample_path: samples/speech/kws
+    download_scripts:
+      - samples/speech/kws/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/kws.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/kws/kws.hbm
+        sha256: null
+  - id: paraformer
+    name: Paraformer
+    tasks:
+      - speech-recognition
+    sample_path: samples/speech/paraformer
+    download_scripts:
+      - samples/speech/paraformer/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/paraformer_large_encoder_400x560_s100.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/encoder_int16.hbm
+        sha256: null
+      - filename: s100/paraformer_large_predictor_400x512_s100.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/predictor_int16.hbm
+        sha256: null
+      - filename: s100/paraformer_large_decoder_400x512_s100.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/decoder_int16.hbm
+        sha256: null
+      - filename: s100/tokens.json
+        format: json
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/tokens.json
+        sha256: null
+      - filename: s100/am.mvn
+        format: mvn
+        url: null
+        sha256: null
+      - filename: s100/paraformer_config.yaml
+        format: yaml
+        url: null
+        sha256: null
+    notes: The repository script downloads four package files and copies am.mvn and
+      paraformer_config.yaml from the sample.
+  - id: gemma4-e2b
+    name: Gemma4-E2B VLM
+    tasks:
+      - vision-language-model
+    sample_path: samples/llm/gemma4-e2b
+    download_scripts:
+      - samples/llm/gemma4-e2b/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100p/gemma4-e2b_vit_ptq.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model/gemma4-e2b_vit_ptq.hbm
+        sha256: null
+      - filename: s100p/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+        sha256: null
+      - filename: s600/gemma4-e2b_vit_ptq.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/gemma4_e2b/model/gemma4-e2b_vit_ptq.hbm
+        sha256: null
+      - filename: s600/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/gemma4_e2b/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+        sha256: null
+      - filename: common/tok_embeddings.bin
+        format: bin
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model/tok_embeddings.bin
+        sha256: null
+      - filename: common/tokenizer/tokenizer.json
+        format: json
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/tokenizer/tokenizer.json
+        sha256: null
+      - filename: common/tokenizer/tokenizer_config.json
+        format: json
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/tokenizer/tokenizer_config.json
+        sha256: null
+    notes: The source script has default HBM archives for S100P and S600. S100
+      requires a maintainer supplied GEMMA4_MODEL_BASE_URL; the manifest does
+      not invent one.
+  - id: 3dresnet
+    name: 3D ResNet-18
+    tasks:
+      - video-action-classification
+    sample_path: samples/vision/3dresnet
+    download_scripts:
+      - samples/vision/3dresnet/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/r3d_18.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/3dresnet/r3d_18.hbm
+        sha256: null
+  - id: bytetrack
+    name: ByteTrack
+    tasks:
+      - multi-object-tracking
+    sample_path: samples/vision/bytetrack
+    download_scripts:
+      - samples/vision/bytetrack/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/yolov5x_672x672_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolov5x_672x672_nv12.hbm
+        sha256: null
+      - filename: s100p/yolov5x_672x672_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm
+        sha256: null
+      - filename: s600/yolov5x_672x672_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm
+        sha256: null
+  - id: depth_anything_v2
+    name: Depth Anything V2
+    tasks:
+      - monocular-depth-estimation
+    sample_path: samples/vision/depth_anything_v2
+    download_scripts:
+      - samples/vision/depth_anything_v2/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/depth_any.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/depth_any/depth_any.hbm
+        sha256: null
+    notes: The model README publishes the S100 artifact; the root index also names
+      S100P, but no separate S100P asset is enumerated here.
+  - id: diffusiondrive
+    name: DiffusionDrive R34
+    tasks:
+      - autonomous-driving
+    sample_path: samples/vision/diffusiondrive
+    download_scripts:
+      - samples/vision/diffusiondrive/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100p/diffusiondrive_r34_256x1024_s100p.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/diffusiondrive/diffusiondrive_r34_256x1024_s100p.hbm
+        sha256: 5829a1a318116e2eba5c3ba313841fbd064fe2d48fe3cd37eb1ec7d9a0ffa8fa
+      - filename: s600/diffusiondrive_r34_256x1024_s600.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/diffusiondrive/diffusiondrive_r34_256x1024_s600.hbm
+        sha256: 78605b5aaa573fbaa2bf4788c6c8922bcab39d90c195e264aa3a8d3a78321c53
+  - id: dinov2
+    name: DINOv2 ViT-S/14
+    tasks:
+      - image-embedding
+    sample_path: samples/vision/dinov2
+    download_scripts:
+      - samples/vision/dinov2/model/download_model.sh
+    availability: download
+    assets:
+      - filename: nash-e/dinov2_vits14_224_int16_nashe.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/dinov2/nash-e/dinov2_vits14_224_int16_nashe.hbm
+        sha256: null
+      - filename: nash-m/dinov2_vits14_224_int16_nashm.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/dinov2/nash-m/dinov2_vits14_224_int16_nashm.hbm
+        sha256: null
+      - filename: nash-p/dinov2_vits14_224_int16_nashp.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/dinov2/nash-p/dinov2_vits14_224_int16_nashp.hbm
+        sha256: null
+  - id: efficient_sam
+    name: EfficientSAM ViT-T
+    tasks:
+      - promptable-image-segmentation
+    sample_path: samples/vision/efficient_sam
+    download_scripts:
+      - samples/vision/efficient_sam/model/download_model.sh
+    availability: download
+    assets:
+      - filename: nash-e/efficient_sam_vitt_encoder_512x512_nashe.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-e/efficient_sam_vitt_encoder_512x512_nashe.hbm
+        sha256: null
+      - filename: nash-e/efficient_sam_vitt_decoder_512_nashe.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-e/efficient_sam_vitt_decoder_512_nashe.hbm
+        sha256: null
+      - filename: nash-m/efficient_sam_vitt_encoder_512x512_nashm.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-m/efficient_sam_vitt_encoder_512x512_nashm.hbm
+        sha256: null
+      - filename: nash-m/efficient_sam_vitt_decoder_512_nashm.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-m/efficient_sam_vitt_decoder_512_nashm.hbm
+        sha256: null
+      - filename: nash-p/efficient_sam_vitt_encoder_512x512_nashp.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/efficient_sam/nash-p/efficient_sam_vitt_encoder_512x512_nashp.hbm
+        sha256: null
+      - filename: nash-p/efficient_sam_vitt_decoder_512_nashp.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/efficient_sam/nash-p/efficient_sam_vitt_decoder_512_nashp.hbm
+        sha256: null
+  - id: efficientnet
+    name: EfficientNet-Lite
+    tasks:
+      - image-classification
+    sample_path: samples/vision/efficientnet
+    download_scripts:
+      - samples/vision/efficientnet/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/efficientnet_lite0_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/EfficientNet/efficientnet_lite0_224x224_nv12.hbm
+        sha256: null
+      - filename: s100/efficientnet_lite1_240x240_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/EfficientNet/efficientnet_lite1_240x240_nv12.hbm
+        sha256: null
+      - filename: s100/efficientnet_lite2_260x260_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/EfficientNet/efficientnet_lite2_260x260_nv12.hbm
+        sha256: null
+      - filename: s100/efficientnet_lite3_300x300_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/EfficientNet/efficientnet_lite3_300x300_nv12.hbm
+        sha256: null
+      - filename: s100/efficientnet_lite4_380x380_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/EfficientNet/efficientnet_lite4_380x380_nv12.hbm
+        sha256: null
+      - filename: s600/efficientnet_lite0_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/EfficientNet/efficientnet_lite0_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/efficientnet_lite1_240x240_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/EfficientNet/efficientnet_lite1_240x240_nv12.hbm
+        sha256: null
+      - filename: s600/efficientnet_lite2_260x260_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/EfficientNet/efficientnet_lite2_260x260_nv12.hbm
+        sha256: null
+      - filename: s600/efficientnet_lite3_300x300_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/EfficientNet/efficientnet_lite3_300x300_nv12.hbm
+        sha256: null
+      - filename: s600/efficientnet_lite4_380x380_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/EfficientNet/efficientnet_lite4_380x380_nv12.hbm
+        sha256: null
+  - id: lanenet
+    name: LaneNet
+    tasks:
+      - lane-detection
+    sample_path: samples/vision/lanenet
+    download_scripts:
+      - samples/vision/lanenet/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/lanenet256x512.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Lanenet/lanenet256x512.hbm
+        sha256: null
+  - id: mobile_sam
+    name: MobileSAM
+    tasks:
+      - promptable-image-segmentation
+    sample_path: samples/vision/mobile_sam
+    download_scripts:
+      - samples/vision/mobile_sam/model/download_model.sh
+    availability: download
+    assets:
+      - filename: nash-e/mobile_sam_image_encoder_norm_512x512_nashe.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-e/mobile_sam_image_encoder_norm_512x512_nashe.hbm
+        sha256: null
+      - filename: nash-e/mobile_sam_decoder_512_nashe.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-e/mobile_sam_decoder_512_nashe.hbm
+        sha256: null
+      - filename: nash-m/mobile_sam_image_encoder_norm_512x512_nashm.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-m/mobile_sam_image_encoder_norm_512x512_nashm.hbm
+        sha256: null
+      - filename: nash-m/mobile_sam_decoder_512_nashm.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-m/mobile_sam_decoder_512_nashm.hbm
+        sha256: null
+      - filename: nash-p/mobile_sam_image_encoder_norm_512x512_nashp.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/mobile_sam/nash-p/mobile_sam_image_encoder_norm_512x512_nashp.hbm
+        sha256: null
+      - filename: nash-p/mobile_sam_decoder_512_nashp.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/mobile_sam/nash-p/mobile_sam_decoder_512_nashp.hbm
+        sha256: null
+  - id: mobilenetv1
+    name: MobileNetV1
+    tasks:
+      - image-classification
+    sample_path: samples/vision/mobilenetv1
+    download_scripts:
+      - samples/vision/mobilenetv1/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/mobilenetv1_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet/mobilenetv1_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/mobilenetv1_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/MobileNet/mobilenetv1_224x224_nv12.hbm
+        sha256: null
+  - id: mobilenetv2
+    name: MobileNetV2
+    tasks:
+      - image-classification
+    sample_path: samples/vision/mobilenetv2
+    download_scripts:
+      - samples/vision/mobilenetv2/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/mobilenetv2_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet/mobilenetv2_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/mobilenetv2_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/MobileNet/mobilenetv2_224x224_nv12.hbm
+        sha256: null
+  - id: mobilenetv3
+    name: MobileNetV3
+    tasks:
+      - image-classification
+    sample_path: samples/vision/mobilenetv3
+    download_scripts:
+      - samples/vision/mobilenetv3/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/mobilenetv3_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet/mobilenetv3_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/mobilenetv3_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/MobileNet/mobilenetv3_224x224_nv12.hbm
+        sha256: null
+  - id: mobilenetv4
+    name: MobileNetV4
+    tasks:
+      - image-classification
+    sample_path: samples/vision/mobilenetv4
+    download_scripts:
+      - samples/vision/mobilenetv4/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/mobilenetv4_small_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet/mobilenetv4_small_224x224_nv12.hbm
+        sha256: null
+      - filename: s100/mobilenetv4_medium_256x256_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet/mobilenetv4_medium_256x256_nv12.hbm
+        sha256: null
+      - filename: s600/mobilenetv4_small_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/MobileNet/mobilenetv4_small_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/mobilenetv4_medium_256x256_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/MobileNet/mobilenetv4_medium_256x256_nv12.hbm
+        sha256: null
+  - id: paddle_ocr
+    name: PaddleOCR v6
+    tasks:
+      - text-detection
+      - text-recognition
+    sample_path: samples/vision/paddle_ocr
+    download_scripts:
+      - samples/vision/paddle_ocr/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paddle_ocr/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
+        sha256: null
+      - filename: s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paddle_ocr/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm
+        sha256: null
+  - id: pointnet
+    name: PointNet
+    tasks:
+      - point-cloud-segmentation
+    sample_path: samples/vision/pointnet
+    download_scripts:
+      - samples/vision/pointnet/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/pointnet.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/PointNet/pointnet.hbm
+        sha256: null
+  - id: resnet18
+    name: Resnet18
+    tasks:
+      - image-classification
+    sample_path: samples/vision/resnet18
+    download_scripts:
+      - samples/vision/resnet18/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/resnet18_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/resnet18_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
+        sha256: null
+  - id: resnet50
+    name: Resnet50
+    tasks:
+      - image-classification
+    sample_path: samples/vision/resnet50
+    download_scripts:
+      - samples/vision/resnet50/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/resnet50_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/resnet50_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet50_224x224_nv12.hbm
+        sha256: null
+  - id: resnet152
+    name: Resnet152
+    tasks:
+      - image-classification
+    sample_path: samples/vision/resnet152
+    download_scripts:
+      - samples/vision/resnet152/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/resnet152_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152_224x224_nv12.hbm
+        sha256: null
+      - filename: s600/resnet152_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet152_224x224_nv12.hbm
+        sha256: null
+  - id: siglip
+    name: SigLIP
+    tasks:
+      - vision-embedding
+      - image-text-similarity
+    sample_path: samples/vision/siglip
+    download_scripts:
+      - samples/vision/siglip/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/bpu-siglip-base-patch16-224.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-base-patch16-224.hbm
+        sha256: null
+      - filename: s100/bpu-siglip-base-patch16-384.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-base-patch16-384.hbm
+        sha256: null
+      - filename: s100/bpu-siglip-base-patch16-512.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-base-patch16-512.hbm
+        sha256: null
+      - filename: s100/bpu-siglip-large-patch16-256.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-large-patch16-256.hbm
+        sha256: null
+      - filename: s100/bpu-siglip-large-patch16-384.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-large-patch16-384.hbm
+        sha256: null
+      - filename: s100/bpu-siglip-so400m-patch14-224.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch14-224.hbm
+        sha256: null
+      - filename: s100/bpu-siglip-so400m-patch14-384.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch14-384.hbm
+        sha256: null
+      - filename: s100/bpu-siglip-so400m-patch16-256-i18n.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch16-256-i18n.hbm
+        sha256: null
+  - id: ultralytics_yolo
+    name: Ultralytics YOLO
+    tasks:
+      - object-detection
+      - instance-segmentation
+      - pose-estimation
+      - image-classification
+    sample_path: samples/vision/ultralytics_yolo
+    download_scripts:
+      - samples/vision/ultralytics_yolo/model/download_model.sh
+    availability: download
+    assets:
+      - filename: nash-e/yolov5nu_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolov5nu_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolov5su_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolov5su_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolov5mu_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolov5mu_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolov5lu_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolov5lu_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolov5xu_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolov5xu_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolov5nu_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolov5nu_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolov5su_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolov5su_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolov5mu_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolov5mu_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolov5lu_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolov5lu_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolov5xu_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolov5xu_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolov5nu_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolov5nu_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolov5su_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolov5su_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolov5mu_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolov5mu_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolov5lu_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolov5lu_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolov5xu_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolov5xu_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8s_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8s_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8m_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8m_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8l_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8l_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8x_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8x_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8n_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8n_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8s_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8s_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8m_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8m_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8l_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8l_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8x_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8x_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8n_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8n_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8s_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8s_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8m_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8m_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8l_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8l_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8x_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8x_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8n_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8n_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8s_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8s_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8m_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8m_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8l_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8l_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo8x_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo8x_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8n_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8n_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8s_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8s_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8m_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8m_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8l_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8l_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8x_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8x_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8n_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8n_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8s_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8s_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8m_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8m_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8l_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8l_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8x_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8x_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8n_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8n_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8s_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8s_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8m_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8m_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8l_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8l_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8x_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8x_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8n_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8n_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8s_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8s_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8m_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8m_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8l_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8l_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo8x_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo8x_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8n_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8n_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8s_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8s_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8m_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8m_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8l_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8l_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8x_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8x_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8n_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8n_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8s_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8s_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8m_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8m_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8l_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8l_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8x_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8x_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8n_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8n_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8s_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8s_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8m_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8m_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8l_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8l_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8x_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8x_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8n_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8n_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8s_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8s_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8m_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8m_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8l_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8l_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo8x_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo8x_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo9n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo9n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo9s_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo9s_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo9m_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo9m_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo9c_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo9c_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo9e_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo9e_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo9n_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo9n_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo9s_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo9s_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo9m_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo9m_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo9c_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo9c_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo9e_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo9e_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo9s_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo9s_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo9m_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo9m_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo9c_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo9c_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo9e_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo9e_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo9c_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo9c_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo9e_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo9e_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo9c_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo9c_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo9e_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo9e_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo10n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo10n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo10s_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo10s_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo10m_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo10m_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo10b_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo10b_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo10l_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo10l_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo10x_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo10x_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo10n_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo10n_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo10s_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo10s_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo10m_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo10m_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo10b_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo10b_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo10l_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo10l_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo10x_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo10x_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo10n_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo10n_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo10s_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo10s_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo10m_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo10m_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo10b_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo10b_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo10l_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo10l_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo10x_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo10x_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11s_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11s_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11m_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11m_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11l_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11l_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11x_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11x_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11n_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11n_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11s_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11s_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11m_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11m_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11l_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11l_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11x_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11x_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11n_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11n_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11s_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11s_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11m_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11m_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11l_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11l_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11x_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11x_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11n_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11n_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11s_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11s_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11m_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11m_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11l_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11l_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo11x_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo11x_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11n_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11n_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11s_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11s_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11m_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11m_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11l_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11l_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11x_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11x_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11n_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11n_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11s_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11s_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11m_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11m_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11l_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11l_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11x_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11x_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11n_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11n_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11s_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11s_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11m_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11m_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11l_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11l_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11x_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11x_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11n_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11n_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11s_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11s_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11m_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11m_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11l_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11l_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo11x_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo11x_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11n_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11n_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11s_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11s_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11m_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11m_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11l_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11l_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11x_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11x_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11n_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11n_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11s_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11s_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11m_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11m_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11l_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11l_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11x_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11x_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11n_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11n_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11s_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11s_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11m_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11m_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11l_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11l_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11x_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11x_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11n_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11n_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11s_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11s_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11m_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11m_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11l_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11l_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo11x_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo11x_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo12n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo12n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo12s_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo12s_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo12m_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo12m_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo12l_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo12l_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo12x_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo12x_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo12n_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo12n_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo12s_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo12s_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo12m_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo12m_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo12l_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo12l_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo12x_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo12x_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo12n_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo12n_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo12s_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo12s_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo12m_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo12m_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo12l_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo12l_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo12x_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo12x_detect_nashp_640x640_nv12.hbm
+        sha256: null
+    notes: The asset inventory follows the published task/size combinations in the
+      sample model README and download script. S100P files use the nash-m
+      archive directory under rdk_s100.
+  - id: ultralytics_yolo26
+    name: YOLO26
+    tasks:
+      - object-detection
+      - instance-segmentation
+      - pose-estimation
+      - oriented-object-detection
+      - image-classification
+    sample_path: samples/vision/ultralytics_yolo26
+    download_scripts:
+      - samples/vision/ultralytics_yolo26/model/download_model.sh
+    availability: download
+    assets:
+      - filename: nash-e/yolo26n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo26n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo26n_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo26n_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo26n_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo26n_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo26n_cls_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo26n_cls_nashe_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo26n_obb_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-e/yolo26n_obb_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26n_detect_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo26n_detect_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26n_seg_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo26n_seg_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26n_pose_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo26n_pose_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26n_cls_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo26n_cls_nashm_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26n_obb_nashm_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Ultralytics_YOLO_OE_3.7.0/nash-m/yolo26n_obb_nashm_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26n_detect_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo26n_detect_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26n_seg_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo26n_seg_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26n_pose_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo26n_pose_nashp_640x640_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26n_cls_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo26n_cls_nashp_224x224_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26n_obb_nashp_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo26n_obb_nashp_640x640_nv12.hbm
+        sha256: null
+    notes: The source download script publishes YOLO26n artifacts. Evaluator rows
+      for other sizes are retained as documentation benchmarks without an
+      invented asset mapping.
+  - id: unetmobilenet
+    name: UnetMobileNet
+    tasks:
+      - semantic-segmentation
+    sample_path: samples/vision/unetmobilenet
+    download_scripts:
+      - samples/vision/unetmobilenet/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/unet_mobilenet_1024x2048_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm
+        sha256: null
+      - filename: s600/unet_mobilenet_1024x2048_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm
+        sha256: null
+  - id: vit
+    name: ViT
+    tasks:
+      - image-classification
+    sample_path: samples/vision/vit
+    download_scripts:
+      - samples/vision/vit/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/vit_cifar10_batch1_int8.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int8.hbm
+        sha256: null
+      - filename: s100/vit_cifar10_batch1_int16.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int16.hbm
+        sha256: null
+  - id: yolo11
+    name: YOLO11
+    tasks:
+      - object-detection
+    sample_path: samples/vision/yolo11
+    download_scripts:
+      - samples/vision/yolo11/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/yolo11n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolo11n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: s600/yolo11n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolo11n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+    notes: The source script uses the nashe filename for its S600 path; this
+      manifest preserves that exact script behavior.
+  - id: yolo11_pose
+    name: YOLO11 Pose
+    tasks:
+      - pose-estimation
+    sample_path: samples/vision/yolo11_pose
+    download_scripts:
+      - samples/vision/yolo11_pose/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/yolo11n_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolo11n_pose_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: s600/yolo11n_pose_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolo11n_pose_nashe_640x640_nv12.hbm
+        sha256: null
+    notes: The source script uses the nashe filename for its S600 path; this
+      manifest preserves that exact script behavior.
+  - id: yolo11_seg
+    name: YOLO11 Seg
+    tasks:
+      - instance-segmentation
+    sample_path: samples/vision/yolo11_seg
+    download_scripts:
+      - samples/vision/yolo11_seg/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/yolo11n_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolo11n_seg_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: s600/yolo11n_seg_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolo11n_seg_nashe_640x640_nv12.hbm
+        sha256: null
+    notes: The source script uses the nashe filename for its S600 path; this
+      manifest preserves that exact script behavior.
+  - id: yolo26_depth
+    name: YOLO26 Depth
+    tasks:
+      - monocular-depth-estimation
+    sample_path: samples/vision/yolo26_depth
+    download_scripts:
+      - samples/vision/yolo26_depth/model/download_model.sh
+    availability: download
+    assets:
+      - filename: nash-e/yolo26n_depth_nashe_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-e/yolo26n_depth_nashe_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo26s_depth_nashe_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-e/yolo26s_depth_nashe_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo26m_depth_nashe_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-e/yolo26m_depth_nashe_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-e/yolo26l_depth_lite_nashe_768x768.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-e/yolo26l_depth_lite_nashe_768x768.hbm
+        sha256: null
+      - filename: nash-e/yolo26x_depth_lite_nashe_768x768.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-e/yolo26x_depth_lite_nashe_768x768.hbm
+        sha256: null
+      - filename: nash-m/yolo26n_depth_nashm_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-m/yolo26n_depth_nashm_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26s_depth_nashm_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-m/yolo26s_depth_nashm_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26m_depth_nashm_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-m/yolo26m_depth_nashm_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-m/yolo26l_depth_lite_nashm_768x768.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-m/yolo26l_depth_lite_nashm_768x768.hbm
+        sha256: null
+      - filename: nash-m/yolo26x_depth_lite_nashm_768x768.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yolo26_depth/nash-m/yolo26x_depth_lite_nashm_768x768.hbm
+        sha256: null
+      - filename: nash-p/yolo26n_depth_nashp_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/yolo26_depth/nash-p/yolo26n_depth_nashp_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26s_depth_nashp_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/yolo26_depth/nash-p/yolo26s_depth_nashp_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26m_depth_nashp_768x768_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/yolo26_depth/nash-p/yolo26m_depth_nashp_768x768_nv12.hbm
+        sha256: null
+      - filename: nash-p/yolo26l_depth_lite_nashp_768x768.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/yolo26_depth/nash-p/yolo26l_depth_lite_nashp_768x768.hbm
+        sha256: null
+      - filename: nash-p/yolo26x_depth_lite_nashp_768x768.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/yolo26_depth/nash-p/yolo26x_depth_lite_nashp_768x768.hbm
+        sha256: null
+  - id: yolov13_imoonlab
+    name: YOLOv13 (iMoonLab)
+    tasks:
+      - object-detection
+    sample_path: samples/vision/yolov13_imoonlab
+    download_scripts:
+      - samples/vision/yolov13_imoonlab/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/yolo13n_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/iMoonLab_YOLOv13/yolo13n_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: s100/yolo13s_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/iMoonLab_YOLOv13/yolo13s_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: s100/yolo13l_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/iMoonLab_YOLOv13/yolo13l_detect_nashe_640x640_nv12.hbm
+        sha256: null
+      - filename: s100/yolo13x_detect_nashe_640x640_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/iMoonLab_YOLOv13/yolo13x_detect_nashe_640x640_nv12.hbm
+        sha256: null
+  - id: yolov5
+    name: YOLOv5x
+    tasks:
+      - object-detection
+    sample_path: samples/vision/yolov5
+    download_scripts:
+      - samples/vision/yolov5/model/download_model.sh
+    availability: download
+    assets:
+      - filename: s100/yolov5x_672x672_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolov5x_672x672_nv12.hbm
+        sha256: null
+      - filename: s600/yolov5x_672x672_nv12.hbm
+        format: hbm
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm
+        sha256: null

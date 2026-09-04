@@ -1,0 +1,26 @@
+# Changelog
+
+All notable changes to the RDK Model Zoo S-series release line are recorded in
+this file.
+
+## [1.0.0] - 2026-09-04
+
+### English
+
+- Published the first formal S-series baseline from the immutable `s-v1.0.0`
+  source ref on `rdk_s`.
+- Added a repository-evidence model inventory covering 33 releasable samples,
+  308 published or locally provisioned assets, and the matching benchmark
+  manifest.
+- Recorded checksum availability explicitly; unknown SHA-256 values are `null`.
+- This release validates manifests and documentation only. It does not include
+  a repository-wide RDK board test gate.
+
+### 简体中文
+
+- 基于 `rdk_s` 分支的不可变 `s-v1.0.0` 源引用，发布首个正式的 S 系列基线版本。
+- 新增基于仓库证据的模型清单，覆盖 33 个可发布 sample、308 个已发布或本地提供的资产，以及对应的 benchmark 清单。
+- 显式记录校验和覆盖情况；未知 SHA-256 值统一写为 `null`。
+- 本版本只校验清单与文档，不设置全仓库 RDK 板卡测试门禁。
+
+[1.0.0]: https://github.com/D-Robotics/rdk_model_zoo/releases/tag/s-v1.0.0
