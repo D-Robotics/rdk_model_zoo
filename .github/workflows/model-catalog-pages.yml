@@ -1,0 +1,88 @@
+name: Deploy model catalog to Pages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      catalog_ref:
+        description: Git ref containing the approved catalog site and release data
+        required: true
+        default: rdk_x5
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve deployment ref
+        id: catalog-ref
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          MANUAL_REF: ${{ inputs.catalog_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "release" ]; then
+            printf 'ref=%s\n' "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          else
+            printf 'ref=%s\n' "$MANUAL_REF" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check out approved catalog ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.catalog-ref.outputs.ref }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: site
+      - name: Validate catalog and build site
+        run: npm run check
+        working-directory: site
+      - name: Verify deployed release identity
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const catalog = JSON.parse(readFileSync("site/dist/data/catalog.json", "utf8"));
+            const tag = catalog?.release?.tag;
+            if (typeof tag !== "string" || tag.trim() === "") throw new Error("Catalog release.tag is empty");
+            if (process.env.EVENT_NAME === "release" && tag !== process.env.RELEASE_TAG) {
+              throw new Error(`Catalog tag ${tag} does not match release ${process.env.RELEASE_TAG}`);
+            }
+            console.log(`Verified catalog release tag: ${tag}`);
+          '
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
