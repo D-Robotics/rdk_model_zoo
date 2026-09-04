@@ -24,7 +24,7 @@ The X5 manifest includes every sample in the release's top-level model list, inc
 
 ## Benchmark manifest
 
-`benchmarks.yaml` records performance and accuracy values already published in repository documentation. Each record references a model in `models.yaml` and an immutable release source. Missing fields mean that the source did not publish that condition; they must not be inferred. A metric qualifier preserves claims such as `200+ FPS` as a lower bound.
+`benchmarks.yaml` records performance and accuracy values already published in repository documentation. Each record references a model in `models.yaml` and an immutable release source. Missing fields mean that the source did not publish that condition; they must not be inferred. A metric qualifier preserves claims such as `200+ FPS` as a lower bound. Accuracy metrics without a published dataset remain valid, but the catalog build emits a warning and the detail view marks their test conditions as incomplete.
 
 ## Online catalog
 

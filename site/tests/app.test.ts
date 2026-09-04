@@ -318,7 +318,8 @@ describe("catalog application", () => {
     expect(app).toBeNull();
     expect(root().getAttribute("role")).toBe("alert");
     expect(root().textContent).toContain("The catalog could not be loaded.");
-    expect(root().querySelector('a[href*="release/models.yaml"]')).not.toBeNull();
+    expect(root().querySelector('a[href="https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_x5/release/models.yaml"]'))
+      .not.toBeNull();
     expect(root().querySelector('a[href="https://github.com/D-Robotics/rdk_model_zoo"]')).not.toBeNull();
     expect(root().querySelector('[data-action="retry-load"]')).not.toBeNull();
   });

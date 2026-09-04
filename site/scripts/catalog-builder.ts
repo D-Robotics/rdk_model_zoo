@@ -11,6 +11,7 @@ export interface BuildCatalogOptions {
   benchmarksPath: string;
   modelsSchemaPath: string;
   benchmarksSchemaPath: string;
+  onWarning?: (message: string) => void;
 }
 
 export class CatalogValidationError extends Error {
@@ -185,6 +186,23 @@ function validateNoYoloe(modelsDocument: ModelsDocument, benchmarksDocument: Ben
   }
 }
 
+function warnOnIncompleteAccuracy(
+  benchmarks: BenchmarkRecord[],
+  onWarning: BuildCatalogOptions["onWarning"]
+): void {
+  if (!onWarning) return;
+  const incompleteCount = benchmarks.reduce(
+    (count, benchmark) => count + (benchmark.accuracy ?? []).filter((metric) => !metric.dataset).length,
+    0
+  );
+  if (incompleteCount > 0) {
+    onWarning(
+      `Catalog warning: ${incompleteCount} accuracy metrics have no published dataset; `
+      + "the generated site marks their test conditions incomplete."
+    );
+  }
+}
+
 function normalizeAsset({ url, ...asset }: ModelManifestAsset): ModelRecord["assets"][number] {
   return typeof url === "string" ? { ...asset, url } : asset;
 }
@@ -221,11 +239,15 @@ export async function buildCatalog(options: BuildCatalogOptions): Promise<Catalo
   validateModelAndAssetReferences(models.models, benchmarks.benchmarks);
   await validateRepositorySources(options.repositoryRoot, benchmarks.benchmarks);
   validateNoYoloe(models, benchmarks);
+  warnOnIncompleteAccuracy(benchmarks.benchmarks, options.onWarning);
   return joinCatalog(models, benchmarks);
 }
 
 export async function writeCatalog(options: BuildCatalogOptions & { outputPath: string }): Promise<Catalog> {
-  const catalog = await buildCatalog(options);
+  const catalog = await buildCatalog({
+    ...options,
+    onWarning: options.onWarning ?? ((message) => console.warn(message))
+  });
   await mkdir(dirname(options.outputPath), { recursive: true });
   await writeFile(options.outputPath, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
   return catalog;

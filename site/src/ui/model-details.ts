@@ -85,8 +85,14 @@ function metricValue(metric: MetricRecord, locale: Locale): string {
   }).format(metric.value);
 }
 
-function metricConditions(record: BenchmarkRecord, metric: MetricRecord, locale: Locale): string {
+function metricConditions(
+  record: BenchmarkRecord,
+  metric: MetricRecord,
+  locale: Locale,
+  kind: "performance" | "accuracy"
+): string {
   const parts = [
+    kind === "accuracy" && !metric.dataset ? t(locale, "missing.incomplete") : undefined,
     `${t(locale, "details.hardware")}: ${record.environment.hardware}`,
     record.environment.runtime ? `${t(locale, "details.runtime")}: ${record.environment.runtime}` : undefined,
     record.environment.cpu_mode ? `${t(locale, "details.cpuMode")}: ${record.environment.cpu_mode}` : undefined,
@@ -119,7 +125,8 @@ function appendMetricRows(
         cell(metricValue(metric, context.locale)),
         cell(metric.unit),
         cell(t(context.locale, qualifierKeys[metric.qualifier ?? "exact"])),
-        cell(metricConditions(record, metric, context.locale)),
+        cell(metric.statistic ?? t(context.locale, "missing.unspecified")),
+        cell(metricConditions(record, metric, context.locale, kind)),
         cell(metric.dataset ?? t(context.locale, "missing.unspecified")),
         cell(metric.model_stage ?? t(context.locale, "missing.unspecified")),
         sourceCell(record, context)
@@ -172,6 +179,7 @@ function metricTable(model: ModelRecord, kind: "performance" | "accuracy", conte
     t(context.locale, "details.value"),
     t(context.locale, "details.unit"),
     t(context.locale, "details.qualifier"),
+    t(context.locale, "details.statistic"),
     t(context.locale, "details.conditions"),
     t(context.locale, "details.dataset"),
     t(context.locale, "details.modelStage"),
@@ -182,7 +190,7 @@ function metricTable(model: ModelRecord, kind: "performance" | "accuracy", conte
     emptyTableRow(
       table,
       t(context.locale, kind === "performance" ? "details.noPerformanceData" : "details.noAccuracyData"),
-      9
+      10
     );
   }
   return wrapTable(table, t(context.locale, captionKey));

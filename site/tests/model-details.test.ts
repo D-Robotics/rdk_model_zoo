@@ -68,4 +68,22 @@ describe("model details", () => {
     expect(variantsTable.textContent).toContain("No published model variant data");
     expect(variantsTable.textContent).not.toContain("benchmark data");
   });
+
+  it("shows metric statistics and flags accuracy with an unpublished dataset as incomplete", () => {
+    const model = createModelFixture();
+    const benchmark = model.benchmarks[0]!;
+    benchmark.accuracy = [{
+      metric: "top-1",
+      value: 73,
+      unit: "percent",
+      model_stage: "quantized"
+    }];
+
+    const element = renderModelDetails(model, detailContext);
+    const headers = [...element.querySelectorAll("th")].map((header) => header.textContent);
+
+    expect(headers).toContain("Statistic");
+    expect(element.textContent).toContain("mean");
+    expect(element.textContent).toContain("Incomplete test conditions");
+  });
 });

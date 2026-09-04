@@ -1,17 +1,18 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fileURLToPath } from "node:url";
 import { buildCatalog } from "../scripts/catalog-builder";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 
-function buildRepositoryCatalog() {
+function buildRepositoryCatalog(onWarning?: (message: string) => void) {
   return buildCatalog({
     repositoryRoot,
     modelsPath: "release/models.yaml",
     benchmarksPath: "release/benchmarks.yaml",
     modelsSchemaPath: "release/schemas/models.schema.json",
-    benchmarksSchemaPath: "release/schemas/benchmarks.schema.json"
+    benchmarksSchemaPath: "release/schemas/benchmarks.schema.json",
+    onWarning
   });
 }
 
@@ -132,6 +133,14 @@ describe("buildCatalog", () => {
   it("keeps CLIP empty when its sources publish no numeric benchmark", async () => {
     const catalog = await buildRepositoryCatalog();
     expect(catalog.models.find((model) => model.id === "clip")?.benchmarks).toEqual([]);
+  });
+
+  it("warns when published accuracy evidence omits its dataset", async () => {
+    const onWarning = vi.fn();
+
+    await buildRepositoryCatalog(onWarning);
+
+    expect(onWarning).toHaveBeenCalledWith(expect.stringContaining("accuracy metrics have no published dataset"));
   });
 
   it("joins models and benchmarks and preserves the release tag", async () => {
