@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'x5-v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read

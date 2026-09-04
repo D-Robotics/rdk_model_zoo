@@ -58,16 +58,18 @@ The model manifest and benchmark manifest describe the published source inventor
 
    Replace the branch, tag, and message for the S or X3 line. Do not create a lightweight tag.
 
-7. Create the GitHub Release from the pushed tag, use the matching release-notes file, and attach the manifest as `models.yaml`:
+7. Create the GitHub Release from the pushed tag, use the matching release-notes file, and attach both manifests:
 
    ```bash
-   gh release create x5-v1.0.0 "release/models.yaml#models.yaml" \
+   gh release create x5-v1.0.0 \
+     "release/models.yaml#models.yaml" \
+     "release/benchmarks.yaml#benchmarks.yaml" \
      --title "RDK Model Zoo X5 v1.0.0" \
      --notes-file docs/releases/x5-v1.0.0.md \
      --verify-tag
    ```
 
-8. Wait for `.github/workflows/model-catalog-pages.yml` to deploy the catalog. Open [the public catalog](https://d-robotics.github.io/rdk_model_zoo/) and verify the displayed Release Tag, model count, asset count, and representative source links.
+8. For an `x5-v*` release, wait for `.github/workflows/model-catalog-pages.yml` to deploy the catalog. Open [the public catalog](https://d-robotics.github.io/rdk_model_zoo/) and verify the displayed Release Tag, model count, asset count, and representative source links. S and X3 Releases publish their manifests without replacing the current X5-only catalog; the Pages build is skipped for those tags until the multi-platform catalog is available.
 9. Verify that the GitHub Release, attached manifest, tag, branch commit, `VERSION`, repository manifests, and deployed catalog all refer to the same platform version. Record the release URL and commit in the change log or release record when the project workflow requires it.
 
 If the Pages deployment fails, fix the source and publish a corrective commit and tag. Use `workflow_dispatch` only to retry an unchanged, already approved ref; it must not be used to replace a published tag with different data.

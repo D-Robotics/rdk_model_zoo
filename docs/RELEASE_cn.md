@@ -58,16 +58,18 @@ Manifest 记录本版本提供的模型和资源、示例路径、下载脚本�
 
    S 或 X3 平台需要替换对应的分支名、Tag 和提交说明。禁止创建 lightweight Tag。
 
-7. 使用推送后的 Tag 创建 GitHub Release，使用对应的发版说明文件，并将 manifest 作为 `models.yaml` 附件上传：
+7. 使用推送后的 Tag 创建 GitHub Release，使用对应的发版说明文件，并上传两个 Manifest 附件：
 
    ```bash
-   gh release create x5-v1.0.0 "release/models.yaml#models.yaml" \
+   gh release create x5-v1.0.0 \
+     "release/models.yaml#models.yaml" \
+     "release/benchmarks.yaml#benchmarks.yaml" \
      --title "RDK Model Zoo X5 v1.0.0" \
      --notes-file docs/releases/x5-v1.0.0.md \
      --verify-tag
    ```
 
-8. 等待 `.github/workflows/model-catalog-pages.yml` 完成目录部署。打开[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)，核对页面显示的 Release Tag、模型数量、资产数量和代表性来源链接。
+8. 对于 `x5-v*` Release，等待 `.github/workflows/model-catalog-pages.yml` 完成目录部署。打开[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)，核对页面显示的 Release Tag、模型数量、资产数量和代表性来源链接。S 和 X3 Release 会发布各自 Manifest，但在多平台目录完成前不会替换当前仅含 X5 数据的目录；这些 Tag 的 Pages 构建会被跳过。
 9. 复核 GitHub Release、Release 附件、Tag、分支提交、`VERSION`、仓库 Manifest 和在线目录是否指向同一个平台版本。项目流程需要时，在变更记录或发版记录中记录 Release URL 和提交号。
 
 如果 Pages 部署失败，应修复来源并发布修正提交和新 Tag。`workflow_dispatch` 只能用于重试一个内容未变且已经批准的 ref，不能用它把已发布 Tag 对应的数据替换为其他内容。
