@@ -2,6 +2,7 @@ import { mountCatalog, type CatalogApp } from "./app";
 import type { Catalog, Locale } from "./catalog/types";
 import { createLanguageController } from "./i18n/language";
 import { t, type TranslationKey } from "./i18n/translations";
+import "./styles.css";
 
 const REPOSITORY_URL = "https://github.com/D-Robotics/rdk_model_zoo";
 const MANIFEST_URL = `${REPOSITORY_URL}/blob/x5-v1.0.0/release/models.yaml`;
@@ -10,6 +11,8 @@ export interface LoadCatalogOptions {
   locale: Locale;
   fetcher?: typeof fetch;
   catalogUrl?: string;
+  languageController?: ReturnType<typeof createLanguageController>;
+  onLocaleChange?: (locale: Locale) => void;
 }
 
 export function localizeDocumentShell(locale: Locale): void {
@@ -51,7 +54,11 @@ export async function loadCatalog(root: HTMLElement, options: LoadCatalogOptions
     if (!response.ok) throw new Error(`Catalog request failed with HTTP ${response.status}.`);
     const catalog = await response.json() as Catalog;
     root.removeAttribute("role");
-    return mountCatalog(root, catalog, { locale: options.locale });
+    return mountCatalog(root, catalog, {
+      locale: options.locale,
+      languageController: options.languageController,
+      onLocaleChange: options.onLocaleChange
+    });
   } catch {
     renderLoadError(root, options);
     return null;
@@ -62,8 +69,17 @@ function bootstrap(): void {
   const root = document.querySelector<HTMLElement>("#app");
   if (!root) return;
   const language = createLanguageController(window.localStorage, navigator.language);
-  localizeDocumentShell(language.current());
-  void loadCatalog(root, { locale: language.current() });
+  let mounted: CatalogApp | null = null;
+  const render = async (locale: Locale): Promise<void> => {
+    mounted?.destroy();
+    localizeDocumentShell(locale);
+    mounted = await loadCatalog(root, {
+      locale,
+      languageController: language,
+      onLocaleChange: (nextLocale) => void render(nextLocale)
+    });
+  };
+  void render(language.current());
 }
 
 bootstrap();

@@ -1,5 +1,6 @@
 import { queryModels, type CatalogQuery } from "./catalog/query";
 import type { Catalog, Locale } from "./catalog/types";
+import { createLanguageController, type LanguageController } from "./i18n/language";
 import { t } from "./i18n/translations";
 import { createFilters, DEFAULT_QUERY } from "./ui/filters";
 import { renderModelCard, type RenderedModelCard } from "./ui/model-card";
@@ -7,10 +8,16 @@ import { readModelId, renderModelDetails, writeModelId } from "./ui/model-detail
 import { renderSummary } from "./ui/summary";
 
 const REPOSITORY_URL = "https://github.com/D-Robotics/rdk_model_zoo";
+const THEME_STORAGE_KEY = "rdk-model-zoo-theme";
+type ThemePreference = "system" | "light" | "dark";
 
 export interface AppOptions {
   locale: Locale;
   onSelectModel?: (modelId: string) => void;
+  languageController?: LanguageController;
+  onLocaleChange?: (locale: Locale) => void;
+  storage?: Storage;
+  matchMedia?: (query: string) => MediaQueryList;
 }
 
 export interface CatalogApp {
@@ -22,23 +29,94 @@ interface AppState {
   locale: Locale;
   query: CatalogQuery;
   selectedModelId: string | null;
-  theme: "system" | "light" | "dark";
+  theme: ThemePreference;
+}
+
+function storedTheme(storage: Storage): ThemePreference {
+  try {
+    const value = storage.getItem(THEME_STORAGE_KEY);
+    return value === "light" || value === "dark" || value === "system" ? value : "system";
+  } catch {
+    return "system";
+  }
+}
+
+function persistTheme(storage: Storage, theme: ThemePreference): void {
+  try {
+    storage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // The visual preference remains usable when storage is blocked.
+  }
 }
 
 export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOptions): CatalogApp {
+  const storage = options.storage ?? window.localStorage;
+  const languageController = options.languageController
+    ?? createLanguageController(storage, options.locale);
+  const darkMedia = options.matchMedia
+    ? options.matchMedia("(prefers-color-scheme: dark)")
+    : typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-color-scheme: dark)")
+      : undefined;
   const state: AppState = {
     locale: options.locale,
     query: { ...DEFAULT_QUERY },
     selectedModelId: null,
-    theme: "system"
+    theme: storedTheme(storage)
   };
   document.documentElement.lang = options.locale;
+
+  const preferences = document.createElement("div");
+  preferences.className = "preference-controls";
+  const languageButton = document.createElement("button");
+  languageButton.type = "button";
+  languageButton.className = "preference-button";
+  languageButton.setAttribute("aria-label", t(options.locale, "control.switchLanguage"));
+  languageButton.textContent = `${t(options.locale, "control.language")}: ${t(
+    options.locale,
+    options.locale === "en" ? "control.english" : "control.chinese"
+  )}`;
+  const themeButton = document.createElement("button");
+  themeButton.type = "button";
+  themeButton.className = "preference-button";
+  themeButton.setAttribute("aria-label", t(options.locale, "control.changeTheme"));
+  preferences.append(languageButton, themeButton);
+
+  const themeLabel = (theme: ThemePreference): string => t(
+    options.locale,
+    theme === "system" ? "control.system" : theme === "light" ? "control.light" : "control.dark"
+  );
+  const applyTheme = (): void => {
+    const resolved = state.theme === "system" ? (darkMedia?.matches ? "dark" : "light") : state.theme;
+    document.documentElement.dataset.theme = resolved;
+    document.documentElement.dataset.themePreference = state.theme;
+    document.documentElement.style.colorScheme = resolved;
+    themeButton.textContent = `${t(options.locale, "control.theme")}: ${themeLabel(state.theme)}`;
+  };
+  const switchLanguage = (): void => {
+    const locale: Locale = state.locale === "en" ? "zh" : "en";
+    languageController.set(locale);
+    options.onLocaleChange?.(locale);
+  };
+  const cycleTheme = (): void => {
+    state.theme = state.theme === "system" ? "light" : state.theme === "light" ? "dark" : "system";
+    persistTheme(storage, state.theme);
+    applyTheme();
+  };
+  const followSystemTheme = (): void => {
+    if (state.theme === "system") applyTheme();
+  };
+  languageButton.addEventListener("click", switchLanguage);
+  themeButton.addEventListener("click", cycleTheme);
+  darkMedia?.addEventListener("change", followSystemTheme);
+  applyTheme();
 
   const content = document.createElement("div");
   content.className = "catalog-app";
   const summary = renderSummary(catalog, options.locale);
   const resultStatus = document.createElement("p");
   resultStatus.className = "result-count";
+  resultStatus.dataset.testid = "result-count";
   resultStatus.setAttribute("aria-live", "polite");
   const sortNotice = document.createElement("p");
   sortNotice.className = "sort-notice";
@@ -173,7 +251,7 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
     state.query = query;
     renderResults();
   });
-  content.append(summary, filters.element, results, detailHost);
+  content.append(preferences, summary, filters.element, results, detailHost);
   root.replaceChildren(content);
   renderResults();
   window.addEventListener("popstate", restoreDetails);
@@ -184,6 +262,9 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
       if (destroyed) return;
       destroyed = true;
       window.removeEventListener("popstate", restoreDetails);
+      darkMedia?.removeEventListener("change", followSystemTheme);
+      languageButton.removeEventListener("click", switchLanguage);
+      themeButton.removeEventListener("click", cycleTheme);
       filters.destroy();
       clearCards();
       clearDetails();

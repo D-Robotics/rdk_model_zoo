@@ -160,7 +160,7 @@ function variantsTable(model: ModelRecord, context: DetailContext): HTMLElement 
     );
     table.tBodies[0]!.append(row);
   }
-  if (model.benchmarks.length === 0) emptyTableRow(table, t(context.locale, "details.noPublishedData"), 6);
+  if (model.benchmarks.length === 0) emptyTableRow(table, t(context.locale, "details.noVariants"), 6);
   return wrapTable(table, t(context.locale, "details.variants"));
 }
 

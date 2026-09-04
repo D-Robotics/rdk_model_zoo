@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mountCatalog } from "../src/app";
 import { loadCatalog, localizeDocumentShell } from "../src/main";
 import type { Catalog } from "../src/catalog/types";
+import { createLanguageController } from "../src/i18n/language";
 import { benchmarkFixture, createModelFixture } from "./fixtures/catalog";
 
 const catalog: Catalog = {
@@ -59,6 +60,9 @@ function root(): HTMLElement {
 describe("catalog application", () => {
   beforeEach(() => {
     window.history.replaceState({}, "", "/");
+    window.localStorage.clear();
+    delete document.documentElement.dataset.theme;
+    delete document.documentElement.dataset.themePreference;
     document.documentElement.lang = "";
     document.body.innerHTML = '<main id="app"></main>';
   });
@@ -76,6 +80,68 @@ describe("catalog application", () => {
     expect(document.querySelectorAll("article[data-model-id]")).toHaveLength(1);
     expect(document.querySelector("article")?.textContent).toContain("HiMLoco");
     app.destroy();
+  });
+
+  it("exposes labeled preference controls and a live result count", () => {
+    const languageController = createLanguageController(window.localStorage, "en-US");
+    mountCatalog(root(), catalog, {
+      locale: "en",
+      languageController,
+      onLocaleChange: vi.fn()
+    });
+
+    expect(document.querySelector('label[for="catalog-search"]')).not.toBeNull();
+    expect(document.querySelector('[aria-live="polite"][data-testid="result-count"]')).not.toBeNull();
+    expect(document.querySelector('button[aria-label="Switch language"]')).not.toBeNull();
+    expect(document.querySelector('button[aria-label="Change color theme"]')).not.toBeNull();
+  });
+
+  it("persists language selection and requests a localized rerender", () => {
+    const languageController = createLanguageController(window.localStorage, "en-US");
+    const onLocaleChange = vi.fn();
+    mountCatalog(root(), catalog, { locale: "en", languageController, onLocaleChange });
+
+    document.querySelector<HTMLButtonElement>('button[aria-label="Switch language"]')!.click();
+
+    expect(languageController.current()).toBe("zh");
+    expect(window.localStorage.getItem("rdk-model-zoo-locale")).toBe("zh");
+    expect(onLocaleChange).toHaveBeenCalledWith("zh");
+  });
+
+  it("cycles and persists system, light, and dark themes", () => {
+    let themeListener: EventListener | undefined;
+    const mutableSystem = {
+      matches: true,
+      media: "(prefers-color-scheme: dark)",
+      onchange: null,
+      addEventListener: vi.fn((_type: string, listener: EventListener) => {
+        themeListener = listener;
+      }),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(() => true)
+    };
+    const darkSystem = mutableSystem as unknown as MediaQueryList;
+    mountCatalog(root(), catalog, { locale: "en", matchMedia: () => darkSystem });
+    const button = document.querySelector<HTMLButtonElement>('button[aria-label="Change color theme"]')!;
+
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(document.documentElement.dataset.themePreference).toBe("system");
+    mutableSystem.matches = false;
+    themeListener?.(new Event("change"));
+    expect(document.documentElement.dataset.theme).toBe("light");
+    button.click();
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(window.localStorage.getItem("rdk-model-zoo-theme")).toBe("light");
+    mutableSystem.matches = true;
+    themeListener?.(new Event("change"));
+    expect(document.documentElement.dataset.theme).toBe("light");
+    button.click();
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    button.click();
+    expect(document.documentElement.dataset.themePreference).toBe("system");
+    expect(window.localStorage.getItem("rdk-model-zoo-theme")).toBe("system");
   });
 
   it("rejects a catalog whose declared asset total disagrees with its models", () => {

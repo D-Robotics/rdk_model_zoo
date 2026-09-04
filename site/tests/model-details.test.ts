@@ -58,4 +58,14 @@ describe("model details", () => {
     expect(element.textContent).toContain("Manual model required");
     expect(element.querySelector("a[download]")).toBeNull();
   });
+
+  it("describes an empty variant table without calling it missing benchmark data", () => {
+    const model = createModelFixture({ benchmarks: [] });
+
+    const element = renderModelDetails(model, detailContext);
+    const variantsTable = element.querySelector("table")!;
+
+    expect(variantsTable.textContent).toContain("No published model variant data");
+    expect(variantsTable.textContent).not.toContain("benchmark data");
+  });
 });
