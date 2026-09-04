@@ -1,6 +1,6 @@
 # RDK Model Zoo Release Policy
 
-This document defines the manual release process for the RDK Model Zoo. It is intentionally small: the current phase has no CI gate and no board test gate.
+This document defines the release process for the RDK Model Zoo. The current phase keeps the process small and does not require an RDK board test gate. Automated checks validate the release manifests and online catalog; they do not certify runtime behavior on hardware.
 
 ## 1. Version lines and names
 
@@ -23,18 +23,29 @@ Every release commit must update or verify all of the following files:
 - `VERSION` — the platform version.
 - `CHANGELOG.md` — user-visible changes and known limitations.
 - `release/models.yaml` — the model manifest for the release.
+- `release/benchmarks.yaml` — published performance and accuracy evidence for the release.
 - `docs/releases/<tag>.md` — the release notes used by GitHub Releases.
 
 The manifest records the models and assets exposed by the release, their sample paths, download scripts or URLs, formats, and checksums when available. An unknown SHA-256 value must be written as `null`; it must not be guessed. The release notes must disclose that checksum coverage is incomplete whenever any manifest entry has `sha256: null`.
 
-The manifest describes the published source inventory. It does not certify model accuracy, runtime behavior, or board compatibility.
+The model manifest and benchmark manifest describe the published source inventory and documented measurements. The YAML manifests, GitHub Release assets, and model READMEs remain authoritative; the online catalog is their presentation layer. They do not certify runtime behavior or board compatibility beyond the conditions explicitly recorded in the source documentation.
 
 ## 3. Manual release procedure
 
 1. Select one platform branch and confirm that the release scope belongs to that platform.
-2. Update `VERSION`, `CHANGELOG.md`, `release/models.yaml`, and `docs/releases/<tag>.md`.
-3. Review the manifest manually: sample paths and download scripts must exist, URLs must be correct, and unknown checksums must be `null`. Check that the tag, branch, platform, and version agree in the release files.
-4. Review the source diff and run `git diff --check`. Confirm the working tree is clean and that the intended tag does not already exist.
+2. Update `VERSION`, `CHANGELOG.md`, `release/models.yaml`, `release/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
+3. Review the manifests: sample paths and download scripts must exist, URLs must be correct, unknown checksums must be `null`, and every benchmark must cite immutable repository evidence. Check that the tag, branch, platform, and version agree in the release files.
+4. Review the source diff, then validate the catalog from a clean dependency install:
+
+   ```bash
+   cd site
+   npm ci
+   npm run check
+   cd ..
+   git diff --check
+   ```
+
+   Confirm the working tree is clean and that the intended tag does not already exist.
 5. Merge the reviewed release commit into the platform branch. The tag must point to that branch tip.
 6. Create and push an annotated tag:
 
@@ -56,7 +67,10 @@ The manifest describes the published source inventory. It does not certify model
      --verify-tag
    ```
 
-8. Verify that the GitHub Release, attached manifest, tag, branch commit, `VERSION`, and repository manifest all refer to the same platform version. Record the release URL and commit in the change log or release record when the project workflow requires it.
+8. Wait for `.github/workflows/model-catalog-pages.yml` to deploy the catalog. Open [the public catalog](https://d-robotics.github.io/rdk_model_zoo/) and verify the displayed Release Tag, model count, asset count, and representative source links.
+9. Verify that the GitHub Release, attached manifest, tag, branch commit, `VERSION`, repository manifests, and deployed catalog all refer to the same platform version. Record the release URL and commit in the change log or release record when the project workflow requires it.
+
+If the Pages deployment fails, fix the source and publish a corrective commit and tag. Use `workflow_dispatch` only to retry an unchanged, already approved ref; it must not be used to replace a published tag with different data.
 
 ## 4. Tag and release immutability
 
@@ -70,4 +84,4 @@ A patch release fixes documentation, download metadata, scripts, or other backwa
 
 To withdraw a release, explain the reason in the GitHub Release notes, retain the published tag for traceability, and publish a replacement version when users need a corrected artifact. A withdrawal does not silently rewrite history.
 
-This simplified policy does not require automated CI, self-hosted runners, benchmark jobs, or RDK board testing before publication. Release notes must not claim that the full model set passed board testing. Any tests or manual checks that were actually performed may be listed explicitly with their scope.
+This simplified policy does not require self-hosted runners, new benchmark jobs, or RDK board testing before publication. The catalog CI validates existing manifest evidence and builds the static site; it does not run models or datasets. Release notes must not claim that the full model set passed board testing. Any tests or manual checks that were actually performed may be listed explicitly with their scope.

@@ -49,7 +49,9 @@ This repository uses hardware-specific branches to keep maintained samples, lega
 | RDK X3 | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Branch for RDK X3 devices. |
 | RDK S series | [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Branch for RDK S series boards. Historical archived demos for RDK S series boards are kept in [RDK Model Zoo S](https://github.com/d-Robotics/rdk_model_zoo_s). |
 
-**Current X5 release:** [`x5-v1.0.0`](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/x5-v1.0.0) · [Version](./VERSION) · [Changelog](./CHANGELOG.md) · [Model manifest](./release/models.yaml) · [Release policy](./docs/RELEASE.md)
+**Current X5 release:** [`x5-v1.0.0`](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/x5-v1.0.0) · [Online model catalog](https://d-robotics.github.io/rdk_model_zoo/) · [Version](./VERSION) · [Changelog](./CHANGELOG.md) · [Model manifest](./release/models.yaml) · [Benchmark manifest](./release/benchmarks.yaml) · [Release policy](./docs/RELEASE.md)
+
+The online catalog presents the released models as searchable cards with model assets, published performance and accuracy results, and their documented test conditions. Missing metrics remain explicitly unavailable; the catalog does not infer values that the repository has not published.
 
 ---
 
@@ -182,7 +184,7 @@ python3 main.py \
 - **Model Docs**: Each model's top-level `README.md` provides an overview and run guide.
 - **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.
 - **Guidelines**: To contribute or develop, please read the **[Model Zoo Repository Guidelines](./docs/Model_Zoo_Repository_Guidelines.md)**.
-- **Releases**: See the **[release policy](./docs/RELEASE.md)**, **[changelog](./CHANGELOG.md)**, and versioned **[model manifest](./release/models.yaml)**.
+- **Releases**: See the **[release policy](./docs/RELEASE.md)**, **[changelog](./CHANGELOG.md)**, versioned **[model manifest](./release/models.yaml)**, and **[benchmark manifest](./release/benchmarks.yaml)**. The current release is also available in the **[online model catalog](https://d-robotics.github.io/rdk_model_zoo/)**.
 - **Toolchain Manuals**:
   - [RDK X5 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
   - [RDK X3 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)

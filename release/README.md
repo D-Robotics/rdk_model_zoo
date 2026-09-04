@@ -25,3 +25,9 @@ The X5 manifest includes every sample in the release's top-level model list, inc
 ## Benchmark manifest
 
 `benchmarks.yaml` records performance and accuracy values already published in repository documentation. Each record references a model in `models.yaml` and an immutable release source. Missing fields mean that the source did not publish that condition; they must not be inferred. A metric qualifier preserves claims such as `200+ FPS` as a lower bound.
+
+## Online catalog
+
+The [public model catalog](https://d-robotics.github.io/rdk_model_zoo/) is generated from `models.yaml` and `benchmarks.yaml`. It displays the source Release Tag and provides searchable model cards, assets, benchmark values, test conditions, and immutable evidence links. The YAML manifests, GitHub Release assets, and sample READMEs remain the authoritative release artifacts.
+
+When either manifest changes, run `npm ci` and `npm run check` from `site/`. Publishing a GitHub Release starts `.github/workflows/model-catalog-pages.yml`; use its manual trigger only to retry an unchanged approved ref. After deployment, verify the displayed Tag and the model and asset totals against `models.yaml`.
