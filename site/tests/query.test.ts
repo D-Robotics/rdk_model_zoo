@@ -18,6 +18,7 @@ import {
 
 const baseQuery: CatalogQuery = {
   text: "",
+  platform: "",
   tasks: [],
   formats: [],
   precisions: [],
@@ -41,6 +42,18 @@ describe("queryModels", () => {
       .toHaveLength(1);
     expect(queryModels([modelFixture], { ...baseQuery, text: "NV12.BIN" }).models)
       .toHaveLength(1);
+  });
+
+  it("filters a model family by a hardware platform present in any platform payload", () => {
+    const model = createModelFixture({
+      platforms: [
+        { ...modelFixture, platform: "x5", release_tag: "x5-v1.0.0" },
+        { ...modelFixture, platform: "s", release_tag: "s-v1.0.0", benchmarks: [benchmarkFixture({ environment: { hardware: "RDK S100" } })] }
+      ]
+    });
+
+    expect(queryModels([model], { ...baseQuery, platform: "RDK S100" }).models).toHaveLength(1);
+    expect(queryModels([model], { ...baseQuery, platform: "RDK X3" }).models).toHaveLength(0);
   });
 
   it("normalizes compatibility forms before searching", () => {

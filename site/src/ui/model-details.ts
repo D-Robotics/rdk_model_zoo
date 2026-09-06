@@ -5,6 +5,7 @@ export interface DetailContext {
   locale: Locale;
   repositoryUrl: string;
   releaseTag: string;
+  platform?: string;
 }
 
 const qualifierKeys: Record<NonNullable<MetricRecord["qualifier"]>, TranslationKey> = {
@@ -249,14 +250,69 @@ export function renderModelDetails(model: ModelRecord, context: DetailContext): 
   close.setAttribute("aria-label", t(context.locale, "details.close"));
 
   root.append(heading, close);
-  for (const platformModel of model.platforms ?? [{ ...model, platform: "x5" as const, release_tag: context.releaseTag }]) {
+  for (const sourcePlatform of model.platforms ?? [{ ...model, platform: "x5" as const, release_tag: context.releaseTag }]) {
+    const platformModel = context.platform
+      ? { ...sourcePlatform, benchmarks: sourcePlatform.benchmarks.filter((benchmark) => benchmark.environment.hardware === context.platform) }
+      : sourcePlatform;
+    if (context.platform && platformModel.benchmarks.length === 0) continue;
     const platformHeading = document.createElement("h3");
     platformHeading.className = "platform-heading";
     platformHeading.textContent = `${t(context.locale, "model.platform")}: ${platformModel.platform.toUpperCase()} · ${platformModel.release_tag}`;
     const sample = document.createElement("a");
     sample.href = `${context.repositoryUrl}/blob/${encodeURIComponent(platformModel.release_tag)}/${platformModel.sample_path}/README.md`;
     sample.textContent = t(context.locale, "details.viewSample");
-    root.append(platformHeading, sample, variantsTable(platformModel, context), metricTable(platformModel, "performance", context), metricTable(platformModel, "accuracy", context), assetsTable(platformModel, context));
+    root.append(platformHeading, sample, platformBenchmarkTable(platformModel, context), assetsTable(platformModel, context));
   }
   return root;
+}
+
+function taskFor(record: BenchmarkRecord): string {
+  const variant = record.variant_id.toLowerCase();
+  if (variant.includes("-seg-")) return "Seg";
+  if (variant.includes("-pose-")) return "Pose";
+  if (variant.includes("-cls-")) return "Classify";
+  if (variant.includes("-detect-")) return "Detect";
+  return "—";
+}
+
+function metricCell(metrics: MetricRecord[], metricName: string, concurrency: number, locale: Locale, fallback: string): string {
+  const metric = metrics.find((candidate) => candidate.metric === metricName && (candidate.concurrency === concurrency || (concurrency === 1 && candidate.concurrency === undefined)));
+  return metric ? `${metricValue(metric, locale)} ${metric.unit === "fps" ? "FPS" : metric.unit}` : fallback;
+}
+
+function accuracyCell(metrics: MetricRecord[], stage: "float" | "quantized", locale: Locale, fallback: string): string {
+  const metric = metrics.find((candidate) => candidate.model_stage === stage);
+  return metric ? `${metricValue(metric, locale)} ${metric.unit === "percent" ? "%" : metric.unit}` : fallback;
+}
+
+function platformBenchmarkTable(model: ModelRecord, context: DetailContext): HTMLElement {
+  const table = tableWithCaption(t(context.locale, "details.platformBenchmarks"), [
+    t(context.locale, "details.variants"), t(context.locale, "details.specification"), t(context.locale, "details.hardware"),
+    t(context.locale, "details.oneThreadLatency"), t(context.locale, "details.oneThreadFps"),
+    t(context.locale, "details.twoThreadLatency"), t(context.locale, "details.twoThreadFps"),
+    t(context.locale, "details.floatAccuracy"), t(context.locale, "details.quantizedAccuracy"), t(context.locale, "details.source")
+  ]);
+  const grouped = new Map<string, BenchmarkRecord[]>();
+  for (const record of model.benchmarks) {
+    const key = `${record.variant_id}\u0000${record.environment.hardware}`;
+    const records = grouped.get(key) ?? [];
+    records.push(record);
+    grouped.set(key, records);
+  }
+  for (const records of grouped.values()) {
+    const first = records[0]!;
+    const performance = records.flatMap((record) => record.performance ?? []);
+    const accuracy = records.flatMap((record) => record.accuracy ?? []);
+    const missing = t(context.locale, "model.performanceMissing");
+    const row = document.createElement("tr");
+    row.append(
+      cell(taskFor(first)), cell(first.display_name), cell(first.environment.hardware),
+      cell(metricCell(performance, "latency", 1, context.locale, missing)), cell(metricCell(performance, "throughput", 1, context.locale, missing)),
+      cell(metricCell(performance, "latency", 2, context.locale, missing)), cell(metricCell(performance, "throughput", 2, context.locale, missing)),
+      cell(accuracyCell(accuracy, "float", context.locale, missing)), cell(accuracyCell(accuracy, "quantized", context.locale, missing)), sourceCell(first, context)
+    );
+    table.tBodies[0]!.append(row);
+  }
+  if (grouped.size === 0) emptyTableRow(table, t(context.locale, "details.noPerformanceData"), 10);
+  return wrapTable(table, t(context.locale, "details.platformBenchmarks"));
 }

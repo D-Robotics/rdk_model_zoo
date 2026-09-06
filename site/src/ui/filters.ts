@@ -4,6 +4,7 @@ import { t, taskTranslationKey } from "../i18n/translations";
 
 export const DEFAULT_QUERY: CatalogQuery = {
   text: "",
+  platform: "",
   tasks: [],
   formats: [],
   precisions: [],
@@ -75,6 +76,13 @@ export function createFilters(
     addOption(taskControl.select, task, t(locale, taskTranslationKey(task)));
   }
 
+  const platformControl = labeledSelect("catalog-platform", t(locale, "filter.platformLabel"));
+  addOption(platformControl.select, "", t(locale, "filter.all"));
+  const platforms = uniqueSorted(catalog.models.flatMap((model) =>
+    (model.platforms ?? [model]).flatMap((platform) => platform.benchmarks.map((benchmark) => benchmark.environment.hardware))
+  ), locale);
+  for (const platform of platforms) addOption(platformControl.select, platform, platform);
+
   const formatControl = labeledSelect("catalog-format", t(locale, "filter.formatsLabel"));
   addOption(formatControl.select, "", t(locale, "filter.all"));
   const formats = uniqueSorted(catalog.models.flatMap((model) => [
@@ -103,6 +111,7 @@ export function createFilters(
   addOption(sortControl.select, "accuracy", t(locale, "filter.sortAccuracy"));
 
   taskControl.select.value = initialQuery.tasks[0] ?? "";
+  platformControl.select.value = initialQuery.platform;
   formatControl.select.value = initialQuery.formats[0] ?? "";
   precisionControl.select.value = initialQuery.precisions[0] ?? "";
   benchmarkControl.select.value = initialQuery.benchmark;
@@ -117,6 +126,7 @@ export function createFilters(
   controls.className = "filter-grid";
   controls.append(
     searchWrapper,
+    platformControl.wrapper,
     taskControl.wrapper,
     formatControl.wrapper,
     precisionControl.wrapper,
@@ -128,6 +138,7 @@ export function createFilters(
 
   const readQuery = (): CatalogQuery => ({
     text: search.value,
+    platform: platformControl.select.value,
     tasks: taskControl.select.value ? [taskControl.select.value] : [],
     formats: formatControl.select.value ? [formatControl.select.value] : [],
     precisions: precisionControl.select.value ? [precisionControl.select.value] : [],
@@ -137,6 +148,7 @@ export function createFilters(
   const emit = (): void => onChange(readQuery());
   const resetControls = (): void => {
     search.value = "";
+    platformControl.select.value = "";
     taskControl.select.value = "";
     formatControl.select.value = "";
     precisionControl.select.value = "";
@@ -146,7 +158,7 @@ export function createFilters(
   };
 
   search.addEventListener("input", emit);
-  for (const select of [taskControl.select, formatControl.select, precisionControl.select, benchmarkControl.select, sortControl.select]) {
+  for (const select of [platformControl.select, taskControl.select, formatControl.select, precisionControl.select, benchmarkControl.select, sortControl.select]) {
     select.addEventListener("change", emit);
   }
   reset.addEventListener("click", resetControls);
@@ -156,7 +168,7 @@ export function createFilters(
     reset: resetControls,
     destroy() {
       search.removeEventListener("input", emit);
-      for (const select of [taskControl.select, formatControl.select, precisionControl.select, benchmarkControl.select, sortControl.select]) {
+      for (const select of [platformControl.select, taskControl.select, formatControl.select, precisionControl.select, benchmarkControl.select, sortControl.select]) {
         select.removeEventListener("change", emit);
       }
       reset.removeEventListener("click", resetControls);

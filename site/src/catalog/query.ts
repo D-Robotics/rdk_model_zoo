@@ -2,6 +2,7 @@ import type { BenchmarkRecord, MetricRecord, ModelRecord } from "./types";
 
 export interface CatalogQuery {
   text: string;
+  platform: string;
   tasks: string[];
   formats: string[];
   precisions: string[];
@@ -127,6 +128,7 @@ function modelPrecisions(model: ModelRecord): string[] {
 
 function matchesFilters(model: ModelRecord, query: CatalogQuery): boolean {
   return matchesSearch(model, query.text)
+    && (query.platform === "" || benchmarkValues(model).some((benchmark) => normalize(benchmark.environment.hardware) === normalize(query.platform)))
     && hasAnySelectedValue(model.tasks, query.tasks)
     && hasAnySelectedValue(modelFormats(model), query.formats)
     && hasAnySelectedValue(modelPrecisions(model), query.precisions)

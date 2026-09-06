@@ -183,7 +183,8 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
     const details = renderModelDetails(model, {
       locale: options.locale,
       repositoryUrl: REPOSITORY_URL,
-      releaseTag: catalog.release.tag
+      releaseTag: catalog.release.tag,
+      platform: state.query.platform || undefined
     });
     const close = details.querySelector<HTMLButtonElement>('[data-action="close-details"]')!;
     const closeDetails = (): void => {

@@ -1,7 +1,5 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { parse } from "yaml";
 import type { BenchmarkRecord, Catalog, CatalogPlatform, ModelRecord, PlatformModelRecord } from "../src/catalog/types";
 
@@ -10,8 +8,6 @@ const execFileAsync = promisify(execFile);
 interface ManifestModel extends Omit<ModelRecord, "benchmarks" | "platforms"> {}
 interface SourceDocument { release: { tag: string; platform: CatalogPlatform; version: string }; summary?: Record<string, number>; models: ManifestModel[]; }
 interface BenchmarkDocument { release: { tag: string }; benchmarks: BenchmarkRecord[]; }
-interface IdentitySource { platform: CatalogPlatform; sample_id: string; variant_id: string; }
-interface Identity { id: string; name: string; sources: IdentitySource[]; }
 
 async function gitShow(repositoryRoot: string, ref: string, path: string): Promise<string> {
   const result = await execFileAsync("git", ["-C", repositoryRoot, "show", `${ref}:${path}`], { encoding: "utf8" });
@@ -32,10 +28,6 @@ async function manifestPair(repositoryRoot: string, ref: string, tag: string): P
   return { models, benchmarks };
 }
 
-function recordsFor(model: ManifestModel, benchmarks: BenchmarkDocument, variantId?: string): BenchmarkRecord[] {
-  return benchmarks.benchmarks.filter((benchmark) => benchmark.sample_id === model.id && (variantId === undefined || benchmark.variant_id === variantId));
-}
-
 function toPlatformModel(platform: CatalogPlatform, tag: string, model: ManifestModel, benchmarks: BenchmarkRecord[]): PlatformModelRecord {
   return { ...model, platform, release_tag: tag, benchmarks };
 }
@@ -45,43 +37,58 @@ function cardFromPlatforms(id: string, name: string, platforms: PlatformModelRec
   return { ...representative, id, name, platforms };
 }
 
+function familyIdentity(model: ManifestModel, benchmark?: BenchmarkRecord): { id: string; name: string } {
+  const text = `${model.id} ${benchmark?.variant_id ?? ""}`.toLowerCase();
+  const yolo = /yolov?(\d+)/.exec(text);
+  if (yolo) return { id: `yolov${yolo[1]}`, name: `YOLOv${yolo[1]}` };
+  if (text.includes("mobilenet")) return { id: "mobilenet", name: "MobileNet" };
+  return { id: model.id, name: model.name };
+}
+
+function mergePlatformModels(platform: CatalogPlatform, tag: string, models: Array<{ model: ManifestModel; benchmarks: BenchmarkRecord[] }>): PlatformModelRecord {
+  const first = models[0]!;
+  const assets = models.flatMap((entry) => entry.model.assets).filter((asset, index, all) =>
+    all.findIndex((candidate) => candidate.filename === asset.filename) === index
+  );
+  const benchmarks = models.flatMap((entry) => entry.benchmarks);
+  return toPlatformModel(platform, tag, { ...first.model, assets, tasks: [...new Set(models.flatMap((entry) => entry.model.tasks))] }, benchmarks);
+}
+
 export async function buildMultiplatformCatalog(repositoryRoot: string): Promise<Catalog> {
   // x5-v1.0.0 predates the first committed X5 manifests.  Its immutable
   // release identity is retained while rdk_x5 supplies that release's data.
   const tags: Array<[CatalogPlatform, string, string]> = [["x5", "rdk_x5", "x5-v1.0.0"], ["s", "s-v1.0.0", "s-v1.0.0"], ["x3", "x3-v1.0.0", "x3-v1.0.0"]];
   const loaded = new Map<CatalogPlatform, Awaited<ReturnType<typeof manifestPair>>>();
   for (const [platform, ref, tag] of tags) loaded.set(platform, await manifestPair(repositoryRoot, ref, tag));
-  const registryText = await readFile(resolve(repositoryRoot, "release/catalog-identities.yaml"), "utf8");
-  const identities = (parse(registryText) as { identities: Identity[] }).identities;
-  const used = new Set<string>();
-  const cards: ModelRecord[] = [];
-  for (const identity of identities) {
-    const platforms = identity.sources.map((source) => {
-      const loadedSource = loaded.get(source.platform)!;
-      const model = loadedSource.models.models.find((candidate) => candidate.id === source.sample_id);
-      if (!model) throw new Error(`Identity ${identity.id} references missing sample ${source.platform}/${source.sample_id}`);
-      const benchmarks = recordsFor(model, loadedSource.benchmarks, source.variant_id);
-      if (benchmarks.length === 0) throw new Error(`Identity ${identity.id} references missing variant ${source.platform}/${source.variant_id}`);
-      used.add(`${source.platform}:${source.sample_id}:${source.variant_id}`);
-      return toPlatformModel(source.platform, loadedSource.models.release.tag, model, benchmarks);
-    });
-    cards.push(cardFromPlatforms(identity.id, identity.name, platforms));
-  }
+  const families = new Map<string, { name: string; platforms: Map<CatalogPlatform, Array<{ model: ManifestModel; benchmarks: BenchmarkRecord[] }>> }>();
   for (const [platform] of tags) {
     const source = loaded.get(platform)!;
     for (const model of source.models.models) {
-      const variants = new Set(recordsFor(model, source.benchmarks).map((record) => record.variant_id));
-      if (variants.size === 0) {
-        cards.push(cardFromPlatforms(`${platform}-${model.id}`, model.name, [toPlatformModel(platform, source.models.release.tag, model, [])]));
-        continue;
+      const byFamily = new Map<string, BenchmarkRecord[]>();
+      for (const benchmark of source.benchmarks.benchmarks.filter((record) => record.sample_id === model.id)) {
+        const family = familyIdentity(model, benchmark);
+        const records = byFamily.get(family.id) ?? [];
+        records.push(benchmark);
+        byFamily.set(family.id, records);
       }
-      for (const variantId of variants) {
-        if (used.has(`${platform}:${model.id}:${variantId}`)) continue;
-        const benchmarks = recordsFor(model, source.benchmarks, variantId);
-        cards.push(cardFromPlatforms(`${platform}-${model.id}-${variantId}`, benchmarks[0]?.display_name ?? model.name, [toPlatformModel(platform, source.models.release.tag, model, benchmarks)]));
+      if (byFamily.size === 0) byFamily.set(familyIdentity(model).id, []);
+      for (const [familyId, benchmarks] of byFamily) {
+        const identity = familyIdentity(model, benchmarks[0]);
+        const family = families.get(familyId) ?? { name: identity.name, platforms: new Map() };
+        const platformModels = family.platforms.get(platform) ?? [];
+        platformModels.push({ model, benchmarks });
+        family.platforms.set(platform, platformModels);
+        families.set(familyId, family);
       }
     }
   }
+  const cards: ModelRecord[] = [...families.entries()].map(([id, family]) => cardFromPlatforms(
+    id,
+    family.name,
+    tags.filter(([platform]) => family.platforms.has(platform)).map(([platform]) =>
+      mergePlatformModels(platform, loaded.get(platform)!.models.release.tag, family.platforms.get(platform)!)
+    )
+  ));
   return {
     schema_version: 1,
     release: { platform: "multi", version: "1.0.0", tag: "x5-v1.0.0+s-v1.0.0+x3-v1.0.0" },
