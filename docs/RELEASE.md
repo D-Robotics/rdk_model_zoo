@@ -69,7 +69,7 @@ The model manifest and benchmark manifest describe the published source inventor
      --verify-tag
    ```
 
-8. For an `x5-v*` release, wait for `.github/workflows/model-catalog-pages.yml` to deploy the catalog. Open [the public catalog](https://d-robotics.github.io/rdk_model_zoo/) and verify the displayed Release Tag, model count, asset count, and representative source links. S and X3 Releases publish their manifests without replacing the current X5-only catalog; the Pages build is skipped for those tags until the multi-platform catalog is available.
+8. For an `x5-v*` release, wait for `.github/workflows/model-catalog-pages.yml` to deploy the catalog. Open [the public catalog](https://d-robotics.github.io/rdk_model_zoo/) and verify the displayed Release Tag, model count, asset count, and representative source links. The deployed catalog aggregates the immutable X5, S, and X3 release manifests by exact model variant. S and X3 release events remain skipped because an X5 release or a manual dispatch deploys the aggregate catalog.
 9. Verify that the GitHub Release, attached manifest, tag, branch commit, `VERSION`, repository manifests, and deployed catalog all refer to the same platform version. Record the release URL and commit in the change log or release record when the project workflow requires it.
 
 If the Pages deployment fails, fix the source and publish a corrective commit and tag. Use `workflow_dispatch` only to retry an unchanged, already approved ref; it must not be used to replace a published tag with different data.

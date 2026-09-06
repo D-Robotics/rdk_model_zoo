@@ -69,7 +69,7 @@ Manifest 记录本版本提供的模型和资源、示例路径、下载脚本�
      --verify-tag
    ```
 
-8. 对于 `x5-v*` Release，等待 `.github/workflows/model-catalog-pages.yml` 完成目录部署。打开[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)，核对页面显示的 Release Tag、模型数量、资产数量和代表性来源链接。S 和 X3 Release 会发布各自 Manifest，但在多平台目录完成前不会替换当前仅含 X5 数据的目录；这些 Tag 的 Pages 构建会被跳过。
+8. 对于 `x5-v*` Release，等待 `.github/workflows/model-catalog-pages.yml` 完成目录部署。打开[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)，核对页面显示的 Release Tag、模型数量、资产数量和代表性来源链接。在线目录按精确模型变体聚合不可变的 X5、S 与 X3 Release Manifest。S 和 X3 的 Release 事件仍会跳过 Pages，因为聚合目录由 X5 Release 或人工触发部署。
 9. 复核 GitHub Release、Release 附件、Tag、分支提交、`VERSION`、仓库 Manifest 和在线目录是否指向同一个平台版本。项目流程需要时，在变更记录或发版记录中记录 Release URL 和提交号。
 
 如果 Pages 部署失败，应修复来源并发布修正提交和新 Tag。`workflow_dispatch` 只能用于重试一个内容未变且已经批准的 ref，不能用它把已发布 Tag 对应的数据替换为其他内容。
