@@ -23,12 +23,12 @@ X5、S、X3 三条版本线独立维护。每条版本线使用 [Semantic Versio
 - `VERSION`：平台版本号。
 - `CHANGELOG.md`：面向用户的变更和已知限制。
 - `release/models.yaml`：该版本的模型 manifest。
-- `release/benchmarks.yaml`：该版本已公开的性能与精度证据。
+- `release/benchmarks.yaml`：该版本已经记录的性能与精度实测结果。
 - `docs/releases/<tag>.md`：用于 GitHub Release 的发版说明。
 
 Manifest 记录本版本提供的模型和资源、示例路径、下载脚本或 URL、文件格式，以及已知的校验和。未知的 SHA-256 必须明确写为 `null`，不能猜测或伪造。只要 manifest 中存在 `sha256: null`，发版说明就必须披露校验和覆盖不完整。
 
-模型 Manifest 与 Benchmark Manifest 描述已发布的源码资源和文档中公开的测量结果。YAML Manifest、GitHub Release 资产和模型 README 是权威来源，在线模型目录是它们的展示层。除来源文档明确记录的条件外，这些内容不代表板端运行或兼容性认证。
+模型 Manifest 与 Benchmark Manifest 描述已发布的源码资源和文档中已经记录的测量结果。YAML Manifest、GitHub Release 资产和模型 README 是权威来源，在线模型目录是它们的展示层。缺失的性能或精度指标表示该版本尚未完成或记录对应实测，不表示数据受限或保密。除来源文档明确记录的条件外，这些内容不代表板端运行或兼容性认证。
 
 ## 3. 人工发版流程
 

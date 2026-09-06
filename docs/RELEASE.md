@@ -23,12 +23,12 @@ Every release commit must update or verify all of the following files:
 - `VERSION` — the platform version.
 - `CHANGELOG.md` — user-visible changes and known limitations.
 - `release/models.yaml` — the model manifest for the release.
-- `release/benchmarks.yaml` — published performance and accuracy evidence for the release.
+- `release/benchmarks.yaml` — documented performance and accuracy measurements for the release.
 - `docs/releases/<tag>.md` — the release notes used by GitHub Releases.
 
 The manifest records the models and assets exposed by the release, their sample paths, download scripts or URLs, formats, and checksums when available. An unknown SHA-256 value must be written as `null`; it must not be guessed. The release notes must disclose that checksum coverage is incomplete whenever any manifest entry has `sha256: null`.
 
-The model manifest and benchmark manifest describe the published source inventory and documented measurements. The YAML manifests, GitHub Release assets, and model READMEs remain authoritative; the online catalog is their presentation layer. They do not certify runtime behavior or board compatibility beyond the conditions explicitly recorded in the source documentation.
+The model manifest and benchmark manifest describe the published source inventory and documented measurements. The YAML manifests, GitHub Release assets, and model READMEs remain authoritative; the online catalog is their presentation layer. A missing performance or accuracy metric means that measurement has not yet been run or recorded for this release; it never indicates restricted data. They do not certify runtime behavior or board compatibility beyond the conditions explicitly recorded in the source documentation.
 
 ## 3. Manual release procedure
 

@@ -157,8 +157,8 @@ describe("catalog application", () => {
   it("shows explicit performance and accuracy empty states", () => {
     mountCatalog(root(), catalogWithoutBenchmarks, { locale: "en" });
 
-    expect(document.body.textContent).toContain("No published performance data");
-    expect(document.body.textContent).toContain("No published accuracy data");
+    expect(document.body.textContent).toContain("Performance not yet measured");
+    expect(document.body.textContent).toContain("Accuracy not yet measured");
   });
 
   it("resets search and filters to the full catalog", () => {

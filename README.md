@@ -51,7 +51,7 @@ This repository uses hardware-specific branches to keep maintained samples, lega
 
 **Current X5 release:** [`x5-v1.0.0`](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/x5-v1.0.0) · [Online model catalog](https://d-robotics.github.io/rdk_model_zoo/) · [Version](./VERSION) · [Changelog](./CHANGELOG.md) · [Model manifest](./release/models.yaml) · [Benchmark manifest](./release/benchmarks.yaml) · [Release policy](./docs/RELEASE.md)
 
-The online catalog presents the released models as searchable cards with model assets, published performance and accuracy results, and their documented test conditions. Missing metrics remain explicitly unavailable; the catalog does not infer values that the repository has not published.
+The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their documented test conditions. A missing performance or accuracy metric means it has not yet been measured; the catalog does not infer or fabricate values.
 
 ---
 

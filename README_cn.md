@@ -51,7 +51,7 @@
 
 **当前 X5 版本：** [`x5-v1.0.0`](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/x5-v1.0.0) · [在线模型目录](https://d-robotics.github.io/rdk_model_zoo/) · [版本号](./VERSION) · [变更日志](./CHANGELOG.md) · [模型清单](./release/models.yaml) · [Benchmark 清单](./release/benchmarks.yaml) · [发版规范](./docs/RELEASE_cn.md)
 
-在线模型目录以可搜索卡片展示已发布模型、模型资产、性能与精度结果及其文档中公开的测试条件。缺失指标会明确显示为未公开，不会根据其他指标推算或补造数值。
+在线模型目录以可搜索卡片展示已发布模型、模型资产、已经实测的性能与精度结果及其测试条件。缺失的性能或精度指标均表示尚未实测，不会根据其他指标推算或补造数值。
 
 ---
 
