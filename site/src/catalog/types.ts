@@ -48,6 +48,15 @@ export interface ModelRecord {
   download_scripts: string[];
   assets: Array<{ filename: string; format: string; url?: string; sha256?: string | null }>;
   benchmarks: BenchmarkRecord[];
+  /** The same exact variant's evidence on every supported RDK line. */
+  platforms?: PlatformModelRecord[];
+}
+
+export type CatalogPlatform = "x5" | "s" | "x3";
+
+export interface PlatformModelRecord extends Omit<ModelRecord, "platforms"> {
+  platform: CatalogPlatform;
+  release_tag: string;
 }
 
 export type CatalogSummary = Record<string, number>;

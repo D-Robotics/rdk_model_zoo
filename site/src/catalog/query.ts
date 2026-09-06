@@ -57,7 +57,7 @@ function hasAnySelectedValue(values: string[], selected: string[]): boolean {
 }
 
 function benchmarkValues(model: ModelRecord): BenchmarkRecord[] {
-  return model.benchmarks;
+  return (model.platforms ?? [model]).flatMap((platform) => platform.benchmarks);
 }
 
 function modelSearchValues(model: ModelRecord): string[] {
@@ -110,8 +110,9 @@ function matchesSearch(model: ModelRecord, text: string): boolean {
 }
 
 function modelFormats(model: ModelRecord): string[] {
+  const platforms = model.platforms ?? [model];
   return [
-    ...model.assets.map((asset) => asset.format),
+    ...platforms.flatMap((platform) => platform.assets.map((asset) => asset.format)),
     ...benchmarkValues(model)
       .map((benchmark) => benchmark.model_format)
       .filter((format): format is string => format !== undefined)

@@ -248,18 +248,15 @@ export function renderModelDetails(model: ModelRecord, context: DetailContext): 
   close.textContent = t(context.locale, "details.close");
   close.setAttribute("aria-label", t(context.locale, "details.close"));
 
-  const sample = document.createElement("a");
-  sample.href = `${context.repositoryUrl}/blob/${encodeURIComponent(context.releaseTag)}/${model.sample_path}/README.md`;
-  sample.textContent = t(context.locale, "details.viewSample");
-
-  root.append(
-    heading,
-    close,
-    sample,
-    variantsTable(model, context),
-    metricTable(model, "performance", context),
-    metricTable(model, "accuracy", context),
-    assetsTable(model, context)
-  );
+  root.append(heading, close);
+  for (const platformModel of model.platforms ?? [{ ...model, platform: "x5" as const, release_tag: context.releaseTag }]) {
+    const platformHeading = document.createElement("h3");
+    platformHeading.className = "platform-heading";
+    platformHeading.textContent = `${t(context.locale, "model.platform")}: ${platformModel.platform.toUpperCase()} · ${platformModel.release_tag}`;
+    const sample = document.createElement("a");
+    sample.href = `${context.repositoryUrl}/blob/${encodeURIComponent(platformModel.release_tag)}/${platformModel.sample_path}/README.md`;
+    sample.textContent = t(context.locale, "details.viewSample");
+    root.append(platformHeading, sample, variantsTable(platformModel, context), metricTable(platformModel, "performance", context), metricTable(platformModel, "accuracy", context), assetsTable(platformModel, context));
+  }
   return root;
 }

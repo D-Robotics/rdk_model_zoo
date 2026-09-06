@@ -140,17 +140,17 @@ export function renderModelCard(
     tasks.append(item);
   }
 
-  const formats = unique([
-    ...model.assets.map((asset) => asset.format),
-    ...model.benchmarks.map((benchmark) => benchmark.model_format)
-  ]);
-  const precisions = unique(model.benchmarks.map((benchmark) => benchmark.precision));
-  const variants = unique(model.benchmarks.map((benchmark) => benchmark.variant_id));
-  const checksummed = model.assets.filter((asset) => asset.sha256).length;
+  const platformModels = model.platforms ?? [{ ...model, platform, release_tag: "" }];
+  const allBenchmarks = platformModels.flatMap((entry) => entry.benchmarks);
+  const allAssets = platformModels.flatMap((entry) => entry.assets);
+  const formats = unique([...allAssets.map((asset) => asset.format), ...allBenchmarks.map((benchmark) => benchmark.model_format)]);
+  const precisions = unique(allBenchmarks.map((benchmark) => benchmark.precision));
+  const variants = unique(allBenchmarks.map((benchmark) => benchmark.variant_id));
+  const checksummed = allAssets.filter((asset) => asset.sha256).length;
   const facts = document.createElement("dl");
   facts.className = "model-facts";
   facts.append(
-    labeledValue(t(locale, "model.platform"), platform.toUpperCase()),
+    labeledValue(t(locale, "model.platform"), platformModels.map((entry) => entry.platform.toUpperCase()).join(" · ")),
     labeledValue(t(locale, "model.formats"), formats.join(", ") || t(locale, "missing.notPublished")),
     labeledValue(t(locale, "model.precisions"), precisions.join(", ") || t(locale, "missing.notPublished")),
     labeledValue(t(locale, "model.variants"), t(locale, "model.variantCount", { count: variants.length })),
@@ -158,13 +158,13 @@ export function renderModelCard(
       t(locale, "model.availability"),
       t(locale, model.availability === "download" ? "model.downloadable" : "model.manual")
     ),
-    labeledValue(t(locale, "model.checksumCoverage"), `${checksummed}/${model.assets.length}`)
+    labeledValue(t(locale, "model.checksumCoverage"), `${checksummed}/${allAssets.length}`)
   );
 
-  const performance = model.benchmarks.flatMap((benchmark) =>
+  const performance = allBenchmarks.flatMap((benchmark) =>
     (benchmark.performance ?? []).map((metric) => ({ metric, hardware: benchmark.environment.hardware }))
   );
-  const accuracy = model.benchmarks.flatMap((benchmark) =>
+  const accuracy = allBenchmarks.flatMap((benchmark) =>
     (benchmark.accuracy ?? []).map((metric) => ({ metric, hardware: benchmark.environment.hardware }))
   );
   const metrics = document.createElement("div");
