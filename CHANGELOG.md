@@ -1,5 +1,10 @@
 # Changelog
 
+## [x3-v1.1.1] - 2026-09-07
+
+- Publish refreshed model inventory with corrected release metadata and summary counts.
+- See [release notes](docs/releases/x3-v1.1.1.md) for scope, validation and checksum coverage.
+
 ## [x3 v1.1.0] - 2026-09-07
 
 - Data refresh: benchmark/accuracy values re-transcribed from sample READMEs (see x3-v1.1.0.md).
