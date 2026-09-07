@@ -1,5 +1,10 @@
 # Changelog
 
+## [x3 v1.1.0] - 2026-09-07
+
+- Data refresh: benchmark/accuracy values re-transcribed from sample READMEs (see x3-v1.1.0.md).
+
+
 ## x3-v1.0.0 — 2026-09-04
 
 This release records the RDK X3 model and benchmark baseline present on the
