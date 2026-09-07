@@ -103,3 +103,4 @@ window.history.pushState({}, "", next);
 
 - Final local validation: 103 tests passed; TypeScript and Vite production build passed. Browser checked at desktop and 390px widths, with hardware/task navigation, locale/theme changes and source links. Runnable download counts exclude ONNX and auxiliary metadata files.
 
+- Public deployment verification caught a summary-count mismatch between runnable-only generation and whole-manifest UI validation. Unified the UI count and added a full production-catalog deep-link regression; targeted app/integration tests (22) and browser reload passed.

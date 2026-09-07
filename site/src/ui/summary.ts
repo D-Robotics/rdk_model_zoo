@@ -9,11 +9,17 @@ export interface SummaryStats {
 }
 
 export function catalogSummaryStats(catalog: Catalog): SummaryStats {
-  const totalAssets = catalog.models.reduce((total, model) => total + model.assets.length, 0);
+  // Variant-aware catalogs count only the hardware downloads displayed by
+  // the UI. Legacy catalogs retain their original whole-manifest semantics.
+  const assets = catalog.models.some((model) => model.variants !== undefined)
+    ? [...new Map(catalog.models.flatMap((model) => model.variants ?? [])
+      .flatMap((variant) => variant.assets).map((asset) => [asset.url ?? asset.filename, asset])).values()]
+    : catalog.models.flatMap((model) => model.assets);
+  const totalAssets = assets.length;
   const stats = {
     models: catalog.models.length,
     tasks: new Set(catalog.models.flatMap((model) => model.tasks)).size,
-    assets: catalog.models.flatMap((model) => model.assets).filter((asset) => asset.url).length,
+    assets: assets.filter((asset) => asset.url).length,
     benchmarks: catalog.models.reduce((total, model) => total + model.benchmarks.length, 0)
   };
 
