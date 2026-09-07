@@ -53,14 +53,7 @@ describe("model family card view model", () => {
     expect(s100.platform).toBe("s100");
   });
 
-  it("maps task families to decorative visual categories without reading model output", () => {
-    expect(buildModelCardViewModel(createModelFixture({ tasks: ["image-classification"] })).visualKind)
-      .toBe("classification");
-    expect(buildModelCardViewModel(createModelFixture({ tasks: ["semantic-segmentation"] })).visualKind)
-      .toBe("segmentation");
-    expect(buildModelCardViewModel(createModelFixture({ tasks: ["legged-locomotion-control"] })).visualKind)
-      .toBe("robotics");
-  });
+
 });
 
 describe("model family card", () => {
@@ -69,13 +62,12 @@ describe("model family card", () => {
     window.history.replaceState({}, "", "/?platform=x5");
   });
 
-  it("renders the visual, scoped specifications, hardware controls, and detail action", () => {
+  it("renders compact text, scoped specifications, hardware controls, and detail action", () => {
     const selected = vi.fn<(modelId: string, hardware?: HardwareId) => void>();
     const card = renderModelCard(modelWithVariants(), "x5", "en", selected);
     document.body.append(card.element);
 
-    expect(card.element.querySelector(".model-card-visual")?.getAttribute("aria-hidden")).toBe("true");
-    expect(card.element.querySelector<HTMLElement>(".model-card-visual")?.dataset.visualKind).toBe("detection");
+    expect(card.element.querySelector(".model-card-visual, img, svg")).toBeNull();
     expect(card.element.querySelector(".card-specifications")?.textContent).toBe("YOLOv8n · YOLOv8s");
     expect(card.element.querySelectorAll(".hardware-badges [data-hardware]")).toHaveLength(2);
     expect(card.element.querySelector('[data-action="open-details"]')).not.toBeNull();

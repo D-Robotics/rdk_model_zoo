@@ -24,7 +24,7 @@ npm run check
 
 - `app.ts` 组合目录和独立详情，`ui/navigation.ts` 管理可分享的查询参数。
 - `ui/filters.ts` 提供硬件快捷栏、任务侧栏、搜索和手机筛选草稿；任务分组集中在 `catalog/task-groups.ts`，新增任务使用稳定 ID，未归类项进入其他任务。
-- `catalog/card-view-model.ts` 适配现有数据并生成当前硬件范围的卡片摘要；`ui/model-card.ts` 只负责卡片展示。装饰图形不代表实际模型输出。
+- `catalog/card-view-model.ts` 适配现有数据并生成当前硬件范围的卡片摘要；`ui/model-card.ts` 只负责卡片展示。模型卡片采用纯文字布局，不展示图片或装饰图形。
 - 详情由页面、规格表、精度对照、文件下载和来源组件组合；数值格式继续复用 `catalog/metric-display.ts`。
 - 基础样式位于 `styles.css`，目录与卡片、详情分别维护局部样式。页面支持系统／浅色／深色主题以及中英文。
 

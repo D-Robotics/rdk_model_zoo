@@ -20,12 +20,6 @@ export function renderModelCard(
   article.dataset.platform = viewModel.platform || "all";
   article.dataset.variantCount = String(viewModel.variantCount);
 
-  const visual = document.createElement("div");
-  visual.className = "model-card-visual";
-  visual.dataset.visualKind = viewModel.visualKind;
-  visual.setAttribute("aria-hidden", "true");
-  visual.append(document.createElement("span"), document.createElement("span"), document.createElement("span"));
-
   const body = document.createElement("div");
   body.className = "model-card-body";
 
@@ -130,7 +124,7 @@ export function renderModelCard(
   actions.append(details);
 
   body.append(heading, tasks, specificationsGroup, hardwareGroup, actions);
-  article.append(visual, body);
+  article.append(body);
   return {
     element: article,
     destroy() {

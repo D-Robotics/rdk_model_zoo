@@ -1,18 +1,6 @@
 import type { HardwareId, ModelRecord, ModelVariant } from "./types";
 import { getHardwareIds, getModelVariants, normalizeHardware } from "./variants";
 
-/** Decorative categories used by the card artwork. They carry no model data. */
-export type CardVisualKind =
-  | "detection"
-  | "segmentation"
-  | "classification"
-  | "pose"
-  | "text"
-  | "audio"
-  | "robotics"
-  | "language"
-  | "general";
-
 export interface ModelCardViewModel {
   modelId: string;
   name: string;
@@ -20,13 +8,8 @@ export interface ModelCardViewModel {
   specifications: string[];
   hardware: HardwareId[];
   variantCount: number;
-  visualKind: CardVisualKind;
   /** The active hardware scope, or an empty string when the catalog is unscoped. */
   platform: HardwareId | "";
-}
-
-function normalized(value: string): string {
-  return value.normalize("NFKC").toLocaleLowerCase();
 }
 
 function unique(values: string[]): string[] {
@@ -64,19 +47,6 @@ function sortSpecifications(model: ModelRecord, names: string[]): string[] {
   return [...names].sort((left, right) => rank(left) - rank(right) || left.localeCompare(right));
 }
 
-function visualKind(tasks: string[]): CardVisualKind {
-  const text = tasks.map(normalized).join(" ");
-  if (/segmentation|semantic-segmentation|instance-segmentation/.test(text)) return "segmentation";
-  if (/pose/.test(text)) return "pose";
-  if (/ocr|text-detection|text-recognition/.test(text)) return "text";
-  if (/object-detection|oriented-bounding-box|detection/.test(text)) return "detection";
-  if (/classification|classify/.test(text)) return "classification";
-  if (/audio|speech|sound|voice/.test(text)) return "audio";
-  if (/robot|locomotion|control|depth|stereo/.test(text)) return "robotics";
-  if (/language|llm|multimodal|embedding|caption|question-answer/.test(text)) return "language";
-  return "general";
-}
-
 function scopedVariants(model: ModelRecord, platform: HardwareId | ""): ModelVariant[] {
   const variants = getModelVariants(model);
   return platform ? variants.filter((variant) => variant.hardware === platform) : variants;
@@ -99,7 +69,6 @@ export function buildModelCardViewModel(model: ModelRecord, platform = ""): Mode
     specifications,
     hardware: getHardwareIds(model),
     variantCount: variants.length,
-    visualKind: visualKind(taskSource),
     platform: activePlatform
   };
 }
