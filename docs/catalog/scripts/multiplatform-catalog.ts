@@ -208,7 +208,14 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
   // Pull-request checkouts can be detached with only remote branch refs.
   const x5Ref = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", "--verify", "refs/heads/rdk_x5"])
     .then(() => "refs/heads/rdk_x5", () => "refs/remotes/origin/rdk_x5");
-  const tags: Array<[CatalogPlatform, string, string]> = [["x5", x5Ref, "x5-v1.0.0"], ["s", "s-v1.0.0", "s-v1.0.0"], ["x3", "x3-v1.0.0", "x3-v1.0.0"]];
+  // S and X3 release tags keep their immutable release identity, but their live
+  // branches supply the refreshed benchmark data (tags are stale for S/X3 the
+  // same way x5-v1.0.0 was stale for X5).  Refresh display data without retagging.
+  const sRef = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", "--verify", "refs/heads/rdk_s"])
+    .then(() => "refs/heads/rdk_s", () => "refs/remotes/origin/rdk_s");
+  const x3Ref = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", "--verify", "refs/heads/rdk_x3"])
+    .then(() => "refs/heads/rdk_x3", () => "refs/remotes/origin/rdk_x3");
+  const tags: Array<[CatalogPlatform, string, string]> = [["x5", x5Ref, "x5-v1.0.0"], ["s", sRef, "s-v1.0.0"], ["x3", x3Ref, "x3-v1.0.0"]];
   const loaded = new Map<CatalogPlatform, Awaited<ReturnType<typeof manifestPair>>>();
   for (const [platform, ref, tag] of tags) loaded.set(platform, await manifestPair(repositoryRoot, ref, tag));
   const sSource = loaded.get("s");
