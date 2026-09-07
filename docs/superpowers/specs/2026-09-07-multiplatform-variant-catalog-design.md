@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-07
 
-**Status:** Approved in conversation
+**Status:** Superseded for card identity and presentation by subsequent family-card requirements and `2026-09-07-hardware-model-detail-design.md` (the consolidated detail-page proposal is awaiting review). This document records the earlier design and is not the current UI specification.
 
 ## Purpose
 
