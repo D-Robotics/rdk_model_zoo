@@ -51,6 +51,8 @@
 
 ---
 
+**[浏览在线模型目录 →](https://d-robotics.github.io/rdk_model_zoo/)**
+
 ## 目录结构
 
 <details>
@@ -171,6 +173,8 @@ bash run.sh
 ---
 
 ## 文档与资源
+
+- **维护文档**：发布规范、清单和网站维护统一收录在 **[文档索引](./docs/README.md)**。
 
 - **模型文档**：每个模型的顶层 `README.md` 提供整体介绍与运行指引。
 - **源码参考**：代码层面的接口信息，请参阅 **[源码文档说明](./docs/source_reference/README.md)**。

@@ -22,3 +22,7 @@ The source tree itself is unchanged by that omission.
 This release is a documentation and manifest baseline. It does not certify
 runtime behavior, board compatibility, or a repository-wide board test result.
 The public GitHub Release attaches both `models.yaml` and `benchmarks.yaml`.
+
+Current branch location: `docs/release/`. Historical tag `s-v1.0.0` keeps
+its original `release/` paths. See the [documentation index](../README.md)
+for the shared release policy and website maintenance instructions.

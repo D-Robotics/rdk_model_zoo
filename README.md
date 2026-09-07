@@ -51,6 +51,8 @@ This repository uses hardware-specific branches to keep maintained samples, lega
 
 ---
 
+**[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**
+
 ## Directory Structure
 
 <details>
@@ -171,6 +173,8 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 ---
 
 ## Documentation & Resources
+
+- **Maintainer documentation**: See the [documentation index](./docs/README.md) for release policy, manifests and website maintenance.
 
 - **Model Docs**: Each model's top-level `README.md` provides an overview, run guide, and interface description.
 - **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.
