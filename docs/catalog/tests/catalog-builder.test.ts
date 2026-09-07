@@ -3,15 +3,15 @@ import { describe, expect, it, vi } from "vitest";
 import { fileURLToPath } from "node:url";
 import { buildCatalog } from "../scripts/catalog-builder";
 
-const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
 function buildRepositoryCatalog(onWarning?: (message: string) => void) {
   return buildCatalog({
     repositoryRoot,
-    modelsPath: "release/models.yaml",
-    benchmarksPath: "release/benchmarks.yaml",
-    modelsSchemaPath: "release/schemas/models.schema.json",
-    benchmarksSchemaPath: "release/schemas/benchmarks.schema.json",
+    modelsPath: "docs/release/models.yaml",
+    benchmarksPath: "docs/release/benchmarks.yaml",
+    modelsSchemaPath: "docs/release/schemas/models.schema.json",
+    benchmarksSchemaPath: "docs/release/schemas/benchmarks.schema.json",
     onWarning
   });
 }

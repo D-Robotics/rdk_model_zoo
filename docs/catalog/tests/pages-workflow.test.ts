@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
-const workflowPath = fileURLToPath(new URL("../../.github/workflows/model-catalog-pages.yml", import.meta.url));
+const workflowPath = fileURLToPath(new URL("../../../.github/workflows/model-catalog-pages.yml", import.meta.url));
 
 interface PagesWorkflow {
   on: {

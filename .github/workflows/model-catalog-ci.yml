@@ -3,18 +3,18 @@ name: Model catalog CI
 on:
   pull_request:
     paths:
-      - "site/**"
-      - "release/models.yaml"
-      - "release/benchmarks.yaml"
-      - "release/schemas/**"
+      - "docs/catalog/**"
+      - "docs/release/models.yaml"
+      - "docs/release/benchmarks.yaml"
+      - "docs/release/schemas/**"
       - ".github/workflows/model-catalog-ci.yml"
       - ".github/workflows/model-catalog-pages.yml"
   push:
     paths:
-      - "site/**"
-      - "release/models.yaml"
-      - "release/benchmarks.yaml"
-      - "release/schemas/**"
+      - "docs/catalog/**"
+      - "docs/release/models.yaml"
+      - "docs/release/benchmarks.yaml"
+      - "docs/release/schemas/**"
       - ".github/workflows/model-catalog-ci.yml"
       - ".github/workflows/model-catalog-pages.yml"
 
@@ -35,10 +35,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache-dependency-path: docs/catalog/package-lock.json
       - name: Install dependencies
         run: npm ci
-        working-directory: site
+        working-directory: docs/catalog
       - name: Validate catalog and build site
         run: npm run check
-        working-directory: site
+        working-directory: docs/catalog

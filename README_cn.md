@@ -49,7 +49,7 @@
 | RDK X3 | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | RDK X3 设备请切换到该分支。 |
 | RDK S 系列 | [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | RDK S 系列板卡请切换到该分支。RDK S 系列板卡的历史 demo 保留在 [RDK Model Zoo S](https://github.com/d-Robotics/rdk_model_zoo_s) 仓库。 |
 
-**当前 X5 版本：** [`x5-v1.0.0`](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/x5-v1.0.0) · [在线模型目录](https://d-robotics.github.io/rdk_model_zoo/) · [版本号](./VERSION) · [变更日志](./CHANGELOG.md) · [模型清单](./release/models.yaml) · [Benchmark 清单](./release/benchmarks.yaml) · [发版规范](./docs/RELEASE_cn.md)
+**[浏览在线模型目录 →](https://d-robotics.github.io/rdk_model_zoo/)**
 
 在线模型目录以可搜索卡片展示已发布模型、模型资产、已经实测的性能与精度结果及其测试条件。缺失的性能或精度指标均表示尚未实测，不会根据其他指标推算或补造数值。
 
@@ -193,7 +193,7 @@ python3 main.py \
 - **开发规范**
   - 如需新增或开发 Sample，请先阅读 **[Model Zoo 仓库规范指南](./docs/Model_Zoo_Repository_Guidelines.md)**。
 - **版本发布**
-  - 请参考 **[发版规范](./docs/RELEASE_cn.md)**、**[变更日志](./CHANGELOG.md)**、版本化的 **[模型清单](./release/models.yaml)** 与 **[Benchmark 清单](./release/benchmarks.yaml)**。当前版本也可在 **[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)** 中查看。
+  - 发布规范、清单和网站维护统一收录在 **[文档索引](./docs/README.md)**。
 - **工具链文档**
   - [RDK X5 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
   - [RDK X3 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)

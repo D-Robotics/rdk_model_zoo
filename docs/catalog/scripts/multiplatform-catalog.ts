@@ -23,9 +23,13 @@ async function gitShow(repositoryRoot: string, ref: string, path: string): Promi
 }
 
 async function manifestPair(repositoryRoot: string, ref: string, tag: string): Promise<{ models: SourceDocument; benchmarks: BenchmarkDocument }> {
+  // Existing release tags keep their original paths. Read both layouts
+  // without changing immutable history or keeping duplicate live manifests.
+  const directory = await execFileAsync("git", ["-C", repositoryRoot, "cat-file", "-e", `${ref}:docs/release/models.yaml`])
+    .then(() => "docs/release", () => "release");
   const [modelsText, benchmarksText] = await Promise.all([
-    gitShow(repositoryRoot, ref, "release/models.yaml"),
-    gitShow(repositoryRoot, ref, "release/benchmarks.yaml")
+    gitShow(repositoryRoot, ref, `${directory}/models.yaml`),
+    gitShow(repositoryRoot, ref, `${directory}/benchmarks.yaml`)
   ]);
   const models = parse(modelsText) as SourceDocument;
   const benchmarks = parse(benchmarksText) as BenchmarkDocument;

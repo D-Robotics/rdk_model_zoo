@@ -22,8 +22,8 @@ Every release commit must update or verify all of the following files:
 
 - `VERSION` — the platform version.
 - `CHANGELOG.md` — user-visible changes and known limitations.
-- `release/models.yaml` — the model manifest for the release.
-- `release/benchmarks.yaml` — documented performance and accuracy measurements for the release.
+- `docs/release/models.yaml` — the model manifest for the release.
+- `docs/release/benchmarks.yaml` — documented performance and accuracy measurements for the release.
 - `docs/releases/<tag>.md` — the release notes used by GitHub Releases.
 
 The manifest records the models and assets exposed by the release, their sample paths, download scripts or URLs, formats, and checksums when available. An unknown SHA-256 value must be written as `null`; it must not be guessed. The release notes must disclose that checksum coverage is incomplete whenever any manifest entry has `sha256: null`.
@@ -33,15 +33,15 @@ The model manifest and benchmark manifest describe the published source inventor
 ## 3. Manual release procedure
 
 1. Select one platform branch and confirm that the release scope belongs to that platform.
-2. Update `VERSION`, `CHANGELOG.md`, `release/models.yaml`, `release/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
+2. Update `VERSION`, `CHANGELOG.md`, `docs/release/models.yaml`, `docs/release/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
 3. Review the manifests: sample paths and download scripts must exist, URLs must be correct, unknown checksums must be `null`, and every benchmark must cite immutable repository evidence. Check that the tag, branch, platform, and version agree in the release files.
 4. Review the source diff, then validate the catalog from a clean dependency install:
 
    ```bash
-   cd site
+   cd docs/catalog
    npm ci
    npm run check
-   cd ..
+   cd ../..
    git diff --check
    ```
 
@@ -62,8 +62,8 @@ The model manifest and benchmark manifest describe the published source inventor
 
    ```bash
    gh release create x5-v1.0.0 \
-     "release/models.yaml#models.yaml" \
-     "release/benchmarks.yaml#benchmarks.yaml" \
+     "docs/release/models.yaml#models.yaml" \
+     "docs/release/benchmarks.yaml#benchmarks.yaml" \
      --title "RDK Model Zoo X5 v1.0.0" \
      --notes-file docs/releases/x5-v1.0.0.md \
      --verify-tag

@@ -48,13 +48,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache-dependency-path: docs/catalog/package-lock.json
       - name: Install dependencies
         run: npm ci
-        working-directory: site
+        working-directory: docs/catalog
       - name: Validate catalog and build site
         run: npm run check
-        working-directory: site
+        working-directory: docs/catalog
       - name: Verify deployed release identity
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -62,7 +62,7 @@ jobs:
         run: |
           node --input-type=module -e '
             import { readFileSync } from "node:fs";
-            const catalog = JSON.parse(readFileSync("site/dist/data/catalog.json", "utf8"));
+            const catalog = JSON.parse(readFileSync("docs/catalog/dist/data/catalog.json", "utf8"));
             const tag = catalog?.release?.tag;
             if (typeof tag !== "string" || tag.trim() === "") throw new Error("Catalog release.tag is empty");
             if (process.env.EVENT_NAME === "release" && tag !== process.env.RELEASE_TAG) {
@@ -75,7 +75,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: site/dist
+          path: docs/catalog/dist
 
   deploy:
     needs: build

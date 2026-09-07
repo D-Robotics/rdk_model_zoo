@@ -30,4 +30,4 @@ The X5 manifest includes every sample in the release's top-level model list, inc
 
 The [public model catalog](https://d-robotics.github.io/rdk_model_zoo/) is generated from `models.yaml` and `benchmarks.yaml`. It displays the source Release Tag and provides searchable model cards, assets, benchmark values, test conditions, and immutable evidence links. The YAML manifests, GitHub Release assets, and sample READMEs remain the authoritative release artifacts.
 
-When either manifest changes, run `npm ci` and `npm run check` from `site/`. Publishing a GitHub Release starts `.github/workflows/model-catalog-pages.yml`; use its manual trigger only to retry an unchanged approved ref. After deployment, verify the displayed Tag and the model and asset totals against `models.yaml`.
+When either manifest changes, run `npm ci` and `npm run check` from `docs/catalog/`. Publishing a GitHub Release starts `.github/workflows/model-catalog-pages.yml`; use its manual trigger only to retry an unchanged approved ref. After deployment, verify the displayed Tag and the model and asset totals against `models.yaml`.

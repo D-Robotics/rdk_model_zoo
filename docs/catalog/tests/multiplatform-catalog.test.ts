@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fileURLToPath } from "node:url";
 import { buildMultiplatformCatalog } from "../scripts/multiplatform-catalog";
 
-const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
 describe("multi-platform variant catalog", () => {
   it("groups YOLOv8 sizes into one family card with multi-platform evidence", async () => {

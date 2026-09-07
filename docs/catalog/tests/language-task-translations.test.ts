@@ -8,7 +8,7 @@ import {
   translations
 } from "../src/i18n/translations";
 
-const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 describe("manifest task translations", () => {
   it("maps every task in the production manifest to a bilingual translation key", async () => {
     const catalog = await buildMultiplatformCatalog(repositoryRoot);

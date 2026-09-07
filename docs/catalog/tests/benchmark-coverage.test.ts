@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { buildCatalog } from "../scripts/catalog-builder";
 import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 
-const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const EXPECTED_MODEL_COUNT = 36;
 const EXPECTED_BENCHMARK_RECORD_COUNT = 227;
 const EXPECTED_PERFORMANCE_METRIC_COUNT = 623;
@@ -56,10 +56,10 @@ const EXPECTED_WITHOUT_PUBLISHED_BENCHMARKS = new Set([
 function buildRepositoryCatalog() {
   return buildCatalog({
     repositoryRoot,
-    modelsPath: "release/models.yaml",
-    benchmarksPath: "release/benchmarks.yaml",
-    modelsSchemaPath: "release/schemas/models.schema.json",
-    benchmarksSchemaPath: "release/schemas/benchmarks.schema.json"
+    modelsPath: "docs/release/models.yaml",
+    benchmarksPath: "docs/release/benchmarks.yaml",
+    modelsSchemaPath: "docs/release/schemas/models.schema.json",
+    benchmarksSchemaPath: "docs/release/schemas/benchmarks.schema.json"
   });
 }
 
