@@ -51,7 +51,7 @@ This repository uses hardware-specific branches to keep maintained samples, lega
 
 **[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**
 
-The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their documented test conditions. A missing performance or accuracy metric means it has not yet been measured; the catalog does not infer or fabricate values.
+The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their documented test conditions.
 
 ---
 
