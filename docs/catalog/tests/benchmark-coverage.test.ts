@@ -8,7 +8,7 @@ const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const EXPECTED_MODEL_COUNT = 36;
 const EXPECTED_BENCHMARK_RECORD_COUNT = 227;
 const EXPECTED_PERFORMANCE_METRIC_COUNT = 623;
-const EXPECTED_ACCURACY_METRIC_COUNT = 369;
+const EXPECTED_ACCURACY_METRIC_COUNT = 401;
 const EXPECTED_MODEL_PATHS = new Map([
   ["clip", "samples/vision/clip"],
   ["convnext", "samples/vision/convnext"],
