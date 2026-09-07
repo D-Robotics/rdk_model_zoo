@@ -176,14 +176,13 @@ describe("catalog application", () => {
     expect(document.querySelectorAll("article[data-model-id]")).toHaveLength(2);
   });
 
-  it("explains when published conditions prevent the requested numeric sort", () => {
-    mountCatalog(root(), catalog, { locale: "en" });
-    const sort = document.querySelector<HTMLSelectElement>("#catalog-sort")!;
-    sort.value = "fps";
-    sort.dispatchEvent(new Event("change", { bubbles: true }));
-
-    expect(document.querySelector(".sort-notice")?.textContent)
-      .toContain("published benchmark conditions are not comparable");
+  it("normalizes old numeric sort links to model names", () => {
+    window.history.replaceState({}, "", "/?sort=fps&q=HiMLoco");
+    const app = mountCatalog(root(), catalog, { locale: "en" });
+    expect(app.state().query.sort).toBe("name");
+    expect(document.querySelector("#catalog-sort")).toBeNull();
+    expect(document.querySelectorAll(".model-card")).toHaveLength(1);
+    app.destroy();
   });
 
   it("uses bilingual task labels from the manifest mapping", () => {
@@ -235,12 +234,12 @@ describe("catalog application", () => {
 
   it("shows the five canonical hardware filters including hardware with no current result", () => {
     mountCatalog(root(), catalog, { locale: "en" });
-    const select = document.querySelector<HTMLSelectElement>("#catalog-platform")!;
-    expect([...select.options].map(option => option.text)).toEqual(["All", "X3", "X5", "S100", "S100P", "S600"]);
-    select.value = "s600";
-    select.dispatchEvent(new Event("change"));
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>(".hardware-filter button")];
+    expect(buttons.map(button => button.textContent)).toEqual(["All", "X3", "X5", "S100", "S100P", "S600"]);
+    buttons[5]!.click();
     expect(document.querySelectorAll(".model-card")).toHaveLength(0);
-    expect(select.options).toHaveLength(6);
+    expect(buttons[5]!.getAttribute("aria-pressed")).toBe("true");
+    expect(document.querySelectorAll(".hardware-filter button")).toHaveLength(6);
   });
 
   it("renders standalone details and restores directory filters from a direct link", () => {
@@ -253,7 +252,7 @@ describe("catalog application", () => {
     document.querySelector<HTMLButtonElement>('[data-action="close-details"]')!.click();
     expect(document.querySelector<HTMLElement>(".catalog-directory")!.hidden).toBe(false);
     expect(document.querySelector<HTMLInputElement>("#catalog-search")!.value).toBe("ConvNeXt");
-    expect(document.querySelector<HTMLSelectElement>("#catalog-platform")!.value).toBe("x5");
+    expect(document.querySelector('.hardware-filter [data-platform="x5"]')?.getAttribute("aria-pressed")).toBe("true");
     expect(document.querySelectorAll(".model-card")).toHaveLength(1);
     expect(new URL(window.location.href).searchParams.has("hardware")).toBe(false);
   });

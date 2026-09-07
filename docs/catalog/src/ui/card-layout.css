@@ -1,0 +1,313 @@
+/*
+ * Model-family card layout.
+ *
+ * The artwork is intentionally CSS-only and decorative. It communicates the
+ * model's task area without presenting a generated result or a benchmark
+ * image as evidence.
+ */
+.model-grid > .model-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  border-color: color-mix(in srgb, var(--border) 82%, var(--accent));
+  border-radius: 1rem;
+  background: var(--surface-elevated);
+  box-shadow: 0 0.75rem 1.8rem rgb(25 32 40 / 7%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.model-grid > .model-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 54%, var(--border));
+  box-shadow: 0 1rem 2.4rem rgb(25 32 40 / 13%);
+  transform: translateY(-2px);
+}
+
+.model-grid > .model-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--accent) 20%, transparent), 0 1rem 2.4rem rgb(25 32 40 / 11%);
+}
+
+.model-card-visual {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 9rem;
+  aspect-ratio: 16 / 9;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--card-visual-accent) 28%, transparent), transparent 37%),
+    linear-gradient(135deg, color-mix(in srgb, var(--card-visual-accent) 17%, var(--surface)), var(--surface));
+}
+
+.model-card-visual::before,
+.model-card-visual::after,
+.model-card-visual > span {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.model-card-visual::before {
+  inset: 14%;
+  z-index: -1;
+  border: 1px solid color-mix(in srgb, var(--card-visual-accent) 42%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.2rem color-mix(in srgb, var(--card-visual-accent) 7%, transparent);
+  transform: rotate(-18deg) scaleX(1.35);
+}
+
+.model-card-visual::after {
+  inset: 0;
+  z-index: 0;
+  opacity: 0.45;
+  background-image: linear-gradient(color-mix(in srgb, var(--card-visual-accent) 11%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--card-visual-accent) 11%, transparent) 1px, transparent 1px);
+  background-size: 1.25rem 1.25rem;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+
+.model-card-visual > span:nth-child(1) {
+  inset: 27% 24%;
+  z-index: 1;
+  border: 2px solid color-mix(in srgb, var(--card-visual-accent) 78%, var(--text));
+  border-radius: 0.65rem;
+  box-shadow: 0 0 1.5rem color-mix(in srgb, var(--card-visual-accent) 23%, transparent);
+}
+
+.model-card-visual > span:nth-child(2) {
+  width: 0.6rem;
+  height: 0.6rem;
+  z-index: 2;
+  border-radius: 50%;
+  background: var(--card-visual-accent);
+  box-shadow: 1.8rem -1rem 0 color-mix(in srgb, var(--card-visual-accent) 75%, var(--text)),
+    -1.75rem 1.2rem 0 color-mix(in srgb, var(--card-visual-accent) 52%, var(--text));
+}
+
+.model-card-visual > span:nth-child(3) {
+  width: 48%;
+  height: 1px;
+  z-index: 1;
+  background: linear-gradient(90deg, transparent, var(--card-visual-accent), transparent);
+  transform: rotate(-26deg);
+}
+
+.model-card-visual[data-visual-kind="detection"] {
+  --card-visual-accent: #e26b26;
+}
+
+.model-card-visual[data-visual-kind="segmentation"] {
+  --card-visual-accent: #c57b28;
+}
+
+.model-card-visual[data-visual-kind="segmentation"] > span:nth-child(1) {
+  border-radius: 42% 58% 55% 45%;
+  transform: rotate(22deg);
+}
+
+.model-card-visual[data-visual-kind="classification"] {
+  --card-visual-accent: #b65c87;
+}
+
+.model-card-visual[data-visual-kind="classification"] > span:nth-child(1) {
+  width: 42%;
+  height: 42%;
+  border-width: 0 0 2px 2px;
+  border-radius: 0;
+  transform: skewY(-24deg);
+}
+
+.model-card-visual[data-visual-kind="pose"] {
+  --card-visual-accent: #7272c8;
+}
+
+.model-card-visual[data-visual-kind="pose"] > span:nth-child(1) {
+  inset: 22% 31%;
+  border-width: 0 2px 2px 0;
+  border-radius: 48% 48% 0 0;
+  transform: rotate(18deg);
+}
+
+.model-card-visual[data-visual-kind="text"] {
+  --card-visual-accent: #2d9b93;
+}
+
+.model-card-visual[data-visual-kind="text"] > span:nth-child(1) {
+  inset: 28% 18%;
+  border-width: 1px 0;
+  border-radius: 0;
+  transform: skewX(-22deg);
+}
+
+.model-card-visual[data-visual-kind="audio"] {
+  --card-visual-accent: #407eb9;
+}
+
+.model-card-visual[data-visual-kind="audio"] > span:nth-child(1) {
+  inset: 25% 34%;
+  border-width: 0 2px;
+  border-radius: 50%;
+  transform: scaleX(0.65);
+}
+
+.model-card-visual[data-visual-kind="robotics"] {
+  --card-visual-accent: #5a8b65;
+}
+
+.model-card-visual[data-visual-kind="robotics"] > span:nth-child(1) {
+  inset: 31% 18% 31% 18%;
+  border-width: 0 0 2px 2px;
+  border-radius: 50%;
+  transform: rotate(-12deg);
+}
+
+.model-card-visual[data-visual-kind="language"] {
+  --card-visual-accent: #7a6aa8;
+}
+
+.model-card-visual[data-visual-kind="language"] > span:nth-child(1) {
+  inset: 24% 28%;
+  border-radius: 1rem 1rem 1rem 0.2rem;
+  transform: rotate(-7deg);
+}
+
+.model-card-visual[data-visual-kind="general"] {
+  --card-visual-accent: #777f88;
+}
+
+.model-card-body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.05rem 1.1rem 1.1rem;
+}
+
+.model-card-heading {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.model-card-kicker,
+.model-card-section-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.model-card .model-card-heading h3 {
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.35rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.model-card .model-card-heading h3 a {
+  color: var(--text);
+  text-decoration: none;
+  text-wrap: balance;
+}
+
+.model-card .model-card-heading h3 a:hover {
+  color: var(--accent-strong);
+}
+
+.model-card .task-badges {
+  gap: 0.35rem;
+}
+
+.model-card .task-badges li {
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.model-card-specifications {
+  display: grid;
+  gap: 0.28rem;
+  min-height: 3.55rem;
+  padding-block: 0.72rem;
+  border-block: 1px solid var(--border);
+}
+
+.model-card .card-specifications {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.model-card .card-specifications[data-empty="true"] {
+  color: var(--muted);
+}
+
+.model-card-hardware {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.model-card .hardware-badges {
+  gap: 0.35rem;
+}
+
+.model-card .hardware-badges button {
+  min-height: 2.15rem;
+  padding: 0.25rem 0.62rem;
+  border-radius: 0.55rem;
+  background: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.model-card .hardware-badges button:hover,
+.model-card .hardware-badges button:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.model-card .model-actions {
+  margin-top: auto;
+  padding-top: 0.15rem;
+}
+
+.model-card .model-actions button {
+  min-height: 2.7rem;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  color: var(--accent-strong);
+  font-weight: 700;
+  text-align: left;
+}
+
+.model-card .model-actions button:hover {
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+}
+
+@media (min-width: 42rem) {
+  .model-card-visual {
+    min-height: 10.5rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .model-card-body {
+    padding: 0.95rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .model-grid > .model-card {
+    transition: none;
+  }
+}

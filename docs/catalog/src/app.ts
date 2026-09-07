@@ -67,6 +67,9 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
     theme: storedTheme(storage)
   };
   document.documentElement.lang = options.locale;
+  if (new URL(window.location.href).searchParams.has("sort")) {
+    window.history.replaceState({}, "", writeCatalogQuery(new URL(window.location.href), state.query));
+  }
 
   const preferences = document.createElement("div");
   preferences.className = "preference-controls";
@@ -267,7 +270,7 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
       return;
     }
     for (const model of queryResult.models) {
-      const card = renderModelCard(model, catalog.release.platform, options.locale, (modelId, hardware) => {
+      const card = renderModelCard(model, state.query.platform, options.locale, (modelId, hardware) => {
         openDetails(modelId, hardware);
       });
       renderedCards.push(card);
@@ -281,7 +284,11 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
     window.history.replaceState({}, "", writeCatalogQuery(new URL(window.location.href), query));
     renderResults();
   });
-  directory.append(summary, filters.element, results);
+  const workspace = document.createElement("div");
+  workspace.className = "catalog-workspace";
+  results.prepend(filters.toolbar, filters.chips);
+  workspace.append(filters.element, results);
+  directory.append(summary, filters.hardware, workspace);
   content.append(preferences, directory, detailHost);
   root.replaceChildren(content);
   renderResults();

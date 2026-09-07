@@ -186,4 +186,42 @@ describe("model details", () => {
     expect(element.querySelector(".model-detail-row-details")?.textContent).toContain("download_only.hbm");
     expect(element.textContent).not.toContain("—");
   });
+
+  it("renders expanded evidence as a full-width sibling row", () => {
+    const element = renderModelDetails(createModelFixture({ variants: [variant()] }), detailContext);
+    const table = element.querySelector<HTMLTableElement>(".model-detail-specifications-table")!;
+    const mainRow = table.querySelector<HTMLTableRowElement>("tbody tr.model-detail-spec-row")!;
+    const expandedRow = mainRow.nextElementSibling as HTMLTableRowElement;
+    const headerColumns = [...table.tHead!.rows[0]!.cells]
+      .reduce((total, header) => total + header.colSpan, 0);
+
+    expect(expandedRow.classList.contains("model-detail-expanded-row")).toBe(true);
+    expect(expandedRow.hidden).toBe(true);
+    expect(expandedRow.querySelector("td")?.colSpan).toBe(headerColumns);
+    expect(expandedRow.querySelector(".model-detail-row-details")).toBeTruthy();
+    mainRow.querySelector<HTMLButtonElement>('[data-action="toggle-row-details"]')!.click();
+    expect(expandedRow.hidden).toBe(false);
+  });
+
+  it("keeps extra thread columns behind a URL-addressable table control", () => {
+    window.history.replaceState({}, "", "/?model=convnext");
+    const benchmark = benchmarkFixture({
+      performance: [
+        { metric: "latency", value: 2, unit: "ms", concurrency: 1 },
+        { metric: "throughput", value: 500, unit: "fps", concurrency: 1 },
+        { metric: "latency", value: 3, unit: "ms", concurrency: 4 },
+        { metric: "throughput", value: 900, unit: "fps", concurrency: 4 }
+      ]
+    });
+    const element = renderModelDetails(createModelFixture({ variants: [variant({ benchmarks: [benchmark] })] }), detailContext);
+    const tableHost = element.querySelector<HTMLElement>(".model-detail-benchmark-table")!;
+    const toggle = element.querySelector<HTMLButtonElement>('[data-action="toggle-threads"]')!;
+
+    expect(tableHost.querySelector('thead th[data-concurrency="4"]')).toBeNull();
+    toggle.click();
+    expect(tableHost.querySelector('thead th[data-concurrency="4"]')).not.toBeNull();
+    expect(new URL(window.location.href).searchParams.get("threads")).toBe("all");
+    toggle.click();
+    expect(new URL(window.location.href).searchParams.has("threads")).toBe(false);
+  });
 });

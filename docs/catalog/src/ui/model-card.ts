@@ -1,85 +1,140 @@
 import type { HardwareId, Locale, ModelRecord } from "../catalog/types";
-import { getHardwareIds, getModelVariants } from "../catalog/variants";
+import { buildModelCardViewModel } from "../catalog/card-view-model";
 import { t, taskTranslationKey } from "../i18n/translations";
+import "./card-layout.css";
 
 export interface RenderedModelCard { element: HTMLElement; destroy(): void; }
 
+function hardwareLabel(hardware: HardwareId): string {
+  return hardware.toUpperCase();
+}
+
 export function renderModelCard(
-  model: ModelRecord, _platform: string, locale: Locale,
+  model: ModelRecord, platform: string, locale: Locale,
   onSelect: (modelId: string, hardware?: HardwareId) => void
 ): RenderedModelCard {
+  const viewModel = buildModelCardViewModel(model, platform);
   const article = document.createElement("article");
   article.className = "model-card";
-  article.dataset.modelId = model.id;
+  article.dataset.modelId = viewModel.modelId;
+  article.dataset.platform = viewModel.platform || "all";
+  article.dataset.variantCount = String(viewModel.variantCount);
+
+  const visual = document.createElement("div");
+  visual.className = "model-card-visual";
+  visual.dataset.visualKind = viewModel.visualKind;
+  visual.setAttribute("aria-hidden", "true");
+  visual.append(document.createElement("span"), document.createElement("span"), document.createElement("span"));
+
+  const body = document.createElement("div");
+  body.className = "model-card-body";
+
+  const heading = document.createElement("div");
+  heading.className = "model-card-heading";
+  const kicker = document.createElement("p");
+  kicker.className = "model-card-kicker";
+  kicker.textContent = locale === "zh" ? "模型家族" : "Model family";
   const title = document.createElement("h3");
   const titleLink = document.createElement("a");
   const detailUrl = new URL(window.location.href);
-  detailUrl.searchParams.set("model", model.id);
+  detailUrl.searchParams.set("model", viewModel.modelId);
   detailUrl.searchParams.delete("hardware");
   detailUrl.searchParams.delete("task");
-  if (detailUrl.searchParams.get("platform")) detailUrl.searchParams.set("hardware", detailUrl.searchParams.get("platform")!);
+  if (detailUrl.searchParams.get("platform")) {
+    detailUrl.searchParams.set("hardware", detailUrl.searchParams.get("platform")!);
+  }
   titleLink.href = detailUrl.href;
-  titleLink.textContent = model.name;
+  titleLink.textContent = viewModel.name;
   title.append(titleLink);
-  const variants = getModelVariants(model);
+  heading.append(kicker, title);
+
   const tasks = document.createElement("ul");
   tasks.className = "task-badges";
   tasks.setAttribute("aria-label", t(locale, "model.tasks"));
-  const taskIds = [...new Set(variants.length ? variants.map((variant) => variant.task) : model.tasks)];
-  for (const task of taskIds) {
+  for (const task of viewModel.tasks) {
     const item = document.createElement("li");
     item.textContent = t(locale, taskTranslationKey(task));
     tasks.append(item);
   }
+
+  const specificationsGroup = document.createElement("div");
+  specificationsGroup.className = "model-card-specifications";
+  const specificationsLabel = document.createElement("span");
+  specificationsLabel.className = "model-card-section-label";
+  specificationsLabel.textContent = locale === "zh" ? "规格" : "Specifications";
+  const specifications = document.createElement("p");
+  specifications.className = "card-specifications";
+  if (viewModel.specifications.length === 0) {
+    specifications.dataset.empty = "true";
+    specifications.textContent = t(locale, "missing.notPublished");
+  } else {
+    const visible = viewModel.specifications.slice(0, 5).join(" · ");
+    const remaining = viewModel.specifications.length - 5;
+    specifications.textContent = visible
+      + (remaining > 0
+        ? (locale === "zh" ? ` 等 ${viewModel.specifications.length} 种规格` : ` · ${viewModel.specifications.length} specifications`)
+        : "");
+  }
+  specificationsGroup.append(specificationsLabel, specifications);
+
+  const hardwareGroup = document.createElement("div");
+  hardwareGroup.className = "model-card-hardware";
+  const hardwareLabelElement = document.createElement("span");
+  hardwareLabelElement.className = "model-card-section-label";
+  hardwareLabelElement.textContent = t(locale, "model.platform");
   const hardwareLabels = document.createElement("div");
   hardwareLabels.className = "hardware-badges";
   hardwareLabels.setAttribute("role", "group");
   hardwareLabels.setAttribute("aria-label", t(locale, "model.platform"));
+  hardwareGroup.append(hardwareLabelElement, hardwareLabels);
+
   const cleanups: Array<() => void> = [];
   const followTitle = (event: MouseEvent): void => {
     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-    event.preventDefault(); onSelect(model.id);
+    event.preventDefault();
+    onSelect(viewModel.modelId);
   };
   const followCard = (event: MouseEvent): void => {
     if (!(event.target instanceof Element) || event.target.closest("a, button, input, select, details")) return;
     titleLink.focus({ preventScroll: true });
-    onSelect(model.id);
+    onSelect(viewModel.modelId);
   };
   titleLink.addEventListener("click", followTitle);
   article.addEventListener("click", followCard);
-  cleanups.push(() => titleLink.removeEventListener("click", followTitle), () => article.removeEventListener("click", followCard));
-  for (const hardware of getHardwareIds(model)) {
+  cleanups.push(
+    () => titleLink.removeEventListener("click", followTitle),
+    () => article.removeEventListener("click", followCard)
+  );
+
+  for (const hardware of viewModel.hardware) {
     const button = document.createElement("button");
     button.type = "button";
     button.dataset.hardware = hardware;
-    button.textContent = hardware.toUpperCase();
-    const select = (): void => onSelect(model.id, hardware);
+    button.textContent = hardwareLabel(hardware);
+    const select = (): void => onSelect(viewModel.modelId, hardware);
     button.addEventListener("click", select);
     cleanups.push(() => button.removeEventListener("click", select));
     hardwareLabels.append(button);
   }
-  const specifications = document.createElement("p");
-  specifications.className = "card-specifications";
-  const names = [...new Set(variants.map((variant) => {
-    if (/^yolov?\d+$/i.test(model.id)) return /^yolov?\d+[a-z]*/i.exec(variant.name)?.[0] ?? variant.name;
-    return variant.name.replace(/\s+(?:on\s+)?RDK\s+.*$/i, "");
-  }))];
-  if (/^yolov?\d+$/i.test(model.id)) {
-    const sizeOrder = ["n", "s", "m", "l", "x", "b", "c", "e"];
-    const rank = (name: string): number => { const size = /\d+([a-z])/i.exec(name)?.[1]?.toLowerCase(); return size ? sizeOrder.indexOf(size) : 99; };
-    names.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
-  }
-  specifications.textContent = names.slice(0, 5).join(" · ")
-    + (names.length > 5 ? (locale === "zh" ? ` 等 ${names.length} 种规格` : ` · ${names.length} specifications`) : "");
+
   const details = document.createElement("button");
   details.type = "button";
   details.dataset.action = "open-details";
   details.textContent = locale === "zh" ? "查看模型 →" : "View model →";
-  details.setAttribute("aria-label", t(locale, "model.openDetails", { name: model.name }));
-  const select = (): void => onSelect(model.id);
+  details.setAttribute("aria-label", t(locale, "model.openDetails", { name: viewModel.name }));
+  const select = (): void => onSelect(viewModel.modelId);
   details.addEventListener("click", select);
   cleanups.push(() => details.removeEventListener("click", select));
-  const actions = document.createElement("div"); actions.className = "model-actions"; actions.append(details);
-  article.append(title, tasks, hardwareLabels, specifications, actions);
-  return { element: article, destroy() { cleanups.forEach((cleanup) => cleanup()); } };
+  const actions = document.createElement("div");
+  actions.className = "model-actions";
+  actions.append(details);
+
+  body.append(heading, tasks, specificationsGroup, hardwareGroup, actions);
+  article.append(visual, body);
+  return {
+    element: article,
+    destroy() {
+      cleanups.forEach((cleanup) => cleanup());
+    }
+  };
 }

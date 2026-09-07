@@ -3,14 +3,13 @@ import { normalizeHardware } from "../catalog/variants";
 
 export function readCatalogQuery(url: URL): CatalogQuery {
   const params = url.searchParams;
-  const sort = params.get("sort");
   const benchmark = params.get("benchmark");
   const list = (key: string): string[] => params.getAll(key).filter(Boolean);
   return {
     text: params.get("q") ?? "",
     platform: normalizeHardware(params.get("platform") ?? "") ?? "",
     tasks: list("catalogTask"), formats: list("format"), precisions: list("precision"),
-    sort: sort === "latency" || sort === "fps" || sort === "accuracy" ? sort : "name",
+    sort: "name",
     benchmark: benchmark === "performance" || benchmark === "accuracy" || benchmark === "none" ? benchmark : "all"
   };
 }
