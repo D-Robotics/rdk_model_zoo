@@ -1,5 +1,10 @@
 # Changelog
 
+## [s v1.1.0] - 2026-09-07
+
+- Data refresh: benchmark/accuracy values re-transcribed from sample READMEs (see s-v1.1.0.md).
+
+
 All notable changes to the RDK Model Zoo S-series release line are recorded in
 this file.
 
