@@ -1,5 +1,10 @@
 # Changelog
 
+## [x5 v1.1.0] - 2026-09-07
+
+- Data refresh: benchmark/accuracy values re-transcribed from sample READMEs (see x5-v1.1.0.md).
+
+
 All notable changes to each platform release are recorded in this file. RDK Model Zoo follows [Semantic Versioning](https://semver.org/) independently for each maintained platform branch.
 
 ## [X5 1.0.0] - 2026-09-03

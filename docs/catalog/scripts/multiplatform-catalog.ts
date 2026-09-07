@@ -215,7 +215,7 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
     .then(() => "refs/heads/rdk_s", () => "refs/remotes/origin/rdk_s");
   const x3Ref = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", "--verify", "refs/heads/rdk_x3"])
     .then(() => "refs/heads/rdk_x3", () => "refs/remotes/origin/rdk_x3");
-  const tags: Array<[CatalogPlatform, string, string]> = [["x5", x5Ref, "x5-v1.0.0"], ["s", sRef, "s-v1.0.0"], ["x3", x3Ref, "x3-v1.0.0"]];
+  const tags: Array<[CatalogPlatform, string, string]> = [["x5", x5Ref, "x5-v1.1.0"], ["s", sRef, "s-v1.1.0"], ["x3", x3Ref, "x3-v1.1.0"]];
   const loaded = new Map<CatalogPlatform, Awaited<ReturnType<typeof manifestPair>>>();
   for (const [platform, ref, tag] of tags) loaded.set(platform, await manifestPair(repositoryRoot, ref, tag));
   const sSource = loaded.get("s");
@@ -264,7 +264,7 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
   const downloadableAssetCount = runnableAssets.filter((asset) => asset.url).length;
   return {
     schema_version: 1,
-    release: { platform: "multi", version: "1.0.0", tag: "x5-v1.0.0+s-v1.0.0+x3-v1.0.0" },
+    release: { platform: "multi", version: "1.0.0", tag: "x5-v1.1.0+s-v1.1.0+x3-v1.1.0" },
     summary: {
       sample_count: cards.length,
       asset_count: assetCount,
