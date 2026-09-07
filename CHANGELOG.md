@@ -1,5 +1,18 @@
 # Changelog
 
+## [s-v1.1.1] - 2026-09-07
+
+- Corrected the S-series release metadata and manifest summary for the
+  `s-v1.1.1` release candidate.
+- Aligned the Ultralytics model filenames and URLs with the committed download
+  script, excluded unsupported `yolo9n` assets, and added the published
+  `yolov9t` S100/S100P assets.
+- Audited 473 benchmark records with 1,037 performance metrics and 1,682
+  accuracy metrics; existing evidence values, model assets and download URLs
+  are unchanged.
+- See [release notes](docs/releases/s-v1.1.1.md) for inventory totals,
+  immutable evidence references, checksum coverage and validation scope.
+
 ## [s v1.1.0] - 2026-09-07
 
 - Data refresh: benchmark/accuracy values re-transcribed from sample READMEs (see s-v1.1.0.md).
