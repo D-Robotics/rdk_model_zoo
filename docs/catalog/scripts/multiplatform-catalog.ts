@@ -1,6 +1,9 @@
+import { readFile, access } from "node:fs/promises";
+import { resolve } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { parse } from "yaml";
+import { validateReleaseSummary } from "./release-summary";
 import { correctSArtifacts } from "./source-corrections";
 import { buildModelVariants, getModelVariants } from "../src/catalog/variants";
 import type { BenchmarkRecord, Catalog, CatalogPlatform, ModelRecord, ModelVariant, PlatformModelRecord } from "../src/catalog/types";
@@ -9,7 +12,7 @@ const execFileAsync = promisify(execFile);
 
 interface ManifestModel extends Omit<ModelRecord, "benchmarks" | "platforms"> {}
 interface SourceDocument { release: { tag: string; platform: CatalogPlatform; version: string }; summary?: Record<string, number>; models: ManifestModel[]; }
-interface BenchmarkDocument { release: { tag: string }; benchmarks: BenchmarkRecord[]; }
+interface BenchmarkDocument { release: { tag: string; platform: string; version: string }; benchmarks: BenchmarkRecord[]; }
 
 interface FamilyEntry {
   model: ManifestModel;
@@ -25,15 +28,20 @@ async function gitShow(repositoryRoot: string, ref: string, path: string): Promi
 async function manifestPair(repositoryRoot: string, ref: string, tag: string): Promise<{ models: SourceDocument; benchmarks: BenchmarkDocument }> {
   // Existing release tags keep their original paths. Read both layouts
   // without changing immutable history or keeping duplicate live manifests.
-  const directory = await execFileAsync("git", ["-C", repositoryRoot, "cat-file", "-e", `${ref}:docs/release/models.yaml`])
-    .then(() => "docs/release", () => "release");
+  const directory = ref === "WORKTREE"
+    ? await access(resolve(repositoryRoot, "docs/release/models.yaml")).then(() => "docs/release", () => "release")
+    : await execFileAsync("git", ["-C", repositoryRoot, "cat-file", "-e", `${ref}:docs/release/models.yaml`])
+      .then(() => "docs/release", () => "release");
+  const read = (path: string): Promise<string> => ref === "WORKTREE"
+    ? readFile(resolve(repositoryRoot, path), "utf8") : gitShow(repositoryRoot, ref, path);
   const [modelsText, benchmarksText] = await Promise.all([
-    gitShow(repositoryRoot, ref, `${directory}/models.yaml`),
-    gitShow(repositoryRoot, ref, `${directory}/benchmarks.yaml`)
+    read(`${directory}/models.yaml`), read(`${directory}/benchmarks.yaml`)
   ]);
   const models = parse(modelsText) as SourceDocument;
   const benchmarks = parse(benchmarksText) as BenchmarkDocument;
-  if (models.release.tag !== tag || benchmarks.release.tag !== tag || models.release.tag !== benchmarks.release.tag) {
+  validateReleaseSummary(models.models, benchmarks.benchmarks, models.summary);
+  if (models.release.tag !== tag || benchmarks.release.tag !== tag
+    || models.release.version !== benchmarks.release.version || models.release.platform !== benchmarks.release.platform) {
     throw new Error(`Release identity mismatch for ${tag}`);
   }
   if (JSON.stringify({ models, benchmarks }).toLowerCase().includes("yoloe")) throw new Error("YOLOE is excluded from the catalog");
@@ -203,19 +211,24 @@ function mergePlatformModels(platform: CatalogPlatform, tag: string, familyId: s
 }
 
 export async function buildMultiplatformCatalog(repositoryRoot: string): Promise<Catalog> {
-  // x5-v1.0.0 predates the first committed X5 manifests.  Its immutable
-  // release identity is retained while rdk_x5 supplies that release's data.
-  // Pull-request checkouts can be detached with only remote branch refs.
-  const x5Ref = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", "--verify", "refs/heads/rdk_x5"])
-    .then(() => "refs/heads/rdk_x5", () => "refs/remotes/origin/rdk_x5");
-  // S and X3 release tags keep their immutable release identity, but their live
-  // branches supply the refreshed benchmark data (tags are stale for S/X3 the
-  // same way x5-v1.0.0 was stale for X5).  Refresh display data without retagging.
-  const sRef = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", "--verify", "refs/heads/rdk_s"])
-    .then(() => "refs/heads/rdk_s", () => "refs/remotes/origin/rdk_s");
-  const x3Ref = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", "--verify", "refs/heads/rdk_x3"])
-    .then(() => "refs/heads/rdk_x3", () => "refs/remotes/origin/rdk_x3");
-  const tags: Array<[CatalogPlatform, string, string]> = [["x5", x5Ref, "x5-v1.1.0"], ["s", sRef, "s-v1.1.0"], ["x3", x3Ref, "x3-v1.1.0"]];
+  // X5 comes from this checkout (the exact release tag in CI), never a local
+  // or remote branch that may have moved. Other hardware lines are locked.
+  const current = parse(await readFile(resolve(repositoryRoot, "docs/release/models.yaml"), "utf8")) as SourceDocument;
+  const version = (await readFile(resolve(repositoryRoot, "VERSION"), "utf8")).trim();
+  if (current.release.platform !== "x5" || current.release.version !== version || current.release.tag !== `x5-v${version}`) {
+    throw new Error("X5 VERSION and manifest release identity disagree");
+  }
+  const pins = JSON.parse(await readFile(resolve(repositoryRoot, "docs/release/catalog-sources.json"), "utf8")) as Record<"s" | "x3", string>;
+  for (const platform of ["s", "x3"] as const) {
+    if (!new RegExp(`^${platform}-v[0-9]+\\.[0-9]+\\.[0-9]+$`).test(pins[platform])) {
+      throw new Error(`Catalog source must be an immutable platform tag: ${platform}`);
+    }
+    const type = await execFileAsync("git", ["-C", repositoryRoot, "cat-file", "-t", pins[platform]]);
+    if (type.stdout.trim() !== "tag") throw new Error(`Annotated source tag required: ${pins[platform]}`);
+  }
+  const tags: Array<[CatalogPlatform, string, string]> = [
+    ["x5", "WORKTREE", current.release.tag], ["s", pins.s, pins.s], ["x3", pins.x3, pins.x3]
+  ];
   const loaded = new Map<CatalogPlatform, Awaited<ReturnType<typeof manifestPair>>>();
   for (const [platform, ref, tag] of tags) loaded.set(platform, await manifestPair(repositoryRoot, ref, tag));
   const sSource = loaded.get("s");
@@ -264,7 +277,7 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
   const downloadableAssetCount = runnableAssets.filter((asset) => asset.url).length;
   return {
     schema_version: 1,
-    release: { platform: "multi", version: "1.0.0", tag: "x5-v1.1.0+s-v1.1.0+x3-v1.1.0" },
+    release: { platform: "multi", version: current.release.version, tag: tags.map(([, , tag]) => tag).join("+"), platform_tags: Object.fromEntries(tags.map(([platform, , tag]) => [platform, tag])) },
     summary: {
       sample_count: cards.length,
       asset_count: assetCount,

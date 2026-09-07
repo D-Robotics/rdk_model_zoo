@@ -32,6 +32,10 @@ The model manifest and benchmark manifest describe the published source inventor
 
 ## 3. Manual release procedure
 
+For aggregate catalog releases, prepare S and X3 first and pin their annotated tags in `docs/release/catalog-sources.json` on X5. The X5 catalog uses manifests from its own checkout; it must never read an unrelated local or live remote branch. Publish S/X3 releases first, then the X5 release that deploys the aggregate. Only the X5 release is marked GitHub's repository-wide Latest; each hardware line still has its own version.
+
+Verify all declared summary counts against actual model assets and benchmark measurements. Export the two YAML attachments directly from the released tag and attach `SHA256SUMS` for those files. This checksum file does not certify externally hosted model binaries. Existing pushed preparation tags must be retained; metadata corrections receive a new patch tag.
+
 1. Select one platform branch and confirm that the release scope belongs to that platform.
 2. Update `VERSION`, `CHANGELOG.md`, `docs/release/models.yaml`, `docs/release/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
 3. Review the manifests: sample paths and download scripts must exist, URLs must be correct, unknown checksums must be `null`, and every benchmark must cite immutable repository evidence. Check that the tag, branch, platform, and version agree in the release files.

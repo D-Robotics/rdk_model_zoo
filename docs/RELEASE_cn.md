@@ -2,6 +2,10 @@
 
 本文规定 RDK Model Zoo 的发版流程。当前阶段保持流程简洁，不要求设置 RDK 板卡测试门禁。自动检查用于校验发版 Manifest 和在线模型目录，不代表模型已经通过板端运行认证。
 
+多平台目录按以下顺序发版：先准备并发布 S、X3，再在 X5 的 `docs/release/catalog-sources.json` 固定它们的附注 Tag，最后发布 X5 并部署目录。X5 清单读取自身发布检出，不读取其他本地或活动远端分支。GitHub 仓库级 Latest 指向 X5；三个硬件版本仍独立维护。
+
+每次发布须按实际条目重新核对汇总统计，从 Tag 原样导出两份 YAML 附件，并附上它们的 `SHA256SUMS`。该文件只校验清单附件，不代表外部模型文件已有哈希。已推送的准备版 Tag 保留不动，元数据修正使用新的补丁 Tag。
+
 ## 1. 版本线与命名
 
 X5、S、X3 三条版本线独立维护。每条版本线使用 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)：`MAJOR.MINOR.PATCH`。

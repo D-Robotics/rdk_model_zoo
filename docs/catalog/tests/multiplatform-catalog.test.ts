@@ -8,6 +8,9 @@ const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 describe("multi-platform variant catalog", () => {
   it("groups YOLOv8 sizes into one family card with multi-platform evidence", async () => {
     const catalog = await buildMultiplatformCatalog(repositoryRoot);
+    const platformTags = catalog.release.platform_tags as Record<string, string>;
+    expect(catalog.release.tag).toBe([platformTags.x5, platformTags.s, platformTags.x3].join("+"));
+    expect(platformTags.x5).toBe(`x5-v${catalog.release.version}`);
     const yolov8 = catalog.models.find((model) => model.id === "yolov8");
 
     expect(yolov8?.platforms?.map((platform) => platform.platform)).toEqual(["x5", "s", "x3"]);

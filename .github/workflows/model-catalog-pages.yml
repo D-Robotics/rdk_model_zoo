@@ -65,8 +65,8 @@ jobs:
             const catalog = JSON.parse(readFileSync("docs/catalog/dist/data/catalog.json", "utf8"));
             const tag = catalog?.release?.tag;
             if (typeof tag !== "string" || tag.trim() === "") throw new Error("Catalog release.tag is empty");
-            if (process.env.EVENT_NAME === "release" && tag !== process.env.RELEASE_TAG) {
-              throw new Error(`Catalog tag ${tag} does not match release ${process.env.RELEASE_TAG}`);
+            if (process.env.EVENT_NAME === "release" && catalog.release.platform_tags?.x5 !== process.env.RELEASE_TAG) {
+              throw new Error(`Catalog X5 tag ${catalog.release.platform_tags?.x5} does not match release ${process.env.RELEASE_TAG}`);
             }
             console.log(`Verified catalog release tag: ${tag}`);
           '

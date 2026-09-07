@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { buildCatalog } from "../scripts/catalog-builder";
 import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
@@ -210,7 +211,11 @@ describe("audited benchmark coverage", () => {
     const catalog = await buildRepositoryCatalog();
     const records = catalog.models.flatMap((model) => model.benchmarks);
 
-    expect(records.every((record) => record.source.ref === catalog.release.tag)).toBe(true);
+    expect(records.every((record) => record.source.ref === catalog.release.tag || /^[a-f0-9]{40}$/i.test(record.source.ref))).toBe(true);
+    for (const ref of new Set(records.map(record => record.source.ref))) {
+      if (ref === catalog.release.tag) continue;
+      expect(execFileSync("git", ["-C", repositoryRoot, "cat-file", "-t", ref], { encoding: "utf8" }).trim()).toBe("commit");
+    }
     expect(records.every((record) => record.source.path.length > 0 && record.source.section.length > 0)).toBe(true);
 
     const prohibitedFamily = ["yolo", "e"].join("");
