@@ -27,6 +27,17 @@ const baseQuery: CatalogQuery = {
 };
 
 describe("queryModels", () => {
+  it("does not borrow measured results from another hardware when filtering", () => {
+    const model = createModelFixture({ variants: [
+      { id: "x5-atto", name: "Atto", hardware: "x5", task: "image-classification", assets: modelFixture.assets,
+        benchmarks: modelFixture.benchmarks, sample_path: modelFixture.sample_path, release_tag: "x5-v1.0.0" },
+      { id: "s100-atto", name: "Atto", hardware: "s100", task: "image-classification", assets: [],
+        benchmarks: [], sample_path: modelFixture.sample_path, release_tag: "s-v1.0.0" }
+    ] });
+    expect(queryModels([model], { ...baseQuery, platform: "s100", benchmark: "performance" }).models).toHaveLength(0);
+    expect(queryModels([model], { ...baseQuery, platform: "x5", benchmark: "performance" }).models).toHaveLength(1);
+    expect(queryModels([model], { ...baseQuery, platform: "s100", text: "convnext-atto-x5" }).models).toHaveLength(0);
+  });
   it("matches names, ids, tasks, variants, and asset filenames case-insensitively", () => {
     const result = queryModels([modelFixture], {
       ...baseQuery,

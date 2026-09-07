@@ -219,6 +219,18 @@ const englishTranslations = {
   "task.poseEstimation": "Pose estimation",
   "task.promptableImageSegmentation": "Promptable image segmentation",
   "task.semanticSegmentation": "Semantic segmentation",
+  "task.autonomousDriving": "Autonomous driving",
+  "task.imageEmbedding": "Image embedding",
+  "task.keywordSpotting": "Keyword spotting",
+  "task.laneDetection": "Lane detection",
+  "task.multiObjectTracking": "Multi-object tracking",
+  "task.pointCloudSegmentation": "Point cloud segmentation",
+  "task.speechRecognition": "Speech recognition",
+  "task.textDetection": "Text detection",
+  "task.textRecognition": "Text recognition",
+  "task.videoActionClassification": "Video action classification",
+  "task.visionEmbedding": "Vision embedding",
+  "task.visionLanguageModel": "Vision-language model",
   "task.unknown": "Task",
 
   "condition.singleFrame": "single-frame",
@@ -294,7 +306,7 @@ const chineseTranslations: TranslationDictionary = {
   "filter.tasksLabel": "任务",
   "filter.platformLabel": "平台",
   "filter.formatsLabel": "模型格式",
-  "filter.precisionsLabel": "精度格式",
+  "filter.precisionsLabel": "量化类型",
   "filter.benchmarkLabel": "Benchmark 可用性",
   "filter.sortLabel": "模型排序",
   "filter.all": "全部",
@@ -478,6 +490,18 @@ const chineseTranslations: TranslationDictionary = {
   "task.poseEstimation": "姿态估计",
   "task.promptableImageSegmentation": "提示式图像分割",
   "task.semanticSegmentation": "语义分割",
+  "task.autonomousDriving": "自动驾驶",
+  "task.imageEmbedding": "图像特征提取",
+  "task.keywordSpotting": "关键词唤醒",
+  "task.laneDetection": "车道线检测",
+  "task.multiObjectTracking": "多目标跟踪",
+  "task.pointCloudSegmentation": "点云分割",
+  "task.speechRecognition": "语音识别",
+  "task.textDetection": "文本检测",
+  "task.textRecognition": "文本识别",
+  "task.videoActionClassification": "视频动作分类",
+  "task.visionEmbedding": "视觉特征提取",
+  "task.visionLanguageModel": "视觉语言模型",
   "task.unknown": "任务",
 
   "condition.singleFrame": "单帧",
@@ -529,10 +553,23 @@ export type ManifestTaskId =
   | "ocr-text-recognition"
   | "open-vocabulary-object-detection"
   | "oriented-bounding-box-detection"
+  | "oriented-object-detection"
   | "portrait-matting"
   | "pose-estimation"
   | "promptable-image-segmentation"
-  | "semantic-segmentation";
+  | "semantic-segmentation"
+  | "autonomous-driving"
+  | "image-embedding"
+  | "keyword-spotting"
+  | "lane-detection"
+  | "multi-object-tracking"
+  | "point-cloud-segmentation"
+  | "speech-recognition"
+  | "text-detection"
+  | "text-recognition"
+  | "video-action-classification"
+  | "vision-embedding"
+  | "vision-language-model";
 
 export const manifestTaskTranslationKeys: Record<ManifestTaskId, TranslationKey> = {
   "image-classification": "task.imageClassification",
@@ -546,10 +583,23 @@ export const manifestTaskTranslationKeys: Record<ManifestTaskId, TranslationKey>
   "ocr-text-recognition": "task.ocrTextRecognition",
   "open-vocabulary-object-detection": "task.openVocabularyObjectDetection",
   "oriented-bounding-box-detection": "task.orientedBoundingBoxDetection",
+  "oriented-object-detection": "task.orientedBoundingBoxDetection",
   "portrait-matting": "task.portraitMatting",
   "pose-estimation": "task.poseEstimation",
   "promptable-image-segmentation": "task.promptableImageSegmentation",
-  "semantic-segmentation": "task.semanticSegmentation"
+  "semantic-segmentation": "task.semanticSegmentation",
+  "autonomous-driving": "task.autonomousDriving",
+  "image-embedding": "task.imageEmbedding",
+  "keyword-spotting": "task.keywordSpotting",
+  "lane-detection": "task.laneDetection",
+  "multi-object-tracking": "task.multiObjectTracking",
+  "point-cloud-segmentation": "task.pointCloudSegmentation",
+  "speech-recognition": "task.speechRecognition",
+  "text-detection": "task.textDetection",
+  "text-recognition": "task.textRecognition",
+  "video-action-classification": "task.videoActionClassification",
+  "vision-embedding": "task.visionEmbedding",
+  "vision-language-model": "task.visionLanguageModel"
 };
 
 export const translations: Translations = {

@@ -240,6 +240,10 @@ button:hover {
   margin: 0;
 }
 
+.model-card { cursor: pointer; }
+.model-card h3 a { text-decoration: none; color: var(--text); }
+.model-card h3 a:hover { color: var(--accent-strong); }
+
 .task-badges,
 .model-metric-group ul {
   display: flex;
@@ -304,35 +308,55 @@ button:hover {
 }
 
 .model-details {
-  width: min(92vw, 78rem);
-  max-height: 88vh;
-  margin: 2rem auto;
-  padding: clamp(1rem, 3vw, 2rem);
-  overflow: auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: clamp(1rem, 2.5vw, 2rem);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface-elevated);
+  background: var(--surface);
   color: var(--text);
-  box-shadow: var(--shadow);
 }
 
-dialog.model-details::backdrop {
-  background: rgb(10 14 18 / 72%);
-}
-
-.model-details > h2 {
-  margin-top: 0;
-}
-
-.platform-heading {
-  margin: 1.5rem 0 0.45rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.model-details > button {
-  float: right;
-}
+.model-details h1 { margin: .75rem 0 .5rem; font-size: clamp(1.75rem, 4vw, 2.6rem); letter-spacing: -.025em; }
+.model-detail-task-summary { margin-block: .5rem; }
+.model-details [data-action="close-details"] { border: 0; padding-inline: 0; color: var(--accent-strong); background: transparent; }
+.catalog-directory { display: grid; gap: 1.25rem; min-width: 0; }
+[hidden] { display: none !important; }
+.catalog-app, .detail-host { min-width: 0; }
+.hardware-badges { display: flex; flex-wrap: wrap; gap: .45rem; }
+.hardware-badges button { min-height: 2rem; padding: .2rem .6rem; font-size: .82rem; }
+.card-specifications { color: var(--muted); font-size: .86rem; margin: 0 0 .5rem; overflow-wrap: anywhere; }
+.model-details [role="tablist"] { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0 .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+.model-details [role="tab"] { padding: .65rem 1.5rem; font-weight: 600; }
+.model-details [role="tab"][aria-selected="true"] { border-color: var(--accent); color: var(--accent-strong); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.model-details select { padding-inline: .8rem; max-width: 100%; }
+.model-detail-task-control { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem; }
+.model-detail-specifications-heading { display: inline-block; margin: 1rem 0 .5rem; }
+.model-detail-sample-link { float: right; margin-top: 1.25rem; font-size: .85rem; }
+.model-detail-content > .table-scroll { margin-top: .5rem; }
+.model-details table { border-collapse: separate; border-spacing: 0; }
+.model-details th, .model-details td { vertical-align: middle; }
+.model-details thead th { text-align: center; background: var(--canvas); }
+.model-details tbody td { text-align: right; white-space: nowrap; }
+.model-details tbody td:first-child, .model-details tbody th { text-align: left; }
+.model-details th[scope="row"] { background: var(--surface); position: sticky; left: 0; z-index: 1; }
+.model-details td a[download], .model-details .variant-download { display: inline-block; border: 1px solid var(--border); border-radius: .4rem; padding: .4rem .65rem; text-decoration: none; }
+.model-details th[colspan] { border-left: 1px solid var(--border); }
+.model-details thead th[colspan] { white-space: normal; }
+.model-details .model-detail-specification { min-width: 9rem; max-width: 14rem; white-space: normal; }
+.model-detail-measurement-scope { display: inline-block; color: var(--muted); font-size: .72rem; font-weight: 400; }
+.model-detail-download-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
+.model-details td[colspan] { text-align: left; white-space: normal; }
+.model-details details { font-size: .84rem; color: var(--muted); }
+.model-details summary { cursor: pointer; padding: .35rem 0; }
+.model-details details a, .model-details details code { overflow-wrap: anywhere; }
+.model-details details dl, .model-details details ul { margin-block: .65rem; }
+.model-details details table { min-width: 42rem; }
+.model-details .missing-data { font-size: .8rem; }
+.site-header.detail-page-header { padding-block: 1.2rem .5rem; }
+.site-header.detail-page-header p:first-child { font-size: 1.25rem; letter-spacing: 0; }
+.site-header.detail-page-header p:last-child { display: none; }
 
 .table-scroll {
   max-width: 100%;
@@ -408,9 +432,8 @@ th {
   }
 
   .model-details {
-    width: calc(100vw - 1rem);
-    max-height: calc(100vh - 1rem);
-    margin: 0.5rem auto;
+    width: 100%;
+    margin: 0;
     padding: 1rem;
   }
 }

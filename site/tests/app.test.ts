@@ -30,6 +30,7 @@ const catalog: Catalog = {
         id: "himloco-runtime-x5",
         sample_id: "himloco",
         variant_id: "himloco-policy",
+        asset_filename: "himloco.onnx",
         display_name: "HiMLoco policy",
         model_format: "onnx",
         precision: "float32",
@@ -154,11 +155,12 @@ describe("catalog application", () => {
       .toThrow("Catalog summary declares 3 assets but contains 2.");
   });
 
-  it("shows explicit performance and accuracy empty states", () => {
-    mountCatalog(root(), catalogWithoutBenchmarks, { locale: "en" });
-
-    expect(document.body.textContent).toContain("Performance not yet measured");
-    expect(document.body.textContent).toContain("Accuracy not yet measured");
+  it("keeps hardware and specifications on cards without presenting a family-wide missing accuracy", () => {
+    const model = createModelFixture({ benchmarks: [] });
+    model.platforms = [{ ...createModelFixture({ benchmarks: [] }), platform: "x5", release_tag: "x5-v1.0.0" }];
+    mountCatalog(root(), { ...catalogWithoutBenchmarks, models: [model] }, { locale: "en" });
+    expect(document.querySelector(".hardware-badges")?.textContent).toContain("X5");
+    expect(document.querySelector(".model-card")?.textContent).not.toContain("Accuracy not yet measured");
   });
 
   it("resets search and filters to the full catalog", () => {
@@ -224,35 +226,65 @@ describe("catalog application", () => {
     expect(document.documentElement.lang).toBe("zh");
   });
 
-  it("renders metric qualifiers and concise test conditions", () => {
+  it("does not assign one variant's performance to its whole family card", () => {
     mountCatalog(root(), catalog, { locale: "en" });
     const card = document.querySelector<HTMLElement>('[data-model-id="himloco"]')!;
-
-    expect(card.textContent).toContain("2,800 FPS");
-    expect(card.textContent).toContain("lower bound");
-    expect(card.textContent).toContain("RDK X5");
-    expect(card.textContent).toContain("single-thread runtime");
+    expect(card.textContent).not.toContain("2,800 FPS");
+    expect(card.querySelector('[data-action="open-details"]')).not.toBeNull();
   });
 
-  it("keeps representative latency and throughput visible when several timings exist", () => {
-    const timingCatalog: Catalog = {
-      ...catalogWithoutBenchmarks,
-      models: [createModelFixture({
-        benchmarks: [benchmarkFixture({
-          performance: [
-            { metric: "latency", value: 2, unit: "ms", scope: "single frame", concurrency: 1 },
-            { metric: "latency", value: 3, unit: "ms", scope: "end to end", concurrency: 1 },
-            { metric: "throughput", value: 500, unit: "fps", scope: "four threads", concurrency: 4 }
-          ]
-        })]
-      })]
-    };
+  it("shows the five canonical hardware filters including hardware with no current result", () => {
+    mountCatalog(root(), catalog, { locale: "en" });
+    const select = document.querySelector<HTMLSelectElement>("#catalog-platform")!;
+    expect([...select.options].map(option => option.text)).toEqual(["All", "X3", "X5", "S100", "S100P", "S600"]);
+    select.value = "s600";
+    select.dispatchEvent(new Event("change"));
+    expect(document.querySelectorAll(".model-card")).toHaveLength(0);
+    expect(select.options).toHaveLength(6);
+  });
 
-    mountCatalog(root(), timingCatalog, { locale: "en" });
+  it("renders standalone details and restores directory filters from a direct link", () => {
+    window.history.replaceState({}, "", "/?q=ConvNeXt&platform=x5&model=convnext&hardware=x5&task=image-classification");
+    mountCatalog(root(), catalog, { locale: "en" });
+    expect(document.querySelector<HTMLElement>(".catalog-directory")!.hidden).toBe(true);
+    expect(document.querySelector("dialog, [aria-modal=true]")).toBeNull();
+    expect(document.querySelector(".model-details h1")?.textContent).toContain("ConvNeXt");
+    expect(document.title).toContain("X5");
+    document.querySelector<HTMLButtonElement>('[data-action="close-details"]')!.click();
+    expect(document.querySelector<HTMLElement>(".catalog-directory")!.hidden).toBe(false);
+    expect(document.querySelector<HTMLInputElement>("#catalog-search")!.value).toBe("ConvNeXt");
+    expect(document.querySelector<HTMLSelectElement>("#catalog-platform")!.value).toBe("x5");
+    expect(document.querySelectorAll(".model-card")).toHaveLength(1);
+    expect(new URL(window.location.href).searchParams.has("hardware")).toBe(false);
+  });
 
-    const card = document.querySelector<HTMLElement>(".model-card")!;
-    expect(card.textContent).toContain("Latency: 2 ms");
-    expect(card.textContent).toContain("Throughput: 500 FPS");
+  it("updates hardware links and history when a detail tab changes", () => {
+    const model = createModelFixture();
+    model.platforms = [
+      { ...createModelFixture(), platform: "x5", release_tag: "x5-v1.0.0" },
+      { ...createModelFixture(), platform: "s", release_tag: "s-v1.0.0", benchmarks: [benchmarkFixture({ environment: { hardware: "RDK S100" } })] }
+    ];
+    const multi = { ...catalogWithoutBenchmarks, models: [model] };
+    window.history.replaceState({}, "", "/?model=convnext&hardware=x5");
+    mountCatalog(root(), multi, { locale: "en" });
+    document.querySelector<HTMLButtonElement>('.model-details [role="tab"][data-hardware="s100"]')!.click();
+    expect(new URL(window.location.href).searchParams.get("hardware")).toBe("s100");
+    expect(document.title).toContain("S100");
+    window.history.replaceState({}, "", "/?model=convnext&hardware=x5");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(document.querySelector<HTMLElement>(".model-details")!.dataset.hardware).toBe("x5");
+  });
+
+  it("opens card body without double navigation from hardware controls", () => {
+    const onSelectModel = vi.fn();
+    mountCatalog(root(), catalog, { locale: "en", onSelectModel });
+    document.querySelector<HTMLElement>('.model-card[data-model-id="convnext"] .card-specifications')!.click();
+    expect(onSelectModel).toHaveBeenCalledTimes(1);
+    expect(new URL(window.location.href).searchParams.get("model")).toBe("convnext");
+    document.querySelector<HTMLButtonElement>('[data-action="close-details"]')!.click();
+    expect(document.activeElement).toBe(document.querySelector('.model-card[data-model-id="convnext"] h3 a'));
+    document.querySelector<HTMLButtonElement>('.model-card[data-model-id="convnext"] [data-hardware="x5"]')!.click();
+    expect(onSelectModel).toHaveBeenCalledTimes(2);
   });
 
   it("removes registered event listeners when destroyed", () => {

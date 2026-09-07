@@ -1,4 +1,5 @@
 export type Locale = "zh" | "en";
+export type HardwareId = "x3" | "x5" | "s100" | "s100p" | "s600";
 export type MetricUnit = "ms" | "us" | "fps" | "percent" | "ratio" | "mae" | "rmse";
 
 export interface MetricRecord {
@@ -48,8 +49,21 @@ export interface ModelRecord {
   download_scripts: string[];
   assets: Array<{ filename: string; format: string; url?: string; sha256?: string | null }>;
   benchmarks: BenchmarkRecord[];
-  /** The same exact variant's evidence on every supported RDK line. */
+  variants?: ModelVariant[];
+  /** Source records for this family on each release line. */
   platforms?: PlatformModelRecord[];
+}
+
+export interface ModelVariant {
+  id: string;
+  name: string;
+  hardware: HardwareId;
+  task: string;
+  input?: BenchmarkRecord["input"];
+  assets: ModelRecord["assets"];
+  benchmarks: BenchmarkRecord[];
+  sample_path: string;
+  release_tag: string;
 }
 
 export type CatalogPlatform = "x5" | "s" | "x3";

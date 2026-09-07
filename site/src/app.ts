@@ -1,8 +1,10 @@
 import { queryModels, type CatalogQuery } from "./catalog/query";
-import type { Catalog, Locale } from "./catalog/types";
+import type { Catalog, HardwareId, Locale } from "./catalog/types";
 import { createLanguageController, type LanguageController } from "./i18n/language";
 import { t } from "./i18n/translations";
-import { createFilters, DEFAULT_QUERY } from "./ui/filters";
+import { createFilters } from "./ui/filters";
+import { normalizeHardware } from "./catalog/variants";
+import { readCatalogQuery, writeCatalogQuery } from "./ui/navigation";
 import { renderModelCard, type RenderedModelCard } from "./ui/model-card";
 import { readModelId, renderModelDetails, writeModelId } from "./ui/model-details";
 import { renderSummary } from "./ui/summary";
@@ -60,7 +62,7 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
       : undefined;
   const state: AppState = {
     locale: options.locale,
-    query: { ...DEFAULT_QUERY },
+    query: readCatalogQuery(new URL(window.location.href)),
     selectedModelId: null,
     theme: storedTheme(storage)
   };
@@ -144,22 +146,45 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
     detailCleanup = undefined;
     detailHost.replaceChildren();
   };
+  const directory = document.createElement("div");
+  directory.className = "catalog-directory";
+  const titleFor = (name?: string, hardware?: string): void => {
+    document.title = [name, hardware?.toUpperCase(), t(options.locale, "app.title")].filter(Boolean).join(" · ");
+  };
+  const updateSelection = (hardware: HardwareId, task: string, push: boolean): void => {
+    const next = new URL(window.location.href);
+    next.searchParams.set("hardware", hardware);
+    next.searchParams.set("task", task);
+    if (next.href !== window.location.href) {
+      if (push) window.history.pushState({}, "", next);
+      else window.history.replaceState({}, "", next);
+    }
+    titleFor(catalog.models.find((model) => model.id === state.selectedModelId)?.name, hardware);
+  };
+  const closeDetails = (): void => {
+    const next = writeModelId(new URL(window.location.href), null);
+    next.searchParams.delete("hardware");
+    next.searchParams.delete("task");
+    window.history.pushState({}, "", next);
+    renderDetails(null, true);
+  };
   const renderDetails = (modelId: string | null, restoreFocus = false): void => {
     clearDetails();
     state.selectedModelId = modelId;
+    directory.hidden = modelId !== null;
+    content.classList.toggle("showing-detail", modelId !== null);
+    document.querySelector(".site-header")?.classList.toggle("detail-page-header", modelId !== null);
     if (modelId === null) {
+      titleFor();
       if (restoreFocus && detailOpener?.isConnected) detailOpener.focus();
       detailOpener = null;
       return;
     }
-
     const model = catalog.models.find((candidate) => candidate.id === modelId);
     if (!model) {
       const panel = document.createElement("section");
       panel.className = "model-details model-not-found";
-      panel.setAttribute("role", "dialog");
-      panel.setAttribute("aria-modal", "true");
-      const heading = document.createElement("h2");
+      const heading = document.createElement("h1");
       heading.id = "model-details-not-found";
       heading.textContent = t(options.locale, "details.notFound");
       panel.setAttribute("aria-labelledby", heading.id);
@@ -168,53 +193,56 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
       const clear = document.createElement("button");
       clear.type = "button";
       clear.dataset.action = "clear-model";
-      clear.textContent = t(options.locale, "details.clearModel");
-      const clearModel = (): void => {
-        window.history.pushState({}, "", writeModelId(new URL(window.location.href), null));
-        renderDetails(null, true);
-      };
-      clear.addEventListener("click", clearModel);
+      clear.textContent = options.locale === "zh" ? "返回模型目录" : "Back to model catalog";
+      clear.addEventListener("click", closeDetails);
       panel.append(heading, message, clear);
       detailHost.append(panel);
-      detailCleanup = () => clear.removeEventListener("click", clearModel);
+      heading.tabIndex = -1;
+      heading.focus();
+      titleFor(heading.textContent);
+      detailCleanup = () => clear.removeEventListener("click", closeDetails);
       return;
     }
-
+    const url = new URL(window.location.href);
     const details = renderModelDetails(model, {
       locale: options.locale,
       repositoryUrl: REPOSITORY_URL,
       releaseTag: catalog.release.tag,
-      platform: state.query.platform || undefined
+      hardware: normalizeHardware(url.searchParams.get("hardware") ?? state.query.platform),
+      task: url.searchParams.get("task") ?? undefined,
+      onSelectionChange: (hardware, task) => updateSelection(hardware, task, true)
     });
     const close = details.querySelector<HTMLButtonElement>('[data-action="close-details"]')!;
-    const closeDetails = (): void => {
-      window.history.pushState({}, "", writeModelId(new URL(window.location.href), null));
-      renderDetails(null, true);
-    };
-    const cancelDetails = (event: Event): void => {
-      event.preventDefault();
-      closeDetails();
-    };
     close.addEventListener("click", closeDetails);
-    details.addEventListener("cancel", cancelDetails);
     detailHost.append(details);
-    if (details instanceof HTMLDialogElement && typeof details.showModal === "function") {
-      details.showModal();
-    } else {
-      close.focus();
-    }
-    detailCleanup = () => {
-      close.removeEventListener("click", closeDetails);
-      details.removeEventListener("cancel", cancelDetails);
-    };
+    const hardware = normalizeHardware(details.dataset.hardware ?? "");
+    if (hardware && details.dataset.task) updateSelection(hardware, details.dataset.task, false);
+    else titleFor(model.name);
+    const heading = details.querySelector<HTMLElement>("h1");
+    if (heading) { heading.tabIndex = -1; heading.focus(); }
+    detailCleanup = () => close.removeEventListener("click", closeDetails);
   };
-  const openDetails = (modelId: string): void => {
+  const openDetails = (modelId: string, hardware?: HardwareId): void => {
     detailOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    window.history.pushState({}, "", writeModelId(new URL(window.location.href), modelId));
+    const next = writeModelId(new URL(window.location.href), modelId);
+    const preferred = hardware ?? normalizeHardware(state.query.platform);
+    if (preferred) next.searchParams.set("hardware", preferred);
+    else next.searchParams.delete("hardware");
+    next.searchParams.delete("task");
+    window.history.pushState({}, "", next);
     renderDetails(modelId);
     options.onSelectModel?.(modelId);
   };
-  const restoreDetails = (): void => renderDetails(readModelId(new URL(window.location.href)));
+  const restoreDetails = (): void => {
+    const url = new URL(window.location.href);
+    const query = readCatalogQuery(url);
+    if (JSON.stringify(query) !== JSON.stringify(state.query)) {
+      state.query = query;
+      filters.setQuery(query);
+      renderResults();
+    }
+    renderDetails(readModelId(url), true);
+  };
 
   const renderResults = (): void => {
     clearCards();
@@ -239,8 +267,8 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
       return;
     }
     for (const model of queryResult.models) {
-      const card = renderModelCard(model, catalog.release.platform, options.locale, (modelId) => {
-        openDetails(modelId);
+      const card = renderModelCard(model, catalog.release.platform, options.locale, (modelId, hardware) => {
+        openDetails(modelId, hardware);
       });
       renderedCards.push(card);
       grid.append(card.element);
@@ -250,9 +278,11 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
   const filters = createFilters(catalog, options.locale, state.query, (query) => {
     if (destroyed) return;
     state.query = query;
+    window.history.replaceState({}, "", writeCatalogQuery(new URL(window.location.href), query));
     renderResults();
   });
-  content.append(preferences, summary, filters.element, results, detailHost);
+  directory.append(summary, filters.element, results);
+  content.append(preferences, directory, detailHost);
   root.replaceChildren(content);
   renderResults();
   window.addEventListener("popstate", restoreDetails);

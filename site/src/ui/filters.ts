@@ -1,6 +1,7 @@
 import type { Catalog, Locale } from "../catalog/types";
 import type { CatalogQuery } from "../catalog/query";
 import { t, taskTranslationKey } from "../i18n/translations";
+import { HARDWARE_IDS, getModelVariants } from "../catalog/variants";
 
 export const DEFAULT_QUERY: CatalogQuery = {
   text: "",
@@ -15,6 +16,7 @@ export const DEFAULT_QUERY: CatalogQuery = {
 export interface FilterPanel {
   element: HTMLElement;
   reset(): void;
+  setQuery(query: CatalogQuery): void;
   destroy(): void;
 }
 
@@ -78,23 +80,22 @@ export function createFilters(
 
   const platformControl = labeledSelect("catalog-platform", t(locale, "filter.platformLabel"));
   addOption(platformControl.select, "", t(locale, "filter.all"));
-  const platforms = uniqueSorted(catalog.models.flatMap((model) =>
-    (model.platforms ?? [model]).flatMap((platform) => platform.benchmarks.map((benchmark) => benchmark.environment.hardware))
-  ), locale);
-  for (const platform of platforms) addOption(platformControl.select, platform, platform);
+  for (const platform of HARDWARE_IDS) addOption(platformControl.select, platform, platform.toUpperCase());
 
   const formatControl = labeledSelect("catalog-format", t(locale, "filter.formatsLabel"));
   addOption(formatControl.select, "", t(locale, "filter.all"));
   const formats = uniqueSorted(catalog.models.flatMap((model) => [
-    ...model.assets.map((asset) => asset.format),
-    ...model.benchmarks.flatMap((benchmark) => benchmark.model_format ? [benchmark.model_format] : [])
+    ...getModelVariants(model).flatMap((variant) => [
+      ...variant.assets.map((asset) => asset.format),
+      ...variant.benchmarks.flatMap((benchmark) => benchmark.model_format ? [benchmark.model_format] : [])
+    ])
   ]), locale);
   for (const format of formats) addOption(formatControl.select, format, format);
 
   const precisionControl = labeledSelect("catalog-precision", t(locale, "filter.precisionsLabel"));
   addOption(precisionControl.select, "", t(locale, "filter.all"));
   const precisions = uniqueSorted(catalog.models.flatMap((model) =>
-    model.benchmarks.flatMap((benchmark) => benchmark.precision ? [benchmark.precision] : [])
+    getModelVariants(model).flatMap((variant) => variant.benchmarks.flatMap((benchmark) => benchmark.precision ? [benchmark.precision] : []))
   ), locale);
   for (const precision of precisions) addOption(precisionControl.select, precision, precision);
 
@@ -166,6 +167,15 @@ export function createFilters(
   return {
     element: form,
     reset: resetControls,
+    setQuery(query) {
+      search.value = query.text;
+      platformControl.select.value = query.platform;
+      taskControl.select.value = query.tasks[0] ?? "";
+      formatControl.select.value = query.formats[0] ?? "";
+      precisionControl.select.value = query.precisions[0] ?? "";
+      benchmarkControl.select.value = query.benchmark;
+      sortControl.select.value = query.sort;
+    },
     destroy() {
       search.removeEventListener("input", emit);
       for (const select of [platformControl.select, taskControl.select, formatControl.select, precisionControl.select, benchmarkControl.select, sortControl.select]) {

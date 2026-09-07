@@ -1,201 +1,85 @@
-import type { Locale, MetricRecord, ModelRecord } from "../catalog/types";
-import { t, taskTranslationKey, type TranslationKey } from "../i18n/translations";
+import type { HardwareId, Locale, ModelRecord } from "../catalog/types";
+import { getHardwareIds, getModelVariants } from "../catalog/variants";
+import { t, taskTranslationKey } from "../i18n/translations";
 
-export interface RenderedModelCard {
-  element: HTMLElement;
-  destroy(): void;
-}
-
-const qualifierKeys: Record<NonNullable<MetricRecord["qualifier"]>, TranslationKey> = {
-  exact: "qualifier.exact",
-  "lower-bound": "qualifier.lowerBound",
-  "upper-bound": "qualifier.upperBound",
-  approximate: "qualifier.approximate"
-};
-
-const metricKeys: Record<string, TranslationKey> = {
-  latency: "metric.latency",
-  throughput: "metric.throughput",
-  fps: "metric.throughput",
-  "top-1": "metric.top1",
-  "top-5": "metric.top5",
-  map: "metric.map",
-  miou: "metric.miou",
-  mae: "metric.mae",
-  rmse: "metric.rmse",
-  cosine_similarity: "metric.cosineSimilarity"
-};
-
-const unitKeys: Record<MetricRecord["unit"], TranslationKey> = {
-  ms: "unit.ms",
-  us: "unit.us",
-  fps: "unit.fps",
-  percent: "unit.percent",
-  ratio: "unit.ratio",
-  mae: "unit.mae",
-  rmse: "unit.rmse"
-};
-
-function unique(values: Array<string | undefined>): string[] {
-  return [...new Set(values.filter((value): value is string => Boolean(value)))];
-}
-
-function labeledValue(label: string, value: string): HTMLDivElement {
-  const row = document.createElement("div");
-  row.className = "model-fact";
-  const term = document.createElement("dt");
-  term.textContent = label;
-  const description = document.createElement("dd");
-  description.textContent = value;
-  row.append(term, description);
-  return row;
-}
-
-function formatMetric(metric: MetricRecord, locale: Locale): HTMLElement {
-  const item = document.createElement("li");
-  item.className = "metric-item";
-  const labelKey = metricKeys[metric.metric.toLocaleLowerCase()];
-  const label = labelKey ? t(locale, labelKey) : metric.metric;
-  const number = new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
-    maximumFractionDigits: 6
-  }).format(metric.value);
-  item.append(`${label}: ${number} ${t(locale, unitKeys[metric.unit])}`);
-  if (metric.qualifier && metric.qualifier !== "exact") {
-    const qualifier = document.createElement("span");
-    qualifier.className = "metric-qualifier";
-    qualifier.textContent = ` (${t(locale, qualifierKeys[metric.qualifier])})`;
-    item.append(qualifier);
-  }
-  return item;
-}
-
-function metricGroup(
-  headingText: string,
-  missingText: string,
-  metrics: Array<{ metric: MetricRecord; hardware: string }>,
-  locale: Locale,
-  limit: number
-): HTMLElement {
-  const group = document.createElement("section");
-  group.className = "model-metric-group";
-  const heading = document.createElement("h4");
-  heading.textContent = headingText;
-  group.append(heading);
-  if (metrics.length === 0) {
-    const missing = document.createElement("p");
-    missing.className = "missing-data";
-    missing.textContent = missingText;
-    group.append(missing);
-    return group;
-  }
-
-  const list = document.createElement("ul");
-  for (const entry of metrics.slice(0, limit)) {
-    const item = formatMetric(entry.metric, locale);
-    const conditions = unique([entry.hardware, entry.metric.scope]);
-    if (conditions.length > 0) {
-      const detail = document.createElement("small");
-      detail.className = "metric-conditions";
-      detail.textContent = ` — ${conditions.join(" · ")}`;
-      item.append(detail);
-    }
-    list.append(item);
-  }
-  group.append(list);
-  return group;
-}
-
-function representativePerformance<T extends { metric: MetricRecord }>(metrics: T[]): T[] {
-  const latency = metrics.find((entry) => entry.metric.metric.toLocaleLowerCase() === "latency");
-  const throughput = metrics.find((entry) => {
-    const metric = entry.metric.metric.toLocaleLowerCase();
-    return metric === "throughput" || metric === "fps";
-  });
-  const selected = [latency, throughput].filter((entry): entry is T => entry !== undefined);
-  for (const entry of metrics) {
-    if (selected.length >= 2) break;
-    if (!selected.includes(entry)) selected.push(entry);
-  }
-  return selected;
-}
+export interface RenderedModelCard { element: HTMLElement; destroy(): void; }
 
 export function renderModelCard(
-  model: ModelRecord,
-  platform: string,
-  locale: Locale,
-  onSelect: (modelId: string) => void
+  model: ModelRecord, _platform: string, locale: Locale,
+  onSelect: (modelId: string, hardware?: HardwareId) => void
 ): RenderedModelCard {
   const article = document.createElement("article");
   article.className = "model-card";
   article.dataset.modelId = model.id;
   const title = document.createElement("h3");
-  title.textContent = model.name;
-
+  const titleLink = document.createElement("a");
+  const detailUrl = new URL(window.location.href);
+  detailUrl.searchParams.set("model", model.id);
+  detailUrl.searchParams.delete("hardware");
+  detailUrl.searchParams.delete("task");
+  if (detailUrl.searchParams.get("platform")) detailUrl.searchParams.set("hardware", detailUrl.searchParams.get("platform")!);
+  titleLink.href = detailUrl.href;
+  titleLink.textContent = model.name;
+  title.append(titleLink);
+  const variants = getModelVariants(model);
   const tasks = document.createElement("ul");
   tasks.className = "task-badges";
   tasks.setAttribute("aria-label", t(locale, "model.tasks"));
-  for (const task of model.tasks) {
+  const taskIds = [...new Set(variants.length ? variants.map((variant) => variant.task) : model.tasks)];
+  for (const task of taskIds) {
     const item = document.createElement("li");
     item.textContent = t(locale, taskTranslationKey(task));
     tasks.append(item);
   }
-
-  const platformModels = model.platforms ?? [{ ...model, platform, release_tag: "" }];
-  const allBenchmarks = platformModels.flatMap((entry) => entry.benchmarks);
-  const allAssets = platformModels.flatMap((entry) => entry.assets);
-  const formats = unique([...allAssets.map((asset) => asset.format), ...allBenchmarks.map((benchmark) => benchmark.model_format)]);
-  const precisions = unique(allBenchmarks.map((benchmark) => benchmark.precision));
-  const variants = unique(allBenchmarks.map((benchmark) => benchmark.variant_id));
-  const checksummed = allAssets.filter((asset) => asset.sha256).length;
-  const facts = document.createElement("dl");
-  facts.className = "model-facts";
-  facts.append(
-    labeledValue(t(locale, "model.platform"), platformModels.map((entry) => entry.platform.toUpperCase()).join(" · ")),
-    labeledValue(t(locale, "model.formats"), formats.join(", ") || t(locale, "missing.notPublished")),
-    labeledValue(t(locale, "model.precisions"), precisions.join(", ") || t(locale, "missing.notPublished")),
-    labeledValue(t(locale, "model.variants"), t(locale, "model.variantCount", { count: variants.length })),
-    labeledValue(
-      t(locale, "model.availability"),
-      t(locale, model.availability === "download" ? "model.downloadable" : "model.manual")
-    ),
-    labeledValue(t(locale, "model.checksumCoverage"), `${checksummed}/${allAssets.length}`)
-  );
-
-  const performance = allBenchmarks.flatMap((benchmark) =>
-    (benchmark.performance ?? []).map((metric) => ({ metric, hardware: benchmark.environment.hardware }))
-  );
-  const accuracy = allBenchmarks.flatMap((benchmark) =>
-    (benchmark.accuracy ?? []).map((metric) => ({ metric, hardware: benchmark.environment.hardware }))
-  );
-  const metrics = document.createElement("div");
-  metrics.className = "model-metrics";
-  metrics.append(
-    metricGroup(
-      t(locale, "details.performance"),
-      t(locale, "model.performanceMissing"),
-      representativePerformance(performance),
-      locale,
-      2
-    ),
-    metricGroup(t(locale, "details.accuracy"), t(locale, "model.accuracyMissing"), accuracy, locale, 1)
-  );
-
-  const actions = document.createElement("div");
-  actions.className = "model-actions";
+  const hardwareLabels = document.createElement("div");
+  hardwareLabels.className = "hardware-badges";
+  hardwareLabels.setAttribute("role", "group");
+  hardwareLabels.setAttribute("aria-label", t(locale, "model.platform"));
+  const cleanups: Array<() => void> = [];
+  const followTitle = (event: MouseEvent): void => {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault(); onSelect(model.id);
+  };
+  const followCard = (event: MouseEvent): void => {
+    if (!(event.target instanceof Element) || event.target.closest("a, button, input, select, details")) return;
+    titleLink.focus({ preventScroll: true });
+    onSelect(model.id);
+  };
+  titleLink.addEventListener("click", followTitle);
+  article.addEventListener("click", followCard);
+  cleanups.push(() => titleLink.removeEventListener("click", followTitle), () => article.removeEventListener("click", followCard));
+  for (const hardware of getHardwareIds(model)) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.hardware = hardware;
+    button.textContent = hardware.toUpperCase();
+    const select = (): void => onSelect(model.id, hardware);
+    button.addEventListener("click", select);
+    cleanups.push(() => button.removeEventListener("click", select));
+    hardwareLabels.append(button);
+  }
+  const specifications = document.createElement("p");
+  specifications.className = "card-specifications";
+  const names = [...new Set(variants.map((variant) => {
+    if (/^yolov?\d+$/i.test(model.id)) return /^yolov?\d+[a-z]*/i.exec(variant.name)?.[0] ?? variant.name;
+    return variant.name.replace(/\s+(?:on\s+)?RDK\s+.*$/i, "");
+  }))];
+  if (/^yolov?\d+$/i.test(model.id)) {
+    const sizeOrder = ["n", "s", "m", "l", "x", "b", "c", "e"];
+    const rank = (name: string): number => { const size = /\d+([a-z])/i.exec(name)?.[1]?.toLowerCase(); return size ? sizeOrder.indexOf(size) : 99; };
+    names.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+  }
+  specifications.textContent = names.slice(0, 5).join(" · ")
+    + (names.length > 5 ? (locale === "zh" ? ` 等 ${names.length} 种规格` : ` · ${names.length} specifications`) : "");
   const details = document.createElement("button");
   details.type = "button";
   details.dataset.action = "open-details";
-  details.textContent = t(locale, "details.overview");
+  details.textContent = locale === "zh" ? "查看模型 →" : "View model →";
   details.setAttribute("aria-label", t(locale, "model.openDetails", { name: model.name }));
   const select = (): void => onSelect(model.id);
   details.addEventListener("click", select);
-  actions.append(details);
-
-  article.append(title, tasks, facts, metrics, actions);
-  return {
-    element: article,
-    destroy() {
-      details.removeEventListener("click", select);
-    }
-  };
+  cleanups.push(() => details.removeEventListener("click", select));
+  const actions = document.createElement("div"); actions.className = "model-actions"; actions.append(details);
+  article.append(title, tasks, hardwareLabels, specifications, actions);
+  return { element: article, destroy() { cleanups.forEach((cleanup) => cleanup()); } };
 }

@@ -1,4 +1,5 @@
 import type { BenchmarkRecord, MetricRecord, ModelRecord } from "./types";
+import { getHardwareIds, getModelVariants, normalizeHardware } from "./variants";
 
 export interface CatalogQuery {
   text: string;
@@ -66,6 +67,8 @@ function modelSearchValues(model: ModelRecord): string[] {
     model.name,
     model.id,
     model.sample_path,
+    ...getHardwareIds(model),
+    ...getModelVariants(model).map((variant) => variant.name),
     ...model.tasks,
     ...model.assets.map((asset) => asset.filename),
     ...benchmarkValues(model).flatMap((benchmark) => [
@@ -127,12 +130,22 @@ function modelPrecisions(model: ModelRecord): string[] {
 }
 
 function matchesFilters(model: ModelRecord, query: CatalogQuery): boolean {
-  return matchesSearch(model, query.text)
-    && (query.platform === "" || benchmarkValues(model).some((benchmark) => normalize(benchmark.environment.hardware) === normalize(query.platform)))
-    && hasAnySelectedValue(model.tasks, query.tasks)
-    && hasAnySelectedValue(modelFormats(model), query.formats)
-    && hasAnySelectedValue(modelPrecisions(model), query.precisions)
-    && matchesBenchmarkFilter(model, query.benchmark);
+  const scoped = scopeForQuery(model, query);
+  return matchesSearch(scoped, query.text)
+    && (query.platform === "" || getHardwareIds(model).some((hardware) => hardware === normalizeHardware(query.platform)))
+    && hasAnySelectedValue(scoped.tasks, query.tasks)
+    && hasAnySelectedValue(modelFormats(scoped), query.formats)
+    && hasAnySelectedValue(modelPrecisions(scoped), query.precisions)
+    && matchesBenchmarkFilter(scoped, query.benchmark);
+}
+
+function scopeForQuery(model: ModelRecord, query: CatalogQuery): ModelRecord {
+  if (!query.platform) return model;
+  const variants = getModelVariants(model).filter((variant) => variant.hardware === normalizeHardware(query.platform)
+    && hasAnySelectedValue([variant.task], query.tasks));
+  return { ...model, platforms: undefined, variants,
+    benchmarks: variants.flatMap((variant) => variant.benchmarks),
+    assets: variants.flatMap((variant) => variant.assets), tasks: [...new Set(variants.map((variant) => variant.task))] };
 }
 
 function isAccuracyMetric(record: BenchmarkRecord, metric: MetricRecord): boolean {
@@ -335,5 +348,6 @@ export function queryModels(models: ModelRecord[], query: CatalogQuery): QueryRe
   if (filtered.length === 0) {
     return { models: filtered, sortApplied: false };
   }
-  return sortByNumericMetric(filtered, query.sort);
+  const result = sortByNumericMetric(filtered.map((model) => scopeForQuery(model, query)), query.sort);
+  return { ...result, models: result.models.map((model) => filtered.find((original) => original.id === model.id)!) };
 }
