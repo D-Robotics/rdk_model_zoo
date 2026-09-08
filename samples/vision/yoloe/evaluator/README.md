@@ -8,7 +8,7 @@ This directory records the benchmark data, runtime verification results, and per
 
 The current X5 benchmark scope covers:
 
-- `yoloe-11s-seg-pf_bayese_640x640_nv12.bin`
+- `yoloe_11s_seg_pf_bayese_640x640_nv12.bin`
 
 ## Test Environment
 

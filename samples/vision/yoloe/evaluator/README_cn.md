@@ -8,7 +8,7 @@
 
 当前 X5 benchmark 覆盖以下模型：
 
-- `yoloe-11s-seg-pf_bayese_640x640_nv12.bin`
+- `yoloe_11s_seg_pf_bayese_640x640_nv12.bin`
 
 ## 测试环境
 
