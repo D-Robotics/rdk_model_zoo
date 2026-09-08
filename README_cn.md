@@ -99,7 +99,8 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- paraformer/              # Paraformer 中文语音识别（WAV 输入，Python / C++ Runtime）
 |   |   `-- kws/                    # 关键词唤醒
 |   |-- llm/
-|   |   `-- gemma4-e2b/             # Gemma4-E2B VLM（视觉 + 语言）
+|   |   |-- gemma4-e2b/             # Gemma4-E2B VLM（视觉 + 语言）
+|   |   `-- minicpm5-2b/           # MiniCPM5-2B text generation (S600)
 |   `-- vla/
 |       |-- act/                    # Action Chunking Transformer（机器人策略）
 |       `-- pi0/                    # rdk_LeRobot_tools s600 子模块；Pi0 位于 models/pi0
@@ -167,6 +168,7 @@ bash run.sh
 | 语音识别 | Paraformer（中文 ASR，WAV 输入，三段 INT16 HBM） | `samples/speech/paraformer` | S100 | [详情](./samples/speech/paraformer) |
 | 关键词唤醒 | KWS（MDTC） | `samples/speech/kws` | S100 | [详情](./samples/speech/kws) |
 | 视觉语言模型 | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P / S600 | [详情](./samples/llm/gemma4-e2b) |
+| 文本生成 | MiniCPM5-2B | `samples/llm/minicpm5-2b` | S600 | [详情](./samples/llm/minicpm5-2b) |
 | 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | `samples/vla/act` | S100 / S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 | 具身智能 / 机器人策略 | Pi0 | `samples/vla/pi0/models/pi0` | S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools/tree/s600/models/pi0) |
 
