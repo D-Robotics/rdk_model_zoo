@@ -71,7 +71,7 @@ a { text-underline-offset: .23em; }
 .repository-link:hover, .editorial-primary:hover { background: var(--muted); border-color: var(--muted); }
 .catalog-app { gap: 0; }
 .catalog-directory { gap: 0; }
-.catalog-hero { padding: 4.3rem 1rem 4.8rem; text-align: center; }
+.catalog-hero { padding: 2.6rem 1rem 3.1rem; text-align: center; }
 .editorial-eyebrow { margin: 0 0 1.8rem; font-size: .64rem; letter-spacing: .22em; font-weight: 500; color: var(--muted); }
 .catalog-hero h1 { margin: 0; font-family: var(--display-font); font-weight: 400; font-size: clamp(3.2rem, 6vw, 5.6rem); line-height: 1.03; letter-spacing: -.06em; text-wrap: balance; }
 :lang(zh) .catalog-hero h1 { font-size: clamp(2.6rem, 5.1vw, 4.6rem); line-height: 1.22; letter-spacing: -.04em; }
@@ -167,7 +167,7 @@ a { text-underline-offset: .23em; }
 }
 @media (max-width: 899px) {
   .catalog-workspace { grid-template-columns: minmax(0, 1fr); }
-  .catalog-hero { padding-block: 3.5rem; }
+  .catalog-hero { padding-block: 2.5rem 3rem; }
   .catalog-filters.is-open { padding: 1.5rem; background: var(--surface); border: 0; }
   .mobile-filter-apply { background: var(--text) !important; color: var(--canvas); }
   .directory-heading h2 { font-size: 1.8rem; }
@@ -180,7 +180,7 @@ a { text-underline-offset: .23em; }
   .site-header-actions { gap: .6rem; width: 100%; justify-content: space-between; flex-wrap: wrap; }
   .preference-button { min-height: 2.5rem; padding: .4rem .6rem; font-size: .8rem; }
   .repository-link { padding: .4rem .7rem; font-size: .7rem; min-height: 2rem; }
-  .catalog-hero { padding: 3rem .5rem 3.5rem; }
+  .catalog-hero { padding: 2rem .5rem 2.5rem; }
   .editorial-eyebrow { font-size: .6rem; margin-bottom: 1.5rem; }
   .catalog-hero h1 { font-size: 3.6rem; }
   :lang(zh) .catalog-hero h1 { font-size: 2.7rem; }
@@ -243,3 +243,64 @@ a { text-underline-offset: .23em; }
 .model-details.model-details .model-detail-task-control label,
 .model-details.model-details .model-detail-sample-link { font-size: .9rem; }
 .model-details.model-details .model-detail-hardware-tab { font-size: .9rem; font-weight: 600; }
+
+/* Taste Skill audit: align comparable content, maintain context and add pressed feedback. */
+@supports (grid-template-rows: subgrid) {
+  .model-grid > .model-card {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 5;
+    row-gap: .85rem;
+    padding: 1.4rem 1.2rem 1.1rem;
+  }
+  .model-card-body {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 5;
+    row-gap: .85rem;
+    padding: 0;
+  }
+  .model-card .task-badges { align-content: start; align-items: start; }
+  .model-card-heading, .model-card-hardware { align-content: start; }
+  .model-card .model-actions { align-self: end; }
+}
+.model-card .model-card-heading h3 a { text-wrap: pretty; }
+.preference-controls { gap: .5rem; }
+.preference-button:active, .editorial-primary:active, .repository-link:active,
+.model-card .model-actions button:active { transform: translateY(1px); }
+.hardware-filter button:active, .hardware-badges button:active,
+.model-detail-hardware-tab:active { box-shadow: inset 0 0 0 1px currentColor; }
+.model-details.model-details .model-detail-benchmark-table > div > .table-scroll {
+  max-height: min(70vh, 44rem);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--surface-elevated);
+}
+.model-detail-specifications-table > thead { position: sticky; top: 0; z-index: 2; }
+.model-detail-specifications-table > thead > tr:first-child > th:first-child {
+  position: sticky; left: 0; z-index: 3; box-shadow: 1px 0 0 var(--border);
+}
+.model-details.model-details .model-detail-specifications-table th[scope="row"] {
+  box-shadow: 1px 0 0 var(--border);
+}
+.model-details.model-details .model-detail-benchmark-table > div > .table-scroll:focus-visible {
+  outline-offset: .2rem;
+}
+@media (pointer: coarse) {
+  .model-card .hardware-badges button,
+  .preference-button,
+  .model-details.model-details .model-detail-row-toggle,
+  .model-details.model-details .model-detail-thread-toggle,
+  .model-details.model-details .model-detail-download-list a[data-action="download-model"] { min-height: 44px; }
+  .task-filter-list label { min-height: 44px; }
+}
+@media (max-width: 599px) {
+  .site-header-actions { align-items: stretch; }
+  #header-preferences { flex: 1 1 auto; }
+  .preference-controls { flex-wrap: wrap; }
+  .preference-button { flex: 1 1 auto; }
+  .model-details.model-details .model-detail-specifications-table th[scope="row"] {
+    min-width: 9rem; max-width: 10rem; padding-inline: .7rem;
+  }
+  .model-details.model-details .model-detail-benchmark-table > div > .table-scroll { max-height: 65svh; }
+}

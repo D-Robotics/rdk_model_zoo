@@ -32,3 +32,9 @@ The preference controls mount into `#header-preferences` in the HTML shell; the 
 Development preview: run `npm ci` then `npm run dev -- --host 127.0.0.1 --port 5188` in `docs/catalog`. The URL is `http://127.0.0.1:5188/rdk_model_zoo/`.
 
 Merge the UI commit with the content refresh before deploying the combined site. Preserve the refreshed manifest and benchmark files during that merge; do not replace them with the baseline used for UI preview. Existing published release tags remain immutable.
+
+## Taste Skill review
+
+Applied `redesign-existing-projects` from `Leonxlnx/taste-skill` on 2026-09-08. Its scan/diagnose/fix process identified excess introductory spacing, uneven card section alignment, lost table context during long comparisons, and inconsistent pressed/touch states.
+
+The refinement reduces hero spacing, uses CSS subgrid to align card sections (with the existing flex layout as fallback), gives long benchmark tables a bounded scroll region with sticky headers and specification cells, adds pressed feedback, and enlarges coarse-pointer targets. Keep the user-approved serif headings, Latin fonts, monochrome palette, text-only presentation and all source data. The skill's generic suggestions for imagery, wholesale font changes, marketing layouts and fictional sample data do not apply to this catalog.
