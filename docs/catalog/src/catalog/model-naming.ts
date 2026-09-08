@@ -56,11 +56,17 @@ export function officialFamilyName(familyId: string, fallbackName: string): stri
 }
 
 /**
- * Removes a trailing hardware qualifier such as `on RDK S100`. The detail page
- * already states the selected hardware in its tab, so repeating it inside every
- * row name is noise.
+ * Removes qualifiers a row name should not repeat: the hardware ("on RDK
+ * S100", already stated by the hardware tab) and a trailing input size
+ * ("640x640", already stated by the input-size column). "YOLOv10n Detect
+ * 640x640 on RDK S100" becomes "YOLOv10n Detect".
  */
 export function stripHardwareSuffix(name: string): string {
-  const stripped = name.replace(/[\s·|-]*(?:on\s+)?RDK\s+[A-Za-z0-9-]+\s*$/i, "").trim();
+  const stripped = name
+    .replace(/[\s·|-]*(?:on\s+)?RDK\s+[A-Za-z0-9-]+\s*$/i, "")
+    // A trailing input size such as "640x640"; a bare number ("224" in
+    // "SigLIP base patch16 224") is part of the model name, not a size.
+    .replace(/[\s·|-]+[0-9]{2,4}\s*[x×*]\s*[0-9]{2,4}\s*$/i, "")
+    .trim();
   return stripped || name.trim();
 }

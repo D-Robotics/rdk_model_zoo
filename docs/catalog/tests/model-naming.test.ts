@@ -24,12 +24,14 @@ describe("official model naming", () => {
     expect(officialFamilyName("convnext", "ConvNeXt")).toBe("ConvNeXt");
   });
 
-  it("removes a trailing hardware qualifier without eating the model name", () => {
-    expect(stripHardwareSuffix("YOLOv8n Detect on RDK S100")).toBe("YOLOv8n Detect");
+  it("removes trailing hardware and input-size qualifiers without eating the model name", () => {
+    expect(stripHardwareSuffix("YOLOv8n Detect 640x640 on RDK S100")).toBe("YOLOv8n Detect");
     expect(stripHardwareSuffix("SigLIP base patch16 224 on RDK S100P")).toBe("SigLIP base patch16 224");
-    expect(stripHardwareSuffix("YOLO26n Detect 640x640")).toBe("YOLO26n Detect 640x640");
-    // A name that is only a hardware qualifier must not collapse to nothing.
+    expect(stripHardwareSuffix("YOLOv10n Detect 640x640")).toBe("YOLOv10n Detect");
+    // A name that is only a qualifier must not collapse to nothing.
     expect(stripHardwareSuffix("on RDK S100")).toBe("on RDK S100");
+    // A model version such as YOLO26 is not an input size.
+    expect(stripHardwareSuffix("YOLO26n Detect 640x640")).toBe("YOLO26n Detect");
   });
 });
 
