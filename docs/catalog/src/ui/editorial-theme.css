@@ -1,4 +1,19 @@
 /* Editorial presentation layer. Keep data and benchmark semantics out of this file. */
+/* Limit the replacement to Chinese UI glyphs; Latin text keeps its original font. */
+@font-face {
+  font-family: "Catalog Chinese UI";
+  src: local("Noto Sans SC"), local("HarmonyOS Sans SC");
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+2E80-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-3134F;
+}
+@font-face {
+  font-family: "Catalog Chinese UI";
+  src: local("Noto Sans SC Medium"), local("Noto Sans SC"), local("HarmonyOS Sans SC");
+  font-weight: 500 700;
+  font-display: swap;
+  unicode-range: U+2E80-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-3134F;
+}
 :root {
   --canvas: #fff;
   --surface: #fff;
@@ -12,7 +27,7 @@
   --radius: .35rem;
   --shadow: none;
   --display-font: Georgia, "Times New Roman", "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
-  --ui-font: "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --ui-font: Inter, "Catalog Chinese UI", "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
   font-family: var(--ui-font);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
@@ -33,10 +48,8 @@ html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
 body { line-height: 1.7; }
 :root:lang(zh) {
   font-size: 17px;
-  --display-font: var(--ui-font);
 }
 body { font-weight: 400; }
-:lang(zh) .catalog-hero h1 { font-weight: 500; }
 button, input, select { border-radius: .3rem; font-size: .85rem; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button, .repository-link, .editorial-primary { transition: background-color 200ms, color 200ms, border-color 200ms; }

@@ -4,7 +4,7 @@
 
 The September 2026 redesign adapts the supplied Boomerang reference to a model catalog: white canvas, near-black text, serif display typography, generous introductory spacing, hairline separators, and restrained 200 ms interaction transitions. The model directory remains the primary product. No imagery, background video, canvas animation, marketing navigation, or additional UI library is required.
 
-Chinese display and UI text prefer locally available Noto Sans SC, followed by HarmonyOS Sans SC, PingFang SC and Microsoft YaHei. Body text uses regular weight; Chinese hero text, buttons and benchmark values use medium weight. English display headings retain Georgia. Font synthesis is disabled. No third-party font request is required; devices without Noto Sans SC use the system fallbacks. Keep the existing TypeScript/Vite application and catalog schema.
+Display headings retain the original Georgia/CJK serif (Songti) stack. Latin UI text retains its original Inter/system stack. Only Chinese UI glyphs in body text, buttons and tables use locally available Noto Sans SC or HarmonyOS Sans SC, scoped by `unicode-range` so English glyphs remain unchanged. Body text uses regular weight and UI emphasis uses medium weight. Font synthesis is disabled. No third-party font request is required; devices without those fonts use the existing system fallbacks. Keep the existing TypeScript/Vite application and catalog schema.
 
 ## Page structure
 
