@@ -114,7 +114,13 @@ export function renderModelCard(
   const details = document.createElement("button");
   details.type = "button";
   details.dataset.action = "open-details";
-  details.textContent = locale === "zh" ? "查看模型 →" : "View model →";
+  const actionLabel = document.createElement("span");
+  actionLabel.textContent = locale === "zh" ? "查看模型" : "View model";
+  const actionArrow = document.createElement("span");
+  actionArrow.className = "model-action-arrow";
+  actionArrow.setAttribute("aria-hidden", "true");
+  actionArrow.textContent = "→";
+  details.append(actionLabel, " ", actionArrow);
   details.setAttribute("aria-label", t(locale, "model.openDetails", { name: viewModel.name }));
   const select = (): void => onSelect(viewModel.modelId);
   details.addEventListener("click", select);

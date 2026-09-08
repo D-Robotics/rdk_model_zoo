@@ -46,7 +46,7 @@ export function createFilters(catalog: Catalog, locale: Locale, initialQuery: Ca
   listen(search, "input", () => change({ text: search.value }));
   const open = button(zh ? "筛选" : "Filters", () => {
     restoreBackground?.();
-    const background = [...document.querySelectorAll<HTMLElement>(".catalog-results, .hardware-filter, .catalog-summary, .preference-controls, .site-header, .site-footer")];
+    const background = [...document.querySelectorAll<HTMLElement>(".catalog-results, .hardware-filter, .catalog-summary, .catalog-hero, .directory-heading, .preference-controls, .site-header, .site-footer")];
     const previous = background.map(node => node.inert);
     const overflow = document.body.style.overflow;
     background.forEach(node => { node.inert = true; });

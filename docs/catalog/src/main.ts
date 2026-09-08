@@ -4,6 +4,7 @@ import { createLanguageController } from "./i18n/language";
 import { t, type TranslationKey } from "./i18n/translations";
 import "./styles.css";
 import "./ui/catalog-layout.css";
+import "./ui/editorial-theme.css";
 
 const REPOSITORY_URL = "https://github.com/D-Robotics/rdk_model_zoo";
 const MANIFEST_URL = `${REPOSITORY_URL}/blob/rdk_x5/docs/release/models.yaml`;

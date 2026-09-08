@@ -8,6 +8,7 @@ import { readCatalogQuery, writeCatalogQuery } from "./ui/navigation";
 import { renderModelCard, type RenderedModelCard } from "./ui/model-card";
 import { readModelId, renderModelDetails, writeModelId } from "./ui/model-details";
 import { renderSummary } from "./ui/summary";
+import { renderDirectoryHeading, renderEditorialIntro } from "./ui/editorial-shell";
 
 const REPOSITORY_URL = "https://github.com/D-Robotics/rdk_model_zoo";
 const THEME_STORAGE_KEY = "rdk-model-zoo-theme";
@@ -288,9 +289,11 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
   workspace.className = "catalog-workspace";
   results.prepend(filters.toolbar, filters.chips);
   workspace.append(filters.element, results);
-  directory.append(summary, filters.hardware, workspace);
+  directory.append(renderEditorialIntro(options.locale), renderDirectoryHeading(options.locale), filters.hardware, workspace, summary);
   content.append(preferences, directory, detailHost);
   root.replaceChildren(content);
+  const preferenceHost = document.querySelector<HTMLElement>("#header-preferences");
+  preferenceHost?.replaceChildren(preferences);
   renderResults();
   window.addEventListener("popstate", restoreDetails);
   restoreDetails();
@@ -304,6 +307,7 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
       languageButton.removeEventListener("click", switchLanguage);
       themeButton.removeEventListener("click", cycleTheme);
       filters.destroy();
+      if (preferenceHost?.contains(preferences)) preferences.remove();
       clearCards();
       clearDetails();
     },
