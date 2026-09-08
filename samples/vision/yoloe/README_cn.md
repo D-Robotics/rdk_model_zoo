@@ -105,13 +105,11 @@ YOLOE 当前提供 Python 版本推理示例。
 
 ## 性能数据
 
-下表保留 YOLOE-11s 在 RDK X5 平台上的历史参考数据，详见 [评测说明](./evaluator/README_cn.md)。
-
 | 模型 | 分辨率 | 线程数 | 延迟 | FPS |
 | --- | --- | ---: | --- | --- |
-| YOLOE-11s-Seg-PF | 640x640 | 1 | 142.9 ms | 7.0 FPS |
-| YOLOE-11s-Seg-PF | 640x640 | 2 | 149.5 ms | 13.3 FPS |
-| YOLOE-11s-Seg-PF | 640x640 | 3 | 167.4 ms | 17.8 FPS |
+| YOLOE-11s-Seg-PF | 640x640 | 1 | 146.16 ms | 6.84 FPS |
+| YOLOE-11m-Seg-PF | 640x640 | 1 | 177.14 ms | 5.65 FPS |
+| YOLOE-11l-Seg-PF | 640x640 | 1 | 189.97 ms | 5.26 FPS |
 
 ---
 

@@ -109,13 +109,11 @@ YOLOE runtime inference sample currently provides a Python implementation.
 
 ## Performance Data
 
-The following table retains historical YOLOE-11s reference measurements on RDK X5. See the [evaluation notes](./evaluator/README.md).
-
 | Model | Size | Threads | Latency | FPS |
 | --- | --- | ---: | --- | --- |
-| YOLOE-11s-Seg-PF | 640x640 | 1 | 142.9 ms | 7.0 FPS |
-| YOLOE-11s-Seg-PF | 640x640 | 2 | 149.5 ms | 13.3 FPS |
-| YOLOE-11s-Seg-PF | 640x640 | 3 | 167.4 ms | 17.8 FPS |
+| YOLOE-11s-Seg-PF | 640x640 | 1 | 146.16 ms | 6.84 FPS |
+| YOLOE-11m-Seg-PF | 640x640 | 1 | 177.14 ms | 5.65 FPS |
+| YOLOE-11l-Seg-PF | 640x640 | 1 | 189.97 ms | 5.26 FPS |
 
 ---
 
