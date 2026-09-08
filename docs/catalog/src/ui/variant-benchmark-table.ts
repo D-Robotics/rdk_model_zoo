@@ -157,7 +157,7 @@ function buildVariantRow(
   const pairs = pairAccuracyMetrics(records);
   const accuracyDisplay = accuracyHeader(pairs, context.locale);
   const floatCell = document.createElement("td");
-  floatCell.className = "model-detail-accuracy-cell";
+  floatCell.className = "model-detail-accuracy-cell benchmark-group-start";
   renderAccuracyValues(floatCell, pairs, "float", context, !accuracyDisplay.shared);
   row.append(floatCell);
   const quantizedCell = document.createElement("td");

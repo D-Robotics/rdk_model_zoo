@@ -95,6 +95,7 @@ export function renderRetentionValues(
     if (element.childNodes.length > 0) element.append(document.createElement("br"));
     const item = document.createElement("span");
     item.className = "model-detail-retention-value";
+    item.classList.toggle("missing-data", retention.status !== "value");
     item.dataset.retentionSource = retention.source ?? "none";
     item.textContent = text;
     if (retention.source === "derived") {
