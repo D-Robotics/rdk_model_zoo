@@ -4,6 +4,25 @@
 
 - Recorded the retention percentage that the source accuracy tables already
   publish beside every `FP32 / BPU` pair. 768 published retention values were
+  added across 180 benchmark records.
+- Added the 12 accuracy values the source publishes but the manifest missed:
+  `bbox-small/medium/large mAP@.50:.95` for YOLOv8n and YOLO11n on S100.
+- Added the 65 benchmark records the two Ultralytics evaluator READMEs publish
+  but the manifest never carried: the whole Classification task for
+  `ultralytics_yolo` on S100/S100P (previously S600-only) and for
+  `ultralytics_yolo26` on S100/S600, plus the full S100P detection accuracy
+  table for `ultralytics_yolo26`. 136 performance and 200 accuracy metrics,
+  transcribed verbatim.
+- Audit: one verification agent per sample across all 35 S samples proved
+  every remaining record matches its source row; the remaining 97 documented
+  gaps (SigLIP float/MSE columns, per-case and Total-Latency columns,
+  code-fenced cosines) are listed in the release note for the next batch.
+- Benchmarks 473 -> 538 records; performance 1,037 -> 1,173; accuracy
+  1,682 -> 2,668 (834 retention). No published value was changed or inferred.
+- See [release notes](docs/releases/s-v1.1.2.md).
+
+- Recorded the retention percentage that the source accuracy tables already
+  publish beside every `FP32 / BPU` pair. 768 published retention values were
   added across 180 benchmark records; until now the catalog could only derive
   an approximation from the two accuracy values.
 - Added the 12 accuracy values the source publishes but the manifest missed:

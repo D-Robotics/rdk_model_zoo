@@ -16,11 +16,18 @@ evidence that was already in the repository documentation.
   each float/quantized accuracy pair the manifest already carried. These are
   recorded as `<metric>-retention` with `unit: percent`, matching the existing
   X5 convention.
+- **65 missed benchmark records added**: the entire Classification task for
+  `ultralytics_yolo` on S100 and S100P (previously carried for S600 only) and
+  for `ultralytics_yolo26` on S100 and S600, plus the complete S100P
+  detection accuracy table for `ultralytics_yolo26` — 136 performance and
+  200 accuracy metrics found by the per-sample audit agents and transcribed
+  verbatim from the evaluator READMEs.
 - **12 missed accuracy values added**: `bbox-small`, `bbox-medium` and
   `bbox-large` `mAP@.50:.95` (FP32 and BPU) for YOLOv8n and YOLO11n on S100,
   plus their 6 published retentions. The source detection table publishes all
   four bbox columns for every row; these two rows had only `bbox-all` recorded.
-- Accuracy metrics 1,682 → 2,468 (of which 774 are retention). Benchmark record
+- Accuracy metrics 1,682 → 2,468 (of which 774 are retention) from the
+retention work, then → 2,668 with the 65 new Ultralytics records. Benchmark record
   count (473), performance metric count (1,037), model entries (35) and assets
   (308) are unchanged.
 
@@ -57,8 +64,8 @@ retentions are recorded to two decimals as published (`93.27`).
 - 308 manifest assets: 306 with download URLs and 2 local-only assets
   (`s100/am.mvn`, `s100/paraformer_config.yaml`).
 - SHA-256 coverage is still incomplete: 2 recorded, 306 `null`.
-- 473 benchmark records contain 1,037 performance metrics and 2,468 accuracy
-  metrics.
+- 538 benchmark records contain 1,173 performance metrics and 2,668 accuracy
+  metrics (of which 834 are retention).
 
 Benchmark evidence remains anchored to the full commit SHA
 `53d924f4c88175ec77634d24e5d711a3a0901eb6`. The three source documents read for
@@ -81,3 +88,22 @@ existing refs stay valid and were not rewritten.
   only, not external model binaries.
 
 Previous published release: [s-v1.1.1](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/s-v1.1.1).
+
+## Known remaining gaps (audited, not yet recorded)
+
+The per-sample audit (one verification agent per sample, all 35 S samples)
+confirmed every value now in the manifest matches its source row, and
+documented 97 further published numbers not yet recorded. The largest:
+
+- SigLIP: the PyTorch float-stage TOP1/TOP5 column and the MSE column (24
+  values; the manifest carries the BPU values and cosine).
+- Paraformer: C++ UCP stage latencies, RTF values and the FP32 baseline CER
+  (14). DiffusionDrive: per-case S600 BEV metrics (8). DINOv2: six
+  board-executed cosine values and the PTQ calibrated cosine (8).
+- ResNet152 evaluator runtime table (7), gemma4-e2b S100P performance and
+  quantization accuracy (6), yolo26_depth board latencies (5), Total-Latency
+  columns for 3dresnet/depth_anything_v2/pointnet (9), calibrated cosines for
+  mobilenetv2/v3/v4 (4), vit float ONNX accuracy (2), yolov13 CPU latency
+  column (2).
+
+Each carries file, heading and verbatim cell evidence in the audit reports.
