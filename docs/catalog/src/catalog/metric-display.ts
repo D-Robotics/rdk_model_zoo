@@ -1,4 +1,5 @@
 import type { BenchmarkRecord, Locale, MetricRecord, MetricUnit } from "./types";
+import { canonicalMetricName, isRetentionMetricName } from "./metric-identity";
 
 /** A metric together with the benchmark record that supplied its conditions. */
 export interface MetricEntry {
@@ -29,6 +30,8 @@ export interface PerformanceGroup {
 export interface AccuracyPair {
   key: string;
   metric: string;
+  /** Canonical identity, so `TOP1` and `top-1` are one measurement. */
+  canonicalMetric: string;
   dataset?: string;
   unit: MetricUnit;
   scope?: string;
@@ -36,6 +39,12 @@ export interface AccuracyPair {
   artifact: string;
   float?: MetricEntry;
   quantized?: MetricEntry;
+  /**
+   * A published value whose stage the source does not label (or labels as
+   * compiled/runtime). It must stay visible: an unlabelled stage is not the
+   * same statement as “not yet measured”.
+   */
+  other?: MetricEntry;
   retention?: MetricEntry;
   retentionValue?: number;
   retentionSource?: "explicit" | "derived";
@@ -156,12 +165,7 @@ export function primaryPerformanceGroups(records: BenchmarkRecord[]): Performanc
 }
 
 function isRetentionMetric(metric: MetricRecord): boolean {
-  const name = normalized(metric.metric);
-  return name === "retention"
-    || name.endsWith("-retention")
-    || name.endsWith("_retention")
-    || name.endsWith(" retention")
-    || name.includes("retention");
+  return isRetentionMetricName(metric.metric);
 }
 
 /** Remove the conventional suffix from an explicit retention metric name. */
@@ -224,7 +228,7 @@ function accuracyKey(
   metricName = metric.metric
 ): string {
   return JSON.stringify([
-    normalized(metricName),
+    canonicalMetricName(metricName),
     optionalKey(metric.dataset),
     metric.unit,
     optionalKey(metric.scope),
@@ -236,7 +240,7 @@ function accuracyKey(
 
 function explicitRetentionKey(record: BenchmarkRecord, metric: MetricRecord): string {
   return JSON.stringify([
-    normalized(retentionBaseMetric(metric.metric) ?? metric.metric),
+    canonicalMetricName(retentionBaseMetric(metric.metric) ?? metric.metric),
     optionalKey(metric.dataset),
     optionalKey(metric.scope),
     statisticKey(metric.statistic),
@@ -315,6 +319,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
     const existing = pairs.get(key) ?? {
       key,
       metric: metric.metric,
+      canonicalMetric: canonicalMetricName(metric.metric),
       dataset: metric.dataset,
       unit: metric.unit,
       scope: metric.scope,
@@ -324,6 +329,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
     };
     if (metric.model_stage === "float") existing.float ??= entry;
     else if (metric.model_stage === "quantized") existing.quantized ??= entry;
+    else existing.other ??= entry;
     pairs.set(key, existing);
   }
 
@@ -336,7 +342,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
       continue;
     }
     const retentionKey = JSON.stringify([
-      normalized(pair.metric),
+      pair.canonicalMetric,
       optionalKey(pair.dataset),
       optionalKey(pair.scope),
       statisticKey(pair.statistic),
@@ -351,6 +357,12 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
     pair.retentionStatus = display.status;
     if (display.status === "not-measured" && (pair.float !== undefined || pair.quantized !== undefined)) {
       if (hasOppositeStage(pair, entries)) pair.retentionStatus = "not-comparable";
+    }
+    // A value published without a float/quantized split has no counterpart to
+    // compare against. Say so instead of implying it was never measured.
+    if (display.status === "not-measured" && pair.float === undefined && pair.quantized === undefined
+      && pair.other !== undefined && pair.retention === undefined) {
+      pair.retentionStatus = "not-applicable";
     }
   }
 
@@ -367,7 +379,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
           && optionalKey(pair.scope) === optionalKey(entry.metric.scope)
           && statisticKey(pair.statistic) === statisticKey(entry.metric.statistic)
           && (() => {
-            const pairRecord = pair.float?.record ?? pair.quantized?.record;
+            const pairRecord = pair.float?.record ?? pair.quantized?.record ?? pair.other?.record;
             return pairRecord !== undefined && inputKey(pairRecord) === inputKey(entry.record);
           })()
         );
@@ -384,6 +396,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
         pairs.set(key, {
           key,
           metric: entry.metric.metric,
+          canonicalMetric: canonicalMetricName(retentionBaseMetric(entry.metric.metric) ?? entry.metric.metric),
           dataset: entry.metric.dataset,
           unit: entry.metric.unit,
           scope: entry.metric.scope,
@@ -396,13 +409,13 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
         });
         continue;
       }
-      const hasPair = [...pairs.values()].some((pair) => normalized(pair.metric) === normalized(base)
+      const hasPair = [...pairs.values()].some((pair) => pair.canonicalMetric === canonicalMetricName(base)
         && pair.artifact === entry.artifact
         && optionalKey(pair.dataset) === optionalKey(entry.metric.dataset)
         && optionalKey(pair.scope) === optionalKey(entry.metric.scope)
         && statisticKey(pair.statistic) === statisticKey(entry.metric.statistic)
         && (() => {
-          const pairRecord = pair.float?.record ?? pair.quantized?.record;
+          const pairRecord = pair.float?.record ?? pair.quantized?.record ?? pair.other?.record;
           return pairRecord !== undefined && inputKey(pairRecord) === inputKey(entry.record);
         })());
       if (!hasPair) {
@@ -411,6 +424,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
         pairs.set(key, {
           key,
           metric: base,
+          canonicalMetric: canonicalMetricName(base),
           dataset: entry.metric.dataset,
           unit: entry.metric.unit,
           scope: entry.metric.scope,

@@ -1,5 +1,6 @@
 import type { HardwareId, ModelRecord, ModelVariant } from "./types";
 import { getHardwareIds, getModelVariants, normalizeHardware } from "./variants";
+import { stripHardwareSuffix } from "./model-naming";
 
 export interface ModelCardViewModel {
   modelId: string;
@@ -34,7 +35,7 @@ function specificationName(model: ModelRecord, variant: ModelVariant): string {
   if (isYoloFamily(model)) {
     return /^yolov?\d+[a-z]*/i.exec(variant.name)?.[0] ?? variant.name;
   }
-  return variant.name.replace(/\s+(?:on\s+)?RDK\s+.*$/i, "");
+  return stripHardwareSuffix(variant.name);
 }
 
 function sortSpecifications(model: ModelRecord, names: string[]): string[] {

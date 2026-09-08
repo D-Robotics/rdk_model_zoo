@@ -116,7 +116,7 @@ describe("model details", () => {
     expect(element.textContent).toContain("Not comparable");
   });
 
-  it("labels one shared accuracy metric in the group header and derives its retention", () => {
+  it("labels one shared accuracy metric in its own column group and derives its retention", () => {
     const benchmark = benchmarkFixture({
       accuracy: [
         { metric: "bbox-all-map-50-95", value: 0.306, unit: "ratio", dataset: "COCO2017", model_stage: "float" },
@@ -126,9 +126,126 @@ describe("model details", () => {
     const element = renderModelDetails(createModelFixture({ variants: [variant({ benchmarks: [benchmark] })] }), detailContext);
     const table = element.querySelector<HTMLTableElement>(".model-detail-specifications-table")!;
 
-    expect(table.textContent).toContain("COCO2017 · bbox mAP@0.5:0.95 (%)");
+    // The metric owns a column group; its header carries dataset and scale.
+    expect(table.textContent).toContain("bbox mAP@0.5:0.95");
+    expect(table.textContent).toContain("COCO2017 · 0–1");
+    // Values are shown exactly as published: no percent sign, and retention —
+    // which is defined as a percentage — keeps it.
+    expect(table.textContent).toContain("0.306");
+    expect(table.textContent).toContain("0.292");
     expect(table.textContent).toContain("95.42%");
+    expect(table.textContent).not.toContain("30.6 %");
     expect(table.querySelector("tbody td.model-detail-accuracy-cell")?.textContent).not.toContain("bbox-all-map-50-95");
+  });
+
+  it("keeps a published accuracy value visible when the source labels no model stage", () => {
+    // SigLIP publishes BPU top-1/top-5 with no float/quantized split. An
+    // unlabelled stage is not the same statement as “not yet measured”.
+    const benchmark = benchmarkFixture({
+      accuracy: [
+        { metric: "top-1", value: 0.7482, unit: "ratio", dataset: "ImageNet-1k" },
+        { metric: "top-5", value: 0.934, unit: "ratio", dataset: "ImageNet-1k" }
+      ]
+    });
+    const element = renderModelDetails(createModelFixture({ variants: [variant({ benchmarks: [benchmark] })] }), detailContext);
+    const table = element.querySelector<HTMLTableElement>(".model-detail-specifications-table")!;
+    const cells = [...table.querySelectorAll("tbody td.model-detail-accuracy-cell")].map((cell) => cell.textContent).join("|");
+
+    expect(table.textContent).toContain("Top-1");
+    expect(table.textContent).toContain("Top-5");
+    expect(cells).toContain("0.7482");
+    expect(cells).toContain("0.934");
+    expect(cells).not.toContain("Accuracy not yet measured");
+  });
+
+  it("merges one metric published under different source spellings into one column", () => {
+    const benchmark = benchmarkFixture({
+      accuracy: [
+        { metric: "TOP1", value: 0.783, unit: "ratio", dataset: "ImageNet-1k", model_stage: "float" },
+        { metric: "top-1", value: 0.718, unit: "ratio", dataset: "ImageNet-1k", model_stage: "quantized" }
+      ]
+    });
+    const element = renderModelDetails(createModelFixture({ variants: [variant({ benchmarks: [benchmark] })] }), detailContext);
+    const table = element.querySelector<HTMLTableElement>(".model-detail-specifications-table")!;
+    const groups = [...table.querySelectorAll("thead th.model-detail-accuracy-group")];
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]!.textContent).toContain("Top-1");
+    expect(table.textContent).toContain("0.783");
+    expect(table.textContent).toContain("0.718");
+    expect(table.textContent).toContain("91.7%");
+  });
+
+  it("gives each accuracy metric its own column instead of piling them into one cell", () => {
+    const benchmark = benchmarkFixture({
+      accuracy: [
+        { metric: "bbox-all-map-50-95", value: 0.391, unit: "ratio", dataset: "COCO2017", model_stage: "float" },
+        { metric: "bbox-small-map-50-95", value: 0.195, unit: "ratio", dataset: "COCO2017", model_stage: "float" },
+        { metric: "bbox-medium-map-50-95", value: 0.437, unit: "ratio", dataset: "COCO2017", model_stage: "float" },
+        { metric: "bbox-large-map-50-95", value: 0.566, unit: "ratio", dataset: "COCO2017", model_stage: "float" }
+      ]
+    });
+    const element = renderModelDetails(createModelFixture({ variants: [variant({ benchmarks: [benchmark] })] }), detailContext);
+    const table = element.querySelector<HTMLTableElement>(".model-detail-specifications-table")!;
+    const groupLabels = [...table.querySelectorAll("thead th.model-detail-accuracy-group")].map((group) => group.textContent);
+    const firstAccuracyCell = table.querySelector("tbody td.model-detail-accuracy-cell")!;
+
+    expect(groupLabels).toHaveLength(4);
+    expect(groupLabels.join("|")).toContain("(small)");
+    expect(groupLabels.join("|")).toContain("(medium)");
+    expect(groupLabels.join("|")).toContain("(large)");
+    // One measurement per cell: four metrics no longer share a single cell.
+    expect(firstAccuracyCell.textContent!.trim()).toBe("0.391");
+  });
+
+  it("drops the hardware qualifier from a row name because the tab already states it", () => {
+    const benchmark = benchmarkFixture({ environment: { hardware: "RDK S100" } });
+    const element = renderModelDetails(createModelFixture({
+      variants: [variant({ hardware: "s100", name: "YOLOv8n Detect on RDK S100", benchmarks: [benchmark] })]
+    }), { ...detailContext, hardware: "s100" });
+    const specification = element.querySelector("th.model-detail-specification")!;
+
+    expect(specification.textContent).toContain("YOLOv8n Detect");
+    expect(specification.textContent).not.toContain("RDK S100");
+  });
+
+  it("separates a missing FPS from a model that published no performance table", () => {
+    const benchmark = benchmarkFixture({
+      performance: [{ metric: "latency", value: 26.8, unit: "ms", scope: "pooler output" }]
+    });
+    const element = renderModelDetails(createModelFixture({ variants: [variant({ benchmarks: [benchmark] })] }), detailContext);
+    const table = element.querySelector<HTMLTableElement>(".model-detail-specifications-table")!;
+    const throughput = table.querySelector("tbody td.model-detail-throughput")!;
+
+    expect(table.textContent).toContain("26.8 ms");
+    expect(throughput.textContent).toContain("Not recorded");
+    expect(throughput.textContent).not.toContain("Performance not yet measured");
+  });
+
+  it("keeps an accuracy measurement out of a row whose timing scope does not cover it", () => {
+    // SigLIP reports top-1/top-5 for the pooler output and cosine similarity for
+    // the last hidden state; each row shows only the scope it measured.
+    const benchmark = benchmarkFixture({
+      environment: { hardware: "RDK S100" },
+      performance: [
+        { metric: "latency", value: 26.8, unit: "ms", scope: "pooler output" },
+        { metric: "latency", value: 26, unit: "ms", scope: "last hidden state" }
+      ],
+      accuracy: [
+        { metric: "top-1", value: 0.7118, unit: "ratio", dataset: "ImageNet-1k", scope: "pooler output zero-shot classification on BPU" },
+        { metric: "cosine-similarity", value: 0.991, unit: "ratio", dataset: "COCO2014", scope: "last hidden state mean" }
+      ]
+    });
+    const element = renderModelDetails(createModelFixture({
+      variants: [variant({ hardware: "s100", task: "vision-embedding", benchmarks: [benchmark] })]
+    }), { ...detailContext, hardware: "s100", task: "vision-embedding" });
+    const rows = [...element.querySelectorAll<HTMLTableRowElement>("tbody tr.model-detail-spec-row")];
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.textContent).toContain("0.7118");
+    expect(rows[0]!.textContent).not.toContain("0.991");
+    expect(rows[1]!.textContent).toContain("0.991");
+    expect(rows[1]!.textContent).not.toContain("0.7118");
   });
 
   it("does not treat X3 post-processing as BPU latency and keeps all metrics in row details", () => {

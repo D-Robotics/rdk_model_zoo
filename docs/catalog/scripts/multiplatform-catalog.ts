@@ -6,6 +6,7 @@ import { parse } from "yaml";
 import { validateReleaseSummary } from "./release-summary";
 import { correctSArtifacts } from "./source-corrections";
 import { buildModelVariants, getModelVariants } from "../src/catalog/variants";
+import { canonicalFamilyId, officialFamilyName, officialYoloName } from "../src/catalog/model-naming";
 import type { BenchmarkRecord, Catalog, CatalogPlatform, ModelRecord, ModelVariant, PlatformModelRecord } from "../src/catalog/types";
 
 const execFileAsync = promisify(execFile);
@@ -86,7 +87,7 @@ function cardFromPlatforms(id: string, name: string, platforms: PlatformModelRec
 function familyIdentity(model: ManifestModel, benchmark?: BenchmarkRecord): { id: string; name: string } {
   const text = `${model.id} ${benchmark?.variant_id ?? ""}`.toLowerCase();
   const yolo = /yolov?(\d+)/.exec(text);
-  if (yolo) return { id: `yolov${yolo[1]}`, name: `YOLOv${yolo[1]}` };
+  if (yolo) return { id: `yolov${yolo[1]}`, name: officialYoloName(yolo[1]!) };
   // A MobileNet backbone in a segmentation sample (for example
   // `unet_mobilenet`) is not the MobileNet classifier family.
   if (
@@ -95,7 +96,10 @@ function familyIdentity(model: ManifestModel, benchmark?: BenchmarkRecord): { id
   ) {
     return { id: "mobilenet", name: "MobileNet" };
   }
-  return { id: model.id, name: model.name };
+  return {
+    id: canonicalFamilyId(model.id),
+    name: officialFamilyName(canonicalFamilyId(model.id), model.name)
+  };
 }
 
 function assetFamilyId(asset: ManifestModel["assets"][number]): string | undefined {
@@ -112,7 +116,7 @@ function assetFamilyId(asset: ManifestModel["assets"][number]): string | undefin
 function familyIdentityFromAsset(asset: ManifestModel["assets"][number]): { id: string; name: string } | undefined {
   const text = `${asset.filename} ${asset.url ?? ""}`.toLowerCase();
   const yolo = /yolov?(\d+)/.exec(text);
-  if (yolo) return { id: `yolov${yolo[1]}`, name: `YOLOv${yolo[1]}` };
+  if (yolo) return { id: `yolov${yolo[1]}`, name: officialYoloName(yolo[1]!) };
   if (
     !/(^|[^a-z0-9])unet[_-]?mobilenet/.test(text)
     && /(^|[^a-z0-9])mobilenet(?:v?\d+)?(?=$|[^a-z0-9])/.test(text)
@@ -255,8 +259,7 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
       const familyIds = [...byFamily.keys()];
       for (const [familyId, benchmarks] of byFamily) {
         const identity = familyIdentity(model, benchmarks[0]);
-        const name = /^yolov\d+$/.test(familyId) ? familyId.replace("yolov", "YOLOv")
-          : familyId === "mobilenet" ? "MobileNet" : identity.name;
+        const name = officialFamilyName(familyId, familyId === "mobilenet" ? "MobileNet" : identity.name);
         const family = families.get(familyId) ?? { name, platforms: new Map() };
         const platformModels = family.platforms.get(platform) ?? [];
         platformModels.push({ model, benchmarks, familyIds });

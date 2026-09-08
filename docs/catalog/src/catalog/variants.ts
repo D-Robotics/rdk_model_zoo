@@ -4,6 +4,7 @@ import type {
   ModelVariant,
   PlatformModelRecord
 } from "./types";
+import { officialYoloName } from "./model-naming";
 
 export const HARDWARE_IDS = ["x3", "x5", "s100", "s100p", "s600"] as const;
 
@@ -79,7 +80,7 @@ function uniqueAssets(assets: AssetRecord[]): AssetRecord[] {
 function familyFromText(value: string): { id: string; name: string } | undefined {
   const text = normalized(value);
   const yolo = /yolov?(\d+)/.exec(text);
-  if (yolo) return { id: `yolov${yolo[1]}`, name: `YOLOv${yolo[1]}` };
+  if (yolo) return { id: `yolov${yolo[1]}`, name: officialYoloName(yolo[1]!) };
   // Treat MobileNet as a family only when it is a standalone model token.
   // Semantic-segmentation samples such as `unet_mobilenet` use MobileNet as
   // a backbone and must not be pulled into the MobileNet classifier card.
@@ -344,7 +345,7 @@ function assetDisplayName(asset: AssetRecord, model: ModelRecord, task: string):
   if (family?.id.startsWith("yolov")) {
     const match = /yolov?(\d+)([a-z]+)/i.exec(basename);
     if (match) {
-      const version = `YOLOv${match[1]}${match[2]}`;
+      const version = `${officialYoloName(match[1]!)}${match[2]}`;
       const label = classifierHead ? `${taskLabel(task)} (classification head)` : taskLabel(task);
       return [version, label, shape].filter(Boolean).join(" ");
     }
