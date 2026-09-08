@@ -1,5 +1,25 @@
 # Changelog
 
+## [s-v1.1.2] - 2026-09-08
+
+- Recorded the retention percentage that the source accuracy tables already
+  publish beside every `FP32 / BPU` pair. 768 published retention values were
+  added across 180 benchmark records; until now the catalog could only derive
+  an approximation from the two accuracy values.
+- Added the 12 accuracy values the source publishes but the manifest missed:
+  `bbox-small/medium/large mAP@.50:.95` for YOLOv8n and YOLO11n on S100
+  (`ultralytics_yolo/evaluator/README.md`, detection accuracy table).
+- Accuracy metrics 1,682 -> 2,468 over the same 473 benchmark records and
+  1,037 performance metrics. No published value was changed, re-scaled or
+  removed, and no measurement was inferred.
+- Retention was matched by evidence, not by name: a source row is used only
+  when its device matches the record hardware, its model label appears in the
+  record's display name, and the row reproduces the record's own published
+  float/quantized numbers exactly. 0 of 768 pairs were ambiguous after that
+  check; YOLOv13 uses its own `Pytorch | YUV420SP Python (retention)` layout
+  and one table covering both S100 and S100P.
+- See [release notes](docs/releases/s-v1.1.2.md).
+
 ## [s-v1.1.1] - 2026-09-07
 
 - Corrected the S-series release metadata and manifest summary for the
