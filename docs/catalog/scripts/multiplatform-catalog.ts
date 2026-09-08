@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 import { parse } from "yaml";
 import { validateReleaseSummary } from "./release-summary";
 import { correctSArtifacts } from "./source-corrections";
-import { buildModelVariants, getModelVariants } from "../src/catalog/variants";
+import { buildModelVariants, canonicalTuple, getModelVariants, tuplesCompatible } from "../src/catalog/variants";
 import { canonicalFamilyId, officialFamilyName, officialYoloName } from "../src/catalog/model-naming";
 import type { BenchmarkRecord, Catalog, CatalogPlatform, ModelRecord, ModelVariant, PlatformModelRecord } from "../src/catalog/types";
 
@@ -132,12 +132,19 @@ function assetsForFamily(entry: FamilyEntry, familyId: string): ManifestModel["a
       .map((benchmark) => benchmark.asset_filename)
       .filter((filename): filename is string => filename !== undefined)
   );
+  // Assets whose family token matches must go to the entry that owns this
+  // family's benchmarks. When an entry carries several families (the
+  // Ultralytics directory indexes several YOLO versions), a foreign family's
+  // assets would otherwise seed asset-only rows here while the entry holding
+  // the benchmarks cannot attach them.
+  const ownsFamily = entry.familyIds.includes(familyId);
   return entry.model.assets.filter((asset) => {
     if (referenced.has(asset.filename)) return true;
     const inferredFamily = assetFamilyId(asset);
     // A source model containing one family may use unqualified filenames;
     // when it contains several families, only the family token is accepted.
-    return inferredFamily === familyId || (entry.familyIds.length === 1 && inferredFamily === undefined);
+    return (ownsFamily && inferredFamily === familyId)
+      || (entry.familyIds.length === 1 && inferredFamily === undefined);
   });
 }
 
@@ -159,7 +166,14 @@ function variantKey(variant: ModelVariant): string {
   ]);
 }
 
-function mergeVariants(platformModels: PlatformModelRecord[]): ModelVariant[] {
+function targetVariantId(row: ModelVariant): string {
+  const byVariant = new Map<string, number>();
+  for (const record of row.benchmarks) byVariant.set(record.variant_id, (byVariant.get(record.variant_id) ?? 0) + 1);
+  return [...byVariant.entries()].sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0]?.[0]
+    ?? row.name;
+}
+
+function mergeVariants(platformModels: PlatformModelRecord[], familyId: string): ModelVariant[] {
   const merged = new Map<string, ModelVariant>();
   for (const platformModel of platformModels) {
     for (const variant of getModelVariants(platformModel)) {
@@ -182,7 +196,62 @@ function mergeVariants(platformModels: PlatformModelRecord[]): ModelVariant[] {
       }));
     }
   }
-  return [...merged.values()];
+
+  // A family can be spread over several sample directories (the Ultralytics
+  // index publishes YOLO26 files while a second sample carries the YOLO26
+  // benchmark rows). The benchmark rows and the asset-only rows then name the
+  // same model differently (`yolo26l-detect-640` versus
+  // `yolov26-l-640x640-nv12`), so the id-based key above keeps two rows: one
+  // with measurements and no download, one with a download and no
+  // measurements. Move the assets onto the measured row via the same tuple
+  // identity the single-sample builder uses, and drop the emptied row.
+  const rows = [...merged.values()];
+  const assetOnly = rows.filter((row) => row.benchmarks.length === 0 && row.assets.length > 0);
+  if (assetOnly.length > 0) {
+    const taken = new Set<string>();
+    for (const source of assetOnly) {
+      // Match with the same identity the single-sample builder uses: the
+      // asset filename alone, not the row id (ids embed task words that
+      // canonicalTuple strips only once and pollute the identity).
+      const sourceTuple = canonicalTuple(
+        source.assets.map((asset) => asset.filename).join(" "),
+        familyId,
+        source.task,
+        source.input
+      );
+      const target = rows.find((row) => row !== source
+        && row.benchmarks.length > 0
+        && row.hardware === source.hardware
+        && row.task === source.task
+        && tuplesCompatible(
+          sourceTuple,
+          canonicalTuple(
+            // A single variant id, as the single-sample builder uses: joining
+            // several ids leaves the second family token unstripped and
+            // pollutes the identity.
+            targetVariantId(row),
+            familyId,
+            row.task,
+            row.input
+          )
+        ));
+      if (!target) continue;
+      const newAssets = uniqueAssets([...target.assets, ...source.assets]);
+      const mergedAll = newAssets.length === target.assets.length + source.assets.length;
+      const redundant = newAssets.length === target.assets.length;
+      if (mergedAll) {
+        target.assets = newAssets;
+        taken.add(source.id);
+      } else if (redundant && target.assets.length > 0) {
+        // Every asset of the asset-only row is already attached to the
+        // measured row (the n size carries an explicit asset_filename): the
+        // empty duplicate row is pure noise and must be dropped.
+        taken.add(source.id);
+      }
+    }
+    return rows.filter((row) => !taken.has(row.id));
+  }
+  return rows;
 }
 
 function mergePlatformModels(platform: CatalogPlatform, tag: string, familyId: string, entries: FamilyEntry[]): PlatformModelRecord {
@@ -203,7 +272,7 @@ function mergePlatformModels(platform: CatalogPlatform, tag: string, familyId: s
   const first = platformModels[0]!;
   const assets = uniqueAssets(platformModels.flatMap((platformModel) => platformModel.assets));
   const benchmarks = platformModels.flatMap((platformModel) => platformModel.benchmarks);
-  const variants = mergeVariants(platformModels);
+  const variants = mergeVariants(platformModels, familyId);
   return {
     ...first,
     assets,

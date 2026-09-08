@@ -225,7 +225,7 @@ function inputSignature(input: BenchmarkRecord["input"] | undefined): string {
  * filename. Both X5 `bayese` files and S `nash-*` files are source naming
  * conventions; no basename or prefix ranking is used here.
  */
-function canonicalTuple(
+export function canonicalTuple(
   value: string,
   familyId: string,
   task: string,
@@ -302,7 +302,7 @@ function tupleField(tuple: string, key: string): string | undefined {
   return value?.slice(key.length + 1) || undefined;
 }
 
-function tuplesCompatible(left: string, right: string): boolean {
+export function tuplesCompatible(left: string, right: string): boolean {
   const leftParts = left.split("|");
   const rightParts = right.split("|");
   // Family, task, and parsed model spec are required exact matches. Shape,
