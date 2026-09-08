@@ -56,6 +56,24 @@ describe("production catalog naming", () => {
     const paddleocr = catalog.models.find((model) => model.name === "PaddleOCR");
     const hardware = new Set((paddleocr?.variants ?? []).map((variant) => variant.hardware));
     expect(paddleocr?.id).toBe("paddleocr");
+
+    // A task id must be one the catalog knows. The S manifest once labelled
+    // YOLO26 OBB "oriented-object-detection", which taskFor() could not match,
+    // so OBB rows fell back to the detection task and appeared inside the
+    // detection table.
+    const yolo26 = catalog.models.find((model) => model.id === "yolov26");
+    const tasks = new Set((yolo26?.variants ?? []).map((variant) => variant.task));
+    for (const task of tasks) {
+      expect(["object-detection", "instance-segmentation", "pose-estimation",
+        "image-classification", "monocular-depth-estimation",
+        "oriented-bounding-box-detection"]).toContain(task);
+    }
+    expect(tasks.has("oriented-bounding-box-detection")).toBe(true);
+    const obbVariants = (yolo26?.variants ?? []).filter((variant) => variant.task === "oriented-bounding-box-detection");
+    expect(obbVariants.length).toBeGreaterThan(0);
+    for (const variant of obbVariants) {
+      expect(variant.task).not.toBe("object-detection");
+    }
     expect([...hardware].sort()).toEqual(["s100", "x3", "x5"]);
   });
 });

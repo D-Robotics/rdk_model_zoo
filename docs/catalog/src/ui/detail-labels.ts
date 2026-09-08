@@ -89,7 +89,7 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     manualDownload: "Manual model required",
     available: "Available",
     checksum: "SHA-256",
-    noAssets: "No runnable model assets published",
+    noAssets: "Model files not published for this variant",
     noPerformance: "Performance not yet measured",
     noAccuracy: "Accuracy not yet measured"
   },
@@ -135,7 +135,7 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     manualDownload: "需要手动提供模型",
     available: "可用",
     checksum: "SHA-256",
-    noAssets: "暂无可运行模型资产",
+    noAssets: "该规格未发布模型文件",
     noPerformance: "性能尚未实测",
     noAccuracy: "精度尚未实测"
   }
