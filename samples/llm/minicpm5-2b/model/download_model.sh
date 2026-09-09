@@ -2,7 +2,7 @@
 set -euo pipefail
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 MODEL_DIR=${MODEL_DIR:-"$HERE/s600"}
-URL=${MINICPM5_MODEL_URL:-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz}
+URL=${MINICPM5_MODEL_URL:-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz}
 ARCHIVE_SHA256=8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841
 MANIFEST_SHA256=a938fb43fd7e2c161e188a12e2925f386809adcdd3ab0f0531faaa43d5affcb5
 

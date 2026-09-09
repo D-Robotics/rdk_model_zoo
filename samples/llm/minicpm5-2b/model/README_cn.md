@@ -16,6 +16,6 @@ SHA256: `8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841`
 
 Size: 2457817532 bytes.
 
-[Download model](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz)
+[Download model](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz)
 
-默认输出到 `model/s600`，包含 HBM、FP16 embedding、tokenizer、模型元数据、LICENSE、NOTICE 和 MODEL_INFO.json，不包含 SDK 运行库。下载地址沿用文件服务器的 `rdk_s100` 目录，本产物实际只适用于 S600/Nash-p。
+默认输出到 `model/s600`，包含 HBM、FP16 embedding、tokenizer、模型元数据、LICENSE、NOTICE 和 MODEL_INFO.json，不包含 SDK 运行库。本产物只适用于 S600/Nash-p。
