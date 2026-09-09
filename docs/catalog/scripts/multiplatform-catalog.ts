@@ -49,6 +49,24 @@ async function manifestPair(repositoryRoot: string, ref: string, tag: string): P
   return { models, benchmarks };
 }
 
+/**
+ * A platform's manifest is authoritative for its own hardware only. The X5
+ * manifest also carries two RDK X3 paddleocr records (historical
+ * cross-publishing) that the X3 manifest publishes as well; letting both
+ * through duplicated the X3 rows on the merged card.
+ */
+const PLATFORM_HARDWARE: Record<CatalogPlatform, RegExp> = {
+  x5: /\bX5\b/,
+  s: /\b(S100P|S100|S600)\b/,
+  x3: /\bX3\b/
+};
+
+function platformOwnsRecord(platform: CatalogPlatform, record: BenchmarkRecord): boolean {
+  const hardware = record.environment?.hardware ?? "";
+  if (!hardware.trim()) return true;
+  return PLATFORM_HARDWARE[platform].test(hardware);
+}
+
 function toPlatformModel(platform: CatalogPlatform, tag: string, model: ManifestModel, benchmarks: BenchmarkRecord[]): PlatformModelRecord {
   const platformModel: PlatformModelRecord = { ...model, platform, release_tag: tag, benchmarks };
   const variants = buildModelVariants(platformModel, { releaseTag: tag });
@@ -329,7 +347,9 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
     const source = loaded.get(platform)!;
     for (const model of source.models.models) {
       const byFamily = new Map<string, BenchmarkRecord[]>();
-      for (const benchmark of source.benchmarks.benchmarks.filter((record) => record.sample_id === model.id)) {
+      for (const benchmark of source.benchmarks.benchmarks.filter(
+        (record) => record.sample_id === model.id && platformOwnsRecord(platform, record)
+      )) {
         const family = familyIdentity(model, benchmark);
         const records = byFamily.get(family.id) ?? [];
         records.push(benchmark);

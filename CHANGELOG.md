@@ -1,5 +1,32 @@
 # Changelog
 
+## [x5-v1.1.2] - 2026-09-08
+
+- Catalog detail tables now show every measurement a model publishes. Accuracy
+  values whose stage the source does not label (`model_stage` absent) were being
+  dropped from the table and reported as "not yet measured" while still visible
+  in the row evidence; 69 such measurements across SigLIP, DiffusionDrive,
+  EfficientSAM, MobileSAM, PointNet, Paraformer, KWS and YOLO26 are now shown.
+- Accuracy columns are derived from each model's own published metrics instead
+  of one shared three-column template, so a classifier shows Top-1/Top-5, a
+  detector shows the bbox all/small/medium/large columns of its source table, a
+  pose model shows the keypoint columns and an embedding model shows cosine
+  similarity. One measurement per cell; a measurement is kept out of a row whose
+  timing scope does not cover it.
+- Accuracy values render exactly as published. They were previously re-scaled
+  into percentages (`0.391` shown as `39.1 %`); the scale now appears once in the
+  column header and only retention keeps a `%`.
+- Official model names: YOLO11/12/13/26 drop the `v` that YOLOv5/8/9/10 keep,
+  ResNet18/50/152 are capitalised, `PaddleOCR v6` becomes `PaddleOCR`, and the
+  X3/X5 `paddleocr` and S `paddle_ocr` slugs merge into one card. Family ids are
+  unchanged so published deep links keep working.
+- Row names no longer repeat the selected hardware (`YOLOv8n Detect on RDK S100`
+  under the S100 tab).
+- S-series catalog input advanced to `s-v1.1.2`, which records the retention
+  percentage the S source tables already publish. X3 stays at `x3-v1.1.1`.
+- X5 manifest values are unchanged in this release.
+- See [release notes](docs/releases/x5-v1.1.2.md).
+
 ## [x5-v1.1.1] - 2026-09-07
 
 - Publish refreshed model inventory with corrected release metadata and summary counts.

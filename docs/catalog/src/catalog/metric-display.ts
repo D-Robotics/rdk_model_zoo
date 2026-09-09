@@ -108,9 +108,57 @@ function metricEntry(record: BenchmarkRecord, metric: MetricRecord, kind: Metric
 }
 
 /**
+ * Timing-scope equivalence class for grouping.
+ *
+ * The three release lines label the plain BPU timing measurement differently
+ * (`BPU task`, `BPU; 2 threads`, `multi-thread`, `frame rate`, `100 frames`,
+ * no scope at all…). Those wordings all describe the same row: the thread
+ * configuration is already carried by `concurrency`. Groupring by the raw
+ * wording split one measurement into several rows — a latency row, a separate
+ * FPS row and one row per thread count — so the wording is folded into one
+ * class here. Scopes that describe a genuinely different measurement context
+ * (encoder/decoder, pooler vs last hidden state, compiler estimates, post
+ * processing) keep their own class and stay separate rows.
+ */
+const BPU_SCOPE_CLASS_PATTERNS: RegExp[] = [
+  /^bpu( task)?([;,.]|$)/,
+  /^bpu (single|multi)[- ]?thread/,
+  /^bpu throughput( summary)?$/,
+  /^(single|multi|two|three|four|eight|twelve)[- ]?thread/,
+  /^single-frame, single-thread/,
+  /^frame rate$/,
+  /^[0-9]+\s*frames?(, core_id [0-9,]+)?$/,
+  /^hrt_model_exec perf/,
+  /^model execution only$/,
+  /^measured latency table$/,
+  /^[0-9]+×[0-9]+, single core$/
+];
+
+function performanceScopeClass(scope: string | undefined): string {
+  if (!scope) return "bpu";
+  const value = scope.trim().toLowerCase();
+  if (BPU_SCOPE_CLASS_PATTERNS.some((pattern) => pattern.test(value))) {
+    return "bpu";
+  }
+  return `scope:${value}`;
+}
+
+/**
+ * An unstated statistic is the natural default of the stated one: a latency
+ * published without a statistic and the mean latency beside it belong to the
+ * same row. Explicit statistics (min/p50/…) still produce their own rows.
+ */
+function statisticClass(statistic: MetricRecord["statistic"]): string {
+  return statistic ?? "mean";
+}
+
+/**
  * Groups performance measurements only when their timing scope and statistic
  * are compatible. Unknown concurrency is intentionally kept as its own
- * thread bucket instead of silently becoming one thread.
+ * thread bucket instead of silently becoming one thread. When folding scopes
+ * into one class would put two latencies (or two throughputs) of different
+ * raw scopes into the same thread bucket, the second entry keeps its own
+ * exact-scope group instead of being hidden.
  */
 export function groupPerformanceMetrics(records: BenchmarkRecord[]): PerformanceGroup[] {
   const groups = new Map<string, PerformanceGroup>();
@@ -119,42 +167,98 @@ export function groupPerformanceMetrics(records: BenchmarkRecord[]): Performance
       const artifact = artifactForRecord(record);
       const scope = metric.scope;
       const statistic = metric.statistic;
-      const key = JSON.stringify([
+      const makeKey = (scopeKey: string): string => JSON.stringify([
         record.variant_id,
         artifact,
         inputKey(record),
-        optionalKey(scope),
-        statisticKey(statistic)
+        scopeKey,
+        statisticClass(statistic)
       ]);
-      const existing = groups.get(key) ?? {
-        key,
-        variantId: record.variant_id,
-        artifact,
-        scope,
-        statistic,
-        threads: [],
-        metrics: []
-      };
       const entry = metricEntry(record, metric, "performance");
-      existing.metrics.push(entry);
       const concurrency = validConcurrency(metric.concurrency);
-      let thread = existing.threads.find((candidate) => candidate.concurrency === concurrency);
-      if (thread === undefined) {
-        thread = { concurrency, metrics: [] };
-        existing.threads.push(thread);
-        existing.threads.sort((left, right) => {
-          if (left.concurrency === undefined) return 1;
-          if (right.concurrency === undefined) return -1;
-          return left.concurrency - right.concurrency;
-        });
+
+      const placeInto = (group: PerformanceGroup): void => {
+        group.metrics.push(entry);
+        let thread = group.threads.find((candidate) => candidate.concurrency === concurrency);
+        if (thread === undefined) {
+          thread = { concurrency, metrics: [] };
+          group.threads.push(thread);
+          group.threads.sort((left, right) => {
+            if (left.concurrency === undefined) return 1;
+            if (right.concurrency === undefined) return -1;
+            return left.concurrency - right.concurrency;
+          });
+        }
+        thread.metrics.push(entry);
+        const occupied = isLatencyMetric(metric) ? thread.latency : undefined;
+        const occupiedThroughput = isThroughputMetric(metric) ? thread.throughput : undefined;
+        const incumbent = occupied ?? occupiedThroughput;
+        if (incumbent !== undefined && incumbent.metric.scope !== scope) {
+          // Collision from a different raw scope: this entry would be hidden.
+          // Undo the partial placement; the caller falls back to exact scope.
+          group.metrics.pop();
+          thread.metrics.pop();
+          if (thread.metrics.length === 0) {
+            group.threads.splice(group.threads.indexOf(thread), 1);
+          }
+          return;
+        }
+        if (isLatencyMetric(metric)) thread.latency ??= entry;
+        if (isThroughputMetric(metric)) thread.throughput ??= entry;
+      };
+
+      const classKey = makeKey(performanceScopeClass(scope));
+      let group = groups.get(classKey);
+      if (group === undefined) {
+        group = {
+          key: classKey,
+          variantId: record.variant_id,
+          artifact,
+          scope,
+          statistic,
+          threads: [],
+          metrics: []
+        };
+        groups.set(classKey, group);
       }
-      thread.metrics.push(entry);
-      if (isLatencyMetric(metric)) thread.latency ??= entry;
-      if (isThroughputMetric(metric)) thread.throughput ??= entry;
-      groups.set(key, existing);
+      const before = group.metrics.length;
+      placeInto(group);
+      if (group.metrics.length === before) {
+        // collision: keep the entry visible in its own exact-scope group
+        const exactKey = makeKey(optionalKey(scope));
+        let exact = groups.get(exactKey);
+        if (exact === undefined) {
+          exact = {
+            key: exactKey,
+            variantId: record.variant_id,
+            artifact,
+            scope,
+            statistic,
+            threads: [],
+            metrics: []
+          };
+          groups.set(exactKey, exact);
+        }
+        const beforeExact = exact.metrics.length;
+        placeInto(exact);
+        if (exact.metrics.length === beforeExact) {
+          // pathological duplicate: keep it as its own single-entry group
+          const singleton: PerformanceGroup = {
+            key: `${exactKey}#${groups.size}`,
+            variantId: record.variant_id,
+            artifact,
+            scope,
+            statistic,
+            threads: [],
+            metrics: []
+          };
+          placeInto(singleton);
+          groups.set(singleton.key, singleton);
+        }
+      }
     }
   }
-  return [...groups.values()];
+  return [...groups.values()].filter((group) => group.metrics.length > 0);
 }
 
 /** Return only groups that have a latency or throughput measurement. */

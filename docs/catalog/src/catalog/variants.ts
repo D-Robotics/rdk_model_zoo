@@ -339,10 +339,54 @@ function taskLabel(task: string): string {
     "instance-segmentation": "Seg",
     "semantic-segmentation": "Seg",
     "pose-estimation": "Pose",
-    "image-classification": "Classify",
+    // The Ultralytics tables label classification rows `CLS`; asset-derived
+    // rows must use the same word so one table never shows both spellings.
+    "image-classification": "CLS",
     "ocr-text-detection": "Text Detect",
     "ocr-text-recognition": "Text Recognize"
   }[task] ?? task;
+}
+
+/**
+ * Official spellings for row names, mirroring the sample READMEs: `Resnet18`
+ * and `MobileNetv4 medium` are manifest spellings, the tables print
+ * `ResNet18` / `MobileNetV4 Medium`.
+ */
+export function polishModelCasing(name: string): string {
+  return name
+    .replace(/\bResnet(\d*)\b/gi, (_all, digits: string) => `ResNet${digits}`)
+    .replace(/\bMobilenetv(\d+)\b/gi, (_all, digits: string) => `MobileNetV${digits}`)
+    .replace(/\bMobilenet(?!\w)/gi, "MobileNet")
+    .replace(/\b(MobileNetV\d)\s+(medium|small|large)\b/gi,
+      (_all, head: string, size: string) => `${head} ${size[0]!.toUpperCase()}${size.slice(1)}`)
+    // X5 writes `YOLOv8n-CLS`, the S tables `YOLOv8n CLS`; one spelling.
+    .replace(/[-_](CLS|Seg|Pose|Obb|Detect)\b/g, " $1")
+    .replace(/\bCls\b/g, "CLS")
+    .replace(/\bObb\b/g, "OBB")
+    .replace(/\bPP-OCRv3_det\b/gi, "PP-OCRv3 Detection")
+    .replace(/\bPP-OCRv3_rec\b/gi, "PP-OCRv3 Recognition")
+    .replace(/\bYOLO World\b/g, "YOLOWorld");
+}
+
+/** Official spellings for words that appear inside asset filename slugs. */
+const SLUG_WORDS: Record<string, string> = {
+  efficientnet: "EfficientNet", lite: "Lite", vit: "ViT", cifar10: "CIFAR-10",
+  unet: "UNet", modnet: "MODNet", lprnet: "LPRNet", pointnet: "PointNet",
+  paraformer: "Paraformer", vargconvnet: "VargConvNet", yoloworld: "YOLOWorld",
+  yolo: "YOLO", world: "World", asr: "ASR", himloco: "HIMLoco", clip: "CLIP",
+  encoder: "Encoder", decoder: "Decoder", embeddings: "Embeddings",
+  large: "Large", medium: "Medium", small: "Small",
+  ptq: "PTQ", hbm: "HBM", rgb: "RGB", lpr: "LPR"
+};
+
+function polishSlugCasing(slug: string): string {
+  return slug.split(/(\s+)/).map((token) => {
+    if (/^\s+$/.test(token)) return token;
+    const mapped = SLUG_WORDS[token.toLowerCase()];
+    if (mapped) return mapped;
+    if (/^[a-z]{3,}$/.test(token)) return token[0]!.toUpperCase() + token.slice(1);
+    return token;
+  }).join("");
 }
 
 function assetDisplayName(asset: AssetRecord, model: ModelRecord, task: string): string {
@@ -363,18 +407,27 @@ function assetDisplayName(asset: AssetRecord, model: ModelRecord, task: string):
     if (match) {
       const version = match[1];
       if (!version) return model.name;
-      return [`MobileNetv${version.replace(/^v/i, "")}`, match[2], shape]
+      return polishModelCasing([`MobileNetv${version.replace(/^v/i, "")}`, match[2], shape]
         .filter(Boolean)
-        .join(" ");
+        .join(" "));
     }
   }
-  const readable = basename
+  let readable = basename
     .replace(/\.(?:bin|hbm)$/i, "")
     .replace(/(?:nashe|nashm|nashp|bayese)/gi, "")
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return readable ? `${model.name} · ${readable}` : model.name;
+  readable = polishSlugCasing(polishModelCasing(readable))
+    .replace(/\bYOLO World\b/g, "YOLOWorld");
+  // `Resnet18 · resnet18 224x224 nv12` repeats the model name in the slug;
+  // the family is already the first token, so drop the duplicate.
+  const modelHead = model.name.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const readableHead = readable.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  if (modelHead && readableHead.startsWith(modelHead)) {
+    return readable;
+  }
+  return readable ? `${polishModelCasing(model.name)} · ${readable}` : polishModelCasing(model.name);
 }
 
 interface VariantSeed {
@@ -412,7 +465,7 @@ function seedFor(
     key,
     familyId: modelFamilyId(model),
     identity,
-    name: record.display_name,
+    name: polishModelCasing(record.display_name),
     task,
     hardware,
     input,
