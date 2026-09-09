@@ -1,11 +1,11 @@
 schema_version: 1
 release:
   platform: x3
-  version: "1.1.1"
-  tag: x3-v1.1.1
+  version: "1.1.2"
+  tag: x3-v1.1.2
   branch: rdk_x3
-  source_ref: x3-v1.1.1
-  released_at: "2026-09-07"
+  source_ref: x3-v1.1.2
+  released_at: "2026-09-09"
 benchmarks:
   - id: googlenet-x3
     sample_id: googlenet
@@ -428,13 +428,13 @@ benchmarks:
         unit: fps
         scope: BPU multi-threaded
         concurrency: 3
-      - metric: latency
+      - metric: post_process_latency
         value: 5
         unit: ms
         scope: post-processing (Python)
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: demos/detect/FCOS/README.md
+      path: demos/detect/FCOS/README_cn.md
       section: "## Performance data"
       provenance: existing-repository-documentation
   - id: paddleocr-det-x3
@@ -526,13 +526,13 @@ benchmarks:
         unit: fps
         scope: BPU; 3 threads
         concurrency: 3
-      - metric: latency
+      - metric: post_process_latency
         value: 13
         unit: ms
         scope: post-processing (Python)
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: demos/detect/YOLOv5/README.md
+      path: demos/detect/YOLOv5/README_cn.md
       section: "## Performance data"
       provenance: existing-repository-documentation
   - id: yolov5x-v2-x3
@@ -578,13 +578,13 @@ benchmarks:
         unit: fps
         scope: BPU; 3 threads
         concurrency: 3
-      - metric: latency
+      - metric: post_process_latency
         value: 13
         unit: ms
         scope: post-processing (Python)
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: demos/detect/YOLOv5/README.md
+      path: demos/detect/YOLOv5/README_cn.md
       section: "## Performance data"
       provenance: existing-repository-documentation
   - id: yolov5n-v7-x3
@@ -640,7 +640,7 @@ benchmarks:
         unit: fps
         scope: BPU; 8 threads
         concurrency: 8
-      - metric: latency
+      - metric: post_process_latency
         value: 13
         unit: ms
         scope: post-processing (Python)
@@ -653,7 +653,7 @@ benchmarks:
         scope: mAP:50-95
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: demos/detect/YOLOv5/README.md
+      path: demos/detect/YOLOv5/README_cn.md
       section: "## Performance data"
       provenance: existing-repository-documentation
   - id: yolov5s-v7-x3
@@ -709,7 +709,7 @@ benchmarks:
         unit: fps
         scope: BPU; 8 threads
         concurrency: 8
-      - metric: latency
+      - metric: post_process_latency
         value: 13
         unit: ms
         scope: post-processing (Python)
@@ -722,7 +722,7 @@ benchmarks:
         scope: mAP:50-95
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: demos/detect/YOLOv5/README.md
+      path: demos/detect/YOLOv5/README_cn.md
       section: "## Performance data"
       provenance: existing-repository-documentation
   - id: yolov5x-v7-x3
@@ -778,7 +778,7 @@ benchmarks:
         unit: fps
         scope: BPU; 8 threads
         concurrency: 8
-      - metric: latency
+      - metric: post_process_latency
         value: 13
         unit: ms
         scope: post-processing (Python)
@@ -791,7 +791,7 @@ benchmarks:
         scope: mAP:50-95
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: demos/detect/YOLOv5/README.md
+      path: demos/detect/YOLOv5/README_cn.md
       section: "## Performance data"
       provenance: existing-repository-documentation
   - id: yolov8n-x3
@@ -807,11 +807,47 @@ benchmarks:
     environment:
       hardware: RDK X3 & RDK X3 Module (Bernoulli2)
     performance:
+      - metric: latency
+        value: 99.8
+        unit: ms
+        scope: BPU; 1 thread
+        concurrency: 1
+      - metric: throughput
+        value: 10.0
+        unit: fps
+        scope: BPU; 1 thread
+        concurrency: 1
+      - metric: latency
+        value: 102.0
+        unit: ms
+        scope: BPU; 2 threads
+        concurrency: 2
+      - metric: throughput
+        value: 19.6
+        unit: fps
+        scope: BPU; 2 threads
+        concurrency: 2
+      - metric: latency
+        value: 131.4
+        unit: ms
+        scope: BPU; 4 threads
+        concurrency: 4
+      - metric: throughput
+        value: 30.2
+        unit: fps
+        scope: BPU; 4 threads
+        concurrency: 4
+      - metric: latency
+        value: 231.0
+        unit: ms
+        scope: BPU; 8 threads
+        concurrency: 8
       - metric: throughput
         value: 34.1
         unit: fps
-        scope: BPU throughput summary
-      - metric: latency
+        scope: BPU; 8 threads
+        concurrency: 8
+      - metric: post_process_latency
         value: 6
         unit: ms
         scope: post-processing (Python)
@@ -824,7 +860,7 @@ benchmarks:
         scope: mAP:50-95
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: README.md
+      path: demos/detect/YOLOv8/README_cn.md
       section: "### Object Detection"
       provenance: existing-repository-documentation
   - id: yolov10n-x3
@@ -840,11 +876,47 @@ benchmarks:
     environment:
       hardware: RDK X3 & RDK X3 Module (Bernoulli2)
     performance:
+      - metric: latency
+        value: 174.7
+        unit: ms
+        scope: BPU; 1 thread
+        concurrency: 1
+      - metric: throughput
+        value: 5.7
+        unit: fps
+        scope: BPU; 1 thread
+        concurrency: 1
+      - metric: latency
+        value: 181.5
+        unit: ms
+        scope: BPU; 2 threads
+        concurrency: 2
+      - metric: throughput
+        value: 11.0
+        unit: fps
+        scope: BPU; 2 threads
+        concurrency: 2
+      - metric: latency
+        value: 240.1
+        unit: ms
+        scope: BPU; 4 threads
+        concurrency: 4
+      - metric: throughput
+        value: 16.2
+        unit: fps
+        scope: BPU; 4 threads
+        concurrency: 4
+      - metric: latency
+        value: 421.0
+        unit: ms
+        scope: BPU; 8 threads
+        concurrency: 8
       - metric: throughput
         value: 18.1
         unit: fps
-        scope: BPU throughput summary
-      - metric: latency
+        scope: BPU; 8 threads
+        concurrency: 8
+      - metric: post_process_latency
         value: 5
         unit: ms
         scope: post-processing (Python)
@@ -857,7 +929,7 @@ benchmarks:
         scope: mAP:50-95
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: README.md
+      path: demos/detect/YOLOv10/README_cn.md
       section: "### Object Detection"
       provenance: existing-repository-documentation
   - id: yolov8n-seg-x3
@@ -873,11 +945,47 @@ benchmarks:
     environment:
       hardware: RDK X3 & RDK X3 Module (Bernoulli2)
     performance:
+      - metric: latency
+        value: 126.7
+        unit: ms
+        scope: BPU; 1 thread
+        concurrency: 1
+      - metric: throughput
+        value: 7.9
+        unit: fps
+        scope: BPU; 1 thread
+        concurrency: 1
+      - metric: latency
+        value: 129.2
+        unit: ms
+        scope: BPU; 2 threads
+        concurrency: 2
+      - metric: throughput
+        value: 15.5
+        unit: fps
+        scope: BPU; 2 threads
+        concurrency: 2
+      - metric: latency
+        value: 163.9
+        unit: ms
+        scope: BPU; 4 threads
+        concurrency: 4
+      - metric: throughput
+        value: 24.1
+        unit: fps
+        scope: BPU; 4 threads
+        concurrency: 4
+      - metric: latency
+        value: 285.8
+        unit: ms
+        scope: BPU; 8 threads
+        concurrency: 8
       - metric: throughput
         value: 27.3
         unit: fps
-        scope: BPU throughput summary
-      - metric: latency
+        scope: BPU; 8 threads
+        concurrency: 8
+      - metric: post_process_latency
         value: 6
         unit: ms
         scope: post-processing (Python)
@@ -896,6 +1004,6 @@ benchmarks:
         scope: mAP:50-95
     source:
       ref: a34e5f67f07418004650f97b069fc61ceeb2bd26
-      path: README.md
+      path: demos/Instance_Segmentation/YOLOv8-Seg/README_cn.md
       section: "### Instance Segmentation"
       provenance: existing-repository-documentation

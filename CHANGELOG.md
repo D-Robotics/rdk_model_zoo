@@ -1,5 +1,14 @@
 # Changelog
 
+## [x3-v1.1.2] - 2026-09-09
+
+- Record the per-thread BPU latency/throughput that the README_cn `RDK X3`
+  tables publish for YOLOv8n, YOLOv10n and YOLOv8n-seg (previously only the
+  summary FPS and post-processing latency were recorded).
+- Rename post-processing entries to `post_process_latency` to match the
+  X5/S naming, so they stop rendering as BPU latency rows.
+- See [release notes](docs/releases/x3-v1.1.2.md) for scope and validation.
+
 ## [x3-v1.1.1] - 2026-09-07
 
 - Publish refreshed model inventory with corrected release metadata and summary counts.
