@@ -22,14 +22,26 @@ evidence that was already in the repository documentation.
   detection accuracy table for `ultralytics_yolo26` — 136 performance and
   200 accuracy metrics found by the per-sample audit agents and transcribed
   verbatim from the evaluator READMEs.
+- **194 post-processing latencies added**: every Ultralytics and YOLOv13
+  performance row publishes a `CPU Latency (Single Core)` column
+  (2.0 ms detection, 5.0 ms segmentation, 1.0 ms pose, 0.5 ms classification;
+  YOLOv13 2.0 ms) that the manifest did not carry. These are recorded as
+  `post_process_latency` with scope `single-core CPU`, matching the X5
+  convention, for all 186 Ultralytics and 8 YOLOv13 performance records.
+- **SigLIP accuracy completed**: the PyTorch baseline TOP1/TOP5 column
+  (16 values, `model_stage: float`) and the `last hidden state` MSE column
+  (8 values, mean) that the accuracy tables publish beside the already
+  recorded BPU and cosine values — 48 entries across the 16 records
+  (each variant carries both the S100 and S100P record).
 - **12 missed accuracy values added**: `bbox-small`, `bbox-medium` and
   `bbox-large` `mAP@.50:.95` (FP32 and BPU) for YOLOv8n and YOLO11n on S100,
   plus their 6 published retentions. The source detection table publishes all
   four bbox columns for every row; these two rows had only `bbox-all` recorded.
 - Accuracy metrics 1,682 → 2,468 (of which 774 are retention) from the
-retention work, then → 2,668 with the 65 new Ultralytics records. Benchmark record
-  count (473), performance metric count (1,037), model entries (35) and assets
-  (308) are unchanged.
+  retention work, → 2,668 with the 65 new Ultralytics records, and → 2,716
+  with the SigLIP float/MSE completion. Performance metrics 1,037 → 1,173
+  with the new records, → 1,367 with the post-processing column. Benchmark
+  record count (538) and model entries (35) are unchanged.
 
 ## How each value was matched
 
@@ -64,7 +76,7 @@ retentions are recorded to two decimals as published (`93.27`).
 - 308 manifest assets: 306 with download URLs and 2 local-only assets
   (`s100/am.mvn`, `s100/paraformer_config.yaml`).
 - SHA-256 coverage is still incomplete: 2 recorded, 306 `null`.
-- 538 benchmark records contain 1,173 performance metrics and 2,668 accuracy
+- 538 benchmark records contain 1,367 performance metrics and 2,716 accuracy
   metrics (of which 834 are retention).
 
 Benchmark evidence remains anchored to the full commit SHA
@@ -93,7 +105,10 @@ Previous published release: [s-v1.1.1](https://github.com/D-Robotics/rdk_model_z
 
 The per-sample audit (one verification agent per sample, all 35 S samples)
 confirmed every value now in the manifest matches its source row, and
-documented 97 further published numbers not yet recorded. The largest:
+documented 97 further published numbers not yet recorded. This release
+records the SigLIP column (24) and the YOLOv13 CPU latency, and the audit's
+second deterministic pass found the Ultralytics/YOLOv13 post-processing
+columns (194 entries) recorded here as well. What still remains:
 
 - SigLIP: the PyTorch float-stage TOP1/TOP5 column and the MSE column (24
   values; the manifest carries the BPU values and cosine).
