@@ -44,3 +44,7 @@ TRAIN 和 TEST 分开下载并固定校验和。TRAIN 仅因SDK按 test-*.parque
 适配器验证无bias的Llama配置，恢复Transformers配置归一化后的RoPE theta=5000000，并通过官方chat template一次完成分词。编译为Nash-p四核、opt2、jobs8、256-token prefill、4096 KV容量、FP16 embedding，并保留全部prefill logits。prepare_tokenizer固定非thinking模式并检查token一致性；package_s600将模板加入HBM元数据，不改动原始checkpoint。重新编译可能产生不同二进制摘要，必须重新评估；公开性能和精度数据只对应本次下载包。
 
 继续阅读[板端评估](../evaluator/README_cn.md)。
+
+## S100 / S100P
+
+独立的 SDK 1.0.0 / leap_llm 编译流程见 [legacy 转换说明](legacy/README_cn.md)。上文 2.0 配置仅用于 S600。

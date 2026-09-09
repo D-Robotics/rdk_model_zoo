@@ -100,7 +100,7 @@ rdk_model_zoo/                       # rdk_s branch
 |   |   `-- kws/                    # Keyword spotting
 |   |-- llm/
 |   |   |-- gemma4-e2b/             # Gemma4-E2B VLM (Vision + Text)
-|   |   `-- minicpm5-2b/           # MiniCPM5-2B text generation (S600)
+|   |   `-- minicpm5-2b/           # MiniCPM5-2B text generation (S100 / S100P / S600)
 |   `-- vla/
 |       |-- act/                    # Action Chunking Transformer (robot policy)
 |       `-- pi0/                    # rdk_LeRobot_tools s600 submodule; Pi0 is under models/pi0
@@ -168,7 +168,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Speech Recognition | Paraformer (Chinese ASR, WAV input, three-stage INT16 HBM) | `samples/speech/paraformer` | S100 | [Details](./samples/speech/paraformer) |
 | Keyword Spotting | KWS (MDTC) | `samples/speech/kws` | S100 | [Details](./samples/speech/kws) |
 | Vision-Language Model | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P / S600 | [Details](./samples/llm/gemma4-e2b) |
-| Text Generation | MiniCPM5-2B | `samples/llm/minicpm5-2b` | S600 | [Details](./samples/llm/minicpm5-2b) |
+| Text Generation | MiniCPM5-2B | `samples/llm/minicpm5-2b` | S100 / S100P / S600 | [Details](./samples/llm/minicpm5-2b) |
 | Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | `samples/vla/act` | S100 / S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 | Embodied AI / Robot Policy | Pi0 | `samples/vla/pi0/models/pi0` | S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools/tree/s600/models/pi0) |
 

@@ -1,10 +1,17 @@
 [English](README.md) | [简体中文](README_cn.md)
 
-# MiniCPM5-2B on RDK S600
+# MiniCPM5-2B on RDK S100 / S100P / S600
 
 This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and OELLM Runtime. It provides a C++ command-line application, model download with SHA256 verification, conversion guidance and full WikiText2 evaluation evidence.
 
-## Model and supported scope
+> S600 currently requires the internal OELLM 2.0 beta SDK; its public release is planned for mid-October 2026. Public S600 SDK 1.0.5 did not pass direct inference with this HBM and cannot substitute for 2.0. S100/S100P use the separate public 1.0.0 workflow below.
+
+## S100 / S100P support
+
+S100 (Nash-e) and S100P (Nash-m) use separate OELLM 1.0.0 W8 artifacts and the [legacy C++ entry point](runtime/legacy/README.md). Both pass single-turn Chinese/English generation and normal EOS; full PPL is unverified. Short-request decode is approximately 12.1 / 13.0 tokens/s. Follow that entry point for memory configuration, downloads and commands; see [legacy conversion](conversion/legacy/README.md). The existing PPL, multi-turn and stability results below apply only to S600.
+
+
+## S600 model and supported scope
 
 MiniCPM5-2B uses a Llama architecture with 42 layers, hidden size 2048, 16 query heads and 2 KV heads. This artifact uses a 256-token prefill chunk, a 4096-token KV cache and four Nash-p cores. Generation is greedy with thinking disabled. It supports Chinese/English text and a follow-up prompt in the same conversation.
 
@@ -16,11 +23,12 @@ This delivery is verified on **S600** with RDK OS V5.1.0. The artifact is not in
 conversion/     Host adapter and quantization/compilation instructions
 evaluator/      Full PPL evaluator and recorded evidence
 model/          Verified model download
-runtime/cpp/    CMake project and run.sh
+runtime/cpp/    S600 CMake project and run.sh
+runtime/legacy/ S100/S100P CMake project and run.sh
 test_data/      Generation prompts and observed reference results
 ```
 
-## Quick start
+## S600 quick start
 
 Obtain and extract OpenExplorer LLM 2.0.0-beta1, including its `oellm_runtime` directory. On the S600 board install the build dependencies:
 

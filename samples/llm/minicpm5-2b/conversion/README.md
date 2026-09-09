@@ -44,3 +44,7 @@ TRAIN and TEST are downloaded separately with fixed hashes. The TRAIN parquet is
 The adapter validates bias-free Llama, restores RoPE theta=5000000 after Transformers config normalization, and tokenizes the official chat template once. Compilation uses Nash-p, four cores, opt2, jobs8, 256-token prefill, 4096 KV capacity, FP16 embedding and all prefill logits. Prepare_tokenizer fixes non-thinking mode and checks token equality; package_s600 adds that template to HBM metadata without changing the source checkpoint. A new compilation may have a different binary digest and must be evaluated before deployment; published metrics apply to the provided archive.
 
 See [board evaluation](../evaluator/README.md).
+
+## S100 / S100P
+
+Use the separate [SDK 1.0.0 / leap_llm workflow](legacy/README.md). The 2.0 configuration above is S600-specific.
