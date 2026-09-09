@@ -8,7 +8,7 @@
 
 ## S100 / S100P 支持
 
-S100（Nash-e）与 S100P（Nash-m）使用独立的 OELLM 1.0.0 W8 模型包和 [legacy C++ 入口](runtime/legacy/README_cn.md)。两板已通过中英文单轮生成和正常 EOS 验证；未进行全量 PPL。短请求 decode 约 12.1 / 13.0 token/s。内存配置、下载和命令见该入口；转换见 [legacy 转换](conversion/legacy/README_cn.md)。下文原有的 PPL、多轮和稳定性数据仅属于 S600。
+S100（Nash-e）与 S100P（Nash-m）使用独立的 OELLM 1.0.0 W8 模型包和 [legacy C++ 入口](runtime/legacy/README_cn.md)。两板均完成 140 × 2048-token 全量 WikiText2 TEST：PPL 17.91995，相对浮点上升 27.83%，未达到 ≤3% 精度目标。可复现入口见 [全量评估](evaluator/legacy/README_cn.md)。此前已通过中英文单轮生成和正常 EOS 验证。短请求 decode 约 12.1 / 13.0 token/s。内存配置、下载和命令见该入口；转换见 [legacy 转换](conversion/legacy/README_cn.md)。下文原有的 PPL、多轮和稳定性数据仅属于 S600。
 
 
 ## S600 模型与支持范围
@@ -21,7 +21,8 @@ MiniCPM5-2B 使用 Llama 架构，包含 42 层、2048 隐藏维度、16 个 que
 
 ```text
 conversion/     主机适配代码与量化、编译说明
-evaluator/      完整 PPL 评估与测评证据
+evaluator/      S600 PPL 评估与测评证据
+evaluator/legacy/ S100/S100P 全量 PPL 与生成验证
 model/          模型下载及校验
 runtime/cpp/    S600 的 CMake 工程和 run.sh
 runtime/legacy/ S100/S100P 的 CMake 工程和 run.sh

@@ -53,6 +53,6 @@ timeout 120 ./build/main --model-path ../../model/s100/minicpm5-2b_ctx4096_s100.
 
 ## 已知边界
 
-编译 chunk=256、cache=4096；输入和输出共享上下文。此旧接口未提供本示例可用的输出 token 上限，因此提供进程超时。未验证多轮、工具调用、多模态、全量 PPL 或长时间稳定性。
+编译 chunk=256、cache=4096；输入和输出共享上下文。此旧接口未提供本示例可用的输出 token 上限，因此提供进程超时。独立的 [全量评估入口](../../evaluator/legacy/README_cn.md)覆盖 PPL、双轮、长输入与 50 次连续请求；当前 PPL 与参考文本匹配未达到验收目标，详见 [结果](../../evaluator/README_cn.md)。本 CLI 仍为单请求入口。未验证工具调用、多模态或长时间稳定性。
 
 旧 tokenizer 需要字符串形式 BPE merges 和简化的非思考模板；部署主 EOS 为已有 `<|im_end|>`（130073）。转换脚本不改原始 checkpoint。单请求使用 SDK 示例约定的 request_id=0。
