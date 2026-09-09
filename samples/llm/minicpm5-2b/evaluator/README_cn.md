@@ -40,3 +40,23 @@ HBM SHA256：`7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`�
 ## 生成验证
 
 [六条提示词及 token 对照](../test_data/generation-reference.json)全部匹配官方 HF 贪心输出，并以 EOS 结束。另有 53/45-token 两轮对话、填充后 2048/3840-token 输入的代码检索和 50 次重复请求。重复测试平均 decode 53.2503 token/s、首 token 延迟 147.8602 ms，不含冷启动加载时间。这是短时单请求场景，不代表老化或并发覆盖；prefill 计数包含 chunk 填充。
+
+## S100 / S100P 基础验证
+
+上面的完整 PPL 评估入口仅用于 S600。S100/S100P 当前只有中英文单轮生成记录（2026-09-09，W8/chunk256/cache4096，SDK 1.0.0，DNN 3.7.3/HBRT 4.2.11）。
+
+| 板卡 | Prefill token/s | Decode token/s |
+|---|---:|---:|
+| S100 | 431.70–432.43 | 12.07–12.11 |
+| S100P | 554.11 | 12.97–13.04 |
+
+数据取自短请求 Runtime Performance 日志；prefill 按 256-token 分块补齐。回调性能字段为零，不作为 TTFT。没有全量 PPL、多轮、工具调用、多模态、长上下文或老化结论。
+
+```bash
+cd ../runtime/legacy
+BOARD=s100 bash run.sh --prompt 'What is the capital of France?'
+BOARD=s100 bash run.sh --prompt '请用一句话介绍你自己。'
+# 在 S100P 上改用 BOARD=s100p。
+```
+
+英文预期 `The capital of France is Paris.`；中文应介绍 MiniCPM 与 ModelBest/OpenBMB。两者必须以 `RESULT status=0 ended=1 failed=0 destroy=0` 结束，且没有模板回退或 `<|im_end|>` 外泄。这是基础功能验证，不是语言模型质量基准。

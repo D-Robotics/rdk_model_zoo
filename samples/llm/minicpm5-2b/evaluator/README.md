@@ -40,3 +40,23 @@ HBM SHA256: `7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`.
 ## Generation checks
 
 [Six prompt/token comparisons](../test_data/generation-reference.json) match official HF greedy output and terminate with EOS. Other recorded tests include a 53/45-token two-turn conversation, code retrieval at padded 2048/3840 input tokens, and 50 repeated requests. The repeat test averaged 53.2503 decode token/s and 147.8602 ms TTFT. Measurements exclude cold model loading and describe a short single-request workload, not soak/concurrency coverage. Prefill counts include chunk padding.
+
+## S100 / S100P basic validation
+
+The full PPL evaluators above are S600-specific. S100/S100P have only single-turn English and Chinese generation evidence (2026-09-09, W8/chunk256/cache4096, SDK 1.0.0, DNN 3.7.3/HBRT 4.2.11).
+
+| Board | Prefill tokens/s | Decode tokens/s |
+|---|---:|---:|
+| S100 | 431.70–432.43 | 12.07–12.11 |
+| S100P | 554.11 | 12.97–13.04 |
+
+Runtime Performance lines measure these short requests. Prefill is padded to 256-token chunks. Callback performance fields were zero and are not reported as TTFT. No full PPL, multi-turn, tools, multimodal, long-context or endurance results are claimed for these boards.
+
+```bash
+cd ../runtime/legacy
+BOARD=s100 bash run.sh --prompt 'What is the capital of France?'
+BOARD=s100 bash run.sh --prompt '请用一句话介绍你自己。'
+# Repeat on S100P with BOARD=s100p.
+```
+
+Expected English: `The capital of France is Paris.` Chinese identifies MiniCPM and ModelBest/OpenBMB. Both must end with `RESULT status=0 ended=1 failed=0 destroy=0`, without a template fallback warning or a leaked `<|im_end|>` token. This is a smoke validation, not a language-model quality benchmark.

@@ -17,7 +17,7 @@ for ((i=0; i<${#ARGS[@]}; i++)); do
 done
 MODEL_DIR=$(realpath -m "$MODEL_DIR")
 export MODEL_DIR
-bash "$HERE/../../model/download_model.sh"
+BOARD=s600 bash "$HERE/../../model/download_model.sh"
 cmake -S "$HERE" -B "$HERE/build" -DOELLM_RUNTIME_ROOT="$RUNTIME_ROOT"
 cmake --build "$HERE/build" --parallel 4
 export LD_LIBRARY_PATH="$RUNTIME_ROOT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
