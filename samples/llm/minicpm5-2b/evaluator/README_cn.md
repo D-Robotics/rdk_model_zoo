@@ -41,22 +41,17 @@ HBM SHA256：`7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`�
 
 [六条提示词及 token 对照](../test_data/generation-reference.json)全部匹配官方 HF 贪心输出，并以 EOS 结束。另有 53/45-token 两轮对话、填充后 2048/3840-token 输入的代码检索和 50 次重复请求。重复测试平均 decode 53.2503 token/s、首 token 延迟 147.8602 ms，不含冷启动加载时间。这是短时单请求场景，不代表老化或并发覆盖；prefill 计数包含 chunk 填充。
 
-## S100 / S100P 基础验证
+## S100 / S100P 全量验证（2026-09-09）
 
-上面的完整 PPL 评估入口仅用于 S600。S100/S100P 当前只有中英文单轮生成记录（2026-09-09，W8/chunk256/cache4096，SDK 1.0.0，DNN 3.7.3/HBRT 4.2.11）。
+使用独立的 [legacy 评估入口](legacy/README_cn.md)，对应 SDK 1.0.0、UCP/DNN 3.7.3、HBRT 4.2.11。两块板各自的 HBM 均完成相同的 140 × 2048-token TEST 输入与 286580 个预测目标。**两板 PPL 均为 17.91995474675122，相对浮点上升 27.83167%，未达到 ≤3% 精度目标。** 完整性与数学一致性检查通过；共用验证器会按精度阈值拒绝该结果。
 
-| 板卡 | Prefill token/s | Decode token/s |
-|---|---:|---:|
-| S100 | 431.70–432.43 | 12.07–12.11 |
-| S100P | 554.11 | 12.97–13.04 |
+| 板卡 | 全量 PPL | 评估秒数 | 参考文本完全一致 | 连续请求 |
+|---|---:|---:|---:|---:|
+| [S100 PPL](results/s100-wikitext2-full.json) / [生成](results/s100-generation-full.json) | 17.91995 | 1129.83 | 2/6 | 50/50 |
+| [S100P PPL](results/s100p-wikitext2-full.json) / [生成](results/s100p-generation-full.json) | 17.91995 | 882.44 | 2/6 | 50/50 |
 
-数据取自短请求 Runtime Performance 日志；prefill 按 256-token 分块补齐。回调性能字段为零，不作为 TTFT。没有全量 PPL、多轮、工具调用、多模态、长上下文或老化结论。
+两板均通过中英双轮，以及约 2000/3750 原始 token 输入的信息检索。每板共 60 次请求均正常结束，SDK 返回码和销毁返回码正常。四条参考文本不一致：翻译错误、代码回答不完整，以及 JSON/列表格式不同，不能算作六条生成对照全部通过。旧版 SDK 只返回文本，不返回生成 token ID。
 
-```bash
-cd ../runtime/legacy
-BOARD=s100 bash run.sh --prompt 'What is the capital of France?'
-BOARD=s100 bash run.sh --prompt '请用一句话介绍你自己。'
-# 在 S100P 上改用 BOARD=s100p。
-```
+50 次请求平均端到端耗时为 S100 671.37 ms、S100P 543.22 ms，不含模型加载；这是墙钟时间，不是 TTFT。此前短请求日志 decode 约 12.1/13.0 token/s，不把全零回调字段当成性能测量。未覆盖工具调用、思考、多模态、并发或长时间压力测试。
 
-英文预期 `The capital of France is Paris.`；中文应介绍 MiniCPM 与 ModelBest/OpenBMB。两者必须以 `RESULT status=0 ended=1 failed=0 destroy=0` 结束，且没有模板回退或 `<|im_end|>` 外泄。这是基础功能验证，不是语言模型质量基准。
+[首片段诊断](results/legacy-first-segment-diagnostic.json)：HF float32 PPL 10.75668，legacy 适配器 float32 10.75612，实际 HBM 14.01536。全部八个掩码与 SDK 校准辅助函数逐项一致；输入哈希与 S600 相同，也核验了实际执行的两份 HBM 哈希。这将后续排查重点指向量化执行路径，但尚未定位具体量化算子。交付版评估脚本在两板分别复现首段 NLL 5404.3955137729645。上文 S600 结果沿用既有记录，本次没有重新评测。

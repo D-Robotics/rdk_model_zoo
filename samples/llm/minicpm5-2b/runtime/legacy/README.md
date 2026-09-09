@@ -53,6 +53,6 @@ timeout 120 ./build/main --model-path ../../model/s100/minicpm5-2b_ctx4096_s100.
 
 ## Limits
 
-Fixed chunk=256 and cache=4096; input and output share the context budget. This entry point uses a process timeout because it has no usable output-token limit in the old API. Multi-turn, tools, multimodal input, full PPL and long-duration stability are unverified.
+Fixed chunk=256 and cache=4096; input and output share the context budget. This entry point uses a process timeout because it has no usable output-token limit in the old API. The separate [full evaluator](../../evaluator/legacy/README.md) covers PPL, two-turn conversation, long input and 50 repeated requests. Current PPL and reference-text matching fail the acceptance targets; see [results](../../evaluator/README.md). This CLI remains single-request. Tools, multimodal input and long-duration stability are unverified.
 
 Legacy BPE merges use strings and a simplified non-thinking template. The deployment primary EOS is the existing `<|im_end|>` (130073). Preparation preserves the original checkpoint. A single request uses request_id=0 as in the SDK demo.

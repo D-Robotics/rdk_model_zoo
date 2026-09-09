@@ -8,7 +8,7 @@ This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and
 
 ## S100 / S100P support
 
-S100 (Nash-e) and S100P (Nash-m) use separate OELLM 1.0.0 W8 artifacts and the [legacy C++ entry point](runtime/legacy/README.md). Both pass single-turn Chinese/English generation and normal EOS; full PPL is unverified. Short-request decode is approximately 12.1 / 13.0 tokens/s. Follow that entry point for memory configuration, downloads and commands; see [legacy conversion](conversion/legacy/README.md). The existing PPL, multi-turn and stability results below apply only to S600.
+S100 (Nash-e) and S100P (Nash-m) use separate OELLM 1.0.0 W8 artifacts and the [legacy C++ entry point](runtime/legacy/README.md). Both completed full 140 × 2048-token WikiText2 TEST evaluation: PPL 17.91995, a 27.83% relative increase over float, failing the ≤3% accuracy target. See [full evaluation](evaluator/legacy/README.md) for reproduction. Earlier single-turn Chinese/English generation and normal EOS checks passed. Short-request decode is approximately 12.1 / 13.0 tokens/s. Follow that entry point for memory configuration, downloads and commands; see [legacy conversion](conversion/legacy/README.md). The existing PPL, multi-turn and stability results below apply only to S600.
 
 
 ## S600 model and supported scope
@@ -21,7 +21,8 @@ This delivery is verified on **S600** with RDK OS V5.1.0. The artifact is not in
 
 ```text
 conversion/     Host adapter and quantization/compilation instructions
-evaluator/      Full PPL evaluator and recorded evidence
+evaluator/      S600 PPL evaluator and recorded evidence
+evaluator/legacy/ S100/S100P full PPL and generation checks
 model/          Verified model download
 runtime/cpp/    S600 CMake project and run.sh
 runtime/legacy/ S100/S100P CMake project and run.sh

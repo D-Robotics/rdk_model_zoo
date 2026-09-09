@@ -34,4 +34,4 @@ python retarget.py   --source-hbm ./output/s100/minicpm5-2b_chunk_256_cache_4096
 
 运行文件仅需 HBM、`deployment-tokenizer/`、LICENSE、修改说明和校验清单；不分发 SDK、`.bc`、`.hbo` 或编译缓存。公开包将 HBM 重命名为 `minicpm5-2b_ctx4096_s100.hbm` / `minicpm5-2b_ctx4096_s100p.hbm`。tokenizer 准备仅转换 BPE merges 序列化、使用等价的纯文本非思考模板，并选择已有 chat EOS 130073，不改词表和合并顺序。
 
-参见 [模型下载](../../model/README_cn.md) 与 [基础板端验证](../../evaluator/README_cn.md)。S600 的 PPL 不能视为这两个 HBM 的精度结果；目前只完成单轮中英文和 EOS 验证。
+参见 [模型下载](../../model/README_cn.md) 与 [全量板端验证](../../evaluator/README_cn.md)。两份 legacy HBM 全量 PPL 均为 17.91995，相对浮点上升 27.83%，未达到 ≤3% 目标。生成对照差异与通过的功能测试分别记录；S600 的 PPL 不能作为这两个产物的精度证据。
