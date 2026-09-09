@@ -23,7 +23,8 @@ MiniCPM5-2B 使用 Llama 架构，包含 42 层、2048 隐藏维度、16 个 que
 conversion/     主机适配代码与量化、编译说明
 evaluator/      完整 PPL 评估与测评证据
 model/          模型下载及校验
-runtime/cpp/    CMake 工程和 run.sh
+runtime/cpp/    S600 的 CMake 工程和 run.sh
+runtime/legacy/ S100/S100P 的 CMake 工程和 run.sh
 test_data/      生成提示词与实际参考结果
 ```
 

@@ -8,7 +8,29 @@ from leap_llm.nn.utils import load_safetensors_state_dict
 
 
 def build_model(model_dir, chunk_size=256, cache_len=4096):
-    """Load bias-free MiniCPM weights strictly into the SDK Llama-compatible model."""
+    """Load bias-free MiniCPM weights into the SDK Llama-compatible model.
+
+    Args:
+        model_dir (str or pathlib.Path): Original checkpoint directory containing
+            config.json and safetensors weights accepted by the SDK loader.
+        chunk_size (int): Number of tokens in a prefill chunk. Defaults to 256,
+            the shape verified for the distributed S100/S100P artifacts.
+        cache_len (int): KV-cache capacity in tokens, shared by input and output.
+            Defaults to the verified capacity of 4096.
+
+    Returns:
+        DeepSeek: SDK wrapper around the strictly loaded MiniCPM model and its
+        ModelArgs, configured for batch size one, W8 and preserve_precision.
+        The wrapper name denotes SDK implementation reuse, not a model change.
+
+    Raises:
+        OSError: The checkpoint configuration or weight files cannot be read.
+        json.JSONDecodeError: config.json is not valid JSON.
+        ValueError: The checkpoint is not a bias-free Llama model, uses scaled
+            RoPE, or has a head dimension incompatible with legacy attention.
+        RuntimeError: Strict weight loading finds missing or unexpected keys,
+            incompatible tensor shapes, or an SDK model-loading failure.
+    """
     config = json.loads((Path(model_dir) / 'config.json').read_text())
     if config.get('model_type') != 'llama':
         raise ValueError('Expected a Llama checkpoint')
