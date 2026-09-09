@@ -208,7 +208,7 @@ const englishTranslations = {
   "task.imageTextSimilarity": "Image-text similarity",
   "task.instanceSegmentation": "Instance segmentation",
   "task.leggedLocomotionControl": "Legged locomotion control",
-  "task.robotManipulationPolicy": "Robot manipulation policy",
+  "task.robotManipulationPolicy": "Robot arm manipulation policy",
   "task.licensePlateRecognition": "License plate recognition",
   "task.monocularDepthEstimation": "Monocular depth estimation",
   "task.objectDetection": "Object detection",
@@ -480,7 +480,7 @@ const chineseTranslations: TranslationDictionary = {
   "task.imageTextSimilarity": "图文相似度",
   "task.instanceSegmentation": "实例分割",
   "task.leggedLocomotionControl": "足式运动控制",
-  "task.robotManipulationPolicy": "机器人操作策略",
+  "task.robotManipulationPolicy": "机械臂操作策略",
   "task.licensePlateRecognition": "车牌识别",
   "task.monocularDepthEstimation": "单目深度估计",
   "task.objectDetection": "目标检测",
@@ -548,6 +548,7 @@ export type ManifestTaskId =
   | "image-text-similarity"
   | "instance-segmentation"
   | "legged-locomotion-control"
+  | "robot-manipulation-policy"
   | "license-plate-recognition"
   | "monocular-depth-estimation"
   | "object-detection"
