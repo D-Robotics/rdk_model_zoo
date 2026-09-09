@@ -2,8 +2,10 @@
 set -euo pipefail
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 BOARD=${BOARD:-s600}
+REMOTE_DIR=rdk_s100
 case "$BOARD" in
   s600)
+    REMOTE_DIR=rdk_s600
     ARCHIVE=minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz
     ARCHIVE_SHA256=8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841
     MANIFEST_SHA256=a938fb43fd7e2c161e188a12e2925f386809adcdd3ab0f0531faaa43d5affcb5
@@ -21,7 +23,7 @@ case "$BOARD" in
   *) echo "BOARD must be s100, s100p or s600" >&2; exit 2;;
 esac
 MODEL_DIR=${MODEL_DIR:-"$HERE/$BOARD"}
-URL=${MINICPM5_MODEL_URL:-https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/$ARCHIVE}
+URL=${MINICPM5_MODEL_URL:-https://archive.d-robotics.cc/downloads/rdk_model_zoo/$REMOTE_DIR/$ARCHIVE}
 
 verify_model() {
   local directory=$1

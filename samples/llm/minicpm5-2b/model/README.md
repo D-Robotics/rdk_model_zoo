@@ -16,7 +16,7 @@ SHA256: `8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841`
 
 Size: 2457817532 bytes.
 
-[Download model](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz)
+[Download model](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz)
 
 The default destination is `model/s600`. It contains the HBM, FP16 embedding, tokenizer files, model metadata, LICENSE, NOTICE and MODEL_INFO.json. SDK libraries are not included. The historical `rdk_s100` server directory in this URL does not change the artifact target: this HBM is S600/Nash-p only.
 
