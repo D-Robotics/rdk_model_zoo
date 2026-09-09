@@ -6,7 +6,7 @@ const GROUPS = [
   { id: "language", zh: "语言与多模态", en: "Language & multimodal", tasks: ["image-text-similarity", "vision-language-model", "open-vocabulary-object-detection", "text-generation"] },
   { id: "text", zh: "文字识别", en: "Text recognition", tasks: ["license-plate-recognition", "ocr-text-detection", "ocr-text-recognition", "text-detection", "text-recognition"] },
   { id: "audio", zh: "语音", en: "Speech", tasks: ["keyword-spotting", "speech-recognition"] },
-  { id: "robotics", zh: "机器人与空间感知", en: "Robotics & spatial", tasks: ["legged-locomotion-control", "autonomous-driving", "lane-detection", "point-cloud-segmentation"] }
+  { id: "robotics", zh: "机器人与空间感知", en: "Robotics & spatial", tasks: ["robot-manipulation-policy", "legged-locomotion-control", "autonomous-driving", "lane-detection", "point-cloud-segmentation"] }
 ];
 export function groupTasks(tasks: string[], locale: Locale): Array<{ id: string; label: string; tasks: string[] }> {
   const remaining = new Set(tasks);
