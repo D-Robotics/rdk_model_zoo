@@ -1,13 +1,33 @@
 schema_version: 1
 release:
   platform: s
-  version: 1.1.2
-  tag: s-v1.1.2
+  version: 1.1.3
+  tag: s-v1.1.3
   branch: rdk_s
-  source_ref: s-v1.1.2
-  released_at: 2026-09-08
+  source_ref: s-v1.1.3
+  released_at: 2026-09-09
 
 benchmarks:
+  - id: act-s600-complete
+    sample_id: act
+    variant_id: act-s600
+    display_name: ACT complete policy on RDK S600
+    model_format: hbm
+    precision: int8
+    environment: { hardware: RDK S600, runtime: BPU, bpu_cores: 1 }
+    performance:
+      - { metric: latency, value: 6.20, unit: ms, statistic: mean, scope: complete ACT policy }
+      - { metric: throughput, value: 161.2, unit: fps, statistic: mean, scope: complete ACT policy }
+      - { metric: latency, value: 3.92, unit: ms, statistic: mean, scope: VisionEncoder stage }
+      - { metric: throughput, value: 255.0, unit: fps, statistic: mean, scope: VisionEncoder stage }
+      - { metric: latency, value: 2.29, unit: ms, statistic: mean, scope: TransformerLayers stage }
+      - { metric: throughput, value: 436.4, unit: fps, statistic: mean, scope: TransformerLayers stage }
+    source:
+      ref: 326ea043be204de25223d95c7d918efe8672dc66
+      path: models/act/README_CN.md
+      section: "## BPU 性能测试"
+      provenance: existing-repository-documentation
+
   - id: asr-s100
     sample_id: asr
     variant_id: asr-s100
