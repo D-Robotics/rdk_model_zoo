@@ -2,17 +2,25 @@ import type { BenchmarkRecord, HardwareId, ModelVariant } from "../catalog/types
 import {
   groupPerformanceMetrics,
   pairAccuracyMetrics,
+  type AccuracyPair,
   type PerformanceGroup,
   type PerformanceThread
 } from "../catalog/metric-display";
 import { normalizeHardware } from "../catalog/variants";
-import { accuracyHeader, renderAccuracyValues, renderRetentionValues } from "./accuracy-comparison";
+import { stripHardwareSuffix } from "../catalog/model-naming";
+import {
+  accuracyColumnGroups,
+  columnConditionText,
+  renderRetentionCell,
+  renderStageCell,
+  stageLabel,
+  type AccuracyColumnGroup
+} from "./accuracy-comparison";
 import { renderDownloadCell, renderAssetDetails, runnableAssets } from "./artifact-downloads";
 import type { DetailContext } from "./detail-types";
 import { renderEvidenceDetails } from "./evidence-details";
 import { detailLabel, unitLabel } from "./detail-labels";
 import {
-  accuracyCellText,
   appendEmptyRow,
   cell,
   formatThreadLabel,
@@ -75,10 +83,14 @@ function appendMetricValue(
   element: HTMLElement,
   entry: PerformanceThread["latency"],
   context: DetailContext,
-  metricName: "latency" | "throughput"
+  metricName: "latency" | "throughput",
+  rowHasPerformance: boolean
 ): void {
   if (entry === undefined) {
-    element.textContent = detailLabel(context.locale, "noPerformance");
+    // “No performance table was published” and “this table reports latency but
+    // no FPS for this thread” are different statements and must not share text.
+    element.textContent = detailLabel(context.locale, rowHasPerformance ? "notRecorded" : "noPerformance");
+    element.dataset.empty = "true";
     return;
   }
   const value = document.createElement("span");
@@ -90,11 +102,17 @@ function appendMetricValue(
   element.append(value);
 }
 
+function accuracyColumnCount(columns: AccuracyColumnGroup[]): number {
+  return columns.reduce((count, column) => count + column.stages.length + (column.showRetention ? 1 : 0), 0);
+}
+
 function buildVariantRow(
   variant: ModelVariant,
   records: BenchmarkRecord[],
   group: PerformanceGroup | undefined,
   threadCounts: Array<number | undefined>,
+  columns: AccuracyColumnGroup[],
+  rowPairs: AccuracyPair[],
   detailId: string,
   context: DetailContext
 ): HTMLTableRowElement {
@@ -109,7 +127,9 @@ function buildVariantRow(
   const specification = document.createElement("th");
   specification.scope = "row";
   specification.className = "model-detail-specification";
-  specification.textContent = variant.name || variant.id;
+  // The hardware tab already states the board, so `on RDK S100` is dropped
+  // instead of being repeated on every row.
+  specification.textContent = stripHardwareSuffix(variant.name || variant.id);
   if (group !== undefined) {
     const conditions = [
       group.scope ? `${detailLabel(context.locale, "scope")}: ${group.scope}` : undefined,
@@ -145,29 +165,34 @@ function buildVariantRow(
     latency.className = "model-detail-thread-value model-detail-latency";
     if (thread?.latency) latency.dataset.metric = "latency";
     latency.dataset.concurrency = threadKey(concurrency);
-    appendMetricValue(latency, thread?.latency, context, "latency");
+    appendMetricValue(latency, thread?.latency, context, "latency", group !== undefined);
     const throughput = document.createElement("td");
     throughput.className = "model-detail-thread-value model-detail-throughput";
     if (thread?.throughput) throughput.dataset.metric = "throughput";
     throughput.dataset.concurrency = threadKey(concurrency);
-    appendMetricValue(throughput, thread?.throughput, context, "throughput");
+    appendMetricValue(throughput, thread?.throughput, context, "throughput", group !== undefined);
     row.append(latency, throughput);
   }
 
-  const pairs = pairAccuracyMetrics(records);
-  const accuracyDisplay = accuracyHeader(pairs, context.locale);
-  const floatCell = document.createElement("td");
-  floatCell.className = "model-detail-accuracy-cell benchmark-group-start";
-  renderAccuracyValues(floatCell, pairs, "float", context, !accuracyDisplay.shared);
-  row.append(floatCell);
-  const quantizedCell = document.createElement("td");
-  quantizedCell.className = "model-detail-accuracy-cell";
-  renderAccuracyValues(quantizedCell, pairs, "quantized", context, !accuracyDisplay.shared);
-  row.append(quantizedCell);
-  const retentionCell = document.createElement("td");
-  retentionCell.className = "model-detail-retention-cell";
-  renderRetentionValues(retentionCell, pairs, context, !accuracyDisplay.shared);
-  row.append(retentionCell);
+  for (const column of columns) {
+    for (const stage of column.stages) {
+      const stageCell = document.createElement("td");
+      stageCell.className = "model-detail-accuracy-cell";
+      stageCell.classList.toggle("benchmark-group-start", stage === column.stages[0]);
+      stageCell.dataset.metric = column.canonicalMetric;
+      stageCell.dataset.stage = stage;
+      renderStageCell(stageCell, column, rowPairs, stage, context, group?.scope);
+      row.append(stageCell);
+    }
+    if (column.showRetention) {
+      const retentionCell = document.createElement("td");
+      retentionCell.className = "model-detail-retention-cell";
+      retentionCell.dataset.metric = column.canonicalMetric;
+      renderRetentionCell(retentionCell, column, rowPairs, context, group?.scope);
+      row.append(retentionCell);
+    }
+  }
+
   const downloads = document.createElement("td");
   downloads.className = "model-detail-download-cell";
   renderDownloadCell(downloads, runnableAssets(variant), context);
@@ -203,19 +228,58 @@ function expandedVariantRow(
   return row;
 }
 
+function appendAccuracyHeader(
+  firstRow: HTMLTableRowElement,
+  secondRow: HTMLTableRowElement,
+  columns: AccuracyColumnGroup[],
+  context: DetailContext
+): void {
+  for (const column of columns) {
+    const span = column.stages.length + (column.showRetention ? 1 : 0);
+    const group = document.createElement("th");
+    group.scope = "colgroup";
+    group.colSpan = span;
+    group.className = "model-detail-accuracy-group";
+    group.dataset.metric = column.canonicalMetric;
+    const label = document.createElement("span");
+    label.className = "model-detail-accuracy-group-label";
+    label.textContent = column.label;
+    group.append(label);
+    const condition = columnConditionText(column, context.locale);
+    if (condition) {
+      const note = document.createElement("small");
+      note.className = "model-detail-metric-scale";
+      note.textContent = condition;
+      group.append(document.createElement("br"), note);
+    }
+    firstRow.append(group);
+    for (const stage of column.stages) {
+      const head = cell(stageLabel(stage, context.locale), true);
+      head.dataset.metric = column.canonicalMetric;
+      head.dataset.stage = stage;
+      secondRow.append(head);
+    }
+    if (column.showRetention) {
+      const head = cell(detailLabel(context.locale, "retention"), true);
+      head.dataset.metric = column.canonicalMetric;
+      head.dataset.retention = "true";
+      secondRow.append(head);
+    }
+  }
+}
+
 function buildTable(
   variants: ModelVariant[],
   hardware: HardwareId,
   task: string,
   threadCounts: Array<number | undefined>,
   performanceGroups: PerformanceGroup[],
+  columns: AccuracyColumnGroup[],
   context: DetailContext
 ): HTMLTableElement {
   const selected = variants.filter((variant) => variant.hardware === hardware
     && (variant.task || taskFromVariant(variant.id, "")) === task);
-  const records = selected.flatMap((variant) => variantRecords(variant, hardware));
-  const accuracyDisplay = accuracyHeader(pairAccuracyMetrics(records), context.locale);
-  const result = table(`${detailLabel(context.locale, "performance")}${accuracyDisplay.shared && accuracyDisplay.text !== detailLabel(context.locale, "accuracy") ? ` · ${accuracyDisplay.text}` : ""}`);
+  const result = table(detailLabel(context.locale, "performance"));
   result.className = "model-detail-specifications-table";
   const head = result.tHead!;
   const firstRow = document.createElement("tr");
@@ -233,15 +297,6 @@ function buildTable(
     if (latencyUnit) group.dataset.latencyUnit = latencyUnit;
     firstRow.append(group);
   }
-  const accuracy = cell(accuracyDisplay.text, true);
-  accuracy.colSpan = 3;
-  accuracy.scope = "colgroup";
-  firstRow.append(accuracy);
-  const download = cell(detailLabel(context.locale, "download"), true);
-  download.rowSpan = 2;
-  firstRow.append(download);
-  head.append(firstRow);
-
   const secondRow = document.createElement("tr");
   for (const concurrency of threadCounts) {
     const latencyUnit = metricUnit(performanceGroups, concurrency, "latency", context.locale);
@@ -253,39 +308,33 @@ function buildTable(
     throughput.dataset.concurrency = threadKey(concurrency);
     secondRow.append(latency, throughput);
   }
-  secondRow.append(
-    cell(detailLabel(context.locale, "floatAccuracy"), true),
-    cell(detailLabel(context.locale, "quantizedAccuracy"), true),
-    cell(detailLabel(context.locale, "retention"), true)
-  );
-  head.append(secondRow);
+  appendAccuracyHeader(firstRow, secondRow, columns, context);
+  const download = cell(detailLabel(context.locale, "download"), true);
+  download.rowSpan = 2;
+  firstRow.append(download);
+  head.append(firstRow, secondRow);
 
-  const columnCount = 2 + threadCounts.length * 2 + 3 + 1;
+  const columnCount = 2 + threadCounts.length * 2 + accuracyColumnCount(columns) + 1;
   for (const variant of selected) {
     const variantRecordsList = variantRecords(variant, hardware);
+    const rowPairs = pairAccuracyMetrics(variantRecordsList);
     const groups = groupPerformanceMetrics(variantRecordsList).filter((candidate) =>
       candidate.threads.some((thread) => thread.latency !== undefined || thread.throughput !== undefined)
     );
     if (groups.length === 0) {
       const detailId = `model-detail-row-${variant.id}-default`.replace(/[^a-zA-Z0-9_-]+/g, "-");
-      const mainRow = buildVariantRow(variant, variantRecordsList, undefined, threadCounts, detailId, context);
+      const mainRow = buildVariantRow(variant, variantRecordsList, undefined, threadCounts, columns, rowPairs, detailId, context);
       const expandedRow = expandedVariantRow(variant, variantRecordsList, columnCount, detailId, context);
-      result.tBodies[0]!.append(
-        mainRow,
-        expandedRow
-      );
+      result.tBodies[0]!.append(mainRow, expandedRow);
       wireRowToggle(mainRow, expandedRow, context);
       continue;
     }
     for (const [groupIndex, group] of groups.entries()) {
       const groupKey = `${groupIndex}-${group.scope ?? "scope"}-${group.statistic ?? "statistic"}`;
       const detailId = `model-detail-row-${variant.id}-${groupKey}`.replace(/[^a-zA-Z0-9_-]+/g, "-");
-      const mainRow = buildVariantRow(variant, variantRecordsList, group, threadCounts, detailId, context);
+      const mainRow = buildVariantRow(variant, variantRecordsList, group, threadCounts, columns, rowPairs, detailId, context);
       const expandedRow = expandedVariantRow(variant, variantRecordsList, columnCount, detailId, context);
-      result.tBodies[0]!.append(
-        mainRow,
-        expandedRow
-      );
+      result.tBodies[0]!.append(mainRow, expandedRow);
       wireRowToggle(mainRow, expandedRow, context);
     }
   }
@@ -323,6 +372,10 @@ export interface VariantBenchmarkTableOptions {
  * Render the platform comparison as one grouped table. The primary view keeps
  * 1/2-thread columns (plus explicitly unknown concurrency) compact; the
  * complete source thread set remains one click away in the same table.
+ *
+ * Accuracy columns come from the measurements this model actually publishes, so
+ * a detector, a classifier and an embedding model each get their own table
+ * shape rather than sharing one fixed template.
  */
 export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOptions): HTMLElement {
   const { variants, hardware, task, context } = options;
@@ -333,6 +386,7 @@ export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOption
   const primaryGroups = allGroups.filter((group) =>
     group.threads.some((thread) => thread.latency !== undefined || thread.throughput !== undefined)
   );
+  const columns = accuracyColumnGroups(pairAccuracyMetrics(records), context.locale);
   const allThreads = allThreadCounts(primaryGroups);
   let showAllThreads = false;
   const primaryThreads = primaryThreadCounts(allThreads);
@@ -362,7 +416,7 @@ export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOption
       ? (context.locale === "zh" ? "收起其他线程" : "Hide additional threads")
       : (context.locale === "zh" ? `显示其他线程（${extraThreads.length}）` : `Show additional threads (${extraThreads.length})`);
     scrollHost.replaceChildren(wrapper(
-      buildTable(variants, hardware, task, threadCounts, primaryGroups, context),
+      buildTable(variants, hardware, task, threadCounts, primaryGroups, columns, context),
       detailLabel(context.locale, "specifications")
     ));
   };

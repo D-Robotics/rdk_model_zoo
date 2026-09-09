@@ -1,7 +1,8 @@
 import type { BenchmarkRecord } from "../catalog/types";
 import { detailLabel, unitLabel } from "./detail-labels";
 import type { DetailContext } from "./detail-types";
-import { accuracyCellText, cell, metricCellText, sourceUrl, table, wrapper } from "./detail-utils";
+import { accuracyValueText } from "./accuracy-comparison";
+import { cell, metricCellText, sourceUrl, table, wrapper } from "./detail-utils";
 
 function sourceLink(record: BenchmarkRecord, context: DetailContext): HTMLAnchorElement {
   const link = document.createElement("a");
@@ -67,7 +68,9 @@ function renderMetricTable(records: BenchmarkRecord[], context: DetailContext): 
         row.dataset.metric = metric.metric;
         row.append(
           cell(metric.metric),
-          cell(kind === "accuracy" ? accuracyCellText(metric, context.locale) : metricCellText(metric, context.locale)),
+          // Raw evidence shows the value exactly as published; the unit lives in
+          // its own column, so a ratio is never re-scaled into a percentage.
+          cell(kind === "accuracy" ? accuracyValueText(metric, context.locale) : metricCellText(metric, context.locale)),
           cell(unitLabel(context.locale, metric.unit)),
           cell(metric.scope ?? detailLabel(context.locale, "notRecorded")),
           cell(metric.concurrency === undefined ? detailLabel(context.locale, "unknownConcurrency") : String(metric.concurrency)),

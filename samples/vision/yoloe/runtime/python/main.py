@@ -32,12 +32,13 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+from pathlib import Path
 import sys
 
 import cv2
 import numpy as np
 
-sys.path.append(os.path.abspath("../../../../../"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]))
 import utils.py_utils.file_io as file_io
 import utils.py_utils.inspect as inspect
 import utils.py_utils.visualize as visualize
@@ -56,7 +57,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "../../../../../"))
 MODEL_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../model"))
 TEST_DATA_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../test_data"))
 
-DEFAULT_MODEL_PATH = os.path.join(MODEL_DIR, "yoloe-11s-seg-pf_bayese_640x640_nv12.bin")
+DEFAULT_MODEL_PATH = os.path.join(MODEL_DIR, "yoloe_11s_seg_pf_bayese_640x640_nv12.bin")
 DEFAULT_TEST_IMAGE = os.path.join(PROJECT_ROOT, "datasets/coco/assets/bus.jpg")
 DEFAULT_LABEL_FILE = os.path.join(PROJECT_ROOT, "datasets/yoloe/yoloe_seg_pf_classes.names")
 DEFAULT_RESULT_IMAGE = os.path.join(TEST_DATA_DIR, "result_seg.jpg")
@@ -118,6 +119,8 @@ def main() -> None:
 
     img = file_io.load_image(args.test_img)
     labels = file_io.load_class_names(args.label_file)
+    if len(labels) != args.classes_num:
+        raise ValueError(f"Expected {args.classes_num} class names, got {len(labels)}")
 
     xyxy, score, cls, masks = model.predict(img)
 

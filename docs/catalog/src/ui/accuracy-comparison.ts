@@ -1,106 +1,231 @@
-import type { Locale } from "../catalog/types";
+import type { Locale, MetricRecord, MetricUnit } from "../catalog/types";
 import {
   formatRetention,
   getRetention,
   type AccuracyPair,
   type MetricEntry
 } from "../catalog/metric-display";
-import { detailLabel, metricLabel, unitLabel } from "./detail-labels";
+import { metricDisplayLabel, unitScaleLabel } from "../catalog/metric-identity";
+import { detailLabel } from "./detail-labels";
 import type { DetailContext } from "./detail-types";
-import { accuracyCellText } from "./detail-utils";
+
+/**
+ * Accuracy columns are derived from the measurements a model actually
+ * publishes, so every model gets its own table shape instead of a shared
+ * three-column template. A classification model shows Top-1/Top-5, a detector
+ * shows the bbox mAP columns of its source table, a pose model shows the
+ * keypoint columns, and an embedding model shows cosine similarity.
+ */
+
+export type AccuracyStage = "float" | "quantized" | "other";
+
+export interface AccuracyColumnGroup {
+  key: string;
+  canonicalMetric: string;
+  label: string;
+  units: MetricUnit[];
+  datasets: string[];
+  stages: AccuracyStage[];
+  showRetention: boolean;
+  pairs: AccuracyPair[];
+}
+
+const STAGE_ORDER: AccuracyStage[] = ["float", "quantized", "other"];
 
 function normalized(value: string | undefined): string {
   return (value ?? "").normalize("NFKC").trim().toLocaleLowerCase();
 }
 
-export function readableAccuracyMetric(metric: string, locale: Locale): string {
-  const normalizedMetric = normalized(metric);
-  const map = normalizedMetric.match(/^(bbox|mask|keypoints?)-all-map-50-95$/);
-  if (map?.[1]) return `${map[1]} mAP@0.5:0.95`;
-  if (normalizedMetric === "top-1") return "Top-1";
-  if (normalizedMetric === "top-5") return "Top-5";
-  return metricLabel(locale, metric);
+function stageEntry(pair: AccuracyPair, stage: AccuracyStage): MetricEntry | undefined {
+  if (stage === "float") return pair.float;
+  if (stage === "quantized") return pair.quantized;
+  return pair.other;
 }
 
-export function accuracyMetricName(pair: AccuracyPair, locale: Locale): string {
-  return readableAccuracyMetric(pair.metric, locale);
+function unique(values: Array<string | undefined>): string[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value && value.trim())))];
 }
 
-export function accuracyDescriptor(pair: AccuracyPair, locale: Locale): string {
-  const dataset = pair.dataset ?? detailLabel(locale, "notRecorded");
-  const metric = readableAccuracyMetric(pair.metric, locale);
-  const unit = pair.unit === "ratio" || pair.unit === "percent" ? "%" : unitLabel(locale, pair.unit);
-  return `${dataset} · ${metric} (${unit})`;
+/**
+ * Groups paired accuracy measurements by canonical metric, preserving the
+ * order in which the source tables publish them.
+ */
+export function accuracyColumnGroups(pairs: AccuracyPair[], locale: Locale): AccuracyColumnGroup[] {
+  const groups = new Map<string, AccuracyColumnGroup>();
+  for (const pair of pairs) {
+    const existing = groups.get(pair.canonicalMetric);
+    if (existing) {
+      existing.pairs.push(pair);
+      continue;
+    }
+    groups.set(pair.canonicalMetric, {
+      key: pair.canonicalMetric,
+      canonicalMetric: pair.canonicalMetric,
+      label: metricDisplayLabel(pair.canonicalMetric, locale),
+      units: [],
+      datasets: [],
+      stages: [],
+      showRetention: false,
+      pairs: [pair]
+    });
+  }
+
+  for (const group of groups.values()) {
+    const stages = new Set<AccuracyStage>();
+    const units = new Set<MetricUnit>();
+    let retention = false;
+    for (const pair of group.pairs) {
+      if (pair.float) stages.add("float");
+      if (pair.quantized) stages.add("quantized");
+      if (pair.other) stages.add("other");
+      units.add(pair.unit);
+      const display = getRetention(pair);
+      if (display.status === "value") retention = true;
+    }
+    group.stages = STAGE_ORDER.filter((stage) => stages.has(stage));
+    group.units = [...units];
+    group.datasets = unique(group.pairs.map((pair) => pair.dataset));
+    // A retention column only carries information when something is comparable.
+    group.showRetention = retention || group.stages.length > 1;
+  }
+  return [...groups.values()];
 }
 
-export function accuracyHeader(pairs: AccuracyPair[], locale: Locale): { text: string; shared: boolean } {
-  const descriptors = [...new Set(pairs.map((pair) => accuracyDescriptor(pair, locale)))];
-  if (descriptors.length === 0) return { text: detailLabel(locale, "accuracy"), shared: true };
-  return {
-    text: `${detailLabel(locale, "accuracy")} · ${descriptors.join(" / ")}`,
-    shared: descriptors.length === 1
-  };
+/** Whether an accuracy measurement belongs to a performance row's timing scope. */
+export function scopeCompatible(rowScope: string | undefined, pairScope: string | undefined): boolean {
+  const row = normalized(rowScope);
+  const pair = normalized(pairScope);
+  if (!row || !pair) return true;
+  return pair.includes(row) || row.includes(pair);
 }
 
-export function renderAccuracyValues(
+/** The measurements of one column group that apply to a single table row. */
+export function pairsForRow(group: AccuracyColumnGroup, rowPairs: AccuracyPair[], rowScope?: string): AccuracyPair[] {
+  return group.pairs.filter((candidate) => {
+    const rowPair = rowPairs.find((pair) => pair.key === candidate.key);
+    return rowPair !== undefined && scopeCompatible(rowScope, rowPair.scope);
+  });
+}
+
+function digitsFor(unit: MetricUnit): number {
+  return unit === "ratio" || unit === "percent" ? 4 : 6;
+}
+
+/**
+ * Accuracy values are shown exactly as the source records them, with no `%`
+ * suffix: the scale lives in the column header. Retention is the one value
+ * that keeps its `%` because it is defined as a percentage.
+ */
+export function accuracyValueText(metric: MetricRecord, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
+    maximumFractionDigits: digitsFor(metric.unit)
+  }).format(metric.value);
+}
+
+export function stageLabel(stage: AccuracyStage, locale: Locale): string {
+  if (stage === "float") return detailLabel(locale, "floatAccuracy");
+  if (stage === "quantized") return detailLabel(locale, "quantizedAccuracy");
+  return locale === "zh" ? "实测值" : "Reported value";
+}
+
+/** Header condition line: dataset and value scale, as published by the source. */
+export function columnConditionText(group: AccuracyColumnGroup, locale: Locale): string {
+  const parts = [
+    group.datasets.length > 0 ? group.datasets.join(" / ") : undefined,
+    group.units.map((unit) => unitScaleLabel(unit, locale)).join(" / ")
+  ].filter((value): value is string => Boolean(value));
+  return parts.join(" · ");
+}
+
+function appendValueLine(
   element: HTMLElement,
-  pairs: AccuracyPair[],
-  stage: "float" | "quantized",
-  context: DetailContext,
-  showMetricLabels: boolean
+  text: string,
+  className: string,
+  title?: string,
+  dataset?: Record<string, string>
 ): void {
-  const values = pairs
-    .map((pair) => ({ pair, entry: pair[stage] }))
+  if (element.childNodes.length > 0) element.append(document.createElement("br"));
+  const item = document.createElement("span");
+  item.className = className;
+  item.textContent = text;
+  if (title) item.title = title;
+  for (const [key, value] of Object.entries(dataset ?? {})) item.dataset[key] = value;
+  element.append(item);
+}
+
+/**
+ * Renders one stage column for one row. A measurement that belongs to a
+ * different timing scope is marked not applicable rather than being dropped or
+ * reported as missing, so the reader can tell “other row” from “never measured”.
+ */
+export function renderStageCell(
+  element: HTMLElement,
+  group: AccuracyColumnGroup,
+  rowPairs: AccuracyPair[],
+  stage: AccuracyStage,
+  context: DetailContext,
+  rowScope?: string
+): void {
+  const applicable = pairsForRow(group, rowPairs, rowScope);
+  const values = applicable
+    .map((pair) => ({ pair, entry: stageEntry(pair, stage) }))
     .filter((value): value is { pair: AccuracyPair; entry: MetricEntry } => value.entry !== undefined);
   if (values.length === 0) {
-    element.textContent = detailLabel(context.locale, "noAccuracy");
+    const anyStageForScope = applicable.some((pair) => STAGE_ORDER.some((candidate) => stageEntry(pair, candidate)));
+    const scopedOut = group.pairs.some((pair) => rowPairs.some((candidate) => candidate.key === pair.key)
+      && !scopeCompatible(rowScope, pair.scope));
+    element.textContent = detailLabel(context.locale, scopedOut && !anyStageForScope
+      ? "notApplicable"
+      : "noAccuracy");
+    element.dataset.empty = "true";
     return;
   }
-  for (const [index, value] of values.entries()) {
-    if (index > 0) element.append(document.createElement("br"));
-    const item = document.createElement("span");
-    item.className = "model-detail-accuracy-value";
-    item.dataset.metric = value.pair.metric;
-    item.textContent = showMetricLabels
-      ? `${accuracyMetricName(value.pair, context.locale)}: ${accuracyCellText(value.entry.metric, context.locale)}`
-      : accuracyCellText(value.entry.metric, context.locale);
-    item.title = [value.pair.dataset, value.pair.scope, value.pair.artifact].filter(Boolean).join(" · ");
-    element.append(item);
+  const ambiguousUnits = group.units.length > 1;
+  for (const { pair, entry } of values) {
+    const suffix = ambiguousUnits ? ` ${unitScaleLabel(entry.metric.unit, context.locale)}` : "";
+    appendValueLine(
+      element,
+      `${accuracyValueText(entry.metric, context.locale)}${suffix}`,
+      "model-detail-accuracy-value",
+      [pair.dataset, pair.scope, pair.artifact].filter(Boolean).join(" · "),
+      { metric: pair.canonicalMetric, stage }
+    );
   }
 }
 
-export function renderRetentionValues(
+/** Renders the retention column for one row. */
+export function renderRetentionCell(
   element: HTMLElement,
-  pairs: AccuracyPair[],
+  group: AccuracyColumnGroup,
+  rowPairs: AccuracyPair[],
   context: DetailContext,
-  showMetricLabels: boolean
+  rowScope?: string
 ): void {
-  if (pairs.length === 0) {
-    element.textContent = detailLabel(context.locale, "notMeasured");
+  const applicable = pairsForRow(group, rowPairs, rowScope);
+  if (applicable.length === 0) {
+    element.textContent = detailLabel(context.locale, "notApplicable");
+    element.dataset.empty = "true";
     return;
   }
   const rendered = new Set<string>();
-  for (const pair of pairs) {
+  let wrote = false;
+  for (const pair of applicable) {
     const retention = getRetention(pair);
-    const valueText = retention.status === "value" && retention.value !== undefined
+    const text = retention.status === "value" && retention.value !== undefined
       ? formatRetention(retention.value, context.locale)
       : detailLabel(context.locale, retention.status === "not-comparable"
         ? "notComparable"
         : retention.status === "not-applicable" ? "notApplicable" : "notMeasured");
-    const text = showMetricLabels && retention.status === "value"
-      ? `${accuracyMetricName(pair, context.locale)}: ${valueText}`
-      : valueText;
     if (rendered.has(text)) continue;
     rendered.add(text);
-    if (element.childNodes.length > 0) element.append(document.createElement("br"));
-    const item = document.createElement("span");
-    item.className = "model-detail-retention-value";
-    item.classList.toggle("missing-data", retention.status !== "value");
-    item.dataset.retentionSource = retention.source ?? "none";
-    item.textContent = text;
-    if (retention.source === "derived") {
-      item.title = context.locale === "zh" ? "由原始精度计算" : "Derived from source accuracies";
-    }
-    element.append(item);
+    appendValueLine(element, text, "model-detail-retention-value", retention.source === "derived"
+      ? (context.locale === "zh" ? "由原始精度计算" : "Derived from source accuracies")
+      : undefined, { retentionSource: retention.source ?? "none" });
+    element.lastElementChild?.classList.toggle("missing-data", retention.status !== "value");
+    wrote = true;
+  }
+  if (!wrote) {
+    element.textContent = detailLabel(context.locale, "notMeasured");
+    element.dataset.empty = "true";
   }
 }

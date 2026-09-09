@@ -25,10 +25,13 @@ Usage:
 """
 
 import argparse
+import json
+from pathlib import Path
+import re
 from types import MethodType
 
+import torch
 import torch.nn as nn
-from ultralytics import YOLO
 
 
 def linear2conv(linear: nn.Linear) -> nn.Conv2d:
@@ -41,14 +44,34 @@ def linear2conv(linear: nn.Linear) -> nn.Conv2d:
         stride=1,
         padding=0,
         bias=linear.bias is not None,
-    )
-    conv.weight.data = linear.weight.view(linear.out_features, linear.in_features, 1, 1).data
-    if linear.bias is not None:
-        conv.bias.data = linear.bias.data
+    ).to(device=linear.weight.device, dtype=linear.weight.dtype)
+    with torch.no_grad():
+        conv.weight.copy_(linear.weight.reshape(linear.out_features, linear.in_features, 1, 1))
+        if linear.bias is not None:
+            conv.bias.copy_(linear.bias)
+    conv.train(linear.training)
     return conv
 
 
-def rdk_forward(self, x, text):
+def patch_head(network):
+    """Accept a fused PF head, preserving existing convolutional vocab layers."""
+    heads = [m for m in network.modules()
+             if all(hasattr(m, key) for key in ("lrpc", "cv2", "cv3", "cv5", "proto", "nl"))]
+    if len(heads) != 1:
+        raise ValueError("Expected one fused YOLOE-11 PF segmentation head; prompt models are unsupported.")
+    head = heads[0]
+    if head.nl != 3 or len(head.lrpc) != 3 or head.reg_max != 16 or head.nm != 32:
+        raise ValueError("Expected three scales, DFL=16 and 32 mask coefficients.")
+    for branch in head.lrpc:
+        if isinstance(branch.vocab, nn.Linear):
+            branch.vocab = linear2conv(branch.vocab)
+        elif not isinstance(branch.vocab, nn.Conv2d):
+            raise TypeError(f"Unsupported PF vocabulary layer: {type(branch.vocab).__name__}")
+    head.forward = MethodType(rdk_forward, head)
+    return head
+
+
+def rdk_forward(self, x, text=None):
     """Forward method patched for BPU output layout (NHWC, 10 tensors)."""
     results = []
     for i in range(self.nl):
@@ -67,25 +90,42 @@ def main():
                         help="Input image size for export.")
     parser.add_argument("--opset", type=int, default=11,
                         help="ONNX opset version.")
-    parser.add_argument("--names-output", type=str, default="yoloe_seg_pf_classes.names",
+    parser.add_argument("--names-output", type=str, default=None,
                         help="Output path for the class names file.")
     args = parser.parse_args()
 
-    model = YOLO(args.weights)
+    weights = Path(args.weights).expanduser().resolve()
+    if not weights.is_file() or not re.fullmatch(r"yoloe-11[sml]-seg-pf\.pt", weights.name):
+        parser.error("Provide a local yoloe-11{s,m,l}-seg-pf.pt checkpoint (no automatic download).")
+    if args.imgsz != 640:
+        parser.error("This X5 deployment contract currently supports --imgsz 640 only.")
+    names_path = Path(args.names_output).resolve() if args.names_output else weights.with_suffix(".names")
+    onnx_path = weights.with_suffix(".onnx")
+    metadata_path = weights.with_suffix(".export.json")
+    for path in (names_path, onnx_path, metadata_path):
+        if path.exists():
+            parser.error(f"Refusing to overwrite {path}; use a fresh export directory.")
+    from ultralytics import YOLO
 
-    # Replace Linear vocab layers with Conv2d for BPU compatibility
-    model.model.model[23].lrpc[0].vocab = linear2conv(model.model.model[23].lrpc[0].vocab)
-    model.model.model[23].lrpc[1].vocab = linear2conv(model.model.model[23].lrpc[1].vocab)
-    model.model.model[23].forward = MethodType(rdk_forward, model.model.model[23])
+    model = YOLO(str(weights))
+    model.model.cpu().float().eval()
+    patch_head(model.model)
+    names = model.names
+    if not isinstance(names, dict) or set(names) != set(range(4585)):
+        raise ValueError("Expected 4585 contiguous class IDs in the PF checkpoint.")
 
-    # Save class names (4585 entries)
-    with open(args.names_output, "w", encoding="utf-8") as f:
-        for name in model.names.values():
-            f.write(f"{name}\n")
-    print(f"Saved {len(model.names)} class names to {args.names_output}")
-
-    # Export to ONNX
-    model.export(imgsz=args.imgsz, format="onnx", simplify=True, opset=args.opset)
+    exported = model.export(imgsz=args.imgsz, format="onnx", simplify=True,
+                            opset=args.opset, batch=1, dynamic=False, device="cpu")
+    if Path(exported).resolve() != onnx_path or not onnx_path.is_file():
+        raise RuntimeError(f"Unexpected export path: {exported}; expected {onnx_path}")
+    with names_path.open("x", encoding="utf-8") as f:
+        f.write("".join(f"{names[i]}\n" for i in range(4585)))
+    import ultralytics
+    with metadata_path.open("x", encoding="utf-8") as f:
+        json.dump({"weights": str(weights), "onnx": str(onnx_path),
+                   "names": str(names_path), "ultralytics": ultralytics.__version__,
+                   "torch": torch.__version__, "opset": args.opset,
+                   "validation": "exported_only_not_accuracy_verified"}, f, indent=2)
     print("Export complete.")
 
 

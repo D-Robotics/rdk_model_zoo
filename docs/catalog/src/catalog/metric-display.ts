@@ -1,4 +1,5 @@
 import type { BenchmarkRecord, Locale, MetricRecord, MetricUnit } from "./types";
+import { canonicalMetricName, isRetentionMetricName } from "./metric-identity";
 
 /** A metric together with the benchmark record that supplied its conditions. */
 export interface MetricEntry {
@@ -29,6 +30,8 @@ export interface PerformanceGroup {
 export interface AccuracyPair {
   key: string;
   metric: string;
+  /** Canonical identity, so `TOP1` and `top-1` are one measurement. */
+  canonicalMetric: string;
   dataset?: string;
   unit: MetricUnit;
   scope?: string;
@@ -36,6 +39,12 @@ export interface AccuracyPair {
   artifact: string;
   float?: MetricEntry;
   quantized?: MetricEntry;
+  /**
+   * A published value whose stage the source does not label (or labels as
+   * compiled/runtime). It must stay visible: an unlabelled stage is not the
+   * same statement as “not yet measured”.
+   */
+  other?: MetricEntry;
   retention?: MetricEntry;
   retentionValue?: number;
   retentionSource?: "explicit" | "derived";
@@ -99,9 +108,57 @@ function metricEntry(record: BenchmarkRecord, metric: MetricRecord, kind: Metric
 }
 
 /**
+ * Timing-scope equivalence class for grouping.
+ *
+ * The three release lines label the plain BPU timing measurement differently
+ * (`BPU task`, `BPU; 2 threads`, `multi-thread`, `frame rate`, `100 frames`,
+ * no scope at all…). Those wordings all describe the same row: the thread
+ * configuration is already carried by `concurrency`. Groupring by the raw
+ * wording split one measurement into several rows — a latency row, a separate
+ * FPS row and one row per thread count — so the wording is folded into one
+ * class here. Scopes that describe a genuinely different measurement context
+ * (encoder/decoder, pooler vs last hidden state, compiler estimates, post
+ * processing) keep their own class and stay separate rows.
+ */
+const BPU_SCOPE_CLASS_PATTERNS: RegExp[] = [
+  /^bpu( task)?([;,.]|$)/,
+  /^bpu (single|multi)[- ]?thread/,
+  /^bpu throughput( summary)?$/,
+  /^(single|multi|two|three|four|eight|twelve)[- ]?thread/,
+  /^single-frame, single-thread/,
+  /^frame rate$/,
+  /^[0-9]+\s*frames?(, core_id [0-9,]+)?$/,
+  /^hrt_model_exec perf/,
+  /^model execution only$/,
+  /^measured latency table$/,
+  /^[0-9]+×[0-9]+, single core$/
+];
+
+function performanceScopeClass(scope: string | undefined): string {
+  if (!scope) return "bpu";
+  const value = scope.trim().toLowerCase();
+  if (BPU_SCOPE_CLASS_PATTERNS.some((pattern) => pattern.test(value))) {
+    return "bpu";
+  }
+  return `scope:${value}`;
+}
+
+/**
+ * An unstated statistic is the natural default of the stated one: a latency
+ * published without a statistic and the mean latency beside it belong to the
+ * same row. Explicit statistics (min/p50/…) still produce their own rows.
+ */
+function statisticClass(statistic: MetricRecord["statistic"]): string {
+  return statistic ?? "mean";
+}
+
+/**
  * Groups performance measurements only when their timing scope and statistic
  * are compatible. Unknown concurrency is intentionally kept as its own
- * thread bucket instead of silently becoming one thread.
+ * thread bucket instead of silently becoming one thread. When folding scopes
+ * into one class would put two latencies (or two throughputs) of different
+ * raw scopes into the same thread bucket, the second entry keeps its own
+ * exact-scope group instead of being hidden.
  */
 export function groupPerformanceMetrics(records: BenchmarkRecord[]): PerformanceGroup[] {
   const groups = new Map<string, PerformanceGroup>();
@@ -110,42 +167,98 @@ export function groupPerformanceMetrics(records: BenchmarkRecord[]): Performance
       const artifact = artifactForRecord(record);
       const scope = metric.scope;
       const statistic = metric.statistic;
-      const key = JSON.stringify([
+      const makeKey = (scopeKey: string): string => JSON.stringify([
         record.variant_id,
         artifact,
         inputKey(record),
-        optionalKey(scope),
-        statisticKey(statistic)
+        scopeKey,
+        statisticClass(statistic)
       ]);
-      const existing = groups.get(key) ?? {
-        key,
-        variantId: record.variant_id,
-        artifact,
-        scope,
-        statistic,
-        threads: [],
-        metrics: []
-      };
       const entry = metricEntry(record, metric, "performance");
-      existing.metrics.push(entry);
       const concurrency = validConcurrency(metric.concurrency);
-      let thread = existing.threads.find((candidate) => candidate.concurrency === concurrency);
-      if (thread === undefined) {
-        thread = { concurrency, metrics: [] };
-        existing.threads.push(thread);
-        existing.threads.sort((left, right) => {
-          if (left.concurrency === undefined) return 1;
-          if (right.concurrency === undefined) return -1;
-          return left.concurrency - right.concurrency;
-        });
+
+      const placeInto = (group: PerformanceGroup): void => {
+        group.metrics.push(entry);
+        let thread = group.threads.find((candidate) => candidate.concurrency === concurrency);
+        if (thread === undefined) {
+          thread = { concurrency, metrics: [] };
+          group.threads.push(thread);
+          group.threads.sort((left, right) => {
+            if (left.concurrency === undefined) return 1;
+            if (right.concurrency === undefined) return -1;
+            return left.concurrency - right.concurrency;
+          });
+        }
+        thread.metrics.push(entry);
+        const occupied = isLatencyMetric(metric) ? thread.latency : undefined;
+        const occupiedThroughput = isThroughputMetric(metric) ? thread.throughput : undefined;
+        const incumbent = occupied ?? occupiedThroughput;
+        if (incumbent !== undefined && incumbent.metric.scope !== scope) {
+          // Collision from a different raw scope: this entry would be hidden.
+          // Undo the partial placement; the caller falls back to exact scope.
+          group.metrics.pop();
+          thread.metrics.pop();
+          if (thread.metrics.length === 0) {
+            group.threads.splice(group.threads.indexOf(thread), 1);
+          }
+          return;
+        }
+        if (isLatencyMetric(metric)) thread.latency ??= entry;
+        if (isThroughputMetric(metric)) thread.throughput ??= entry;
+      };
+
+      const classKey = makeKey(performanceScopeClass(scope));
+      let group = groups.get(classKey);
+      if (group === undefined) {
+        group = {
+          key: classKey,
+          variantId: record.variant_id,
+          artifact,
+          scope,
+          statistic,
+          threads: [],
+          metrics: []
+        };
+        groups.set(classKey, group);
       }
-      thread.metrics.push(entry);
-      if (isLatencyMetric(metric)) thread.latency ??= entry;
-      if (isThroughputMetric(metric)) thread.throughput ??= entry;
-      groups.set(key, existing);
+      const before = group.metrics.length;
+      placeInto(group);
+      if (group.metrics.length === before) {
+        // collision: keep the entry visible in its own exact-scope group
+        const exactKey = makeKey(optionalKey(scope));
+        let exact = groups.get(exactKey);
+        if (exact === undefined) {
+          exact = {
+            key: exactKey,
+            variantId: record.variant_id,
+            artifact,
+            scope,
+            statistic,
+            threads: [],
+            metrics: []
+          };
+          groups.set(exactKey, exact);
+        }
+        const beforeExact = exact.metrics.length;
+        placeInto(exact);
+        if (exact.metrics.length === beforeExact) {
+          // pathological duplicate: keep it as its own single-entry group
+          const singleton: PerformanceGroup = {
+            key: `${exactKey}#${groups.size}`,
+            variantId: record.variant_id,
+            artifact,
+            scope,
+            statistic,
+            threads: [],
+            metrics: []
+          };
+          placeInto(singleton);
+          groups.set(singleton.key, singleton);
+        }
+      }
     }
   }
-  return [...groups.values()];
+  return [...groups.values()].filter((group) => group.metrics.length > 0);
 }
 
 /** Return only groups that have a latency or throughput measurement. */
@@ -156,12 +269,7 @@ export function primaryPerformanceGroups(records: BenchmarkRecord[]): Performanc
 }
 
 function isRetentionMetric(metric: MetricRecord): boolean {
-  const name = normalized(metric.metric);
-  return name === "retention"
-    || name.endsWith("-retention")
-    || name.endsWith("_retention")
-    || name.endsWith(" retention")
-    || name.includes("retention");
+  return isRetentionMetricName(metric.metric);
 }
 
 /** Remove the conventional suffix from an explicit retention metric name. */
@@ -224,7 +332,7 @@ function accuracyKey(
   metricName = metric.metric
 ): string {
   return JSON.stringify([
-    normalized(metricName),
+    canonicalMetricName(metricName),
     optionalKey(metric.dataset),
     metric.unit,
     optionalKey(metric.scope),
@@ -236,7 +344,7 @@ function accuracyKey(
 
 function explicitRetentionKey(record: BenchmarkRecord, metric: MetricRecord): string {
   return JSON.stringify([
-    normalized(retentionBaseMetric(metric.metric) ?? metric.metric),
+    canonicalMetricName(retentionBaseMetric(metric.metric) ?? metric.metric),
     optionalKey(metric.dataset),
     optionalKey(metric.scope),
     statisticKey(metric.statistic),
@@ -315,6 +423,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
     const existing = pairs.get(key) ?? {
       key,
       metric: metric.metric,
+      canonicalMetric: canonicalMetricName(metric.metric),
       dataset: metric.dataset,
       unit: metric.unit,
       scope: metric.scope,
@@ -324,6 +433,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
     };
     if (metric.model_stage === "float") existing.float ??= entry;
     else if (metric.model_stage === "quantized") existing.quantized ??= entry;
+    else existing.other ??= entry;
     pairs.set(key, existing);
   }
 
@@ -336,7 +446,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
       continue;
     }
     const retentionKey = JSON.stringify([
-      normalized(pair.metric),
+      pair.canonicalMetric,
       optionalKey(pair.dataset),
       optionalKey(pair.scope),
       statisticKey(pair.statistic),
@@ -351,6 +461,12 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
     pair.retentionStatus = display.status;
     if (display.status === "not-measured" && (pair.float !== undefined || pair.quantized !== undefined)) {
       if (hasOppositeStage(pair, entries)) pair.retentionStatus = "not-comparable";
+    }
+    // A value published without a float/quantized split has no counterpart to
+    // compare against. Say so instead of implying it was never measured.
+    if (display.status === "not-measured" && pair.float === undefined && pair.quantized === undefined
+      && pair.other !== undefined && pair.retention === undefined) {
+      pair.retentionStatus = "not-applicable";
     }
   }
 
@@ -367,7 +483,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
           && optionalKey(pair.scope) === optionalKey(entry.metric.scope)
           && statisticKey(pair.statistic) === statisticKey(entry.metric.statistic)
           && (() => {
-            const pairRecord = pair.float?.record ?? pair.quantized?.record;
+            const pairRecord = pair.float?.record ?? pair.quantized?.record ?? pair.other?.record;
             return pairRecord !== undefined && inputKey(pairRecord) === inputKey(entry.record);
           })()
         );
@@ -384,6 +500,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
         pairs.set(key, {
           key,
           metric: entry.metric.metric,
+          canonicalMetric: canonicalMetricName(retentionBaseMetric(entry.metric.metric) ?? entry.metric.metric),
           dataset: entry.metric.dataset,
           unit: entry.metric.unit,
           scope: entry.metric.scope,
@@ -396,13 +513,13 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
         });
         continue;
       }
-      const hasPair = [...pairs.values()].some((pair) => normalized(pair.metric) === normalized(base)
+      const hasPair = [...pairs.values()].some((pair) => pair.canonicalMetric === canonicalMetricName(base)
         && pair.artifact === entry.artifact
         && optionalKey(pair.dataset) === optionalKey(entry.metric.dataset)
         && optionalKey(pair.scope) === optionalKey(entry.metric.scope)
         && statisticKey(pair.statistic) === statisticKey(entry.metric.statistic)
         && (() => {
-          const pairRecord = pair.float?.record ?? pair.quantized?.record;
+          const pairRecord = pair.float?.record ?? pair.quantized?.record ?? pair.other?.record;
           return pairRecord !== undefined && inputKey(pairRecord) === inputKey(entry.record);
         })());
       if (!hasPair) {
@@ -411,6 +528,7 @@ export function pairAccuracyMetrics(records: BenchmarkRecord[]): AccuracyPair[] 
         pairs.set(key, {
           key,
           metric: base,
+          canonicalMetric: canonicalMetricName(base),
           dataset: entry.metric.dataset,
           unit: entry.metric.unit,
           scope: entry.metric.scope,

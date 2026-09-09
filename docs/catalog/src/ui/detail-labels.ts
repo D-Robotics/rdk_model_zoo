@@ -89,7 +89,7 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     manualDownload: "Manual model required",
     available: "Available",
     checksum: "SHA-256",
-    noAssets: "No runnable model assets published",
+    noAssets: "Model files not published for this variant",
     noPerformance: "Performance not yet measured",
     noAccuracy: "Accuracy not yet measured"
   },
@@ -135,7 +135,7 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     manualDownload: "需要手动提供模型",
     available: "可用",
     checksum: "SHA-256",
-    noAssets: "暂无可运行模型资产",
+    noAssets: "该规格未发布模型文件",
     noPerformance: "性能尚未实测",
     noAccuracy: "精度尚未实测"
   }
@@ -149,37 +149,61 @@ const hardwareNames: Record<Locale, Record<HardwareId, string>> = {
 const taskNames: Record<Locale, Record<string, string>> = {
   en: {
     "image-classification": "Image classification",
+    "image-embedding": "Image embedding",
     "image-text-similarity": "Image-text similarity",
     "instance-segmentation": "Instance segmentation",
+    "autonomous-driving": "Autonomous driving",
+    "keyword-spotting": "Keyword spotting",
+    "lane-detection": "Lane detection",
     "legged-locomotion-control": "Legged locomotion control",
     "license-plate-recognition": "License plate recognition",
     "monocular-depth-estimation": "Monocular depth estimation",
+    "multi-object-tracking": "Multi-object tracking",
     "object-detection": "Object detection",
     "ocr-text-detection": "OCR text detection",
     "ocr-text-recognition": "OCR text recognition",
     "open-vocabulary-object-detection": "Open-vocabulary object detection",
     "oriented-bounding-box-detection": "Oriented bounding box detection",
+    "point-cloud-segmentation": "Point cloud segmentation",
     "portrait-matting": "Portrait matting",
     "pose-estimation": "Pose estimation",
     "promptable-image-segmentation": "Promptable image segmentation",
-    "semantic-segmentation": "Semantic segmentation"
+    "semantic-segmentation": "Semantic segmentation",
+    "speech-recognition": "Speech recognition",
+    "text-detection": "Text detection",
+    "text-recognition": "Text recognition",
+    "video-action-classification": "Video action classification",
+    "vision-embedding": "Vision embedding",
+    "vision-language-model": "Vision-language model"
   },
   zh: {
     "image-classification": "图像分类",
+    "image-embedding": "图像特征",
     "image-text-similarity": "图文相似度",
     "instance-segmentation": "实例分割",
+    "autonomous-driving": "自动驾驶",
+    "keyword-spotting": "关键词唤醒",
+    "lane-detection": "车道线检测",
     "legged-locomotion-control": "足式运动控制",
     "license-plate-recognition": "车牌识别",
     "monocular-depth-estimation": "单目深度估计",
+    "multi-object-tracking": "多目标跟踪",
     "object-detection": "目标检测",
     "ocr-text-detection": "OCR 文本检测",
     "ocr-text-recognition": "OCR 文本识别",
     "open-vocabulary-object-detection": "开放词汇目标检测",
     "oriented-bounding-box-detection": "旋转目标检测",
+    "point-cloud-segmentation": "点云分割",
     "portrait-matting": "人像抠图",
     "pose-estimation": "姿态估计",
     "promptable-image-segmentation": "提示式图像分割",
-    "semantic-segmentation": "语义分割"
+    "semantic-segmentation": "语义分割",
+    "speech-recognition": "语音识别",
+    "text-detection": "文本检测",
+    "text-recognition": "文本识别",
+    "video-action-classification": "视频动作分类",
+    "vision-embedding": "视觉特征",
+    "vision-language-model": "视觉语言模型"
   }
 };
 
