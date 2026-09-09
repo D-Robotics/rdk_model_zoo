@@ -2,20 +2,25 @@ model_parameters:
   onnx_model: 'yoloe-11s-seg-pf.onnx'
   march: "bayes-e"
   layer_out_dump: False
-  working_dir: 'yoloe11s_seg_pf_bayese_640x640_nv12'
-  output_model_file_prefix: 'yoloe11s_seg_pf_bayese_640x640_nv12'
+  working_dir: 'yoloe_11s_seg_pf_bayese_640x640_nv12'
+  output_model_file_prefix: 'yoloe_11s_seg_pf_bayese_640x640_nv12'
   node_info: {"/model.10/m/m.0/attn/Softmax": {'ON': 'BPU','InputType': 'int16','OutputType': 'int16'}}
 input_parameters:
-  input_name: ""
+  input_name: "images"
+  input_shape: '1x3x640x640'
   input_type_rt: 'nv12'
   input_type_train: 'rgb'
   input_layout_train: 'NCHW'
   norm_type: 'data_scale'
-  scale_value: 0.003921568627451
+  scale_value: '0.00392156862745098'
 calibration_parameters:
+  calibration_type: 'default'
   cal_data_dir: './calibration_data_rgb_f32_640'
   cal_data_type: 'float32'
 compiler_parameters:
   compile_mode: 'latency'
   debug: False
   optimize_level: 'O3'
+  core_num: 1
+  input_source: {"images": "pyramid"}
+  jobs: 4

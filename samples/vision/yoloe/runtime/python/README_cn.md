@@ -20,13 +20,17 @@ chmod +x run.sh
 ./run.sh
 ```
 
-脚本会在缺少默认模型时自动下载 `yoloe-11s-seg-pf_bayese_640x640_nv12.bin` 到 `../../model/`，并将结果图保存到 `../../test_data/result_seg.jpg`。
+脚本会在缺少默认模型时自动下载 `yoloe_11s_seg_pf_bayese_640x640_nv12.bin` 到 `../../model/`，并将结果图保存到 `../../test_data/result_seg.jpg`。
+
+s/m/l 共用此入口。通过 `--model-path` 指定模型时，脚本不会下载默认 s 模型。
 
 ## 手动运行
 
 ```bash
 python3 main.py
-python3 main.py --model-path ../../model/yoloe-11s-seg-pf_bayese_640x640_nv12.bin
+python3 main.py --model-path ../../model/yoloe_11s_seg_pf_bayese_640x640_nv12.bin
+python3 main.py --model-path ../../model/yoloe_11m_seg_pf_bayese_640x640_nv12.bin
+python3 main.py --model-path ../../model/yoloe_11l_seg_pf_bayese_640x640_nv12.bin
 python3 main.py --img-save-path ../../test_data/result_custom.jpg
 python3 main.py --score-thres 0.3 --nms-thres 0.65
 ```
@@ -39,7 +43,7 @@ python3 main.py -h
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| `--model-path` | BPU 量化 YOLOE BIN 模型路径。 | `../../model/yoloe-11s-seg-pf_bayese_640x640_nv12.bin` |
+| `--model-path` | BPU 量化 YOLOE BIN 模型路径。 | `../../model/yoloe_11s_seg_pf_bayese_640x640_nv12.bin` |
 | `--test-img` | 测试输入图片路径。 | `../../../../../datasets/coco/assets/bus.jpg` |
 | `--label-file` | 可视化使用的类别名称文件路径。 | `../../../../../datasets/yoloe/yoloe_seg_pf_classes.names` |
 | `--img-save-path` | 结果图保存路径。 | `../../test_data/result_seg.jpg` |
