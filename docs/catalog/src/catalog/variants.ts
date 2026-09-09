@@ -90,6 +90,14 @@ function familyFromText(value: string): { id: string; name: string } | undefined
   ) {
     return { id: "mobilenet", name: "MobileNet" };
   }
+  // ResNet is one family across release lines: X3/X5 publish `resnet`
+  // (ResNet18) while S publishes resnet18/50/152 as separate samples. All
+  // are the same classifier family, so they aggregate like MobileNet does.
+  // `3dresnet` (3D convolutions) and `unet resnet*` backbones are different
+  // models and keep their own cards.
+  if (!/(^|[^a-z0-9])(?:3d[-_]?resnet|unet[-_]?resnet)/.test(text) && /(^|[^a-z0-9])resnet(?:\d{2,3})?(?=$|[^a-z0-9])/.test(text)) {
+    return { id: "resnet", name: "ResNet" };
+  }
   return undefined;
 }
 

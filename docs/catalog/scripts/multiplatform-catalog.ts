@@ -96,6 +96,14 @@ function familyIdentity(model: ManifestModel, benchmark?: BenchmarkRecord): { id
   ) {
     return { id: "mobilenet", name: "MobileNet" };
   }
+  // ResNet18/50/152 across release lines are one classifier family, exactly
+  // like MobileNet v1-v4; `3dresnet` is a different model.
+  if (
+    !/(^|[^a-z0-9])(?:3d[-_]?resnet|unet[-_]?resnet)/.test(text)
+    && /(^|[^a-z0-9])resnet(?:\d{2,3})?(?=$|[^a-z0-9])/.test(text)
+  ) {
+    return { id: "resnet", name: "ResNet" };
+  }
   return {
     id: canonicalFamilyId(model.id),
     name: officialFamilyName(canonicalFamilyId(model.id), model.name)
@@ -110,6 +118,10 @@ function assetFamilyId(asset: ManifestModel["assets"][number]): string | undefin
     !/(^|[^a-z0-9])unet[_-]?mobilenet/.test(text)
     && /(^|[^a-z0-9])mobilenet(?:v?\d+)?(?=$|[^a-z0-9])/.test(text)
   ) return "mobilenet";
+  if (
+    !/(^|[^a-z0-9])(?:3d[-_]?resnet|unet[-_]?resnet)/.test(text)
+    && /(^|[^a-z0-9])resnet(?:\d{2,3})?(?=$|[^a-z0-9])/.test(text)
+  ) return "resnet";
   return undefined;
 }
 
@@ -122,6 +134,12 @@ function familyIdentityFromAsset(asset: ManifestModel["assets"][number]): { id: 
     && /(^|[^a-z0-9])mobilenet(?:v?\d+)?(?=$|[^a-z0-9])/.test(text)
   ) {
     return { id: "mobilenet", name: "MobileNet" };
+  }
+  if (
+    !/(^|[^a-z0-9])(?:3d[-_]?resnet|unet[-_]?resnet)/.test(text)
+    && /(^|[^a-z0-9])resnet(?:\d{2,3})?(?=$|[^a-z0-9])/.test(text)
+  ) {
+    return { id: "resnet", name: "ResNet" };
   }
   return undefined;
 }
