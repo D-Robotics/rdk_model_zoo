@@ -11,8 +11,8 @@ export function renderEditorialIntro(locale: Locale): HTMLElement {
   eyebrow.textContent = "D-ROBOTICS / MODEL ZOO";
   const heading = document.createElement("h1");
   heading.id = "catalog-hero-title";
-  heading.append(zh ? "找到模型，" : "Find your model.", document.createElement("br"),
-    zh ? "让想法运行。" : "Make it run.");
+  if (zh) heading.textContent = "找到模型，让想法运行。";
+  else heading.append("Find your model.", document.createElement("br"), "Make it run.");
   const description = document.createElement("p");
   description.className = "catalog-hero-description";
   description.textContent = zh
