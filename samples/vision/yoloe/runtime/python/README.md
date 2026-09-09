@@ -20,13 +20,17 @@ chmod +x run.sh
 ./run.sh
 ```
 
-The script downloads the default `yoloe-11s-seg-pf_bayese_640x640_nv12.bin` model into `../../model/` if needed and saves the result image into `../../test_data/result_seg.jpg`.
+The script downloads the default `yoloe_11s_seg_pf_bayese_640x640_nv12.bin` model into `../../model/` if needed and saves the result image into `../../test_data/result_seg.jpg`.
+
+s/m/l share this entry point. An explicit `--model-path` skips the default s download.
 
 ## Manual Execution
 
 ```bash
 python3 main.py
-python3 main.py --model-path ../../model/yoloe-11s-seg-pf_bayese_640x640_nv12.bin
+python3 main.py --model-path ../../model/yoloe_11s_seg_pf_bayese_640x640_nv12.bin
+python3 main.py --model-path ../../model/yoloe_11m_seg_pf_bayese_640x640_nv12.bin
+python3 main.py --model-path ../../model/yoloe_11l_seg_pf_bayese_640x640_nv12.bin
 python3 main.py --img-save-path ../../test_data/result_custom.jpg
 python3 main.py --score-thres 0.3 --nms-thres 0.65
 ```
@@ -39,7 +43,7 @@ python3 main.py -h
 
 | Argument | Description | Default |
 | --- | --- | --- |
-| `--model-path` | Path to the BPU quantized YOLOE BIN model. | `../../model/yoloe-11s-seg-pf_bayese_640x640_nv12.bin` |
+| `--model-path` | Path to the BPU quantized YOLOE BIN model. | `../../model/yoloe_11s_seg_pf_bayese_640x640_nv12.bin` |
 | `--test-img` | Path to the test input image. | `../../../../../datasets/coco/assets/bus.jpg` |
 | `--label-file` | Path to the class names file used by visualization. | `../../../../../datasets/yoloe/yoloe_seg_pf_classes.names` |
 | `--img-save-path` | Path to save the output image. | `../../test_data/result_seg.jpg` |

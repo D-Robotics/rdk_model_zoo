@@ -2,6 +2,10 @@
 
 本文规定 RDK Model Zoo 的发版流程。当前阶段保持流程简洁，不要求设置 RDK 板卡测试门禁。自动检查用于校验发版 Manifest 和在线模型目录，不代表模型已经通过板端运行认证。
 
+多平台目录按以下顺序发版：先准备并发布 S、X3，再在 X5 的 `docs/release/catalog-sources.json` 固定它们的附注 Tag，最后发布 X5 并部署目录。X5 清单读取自身发布检出，不读取其他本地或活动远端分支。GitHub 仓库级 Latest 指向 X5；三个硬件版本仍独立维护。
+
+每次发布须按实际条目重新核对汇总统计，从 Tag 原样导出两份 YAML 附件，并附上它们的 `SHA256SUMS`。该文件只校验清单附件，不代表外部模型文件已有哈希。已推送的准备版 Tag 保留不动，元数据修正使用新的补丁 Tag。
+
 ## 1. 版本线与命名
 
 X5、S、X3 三条版本线独立维护。每条版本线使用 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)：`MAJOR.MINOR.PATCH`。
@@ -22,26 +26,26 @@ X5、S、X3 三条版本线独立维护。每条版本线使用 [Semantic Versio
 
 - `VERSION`：平台版本号。
 - `CHANGELOG.md`：面向用户的变更和已知限制。
-- `release/models.yaml`：该版本的模型 manifest。
-- `release/benchmarks.yaml`：该版本已公开的性能与精度证据。
+- `docs/release/models.yaml`：该版本的模型 manifest。
+- `docs/release/benchmarks.yaml`：该版本已经记录的性能与精度实测结果。
 - `docs/releases/<tag>.md`：用于 GitHub Release 的发版说明。
 
 Manifest 记录本版本提供的模型和资源、示例路径、下载脚本或 URL、文件格式，以及已知的校验和。未知的 SHA-256 必须明确写为 `null`，不能猜测或伪造。只要 manifest 中存在 `sha256: null`，发版说明就必须披露校验和覆盖不完整。
 
-模型 Manifest 与 Benchmark Manifest 描述已发布的源码资源和文档中公开的测量结果。YAML Manifest、GitHub Release 资产和模型 README 是权威来源，在线模型目录是它们的展示层。除来源文档明确记录的条件外，这些内容不代表板端运行或兼容性认证。
+模型 Manifest 与 Benchmark Manifest 描述已发布的源码资源和文档中已经记录的测量结果。YAML Manifest、GitHub Release 资产和模型 README 是权威来源，在线模型目录是它们的展示层。缺失的性能或精度指标表示该版本尚未完成或记录对应实测，不表示数据受限或保密。除来源文档明确记录的条件外，这些内容不代表板端运行或兼容性认证。
 
 ## 3. 人工发版流程
 
 1. 选择一条平台分支，并确认发版内容属于该平台。
-2. 更新 `VERSION`、`CHANGELOG.md`、`release/models.yaml`、`release/benchmarks.yaml` 和 `docs/releases/<tag>.md`，两个 Manifest 都必须填写新的 Release Tag。
+2. 更新 `VERSION`、`CHANGELOG.md`、`docs/release/models.yaml`、`docs/release/benchmarks.yaml` 和 `docs/releases/<tag>.md`，两个 Manifest 都必须填写新的 Release Tag。
 3. 复核 Manifest：示例路径和下载脚本必须存在，URL 必须正确，未知校验和必须写为 `null`，每条 Benchmark 必须引用不可变的仓库证据；检查发版文件中的 Tag、分支、平台和版本一致。
 4. 复核源码差异，并从全新依赖安装开始校验在线目录：
 
    ```bash
-   cd site
+   cd docs/catalog
    npm ci
    npm run check
-   cd ..
+   cd ../..
    git diff --check
    ```
 
@@ -62,14 +66,14 @@ Manifest 记录本版本提供的模型和资源、示例路径、下载脚本�
 
    ```bash
    gh release create x5-v1.0.0 \
-     "release/models.yaml#models.yaml" \
-     "release/benchmarks.yaml#benchmarks.yaml" \
+     "docs/release/models.yaml#models.yaml" \
+     "docs/release/benchmarks.yaml#benchmarks.yaml" \
      --title "RDK Model Zoo X5 v1.0.0" \
      --notes-file docs/releases/x5-v1.0.0.md \
      --verify-tag
    ```
 
-8. 对于 `x5-v*` Release，等待 `.github/workflows/model-catalog-pages.yml` 完成目录部署。打开[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)，核对页面显示的 Release Tag、模型数量、资产数量和代表性来源链接。S 和 X3 Release 会发布各自 Manifest，但在多平台目录完成前不会替换当前仅含 X5 数据的目录；这些 Tag 的 Pages 构建会被跳过。
+8. 对于 `x5-v*` Release，等待 `.github/workflows/model-catalog-pages.yml` 完成目录部署。打开[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)，核对页面显示的 Release Tag、模型数量、资产数量和代表性来源链接。在线目录按精确模型变体聚合不可变的 X5、S 与 X3 Release Manifest。S 和 X3 的 Release 事件仍会跳过 Pages，因为聚合目录由 X5 Release 或人工触发部署。
 9. 复核 GitHub Release、Release 附件、Tag、分支提交、`VERSION`、仓库 Manifest 和在线目录是否指向同一个平台版本。项目流程需要时，在变更记录或发版记录中记录 Release URL 和提交号。
 
 如果 Pages 部署失败，应修复来源并发布修正提交和新 Tag。`workflow_dispatch` 只能用于重试一个内容未变且已经批准的 ref，不能用它把已发布 Tag 对应的数据替换为其他内容。

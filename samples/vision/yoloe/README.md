@@ -4,6 +4,8 @@ English | [简体中文](./README_cn.md)
 
 This directory provides the complete usage guide for the YOLOE sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
+This sample provides conversion and Python inference for YOLOE-11s/m/l Seg Prompt-Free with 640x640 NV12 input.
+
 ---
 
 ## Algorithm Overview
@@ -33,7 +35,7 @@ This directory contains:
 │   ├── onnx_export/
 │   │   └── export_yoloe11seg_bpu.py
 │   ├── ptq_yamls/
-│   │   └── yoloe11s_seg_pf_bayese_640x640_nv12.yaml
+│   │   └── yoloe_11s_seg_pf_bayese_640x640_nv12.yaml
 │   ├── README.md
 │   └── README_cn.md
 ├── evaluator/                         # Accuracy and performance evaluation
@@ -76,7 +78,7 @@ For a quick experience, the Python sample provides a `run.sh` script that allows
 
 ## Model Conversion
 
-ModelZoo provides pre-adapted BIN model files. Users can directly run the download script in the `model` directory to download and use them.
+ModelZoo provides YOLOE-11s/m/l Seg-PF BIN downloads. See the download script and instructions in the `model` directory.
 
 If you need to reproduce the conversion flow from the YOLOE project, refer to [conversion/README.md](./conversion/README.md) for:
 
@@ -107,13 +109,11 @@ YOLOE runtime inference sample currently provides a Python implementation.
 
 ## Performance Data
 
-The following table shows the reference performance data of YOLOE on the RDK X5 platform.
-
 | Model | Size | Threads | Latency | FPS |
 | --- | --- | ---: | --- | --- |
-| YOLOE-11s-Seg-PF | 640x640 | 1 | 142.9 ms | 7.0 FPS |
-| YOLOE-11s-Seg-PF | 640x640 | 2 | 149.5 ms | 13.3 FPS |
-| YOLOE-11s-Seg-PF | 640x640 | 3 | 167.4 ms | 17.8 FPS |
+| YOLOE-11s-Seg-PF | 640x640 | 1 | 146.16 ms | 6.84 FPS |
+| YOLOE-11m-Seg-PF | 640x640 | 1 | 177.14 ms | 5.65 FPS |
+| YOLOE-11l-Seg-PF | 640x640 | 1 | 189.97 ms | 5.26 FPS |
 
 ---
 

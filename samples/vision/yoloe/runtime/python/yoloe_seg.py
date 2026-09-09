@@ -43,6 +43,7 @@ import os
 import sys
 import time
 import logging
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
@@ -50,7 +51,7 @@ import cv2
 import hbm_runtime
 import numpy as np
 
-sys.path.append(os.path.abspath("../../../../../"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]))
 import utils.py_utils.preprocess as pre_utils
 import utils.py_utils.postprocess as post_utils
 
@@ -79,7 +80,9 @@ def process_mask(protos: np.ndarray,
                  masks_in: np.ndarray,
                  bboxes: np.ndarray,
                  shape: Tuple[int, int],
-                 upsample: bool = False) -> np.ndarray:
+                 upsample: bool = False,
+                 input_shape: Tuple[int, int] = (640, 640),
+                 resize_type: int = 1) -> np.ndarray:
     """Build instance masks from prototype features and mask coefficients.
 
     Args:
@@ -88,6 +91,8 @@ def process_mask(protos: np.ndarray,
         bboxes: Bounding boxes in model input coordinates.
         shape: Target ``(height, width)`` for output masks.
         upsample: Whether to resize masks to the target image shape.
+        input_shape: Model input height and width.
+        resize_type: Match the runtime resize (0) or letterbox (1).
 
     Returns:
         Binary instance masks aligned to the target image shape.
@@ -97,12 +102,22 @@ def process_mask(protos: np.ndarray,
 
     masks = (masks_in @ protos.reshape(c, -1)).reshape(-1, mh, mw)
     masks = post_utils.sigmoid(masks)
-    downsampled_bboxes = bboxes * (mh / 640.0)
+    input_h, input_w = input_shape
+    downsampled_bboxes = bboxes * np.array([mw / input_w, mh / input_h,
+                                           mw / input_w, mh / input_h])
     masks = crop_mask(masks, downsampled_bboxes)
 
     if upsample:
         resized_masks = []
         for m in masks:
+            m = cv2.resize(m, (input_w, input_h), interpolation=cv2.INTER_LINEAR)
+            if resize_type == 1:
+                scale = min(input_h / ih, input_w / iw)
+                new_w, new_h = int(iw * scale), int(ih * scale)
+                left, top = (input_w - new_w) // 2, (input_h - new_h) // 2
+                m = m[top:top + new_h, left:left + new_w]
+            elif resize_type != 0:
+                raise ValueError("resize_type must be 0 or 1")
             m_res = cv2.resize(m, (iw, ih), interpolation=cv2.INTER_LINEAR)
             resized_masks.append(m_res)
         masks = np.array(resized_masks)
@@ -222,13 +237,26 @@ class YOLOESeg:
         self.output_names = self.model.output_names[self.model_name]
         self.input_shapes = self.model.input_shapes[self.model_name]
 
+        if len(self.input_names) != 1 or len(self.output_names) != 10:
+            raise ValueError("YOLOE-11 PF requires one image input and ten NHWC outputs.")
         input_shape = self.input_shapes[self.input_names[0]]
+        if len(input_shape) != 4 or input_shape[0] != 1:
+            raise ValueError(f"Unsupported input metadata: {input_shape}")
         if input_shape[1] == 3:
             self.input_h = input_shape[2]
             self.input_w = input_shape[3]
-        else:
+        elif input_shape[3] == 3:
             self.input_h = input_shape[1]
             self.input_w = input_shape[2]
+        else:
+            raise ValueError(f"Expected RGB-shaped NV12 input metadata, got {input_shape}")
+        if (self.input_h, self.input_w) != (640, 640):
+            raise ValueError("This YOLOE-11 PF runtime currently supports 640x640 models only.")
+        if (self.cfg.classes_num, self.cfg.reg, self.cfg.mc) != (4585, 16, 32):
+            raise ValueError("YOLOE-11 PF requires classes=4585, DFL=16, mask channels=32.")
+        if list(self.cfg.strides) != [8, 16, 32]:
+            raise ValueError("YOLOE-11 PF requires strides 8,16,32.")
+        self._resize_type = self.cfg.resize_type
 
         self.weights_static = np.arange(self.cfg.reg, dtype=np.float32)[np.newaxis, np.newaxis, :]
 
@@ -273,6 +301,7 @@ class YOLOESeg:
         t0 = time.time()
         if resize_type is None:
             resize_type = self.cfg.resize_type
+        self._resize_type = resize_type
 
         if image_format == "BGR":
             resize_img = pre_utils.resized_image(img, self.input_w, self.input_h, resize_type)
@@ -329,6 +358,15 @@ class YOLOESeg:
             nms_thres = self.cfg.nms_thres
 
         raw_outputs = outputs[self.model_name]
+        expected = []
+        for size in (80, 40, 20):
+            expected.extend([(1, size, size, c) for c in (4585, 64, 32)])
+        expected.append((1, 160, 160, 32))
+        for name, shape in zip(self.output_names, expected):
+            tensor = raw_outputs[name]
+            if tensor.shape != shape or not np.issubdtype(tensor.dtype, np.floating):
+                raise ValueError(f"Output {name}: expected dequantized float {shape}, "
+                                 f"got {tensor.shape} {tensor.dtype}")
         decoded = []
 
         for i, stride in enumerate(self.cfg.strides):
@@ -373,11 +411,12 @@ class YOLOESeg:
         masks = process_mask(
             proto_tensor, mask_coefs, xyxy,
             (ori_img_h, ori_img_w), upsample=True,
+            input_shape=(self.input_h, self.input_w), resize_type=self._resize_type,
         )
 
         xyxy = post_utils.scale_coords_back(
             xyxy, ori_img_w, ori_img_h,
-            self.input_w, self.input_h, self.cfg.resize_type,
+            self.input_w, self.input_h, self._resize_type,
         )
 
         logger.info(f"\033[1;31mPost Process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
