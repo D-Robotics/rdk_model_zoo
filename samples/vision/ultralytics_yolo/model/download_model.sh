@@ -7,7 +7,7 @@ MODELS=(
   "yolo11n_detect_bayese_640x640_nv12.bin"
   "yolo11n_seg_bayese_640x640_nv12.bin"
   "yolo11n_pose_bayese_640x640_nv12.bin"
-  "yolo11n_cls_detect_bayese_640x640_nv12.bin"
+  "yolo11n_cls_bayese_640x640_nv12.bin"
 )
 
 for model in "${MODELS[@]}"; do

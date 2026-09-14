@@ -1,6 +1,6 @@
 export type Locale = "zh" | "en";
 export type HardwareId = "x3" | "x5" | "s100" | "s100p" | "s600";
-export type MetricUnit = "ms" | "us" | "fps" | "percent" | "ratio" | "mae" | "rmse";
+export type MetricUnit = "ms" | "us" | "fps" | "percent" | "ratio" | "mae" | "rmse" | "MB" | "degrees" | "tokens/s";
 
 export interface MetricRecord {
   metric: string;
@@ -20,6 +20,7 @@ export interface BenchmarkRecord {
   variant_id: string;
   display_name: string;
   asset_filename?: string;
+  asset_filenames?: string[];
   model_format?: string;
   precision?: string;
   input?: { shape?: number[]; layout?: string; format?: string };
@@ -33,6 +34,7 @@ export interface BenchmarkRecord {
   performance?: MetricRecord[];
   accuracy?: MetricRecord[];
   source: {
+    repository_url?: string;
     ref: string;
     path: string;
     section: string;
@@ -47,7 +49,7 @@ export interface ModelRecord {
   sample_path: string;
   availability: "download" | "manual";
   download_scripts: string[];
-  assets: Array<{ filename: string; format: string; url?: string; sha256?: string | null }>;
+  assets: Array<{ filename: string; format: string; url?: string; sha256?: string | null; role?: "model" | "dependency"; display_name?: string }>;
   benchmarks: BenchmarkRecord[];
   variants?: ModelVariant[];
   /** Source records for this family on each release line. */

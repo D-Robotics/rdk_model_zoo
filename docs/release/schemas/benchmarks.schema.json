@@ -29,6 +29,7 @@
           "variant_id": { "type": "string", "minLength": 1 },
           "display_name": { "type": "string", "minLength": 1 },
           "asset_filename": { "type": "string", "minLength": 1 },
+          "asset_filenames": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
           "model_format": { "type": "string", "minLength": 1 },
           "precision": { "type": "string", "minLength": 1 },
           "input": {
@@ -64,6 +65,7 @@
                 "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$",
                 "description": "A release tag or full Git commit SHA; runtime validation requires the release tag to match or the SHA to be immutable."
               },
+              "repository_url": { "type": "string", "format": "uri", "pattern": "^https://" },
               "path": { "type": "string", "minLength": 1 },
               "section": { "type": "string", "minLength": 1 },
               "provenance": { "const": "existing-repository-documentation" }
@@ -83,7 +85,7 @@
         "properties": {
           "metric": { "type": "string", "minLength": 1 },
           "value": { "type": "number" },
-          "unit": { "enum": ["ms", "us", "fps", "percent", "ratio", "mae", "rmse"] },
+          "unit": { "enum": ["ms","us","fps","percent","ratio","mae","rmse","MB","degrees","tokens/s"] },
           "qualifier": { "enum": ["exact", "lower-bound", "upper-bound", "approximate"] },
           "statistic": { "enum": ["min", "mean", "p50", "p95", "max"] },
           "scope": { "type": "string", "minLength": 1 },

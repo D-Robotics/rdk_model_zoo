@@ -1,11 +1,16 @@
+import { renderRepresentativeDetails } from "./representative-details";
 import "./detail-layout.css";
+import "./readability-tables.css";
 import type { BenchmarkRecord, HardwareId, Locale, ModelRecord, ModelVariant } from "../catalog/types";
-import { getHardwareIds, getModelVariants, HARDWARE_IDS, normalizeHardware } from "../catalog/variants";
+import { getHardwareIds, getModelVariants, HARDWARE_IDS, isRunnableAsset, normalizeHardware } from "../catalog/variants";
 import { detailLabel, taskLabel } from "./detail-labels";
 import type { DetailContext } from "./detail-types";
 import { createHardwareTabs } from "./hardware-tabs";
 import { createTaskSelector } from "./task-selector";
 import { renderVariantBenchmarkTable } from "./variant-benchmark-table";
+import { renderEvidenceDetails } from "./evidence-details";
+import { groupPerformanceMetrics } from "../catalog/metric-display";
+import { sourceUrl } from "./detail-utils";
 
 export type { DetailContext } from "./detail-types";
 
@@ -41,7 +46,8 @@ function availableVariants(model: ModelRecord, context: DetailContext): ModelVar
     }
     const platformHardware = normalizeHardware(platform.platform);
     for (const [id, benchmarks] of grouped) {
-      const hardware = normalizeHardware(benchmarks[0]?.environment.hardware ?? "") ?? platformHardware;
+      const declaredHardware = benchmarks[0]?.environment.hardware?.trim();
+      const hardware = declaredHardware ? normalizeHardware(declaredHardware) : platformHardware;
       if (hardware === undefined) continue;
       result.push({
         id,
@@ -179,6 +185,7 @@ function renderTaskContent(
 ): HTMLElement {
   const section = document.createElement("section");
   section.className = "model-detail-content";
+  section.dataset.model = model.id;
   section.dataset.hardware = hardware;
   section.dataset.task = task;
 
@@ -194,16 +201,60 @@ function renderTaskContent(
   if (sample?.sample_path) {
     const sampleLink = document.createElement("a");
     sampleLink.className = "model-detail-sample-link";
-    sampleLink.href = `${context.repositoryUrl.replace(/\/$/, "")}/blob/${encodeURIComponent(sample.release_tag || context.releaseTag)}/${sample.sample_path}/README.md`;
+    const submoduleSource = sample.benchmarks.find(record => record.source.repository_url);
+    sampleLink.href = submoduleSource ? sourceUrl(submoduleSource, context.repositoryUrl)
+      : `${context.repositoryUrl.replace(/\/$/, "")}/blob/${encodeURIComponent(sample.release_tag || context.releaseTag)}/${sample.sample_path}/README.md`;
     sampleLink.textContent = detailLabel(context.locale, "source");
     header.append(sampleLink);
   }
-  section.append(header, renderVariantBenchmarkTable({
+  const representative = ["paraformer", "himloco", "siglip"].includes(model.id);
+  const renderTable = representative ? (options: Parameters<typeof renderVariantBenchmarkTable>[0]) => renderRepresentativeDetails(model.id, options) : renderVariantBenchmarkTable;
+  section.append(header);
+  const guides: Record<string, [string, string]> = {
+    yolov8: ["默认对比单线程推理、CPU 后处理和精度；其他线程可展开查看。完整测试条件见各行详情。", "Compare single-thread inference, CPU post-processing and accuracy. Expand additional threads or row details for more measurements and test conditions."],
+    paraformer: ["配置与下载、阶段性能、识别精度分别展示。Python 与 C++ UCP 按原始测量记录对照。", "Configuration, pipeline performance and recognition accuracy are shown separately, with source-reported Python and C++ UCP measurements."],
+    himloco: ["按运行时比较延迟分布与吞吐量。编译器估算单独列出。", "Compare latency distributions and throughput by runtime. Compiler estimates are shown separately."],
+    siglip: ["先选择具体模型，再查看不同输出的性能，以及各数据集的浮点与量化精度。", "Choose a configuration, then compare performance by output and float/quantized accuracy by dataset."]
+  };
+  if (guides[model.id]) {
+    const guide = document.createElement("p");
+    guide.className = "model-detail-reading-guide";
+    guide.textContent = guides[model.id]![context.locale === "zh" ? 0 : 1];
+    section.append(guide);
+  }
+  section.append(renderTable({
     variants: orderedVariants(variants),
     hardware,
     task,
     context
   }));
+  const selectedRecords = [...new Map(selectedVariants.flatMap(variant => variant.benchmarks)
+    .map(record => [JSON.stringify([record.id, record.source.ref, record.source.path]), record])).values()];
+  const primaryMetrics = new Set(groupPerformanceMetrics(selectedRecords).flatMap(group => group.threads
+    .flatMap(thread => [thread.latency?.metric, thread.throughput?.metric]).filter(Boolean)));
+  const additionalRecords = selectedRecords.map(record => ({ ...record, accuracy: [],
+    performance: record.performance?.filter(metric => !primaryMetrics.has(metric))
+  })).filter(record => (record.performance?.length ?? 0) > 0);
+  if (additionalRecords.length > 0 && !representative) {
+    const extra = document.createElement("section");
+    extra.className = "model-detail-additional-metrics";
+    const title = document.createElement("h3");
+    title.textContent = context.locale === "zh" ? "其他性能指标" : "Additional performance metrics";
+    extra.append(title, renderEvidenceDetails(additionalRecords, context));
+    section.append(extra);
+  }
+  const relatedPlatforms = model.platforms?.filter(platform => platform.sample_path === sample?.sample_path
+    && getModelVariants(platform).some(variant => variant.hardware === hardware && variant.task === task));
+  const relatedAssets = (relatedPlatforms?.flatMap(platform => platform.assets) ?? model.assets)
+    .filter(asset => !isRunnableAsset(asset))
+    .filter(asset => !normalizeHardware(asset.filename) || normalizeHardware(asset.filename) === hardware);
+  if (relatedAssets.length > 0) {
+    const related = document.createElement("p");
+    related.className = "model-detail-related-files";
+    related.textContent = `${context.locale === "zh" ? "其他模型文件" : "Other model files"}: ${[...new Set(relatedAssets.map(asset => asset.filename))].join(", ")}. `
+      + (context.locale === "zh" ? "用途与准备方法见来源文档。" : "See the source documentation for their purpose and setup.");
+    section.append(related);
+  }
   return section;
 }
 
@@ -333,7 +384,66 @@ export function renderModelDetails(model: ModelRecord, context: DetailContext): 
     content.replaceChildren(renderTaskContent(model, variants, selectedHardware, selectedTask, context));
   };
 
-  root.append(toolbar, overview, selection, content);
-  renderLocal();
+  root.append(toolbar, overview);
+  if (variants.length > 0) {
+    root.append(selection, content);
+    renderLocal();
+  } else {
+    const empty = document.createElement("p");
+    empty.textContent = context.locale === "zh"
+      ? "尚未发布可对应到具体开发板的模型配置。"
+      : "No board-specific model configuration has been published.";
+    root.append(empty);
+  }
+
+  // Evidence can describe a toolchain, an unspecified board, or a shared
+  // measurement. Keep it accessible without assigning it to an inferred board.
+  const recordKey = (record: BenchmarkRecord): string =>
+    JSON.stringify([record.id, record.source.ref, record.source.path]);
+  const assigned = new Set(variants.flatMap(variant => variant.benchmarks).map(recordKey));
+  const unassigned = [...new Map(model.benchmarks.filter(record => !assigned.has(recordKey(record)))
+    .map(record => [recordKey(record), record])).values()];
+  if (unassigned.length > 0) {
+    // Families such as SigLIP publish many shared distributions at once. The
+    // list stays complete and in the DOM, but starts collapsed with an
+    // informative summary so it does not push the assigned configurations off
+    // the page. No record is ever attributed to a board it does not name.
+    const evidence = document.createElement("details");
+    evidence.className = "model-detail-unassigned-evidence";
+    const summary = document.createElement("summary");
+    const title = document.createElement("span");
+    title.className = "model-detail-unassigned-title";
+    title.textContent = detailLabel(context.locale, "unassignedEvidence");
+    const count = document.createElement("span");
+    count.className = "model-detail-unassigned-count";
+    count.textContent = context.locale === "zh"
+      ? `共 ${unassigned.length} 条记录 · ${detailLabel(context.locale, "unassignedEvidenceCount")}`
+      : `${unassigned.length} records · ${detailLabel(context.locale, "unassignedEvidenceCount")}`;
+    summary.append(title, count);
+    const explanation = document.createElement("p");
+    explanation.className = "model-detail-unassigned-explanation";
+    explanation.textContent = context.locale === "zh"
+      ? "以下记录按原始测试条件展示，尚未关联到上方的开发板配置。"
+      : "These records retain their original test conditions and are not assigned to the board configurations above.";
+    evidence.append(summary, explanation);
+    for (const record of unassigned) {
+      const item = document.createElement("details");
+      item.className = "model-detail-unassigned-record";
+      item.dataset.unassignedRecord = record.id;
+      const recordSummary = document.createElement("summary");
+      const name = document.createElement("span");
+      name.className = "model-detail-unassigned-record-name";
+      name.textContent = record.display_name;
+      const conditions = document.createElement("span");
+      conditions.className = "model-detail-unassigned-record-conditions";
+      conditions.textContent = [record.environment.hardware, record.environment.runtime,
+        record.source.section].filter(Boolean).join(" · ");
+      recordSummary.append(name, conditions);
+      recordSummary.title = detailLabel(context.locale, "unassignedRecordSummary");
+      item.append(recordSummary, renderEvidenceDetails([record], context));
+      evidence.append(item);
+    }
+    root.append(evidence);
+  }
   return root;
 }

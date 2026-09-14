@@ -104,7 +104,9 @@ describe("metric display", () => {
     expect(bpu?.threads[0]?.concurrency).toBeUndefined();
     expect(bpu?.threads[0]?.throughput?.metric.metric).toBe("throughput");
     const postProcess = groups.find((group) => group.scope === "Python post-process");
-    expect(postProcess?.threads[0]?.latency).toBeUndefined();
+    expect(postProcess?.threads[0]?.latency?.metric.value).toBe(6);
+    expect(postProcess?.measurement).toBe("post_process_latency");
+    expect(bpu?.measurement).toBeUndefined();
     expect(postProcess?.metrics[0]?.metric.metric).toBe("post_process_latency");
   });
 });

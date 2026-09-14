@@ -89,12 +89,16 @@ describe("model details", () => {
     });
     const model = createModelFixture({ variants: [variant({ benchmarks: [benchmark] })] });
     const element = renderModelDetails(model, detailContext);
-    const row = element.querySelector<HTMLTableRowElement>("tbody tr")!;
+    const row = () => element.querySelector<HTMLTableRowElement>("tbody tr.model-detail-spec-row")!;
 
-    expect(row.textContent).toContain("2 ms");
-    expect(row.textContent).toContain("500 FPS");
-    expect(row.textContent).toContain("3 ms");
-    expect(row.textContent).toContain("900 FPS");
+    // Single-thread is the default comparison on every platform; the other
+    // measured threads stay on the same row behind the table control.
+    expect(row().textContent).toContain("2 ms");
+    expect(row().textContent).toContain("500 FPS");
+    expect(row().textContent).not.toContain("3 ms");
+    element.querySelector<HTMLButtonElement>('[data-action="toggle-threads"]')!.click();
+    expect(row().textContent).toContain("3 ms");
+    expect(row().textContent).toContain("900 FPS");
     expect(element.textContent).toContain("Concurrency not recorded");
     expect(element.textContent).toContain("34.1 FPS");
   });
@@ -155,7 +159,7 @@ describe("model details", () => {
     expect(table.textContent).toContain("Top-5");
     expect(cells).toContain("0.7482");
     expect(cells).toContain("0.934");
-    expect(cells).not.toContain("Accuracy not yet measured");
+    expect(cells).not.toContain("No accuracy recorded for this configuration");
   });
 
   it("merges one metric published under different source spellings into one column", () => {
@@ -218,13 +222,17 @@ describe("model details", () => {
     const throughput = table.querySelector("tbody td.model-detail-throughput")!;
 
     expect(table.textContent).toContain("26.8 ms");
-    expect(throughput.textContent).toContain("Not recorded");
-    expect(throughput.textContent).not.toContain("Performance not yet measured");
+    // The repeated wording is replaced by one compact dash, and the accessible
+    // label keeps the distinction: this measurement is missing even though the
+    // configuration did publish a performance table.
+    expect(throughput.textContent).toBe("—");
+    expect(throughput.getAttribute("aria-label")).toBe("Not recorded");
+    expect(throughput.getAttribute("aria-label")).not.toBe("No performance recorded for this configuration");
   });
 
-  it("keeps an accuracy measurement out of a row whose timing scope does not cover it", () => {
+  it("keeps distinct timing and accuracy scopes visible within one configuration", () => {
     // SigLIP reports top-1/top-5 for the pooler output and cosine similarity for
-    // the last hidden state; each row shows only the scope it measured.
+    // the last hidden state; each observation retains its own measurement scope.
     const benchmark = benchmarkFixture({
       environment: { hardware: "RDK S100" },
       performance: [
@@ -241,11 +249,13 @@ describe("model details", () => {
     }), { ...detailContext, hardware: "s100", task: "vision-embedding" });
     const rows = [...element.querySelectorAll<HTMLTableRowElement>("tbody tr.model-detail-spec-row")];
 
-    expect(rows).toHaveLength(2);
-    expect(rows[0]!.textContent).toContain("0.7118");
-    expect(rows[0]!.textContent).not.toContain("0.991");
-    expect(rows[1]!.textContent).toContain("0.991");
-    expect(rows[1]!.textContent).not.toContain("0.7118");
+    expect(rows).toHaveLength(1);
+    const observations = [...rows[0]!.querySelectorAll('.model-detail-observation')].map(item => item.textContent);
+    expect(observations.some(text => text?.includes("26.8 ms") && text.includes("pooler output"))).toBe(true);
+    expect(observations.some(text => text?.includes("26 ms") && text.includes("last hidden state"))).toBe(true);
+    const accuracy = [...rows[0]!.querySelectorAll('.model-detail-accuracy-value')].map(item => item.textContent);
+    expect(accuracy.some(text => text?.includes("0.7118") && text.includes("pooler output zero-shot classification on BPU"))).toBe(true);
+    expect(accuracy.some(text => text?.includes("0.991") && text.includes("last hidden state mean"))).toBe(true);
   });
 
   it("does not treat X3 post-processing as BPU latency and keeps all metrics in row details", () => {
@@ -258,11 +268,15 @@ describe("model details", () => {
     });
     const model = createModelFixture({ variants: [variant({ hardware: "x3", benchmarks: [benchmark] })] });
     const element = renderModelDetails(model, { ...detailContext, hardware: "x3" });
-    const latencyCell = element.querySelector<HTMLElement>('tbody td[data-metric="latency"][data-concurrency="unknown"]');
-
-    expect(latencyCell).toBeNull();
+    const bpuRow = element.querySelector<HTMLElement>('.model-detail-spec-row')!;
+    expect(element.querySelectorAll(".model-detail-spec-row")).toHaveLength(1);
+    expect(bpuRow.querySelector('td[data-metric="latency"]')).toBeNull();
+    expect(element.querySelector('thead [data-metric="post_process_latency"]')?.textContent).toContain("CPU post-processing");
+    expect(bpuRow.querySelector(".model-detail-postprocess")?.textContent).toContain("6 ms");
     expect(element.querySelector("details")?.textContent).toContain("post_process_latency");
-    expect(element.querySelector("details")?.textContent).toContain("6 ms");
+    const rawMetric = element.querySelector('details tr[data-metric="post_process_latency"]')!;
+    expect(rawMetric.children[1]?.textContent).toBe("6");
+    expect(rawMetric.children[2]?.textContent).toBe("ms");
   });
 
   it("keeps a recorded non-BPU latency scope visible beside the specification", () => {
@@ -298,10 +312,15 @@ describe("model details", () => {
       assets: [{ filename: "download_only.hbm", format: "hbm", url: "https://archive.example.test/download_only.hbm" }]
     })] }), detailContext);
 
-    expect(element.textContent).toContain("Performance not yet measured");
+    const missing = element.querySelector<HTMLTableCellElement>("td.model-detail-throughput")!;
+    expect(missing.textContent).toBe("—");
+    expect(missing.getAttribute("aria-label")).toBe("No performance recorded for this configuration");
     expect(element.querySelector('[data-action="download-model"]')?.textContent).toBe("Download .hbm");
     expect(element.querySelector(".model-detail-row-details")?.textContent).toContain("download_only.hbm");
-    expect(element.textContent).not.toContain("—");
+    // The legend names both meanings of the dash so it is never read as an
+    // absent benchmark when the gap is only an absent accuracy value.
+    expect([...element.querySelectorAll(".model-detail-table-legend dt")].map((term) => term.textContent))
+      .toEqual(["—", "—", "Not applicable"]);
   });
 
   it("renders expanded evidence as a full-width sibling row", () => {

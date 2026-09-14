@@ -64,9 +64,9 @@ python3 eval_Ultralytics_YOLO_Pose_YUV420SP.py \
 
 ```bash
 python3 eval_Ultralytics_YOLO_Classify_YUV420SP.py \
-  --model-path source/reference_bin_models/cls/yolo11n_cls_detect_bayese_640x640_nv12.bin \
+  --model-path source/reference_bin_models/cls/yolo11n_cls_bayese_640x640_nv12.bin \
   --image-path ../../../../datasets/imagenet/val_images \
-  --json-path yolo11n_cls_detect_bayese_640x640_nv12_py_coco2017_val_pridect.json
+  --json-path yolo11n_cls_bayese_640x640_nv12_py_coco2017_val_pridect.json
 ```
 
 ### 5. 批量评测

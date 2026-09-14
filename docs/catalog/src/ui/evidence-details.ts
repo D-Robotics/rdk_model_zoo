@@ -2,7 +2,7 @@ import type { BenchmarkRecord } from "../catalog/types";
 import { detailLabel, unitLabel } from "./detail-labels";
 import type { DetailContext } from "./detail-types";
 import { accuracyValueText } from "./accuracy-comparison";
-import { cell, metricCellText, sourceUrl, table, wrapper } from "./detail-utils";
+import { cell, sourceUrl, table, wrapper } from "./detail-utils";
 
 function sourceLink(record: BenchmarkRecord, context: DetailContext): HTMLAnchorElement {
   const link = document.createElement("a");
@@ -33,6 +33,7 @@ function renderConditions(records: BenchmarkRecord[], context: DetailContext): H
     block.className = "model-detail-condition";
     const environment = [
       record.environment.hardware,
+      record.environment.rdk_os ? `RDK OS: ${record.environment.rdk_os}` : undefined,
       record.environment.runtime ? `${detailLabel(context.locale, "runtime")}: ${record.environment.runtime}` : undefined,
       record.environment.cpu_mode ? `${detailLabel(context.locale, "cpuMode")}: ${record.environment.cpu_mode}` : undefined,
       record.environment.bpu_cores !== undefined ? `${detailLabel(context.locale, "bpuCores")}: ${record.environment.bpu_cores}` : undefined,
@@ -70,7 +71,7 @@ function renderMetricTable(records: BenchmarkRecord[], context: DetailContext): 
           cell(metric.metric),
           // Raw evidence shows the value exactly as published; the unit lives in
           // its own column, so a ratio is never re-scaled into a percentage.
-          cell(kind === "accuracy" ? accuracyValueText(metric, context.locale) : metricCellText(metric, context.locale)),
+          cell(accuracyValueText(metric, context.locale)),
           cell(unitLabel(context.locale, metric.unit)),
           cell(metric.scope ?? detailLabel(context.locale, "notRecorded")),
           cell(metric.concurrency === undefined ? detailLabel(context.locale, "unknownConcurrency") : String(metric.concurrency)),

@@ -5,6 +5,8 @@ import { promisify } from "node:util";
 import { parse } from "yaml";
 import { validateReleaseSummary } from "./release-summary";
 import { correctSArtifacts } from "./source-corrections";
+import { applySCatalogErrata } from "./catalog-errata";
+import { applyX3CatalogErrata } from "./x3-catalog-errata";
 import { buildModelVariants, canonicalTuple, getModelVariants, tuplesCompatible } from "../src/catalog/variants";
 import { canonicalFamilyId, officialFamilyName, officialYoloName } from "../src/catalog/model-naming";
 import type { BenchmarkRecord, Catalog, CatalogPlatform, ModelRecord, ModelVariant, PlatformModelRecord } from "../src/catalog/types";
@@ -45,7 +47,6 @@ async function manifestPair(repositoryRoot: string, ref: string, tag: string): P
     || models.release.version !== benchmarks.release.version || models.release.platform !== benchmarks.release.platform) {
     throw new Error(`Release identity mismatch for ${tag}`);
   }
-  if (JSON.stringify({ models, benchmarks }).toLowerCase().includes("yoloe")) throw new Error("YOLOE is excluded from the catalog");
   return { models, benchmarks };
 }
 
@@ -64,7 +65,11 @@ const PLATFORM_HARDWARE: Record<CatalogPlatform, RegExp> = {
 function platformOwnsRecord(platform: CatalogPlatform, record: BenchmarkRecord): boolean {
   const hardware = record.environment?.hardware ?? "";
   if (!hardware.trim()) return true;
-  return PLATFORM_HARDWARE[platform].test(hardware);
+  // Reject explicit cross-published board records, but keep toolchain and
+  // unspecified-hardware evidence on its source platform. Variant resolution
+  // must not turn that evidence into a board performance claim.
+  return PLATFORM_HARDWARE[platform].test(hardware)
+    || !Object.values(PLATFORM_HARDWARE).some(pattern => pattern.test(hardware));
 }
 
 function toPlatformModel(platform: CatalogPlatform, tag: string, model: ManifestModel, benchmarks: BenchmarkRecord[]): PlatformModelRecord {
@@ -174,6 +179,7 @@ function assetsForFamily(entry: FamilyEntry, familyId: string): ManifestModel["a
   // assets would otherwise seed asset-only rows here while the entry holding
   // the benchmarks cannot attach them.
   const ownsFamily = entry.familyIds.includes(familyId);
+  if (ownsFamily && entry.familyIds.length === 1) return entry.model.assets;
   return entry.model.assets.filter((asset) => {
     if (referenced.has(asset.filename)) return true;
     const inferredFamily = assetFamilyId(asset);
@@ -342,6 +348,9 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
   for (const [platform, ref, tag] of tags) loaded.set(platform, await manifestPair(repositoryRoot, ref, tag));
   const sSource = loaded.get("s");
   if (sSource) correctSArtifacts(sSource.models, { benchmarks: sSource.benchmarks.benchmarks });
+  if (sSource) applySCatalogErrata(pins.s, sSource.models.models, sSource.benchmarks.benchmarks);
+  const x3Source = loaded.get("x3");
+  if (x3Source) applyX3CatalogErrata(pins.x3, x3Source.benchmarks.benchmarks);
   const families = new Map<string, { name: string; platforms: Map<CatalogPlatform, FamilyEntry[]> }>();
   for (const [platform] of tags) {
     const source = loaded.get(platform)!;
@@ -360,7 +369,10 @@ export async function buildMultiplatformCatalog(repositoryRoot: string): Promise
       // catalog still exposes a hardware row marked “尚未实测”.
       for (const asset of model.assets) {
         const family = familyIdentityFromAsset(asset);
-        if (family && !byFamily.has(family.id)) byFamily.set(family.id, []);
+        // A pipeline's detector/backbone is an asset of that pipeline. Only
+        // the aggregate Ultralytics sample intentionally spans foreign families.
+        const ownsAssetFamily = model.id === "ultralytics_yolo" || family?.id === familyIdentity(model).id;
+        if (family && ownsAssetFamily && !byFamily.has(family.id)) byFamily.set(family.id, []);
       }
       if (byFamily.size === 0) byFamily.set(familyIdentity(model).id, []);
       const familyIds = [...byFamily.keys()];

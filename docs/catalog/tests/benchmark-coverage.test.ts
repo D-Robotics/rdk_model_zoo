@@ -6,10 +6,10 @@ import { buildCatalog } from "../scripts/catalog-builder";
 import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
-const EXPECTED_MODEL_COUNT = 36;
-const EXPECTED_BENCHMARK_RECORD_COUNT = 227;
-const EXPECTED_PERFORMANCE_METRIC_COUNT = 623;
-const EXPECTED_ACCURACY_METRIC_COUNT = 401;
+const EXPECTED_MODEL_COUNT = 37;
+const EXPECTED_BENCHMARK_RECORD_COUNT = 239;
+const EXPECTED_PERFORMANCE_METRIC_COUNT = 636;
+const EXPECTED_ACCURACY_METRIC_COUNT = 419;
 const EXPECTED_MODEL_PATHS = new Map([
   ["clip", "samples/vision/clip"],
   ["convnext", "samples/vision/convnext"],
@@ -45,6 +45,7 @@ const EXPECTED_MODEL_PATHS = new Map([
   ["unet", "samples/vision/unet"],
   ["vargconvnet", "samples/vision/vargconvnet"],
   ["yolo26_depth", "samples/vision/yolo26_depth"],
+  ["yoloe", "samples/vision/yoloe"],
   ["yolov5", "samples/vision/yolov5"],
   ["yoloworld", "samples/vision/yoloworld"]
 ]);
@@ -207,7 +208,7 @@ describe("audited benchmark coverage", () => {
     )).toBe(true);
   });
 
-  it("keeps immutable sources resolvable and the prohibited family absent", async () => {
+  it("keeps immutable sources resolvable and includes the completed YOLOE sample", async () => {
     const catalog = await buildRepositoryCatalog();
     const records = catalog.models.flatMap((model) => model.benchmarks);
 
@@ -218,7 +219,10 @@ describe("audited benchmark coverage", () => {
     }
     expect(records.every((record) => record.source.path.length > 0 && record.source.section.length > 0)).toBe(true);
 
-    const prohibitedFamily = ["yolo", "e"].join("");
-    expect(JSON.stringify(catalog).toLowerCase()).not.toContain(prohibitedFamily);
+    const yoloe = catalog.models.find(model => model.id === "yoloe")!;
+    expect(yoloe.assets).toHaveLength(3);
+    expect(yoloe.assets.every(asset => /^[a-f0-9]{64}$/.test(asset.sha256 ?? ""))).toBe(true);
+    expect(yoloe.benchmarks.flatMap(record => record.performance ?? [])).toHaveLength(12);
+    expect(yoloe.benchmarks.every(record => record.performance?.every(metric => metric.concurrency === 1))).toBe(true);
   });
 });

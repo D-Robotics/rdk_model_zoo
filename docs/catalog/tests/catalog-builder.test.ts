@@ -17,7 +17,7 @@ function buildRepositoryCatalog(onWarning?: (message: string) => void) {
 }
 
 describe("buildCatalog", () => {
-  it("includes exact published evidence and excludes the prohibited model family", async () => {
+  it("includes exact published evidence and the completed YOLOE family", async () => {
     const catalog = await buildRepositoryCatalog();
     const himloco = catalog.models.find((model) => model.id === "himloco");
     const cpp = himloco?.benchmarks.find((record) => record.id === "himloco-cpp-runtime-x5");
@@ -27,8 +27,7 @@ describe("buildCatalog", () => {
       unit: "fps",
       qualifier: "exact"
     }));
-    const text = JSON.stringify(catalog).toLowerCase();
-    expect(text).not.toContain(["yolo", "e"].join(""));
+    expect(catalog.models.find(model => model.id === "yoloe")?.benchmarks).toHaveLength(3);
   });
 
   it("keeps plus-suffixed throughput as reported rather than inventing an exact value", async () => {
@@ -122,12 +121,13 @@ describe("buildCatalog", () => {
     ]));
   });
 
-  it("omits UNet accuracy whose source does not publish a usable unit and environment", async () => {
+  it("preserves UNet historical accuracy and host release results with their limitations", async () => {
     const catalog = await buildRepositoryCatalog();
     const records = catalog.models.find((model) => model.id === "unet")?.benchmarks ?? [];
-    expect(records).toHaveLength(1);
-    expect(records[0]?.id).toBe("unet-resnet18-x5");
-    expect(records[0]?.accuracy).toBeUndefined();
+    expect(records).toHaveLength(8);
+    expect(records.flatMap(record => record.accuracy ?? [])).toHaveLength(18);
+    expect(records.filter(record => record.id.includes("history")).every(record => record.accuracy?.every(metric => metric.scope?.includes("not current download revalidation")))).toBe(true);
+    expect(records.filter(record => record.id.includes("release-reference")).every(record => record.accuracy?.every(metric => metric.scope?.includes("board runtime pending")))).toBe(true);
   });
 
   it("keeps CLIP empty when its sources publish no numeric benchmark", async () => {

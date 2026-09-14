@@ -14,8 +14,8 @@ elif [ "${TASK}" = "pose" ]; then
   MODEL_FILE="${MODEL_DIR}/yolo11n_pose_bayese_640x640_nv12.bin"
   URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11n_pose_bayese_640x640_nv12.bin"
 elif [ "${TASK}" = "cls" ]; then
-  MODEL_FILE="${MODEL_DIR}/yolo11n_cls_detect_bayese_640x640_nv12.bin"
-  URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11n_cls_detect_bayese_640x640_nv12.bin"
+  MODEL_FILE="${MODEL_DIR}/yolo11n_cls_bayese_640x640_nv12.bin"
+  URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11n_cls_bayese_640x640_nv12.bin"
 else
   MODEL_FILE="${MODEL_DIR}/yolo11n_detect_bayese_640x640_nv12.bin"
   URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO/yolo11n_detect_bayese_640x640_nv12.bin"

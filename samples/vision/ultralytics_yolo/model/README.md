@@ -41,7 +41,7 @@ chmod +x fulldownload.sh
 - `detect`: `yolo11n_detect_bayese_640x640_nv12.bin`
 - `seg`: `yolo11n_seg_bayese_640x640_nv12.bin`
 - `pose`: `yolo11n_pose_bayese_640x640_nv12.bin`
-- `cls`: `yolo11n_cls_detect_bayese_640x640_nv12.bin`
+- `cls`: `yolo11n_cls_bayese_640x640_nv12.bin`
 
 ## Model List
 
@@ -70,3 +70,7 @@ chmod +x fulldownload.sh
 
 - `yolov8{n/s/m/l/x}_cls_detect_bayese_640x640_nv12.bin`
 - `yolo11{n/s/m/l/x}_cls_detect_bayese_640x640_nv12.bin`
+
+### Classification model filenames
+
+YOLOv8 / YOLO11 classification models use `*_cls_bayese_640x640_nv12.bin` and belong to the image-classification task. Legacy `*_cls_detect_*` download URLs remain available for compatibility; current scripts and examples use `*_cls_*`.

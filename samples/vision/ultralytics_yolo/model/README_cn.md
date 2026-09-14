@@ -42,7 +42,7 @@ chmod +x fulldownload.sh
 - `detect`: `yolo11n_detect_bayese_640x640_nv12.bin`
 - `seg`: `yolo11n_seg_bayese_640x640_nv12.bin`
 - `pose`: `yolo11n_pose_bayese_640x640_nv12.bin`
-- `cls`: `yolo11n_cls_detect_bayese_640x640_nv12.bin`
+- `cls`: `yolo11n_cls_bayese_640x640_nv12.bin`
 
 ## 模型列表
 
@@ -71,3 +71,7 @@ chmod +x fulldownload.sh
 
 - `yolov8{n/s/m/l/x}_cls_detect_bayese_640x640_nv12.bin`
 - `yolo11{n/s/m/l/x}_cls_detect_bayese_640x640_nv12.bin`
+
+### 分类模型命名
+
+YOLOv8 / YOLO11 分类模型统一使用 `*_cls_bayese_640x640_nv12.bin`，属于图像分类任务。旧的 `*_cls_detect_*` 下载地址保留兼容；新的脚本和示例使用 `*_cls_*`。

@@ -96,7 +96,7 @@ python3 main.py \
 ```bash
 python3 main.py \
     --task cls \
-    --model-path ../../model/yolo11n_cls_detect_bayese_640x640_nv12.bin \
+    --model-path ../../model/yolo11n_cls_bayese_640x640_nv12.bin \
     --test-img ../../test_data/zebra_cls.jpg \
     --label-file ../../../../../datasets/imagenet/imagenet_classes.names
 ```
