@@ -1,46 +1,23 @@
-# Repository Documentation Overview
+# RDK S 文档索引 / Documentation Index
 
-本目录用于存放与 BPU Sample 示例仓库（Model Zoo） 相关的用户文档、接口说明及规范性文档，旨在帮助开发者快速理解仓库结构、核心组件、接口来源以及统一的开发与维护规范。
+## 使用与开发
 
-## 目录结构说明
+- [仓库规范](./Model_Zoo_Repository_Guidelines.md)：目录、代码和文档约定。
+- [Python API 用户手册](./Python_API_User_Guide.md)：`hbm_runtime` 接口说明。
+- [UCP 用户手册](./UCP_User_Guide.md)：`libdnn` / `libucp` 接口说明。
+- [源码文档](./source_reference/README.md)：接口参考文档及生成方式。
+- `assets/`：文档图片资源。
 
-```text
-.
-├── assets/
-├── Model_Zoo_Repository_Guidelines.md
-├── Python_API_User_Guide.md
-├── README.md
-└── UCP_User_Guide.md
-```
+## 版本与发布
 
-## 各文件/目录说明
-### images
+- [发布资料说明](./release/README.md)：S 系列清单的范围和数据来源。
+- [模型清单](./release/models.yaml) / [Benchmark 清单](./release/benchmarks.yaml)：模型文件、性能和精度记录。
+- [当前版本](../VERSION) / [更新记录](../CHANGELOG.md)。
+- [S v1.0.0 发布说明](./releases/s-v1.0.0.md) / [历史发布说明目录](./releases/)。
+- 统一发布规范：[中文](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_x5/docs/RELEASE_cn.md) / [English](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_x5/docs/RELEASE.md)。三个硬件分支分别维护版本，S 系列使用 `s-vMAJOR.MINOR.PATCH`。
 
-用于存放文档中使用的 示意图、流程图或截图资源，主要服务于各类 UserGuide 文档的说明与展示，不包含可执行代码。
+## 在线目录维护
 
-### Model_Zoo_Repository_Guidelines.md
+在线目录统一服务 X3、X5、S100、S100P 和 S600。网站源码与维护说明集中在 `rdk_x5` 分支的 [docs/catalog/](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5/docs/catalog)，S 分支维护自己的模型与发布数据。
 
-D-Robotics Model Zoo 仓库规范文档，该文档用于统一说明 Model Zoo 仓库的目录和文件规范、编码规范、注释规范以及文档规范，以保证不同模型、不同任务、不同语言（C / Python）在同一仓库中具备 一致的使用体验、良好的复用性与长期可维护性。
-
-### BPU_Python_API_UserGuide.md → Python_API_User_Guide.md
-
-BPU Python API 使用说明文档，该文档用于说明本仓库中 Python Sample 所使用的 BPU Python 接口背景与来源，
-其中涉及的 Python 接口主要基于官方提供的 hbm_runtime Python 包，用于在 Python 环境中完成 BPU 模型加载、推理执行等功能。
-
-### UCP_UserGuide.md → UCP_User_Guide.md
-
-UCP/DNN 相关接口说明文档，用于说明本仓库 Sample 中涉及的 hb_ucp和hb_dnn相关接口的定位与使用背景。当在示例代码中涉及底层资源管理、内存分配或模型推理等相关内容时，可通过该文档快速了解应参考的官方接口说明位置。
-
-### README.md
-
-当前目录的说明文档。
-
-### 使用建议
-
-初次使用本仓库时，建议先阅读本 README，了解各文档的职责划分：
-
-- 整体规范与仓库约定，请参考 Model_Zoo_Repository_Guidelines.md;
-
-- 在使用 Python Sample 时，重点参考 Python_API_User_Guide.md;
-
-- 在使用底层能力或 C/C++ Sample 时，可结合 UCP_User_Guide.md 阅读;
+当前分支的发布资料统一位于 `docs/release/`。历史 Tag（例如 `s-v1.0.0`）仍保留当时的 `release/` 路径；查询历史发布时请使用对应 Tag 的链接。

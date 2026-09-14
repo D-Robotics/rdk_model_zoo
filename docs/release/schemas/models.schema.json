@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RDK Model Zoo release models manifest",
+  "type": "object",
+  "required": ["schema_version", "release", "models"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "release": {
+      "type": "object",
+      "required": ["platform", "version", "tag"],
+      "properties": {
+        "platform": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1 },
+        "branch": { "type": "string" },
+        "source_ref": { "type": "string" },
+        "released_at": { "type": "string" },
+        "model_archive_root": { "type": "string", "format": "uri" },
+        "compatibility": {
+          "type": "object",
+          "properties": {
+            "hardware": { "type": "string" },
+            "rdk_os": { "type": "string" },
+            "operating_system": { "type": "string" },
+            "tros": { "type": "string" }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "repository_wide_board_test": { "type": "boolean" },
+            "statement": { "type": "string" }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "sample_count": { "type": "integer", "minimum": 0 },
+        "download_script_count": { "type": "integer", "minimum": 0 },
+        "asset_count": { "type": "integer", "minimum": 0 },
+        "downloadable_asset_count": { "type": "integer", "minimum": 0 },
+        "manual_asset_count": { "type": "integer", "minimum": 0 },
+        "sha256_recorded_count": { "type": "integer", "minimum": 0 },
+        "sha256_unrecorded_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": { "type": "number" }
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "tasks", "sample_path", "availability", "download_scripts", "assets"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "tasks": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "sample_path": { "type": "string", "minLength": 1 },
+          "availability": { "enum": ["download", "manual"] },
+          "download_scripts": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["filename", "format"],
+              "properties": {
+                "filename": { "type": "string", "minLength": 1 },
+                "format": { "type": "string", "minLength": 1 },
+                "url": { "anyOf": [{ "type": "null" }, { "type": "string", "format": "uri" }] },
+                "sha256": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[a-f0-9]{64}$" }] }
+              }
+            }
+          },
+          "description": { "type": "string" },
+          "display_name": { "type": "string" },
+          "locales": {
+            "type": "object",
+            "properties": {
+              "zh": { "type": "string" },
+              "en": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

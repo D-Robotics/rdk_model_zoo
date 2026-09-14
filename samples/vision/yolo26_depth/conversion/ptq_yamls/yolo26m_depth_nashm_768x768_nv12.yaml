@@ -1,0 +1,29 @@
+# YOLO26 Depth NV12 profile: calibrated log-depth ONNX + NV12 input.
+# Used for variants n/s/m in the mixed release profile.
+model_parameters:
+  onnx_model: './onnx/yolo26m-depth-log.onnx'
+  march: 'nash-m'
+  layer_out_dump: false
+  working_dir: 'bpu_model_output_yolo26m_nv12_nashm'
+  output_model_file_prefix: 'yolo26m_depth_nashm_768x768_nv12'
+input_parameters:
+  input_name: 'images'
+  input_type_rt: 'nv12'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW'
+  input_shape: '1x3x768x768'
+  norm_type: 'data_scale'
+  scale_value: 0.003921568627451
+calibration_parameters:
+  cal_data_dir: './calibration'
+  cal_data_type: 'float32'
+  calibration_type: 'max'
+  max_percentile: 0.9999
+compiler_parameters:
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true
+  jobs: 16
+  compile_mode: 'latency'
+  debug: true
+  optimize_level: 'O2'

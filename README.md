@@ -51,6 +51,8 @@ This repository uses hardware-specific branches to keep maintained samples, lega
 
 ---
 
+**[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**
+
 ## Directory Structure
 
 <details>
@@ -84,8 +86,12 @@ rdk_model_zoo/                       # rdk_s branch
 |   |   |-- vit/                     # Image classification
 |   |   |-- 3dresnet/                # Video action classification
 |   |   |-- unetmobilenet/           # Semantic segmentation
+|   |   |-- mobile_sam/              # Promptable segmentation (box prompt)
+|   |   |-- efficient_sam/           # Promptable segmentation (fixed prompt)
 |   |   |-- depth_anything_v2/       # Monocular depth estimation
+|   |   |-- yolo26_depth/            # YOLO26 monocular depth estimation
 |   |   |-- siglip/                  # Vision encoder for VLM / VLA
+|   |   |-- dinov2/                  # Self-supervised vision encoder (image embedding)
 |   |   |-- pointnet/                # Point cloud part segmentation
 |   |   |-- lanenet/                 # Lane detection
 |   |   `-- paddle_ocr/             # OCR text detection and recognition
@@ -94,7 +100,8 @@ rdk_model_zoo/                       # rdk_s branch
 |   |   |-- paraformer/              # Paraformer Chinese ASR (WAV input, Python / C++ runtime)
 |   |   `-- kws/                    # Keyword spotting
 |   |-- llm/
-|   |   `-- gemma4-e2b/             # Gemma4-E2B VLM (Vision + Text)
+|   |   |-- gemma4-e2b/             # Gemma4-E2B VLM (Vision + Text)
+|   |   `-- minicpm5-2b/           # MiniCPM5-2B text generation (S100 / S100P / S600)
 |   `-- vla/
 |       |-- act/                    # Action Chunking Transformer (robot policy)
 |       `-- pi0/                    # rdk_LeRobot_tools s600 submodule; Pi0 is under models/pi0
@@ -138,6 +145,8 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Instance Segmentation | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [Details](./samples/vision/yolo11_seg) |
 | Instance Segmentation | YOLOe11-Seg (Prompt-Free) | `samples/vision/yoloe11_seg` | S100 | [Details](./samples/vision/yoloe11_seg) |
 | Instance Segmentation | YOLOE-26-Seg PF (n/s/m/l/x) | `samples/vision/yoloe26_seg` | S100 / S100P | [Details](./samples/vision/yoloe26_seg) |
+| Promptable Segmentation | MobileSAM (box prompt) | `samples/vision/mobile_sam` | S100 / S100P / S600 | [Details](./samples/vision/mobile_sam) |
+| Promptable Segmentation | EfficientSAM (ViT-T, fixed prompt) | `samples/vision/efficient_sam` | S100 / S100P / S600 | [Details](./samples/vision/efficient_sam) |
 | Pose Estimation | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [Details](./samples/vision/yolo11_pose) |
 | Image Classification | ResNet18 | `samples/vision/resnet18` | S100 / S600 | [Details](./samples/vision/resnet18) |
 | Image Classification | ResNet50 | `samples/vision/resnet50` | S100 / S600 | [Details](./samples/vision/resnet50) |
@@ -151,7 +160,9 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Image Classification | 3D ResNet (Video Action) | `samples/vision/3dresnet` | S100 | [Details](./samples/vision/3dresnet) |
 | Semantic Segmentation | UnetMobileNet | `samples/vision/unetmobilenet` | S100 / S600 | [Details](./samples/vision/unetmobilenet) |
 | Monocular Depth Estimation | Depth Anything V2 | `samples/vision/depth_anything_v2` | S100 | [Details](./samples/vision/depth_anything_v2) |
+| Monocular Depth Estimation | YOLO26 Depth | `samples/vision/yolo26_depth` | S100 / S100P / S600 | [Details](./samples/vision/yolo26_depth) |
 | Vision Encoder | SigLIP | `samples/vision/siglip` | S100 / S100P | [Details](./samples/vision/siglip) |
+| Vision Encoder | DINOv2 | `samples/vision/dinov2` | S100 / S100P / S600 | [Details](./samples/vision/dinov2) |
 | Point Cloud Segmentation | PointNet | `samples/vision/pointnet` | S100 | [Details](./samples/vision/pointnet) |
 | Lane Detection | LaneNet | `samples/vision/lanenet` | S100 | [Details](./samples/vision/lanenet) |
 | Text Recognition | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [Details](./samples/vision/paddle_ocr) |
@@ -159,12 +170,15 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | Speech Recognition | Paraformer (Chinese ASR, WAV input, three-stage INT16 HBM) | `samples/speech/paraformer` | S100 | [Details](./samples/speech/paraformer) |
 | Keyword Spotting | KWS (MDTC) | `samples/speech/kws` | S100 | [Details](./samples/speech/kws) |
 | Vision-Language Model | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P / S600 | [Details](./samples/llm/gemma4-e2b) |
+| Text Generation | MiniCPM5-2B | `samples/llm/minicpm5-2b` | S100 / S100P / S600 | [Details](./samples/llm/minicpm5-2b) |
 | Embodied AI / Robot Policy | ACT (Action Chunking Transformer) | `samples/vla/act` | S100 / S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 | Embodied AI / Robot Policy | Pi0 | `samples/vla/pi0/models/pi0` | S600 | [Details](https://github.com/D-Robotics/rdk_LeRobot_tools/tree/s600/models/pi0) |
 
 ---
 
 ## Documentation & Resources
+
+- **Maintainer documentation**: See the [documentation index](./docs/README.md) for release policy, manifests and website maintenance.
 
 - **Model Docs**: Each model's top-level `README.md` provides an overview, run guide, and interface description.
 - **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.

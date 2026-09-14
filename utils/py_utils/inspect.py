@@ -65,6 +65,85 @@ def get_soc_name() -> str:
         return "s100"
 
 
+def resolve_platform(soc_name: str, board_type: str = "") -> tuple[str, str, str, str]:
+    """Resolve an S-series SoC to its ``(platform, march, suffix, repo_dir)`` tuple.
+
+    RDK S-series boards map onto OpenExplorer ``--march`` values, a model
+    filename suffix, and a Model Zoo repository directory:
+
+        - S100  -> ``nash-e`` / ``nashe`` / ``rdk_s100``
+        - S100P -> ``nash-m`` / ``nashm`` / ``rdk_s100``
+        - S600  -> ``nash-p`` / ``nashp`` / ``rdk_s600``
+
+    ``board_type`` takes precedence for an S100P board because some images
+    expose the base SoC name as ``S100`` while carrying the P variant in the
+    board descriptor.
+
+    Non-S boards and unreadable SoC info are rejected explicitly: this
+    function exists to pick an S-series model artifact, so a wrong-board
+    fallback would silently produce a misleading "model not found" error
+    instead of a clear platform mismatch message.
+
+    Args:
+        soc_name: Raw SoC name, e.g. from :func:`get_soc_name`. An empty
+            string is passed when ``/sys/class/boardinfo/soc_name`` cannot
+            be read (see :func:`get_soc_name_fallback_free`).
+        board_type: Raw board type descriptor, e.g. the contents of
+            ``/sys/class/boardinfo/board_type``.
+
+    Returns:
+        A ``(platform, march, filename_suffix, repo_dir)`` tuple, e.g.
+        ``("S600", "nash-p", "nashp", "rdk_s600")``.
+
+    Raises:
+        ValueError: If the SoC is not a recognized S-series platform, or if
+            the SoC name is empty because it could not be read from the
+            system (typically a non-S-series board such as RDK X5).
+    """
+    platforms = {
+        "s100": ("S100", "nash-e", "nashe", "rdk_s100"),
+        "s100p": ("S100P", "nash-m", "nashm", "rdk_s100"),
+        "s600": ("S600", "nash-p", "nashp", "rdk_s600"),
+    }
+    soc = soc_name.strip().lower()
+    board = board_type.strip().lower()
+    if not soc and not board:
+        raise ValueError(
+            "Unable to read the SoC name from /sys/class/boardinfo/soc_name. "
+            "This sample requires an RDK S-series board (S100 / S100P / S600)."
+        )
+    if "s100p" in board or soc == "s100p":
+        return platforms["s100p"]
+    if soc in platforms:
+        return platforms[soc]
+    raise ValueError(
+        "Unsupported S-series platform: "
+        f"soc_name={soc_name!r}, board_type={board_type!r}. "
+        "This sample requires an RDK S-series board (S100 / S100P / S600)."
+    )
+
+
+def get_soc_name_fallback_free() -> str:
+    """Get the raw SoC name without the S100 fallback.
+
+    Unlike :func:`get_soc_name`, this variant returns an empty string when
+    ``/sys/class/boardinfo/soc_name`` cannot be read instead of defaulting
+    to ``"s100"``. Use it together with :func:`resolve_platform` so that a
+    non-S-series board (e.g. RDK X5) is reported as a platform mismatch
+    rather than silently resolved to the S100 march.
+
+    Returns:
+        The SoC name as a string, or ``""`` if the system file cannot be
+        read (typically a non-S-series board or a non-board host).
+    """
+    soc_path = "/sys/class/boardinfo/soc_name"
+    try:
+        with open(soc_path, "r") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+
 def print_model_info(models: object) -> None:
 
     """Print detailed input and output tensor information for all models.

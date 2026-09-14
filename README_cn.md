@@ -51,6 +51,8 @@
 
 ---
 
+**[浏览在线模型目录 →](https://d-robotics.github.io/rdk_model_zoo/)**
+
 ## 目录结构
 
 <details>
@@ -84,8 +86,12 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- vit/                     # 图像分类
 |   |   |-- 3dresnet/                # 视频动作分类
 |   |   |-- unetmobilenet/           # 语义分割
+|   |   |-- mobile_sam/              # 可提示分割（框提示）
+|   |   |-- efficient_sam/           # 可提示分割（固定提示）
 |   |   |-- depth_anything_v2/       # 单目深度估计
+|   |   |-- yolo26_depth/            # YOLO26 单目深度估计
 |   |   |-- siglip/                  # VLM / VLA 视觉编码器
+|   |   |-- dinov2/                  # 自监督视觉编码器（图像 embedding）
 |   |   |-- pointnet/                # 点云零件分割
 |   |   |-- lanenet/                 # 车道线检测
 |   |   `-- paddle_ocr/             # OCR 文字检测与识别
@@ -94,7 +100,8 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- paraformer/              # Paraformer 中文语音识别（WAV 输入，Python / C++ Runtime）
 |   |   `-- kws/                    # 关键词唤醒
 |   |-- llm/
-|   |   `-- gemma4-e2b/             # Gemma4-E2B VLM（视觉 + 语言）
+|   |   |-- gemma4-e2b/             # Gemma4-E2B VLM（视觉 + 语言）
+|   |   `-- minicpm5-2b/           # MiniCPM5-2B text generation (S100 / S100P / S600)
 |   `-- vla/
 |       |-- act/                    # Action Chunking Transformer（机器人策略）
 |       `-- pi0/                    # rdk_LeRobot_tools s600 子模块；Pi0 位于 models/pi0
@@ -138,6 +145,8 @@ bash run.sh
 | 实例分割 | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [详情](./samples/vision/yolo11_seg) |
 | 实例分割 | YOLOe11-Seg（无提示词） | `samples/vision/yoloe11_seg` | S100 | [详情](./samples/vision/yoloe11_seg) |
 | 实例分割 | YOLOE-26-Seg PF（n/s/m/l/x） | `samples/vision/yoloe26_seg` | S100 / S100P | [详情](./samples/vision/yoloe26_seg/README_cn.md) |
+| 可提示分割 | MobileSAM（框提示） | `samples/vision/mobile_sam` | S100 / S100P / S600 | [详情](./samples/vision/mobile_sam) |
+| 可提示分割 | EfficientSAM（ViT-T，固定提示） | `samples/vision/efficient_sam` | S100 / S100P / S600 | [详情](./samples/vision/efficient_sam) |
 | 姿态估计 | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [详情](./samples/vision/yolo11_pose) |
 | 图像分类 | ResNet18 | `samples/vision/resnet18` | S100 / S600 | [详情](./samples/vision/resnet18) |
 | 图像分类 | ResNet50 | `samples/vision/resnet50` | S100 / S600 | [详情](./samples/vision/resnet50) |
@@ -151,7 +160,9 @@ bash run.sh
 | 图像分类 | 3D ResNet（视频动作分类） | `samples/vision/3dresnet` | S100 | [详情](./samples/vision/3dresnet) |
 | 语义分割 | UnetMobileNet | `samples/vision/unetmobilenet` | S100 / S600 | [详情](./samples/vision/unetmobilenet) |
 | 单目深度估计 | Depth Anything V2 | `samples/vision/depth_anything_v2` | S100 | [详情](./samples/vision/depth_anything_v2) |
+| 单目深度估计 | YOLO26 Depth | `samples/vision/yolo26_depth` | S100 / S100P / S600 | [详情](./samples/vision/yolo26_depth) |
 | 视觉编码器 | SigLIP | `samples/vision/siglip` | S100 / S100P | [详情](./samples/vision/siglip) |
+| 视觉编码器 | DINOv2 | `samples/vision/dinov2` | S100 / S100P / S600 | [详情](./samples/vision/dinov2) |
 | 点云分割 | PointNet | `samples/vision/pointnet` | S100 | [详情](./samples/vision/pointnet) |
 | 车道线检测 | LaneNet | `samples/vision/lanenet` | S100 | [详情](./samples/vision/lanenet) |
 | 文字识别 | PaddleOCR | `samples/vision/paddle_ocr` | S100 | [详情](./samples/vision/paddle_ocr) |
@@ -159,12 +170,15 @@ bash run.sh
 | 语音识别 | Paraformer（中文 ASR，WAV 输入，三段 INT16 HBM） | `samples/speech/paraformer` | S100 | [详情](./samples/speech/paraformer) |
 | 关键词唤醒 | KWS（MDTC） | `samples/speech/kws` | S100 | [详情](./samples/speech/kws) |
 | 视觉语言模型 | Gemma4-E2B VLM | `samples/llm/gemma4-e2b` | S100P / S600 | [详情](./samples/llm/gemma4-e2b) |
+| 文本生成 | MiniCPM5-2B | `samples/llm/minicpm5-2b` | S100 / S100P / S600 | [详情](./samples/llm/minicpm5-2b) |
 | 具身智能 / 机器人策略 | ACT（Action Chunking Transformer） | `samples/vla/act` | S100 / S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools) |
 | 具身智能 / 机器人策略 | Pi0 | `samples/vla/pi0/models/pi0` | S600 | [详情](https://github.com/D-Robotics/rdk_LeRobot_tools/tree/s600/models/pi0) |
 
 ---
 
 ## 文档与资源
+
+- **维护文档**：发布规范、清单和网站维护统一收录在 **[文档索引](./docs/README.md)**。
 
 - **模型文档**：每个模型的顶层 `README.md` 提供整体介绍与运行指引。
 - **源码参考**：代码层面的接口信息，请参阅 **[源码文档说明](./docs/source_reference/README.md)**。

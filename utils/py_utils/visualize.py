@@ -523,3 +523,44 @@ def print_detections(boxes: np.ndarray, scores: np.ndarray,
         name = class_names[cid] if class_names and cid < len(class_names) else str(cid)
         print(f"  [{i}] {name}: {scores[i]:.2f} | Box ({boxes[i][0]:.1f}, {boxes[i][1]:.1f}, "
               f"{boxes[i][2]:.1f}, {boxes[i][3]:.1f})")
+
+
+def draw_mask_result(image: np.ndarray, mask: np.ndarray, iou: float,
+                     mask_index: int, title: str,
+                     color: tuple = (0, 180, 0)) -> np.ndarray:
+    """Draw a full-image binary mask overlay with contour and text labels.
+
+    Resizes the image to a ``512x512`` canvas, blends a color where the mask is
+    true, then draws the mask contour and a two-line caption (a ``title`` line
+    plus the predicted IoU).
+
+    Args:
+        image: Original BGR input image with shape ``(H, W, 3)`` of any
+            resolution; it is resized onto the ``512x512`` canvas.
+        mask: Boolean mask with shape ``(512, 512)`` matching the canvas,
+            typically produced by a model whose input resolution is 512x512
+            (e.g. the SAM-family post-processing output). Passing a mask at
+            the original image resolution raises ``IndexError``.
+        iou: Predicted IoU of the selected mask.
+        mask_index: Index of the selected decoder mask.
+        title: First caption line describing the model or pipeline.
+        color: BGR color used for the mask overlay.
+
+    Returns:
+        BGR visualization image with the mask overlay, contour, and text labels.
+    """
+    canvas = cv2.resize(image, (512, 512), interpolation=cv2.INTER_LINEAR)
+    mask_bool = mask.astype(bool)
+    color_layer = np.zeros_like(canvas)
+    color_layer[:, :] = color
+    blended = cv2.addWeighted(canvas, 0.45, color_layer, 0.55, 0)
+    canvas[mask_bool] = blended[mask_bool]
+    contours, _ = cv2.findContours(mask_bool.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(canvas, contours, -1, (0, 255, 255), 2)
+    lines = [title, f"hbm_runtime dual model, mask={mask_index}, IoU={iou:.4f}"]
+    y = 28
+    for line in lines:
+        cv2.putText(canvas, line, (12, y), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (0, 0, 0), 4, cv2.LINE_AA)
+        cv2.putText(canvas, line, (12, y), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (255, 255, 255), 2, cv2.LINE_AA)
+        y += 28
+    return canvas
