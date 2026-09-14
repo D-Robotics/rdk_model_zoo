@@ -1,0 +1,28 @@
+{
+  "name": "rdk-model-zoo-catalog-publisher",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "scripts": {
+    "catalog:build": "tsx scripts/build-catalog.ts",
+    "catalog:check": "tsx scripts/build-catalog.ts --check",
+    "validate:sources": "tsx scripts/validate-sources.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run catalog:build && npm run typecheck",
+    "check": "npm run validate:sources && npm test && npm run build && npm run catalog:check"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "vitest": "3.2.7"
+  }
+}

@@ -1,0 +1,46 @@
+# Decoder INT16 hb_compile config (S100 / nash-e)
+#
+# 4 inputs: encoder_out + token_num + bias_embed + pre_acoustic_embeds
+#
+# Prerequisites:
+#   - ./decoder_only_final.onnx (produced by scripts/02_extract_decoder.py + 03-06)
+#   - ./real_calib/{encoder_after_norm_Add_1_output_0,shape_8609,token_num,bias_embed}/*.npy
+#     (produced by scripts/10_gen_real_calib.py — must use REAL FP32 pipeline outputs,
+#      NOT random data, or INT16 will collapse to all-</s> tokens)
+#
+# Run:
+#   hb_compile -c decoder_int16.yaml
+#
+# Produces:
+#   ./decoder_int16_output/decoder_int16.hbm             (~73 MB, ~5.8 ms)
+#   ./decoder_int16_output/decoder_int16_ptq_model.onnx  (for CER eval)
+
+model_parameters:
+  onnx_model: ./decoder_only_final.onnx
+  march: nash-e
+  output_model_file_prefix: decoder_int16
+  working_dir: ./decoder_int16_output
+
+input_parameters:
+  input_name: /encoder/after_norm/Add_1_output_0;token_num;bias_embed;onnx::Shape_8609
+  input_shape: 1x400x512;1;1x1x512;1x100x512
+  input_type_rt: featuremap;featuremap;featuremap;featuremap
+  input_type_train: featuremap;featuremap;featuremap;featuremap
+  input_layout_train: NCHW;NCHW;NCHW;NCHW
+  separate_batch: false
+
+calibration_parameters:
+  cal_data_dir: ./real_calib/encoder_after_norm_Add_1_output_0;./real_calib/token_num;./real_calib/bias_embed;./real_calib/shape_8609
+  calibration_type: max
+  quant_config:
+    model_config:
+      all_node_type: int16
+      activation:
+        calibration_type: max
+
+compiler_parameters:
+  optimize_level: O2
+  compile_mode: latency
+  core_num: 1
+  jobs: 32
+  cache_mode: disable

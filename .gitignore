@@ -42,6 +42,22 @@ GEMINI.md
 
 .DS_Store
 .worktrees/
-docs/catalog/node_modules/
-docs/catalog/dist/
-docs/catalog/public/data/catalog.json
+
+# Publisher source names may contain "build"; keep them despite the legacy
+# broad *build* rule above. Generated dependencies/output remain ignored.
+!tools/catalog-publisher/**
+
+# Catalog publisher dependencies and build output. The data package is
+# published as a CI artifact, never committed.
+tools/catalog-publisher/node_modules/
+tools/catalog-publisher/dist/
+
+# Pre-migration source snapshots. Kept on disk for provenance; see
+# archive/sources/REVISIONS.md.
+archive/
+
+# Local staging area used while moving the dashboard UI into the docs repo.
+.staging/
+
+# Local review reports and command logs.
+/audit/

@@ -1,0 +1,21 @@
+model_parameters:
+  onnx_model: './yolov8n-seg.onnx'
+  march: "bayes-e"
+  layer_out_dump: False
+  working_dir: 'yolov8n_instance_seg_bayese_640x640_nchw'
+  output_model_file_prefix: 'yolov8n_instance_seg_bayese_640x640_nchw'
+input_parameters:
+  input_name: ""
+  input_type_rt: 'rgb'
+  input_layout_rt: 'NCHW'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW'
+  norm_type: 'data_scale'
+  scale_value: 0.003921568627451
+calibration_parameters:
+  cal_data_dir: './calibration_data_rgb_f32_coco_640'
+  cal_data_type: 'float32'
+compiler_parameters:
+  compile_mode: 'latency'
+  debug: False
+  optimize_level: 'O3'

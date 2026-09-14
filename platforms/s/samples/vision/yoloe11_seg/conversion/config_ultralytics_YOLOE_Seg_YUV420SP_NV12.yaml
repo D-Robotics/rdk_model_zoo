@@ -1,0 +1,32 @@
+
+model_parameters:
+    onnx_model: 'yoloe-11s-seg-pf.onnx'
+    march: nash-e  # S100: nash-e, S100P: nash-m.
+    layer_out_dump: False
+    working_dir: 'bpu_outputs'
+    output_model_file_prefix: 'yoloe_11s_seg_pf_nashe_640x640_nv12' 
+    remove_node_name: '/model.23/loc/Conv;/model.23/cv5.0/cv5.0.2/Conv;/model.23/loc_1/Conv;/model.23/cv5.1/cv5.1.2/Conv;/model.23/loc_2/Conv;/model.23/cv5.2/cv5.2.2/Conv;/model.23/proto/cv3/act/Mul_output_0_HzCalibration;'
+    # YOLOE-v8-Seg: /model.23/loc/Conv;/model.23/cv5.0/cv5.0.2/Conv;/model.23/loc_1/Conv;/model.23/cv5.1/cv5.1.2/Conv;/model.23/loc_2/Conv;/model.23/cv5.2/cv5.2.2/Conv;/model.23/proto/cv3/act/Mul_output_0_HzCalibration;
+    # YOLOE-11-Seg: /model.22/loc/Conv;/model.22/cv5.0/cv5.0.2/Conv;/model.22/loc_1/Conv;/model.22/cv5.1/cv5.1.2/Conv;/model.22/loc_2/Conv;/model.22/cv5.2/cv5.2.2/Conv;/model.22/proto/cv3/act/Mul_output_0_HzCalibration;'
+input_parameters:
+    input_name: ''
+    input_type_rt: 'nv12'
+    input_type_train: 'rgb'
+    input_layout_train: 'NCHW;'
+    input_shape: ''
+    norm_type: 'data_scale'
+    mean_value: ''
+    scale_value: 0.003921568627451
+calibration_parameters:
+    cal_data_dir: '/open_explorer/calibration_data_rgb_f32_640'
+    cal_data_type: 'float32'
+    calibration_type: 'default'
+    quant_config: {"op_config": {"softmax": {"qtype": "int8"} } }
+compiler_parameters:
+    extra_params: {'input_no_padding': True, 'output_no_padding': True }
+    jobs: 15
+    compile_mode: 'latency'
+    debug: True
+    advice: 1
+    optimize_level: 'O2'
+    

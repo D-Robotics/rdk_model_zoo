@@ -1,0 +1,50 @@
+[UCP]: log level = 3
+[UCP]: UCP version = 3.3.3
+[VP]: log level = 3
+[DNN]: log level = 3
+[HPL]: log level = 3
+[UCPT]: log level = 6
+[DSP]: log level = 3
+hrt_model_exec model_info --model_file bpu_outputs/yoloe_v8s_seg_pf_nashe_640x640_nv12.hbm
+[DNN]: 3.3.3_(4.1.17 HBRT)
+Load model to DDR cost 108.448ms.
+This model file has 1 model:
+[yoloe_v8s_seg_pf_nashe_640x640_nv12]	
+---------------------------------------------------------------------
+[model name]: yoloe_v8s_seg_pf_nashe_640x640_nv12
+
+[model desc]: {"BUILDER_VERSION": "3.3.11", "HBDK_VERSION": "4.1.17", "HBDK_RUNTIME_VERSION": null, "HORIZON_NN_VERSION": "2.1.9", "CAFFE_MODEL": null, "PROTOTXT": null, "ONNX_MODEL": "/open_explorer/ws_yoloe_0514/yoloe_seg_ws_yoloe-v8s-seg-pf/yoloe-v8s-seg-pf.onnx", "MARCH": "nash-e", "LAYER_OUT_DUMP": "False", "LOG_LEVEL": null, "WORKING_DIR": "/open_explorer/ws_yoloe_0514/yoloe_seg_ws_yoloe-v8s-seg-pf/bpu_outputs", "MODEL_PREFIX": "yoloe_v8s_seg_pf_nashe_640x640_nv12", "OUTPUT_NODES": "", "REMOVE_NODE_TYPE": "", "REMOVE_NODE_NAME": "/model.22/loc/Conv;/model.22/cv5.0/cv5.0.2/Conv;/model.22/loc_1/Conv;/model.22/cv5.1/cv5.1.2/Conv;/model.22/loc_2/Conv;/model.22/cv5.2/cv5.2.2/Conv;/model.22/proto/cv3/act/Mul_output_0_HzCalibration", "DEBUG_MODE": "", "NODE_INFO": "{}", "INPUT_NAMES": "images", "INPUT_SPACE_AND_RANGE": "regular", "INPUT_TYPE_RT": "nv12", "INPUT_TYPE_TRAIN": "rgb", "INPUT_LAYOUT_TRAIN": "NCHW", "INPUT_LAYOUT_RT": "", "NORM_TYPE": "data_scale", "MEAN_VALUE": "[]", "SCALE_VALUE": "[0.003921568627451]", "STD_VALUE": "[]", "INPUT_SHAPE": "1x3x640x640", "INPUT_BATCH": "", "SEPARATE_BATCH": "False", "SEPARATE_NAME": "", "CUSTOM_OP_METHOD": null, "CUSTOM_OP_DIR": null, "CUSTOM_OP_REGISTER_FILES": "", "OPTIMIZATION": "", "CALI_TYPE": "default", "CAL_DATA_DIR": "/open_explorer/calibration_data_rgb_f32_640", "PER_CHANNEL": "False", "MAX_PERCENTILE": "None", "RUN_ON_CPU": "", "RUN_ON_BPU": "", "QUANT_CONFIG": {"op_config": {"softmax": {"qtype": "int8"}}}, "ADVICE": 1, "DEBUG": "True", "OPTIMIZE_LEVEL": "O2", "COMPILE_MODE": "latency", "CORE_NUM": 1, "MAX_TIME_PER_FC": 0, "BALANCE_FACTOR": 100, "ABILITY_ENTRY": null, "INPUT_SOURCE": {"images": "pyramid"}, "hbdk3_compatible_mode": "False", "CALI_EXTRA_PARAM": {}, "EXTRA_PARAMS": {"input_no_padding": true, "output_no_padding": true}}
+input[0]: 
+name: images_y
+valid shape: (1,640,640,1,)
+aligned byte size: -1
+tensor type: HB_DNN_TENSOR_TYPE_U8
+quanti type: NONE
+stride: (-1,-1,1,1,)
+
+input[1]: 
+name: images_uv
+valid shape: (1,320,320,2,)
+aligned byte size: -1
+tensor type: HB_DNN_TENSOR_TYPE_U8
+quanti type: NONE
+stride: (-1,-1,2,1,)
+
+output[0]: 
+name: output0
+valid shape: (1,80,80,4585,)
+aligned byte size: 117376000
+tensor type: HB_DNN_TENSOR_TYPE_F32
+quanti type: NONE
+stride: (117376000,1467200,18340,4,)
+
+output[1]: 
+name: output1
+valid shape: (1,80,80,64,)
+aligned byte size: 1638400
+tensor type: HB_DNN_TENSOR_TYPE_S32
+quanti type: SCALE
+stride: (1638400,20480,256,4,)
+scale data: 0.000656621,0.000407096,0.000532722,0.000505093,0.000847866,0.00107062,0.00123899,0.00131756,0.00131238,0.00133224,0.00135469,0.00123035,0.00114401,0.00113106,0.00110948,0.0010784,0.000638489,0.000398678,0.000508978,0.000563373,0.000875063,0.00105595,0.0011207,0.00114229,0.00114315,0.00115956,0.00112416,0.00106113,0.0010076,0.000954928,0.000878516,0.000810739,0.000647555,0.000433214,0.000507252,0.000530563,0.000776203,0.00103004,0.0011751,0.0012718,0.00132792,0.00132878,0.0012718,0.00119927,0.00114142,0.00108358,0.00102227,0.00093507,0.000587548,0.000306078,0.000505525,0.000564668,0.000817646,0.00110171,0.00125712,0.00134001,0.00136677,0.00135469,0.0012882,0.00120877,0.0011561,0.00118114,0.00117423,0.0011112,
+quantizeAxis: 3
+zero_point data: 

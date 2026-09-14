@@ -1,0 +1,49 @@
+model:
+  march: nash-p
+  model_name: MiniCPM5
+  model_path: ./MiniCPM5-2B
+  model_list: [lm]
+  model_dtype: bfloat16
+  device: cuda
+  do_sample: false
+  chunk_prefill: true
+  enable_thinking: false
+  text_config:
+    max_kvcache_len: 4096
+    max_lm_input_len: 256
+calibration:
+  dataset_type: ppl
+  dataset_name: wikitext2
+  data_path: ./datasets/wikitext2-calibration-train
+  seq_len: 256
+  log_path: ./output/qconfig
+  calib_ckpt_save_path: ./output/calibration
+  calibration_step: 50
+evaluation:
+  dataset_type: ppl
+  dataset_name: wikitext2
+  data_path: ./datasets/wikitext2-test
+  seq_len: 2048
+  bs: 1
+  result_path: ./output/float_eval
+compile:
+  hbm_save_path: ./output/hbm
+  calib_ckpt_load_path: ./output/calibration
+  rmsnorm_version: cuda_hp
+  opt_level: 2
+  jobs: 8
+  cache_path: ./output/cache
+  debug: false
+  progress_bar: true
+  input_no_padding: false
+  output_no_padding: false
+  cache_mode: enable
+  enable_hpc: true
+  prefill:
+    enable_hpc: true
+  decode:
+    enable_hpc: false
+  core_num: 4
+  embed_dtype: fp16
+  return_all_logits: true
+  max_l2m_size: 25165824
