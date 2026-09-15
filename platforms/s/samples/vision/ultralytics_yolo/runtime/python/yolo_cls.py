@@ -11,230 +11,114 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""RDK S Ultralytics YOLO classification runtime wrapper (compatibility names).
 
-# flake8: noqa: E501
-# flake8: noqa: E402
+The maintained implementation lives in the canonical sample at
+`samples/vision/ultralytics_yolo/runtime/python/yolo_cls.py`. This module keeps
+the RDK S module, class and configuration names importable, so existing RDK S
+code and documentation keep working, without a second copy of the pipeline.
 
-"""Provide a YOLO classification inference wrapper and pipeline utilities.
-
-This module defines a lightweight YOLO classification runtime wrapper built
-on HBM runtime. It supports YOLO classification models (v8-cls and v11-cls),
-producing top-K class predictions with softmax probabilities.
-
-Key Features:
-    - YoloClsConfig dataclass for configuring model parameters.
-    - YoloCls class providing pre_process, forward, post_process, predict,
-      and __call__ methods.
-    - Top-K classification with softmax probability computation.
+# The S wrapper documented its own thresholds, anchor sizes and resize
+# policy, and had no `platform` field; those defaults are reinstated here.
+The runtime behaviour is the canonical behaviour; only the names and the
+platform-bound defaults below are reinstated here.
 
 Typical Usage:
-    >>> from yolo_cls import YoloCls, YoloClsConfig
-    >>> cfg = YoloClsConfig(model_path="/path/to/yolo11n_cls.hbm")
-    >>> model = YoloCls(cfg)
-    >>> results = model(img)  # List of (class_id, probability)
-
-Notes:
-    - Requires hbm_runtime to be installed in the deployment environment.
-    - Input images are expected in BGR format by default.
-    - Classification models use stretch resize (resize_type=0) by default.
+    >>> from yolo_cls import YoloClsConfig, YoloCls
+    >>> net = YoloCls(YoloClsConfig(model_path="yolo11n_detect_nashe_640x640_nv12.hbm"))
+    >>> results = net(img)
 """
 
 import os
 import sys
-import hbm_runtime
-import numpy as np
-from scipy.special import softmax
-from dataclasses import dataclass
-from typing import Optional, Dict, List, Tuple
 
-# Add project root to sys.path so we can import utility modules.
-sys.path.append(os.path.abspath("../../../../../"))
-import utils.py_utils.preprocess as pre_utils
-import utils.py_utils.postprocess as post_utils
+
+def _find_sample_root() -> str:
+    """Locate the canonical Ultralytics YOLO sample above this file.
+
+    The platform trees are distributions of the merged sample, so the
+    canonical copy always sits at `<repo>/samples/vision/ultralytics_yolo`.
+    Walking up to it instead of counting `..` keeps this working when the
+    sample is moved, and turns a missing canonical sample into an explicit
+    error instead of a confusing import failure.
+
+    A directory only counts as the canonical sample when it carries the shared
+    downloader, because every platform tree ends in the same
+    `samples/vision/ultralytics_yolo` tail and would otherwise match first.
+
+    Returns:
+        Absolute path of the canonical sample directory.
+
+    Raises:
+        ImportError: If no parent directory holds the canonical sample.
+    """
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        candidate = os.path.join(current, "samples", "vision",
+                                 "ultralytics_yolo")
+        if os.path.isfile(os.path.join(candidate, "runtime", "python",
+                                       "yolo_download.py")):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise ImportError(
+                "the canonical Ultralytics YOLO sample was not found above "
+                f"{os.path.dirname(os.path.abspath(__file__))}; this "
+                "compatibility entry point forwards to it and cannot run "
+                "without it.")
+        current = parent
+
+
+_SAMPLE_PYTHON = os.path.join(_find_sample_root(), "runtime", "python")
+if _SAMPLE_PYTHON not in sys.path:
+    sys.path.insert(0, _SAMPLE_PYTHON)
+
+from dataclasses import dataclass, field  # noqa: E402
+from typing import List, Optional  # noqa: E402
+
+import importlib.util
+_module_name = "_rdk_shared_yolo_cls"
+if _module_name not in sys.modules:
+    _spec = importlib.util.spec_from_file_location(_module_name, os.path.join(_SAMPLE_PYTHON, "yolo_cls.py"))
+    _module = importlib.util.module_from_spec(_spec)
+    sys.modules[_module_name] = _module
+    _spec.loader.exec_module(_module)
+_BaseConfig = sys.modules[_module_name].YoloClsConfig
+_BaseModel = sys.modules[_module_name].YoloCls
+from yolo_platform import PlatformProfile, resolve_platform  # noqa: E402
 
 
 @dataclass
-class YoloClsConfig:
-    """Configuration for initializing the YoloCls model.
+class YoloClsConfig(_BaseConfig):
+    """YoloClsConfig bound to the RDK S series.
 
-    This dataclass stores the model path and all runtime parameters required
-    for preprocessing, inference, and postprocessing in the YOLO classification
-    pipeline. It applies to YOLO classification models (v8-cls and v11-cls).
-
-    Attributes:
-        model_path: Path to the compiled YOLO-Cls `.hbm` model.
-        topk: Number of top classes to return. Defaults to 5.
-        resize_type: Image resize strategy (0=stretch, 1=letterbox).
-            Classification models typically use stretch resize.
+    Every field is inherited from `YoloClsConfig`. Only the defaults the
+    RDK S tree documented differently are reinstated, so the constructor stays
+    interchangeable.
     """
-    model_path: str
-    topk: int = 5
+
     resize_type: int = 0
 
+    platform: Optional[PlatformProfile] = field(default_factory=resolve_platform)
 
-class YoloCls:
-    """YOLO classification wrapper based on HB_HBMRuntime.
 
-    This class provides a unified inference pipeline for YOLO classification
-    models (v8-cls and v11-cls), including input preprocessing, model
-    execution, and postprocessing with softmax and top-K selection.
-
-    Attributes:
-        model: Loaded HBM runtime model instance.
-        model_name: Name of the first loaded model.
-        input_names: Input tensor name list.
-        output_names: Output tensor name list.
-        input_shapes: Input tensor shape dictionary.
-        input_h: Model input height (pixels).
-        input_w: Model input width (pixels).
-        cfg: Model configuration object.
-    """
+class YoloCls(_BaseModel):
+    """YoloClsConfig counterpart of `YoloCls` bound to the RDK S series."""
 
     def __init__(self, config: YoloClsConfig):
-        """Initialize the YoloCls model with the given configuration.
+        """Bind the board platform when the configuration does not name one.
+
+        The RDK S series publishes different artifacts for S100, S100P and
+        S600, so a configuration that does not name a platform is bound to the
+        board it is constructed on. An unsupported or undetected board fails
+        here rather than later, at model load.
 
         Args:
-            config: Configuration object containing model path and all inference
-                parameters. All field semantics are defined in `YoloClsConfig`.
+            config: Runtime configuration, updated in place.
         """
-        self.cfg = config
-        self.model = hbm_runtime.HB_HBMRuntime(self.cfg.model_path)
+        if config.platform is None:
+            config.platform = resolve_platform()
+        super().__init__(config)
 
-        self.model_name = self.model.model_names[0]
-        self.input_names = self.model.input_names[self.model_name]
-        self.output_names = self.model.output_names[self.model_name]
-        self.input_shapes = self.model.input_shapes[self.model_name]
 
-        # Model input resolution (H, W)
-        input_shape = self.input_shapes[self.input_names[0]]
-        self.input_h = input_shape[1]
-        self.input_w = input_shape[2]
-
-    def set_scheduling_params(self,
-                              priority: Optional[int] = None,
-                              bpu_cores: Optional[list] = None) -> None:
-        """Configure inference scheduling parameters.
-
-        Args:
-            priority: Inference priority in the range [0, 255].
-            bpu_cores: List of BPU core indices used for inference.
-
-        Returns:
-            None
-        """
-        kwargs = {}
-        if priority is not None:
-            kwargs["priority"] = {self.model_name: priority}
-        if bpu_cores is not None:
-            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
-
-        if kwargs:
-            self.model.set_scheduling_params(**kwargs)
-
-    def pre_process(self,
-                    img: np.ndarray,
-                    image_format: Optional[str] = "BGR"
-                    ) -> Dict[str, Dict[str, np.ndarray]]:
-        """Preprocess an input image into model-required tensor format.
-
-        The input image is resized and converted from BGR to NV12
-        (Y and UV planes). S100 models use the fixed dual-input Y/UV
-        tensor protocol.
-
-        Args:
-            img: Input image array in BGR format.
-            image_format: Input image format. Currently only `"BGR"` is supported.
-
-        Returns:
-            A nested input tensor dictionary: `{model_name: {input_name: tensor}}`.
-
-        Raises:
-            ValueError: If an unsupported image format is provided.
-        """
-        if image_format != "BGR":
-            raise ValueError(f"Unsupported image_format: {image_format}")
-
-        resized_img = pre_utils.resized_image(
-            img, self.input_w, self.input_h, self.cfg.resize_type)
-        y, uv = pre_utils.bgr_to_nv12_planes(resized_img)
-
-        if len(self.input_names) != 2:
-            raise ValueError(
-                f"YOLO classification expects fixed NV12 Y/UV inputs, got {len(self.input_names)} inputs.")
-
-        return {
-            self.model_name: {
-                self.input_names[0]: y,
-                self.input_names[1]: uv
-            }
-        }
-
-    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict:
-        """Execute model inference.
-
-        Args:
-            input_tensor: Preprocessed input tensor dictionary produced by
-                `pre_process()`.
-
-        Returns:
-            A dictionary containing raw output tensors returned by the runtime.
-        """
-        return self.model.run(input_tensor)
-
-    def post_process(self,
-                     outputs: Dict,
-                     topk: Optional[int] = None) -> List[Tuple[int, float]]:
-        """Process raw logits to get Top-K classification results.
-
-        The output tensor is reshaped and passed through softmax
-        to obtain probabilities. The top-K classes are returned.
-
-        Args:
-            outputs: Raw output tensors from inference.
-            topk: Number of top results to return. If `None`, uses config value.
-
-        Returns:
-            List of `(class_id, probability)` sorted by probability descending.
-        """
-        topk = topk if topk is not None else self.cfg.topk
-
-        logits = outputs[self.model_name][self.output_names[0]].reshape(-1)
-
-        probs = softmax(logits)
-        top_indices = np.argsort(probs)[::-1][:topk]
-        return [(int(idx), float(probs[idx])) for idx in top_indices]
-
-    def predict(self,
-                img: np.ndarray,
-                image_format: str = "BGR",
-                topk: Optional[int] = None) -> List[Tuple[int, float]]:
-        """Run the complete classification pipeline on a single image.
-
-        This method internally performs preprocessing, inference, and
-        postprocessing.
-
-        Args:
-            img: Input image array in BGR format.
-            image_format: Input image format. Currently supports `"BGR"`.
-            topk: Number of top results to return.
-
-        Returns:
-            List of (class_id, probability) tuples.
-        """
-        inp = self.pre_process(img, image_format)
-        out = self.forward(inp)
-        return self.post_process(out, topk)
-
-    def __call__(self,
-                 img: np.ndarray,
-                 **kwargs) -> List[Tuple[int, float]]:
-        """Callable interface equivalent to predict().
-
-        Args:
-            img: Input image array.
-            **kwargs: Additional keyword arguments passed to predict().
-
-        Returns:
-            List of (class_id, probability) tuples.
-        """
-        return self.predict(img, **kwargs)
+__all__ = ["YoloCls", "YoloClsConfig"]

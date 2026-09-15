@@ -11,276 +11,107 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""RDK X5 Ultralytics YOLO segmentation runtime wrapper (compatibility names).
 
-"""
-Ultralytics YOLO Segmentation Runtime Wrapper.
+The maintained implementation lives in the canonical sample at
+`samples/vision/ultralytics_yolo/runtime/python/yolo_seg.py`. This module keeps
+the RDK X5 module, class and configuration names importable, so existing RDK X5
+code and documentation keep working, without a second copy of the pipeline.
 
-This module implements the maintained Python segmentation wrapper for the
-`ultralytics_yolo` sample on `RDK X5`. It is shared by all segmentation
-families delivered in this sample:
+# The X5 wrapper documented an NMS default of `0.70` and named the mask
+# coefficient count `mc`. Here `mc` is authoritative: it is copied onto the
+# canonical `mces_num` field after construction.
+The runtime behaviour is the canonical behaviour; only the names and the
+platform-bound defaults below are reinstated here.
 
-    - YOLOv8
-    - YOLOv9
-    - YOLO11
-
-The exported X5 models use one fixed output protocol:
-
-    - [cls, box, mask_coeff] * 3
-    - one final proto output
-
-The wrapper uses shared preprocessing and postprocessing utilities under
-`utils/py_utils`, while the task-specific decode flow remains inside this
-module.
+Typical Usage:
+    >>> from yolo_seg import UltralyticsYOLOSegConfig, UltralyticsYOLOSeg
+    >>> net = UltralyticsYOLOSeg(UltralyticsYOLOSegConfig(model_path="yolo11n_seg_bayese_640x640_nv12.bin"))
+    >>> results = net(img)
 """
 
 import os
 import sys
-import time
-import logging
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
-
-import hbm_runtime
-import numpy as np
-
-sys.path.append(os.path.abspath("../../../../../"))
-
-import utils.py_utils.postprocess as post_utils
-import utils.py_utils.preprocess as pre_utils
 
 
-logger = logging.getLogger("Ultralytics_YOLO")
+def _find_sample_root() -> str:
+    """Locate the canonical Ultralytics YOLO sample above this file.
+
+    The platform trees are distributions of the merged sample, so the
+    canonical copy always sits at `<repo>/samples/vision/ultralytics_yolo`.
+    Walking up to it instead of counting `..` keeps this working when the
+    sample is moved, and turns a missing canonical sample into an explicit
+    error instead of a confusing import failure.
+
+    A directory only counts as the canonical sample when it carries the shared
+    downloader, because every platform tree ends in the same
+    `samples/vision/ultralytics_yolo` tail and would otherwise match first.
+
+    Returns:
+        Absolute path of the canonical sample directory.
+
+    Raises:
+        ImportError: If no parent directory holds the canonical sample.
+    """
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        candidate = os.path.join(current, "samples", "vision",
+                                 "ultralytics_yolo")
+        if os.path.isfile(os.path.join(candidate, "runtime", "python",
+                                       "yolo_download.py")):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise ImportError(
+                "the canonical Ultralytics YOLO sample was not found above "
+                f"{os.path.dirname(os.path.abspath(__file__))}; this "
+                "compatibility entry point forwards to it and cannot run "
+                "without it.")
+        current = parent
+
+
+_SAMPLE_PYTHON = os.path.join(_find_sample_root(), "runtime", "python")
+if _SAMPLE_PYTHON not in sys.path:
+    sys.path.insert(0, _SAMPLE_PYTHON)
+
+from dataclasses import dataclass, field  # noqa: E402
+from typing import List, Optional  # noqa: E402
+
+import importlib.util
+_module_name = "_rdk_shared_yolo_seg"
+if _module_name not in sys.modules:
+    _spec = importlib.util.spec_from_file_location(_module_name, os.path.join(_SAMPLE_PYTHON, "yolo_seg.py"))
+    _module = importlib.util.module_from_spec(_spec)
+    sys.modules[_module_name] = _module
+    _spec.loader.exec_module(_module)
+_BaseConfig = sys.modules[_module_name].YoloSegConfig
+_BaseModel = sys.modules[_module_name].YoloSeg
+from yolo_platform import PlatformProfile, resolve_platform  # noqa: E402
 
 
 @dataclass
-class UltralyticsYOLOSegConfig:
-    """Configuration used by the segmentation wrapper.
+class UltralyticsYOLOSegConfig(_BaseConfig):
+    """UltralyticsYOLOSegConfig bound to RDK X5.
 
-    Args:
-        model_path: Path to the X5 `.bin` model.
-        classes_num: Number of categories predicted by the segmentation head.
-        score_thres: Confidence threshold used before NMS.
-        nms_thres: IoU threshold used by class-wise NMS.
-        reg: Number of DFL bins for one box edge.
-        mc: Number of mask coefficients per prediction.
-        resize_type: Resize policy, `0` for direct resize and `1` for
-            letterbox.
-        strides: Feature strides used by the three segmentation heads.
+    Every field is inherited from `YoloSegConfig`. Only the defaults the
+    RDK X5 tree documented differently are reinstated, so the constructor stays
+    interchangeable.
     """
 
-    model_path: str
-    classes_num: int = 80
-    score_thres: float = 0.25
     nms_thres: float = 0.70
-    reg: int = 16
     mc: int = 32
-    resize_type: int = 1
-    strides: List[int] = field(default_factory=lambda: [8, 16, 32])
+
+    platform: Optional[PlatformProfile] = field(
+        default_factory=lambda: resolve_platform("x5"))
 
 
-class UltralyticsYOLOSeg:
-    """Segmentation wrapper built on top of `hbm_runtime`."""
+    def __post_init__(self) -> None:
+        """Copy the compatibility `mc` field onto the canonical field."""
+        self.mces_num = int(self.mc)
 
-    def __init__(self, config: UltralyticsYOLOSegConfig):
-        """Initialize the segmentation runtime wrapper.
 
-        Args:
-            config: Segmentation runtime configuration for the current model.
-        """
-        self.cfg = config
-        self.conf_thres_raw = -np.log(1.0 / self.cfg.score_thres - 1.0)
-        self.weights_static = np.arange(self.cfg.reg, dtype=np.float32)[None, None, :]
+class UltralyticsYOLOSeg(_BaseModel):
+    """UltralyticsYOLOSegConfig counterpart of `YoloSeg` bound to RDK X5."""
 
-        t0 = time.time()
-        self.model = hbm_runtime.HB_HBMRuntime(self.cfg.model_path)
-        logger.info("\033[1;31mLoad Model time = %.2f ms\033[0m", 1000 * (time.time() - t0))
 
-        self.model_name = self.model.model_names[0]
-        self.input_names = self.model.input_names[self.model_name]
-        self.output_names = self.model.output_names[self.model_name]
-        self.input_shapes = self.model.input_shapes[self.model_name]
-
-        input_shape = self.input_shapes[self.input_names[0]]
-        if input_shape[1] == 3:
-            self.input_h = input_shape[2]
-            self.input_w = input_shape[3]
-        else:
-            self.input_h = input_shape[1]
-            self.input_w = input_shape[2]
-
-    def set_scheduling_params(
-        self,
-        priority: Optional[int] = None,
-        bpu_cores: Optional[list] = None,
-    ) -> None:
-        """Set optional BPU scheduling parameters.
-
-        Args:
-            priority: Runtime priority used by `hbm_runtime`.
-            bpu_cores: BPU core list used by the model scheduler.
-        """
-        kwargs = {}
-        if priority is not None:
-            kwargs["priority"] = {self.model_name: priority}
-        if bpu_cores is not None:
-            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
-        if kwargs:
-            self.model.set_scheduling_params(**kwargs)
-
-    def pre_process(
-        self,
-        img: np.ndarray,
-        resize_type: Optional[int] = None,
-    ) -> Dict[str, Dict[str, np.ndarray]]:
-        """Convert one BGR image into packed NV12 model input.
-
-        Args:
-            img: Input BGR image loaded by OpenCV.
-            resize_type: Optional resize policy override.
-
-        Returns:
-            The nested input tensor dictionary required by `HB_HBMRuntime.run`.
-        """
-        t0 = time.time()
-        resize_type = self.cfg.resize_type if resize_type is None else resize_type
-
-        resized = pre_utils.resized_image(img, self.input_w, self.input_h, resize_type)
-        y, uv = pre_utils.bgr_to_nv12_planes(resized)
-        packed_nv12 = np.concatenate([y.reshape(-1), uv.reshape(-1)]).astype(np.uint8)
-
-        logger.info("\033[1;31mPre-process time = %.2f ms\033[0m", 1000 * (time.time() - t0))
-        return {self.model_name: {self.input_names[0]: packed_nv12}}
-
-    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, Dict[str, np.ndarray]]:
-        """Run BPU inference for one input image."""
-        t0 = time.time()
-        outputs = self.model.run(input_tensor)
-        logger.info("\033[1;31mForward time = %.2f ms\033[0m", 1000 * (time.time() - t0))
-        return outputs
-
-    def post_process(
-        self,
-        outputs: Dict[str, Dict[str, np.ndarray]],
-        ori_img_w: int,
-        ori_img_h: int,
-        score_thres: Optional[float] = None,
-        nms_thres: Optional[float] = None,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[np.ndarray]]:
-        """Decode segmentation tensors into boxes, classes, and masks.
-
-        Args:
-            outputs: Raw runtime outputs returned by `forward`.
-            ori_img_w: Original image width.
-            ori_img_h: Original image height.
-            score_thres: Optional score threshold override.
-            nms_thres: Optional NMS threshold override.
-
-        Returns:
-            A tuple containing:
-                - scaled bounding boxes
-                - confidence scores
-                - class ids
-                - resized binary masks
-        """
-        t0 = time.time()
-        score_thres = self.cfg.score_thres if score_thres is None else score_thres
-        nms_thres = self.cfg.nms_thres if nms_thres is None else nms_thres
-        conf_thres_raw = -np.log(1.0 / score_thres - 1.0)
-        raw_outputs = outputs[self.model_name]
-
-        boxes_all = []
-        scores_all = []
-        cls_all = []
-        mces_all = []
-
-        for level_index, stride in enumerate(self.cfg.strides):
-            base_idx = level_index * 3
-            cls_output = raw_outputs[self.output_names[base_idx]].reshape(-1, self.cfg.classes_num)
-            box_output = raw_outputs[self.output_names[base_idx + 1]]
-            mc_output = raw_outputs[self.output_names[base_idx + 2]]
-
-            scores, cls_ids, valid_indices = post_utils.filter_classification(cls_output, conf_thres_raw)
-            if valid_indices.size == 0:
-                continue
-
-            grid_size = self.input_h // stride
-            boxes = post_utils.decode_boxes(
-                box_output,
-                valid_indices,
-                grid_size,
-                stride,
-                self.weights_static,
-            )
-            mces = post_utils.filter_mces(mc_output, valid_indices)
-
-            boxes_all.append(boxes)
-            scores_all.append(scores)
-            cls_all.append(cls_ids.astype(np.int32))
-            mces_all.append(mces)
-
-        if not boxes_all:
-            return (
-                np.empty((0, 4), dtype=np.float32),
-                np.empty((0,), dtype=np.float32),
-                np.empty((0,), dtype=np.int32),
-                [],
-            )
-
-        boxes = np.concatenate(boxes_all, axis=0).astype(np.float32)
-        scores = np.concatenate(scores_all, axis=0).astype(np.float32)
-        cls_ids = np.concatenate(cls_all, axis=0).astype(np.int32)
-        mces = np.concatenate(mces_all, axis=0).astype(np.float32)
-
-        keep = post_utils.NMS(boxes, scores, cls_ids, nms_thres)
-        if not keep:
-            return (
-                np.empty((0, 4), dtype=np.float32),
-                np.empty((0,), dtype=np.float32),
-                np.empty((0,), dtype=np.int32),
-                [],
-            )
-
-        boxes = boxes[keep]
-        scores = scores[keep]
-        cls_ids = cls_ids[keep]
-        mces = mces[keep]
-
-        proto = raw_outputs[self.output_names[9]]
-        if proto.shape[0] == 1:
-            proto = proto[0]
-        if proto.shape[-1] != self.cfg.mc and proto.shape[0] == self.cfg.mc:
-            proto = np.transpose(proto, (1, 2, 0))
-
-        masks = post_utils.decode_masks(
-            mces,
-            boxes,
-            proto,
-            self.input_w,
-            self.input_h,
-            proto.shape[1],
-            proto.shape[0],
-            mask_thresh=0.5,
-        )
-        scaled_boxes = post_utils.scale_coords_back(
-            boxes.copy(),
-            ori_img_w,
-            ori_img_h,
-            self.input_w,
-            self.input_h,
-            self.cfg.resize_type,
-        )
-        masks = post_utils.resize_masks_to_boxes(masks, scaled_boxes, ori_img_w, ori_img_h)
-
-        logger.info("\033[1;31mPost Process time = %.2f ms\033[0m", 1000 * (time.time() - t0))
-        return scaled_boxes, scores, cls_ids, masks
-
-    def predict(self, img: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[np.ndarray]]:
-        """Run the full segmentation pipeline on one image."""
-        ori_img_h, ori_img_w = img.shape[:2]
-        input_tensor = self.pre_process(img)
-        outputs = self.forward(input_tensor)
-        return self.post_process(outputs, ori_img_w, ori_img_h)
-
-    def __call__(self, img: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[np.ndarray]]:
-        """Provide function-style inference for one image."""
-        return self.predict(img)
+__all__ = ["UltralyticsYOLOSeg", "UltralyticsYOLOSegConfig"]

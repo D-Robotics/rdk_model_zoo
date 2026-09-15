@@ -1,72 +1,100 @@
+# Copyright (c) 2025 D-Robotics Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""RDK S Ultralytics YOLO pose evaluation (compatibility wrapper).
+
+The maintained implementation lives in the canonical sample at
+`samples/vision/ultralytics_yolo/evaluator/eval_yolo_pose.py`. This module forwards to
+it from the RDK S tree, so the documented evaluation command keeps working
+without a second copy of the metric code.
+
+# The platform is resolved from the board, so S100, S100P and S600 select
+# their own artifacts.
+#
+Usage:
+    python3 eval_yolo_pose.py --help
+"""
+
 import os
 import sys
-import json
-import time
-import argparse
-
-import cv2
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-runtime_path = os.path.abspath(os.path.join(current_dir, "../runtime/python"))
-project_root = os.path.abspath(os.path.join(current_dir, "../../../../"))
-sys.path.append(runtime_path)
-sys.path.append(project_root)
-
-from yolo_pose import YoloPose, YoloPoseConfig
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Ultralytics YOLO Pose Evaluation")
-    parser.add_argument("--model-path", required=True)
-    parser.add_argument("--image-dir", required=True)
-    parser.add_argument("--annotation", required=True)
-    parser.add_argument("--conf-thres", type=float, default=0.25)
-    parser.add_argument("--nms-thres", type=float, default=0.7)
-    parser.add_argument("--json-save-path", default="results_pose.json")
-    parser.add_argument("--limit", type=int, default=0)
-    args = parser.parse_args()
+def _find_sample_root() -> str:
+    """Locate the canonical Ultralytics YOLO sample above this file.
 
-    coco = COCO(args.annotation)
-    image_ids = coco.getImgIds()
-    if args.limit > 0:
-        image_ids = image_ids[:args.limit]
+    The platform trees are distributions of the merged sample, so the
+    canonical copy always sits at `<repo>/samples/vision/ultralytics_yolo`.
+    Walking up to it instead of counting `..` keeps this working when the
+    sample is moved, and turns a missing canonical sample into an explicit
+    error instead of a confusing import failure.
 
-    model = YoloPose(YoloPoseConfig(model_path=args.model_path))
-    results = []
-    start = time.time()
-    for image_id in image_ids:
-        info = coco.loadImgs([image_id])[0]
-        img = cv2.imread(os.path.join(args.image_dir, info["file_name"]))
-        if img is None:
-            continue
-        boxes, scores, cls_ids, kpts_xy, kpts_score = model(img, score_thres=args.conf_thres, nms_thres=args.nms_thres)
-        for box, score, kxy, kscore in zip(boxes, scores, kpts_xy, kpts_score):
-            x1, y1, x2, y2 = [float(v) for v in box]
-            flat_kpts = []
-            for (x, y), ks in zip(kxy, kscore):
-                ks_value = ks.item() if hasattr(ks, "item") else float(ks)
-                flat_kpts.extend([float(x), float(y), 1 if ks_value > 0 else 0])
-            results.append({
-                "image_id": image_id,
-                "category_id": 1,
-                "bbox": [x1, y1, x2 - x1, y2 - y1],
-                "score": float(score),
-                "keypoints": flat_kpts,
-            })
+    A directory only counts as the canonical sample when it carries the shared
+    downloader, because every platform tree ends in the same
+    `samples/vision/ultralytics_yolo` tail and would otherwise match first.
 
-    with open(args.json_save_path, "w", encoding="utf-8") as f:
-        json.dump(results, f)
+    Returns:
+        Absolute path of the canonical sample directory.
 
-    coco_dt = coco.loadRes(args.json_save_path)
-    coco_eval = COCOeval(coco, coco_dt, "keypoints")
-    coco_eval.evaluate()
-    coco_eval.accumulate()
-    coco_eval.summarize()
-    print(f"elapsed: {time.time() - start:.3f}s")
+    Raises:
+        ImportError: If no parent directory holds the canonical sample.
+    """
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        candidate = os.path.join(current, "samples", "vision",
+                                 "ultralytics_yolo")
+        if os.path.isfile(os.path.join(candidate, "runtime", "python",
+                                       "yolo_download.py")):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise ImportError(
+                "the canonical Ultralytics YOLO sample was not found above "
+                f"{os.path.dirname(os.path.abspath(__file__))}; this "
+                "compatibility entry point forwards to it and cannot run "
+                "without it.")
+        current = parent
+
+
+_SCRIPT = os.path.join(_find_sample_root(), "evaluator", "eval_yolo_pose.py")
+
+
+def _run(script: str, argv: list) -> None:
+    """Run a canonical script as `__main__` with the given arguments.
+
+    Args:
+        script: Absolute path of the canonical script to run.
+        argv: Arguments the script should see.
+
+    Returns:
+        None
+    """
+    import runpy  # noqa: PLC0415 - only needed when the wrapper actually runs
+
+    sys.argv = [script] + list(argv)
+    runpy.run_path(script, run_name="__main__")
+
+def main(argv=None) -> None:
+    """Run the canonical evaluator.
+
+    Args:
+        argv: Argument list, defaulting to `sys.argv[1:]`.
+
+    Returns:
+        None
+    """
+    forwarded = list(sys.argv[1:] if argv is None else argv)
+    _run(_SCRIPT, forwarded)
 
 
 if __name__ == "__main__":
     main()
-

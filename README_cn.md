@@ -1,3 +1,5 @@
+> 首批合并入口：[Ultralytics YOLO：X5/S 共用 Sample](samples/vision/ultralytics_yolo/README_cn.md)。其旧平台命令已转发，需完整仓库；其他 Sample 暂保留平台目录。
+
 <div align="center">
   <img src="platforms/x5/docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
 </div>
@@ -28,7 +30,7 @@
 
 本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者**快速上手 BPU**、**快速跑通模型推理流程**。
 
-main 分支同时收纳**全部已支持硬件平台**的维护中发行版。每个平台在 `platforms/` 下保留各自完整、自包含的目录树——示例、运行时代码、转换配置、文档与发布清单——不做裁剪。平台目录树是逐字保留的发行版：内部相对路径不变，因此原有示例相对路径保持有效；板端运行仍需单独验收。各平台不共享运行时 API，本仓库也不做这种假装统一。
+main 分支统一维护全部已支持平台。本轮从 Ultralytics YOLO 开始合并相同 Sample：共用 Python 入口和任务实现，保留平台输入协议与独立编译工具链。其旧平台路径转发到仓库根目录的 `samples/`，需要完整仓库；其他 Sample 暂保持原平台目录。板端运行仍需单独验收。
 
 ### 平台登记 (Platform Registry)
 
@@ -56,7 +58,7 @@ main 分支同时收纳**全部已支持硬件平台**的维护中发行版。�
 ```bash
 rdk_model_zoo/
 |-- platforms/
-|   |-- x5/                  # RDK X5 完整发行版（逐字保留原布局）
+|   |-- x5/                  # RDK X5 平台目录（YOLO 转发至共用实现）
 |   |   |-- samples/         # vision/ 与 robotics/ 示例
 |   |   |-- utils/           # 共用 Python 工具与批处理工具
 |   |   |-- datasets/        # 数据集准备脚本
@@ -65,10 +67,10 @@ rdk_model_zoo/
 |   |   |   `-- releases/    # 已发布版本说明
 |   |   |-- tros/            # TROS 集成参考
 |   |   `-- README.md        # X5 入口文档
-|   |-- s/                   # RDK S100/S100P/S600 完整发行版
+|   |-- s/                   # RDK S100/S100P/S600 平台目录
 |   |   |-- samples/         # vision/、speech/、vla/
 |   |   `-- docs/release/    # models.yaml + benchmarks.yaml（S 清单对）
-|   `-- x3/                  # RDK X3 完整发行版
+|   `-- x3/                  # RDK X3 平台目录
 |       |-- demos/           # 旧版 demo 布局
 |       `-- release/         # models.yaml + benchmarks.yaml（X3 清单对）
 |-- tools/

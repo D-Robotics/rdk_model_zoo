@@ -11,341 +11,118 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""RDK S Ultralytics YOLO pose runtime wrapper (compatibility names).
 
-# flake8: noqa: E501
-# flake8: noqa: E402
+The maintained implementation lives in the canonical sample at
+`samples/vision/ultralytics_yolo/runtime/python/yolo_pose.py`. This module keeps
+the RDK S module, class and configuration names importable, so existing RDK S
+code and documentation keep working, without a second copy of the pipeline.
 
-"""Provide a YOLO pose estimation inference wrapper and pipeline utilities.
-
-This module defines a lightweight YOLO-Pose runtime wrapper built on HBM runtime.
-It supports DFL-based YOLO pose models (v8 and v11), producing bounding
-boxes, class IDs, scores, keypoint coordinates and keypoint scores.
-
-Key Features:
-    - YoloPoseConfig dataclass for configuring model parameters.
-    - YoloPose class providing pre_process, forward, post_process, predict,
-      and __call__ methods.
-    - Anchor-free DFL box decoding and keypoint coordinate decoding.
-    - Class-wise NMS with keypoints kept aligned.
+# The S wrapper documented its own thresholds, anchor sizes and resize
+# policy, and had no `platform` field; those defaults are reinstated here.
+The runtime behaviour is the canonical behaviour; only the names and the
+platform-bound defaults below are reinstated here.
 
 Typical Usage:
-    >>> from yolo_pose import YoloPose, YoloPoseConfig
-    >>> cfg = YoloPoseConfig(model_path="/path/to/yolo11n_pose.hbm")
-    >>> model = YoloPose(cfg)
-    >>> boxes, scores, cls_ids, kpts_xy, kpts_score = model(img)
-
-Notes:
-    - Requires hbm_runtime to be installed in the deployment environment.
-    - Input images are expected in BGR format by default.
-    - The model outputs 9 tensors: 3 scales x (cls, box, kpts).
-    - Keypoint scores are returned as sigmoid-activated probabilities
-      (range [0, 1]), ready for visualization thresholding.
+    >>> from yolo_pose import YoloPoseConfig, YoloPose
+    >>> net = YoloPose(YoloPoseConfig(model_path="yolo11n_detect_nashe_640x640_nv12.hbm"))
+    >>> results = net(img)
 """
 
 import os
 import sys
-import hbm_runtime
-import numpy as np
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Tuple
 
-# Add project root to sys.path so we can import utility modules.
-sys.path.append(os.path.abspath("../../../../../"))
-import utils.py_utils.preprocess as pre_utils
-import utils.py_utils.postprocess as post_utils
+
+def _find_sample_root() -> str:
+    """Locate the canonical Ultralytics YOLO sample above this file.
+
+    The platform trees are distributions of the merged sample, so the
+    canonical copy always sits at `<repo>/samples/vision/ultralytics_yolo`.
+    Walking up to it instead of counting `..` keeps this working when the
+    sample is moved, and turns a missing canonical sample into an explicit
+    error instead of a confusing import failure.
+
+    A directory only counts as the canonical sample when it carries the shared
+    downloader, because every platform tree ends in the same
+    `samples/vision/ultralytics_yolo` tail and would otherwise match first.
+
+    Returns:
+        Absolute path of the canonical sample directory.
+
+    Raises:
+        ImportError: If no parent directory holds the canonical sample.
+    """
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        candidate = os.path.join(current, "samples", "vision",
+                                 "ultralytics_yolo")
+        if os.path.isfile(os.path.join(candidate, "runtime", "python",
+                                       "yolo_download.py")):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise ImportError(
+                "the canonical Ultralytics YOLO sample was not found above "
+                f"{os.path.dirname(os.path.abspath(__file__))}; this "
+                "compatibility entry point forwards to it and cannot run "
+                "without it.")
+        current = parent
+
+
+_SAMPLE_PYTHON = os.path.join(_find_sample_root(), "runtime", "python")
+if _SAMPLE_PYTHON not in sys.path:
+    sys.path.insert(0, _SAMPLE_PYTHON)
+
+from dataclasses import dataclass, field  # noqa: E402
+from typing import List, Optional  # noqa: E402
+
+import importlib.util
+_module_name = "_rdk_shared_yolo_pose"
+if _module_name not in sys.modules:
+    _spec = importlib.util.spec_from_file_location(_module_name, os.path.join(_SAMPLE_PYTHON, "yolo_pose.py"))
+    _module = importlib.util.module_from_spec(_spec)
+    sys.modules[_module_name] = _module
+    _spec.loader.exec_module(_module)
+_BaseConfig = sys.modules[_module_name].YoloPoseConfig
+_BaseModel = sys.modules[_module_name].YoloPose
+from yolo_platform import PlatformProfile, resolve_platform  # noqa: E402
 
 
 @dataclass
-class YoloPoseConfig:
-    """Configuration for initializing the YoloPose model.
+class YoloPoseConfig(_BaseConfig):
+    """YoloPoseConfig bound to the RDK S series.
 
-    This dataclass stores the model path and all runtime parameters required
-    for preprocessing, inference, and postprocessing in the YOLO pose
-    estimation pipeline. It applies to DFL-based YOLO pose models (v8 and v11).
-
-    Attributes:
-        model_path: Path to the compiled YOLO-Pose `.hbm` model.
-        resize_type: Image resize mode used during preprocessing.
-            - 1: Keep aspect ratio with letterbox padding.
-        score_thres: Minimum confidence threshold for filtering detections.
-        nms_thres: IoU threshold used for Non-Maximum Suppression.
-        reg: Number of DFL regression bins per bounding-box side. Defaults to 16.
-        strides: Feature map downsampling strides for each detection scale.
-        anchor_sizes: Feature map grid sizes for each detection scale.
+    Every field is inherited from `YoloPoseConfig`. Only the defaults the
+    RDK S tree documented differently are reinstated, so the constructor stays
+    interchangeable.
     """
-    model_path: str
+
     resize_type: int = 1
     score_thres: float = 0.25
     nms_thres: float = 0.7
-    reg: int = 16
-    strides: list = field(default_factory=lambda: [8, 16, 32])
-    anchor_sizes: list = field(default_factory=lambda: [80, 40, 20])
+    anchor_sizes: List[int] = field(
+        default_factory=lambda: [80, 40, 20])
+
+    platform: Optional[PlatformProfile] = field(default_factory=resolve_platform)
 
 
-class YoloPose:
-    """YOLO pose estimation wrapper based on HB_HBMRuntime.
-
-    This class provides a unified inference pipeline for DFL-based YOLO pose
-    models (v8 and v11), including input preprocessing, model execution,
-    and postprocessing steps such as anchor-free DFL box decoding, keypoint
-    coordinate decoding, Non-Maximum Suppression (NMS), and coordinate
-    rescaling to original image space.
-
-    Attributes:
-        model: Loaded HBM runtime model instance.
-        model_name: Name of the first loaded model.
-        input_names: Input tensor name list.
-        output_names: Output tensor name list.
-        input_shapes: Input tensor shape dictionary.
-        input_h: Model input height (pixels).
-        input_w: Model input width (pixels).
-        weights_static: DFL bin weights for box expectation computation.
-        cfg: Model configuration object.
-
-    Notes:
-        The model outputs 9 tensors: for 3 detection scales (stride 8/16/32),
-        each has [cls, box, kpts] outputs.
-        Box regression uses DFL (16-bin distributions per side).
-        Keypoints use 17 COCO keypoints, each with (x, y, score).
-    """
+class YoloPose(_BaseModel):
+    """YoloPoseConfig counterpart of `YoloPose` bound to the RDK S series."""
 
     def __init__(self, config: YoloPoseConfig):
-        """Initialize the YoloPose model with the given configuration.
+        """Bind the board platform when the configuration does not name one.
+
+        The RDK S series publishes different artifacts for S100, S100P and
+        S600, so a configuration that does not name a platform is bound to the
+        board it is constructed on. An unsupported or undetected board fails
+        here rather than later, at model load.
 
         Args:
-            config: Configuration object containing model path and all inference
-                parameters. All field semantics are defined in `YoloPoseConfig`.
+            config: Runtime configuration, updated in place.
         """
-        # Load model and extract metadata
-        self.model = hbm_runtime.HB_HBMRuntime(config.model_path)
+        if config.platform is None:
+            config.platform = resolve_platform()
+        super().__init__(config)
 
-        self.model_name = self.model.model_names[0]
-        self.input_names = self.model.input_names[self.model_name]
-        self.output_names = self.model.output_names[self.model_name]
-        self.input_shapes = self.model.input_shapes[self.model_name]
 
-        # Model input resolution (H, W)
-        self.input_h = self.input_shapes[self.input_names[0]][1]
-        self.input_w = self.input_shapes[self.input_names[0]][2]
-
-        # DFL bin weights: shape (1, 1, reg) for expectation computation
-        self.weights_static = np.arange(config.reg, dtype=np.float32)[np.newaxis, np.newaxis, :]
-
-        self.cfg = config
-
-    def set_scheduling_params(self,
-                              priority: Optional[int] = None,
-                              bpu_cores: Optional[list] = None) -> None:
-        """Configure inference scheduling parameters.
-
-        Args:
-            priority: Inference priority in the range [0, 255].
-            bpu_cores: List of BPU core indices used for inference.
-
-        Returns:
-            None
-        """
-        kwargs = {}
-        if priority is not None:
-            kwargs["priority"] = {self.model_name: priority}
-        if bpu_cores is not None:
-            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
-
-        if kwargs:
-            self.model.set_scheduling_params(**kwargs)
-
-    def pre_process(self,
-                    img: np.ndarray,
-                    image_format: Optional[str] = "BGR"
-                    ) -> Dict[str, Dict[str, np.ndarray]]:
-        """Preprocess an input image into model-required tensor format.
-
-        The input image is letterbox-resized and converted from BGR to NV12
-        (Y and UV planes).
-
-        Args:
-            img: Input image array in BGR format.
-            image_format: Input image format. Currently only `"BGR"` is supported.
-
-        Returns:
-            A nested input tensor dictionary: `{model_name: {input_name: tensor}}`.
-
-        Raises:
-            ValueError: If an unsupported image format is provided.
-        """
-        if image_format == "BGR":
-            resize_img = pre_utils.resized_image(
-                img, self.input_w, self.input_h, self.cfg.resize_type)
-            y, uv = pre_utils.bgr_to_nv12_planes(resize_img)
-        else:
-            raise ValueError(f"Unsupported image_format: {image_format}")
-
-        return {
-            self.model_name: {
-                self.input_names[0]: y,
-                self.input_names[1]: uv
-            }
-        }
-
-    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
-        """Execute model inference.
-
-        Args:
-            input_tensor: Preprocessed input tensor dictionary produced by `pre_process()`.
-
-        Returns:
-            A dictionary containing raw output tensors returned by the runtime.
-        """
-        outputs = self.model.run(input_tensor)
-        return outputs
-
-    def post_process(self,
-                     outputs: Dict[str, Dict[str, np.ndarray]],
-                     ori_img_w: int,
-                     ori_img_h: int,
-                     score_thres: Optional[float] = None,
-                     nms_thres: Optional[float] = None,
-                     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Convert raw model outputs into pose estimation results.
-
-        Steps:
-        1) For each detection scale, filter by logit threshold and decode DFL
-           boxes and keypoint coordinates.
-        2) Concatenate results, apply NMS.
-        3) Rescale boxes and keypoints to original image dimensions.
-
-        Args:
-            outputs: Raw output tensors from inference (as returned by `forward()`).
-            ori_img_w: Width of the original input image.
-            ori_img_h: Height of the original input image.
-            score_thres: Confidence threshold override. If `None`, uses config value.
-            nms_thres: IoU threshold for NMS override. If `None`, uses config value.
-
-        Returns:
-            A tuple containing:
-                - boxes: Bounding boxes with shape `(N, 4)`, format `[x1, y1, x2, y2]`.
-                - scores: Confidence scores with shape `(N,)`.
-                - cls_ids: Class indices with shape `(N,)`.
-                - kpts_xy: Keypoint coordinates with shape `(N, 17, 2)`.
-                - kpts_score: Keypoint scores (sigmoid-activated) with shape `(N, 17, 1)`.
-        """
-        score_thres = score_thres if score_thres is not None else self.cfg.score_thres
-        nms_thres = nms_thres if nms_thres is not None else self.cfg.nms_thres
-
-        # Inverse sigmoid threshold for raw logit filtering
-        conf_thres_raw = -np.log(1.0 / score_thres - 1.0)
-
-        # Step 1: Decode each detection head (cls + box + kpts)
-        model_outputs = outputs[self.model_name]
-        all_boxes = []
-        all_scores = []
-        all_ids = []
-        all_kpts_xy = []
-        all_kpts_score = []
-        for i, (stride, anchor_size) in enumerate(
-                zip(self.cfg.strides, self.cfg.anchor_sizes)):
-            cls_key  = self.output_names[3 * i]
-            box_key  = self.output_names[3 * i + 1]
-            kpts_key = self.output_names[3 * i + 2]
-
-            # Filter by raw logit threshold, decode DFL boxes
-            scores, ids, valid_indices = post_utils.filter_classification(
-                model_outputs[cls_key], conf_thres_raw)
-            dbboxes = post_utils.decode_boxes(
-                model_outputs[box_key], valid_indices,
-                anchor_size, stride, self.weights_static)
-
-            # Decode keypoints (x, y, score) for valid detections
-            anchor = post_utils.gen_anchor(anchor_size)[valid_indices]
-            kpts_xy, kpts_score = post_utils.decode_kpts(
-                model_outputs[kpts_key], valid_indices,
-                anchor_size, stride, anchor)
-
-            all_boxes.append(dbboxes)
-            all_scores.append(scores)
-            all_ids.append(ids)
-            all_kpts_xy.append(kpts_xy)
-            all_kpts_score.append(kpts_score)
-
-        # Concatenate across all scales
-        boxes      = np.concatenate(all_boxes,      axis=0)
-        scores     = np.concatenate(all_scores,     axis=0)
-        ids        = np.concatenate(all_ids,        axis=0)
-        kpts_xy    = np.concatenate(all_kpts_xy,    axis=0)
-        kpts_score = np.concatenate(all_kpts_score, axis=0)
-
-        # Step 2: NMS
-        keep = post_utils.NMS(boxes, scores, ids, nms_thres)
-
-        # Step 3: Rescale boxes to original image
-        xyxy = post_utils.scale_coords_back(
-            boxes[keep], ori_img_w, ori_img_h,
-            self.input_w, self.input_h, self.cfg.resize_type)
-
-        # Step 4: Rescale keypoints to original image
-        scaled_kpts_xy, scaled_kpts_score = post_utils.scale_keypoints_to_original_image(
-            kpts_xy[keep], kpts_score[keep],
-            ori_img_w, ori_img_h,
-            self.input_w, self.input_h,
-            self.cfg.resize_type)
-
-        # Apply sigmoid to keypoint visibility scores
-        scaled_kpts_score = post_utils.sigmoid(scaled_kpts_score)
-
-        return xyxy, scores[keep], ids[keep], scaled_kpts_xy, scaled_kpts_score
-
-    def predict(self,
-                img: np.ndarray,
-                image_format: str = "BGR",
-                score_thres: Optional[float] = None,
-                nms_thres: Optional[float] = None,
-                ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Run the complete pose estimation pipeline on a single image.
-
-        This method internally performs preprocessing, inference, and postprocessing.
-
-        Args:
-            img: Input image array in BGR format.
-            image_format: Input image format. Currently supports `"BGR"`.
-            score_thres: Confidence threshold override.
-            nms_thres: IoU threshold override for NMS.
-
-        Returns:
-            A tuple containing:
-                - boxes: Bounding boxes with shape `(N, 4)`.
-                - scores: Confidence scores with shape `(N,)`.
-                - cls_ids: Class indices with shape `(N,)`.
-                - kpts_xy: Keypoint coordinates with shape `(N, 17, 2)`.
-                - kpts_score: Keypoint scores (sigmoid-activated) with shape `(N, 17, 1)`.
-        """
-        ori_img_h, ori_img_w = img.shape[:2]
-
-        # 1) Preprocess
-        input_tensor = self.pre_process(img, image_format)
-
-        # 2) Inference
-        outputs = self.forward(input_tensor)
-
-        # 3) Postprocess
-        return self.post_process(outputs, ori_img_w, ori_img_h, score_thres, nms_thres)
-
-    def __call__(self,
-                 img: np.ndarray,
-                 image_format: str = "BGR",
-                 score_thres: Optional[float] = None,
-                 nms_thres: Optional[float] = None,
-                 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Callable interface for the pose estimation pipeline.
-
-        This method is functionally equivalent to calling `predict()`.
-
-        Args:
-            img: Input image array in BGR format.
-            image_format: Input image format.
-            score_thres: Confidence threshold override.
-            nms_thres: IoU threshold override for NMS.
-
-        Returns:
-            Same return values as `predict()`.
-        """
-        return self.predict(img, image_format, score_thres, nms_thres)
+__all__ = ["YoloPose", "YoloPoseConfig"]

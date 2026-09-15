@@ -28,7 +28,7 @@
 
 This repository is the official collection of BPU model examples and tools (Model Zoo) provided by D-Robotics. It is oriented towards AI model deployment and application development on BPU (Brain Processing Unit), helping developers to **quickly get started with BPU** and **fast-track model inference workflows**.
 
-The main branch hosts the maintained distribution of **every supported hardware platform** side by side. Each platform keeps its own complete, self-contained tree — samples, runtime code, conversion configs, documentation, and release manifests — under `platforms/`. A platform tree is a verbatim distribution: relative paths inside it are preserved, so existing sample-relative paths remain valid. Board runtime verification remains a separate release check. The platforms do not share a runtime API, and this repository does not pretend they do.
+The main branch carries all supported platforms. Migration to shared samples starts with [Ultralytics YOLO](samples/vision/ultralytics_yolo/README.md): one Python entry point with explicit platform profiles, separate conversion toolchains, and X5-only C++. Its old platform commands forward to the shared implementation and require the complete repository checkout. Other samples remain under `platforms/`; board verification remains a separate release check.
 
 ### Platform Registry
 

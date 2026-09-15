@@ -1,6 +1,4 @@
-#!/user/bin/env python
-
-# Copyright (c) 2024，WuChao D-Robotics.
+# Copyright (c) 2025 D-Robotics Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,135 +11,162 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""RDK X5 Ultralytics YOLO detection evaluation (compatibility wrapper).
 
-# 注意: 此程序在RDK板端运行
-# Attention: This program runs on RDK board.
+The maintained implementation lives in the canonical sample at
+`samples/vision/ultralytics_yolo/evaluator/eval_yolo_det.py`. This module forwards to
+it from the RDK X5 tree, so the documented evaluation command keeps working
+without a second copy of the metric code.
 
-import sys
-from pathlib import Path
+# The pre-merge options `--image-path`, `--json-path`, `--max-num` and
+# `--score-thres` are accepted and renamed onto the canonical options.
+#
+Usage:
+    python3 eval_yolo_det.py --help
+"""
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime" / "python"))
-
-from ultralytics_yolo_det import *
-
-import json
-
-import argparse
-import logging 
 import os
+import sys
 
 
-# 日志模块配置
-# logging configs
-logging.basicConfig(
-    level = logging.DEBUG,
-    format = '[%(name)s] [%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s',
-    datefmt='%H:%M:%S')
-logger = logging.getLogger("RDK_YOLO")
+def _find_sample_root() -> str:
+    """Locate the canonical Ultralytics YOLO sample above this file.
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model-path', type=str, default='source/reference_bin_models/det/yolo12n_detect_bayes-e_640x640_nv12.bin', 
-                        help="""Path to BPU Quantized *.bin Model.
-                                RDK X3(Module): Bernoulli2.
-                                RDK Ultra: Bayes.
-                                RDK X5(Module): Bayes-e.
-                                RDK S100: Nash-e.
-                                RDK S100P: Nash-m.""") 
-    parser.add_argument('--classes-num', type=int, default=80, help='Classes Num to Detect.')
-    parser.add_argument('--reg', type=int, default=16, help='DFL reg layer.')
-    parser.add_argument('--nms-thres', type=float, default=0.7, help='IoU threshold.')
-    parser.add_argument('--score-thres', type=float, default=0.25, help='confidence threshold.')
-    parser.add_argument('--strides', type=lambda s: list(map(int, s.split(','))), 
-                        default=[8, 16 ,32],
-                        help='--strides 8, 16, 32')
-    parser.add_argument('--image-path', type=str, default="../../../../datasets/coco/val2017", help='COCO2017 val source image path.')
-    parser.add_argument('--result-image-dump', type=bool, default=False, help='dump image result or not')
-    parser.add_argument('--result-image-path', type=str, default="coco2017_image_result", help='COCO2017 val image result saving path.')
-    parser.add_argument('--json-path', type=str, default="yolo12n_detect_bayes-e_640x640_nv12_py_coco2017_val_pridect.json", help='convert to json save path.')
-    parser.add_argument('--max-num', type=int, default=50000, help='max num of images which will be precessed.')
-    opt = parser.parse_args()
-    logger.info(opt)
-    begin_time = time()
-    run(opt)
-    print("\033[1;31m" + f"Total time = {(time() - begin_time)/60:.2f} min" + "\033[0m")
+    The platform trees are distributions of the merged sample, so the
+    canonical copy always sits at `<repo>/samples/vision/ultralytics_yolo`.
+    Walking up to it instead of counting `..` keeps this working when the
+    sample is moved, and turns a missing canonical sample into an explicit
+    error instead of a confusing import failure.
 
-def run(opt):
-    # id -> coco_id
-    coco_id = [1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,51,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90]
+    A directory only counts as the canonical sample when it carries the shared
+    downloader, because every platform tree ends in the same
+    `samples/vision/ultralytics_yolo` tail and would otherwise match first.
+
+    Returns:
+        Absolute path of the canonical sample directory.
+
+    Raises:
+        ImportError: If no parent directory holds the canonical sample.
+    """
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        candidate = os.path.join(current, "samples", "vision",
+                                 "ultralytics_yolo")
+        if os.path.isfile(os.path.join(candidate, "runtime", "python",
+                                       "yolo_download.py")):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise ImportError(
+                "the canonical Ultralytics YOLO sample was not found above "
+                f"{os.path.dirname(os.path.abspath(__file__))}; this "
+                "compatibility entry point forwards to it and cannot run "
+                "without it.")
+        current = parent
 
 
-    # 实例化
-    model = Ultralytics_YOLO_Detect_Bayese_YUV420SP(
-        model_path=opt.model_path,
-        classes_num=opt.classes_num,   # default: 80
-        nms_thres=opt.nms_thres,       # default: 0.7
-        score_thres=opt.score_thres,   # default: 0.25
-        reg=opt.reg,                   # default: 16
-        strides=opt.strides            # default: [8, 16, 32]
-        )
+_SCRIPT = os.path.join(_find_sample_root(), "evaluator", "eval_yolo_det.py")
 
-    # 创建 result* 目录存储结果
-    if opt.result_image_dump:
-        for i in range(9999):
-            result_image_path = f"{opt.result_image_path}_{i}"
-            if not os.path.exists(result_image_path):
-                os.makedirs(result_image_path)
-                logger.info("\033[1;32m" + f"Created directory Successfully: \"{result_image_path}\"" + "\033[0m")
-                break
-    
-    # 生成pycocotools的预测结果json文件
-    pridect_json = []
 
-    # 板端直接推理所有验证集，并生成标签和渲染结果 (串行程序)
-    img_names = os.listdir(opt.image_path)
-    img_num = len(img_names)
-    control = opt.max_num
-    for cnt, img_name in enumerate(img_names, 1):
-        # 流程控制
-        if control < 1:
-            break
-        control -= 1
+def _has_option(argv, name: str) -> bool:
+    """Return True when `--name` appears as a flag or as `--name=value`.
 
-        logger.info("\033[1;32m" + f"[{cnt}/{img_num}] Processing image: \"{img_name}\"" + "\033[0m")
-        # 端到端推理
-        img = cv2.imread(os.path.join(opt.image_path, img_name))
-        input_tensor = model.preprocess_yuv420sp(img)
-        outputs = model.c2numpy(model.forward(input_tensor))
-        results = model.postProcess(outputs)
-        # 渲染结果并保存
-        if opt.result_image_dump:
-            logger.info("\033[1;32m" + "Draw Results: " + "\033[0m")
-            for class_id, score, x1, y1, x2, y2 in results:
-                logger.info("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
-                draw_detection(img, (x1, y1, x2, y2), score, class_id)
-                save_path = os.path.join(result_image_path, img_name[:-4] + "_result.jpg")
-                cv2.imwrite(save_path, img)
-                logger.info("\033[1;32m" + f"result image saved: \"./{save_path}\"" + "\033[0m")
-        id_cnt = 0
-        for class_id, score, x1, y1, x2, y2 in results:
-            # logger.info("(%d, %d, %d, %d) -> %s: %.2f"%(x1,y1,x2,y2, coco_names[class_id], score))
-            width = max(0, x2 - x1)
-            height = max(0, y2 - y1)
-            x1, y1, x2, y2, width, height = float(x1), float(y1), float(x2), float(y2), float(width), float(height)
-            pridect_json.append({
-                    'area': width * height,
-                    'bbox': [x1, y1, width, height],
-                    'category_id': int(coco_id[class_id]),
-                    'id': id_cnt,
-                    "score": float(score),
-                    'image_id': int(img_name[:-4]),
-                    'iscrowd': 0,
-                    'segmentation': [[x1, y1, x2, y1, x2, y2, x1, y2]]
-                })
-            id_cnt += 1
+    Args:
+        argv: Argument list to scan.
+        name: Option name without the leading dashes.
 
-    # 保存标签
-    with open(opt.json_path, 'w') as f:
-        json.dump(pridect_json, f, ensure_ascii=False, indent=1)
-    
-    logger.info("\033[1;32m" + f"result label saved: \"{opt.json_path}\"" + "\033[0m")
-    
+    Returns:
+        True when the option is present.
+    """
+    flag = "--" + name
+    return any(arg == flag or arg.startswith(flag + "=") for arg in argv)
+
+#: Pre-merge X5 option names mapped onto the canonical evaluator options.
+_RENAMED_OPTIONS = {
+    "--image-path": "--image-dir",
+    "--json-path": "--json-save-path",
+    "--max-num": "--limit",
+    "--score-thres": "--conf-thres",
+}
+
+#: Pre-merge options the merged evaluator derives instead of accepting.
+_DERIVED_OPTIONS = {
+    "--classes-num": "the class count is read from the model output",
+    "--reg": "the DFL bin count is read from the model output",
+    "--strides": "the feature strides are read from the model output",
+    "--mc": "the mask coefficient count is read from the model output",
+    "--nkpt": "the keypoint count is read from the model output",
+    "--kpt-conf-thres": "keypoint confidence is reported per keypoint",
+    "--result-image-dump": "the evaluator writes the result JSON only",
+    "--result-image-path": "the evaluator writes the result JSON only",
+    "--test-img": "the evaluator walks --image-dir instead",
+    "--img-save-path": "the evaluator writes the result JSON only",
+    "--is-open": "mask morphology follows the model wrapper default",
+    "--is-point": "mask morphology follows the model wrapper default",
+}
+
+
+def _translate(argv: list) -> list:
+    """Translate the pre-merge X5 evaluator options onto the canonical ones.
+
+    Args:
+        argv: Arguments as the caller passed them.
+
+    Returns:
+        Arguments the canonical evaluator accepts.
+    """
+    translated = []
+    index = 0
+    while index < len(argv):
+        arg = argv[index]
+        name = arg.split("=", 1)[0]
+        if name in _DERIVED_OPTIONS:
+            print(f"[notice] ignoring {name}: {_DERIVED_OPTIONS[name]}.",
+                  file=sys.stderr)
+            if "=" not in arg and index + 1 < len(argv):
+                index += 1
+            index += 1
+            continue
+        replacement = _RENAMED_OPTIONS.get(name)
+        if replacement is None:
+            translated.append(arg)
+        elif "=" in arg:
+            translated.append(replacement + arg[len(name):])
+        else:
+            translated.append(replacement)
+        index += 1
+    return translated
+
+
+
+def _run(script: str, argv: list) -> None:
+    """Run a canonical script as `__main__` with the given arguments.
+
+    Args:
+        script: Absolute path of the canonical script to run.
+        argv: Arguments the script should see.
+
+    Returns:
+        None
+    """
+    import runpy  # noqa: PLC0415 - only needed when the wrapper actually runs
+
+    sys.argv = [script] + list(argv)
+    runpy.run_path(script, run_name="__main__")
+
+def main(argv=None) -> None:
+    """Run the canonical evaluator.
+
+    Args:
+        argv: Argument list, defaulting to `sys.argv[1:]`.
+
+    Returns:
+        None
+    """
+    forwarded = list(sys.argv[1:] if argv is None else argv)
+    forwarded = _translate(forwarded)
+    _run(_SCRIPT, forwarded)
+
 
 if __name__ == "__main__":
     main()

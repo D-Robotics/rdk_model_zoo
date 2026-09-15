@@ -1,6 +1,6 @@
 # 平台登记 (Platform Registry)
 
-main 分支并列收纳全部已支持硬件平台。`platforms/` 下的每个目录都是一个**完整、自包含的发行版**：其中的示例、运行时代码、转换配置、文档与发布清单，与该平台独立发布分支上的内容完全一致，内部相对路径保持不变。
+main 分支统一维护全部已支持平台。尚未合并的 Sample 保留在 `platforms/`；已审计的同类实现逐个迁入仓库根目录 `samples/`，并保留旧路径兼容入口。首批为 Ultralytics YOLO。历史 Tag 保留原有完整布局。
 
 [English](./README.md) | **简体中文**
 
@@ -12,15 +12,11 @@ main 分支并列收纳全部已支持硬件平台。`platforms/` 下的每个�
 
 同一份登记表连同硬件标识与许可证指针，以机器可读形式发布于 [`registry.json`](./registry.json)。
 
-## 为什么不做平台合并
+## 共用 Sample 迁移
 
-这三个平台是近亲，但不是可互换的构建。X5 与 S 都提供名为 `hbm_runtime` 的模块，但底层依赖不同；X5 模型使用 `.bin`，S 模型使用 `.hbm`；X3 早于两者，运行 `hobot_dnn` 与 `bpu_infer_lib_x3`。目录约定也不同——X5、S 使用 `samples/vision/<model>/`，X3 使用旧版 `demos/<task>/<Model>/` 布局与 PascalCase 命名。
+首批为 [Ultralytics YOLO](../samples/vision/ultralytics_yolo/README_cn.md)：共用 Python 任务实现、显式选择平台，X5/S 转换流程独立，C++ 仅保留 X5 支持。旧平台命令转发到共用实现，因此需要完整仓库；原 README 与 Manifest 仍是 Benchmark 证据。
 
-如果摊平成单一的 `samples/` 目录树，就必须重命名目录、改写运行时导入，并把两套互不兼容的 API 强行合并。这会破坏已发布文档中的每一条相对路径，并让发布清单静默失效——清单正是以仓库相对路径精确引用来源的。保持平台完整可以完全避免这些问题，代价只是每条链接多一层前缀。
-
-## 布局不变式
-
-平台目录内部的任何内容都不得依赖平台前缀。像 `platforms/x5/samples/vision/ultralytics_yolo/runtime/python/run.sh` 这样的路径，必须在同一子树被检出到仓库根目录时同样可用——历史发布 Tag 正是这种布局。贡献者不得引入绝对路径、跨平台相对导入，或假设存在同级平台。
+其他 Sample 暂保留平台布局，按运行时、编译器、资产及评测差异逐项审计后再迁移。历史 Tag 不重写，也不因本次合并要求各板卡同步打 Tag。
 
 ## 各平台内容
 

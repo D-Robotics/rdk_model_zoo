@@ -1,6 +1,6 @@
 # Platform Registry
 
-The main branch distributes every supported hardware platform side by side. Each directory under `platforms/` is a **complete, self-contained distribution**: its samples, runtime code, conversion configurations, documentation, and release manifests are exactly the ones published on that platform's own release line, with internal relative paths unchanged.
+The main branch maintains all supported platforms. Platform-local samples remain here; audited shared samples move to the root `samples/` tree with compatibility entry points. Ultralytics YOLO is the first such migration. Historical release tags retain their original self-contained layout.
 
 **English** | [简体中文](./README_cn.md)
 
@@ -12,15 +12,15 @@ The main branch distributes every supported hardware platform side by side. Each
 
 The same registry, with hardware identifiers and license pointers, is published as [`registry.json`](./registry.json) for tooling.
 
-## Why the platforms are not merged
+## Differences retained across platforms
 
 The platforms are close relatives, not interchangeable builds. X5 and S both expose a module named `hbm_runtime`, with different platform backends. X5 artifacts use `.bin` and S artifacts use `.hbm`; X3 predates both and runs `hobot_dnn` with `bpu_infer_lib_x3`. Directory conventions differ too — X5 and S use `samples/vision/<model>/`, while X3 uses a legacy `demos/<task>/<Model>/` layout with PascalCase names.
 
-A single flattened `samples/` tree would have to rename directories, rewrite runtime imports, and collapse two incompatible APIs into one. That would break every relative path in the published documentation and silently invalidate the release manifests, which cite sources by exact repository-relative path. Keeping the platforms whole avoids all of it, and costs only a one-level prefix on every link.
+## Shared sample migration
 
-## Layout invariant
+The first audited merge is [Ultralytics YOLO](../samples/vision/ultralytics_yolo/README.md). It keeps the existing five-directory sample layout with shared Python task implementations and explicit platform input profiles. X5/S conversion workflows remain separate; C++ remains X5-only. Old platform commands forward to the root sample, so this sample now requires the complete repository checkout. Its original README/Manifest paths remain Benchmark provenance.
 
-Nothing inside a platform directory may depend on the platform prefix. A path such as `platforms/x5/samples/vision/ultralytics_yolo/runtime/python/run.sh` must work when the same subtree is checked out at the repository root, which is exactly what the historical release tags hold. Contributors must not introduce absolute paths, cross-platform relative imports, or references that assume a sibling platform exists.
+Other samples still use platform-local layouts. Migrate them individually after auditing runtime, compiler, artifact and evaluation differences. Historical tags keep the layouts and APIs they originally published; this local merge does not rewrite tags or require synchronized platform release tags.
 
 ## Platform contents
 

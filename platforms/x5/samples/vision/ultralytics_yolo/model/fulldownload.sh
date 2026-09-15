@@ -1,80 +1,39 @@
 #!/usr/bin/env bash
+# Download every RDK X5 Ultralytics YOLO model asset.
+#
+# The maintained implementation lives in the canonical sample. This script
+# forwards to it from the RDK X5 tree, keeping the documented command and the
+# download location working. Model names and URLs come from the shared asset
+# registry, so a downloaded file always matches the path the runtime resolves.
+#
+# Usage:
+#   bash fulldownload.sh
+#   bash fulldownload.sh
+#   bash fulldownload.sh --dry-run
 set -e
 
-BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ultralytics_YOLO"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-MODELS=(
-  "yolov5nu_detect_bayese_640x640_nv12.bin"
-  "yolov5su_detect_bayese_640x640_nv12.bin"
-  "yolov5mu_detect_bayese_640x640_nv12.bin"
-  "yolov5lu_detect_bayese_640x640_nv12.bin"
-  "yolov5xu_detect_bayese_640x640_nv12.bin"
-  "yolov8n_detect_bayese_640x640_nv12.bin"
-  "yolov8s_detect_bayese_640x640_nv12.bin"
-  "yolov8m_detect_bayese_640x640_nv12.bin"
-  "yolov8l_detect_bayese_640x640_nv12.bin"
-  "yolov8x_detect_bayese_640x640_nv12.bin"
-  "yolov9t_detect_bayese_640x640_nv12.bin"
-  "yolov9s_detect_bayese_640x640_nv12.bin"
-  "yolov9m_detect_bayese_640x640_nv12.bin"
-  "yolov9c_detect_bayese_640x640_nv12.bin"
-  "yolov9e_detect_bayese_640x640_nv12.bin"
-  "yolov10n_detect_bayese_640x640_nv12.bin"
-  "yolov10s_detect_bayese_640x640_nv12.bin"
-  "yolov10m_detect_bayese_640x640_nv12.bin"
-  "yolov10b_detect_bayese_640x640_nv12.bin"
-  "yolov10l_detect_bayese_640x640_nv12.bin"
-  "yolov10x_detect_bayese_640x640_nv12.bin"
-  "yolo11n_detect_bayese_640x640_nv12.bin"
-  "yolo11s_detect_bayese_640x640_nv12.bin"
-  "yolo11m_detect_bayese_640x640_nv12.bin"
-  "yolo11l_detect_bayese_640x640_nv12.bin"
-  "yolo11x_detect_bayese_640x640_nv12.bin"
-  "yolo12n_detect_bayese_640x640_nv12.bin"
-  "yolo12s_detect_bayese_640x640_nv12.bin"
-  "yolo12m_detect_bayese_640x640_nv12.bin"
-  "yolo12l_detect_bayese_640x640_nv12.bin"
-  "yolo12x_detect_bayese_640x640_nv12.bin"
-  "yolov13n_detect_bayese_640x640_nv12.bin"
-  "yolov13s_detect_bayese_640x640_nv12.bin"
-  "yolov13l_detect_bayese_640x640_nv12.bin"
-  "yolov13x_detect_bayese_640x640_nv12.bin"
-  "yolov8n_seg_bayese_640x640_nv12.bin"
-  "yolov8s_seg_bayese_640x640_nv12.bin"
-  "yolov8m_seg_bayese_640x640_nv12.bin"
-  "yolov8l_seg_bayese_640x640_nv12.bin"
-  "yolov8x_seg_bayese_640x640_nv12.bin"
-  "yolov9c_seg_bayese_640x640_nv12.bin"
-  "yolov9e_seg_bayese_640x640_nv12.bin"
-  "yolo11n_seg_bayese_640x640_nv12.bin"
-  "yolo11s_seg_bayese_640x640_nv12.bin"
-  "yolo11m_seg_bayese_640x640_nv12.bin"
-  "yolo11l_seg_bayese_640x640_nv12.bin"
-  "yolo11x_seg_bayese_640x640_nv12.bin"
-  "yolov8n_pose_bayese_640x640_nv12.bin"
-  "yolov8s_pose_bayese_640x640_nv12.bin"
-  "yolov8m_pose_bayese_640x640_nv12.bin"
-  "yolov8l_pose_bayese_640x640_nv12.bin"
-  "yolov8x_pose_bayese_640x640_nv12.bin"
-  "yolo11n_pose_bayese_640x640_nv12.bin"
-  "yolo11s_pose_bayese_640x640_nv12.bin"
-  "yolo11m_pose_bayese_640x640_nv12.bin"
-  "yolo11l_pose_bayese_640x640_nv12.bin"
-  "yolo11x_pose_bayese_640x640_nv12.bin"
-  "yolov8n_cls_bayese_640x640_nv12.bin"
-  "yolov8s_cls_bayese_640x640_nv12.bin"
-  "yolov8m_cls_bayese_640x640_nv12.bin"
-  "yolov8l_cls_bayese_640x640_nv12.bin"
-  "yolov8x_cls_bayese_640x640_nv12.bin"
-  "yolo11n_cls_bayese_640x640_nv12.bin"
-  "yolo11s_cls_bayese_640x640_nv12.bin"
-  "yolo11m_cls_bayese_640x640_nv12.bin"
-  "yolo11l_cls_bayese_640x640_nv12.bin"
-  "yolo11x_cls_bayese_640x640_nv12.bin"
-)
-
-for model in "${MODELS[@]}"; do
-  if [ ! -f "${model}" ]; then
-    wget -O "${model}" "${BASE_URL}/${model}"
+SAMPLE_DIR=""
+dir="${SCRIPT_DIR}"
+while [ -n "${dir}" ] && [ "${dir}" != "/" ]; do
+  if [ -f "${dir}/samples/vision/ultralytics_yolo/runtime/python/yolo_download.py" ]; then
+    SAMPLE_DIR="${dir}/samples/vision/ultralytics_yolo"
+    break
   fi
+  dir="$(dirname "${dir}")"
 done
+
+if [ -z "${SAMPLE_DIR}" ]; then
+  echo "[Error] the canonical Ultralytics YOLO sample was not found above ${SCRIPT_DIR}." >&2
+  exit 1
+fi
+
+DOWNLOADER="${SAMPLE_DIR}/runtime/python/yolo_download.py"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "[Error] python3 is required to resolve model assets." >&2
+  exit 1
+fi
+
+exec python3 "${DOWNLOADER}" --platform x5 --all --model-dir "${SCRIPT_DIR}" "$@"

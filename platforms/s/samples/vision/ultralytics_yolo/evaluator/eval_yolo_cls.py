@@ -1,80 +1,99 @@
+# Copyright (c) 2025 D-Robotics Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""RDK S Ultralytics YOLO classification evaluation (compatibility wrapper).
+
+The maintained implementation lives in the canonical sample at
+`samples/vision/ultralytics_yolo/evaluator/eval_yolo_cls.py`. This module forwards to
+it from the RDK S tree, so the documented evaluation command keeps working
+without a second copy of the metric code.
+
+# The platform is resolved from the board, so S100, S100P and S600 select
+# their own artifacts.
+#
+Usage:
+    python3 eval_yolo_cls.py --help
+"""
+
 import os
 import sys
-import json
-import time
-import argparse
-
-import cv2
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-runtime_path = os.path.abspath(os.path.join(current_dir, "../runtime/python"))
-project_root = os.path.abspath(os.path.join(current_dir, "../../../../"))
-sys.path.append(runtime_path)
-sys.path.append(project_root)
-
-from yolo_cls import YoloCls, YoloClsConfig
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Ultralytics YOLO Classification Evaluation")
-    parser.add_argument("--model-path", required=True)
-    parser.add_argument("--image-dir", required=True)
-    parser.add_argument("--val-txt", required=True)
-    parser.add_argument("--json-save-path", default="results_cls.json")
-    parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--topk", type=int, default=5)
-    parser.add_argument("--label-offset", type=int, default=0)
-    parser.add_argument("--log-interval", type=int, default=1000)
-    args = parser.parse_args()
+def _find_sample_root() -> str:
+    """Locate the canonical Ultralytics YOLO sample above this file.
 
-    model = YoloCls(YoloClsConfig(model_path=args.model_path, topk=args.topk))
-    gt_map = {}
-    with open(args.val_txt, "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split()
-            if len(parts) >= 2:
-                gt_map[os.path.basename(parts[0])] = int(parts[1]) + args.label_offset
+    The platform trees are distributions of the merged sample, so the
+    canonical copy always sits at `<repo>/samples/vision/ultralytics_yolo`.
+    Walking up to it instead of counting `..` keeps this working when the
+    sample is moved, and turns a missing canonical sample into an explicit
+    error instead of a confusing import failure.
 
-    img_files = sorted([f for f in os.listdir(args.image_dir) if f.lower().endswith((".jpg", ".jpeg", ".png", ".jpeg"))])
-    if args.limit > 0:
-        img_files = img_files[:args.limit]
+    A directory only counts as the canonical sample when it carries the shared
+    downloader, because every platform tree ends in the same
+    `samples/vision/ultralytics_yolo` tail and would otherwise match first.
 
-    top1 = 0
-    top5 = 0
-    total = 0
-    start = time.time()
-    for img_file in img_files:
-        if img_file not in gt_map:
-            continue
-        img = cv2.imread(os.path.join(args.image_dir, img_file))
-        if img is None:
-            continue
-        preds = model(img, topk=args.topk)
-        pred_ids = [p[0] for p in preds]
-        gt = gt_map[img_file]
-        total += 1
-        if pred_ids and pred_ids[0] == gt:
-            top1 += 1
-        if gt in pred_ids[:5]:
-            top5 += 1
-        if args.log_interval > 0 and total % args.log_interval == 0:
-            elapsed = time.time() - start
-            print({
-                "progress": total,
-                "top1": top1 / total if total else 0.0,
-                "top5": top5 / total if total else 0.0,
-                "elapsed_sec": elapsed,
-            }, flush=True)
+    Returns:
+        Absolute path of the canonical sample directory.
 
-    summary = {
-        "total": total,
-        "top1": top1 / total if total else 0.0,
-        "top5": top5 / total if total else 0.0,
-        "elapsed_sec": time.time() - start,
-    }
-    with open(args.json_save_path, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
-    print(summary)
+    Raises:
+        ImportError: If no parent directory holds the canonical sample.
+    """
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        candidate = os.path.join(current, "samples", "vision",
+                                 "ultralytics_yolo")
+        if os.path.isfile(os.path.join(candidate, "runtime", "python",
+                                       "yolo_download.py")):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise ImportError(
+                "the canonical Ultralytics YOLO sample was not found above "
+                f"{os.path.dirname(os.path.abspath(__file__))}; this "
+                "compatibility entry point forwards to it and cannot run "
+                "without it.")
+        current = parent
+
+
+_SCRIPT = os.path.join(_find_sample_root(), "evaluator", "eval_yolo_cls.py")
+
+
+def _run(script: str, argv: list) -> None:
+    """Run a canonical script as `__main__` with the given arguments.
+
+    Args:
+        script: Absolute path of the canonical script to run.
+        argv: Arguments the script should see.
+
+    Returns:
+        None
+    """
+    import runpy  # noqa: PLC0415 - only needed when the wrapper actually runs
+
+    sys.argv = [script] + list(argv)
+    runpy.run_path(script, run_name="__main__")
+
+def main(argv=None) -> None:
+    """Run the canonical evaluator.
+
+    Args:
+        argv: Argument list, defaulting to `sys.argv[1:]`.
+
+    Returns:
+        None
+    """
+    forwarded = list(sys.argv[1:] if argv is None else argv)
+    _run(_SCRIPT, forwarded)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+> Maintained implementation / 当前维护入口: [shared X5/S sample](../../../../../samples/vision/ultralytics_yolo/README.md). This page retains platform-specific Benchmark evidence. / 本页保留平台 Benchmark 证据。
+
 English | [简体中文](./README_cn.md)
 
 # Ultralytics YOLO Model Description
