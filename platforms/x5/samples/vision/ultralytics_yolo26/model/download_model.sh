@@ -1,37 +1,19 @@
-#!/bin/bash
-
-# Download YOLO26 Nano Models (Lightweight for quick start)
-# Usage: sh download_model.sh
-
-# Create model directory if not exists
-mkdir -p .
-
-# Base URL
-BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/Ultralytics_YOLO_OE_1.2.8/"
-
-# List of models to download (Only n series)
-MODELS=(
-    "yolo26n_detect_bayese_640x640_nv12.bin"
-    "yolo26n_seg_bayese_640x640_nv12.bin"
-    "yolo26n_pose_bayese_640x640_nv12.bin"
-    "yolo26n_obb_bayese_640x640_nv12.bin"
-    "yolo26n_cls_bayese_224x224_nv12.bin"
-)
-
-echo "Downloading YOLO26 Nano models..."
-
-for model in "${MODELS[@]}"; do
-    if [ ! -f "$model" ]; then
-        echo "Downloading $model ..."
-        wget -q --show-progress "${BASE_URL}/${model}" -O "$model"
-        if [ $? -ne 0 ]; then
-            echo "Failed to download $model"
-        else
-            echo "Successfully downloaded $model"
-        fi
-    else
-        echo "$model already exists, skipping."
-    fi
+#!/usr/bin/env bash
+set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$SCRIPT_DIR"
+while [ ! -f "$ROOT/samples/vision/ultralytics_yolo/runtime/python/yolo_dispatch.py" ]; do
+  [ "$ROOT" != / ] || { echo 'Complete repository checkout required' >&2; exit 1; }
+  ROOT="$(dirname "$ROOT")"
 done
-
-echo "Download complete."
+SAMPLE="$ROOT/samples/vision/ultralytics_yolo"
+set -- --platform x5 "$@"
+# Old download command selects nano for all five tasks unless a task is explicit.
+HAS_TASK=false
+for arg in "$@"; do case "$arg" in --task|--task=*) HAS_TASK=true ;; esac; done
+if [ "$HAS_TASK" = true ]; then
+  exec python3 "$SAMPLE/runtime/python/yolo_download.py" --family yolo26 --model-dir "$SCRIPT_DIR" "$@"
+fi
+for task in detect seg pose cls obb; do
+  python3 "$SAMPLE/runtime/python/yolo_download.py" --family yolo26 --task "$task" --model-dir "$SCRIPT_DIR" "$@"
+done

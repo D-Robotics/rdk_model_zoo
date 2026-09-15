@@ -24,6 +24,18 @@ import types
 import os
 
 def main():
+    import sys, runpy
+    selector=argparse.ArgumentParser(add_help=False)
+    selector.add_argument('--family',default=None)
+    selector.add_argument('--task',default='detect',choices=['detect','cls','seg','pose','obb'])
+    selected,rest=selector.parse_known_args()
+    if selected.family == 'yolo26':
+        rest=['--weights' if a=='--pt' else a for a in rest]
+        script=os.path.join(os.path.dirname(__file__),'yolo26',f'export_yolo26_{selected.task}_bpu.py')
+        sys.argv=[script]+rest
+        runpy.run_path(script,run_name='__main__')
+        return
+    sys.argv=[sys.argv[0]]+rest
     parser = argparse.ArgumentParser()
     parser.add_argument('--pt', type=str, default='./yolo11n.pt', help='path to *.pt model.')
     # `--optse` is the historical spelling; `--opset` is accepted as an alias.

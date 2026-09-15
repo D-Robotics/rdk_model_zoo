@@ -41,6 +41,8 @@ for _path in (_EVALUATOR_DIR, _RUNTIME_DIR):
 
 from eval_common import (  # noqa: E402  (path is set up above)
     add_platform_arguments,
+    evaluation_types,
+    evaluation_options,
     add_threshold_arguments,
     category_ids,
     list_images,
@@ -63,17 +65,12 @@ def build_model(args, platform):
         A `(model, is_nms_free)` tuple. `is_nms_free` is True for YOLOv10,
         which is evaluated without an NMS threshold.
     """
-    common = dict(model_path=args.model_path, platform=platform,
-                  input_shape=args.input_shape)
-    # `None` means "keep the wrapper default", so the flag is only forwarded
-    # when the caller actually named a value.
-    if args.conf_thres is not None:
-        common["score_thres"] = args.conf_thres
-    if platform.family == "s" and family_from_filename(platform, args.model_path) == "yolov10":
-        return YoloV10Detect(YoloV10DetectConfig(**common)), True
-    if args.nms_thres is not None:
-        common["nms_thres"] = args.nms_thres
-    return YoloDetect(YoloDetectConfig(**common)), False
+    Model,Config=evaluation_types(args,platform,'detect')
+    common=dict(model_path=args.model_path,platform=platform,input_shape=args.input_shape,**evaluation_options(args,'detect'))
+    if args.conf_thres is not None:common['score_thres']=args.conf_thres
+    nms_free=Model.__name__=='YoloV10Detect'
+    if not nms_free and args.nms_thres is not None:common['nms_thres']=args.nms_thres
+    return Model(Config(**common)),nms_free
 
 
 def build_parser() -> argparse.ArgumentParser:

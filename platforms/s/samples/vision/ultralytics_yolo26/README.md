@@ -1,3 +1,5 @@
+> Maintenance moved to [the shared Ultralytics YOLO sample](../../../../../samples/vision/ultralytics_yolo/README.md), using `--family yolo26`. This path forwards to it; the Benchmark tables below retain their original release measurements.
+
 English | [简体中文](./README_cn.md)
 
 # YOLO26 Model Description

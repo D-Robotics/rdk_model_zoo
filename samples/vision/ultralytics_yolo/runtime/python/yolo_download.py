@@ -132,6 +132,7 @@ def build_parser() -> argparse.ArgumentParser:
                              'downloading anything.')
     parser.add_argument('positional', nargs='*',
                         help='Legacy positional form: soc family task size.')
+    parser.add_argument("--legacy-families", action="store_true", help=argparse.SUPPRESS)
     return parser
 
 
@@ -179,7 +180,7 @@ def select_assets(args, profile: PlatformProfile):
         UnsupportedAssetError: If the platform publishes no such asset.
     """
     if args.all:
-        return list(iter_assets(profile))
+        return [(f,t,s) for f,t,s in iter_assets(profile) if (args.family is None or f == args.family) and not (args.legacy_families and f == "yolo26")]
     family = args.family or DEFAULT_FAMILY
     if args.task is None:
         return [(family, task, args.model_size)

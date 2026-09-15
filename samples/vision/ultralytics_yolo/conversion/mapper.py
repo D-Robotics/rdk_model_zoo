@@ -91,6 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
                              '--march when that is given.')
     parser.add_argument('--toolchain-help', action='store_true',
                         help='Show the selected toolchain own --help and exit.')
+    parser.add_argument("--family", default="yolo11", help="Model family; yolo26 selects its conversion workflow.")
     return parser
 
 
@@ -175,7 +176,14 @@ def main(argv=None) -> int:
         if _option_value(forwarded, "march") is None:
             forwarded += ['--march', S_MARCH[platform]]
 
-    module = __import__(module_name)
+    if args.family == 'yolo26':
+        import importlib.util
+        path=os.path.join(SCRIPT_DIR,'yolo26','mapper_x5.py' if platform=='x5' else 'mapper_s.py')
+        spec=importlib.util.spec_from_file_location('_yolo26_mapper',path)
+        module=importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    else:
+        module = __import__(module_name)
     if args.toolchain_help:
         saved = sys.argv
         sys.argv = [module_name] + forwarded + ['--help']

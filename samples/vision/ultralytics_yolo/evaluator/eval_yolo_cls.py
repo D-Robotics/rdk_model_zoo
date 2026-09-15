@@ -55,6 +55,7 @@ for _path in (_EVALUATOR_DIR, _RUNTIME_DIR):
 
 from eval_common import (  # noqa: E402  (path is set up above)
     add_platform_arguments,
+    evaluation_types,
     report_empty_predictions,
     resolve_platform_argument,
 )
@@ -143,6 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Directory holding the validation images.")
     parser.add_argument("--json-save-path", default="results_cls.json",
                         help="Where to write the accuracy summary.")
+    parser.add_argument("--val-format", choices=["named","ordered"], default="named", help="ordered: one label per sorted image, for legacy X5 ImageNet ground truth")
     parser.add_argument("--val-txt", default=None,
                         help="ImageNet val.txt with '<path> <label>' lines.")
     parser.add_argument("--label-file", default=None,
@@ -188,11 +190,17 @@ def main(argv=None) -> int:
                  if args.val_txt else {})
     synset_index = load_synset_index(args.label_file) if args.label_file else {}
 
-    model = YoloCls(YoloClsConfig(model_path=args.model_path, platform=platform,
+    Model,Config=evaluation_types(args,platform,'cls')
+    model = Model(Config(model_path=args.model_path, platform=platform,
                                   input_shape=args.input_shape, topk=args.topk))
 
     names = sorted(name for name in os.listdir(args.image_dir)
                    if name.lower().endswith(_IMAGE_SUFFIXES))
+    if args.val_txt and args.val_format=='ordered':
+        with open(args.val_txt,encoding='utf-8') as handle:
+            labels=[int(line.split()[-1])+args.label_offset for line in handle if line.strip()]
+        if len(labels)!=len(names):raise ValueError('Ground-truth count differs from sorted image count.')
+        val_truth=dict(zip(names,labels))
     if args.limit > 0:
         names = names[:args.limit]
 

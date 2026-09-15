@@ -40,6 +40,8 @@ for _path in (_EVALUATOR_DIR, _RUNTIME_DIR):
 
 from eval_common import (  # noqa: E402  (path is set up above)
     add_platform_arguments,
+    evaluation_types,
+    evaluation_options,
     add_threshold_arguments,
     list_images,
     report_empty_predictions,
@@ -48,7 +50,7 @@ from eval_common import (  # noqa: E402  (path is set up above)
 from yolo_pose import YoloPose, YoloPoseConfig  # noqa: E402
 
 
-def flatten_keypoints(kpts_xy, kpts_score) -> list:
+def flatten_keypoints(kpts_xy, kpts_score, *, yolo26_platform=None, visibility_threshold=0.5) -> list:
     """Flatten per-keypoint coordinates and scores into COCO's `[x, y, v]` form.
 
     Args:
@@ -61,7 +63,10 @@ def flatten_keypoints(kpts_xy, kpts_score) -> list:
     flat = []
     for (x, y), score in zip(kpts_xy, kpts_score):
         value = score.item() if hasattr(score, "item") else float(score)
-        flat.extend([float(x), float(y), 1 if value > 0 else 0])
+        visibility = 1 if value > 0 else 0
+        if yolo26_platform is not None:
+            visibility = 2 if yolo26_platform == 'x5' and value >= visibility_threshold else 1
+        flat.extend([float(x), float(y), visibility])
     return flat
 
 
@@ -116,7 +121,11 @@ def main(argv=None) -> int:
         common["score_thres"] = args.conf_thres
     if args.nms_thres is not None:
         common["nms_thres"] = args.nms_thres
-    model = YoloPose(YoloPoseConfig(**common))
+    Model,Config=evaluation_types(args,platform,"pose")
+    from yolo_assets import family_from_filename
+    family = args.family or family_from_filename(platform,args.model_path)
+    common.update(evaluation_options(args,"pose"))
+    model = Model(Config(**common))
 
     results = []
     start = time.time()
@@ -133,7 +142,9 @@ def main(argv=None) -> int:
                 "category_id": args.category_id,
                 "bbox": [x1, y1, x2 - x1, y2 - y1],
                 "score": float(score),
-                "keypoints": flatten_keypoints(kxy, kscore),
+                "keypoints": flatten_keypoints(kxy, kscore,
+                    yolo26_platform=platform.family if family == 'yolo26' else None,
+                    visibility_threshold=args.kpt_conf_thres),
             })
 
     with open(args.json_save_path, "w", encoding="utf-8") as handle:

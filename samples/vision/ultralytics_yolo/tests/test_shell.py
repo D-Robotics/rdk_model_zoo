@@ -34,6 +34,22 @@ class ShellEntrypoints(unittest.TestCase):
             for tree, platform in [(S, 's100'), (x5, 'x5'), (s, 's600')]:
                 result = run(tree / 'runtime/python/run.sh', 'cls', '--platform', platform, '--dry-run')
                 self.assertIn('[dry-run]', result)
+            for platform in ('x5','s'):
+                old=R/f'platforms/{platform}/samples/vision/ultralytics_yolo26'
+                for script in old.rglob('*.sh'):
+                    syntax=subprocess.run([BASH,'-n',str(script)],capture_output=True,text=True)
+                    self.assertEqual(syntax.returncode,0,syntax.stderr)
+                target='x5' if platform=='x5' else 's600'
+                result=run(old/'model/download_model.sh','--platform',target,'--dry-run')
+                names=set(re.findall(r'\byolo26[^/\s]*\.(?:bin|hbm)',result))
+                self.assertEqual(len(names),5)
+                result=run(old/'runtime/python/run.sh','obb','--platform',target,'--dry-run')
+                self.assertIn('yolo26n_obb',result)
+            old=R/'platforms/x5/samples/vision/ultralytics_yolo26'
+            result=run(old/'model/fulldownload.sh','--dry-run')
+            self.assertEqual(len(set(re.findall(r'\byolo26[^/\s]*\.bin',result))),25)
+            result=run(R/'platforms/s/samples/vision/ultralytics_yolo26/model/download_model.sh','nash-p','--dry-run')
+            self.assertIn('nashp_224x224_nv12.hbm',result)
 
 
 if __name__ == '__main__':

@@ -92,6 +92,7 @@ def add_platform_arguments(parser: argparse.ArgumentParser) -> None:
     Returns:
         None
     """
+    parser.add_argument("--family", default=None, help="Infer from model filename when omitted.")
     parser.add_argument(
         "--platform", type=str, default=None,
         help="Target platform: x5, s100, s100p or s600. Defaults to the "
@@ -115,6 +116,9 @@ def add_threshold_arguments(parser: argparse.ArgumentParser) -> None:
     Returns:
         None
     """
+    parser.add_argument("--classes-num", type=int, default=None)
+    parser.add_argument("--strides", type=lambda s: [int(v) for v in s.split(",")], default=None)
+    parser.add_argument("--kpt-conf-thres", type=float, default=0.5)
     parser.add_argument(
         "--conf-thres", type=float, default=None,
         help="Score threshold. Defaults to the model wrapper default (0.25).")
@@ -231,3 +235,20 @@ __all__ = [
     "report_empty_predictions",
     "resolve_platform_argument",
 ]
+
+
+def evaluation_types(args, platform, task):
+    from yolo_assets import family_from_filename
+    from yolo_dispatch import get_task_types
+    inferred=family_from_filename(platform,args.model_path)
+    if args.family and inferred and args.family!=inferred:
+        raise ValueError('--family conflicts with model filename.')
+    family=args.family or inferred or 'yolo11'
+    return get_task_types(platform,family,task)
+
+
+def evaluation_options(args,task):
+    options={}
+    if getattr(args,'strides',None) is not None:options['strides']=args.strides
+    if task in ('detect','seg','obb') and getattr(args,'classes_num',None) is not None:options['classes_num']=args.classes_num
+    return options

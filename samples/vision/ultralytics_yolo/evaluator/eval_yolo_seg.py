@@ -41,6 +41,8 @@ for _path in (_EVALUATOR_DIR, _RUNTIME_DIR):
 
 from eval_common import (  # noqa: E402  (path is set up above)
     add_platform_arguments,
+    evaluation_types,
+    evaluation_options,
     add_threshold_arguments,
     category_ids,
     list_images,
@@ -132,7 +134,9 @@ def main(argv=None) -> int:
         common["score_thres"] = args.conf_thres
     if args.nms_thres is not None:
         common["nms_thres"] = args.nms_thres
-    model = YoloSeg(YoloSegConfig(**common))
+    Model,Config=evaluation_types(args,platform,"seg")
+    common.update(evaluation_options(args,"seg"))
+    model = Model(Config(**common))
 
     results = []
     start = time.time()

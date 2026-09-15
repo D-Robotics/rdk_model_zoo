@@ -137,6 +137,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--classes-num', type=int, default=None)
     parser.add_argument('--strides', type=lambda v: [int(x) for x in v.split(',')], default=[8,16,32])
     parser.add_argument('--mc', type=int, default=32)
+    parser.add_argument('--angle-sign', type=float, default=1.0)
+    parser.add_argument('--angle-offset', type=float, default=0.0, help='OBB offset in degrees')
+    parser.add_argument('--regularize', type=int, choices=[0,1], default=1)
     parser.add_argument('--reg', type=int, default=16,
                         help='Number of DFL regression bins.')
     parser.add_argument('--nkpt', type=int, default=17,
@@ -240,6 +243,8 @@ def describe_plan(profile: PlatformProfile, args) -> dict:
     if args.family and inferred and args.family != inferred:
         raise UnsupportedAssetError("--family conflicts with --model-path filename.")
     args.family = args.family or inferred or DEFAULT_FAMILY
+    from yolo_dispatch import get_task_types
+    get_task_types(profile, args.family, args.task)
     if args.model_path:
         return {
             "filename": os.path.basename(args.model_path),
@@ -285,7 +290,7 @@ def print_dry_run(profile: PlatformProfile, args, plan: dict) -> None:
         print(f"  download url    : {plan['url']}")
     print(f"  NV12 protocol   : {profile.input_protocol}")
     print(f"  resize policy   : "
-          f"{args.resize_type if args.resize_type is not None else default_resize_type(profile, args.task)}")
+          f"{args.resize_type if args.resize_type is not None else __import__("yolo_dispatch").runtime_resize(profile, args.family, args.task)}")
     if args.task != 'cls':
         print(f"  NMS IoU         : "
               f"{args.nms_thres if args.nms_thres is not None else profile.nms_thres}")
@@ -334,6 +339,8 @@ def load_labels(args, task: str) -> list:
         if not os.path.exists(args.label_file):
             raise FileNotFoundError(f"Label file not found: {args.label_file}")
         return file_io.load_class_names(args.label_file)
+    if task == 'obb':
+        return []
     default = _IMAGENET_LABELS if task == 'cls' else _COCO_LABELS
     if os.path.exists(default):
         return file_io.load_class_names(default)
@@ -341,115 +348,43 @@ def load_labels(args, task: str) -> list:
 
 
 def run_inference(profile: PlatformProfile, args, labels: list) -> None:
-    """Load the selected model and run one image through it.
-
-    Args:
-        profile: Selected platform.
-        args: Parsed command-line arguments.
-        labels: Label names used for rendering.
-
-    Returns:
-        None
-    """
-    import cv2  # noqa: PLC0415 - heavy import, only needed to run
-    from rdk_yolo_utils import file_io  # noqa: PLC0415
-    from rdk_yolo_utils import visualize  # noqa: PLC0415
-    from rdk_yolo_utils import inspect as inspect_utils  # noqa: PLC0415
-
-    from yolo_assets import is_nms_free  # noqa: PLC0415
-    from yolo_cls import YoloCls, YoloClsConfig  # noqa: PLC0415
-    from yolo_detect import YoloDetect, YoloDetectConfig  # noqa: PLC0415
-    from yolo_pose import YoloPose, YoloPoseConfig  # noqa: PLC0415
-    from yolo_seg import YoloSeg, YoloSegConfig  # noqa: PLC0415
-    from yolo_v10detect import (  # noqa: PLC0415
-        YoloV10Detect,
-        YoloV10DetectConfig,
-    )
-
-    img = file_io.load_image(args.test_img)
-    input_shape = args.input_shape
-    resize_type = (args.resize_type if args.resize_type is not None
-                   else default_resize_type(profile, args.task))
-    nms_thres = (args.nms_thres if args.nms_thres is not None
-                 else default_nms_thres(profile, args.task))
-    common = dict(
-        model_path=args.model_path,
-        platform=profile,
-        input_shape=input_shape,
-        resize_type=resize_type,
-    )
-    # Classification scores the softmax output itself and takes no confidence
-    # threshold, so it does not share the detection-style keyword arguments.
-    detection_common = dict(score_thres=args.score_thres, strides=args.strides, **common)
-    if args.classes_num is not None:
-        detection_common["classes_num"] = args.classes_num
-    result_img = None
-
-    if args.task == 'detect' and is_nms_free(profile, args.family):
-        # YOLOv10 is NMS-free: its head emits final boxes, so no NMS runs.
-        model = YoloV10Detect(YoloV10DetectConfig(reg=args.reg, **detection_common))
-        model.set_scheduling_params(
-            priority=args.priority, bpu_cores=args.bpu_cores)
-        inspect_utils.print_model_info(model.model)
-        boxes, scores, cls_ids = model.predict(img)
-        visualize.print_detections(boxes, scores, cls_ids, labels)
-        result_img = visualize.draw_boxes(
-            img, boxes, cls_ids, scores, labels, visualize.rdk_colors)
-
-    elif args.task == 'detect':
-        model = YoloDetect(YoloDetectConfig(
-            reg=args.reg, nms_thres=nms_thres, **detection_common))
-        model.set_scheduling_params(
-            priority=args.priority, bpu_cores=args.bpu_cores)
-        inspect_utils.print_model_info(model.model)
-        boxes, scores, cls_ids = model.predict(img)
-        visualize.print_detections(boxes, scores, cls_ids, labels)
-        result_img = visualize.draw_boxes(
-            img, boxes, cls_ids, scores, labels, visualize.rdk_colors)
-
-    elif args.task == 'seg':
-        model = YoloSeg(YoloSegConfig(
-            mces_num=args.mc, reg=args.reg, nms_thres=nms_thres, **detection_common))
-        model.set_scheduling_params(
-            priority=args.priority, bpu_cores=args.bpu_cores)
-        inspect_utils.print_model_info(model.model)
-        xyxy, scores, cls_ids, masks = model.predict(img)
-        visualize.draw_masks(img, xyxy, masks, cls_ids, visualize.rdk_colors)
-        result_img = visualize.draw_boxes(
-            img, xyxy, cls_ids, scores, labels, visualize.rdk_colors)
-
-    elif args.task == 'pose':
-        model = YoloPose(YoloPoseConfig(
-            reg=args.reg, nkpt=args.nkpt, nms_thres=nms_thres, **detection_common))
-        model.set_scheduling_params(
-            priority=args.priority, bpu_cores=args.bpu_cores)
-        inspect_utils.print_model_info(model.model)
-        xyxy, scores, cls_ids, kpts_xy, kpts_score = model.predict(img)
-        # Combine keypoint coordinates and activated scores for rendering.
-        kpts = np.zeros(
-            (kpts_xy.shape[0], kpts_xy.shape[1], 3), dtype=np.float32)
-        kpts[:, :, :2] = kpts_xy
-        kpts[:, :, 2] = kpts_score[:, :, 0]
-        result_img = visualize.draw_pose(
-            img, xyxy, kpts,
-            kpt_conf_thres=args.kpt_conf_thres,
-            scores=scores, class_ids=cls_ids, colors=visualize.rdk_colors)
-
+    """One rendering pipeline for all supported families and their task protocols."""
+    import cv2
+    from rdk_yolo_utils import file_io, visualize, inspect as inspect_utils
+    from yolo_dispatch import create_runtime_model
+    model = create_runtime_model(profile,args)
+    model.set_scheduling_params(priority=args.priority,bpu_cores=args.bpu_cores)
+    inspect_utils.print_model_info(model.model)
+    img=file_io.load_image(args.test_img)
+    result=model.predict(img)
+    result_img=None
+    if args.task=='detect':
+        boxes,scores,ids=result
+        visualize.print_detections(boxes,scores,ids,labels)
+        result_img=visualize.draw_boxes(img,boxes,ids,scores,labels,visualize.rdk_colors)
+    elif args.task=='seg':
+        boxes,scores,ids,masks=result
+        visualize.draw_masks(img,boxes,masks,ids,visualize.rdk_colors)
+        result_img=visualize.draw_boxes(img,boxes,ids,scores,labels,visualize.rdk_colors)
+    elif args.task=='pose':
+        boxes,scores,ids,xy,confidence=result
+        kpts=np.concatenate([xy,confidence],axis=-1)
+        result_img=visualize.draw_pose(img,boxes,kpts,kpt_conf_thres=args.kpt_conf_thres,scores=scores,class_ids=ids,colors=visualize.rdk_colors)
+    elif args.task=='obb':
+        result_img=img.copy()
+        for item in result:
+            cx,cy,w,h,angle=item['rrect']
+            points=cv2.boxPoints(((float(cx),float(cy)),(float(w),float(h)),float(np.degrees(angle)))).astype(np.int32)
+            color=tuple(int(v) for v in visualize.rdk_colors[int(item['id'])%len(visualize.rdk_colors)])
+            cv2.polylines(result_img,[points],True,color,2)
+            label=labels[item['id']] if 0<=item['id']<len(labels) else str(item['id'])
+            cv2.putText(result_img,f"{label} {item['score']:.2f}",tuple(points[0]),cv2.FONT_HERSHEY_SIMPLEX,.5,color,1)
     else:
-        model = YoloCls(YoloClsConfig(topk=args.topk, **common))
-        model.set_scheduling_params(
-            priority=args.priority, bpu_cores=args.bpu_cores)
-        inspect_utils.print_model_info(model.model)
-        results = model.predict(img)
-        idx2label = file_io.load_labels(
-            args.label_file or _IMAGENET_LABELS)
-        visualize.print_classification_results(results, idx2label)
-
+        visualize.print_classification_results(result,file_io.load_labels(args.label_file or _IMAGENET_LABELS))
     if result_img is not None:
-        os.makedirs(os.path.dirname(os.path.abspath(args.img_save_path)), exist_ok=True)
-        if not cv2.imwrite(args.img_save_path, result_img):
-            raise OSError(f"Could not write image: {args.img_save_path}")
-        print(f"[Saved] Result saved to: {args.img_save_path}")
+        os.makedirs(os.path.dirname(os.path.abspath(args.img_save_path)),exist_ok=True)
+        if not cv2.imwrite(args.img_save_path,result_img):raise OSError(f'Could not write image: {args.img_save_path}')
+        print(f'[Saved] Result saved to: {args.img_save_path}')
 
 
 def main() -> int:

@@ -45,6 +45,7 @@ TASK_EVALUATORS = {
     "seg": "eval_yolo_seg.py",
     "pose": "eval_yolo_pose.py",
     "cls": "eval_yolo_cls.py",
+    "obb": "eval_yolo_obb.py",
 }
 
 #: Model file suffixes the batch runner recognises.
@@ -144,6 +145,7 @@ def main(argv=None) -> int:
                    "--model-path", os.path.join(args.model_dir, name),
                    "--json-save-path", json_path,
                    "--platform", platform.key]
+        if args.family:command += ["--family",args.family]
         command += forwarded
         print("[CMD] " + " ".join(command))
         status |= subprocess.call(command)

@@ -52,7 +52,7 @@ TASK_POSE = "pose"
 TASK_CLS = "cls"
 
 #: Every task name accepted on the command line.
-SUPPORTED_TASKS: Tuple[str, ...] = (TASK_DETECT, TASK_SEG, TASK_POSE, TASK_CLS)
+SUPPORTED_TASKS: Tuple[str, ...] = (TASK_DETECT, TASK_SEG, TASK_POSE, TASK_CLS, "obb")
 
 #: Default family used when none is requested.
 DEFAULT_FAMILY = "yolo11"
@@ -62,6 +62,7 @@ DEFAULT_TASK = TASK_DETECT
 
 #: Mapping of the task name to the token embedded in published filenames.
 TASK_TOKENS: Dict[str, str] = {
+    "obb": "obb",
     TASK_DETECT: "detect",
     TASK_SEG: "seg",
     TASK_POSE: "pose",
@@ -140,6 +141,7 @@ _YOLOV9_SIZES = ("t", "s", "m", "c", "e")
 
 #: Families published on RDK X5.
 X5_FAMILIES: Dict[str, FamilySpec] = {
+    "yolo26": _spec("yolo26", SUPPORTED_TASKS, _COMMON_SMALL_TO_LARGE, "n"),
     "yolov5u": _spec("yolov5u", (TASK_DETECT,), _COMMON_SMALL_TO_LARGE, "n"),
     "yolov8": _spec("yolov8", (TASK_DETECT, TASK_SEG, TASK_POSE, TASK_CLS),
                     _COMMON_SMALL_TO_LARGE, "n"),
@@ -155,6 +157,7 @@ X5_FAMILIES: Dict[str, FamilySpec] = {
 
 #: Families published on the RDK S series.
 S_FAMILIES: Dict[str, FamilySpec] = {
+    "yolo26": _spec("yolo26", SUPPORTED_TASKS, _COMMON_SMALL_TO_LARGE, "n"),
     "yolov5u": _spec("yolov5u", (TASK_DETECT,), _COMMON_SMALL_TO_LARGE, "n"),
     "yolov8": _spec("yolov8", (TASK_DETECT, TASK_SEG, TASK_POSE, TASK_CLS),
                     _COMMON_SMALL_TO_LARGE, "n"),
@@ -230,7 +233,7 @@ def asset_resolution(profile: PlatformProfile, family: str, task: str) -> str:
         A resolution string embedded in the published filename.
     """
     if task == TASK_CLS:
-        return classification_resolution(profile)
+        return "224x224" if family == "yolo26" else classification_resolution(profile)
     return DEFAULT_RESOLUTION
 
 
@@ -342,7 +345,10 @@ def model_url(profile: PlatformProfile,
         UnsupportedAssetError: If the platform publishes no such asset.
     """
     filename = model_filename(profile, family, task, size)
-    return f"{model_base_url(profile)}/{filename}"
+    base = model_base_url(profile)
+    if family == "yolo26" and profile.family == "x5":
+        base = base.rsplit("/",1)[0] + "/Ultralytics_YOLO_OE_1.2.8"
+    return f"{base}/{filename}"
 
 
 def model_path(model_root: str,
