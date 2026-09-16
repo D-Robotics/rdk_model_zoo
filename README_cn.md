@@ -3,6 +3,8 @@
 
 [English](./README.md) | 简体中文
 
+[版本记录](CHANGELOG.md) | [模型与评测清单](docs/manifests/README.md) | [Skills（预留）](skills/README.md)
+
 
 ## RDK Model Zoo 简介
 

@@ -3,6 +3,8 @@
 
 English| [简体中文](./README_cn.md)
 
+[Version history](CHANGELOG.md) | [Model and benchmark manifests](docs/manifests/README.md) | [Skills (placeholder)](skills/README.md)
+
 Welcome to the RDK Model Zoo GitHub
 
 
