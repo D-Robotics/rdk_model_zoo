@@ -6,6 +6,7 @@
 
 - [仓库规范](Model_Zoo_Repository_Guidelines.md)：样例目录、代码和文档约定。
 - [源码参考](source_reference/README.md)：接口与底层组件说明。
+- TROS 集成说明：[中文](tros/README_cn.md) / [English](tros/README.md)。
 
 ## 维护资料
 
@@ -26,7 +27,7 @@ docs/
 ├── release/          # 当前分支 Manifest 与 schema
 ├── releases/         # 各版发布说明
 ├── source_reference/ # 接口参考
-└── superpowers/      # 设计与实施记录
+└── tros/             # TROS 集成说明
 ```
 
 网站源码与发布数据已从根目录的 `site/`、`release/` 收拢到这里。旧 Release Tag 保留其原始目录，目录生成器同时支持两种历史布局；文件内容和 Tag 不因目录迁移改变。

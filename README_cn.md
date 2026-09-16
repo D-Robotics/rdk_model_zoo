@@ -104,8 +104,9 @@ rdk_model_zoo/
 |   |   |-- yolov5/               # 目标检测
 |   |   `-- yoloworld/           # 开放词表目标检测
 |-- docs/                  # 项目规范与参考文档
+|   `-- tros/              # TROS 集成指南与示例
 |-- datasets/              # 数据集与下载脚本
-|-- tros/                  # TROS 集成指南与示例
+|-- skills/                # RDK Model Zoo 技能（预留）
 |-- utils/                 # 公共 C++ / Python 工具
 ```
 </details>

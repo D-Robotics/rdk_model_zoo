@@ -24,6 +24,7 @@
 │   └── README.md                                    # datasets 目录说明
 ├── docs                                             # 文档与资源，可添加各接口的链接文档
 │   ├── images                                       # 文档图片
+│   ├── tros                                         # TROS相关链接
 │   └── Model_Zoo_Repository_Guidelines.md           # 本仓库中的规范说明
 ├── samples                                          # 所有模型示例（按任务分类）
 │   ├── llm                                          # 大语言模型示例（底线是文档链接）
@@ -75,7 +76,7 @@
 │   ├── vla                                          # Vision-Language-Action 模型示例
 │   └── vlm                                          # Vision-Language 模型示例
 ├── tools                                            # 工具脚本（构建/管理/调试）
-├── tros                                             # TROS相关链接
+├── skills                                           # RDK Model Zoo 技能（预留）
 ├── utils                                            # 通用工具库
 │   ├── c_utils                                      # C/C++ 公共工具
 │   │   ├── inc                                      # 公共头文件
@@ -676,6 +677,8 @@ TODO
 |-- docs
 |   |-- README.md
 |   |-- Model_Zoo_Repository_Guidelines.md
+|   |-- tros
+|   |   `-- README.md
 |   |-- Python_API_User_Guide.md
 |   `-- UCP_User_Guide.md
 |-- samples
@@ -707,7 +710,7 @@ TODO
 |               |   `-- README.md
 |               `-- python
 |                   `-- README.md
-|-- tros
+|-- skills
 |   `-- README.md
 `-- utils
     |-- c_utils
@@ -981,7 +984,7 @@ TODO
 - 相关人员
     - 普通开发人员；
 
-### tros
+### docs/tros
 TODO
 
 ### utils/c_utils(py_utils)/README.md

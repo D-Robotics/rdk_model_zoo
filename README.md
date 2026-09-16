@@ -104,8 +104,9 @@ rdk_model_zoo/
 |   |   |-- yolov5/               # Object detection
 |   |   `-- yoloworld/           # Open-vocabulary object detection
 |-- docs/                  # Project guidelines and reference documentation
+|   `-- tros/              # TROS integration guides and examples
 |-- datasets/              # Sample datasets and download scripts
-|-- tros/                  # TROS integration guides and examples
+|-- skills/                # RDK Model Zoo skills (placeholder)
 |-- utils/                 # Shared C++ / Python utilities
 ```
 </details>
