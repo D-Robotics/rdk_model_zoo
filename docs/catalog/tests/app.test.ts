@@ -160,7 +160,7 @@ describe("catalog application", () => {
     model.platforms = [{ ...createModelFixture({ benchmarks: [] }), platform: "x5", release_tag: "x5-v1.0.0" }];
     mountCatalog(root(), { ...catalogWithoutBenchmarks, models: [model] }, { locale: "en" });
     expect(document.querySelector(".hardware-badges")?.textContent).toContain("X5");
-    expect(document.querySelector(".model-card")?.textContent).not.toContain("Accuracy not yet measured");
+    expect(document.querySelector(".model-card")?.textContent).not.toContain("No accuracy recorded for this configuration");
   });
 
   it("resets search and filters to the full catalog", () => {

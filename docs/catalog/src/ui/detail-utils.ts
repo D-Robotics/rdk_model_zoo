@@ -7,7 +7,7 @@ export function normalized(value: string | undefined): string {
 }
 
 export function sourceUrl(record: BenchmarkRecord, repositoryUrl: string): string {
-  return `${repositoryUrl.replace(/\/$/, "")}/blob/${encodeURIComponent(record.source.ref)}/${record.source.path}`;
+  return `${(record.source.repository_url ?? repositoryUrl).replace(/\/$/, "")}/blob/${encodeURIComponent(record.source.ref)}/${record.source.path}`;
 }
 
 export function cell(value: string, header = false): HTMLTableCellElement {
@@ -47,7 +47,7 @@ export function inputDescription(input: BenchmarkRecord["input"] | undefined): s
   const parts = [
     input?.shape?.join("×"),
     input?.layout,
-    input?.format
+    input?.format?.replace(/^(nv12|rgb)$/i, value => value.toUpperCase())
   ].filter((value): value is string => Boolean(value));
   return parts.join(" · ");
 }

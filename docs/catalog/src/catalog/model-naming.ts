@@ -66,7 +66,7 @@ export function stripHardwareSuffix(name: string): string {
     .replace(/[\s·|-]*(?:on\s+)?RDK\s+[A-Za-z0-9-]+\s*$/i, "")
     // A trailing input size such as "640x640"; a bare number ("224" in
     // "SigLIP base patch16 224") is part of the model name, not a size.
-    .replace(/[\s·|-]+[0-9]{2,4}\s*[x×*]\s*[0-9]{2,4}\s*$/i, "")
+    .replace(/[\s·|-]+[0-9]{2,4}\s*[x×*]\s*[0-9]{2,4}(?:\s+(?:nv12|rgb|nchw|float32))?\s*$/i, "")
     .trim();
   return stripped || name.trim();
 }

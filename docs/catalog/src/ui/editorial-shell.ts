@@ -1,32 +1,51 @@
-import type { Locale } from "../catalog/types";
+import type { Catalog, Locale } from "../catalog/types";
+import { HARDWARE_IDS } from "../catalog/variants";
 
-/** Presentation-only shell: model records and filtering remain owned by the catalog. */
-export function renderEditorialIntro(locale: Locale): HTMLElement {
+/** Counts represent catalog coverage, not a claim of measured performance. */
+export function renderEditorialIntro(locale: Locale, catalog?: Catalog): HTMLElement {
   const zh = locale === "zh";
   const hero = document.createElement("section");
-  hero.className = "catalog-hero";
+  hero.className = "catalog-dashboard";
   hero.setAttribute("aria-labelledby", "catalog-hero-title");
-  const eyebrow = document.createElement("p");
-  eyebrow.className = "editorial-eyebrow";
-  eyebrow.textContent = "D-ROBOTICS / MODEL ZOO";
   const heading = document.createElement("h1");
   heading.id = "catalog-hero-title";
-  if (zh) heading.textContent = "找到模型，让想法运行。";
-  else heading.append("Find your model.", document.createElement("br"), "Make it run.");
-  const description = document.createElement("p");
-  description.className = "catalog-hero-description";
-  description.textContent = zh
-    ? "为你的 RDK 硬件选择模型。对比性能与精度，下载可直接运行的量化模型。"
-    : "Find the right model for your RDK hardware. Compare performance and accuracy, then download a model ready to run.";
-  const explore = document.createElement("a");
-  explore.className = "editorial-primary";
-  explore.href = "#model-directory";
-  explore.append(zh ? "探索模型" : "Explore models");
-  const arrow = document.createElement("span");
-  arrow.setAttribute("aria-hidden", "true");
-  arrow.textContent = "↓";
-  explore.append(arrow);
-  hero.append(eyebrow, heading, description, explore);
+  heading.textContent = zh ? "模型概览" : "Model overview";
+  const counts = document.createElement("div");
+  counts.className = "catalog-total-counts";
+  const models = catalog?.models ?? [];
+  const variants = models.flatMap(model => model.variants ?? []);
+  for (const [key, count, label] of [
+    ["families", models.length, zh ? "模型系列" : "Model families"],
+    ["models", variants.length, zh ? "具体模型" : "Models by platform"]
+  ] as const) {
+    const item = document.createElement("div");
+    const value = document.createElement("strong");
+    value.dataset.count = key;
+    value.textContent = count.toLocaleString(locale);
+    const title = document.createElement("span");
+    title.textContent = label;
+    item.append(value, title);
+    counts.append(item);
+  }
+  const note = document.createElement("p");
+  note.className = "catalog-count-note";
+  note.textContent = zh ? "具体模型按平台分别计数，包含不同输入尺寸及任务配置；收录不代表均已完成实测。" : "Models are counted per platform, input size and task. Catalog coverage does not imply every configuration has measured benchmarks.";
+  const platforms = document.createElement("div");
+  platforms.className = "catalog-platform-counts";
+  for (const hardware of HARDWARE_IDS) {
+    const link = document.createElement("a");
+    link.dataset.platform = hardware;
+    link.href = "?platform=" + hardware + "#model-directory";
+    const name = document.createElement("strong");
+    name.textContent = hardware.toUpperCase();
+    const familyCount = models.filter(model => model.variants?.some(v => v.hardware === hardware)).length;
+    const modelCount = variants.filter(v => v.hardware === hardware).length;
+    const value = document.createElement("span");
+    value.textContent = zh ? familyCount + " 个系列 · " + modelCount + " 个模型" : familyCount + " families · " + modelCount + " models";
+    link.append(name, value);
+    platforms.append(link);
+  }
+  hero.append(heading, counts, note, platforms);
   return hero;
 }
 

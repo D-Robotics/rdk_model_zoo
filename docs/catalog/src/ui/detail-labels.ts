@@ -44,7 +44,13 @@ export type DetailLabelKey =
   | "checksum"
   | "noAssets"
   | "noPerformance"
-  | "noAccuracy";
+  | "noAccuracy"
+  | "legendMissingAccuracy"
+  | "legendMissingPerformance"
+  | "legendNotApplicable"
+  | "unassignedEvidence"
+  | "unassignedEvidenceCount"
+  | "unassignedRecordSummary";
 
 const labels: Record<Locale, Record<DetailLabelKey, string>> = {
   en: {
@@ -59,7 +65,7 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     performance: "Platform benchmarks",
     accuracy: "Accuracy",
     retention: "Retention",
-    floatAccuracy: "FP32 accuracy",
+    floatAccuracy: "Float accuracy",
     quantizedAccuracy: "Quantized/BPU accuracy",
     download: "Download",
     downloads: "Downloads",
@@ -90,8 +96,14 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     available: "Available",
     checksum: "SHA-256",
     noAssets: "Model files not published for this variant",
-    noPerformance: "Performance not yet measured",
-    noAccuracy: "Accuracy not yet measured"
+    noPerformance: "No performance recorded for this configuration",
+    noAccuracy: "No accuracy recorded for this configuration",
+    legendMissingAccuracy: "Nothing was measured for this accuracy column. The source published no value for this configuration.",
+    legendMissingPerformance: "Nothing was measured for this performance column. The source published no value for this configuration.",
+    legendNotApplicable: "The measurement belongs to another configuration, so it is not missing here.",
+    unassignedEvidence: "Additional benchmark evidence",
+    unassignedEvidenceCount: "Not assigned to a board configuration above",
+    unassignedRecordSummary: "Show this record's conditions and raw metrics"
   },
   zh: {
     back: "返回模型目录",
@@ -105,7 +117,7 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     performance: "平台 Benchmark",
     accuracy: "精度",
     retention: "保持率",
-    floatAccuracy: "FP32 精度",
+    floatAccuracy: "浮点精度",
     quantizedAccuracy: "量化/BPU 精度",
     download: "下载",
     downloads: "下载文件",
@@ -136,8 +148,14 @@ const labels: Record<Locale, Record<DetailLabelKey, string>> = {
     available: "可用",
     checksum: "SHA-256",
     noAssets: "该规格未发布模型文件",
-    noPerformance: "性能尚未实测",
-    noAccuracy: "精度尚未实测"
+    noPerformance: "未记录此配置的性能数据",
+    noAccuracy: "未记录此配置的精度数据",
+    legendMissingAccuracy: "该精度列没有实测值：来源未发布此配置的数值。",
+    legendMissingPerformance: "该性能列没有实测值：来源未发布此配置的数值。",
+    legendNotApplicable: "该数值属于其它配置，并非缺失。",
+    unassignedEvidence: "其他测试记录",
+    unassignedEvidenceCount: "尚未关联到上方的开发板配置",
+    unassignedRecordSummary: "展开该记录的测试条件与原始指标"
   }
 };
 

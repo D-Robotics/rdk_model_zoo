@@ -1,5 +1,11 @@
 # Changelog
 
+## [x5-v1.1.3] - 2026-09-16
+
+- Release the refreshed dashboard, platform/family statistics, configuration-based Benchmark tables and representative model details from rdk_x5.
+- Include source-backed catalog corrections and fresh-checkout CI fixes; retain S/X3 v1.1.2 pins.
+- See [release notes](docs/releases/x5-v1.1.3.md) for inventory and validation scope.
+
 ## [x5-v1.1.2] - 2026-09-08
 
 - Catalog detail tables now show every measurement a model publishes. Accuracy

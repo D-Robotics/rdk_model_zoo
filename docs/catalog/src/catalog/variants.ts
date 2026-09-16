@@ -53,6 +53,7 @@ export function normalizeHardware(value: string): HardwareId | undefined {
 }
 
 export function isRunnableAsset(asset: AssetRecord): boolean {
+  if (asset.role === "dependency") return false;
   const format = normalized(asset.format).replace(/^\./, "");
   if (RUNNABLE_FORMATS.has(format)) return true;
   const filename = normalized(asset.filename);
@@ -60,11 +61,13 @@ export function isRunnableAsset(asset: AssetRecord): boolean {
 }
 
 function assetHardware(asset: AssetRecord): HardwareId | undefined {
-  return normalizeHardware(`${asset.filename} ${asset.url ?? ""}`);
+  const directory = asset.filename.split(/[\\/]/)[0] ?? "";
+  const declaredBoard = /^(?:x3|x5|s100p?|s600)$/i.test(directory) ? normalizeHardware(directory) : undefined;
+  return declaredBoard ?? normalizeHardware(asset.filename) ?? normalizeHardware(asset.url ?? "");
 }
 
 function assetKey(asset: AssetRecord): string {
-  return asset.url ?? asset.filename;
+  return JSON.stringify([assetHardware(asset), asset.url ?? asset.filename]);
 }
 
 function uniqueAssets(assets: AssetRecord[]): AssetRecord[] {
@@ -104,12 +107,9 @@ function familyFromText(value: string): { id: string; name: string } | undefined
 function taskCandidates(value: string): string[] {
   const text = normalized(value);
   const candidates: string[] = [];
-  // Ultralytics files named `*_cls_detect_*` are detector classifier-head
-  // artifacts. Keep them under object detection instead of reclassifying the
-  // file as an image-classification model merely because `cls` appears first.
-  if (/(^|[-_])cls[-_]?detect([-_.]|$)/.test(text)) {
-    candidates.push("object-detection");
-  }
+  // Legacy *_cls_detect_* filenames are image-classification models.
+  // Keep old pinned manifests readable while new assets use *_cls_* names.
+  if (/(^|[-_])cls[-_]?detect([-_.]|$)/.test(text)) return ["image-classification"];
   if (/(^|[-_])(?:obb|oriented|rotated)(?:[-_]|$)/.test(text)) {
     candidates.push("oriented-bounding-box-detection");
   }
@@ -142,7 +142,8 @@ function inferredShape(value: string): number[] | undefined {
   // Benchmark variant ids commonly shorten a square input to `-640` or
   // `-224`; accept only the dimensions used by the published artifacts so a
   // model version such as YOLO26 is never treated as an input size.
-  const square = /(^|[-_])((?:224|240|256|260|300|320|380|384|448|512|640|672|768|896|1024))(?=$|[-_.])/i.exec(value);
+  const spatialText = value.replace(/(?:^|[-_])(?:chunk|cache|sequence|tokens|length)[-_]\d+(?=$|[-_.])/gi, "_");
+  const square = /(^|[-_])((?:224|240|256|260|300|320|380|384|448|512|640|672|768|896|1024))(?=$|[-_.])/i.exec(spatialText);
   return square ? [Number(square[2]), Number(square[2])] : undefined;
 }
 
@@ -390,15 +391,15 @@ function polishSlugCasing(slug: string): string {
 }
 
 function assetDisplayName(asset: AssetRecord, model: ModelRecord, task: string): string {
+  if (asset.display_name) return polishModelCasing(asset.display_name);
   const basename = asset.filename.split(/[\\/]/).pop() ?? asset.filename;
   const family = familyFromText(asset.filename);
   const shape = shapeFromText(asset.filename);
-  const classifierHead = /(?:^|[_-])cls[_-]?detect(?:[-_.]|$)/i.test(basename);
   if (family?.id.startsWith("yolov")) {
     const match = /yolov?(\d+)([a-z]+)/i.exec(basename);
     if (match) {
       const version = `${officialYoloName(match[1]!)}${match[2]}`;
-      const label = classifierHead ? `${taskLabel(task)} (classification head)` : taskLabel(task);
+      const label = taskLabel(task);
       return [version, label, shape].filter(Boolean).join(" ");
     }
   }
@@ -419,11 +420,15 @@ function assetDisplayName(asset: AssetRecord, model: ModelRecord, task: string):
     .replace(/\s+/g, " ")
     .trim();
   readable = polishSlugCasing(polishModelCasing(readable))
-    .replace(/\bYOLO World\b/g, "YOLOWorld");
+    .replace(/\bYOLO World\b/g, "YOLOWorld")
+    .replace(/\bImg Encoder\b/g, "Image Encoder");
   // `Resnet18 · resnet18 224x224 nv12` repeats the model name in the slug;
   // the family is already the first token, so drop the duplicate.
   const modelHead = model.name.replace(/[^a-z0-9]/gi, "").toLowerCase();
   const readableHead = readable.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  if (readableHead === model.id.replace(/[^a-z0-9]/gi, "").toLowerCase()) {
+    return polishModelCasing(model.name);
+  }
   if (modelHead && readableHead.startsWith(modelHead)) {
     return readable;
   }
@@ -459,6 +464,15 @@ function seedFor(
   const existing = seeds.get(key);
   if (existing) {
     existing.records.push(record);
+    const names = existing.records.map(entry => polishModelCasing(entry.display_name).split(/\s+/));
+    // Only a contiguous common prefix is a model name; later matching tokens
+    // can be unrelated runtime/statistic suffixes.
+    const prefix: string[] = [];
+    for (const [index, word] of names[0]!.entries()) {
+      if (!names.every(name => name[index] === word)) break;
+      prefix.push(word);
+    }
+    if (prefix.length >= 2) existing.name = prefix.join(" ");
     return existing;
   }
   const seed: VariantSeed = {
@@ -485,13 +499,15 @@ function attachExactAssets(
   const assetsByFilename = new Map(model.assets.map((asset) => [asset.filename, asset]));
   for (const seed of seeds.values()) {
     for (const record of seed.records) {
-      if (!record.asset_filename) continue;
-      const asset = assetsByFilename.get(record.asset_filename);
-      if (!asset || !isRunnableAsset(asset)) continue;
-      const hardware = assetHardware(asset) ?? defaultHardware;
-      if (hardware !== undefined && hardware !== seed.hardware) continue;
-      if (!seed.assets.some((candidate) => candidate.filename === asset.filename)) seed.assets.push(asset);
-      assigned.add(assetKey(asset));
+      for (const filename of new Set([record.asset_filename, ...record.asset_filenames ?? []])) {
+        if (!filename) continue;
+        const asset = assetsByFilename.get(filename);
+        if (!asset || !isRunnableAsset(asset)) continue;
+        const hardware = assetHardware(asset) ?? defaultHardware;
+        if (hardware !== undefined && hardware !== seed.hardware) continue;
+        if (!seed.assets.some((candidate) => candidate.filename === asset.filename)) seed.assets.push(asset);
+        assigned.add(assetKey(asset));
+      }
     }
   }
 }

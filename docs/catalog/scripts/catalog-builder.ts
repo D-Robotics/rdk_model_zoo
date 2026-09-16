@@ -179,13 +179,6 @@ async function validateRepositorySources(repositoryRoot: string, benchmarks: Ben
   }
 }
 
-function validateNoYoloe(modelsDocument: ModelsDocument, benchmarksDocument: BenchmarksDocument): void {
-  const catalogContent = JSON.stringify({ modelsDocument, benchmarksDocument }).toLowerCase();
-  if (catalogContent.includes("yoloe")) {
-    throw new CatalogValidationError("EXCLUDED_YOLOE", "YOLOE entries are excluded from the catalog");
-  }
-}
-
 function warnOnIncompleteAccuracy(
   benchmarks: BenchmarkRecord[],
   onWarning: BuildCatalogOptions["onWarning"]
@@ -238,7 +231,6 @@ export async function buildCatalog(options: BuildCatalogOptions): Promise<Catalo
   validateUniqueIds(models.models, benchmarks.benchmarks);
   validateModelAndAssetReferences(models.models, benchmarks.benchmarks);
   await validateRepositorySources(options.repositoryRoot, benchmarks.benchmarks);
-  validateNoYoloe(models, benchmarks);
   warnOnIncompleteAccuracy(benchmarks.benchmarks, options.onWarning);
   return joinCatalog(models, benchmarks);
 }

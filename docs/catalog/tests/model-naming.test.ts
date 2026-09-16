@@ -85,6 +85,6 @@ describe("production catalog naming", () => {
     for (const variant of obbVariants) {
       expect(variant.task).not.toBe("object-detection");
     }
-    expect([...hardware].sort()).toEqual(["s100", "x3", "x5"]);
+    expect([...hardware].sort()).toEqual(["s100", "s100p", "s600", "x3", "x5"]);
   });
 });

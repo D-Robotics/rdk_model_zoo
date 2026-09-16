@@ -30,14 +30,14 @@ describe("multi-platform variant catalog", () => {
       .toEqual(expect.arrayContaining(["mobilenetv1-224", "mobilenetv4-conv-small-224"]));
   });
 
-  it("keeps YOLOv8 size rows joined to the exact X5 assets and separates classifier heads", async () => {
+  it("keeps YOLOv8 detection assets separate from renamed classification models", async () => {
     const catalog = await buildMultiplatformCatalog(repositoryRoot);
     const yolov8 = catalog.models.find((model) => model.id === "yolov8")!;
     const x5 = yolov8.platforms!.find((platform) => platform.platform === "x5")!;
     const regularDetect = x5.variants!.filter((variant) =>
       variant.task === "object-detection" && !variant.name.includes("classification head")
     );
-    const classifierHeads = x5.variants!.filter((variant) => variant.name.includes("classification head"));
+    const classifierHeads = x5.variants!.filter((variant) => variant.assets.some(asset => /_cls_bayese_640x640_/.test(asset.filename)));
 
     expect(regularDetect).toHaveLength(5);
     expect(regularDetect.map((variant) => variant.assets[0]?.filename)).toEqual(expect.arrayContaining([
@@ -48,8 +48,8 @@ describe("multi-platform variant catalog", () => {
       "yolov8x_detect_bayese_640x640_nv12.bin"
     ]));
     expect(classifierHeads).toHaveLength(5);
-    expect(classifierHeads.every((variant) => variant.task === "object-detection")).toBe(true);
-    expect(classifierHeads.every((variant) => variant.name.includes("classification head"))).toBe(true);
+    expect(classifierHeads.every((variant) => variant.task === "image-classification")).toBe(true);
+    expect(classifierHeads.every((variant) => !variant.name.includes("classification head"))).toBe(true);
   });
 
   it("seeds S hardware rows from assets and preserves each source sample path", async () => {

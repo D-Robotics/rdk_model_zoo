@@ -4,10 +4,11 @@ import {
   pairAccuracyMetrics,
   type AccuracyPair,
   type PerformanceGroup,
-  type PerformanceThread
+  type MetricEntry
 } from "../catalog/metric-display";
 import { normalizeHardware } from "../catalog/variants";
 import { stripHardwareSuffix } from "../catalog/model-naming";
+import { canonicalMetricName, metricDisplayLabel } from "../catalog/metric-identity";
 import {
   accuracyColumnGroups,
   columnConditionText,
@@ -32,13 +33,27 @@ import {
   table,
   wrapper
 } from "./detail-utils";
+import {
+  conditionText,
+  hasConditions,
+  renderTableConditions,
+  summarizeConditions,
+  sharedAccuracyScope,
+  uniformColumnConditions,
+  visibleParts,
+  type ConditionsSummary,
+  type UniformConditions
+} from "./table-conditions";
+
+/** The glyph that replaces repeated verbose missing-value wording in a cell. */
+const MISSING_DASH = "—";
 
 function taskFromVariant(variantId: string, fallback: string): string {
   const id = normalized(variantId);
   if (id.includes("-seg-") || id.includes("_seg_")) return "instance-segmentation";
-  if (id.includes("-pose-") || id.includes("_pose_")) return "pose-estimation";
-  if (id.includes("-cls-") || id.includes("_cls_")) return "image-classification";
-  if (id.includes("-detect-") || id.includes("_detect_")) return "object-detection";
+  if (id.includes("-pose-") || id.includes("_pose-")) return "pose-estimation";
+  if (id.includes("-cls-") || id.includes("_cls-")) return "image-classification";
+  if (id.includes("-detect-") || id.includes("_detect-")) return "object-detection";
   return fallback;
 }
 
@@ -59,8 +74,15 @@ function allThreadCounts(groups: PerformanceGroup[]): Array<number | undefined> 
   });
 }
 
+/**
+ * The comparison defaults to single-thread whenever the source measured it,
+ * for every model family. Additional threads are not dropped; they stay one
+ * click away in the same table. A table that never measured one thread keeps
+ * its smallest comparable set instead of inventing a column.
+ */
 function primaryThreadCounts(all: Array<number | undefined>): Array<number | undefined> {
-  const preferred = all.filter((concurrency) => concurrency === undefined || concurrency === 1 || concurrency === 2);
+  if (all.includes(1)) return [1];
+  const preferred = all.filter((concurrency) => concurrency === undefined || concurrency === 2);
   if (preferred.length > 0) return preferred;
   return all.slice(0, 1);
 }
@@ -71,77 +93,148 @@ function metricUnit(
   metric: "latency" | "throughput",
   locale: DetailContext["locale"]
 ): string | undefined {
+  const units = new Set<string>();
   for (const group of groups) {
     const thread = group.threads.find((candidate) => candidate.concurrency === concurrency);
     const entry = metric === "latency" ? thread?.latency : thread?.throughput;
-    if (entry !== undefined) return unitLabel(locale, entry.metric.unit);
+    if (entry !== undefined) units.add(unitLabel(locale, entry.metric.unit));
   }
-  return undefined;
+  return units.size === 1 ? [...units][0] : undefined;
 }
 
-function appendMetricValue(
+function perfColumnKey(concurrency: number | undefined, kind: "latency" | "throughput"): string {
+  return `perf:${threadKey(concurrency)}:${kind}`;
+}
+
+function stageColumnKey(stage: string): string {
+  return `stage:${stage}`;
+}
+
+/** Compact placeholder carrying the full wording for hover and screen readers. */
+function renderMissingValue(
   element: HTMLElement,
-  entry: PerformanceThread["latency"],
   context: DetailContext,
-  metricName: "latency" | "throughput",
-  rowHasPerformance: boolean
+  labelKey: "notRecorded" | "noPerformance" | "noAccuracy",
+  dimension: "accuracy" | "performance"
 ): void {
-  if (entry === undefined) {
-    // “No performance table was published” and “this table reports latency but
-    // no FPS for this thread” are different statements and must not share text.
-    element.textContent = detailLabel(context.locale, rowHasPerformance ? "notRecorded" : "noPerformance");
-    element.dataset.empty = "true";
+  const label = detailLabel(context.locale, labelKey);
+  element.textContent = MISSING_DASH;
+  element.title = label;
+  element.setAttribute("aria-label", label);
+  element.dataset.empty = "true";
+  element.dataset.missing = dimension;
+}
+
+/** Different observations share a configuration row, never a calculated value. */
+function appendMetricValues(
+  element: HTMLElement,
+  entries: MetricEntry[],
+  context: DetailContext,
+  hasPerformance: boolean,
+  uniform?: UniformConditions
+): void {
+  const unique = [...new Map(entries.map(entry => [JSON.stringify([entry.metric, entry.record.environment]), entry])).values()];
+  if (!unique.length) {
+    renderMissingValue(element, context, hasPerformance ? "notRecorded" : "noPerformance", "performance");
     return;
   }
-  const value = document.createElement("span");
-  value.className = "model-detail-metric-value";
-  value.dataset.metric = metricName;
-  value.dataset.concurrency = threadKey(entry.metric.concurrency);
-  value.textContent = metricCellText(entry.metric, context.locale);
-  value.title = entry.metric.scope ?? "";
-  element.append(value);
+  for (const entry of unique) {
+    const item = document.createElement("div");
+    item.className = "model-detail-observation";
+    const value = document.createElement("span");
+    value.className = "model-detail-metric-value";
+    value.dataset.metric = entry.metric.metric;
+    value.dataset.concurrency = threadKey(entry.metric.concurrency);
+    value.textContent = metricCellText(entry.metric, context.locale);
+    // Only the wording this column does not already state stays beside the
+    // value. A column-wide condition is stated once in the conditions block,
+    // while a stage, runtime or statistic that differs inside one cell keeps
+    // its label so the two numbers remain distinguishable.
+    const conditions = conditionText(visibleParts(entry, uniform));
+    value.title = conditions;
+    item.append(value);
+    if (conditions) {
+      const note = document.createElement("small");
+      note.className = "model-detail-measurement-scope";
+      note.textContent = conditions;
+      note.title = conditions;
+      item.append(document.createElement("br"), note);
+    }
+    element.append(item);
+  }
+}
+
+function stageKey(group: PerformanceGroup): string | undefined {
+  if (!group.measurement) return undefined;
+  if (/^post[-_]?process(?:ing)?[-_]latency$/i.test(group.measurement)) return "post_process_latency";
+  return group.measurement.replaceAll("_", "-");
+}
+
+function stageLabelFor(key: string, context: DetailContext): string {
+  return key === "post_process_latency"
+    ? (context.locale === "zh" ? "CPU 后处理" : "CPU post-processing")
+    : metricDisplayLabel(canonicalMetricName(key), context.locale);
 }
 
 function accuracyColumnCount(columns: AccuracyColumnGroup[]): number {
   return columns.reduce((count, column) => count + column.stages.length + (column.showRetention ? 1 : 0), 0);
 }
 
-function buildVariantRow(
+/** One rendered configuration, with its per-column measurements precomputed. */
+interface PlannedRow {
+  variant: ModelVariant;
+  records: BenchmarkRecord[];
+  groups: PerformanceGroup[];
+  rowPairs: AccuracyPair[];
+  cells: Map<string, MetricEntry[]>;
+}
+
+function planRow(
   variant: ModelVariant,
-  records: BenchmarkRecord[],
-  group: PerformanceGroup | undefined,
+  hardware: HardwareId,
+  threadCounts: Array<number | undefined>,
+  stages: string[]
+): PlannedRow {
+  const records = variantRecords(variant, hardware);
+  const groups = groupPerformanceMetrics(records);
+  const primary = groups.filter(group => !group.measurement);
+  const cells = new Map<string, MetricEntry[]>();
+  for (const concurrency of threadCounts) {
+    for (const kind of ["latency", "throughput"] as const) {
+      cells.set(perfColumnKey(concurrency, kind), primary
+        .flatMap(group => group.threads.filter(thread => thread.concurrency === concurrency)
+          .flatMap(thread => thread[kind] ? [thread[kind]!] : [])));
+    }
+  }
+  for (const stage of stages) {
+    cells.set(stageColumnKey(stage), groups.filter(group => stageKey(group) === stage).flatMap(group => group.metrics));
+  }
+  return { variant, records, groups, rowPairs: pairAccuracyMetrics(records), cells };
+}
+
+function buildVariantRow(
+  planned: PlannedRow,
   threadCounts: Array<number | undefined>,
   columns: AccuracyColumnGroup[],
-  rowPairs: AccuracyPair[],
   detailId: string,
-  context: DetailContext
+  context: DetailContext,
+  stages: string[],
+  uniform: Map<string, UniformConditions>,
+  accuracyScope?: string
 ): HTMLTableRowElement {
+  const { variant, records, groups, rowPairs, cells } = planned;
   const row = document.createElement("tr");
   row.className = "model-detail-spec-row";
   row.dataset.variantId = variant.id;
   row.dataset.hardware = variant.hardware;
   row.dataset.task = variant.task;
-  if (group?.scope) row.dataset.scope = group.scope;
-  if (group?.statistic) row.dataset.statistic = group.statistic;
+  if (groups.length === 1 && groups[0]?.scope) row.dataset.scope = groups[0].scope;
 
   const specification = document.createElement("th");
   specification.scope = "row";
   specification.className = "model-detail-specification";
-  // The hardware tab already states the board, so `on RDK S100` is dropped
-  // instead of being repeated on every row.
-  specification.textContent = stripHardwareSuffix(variant.name || variant.id);
-  if (group !== undefined) {
-    const conditions = [
-      group.scope ? `${detailLabel(context.locale, "scope")}: ${group.scope}` : undefined,
-      group.statistic ? `${detailLabel(context.locale, "statistic")}: ${group.statistic}` : undefined
-    ].filter((value): value is string => Boolean(value));
-    if (conditions.length > 0) {
-      const note = document.createElement("small");
-      note.className = "model-detail-measurement-scope";
-      note.textContent = conditions.join(" · ");
-      specification.append(document.createElement("br"), note);
-    }
-  }
+  specification.textContent = stripHardwareSuffix(variant.name || variant.id)
+    .replace(/\s+(?:(?:Single|One|Two|Eight|Multi)[- ]Threads?|Statistics)$/i, "");
   const rowToggle = document.createElement("button");
   rowToggle.type = "button";
   rowToggle.className = "model-detail-row-toggle";
@@ -157,21 +250,26 @@ function buildVariantRow(
   input.textContent = inputDescription(inputForVariant(variant)) || detailLabel(context.locale, "notRecorded");
   row.append(input);
 
-  const byConcurrency = new Map<number | undefined, PerformanceThread>();
-  for (const thread of group?.threads ?? []) byConcurrency.set(thread.concurrency, thread);
+  const hasPerformance = records.some(record => (record.performance?.length ?? 0) > 0);
   for (const concurrency of threadCounts) {
-    const thread = byConcurrency.get(concurrency);
-    const latency = document.createElement("td");
-    latency.className = "model-detail-thread-value model-detail-latency";
-    if (thread?.latency) latency.dataset.metric = "latency";
-    latency.dataset.concurrency = threadKey(concurrency);
-    appendMetricValue(latency, thread?.latency, context, "latency", group !== undefined);
-    const throughput = document.createElement("td");
-    throughput.className = "model-detail-thread-value model-detail-throughput";
-    if (thread?.throughput) throughput.dataset.metric = "throughput";
-    throughput.dataset.concurrency = threadKey(concurrency);
-    appendMetricValue(throughput, thread?.throughput, context, "throughput", group !== undefined);
-    row.append(latency, throughput);
+    for (const kind of ["latency", "throughput"] as const) {
+      const key = perfColumnKey(concurrency, kind);
+      const target = document.createElement("td");
+      target.className = "model-detail-thread-value model-detail-" + kind;
+      target.dataset.concurrency = threadKey(concurrency);
+      const entries = cells.get(key) ?? [];
+      if (entries.length) target.dataset.metric = kind;
+      appendMetricValues(target, entries, context, hasPerformance, uniform.get(key));
+      row.append(target);
+    }
+  }
+  for (const stage of stages) {
+    const key = stageColumnKey(stage);
+    const target = document.createElement("td");
+    target.className = stage === "post_process_latency" ? "model-detail-postprocess" : "model-detail-stage-value";
+    target.dataset.metric = stage;
+    appendMetricValues(target, cells.get(key) ?? [], context, hasPerformance, uniform.get(key));
+    row.append(target);
   }
 
   for (const column of columns) {
@@ -181,14 +279,14 @@ function buildVariantRow(
       stageCell.classList.toggle("benchmark-group-start", stage === column.stages[0]);
       stageCell.dataset.metric = column.canonicalMetric;
       stageCell.dataset.stage = stage;
-      renderStageCell(stageCell, column, rowPairs, stage, context, group?.scope);
+      renderStageCell(stageCell, column, rowPairs, stage, context, undefined, accuracyScope);
       row.append(stageCell);
     }
     if (column.showRetention) {
       const retentionCell = document.createElement("td");
       retentionCell.className = "model-detail-retention-cell";
       retentionCell.dataset.metric = column.canonicalMetric;
-      renderRetentionCell(retentionCell, column, rowPairs, context, group?.scope);
+      renderRetentionCell(retentionCell, column, rowPairs, context);
       row.append(retentionCell);
     }
   }
@@ -268,6 +366,37 @@ function appendAccuracyHeader(
   }
 }
 
+/**
+ * The table legend states what the compact placeholders mean. Missing accuracy
+ * and missing performance get one entry each so a dash in an accuracy column
+ * is never read as an absent benchmark.
+ */
+function renderTableLegend(context: DetailContext): HTMLElement {
+  const legend = document.createElement("dl");
+  legend.className = "model-detail-table-legend";
+  const entries: Array<[string, string]> = [
+    [MISSING_DASH, detailLabel(context.locale, "legendMissingAccuracy")],
+    [MISSING_DASH, detailLabel(context.locale, "legendMissingPerformance")],
+    [detailLabel(context.locale, "notApplicable"), detailLabel(context.locale, "legendNotApplicable")]
+  ];
+  for (const [term, description] of entries) {
+    const item = document.createElement("div");
+    const key = document.createElement("dt");
+    key.textContent = term;
+    const value = document.createElement("dd");
+    value.textContent = description;
+    item.append(key, value);
+    legend.append(item);
+  }
+  return legend;
+}
+
+interface BuiltTable {
+  table: HTMLTableElement;
+  summary: ConditionsSummary;
+  hasMissingCells: boolean;
+}
+
 function buildTable(
   variants: ModelVariant[],
   hardware: HardwareId,
@@ -276,9 +405,10 @@ function buildTable(
   performanceGroups: PerformanceGroup[],
   columns: AccuracyColumnGroup[],
   context: DetailContext
-): HTMLTableElement {
+): BuiltTable {
   const selected = variants.filter((variant) => variant.hardware === hardware
     && (variant.task || taskFromVariant(variant.id, "")) === task);
+  const stages = [...new Set(selected.flatMap(variant => groupPerformanceMetrics(variantRecords(variant, hardware)).map(stageKey)).filter((key): key is string => key !== undefined))];
   const result = table(detailLabel(context.locale, "performance"));
   result.className = "model-detail-specifications-table";
   const head = result.tHead!;
@@ -288,14 +418,24 @@ function buildTable(
   const input = cell(detailLabel(context.locale, "input"), true);
   input.rowSpan = 2;
   firstRow.append(specification, input);
+
+  const columnLabels = new Map<string, string>();
   for (const concurrency of threadCounts) {
     const latencyUnit = metricUnit(performanceGroups, concurrency, "latency", context.locale);
-    const group = cell(`${formatThreadLabel(concurrency, context.locale)} ${context.locale === "zh" ? "延迟 / FPS" : "latency / FPS"}`, true);
+    const unknownMetrics = performanceGroups.flatMap(group => group.threads.filter(thread => thread.concurrency === undefined).flatMap(thread => thread.metrics));
+    const unspecifiedMultithread = concurrency === undefined && unknownMetrics.length > 0
+      && unknownMetrics.every(entry => /^multi[- ]thread/i.test(entry.metric.scope ?? ""));
+    const threadLabel = unspecifiedMultithread
+      ? (context.locale === "zh" ? "多线程（数量未记录）" : "Multi-thread (count not recorded)")
+      : formatThreadLabel(concurrency, context.locale);
+    const group = cell(`${threadLabel} ${context.locale === "zh" ? "延迟 / FPS" : "latency / FPS"}`, true);
     group.colSpan = 2;
     group.scope = "colgroup";
     group.dataset.concurrency = threadKey(concurrency);
     if (latencyUnit) group.dataset.latencyUnit = latencyUnit;
     firstRow.append(group);
+    columnLabels.set(perfColumnKey(concurrency, "latency"), `${threadLabel} ${context.locale === "zh" ? "延迟" : "latency"}`);
+    columnLabels.set(perfColumnKey(concurrency, "throughput"), `${threadLabel} FPS`);
   }
   const secondRow = document.createElement("tr");
   for (const concurrency of threadCounts) {
@@ -308,38 +448,50 @@ function buildTable(
     throughput.dataset.concurrency = threadKey(concurrency);
     secondRow.append(latency, throughput);
   }
+  for (const stage of stages) {
+    const header = cell(stageLabelFor(stage, context), true);
+    header.rowSpan = 2;
+    header.dataset.metric = stage;
+    firstRow.append(header);
+    columnLabels.set(stageColumnKey(stage), stageLabelFor(stage, context));
+  }
   appendAccuracyHeader(firstRow, secondRow, columns, context);
   const download = cell(detailLabel(context.locale, "download"), true);
   download.rowSpan = 2;
   firstRow.append(download);
   head.append(firstRow, secondRow);
 
-  const columnCount = 2 + threadCounts.length * 2 + accuracyColumnCount(columns) + 1;
-  for (const variant of selected) {
-    const variantRecordsList = variantRecords(variant, hardware);
-    const rowPairs = pairAccuracyMetrics(variantRecordsList);
-    const groups = groupPerformanceMetrics(variantRecordsList).filter((candidate) =>
-      candidate.threads.some((thread) => thread.latency !== undefined || thread.throughput !== undefined)
-    );
-    if (groups.length === 0) {
-      const detailId = `model-detail-row-${variant.id}-default`.replace(/[^a-zA-Z0-9_-]+/g, "-");
-      const mainRow = buildVariantRow(variant, variantRecordsList, undefined, threadCounts, columns, rowPairs, detailId, context);
-      const expandedRow = expandedVariantRow(variant, variantRecordsList, columnCount, detailId, context);
-      result.tBodies[0]!.append(mainRow, expandedRow);
-      wireRowToggle(mainRow, expandedRow, context);
-      continue;
-    }
-    for (const [groupIndex, group] of groups.entries()) {
-      const groupKey = `${groupIndex}-${group.scope ?? "scope"}-${group.statistic ?? "statistic"}`;
-      const detailId = `model-detail-row-${variant.id}-${groupKey}`.replace(/[^a-zA-Z0-9_-]+/g, "-");
-      const mainRow = buildVariantRow(variant, variantRecordsList, group, threadCounts, columns, rowPairs, detailId, context);
-      const expandedRow = expandedVariantRow(variant, variantRecordsList, columnCount, detailId, context);
-      result.tBodies[0]!.append(mainRow, expandedRow);
-      wireRowToggle(mainRow, expandedRow, context);
-    }
+  const planned = selected.map(variant => planRow(variant, hardware, threadCounts, stages));
+  const cellsByColumn = new Map([...new Set(planned.flatMap(row => [...row.cells.keys()]))]
+    .map(key => [key, planned.map(row => row.cells.get(key) ?? [])]));
+  // A wording that repeats in every populated cell of one column describes the
+  // column, so it moves to the conditions block instead of printing each time.
+  const uniform = uniformColumnConditions(cellsByColumn);
+
+  const columnCount = 2 + threadCounts.length * 2 + accuracyColumnCount(columns) + stages.length + 1;
+  for (const row of planned) {
+    const detailId = ("model-detail-row-" + row.variant.id).replace(/[^a-zA-Z0-9_-]+/g, "-");
+    const mainRow = buildVariantRow(row, threadCounts, columns, detailId, context, stages, uniform, sharedAccuracyScope(planned.flatMap(item => item.records)));
+    const expandedRow = expandedVariantRow(row.variant, row.records, columnCount, detailId, context);
+    result.tBodies[0]!.append(mainRow, expandedRow);
+    wireRowToggle(mainRow, expandedRow, context);
   }
   if (selected.length === 0) appendEmptyRow(result, detailLabel(context.locale, "noPerformance"), columnCount);
-  return result;
+
+  const summary = summarizeConditions({
+    records: planned.flatMap(row => row.records),
+    siblingRecords: variants.flatMap(variant => variant.benchmarks),
+    columns: cellsByColumn,
+    columnLabels,
+    threadCounts,
+    sourceRef: selected[0]?.release_tag ?? context.releaseTag,
+    locale: context.locale
+  });
+  return {
+    table: result,
+    summary,
+    hasMissingCells: result.querySelector('[data-empty="true"]') !== null
+  };
 }
 
 function wireRowToggle(
@@ -362,6 +514,7 @@ function wireRowToggle(
 }
 
 export interface VariantBenchmarkTableOptions {
+  preferredThreads?: number[];
   variants: ModelVariant[];
   hardware: HardwareId;
   task: string;
@@ -369,13 +522,15 @@ export interface VariantBenchmarkTableOptions {
 }
 
 /**
- * Render the platform comparison as one grouped table. The primary view keeps
- * 1/2-thread columns (plus explicitly unknown concurrency) compact; the
- * complete source thread set remains one click away in the same table.
+ * Render the platform comparison as one grouped table. Single-thread is the
+ * default comparison whenever the source measured it; the complete source
+ * thread set remains one click away in the same table.
  *
  * Accuracy columns come from the measurements this model actually publishes, so
  * a detector, a classifier and an embedding model each get their own table
- * shape rather than sharing one fixed template.
+ * shape rather than sharing one fixed template. Conditions that every cell of a
+ * column repeats are stated once below the table, taken from the records
+ * themselves.
  */
 export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOptions): HTMLElement {
   const { variants, hardware, task, context } = options;
@@ -384,13 +539,15 @@ export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOption
   const records = selected.flatMap((variant) => variantRecords(variant, hardware));
   const allGroups = groupPerformanceMetrics(records);
   const primaryGroups = allGroups.filter((group) =>
-    group.threads.some((thread) => thread.latency !== undefined || thread.throughput !== undefined)
+    !group.measurement && group.threads.some((thread) => thread.latency !== undefined || thread.throughput !== undefined)
   );
   const columns = accuracyColumnGroups(pairAccuracyMetrics(records), context.locale);
   const allThreads = allThreadCounts(primaryGroups);
   let showAllThreads = false;
-  const primaryThreads = primaryThreadCounts(allThreads);
-  if (primaryThreads.length === 0 && selected.length > 0) primaryThreads.push(undefined);
+  const preferred = options.preferredThreads;
+  const matching = preferred ? allThreads.filter(count => count === undefined || preferred.includes(count)) : [];
+  const primaryThreads = matching.length ? matching : primaryThreadCounts(allThreads);
+  if (primaryThreads.length === 0 && selected.length > 0 && !allGroups.some(group => group.measurement)) primaryThreads.push(undefined);
   const tableHost = document.createElement("div");
   tableHost.className = "model-detail-benchmark-table";
   const initialThreadMode = typeof window !== "undefined"
@@ -408,6 +565,8 @@ export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOption
   toggle.hidden = extraThreads.length === 0;
   toolbar.append(toggle);
   const scrollHost = document.createElement("div");
+  const conditionsHost = document.createElement("div");
+  conditionsHost.className = "model-detail-conditions-host";
 
   const render = (): void => {
     const threadCounts = showAllThreads ? allThreads : primaryThreads;
@@ -415,10 +574,12 @@ export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOption
     toggle.textContent = showAllThreads
       ? (context.locale === "zh" ? "收起其他线程" : "Hide additional threads")
       : (context.locale === "zh" ? `显示其他线程（${extraThreads.length}）` : `Show additional threads (${extraThreads.length})`);
-    scrollHost.replaceChildren(wrapper(
-      buildTable(variants, hardware, task, threadCounts, primaryGroups, columns, context),
-      detailLabel(context.locale, "specifications")
-    ));
+    const built = buildTable(variants, hardware, task, threadCounts, primaryGroups, columns, context);
+    scrollHost.replaceChildren(wrapper(built.table, detailLabel(context.locale, "specifications")));
+    const reference: HTMLElement[] = [];
+    if (built.hasMissingCells) reference.push(renderTableLegend(context));
+    if (hasConditions(built.summary)) reference.push(renderTableConditions(built.summary, context));
+    conditionsHost.replaceChildren(...reference);
   };
   toggle.addEventListener("click", () => {
     showAllThreads = !showAllThreads;
@@ -431,6 +592,7 @@ export function renderVariantBenchmarkTable(options: VariantBenchmarkTableOption
     render();
   });
   render();
-  tableHost.append(toolbar, scrollHost);
+  tableHost.append(toolbar, scrollHost, conditionsHost);
+
   return tableHost;
 }

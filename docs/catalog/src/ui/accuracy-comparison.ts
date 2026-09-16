@@ -2,6 +2,7 @@ import type { Locale, MetricRecord, MetricUnit } from "../catalog/types";
 import {
   formatRetention,
   getRetention,
+  qualifierPrefix,
   type AccuracyPair,
   type MetricEntry
 } from "../catalog/metric-display";
@@ -107,19 +108,19 @@ export function pairsForRow(group: AccuracyColumnGroup, rowPairs: AccuracyPair[]
   });
 }
 
-function digitsFor(unit: MetricUnit): number {
-  return unit === "ratio" || unit === "percent" ? 4 : 6;
-}
-
 /**
  * Accuracy values are shown exactly as the source records them, with no `%`
  * suffix: the scale lives in the column header. Retention is the one value
- * that keeps its `%` because it is defined as a percentage.
+ * that keeps its `%` because it is defined as a percentage. A recorded bound
+ * or approximation keeps its qualifier prefix, and up to twelve fractional
+ * digits are kept so published values such as 0.968013 are not rounded into
+ * a different measurement.
  */
 export function accuracyValueText(metric: MetricRecord, locale: Locale): string {
-  return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
-    maximumFractionDigits: digitsFor(metric.unit)
+  const number = new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
+    maximumFractionDigits: 12
   }).format(metric.value);
+  return `${qualifierPrefix(metric.qualifier)}${number}`;
 }
 
 export function stageLabel(stage: AccuracyStage, locale: Locale): string {
@@ -164,7 +165,8 @@ export function renderStageCell(
   rowPairs: AccuracyPair[],
   stage: AccuracyStage,
   context: DetailContext,
-  rowScope?: string
+  rowScope?: string,
+  sharedScope?: string
 ): void {
   const applicable = pairsForRow(group, rowPairs, rowScope);
   const values = applicable
@@ -174,18 +176,31 @@ export function renderStageCell(
     const anyStageForScope = applicable.some((pair) => STAGE_ORDER.some((candidate) => stageEntry(pair, candidate)));
     const scopedOut = group.pairs.some((pair) => rowPairs.some((candidate) => candidate.key === pair.key)
       && !scopeCompatible(rowScope, pair.scope));
-    element.textContent = detailLabel(context.locale, scopedOut && !anyStageForScope
-      ? "notApplicable"
-      : "noAccuracy");
     element.dataset.empty = "true";
+    if (scopedOut && !anyStageForScope) {
+      // "Other configuration" is a statement about scope, not about a gap in
+      // the evidence, so it keeps its own wording instead of the dash.
+      element.textContent = detailLabel(context.locale, "notApplicable");
+      element.dataset.missing = "not-applicable";
+      return;
+    }
+    // A missing accuracy value is marked with the shared dash and keeps the
+    // full wording for hover and assistive technology, so a repeated label no
+    // longer widens every column. Which of the two the dash means is stated in
+    // the table legend.
+    element.textContent = "—";
+    element.title = detailLabel(context.locale, "noAccuracy");
+    element.setAttribute("aria-label", detailLabel(context.locale, "noAccuracy"));
+    element.dataset.missing = "accuracy";
     return;
   }
   const ambiguousUnits = group.units.length > 1;
   for (const { pair, entry } of values) {
     const suffix = ambiguousUnits ? ` ${unitScaleLabel(entry.metric.unit, context.locale)}` : "";
+    const condition = [pair.scope === sharedScope ? undefined : pair.scope, values.length > 1 && group.datasets.length > 1 ? pair.dataset : undefined].filter(Boolean).join(" · ");
     appendValueLine(
       element,
-      `${accuracyValueText(entry.metric, context.locale)}${suffix}`,
+      `${accuracyValueText(entry.metric, context.locale)}${suffix}${condition ? ` (${condition})` : ""}`,
       "model-detail-accuracy-value",
       [pair.dataset, pair.scope, pair.artifact].filter(Boolean).join(" · "),
       { metric: pair.canonicalMetric, stage }

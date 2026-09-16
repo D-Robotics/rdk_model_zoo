@@ -107,8 +107,8 @@ describe("hardware model variants", () => {
       && variant.benchmarks.some((record) => record.input?.shape?.[0] === 640));
     const lowResolutionDetection = variants.find((variant) => variant.task === "object-detection"
       && variant.benchmarks.some((record) => record.input?.shape?.[0] === 320));
-    const classification = variants.find((variant) => variant.task === "image-classification");
-    const classifierHead = variants.find((variant) => variant.name.includes("classification head"));
+    const classification = variants.find((variant) => variant.task === "image-classification" && variant.assets.some(asset => asset.filename.includes("224x224")));
+    const classifierHead = variants.find((variant) => variant.assets.some(asset => asset.filename.includes("_cls_detect_")));
 
     expect(detection?.assets.map((entry) => entry.filename)).toEqual([
       "yolov8n_detect_bayese_640x640_nv12.bin"
@@ -119,11 +119,11 @@ describe("hardware model variants", () => {
     expect(classification?.assets.map((entry) => entry.filename)).toEqual([
       "yolov8n_cls_bayese_224x224_nv12.bin"
     ]);
-    expect(classifierHead?.task).toBe("object-detection");
+    expect(classifierHead?.task).toBe("image-classification");
     expect(classifierHead?.assets.map((entry) => entry.filename)).toEqual([
       "yolov8n_cls_detect_bayese_640x640_nv12.bin"
     ]);
-    expect(classifierHead?.name).toContain("classification head");
+    expect(classifierHead?.name).not.toContain("classification head");
   });
 
   it("returns the public hardware order from resolved variants", () => {

@@ -78,9 +78,10 @@ describe("performance row grouping", () => {
       perf({ metric: "latency", value: 6.3, scope: "BPU task", concurrency: 1 }),
       perf({ metric: "post_process_latency", value: 5, scope: "single-core CPU" })
     ] })]);
-    const timing = groups.filter((group) => group.threads.some((thread) => thread.latency || thread.throughput));
+    const timing = groups.filter((group) => !group.measurement && group.threads.some((thread) => thread.latency || thread.throughput));
     expect(timing).toHaveLength(1);
     expect(timing[0]!.threads[0]!.latency?.metric.value).toBe(6.3);
+    expect(groups.find(group => group.measurement === "post_process_latency")?.threads[0]?.latency?.metric.value).toBe(5);
   });
 });
 
@@ -91,7 +92,7 @@ describe("self-review of the published catalog", () => {
     const variant = yolov8.variants?.find((candidate) => candidate.hardware === "x3"
       && candidate.task === "object-detection")!;
     const groups = groupPerformanceMetrics(variantRecords(variant, "x3" as HardwareId))
-      .filter((group) => group.threads.some((thread) => thread.latency || thread.throughput));
+      .filter((group) => !group.measurement && group.threads.some((thread) => thread.latency || thread.throughput));
     expect(groups).toHaveLength(1);
     const byConcurrency = new Map(groups[0]!.threads.map((thread) => [thread.concurrency, thread]));
     expect(byConcurrency.get(1)?.latency?.metric.value).toBe(99.8);
@@ -121,7 +122,7 @@ describe("self-review of the published catalog", () => {
     const pairs = pairAccuracyMetrics(variantRecords(variant, "s100" as HardwareId));
     const byCanonical = new Map(pairs.map((pair) => [pair.canonicalMetric, pair]));
     expect(byCanonical.get("top-1")?.float?.metric.value).toBe(0.7123);
-    expect(byCanonical.get("top-1")?.other?.metric.value).toBe(0.7118);
+    expect(byCanonical.get("top-1")?.quantized?.metric.value).toBe(0.7118);
     expect(byCanonical.get("top-5")?.float?.metric.value).toBe(0.9143);
     expect(byCanonical.get("mse")?.other?.metric.value).toBe(0.087);
     expect(byCanonical.get("cosine-similarity")?.other?.metric.value).toBe(0.991);
@@ -158,7 +159,8 @@ describe("self-review of the published catalog", () => {
     expect(post[0]!.value).toBe(2);
     const groups = groupPerformanceMetrics(records)
       .filter((group) => group.threads.some((thread) => thread.latency || thread.throughput));
-    // BPU task timing only: the post-processing entry must not add a row.
-    expect(groups).toHaveLength(1);
+    // Named post-processing is visible separately; it is never merged into BPU timing.
+    expect(groups.filter(group => !group.measurement)).toHaveLength(1);
+    expect(groups.find(group => group.measurement === "post_process_latency")?.threads[0]?.latency?.metric.value).toBe(2);
   });
 });

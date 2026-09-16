@@ -23,6 +23,8 @@ export interface PerformanceGroup {
   artifact: string;
   scope?: string;
   statistic?: MetricRecord["statistic"];
+  /** Named stage timings must not look like whole-model inference latency. */
+  measurement?: string;
   threads: PerformanceThread[];
   metrics: MetricEntry[];
 }
@@ -91,7 +93,8 @@ function inputKey(record: BenchmarkRecord): string {
 }
 
 function isLatencyMetric(metric: MetricRecord): boolean {
-  return normalized(metric.metric) === "latency";
+  return (metric.unit === "ms" || metric.unit === "us")
+    && /(?:^|[-_])latency$/.test(normalized(metric.metric));
 }
 
 function isThroughputMetric(metric: MetricRecord): boolean {
@@ -167,10 +170,14 @@ export function groupPerformanceMetrics(records: BenchmarkRecord[]): Performance
       const artifact = artifactForRecord(record);
       const scope = metric.scope;
       const statistic = metric.statistic;
+      const measurement = isLatencyMetric(metric) && normalized(metric.metric) !== "latency" ? metric.metric : undefined;
       const makeKey = (scopeKey: string): string => JSON.stringify([
         record.variant_id,
         artifact,
         inputKey(record),
+        measurement,
+        [record.environment.hardware, record.environment.runtime, record.environment.rdk_os,
+          record.environment.cpu_mode, record.environment.bpu_cores],
         scopeKey,
         statisticClass(statistic)
       ]);
@@ -178,6 +185,7 @@ export function groupPerformanceMetrics(records: BenchmarkRecord[]): Performance
       const concurrency = validConcurrency(metric.concurrency);
 
       const placeInto = (group: PerformanceGroup): void => {
+        group.measurement = measurement;
         group.metrics.push(entry);
         let thread = group.threads.find((candidate) => candidate.concurrency === concurrency);
         if (thread === undefined) {
@@ -193,8 +201,14 @@ export function groupPerformanceMetrics(records: BenchmarkRecord[]): Performance
         const occupied = isLatencyMetric(metric) ? thread.latency : undefined;
         const occupiedThroughput = isThroughputMetric(metric) ? thread.throughput : undefined;
         const incumbent = occupied ?? occupiedThroughput;
-        if (incumbent !== undefined && incumbent.metric.scope !== scope) {
-          // Collision from a different raw scope: this entry would be hidden.
+        if (incumbent !== undefined && (
+          incumbent.metric.scope !== scope || incumbent.metric.value !== metric.value
+          || incumbent.metric.unit !== metric.unit
+          || (incumbent.metric.qualifier ?? "exact") !== (metric.qualifier ?? "exact")
+          || incumbent.metric.dataset !== metric.dataset
+          || incumbent.metric.model_stage !== metric.model_stage
+        )) {
+          // A different condition or value cannot occupy the same display cell.
           // Undo the partial placement; the caller falls back to exact scope.
           group.metrics.pop();
           thread.metrics.pop();
@@ -560,20 +574,34 @@ export interface FormatMetricOptions {
   maximumFractionDigits?: number;
 }
 
+/**
+ * Prefix that keeps a measurement's qualifier visible in the rendered value:
+ * a lower bound is "at least this value", an upper bound is "at most this
+ * value", an approximation is "about this value". Exact measurements (and
+ * records without a qualifier, whose implied qualifier is exact) render with
+ * no prefix so their meaning is unchanged.
+ */
+export function qualifierPrefix(qualifier: MetricRecord["qualifier"]): string {
+  if (qualifier === "lower-bound") return "≥";
+  if (qualifier === "upper-bound") return "≤";
+  if (qualifier === "approximate") return "≈";
+  return "";
+}
+
 /** Format a metric value with an unambiguous unit. */
 export function formatMetricValue(
-  metric: Pick<MetricRecord, "value" | "unit" | "metric">,
+  metric: Pick<MetricRecord, "value" | "unit" | "metric" | "qualifier">,
   locale: Locale = "en",
   options: FormatMetricOptions = {}
 ): string {
   const asPercentage = options.asPercentage ?? metric.unit === "ratio";
   const value = metric.unit === "ratio" && asPercentage ? metric.value * 100 : metric.value;
-  const fractionDigits = options.maximumFractionDigits ?? (metric.unit === "ratio" || metric.unit === "percent" ? 2 : 6);
+  const fractionDigits = options.maximumFractionDigits ?? ((metric.unit === "ratio" && asPercentage) || metric.unit === "percent" ? 2 : 6);
   const number = formatNumber(value, locale, fractionDigits);
   const unit = metric.unit === "percent" || (metric.unit === "ratio" && asPercentage)
     ? "%"
     : metric.unit;
-  return `${number}${unit}`;
+  return `${qualifierPrefix(metric.qualifier)}${number}${unit}`;
 }
 
 /** Format values that are shown in a performance thread cell. */

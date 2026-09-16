@@ -289,7 +289,7 @@ export function mountCatalog(root: HTMLElement, catalog: Catalog, options: AppOp
   workspace.className = "catalog-workspace";
   results.prepend(filters.toolbar, filters.chips);
   workspace.append(filters.element, results);
-  directory.append(renderEditorialIntro(options.locale), renderDirectoryHeading(options.locale), filters.hardware, workspace, summary);
+  directory.append(renderEditorialIntro(options.locale, catalog), renderDirectoryHeading(options.locale), filters.hardware, workspace, summary);
   content.append(preferences, directory, detailHost);
   root.replaceChildren(content);
   const preferenceHost = document.querySelector<HTMLElement>("#header-preferences");
