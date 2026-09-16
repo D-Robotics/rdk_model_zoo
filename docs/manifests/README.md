@@ -32,8 +32,8 @@ runtime behavior, board compatibility, or a repository-wide board test result;
 no board tests were run for this release. The public GitHub Release attaches
 both `models.yaml` and `benchmarks.yaml`.
 
-See the [S v1.1.1 release notes](../releases/s-v1.1.1.md) for the audited
-totals and validation scope. Current branch location: `docs/release/`.
+See the [S v1.1.1 release notes](../../CHANGELOG.md#s-v1.1.1-details) for the audited
+totals and validation scope. Current branch location: `docs/manifests/`.
 Historical tags such as `s-v1.0.0` keep their original `release/` paths. See
 the [documentation index](../README.md) for the shared release policy and
 website maintenance instructions.
