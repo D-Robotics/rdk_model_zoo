@@ -2,7 +2,7 @@
 
 本文规定 RDK Model Zoo 的发版流程。当前阶段保持流程简洁，不要求设置 RDK 板卡测试门禁。自动检查用于校验发版 Manifest 和在线模型目录，不代表模型已经通过板端运行认证。
 
-多平台目录按以下顺序发版：先准备并发布 S、X3，再在 X5 的 `docs/release/catalog-sources.json` 固定它们的附注 Tag，最后发布 X5 并部署目录。X5 清单读取自身发布检出，不读取其他本地或活动远端分支。GitHub 仓库级 Latest 指向 X5；三个硬件版本仍独立维护。
+多平台目录按以下顺序发版：先准备并发布 S、X3，再在 X5 的 `docs/manifests/catalog-sources.json` 固定它们的附注 Tag，最后发布 X5 并部署目录。X5 清单读取自身发布检出，不读取其他本地或活动远端分支。GitHub 仓库级 Latest 指向 X5；三个硬件版本仍独立维护。
 
 每次发布须按实际条目重新核对汇总统计，从 Tag 原样导出两份 YAML 附件，并附上它们的 `SHA256SUMS`。该文件只校验清单附件，不代表外部模型文件已有哈希。已推送的准备版 Tag 保留不动，元数据修正使用新的补丁 Tag。
 
@@ -26,8 +26,8 @@ X5、S、X3 三条版本线独立维护。每条版本线使用 [Semantic Versio
 
 - `VERSION`：平台版本号。
 - `CHANGELOG.md`：面向用户的变更和已知限制。
-- `docs/release/models.yaml`：该版本的模型 manifest。
-- `docs/release/benchmarks.yaml`：该版本已经记录的性能与精度实测结果。
+- `docs/manifests/models.yaml`：该版本的模型 manifest。
+- `docs/manifests/benchmarks.yaml`：该版本已经记录的性能与精度实测结果。
 - `docs/releases/<tag>.md`：用于 GitHub Release 的发版说明。
 
 Manifest 记录本版本提供的模型和资源、示例路径、下载脚本或 URL、文件格式，以及已知的校验和。未知的 SHA-256 必须明确写为 `null`，不能猜测或伪造。只要 manifest 中存在 `sha256: null`，发版说明就必须披露校验和覆盖不完整。
@@ -37,7 +37,7 @@ Manifest 记录本版本提供的模型和资源、示例路径、下载脚本�
 ## 3. 人工发版流程
 
 1. 选择一条平台分支，并确认发版内容属于该平台。
-2. 更新 `VERSION`、`CHANGELOG.md`、`docs/release/models.yaml`、`docs/release/benchmarks.yaml` 和 `docs/releases/<tag>.md`，两个 Manifest 都必须填写新的 Release Tag。
+2. 更新 `VERSION`、`CHANGELOG.md`、`docs/manifests/models.yaml`、`docs/manifests/benchmarks.yaml` 和 `docs/releases/<tag>.md`，两个 Manifest 都必须填写新的 Release Tag。
 3. 复核 Manifest：示例路径和下载脚本必须存在，URL 必须正确，未知校验和必须写为 `null`，每条 Benchmark 必须引用不可变的仓库证据；检查发版文件中的 Tag、分支、平台和版本一致。
 4. 复核源码差异，并从全新依赖安装开始校验在线目录：
 
@@ -66,8 +66,8 @@ Manifest 记录本版本提供的模型和资源、示例路径、下载脚本�
 
    ```bash
    gh release create x5-v1.0.0 \
-     "docs/release/models.yaml#models.yaml" \
-     "docs/release/benchmarks.yaml#benchmarks.yaml" \
+     "docs/manifests/models.yaml#models.yaml" \
+     "docs/manifests/benchmarks.yaml#benchmarks.yaml" \
      --title "RDK Model Zoo X5 v1.0.0" \
      --notes-file docs/releases/x5-v1.0.0.md \
      --verify-tag

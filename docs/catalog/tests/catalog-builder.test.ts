@@ -8,10 +8,10 @@ const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 function buildRepositoryCatalog(onWarning?: (message: string) => void) {
   return buildCatalog({
     repositoryRoot,
-    modelsPath: "docs/release/models.yaml",
-    benchmarksPath: "docs/release/benchmarks.yaml",
-    modelsSchemaPath: "docs/release/schemas/models.schema.json",
-    benchmarksSchemaPath: "docs/release/schemas/benchmarks.schema.json",
+    modelsPath: "docs/manifests/models.yaml",
+    benchmarksPath: "docs/manifests/benchmarks.yaml",
+    modelsSchemaPath: "docs/manifests/schemas/models.schema.json",
+    benchmarksSchemaPath: "docs/manifests/schemas/benchmarks.schema.json",
     onWarning
   });
 }
@@ -148,8 +148,8 @@ describe("buildCatalog", () => {
       repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),
       modelsPath: "models.valid.yaml",
       benchmarksPath: "benchmarks.valid.yaml",
-      modelsSchemaPath: "../../../release/schemas/models.schema.json",
-      benchmarksSchemaPath: "../../../release/schemas/benchmarks.schema.json"
+      modelsSchemaPath: "../../../manifests/schemas/models.schema.json",
+      benchmarksSchemaPath: "../../../manifests/schemas/benchmarks.schema.json"
     });
     expect(catalog.release.tag).toBe("x5-v1.0.0");
     expect(catalog.models[0]?.benchmarks[0]?.sample_id).toBe("convnext");
@@ -160,8 +160,8 @@ describe("buildCatalog", () => {
       repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),
       modelsPath: "models.valid.yaml",
       benchmarksPath: "benchmarks.non-heading-section.yaml",
-      modelsSchemaPath: "../../../release/schemas/models.schema.json",
-      benchmarksSchemaPath: "../../../release/schemas/benchmarks.schema.json"
+      modelsSchemaPath: "../../../manifests/schemas/models.schema.json",
+      benchmarksSchemaPath: "../../../manifests/schemas/benchmarks.schema.json"
     })).rejects.toEqual(expect.objectContaining({
       code: "SOURCE_SECTION_NOT_FOUND"
     }));
@@ -172,8 +172,8 @@ describe("buildCatalog", () => {
       repositoryRoot: fileURLToPath(new URL("fixtures/invalid-reference/", import.meta.url)),
       modelsPath: "models.yaml",
       benchmarksPath: "benchmarks.yaml",
-      modelsSchemaPath: "../../../../release/schemas/models.schema.json",
-      benchmarksSchemaPath: "../../../../release/schemas/benchmarks.schema.json"
+      modelsSchemaPath: "../../../../manifests/schemas/models.schema.json",
+      benchmarksSchemaPath: "../../../../manifests/schemas/benchmarks.schema.json"
     })).rejects.toEqual(expect.objectContaining({
       code: "UNKNOWN_SAMPLE"
     }));
@@ -184,8 +184,8 @@ describe("buildCatalog", () => {
       repositoryRoot: fileURLToPath(new URL("fixtures/", import.meta.url)),
       modelsPath: "models.valid.yaml",
       benchmarksPath: "benchmarks.mutable-ref.yaml",
-      modelsSchemaPath: "../../../release/schemas/models.schema.json",
-      benchmarksSchemaPath: "../../../release/schemas/benchmarks.schema.json"
+      modelsSchemaPath: "../../../manifests/schemas/models.schema.json",
+      benchmarksSchemaPath: "../../../manifests/schemas/benchmarks.schema.json"
     })).rejects.toEqual(expect.objectContaining({
       code: "INVALID_SOURCE_REF"
     }));

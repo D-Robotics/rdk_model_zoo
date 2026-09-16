@@ -29,12 +29,20 @@ async function gitShow(repositoryRoot: string, ref: string, path: string): Promi
 }
 
 async function manifestPair(repositoryRoot: string, ref: string, tag: string): Promise<{ models: SourceDocument; benchmarks: BenchmarkDocument }> {
-  // Existing release tags keep their original paths. Read both layouts
+  // Existing release tags keep their original paths. Read all three layouts
   // without changing immutable history or keeping duplicate live manifests.
-  const directory = ref === "WORKTREE"
-    ? await access(resolve(repositoryRoot, "docs/release/models.yaml")).then(() => "docs/release", () => "release")
-    : await execFileAsync("git", ["-C", repositoryRoot, "cat-file", "-e", `${ref}:docs/release/models.yaml`])
-      .then(() => "docs/release", () => "release");
+  let directory: string | undefined;
+  for (const candidate of ["docs/manifests", "docs/release", "release"]) {
+    const exists = ref === "WORKTREE"
+      ? await access(resolve(repositoryRoot, `${candidate}/models.yaml`)).then(() => true, () => false)
+      : await execFileAsync("git", ["-C", repositoryRoot, "cat-file", "-e", `${ref}:${candidate}/models.yaml`])
+        .then(() => true, () => false);
+    if (exists) {
+      directory = candidate;
+      break;
+    }
+  }
+  if (!directory) throw new Error(`Model manifest not found for ${ref}`);
   const read = (path: string): Promise<string> => ref === "WORKTREE"
     ? readFile(resolve(repositoryRoot, path), "utf8") : gitShow(repositoryRoot, ref, path);
   const [modelsText, benchmarksText] = await Promise.all([
@@ -328,12 +336,12 @@ function mergePlatformModels(platform: CatalogPlatform, tag: string, familyId: s
 export async function buildMultiplatformCatalog(repositoryRoot: string): Promise<Catalog> {
   // X5 comes from this checkout (the exact release tag in CI), never a local
   // or remote branch that may have moved. Other hardware lines are locked.
-  const current = parse(await readFile(resolve(repositoryRoot, "docs/release/models.yaml"), "utf8")) as SourceDocument;
+  const current = parse(await readFile(resolve(repositoryRoot, "docs/manifests/models.yaml"), "utf8")) as SourceDocument;
   const version = (await readFile(resolve(repositoryRoot, "VERSION"), "utf8")).trim();
   if (current.release.platform !== "x5" || current.release.version !== version || current.release.tag !== `x5-v${version}`) {
     throw new Error("X5 VERSION and manifest release identity disagree");
   }
-  const pins = JSON.parse(await readFile(resolve(repositoryRoot, "docs/release/catalog-sources.json"), "utf8")) as Record<"s" | "x3", string>;
+  const pins = JSON.parse(await readFile(resolve(repositoryRoot, "docs/manifests/catalog-sources.json"), "utf8")) as Record<"s" | "x3", string>;
   for (const platform of ["s", "x3"] as const) {
     if (!new RegExp(`^${platform}-v[0-9]+\\.[0-9]+\\.[0-9]+$`).test(pins[platform])) {
       throw new Error(`Catalog source must be an immutable platform tag: ${platform}`);

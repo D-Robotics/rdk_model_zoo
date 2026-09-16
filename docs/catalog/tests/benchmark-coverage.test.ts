@@ -58,10 +58,10 @@ const EXPECTED_WITHOUT_PUBLISHED_BENCHMARKS = new Set([
 function buildRepositoryCatalog() {
   return buildCatalog({
     repositoryRoot,
-    modelsPath: "docs/release/models.yaml",
-    benchmarksPath: "docs/release/benchmarks.yaml",
-    modelsSchemaPath: "docs/release/schemas/models.schema.json",
-    benchmarksSchemaPath: "docs/release/schemas/benchmarks.schema.json"
+    modelsPath: "docs/manifests/models.yaml",
+    benchmarksPath: "docs/manifests/benchmarks.yaml",
+    modelsSchemaPath: "docs/manifests/schemas/models.schema.json",
+    benchmarksSchemaPath: "docs/manifests/schemas/benchmarks.schema.json"
   });
 }
 

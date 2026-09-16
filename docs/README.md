@@ -13,9 +13,9 @@
 | 内容 | 位置 |
 | --- | --- |
 | 网站源码与开发命令 | [catalog/README.md](catalog/README.md) |
-| 模型与 Benchmark 清单说明 | [release/README.md](release/README.md) |
-| 模型清单 | [release/models.yaml](release/models.yaml) |
-| Benchmark 清单 | [release/benchmarks.yaml](release/benchmarks.yaml) |
+| 模型与 Benchmark 清单说明 | [manifests/README.md](manifests/README.md) |
+| 模型清单 | [manifests/models.yaml](manifests/models.yaml) |
+| Benchmark 清单 | [manifests/benchmarks.yaml](manifests/benchmarks.yaml) |
 | 发布规范 | [中文](RELEASE_cn.md) / [English](RELEASE.md) |
 | 版本与变更记录 | [VERSION](../VERSION) / [CHANGELOG.md](../CHANGELOG.md) |
 | 各版发布说明 | [releases/](releases/) |
@@ -24,10 +24,10 @@
 docs/
 ├── assets/           # 文档图片
 ├── catalog/          # 在线目录源码、构建和测试
-├── release/          # 当前分支 Manifest 与 schema
+├── manifests/        # 当前分支 Manifest 与 schema
 ├── releases/         # 各版发布说明
 ├── source_reference/ # 接口参考
 └── tros/             # TROS 集成说明
 ```
 
-网站源码与发布数据已从根目录的 `site/`、`release/` 收拢到这里。旧 Release Tag 保留其原始目录，目录生成器同时支持两种历史布局；文件内容和 Tag 不因目录迁移改变。
+网站源码与发布数据已从根目录的 `site/`、`release/` 收拢到这里。旧 Release Tag 保留其原始目录，目录生成器兼容历史 `release/`、`docs/release/` 和当前 `docs/manifests/` 布局；文件内容和 Tag 不因目录迁移改变。

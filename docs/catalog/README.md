@@ -1,6 +1,6 @@
 # 在线模型目录维护
 
-网站源码收录在文档配套目录，仓库根目录仅保留面向模型样例开发的主要内容。发布清单位于 [../release/](../release/)，完整维护入口见 [文档索引](../README.md)。
+网站源码收录在文档配套目录，仓库根目录仅保留面向模型样例开发的主要内容。发布清单位于 [../manifests/](../manifests/)，完整维护入口见 [文档索引](../README.md)。
 
 从仓库根目录运行（Node.js 22）：
 
@@ -18,9 +18,9 @@ npm run check
 
 构建输出为 `docs/catalog/dist/`；依赖、构建输出和生成的 `public/data/catalog.json` 不提交。GitHub Actions 使用同一目录安装、验证与发布，线上地址保持不变。
 
-生成器从固定来源读取多平台清单，兼容旧 Tag 的 `release/` 路径与新布局的 `docs/release/`。目录搬迁不重打 Tag，不改变模型文件地址，也不重新计算 Benchmark。
+生成器从固定来源读取多平台清单，兼容旧 Tag 的 `release/`、`docs/release/` 路径与当前布局的 `docs/manifests/`。目录搬迁不重打 Tag，不改变模型文件地址，也不重新计算 Benchmark。
 
-发布时，X5 清单取自当前发布检出，S/X3 取自 `docs/release/catalog-sources.json` 指定的附注 Tag。升级 S/X3 后需要显式更新此文件再发布 X5；不会自动读取活动分支。构建会核对各平台声明的清单汇总，Pages 按 `platform_tags.x5` 验证发布身份。
+发布时，X5 清单取自当前发布检出，S/X3 取自 `docs/manifests/catalog-sources.json` 指定的附注 Tag。升级 S/X3 后需要显式更新此文件再发布 X5；不会自动读取活动分支。构建会核对各平台声明的清单汇总，Pages 按 `platform_tags.x5` 验证发布身份。
 
 ## UI 与数据的边界
 

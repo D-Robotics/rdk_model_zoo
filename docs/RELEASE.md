@@ -22,8 +22,8 @@ Every release commit must update or verify all of the following files:
 
 - `VERSION` — the platform version.
 - `CHANGELOG.md` — user-visible changes and known limitations.
-- `docs/release/models.yaml` — the model manifest for the release.
-- `docs/release/benchmarks.yaml` — documented performance and accuracy measurements for the release.
+- `docs/manifests/models.yaml` — the model manifest for the release.
+- `docs/manifests/benchmarks.yaml` — documented performance and accuracy measurements for the release.
 - `docs/releases/<tag>.md` — the release notes used by GitHub Releases.
 
 The manifest records the models and assets exposed by the release, their sample paths, download scripts or URLs, formats, and checksums when available. An unknown SHA-256 value must be written as `null`; it must not be guessed. The release notes must disclose that checksum coverage is incomplete whenever any manifest entry has `sha256: null`.
@@ -32,12 +32,12 @@ The model manifest and benchmark manifest describe the published source inventor
 
 ## 3. Manual release procedure
 
-For aggregate catalog releases, prepare S and X3 first and pin their annotated tags in `docs/release/catalog-sources.json` on X5. The X5 catalog uses manifests from its own checkout; it must never read an unrelated local or live remote branch. Publish S/X3 releases first, then the X5 release that deploys the aggregate. Only the X5 release is marked GitHub's repository-wide Latest; each hardware line still has its own version.
+For aggregate catalog releases, prepare S and X3 first and pin their annotated tags in `docs/manifests/catalog-sources.json` on X5. The X5 catalog uses manifests from its own checkout; it must never read an unrelated local or live remote branch. Publish S/X3 releases first, then the X5 release that deploys the aggregate. Only the X5 release is marked GitHub's repository-wide Latest; each hardware line still has its own version.
 
 Verify all declared summary counts against actual model assets and benchmark measurements. Export the two YAML attachments directly from the released tag and attach `SHA256SUMS` for those files. This checksum file does not certify externally hosted model binaries. Existing pushed preparation tags must be retained; metadata corrections receive a new patch tag.
 
 1. Select one platform branch and confirm that the release scope belongs to that platform.
-2. Update `VERSION`, `CHANGELOG.md`, `docs/release/models.yaml`, `docs/release/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
+2. Update `VERSION`, `CHANGELOG.md`, `docs/manifests/models.yaml`, `docs/manifests/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
 3. Review the manifests: sample paths and download scripts must exist, URLs must be correct, unknown checksums must be `null`, and every benchmark must cite immutable repository evidence. Check that the tag, branch, platform, and version agree in the release files.
 4. Review the source diff, then validate the catalog from a clean dependency install:
 
@@ -66,8 +66,8 @@ Verify all declared summary counts against actual model assets and benchmark mea
 
    ```bash
    gh release create x5-v1.0.0 \
-     "docs/release/models.yaml#models.yaml" \
-     "docs/release/benchmarks.yaml#benchmarks.yaml" \
+     "docs/manifests/models.yaml#models.yaml" \
+     "docs/manifests/benchmarks.yaml#benchmarks.yaml" \
      --title "RDK Model Zoo X5 v1.0.0" \
      --notes-file docs/releases/x5-v1.0.0.md \
      --verify-tag
