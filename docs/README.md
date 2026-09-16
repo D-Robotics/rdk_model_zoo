@@ -18,14 +18,13 @@
 | Benchmark 清单 | [manifests/benchmarks.yaml](manifests/benchmarks.yaml) |
 | 发布规范 | [中文](RELEASE_cn.md) / [English](RELEASE.md) |
 | 版本与变更记录 | [VERSION](../VERSION) / [CHANGELOG.md](../CHANGELOG.md) |
-| 各版发布说明 | [releases/](releases/) |
+| 各版发布说明 | 统一保存在根目录 [CHANGELOG.md](../CHANGELOG.md) |
 
 ```text
 docs/
 ├── assets/           # 文档图片
 ├── catalog/          # 在线目录源码、构建和测试
 ├── manifests/        # 当前分支 Manifest 与 schema
-├── releases/         # 各版发布说明
 ├── source_reference/ # 接口参考
 └── tros/             # TROS 集成说明
 ```

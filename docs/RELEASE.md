@@ -21,10 +21,9 @@ Do not use a common repository-wide version for these platform lines. A tag iden
 Every release commit must update or verify all of the following files:
 
 - `VERSION` — the platform version.
-- `CHANGELOG.md` — user-visible changes and known limitations.
+- `CHANGELOG.md` — the sole in-repository record of version changes, release notes, validation scope and known limitations.
 - `docs/manifests/models.yaml` — the model manifest for the release.
 - `docs/manifests/benchmarks.yaml` — documented performance and accuracy measurements for the release.
-- `docs/releases/<tag>.md` — the release notes used by GitHub Releases.
 
 The manifest records the models and assets exposed by the release, their sample paths, download scripts or URLs, formats, and checksums when available. An unknown SHA-256 value must be written as `null`; it must not be guessed. The release notes must disclose that checksum coverage is incomplete whenever any manifest entry has `sha256: null`.
 
@@ -37,7 +36,7 @@ For aggregate catalog releases, prepare S and X3 first and pin their annotated t
 Verify all declared summary counts against actual model assets and benchmark measurements. Export the two YAML attachments directly from the released tag and attach `SHA256SUMS` for those files. This checksum file does not certify externally hosted model binaries. Existing pushed preparation tags must be retained; metadata corrections receive a new patch tag.
 
 1. Select one platform branch and confirm that the release scope belongs to that platform.
-2. Update `VERSION`, `CHANGELOG.md`, `docs/manifests/models.yaml`, `docs/manifests/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
+2. Update `VERSION`, the matching version entry in `CHANGELOG.md`, `docs/manifests/models.yaml`, and `docs/manifests/benchmarks.yaml`. Both manifests must carry the new Release Tag. Do not create separate release-note files in the repository.
 3. Review the manifests: sample paths and download scripts must exist, URLs must be correct, unknown checksums must be `null`, and every benchmark must cite immutable repository evidence. Check that the tag, branch, platform, and version agree in the release files.
 4. Review the source diff, then validate the catalog from a clean dependency install:
 
@@ -62,14 +61,14 @@ Verify all declared summary counts against actual model assets and benchmark mea
 
    Replace the branch, tag, and message for the S or X3 line. Do not create a lightweight tag.
 
-7. Create the GitHub Release from the pushed tag, use the matching release-notes file, and attach both manifests:
+7. Copy the matching version's complete notes from `CHANGELOG.md` into a temporary file outside the repository (for example `/tmp/rdk-release-notes.md`). Include any archived details belonging to that version, but not other versions. Create the GitHub Release from the pushed tag and attach both manifests:
 
    ```bash
    gh release create x5-v1.0.0 \
      "docs/manifests/models.yaml#models.yaml" \
      "docs/manifests/benchmarks.yaml#benchmarks.yaml" \
      --title "RDK Model Zoo X5 v1.0.0" \
-     --notes-file docs/releases/x5-v1.0.0.md \
+     --notes-file /tmp/rdk-release-notes.md \
      --verify-tag
    ```
 
