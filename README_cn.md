@@ -105,8 +105,9 @@ rdk_model_zoo/                       # rdk_s 分支
 |       |-- act/                    # Action Chunking Transformer（机器人策略）
 |       `-- pi0/                    # rdk_LeRobot_tools s600 子模块；Pi0 位于 models/pi0
 |-- docs/                            # 项目规范与参考文档
+|   `-- tros/                        # TROS 集成指南与示例
 |-- datasets/                        # 示例数据集与下载脚本
-|-- tros/                            # TROS 集成指南与示例
+|-- skills/                          # RDK Model Zoo 技能（预留）
 |-- utils/                           # 共享 Python 工具库
 ```
 

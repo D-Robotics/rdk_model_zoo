@@ -38,7 +38,7 @@
   - [samples/vision/yolov5/evaluator](#samplesvisionyolov5evaluator)
   - [samples/vision/yolov5/model/README.md](#samplesvisionyolov5modelreadmemd)
   - [samples/vision/yolov5/runtime/python(cpp)/README.md](#samplesvisionyolov5runtimepythoncppreadmemd)
-  - [tros](#tros)
+  - [docs/tros](#docstros)
   - [utils/c\_utils(py\_utils)/README.md](#utilsc_utilspy_utilsreadmemd)
 - [跨平台规范](#跨平台规范)
   - [代码跨平台规范](#代码跨平台规范)
@@ -64,6 +64,7 @@
 │   ├── imagenet                                     # ImageNet 示例数据
 │   └── README.md                                    # datasets 目录说明
 ├── docs                                             # 文档与资源，可添加各接口的链接文档
+│   ├── tros                                         # TROS相关链接
 │   ├── images                                       # 文档图片
 │   └── Model_Zoo_Repository_Guidelines.md           # 本仓库中的规范说明
 ├── samples                                          # 所有模型示例（按任务分类）
@@ -96,7 +97,7 @@
 │   ├── vla                                          # Vision-Language-Action 模型示例
 │   └── vlm                                          # Vision-Language 模型示例
 ├── tools                                            # 工具脚本（构建/管理/调试）
-├── tros                                             # TROS相关链接
+├── skills                                           # RDK Model Zoo 技能（预留）
 ├── utils                                            # 通用工具库
 │   ├── c_utils                                      # C/C++ 公共工具
 │   │   ├── inc                                      # 公共头文件
@@ -845,6 +846,8 @@ while (reader.next(chunk)) {
 |   `-- coco
 |       `-- README.md
 |-- docs
+|   |-- tros
+|   |   `-- README.md
 |   |-- README.md
 |   |-- Model_Zoo_Repository_Guidelines.md
 |   |-- Python_API_User_Guide.md
@@ -864,7 +867,7 @@ while (reader.next(chunk)) {
 |               |   `-- README.md
 |               `-- python
 |                   `-- README.md
-|-- tros
+|-- skills
 |   `-- README.md
 `-- utils
     |-- c_utils
@@ -1138,7 +1141,7 @@ while (reader.next(chunk)) {
 - 相关人员
     - 普通开发人员；
 
-### tros
+### docs/tros
 TODO
 
 ### utils/c_utils(py_utils)/README.md

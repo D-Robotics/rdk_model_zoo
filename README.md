@@ -105,8 +105,9 @@ rdk_model_zoo/                       # rdk_s branch
 |       |-- act/                    # Action Chunking Transformer (robot policy)
 |       `-- pi0/                    # rdk_LeRobot_tools s600 submodule; Pi0 is under models/pi0
 |-- docs/                            # Project guidelines and reference documentation
+|   `-- tros/                        # TROS integration guides and examples
 |-- datasets/                        # Sample datasets and download scripts
-|-- tros/                            # TROS integration guides and examples
+|-- skills/                          # RDK Model Zoo skills (placeholder)
 |-- utils/                           # Shared Python utilities
 ```
 

@@ -2,6 +2,9 @@
 
 ## 使用与开发
 
+- [TROS 集成说明](tros/README.md)。
+- [Skills](../skills/README.md)：预留技能目录。
+
 - [仓库规范](./Model_Zoo_Repository_Guidelines.md)：目录、代码和文档约定。
 - [Python API 用户手册](./Python_API_User_Guide.md)：`hbm_runtime` 接口说明。
 - [UCP 用户手册](./UCP_User_Guide.md)：`libdnn` / `libucp` 接口说明。
