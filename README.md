@@ -71,6 +71,7 @@ rdk_model_zoo/                       # rdk_s branch
 |   |   |-- yolo11_seg/              # Instance segmentation
 |   |   |-- yolo11_pose/             # Pose estimation
 |   |   |-- yoloe11_seg/             # Instance segmentation (prompt-free)
+|   |   |-- yoloe26_seg/             # YOLOE-26 PF
 |   |   |-- yolov13_imoonlab/        # Object detection
 |   |   |-- bytetrack/               # Multi-object tracking
 |   |   |-- diffusiondrive/          # End-to-end autonomous driving
@@ -144,6 +145,7 @@ The `run.sh` script automatically downloads the model, installs dependencies, an
 | End-to-End Autonomous Driving | DiffusionDrive R34 | `samples/vision/diffusiondrive` | S100P / S600 | [Details](./samples/vision/diffusiondrive) |
 | Instance Segmentation | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [Details](./samples/vision/yolo11_seg) |
 | Instance Segmentation | YOLOe11-Seg (Prompt-Free) | `samples/vision/yoloe11_seg` | S100 | [Details](./samples/vision/yoloe11_seg) |
+| Instance Segmentation | YOLOE-26-Seg PF (n/s/m/l/x) | `samples/vision/yoloe26_seg` | S100 / S100P | [Details](./samples/vision/yoloe26_seg) |
 | Promptable Segmentation | MobileSAM (box prompt) | `samples/vision/mobile_sam` | S100 / S100P / S600 | [Details](./samples/vision/mobile_sam) |
 | Promptable Segmentation | EfficientSAM (ViT-T, fixed prompt) | `samples/vision/efficient_sam` | S100 / S100P / S600 | [Details](./samples/vision/efficient_sam) |
 | Pose Estimation | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [Details](./samples/vision/yolo11_pose) |

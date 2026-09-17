@@ -71,6 +71,7 @@ rdk_model_zoo/                       # rdk_s 分支
 |   |   |-- yolo11_seg/              # 实例分割
 |   |   |-- yolo11_pose/             # 姿态估计
 |   |   |-- yoloe11_seg/             # 实例分割（无提示词）
+|   |   |-- yoloe26_seg/             # YOLOE-26 PF
 |   |   |-- yolov13_imoonlab/        # 目标检测
 |   |   |-- bytetrack/               # 多目标追踪
 |   |   |-- diffusiondrive/          # 端到端自动驾驶
@@ -144,6 +145,7 @@ bash run.sh
 | 端到端自动驾驶 | DiffusionDrive R34 | `samples/vision/diffusiondrive` | S100P / S600 | [详情](./samples/vision/diffusiondrive) |
 | 实例分割 | YOLO11-Seg | `samples/vision/yolo11_seg` | S100 / S600 | [详情](./samples/vision/yolo11_seg) |
 | 实例分割 | YOLOe11-Seg（无提示词） | `samples/vision/yoloe11_seg` | S100 | [详情](./samples/vision/yoloe11_seg) |
+| 实例分割 | YOLOE-26-Seg PF（n/s/m/l/x） | `samples/vision/yoloe26_seg` | S100 / S100P | [详情](./samples/vision/yoloe26_seg/README_cn.md) |
 | 可提示分割 | MobileSAM（框提示） | `samples/vision/mobile_sam` | S100 / S100P / S600 | [详情](./samples/vision/mobile_sam) |
 | 可提示分割 | EfficientSAM（ViT-T，固定提示） | `samples/vision/efficient_sam` | S100 / S100P / S600 | [详情](./samples/vision/efficient_sam) |
 | 姿态估计 | YOLO11-Pose | `samples/vision/yolo11_pose` | S100 / S600 | [详情](./samples/vision/yolo11_pose) |
