@@ -3,6 +3,10 @@
 
 本文档适用对象：仓库开发者、仓库维护者
 
+## Skills 维护源与目标上下文
+
+本文件是仓库规范参考，实际开发和评审先读取 `REPO_ROOT` 中用户指定目标 ref 的规则、README、Manifest（有清单时）和代码。Skills 从 `rdk_x5` 默认分支维护只表示维护源，不把任务目标默认为 X5；目标可能是 X5、S100/S100P/S600、X3 或 legacy。分支名、Tag 和模型后缀只是线索，平台兼容性仍按目标 sample、artifact 和 runtime 核对。目标 ref 与用户明确约束冲突时保留约束并报告，不通过 checkout 或 reset 消除冲突。当前清单优先位于 `docs/manifests/`，历史 ref 仍可能使用 `docs/release/` 或根 `release/`。`skills/` 下的技能资源按自身许可和资源闭包独立维护、安装，具体维护入口见 `skills/README.md`。
+
 ## 目录和文件规范
 ### 目录规范
 
@@ -793,6 +797,10 @@ TODO
 - 相关人员
     - 仓库管理员
     - 开发人员
+
+### skills/README.md
+
+说明 Model Zoo Skills 的维护源、许可证、独立安装资源和验证入口。Skills 维护源的默认分支只表示文档来源，不替代用户目标仓库的硬件、版本或 runtime 规则；目标上下文仍按 `REPO_ROOT` 的实际 ref 读取。
 
 ### docs/Python_API_User_Guide.md
 

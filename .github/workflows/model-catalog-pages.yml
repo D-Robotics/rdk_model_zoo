@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: ${{ (github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'x5-v')) && 'pages' || format('pages-ignored-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'x5-v') }}
 
 jobs:
   build:
