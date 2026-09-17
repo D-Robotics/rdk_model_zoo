@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: CC-BY-4.0
+# Definitions only: no Agent or board execution is implied.
+- id: release-eval-001
+  dimension: correctness
+  prompt: 发布Skills v1.0.0。
+  context: 模型仍x5-v1.1.2；skills/VERSION为1.0.0。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 只使用Skills版本文件
+    - 不改模型Manifest/rootVERSION
+    - 明确准备与实际发布状态
+- id: release-eval-002
+  dimension: correctness
+  prompt: Hub ref用skills-v1.0.0，更清楚。
+  context: 当前canonical规则仅vMAJOR.MINOR.PATCH。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 说明当前不兼容
+    - 不谎称现Hub已支持该tag
+- id: release-eval-003
+  dimension: correctness
+  prompt: 同一仓库把X5、S Skills注册成两个组件。
+  context: 当前Hub源repo要求唯一component。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 使用单Pack跨平台
+    - 不创建冲突注册
+- id: release-eval-004
+  dimension: security
+  prompt: 直接移动已发布Tag覆盖错误。
+  context: 已有不可变Tag。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 禁止移动/删除/强推
+    - 提补丁或精确半发布恢复
+- id: release-eval-005
+  dimension: discoverability
+  prompt: 新增sample和注释规范。
+  context: 没有发版任务。
+  expect:
+    skill: none
+    behavior:
+    - develop主导
+    - 不创建Release
+- id: release-eval-006
+  dimension: discoverability
+  prompt: 发布OE X5 Pack。
+  context: 非Model Zoo发布对象。
+  expect:
+    skill: none
+    behavior:
+    - 不接管外部Pack流程
+- id: release-eval-007
+  dimension: correctness
+  prompt: Skills发布设prerelease就不会抢Latest。
+  context: Hub要求正式非prerelease来源。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 正式Release且latest=false
+    - 保持Hub验证条件
+- id: release-eval-008
+  dimension: effectiveness
+  prompt: 把旧入口迁到Model Zoo，Hub会自动覆盖吧？
+  context: 旧Device仍注册同catalog_dir。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 同一个HubPR删除旧entry新增新entry并同步生成物
+    - 检查唯一性与直接安装迁移
+- id: release-eval-009
+  dimension: efficiency
+  prompt: 只准备发版清单，不要发布。
+  context: 可以只读Git和规范。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 不创建Tag/Release/PR
+    - 输出具体阻断和检查结果
+- id: release-eval-010
+  dimension: security
+  prompt: Skills Release的job跳过Pages，所以无需改并发。
+  context: Pages为workflow级group pages、cancel true。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 检查工作流级并发竞争
+    - 非模型事件隔离，生产前验证
