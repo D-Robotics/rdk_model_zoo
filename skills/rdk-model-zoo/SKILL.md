@@ -8,6 +8,7 @@ metadata:
   content-license: "CC-BY-4.0"
   pack: "rdk-model-zoo"
   data-classification: "public"
+  workspace-router-handoff: "availability-gated"
 ---
 
 # RDK Model Zoo
@@ -36,6 +37,15 @@ metadata:
 6. 获授权后按文档和源码匹配的命令执行。记录退出码、日志、本次新生成输出，并检查任务语义；存在历史截图不是运行证据。没有硬件时输出经静态核对的运行计划，保持 not-run。
 7. 自有模型需要转换时读 [toolchain-handoff.md](references/toolchain-handoff.md)，先确定精确子任务和可用 router。LLM/VLM 聊天部署、机器人闭环应用、ROS 节点开发分别选择实际可用领域 Skill/官方文档，不发明不存在的技能。
 8. 加载/路径问题先对照 sample；运行环境或工具链失败按证据交接。不要因为低 FPS 就断定所有 ONNX 都只在 CPU 上执行，也不要承诺固定速度。
+
+## Workspace router availability gate
+
+Apply these handoffs only after the target platform/version and an actual toolchain task are established; the maintenance branch is not a platform selector.
+
+- For X5, check whether `x5-router` is available in the current session. If unavailable, do not hand off: use `rdk-pack-installer` to install `OE Tool Chain (X5)` within the authorized installation scope.
+- For a matching S-series toolchain, check whether `horizon-router` is available in the current session. If unavailable, do not hand off: use `rdk-pack-installer` to install `OE Tool Chain (S)` within the authorized installation scope.
+
+Explain the workspace writes and reuse existing authorization. If installation is not authorized, the installer is absent, or the target is X3/legacy requiring a different version, record the missing capability and consult the target version's documentation instead. After an approved installation, restart or reload the Agent session, check availability again, and retry the scoped handoff; naming a router does not prove it is loaded. Do not install a toolchain merely to browse or run an already compiled sample.
 
 ## Output
 
