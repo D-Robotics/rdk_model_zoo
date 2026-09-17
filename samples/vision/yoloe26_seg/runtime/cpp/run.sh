@@ -10,5 +10,8 @@ MODEL_DIR="$SCRIPT_DIR/../../model/$MARCH"
 cmake -S "$SCRIPT_DIR" -B "$SCRIPT_DIR/build" -DCMAKE_BUILD_TYPE=Release
 cmake --build "$SCRIPT_DIR/build" -j2
 exec "$SCRIPT_DIR/build/yoloe26seg" \
-  "$MODEL_DIR/yoloe_26${SIZE}_seg_pf_${MARCH//-/}_640x640_nv12.hbm" \
-  "$MODEL_DIR/yoloe_26${SIZE}_seg_pf.names" "$IMAGE" "$OUTPUT"
+  --model_path "$MODEL_DIR/yoloe_26${SIZE}_seg_pf_${MARCH//-/}_640x640_nv12.hbm" \
+  --model_size "$SIZE" \
+  --label_file "$MODEL_DIR/yoloe_26${SIZE}_seg_pf.names" \
+  --test_img "$IMAGE" \
+  --output_path "$OUTPUT"

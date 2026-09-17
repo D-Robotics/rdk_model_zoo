@@ -26,7 +26,7 @@ bash runtime/cpp/run.sh n
 | 板型 | March | 已发布规格 | 编译配置 | 板端验证 |
 |---|---|---|---|---|
 | S100 | nash-e | n/s/m/l/x | OE 3.7.0，INT8 KL | 2026-09-08 已完成 Python/C++ 测试 |
-| S100P | nash-m | n/s/m/l/x | OE 3.7.0，INT8 KL | 待验证 |
+| S100P | nash-m | n/s/m/l/x | OE 3.7.0，INT8 KL | n：2026-09-17 已完成 Python/C++ 测试；s/m/l/x 待验证 |
 
 两平台模型均提供十个 NHWC 输出。分类、框和 mask 系数输出为 INT32，proto 为 INT8；
 CPU 后处理根据实际量化参数反量化，并正确处理张量 padding。

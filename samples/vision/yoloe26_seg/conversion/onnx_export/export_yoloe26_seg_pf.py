@@ -36,6 +36,18 @@ from yoloe26seg import (  # noqa: E402
 
 
 def validate_head(head: nn.Module) -> None:
+    """Validate that an Ultralytics head matches the static raw PF contract.
+
+    Args:
+        head: Candidate YOLOE segmentation head.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: If the head type, dimensions, strides, or vocabulary layer
+            are incompatible with the ten-output export.
+    """
     if not isinstance(head, YOLOESegment26) or not hasattr(head, "lrpc"):
         raise ValueError("Expected YOLOESegment26 with fused PF LRPC; text/visual heads are unsupported")
     if head.reg_max != 1 or not head.end2end or head.nl != 3 or head.nm != 32 or head.nc != CLASSES:
@@ -50,14 +62,32 @@ def validate_head(head: nn.Module) -> None:
 
 
 class RawPFHead(nn.Module):
-    """Expose the static PF raw branches without upstream post-processing."""
+    """Expose static PF raw branches without upstream post-processing.
+
+    Args:
+        head: Validated Ultralytics YOLOE-26 prompt-free segmentation head.
+    """
 
     def __init__(self, head: nn.Module):
+        """Store a validated prompt-free segmentation head.
+
+        Args:
+            head: Ultralytics head that satisfies the raw PF contract.
+        """
         super().__init__()
         validate_head(head)
         self.head = head
 
     def forward(self, features: list[torch.Tensor]) -> tuple[torch.Tensor, ...]:
+        """Return raw classification, box, mask, and prototype tensors.
+
+        Args:
+            features: Backbone/neck feature maps consumed by the three head
+                scales and the prototype branch.
+
+        Returns:
+            Ten NHWC tensors ordered according to ``OUTPUT_NAMES``.
+        """
         head = self.head
         outputs = []
         for index in range(3):
@@ -81,9 +111,19 @@ class RawPFHead(nn.Module):
 
 
 class RawPFModel(nn.Module):
-    """Run the original backbone/neck and replace only the final PF head output."""
+    """Run the original backbone/neck and expose raw final-head outputs.
+
+    Args:
+        model: Loaded Ultralytics YOLOE-26 model.
+    """
 
     def __init__(self, model: nn.Module):
+        """Wrap the source model while retaining its saved-layer routing.
+
+        Args:
+            model: Loaded Ultralytics model whose final layer is a compatible
+                prompt-free segmentation head.
+        """
         super().__init__()
         self.layers = model.model[:-1]
         self.save = model.save
@@ -91,6 +131,14 @@ class RawPFModel(nn.Module):
         self.head = RawPFHead(model.model[-1])
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, ...]:
+        """Run the source graph and return the ten-output raw PF contract.
+
+        Args:
+            x: Float RGB input tensor with shape ``(1, 3, 640, 640)``.
+
+        Returns:
+            Ten NHWC tensors ordered according to ``OUTPUT_NAMES``.
+        """
         saved = []
         for layer in self.layers:
             if layer.f != -1:
@@ -104,6 +152,7 @@ class RawPFModel(nn.Module):
 
 
 def _reference_outputs(wrapper: RawPFModel, sample: torch.Tensor) -> tuple[torch.Tensor, ...]:
+    """Check raw-head decoding against Ultralytics and return reference outputs."""
     with torch.inference_mode():
         expected = wrapper(sample)
         validate_shapes([tensor.shape for tensor in expected])
@@ -138,6 +187,25 @@ def _reference_outputs(wrapper: RawPFModel, sample: torch.Tensor) -> tuple[torch
 
 
 def export(weights: Path, size: str, output_dir: Path, test_image: Path | None = None) -> dict:
+    """Export and verify one checkpoint against the raw PF ONNX contract.
+
+    Args:
+        weights: Prompt-free YOLOE-26 segmentation checkpoint.
+        size: Model size letter, one of ``n``, ``s``, ``m``, ``l``, or ``x``.
+        output_dir: New directory for ONNX, metadata, and vocabulary files.
+        test_image: Optional image used for validation. A seeded random tensor is
+            used when omitted.
+
+    Returns:
+        Metadata describing the exported graph, vocabulary, hashes, and float
+        validation results.
+
+    Raises:
+        FileExistsError: If ``output_dir`` already exists.
+        FileNotFoundError: If ``weights`` does not exist.
+        ValueError: If the checkpoint does not match the requested static PF
+            model contract.
+    """
     import onnx
     import onnxruntime as ort
 
@@ -234,6 +302,7 @@ def export(weights: Path, size: str, output_dir: Path, test_image: Path | None =
 
 
 def main() -> int:
+    """Parse export options, export one checkpoint, and return a process code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--weights", required=True, type=Path)
     parser.add_argument("--size", required=True, choices=SIZES)

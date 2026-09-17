@@ -1,33 +1,73 @@
 English | [简体中文](./README_cn.md)
 
-# C++ UCP Inference
+# YOLOE-26 Segmentation C++ Runtime
 
-Build on S100/S100P with the installed UCP/DNN SDK, OpenCV development package,
-CMake and a C++17 compiler.
+This sample runs the released YOLOE-26 prompt-free instance-segmentation HBM
+on S100 or S100P with UCP, OpenCV, CMake, C++17, and gflags.
+
+Install the board development packages before building:
 
 ```bash
-# SIZE [IMAGE] [OUTPUT]; default SIZE=n, bundled image and result.jpg.
-bash run.sh n
-bash run.sh x /path/image.jpg result.jpg
-
-# Direct build and invocation, after downloading the model:
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j2
-./build/yoloe26seg /path/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm \
-  /path/yoloe_26n_seg_pf.names /path/image.jpg result.jpg 0.25 300 0
+sudo apt install -y libgflags-dev libopencv-dev
 ```
 
-The last three optional arguments are confidence, max_det and multi_label (0/1).
-The canonical filename must match the board: `nashe` for S100 or `nashm` for
-S100P. The download wrapper selects this automatically and verifies SHA256.
+From this `runtime/cpp/` directory, download the n model and run the complete
+example:
 
-`inc/yoloe26seg.hpp` exposes `YoloE26Seg::predict` and result structures.
-`src/yoloe26seg.cpp` owns UCP model/tensor resources, preprocessing and output
-decoding. `src/main.cpp` only handles the image demo and visualization.
+```bash
+cd samples/vision/yoloe26_seg/runtime/cpp
+bash ../../model/download_model.sh auto n
+bash run.sh
+```
 
-Outputs are read using their byte strides, dequantized using their actual
-scale/zero-point metadata and decoded without DFL or NMS. Use one model instance
-per inference thread. Resource cleanup also applies to exceptions.
+`run.sh` resolves its own source directory, so it can also be invoked by its
+absolute path from another working directory. It downloads and verifies the
+matching board model, builds the executable, and passes named flags. Optional
+arguments are `SIZE`, `IMAGE`, and `OUTPUT`:
 
-The default build contains no internal benchmark executables or test fixtures.
-Use `hrt_model_exec perf` for model Runtime measurements.
+```bash
+bash run.sh x /path/to/image.jpg /path/to/result.jpg
+```
+
+To build directly:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j2
+```
+
+The executable uses gflags and is zero-argument runnable when the downloaded n
+model and the bundled 4585-class label file and test image exist at their
+repository paths. Override paths and inference options with snake_case flags:
+
+```bash
+./build/yoloe26seg \
+  --model_path=/path/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm \
+  --model_size=n \
+  --label_file=/path/yoloe_26n_seg_pf.names \
+  --test_img=/path/image.jpg \
+  --output_path=result.jpg \
+  --score_thres=0.25 --max_det=300 --multi_label=false
+```
+
+The model file must use the canonical board suffix: `nashe` for S100 and
+`nashm` for S100P. The runtime validates the suffix against
+`/sys/class/boardinfo`.
+
+`inc/yoloe26seg.hpp` exposes `YoloE26SegConfig`, the lightweight
+`YoloE26Seg` owner, and the staged `pre_process`, `infer`, and `post_process`
+functions. `init()` returns zero on success and contains initialization errors;
+the destructor releases partially allocated resources safely.
+
+`post_process()` returns the common `InstanceSegResult` from
+`utils/c_utils/inc/model_types.hpp`. Boxes remain floating-point xyxy values in
+source-image coordinates. Each mask is a `CV_8UC1` matrix containing only 0 or
+1 and is local to the clipped, integer-truncated box. Empty boxes keep an empty
+mask so detections and masks remain index-aligned. The demo renders these local
+masks inside their clipped boxes and draws the corresponding boxes directly;
+this keeps the sample independent of the optional hardware-display parts of the
+shared visualization implementation.
+
+The raw-v1 decoder keeps the ten-output order, tensor byte strides,
+quantization scale/zero-point metadata, and deterministic static top-K behavior
+of the released protocol. It does not apply IoU NMS.

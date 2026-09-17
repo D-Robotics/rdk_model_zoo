@@ -43,12 +43,29 @@ OPTIMIZE_LEVEL = "O2"
 
 
 def _size_from_name(path: Path) -> str | None:
+    """Extract a model size from a canonical PF artifact filename.
+
+    Args:
+        path: ONNX or metadata path whose name may contain the model stem.
+
+    Returns:
+        The size letter when present, otherwise ``None``.
+    """
     match = re.search(r"yoloe_26([nsmlx])_seg_pf", path.name)
     return match.group(1) if match else None
 
 
 def _find_source(root: Path, size: str, suffix: str) -> Path:
-    """Resolve one source file while avoiding ambiguous experiment artifacts."""
+    """Resolve one source file while avoiding ambiguous experiment artifacts.
+
+    Args:
+        root: A direct artifact path or directory to search.
+        size: Requested model size letter.
+        suffix: Required artifact suffix, such as ``.onnx`` or ``.json``.
+
+    Returns:
+        The single source path matching the canonical model stem.
+    """
 
     stem = model_stem(size)
     if root.is_file():
@@ -67,6 +84,16 @@ def _find_source(root: Path, size: str, suffix: str) -> Path:
 
 
 def _resolve_pairs(onnx_arg: Path, metadata_arg: Path, requested: tuple[str, ...]) -> list[dict[str, Any]]:
+    """Pair ONNX and metadata sources for each requested model size.
+
+    Args:
+        onnx_arg: ONNX file or directory containing size-specific exports.
+        metadata_arg: JSON file or directory containing matching metadata.
+        requested: Ordered model sizes to resolve.
+
+    Returns:
+        Source dictionaries containing size, ONNX path, and metadata path.
+    """
     if onnx_arg.is_file() or metadata_arg.is_file():
         inferred = _size_from_name(onnx_arg) or _size_from_name(metadata_arg)
         if inferred is None:
@@ -85,6 +112,14 @@ def _resolve_pairs(onnx_arg: Path, metadata_arg: Path, requested: tuple[str, ...
 
 
 def _validate_onnx(path: Path) -> None:
+    """Validate one ONNX graph against the fixed raw PF input/output contract.
+
+    Args:
+        path: ONNX graph to load and inspect.
+
+    Returns:
+        None.
+    """
     model = onnx.load(str(path), load_external_data=False)
     onnx.checker.check_model(model)
     if len(model.graph.input) != 1:
@@ -108,6 +143,14 @@ def _validate_onnx(path: Path) -> None:
 
 
 def _validate_source(pair: dict[str, Any]) -> dict[str, Any]:
+    """Validate one ONNX/metadata/vocabulary source set.
+
+    Args:
+        pair: Source dictionary produced by ``_resolve_pairs``.
+
+    Returns:
+        The source dictionary enriched with metadata, hash, and names path.
+    """
     size = pair["size"]
     onnx_path = pair["onnx"]
     metadata_path = pair["metadata"]
@@ -135,6 +178,14 @@ def _validate_source(pair: dict[str, Any]) -> dict[str, Any]:
 
 
 def _image_paths(root: Path) -> list[Path]:
+    """List supported calibration images in deterministic path order.
+
+    Args:
+        root: Calibration image directory to scan recursively.
+
+    Returns:
+        Sorted paths with supported image suffixes.
+    """
     if not root.is_dir():
         raise FileNotFoundError(f"Calibration image directory does not exist: {root}")
     paths = sorted(
@@ -147,6 +198,16 @@ def _image_paths(root: Path) -> list[Path]:
 
 
 def _prepare_calibration(images: Path, destination: Path, count: int) -> list[dict[str, Any]]:
+    """Write evenly sampled normalized RGB calibration tensors.
+
+    Args:
+        images: Directory containing representative source images.
+        destination: New directory for generated ``.npy`` tensors.
+        count: Maximum number of images to select.
+
+    Returns:
+        Manifest records describing each source and generated tensor.
+    """
     if count < 1:
         raise ValueError("--sample-count must be positive")
     if destination.exists():
@@ -174,6 +235,18 @@ def _prepare_calibration(images: Path, destination: Path, count: int) -> list[di
 
 
 def _config(onnx_path: Path, calibration: Path, workspace: Path, size: str, march: str) -> dict[str, Any]:
+    """Build an OpenExplorer configuration for one size and target march.
+
+    Args:
+        onnx_path: Validated source ONNX path.
+        calibration: Directory containing prepared calibration tensors.
+        workspace: Compiler working directory.
+        size: Model size letter.
+        march: Target architecture, ``nash-e`` or ``nash-m``.
+
+    Returns:
+        Configuration mapping ready to serialize as YAML.
+    """
     return {
         "model_parameters": {
             "onnx_model": str(onnx_path),
@@ -208,6 +281,16 @@ def _config(onnx_path: Path, calibration: Path, workspace: Path, size: str, marc
 
 
 def _target_metadata(source: dict[str, Any], pair: dict[str, Any], march: str) -> dict[str, Any]:
+    """Derive pre-compilation target metadata from validated export metadata.
+
+    Args:
+        source: Validated ONNX export metadata.
+        pair: Source dictionary containing model identity and ONNX hash.
+        march: Target architecture, ``nash-e`` or ``nash-m``.
+
+    Returns:
+        Target metadata marked as not yet compiled or board validated.
+    """
     metadata = deepcopy(source)
     metadata.update({
         "march": march,
@@ -232,10 +315,23 @@ def _target_metadata(source: dict[str, Any], pair: dict[str, Any], march: str) -
 
 
 def _write_json(path: Path, value: Any) -> None:
+    """Write UTF-8 JSON with stable indentation and a trailing newline."""
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def _compile_one(folder: Path, size: str, march: str, compiler: str, metadata: dict[str, Any]) -> dict[str, Any]:
+    """Compile one prepared model and capture a non-raising result record.
+
+    Args:
+        folder: Prepared size-specific output directory.
+        size: Model size letter.
+        march: Target architecture.
+        compiler: ``hb_compile`` executable or path.
+        metadata: Target metadata to update after successful compilation.
+
+    Returns:
+        Result record containing status and output details or an error message.
+    """
     config_path = folder / "config.yaml"
     workspace = folder / "bpu_output"
     expected = workspace / hbm_name(size, march)
@@ -284,6 +380,17 @@ def _compile_one(folder: Path, size: str, march: str, compiler: str, metadata: d
 
 
 def _write_manifest(root: Path, sizes: tuple[str, ...], march: str, results: dict[str, Any]) -> None:
+    """Write hashes, sizes, compiler results, and contract data to a manifest.
+
+    Args:
+        root: Conversion output root.
+        sizes: Ordered model sizes included in the run.
+        march: Target architecture.
+        results: Per-size configuration or compilation results.
+
+    Returns:
+        None.
+    """
     files: dict[str, dict[str, Any]] = {}
     for size in sizes:
         folder = root / size
@@ -304,6 +411,7 @@ def _write_manifest(root: Path, sizes: tuple[str, ...], march: str, results: dic
 
 
 def main() -> int:
+    """Prepare conversion artifacts and return nonzero if compilation fails."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--onnx", required=True, type=Path,
                         help="One export directory or one yoloe_26<SIZE>_seg_pf.onnx file")

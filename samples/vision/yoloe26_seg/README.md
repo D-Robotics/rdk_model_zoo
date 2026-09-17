@@ -27,7 +27,7 @@ Downloaded artifacts are verified against the published SHA256 manifest.
 | Board | March | Released sizes | Compilation | Board verification |
 |---|---|---|---|---|
 | S100 | nash-e | n/s/m/l/x | OE 3.7.0, INT8 KL | Python/C++ tested 2026-09-08 |
-| S100P | nash-m | n/s/m/l/x | OE 3.7.0, INT8 KL | Pending |
+| S100P | nash-m | n/s/m/l/x | OE 3.7.0, INT8 KL | n: Python/C++ tested 2026-09-17; s/m/l/x pending |
 
 Both families contain ten NHWC outputs. Class, box and mask-coefficient outputs
 are INT32 and proto is INT8; CPU postprocessing applies the output quantization

@@ -25,6 +25,14 @@ MARCHES = ("nash-e", "nash-m")
 
 
 def sha256(path):
+    """Compute the hexadecimal SHA256 digest of a model or metadata file.
+
+    Args:
+        path: File to read in bounded chunks.
+
+    Returns:
+        The lowercase hexadecimal digest.
+    """
     digest = hashlib.sha256()
     with open(path, "rb") as stream:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
@@ -33,18 +41,43 @@ def sha256(path):
 
 
 def model_stem(size):
+    """Return the released filename stem for size n, s, m, l or x.
+
+    Args:
+        size: One supported model size letter.
+
+    Returns:
+        The common stem shared by HBM metadata and labels.
+    """
     if size not in SIZES:
         raise ValueError(f"Unsupported model size: {size}")
     return f"yoloe_26{size}_seg_pf"
 
 
 def hbm_name(size, march="nash-e"):
+    """Return the canonical 640x640 NV12 HBM filename.
+
+    Args:
+        size: Model size letter.
+        march: Target architecture, nash-e or nash-m.
+
+    Returns:
+        A filename containing the model size and target chip.
+    """
     if march not in MARCHES:
         raise ValueError("Only S100/nash-e and S100P/nash-m are supported")
     return f"{model_stem(size)}_{march.replace('-', '')}_640x640_nv12.hbm"
 
 
 def detect_march():
+    """Read board information and return nash-e (S100) or nash-m (S100P).
+
+    Returns:
+        The architecture matching the local board.
+
+    Raises:
+        RuntimeError: If the board is not a supported S100/S100P.
+    """
     path = Path("/sys/class/boardinfo/soc_name")
     soc = path.read_text().strip().lower() if path.exists() else ""
     board_path = path.with_name("board_type")
@@ -58,11 +91,27 @@ def detect_march():
 
 
 def validate_shapes(shapes):
+    """Validate ordered raw-v1 output tensor dimensions.
+
+    Args:
+        shapes: Ten logical NHWC shapes in OUTPUT_NAMES order.
+
+    Raises:
+        ValueError: If the shapes differ from the fixed 640x640 contract.
+    """
     if tuple(tuple(int(n) for n in shape) for shape in shapes) != OUTPUT_SHAPES:
         raise ValueError("Expected the ten 640x640 YOLOE-26 PF NHWC outputs")
 
 
 def read_metadata(path):
+    """Read and validate the released static PF model contract.
+
+    Args:
+        path: JSON metadata accompanying the HBM.
+
+    Returns:
+        Validated metadata including march, size and checkpoint-ordered names.
+    """
     with open(path, encoding="utf-8") as stream:
         data = json.load(stream)
     model_stem(data["size"])
@@ -81,6 +130,14 @@ def read_metadata(path):
 
 
 def letterbox(image):
+    """Center a BGR image in a 640x640 canvas with padding value 114.
+
+    Args:
+        image: Nonempty uint8 HWC BGR image.
+
+    Returns:
+        Padded image and (gain, left, top, resized_width, resized_height).
+    """
     if image is None or image.ndim != 3 or image.shape[2] != 3 or image.dtype != np.uint8:
         raise ValueError("Expected a nonempty uint8 BGR image")
     h, w = image.shape[:2]
@@ -96,12 +153,28 @@ def letterbox(image):
 
 
 def prepare_rgb(image):
+    """Prepare normalized RGB input for export and calibration.
+
+    Args:
+        image: Nonempty uint8 HWC BGR image.
+
+    Returns:
+        Contiguous float32 RGB tensor of shape (1, 3, 640, 640), scaled by 1/255.
+    """
     padded, _ = letterbox(image)
     return np.ascontiguousarray(padded[..., ::-1].transpose(2, 0, 1)[None], dtype=np.float32) / 255
 
 
 def topk_indices(values, count):
-    """Stable descending ordering, with original index as the tie breaker."""
+    """Select descending values with original index as the tie breaker.
+
+    Args:
+        values: Finite array flattened in row-major order.
+        count: Maximum number of indices to return.
+
+    Returns:
+        A one-dimensional int64 array of flattened indices.
+    """
     values = np.asarray(values).reshape(-1)
     count = min(count, values.size)
     if count == 0:
@@ -114,7 +187,15 @@ def topk_indices(values, count):
 
 
 def dequantize_output(value, quant):
-    """Normalize HBM outputs to logical FP32, preserving scalar zero points."""
+    """Normalize HBM outputs to logical FP32, preserving scalar zero points.
+
+    Args:
+        value: Logical output tensor, possibly backed by padded storage.
+        quant: Runtime QuantParams with quant_type, scale, zero_point and axis.
+
+    Returns:
+        Float32 values with the original logical shape.
+    """
     if value.dtype == np.float32:
         return value
     if value.dtype not in (np.int8, np.uint8, np.int16, np.uint16, np.int32):
@@ -147,7 +228,18 @@ def dequantize_output(value, quant):
 
 
 def decode_candidates(outputs, score_threshold=0.25, max_det=300, single_label=True):
-    """Match end-to-end top-k selection; never perform IoU suppression."""
+    """Match end-to-end top-k selection; never perform IoU suppression.
+
+    Args:
+        outputs: Ten dequantized NHWC float32 tensors in OUTPUT_NAMES order.
+        score_threshold: Minimum sigmoid confidence, strictly between 0 and 1.
+        max_det: Maximum detections, between 1 and 8400.
+        single_label: Keep only the highest scoring class at each anchor.
+
+    Returns:
+        Boxes (N, 4) in 640x640 coordinates, scores (N,), class IDs (N,),
+        and mask coefficients (N, 32), all aligned by instance.
+    """
     if not 0 < score_threshold < 1 or not 1 <= max_det <= 8400:
         raise ValueError("Require 0 < score threshold < 1 and 1 <= max_det <= 8400")
     validate_shapes([x.shape for x in outputs])
@@ -193,30 +285,52 @@ def decode_candidates(outputs, score_threshold=0.25, max_det=300, single_label=T
 def restore_masks(boxes, coefficients, proto, original_shape):
     """Upsample then crop, matching upstream process_mask(upsample=True).
 
-    Binary masks are unpadded and restored to the source image with nearest
-    interpolation. No morphology or extra mask threshold is applied.
+    Binary masks are unpadded, restored with nearest interpolation, then cropped
+    to each original-image box. No morphology or extra threshold is applied.
+
+    Args:
+        boxes: Float32 xyxy boxes in the 640x640 letterboxed image.
+        coefficients: Per-instance mask coefficients of shape (N, 32).
+        proto: Float32 prototype tensor of shape (160, 160, 32).
+        original_shape: Original image shape, beginning with height and width.
+
+    Returns:
+        Clipped float32 original-image boxes and aligned uint8 0/1 ROI masks.
+        ROI bounds use int(x1), int(y1), int(x2), int(y2), as the shared drawing
+        helpers do. Degenerate boxes retain an empty mask to preserve alignment.
     """
     h, w = original_shape[:2]
     gain = min(640 / h, 640 / w)
     width, height = max(1, round(w * gain)), max(1, round(h * gain))
     left, top = (640 - width) // 2, (640 - height) // 2
+    restored = boxes.copy()
+    restored[:, [0, 2]] = np.clip((boxes[:, [0, 2]] - left) / gain, 0, w)
+    restored[:, [1, 3]] = np.clip((boxes[:, [1, 3]] - top) / gain, 0, h)
     yy, xx = np.mgrid[:640, :640]
     masks = []
-    for box, coeff in zip(boxes, coefficients):
+    for box, coeff, original_box in zip(boxes, coefficients, restored):
         raw = proto @ coeff
         raw = cv2.resize(raw, (640, 640), interpolation=cv2.INTER_LINEAR)
         x1, y1, x2, y2 = box
         binary = ((raw > 0) & (xx >= x1) & (xx < x2) & (yy >= y1) & (yy < y2)).astype(np.uint8)
         binary = binary[top:top + height, left:left + width]
-        masks.append(cv2.resize(binary, (w, h), interpolation=cv2.INTER_NEAREST).astype(bool))
-    restored = boxes.copy()
-    restored[:, [0, 2]] = np.clip((boxes[:, [0, 2]] - left) / gain, 0, w)
-    restored[:, [1, 3]] = np.clip((boxes[:, [1, 3]] - top) / gain, 0, h)
+        full = cv2.resize(binary, (w, h), interpolation=cv2.INTER_NEAREST)
+        x1, y1, x2, y2 = original_box.astype(int)
+        masks.append(full[y1:y2, x1:x2].copy())
     return restored, masks
 
 
 @dataclass
 class YoloE26SegConfig:
+    """Configure a released model and end-to-end candidate selection.
+
+    Attributes:
+        model_path: Path to the HBM for the local board.
+        metadata_path: Matching metadata JSON containing the HBM SHA256.
+        score_thres: Minimum sigmoid confidence in (0, 1).
+        max_det: Maximum retained detections, between 1 and 8400.
+        single_label: Keep only the best class per anchor when True.
+    """
     model_path: str
     metadata_path: str
     score_thres: float = 0.25
@@ -225,7 +339,21 @@ class YoloE26SegConfig:
 
 
 class YoloE26Seg:
+    """Own one HBM runtime and expose a staged segmentation pipeline.
+
+    Args:
+        config: Model/metadata paths and candidate selection settings.
+
+    Use one instance per inference thread. predict() returns original-image
+    boxes and box-local uint8 masks compatible with the shared visualization.
+    """
+
     def __init__(self, config):
+        """Load the HBM and check its metadata against the current board.
+
+        Args:
+            config: YoloE26SegConfig containing matching model/metadata paths.
+        """
         march = detect_march()
         import hbm_runtime
 
@@ -250,22 +378,80 @@ class YoloE26Seg:
         if list(self.output_names) != list(OUTPUT_NAMES):
             raise ValueError("HBM output names/order do not match export metadata")
 
-    def forward(self, image):
+    def set_scheduling_params(self, priority=None, bpu_cores=None):
+        """Set runtime scheduling options without resetting omitted values.
+
+        Args:
+            priority: Optional runtime task priority.
+            bpu_cores: Optional list of BPU cores accepted by the runtime.
+        """
+        kwargs = {}
+        if priority is not None:
+            kwargs["priority"] = {self.model_name: priority}
+        if bpu_cores is not None:
+            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
+        if kwargs:
+            self.model.set_scheduling_params(**kwargs)
+
+    def pre_process(self, image, image_format="BGR"):
+        """Prepare letterboxed NV12 planes for the runtime.
+
+        Args:
+            image: Nonempty uint8 HWC image.
+            image_format: Input color order; only BGR is supported.
+
+        Returns:
+            Nested {model_name: {input_name: tensor}} dictionary for forward().
+
+        Raises:
+            ValueError: If the format or image is unsupported.
+        """
         from utils.py_utils.preprocess import bgr_to_nv12_planes
 
+        if image_format != "BGR":
+            raise ValueError(f"Unsupported image_format: {image_format}")
         padded, _ = letterbox(image)
         y, uv = bgr_to_nv12_planes(padded)
-        raw = self.model.run({self.model_name: dict(zip(self.input_names, (y, uv)))})[self.model_name]
-        outputs = [dequantize_output(raw[name], self.output_quants[name]) for name in self.output_names]
-        return outputs
+        return {self.model_name: dict(zip(self.input_names, (y, uv)))}
+
+    def forward(self, input_tensor):
+        """Run inference on prepared tensors and return the raw runtime output.
+
+        Args:
+            input_tensor: Nested runtime dictionary returned by pre_process().
+
+        Returns:
+            The unmodified nested output dictionary from HB_HBMRuntime.run().
+        """
+        return self.model.run(input_tensor)
 
     def post_process(self, outputs, original_shape):
+        """Dequantize and decode raw runtime outputs into instance results.
+
+        Args:
+            outputs: Nested output dictionary returned by forward().
+            original_shape: Original image shape, beginning with height/width.
+
+        Returns:
+            Original-image boxes (N, 4), scores (N,), class IDs (N,), and
+            aligned box-local uint8 0/1 masks. Degenerate boxes have empty masks.
+        """
+        raw = outputs[self.model_name]
+        tensors = [dequantize_output(raw[name], self.output_quants[name]) for name in self.output_names]
         boxes, scores, labels, coefficients = decode_candidates(
-            outputs, self.cfg.score_thres, self.cfg.max_det, self.cfg.single_label)
-        boxes, masks = restore_masks(boxes, coefficients, outputs[-1][0], original_shape)
+            tensors, self.cfg.score_thres, self.cfg.max_det, self.cfg.single_label)
+        boxes, masks = restore_masks(boxes, coefficients, tensors[-1][0], original_shape)
         return boxes, scores, labels, masks
 
     def predict(self, image):
-        return self.post_process(self.forward(image), image.shape)
+        """Run the complete pre_process → forward → post_process pipeline.
+
+        Args:
+            image: Original uint8 HWC BGR image.
+
+        Returns:
+            The boxes, scores, class IDs and ROI masks described by post_process.
+        """
+        return self.post_process(self.forward(self.pre_process(image)), image.shape)
 
     __call__ = predict

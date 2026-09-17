@@ -1,356 +1,885 @@
 // Copyright (c) 2026 D-Robotics Corporation
 // SPDX-License-Identifier: Apache-2.0
+
+/**
+ * @file yoloe26seg.cpp
+ * @brief Implement the YOLOE-26 staged UCP inference pipeline.
+ */
+
 #include "yoloe26seg.hpp"
-#include "hobot/dnn/hb_dnn.h"
-#include "hobot/hb_ucp.h"
-#include <opencv2/opencv.hpp>
+
+#include <opencv2/imgproc.hpp>
+
 #include <algorithm>
+#include <array>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <cctype>
+#include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <limits>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
+#ifndef YOLOE26_SOURCE_DIR
+#define YOLOE26_SOURCE_DIR "."
+#endif
+
 namespace yoloe26 {
+
+namespace {
+
+constexpr int kModelWidth = 640;
+constexpr int kModelHeight = 640;
 constexpr int kClasses = 4585;
+constexpr int kMaskChannels = 32;
+constexpr int kMaskSize = 160;
 constexpr std::array<int, 3> kStrides{8, 16, 32};
 
-struct Tensor {
-    const float* data;
-    int h, w, channels;
-    float at(int anchor, int channel) const { return data[anchor * channels + channel]; }
+/** @brief Internal geometry shared by preprocessing and mask restoration. */
+struct LetterboxTransform {
+    double gain{1.0};
+    int width{0};
+    int height{0};
+    int left{0};
+    int top{0};
+    int input_width{kModelWidth};
+    int input_height{kModelHeight};
 };
 
+/** @brief Internal tensor view used by the static raw-v1 decoder. */
+struct Tensor {
+    const float* data{nullptr};
+    int h{0};
+    int w{0};
+    int channels{0};
 
-inline std::vector<Detection> decode(const std::vector<Tensor>& tensors, float threshold = .25f,
-                                     int max_det = 300, bool single_label = true) {
-    if (!(threshold > 0 && threshold < 1) || max_det < 1 || max_det > 8400 || tensors.size() != 10)
-        throw std::invalid_argument("Invalid threshold, max_det, or output count");
-    for (int i = 0; i < 10; ++i) {
-        const auto& t = tensors[i];
-        const int hw = i == 9 ? 160 : 640 / kStrides[i / 3];
-        const int channels = i == 9 ? 32 : (i % 3 == 0 ? kClasses : (i % 3 == 1 ? 4 : 32));
-        if (!t.data || t.h != hw || t.w != hw || t.channels != channels)
-            throw std::invalid_argument("Invalid raw-v1 output shape");
-        for (int j = 0; j < hw * hw * channels; ++j)
-            if (!std::isfinite(t.data[j])) throw std::invalid_argument("Non-finite output");
+    float at(int anchor, int channel) const {
+        return data[static_cast<size_t>(anchor) * channels + channel];
     }
-    struct Candidate { float value; int scale, anchor, label; int rank = 0; };
+};
+
+/** @brief Internal decoded candidate retaining its 32 mask coefficients. */
+struct RawDetection {
+    std::array<float, 4> box{};
+    float score{0.0f};
+    int label{0};
+    std::array<float, kMaskChannels> coefficients{};
+};
+
+void check_runtime(int code, const char* operation) {
+    if (code != 0) {
+        throw std::runtime_error(std::string(operation) + " failed: " +
+                                 std::to_string(code));
+    }
+}
+
+std::string normalized_word(const char* path) {
+    std::ifstream stream(path);
+    std::string value;
+    std::getline(stream, value);
+    std::string result;
+    for (unsigned char c : value) {
+        if (std::isalnum(c)) result.push_back(static_cast<char>(std::tolower(c)));
+    }
+    return result;
+}
+
+struct BoardInfo {
+    std::string soc;
+    std::string board;
+    std::string march;
+    bool known{false};
+};
+
+BoardInfo board_info() {
+    BoardInfo result;
+    result.soc = normalized_word("/sys/class/boardinfo/soc_name");
+    result.board = normalized_word("/sys/class/boardinfo/board_type");
+    if (result.soc != "s100" && result.soc != "s100p") return result;
+
+    const bool is_plus = result.soc == "s100p" || result.board == "p" ||
+                         result.board == "nashm" ||
+                         result.board.rfind("s100p", 0) == 0 ||
+                         result.board.rfind("rdks100p", 0) == 0;
+    result.march = is_plus ? "nash-m" : "nash-e";
+    result.known = true;
+    return result;
+}
+
+std::string canonical_suffix(const std::string& march) {
+    return march == "nash-m" ? "_nashm_640x640_nv12.hbm"
+                              : "_nashe_640x640_nv12.hbm";
+}
+
+bool has_suffix(const std::string& value, const std::string& suffix) {
+    return value.size() >= suffix.size() &&
+           value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+LetterboxTransform make_transform(int source_width, int source_height,
+                                  int input_width, int input_height) {
+    if (source_width <= 0 || source_height <= 0 || input_width <= 0 ||
+        input_height <= 0) {
+        throw std::invalid_argument("Image and model dimensions must be positive");
+    }
+    LetterboxTransform transform;
+    transform.input_width = input_width;
+    transform.input_height = input_height;
+    transform.gain = std::min(static_cast<double>(input_width) / source_width,
+                              static_cast<double>(input_height) / source_height);
+    transform.width = std::max(
+        1, static_cast<int>(std::nearbyint(source_width * transform.gain)));
+    transform.height = std::max(
+        1, static_cast<int>(std::nearbyint(source_height * transform.gain)));
+    transform.width = std::min(transform.width, input_width);
+    transform.height = std::min(transform.height, input_height);
+    transform.left = (input_width - transform.width) / 2;
+    transform.top = (input_height - transform.height) / 2;
+    return transform;
+}
+
+/**
+ * @brief Decode static YOLOE-26 raw-v1 outputs without IoU suppression.
+ *
+ * This is deliberately kept close to the released protocol implementation:
+ * per-scale top-K selection happens before optional multi-label expansion, and
+ * tie ordering is deterministic across scales and anchors.
+ */
+std::vector<RawDetection> decode(const std::vector<Tensor>& tensors,
+                                 float threshold,
+                                 int max_det,
+                                 bool single_label) {
+    if (!(threshold > 0.0f && threshold < 1.0f) || max_det < 1 ||
+        max_det > 8400 || tensors.size() != 10) {
+        throw std::invalid_argument("Invalid threshold, max_det, or output count");
+    }
+    for (int i = 0; i < 10; ++i) {
+        const auto& tensor = tensors[i];
+        const int hw = i == 9 ? kMaskSize : kModelWidth / kStrides[i / 3];
+        const int channels = i == 9
+                                 ? kMaskChannels
+                                 : (i % 3 == 0 ? kClasses
+                                               : (i % 3 == 1 ? 4 : kMaskChannels));
+        if (!tensor.data || tensor.h != hw || tensor.w != hw ||
+            tensor.channels != channels) {
+            throw std::invalid_argument("Invalid raw-v1 output shape");
+        }
+        const size_t count = static_cast<size_t>(hw) * hw * channels;
+        for (size_t j = 0; j < count; ++j) {
+            if (!std::isfinite(tensor.data[j])) {
+                throw std::invalid_argument("Non-finite model output");
+            }
+        }
+    }
+
+    struct Candidate {
+        float value;
+        int scale;
+        int anchor;
+        int label;
+        int rank{0};
+    };
+
     std::vector<Candidate> anchors;
+    anchors.reserve(8400);
     for (int scale = 0; scale < 3; ++scale) {
         const auto& cls = tensors[scale * 3];
         for (int anchor = 0; anchor < cls.h * cls.w; ++anchor) {
             int label = 0;
-            for (int c = 1; c < kClasses; ++c)
+            for (int c = 1; c < kClasses; ++c) {
                 if (cls.at(anchor, c) > cls.at(anchor, label)) label = c;
+            }
             anchors.push_back({cls.at(anchor, label), scale, anchor, label});
         }
     }
+
     auto order = [](const Candidate& a, const Candidate& b) {
         if (a.value != b.value) return a.value > b.value;
         if (a.scale != b.scale) return a.scale < b.scale;
         if (a.anchor != b.anchor) return a.anchor < b.anchor;
         return a.label < b.label;
     };
-    std::partial_sort(anchors.begin(), anchors.begin() + max_det, anchors.end(), order);
-    anchors.resize(max_det);
+    const size_t anchor_count = std::min<size_t>(max_det, anchors.size());
+    std::partial_sort(anchors.begin(), anchors.begin() + anchor_count,
+                      anchors.end(), order);
+    anchors.resize(anchor_count);
+
     if (!single_label) {
         std::vector<Candidate> classes;
-        for (int rank = 0; rank < max_det; ++rank) {
-            const auto& a = anchors[rank];
-            for (int c = 0; c < kClasses; ++c)
-                classes.push_back({tensors[3 * a.scale].at(a.anchor, c), a.scale, a.anchor, c, rank});
+        classes.reserve(anchor_count * kClasses);
+        for (int rank = 0; rank < static_cast<int>(anchor_count); ++rank) {
+            const auto& anchor = anchors[rank];
+            for (int c = 0; c < kClasses; ++c) {
+                classes.push_back({tensors[3 * anchor.scale].at(anchor.anchor, c),
+                                   anchor.scale, anchor.anchor, c, rank});
+            }
         }
-        std::partial_sort(classes.begin(), classes.begin() + max_det, classes.end(),
-                          [](const Candidate& a, const Candidate& b) {
+        const size_t class_count = std::min<size_t>(max_det, classes.size());
+        std::partial_sort(classes.begin(), classes.begin() + class_count,
+                          classes.end(), [](const Candidate& a, const Candidate& b) {
                               if (a.value != b.value) return a.value > b.value;
                               if (a.rank != b.rank) return a.rank < b.rank;
                               return a.label < b.label;
                           });
-        classes.resize(max_det);
+        classes.resize(class_count);
         anchors = std::move(classes);
     }
-    const float raw_threshold = std::log(threshold / (1 - threshold));
-    std::vector<Detection> result;
-    for (const auto& a : anchors) {
-        if (a.value <= raw_threshold) continue;
-        int stride = kStrides[a.scale], grid = 640 / stride;
-        float x = a.anchor % grid + .5f, y = a.anchor / grid + .5f;
-        const auto& box = tensors[3 * a.scale + 1];
-        Detection d{{(x - box.at(a.anchor, 0)) * stride, (y - box.at(a.anchor, 1)) * stride,
-                     (x + box.at(a.anchor, 2)) * stride, (y + box.at(a.anchor, 3)) * stride},
-                    1.f / (1.f + std::exp(-std::clamp(a.value, -80.f, 80.f))), a.label, {}};
-        for (int c = 0; c < 32; ++c) d.coefficients[c] = tensors[3 * a.scale + 2].at(a.anchor, c);
-        result.push_back(d);
+
+    const float raw_threshold = std::log(threshold / (1.0f - threshold));
+    std::vector<RawDetection> result;
+    result.reserve(anchors.size());
+    for (const auto& candidate : anchors) {
+        if (candidate.value <= raw_threshold) continue;
+        const int stride = kStrides[candidate.scale];
+        const int grid = kModelWidth / stride;
+        const float x = candidate.anchor % grid + 0.5f;
+        const float y = candidate.anchor / grid + 0.5f;
+        const auto& box = tensors[3 * candidate.scale + 1];
+        RawDetection detection;
+        detection.box = {(x - box.at(candidate.anchor, 0)) * stride,
+                         (y - box.at(candidate.anchor, 1)) * stride,
+                         (x + box.at(candidate.anchor, 2)) * stride,
+                         (y + box.at(candidate.anchor, 3)) * stride};
+        detection.score = 1.0f / (1.0f +
+                                  std::exp(-std::clamp(candidate.value, -80.0f, 80.0f)));
+        detection.label = candidate.label;
+        for (int c = 0; c < kMaskChannels; ++c) {
+            detection.coefficients[c] =
+                tensors[3 * candidate.scale + 2].at(candidate.anchor, c);
+        }
+        result.push_back(detection);
     }
     return result;
 }
-}  // namespace yoloe26
 
-namespace {
-void check(int code, const char* operation) {
-    if (code) throw std::runtime_error(std::string(operation) + " failed: " + std::to_string(code));
+int tensor_item_size(const hbDNNTensorProperties& properties) {
+    switch (properties.tensorType) {
+        case HB_DNN_TENSOR_TYPE_F32:
+        case HB_DNN_TENSOR_TYPE_S32:
+            return 4;
+        case HB_DNN_TENSOR_TYPE_S16:
+        case HB_DNN_TENSOR_TYPE_U16:
+            return 2;
+        case HB_DNN_TENSOR_TYPE_S8:
+        case HB_DNN_TENSOR_TYPE_U8:
+            return 1;
+        default:
+            return 0;
+    }
 }
 
-class Runtime {
-public:
-    hbDNNPackedHandle_t packed = nullptr;
-    hbDNNHandle_t model = nullptr;
-    std::vector<hbDNNTensor> inputs, outputs;
-    Runtime() = default;
-    Runtime(const Runtime&) = delete;
-    Runtime& operator=(const Runtime&) = delete;
-    ~Runtime() {
-        for (auto& t : inputs) if (t.sysMem.virAddr) hbUCPFree(&t.sysMem);
-        for (auto& t : outputs) if (t.sysMem.virAddr) hbUCPFree(&t.sysMem);
-        if (packed) hbDNNRelease(packed);
+void allocate_tensor(hbDNNTensor& tensor, int item_size) {
+    auto& properties = tensor.properties;
+    if (properties.validShape.numDimensions != 4 || item_size <= 0) {
+        throw std::runtime_error("Unsupported tensor rank or type");
     }
-    void load(const char* path) {
-        check(hbDNNInitializeFromFiles(&packed, &path, 1), "load HBM");
-        const char** names = nullptr;
-        int count = 0;
-        check(hbDNNGetModelNameList(&names, &count, packed), "model names");
-        if (count != 1) throw std::runtime_error("Expected one model");
-        check(hbDNNGetModelHandle(&model, packed, names[0]), "model handle");
-        int ni = 0, no = 0;
-        check(hbDNNGetInputCount(&ni, model), "input count");
-        check(hbDNNGetOutputCount(&no, model), "output count");
-        if (ni != 2 || no != 10)
-            throw std::runtime_error("Expected 2 NV12 inputs and 10 raw outputs");
-        inputs.resize(ni);
-        outputs.resize(no);
-        for (int i = 0; i < ni; ++i) {
-            auto& t = inputs[i];
-            check(hbDNNGetInputTensorProperties(&t.properties, model, i), "input properties");
-            const auto& shape = t.properties.validShape;
-            const std::array<int, 4> expected = i == 0 ? std::array<int, 4>{1,640,640,1} : std::array<int, 4>{1,320,320,2};
-            if (shape.numDimensions != 4 || t.properties.tensorType != HB_DNN_TENSOR_TYPE_U8)
-                throw std::runtime_error("Expected uint8 NHWC NV12 inputs");
-            for (int d = 0; d < 4; ++d)
-                if (shape.dimensionSize[d] != expected[d]) throw std::runtime_error("Invalid NV12 input shape/order");
-            allocate(t, 1);
+    for (int dim = 3; dim >= 0; --dim) {
+        if (properties.stride[dim] == -1) {
+            properties.stride[dim] =
+                dim == 3 ? item_size
+                         : properties.stride[dim + 1] *
+                               properties.validShape.dimensionSize[dim + 1];
+            if (dim < 2) properties.stride[dim] =
+                (properties.stride[dim] + 31) / 32 * 32;
         }
-        for (int i = 0; i < no; ++i) {
-            auto& t = outputs[i];
-            check(hbDNNGetOutputTensorProperties(&t.properties, model, i), "output properties");
-            if (t.properties.tensorType != HB_DNN_TENSOR_TYPE_F32 && t.properties.quantiType != SCALE)
-                throw std::runtime_error("Integer output requires SCALE quantization metadata");
-            int hw = i == 9 ? 160 : 640 / yoloe26::kStrides[i / 3];
-            int c = i == 9 ? 32 : (i % 3 == 0 ? 4585 : (i % 3 == 1 ? 4 : 32));
-            const auto& shape = t.properties.validShape;
-            if (shape.numDimensions != 4 || shape.dimensionSize[0] != 1 ||
-                shape.dimensionSize[1] != hw || shape.dimensionSize[2] != hw || shape.dimensionSize[3] != c)
-                throw std::runtime_error("Invalid raw-v1 output shape/order");
-            int item_size = 0;
-            switch (t.properties.tensorType) {
-                case HB_DNN_TENSOR_TYPE_F32: case HB_DNN_TENSOR_TYPE_S32: item_size = 4; break;
-                case HB_DNN_TENSOR_TYPE_S16: case HB_DNN_TENSOR_TYPE_U16: item_size = 2; break;
-                case HB_DNN_TENSOR_TYPE_S8: case HB_DNN_TENSOR_TYPE_U8: item_size = 1; break;
-                default: throw std::runtime_error("Unsupported output dtype");
-            }
-            allocate(t, item_size);
+        if (properties.stride[dim] <= 0) {
+            throw std::runtime_error("Unsupported tensor stride");
         }
     }
-    void allocate(hbDNNTensor& t, int item_size) {
-        auto& p = t.properties;
-        for (int d = 3; d >= 0; --d) {
-            if (p.stride[d] == -1) {
-                p.stride[d] = d == 3 ? item_size : p.stride[d + 1] * p.validShape.dimensionSize[d + 1];
-                if (d < 2) p.stride[d] = (p.stride[d] + 31) / 32 * 32;
-            }
-            if (p.stride[d] <= 0) throw std::runtime_error("Unsupported tensor stride");
-        }
-        auto bytes = p.stride[0] * p.validShape.dimensionSize[0];
-        if (p.alignedByteSize > bytes) bytes = p.alignedByteSize;
-        check(hbUCPMallocCached(&t.sysMem, bytes, 0), "allocate tensor");
-        std::memset(t.sysMem.virAddr, 0, bytes);
+    size_t bytes = static_cast<size_t>(properties.stride[0]) *
+                   properties.validShape.dimensionSize[0];
+    if (properties.alignedByteSize > 0) {
+        bytes = std::max(bytes, static_cast<size_t>(properties.alignedByteSize));
     }
-    void run(const cv::Mat& padded) {
-        cv::Mat i420;
-        cv::cvtColor(padded, i420, cv::COLOR_BGR2YUV_I420);
-        const auto* src = i420.ptr<unsigned char>();
-        auto* y = static_cast<unsigned char*>(inputs[0].sysMem.virAddr);
-        auto* uv = static_cast<unsigned char*>(inputs[1].sysMem.virAddr);
-        for (int row = 0; row < 640; ++row)
-            for (int col = 0; col < 640; ++col)
-                y[row * inputs[0].properties.stride[1] + col * inputs[0].properties.stride[2]] = src[row * 640 + col];
-        for (int row = 0; row < 320; ++row) for (int col = 0; col < 320; ++col) {
-            auto offset = row * inputs[1].properties.stride[1] + col * inputs[1].properties.stride[2];
-            uv[offset] = src[640 * 640 + row * 320 + col];
-            uv[offset + inputs[1].properties.stride[3]] = src[640 * 640 * 5 / 4 + row * 320 + col];
-        }
-        for (auto& t : inputs) check(hbUCPMemFlush(&t.sysMem, HB_SYS_MEM_CACHE_CLEAN), "flush input");
-        // Synchronous mode ensures tensor buffers are no longer in use on return.
-        check(hbDNNInferV2(nullptr, outputs.data(), inputs.data(), model), "infer");
-        for (auto& t : outputs) check(hbUCPMemFlush(&t.sysMem, HB_SYS_MEM_CACHE_INVALIDATE), "invalidate output");
-    }
-};
+    check_runtime(hbUCPMallocCached(&tensor.sysMem, bytes, 0),
+                  "allocate tensor");
+    std::memset(tensor.sysMem.virAddr, 0, bytes);
+}
 
-std::vector<float> unpack(const hbDNNTensor& t) {
-    const auto& p = t.properties;
-    int h = p.validShape.dimensionSize[1], w = p.validShape.dimensionSize[2], c = p.validShape.dimensionSize[3];
-    std::vector<float> values(h * w * c);
-    const auto* data = static_cast<const unsigned char*>(t.sysMem.virAddr);
-    const bool quantized = p.tensorType != HB_DNN_TENSOR_TYPE_F32;
-    int axis = p.quantizeAxis;
+void release_tensors(std::vector<hbDNNTensor>& tensors) noexcept {
+    for (auto& tensor : tensors) {
+        if (tensor.sysMem.virAddr) {
+            hbUCPFree(&tensor.sysMem);
+            tensor.sysMem.virAddr = nullptr;
+        }
+    }
+    tensors.clear();
+}
+
+std::vector<float> unpack(const hbDNNTensor& tensor) {
+    const auto& properties = tensor.properties;
+    if (!tensor.sysMem.virAddr || properties.validShape.numDimensions != 4) {
+        throw std::runtime_error("Output tensor has no valid memory or shape");
+    }
+    const int h = properties.validShape.dimensionSize[1];
+    const int w = properties.validShape.dimensionSize[2];
+    const int c = properties.validShape.dimensionSize[3];
+    if (h <= 0 || w <= 0 || c <= 0) throw std::runtime_error("Invalid output shape");
+
+    std::vector<float> values(static_cast<size_t>(h) * w * c);
+    const auto* data = static_cast<const unsigned char*>(tensor.sysMem.virAddr);
+    const bool quantized = properties.tensorType != HB_DNN_TENSOR_TYPE_F32;
+    int axis = properties.quantizeAxis;
     if (axis < 0) axis += 4;
-    if (p.scale.scaleLen <= 1 && p.scale.zeroPointLen <= 1) axis = 0;
-    if (quantized && (p.scale.scaleLen < 1 || !p.scale.scaleData || axis < 0 || axis > 3))
+    if (properties.scale.scaleLen <= 1 && properties.scale.zeroPointLen <= 1) axis = 0;
+    if (quantized && (properties.scale.scaleLen < 1 || !properties.scale.scaleData ||
+                      axis < 0 || axis > 3)) {
         throw std::runtime_error("Invalid output quantization metadata");
-    if (quantized && ((p.scale.scaleLen != 1 && p.scale.scaleLen != p.validShape.dimensionSize[axis]) ||
-                     (p.scale.zeroPointLen > 1 && p.scale.zeroPointLen != p.validShape.dimensionSize[axis]) ||
-                     (p.scale.zeroPointLen > 0 && !p.scale.zeroPointData)))
+    }
+    if (quantized &&
+        ((properties.scale.scaleLen != 1 &&
+          properties.scale.scaleLen != properties.validShape.dimensionSize[axis]) ||
+         (properties.scale.zeroPointLen > 1 &&
+          properties.scale.zeroPointLen != properties.validShape.dimensionSize[axis]) ||
+         (properties.scale.zeroPointLen > 0 && !properties.scale.zeroPointData))) {
         throw std::runtime_error("Quantization length mismatch");
-    for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) for (int z = 0; z < c; ++z) {
-        const auto* address = data + y * p.stride[1] + x * p.stride[2] + z * p.stride[3];
-        float value = 0;
-        switch (p.tensorType) {
-            case HB_DNN_TENSOR_TYPE_F32: std::memcpy(&value, address, 4); break;
-            case HB_DNN_TENSOR_TYPE_S32: { int32_t v; std::memcpy(&v, address, 4); value = v; break; }
-            case HB_DNN_TENSOR_TYPE_S16: { int16_t v; std::memcpy(&v, address, 2); value = v; break; }
-            case HB_DNN_TENSOR_TYPE_U16: { uint16_t v; std::memcpy(&v, address, 2); value = v; break; }
-            case HB_DNN_TENSOR_TYPE_S8: { int8_t v; std::memcpy(&v, address, 1); value = v; break; }
-            case HB_DNN_TENSOR_TYPE_U8: value = *address; break;
-            default: throw std::runtime_error("Unsupported output dtype");
+    }
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            for (int z = 0; z < c; ++z) {
+                const auto* address = data + y * properties.stride[1] +
+                                      x * properties.stride[2] +
+                                      z * properties.stride[3];
+                float value = 0.0f;
+                switch (properties.tensorType) {
+                    case HB_DNN_TENSOR_TYPE_F32:
+                        std::memcpy(&value, address, sizeof(value));
+                        break;
+                    case HB_DNN_TENSOR_TYPE_S32: {
+                        int32_t v;
+                        std::memcpy(&v, address, sizeof(v));
+                        value = static_cast<float>(v);
+                        break;
+                    }
+                    case HB_DNN_TENSOR_TYPE_S16: {
+                        int16_t v;
+                        std::memcpy(&v, address, sizeof(v));
+                        value = static_cast<float>(v);
+                        break;
+                    }
+                    case HB_DNN_TENSOR_TYPE_U16: {
+                        uint16_t v;
+                        std::memcpy(&v, address, sizeof(v));
+                        value = static_cast<float>(v);
+                        break;
+                    }
+                    case HB_DNN_TENSOR_TYPE_S8: {
+                        int8_t v;
+                        std::memcpy(&v, address, sizeof(v));
+                        value = static_cast<float>(v);
+                        break;
+                    }
+                    case HB_DNN_TENSOR_TYPE_U8:
+                        value = *address;
+                        break;
+                    default:
+                        throw std::runtime_error("Unsupported output dtype");
+                }
+                if (quantized) {
+                    const int coordinates[4] = {0, y, x, z};
+                    const int scale_index = properties.scale.scaleLen == 1
+                                                ? 0
+                                                : coordinates[axis];
+                    const float scale = properties.scale.scaleData[scale_index];
+                    if (!(scale > 0.0f) || !std::isfinite(scale)) {
+                        throw std::runtime_error("Invalid quantization scale");
+                    }
+                    const int zero_index = properties.scale.zeroPointLen == 1
+                                               ? 0
+                                               : coordinates[axis];
+                    const float zero = properties.scale.zeroPointLen == 0
+                                           ? 0.0f
+                                           : properties.scale.zeroPointData[zero_index];
+                    value = (value - zero) * scale;
+                }
+                values[(static_cast<size_t>(y) * w + x) * c + z] = value;
+            }
         }
-        if (quantized) {
-            int coordinates[] = {0, y, x, z};
-            float scale = p.scale.scaleData[p.scale.scaleLen == 1 ? 0 : coordinates[axis]];
-            if (!(scale > 0) || !std::isfinite(scale)) throw std::runtime_error("Invalid scale");
-            float zero = p.scale.zeroPointLen == 0 ? 0 : p.scale.zeroPointData[p.scale.zeroPointLen == 1 ? 0 : coordinates[axis]];
-            value = (value - zero) * scale;
-        }
-        values[(y * w + x) * c + z] = value;
     }
     return values;
 }
 
-struct LetterboxTransform {
-    double gain = 1.0;
-    int width = 0;
-    int height = 0;
-    int left = 0;
-    int top = 0;
-};
-
-using FrameResult = yoloe26::Result;
-
-
-cv::Mat letterbox(const cv::Mat& image, LetterboxTransform& transform) {
-    if (image.empty() || image.type() != CV_8UC3)
-        throw std::runtime_error("Expected a nonempty uint8 BGR image");
-    transform.gain = std::min(640.0 / image.rows, 640.0 / image.cols);
-    transform.width = std::max(1, static_cast<int>(std::nearbyint(image.cols * transform.gain)));
-    transform.height = std::max(1, static_cast<int>(std::nearbyint(image.rows * transform.gain)));
-    transform.left = (640 - transform.width) / 2;
-    transform.top = (640 - transform.height) / 2;
-
-    cv::Mat resized, padded;
-    cv::resize(image, resized, cv::Size(transform.width, transform.height), 0, 0, cv::INTER_LINEAR);
-    cv::copyMakeBorder(resized, padded, transform.top, 640 - transform.height - transform.top,
-                       transform.left, 640 - transform.width - transform.left,
-                       cv::BORDER_CONSTANT, cv::Scalar(114, 114, 114));
-    return padded;
+/** @brief Convert one raw model box from canvas to clipped source coordinates. */
+std::array<float, 4> restore_box(const std::array<float, 4>& box,
+                                 const LetterboxTransform& transform,
+                                 int source_width,
+                                 int source_height) {
+    return {std::clamp(static_cast<float>((box[0] - transform.left) /
+                                           transform.gain),
+                       0.0f, static_cast<float>(source_width)),
+            std::clamp(static_cast<float>((box[1] - transform.top) /
+                                           transform.gain),
+                       0.0f, static_cast<float>(source_height)),
+            std::clamp(static_cast<float>((box[2] - transform.left) /
+                                           transform.gain),
+                       0.0f, static_cast<float>(source_width)),
+            std::clamp(static_cast<float>((box[3] - transform.top) /
+                                           transform.gain),
+                       0.0f, static_cast<float>(source_height))};
 }
 
-FrameResult decode_frame(Runtime& runtime, const cv::Mat& source, const LetterboxTransform& transform,
-                         float score_threshold, int max_det, bool single_label) {
-    std::vector<std::vector<float>> physical;
-    physical.reserve(runtime.outputs.size());
-    for (auto& output : runtime.outputs) physical.push_back(unpack(output));
+/**
+ * @brief Restore one binary mask and crop it to its source-image ROI.
+ *
+ * The order matches the Python runtime: threshold and crop in model canvas,
+ * remove letterbox padding, resize to the full source image, then use clipped
+ * integer-truncated source coordinates for the local ROI.
+ */
+cv::Mat restore_mask(const cv::Mat& raw_mask,
+                    const std::array<float, 4>& model_box,
+                    const LetterboxTransform& transform,
+                    const std::array<float, 4>& source_box,
+                    int source_width,
+                    int source_height) {
+    cv::Mat full_canvas;
+    cv::resize(raw_mask, full_canvas,
+               cv::Size(transform.input_width, transform.input_height), 0, 0,
+               cv::INTER_LINEAR);
+    cv::Mat binary = full_canvas > 0.0f;
+    for (int y = 0; y < binary.rows; ++y) {
+        auto* row = binary.ptr<unsigned char>(y);
+        for (int x = 0; x < binary.cols; ++x) row[x] = row[x] ? 1 : 0;
+    }
 
-    std::vector<std::vector<float>> buffers;
-    buffers.reserve(10);
-    std::vector<yoloe26::Tensor> tensors;
-    tensors.reserve(10);
-    buffers = std::move(physical);
+    const int canvas_left = std::clamp(transform.left, 0, transform.input_width);
+    const int canvas_top = std::clamp(transform.top, 0, transform.input_height);
+    const int canvas_width = std::clamp(transform.width, 0,
+                                        transform.input_width - canvas_left);
+    const int canvas_height = std::clamp(transform.height, 0,
+                                         transform.input_height - canvas_top);
+    if (canvas_width <= 0 || canvas_height <= 0) return cv::Mat();
+
+    for (int y = 0; y < binary.rows; ++y) {
+        auto* row = binary.ptr<unsigned char>(y);
+        for (int x = 0; x < binary.cols; ++x) {
+            if (x < model_box[0] || x >= model_box[2] || y < model_box[1] ||
+                y >= model_box[3]) {
+                row[x] = 0;
+            }
+        }
+    }
+
+    const cv::Mat unpadded = binary(
+        cv::Rect(canvas_left, canvas_top, canvas_width, canvas_height));
+    cv::Mat restored;
+    cv::resize(unpadded, restored, cv::Size(source_width, source_height), 0, 0,
+               cv::INTER_NEAREST);
+    for (int y = 0; y < restored.rows; ++y) {
+        auto* row = restored.ptr<unsigned char>(y);
+        for (int x = 0; x < restored.cols; ++x) row[x] = row[x] ? 1 : 0;
+    }
+
+    // Clip first, then truncate. This is intentionally equivalent to int(box)
+    // in the shared Python visualization contract.
+    const int x1 = static_cast<int>(std::clamp(source_box[0], 0.0f,
+                                              static_cast<float>(source_width)));
+    const int y1 = static_cast<int>(std::clamp(source_box[1], 0.0f,
+                                              static_cast<float>(source_height)));
+    const int x2 = static_cast<int>(std::clamp(source_box[2], 0.0f,
+                                              static_cast<float>(source_width)));
+    const int y2 = static_cast<int>(std::clamp(source_box[3], 0.0f,
+                                              static_cast<float>(source_height)));
+    if (x2 <= x1 || y2 <= y1) return cv::Mat();
+    return restored(cv::Rect(x1, y1, x2 - x1, y2 - y1)).clone();
+}
+
+void validate_output_tensors(const std::vector<hbDNNTensor>& output_tensors) {
+    if (output_tensors.size() != 10) {
+        throw std::invalid_argument("Expected ten YOLOE-26 output tensors");
+    }
     for (int i = 0; i < 10; ++i) {
-        const int hw = i == 9 ? 160 : 640 / yoloe26::kStrides[i / 3];
-        const int channels = i == 9 ? 32 : (i % 3 == 0 ? yoloe26::kClasses : (i % 3 == 1 ? 4 : 32));
-        tensors.push_back({buffers[i].data(), hw, hw, channels});
-    }
-
-    FrameResult result;
-    const auto decoded = yoloe26::decode(tensors, score_threshold, max_det, single_label);
-    result.detections.reserve(decoded.size());
-    result.masks.reserve(decoded.size());
-    for (auto detection : decoded) {
-        cv::Mat raw(160, 160, CV_32F, cv::Scalar(0));
-        for (int y = 0; y < 160; ++y) {
-            float* row = raw.ptr<float>(y);
-            for (int x = 0; x < 160; ++x) {
-                float value = 0.0f;
-                for (int c = 0; c < 32; ++c)
-                    value += tensors[9].at(y * 160 + x, c) * detection.coefficients[c];
-                row[x] = value;
+        const auto& tensor = output_tensors[i];
+        const auto& shape = tensor.properties.validShape;
+        const int hw = i == 9 ? kMaskSize : kModelWidth / kStrides[i / 3];
+        const int channels = i == 9
+                                 ? kMaskChannels
+                                 : (i % 3 == 0 ? kClasses
+                                               : (i % 3 == 1 ? 4 : kMaskChannels));
+        if (shape.numDimensions != 4 || shape.dimensionSize[0] != 1 ||
+            shape.dimensionSize[1] != hw || shape.dimensionSize[2] != hw ||
+            shape.dimensionSize[3] != channels || tensor_item_size(tensor.properties) == 0 ||
+            !tensor.sysMem.virAddr) {
+            throw std::invalid_argument("Invalid raw-v1 output tensor shape or memory");
+        }
+        for (int dim = 0; dim < 4; ++dim) {
+            if (tensor.properties.stride[dim] <= 0) {
+                throw std::invalid_argument("Invalid raw-v1 output tensor stride");
             }
         }
-        cv::Mat full;
-        cv::resize(raw, full, cv::Size(640, 640), 0, 0, cv::INTER_LINEAR);
-        cv::Mat binary = full > 0;
-        for (int y = 0; y < 640; ++y) {
-            unsigned char* row = binary.ptr<unsigned char>(y);
-            for (int x = 0; x < 640; ++x) {
-                if (x < detection.box[0] || x >= detection.box[2] ||
-                    y < detection.box[1] || y >= detection.box[3])
-                    row[x] = 0;
-            }
-        }
-        const cv::Mat unpadded = binary(cv::Rect(transform.left, transform.top,
-                                                 transform.width, transform.height));
-        cv::Mat restored_mask;
-        cv::resize(unpadded, restored_mask, source.size(), 0, 0, cv::INTER_NEAREST);
-        result.masks.push_back(std::move(restored_mask));
-
-        detection.box[0] = std::clamp(static_cast<float>((detection.box[0] - transform.left) / transform.gain),
-                                      0.0f, static_cast<float>(source.cols));
-        detection.box[1] = std::clamp(static_cast<float>((detection.box[1] - transform.top) / transform.gain),
-                                      0.0f, static_cast<float>(source.rows));
-        detection.box[2] = std::clamp(static_cast<float>((detection.box[2] - transform.left) / transform.gain),
-                                      0.0f, static_cast<float>(source.cols));
-        detection.box[3] = std::clamp(static_cast<float>((detection.box[3] - transform.top) / transform.gain),
-                                      0.0f, static_cast<float>(source.rows));
-        result.detections.push_back(detection);
     }
-    return result;
 }
 
 }  // namespace
 
-namespace yoloe26 {
-struct YoloE26Seg::Impl { Runtime runtime; };
+int32_t pre_process(std::vector<hbDNNTensor>& input_tensors,
+                    const cv::Mat& image,
+                    int input_w,
+                    int input_h,
+                    const std::string& image_format) {
+    if (image_format != "BGR") return -1;
+    if (image.empty() || image.type() != CV_8UC3 || input_w <= 0 ||
+        input_h <= 0 || input_w % 2 != 0 || input_h % 2 != 0) {
+        return -2;
+    }
+    if (input_tensors.size() != 2 || !input_tensors[0].sysMem.virAddr ||
+        !input_tensors[1].sysMem.virAddr) {
+        return -3;
+    }
 
-YoloE26Seg::YoloE26Seg(const std::string& model_path) : impl_(std::make_unique<Impl>()) {
-    auto read_word = [](const char* path) {
-        std::ifstream stream(path);
-        std::string value;
-        std::getline(stream, value);
-        std::string result;
-        for (unsigned char c : value) if (std::isalnum(c)) result += std::tolower(c);
-        return result;
-    };
-    const std::string soc = read_word("/sys/class/boardinfo/soc_name");
-    const std::string board = read_word("/sys/class/boardinfo/board_type");
-    if (soc != "s100" && soc != "s100p") throw std::runtime_error("Only S100/S100P are supported");
-    const bool plus = soc == "s100p" || board == "p" || board == "nashm" ||
-                      board.rfind("s100p", 0) == 0 || board.rfind("rdks100p", 0) == 0;
-    const std::string suffix = plus ? "_nashm_640x640_nv12.hbm" : "_nashe_640x640_nv12.hbm";
-    if (model_path.size() < suffix.size() ||
-        model_path.compare(model_path.size() - suffix.size(), suffix.size(), suffix) != 0)
-        throw std::runtime_error("Use the canonical HBM filename matching this board: " + suffix);
-    impl_->runtime.load(model_path.c_str());
+    try {
+        const LetterboxTransform transform =
+            make_transform(image.cols, image.rows, input_w, input_h);
+        cv::Mat resized;
+        cv::resize(image, resized,
+                   cv::Size(transform.width, transform.height), 0, 0,
+                   cv::INTER_LINEAR);
+        cv::Mat padded;
+        cv::copyMakeBorder(resized, padded, transform.top,
+                           input_h - transform.height - transform.top,
+                           transform.left,
+                           input_w - transform.width - transform.left,
+                           cv::BORDER_CONSTANT, cv::Scalar(114, 114, 114));
+
+        cv::Mat i420;
+        cv::cvtColor(padded, i420, cv::COLOR_BGR2YUV_I420);
+        const auto* source = i420.ptr<unsigned char>();
+        auto* y_plane = static_cast<unsigned char*>(input_tensors[0].sysMem.virAddr);
+        auto* uv_plane = static_cast<unsigned char*>(input_tensors[1].sysMem.virAddr);
+        const auto& y_props = input_tensors[0].properties;
+        const auto& uv_props = input_tensors[1].properties;
+        if (y_props.validShape.dimensionSize[1] != input_h ||
+            y_props.validShape.dimensionSize[2] != input_w ||
+            uv_props.validShape.dimensionSize[1] != input_h / 2 ||
+            uv_props.validShape.dimensionSize[2] != input_w / 2) {
+            return -4;
+        }
+
+        for (int row = 0; row < input_h; ++row) {
+            for (int col = 0; col < input_w; ++col) {
+                y_plane[row * y_props.stride[1] + col * y_props.stride[2]] =
+                    source[row * input_w + col];
+            }
+        }
+        const int uv_offset = input_h * input_w;
+        const int v_offset = uv_offset + (input_h / 2) * (input_w / 2);
+        for (int row = 0; row < input_h / 2; ++row) {
+            for (int col = 0; col < input_w / 2; ++col) {
+                const auto offset = row * uv_props.stride[1] +
+                                    col * uv_props.stride[2];
+                uv_plane[offset] = source[uv_offset + row * (input_w / 2) + col];
+                uv_plane[offset + uv_props.stride[3]] =
+                    source[v_offset + row * (input_w / 2) + col];
+            }
+        }
+        check_runtime(hbUCPMemFlush(&input_tensors[0].sysMem,
+                                     HB_SYS_MEM_CACHE_CLEAN),
+                      "flush Y input");
+        check_runtime(hbUCPMemFlush(&input_tensors[1].sysMem,
+                                     HB_SYS_MEM_CACHE_CLEAN),
+                      "flush UV input");
+        return 0;
+    } catch (const std::exception& error) {
+        std::cerr << "pre_process: " << error.what() << '\n';
+        return -5;
+    }
 }
 
-YoloE26Seg::~YoloE26Seg() = default;
+int32_t infer(std::vector<hbDNNTensor>& output_tensors,
+              std::vector<hbDNNTensor>& input_tensors,
+              hbDNNHandle_t dnn_handle,
+              hbUCPSchedParam* sched_param) {
+    if (!dnn_handle || input_tensors.empty() || output_tensors.empty()) return -1;
 
-Result YoloE26Seg::predict(const cv::Mat& image, float threshold, int max_det, bool single_label) {
-    if (!(threshold > 0 && threshold < 1) || max_det < 1 || max_det > 8400)
+    for (auto& tensor : input_tensors) {
+        const int code = hbUCPMemFlush(&tensor.sysMem, HB_SYS_MEM_CACHE_CLEAN);
+        if (code != 0) return code;
+    }
+
+    if (!sched_param) {
+        // nullptr is the documented synchronous path for a single inference.
+        const int code = hbDNNInferV2(nullptr, output_tensors.data(),
+                                      input_tensors.data(), dnn_handle);
+        if (code != 0) return code;
+    } else {
+        hbUCPTaskHandle_t task{nullptr};
+        int code = hbDNNInferV2(&task, output_tensors.data(),
+                                input_tensors.data(), dnn_handle);
+        if (code != 0) return code;
+        if (!task) return -2;
+        code = hbUCPSubmitTask(task, sched_param);
+        if (code == 0) code = hbUCPWaitTaskDone(task, 0);
+        const int release_code = hbUCPReleaseTask(task);
+        if (code != 0) return code;
+        if (release_code != 0) return release_code;
+    }
+
+    for (auto& tensor : output_tensors) {
+        const int code = hbUCPMemFlush(&tensor.sysMem,
+                                       HB_SYS_MEM_CACHE_INVALIDATE);
+        if (code != 0) return code;
+    }
+    return 0;
+}
+
+static InstanceSegResult post_process_with_transform(
+    const std::vector<hbDNNTensor>& output_tensors,
+    const YoloE26SegConfig& config,
+    int source_width,
+    int source_height,
+    const LetterboxTransform& transform) {
+    if (source_width <= 0 || source_height <= 0 || transform.gain <= 0.0 ||
+        transform.input_width <= 0 || transform.input_height <= 0 ||
+        transform.width <= 0 || transform.height <= 0) {
+        throw std::invalid_argument("Invalid source image or letterbox transform");
+    }
+    validate_output_tensors(output_tensors);
+
+    std::vector<std::vector<float>> buffers;
+    buffers.reserve(output_tensors.size());
+    for (const auto& output : output_tensors) buffers.push_back(unpack(output));
+
+    std::vector<Tensor> tensors;
+    tensors.reserve(buffers.size());
+    for (int i = 0; i < 10; ++i) {
+        const int hw = i == 9 ? kMaskSize : kModelWidth / kStrides[i / 3];
+        const int channels = i == 9
+                                 ? kMaskChannels
+                                 : (i % 3 == 0 ? kClasses
+                                               : (i % 3 == 1 ? 4 : kMaskChannels));
+        tensors.push_back({buffers[i].data(), hw, hw, channels});
+    }
+
+    const std::vector<RawDetection> decoded =
+        decode(tensors, config.score_threshold, config.max_det,
+               config.single_label);
+    InstanceSegResult result;
+    result.detections.reserve(decoded.size());
+    result.masks.reserve(decoded.size());
+
+    for (const auto& raw_detection : decoded) {
+        cv::Mat raw_mask(kMaskSize, kMaskSize, CV_32F, cv::Scalar(0));
+        for (int y = 0; y < kMaskSize; ++y) {
+            float* row = raw_mask.ptr<float>(y);
+            for (int x = 0; x < kMaskSize; ++x) {
+                float value = 0.0f;
+                const float* proto = tensors[9].data +
+                                     (static_cast<size_t>(y) * kMaskSize + x) *
+                                         kMaskChannels;
+                for (int c = 0; c < kMaskChannels; ++c) {
+                    value += proto[c] * raw_detection.coefficients[c];
+                }
+                row[x] = value;
+            }
+        }
+
+        const auto source_box = restore_box(raw_detection.box, transform,
+                                            source_width, source_height);
+        result.detections.push_back(
+            Detection{{source_box[0], source_box[1], source_box[2], source_box[3]},
+                      raw_detection.score, raw_detection.label});
+        result.masks.push_back(restore_mask(raw_mask, raw_detection.box,
+                                            transform, source_box, source_width,
+                                            source_height));
+    }
+    return result;
+}
+
+InstanceSegResult post_process(const std::vector<hbDNNTensor>& output_tensors,
+                               const YoloE26SegConfig& config,
+                               int source_width,
+                               int source_height,
+                               int input_width,
+                               int input_height) {
+    return post_process_with_transform(
+        output_tensors, config, source_width, source_height,
+        make_transform(source_width, source_height, input_width, input_height));
+}
+
+YoloE26Seg::YoloE26Seg(YoloE26SegConfig config) : config_(std::move(config)) {}
+
+YoloE26Seg::~YoloE26Seg() { release(); }
+
+void YoloE26Seg::release() noexcept {
+    release_tensors(input_tensors);
+    release_tensors(output_tensors);
+    if (packed_dnn_handle_) {
+        hbDNNRelease(packed_dnn_handle_);
+        packed_dnn_handle_ = nullptr;
+    }
+    dnn_handle = nullptr;
+    input_count_ = 0;
+    output_count_ = 0;
+    input_h = 0;
+    input_w = 0;
+    inited_ = false;
+}
+
+int32_t YoloE26Seg::init(const char* requested_model_path) noexcept {
+    if (inited_) return -1;
+    release();
+
+    try {
+        const std::string model_size = config_.model_size;
+        if (model_size != "n" && model_size != "s" && model_size != "m" &&
+            model_size != "l" && model_size != "x") {
+            throw std::invalid_argument("model_size must be one of n/s/m/l/x");
+        }
+        const std::string path = requested_model_path && requested_model_path[0]
+                                     ? requested_model_path
+                                     : (config_.model_path.empty()
+                                            ? default_model_path(model_size)
+                                            : config_.model_path);
+        if (path.empty()) throw std::invalid_argument("model_path is empty");
+
+        const BoardInfo board = board_info();
+        if (!board.known) {
+            throw std::invalid_argument("Only S100 and S100P boards are supported");
+        }
+        const std::string name = std::filesystem::path(path).filename().string();
+        if (!has_suffix(name, "_nashe_640x640_nv12.hbm") &&
+            !has_suffix(name, "_nashm_640x640_nv12.hbm")) {
+            throw std::invalid_argument("Use a canonical YOLOE-26 HBM filename");
+        }
+        if (board.known && !has_suffix(name, canonical_suffix(board.march))) {
+            throw std::invalid_argument(
+                "HBM filename does not match this board; expected " +
+                canonical_suffix(board.march));
+        }
+
+        const char* model_files[] = {path.c_str()};
+        check_runtime(hbDNNInitializeFromFiles(&packed_dnn_handle_, model_files, 1),
+                      "load HBM");
+        const char** model_names = nullptr;
+        int model_count = 0;
+        check_runtime(hbDNNGetModelNameList(&model_names, &model_count,
+                                            packed_dnn_handle_),
+                      "model names");
+        if (!model_names || model_count != 1) {
+            throw std::runtime_error("Expected one model in HBM");
+        }
+        check_runtime(hbDNNGetModelHandle(&dnn_handle, packed_dnn_handle_,
+                                           model_names[0]),
+                      "model handle");
+        check_runtime(hbDNNGetInputCount(&input_count_, dnn_handle),
+                      "input count");
+        check_runtime(hbDNNGetOutputCount(&output_count_, dnn_handle),
+                      "output count");
+        if (input_count_ != 2 || output_count_ != 10) {
+            throw std::runtime_error("Expected 2 NV12 inputs and 10 outputs");
+        }
+
+        input_tensors.resize(input_count_);
+        output_tensors.resize(output_count_);
+        for (int i = 0; i < input_count_; ++i) {
+            auto& tensor = input_tensors[i];
+            check_runtime(hbDNNGetInputTensorProperties(&tensor.properties,
+                                                        dnn_handle, i),
+                          "input properties");
+            const auto& shape = tensor.properties.validShape;
+            const std::array<int, 4> expected =
+                i == 0 ? std::array<int, 4>{1, kModelHeight, kModelWidth, 1}
+                       : std::array<int, 4>{1, kModelHeight / 2, kModelWidth / 2, 2};
+            if (shape.numDimensions != 4 ||
+                tensor.properties.tensorType != HB_DNN_TENSOR_TYPE_U8) {
+                throw std::runtime_error("Expected uint8 NHWC NV12 inputs");
+            }
+            for (int d = 0; d < 4; ++d) {
+                if (shape.dimensionSize[d] != expected[d]) {
+                    throw std::runtime_error("Invalid NV12 input shape/order");
+                }
+            }
+            allocate_tensor(tensor, 1);
+        }
+        for (int i = 0; i < output_count_; ++i) {
+            auto& tensor = output_tensors[i];
+            check_runtime(hbDNNGetOutputTensorProperties(&tensor.properties,
+                                                         dnn_handle, i),
+                          "output properties");
+            if (tensor.properties.tensorType != HB_DNN_TENSOR_TYPE_F32 &&
+                tensor.properties.quantiType != SCALE) {
+                throw std::runtime_error(
+                    "Integer output requires SCALE quantization metadata");
+            }
+            const int hw = i == 9 ? kMaskSize : kModelWidth / kStrides[i / 3];
+            const int channels = i == 9
+                                     ? kMaskChannels
+                                     : (i % 3 == 0 ? kClasses
+                                                   : (i % 3 == 1 ? 4 : kMaskChannels));
+            const auto& shape = tensor.properties.validShape;
+            if (shape.numDimensions != 4 || shape.dimensionSize[0] != 1 ||
+                shape.dimensionSize[1] != hw || shape.dimensionSize[2] != hw ||
+                shape.dimensionSize[3] != channels) {
+                throw std::runtime_error("Invalid raw-v1 output shape/order");
+            }
+            const int item_size = tensor_item_size(tensor.properties);
+            allocate_tensor(tensor, item_size);
+        }
+        input_h = kModelHeight;
+        input_w = kModelWidth;
+        inited_ = true;
+        return 0;
+    } catch (const std::exception& error) {
+        std::cerr << "YoloE26Seg::init: " << error.what() << '\n';
+        release();
+        return -1;
+    } catch (...) {
+        std::cerr << "YoloE26Seg::init: unknown error\n";
+        release();
+        return -1;
+    }
+}
+
+InstanceSegResult YoloE26Seg::predict(const cv::Mat& image) {
+    if (!inited_ || !dnn_handle) {
+        throw std::runtime_error("YoloE26Seg::init() must succeed before predict()");
+    }
+    if (image.empty() || image.type() != CV_8UC3) {
+        throw std::invalid_argument("predict expects a nonempty BGR CV_8UC3 image");
+    }
+    if (!(config_.score_threshold > 0.0f && config_.score_threshold < 1.0f) ||
+        config_.max_det < 1 || config_.max_det > 8400) {
         throw std::invalid_argument("Invalid threshold or max_det");
-    LetterboxTransform transform;
-    cv::Mat padded = letterbox(image, transform);
-    impl_->runtime.run(padded);
-    return decode_frame(impl_->runtime, image, transform, threshold, max_det, single_label);
+    }
+
+    const int preprocess_code = pre_process(input_tensors, image, input_w, input_h);
+    if (preprocess_code != 0) {
+        throw std::runtime_error("pre_process failed: " +
+                                 std::to_string(preprocess_code));
+    }
+    const int infer_code = infer(output_tensors, input_tensors, dnn_handle);
+    if (infer_code != 0) {
+        throw std::runtime_error("infer failed: " + std::to_string(infer_code));
+    }
+    return post_process(output_tensors, config_, image.cols, image.rows,
+                        input_w, input_h);
 }
+
+std::string YoloE26Seg::default_model_path(const std::string& model_size) {
+    if (model_size != "n" && model_size != "s" && model_size != "m" &&
+        model_size != "l" && model_size != "x") {
+        throw std::invalid_argument("model_size must be one of n/s/m/l/x");
+    }
+    const BoardInfo board = board_info();
+    if (!board.known) {
+        throw std::invalid_argument("Only S100 and S100P boards are supported");
+    }
+    const std::string march = board.march;
+    const std::string stem = "yoloe_26" + model_size + "_seg_pf_" +
+                             (march == "nash-m" ? "nashm" : "nashe") +
+                             "_640x640_nv12.hbm";
+    const std::filesystem::path source_dir(YOLOE26_SOURCE_DIR);
+    const std::filesystem::path repository_model =
+        source_dir / ".." / ".." / "model" / march / stem;
+    std::error_code error;
+    if (std::filesystem::exists(repository_model, error)) {
+        return repository_model.string();
+    }
+    return repository_model.string();
+}
+
 }  // namespace yoloe26
