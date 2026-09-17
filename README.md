@@ -1,96 +1,61 @@
-<div align="center">
-  <img src="platforms/x5/docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
-</div>
+# RDK Model Zoo
 
-<div align="center">
-  <h1 align="center">RDK Model Zoo</h1>
-  <p align="center">
-    <b>Out-of-the-Box AI Model Deployment Pipelines and Full-Link Conversion Tutorials Based on D-Robotics BPU</b>
-  </p>
-</div>
+English | [简体中文](README_cn.md)
 
-<div align="center">
+RDK Model Zoo provides model deployment examples for D-Robotics BPU devices. Each sample includes model preparation, board inference, readable source, and its existing conversion and evaluation workflow. Inference uses Python and the runtime supplied with the board image; neither an Agent nor Node.js is required.
 
-**English** | [简体中文](./README_cn.md)
+## Start with a sample
 
-<p align="center">
-  <a href="https://github.com/D-Robotics/rdk_model_zoo/stargazers"><img src="https://img.shields.io/github/stars/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Stars"></a>
-  <a href="https://github.com/D-Robotics/rdk_model_zoo/network/members"><img src="https://img.shields.io/github/forks/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Forks"></a>
-  <a href="https://github.com/D-Robotics/rdk_model_zoo/pulls"><img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome"></a>
-  <a href="https://developer.d-robotics.cc"><img src="https://img.shields.io/badge/Community-D--Robotics-orange.svg?style=flat-square" alt="Community"></a>
-</p>
+This integration covers three representative tasks. Follow a sample's guide for setup and execution. Board results below apply to the named artifacts and fixed inputs, not every model in a family.
 
-</div>
+| Task | Sample | Representative models and boards | Development |
+| --- | --- | --- | --- |
+| Object detection | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README.md) | YOLOv8n and YOLO26n; X5 8GB/4GB, S100, S100P, S600 | [Conversion](samples/vision/ultralytics_yolo/conversion/README.md) · [Evaluation](samples/vision/ultralytics_yolo/evaluator/README.md) |
+| Image classification | [ResNet](samples/vision/resnet/README.md) | ResNet18; X5 8GB/4GB, S100, S600 | [Conversion](samples/vision/resnet/conversion/README.md) · [Evaluation](samples/vision/resnet/evaluator/README.md) |
+| Text detection and recognition | [PaddleOCR](samples/vision/paddle_ocr/README.md) | X5 PP-OCRv3 and S100 PP-OCRv6; detector and recognizer composition | [Conversion](samples/vision/paddle_ocr/conversion/README.md) · [Evaluation](samples/vision/paddle_ocr/evaluator/README.md) |
 
-## Introduction
+The September 17 source revision was retested on both X5 boards, S100 and S100P where artifacts are available. S600 results are from September 16; connection recovery and revision retesting remain pending.
 
-> **Mission**: Dedicated to providing D-Robotics developers with extreme performance, out-of-the-box, and full-scenario AI deployment validation experiences.
-
-This repository is the official collection of BPU model examples and tools (Model Zoo) provided by D-Robotics. It is oriented towards AI model deployment and application development on BPU (Brain Processing Unit), helping developers to **quickly get started with BPU** and **fast-track model inference workflows**.
-
-The main branch carries all supported platforms. Migration to shared samples starts with [Ultralytics YOLO](samples/vision/ultralytics_yolo/README.md): one Python entry point with explicit platform profiles, separate conversion toolchains, and X5-only C++. Its old platform commands forward to the shared implementation and require the complete repository checkout. Other samples remain under `platforms/`; board verification remains a separate release check.
-
-### Platform Registry
-
-| Target Hardware | Path | Historical branch | Documentation |
-| :--- | :--- | :--- | :--- |
-| RDK X5 | [`platforms/x5`](./platforms/x5) | `rdk_x5` | [README](./platforms/x5/README.md) · [中文](./platforms/x5/README_cn.md) |
-| RDK S100 / S100P / S600 | [`platforms/s`](./platforms/s) | `rdk_s` | [README](./platforms/s/README.md) · [中文](./platforms/s/README_cn.md) |
-| RDK X3 | [`platforms/x3`](./platforms/x3) | `rdk_x3` | [README](./platforms/x3/README.md) · [中文](./platforms/x3/README_cn.md) |
-
-The registry is also published as machine-readable data in [`platforms/registry.json`](./platforms/registry.json), and described in prose in [`platforms/README.md`](./platforms/README.md).
-
-### Historical Branches
-
-All new models, fixes, manifests, and release preparation are maintained on **main**. Existing platform branches and tags are retained as historical and compatibility references; new development does not require synchronizing those branches. Platform release versions may evolve independently while their source directories stay on main.
-
-| Target Hardware | Branch | Description |
-| :--- | :--- | :--- |
-| RDK X5 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) | Historical RDK X5 branch. Recommended system version: RDK OS >= 3.5.0, based on Ubuntu 22.04 aarch64 and TROS-Humble. |
-| RDK X5 legacy demos | [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) | Historical archive branch for the previous RDK X5 demos. Use it only when you need to reference legacy demo content. |
-| RDK X3 | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Historical RDK X3 branch. |
-| RDK S series | [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Historical RDK S series branch. Historical archived demos for RDK S series boards are kept in [RDK Model Zoo S](https://github.com/d-Robotics/rdk_model_zoo_s). |
-
-## Repository Layout
+Keep a complete checkout on your board. From the repository root, inspect available arguments and models without loading the BPU or downloading artifacts:
 
 ```bash
-rdk_model_zoo/
-|-- platforms/
-|   |-- x5/                  # Complete RDK X5 distribution (verbatim layout)
-|   |   |-- samples/         # vision/ and robotics/ samples
-|   |   |-- utils/           # shared Python utilities and batch tools
-|   |   |-- datasets/        # dataset preparation helpers
-|   |   |-- docs/
-|   |   |   |-- release/     # models.yaml + benchmarks.yaml (X5 manifest pair)
-|   |   |   `-- releases/    # published release notes
-|   |   |-- tros/            # TROS integration references
-|   |   `-- README.md        # X5 entry point
-|   |-- s/                   # Complete RDK S100/S100P/S600 distribution
-|   |   |-- samples/         # vision/, speech/, vla/
-|   |   `-- docs/release/    # models.yaml + benchmarks.yaml (S manifest pair)
-|   `-- x3/                  # Complete RDK X3 distribution
-|       |-- demos/           # legacy demo layout
-|       `-- release/         # models.yaml + benchmarks.yaml (X3 manifest pair)
-|-- tools/
-|   `-- catalog-publisher/   # catalog data generator, schema validation, errata
-|-- archive/                 # local source snapshots (not committed)
-|-- docs/superpowers/        # design records and implementation plans
-`-- .github/workflows/       # catalog data build and validation
+python3 samples/vision/ultralytics_yolo/runtime/python/main.py --help
+python3 samples/vision/resnet/runtime/python/main.py --list-models --target x5
+python3 samples/vision/paddle_ocr/runtime/python/main.py --list-models --target x5
 ```
 
-### Release Manifests
+Then follow the sample README to prepare user-space dependencies and a model for your board, and run inference. X5 `.bin` and S-series `.hbm` artifacts are not interchangeable; S100, S100P and S600 also require their own artifacts. Do not replace the board runtime with a generic PyPI package.
 
-Each platform publishes the same manifest pair — `models.yaml` (artifact inventory) and `benchmarks.yaml` (performance and accuracy observations) — together with the JSON Schemas that validate them. The manifests are the authoritative record of what a release ships and measures; the catalog is a derived, read-only view.
+## Read and extend the code
 
-| Platform | Manifest directory | Release tag | Counts |
-| :--- | :--- | :--- | :--- |
-| X5 | [`platforms/x5/docs/release`](./platforms/x5/docs/release) | `x5-v1.1.2` | 37 samples, 239 benchmark records |
-| S | [`platforms/s/docs/release`](./platforms/s/docs/release) | `s-v1.1.2` | 35 samples, 563 benchmark records |
-| X3 | [`platforms/x3/release`](./platforms/x3/release) | `x3-v1.1.2` | 15 samples, 20 benchmark records |
+```text
+samples/
+├── _shared/                  # Target identity, artifact access, image-byte conversion
+└── vision/
+    ├── ultralytics_yolo/      # Detection pipeline and DFL / LTRB decoding
+    ├── resnet/               # Classification pipeline and Top-K results
+    └── paddle_ocr/           # Detection → crops → recognition → CTC decoding
+```
 
-The counts are per manifest. Two RDK X3 `paddleocr` records also appear in the X5 manifest, so the sums are two higher than the catalog's deduplicated total of 820.
+Within each sample, `runtime/python/main.py` handles the command line, the task module owns inference flow, `model_runner.py` calls the model, and `model_binding.py` validates artifact and tensor contracts. `conversion/` generates models on a development host, `evaluator/` evaluates results, and `test_data/` holds minimal inputs. Sample READMEs show callable APIs and explain the files.
 
-Historical release tags (`x5-v1.1.2`, `s-v1.1.2`, `x3-v1.1.2` and their predecessors) keep the **original repository-root layout** they were published with: a tag checkout holds `samples/`, `docs/release/`, or `release/` at the top level, not `platforms/`. Links inside old release notes and the manifests' own `source.path` fields therefore resolve against those tags exactly as before.
+Shared algorithms have one maintenance location; necessary model differences remain local. The two OCR generations retain different vocabularies, and YOLO DFL and direct LTRB retain different decoders.
+
+## Platform sources, datasets and historical releases
+
+Models outside this batch remain available through their platform directories. X3 is preserved as historical content and is not part of this X5/S integration.
+
+| Platform | Sources and usage | Release facts |
+| --- | --- | --- |
+| X5 | [Platform README](platforms/x5/README.md) | [Model and benchmark manifests](platforms/x5/docs/release) |
+| S100 / S100P / S600 | [Platform README](platforms/s/README.md) | [Model and benchmark manifests](platforms/s/docs/release) |
+| X3 (historical) | [Platform README](platforms/x3/README.md) | [Historical manifests](platforms/x3/release) |
+
+Dataset preparation remains in [X5 datasets](platforms/x5/datasets) and [S datasets](platforms/s/datasets). Existing manifests remain the source of model URLs, identities and historical measurements; integrating source does not redefine published artifacts.
+
+Historical tags retain their release-time layout. Read their documentation at the matching tag. The [platform registry guide](platforms/README.md) describes historical branches; local integration does not switch the default branch or publish a release.
+
+The [validation record](docs/releases/unified-migration/2026-09-16-p2-validation.md) describes previous runtime checks. The [integration revision](docs/superpowers/plans/2026-09-17-representative-integration.md) tracks source consolidation, documentation, conversion and regression checks separately.
 
 ## Catalog Data
 

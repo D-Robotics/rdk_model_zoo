@@ -1,44 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
-project(paddle_ocr)
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+project(paddle_ocr_legacy_entrypoint)
 
-# SOC macro; handle boards where soc_name reads as "(null)"
-file(READ "/sys/class/boardinfo/soc_name" SOC_NAME_RAW)
-string(STRIP "${SOC_NAME_RAW}" SOC_NAME_STRIPPED)
-string(TOUPPER "${SOC_NAME_STRIPPED}" SOC_NAME_UPPER)
-if(SOC_NAME_UPPER STREQUAL "(NULL)")
-    set(SOC_NAME_UPPER "")
-endif()
-if(SOC_NAME_UPPER)
-    add_definitions(-DSOC_${SOC_NAME_UPPER})
-endif()
+# Keep the historical configure/build directory and executable name while
+# delegating every dependency, compiler flag, and source list to the
+# canonical sample.  There is deliberately no second C++ build recipe here.
+set(CANONICAL_PADDLE_OCR
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../samples/vision/paddle_ocr/runtime/cpp")
+add_subdirectory("${CANONICAL_PADDLE_OCR}" canonical_paddle_ocr)
 
-include_directories(
-    /usr/hobot/include
-    /usr/include/hobot/dnn
-    /usr/include/hobot
-    ../../../../../utils/c_utils/inc
-    inc/
-)
-
-link_directories(/usr/hobot/lib)
-
-add_executable(paddle_ocr
-    src/main.cpp
-    src/paddle_ocr.cpp
-    ../../../../../utils/c_utils/src/file_io.cpp
-    ../../../../../utils/c_utils/src/preprocess.cpp
-    ../../../../../utils/c_utils/src/postprocess.cpp
-    ../../../../../utils/c_utils/src/visualize.cpp
-)
-
-find_package(OpenCV REQUIRED)
-find_package(PkgConfig REQUIRED)
-find_library(CLIPPER_LIBRARY NAMES polyclipping)
-find_package(Freetype REQUIRED)
-
-SET(LINK_libs dnn hbucp gflags ${OpenCV_LIBS} ${FREETYPE_LIBRARIES})
-target_include_directories(paddle_ocr PRIVATE ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(paddle_ocr ${LINK_libs} ${CLIPPER_LIBRARY})
+# Older instructions expect <old-build>/paddle_ocr after `cmake ..`.
+set_target_properties(paddle_ocr PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")

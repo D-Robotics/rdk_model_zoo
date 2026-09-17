@@ -1,0 +1,55 @@
+{"archive_sha256": "89b93d6ec452742b26b53019e5f928bff57bbc82e570715da9112aa042b325d4", "detected_target": "s100", "started": "2026-09-16T11:54:46.224303+00:00"}
+COMPILE_PASS
+[UCP]: log level = 3
+[UCP]: UCP version = 3.13.6
+[VP]: log level = 3
+[DNN]: log level = 3
+[HPL]: log level = 3
+[UCPT]: log level = 6
+[BPU][[BPU_MONITOR]][281473694631616][INFO]BPULib verison(2, 2, 15)[f21ee84]!
+[DNN]: 3.13.6_(4.7.5 HBRT)
+
+STDERR:
+Traceback (most recent call last):
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/tensor_io.py", line 57, in normalize_dtype
+    return np.dtype(value)
+TypeError: Cannot interpret '<hbDNNDataType.F32: 7>' as a data type
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/tensor_io.py", line 75, in normalize_dtype
+    return np.dtype(aliases.get(text, text))
+TypeError: data type 'f32' not understood
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/model_runner.py", line 135, in from_selection
+    metadata = RuntimeMetadata.from_runtime(model)
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/model_binding.py", line 532, in from_runtime
+    return cls(model_name=str(model_name), input_names=input_names,
+  File "<string>", line 11, in __init__
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/model_binding.py", line 486, in __post_init__
+    object.__setattr__(self, "output_dtypes", {
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/model_binding.py", line 487, in <dictcomp>
+    str(name): normalize_dtype(value)
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/tensor_io.py", line 77, in normalize_dtype
+    raise TensorContractError(f"Unsupported tensor dtype {value!r}.") from exc
+samples.vision.ultralytics_yolo.runtime.python.tensor_io.TensorContractError: Unsupported tensor dtype <hbDNNDataType.F32: 7>.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<stdin>", line 28, in <module>
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/yolo_detect.py", line 141, in __init__
+    self.runner = build_runner(config) if runner is None else runner
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/model_runner.py", line 191, in build_runner
+    return ModelRunner.from_config(selection, runtime_loader)
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/model_runner.py", line 148, in from_config
+    return cls.from_selection(_selection_from_config(config), runtime_loader)
+  File "/tmp/rdk-model-zoo-20260916-contract-pilot/current-89b93d6ec452/samples/vision/ultralytics_yolo/runtime/python/model_runner.py", line 137, in from_selection
+    raise RunnerError(f"Runtime metadata is not readable: {exc}") from exc
+samples.vision.ultralytics_yolo.runtime.python.model_runner.RunnerError: Runtime metadata is not readable: Unsupported tensor dtype <hbDNNDataType.F32: 7>.
+
+EXIT_STATUS=1

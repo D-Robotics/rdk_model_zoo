@@ -40,40 +40,10 @@ import numpy as np
 
 
 def bgr_to_nv12_planes(image: np.ndarray) -> tuple:
-    """Convert a BGR image to NV12 format (Y and UV planes).
+    """Use the shared I420-to-NV12 conversion; preserve this entry's checks."""
+    from samples._shared.image import bgr_to_nv12_planes as convert
 
-    This function converts a BGR image into NV12 format by first transforming
-    it into planar YUV420 (I420) format and then interleaving the U and V
-    planes to form the UV plane.
-
-    Args:
-        image: Input BGR image as a NumPy array with shape `(H, W, 3)`.
-
-    Returns:
-        A tuple containing:
-            - y: Y plane with shape `(1, H, W, 1)`.
-            - uv: UV plane with shape `(1, H/2, W/2, 2)`.
-    """
-    height, width = image.shape[:2]
-    area = height * width
-
-    # Convert to planar YUV I420 format
-    yuv420p = cv2.cvtColor(image, cv2.COLOR_BGR2YUV_I420)
-    yuv420p = yuv420p.reshape((area * 3 // 2,))
-
-    # Extract Y, U, V planes
-    y = yuv420p[:area].reshape((height, width))
-    u = yuv420p[area:area + area // 4].reshape((height // 2, width // 2))
-    v = yuv420p[area + area // 4:].reshape((height // 2, width // 2))
-
-    # Interleave U and V to form UV plane
-    uv = np.stack((u, v), axis=-1)
-
-    # Add batch and channel dimensions
-    y = y[np.newaxis, :, :, np.newaxis]
-    uv = uv[np.newaxis, :, :, :]
-
-    return y, uv
+    return convert(image)
 
 
 def resized_image(img: np.ndarray, input_W: int, input_H: int,

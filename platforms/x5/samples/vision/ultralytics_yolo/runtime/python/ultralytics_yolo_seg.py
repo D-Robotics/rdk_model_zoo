@@ -71,6 +71,9 @@ def _find_sample_root() -> str:
 
 
 _SAMPLE_PYTHON = os.path.join(_find_sample_root(), "runtime", "python")
+_REPOSITORY_ROOT = os.path.abspath(os.path.join(_SAMPLE_PYTHON, "../../../../.."))
+if _REPOSITORY_ROOT not in sys.path:
+    sys.path.insert(0, _REPOSITORY_ROOT)
 if _SAMPLE_PYTHON not in sys.path:
     sys.path.insert(0, _SAMPLE_PYTHON)
 

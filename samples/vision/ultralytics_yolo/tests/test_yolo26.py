@@ -32,10 +32,18 @@ class Yolo26Contracts(unittest.TestCase):
                     outputs={'logits':(1,1000)} if task=='cls' else {f'{g}-{c}':(1,g,g,c) for g in (2,8,4) for c in reversed(channels[task])}
                     if task=='seg':outputs['proto']=(1,16,16,32)
                     model=types.SimpleNamespace(model_names=['m'],input_names={'m':names},input_shapes={'m':shapes},
-                        output_names={'m':list(outputs)},output_shapes={'m':outputs})
+                        input_dtypes={'m':{name:'NV12' if platform=='x5' else 'U8' for name in names}},
+                        output_names={'m':list(outputs)},output_shapes={'m':outputs},
+                        output_dtypes={'m':{name:'F32' for name in outputs}})
                     Model,Config=get_task_types(profile,'yolo26',task)
-                    with patch('yolo_runtime.load_hbm_runtime',return_value=types.SimpleNamespace(HB_HBMRuntime=lambda _:model)):
-                        runtime=Model(Config('stub',platform=profile))
+                    sdk=types.SimpleNamespace(HB_HBMRuntime=lambda _:model)
+                    if task=='detect':
+                        # The detector's explicit host seam still exercises
+                        # full metadata binding; it does not claim a host board.
+                        runtime=Model(Config('stub',platform=profile),runtime_loader=lambda:sdk)
+                    else:
+                        with patch('yolo_runtime.load_hbm_runtime',return_value=sdk):
+                            runtime=Model(Config('stub',platform=profile))
                     bound=runtime.pre_process(np.zeros((32,48,3),np.uint8))['m']
                     self.assertEqual(list(bound),names)
                     self.assertEqual(sum(t.size for t in bound.values()),height*height*3//2)

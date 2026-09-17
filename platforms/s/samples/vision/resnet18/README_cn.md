@@ -2,6 +2,11 @@
 
 # ResNet18 模型说明
 
+本 S18 旧路径继续服务现有应用。Python 类、命令、模型下载器和 C++ 配置路径
+都是维护中的[统一 ResNet18 sample](../../../../../samples/vision/resnet/README_cn.md)
+的兼容入口。统一目录维护实现和共享工具；本路径保留旧的 Y/UV 分离 API 以及
+S100/S600 默认模型目录。运行任一兼容命令前请显式准备模型。
+
 ResNet18 是 RDK Model Zoo 的 ImageNet 分类 sample，已支持 RDK S100 与 RDK S600。
 本目录提供 sample 内模型下载、Python 和 C++ runtime、保留的原始文档资产以及验证说明。
 
@@ -76,6 +81,7 @@ Python：
 
 ```bash
 cd runtime/python
+bash ../../model/download_model.sh s100
 bash run.sh
 ```
 

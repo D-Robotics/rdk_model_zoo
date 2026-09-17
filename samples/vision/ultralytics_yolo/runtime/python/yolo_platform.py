@@ -230,11 +230,8 @@ def detect_host_platform() -> Optional[str]:
         A canonical platform name, or `None` when no supported board is
         detected. An unknown SoC returns `None` and never a fallback.
     """
-    soc_name = read_board_info(SOC_NAME_PATH)
-    if soc_name is None:
-        return None
-    board_type = read_board_info(BOARD_TYPE_PATH)
-    return match_platform(soc_name, board_type)
+    from samples._shared.platforms import detect_target
+    return detect_target()
 
 
 def match_platform(soc_name: str, board_type: Optional[str] = None) -> Optional[str]:
@@ -249,17 +246,8 @@ def match_platform(soc_name: str, board_type: Optional[str] = None) -> Optional[
     Returns:
         A canonical platform name, or `None` when the SoC is not supported.
     """
-    soc = (soc_name or "").strip().lower()
-    if not soc:
-        return None
-    if soc == "s100" and (board_type or "").strip().lower() in ("s100p", "rdk s100p"):
-        return "s100p"
-    for profile in PLATFORMS.values():
-        if soc in profile.soc_names:
-            return profile.key
-    # Only the S series publishes an ambiguous SoC name that a board type can
-    # refine; the refinement never crosses SoC boundaries.
-    return None
+    from samples._shared.platforms import match_target
+    return match_target(soc_name, board_type)
 
 
 def resolve_platform(platform: Optional[str] = None,

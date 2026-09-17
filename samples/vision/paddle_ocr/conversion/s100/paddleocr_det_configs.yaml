@@ -1,0 +1,38 @@
+# Copyright (c) 2021-2026 D-Robotics Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# S100 PP-OCRv6 detector.  Keep the trailing Dequantize node in the ONNX
+# graph: the audited S100 artifact exposes an F32 probability map at
+# fetch_name_0.  Removing it changes the output contract and is unsupported by
+# the canonical Python and C++ post-processing paths.
+model_parameters:
+  onnx_model: '../onnx/model_detv6.onnx'
+  march: 'nash-e'
+  layer_out_dump: False
+  working_dir: 'model_output'
+  output_model_file_prefix: 'PP-OCRv6_det_infer-deploy_640x640_nv12'
+
+input_parameters:
+  input_name: 'x'
+  input_type_rt: 'nv12'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW'
+  input_shape: '1x3x640x640'
+  norm_type: 'data_mean_and_scale'
+  mean_value: 123.675 116.28 103.53
+  scale_value: 0.01712475 0.017507 0.01742919
+
+calibration_parameters:
+  cal_data_dir: './../calibration_data'
+  cal_data_type: 'float32'
+  calibration_type: 'default'
+
+compiler_parameters:
+  compile_mode: 'latency'
+  debug: False
+  optimize_level: 'O2'

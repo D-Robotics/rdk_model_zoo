@@ -1,87 +1,109 @@
-# Copyright (c) 2025 D-Robotics Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""Compatibility command for the historical S-series ResNet18 sample.
 
-"""ResNet18 image classification command line sample.
-
-The entry script parses arguments, loads the test image and labels, builds a
-configuration object, runs ``predict()``, and prints Top-K ImageNet results.
+The canonical entrypoint owns argument parsing and execution.  This shim
+supplies the old sample's defaults and maps its documented S100/S600 model
+directories to exact manifest references.  An arbitrary custom model path
+uses the shared board identity when no target is supplied; an explicit
+canonical ``--asset-id`` remains available when selecting a particular
+manifest artifact. Chip and tensor protocol are never inferred from a
+filename.
 """
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 import sys
-import argparse
-import numpy as np
-from typing import Dict
-
-sys.path.append(os.path.abspath("../../../../../"))
-import utils.py_utils.file_io as file_io
-import utils.py_utils.inspect as inspect
-import utils.py_utils.visualize as visualize
-from resnet18 import Resnet18Config, Resnet18
 
 
-def main() -> None:
-    """Run a ResNet18 image classification demo.
+def _repository_root() -> Path:
+    for candidate in Path(__file__).resolve().parents:
+        if (candidate / "samples/vision/resnet/runtime/python/main.py").is_file():
+            return candidate
+    raise RuntimeError("Could not locate the canonical ResNet18 entrypoint.")
 
-    Returns:
-        None
-    """
-    parser = argparse.ArgumentParser()
 
-    parser.add_argument('--model-path', type=str,
-                        default="../../model/s100/resnet18_224x224_nv12.hbm",
-                        help="Path to the compiled HBM model.")
-    parser.add_argument('--priority', type=int, default=0,
-                        help="Model priority (0~255). 0 is lowest, 255 is highest.")
-    parser.add_argument('--bpu-cores', nargs='+', type=int, default=[0],
-                        help="BPU core indexes to run. Provide a list of integers (e.g., --bpu-cores 0 1).")
-    parser.add_argument('--test-img', type=str,
-                        default='../../test_data/zebra_cls.jpg',
-                        help='Path to load the test image.')
-    parser.add_argument('--label-file', type=str,
-                        default='../../../../../datasets/imagenet/imagenet_classes.names',
-                        help='Path to load ImageNet label mapping file.')
-    parser.add_argument('--top-k', type=int, default=5,
-                        help='Number of classification results to print.')
+_ROOT = _repository_root()
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
-    opt = parser.parse_args()
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_OLD_SAMPLE = _SCRIPT_DIR.parents[1]
+_PLATFORM_ROOT = _SCRIPT_DIR.parents[4]
+_DEFAULT_MODEL = _OLD_SAMPLE / "model" / "s100" / "resnet18_224x224_nv12.hbm"
+_DEFAULT_IMAGE = _OLD_SAMPLE / "test_data" / "zebra_cls.jpg"
+_DEFAULT_LABELS = _PLATFORM_ROOT / "datasets" / "imagenet" / "imagenet_classes.names"
 
-    # Init config parameter
-    config = Resnet18Config(
-        model_path=opt.model_path
+
+def _has_option(arguments: list[str], *names: str) -> bool:
+    return any(
+        value == name or value.startswith(name + "=")
+        for value in arguments
+        for name in names
     )
 
-    # Load label mapping if available
-    idx2label: Dict[int, str] = {}
-    if os.path.exists(opt.label_file):
-        idx2label = file_io.load_labels(opt.label_file)
 
-    # Initialize ResNet18 model instance
-    resnet18 = Resnet18(config)
+def _option_value(arguments: list[str], name: str) -> str | None:
+    for index, value in enumerate(arguments):
+        if value == name and index + 1 < len(arguments):
+            return arguments[index + 1]
+        if value.startswith(name + "="):
+            return value.split("=", 1)[1]
+    return None
 
-    # Set runtime scheduling parameters
-    resnet18.set_scheduling_params(priority=opt.priority, bpu_cores=opt.bpu_cores)
 
-    # Print model information (e.g., input/output names, shape)
-    inspect.print_model_info(resnet18.model)
+def _known_target(model_path: str) -> str | None:
+    parts = {part.lower() for part in Path(model_path).expanduser().parts}
+    if "s600" in parts:
+        return "s600"
+    if "s100" in parts:
+        return "s100"
+    return None
 
-    img: np.ndarray = file_io.load_image(opt.test_img)
 
-    cls_results = resnet18.predict(img, topk=opt.top_k)
+def main(argv: list[str] | None = None) -> int:
+    """Run the canonical entrypoint with historical S-series defaults."""
 
-    visualize.print_classification_results(cls_results, idx2label)
+    from samples.vision.resnet.runtime.python.main import main as canonical_main
+
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    model_path = _option_value(arguments, "--model-path")
+    if model_path is None:
+        model_path = str(_DEFAULT_MODEL)
+        arguments.extend(["--model-path", model_path])
+
+    explicit_target = _option_value(arguments, "--target")
+    target = explicit_target or _known_target(model_path)
+    inspection = any(
+        value in ("--help", "-h", "--list-models", "--dry-run")
+        for value in arguments
+    )
+    if target in (None, "auto") and not inspection:
+        # The old S18 command had no target flag. Resolve that omission from
+        # the shared board identity for custom paths; never use a filename as
+        # chip evidence. Leave the canonical error visible if identity is
+        # unavailable on a host.
+        try:
+            from samples._shared.platforms import resolve_target
+
+            detected = resolve_target("auto")
+        except ValueError:
+            detected = None
+        if detected in ("s100", "s600"):
+            target = detected
+    if not _has_option(arguments, "--target") and target is not None:
+        arguments.extend(["--target", target])
+
+    if not _has_option(arguments, "--asset-id") and target in ("s100", "s600"):
+        arguments.extend([
+            "--asset-id",
+            f"s:resnet18:{target}/resnet18_224x224_nv12.hbm",
+        ])
+    if not _has_option(arguments, "--test-img"):
+        arguments.extend(["--test-img", str(_DEFAULT_IMAGE)])
+    if not _has_option(arguments, "--label-file"):
+        arguments.extend(["--label-file", str(_DEFAULT_LABELS)])
+    return canonical_main(arguments)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

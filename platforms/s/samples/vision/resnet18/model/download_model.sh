@@ -1,32 +1,18 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 SOC="${1:-s100}"
-
-# Supported SoC -> model directory (also doubles as URL sub-path).
-#   s100 -> rdk_s100/ResNet
-#   s600 -> rdk_s600/ResNet
 case "$SOC" in
   s100|s600) ;;
   *)
-    echo "Unsupported SoC: $SOC"
-    echo "Available: s100, s600"
+    echo "Unsupported SoC: $SOC" >&2
+    echo "Available: s100, s600" >&2
     exit 1
     ;;
 esac
 
-MODEL_DIR="./${SOC}"
-MODEL_NAME="resnet18_224x224_nv12"
-MODEL_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_${SOC}/ResNet/${MODEL_NAME}.hbm"
-MODEL_PATH="${MODEL_DIR}/${MODEL_NAME}.hbm"
-
-mkdir -p "$MODEL_DIR"
-
-if [[ -f "$MODEL_PATH" ]]; then
-  echo "${MODEL_PATH} already exists, skip"
-  exit 0
-fi
-
-echo "Downloading ${MODEL_NAME}.hbm for ${SOC}..."
-wget -c "$MODEL_URL" -O "$MODEL_PATH"
-echo "Downloaded to ${MODEL_PATH}"
+# The canonical downloader owns the manifest lookup and atomic download. This
+# compatibility path keeps the historical S100/S600 argument and directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CANONICAL="$(cd "$SCRIPT_DIR/../../../../../../samples/vision/resnet/model" && pwd)"
+exec python3 "$CANONICAL/download.py" --target "$SOC" --output-dir "$SCRIPT_DIR"

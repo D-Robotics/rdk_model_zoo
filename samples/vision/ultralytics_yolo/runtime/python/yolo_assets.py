@@ -20,7 +20,7 @@ the filename suffix encodes the march, and the S series stores artifacts in a
 per-march sub-directory. This module derives names from the platform profile
 and refuses to produce a name that the platform does not publish.
 
-Nothing here downloads anything; URL construction is separated from I/O so the
+Nothing here downloads anything; Manifest resolution is separated from I/O so the
 downloader can run as a dry run on a host without board runtime.
 
 Typical Usage:
@@ -35,7 +35,6 @@ from typing import Dict, List, Optional, Tuple
 
 from yolo_platform import (
     PlatformProfile,
-    model_base_url,
     model_directory,
 )
 
@@ -344,11 +343,28 @@ def model_url(profile: PlatformProfile,
     Raises:
         UnsupportedAssetError: If the platform publishes no such asset.
     """
+    asset = manifest_asset(profile, family, task, size)
+    if not asset.url:
+        raise UnsupportedAssetError(f'No download URL recorded for {asset.reference}.')
+    return asset.url
+
+
+def manifest_asset(profile: PlatformProfile, family: str, task: str,
+                   size: Optional[str] = None):
+    """Read the published record selected by the existing finite family policy.
+
+    Filenames remain compatibility selections; URLs and publisher hashes have
+    one authority in the existing platform manifest.
+    """
+    from samples._shared.assets import resolve_asset
     filename = model_filename(profile, family, task, size)
-    base = model_base_url(profile)
-    if family == "yolo26" and profile.family == "x5":
-        base = base.rsplit("/",1)[0] + "/Ultralytics_YOLO_OE_1.2.8"
-    return f"{base}/{filename}"
+    if profile.model_subdir:
+        filename = profile.model_subdir + '/' + filename
+    sample = 'ultralytics_yolo26' if family == 'yolo26' else 'ultralytics_yolo'
+    try:
+        return resolve_asset(f'{profile.family}:{sample}:{filename}')
+    except ValueError as exc:
+        raise UnsupportedAssetError(str(exc)) from exc
 
 
 def model_path(model_root: str,

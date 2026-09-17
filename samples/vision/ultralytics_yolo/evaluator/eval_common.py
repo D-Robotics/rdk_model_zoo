@@ -27,6 +27,7 @@ Both original evaluator CLIs use NMS=0.70; runtime CLI defaults are separate.
 import argparse
 import os
 import sys
+from pathlib import Path
 from typing import Optional, Tuple
 
 #: Image file suffixes the evaluators process.
@@ -46,6 +47,12 @@ _RUNTIME_DIR = os.path.abspath(os.path.join(_EVALUATOR_DIR, os.pardir,
                                             "runtime", "python"))
 if _RUNTIME_DIR not in sys.path:
     sys.path.insert(0, _RUNTIME_DIR)
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
+    raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
+if str(_REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPOSITORY_ROOT))
 
 from yolo_platform import (  # noqa: E402  (path is set up above)
     PlatformProfile,

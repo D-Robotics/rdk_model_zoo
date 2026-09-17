@@ -2,6 +2,13 @@ English | [简体中文](./README_cn.md)
 
 # ResNet18 Model Description
 
+This historical S18 path remains available to existing applications. Its
+Python classes, command, model downloader, and C++ configure path are
+compatibility entrypoints for the maintained [canonical ResNet18 sample](../../../../../samples/vision/resnet/README.md).
+The canonical tree owns the implementation and shared utilities; this path
+preserves the old split-Y/UV API and default S100/S600 model directories.
+Prepare the model explicitly before running either compatibility command.
+
 ResNet18 is an ImageNet classification sample for the RDK Model Zoo. It targets
 RDK S100 and RDK S600, providing sample-local model download, Python and C++
 runtime examples, preserved original documentation assets, and validation notes.
@@ -78,6 +85,7 @@ Python:
 
 ```bash
 cd runtime/python
+bash ../../model/download_model.sh s100
 bash run.sh
 ```
 

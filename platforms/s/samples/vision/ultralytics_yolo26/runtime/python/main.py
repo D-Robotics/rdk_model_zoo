@@ -5,6 +5,7 @@ _HERE=Path(__file__).resolve()
 _ROOT=next((p for p in _HERE.parents if (p/'samples/vision/ultralytics_yolo/runtime/python/yolo_dispatch.py').is_file()),None)
 if _ROOT is None:raise ImportError('Complete repository checkout with the shared Ultralytics sample is required.')
 _SAMPLE=_ROOT/'samples/vision/ultralytics_yolo'
+sys.path.insert(0,str(_ROOT))
 sys.path.insert(0,str(_SAMPLE/'runtime/python'))
 def _has(args,key):return any(a==key or a.startswith(key+'=') for a in args)
 

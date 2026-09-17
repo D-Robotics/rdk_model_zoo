@@ -1,57 +1,18 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-# 1. Environment Setup
-PKGS=(
-  libgflags-dev
-)
+# Preserve the historical launcher path while delegating build/run behavior to
+# the canonical S18 source. No apt, pip, or model download is performed here.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CANONICAL="$(cd "$SCRIPT_DIR/../../../../../../../samples/vision/resnet/runtime/cpp" && pwd)"
+OLD_SAMPLE="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PLATFORM_ROOT="$(cd "$SCRIPT_DIR/../../../../../" && pwd)"
 
-need_update=false
+MODEL_PATH="${MODEL_PATH:-$OLD_SAMPLE/model/s100/resnet18_224x224_nv12.hbm}"
+TEST_IMAGE="${TEST_IMAGE:-$OLD_SAMPLE/test_data/zebra_cls.jpg}"
+LABEL_FILE="${LABEL_FILE:-$PLATFORM_ROOT/datasets/imagenet/imagenet_classes.names}"
 
-# Check if there are any missing packages
-for pkg in "${PKGS[@]}"; do
-  if ! dpkg -s "$pkg" >/dev/null 2>&1; then
-    need_update=true
-    break
-  fi
-done
-
-# Only update apt index if there are packages to install
-if $need_update; then
-  echo "Running apt update (packages missing)"
-  sudo apt update
-fi
-
-# Install missing packages
-for pkg in "${PKGS[@]}"; do
-  if dpkg -s "$pkg" >/dev/null 2>&1; then
-    echo "$pkg already installed"
-  else
-    echo "Installing $pkg"
-    sudo apt install -y "$pkg"
-  fi
-done
-
-# 2. Model Download
-MODEL_PATH="../../model/s100/resnet18_224x224_nv12.hbm"
-
-echo "Model path : $MODEL_PATH"
-
-if [[ ! -f "$MODEL_PATH" ]]; then
-  echo "Model not found, downloading to sample-local model directory..."
-  (cd ../../model && bash download_model.sh s100)
-else
-  echo "Model already exists, skip download"
-fi
-
-# 3. Model Compilation
-mkdir -p build && cd build
-cmake ..
-make -j$(nproc)
-
-# 4. Quick Run
-./resnet18 \
-  --model_path ../../../model/s100/resnet18_224x224_nv12.hbm \
-  --test_img   ../../../test_data/zebra_cls.jpg \
-  --label_file ../../../../../../datasets/imagenet/imagenet_classes.names \
-  --top_k 5
+MODEL_PATH="$MODEL_PATH" \
+TEST_IMAGE="$TEST_IMAGE" \
+LABEL_FILE="$LABEL_FILE" \
+exec bash "$CANONICAL/run.sh" "$@"

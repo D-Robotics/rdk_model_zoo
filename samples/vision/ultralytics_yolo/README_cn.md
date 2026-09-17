@@ -1,5 +1,15 @@
 # Ultralytics YOLO：X5 / S 共用 Sample
 
+`--target` 与 `--platform` 等价，均可用 `auto`。主机上的列表、dry-run 和 `--download` 可以显式选择目标；实际推理在下载或加载模型前校验本机身份，拒绝未知硬件或目标不匹配。身份别名来自[共用注册表](../../../docs/release/platforms.json)，不代表制品支持或实测结论。本历史入口仍保留默认模型缺失时下载的兼容行为。
+
+模型准备和列表额外依赖 PyYAML，直接读取已有平台 Manifest。`--list-models` 显示可传给 `--asset-id` 的精确 `group:sample:filename` 引用，限定既有身份而不更名，也不代表实机通过。例如：
+
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py --target x5 --task detect --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
+```
+
+下载地址和发布摘要来自该 Manifest。显式准备使用临时文件，有发布摘要时核对后才完成；本地观测摘要不能替代缺失的发布摘要。
+
 [English](README.md)
 
 同一个 Sample、同一个 Python 入口，通过 `--platform x5|s100|s100p|s600` 选择目标。本轮从 X5/S 合并 YOLOv8 的检测、分割、姿态、分类，同时保留本 Sample 中 YOLOv5u、YOLOv9、YOLOv10、YOLO11、YOLO12 及 X5 YOLOv13 的已有模型组合。YOLO26 已接入同一个入口，覆盖 detect / cls / seg / pose / obb。YOLOE、独立 YOLOv5 和 yolo26_depth 暂不改动。
@@ -9,6 +19,7 @@ ultralytics_yolo/
 ├── conversion/           # 共用导出补丁；mapper.py 选择 X5/S 工具链
 │   ├── export_monkey_patch.py
 │   ├── mapper.py
+│   ├── workflow.py       # 共用 ONNX 检查、标定、配置和制品流程
 │   ├── mapper_x5.py      # hb_mapper，原始 float32 rgbchw 标定
 │   └── mapper_s.py       # hb_compile，归一化 npy 标定
 ├── evaluator/            # 共用 COCO / ImageNet 评测入口
@@ -40,7 +51,9 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s100 --
 | YOLOv10 运行路径 | DFL + NMS，保留原实现 | DFL 解码后不做 NMS |
 | C++ | X5 参考实现 | 本 Sample 未提供 |
 
-分类文件名是发布资产的名称，不能替代二进制输入形状检查。运行时从模型元数据读取尺寸，校验 batch=1、正偶数方形尺寸及输入协议；不明确的 flat 输入需要显式 `--input-shape HxW`，与元数据冲突会报错。DFL 检测类暂限三个特征层、reg=16；YOLO26 使用 stride 8/16/32 的四通道 LTRB；姿态暂限 17 点。这里只验证了主机逻辑，尚未执行真实板卡推理或编译工具链回归。
+分类文件名是发布资产的名称，不能替代二进制输入形状检查。运行时从模型元数据读取尺寸，校验 batch=1、正偶数方形尺寸及输入协议；不明确的 flat 输入需要显式 `--input-shape HxW`，与元数据冲突会报错。DFL 检测类暂限三个特征层、reg=16；YOLO26 使用 stride 8/16/32 的四通道 LTRB；姿态暂限 17 点。
+
+YOLOv8n DFL 与 YOLO26n 直接 LTRB 检测已在 X5 8GB/4GB、S100、S100P、S600 通过固定输入旧新对照，检测任务支持注入可替换 runner。详见[契约](DETECTION_CONTRACT.md)、[P1 证据](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md)和 [P2 证据](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md)。这不代表其他尺寸/任务、完整数据集精度、性能或真实编译工具链已验证。
 
 Python 主机检查需要 NumPy、OpenCV、SciPy；实际推理需要板卡系统提供的 `hbm_runtime`，脚本不会静默安装依赖。`--help`、`--dry-run`、下载列表不加载板卡运行时。显式 `--model-path` 不会自动下载文件；可识别的文件名会选择模型家族，自定义名称请同时指定 `--family`。
 

@@ -1,15 +1,8 @@
-#!/bin/bash
-# Copyright (c) 2025 D-Robotics Corporation
-# Standard ResNet18 Download Script
+#!/usr/bin/env bash
+set -euo pipefail
 
-MODEL_NAME="resnet18_224x224_nv12.bin"
-DOWNLOAD_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/resnet18_224x224_nv12.bin"
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-if [ -f "$DIR/$MODEL_NAME" ]; then
-    echo "Model $MODEL_NAME already exists in $DIR. Skipping download."
-else
-    echo "Downloading $MODEL_NAME to $DIR..."
-    wget -c "$DOWNLOAD_URL" -P "$DIR"
-fi
+# Keep the historical command path, but let the canonical downloader read the
+# published URL/format/hash from platforms/x5/docs/release/models.yaml.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CANONICAL="$(cd "$SCRIPT_DIR/../../../../../../samples/vision/resnet/model" && pwd)"
+exec python3 "$CANONICAL/download.py" --target x5 --output-dir "$SCRIPT_DIR"

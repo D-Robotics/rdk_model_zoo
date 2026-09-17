@@ -13,6 +13,13 @@ import os
 import shutil
 import argparse
 
+try:
+    from workflow import export_defaults
+except ImportError:
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    from workflow import export_defaults
+
 def main():
     """Main entry point for detection model export."""
     parser = argparse.ArgumentParser(description='YOLO26 Detect Export Script')
@@ -22,8 +29,17 @@ def main():
     parser.add_argument('--platform', choices=['x5', 's100', 's100p', 's600'], default='x5')
     parser.add_argument('--opset', '--optse', type=int, default=None)
     parser.add_argument('--simplify', type=int, choices=[0, 1], default=None)
+    parser.add_argument('--require-local', action='store_true',
+                        help='fail unless --weights already exists locally')
     args = parser.parse_args()
-    export_bpu_onnx(args.weights, args.output, args.imgsz, opset=args.opset if args.opset is not None else 11 if args.platform == 'x5' else 19, simplify=bool(args.simplify) if args.simplify is not None else args.platform == 'x5')
+    if args.require_local and not os.path.isfile(args.weights):
+        parser.error(f'checkpoint does not exist locally: {args.weights}')
+    default_opset, default_simplify = export_defaults(args.platform, 'yolo26')
+    export_bpu_onnx(
+        args.weights, args.output, args.imgsz,
+        opset=args.opset if args.opset is not None else default_opset,
+        simplify=bool(args.simplify) if args.simplify is not None else default_simplify,
+    )
 
 def bpu_detect_forward(self, x):
     """Modified forward method for YOLO26 Detect Head (BPU-Optimized).

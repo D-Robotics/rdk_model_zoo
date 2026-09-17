@@ -17,20 +17,16 @@
 """Single entry point for the two Ultralytics YOLO conversion toolchains.
 
 RDK X5 and the RDK S series do not share a compiler. X5 compiles with
-`hb_mapper makertbin` and consumes raw float32 `.rgbchw` calibration data; the
-S series compiles with `hb_compile` and consumes `/255`-normalized `.npy`
-calibration data, with `quant_config` and `no_padding` extras. The two
-implementations therefore stay separate:
+``hb_mapper makertbin`` and consumes raw float32 ``.rgbchw`` calibration data;
+the S series compiles with ``hb_compile`` and consumes ``/255``-normalized
+``.npy`` calibration data, with ``quant_config`` and ``no_padding`` extras.
+Those protocol differences are represented once in ``conversion/workflow.py``
+and selected here. The generic and YOLO26 mapper paths are thin adapters over
+that workflow, so a calibration or artifact-path fix reaches both families
+without copying a second full implementation.
 
-    mapper_x5.py   X5 workflow, unchanged
-    mapper_s.py    S workflow, unchanged
-
-This module only selects between them from one `--platform` argument, and it
-translates the platform into the matching `--march` for the S workflow. It
-never merges the two calibration or quantization conventions.
-
-The converter runs in the OpenExplore container, not on the board, and it never
-installs packages: a missing dependency is reported instead.
+The converter runs in the OpenExplore container, not on the board, and it
+never installs packages: a missing dependency is reported instead.
 
 Examples:
     python mapper.py --platform x5   --onnx ./yolo11n.onnx --cal-images ./cal_images
@@ -198,10 +194,13 @@ def main(argv=None) -> int:
     saved = sys.argv
     sys.argv = [module_name] + forwarded
     try:
-        module.main()
+        result = module.main()
     finally:
         sys.argv = saved
-    return 0
+    # Mapper adapters return an integer status. Treat a legacy adapter that
+    # returns None as success while preserving failures from the maintained
+    # shared workflow.
+    return 0 if result is None else int(result)
 
 
 if __name__ == "__main__":

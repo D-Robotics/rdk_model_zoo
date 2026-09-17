@@ -1,4 +1,4 @@
-# Copyright (c) 2025 D-Robotics Corporation
+# Copyright (c) 2026 D-Robotics Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,83 +12,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# flake8: noqa: E501
-# flake8: noqa: E402
+"""Reusable YOLO DFL detection task.
 
-"""Provide a YOLO DFL-based detection inference wrapper and pipeline utilities.
-
-This module defines a lightweight YOLO detection runtime wrapper built on
-HBM runtime. It supports DFL-based (Distribution Focal Loss) detection models
-including YOLOv5u, YOLOv8, YOLO11, and YOLO12, which share the same
-anchor-free box decoding logic.
-
-Key Features:
-    - YoloDetectConfig dataclass for configuring model parameters.
-    - YoloDetect class providing pre_process, forward, post_process, predict,
-      and __call__ methods.
-    - Anchor-free box decoding via DFL regression outputs.
-    - Class-wise Non-Maximum Suppression (NMS).
-
-Typical Usage:
-    >>> from yolo_detect import YoloDetect, YoloDetectConfig
-    >>> cfg = YoloDetectConfig(model_path="/path/to/yolo11n_detect.hbm")
-    >>> model = YoloDetect(cfg)
-    >>> boxes, scores, cls_ids = model(img)
-
-Notes:
-    - Requires hbm_runtime to be installed in the deployment environment.
-    - Input images are expected in BGR format by default.
-    - The detection head uses anchor-free, DFL regression. Each detection
-      scale emits a paired classification output and a box distribution
-      output (4 * reg values per prediction).
+The task owns image geometry, decoding and the public result.  A
+``ModelRunner`` (or any compatible callable) owns model execution and may be
+injected for host tests or another supported runtime.  The legacy constructor
+still builds a runner from ``YoloDetectConfig`` when one is not injected.
 """
 
-import os
-import sys
-import numpy as np
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Tuple
+from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Tuple
 
-# Make the sample-local helper modules importable regardless of the working
-# directory the sample is started from.
-_PYTHON_DIR = os.path.dirname(os.path.abspath(__file__))
-if _PYTHON_DIR not in sys.path:
-    sys.path.insert(0, _PYTHON_DIR)
+import numpy as np
 
-from rdk_yolo_utils import preprocess as pre_utils
-from rdk_yolo_utils import postprocess as post_utils
-from yolo_platform import PlatformProfile
-from yolo_runtime import open_model, require_dfl_bins, require_square_grid
+# The repository-root bootstrap belongs to the entrypoints.  Keeping the
+# algorithm package-qualified avoids collisions with another sample's
+# ``model_runner`` or ``tensor_io`` module when a compatibility wrapper imports
+# this task from an arbitrary working directory.
+from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils import preprocess as pre_utils
+from samples.vision.ultralytics_yolo.runtime.python.decode import decode_dfl
+from samples.vision.ultralytics_yolo.runtime.python.geometry import (
+    ImageTransform,
+    inverse_boxes,
+    make_transform,
+    resize_with_transform,
+)
+from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+    BindingError,
+    DFLDetectionContract,
+    default_dfl_contract,
+)
+from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import PlatformProfile
+
+
+class DetectionResult(NamedTuple):
+    """Tuple-compatible public detector result."""
+
+    boxes_xyxy: np.ndarray
+    scores: np.ndarray
+    class_ids: np.ndarray
+
+    @property
+    def boxes(self) -> np.ndarray:
+        return self.boxes_xyxy
+
+    @property
+    def cls_ids(self) -> np.ndarray:
+        return self.class_ids
 
 
 @dataclass
 class YoloDetectConfig:
-    """Configuration for initializing the YoloDetect model.
+    """Configuration retained for the established detector entrypoints."""
 
-    This dataclass stores the model path and all runtime parameters required
-    for preprocessing, inference, and postprocessing in the YOLO detection
-    pipeline. It applies to all DFL-based YOLO detection models (v5u, v8,
-    v9, v11, and v12).
-
-    Attributes:
-        model_path: Path to the compiled YOLO detection model.
-        platform: Platform profile describing the input protocol. Required for
-            every operation that touches the model.
-        input_shape: Optional `(height, width)` override used when the runtime
-            does not report usable spatial metadata.
-        classes_num: Number of detection classes. Defaults to 80 (COCO).
-        resize_type: Image resize mode used during preprocessing.
-            - 0: Stretch resize.
-            - 1: Keep aspect ratio with letterbox padding.
-        score_thres: Minimum confidence threshold for filtering detections.
-        nms_thres: IoU threshold used for Non-Maximum Suppression. When
-            `None`, the platform's documented default is used.
-        reg: Number of DFL regression bins per bounding-box side. Defaults to 16.
-        strides: Feature map downsampling strides for each detection scale.
-        anchor_sizes: Feature map grid sizes for each detection scale. When
-            `None`, each grid is derived from the model input height and the
-            matching stride.
-    """
     model_path: str
     platform: Optional[PlatformProfile] = None
     input_shape: Optional[Tuple[int, int]] = None
@@ -99,267 +78,309 @@ class YoloDetectConfig:
     reg: int = 16
     strides: list = field(default_factory=lambda: [8, 16, 32])
     anchor_sizes: Optional[list] = None
+    contract: Optional[DFLDetectionContract] = None
+
+
+def _size_from_runner(runner: Any,
+                      config: YoloDetectConfig) -> Tuple[int, int]:
+    value = getattr(runner, "input_size", None)
+    if value is not None:
+        if len(value) != 2:
+            raise ValueError("runner.input_size must be (height, width).")
+        return int(value[0]), int(value[1])
+    height = getattr(runner, "input_height", None)
+    width = getattr(runner, "input_width", None)
+    if height is not None and width is not None:
+        return int(height), int(width)
+    if config.input_shape is not None:
+        return int(config.input_shape[0]), int(config.input_shape[1])
+    raise ValueError(
+        "The injected runner must expose input_size or input_height/input_width.")
+
+
+def _normalise_grids(anchor_sizes: Optional[Sequence[Any]],
+                     input_size: Tuple[int, int],
+                     strides: Sequence[int]) -> list:
+    expected = []
+    for stride in strides:
+        stride = int(stride)
+        if stride <= 0 or input_size[0] % stride or input_size[1] % stride:
+            raise ValueError(
+                f"Stride {stride} does not divide model input {input_size[0]}x{input_size[1]}.")
+        expected.append((input_size[0] // stride, input_size[1] // stride))
+    if anchor_sizes is None:
+        return expected
+    if len(anchor_sizes) != len(expected):
+        raise ValueError("anchor_sizes must contain one grid per stride.")
+    actual = []
+    for value in anchor_sizes:
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+            if len(value) != 2:
+                raise ValueError("Each rectangular anchor grid must be (height, width).")
+            actual.append((int(value[0]), int(value[1])))
+        else:
+            actual.append((int(value), int(value)))
+    if actual != expected:
+        raise ValueError(
+            f"anchor_sizes {actual} conflict with model input and strides {expected}.")
+    return actual
+
+
+def _build_input(runner: Any,
+                 input_adapter: Any,
+                 y_plane: np.ndarray,
+                 uv_plane: np.ndarray):
+    """Build one bound NV12 input through the selected runner."""
+    method = getattr(runner, "prepare_input", None)
+    if method is not None:
+        return method(y_plane, uv_plane)
+    if input_adapter is None:
+        raise BindingError("The injected runner has no input adapter.")
+    return input_adapter.build(y_plane, uv_plane)
+
+
+def _prepare_image(runner: Any,
+                   input_adapter: Any,
+                   input_size: Tuple[int, int],
+                   resize_type: int,
+                   img: np.ndarray,
+                   image_format: str) -> Tuple[Dict[str, Dict[str, np.ndarray]], ImageTransform]:
+    """Share image validation, resize bookkeeping and NV12 transport."""
+    if str(image_format).upper() != "BGR":
+        raise ValueError(f"Unsupported image_format: {image_format}")
+    if not isinstance(img, np.ndarray) or img.ndim != 3 or img.shape[2] != 3:
+        raise ValueError("img must be a BGR HxWx3 NumPy array.")
+    resized, transform = resize_with_transform(
+        img, input_size, resize_type=resize_type)
+    y_plane, uv_plane = pre_utils.bgr_to_nv12_planes(resized)
+    return _build_input(runner, input_adapter, y_plane, uv_plane), transform
+
+
+def _forward_runner(runner: Any, input_tensor: Mapping[str, Any]):
+    """Call one injected or factory-created runner exactly once."""
+    if callable(runner):
+        return runner(input_tensor)
+    method = getattr(runner, "forward", None) or getattr(runner, "run", None)
+    if method is None:
+        raise BindingError("The injected runner is not callable and has no forward/run method.")
+    return method(input_tensor)
+
+
+def _semantic_outputs(binding: Any,
+                      contract: Any,
+                      outputs: Any,
+                      protocol: str) -> Mapping[str, Any]:
+    """Use named semantic outputs or the already validated physical binding."""
+    if isinstance(outputs, Mapping):
+        required = set(contract.required_roles)
+        if required.issubset(set(outputs)):
+            return outputs
+    if binding is not None:
+        reader = getattr(binding, "read_outputs", None)
+        if reader is not None:
+            try:
+                return reader(outputs)
+            except Exception as exc:
+                raise BindingError(str(exc)) from exc
+    raise BindingError(
+        f"Detector outputs are not keyed by semantic roles and no complete {protocol} "
+        "output binding is available.")
+
+
+def _transform_for_postprocess(last_transform: Optional[ImageTransform],
+                               ori_img_w: int,
+                               ori_img_h: int,
+                               input_size: Tuple[int, int],
+                               resize_type: int) -> ImageTransform:
+    """Return the concrete transform used for one image or legacy postprocess."""
+    if last_transform is not None and last_transform.original_size == (ori_img_h, ori_img_w):
+        return last_transform
+    return make_transform((ori_img_h, ori_img_w), input_size, resize_type)
+
+
+def _set_scheduling_params(runner: Any,
+                           model: Any,
+                           model_name: Optional[str],
+                           priority: Optional[int],
+                           bpu_cores: Optional[list]) -> None:
+    """Forward explicit scheduler settings and reject unsupported requests."""
+    method = getattr(runner, "set_scheduling_params", None)
+    if method is not None:
+        method(priority=priority, bpu_cores=bpu_cores)
+        return
+    method = getattr(model, "set_scheduling_params", None)
+    if method is None:
+        if priority is not None or bpu_cores is not None:
+            raise BindingError(
+                "The injected runner/runtime does not support explicit scheduling parameters.")
+        return
+    values: Dict[str, Any] = {}
+    if priority is not None:
+        values["priority"] = {model_name: priority}
+    if bpu_cores is not None:
+        values["bpu_cores"] = {model_name: bpu_cores}
+    if values:
+        method(**values)
+
+
+def _predict_task(task: Any,
+                  img: np.ndarray,
+                  image_format: str,
+                  score_thres: Optional[float],
+                  nms_thres: Optional[float]) -> DetectionResult:
+    """Run the shared image/runner/task orchestration for one detector."""
+    input_tensor, transform = task.pre_process_with_transform(img, image_format)
+    outputs = task.forward(input_tensor)
+    return task.post_process(
+        outputs,
+        ori_img_w=int(img.shape[1]),
+        ori_img_h=int(img.shape[0]),
+        score_thres=score_thres,
+        nms_thres=nms_thres,
+        transform=transform,
+    )
 
 
 class YoloDetect:
-    """YOLO DFL-based detection wrapper for HB_HBMRuntime.
+    """DFL detector with a replaceable model execution boundary."""
 
-    This class provides a unified inference pipeline for DFL-based YOLO
-    detection models (v5u, v8, v11, and v12), including input preprocessing,
-    model execution, and postprocessing steps such as anchor-free DFL box
-    decoding, confidence filtering, and Non-Maximum Suppression (NMS).
-
-    Attributes:
-        model: Loaded HBM runtime model instance.
-        model_name: Name of the first loaded model.
-        input_names: Input tensor name list.
-        output_names: Output tensor name list.
-        input_shapes: Input tensor shape dictionary.
-        input_h: Model input height (pixels).
-        input_w: Model input width (pixels).
-        weights_static: DFL discrete location weights for box expectation.
-        cfg: Model configuration object.
-
-    Notes:
-        All supported YOLO detection variants (v5u, v8, v11, and v12) share the
-        same anchor-free DFL head structure. Each detection scale emits a
-        paired classification output and a box distribution output.
-    """
-
-    def __init__(self, config: YoloDetectConfig):
-        """Initialize the YoloDetect model with the given configuration.
-
-        Args:
-            config: Configuration object containing model path, preprocessing
-                parameters, and postprocessing parameters. All field semantics
-                and constraints are defined in the `YoloDetectConfig` dataclass.
-        """
-        # Load model and extract metadata
-        self.model, self.input_adapter = open_model(
-            config, config.platform, config.input_shape)
-
-        self.model_name = self.input_adapter.model_name
-        self.input_names = self.input_adapter.input_names
-        self.output_names = self.model.output_names[self.model_name]
-        self.input_shapes = self.model.input_shapes[self.model_name]
-
-        # Model input resolution (H, W) validated against the input protocol
-        self.input_h = self.input_adapter.input_height
-        self.input_w = self.input_adapter.input_width
-
-        # DFL weights: shape (1, 1, reg), used to compute expected box offsets
-        self.weights_static = np.arange(
-            require_dfl_bins(config.reg), dtype=np.float32)[np.newaxis, np.newaxis, :]
-
-        # Feature map grid sizes. Both published trees used a grid that follows
-        # from the input height and the stride, so it is derived rather than
-        # hard-coded to one resolution.
-        expected_grids = self.input_adapter.expected_anchor_sizes(config.strides)
-        if config.anchor_sizes is not None:
-            if list(config.anchor_sizes) != expected_grids:
-                raise ValueError("anchor_sizes conflict with model input shape and strides.")
-            self.anchor_sizes = list(config.anchor_sizes)
-        else:
-            self.anchor_sizes = self.input_adapter.expected_anchor_sizes(
-                config.strides)
-        require_square_grid(self.anchor_sizes, self.input_h)
-
-        # Store configuration
+    def __init__(self,
+                 config: YoloDetectConfig,
+                 runner: Any = None,
+                 model_runner: Any = None) -> None:
+        if runner is not None and model_runner is not None:
+            raise ValueError("Pass only one of runner or model_runner.")
+        if model_runner is not None:
+            runner = model_runner
         self.cfg = config
+        self.runner = build_runner(config) if runner is None else runner
+        self.binding = getattr(self.runner, "binding", None)
+        self.model = getattr(self.runner, "model", self.runner)
+        self.input_adapter = getattr(self.runner, "input_adapter", None)
+        if self.input_adapter is None and self.binding is not None:
+            self.input_adapter = getattr(self.binding, "input_adapter", None)
+        self.input_h, self.input_w = _size_from_runner(self.runner, config)
+        if self.input_h <= 0 or self.input_w <= 0:
+            raise ValueError("Model input dimensions must be positive.")
+        self.input_size = (self.input_h, self.input_w)
+        self.model_name = getattr(self.runner, "model_name", None)
+        if self.model_name is None and self.binding is not None:
+            self.model_name = getattr(self.binding, "model_name", None)
+        self.input_names = tuple(getattr(self.runner, "input_names", ()) or ())
+        if not self.input_names and self.input_adapter is not None:
+            self.input_names = tuple(getattr(self.input_adapter, "input_names", ()) or ())
+        self.output_names = tuple(getattr(self.runner, "output_names", ()) or ())
+        self.input_shapes = dict(getattr(self.runner, "input_shapes", {}) or {})
+        self.output_shapes = dict(getattr(self.runner, "output_shapes", {}) or {})
+
+        if self.binding is not None:
+            self.contract = getattr(self.binding, "contract", None)
+        else:
+            self.contract = config.contract
+        if self.contract is None:
+            self.contract = default_dfl_contract(
+                classes=config.classes_num,
+                reg_bins=config.reg,
+                strides=config.strides,
+            )
+        self.anchor_sizes = _normalise_grids(
+            config.anchor_sizes, self.input_size, self.contract.strides)
+        self.grid_shapes = list(self.anchor_sizes)
+        self.weights_static = np.arange(
+            int(self.contract.reg_bins), dtype=np.float32)[None, None, :]
         if self.cfg.nms_thres is None:
-            self.cfg.nms_thres = config.platform.nms_thres
+            profile = config.platform
+            value = getattr(profile, "nms_thres", None) if profile is not None else None
+            if value is not None:
+                self.cfg.nms_thres = float(value)
+        self.last_transform: Optional[ImageTransform] = None
+        self.last_image_transform: Optional[ImageTransform] = None
 
     def set_scheduling_params(self,
                               priority: Optional[int] = None,
                               bpu_cores: Optional[list] = None) -> None:
-        """Configure inference scheduling parameters.
+        """Forward explicit runtime scheduling parameters to the runner."""
+        _set_scheduling_params(
+            self.runner, self.model, self.model_name, priority, bpu_cores)
 
-        Args:
-            priority: Inference priority in the range [0, 255].
-            bpu_cores: List of BPU core indices used for inference.
+    def _build_input(self, y_plane: np.ndarray, uv_plane: np.ndarray):
+        return _build_input(self.runner, self.input_adapter, y_plane, uv_plane)
 
-        Returns:
-            None
-        """
-        kwargs = {}
-        if priority is not None:
-            kwargs["priority"] = {self.model_name: priority}
-        if bpu_cores is not None:
-            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
-
-        if kwargs:
-            self.model.set_scheduling_params(**kwargs)
+    def pre_process_with_transform(
+            self,
+            img: np.ndarray,
+            image_format: str = "BGR") -> Tuple[Dict[str, Dict[str, np.ndarray]], ImageTransform]:
+        """Prepare one image and return its input tensors and actual transform."""
+        tensors, transform = _prepare_image(
+            self.runner, self.input_adapter, self.input_size,
+            self.cfg.resize_type, img, image_format)
+        self.last_transform = transform
+        self.last_image_transform = transform
+        return tensors, transform
 
     def pre_process(self,
                     img: np.ndarray,
-                    image_format: Optional[str] = "BGR"
-                    ) -> Dict[str, Dict[str, np.ndarray]]:
-        """Preprocess an input image into model-required tensor format.
+                    image_format: str = "BGR") -> Dict[str, Dict[str, np.ndarray]]:
+        """Prepare one image using the legacy tensor-only return shape."""
+        tensors, _ = self.pre_process_with_transform(img, image_format)
+        return tensors
 
-        The input image is resized according to the configured resize strategy
-        and converted from BGR format to NV12 (Y and UV planes).
+    def forward(self, input_tensor: Mapping[str, Any]):
+        """Call the injected runner exactly once."""
+        return _forward_runner(self.runner, input_tensor)
 
-        Args:
-            img: Input image array.
-            image_format: Input image format. Currently, only `"BGR"` is
-                supported.
+    def _semantic_outputs(self, outputs: Any) -> Mapping[str, Any]:
+        return _semantic_outputs(self.binding, self.contract, outputs, "DFL")
 
-        Returns:
-            A nested input tensor dictionary in the form:
-            `{model_name: {input_name: tensor}}`.
-
-        Raises:
-            ValueError: If an unsupported image format is provided.
-        """
-        if image_format == "BGR":
-            resize_img = pre_utils.resized_image(
-                img, self.input_w, self.input_h, self.cfg.resize_type)
-            y, uv = pre_utils.bgr_to_nv12_planes(resize_img)
-        else:
-            raise ValueError(f"Unsupported image_format: {image_format}")
-
-        return self.input_adapter.build(y, uv)
-
-    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
-        """Execute model inference.
-
-        Args:
-            input_tensor: Preprocessed input tensor dictionary produced by
-                `pre_process()`.
-
-        Returns:
-            A dictionary containing raw output tensors returned by the runtime.
-        """
-        outputs = self.model.run(input_tensor)
-        return outputs
+    def _transform_for_postprocess(self,
+                                   ori_img_w: int,
+                                   ori_img_h: int,
+                                   transform: Optional[ImageTransform]) -> ImageTransform:
+        if transform is not None:
+            return transform
+        return _transform_for_postprocess(
+            self.last_transform, ori_img_w, ori_img_h,
+            self.input_size, self.cfg.resize_type)
 
     def post_process(self,
-                     outputs: Dict[str, Dict[str, np.ndarray]],
+                     outputs: Any,
                      ori_img_w: int,
                      ori_img_h: int,
                      score_thres: Optional[float] = None,
                      nms_thres: Optional[float] = None,
-                     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Convert raw model outputs into final detection results.
-
-        This step includes anchor-free DFL box decoding,
-        confidence filtering, Non-Maximum Suppression (NMS), and coordinate
-        scaling back to the original image resolution.
-
-        Args:
-            outputs: Raw output tensors from inference (as returned by `forward()`).
-            ori_img_w: Width of the original input image.
-            ori_img_h: Height of the original input image.
-            score_thres: Confidence threshold override. If `None`, the value
-                from the configuration is used.
-            nms_thres: IoU threshold for NMS override. If `None`, the value
-                from the configuration is used.
-
-        Returns:
-            A tuple containing:
-                - boxes: Bounding boxes with shape `(N, 4)` in original image
-                  coordinates, formatted as `[x1, y1, x2, y2]`.
-                - scores: Confidence scores with shape `(N,)`.
-                - cls_ids: Class indices with shape `(N,)`.
-        """
-        score_thres = score_thres if score_thres is not None else self.cfg.score_thres
-        nms_thres = nms_thres if nms_thres is not None else self.cfg.nms_thres
-
-        # Compute inverse-sigmoid threshold for raw logit filtering
-        conf_thres_raw = -np.log(1.0 / score_thres - 1)
-
-        # Step 1: Decode each detection scale's paired classification and box outputs
-        model_outputs = outputs[self.model_name]
-        all_boxes = []
-        all_scores = []
-        all_ids = []
-        for i, (stride, anchor_size) in enumerate(
-                zip(self.cfg.strides, self.anchor_sizes)):
-            cls_key = self.output_names[2 * i]      # Classification logits output
-            box_key = self.output_names[2 * i + 1]  # DFL box distribution output
-
-            # Filter by raw logit threshold before sigmoid
-            scores, ids, valid_indices = post_utils.filter_classification(
-                model_outputs[cls_key], conf_thres_raw)
-
-            # Decode DFL bounding boxes for valid predictions
-            dbboxes = post_utils.decode_boxes(
-                model_outputs[box_key], valid_indices,
-                anchor_size, stride, self.weights_static)
-
-            all_boxes.append(dbboxes)
-            all_scores.append(scores)
-            all_ids.append(ids)
-
-        # Step 2: Concatenate results across all detection scales
-        boxes = np.concatenate(all_boxes, axis=0)
-        scores = np.concatenate(all_scores, axis=0)
-        cls_ids = np.concatenate(all_ids, axis=0)
-
-        # Step 3: Non-Maximum Suppression
-        keep = post_utils.NMS(boxes, scores, cls_ids, nms_thres)
-
-        # Step 4: Rescale boxes to original image dimensions
-        xyxy = post_utils.scale_coords_back(
-            boxes[keep], ori_img_w, ori_img_h,
-            self.input_w, self.input_h, self.cfg.resize_type)
-
-        return xyxy, scores[keep], cls_ids[keep]
+                     transform: Optional[ImageTransform] = None) -> DetectionResult:
+        """Decode, suppress, and map boxes to original image pixels."""
+        semantic = self._semantic_outputs(outputs)
+        score = self.cfg.score_thres if score_thres is None else float(score_thres)
+        nms = self.cfg.nms_thres if nms_thres is None else float(nms_thres)
+        if self.contract.nms == "none":
+            nms = None
+        boxes, scores, class_ids = decode_dfl(
+            semantic,
+            self.contract,
+            input_size=self.input_size,
+            score_thres=score,
+            nms_thres=nms,
+        )
+        concrete = self._transform_for_postprocess(ori_img_w, ori_img_h, transform)
+        boxes = inverse_boxes(boxes, concrete)
+        return DetectionResult(boxes, scores, class_ids)
 
     def predict(self,
                 img: np.ndarray,
                 image_format: str = "BGR",
                 score_thres: Optional[float] = None,
-                nms_thres: Optional[float] = None,
-                ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Run the complete detection pipeline on a single image.
-
-        This method internally performs preprocessing, inference, and
-        postprocessing.
-
-        Args:
-            img: Input image array.
-            image_format: Input image format. Currently supports `"BGR"`.
-            score_thres: Confidence threshold override.
-            nms_thres: IoU threshold override for NMS.
-
-        Returns:
-            A tuple containing:
-                - boxes: Bounding boxes with shape `(N, 4)`.
-                - scores: Confidence scores with shape `(N,)`.
-                - cls_ids: Class indices with shape `(N,)`.
-        """
-        ori_img_h, ori_img_w = img.shape[:2]
-
-        # 1) Preprocess
-        input_tensor = self.pre_process(img, image_format)
-
-        # 2) Inference
-        outputs = self.forward(input_tensor)
-
-        # 3) Postprocess
-        boxes, scores, cls_ids = self.post_process(
-            outputs, ori_img_w, ori_img_h, score_thres, nms_thres)
-
-        return boxes, scores, cls_ids
+                nms_thres: Optional[float] = None) -> DetectionResult:
+        """Run preprocessing, one model call, and postprocessing."""
+        return _predict_task(self, img, image_format, score_thres, nms_thres)
 
     def __call__(self,
                  img: np.ndarray,
                  image_format: str = "BGR",
                  score_thres: Optional[float] = None,
-                 nms_thres: Optional[float] = None,
-                 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Callable interface for the detection pipeline.
-
-        This method is functionally equivalent to calling `predict()`.
-
-        Args:
-            img: Input image array.
-            image_format: Input image format.
-            score_thres: Confidence threshold override.
-            nms_thres: IoU threshold override for NMS.
-
-        Returns:
-            Same return values as `predict()`.
-        """
+                 nms_thres: Optional[float] = None) -> DetectionResult:
+        """Tuple-compatible alias for :meth:`predict`."""
         return self.predict(img, image_format, score_thres, nms_thres)
+
+
+__all__ = ["DetectionResult", "YoloDetectConfig", "YoloDetect"]

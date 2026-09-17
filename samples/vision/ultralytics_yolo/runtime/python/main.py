@@ -46,12 +46,20 @@ Examples:
 import argparse
 import os
 import sys
+from pathlib import Path
 
 # Make the sample-local helper modules importable regardless of the working
 # directory the sample is started from.
 _PYTHON_DIR = os.path.dirname(os.path.abspath(__file__))
 if _PYTHON_DIR not in sys.path:
     sys.path.insert(0, _PYTHON_DIR)
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
+    raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
+if str(_REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPOSITORY_ROOT))
+from samples._shared.platforms import resolve_target, require_execution_target
 
 # Sample layout, resolved relative to this file rather than to the working
 # directory, so the sample runs correctly from anywhere.
@@ -71,6 +79,7 @@ from yolo_assets import (  # noqa: E402
     UnsupportedAssetError,
     available_families,
     family_listing,
+    manifest_asset,
     model_filename,
     model_path as resolve_model_path,
     model_url,
@@ -97,12 +106,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Ultralytics YOLO unified inference",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--platform', type=str, default=None,
-                        choices=list(available_platforms()),
+    parser.add_argument('--platform', '--target', type=str, default=None,
+                        choices=['auto', *available_platforms()],
                         help='Target platform. When omitted, the board is '
-                             'detected from /sys/class/boardinfo. An explicit '
-                             'value always overrides detection, and an '
-                             'unrecognised board is rejected.')
+                             'detected from /sys/class/boardinfo. Preparation '
+                             'may select any target; inference requires matching '
+                             'local board identity.')
     parser.add_argument('--task', type=str, default=DEFAULT_TASK,
                         choices=list(SUPPORTED_TASKS),
                         help='Task type.')
@@ -115,6 +124,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--model-path', type=str, default=None,
                         help='Path to a compiled model. Overrides the resolved '
                              'default path and is never downloaded.')
+    parser.add_argument('--asset-id', default=None,
+                        help='Exact existing manifest reference group:sample:filename; '
+                             'use --list-models to inspect references.')
     parser.add_argument('--input-shape', type=_input_shape, default=None,
                         help='Explicit model input geometry as HxW, used only '
                              'when the runtime does not report it.')
@@ -221,6 +233,33 @@ def print_model_listing(profile: PlatformProfile) -> None:
         note = f"  # {entry['notes']}" if entry["notes"] else ""
         print(f"    {entry['family']:<9} default size {entry['default_size']}"
               f"  ->  {tasks}{note}")
+        for task, sizes in entry['tasks'].items():
+            for size in sizes:
+                record = manifest_asset(profile, entry['family'], task, size)
+                print(f'      {task}: {record.reference} (asset available; validation is separate)')
+
+
+def select_manifest_reference(profile: PlatformProfile, args) -> None:
+    """Resolve an official reference using the sample's finite task/size policy."""
+    from samples._shared.assets import resolve_asset
+    try:
+        record = resolve_asset(args.asset_id)
+    except ValueError as exc:
+        raise UnsupportedAssetError(str(exc)) from exc
+    if record.group != profile.family or record.sample_id not in ('ultralytics_yolo', 'ultralytics_yolo26'):
+        raise UnsupportedAssetError('Asset reference does not belong to this target and Sample.')
+    candidates = []
+    for entry in family_listing(profile):
+        for size in entry['tasks'].get(args.task, ()):
+            candidate = manifest_asset(profile, entry['family'], args.task, size)
+            if candidate.reference == record.reference:
+                candidates.append((entry['family'], size))
+    if len(candidates) != 1:
+        raise UnsupportedAssetError('Asset reference is not registered for the selected target/task.')
+    family, size = candidates[0]
+    if (args.family and args.family != family) or (args.model_size and args.model_size != size):
+        raise UnsupportedAssetError('Asset reference conflicts with family or model size.')
+    args.family, args.model_size = family, size
 
 
 def describe_plan(profile: PlatformProfile, args) -> dict:
@@ -239,6 +278,8 @@ def describe_plan(profile: PlatformProfile, args) -> dict:
         UnsupportedAssetError: If the platform publishes no such asset.
     """
     from yolo_assets import family_from_filename
+    if args.asset_id:
+        select_manifest_reference(profile, args)
     inferred = family_from_filename(profile, args.model_path) if args.model_path else None
     if args.family and inferred and args.family != inferred:
         raise UnsupportedAssetError("--family conflicts with --model-path filename.")
@@ -247,6 +288,7 @@ def describe_plan(profile: PlatformProfile, args) -> dict:
     get_task_types(profile, args.family, args.task)
     if args.model_path:
         return {
+            "asset_reference": args.asset_id,
             "filename": os.path.basename(args.model_path),
             "path": args.model_path,
             "url": None,
@@ -258,6 +300,7 @@ def describe_plan(profile: PlatformProfile, args) -> dict:
     path = resolve_model_path(
         _MODEL_DIR, profile, args.family, args.task, args.model_size)
     return {
+        "asset_reference": manifest_asset(profile, args.family, args.task, args.model_size).reference,
         "filename": filename,
         "path": path,
         "url": model_url(profile, args.family, args.task, args.model_size),
@@ -277,11 +320,15 @@ def print_dry_run(profile: PlatformProfile, args, plan: dict) -> None:
     Returns:
         None
     """
+    from yolo_dispatch import runtime_resize
+
     print("[dry-run] No model is downloaded and no inference is run.")
     print(f"  platform        : {profile.key} ({profile.march})")
     print(f"  task            : {args.task}")
     print(f"  family          : {args.family}")
     print(f"  model file      : {plan['filename']}")
+    if plan.get('asset_reference'):
+        print(f"  asset reference : {plan['asset_reference']}")
     print(f"  resolved path   : {plan['path']}")
     print(f"  already present : {'yes' if plan['present'] else 'no'}")
     if plan['explicit']:
@@ -290,7 +337,7 @@ def print_dry_run(profile: PlatformProfile, args, plan: dict) -> None:
         print(f"  download url    : {plan['url']}")
     print(f"  NV12 protocol   : {profile.input_protocol}")
     print(f"  resize policy   : "
-          f"{args.resize_type if args.resize_type is not None else __import__("yolo_dispatch").runtime_resize(profile, args.family, args.task)}")
+          f"{args.resize_type if args.resize_type is not None else runtime_resize(profile, args.family, args.task)}")
     if args.task != 'cls':
         print(f"  NMS IoU         : "
               f"{args.nms_thres if args.nms_thres is not None else profile.nms_thres}")
@@ -311,13 +358,18 @@ def ensure_model(plan: dict) -> None:
         FileNotFoundError: If an explicit model path does not exist, or if no
             download URL is available for a missing default asset.
     """
+    from samples._shared.assets import resolve_asset, verify_asset_file, download_asset
+    asset = resolve_asset(plan['asset_reference']) if plan.get('asset_reference') else None
     if plan['present']:
+        if asset is not None:
+            verify_asset_file(asset, Path(plan['path']))
         return
     if plan['explicit'] or not plan['url']:
         raise FileNotFoundError(f"Model file not found: {plan['path']}")
-    from rdk_yolo_utils import file_io  # noqa: PLC0415 - keeps imports lazy
     print(f"[Download] {plan['url']}")
-    file_io.download_model_if_needed(plan['path'], plan['url'])
+    if asset is None:
+        raise ValueError('Default model download requires a manifest asset reference.')
+    download_asset(asset, Path(plan['path']))
 
 
 def load_labels(args, task: str) -> list:
@@ -396,8 +448,8 @@ def main() -> int:
     args = build_parser().parse_args()
 
     try:
-        profile = resolve_platform(args.platform)
-    except UnsupportedPlatformError as exc:
+        profile = resolve_platform(resolve_target(args.platform))
+    except ValueError as exc:
         print(f"[Error] {exc}", file=sys.stderr)
         return 2
 
@@ -415,9 +467,16 @@ def main() -> int:
         print_dry_run(profile, args, plan)
         return 0
 
+    if not args.download:
+        try:
+            require_execution_target(profile.key)
+        except ValueError as exc:
+            print(f'[Error] {exc}', file=sys.stderr)
+            return 2
+
     try:
         ensure_model(plan)
-    except FileNotFoundError as exc:
+    except (OSError, ValueError) as exc:
         print(f"[Error] {exc}", file=sys.stderr)
         return 2
 

@@ -1,44 +1,15 @@
-cmake_minimum_required(VERSION 3.0)
-project(resnet18)
-set(CMAKE_BUILD_TYPE Release)
+cmake_minimum_required(VERSION 3.15)
+project(resnet18_legacy_launcher LANGUAGES CXX)
 
-# Set C++ standard to C++17
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Set device model macro definition
-file(READ "/sys/class/boardinfo/soc_name" SOC_NAME_RAW)
-string(TOUPPER "${SOC_NAME_RAW}" SOC_NAME_UPPER)
-add_definitions(-DSOC_${SOC_NAME_UPPER})
-
-# Include directories for header file search
-include_directories(
-    /usr/hobot/include
-    /usr/include/hobot/dnn
-    /usr/include/hobot
-    ../../../../../utils/c_utils/inc
-    inc/
+# The S18 source is maintained in the canonical sample. Keep this historical
+# configure path buildable and preserve its old build/resnet18 output location
+# without maintaining a second implementation or a second set of flags.
+get_filename_component(REPOSITORY_ROOT
+    "${CMAKE_CURRENT_LIST_DIR}/../../../../../../../" ABSOLUTE)
+add_subdirectory(
+    "${REPOSITORY_ROOT}/samples/vision/resnet/runtime/cpp"
+    "${CMAKE_BINARY_DIR}/canonical-resnet18"
 )
-
-# Add library search path for linker
-link_directories(/usr/hobot/lib)
-
-# Define the executable target and its source files
-add_executable(resnet18
-    src/main.cpp
-    src/resnet18.cpp
-    ../../../../../utils/c_utils/src/file_io.cpp
-    ../../../../../utils/c_utils/src/nn_math.cpp
-    ../../../../../utils/c_utils/src/preprocess.cpp
-    ../../../../../utils/c_utils/src/postprocess.cpp
-    ../../../../../utils/c_utils/src/visualize.cpp
+set_target_properties(resnet18 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
-
-# Find package (required)
-find_package(OpenCV REQUIRED)
-
-# Libraries to link with the target
-SET(LINK_libs dnn hbucp gflags fmt ${OpenCV_LIBS})
-
-# Link libraries to the executable target
-target_link_libraries(resnet18 ${LINK_libs})

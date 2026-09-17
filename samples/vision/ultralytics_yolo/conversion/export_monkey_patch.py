@@ -23,27 +23,48 @@ import argparse
 import types
 import os
 
+try:
+    from workflow import export_defaults
+except ImportError:
+    # ``python export_monkey_patch.py`` is run with conversion/ as its script
+    # directory in the canonical sample.
+    export_defaults = None
+
 def main():
     import sys, runpy
     selector=argparse.ArgumentParser(add_help=False)
     selector.add_argument('--family',default=None)
     selector.add_argument('--task',default='detect',choices=['detect','cls','seg','pose','obb'])
+    selector.add_argument('--platform',default=None,choices=['x5','s100','s100p','s600'])
     selected,rest=selector.parse_known_args()
     if selected.family == 'yolo26':
         rest=['--weights' if a=='--pt' else a for a in rest]
+        if selected.platform is not None:
+            rest += ['--platform', selected.platform]
         script=os.path.join(os.path.dirname(__file__),'yolo26',f'export_yolo26_{selected.task}_bpu.py')
         sys.argv=[script]+rest
         runpy.run_path(script,run_name='__main__')
         return
     sys.argv=[sys.argv[0]]+rest
+    platform = selected.platform or 'x5'
+    if export_defaults is None:
+        default_opset = 11 if platform == 'x5' else 19
+    else:
+        default_opset, _ = export_defaults(platform, 'yolo11')
     parser = argparse.ArgumentParser()
+    parser.add_argument('--platform', choices=['x5', 's100', 's100p', 's600'],
+                        default=platform, help='target export platform')
     parser.add_argument('--pt', type=str, default='./yolo11n.pt', help='path to *.pt model.')
+    parser.add_argument('--require-local', action='store_true',
+                        help='fail unless --pt already exists as a local file')
     # `--optse` is the historical spelling; `--opset` is accepted as an alias.
     # The value is passed to the exporter, so it actually takes effect.
-    parser.add_argument('--optse', '--opset', dest='optse', type=int, default=11,
+    parser.add_argument('--optse', '--opset', dest='optse', type=int, default=default_opset,
                         help='ONNX opset version passed to the Ultralytics '
                              'exporter. RDK X5 uses 11; the RDK S series uses 19.')
     opt = parser.parse_args()
+    if opt.require_local and not os.path.isfile(opt.pt):
+        parser.error(f'checkpoint does not exist locally: {opt.pt}')
     global YOLO, Detect, v10Detect, Segment, OBB, Pose, Classify, Attention, AAttn, torch
     from ultralytics import YOLO
     from ultralytics.nn.modules.head import Detect, v10Detect, Segment, OBB, Pose, Classify

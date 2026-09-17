@@ -33,12 +33,19 @@ Typical Usage:
 import argparse
 import os
 import sys
+from pathlib import Path
 
 # Make the sample-local helper modules importable regardless of the working
 # directory the sample is started from.
 _PYTHON_DIR = os.path.dirname(os.path.abspath(__file__))
 if _PYTHON_DIR not in sys.path:
     sys.path.insert(0, _PYTHON_DIR)
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
+    raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
+if str(_REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPOSITORY_ROOT))
 
 _SAMPLE_DIR = os.path.dirname(os.path.dirname(_PYTHON_DIR))
 _DEFAULT_MODEL_DIR = os.path.join(_SAMPLE_DIR, "model")
@@ -51,6 +58,7 @@ from yolo_assets import (  # noqa: E402
     family_registry,
     model_filename,
     model_url,
+    manifest_asset,
 )
 from yolo_platform import (  # noqa: E402
     PlatformProfile,
@@ -213,7 +221,7 @@ def main() -> int:
                 filename,
                 os.path.join(
                     model_directory(args.model_dir, profile), filename),
-                model_url(profile, family, task, size),
+                manifest_asset(profile, family, task, size),
             ))
     except UnsupportedAssetError as exc:
         print(f"[Error] {exc}", file=sys.stderr)
@@ -225,25 +233,24 @@ def main() -> int:
 
     print(f"Platform: {profile.key} ({profile.march}), "
           f"{len(targets)} asset(s) selected.")
-    missing = [(name, path, url) for name, path, url in targets
+    missing = [(name, path, asset) for name, path, asset in targets
                if not os.path.exists(path)]
     if args.dry_run:
-        for name, path, url in targets:
+        for name, path, asset in targets:
             state = "present" if os.path.exists(path) else "missing"
-            print(f"  [{state}] {path}\n            {url}")
+            print(f"  [{state}] {path}\n            {asset.url}")
         print(f"[dry-run] {len(missing)} of {len(targets)} asset(s) would be "
               f"downloaded. Nothing was downloaded.")
         return 0
 
-    if not missing:
-        print("All selected models are already present.")
-        return 0
-
-    from rdk_yolo_utils import file_io  # noqa: PLC0415 - keeps imports lazy
-
-    for name, path, url in missing:
-        print(f"[Download] {name}")
-        file_io.download_model_if_needed(path, url)
+    from samples._shared.assets import download_asset
+    try:
+        for name, path, asset in targets:
+            print(f"[Prepare] {name}")
+            download_asset(asset, Path(path))
+    except (OSError, ValueError) as exc:
+        print(f'[Error] {exc}', file=sys.stderr)
+        return 2
     print(f"[Done] {len(missing)} model(s) downloaded.")
     return 0
 

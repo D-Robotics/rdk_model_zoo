@@ -1,15 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
+# Model preparation is explicit. This historical launcher only delegates to
+# the compatibility command, which supplies the old X5 defaults.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MODEL_DIR="${SCRIPT_DIR}/../../model"
-
-MODEL_PATH="${MODEL_DIR}/resnet18_224x224_nv12.bin"
-
-# Download model if missing
-if [ ! -f "${MODEL_PATH}" ]; then
-    bash "${MODEL_DIR}/download.sh"
-fi
-
-cd "${SCRIPT_DIR}"
-python3 main.py "$@"
+exec python3 "$SCRIPT_DIR/main.py" "$@"

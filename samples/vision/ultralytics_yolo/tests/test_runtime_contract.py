@@ -56,8 +56,21 @@ class RuntimeContract(unittest.TestCase):
                     fake = types.SimpleNamespace(HB_HBMRuntime=lambda _: runtime)
                     m = importlib.import_module(module)
                     cfg = getattr(m, name + 'Config')(model_path='stub', platform=profile)
-                    with patch('yolo_runtime.load_hbm_runtime', return_value=fake):
-                        model = getattr(m, name)(cfg)
+                    if module == 'yolo_detect':
+                        # The new detector requires the descriptors provided
+                        # by the real SDK, not the former names-only fixture.
+                        runtime.input_dtypes = {'m': {n: np.dtype(np.uint8) for n in names}}
+                        runtime.output_shapes = {'m': {
+                            str(2 * i + j): (1, grid, grid, channels)
+                            for i, grid in enumerate((80, 40, 20))
+                            for j, channels in enumerate((80, 64))}}
+                        runtime.output_dtypes = {'m': {str(i): np.dtype(np.float32) for i in range(count)}}
+                        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+                        runner = build_runner(cfg, runtime_loader=lambda: fake)
+                        model = getattr(m, name)(cfg, runner=runner)
+                    else:
+                        with patch('yolo_runtime.load_hbm_runtime', return_value=fake):
+                            model = getattr(m, name)(cfg)
                     tensors = model.pre_process(np.zeros((24, 36, 3), np.uint8))['m']
                     self.assertEqual(list(tensors), names)
                     self.assertEqual(sum(t.size for t in tensors.values()), 640 * 640 * 3 // 2)

@@ -1,96 +1,61 @@
-> 首批合并入口：[Ultralytics YOLO：X5/S 共用 Sample](samples/vision/ultralytics_yolo/README_cn.md)。其旧平台命令已转发，需完整仓库；其他 Sample 暂保留平台目录。
+# RDK Model Zoo
 
-<div align="center">
-  <img src="platforms/x5/docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
-</div>
+[English](README.md) | 简体中文
 
-<div align="center">
-  <h1 align="center">RDK Model Zoo</h1>
-  <p align="center">
-    <b>基于 D-Robotics BPU 的开箱即用 AI 模型部署 Pipeline 与全链路转换教程</b>
-  </p>
-</div>
+RDK Model Zoo 提供在地瓜机器人 BPU 上部署模型的示例。每个 Sample 包含模型准备、板端推理、源码说明，以及已有的模型转换和评估流程。运行模型使用 Python 与板卡随系统提供的 Runtime，不依赖 Agent 或 Node.js。
 
-<div align="center">
+## 从一个样例开始
 
-[English](./README.md) | **简体中文**
+本轮整合三类代表样例。点击任务进入完整使用说明；表中的验证只针对列出的模型和固定输入，不代表同系列所有规格都已测试。
 
-<p align="center">
-  <a href="https://github.com/D-Robotics/rdk_model_zoo/stargazers"><img src="https://img.shields.io/github/stars/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Stars"></a>
-  <a href="https://github.com/D-Robotics/rdk_model_zoo/network/members"><img src="https://img.shields.io/github/forks/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Forks"></a>
-  <a href="https://github.com/D-Robotics/rdk_model_zoo/pulls"><img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome"></a>
-  <a href="https://developer.d-robotics.cc"><img src="https://img.shields.io/badge/Community-D--Robotics-orange.svg?style=flat-square" alt="Community"></a>
-</p>
+| 任务 | Sample | 代表模型与板卡 | 开发入口 |
+| --- | --- | --- | --- |
+| 目标检测 | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README_cn.md) | YOLOv8n、YOLO26n；X5 8GB/4GB、S100、S100P、S600 | [转换](samples/vision/ultralytics_yolo/conversion/README_cn.md) · [评估](samples/vision/ultralytics_yolo/evaluator/README_cn.md) |
+| 图像分类 | [ResNet](samples/vision/resnet/README_cn.md) | ResNet18；X5 8GB/4GB、S100、S600 | [转换](samples/vision/resnet/conversion/README_cn.md) · [评估](samples/vision/resnet/evaluator/README_cn.md) |
+| 文字检测与识别 | [PaddleOCR](samples/vision/paddle_ocr/README_cn.md) | X5 PP-OCRv3、S100 PP-OCRv6；检测与识别串联 | [转换](samples/vision/paddle_ocr/conversion/README_cn.md) · [评估](samples/vision/paddle_ocr/evaluator/README_cn.md) |
 
-</div>
+2026-09-17 的源码修订已复测 X5 两块板、S100 和 S100P 的适用模型。S600 的对照结果来自 2026-09-16，当前连接尚未恢复，新修订复测未执行。
 
-## 仓库简介 (Introduction)
-
-> **使命**：致力于为地瓜机器人开发者提供极致性能、开箱即用、覆盖全场景的 AI 部署验证体验。
-
-本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者**快速上手 BPU**、**快速跑通模型推理流程**。
-
-main 分支统一维护全部已支持平台。本轮从 Ultralytics YOLO 开始合并相同 Sample：共用 Python 入口和任务实现，保留平台输入协议与独立编译工具链。其旧平台路径转发到仓库根目录的 `samples/`，需要完整仓库；其他 Sample 暂保持原平台目录。板端运行仍需单独验收。
-
-### 平台登记 (Platform Registry)
-
-| 目标硬件 | 路径 | 历史分支 | 文档 |
-| :--- | :--- | :--- | :--- |
-| RDK X5 | [`platforms/x5`](./platforms/x5) | `rdk_x5` | [README](./platforms/x5/README.md) · [中文](./platforms/x5/README_cn.md) |
-| RDK S100 / S100P / S600 | [`platforms/s`](./platforms/s) | `rdk_s` | [README](./platforms/s/README.md) · [中文](./platforms/s/README_cn.md) |
-| RDK X3 | [`platforms/x3`](./platforms/x3) | `rdk_x3` | [README](./platforms/x3/README.md) · [中文](./platforms/x3/README_cn.md) |
-
-平台登记同时以机器可读形式发布于 [`platforms/registry.json`](./platforms/registry.json)，说明文字见 [`platforms/README.md`](./platforms/README.md)。
-
-### 历史分支 (Historical Branches)
-
-新增模型、修复、Manifest 和发布准备统一在 **main** 维护。现有平台分支和 Tag 保留为历史与兼容入口，新开发不再要求同步这些分支。各平台版本可以独立演进，源码目录始终保留在 main。
-
-| 目标硬件 | 分支 | 说明 |
-| :--- | :--- | :--- |
-| RDK X5 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) | RDK X5 历史分支。推荐系统版本：RDK OS >= 3.5.0，基于 Ubuntu 22.04 aarch64 与 TROS-Humble。 |
-| RDK X5 历史 Demo | [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) | 旧版 RDK X5 Demo 的历史归档分支，仅在需要参考旧版 Demo 内容时使用。 |
-| RDK X3 | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | RDK X3 设备分支。 |
-| RDK S 系列 | [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | RDK S 系列板卡分支。RDK S 系列历史归档 Demo 保留在 [RDK Model Zoo S](https://github.com/d-Robotics/rdk_model_zoo_s)。 |
-
-## 仓库结构 (Repository Layout)
+在板卡上保留完整仓库。下面的命令从仓库根目录执行，先查看模型与参数，不加载 BPU 或下载模型：
 
 ```bash
-rdk_model_zoo/
-|-- platforms/
-|   |-- x5/                  # RDK X5 平台目录（YOLO 转发至共用实现）
-|   |   |-- samples/         # vision/ 与 robotics/ 示例
-|   |   |-- utils/           # 共用 Python 工具与批处理工具
-|   |   |-- datasets/        # 数据集准备脚本
-|   |   |-- docs/
-|   |   |   |-- release/     # models.yaml + benchmarks.yaml（X5 清单对）
-|   |   |   `-- releases/    # 已发布版本说明
-|   |   |-- tros/            # TROS 集成参考
-|   |   `-- README.md        # X5 入口文档
-|   |-- s/                   # RDK S100/S100P/S600 平台目录
-|   |   |-- samples/         # vision/、speech/、vla/
-|   |   `-- docs/release/    # models.yaml + benchmarks.yaml（S 清单对）
-|   `-- x3/                  # RDK X3 平台目录
-|       |-- demos/           # 旧版 demo 布局
-|       `-- release/         # models.yaml + benchmarks.yaml（X3 清单对）
-|-- tools/
-|   `-- catalog-publisher/   # 目录数据生成、Schema 校验与勘误
-|-- archive/                 # 本地源码快照（不入库）
-|-- docs/superpowers/        # 设计记录与实施计划
-`-- .github/workflows/       # 目录数据构建与校验
+python3 samples/vision/ultralytics_yolo/runtime/python/main.py --help
+python3 samples/vision/resnet/runtime/python/main.py --list-models --target x5
+python3 samples/vision/paddle_ocr/runtime/python/main.py --list-models --target x5
 ```
 
-### 发布清单 (Release Manifests)
+选择样例后，按其 README 安装用户态依赖、准备对应板卡的模型，再执行推理。X5 的 `.bin` 与 S 系列的 `.hbm` 不能互换；S100、S100P、S600 也必须选择各自制品。不要用通用 PyPI 包替换板卡 Runtime。
 
-各平台发布同一组清单——`models.yaml`（产物清单）与 `benchmarks.yaml`（性能与精度观测）——以及校验它们的 JSON Schema。清单是发布内容与实测结果的权威记录，目录数据只是派生的只读视图。
+## 阅读和修改代码
 
-| 平台 | 清单目录 | 发布 Tag | 统计 |
-| :--- | :--- | :--- | :--- |
-| X5 | [`platforms/x5/docs/release`](./platforms/x5/docs/release) | `x5-v1.1.2` | 37 个示例，239 条基准记录 |
-| S | [`platforms/s/docs/release`](./platforms/s/docs/release) | `s-v1.1.2` | 35 个示例，563 条基准记录 |
-| X3 | [`platforms/x3/release`](./platforms/x3/release) | `x3-v1.1.2` | 15 个示例，20 条基准记录 |
+```text
+samples/
+├── _shared/                  # 平台识别、资产读取、共用图像字节转换
+└── vision/
+    ├── ultralytics_yolo/      # 检测流程与 DFL / LTRB 解码
+    ├── resnet/               # 分类流程与 Top-K 结果
+    └── paddle_ocr/           # 检测 → 裁剪 → 识别 → CTC 解码
+```
 
-历史发布 Tag（`x5-v1.1.2`、`s-v1.1.2`、`x3-v1.1.2` 及其更早版本）保留发布时的**仓库根目录布局**：检出 Tag 后顶层是 `samples/`、`docs/release/` 或 `release/`，而不是 `platforms/`。因此旧版版本说明中的链接与清单自身的 `source.path` 字段，仍按原有方式解析到这些 Tag。
+每个 Sample 的 `runtime/python/main.py` 是命令入口；任务模块维护推理流程，`model_runner.py` 封装模型调用，`model_binding.py` 检查制品及输入输出约定。`conversion/` 在开发主机上生成模型，`evaluator/` 评估结果，`test_data/` 保存最小输入。具体调用示例和文件职责见各 Sample README。
+
+同一算法在一处维护，必要的模型差异留在局部适配中。例如 OCR 两代模型使用不同词典，YOLO DFL 和直接 LTRB 使用不同解码，不因目录合并而混用。
+
+## 平台源码、数据与历史版本
+
+未纳入本轮的模型仍从平台目录使用。X3 保留历史内容，不参与此次 X5/S 整合。
+
+| 平台 | 源码与使用说明 | 发布事实 |
+| --- | --- | --- |
+| X5 | [平台 README](platforms/x5/README_cn.md) | [模型与 Benchmark 清单](platforms/x5/docs/release) |
+| S100 / S100P / S600 | [平台 README](platforms/s/README_cn.md) | [模型与 Benchmark 清单](platforms/s/docs/release) |
+| X3（历史） | [平台 README](platforms/x3/README_cn.md) | [历史清单](platforms/x3/release) |
+
+数据集准备仍位于 [X5 datasets](platforms/x5/datasets) 和 [S datasets](platforms/s/datasets)。现有清单继续保存模型 URL、身份和历史测量；合并源码不修改已发布资产的含义。
+
+历史 Tag 保留当时的仓库布局，旧版本文档应与对应 Tag 一起阅读。[平台登记](platforms/README.md)说明历史分支；本地整合不代表已切换默认分支或发布新版本。
+
+[验证记录](docs/releases/unified-migration/2026-09-16-p2-validation.md)记录之前的运行适配检查；[本次整合修订](docs/superpowers/plans/2026-09-17-representative-integration.md)分别跟踪源码归并、文档、转换与回归验证。
 
 ## 目录数据 (Catalog Data)
 

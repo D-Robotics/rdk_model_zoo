@@ -2,6 +2,14 @@ English | [简体中文](./README_cn.md)
 
 # ResNet Model Description
 
+This path is retained for existing X5 applications. Its `runtime/python`
+classes, command, and model downloader are compatibility entrypoints that
+delegate to the maintained [canonical ResNet18 sample](../../../../../samples/vision/resnet/README.md).
+Prepare the model explicitly, then use the old command as before; the old
+packed-NV12 defaults and return tuple remain available. The canonical guide
+also documents the S100/S600 contracts, host checks, conversion limits, and
+troubleshooting.
+
 This directory provides the complete usage guide for the ResNet sample in Model Zoo, including algorithm overview, model conversion, runtime inference, model file management, and evaluation notes.
 
 ## Algorithm Overview
@@ -65,6 +73,7 @@ ResNet can complete the following task:
 
 ```bash
 cd runtime/python
+bash ../../model/download.sh
 bash run.sh
 ```
 

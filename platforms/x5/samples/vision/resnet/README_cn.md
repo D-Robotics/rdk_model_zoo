@@ -2,6 +2,11 @@
 
 # ResNet 模型说明
 
+本路径为现有 X5 应用保留。`runtime/python` 中的类、命令和模型下载器现在是
+兼容入口，委托到维护中的[统一 ResNet18 sample](../../../../../samples/vision/resnet/README_cn.md)。
+请先显式准备模型，再使用旧命令；原有 packed-NV12 默认值和返回元组仍然可用。
+统一说明还包含 S100/S600 契约、主机检查、转换限制和故障排查。
+
 本目录给出 ResNet sample 在 Model Zoo 中的完整使用说明，包括算法概览、模型转换、运行时推理、模型文件管理和评测说明。
 
 ## 算法介绍
@@ -65,6 +70,7 @@ ResNet 可完成以下任务：
 
 ```bash
 cd runtime/python
+bash ../../model/download.sh
 bash run.sh
 ```
 
