@@ -1,12 +1,13 @@
 """YOLO26 family contracts through the unified sample, without board runtime."""
 from pathlib import Path
-import sys, unittest, json
+import sys, unittest
 import numpy as np
 import importlib, importlib.util, types
 import subprocess, tempfile
 from unittest.mock import patch, MagicMock
 S = Path(__file__).resolve().parents[1]
 R = S.parents[2]
+sys.path.insert(0, str(R))
 sys.path.insert(0, str(S/'runtime/python'))
 
 class Yolo26Contracts(unittest.TestCase):
@@ -140,11 +141,12 @@ class Yolo26Contracts(unittest.TestCase):
         self.assertIs(get_task_types(profile, 'yolov8', 'detect')[0], YoloDetect)
         self.assertIs(get_task_types(profile, 'yolo26', 'detect')[0], YOLO26Detect)
 
-    def test_all_100_assets_match_catalog(self):
+    def test_all_100_assets_match_manifests(self):
+        from samples._shared.assets import list_assets
         from yolo_assets import model_url
         from yolo_platform import resolve_platform
-        data=json.loads((R/'tools/catalog-publisher/dist/catalog.json').read_text(encoding='utf-8'))
-        published={a['url'] for m in data['models'] for a in m.get('assets',[]) if a.get('url')}
+        published={asset.url for group in ('x5','s')
+                   for asset in list_assets(group,'ultralytics_yolo26') if asset.url}
         urls=set()
         for platform in ('x5','s100','s100p','s600'):
             for task in ('detect','cls','seg','pose','obb'):

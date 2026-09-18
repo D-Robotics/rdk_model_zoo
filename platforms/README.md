@@ -38,7 +38,7 @@ The historical demo line, preserved as published: `demos/` for runnable demos, `
 
 ## Manifests
 
-Every platform publishes `models.yaml` and `benchmarks.yaml` along with the JSON Schemas that validate them. The manifests are authoritative; the catalog data package produced by [`tools/catalog-publisher`](../tools/catalog-publisher) is a derived view.
+Every platform publishes `models.yaml` and `benchmarks.yaml` along with the JSON Schemas that validate them. These manifests are the authoritative model and measurement records.
 
 | Platform | Samples | Benchmark records | Performance metrics | Accuracy metrics |
 | :--- | ---: | ---: | ---: | ---: |

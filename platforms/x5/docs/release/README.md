@@ -26,10 +26,6 @@ The X5 manifest includes every sample in the release's top-level model list, inc
 
 `benchmarks.yaml` records performance and accuracy values already published in repository documentation. Each record references a model in `models.yaml` and an immutable release source. Missing fields mean that the source did not publish that condition; they must not be inferred. A metric qualifier preserves claims such as `200+ FPS` as a lower bound. Accuracy metrics without a published dataset remain valid, but the catalog build emits a warning and the detail view marks their test conditions as incomplete.
 
-## Catalog data package
+## Consumer expectations
 
-The catalog is generated from `models.yaml` and `benchmarks.yaml`. It displays the source Release Tag and provides searchable model cards, assets, benchmark values, test conditions, and immutable evidence links. The YAML manifests, GitHub Release assets, and sample READMEs remain the authoritative release artifacts.
-
-When either manifest changes, run `npm ci` and `npm run check` from `tools/catalog-publisher/` on the aggregated `main` branch, where this manifest sits at `platforms/x5/docs/release/`. The same directory is `docs/release/` inside this platform's own branch and inside every historical release tag, so a manifest edit travels unchanged between the two layouts.
-
-The build writes `catalog.json` and `catalog.meta.json`; the metadata file pins the payload's exact byte count and SHA256 digest. `.github/workflows/model-catalog-data.yml` runs the checks and uploads both files as a build artifact. No branch of this repository deploys a website.
+The YAML manifests, GitHub Release assets, and sample READMEs are the authoritative release artifacts. Consumers must preserve the source Release Tag, unknown checksums, missing measurements, test conditions, and immutable evidence links without inventing replacement values.

@@ -219,6 +219,4 @@ python -m unittest discover -s samples/vision/paddle_ocr/tests -p 'test_*.py' -v
 The current evidence includes exact Python stage/input/output/lifetime checks
 on X5 8GB, X5 4GB, and S100, including the legacy Python wrappers. Accuracy
 and performance remain unmeasured until a labeled dataset and target-specific
-measurement are supplied. See the
-[OCR source audit](../../../docs/releases/unified-migration/p2-ocr-source-audit.md)
-for the conversion and protocol evidence.
+measurement are supplied.

@@ -12,7 +12,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s600 --
 python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s100 --list-models
 ```
 
-Remove `--dry-run` on the target board to run inference. This existing compatibility entry still downloads missing default assets; explicit `--model-path` files are never downloaded. A recognized filename selects its family; use `--family` for custom names. `--target` is an alias for `--platform`, with `auto` available for detection. Explicit selection works on a development host for listing, dry-run and `--download`; inference rejects unknown local hardware and target mismatches before downloading or loading a model. Target identity comes from [the shared registry](../../../docs/release/platforms.json), independently of artifact support and validation status.
+Remove `--dry-run` on the target board to run inference. This existing compatibility entry still downloads missing default assets; explicit `--model-path` files are never downloaded. A recognized filename selects its family; use `--family` for custom names. `--target` is an alias for `--platform`, with `auto` available for detection. Explicit selection works on a development host for listing, dry-run and `--download`; inference rejects unknown local hardware and target mismatches before downloading or loading a model. Target identity comes from [the shared registry](../../../platforms/registry.json), independently of artifact support and validation status.
 
 | Contract | X5 | S100 / S100P / S600 |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ Remove `--dry-run` on the target board to run inference. This existing compatibi
 
 Artifact names are not proof of binary input geometry. Runtime metadata must describe positive, even, square batch-one NV12 inputs. Flat metadata requires `--input-shape HxW`; conflicting geometry is rejected. DFL detection decoders require three feature levels and reg=16; YOLO26 uses direct four-channel LTRB at strides 8/16/32; pose requires 17 keypoints.
 
-YOLOv8n DFL and YOLO26n direct-LTRB detection passed fixed-input old/new comparisons on X5 8GB/4GB, S100, S100P and S600. The detection tasks accept injected runner callables; see [the contract](DETECTION_CONTRACT.md), [P1 evidence](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md) and [P2 evidence](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md). This does not validate other scales/tasks, full-dataset accuracy, performance or real toolchain compilation.
+YOLOv8n DFL and YOLO26n direct-LTRB detection passed fixed-input old/new comparisons on X5 8GB/4GB, S100, S100P and S600. The detection tasks accept injected runner callables; see [the contract](DETECTION_CONTRACT.md). This does not validate other scales/tasks, full-dataset accuracy, performance or real toolchain compilation.
 
 Host checks need NumPy, OpenCV and SciPy. Inference additionally needs `hbm_runtime` from the board image. No silent dependency installation occurs. Help, dry-run and inventory commands do not load board runtime.
 
@@ -48,7 +48,7 @@ Old platform Python/conversion/evaluation/download commands forward here. They r
 
 [Python](runtime/python/README.md) · [Models](model/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md) · [C++](runtime/cpp/README.md)
 
-Host tests: `python -m unittest discover -s samples/vision/ultralytics_yolo/tests`. Build catalog assets first with `npm --prefix tools/catalog-publisher run build` for the asset-inventory comparison.
+Host tests: `python -m unittest discover -s samples/vision/ultralytics_yolo/tests`. Asset-inventory checks read the X5 and S platform manifests directly.
 
 ## YOLO26: one family in this sample
 

@@ -32,20 +32,16 @@ X5、S、X3 三条版本线独立维护。每条版本线使用 [Semantic Versio
 
 Manifest 记录本版本提供的模型和资源、示例路径、下载脚本或 URL、文件格式，以及已知的校验和。未知的 SHA-256 必须明确写为 `null`，不能猜测或伪造。只要 manifest 中存在 `sha256: null`，发版说明就必须披露校验和覆盖不完整。
 
-模型 Manifest 与 Benchmark Manifest 描述已发布的源码资源和文档中已经记录的测量结果。YAML Manifest、GitHub Release 资产和模型 README 是权威来源，目录数据包是它们的展示层。缺失的性能或精度指标表示该版本尚未完成或记录对应实测，不表示数据受限或保密。除来源文档明确记录的条件外，这些内容不代表板端运行或兼容性认证。
+模型 Manifest 与 Benchmark Manifest 描述已发布的源码资源和文档中已经记录的测量结果。YAML Manifest、GitHub Release 资产和模型 README 是权威来源。缺失的性能或精度指标表示该版本尚未完成或记录对应实测，不表示数据受限或保密。除来源文档明确记录的条件外，这些内容不代表板端运行或兼容性认证。
 
 ## 3. 人工发版流程
 
 1. 选择一条平台分支，并确认发版内容属于该平台。
 2. 更新 `VERSION`、`CHANGELOG.md`、`docs/release/models.yaml`、`docs/release/benchmarks.yaml` 和 `docs/releases/<tag>.md`，两个 Manifest 都必须填写新的 Release Tag。
 3. 复核 Manifest：示例路径和下载脚本必须存在，URL 必须正确，未知校验和必须写为 `null`，每条 Benchmark 必须引用不可变的仓库证据；检查发版文件中的 Tag、分支、平台和版本一致。
-4. 复核源码差异，并从全新依赖安装开始校验目录数据。发布工具只存在于聚合后的 `main` 分支，该分支上本平台检出在 `platforms/x5`；历史发布 Tag 保留仓库根目录布局，检出 Tag 后同一份清单位于 `docs/release/`：
+4. 从干净检出中复核源码差异，并执行相关 Sample 与 Manifest 检查：
 
    ```bash
-   cd tools/catalog-publisher
-   npm ci
-   npm run check
-   cd ../..
    git diff --check
    ```
 
@@ -73,10 +69,8 @@ Manifest 记录本版本提供的模型和资源、示例路径、下载脚本�
      --verify-tag
    ```
 
-8. 将平台分支合入 `main`，使聚合目录获取新的 Tag，然后等待 `.github/workflows/model-catalog-data.yml` 完成。该流程校验全部平台清单、重建目录数据包，并上传 `catalog.json` 与 `catalog.meta.json`。核对上传的 `catalog.meta.json` 是否声明了新的平台 Tag，以及其 `sha256` 是否仍与所锁定的载荷一致。聚合目录按精确模型变体聚合不可变的 X5、S 与 X3 Release Manifest；没有任何分支部署网站，因此不存在需要等待的部署步骤。
-9. 复核 GitHub Release、Release 附件、Tag、分支提交、`VERSION`、仓库 Manifest 与上传的目录数据包是否指向同一个平台版本。项目流程需要时，在变更记录或发版记录中记录 Release URL 和提交号。
-
-如果目录构建失败，应修复来源并发布修正提交和新 Tag。`workflow_dispatch` 只能用于重建一个内容未变且已经批准的 ref，不能用它把已发布 Tag 对应的数据替换为其他内容。
+8. 平台发布完成后，将平台分支合入 `main`。
+9. 复核 GitHub Release、Release 附件、Tag、分支提交、`VERSION` 与仓库 Manifest 是否指向同一个平台版本。项目流程需要时，在变更记录或发版记录中记录 Release URL 和提交号。
 
 ## 4. Tag 和 Release 的不可变性
 

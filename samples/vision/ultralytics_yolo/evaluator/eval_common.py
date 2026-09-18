@@ -49,7 +49,7 @@ if _RUNTIME_DIR not in sys.path:
     sys.path.insert(0, _RUNTIME_DIR)
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
-if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
+if not (_REPOSITORY_ROOT / 'platforms/registry.json').is_file():
     raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))

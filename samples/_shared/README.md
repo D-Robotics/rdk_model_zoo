@@ -3,7 +3,7 @@
 These modules serve ResNet, Ultralytics YOLO and PaddleOCR. They do not define a global
 model runtime or a global command.
 
-`platforms.py` reads concrete identity from `docs/release/platforms.json`.
+`platforms.py` reads concrete identity aliases from `platforms/registry.json`.
 It checks boardinfo first, then X5's socinfo, then the observed device-tree
 model. Exact `X5U` was observed on the two test X5 boards; `X5H` and `X5M`
 are user-supplied aliases, not additional tested hardware. Explicit selection

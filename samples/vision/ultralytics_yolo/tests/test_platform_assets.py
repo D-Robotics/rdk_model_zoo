@@ -2,7 +2,6 @@
 from pathlib import Path
 import sys
 import unittest
-import json
 
 ROOT=Path(__file__).resolve().parents[4]
 sys.path.insert(0,str(ROOT/'samples/vision/ultralytics_yolo/runtime/python'))
@@ -33,10 +32,12 @@ class PlatformAcceptance(unittest.TestCase):
         self.assertTrue(is_nms_free(resolve_platform('s600'),'yolov10'))
 
     def test_all_advertised_assets_exist_in_manifest_snapshot(self):
+        from samples._shared.assets import list_assets
         from yolo_platform import resolve_platform
         from yolo_assets import family_registry,model_url,UnsupportedAssetError
-        data=json.loads((ROOT/'tools/catalog-publisher/dist/catalog.json').read_text(encoding='utf-8'))
-        urls={a['url'] for m in data['models'] for a in m.get('assets',[]) if a.get('url')}
+        urls={asset.url for group in ('x5','s')
+              for sample in ('ultralytics_yolo','ultralytics_yolo26')
+              for asset in list_assets(group,sample) if asset.url}
         for key in ['x5','s100','s100p','s600']:
             profile=resolve_platform(key)
             for family,spec in family_registry(profile).items():

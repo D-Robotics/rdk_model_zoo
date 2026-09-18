@@ -55,20 +55,7 @@ Dataset preparation remains in [X5 datasets](platforms/x5/datasets) and [S datas
 
 Historical tags retain their release-time layout. Read their documentation at the matching tag. The [platform registry guide](platforms/README.md) describes historical branches; local integration does not switch the default branch or publish a release.
 
-The [validation record](docs/releases/unified-migration/2026-09-16-p2-validation.md) describes previous runtime checks. The [integration revision](docs/superpowers/plans/2026-09-17-representative-integration.md) tracks source consolidation, documentation, conversion and regression checks separately.
-
-## Catalog Data
-
-`tools/catalog-publisher` reads the three platform manifests, validates them against their own schemas, applies the documented normalisation and errata layers, and emits a versioned data package:
-
-```bash
-cd tools/catalog-publisher
-npm ci
-npm run check           # validate sources, run tests, typecheck, rebuild, verify
-npm run catalog:build   # write dist/catalog.json and dist/catalog.meta.json
-```
-
-`dist/catalog.meta.json` pins the exact bytes of `catalog.json` with a SHA256 digest; consumers verify that digest before using the data. The package is uploaded as a build artifact by `.github/workflows/model-catalog-data.yml`. No branch of this repository deploys a website.
+The static Model Zoo interface is maintained under [`docs/model_zoo_web`](docs/model_zoo_web). Model data has not yet been connected to that interface.
 
 ## License
 

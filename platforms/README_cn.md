@@ -34,7 +34,7 @@ main 分支统一维护全部已支持平台。尚未合并的 Sample 保留在 
 
 ## 清单 (Manifests)
 
-每个平台都发布 `models.yaml` 与 `benchmarks.yaml`，以及校验它们的 JSON Schema。清单是权威记录；[`tools/catalog-publisher`](../tools/catalog-publisher) 产出的目录数据包只是派生视图。
+每个平台都发布 `models.yaml` 与 `benchmarks.yaml`，以及校验它们的 JSON Schema。这些清单是模型与测量数据的权威记录。
 
 | 平台 | 示例数 | 基准记录 | 性能指标 | 精度指标 |
 | :--- | ---: | ---: | ---: | ---: |

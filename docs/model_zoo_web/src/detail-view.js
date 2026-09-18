@@ -46,7 +46,6 @@
   }
 
   function render({ model: m, models, data }) {
-    const git = `https://github.com/D-Robotics/rdk_model_zoo/blob/${data.ref}/`;
     const b = m.benchmark;
     const hardware = hardwareOf(m, data);
     const variants = models.filter(other => other.sample === m.sample && other.task === m.task);
@@ -61,7 +60,7 @@
       <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>
       <section class="mz-section" id="downloads"><div class="mz-section-heading"><h2>模型文件</h2><span>${m.assets.length} 个文件</span></div><div class="mz-files">${m.assets.map(a => `<div class="mz-file"><div class="mz-file-copy"><div class="mz-file-title"><h3>${assetRole(a)}</h3><span>${esc(a.format.toUpperCase())}</span></div><code>${esc(a.filename)}</code>${a.sha256 ? `<small>SHA-256: ${esc(a.sha256)}</small>` : ''}</div>${external(a.url, icon('download') + '<span>下载</span>', 'mz-download')}</div>`).join('')}</div></section>
       </div>
-      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-supported-platform"><span class="mz-platform-mark">${icon('cpu')}</span><div><strong>${esc(hardware)}</strong></div></div></section><section><h2>开发资源</h2><div class="mz-resource-links">${external(m.source, '模型仓库')}${external(m.source + '/runtime/python', '运行文档')}${external(m.source + '/conversion', '模型转换')}${external(git + 'docs/release/models.yaml', '发布清单')}</div></section><section><h2>模型许可</h2>${external(m.source, '查看许可说明')}</section></aside></div>
+      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-supported-platform"><span class="mz-platform-mark">${icon('cpu')}</span><div><strong>${esc(hardware)}</strong></div></div></section><section><h2>开发资源</h2><div class="mz-resource-links">${external(m.source, '模型仓库')}${external(m.source + '/runtime/python', '运行文档')}${external(m.source + '/conversion', '模型转换')}</div></section><section><h2>模型许可</h2>${external(m.source, '查看许可说明')}</section></aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model"><img src="${esc(other.coverImage)}" alt="${esc(other.name)}" loading="lazy"><div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}
       `;
   }

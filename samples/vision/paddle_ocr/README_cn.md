@@ -200,5 +200,4 @@ python -m unittest discover -s samples/vision/paddle_ocr/tests -p 'test_*.py' -v
 
 当前证据包括 X5 8GB、X5 4GB 和 S100 的 Python 阶段/输入/输出/生命周期精确
 检查，也包括旧 Python wrapper。准确率和性能需要带标注数据及目标特定测量，
-当前尚未测量。转换和协议证据见
-[`OCR 源码审计`](../../../docs/releases/unified-migration/p2-ocr-source-audit.md)。
+当前尚未测量。

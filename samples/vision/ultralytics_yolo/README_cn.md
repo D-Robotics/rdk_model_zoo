@@ -1,6 +1,6 @@
 # Ultralytics YOLO：X5 / S 共用 Sample
 
-`--target` 与 `--platform` 等价，均可用 `auto`。主机上的列表、dry-run 和 `--download` 可以显式选择目标；实际推理在下载或加载模型前校验本机身份，拒绝未知硬件或目标不匹配。身份别名来自[共用注册表](../../../docs/release/platforms.json)，不代表制品支持或实测结论。本历史入口仍保留默认模型缺失时下载的兼容行为。
+`--target` 与 `--platform` 等价，均可用 `auto`。主机上的列表、dry-run 和 `--download` 可以显式选择目标；实际推理在下载或加载模型前校验本机身份，拒绝未知硬件或目标不匹配。身份别名来自[共用注册表](../../../platforms/registry.json)，不代表制品支持或实测结论。本历史入口仍保留默认模型缺失时下载的兼容行为。
 
 模型准备和列表额外依赖 PyYAML，直接读取已有平台 Manifest。`--list-models` 显示可传给 `--asset-id` 的精确 `group:sample:filename` 引用，限定既有身份而不更名，也不代表实机通过。例如：
 
@@ -53,7 +53,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s100 --
 
 分类文件名是发布资产的名称，不能替代二进制输入形状检查。运行时从模型元数据读取尺寸，校验 batch=1、正偶数方形尺寸及输入协议；不明确的 flat 输入需要显式 `--input-shape HxW`，与元数据冲突会报错。DFL 检测类暂限三个特征层、reg=16；YOLO26 使用 stride 8/16/32 的四通道 LTRB；姿态暂限 17 点。
 
-YOLOv8n DFL 与 YOLO26n 直接 LTRB 检测已在 X5 8GB/4GB、S100、S100P、S600 通过固定输入旧新对照，检测任务支持注入可替换 runner。详见[契约](DETECTION_CONTRACT.md)、[P1 证据](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md)和 [P2 证据](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md)。这不代表其他尺寸/任务、完整数据集精度、性能或真实编译工具链已验证。
+YOLOv8n DFL 与 YOLO26n 直接 LTRB 检测已在 X5 8GB/4GB、S100、S100P、S600 通过固定输入旧新对照，检测任务支持注入可替换 runner，详见[契约](DETECTION_CONTRACT.md)。这不代表其他尺寸/任务、完整数据集精度、性能或真实编译工具链已验证。
 
 Python 主机检查需要 NumPy、OpenCV、SciPy；实际推理需要板卡系统提供的 `hbm_runtime`，脚本不会静默安装依赖。`--help`、`--dry-run`、下载列表不加载板卡运行时。显式 `--model-path` 不会自动下载文件；可识别的文件名会选择模型家族，自定义名称请同时指定 `--family`。
 
@@ -65,7 +65,7 @@ Python 主机检查需要 NumPy、OpenCV、SciPy；实际推理需要板卡系�
 - [评测](evaluator/README_cn.md)
 - [C++](runtime/cpp/README_cn.md)
 
-回归检查：`python -m unittest discover -s samples/vision/ultralytics_yolo/tests`；资产清单测试需要先运行 `npm --prefix tools/catalog-publisher run build`。
+回归检查：`python -m unittest discover -s samples/vision/ultralytics_yolo/tests`；资产清单测试直接读取 X5 与 S 平台 Manifest。
 
 ## YOLO26：使用同一个 Sample 入口
 

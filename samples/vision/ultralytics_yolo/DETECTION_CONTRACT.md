@@ -59,10 +59,9 @@ profile and are not inferred from the tensor names.
 
 ## Observed pilot artifact mapping
 
-The following mapping is grounded in the runtime metadata captured in
-`docs/releases/unified-migration/evidence/*-metadata.log`. The compiler names
-are opaque, so the binding discovers the same map from shape and dtype and
-validates it on every model load.
+The following mapping is grounded in runtime metadata captured during board
+validation. The compiler names are opaque, so the binding discovers the same
+map from shape and dtype and validates it on every model load.
 
 | Target | Input roles | `cls_8` / `box_8` | `cls_16` / `box_16` | `cls_32` / `box_32` |
 | --- | --- | --- | --- | --- |
@@ -164,14 +163,12 @@ Fixed-input old/new YOLOv8n comparisons passed on X5 8GB/4GB, S100, S100P,
 and S600, using the same per-target artifact and bus image as the original
 source. The native command, compatibility wrapper, explicit scheduling,
 returned-result lifetime across another inference, and wrong-target rejection
-were also exercised. See the [validation record](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md)
-for exact source snapshots, artifacts, runtime versions, tolerances, and logs.
-This does not certify every DFL family/scale, performance, dataset accuracy,
-SDK raw-buffer ownership beyond the returned task results, or other YOLO tasks.
+were also exercised. This does not certify every DFL family/scale,
+performance, dataset accuracy, SDK raw-buffer ownership beyond the returned
+task results, or other YOLO tasks.
 
 P2 Task 1 also compared YOLO26n direct-LTRB on the same five targets. Boxes,
 scores, class IDs and ordering matched each original-source baseline exactly;
 native entry and returned-result lifetime passed. The same candidate reran DFL
-and available ResNet18 board regressions. See the [P2 validation record](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md)
-for the distinct source snapshot, 95 host tests and independent review. Other
-YOLO26 tasks and model scales remain outside this result.
+and available ResNet18 board regressions. Other YOLO26 tasks and model scales
+remain outside this result.

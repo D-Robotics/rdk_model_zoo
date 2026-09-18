@@ -32,20 +32,16 @@ The model manifest and benchmark manifest describe the published source inventor
 
 ## 3. Manual release procedure
 
-Each hardware line is released independently and no line blocks another. The aggregate catalog is built from all three platform trees on the `main` branch, where every manifest is read from its checked-out `platforms/<id>` distribution. There is no per-platform pinning file and no ordering requirement: a release line never reads another line's working branch, and no branch deploys a website. Only the X5 release is marked GitHub's repository-wide Latest; each hardware line still has its own version.
+Each hardware line is released independently and no line blocks another. A release line never reads another line's working branch. Only the X5 release is marked GitHub's repository-wide Latest; each hardware line still has its own version.
 
 Verify all declared summary counts against actual model assets and benchmark measurements. Export the two YAML attachments directly from the released tag and attach `SHA256SUMS` for those files. This checksum file does not certify externally hosted model binaries. Existing pushed preparation tags must be retained; metadata corrections receive a new patch tag.
 
 1. Select one platform branch and confirm that the release scope belongs to that platform.
 2. Update `VERSION`, `CHANGELOG.md`, `docs/release/models.yaml`, `docs/release/benchmarks.yaml`, and `docs/releases/<tag>.md`. Both manifests must carry the new Release Tag.
 3. Review the manifests: sample paths and download scripts must exist, URLs must be correct, unknown checksums must be `null`, and every benchmark must cite immutable repository evidence. Check that the tag, branch, platform, and version agree in the release files.
-4. Review the source diff, then validate the catalog from a clean dependency install. The publisher lives only on the aggregated `main` branch, where this platform is checked out at `platforms/x5`; the historical release tags keep the repository-root layout, so on a tag checkout the same manifests sit at `docs/release/`:
+4. Review the source diff and run the relevant sample and manifest checks from a clean checkout:
 
    ```bash
-   cd tools/catalog-publisher
-   npm ci
-   npm run check
-   cd ../..
    git diff --check
    ```
 
@@ -73,10 +69,8 @@ Verify all declared summary counts against actual model assets and benchmark mea
      --verify-tag
    ```
 
-8. Merge the platform branch into `main` so the aggregate catalog picks up the new tags, then wait for `.github/workflows/model-catalog-data.yml`. It validates every platform manifest, rebuilds the catalog package, and uploads `catalog.json` together with `catalog.meta.json`. Verify that the uploaded `catalog.meta.json` names the new platform tag and that its `sha256` still matches the payload it pins. The aggregate catalog joins the immutable X5, S, and X3 release manifests by exact model variant; no branch deploys a website, so there is no deployment step to wait for.
-9. Verify that the GitHub Release, attached manifest, tag, branch commit, `VERSION`, repository manifests, and the uploaded catalog package all refer to the same platform version. Record the release URL and commit in the change log or release record when the project workflow requires it.
-
-If the catalog build fails, fix the source and publish a corrective commit and tag. A `workflow_dispatch` run may only rebuild an unchanged, already approved ref; it must not be used to replace a published tag with different data.
+8. Merge the platform branch into `main` after the platform release is complete.
+9. Verify that the GitHub Release, attached manifests, tag, branch commit, `VERSION`, and repository manifests all refer to the same platform version. Record the release URL and commit in the change log or release record when the project workflow requires it.
 
 ## 4. Tag and release immutability
 

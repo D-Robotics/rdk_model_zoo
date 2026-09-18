@@ -55,20 +55,7 @@ samples/
 
 历史 Tag 保留当时的仓库布局，旧版本文档应与对应 Tag 一起阅读。[平台登记](platforms/README.md)说明历史分支；本地整合不代表已切换默认分支或发布新版本。
 
-[验证记录](docs/releases/unified-migration/2026-09-16-p2-validation.md)记录之前的运行适配检查；[本次整合修订](docs/superpowers/plans/2026-09-17-representative-integration.md)分别跟踪源码归并、文档、转换与回归验证。
-
-## 目录数据 (Catalog Data)
-
-`tools/catalog-publisher` 读取三个平台的清单，用各平台自带的 Schema 校验，套用已归档的归一化与勘误层，产出带版本的目录数据包：
-
-```bash
-cd tools/catalog-publisher
-npm ci
-npm run check           # 校验源、跑测试、类型检查、重建并复核
-npm run catalog:build   # 写出 dist/catalog.json 与 dist/catalog.meta.json
-```
-
-`dist/catalog.meta.json` 用 SHA256 摘要锁定 `catalog.json` 的精确字节；使用方在读取前需校验该摘要。该数据包由 `.github/workflows/model-catalog-data.yml` 构建并上传为构建产物。本仓库任何分支都不部署网站。
+静态 Model Zoo 网页维护在 [`docs/model_zoo_web`](docs/model_zoo_web)，目前尚未接入正式模型数据。
 
 ## 许可证 (License)
 

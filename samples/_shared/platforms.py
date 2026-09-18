@@ -14,7 +14,7 @@ SOC_NAME_PATH = Path('/sys/class/boardinfo/soc_name')
 SOCINFO_NAME_PATH = Path('/sys/class/socinfo/soc_name')
 BOARD_TYPE_PATH = Path('/sys/class/boardinfo/board_type')
 DEVICE_TREE_MODEL_PATH = Path('/proc/device-tree/model')
-_REGISTRY = Path(__file__).resolve().parents[2] / 'docs/release/platforms.json'
+_REGISTRY = Path(__file__).resolve().parents[2] / 'platforms/registry.json'
 
 
 @lru_cache(maxsize=1)
