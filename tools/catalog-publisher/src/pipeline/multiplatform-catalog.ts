@@ -54,7 +54,7 @@ async function manifestPair(
   if (String(benchmarks.release.version) !== version) {
     throw new Error(`Release identity mismatch for ${expectedTag}`);
   }
-  const platformVersion = (await readSourceFile(repositoryRoot, source, "VERSION")).trim();
+  const platformVersion = (await readSourceFile(repositoryRoot, source, source.versionFile)).trim();
   if (platformVersion !== version) {
     throw new Error(`${source.platform}: VERSION ${platformVersion} and manifest release version ${version} disagree`);
   }

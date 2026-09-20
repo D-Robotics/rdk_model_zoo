@@ -1,8 +1,7 @@
-import { readFile } from "node:fs/promises";
-import { isAbsolute, relative, resolve, win32 } from "node:path";
+import { isAbsolute, win32 } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
-import { readSourceFile, type PlatformSource } from "../sources";
+import { readRepositoryBlob, readSourceFile, repositoryBlobExists, type PlatformSource } from "../sources";
 import type { BenchmarkRecord, ModelRecord } from "../catalog/types";
 
 export class CatalogValidationError extends Error {
@@ -112,7 +111,7 @@ function escapeRegExp(value: string): string {
 }
 
 /** True when `content` contains `section` as an exact ATX heading outside a code fence. */
-function hasExactMarkdownAtxHeading(content: string, section: string): boolean {
+export function hasExactMarkdownAtxHeading(content: string, section: string): boolean {
   const normalizedSection = section.trim();
   if (!/^#{1,6}(?:[\t ]+|$)/.test(normalizedSection)) return false;
 
@@ -142,19 +141,25 @@ const MARKDOWN_EXTENSION = /\.(?:md|mdx)$/i;
 /**
  * Verifies that every benchmark cites evidence this repository actually holds.
  *
+ * A record names `(ref, path, section)` and the ref is the immutable revision
+ * the evidence was published at, so the blob is read from the repository's
+ * object store (`git show <ref>:<path>`), not from the checked-out worktree.
+ * On the unified branch a cited sample may not be migrated yet, and a migrated
+ * sample may legitimately have rewritten its README; the ref, not the worktree,
+ * is the provenance the record vouches for. Reading at the ref also keeps the
+ * check working for pinned-tag builds, whose records cite the same object
+ * store.
+ *
  * A benchmark points at one of three kinds of source, and each is checked as
  * strictly as it can be:
  *
- * - A Markdown file in this repository must contain the named section as an
+ * - A Markdown blob at the cited ref must contain the named section as an
  *   exact ATX heading, so a stale anchor cannot survive into the artifact.
  * - A record that names another repository (`source.repository_url`) is located
  *   outside this tree; only a non-empty path and locator are required.
  * - A non-text artifact (an evaluation screenshot, for example) is located by a
- *   caption it carries itself, which cannot be matched as a heading; the file
- *   still has to exist at the cited path.
- *
- * Only a checked-out distribution can be read file by file, so a pinned-tag
- * build skips the check and says so.
+ *   caption it carries itself, which cannot be matched as a heading; the blob
+ *   still has to exist at the cited ref.
  */
 async function validateRepositorySources(
   repositoryRoot: string,
@@ -162,8 +167,6 @@ async function validateRepositorySources(
   source: PlatformSource,
   benchmarks: BenchmarkRecord[]
 ): Promise<void> {
-  if (source.kind !== "worktree") return;
-  const root = resolve(repositoryRoot, source.worktreeRoot!);
   for (const benchmark of benchmarks) {
     const cited = benchmark.source;
     const sourcePath = cited.path;
@@ -180,21 +183,31 @@ async function validateRepositorySources(
       continue;
     }
     if (!isSafeRelativePath(sourcePath)) {
+      // The blob is addressed inside the git tree, but the traversal rules of a
+      // worktree path still apply: no absolute paths, no `..` escapes.
       throw new CatalogValidationError("INVALID_SOURCE_PATH", `Benchmark ${benchmark.id} has an unsafe source path: ${sourcePath}`);
     }
-    const sourceFile = resolve(root, sourcePath);
-    const sourceRelative = relative(root, sourceFile);
-    if (isAbsolute(sourceRelative) || win32.isAbsolute(sourceRelative) || sourceRelative === ".."
-      || sourceRelative.startsWith("../") || sourceRelative.startsWith("..\\")) {
-      throw new CatalogValidationError("INVALID_SOURCE_PATH", `Benchmark ${benchmark.id} has an unsafe source path: ${sourcePath}`);
+    // A non-text artifact (an evaluation screenshot, for example) is located by
+    // a caption it carries itself, which cannot be matched as a heading; only
+    // its existence at the cited ref is required, so the blob is never read.
+    if (!MARKDOWN_EXTENSION.test(sourcePath)) {
+      if (!(await repositoryBlobExists(repositoryRoot, cited.ref, sourcePath))) {
+        throw new CatalogValidationError(
+          "SOURCE_NOT_FOUND",
+          `${source.platform}: benchmark ${benchmark.id} source does not exist at ref ${cited.ref}: ${sourcePath}`
+        );
+      }
+      continue;
     }
     let content: string;
     try {
-      content = await readFile(sourceFile, "utf8");
+      content = await readRepositoryBlob(repositoryRoot, cited.ref, sourcePath);
     } catch {
-      throw new CatalogValidationError("SOURCE_NOT_FOUND", `${source.platform}: benchmark ${benchmark.id} source does not exist: ${sourcePath}`);
+      throw new CatalogValidationError(
+        "SOURCE_NOT_FOUND",
+        `${source.platform}: benchmark ${benchmark.id} source does not exist at ref ${cited.ref}: ${sourcePath}`
+      );
     }
-    if (!MARKDOWN_EXTENSION.test(sourcePath)) continue;
     if (!hasExactMarkdownAtxHeading(content, section)) {
       throw new CatalogValidationError(
         "SOURCE_SECTION_NOT_FOUND",
@@ -241,9 +254,8 @@ export async function validatePublishedManifests(options: ValidateDocumentsOptio
 
 /**
  * Second pass, run after the documented normalisation and errata layers: asset
- * references and the on-disk evidence each benchmark cites. The repository
- * source check needs a checked-out distribution, so it is skipped for pinned
- * historical builds and reported as such.
+ * references and the evidence each benchmark cites, read at the immutable ref
+ * the record names from this repository's object store.
  */
 export async function validateNormalizedCatalog(options: ValidateDocumentsOptions): Promise<void> {
   const { source, documents } = options;

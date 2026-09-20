@@ -11,7 +11,7 @@ describe("multi-platform variant catalog", () => {
     const platformTags = catalog.release.platform_tags!;
     expect(catalog.release.tag).toMatch(/^catalog-v1\.0\.0-[a-f0-9]{16}$/);
     expect(catalog.release.catalog_version).toBe(catalog.release.tag);
-    expect(platformTags).toEqual({ x5: "x5-v1.1.2", s: "s-v1.1.2", x3: "x3-v1.1.2" });
+    expect(platformTags).toEqual({ x5: "x5-v1.1.3", s: "s-v1.1.2", x3: "x3-v1.1.2" });
     const yolov8 = catalog.models.find((model) => model.id === "yolov8");
 
     expect(yolov8?.platforms?.map((platform) => platform.platform)).toEqual(["x5", "s", "x3"]);
@@ -83,11 +83,12 @@ describe("multi-platform variant catalog", () => {
     const catalog = await repositoryCatalog();
     const variants = catalog.models.flatMap((model) => model.variants ?? []);
 
-    // The reviewed baseline before the migration: 54 families, 584
-    // configurations, 820 benchmark observations. Splitting the platforms into
-    // one repository must not change any of them.
-    expect(catalog.models).toHaveLength(54);
-    expect(variants).toHaveLength(584);
+    // The reviewed baseline after the manifest relocation to docs/release:
+    // 57 families, 595 configurations, 820 benchmark observations. The three
+    // new S families (yoloe26_seg, yoloe11_seg, minicpm5-2b) contribute 11
+    // asset-only variants; no benchmark observation changed with the move.
+    expect(catalog.models).toHaveLength(57);
+    expect(variants).toHaveLength(595);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(820);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
@@ -100,7 +101,9 @@ describe("multi-platform variant catalog", () => {
     for (const platform of ["x5", "s", "x3"] as const) {
       const record = catalog.sources![platform]!;
       expect(record.kind).toBe("worktree");
-      expect(record.path).toBe(`platforms/${platform}`);
+      // X5 and S are read from the repository root; only the archived X3
+      // keeps its frozen subtree, so its manifests keep the subtree prefix.
+      expect(record.path).toBe(platform === "x3" ? "platforms/x3" : ".");
       expect(record.release_tag).toBe(catalog.release.platform_tags![platform]);
       expect(record.manifest_sha256).toMatch(/^[a-f0-9]{64}$/);
     }
@@ -109,12 +112,15 @@ describe("multi-platform variant catalog", () => {
   it("stamps every variant with the layout its sample path lives in", async () => {
     const catalog = await repositoryCatalog();
 
-    // The default build reads the migration layout, so every sample link must
-    // carry the platform prefix that actually holds the sample directory.
+    // X5/S variants link into the unified branch at the repository root; X3
+    // variants keep pointing at the frozen subtree that holds their demos.
     for (const variant of catalog.models.flatMap((model) => model.variants ?? [])) {
-      expect(variant.source_ref).toBe("main");
-      expect(variant.source_path_prefix).toMatch(/^platforms\/(x5|s|x3)$/);
-      expect(variant.sample_path.startsWith(variant.source_path_prefix!)).toBe(false);
+      const unified = variant.hardware !== "x3";
+      expect(variant.source_ref).toBe(unified ? "develop" : "main");
+      expect(variant.source_path_prefix).toBe(unified ? "" : "platforms/x3");
+      if (!unified) {
+        expect(variant.sample_path.startsWith(variant.source_path_prefix!)).toBe(false);
+      }
     }
   });
 

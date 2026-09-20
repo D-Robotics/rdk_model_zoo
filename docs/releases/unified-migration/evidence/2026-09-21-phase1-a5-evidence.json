@@ -1,0 +1,66 @@
+{
+  "record": "2026-09-21-phase1-a5-workflows",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous, per standing plan-execution instruction)",
+  "repo_head_before": "098f942",
+  "scope": "catalog-publisher pipeline reconciliation after the A4 manifest relocation",
+  "evidence_resolution": {
+    "change": "validateRepositorySources reads each benchmark's (ref, path, section) via git show from the repository object store; worktree reads removed; tag-kind sources no longer skip the check",
+    "prevalence_survey": {
+      "method": "PyYAML with duplicate-anchor rewrite; per-record git cat-file -e <ref>:<path>",
+      "x5": "239/239 resolvable (239 sha40 refs; worktree would resolve only 68: resnet 1 + ultralytics_yolo 67)",
+      "s": "538/538 resolvable (538 sha40; worktree would resolve only 368 ultralytics_yolo)",
+      "x3": "20/20 resolvable (20 sha40)"
+    },
+    "non_markdown_evidence": "existence-only via git cat-file -e; fixes execFile maxBuffer failure observed on s-v1.1.2:samples/speech/asr/test_data/readme_img/acc.jpg (707231 bytes, binary)",
+    "cache": "readRepositoryBlob memoizes (root, ref, path) per process; rejected reads are retried by the next caller",
+    "ci_precondition": "fetch-depth: 0 already set in model-catalog-data.yml; cited commits live on rdk_x5/rdk_s branches of the same repository"
+  },
+  "version_files": {
+    "docs/release/x5/VERSION": "1.1.3 (= ac11571:VERSION)",
+    "docs/release/s/VERSION": "1.1.2 (= 380e1a2:VERSION)",
+    "mechanism": "sources.json version_file per source (default VERSION at platform root); manifestPair reads source.versionFile; x3 unchanged (platforms/x3/VERSION)",
+    "rationale": "one repository root cannot hold three disagreeing platform versions; the version file travels with the release identity",
+    "a6_note": "a future repo-root VERSION/CHANGELOG from rdk_x5 is the ADR-0006 unified line, a different concept; the pipeline no longer reads the root VERSION"
+  },
+  "registry_transition": {
+    "platforms/registry.json": "x5/s rows: path '.', manifest_directory docs/release/{x5,s}, x5 release_tag/version x5-v1.1.3/1.1.3; readme/guidelines/license/release_notes still point at the frozen trees (files exist); description updated to the migration-window dual state; x3 row unchanged",
+    "final_split": "docs/release/registry.json convergence remains a closing-phase item"
+  },
+  "workflow": {
+    "model-catalog-data.yml": "added docs/release/** to pull_request and push path triggers; kept platforms/** (x3 archive still read from worktree); no Pages workflow copied (ADR-0001)",
+    "rdk_x5_tip_workflows_reviewed": ["model-catalog-ci.yml (docs/catalog website CI - ADR-0001 excluded)", "model-catalog-pages.yml (Pages deploy - excluded)"],
+    "portable_validation_conclusion": "none beyond what model-catalog-data.yml already runs (validate:sources + vitest + build + checksum contract via npm run check)"
+  },
+  "test_changes": {
+    "baseline_before_a5": "vitest 42 failed / 53 passed; validate:sources x5+s SOURCE_NOT_FOUND",
+    "final": "vitest 17 files / all passed; npm run check green end-to-end",
+    "notable_updates": [
+      "multiplatform totals 54/584/820 -> 57/595/820 (families +yoloe26_seg +yoloe11_seg +minicpm5-2b; variants +10+1+0; benchmarks unchanged - composition verified variant-by-variant)",
+      "platformTags x5 x5-v1.1.2 -> x5-v1.1.3; provenance path x5/s '.'; variant link stamps: x5/s develop + '' prefix, x3 main + platforms/x3",
+      "benchmark-coverage EXPECTED_MODEL_PATHS: paddleocr -> samples/vision/paddle_ocr; ultralytics_yolo26 merged into samples/vision/ultralytics_yolo; EXPECTED_MODEL_COUNT 37 -> 36 (record/metric totals unchanged 239/636/419)",
+      "release-workflow accepts sample-contract.yml (Q3); anti-website-deploy assertions applied to both workflows",
+      "fixtures: valid section -> '## Performance Data'; non-text evidence -> tag-real test_data/cheetah.JPEG; non-heading-section -> real README + '### QuickStart'; tests/fixtures/samples/ synthetic tree deleted; hasExactMarkdownAtxHeading exported with direct unit tests for prose/link/inline-code/fence negatives",
+      "sources.test default-resolution expectations split per platform incl. versionFile map"
+    ]
+  },
+  "cls_url_inconsistency_refined": {
+    "finding": "catalog-errata.ts applySCatalogErrata(s-v1.1.2) canonicalizes nashe/nashm yolov8/yolo11 cls display names to 224x224 with comment 'Archive migration: S100/S100P CLS files now use the 224 names already specified by release download URLs. Legacy 640 URLs remain compatible.'",
+    "three_sources": {
+      "s_tip_manifest": "filename keys 640x640, URLs 224x224",
+      "s_tip_download_script": "constructs 640x640 filenames AND 640x640 URLs (re-verified 380e1a2:samples/vision/ultralytics_yolo/model/download_model.sh lines 70/94 + MODEL_URL)",
+      "develop_catalog_errata": "canonical 224 per URL evidence; claims legacy 640 URLs remain compatible"
+    },
+    "a5_disposition": "no cross-rewriting introduced: catalog presentation (224 via errata), manifest bytes (tip-preserved), sample resolution (manifest keys 640) each stay self-consistent; archive truth still requires a network check (user-gated); A7 ledger flag retained and refined with the errata comment as additional evidence"
+  },
+  "verification": {
+    "npm_run_check": "green: validate:sources (x5 37 samples/239 records; s 38/563 normalized incl. 25 errata-synthesized; x3 15/20), vitest 17 files passed, tsc --noEmit clean, reproducible artifact catalog-v1.0.0-1678b0f7cd6d23c2 (57 families, 820 benchmarks, sha256 85e7e1e4e206a296f22363192bfbc5dfe4749b2b1522ea9107c2d36b6529a60a, 9204384 bytes)",
+    "python_regressions": "samples/_shared/tests OK; tools/sample_contract/tests OK; no Python consumer of platforms/registry.json or the per-platform VERSION files (grep verified)",
+    "timing": "validate:sources 1.4s wall (blob cache effective)"
+  },
+  "not_run": [
+    "board smoke (user-gated X5 8GB/4GB + S100)",
+    "network fetches (incl. cls URL true-name adjudication)",
+    "GitHub Actions run of the updated workflow (paths/permissions verified statically; CI executes on next push)"
+  ]
+}

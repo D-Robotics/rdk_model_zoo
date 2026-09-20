@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { validateNormalizedCatalog, validatePublishedManifests } from "../src/pipeline/manifest-validation";
+import { hasExactMarkdownAtxHeading, validateNormalizedCatalog, validatePublishedManifests } from "../src/pipeline/manifest-validation";
 import type { PlatformDocuments } from "../src/pipeline/manifest-validation";
 import { fixtureRelease, repositoryRoot } from "./helpers/repository";
 
@@ -46,7 +46,7 @@ describe("published manifest validation", () => {
       .rejects.toEqual(expect.objectContaining({ code: "INVALID_SOURCE_PATH" }));
   });
 
-  it("rejects a Markdown source that does not exist on disk", async () => {
+  it("rejects a Markdown source whose blob does not exist at the cited ref", async () => {
     const { source, documents } = await publish("valid");
     documents.benchmarks.benchmarks[0]!.source.path = "samples/vision/convnext/CHANGELOG.md";
     await expect(validateNormalizedCatalog({ repositoryRoot, source, documents, repositoryUrl }))
@@ -87,10 +87,12 @@ describe("published manifest validation", () => {
       .rejects.toEqual(expect.objectContaining({ code: "SOURCE_SECTION_NOT_FOUND" }));
   });
 
-  it("locates non-text evidence by caption but still requires the file to exist", async () => {
+  it("locates non-text evidence by caption but still requires the blob to exist at the ref", async () => {
     const { source, documents } = await publish("valid");
     const record = documents.benchmarks.benchmarks[0]!;
-    record.source.path = "samples/vision/convnext/accuracy.txt";
+    // A non-Markdown artifact at the cited tag: located by the caption it
+    // carries, never matched as a heading, but it must exist at that revision.
+    record.source.path = "samples/vision/convnext/test_data/cheetah.JPEG";
     record.source.section = "modelOutput: Calibrated Cosine / Quantized Cosine";
     await expect(validateNormalizedCatalog({ repositoryRoot, source, documents, repositoryUrl })).resolves.toBeUndefined();
 
@@ -118,5 +120,42 @@ describe("published manifest validation", () => {
     const schemaLess: typeof source = { ...source, manifestDirectory: "release/valid/samples" };
     await expect(validatePublishedManifests({ repositoryRoot, source: schemaLess, documents, repositoryUrl }))
       .rejects.toEqual(expect.objectContaining({ code: "MODELS_SCHEMA" }));
+  });
+});
+
+describe("exact ATX heading matching", () => {
+  // Section text that merely occurs in the document must not count: prose
+  // mentions, link labels, inline code, and fenced blocks are all rejected;
+  // only a heading line outside a code fence matches, and it must repeat the
+  // section text exactly (level included).
+  const proseMentions = [
+    "# Source fixture",
+    "",
+    "This prose mentions ## Benchmark without defining a section.",
+    "",
+    "[Link labeled ## Benchmark](https://example.com)",
+    "",
+    "Inline code also mentions `## Benchmark`.",
+    "",
+    "```markdown",
+    "## Benchmark",
+    "```"
+  ].join("\n");
+
+  it("accepts an exact heading line outside a code fence", () => {
+    expect(hasExactMarkdownAtxHeading("## Benchmark\nbody", "## Benchmark")).toBe(true);
+    expect(hasExactMarkdownAtxHeading("text\n\n## Benchmark  \nbody", "## Benchmark")).toBe(true);
+  });
+
+  it("rejects section text that only occurs in prose, links, code, or fences", () => {
+    expect(hasExactMarkdownAtxHeading(proseMentions, "## Benchmark")).toBe(false);
+    expect(hasExactMarkdownAtxHeading("## Benchmarked\n", "## Benchmark")).toBe(false);
+    expect(hasExactMarkdownAtxHeading("### Benchmark\n", "## Benchmark")).toBe(false);
+    expect(hasExactMarkdownAtxHeading("## benchmark\n", "## Benchmark")).toBe(false);
+  });
+
+  it("accepts a heading that appears again outside a fence that also mentions it", () => {
+    const content = `${proseMentions}\n\n## Benchmark\n`;
+    expect(hasExactMarkdownAtxHeading(content, "## Benchmark")).toBe(true);
   });
 });
