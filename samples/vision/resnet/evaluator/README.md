@@ -44,12 +44,12 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names \
+  --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-On S100/S600 substitute the `s:resnet18:<target>/...` reference, artifact
-path, and `platforms/s/...` labels. For a same-board before/after
+On S100/S600 substitute the `s:resnet18:<target>/...` reference and the
+artifact path; the labels file is shared. For a same-board before/after
 comparison, run the legacy entrypoint
 (`platforms/x5/samples/vision/resnet/runtime/python/main.py` or
 `platforms/s/samples/vision/resnet18/runtime/python/main.py`) with the
@@ -81,7 +81,7 @@ output, image path, resize type, and command line.
 
 | Item | Value | Source |
 | --- | --- | --- |
-| host tests | 39 OK (2026-09-20, host evidence JSON) | migration evidence |
+| host tests | 46 OK (2026-09-21, B1 host evidence JSON) | migration evidence |
 | board comparison | canonical == legacy on both X5 boards and S100 (class IDs and raw scores) | integration review 2026-09-17 |
 | S100 C++ | Top-5 text equal to the source baseline | integration review 2026-09-17 |
 | dataset accuracy / latency | not-run in this sample | — |

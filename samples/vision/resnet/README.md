@@ -30,10 +30,18 @@ documents, not here.
 | s100 | resnet18 | cpp | supported-verified (S100 build + run, Top-5 equal to source baseline, 2026-09-17) |
 | s600 | resnet18 | python | supported-not-run (board access unavailable) |
 | s600 | resnet18 | cpp | supported-not-run (board access unavailable) |
-| s100p | resnet18 | python, cpp | not-supported (no ResNet18 asset row in the release manifest) |
+| s100 | resnet50 | python | supported-host-verified (B1 migration; board smoke pending) |
+| s600 | resnet50 | python | supported-not-run (S100/S600 artifacts published; board smoke pending) |
+| s100 | resnet152 | python | supported-host-verified (B1 migration; board smoke pending) |
+| s600 | resnet152 | python | supported-not-run (S100/S600 artifacts published; board smoke pending) |
+| s100p | any | python, cpp | not-supported (no ResNet asset row in the release manifest) |
 
 Verification evidence: [integration review 2026-09-17](../../../docs/releases/unified-migration/2026-09-17-integration-review.md).
-ResNet50/152 remain legacy material outside this runnable sample.
+ResNet50/152 joined this sample in B1 from the S branch (no X5 artifact is
+published for them); they resolve the `s:resnet50`/`s:resnet152` manifest
+rows and run the same flow with `--variant resnet50`/`--variant resnet152`.
+Board smoke for the new variants is pending; their status rows above stay
+not-run until it is recorded.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -79,11 +87,11 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names
+  --label-file datasets/imagenet/imagenet_classes.names
 ```
 
 For S100/S600 use the matching `s:resnet18:<target>/...` reference and the
-`platforms/s/datasets/imagenet/` labels; for the C++ flow use
+the same root `datasets/imagenet/` labels; for the C++ flow use
 `bash samples/vision/resnet/runtime/cpp/run.sh`. Full commands:
 [runtime/python/README.md](runtime/python/README.md),
 [runtime/cpp/README.md](runtime/cpp/README.md).

@@ -36,12 +36,12 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names \
+  --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-S100/S600 替换 `s:resnet18:<target>/...` 引用、制品路径与 `platforms/s/...`
-标签。同板前后对照：用相同图片、模型字节、标签、缩放方式与 Top-K 运行旧
+S100/S600 替换 `s:resnet18:<target>/...` 引用与制品路径；标签文件两侧
+共用。同板前后对照：用相同图片、模型字节、标签、缩放方式与 Top-K 运行旧
 入口（`platforms/x5/samples/vision/resnet/runtime/python/main.py` 或
 `platforms/s/samples/vision/resnet18/runtime/python/main.py`），先比较类别
 ID 与 raw 分数，再比较标签排版。S 系列 C++ 检查执行
@@ -70,7 +70,7 @@ ID 与 raw 分数，再比较标签排版。S 系列 C++ 检查执行
 
 | 项目 | 数值 | 来源 |
 | --- | --- | --- |
-| 主机测试 | 39 OK（2026-09-20，主机 evidence JSON） | 迁移证据 |
+| 主机测试 | 46 OK（2026-09-21，B1 主机 evidence JSON） | 迁移证据 |
 | 板端对照 | X5 双板与 S100 上 canonical == 旧入口（类别 ID 与 raw 分数） | 2026-09-17 集成评审 |
 | S100 C++ | Top-5 文本与源基线一致 | 2026-09-17 集成评审 |
 | 数据集精度 / 延迟 | 本 sample not-run | — |

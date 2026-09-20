@@ -33,11 +33,11 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names
+  --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-S100/S600 替换为 `s:resnet18:<target>/...` 引用、`s100/`/`s600/` 制品路径
-与 `platforms/s/...` 标签。`--dry-run --target x5` 在无板卡访问、无模型
+S100/S600 替换为 `s:resnet18:<target>/...` 引用与 `s100/`/`s600/` 制品路径；
+标签文件两侧共用。`--dry-run --target x5` 在无板卡访问、无模型
 加载、无下载的情况下解析选择。
 
 <a id="parameters"></a>
@@ -47,10 +47,10 @@ S100/S600 替换为 `s:resnet18:<target>/...` 引用、`s100/`/`s600/` 制品路
 | --- | --- | --- | --- |
 | `--target` | choice | auto | 执行目标：`auto`、`x5`、`s100`、`s100p`、`s600`；执行目标必须与检测到的硬件匹配 |
 | `--asset-id` | string | null | Manifest 中完整的 `group:sample:filename` 引用 |
-| `--variant` | choice | null | 模型变体（仅发布 `resnet18`） |
+| `--variant` | choice | null | 模型变体（`resnet18` 全目标；`resnet50`/`resnet152` 仅 s100/s600） |
 | `--model-path` | string | null | 已存在的 `.bin`/`.hbm`；必须与 `--asset-id` 配对；缺省时按所解析引用的 `model/` 位置查找 |
 | `--test-img` | string | samples/vision/resnet/test_data/white_wolf.JPEG | BGR 输入图像 |
-| `--label-file` | string | platforms/x5/datasets/imagenet/imagenet_classes.names | 逐行一个类别的 ImageNet 标签 |
+| `--label-file` | string | datasets/imagenet/imagenet_classes.names | 逐行一个类别的 ImageNet 标签 |
 | `--top-k` | int | 5 | 打印的结果数量 |
 | `--topk` | int | 5 | `--top-k` 的旧拼写 |
 | `--resize-type` | int | null | `0` 直接拉伸或 `1` letterbox（BGR 127 填充）；默认跟随绑定源 |

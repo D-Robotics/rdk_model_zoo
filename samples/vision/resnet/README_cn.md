@@ -26,10 +26,17 @@ wrapper；其审计记录在迁移文档中，不在本文重复。
 | s100 | resnet18 | cpp | supported-verified（S100 构建+运行，Top-5 与源基线一致，2026-09-17） |
 | s600 | resnet18 | python | supported-not-run（板卡连接不可用） |
 | s600 | resnet18 | cpp | supported-not-run（板卡连接不可用） |
-| s100p | resnet18 | python、cpp | not-supported（发布 Manifest 无 ResNet18 资产行） |
+| s100 | resnet50 | python | supported-host-verified（B1 迁移；板端冒烟未执行） |
+| s600 | resnet50 | python | supported-not-run（已发布 S100/S600 制品；板端冒烟未执行） |
+| s100 | resnet152 | python | supported-host-verified（B1 迁移；板端冒烟未执行） |
+| s600 | resnet152 | python | supported-not-run（已发布 S100/S600 制品；板端冒烟未执行） |
+| s100p | 任意 | python、cpp | not-supported（发布 Manifest 无 ResNet 资产行） |
 
 验证证据：[2026-09-17 集成评审](../../../docs/releases/unified-migration/2026-09-17-integration-review.md)。
-ResNet50/152 仍是本可运行 sample 之外的旧资料。
+ResNet50/152 在 B1 从 S 分支并入本 sample（未发布 X5 制品）；通过
+`s:resnet50`/`s:resnet152` Manifest 行解析，运行同一流程并指定
+`--variant resnet50`/`--variant resnet152`。新变体的板端冒烟尚未执行；
+在记录证据前，上方状态行保持 not-run。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -72,11 +79,11 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names
+  --label-file datasets/imagenet/imagenet_classes.names
 ```
 
 S100/S600 使用对应的 `s:resnet18:<target>/...` 引用与
-`platforms/s/datasets/imagenet/` 标签；C++ 流程执行
+同一根目录 `datasets/imagenet/` 标签；C++ 流程执行
 `bash samples/vision/resnet/runtime/cpp/run.sh`。完整命令见
 [runtime/python/README_cn.md](runtime/python/README_cn.md) 与
 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)。

@@ -37,11 +37,11 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names
+  --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-For S100/S600 substitute the `s:resnet18:<target>/...` reference, the
-`s100/`/`s600/` artifact path, and the `platforms/s/...` labels.
+For S100/S600 substitute the `s:resnet18:<target>/...` reference and the
+`s100/`/`s600/` artifact path; the labels file is shared.
 `--dry-run --target x5` resolves a selection without board access, model
 loading, or download.
 
@@ -52,10 +52,10 @@ loading, or download.
 | --- | --- | --- | --- |
 | `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
 | `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
-| `--variant` | choice | null | model variant (only `resnet18` is published) |
+| `--variant` | choice | null | model variant (`resnet18` on all targets; `resnet50`/`resnet152` on s100/s600 only) |
 | `--model-path` | string | null | existing `.bin`/`.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
 | `--test-img` | string | samples/vision/resnet/test_data/white_wolf.JPEG | BGR input image |
-| `--label-file` | string | platforms/x5/datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
+| `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
 | `--topk` | int | 5 | legacy spelling of `--top-k` |
 | `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source |

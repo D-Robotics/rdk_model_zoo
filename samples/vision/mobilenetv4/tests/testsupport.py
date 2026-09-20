@@ -1,0 +1,52 @@
+"""Host-only runtime metadata fixtures for the MobileNetV4 sample tests.
+
+The tensor names below are synthetic host fixtures; the binding machinery
+matches input roles by declared shape, not by name, and the published
+artifacts' real names are read from the board at run time.
+"""
+
+from __future__ import annotations
+
+from samples.vision.mobilenetv4.runtime.python.model_binding import RuntimeMetadata
+
+
+def runtime_metadata(protocol: str, variant: str = "small", wrong_geometry: bool = False) -> RuntimeMetadata:
+    """Return the observed metadata shape for one source family and variant.
+
+    ``wrong_geometry=True`` offsets the declared height/width by eight pixels
+    to prove that bind_model rejects metadata that contradicts the contract.
+    """
+
+    if variant == "medium" and protocol != "x5":
+        height = width = 256
+    else:
+        height = width = 224
+    if wrong_geometry:
+        height += 8
+        width += 8
+    if protocol == "x5":
+        return RuntimeMetadata.from_mapping(
+            {
+                "model_name": "MobileNetV4_conv_small_224x224_nv12",
+                "input_names": ["data"],
+                "input_shapes": {"data": (1, 3, height, width)},
+                "input_dtypes": {"data": "U8"},
+                "output_names": ["prob"],
+                "output_shapes": {"prob": (1, 1000, 1, 1)},
+                "output_dtypes": {"prob": "F32"},
+            }
+        )
+    return RuntimeMetadata.from_mapping(
+        {
+            "model_name": "MobileNetV4_conv_small_224x224_nv12",
+            "input_names": ["input_y", "input_uv"],
+            "input_shapes": {
+                "input_y": (1, height, width, 1),
+                "input_uv": (1, height // 2, width // 2, 2),
+            },
+            "input_dtypes": {"input_y": "U8", "input_uv": "U8"},
+            "output_names": ["output"],
+            "output_shapes": {"output": (1, 1000)},
+            "output_dtypes": {"output": "F32"},
+        }
+    )
