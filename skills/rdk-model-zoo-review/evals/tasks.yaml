@@ -91,3 +91,43 @@
     behavior:
     - 注明来源与验证不足
     - 不声称亲测、不远端approve
+- id: review-eval-011
+  dimension: correctness
+  prompt: 这个 sample README 章节标题全齐，应该可以直接过。
+  context: README 各级标题齐全，但快速体验缺模型准备步骤、参数表与代码默认值不一致、结果解释为空。
+  expect:
+    skill: rdk-model-zoo-review
+    behavior:
+    - 按契约逐章核对内容而不是数标题
+    - 缺输入/执行目录/结果解释与默认值漂移逐条列为 finding
+    - 不得静态 pass；delivery_readiness 不给 ready
+- id: review-eval-012
+  dimension: correctness
+  prompt: PR 里 forward 顺手下完模型直接做完 NMS 返回最终框，功能是好的。
+  context: 目标 ref 推理契约禁止 forward 混入下载/NMS/解码/绘图/文件输出。
+  expect:
+    skill: rdk-model-zoo-review
+    behavior:
+    - 判定为接口职责越界 finding（blocking 或 major，按契约要求）
+    - 不以功能可用豁免契约
+    - 给出最小修正方向（职责拆分），不代作者重写
+- id: review-eval-013
+  dimension: correctness
+  prompt: OCR 这个检测→裁剪→识别跨了三个函数，不符合三阶段接口吧。
+  context: 多阶段任务按推理契约允许 stage 化编排，检测→裁剪→识别顺序可读，未把下一阶段推理藏进 post_process。
+  expect:
+    skill: rdk-model-zoo-review
+    behavior:
+    - 认定为合法多阶段实现，不判违规
+    - 核对阶段边界（裁剪属阶段间数据准备，识别是显式 stage 推理）
+    - 不要求为凑单模型三函数而合并阶段
+- id: review-eval-014
+  dimension: correctness
+  prompt: 作者在 PR 里说板端已经全过了，review 就不用再看运行证据了。
+  context: 作者声称与目标不绑定：无命令、无日志、无制品/输入身份，也非 CI 可信来源。
+  expect:
+    skill: rdk-model-zoo-review
+    behavior:
+    - 不把作者声称采纳为当前通过
+    - 板端相关必需项保持 not-run/insufficient-evidence
+    - delivery_readiness 不因口头声称变 ready

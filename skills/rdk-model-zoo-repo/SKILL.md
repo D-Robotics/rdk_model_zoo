@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-repo
 description: "Use to establish an RDK Model Zoo checkout's platform, version, layout, conventions, dirty or untracked files, affected samples, and development entrypoints. 触发词：仓库上下文、工作区盘点、开发入口、分支规范。Workspace inventory belongs here; assessing code correctness, standards compliance or delivery readiness belongs to review. Do not use as primary for ready-made model lookup or quantization."
-version: "1.0.0"
+version: "1.1.0"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"

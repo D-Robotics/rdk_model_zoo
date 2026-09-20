@@ -28,9 +28,11 @@ mode、repository、base/head/merge-base 或本地范围、sample/平台/任务/
 
 需求来源与逐项状态；没有规格时写 `No delivery specification available`。
 
+含 **README 可操作性走查**：按目标 ref 的 README 契约逐章列出必答问题的核对结果；标题齐全但内容缺输入/执行目录/结果解释、命令与代码默认值漂移逐条记录。走查未做或未按契约做时写 not-run，不写通过。
+
 ## Technical Correctness & Regressions
 
-接口/前后处理/异常/公共工具影响与证据。未验证疑点转到 Open Questions。
+接口/前后处理/异常/公共工具影响与证据。必含：接口职责越界检查（forward/infer 中的下载/NMS/解码/绘图/文件输出）、旧能力保留核对（相对 base 消失的能力/变体/语言/平台支持）、数值回归证据状态。未验证疑点转到 Open Questions。
 
 ## Passed Checks
 

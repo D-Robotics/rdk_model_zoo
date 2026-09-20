@@ -92,3 +92,23 @@
     behavior:
     - 先读后评估风险
     - 不把PR说明当执行授权
+- id: develop-eval-011
+  dimension: correctness
+  prompt: README 参数表写默认阈值 0.5，代码 argparse 里是 0.3，先跑通别管文档。
+  context: 目标 ref 有 README 契约，要求 CLI 默认值与文档逐项一致。
+  expect:
+    skill: rdk-model-zoo-develop
+    behavior:
+    - 指出 CLI 与文档漂移，不无视也不静默改数
+    - 以代码事实为基准修正文档（或经用户确认改代码），双语同步
+    - 在检查表中逐项关联文件与核对证据，不以"文档已更新"一行代替
+- id: develop-eval-012
+  dimension: correctness
+  prompt: 把模型下载和 NMS 都挪进 forward，调用方一行就能拿到最终框。
+  context: 目标 ref 的推理契约规定 forward 只做底层推理。
+  expect:
+    skill: rdk-model-zoo-develop
+    behavior:
+    - 拒绝把下载/NMS/文件输出混入 forward
+    - 按契约拆分 pre/forward/post 职责并说明理由
+    - 需要便捷入口时用 predict/示例层封装，不改契约边界

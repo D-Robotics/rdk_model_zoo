@@ -70,6 +70,53 @@ models: []
         self.assertEqual(x['branch_role'],'unknown')
         self.assertFalse(x['is_maintenance_branch'])
 
+    def test_unified_layout_reports_platform_manifests(self):
+        self.write('docs/release/x5/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('docs/release/s/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('samples/vision/demo/README.md','fixture')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        self.assertIn('docs/release/x5/models.yaml',x['manifest_candidates'])
+        self.assertIn('docs/release/s/models.yaml',x['manifest_candidates'])
+        self.assertEqual(x['platform_manifests']['x5'],'docs/release/x5/models.yaml')
+        self.assertEqual(x['platform_manifests']['s'],'docs/release/s/models.yaml')
+        self.assertTrue(x['unified_layout'])
+        # Two per-platform manifests is the normal unified state, not ambiguity.
+        self.assertFalse(any('Multiple manifest layouts' in warning for warning in x['warnings']))
+
+    def test_platform_snapshots_reported_without_unified_claim(self):
+        self.write('platforms/x5/docs/release/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('platforms/x3/release/models.yaml','schema_version: 1\nmodels: []\n')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        self.assertEqual(x['platform_manifests']['x5'],'platforms/x5/docs/release/models.yaml')
+        self.assertEqual(x['platform_manifests']['x3'],'platforms/x3/release/models.yaml')
+        self.assertFalse(x['unified_layout'])
+
+    def test_unified_wins_over_snapshot_for_same_platform(self):
+        self.write('docs/release/s/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('platforms/s/docs/release/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('samples/vision/demo/README.md','fixture')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        self.assertEqual(x['platform_manifests']['s'],'docs/release/s/models.yaml')
+        self.assertTrue(any('Migration dual state' not in warning for warning in x['warnings']))
+
+    def test_integration_role_requires_unified_facts(self):
+        self.git('checkout','-qb','develop')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        # Branch name alone proves nothing about the layout.
+        self.assertEqual(x['branch_role'],'unknown')
+        self.write('docs/release/x5/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('samples/vision/demo/README.md','fixture')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        self.assertEqual(x['branch_role'],'integration')
+        self.assertTrue(x['unified_layout'])
+        self.assertIsNone(x['platform_hint'])
+
+    def test_migration_dual_state_flagged(self):
+        self.write('docs/manifests/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('docs/release/s/models.yaml','schema_version: 1\nmodels: []\n')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        self.assertTrue(any('dual state' in warning for warning in x['warnings']))
+
     def test_maintenance_branch_is_distinguished_from_target(self):
         self.git('checkout','-qb','rdk_x5')
         x=self.invoke(INSPECT,'--repo',self.root)

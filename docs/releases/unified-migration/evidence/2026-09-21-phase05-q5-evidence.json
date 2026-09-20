@@ -1,0 +1,112 @@
+{
+  "record": "2026-09-21-phase05-q5-skills",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous, per standing plan-execution instruction)",
+  "repo_head_before": "57546a2",
+  "scope": "Phase 0.5 Q5: strengthen develop/review/validate skills, extend inspect_repo.py unified-layout facts, add behavior-eval definitions, sync installed copies",
+  "constraints_honored": {
+    "no_eighth_skill": "entry count unchanged (7); strengthening only",
+    "shared_content": "skills/_shared/ untouched; references/ regenerated copies unchanged (sync check: no drift)",
+    "authority": "repo regulations stay the single authority; skills read target-ref contracts and rank them topmost when present; X5 maintenance-source rules never applied unconditionally to old refs"
+  },
+  "skill_changes": {
+    "rdk-model-zoo-develop": {
+      "version": "1.0.0 -> 1.1.0",
+      "files": ["SKILL.md", "assets/development-checklist.md", "evals/tasks.yaml"],
+      "SKILL.md": "step 2: read target-ref sample-standards contracts (readme-contract.md, inference-contract.md) as topmost applicable clauses when present, never fabricated for old refs; step 7: before/after contract mapping - list touched files and README sections (incl. parent indexes) with per-file duties before; link file <-> contract section <-> check evidence after; no one-line 'docs updated' substitute",
+      "checklist": "rows added: pre-change README contract touch-surface + file duties; three-stage duty boundary (pre/forward/post/predict; forward free of download/NMS/decode/draw/file-output); post-change per-file evidence linkage; enriched model-acquisition row requires CLI-default vs README-table itemized crosscheck",
+      "eval_cases_added": ["develop-eval-011 (CLI/doc drift: report drift, fix from code facts, itemized evidence)", "develop-eval-012 (forward with download/NMS: reject boundary violation, split per contract, predict-level chaining)"]
+    },
+    "rdk-model-zoo-review": {
+      "version": "1.0.0 -> 1.1.0",
+      "files": ["SKILL.md", "assets/review-report.md", "evals/tasks.yaml"],
+      "SKILL.md": "step 5 four mandatory checks: (a) README operability walkthrough (complete headings do not statically pass; missing inputs/cwd/result interpretation and CLI-default drift are findings), (b) inference interface duties (download/NMS/task-decode/draw/file-output inside forward/infer = boundary finding), (c) preservation of prior capabilities vs base, (d) numerical regression evidence or explicit not-run (no 'should be unaffected')",
+      "report_template": "Delivery Specification gains README operability walkthrough block; Technical Correctness must contain interface-boundary check, prior-capability check, numerical-regression evidence status",
+      "eval_cases_added": [
+        "review-eval-011 (headings complete but not runnable: per-contract chapter check, finding, no static pass)",
+        "review-eval-012 (forward-violation PR: boundary finding; functional availability does not waive contract)",
+        "review-eval-013 (legal OCR multi-stage: recognize legality, check stage boundaries, do not demand merged stages)",
+        "review-eval-014 (author claims board pass: not adopted, stays not-run, readiness unchanged)"
+      ]
+    },
+    "rdk-model-zoo-validate": {
+      "version": "1.0.0 -> 1.1.0",
+      "files": ["SKILL.md", "evals/tasks.yaml"],
+      "SKILL.md": "step 2: classify README code blocks explanatory/host/board/conversion before treating any command as verified; host class executed only within authorization, bound to code SHA + cwd + artifact/input identity; board/conversion form pending plans for the corresponding executors; structural validation is not command verification",
+      "eval_cases_added": ["validate-eval-011 (README command classification)", "validate-eval-012 (unbindable historical board claim: reject board passed)"]
+    },
+    "rdk-model-zoo-repo": {
+      "version": "1.0.0 -> 1.1.0",
+      "files": ["SKILL.md", "scripts/inspect_repo.py"],
+      "SKILL.md": "frontmatter version only (inspection behavior documented in script)",
+      "inspect_repo.py": {
+        "platform_manifest_patterns": {
+          "docs/release/{platform}": "unified",
+          "platforms/{platform}/docs/release": "snapshot",
+          "platforms/{platform}/release": "snapshot",
+          "tie_rule": "unified wins over snapshot for the same platform (snapshots are frozen migration-window copies)"
+        },
+        "new_output": ["platform_manifests (platform -> manifest path)", "unified_layout (samples/ present AND a docs/release/ prefixed per-platform manifest)"],
+        "branch_role": "integration only when branch==develop AND unified_layout; branch name alone stays unknown (fixture-pinned); platform_hint remains null for develop",
+        "warnings": [
+          "unified layout note: hardware selected per sample, never inferred from branch or manifest presence",
+          "Migration dual state when flat single-platform manifests AND per-platform manifests coexist",
+          "flat ambiguity warning only when len(flat)>1 (two per-platform manifests are the normal unified state)"
+        ],
+        "preserved": ["maintenance/target/unknown roles", "detached-head", "remote redaction", "traversal/symlink rejection", "legacy flat layouts"]
+      }
+    }
+  },
+  "eval_definitions": {
+    "protocol": "tasks.yaml records behaviors to test, not execution results; no behavior-passing claim made",
+    "counts": {"develop": 12, "review": 14, "validate": 12, "pack_total": 83},
+    "added_total": 8,
+    "ids_unique": true,
+    "yaml_parse": "ok (validate_pack counts agree)",
+    "executed": false,
+    "historical_note": "Codex 75-case run of 2026-09-17 remains a historical record; not rewritten by this step"
+  },
+  "tests": {
+    "new": [
+      "test_unified_layout_reports_platform_manifests (dual per-platform manifests without false ambiguity warning)",
+      "test_platform_snapshots_reported_without_unified_claim",
+      "test_unified_wins_over_snapshot_for_same_platform",
+      "test_integration_role_requires_unified_facts (develop branch alone -> unknown; + docs/release/x5 + samples/ -> integration)",
+      "test_migration_dual_state_flagged"
+    ],
+    "total": 55,
+    "result": "55/55 OK (python -m unittest discover -s skills/tests)"
+  },
+  "trio": {
+    "sync_references_bare_check": {"valid": true, "applied": false, "changed_files": []},
+    "validate_pack": {"valid": true, "skills_checked": 7, "eval_cases": 83, "behavior_evaluated": false, "board_verified": false},
+    "unittest_discover": "55 OK"
+  },
+  "versioning": {
+    "members_bumped": {"rdk-model-zoo-develop": "1.1.0", "rdk-model-zoo-review": "1.1.0", "rdk-model-zoo-validate": "1.1.0", "rdk-model-zoo-repo": "1.1.0"},
+    "unchanged_members": {"rdk-model-zoo": "1.1.0", "rdk-model-zoo-integrate": "1.0.0", "rdk-model-zoo-release": "1.0.0"},
+    "pack_version": "1.0.0 (candidate, unchanged); skills/VERSION unchanged; member and pack versions managed separately",
+    "changelog": "skills/CHANGELOG.md Unreleased gains six Q5 bullets incl. explicit 'definitions, not executed results' wording"
+  },
+  "installed_copy_update": {
+    "location": "~/.claude/skills/ (flat install: 7 skill dirs, no pack-level files)",
+    "pre_update_audit": "diff -rq --exclude=__pycache__: differing file sets were exactly the Q5-touched files per skill (develop 3, review 3, validate 2, repo 2); other 3 skills byte-identical => no user modifications",
+    "method": "rsync -a --delete --exclude=__pycache__ per skill dir",
+    "post_update_content": "diff -r: all 7 skill dirs SAME vs source; 4 updated skills frontmatter 1.1.0",
+    "post_update_discovery": {
+      "before": {"branch_role": "unknown", "manifest_candidates": [], "unified_layout_key": false, "note": "Phase 0 documented limitation"},
+      "after": {"branch_role": "integration", "unified_layout": true, "platform_manifests": {"x5": "docs/release/x5/models.yaml", "s": "docs/release/s/models.yaml", "x3": "platforms/x3/release/models.yaml"}},
+      "source_vs_installed_output": "byte-identical JSON"
+    },
+    "versions_recorded_separately": {
+      "source": "repo skills/ tree at this commit (members: 1.1.0 x4 touched + rdk-model-zoo 1.1.0, integrate/release 1.0.0)",
+      "installed": "~/.claude/skills same content as source for all 7 skills (flat install, pack-level files not installed by design)"
+    }
+  },
+  "not_run": [
+    "behavior-eval suite execution (definitions authored only; requires independent executor/session)",
+    "board runs (out of scope for this step)",
+    "hub/publish actions (out of plan)"
+  ],
+  "phase05_status": "Q1-Q5 complete; baseline exit conditions met for the skills gate; next: Phase 1.5 H1-H4 hardening (H5/H6 land with B1), then B1"
+}
