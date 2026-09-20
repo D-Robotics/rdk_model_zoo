@@ -1,37 +1,81 @@
 # RDK Model Zoo Web
 
-This directory contains the standalone source for the static RDK Model Zoo
-website. It is the primary catalog UI source in this repository.
+This directory is the source of truth for the samples-only Model Zoo catalog
+and its static website. It does not scan historical `platforms/` manifests.
 
 ```text
-src/       catalog UI and empty report-library shell
-public/    brand logo and interface icons
-scripts/   deterministic build and validation scripts
-dist/      generated deployment artifact; ignored by Git
+data/       reviewed release metadata grouped by model family and task
+src/        catalog UI and empty report-library shell
+public/     brand logo and interface icons
+scripts/    catalog, website, and validation scripts
+build/      generated catalog intermediate; ignored by Git
+dist/       generated website artifact; ignored by Git
 ```
 
-The default build remains an empty catalog shell. Released sample models are
-imported explicitly with `build:preview` from the reviewed samples-only
-catalog; the website never scans historical `platforms/` metadata.
+## Ownership
+
+- `samples/` owns conversion, evaluation, and runtime code.
+- `model_zoo_web/data/` owns website metadata for released sample models.
+- OSS owns binaries, release manifests, checksums, and complete OE reports.
+
+Catalog records use this layout:
+
+```text
+data/<domain>/<source>/<series>/<task>.yaml
+```
+
+Each task record groups model sizes and target platforms. Descriptions are
+authored in Chinese and English at the task level and describe model
+architecture only. Deployment formats, model statistics, accuracy, and
+performance remain in their dedicated release fields.
+
+Public artifacts use stable OSS paths:
+
+```text
+models/<source>/<series>/<task>/<size>/<platform>/<artifact>
+```
+
+Build dates, repository commits, and toolchain versions belong in release
+metadata rather than the object path.
+
+## Build and validation
+
+Install the local build dependencies and validate both the empty website shell
+and the samples-only catalog:
+
+```bash
+python3 -m pip install -r model_zoo_web/requirements.txt
+npm ci --prefix model_zoo_web
+npm --prefix model_zoo_web run check
+```
+
+The catalog builder reads only `model_zoo_web/data/` and writes deterministic
+intermediate files to `model_zoo_web/build/`:
+
+```bash
+npm --prefix model_zoo_web run build:catalog
+npm --prefix model_zoo_web run check:catalog
+```
+
+The default website build remains an empty catalog shell. To generate a local
+release preview, provide a reviewed multi-model input manifest. The release
+build first regenerates `build/catalog.json` and then writes the complete site
+to `dist/`:
+
+```bash
+MODEL_ZOO_INPUTS=/path/to/model-zoo-web-inputs.json \
+npm --prefix model_zoo_web run build:release
+
+npm --prefix model_zoo_web run check:release
+```
+
+`MODEL_ZOO_CATALOG` may optionally override the default
+`model_zoo_web/build/catalog.json` path.
 
 The model-detail view links an OE conversion report only when the imported
 release record supplies a reviewed public OSS URL. Missing reports keep the
 non-interactive placeholder; do not add an empty `href`, a fake `#` target, or
 a link to local report payloads.
-
-```bash
-npm ci --prefix model_zoo_web
-npm --prefix model_zoo_web run check
-```
-
-To build a local preview from the samples-only catalog, provide the generated
-catalog and a reviewed multi-model input manifest:
-
-```bash
-MODEL_ZOO_CATALOG=/path/to/model_zoo_web/dist/catalog.json \
-MODEL_ZOO_INPUTS=/path/to/model-zoo-web-inputs.json \
-npm --prefix model_zoo_web run build:preview
-```
 
 The input manifest is keyed at two levels. `models` supplies one shared cover
 per catalog model/task record, so every size and platform of YOLO26 Detect uses

@@ -8,8 +8,12 @@
   "scripts": {
     "build": "node scripts/generate.mjs",
     "build:web": "npm run build",
+    "build:catalog": "python3 scripts/build_catalog.py",
+    "check:catalog": "python3 scripts/build_catalog.py --check",
     "build:preview": "node scripts/generate-preview.mjs",
+    "build:release": "npm run build:catalog && npm run build:preview",
     "validate": "node scripts/validate.cjs",
-    "check": "npm run build && npm run validate"
+    "check:release": "npm run validate -- --preview",
+    "check": "npm run build && npm run validate && npm run build:catalog && npm run check:catalog"
   }
 }

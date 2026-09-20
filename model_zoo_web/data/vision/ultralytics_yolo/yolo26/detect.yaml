@@ -1,0 +1,170 @@
+schema_version: 1
+id: ultralytics_yolo/yolo26/detect
+name: YOLO26 Detect
+domain: vision
+source: ultralytics_yolo
+provider: ultralytics
+family: yolo26
+task: detect
+description:
+  zh: YOLO26 Detect 采用 DFL-free 检测头与直接 LTRB 回归，通过双分支设计兼顾充分训练与端到端推理。
+  en: YOLO26 Detect uses a DFL-free head with direct LTRB regression and a dual-branch design for effective training and end-to-end inference.
+license:
+  name: AGPL-3.0
+  url: https://www.ultralytics.com/license
+sample_path: samples/vision/ultralytics_yolo
+variants:
+  - size: n
+    model:
+      parameter_count: 2408932
+      gflops: 5.5
+    input:
+      width: 640
+      height: 640
+      source:
+        format: rgb
+        dtype: float32
+        layout: NCHW
+        shape: [1, 3, 640, 640]
+        scale: 0.003921568627451
+    platforms:
+      - platform: x5
+        status: released
+        released_at: "2026-09-20"
+        artifact:
+          format: bin
+          march: bayes-e
+          runtime_input: nv12
+          url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/detect/n/x5/yolo26n_detect_bayese_640x640_nv12.bin
+          release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/detect/n/x5/release.json
+          checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/detect/n/x5/SHA256SUMS
+          size_bytes: 4003465
+          sha256: ce7f865b4e0333ed21b1a6b14bba8dd6f01368c9e241f09f22cf26bc02e0b270
+        reports:
+          oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/detect/n/x5/oe_report.html
+        accuracy:
+          dataset: COCO val2017
+          task: bbox
+          images: 5000
+          float_onnx:
+            label: FP32 BPU-friendly ONNX baseline
+            map_50_95: 0.396885
+            map_50: 0.559091
+            map_75: 0.425264
+          runtime:
+            map_50_95: 0.371968
+            map_50: 0.538054
+            map_75: 0.400559
+        performance:
+          tool: hrt_model_exec perf
+          implementation: native_cpp_cli
+          timing_scope: model_runtime
+          thread_semantics: runtime_submission_concurrency
+          core_id: 1
+          warmup_frames_per_condition: 20
+          runs_per_condition: 3
+          frames_per_run: 200
+          stages:
+            preprocess: not_measured
+            runtime: measured
+            postprocess: not_measured
+            end_to_end: not_measured
+          measurements:
+            - threads: 1
+              average_latency_ms: 14.729872
+              observed_min_latency_ms: 11.527
+              observed_max_latency_ms: 18.569
+              aggregate_fps: 67.783511
+            - threads: 2
+              average_latency_ms: 18.618317
+              observed_min_latency_ms: 12.205
+              observed_max_latency_ms: 25.264999
+              aggregate_fps: 106.972170
+          end_to_end:
+            - tool: ultralytics_yolo_detect
+              implementation: native_cpp_yolo26_ltrb
+              timing_scope: in_memory_bgr_to_detections
+              pipeline_streams: 1
+              runtime_submission_threads: 1
+              cpu_thread_policy: all_online
+              online_cpu_threads: 8
+              opencv_threads: 8
+              cpu_governor: performance
+              cpu_frequency_mhz: 1500
+              bpu_frequency_mhz: 1000
+              warmup_frames_per_round: 20
+              rounds: 3
+              frames_per_round: 200
+              timed_frames: 600
+              aggregate_wall_ms: 12281.108465
+              metrics_ms:
+                preprocess:
+                  mean: 4.618200
+                  p50: 4.612328
+                  p95: 4.715400
+                  min: 4.487599
+                  max: 4.934141
+                runtime:
+                  mean: 11.718184
+                  p50: 11.706080
+                  p95: 11.823210
+                  min: 11.621955
+                  max: 11.979331
+                postprocess:
+                  mean: 4.122443
+                  p50: 4.118910
+                  p95: 4.176795
+                  min: 4.057389
+                  max: 4.329264
+                end_to_end:
+                  mean: 20.458828
+                  p50: 20.451172
+                  p95: 20.595198
+                  min: 20.283526
+                  max: 20.800027
+              throughput_fps: 48.855525
+            - tool: ultralytics_yolo_detect
+              implementation: native_cpp_yolo26_ltrb
+              timing_scope: in_memory_bgr_to_detections
+              pipeline_streams: 2
+              runtime_submission_threads: 2
+              cpu_thread_policy: all_online
+              online_cpu_threads: 8
+              opencv_threads: 8
+              cpu_governor: performance
+              cpu_frequency_mhz: 1500
+              bpu_frequency_mhz: 1000
+              warmup_frames_per_round: 20
+              rounds: 3
+              frames_per_round: 200
+              timed_frames: 1200
+              aggregate_wall_ms: 12989.194290
+              metrics_ms:
+                preprocess:
+                  mean: 5.336787
+                  p50: 4.991746
+                  p95: 6.789010
+                  min: 4.751432
+                  max: 16.453304
+                runtime:
+                  mean: 12.117444
+                  p50: 11.839748
+                  p95: 13.510984
+                  min: 11.614413
+                  max: 15.692468
+                postprocess:
+                  mean: 4.154596
+                  p50: 4.138076
+                  p95: 4.304433
+                  min: 4.051430
+                  max: 5.219434
+                end_to_end:
+                  mean: 21.608827
+                  p50: 21.043256
+                  p95: 22.902084
+                  min: 20.590235
+                  max: 32.576565
+              throughput_fps: 92.384483
+        provenance:
+          repository_commit: 9f17f2a45d0fee313cacabeb9642b34a2cc1dd1a
+          build_id: 20260920-9f17f2a45d0f-oe1.2.8
