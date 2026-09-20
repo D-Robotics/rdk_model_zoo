@@ -276,14 +276,16 @@ npm ci --prefix model_zoo_web
 npm --prefix model_zoo_web run check
 ```
 
-生成正式预览并验证：
+生成正式预览并验证。默认使用仓库中的
+`model_zoo_web/release/inputs.json`：
 
 ```bash
-MODEL_ZOO_INPUTS=/absolute/path/to/model-zoo-web-inputs.json \
 npm --prefix model_zoo_web run build:release
 
 npm --prefix model_zoo_web run check:release
 ```
+
+本地审核其他输入清单时，可以使用 `MODEL_ZOO_INPUTS` 覆盖默认路径。
 
 本地查看：
 

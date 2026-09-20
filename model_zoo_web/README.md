@@ -59,20 +59,18 @@ npm --prefix model_zoo_web run build:catalog
 npm --prefix model_zoo_web run check:catalog
 ```
 
-The default website build remains an empty catalog shell. To generate a local
-release preview, provide a reviewed multi-model input manifest. The release
-build first regenerates `build/catalog.json` and then writes the complete site
-to `dist/`:
+The default website build remains an empty catalog shell. The release build
+uses the reviewed `release/inputs.json` manifest, regenerates
+`build/catalog.json`, and writes the complete site to `dist/`:
 
 ```bash
-MODEL_ZOO_INPUTS=/path/to/model-zoo-web-inputs.json \
 npm --prefix model_zoo_web run build:release
 
 npm --prefix model_zoo_web run check:release
 ```
 
-`MODEL_ZOO_CATALOG` may optionally override the default
-`model_zoo_web/build/catalog.json` path.
+`MODEL_ZOO_CATALOG` and `MODEL_ZOO_INPUTS` may optionally override the default
+catalog and release-input paths for local review.
 
 The model-detail view links an OE conversion report only when the imported
 release record supplies a reviewed public OSS URL. Missing reports keep the

@@ -6,10 +6,8 @@ const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
 const outputRoot = resolve(webRoot, 'dist');
 const catalogPath = process.env.MODEL_ZOO_CATALOG || resolve(webRoot, 'build', 'catalog.json');
-const inputsPath = process.env.MODEL_ZOO_INPUTS;
+const inputsPath = process.env.MODEL_ZOO_INPUTS || resolve(webRoot, 'release', 'inputs.json');
 const repositoryUrl = process.env.MODEL_ZOO_REPOSITORY_URL || 'https://github.com/D-Robotics/rdk_model_zoo';
-
-if (!inputsPath) throw new Error('MODEL_ZOO_INPUTS must point to the reviewed multi-model input manifest');
 
 await import('./generate.mjs');
 
