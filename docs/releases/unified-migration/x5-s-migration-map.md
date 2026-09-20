@@ -126,3 +126,76 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 3. 制品身份：Manifest 中大多数资产没有 SHA-256，工作树也没有这些模型字节；A 列不等于可下载成功或运行通过。
 4. 外部依赖：ACT/PI0 的上游目录未初始化；Gemma4/MiniCPM 的 LLM/OELLM SDK 与版本、许可证、运行边界需要单独取证。
 5. 第一方 Notebook：X5/S 为 0；X3 的 20 个 Notebook 是历史资源，不能在本表中改动或算入 X5/S 迁移完成度。
+
+---
+
+## 本轮 B1–B11 迁移进度区（2026-09-20 起）
+
+本区独立记录本轮迁移进度，供人工审阅和 Q3 检查器读取。上方历史 P0 表的 `S/F/H` 是清点口径（S=源码/清单静态核对，F=旧新函数映射未核定，H=板端验证未执行），不是顺序状态机；历史列不因批次工作翻转，不得把 F 再解释为 mapping verified，也不得用历史 P0 状态推断新代码已验收。Q3 检查器纳入范围按本区 Refactor 列（in-progress/done 均纳入）确定。
+
+- Mapping / Refactor / Docs：`pending / in-progress / done / not-applicable`。
+- Host / Board / Review：`not-run / passed / failed / not-applicable`。
+- Closed：默认 `no`，迁移代码存在不等于 closed；仅当全部 required 维度完成/通过且无未解决阻断项时为 `yes`。
+- `not-applicable` 必须引用适用范围和理由，不能替代 required 检查；可选未运行项仍披露，不扩大支持或实测声明。
+- Evidence 绑定实际代码 SHA、源 SHA、目标、制品与输入身份、命令/cwd、结果和评审来源；阶段没有执行时不生成虚构成功记录。
+- 一个 sample 的目标、变体或语言完成状态不同必须拆行；下表 pending 行先按 sample 粒度登记，批次执行时按 target×variant×语言细化拆分。
+
+| Batch | Sample / source SHA | Target / variant / language | Mapping | Refactor | Docs | Host | Board | Review | Closed | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| pilot | ultralytics_yolo（yolov8n/yolo26n 检测）/ develop@9f17f2a | x5+s / yolov8n、yolo26n / python | done | done | pending（Q1–Q5 合规随 B9 收编验收） | passed | passed（x5 双板+s100+s100p 适用项；S600 not-run） | not-run | no | [2026-09-17-integration-review.md](2026-09-17-integration-review.md) |
+| pilot | resnet（resnet18）/ develop@9f17f2a | x5+s100 / resnet18 / python + s100 cpp | done | done | in-progress（Q4 参照改造） | passed | passed（x5 双板+s100；s100p 无已批准资产，未验证） | not-run | no | [2026-09-17-integration-review.md](2026-09-17-integration-review.md) |
+| pilot | paddle_ocr（PP-OCRv3/v6）/ develop@9f17f2a | x5+s100 / det+rec 两阶段 / python + s100 cpp | done | done | in-progress（Q4 参照改造） | passed | passed（x5 双板+s100；s100p/s600 not-run） | not-run | no | [2026-09-17-integration-review.md](2026-09-17-integration-review.md) |
+| B1 | mobilenetv1 / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B1 | mobilenetv2 / x5:ac11571 + s:380e1a2 | x5+s / python + s cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B1 | mobilenetv3 / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B1 | mobilenetv4 / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B1 | resnet 新增 resnet50/resnet152 / s:380e1a2 | s100 / 新 variant / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B2 | efficientnet / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B2 | efficientformer / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B2 | efficientformerv2 / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B2 | efficientvit / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B3 | convnext / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B3 | edgenext / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B3 | fasternet / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B3 | fastvit / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | repghost / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | repvgg / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | repvit / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | mobileone / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | resnext / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | vargconvnet / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | googlenet / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B4 | hgnetv2 / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B5 | clip / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B5 | siglip / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B5 | dinov2 / s:380e1a2 | s / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B5 | vit / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B5 | 3dresnet / s:380e1a2 | s / python（视频输入） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B6 | efficient_sam / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B6 | mobile_sam / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B7 | yolov5 / x5:ac11571 + s:380e1a2 | x5+s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B7 | fcos / x5:ac11571 | x5 / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B7 | yoloworld / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B7 | lprnet / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B7 | modnet / x5:ac11571 | x5 / python（资产 manual） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B7 | bytetrack / s:380e1a2 | s / python（依赖 yolov5） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | unet / x5:ac11571 | x5 / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | unetmobilenet / s:380e1a2 | s / python + cpp（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | pp_liteseg / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | yolo26_depth / x5:ac11571 + s:380e1a2 | x5+s / python + x5 cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | depth_anything_v2 / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | lanenet / s:380e1a2 | s / python + cpp（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | pointnet / s:380e1a2 | s / python（点云输入） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | diffusiondrive / s:380e1a2 | s / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B9 | ultralytics_yolo 收编 yolo11/yolo11_pose/yolo11_seg/yolov13_imoonlab / s:380e1a2 | s / 新 family/variant / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B9 | yoloe（x5 yoloe + s yoloe11_seg + s tip yoloe26_seg）/ x5:ac11571 + s:380e1a2 | x5+s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B10 | himloco / x5:ac11571 | x5 / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B10 | asr / s:380e1a2 | s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B10 | kws / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B10 | paraformer / s:380e1a2 | s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B11 | gemma4-e2b / s:380e1a2 | s / cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B11 | minicpm5-2b / s:380e1a2 | s / cpp + legacy evaluator | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B11 | vla/act / s:380e1a2（gitlink 326ea043） | s / gitlink | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B11 | vla/pi0 / s:380e1a2（gitlink a32de276） | s / gitlink | pending | pending | pending | not-run | not-run | not-run | no | — |
+
+勘误（相对批次 kickoff 表）：depth_anything_v2、lanenet、pointnet 为 S-only 源（kickoff 表 B8 行未单独标注）；B2 的 efficientformer 与 efficientformerv2 为两个独立源 sample；S 侧 yolov13 实际目录为 yolov13_imoonlab。

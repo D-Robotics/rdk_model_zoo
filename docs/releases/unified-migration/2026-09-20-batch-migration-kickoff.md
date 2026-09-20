@@ -43,10 +43,18 @@ board smoke on X5 (8GB/4GB) and S100 before the next batch starts.
   semantics, remaining work).
 - Evidence artifacts go to `evidence/` as JSON with recorded cwd, full
   command, commit SHA, target/runtime and input/output hashes.
-- The [migration map](x5-s-migration-map.md) status column flips per entry:
-  `S` (static-checked) → `F` (mapping verified) → closed after the batch's
-  board smoke passes. Board-unverified items stay `H` and are reported as
-  `not-run`; they are never closed by host tests alone.
+- Status tracking lives in the **current-round progress region** appended to
+  the [migration map](x5-s-migration-map.md) (fixed columns:
+  Mapping/Refactor/Docs/Host/Board/Review/Closed/Evidence). The historical
+  P0 `S/F/H` columns in the same file are a one-time inventory reading —
+  `S` = source/manifest statically cross-checked, `F` = old→new function
+  map not yet verified, `H` = board verification not run. They are not a
+  state machine, are never re-interpreted as "mapping verified", and are
+  never flipped by batch work.
+- `Closed=yes` requires every required dimension to be recorded done/passed
+  with linked evidence and no unresolved blockers. Host tests alone never
+  close a row; board-unverified items stay `not-run` in the progress region
+  and are never silently upgraded.
 
 ## Source-drift ledger
 
