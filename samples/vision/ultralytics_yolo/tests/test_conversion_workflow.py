@@ -194,8 +194,12 @@ class ConversionWorkflowTests(unittest.TestCase):
                 command_runner=compile_success,
             )
             self.assertTrue(plan.artifact_path.is_file())
-            self.assertEqual(plan.artifact_path.parent, root)
-            self.assertEqual(list((root / ".temporary_workspace").iterdir()), [])
+            # The production path is resolved; on macOS the same temporary
+            # directory is addressable as both /var/... and /private/var/...,
+            # so compare resolved forms on every host.
+            self.assertEqual(plan.artifact_path.parent, root.resolve())
+            self.assertEqual(
+                list((root / ".temporary_workspace").iterdir()), [])
 
     def test_workspace_parent_overlapping_calibration_pool_is_rejected(self):
         class FakeSession:
