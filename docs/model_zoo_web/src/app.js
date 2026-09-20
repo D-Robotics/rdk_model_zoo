@@ -33,7 +33,8 @@
   $('app').innerHTML = `${header}<main id="main" tabindex="-1"><div id="catalog">${catalog}</div><section id="detail" hidden></section></main>${footer}`;
 
   function card(model) {
-    return `<article class="model-card"><a class="gallery-link" href="#model/${esc(model.id)}" aria-label="查看 ${esc(model.name)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="reference-description" title="${esc(model.description)}">${esc(model.description)}</p><div class="model-tags"><span>${esc(model.task)}</span></div></div></a></article>`;
+    const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
+    return `<article class="model-card"><a class="gallery-link" href="#model/${esc(model.id)}" aria-label="查看 ${esc(model.name)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="reference-description" data-i18n-zh="${esc(model.description)}" data-i18n-en="${esc(model.descriptionEn || model.description)}" title="${esc(description)}">${esc(description)}</p><div class="model-tags"><span>${esc(model.task)}</span></div></div></a></article>`;
   }
 
   function matchesTask(model) {
@@ -77,7 +78,7 @@
     const platformItems = models.filter(model => !selectedPlatforms.size || modelPlatforms(model).some(platform => selectedPlatforms.has(platform)));
     const query = state.query.toLowerCase().trim();
     const items = platformItems.filter(model => {
-      const searchable = [model.name, model.task, model.description, facets.searchTerms(model), ...modelPlatforms(model)].join(' ').toLowerCase();
+      const searchable = [model.name, model.variantName, model.task, model.description, facets.searchTerms(model), ...modelPlatforms(model)].join(' ').toLowerCase();
       return matchesTask(model) && searchable.includes(query);
     });
     filteredItems = items;
