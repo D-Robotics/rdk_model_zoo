@@ -55,7 +55,7 @@ Dataset preparation remains in [X5 datasets](platforms/x5/datasets) and [S datas
 
 Historical tags retain their release-time layout. Read their documentation at the matching tag. The [platform registry guide](platforms/README.md) describes historical branches; local integration does not switch the default branch or publish a release.
 
-The static Model Zoo interface is maintained under [`docs/model_zoo_web`](docs/model_zoo_web). Model data has not yet been connected to that interface.
+The static Model Zoo interface is maintained under [`model_zoo_web`](model_zoo_web). Reviewed sample-model data can be imported through its catalog build pipeline.
 
 ## License
 

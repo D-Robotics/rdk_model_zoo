@@ -20,8 +20,8 @@ non-interactive placeholder; do not add an empty `href`, a fake `#` target, or
 a link to local report payloads.
 
 ```bash
-npm ci --prefix docs/model_zoo_web
-npm --prefix docs/model_zoo_web run check
+npm ci --prefix model_zoo_web
+npm --prefix model_zoo_web run check
 ```
 
 To build a local preview from the samples-only catalog, provide the generated
@@ -30,7 +30,7 @@ catalog and a reviewed multi-model input manifest:
 ```bash
 MODEL_ZOO_CATALOG=/path/to/model_zoo_web/dist/catalog.json \
 MODEL_ZOO_INPUTS=/path/to/model-zoo-web-inputs.json \
-npm --prefix docs/model_zoo_web run build:preview
+npm --prefix model_zoo_web run build:preview
 ```
 
 The input manifest is keyed at two levels. `models` supplies one shared cover

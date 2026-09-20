@@ -55,7 +55,7 @@ samples/
 
 历史 Tag 保留当时的仓库布局，旧版本文档应与对应 Tag 一起阅读。[平台登记](platforms/README.md)说明历史分支；本地整合不代表已切换默认分支或发布新版本。
 
-静态 Model Zoo 网页维护在 [`docs/model_zoo_web`](docs/model_zoo_web)，目前尚未接入正式模型数据。
+静态 Model Zoo 网页维护在 [`model_zoo_web`](model_zoo_web)，经审核的 Sample 模型数据可通过其中的 Catalog 构建流程导入。
 
 ## 许可证 (License)
 
