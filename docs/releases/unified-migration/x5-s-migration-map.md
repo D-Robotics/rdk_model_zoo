@@ -126,6 +126,27 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 3. 制品身份：Manifest 中大多数资产没有 SHA-256，工作树也没有这些模型字节；A 列不等于可下载成功或运行通过。
 4. 外部依赖：ACT/PI0 的上游目录未初始化；Gemma4/MiniCPM 的 LLM/OELLM SDK 与版本、许可证、运行边界需要单独取证。
 5. 第一方 Notebook：X5/S 为 0；X3 的 20 个 Notebook 是历史资源，不能在本表中改动或算入 X5/S 迁移完成度。
+6. **S 侧 cls 文件名真伪未裁定**（B9 收编 ultralytics 家族时裁定）：S 快照的
+   `tests/test_yolo_cls_resolution.py` 断言 cls 制品名为 `*_cls_<march>_224x224_nv12.hbm`
+   （且 `model_url` 亦返回 224 URL）；s tip（380e1a2）删除了该测试，sample 代码与
+   `model/download_model.sh` 改为构造 **640x640** 文件名与 URL，清单 filename 键为
+   640、但清单 URL 仍为 224——即 tip 处于 224→640 改名中途（文件名已改、URL 未跟）。
+   develop 目录侧 errata（`applySCatalogErrata`）按 URL 证据把展示名归一为 224 并注明
+   "Legacy 640 URLs remain compatible"。三方（catalog 展示 224 / 清单字节 640 键 /
+   sample 按 manifest 键解析）各自自洽、互不改写；真名需网络实测裁定（用户门禁），
+   裁定前 B9 不得合并或改写任何一侧。
+7. **platforms/s 快照落后 s tip**（A7 勘定，2026-09-21）：快照相对 380e1a2 缺 53 个
+   文件——`samples/vision/yoloe26_seg`（30）、`samples/llm/minicpm5-2b`（13，
+   legacy evaluator + results + test_data）、`samples/vla/{act,pi0}` gitlink 与
+   `.gitmodules`、`docs/manifests/*`（清单在 tip 已由 docs/release 迁至 docs/manifests；
+   develop 侧 A4/A5 已按 tip 内容落位 `docs/release/s` 并补齐 tip 新增资产 382=368+14）、
+   空的 `docs/tros/README.md` 与占位 `skills/README.md`（A6 已裁定不迁）。全部去向：
+   B9（yoloe26_seg）、B11（minicpm5、vla gitlink+.gitmodules 路径改指 samples/vla），
+   本表各行 source SHA 一律为 tip。快照多出的文件（旧 docs/release 清单、历史 release
+   notes、`__pycache__`、`.gitattributes`、`tests/test_yolo_cls_resolution.py`、根
+   `tros/`）均为 tip 已取代或废弃内容，不构成迁移义务。platforms/x5 快照对
+   ac11571 的 sample 目录**零漂移**（差异仅 docs/catalog、skills、workflows 等
+   ADR-0001/A3 范围设施）。
 
 ---
 
@@ -194,8 +215,8 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B10 | kws / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B10 | paraformer / s:380e1a2 | s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B11 | gemma4-e2b / s:380e1a2 | s / cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B11 | minicpm5-2b / s:380e1a2 | s / cpp + legacy evaluator | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B11 | minicpm5-2b / s:380e1a2（快照无，tip 新增） | s / cpp + evaluator（legacy 脚本 + results/*.json）+ test_data | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B11 | vla/act / s:380e1a2（gitlink 326ea043） | s / gitlink | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B11 | vla/pi0 / s:380e1a2（gitlink a32de276） | s / gitlink | pending | pending | pending | not-run | not-run | not-run | no | — |
 
-勘误（相对批次 kickoff 表）：depth_anything_v2、lanenet、pointnet 为 S-only 源（kickoff 表 B8 行未单独标注）；B2 的 efficientformer 与 efficientformerv2 为两个独立源 sample；S 侧 yolov13 实际目录为 yolov13_imoonlab。
+勘误（相对批次 kickoff 表）：depth_anything_v2、lanenet、pointnet 为 S-only 源（kickoff 表 B8 行未单独标注）；B2 的 efficientformer 与 efficientformerv2 为两个独立源 sample；S 侧 yolov13 实际目录为 yolov13_imoonlab；yoloe26_seg、minicpm5-2b、vla gitlink 仅存在于 s tip（快照缺失，见未核定项 7）；B9 收编 ultralytics 家族时先裁定未核定项 6 的 cls 文件名真伪。
