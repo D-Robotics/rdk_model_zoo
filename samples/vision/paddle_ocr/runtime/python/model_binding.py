@@ -42,7 +42,7 @@ X5_ALPHABET = (
     "{|}~!\"#$%&'()*+,-./  "
 )
 S100_VOCABULARY_SHA256 = (
-    "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6"
+    "b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d"
 )
 
 
