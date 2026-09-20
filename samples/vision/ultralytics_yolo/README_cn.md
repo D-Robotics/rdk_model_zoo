@@ -47,7 +47,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s100 --
 | 运行 CLI NMS 默认值 | 0.70 | 0.45 |
 | 运行 CLI 分类缩放 | YOLO26 直接缩放（0）；其他系列 letterbox（1） | 直接缩放，resize-type=0 |
 | 分类配置类默认缩放 | 0，保留原 API | 0，保留原 API |
-| 已发布分类文件名 | YOLO26 为 224x224；其他系列为 640x640 | 224x224 |
+| 已发布分类文件名 | YOLO26 为 224x224；其他系列为 640x640 | S600 全部 224x224；S100/S100P：YOLO26 为 224x224，其他系列为 640x640 |
 | YOLOv10 运行路径 | DFL + NMS，保留原实现 | DFL 解码后不做 NMS |
 | C++ | X5 参考实现 | 本 Sample 未提供 |
 

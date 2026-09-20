@@ -21,7 +21,7 @@ Remove `--dry-run` on the target board to run inference. This existing compatibi
 | Runtime CLI NMS | 0.70 | 0.45 |
 | Classification CLI resize | YOLO26 stretch (0); other families letterbox (1) | stretch (0) |
 | Classification config-class resize | stretch (0) | stretch (0) |
-| Published classifier filename | YOLO26 224x224; older families 640x640 | 224x224 |
+| Published classifier filename | YOLO26 224x224; older families 640x640 | S600 all 224x224; S100/S100P: YOLO26 224x224, older families 640x640 |
 | YOLOv10 decoder | DFL + NMS | DFL without NMS |
 | C++ | X5 reference | Not supplied |
 

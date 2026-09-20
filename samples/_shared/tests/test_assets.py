@@ -34,6 +34,17 @@ class ManifestAssetsTests(unittest.TestCase):
         self.assertEqual(item.url, 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/resnet18_224x224_nv12.bin')
         self.assertIsNone(item.sha256)
 
+    def test_manifest_authority_is_the_unified_release_location(self):
+        """A4: manifests live at docs/release/{group}/, not under platforms/."""
+        from samples._shared import assets
+        from samples._shared.assets import resolve_asset
+        for group in ('x5', 's'):
+            location = assets._ROOT / f'docs/release/{group}/models.yaml'
+            self.assertTrue(location.is_file(), f'missing unified manifest {location}')
+            self.assertIn(f'docs/release/{group}/models.yaml', str(location))
+        item = resolve_asset('s:resnet18:s100/resnet18_224x224_nv12.hbm')
+        self.assertEqual(item.source_path, 'docs/release/s/models.yaml')
+
     def test_group_and_paths_cannot_escape_manifest_scope(self):
         from samples._shared.assets import resolve_asset
         for reference in ('../s:resnet18:x', 's:resnet18:../../x', 'resnet18', 's:missing:missing'):

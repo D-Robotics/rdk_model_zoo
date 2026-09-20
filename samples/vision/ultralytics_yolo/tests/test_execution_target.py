@@ -30,7 +30,7 @@ class ExecutionTargetTests(unittest.TestCase):
         from yolo_assets import model_url
         from yolo_platform import resolve_platform
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / 'platforms/x5/docs/release/models.yaml'
+            path = Path(directory) / 'docs/release/x5/models.yaml'
             path.parent.mkdir(parents=True)
             path.write_text('models:\n- id: ultralytics_yolo\n  assets:\n  - filename: yolov8n_detect_bayese_640x640_nv12.bin\n    format: bin\n    url: https://example.invalid/revised-model.bin\n    sha256: null\n', encoding='utf-8')
             assets._models.cache_clear()

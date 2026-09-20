@@ -171,13 +171,14 @@ S_FAMILIES: Dict[str, FamilySpec] = {
     "yolo12": _spec("yolo12", (TASK_DETECT,), _COMMON_SMALL_TO_LARGE, "n"),
 }
 
-#: Classification input resolution per platform family. The X5 toolchain
-#: publishes classification artifacts named `640x640`; the S toolchain
-#: publishes them named `224x224`.
-CLASSIFICATION_RESOLUTION: Dict[str, str] = {
-    "x5": "640x640",
-    "s": "224x224",
-}
+#: Classification input resolution is published per family and toolchain, not
+#: per platform: YOLO26 classification artifacts are named `224x224` on every
+#: target, S600 (nash-p) publishes every classification artifact at `224x224`,
+#: and the remaining families on X5, S100 and S100P are named `640x640`.
+#: Facts follow the release manifests (docs/release/{x5,s}/models.yaml) and
+#: the platform download scripts.
+CLASSIFICATION_LOW_RESOLUTION_FAMILIES = frozenset({"yolo26"})
+CLASSIFICATION_LOW_RESOLUTION_TARGETS = frozenset({"s600"})
 
 #: Input resolution used by every non-classification artifact on both
 #: platforms.
@@ -208,16 +209,19 @@ def available_families(profile: PlatformProfile) -> Tuple[str, ...]:
     return tuple(family_registry(profile))
 
 
-def classification_resolution(profile: PlatformProfile) -> str:
-    """Return the published classification input resolution of a platform.
+def classification_resolution(profile: PlatformProfile, family: str) -> str:
+    """Return the published classification input resolution of one family.
 
     Args:
-        profile: Platform whose classification resolution is requested.
+        profile: Platform that publishes the classification artifacts.
+        family: Model family name.
 
     Returns:
         A resolution string such as `"640x640"` or `"224x224"`.
     """
-    return CLASSIFICATION_RESOLUTION[profile.family]
+    if family in CLASSIFICATION_LOW_RESOLUTION_FAMILIES or profile.key in CLASSIFICATION_LOW_RESOLUTION_TARGETS:
+        return "224x224"
+    return DEFAULT_RESOLUTION
 
 
 def asset_resolution(profile: PlatformProfile, family: str, task: str) -> str:
@@ -232,7 +236,7 @@ def asset_resolution(profile: PlatformProfile, family: str, task: str) -> str:
         A resolution string embedded in the published filename.
     """
     if task == TASK_CLS:
-        return "224x224" if family == "yolo26" else classification_resolution(profile)
+        return classification_resolution(profile, family)
     return DEFAULT_RESOLUTION
 
 
