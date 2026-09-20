@@ -1,0 +1,50 @@
+{
+  "record_type": "checker-evidence",
+  "date": "2026-09-20",
+  "phase": "0.5-Q3",
+  "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo",
+  "code_sha": "pending-commit",
+  "interpreter": ".venv/bin/python (CPython 3.14.7, Homebrew)",
+  "deliverables": [
+    "tools/sample_contract/check.py",
+    "tools/sample_contract/README.md",
+    "tools/sample_contract/tests/test_check.py",
+    "tools/sample_contract/tests/fixtures/{good_sample,bad_sections,bad_links,bad_cli_drift,bad_stage_purity,bad_i18n_params,bad_pair,bad_import_runtime}",
+    ".github/workflows/sample-contract.yml"
+  ],
+  "commands": [
+    {
+      "cmd": ".venv/bin/python -m unittest discover -s tools/sample_contract/tests -v",
+      "result": "Ran 23 tests — OK",
+      "coverage": "positive fixture (exit 0, CLI verified not skipped), missing-section (3 findings incl. duplicate anchor line 11 and order deviation), broken links (3 findings at lines 27/28/30; external URL out of scope), CLI drift ([en]-tagged drift/missing/extra vs parser; [zh] clean; static mode records skips without claiming pass), stage purity (4 findings at lines 16/21/24/28 across download/save/subprocess; non-stage helper not flagged), i18n params (option-set + default mismatch; missing main.py is a skip), pairing (model README_cn.md missing), import failure (RuntimeError recorded as skip for both languages), exemptions (matching suppresses with reason shown; unused is itself a violation; missing reason rejected with exit 2), scope resolution on the live migration map (3 pilots, no findings), canonicalization unit tests, JSON report writing"
+    },
+    {
+      "cmd": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --report docs/releases/unified-migration/evidence/2026-09-20-phase05-q3-pilot-checker-report.json",
+      "result": "3 samples, 252 violations, 10 skips, exit 1",
+      "breakdown": {
+        "samples/vision/ultralytics_yolo": {"R-README-SECTIONS": 84, "R-STAGE-PURITY": 0},
+        "samples/vision/resnet": {"R-README-SECTIONS": 84, "R-STAGE-PURITY": 0},
+        "samples/vision/paddle_ocr": {"R-README-SECTIONS": 84, "R-STAGE-PURITY": 0}
+      },
+      "interpretation": "All 252 violations are missing fixed section anchors: the pilot READMEs predate the Q1 anchor mechanism and are reworked in Q4 (per baseline plan; ultralytics_yolo defers to B9 per the exit note — CI stays red on it until then unless the batch pulls it forward). R-STAGE-PURITY reports zero violations on all three pilots' real task/pipeline modules — the Q2 boundary work holds at the AST level. R-CLI-DEFAULTS is recorded as skipped ('no parameters section') everywhere because the section does not exist yet; the rule activates once Q4 adds anchor + tables.",
+      "skips": "10 total: 6 R-CLI-DEFAULTS (no parameters section), 4 R-STAGE-PURITY policy skips (main.py x3, resnet legacy.py x1)"
+    },
+    {
+      "cmd": ".venv/bin/python tools/sample_contract/check.py --sample tools/sample_contract/tests/fixtures/good_sample",
+      "result": "0 violations, exit 0; R-CLI-DEFAULTS verified in import mode (no skip)"
+    }
+  ],
+  "design_facts": {
+    "fixture_first": true,
+    "rule_ids": ["R-README-PAIR", "R-README-SECTIONS", "R-README-LINKS", "R-CLI-DEFAULTS", "R-I18N-PARAMS", "R-STAGE-PURITY", "R-EXEMPTION", "R-SCOPE"],
+    "section_ids_source": "derived live from docs/sample-standards/templates/*.md (en/zh anchor parity enforced at load; duplicates fatal) — no second rule source",
+    "scope_semantics": "progress-region Refactor column, in-progress/done included after stripping parenthetical annotations; historical P0 S/F/H never read",
+    "parser_mode": "import (default) imports trusted repository main.py and calls build_parser(); static mode executes no sample code and records skips; import failures and missing main.py are skips, never passes",
+    "exemptions": "rule+path+line+mandatory reason; unused exemption is itself a violation; no directory-level豁免",
+    "canonical_defaults": "None->null(null/none accepted), bool->true/false, list->JSON ([0]), scalars literal, repo-absolute paths repo-relative posix; backticks/quotes stripped"
+  },
+  "not_run": [
+    "GitHub Actions execution (workflow committed; no CI run happens from this worktree without push authorization)",
+    "semantic review dimensions (prose quality, predict duplication, board behavior) — Q4 by design"
+  ]
+}

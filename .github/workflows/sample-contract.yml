@@ -1,0 +1,50 @@
+name: sample-contract
+
+# Q3 automated checks for the unified samples.  Scope is resolved from the
+# current-round progress region in the migration map (Refactor column:
+# in-progress/done are both included); the historical P0 S/F/H columns are
+# never read for scope decisions.  The checker only reads source/docs and,
+# in import mode, calls the trusted sample's side-effect-free build_parser.
+# No downloads, no board SDK, no README code-block execution.
+
+on:
+  pull_request:
+    paths:
+      - "samples/**"
+      - "docs/sample-standards/**"
+      - "tools/sample_contract/**"
+      - "docs/releases/unified-migration/x5-s-migration-map.md"
+      - ".github/workflows/sample-contract.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "samples/**"
+      - "docs/sample-standards/**"
+      - "tools/sample_contract/**"
+      - "docs/releases/unified-migration/x5-s-migration-map.md"
+      - ".github/workflows/sample-contract.yml"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install host-side parser import dependencies
+        run: python3 -m pip install numpy pyyaml opencv-python-headless
+      - name: Checker unit tests (fixtures first)
+        run: python3 -m unittest discover -s tools/sample_contract/tests -v
+      - name: Check migration scope
+        run: >
+          python3 tools/sample_contract/check.py
+          --scope migration
+          --parser-mode import
+          --report sample-contract-report.json
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-contract-report
+          path: sample-contract-report.json
