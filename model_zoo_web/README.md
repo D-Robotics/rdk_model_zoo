@@ -12,6 +12,8 @@ build/      generated catalog intermediate; ignored by Git
 dist/       generated website artifact; ignored by Git
 ```
 
+New model submissions must follow [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Ownership
 
 - `samples/` owns conversion, evaluation, and runtime code.
