@@ -1,48 +1,95 @@
-# C++ runtime
+# ResNet18 C++ runtime (S-series)
 
-This is the consolidated S-series ResNet18 native runtime. It keeps the
-audited S18 `hbDNNInferV2` flow, image preprocessing, NV12 tensor creation, and
-Top-K output code in the canonical sample. The old S18 C++ directory is a thin
-CMake compatibility configure path and adds this target; it does not maintain
-a second copy of the implementation.
+The consolidated S-series ResNet18 native runtime: the audited S18
+`hbDNNInferV2` flow, image preprocessing, NV12 tensor creation, and Top-K
+output code kept as source in the canonical sample. The old S18 C++
+directory remains a thin CMake compatibility configure path; it does not
+maintain a second copy.
 
-## Board prerequisites
+<a id="supported-boards"></a>
+## Supported boards
 
-Build and run on an RDK S100 or S600 board with the matching board image. The
-host/board environment must already provide:
+| Board | Status |
+| --- | --- |
+| S100 | supported-verified (built and run 2026-09-17; Top-5 equal to the source baseline) |
+| S600 | supported-not-run (same source and SoC detection; board access unavailable) |
+| X5 | not-supported (no X5 C++ source exists in the audited baseline) |
 
-* CMake and a C++17 compiler;
-* OpenCV development headers and libraries;
-* `gflags` and `fmt` development libraries;
-* Horizon DNN headers under `/usr/hobot/include` and libraries under
-  `/usr/hobot/lib`, including `hbDNN` and `hbucp`.
+The CMake file reads `/sys/class/boardinfo/soc_name` and defines the SoC
+macro used by the original source; an unreadable identity file is an error,
+not a fallback.
 
-The CMake file reads `/sys/class/boardinfo/soc_name` and defines the SoC macro
-used by the original source. The launcher does not install system packages,
-modify the SDK, or download a model.
+<a id="dependencies"></a>
+## Dependencies
 
-## Prepare and run
+On the board image: CMake and a C++17 compiler; OpenCV development
+headers/libraries; `gflags` and `fmt` development libraries; Horizon DNN
+headers under `/usr/hobot/include` and libraries under `/usr/hobot/lib`
+(`hbDNN`, `hbucp`). The source utility implementations come from the
+existing `platforms/s/utils/c_utils` files referenced by the canonical
+CMake target. The launcher does not install system packages, modify the
+SDK, or download a model.
 
-Prepare the S100 artifact explicitly from the repository root, then run:
+<a id="build"></a>
+## Build
+
+The launcher builds automatically; to build manually (cwd: repository
+root):
 
 ```bash
-bash samples/vision/resnet/model/download.sh s100
+# success: build directory contains the resnet18 binary
+cmake -S samples/vision/resnet/runtime/cpp \
+  -B samples/vision/resnet/runtime/cpp/build
+cmake --build samples/vision/resnet/runtime/cpp/build --parallel
+```
+
+The compatibility path selects the same canonical target:
+
+```bash
+cmake -S platforms/s/samples/vision/resnet18/runtime/cpp \
+  -B /tmp/resnet18-legacy-build
+cmake --build /tmp/resnet18-legacy-build --parallel
+```
+
+<a id="run"></a>
+## Run
+
+Prerequisite: `bash samples/vision/resnet/model/download.sh s100` (or the
+S600 artifact). From any working directory:
+
+```bash
+# input: model/s100 artifact, bundled zebra_cls.jpg, S ImageNet labels
+# output: Top-K lines on stdout — success: exit 0
 bash samples/vision/resnet/runtime/cpp/run.sh
 ```
 
-The launcher checks the model, bundled `zebra_cls.jpg`, and
-`platforms/s/datasets/imagenet/imagenet_classes.names`, configures CMake,
-builds the `resnet18` binary, and passes those paths to it. For S600, use the
-S600 artifact and a separate build directory:
+For S600, select the artifact explicitly and use a separate build
+directory when the same checkout serves both boards:
 
 ```bash
-bash samples/vision/resnet/model/download.sh s600
 MODEL_PATH="$PWD/samples/vision/resnet/model/s600/resnet18_224x224_nv12.hbm" \
 BUILD_DIR="$PWD/samples/vision/resnet/runtime/cpp/build-s600" \
 bash samples/vision/resnet/runtime/cpp/run.sh
 ```
 
-The script accepts native flag overrides such as:
+The launcher checks the model, image, and label files first, then invokes
+CMake, builds `resnet18`, and passes absolute paths so the command works
+from any directory.
+
+<a id="parameters"></a>
+## Parameters
+
+Native gflags of the `resnet18` binary (the launcher overrides the first
+three with absolute sample paths):
+
+| Flag | Default | Meaning |
+| --- | --- | --- |
+| `--model_path` | SoC-dependent: `/opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm` (S100) or `/opt/hobot/model/s600/basic/resnet18_224x224_nv12.hbm` (S600) | HBM model path |
+| `--test_img` | `../../../test_data/zebra_cls.jpg` (relative to the historical build layout) | BGR test image |
+| `--label_file` | repository S ImageNet labels path | one label per line |
+| `--top_k` | `5` | number of printed classes |
+
+Example override through the launcher:
 
 ```bash
 bash samples/vision/resnet/runtime/cpp/run.sh \
@@ -52,50 +99,25 @@ bash samples/vision/resnet/runtime/cpp/run.sh \
   --top_k 5
 ```
 
-Overrides are resolved before file checks and passed through to the binary.
-Use a path that exists on the board; no download is implied by a missing file.
+<a id="interface-lifecycle"></a>
+## Interface and lifecycle
 
-## Native flow
+`main.cpp` creates the `Resnet18` model object, loads the HBM and extracts
+tensor metadata, converts the BGR image through the model's preprocessing
+(NV12 Y/UV tensor creation), invokes `hbDNNInferV2` on the S-series input
+tensors, decodes the F32 output with the Top-K postprocess, prints the
+configured Top-K classes, and releases the DNN resources at scope exit.
+The heavy work happens after construction, not in the constructor; the
+utility implementations are the existing `platforms/s/utils/c_utils`
+sources. There is no background thread; the process performs one
+synchronous inference.
 
-`main.cpp` creates `Resnet18`, loads the HBM, converts the BGR image through
-`pre_process`, invokes `hbDNNInferV2`, and decodes the output with
-`post_process`. The C++ runtime receives the S-series Y and UV input tensors and
-prints the configured Top-K classes using the linewise ImageNet label file.
-The source utility implementations are the existing files under
-`platforms/s/utils/c_utils`; their include and source paths are referenced by
-the canonical CMake target.
+<a id="results-interpretation"></a>
+## Results interpretation
 
-The default binary flags retain the old names and defaults:
-
-| Flag | Default | Meaning |
-| --- | --- | --- |
-| `--model_path` | board S100 `/opt/hobot/model/s100/basic/...` or S600 equivalent | HBM model path |
-| `--test_img` | `../../../test_data/zebra_cls.jpg` from the build directory | BGR test image |
-| `--label_file` | repository S ImageNet labels | one label per line |
-| `--top_k` | `5` | number of printed classes |
-
-The launcher supplies absolute sample paths so its command works from any
-working directory. The binary defaults remain for callers that invoke it
-directly from the historical build layout.
-
-## Compatibility build and troubleshooting
-
-To verify that the old configure path still selects the canonical target:
-
-```bash
-cmake -S platforms/s/samples/vision/resnet18/runtime/cpp \
-  -B /tmp/resnet18-legacy-build
-cmake --build /tmp/resnet18-legacy-build --parallel
-```
-
-The old `runtime/cpp/run.sh` delegates to the canonical launcher while
-retaining its old model/image/label locations. If CMake cannot read the SoC,
-the board identity file is unavailable. If headers or libraries are missing,
-install the board image/toolchain prerequisites through the normal platform
-process and rerun; this sample does not perform that installation. If the
-binary reports a model or input failure, compare the artifact target, tensor
-protocol, model metadata, image path, and label path before changing source.
-
-Record the board identity, artifact reference, complete build command, and
-Top-K output for every native evaluation. S600 connectivity or an unavailable
-artifact is `not-run`, not a successful S100 result.
+The binary prints the Top-K classes using the linewise ImageNet label
+file, one result per line with class id, score, and label; the exit code
+is 0 on success. Record the board identity, artifact reference, complete
+build/run command, and Top-K output for every native evaluation. S600
+connectivity or an unavailable artifact is `not-run`, not a successful
+S100 substitute.

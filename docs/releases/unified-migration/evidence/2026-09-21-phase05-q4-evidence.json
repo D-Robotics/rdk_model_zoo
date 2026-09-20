@@ -1,0 +1,131 @@
+{
+  "phase": "0.5-Q4",
+  "date": "2026-09-21",
+  "base_commit": "5f63254fa6f8401fc32cdf5ef60283085e6a15e5",
+  "changed_files": [
+    "samples/vision/resnet/{README.md,README_cn.md,model/,runtime/python/,runtime/cpp/,conversion/,evaluator/} README pairs (12 files, docs-only)",
+    "samples/vision/paddle_ocr/{README.md,README_cn.md,model/,runtime/python/,runtime/cpp/,conversion/,evaluator/} README pairs (12 files, docs-only)"
+  ],
+  "checker": {
+    "command": "python3 tools/sample_contract/check.py --sample <sample>",
+    "python": "repo .venv CPython 3.14.7",
+    "resnet": {"violations": 0, "skips": 2, "skip_reasons": ["runtime/python/legacy.py documented compatibility shim", "runtime/python/main.py CLI layer policy skip"], "exit": 0},
+    "paddle_ocr": {"violations": 0, "skips": 1, "skip_reasons": ["runtime/python/main.py CLI layer policy skip"], "exit": 0},
+    "migration_scope": {
+      "command": "python3 tools/sample_contract/check.py --scope migration",
+      "samples": 3,
+      "violations": 84,
+      "exit": 1,
+      "note": "All 84 findings are ultralytics_yolo R-README-SECTIONS (template anchors absent). Sanctioned interim state: the plan defers ultralytics_yolo Q1-Q5 compliance to its B9 incorporation; rules are not weakened to force green."
+    }
+  },
+  "host_suites": {
+    "command_pattern": "python3 -m unittest discover -s <dir> -p 'test_*.py'",
+    "results": {
+      "samples/vision/resnet/tests": "39 OK",
+      "samples/vision/paddle_ocr/tests": "43 OK",
+      "samples/vision/ultralytics_yolo/tests": "59 OK",
+      "samples/_shared/tests": "17 OK",
+      "tools/sample_contract/tests": "23 OK"
+    }
+  },
+  "customer_path_verifications": [
+    {
+      "step": "paddle_ocr list pairs (SDK-free)",
+      "command": "python3 samples/vision/paddle_ocr/runtime/python/main.py --list-models --target auto",
+      "cwd": "repository root",
+      "result": "exit 0; printed x5/ppocrv3 and s100/ppocrv6 rows with the four qualified references exactly as documented in model/README.md"
+    },
+    {
+      "step": "paddle_ocr dry-run (SDK-free static contract)",
+      "command": "python3 samples/vision/paddle_ocr/runtime/python/main.py --dry-run --target x5 --det-asset-id x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin --rec-asset-id x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin",
+      "cwd": "repository root",
+      "result": "exit 0; detector contract shows input_protocol packed_nv12, runtime input [1,960,640,1] u8, output sigmoid_0.tmp_0 [1,1,640,640] float32, semantics unverified_score_vector - matches the stage-io table"
+    },
+    {
+      "step": "resnet list assets (SDK-free)",
+      "command": "python3 samples/vision/resnet/runtime/python/main.py --list-models --target auto",
+      "cwd": "repository root",
+      "result": "exit 0; printed x5 bin row plus s100/s600 hbm rows with source manifests, matching model/README.md"
+    },
+    {
+      "step": "resnet dry-run",
+      "command": "python3 samples/vision/resnet/runtime/python/main.py --dry-run --target x5 --asset-id x5:resnet:resnet18_224x224_nv12.bin --variant resnet18",
+      "cwd": "repository root",
+      "result": "exit 0; resolved model_format bin, input_protocol packed_nv12, default model path under samples/vision/resnet/model/"
+    },
+    {
+      "step": "paddle_ocr evaluator on synthetic records",
+      "command": "python3 samples/vision/paddle_ocr/evaluator/evaluate.py --ground-truth gt.jsonl --predictions pred.jsonl --iou-threshold 0.5 --output report.json",
+      "cwd": "repository root",
+      "inputs": "two synthetic single-image JSONL records (documented record shape)",
+      "result": "exit 0; report identical on stdout and file: precision/recall/F1 1.0, recognition exact_rate 1.0, normalized_similarity 1.0, status measured, per_image match iou 0.938125 - matches evaluator/README.md metrics table"
+    },
+    {
+      "step": "network-capable steps NOT executed",
+      "items": ["--prepare (downloads)", "board inference", "C++ build/run", "OE conversion"],
+      "reason": "authorization boundaries; recorded as not-run, not inferred"
+    }
+  ],
+  "agent_path_verifications": [
+    {
+      "check": "integration-example imports resolve on host",
+      "result": "importlib OK for paddle_ocr model_binding/model_runner/pipeline/tensor_io and resnet model_binding/model_runner (board-only execution not attempted)"
+    },
+    {
+      "check": "parameter tables machine-verified against build_parser()",
+      "result": "R-CLI-DEFAULTS 0 findings on both samples (15 rows paddle_ocr incl. mutually-exclusive mode flags; 14 rows resnet); en/zh tables agree (R-I18N-PARAMS 0)"
+    },
+    {
+      "check": "stage purity",
+      "result": "R-STAGE-PURITY 0 findings on task modules of both samples; only documented policy skips visible"
+    }
+  ],
+  "review_findings_and_fixes": [
+    {
+      "finding": "model-path default lookup was undocumented",
+      "detail": "When --det-model-path/--rec-model-path (paddle_ocr) or --model-path (resnet) are omitted, the binding resolves model/<filename>; READMEs documented only the explicit-path usage",
+      "fix": "Added the default-lookup sentence to paddle_ocr model/README(.+_cn) local-paths, paddle_ocr runtime/python parameter descriptions, and resnet runtime/python parameter descriptions (en+zh, 6 files); checker re-run still 0 violations"
+    },
+    {
+      "finding": "evaluator status vocabulary",
+      "detail": "metrics table documents the no-matched-regions status not_run; the measured path prints status measured (verified live)",
+      "fix": "none needed - table already scoped to the not_run condition"
+    }
+  ],
+  "before_after_comparison": {
+    "principle": "same board, same artifact bytes, same input, same parameters; canonical vs legacy entrypoint",
+    "dimensions": [
+      {"dimension": "preprocessing numerics (NV12/RGB tensors)", "tolerance": "exact equality (0 difference) - identical deterministic algorithm on the same bytes", "status": "passed x5 8GB/4GB + s100 (2026-09-17, both default and aspect paths)"},
+      {"dimension": "raw model output (F32 tensors)", "tolerance": "exact equality - same artifact bytes, same input tensors", "status": "passed x5 8GB/4GB + s100 (2026-09-17)"},
+      {"dimension": "task result (class ids + raw scores / boxes + texts)", "tolerance": "exact equality incl. label formatting compared after raw-score comparison", "status": "passed x5 8GB/4GB + s100 (2026-09-17)"},
+      {"dimension": "C++ rendered/printed output", "tolerance": "Top-5 text equal (resnet); rendered image pixels equal (paddle_ocr)", "status": "passed s100 (2026-09-17)"},
+      {"dimension": "onnx export smoke (resnet host)", "tolerance": "1e-4 contract, observed max abs diff 1.7881393432617188e-06", "status": "passed host (2026-09-17); graph check only, not BPU compilation"}
+    ],
+    "source_evidence": [
+      "runtime source archive 77c9532feccd6f157b47b7df342a6a3bfff648fbcae65300feaf89729ed982cd (resnet; both X5 boards + S100; S100P has no approved resnet18 asset)",
+      "OCR runtime archive 7e75debcc4cc212b4a36560b1488cd45b111024b7a86cb9202d5238b50232e3f (paddle_ocr; both X5 boards + S100; default/aspect preprocessing, raw output, final result, compat wrappers, output ownership, wrong-target rejection)",
+      "S100 C++ archive ba1d74010890f326173ace7b5aa4700b1a629380cb629aad6c224f503424e99e (resnet + paddle_ocr build/run; launchers from /tmp)"
+    ],
+    "not_run": [
+      "S600 retest (SSH unrecovered) - resnet and paddle_ocr rows stay supported-not-run; S100 results must not be substituted",
+      "S100P (no approved resnet18 asset; no audited OCR pair)",
+      "post-Q4-README board re-smoke: Q4 changed documentation only (no runtime/conversion source changes in this commit set), so the 2026-09-17 board evidence remains bound to the unchanged runtime archives; next board gate is the user's B-batch smoke"
+    ]
+  },
+  "dual_perspective_review": {
+    "customer_reading_path": {
+      "method": "walked README root->model->runtime->conversion->evaluator as a new user, executing every host-safe command and checking each stated success criterion, input, cwd, and output against actual behavior",
+      "verdict": "pass for resnet and paddle_ocr after the default-lookup fix; no undefined-variable examples, no dead local links (R-README-LINKS 0), every quickstart command carries cwd/inputs/success criterion"
+    },
+    "agent_development_path": {
+      "method": "located interfaces/parameters/artifacts/conversion/evaluator entries from the READMEs alone, then verified each claim against code: parser defaults via the checker's import mode, stage functions via R-STAGE-PURITY AST scan, integration imports via importlib, manifest references via --list-models",
+      "verdict": "pass for resnet and paddle_ocr; parameter tables are machine-locked to build_parser(), stage-io tables match binding contracts printed by --dry-run"
+    }
+  },
+  "limits": [
+    "CI workflow not executed on a runner in this phase (rules verified locally with the same command the workflow runs)",
+    "board-dependent statements rest on the 2026-09-17 evidence, not on new board runs",
+    "ultralytics_yolo documentation remains non-compliant by design until B9"
+  ]
+}
