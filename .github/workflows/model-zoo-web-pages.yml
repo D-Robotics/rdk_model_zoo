@@ -1,0 +1,96 @@
+name: Deploy Model Zoo Web to Pages
+
+on:
+  push:
+    tags:
+      - "web-v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Check out tagged release
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify release tag and branch ancestry
+        shell: bash
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^web-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must use web-vMAJOR.MINOR.PATCH" >&2
+            exit 1
+          fi
+          git fetch --no-tags origin model_zoo_web:refs/remotes/origin/model_zoo_web
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/model_zoo_web; then
+            echo "Tagged commit is not part of origin/model_zoo_web" >&2
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: model_zoo_web/requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: model_zoo_web/package-lock.json
+
+      - name: Install catalog dependencies
+        run: python -m pip install --disable-pip-version-check -r model_zoo_web/requirements.txt
+
+      - name: Install website dependencies
+        run: npm ci --prefix model_zoo_web
+
+      - name: Validate source and catalog
+        run: npm --prefix model_zoo_web run check
+
+      - name: Build release website
+        run: npm --prefix model_zoo_web run build:release
+
+      - name: Validate release website
+        run: npm --prefix model_zoo_web run check:release
+
+      - name: Verify build does not modify tracked sources
+        run: git diff --exit-code
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: model_zoo_web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

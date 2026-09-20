@@ -307,7 +307,30 @@ python3 -m http.server 4173 --directory model_zoo_web/dist
 - OE 报告入口可用，并在新页面打开原始报告。
 - 桌面和移动端没有文字溢出、控件遮挡或异常换行。
 
-## 8. Git 提交规范
+## 8. GitHub Pages 发布
+
+CI 和 Pages workflow 与网页源码一起维护在 `model_zoo_web` 分支：
+
+- 普通 push 和相关 PR 只执行完整构建与验证，不发布网站。
+- 只有符合 `web-vMAJOR.MINOR.PATCH` 的 Tag 才会部署 Pages。
+- Tag 指向的提交必须属于远端 `model_zoo_web` 分支。
+- Pages 上传目录固定为 `model_zoo_web/dist`。
+
+首次发布前，由仓库管理员在 `Settings > Pages` 中将发布源设置为
+`GitHub Actions`，并确认 `github-pages` environment 允许 `web-v*` Tag。
+
+发布时先推送分支，再创建带注释的 Tag：
+
+```bash
+git push upstream model_zoo_web
+git tag -a web-v1.0.0 -m "RDK Model Zoo Web v1.0.0"
+git push upstream web-v1.0.0
+```
+
+现有旧 Pages workflow 如果仍处于启用状态，后续运行可能重新覆盖站点。切换到新
+Web 后应在仓库设置中禁用旧 workflow，或将其改为不再执行 Pages 部署。
+
+## 9. Git 提交规范
 
 每个提交只处理一个逻辑部分。不要把模型元数据、网页重构和无关 sample 修改混在
 同一个提交中。
@@ -328,7 +351,7 @@ git diff --check
 git status --short
 ```
 
-## 9. Pull Request Checklist
+## 10. Pull Request Checklist
 
 PR 描述中复制并完成以下清单：
 
@@ -348,6 +371,7 @@ PR 描述中复制并完成以下清单：
 - [ ] 封面为 16:9，同系列同任务共用，结果来自真实推理
 - [ ] `npm --prefix model_zoo_web run check` 通过
 - [ ] release preview 构建和 `check:release` 通过
+- [ ] 页面资源使用相对路径，可部署到 GitHub Pages 项目子路径
 - [ ] 已人工检查中文、英文、桌面端和移动端
 - [ ] PR 未包含模型制品、OE HTML、数据集、凭据或生成目录
 ```

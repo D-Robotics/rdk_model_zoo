@@ -26,6 +26,24 @@ const reportPage = fs.readFileSync(path.join(root, 'reports.html'), 'utf8');
 assert.match(reportPage, /reports\/reports-data\.js/);
 assert.match(reportPage, /reports\.js/);
 
+const pagesCompatibleFiles = [
+  'index.html', 'reports.html', 'app.js', 'detail-view.js', 'reports.js',
+  'style.css', 'gallery.css', 'reference.css', 'detail.css', 'reports.css',
+];
+for (const filename of pagesCompatibleFiles) {
+  const source = fs.readFileSync(path.join(root, filename), 'utf8');
+  assert.doesNotMatch(
+    source,
+    /(?:href|src)\s*=\s*["']\/(?!\/)/i,
+    `${filename} must use relative local URLs for GitHub Pages project paths`,
+  );
+  assert.doesNotMatch(
+    source,
+    /url\(\s*["']?\/(?!\/)/i,
+    `${filename} must use relative CSS URLs for GitHub Pages project paths`,
+  );
+}
+
 const context = { window: {} };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(root, 'data.js'), 'utf8'), context);

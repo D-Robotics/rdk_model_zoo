@@ -112,5 +112,22 @@ thread and must state the CPU governor and CPU/BPU frequencies explicitly.
 
 Compiled models, conversion outputs, and complete OE reports must not be
 committed here. Their stable OSS URLs and checksums are supplied through the
-reviewed catalog-generation step. This project also does not define or own a
-GitHub Pages deployment.
+reviewed catalog-generation step.
+
+## GitHub Pages release
+
+The CI and Pages workflows live with the website on the `model_zoo_web`
+branch. Ordinary branch pushes run validation only. A semantic `web-v*` tag
+builds the reviewed release inputs and deploys `model_zoo_web/dist` to Pages.
+
+Push the branch before creating the release tag:
+
+```bash
+git push upstream model_zoo_web
+git tag -a web-v1.0.0 -m "RDK Model Zoo Web v1.0.0"
+git push upstream web-v1.0.0
+```
+
+The deployment workflow rejects malformed tags and commits that are not part
+of `origin/model_zoo_web`. The repository Pages source must be set to GitHub
+Actions, and the `github-pages` environment must allow the release tag.
