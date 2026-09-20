@@ -16,7 +16,7 @@
 | --- | --- | --- |
 | 协作约束 | [`AGENTS.md`](../AGENTS.md) | 分支纪律、权限边界（只读默认/下载/板测/发布须授权）、冲突报告 |
 | README 契约 | [`docs/sample-standards/readme-contract.md`](sample-standards/readme-contract.md) | 各级 README 必答问题、固定章节 ID、双语配对、统一内容纪律；与旧规范的冲突处置记录在其 §6 |
-| 推理契约 | `docs/sample-standards/inference-contract.md`（Q2 落地） | pre/forward/post/predict 职责边界、阶段数据流、多阶段编排 |
+| 推理契约 | [`docs/sample-standards/inference-contract.md`](sample-standards/inference-contract.md) | pre/forward/post/predict 职责边界、阶段数据流、多阶段编排、必需测试 |
 | 迁移记录 | [`docs/releases/unified-migration/`](releases/unified-migration/) | 台账、批次评审、证据；迁移历史不放客户 README |
 | 架构决策 | [`docs/adr/`](adr/) | ADR-0001 源仓/文档站分离、ADR-0002 过渡兼容、ADR-0006 统一版本线等 |
 

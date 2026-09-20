@@ -1,0 +1,60 @@
+{
+  "record_type": "host-test-evidence",
+  "date": "2026-09-20",
+  "phase": "0.5-Q2",
+  "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo",
+  "code_sha": "pending-commit",
+  "interpreter": ".venv/bin/python (CPython 3.14.7, Homebrew)",
+  "environment": {
+    "host": "macOS (Darwin 27.0.0)",
+    "venv": "repo-local .venv created for this session; gitignored",
+    "python_packages": {
+      "numpy": "2.5.3",
+      "opencv-python-headless": "4.14.0 (pinned <5 to mirror board TROS OpenCV 4.x line)",
+      "pyyaml": "installed",
+      "scipy": "installed (required by ultralytics_yolo tests)"
+    },
+    "node": "v26.9.0 (catalog-publisher README recommends Node 22 series; build succeeded and is recorded here as an observation, not a verified support claim)",
+    "catalog_artifact": "tools/catalog-publisher/dist/catalog.json regenerated via npm ci + npm run catalog:build (sha256 af29219bb2db3ac2e50bc5cc57f1a4178a5d71ab9435993c2604b3780ca4fd47, 9175798 bytes, catalog-v1.0.0-38a804d954f9b6ce)"
+  },
+  "commands": [
+    {
+      "cmd": ".venv/bin/python -m unittest discover -s samples/vision/resnet/tests -q",
+      "result": "Ran 39 tests — OK (35 pre-existing + 4 new stage-contract tests)"
+    },
+    {
+      "cmd": ".venv/bin/python -m unittest discover -s samples/vision/paddle_ocr/tests -q",
+      "result": "Ran 43 tests — OK (38 pre-existing + 5 new stage-contract tests)"
+    },
+    {
+      "cmd": ".venv/bin/python -m unittest discover -s samples/vision/ultralytics_yolo/tests -q",
+      "result": "Ran 59 tests — OK (after environment enablement; no production code changed in this sample)"
+    },
+    {
+      "cmd": ".venv/bin/python -m unittest discover -s samples/_shared/tests -q",
+      "result": "Ran 17 tests — OK"
+    }
+  ],
+  "pre_existing_defects_found_and_fixed": [
+    {
+      "defect": "S100_VOCABULARY_SHA256 constant in paddle_ocr model_binding.py (769e7fa7…) matched no form of the committed dictionary; committed test_data/s100/ppocrv6_dict.txt is byte-identical to rdk_s:380e1a2 test_data/ppocrv6_dict.txt (b5f2bfe2…, 18708 lines; +blank+space = 18710 classes consistent with the recognizer contract)",
+      "fix": "constant updated to b5f2bfe2… (verified source identity); test_vocabulary_policies now passes",
+      "verification": "raw/strip-newline/lf-normalization hashes computed — none reproduce the old constant, ruling out a normalization-semantics mix-up"
+    },
+    {
+      "defect": "test_geometry collinear sub-case pinned the Windows cv2 build's degenerate-rect angle sign ((13,9,3), sum 351); macOS cv2 4.14 returns angle -90 → (9,13,3), sum 1649. rdk_s source (utils/py_utils/postprocess.py crop_and_rotate_image) runs the identical chain with no degenerate branch — the port is faithful, the assertion over-pinned an accident",
+      "fix": "assertion now checks cross-build invariants (shape in the two observed orientations, deterministic output); board build's degenerate behavior to be confirmed at board smoke",
+      "verification": "zero-area box sub-case still reproduces exactly ((9,13,3), sum 351) on this build"
+    },
+    {
+      "defect": "test_conversion_workspace overlap assertion compared unresolved tempdir path; macOS addresses the same dir as /var/... and /private/var/...",
+      "fix": "compare against root.resolve()",
+      "verification": "ultralytics_yolo suite OK"
+    }
+  ],
+  "not_run": [
+    "board runs (all) — host evidence only",
+    "S600 — SSH unrecovered",
+    "board cv2 degenerate-crop behavior comparison — deferred to board smoke"
+  ]
+}
