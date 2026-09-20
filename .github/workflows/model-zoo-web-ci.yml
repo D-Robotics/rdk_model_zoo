@@ -1,0 +1,65 @@
+name: Model Zoo Web CI
+
+on:
+  pull_request:
+    paths:
+      - "model_zoo_web/**"
+      - ".github/workflows/model-zoo-web-ci.yml"
+      - ".github/workflows/model-zoo-web-pages.yml"
+  push:
+    branches:
+      - model_zoo_web
+    paths:
+      - "model_zoo_web/**"
+      - ".github/workflows/model-zoo-web-ci.yml"
+      - ".github/workflows/model-zoo-web-pages.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-zoo-web-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: model_zoo_web/requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: model_zoo_web/package-lock.json
+
+      - name: Install catalog dependencies
+        run: python -m pip install --disable-pip-version-check -r model_zoo_web/requirements.txt
+
+      - name: Install website dependencies
+        run: npm ci --prefix model_zoo_web
+
+      - name: Validate source and catalog
+        run: npm --prefix model_zoo_web run check
+
+      - name: Build release website
+        run: npm --prefix model_zoo_web run build:release
+
+      - name: Validate release website
+        run: npm --prefix model_zoo_web run check:release
+
+      - name: Verify build does not modify tracked sources
+        run: git diff --exit-code
