@@ -7,9 +7,11 @@ from typing import Any, Callable, Mapping, Optional, Sequence
 
 import numpy as np
 
+from samples._shared.quantization import apply_output_transform
 from samples.vision.resnet.runtime.python.model_binding import (
     MetadataMismatchError,
     ModelBinding,
+    score_vector_shape,
 )
 from samples.vision.resnet.runtime.python.tensor_io import PreparedInput, prepare_nv12
 
@@ -111,12 +113,22 @@ class ClassificationTask:
     def post_process(self, outputs: Any) -> ClassificationResult:
         """Decode the bound score vector using the source policy.
 
-        Both legacy wrappers apply softmax to their output vector.  The
-        contract calls that policy ``legacy_softmax`` because X5 board evidence
-        currently looks normalized already and does not prove graph semantics.
+        Phase 1.5 H1: ``post_process`` owns the declared
+        ``output_transform`` (``raw_f32`` passthrough or ``dequant`` with the
+        binding's quantization descriptors); ``forward``/the runner only adapt
+        containers.  Both legacy wrappers then apply softmax to the resulting
+        float32 vector.  The contract calls that policy ``legacy_softmax``
+        because X5 board evidence currently looks normalized already and does
+        not prove graph semantics.
         """
 
-        scores = _extract_output(outputs, self.binding)
+        raw = _extract_output(outputs, self.binding)
+        values = apply_output_transform(
+            self.binding.contract.output_transform,
+            {self.binding.output_name: raw},
+            self.binding.output_quants,
+        )
+        scores = values[self.binding.output_name]
         if self.binding.contract.output_score_policy != "legacy_softmax":
             raise MetadataMismatchError(
                 "Unsupported classification output score policy "
@@ -217,15 +229,16 @@ def _extract_output(outputs: Any, binding: ModelBinding) -> np.ndarray:
         )
 
     array = np.asarray(value)
-    if tuple(array.shape) != tuple(binding.output_shape):
+    # H4 rank rule replaces the dual (1,1000,1,1)/(1,1000) hard-code.
+    if not score_vector_shape(array.shape, binding.contract.class_count):
         raise MetadataMismatchError(
             f"Runner output {binding.output_name!r} shape {array.shape} does not "
-            f"match the bound shape {binding.output_shape}."
+            f"squeeze to the bound ({binding.contract.class_count},) score vector."
         )
-    if array.dtype != np.dtype("float32"):
+    if binding.output_transform == "raw_f32" and array.dtype != np.dtype("float32"):
         raise MetadataMismatchError(
             f"Runner output {binding.output_name!r} dtype {array.dtype} does not "
-            "match the bound F32 contract."
+            "match the declared raw_f32 contract."
         )
     return array
 

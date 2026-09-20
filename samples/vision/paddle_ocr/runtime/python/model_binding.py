@@ -22,10 +22,15 @@ infer a protocol from a filename supplied by a caller.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import hashlib
 from pathlib import Path
 from typing import Any, Literal, Mapping, Optional, Sequence
+
+from samples._shared.runtime_meta import (
+    MetadataMismatchError as _SharedMetadataMismatchError,
+)
+from samples._shared.runtime_meta import RuntimeMetadata, canonicalise_dtype
 
 
 SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
@@ -54,7 +59,7 @@ class UnsupportedAssetError(BindingError):
     """The requested asset pair or target is outside the pilot boundary."""
 
 
-class MetadataMismatchError(BindingError):
+class MetadataMismatchError(BindingError, _SharedMetadataMismatchError):
     """A loaded model or runner tensor does not satisfy its bound contract."""
 
 
@@ -158,84 +163,6 @@ class OCRPair:
 
 # The name is useful to callers that prefer the more explicit wording.
 ModelPair = OCRPair
-
-
-@dataclass(frozen=True)
-class RuntimeMetadata:
-    """Facts read from one actual runtime model instance."""
-
-    model_name: str
-    input_names: tuple[str, ...]
-    input_shapes: Mapping[str, tuple[int, ...]]
-    output_names: tuple[str, ...]
-    output_shapes: Mapping[str, tuple[int, ...]]
-    input_dtypes: Mapping[str, str]
-    output_dtypes: Mapping[str, str]
-    input_strides: Mapping[str, tuple[int, ...]] = field(default_factory=dict)
-    output_strides: Mapping[str, tuple[int, ...]] = field(default_factory=dict)
-    output_scales: Mapping[str, Any] = field(default_factory=dict)
-    output_zero_points: Mapping[str, Any] = field(default_factory=dict)
-
-    @classmethod
-    def from_mapping(cls, values: Mapping[str, Any]) -> "RuntimeMetadata":
-        """Build metadata from flat or one-model nested runtime attributes."""
-
-        model_name = str(values.get("model_name") or values.get("name") or "model")
-
-        def model_field(name: str, default: Any) -> Any:
-            value = values.get(name, default)
-            if isinstance(value, Mapping) and model_name in value:
-                return value[model_name]
-            return value
-
-        input_names = tuple(str(value) for value in model_field("input_names", ()))
-        output_names = tuple(str(value) for value in model_field("output_names", ()))
-        return cls(
-            model_name=model_name,
-            input_names=input_names,
-            input_shapes=_normalise_shapes(model_field("input_shapes", {})),
-            output_names=output_names,
-            output_shapes=_normalise_shapes(model_field("output_shapes", {})),
-            input_dtypes=_normalise_dtypes(model_field("input_dtypes", {})),
-            output_dtypes=_normalise_dtypes(model_field("output_dtypes", {})),
-            input_strides=_normalise_shapes(model_field("input_strides", {})),
-            output_strides=_normalise_shapes(model_field("output_strides", {})),
-            output_scales=_normalise_numbers(model_field("output_scales", {})),
-            output_zero_points=_normalise_numbers(
-                model_field("output_zero_points", {})
-            ),
-        )
-
-    @classmethod
-    def from_runtime(cls, runtime: Any) -> "RuntimeMetadata":
-        """Read only public metadata attributes exposed by ``hbm_runtime``."""
-
-        names = getattr(runtime, "model_names", None)
-        if not names:
-            raise MetadataMismatchError("Runtime did not expose model_names.")
-        model_name = str(names[0])
-
-        def runtime_field(name: str, default: Any) -> Any:
-            value = getattr(runtime, name, default)
-            if isinstance(value, Mapping) and model_name in value:
-                return value[model_name]
-            return value
-
-        return cls.from_mapping(
-            {
-                "model_name": model_name,
-                "input_names": runtime_field("input_names", ()),
-                "input_shapes": runtime_field("input_shapes", {}),
-                "output_names": runtime_field("output_names", ()),
-                "output_shapes": runtime_field("output_shapes", {}),
-                "input_dtypes": runtime_field("input_dtypes", {}),
-                "output_dtypes": runtime_field("output_dtypes", {}),
-                "input_strides": runtime_field("input_strides", {}),
-                "output_strides": runtime_field("output_strides", {}),
-                "output_scales": runtime_field("output_scales", {}),
-                "output_zero_points": runtime_field("output_zero_points", {}),
-            }
-        )
 
 
 @dataclass(frozen=True)
@@ -394,7 +321,7 @@ def bind_stage(
                 f"{stage} input {name!r} shape {actual_shape!r} does not match "
                 f"{contract.input_shapes[name]!r}."
             )
-        actual_dtype = _canonical_dtype(facts.input_dtypes.get(name))
+        actual_dtype = canonicalise_dtype(facts.input_dtypes.get(name))
         if actual_dtype is None:
             raise MetadataMismatchError(
                 f"{stage} input {name!r} metadata is missing a dtype."
@@ -411,7 +338,7 @@ def bind_stage(
             f"{stage} output {contract.output_name!r} shape {actual_output_shape!r} "
             f"does not match {contract.output_shape!r}."
         )
-    actual_output_dtype = _canonical_dtype(facts.output_dtypes.get(contract.output_name))
+    actual_output_dtype = canonicalise_dtype(facts.output_dtypes.get(contract.output_name))
     if actual_output_dtype is None:
         raise MetadataMismatchError(
             f"{stage} output {contract.output_name!r} metadata is missing a dtype."
@@ -421,9 +348,9 @@ def bind_stage(
             f"The OCR pilot accepts only F32 outputs; {stage} reported "
             f"{actual_output_dtype!r}."
         )
-    if contract.output_name in facts.output_scales or contract.output_name in facts.output_zero_points:
+    if contract.output_name in facts.output_quants:
         raise MetadataMismatchError(
-            f"{stage} F32 output must not carry an unverified quantization mapping."
+            f"{stage} F32 output must not carry a quantization descriptor."
         )
 
     return StageBinding(
@@ -690,63 +617,6 @@ def _normalise_target(value: str, *, allow_auto: bool = False) -> str:
             f"Unknown target {value!r}; use x5/s100/s100p/s600{suffix}."
         )
     return key
-
-
-def _normalise_shapes(values: Any) -> dict[str, tuple[int, ...]]:
-    if not isinstance(values, Mapping):
-        return {}
-    result: dict[str, tuple[int, ...]] = {}
-    for name, shape in values.items():
-        try:
-            result[str(name)] = tuple(int(dimension) for dimension in shape)
-        except (TypeError, ValueError):
-            result[str(name)] = ()
-    return result
-
-
-def _normalise_dtypes(values: Any) -> dict[str, str]:
-    if not isinstance(values, Mapping):
-        return {}
-    result: dict[str, str] = {}
-    for name, dtype in values.items():
-        raw = str(getattr(dtype, "name", dtype)).lower()
-        if raw in {"f32", "float", "float32", "hbdnndatatype.f32"} or raw.endswith(".f32"):
-            raw = "float32"
-        elif raw in {"u8", "uint8", "hbdnndatatype.u8"} or raw.endswith(".u8"):
-            raw = "uint8"
-        elif raw in {"nv12", "hbdnndatatype.nv12"} or raw.endswith(".nv12"):
-            raw = "nv12"
-        result[str(name)] = raw
-    return result
-
-
-def _normalise_numbers(values: Any) -> dict[str, Any]:
-    if not isinstance(values, Mapping):
-        return {}
-    result: dict[str, Any] = {}
-    for name, value in values.items():
-        shape = getattr(value, "shape", None)
-        if isinstance(value, (list, tuple, Mapping)) or (
-            shape is not None and tuple(shape) != ()
-        ):
-            # Keep vectors/structured values present so the finite F32
-            # contract rejects them instead of dropping unsupported metadata.
-            result[str(name)] = value
-            continue
-        try:
-            result[str(name)] = float(value)
-        except (OverflowError, TypeError, ValueError):
-            # Preserve an unnormalisable but present value.  F32 OCR output
-            # does not support quantization metadata; bind_stage must see the
-            # key and reject it rather than silently treating it as absent.
-            result[str(name)] = value
-    return result
-
-
-def _canonical_dtype(dtype: Any) -> Optional[str]:
-    if dtype is None:
-        return None
-    return _normalise_dtypes({"dtype": dtype}).get("dtype")
 
 
 __all__ = [

@@ -49,7 +49,8 @@ class ClassificationTests(unittest.TestCase):
         result = task.predict(np.zeros((10, 20, 3), dtype=np.uint8))
 
         self.assertEqual(result.class_ids.tolist(), [7])
-        self.assertEqual(tuple(observed[binding.input_names[0]].shape), (1, 336, 224, 1))
+        # H2: packed NV12 feeds the canonical flat 1-D byte buffer.
+        self.assertEqual(tuple(observed[binding.input_names[0]].shape), (224 * 336,))
 
     def test_injected_runner_rejects_wrong_output_shape(self):
         from samples.vision.resnet.runtime.python.classification import ClassificationTask
@@ -80,6 +81,63 @@ class ClassificationTests(unittest.TestCase):
             ClassificationTask(
                 lambda _: {binding.output_name: wrong_dtype}, binding, top_k=1
             ).predict(np.zeros((20, 20, 3), dtype=np.uint8))
+
+    def test_declared_dequant_transform_is_executed_by_post_process(self):
+        # H1 full chain: a contract declaring 'dequant' makes post_process
+        # dequantize the runner's int8 output with the binding's descriptor
+        # before the legacy softmax policy.  Synthetic fixture, not board
+        # evidence; the published ResNet artifacts declare raw_f32.
+        import dataclasses
+
+        from samples.vision.resnet.runtime.python.classification import ClassificationTask
+        from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+        from testsupport import runtime_metadata
+
+        class _QuantInfo:
+            def __init__(self):
+                import numpy as np
+
+                class _EnumLike:
+                    name = "SCALE"
+
+                self.quant_type = _EnumLike()
+                self.scale = np.asarray(0.5, dtype=np.float32)
+                self.zero_point = np.asarray(2.0, dtype=np.float32)
+                self.axis = 0
+
+        selection = resolve_selection("x5")
+        dequant_selection = dataclasses.replace(
+            selection,
+            contract=dataclasses.replace(
+                selection.contract, output_transform="dequant"
+            ),
+        )
+        descriptor = _QuantInfo()
+        facts = runtime_metadata("x5")
+        facts = type(facts).from_mapping(
+            {
+                "model_name": facts.model_name,
+                "input_names": facts.input_names,
+                "input_shapes": facts.input_shapes,
+                "input_dtypes": facts.input_dtypes,
+                "output_names": facts.output_names,
+                "output_shapes": facts.output_shapes,
+                "output_dtypes": {facts.output_names[0]: "int8"},
+                "output_quants": {facts.output_names[0]: descriptor},
+            }
+        )
+        binding = bind_model(dequant_selection, facts)
+
+        import numpy as np
+
+        # q=10 -> (10-2)*0.5 = 4.0 at class 7; all others map below it.
+        raw = np.zeros((1, 1000, 1, 1), dtype=np.int8)
+        raw[0, 7, 0, 0] = 10
+        raw[0, 0, 0, 0] = 4
+
+        task = ClassificationTask(lambda _: {binding.output_name: raw}, binding, top_k=1)
+        result = task.predict(np.zeros((10, 20, 3), dtype=np.uint8))
+        self.assertEqual(result.class_ids.tolist(), [7])
 
     def test_split_input_keeps_y_and_uv_as_separate_tensors(self):
         from samples.vision.resnet.runtime.python.classification import ClassificationTask

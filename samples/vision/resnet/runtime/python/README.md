@@ -73,12 +73,16 @@ checker.
 
 The command prints the stable Top-K as class IDs, scores, and labels
 (`ClassificationResult(class_ids, scores, labels)`), and writes an
-annotated image only when `--img-save-path` is given. X5 receives packed
-`(1,336,224,1)` uint8 NV12; S100/S600 receive Y `(1,224,224,1)` and UV
-`(1,112,112,2)` uint8 arrays. Both audited source wrappers apply softmax to
-the returned score vector; the canonical contract records this as
-`legacy_softmax` over an `unverified_score_vector` and does not claim a new
-output semantic.
+annotated image only when `--img-save-path` is given. X5 receives the packed
+NV12 buffer as the canonical flat 1-D uint8 array of `H*W*3/2` bytes
+(224x224 -> 75,264 bytes; same bytes as the former `(1,336,224,1)` view);
+S100/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8 arrays.
+Both audited source wrappers apply softmax to the returned score vector; the
+canonical contract records this as `legacy_softmax` over an
+`unverified_score_vector` and does not claim a new output semantic. Output
+shapes follow the rank rule: any singleton-batch/spatial spelling that
+squeezes to `(1000,)` binds (the published artifacts declare the `raw_f32`
+transform; quantized artifacts would require a declared `dequant` contract).
 
 <a id="integration-example"></a>
 ## Integration example

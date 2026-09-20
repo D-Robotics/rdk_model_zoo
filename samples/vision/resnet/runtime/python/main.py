@@ -217,7 +217,8 @@ def _dry_run(args: argparse.Namespace) -> int:
         "  input_geometry: "
         f"{selection.contract.input_width}x{selection.contract.input_height}"
     )
-    print(f"  output_shape: {selection.contract.output_shape}")
+    print(f"  output_transform: {selection.contract.output_transform}")
+    print(f"  output_rank_rule: squeeze -> ({selection.contract.class_count},)")
     print(f"  output_semantics: {selection.contract.output_semantics}")
     print(f"  output_score_policy: {selection.contract.output_score_policy}")
     print(f"  source_manifest: {selection.contract.source_manifest}")

@@ -67,10 +67,14 @@ S100/S600 替换为 `s:resnet18:<target>/...` 引用、`s100/`/`s600/` 制品路
 
 命令打印稳定的 Top-K：类别 ID、分数与标签
 （`ClassificationResult(class_ids, scores, labels)`）；仅当给定
-`--img-save-path` 时写标注图。X5 接收 packed `(1,336,224,1)` uint8 NV12；
-S100/S600 接收 Y `(1,224,224,1)` 与 UV `(1,112,112,2)` uint8 数组。审计的
-两个源 wrapper 都对返回分数向量做 softmax；canonical 契约将其记录为
-`unverified_score_vector` 上的 `legacy_softmax`，不宣称新的输出语义。
+`--img-save-path` 时写标注图。X5 以 canonical 的扁平 1-D uint8 数组接收
+packed NV12 缓冲（`H*W*3/2` 字节；224x224 即 75,264 字节，与旧
+`(1,336,224,1)` 视图字节相同）；S100/S600 接收 Y `(1,224,224,1)` 与 UV
+`(1,112,112,2)` uint8 数组。审计的两个源 wrapper 都对返回分数向量做
+softmax；canonical 契约将其记录为 `unverified_score_vector` 上的
+`legacy_softmax`，不宣称新的输出语义。输出形状按 rank 规则校验：凡可
+squeeze 成 `(1000,)` 的单批次/单空间维拼写均可绑定（已发布制品声明
+`raw_f32` 变换；量化制品需声明 `dequant` 契约）。
 
 <a id="integration-example"></a>
 ## 集成示例

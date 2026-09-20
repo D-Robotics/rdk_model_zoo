@@ -13,6 +13,7 @@ from samples.vision.resnet.runtime.python.model_binding import (
     ModelSelection,
     RuntimeMetadata,
     bind_model,
+    score_vector_shape,
 )
 from samples.vision.resnet.runtime.python.tensor_io import validate_input_tensors
 
@@ -136,15 +137,19 @@ class RuntimeModelRunner:
             raise MetadataMismatchError(
                 f"Runtime output does not contain bound tensor {binding.output_name!r}.")
         output = np.asarray(flat[binding.output_name])
-        if tuple(output.shape) != tuple(binding.output_shape):
+        # H4: the observed shape must satisfy the squeeze rule instead of one
+        # hard-coded spelling; the runner performs container validation only,
+        # the declared output transform stays with post_process (H1).
+        if not score_vector_shape(output.shape, binding.contract.class_count):
             raise MetadataMismatchError(
-                f"Runtime output {binding.output_name!r} shape {output.shape} does not "
-                f"match the bound shape {binding.output_shape}."
+                f"Runtime output {binding.output_name!r} shape {output.shape} does "
+                f"not squeeze to the bound ({binding.contract.class_count},) "
+                "score vector."
             )
-        if output.dtype != np.dtype("float32"):
+        if binding.output_transform == "raw_f32" and output.dtype != np.dtype("float32"):
             raise MetadataMismatchError(
                 f"Runtime output {binding.output_name!r} dtype {output.dtype} does not "
-                "match the bound F32 contract."
+                "match the declared raw_f32 contract."
             )
         return {binding.output_name: output}
 

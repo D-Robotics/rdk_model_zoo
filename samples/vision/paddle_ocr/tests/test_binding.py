@@ -175,8 +175,10 @@ class BindingTests(unittest.TestCase):
             input_dtypes={"x": "nv12"},
             output_dtypes={"out": "float32"},
         )
-        self.assertEqual(metadata.output_scales, {})
-        self.assertEqual(metadata.output_zero_points, {})
+        self.assertEqual(metadata.output_quants, {})
+        self.assertEqual(metadata.model_names, ())
+        self.assertEqual(metadata.input_strides, {})
+        self.assertEqual(metadata.output_strides, {})
 
     def test_bound_stage_validates_physical_runtime_tensors(self):
         import numpy as np
@@ -220,7 +222,7 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(s100_tokens[-1], " ")
         self.assertIn("照", s100_tokens)
 
-    def test_all_present_quantization_vectors_are_rejected_for_each_stage(self):
+    def test_all_present_quantization_descriptors_are_rejected_for_each_stage(self):
         from samples.vision.paddle_ocr.runtime.python.model_binding import (
             MetadataMismatchError,
             bind_stage,
@@ -230,10 +232,10 @@ class BindingTests(unittest.TestCase):
         for pair in list_available_pairs():
             for stage in ("detector", "recognizer"):
                 contract = getattr(pair, stage)
-                for field_name, values in (
-                    ("output_scales", {contract.output_name: [0.5]}),
-                    ("output_scales", {contract.output_name: [0.5, 0.75]}),
-                    ("output_zero_points", {contract.output_name: [0]}),
+                for values in (
+                    {contract.output_name: [0.5]},
+                    {contract.output_name: [0.5, 0.75]},
+                    {contract.output_name: object()},
                 ):
                     metadata = {
                         "model_name": contract.model_name,
@@ -243,10 +245,62 @@ class BindingTests(unittest.TestCase):
                         "output_names": [contract.output_name],
                         "output_shapes": {contract.output_name: contract.output_shape},
                         "output_dtypes": {contract.output_name: "float32"},
-                        field_name: values,
+                        # The F32 stage contract must reject any present
+                        # output_quants descriptor (H1 raw_f32 discipline).
+                        "output_quants": values,
                     }
                     with self.assertRaises(MetadataMismatchError):
                         bind_stage(pair, stage, metadata)
+
+    def test_multi_model_runtime_requires_explicit_model_selection(self):
+        from samples._shared.runtime_meta import (
+            MetadataMismatchError as SharedMetadataMismatchError,
+        )
+        from samples.vision.paddle_ocr.runtime.python.model_binding import (
+            RuntimeMetadata,
+        )
+
+        MetadataMismatchError = SharedMetadataMismatchError
+
+        class _TwoModelRuntime:
+            model_names = ["det_model", "rec_model"]
+            input_names = {
+                "det_model": ["x"],
+                "rec_model": ["x"],
+            }
+            input_shapes = {
+                "det_model": {"x": (1, 3, 640, 640)},
+                "rec_model": {"x": (1, 3, 48, 320)},
+            }
+            input_dtypes = {
+                "det_model": {"x": "NV12"},
+                "rec_model": {"x": "F32"},
+            }
+            output_names = {
+                "det_model": ["sigmoid_0.tmp_0"],
+                "rec_model": ["softmax_2.tmp_0"],
+            }
+            output_shapes = {
+                "det_model": {"sigmoid_0.tmp_0": (1, 1, 640, 640)},
+                "rec_model": {"softmax_2.tmp_0": (1, 40, 97, 1)},
+            }
+            output_dtypes = {
+                "det_model": {"sigmoid_0.tmp_0": "F32"},
+                "rec_model": {"softmax_2.tmp_0": "F32"},
+            }
+
+        # H3: several models are never silently reduced to model_names[0].
+        with self.assertRaises(MetadataMismatchError):
+            RuntimeMetadata.from_runtime(_TwoModelRuntime())
+        selected = RuntimeMetadata.from_runtime(_TwoModelRuntime(), "rec_model")
+        self.assertEqual(selected.model_name, "rec_model")
+        self.assertEqual(selected.model_names, ("det_model", "rec_model"))
+        self.assertEqual(selected.input_shapes, {"x": (1, 3, 48, 320)})
+        self.assertEqual(
+            selected.output_shapes, {"softmax_2.tmp_0": (1, 40, 97, 1)}
+        )
+        with self.assertRaises(MetadataMismatchError):
+            RuntimeMetadata.from_runtime(_TwoModelRuntime(), "missing_model")
 
 
 if __name__ == "__main__":

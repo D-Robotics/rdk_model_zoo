@@ -81,13 +81,59 @@ class TensorIoTests(unittest.TestCase):
         )
         self.assertEqual(tuple(y.shape), (1, 4, 4, 1))
         self.assertEqual(tuple(uv.shape), (1, 2, 2, 2))
+        # H2: the canonical packed layout is the flat 1-D byte buffer.
+        self.assertEqual(packed.ndim, 1)
+        self.assertEqual(packed.size, 4 * 4 * 3 // 2)
         self.assertEqual(packed.dtype, np.uint8)
+        self.assertTrue(packed.flags.c_contiguous)
         self.assertTrue(
             np.array_equal(
                 packed.reshape(-1),
                 np.concatenate((y.reshape(-1), uv.reshape(-1))),
             )
         )
+
+    def test_as_packed_and_as_split_round_trip(self):
+        from samples.vision.resnet.runtime.python.tensor_io import (
+            as_packed,
+            as_split,
+        )
+
+        y = np.arange(16, dtype=np.uint8).reshape(1, 4, 4, 1)
+        uv = np.arange(8, dtype=np.uint8).reshape(1, 2, 2, 2)
+        packed = as_packed(y, uv)
+        self.assertEqual(packed.shape, (24,))
+        np.testing.assert_array_equal(
+            packed, np.concatenate((y.reshape(-1), uv.reshape(-1)))
+        )
+        # as_split keeps contiguous plane views for the S-series protocol.
+        split_y, split_uv = as_split(y, uv)
+        np.testing.assert_array_equal(split_y, y)
+        np.testing.assert_array_equal(split_uv, uv)
+
+    def test_validate_input_tensors_accepts_only_flat_packed_layout(self):
+        from samples.vision.resnet.runtime.python.model_binding import (
+            bind_model,
+            resolve_selection,
+        )
+        from samples.vision.resnet.runtime.python.tensor_io import (
+            validate_input_tensors,
+        )
+        from testsupport import runtime_metadata
+
+        binding = bind_model(resolve_selection("x5"), runtime_metadata("x5"))
+        flat = np.zeros(224 * 336, dtype=np.uint8)
+        validate_input_tensors(binding, {binding.input_names[0]: flat})
+
+        four_dimensional = flat.reshape(1, 336, 224, 1)
+        with self.assertRaises(ValueError):
+            validate_input_tensors(
+                binding, {binding.input_names[0]: four_dimensional}
+            )
+        with self.assertRaises(ValueError):
+            validate_input_tensors(
+                binding, {binding.input_names[0]: np.zeros(224 * 336 + 1, dtype=np.uint8)}
+            )
 
     def test_bundled_white_wolf_keeps_legacy_letterbox_pixels(self):
         from pathlib import Path

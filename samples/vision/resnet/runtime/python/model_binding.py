@@ -8,9 +8,15 @@ filename supplied by a caller.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
+
+from samples._shared.quantization import OUTPUT_TRANSFORMS, validate_output_transform
+from samples._shared.runtime_meta import (
+    MetadataMismatchError as _SharedMetadataMismatchError,
+)
+from samples._shared.runtime_meta import RuntimeMetadata, canonicalise_dtype
 
 
 SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
@@ -34,7 +40,7 @@ class UnsupportedAssetError(BindingError):
     """The requested asset/target combination is not in the pilot set."""
 
 
-class MetadataMismatchError(BindingError):
+class MetadataMismatchError(BindingError, _SharedMetadataMismatchError):
     """Runtime metadata cannot satisfy the known pilot contract."""
 
 
@@ -53,6 +59,14 @@ class ClassificationContract:
     whether the graph or the wrapper owns that normalization.  The pilot keeps
     the old ``legacy_softmax`` behavior and records that uncertainty instead of
     calling the tensor a verified logits output.
+
+    ``output_transform`` (Phase 1.5 H1) declares how raw runtime outputs
+    become float32 values: the published ResNet artifacts return F32 tensors,
+    so the contract declares ``raw_f32`` and the reject-int8 rule becomes a
+    declared option instead of an implicit hardcode.  Output shapes follow the
+    H4 rank rule (:func:`score_vector_shape`): the X5 ``(1, 1000, 1, 1)`` and
+    S ``(1, 1000)`` forms are two spellings of one squeezable score vector,
+    not two hard-coded contracts.
     """
 
     asset_id: str
@@ -63,7 +77,7 @@ class ClassificationContract:
     input_height: int
     input_width: int
     class_count: int
-    output_shape: tuple[int, ...]
+    output_transform: str
     output_semantics: str
     output_score_policy: str
     resize_type: int
@@ -115,92 +129,16 @@ class ModelSelection:
 
 
 @dataclass(frozen=True)
-class RuntimeMetadata:
-    """Runtime facts used to validate one loaded model instance."""
-
-    model_name: str
-    input_names: tuple[str, ...]
-    input_shapes: Mapping[str, tuple[int, ...]]
-    output_names: tuple[str, ...]
-    output_shapes: Mapping[str, tuple[int, ...]]
-    input_dtypes: Mapping[str, str]
-    output_dtypes: Mapping[str, str]
-    output_semantics: Optional[str] = None
-    output_scales: Mapping[str, float] = field(default_factory=dict)
-    output_zero_points: Mapping[str, float] = field(default_factory=dict)
-
-    @classmethod
-    def from_mapping(cls, values: Mapping[str, Any]) -> "RuntimeMetadata":
-        """Create metadata from a flat or one-model nested mapping."""
-
-        model_name = str(values.get("model_name") or values.get("name") or "model")
-
-        def field(name: str, default: Any) -> Any:
-            value = values.get(name, default)
-            if isinstance(value, Mapping) and model_name in value:
-                return value[model_name]
-            return value
-
-        input_names = tuple(str(value) for value in field("input_names", ()))
-        output_names = tuple(str(value) for value in field("output_names", ()))
-        input_shapes = _normalise_shapes(field("input_shapes", {}))
-        output_shapes = _normalise_shapes(field("output_shapes", {}))
-        input_dtypes = _normalise_dtypes(field("input_dtypes", {}))
-        output_dtypes = _normalise_dtypes(field("output_dtypes", {}))
-        output_scales = _normalise_numbers(field("output_scales", {}))
-        output_zero_points = _normalise_numbers(field("output_zero_points", {}))
-        semantics = field("output_semantics", None)
-        if isinstance(semantics, Mapping):
-            semantics = semantics.get(output_names[0]) if output_names else None
-        return cls(
-            model_name=model_name,
-            input_names=input_names,
-            input_shapes=input_shapes,
-            output_names=output_names,
-            output_shapes=output_shapes,
-            input_dtypes=input_dtypes,
-            output_dtypes=output_dtypes,
-            output_semantics=str(semantics).lower() if semantics is not None else None,
-            output_scales=output_scales,
-            output_zero_points=output_zero_points,
-        )
-
-    @classmethod
-    def from_runtime(cls, runtime: Any) -> "RuntimeMetadata":
-        """Read public metadata attributes exposed by ``hbm_runtime``."""
-
-        names = getattr(runtime, "model_names", None)
-        if not names:
-            raise MetadataMismatchError("Runtime did not expose model_names.")
-        model_name = str(names[0])
-
-        def model_field(name: str, default: Any) -> Any:
-            value = getattr(runtime, name, default)
-            if isinstance(value, Mapping) and model_name in value:
-                return value[model_name]
-            return value
-
-        return cls.from_mapping(
-            {
-                "model_name": model_name,
-                "input_names": model_field("input_names", ()),
-                "input_shapes": model_field("input_shapes", {}),
-                "output_names": model_field("output_names", ()),
-                "output_shapes": model_field("output_shapes", {}),
-                "input_dtypes": model_field("input_dtypes", {}),
-                "output_dtypes": model_field("output_dtypes", {}),
-                "output_semantics": model_field("output_semantics", None),
-                # These fields are optional.  The pilot accepts F32 outputs
-                # only, so it never guesses a quantization scale.
-                "output_scales": model_field("output_scales", {}),
-                "output_zero_points": model_field("output_zero_points", {}),
-            }
-        )
-
-
-@dataclass(frozen=True)
 class ModelBinding:
-    """Validated connection between a selection and runtime tensor names."""
+    """Validated connection between a selection and runtime tensor names.
+
+    ``output_shape`` is the observed metadata shape (diagnostics); validation
+    and normalization follow the H4 squeeze rule through
+    :func:`score_vector_shape`/:func:`normalise_score_vector`.
+    ``output_quants`` snapshots the runtime's per-output quantization
+    descriptors at bind time so ``post_process`` can execute the declared
+    ``output_transform`` without reaching back into the runner.
+    """
 
     selection: ModelSelection
     contract: ClassificationContract
@@ -210,6 +148,8 @@ class ModelBinding:
     output_name: str
     output_shape: tuple[int, ...]
     output_dtype: str
+    output_transform: str
+    output_quants: Mapping[str, Any]
     y_input_name: Optional[str] = None
     uv_input_name: Optional[str] = None
 
@@ -326,9 +266,12 @@ def bind_model(
         if isinstance(metadata, RuntimeMetadata)
         else RuntimeMetadata.from_mapping(metadata)
     )
-    if facts.output_semantics is not None and facts.output_semantics not in KNOWN_OUTPUT_SEMANTICS:
+    semantics = facts.output_semantics
+    if isinstance(semantics, Mapping):
+        semantics = semantics.get(facts.output_names[0]) if facts.output_names else None
+    if semantics is not None and str(semantics).lower() not in KNOWN_OUTPUT_SEMANTICS:
         raise MetadataMismatchError(
-            f"Runtime reported unsupported output semantics {facts.output_semantics!r}."
+            f"Runtime reported unsupported output semantics {semantics!r}."
         )
     if len(facts.output_names) != 1:
         raise MetadataMismatchError(
@@ -336,26 +279,44 @@ def bind_model(
         )
     output_name = facts.output_names[0]
     output_shape = facts.output_shapes.get(output_name)
-    if tuple(output_shape or ()) != selection.contract.output_shape:
+    if not score_vector_shape(output_shape, selection.contract.class_count):
         raise MetadataMismatchError(
-            f"Output {output_name!r} shape {output_shape!r} does not match the "
-            f"known {selection.contract.output_shape} score-vector shape."
+            f"Output {output_name!r} shape {output_shape!r} does not squeeze to "
+            f"the known ({selection.contract.class_count},) score vector "
+            "(H4 rank rule: singleton batch/spatial dims collapse, batch must "
+            "be one)."
         )
 
     if output_name not in facts.output_dtypes:
         raise MetadataMismatchError(
             f"Runtime metadata is missing the dtype for output {output_name!r}."
         )
-    output_dtype = _canonical_dtype(facts.output_dtypes[output_name])
-    if output_dtype != "float32":
-        raise MetadataMismatchError(
-            f"The P1 pilot accepts only F32 output tensors; {output_name!r} "
-            f"reported {output_dtype!r}. No quantization scale is guessed."
-        )
-    if facts.output_scales.get(output_name) is not None or facts.output_zero_points.get(output_name) is not None:
-        raise MetadataMismatchError(
-            "The P1 F32 contract does not accept output quantization metadata."
-        )
+    output_dtype = canonicalise_dtype(facts.output_dtypes[output_name])
+    transform = validate_output_transform(selection.contract.output_transform)
+    output_quants = facts.output_quants
+    if transform == "raw_f32":
+        if output_dtype != "float32":
+            raise MetadataMismatchError(
+                f"The declared raw_f32 contract accepts only F32 output "
+                f"tensors; {output_name!r} reported {output_dtype!r}. "
+                "Quantized artifacts must declare the 'dequant' transform."
+            )
+        if output_name in output_quants:
+            raise MetadataMismatchError(
+                "The declared raw_f32 contract does not accept output "
+                "quantization metadata."
+            )
+    else:  # dequant (reachable only for contracts that declare it)
+        if output_name not in output_quants:
+            raise MetadataMismatchError(
+                f"The declared dequant contract requires a quantization "
+                f"descriptor for output {output_name!r}."
+            )
+        if output_dtype not in {"int8", "uint8", "int16", "int32", "float32"}:
+            raise MetadataMismatchError(
+                f"Output {output_name!r} dtype {output_dtype!r} is not a "
+                "dequantizable tensor dtype."
+            )
 
     contract = selection.contract
     if contract_input_is_packed(contract):
@@ -379,8 +340,10 @@ def bind_model(
             input_names=facts.input_names,
             input_shapes=facts.input_shapes,
             output_name=output_name,
-            output_shape=tuple(output_shape),
-            output_dtype=output_dtype,
+            output_shape=tuple(output_shape or ()),
+            output_dtype=output_dtype or "",
+            output_transform=transform,
+            output_quants=output_quants,
         )
 
     if contract.input_protocol == "split_nv12":
@@ -412,8 +375,10 @@ def bind_model(
             input_names=facts.input_names,
             input_shapes=facts.input_shapes,
             output_name=output_name,
-            output_shape=tuple(output_shape),
-            output_dtype=output_dtype,
+            output_shape=tuple(output_shape or ()),
+            output_dtype=output_dtype or "",
+            output_transform=transform,
+            output_quants=output_quants,
             y_input_name=y_names[0],
             uv_input_name=uv_names[0],
         )
@@ -439,7 +404,10 @@ def _contract_for(record: AssetRecord) -> ClassificationContract:
         input_height=224,
         input_width=224,
         class_count=1000,
-        output_shape=(1, 1000, 1, 1) if record.target == "x5" else (1, 1000),
+        # Both published families return F32 score tensors; int8 outputs with
+        # output_quants would require the 'dequant' transform (H1) and are a
+        # declared contract change, not an implicit fallback.
+        output_transform="raw_f32",
         output_semantics="unverified_score_vector",
         output_score_policy="legacy_softmax",
         resize_type=1,
@@ -451,6 +419,40 @@ def _contract_for(record: AssetRecord) -> ClassificationContract:
         letterbox_interpolation="linear",
         source_manifest=record.source_manifest,
     )
+
+
+def score_vector_shape(shape: Sequence[int] | None, class_count: int) -> bool:
+    """Apply the H4 output rank rule to one observed output shape.
+
+    A classification artifact may spell its score vector ``(1000,)``,
+    ``(1, 1000)`` (S-series) or ``(1, 1000, 1, 1)`` (X5 NCHW-style): all
+    singleton dimensions collapse and the remainder must be exactly the class
+    count.  A non-singleton batch or an extra real dimension is rejected —
+    the rule never silently flattens ambiguous layouts.
+    """
+
+    try:
+        dims = tuple(int(dimension) for dimension in (shape or ()))
+    except (TypeError, ValueError):
+        return False
+    if any(dimension <= 0 for dimension in dims):
+        return False
+    squeezed = tuple(dimension for dimension in dims if dimension != 1)
+    return squeezed == (int(class_count),)
+
+
+def normalise_score_vector(array: Any) -> Any:
+    """Squeeze one validated score tensor to its canonical 1-D form."""
+
+    import numpy as np
+
+    squeezed = np.squeeze(np.asarray(array))
+    if squeezed.ndim != 1:
+        raise MetadataMismatchError(
+            f"Output does not squeeze to one score vector; got shape "
+            f"{np.asarray(array).shape}."
+        )
+    return squeezed
 
 
 def _manifest_asset_records() -> tuple[AssetRecord, ...]:
@@ -507,46 +509,6 @@ def _normalise_target(value: str) -> str:
     return key
 
 
-def _normalise_shapes(values: Any) -> dict[str, tuple[int, ...]]:
-    if not isinstance(values, Mapping):
-        return {}
-    result: dict[str, tuple[int, ...]] = {}
-    for name, shape in values.items():
-        try:
-            result[str(name)] = tuple(int(dimension) for dimension in shape)
-        except (TypeError, ValueError):
-            result[str(name)] = ()
-    return result
-
-
-def _normalise_dtypes(values: Any) -> dict[str, str]:
-    if not isinstance(values, Mapping):
-        return {}
-    result: dict[str, str] = {}
-    for name, dtype in values.items():
-        raw = str(getattr(dtype, "name", dtype)).lower()
-        if raw in {"f32", "float", "float32", "hbdnndatatype.f32"} or raw.endswith(".f32"):
-            raw = "float32"
-        elif raw in {"u8", "uint8", "hbdnndatatype.u8"} or raw.endswith(".u8"):
-            raw = "uint8"
-        elif raw in {"nv12", "hbdnndatatype.nv12"} or raw.endswith(".nv12"):
-            raw = "nv12"
-        result[str(name)] = raw
-    return result
-
-
-def _normalise_numbers(values: Any) -> dict[str, float]:
-    if not isinstance(values, Mapping):
-        return {}
-    result: dict[str, float] = {}
-    for name, value in values.items():
-        try:
-            result[str(name)] = float(value)
-        except (TypeError, ValueError):
-            continue
-    return result
-
-
 def _validate_input_dtype(
     facts: RuntimeMetadata, name: str, *, packed: bool = False
 ) -> None:
@@ -554,19 +516,13 @@ def _validate_input_dtype(
         raise MetadataMismatchError(
             f"Runtime metadata is missing the dtype for input {name!r}."
         )
-    dtype = _canonical_dtype(facts.input_dtypes[name])
+    dtype = canonicalise_dtype(facts.input_dtypes[name])
     allowed = {"uint8", "nv12"} if packed else {"uint8"}
     if dtype is not None and dtype not in allowed:
         raise MetadataMismatchError(
             f"NV12 input {name!r} has unsupported dtype {dtype!r}; "
             f"expected one of {sorted(allowed)}."
         )
-
-
-def _canonical_dtype(dtype: Any) -> str:
-    """Normalize a direct dataclass value like the mapping path does."""
-
-    return next(iter(_normalise_dtypes({"dtype": dtype}).values()))
 
 
 def _is_y_shape(shape: Optional[Sequence[int]], height: int, width: int) -> bool:
@@ -587,6 +543,7 @@ __all__ = [
     "MetadataMismatchError",
     "ModelBinding",
     "ModelSelection",
+    "OUTPUT_TRANSFORMS",
     "RuntimeMetadata",
     "SUPPORTED_TARGETS",
     "SUPPORTED_VARIANTS",
@@ -594,5 +551,7 @@ __all__ = [
     "bind_model",
     "contract_input_is_packed",
     "list_available_assets",
+    "normalise_score_vector",
     "resolve_selection",
+    "score_vector_shape",
 ]

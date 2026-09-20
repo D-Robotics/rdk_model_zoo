@@ -138,6 +138,31 @@ def bgr_to_nv12_planes(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return convert(image)
 
 
+def as_packed(y: np.ndarray, uv: np.ndarray) -> np.ndarray:
+    """Return the canonical flat 1-D packed NV12 byte layout (Phase 1.5 H2).
+
+    X5 accepts one packed NV12 buffer; the canonical feed layout is the flat
+    Y-then-interleaved-UV byte sequence (``H*W + H*W/2`` bytes, uint8,
+    contiguous).  The former ``(1, 3H/2, W, 1)`` view carried the same bytes;
+    board smoke evidence for the equivalence is recorded with the Phase 1.5
+    migration notes.
+    """
+
+    return np.ascontiguousarray(
+        np.concatenate((np.asarray(y).reshape(-1), np.asarray(uv).reshape(-1))),
+        dtype=np.uint8,
+    )
+
+
+def as_split(y: np.ndarray, uv: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Return contiguous split Y/UV planes for the S-series protocol."""
+
+    return (
+        np.ascontiguousarray(np.asarray(y), dtype=np.uint8),
+        np.ascontiguousarray(np.asarray(uv), dtype=np.uint8),
+    )
+
+
 def prepare_nv12(image: np.ndarray, binding: ModelBinding, *,
                  resize_type: Optional[int] = None) -> PreparedInput:
     """Prepare a BGR image for one validated packed or split NV12 binding."""
@@ -156,9 +181,7 @@ def prepare_nv12(image: np.ndarray, binding: ModelBinding, *,
     if contract.input_protocol == "packed_nv12":
         if len(binding.input_names) != 1:
             raise ValueError("Packed NV12 binding must contain one input name.")
-        packed = np.concatenate((y.reshape(-1), uv.reshape(-1))).reshape(
-            1, contract.input_height * 3 // 2, contract.input_width, 1)
-        tensors = {binding.input_names[0]: np.ascontiguousarray(packed, dtype=np.uint8)}
+        tensors = {binding.input_names[0]: as_packed(y, uv)}
     elif contract.input_protocol == "split_nv12":
         if not binding.y_input_name or not binding.uv_input_name:
             raise ValueError("Split NV12 binding is missing Y/UV input roles.")
@@ -184,7 +207,7 @@ def pack_nv12(image: np.ndarray, binding: ModelBinding, *,
 def pack_nv12_single(image: np.ndarray, input_width: int = 224,
                      input_height: int = 224, *, resize_type: int = 1,
                      interpolation: str | int = "nearest") -> np.ndarray:
-    """Pack an image into the physical single-buffer NV12 shape used by X5."""
+    """Pack an image into the canonical flat packed-NV12 byte layout (X5)."""
 
     resized, _ = resize_bgr(
         image,
@@ -195,8 +218,7 @@ def pack_nv12_single(image: np.ndarray, input_width: int = 224,
         letterbox_interpolation="linear",
     )
     y, uv = bgr_to_nv12_planes(resized)
-    return np.ascontiguousarray(np.concatenate((y.reshape(-1), uv.reshape(-1))).reshape(
-        1, input_height * 3 // 2, input_width, 1), dtype=np.uint8)
+    return as_packed(y, uv)
 
 
 def pack_nv12_planes(image: np.ndarray, input_width: int = 224,
@@ -226,9 +248,13 @@ def validate_input_tensors(binding: ModelBinding,
     contract = binding.contract
     if contract.input_protocol == "packed_nv12":
         actual = tensors[binding.input_names[0]]
-        expected = (1, contract.input_height * 3 // 2, contract.input_width, 1)
-        if tuple(actual.shape) != expected:
-            raise ValueError(f"Packed NV12 input shape {actual.shape} != {expected}.")
+        # Canonical flat 1-D layout (H2): exact byte count, no view games.
+        expected_size = contract.input_height * contract.input_width * 3 // 2
+        if actual.ndim != 1 or actual.size != expected_size:
+            raise ValueError(
+                f"Packed NV12 input must be the flat 1-D {expected_size}-byte "
+                f"buffer; got shape {actual.shape}."
+            )
     else:
         y = tensors.get(binding.y_input_name or "")
         uv = tensors.get(binding.uv_input_name or "")
@@ -274,6 +300,8 @@ def _cv_interpolation(value: str | int) -> int:
 __all__ = [
     "ImageTransform",
     "PreparedInput",
+    "as_packed",
+    "as_split",
     "bgr_to_nv12_planes",
     "pack_nv12",
     "pack_nv12_planes",

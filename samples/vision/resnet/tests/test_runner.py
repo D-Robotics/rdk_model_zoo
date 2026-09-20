@@ -41,7 +41,7 @@ class RunnerTests(unittest.TestCase):
         binding = runner.load()
 
         output = runner(
-            {binding.input_names[0]: np.zeros((1, 336, 224, 1), dtype=np.uint8)}
+            {binding.input_names[0]: np.zeros(224 * 336, dtype=np.uint8)}
         )
         self.assertEqual(tuple(output[binding.output_name].shape), (1, 1000, 1, 1))
         self.assertEqual(fake.calls[0][binding.model_name][binding.input_names[0]].dtype, np.uint8)

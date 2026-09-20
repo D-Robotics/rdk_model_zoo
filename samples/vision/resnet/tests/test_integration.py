@@ -97,8 +97,10 @@ class ResNetIntegrationTests(unittest.TestCase):
         outputs = model.forward(prepared)
         class_ids, probabilities, labels = model.post_process(outputs, topk=3)
 
+        # H2: the adapter feeds the canonical flat packed-NV12 byte buffer
+        # (same bytes as the former (1, 336, 224, 1) view).
         self.assertEqual(tuple(prepared[model.model_name][model.input_names[0]].shape),
-                         (1, 336, 224, 1))
+                         (224 * 336,))
         self.assertEqual(runtime.calls[0][model.model_name][model.input_names[0]].dtype,
                          np.uint8)
         self.assertEqual(class_ids.tolist(), [42, 7, 0])
