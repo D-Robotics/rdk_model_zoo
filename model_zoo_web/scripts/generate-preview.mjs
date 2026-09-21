@@ -175,7 +175,9 @@ for (const record of catalog.models || []) {
       if (reportDataUrl || reportUrl) {
         reportEntries.push({
           id,
-          name: names.variant,
+          // The library lists one report per platform release; carry the
+          // platform in the name so sibling entries stay distinguishable.
+          name: `${names.variant} (${platform})`,
           hardware: platform,
           march: artifact.march,
           kind: 'conversion',

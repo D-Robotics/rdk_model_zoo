@@ -140,7 +140,7 @@
   }
 
   if (selected) {
-    document.getElementById('report-app').innerHTML = `${header}<main class="report-view report-view-native"><div class="report-view-toolbar"><div class="report-view-toolbar-inner"><div><a href="${back}">← 返回模型详情</a><a href="${library}">报告库</a><h1>${esc(selected.name)}${selected.hardware || selected.march ? ` · ${esc(selected.hardware || selected.march)}` : ''}</h1></div></div></div><div class="rd-root" id="rd-root"><div class="rd-loading">加载中…</div></div></main>${footer}`;
+    document.getElementById('report-app').innerHTML = `${header}<main class="report-view report-view-native"><div class="report-view-toolbar"><div class="report-view-toolbar-inner"><div><a href="${back}">← 返回模型详情</a><a href="${library}">报告库</a><h1>${esc(selected.name)}${selected.march ? ` · ${esc(selected.march)}` : ''}</h1></div></div></div><div class="rd-root" id="rd-root"><div class="rd-loading">加载中…</div></div></main>${footer}`;
     const root = document.getElementById('rd-root');
     const mountIframe = () => {
       root.outerHTML = `<iframe class="report-frame" src="${esc(selected.path)}" title="OE 转换报告" sandbox="allow-scripts allow-downloads"></iframe>`;
