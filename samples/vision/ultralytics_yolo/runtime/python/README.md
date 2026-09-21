@@ -78,6 +78,19 @@ YOLO26 artifact to a DFL decoder or infer its protocol from output numbering.
 The current representative board evidence covers YOLOv8n and YOLO26n
 detection; it does not certify every model scale or task.
 
+Registered families and their decoder protocol:
+
+| family | tasks | decoder |
+|---|---|---|
+| `yolo26` | detect, seg, pose, cls, obb | direct-LTRB |
+| `yolov5u` | detect | DFL |
+| `yolov8` | detect, seg, pose, cls | DFL |
+| `yolov9` | detect, seg | DFL |
+| `yolov10` | detect | DFL; NMS-free decode on S-series |
+| `yolo11` | detect, seg, pose, cls | DFL (default family) |
+| `yolo12` | detect | DFL |
+| `yolov13` | detect | DFL |
+
 Useful options include:
 
 ```text

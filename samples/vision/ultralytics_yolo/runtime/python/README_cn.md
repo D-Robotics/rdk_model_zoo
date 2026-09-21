@@ -67,6 +67,19 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 不能把 YOLO26 制品交给 DFL 解码器，也不能根据输出序号猜协议。当前代表
 性板卡证据覆盖 YOLOv8n、YOLO26n 检测，不代表所有尺寸或任务。
 
+已注册的模型系列与解码协议：
+
+| 系列 | 任务 | 解码器 |
+|---|---|---|
+| `yolo26` | detect, seg, pose, cls, obb | direct-LTRB |
+| `yolov5u` | detect | DFL |
+| `yolov8` | detect, seg, pose, cls | DFL |
+| `yolov9` | detect, seg | DFL |
+| `yolov10` | detect | DFL；S 系列走 NMS-free 解码 |
+| `yolo11` | detect, seg, pose, cls | DFL（默认系列） |
+| `yolo12` | detect | DFL |
+| `yolov13` | detect | DFL |
+
 常用参数：
 
 ```text

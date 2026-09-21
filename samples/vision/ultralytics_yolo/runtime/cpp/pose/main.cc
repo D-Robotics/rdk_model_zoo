@@ -90,6 +90,8 @@ limitations under the License.
 #include "dnn/plugin/hb_dnn_plugin.h"
 #include "dnn/hb_sys.h"
 
+#include "common/nv12_geometry.h"
+
 // ============================================================================
 // Macros
 // ============================================================================
@@ -158,44 +160,13 @@ struct PoseDetection {
 // ============================================================================
 
 /**
- * @brief Convert BGR image to NV12 format
+ * @brief Convert BGR image to I420 (used by both NV12 input protocols via
+ *        common/nv12_geometry.h)
  */
-cv::Mat bgr2nv12(const cv::Mat& bgr_img) {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    int height = bgr_img.rows;
-    int width = bgr_img.cols;
-
-    // BGR to YUV420P
+cv::Mat bgr2i420(const cv::Mat& bgr_img) {
     cv::Mat yuv_mat;
     cv::cvtColor(bgr_img, yuv_mat, cv::COLOR_BGR2YUV_I420);
-    uint8_t* yuv = yuv_mat.ptr<uint8_t>();
-
-    // Allocate NV12 image
-    cv::Mat nv12_img(height * 3 / 2, width, CV_8UC1);
-    uint8_t* nv12 = nv12_img.ptr<uint8_t>();
-
-    // Copy Y plane
-    int y_size = height * width;
-    memcpy(nv12, yuv, y_size);
-
-    // Convert UV planar to UV packed (NV12)
-    int uv_height = height / 2;
-    int uv_width = width / 2;
-    uint8_t* nv12_uv = nv12 + y_size;
-    uint8_t* u_data = yuv + y_size;
-    uint8_t* v_data = u_data + uv_height * uv_width;
-
-    for (int i = 0; i < uv_width * uv_height; i++) {
-        *nv12_uv++ = *u_data++;
-        *nv12_uv++ = *v_data++;
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-    LOG_TIME("BGR to NV12 time", duration);
-
-    return nv12_img;
+    return yuv_mat;
 }
 
 /**
@@ -394,8 +365,8 @@ int main(int argc, char** argv) {
         hbDNNGetInputCount(&input_count, dnn_handle),
         "Failed to get input count");
 
-    if (input_count != 1) {
-        LOG_ERROR("Model should have exactly 1 input, but has " << input_count);
+    if (input_count != 1 && input_count != 2) {
+        LOG_ERROR("Model should have 1 (packed NV12, X5) or 2 (split Y/UV NV12, S-series) inputs, but has " << input_count);
         return -1;
     }
 
@@ -404,29 +375,50 @@ int main(int argc, char** argv) {
         hbDNNGetInputTensorProperties(&input_properties, dnn_handle, 0),
         "Failed to get input tensor properties");
 
-    // Check tensor type
-    if (input_properties.tensorType != HB_DNN_IMG_TYPE_NV12) {
-        LOG_ERROR("Input tensor type is not HB_DNN_IMG_TYPE_NV12");
-        return -1;
-    }
-    LOG_INFO("Input tensor type: HB_DNN_IMG_TYPE_NV12");
+    int32_t input_h = 0;
+    int32_t input_w = 0;
+    const bool split_input = (input_count == 2);
+    hbDNNTensorProperties uv_properties;
 
-    // Check tensor layout
-    if (input_properties.tensorLayout != HB_DNN_LAYOUT_NCHW) {
-        LOG_ERROR("Input tensor layout is not HB_DNN_LAYOUT_NCHW");
-        return -1;
+    if (!split_input) {
+        // Packed NV12 (X5 .bin): one NCHW NV12 tensor.
+        if (input_properties.tensorType != HB_DNN_IMG_TYPE_NV12) {
+            LOG_ERROR("Input tensor type is not HB_DNN_IMG_TYPE_NV12");
+            return -1;
+        }
+        if (input_properties.tensorLayout != HB_DNN_LAYOUT_NCHW) {
+            LOG_ERROR("Input tensor layout is not HB_DNN_LAYOUT_NCHW");
+            return -1;
+        }
+        if (input_properties.validShape.numDimensions != 4) {
+            LOG_ERROR("Input tensor should have 4 dimensions");
+            return -1;
+        }
+        input_h = input_properties.validShape.dimensionSize[2];
+        input_w = input_properties.validShape.dimensionSize[3];
+        LOG_INFO("Input: packed NV12 " << input_w << "x" << input_h);
+    } else {
+        // Split NV12 (S100/S100P/S600 .hbm): images_y [1,H,W,1] + images_uv
+        // [1,H/2,W/2,2], both UINT8 (surfacing as S8 at the hbDNN level).
+        CHECK_SUCCESS(
+            hbDNNGetInputTensorProperties(&uv_properties, dnn_handle, 1),
+            "Failed to get uv input tensor properties");
+        const hbDNNTensorShape& y_shape = input_properties.validShape;
+        const hbDNNTensorShape& uv_shape = uv_properties.validShape;
+        if (input_properties.tensorType != HB_DNN_TENSOR_TYPE_S8 ||
+            uv_properties.tensorType != HB_DNN_TENSOR_TYPE_S8 ||
+            y_shape.numDimensions != 4 || uv_shape.numDimensions != 4 ||
+            y_shape.dimensionSize[3] != 1 || y_shape.dimensionSize[2] % 2 != 0 ||
+            uv_shape.dimensionSize[1] != y_shape.dimensionSize[1] / 2 ||
+            uv_shape.dimensionSize[2] != y_shape.dimensionSize[2] / 2 ||
+            uv_shape.dimensionSize[3] != 2) {
+            LOG_ERROR("Split NV12 input shapes do not match the y/uv contract");
+            return -1;
+        }
+        input_h = y_shape.dimensionSize[1];
+        input_w = y_shape.dimensionSize[2];
+        LOG_INFO("Input: split Y/UV NV12 " << input_w << "x" << input_h);
     }
-    LOG_INFO("Input tensor layout: HB_DNN_LAYOUT_NCHW");
-
-    // Get input shape
-    if (input_properties.validShape.numDimensions != 4) {
-        LOG_ERROR("Input tensor should have 4 dimensions");
-        return -1;
-    }
-
-    int32_t input_h = input_properties.validShape.dimensionSize[2];
-    int32_t input_w = input_properties.validShape.dimensionSize[3];
-    LOG_INFO("Input shape: (1, 3, " << input_h << ", " << input_w << ")");
 
     // ========================================================================
     // 4. Check model outputs
@@ -484,20 +476,37 @@ int main(int argc, char** argv) {
     cv::Mat preprocessed = preprocess_image(img, input_h, input_w,
                                            x_scale, y_scale, x_shift, y_shift);
 
-    // Convert to NV12
-    cv::Mat nv12_img = bgr2nv12(preprocessed);
+    // Convert to I420 (shared source for both input protocols)
+    cv::Mat yuv_mat = bgr2i420(preprocessed);
+    const uint8_t* y_plane = yuv_mat.ptr<uint8_t>();
+    const uint8_t* u_plane = y_plane + input_h * input_w;
+    const uint8_t* v_plane = u_plane + input_h * input_w / 4;
 
     // ========================================================================
-    // 6. Prepare input tensor
+    // 6. Prepare input tensor(s)
     // ========================================================================
 
-    hbDNNTensor input;
-    input.properties = input_properties;
-
-    int input_memSize = input_h * input_w * 3 / 2;
-    hbSysAllocCachedMem(&input.sysMem[0], input_memSize);
-    memcpy(input.sysMem[0].virAddr, nv12_img.ptr<uint8_t>(), input_memSize);
-    hbSysFlushMem(&input.sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    hbDNNTensor inputs[2];
+    if (!split_input) {
+        inputs[0].properties = input_properties;
+        const int input_memSize = input_h * input_w * 3 / 2;
+        hbSysAllocCachedMem(&inputs[0].sysMem[0], input_memSize);
+        yolo::i420_to_packed_nv12(y_plane, u_plane, v_plane, input_h, input_w,
+                                  reinterpret_cast<uint8_t*>(inputs[0].sysMem[0].virAddr));
+        hbSysFlushMem(&inputs[0].sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    } else {
+        inputs[0].properties = input_properties;
+        inputs[1].properties = uv_properties;
+        hbSysAllocCachedMem(&inputs[0].sysMem[0], input_properties.alignedByteSize);
+        hbSysAllocCachedMem(&inputs[1].sysMem[0], uv_properties.alignedByteSize);
+        yolo::i420_to_split_nv12(y_plane, u_plane, v_plane, input_h, input_w,
+                                 reinterpret_cast<uint8_t*>(inputs[0].sysMem[0].virAddr),
+                                 input_properties.stride[1],
+                                 reinterpret_cast<uint8_t*>(inputs[1].sysMem[0].virAddr),
+                                 uv_properties.stride[1]);
+        hbSysFlushMem(&inputs[0].sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+        hbSysFlushMem(&inputs[1].sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    }
 
     // ========================================================================
     // 7. Prepare output tensors
@@ -522,7 +531,7 @@ int main(int argc, char** argv) {
     hbDNNInferCtrlParam infer_ctrl_param;
     HB_DNN_INITIALIZE_INFER_CTRL_PARAM(&infer_ctrl_param);
 
-    hbDNNInfer(&task_handle, &output, &input, dnn_handle, &infer_ctrl_param);
+    hbDNNInfer(&task_handle, &output, inputs, dnn_handle, &infer_ctrl_param);
     hbDNNWaitTaskDone(task_handle, 0);
 
     auto infer_duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -540,6 +549,12 @@ int main(int argc, char** argv) {
     float KPT_THRES_RAW = -std::log(1.0f / KPT_SCORE_THRESHOLD - 1.0f);
 
     std::vector<PoseDetection> detections;
+
+    // YOLO26 pose heads emit 4-channel direct-LTRB box maps; YOLO11-family
+    // pose heads emit 64-channel DFL maps. Detect once from output[1]
+    // (scale-0 box map) and reuse for every scale.
+    const bool direct_ltrb =
+        output[1].properties.validShape.dimensionSize[3] == 4;
 
     // Process 3 scales
     const int strides[3] = {8, 16, 32};
@@ -569,7 +584,7 @@ int main(int argc, char** argv) {
             for (int w = 0; w < grid_w; w++) {
                 int offset = h * grid_w + w;
 
-                float* cur_box = box_raw + offset * (4 * REG);
+                float* cur_box = box_raw + offset * (direct_ltrb ? 4 : 4 * REG);
                 float* cur_cls = cls_raw + offset * CLASSES_NUM;
                 float* cur_kpt = kpt_raw + offset * (KPT_NUM * KPT_ENCODE);
 
@@ -581,21 +596,29 @@ int main(int argc, char** argv) {
                 // Apply sigmoid to get confidence score
                 float score = 1.0f / (1.0f + std::exp(-cur_cls[0]));
 
-                // Decode bbox using DFL (Distribution Focal Loss)
+                // Decode bbox: YOLO26 stores direct LTRB distances,
+                // YOLO11-family uses DFL (Distribution Focal Loss).
                 float ltrb[4] = {0.0f};  // left, top, right, bottom
 
-                for (int i = 0; i < 4; i++) {
-                    float dfl_values[REG];
-                    float dfl_softmax[REG];
+                if (direct_ltrb) {
+                    ltrb[0] = cur_box[0];
+                    ltrb[1] = cur_box[1];
+                    ltrb[2] = cur_box[2];
+                    ltrb[3] = cur_box[3];
+                } else {
+                    for (int i = 0; i < 4; i++) {
+                        float dfl_values[REG];
+                        float dfl_softmax[REG];
 
-                    for (int j = 0; j < REG; j++) {
-                        dfl_values[j] = cur_box[i * REG + j];
-                    }
+                        for (int j = 0; j < REG; j++) {
+                            dfl_values[j] = cur_box[i * REG + j];
+                        }
 
-                    softmax(dfl_values, dfl_softmax, REG);
+                        softmax(dfl_values, dfl_softmax, REG);
 
-                    for (int j = 0; j < REG; j++) {
-                        ltrb[i] += dfl_softmax[j] * j;
+                        for (int j = 0; j < REG; j++) {
+                            ltrb[i] += dfl_softmax[j] * j;
+                        }
                     }
                 }
 
@@ -627,13 +650,26 @@ int main(int argc, char** argv) {
                         float kpt_y = cur_kpt[k * 3 + 1];
                         float kpt_conf = cur_kpt[k * 3 + 2];
 
-                        // Decode keypoint coordinates
-                        // kpts_xy = (kpts[:, :, :2] * 2.0 + (anchor - 0.5)) * stride
-                        float decoded_x = (kpt_x * 2.0f + (w + 0.5f) - 0.5f) * stride;
-                        float decoded_y = (kpt_y * 2.0f + (h + 0.5f) - 0.5f) * stride;
+                        float decoded_x;
+                        float decoded_y;
+                        if (direct_ltrb) {
+                            // YOLO26: keypoints regress directly from the
+                            // grid centre (mirrors decode_pose_layer in
+                            // runtime/python/rdk_yolo_utils/postprocess.py).
+                            decoded_x = (kpt_x + w + 0.5f) * stride;
+                            decoded_y = (kpt_y + h + 0.5f) * stride;
+                        } else {
+                            // YOLO11-family:
+                            // kpts_xy = (kpts[:, :, :2] * 2.0 + (anchor - 0.5)) * stride
+                            decoded_x = (kpt_x * 2.0f + (w + 0.5f) - 0.5f) * stride;
+                            decoded_y = (kpt_y * 2.0f + (h + 0.5f) - 0.5f) * stride;
+                        }
 
                         det.keypoints[k] = cv::Point2f(decoded_x, decoded_y);
-                        det.keypoint_scores[k] = kpt_conf;  // No sigmoid for keypoint score
+                        // Both families keep the raw confidence here; the
+                        // draw pass compares against a raw-logit threshold,
+                        // which is equivalent to sigmoid-space thresholding.
+                        det.keypoint_scores[k] = kpt_conf;
                     }
 
                     detections.push_back(det);

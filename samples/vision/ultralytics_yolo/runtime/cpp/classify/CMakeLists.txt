@@ -30,7 +30,11 @@ include_directories(${DNN_PATH})
 link_directories(${DNN_LIB_PATH})
 
 # Add executable
-add_executable(ultralytics_yolo_classify main.cc)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+add_executable(ultralytics_yolo_classify
+    main.cc
+    ../common/nv12_geometry.cc
+)
 
 # Link libraries
 target_link_libraries(ultralytics_yolo_classify

@@ -86,6 +86,8 @@ limitations under the License.
 #include "dnn/plugin/hb_dnn_plugin.h"
 #include "dnn/hb_sys.h"
 
+#include "common/nv12_geometry.h"
+
 // ============================================================================
 // Macros
 // ============================================================================
@@ -360,8 +362,8 @@ int main(int argc, char** argv) {
         hbDNNGetInputCount(&input_count, dnn_handle),
         "Failed to get input count");
 
-    if (input_count != 1) {
-        LOG_ERROR("Model should have exactly 1 input, but has " << input_count);
+    if (input_count != 1 && input_count != 2) {
+        LOG_ERROR("Model should have 1 (packed NV12, X5) or 2 (split Y/UV NV12, S-series) inputs, but has " << input_count);
         return -1;
     }
 
@@ -370,29 +372,50 @@ int main(int argc, char** argv) {
         hbDNNGetInputTensorProperties(&input_properties, dnn_handle, 0),
         "Failed to get input tensor properties");
 
-    // Check tensor type
-    if (input_properties.tensorType != HB_DNN_IMG_TYPE_NV12) {
-        LOG_ERROR("Input tensor type is not HB_DNN_IMG_TYPE_NV12");
-        return -1;
-    }
-    LOG_INFO("Input tensor type: HB_DNN_IMG_TYPE_NV12");
+    int32_t input_h = 0;
+    int32_t input_w = 0;
+    const bool split_input = (input_count == 2);
+    hbDNNTensorProperties uv_properties;
 
-    // Check tensor layout
-    if (input_properties.tensorLayout != HB_DNN_LAYOUT_NCHW) {
-        LOG_ERROR("Input tensor layout is not HB_DNN_LAYOUT_NCHW");
-        return -1;
+    if (!split_input) {
+        // Packed NV12 (X5 .bin): one NCHW NV12 tensor.
+        if (input_properties.tensorType != HB_DNN_IMG_TYPE_NV12) {
+            LOG_ERROR("Input tensor type is not HB_DNN_IMG_TYPE_NV12");
+            return -1;
+        }
+        if (input_properties.tensorLayout != HB_DNN_LAYOUT_NCHW) {
+            LOG_ERROR("Input tensor layout is not HB_DNN_LAYOUT_NCHW");
+            return -1;
+        }
+        if (input_properties.validShape.numDimensions != 4) {
+            LOG_ERROR("Input tensor should have 4 dimensions");
+            return -1;
+        }
+        input_h = input_properties.validShape.dimensionSize[2];
+        input_w = input_properties.validShape.dimensionSize[3];
+        LOG_INFO("Input: packed NV12 " << input_w << "x" << input_h);
+    } else {
+        // Split NV12 (S100/S100P/S600 .hbm): images_y [1,H,W,1] + images_uv
+        // [1,H/2,W/2,2], both UINT8 (surfacing as S8 at the hbDNN level).
+        CHECK_SUCCESS(
+            hbDNNGetInputTensorProperties(&uv_properties, dnn_handle, 1),
+            "Failed to get uv input tensor properties");
+        const hbDNNTensorShape& y_shape = input_properties.validShape;
+        const hbDNNTensorShape& uv_shape = uv_properties.validShape;
+        if (input_properties.tensorType != HB_DNN_TENSOR_TYPE_S8 ||
+            uv_properties.tensorType != HB_DNN_TENSOR_TYPE_S8 ||
+            y_shape.numDimensions != 4 || uv_shape.numDimensions != 4 ||
+            y_shape.dimensionSize[3] != 1 || y_shape.dimensionSize[2] % 2 != 0 ||
+            uv_shape.dimensionSize[1] != y_shape.dimensionSize[1] / 2 ||
+            uv_shape.dimensionSize[2] != y_shape.dimensionSize[2] / 2 ||
+            uv_shape.dimensionSize[3] != 2) {
+            LOG_ERROR("Split NV12 input shapes do not match the y/uv contract");
+            return -1;
+        }
+        input_h = y_shape.dimensionSize[1];
+        input_w = y_shape.dimensionSize[2];
+        LOG_INFO("Input: split Y/UV NV12 " << input_w << "x" << input_h);
     }
-    LOG_INFO("Input tensor layout: HB_DNN_LAYOUT_NCHW");
-
-    // Get input shape
-    if (input_properties.validShape.numDimensions != 4) {
-        LOG_ERROR("Input tensor should have 4 dimensions");
-        return -1;
-    }
-
-    int32_t input_h = input_properties.validShape.dimensionSize[2];
-    int32_t input_w = input_properties.validShape.dimensionSize[3];
-    LOG_INFO("Input shape: (1, 3, " << input_h << ", " << input_w << ")");
 
     // ========================================================================
     // 4. Check model outputs
@@ -451,19 +474,38 @@ int main(int argc, char** argv) {
                                            x_scale, y_scale, x_shift, y_shift);
 
     // Convert to NV12
-    cv::Mat nv12_img = bgr2nv12(preprocessed);
+    // Convert to I420 (shared source for both input protocols)
+    cv::Mat yuv_mat;
+    cv::cvtColor(preprocessed, yuv_mat, cv::COLOR_BGR2YUV_I420);
+    const uint8_t* y_plane = yuv_mat.ptr<uint8_t>();
+    const uint8_t* u_plane = y_plane + input_h * input_w;
+    const uint8_t* v_plane = u_plane + input_h * input_w / 4;
 
     // ========================================================================
     // 6. Prepare input tensor
     // ========================================================================
 
-    hbDNNTensor input;
-    input.properties = input_properties;
-
-    int input_memSize = input_h * input_w * 3 / 2;
-    hbSysAllocCachedMem(&input.sysMem[0], input_memSize);
-    memcpy(input.sysMem[0].virAddr, nv12_img.ptr<uint8_t>(), input_memSize);
-    hbSysFlushMem(&input.sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    hbDNNTensor inputs[2];
+    if (!split_input) {
+        inputs[0].properties = input_properties;
+        const int input_memSize = input_h * input_w * 3 / 2;
+        hbSysAllocCachedMem(&inputs[0].sysMem[0], input_memSize);
+        yolo::i420_to_packed_nv12(y_plane, u_plane, v_plane, input_h, input_w,
+                                  reinterpret_cast<uint8_t*>(inputs[0].sysMem[0].virAddr));
+        hbSysFlushMem(&inputs[0].sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    } else {
+        inputs[0].properties = input_properties;
+        inputs[1].properties = uv_properties;
+        hbSysAllocCachedMem(&inputs[0].sysMem[0], input_properties.alignedByteSize);
+        hbSysAllocCachedMem(&inputs[1].sysMem[0], uv_properties.alignedByteSize);
+        yolo::i420_to_split_nv12(y_plane, u_plane, v_plane, input_h, input_w,
+                                 reinterpret_cast<uint8_t*>(inputs[0].sysMem[0].virAddr),
+                                 input_properties.stride[1],
+                                 reinterpret_cast<uint8_t*>(inputs[1].sysMem[0].virAddr),
+                                 uv_properties.stride[1]);
+        hbSysFlushMem(&inputs[0].sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+        hbSysFlushMem(&inputs[1].sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    }
 
     // ========================================================================
     // 7. Prepare output tensors
@@ -488,7 +530,7 @@ int main(int argc, char** argv) {
     hbDNNInferCtrlParam infer_ctrl_param;
     HB_DNN_INITIALIZE_INFER_CTRL_PARAM(&infer_ctrl_param);
 
-    hbDNNInfer(&task_handle, &output, &input, dnn_handle, &infer_ctrl_param);
+    hbDNNInfer(&task_handle, &output, inputs, dnn_handle, &infer_ctrl_param);
     hbDNNWaitTaskDone(task_handle, 0);
 
     auto infer_duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -515,6 +557,12 @@ int main(int argc, char** argv) {
 
     // Create proto matrix (proto_h*proto_w × MCES)
     cv::Mat proto_mat(proto_h * proto_w, MCES, CV_32F, proto_data);
+
+    // YOLO26 seg heads emit 4-channel direct-LTRB box maps; YOLO11-family
+    // seg heads emit 64-channel DFL maps. Detect once from output[1]
+    // (scale-0 box map) and reuse for every scale.
+    const bool direct_ltrb =
+        output[1].properties.validShape.dimensionSize[3] == 4;
 
     // Process 3 scales
     const int strides[3] = {8, 16, 32};
@@ -545,7 +593,7 @@ int main(int argc, char** argv) {
                 int offset = h * grid_w + w;
 
                 float* cur_cls = cls_raw + offset * CLASSES_NUM;
-                float* cur_box = box_raw + offset * (4 * REG);
+                float* cur_box = box_raw + offset * (direct_ltrb ? 4 : 4 * REG);
                 float* cur_mce = mce_raw + offset * MCES;
 
                 // Find max class score
@@ -564,21 +612,29 @@ int main(int argc, char** argv) {
                 // Apply sigmoid to get confidence score
                 float score = 1.0f / (1.0f + std::exp(-cur_cls[cls_id]));
 
-                // Decode bbox using DFL (Distribution Focal Loss)
+                // Decode bbox: YOLO26 stores direct LTRB distances,
+                // YOLO11-family uses DFL (Distribution Focal Loss).
                 float ltrb[4] = {0.0f};  // left, top, right, bottom
 
-                for (int i = 0; i < 4; i++) {
-                    float dfl_values[REG];
-                    float dfl_softmax[REG];
+                if (direct_ltrb) {
+                    ltrb[0] = cur_box[0];
+                    ltrb[1] = cur_box[1];
+                    ltrb[2] = cur_box[2];
+                    ltrb[3] = cur_box[3];
+                } else {
+                    for (int i = 0; i < 4; i++) {
+                        float dfl_values[REG];
+                        float dfl_softmax[REG];
 
-                    for (int j = 0; j < REG; j++) {
-                        dfl_values[j] = cur_box[i * REG + j];
-                    }
+                        for (int j = 0; j < REG; j++) {
+                            dfl_values[j] = cur_box[i * REG + j];
+                        }
 
-                    softmax(dfl_values, dfl_softmax, REG);
+                        softmax(dfl_values, dfl_softmax, REG);
 
-                    for (int j = 0; j < REG; j++) {
-                        ltrb[i] += dfl_softmax[j] * j;
+                        for (int j = 0; j < REG; j++) {
+                            ltrb[i] += dfl_softmax[j] * j;
+                        }
                     }
                 }
 

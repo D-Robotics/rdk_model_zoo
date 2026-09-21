@@ -29,8 +29,14 @@ set(DNN_LIB_PATH "/usr/lib/")
 include_directories(${DNN_PATH})
 link_directories(${DNN_LIB_PATH})
 
-# Add executable
-add_executable(ultralytics_yolo_detect main.cc)
+# Add executable (with the shared helpers in ../common)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+add_executable(ultralytics_yolo_detect
+    main.cc
+    ../common/benchmark.cc
+    ../common/dnn_io.cc
+    ../common/nv12_geometry.cc
+)
 
 # Link libraries
 target_link_libraries(ultralytics_yolo_detect
