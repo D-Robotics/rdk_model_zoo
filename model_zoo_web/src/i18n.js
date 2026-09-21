@@ -156,6 +156,8 @@
     'BPU OPs': 'BPU OPs',
     '量化节点': 'Quantized nodes',
     '最弱相似度': 'Lowest similarity',
+    'BPU 核执行': 'BPU core execution',
+    '任务生成': 'Task generation',
     '层': 'layers',
     '模型输入': 'Model inputs',
     '模型输出': 'Model outputs',
@@ -203,6 +205,8 @@
       .replace(/^已选 (\d+) 项$/, (_, count) => `${count} selected`)
       .replace(/^已显示 (\d+) \/ (\d+) 个模型$/, (_, shown, total) => `${shown} of ${total} models shown`)
       .replace(/^(\d+) 个文件$/, (_, count) => `${count} ${count === '1' ? 'file' : 'files'}`)
+      .replace(/^(\d+) 个算子$/, (_, count) => `${count} ${count === '1' ? 'op' : 'ops'}`)
+      .replace(/^P10 ([\d.]+) · 中位 ([\d.]+)$/, (_, p10, median) => `P10 ${p10} · median ${median}`)
       .replace(/^(\d+) 个报告$/, (_, count) => `${count} ${count === '1' ? 'report' : 'reports'}`)
       .replace(/(\d+) 线程/g, (_, count) => `${count} threads`)
       .replace(pattern, match => messages[match]);

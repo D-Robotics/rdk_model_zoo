@@ -60,10 +60,10 @@
         const weakestList = summary.weakest_nodes || (weakest ? [weakest] : []);
         const percentiles = summary.cosine_percentiles || {};
         const shortName = name => name.split('/').slice(-2).join('/');
-        const rows = weakestList.slice(0, 3).map(node =>
-          `<span class="rd-weak-row"><b>${fmt(node.cosine, 4)}</b><code title="${esc(node.name)}">${esc(shortName(node.name))}</code></span>`).join('');
-        const stats = percentiles.p10 != null ? `<small>P10 ${fmt(percentiles.p10, 4)} · 中位 ${fmt(percentiles.median, 4)}</small>` : '';
-        return `<div class="rd-card rd-card-weak"><span>最弱相似度 TOP3</span><div class="rd-weak-rows">${rows || '—'}</div>${stats}</div>`;
+        const tip = weakestList.slice(0, 3)
+          .map(node => `${node.cosine != null ? node.cosine.toFixed(4) : '—'} ${node.name}`).join('\n');
+        const note = percentiles.p10 != null ? `P10 ${fmt(percentiles.p10, 4)} · 中位 ${fmt(percentiles.median, 4)}` : '';
+        return `<div class="rd-card"><span>最弱相似度</span><strong title="${esc(tip)}">${weakest ? `${fmt(weakest.cosine, 4)} · ${esc(shortName(weakest.name))}` : '—'}</strong><small class="rd-pair-note">${note}</small></div>`;
       })(),
     ];
     const subgraphs = data.subgraphs || [];
