@@ -52,12 +52,19 @@ def bpu_detect_forward(self, x):
         Layout is NHWC.
     """
     res = []
-    if hasattr(self, 'one2one_cv2') and hasattr(self, 'one2one_cv3'):
-        box_layers = self.one2one_cv2
-        cls_layers = self.one2one_cv3
-    else:
-        box_layers = self.cv2
-        cls_layers = self.cv3
+    # YOLO26 is end-to-end: the one2one branch is the deployment head. Newer
+    # ultralytics releases keep the attributes but set them to None in
+    # Detect.fuse(), so probe by value — not by hasattr — and never let a
+    # silently-switched head reach the exporter.
+    box_layers = getattr(self, 'one2one_cv2', None)
+    cls_layers = getattr(self, 'one2one_cv3', None)
+    if box_layers is None or cls_layers is None:
+        box_layers, cls_layers = self.cv2, self.cv3
+    if box_layers is None or cls_layers is None:
+        raise RuntimeError(
+            'YOLO26 export: neither the one2one nor the one2many detect head '
+            'is available (Detect.fuse() removed both); pin an ultralytics '
+            'release that preserves the deployment head')
     for i in range(self.nl):
         scores = cls_layers[i](x[i]).permute(0, 2, 3, 1)
         bboxes = box_layers[i](x[i]).permute(0, 2, 3, 1)

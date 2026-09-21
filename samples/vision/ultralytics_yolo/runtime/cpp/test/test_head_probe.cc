@@ -53,13 +53,13 @@ int main() {
   view.h = 2;
   view.w = 2;
   view.channels = 4;
-  view.aligned_w = 2;
-  view.aligned_c = 4;
+  view.row_step = 8;
+  view.cell_step = 4;
   expect_eq("cell(1,0)[0]", static_cast<int>(view.cell(1, 0)[0]), 8);
   expect_eq("cell(1,1)[2]", static_cast<int>(view.cell(1, 1)[2]), 14);
 
-  // Row padding: aligned_w wider than valid w.
-  view.aligned_w = 4;
+  // Row padding: row_step wider than the valid width.
+  view.row_step = 16;
   expect_eq("padded cell(1,0)[0]", static_cast<int>(view.cell(1, 0)[0]), 16);
 
   if (failures == 0) {

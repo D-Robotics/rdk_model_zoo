@@ -28,20 +28,20 @@
 namespace yolo {
 
 // Stride-aware read-only view over one FLOAT32 NHWC output tensor.
-// `h/w/channels` follow the tensor validShape; `aligned_w/aligned_c` follow
-// the alignedShape used for the physical layout (row-major cells of
-// `aligned_c` floats over `aligned_w` columns). Both pairs default to the
-// valid shape when the tensor is tightly packed.
+// `h/w/channels` follow the tensor validShape; `row_step`/`cell_step` are
+// the physical strides in floats between consecutive rows/cells. They
+// default to the tightly packed values derived from the valid shape.
 struct TensorView {
   const float* data = nullptr;
   int h = 0;
   int w = 0;
   int channels = 0;
-  int aligned_w = 0;
-  int aligned_c = 0;
+  int row_step = 0;
+  int cell_step = 0;
 
   const float* cell(int y, int x) const {
-    return data + (static_cast<std::ptrdiff_t>(y) * aligned_w + x) * aligned_c;
+    return data + static_cast<std::ptrdiff_t>(y) * row_step +
+           static_cast<std::ptrdiff_t>(x) * cell_step;
   }
 };
 

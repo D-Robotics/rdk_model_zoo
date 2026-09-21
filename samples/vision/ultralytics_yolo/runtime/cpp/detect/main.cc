@@ -46,9 +46,6 @@
 #include <opencv2/dnn/dnn.hpp>
 #include <opencv2/opencv.hpp>
 
-#include "dnn/hb_dnn.h"
-#include "dnn/hb_sys.h"
-
 #include "common/benchmark.h"
 #include "common/dnn_io.h"
 #include "common/decode.h"
@@ -305,32 +302,46 @@ class DetectRuntime {
         return false;
       }
       const hbDNNTensorProperties& properties = outputs_[i].properties;
-      if (properties.tensorLayout != HB_DNN_LAYOUT_NHWC ||
-          properties.tensorType != HB_DNN_TENSOR_TYPE_F32 ||
+      if (properties.tensorType != HB_DNN_TENSOR_TYPE_F32 ||
           properties.quantiType != NONE ||
-          properties.validShape.numDimensions != 4) {
+          properties.validShape.numDimensions != 4
+#if defined(YOLO_DNN_STACK_X5)
+          || properties.tensorLayout != HB_DNN_LAYOUT_NHWC
+#endif
+      ) {
         std::cerr << "[ERROR] output[" << i
-                  << "] must be unquantized FLOAT32 NHWC" << std::endl;
+                  << "] must be unquantized FLOAT32"
+#if defined(YOLO_DNN_STACK_X5)
+                  << " NHWC"
+#else
+                  << " (layout validated via strides on this stack)"
+#endif
+                  << std::endl;
         return false;
       }
-      if (!check_ret(hbSysAllocCachedMem(&outputs_[i].sysMem[0],
-                                         properties.alignedByteSize),
-                     "hbSysAllocCachedMem(output)")) {
+      const int64_t output_bytes = yolo::output_alloc_bytes(properties);
+      if (output_bytes <= 0) {
+        std::cerr << "[ERROR] output[" << i
+                  << "] reports no usable allocation size" << std::endl;
+        return false;
+      }
+      if (!check_ret(YOLO_SYS_ALLOC_CACHED(YOLO_SYS_MEM(outputs_[i]),
+                                         output_bytes),
+                     "sys alloc cached(output)")) {
         return false;
       }
       output_allocated_[i] = true;
 
       const hbDNNTensorShape& valid = properties.validShape;
-      const hbDNNTensorShape& aligned = properties.alignedShape;
       shapes[i].h = valid.dimensionSize[1];
       shapes[i].w = valid.dimensionSize[2];
       shapes[i].c = valid.dimensionSize[3];
       std::cout << "[INFO] output[" << i << "] valid=(" << valid.dimensionSize[0]
                 << ", " << valid.dimensionSize[1] << ", " << valid.dimensionSize[2]
-                << ", " << valid.dimensionSize[3] << ") aligned=("
-                << aligned.dimensionSize[0] << ", " << aligned.dimensionSize[1]
-                << ", " << aligned.dimensionSize[2] << ", "
-                << aligned.dimensionSize[3] << ")" << std::endl;
+                << ", " << valid.dimensionSize[3] << ") strides=("
+                << yolo::tensor_row_step_floats(properties) << "f/row, "
+                << yolo::tensor_cell_step_floats(properties) << "f/cell)"
+                << std::endl;
     }
 
     if (!bind_outputs(shapes, head_mode)) return false;
@@ -368,27 +379,18 @@ class DetectRuntime {
   }
 
   bool infer() {
-    hbDNNTaskHandle_t task = nullptr;
-    hbDNNInferCtrlParam control;
-    HB_DNN_INITIALIZE_INFER_CTRL_PARAM(&control);
-    hbDNNTensor* output_ptr = outputs_.data();
-
-    int ret = hbDNNInfer(&task, &output_ptr, input_.tensors(), model_handle_,
-                         &control);
-    if (ret != 0) return check_ret(ret, "hbDNNInfer");
-    ret = hbDNNWaitTaskDone(task, 0);
-    const int release_ret = hbDNNReleaseTask(task);
-    if (ret != 0) return check_ret(ret, "hbDNNWaitTaskDone");
-    return check_ret(release_ret, "hbDNNReleaseTask");
+    return check_ret(yolo::infer_sync(outputs_.data(), input_.tensors(),
+                                      input_.input_count(), model_handle_),
+                     "infer_sync");
   }
 
   bool postprocess(const yolo::ImageTransform& transform, int image_w, int image_h,
                    float score_threshold, float nms_threshold,
                    std::vector<Detection>* detections) {
     for (size_t i = 0; i < outputs_.size(); ++i) {
-      if (!check_ret(hbSysFlushMem(&outputs_[i].sysMem[0],
+      if (!check_ret(YOLO_SYS_FLUSH(YOLO_SYS_MEM(outputs_[i]),
                                    HB_SYS_MEM_CACHE_INVALIDATE),
-                     "hbSysFlushMem(output invalidate)")) {
+                     "sys flush(output invalidate)")) {
         return false;
       }
     }
@@ -453,16 +455,15 @@ class DetectRuntime {
   yolo::TensorView output_view(int index) const {
     const hbDNNTensor& tensor = outputs_[index];
     const hbDNNTensorShape& valid = tensor.properties.validShape;
-    const hbDNNTensorShape& aligned = tensor.properties.alignedShape;
     yolo::TensorView view;
-    view.data = reinterpret_cast<const float*>(tensor.sysMem[0].virAddr);
+    view.data = reinterpret_cast<const float*>(YOLO_SYS_MEM(tensor)->virAddr);
     view.h = valid.dimensionSize[1];
     view.w = valid.dimensionSize[2];
     view.channels = valid.dimensionSize[3];
-    view.aligned_w = aligned.numDimensions == 4 ? aligned.dimensionSize[2]
-                                                : view.w;
-    view.aligned_c = aligned.numDimensions == 4 ? aligned.dimensionSize[3]
-                                                : view.channels;
+    view.row_step = yolo::tensor_row_step_floats(tensor.properties);
+    view.cell_step = yolo::tensor_cell_step_floats(tensor.properties);
+    if (view.row_step <= 0) view.row_step = view.w * view.channels;
+    if (view.cell_step <= 0) view.cell_step = view.channels;
     return view;
   }
 
@@ -509,7 +510,7 @@ class DetectRuntime {
   void release() {
     for (size_t i = 0; i < outputs_.size(); ++i) {
       if (i < output_allocated_.size() && output_allocated_[i]) {
-        const int ret = hbSysFreeMem(&outputs_[i].sysMem[0]);
+        const int ret = YOLO_SYS_FREE(YOLO_SYS_MEM(outputs_[i]));
         if (ret != 0) {
           std::cerr << "[WARN] hbSysFreeMem(output) returned " << ret << std::endl;
         }
@@ -524,7 +525,7 @@ class DetectRuntime {
     }
   }
 
-  hbPackedDNNHandle_t packed_handle_ = nullptr;
+  yolo_packed_handle_t packed_handle_ = nullptr;
   hbDNNHandle_t model_handle_ = nullptr;
   yolo::InputPlan input_plan_;
   yolo::Nv12Input input_;

@@ -9,6 +9,7 @@ sys.path.insert(0, str(S / 'runtime/python'))
 
 CPP_DETECT = (S / 'runtime/cpp/detect/main.cc').read_text()
 CPP_DECODE = (S / 'runtime/cpp/common/decode.h').read_text()
+CPP_DNN_IO = (S / 'runtime/cpp/common/dnn_io.cc').read_text()
 CPP_POSE = (S / 'runtime/cpp/pose/main.cc').read_text()
 CPP_SEGMENT = (S / 'runtime/cpp/segment/main.cc').read_text()
 
@@ -50,14 +51,13 @@ class CppContractTests(unittest.TestCase):
         for task in ('classify', 'detect', 'pose', 'segment'):
             source = (S / f'runtime/cpp/{task}/main.cc').read_text()
             with self.subTest(task=task):
-                if task == 'detect':
-                    # Input plumbing lives in common/dnn_io via probe_input_protocol.
-                    self.assertIn('probe_input_protocol', source)
-                    self.assertIn('Nv12Input', source)
-                else:
-                    self.assertIn('HB_DNN_IMG_TYPE_NV12', source)
-                    self.assertIn('i420_to_packed_nv12', source)
-                    self.assertIn('i420_to_split_nv12', source)
+                # Input plumbing lives in common/dnn_io via probe_input_protocol.
+                self.assertIn('probe_input_protocol', source)
+                self.assertIn('Nv12Input', source)
+        # The protocol detection itself is shared, not duplicated per task.
+        self.assertIn('HB_DNN_IMG_TYPE_NV12', CPP_DNN_IO)
+        self.assertIn('i420_to_packed_nv12', CPP_DNN_IO)
+        self.assertIn('i420_to_split_nv12', CPP_DNN_IO)
 
 
 if __name__ == '__main__':
