@@ -16,6 +16,32 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[character]));
   const modelPlatforms = model => (model.platforms || []).map(platform => String(platform).toUpperCase());
+  const groupKey = model => `${model.catalogId || model.sample || model.id}#${model.modelSize || ''}`;
+  const platformRank = platform => { const index = platforms.indexOf(platform); return index < 0 ? platforms.length : index; };
+  // One grid card per model variant: the per-platform releases of the same
+  // model collapse into a single card listing its hardware targets, and the
+  // detail page's hardware selector navigates between them.
+  const groups = [...models.reduce((map, model) => {
+    const key = groupKey(model);
+    if (!map.has(key)) map.set(key, { members: [] });
+    map.get(key).members.push(model);
+    return map;
+  }, new Map()).values()].map(group => {
+    const primary = group.members[0];
+    return {
+      members: group.members,
+      entry: primary,
+      id: primary.id,
+      name: primary.name,
+      variantName: primary.variantName,
+      task: primary.task,
+      taskId: primary.taskId,
+      description: primary.description,
+      descriptionEn: primary.descriptionEn,
+      coverImage: primary.coverImage,
+      platforms: [...new Set(group.members.flatMap(modelPlatforms))].sort((a, b) => platformRank(a) - platformRank(b)),
+    };
+  });
   const repositoryUrl = data.repository?.url || 'https://github.com/D-Robotics/rdk_model_zoo';
   const external = (url, label) => `<a href="${esc(url)}" target="_blank" rel="noopener">${label}<span aria-hidden="true"> ↗</span></a>`;
 
@@ -25,16 +51,19 @@
   const search = '<label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" placeholder="搜索模型" aria-label="搜索模型"></label>';
   const taskFilters = `<div id="filters" class="task-domains">${facets.groups.map(group => `<div class="task-domain" data-domain="${group.id}"><div class="domain-heading"><button type="button" class="domain-label" data-task-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" data-active="false"><span class="domain-symbol domain-symbol-${group.id}" aria-hidden="true"></span><span>${group.label}</span></button><button type="button" class="domain-toggle" data-toggle-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" aria-label="${group.label}子类"></button></div><div class="task-children" id="tasks-${group.id}" hidden>${group.tasks.map(([id, label]) => `<button type="button" class="task-option" data-task-id="${id}" aria-pressed="false"><span>${label}</span><span class="selection-mark" aria-hidden="true"></span></button>`).join('')}</div></div>`).join('')}</div>`;
   const platformFilters = `<fieldset class="sidebar-group"><legend>硬件平台</legend><div id="platform-filters">${platforms.map(platform => {
-    const count = models.filter(model => modelPlatforms(model).includes(platform)).length;
+    const count = groups.filter(group => group.platforms.includes(platform)).length;
     return `<button type="button" class="facet-option platform-filter" data-platform="${platform}" aria-pressed="false"><span class="selection-mark" aria-hidden="true"></span><span>RDK ${platform}</span><small>${count || '尚未收录'}</small></button>`;
   }).join('')}</div></fieldset>`;
   const catalog = `<section class="page-heading"><h1>RDK Model Zoo</h1></section><div class="catalog-layout"><details id="catalog-sidebar" class="catalog-sidebar" open><summary>筛选模型 <span id="filter-count"></span></summary><div class="sidebar-content"><div class="sidebar-top"><span>筛选条件</span><button id="reset" type="button">清除筛选</button></div>${search}<section class="facet-group task-section"><h2>任务类型</h2>${taskFilters}</section><section class="facet-group hardware-section"><h2>硬件平台</h2>${platformFilters}</section></div></details><section class="collection" aria-label="模型列表"><div class="collection-count"><span id="result-count" aria-live="polite"></span></div><div id="grid" class="model-grid"></div><div id="load-more-trigger" class="load-more-trigger" hidden><button id="load-more" type="button">加载更多</button></div><span id="load-status" class="sr-only" role="status" aria-live="polite"></span></section></div>`;
 
   $('app').innerHTML = `${header}<main id="main" tabindex="-1"><div id="catalog">${catalog}</div><section id="detail" hidden></section></main>${footer}`;
 
-  function card(model) {
+  function card(group) {
+    const model = group.entry;
     const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
-    return `<article class="model-card"><a class="gallery-link" href="#model/${esc(model.id)}" aria-label="查看 ${esc(model.name)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="reference-description" data-i18n-zh="${esc(model.description)}" data-i18n-en="${esc(model.descriptionEn || model.description)}" title="${esc(description)}">${esc(description)}</p><div class="model-tags"><span>${esc(model.task)}</span></div></div></a></article>`;
+    const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform))) || model;
+    const platformChips = group.platforms.map(platform => `<span class="platform-chip">${esc(platform)}</span>`).join('');
+    return `<article class="model-card"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="model-variant">${esc(model.variantName || '')}</p><p class="reference-description" data-i18n-zh="${esc(model.description)}" data-i18n-en="${esc(model.descriptionEn || model.description)}" title="${esc(description)}">${esc(description)}</p><div class="model-tags"><span>${esc(model.task)}</span>${platformChips}</div></div></a></article>`;
   }
 
   function matchesTask(model) {
@@ -43,6 +72,10 @@
     if (state.useCase) return ids.includes(state.useCase);
     const group = facets.groups.find(candidate => candidate.id === state.domain);
     return Boolean(group?.tasks.some(([id]) => ids.includes(id)));
+  }
+
+  function groupMatchesTask(group) {
+    return group.members.some(matchesTask);
   }
 
   function syncTaskSelection() {
@@ -75,11 +108,11 @@
   function render() {
     state.visibleCount = batchSize;
     listObserver?.disconnect();
-    const platformItems = models.filter(model => !selectedPlatforms.size || modelPlatforms(model).some(platform => selectedPlatforms.has(platform)));
+    const platformItems = groups.filter(group => !selectedPlatforms.size || group.platforms.some(platform => selectedPlatforms.has(platform)));
     const query = state.query.toLowerCase().trim();
-    const items = platformItems.filter(model => {
-      const searchable = [model.name, model.variantName, model.task, model.description, facets.searchTerms(model), ...modelPlatforms(model)].join(' ').toLowerCase();
-      return matchesTask(model) && searchable.includes(query);
+    const items = platformItems.filter(group => {
+      const searchable = [group.name, ...group.members.map(member => member.variantName), group.task, group.description, ...group.members.flatMap(member => facets.searchTerms(member)), ...group.platforms].join(' ').toLowerCase();
+      return groupMatchesTask(group) && searchable.includes(query);
     });
     filteredItems = items;
     $('result-count').textContent = `共 ${items.length} 个模型`;

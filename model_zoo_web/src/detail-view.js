@@ -68,7 +68,7 @@
     const hardwareOptions = [...new Set(variants.map(other => hardwareOf(other, data)))];
     const performance = b?.performance || [];
     const conditions = [...new Set(performance.filter(p => ['latency', 'throughput'].includes(p.metric)).map(p => p.concurrency || 1))].sort((a, b) => a - b);
-    const related = models.filter(other => other.id !== m.id && (other.sample === m.sample || other.task === m.task)).slice(0, 3);
+    const related = models.filter(other => other.id !== m.id && other.sample !== m.sample && other.task === m.task).slice(0, 3);
     const downloadModels = variants.filter(other => other.assets?.length);
     const selectedDownloadModel = downloadModels.find(other => other.id === m.id) || downloadModels[0];
     const selectedPlatform = selectedDownloadModel ? hardwareOf(selectedDownloadModel, data) : hardware;
