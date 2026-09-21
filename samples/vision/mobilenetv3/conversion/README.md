@@ -43,24 +43,36 @@ source branch's recorded recipe, not a verified result.
 <a id="calibration"></a>
 ## Calibration
 
-`get_calibration_data.py` is the generic calibrator from the source
-branch: it loads raw images, applies the preprocessing defined inside the
-script, and writes `.npy` calibration samples consumed by the YAML
-(`cal_data_dir`: ./calibration_data_rgb_f32 (X5 config) / ./calibration_data_bgr (S config)). The calibration images themselves are
-not shipped; a regeneration must record the exact image list and
-preprocessing used. PTQ calibration has not been re-run in this repository.
+`get_calibration_data.py` is kept verbatim from the source branch. Its
+hardcoded facts: it reads `ILSVRC2012_val_*.JPEG` from a legacy-tree
+source directory
+(`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`,
+which does not exist in this repository — edit it to your own ImageNet
+validation directory), and its transformer chain is fixed to BGR
+(padded center crop 224, resize, HWC→CHW, `RGB2BGRTransformer`, ×255,
+mean `103.94 116.78 123.68`, ×0.017), writing `./calibration_data_bgr/`.
+The calibration images are not shipped; a regeneration must record the
+exact image list used.
+
+What each YAML consumes versus what the script produces:
+
+| Config (target) | `cal_data_dir` | Layout/mean the YAML declares | Produced by the script as kept? |
+| --- | --- | --- | --- |
+| `mobilenetv3_s_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr` | BGR, mean `103.53 116.28 123.675` | **Yes.** Output dir and BGR chain match the recipe after the source-dir edit. The script's mean constants (`103.94 116.78 123.68`) differ slightly from the YAML's `103.53 116.28 123.675`; both files are source-verbatim — the discrepancy is disclosed here, not silently fixed. |
+| `MobileNetV3_config.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, mean `123.675 116.28 103.53` | **No — missing prerequisite.** The script has no RGB output mode, and no RGB calibration recipe for the X5 artifact was published. Renaming `calibration_data_bgr` to `calibration_data_rgb_f32` would feed BGR arrays with the wrong mean order to an RGB config — a rename is not a fix. The X5 calibration step is therefore not reproducible from this directory as kept. |
+
+PTQ calibration has not been re-run in this repository.
 <a id="compile"></a>
 ## Compile
 
 Reference configurations kept in this directory:
 
-| Config | Target | Command (inside the OE container) |
-| --- | --- | --- |
-| `MobileNetV3_config.yaml` | x5 | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
-| `mobilenetv3_s_config.yaml` | s100 | `hb_compile --config mobilenetv3_s_config.yaml` |
+| Config | Target | Inputs the config names | Command (inside the OE container) |
+| --- | --- | --- | --- |
+| `MobileNetV3_config.yaml` | x5 | `./mobilenetv3_large_100.onnx` (matches the exporter output), `./calibration_data_rgb_f32` (**missing** — see [Calibration](#calibration)) | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
+| `mobilenetv3_s_config.yaml` | s100 (s600: change march to `nash-p`) | `./mobilenetv3_large_100.onnx` (matches), `./calibration_data_bgr` (script-produced after the source-dir edit) | `hb_compile --config mobilenetv3_s_config.yaml` |
 
-S600 variants change only the march (`nash-p`) in the S-side YAML. The
-march values above are read from the YAML files themselves (`bayes-e` X5,
+The march values are read from the YAML files themselves (`bayes-e` X5,
 `nash-e` S100). Compilation has not been re-run in this repository; a
 regenerated artifact is not equivalent to the published one until target,
 input metadata, output shape/dtype, and numerical results are compared.
@@ -94,5 +106,14 @@ artifacts in this repository: **not-run**.
 
 - The S-side YAML is renamed (`mobilenetv3_s_config.yaml`) for
 case-insensitive filesystems; content is verbatim.
+- **X5 calibration has no recipe**: `MobileNetV3_config.yaml` consumes
+RGB `./calibration_data_rgb_f32`, which no kept script produces (the
+calibrator is BGR-only) and which the source branch never published.
+The X5 chain stops at this missing prerequisite.
+- The calibrator's hardcoded source directory belongs to the legacy
+tree; only the source-directory line (and nothing else) needs editing
+before a run.
+- The calibrator's mean constants differ slightly from the S YAML's
+`mean_value` (source-verbatim inconsistency, disclosed above).
 - End-to-end regeneration (export → calibration → compile → board
 validation) has not been executed in this repository.

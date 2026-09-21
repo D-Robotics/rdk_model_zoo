@@ -39,24 +39,36 @@ python3 get_mobilenetv3_onnx.py    # -> ./mobilenetv3_large_100.onnx
 <a id="calibration"></a>
 ## 校准
 
-`get_calibration_data.py` 是源分支的通用校准脚本：加载原始图像、执行
-脚本内定义的预处理、写出供 YAML 消费的 `.npy` 校准样本（`cal_data_dir`：
-./calibration_data_rgb_f32 (X5 config) / ./calibration_data_bgr (S config)）。校准图像本身未随附；再生成时必须记录所用图像清单与
-预处理。本仓库未重跑 PTQ 校准。
+`get_calibration_data.py` 按源分支原样保留。其硬编码事实：从旧目录树
+的源目录
+（`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`，
+该路径在本仓库不存在——请改为自备的 ImageNet 验证集目录）读取
+`ILSVRC2012_val_*.JPEG`；变换链固定为 BGR（padded center crop 224、
+resize、HWC→CHW、`RGB2BGRTransformer`、×255、mean
+`103.94 116.78 123.68`、×0.017），输出到 `./calibration_data_bgr/`。
+校准图像未随附；再生成时必须记录所用图像清单。
+
+各 YAML 消费的内容 vs 脚本产出：
+
+| 配置（目标） | `cal_data_dir` | YAML 声明的布局/mean | 原样脚本能产出？ |
+| --- | --- | --- | --- |
+| `mobilenetv3_s_config.yaml`（s100；s600 仅改 march） | `./calibration_data_bgr` | BGR，mean `103.53 116.28 123.675` | **能。** 改源目录后，输出目录与 BGR 链即匹配该配方。脚本 mean 常量（`103.94 116.78 123.68`）与 YAML 的 `103.53 116.28 123.675` 略有出入；两文件均为源分支原样——差异在此披露，不做静默修正。 |
+| `MobileNetV3_config.yaml`（x5） | `./calibration_data_rgb_f32` | RGB，mean `123.675 116.28 103.53` | **不能——缺失前提。** 脚本没有 RGB 输出模式，且 X5 制品的 RGB 校准配方从未发布。把 `calibration_data_bgr` 改名为 `calibration_data_rgb_f32` 只会给 RGB 配置喂入 mean 顺序错误的 BGR 数据——改名不是修复。X5 校准步骤因此无法在本目录现状下复现。 |
+
+本仓库未重跑 PTQ 校准。
 <a id="compile"></a>
 ## 编译
 
 本目录保留的参考配置：
 
-| 配置 | 目标 | 命令（OE 容器内） |
-| --- | --- | --- |
-| `MobileNetV3_config.yaml` | x5 | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
-| `mobilenetv3_s_config.yaml` | s100 | `hb_compile --config mobilenetv3_s_config.yaml` |
+| 配置 | 目标 | 配置引用的输入 | 命令（OE 容器内） |
+| --- | --- | --- | --- |
+| `MobileNetV3_config.yaml` | x5 | `./mobilenetv3_large_100.onnx`（与导出器输出一致）、`./calibration_data_rgb_f32`（**缺失**，见[校准](#calibration)） | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
+| `mobilenetv3_s_config.yaml` | s100（s600：march 改 `nash-p`） | `./mobilenetv3_large_100.onnx`（一致）、`./calibration_data_bgr`（改源目录后由脚本产出） | `hb_compile --config mobilenetv3_s_config.yaml` |
 
-S600 变体只需把 S 侧 YAML 中的 march 改为 `nash-p`。上表 march 取自 YAML
-文件本身（X5 `bayes-e`，S100 `nash-e`）。本仓库未重跑编译；在对比目标、
-输入 metadata、输出 shape/dtype 与数值结果之前，再生成制品不等价于已发布
-制品。
+上表 march 取自 YAML 文件本身（X5 `bayes-e`，S100 `nash-e`）。本仓库未重跑
+编译；在对比目标、输入 metadata、输出 shape/dtype 与数值结果之前，再生成
+制品不等价于已发布制品。
 重命名说明：S 源文件名为 `mobilenetv3_config.yaml`；在不区分大小写
 的文件系统上与 X5 的 `MobileNetV3_config.yaml` 冲突，因此此处 S 副本
 更名为 `mobilenetv3_s_config.yaml`——仅文件名变化，内容原样。
@@ -84,4 +96,11 @@ UV `[1,112,112,2]` 与 F32 `[1,1000]` 输出；输出语义为原始 logits（so
 
 - S 侧 YAML 因不区分大小写文件系统而更名
 （`mobilenetv3_s_config.yaml`）；内容原样。
+- **X5 校准无配方**：`MobileNetV3_config.yaml` 消费 RGB 的
+`./calibration_data_rgb_f32`，保留的脚本产不出（校准器仅 BGR），源分支
+也未发布过。X5 链路止步于该缺失前提。
+- 校准脚本硬编码的源目录属于旧目录树；运行前只需改源目录一行，
+其余不动。
+- 校准脚本的 mean 常量与 S YAML 的 `mean_value` 略有出入（源分支原样的
+不一致，上文已披露）。
 - 端到端再生成（导出 → 校准 → 编译 → 板端验证）未在本仓库执行。
