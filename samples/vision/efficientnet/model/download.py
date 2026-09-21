@@ -42,12 +42,33 @@ ASSET_REFERENCES = {
     ('s600', 'lite4'): 's:efficientnet:s600/efficientnet_lite4_380x380_nv12.hbm',
 }
 TARGETS = ("x5", "s100", "s600")
+#: Per-target default variants, mirroring the binding table so an omitted
+#: ``--variant`` keeps each source entrypoint's default model (X5 B2, S lite0).
+#: Tests pin this mapping to ``model_binding.BINDING_TABLE`` per target.
+DEFAULT_VARIANTS = {
+    'x5': 'b2',
+    's100': 'lite0',
+    's600': 'lite0',
+}
 
 
-def asset_reference(target: str, variant: str = 'b2') -> str:
-    """Return the exact manifest reference for a supported target/variant."""
+def asset_reference(target: str, variant: Optional[str] = None) -> str:
+    """Return the exact manifest reference for a supported target/variant.
 
-    key = (str(target).strip().lower(), str(variant).strip().lower())
+    ``variant=None`` resolves the per-target default (X5 b2, S lite0); a
+    target without a default fails explicitly instead of borrowing another
+    platform's model.
+    """
+
+    key_target = str(target).strip().lower()
+    if variant is None:
+        variant = DEFAULT_VARIANTS.get(key_target)
+        if variant is None:
+            raise ValueError(
+                f"Target {target!r} has no default variant; pass --variant "
+                "explicitly."
+            )
+    key = (key_target, str(variant).strip().lower())
     try:
         return ASSET_REFERENCES[key]
     except KeyError as exc:
@@ -62,10 +83,11 @@ def download_target(
     target: str,
     output_dir: Optional[str | Path] = None,
     *,
-    variant: str = 'b2',
+    variant: Optional[str] = None,
 ) -> str:
     """Download an exact target artifact and return its observed SHA-256.
 
+    ``variant=None`` resolves the per-target default (X5 b2, S lite0).
     ``output_dir`` preserves the source sample's layout: X5 is flat while the
     S-series artifact remains under ``s100/`` or ``s600/``. Existing files are
     verified by the shared downloader and are never silently replaced.
@@ -97,8 +119,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--variant",
         choices=VARIANTS,
-        default='b2',
-        help="Model variant to fetch (default: b2).",
+        default=None,
+        help="Model variant to fetch (default: b2 on x5, lite0 on s100/s600).",
     )
     parser.add_argument(
         "--output-dir",

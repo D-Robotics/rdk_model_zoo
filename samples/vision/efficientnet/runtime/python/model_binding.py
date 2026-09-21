@@ -133,7 +133,16 @@ BINDING_TABLE = SampleBindingTable(
         's600/efficientnet_lite3_300x300_nv12.hbm': 'lite3',
         's600/efficientnet_lite4_380x380_nv12.hbm': 'lite4',
     },
-    default_variant='b2',
+    default_variant={
+        # Per-target defaults preserve both source entrypoint defaults: the
+        # X5 main.py DEFAULT_MODEL_PATH is EfficientNet_B2_224x224_nv12.bin
+        # and the S wrapper defaults to the per-SoC lite0 model.  s100p is
+        # absent on purpose — no published asset, so an omitted variant fails
+        # with the standard explicit error instead of borrowing lite0.
+        'x5': 'b2',
+        's100': 'lite0',
+        's600': 'lite0',
+    },
     facts=_FACTS,
 )
 

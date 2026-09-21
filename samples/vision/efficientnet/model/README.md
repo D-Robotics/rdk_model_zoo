@@ -46,6 +46,9 @@ bash samples/vision/efficientnet/model/download.sh s600 lite0
 
 The Python form is equivalent:
 `python3 samples/vision/efficientnet/model/download.py --target s100 --variant lite1`.
+Omitting the variant resolves each target's source default (x5 `b2`,
+s100/s600 `lite0`), matching the runtime's omitted-variant behavior; an
+explicit `--variant` always selects exactly.
 The downloader writes through a same-directory temporary file, checks the
 content length and the recorded publisher SHA-256 when present, and installs
 atomically without overwriting an existing file (a failed verification

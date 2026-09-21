@@ -58,7 +58,7 @@ S600 换用 `s600/` 引用与路径。`--dry-run --target x5` 不接触板卡、
 | --- | --- | --- | --- |
 | `--target` | choice | auto | 执行目标：`auto`、`x5`、`s100`、`s100p`、`s600`；执行目标必须与检测到的硬件一致 |
 | `--asset-id` | string | null | Manifest 中的完整 `group:sample:filename` 引用 |
-| `--variant` | choice | null | 模型变体（省略时默认 `b2`；发布组合见 `--list-models`） |
+| `--variant` | choice | null | 模型变体（省略时按 target 取默认：x5 `b2`、s100/s600 `lite0`；发布组合见 `--list-models`） |
 | `--model-path` | string | null | 已存在的 `.bin`/`.hbm`；必须与 `--asset-id` 配对；省略时默认取解析引用在 `model/` 下的位置 |
 | `--test-img` | string | samples/vision/efficientnet/test_data/Scottish_deerhound.JPEG | BGR 输入图像 |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | 每行一个类别的 ImageNet 标签 |

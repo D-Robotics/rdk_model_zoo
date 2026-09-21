@@ -22,7 +22,72 @@ class BindingTableTests(unittest.TestCase):
                 table.facts,
                 f"filename {filename!r} maps to no facts entry",
             )
-        self.assertIn(table.default_variant, ('b2', 'b3', 'b4'))
+        variants = set(table.filename_variants.values())
+        if isinstance(table.default_variant, str):
+            self.assertIn(table.default_variant, variants)
+        else:
+            for target, variant in table.default_variant.items():
+                self.assertIn(target, table.s_filename_targets + ("x5",))
+                self.assertIn(variant, variants)
+
+    def test_default_variant_follows_the_resolved_target(self):
+        """B2-R1 regression: omitted variant must keep each source entrypoint's
+        default per target — X5 main.py defaulted to B2 and the S wrapper to
+        the per-SoC lite0 model.  A global b2 default made every S board fail
+        with "no published asset" when the variant was omitted."""
+
+        from samples.vision.efficientnet.runtime.python.model_binding import (
+            BindingError,
+            resolve_selection,
+        )
+
+        expected = {
+            "x5": (
+                "x5:efficientnet:EfficientNet_B2_224x224_nv12.bin",
+                "b2",
+                (224, 224),
+            ),
+            "s100": (
+                "s:efficientnet:s100/efficientnet_lite0_224x224_nv12.hbm",
+                "lite0",
+                (224, 224),
+            ),
+            "s600": (
+                "s:efficientnet:s600/efficientnet_lite0_224x224_nv12.hbm",
+                "lite0",
+                (224, 224),
+            ),
+        }
+        for target, (asset_id, variant, (width, height)) in expected.items():
+            with self.subTest(target=target):
+                selection = resolve_selection(target)
+                self.assertEqual(selection.asset_id, asset_id)
+                self.assertEqual(selection.variant, variant)
+                self.assertEqual(
+                    (selection.contract.input_width, selection.contract.input_height),
+                    (width, height),
+                )
+
+        # Explicit variants keep exact matching and per-variant geometry.
+        lite2 = resolve_selection("s100", variant="lite2")
+        self.assertEqual(
+            lite2.asset_id,
+            "s:efficientnet:s100/efficientnet_lite2_260x260_nv12.hbm",
+        )
+        self.assertEqual(
+            (lite2.contract.input_width, lite2.contract.input_height), (260, 260)
+        )
+
+        # A b2 variant on an S target is an explicit error, never a silent
+        # cross-platform substitution.
+        with self.assertRaises(BindingError) as ctx:
+            resolve_selection("s100", variant="b2")
+        self.assertIn("No published sample asset matches", str(ctx.exception))
+
+        # S100P rejection stays explicit with the standard message.
+        with self.assertRaises(BindingError) as ctx:
+            resolve_selection("s100p")
+        self.assertIn("No published sample asset matches target='s100p'", str(ctx.exception))
 
     def test_published_listing_matches_table_and_profiles(self):
         from samples.vision.efficientnet.runtime.python.model_binding import (

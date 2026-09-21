@@ -44,6 +44,8 @@ bash samples/vision/efficientnet/model/download.sh s600 lite0
 
 Python 形式等价：
 `python3 samples/vision/efficientnet/model/download.py --target s100 --variant lite1`。
+省略变体时按 target 取源默认（x5 `b2`，s100/s600 `lite0`），与运行时
+省略 `--variant` 的行为一致；显式 `--variant` 恒为精确选择。
 下载器经同目录临时文件写入，核对内容长度与 Manifest 记录的发布方
 SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留文件供排查）。
 当前各行没有发布方 SHA-256，下载器打印实测摘要作为本地证据并声明来源

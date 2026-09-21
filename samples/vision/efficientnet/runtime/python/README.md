@@ -60,7 +60,7 @@ resolves a selection without board access, model loading, or download;
 | --- | --- | --- | --- |
 | `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
 | `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
-| `--variant` | choice | null | model variant (`b2` default when omitted; see `--list-models` for published combinations) |
+| `--variant` | choice | null | model variant (per-target default when omitted: `b2` on x5, `lite0` on s100/s600; see `--list-models` for published combinations) |
 | `--model-path` | string | null | existing `.bin`/`.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
 | `--test-img` | string | samples/vision/efficientnet/test_data/Scottish_deerhound.JPEG | BGR input image |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |

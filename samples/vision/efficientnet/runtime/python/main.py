@@ -59,8 +59,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--variant",
         choices=SUPPORTED_VARIANTS,
         default=None,
-        help="Model variant (default: b2; see --list-models for the "
-        "published variant/target combinations).",
+        help="Model variant (default: b2 on x5, lite0 on s100/s600; see "
+        "--list-models for the published variant/target combinations).",
     )
     parser.add_argument(
         "--model-path",

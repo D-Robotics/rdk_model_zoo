@@ -94,7 +94,13 @@ class SampleBindingTable:
             and historical letter casing); variants are never guessed from a
             basename.
         default_variant: Variant selected when neither ``--variant`` nor
-            ``--asset-id`` names one.
+            ``--asset-id`` names one.  A plain string applies to every target;
+            a ``{target: variant}`` mapping selects one default per target —
+            used when the source entrypoints defaulted to different models per
+            platform (e.g. EfficientNet: X5 B2, S lite0).  A target absent
+            from the mapping has no default, so an omitted variant fails with
+            the standard "no published asset" error instead of silently
+            selecting another platform's model.
         facts: ``(variant, target)`` → :class:`VariantFacts`.  Every
             published (variant, target) combination must have a row.
         s_filename_targets: Filename prefixes under the ``s`` group that map
@@ -105,9 +111,21 @@ class SampleBindingTable:
     sample_dir: Path
     manifest_rows: tuple[tuple[str, str], ...]
     filename_variants: Mapping[str, str]
-    default_variant: str
+    default_variant: str | Mapping[str, str]
     facts: Mapping[tuple[str, str], VariantFacts]
     s_filename_targets: tuple[str, ...] = ("s100", "s600")
+
+    def default_variant_for(self, target: str) -> Optional[str]:
+        """Return the default variant for ``target``, or ``None`` if unset.
+
+        A mapping without the target yields ``None`` so the caller falls
+        through to the standard no-published-asset error rather than picking
+        another target's default.
+        """
+
+        if isinstance(self.default_variant, str):
+            return self.default_variant
+        return self.default_variant.get(target)
 
 
 @dataclass(frozen=True)
@@ -270,8 +288,16 @@ def resolve_selection(
 
     records = list_assets(table, resolved_target)
     if asset_id is None:
-        requested_variant = requested_variant or table.default_variant
-        matches = [record for record in records if record.variant == requested_variant]
+        if requested_variant is None:
+            requested_variant = table.default_variant_for(resolved_target)
+        if requested_variant is not None:
+            matches = [
+                record for record in records if record.variant == requested_variant
+            ]
+        else:
+            # No default variant declared for this target; fall through with
+            # every record so the error below lists the exact references.
+            matches = list(records)
     else:
         # Match the exact qualified reference.  Bare model/sample IDs are not
         # silently promoted to physical artifact identities.

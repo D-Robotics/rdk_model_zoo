@@ -56,23 +56,47 @@ class DownloadTargetReferenceTests(unittest.TestCase):
                 )
                 self.assertEqual(digest, "0" * 64)
 
-    def test_default_download_target_is_b2_on_x5(self):
-        captured = {}
+    def test_default_download_target_follows_the_target(self):
+        """B2-R1 regression: an omitted variant resolves each target's source
+        default (X5 b2, S lite0) instead of a global b2 that fails on S."""
 
-        def fake_download(asset, destination):
-            captured["reference"] = asset.reference
-            return "0" * 64
+        expected = {
+            "x5": "x5:efficientnet:EfficientNet_B2_224x224_nv12.bin",
+            "s100": "s:efficientnet:s100/efficientnet_lite0_224x224_nv12.hbm",
+            "s600": "s:efficientnet:s600/efficientnet_lite0_224x224_nv12.hbm",
+        }
+        for target, reference in expected.items():
+            with self.subTest(target=target):
+                captured = {}
 
-        with mock.patch.object(download_mod, "download_asset", fake_download):
-            download_mod.download_target("x5", self.output_dir)
-        self.assertEqual(
-            captured["reference"], "x5:efficientnet:EfficientNet_B2_224x224_nv12.bin"
+                def fake_download(asset, destination):
+                    captured["reference"] = asset.reference
+                    return "0" * 64
+
+                with mock.patch.object(download_mod, "download_asset", fake_download):
+                    download_mod.download_target(target, self.output_dir)
+                self.assertEqual(captured["reference"], reference)
+
+    def test_default_variants_match_the_binding_table(self):
+        """The downloader's per-target defaults must not drift from the binding
+        table's declared defaults (single source of truth for the contract)."""
+
+        from samples.vision.efficientnet.runtime.python.model_binding import (
+            BINDING_TABLE,
         )
+
+        for target, variant in download_mod.DEFAULT_VARIANTS.items():
+            self.assertEqual(BINDING_TABLE.default_variant_for(target), variant)
 
     def test_unpublished_combination_is_rejected_without_network(self):
         with self.assertRaises(ValueError) as ctx:
             download_mod.asset_reference("x5", "lite0")
         self.assertIn("Unsupported EfficientNet target/variant", str(ctx.exception))
+
+    def test_target_without_default_is_rejected_explicitly(self):
+        with self.assertRaises(ValueError) as ctx:
+            download_mod.asset_reference("s100p")
+        self.assertIn("no default variant", str(ctx.exception))
 
 
 if __name__ == "__main__":
