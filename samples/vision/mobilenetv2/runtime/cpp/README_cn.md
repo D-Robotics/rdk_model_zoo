@@ -10,9 +10,15 @@ Python，因此本流程显式声明为 S 系列范围。
 <a id="supported-boards"></a>
 ## 适用板卡
 
-仅 S100 与 S600。启动器从 `/sys/class/boardinfo/soc_name` 只读取一次板卡
-身份，对 s100p 与未知板卡显式报错——旧源启动器会把它们静默回退到 s100
-制品，本 sample 不保留该行为。
+仅 S100 与 S600。启动器一次性读取 `/sys/class/boardinfo/soc_name` 与
+`/sys/class/boardinfo/board_type`（`board_type` 变体），身份判定与 Python
+流程一致（`samples/_shared/platforms.py`，登记于
+`docs/release/platforms.json`）。S100P 以其两种登记形式被拒绝（soc_name
+`s100p`；或 soc_name `s100` 且 board_type `s100p`/`rdk s100p`），未知或
+不可读的身份文件按未知板卡拒绝——均显式报错，绝不静默回退 s100 制品
+（旧源启动器会回退）。`SOC_NAME_FILE`/`BOARD_TYPE_FILE` 供主机 fixture
+测试（`tests/test_cpp_launcher_identity.py`）覆盖身份来源；板卡上不要
+设置。
 
 <a id="dependencies"></a>
 ## 依赖
@@ -92,6 +98,7 @@ TOP-4: label=tiger cat, prob=0.000722661
 TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
 ```
 
-正确的统一运行应在分数噪声内复现该排序；对照该基线的 B1 板端比较尚未
-执行，因此在记录证据前本流程状态行保持 not-run。分数全零或 NaN 说明
+正确的统一运行应在分数噪声内复现该排序。B1 板端运行（2026-09-21）已在
+S100 以 BUILD_JOBS=1 构建本流程并复现基线 TOP-1（label=zebra）；S600 C++
+构建保持 not-run（不在 B1 冒烟集内）。分数全零或 NaN 说明
 制品/输入配对错误，不是调参问题。

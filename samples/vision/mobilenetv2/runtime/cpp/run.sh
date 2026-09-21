@@ -8,12 +8,36 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${BUILD_DIR:-$SCRIPT_DIR/build}"
 SAMPLE_DIR="$SCRIPT_DIR/../.."
 
-# Board identity is read once from the same source the Python flow uses.
-# s100p and unknown boards are rejected instead of silently falling back to
+# Board identity is read once from the same sources the Python flow uses:
+# soc_name plus the board_type variant that distinguishes S100P from S100
+# (docs/release/platforms.json registers soc_name=s100 with
+# board_type=s100p/"rdk s100p" as S100P).  Both registered S100P identity
+# forms and unknown boards are rejected instead of silently falling back to
 # the s100 artifact (the legacy source launcher did fall back).
-SOC_RAW="$(tr -d '() \t\r\n' < /sys/class/boardinfo/soc_name 2>/dev/null | tr 'A-Z' 'a-z')"
+# SOC_NAME_FILE/BOARD_TYPE_FILE exist so host tests can fixture the identity
+# sources; on a board the defaults below are the real sysfs files.
+SOC_NAME_FILE="${SOC_NAME_FILE:-/sys/class/boardinfo/soc_name}"
+BOARD_TYPE_FILE="${BOARD_TYPE_FILE:-/sys/class/boardinfo/board_type}"
+# An unreadable identity file yields "" (not a shell exit) so the case
+# below reports it as an unknown board — set -e/pipefail would otherwise
+# abort at the failed redirect with a bare rc=1.
+read_id_file() {
+  local path="$1" raw=""
+  [[ -r "$path" ]] && raw="$(tr -d '() \t\r\n' < "$path" | tr 'A-Z' 'a-z')"
+  printf '%s' "$raw"
+}
+SOC_RAW="$(read_id_file "$SOC_NAME_FILE")"
+BOARD_RAW="$(read_id_file "$BOARD_TYPE_FILE")"
+if [[ "$SOC_RAW" == "s100" && ( "$BOARD_RAW" == "s100p" || "$BOARD_RAW" == "rdks100p" ) ]]; then
+  SOC_RAW="s100p"
+fi
 case "$SOC_RAW" in
   s100|s600) ;;
+  s100p)
+    echo "error: detected s100p (soc_name/board_type identity); this C++ flow" \
+         "supports s100/s600 only and no s100p artifact is published" >&2
+    exit 2
+    ;;
   *)
     echo "error: unrecognized or unsupported SoC '${SOC_RAW:-unknown}';" \
          "this C++ flow supports s100/s600 only" >&2

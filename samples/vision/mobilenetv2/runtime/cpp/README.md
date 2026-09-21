@@ -12,9 +12,17 @@ only, so this flow declares S-series scope explicitly.
 ## Supported boards
 
 S100 and S600 only. The launcher reads the board identity once from
-`/sys/class/boardinfo/soc_name` and rejects s100p and unknown boards with
-an explicit error — the legacy source launcher silently fell back to the
-s100 artifact for them, which this sample does not keep.
+`/sys/class/boardinfo/soc_name` plus the `board_type` variant from
+`/sys/class/boardinfo/board_type` — the same registered identity forms
+as the Python flow (`samples/_shared/platforms.py`, registered in
+`docs/release/platforms.json`). S100P is rejected in both of its
+registered forms (soc_name `s100p`, or soc_name `s100` with board_type
+`s100p`/`rdk s100p`), and unknown or unreadable identity files are
+rejected as unknown boards — all with an explicit error, never a silent
+fallback to the s100 artifact (the legacy source launcher did fall
+back). `SOC_NAME_FILE`/`BOARD_TYPE_FILE` override the two identity
+sources for the host fixture tests (`tests/test_cpp_launcher_identity.py`);
+leave them unset on a board.
 
 <a id="dependencies"></a>
 ## Dependencies
@@ -101,7 +109,8 @@ TOP-4: label=tiger cat, prob=0.000722661
 TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
 ```
 
-A correct unified run reproduces this ordering within score noise; the
-B1 board comparison against this baseline is pending, so this flow's
-status row stays not-run until it is recorded. Scores that are all zero
+A correct unified run reproduces this ordering within score noise. The
+B1 board run (2026-09-21) built this flow on S100 with BUILD_JOBS=1 and
+reproduced the baseline's TOP-1 (label=zebra); the S600 C++ build stays
+not-run (outside the B1 smoke set). Scores that are all zero
 or NaN indicate a wrong artifact/input pairing, not a tuning problem.
