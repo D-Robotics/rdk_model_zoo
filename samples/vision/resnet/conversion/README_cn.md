@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | ResNet18（x5+s） | `export_resnet18_onnx.py` | 主机可重放 ONNX 导出；校准/YAML 由 OE `13_resnet18` 示例承担（声明的缺口） |
 | ResNet50（仅 s） | — | 源头无配方（rdk_s @380e1a2 只有 README 指引）；以 OE `13_resnet50` 示例为准 |
-| ResNet152（仅 s） | `resnet152_config.yaml`、`get_calibration_data.py`、`x86_inference.py` | 源分支完整 OE 配方原样保留；在 OE 内给定已发布 ONNX 与用户自备校准图即可重放 |
+| ResNet152（仅 s） | `resnet152_config.yaml`、`get_calibration_data.py`、`x86_inference.py` | 源分支 OE 配方原样保留；在 OE 内给定已发布 ONNX 与用户自备校准图即可重放——重放复现的是配方步骤，不等于与已发布制品数值等价（保留的 scale 差异见"校准"一节） |
 
 ResNet152 三个文件逐字节来自
 `rdk_s@380e1a2:samples/vision/resnet152/conversion/`（本批审计源；
@@ -115,12 +115,22 @@ output_calib_dir = './calibration_data_rgb/'  # 与 resnet152_config.yaml 的 ca
 # cwd：本 conversion 目录（OE 容器内）
 # 输入：src_image_dir 内 >=100 张 ILSVRC2012_val_*.JPEG
 # 输出：./calibration_data_rgb/*.npy（float32、RGB、NCHW）— 成功判据：打印 100 个文件
-python3 samples/vision/resnet/conversion/get_calibration_data.py
+python3 get_calibration_data.py
 ```
 
-变换链（padded center crop 224、resize、HWC2CHW、×255、mean
-`123.675 116.28 103.53`、×0.017）与 YAML 的 `data_mean_and_scale`
-条目一致。
+相对路径在本 cwd 内闭环衔接：脚本写出 `./calibration_data_rgb/`，
+即 `resnet152_config.yaml` 的 `cal_data_dir`；YAML 的 `onnx_model`
+`./resnet152.onnx` 是[源模型](#source-model)一步下载到本目录的文
+件；其 `working_dir`/`output_model_file_prefix` 产出
+`./model_output/resnet152_224x224_nv12.hbm`，与[编译](#compile)一节
+的声明一致。
+
+两个保留源文件的归一化常量**并不一致**：脚本与 YAML 的 mean 相同
+（`123.675 116.28 103.53`），但脚本统一乘 `0.017`，YAML 声明逐通道
+`scale_value: 0.01712475 0.017507 0.01742919`。这是按源分支原样保留
+的差异；已发布制品到底用哪一组系数校准、编译，本仓库未确认（未做
+OE 重建或数值对照），也不认定哪一组是"正确值"。发布记录的
+Mean/Scale 行与 YAML 值相同（见[转换后验证](#validation)）。
 
 ResNet50——校准由 OE `13_resnet50` 示例承担；本目录无可执行内容。
 
@@ -219,8 +229,10 @@ ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只
   OE `13_resnet50` 示例的 README 指引。重建该制品只能从该示例出发；
   本目录记录指引而非虚构配方。
 - ResNet152：校准图片由用户自备（脚本默认源目录属于旧分支目录树，
-  在本仓不存在）；S600（`nash-p`）构建与公开的 FPS/延迟记录未在本
-  仓库重跑。
+  在本仓不存在）；脚本统一 `0.017` scale 与 YAML 逐通道 `scale_value`
+  的差异按源分支原样保留——本仓库未做 OE 重建或数值对照来裁定，
+  也不认定哪一组系数正确；S600（`nash-p`）构建与公开的 FPS/延迟记录
+  未在本仓库重跑。
 - 每个已发布制品实际使用的权重与 OE 配置未记录；同名的再生成文件在
   比较 target、输入元数据、输出 shape/dtype 与数值结果之前不等价。
 - 本 sample 未执行真实 OE 编译（**not-run**）；仅记录了 ResNet18 的

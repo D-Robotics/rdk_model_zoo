@@ -136,6 +136,41 @@
   基线暴露的原有缺陷的回归锚）。无 continue-on-error、无整目录豁免、
   无规则降级；B9 行与基线文件头均写明删除义务。
 
+## 复审遗留整改（B1-R1a/R1b，2026-09-21 第二轮）
+
+依据 [整改独立复审](2026-09-21-b1-independent-rereview.md)（HEAD
+`dd60911`）：R2–R6 已关闭，R1 文件保留通过，双语转换 README 余两项。
+两项修复**待独立确认**（作者自检不冒充复审通过）。
+
+### B1-R1a — 校准命令与 cwd 一致
+
+- **位置**：`samples/vision/resnet/conversion/README.md` 校准章命令块、
+  `README_cn.md` 同节。
+- **修正**：命令由仓库根相对路径
+  `python3 samples/vision/resnet/conversion/get_calibration_data.py`
+  改为 cwd（conversion 目录）内的 `python3 get_calibration_data.py`。
+- **路径衔接核对**（静态，两侧语言同文）：wget 产出 `./resnet152.onnx`
+  = YAML `onnx_model`；脚本 `output_calib_dir='./calibration_data_rgb/'`
+  = YAML `cal_data_dir`；YAML `working_dir`+`output_model_file_prefix`
+  产出 `./model_output/resnet152_224x224_nv12.hbm` = 编译节声明。此
+  衔接说明新增进两语言校准节。
+- **回归证据**：resnet 套件 **52 OK**；单样例 checker 0 violations /
+  2 skips。纯文档修正，无行为变更，无需板测（复审关闭条件亦如此
+  约定）。
+
+### B1-R1b — scale 一致性错误声明删除
+
+- **位置**：两语言校准节的"变换链……与 YAML 条目一致"段；总览表
+  ResNet152 行"完整……可重放"表述；缺失项列表。
+- **修正**：明确 mean 相同（`123.675 116.28 103.53`）、scale 不同
+  （脚本统一 `0.017` vs YAML 逐通道 `0.01712475 0.017507 0.01742919`），
+  为按源分支原样保留的差异；未做 OE 重建或数值对照，不认定哪一组
+  正确；发布记录的 Mean/Scale 行与 YAML 相同（指向验证节历史表）。
+  总览表收紧为"重放复现的是配方步骤，不等于与已发布制品数值等价"。
+- **文件不动**：`get_calibration_data.py`/`resnet152_config.yaml`/
+  `x86_inference.py` 及其 SHA-256 固定不变（tests/test_conversion_layout.py
+  52 OK 内含 provenance 断言，仍绿）。
+
 ## 全量回归（整改后）
 
 | 项 | 结果 |
@@ -155,7 +190,7 @@
 - `97dc639` B1-R5：16 份 mobilenet 客户 README 同步板测证据（resnet 根与 v2 cpp 随 R1/R2 提交）
 - `ea68ea6` B1-R6：checker message 锚定豁免 + 84 条欠账基线 + workflow 旗标（checker 27 OK）
 - `25a8187` 台账拆行 + 本整改记录；`160abb8` 整改提交自评；`81b0a92` board evidence 闭环注记
-- `8f7fa0f` B1-R2 板端复测（关闭条件 2"仅重跑受影响范围"）：s100 正例复现基线 +
+- `dd60911` B1-R2 板端复测（关闭条件 2"仅重跑受影响范围"；初提交 8f7fa0f 经 amend 收入提交清单更新，故最终 SHA 为 dd60911）：s100 正例复现基线 +
   s100p 4/4 拒绝，见 board evidence `r2_launcher_board_recheck` 节与本文件 B1-R2 节
 
 ## 整改提交自评（步骤 review，2026-09-21，HEAD `25a8187`）

@@ -9,7 +9,7 @@ variant — stated below and never overstated:
 | --- | --- | --- |
 | ResNet18 (x5 + s) | `export_resnet18_onnx.py` | ONNX export replayable on host; calibration/YAML owned by the OE `13_resnet18` example (declared gap) |
 | ResNet50 (s only) | — | No source recipe existed (rdk_s @380e1a2 shipped README pointers only); the OE `13_resnet50` example is the authority |
-| ResNet152 (s only) | `resnet152_config.yaml`, `get_calibration_data.py`, `x86_inference.py` | Full OE recipe kept verbatim from the source branch; replayable inside OE given a published ONNX and user-provided calibration images |
+| ResNet152 (s only) | `resnet152_config.yaml`, `get_calibration_data.py`, `x86_inference.py` | OE recipe kept verbatim from the source branch; replayable inside OE given a published ONNX and user-provided calibration images — replay reproduces the recipe's steps, not numeric equivalence to the published artifact (see the retained scale discrepancy under Calibration) |
 
 The ResNet152 files are byte-verbatim from
 `rdk_s@380e1a2:samples/vision/resnet152/conversion/` (audited source of
@@ -125,12 +125,27 @@ output_calib_dir = './calibration_data_rgb/'  # matches resnet152_config.yaml ca
 # cwd: this conversion directory (inside the OE container)
 # input: src_image_dir with >=100 ILSVRC2012_val_*.JPEG
 # output: ./calibration_data_rgb/*.npy (float32, RGB, NCHW) — success: 100 files printed
-python3 samples/vision/resnet/conversion/get_calibration_data.py
+python3 get_calibration_data.py
 ```
 
-The transformer chain (padded center crop 224, resize, HWC2CHW, ×255,
-mean `123.675 116.28 103.53`, ×0.017) matches the YAML's
-`data_mean_and_scale` entries.
+The relative paths chain within this cwd: the script writes
+`./calibration_data_rgb/`, which is exactly `resnet152_config.yaml`'s
+`cal_data_dir`; the YAML's `onnx_model` `./resnet152.onnx` is the file
+the [Source model](#source-model) step downloads into this directory,
+and its `working_dir`/`output_model_file_prefix` produce
+`./model_output/resnet152_224x224_nv12.hbm` as stated under
+[Compile](#compile).
+
+The normalization constants are **not identical** between the two kept
+source files: the script and the YAML use the same mean
+(`123.675 116.28 103.53`), but the script multiplies by a uniform
+`0.017` while the YAML declares per-channel `scale_value: 0.01712475
+0.017507 0.01742919`. This is a discrepancy retained verbatim from the
+source branch; which set the published artifact was calibrated and
+compiled with is not confirmed here (no OE rebuild or numeric
+comparison was performed in this repository), and neither set is
+endorsed as the correct one. The published record's Mean/Scale row
+matches the YAML values (see [Validation](#validation)).
 
 ResNet50 — calibration is owned by the OE `13_resnet50` example; nothing
 to run here.
@@ -240,8 +255,12 @@ artifact contract.
   recipe.
 - ResNet152: calibration images are user-provided (the script's default
   source directory belongs to the legacy branch tree and does not exist
-  here); the S600 (`nash-p`) build and the published FPS/latency record
-  have not been re-executed in this repository.
+  here); the script's uniform `0.017` scale versus the YAML's
+  per-channel `scale_value` is a retained source-branch discrepancy —
+  no OE rebuild or numeric comparison in this repository reconciles it,
+  and no coefficient set is declared correct; the S600 (`nash-p`) build
+  and the published FPS/latency record have not been re-executed in
+  this repository.
 - The exact weights and OE configuration used for each published
   artifact are unrecorded; a regenerated file with the same basename is
   not equivalent until target, input metadata, output shape/dtype, and
