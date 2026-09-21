@@ -185,7 +185,85 @@ Top-1 + 延迟/FPS 表（源分支记录，未在本仓重测）；s 为功能�
    efficientnet（先同板源实现基线，后迁移对照）；s100p 负例；
    无法执行记 not-run 及原因。
 
-## 6. 执行结果（回填区）
+## 6. 执行结果（2026-09-21 回填）
 
-（执行后回填：主机测试计数、checker/CI 结果、板测矩阵、发现修复的
-问题、提交清单。）
+### 6.1 提交清单
+
+| sample | commit | 文件数 | 说明 |
+| --- | --- | --- | --- |
+| efficientnet（x5+s） | `ac09101` | 54 | 8 变体契约表（x5 B2/B3/B4 224 + s lite0–4 逐变体几何 224/240/260/300/380）；s 侧 13 个转换文件逐字节迁入并锚定校准链；x5 3 YAML SHA 固定 + 缺口披露 |
+| efficientformer | `27fea1a` | 35 | l1/l3 双变体，缺省 l3 保持源默认；无变体前缀重命名缺口以 assertNotEqual 钉住 |
+| efficientformerv2 | `a8a9ace` | 35 | s0/s1/s2，缺省 s0 保持源默认；**正向锚定**：`output_model_file_prefix + '.bin' == Manifest 基名`（三变体全等，无需重命名）；s0 独有 debug/optimization 不对称钉住 |
+| efficientvit | `4f08785` | 35 | 单变体 m5；`msra` 无变体前缀 vs `m5` 基名缺口钉住；0.99999 分位与 28 节点 Softmax int16 摆放锚定 |
+| manifest + 台账 + 证据 | （本提交） | — | s `efficientnet` 行 `download_scripts` → `download.sh`；B2 台账行回填；本文件 §6；evidence JSON |
+
+### 6.2 主机验证（cwd：仓库根，`.venv/bin/python`）
+
+- B2 新套件：efficientnet 25 OK / efficientformer 25 OK /
+  efficientformerv2 26 OK / efficientvit 26 OK（共 102）。
+- B1 回归：resnet 52、mobilenetv1 17、v2 24、v3 17、v4 20、
+  ultralytics_yolo 59、paddle_ocr 44——全部 OK（233）。
+- `_shared` 71 OK；checker 单测 27 OK。
+- 逐 sample Q3 检查器：4/4 均 0 violations、1 skip（main.py CLI 层
+  R-STAGE-PURITY 策略跳过）。
+- CI 同命令（migration scope）：**11 samples、0 violations、
+  84 exemptions、rc=0**——84 条 B9 延期基线原样未动；范围由 7 增至
+  11 系 B2 台账行 Refactor=done 后按进度区解析所得。
+
+### 6.3 执行中发现并修复的问题（作者自检记录）
+
+1. model_binding 委托 API 首次写错（虚构 build_* 函数，导入即
+   TypeError）→ 更正为显式 `list_assets/resolve_selection/bind_model`
+   委托（efficientformer）。
+2. `classification_profiles()` 缺必填 `url_prefix_s`（x5-only sample
+   同样必填）→ 以惰性值 + 如实 docstring 修复（无 S 清单行，该前缀
+   永不被消费）。
+3. efficientformer test_conversion_layout.py 出现无意义断言
+   （对死字符串 assertNotIn）→ 换成有意义的
+   `assertFalse((CONVERSION/'calibration_data_rgb_f32').exists())`。
+4. 本文件 §3.1 事实错误：efficientnet 的 `debug_mode` 最初记为 B3 独有
+   ，实际三份 YAML（B2/B3/B4）均有 → §3.1 已在 efficientnet 提交内
+   更正，并补记 B2/B4 有而 B3 没有的 `node_info` 不对称。
+5. 不可验证引用：efficientnet 根 README 曾以 arXiv 1904.01146 指称
+   EfficientNet-Lite 原始论文 → 改为按源交付引用 tensorflow/tpu 仓库
+   （双语）。
+6. efficientformerv2 sed 改名残留：文件名字面量（错误大小写/旧变体名
+   、双变体列表）首批补丁静默未命中、第二批中途退出 → 全部经显式
+   Edit 逐一核对面修复；教训：sed 产物先扫残留字面量再跑测试。
+7. efficientvit Softmax 摆放数初判 27，grep 实数 28 → 测试锚定 28。
+
+### 6.4 材料披露
+
+- **test_data 大小写冲突（efficientnet，x5 合并）**：x5 侧
+  `EfficientNet_architecture.png` 与 s 侧 `efficientnet_architecture.png`
+  仅文件名大小写不同；两侧字节**完全一致**（sha256 `f0c7ccbe…`，
+  170885 bytes，双源核验）；APFS 单目录无法并存两种大小写，保留 s 侧
+  小写名一份——零内容损失，仅名称大小写差异。
+- legacy 生成物（result.jpg/result.png）不迁移：均为运行期副作用文件
+  而非输入素材；统一运行时仅在 `--img-save-path` 时写图。
+- efficientvit 源 `run.sh` 的 `/opt/hobot/model/x5/basic/` 优先 + 自动
+  wget 回退：两个隐式行为均已移除（下载显式化、run.sh 纯透传）。
+- 已发布基准表（x5-v1.1.3）按"源分支记录、未重测"如实复制；
+  efficientvit 源表未声明延迟线程条件，照实记录。
+- 论文引用核实：EfficientNet 1905.11942；EfficientFormer 2206.00171；
+  EfficientFormerV2 2212.08059（snap-research/EfficientFormer）；
+  EfficientViT 2305.07027（microsoft/Cream）；EfficientNet-Lite 维持
+  源交付引用（tensorflow/tpu，原始论文链接在源中不可验证）。
+
+### 6.5 板测矩阵（既有授权；执行前为 not-run）
+
+| 板位 | 范围 | 状态 |
+| --- | --- | --- |
+| x5-8g | 四 sample 全变体默认图冒烟 + 同板 legacy 对照 | not-run（待执行） |
+| x5-4g | 同上 | not-run（待执行） |
+| s100 | efficientnet lite0–4 冒烟 + legacy 对照 | not-run（待执行） |
+| s600 | efficientnet（nash-p 制品） | not-run（待执行） |
+| s100p | 拒绝负例（无已发布资产） | not-run（待执行） |
+
+主机测试不替代板测；各项执行后在此回填实测值，无法执行记 not-run
+及原因。
+
+### 6.6 状态
+
+作者自检完成；独立评审未开始。全部 B2 行 Closed=no。完成后停在 B2，
+不进入 B3（用户指示）。
