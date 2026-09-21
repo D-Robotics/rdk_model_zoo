@@ -153,22 +153,26 @@ H5、H6）按实际执行回填：
 
 | 交付物 | Mapping | Refactor | Docs | Host | Board | Review | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| mobilenetv1（x5+s python） | done | done | done | passed（17 OK，板后修复回归） | passed（x5-4g+s100+s600 对照全等；s100p 负例 2/2） | passed（§6 自评 + §7 板后复核） | [b1 evidence](evidence/2026-09-21-b1-mobilenet-resnet-evidence.json)、[board evidence](evidence/2026-09-21-b1-board-smoke-evidence.json) |
-| mobilenetv2（x5+s python + s cpp） | done | done | done | passed（17 OK） | passed（python 三板对照全等；cpp s100 构建并运行 TOP-1 zebra，BUILD_JOBS=1） | passed（同上） | 同上 |
-| mobilenetv3（x5+s python） | done | done | done | passed（17 OK） | passed（三板对照全等） | passed（同上） | 同上 |
-| mobilenetv4（x5+s python，small/medium） | done | done | done | passed（17 OK） | passed（三板；medium 下载缺陷经板测发现并修复复验，见 §7 B1-D2） | passed（同上） | 同上 |
+| mobilenetv1（x5+s python） | done | done | done | passed（17 OK，板后修复回归） | passed（x5-8g+x5-4g+s100+s600 对照全等；s100p 负例 2/2） | passed（§6 自评 + §7 板后复核） | [b1 evidence](evidence/2026-09-21-b1-mobilenet-resnet-evidence.json)、[board evidence](evidence/2026-09-21-b1-board-smoke-evidence.json) |
+| mobilenetv2（x5+s python + s cpp） | done | done | done | passed（17 OK） | passed（python 四板对照全等（含 x5-8g 复测）；cpp s100 构建并运行 TOP-1 zebra，BUILD_JOBS=1） | passed（同上） | 同上 |
+| mobilenetv3（x5+s python） | done | done | done | passed（17 OK） | passed（四板对照全等，含 x5-8g 复测） | passed（同上） | 同上 |
+| mobilenetv4（x5+s python，small/medium） | done | done | done | passed（17 OK） | passed（四板（含 x5-8g 复测）；medium 下载缺陷经板测发现并修复复验，见 §7 B1-D2） | passed（同上） | 同上 |
 | resnet50/152 变体（s-only python） | done | done | done | passed（套件 46 OK） | passed（s100+s600 对照全等） | passed（同上） | 同上 |
 | H5 Profile 契约 | done | done | done（模块 docstring + 测试表） | passed（11 OK） | not-applicable（纯主机契约） | passed | 同上 |
 | H6 覆盖检查 | done | done | done（本文件 §3.3） | passed（4 OK） | not-applicable | passed | 同上 |
 
-Closed=no：X5 8GB（x5-8g，192.168.3.207）当日三次 SSH 连接超时不可达；其余全部
-板位（x5-4g、s100、s600-64g、s100p 负例）已通过，含 H2 flat≡4D 等价性确认
-（x5 v1/v2 逐位相等，v3/v4 ≤6e-8）。仅 x5-8g 复测通过后即可关闭。
+Closed=no：板测维度已随 2026-09-21 下午的 x5-8g 复测闭环（§7 末行：5/5 通过，
+含 H2 flat≡4D 确认 v1/v2 逐位相等、v3/v4 ≤6e-8）；但独立评审（Codex，
+[B1 独立评审](2026-09-21-b1-independent-review.md)）判定 changes-required
+（B1-R1–R6），整改完成并由独立 reviewer 复核前 B1 不得关闭。上方本表 Board
+列的 passed 仅覆盖板测维度；Review 列的 passed 是作者自评历史记录，已被独立
+评审的 changes-required 取代（见文首更新说明）。
 
 ## 6. 批后自评（2026-09-21，B1 完成时）
 
-**结论：B1 主机侧交付完成，全量验证绿；板端冒烟已在 x5-4g/s100/s600/s100p
-完成并回填（§7），S600 复测完成；仅 x5-8g 不可达待复测，Closed=no。**
+**结论：B1 主机侧交付完成，全量验证绿；板端冒烟五个板位（x5-8g/x5-4g/s100/
+s600-64g/s100p 负例）全部通过并回填（§7）。本自评不构成批次关闭：独立评审
+changes-required（B1-R1–R6）整改中，Closed=no。**
 
 ### 6.1 做对了什么
 
@@ -225,7 +229,11 @@ Closed=no：X5 8GB（x5-8g，192.168.3.207）当日三次 SSH 连接超时不可
 
 ### 6.3 遗留与风险
 
-- **x5-8g 待复测**：当日三次 SSH 超时；矩阵与 x5-4g 完全相同，可达即跑。
+- **独立评审整改（当前阻断项）**：Codex 独立评审 changes-required
+  （[B1 独立评审](2026-09-21-b1-independent-review.md)）：B1-R1 resnet50/152
+  转换能力未迁入、B1-R2 v2 cpp 启动器 S100P 身份形式、B1-R3 v3/v4 校准文档、
+  B1-R4 v4 medium S 验收 shape、B1-R5 板后证据未同步客户 README/台账拆行、
+  B1-R6 CI 欠账基线。逐项整改后由独立 reviewer 复核，才可 Closed=yes。
 - **s100 cpp 并行编译 OOM**：`cmake --build --parallel $(nproc)` 在 s100 上
   cc1plus 被杀；`BUILD_JOBS=1` 构建通过。启动器已支持 `BUILD_JOBS` 覆盖，
   README 补充建议（见 §7 备注）。
@@ -238,12 +246,13 @@ Closed=no：X5 8GB（x5-8g，192.168.3.207）当日三次 SSH 连接超时不可
 - `--scope migration` 全量模式报告 ultralytics_yolo 84 条 R-README-SECTIONS
   违规——试点文档债，台账 Docs=pending、按计划 B9 收编时按 Q1 门槛重写；
   非本批引入，不因检查器存在而视为已验收。
-- 独立 reviewer 抽查按计划在收尾统一执行（rdk-model-zoo-review sample-audit）；
-  本文件 §6/§7 是作者自评，不冒充独立审阅。
+- 独立审阅不再推迟到收尾：B1 已由独立 reviewer（Codex）完成 change-review 并
+  交付 changes-required 结论；本文件 §6/§7 是作者自评，与独立评审分开解读。
 
 ### 6.4 下一步
 
-x5-8g 恢复后复测同矩阵并关闭 B1；随后按计划进入 B2
+整改 B1-R1–R6（见 §6.3 首条与独立评审文件），完成后交独立 reviewer 复核
+关闭 findings；通过后 B1 Closed=yes 并进入 B2
 （efficientnet/efficientformer(v2)/efficientvit）。
 
 ## 7. 板端冒烟结果（2026-09-21，修复后）
@@ -262,7 +271,7 @@ x5-8g 恢复后复测同矩阵并关闭 B1；随后按计划进入 B2
 | s100 | 同上 | mobilenetv2 runtime/cpp | pass | 首次并行编译 cc1plus OOM，`BUILD_JOBS=1` 后构建运行，TOP-1 zebra（launcher 自带 BUILD_JOBS 覆盖） |
 | s600-64g | S600 / py3.12.3 | 同 s100（7） | 7/7 pass | **S600 SSH 恢复后完成复测**；maxdiff ≤1.2e-7 |
 | s100p | S100P / RDK S100P V1P0 | 负例（2） | 2/2 pass | `--target s100` → `Target mismatch: requested s100, detected s100p`；s100p 资产 → `No published sample asset matches target='s100p'`；均 rc=2 无回退 |
-| x5-8g | 192.168.3.207 | — | not-run | 当日三次 connect timeout；可达即复测 |
+| x5-8g | socinfo X5U / RDK X5 V1.0 / py3.10.12 / 7.25 GB / OS 3.5.0-beta（192.168.3.208） | v1-v3 + v4 small/medium（5） | 5/5 pass | **板卡重刷镜像后恢复**（旧 IP .207 失效、authorized_keys 重置——默认口令登录一次以恢复公钥后全程密钥认证；新镜像 hbrt 3.15.55 vs 模型构建 3.15.47 版本告警，对照两侧同板同 runtime，不影响等价结论）；v1/v2 maxdiff 0.0（H2 在第二块 X5 复证）；v3/v4 ≤5.96e-8；隔离稳定；制品 SHA-256 与 x5-4g 完全一致 |
 
 板测发现的两个产品缺陷（B1-D1 原始 F32 拒绝量化描述符、B1-D2 v4 下载丢
 variant）已修复、主机回归测试落地并在板上复验通过（§6.2 条 6/7）。
