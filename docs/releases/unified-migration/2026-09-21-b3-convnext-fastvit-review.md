@@ -196,3 +196,34 @@ legacy 对照 + 显式资产/省略变体 CLI。本轮 B3 的已验证面为**�
 "主机侧完成 + 板测待补"状态提交独立评审（先例：B1 的 S600
 MobileNetV2 C++ 依用户决定保持 not-run 未阻断关闭——是否同理处理由
 独立评审裁定）；不进入 B4。
+
+### 7.6 独立评审整改（作者自检记录，2026-09-22；待独立复核）
+
+独立评审（Codex，365d52e 基点，[评审报告](2026-09-22-b3-independent-review.md)）
+判定 changes-required：B3-R1–R4，整改如下：
+
+- **B3-R1（下载 CLI 默认值非法）**：`938031d`——fasternet/fastvit
+  download parser 默认由非法的 `base` 改为 s / s12，fastvit
+  `asset_reference` 默认 `s`→`s12`，与运行时绑定全链一致；新增
+  parser→main→download_target 委托回归测试（此前测试直调底层函数
+  绕过 parser），并钉住非法变体在 parser 层 SystemExit(2)。套件
+  27→28 OK ×2。
+- **B3-R2（文档下载示例不可执行）**：`b1025ea`——12 份双语 README
+  的下载示例全部改为合法变体 id；evaluator 功能检查改用真实存在
+  的测试图（fasternet drake、fastvit bucket；此前 EN zebra/CN
+  bittern 均不存在），中英成功判据统一；convnext CN 判据图词条
+  挂钩→猎豹。
+- **B3-R3（FastViT evaluator 表错串 FasterNet 数据）**：`b1025ea`——
+  依据固定源（ac11571 fastvit evaluator README）逐列恢复正确表
+  （SA12/S12/T12/T8，10.9/8.8/6.8/3.6M，S12 5.86ms/193.87FPS），
+  注明源表多线程延迟列（42.45/20.45/16.87/5.93ms）按共享布局省略；
+  中英/根/evaluator 四处一致。
+- **B3-R4（未执行板测写成已执行口吻）**：`b1025ea`——四 sample
+  evaluator 的比较口径由"recorded 2026-09-21 smoke"改为"B3 板测拟
+  采用的容差 + 引用已执行的 B2 先例及其证据"；fasternet/fastvit
+  主机测试数同步 28（27+1 委托测试）。
+- 整改后验证：B3 套件 28/26/28/28 OK、全量回归绿（B2 106、B1+pilots
+  233、shared 71、checker 27）、逐 sample checker 4/4 零违规、CI
+  同命令 15 samples / 0 violations / 84 exemptions / rc=0。
+- 板测维持用户外出期间暂缓（f552c52 策略）；远程板测协调由主评审
+  统筹（见评审报告"远程板测协调"节），Mac 侧不探测。
