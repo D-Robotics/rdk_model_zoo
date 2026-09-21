@@ -1,5 +1,8 @@
 # B1 整改记录（B1-R1–R6，2026-09-21）
 
+> **最新独立复审（Codex，HEAD dd60911）：changes-required / not-ready，Closed=no。** R2–R6 已关闭；R1 文件保留已通过，双语转换 README 尚有执行目录错误与 scale 一致性错误。见 [整改独立复审](2026-09-21-b1-independent-rereview.md)。历史内容和原始结论保留。
+
+
 > 作者：原执行者（Claude Code）。本文是 [B1 独立评审](2026-09-21-b1-independent-review.md)
 > 六项必需整改（B1-R1–R6）的逐项整改记录：位置、内容、回归证据。
 > **独立 reviewer 复核通过前，B1 Review 仍为 changes-required、Closed=no。**

@@ -1,5 +1,8 @@
 # B1 批次评审 — mobilenetv1–v4 迁移 + resnet50/152 变体 + H5/H6（2026-09-21）
 
+> **最新独立复审（Codex，HEAD dd60911）：changes-required / not-ready，Closed=no。** R2–R6 已关闭；R1 文件保留已通过，双语转换 README 尚有执行目录错误与 scale 一致性错误。见 [整改独立复审](2026-09-21-b1-independent-rereview.md)。历史内容和原始结论保留。
+
+
 > **独立评审更新（Codex，2026-09-21，审阅 c218e86）：changes-required / not-ready。**
 > 见 [B1 独立评审](2026-09-21-b1-independent-review.md)：B1-R1–R6 尚待修正。
 > 下文 §5–§7 的 passed Review 为作者自评历史记录，不代表独立评审通过；

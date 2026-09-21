@@ -1,5 +1,8 @@
 # B1 独立评审 — 2026-09-21
 
+> **最新独立复审（Codex，HEAD dd60911）：changes-required / not-ready，Closed=no。** R2–R6 已关闭；R1 文件保留已通过，双语转换 README 尚有执行目录错误与 scale 一致性错误。见 [整改独立复审](2026-09-21-b1-independent-rereview.md)。历史内容和原始结论保留。
+
+
 - Reviewer：Codex（独立于 B1 实现作者 Claude）
 - review_decision：**changes-required**
 - delivery_readiness：**not-ready**
