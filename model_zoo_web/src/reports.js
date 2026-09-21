@@ -40,6 +40,8 @@
       record.metric === 'throughput' && (record.concurrency || 1) === (catalogLatency?.concurrency || 1));
     const profilerBpu = profiler?.bpu_inference_ms;
     const boardCpu = profiler?.cpu_inference_ms;
+    const boardStages = profiler?.stages || {};
+    const generateTask = boardStages.generate_task_ms;
     const latencyBoard = profilerBpu ? profilerBpu.avg_time : catalogLatency?.value;
     const bpuScopedFps = profiler && profiler.average_latency_ms != null && boardCpu?.avg_time != null
       ? 1000 / (profiler.average_latency_ms - boardCpu.avg_time)
@@ -54,7 +56,15 @@
       `<div class="rd-card"><span>估算 DDR</span><strong>${aggregate.ddr_mb_per_frame != null ? `${fmt(aggregate.ddr_mb_per_frame, 1)} MB` : '—'}</strong></div>`,
       `<div class="rd-card"><span>BPU OPs</span><strong>${giga(aggregate.bpu_ops_per_frame)}</strong></div>`,
       `<div class="rd-card"><span>量化节点</span><strong>${summary.total_nodes != null ? `${summary.total_nodes} 层` : '—'}</strong></div>`,
-      `<div class="rd-card"><span>最弱相似度</span><strong>${weakest ? `${fmt(weakest.cosine, 4)} · ${esc(weakest.name.split('/').slice(-2).join('/'))}` : '—'}</strong></div>`,
+      (() => {
+        const weakestList = summary.weakest_nodes || (weakest ? [weakest] : []);
+        const percentiles = summary.cosine_percentiles || {};
+        const shortName = name => name.split('/').slice(-2).join('/');
+        const rows = weakestList.slice(0, 3).map(node =>
+          `<span class="rd-weak-row"><b>${fmt(node.cosine, 4)}</b><code title="${esc(node.name)}">${esc(shortName(node.name))}</code></span>`).join('');
+        const stats = percentiles.p10 != null ? `<small>P10 ${fmt(percentiles.p10, 4)} · 中位 ${fmt(percentiles.median, 4)}</small>` : '';
+        return `<div class="rd-card rd-card-weak"><span>最弱相似度 TOP3</span><div class="rd-weak-rows">${rows || '—'}</div>${stats}</div>`;
+      })(),
     ];
     const subgraphs = data.subgraphs || [];
     const estimatePanel = subgraphs.length
@@ -62,7 +72,7 @@
       : '';
     const boardRow = (name, value, note, strong = false) => `<div class="rd-duo-row${strong ? ' is-total' : ''}"><span>${name}</span><b>${value}</b>${note ? `<small>${note}</small>` : ''}</div>`;
     const boardPanel = profiler
-      ? `<div class="rd-duo-panel"><h3>板端实测</h3>${profilerBpu ? boardRow('BPU 推理', `${fmt(profilerBpu.avg_time)} ms`, fmt(bpuScopedFps) != null ? `${fmt(bpuScopedFps)} FPS` : '') : ''}${boardCpu ? boardRow('CPU 反量化', `${fmt(boardCpu.avg_time)} ms`) : ''}${boardRow('合计', profiler.average_latency_ms != null ? `${fmt(profiler.average_latency_ms)} ms` : '—', profiler.fps != null ? `${fmt(profiler.fps)} FPS` : '', true)}</div>`
+      ? `<div class="rd-duo-panel"><h3>板端实测</h3>${profilerBpu ? boardRow(generateTask ? 'BPU 核执行' : 'BPU 推理', `${fmt(profilerBpu.avg_time)} ms`, fmt(bpuScopedFps) != null ? `${fmt(bpuScopedFps)} FPS` : '') : ''}${generateTask ? boardRow('任务生成', `${fmt(generateTask.avg_time)} ms`) : ''}${boardCpu && boardCpu.avg_time > 0 ? boardRow('CPU 反量化', `${fmt(boardCpu.avg_time)} ms`, profiler.cpu_op_count ? `${profiler.cpu_op_count} 个算子` : '') : ''}${boardRow('合计', profiler.average_latency_ms != null ? `${fmt(profiler.average_latency_ms)} ms` : '—', profiler.fps != null ? `${fmt(profiler.fps)} FPS` : '', true)}</div>`
       : '';
     const decompSection = estimatePanel || boardPanel
       ? `<div class="rd-duo">${estimatePanel}${boardPanel}</div>`
