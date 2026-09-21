@@ -250,20 +250,44 @@ Top-1 + 延迟/FPS 表（源分支记录，未在本仓重测）；s 为功能�
   EfficientViT 2305.07027（microsoft/Cream）；EfficientNet-Lite 维持
   源交付引用（tensorflow/tpu，原始论文链接在源中不可验证）。
 
-### 6.5 板测矩阵（既有授权；执行前为 not-run）
+### 6.5 板测矩阵（既有授权；2026-09-21 执行完毕）
+
+方法：每板同进程内先跑同板源实现（platforms/ 旧 wrapper）基线，再跑
+统一入口（resolve_selection → RuntimeModelRunner → ClassificationTask），
+同一制品字节 + 同一输入图；判定 ids 全等且 max score diff <1e-5，id 失配时
+触发 top-8 平局分析（逐 id <1e-5 且双方边界对 gap <1e-6）。证据：
+[board evidence](evidence/2026-09-21-b2-board-smoke-evidence.json)（bundle
+SHA `d54d1cf531cd…`，每板 19 制品 digest 全验、69 文件 py_compile 通过）。
 
 | 板位 | 范围 | 状态 |
 | --- | --- | --- |
-| x5-8g | 四 sample 全变体默认图冒烟 + 同板 legacy 对照 | not-run（待执行） |
-| x5-4g | 同上 | not-run（待执行） |
-| s100 | efficientnet lite0–4 冒烟 + legacy 对照 | not-run（待执行） |
-| s600 | efficientnet（nash-p 制品） | not-run（待执行） |
-| s100p | 拒绝负例（无已发布资产） | not-run（待执行） |
+| x5-8g | 四 sample 全变体（9 对照 + 4 CLI） | passed（13/13，rc=0；ids 全等，maxdiff ≤2.38e-7） |
+| x5-4g | 同上 | passed（13/13；与 8g 逐 case 数值完全一致——BPU 确定性） |
+| s100 | efficientnet lite0–4 + lite0 CLI | passed（6/6；逐变体几何 224/240/260/300/380 解析正确，maxdiff ≤1.19e-7） |
+| s600 | efficientnet lite0–4（nash-p 制品）+ CLI | passed（6/6；maxdiff ≤5.96e-8） |
+| s100p | 拒绝负例（无已发布资产） | passed（3/3：resolve_selection 显式报错、`--dry-run --target s100p` rc=2、s100 资产在 s100p 上 rc=2 "Target mismatch"） |
 
-主机测试不替代板测；各项执行后在此回填实测值，无法执行记 not-run
-及原因。
+要点披露：
+
+- **efficientformerv2/s1 平局（唯一 id 失配）**：legacy rank-5=851 vs
+  unified=794；top-8 复跑证明 794/851 在两种实现中分数逐字节相同
+  （双方 gap 均为 0.0），属模型级真平局——rank-5 的取舍是 scipy softmax
+  （legacy）与稳定 softmax（unified）的舍入 + 快排/稳定排序噪声，
+  非行为差异。记录为 `tie_resolved: true`，完整 per-id 证据在
+  板端 record 中。
+- **s100p 一项 harness 判定伪 fail**：`--dry-run --target s100p` 实测
+  rc=2 + 显式 no-published-asset 报错（即期望行为），但 harness 复用了
+  正向 CLI 判定标准（rc=0 + Top-5）误标 fail；按负例真实标准裁定为
+  pass，原始 record 未修改保留。属 harness 工具缺陷，非产品问题。
+- HorizonRT 版本告警（hbrt 3.15.55 vs 制品构建 3.15.54）：legacy 与
+  unified 路径同样出现，无害，如实记录。
+- **未发现产品缺陷**：无需代码修复（对照 B1 曾有 D1/D2 两项板测修复）。
+
+主机测试不替代板测；未覆盖项：转换配方未在任何板上执行（OE 工具链
+范围外，缺口已逐 sample 披露）；evaluator 基准表仍为源分支记录未重测；
+S100P 无正向推理（无已发布资产，by design）。
 
 ### 6.6 状态
 
-作者自检完成；独立评审未开始。全部 B2 行 Closed=no。完成后停在 B2，
-不进入 B3（用户指示）。
+作者自检 + 板测（五板，§6.5）完成；独立评审未开始。全部 B2 行
+Closed=no。完成后停在 B2，不进入 B3（用户指示）。
