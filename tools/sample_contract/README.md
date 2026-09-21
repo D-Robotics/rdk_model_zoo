@@ -58,10 +58,28 @@ hygiene is enforced by CI.
 ## Exemptions
 
 `--exemptions file.json` accepts reviewed exceptions of the form
-`{"rule", "path", "line", "reason"}`; `reason` is mandatory.  An exemption
-that matches no finding is itself a violation (`R-EXEMPTION`), so stale
-entries fail CI instead of rotting.  Broad directory exemptions are not
-supported by design (plan Q3); each entry must name one finding location.
+`{"rule", "path", "line", "reason"}`; `reason` is mandatory.  An optional
+`"message"` field pins the entry to one exact finding message — required
+for baselining rules that report several findings at the same line
+(`R-README-SECTIONS` reports every missing anchor at line 0; without the
+message pin, fixing one anchor and breaking another would stay green).
+An exemption that matches no finding is itself a violation (`R-EXEMPTION`),
+so stale entries fail CI instead of rotting.  Broad directory exemptions
+are not supported by design (plan Q3); each entry must name one finding
+location.
+
+### Audited debt baseline
+
+`baselines/ultralytics-readme-debt.json` is the B1-R6 baseline: the 84
+pre-existing `R-README-SECTIONS` findings in the `ultralytics_yolo` pilot,
+each entry pinned by exact message.  CI passes it to the scope check, so
+the approved deferral is explicit and bounded: any new violation — in this
+sample or any other, of this rule or any other — still fails the gate,
+and fixing a listed finding surfaces its entry as an unused exemption,
+forcing the baseline to shrink.  Batch B9 rewrites the sample per the Q1
+contract and **must delete the baseline file and the `--exemptions` flag
+from `.github/workflows/sample-contract.yml`**; the deferral may not
+outlive B9.
 
 ## Boundaries
 

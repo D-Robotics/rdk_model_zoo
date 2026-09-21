@@ -37,10 +37,17 @@ jobs:
       - name: Checker unit tests (fixtures first)
         run: python3 -m unittest discover -s tools/sample_contract/tests -v
       - name: Check migration scope
+        # --exemptions pins the B1-R6 audited baseline: the 84
+        # pre-existing ultralytics_yolo R-README-SECTIONS findings whose
+        # rewrite is deferred to B9.  Entries match on exact finding
+        # message, so new violations still fail this step and fixed ones
+        # surface as unused-exemption violations.  B9 removes the flag
+        # and the baseline file.
         run: >
           python3 tools/sample_contract/check.py
           --scope migration
           --parser-mode import
+          --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json
           --report sample-contract-report.json
       - name: Upload report
         if: always()

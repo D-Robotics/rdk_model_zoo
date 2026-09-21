@@ -740,12 +740,21 @@ def resolve_migration_scope(map_path: Path, samples_root: Path) -> tuple[
 
 @dataclass
 class Exemption:
-    """A reviewed exception to one finding; requires a non-empty reason."""
+    """A reviewed exception to one finding; requires a non-empty reason.
+
+    ``message`` optionally pins the exemption to one exact finding
+    message.  Baselines over rules that report several findings at the
+    same line (R-README-SECTIONS reports every missing anchor at line 0)
+    must set it: without it one entry tolerates any finding of the rule
+    at that path/line, so fixing one anchor and breaking another would
+    keep the gate green instead of surfacing new debt.
+    """
 
     rule: str
     path: str
     line: int
     reason: str
+    message: Optional[str] = None
 
     @classmethod
     def from_dict(cls, raw: dict, source: Path) -> "Exemption":
@@ -755,7 +764,8 @@ class Exemption:
             raise SystemExit(
                 f"sample-contract: malformed exemption in {source}: {raw}")
         return cls(str(raw["rule"]), str(raw["path"]), int(raw["line"]),
-                   str(raw["reason"]))
+                   str(raw["reason"]),
+                   str(raw["message"]) if "message" in raw else None)
 
 
 def load_exemptions(path: Optional[Path]) -> list[Exemption]:
@@ -767,18 +777,28 @@ def load_exemptions(path: Optional[Path]) -> list[Exemption]:
 
 
 def apply_exemptions(report: SampleReport,
-                     exemptions: list[Exemption]) -> list[Finding]:
-    """Drop exempted findings and record them; return unmatched leftovers."""
+                     exemptions: list[Exemption],
+                     matched_indexes: Optional[set] = None) -> list[Finding]:
+    """Drop exempted findings and record them; return unmatched leftovers.
 
+    ``matched_indexes`` carries exemption indexes already consumed by
+    earlier reports of the same run.  Without it, an exemption matched in
+    one sample's report would resurface as "unused" against every other
+    report and turn into phantom violations in multi-sample runs.
+    """
+
+    if matched_indexes is None:
+        matched_indexes = set()
     remaining: list[Finding] = []
-    matched_indexes: set[int] = set()
     for finding in report.findings:
         for index, exemption in enumerate(exemptions):
             if index in matched_indexes:
                 continue
             if (exemption.rule == finding.rule
                     and exemption.path == finding.path
-                    and exemption.line == finding.line):
+                    and exemption.line == finding.line
+                    and (exemption.message is None
+                         or exemption.message == finding.message)):
                 matched_indexes.add(index)
                 report.exemptions_applied.append({
                     "rule": finding.rule, "path": finding.path,
@@ -874,9 +894,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         # Scope resolution produced nothing; findings still need a home.
         reports.append(SampleReport(path=display_path(args.samples_root)))
 
-    unused: list[Exemption] = []
+    matched_indexes: set = set()
     for report in reports:
-        unused.extend(apply_exemptions(report, exemptions))
+        apply_exemptions(report, exemptions, matched_indexes)
+    # An exemption counts as unused only if no report in this run matched
+    # it — per-report leftovers would flag yolo's baseline entries against
+    # every other sample in scope runs.
+    unused = [exemptions[i] for i in range(len(exemptions))
+              if i not in matched_indexes]
     for exemption in unused:
         reports[0].findings.append(Finding(
             RULE_EXEMPTION, exemption.path, exemption.line,

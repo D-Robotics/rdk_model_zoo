@@ -291,6 +291,78 @@ class ExemptionTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("malformed exemption", stderr.getvalue())
 
+    def test_message_pinned_exemption_tolerates_only_that_finding(self):
+        # B1-R6 baseline semantics: R-README-SECTIONS reports every
+        # missing anchor at line 0, so the baseline entries pin the exact
+        # message.  A pinned entry suppresses its finding and nothing
+        # else at the same rule/path/line.
+        report = report_for("bad_sections")
+        pinned = next(f for f in report.findings
+                      if f.rule == CHECK.RULE_SECTIONS)
+        target = CHECK.display_path(Path(pinned.path))
+        with tempfile.TemporaryDirectory() as tmp:
+            exempt = Path(tmp) / "exemptions.json"
+            exempt.write_text(json.dumps({"exemptions": [{
+                "rule": pinned.rule, "path": target, "line": pinned.line,
+                "message": pinned.message,
+                "reason": "one pinned baseline entry (test)",
+            }]}), encoding="utf-8")
+            code, output = run_fixture("bad_sections", "--exemptions",
+                                       str(exempt))
+        self.assertIn("1 exemptions applied", output)
+        # Every other section finding of the fixture still fails.  The
+        # "exempted ..." line also names the rule, so count finding
+        # lines (rule directly after the indent) instead of substrings.
+        self.assertEqual(
+            output.count(f"\n  {CHECK.RULE_SECTIONS} "),
+            len([f for f in report.findings
+                 if f.rule == CHECK.RULE_SECTIONS]) - 1)
+
+    def test_message_pinned_exemption_rejects_other_message(self):
+        report = report_for("bad_sections")
+        pinned = next(f for f in report.findings
+                      if f.rule == CHECK.RULE_SECTIONS)
+        target = CHECK.display_path(Path(pinned.path))
+        with tempfile.TemporaryDirectory() as tmp:
+            exempt = Path(tmp) / "exemptions.json"
+            exempt.write_text(json.dumps({"exemptions": [{
+                "rule": pinned.rule, "path": target, "line": pinned.line,
+                "message": pinned.message + " (never emitted)",
+                "reason": "entry whose message matches no finding",
+            }]}), encoding="utf-8")
+            code, output = run_fixture("bad_sections", "--exemptions",
+                                       str(exempt))
+        self.assertEqual(code, 1)
+        self.assertIn("0 exemptions applied", output)
+        self.assertIn("unused exemption", output)
+
+    def test_multi_sample_run_has_no_phantom_unused_exemptions(self):
+        # An exemption matched in one sample's report must not resurface
+        # as "unused" against the other samples of the same run (the
+        # B1-R6 baseline exposed this: 84 yolo entries turned into 504
+        # phantom violations across the seven in-scope samples).
+        report = report_for("bad_links")
+        pinned = next(f for f in report.findings
+                      if f.rule == CHECK.RULE_LINKS)
+        target = CHECK.display_path(Path(pinned.path))
+        with tempfile.TemporaryDirectory() as tmp:
+            exempt = Path(tmp) / "exemptions.json"
+            exempt.write_text(json.dumps({"exemptions": [{
+                "rule": pinned.rule, "path": target, "line": pinned.line,
+                "reason": "multi-sample phantom regression pin (test)",
+            }]}), encoding="utf-8")
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = CHECK.main([
+                    "--sample", str(FIXTURES / "bad_links"),
+                    "--sample", str(FIXTURES / "bad_sections"),
+                    "--exemptions", str(exempt),
+                ])
+        output = stdout.getvalue()
+        self.assertEqual(code, 1)  # bad_sections findings remain
+        self.assertIn("1 exemptions applied", output)
+        self.assertNotIn("unused exemption", output)
+
 
 class CanonicalizationTests(unittest.TestCase):
     def test_parser_default_forms(self):
