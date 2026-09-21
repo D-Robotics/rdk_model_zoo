@@ -1,5 +1,8 @@
 # B2 独立评审及 B1 关闭确认（2026-09-21）
 
+> **最终独立确认（Codex，21c833a）：B2-R1-E 证据通过，N1/N2 已确认；B2 全部 findings closed，pass / ready（既定范围），Closed=yes。** 见 [关闭报告](2026-09-21-b2-independent-closure.md)。以下历史结论保留。
+
+
 > **整改独立复审（Codex，0a6deaa）：R2/R3 closed，R1 代码验证通过，但 overlay 后 S 默认入口板测缺少可追溯记录（B2-R1-E）。** 436 tests 与 CI 通过；B2 仍 changes-required / not-ready / Closed=no。见 [复审报告](2026-09-21-b2-independent-rereview.md)。优先补存已有记录，无需完整重跑。
 
 

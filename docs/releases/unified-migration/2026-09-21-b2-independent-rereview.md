@@ -1,5 +1,8 @@
 # B2 整改独立复审（2026-09-21）
 
+> **最终独立确认（Codex，21c833a）：B2-R1-E 证据通过，N1/N2 已确认；B2 全部 findings closed，pass / ready（既定范围），Closed=yes。** 见 [关闭报告](2026-09-21-b2-independent-closure.md)。以下历史结论保留。
+
+
 - Reviewer：Codex；change-review；base `bea64b1` → head `0a6deaafb55525cf00121f32d57f99b5ed97b0e4`；开审工作树 clean。
 - **review_decision=changes-required；delivery_readiness=not-ready；Closed=no**。代码的原始 S 默认选择回归已修复，唯一关闭阻断为受影响板端复测的可追溯证据。B1 保持已关闭，不进入 B3。
 
