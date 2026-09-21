@@ -1,74 +1,85 @@
 {
-  "record": "2026-09-21-b3-convnext-fastvit",
-  "date": "2026-09-21",
-  "actor": "claude (autonomous, per standing /loop instruction; B3 opened after B2 independent closure d91ac89)",
-  "repo_head_before": "d91ac89 (B2 independent closure record)",
-  "source_baselines": {
-    "rdk_x5": "ac115717197920355fc390bb04299b20e6436864 (tip ac11571, x5-v1.1.3; re-verified undrifted via git rev-parse before extraction)"
+ "record": "2026-09-21-b3-convnext-fastvit",
+ "date": "2026-09-21",
+ "actor": "claude (autonomous, per standing /loop instruction; B3 opened after B2 independent closure d91ac89)",
+ "repo_head_before": "d91ac89 (B2 independent closure record)",
+ "source_baselines": {
+  "rdk_x5": "ac115717197920355fc390bb04299b20e6436864 (tip ac11571, x5-v1.1.3; re-verified undrifted via git rev-parse before extraction)"
+ },
+ "scope": "B3: convnext (atto), edgenext (base/small/x_small/xx_small), fasternet (S/T0/T1/T2), fastvit (S12/SA12/T12/T8) — all x5-only python migrations from the standardized wrapper family; no S source, no real C++ runtime (convnext ships an explicit unimplemented cpp placeholder, preserved)",
+ "change_set": {
+  "kickoff_review": "588bc97 (docs: precheck + mapping tables written before code, per batch process)",
+  "convnext": {
+   "commit": "e843005",
+   "files": 35,
+   "variants": "atto (single published; femto/nano recipes carry no manifest asset — asserted absent from the binding table)",
+   "conversion": "3 YAMLs byte-verbatim (SHA-pinned). Pinned quirks: ONNX references mutually cross-swapped as shipped (atto->convnext_femto.onnx, femto->external common-zoo convnext_atto.onnx, nano->convnext_pico.onnx), source README lists an unshipped ConvNeXt_pico.yaml, variant-less prefix ConvNeXt-deploy_224x224_nv12 (rename disclosed), int16 placements 8/5/8, published benchmark table covers nano/pico/femto but NOT atto (the only published asset)"
   },
-  "scope": "B3: convnext (atto), edgenext (base/small/x_small/xx_small), fasternet (S/T0/T1/T2), fastvit (S12/SA12/T12/T8) — all x5-only python migrations from the standardized wrapper family; no S source, no real C++ runtime (convnext ships an explicit unimplemented cpp placeholder, preserved)",
-  "change_set": {
-    "kickoff_review": "588bc97 (docs: precheck + mapping tables written before code, per batch process)",
-    "convnext": {
-      "commit": "e843005",
-      "files": 35,
-      "variants": "atto (single published; femto/nano recipes carry no manifest asset — asserted absent from the binding table)",
-      "conversion": "3 YAMLs byte-verbatim (SHA-pinned). Pinned quirks: ONNX references mutually cross-swapped as shipped (atto->convnext_femto.onnx, femto->external common-zoo convnext_atto.onnx, nano->convnext_pico.onnx), source README lists an unshipped ConvNeXt_pico.yaml, variant-less prefix ConvNeXt-deploy_224x224_nv12 (rename disclosed), int16 placements 8/5/8, published benchmark table covers nano/pico/femto but NOT atto (the only published asset)"
-    },
-    "edgenext": {
-      "commit": "b4f8aff",
-      "files": 36,
-      "variants": "base/small/x_small/xx_small (all published)",
-      "conversion": "4 YAMLs byte-verbatim (SHA-pinned). POSITIVE anchor: every output_model_file_prefix reproduces its manifest basename (no rename; pinned); onnx names carry their variant; calibration max @0.999; xca-Softmax int16 placements 3/3/3/16; benchmark table covers exactly the four published variants"
-    },
-    "fasternet": {
-      "commit": "69052d5",
-      "files": 37,
-      "variants": "S/T0/T1/T2 — table ids lowercase s/t0/t1/t2 (shared binding lowercases requests; published filenames keep capital spelling; pinned by tests)",
-      "conversion": "4 YAMLs byte-verbatim (SHA-pinned). Pinned quirks: variant-less prefix FasterNet_224x224_nv12 (rename disclosed), working_dir asymmetry (S=model_output, T0=FasterNet_224x224_nv12_mix, T1/T2=plain), only-T0 int16 placements (2), published Params (M) column disagrees with upstream paper sizes in some rows (recorded as published)"
-    },
-    "fastvit": {
-      "commit": "f33167a",
-      "files": 36,
-      "variants": "S12/SA12/T12/T8 — table ids lowercase s12/sa12/t12/t8",
-      "conversion": "4 YAMLs byte-verbatim (SHA-pinned). Pinned quirks: every onnx_model points at the external 01_common model-zoo path outside the sample tree (disclosed; no exporter flow claimed), variant-less prefix FastViT_224x224_nv12 (rename disclosed), uniform working_dir FastViT_224x224_nv12_mix, int16 placements 5/6/4/10"
-    }
+  "edgenext": {
+   "commit": "b4f8aff",
+   "files": 36,
+   "variants": "base/small/x_small/xx_small (all published)",
+   "conversion": "4 YAMLs byte-verbatim (SHA-pinned). POSITIVE anchor: every output_model_file_prefix reproduces its manifest basename (no rename; pinned); onnx names carry their variant; calibration max @0.999; xca-Softmax int16 placements 3/3/3/16; benchmark table covers exactly the four published variants"
   },
-  "uniform_family_facts": "all 13 conversion YAMLs: march bayes-e, nv12/rgb/NCHW, mean 123.675 116.28 103.53, scale 0.01712475 0.017507 0.01742919, cal_data_dir ./calibration_data_rgb_f32; all four wrappers are the B1/B2-audited standardized x5 form (Config resize_type=1 topk=5, INTER_LINEAR letterbox, packed NV12, scipy softmax + argsort; H/W from shape [2]/[3]); no manifest changes needed (sample_path already unified for all four)",
-  "entrypoint_behaviors_removed": "edgenext/fasternet/fastvit source run.sh preferred /opt/hobot/model/x5/basic/ and auto-ran download.sh on miss; convnext main.py defaulted --img-save-path to a relative result.jpg — all replaced by the unified passthrough run.sh, explicit download, and write-only-with---img-save-path (disclosed in READMEs)",
-  "host_verification": {
-    "cwd": "repository root",
-    "b3_suites": {
-      "convnext": "28 OK",
-      "edgenext": "26 OK",
-      "fasternet": "27 OK",
-      "fastvit": "27 OK"
-    },
-    "regressions": {
-      "B2": "efficientnet 28 / efficientformer 25 / efficientformerv2 26 / efficientvit 27 OK",
-      "B1+pilots": "mobilenetv1 17 / v2 24 / v3 17 / v4 20 / resnet 52 / ultralytics_yolo 59 / paddle_ocr 44 OK"
-    },
-    "shared": "samples/_shared/tests: 71 OK",
-    "checker_unit": "tools/sample_contract/tests: 27 OK",
-    "per_sample_checker": "4/4 B3 samples: 0 violations, 1 policy skip each",
-    "ci_same_command": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json -> after ledger rows set Refactor=done: 15 samples, 0 violations, 18 skips, 84 exemptions applied, rc=0 (84-exemption B9 baseline unchanged; scope 11 -> 15)"
+  "fasternet": {
+   "commit": "69052d5",
+   "files": 37,
+   "variants": "S/T0/T1/T2 — table ids lowercase s/t0/t1/t2 (shared binding lowercases requests; published filenames keep capital spelling; pinned by tests)",
+   "conversion": "4 YAMLs byte-verbatim (SHA-pinned). Pinned quirks: variant-less prefix FasterNet_224x224_nv12 (rename disclosed), working_dir asymmetry (S=model_output, T0=FasterNet_224x224_nv12_mix, T1/T2=plain), only-T0 int16 placements (2), published Params (M) column disagrees with upstream paper sizes in some rows (recorded as published)"
   },
-  "issues_found_and_fixed_during_b3": [
-    "generation-order bug (author tooling, caught by suites): applying variant swaps AFTER the model-name rename made the swap patterns miss (fastvit binding/download/test filenames kept stale FastViT_S_/T0_/T1_/T2_ spellings and old single-letter variant ids) — fixed by re-applying filename+id corrections; guarded-assertion generation discipline retained (every replacement asserted count==1 before applying)",
-    "fasternet variant casing: table ids initially uppercase S/T0/... while the shared binding lowercases requested variants (Unknown sample variant 'S'; known variants: S, T0...) — normalized to lowercase ids s/t0/t1/t2 with published filenames unchanged, tests pin both sides",
-    "edgenext listing count inherited the 2-variant template's assertion (4 != 2) — corrected to the actual 4 published assets (manifest re-verified before fixing)",
-    "edgenext conversion test initially asserted no Softmax placements (family habit from convnext) — EdgeNeXt does place xca-Softmax nodes (3 per config); assertion corrected to pin the real structure",
-    "convnext CN conversion README used Chinese anchor ids — checker requires canonical English section anchors in CN files (9 violations) — fixed to the B2 convention"
-  ],
-  "board_status": "not-run — SKIPPED this round by explicit user decision (2026-09-21T14:5xZ: user switched network environment, SSH to the boards unavailable; user instructed to skip board testing this round). This is a disclosed non-execution, NOT a pass: no board claims are made and host tests never substitute board tests. The verified surface for B3 is host-side only (suites, checker, CI). The bundle (sha256 bfd332cf351eddbf8c5fd5e3a9f6266901a49d05b8171f60de1c0523d007bc99, 13/13 artifact digests pinned) and harness (/tmp/b3-harness.py, B2-R1-E standard: on-board deployed .py hashes, timestamps, argv/cwd, rc, full stdout/stderr, tie policy) are ready; the smoke executes in a later round when boards are reachable again (same-board legacy comparison vs unified for all 13 variants + explicit-asset and default-entry CLI).",
-  "review_status": "author self-check only; independent review not started. All B3 rows Closed=no.",
-  "board_execution_policy_2026_09_22": {
-    "source": "user instruction in Codex conversation",
-    "status": "not-run",
-    "reason": "user away from LAN board environment; temporarily defer board tests",
-    "quiet_skip": true,
-    "connection_attempts_allowed": false,
-    "resume_condition": "explicit user instruction",
-    "host_work_and_review_can_continue": true
+  "fastvit": {
+   "commit": "f33167a",
+   "files": 36,
+   "variants": "S12/SA12/T12/T8 — table ids lowercase s12/sa12/t12/t8",
+   "conversion": "4 YAMLs byte-verbatim (SHA-pinned). Pinned quirks: every onnx_model points at the external 01_common model-zoo path outside the sample tree (disclosed; no exporter flow claimed), variant-less prefix FastViT_224x224_nv12 (rename disclosed), uniform working_dir FastViT_224x224_nv12_mix, int16 placements 5/6/4/10"
   }
+ },
+ "uniform_family_facts": "all 13 conversion YAMLs: march bayes-e, nv12/rgb/NCHW, mean 123.675 116.28 103.53, scale 0.01712475 0.017507 0.01742919, cal_data_dir ./calibration_data_rgb_f32; all four wrappers are the B1/B2-audited standardized x5 form (Config resize_type=1 topk=5, INTER_LINEAR letterbox, packed NV12, scipy softmax + argsort; H/W from shape [2]/[3]); no manifest changes needed (sample_path already unified for all four)",
+ "entrypoint_behaviors_removed": "edgenext/fasternet/fastvit source run.sh preferred /opt/hobot/model/x5/basic/ and auto-ran download.sh on miss; convnext main.py defaulted --img-save-path to a relative result.jpg — all replaced by the unified passthrough run.sh, explicit download, and write-only-with---img-save-path (disclosed in READMEs)",
+ "host_verification": {
+  "cwd": "repository root",
+  "b3_suites": {
+   "convnext": "28 OK",
+   "edgenext": "26 OK",
+   "fasternet": "28 tests OK (was 27; +1 B3-R1 parser->main->download delegation test)",
+   "fastvit": "28 tests OK (was 27; +1 B3-R1 parser->main->download delegation test)"
+  },
+  "regressions": {
+   "B2": "efficientnet 28 / efficientformer 25 / efficientformerv2 26 / efficientvit 27 OK",
+   "B1+pilots": "mobilenetv1 17 / v2 24 / v3 17 / v4 20 / resnet 52 / ultralytics_yolo 59 / paddle_ocr 44 OK"
+  },
+  "shared": "samples/_shared/tests: 71 OK",
+  "checker_unit": "tools/sample_contract/tests: 27 OK",
+  "per_sample_checker": "4/4 B3 samples: 0 violations, 1 policy skip each",
+  "ci_same_command": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json -> after ledger rows set Refactor=done: 15 samples, 0 violations, 18 skips, 84 exemptions applied, rc=0 (84-exemption B9 baseline unchanged; scope 11 -> 15)"
+ },
+ "issues_found_and_fixed_during_b3": [
+  "generation-order bug (author tooling, caught by suites): applying variant swaps AFTER the model-name rename made the swap patterns miss (fastvit binding/download/test filenames kept stale FastViT_S_/T0_/T1_/T2_ spellings and old single-letter variant ids) — fixed by re-applying filename+id corrections; guarded-assertion generation discipline retained (every replacement asserted count==1 before applying)",
+  "fasternet variant casing: table ids initially uppercase S/T0/... while the shared binding lowercases requested variants (Unknown sample variant 'S'; known variants: S, T0...) — normalized to lowercase ids s/t0/t1/t2 with published filenames unchanged, tests pin both sides",
+  "edgenext listing count inherited the 2-variant template's assertion (4 != 2) — corrected to the actual 4 published assets (manifest re-verified before fixing)",
+  "edgenext conversion test initially asserted no Softmax placements (family habit from convnext) — EdgeNeXt does place xca-Softmax nodes (3 per config); assertion corrected to pin the real structure",
+  "convnext CN conversion README used Chinese anchor ids — checker requires canonical English section anchors in CN files (9 violations) — fixed to the B2 convention"
+ ],
+ "board_status": "not-run — SKIPPED this round by explicit user decision (2026-09-21T14:5xZ: user switched network environment, SSH to the boards unavailable; user instructed to skip board testing this round). This is a disclosed non-execution, NOT a pass: no board claims are made and host tests never substitute board tests. The verified surface for B3 is host-side only (suites, checker, CI). The bundle (sha256 bfd332cf351eddbf8c5fd5e3a9f6266901a49d05b8171f60de1c0523d007bc99, 13/13 artifact digests pinned) and harness (/tmp/b3-harness.py, B2-R1-E standard: on-board deployed .py hashes, timestamps, argv/cwd, rc, full stdout/stderr, tie policy) are ready; the smoke executes in a later round when boards are reachable again (same-board legacy comparison vs unified for all 13 variants + explicit-asset and default-entry CLI).",
+ "review_status": "author self-check only; independent review not started. All B3 rows Closed=no.",
+ "board_execution_policy_2026_09_22": {
+  "source": "user instruction in Codex conversation",
+  "status": "not-run",
+  "reason": "user away from LAN board environment; temporarily defer board tests",
+  "quiet_skip": true,
+  "connection_attempts_allowed": false,
+  "resume_condition": "explicit user instruction",
+  "host_work_and_review_can_continue": true
+ },
+ "independent_review_2026_09_22": {
+  "verdict": "changes-required / not-ready; findings B3-R1 (illegal download parser defaults), B3-R2 (bilingual download examples not executable + nonexistent evaluator images), B3-R3 (FastViT evaluator tables carried FasterNet numbers), B3-R4 (executed-smoke wording without an executed smoke)",
+  "report": "docs/releases/unified-migration/2026-09-22-b3-independent-review.md",
+  "remediation": {
+   "B3-R1": "938031d: parser defaults base->s (fasternet) and base->s12 (fastvit); fastvit asset_reference default s->s12; delegation regression tests added (suites 27->28 each)",
+   "B3-R2": "b1025ea: all bilingual download examples use legal variant ids; evaluator images corrected to existing files (drake.JPEG/bucket.JPEG; EN zebra & CN bittern did not exist); EN/CN criteria unified; convnext CN criteria word hook->cheetah",
+   "B3-R3": "b1025ea: FastViT evaluator tables restored column-by-column from the fixed source (SA12/S12/T12/T8, 10.9/8.8/6.8/3.6M; S12 5.86ms/193.87FPS); source multi-thread column disclosed as omitted",
+   "B3-R4": "b1025ea: executed-smoke wording replaced with the planned-B3 tolerance citing the executed B2 precedent by name; fasternet/fastvit host-test counts synced to 28"
+  },
+  "verification_after_remediation": "B3 suites 28/26/28/28 OK; regressions green; checker 4/4 zero violations; CI 15 samples / 0 violations / 84 exemptions / rc=0"
+ }
 }
