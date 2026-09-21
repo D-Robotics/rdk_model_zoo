@@ -62,8 +62,7 @@
     const model = group.entry;
     const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
     const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform))) || model;
-    const platformChips = group.platforms.map(platform => `<span class="platform-chip">${esc(platform)}</span>`).join('');
-    return `<article class="model-card"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="model-variant">${esc(model.variantName || '')}</p><p class="reference-description" data-i18n-zh="${esc(model.description)}" data-i18n-en="${esc(model.descriptionEn || model.description)}" title="${esc(description)}">${esc(description)}</p><div class="model-tags"><span>${esc(model.task)}</span>${platformChips}</div></div></a></article>`;
+    return `<article class="model-card"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="model-variant">${esc(model.variantName || '')}</p><p class="reference-description" data-i18n-zh="${esc(model.description)}" data-i18n-en="${esc(model.descriptionEn || model.description)}" title="${esc(description)}">${esc(description)}</p><div class="model-tags"><span>${esc(model.task)}</span></div></div></a></article>`;
   }
 
   function matchesTask(model) {

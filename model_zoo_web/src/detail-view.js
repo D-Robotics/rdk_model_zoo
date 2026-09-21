@@ -18,6 +18,11 @@
   const threadLabel = threads => threads === 1 ? 'Runtime 单路' : `Runtime ${threads} 路并发`;
   const formats = m => [...new Set(m.assets.map(asset => asset.format.toUpperCase()))].join(' + ');
   const hardwareOf = (model, data) => model.benchmark?.environment?.hardware || data.release.compatibility.hardware;
+  // Preferred hardware display order: strongest S-series first, X5 last.
+  const platformDisplayOrder = hardware => ({
+    'RDK S600': 0, 'RDK S100P': 1, 'RDK S100': 2, 'RDK X5': 3,
+  }[String(hardware)] ?? 99);
+  const byPlatformOrder = (a, b) => platformDisplayOrder(a) - platformDisplayOrder(b) || String(a).localeCompare(String(b));
   const byteSize = value => {
     const bytes = Number(value);
     if (!Number.isFinite(bytes) || bytes <= 0) return null;
@@ -65,14 +70,14 @@
     const hardware = hardwareOf(m, data);
     const groupId = m.catalogId || `${m.name}/${m.taskId || m.task}`;
     const variants = models.filter(other => (other.catalogId || `${other.name}/${other.taskId || other.task}`) === groupId);
-    const hardwareOptions = [...new Set(variants.map(other => hardwareOf(other, data)))];
+    const hardwareOptions = [...new Set(variants.map(other => hardwareOf(other, data)))].sort(byPlatformOrder);
     const performance = b?.performance || [];
     const conditions = [...new Set(performance.filter(p => ['latency', 'throughput'].includes(p.metric)).map(p => p.concurrency || 1))].sort((a, b) => a - b);
     const related = models.filter(other => other.id !== m.id && other.sample !== m.sample && other.task === m.task).slice(0, 3);
     const downloadModels = variants.filter(other => other.assets?.length);
     const selectedDownloadModel = downloadModels.find(other => other.id === m.id) || downloadModels[0];
     const selectedPlatform = selectedDownloadModel ? hardwareOf(selectedDownloadModel, data) : hardware;
-    const downloadPlatforms = [...new Set(downloadModels.map(other => hardwareOf(other, data)))];
+    const downloadPlatforms = [...new Set(downloadModels.map(other => hardwareOf(other, data)))].sort(byPlatformOrder);
     const dialogId = `get-model-${m.id}`;
     const description = window.HubI18n?.locale === 'en' ? (m.descriptionEn || m.description) : m.description;
     const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-download-dialog-shell"><header class="mz-download-dialog-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-download-dialog-body"><fieldset class="mz-download-step"><legend><span>1</span>选择芯片</legend><div class="mz-chip-options">${downloadPlatforms.map((platform, index) => `<label class="mz-download-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-choice-content"><strong>${esc(platform)}</strong></span><span class="mz-choice-check">${icon('check')}</span></label>`).join('')}</div></fieldset><fieldset class="mz-download-step"><legend><span>2</span>选择模型类型</legend><div class="mz-model-options">${downloadModels.map((model, index) => { const platform = hardwareOf(model, data); const asset = model.assets[0]; const size = byteSize(asset.sizeBytes) || ''; return `<label class="mz-download-choice mz-model-choice" data-platform="${esc(platform)}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" data-filename="${esc(asset.filename)}" data-size="${esc(size)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-choice-content"><strong>${esc(model.variantName || model.name)}</strong></span><span class="mz-choice-check">${icon('check')}</span></label>`; }).join('')}</div></fieldset><div class="mz-selected-file"><span>下载文件</span><code data-download-filename>${esc(selectedDownloadModel.assets[0].filename)}</code><small data-download-size>${esc(byteSize(selectedDownloadModel.assets[0].sizeBytes) || '')}</small></div></div><footer class="mz-download-dialog-footer"><button type="submit" value="cancel" class="mz-dialog-cancel">取消</button><a class="button mz-dialog-download" data-download-link href="${esc(selectedDownloadModel.assets[0].url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : '';
@@ -83,7 +88,7 @@
       <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>
       <section class="mz-section" id="downloads"><div class="mz-section-heading"><h2>模型文件</h2><span>${m.assets.length} 个文件</span></div><div class="mz-files">${m.assets.map(a => { const size = byteSize(a.sizeBytes); const downloadLabel = `${icon('download')}<span>下载</span>${size ? `<span class="mz-download-size">${esc(size)}</span>` : ''}`; return `<div class="mz-file"><div class="mz-file-copy"><div class="mz-file-title"><h3>${assetRole(a)}</h3></div><code>${esc(a.filename)}</code></div>${external(a.url, downloadLabel, 'mz-download')}</div>`; }).join('')}</div></section>
       </div>
-      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-supported-platform"><span class="mz-platform-mark">${icon('cpu')}</span><div><strong>${esc(hardware)}</strong></div></div></section><section><h2>开发资源</h2><div class="mz-resource-links">${external(m.source, '模型仓库')}${external(m.source + '/runtime/python', '运行文档')}${external(m.source + '/conversion', '模型转换')}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
+      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${external(m.source, '模型仓库')}${external(m.source + '/runtime/python', '运行文档')}${external(m.source + '/conversion', '模型转换')}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model"><img src="${esc(other.coverImage)}" alt="${esc(other.name)}" loading="lazy"><div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}
       ${downloadDialog}
       `;
@@ -293,6 +298,12 @@
       const target = models.find(other => other.sample === m.sample && other.task === m.task && hardwareOf(other, data) === event.target.dataset.value);
       if (target && target.id !== m.id) location.hash = '#model/' + target.id;
     });
+    for (const button of root.querySelectorAll('[data-platform-target]')) {
+      listen(button, 'click', () => {
+        const targetId = button.dataset.platformTarget;
+        if (targetId && targetId !== m.id) location.hash = '#model/' + targetId;
+      });
+    }
     performance();
   }
   window.ModelDetail = { render, bind, destroy };
