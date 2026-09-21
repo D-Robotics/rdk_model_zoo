@@ -58,12 +58,10 @@
       `<div class="rd-card"><span>量化节点</span><strong>${summary.total_nodes != null ? `${summary.total_nodes} 层` : '—'}</strong></div>`,
       (() => {
         const weakestList = summary.weakest_nodes || (weakest ? [weakest] : []);
-        const percentiles = summary.cosine_percentiles || {};
         const shortName = name => name.split('/').slice(-2).join('/');
         const tip = weakestList.slice(0, 3)
           .map(node => `${node.cosine != null ? node.cosine.toFixed(4) : '—'} ${node.name}`).join('\n');
-        const note = percentiles.p10 != null ? `P10 ${fmt(percentiles.p10, 4)} · 中位 ${fmt(percentiles.median, 4)}` : '';
-        return `<div class="rd-card"><span>最弱相似度</span><strong title="${esc(tip)}">${weakest ? `${fmt(weakest.cosine, 4)} · ${esc(shortName(weakest.name))}` : '—'}</strong><small class="rd-pair-note">${note}</small></div>`;
+        return `<div class="rd-card"><span>最弱相似度</span><strong title="${esc(tip)}">${weakest ? `${fmt(weakest.cosine, 4)} · ${esc(shortName(weakest.name))}` : '—'}</strong></div>`;
       })(),
     ];
     const subgraphs = data.subgraphs || [];
@@ -113,11 +111,24 @@
     return nodes.map(node => `<tr><td><code>${esc(node.name)}</code></td><td>${esc(node.on)}</td><td>${node.subgraph}</td><td>${esc(node.type)}</td><td class="rd-cosine ${cosineClass(node.cosine)}">${node.cosine == null ? '未测量' : fmt(node.cosine, 6)}</td><td>${fmt(node.threshold, 4)}</td><td>${esc(node.dtype)}</td></tr>`).join('');
   }
 
+  function fitCardValues(scope) {
+    (scope || document).querySelectorAll('.rd-card strong').forEach(el => {
+      if (!el.dataset.fitBase) el.dataset.fitBase = getComputedStyle(el).fontSize;
+      el.style.fontSize = el.dataset.fitBase;
+      let size = parseFloat(el.dataset.fitBase);
+      while (size > 11 && el.scrollWidth > el.clientWidth) {
+        size -= 0.5;
+        el.style.fontSize = `${size}px`;
+      }
+    });
+  }
+
   function renderNative(root, data, report) {
     root.innerHTML = `
       <div class="rd-tabs" role="tablist"><button type="button" class="rd-tab is-active" data-tab="overview" role="tab" aria-selected="true">概览</button><button type="button" class="rd-tab" data-tab="quantization" role="tab" aria-selected="false">逐层量化</button><button type="button" class="rd-tab" data-tab="raw" role="tab" aria-selected="false">原始数据</button></div>
       ${overviewPanel(data, report)}${quantizationPanel(data)}
       <section class="rd-panel" data-panel="raw" role="tabpanel" hidden><details class="rd-raw"><summary>查看完整 JSON</summary><pre>${esc(JSON.stringify(data, null, 2))}</pre></details></section>`;
+    fitCardValues(root);
 
     root.querySelectorAll('.rd-tab').forEach(tab => tab.addEventListener('click', () => {
       root.querySelectorAll('.rd-tab').forEach(item => {
@@ -199,4 +210,9 @@
     if (button) window.HubI18n.setLocale(button.dataset.language);
   });
   window.HubI18n.apply();
+  let fitTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => fitCardValues(), 80);
+  });
 })();

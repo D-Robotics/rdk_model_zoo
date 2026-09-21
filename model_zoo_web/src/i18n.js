@@ -206,7 +206,6 @@
       .replace(/^已显示 (\d+) \/ (\d+) 个模型$/, (_, shown, total) => `${shown} of ${total} models shown`)
       .replace(/^(\d+) 个文件$/, (_, count) => `${count} ${count === '1' ? 'file' : 'files'}`)
       .replace(/^(\d+) 个算子$/, (_, count) => `${count} ${count === '1' ? 'op' : 'ops'}`)
-      .replace(/^P10 ([\d.]+) · 中位 ([\d.]+)$/, (_, p10, median) => `P10 ${p10} · median ${median}`)
       .replace(/^(\d+) 个报告$/, (_, count) => `${count} ${count === '1' ? 'report' : 'reports'}`)
       .replace(/(\d+) 线程/g, (_, count) => `${count} threads`)
       .replace(pattern, match => messages[match]);
