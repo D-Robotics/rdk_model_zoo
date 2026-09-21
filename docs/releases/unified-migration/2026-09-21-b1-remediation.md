@@ -49,9 +49,19 @@
   归一化）三形态拒绝、`s600`+s100p board_type 放行（语义负例）、双文件
   缺失报 unknown、未知 soc 报错。mobilenetv2 套件 17 → **24 OK**。
   21 格身份矩阵（soc×board_type）手工验证输出与预期全等。
-- **说明**：板端复测未执行（整改后 launcher 的板端行为由语义镜像 +
-  主机 fixture 覆盖；s100 正例 gate 放行路径与板测版一致——差异仅在
-  新增的 board_type 读取与拒绝分支）。
+- **板端复测**（2026-09-21 补做，随用户指令"仅重跑受行为修改影响的
+  范围"；R2 是六项整改中唯一有板端可见行为变更的项）：launcher
+  sha256 `01c0c6d4…`（主机与两板部署副本三方一致）。s100 正例
+  （root@192.168.3.116，soc `S100`+空 board_type）：gate 放行、增量
+  构建、TOP-1 zebra prob=9.30961（与整改前基线 9.309612274169922
+  一致）、rc=0，双跑确定。s100p（root@192.168.3.191）4/4：真实身份
+  `S100P` 显式拒绝 rc=2；登记别名 `s100`+`s100p`（即 B1-R2 finding
+  形态）拒绝 rc=2；`s100`+`RDK S100P`（大小写/空格归一化）拒绝
+  rc=2；对照例 `s100`+空 board_type gate 放行并停在显式模型准备
+  提示（板端证明 gate 先于构建/模型加载）。日志与命令见
+  [board evidence](evidence/2026-09-21-b1-board-smoke-evidence.json)
+  的 `r2_launcher_board_recheck` 节。边界不变：s100p 无正向推理
+  （无已发布制品）、s600 cpp 维持 not-run、x5 不受 R2 影响。
 
 ## B1-R3 — V3/V4 校准/编译文档按 target×variant 落实
 
@@ -141,7 +151,9 @@
 - `7cfc186` B1-R3/R4：v3/v4 转换 README 按 target×variant + medium 256 shape 测试（v4 20 OK）
 - `97dc639` B1-R5：16 份 mobilenet 客户 README 同步板测证据（resnet 根与 v2 cpp 随 R1/R2 提交）
 - `ea68ea6` B1-R6：checker message 锚定豁免 + 84 条欠账基线 + workflow 旗标（checker 27 OK）
-- 台账拆行与本整改记录随其后一个 docs 提交落库
+- `25a8187` 台账拆行 + 本整改记录；`160abb8` 整改提交自评；`81b0a92` board evidence 闭环注记
+- `8f7fa0f` B1-R2 板端复测（关闭条件 2"仅重跑受影响范围"）：s100 正例复现基线 +
+  s100p 4/4 拒绝，见 board evidence `r2_launcher_board_recheck` 节与本文件 B1-R2 节
 
 ## 整改提交自评（步骤 review，2026-09-21，HEAD `25a8187`）
 

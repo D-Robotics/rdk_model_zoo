@@ -99,6 +99,10 @@ TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
 ```
 
 正确的统一运行应在分数噪声内复现该排序。B1 板端运行（2026-09-21）已在
-S100 以 BUILD_JOBS=1 构建本流程并复现基线 TOP-1（label=zebra）；S600 C++
-构建保持 not-run（不在 B1 冒烟集内）。分数全零或 NaN 说明
+S100 以 BUILD_JOBS=1 构建本流程并复现基线 TOP-1（label=zebra）；B1-R2
+启动器整改后在同一板卡带身份 gate 复测再次复现（TOP-1 zebra，
+prob=9.30961，rc=0），并在 S100P 实板上验证两种登记身份形式（含
+`RDK S100P` 大小写形态）均显式拒绝、s100 对照例放行 gate 并停在模型
+准备提示——见 B1 board-smoke evidence 的 `r2_launcher_board_recheck`
+节。S600 C++ 构建保持 not-run（不在 B1 冒烟集内）。分数全零或 NaN 说明
 制品/输入配对错误，不是调参问题。

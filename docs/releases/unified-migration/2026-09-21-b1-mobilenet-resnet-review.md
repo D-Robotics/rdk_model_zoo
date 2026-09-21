@@ -162,7 +162,7 @@ H5、H6）按实际执行回填：
 | 交付物 | Mapping | Refactor | Docs | Host | Board | Review | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | mobilenetv1（x5+s python） | done | done | done | passed（17 OK，板后修复回归） | passed（x5-8g+x5-4g+s100+s600 对照全等；s100p 负例 2/2） | passed（§6 自评 + §7 板后复核） | [b1 evidence](evidence/2026-09-21-b1-mobilenet-resnet-evidence.json)、[board evidence](evidence/2026-09-21-b1-board-smoke-evidence.json) |
-| mobilenetv2（x5+s python + s cpp） | done | done | done | passed（24 OK；+7 为 B1-R2 整改的 cpp 启动器身份 fixture） | passed（python 四板对照全等（含 x5-8g 复测）；cpp s100 构建并运行 TOP-1 zebra，BUILD_JOBS=1） | passed（同上） | 同上 |
+| mobilenetv2（x5+s python + s cpp） | done | done | done | passed（24 OK；+7 为 B1-R2 整改的 cpp 启动器身份 fixture） | passed（python 四板对照全等（含 x5-8g 复测）；cpp s100 构建并运行 TOP-1 zebra，BUILD_JOBS=1——R2 整改后板端复测复现同基线（TOP-1 zebra prob=9.30961、rc=0）；s100p 实板 cpp 拒绝 4/4（两种登记身份形式+归一化+gate 次序对照），见 board evidence `r2_launcher_board_recheck` 节） | passed（同上） | 同上 |
 | mobilenetv3（x5+s python） | done | done | done | passed（17 OK） | passed（四板对照全等，含 x5-8g 复测） | passed（同上） | 同上 |
 | mobilenetv4（x5+s python，small/medium） | done | done | done | passed（20 OK；+3 为 B1-R4 整改的转换 shape 一致性测试） | passed（四板（含 x5-8g 复测）；medium 下载缺陷经板测发现并修复复验，见 §7 B1-D2） | passed（同上） | 同上 |
 | resnet50/152 变体（s-only python） | done | done | done | passed（套件 52 OK；+6 为 B1-R1 整改的转换 layout/provenance 测试） | passed（s100+s600 对照全等） | passed（同上） | 同上 |

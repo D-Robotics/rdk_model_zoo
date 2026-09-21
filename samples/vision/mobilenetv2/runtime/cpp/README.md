@@ -111,6 +111,13 @@ TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
 
 A correct unified run reproduces this ordering within score noise. The
 B1 board run (2026-09-21) built this flow on S100 with BUILD_JOBS=1 and
-reproduced the baseline's TOP-1 (label=zebra); the S600 C++ build stays
-not-run (outside the B1 smoke set). Scores that are all zero
-or NaN indicate a wrong artifact/input pairing, not a tuning problem.
+reproduced the baseline's TOP-1 (label=zebra); after the B1-R2 launcher
+rework the same board reproduced it again with the identity gate active
+(TOP-1 zebra, prob=9.30961, rc=0), and on S100P hardware both
+registered S100P identity forms (plus the `RDK S100P` casing) were
+rejected with the explicit error while an s100 control passed the gate
+and stopped at the model-preparation hint — see the
+`r2_launcher_board_recheck` section of the B1 board-smoke evidence. The
+S600 C++ build stays not-run (outside the B1 smoke set). Scores that are
+all zero or NaN indicate a wrong artifact/input pairing, not a tuning
+problem.

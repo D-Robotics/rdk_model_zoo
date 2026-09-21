@@ -661,5 +661,57 @@
   "not_run": [
     "s600 C++: B1 cpp deliverable is S-series; s600 run not required by the batch gate (s100 covers the cpp language row)"
   ],
-  "closed": "board matrix: yes — all five board slots executed and passed (x5-8g 5/5 on 2026-09-21 after the board came back re-imaged at 192.168.3.208; x5-4g 5/5; s100 7/7 + cpp; s600-64g 7/7; s100p negatives 2/2). Batch B1 closure: NO — the board-smoke gate alone does not close the batch; independent review 2026-09-21-b1-independent-review.md (changes-required, B1-R1..R6) must be remediated and re-reviewed first. Remediation for B1-R1..R6 is committed (see 2026-09-21-b1-remediation.md, commits e43718b..25a8187); closure still awaits the independent reviewer's re-check."
+  "closed": "board matrix: yes — all five board slots executed and passed (x5-8g 5/5 on 2026-09-21 after the board came back re-imaged at 192.168.3.208; x5-4g 5/5; s100 7/7 + cpp; s600-64g 7/7; s100p negatives 2/2). Batch B1 closure: NO — the board-smoke gate alone does not close the batch; independent review 2026-09-21-b1-independent-review.md (changes-required, B1-R1..R6) must be remediated and re-reviewed first. Remediation for B1-R1..R6 is committed (see 2026-09-21-b1-remediation.md, commits e43718b..25a8187); closure still awaits the independent reviewer's re-check.",
+  "r2_launcher_board_recheck": {
+    "date": "2026-09-21",
+    "actor": "original executor (Claude Code), board runs authorized by user",
+    "repo_head": "81b0a92",
+    "why": "B1-R2 (commit c1bb46b) rewrote the mobilenetv2 C++ launcher identity gate — the only B1 remediation with board-visible behavior change. Per independent-review closure condition 2, only the affected scope was re-run: the s100 cpp positive path (previously verified pre-fix) and the s100p rejection paths. Python flows, x5 boards, and s600 are untouched by R2 and retain their recorded results; s600 C++ stays not-run.",
+    "launcher": {
+      "path": "samples/vision/mobilenetv2/runtime/cpp/run.sh",
+      "sha256": "01c0c6d4bb71a49f21046b0925db4b194a231ec24ade000e6275fcdccd6985bf",
+      "identity_note": "host file and both deployed board copies byte-identical (sha256 verified on all three)"
+    },
+    "s100_positive": {
+      "board": "s100 root@192.168.3.116 (soc_name=S100, board_type empty — gate must accept)",
+      "cwd": "/tmp/rdk-b1-smoke/work-2134411c01de/samples/vision/mobilenetv2/runtime/cpp",
+      "command": "BUILD_JOBS=1 bash run.sh",
+      "artifact_sha256": "06c64f2310413a51407240f0db972d90b2715856d62f6ef328be203f1291157e (matches s:mobilenetv2:s100 asset recorded above)",
+      "result": "gate accepted s100 with empty board_type; incremental cmake build ok; TOP-1 label=zebra prob=9.30961 (matches pre-fix baseline 9.309612274169922); rc=0; run twice, deterministic",
+      "log": "/tmp/b1-r2/s100-cpp-r2.log (board copy /tmp/s100-cpp-r2.log)"
+    },
+    "s100p_rejection": {
+      "board": "s100p root@192.168.3.191 (real identity: soc_name=S100P, board_type empty)",
+      "cwd": "/tmp/r2-verify",
+      "cases": [
+        {
+          "name": "real identity soc_name=S100P",
+          "command": "bash run.sh",
+          "result": "error: detected s100p (soc_name/board_type identity); supports s100/s600 only and no s100p artifact is published; rc=2"
+        },
+        {
+          "name": "registered alias soc=s100 + board_type=s100p (the B1-R2 finding form)",
+          "command": "SOC_NAME_FILE=soc.txt BOARD_TYPE_FILE=bt.txt bash run.sh",
+          "result": "same explicit s100p rejection; rc=2"
+        },
+        {
+          "name": "alias with case/space: soc=s100 + board_type='RDK S100P'",
+          "command": "SOC_NAME_FILE=soc.txt BOARD_TYPE_FILE=bt2.txt bash run.sh",
+          "result": "same explicit s100p rejection (normalization on hardware); rc=2"
+        },
+        {
+          "name": "control soc=s100 + empty board_type",
+          "command": "SOC_NAME_FILE=soc.txt BOARD_TYPE_FILE=bt_empty.txt bash run.sh",
+          "result": "gate ACCEPTED (identity gate before build/model), stopped at 'Model not found ... prepare with download.sh s100'; rc=2 — proves gate ordering on hardware"
+        }
+      ],
+      "result": "4/4 as expected: both registered S100P identity forms rejected with an explicit error and no fallback to the s100 artifact; the s100 control passes the gate and stops at the explicit model-preparation hint",
+      "log": "/tmp/b1-r2/s100p-launcher.log (board copy /tmp/r2-verify/s100p-launcher.log)"
+    },
+    "boundaries": [
+      "No positive s100p model inference: no s100p artifact is published for mobilenetv2 — rejection remains the only verifiable face; this recheck does not enlarge any support claim",
+      "s600 cpp not re-run and remains not-run (outside the B1 gate; unchanged by R2)",
+      "x5 boards unaffected by R2 (S-series launcher only); x5 results above remain valid"
+    ]
+  }
 }
