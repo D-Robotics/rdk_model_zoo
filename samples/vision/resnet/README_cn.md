@@ -24,19 +24,18 @@ wrapper；其审计记录在迁移文档中，不在本文重复。
 | x5 | resnet18 | python | supported-verified（X5 双板，2026-09-17） |
 | s100 | resnet18 | python | supported-verified（S100，2026-09-17） |
 | s100 | resnet18 | cpp | supported-verified（S100 构建+运行，Top-5 与源基线一致，2026-09-17） |
-| s600 | resnet18 | python | supported-not-run（板卡连接不可用） |
-| s600 | resnet18 | cpp | supported-not-run（板卡连接不可用） |
-| s100 | resnet50 | python | supported-host-verified（B1 迁移；板端冒烟未执行） |
-| s600 | resnet50 | python | supported-not-run（已发布 S100/S600 制品；板端冒烟未执行） |
-| s100 | resnet152 | python | supported-host-verified（B1 迁移；板端冒烟未执行） |
-| s600 | resnet152 | python | supported-not-run（已发布 S100/S600 制品；板端冒烟未执行） |
+| s600 | resnet18 | python | supported-not-run（不在 B1 冒烟集内；板卡已于 2026-09-21 恢复） |
+| s600 | resnet18 | cpp | supported-not-run（不在 B1 冒烟集内；板卡已于 2026-09-21 恢复） |
+| s100 | resnet50 | python | supported-verified（S100 板端冒烟，2026-09-21） |
+| s600 | resnet50 | python | supported-verified（S600 板端冒烟，2026-09-21） |
+| s100 | resnet152 | python | supported-verified（S100 板端冒烟，2026-09-21） |
+| s600 | resnet152 | python | supported-verified（S600 板端冒烟，2026-09-21） |
 | s100p | 任意 | python、cpp | not-supported（发布 Manifest 无 ResNet 资产行） |
 
 验证证据：[2026-09-17 集成评审](../../../docs/releases/unified-migration/2026-09-17-integration-review.md)。
 ResNet50/152 在 B1 从 S 分支并入本 sample（未发布 X5 制品）；通过
 `s:resnet50`/`s:resnet152` Manifest 行解析，运行同一流程并指定
-`--variant resnet50`/`--variant resnet152`。新变体的板端冒烟尚未执行；
-在记录证据前，上方状态行保持 not-run。
+`--variant resnet50`/`--variant resnet152`。新变体板端冒烟已在 S100 与 S600 通过（2026-09-21）：Top-1 zebra，分数张量与源实现一致（maxdiff ≤1.2e-7）。证据：[B1 板端冒烟](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json)。
 
 <a id="prerequisites"></a>
 ## 环境前提

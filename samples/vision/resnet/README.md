@@ -28,20 +28,21 @@ documents, not here.
 | x5 | resnet18 | python | supported-verified (both X5 boards, 2026-09-17) |
 | s100 | resnet18 | python | supported-verified (S100, 2026-09-17) |
 | s100 | resnet18 | cpp | supported-verified (S100 build + run, Top-5 equal to source baseline, 2026-09-17) |
-| s600 | resnet18 | python | supported-not-run (board access unavailable) |
-| s600 | resnet18 | cpp | supported-not-run (board access unavailable) |
-| s100 | resnet50 | python | supported-host-verified (B1 migration; board smoke pending) |
-| s600 | resnet50 | python | supported-not-run (S100/S600 artifacts published; board smoke pending) |
-| s100 | resnet152 | python | supported-host-verified (B1 migration; board smoke pending) |
-| s600 | resnet152 | python | supported-not-run (S100/S600 artifacts published; board smoke pending) |
+| s600 | resnet18 | python | supported-not-run (outside the B1 smoke set; board access recovered 2026-09-21) |
+| s600 | resnet18 | cpp | supported-not-run (outside the B1 smoke set; board access recovered 2026-09-21) |
+| s100 | resnet50 | python | supported-verified (S100 board smoke, 2026-09-21) |
+| s600 | resnet50 | python | supported-verified (S600 board smoke, 2026-09-21) |
+| s100 | resnet152 | python | supported-verified (S100 board smoke, 2026-09-21) |
+| s600 | resnet152 | python | supported-verified (S600 board smoke, 2026-09-21) |
 | s100p | any | python, cpp | not-supported (no ResNet asset row in the release manifest) |
 
 Verification evidence: [integration review 2026-09-17](../../../docs/releases/unified-migration/2026-09-17-integration-review.md).
 ResNet50/152 joined this sample in B1 from the S branch (no X5 artifact is
 published for them); they resolve the `s:resnet50`/`s:resnet152` manifest
 rows and run the same flow with `--variant resnet50`/`--variant resnet152`.
-Board smoke for the new variants is pending; their status rows above stay
-not-run until it is recorded.
+ResNet50/152 board smoke passed on S100 and S600 (2026-09-21): Top-1
+zebra with score tensors equal to the source implementations (maxdiff
+≤1.2e-7). Evidence: [B1 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json).
 
 <a id="prerequisites"></a>
 ## Prerequisites
