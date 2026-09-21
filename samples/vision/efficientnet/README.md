@@ -26,17 +26,24 @@ lives in the migration documents, not here.
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | b2, b3, b4 | python | supported (source-verified contract; board smoke pending, see below) |
-| s100 | lite0..lite4 | python | supported (source-verified contract; board smoke pending, see below) |
-| s600 | lite0..lite4 | python | supported (source-verified contract; board smoke pending, see below) |
+| x5 | b2, b3, b4 | python | supported (board smoke passed 2026-09-21 on x5-8g + x5-4g, see below) |
+| s100 | lite0..lite4 | python | supported (board smoke passed 2026-09-21 on s100, see below) |
+| s600 | lite0..lite4 | python | supported (board smoke passed 2026-09-21 on s600, see below) |
 | s100p | any | python | not-supported (no s100p asset row in the release manifest; selection is an explicit error, no fallback) |
 
 Source baselines: X5 rdk_x5 @ac11571 (x5-v1.1.3); S rdk_s @380e1a2
-(s-v1.1.2). The unified sample's host tests (25) all pass. Board smoke for
-this batch is executed after the host side of all four B2 samples lands;
-this matrix is updated with the observed results then — until that entry
-exists, board status for this sample is **not-run**, and the legacy sources
-remain the verified delivery.
+(s-v1.1.2). The unified sample's host tests (28) all pass. Board smoke
+(2026-09-21; same board, same artifact bytes, same input image, legacy
+wrapper vs unified entry): x5-8g and x5-4g return exactly equal b2/b3/b4
+top-5 ids (max abs score diff <=1.2e-7); s100 and s600 return exactly
+equal lite0..lite4 top-5 ids (max <=1.2e-7) with the per-variant geometry
+224/240/260/300/380 resolved correctly; the `run.sh` CLI exited 0 on all
+four boards. With the variant omitted, the default entry resolves b2 on
+x5 and lite0 on s100/s600 (re-verified on both S boards after the B2-R1
+fix; explicit `--variant`/`--asset-id` matching is unchanged). s100p
+rejects selection with an explicit no-published-asset error — no fallback.
+Raw-tensor equality, dataset accuracy, and latency are not covered; the
+published benchmark tables remain source records. Evidence: [B2 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json).
 
 <a id="prerequisites"></a>
 ## Prerequisites

@@ -21,13 +21,14 @@ Speed](https://arxiv.org/abs/2206.00171)）。[English](README.md)
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | l1、l3 | python | supported（源契约已核实；板端冒烟见下方说明） |
+| x5 | l1、l3 | python | supported（2026-09-21 x5-8g + x5-4g 板测通过，见下方说明） |
 | s100 / s100p / s600 | 任意 | python | not-supported（S Manifest 未发布 EfficientFormer 资产；选择时显式报错，无跨平台回退） |
 
 源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)。统一 sample 的主机测试（25
-项）全部通过。本批（B2）板端冒烟在四个 sample 主机侧全部落地后执行；
-届时在此回填实测结果——在该条目出现之前，本 sample 的板端状态为
-**not-run**，已验证的交付仍是源分支。
+项）全部通过。板端冒烟（2026-09-21；同板、同制品字节、同输入图，旧
+wrapper 对照统一入口）：x5-8g/x5-4g l1/l3 Top-5 ids 全等（最大分差
+≤2.4e-7）；`run.sh` CLI（l3 显式资产）双板 rc=0。raw tensor 等价、
+数据集精度与延迟不在覆盖范围；已发布基准表仍为源分支记录。证据：[B2 板测](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json)。
 
 <a id="prerequisites"></a>
 ## 环境前提

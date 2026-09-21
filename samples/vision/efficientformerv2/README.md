@@ -25,14 +25,21 @@ migration documents, not here.
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | s0, s1, s2 | python | supported (source-verified contract; board smoke pending, see below) |
+| x5 | s0, s1, s2 | python | supported (board smoke passed 2026-09-21 on x5-8g + x5-4g, see below) |
 | s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no EfficientFormerV2 asset; selection is an explicit error, no cross-platform fallback) |
 
 Source baseline: X5 rdk_x5 @ac11571 (x5-v1.1.3). The unified sample's host
-tests (26) all pass. Board smoke for this batch is executed after the host
-side of all four B2 samples lands; this matrix is updated with the observed
-results then — until that entry exists, board status for this sample is
-**not-run**, and the legacy source remains the verified delivery.
+tests (26) all pass. Board smoke (2026-09-21; same board, same artifact
+bytes, same input image, legacy wrapper vs unified entry): on x5-8g and
+x5-4g, s0 and s2 return exactly equal top-5 ids (max abs score diff
+<=4.7e-10); s1 is an exact tie on both boards — classes 794/851 carry
+exactly equal scores within each implementation (gap 0.0 per side) while
+the cross-implementation per-id diff is 1.4e-9, so the differing rank-5
+pick is softmax rounding plus sort-order noise on a model-level tie, not a
+behavioral difference (adjudicated with recorded top-8 per-ID evidence).
+The `run.sh` CLI (s0) exited 0 on both boards. Raw-tensor equality,
+dataset accuracy, and latency are not covered; the published benchmark
+tables remain source records. Evidence: [B2 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json).
 
 <a id="prerequisites"></a>
 ## Prerequisites

@@ -45,7 +45,7 @@ python3 samples/vision/efficientformer/runtime/python/main.py \
 同板迁移前后对照请用相同的图像、制品字节、标签、resize 类型和 Top-K
 运行旧平台入口
 （`platforms/x5/samples/vision/efficientformer/runtime/python/main.py`），
-在标签格式化之前对比类别 ID 与原始分数。相同输入重复运行时输出应当
+在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按声明的容差判定——2026-09-21 板测按 |分数差| < 1e-5 判定；不声明 raw tensor 逐位相等）。相同输入重复运行时输出应当
 有限、非零且稳定。
 
 <a id="metrics"></a>
@@ -54,7 +54,7 @@ python3 samples/vision/efficientformer/runtime/python/main.py \
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
 | 契约通过 | 运行时接受制品，张量名/形状/dtype 与绑定一致，返回一个 F32 分数向量 | 任何已准备制品在匹配板卡上 |
-| Top-K 一致 | 规范实现与旧实现类别 ID 与原始分数完全一致 | 同板、同制品字节、同图像、同 resize、同 Top-K |
+| Top-K 一致 | 规范实现与旧实现 softmax 后 Top-K 类别 ID 相同，分数在容差内（2026-09-21 板测实测最大差 ≤2.4e-7，判据 1e-5；不声明 raw tensor 逐位相等） | 同板、同制品字节、同图像、同 resize、同 Top-K |
 | Top-1 精度 | argmax 正确的样本比例 | ImageNet val —— 本 sample 未评估 |
 | 延迟 / FPS | 推理耗时 | 本 sample 未评估；下方历史数值的条件未完整声明 |
 
@@ -72,7 +72,7 @@ Top-K 输出、图像路径、resize 类型与命令行。
 | 项目 | 取值 | 来源 |
 | --- | --- | --- |
 | 主机测试 | 25 OK（2026-09-21，作者自检） | 迁移证据 |
-| 板上对照（规范 vs 旧实现） | not-run（B2 板端冒烟未执行；执行后回填） | — |
+| 板上对照（规范 vs 旧实现） | passed（2026-09-21：x5-8g/x5-4g l1/l3 Top-5 ids 全等，最大分差 ≤2.4e-7；run.sh rc=0） | [B2 板测证据](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
 | 数据集精度 / 延迟 | 本 sample not-run | — |
 
 X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布历史数值（源说明：

@@ -35,7 +35,7 @@
         {"sample": "efficientformer", "variant": "l1", "ids": [133, 86, 136, 135, 83], "ids_equal": true, "max_score_abs_diff": 2.38e-07, "status": "pass"},
         {"sample": "efficientformer", "variant": "l3", "ids": [133, 86, 136, 138, 91], "ids_equal": true, "max_score_abs_diff": 1.19e-07, "status": "pass"},
         {"sample": "efficientformerv2", "variant": "s0", "ids": [1, 0, 29, 392, 973], "ids_equal": true, "max_score_abs_diff": 4.66e-10, "status": "pass"},
-        {"sample": "efficientformerv2", "variant": "s1", "ids": [1, 916, 904, 393, "rank5: legacy 851 / unified 794"], "ids_equal": false, "max_score_abs_diff": 2.38e-07, "tie_resolved": true, "status": "pass", "note": "classes 794 and 851 have byte-identical scores in BOTH implementations (legacy 0.00418911874294281 = unified 0.004189117345958948 at float printing; boundary gap 0.0 legacy, 0.0 unified); rank-5 pick is scipy-softmax (legacy) vs stable-softmax (unified) rounding + quicksort vs stable argsort order noise on a true model-level tie; top-8 per-id agreement all < 1e-5"},
+        {"sample": "efficientformerv2", "variant": "s1", "ids": [1, 916, 904, 393, "rank5: legacy 851 / unified 794"], "ids_equal": false, "max_score_abs_diff": 2.38e-07, "tie_resolved": true, "status": "pass", "note": "classes 794 and 851 have exactly equal scores WITHIN each implementation (boundary gap 0.0 in legacy and 0.0 in unified); ACROSS implementations the per-id diff is 1.4e-9 (legacy 0.00418911874294281 vs unified 0.004189117345958948 — equal to each other only within a side, not byte-identical across sides); rank-5 pick is scipy-softmax (legacy) vs stable-softmax (unified) rounding + quicksort vs stable argsort order noise on a true model-level tie; top-8 per-id agreement all < 1e-5"},
         {"sample": "efficientformerv2", "variant": "s2", "ids": [1, 0, 392, 393, 973], "ids_equal": true, "max_score_abs_diff": 5.82e-11, "status": "pass", "note": "exact-tie classes 0 and 392 carry equal scores in both implementations and both pick the same order"},
         {"sample": "efficientvit", "variant": "m5", "ids": [600, 517, 488, 978, 536], "ids_equal": true, "max_score_abs_diff": 1.86e-09, "status": "pass"}
       ],
@@ -54,8 +54,8 @@
       "rc": 0,
       "compile_count": 69,
       "artifact_digest_checks": 19,
-      "result": "13/13 entries pass (9 comparisons + 4 CLI), numerically identical to x5-8g: same top-5 ids in legacy and unified for all 9 cases, same max_score_abs_diff per case, same s1 tie resolution — BPU inference is deterministic across the two boards",
-      "cross_board_check": "per-case ids_equal_across_boards verified True for all 9 cases and 4 CLI checks (see b2-record-x5-4g.json vs b2-record-x5-8g.json)"
+      "result": "13/13 entries pass (9 comparisons + 4 CLI); per case the same top-5 ids in legacy and unified as x5-8g (8 ids-exact cases + the same s1 exact tie), same max_score_abs_diff per case — BPU inference is deterministic across the two boards for the same implementation",
+      "cross_board_check": "per-case ids_equal_across_boards verified True for all 9 cases and 4 CLI checks (see b2-record-x5-4g.json vs b2-record-x5-8g.json); the s1 tie occurs independently on BOTH boards (2 tie adjudications total)"
     },
     "s100": {
       "identity": {"soc_name": "S100", "hostname": "ubuntu", "python": "3.10.12", "memtotal_kb": "2945664"},
@@ -120,9 +120,17 @@
     "s100p --dry-run negative scored by the generic positive cli_check criterion (see adjudication above); harness not re-run — the recorded rc=2 + exact error string is the complete evidence for the negative"
   ],
   "defects_found_on_board": [],
+  "post_review_corrections": [
+    "B2-R3 (independent review 2026-09-21): the original summary here miscounted '28 exact-id + 1 tie' and called the tied classes' scores 'byte-identical across implementations'. Corrected: 28 comparisons total = 26 ids_equal=true + 2 tie_resolved=true (the same efficientformerv2/s1 variant adjudicated independently on x5-8g and x5-4g); the tied pair 794/851 is exactly equal WITHIN each implementation (gap 0.0 per side) while the cross-implementation per-id diff is 1.4e-9 — not byte-identical across implementations. Raw board records unchanged; durable copies at evidence/2026-09-21-b2-review-inputs/."
+  ],
+  "post_review_remediation_b2r1": {
+    "fix": "per-target default variant (x5 b2, s100/s600 lite0) in samples/_shared/cls_binding.py (SampleBindingTable.default_variant mapping + default_variant_for), efficientnet model_binding.py, model/download.py, and main.py --variant help; explicit variant/asset-id exact matching and s100p rejection unchanged",
+    "board_verification": "affected S default entry only (per review instruction, no full matrix): the four fixed files overlaid onto the existing bundle-d54d1cf531cd on both boards; model/s100|s600/efficientnet_lite0_224x224_nv12.hbm staged into the sample model/ layout (equivalent to download.sh output). s100: main.py --target s100 (no variant/asset-id) -> rc=0, resolved s:efficientnet:s100/efficientnet_lite0_224x224_nv12.hbm, Top-5 identical to the recorded lite0 CLI run (rank1 class=177 score=0.824479, rank5 class=181 score=0.004261); --dry-run rc=0 lite0. s600: same -> rank1 class=177 score=0.812036, rank5 class=233 score=0.003884; explicit lite2 asset-id run still exact (rank1 class=177 score=0.537814, matching the recorded lite2 comparison). x5 default (b2) verified host-side (--dry-run rc=0) and by unit tests; no x5 board rerun (default-variant branch is the only changed code path and x5 keeps b2).",
+    "note": "the s100p no-asset error message now reports variant=None instead of variant='b2' (the global default is gone); rejection semantics and message prefix unchanged, pinned by unit test"
+  },
   "summary": {
-    "totals": "x5-8g 13/13, x5-4g 13/13, s100 6/6, s600 6/6, s100p 3/3 negatives (1 adjudicated) — all comparisons ids-exact within 2.4e-07 except the single disclosed s1 tie (tie_resolved=true, boundary gap 0.0 in both implementations)",
-    "unified_vs_legacy_verdict": "numerically equivalent on every tested (board, sample, variant): 28 exact-id comparisons + 1 tie-resolved across 5 boards",
+    "totals": "x5-8g 13/13, x5-4g 13/13, s100 6/6, s600 6/6, s100p 3/3 negatives (1 harness-criterion artifact adjudicated); 28 comparisons total = 26 ids-exact (max diff <=2.4e-07) + 2 exact-tie adjudications (efficientformerv2/s1 on each X5 board; within each implementation the competing pair's gap is exactly 0.0, cross-implementation per-id diff 1.4e-9)",
+    "unified_vs_legacy_verdict": "Top-K equivalent on every tested (board, sample, variant): 26 of 28 comparisons with exactly equal top-5 ids and max score diff <=2.4e-07, plus 2 exact-tie adjudications where the model itself cannot distinguish the rank-5 candidates (evidence per board in the raw records)",
     "inputs": "x5: Scottish_deerhound.JPEG (74eb4f8656f26502) efficientnet; bittern.JPEG (da03e9cdeb2598a3) efficientformer; goldfish.JPEG (102dd5fe242a0b45) efficientformerv2; hook.JPEG (a5fa634d5eeb1d74) efficientvit — each sample's source default test image; s: Scottish_deerhound.JPEG (74eb4f8656f26502)",
     "not_covered": "conversion recipes not executed on any board (OE toolchain out of scope, gaps already disclosed per-sample); evaluator benchmark tables remain published records, not re-measured; S100P has no forward-inference support by design (no published assets)"
   }

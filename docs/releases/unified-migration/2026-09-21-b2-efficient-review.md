@@ -264,27 +264,39 @@ SHA `d54d1cf531cd…`，每板 19 制品 digest 全验、69 文件 py_compile �
 
 | 板位 | 范围 | 状态 |
 | --- | --- | --- |
-| x5-8g | 四 sample 全变体（9 对照 + 4 CLI） | passed（13/13，rc=0；ids 全等，maxdiff ≤2.38e-7） |
-| x5-4g | 同上 | passed（13/13；与 8g 逐 case 数值完全一致——BPU 确定性） |
+| x5-8g | 四 sample 全变体（9 对照 + 4 CLI） | passed（13/13，rc=0；8/9 ids 全等 maxdiff ≤2.38e-7 + s1 精确平局裁定） |
+| x5-4g | 同上 | passed（13/13；逐 case 与 8g 同实现结果完全一致——BPU 确定性；s1 平局独立复现并同样裁定） |
 | s100 | efficientnet lite0–4 + lite0 CLI | passed（6/6；逐变体几何 224/240/260/300/380 解析正确，maxdiff ≤1.19e-7） |
 | s600 | efficientnet lite0–4（nash-p 制品）+ CLI | passed（6/6；maxdiff ≤5.96e-8） |
 | s100p | 拒绝负例（无已发布资产） | passed（3/3：resolve_selection 显式报错、`--dry-run --target s100p` rc=2、s100 资产在 s100p 上 rc=2 "Target mismatch"） |
 
+合计 **28 次对照 = 26 次 ids 全等 + 2 次精确平局裁定**（同一 s1 变体
+在两块 X5 板各一次）+ 10 次正向 CLI + 3 个负例。逐 ID 原始记录（证据
+入口）：[review-inputs](evidence/2026-09-21-b2-review-inputs/)（五板
+record 与 harness，独立评审时已原样归档）。
+
 要点披露：
 
-- **efficientformerv2/s1 平局（唯一 id 失配）**：legacy rank-5=851 vs
-  unified=794；top-8 复跑证明 794/851 在两种实现中分数逐字节相同
-  （双方 gap 均为 0.0），属模型级真平局——rank-5 的取舍是 scipy softmax
-  （legacy）与稳定 softmax（unified）的舍入 + 快排/稳定排序噪声，
-  非行为差异。记录为 `tie_resolved: true`，完整 per-id 证据在
-  板端 record 中。
+- **efficientformerv2/s1 平局（唯一失配变体；两块 X5 板各一例，共
+  2 次裁定）**：legacy rank-5=851 vs unified=794；top-8 复跑证明
+  794/851 在**各自实现内部**分数完全相等（legacy 侧 gap 0.0、
+  unified 侧 gap 0.0），属模型级真平局；**跨实现并非逐字节相同**
+  （legacy 0.00418911874294281 vs unified 0.004189117345958948，
+  差 1.4e-9）。rank-5 的取舍是 scipy softmax（legacy）与稳定
+  softmax（unified）的舍入 + 快排/稳定排序噪声，非行为差异（独立
+  评审裁定：可接受为稳定 Top-K 排序的边界差异，不要求改回不稳定
+  排序）。记录为 `tie_resolved: true`，完整 per-id 证据在板端
+  record 中。本次 gap=0 的裁定不外推为未来 gap<1e-6 近似平局的
+  自动放行依据。
 - **s100p 一项 harness 判定伪 fail**：`--dry-run --target s100p` 实测
   rc=2 + 显式 no-published-asset 报错（即期望行为），但 harness 复用了
   正向 CLI 判定标准（rc=0 + Top-5）误标 fail；按负例真实标准裁定为
   pass，原始 record 未修改保留。属 harness 工具缺陷，非产品问题。
 - HorizonRT 版本告警（hbrt 3.15.55 vs 制品构建 3.15.54）：legacy 与
   unified 路径同样出现，无害，如实记录。
-- **未发现产品缺陷**：无需代码修复（对照 B1 曾有 D1/D2 两项板测修复）。
+- **板测本身未发现产品缺陷**：五板对照未触发代码修复（对照 B1 曾有
+  D1/D2 两项板测修复）。独立评审随后以主机复现发现 B2-R1 默认变体
+  回归（S target 省略 variant 选中不存在的 b2），见 §6.7 整改记录。
 
 主机测试不替代板测；未覆盖项：转换配方未在任何板上执行（OE 工具链
 范围外，缺口已逐 sample 披露）；evaluator 基准表仍为源分支记录未重测；
@@ -292,5 +304,38 @@ S100P 无正向推理（无已发布资产，by design）。
 
 ### 6.6 状态
 
-作者自检 + 板测（五板，§6.5）完成；独立评审未开始。全部 B2 行
-Closed=no。完成后停在 B2，不进入 B3（用户指示）。
+作者自检 + 板测（五板，§6.5）完成；独立评审（Codex，2026-09-21，
+[独立报告](2026-09-21-b2-independent-review.md)）判定
+changes-required：B2-R1/R2/R3，整改见 §6.7。B1 同轮确认关闭
+（R1a/R1b 复核通过，B1 行 Closed=yes）。全部 B2 行 Closed=no；
+停在 B2 等复审，不进入 B3（用户指示）。
+
+### 6.7 独立评审整改（作者自检记录，2026-09-21；待独立复核）
+
+- **B2-R1（S 默认变体回归）**：`SampleBindingTable.default_variant`
+  支持 per-target 映射（`default_variant_for(target)`，字符串形式行为
+  不变，其他 sample 零改动），efficientnet 表声明 `{x5: b2,
+  s100: lite0, s600: lite0}`（两侧源入口默认的如实保留：x5 main.py
+  DEFAULT_MODEL_PATH=B2，s wrapper 默认按 SoC lite0）；download.py
+  省略 variant 时按 target 解析默认并在 `DEFAULT_VARIANTS` 与
+  BINDING_TABLE 之间用测试钉住不漂移；main.py `--variant` help 同步。
+  显式 variant/asset-id 精确匹配、s100p 显式拒绝不变（s100p 报错中
+  `variant='b2'` 字样随全局默认移除而变为 `variant=None`，语义与
+  前缀不变，测试钉住）。回归测试 +3（省略变体逐 target 解析、
+  下载器 per-target 默认 + 与契约表一致、无默认 target 显式拒绝），
+  efficientnet 套件 25→28。受影响 S 默认入口板端复验（非全矩阵）：
+  s100/s600 overlay 修复文件后 `main.py --target <soc>`（无 variant/
+  asset-id）rc=0，Top-5 与已记录 lite0 CLI 结果逐位一致（177/
+  0.824479、177/0.812036），显式 lite2 仍精确；x5 默认（b2）主机
+  dry-run + 单测覆盖。证据：board evidence `post_review_remediation_b2r1`
+  节。
+- **B2-R2（客户文档未同步）**：四个 sample 的根 README 双语 support
+  matrix 状态行与板测段落、evaluator 双语 Top-K 一致性定义与
+  reference-results 行，按实际板测改写并链接证据；明确比较的是
+  softmax 后 Top-K（ids + 容差内分数 + 精确平局裁定），raw tensor
+  等价、数据集精度、性能未测不冒充。
+- **B2-R3（板测汇总计数/表述）**：28 对照 = 26 ids 全等 + 2 精确
+  平局裁定（s1 两板各一例）；"逐字节相同"更正为"各自实现内部相等
+  （gap 0.0），跨实现差 1.4e-9"；evidence 修正记入
+  `post_review_corrections`（原始板端 record 未改动，持久副本在
+  review-inputs/）；§6.5 与台账同步更正。

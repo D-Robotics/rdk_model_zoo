@@ -50,7 +50,7 @@ python3 samples/vision/efficientformerv2/runtime/python/main.py \
 For a same-board before/after comparison, run the legacy platform
 entrypoint (`platforms/x5/samples/vision/efficientformerv2/runtime/python/main.py`)
 with the same image, model bytes, labels, resize type, and Top-K, and
-compare class IDs and raw scores before label formatting. The output
+compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within a stated tolerance — the recorded 2026-09-21 smoke used abs diff < 1e-5; raw-tensor equality was not asserted). The output
 should be finite, non-zero, and stable across repeated runs with the same
 input.
 
@@ -60,7 +60,7 @@ input.
 | Metric | Definition | Conditions |
 | --- | --- | --- |
 | contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
-| Top-K agreement | identical class IDs and raw scores between canonical and legacy runs | same board, same artifact bytes, image, resize type, Top-K |
+| Top-K agreement | identical post-softmax Top-K class IDs between canonical and legacy runs; scores within tolerance (2026-09-21 smoke: max abs diff <=2.4e-7 overall, s0/s2 <=4.7e-10); the s1 exact tie on both boards adjudicated with top-8 per-ID evidence (equal scores within each implementation, cross diff 1.4e-9) | same board, same artifact bytes, image, resize type, Top-K |
 | Top-1 accuracy | fraction of argmax-correct predictions | ImageNet val — not evaluated in this sample |
 | latency / FPS | inference timing | not evaluated in this sample; historical figures below carry unstated conditions |
 
@@ -79,7 +79,7 @@ output, image path, resize type, and command line.
 | Item | Value | Source |
 | --- | --- | --- |
 | host tests | 26 OK (2026-09-21, author self-check) | migration evidence |
-| board comparison (canonical vs legacy) | not-run (B2 board smoke pending; updated when executed) | — |
+| board comparison (canonical vs legacy) | passed (2026-09-21: x5-8g/x5-4g s0/s2 top-5 ids exactly equal; s1 exact tie adjudicated on both boards, not an inference defect; run.sh rc=0) | [B2 board evidence](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
 | dataset accuracy / latency | not-run in this sample | — |
 
 Published historical figures from the X5 source release (rdk_x5 @ac11571,

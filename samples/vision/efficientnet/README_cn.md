@@ -12,12 +12,12 @@ EfficientNet 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像�
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | b2、b3、b4 | python | supported（源契约已核实；板端冒烟见下方说明） |
-| s100 | lite0..lite4 | python | supported（源契约已核实；板端冒烟见下方说明） |
-| s600 | lite0..lite4 | python | supported（源契约已核实；板端冒烟见下方说明） |
+| x5 | b2、b3、b4 | python | supported（2026-09-21 x5-8g + x5-4g 板测通过，见下方说明） |
+| s100 | lite0..lite4 | python | supported（2026-09-21 s100 板测通过，见下方说明） |
+| s600 | lite0..lite4 | python | supported（2026-09-21 s600 板测通过，见下方说明） |
 | s100p | 任意 | python | not-supported（发布 Manifest 无 s100p 资产行；选择时显式报错、无回退） |
 
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)；S 侧 rdk_s @380e1a2 (s-v1.1.2)。统一 sample 的主机测试（25 项）全部通过。本批（B2）板端冒烟在四个 sample 主机侧全部落地后执行；届时在此回填实测结果——在该条目出现之前，本 sample 的板端状态为 **not-run**，已验证的交付仍是两个源分支。
+源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)；S 侧 rdk_s @380e1a2 (s-v1.1.2)。统一 sample 的主机测试（28 项）全部通过。板端冒烟（2026-09-21；同板、同制品字节、同输入图，旧 wrapper 对照统一入口）：x5-8g/x5-4g b2/b3/b4 Top-5 ids 全等（最大分差 ≤1.2e-7）；s100/s600 lite0..lite4 全等（≤1.2e-7），逐变体几何 224/240/260/300/380 解析正确；`run.sh` CLI 四板 rc=0。省略变体的默认入口按 target 解析（x5 → b2，s100/s600 → lite0；B2-R1 修复后在两块 S 板复验，显式 `--variant`/`--asset-id` 匹配不变）。s100p 选择显式报错、无回退。raw tensor 等价、数据集精度与延迟不在覆盖范围；已发布基准表仍为源分支记录。证据：[B2 板测](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json)。
 
 <a id="prerequisites"></a>
 ## 环境前提

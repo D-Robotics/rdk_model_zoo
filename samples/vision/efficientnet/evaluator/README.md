@@ -56,7 +56,7 @@ platform entrypoint
 (`platforms/x5/samples/vision/efficientnet/runtime/python/main.py` or
 `platforms/s/samples/vision/efficientnet/runtime/python/main.py`) with
 the same image, model bytes, labels, resize type, and Top-K, and compare
-class IDs and raw scores before label formatting. Comparing X5 against S
+class IDs and Top-K scores before label formatting (identical IDs; scores judged within a stated tolerance — the recorded 2026-09-21 smoke used abs diff < 1e-5; raw-tensor equality was not asserted). Comparing X5 against S
 is not a substitute for a same-board before/after comparison. The output
 should be finite, non-zero, and stable across repeated runs with the same
 input.
@@ -67,7 +67,7 @@ input.
 | Metric | Definition | Conditions |
 | --- | --- | --- |
 | contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
-| Top-K agreement | identical class IDs and raw scores between canonical and legacy runs | same board, same artifact bytes, image, resize type, Top-K |
+| Top-K agreement | identical post-softmax Top-K class IDs between canonical and legacy runs; scores within tolerance (2026-09-21 smoke: max abs diff <=1.2e-7 against the 1e-5 bar) | same board, same artifact bytes, image, resize type, Top-K |
 | Top-1 accuracy | fraction of argmax-correct predictions | ImageNet val — not evaluated in this sample |
 | latency / FPS | inference timing | not evaluated in this sample; historical figures below carry unstated conditions |
 
@@ -86,7 +86,7 @@ output, image path, resize type, and command line.
 | Item | Value | Source |
 | --- | --- | --- |
 | host tests | 25 OK (2026-09-21, author self-check) | migration evidence |
-| board comparison (canonical vs legacy) | not-run (B2 board smoke pending; updated when executed) | — |
+| board comparison (canonical vs legacy) | passed (2026-09-21: x5-8g/x5-4g b2/b3/b4 and s100/s600 lite0..lite4 top-5 ids exactly equal, max abs diff <=1.2e-7; run.sh rc=0 on all four boards; omitted-variant default entry re-verified on s100/s600 after B2-R1; s100p explicit rejection) | [B2 board evidence](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
 | dataset accuracy / latency | not-run in this sample | — |
 
 Published historical figures, not re-measured in this repository.

@@ -21,13 +21,17 @@ Size and Speed](https://arxiv.org/abs/2212.08059)）。[English](README.md)
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | s0、s1、s2 | python | supported（源契约已核实；板端冒烟见下方说明） |
+| x5 | s0、s1、s2 | python | supported（2026-09-21 x5-8g + x5-4g 板测通过，见下方说明） |
 | s100 / s100p / s600 | 任意 | python | not-supported（S Manifest 未发布 EfficientFormerV2 资产；选择时显式报错，无跨平台回退） |
 
 源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)。统一 sample 的主机测试（26
-项）全部通过。本批（B2）板端冒烟在四个 sample 主机侧全部落地后执行；
-届时在此回填实测结果——在该条目出现之前，本 sample 的板端状态为
-**not-run**，已验证的交付仍是源分支。
+项）全部通过。板端冒烟（2026-09-21；同板、同制品字节、同输入图，旧
+wrapper 对照统一入口）：x5-8g/x5-4g 上 s0/s2 Top-5 ids 全等（最大分差
+≤4.7e-10）；s1 两板各一例精确平局裁定——794/851 在各自实现内部分数
+完全相等（gap 0.0），跨实现同 id 差 1.4e-9，rank-5 取舍为 softmax
+舍入 + 排序噪声而非行为差异（top-8 逐 ID 证据在板端 record）。
+`run.sh` CLI（s0）双板 rc=0。raw tensor 等价、数据集精度与延迟不在
+覆盖范围；已发布基准表仍为源分支记录。证据：[B2 板测](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json)。
 
 <a id="prerequisites"></a>
 ## 环境前提
