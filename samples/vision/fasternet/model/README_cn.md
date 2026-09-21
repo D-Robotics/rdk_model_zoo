@@ -27,12 +27,12 @@ S600 的选择是显式的 no-published-asset 错误，也不得在 S 板卡上�
 ```bash
 # 输入：目标/变体对应的 Manifest 行 — 输出：本目录下的文件
 # 成功判据：退出码 0，打印实测摘要；不残留半成品文件
-bash samples/vision/fasternet/model/download.sh x5 S
-bash samples/vision/fasternet/model/download.sh x5 T2
+bash samples/vision/fasternet/model/download.sh x5 s
+bash samples/vision/fasternet/model/download.sh x5 t2
 ```
 
 Python 形式等价：
-`python3 samples/vision/fasternet/model/download.py --target x5 --variant T1`。
+`python3 samples/vision/fasternet/model/download.py --target x5 --variant t1`.
 下载器经同目录临时文件写入，核对内容长度与 Manifest 记录的发布方
 SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留文件供排查）。
 当前各行没有发布方 SHA-256，下载器打印实测摘要作为本地证据并声明来源

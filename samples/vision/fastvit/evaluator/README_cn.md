@@ -29,15 +29,15 @@ python3 -m unittest discover -s samples/vision/fastvit/tests -v
 ```
 
 X5 板上功能检查（前置：
-`bash samples/vision/fastvit/model/download.sh x5 S`；成功判据：
-退出码 0 且 Top-5 含斑马相关类别）：
+`bash samples/vision/fastvit/model/download.sh x5 s12`；成功判据：
+退出码 0 且 Top-5 含水桶相关类别）：
 
 ```bash
 python3 samples/vision/fastvit/runtime/python/main.py \
   --target x5 \
   --asset-id x5:fastvit:FastViT_S12_224x224_nv12.bin \
   --model-path samples/vision/fastvit/model/FastViT_S12_224x224_nv12.bin \
-  --test-img samples/vision/fastvit/test_data/bittern.JPEG \
+  --test-img samples/vision/fastvit/test_data/bucket.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
@@ -45,7 +45,7 @@ python3 samples/vision/fastvit/runtime/python/main.py \
 同板迁移前后对照请用相同的图像、制品字节、标签、resize 类型和 Top-K
 运行旧平台入口
 （`platforms/x5/samples/vision/fastvit/runtime/python/main.py`），
-在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按声明的容差判定——2026-09-21 板测按 |分数差| < 1e-5 判定；不声明 raw tensor 逐位相等）。相同输入重复运行时输出应当
+在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按 B3 板测拟采用的容差 |分数差| < 1e-5 判定——沿用已执行的 B2 先例（见 B2 板测证据）；精确平局以 top-8 逐 ID 证据裁定；不声明 raw tensor 逐位相等）。相同输入重复运行时输出应当
 有限、非零且稳定。
 
 <a id="metrics"></a>
@@ -71,7 +71,7 @@ Top-K 输出、图像路径、resize 类型与命令行。
 
 | 项目 | 取值 | 来源 |
 | --- | --- | --- |
-| 主机测试 | 26 OK（2026-09-21，作者自检） | 迁移证据 |
+| 主机测试 | 28 OK（2026-09-21 主机侧 + 2026-09-22 B3-R1 整改；作者自检） | 迁移证据 |
 | 板上对照（规范 vs 旧实现） | not-run（B3 板端冒烟待执行；执行后回填） | — |
 | 数据集精度 / 延迟 | 本 sample not-run | — |
 
@@ -82,13 +82,14 @@ Float Top-1 为量化前 ONNX 结果，Quant Top-1 为部署模型结果，延�
 
 | 模型 | 尺寸 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- |
-| FastViT-S | 224x224 | 31.1 | 77.04% | 76.15% | 6.73 | 162.83 |
-| FastViT-T2 | 224x224 | 15.0 | 76.50% | 76.05% | 3.39 | 342.48 |
-| FastViT-T1 | 224x224 | 7.6 | 74.29% | 71.25% | 1.96 | 708.40 |
-| FastViT-T0 | 224x224 | 3.9 | 71.75% | 68.50% | 1.41 | 1135.13 |
+| FastViT-SA12 | 224x224 | 10.9 | 78.25% | 74.50% | 11.56 | 93.44 |
+| FastViT-S12 | 224x224 | 8.8 | 76.50% | 72.00% | 5.86 | 193.87 |
+| FastViT-T12 | 224x224 | 6.8 | 74.75% | 70.43% | 4.97 | 234.78 |
+| FastViT-T8 | 224x224 | 3.6 | 73.50% | 68.50% | 2.09 | 667.21 |
 
-已发布参数量 (M) 列与上游论文的模型尺寸并非全部吻合；按发布原样
-记录，此处不复测。
+数值逐列恢复自固定源（rdk_x5 @ac11571 fastvit evaluator README；源表
+另有多线程延迟列 42.45/20.45/16.87/5.93 ms，此处沿用共享 7 列布局省略）。
+按发布原样记录，此处不复测。
 
 已发布记录中 L1 的量化 top-1（67.72%）远低于其浮点值（76.75%）；此处
 按发布原样记录，未重测亦未解释。

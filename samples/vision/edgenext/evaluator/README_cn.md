@@ -45,7 +45,7 @@ python3 samples/vision/edgenext/runtime/python/main.py \
 同板迁移前后对照请用相同的图像、制品字节、标签、resize 类型和 Top-K
 运行旧平台入口
 （`platforms/x5/samples/vision/edgenext/runtime/python/main.py`），
-在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按声明的容差判定——2026-09-21 板测按 |分数差| < 1e-5 判定；不声明 raw tensor 逐位相等）。相同输入重复运行时输出应当
+在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按 B3 板测拟采用的容差 |分数差| < 1e-5 判定——沿用已执行的 B2 先例（见 B2 板测证据）；精确平局以 top-8 逐 ID 证据裁定；不声明 raw tensor 逐位相等）。相同输入重复运行时输出应当
 有限、非零且稳定。
 
 <a id="metrics"></a>

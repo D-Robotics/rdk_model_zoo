@@ -29,7 +29,7 @@ A full run on a prepared X5 board (default variant is `S`, preserving the
 source entrypoint's default model):
 
 ```bash
-# prerequisites: bash samples/vision/fasternet/model/download.sh x5 S
+# prerequisites: bash samples/vision/fasternet/model/download.sh x5 s
 # success: exit 0 and a printed Top-5 list
 python3 samples/vision/fasternet/runtime/python/main.py \
   --target x5 \

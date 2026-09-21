@@ -28,12 +28,12 @@ From the repository root:
 ```bash
 # input: manifest row for the target/variant — output: file under this directory
 # success: exit 0, observed digest printed; no partial files left behind
-bash samples/vision/fasternet/model/download.sh x5 S
-bash samples/vision/fasternet/model/download.sh x5 T2
+bash samples/vision/fasternet/model/download.sh x5 s
+bash samples/vision/fasternet/model/download.sh x5 t2
 ```
 
 The Python form is equivalent:
-`python3 samples/vision/fasternet/model/download.py --target x5 --variant T1`.
+`python3 samples/vision/fasternet/model/download.py --target x5 --variant t1`.
 The downloader writes through a same-directory temporary file, checks the
 content length and the recorded publisher SHA-256 when present, and installs
 atomically without overwriting an existing file (a failed verification

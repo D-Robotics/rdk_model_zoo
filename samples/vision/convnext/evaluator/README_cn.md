@@ -29,7 +29,7 @@ python3 -m unittest discover -s samples/vision/convnext/tests -v
 ```
 
 X5 功能板测（前置：`bash samples/vision/convnext/model/download.sh x5`；
-成功判据：退出码 0 且 Top-5 含挂钩相关类别）：
+成功判据：退出码 0 且 Top-5 含猎豹相关类别）：
 
 ```bash
 python3 samples/vision/convnext/runtime/python/main.py \
@@ -44,7 +44,7 @@ python3 samples/vision/convnext/runtime/python/main.py \
 同板前后对照：用同一图像、模型字节、标签、resize 类型和 Top-K 运行
 legacy 平台入口
 （`platforms/x5/samples/vision/convnext/runtime/python/main.py`），
-在标签格式化之前比较类别 ID 和 Top-K 分数（ids 相同；分数按声明的容差判定——判定标准 |分数差| < 1e-5；精确平局以记录的 top-8 逐 ID 证据裁定；不声明 raw tensor 逐位相等）。输出应为有限、非零，且同一
+在标签格式化之前比较类别 ID 和 Top-K 分数（ids 相同；分数按 B3 板测拟采用的容差 |分数差| < 1e-5 判定——沿用已执行的 B2 先例（见 B2 板测证据）；精确平局以 top-8 逐 ID 证据裁定；不声明 raw tensor 逐位相等）。输出应为有限、非零，且同一
 输入下重复运行保持稳定。
 
 <a id="metrics"></a>

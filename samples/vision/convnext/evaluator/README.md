@@ -50,7 +50,7 @@ python3 samples/vision/convnext/runtime/python/main.py \
 For a same-board before/after comparison, run the legacy platform
 entrypoint (`platforms/x5/samples/vision/convnext/runtime/python/main.py`)
 with the same image, model bytes, labels, resize type, and Top-K, and
-compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within a stated tolerance — the recorded 2026-09-21 smoke used abs diff < 1e-5; raw-tensor equality was not asserted). The output
+compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within the tolerance planned for the B3 smoke — abs diff < 1e-5, following the executed B2 precedent recorded in the B2 board evidence; exact ties to be adjudicated with top-8 per-ID evidence; raw-tensor equality is not asserted). The output
 should be finite, non-zero, and stable across repeated runs with the same
 input.
 

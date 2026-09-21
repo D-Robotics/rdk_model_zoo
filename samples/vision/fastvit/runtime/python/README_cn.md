@@ -28,7 +28,7 @@ python3 samples/vision/fastvit/runtime/python/main.py --list-models --target aut
 模型）：
 
 ```bash
-# 前置：bash samples/vision/fastvit/model/download.sh x5 S
+# 前置：bash samples/vision/fastvit/model/download.sh x5 s12
 # 成功判据：退出码 0 并打印 Top-5 列表
 python3 samples/vision/fastvit/runtime/python/main.py \
   --target x5 \

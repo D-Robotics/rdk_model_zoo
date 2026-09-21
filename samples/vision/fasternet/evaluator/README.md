@@ -34,7 +34,7 @@ python3 -m unittest discover -s samples/vision/fasternet/tests -v
 ```
 
 Functional board check on X5 (prerequisite:
-`bash samples/vision/fasternet/model/download.sh x5 S`; success:
+`bash samples/vision/fasternet/model/download.sh x5 s`; success:
 exit 0 and a Top-5 containing a drake-related class):
 
 ```bash
@@ -42,7 +42,7 @@ python3 samples/vision/fasternet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:fasternet:FasterNet_S_224x224_nv12.bin \
   --model-path samples/vision/fasternet/model/FasterNet_S_224x224_nv12.bin \
-  --test-img samples/vision/fasternet/test_data/zebra.JPEG \
+  --test-img samples/vision/fasternet/test_data/drake.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
@@ -50,7 +50,7 @@ python3 samples/vision/fasternet/runtime/python/main.py \
 For a same-board before/after comparison, run the legacy platform
 entrypoint (`platforms/x5/samples/vision/fasternet/runtime/python/main.py`)
 with the same image, model bytes, labels, resize type, and Top-K, and
-compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within a stated tolerance — the recorded 2026-09-21 smoke used abs diff < 1e-5; raw-tensor equality was not asserted). The output
+compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within the tolerance planned for the B3 smoke — abs diff < 1e-5, following the executed B2 precedent recorded in the B2 board evidence; exact ties to be adjudicated with top-8 per-ID evidence; raw-tensor equality is not asserted). The output
 should be finite, non-zero, and stable across repeated runs with the same
 input.
 
@@ -78,7 +78,7 @@ output, image path, resize type, and command line.
 
 | Item | Value | Source |
 | --- | --- | --- |
-| host tests | 26 OK (2026-09-21, author self-check) | migration evidence |
+| host tests | 28 OK (2026-09-21 host-side + 2026-09-22 B3-R1 remediation; author self-check) | migration evidence |
 | board comparison (canonical vs legacy) | not-run (B3 board smoke pending; updated when executed) | — |
 | dataset accuracy / latency | not-run in this sample | — |
 

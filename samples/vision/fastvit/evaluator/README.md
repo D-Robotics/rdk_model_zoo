@@ -34,7 +34,7 @@ python3 -m unittest discover -s samples/vision/fastvit/tests -v
 ```
 
 Functional board check on X5 (prerequisite:
-`bash samples/vision/fastvit/model/download.sh x5 S`; success:
+`bash samples/vision/fastvit/model/download.sh x5 s12`; success:
 exit 0 and a Top-5 containing a bucket-related class):
 
 ```bash
@@ -42,7 +42,7 @@ python3 samples/vision/fastvit/runtime/python/main.py \
   --target x5 \
   --asset-id x5:fastvit:FastViT_S12_224x224_nv12.bin \
   --model-path samples/vision/fastvit/model/FastViT_S12_224x224_nv12.bin \
-  --test-img samples/vision/fastvit/test_data/zebra.JPEG \
+  --test-img samples/vision/fastvit/test_data/bucket.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
@@ -50,7 +50,7 @@ python3 samples/vision/fastvit/runtime/python/main.py \
 For a same-board before/after comparison, run the legacy platform
 entrypoint (`platforms/x5/samples/vision/fastvit/runtime/python/main.py`)
 with the same image, model bytes, labels, resize type, and Top-K, and
-compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within a stated tolerance — the recorded 2026-09-21 smoke used abs diff < 1e-5; raw-tensor equality was not asserted). The output
+compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within the tolerance planned for the B3 smoke — abs diff < 1e-5, following the executed B2 precedent recorded in the B2 board evidence; exact ties to be adjudicated with top-8 per-ID evidence; raw-tensor equality is not asserted). The output
 should be finite, non-zero, and stable across repeated runs with the same
 input.
 
@@ -78,7 +78,7 @@ output, image path, resize type, and command line.
 
 | Item | Value | Source |
 | --- | --- | --- |
-| host tests | 26 OK (2026-09-21, author self-check) | migration evidence |
+| host tests | 28 OK (2026-09-21 host-side + 2026-09-22 B3-R1 remediation; author self-check) | migration evidence |
 | board comparison (canonical vs legacy) | not-run (B3 board smoke pending; updated when executed) | — |
 | dataset accuracy / latency | not-run in this sample | — |
 
@@ -90,14 +90,15 @@ single-core, FPS multi-threaded; CPU 8xA55@1.8GHz performance mode, BPU
 
 | Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- |
-| FastViT-S | 224x224 | 31.1 | 77.04% | 76.15% | 6.73 | 162.83 |
-| FastViT-T2 | 224x224 | 15.0 | 76.50% | 76.05% | 3.39 | 342.48 |
-| FastViT-T1 | 224x224 | 7.6 | 74.29% | 71.25% | 1.96 | 708.40 |
-| FastViT-T0 | 224x224 | 3.9 | 71.75% | 68.50% | 1.41 | 1135.13 |
+| FastViT-SA12 | 224x224 | 10.9 | 78.25% | 74.50% | 11.56 | 93.44 |
+| FastViT-S12 | 224x224 | 8.8 | 76.50% | 72.00% | 5.86 | 193.87 |
+| FastViT-T12 | 224x224 | 6.8 | 74.75% | 70.43% | 4.97 | 234.78 |
+| FastViT-T8 | 224x224 | 3.6 | 73.50% | 68.50% | 2.09 | 667.21 |
 
-The published Params (M) column does not match the upstream paper's model
-sizes in all rows; recorded as published, not re-measured or explained
-here.
+Values restored column by column from the fixed source (rdk_x5 @ac11571
+fastvit evaluator README; the source also lists a multi-thread latency
+column 42.45/20.45/16.87/5.93 ms omitted here for the shared 7-column
+layout). Recorded as published, not re-measured.
 
 <a id="boundaries"></a>
 ## Boundaries

@@ -28,12 +28,12 @@ From the repository root:
 ```bash
 # input: manifest row for the target/variant — output: file under this directory
 # success: exit 0, observed digest printed; no partial files left behind
-bash samples/vision/fastvit/model/download.sh x5 S
-bash samples/vision/fastvit/model/download.sh x5 T2
+bash samples/vision/fastvit/model/download.sh x5 s12
+bash samples/vision/fastvit/model/download.sh x5 t8
 ```
 
 The Python form is equivalent:
-`python3 samples/vision/fastvit/model/download.py --target x5 --variant T1`.
+`python3 samples/vision/fastvit/model/download.py --target x5 --variant t12`.
 The downloader writes through a same-directory temporary file, checks the
 content length and the recorded publisher SHA-256 when present, and installs
 atomically without overwriting an existing file (a failed verification

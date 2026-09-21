@@ -29,15 +29,15 @@ python3 -m unittest discover -s samples/vision/fasternet/tests -v
 ```
 
 X5 板上功能检查（前置：
-`bash samples/vision/fasternet/model/download.sh x5 S`；成功判据：
-退出码 0 且 Top-5 含斑马相关类别）：
+`bash samples/vision/fasternet/model/download.sh x5 s`；成功判据：
+退出码 0 且 Top-5 含鸭相关类别）：
 
 ```bash
 python3 samples/vision/fasternet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:fasternet:FasterNet_S_224x224_nv12.bin \
   --model-path samples/vision/fasternet/model/FasterNet_S_224x224_nv12.bin \
-  --test-img samples/vision/fasternet/test_data/bittern.JPEG \
+  --test-img samples/vision/fasternet/test_data/drake.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
@@ -45,7 +45,7 @@ python3 samples/vision/fasternet/runtime/python/main.py \
 同板迁移前后对照请用相同的图像、制品字节、标签、resize 类型和 Top-K
 运行旧平台入口
 （`platforms/x5/samples/vision/fasternet/runtime/python/main.py`），
-在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按声明的容差判定——2026-09-21 板测按 |分数差| < 1e-5 判定；不声明 raw tensor 逐位相等）。相同输入重复运行时输出应当
+在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按 B3 板测拟采用的容差 |分数差| < 1e-5 判定——沿用已执行的 B2 先例（见 B2 板测证据）；精确平局以 top-8 逐 ID 证据裁定；不声明 raw tensor 逐位相等）。相同输入重复运行时输出应当
 有限、非零且稳定。
 
 <a id="metrics"></a>
@@ -71,7 +71,7 @@ Top-K 输出、图像路径、resize 类型与命令行。
 
 | 项目 | 取值 | 来源 |
 | --- | --- | --- |
-| 主机测试 | 26 OK（2026-09-21，作者自检） | 迁移证据 |
+| 主机测试 | 28 OK（2026-09-21 主机侧 + 2026-09-22 B3-R1 整改；作者自检） | 迁移证据 |
 | 板上对照（规范 vs 旧实现） | not-run（B3 板端冒烟待执行；执行后回填） | — |
 | 数据集精度 / 延迟 | 本 sample not-run | — |
 
