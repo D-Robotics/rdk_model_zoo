@@ -135,8 +135,48 @@ data_mean_and_scale`，mean `123.675 116.28 103.53`，scale
    部署文件哈希板上计算、完整 stdout/stderr、时间戳/argv/cwd/rc）；
    S 板不涉及（无 S 资产）；无法执行记 not-run 及原因。
 
-## 7. 执行结果（待回填）
+## 7. 执行结果（2026-09-21 回填；板测待执行）
 
-（每 sample 提交号、主机验证、板测矩阵、发现并修复的问题、材料披露
-——执行后回填；板测数值结论限定 Top-5 类别与 CLI 打印精度分数一致，
-不宣称原始张量逐位相同或数据集精度。）
+### 7.1 提交清单
+
+| sample | commit | 文件数 | 要点 |
+| --- | --- | --- | --- |
+| convnext | `e843005` | 35 | atto 单已发布变体；femto/nano 为无资产配方（绑定表断言不含）；ONNX 引用互为错位（atto→femto.onnx、femto→外部 atto、nano→pico.onnx）+ 源 README 列了未交付的 pico.yaml——钉住披露；前缀无变体需重命名；基准表不含 atto（唯一已发布变体）如实披露 |
+| edgenext | `b4f8aff` | 36 | 4 变体全发布；**前缀正向锚定**（前缀=清单基名，无重命名，测试钉住）；xca-Softmax int16 3/3/3/16 |
+| fasternet | `69052d5` | 37 | 表内 id 小写 s/t0/t1/t2（共享绑定小写请求；文件名保留大写，双侧钉住）；无变体前缀 + working_dir 三种形态不对称披露；仅 T0 有 int16 摆放；源表 Params 与上游论文不符按发布记录 |
+| fastvit | `f33167a` | 36 | 表内 id 小写 s12/sa12/t12/t8；ONNX 全指外部 01_common 路径（披露）+ 无变体前缀；int16 5/6/4/10 |
+
+### 7.2 主机验证（cwd：仓库根，`.venv/bin/python`）
+
+- B3 四套件：convnext 28 / edgenext 26 / fasternet 27 / fastvit 27 OK。
+- 回归：B2 四 sample 106、B1+pilots 233 全 OK；`_shared` 71、checker 27。
+- 逐 sample checker 4/4 零违规；**CI 同命令（台账 Refactor=done 后）：
+  15 samples / 0 violations / 18 skips / 84 exemptions / rc=0**（范围
+  11→15；84 条 B9 基线未动）。
+
+### 7.3 执行中发现并修复的问题（作者自检记录）
+
+1. 生成顺序缺陷（工具层，被套件当场捕获）：变体替换在模型名改名
+   之后执行导致 fastvit 文件名/ id 残留旧拼写——逐一修正；受控断言
+   （每次替换 count==1）纪律保持。
+2. fasternet 变体大小写：表内 id 大写 S/T0 与共享绑定的小写化请求
+   冲突（"Unknown sample variant 'S'"）——统一为小写 id，测试双侧钉住。
+3. edgenext 清单计数沿用模板的 2 变体断言（4 != 2）——核对清单后修正
+   为 4（发布资产数先核实再改测试）。
+4. edgenext 转换测试初版断言"无 Softmax 摆放"（沿用 convnext 惯性）
+   ——EdgeNeXt 实有 xca-Softmax（每份 3 处），改为钉住真实结构。
+5. convnext 中文转换 README 用了中文锚点——checker 要求 CN 文件使用
+   规范英文锚点（9 violations）——按 B2 约定修正。
+
+### 7.4 板测（待执行）
+
+按 B2-R1-E 证据标准：x5-8g/x5-4g 四 sample 全变体同板 legacy 对照 +
+CLI + 省略变体默认入口；部署文件哈希板上计算、完整 stdout/stderr、
+UTC 时间戳/argv/cwd/rc。S 板不涉及（无 S 资产）。数值结论将限定
+Top-5 类别与 CLI 打印精度分数一致，不宣称原始张量逐位相同或数据集
+精度。
+
+### 7.5 状态
+
+作者自检（主机侧）完成；板测未执行；独立评审未开始。全部 B3 行
+Closed=no。板测与证据回填后停在 B3 等待独立评审，不进入 B4。
