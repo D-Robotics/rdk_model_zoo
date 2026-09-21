@@ -85,7 +85,7 @@ output, image path, resize type, and command line.
 
 | Item | Value | Source |
 | --- | --- | --- |
-| host tests | 25 OK (2026-09-21, author self-check) | migration evidence |
+| host tests | 28 OK (2026-09-21; 25 at batch completion, +3 B2-R1 remediation regression tests, author self-check) | migration evidence |
 | board comparison (canonical vs legacy) | passed (2026-09-21: x5-8g/x5-4g b2/b3/b4 and s100/s600 lite0..lite4 top-5 ids exactly equal, max abs diff <=1.2e-7; run.sh rc=0 on all four boards; omitted-variant default entry re-verified on s100/s600 after B2-R1; s100p explicit rejection) | [B2 board evidence](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
 | dataset accuracy / latency | not-run in this sample | — |
 

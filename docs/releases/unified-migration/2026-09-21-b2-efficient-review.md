@@ -342,3 +342,32 @@ changes-required：B2-R1/R2/R3，整改见 §6.7。B1 同轮确认关闭
   （gap 0.0），跨实现差 1.4e-9"；evidence 修正记入
   `post_review_corrections`（原始板端 record 未改动，持久副本在
   review-inputs/）；§6.5 与台账同步更正。
+
+### 6.8 复审后补齐（作者自检记录，2026-09-21；待独立确认）
+
+整改独立复审（0a6deaa，[复审报告](2026-09-21-b2-independent-rereview.md)）
+判定 R2/R3 closed、R1 代码通过，唯一阻断为 **B2-R1-E**（overlay 默认
+入口板测缺代码绑定与完整输出）；本轮补齐：
+
+- **B2-R1-E**：两块 S 板默认入口完整复测记录已持久化到
+  [r1e-default-entry](evidence/2026-09-21-b2-r1e-default-entry/)
+  （s100/s600 JSON record + capture 脚本）。每条 run 含 UTC 起止时间、
+  板身份、精确 argv/cwd、rc、**完整 stdout/stderr**；四个部署修复
+  文件的 SHA-256 **在板上计算**且与当时仓库 HEAD（含 N1 严格化）逐一
+  相等、两板一致——部署哈希绑定执行的代码，原始 tar 哈希仅钉住未
+  overlay 的 bundle 底座；制品/输入图/标签 digest 与五板记录同一。
+  s100 默认入口完整 Top-5（5 rank 全部）与原显式 lite0 CLI 记录
+  逐 rank 相同，s600 同理，s600 显式 lite2 对照复现原对照分数。
+  记录性质如实声明：**复审后新捕获的完整输出**（此前复测未存完整
+  输出），非事后回填当时记录。
+- **B2-N1（采纳）**：无默认映射的 target 省略 variant 一律显式报错
+  （单资产也不隐式默认，`matches=[]` → 标准 "no published asset"
+  错误），代码与 docstring 契约对齐；efficientvit 套件加 reviewer
+  反例边界测试（`dataclasses.replace(BINDING_TABLE,
+  default_variant={})` → x5 单资产仍拒绝），26→27 OK。全量消费者
+  回归 + shared 71 + checker 27 + CI 同命令 rc=0。
+- **B2-N2（采纳）**：efficientnet evaluator 双语 reference-results 的
+  主机测试数同步为 28（注明批次完成 25 + R1 整改 +3）。
+- 验证：11 套件全 OK（B2 106 = 28+25+26+27；B1 回归 233）、
+  `_shared` 71、checker 27；CI 同命令 11 samples / 0 violations /
+  84 exemptions / rc=0。

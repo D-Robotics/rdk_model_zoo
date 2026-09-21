@@ -74,7 +74,7 @@ Top-K 输出、图像路径、resize 类型与命令行。
 
 | 项目 | 取值 | 来源 |
 | --- | --- | --- |
-| 主机测试 | 25 OK（2026-09-21，作者自检） | 迁移证据 |
+| 主机测试 | 28 OK（2026-09-21；批次完成时 25 项，B2-R1 整改 +3 项回归测试，作者自检） | 迁移证据 |
 | 板上对照（规范 vs 旧实现） | passed（2026-09-21：x5-8g/x5-4g b2/b3/b4 与 s100/s600 lite0..lite4 Top-5 ids 全等，最大分差 ≤1.2e-7；run.sh 四板 rc=0；B2-R1 修复后 s100/s600 复验省略变体默认入口；s100p 显式拒绝） | [B2 板测证据](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
 | 数据集精度 / 延迟 | 本 sample not-run | — |
 

@@ -295,9 +295,10 @@ def resolve_selection(
                 record for record in records if record.variant == requested_variant
             ]
         else:
-            # No default variant declared for this target; fall through with
-            # every record so the error below lists the exact references.
-            matches = list(records)
+            # No default variant declared for this target: an omitted variant
+            # is an explicit error even when the target happens to publish a
+            # single asset — a lone candidate is not an implicit default.
+            matches = []
     else:
         # Match the exact qualified reference.  Bare model/sample IDs are not
         # silently promoted to physical artifact identities.

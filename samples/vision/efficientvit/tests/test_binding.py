@@ -76,6 +76,29 @@ class BindingTableTests(unittest.TestCase):
         table = self._table()
         self.assertEqual(table.default_variant, "m5")
 
+    def test_no_default_mapping_is_an_error_even_with_one_asset(self):
+        """B2-N1 boundary (re-review counterexample): a target without a
+        declared default must reject an omitted variant explicitly — a lone
+        published asset is not an implicit default.  EfficientViT is the
+        single-asset case (x5 publishes exactly one m5 artifact)."""
+
+        import dataclasses
+
+        from samples._shared.cls_binding import BindingError, resolve_selection
+        from samples.vision.efficientvit.runtime.python.model_binding import (
+            BINDING_TABLE,
+        )
+
+        stripped = dataclasses.replace(BINDING_TABLE, default_variant={})
+        self.assertIsNone(stripped.default_variant_for("x5"))
+        with self.assertRaises(BindingError) as ctx:
+            resolve_selection(stripped, "x5")
+        self.assertIn("No published sample asset matches", str(ctx.exception))
+        self.assertIn(
+            "x5:efficientvit:EfficientViT_m5_224x224_nv12.bin",
+            str(ctx.exception),
+        )
+
     def test_per_variant_geometry_matches_source_facts(self):
         from samples.vision.efficientvit.runtime.python.model_binding import resolve_selection
 
