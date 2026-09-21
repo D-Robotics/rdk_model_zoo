@@ -18,6 +18,10 @@
   const modelPlatforms = model => (model.platforms || []).map(platform => String(platform).toUpperCase());
   const groupKey = model => `${model.catalogId || model.sample || model.id}#${model.modelSize || ''}`;
   const platformRank = platform => { const index = platforms.indexOf(platform); return index < 0 ? platforms.length : index; };
+  // Entry order when a card has no filtered platform to honor: strongest
+  // S-series first, X5 last — the same order the detail page presents.
+  const openPreference = ['S600', 'S100P', 'S100', 'X5', 'X3'];
+  const openRank = platform => { const index = openPreference.indexOf(platform); return index < 0 ? openPreference.length : index; };
   // One grid card per model variant: the per-platform releases of the same
   // model collapse into a single card listing its hardware targets, and the
   // detail page's hardware selector navigates between them.
@@ -61,7 +65,8 @@
   function card(group) {
     const model = group.entry;
     const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
-    const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform))) || model;
+    const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)))
+      || [...group.members].sort((a, b) => openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0]))[0];
     return `<article class="model-card"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="model-variant">${esc(model.variantName || '')}</p><p class="reference-description" data-i18n-zh="${esc(model.description)}" data-i18n-en="${esc(model.descriptionEn || model.description)}" title="${esc(description)}">${esc(description)}</p><div class="model-tags"><span>${esc(model.task)}</span></div></div></a></article>`;
   }
 
@@ -207,11 +212,14 @@
       return;
     }
     state.scroll = window.scrollY;
+    // Switching platforms stays in place: only entering from the catalog
+    // scrolls to the top of the detail page.
+    const keepScroll = $('detail').hidden ? 0 : window.scrollY;
     $('catalog').hidden = true;
     $('detail').hidden = false;
     $('detail').innerHTML = window.ModelDetail.render({ model, models, data });
     window.ModelDetail.bind($('detail'), model, models, data);
-    window.scrollTo(0, 0);
+    window.scrollTo(0, keepScroll);
     window.HubI18n?.apply();
   }
 
