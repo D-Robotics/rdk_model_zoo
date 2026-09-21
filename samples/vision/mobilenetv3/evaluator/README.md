@@ -80,8 +80,8 @@ output, image path, resize type, and command line.
 
 | Item | Value | Source |
 | --- | --- | --- |
-| host tests | 14 OK per sample (2026-09-21, B1 host evidence JSON) | migration evidence |
-| board comparison (canonical vs legacy) | not-run (B1 board smoke pending, user-executed) | — |
+| host tests | 17 OK (2026-09-21, B1 host evidence JSON) | migration evidence |
+| board comparison (canonical vs legacy) | passed (2026-09-21: x5 8GB/4GB + S100 + S600 — Top-K ids equal, scores allclose, labels equal against the platforms/ legacy entry) | [B1 board evidence](../../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json) |
 | dataset accuracy / latency | not-run in this sample | — |
 
 Published historical figures from the X5 source release (rdk_x5 @ac11571 (x5-v1.1.3);
@@ -101,5 +101,5 @@ No dataset-level accuracy or latency harness ships with this sample: the
 checked-in material covers host contract tests and functional board
 checks only. Host test success never certifies a board. A board that is
 unreachable or an artifact that is unavailable makes the corresponding
-item `not-run`, not failed-and-forgotten. S600 re-validation remains
-`not-run` until board access recovers.
+item `not-run`, not failed-and-forgotten. S600 was re-validated
+2026-09-21 after board access recovered.

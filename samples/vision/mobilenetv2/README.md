@@ -21,16 +21,18 @@ lives in the migration documents, not here.
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | mobilenetv2 | python | supported-host-verified (B1 migration; board smoke pending) |
-| s100 | mobilenetv2 | python | supported-host-verified (B1 migration; board smoke pending) |
-| s600 | mobilenetv2 | python | supported-not-run (artifact published; board smoke pending) |
-| s100 | mobilenetv2 | cpp | supported-not-run (source implementation kept verbatim; board smoke pending) |
-| s600 | mobilenetv2 | cpp | supported-not-run (source implementation kept verbatim; board smoke pending) |
-| s100p | any | python, cpp | not-supported (no s100p asset row in the release manifest) |
+| x5 | mobilenetv2 | python | supported-verified (x5 8GB + 4GB board smoke, 2026-09-21) |
+| s100 | mobilenetv2 | python | supported-verified (S100 board smoke, 2026-09-21) |
+| s600 | mobilenetv2 | python | supported-verified (S600 board smoke, 2026-09-21) |
+| s100 | mobilenetv2 | cpp | supported-verified (S100 build + run, 2026-09-21 — Top-1 zebra equals the rdk_s baseline; BUILD_JOBS=1 on low-RAM boards) |
+| s600 | mobilenetv2 | cpp | supported-not-run (S600 C++ outside the B1 smoke set) |
+| s100p | any | python, cpp | not-supported (no s100p asset row in the release manifest; rejection verified on S100P hardware 2026-09-21 — explicit error, no fallback) |
 
 Source baselines: X5 rdk_x5 @ac11571 (x5-v1.1.3); S rdk_s @380e1a2 (s-v1.1.2). The unified sample's host
-tests all pass; board smoke is executed by the user on X5 8GB/4GB and
-S100, after which the status rows are updated.
+tests all pass. Board smoke (2026-09-21) passed on x5 8GB/4GB and
+S100/S600 with outputs identical across boards and equal to the source
+implementations; S100P was verified as a rejection case only. Evidence:
+[B1 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json).
 
 <a id="prerequisites"></a>
 ## Prerequisites

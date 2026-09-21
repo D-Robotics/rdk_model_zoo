@@ -12,14 +12,15 @@ MobileNetV2 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | mobilenetv2 | python | supported-host-verified（B1 迁移；板端冒烟未执行） |
-| s100 | mobilenetv2 | python | supported-host-verified（B1 迁移；板端冒烟未执行） |
-| s600 | mobilenetv2 | python | supported-not-run（已发布制品；板端冒烟未执行） |
-| s100 | mobilenetv2 | cpp | supported-not-run（源实现原样保留；板端冒烟未执行） |
-| s600 | mobilenetv2 | cpp | supported-not-run（源实现原样保留；板端冒烟未执行） |
-| s100p | 任意 | python、cpp | not-supported（发布 Manifest 无 s100p 资产行） |
+| x5 | mobilenetv2 | python | supported-verified（x5 8GB + 4GB 板端冒烟，2026-09-21） |
+| s100 | mobilenetv2 | python | supported-verified（S100 板端冒烟，2026-09-21） |
+| s600 | mobilenetv2 | python | supported-verified（S600 板端冒烟，2026-09-21） |
+| s100 | mobilenetv2 | cpp | supported-verified（S100 构建+运行，2026-09-21——Top-1 zebra 与 rdk_s 基线一致；小内存板需 BUILD_JOBS=1） |
+| s600 | mobilenetv2 | cpp | supported-not-run（S600 C++ 不在 B1 冒烟集内） |
+| s100p | 任意 | python、cpp | not-supported（发布 Manifest 无 s100p 资产行；2026-09-21 在 S100P 实板验证为拒绝负例——显式报错、无回退） |
 
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)；S 侧 rdk_s @380e1a2 (s-v1.1.2)。统一 sample 的主机测试全部通过；板端冒烟由用户在 X5 8GB/4GB 与 S100 上执行后回填状态。
+源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)；S 侧 rdk_s @380e1a2 (s-v1.1.2)。统一 sample 的主机测试全部通过。板端冒烟（2026-09-21）在 x5 8GB/4GB 与 S100/S600
+全部通过，各板输出一致且与源实现等价；S100P 仅作为拒绝负例验证。证据：[B1 板端冒烟](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json)。
 
 <a id="prerequisites"></a>
 ## 环境前提
