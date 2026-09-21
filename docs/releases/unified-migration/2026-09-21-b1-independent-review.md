@@ -1,5 +1,8 @@
 # B1 独立评审 — 2026-09-21
 
+> **最终独立确认（Codex，2026-09-21，716bdca）：B1 R1a/R1b 修复通过；R1–R6 全部关闭，B1 Closed=yes / pass / ready（既定批次范围）。** S600 MobileNetV2 C++ 按用户决定保持 not-run。见 [B2 独立评审的 B1 收尾节](2026-09-21-b2-independent-review.md)。以下历史结论保留。
+
+
 > **最新独立复审（Codex，HEAD dd60911）：changes-required / not-ready，Closed=no。** R2–R6 已关闭；R1 文件保留已通过，双语转换 README 尚有执行目录错误与 scale 一致性错误。见 [整改独立复审](2026-09-21-b1-independent-rereview.md)。历史内容和原始结论保留。
 
 

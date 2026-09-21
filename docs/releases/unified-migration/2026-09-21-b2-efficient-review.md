@@ -1,5 +1,8 @@
 # B2 批次评审 — efficientnet（x5+s 合并）+ efficientformer/efficientformerv2/efficientvit（x5）（2026-09-21）
 
+> **独立评审（Codex，716bdca）：changes-required / not-ready，B2 Closed=no。** 发现 B2-R1 默认变体回归、B2-R2 客户文档状态/口径未同步、B2-R3 板测摘要计数与表述错误。见 [独立报告](2026-09-21-b2-independent-review.md)。作者原记录保留，433 项主机测试与 CI 通过不替代上述整改。
+
+
 > 作者：原执行者（Claude Code）。本文件按批次固定流程第 1 步在动手前写就：
 > 预检、契约事实表、旧→新函数映射表、资产/清单映射、转换能力映射。
 > **B1 推进背景（用户决定，如实记录）**：B1 独立复审基点 dd60911 判定
