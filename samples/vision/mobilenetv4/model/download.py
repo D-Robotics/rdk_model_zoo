@@ -64,7 +64,7 @@ def download_target(
     verified by the shared downloader and are never silently replaced.
     """
 
-    asset = resolve_asset(asset_reference(target))
+    asset = resolve_asset(asset_reference(target, variant))
     root = Path(output_dir).expanduser() if output_dir is not None else DEFAULT_OUTPUT_DIR
     destination = root / Path(asset.filename)
     digest = download_asset(asset, destination)

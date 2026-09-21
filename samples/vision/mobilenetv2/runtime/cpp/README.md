@@ -40,7 +40,9 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 
 `CMakeLists.txt` detects the SoC at configure time via
 `/sys/class/boardinfo/soc_name` and defines `SOC_S100`/`SOC_S600`; it
-stays verbatim from the source branch.
+stays verbatim from the source branch. On small-RAM boards (observed on
+S100, 2026-09-21) full-parallel compiles can be OOM-killed — build with
+`make -j1` or `BUILD_JOBS=1 bash run.sh` there.
 
 <a id="run"></a>
 ## Run

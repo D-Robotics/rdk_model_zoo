@@ -226,20 +226,25 @@ class BindingTests(unittest.TestCase):
                 with self.assertRaises(MetadataMismatchError):
                     bind_model(selection, _metadata(output_shape=shape))
 
-    def test_declared_raw_f32_rejects_quantization_descriptors(self):
+    def test_declared_raw_f32_keeps_vestigial_quant_descriptor(self):
+        # Contract refinement driven by board evidence (X5 smoke, 2026-09-21):
+        # published X5 mobilenet artifacts ship F32 outputs that still carry a
+        # compiler quant descriptor.  The raw_f32 contract gates on dtype (see
+        # the int8 rejection test above), snapshots the descriptor for the
+        # record, and never applies it — legacy consumers ignored it too.
         from samples.vision.resnet.runtime.python.model_binding import (
-            MetadataMismatchError,
             bind_model,
             resolve_selection,
         )
 
         selection = resolve_selection("x5")
         descriptor = _QuantInfo(scale=0.5, zero_point=3)
-        with self.assertRaises(MetadataMismatchError):
-            bind_model(
-                selection,
-                _metadata(output_quants={"prob": descriptor}),
-            )
+        binding = bind_model(
+            selection,
+            _metadata(output_quants={"prob": descriptor}),
+        )
+        self.assertEqual(binding.output_dtype, "float32")
+        self.assertIs(binding.output_quants["prob"], descriptor)
 
     def test_declared_dequant_contract_binds_int8_output_with_descriptor(self):
         # H1: a contract that declares 'dequant' binds an S-style artifact

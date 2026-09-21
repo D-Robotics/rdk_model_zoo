@@ -10,11 +10,15 @@ from __future__ import annotations
 from samples.vision.mobilenetv4.runtime.python.model_binding import RuntimeMetadata
 
 
-def runtime_metadata(protocol: str, variant: str = "small", wrong_geometry: bool = False) -> RuntimeMetadata:
+def runtime_metadata(protocol: str, variant: str = "small", wrong_geometry: bool = False, output_dtype: str = "F32", quant_descriptor: bool = False) -> RuntimeMetadata:
     """Return the observed metadata shape for one source family and variant.
 
     ``wrong_geometry=True`` offsets the declared height/width by eight pixels
     to prove that bind_model rejects metadata that contradicts the contract.
+    ``output_dtype``/``quant_descriptor`` reproduce board-observed artifact
+    shapes: real X5 mobilenet artifacts ship F32 outputs that still carry a
+    vestigial compiler quant descriptor, so the raw_f32 contract must gate on
+    dtype and keep the descriptor visible instead of rejecting it.
     """
 
     if variant == "medium" and protocol != "x5":
@@ -33,7 +37,8 @@ def runtime_metadata(protocol: str, variant: str = "small", wrong_geometry: bool
                 "input_dtypes": {"data": "U8"},
                 "output_names": ["prob"],
                 "output_shapes": {"prob": (1, 1000, 1, 1)},
-                "output_dtypes": {"prob": "F32"},
+                "output_dtypes": {"prob": output_dtype},
+                "output_quants": {"prob": {"scale": 0.0078125, "zero_point": -3}} if quant_descriptor else {},
             }
         )
     return RuntimeMetadata.from_mapping(
@@ -47,6 +52,7 @@ def runtime_metadata(protocol: str, variant: str = "small", wrong_geometry: bool
             "input_dtypes": {"input_y": "U8", "input_uv": "U8"},
             "output_names": ["output"],
             "output_shapes": {"output": (1, 1000)},
-            "output_dtypes": {"output": "F32"},
+            "output_dtypes": {"output": output_dtype},
+            "output_quants": {"output": {"scale": 0.0078125, "zero_point": -3}} if quant_descriptor else {},
         }
     )

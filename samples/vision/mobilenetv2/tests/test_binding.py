@@ -120,6 +120,47 @@ class BindingTableTests(unittest.TestCase):
         with self.assertRaises(MetadataMismatchError):
             bind_model(selection, runtime_metadata(protocol, wrong_geometry=True))
 
+    def test_bind_model_keeps_vestigial_quant_descriptor_on_f32_output(self):
+        # Board evidence (X5 smoke, 2026-09-21): published artifacts ship F32
+        # outputs that still carry a compiler quant descriptor.  The raw_f32
+        # contract gates on dtype, snapshots the descriptor, and never applies
+        # it - legacy consumers ignored it too.
+        from samples.vision.mobilenetv2.runtime.python.model_binding import (
+            bind_model,
+            resolve_selection,
+        )
+        from testsupport import runtime_metadata
+
+        for (variant, target) in self._table().facts:
+            protocol = "x5" if target == "x5" else "s"
+            selection = resolve_selection(target, variant=variant)
+            binding = bind_model(
+                selection,
+                runtime_metadata(protocol, quant_descriptor=True),
+            )
+            self.assertEqual(binding.output_dtype, "float32")
+            self.assertIn(binding.output_name, binding.output_quants)
+
+    def test_bind_model_rejects_quantized_output_dtype_for_raw_f32(self):
+        from samples.vision.mobilenetv2.runtime.python.model_binding import (
+            MetadataMismatchError,
+            bind_model,
+            resolve_selection,
+        )
+        from testsupport import runtime_metadata
+
+        variant, target = ('mobilenetv2', 'x5')
+        protocol = "x5" if target == "x5" else "s"
+        selection = resolve_selection(target, variant=variant)
+        with self.assertRaises(MetadataMismatchError) as ctx:
+            bind_model(
+                selection,
+                runtime_metadata(
+                    protocol, output_dtype="I8", quant_descriptor=True
+                ),
+            )
+        self.assertIn("accepts only F32", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

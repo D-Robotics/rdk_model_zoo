@@ -24,9 +24,9 @@ number of output tensors; single-output contracts stay a binding-level rule.
 ``output_quants``/``model.output_quants[model_name]`` on both the X5 and S
 toolchains.  The values are deliberately not float-coerced: their structure
 (scale, zero_point, axis, quant_type) belongs to the dequantization chain in
-:mod:`samples._shared.quantization`, and a present-but-unexpected descriptor
-must stay visible so F32 contracts can reject it instead of silently dropping
-metadata.
+:mod:`samples._shared.quantization`, and a descriptor that rides along an F32
+output must stay visible in the binding snapshot instead of being silently
+dropped (the raw_f32 path gates on dtype and never applies it).
 """
 from __future__ import annotations
 

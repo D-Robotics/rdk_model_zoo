@@ -221,6 +221,32 @@ class ScopeTests(unittest.TestCase):
         self.assertIn("ultralytics_yolo", names)
         self.assertEqual(findings, [])
 
+    def test_infrastructure_rows_are_excluded_by_tilde_marker(self):
+        # Rows marked with a leading '~' are infrastructure deliverables and
+        # must leave the sample scope; unresolvable *unmarked* rows must keep
+        # failing so typos cannot silently drop out of scope.
+        map_text = (
+            "## 本轮 B1–B11 迁移进度区（2026-09-20 起）\n\n"
+            "| Batch | Sample / source SHA | Target | Mapping | Refactor"
+            " | Docs | Host | Board | Review | Closed | Evidence |\n"
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | ---"
+            " | --- |\n"
+            "| B1 | resnet / dev | s100 / python | done | done | done"
+            " | passed | passed | passed | no | — |\n"
+            "| B1 | ~ H5 Profile 契约 / develop | _shared | done | done"
+            " | done | passed | not-applicable | passed | no | — |\n"
+            "| B1 | boguswidget / dev | x5 | done | done | done | not-run"
+            " | not-run | not-run | no | — |\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            map_path = Path(tmp) / "map.md"
+            map_path.write_text(map_text, encoding="utf-8")
+            paths, findings = CHECK.resolve_migration_scope(
+                map_path, CHECK.REPO_ROOT / "samples")
+        self.assertEqual([path.name for path in paths], ["resnet"])
+        self.assertEqual(len(findings), 1)
+        self.assertIn("'boguswidget'", findings[0].message)
+
 
 class ExemptionTests(unittest.TestCase):
     def test_matching_exemption_suppresses_one_finding(self):

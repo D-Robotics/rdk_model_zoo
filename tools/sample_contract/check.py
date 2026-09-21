@@ -706,6 +706,11 @@ def resolve_migration_scope(map_path: Path, samples_root: Path) -> tuple[
         refactor = re.sub(r"[（(].*$", "", cells[4]).strip().lower()
         if refactor not in {"in-progress", "done"}:
             continue
+        if sample_cell.startswith("~"):
+            # Infrastructure rows (leading '~', per the map legend) track
+            # tooling/contract deliverables, not sample directories; they are
+            # excluded from the sample scope instead of failing resolution.
+            continue
         name = re.split(r"[（(]", sample_cell)[0].strip()
         name = re.sub(r"\s*/\s*.*$", "", name).strip()
         if name:

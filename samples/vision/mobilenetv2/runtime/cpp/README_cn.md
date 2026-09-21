@@ -36,7 +36,9 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 ```
 
 `CMakeLists.txt` 在配置期经 `/sys/class/boardinfo/soc_name` 探测 SoC 并
-定义 `SOC_S100`/`SOC_S600`；该文件保持源分支原样。
+定义 `SOC_S100`/`SOC_S600`；该文件保持源分支原样。小内存板（2026-09-21
+在 S100 实测）满并行编译可能被 OOM 杀死——请改用 `make -j1` 或
+`BUILD_JOBS=1 bash run.sh`。
 
 <a id="run"></a>
 ## 运行

@@ -122,18 +122,20 @@ class ApplyTransformTests(unittest.TestCase):
                 "raw_f32", {"prob": np.zeros(3, dtype=np.int8)}
             )
 
-    def test_raw_f32_rejects_quant_descriptor(self):
-        from samples._shared.quantization import (
-            OutputTransformError,
-            apply_output_transform,
-        )
+    def test_raw_f32_ignores_vestigial_quant_descriptor(self):
+        # Contract refinement driven by board evidence (X5 smoke, 2026-09-21):
+        # published X5 artifacts ship F32 outputs that still carry a compiler
+        # quant descriptor.  The values are final floats — the descriptor is
+        # neither applied nor an error, matching legacy consumers.
+        from samples._shared.quantization import apply_output_transform
 
-        with self.assertRaises(OutputTransformError):
-            apply_output_transform(
-                "raw_f32",
-                {"prob": np.zeros(3, dtype=np.float32)},
-                {"prob": _QuantInfo(scale=0.5, zero_point=0)},
-            )
+        values = {"prob": np.array([1.0, 2.0], dtype=np.float32)}
+        out = apply_output_transform(
+            "raw_f32",
+            values,
+            {"prob": _QuantInfo(scale=0.5, zero_point=0)},
+        )
+        self.assertIs(out["prob"], values["prob"])
 
     def test_dequant_requires_descriptor_for_every_output(self):
         from samples._shared.quantization import (

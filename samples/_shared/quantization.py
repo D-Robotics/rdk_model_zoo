@@ -17,9 +17,11 @@
 A binding declares, per artifact, how raw runtime outputs become the float32
 values a task ``post_process`` may decode:
 
-- ``raw_f32``: the artifact already returns F32 tensors.  Any quantization
-  descriptor reported for those outputs is a contract mismatch — the pilot
-  era rejected int8 outputs implicitly; this is the same rule, declared.
+- ``raw_f32``: the artifact already returns F32 tensors.  Non-F32 outputs are
+  a contract mismatch — the pilot era rejected int8 outputs implicitly; this
+  is the same rule, declared.  A vestigial quant descriptor riding along an
+  F32 output is accepted and ignored (real X5 artifacts ship such
+  descriptors; board evidence 2026-09-21).
 - ``dequant``: the artifact may return int8/uint8 outputs together with
   ``output_quants`` descriptors; the chain applies the scale/zero-point
   dequantization ported from the delivery branches'
@@ -64,9 +66,12 @@ def apply_output_transform(
     """Apply one declared transform to a flat output mapping.
 
     ``output_quants`` is the per-output descriptor mapping as exposed by the
-    runtime (``{output_name: quant_info}``).  For ``raw_f32`` it must not
-    describe any of the outputs; for ``dequant`` it must describe all of them.
-    Returned values are float32 NumPy arrays.
+    runtime (``{output_name: quant_info}``).  For ``raw_f32`` the values must
+    already be F32; a vestigial descriptor riding along an F32 output is
+    accepted and ignored (real X5 artifacts ship such descriptors — board
+    evidence 2026-09-21 — and legacy consumers ignored them).  For ``dequant``
+    the mapping must describe all outputs.  Returned values are float32 NumPy
+    arrays.
     """
 
     import numpy as np
@@ -82,11 +87,6 @@ def apply_output_transform(
                 raise OutputTransformError(
                     f"raw_f32 output {key!r} has dtype {array.dtype!r}; "
                     "quantized outputs require the 'dequant' transform."
-                )
-            if quant_info is not None:
-                raise OutputTransformError(
-                    f"raw_f32 output {key!r} carries a quantization descriptor; "
-                    "declared F32 artifacts must not report output_quants."
                 )
             result[str(key)] = array
         else:  # dequant

@@ -1,0 +1,540 @@
+{
+  "record": "2026-09-21-b1-board-smoke",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous; board runs authorized by user message '板卡恢复了 可以测试了')",
+  "repo_head_before": "37183b2 (B1 host-side commit; fixes below are the fix-forward on top)",
+  "scope": "B1 board smoke: canonical-vs-legacy comparison for mobilenetv1-v4 (x5 all variants; s100/s600 all variants) and resnet50/152 (s100/s600), mobilenetv2 C++ on s100, negative checks on s100p; two board-found product defects fixed with host regression tests",
+  "defects_found_on_board": [
+    {
+      "id": "B1-D1",
+      "found": "x5-4g first run: all 5 entries died with MetadataMismatchError 'The declared raw_f32 contract does not accept output quantization metadata.'",
+      "root_cause": "Real X5 mobilenet artifacts ship F32 outputs that still carry a compiler quant descriptor; legacy consumers ignore it. The shared binding rejected descriptor presence instead of gating on dtype.",
+      "fix": "dtype is the gate: raw_f32 accepts float32 outputs with a vestigial descriptor (snapshotted in ModelBinding.output_quants, never applied); non-float32 still rejected. Two enforcement sites relaxed in sync: samples/_shared/cls_binding.py bind_model and samples/_shared/quantization.py apply_output_transform; runtime_meta.py/quantization.py docstrings updated.",
+      "regression_tests": "generated tests/test_binding.py: test_bind_model_keeps_vestigial_quant_descriptor_on_f32_output + test_bind_model_rejects_quantized_output_dtype_for_raw_f32 (all 4 mobilenet samples); resnet test_binding.py: test_declared_raw_f32_keeps_vestigial_quant_descriptor; _shared test_quantization.py: test_raw_f32_ignores_vestigial_quant_descriptor"
+    },
+    {
+      "id": "B1-D2",
+      "found": "x5-4g first run: 'download.sh x5 medium' fetched the SMALL artifact (medium file never downloaded).",
+      "root_cause": "mobilenetv4 model/download.py download_target called asset_reference(target) without forwarding variant; generator template never set variant_call for multi-variant samples. v1-v3 are single-variant and unaffected.",
+      "fix": "gen_mobilenet.py variant_call ', variant' in multi-variant branch; v4 download.py line 67 asset_reference(target, variant); re-render verified byte-identical for all 4 samples' generated files.",
+      "regression_tests": "new generated tests/test_download.py per mobilenet sample: download_target with stubbed downloader must hand the exact published reference per (target[,variant]) to download_asset — 3 targets x v1-v3, 6 combos for v4",
+      "board_proof": "x5-4g v4/medium row passed after fix (artifact fb09f1ee14c764db..., distinct from small 4e7f8c57f607d45d...)"
+    }
+  ],
+  "harness_fixes_not_product": [
+    "runner canonical side initially omitted labels (ClassificationTask(labels=...)) so labels_equal compared names vs ids — fixed by loading datasets/imagenet/imagenet_classes.names via samples._shared.labels.load_labels",
+    "negative mode initially expected stale phrases and hit the file-existence check before the identity gate — fixed by staging the s100 artifact first and matching the real error strings ('Target mismatch: requested s100, detected s100p.' / 'No published sample asset matches target='s100p'')"
+  ],
+  "host_verification_after_fixes": {
+    "interpreter": ".venv/bin/python (CPython 3.14)",
+    "suites": [
+      "mobilenetv1/v2/v3/v4: 17 tests each, OK (was 14; +2 binding quant-descriptor tests, +1 download-reference test)",
+      "resnet: 46 tests, OK (one test updated to the refined raw_f32 contract)",
+      "paddle_ocr: 44 OK; ultralytics_yolo: 59 OK (regressions)",
+      "samples/_shared: 71 OK (test_quantization updated to new contract)",
+      "tools/sample_contract self-tests: 24 OK (+1 tilde-marker scope test)"
+    ],
+    "q3_checker": "0 violations on all 5 B1 samples (mobilenetv1-4 1 skip each, resnet 2 skips)",
+    "q3_scope_migration_note": "live-map scope mode reports 84 pre-existing R-README-SECTIONS violations, all ultralytics_yolo pilot docs debt already tracked as Docs=pending -> B9 收编 (map row + plan Phase 0.5 exit note); not introduced by this change. Checker scope rule extended: infrastructure rows marked with leading '~' (documented in map legend) are excluded from sample resolution; unresolvable unmarked rows still fail (new self-test).",
+    "map_row_renames": "progress rows renamed so sample cells resolve: 'resnet 新增 resnet50/resnet152' -> 'resnet（新增 resnet50/152 变体）'; H5/H6 rows prefixed '~' (infrastructure)"
+  },
+  "board_bundle": {
+    "final_sha256": "2134411c01de58488142a537d1203dcd2a1a64072af1daa588028f69a710695c",
+    "x5_run_sha256": "8b81ffa41e26b209b371902458152d75c4f18d70afea169775c3bb052de9fc94",
+    "x5_run_note": "x5-4g ran on the earlier bundle whose samples/ content is byte-identical (working tree unchanged between the two tar builds); the final bundle only adds root utils/ needed by the C++ build",
+    "contents": "samples/_shared, samples/vision/mobilenetv1-4, samples/vision/resnet, utils/, docs/release/platforms.json + {x5,s}/models.yaml, datasets/imagenet/imagenet_classes.names, platforms/{x5,s} legacy sample dirs + utils (legacy comparison only)"
+  },
+  "board_runs": {
+    "x5-4g": {
+      "identity": {
+        "soc_name": "",
+        "socinfo": "X5U",
+        "board_type": "",
+        "device_tree_model": "D-Robotics RDK X5 V1.0",
+        "hostname": "ubuntu",
+        "python": "3.10.12"
+      },
+      "detected": "x5",
+      "archive_sha256": "8b81ffa41e26b209b371902458152d75c4f18d70afea169775c3bb052de9fc94",
+      "started": "2026-09-21T03:16:03.376438+00:00",
+      "finished": "2026-09-21T03:16:14.459543+00:00",
+      "ok": true,
+      "entries": [
+        {
+          "sample": "mobilenetv1",
+          "variant": null,
+          "asset_id": "x5:mobilenetv1:mobilenetv1_224x224_nv12.bin",
+          "artifact_sha256": "75e5352af729a30baa87b663588aed1c4bf7813dcffcc7b65f1bad6cb5239dca",
+          "download_rc": 0,
+          "image": "bulbul.JPEG",
+          "image_sha256": "b5ff1c77956c4da88fdb6e56f349b526670b65ac722325fedb32a97cdb8b9193",
+          "resize_type": 0,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 0.0,
+          "labels_equal": true,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 16,
+            "label": "bulbul",
+            "score": 0.6586471199989319
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv2",
+          "variant": null,
+          "asset_id": "x5:mobilenetv2:mobilenetv2_224x224_nv12.bin",
+          "artifact_sha256": "3e2b7c46fc3b3a6d07a5326c0b9632fe98fe5ca38835346ab2eedc22ed427158",
+          "download_rc": 0,
+          "image": "Scottish_deerhound.JPEG",
+          "image_sha256": "74eb4f8656f26502ab0895b6b14674e3302ad3730ee16171cf663f9fb87a0a0a",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 0.0,
+          "labels_equal": true,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 177,
+            "label": "Scottish deerhound, deerhound",
+            "score": 0.6380698084831238
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv3",
+          "variant": null,
+          "asset_id": "x5:mobilenetv3:MobileNetV3_224x224_nv12.bin",
+          "artifact_sha256": "9e010b2099b30ab4c519dec3a6e1d31f0aca5a9cc08ed6ab91b81e97ac628874",
+          "download_rc": 0,
+          "image": "kit_fox.JPEG",
+          "image_sha256": "f538a80f435514cecc9af00c8288283092cd8c54e590f9351e3b8693f338e936",
+          "resize_type": 0,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 5.960464477539063e-08,
+          "labels_equal": true,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 278,
+            "label": "kit fox, Vulpes macrotis",
+            "score": 0.918543815612793
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv4",
+          "variant": "small",
+          "asset_id": "x5:mobilenetv4:MobileNetV4_conv_small_224x224_nv12.bin",
+          "artifact_sha256": "4e7f8c57f607d45dbc6f23e8b6e1564c0768804438bd957d7d95c427bb6f8b76",
+          "download_rc": 0,
+          "image": "great_grey_owl.JPEG",
+          "image_sha256": "7143ffbc87fbe8b1c725223577fc0ac90cccd789e9b50b8c59fbdad2d7bc45b8",
+          "resize_type": 0,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 5.960464477539063e-08,
+          "labels_equal": true,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 24,
+            "label": "great grey owl, great gray owl, Strix nebulosa",
+            "score": 0.9732412099838257
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv4",
+          "variant": "medium",
+          "asset_id": "x5:mobilenetv4:MobileNetV4_conv_medium_224x224_nv12.bin",
+          "artifact_sha256": "fb09f1ee14c764db0ac3fba9b1e85b8f9f4638f24d3fa2134b96b41d441b845d",
+          "download_rc": 0,
+          "image": "great_grey_owl.JPEG",
+          "image_sha256": "7143ffbc87fbe8b1c725223577fc0ac90cccd789e9b50b8c59fbdad2d7bc45b8",
+          "resize_type": 0,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 5.960464477539063e-08,
+          "labels_equal": true,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 24,
+            "label": "great grey owl, great gray owl, Strix nebulosa",
+            "score": 0.9097265601158142
+          },
+          "status": "pass"
+        }
+      ]
+    },
+    "s100": {
+      "identity": {
+        "soc_name": "S100",
+        "socinfo": "",
+        "board_type": "",
+        "device_tree_model": "D-Robotics RDK S100 V1P0",
+        "hostname": "ubuntu",
+        "python": "3.10.12"
+      },
+      "detected": "s100",
+      "archive_sha256": "2134411c01de58488142a537d1203dcd2a1a64072af1daa588028f69a710695c",
+      "started": "2026-09-21T03:20:16.873522+00:00",
+      "finished": "2026-09-21T03:21:20.115805+00:00",
+      "ok": true,
+      "entries": [
+        {
+          "sample": "mobilenetv1",
+          "variant": null,
+          "asset_id": "s:mobilenetv1:s100/mobilenetv1_224x224_nv12.hbm",
+          "artifact_sha256": "cd694b56b1a4d3967ac330793fcc511b3d558d45ac71a31da3d94f313a2d022e",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 0.0,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.9851036667823792
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv2",
+          "variant": null,
+          "asset_id": "s:mobilenetv2:s100/mobilenetv2_224x224_nv12.hbm",
+          "artifact_sha256": "06c64f2310413a51407240f0db972d90b2715856d62f6ef328be203f1291157e",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 0.0,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 9.309612274169922
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv3",
+          "variant": null,
+          "asset_id": "s:mobilenetv3:s100/mobilenetv3_224x224_nv12.hbm",
+          "artifact_sha256": "062426e273914be01def5149a37477d705ce7fde333bf92f8325a528f49f932e",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 2.3283064365386963e-10,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.8729262351989746
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv4",
+          "variant": "small",
+          "asset_id": "s:mobilenetv4:s100/mobilenetv4_small_224x224_nv12.hbm",
+          "artifact_sha256": "785b78e318aff4098d23f290f41f0a6ea8461528e5035b65e456b5f2668732ec",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 1.1920928955078125e-07,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.8378314971923828
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv4",
+          "variant": "medium",
+          "asset_id": "s:mobilenetv4:s100/mobilenetv4_medium_256x256_nv12.hbm",
+          "artifact_sha256": "1935b619b9e913122da62d82adfb4c46520ea5eb50c0cd08eef8e61ad6dfcc1e",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 5.960464477539063e-08,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.8341658711433411
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "resnet",
+          "variant": "resnet50",
+          "asset_id": "s:resnet50:s100/resnet50_224x224_nv12.hbm",
+          "artifact_sha256": "dd2b8cf6a758a1a2ff1a2781a87e104941a4b3754587f06be70fccb99df87524",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 1.1920928955078125e-07,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.998318076133728
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "resnet",
+          "variant": "resnet152",
+          "asset_id": "s:resnet152:s100/resnet152_224x224_nv12.hbm",
+          "artifact_sha256": "cc20435098617f88de5dcd84c3bc0b6da8a55b5b71108d7fa82ca419da5a4d83",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 5.960464477539063e-08,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.9729946851730347
+          },
+          "status": "pass"
+        }
+      ]
+    },
+    "s600-64g": {
+      "identity": {
+        "soc_name": "S600",
+        "socinfo": "",
+        "board_type": "",
+        "device_tree_model": "D-Robotics RDK S600 MCB V1p0",
+        "hostname": "drobot",
+        "python": "3.12.3"
+      },
+      "detected": "s600",
+      "archive_sha256": "2134411c01de58488142a537d1203dcd2a1a64072af1daa588028f69a710695c",
+      "started": "2026-09-21T03:31:10.567472+00:00",
+      "finished": "2026-09-21T03:35:05.617515+00:00",
+      "ok": true,
+      "entries": [
+        {
+          "sample": "mobilenetv1",
+          "variant": null,
+          "asset_id": "s:mobilenetv1:s600/mobilenetv1_224x224_nv12.hbm",
+          "artifact_sha256": "ff422aacbdfd955be4d3fabb1f67f7a4c9cdc088084a390cc501d759681def30",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 0.0,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.7295993566513062
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv2",
+          "variant": null,
+          "asset_id": "s:mobilenetv2:s600/mobilenetv2_224x224_nv12.hbm",
+          "artifact_sha256": "778dfab6f478a582d1fa9b1878c438382986182ace2db47a847346850fb81ac2",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 0.0,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.889778733253479
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv3",
+          "variant": null,
+          "asset_id": "s:mobilenetv3:s600/mobilenetv3_224x224_nv12.hbm",
+          "artifact_sha256": "6310c1a656fcd9dc74ec9239e1fdf00db55b514bb8a9ced2e50c2dbce4e90ae8",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 5.960464477539063e-08,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.9459309577941895
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv4",
+          "variant": "small",
+          "asset_id": "s:mobilenetv4:s600/mobilenetv4_small_224x224_nv12.hbm",
+          "artifact_sha256": "eb75c045247cfc3db3f4e46b33e011166e4d5bcef6fa64bf77c39f61c281d114",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 5.960464477539063e-08,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.854970395565033
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "mobilenetv4",
+          "variant": "medium",
+          "asset_id": "s:mobilenetv4:s600/mobilenetv4_medium_256x256_nv12.hbm",
+          "artifact_sha256": "88d6ae567f2c7f1eed43805b97e3ecbdb4af88b87e1bc069548adef69dc63bb7",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 0.0,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.7577437162399292
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "resnet",
+          "variant": "resnet50",
+          "asset_id": "s:resnet50:s600/resnet50_224x224_nv12.hbm",
+          "artifact_sha256": "00c2cf9624d5d36468579e65c3ea3209b4f1de7ca616d8263f4050fa5c5b7097",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 2.3283064365386963e-10,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.30510637164115906
+          },
+          "status": "pass"
+        },
+        {
+          "sample": "resnet",
+          "variant": "resnet152",
+          "asset_id": "s:resnet152:s600/resnet152_224x224_nv12.hbm",
+          "artifact_sha256": "804664927cd42fbdb1515183f7febd66b48b44fe6adf69f7d6c4920b8c94ecaf",
+          "download_rc": 0,
+          "image": "zebra_cls.jpg",
+          "image_sha256": "53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462",
+          "resize_type": 1,
+          "ids_equal": true,
+          "scores_allclose_1e-6": true,
+          "max_score_abs_diff": 2.9802322387695312e-08,
+          "labels_equal": null,
+          "state_isolation_stable": true,
+          "top1": {
+            "id": 340,
+            "label": "zebra",
+            "score": 0.43028461933135986
+          },
+          "status": "pass"
+        }
+      ]
+    },
+    "s100p": {
+      "identity": {
+        "soc_name": "S100P",
+        "socinfo": "",
+        "board_type": "",
+        "device_tree_model": "D-Robotics RDK S100P V1P0",
+        "hostname": "ubuntu",
+        "python": "3.10.12"
+      },
+      "detected": "s100p",
+      "archive_sha256": "2134411c01de58488142a537d1203dcd2a1a64072af1daa588028f69a710695c",
+      "ok": true,
+      "checks": [
+        {
+          "check": "requested-s100-on-s100p-hardware",
+          "status": "pass",
+          "returncode": 2,
+          "phrase": "Target mismatch",
+          "output_tail": "error: Target mismatch: requested s100, detected s100p.\n"
+        },
+        {
+          "check": "s100p-has-no-published-asset",
+          "status": "pass",
+          "returncode": 2,
+          "phrase": "No published sample asset matches target='s100p'",
+          "output_tail": "error: No published sample asset matches target='s100p', asset_id='s:mobilenetv1:s100/mobilenetv1_224x224_nv12.hbm', variant=None; available qualified references: none.\n"
+        }
+      ]
+    }
+  },
+  "cpp_s100": {
+    "sample": "samples/vision/mobilenetv2/runtime/cpp (S-series only)",
+    "first_attempt": "cmake --build --parallel $(nproc) on s100: cc1plus OOM-killed (board RAM)",
+    "second_attempt": "BUILD_JOBS=1 bash run.sh: built and ran",
+    "result": "TOP-1 label=zebra with published s100 artifact; exit 0; log /tmp capture s100-cpp.log (local copy /tmp/b1-smoke/s100-cpp.log)"
+  },
+  "h2_flat_vs_4d_equivalence": "x5 v1/v2 max_score_abs_diff == 0.0 (canonical flat 1-D packed NV12 vs legacy 4-D (1,3H/2,W,1) view): bit-identical; v3/v4 <= 5.96e-08 (softmax-path float assoc), ids equal everywhere",
+  "not_run": [
+    "x5-8g (192.168.3.207): ssh connect timeout on 3 attempts today; matrix identical to x5-4g ready to run when reachable",
+    "s600 C++: B1 cpp deliverable is S-series; s600 run not required by the batch gate (s100 covers the cpp language row)"
+  ],
+  "closed": "no (B1 requires X5 8GB/4GB + S100; x5-4g, s100, s600, s100p done; x5-8g unreachable)"
+}

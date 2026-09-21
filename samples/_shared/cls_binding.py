@@ -366,11 +366,10 @@ def bind_model(
                 f"tensors; {output_name!r} reported {output_dtype!r}. "
                 "Quantized artifacts must declare the 'dequant' transform."
             )
-        if output_name in output_quants:
-            raise MetadataMismatchError(
-                "The declared raw_f32 contract does not accept output "
-                "quantization metadata."
-            )
+        # A vestigial quant descriptor alongside an F32 output is accepted:
+        # the runtime values are already final floats and post-processing
+        # consumes them directly, so the snapshot keeps the descriptor for
+        # the record but never applies it (matches legacy consumers).
     else:  # dequant (reachable only for contracts that declare it)
         if output_name not in output_quants:
             raise MetadataMismatchError(
