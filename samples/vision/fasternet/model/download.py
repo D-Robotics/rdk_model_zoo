@@ -88,7 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--variant",
         choices=VARIANTS,
-        default='base',
+        default='s',
         help="Model variant to fetch (default: s).",
     )
     parser.add_argument(

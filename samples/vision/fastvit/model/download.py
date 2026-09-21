@@ -35,7 +35,7 @@ ASSET_REFERENCES = {
 TARGETS = ("x5",)
 
 
-def asset_reference(target: str, variant: str = 's') -> str:
+def asset_reference(target: str, variant: str = 's12') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 
     key = (str(target).strip().lower(), str(variant).strip().lower())
@@ -88,7 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--variant",
         choices=VARIANTS,
-        default='base',
+        default='s12',
         help="Model variant to fetch (default: s12).",
     )
     parser.add_argument(

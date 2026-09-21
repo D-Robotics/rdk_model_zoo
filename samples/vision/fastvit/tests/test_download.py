@@ -65,5 +65,31 @@ class DownloadTargetReferenceTests(unittest.TestCase):
             download_mod.download_target("s100", self.output_dir, variant="s12")
 
 
+    def test_omitted_variant_delegates_parser_default_through_main(self):
+        """B3-R1 regression: `download.py --target x5` (no --variant) must
+        run end-to-end through parser -> main -> download_target and fetch
+        the sample's default-variant reference — earlier tests called
+        download_target directly and missed an illegal parser default."""
+
+        captured = {}
+
+        def fake_download(asset, destination):
+            captured["reference"] = asset.reference
+            return "2" * 64
+
+        with mock.patch.object(download_mod, "download_asset", fake_download):
+            rc = download_mod.main(["--target", "x5", "--output-dir", str(self.output_dir)])
+        self.assertEqual(rc, 0)
+        self.assertEqual(captured["reference"], "x5:fastvit:FastViT_S12_224x224_nv12.bin")
+        # an explicitly illegal variant still fails at the parser: argparse
+        # prints the usage error and raises SystemExit(2)
+        with mock.patch.object(download_mod, "download_asset", fake_download), \
+                mock.patch("sys.stderr"):
+            with self.assertRaises(SystemExit) as ctx:
+                download_mod.main(["--target", "x5", "--variant", "base",
+                                   "--output-dir", str(self.output_dir)])
+        self.assertEqual(ctx.exception.code, 2)
+
+
 if __name__ == "__main__":
     unittest.main()
