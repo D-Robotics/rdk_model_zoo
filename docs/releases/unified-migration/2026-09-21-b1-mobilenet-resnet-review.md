@@ -94,6 +94,14 @@ x5 v1/v2 与 s v1/v2 源码不 softmax（docstring 声明输出已是概率）�
 
 variant 判定用每 sample 显式 `{filename: variant}` 表，不做文件名猜测。
 
+### 2.4 转换能力映射（B1-R1 整改补记）
+
+| 源（rdk_s @380e1a2） | 统一架构去向 | 事实 |
+| --- | --- | --- |
+| `samples/vision/resnet152/conversion/get_calibration_data.py`、`resnet152_config.yaml`、`x86_inference.py` | `samples/vision/resnet/conversion/` 同名文件 | 逐字节迁入（SHA-256 由 `tests/test_conversion_layout.py` 固定：d8a39491…、20eaf2cb…、f2c5738e…）；YAML 前缀与 Manifest 文件名一致性入测试 |
+| `resnet152` 转换 README（含校准/编译/记录表） | `conversion/README(_cn).md` 按变体重写 | 152 全配方、50 指针式（OE `13_resnet50`，无源配方不虚构）、18 导出-only 的可复现范围逐变体声明 |
+| 无对应源（resnet50 无配方） | 不新建 | 以 known-gap 记录，不编造 YAML/脚本 |
+
 ## 3. 本批架构决策
 
 ### 3.1 分类运行时提升（§5.1 第二消费者规则在批内成立）
@@ -154,17 +162,19 @@ H5、H6）按实际执行回填：
 | 交付物 | Mapping | Refactor | Docs | Host | Board | Review | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | mobilenetv1（x5+s python） | done | done | done | passed（17 OK，板后修复回归） | passed（x5-8g+x5-4g+s100+s600 对照全等；s100p 负例 2/2） | passed（§6 自评 + §7 板后复核） | [b1 evidence](evidence/2026-09-21-b1-mobilenet-resnet-evidence.json)、[board evidence](evidence/2026-09-21-b1-board-smoke-evidence.json) |
-| mobilenetv2（x5+s python + s cpp） | done | done | done | passed（17 OK） | passed（python 四板对照全等（含 x5-8g 复测）；cpp s100 构建并运行 TOP-1 zebra，BUILD_JOBS=1） | passed（同上） | 同上 |
+| mobilenetv2（x5+s python + s cpp） | done | done | done | passed（24 OK；+7 为 B1-R2 整改的 cpp 启动器身份 fixture） | passed（python 四板对照全等（含 x5-8g 复测）；cpp s100 构建并运行 TOP-1 zebra，BUILD_JOBS=1） | passed（同上） | 同上 |
 | mobilenetv3（x5+s python） | done | done | done | passed（17 OK） | passed（四板对照全等，含 x5-8g 复测） | passed（同上） | 同上 |
-| mobilenetv4（x5+s python，small/medium） | done | done | done | passed（17 OK） | passed（四板（含 x5-8g 复测）；medium 下载缺陷经板测发现并修复复验，见 §7 B1-D2） | passed（同上） | 同上 |
-| resnet50/152 变体（s-only python） | done | done | done | passed（套件 46 OK） | passed（s100+s600 对照全等） | passed（同上） | 同上 |
+| mobilenetv4（x5+s python，small/medium） | done | done | done | passed（20 OK；+3 为 B1-R4 整改的转换 shape 一致性测试） | passed（四板（含 x5-8g 复测）；medium 下载缺陷经板测发现并修复复验，见 §7 B1-D2） | passed（同上） | 同上 |
+| resnet50/152 变体（s-only python） | done | done | done | passed（套件 52 OK；+6 为 B1-R1 整改的转换 layout/provenance 测试） | passed（s100+s600 对照全等） | passed（同上） | 同上 |
 | H5 Profile 契约 | done | done | done（模块 docstring + 测试表） | passed（11 OK） | not-applicable（纯主机契约） | passed | 同上 |
 | H6 覆盖检查 | done | done | done（本文件 §3.3） | passed（4 OK） | not-applicable | passed | 同上 |
 
 Closed=no：板测维度已随 2026-09-21 下午的 x5-8g 复测闭环（§7 末行：5/5 通过，
 含 H2 flat≡4D 确认 v1/v2 逐位相等、v3/v4 ≤6e-8）；但独立评审（Codex，
 [B1 独立评审](2026-09-21-b1-independent-review.md)）判定 changes-required
-（B1-R1–R6），整改完成并由独立 reviewer 复核前 B1 不得关闭。上方本表 Board
+（B1-R1–R6），整改完成并由独立 reviewer 复核前 B1 不得关闭。原执行者整改记录见
+[B1 整改记录](2026-09-21-b1-remediation.md)（2026-09-21；待独立 reviewer 复核），
+台账拆行见 [x5-s-migration-map.md](x5-s-migration-map.md) 本轮进度区。上方本表 Board
 列的 passed 仅覆盖板测维度；Review 列的 passed 是作者自评历史记录，已被独立
 评审的 changes-required 取代（见文首更新说明）。
 
