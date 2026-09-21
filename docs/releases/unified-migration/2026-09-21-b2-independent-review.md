@@ -1,5 +1,8 @@
 # B2 独立评审及 B1 关闭确认（2026-09-21）
 
+> **整改独立复审（Codex，0a6deaa）：R2/R3 closed，R1 代码验证通过，但 overlay 后 S 默认入口板测缺少可追溯记录（B2-R1-E）。** 436 tests 与 CI 通过；B2 仍 changes-required / not-ready / Closed=no。见 [复审报告](2026-09-21-b2-independent-rereview.md)。优先补存已有记录，无需完整重跑。
+
+
 - Reviewer：Codex；change-review；B2 base `b835e7fe1113af0efbb2f2404566fb7b8088c57e` → head `716bdca92d704a1e7b7ce36d7c9ba04c3160b311`；开审工作树 clean。
 - B2：**review_decision=changes-required；delivery_readiness=not-ready；Closed=no**。不进入 B3。
 - B1：复核 `b835e7f` 的 R1a/R1b 文档修复通过，连同前次关闭的 R2–R6，**B1 Closed=yes / review_decision=pass / delivery_readiness=ready（既定批次范围）**。S600 MobileNetV2 C++ 按用户决定不补测，仍 not-run；不代表全仓迁移完成或可发布 develop。

@@ -1,5 +1,8 @@
 # B2 批次评审 — efficientnet（x5+s 合并）+ efficientformer/efficientformerv2/efficientvit（x5）（2026-09-21）
 
+> **整改独立复审（Codex，0a6deaa）：R2/R3 closed，R1 代码验证通过，但 overlay 后 S 默认入口板测缺少可追溯记录（B2-R1-E）。** 436 tests 与 CI 通过；B2 仍 changes-required / not-ready / Closed=no。见 [复审报告](2026-09-21-b2-independent-rereview.md)。优先补存已有记录，无需完整重跑。
+
+
 > **独立评审（Codex，716bdca）：changes-required / not-ready，B2 Closed=no。** 发现 B2-R1 默认变体回归、B2-R2 客户文档状态/口径未同步、B2-R3 板测摘要计数与表述错误。见 [独立报告](2026-09-21-b2-independent-review.md)。作者原记录保留，433 项主机测试与 CI 通过不替代上述整改。
 
 
