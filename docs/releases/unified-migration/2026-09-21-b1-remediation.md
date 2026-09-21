@@ -143,6 +143,26 @@
 - `ea68ea6` B1-R6：checker message 锚定豁免 + 84 条欠账基线 + workflow 旗标（checker 27 OK）
 - 台账拆行与本整改记录随其后一个 docs 提交落库
 
+## 整改提交自评（步骤 review，2026-09-21，HEAD `25a8187`）
+
+逐提交 `git show --stat` 核对，文件分组与提交信息一致；六个提交均带
+`Co-Authored-By: Claude Code` 署名行；提交后工作树 clean；在提交后树上
+重跑 CI scope 命令（`--scope migration --parser-mode import
+--exemptions baselines/ultralytics-readme-debt.json`）：
+**7 samples / 0 violations / 10 skips / 84 exemptions applied，rc=0**。
+
+两处跨组文件的落位说明（均已在对应提交信息或本节披露，无未声明内容）：
+
+1. resnet 根 README 双语 2 件（R5 的矩阵/尾段改动）随 R1 提交 `e43718b`
+   落库——该提交以 `git add samples/vision/resnet/` 整目录暂存；R5 提交
+   信息已注明"resnet 根与 v2 cpp 随 R1/R2 提交"。v2 cpp README 双语
+   （R2 身份章 + R5 尾段）同理随 `c1bb46b`。
+2. 台账 `x5-s-migration-map.md` 同时含 R5 拆行与 R1 resnet 行翻转、R6
+   的 B9 行删除义务注记，统一随台账提交 `25a8187` 落库，避免拆 hunk。
+
+单元测试证据均取自与提交内容逐字节一致的工作树（提交仅暂存，未改动
+内容）；全量电池见上表。
+
 ## 待独立 reviewer 复核项
 
 1. B1-R1–R6 逐项按本文位置与回归证据复核（关闭条件 1）。
