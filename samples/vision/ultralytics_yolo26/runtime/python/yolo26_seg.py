@@ -74,7 +74,9 @@ def process_mask(protos: np.ndarray,
                  masks_in: np.ndarray, 
                  bboxes: np.ndarray, 
                  shape: Tuple[int, int], 
-                 upsample: bool = False) -> np.ndarray:
+                 upsample: bool = False,
+                 input_shape: Tuple[int, int] = (640, 640),
+                 resize_type: int = 1) -> np.ndarray:
     """
     Build instance masks from prototype features and mask coefficients.
 
@@ -84,22 +86,33 @@ def process_mask(protos: np.ndarray,
         bboxes (np.ndarray): Bounding boxes in model input coordinates.
         shape (Tuple[int, int]): Target `(height, width)` for output masks.
         upsample (bool): Whether to resize masks to the target image shape.
+        input_shape: Model input `(height, width)` used for preprocessing.
+        resize_type: Preprocessing mode, 0 for stretch or 1 for letterbox.
 
     Returns:
         np.ndarray: Binary instance masks aligned to the target image shape.
     """
     c, mh, mw = protos.shape
     ih, iw = shape
+    input_h, input_w = input_shape
 
     masks = (masks_in @ protos.reshape(c, -1)).reshape(-1, mh, mw)
     masks = post_utils.sigmoid(masks)
-    downsampled_bboxes = bboxes * (mh / 640.0) 
+    downsampled_bboxes = bboxes * np.array(
+        [mw / input_w, mh / input_h, mw / input_w, mh / input_h], dtype=np.float32)
     masks = crop_mask(masks, downsampled_bboxes)
 
     if upsample:
         resized_masks = []
         for m in masks:
-            m_res = cv2.resize(m, (iw, ih), interpolation=cv2.INTER_LINEAR)
+            # Undo the exact integer resize/padding used by resized_image().
+            m_res = cv2.resize(m, (input_w, input_h), interpolation=cv2.INTER_LINEAR)
+            if resize_type == 1:
+                scale = min(input_w / iw, input_h / ih)
+                new_w, new_h = int(iw * scale), int(ih * scale)
+                left, top = (input_w - new_w) // 2, (input_h - new_h) // 2
+                m_res = m_res[top:top + new_h, left:left + new_w]
+            m_res = cv2.resize(m_res, (iw, ih), interpolation=cv2.INTER_LINEAR)
             resized_masks.append(m_res)
         masks = np.array(resized_masks)
 
@@ -217,8 +230,8 @@ class YOLO26Seg:
             self.input_w = input_shape[2]
 
         # Reorder output_names into standard (cls, box, mc) × strides + proto layout.
-        # Group by spatial resolution (H,W), sort groups by H ascending (stride 8→32),
-        # and within each group sort by last_dim: cls(80) > mc(32) > box(4).
+        # Group by spatial resolution (H,W), sort groups by H descending (stride 8→32),
+        # and within each detection group order cls(80), box(4), mc(32).
         # Proto is identified as the group whose H exceeds the largest detection head H.
         output_shapes = self.model.output_shapes[self.model_name]
         groups = {}
@@ -228,8 +241,9 @@ class YOLO26Seg:
             h, w, last = shape[1], shape[2], shape[3]
             groups.setdefault((h, w), []).append((name, last))
 
-        sorted_hw = sorted(groups.keys(), key=lambda x: x[0])
-        max_det_h = sorted_hw[-1][0] if len(sorted_hw) > 1 else 0
+        sorted_hw = sorted(groups.keys(), key=lambda x: x[0], reverse=True)
+        # The single-output prototype group must not count as a detection head.
+        max_det_h = max(hw[0] for hw, members in groups.items() if len(members) > 1)
 
         reordered = []
         for hw in sorted_hw:
@@ -329,6 +343,7 @@ class YOLO26Seg:
                      ori_img_h: int,
                      score_thres: Optional[float] = None,
                      nms_thres: Optional[float] = None,
+                     resize_type: Optional[int] = None,
                      ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Convert raw model outputs to final segmentation results.
@@ -339,6 +354,7 @@ class YOLO26Seg:
             ori_img_h (int): Original image height.
             score_thres (Optional[float]): Override confidence threshold.
             nms_thres (Optional[float]): Override NMS threshold.
+            resize_type (Optional[int]): Resize mode used for this input.
 
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -348,6 +364,8 @@ class YOLO26Seg:
                 - masks: Binary segmentation masks.
         """
         t0 = time.time()
+        if resize_type is None:
+            resize_type = self.cfg.resize_type
         if score_thres is None:
             score_thres = self.cfg.score_thres
         if nms_thres is None:
@@ -392,11 +410,13 @@ class YOLO26Seg:
         cls = cls[keep]
         mask_coefs = mask_coefs[keep]
 
-        masks = process_mask(proto_tensor, mask_coefs, xyxy, 
-                             (ori_img_h, ori_img_w), upsample=True)
+        masks = process_mask(proto_tensor, mask_coefs, xyxy,
+                             (ori_img_h, ori_img_w), upsample=True,
+                             input_shape=(self.input_h, self.input_w),
+                             resize_type=resize_type)
 
         xyxy = post_utils.scale_coords_back(xyxy, ori_img_w, ori_img_h,
-                                            self.input_w, self.input_h, self.cfg.resize_type)
+                                            self.input_w, self.input_h, resize_type)
 
         logger.info(f"\033[1;31m[Seg] Post Process time = {1000 * (time.time() - t0):.2f} ms\033[0m")
         
@@ -425,7 +445,8 @@ class YOLO26Seg:
         ori_img_h, ori_img_w = img.shape[:2]
         inp = self.pre_process(img, resize_type, image_format)
         out = self.forward(inp)
-        return self.post_process(out, ori_img_w, ori_img_h, score_thres, nms_thres)
+        return self.post_process(out, ori_img_w, ori_img_h, score_thres, nms_thres,
+                                 resize_type=resize_type)
 
     def __call__(self,
                  img: np.ndarray,

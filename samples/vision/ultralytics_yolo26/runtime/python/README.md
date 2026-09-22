@@ -47,6 +47,14 @@ pip install numpy opencv-python hbm-runtime scipy
 
 ## Quick Run
 
+Host regression checks for output ordering and pose/segmentation/OBB decoding
+(NumPy, OpenCV and SciPy required; no board SDK or model files needed), from the
+repository root:
+
+```bash
+python3 -m unittest discover -s samples/vision/ultralytics_yolo26/tests -v
+```
+
 - **One-click Execution Script**
   ```bash
   chmod +x run.sh
@@ -96,7 +104,7 @@ python3 main.py \
     --task obb \
     --model-path ../../model/yolo26n_obb_bayese_640x640_nv12.bin \
     --test-img ../../../../../datasets/dotav1/asset/P0009.png \
-    --label-file ../../../../../datasets/dotav1/dota_classes.names \
+    --label-file ../../../../../datasets/dotav1/ultralytics_classes.names \
     --img-save-path ../../test_data/result_obb.jpg
 ```
 
@@ -111,6 +119,17 @@ python3 main.py \
 ```
 
 ## Interface Description
+
+YOLO26 OBB heads emit angles directly in radians (see the upstream
+[OBB26 head](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/nn/modules/head.py)).
+The default OBB label file follows the
+[Ultralytics DOTAv1 class order](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/DOTAv1.yaml),
+including class 9 `large-vehicle` and class 10 `small-vehicle`. Custom models
+must supply their own matching `--label-file`.
+
+Segmentation restores masks using the actual model input dimensions and removes
+letterbox padding before resizing to the original image. A `predict(resize_type=...)`
+override applies consistently to preprocessing, boxes and masks.
 
 - **`YOLO26*Config`**: Encapsulates model path and runtime parameters for each task.
 - **`YOLO26*`**: Provides the complete inference pipeline, including `pre_process`, `forward`, `post_process`, and `predict`.

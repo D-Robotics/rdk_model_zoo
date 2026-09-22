@@ -96,7 +96,7 @@ python3 main.py \
     --task obb \
     --model-path ../../model/yolo26n_obb_bayese_640x640_nv12.bin \
     --test-img ../../../../../datasets/dotav1/asset/P0009.png \
-    --label-file ../../../../../datasets/dotav1/dota_classes.names \
+    --label-file ../../../../../datasets/dotav1/ultralytics_classes.names \
     --img-save-path ../../test_data/result_obb.jpg
 ```
 
@@ -111,6 +111,20 @@ python3 main.py \
 ```
 
 ## 接口说明
+
+YOLO26 OBB 角度头直接输出弧度，不需要再次做 sigmoid 变换，参见上游
+[OBB26 源码](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/nn/modules/head.py)。
+默认标签文件遵循 [Ultralytics DOTAv1 类别顺序](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/DOTAv1.yaml)，
+例如第 9 类为 `large-vehicle`、第 10 类为 `small-vehicle`。自定义模型请通过 `--label-file` 提供匹配的标签。
+
+SEG 根据实际模型输入尺寸还原掩码：去掉 letterbox 灰边，再缩放回原图。
+`predict(resize_type=...)` 的覆盖值同时用于预处理、框和掩码。
+
+在仓库根目录执行主机回归测试（需要 NumPy、OpenCV、SciPy，不需要板端 SDK）：
+
+```bash
+python3 -m unittest discover -s samples/vision/ultralytics_yolo26/tests -v
+```
 
 - **`YOLO26*Config`**: 用于封装每个任务的模型路径和运行参数。
 - **`YOLO26*`**: 提供完整推理流程，包括 `pre_process`、`forward`、`post_process` 和 `predict`。

@@ -66,7 +66,7 @@ DEFAULT_LABEL_FILES = {
     "seg": os.path.join(PROJECT_ROOT, "datasets/coco/coco_classes.names"),
     "pose": os.path.join(PROJECT_ROOT, "datasets/coco/coco_classes.names"),
     "cls": os.path.join(PROJECT_ROOT, "datasets/imagenet/imagenet_classes.names"),
-    "obb": os.path.join(PROJECT_ROOT, "datasets/dotav1/dota_classes.names"),
+    "obb": os.path.join(PROJECT_ROOT, "datasets/dotav1/ultralytics_classes.names"),
 }
 
 logging.basicConfig(

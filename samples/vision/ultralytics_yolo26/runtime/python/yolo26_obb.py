@@ -120,7 +120,8 @@ class YOLO26OBB:
             h, w, last = shape[1], shape[2], shape[3]
             groups.setdefault((h, w), []).append((name, last))
 
-        sorted_hw = sorted(groups.keys(), key=lambda x: x[0])
+        # Strides 8/16/32 require feature maps from largest to smallest.
+        sorted_hw = sorted(groups.keys(), key=lambda x: x[0], reverse=True)
 
         reordered = []
         for hw in sorted_hw:
@@ -338,7 +339,8 @@ class YOLO26OBB:
             v_angle = angle_data[valid_indices][:, 0]
             grid = self.grids[stride][valid_indices]
 
-            a_rad = (post_utils.sigmoid(v_angle) - 0.25) * math.pi * self.cfg.angle_sign + self.angle_offset_rad
+            # OBB26 emits radians directly, unlike the older OBB sigmoid head.
+            a_rad = v_angle * self.cfg.angle_sign + self.angle_offset_rad
             l, t, r, b = v_box.T
             xf, yf = (r - l) / 2.0, (b - t) / 2.0
             c, s = np.cos(a_rad), np.sin(a_rad)
