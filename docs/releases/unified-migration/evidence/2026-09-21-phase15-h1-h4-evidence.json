@@ -1,0 +1,65 @@
+{
+  "record": "2026-09-21-phase15-h1-h4-hardening",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous, per standing plan-execution instruction)",
+  "repo_head_before": "0a1ba60",
+  "scope": "Phase 1.5 H1-H4: declared output transforms (dequant chain), flat packed NV12 canonical, shared multi-model runtime metadata, output rank normalisation; H5/H6 deferred to B1 per plan",
+  "change_set": {
+    "new_shared_modules": [
+      "samples/_shared/quantization.py (H1: OUTPUT_TRANSFORMS, apply_output_transform, dequantize_tensor/outputs ported from rdk_s @380e1a2 utils/py_utils/postprocess.py)",
+      "samples/_shared/runtime_meta.py (H3: shared RuntimeMetadata, canonicalise_dtype, MetadataMismatchError)"
+    ],
+    "new_shared_tests": [
+      "samples/_shared/tests/test_quantization.py (11 tests)",
+      "samples/_shared/tests/test_runtime_meta.py (7 tests; total _shared suite 18 -> 37)"
+    ],
+    "resnet": [
+      "model_binding.py: ClassificationContract.output_shape -> output_transform + output_quants snapshot; score_vector_shape/normalise_score_vector (H4); _contract_for drops (1,1000,1,1)/(1,1000) dual hardcode; private normalisers removed in favour of shared canonicalise_dtype",
+      "model_runner.py: container-only output check via rank rule + per-transform dtype; returns raw output",
+      "classification.py: post_process executes apply_output_transform with the binding's quant snapshot before legacy_softmax",
+      "tensor_io.py: as_packed/as_split converters; prepare_nv12 packed branch feeds flat 1-D; validate_input_tensors accepts only flat 1-D of H*W*3/2 bytes (H2)",
+      "main.py: dry-run prints output_transform + output_rank_rule",
+      "tests: test_binding (+4), test_classification (+1, flat + declared-dequant chain with hand-computed SCALE math), test_runner/test_integration (flat inputs, same bytes as former 4D view), test_tensor_io (+2 flat-only/as_packed round-trip)",
+      "README.md/README_cn.md: Results sections rewritten for flat canonical + rank rule + declared transform"
+    ],
+    "paddle_ocr": [
+      "model_binding.py: local RuntimeMetadata deleted, re-exports shared class; MetadataMismatchError multiply inherits; quant-descriptor rejection keyed on facts.output_quants",
+      "tests/test_binding.py: quant-rejection fixtures moved to output_quants; +1 multi-model explicit-selection test (shared error asserted)"
+    ],
+    "docs": [
+      "samples/_shared/README.md: H1/H3 sections added; assets.py manifest path corrected to docs/release/{x5,s}/models.yaml (A4 drift fix)"
+    ]
+  },
+  "h1_activation_semantics_note": "sigmoid-on-raw-logit vs dequant-already-activated stays OUT of the transform chain by design; task-level post_process declares and executes it (lands with B7/B9 migration)",
+  "h2_board_equivalence": "not-run (user-gated board smoke; X5 flat packed vs former 4D view equivalence not claimed until executed)",
+  "verification": {
+    "commands": {
+      "cwd": "repository root",
+      "interpreter": ".venv/bin/python (CPython 3.14, repo venv; system python3 lacks PyYAML and is not used)",
+      "suites": [
+        {"cmd": ".venv/bin/python -m unittest discover -s samples/_shared/tests", "result": "Ran 37 tests, OK"},
+        {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/resnet/tests", "result": "Ran 46 tests, OK"},
+        {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/paddle_ocr/tests", "result": "Ran 44 tests, OK"},
+        {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/ultralytics_yolo/tests", "result": "Ran 59 tests, OK (regression only; sample untouched this phase)"}
+      ],
+      "checker_self": {"cmd": ".venv/bin/python -m unittest discover -s tools/sample_contract/tests", "result": "Ran 23 tests, OK"},
+      "q3_checker": [
+        {"cmd": ".venv/bin/python tools/sample_contract/check.py --sample samples/vision/resnet", "result": "1 samples, 0 violations, 2 skips"},
+        {"cmd": ".venv/bin/python tools/sample_contract/check.py --sample samples/vision/paddle_ocr", "result": "1 samples, 0 violations, 1 skips"},
+        {"cmd": ".venv/bin/python tools/sample_contract/check.py --sample samples/vision/ultralytics_yolo", "result": "84 violations = pre-existing B9-adjudication state; git status confirms zero changes under samples/vision/ultralytics_yolo/ this phase"}
+      ],
+      "dry_run": {
+        "cmd": ".venv/bin/python samples/vision/resnet/runtime/python/main.py --dry-run --target x5 --asset-id x5:resnet:resnet18_224x224_nv12.bin",
+        "exit_code": 0,
+        "key_lines": ["output_transform: raw_f32", "output_rank_rule: squeeze -> (1000,)", "No model is downloaded and no SDK is loaded."]
+      }
+    },
+    "port_fidelity": "dequantize_tensor semantics match rdk_s @380e1a2 utils/py_utils/postprocess.py: SCALE-only gate, per-tensor/per-channel axis broadcast, scalar zero_point -> zeros in per-channel branch, empty zero_point -> zeros((1,)); covered by hand-computed host fixtures"
+  },
+  "not_run": [
+    "X5 board smoke: flat packed NV12 vs former 4D view equivalence (H2 gate; user executes on X5 8GB/4GB)",
+    "S artifact real output_quants metadata verification (H1 fixtures are synthetic; board required)",
+    "board end-to-end runs; S600 (SSH unrecovered)"
+  ],
+  "edit_during_closeout": "removed a duplicated import block accidentally left in test_tensor_io.py::test_validate_input_tensors_accepts_only_flat_packed_layout before committing; resnet suite re-run green after the cleanup (46/46)"
+}

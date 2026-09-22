@@ -14,22 +14,25 @@ async function workflowNames(): Promise<string[]> {
 /**
  * The catalog data package is the only thing this repository publishes from CI.
  * These checks keep a website deployment from creeping back into a model
- * branch: the data workflow may build and upload, never deploy.
+ * branch: the data workflow may build and upload, never deploy. The sample
+ * contract workflow only runs host-side checks and uploads nothing.
  */
 describe("catalog release workflow", () => {
-  it("is the only workflow and no longer deploys a website", async () => {
-    expect(await workflowNames()).toEqual(["model-catalog-data.yml"]);
+  it("runs exactly the data and sample-contract workflows and deploys no website", async () => {
+    expect(await workflowNames()).toEqual(["model-catalog-data.yml", "sample-contract.yml"]);
 
-    const workflow = await readFile(DATA_WORKFLOW, "utf8");
-    for (const forbidden of [
-      "actions/deploy-pages",
-      "actions/upload-pages-artifact",
-      "actions/configure-pages",
-      "pages: write",
-      "id-token: write",
-      "environment:"
-    ]) {
-      expect(workflow).not.toContain(forbidden);
+    const workflows = await Promise.all((await workflowNames()).map((name) => readFile(join(WORKFLOW_DIRECTORY, name), "utf8")));
+    for (const workflow of workflows) {
+      for (const forbidden of [
+        "actions/deploy-pages",
+        "actions/upload-pages-artifact",
+        "actions/configure-pages",
+        "pages: write",
+        "id-token: write",
+        "environment:"
+      ]) {
+        expect(workflow).not.toContain(forbidden);
+      }
     }
   });
 

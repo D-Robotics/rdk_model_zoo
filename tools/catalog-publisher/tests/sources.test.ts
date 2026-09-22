@@ -18,15 +18,22 @@ describe("platform source resolution", () => {
     expect(sources.map((source) => source.platform)).toEqual(PLATFORMS);
     for (const source of sources) {
       expect(source.kind).toBe("worktree");
-      expect(source.worktreeRoot).toBe(`platforms/${source.platform}`);
-      expect(source.linkRef).toBe("main");
-      expect(source.linkPrefix).toBe(`platforms/${source.platform}`);
+      // X5 and S are unified into the repository root; only the archived X3
+      // still reads from its frozen subtree. Sample links follow the layout
+      // that actually holds the sample directory on the ref being linked.
+      const unified = source.platform !== "x3";
+      expect(source.worktreeRoot).toBe(unified ? "." : `platforms/${source.platform}`);
+      expect(source.linkRef).toBe(unified ? "develop" : "main");
+      expect(source.linkPrefix).toBe(unified ? "" : `platforms/${source.platform}`);
     }
-    // The historical X3 layout keeps its manifests at the platform root; the
-    // probe finds each distribution's own manifest directory, so no platform
-    // needs a special case in the build.
+    // Each distribution's own manifest directory: the unified groups live at
+    // docs/release/<platform>, the archived X3 keeps its historical root.
     expect(Object.fromEntries(sources.map((source) => [source.platform, source.manifestDirectory])))
-      .toEqual({ x5: "docs/release", s: "docs/release", x3: "release" });
+      .toEqual({ x5: "docs/release/x5", s: "docs/release/s", x3: "release" });
+    // The version file travels with the manifests, so one repository root can
+    // hold three disagreeing platform versions.
+    expect(Object.fromEntries(sources.map((source) => [source.platform, source.versionFile])))
+      .toEqual({ x5: "docs/release/x5/VERSION", s: "docs/release/s/VERSION", x3: "VERSION" });
   });
 
   it("reads a pinned platform from its frozen tag with the layout that tag carries", async () => {

@@ -47,7 +47,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s100 --
 | 运行 CLI NMS 默认值 | 0.70 | 0.45 |
 | 运行 CLI 分类缩放 | YOLO26 直接缩放（0）；其他系列 letterbox（1） | 直接缩放，resize-type=0 |
 | 分类配置类默认缩放 | 0，保留原 API | 0，保留原 API |
-| 已发布分类文件名 | YOLO26 为 224x224；其他系列为 640x640 | 224x224 |
+| 已发布分类文件名 | YOLO26 为 224x224；其他系列为 640x640 | S600 全部 224x224；S100/S100P：YOLO26 为 224x224，其他系列为 640x640 |
 | YOLOv10 运行路径 | DFL + NMS，保留原实现 | DFL 解码后不做 NMS |
 | C++ | X5 参考实现 | 本 Sample 未提供 |
 
@@ -78,4 +78,6 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --fa
 
 `yolo_dispatch.py` 按模型系列选择任务输出协议；YOLO26 是四通道 LTRB，YOLOv8 是 DFL。平台输入、分类实现、绘制、下载和评测基础设施共用。五个导出补丁放在 `conversion/yolo26/`，X5/S 编译流程保留各自实现。后续新版本在确认张量协议兼容后可以复用，不需要复制整个 Sample。
 
-旧 `platforms/{x5,s}/samples/vision/ultralytics_yolo26` 路径转发到这里，旧 Python 适配层保留姿态、分割返回格式。X5 OBB 的角度偏置、按类别 NMS 和裁剪行为仍与 S 分开保留。输出按尺寸与通道绑定，不再依赖编译器枚举顺序；X5 分割根据真实输入尺寸撤销 letterbox，修复原来硬编码 640 的掩码缩放。这些修正仍须上板复验精度。原 Benchmark 表作为历史证据保留，不代表新代码已重新实测。
+旧 `platforms/{x5,s}/samples/vision/ultralytics_yolo26` 路径转发到这里，旧 Python 适配层保留姿态、分割返回格式。YOLO26 OBB 在 X5 和 S 上均直接按弧度解码；X5 按类别 NMS 和裁剪行为仍与 S 分开保留。输出按尺寸与通道绑定，不再依赖编译器枚举顺序；分割根据真实输入尺寸撤销 letterbox。这些修正仍须上板复验精度。原 Benchmark 表作为历史证据保留，不代表新代码已重新实测。
+
+OBB 默认标签遵循 [Ultralytics DOTAv1 类别顺序](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/DOTAv1.yaml)，其中 ID 9 为 `large-vehicle`、ID 10 为 `small-vehicle`；自定义模型可用 `--label-file` 覆盖。共享导出保留 [OBB26 角度头](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/nn/modules/head.py) 的原始弧度输出，不应再次进行 sigmoid 角度映射。

@@ -1,4 +1,4 @@
-"""People and Agent entrypoint for the ResNet18 classification pilot.
+"""People and Agent entrypoint for the ResNet classification sample.
 
 Only this thin entrypoint adjusts ``sys.path`` for a direct full-checkout
 invocation.  Reusable algorithms use absolute package imports and do not alter
@@ -34,14 +34,16 @@ from samples.vision.resnet.runtime.python.labels import load_labels as _load_lab
 
 _SAMPLE_DIR = _ROOT / "samples" / "vision" / "resnet"
 _DEFAULT_IMAGE = _SAMPLE_DIR / "test_data" / "white_wolf.JPEG"
-_DEFAULT_LABELS = _ROOT / "platforms" / "x5" / "datasets" / "imagenet" / "imagenet_classes.names"
+# Root datasets/ is the A2 unified location; the former platforms/x5 snapshot
+# path disappears with the migration closeout.
+_DEFAULT_LABELS = _ROOT / "datasets" / "imagenet" / "imagenet_classes.names"
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the SDK-free command line parser for the pilot entrypoint."""
+    """Build the SDK-free command line parser for the sample entrypoint."""
 
     parser = argparse.ArgumentParser(
-        description="ResNet18 ImageNet classification on an observed RDK target."
+        description="ResNet ImageNet classification on an observed RDK target."
     )
     parser.add_argument(
         "--target",
@@ -57,7 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--variant",
         choices=SUPPORTED_VARIANTS,
         default=None,
-        help="Pilot model variant (default: resnet18).",
+        help="Model variant (default: resnet18; resnet50/resnet152 are S100/S600-only).",
     )
     parser.add_argument(
         "--model-path",
@@ -109,7 +111,7 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument(
         "--list-models",
         action="store_true",
-        help="List manifest-backed pilot asset references without board access.",
+        help="List manifest-backed sample asset references without board access.",
     )
     mode.add_argument(
         "--dry-run",
@@ -157,7 +159,7 @@ def _list_models(target: str) -> int:
     except BindingError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    print("Manifest-backed ResNet18 pilot asset references:")
+    print("Manifest-backed ResNet asset references:")
     if not records:
         print(f"  no published asset for target: {target}")
         return 0
@@ -217,7 +219,8 @@ def _dry_run(args: argparse.Namespace) -> int:
         "  input_geometry: "
         f"{selection.contract.input_width}x{selection.contract.input_height}"
     )
-    print(f"  output_shape: {selection.contract.output_shape}")
+    print(f"  output_transform: {selection.contract.output_transform}")
+    print(f"  output_rank_rule: squeeze -> ({selection.contract.class_count},)")
     print(f"  output_semantics: {selection.contract.output_semantics}")
     print(f"  output_score_policy: {selection.contract.output_score_policy}")
     print(f"  source_manifest: {selection.contract.source_manifest}")

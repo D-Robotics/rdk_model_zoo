@@ -1,27 +1,42 @@
 # ResNet18 evaluation
 
-Evaluation has two separate purposes: confirm that one board can execute the
-selected artifact with the expected tensor contract, and measure accuracy or
-latency with a stated dataset and toolchain. Host tests cover the former
-contract logic only; they do not simulate `hbm_runtime` or certify a board.
+Evaluation has two separate purposes: confirm that one board executes the
+selected artifact with the expected tensor contract, and measure accuracy
+or latency with a stated dataset and toolchain. This directory documents
+both; it contains no accuracy harness of its own (see
+[boundaries](#boundaries)).
 
-## Host checks
+<a id="dataset"></a>
+## Dataset
 
-From the repository root, run the complete ResNet test suite:
+Not applicable for the current scope: this sample performs functional
+checks (bundled test images) and does not run a dataset-level accuracy
+evaluation. A dataset-based evaluation would require ImageNet validation
+data (50,000 images, ILSVRC2012 val) prepared separately by the user; no
+dataset download or preparation script is provided.
+
+<a id="environment"></a>
+## Environment
+
+Host checks need the repository's user-space Python dependencies
+(`requirements-host.txt` at the sample root) and no board SDK. The
+functional board check needs the target board with its `hbm_runtime`
+image, a prepared artifact, and the label file. The dataset-level
+evaluation would additionally need the OE/board toolchain stated with the
+result.
+
+<a id="command"></a>
+## Command
+
+Host checks (cwd: repository root; success: all tests OK, exit 0):
 
 ```bash
 python3 -m unittest discover -s samples/vision/resnet/tests -v
 ```
 
-These tests cover manifest selection, strict runtime metadata binding, resize
-geometry, packed and split NV12 layouts, injected execution, safe labels,
-legacy wrapper return shapes, and deterministic score decoding. The exporter
-smoke check is separate from board compilation and accuracy.
-
-## Functional board check
-
-Prepare the artifact from the matching manifest row and run the canonical
-Python command on its board. For example, on X5:
+Functional board check on X5 (prerequisite:
+`bash samples/vision/resnet/model/download.sh x5`; success: exit 0 and the
+expected Top-K):
 
 ```bash
 python3 samples/vision/resnet/runtime/python/main.py \
@@ -29,83 +44,59 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names \
+  --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-On S100 or S600, substitute the corresponding `s:resnet18:<target>/...`
-reference, artifact path, and `platforms/s/datasets/imagenet/` labels. Save the
-board identity, model reference, runtime metadata, raw F32 score tensor, Top-K
-output, image path, resize type, and command line. A result is `not-run` when
-the board connection, artifact, or required runtime is unavailable; host test
-success does not change that status.
+On S100/S600 substitute the `s:resnet18:<target>/...` reference and the
+artifact path; the labels file is shared. For a same-board before/after
+comparison, run the legacy entrypoint
+(`platforms/x5/samples/vision/resnet/runtime/python/main.py` or
+`platforms/s/samples/vision/resnet18/runtime/python/main.py`) with the
+same image, model bytes, labels, resize type, and Top-K, and compare class
+IDs and raw scores before label formatting. The S-series C++ check runs
+`bash samples/vision/resnet/runtime/cpp/run.sh`.
 
-The old Python entrypoints are useful for a direct compatibility comparison:
+<a id="metrics"></a>
+## Metrics
 
-```bash
-python3 platforms/x5/samples/vision/resnet/runtime/python/main.py --help
-python3 platforms/s/samples/vision/resnet18/runtime/python/main.py --help
-```
+| Metric | Definition | Conditions |
+| --- | --- | --- |
+| contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
+| Top-K agreement | identical class IDs and raw scores between canonical and legacy runs | same board, same artifact bytes, image, resize type, Top-K |
+| Top-1 accuracy | fraction of argmax-correct predictions | ImageNet val — not evaluated in this sample |
+| latency / FPS | inference timing | not evaluated in this sample; historical figures below carry unstated conditions |
 
-For a comparison, run both commands with the same image, model bytes, labels,
-resize type, and Top-K. Compare class IDs and raw scores before comparing the
-printed label formatting. The compatibility classes return the old tuple/list
-shapes while using the canonical preprocessing and decoder.
+<a id="outputs"></a>
+## Outputs
 
-## Native S-series check
+Host checks print the unittest result. The functional board check prints
+the Top-K (class ids, scores, labels) on stdout and optionally writes an
+annotated image with `--img-save-path`. For evidence, save the board
+identity, model reference, runtime metadata, raw F32 score tensor, Top-K
+output, image path, resize type, and command line.
 
-The consolidated C++ source is built and run only on S100 or S600:
+<a id="reference-results"></a>
+## Reference results
 
-```bash
-bash samples/vision/resnet/runtime/cpp/run.sh
-```
+| Item | Value | Source |
+| --- | --- | --- |
+| host tests | 46 OK (2026-09-21, B1 host evidence JSON) | migration evidence |
+| board comparison | canonical == legacy on both X5 boards and S100 (class IDs and raw scores) | integration review 2026-09-17 |
+| S100 C++ | Top-5 text equal to the source baseline | integration review 2026-09-17 |
+| dataset accuracy / latency | not-run in this sample | — |
 
-The launcher checks the model, image, and label files, runs CMake, and executes
-the binary. It does not install `gflags`, OpenCV, or the Horizon DNN runtime and
-does not download a model. For S600, set `MODEL_PATH` and `BUILD_DIR` as shown
-in the parent README. To audit the compatibility build independently, configure
-`platforms/s/samples/vision/resnet18/runtime/cpp` with CMake; that directory now
-adds the canonical CMake target and preserves the historical output location.
+Historical legacy figures (X5 evaluator record): Top-1 71.5% (float) /
+70.5% (quantized), 2.95 ms latency, 449+ FPS. The source does not state
+whether latency/FPS used single calls, batching, or threads; they are not
+re-derived here and not presented as results of the canonical sample.
 
-The native output should be compared with the original S18 binary using the
-same S artifact, `zebra_cls.jpg`, label file, and `--top_k 5`. Record the full
-configure/build command and the Top-K lines. The C++ source is a consolidated
-copy of the audited S18 implementation and uses the shared
-`platforms/s/utils/c_utils` source files; no X5 C++ baseline exists in the
-audited source.
+<a id="boundaries"></a>
+## Boundaries
 
-## Accuracy and performance
-
-For an ImageNet validation measurement, use the same dataset preprocessing as
-the OE conversion reference: 224x224 input and the target's NV12 contract.
-Record the image list, label mapping, artifact reference, board identity, and
-whether the score vector was decoded with the legacy softmax policy. The
-published legacy X5 evaluator reports:
-
-| Artifact/evaluation | Top-1 | Latency | FPS | Source |
-| --- | ---: | ---: | ---: | --- |
-| ResNet18 float reference | 71.5% | 2.95 ms | 449+ | X5 legacy evaluator README |
-| ResNet18 quantized reference | 70.5% | 2.95 ms | 449+ | X5 legacy evaluator README |
-
-These are historical published values, not a fresh result for every checkout
-or regenerated artifact. The legacy source does not state whether latency or
-FPS used single calls, batching, or multiple threads; keep the two fields as
-separate source metrics and do not derive FPS from 2.95 ms. The S18 README provides a qualitative smoke check:
-`zebra_cls.jpg` should produce a finite non-zero score for a zebra class, but it
-does not publish a full ImageNet accuracy number. Invoke the OE tools used by a
-conversion, including `hb_perf` and `hrt_model_exec`, and retain their complete
-logs when reporting latency or model-level output.
-
-## Result interpretation
-
-The canonical contract accepts only one output tensor with F32 type and 1000
-classes. X5 metadata uses output `prob` with shape `[1,1000,1,1]`; S100/S600 use
-`output` with `[1,1000]`. Both Python source wrappers apply softmax. Because the
-available conversion source does not prove where X5 normalization occurs,
-report raw output and decoded output together and keep the policy labeled
-`legacy_softmax` over an `unverified_score_vector`.
-
-Do not publish a new accuracy or performance claim from a missing board run,
-from a different artifact with the same filename, or from ResNet50/152 legacy
-files. Record `not-run` with the blocking condition and keep the historical
-reference separate from newly measured evidence.
+No dataset-level accuracy or latency harness ships with this sample: the
+checked-in material covers host contract tests and functional board
+checks only. Host test success never certifies a board. A board that is
+unreachable or an artifact that is unavailable makes the corresponding
+item `not-run`, not failed-and-forgotten. S600 re-validation remains
+`not-run` until board access recovers.

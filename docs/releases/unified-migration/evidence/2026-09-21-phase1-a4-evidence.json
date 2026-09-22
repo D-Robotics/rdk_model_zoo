@@ -1,0 +1,106 @@
+{
+  "record": "2026-09-21-phase1-a4-manifests",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous, per standing plan-execution instruction)",
+  "repo_head_before": "46c16e6",
+  "source_refs": {
+    "rdk_x5_tip": "ac11571",
+    "rdk_s_tip": "380e1a2",
+    "snapshot_x5_version": "1.1.2",
+    "snapshot_s_version": "1.1.2 (predates tip's 20 cls filename corrections; x5 snapshot assets+urls byte-identical to tip v1.1.3)"
+  },
+  "files_created": {
+    "docs/release/x5/models.yaml": "from ac11571:docs/manifests/models.yaml + pilot-row edits + summary recompute",
+    "docs/release/x5/benchmarks.yaml": "byte-identical to ac11571:docs/manifests/benchmarks.yaml",
+    "docs/release/x5/schemas/models.schema.json": "byte-identical to ac11571:docs/manifests/schemas/models.schema.json",
+    "docs/release/x5/schemas/benchmarks.schema.json": "byte-identical to ac11571:docs/manifests/schemas/benchmarks.schema.json",
+    "docs/release/s/models.yaml": "from 380e1a2:docs/manifests/models.yaml + pilot-row edits + 3 new rows + summary recompute",
+    "docs/release/s/benchmarks.yaml": "byte-identical to 380e1a2:docs/manifests/benchmarks.yaml",
+    "docs/release/s/schemas/models.schema.json": "copy of x5 tip schema (verified superset of s tip schema; additions all optional)",
+    "docs/release/s/schemas/benchmarks.schema.json": "copy of x5 tip schema (superset)"
+  },
+  "pilot_row_edits": [
+    {"manifest": "x5", "id": "paddleocr", "changes": {"sample_path": "samples/vision/paddleocr -> samples/vision/paddle_ocr", "download_scripts": "[download_model.sh] -> [] + notes (--prepare via samples/_shared/assets.py)"}},
+    {"manifest": "x5", "id": "ultralytics_yolo26", "changes": {"sample_path": "samples/vision/ultralytics_yolo26 -> samples/vision/ultralytics_yolo", "download_scripts": "repointed to unified sample scripts (both exist on develop)"}},
+    {"manifest": "s", "id": "paddle_ocr", "changes": {"download_scripts": "[download_model.sh] -> [] + notes (--prepare)"}},
+    {"manifest": "s", "id": "resnet18", "changes": {"sample_path": "samples/vision/resnet18 -> samples/vision/resnet", "download_scripts": "download_model.sh -> model/download.sh + notes (--variant resnet18)"}},
+    {"manifest": "s", "id": "ultralytics_yolo26", "changes": {"sample_path": "samples/vision/ultralytics_yolo26 -> samples/vision/ultralytics_yolo", "download_scripts": "repointed; notes extended, YOLO26n-only asset disclosure preserved"}}
+  ],
+  "new_s_rows": [
+    {
+      "id": "yoloe26_seg",
+      "assets_added": 10,
+      "asset_pattern": "yoloe_26{n|s|m|l|x}_seg_pf_{nashe|nashm}_640x640_nv12.hbm under rdk_s100/yoloe26_seg/{nash-e,nash-m}/",
+      "sha256": "all null (script verifies against remote manifest.json; repo records no digest)",
+      "sidecars": ".json/.names co-located by script, not inventoried (matches existing vision-row convention)",
+      "provenance": "380e1a2:samples/vision/yoloe26_seg/model/download_model.sh (read in full)"
+    },
+    {
+      "id": "yoloe11_seg",
+      "assets_added": 1,
+      "asset": "yoloe_11s_seg_pf_nashe_640x640_nv12.hbm @ rdk_s100/ultralytics_YOLO/",
+      "scope": "S100 only; script hard-errors on S600",
+      "unregistered_extra": "yoloe_v8s_seg_pf_nashe_640x640_nv12.hbm appears in conversion docs without a recorded URL; intentionally not registered",
+      "provenance": "380e1a2:samples/vision/yoloe11_seg/model/download_model.sh (read in full)"
+    },
+    {
+      "id": "minicpm5-2b",
+      "assets_added": 3,
+      "sha256": {
+        "s100/minicpm5-2b_s100_oellm1_w8_ctx4096_20260909.tar.gz": "dc130ae21dc1f1cc266c526e090b03b4d3be4af8cf4157c4b5841b7f47ab818d",
+        "s100p/minicpm5-2b_s100p_oellm1_w8_ctx4096_20260909.tar.gz": "65c89ae7ead48711a392fa556f602358ffffe16438e94051d1f8cca46d4e096a",
+        "s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz": "8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841"
+      },
+      "sha256_source": "script-pinned constants the download script verifies against (380e1a2:samples/llm/minicpm5-2b/model/download_model.sh)",
+      "notes_flag": "S600 requires internal OELLM 2.0 beta SDK per sample README"
+    }
+  ],
+  "summary_recompute": {
+    "x5": {"download_script_count": "40 -> 39", "others": "unchanged (37/177/176/1/24/153/239/636/419)"},
+    "s": {"sample_count": "35 -> 38", "download_script_count": "33 -> 35", "asset_count": "368 -> 382", "downloadable_asset_count": "366 -> 380", "sha256_recorded_count": "2 -> 5", "sha256_unrecorded_count": "366 -> 377", "others": "manual 2, benchmarks 538/1367/2716 unchanged"}
+  },
+  "code_changes": {
+    "samples/_shared/assets.py": "_models() and Asset.source_path repointed to docs/release/{group}/models.yaml",
+    "samples/_shared/tests/test_assets.py": "added test_manifest_authority_is_the_unified_release_location",
+    "tools/catalog-publisher/sources.json": "x5/s -> path '.', manifest_root docs/release/{x5,s}, link_ref develop, link_prefix ''; x3 unchanged"
+  },
+  "consequential_fix_yolo_cls": {
+    "trigger": "test_shell.test_syntax_and_public_downloads failed: Unknown manifest asset 's:ultralytics_yolo:nash-e/yolo11n_cls_nashe_224x224_nv12.hbm' (tip manifest renamed the key to 640x640)",
+    "source_truth": "rdk_s tip download_model.sh builds yolov8/yolo11 cls filenames and URLs at 640x640; tip manifest filename keys agree (640x640 for nashe/nashm, nashp stays 224x224; yolo26 stays 224x224 everywhere incl. x5)",
+    "changes": [
+      "yolo_assets.py: CLASSIFICATION_RESOLUTION platform map replaced by CLASSIFICATION_LOW_RESOLUTION_FAMILIES={yolo26} + CLASSIFICATION_LOW_RESOLUTION_TARGETS={s600}; classification_resolution(profile, family) new signature (no external consumers); asset_resolution delegates",
+      "run.sh comment example nashe cls 224x224 -> 640x640",
+      "README.md / README_cn.md published-classifier-filename row updated for S100/S100P vs S600",
+      "tests/test_execution_target.py synthetic manifest path platforms/x5/docs/release/models.yaml -> docs/release/x5/models.yaml"
+    ],
+    "discovered_source_inconsistency": "s tip manifest rows for the 20 renamed cls files keep 224x224 URLs while filename keys say 640x640, contradicting the same branch's download script (640x640 URLs). Tip bytes preserved verbatim; NOT silently corrected. Disposition: B9 consolidation or a real board download settles which name the archive hosts; A7 ledger to carry the flag."
+  },
+  "verification": {
+    "jsonschema_draft202012": "4/4 manifests VALID against docs/release/{x5,s}/schemas (python jsonschema; s benchmarks parsed with alias-dedup rewrite for duplicate anchor names present in the tip)",
+    "pyyaml_date_note": "s models/benchmarks unquoted released_at parses as date under PyYAML 1.1; the pipeline's JS YAML 1.2 parser keeps it a string (verified with node); files left byte-identical to tip",
+    "unit_suites": {
+      "samples/vision/resnet/tests": "39 OK",
+      "samples/vision/paddle_ocr/tests": "43 OK",
+      "samples/vision/ultralytics_yolo/tests": "59 OK (was 2 failures before the consequential fix)",
+      "samples/_shared/tests": "18 OK (incl. 1 new)",
+      "tools/sample_contract/tests": "23 OK"
+    },
+    "pilot_entrypoints": {
+      "paddle_ocr --list-models": "4 qualified refs resolve (x5 pair + s100 pair) via new manifest location",
+      "resnet --target x5 --list-models": "source_manifest reported as docs/release/x5/models.yaml"
+    },
+    "migration_scope_checker": "3 samples, 84 violations, 6 skips — identical to pre-A4 (ultralytics_yolo R-README-SECTIONS sanctioned interim state)",
+    "cls_resolution_matrix_review": "model_filename+manifest_asset verified for 9 cases (s600/s100/s100p/x5 x yolov8/yolo11/yolo26 cls): s600 all 224x224 nash-p; s100/s100p yolo11+yolov8 640x640, yolo26 224x224; x5 others 640x640, yolo26 224x224; every reference resolves against the relocated manifests (covers the s600 path the shell test exercises only through the frozen tree)",
+    "platforms_untouched": "git status shows no changes under platforms/ (frozen snapshots kept until the closing phase)"
+  },
+  "catalog_publisher_state": {
+    "baseline_before_a4": "vitest 1 failed / 94 passed (workflow-name expectation predates sample-contract.yml from Q3)",
+    "after_a4": "vitest 42 failed / 53 passed (fixtures lock the old platforms/{x5,s} layout and old totals); validate:sources x5+s fail on benchmark evidence SOURCE_NOT_FOUND at repo root (unmigrated samples); x3 ok; manifest content itself passes schema/identity/reference/normalization at the new location",
+    "owner": "A5 (next step): evidence resolution via immutable record refs (git cat-file), fixture updates, workflow path triggers incl. docs/release/**, workflow-name assertion, full npm run check green"
+  },
+  "not_run": [
+    "board smoke (user-gated X5 8GB/4GB + S100)",
+    "network fetches (incl. settling the s cls URL true name; requires authorization)",
+    "catalog-publisher full check green (A5)"
+  ]
+}

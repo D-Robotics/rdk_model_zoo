@@ -48,12 +48,17 @@ describe("platform registry", () => {
     expect(document.schema_version).toBe(1);
     expect(document.platforms.map((entry) => entry.id).sort()).toEqual(Object.keys(sources.sources).sort());
     for (const entry of document.platforms) {
-      expect(entry.path).toBe(`platforms/${entry.id}`);
-      expect(sources.sources[entry.id as keyof typeof sources.sources]!.path).toBe(entry.path);
-      expect(sources.sources[entry.id as keyof typeof sources.sources]!.manifest_root)
-        .toBe(entry.manifest_directory.slice(`platforms/${entry.id}/`.length));
-      expect((await readFile(join(repositoryRoot, "platforms", entry.id, "VERSION"), "utf8")).trim())
-        .toBe(entry.version);
+      const source = sources.sources[entry.id as keyof typeof sources.sources]!;
+      // X5 and S release data now lives at the repository root
+      // (`docs/release/<platform>`); only the archived X3 keeps a subtree.
+      const expectedPath = entry.id === "x3" ? `platforms/${entry.id}` : ".";
+      expect(entry.path).toBe(expectedPath);
+      expect(source.path).toBe(entry.path);
+      expect(source.manifest_root)
+        .toBe(entry.path === "." ? entry.manifest_directory : entry.manifest_directory.slice(`${entry.path}/`.length));
+      const versionFile = source.version_file ?? "VERSION";
+      const versionRoot = entry.path === "." ? repositoryRoot : join(repositoryRoot, entry.path);
+      expect((await readFile(join(versionRoot, versionFile), "utf8")).trim()).toBe(entry.version);
     }
   });
 

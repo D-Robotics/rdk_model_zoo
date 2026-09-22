@@ -1,0 +1,145 @@
+{
+  "record": "2026-09-21-b2-board-smoke",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous; board runs under the user's standing B2 authorization '板测按既有授权和可用环境执行' in the batch instruction)",
+  "repo_head_before": "e2287d0 (B2 host-side completion: ac09101 efficientnet + 27fea1a efficientformer + a8a9ace efficientformerv2 + 4f08785 efficientvit + docs/ledger/evidence)",
+  "scope": "B2 board smoke: same-board legacy-vs-unified comparison for all 4 B2 samples — efficientnet (x5 b2/b3/b4 on x5-8g+x5-4g; s lite0-4 on s100 and s600), efficientformer (x5 l1/l3), efficientformerv2 (x5 s0/s1/s2), efficientvit (x5 m5) — plus run.sh CLI end-to-end per sample and s100p rejection negatives. No product defects found; no code changes required.",
+  "bundle": {
+    "sha256": "d54d1cf531cd8f8ce63aaf8685cde74c34a5c0b1443116c36cd4dee8d61a3845",
+    "size": "178 MB tar.gz, 204 files",
+    "contents": "samples/_shared + the 4 B2 samples + platforms/x5 legacy runtimes for the 4 samples + platforms/s legacy efficientnet runtime + utils/py_utils (+ bundle-only utils/__init__.py) + docs/release/platforms.json + docs/release/{x5,s}/models.yaml + datasets/imagenet/imagenet_classes.names + models/ (19 artifacts: x5 .bin at root, s100/ and s600/ subdirs) + models.sha256 (19 lines)",
+    "provenance": "every board asserted the tar.gz sha256 against the pinned constant before extraction; every board then re-verified all 19 artifact digests against models.sha256 (19/19 on all five boards); py_compile covered 69 .py files (unified + legacy trees) on each board",
+    "v1_incident": "first bundle omitted docs/release/platforms.json (samples._shared.platforms reads parents[2]/'docs/release/platforms.json'); x5-8g first run died at import with FileNotFoundError — fixed by adding the file and re-tarring (v2, sha above); no sample code changed"
+  },
+  "method": {
+    "comparison": "per case, in one process on the same board: legacy stage = source wrapper loaded from platforms/ tree (Config + predict, scheduling pinned priority=0 bpu_cores=[0]); unified stage = resolve_selection -> RuntimeModelRunner.load -> set_scheduling_params -> ClassificationTask(top_k) on the same artifact bytes and same decoded BGR image",
+    "primary_criterion": "top-5 class ids exactly equal AND max per-rank score abs diff < 1e-5",
+    "tie_policy": "on id mismatch only: both implementations re-run at topk=8; pass with tie_resolved=true requires every union id present in both top-8 with per-id diff < 1e-5 AND every competing legacy-only/unified-only boundary pair separated by < 1e-6 in BOTH implementations (a model-level tie whose rank-5 pick is softmax rounding + sort-order noise, not a behavioral difference). Applied once: efficientformerv2/s1 (see below). Full tie evidence is in the per-board records.",
+    "cli_check": "bash run.sh <argv> with cwd=bundle root; pass = rc 0 and 'Top-5 results' in stdout",
+    "note_on_s_legacy_defaults": "s legacy wrapper pre_process uses INTER_NEAREST (resize_type default path) and split NV12; unified contract table pins the same nearest interpolation for s variants — comparison is same-semantics, not accidental"
+  },
+  "board_runs": {
+    "x5-8g": {
+      "identity": {"socinfo": "X5U", "hostname": "ubuntu", "python": "3.10.12", "memtotal_kb": "7250308"},
+      "detected": "x5",
+      "started": "2026-09-21T06:51:31Z",
+      "finished": "2026-09-21T06:52:00Z",
+      "ok": true,
+      "rc": 0,
+      "compile_count": 69,
+      "artifact_digest_checks": 19,
+      "cases": [
+        {"sample": "efficientnet", "variant": "b2", "ids": [177, 170, 233, 197, 198], "ids_equal": true, "max_score_abs_diff": 5.96e-08, "status": "pass"},
+        {"sample": "efficientnet", "variant": "b3", "ids": [177, 170, 343, 24, 276], "ids_equal": true, "max_score_abs_diff": 1.19e-07, "status": "pass"},
+        {"sample": "efficientnet", "variant": "b4", "ids": [177, 170, 276, 212, 181], "ids_equal": true, "max_score_abs_diff": 1.19e-07, "status": "pass"},
+        {"sample": "efficientformer", "variant": "l1", "ids": [133, 86, 136, 135, 83], "ids_equal": true, "max_score_abs_diff": 2.38e-07, "status": "pass"},
+        {"sample": "efficientformer", "variant": "l3", "ids": [133, 86, 136, 138, 91], "ids_equal": true, "max_score_abs_diff": 1.19e-07, "status": "pass"},
+        {"sample": "efficientformerv2", "variant": "s0", "ids": [1, 0, 29, 392, 973], "ids_equal": true, "max_score_abs_diff": 4.66e-10, "status": "pass"},
+        {"sample": "efficientformerv2", "variant": "s1", "ids": [1, 916, 904, 393, "rank5: legacy 851 / unified 794"], "ids_equal": false, "max_score_abs_diff": 2.38e-07, "tie_resolved": true, "status": "pass", "note": "classes 794 and 851 have exactly equal scores WITHIN each implementation (boundary gap 0.0 in legacy and 0.0 in unified); ACROSS implementations the per-id diff is 1.4e-9 (legacy 0.00418911874294281 vs unified 0.004189117345958948 — equal to each other only within a side, not byte-identical across sides); rank-5 pick is scipy-softmax (legacy) vs stable-softmax (unified) rounding + quicksort vs stable argsort order noise on a true model-level tie; top-8 per-id agreement all < 1e-5"},
+        {"sample": "efficientformerv2", "variant": "s2", "ids": [1, 0, 392, 393, 973], "ids_equal": true, "max_score_abs_diff": 5.82e-11, "status": "pass", "note": "exact-tie classes 0 and 392 carry equal scores in both implementations and both pick the same order"},
+        {"sample": "efficientvit", "variant": "m5", "ids": [600, 517, 488, 978, 536], "ids_equal": true, "max_score_abs_diff": 1.86e-09, "status": "pass"}
+      ],
+      "cli": [
+        {"check": "cli-efficientnet-b2", "rc": 0, "elapsed_s": 4.0, "status": "pass"},
+        {"check": "cli-efficientformer-l3", "rc": 0, "elapsed_s": 3.06, "status": "pass"},
+        {"check": "cli-efficientformerv2-s0", "rc": 0, "elapsed_s": 2.35, "status": "pass"},
+        {"check": "cli-efficientvit-m5", "rc": 0, "elapsed_s": 2.54, "status": "pass"}
+      ],
+      "observations": "HorizonRT warning on every x5 CLI run: hbrt library 3.15.55.0 vs model build 3.15.54.0 (published artifacts built with a slightly older OE); emitted identically for legacy and unified paths, harmless, recorded as-is"
+    },
+    "x5-4g": {
+      "identity": {"socinfo": "X5U", "hostname": "ubuntu", "python": "3.10.12", "memtotal_kb": "3135888"},
+      "detected": "x5",
+      "ok": true,
+      "rc": 0,
+      "compile_count": 69,
+      "artifact_digest_checks": 19,
+      "result": "13/13 entries pass (9 comparisons + 4 CLI); per case the same top-5 ids in legacy and unified as x5-8g (8 ids-exact cases + the same s1 exact tie), same max_score_abs_diff per case — BPU inference is deterministic across the two boards for the same implementation",
+      "cross_board_check": "per-case ids_equal_across_boards verified True for all 9 cases and 4 CLI checks (see b2-record-x5-4g.json vs b2-record-x5-8g.json); the s1 tie occurs independently on BOTH boards (2 tie adjudications total)"
+    },
+    "s100": {
+      "identity": {"soc_name": "S100", "hostname": "ubuntu", "python": "3.10.12", "memtotal_kb": "2945664"},
+      "detected": "s100",
+      "started": "2026-09-21T06:54:21Z",
+      "finished": "2026-09-21T06:54:31Z",
+      "ok": true,
+      "rc": 0,
+      "compile_count": 69,
+      "artifact_digest_checks": 19,
+      "cases": [
+        {"sample": "efficientnet", "variant": "lite0", "geometry": "224x224", "ids": [177, 170, 267, 160, 181], "ids_equal": true, "max_score_abs_diff": 1.19e-07, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite1", "geometry": "240x240", "ids": [177, 170, 160, 276, 267], "ids_equal": true, "max_score_abs_diff": 5.96e-08, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite2", "geometry": "260x260", "ids": [177, 170, 160, 212, 276], "ids_equal": true, "max_score_abs_diff": 5.96e-08, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite3", "geometry": "300x300", "ids": [177, 170, 160, 197, 169], "ids_equal": true, "max_score_abs_diff": 1.49e-08, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite4", "geometry": "380x380", "ids": [177, 170, 169, 172, 425], "ids_equal": true, "max_score_abs_diff": 5.96e-08, "status": "pass"}
+      ],
+      "cli": [
+        {"check": "cli-efficientnet-lite0 (--target s100 --asset-id s:efficientnet:s100/efficientnet_lite0_224x224_nv12.hbm)", "rc": 0, "elapsed_s": 0.96, "top1": "class=177 Scottish deerhound score=0.824479", "status": "pass"}
+      ],
+      "note": "per-variant resolved geometry 224/240/260/300/380 matches the contract table exactly (resolved_geometry recorded per case in the raw record)"
+    },
+    "s600": {
+      "identity": {"soc_name": "S600", "hostname": "drobot", "python": "3.12.3", "memtotal_kb": "48741632"},
+      "detected": "s600",
+      "started": "2026-09-21T06:58:03Z",
+      "finished": "2026-09-21T06:58:12Z",
+      "ok": true,
+      "rc": 0,
+      "compile_count": 69,
+      "artifact_digest_checks": 19,
+      "cases": [
+        {"sample": "efficientnet", "variant": "lite0", "geometry": "224x224", "ids": [177, 170, 267, 181, 233], "ids_equal": true, "max_score_abs_diff": 7.45e-09, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite1", "geometry": "240x240", "ids": [177, 170, 276, 160, 372], "ids_equal": true, "max_score_abs_diff": 5.96e-08, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite2", "geometry": "260x260", "ids": [177, 170, 160, 212, 276], "ids_equal": true, "max_score_abs_diff": 9.31e-10, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite3", "geometry": "300x300", "ids": [177, 170, 160, 169, 197], "ids_equal": true, "max_score_abs_diff": 4.66e-10, "status": "pass"},
+        {"sample": "efficientnet", "variant": "lite4", "geometry": "380x380", "ids": [177, 170, 169, 172, 425], "ids_equal": true, "max_score_abs_diff": 5.96e-08, "status": "pass"}
+      ],
+      "cli": [
+        {"check": "cli-efficientnet-lite0 (--target s600 ... s600/efficientnet_lite0_224x224_nv12.hbm)", "rc": 0, "elapsed_s": 0.54, "top1": "class=177 Scottish deerhound score=0.812036", "status": "pass"}
+      ],
+      "note": "s600 artifacts are the nash-p builds under models/s600/; top-5 sets differ from s100 (different march artifacts) as expected, and legacy-vs-unified agrees exactly on each artifact; lite2-4 rank sets match s100"
+    },
+    "s100p": {
+      "identity": {"soc_name": "S100P", "hostname": "ubuntu", "python": "3.10.12", "memtotal_kb": "15490240"},
+      "detected": "s100p",
+      "ok": false,
+      "rc": 1,
+      "raw_status_disclosure": "the raw record has ok=false / HARNESS_INCOMPLETE because the harness's GENERIC cli_check (pass = rc 0 + 'Top-5 results' in stdout) was applied to a NEGATIVE check; the observed behavior of that check is the expected rejection. Adjudicated below on its actual negative criterion; raw record preserved unmodified as b2-record-s100p.json.",
+      "entries": [
+        {"check": "in-process resolve_selection('s100p') raises", "status": "pass", "error": "No published sample asset matches target='s100p', asset_id=None, variant='b2'; available qualified references: none."},
+        {"check": "cli --dry-run --target s100p", "rc": 2, "harness_status": "fail (criterion artifact)", "adjudicated": "pass on the negative criterion (expected rc=2 with explicit no-published-asset error, no fallback)", "stderr": "error: No published sample asset matches target='s100p', asset_id=None, variant='b2'; available qualified references: none."},
+        {"check": "cli --target s100 --asset-id s:efficientnet:s100/... --model-path <s100 artifact> on s100p", "rc": 2, "status": "pass", "stderr": "error: Target mismatch: requested s100, detected s100p."}
+      ],
+      "conclusion": "3/3 rejection semantics verified: no published s100p asset (explicit error), no silent s100 fallback in the CLI, and target-mismatch gate before any model load. Same semantics as the B1 s100p negatives."
+    }
+  },
+  "harness_incidents_fixed_in_harness_not_product": [
+    "bundle v1 missing docs/release/platforms.json -> v2 re-tar (sha d54d1cf531cd...), constant re-pinned, re-pushed to all boards",
+    "run_case initially passed topk positionally, binding 5 to the closure's sample param -> TypeError on all 9 x5 comparisons; fixed to keyword topk=5/8; comparisons re-run clean",
+    "a dead literal 'from samples.vision.{}.runtime.python...' line (invalid syntax) removed pre-flight when switching to importlib.import_module",
+    "s100p --dry-run negative scored by the generic positive cli_check criterion (see adjudication above); harness not re-run — the recorded rc=2 + exact error string is the complete evidence for the negative"
+  ],
+  "defects_found_on_board": [],
+  "post_review_corrections": [
+    "B2-R3 (independent review 2026-09-21): the original summary here miscounted '28 exact-id + 1 tie' and called the tied classes' scores 'byte-identical across implementations'. Corrected: 28 comparisons total = 26 ids_equal=true + 2 tie_resolved=true (the same efficientformerv2/s1 variant adjudicated independently on x5-8g and x5-4g); the tied pair 794/851 is exactly equal WITHIN each implementation (gap 0.0 per side) while the cross-implementation per-id diff is 1.4e-9 — not byte-identical across implementations. Raw board records unchanged; durable copies at evidence/2026-09-21-b2-review-inputs/."
+  ],
+  "post_review_remediation_b2r1": {
+    "fix": "per-target default variant (x5 b2, s100/s600 lite0) in samples/_shared/cls_binding.py (SampleBindingTable.default_variant mapping + default_variant_for), efficientnet model_binding.py, model/download.py, and main.py --variant help; explicit variant/asset-id exact matching and s100p rejection unchanged",
+    "board_verification": "affected S default entry only (per review instruction, no full matrix): the four fixed files overlaid onto the existing bundle-d54d1cf531cd on both boards; model/s100|s600/efficientnet_lite0_224x224_nv12.hbm staged into the sample model/ layout (equivalent to download.sh output). Full-output records with per-run timestamps, board identity, on-board SHA-256 of the four deployed files, artifact/input/label digests, exact argv/cwd, rc, and complete stdout/stderr are preserved at evidence/2026-09-21-b2-r1e-default-entry/ (b2-r1e-record-s100.json, b2-r1e-record-s600.json, b2-r1e-capture.py).",
+    "b2_r1e_evidence_binding": {
+      "records": "evidence/2026-09-21-b2-r1e-default-entry/",
+      "capture_nature": "fresh full-output captures taken 2026-09-21T08:20-08:21Z after the re-review (the earlier re-verification runs were not saved with complete output; these are new captures, not backdated records — no host hash is passed off as an earlier board hash)",
+      "deployed_file_sha256_match": "on-board SHA-256 of all four overlaid files equals the repository files at the remediation+strictness HEAD in effect at capture time (cls_binding.py 275526773173a780…, model_binding.py 13c3a3887c2e52f1…, main.py c1842e662c0299d8…, download.py 309b71e8bd1102c1…), identical on both boards; the base tar hash d54d1cf531cd… pins only the unmodified bundle contents",
+      "results": "s100 default entry rc=0 resolves s:efficientnet:s100/efficientnet_lite0_224x224_nv12.hbm, complete Top-5 (177/0.824479, 170/0.100230, 267/0.005306, 160/0.004891, 181/0.004261) identical rank-by-rank to the original explicit-lite0 CLI record; s600 default entry rc=0 (177/0.812036, 170/0.111383, 267/0.007434, 181/0.006000, 233/0.003884) identical to its record; s600 explicit lite2 control rc=0 reproduces the recorded lite2 comparison scores; dry-run on both boards shows lite0/split_nv12/224x224 with no SDK load",
+      "input_identity": "artifact sha256 da818a98be2086e1… (s100 lite0) / 36ffd92618bb1679… (s600 lite0), equal to the models.sha256-pinned digests recorded in the five-board records; input image 74eb4f8656f26502… (Scottish_deerhound.JPEG), labels e6ac1e05778e809d…"
+    },
+    "b2_n1_strictness_followup": "adopted non-blocking B2-N1: a target with no declared default now rejects an omitted variant even when it publishes exactly one asset (matches=[] -> standard explicit error), aligning the code with the documented contract; boundary test added in the efficientvit suite (dataclasses.replace(BINDING_TABLE, default_variant={}) -> resolve_selection('x5') raises although x5 publishes exactly one m5 artifact), efficientvit 26->27 OK",
+    "note": "the s100p no-asset error message now reports variant=None instead of variant='b2' (the global default is gone); rejection semantics and message prefix unchanged, pinned by unit test"
+  },
+  "summary": {
+    "totals": "x5-8g 13/13, x5-4g 13/13, s100 6/6, s600 6/6, s100p 3/3 negatives (1 harness-criterion artifact adjudicated); 28 comparisons total = 26 ids-exact (max diff <=2.4e-07) + 2 exact-tie adjudications (efficientformerv2/s1 on each X5 board; within each implementation the competing pair's gap is exactly 0.0, cross-implementation per-id diff 1.4e-9)",
+    "unified_vs_legacy_verdict": "Top-K equivalent on every tested (board, sample, variant): 26 of 28 comparisons with exactly equal top-5 ids and max score diff <=2.4e-07, plus 2 exact-tie adjudications where the model itself cannot distinguish the rank-5 candidates (evidence per board in the raw records)",
+    "inputs": "x5: Scottish_deerhound.JPEG (74eb4f8656f26502) efficientnet; bittern.JPEG (da03e9cdeb2598a3) efficientformer; goldfish.JPEG (102dd5fe242a0b45) efficientformerv2; hook.JPEG (a5fa634d5eeb1d74) efficientvit — each sample's source default test image; s: Scottish_deerhound.JPEG (74eb4f8656f26502)",
+    "not_covered": "conversion recipes not executed on any board (OE toolchain out of scope, gaps already disclosed per-sample); evaluator benchmark tables remain published records, not re-measured; S100P has no forward-inference support by design (no published assets)"
+  }
+}

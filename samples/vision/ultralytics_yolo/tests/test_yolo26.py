@@ -164,9 +164,107 @@ class Yolo26Contracts(unittest.TestCase):
         expected=[f'{g}-{c}' for g in (8,4,2) for c in (80,4,32)]+['prototype']
         self.assertEqual(ordered_outputs(list(shapes),shapes,64,[8,16,32],'seg',80),expected)
 
+    def test_obb_angles_are_radians_on_all_platforms(self):
+        from yolo26_obb import YOLO26OBB, YOLO26OBBConfig
+        from yolo_platform import resolve_platform
+        shapes = {f'{g}-{c}': (1, g, g, c)
+                  for g in (20, 80, 40) for c in (1, 4, 15)}
+        for platform in ('x5', 's100', 's100p', 's600'):
+            with self.subTest(platform=platform):
+                inputs = {'image': (1, 3, 640, 640)} if platform == 'x5' else {
+                    'y': (1, 640, 640, 1), 'uv': (1, 320, 320, 2)}
+                model = types.SimpleNamespace(
+                    model_names=['m'], input_names={'m': list(inputs)}, input_shapes={'m': inputs},
+                    input_dtypes={'m': {n: 'NV12' if platform == 'x5' else 'U8' for n in inputs}},
+                    output_names={'m': list(shapes)}, output_shapes={'m': shapes})
+                sdk = types.SimpleNamespace(HB_HBMRuntime=lambda _: model)
+                with patch('yolo_runtime.load_hbm_runtime', return_value=sdk):
+                    runtime = YOLO26OBB(YOLO26OBBConfig('stub', platform=resolve_platform(platform)))
+                outputs = {name: np.zeros(shape, np.float32) for name, shape in shapes.items()}
+                for g in (20, 40, 80):
+                    outputs[f'{g}-15'].fill(-20)
+                outputs['20-15'][0, 7, 15, 9] = 3
+                outputs['20-4'][0, 7, 15] = [1, 1, 3, 1]
+                outputs['20-1'][0, 7, 15, 0] = np.pi / 2
+                result = runtime.post_process({'m': outputs}, 640, 640)[0]
+                np.testing.assert_allclose(result['rrect'][:4], [496, 272, 128, 64], atol=1e-4)
+                self.assertAlmostEqual(np.cos(2 * result['rrect'][4]), -1, places=6)
+                self.assertEqual(result['id'], 9)
+
+    def test_obb_default_labels_and_custom_override(self):
+        from main import load_labels
+        labels = load_labels(types.SimpleNamespace(label_file=''), 'obb')
+        self.assertEqual(labels[9:11], ['large-vehicle', 'small-vehicle'])
+        self.assertEqual(labels[1], 'ship')
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'labels.txt'
+            path.write_text('custom-object\n', encoding='utf-8')
+            self.assertEqual(load_labels(types.SimpleNamespace(label_file=str(path)), 'obb'), ['custom-object'])
+
+    def test_seg_mask_alignment_for_portrait_and_landscape(self):
+        from rdk_yolo_utils.postprocess import process_mask
+        proto = np.full((32, 16, 16), 10, np.float32)
+        coefficients = np.ones((1, 32), np.float32)
+        for shape in ((64, 32), (32, 64)):
+            with self.subTest(shape=shape):
+                masks = process_mask(proto, coefficients, np.array([[28, 28, 44, 44]], np.float32), shape, 64, 64, 1)
+                self.assertEqual(masks.shape, (1, *shape))
+                y, x = (40, 24) if shape == (64, 32) else (24, 40)
+                self.assertTrue(masks[0, y, x])
+                self.assertFalse(masks[0, 0, 0])
+
     def test_dfl_output_rejected_as_ltrb(self):
         from yolo26_common import ordered_outputs
         shapes={f'{g}-{c}':(1,g,g,c) for g in (8,4,2) for c in (80,64)}
         with self.assertRaises(ValueError):ordered_outputs(list(shapes),shapes,64,[8,16,32],'detect',80)
+
+    def test_640_output_groups_match_stride_for_pose_seg_and_obb(self):
+        from yolo26_common import ordered_outputs
+        for task, channels, classes in (
+            ('pose', (1, 4, 51), 1),
+            ('seg', (80, 4, 32), 80),
+            ('obb', (15, 4, 1), 15),
+        ):
+            with self.subTest(task=task):
+                shapes = {f'{g}-{c}': (1, g, g, c)
+                          for g in (20, 40, 80) for c in reversed(channels)}
+                expected = [f'{g}-{c}' for g in (80, 40, 20) for c in channels]
+                if task == 'seg':
+                    shapes['prototype'] = (1, 160, 160, 32)
+                    expected.append('prototype')
+                for names in (list(shapes), list(reversed(shapes))):
+                    self.assertEqual(ordered_outputs(
+                        names, shapes, 640, [8, 16, 32], task, classes), expected)
+
+    def test_pose_right_side_coordinates_survive_output_reordering(self):
+        from yolo26_pose import YOLO26Pose, YOLO26PoseConfig
+        from yolo_platform import resolve_platform
+        # Inject only the board loader; use real metadata binding and decoding.
+        shapes = {f'{g}-{c}': (1, g, g, c)
+                  for g in (20, 80, 40) for c in (51, 4, 1)}
+        model = types.SimpleNamespace(
+            model_names=['m'], input_names={'m': ['image']},
+            input_shapes={'m': {'image': (1, 3, 640, 640)}},
+            input_dtypes={'m': {'image': 'NV12'}},
+            output_names={'m': list(shapes)}, output_shapes={'m': shapes})
+        sdk = types.SimpleNamespace(HB_HBMRuntime=lambda _: model)
+        with patch('yolo_runtime.load_hbm_runtime', return_value=sdk):
+            runtime = YOLO26Pose(YOLO26PoseConfig('stub', platform=resolve_platform('x5')))
+        for grid, row, col, box, point in (
+            (80, 30, 60, [476, 236, 492, 252], [484, 244]),
+            (40, 15, 30, [472, 232, 504, 264], [488, 248]),
+            (20, 7, 15, [464, 208, 528, 272], [496, 240]),
+        ):
+            with self.subTest(grid=grid):
+                outputs = {name: np.zeros(shape, np.float32) for name, shape in shapes.items()}
+                for g in (20, 40, 80):
+                    outputs[f'{g}-1'].fill(-20)
+                outputs[f'{grid}-1'][0, row, col, 0] = 3
+                outputs[f'{grid}-4'][0, row, col] = 1
+                boxes, scores, ids, xy, confidence = runtime.post_process({'m': outputs}, 640, 640)
+                np.testing.assert_allclose(boxes, [box])
+                np.testing.assert_allclose(xy, [[point] * 17])
+                np.testing.assert_allclose(scores, [0.95257413])
+                np.testing.assert_allclose(confidence, .5)
 
 if __name__=='__main__':unittest.main()

@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${BUILD_DIR:-$SCRIPT_DIR/build}"
 MODEL_PATH="${MODEL_PATH:-$SCRIPT_DIR/../../model/s100/resnet18_224x224_nv12.hbm}"
 TEST_IMAGE="${TEST_IMAGE:-$SCRIPT_DIR/../../test_data/zebra_cls.jpg}"
-LABEL_FILE="${LABEL_FILE:-$SCRIPT_DIR/../../../../../platforms/s/datasets/imagenet/imagenet_classes.names}"
+LABEL_FILE="${LABEL_FILE:-$SCRIPT_DIR/../../../../../datasets/imagenet/imagenet_classes.names}"
 
 has_option() {
   local name="$1"

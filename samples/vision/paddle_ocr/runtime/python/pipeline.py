@@ -114,6 +114,27 @@ class OCRPipeline:
     The callables receive and return flat physical tensor-name mappings.  This
     keeps host tests independent from ``hbm_runtime`` and makes each stage
     individually comparable with the original source captures.
+
+    Stage data flow (inference-contract §2), concretized for two-stage OCR:
+
+    - ``Input``: one BGR ``uint8`` image (pipeline level); one crop
+      (recognition stage level).
+    - ``Tensors``: detection — target-specific NV12 mapping (packed on X5,
+      split on S100); recognition — shared RGB float32 NCHW crop tensor.
+    - ``Context``: detection keeps the original image geometry (the mask is
+      resized back to it in ``postprocess_detection``); recognition carries
+      the crop identity through the per-crop loop in ``predict``.
+    - ``RawOutputs``: each stage's validated flat output mapping;
+      ``forward_*`` performs structural validation and container adaptation
+      only — no thresholding, decoding, or file access.
+    - ``Result``: :class:`DetectionResult` (stage) / :class:`OCRResult`
+      (pipeline), owned and ordered.
+
+    Each stage exposes the public three-step interface
+    (``prepare_*`` / ``forward_*`` / ``postprocess_*`` or ``decode_*``);
+    ``run_*`` composes the three steps of one stage and ``predict`` composes
+    detection → ordered cropping → recognition with per-stage, per-crop error
+    attribution.
     """
 
     def __init__(
@@ -156,18 +177,35 @@ class OCRPipeline:
 
         return prepare_recognition(crop, self.pair)
 
+    def forward_detection(self, inputs: Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
+        """Invoke the detector runner and validate its raw output mapping.
+
+        Container adaptation only (inference-contract §3): no thresholding,
+        decoding, drawing, or file access happens here.
+        """
+
+        return self._call_runner(
+            self.detector_runner, self.pair.detector, inputs, "detector"
+        )
+
+    def forward_recognition(self, inputs: Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
+        """Invoke the recognizer runner and validate its raw output mapping.
+
+        Container adaptation only (inference-contract §3): no CTC decoding,
+        activation, or file access happens here.
+        """
+
+        return self._call_runner(
+            self.recognizer_runner, self.pair.recognizer, inputs, "recognizer"
+        )
+
     def run_detection(self, image: np.ndarray) -> DetectionResult:
         """Run detection and return boxes/crops for independent comparison."""
 
         _validate_bgr_image(image)
         try:
             inputs = self.prepare_detection(image)
-            outputs = self._call_runner(
-                self.detector_runner,
-                self.pair.detector,
-                inputs,
-                "detector",
-            )
+            outputs = self.forward_detection(inputs)
             return self.postprocess_detection(outputs, image)
         except Exception as exc:
             if isinstance(exc, RuntimeError) and str(exc).startswith("detector stage"):
@@ -211,12 +249,7 @@ class OCRPipeline:
 
         try:
             inputs = self.prepare_recognition(crop)
-            outputs = self._call_runner(
-                self.recognizer_runner,
-                self.pair.recognizer,
-                inputs,
-                "recognizer",
-            )
+            outputs = self.forward_recognition(inputs)
             return self.decode_recognition(outputs)
         except Exception as exc:
             if isinstance(exc, RuntimeError) and str(exc).startswith("recognizer stage"):

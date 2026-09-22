@@ -1,0 +1,86 @@
+{
+  "record": "2026-09-21-b1-mobilenet-resnet",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous, per standing plan-execution instruction)",
+  "repo_head_before": "c9e6bb8",
+  "source_baselines": {
+    "rdk_x5": "ac115717197920355fc390bb04299b20e6436864 (tip ac11571, x5-v1.1.3)",
+    "rdk_s": "380e1a2bf42041af54be6f34935e50197cfadff9 (tip 380e1a2, s-v1.1.2)"
+  },
+  "scope": "B1: mobilenetv1-v4 unified samples (x5+s python; v2 s cpp), resnet50/152 variants into samples/vision/resnet, H5 platform profile contract, H6 manifest coverage test, shared classification runtime lift (second-consumer rule), resnet legacy-path fixes",
+  "change_set": {
+    "new_samples": {
+      "mobilenetv1": "46 files / 10 bilingual READMEs; variants mobilenetv1; policy none (published outputs already probabilities)",
+      "mobilenetv2": "55 files / 12 READMEs (incl. runtime/cpp S-series pair); python policy none; cpp launcher rewritten from verbatim S copy to explicit s100/s600 gate (legacy silent s100 fallback not kept)",
+      "mobilenetv3": "51 files / 10 READMEs; policy softmax (raw logits artifacts)",
+      "mobilenetv4": "54 files / 10 READMEs; variants small/medium; policy softmax; S medium geometry 256x256 recorded per-target (X5 medium stays 224x224)"
+    },
+    "resnet_variants": [
+      "SUPPORTED_VARIANTS extended to resnet18/resnet50/resnet152; 50/152 are s-only (no x5 source delivery); facts: softmax / source_declared_logits / 224 / nearest",
+      "10 README files updated (root/model/runtime-python/evaluator pairs) for 50/152 rows, manifest paths docs/release/{x5,s}/models.yaml, shared labels sentence",
+      "runtime/cpp/run.sh LABEL_FILE default moved from platforms/s/datasets/... snapshot path to root datasets/imagenet/imagenet_classes.names",
+      "evaluator reference-results row refreshed 39 OK (2026-09-20) -> 46 OK (2026-09-21, this evidence)"
+    ],
+    "shared_lift": [
+      "samples/_shared/labels.py (renamed from samples/vision/resnet/runtime/python/labels.py; resnet keeps a re-export facade)",
+      "samples/_shared/cls_binding.py (ClassificationContract/ModelSelection/ModelBinding/VariantFacts; SCORE_POLICIES = legacy_softmax|softmax|none; score_vector_shape rank rule)",
+      "samples/_shared/tensor_io.py (resize_bgr, bgr_to_nv12_planes, as_packed flat-1D / as_split, prepare_nv12 by contract.input_protocol)",
+      "samples/_shared/model_runner.py (lazy hbm_runtime, scheduling pass-through, flattened outputs)",
+      "samples/_shared/classification.py (ClassificationTask, topk_from_scores/topk_from_logits, ClassificationResult with legacy surface)",
+      "samples/_shared/platform_profile.py (H5: PlatformProfile + classification_profiles factory; 4 profiles x5/s100/s100p/s600; s100p url_prefix=None and model_base_url() raises; resolve_profile never falls back)"
+    ],
+    "new_shared_tests": [
+      "samples/_shared/tests/test_platform_profile.py (11 tests)",
+      "samples/_shared/tests/test_cls_binding.py (10 tests)",
+      "samples/_shared/tests/test_classification.py (8 tests: policy none/softmax/legacy_softmax/unknown, topk helpers, stage isolation, legacy result surface)",
+      "samples/_shared/tests/test_manifest_coverage.py (4 tests, H6: exact sample_path rows for every runtime/python/model_binding.py sample, download scripts on disk, no platforms/ sample_path regression)"
+    ],
+    "manifest": "docs/release/s/models.yaml: mobilenetv1-4 rows download_model.sh -> download.sh + relocation notes; resnet50/152 rows sample_path -> samples/vision/resnet with download.sh + --variant notes (done in prior session segment, yaml.safe_load + asset counts 2/2/2/4 re-verified this session)"
+  },
+  "verification": {
+    "cwd": "repository root",
+    "interpreter": ".venv/bin/python (CPython 3.14, repo venv)",
+    "suites": [
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/mobilenetv1/tests -t samples/vision/mobilenetv1/tests", "result": "Ran 14 tests, OK"},
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/mobilenetv2/tests -t samples/vision/mobilenetv2/tests", "result": "Ran 14 tests, OK"},
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/mobilenetv3/tests -t samples/vision/mobilenetv3/tests", "result": "Ran 14 tests, OK"},
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/mobilenetv4/tests -t samples/vision/mobilenetv4/tests", "result": "Ran 14 tests, OK"},
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/resnet/tests -t samples/vision/resnet/tests", "result": "Ran 46 tests, OK"},
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/paddle_ocr/tests -t samples/vision/paddle_ocr/tests", "result": "Ran 44 tests, OK (regression)"},
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/vision/ultralytics_yolo/tests -t samples/vision/ultralytics_yolo/tests", "result": "Ran 59 tests, OK (regression)"},
+      {"cmd": ".venv/bin/python -m unittest discover -s samples/_shared/tests -t samples/_shared/tests", "result": "Ran 71 tests, OK (was 37 before B1; +11 profile, +10 binding, +8 classification, +4 coverage)"}
+    ],
+    "q3_checker": [
+      {"sample": "samples/vision/mobilenetv1", "result": "1 samples, 0 violations, 1 skip (CLI-layer policy skip)"},
+      {"sample": "samples/vision/mobilenetv2", "result": "1 samples, 0 violations, 1 skip"},
+      {"sample": "samples/vision/mobilenetv3", "result": "1 samples, 0 violations, 1 skip"},
+      {"sample": "samples/vision/mobilenetv4", "result": "1 samples, 0 violations, 1 skip"},
+      {"sample": "samples/vision/resnet", "result": "1 samples, 0 violations, 2 skips"}
+    ],
+    "checker_self_tests": {"cmd": ".venv/bin/python -m unittest discover -s tools/sample_contract/tests -t tools/sample_contract/tests", "result": "Ran 23 tests, OK"},
+    "sdk_free_entries": [
+      {"cmd": ".venv/bin/python samples/vision/mobilenetv1/runtime/python/main.py --list-models --target auto", "result": "exit 0; s600 row s600/mobilenetv1_224x224_nv12.hbm from docs/release/s/models.yaml; no SDK loaded"},
+      {"cmd": ".venv/bin/python samples/vision/mobilenetv1/runtime/python/main.py --dry-run --target s100", "result": "exit 0; output_score_policy: none; model_path_exists: False"},
+      {"cmd": ".venv/bin/python samples/vision/mobilenetv4/runtime/python/main.py --dry-run --target s100 --variant small", "result": "exit 0; output_score_policy: softmax; medium listed at s600/mobilenetv4_medium_256x256_nv12.hbm"}
+    ],
+    "shell_syntax": "bash -n on 4x model/download.sh, mobilenetv2 runtime/cpp/run.sh, resnet runtime/cpp/run.sh - all clean",
+    "download_py_references": "all 15 generated single-variant key lookups (4 samples x targets) resolve to exact manifest rows (s100 example: s:mobilenetv1:s100/mobilenetv1_224x224_nv12.hbm)"
+  },
+  "known_gaps_recorded": [
+    "mobilenetv4 X5-side export script emits medium ONNX at 256x256 while the published X5 medium artifact and its config are 224x224; source records no reconciliation - documented as conversion known-gap, not 'fixed'",
+    "mobilenetv3 S-side config renamed mobilenetv3_config.yaml -> mobilenetv3_s_config.yaml for case-insensitive filesystems (content verbatim)",
+    "mobilenetv1/v2: no ONNX exporter on either branch; v1 additionally has no OE config or calibration set on either branch; v2 has no X5-side config (only S reference YAML, march nash-e)",
+    "S source release published no accuracy/latency figures for any B1 model; READMEs disclose this instead of inferring",
+    "publisher SHA-256 unrecorded for all B1 manifest rows; downloader prints observed digest, origin unproven"
+  ],
+  "silent_fallback_eliminations": [
+    "mobilenetv2 cpp launcher: legacy run.sh fell back to the s100 artifact for s100p/unknown boards; unified launcher gates on s100|s600 and errors otherwise",
+    "python flows resolve board identity via samples/_shared/platforms.py (unknown board errors; s100p gets explicit 'no published asset')"
+  ],
+  "not_run": [
+    "board smoke: user-gated on X5 8GB/4GB + S100 (canonical vs legacy entrypoint comparison; carries deferred H2 flat packed NV12 vs former 4D view equivalence check)",
+    "S600 retest: SSH access unrecovered",
+    "conversion regeneration (export/calibration/compile) and dataset-level accuracy: no harness shipped by sources, none invented"
+  ],
+  "closed": "no (Board dimension is required and not-run; closes after user board smoke passes and any fixes land)"
+}

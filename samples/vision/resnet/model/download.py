@@ -1,9 +1,10 @@
-"""Download one published ResNet18 artifact through the shared manifest.
+"""Download one published ResNet artifact through the shared manifest.
 
-The script deliberately contains only stable target-to-reference mappings. URL,
-format, and optional publisher hash facts are read from the platform manifest by
-``samples._shared.assets``. It is safe to import this module on a host without
-the board SDK; network access occurs only when ``download_target`` is called.
+The script deliberately contains only stable target/variant-to-reference
+mappings. URL, format, and optional publisher hash facts are read from the
+platform manifest by ``samples._shared.assets``. It is safe to import this
+module on a host without the board SDK; network access occurs only when
+``download_target`` is called.
 """
 
 from __future__ import annotations
@@ -24,27 +25,39 @@ from samples._shared.assets import download_asset, resolve_asset
 
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
+VARIANTS = ("resnet18", "resnet50", "resnet152")
 ASSET_REFERENCES = {
-    "x5": "x5:resnet:resnet18_224x224_nv12.bin",
-    "s100": "s:resnet18:s100/resnet18_224x224_nv12.hbm",
-    "s600": "s:resnet18:s600/resnet18_224x224_nv12.hbm",
+    ("x5", "resnet18"): "x5:resnet:resnet18_224x224_nv12.bin",
+    ("s100", "resnet18"): "s:resnet18:s100/resnet18_224x224_nv12.hbm",
+    ("s600", "resnet18"): "s:resnet18:s600/resnet18_224x224_nv12.hbm",
+    ("s100", "resnet50"): "s:resnet50:s100/resnet50_224x224_nv12.hbm",
+    ("s600", "resnet50"): "s:resnet50:s600/resnet50_224x224_nv12.hbm",
+    ("s100", "resnet152"): "s:resnet152:s100/resnet152_224x224_nv12.hbm",
+    ("s600", "resnet152"): "s:resnet152:s600/resnet152_224x224_nv12.hbm",
 }
+TARGETS = ("x5", "s100", "s600")
 
 
-def asset_reference(target: str) -> str:
-    """Return the exact manifest reference for a supported target."""
+def asset_reference(target: str, variant: str = "resnet18") -> str:
+    """Return the exact manifest reference for a supported target/variant."""
 
-    key = str(target).strip().lower()
+    key = (str(target).strip().lower(), str(variant).strip().lower())
     try:
         return ASSET_REFERENCES[key]
     except KeyError as exc:
-        supported = ", ".join(ASSET_REFERENCES)
+        available = ", ".join(f"{t}/{v}" for t, v in ASSET_REFERENCES)
         raise ValueError(
-            f"Unsupported ResNet18 target {target!r}; choose {supported}."
+            f"Unsupported ResNet target/variant {target}/{variant}; "
+            f"published combinations: {available}."
         ) from exc
 
 
-def download_target(target: str, output_dir: Optional[str | Path] = None) -> str:
+def download_target(
+    target: str,
+    output_dir: Optional[str | Path] = None,
+    *,
+    variant: str = "resnet18",
+) -> str:
     """Download an exact target artifact and return its observed SHA-256.
 
     ``output_dir`` preserves the source sample's layout: X5 is flat while the
@@ -52,7 +65,7 @@ def download_target(target: str, output_dir: Optional[str | Path] = None) -> str
     verified by the shared downloader and are never silently replaced.
     """
 
-    asset = resolve_asset(asset_reference(target))
+    asset = resolve_asset(asset_reference(target, variant))
     root = Path(output_dir).expanduser() if output_dir is not None else DEFAULT_OUTPUT_DIR
     destination = root / Path(asset.filename)
     digest = download_asset(asset, destination)
@@ -67,13 +80,20 @@ def build_parser() -> argparse.ArgumentParser:
     """Build the dependency-free command-line parser."""
 
     parser = argparse.ArgumentParser(
-        description="Download one manifest-backed ResNet18 deployment artifact."
+        description="Download one manifest-backed ResNet deployment artifact."
     )
     parser.add_argument(
         "--target",
-        choices=tuple(ASSET_REFERENCES),
+        choices=TARGETS,
         default="x5",
         help="Target artifact to fetch (default: x5).",
+    )
+    parser.add_argument(
+        "--variant",
+        choices=VARIANTS,
+        default="resnet18",
+        help="Model variant to fetch (default: resnet18; resnet50/resnet152 "
+        "are S100/S600-only).",
     )
     parser.add_argument(
         "--output-dir",
@@ -89,7 +109,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     args = build_parser().parse_args(argv)
     try:
-        download_target(args.target, args.output_dir)
+        download_target(args.target, args.output_dir, variant=args.variant)
     except (OSError, ValueError) as exc:
         print(f"error: {exc}")
         return 2

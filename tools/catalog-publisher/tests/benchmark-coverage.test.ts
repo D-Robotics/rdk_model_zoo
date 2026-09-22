@@ -5,10 +5,13 @@ import { describe, expect, it } from "vitest";
 import { platformBenchmarks, platformSlice, repositoryCatalog, repositoryRoot } from "./helpers/repository";
 import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 
-const EXPECTED_MODEL_COUNT = 37;
+const EXPECTED_MODEL_COUNT = 36;
 const EXPECTED_BENCHMARK_RECORD_COUNT = 239;
 const EXPECTED_PERFORMANCE_METRIC_COUNT = 636;
 const EXPECTED_ACCURACY_METRIC_COUNT = 419;
+// YOLO26 rows resolve under the unified ultralytics_yolo sample (the separate
+// yolo26 directory no longer exists on develop), and the OCR pilot lives at
+// samples/vision/paddle_ocr; the audited directory count shrank accordingly.
 const EXPECTED_MODEL_PATHS = new Map([
   ["clip", "samples/vision/clip"],
   ["convnext", "samples/vision/convnext"],
@@ -32,7 +35,7 @@ const EXPECTED_MODEL_PATHS = new Map([
   ["mobilenetv4", "samples/vision/mobilenetv4"],
   ["mobileone", "samples/vision/mobileone"],
   ["modnet", "samples/vision/modnet"],
-  ["paddleocr", "samples/vision/paddleocr"],
+  ["paddleocr", "samples/vision/paddle_ocr"],
   ["pp_liteseg", "samples/vision/pp_liteseg"],
   ["repghost", "samples/vision/repghost"],
   ["repvgg", "samples/vision/repvgg"],
@@ -40,7 +43,6 @@ const EXPECTED_MODEL_PATHS = new Map([
   ["resnet", "samples/vision/resnet"],
   ["resnext", "samples/vision/resnext"],
   ["ultralytics_yolo", "samples/vision/ultralytics_yolo"],
-  ["ultralytics_yolo26", "samples/vision/ultralytics_yolo26"],
   ["unet", "samples/vision/unet"],
   ["vargconvnet", "samples/vision/vargconvnet"],
   ["yolo26_depth", "samples/vision/yolo26_depth"],

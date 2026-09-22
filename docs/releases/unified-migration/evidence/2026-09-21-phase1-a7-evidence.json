@@ -1,0 +1,60 @@
+{
+  "record": "2026-09-21-phase1-a7-ledger",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous, per standing plan-execution instruction)",
+  "repo_head_before": "8cfeff6",
+  "scope": "Phase 1 A7 ledger supplement: snapshot-vs-tip drift adjudication and cls flag consolidation",
+  "drift_survey": {
+    "method": "git ls-tree -r --name-only <tip> vs find over platforms/<plat> snapshot, comm -23/-13",
+    "x5": {
+      "tip_only_files": 307,
+      "sample_drift": "zero under samples/ (all deltas: docs/catalog 201 ADR-0001-excluded, skills/** A3-covered, docs/manifests + docs/tros release facilities, workflows 2, AGENTS.md)",
+      "snapshot_only_files": 17,
+      "snapshot_only_nature": "superseded (docs/release->docs/manifests move residue, old release notes, __pycache__, .gitattributes, root tros/)",
+      "ledger_items_added": 0
+    },
+    "s": {
+      "tip_only_files": 53,
+      "capabilities": {
+        "samples/vision/yoloe26_seg": {"files": 30, "destination": "B9 yoloe row (already annotated 's tip yoloe26_seg')"},
+        "samples/llm/minicpm5-2b": {"files": 13, "detail": "evaluator/legacy scripts + results/{s100,s100p}-{generation,wikitext2}-full.json + test_data/legacy-long-prompts.json", "destination": "B11 row refined this step"},
+        "samples/vla/{act,pi0} + .gitmodules": {"files": "2 gitlinks + config", "gitlinks": {"act": "326ea043be204de25223d95c7d918efe8672dc66", "pi0": "a32de276bc1681a2b1531012de111eaa1c16acb6"}, "url": "https://github.com/D-Robotics/rdk_LeRobot_tools", "destination": "B11; develop .gitmodules currently points at platforms/s snapshot paths, B11 retargets to samples/vla/"},
+        "docs/manifests/*": {"files": 5, "destination": "tip relocated manifests docs/release->docs/manifests; develop docs/release/s carries the content (A4/A5)"},
+        "docs/tros/README.md (empty) + skills/README.md (placeholder)": {"files": 2, "destination": "A6 decisions: not migrated (x5 tros bilingual + x5 skills README taken instead)"}
+      },
+      "snapshot_only_files": 17,
+      "snapshot_only_nature": "superseded/junk incl. tests/test_yolo_cls_resolution.py (see cls_flag) and old-position manifests/release notes"
+    }
+  },
+  "manifest_supplement_math": {
+    "develop_s_models_yaml_assets": 382,
+    "tip_s_models_yaml_assets": 368,
+    "delta": "+14 = yoloe26_seg 10 + yoloe11_seg 1 + minicpm5-2b tar.gz 3; matches A5 family/variant totals (57/595)",
+    "benchmarks_yaml": "byte-identical to tip docs/manifests (both platforms)",
+    "models_yaml": "curated (paths/counts updated by A4), not byte-verbatim by design"
+  },
+  "cls_flag": {
+    "ledger_location": "x5-s-migration-map.md 明确保留的未核定项 6 (+ 勘误 footnote requiring B9 adjudication before any merge/rewrite)",
+    "evidence_chain": [
+      "snapshot platforms/s/tests/test_yolo_cls_resolution.py asserts cls artifact names *_cls_<march>_224x224_nv12.hbm and model_url() returning 224 URLs",
+      "s tip 380e1a2 deleted that test entirely",
+      "s tip sample code + model/download_model.sh construct 640x660 [sic 640x640] filenames AND 640 URLs",
+      "s tip manifest filename keys 640x640 while manifest URLs remain 224x224",
+      "develop catalog-errata applySCatalogErrata displays 224 per URL evidence ('Legacy 640 URLs remain compatible')"
+    ],
+    "interpretation": "tip is mid-rename 224->640 (filenames moved, URLs lagged); catalog display / manifest bytes / sample resolution each self-consistent, no cross-rewriting",
+    "adjudication": "network truth check user-gated; until then B9 must not merge or rewrite either side",
+    "note": "the deleted test is not reachable in 380e1a2 ancestry under that path (git log empty) - it documents snapshot-era behavior; snapshot itself is not a committed rdk_s state"
+  },
+  "ledger_edits": [
+    "未核定项 +6 (cls flag full chain) and +7 (drift adjudication + destination table)",
+    "B11 minicpm5-2b row: refined to 'cpp + evaluator（legacy 脚本 + results/*.json）+ test_data', annotated 快照无/tip 新增",
+    "勘误 footnote: yoloe26_seg/minicpm5/vla tip-only; B9 adjudicates cls flag first"
+  ],
+  "verification": {
+    "nature": "documentation-only step; no code or pipeline inputs changed",
+    "cross_checks": "gitlink SHAs vs plan B11 pins OK; .gitmodules URL matches tip; 382=368+14 recomputed; benchmarks.yaml blob equality re-verified this step"
+  },
+  "not_run": ["network fetch for cls true-name adjudication (user-gated)", "board smoke"],
+  "phase1_status": "A1-A7 complete; next: Q5 skills strengthening, then Phase 1.5 H1-H6"
+}

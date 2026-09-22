@@ -32,7 +32,7 @@ class Asset:
     @property
     def source_path(self) -> str:
         """Return the authority location relative to the source checkout."""
-        return f'platforms/{self.group}/docs/release/models.yaml'
+        return f'docs/release/{self.group}/models.yaml'
 
 
 @lru_cache(maxsize=2)
@@ -40,7 +40,7 @@ def _models(group: str) -> tuple:
     if group not in ('x5', 's'):
         raise ValueError(f'Unsupported active manifest group {group!r}.')
     import yaml
-    with (_ROOT / f'platforms/{group}/docs/release/models.yaml').open(encoding='utf-8') as handle:
+    with (_ROOT / f'docs/release/{group}/models.yaml').open(encoding='utf-8') as handle:
         content = yaml.safe_load(handle)
     if not isinstance(content, dict) or not isinstance(content.get('models'), list):
         raise ValueError(f'Invalid models manifest for {group}.')

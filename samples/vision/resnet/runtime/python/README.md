@@ -1,52 +1,98 @@
-# Python runtime
+# ResNet18 Python runtime
 
 `main.py` is the canonical user-facing command. It resolves one exact model
 reference from the release manifests, checks the detected board, loads
 `hbm_runtime` lazily, and executes one `ClassificationTask` flow. Model
 preparation is explicit; this runtime never downloads or installs packages.
 
-## Prepare and run
+<a id="environment"></a>
+## Environment
 
-Use the board Python environment that already contains the matching
-`hbm_runtime`, NumPy, and OpenCV-Python. From the repository root, prepare the
-artifact first:
+Run on the target board's Python environment with the matching
+`hbm_runtime`, NumPy, and OpenCV-Python; PyYAML is needed for manifest
+reading. `hbm_runtime` exists only in board images and is imported lazily —
+`--help`, `--list-models`, `--dry-run`, and the host unittest suite run
+without it. Host-side test dependencies are listed in the sample's
+`requirements-host.txt`.
+
+<a id="usage"></a>
+## Usage
+
+cwd: repository root. Default command (zero arguments beyond the mode
+flags is not executable without a board and artifact, so the minimal
+SDK-free invocation is the listing mode):
 
 ```bash
-bash samples/vision/resnet/model/download.sh x5
+# success: prints all published references, exit 0, no SDK loaded
+python3 samples/vision/resnet/runtime/python/main.py --list-models --target auto
 ```
 
-Then run it on the matching X5 board:
+A full run on a prepared X5 board:
 
 ```bash
+# prerequisites: bash samples/vision/resnet/model/download.sh x5
+# success: exit 0 and a printed Top-5 list
 python3 samples/vision/resnet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
   --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
-  --label-file platforms/x5/datasets/imagenet/imagenet_classes.names
+  --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-For S100 or S600, use the matching `s:resnet18:<target>/...` reference and
-artifact directory. `--list-models` prints all published references;
-`--dry-run` resolves one without board access, model loading, or download.
+For S100/S600 substitute the `s:resnet18:<target>/...` reference and the
+`s100/`/`s600/` artifact path; the labels file is shared.
+`--dry-run --target x5` resolves a selection without board access, model
+loading, or download.
 
-## Command parameters
+<a id="parameters"></a>
+## Parameters
 
-| Option | Behavior |
-| --- | --- |
-| `--target` | `auto`, `x5`, `s100`, `s100p`, or `s600`; an execution target must match detected hardware |
-| `--asset-id` | complete `group:sample:filename` reference from the manifest |
-| `--model-path` | existing `.bin` or `.hbm`; it must be paired with `--asset-id` |
-| `--test-img` / `--label-file` | BGR input image and ImageNet labels |
-| `--top-k` / `--topk` | number of results, default 5 |
-| `--resize-type` | 0 direct stretch, or 1 letterbox with BGR 127 padding |
-| `--priority` / `--bpu-cores` | runtime scheduling, default 0 and `[0]` |
-| `--img-save-path` | optional annotated image |
-| `--list-models` / `--dry-run` | SDK-free inspection modes |
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
+| `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
+| `--variant` | choice | null | model variant (`resnet18` on all targets; `resnet50`/`resnet152` on s100/s600 only) |
+| `--model-path` | string | null | existing `.bin`/`.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
+| `--test-img` | string | samples/vision/resnet/test_data/white_wolf.JPEG | BGR input image |
+| `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
+| `--top-k` | int | 5 | number of printed results |
+| `--topk` | int | 5 | legacy spelling of `--top-k` |
+| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source |
+| `--priority` | int | 0 | runtime scheduling priority (0-255) |
+| `--bpu-cores` | int list | [0] | runtime BPU core indexes |
+| `--img-save-path` | string | null | optional annotated output image path |
+| `--list-models` | flag | false | list manifest-backed references without board access |
+| `--dry-run` | flag | false | resolve/check a selection without loading a model or SDK |
 
-The canonical API accepts one BGR `uint8` image:
+Defaults above are machine-checked against `build_parser()` by the Q3
+checker.
+
+<a id="results"></a>
+## Results
+
+The command prints the stable Top-K as class IDs, scores, and labels
+(`ClassificationResult(class_ids, scores, labels)`), and writes an
+annotated image only when `--img-save-path` is given. X5 receives the packed
+NV12 buffer as the canonical flat 1-D uint8 array of `H*W*3/2` bytes
+(224x224 -> 75,264 bytes; same bytes as the former `(1,336,224,1)` view);
+S100/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8 arrays.
+Both audited source wrappers apply softmax to the returned score vector; the
+canonical contract records this as `legacy_softmax` over an
+`unverified_score_vector` and does not claim a new output semantic. Output
+shapes follow the rank rule: any singleton-batch/spatial spelling that
+squeezes to `(1000,)` binds (the published artifacts declare the `raw_f32`
+transform; quantized artifacts would require a declared `dequant` contract).
+
+<a id="integration-example"></a>
+## Integration example
+
+Prerequisites: artifact prepared (see [model/README.md](../../model/README.md))
+and OpenCV-Python importable. Every input variable is defined in the example:
 
 ```python
+import cv2
+
 from samples.vision.resnet.runtime.python.classification import ClassificationTask
 from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
 from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
@@ -59,63 +105,36 @@ selection = resolve_selection(
 runner = RuntimeModelRunner(selection)
 binding = runner.load()
 task = ClassificationTask(runner, binding, top_k=5)
+image = cv2.imread("samples/vision/resnet/test_data/white_wolf.JPEG")
 result = task.predict(image)
 print(result.class_ids, result.scores, result.labels)
 ```
 
-The task returns `ClassificationResult(class_ids, scores, labels)`. X5 input is
-packed as `(1,336,224,1)` uint8 NV12. S100/S600 input remains two arrays:
-Y `(1,224,224,1)` and UV `(1,112,112,2)`. The tensor names, output name, and
-F32 shape are validated against the selected contract before inference.
+The three stages can also be driven explicitly: `prepared = task.pre_process(image)`,
+`outputs = task.forward(prepared.tensors)`,
+`result = task.post_process(outputs)` — `predict` chains exactly these
+steps (verified by the stage-contract tests).
 
-The source wrappers apply softmax to one returned score vector. The canonical
-implementation keeps that behavior as `legacy_softmax` because available X5
-conversion material does not establish whether its `prob` tensor is normalized
-inside the graph or by the wrapper. It does not silently reinterpret output
-semantics.
+<a id="stage-io"></a>
+## Stage I/O
 
-## Compatibility adapters
+| Stage | Input | Output |
+| --- | --- | --- |
+| `pre_process` | one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context) |
+| `forward` | `prepared.tensors` | raw `{'prob': ndarray}` (X5, F32 `[1,1000,1,1]`) or `{'output': ndarray}` (S, F32 `[1,1000]`) — bit-identical to the runner output, no decode |
+| `post_process` | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K after `legacy_softmax` |
+| `predict` | BGR `uint8` array | chains the three stages, same `ClassificationResult` |
 
-The former imports remain thin adapters:
+<a id="troubleshooting"></a>
+## Troubleshooting
 
-```python
-from platforms.x5.samples.vision.resnet.runtime.python.resnet import ResNet, ResNetConfig
-from platforms.s.samples.vision.resnet18.runtime.python.resnet18 import Resnet18, Resnet18Config
-```
+| Symptom | Check |
+| --- | --- |
+| `Cannot identify this board` | Run with an explicit target for dry-run, then execute only on that matching board; an explicit target is not hardware evidence. |
+| `model_path requires --asset-id` | Copy the exact qualified reference from `--list-models`; do not use a bare filename. |
+| `No published ... asset` for S100P | There is no ResNet18 S100P row in the manifest; use S100/S600 artifacts on their matching boards. |
+| input shape or dtype mismatch | Confirm the artifact reference and runtime metadata; do not swap packed X5 and split S artifacts. |
+| output differs from a legacy run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |
 
-The X5 adapter retains nested `{model_name: {input_name: tensor}}` inputs and
-returns `(topk_idx, topk_prob, topk_labels)`. The S18 adapter retains nested
-Y/UV inputs and returns a list of `(class_id, probability)` pairs. Their
-`pre_process`, `forward`, and `post_process` methods delegate to
-`tensor_io.prepare_nv12`, `RuntimeModelRunner`, and
-`classification.topk_from_scores`. Passing `runtime=` or `runtime_factory=`
-is an optional host fixture seam; normal board use constructs the installed
-SDK lazily.
-
-## Code flow and troubleshooting
-
-```text
-main.py
-  -> model_binding.resolve_selection
-  -> platforms.require_execution_target
-  -> model_runner.RuntimeModelRunner.load
-  -> model_binding.bind_model
-  -> classification.ClassificationTask.predict
-       -> tensor_io.prepare_nv12
-       -> runtime.run
-       -> classification.topk_from_scores
-```
-
-`model_path requires --asset-id` means the runtime cannot safely select an
-input protocol from the filename. `Cannot identify this board` means automatic
-identity detection is unavailable; an explicit target helps dry-run but does
-not establish hardware evidence. Shape or dtype errors mean the artifact and
-runtime metadata do not match the selected X5 packed or S-series split
-contract. For output differences, compare raw F32 output, image, resize mode,
-Top-K, and artifact before changing score processing.
-
-Run the host contract and adapter tests with:
-
-```bash
-python3 -m unittest discover -s samples/vision/resnet/tests -v
-```
+Host checks (repository root):
+`python3 -m unittest discover -s samples/vision/resnet/tests -v`.

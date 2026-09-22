@@ -13,7 +13,7 @@ class LabelTests(unittest.TestCase):
 
         root = Path(__file__).parents[4]
         labels = _load_labels(
-            root / "platforms" / "x5" / "datasets" / "imagenet" / "imagenet_classes.names"
+            root / "datasets" / "imagenet" / "imagenet_classes.names"
         )
         self.assertEqual(labels[270], "white wolf, Arctic wolf, Canis lupus tundrarum")
 

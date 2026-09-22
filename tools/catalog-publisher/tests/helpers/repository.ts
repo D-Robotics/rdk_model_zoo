@@ -52,6 +52,7 @@ export function fixtureSource(variant: string, platform: CatalogPlatform = "x5")
     worktreeRoot: "tools/catalog-publisher/tests/fixtures",
     treePrefix: "",
     manifestDirectory: `release/${variant}`,
+    versionFile: "VERSION",
     linkRef: "main",
     linkPrefix: ""
   };

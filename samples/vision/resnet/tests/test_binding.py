@@ -10,8 +10,26 @@ from __future__ import annotations
 import unittest
 
 
+class _EnumLike:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+class _QuantInfo:
+    """Synthetic descriptor mirroring the runtime ``output_quants`` entries."""
+
+    def __init__(self, *, scale, zero_point, axis=0, quant_type="SCALE") -> None:
+        import numpy as np
+
+        self.quant_type = _EnumLike(quant_type)
+        self.scale = np.asarray(scale, dtype=np.float32)
+        self.zero_point = np.asarray(zero_point, dtype=np.float32)
+        self.axis = axis
+
+
 def _metadata(*, protocol: str = "x5", output_shape=None,
-              output_dtype: str = "float32", output_semantics: str | None = None):
+              output_dtype: str = "float32", output_semantics: str | None = None,
+              output_quants: dict | None = None):
     from samples.vision.resnet.runtime.python.model_binding import RuntimeMetadata
 
     if protocol == "x5":
@@ -43,6 +61,8 @@ def _metadata(*, protocol: str = "x5", output_shape=None,
     }
     if output_semantics is not None:
         values["output_semantics"] = output_semantics
+    if output_quants is not None:
+        values["output_quants"] = output_quants
     return RuntimeMetadata.from_mapping(values)
 
 
@@ -178,6 +198,88 @@ class BindingTests(unittest.TestCase):
 
         with self.assertRaises(UnsupportedAssetError):
             resolve_selection("x5", model_path="custom.bin")
+
+    def test_output_rank_rule_accepts_all_singleton_spellings(self):
+        # H4: X5 (1,1000,1,1), S (1,1000) and a bare vector are one contract.
+        from samples.vision.resnet.runtime.python.model_binding import (
+            bind_model,
+            resolve_selection,
+        )
+
+        selection = resolve_selection("x5")
+        for shape in ((1, 1000, 1, 1), (1, 1000), (1000,), (1, 1, 1000)):
+            with self.subTest(shape=shape):
+                binding = bind_model(selection, _metadata(output_shape=shape))
+                self.assertEqual(binding.output_shape, shape)
+                self.assertEqual(binding.output_transform, "raw_f32")
+
+    def test_output_rank_rule_rejects_ambiguous_layouts(self):
+        from samples.vision.resnet.runtime.python.model_binding import (
+            MetadataMismatchError,
+            bind_model,
+            resolve_selection,
+        )
+
+        selection = resolve_selection("x5")
+        for shape in ((1, 999), (2, 1000), (1, 500, 2), (), (1,)):
+            with self.subTest(shape=shape):
+                with self.assertRaises(MetadataMismatchError):
+                    bind_model(selection, _metadata(output_shape=shape))
+
+    def test_declared_raw_f32_keeps_vestigial_quant_descriptor(self):
+        # Contract refinement driven by board evidence (X5 smoke, 2026-09-21):
+        # published X5 mobilenet artifacts ship F32 outputs that still carry a
+        # compiler quant descriptor.  The raw_f32 contract gates on dtype (see
+        # the int8 rejection test above), snapshots the descriptor for the
+        # record, and never applies it — legacy consumers ignored it too.
+        from samples.vision.resnet.runtime.python.model_binding import (
+            bind_model,
+            resolve_selection,
+        )
+
+        selection = resolve_selection("x5")
+        descriptor = _QuantInfo(scale=0.5, zero_point=3)
+        binding = bind_model(
+            selection,
+            _metadata(output_quants={"prob": descriptor}),
+        )
+        self.assertEqual(binding.output_dtype, "float32")
+        self.assertIs(binding.output_quants["prob"], descriptor)
+
+    def test_declared_dequant_contract_binds_int8_output_with_descriptor(self):
+        # H1: a contract that declares 'dequant' binds an S-style artifact
+        # whose output is int8 plus an output_quants descriptor.  The
+        # published ResNet artifacts do not use this contract; the mechanism
+        # is exercised with a replaced contract and a synthetic fixture.
+        import dataclasses
+
+        from samples.vision.resnet.runtime.python.model_binding import (
+            bind_model,
+            resolve_selection,
+        )
+
+        selection = resolve_selection("x5")
+        dequant_selection = dataclasses.replace(
+            selection,
+            contract=dataclasses.replace(
+                selection.contract, output_transform="dequant"
+            ),
+        )
+        descriptor = _QuantInfo(scale=0.25, zero_point=2)
+        binding = bind_model(
+            dequant_selection,
+            _metadata(output_dtype="int8", output_quants={"prob": descriptor}),
+        )
+        self.assertEqual(binding.output_transform, "dequant")
+        self.assertIs(binding.output_quants["prob"], descriptor)
+
+        # The declared dequant contract still requires a descriptor.
+        from samples.vision.resnet.runtime.python.model_binding import (
+            MetadataMismatchError,
+        )
+
+        with self.assertRaises(MetadataMismatchError):
+            bind_model(dequant_selection, _metadata(output_dtype="int8"))
 
 
 if __name__ == "__main__":

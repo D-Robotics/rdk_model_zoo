@@ -8,7 +8,7 @@
 #   bash run.sh
 #   bash run.sh detect
 #   bash run.sh seg --family yolov8 --platform s100
-#   bash run.sh cls --model-path ../../model/nash-e/yolo11n_cls_nashe_224x224_nv12.hbm
+#   bash run.sh cls --model-path ../../model/nash-e/yolo11n_cls_nashe_640x640_nv12.hbm
 #
 # The platform is detected from /sys/class/boardinfo unless --platform is given.
 # No Python package is installed by this script: the required packages are part

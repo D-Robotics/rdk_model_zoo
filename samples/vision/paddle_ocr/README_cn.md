@@ -1,88 +1,116 @@
 [English](./README.md) | 简体中文
 
-# PaddleOCR 文本检测与识别
+# PaddleOCR 两阶段文字检测与识别
 
-本 sample 提供完整的两阶段 OCR 流程：DB 检测器先定位文字区域，随后对每个
-裁剪图使用 CRNN+CTC 识别。维护版 Python 运行时包含两组已经审计的模型组
-合，请按目标板选择，并始终把同一组合的检测模型、识别模型和字典放在一起：
+<a id="overview"></a>
+## 概述
 
-| 板卡 | 模型组合 | 检测输入 | 识别输出 | 已发布引用 |
-| --- | --- | --- | --- | --- |
-| RDK X5 | PP-OCRv3 英文 | 打包 NV12 `[1,960,640,1]` U8 | F32 `[1,40,97,1]`，固定 96 字符表加 blank | `x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin` + `x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin` |
-| RDK S100 | PP-OCRv6 | 分离的 `x_y [1,640,640,1]` 和 `x_uv [1,320,320,2]` U8 | F32 `[1,40,18710]`，仓库 UTF-8 字典加 blank/空格 | `s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm` + `s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` |
+本 sample 在 RDK 板卡上运行完整的两阶段 OCR 流程：DB 检测器在输入图像中
+找出文字区域，逐个裁剪后由 CRNN+CTC 识别器解码为字符串。它是仓库中
+合法多阶段推理的参照实现（见[阶段 I/O](./runtime/python/README.md#stage-io)）：
+检测与识别是两个独立懒加载的运行时阶段，由显式 pipeline 组合，
+检测→裁剪→识别的顺序全程可读。
 
-最后一列的字符串是 X5 和 S [release manifest](../../../platforms/x5/docs/release/models.yaml)
-中已有行的限定引用，也是 S [release manifest](../../../platforms/s/docs/release/models.yaml)
-中已有行的限定引用，不是新的独立 asset ID。当前没有匹配的已审计 S100P 或
-S600 OCR 组合，因此 sample 不会从文件名推断这些板卡的支持。
+维护两个经过审计的模型对。一对 = 检测器 + 识别器 + 词典，作为整体使用；
+禁止跨对混用组件：
 
-## 准备环境和模型
+| 板卡 | 模型对 | 检测器输入 | 识别器输出 |
+| --- | --- | --- | --- |
+| RDK X5 | PP-OCRv3 英文 | 单个 packed NV12 张量（640×640） | F32 `[1,40,97,1]`：固定 96 字符字母表加 blank |
+| RDK S100 | PP-OCRv6 | split NV12 `x_y`（640×640）+ `x_uv`（320×320） | F32 `[1,40,18710]`：随仓 UTF-8 词典加 blank 与末尾空格 |
 
-Python 板端推理需要提供匹配 `hbm_runtime` 的 RDK 系统、Python 3.10 或更新
-版本、NumPy、OpenCV-Python、PyYAML 和 `pyclipper`。`hbm_runtime` 只在正式
-推理时导入；`--help`、`--list-models`、`--dry-run` 不需要板端 SDK。模型文
-件必须预先存在，并且两个路径必须与精确的限定引用对应。
+旧 X5/S Python 入口与旧 S C++ 源码均转发到本 canonical 实现；它们仍是
+可用的兼容入口，本 sample 不维护第二套实现。
 
-模型准备是显式操作，会使用现有 release manifest 中的 URL 并打印实际
-SHA-256；普通推理不会下载：
+<a id="support-matrix"></a>
+## 支持矩阵
 
-```bash
-python samples/vision/paddle_ocr/runtime/python/main.py --prepare \
-  --target x5 \
-  --det-asset-id x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin \
-  --rec-asset-id x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin \
-  --model-dir /tmp/rdk-models
-```
+| 板卡 | Python 运行时 | C++ 运行时 |
+| --- | --- | --- |
+| X5 | supported-verified | not-supported（审计基线中无 X5 C++ 源码） |
+| S100 | supported-verified | supported-verified |
+| S100P | not-supported（未发布经审计的 OCR 模型对） | not-supported |
+| S600 | supported-not-run | supported-not-run |
 
-准备 S100 时将 `--target` 和两条引用替换为上表中的 S100 组合。重新生成
-模型的转换流程见 [`conversion/README_cn.md`](./conversion/README_cn.md)，其
-中 X5 PP-OCRv3 的 `hb_mapper` 与 S100 PP-OCRv6 的 `hb_compile` 配方分开维护。
+验证状态：Python 默认与保持长宽比两条管线及旧包装入口在两块 X5 板与
+S100 上做过逐字节一致验证（2026-09-17 集成评审）；S100 C++ 完成构建运行，
+渲染输出像素与源基线一致。S600 与 S100 共享源码与 SoC 探测，但板卡不可达
+（SSH 未恢复），保持 `not-run`，不能用 S100 结果替代。S100P 在两侧发布
+清单中均无匹配的审计模型对，sample 对其显式拒绝。
 
-## 运行 Python sample
+<a id="prerequisites"></a>
+## 环境前提
 
-在板端执行前先查看可用组合：
+- 与目标匹配、自带 `hbm_runtime` 包的板卡镜像（X5 镜像对应 `.bin`
+  模型对，RDK S 镜像对应 `.hbm` 模型对）。
+- Python 3.10 或更新，含 NumPy、OpenCV-Python、PyYAML；检测器返回
+  至少一个框时另需 `pyclipper`（help/list/dry-run 模式不需要任何板端
+  SDK 包）。
+- 已准备的模型制品（见[入口](#entry-points)）；推理路径不联网下载。
+- 以下命令均在完整检出的仓库根目录执行。
 
-```bash
-python samples/vision/paddle_ocr/runtime/python/main.py --list-models --target auto
-python samples/vision/paddle_ocr/runtime/python/main.py --dry-run --target x5
-```
+<a id="quickstart"></a>
+## 快速体验
 
-准备好 X5 模型后，一条完整命令如下：
+1. 列出清单支撑的模型对（无需 SDK；成功：打印两行带完整引用的结果）：
 
-```bash
-python samples/vision/paddle_ocr/runtime/python/main.py \
-  --target x5 \
-  --det-asset-id x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin \
-  --rec-asset-id x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin \
-  --det-model-path /tmp/rdk-models/en_PP-OCRv3_det_640x640_nv12.bin \
-  --rec-model-path /tmp/rdk-models/en_PP-OCRv3_rec_48x320_rgb.bin \
-  --test-img samples/vision/paddle_ocr/test_data/x5/paddleocr_test.jpg \
-  --output-format json \
-  --json-output /tmp/paddleocr-x5.json
-```
+   ```bash
+   python3 samples/vision/paddle_ocr/runtime/python/main.py \
+     --list-models --target auto
+   ```
 
-S100 运行时替换目标、引用、模型路径和测试图片：
+2. 显式准备 X5 模型对——唯一可联网的操作（输入：清单 URL；
+   输出：`--model-dir` 下两个 `.bin`；成功：退出码 0 且打印实测
+   SHA-256）：
 
-```bash
-python samples/vision/paddle_ocr/runtime/python/main.py \
-  --target s100 \
-  --det-asset-id s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm \
-  --rec-asset-id s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
-  --det-model-path /opt/hobot/model/s100/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm \
-  --rec-model-path /opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
-  --test-img samples/vision/paddle_ocr/test_data/s100/gt_2322.jpg \
-  --output-format json
-```
+   ```bash
+   python3 samples/vision/paddle_ocr/runtime/python/main.py --prepare \
+     --target x5 \
+     --det-asset-id x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin \
+     --rec-asset-id x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin \
+     --model-dir /tmp/rdk-models
+   ```
 
-`--priority` 默认是 `0`，`--bpu-cores` 默认是 `0`；板端应用需要其他调度时
-可以同时传入这两个参数。`--vocabulary-path` 可指定替换的 S100 UTF-8 字典，
-但文件字节必须通过已审计摘要校验。入口会拒绝不完整路径、混合目标引用、
-元数据不匹配、非 F32 输出以及无法识别的执行目标板。
+3. 运行 X5 模型对（cwd：仓库根目录；成功：退出码 0，stdout 打印识别
+   字符串与多边形框）：
 
-## 查看结果
+   ```bash
+   python3 samples/vision/paddle_ocr/runtime/python/main.py \
+     --target x5 \
+     --det-asset-id x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin \
+     --rec-asset-id x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin \
+     --det-model-path /tmp/rdk-models/en_PP-OCRv3_det_640x640_nv12.bin \
+     --rec-model-path /tmp/rdk-models/en_PP-OCRv3_rec_48x320_rgb.bin \
+     --test-img samples/vision/paddle_ocr/test_data/x5/paddleocr_test.jpg \
+     --output-format json
+   ```
 
-文本模式逐项打印识别文字和有序多边形框。JSON 包含 `target`、`image_shape`、
-检测/识别资产引用和对齐的 `boxes`/`texts`，例如：
+4. S100 上整体切换 target、引用、路径与测试图（下列模型对使用 S 镜像
+   `/opt/hobot/model/s100/basic` 下已有的制品）：
+
+   ```bash
+   python3 samples/vision/paddle_ocr/runtime/python/main.py \
+     --target s100 \
+     --det-asset-id s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm \
+     --rec-asset-id s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
+     --det-model-path /opt/hobot/model/s100/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm \
+     --rec-model-path /opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
+     --test-img samples/vision/paddle_ocr/test_data/s100/gt_2322.jpg \
+     --output-format json
+   ```
+
+5. 主机契约测试（无需板卡；成功：全部 OK，退出码 0）：
+
+   ```bash
+   python3 -m unittest discover -s samples/vision/paddle_ocr/tests -v
+   ```
+
+<a id="expected-results"></a>
+## 预期结果
+
+文本输出逐行打印识别字符串及其有序多边形框。JSON 输出包含 `target`、
+`image_shape`、`detector_asset`、`recognizer_asset` 与对齐的
+`boxes`/`texts`，例如：
 
 ```json
 {
@@ -92,113 +120,42 @@ python samples/vision/paddle_ocr/runtime/python/main.py \
 }
 ```
 
-框和文字保留检测顺序，返回数组由结果对象独立持有；检测没有框时不会调用
-识别。检测输出按已观察的分数图直接阈值处理，不加入未经确认的激活，也不
-由此宣称准确率。X5 检测缩放使用 linear，S100 使用 area，掩码缩放和识别缩
-放均使用 linear。轮廓扩张、最小面积过滤、裁剪旋转和退化裁剪行为按目标分
-开保留。
+框与文本保持检测器顺序；结果中的数组归结果所有。检测器输出为空时跳过
+识别并返回空列表。检测器输出按观测到的 score map 直接阈值化（`0.5`）；
+不添加未经验证的激活或精度声明。随仓测试图的具体打印内容属于模型对的
+属性——已核验的对照记录见[评估](./evaluator/README.md#reference-results)；
+数据集级精度在本 sample 为 **not-run**。
 
-S 系列 C++ 程序会生成左右并排 JPEG，同时保留原有 S16/F32 检测输出处理和
-FreeType 字体渲染：
+<a id="directory"></a>
+## 目录
 
-```bash
-bash samples/vision/paddle_ocr/runtime/cpp/run.sh
-```
+| 路径 | 职责 |
+| --- | --- |
+| `model/` | 制品引用与显式准备流程 |
+| `runtime/python/` | canonical 两阶段 Python 运行时（上表全部目标） |
+| `runtime/cpp/` | S 系列原生运行时（DB + CRNN/CTC + FreeType 渲染） |
+| `conversion/` | 按 target 分开的导出/校准/编译配方 |
+| `evaluator/` | 基于记录的检测/识别一致性评估器 |
+| `test_data/` | 随仓测试材料：X5 图像、S100 图像与 PP-OCRv6 词典 |
+| `tests/` | 主机契约测试（43 例） |
 
-C++ 的依赖、模型、参数、API 和排障说明见
-[`runtime/cpp/README_cn.md`](./runtime/cpp/README_cn.md)。C++ 默认路径保留旧
-的 SOC 行为，本轮新增集成证据覆盖 S100。
+<a id="entry-points"></a>
+## 入口
 
-## 使用 Python 库
+- 模型：[model/README.md](./model/README.md)——四条制品引用与
+  `--prepare` 流程。
+- Python 运行时：[runtime/python/README.md](./runtime/python/README.md)——
+  完整参数表、集成示例与阶段 I/O 契约。
+- C++ 运行时：[runtime/cpp/README.md](./runtime/cpp/README.md)——S 系列
+  可执行文件的构建、运行、gflags 与生命周期。
+- 转换：[conversion/README.md](./conversion/README.md)——PP-OCRv3
+  `hb_mapper` 与 PP-OCRv6 `hb_compile` 配方。
+- 评估：[evaluator/README.md](./evaluator/README.md)——标注记录评估
+  及其边界。
 
-完整 checkout 中可以直接导入 package 模块，模块不会修改 `sys.path`；只有
-直接执行脚本的入口会加入 checkout 根目录。用 `resolve_pair` 绑定精确资产，
-再组合两个惰性 runner：
+<a id="license"></a>
+## 许可
 
-```python
-import cv2
-
-from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-from samples.vision.paddle_ocr.runtime.python.model_runner import create_stage_runners
-from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
-
-pair = resolve_pair(
-    "x5",
-    det_asset_id="x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin",
-    rec_asset_id="x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin",
-    det_model_path="/tmp/rdk-models/en_PP-OCRv3_det_640x640_nv12.bin",
-    rec_model_path="/tmp/rdk-models/en_PP-OCRv3_rec_48x320_rgb.bin",
-)
-detector, recognizer = create_stage_runners(pair, priority=0, bpu_cores=[0])
-image = cv2.imread("samples/vision/paddle_ocr/test_data/x5/paddleocr_test.jpg")
-result = OCRPipeline(pair, detector, recognizer).predict(image)
-print(result.texts)
-```
-
-主要库模块如下：
-
-* `model_binding.py` 保存有限的目标契约、manifest 引用、字典身份和运行时元
-  数据检查。
-* `tensor_io.py` 准备目标相关的打包/分离 NV12，以及共用的 RGB float32 NCHW
-  识别输入。
-* `model_runner.py` 惰性加载单个阶段、校验物理 tensor 并应用调度参数。
-* `geometry.py`、`decode.py` 和 `pipeline.py` 负责目标相关后处理、CTC 最佳
-  路径解码、裁剪和有序结果归属。
-
-## 评估带标注记录
-
-为每张图片保存一条预测记录并加入 `image` 标识，再按照
-[`evaluator/README_cn.md`](./evaluator/README_cn.md) 与标注 JSONL 对比：
-
-```bash
-python samples/vision/paddle_ocr/evaluator/evaluate.py \
-  --ground-truth /data/labels.jsonl \
-  --predictions /data/predictions.jsonl \
-  --iou-threshold 0.5 \
-  --output /data/paddleocr-evaluation.json
-```
-
-评估器按 IoU 确定性匹配框，并报告检测计数以及匹配区域上的识别一致性。空
-GT 记录合法；没有匹配区域时识别状态为 `not_run`。只有具备完整标注数据集并
-完成目标板测量，才可以报告数据集准确率或性能。
-
-## 故障排查
-
-* **没有可用组合/引用混用：**运行 `--list-models`，从同一组合中取得两条引
-  用并使用对应字典。
-* **模型文件不存在：**使用 `--prepare` 或自行复制制品，然后显式传入两个路
-  径；推理入口不会获取缺失文件。
-* **运行时元数据不匹配：**使用工具链的 model-info 命令检查制品。X5 必须是
-  打包 NV12 和 97 类；S100 必须是分离 NV12 和 18,710 类。
-* **缺少 `pyclipper`：**在板端 Python 环境中安装后再处理非空检测结果；
-  help/list/dry-run 不需要它。
-* **没有检测框：**确认图片和检测制品，然后检查已观察的 `0.5` 阈值。修改阈
-  值是运行参数，不是新的准确率结果。
-* **文字乱码：**使用识别模型配套字典。S100 的 blank/字典行/末尾空格顺序必
-  须保持，不能换成 X5 字符表。
-
-## 旧入口映射与验证
-
-旧 Python 入口仍可作为兼容 shim 使用，并转发到本 canonical 实现。旧 S C++
-路径的头文件、编译单元和 launcher 也转发到这里。主要映射为：
-
-| 旧入口 | canonical 实现 | 保留契约 |
-| --- | --- | --- |
-| X5 `PaddleOCR.pre_process` | `tensor_io.prepare_detection` | 打包 NV12、linear 缩放 |
-| S `PaddleOCRDet.pre_process` | `tensor_io.prepare_detection` | 分离 NV12、area 缩放 |
-| X5/S 识别预处理 | `tensor_io.prepare_recognition` | RGB F32 NCHW 操作顺序 |
-| 旧 forward 方法 | `RuntimeStageRunner` | 一个惰性、带元数据绑定的阶段 runtime |
-| 检测膨胀/裁剪 helper | `geometry.py` + `pipeline.py` | 目标相关过滤、顺序和旋转 |
-| 旧 CTC converter | `decode.py` | blank 重置、repeat 合并、字典顺序 |
-| 旧 CLI | `runtime/python/main.py` | 显式资产、JSON 输出、无隐式下载 |
-
-运行主机检查：
-
-```bash
-python -m unittest discover -s samples/vision/paddle_ocr/tests -p 'test_*.py' -v
-```
-
-当前证据包括 X5 8GB、X5 4GB 和 S100 的 Python 阶段/输入/输出/生命周期精确
-检查，也包括旧 Python wrapper。准确率和性能需要带标注数据及目标特定测量，
-当前尚未测量。转换和协议证据见
-[`OCR 源码审计`](../../../docs/releases/unified-migration/p2-ocr-source-audit.md)。
+Sample 代码遵循仓库许可。模型制品经平台发布清单发布；PP-OCRv3 与
+PP-OCRv6 权重为 PaddlePaddle 上游发布，其使用受对应上游许可约束。
+S100 词典与 C++ 演示字体自审计源交付原样携带。

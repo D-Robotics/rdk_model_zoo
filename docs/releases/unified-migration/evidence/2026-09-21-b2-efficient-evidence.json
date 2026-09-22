@@ -1,0 +1,84 @@
+{
+ "record": "2026-09-21-b2-efficient",
+ "date": "2026-09-21",
+ "actor": "claude (autonomous, per standing plan-execution instruction)",
+ "repo_head_before": "b835e7f (B1 closeout: R1a/R1b doc fixes)",
+ "source_baselines": {
+  "rdk_x5": "ac115717197920355fc390bb04299b20e6436864 (tip ac11571, x5-v1.1.3; re-verified unchanged before extraction)",
+  "rdk_s": "380e1a2bf42041af54be6f34935e50197cfadff9 (tip 380e1a2, s-v1.1.2; re-verified unchanged)"
+ },
+ "scope": "B2: efficientnet (x5+s merge, 3 x5 variants B2/B3/B4 + 5 s variants lite0-4), efficientformer (x5 l1/l3), efficientformerv2 (x5 s0/s1/s2), efficientvit (x5 m5); all python-only (no source cpp on any side); stop after B2 per user instruction",
+ "user_authorization_note": "B2 opened under explicit user authorization recorded in x5-s-migration-map.md 'B1 R1a/R1b 修复与 B2 推进决定' (2026-09-21): R1a/R1b fixes done, no wait for next B1 independent re-review; B1 rows remain Closed=no / Review=changes-required.",
+ "change_set": {
+  "efficientnet": {
+   "commit": "ac09101",
+   "files": 54,
+   "variants": "x5 b2/b3/b4 (224), s100+s600 lite0(224)/lite1(240)/lite2(260)/lite3(300)/lite4(380)",
+   "default_variant": "b2 on x5 (source x5 entrypoint default), lite0 on s (source s entrypoint default efficientnet_lite0)",
+   "conversion": "x5: 3 PTQ YAMLs byte-verbatim (SHA-pinned) + honest gaps (no exporter, no rgb_f32 producer, variant-less prefixes need rename, B3 working_dir divergence, debug_mode in all three, node_info asymmetry, no pinned compile command, none executed); s: full recipe 13 files byte-verbatim (5 YAML + 5 timm exporters + timm2onnx_local + get_calibration_data + x86_inference), calibration chain verified consistent with YAML (ShortSideResize->CenterCrop->HWC2CHW->Scale(255)->Mean(127)->Scale(0.007843)), disclosed legacy gaps (get_calibration_data.py hardcoded src_image_dir does not resolve in this repo; calibration crop fixed 224 for all variants incl. 240-380; S600 recompile nash-p manual)"
+  },
+  "efficientformer": {
+   "commit": "27fea1a",
+   "files": 35,
+   "variants": "x5 l1/l3, default l3 (source entrypoint default model preserved)",
+   "conversion": "2 YAMLs byte-verbatim (SHA-pinned); variant-less output prefix vs manifest basenames asserted unequal (rename gap pinned); calibration_type default + set_all_nodes_int16 + node_info asymmetry disclosed; no exporter/producer claimed"
+  },
+  "efficientformerv2": {
+   "commit": "a8a9ace",
+   "files": 35,
+   "variants": "x5 s0/s1/s2, default s0 (source entrypoint default model preserved)",
+   "conversion": "3 YAMLs byte-verbatim (SHA-pinned); POSITIVE anchor: output_model_file_prefix + '.bin' == manifest basename for all three variants, per-variant working_dirs, no rename step; s0-only debug_mode/set_all_nodes_int16 asymmetry pinned; max_percentile 0.999/0.999/0.9995 pinned"
+  },
+  "efficientvit": {
+   "commit": "4f08785",
+   "files": 35,
+   "variants": "x5 m5 (single), default m5 (source entrypoint default model preserved)",
+   "conversion": "1 YAML byte-verbatim (SHA-pinned); variant-less 'msra' output prefix vs manifest 'm5' basename asserted unequal (rename gap pinned); unique max_percentile 0.99999 and 28 Softmax int16 placements pinned; no debug_mode/set_all_nodes_int16 (contrast with siblings documented)"
+  },
+  "manifest_update": "docs/release/s/models.yaml efficientnet row download_scripts: download_model.sh -> download.sh (sample_path already unified; x5 4 rows verified correct, untouched)"
+ },
+ "host_verification": {
+  "cwd": "repository root",
+  "command_pattern": ".venv/bin/python -m unittest discover -s samples/vision/<sample>/tests -t samples/vision/<sample>/tests",
+  "b2_suites": {
+   "efficientnet": "28 tests OK (was 25 at original completion; +3 are the B2-R1 remediation regression tests for omitted-variant per-target default resolution)",
+   "efficientformer": "25 tests OK",
+   "efficientformerv2": "26 tests OK",
+   "efficientvit": "26 tests OK"
+  },
+  "b1_regressions": {
+   "resnet": "52 OK", "mobilenetv1": "17 OK", "mobilenetv2": "24 OK",
+   "mobilenetv3": "17 OK", "mobilenetv4": "20 OK",
+   "ultralytics_yolo": "59 OK", "paddle_ocr": "44 OK"
+  },
+  "shared": "samples/_shared/tests: 71 OK",
+  "checker_unit": "tools/sample_contract/tests: 27 OK",
+  "per_sample_checker": "4/4 samples: 0 violations, 1 policy skip each (R-STAGE-PURITY on main.py CLI layer)",
+  "ci_same_command": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json -> 11 samples, 0 violations, 14 skips, 84 exemptions applied, rc=0 (84-exemption baseline unchanged; scope grew 7 -> 11 after B2 ledger rows set Refactor=done)"
+ },
+ "issues_found_and_fixed_during_b2": [
+  "model_binding delegation initially written as cls_binding.build_asset_lister/build_resolver/build_binder (TypeError on import) -> corrected to explicit functions delegating to cls_binding.list_assets/resolve_selection/bind_model (efficientformer)",
+  "classification_profiles() missing required url_prefix_s keyword for x5-only samples -> inert value with honest docstring (never consulted; no S manifest rows exist)",
+  "nonsense assertion in efficientformer test_conversion_layout.py (assertNotIn against dead string) -> replaced with meaningful assertFalse((CONVERSION/'calibration_data_rgb_f32').exists())",
+  "review-file factual error: §3.1 recorded debug_mode as B3-only for efficientnet; YAMLs show it in all three (B2/B3/B4) -> §3.1 corrected in-commit; B2/B4 node_info vs B3 asymmetry added",
+  "unverifiable citation: efficientnet root READMEs cited arXiv 1904.01146 for EfficientNet-Lite -> replaced with tensorflow/tpu repo link as cited by the source delivery (both languages)",
+  "efficientformerv2 sed-remap damage: stale literals ('EfficientFormerV2_l1...' wrong-case/variant names, 2-variant lists) survived first patch; one .replace() batch silently no-matched, a second raised mid-file -> all filename literals fixed via explicit Edit calls verified one-by-one; lesson recorded (verify sed output for stale literals before running)",
+  "efficientvit Softmax placement count initially pinned as 27 from eyeball; grep count is 28 -> test corrected and now anchors the real value"
+ ],
+ "material_disclosures": [
+  "test_data case-collision (efficientnet): x5 ships EfficientNet_architecture.png, s ships efficientnet_architecture.png; bytes are IDENTICAL (sha256 f0c7ccbe... 170885 bytes verified both sources); APFS cannot hold both names in one directory; one copy kept under the s-side lowercase name - zero content loss, name-case-only difference",
+  "legacy generated outputs (result.jpg/result.png) not migrated: they were run-time side-effect files, not input material; unified runtimes write output only with --img-save-path",
+  "x5 efficientvit legacy run.sh preferred /opt/hobot/model/x5/basic/ before falling back and auto-wget: both implicit behaviors removed; download is explicit, run.sh is a passthrough",
+  "published benchmark tables (x5-v1.1.3) copied as published records, explicitly not re-measured in this repo; efficientvit source table does not state latency threading conditions (recorded as such)",
+  "paper citations verified for EfficientFormer (2206.00171), EfficientFormerV2 (2212.08059, snap-research/EfficientFormer), EfficientViT (2305.07027, microsoft/Cream); EfficientNet 1905.11942; EfficientNet-Lite citation kept source-cited (tensorflow/tpu) because no verifiable original paper link exists in the source delivery"
+ ],
+ "board_status": "passed (2026-09-21, same-board legacy-vs-unified comparison; see evidence/2026-09-21-b2-board-smoke-evidence.json): x5-8g 13/13 and x5-4g 13/13 (all 4 samples, 9 variant comparisons + 4 CLI; identical per-implementation results across the two boards), s100 6/6 and s600 6/6 (efficientnet lite0-4 + CLI; per-variant geometry 224/240/260/300/380 resolved correctly), s100p 3/3 rejection negatives (no-published-asset + no silent s100 fallback + target-mismatch rc=2; one harness-criterion artifact adjudicated, raw record preserved). 28 comparisons = 26 ids-exact (max score diff <=2.4e-7) + 2 exact-tie adjudications (efficientformerv2/s1 on each X5 board; competing classes exactly equal within each implementation, cross-implementation diff 1.4e-9 — not byte-identical across implementations). The board runs themselves found no product defects; the B2-R1 default-variant regression was found afterwards by the independent review's host reproduction and is fixed + re-verified on the affected S default entries (see board evidence post_review_remediation_b2r1). Host tests never substitute board tests.",
+ "independent_review": "Codex, 2026-09-21 (base b835e7f -> head 716bdca): changes-required / not-ready; findings B2-R1 (S default-variant regression), B2-R2 (customer README status/criteria not synced), B2-R3 (board-summary counts + 'byte-identical' tie wording). Report: docs/releases/unified-migration/2026-09-21-b2-independent-review.md. B1 confirmed closed in the same round.",
+ "remediation_2026_09_21": {
+  "B2-R1": "per-target default variant implemented (shared SampleBindingTable.default_variant now accepts a {target: variant} mapping via default_variant_for(); string form unchanged for all other samples); efficientnet declares {x5: b2, s100: lite0, s600: lite0} preserving both source entrypoint defaults; download.py resolves the same per-target defaults with DEFAULT_VARIANTS pinned to BINDING_TABLE by test; main.py --variant help updated; explicit variant/asset-id exact matching and s100p rejection unchanged (s100p error now reports variant=None). +3 regression tests (efficientnet 25->28 OK). Board re-verification of the affected S default entries only: s100 and s600 overlaid with the fixed files, main.py --target <soc> with no variant/asset-id exits 0 and reproduces the recorded lite0 results exactly; explicit lite2 unchanged (see board evidence post_review_remediation_b2r1).",
+  "B2-R2": "16 customer READMEs synced (4 samples x root/evaluator x en/zh): support-matrix status rows, board-smoke paragraphs with per-target results and evidence links, evaluator Top-K-agreement definitions and reference-results rows now state the actual comparison (post-softmax Top-K ids equal; scores within the 1e-5 tolerance; exact-tie adjudication for s1) and explicitly do not claim raw-tensor equality, dataset accuracy, or latency; efficientnet runtime/model bilingual READMEs document the per-target default variant.",
+  "B2-R3": "counts corrected everywhere (28 = 26 ids-exact + 2 tie adjudications, same s1 variant on two boards); 'byte-identical across implementations' reworded to 'exactly equal within each implementation (gap 0.0), cross-implementation diff 1.4e-9'; corrections recorded in board evidence post_review_corrections; raw records unchanged, durable copies at evidence/2026-09-21-b2-review-inputs/.",
+  "verification_after_remediation": "all 11 sample suites OK (B2 105 incl. +3, B1 regressions 233), _shared 71 OK, checker 27 OK; per-sample checker 4/4 zero violations; CI same command 11 samples / 0 violations / 84 exemptions / rc=0"
+ },
+ "review_status": "author self-check + independent review (changes-required) + remediation applied; remediation awaits independent re-review. Entry point: docs/releases/unified-migration/2026-09-21-b2-efficient-review.md (§6.7 remediation record + this evidence file). All B2 rows Closed=no."
+}

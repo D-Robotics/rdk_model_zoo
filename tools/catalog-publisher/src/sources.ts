@@ -26,6 +26,13 @@ export interface SourceEntry {
   tree_prefix?: string;
   /** Preferred manifest directory inside the platform root. */
   manifest_root?: string;
+  /**
+   * File that holds this platform's release version, relative to the platform
+   * root. The unified layout colocates it with the manifests
+   * (`docs/release/<platform>/VERSION`) because one repository root can no
+   * longer hold three disagreeing version files. Defaults to `VERSION`.
+   */
+  version_file?: string;
   /** Git ref used for repository source links (`blob/<ref>/...`). */
   link_ref: string;
   /** Path prefix of the platform inside `link_ref`. Empty for legacy layouts. */
@@ -49,6 +56,8 @@ export interface PlatformSource {
   treePrefix: string;
   /** Manifest directory, relative to the platform root. */
   manifestDirectory: string;
+  /** File that holds this platform's release version, relative to the platform root. */
+  versionFile: string;
   /** Git ref used for repository source links. */
   linkRef: string;
   /** Path prefix of the platform inside `linkRef`; empty for legacy layouts. */
@@ -71,6 +80,38 @@ const MANIFEST_PROBE_ORDER = (preferred?: string): string[] => [
 async function gitShow(repositoryRoot: string, ref: string, path: string): Promise<string> {
   const result = await execFileAsync("git", ["-C", repositoryRoot, "show", `${ref}:${path}`], { encoding: "utf8" });
   return result.stdout;
+}
+
+/** Blob cache shared by every evidence read in this process. */
+const blobCache = new Map<string, Promise<string>>();
+
+/**
+ * Reads one blob at an immutable ref from the repository that hosts the
+ * platform histories. Evidence records cite `(ref, path)` precisely because
+ * the worktree copy may since have been rewritten; this reads the revision the
+ * record names. Refs outside this repository's object store (shallow clones,
+ * pruned histories) fail like a missing file.
+ */
+export function readRepositoryBlob(repositoryRoot: string, ref: string, path: string): Promise<string> {
+  const key = `${repositoryRoot}\0${ref}\0${path}`;
+  let blob = blobCache.get(key);
+  if (!blob) {
+    blob = gitShow(repositoryRoot, ref, path);
+    // Only fulfilled reads stay cached; a failure is retried by the next caller.
+    blob.catch(() => blobCache.delete(key));
+    blobCache.set(key, blob);
+  }
+  return blob;
+}
+
+/** True when the blob exists at the ref; never reads its content. */
+export async function repositoryBlobExists(repositoryRoot: string, ref: string, path: string): Promise<boolean> {
+  try {
+    await execFileAsync("git", ["-C", repositoryRoot, "cat-file", "-e", `${ref}:${path}`]);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Reads a file from a worktree source, or from the blob at a tag source's ref. */
@@ -143,6 +184,7 @@ export async function resolvePlatformSources(options: ResolveSourcesOptions): Pr
         ref: pin.tag,
         treePrefix: pin.treePrefix ?? "",
         manifestDirectory: entry.manifest_root ?? "docs/release",
+        versionFile: entry.version_file ?? "VERSION",
         // A pinned build keeps the layout frozen with the tag it names.
         linkRef: pin.tag,
         linkPrefix: pin.treePrefix ?? ""
@@ -155,6 +197,7 @@ export async function resolvePlatformSources(options: ResolveSourcesOptions): Pr
         ref: entry.tag,
         treePrefix: entry.tree_prefix ?? "",
         manifestDirectory: entry.manifest_root ?? "docs/release",
+        versionFile: entry.version_file ?? "VERSION",
         linkRef: entry.tag,
         linkPrefix: entry.tree_prefix ?? ""
       };
@@ -166,6 +209,7 @@ export async function resolvePlatformSources(options: ResolveSourcesOptions): Pr
         worktreeRoot: entry.path,
         treePrefix: entry.path,
         manifestDirectory: entry.manifest_root ?? "docs/release",
+        versionFile: entry.version_file ?? "VERSION",
         linkRef: entry.link_ref,
         linkPrefix: entry.link_prefix
       };

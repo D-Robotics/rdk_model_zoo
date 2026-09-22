@@ -1,0 +1,58 @@
+{
+  "record": "2026-09-21-phase1-a6-facilities",
+  "date": "2026-09-21",
+  "actor": "claude (autonomous, per standing plan-execution instruction)",
+  "repo_head_before": "bfb6575",
+  "scope": "Phase 1 A6 root/documentation facilities from rdk_x5 @ ac11571 (x5-v1.1.3) and rdk_s @ 380e1a2 (s-v1.1.2)",
+  "deliverables": {
+    "CHANGELOG.md": {
+      "source": "merged: verbatim x5 body + verbatim s body under per-platform source headers, preamble added",
+      "bytes": "756 lines; each body minus its duplicated '# Changelog' title line only",
+      "anchor_check": "grep 'id=\"…\"' | sort | uniq -d => empty (all x5-*/s-* anchors unique across bodies); every internal (#…) link targets a present anchor"
+    },
+    "LICENSE": "rdk_s @ 380e1a2 (both Apache-2.0; only trailing-newline differs, s has it)",
+    "docs/tros/": "rdk_x5 (s tip README.md is 0 bytes); README.md + README_cn.md",
+    "docs/source_reference/": {
+      "files_from_x5": 10,
+      "files_from_s": ["bpu_sample_docs_html.tar.xz (5976660 bytes, s-only, referenced by the byte-identical-on-both-tips README.md)"],
+      "divergence": "9 files byte-identical between tips; sphinx/make.bat line-endings only (x5 LF kept, s CRLF)",
+      "blob_verification": "git hash-object vs tip blob: 18/18 OK (all extracted files incl. LICENSE/tros/guides)"
+    },
+    "docs/Python_API_User_Guide.md": "rdk_s (hbm_runtime python package pointer)",
+    "docs/UCP_User_Guide.md": "rdk_s (libdnn/libucp pointer)",
+    "docs/Model_Zoo_Repository_Guidelines.md": "chapter fold, see guidelines_merge"
+  },
+  "guidelines_merge": {
+    "skeleton": "develop Q1 entry file retained (定位与规范层级 table; AGENTS/readme-contract/inference-contract/migration-records/ADR/skills as single authorities)",
+    "from_tips_verbatim": ["整体框架规范 (byte-identical on both tips)", "注释规范 (byte-identical)", "文件规范", "跨平台规范 C/C++ section", "robotics 类别规范 (x5-only chapter; himloco noted as B10)"],
+    "task_specs_from_s": "分类/分割/实例分割/姿态/OCR/ASR filled chapters (x5 carries TODO placeholders); C++ structs verified present in develop utils/c_utils/inc/model_types.hpp (Classification L33, Detection L42, Keypoint L51, SegmentationMask L67, InstanceSegResult L83, PoseResult L100, OCRResult L117)",
+    "directory_chapter": "rewritten to develop actual tree with landed-state annotations (A1 utils, A2 datasets, A3 skills, A4 docs/release/{x5,s}, A6 docs additions, platforms/ frozen)",
+    "docs_chapter": "structural requirements kept; content-authority deferred to readme-contract.md via visible 迁移窗口说明 (no silent weakening); docs/README.md entry dropped (file absent on develop, not fabricated); docs/tros TODO filled; yolov5 exemplar relabeled 交付分支历史参照 + resnet as develop 迁移参照",
+    "explicit_fix": "source_reference link docs/source_reference/README.md -> source_reference/README.md (broken on both tips as-written)",
+    "cross_platform_python": "rewritten: develop rule is samples/_shared/platforms.py board-fact resolution with error-on-unknown and NO default fallback; delivery-branch get_soc_name() 's100' fallback explicitly marked as not-to-be-imported"
+  },
+  "deliberate_skips": {
+    "root_VERSION": "explicit deviation from plan A6 row 'VERSION': x5=1.1.3 vs s=1.1.2 are mutually exclusive at root; per-platform VERSION already at docs/release/{x5,s} (A5); root version line is the ADR-0006 unified line starting with the first unified release - creating it now would fabricate a version; pipeline reads no root VERSION (A5)",
+    "docs_assets": "only model_zoo_logo.jpg; zero references outside platforms/ frozen snapshots (grep verified)",
+    "docs_README_md": "navigation page on tips; no corresponding file set on develop; 收尾 item",
+    "docs_RELEASE_md": "rdk_x5 doc-site release procedure (ADR-0001 excluded)",
+    "source_reference_build_docs_sh": "documented as 推荐入口 by README.md L84/L126 but absent from BOTH tips (upstream gap, not extraction loss); real build entry is sphinx/Makefile; not fabricated"
+  },
+  "verification": {
+    "blob_fidelity": "18/18 extracted files byte-identical to source tips",
+    "links": "all relative link targets in merged guidelines exist on disk (AGENTS.md, sample-standards/*, adr/, releases/unified-migration/, skills/README.md, source_reference/README.md, tros/*)",
+    "headings": "no duplicate headings in merged guidelines",
+    "regressions": {
+      "samples__shared_tests": "18 OK",
+      "tools_sample_contract_tests": "23 OK",
+      "skills_trio": "sync_references valid/no-drift (exit 0), validate_pack valid (exit 0), skills/tests 50 OK"
+    },
+    "catalog_publisher": "not re-run: no pipeline input touched (sources.json reads docs/release/{x5,s} + platforms/ only; no CHANGELOG/LICENSE consumers per grep); A5 green conclusion unaffected",
+    "gitignore": "none of the new files matched (git check-ignore exit 1)"
+  },
+  "not_run": [
+    "board smoke (user-gated X5 8GB/4GB + S100)",
+    "GitHub Actions run of model-catalog-data.yml (inputs unchanged; runs on next qualifying push)",
+    "sphinx/doxygen build of source_reference (host toolchain out of scope; documented entry is Makefile since build_docs.sh is missing upstream)"
+  ]
+}
