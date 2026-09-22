@@ -89,7 +89,8 @@ class YOLO26OBB(Yolo26Runtime):
             v_box = np.abs(box_feat[mask])
             v_angle = angle_feat[mask]
             grid = self.grids[stride][mask]
-            a_rad = (post_utils.sigmoid(v_angle[:, 0]) - (0.25 if self.cfg.platform.family == 'x5' else 0.5)) * math.pi * self.cfg.angle_sign + self.angle_offset_rad
+            # The shared OBB26 exporter emits radians directly on X5 and S.
+            a_rad = v_angle[:, 0] * self.cfg.angle_sign + self.angle_offset_rad
             l, t, r, b = v_box.T
             xf, yf = ((r - l) / 2.0, (b - t) / 2.0)
             c_cos, s_sin = (np.cos(a_rad), np.sin(a_rad))

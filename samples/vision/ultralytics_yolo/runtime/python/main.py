@@ -69,6 +69,7 @@ _TEST_DATA_DIR = os.path.join(_SAMPLE_DIR, "test_data")
 _DEFAULT_IMAGE = os.path.join(_TEST_DATA_DIR, "bus.jpg")
 _COCO_LABELS = os.path.join(_TEST_DATA_DIR, "coco_classes.names")
 _IMAGENET_LABELS = os.path.join(_TEST_DATA_DIR, "imagenet_classes.names")
+_OBB_LABELS = os.path.join(_TEST_DATA_DIR, "ultralytics_dota_classes.names")
 
 import numpy as np  # noqa: E402 - imported after sys.path setup
 
@@ -392,7 +393,7 @@ def load_labels(args, task: str) -> list:
             raise FileNotFoundError(f"Label file not found: {args.label_file}")
         return file_io.load_class_names(args.label_file)
     if task == 'obb':
-        return []
+        return file_io.load_class_names(_OBB_LABELS)
     default = _IMAGENET_LABELS if task == 'cls' else _COCO_LABELS
     if os.path.exists(default):
         return file_io.load_class_names(default)
