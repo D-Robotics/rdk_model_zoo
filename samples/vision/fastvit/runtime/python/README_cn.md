@@ -24,7 +24,7 @@ cwd：仓库根目录。最小的不依赖 SDK 的调用是列表模式：
 python3 samples/vision/fastvit/runtime/python/main.py --list-models --target auto
 ```
 
-在准备好的 X5 板卡上完整运行（缺省变体为 `S`，保持源入口的默认
+在准备好的 X5 板卡上完整运行（缺省变体为 `s12`，保持源入口的默认
 模型）：
 
 ```bash
@@ -38,7 +38,7 @@ python3 samples/vision/fastvit/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-`T0`/`T1`/`T2` 换用自己的引用与路径。`--dry-run --target x5` 不接触板卡、不加载
+`sa12`/`t12`/`t8` 换用自己的引用与路径。`--dry-run --target x5` 不接触板卡、不加载
 模型、不下载即可解析选择；本目录的 `run.sh` 原样转发参数给 `main.py`。
 
 <a id="parameters"></a>
@@ -48,7 +48,7 @@ python3 samples/vision/fastvit/runtime/python/main.py \
 | --- | --- | --- | --- |
 | `--target` | choice | auto | 执行目标：`auto`、`x5`、`s100`、`s100p`、`s600`；执行目标必须与检测到的硬件一致 |
 | `--asset-id` | string | null | Manifest 中的完整 `group:sample:filename` 引用 |
-| `--variant` | choice | null | 模型变体（省略时默认 `S`；发布组合见 `--list-models`） |
+| `--variant` | choice | null | 模型变体（省略时默认 `s12`；发布组合见 `--list-models`） |
 | `--model-path` | string | null | 已存在的 `.bin`；必须与 `--asset-id` 配对；省略时默认取解析引用在 `model/` 下的位置 |
 | `--test-img` | string | samples/vision/fastvit/test_data/bucket.JPEG | BGR 输入图像 |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | 每行一个类别的 ImageNet 标签 |

@@ -1,0 +1,376 @@
+{
+  "schema_version": 1,
+  "kind": "verification",
+  "task": "B7 local LPRNet and MODNet migration",
+  "timestamp_utc": "2026-09-22T17:46:33.396079+00:00",
+  "repository": {
+    "root": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo",
+    "head": "16c5d04d0c71ebd160400c14fb2be1c2eb2513f0",
+    "dirty": true
+  },
+  "source_refs": {
+    "x5": "ac115717197920355fc390bb04299b20e6436864",
+    "source_audit": "docs/releases/unified-migration/2026-09-23-b7-source-audit.md"
+  },
+  "scope": {
+    "samples": [
+      "samples/vision/lprnet",
+      "samples/vision/modnet"
+    ],
+    "targets": [
+      "x5"
+    ],
+    "language": [
+      "python"
+    ],
+    "board_status": "not-run",
+    "network_status": "not-used",
+    "sdk_status": "not-used"
+  },
+  "asset_facts": [
+    {
+      "asset_id": "x5:lprnet:lpr.bin",
+      "format": "bin",
+      "availability": "download",
+      "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/LPRNet/lpr.bin",
+      "sha256": null
+    },
+    {
+      "asset_id": "x5:modnet:modnet_512x512_rgb.bin",
+      "format": "bin",
+      "availability": "manual",
+      "url": null,
+      "sha256": null
+    }
+  ],
+  "copied_source_assets": [
+    {
+      "sample": "lprnet",
+      "path": "test_data/test_input.dat",
+      "source_path": "platforms/x5/samples/vision/lprnet/test_data/test_input.dat",
+      "source_sha256": "8f886d5c36162697b70176b2d2bb2f4bba8bd884abfc075922147589c40f4706",
+      "migrated_sha256": "8f886d5c36162697b70176b2d2bb2f4bba8bd884abfc075922147589c40f4706",
+      "byte_equal": true
+    },
+    {
+      "sample": "lprnet",
+      "path": "test_data/example.jpg",
+      "source_path": "platforms/x5/samples/vision/lprnet/test_data/example.jpg",
+      "source_sha256": "37fdaa4b4a96d68f800a0b718f45f863f58f2ae17dde902c12f319c20e881191",
+      "migrated_sha256": "37fdaa4b4a96d68f800a0b718f45f863f58f2ae17dde902c12f319c20e881191",
+      "byte_equal": true
+    },
+    {
+      "sample": "modnet",
+      "path": "test_data/person.jpg",
+      "source_path": "platforms/x5/samples/vision/modnet/test_data/person.jpg",
+      "source_sha256": "6db513331dba7a097301699615938860111e47817e1830a504987aee9a611294",
+      "migrated_sha256": "6db513331dba7a097301699615938860111e47817e1830a504987aee9a611294",
+      "byte_equal": true
+    },
+    {
+      "sample": "modnet",
+      "path": "test_data/bg.jpg",
+      "source_path": "platforms/x5/samples/vision/modnet/test_data/bg.jpg",
+      "source_sha256": "313f35bb1b84d425a497f317673ceb8a57e0b32c2453397c10ef1dca3dda4a6c",
+      "migrated_sha256": "313f35bb1b84d425a497f317673ceb8a57e0b32c2453397c10ef1dca3dda4a6c",
+      "byte_equal": true
+    }
+  ],
+  "checks": [
+    {
+      "id": "host-unit-tests",
+      "level": "host",
+      "status": "passed",
+      "command": ".venv/bin/python -m unittest samples.vision.lprnet.tests.test_lprnet samples.vision.modnet.tests.test_modnet -v",
+      "result": "14 tests passed; source CTC and geometry numeric fixtures, metadata positive/negative, A-B-A geometry, CLI, and mocked download paths."
+    },
+    {
+      "id": "sample-contract-lprnet",
+      "level": "static",
+      "status": "passed",
+      "command": ".venv/bin/python tools/sample_contract/check.py --sample samples/vision/lprnet --parser-mode import",
+      "result": "0 violations; one documented stage-purity skip for CLI main."
+    },
+    {
+      "id": "sample-contract-modnet",
+      "level": "static",
+      "status": "passed",
+      "command": ".venv/bin/python tools/sample_contract/check.py --sample samples/vision/modnet --parser-mode import",
+      "result": "0 violations; one documented stage-purity skip for CLI main."
+    },
+    {
+      "id": "cli-help",
+      "level": "host",
+      "status": "passed",
+      "command": ".venv/bin/python -m samples.vision.lprnet.runtime.python.main --help; .venv/bin/python -m samples.vision.modnet.runtime.python.main --help",
+      "result": "Both parsers load and print help without model loading or SDK import."
+    },
+    {
+      "id": "evaluator-lprnet",
+      "level": "host",
+      "status": "passed",
+      "command": ".venv/bin/python samples/vision/lprnet/evaluator/compare.py ...",
+      "result": "Identical fixture raw arrays and CTC plate comparison returned status passed."
+    },
+    {
+      "id": "evaluator-modnet",
+      "level": "host",
+      "status": "passed",
+      "command": ".venv/bin/python samples/vision/modnet/evaluator/compare.py ...",
+      "result": "Identical fixture mattes returned status passed."
+    },
+    {
+      "id": "shared-tests",
+      "level": "host",
+      "status": "failed-pre-existing",
+      "command": ".venv/bin/python -m unittest discover -s samples/_shared/tests -v",
+      "result": "101 tests ran; 100 passed and one unrelated manifest coverage failure remains: x5:fcos -> samples/vision/fcos/model/download_model.sh is absent. LPRNet and MODNet entries pass this check. No FCOS file was changed."
+    },
+    {
+      "id": "board-runtime",
+      "level": "board",
+      "status": "not-run",
+      "command": null,
+      "result": null,
+      "reason": "No board, SDK, model download, or remote host authorized."
+    },
+    {
+      "id": "conversion",
+      "level": "static",
+      "status": "not-run",
+      "command": null,
+      "result": null,
+      "reason": "Fixed source lacks reproducible exporter/PTQ materials for these samples."
+    }
+  ],
+  "limitations": [
+    "LPRNet board inference and historical FPS were not re-run.",
+    "MODNet manual external model was not obtained or run.",
+    "Manifest publisher SHA-256 values remain unknown/null.",
+    "S100/S100P/S600 and C++ are not-supported for both samples.",
+    "The shared manifest coverage suite retains one pre-existing FCOS download-script failure outside this migration scope."
+  ],
+  "artifacts": [
+    {
+      "path": "samples/vision/lprnet/README.md",
+      "bytes": 3912,
+      "sha256": "65015809e0594a5044b9c8fc089103ceaa8c6533b2be030d8856ff2df76df288"
+    },
+    {
+      "path": "samples/vision/lprnet/README_cn.md",
+      "bytes": 3560,
+      "sha256": "b3e00e437ea98c2728777cedf8414abaee5f760dc7543ba9dc70bf3f7e092d62"
+    },
+    {
+      "path": "samples/vision/lprnet/conversion/README.md",
+      "bytes": 2646,
+      "sha256": "6193bad2c0e944817db6eaa1ee2349266d74062495b0d2951c47f191eea8eb23"
+    },
+    {
+      "path": "samples/vision/lprnet/conversion/README_cn.md",
+      "bytes": 2277,
+      "sha256": "8a1e13f02c2dde40333cae6af0343cfa7b0b99eb581846e3bff71d39c94e17a6"
+    },
+    {
+      "path": "samples/vision/lprnet/evaluator/README.md",
+      "bytes": 2681,
+      "sha256": "dfb04fa13f6d8c4b79233106795345b165065afa03ff9ea7a8ba324d90bf6cc6"
+    },
+    {
+      "path": "samples/vision/lprnet/evaluator/README_cn.md",
+      "bytes": 2345,
+      "sha256": "476cb6c091820b921734f77ec63ec8d66fd15f1fcf4b03522f718c2358d95edd"
+    },
+    {
+      "path": "samples/vision/lprnet/evaluator/compare.py",
+      "bytes": 2149,
+      "sha256": "2e68c4b9093c99e5e174589e898d5aea455fc2273901576a79e70b492bad669e"
+    },
+    {
+      "path": "samples/vision/lprnet/model/README.md",
+      "bytes": 1693,
+      "sha256": "618d794f654afa16c83005060b1f290bb13b9b9bac151267dc8be546efcc89e4"
+    },
+    {
+      "path": "samples/vision/lprnet/model/README_cn.md",
+      "bytes": 1560,
+      "sha256": "b8dc0241896a66129fdbfe67ecfaf3cd66b704e5a5ada6cb4c47bfa564e67e62"
+    },
+    {
+      "path": "samples/vision/lprnet/model/download.py",
+      "bytes": 1148,
+      "sha256": "6dbab4cb08457331562df893fb46e89d9b6814b8e24ae68d77ed636fff5d7df6"
+    },
+    {
+      "path": "samples/vision/lprnet/model/download.sh",
+      "bytes": 179,
+      "sha256": "04036af86288a3368c76ba7623f272e7ca2d9d310b3fccb569e93b6d8f55075b"
+    },
+    {
+      "path": "samples/vision/lprnet/model/download_model.sh",
+      "bytes": 107,
+      "sha256": "904ecd0747ac3efb11d55fc0b6ec5e30ec42843c471ead418616f6b952388fab"
+    },
+    {
+      "path": "samples/vision/lprnet/runtime/python/README.md",
+      "bytes": 3834,
+      "sha256": "1031ad20c53a7d9bde2d4a815b0812190bbf818eb3c9b396554cf15bd9334fcf"
+    },
+    {
+      "path": "samples/vision/lprnet/runtime/python/README_cn.md",
+      "bytes": 3672,
+      "sha256": "5b9355525c917f3c4bb2cd63c51ad8572ed1831e3d16c06d0318a94c8117bfdb"
+    },
+    {
+      "path": "samples/vision/lprnet/runtime/python/lprnet.py",
+      "bytes": 3268,
+      "sha256": "cacd5a4ef792fa8ea5632380c0b5d7ae0550a2432a20e85c0301618a8b6d3c90"
+    },
+    {
+      "path": "samples/vision/lprnet/runtime/python/main.py",
+      "bytes": 3854,
+      "sha256": "f3fad7d67d0e2fd727ceaf717b3ec5cae9546b072fdbc2d5c57ae9ebb96f0fce"
+    },
+    {
+      "path": "samples/vision/lprnet/runtime/python/model_binding.py",
+      "bytes": 4279,
+      "sha256": "48f6884aae995eda294004bd1b9d67bf89b7f43db67c768362c536b7dde88447"
+    },
+    {
+      "path": "samples/vision/lprnet/runtime/python/model_runner.py",
+      "bytes": 4423,
+      "sha256": "d4bbf3cc1191552aee5b5da1a8fd8963b2cb5df8ef04795b6c5bf0a106c827a2"
+    },
+    {
+      "path": "samples/vision/lprnet/runtime/python/run.sh",
+      "bytes": 239,
+      "sha256": "e08dc3f3c30dac836379b4014d1ffbc2ecd3bb89b3bbcc2eeb32c43d1bf6abef"
+    },
+    {
+      "path": "samples/vision/lprnet/test_data/example.jpg",
+      "bytes": 2812,
+      "sha256": "37fdaa4b4a96d68f800a0b718f45f863f58f2ae17dde902c12f319c20e881191"
+    },
+    {
+      "path": "samples/vision/lprnet/test_data/test_input.dat",
+      "bytes": 27072,
+      "sha256": "8f886d5c36162697b70176b2d2bb2f4bba8bd884abfc075922147589c40f4706"
+    },
+    {
+      "path": "samples/vision/lprnet/tests/test_lprnet.py",
+      "bytes": 6351,
+      "sha256": "4d16cc37b7d72d3a903c5acaf04f754d29390502c533a1802b6c3c8adffc099c"
+    },
+    {
+      "path": "samples/vision/modnet/README.md",
+      "bytes": 4061,
+      "sha256": "523dc8c6c7fdb0be06fe5c79c0250f04ddb2eece02e397565edae28418500cba"
+    },
+    {
+      "path": "samples/vision/modnet/README_cn.md",
+      "bytes": 3782,
+      "sha256": "2885b57a630a4f1cde17eb2d067db618db00fa5c682b733ba36315849881b90d"
+    },
+    {
+      "path": "samples/vision/modnet/conversion/README.md",
+      "bytes": 2528,
+      "sha256": "680da13c878b1ff7dd58a4b803d47b56e95def016064db0c729a31a9e3f18d53"
+    },
+    {
+      "path": "samples/vision/modnet/conversion/README_cn.md",
+      "bytes": 2235,
+      "sha256": "2d2edba15564599f75eb2b99da9513be8362c959a69815200d1f0e8ad783e3ba"
+    },
+    {
+      "path": "samples/vision/modnet/evaluator/README.md",
+      "bytes": 2611,
+      "sha256": "e1387995ef530001080617bb6ccaaebe3eff71abbe5bf1f3365aaf2af9f5c122"
+    },
+    {
+      "path": "samples/vision/modnet/evaluator/README_cn.md",
+      "bytes": 2256,
+      "sha256": "89f52afec8271cbe62f178f5e0315ecf5c37dc342f9ceee5734489598ddcad32"
+    },
+    {
+      "path": "samples/vision/modnet/evaluator/compare.py",
+      "bytes": 1969,
+      "sha256": "770abea6cd8803c36b11d2128cef9b83d9744460130a553f559e4a5dd7fa389b"
+    },
+    {
+      "path": "samples/vision/modnet/model/README.md",
+      "bytes": 1584,
+      "sha256": "5d9fc0bc2ad065e93f7f87f07c384565b2e0d3ce018bd812edca2303fdb22967"
+    },
+    {
+      "path": "samples/vision/modnet/model/README_cn.md",
+      "bytes": 1437,
+      "sha256": "4723a806539df98eb209346298ba4349431536d3252ae57b823255a030104a80"
+    },
+    {
+      "path": "samples/vision/modnet/model/download.py",
+      "bytes": 1179,
+      "sha256": "e6602d3dcb063cdd824f7d014f7a703e04d507e264f0755588a7d4591bc7e5d2"
+    },
+    {
+      "path": "samples/vision/modnet/model/download.sh",
+      "bytes": 179,
+      "sha256": "33d3b2aef74bc08c05bb634f940e3c9121be4db643a34a70835ae741583e2757"
+    },
+    {
+      "path": "samples/vision/modnet/model/download_model.sh",
+      "bytes": 107,
+      "sha256": "904ecd0747ac3efb11d55fc0b6ec5e30ec42843c471ead418616f6b952388fab"
+    },
+    {
+      "path": "samples/vision/modnet/runtime/python/README.md",
+      "bytes": 4726,
+      "sha256": "15f127f563870572599b1f7c0d1ee9d8093dc0975cd2637b25f50cefa939bb0b"
+    },
+    {
+      "path": "samples/vision/modnet/runtime/python/README_cn.md",
+      "bytes": 4467,
+      "sha256": "3c096664a0197aec287887e6a4d496420215d45e3a38fa4e75690b504e4cc365"
+    },
+    {
+      "path": "samples/vision/modnet/runtime/python/main.py",
+      "bytes": 5847,
+      "sha256": "aadbd2dcf9df49a5e09a76680c311ca846ade179983a52da747465b520661a50"
+    },
+    {
+      "path": "samples/vision/modnet/runtime/python/model_binding.py",
+      "bytes": 4268,
+      "sha256": "447df33f9c9129e2db880b53637355d1ff94fc424dd16ad498d719bb8b2ff418"
+    },
+    {
+      "path": "samples/vision/modnet/runtime/python/model_runner.py",
+      "bytes": 4384,
+      "sha256": "90596b17c0474d040337dab8d73d41046166c8b5dd1bfc5b5332826917e53d84"
+    },
+    {
+      "path": "samples/vision/modnet/runtime/python/modnet.py",
+      "bytes": 4634,
+      "sha256": "fedc2f3f6117568dc2dcd994ca62f0349604290683555afca9251b28f22588ae"
+    },
+    {
+      "path": "samples/vision/modnet/runtime/python/run.sh",
+      "bytes": 239,
+      "sha256": "fc85b3869992336113228a45f6e7ab86b280d0d088492b4e6c1c41ce9653b458"
+    },
+    {
+      "path": "samples/vision/modnet/test_data/bg.jpg",
+      "bytes": 489282,
+      "sha256": "313f35bb1b84d425a497f317673ceb8a57e0b32c2453397c10ef1dca3dda4a6c"
+    },
+    {
+      "path": "samples/vision/modnet/test_data/person.jpg",
+      "bytes": 68360,
+      "sha256": "6db513331dba7a097301699615938860111e47817e1830a504987aee9a611294"
+    },
+    {
+      "path": "samples/vision/modnet/tests/test_modnet.py",
+      "bytes": 7447,
+      "sha256": "9ad4bd5335d3114d692023e891d81f8ba3b85a7af52e9908bbda75ce30602209"
+    }
+  ]
+}

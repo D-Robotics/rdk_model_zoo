@@ -21,11 +21,11 @@ without it. Host-side test dependencies are listed in the sample's
 cwd: repository root. The minimal SDK-free invocation is the listing mode:
 
 ```bash
-# success: prints both published references, exit 0, no SDK loaded
+# success: prints all four published references, exit 0, no SDK loaded
 python3 samples/vision/fastvit/runtime/python/main.py --list-models --target auto
 ```
 
-A full run on a prepared X5 board (default variant is `S`, preserving the
+A full run on a prepared X5 board (default variant is `s12`, preserving the
 source entrypoint's default model):
 
 ```bash
@@ -39,7 +39,7 @@ python3 samples/vision/fastvit/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-`T0`/`T1`/`T2` substitute their own reference and path. `--dry-run --target x5`
+`sa12`/`t12`/`t8` substitute their own reference and path. `--dry-run --target x5`
 resolves a selection without board access, model loading, or download;
 `run.sh` in this directory forwards its arguments to `main.py` unchanged.
 
@@ -50,7 +50,7 @@ resolves a selection without board access, model loading, or download;
 | --- | --- | --- | --- |
 | `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
 | `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
-| `--variant` | choice | null | model variant (`S` default when omitted; see `--list-models` for published combinations) |
+| `--variant` | choice | null | model variant (`s12` default when omitted; see `--list-models` for published combinations) |
 | `--model-path` | string | null | existing `.bin`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
 | `--test-img` | string | samples/vision/fastvit/test_data/bucket.JPEG | BGR input image |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |

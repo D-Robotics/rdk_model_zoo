@@ -1,7 +1,8 @@
 # Shared sample utilities
 
-These modules serve ResNet, Ultralytics YOLO and PaddleOCR. They do not define a global
-model runtime or a global command.
+These modules serve the migrated samples, including ResNet, Ultralytics YOLO,
+PaddleOCR and the two SAM pipelines. They do not define a global model runtime
+or a global command.
 
 `platforms.py` reads concrete identity from `docs/release/platforms.json`.
 It checks boardinfo first, then X5's socinfo, then the observed device-tree
@@ -70,3 +71,26 @@ a sigmoid or a dequantized output is already activated is a task-level fact
 declared by each sample's `post_process`. The runner validates containers
 only; the transform executes in `post_process` with the binding's quant
 snapshot.
+
+## SAM encoder and decoder
+
+[`sam_binding.py`](sam_binding.py) selects exact EfficientSAM/MobileSAM asset
+pairs for X5, S100, S100P and S600, then validates both actual models before
+execution. Its native metadata snapshot is immutable. [`sam_runner.py`](sam_runner.py)
+loads the SDK lazily after hardware identity checks and keeps the source X5/S
+container conventions. It never casts or dequantizes outputs.
+
+[`sam_stages.py`](sam_stages.py) exposes encoder and decoder pre/forward/post
+methods and an explicit pipeline; [`sam_tensor_io.py`](sam_tensor_io.py) owns
+normalization and per-call context. The two samples retain different prompt
+protocols, normalization and zero thresholds. Source float32 casts occur in
+stage post-processing; no quantization descriptor is silently interpreted as a
+dequantization instruction. Result masks stay in the stretched 512-square
+image coordinate system.
+
+[`sam_evaluator.py`](sam_evaluator.py) captures legacy/unified stage inputs,
+native outputs, results and hashes through the sample evaluator commands. It
+requires an explicitly matched board and a new evidence directory in normal
+use. Host fixtures test the capture tool; they do not certify model inference.
+See the [EfficientSAM guide](../vision/efficient_sam/README.md) and
+[MobileSAM guide](../vision/mobile_sam/README.md) for preparation and APIs.

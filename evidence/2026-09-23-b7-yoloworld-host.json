@@ -1,0 +1,242 @@
+{
+  "date": "2026-09-23",
+  "kind": "b7-yoloworld-host",
+  "sample": "samples/vision/yoloworld",
+  "source_ref": "ac115717197920355fc390bb04299b20e6436864",
+  "target": "x5",
+  "host_status": "passed",
+  "board_status": "not-run",
+  "network_status": "not-used",
+  "download_status": "not-run; downloader only mocked in tests",
+  "scope": [
+    "RGB F32 image [1,3,640,640]",
+    "offline vocabulary F32 [1,32,512,1]",
+    "raw score/box 8400-row protocol",
+    "prompt ID mapping, empty/overflow rejection",
+    "per-call context A/B/A",
+    "explicit pre/forward/post and predict",
+    "asset identity and metadata",
+    "SDK-free CLI and README contracts",
+    "same-board evaluator executable but not executed"
+  ],
+  "commands": [
+    {
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "samples/vision/yoloworld/tests",
+        "-v"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_download_uses_manifest_asset_without_network (test_entrypoints.EntryTests.test_download_uses_manifest_asset_without_network) ... ok\ntest_empty_and_overflow_prompt_rejected (test_entrypoints.EntryTests.test_empty_and_overflow_prompt_rejected) ... error: Prompts must contain one or more nonempty comma-separated words; empty prompts are rejected.\nerror: At most 32 prompts are supported.\nok\ntest_help_list_and_explicit_dry_run_do_not_load_sdk (test_entrypoints.EntryTests.test_help_list_and_explicit_dry_run_do_not_load_sdk) ... ok\ntest_runtime_api_snippet_executes_with_injected_fixture (test_readme_contract.ReadmeTests.test_runtime_api_snippet_executes_with_injected_fixture) ... ok\ntest_ten_readmes_have_required_sections_and_local_links (test_readme_contract.ReadmeTests.test_ten_readmes_have_required_sections_and_local_links) ... ok\ntest_asset_identity_and_metadata_binding (test_yoloworld.YOLOWorldTests.test_asset_identity_and_metadata_binding) ... ok\ntest_predict_equals_explicit_stages_and_ab_a_context (test_yoloworld.YOLOWorldTests.test_predict_equals_explicit_stages_and_ab_a_context) ... ok\ntest_preprocess_and_postprocess_match_fixed_source_fixture (test_yoloworld.YOLOWorldTests.test_preprocess_and_postprocess_match_fixed_source_fixture) ... ok\ntest_runner_preserves_native_outputs_and_rejects_wrong_input (test_yoloworld.YOLOWorldTests.test_runner_preserves_native_outputs_and_rejects_wrong_input) ... ok\ntest_source_geometry_dtype_slots_and_empty_prompt (test_yoloworld.YOLOWorldTests.test_source_geometry_dtype_slots_and_empty_prompt) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.827s\n\nOK\n"
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "tools/sample_contract/check.py",
+        "--sample",
+        "samples/vision/yoloworld",
+        "--parser-mode",
+        "import",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"tool\": \"sample-contract\",\n  \"parser_mode\": \"import\",\n  \"templates_dir\": \"docs/sample-standards/templates\",\n  \"samples\": [\n    {\n      \"path\": \"samples/vision/yoloworld\",\n      \"findings\": [],\n      \"skips\": [\n        {\n          \"rule\": \"R-STAGE-PURITY\",\n          \"path\": \"samples/vision/yoloworld/runtime/python/main.py\",\n          \"reason\": \"policy skip: CLI layer: saving output and argument handling live here\"\n        }\n      ],\n      \"exemptions_applied\": []\n    }\n  ],\n  \"summary\": {\n    \"samples\": 1,\n    \"violations\": 0,\n    \"skips\": 1,\n    \"exemptions_applied\": 0\n  }\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "compileall",
+        "-q",
+        "samples/vision/yoloworld"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "samples/vision/yoloworld/runtime/python/main.py",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "usage: main.py [-h] [--target {auto,x5,s100,s100p,s600}]\n               [--model-path MODEL_PATH] [--asset-id ASSET_ID]\n               [--vocab-file VOCAB_FILE] [--test-img TEST_IMG]\n               [--prompts PROMPTS] [--img-save-path IMG_SAVE_PATH]\n               [--priority PRIORITY] [--bpu-cores BPU_CORES [BPU_CORES ...]]\n               [--score-thres SCORE_THRES] [--nms-thres NMS_THRES]\n               [--list-models | --dry-run]\n\nYOLOWorld X5 open-vocabulary RGB + offline text detection.\n\noptions:\n  -h, --help            show this help message and exit\n  --target {auto,x5,s100,s100p,s600}\n  --model-path MODEL_PATH\n                        Explicit yolo_world.bin path; requires exact --asset-\n                        id.\n  --asset-id ASSET_ID   Exact manifest identity x5:yoloworld:yolo_world.bin.\n  --vocab-file VOCAB_FILE\n  --test-img TEST_IMG\n  --prompts PROMPTS     Comma-separated vocabulary entries; empty entries are\n                        rejected.\n  --img-save-path IMG_SAVE_PATH\n  --priority PRIORITY\n  --bpu-cores BPU_CORES [BPU_CORES ...]\n  --score-thres SCORE_THRES\n  --nms-thres NMS_THRES\n  --list-models\n  --dry-run\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "samples/vision/yoloworld/runtime/python/main.py",
+        "--list-models"
+      ],
+      "returncode": 0,
+      "stdout": "x5:yoloworld:yolo_world.bin\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "samples/vision/yoloworld/runtime/python/main.py",
+        "--dry-run",
+        "--target",
+        "x5",
+        "--prompts",
+        "dog,person"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"target\": \"x5\",\n  \"asset_id\": \"x5:yoloworld:yolo_world.bin\",\n  \"model_path\": \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/samples/vision/yoloworld/model/yolo_world.bin\",\n  \"image_input\": \"float32[1,3,640,640] RGB, longest-side resize and top-left zero pad\",\n  \"text_input\": \"float32[1,32,512,1] offline embeddings, last prompt fills slots\",\n  \"outputs\": [\n    \"float32[1,8400,32] class scores\",\n    \"float32[1,8400,4] boxes\"\n  ],\n  \"prompts\": [\n    \"dog\",\n    \"person\"\n  ],\n  \"score_thres\": 0.05,\n  \"nms_thres\": 0.45\n}\n",
+      "stderr": ""
+    }
+  ],
+  "files": [
+    {
+      "path": "samples/vision/yoloworld/README.md",
+      "sha256": "78cbf9a11df04ae0eaec381e3961e3a8665a2fd6ee6650f7f18b1e4090a0c137",
+      "bytes": 3288
+    },
+    {
+      "path": "samples/vision/yoloworld/README_cn.md",
+      "sha256": "a94d006eab56f38211c17813fa6c5040b6c589a928fe50f1160f0a806f527af7",
+      "bytes": 3055
+    },
+    {
+      "path": "samples/vision/yoloworld/conversion/README.md",
+      "sha256": "0305e29c16bbc3b5be78d9b2602dda5b2bebc583d577a5fa88026ed900fd0b82",
+      "bytes": 1807
+    },
+    {
+      "path": "samples/vision/yoloworld/conversion/README_cn.md",
+      "sha256": "1f82df8f006c846acd85303bb9414700df16f0814c69df78595ca6ad2eae71ee",
+      "bytes": 1543
+    },
+    {
+      "path": "samples/vision/yoloworld/conversion/source/yoloworld_det.py",
+      "sha256": "10c5f592f33e13c06e88f96f09cc041d844ff094987e622f9e9733f02a9c544b",
+      "bytes": 9879
+    },
+    {
+      "path": "samples/vision/yoloworld/evaluator/README.md",
+      "sha256": "431925240cc55c02b3d2f6daf9447f48ed7834a65162c5bc3f72eef711f0f834",
+      "bytes": 2723
+    },
+    {
+      "path": "samples/vision/yoloworld/evaluator/README_cn.md",
+      "sha256": "c1f8280a62a4d876ca4c8271f5b8a4b9445708af6fbd011db8aa4007b2618550",
+      "bytes": 2399
+    },
+    {
+      "path": "samples/vision/yoloworld/evaluator/compare.py",
+      "sha256": "d54f49780dcc0ffae6a67bde2706135914ba77f06a0a7a9359a55dc4ef71c8d0",
+      "bytes": 5359
+    },
+    {
+      "path": "samples/vision/yoloworld/model/README.md",
+      "sha256": "0b0cda347b2b56f17c4388a6a99f066e07d7d2020bf059593f3804ff6ef007b8",
+      "bytes": 2043
+    },
+    {
+      "path": "samples/vision/yoloworld/model/README_cn.md",
+      "sha256": "87a89522a39552532a81a977cc64d9e17bc086e54681b24fdb1b9dc36b2fce8e",
+      "bytes": 1616
+    },
+    {
+      "path": "samples/vision/yoloworld/model/download.py",
+      "sha256": "980760791552f70e9e99429ed773bdffe2c58234535fe9bc8768b720841bf9fa",
+      "bytes": 1568
+    },
+    {
+      "path": "samples/vision/yoloworld/model/download.sh",
+      "sha256": "28710e2d7ba17cdc0328ba542403e1557cd08ca89a8068c5b31bb3fbd1d2ac7a",
+      "bytes": 140
+    },
+    {
+      "path": "samples/vision/yoloworld/model/download_model.sh",
+      "sha256": "28710e2d7ba17cdc0328ba542403e1557cd08ca89a8068c5b31bb3fbd1d2ac7a",
+      "bytes": 140
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/README.md",
+      "sha256": "2a1bc533b41f11950c59493b2f9628052d00fcf1ddd09564a964c7f42fa0421c",
+      "bytes": 5016
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/README_cn.md",
+      "sha256": "45c3c42ea02bca80e3702932ef84a202be90db7b467cf628a170d53e7a86f07b",
+      "bytes": 4724
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/main.py",
+      "sha256": "81e3928590ecba80d80ae5b4df30cb9cfd175cf801f5251d917f605d8e204768",
+      "bytes": 4976
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/model_binding.py",
+      "sha256": "3ba3fc81c56865516f653216481cf4448acb9e7ff396f427af65fa25d2dd2d60",
+      "bytes": 4380
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/model_runner.py",
+      "sha256": "96ae2af991c9700771bc17a056d9035733e10f86b04d51368dedb6e14de6840c",
+      "bytes": 4723
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/run.sh",
+      "sha256": "4252b05f2a7de47168c2ffb0c77443e066fa19f14d7cb51d86cd6c9ecab4ecfc",
+      "bytes": 136
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/visualization.py",
+      "sha256": "4a518149d08a0052b3fddd8516bd14ad4f06303fadf666dad1c8b797c0118756",
+      "bytes": 793
+    },
+    {
+      "path": "samples/vision/yoloworld/runtime/python/yoloworld.py",
+      "sha256": "965aa5f8afc33f3db9450c70b2366b12a958e4ac725ed1ced5e1b6c002080e3b",
+      "bytes": 7219
+    },
+    {
+      "path": "samples/vision/yoloworld/test_data/dog.jpeg",
+      "sha256": "89e7b49868f13b01877cab869a16a51a8ea2ce9af97ecf7d07900e2209ef38ef",
+      "bytes": 112660
+    },
+    {
+      "path": "samples/vision/yoloworld/test_data/inference.png",
+      "sha256": "d083ea362035044f4f3efed882c93d92caea707ed3eff71c3db2c7e99bcfe2b3",
+      "bytes": 1333899
+    },
+    {
+      "path": "samples/vision/yoloworld/test_data/offline_vocabulary_embeddings.json",
+      "sha256": "a3acf4abf1c1cfb4e43500c24bc8900b1161a377f21d66d4df875a7300a700e0",
+      "bytes": 1241280
+    },
+    {
+      "path": "samples/vision/yoloworld/tests/test_entrypoints.py",
+      "sha256": "ce71fcd39ebebf2f2b763c32c613ded8fc4e667bd067c210e9b1ef2116ea85e4",
+      "bytes": 1648
+    },
+    {
+      "path": "samples/vision/yoloworld/tests/test_readme_contract.py",
+      "sha256": "ff501872c58066a630fd09356997c20941abf636c26b29717b1d9c0e7f974570",
+      "bytes": 2415
+    },
+    {
+      "path": "samples/vision/yoloworld/tests/test_yoloworld.py",
+      "sha256": "5c10d924173a88259b6d1d850bfd3087d69b1e98fdfa3620cd9864b51f3a6712",
+      "bytes": 6892
+    }
+  ],
+  "notes": [
+    "No model binary was downloaded or present in the sample model directory.",
+    "Host tests use injected runtime only; no numerical board claim.",
+    "Source preprocess/postprocess fixture comparison passed; source terminal singleton output shape is accepted without modifying raw arrays.",
+    "Publisher SHA-256 for yolo_world.bin remains null/unknown in docs/release/x5/models.yaml."
+  ]
+}

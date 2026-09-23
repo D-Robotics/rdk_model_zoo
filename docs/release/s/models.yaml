@@ -555,7 +555,7 @@ models:
       - image-text-similarity
     sample_path: samples/vision/siglip
     download_scripts:
-      - samples/vision/siglip/model/download_model.sh
+      - samples/vision/siglip/model/download.sh
     availability: download
     assets:
       - filename: s100/bpu-siglip-base-patch16-224.hbm
@@ -590,6 +590,10 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch16-256-i18n.hbm
         sha256: null
+    notes: The fixed S source explicitly supports both S100 (Nash-E) and S100P
+      (Nash-M) with these same eight s100/ artifacts. This shared filename is not
+      an implicit S100 fallback. The runtime exposes vision embeddings only;
+      historical image-text accuracy uses a text-side evaluation not shipped here.
   - id: ultralytics_yolo
     name: Ultralytics YOLO
     tasks:
@@ -1689,7 +1693,7 @@ models:
       - image-classification
     sample_path: samples/vision/vit
     download_scripts:
-      - samples/vision/vit/model/download_model.sh
+      - samples/vision/vit/model/download.sh
     availability: download
     assets:
       - filename: s100/vit_cifar10_batch1_int8.hbm

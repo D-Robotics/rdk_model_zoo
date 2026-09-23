@@ -1,0 +1,74 @@
+{
+  "kind": "b7-yolov5-cpp-host",
+  "schema_version": 1,
+  "timestamp_utc": "2026-09-22T17:46:23+00:00",
+  "base_commit": "16c5d04d0c71ebd160400c14fb2be1c2eb2513f0",
+  "source_refs": {
+    "x5": "ac115717197920355fc390bb04299b20e6436864",
+    "s": "380e1a2bf42041af54be6f34935e50197cfadff9"
+  },
+  "scope": "samples/vision/yolov5/runtime/cpp and samples/vision/yolov5/tests/test_cpp_*.py",
+  "targets": ["x5", "s100", "s600"],
+  "unsupported_target": "s100p has no published YOLOv5 asset",
+  "board": "not-run",
+  "remote_used": false,
+  "network_used": false,
+  "model_assets_used": false,
+  "sdk_execution": false,
+  "initial_red": {
+    "command": ".venv/bin/python -m unittest samples.vision.yolov5.tests.test_cpp_contract",
+    "result": "red before implementation: 5 tests, 2 failures and 3 errors because the new C++ migration files did not exist",
+    "captured_at": "2026-09-23"
+  },
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest samples.vision.yolov5.tests.test_cpp_contract samples.vision.yolov5.tests.test_cpp_launcher",
+      "result": "9 tests passed",
+      "status": "passed"
+    },
+    {
+      "command": "c++ -std=c++17 host compile of yolov5_decode.cpp",
+      "result": "compiled and ran unique 8/16/32 head validation fixture",
+      "status": "passed"
+    },
+    {
+      "command": "launcher --help; launcher --list-models --target s100; launcher --dry-run --target s600",
+      "result": "SDK-free parser/list/dry-run passed; exact asset IDs emitted",
+      "status": "passed"
+    },
+    {
+      "command": "bash -n samples/vision/yolov5/runtime/cpp/run.sh",
+      "result": "passed",
+      "status": "passed"
+    }
+  ],
+  "contract_facts": [
+    "CMake requires explicit YOLOV5_TARGET and never reads board sysfs.",
+    "X5 requires exactly one packed model, one input, three distinct metadata heads, F32 outputs, and 3*(5+classes) channels.",
+    "S keeps HB-DNN model discovery and UCP scheduling in a separate adapter; caller priority is preserved and source S32/per-channel dequantization is delegated to dequantizeTensorS32.",
+    "Both adapters match heads by actual metadata stride and reject duplicate or incomplete head sets.",
+    "External model paths require the exact manifest asset ID and launcher target identity is checked before native execution.",
+    "X5 native preprocessing retains source letterbox semantics while unified Python defaults to stretch; S native preprocessing retains letterbox."
+  ],
+  "known_limits": [
+    "No native X5 or S SDK compilation was possible on this host.",
+    "No board identity, model execution, image rendering, performance, or accuracy result was obtained.",
+    "The S adapter references the preserved source C++ utility for tensor allocation, NV12 conversion, and S32 dequantization; its target SDK link remains unverified."
+  ],
+  "file_sha256": {
+    "samples/vision/yolov5/runtime/cpp/CMakeLists.txt": "7f27ed64c4a6f6497224cc3961c2ae76ac4594dcba5678cdfb201dcfe11cc1cd",
+    "samples/vision/yolov5/runtime/cpp/launcher.py": "9d4a64afc808d9fce8418a22ffee2c8d8d1bd983fc72a5e0d90e6363477935e3",
+    "samples/vision/yolov5/runtime/cpp/src/cli_main.cpp": "6f5d70ef03de9d9a29560f735592820713924b2fee4bdb26b7e60a4d4a90d84e",
+    "samples/vision/yolov5/runtime/cpp/src/s_adapter.cpp": "65aa7e888c74e8414d0a6c443c0bcf3f5972d3baba06c37113e58bce652caffb",
+    "samples/vision/yolov5/runtime/cpp/src/x5_adapter.cpp": "a3c73cd782f4b4861bc070258c41e7f3c1995ccbdc82e137c3d51414aa97508c",
+    "samples/vision/yolov5/runtime/cpp/src/yolov5_decode.cpp": "b5298f29f58d089399c9857a0985a0301ccc3361ae77b15281c0fd5822954b55",
+    "samples/vision/yolov5/runtime/cpp/include/yolov5_adapter.hpp": "07e2f6ee6a54e6b33aa891fe467e4e586c741ba49fc5e1902e7a613e9b093b43",
+    "samples/vision/yolov5/runtime/cpp/include/yolov5_decode.hpp": "340c9007a403a25e7cf5016982d8b7d7a02d08038ebf6d19b54da2fa197f85f3",
+    "samples/vision/yolov5/runtime/cpp/include/yolov5_visualize.hpp": "57977d0b1f18634e480e07ba9a7f107cc45c7380a64f9b340a5884fe1c42d2e7",
+    "samples/vision/yolov5/runtime/cpp/src/yolov5_visualize.cpp": "3d6eba1a49194664b3cd21c230cab8df3c42acb860a2ea82a973eb60dd00f05c",
+    "samples/vision/yolov5/runtime/cpp/README.md": "72e2db4ff2eba2ee5bf2a196a84d68cb08717fd452c08a00ff6b5eebf528e0ef",
+    "samples/vision/yolov5/runtime/cpp/README_cn.md": "4c0902ea411ab6abf5acb7243162e20ca73a9b3ef11d0cec3060b8e7ad5f330e",
+    "samples/vision/yolov5/tests/test_cpp_contract.py": "a3e7f100278d8d67bd1bc1b98fe72a0a1c2ff6582d930f002e1dbc66a9e9abb0",
+    "samples/vision/yolov5/tests/test_cpp_launcher.py": "db7f0d17fead9d88df7f2de95d14ed60f8b737db65309ba3eca989d9c020d6fc"
+  }
+}

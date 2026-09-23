@@ -24,7 +24,7 @@ Reparameterization](https://arxiv.org/abs/2303.14189)，按源交付引用）。
 | x5 | s12、sa12、t12、t8 | python | supported（源契约已核实；B3 板端冒烟待执行，见下方说明） |
 | s100 / s100p / s600 | 任意 | python | not-supported（S Manifest 未发布 FastViT 资产；选择时显式报错，无跨平台回退） |
 
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)。统一 sample 的主机测试（26
+源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)。统一 sample 的主机测试（28
 项）全部通过。本批（B3）板端冒烟在四个 sample 主机侧全部落地后执行；
 届时在此回填实测结果——在该条目出现之前，本 sample 的板端状态为
 **not-run**，已验证的交付仍是源分支。

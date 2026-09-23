@@ -30,7 +30,7 @@ migration documents, not here.
 | s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no FastViT asset; selection is an explicit error, no cross-platform fallback) |
 
 Source baseline: X5 rdk_x5 @ac11571 (x5-v1.1.3). The unified sample's host
-tests (26) all pass. Board smoke for this batch (B3) is executed after
+tests (28) all pass. Board smoke for this batch (B3) is executed after
 the host side of all four B3 samples lands; this matrix is updated with
 the observed results then — until that entry exists, board status for this
 sample is **not-run**, and the legacy source remains the verified delivery.

@@ -1,0 +1,102 @@
+{
+  "started_utc": "2026-09-22T17:54:59.235728+00:00",
+  "scope": "B7 independent host review of LPRNet/MODNet/YOLOWorld before remediation; SDK fully mocked; no model or board",
+  "probes": [
+    {
+      "sample": "lprnet",
+      "probe": "forged publication row with valid metadata",
+      "outcome": "ACCEPTED forged asset"
+    },
+    {
+      "sample": "lprnet",
+      "probe": "native path must gate before factory import",
+      "outcome": "LOADED fake SDK despite wrong target/missing model",
+      "gate_calls": 0,
+      "sdk_factory_calls": 1
+    },
+    {
+      "sample": "lprnet",
+      "probe": "direct script from arbitrary cwd",
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/samples/vision/lprnet/runtime/python/main.py",
+        "--help"
+      ],
+      "cwd": "/tmp",
+      "return_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/samples/vision/lprnet/runtime/python/main.py\", line 13, in <module>\n    from samples.vision.lprnet.runtime.python.lprnet import LPRNetTask\nModuleNotFoundError: No module named 'samples'\n"
+    },
+    {
+      "sample": "modnet",
+      "probe": "forged publication row with valid metadata",
+      "outcome": "ACCEPTED forged asset"
+    },
+    {
+      "sample": "modnet",
+      "probe": "native path must gate before factory import",
+      "outcome": "LOADED fake SDK despite wrong target/missing model",
+      "gate_calls": 0,
+      "sdk_factory_calls": 1
+    },
+    {
+      "sample": "modnet",
+      "probe": "direct script from arbitrary cwd",
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/samples/vision/modnet/runtime/python/main.py",
+        "--help"
+      ],
+      "cwd": "/tmp",
+      "return_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/samples/vision/modnet/runtime/python/main.py\", line 13, in <module>\n    from samples.vision.modnet.runtime.python.model_binding import BindingError, SUPPORTED_TARGETS, list_available_assets, resolve_selection\nModuleNotFoundError: No module named 'samples'\n"
+    },
+    {
+      "sample": "modnet",
+      "probe": "unsupported compiled size in dry-run",
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+        "-m",
+        "samples.vision.modnet.runtime.python.main",
+        "--dry-run",
+        "--target",
+        "x5",
+        "--ref-size",
+        "256"
+      ],
+      "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo",
+      "return_code": 0,
+      "stdout": "{\n  \"target\": \"x5\",\n  \"asset_id\": \"x5:modnet:modnet_512x512_rgb.bin\",\n  \"model_path\": \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/samples/vision/modnet/model/modnet_512x512_rgb.bin\",\n  \"model_format\": \"bin\",\n  \"input_shape\": [\n    1,\n    3,\n    512,\n    512\n  ],\n  \"input_dtype\": \"float32\",\n  \"output_shape\": [\n    1,\n    1,\n    512,\n    512\n  ],\n  \"output_dtype\": \"float32\",\n  \"input_protocol\": \"BGR HWC -> RGB F32 NCHW, normalize [-1,1], long-side resize + zero padding\",\n  \"model_path_exists\": false,\n  \"sdk_loaded\": false,\n  \"downloaded\": false\n}\n",
+      "stderr": ""
+    }
+  ],
+  "code_sha256": {
+    "samples/vision/lprnet/evaluator/compare.py": "2e68c4b9093c99e5e174589e898d5aea455fc2273901576a79e70b492bad669e",
+    "samples/vision/lprnet/tests/test_lprnet.py": "4d16cc37b7d72d3a903c5acaf04f754d29390502c533a1802b6c3c8adffc099c",
+    "samples/vision/lprnet/model/download.py": "6dbab4cb08457331562df893fb46e89d9b6814b8e24ae68d77ed636fff5d7df6",
+    "samples/vision/lprnet/runtime/python/model_runner.py": "d4bbf3cc1191552aee5b5da1a8fd8963b2cb5df8ef04795b6c5bf0a106c827a2",
+    "samples/vision/lprnet/runtime/python/lprnet.py": "cacd5a4ef792fa8ea5632380c0b5d7ae0550a2432a20e85c0301618a8b6d3c90",
+    "samples/vision/lprnet/runtime/python/model_binding.py": "48f6884aae995eda294004bd1b9d67bf89b7f43db67c768362c536b7dde88447",
+    "samples/vision/lprnet/runtime/python/main.py": "f3fad7d67d0e2fd727ceaf717b3ec5cae9546b072fdbc2d5c57ae9ebb96f0fce",
+    "samples/vision/modnet/evaluator/compare.py": "770abea6cd8803c36b11d2128cef9b83d9744460130a553f559e4a5dd7fa389b",
+    "samples/vision/modnet/tests/test_modnet.py": "9ad4bd5335d3114d692023e891d81f8ba3b85a7af52e9908bbda75ce30602209",
+    "samples/vision/modnet/model/download.py": "e6602d3dcb063cdd824f7d014f7a703e04d507e264f0755588a7d4591bc7e5d2",
+    "samples/vision/modnet/runtime/python/model_runner.py": "90596b17c0474d040337dab8d73d41046166c8b5dd1bfc5b5332826917e53d84",
+    "samples/vision/modnet/runtime/python/model_binding.py": "447df33f9c9129e2db880b53637355d1ff94fc424dd16ad498d719bb8b2ff418",
+    "samples/vision/modnet/runtime/python/modnet.py": "fedc2f3f6117568dc2dcd994ca62f0349604290683555afca9251b28f22588ae",
+    "samples/vision/modnet/runtime/python/main.py": "aadbd2dcf9df49a5e09a76680c311ca846ade179983a52da747465b520661a50",
+    "samples/vision/yoloworld/evaluator/compare.py": "d54f49780dcc0ffae6a67bde2706135914ba77f06a0a7a9359a55dc4ef71c8d0",
+    "samples/vision/yoloworld/tests/test_readme_contract.py": "ff501872c58066a630fd09356997c20941abf636c26b29717b1d9c0e7f974570",
+    "samples/vision/yoloworld/tests/test_yoloworld.py": "5c10d924173a88259b6d1d850bfd3087d69b1e98fdfa3620cd9864b51f3a6712",
+    "samples/vision/yoloworld/tests/test_entrypoints.py": "ce71fcd39ebebf2f2b763c32c613ded8fc4e667bd067c210e9b1ef2116ea85e4",
+    "samples/vision/yoloworld/model/download.py": "980760791552f70e9e99429ed773bdffe2c58234535fe9bc8768b720841bf9fa",
+    "samples/vision/yoloworld/conversion/source/yoloworld_det.py": "10c5f592f33e13c06e88f96f09cc041d844ff094987e622f9e9733f02a9c544b",
+    "samples/vision/yoloworld/runtime/python/model_runner.py": "96ae2af991c9700771bc17a056d9035733e10f86b04d51368dedb6e14de6840c",
+    "samples/vision/yoloworld/runtime/python/yoloworld.py": "965aa5f8afc33f3db9450c70b2366b12a958e4ac725ed1ced5e1b6c002080e3b",
+    "samples/vision/yoloworld/runtime/python/model_binding.py": "3ba3fc81c56865516f653216481cf4448acb9e7ff396f427af65fa25d2dd2d60",
+    "samples/vision/yoloworld/runtime/python/visualization.py": "4a518149d08a0052b3fddd8516bd14ad4f06303fadf666dad1c8b797c0118756",
+    "samples/vision/yoloworld/runtime/python/main.py": "81e3928590ecba80d80ae5b4df30cb9cfd175cf801f5251d917f605d8e204768"
+  },
+  "finished_utc": "2026-09-22T17:54:59.674370+00:00"
+}

@@ -1,0 +1,26 @@
+model_parameters:
+  onnx_model: './efficient_sam_vitt_decoder_fixedprompt_512_op11.onnx'
+  march: 'bayes-e'
+  layer_out_dump: False
+  working_dir: 'bpu_model_output_decoder_fixedprompt'
+  output_model_file_prefix: 'efficient_sam_vitt_decoder_fixedprompt_512_default'
+
+input_parameters:
+  input_name: 'image_embeddings'
+  input_type_rt: 'featuremap'
+  input_type_train: 'featuremap'
+  input_layout_train: 'NCHW'
+  input_layout_rt: 'NCHW'
+  input_shape: '1x256x32x32'
+  norm_type: 'no_preprocess'
+
+calibration_parameters:
+  cal_data_dir: './decoder_calibration/calibration_embeddings'
+  cal_data_type: 'float32'
+  calibration_type: 'default'
+
+compiler_parameters:
+  jobs: 8
+  compile_mode: 'latency'
+  debug: false
+  optimize_level: 'O3'

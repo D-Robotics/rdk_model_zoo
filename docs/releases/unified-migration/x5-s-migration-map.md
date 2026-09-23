@@ -194,31 +194,31 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B2 | efficientformer / x5:ac11571 | x5 / l1、l3（缺省 l3 保持源默认）/ python | done（提交 27fea1a） | done | done（双语 5 级 README，检查器 0 violations） | passed（25 OK） | passed（x5 双板 l1/l3 对照全等，maxdiff ≤2.38e-7；CLI l3 rc=0） | passed（Codex 21c833a；R1/R2/R3/R1-E closed，N1/N2 确认） | yes | 同上 |
 | B2 | efficientformerv2 / x5:ac11571 | x5 / s0、s1、s2（缺省 s0 保持源默认）/ python | done（提交 a8a9ace） | done（output 前缀复现 Manifest 基名的正向锚定；s0 独有 debug/optimization 不对称如实保留） | done（双语 5 级 README，检查器 0 violations） | passed（26 OK） | passed（x5 双板对照；s0/s2 ids 全等，s1 两板各一例精确平局裁定 tie_resolved——794/851 各自实现内部分数相等（gap 0.0），跨实现差 1.4e-9 非逐字节相同，系 softmax 舍入+排序噪声非行为差异（独立评审裁定接受），完整 per-id 证据在 review-inputs 板端 record；CLI s0 rc=0） | passed（Codex 21c833a；R1/R2/R3/R1-E closed，N1/N2 确认） | yes | 同上 |
 | B2 | efficientvit / x5:ac11571 | x5 / m5（缺省 m5 保持源默认）/ python | done（提交 4f08785） | done（`msra` 无变体输出前缀 vs Manifest `m5` 基名缺口钉住；0.99999 分位与 28 节点 Softmax int16 摆放锚定） | done（双语 5 级 README，检查器 0 violations） | passed（27 OK；+1 为复审 B2-N1 采纳后的无默认映射单资产拒绝边界测试） | passed（x5 双板 m5 对照全等，maxdiff ≤1.86e-9；CLI rc=0） | passed（Codex 21c833a；R1/R2/R3/R1-E closed，N1/N2 确认） | yes | 同上 |
-| B3 | convnext / x5:ac11571 | x5 / atto / python | done（提交 e843005） | done | done（双语 5 级 README，检查器 0 violations） | passed（28 OK） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | failed（Codex f552c52：B3-R1–R4，changes-required） | no | [B3 评审](2026-09-21-b3-convnext-fastvit-review.md)、[B3 evidence](evidence/2026-09-21-b3-convnext-fastvit-evidence.json) |
-| B3 | edgenext / x5:ac11571 | x5 / base、small、x_small、xx_small / python | done（提交 b4f8aff） | done（输出前缀正向锚定：前缀复现清单基名，无需重命名） | done（双语 5 级 README，检查器 0 violations） | passed（26 OK） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | failed（Codex f552c52：B3-R1–R4，changes-required） | no | 同上 |
-| B3 | fasternet / x5:ac11571 | x5 / s、t0、t1、t2（表内小写 id；文件名保留大写）/ python | done（提交 69052d5） | done（无变体前缀需重命名 + working_dir 三种形态不对称，钉住披露） | done（双语 5 级 README，检查器 0 violations） | passed（28 OK；+1 为 B3-R1 整改的 parser→main→下载委托测试） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | failed（Codex f552c52：B3-R1–R4，changes-required） | no | 同上 |
-| B3 | fastvit / x5:ac11571 | x5 / s12、sa12、t12、t8（表内小写 id）/ python | done（提交 f33167a） | done（onnx 全指外部 01_common 路径 + 无变体前缀，钉住披露） | done（双语 5 级 README，检查器 0 violations） | passed（28 OK；+1 为 B3-R1 整改的 parser→main→下载委托测试） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | failed（Codex f552c52：B3-R1–R4，changes-required） | no | 同上 |
-| B4 | repghost / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B4 | repvgg / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B4 | repvit / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B4 | mobileone / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B4 | resnext / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B4 | vargconvnet / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B4 | googlenet / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B4 | hgnetv2 / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B5 | clip / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B5 | siglip / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B5 | dinov2 / s:380e1a2 | s / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B5 | vit / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B5 | 3dresnet / s:380e1a2 | s / python（视频输入） | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B6 | efficient_sam / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B6 | mobile_sam / x5:ac11571 + s:380e1a2 | x5+s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B7 | yolov5 / x5:ac11571 + s:380e1a2 | x5+s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B7 | fcos / x5:ac11571 | x5 / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B7 | yoloworld / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B7 | lprnet / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B7 | modnet / x5:ac11571 | x5 / python（资产 manual） | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B7 | bytetrack / s:380e1a2 | s / python（依赖 yolov5） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B3 | convnext / x5:ac11571 | x5 / atto / python | done（提交 e843005） | done | done（双语 5 级 README，检查器 0 violations） | passed（28 OK） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | passed（原 R1–R4 整改复核；208 主机 tests；见 2026-09-22-b3-host-recheck.md；板测待办） | no | [B3 评审](2026-09-21-b3-convnext-fastvit-review.md)、[B3 evidence](evidence/2026-09-21-b3-convnext-fastvit-evidence.json) |
+| B3 | edgenext / x5:ac11571 | x5 / base、small、x_small、xx_small / python | done（提交 b4f8aff） | done（输出前缀正向锚定：前缀复现清单基名，无需重命名） | done（双语 5 级 README，检查器 0 violations） | passed（26 OK） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | passed（原 R1–R4 整改复核；208 主机 tests；见 2026-09-22-b3-host-recheck.md；板测待办） | no | 同上 |
+| B3 | fasternet / x5:ac11571 | x5 / s、t0、t1、t2（表内小写 id；文件名保留大写）/ python | done（提交 69052d5） | done（无变体前缀需重命名 + working_dir 三种形态不对称，钉住披露） | done（双语 5 级 README，检查器 0 violations） | passed（28 OK；+1 为 B3-R1 整改的 parser→main→下载委托测试） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | passed（原 R1–R4 整改复核；208 主机 tests；见 2026-09-22-b3-host-recheck.md；板测待办） | no | 同上 |
+| B3 | fastvit / x5:ac11571 | x5 / s12、sa12、t12、t8（表内小写 id）/ python | done（提交 f33167a） | done（onnx 全指外部 01_common 路径 + 无变体前缀，钉住披露） | done（双语 5 级 README，检查器 0 violations） | passed（28 OK；+1 为 B3-R1 整改的 parser→main→下载委托测试） | not-run（用户决定本轮跳过：网络环境切换、SSH 不可达；不作为通过声明，待后续板卡可达时补测） | passed（原 R1–R4 整改复核；208 主机 tests；见 2026-09-22-b3-host-recheck.md；板测待办） | no | 同上 |
+| B4 | repghost / x5:ac11571 | x5 / 100、111、130、150、200 / python | done（源 SHA 清点） | done（统一任务/绑定/下载；见 B4 记录） | done（双语 5 级 README） | passed（8 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B4 | repvgg / x5:ac11571 | x5 / a0/a1/a2/b0/b1g2/b1g4 / python | done（源清点与职责映射） | done（共享分类任务，独立制品契约） | done（双语 5 级 README） | passed（10 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B4 | repvit / x5:ac11571 | x5 / m0_9/m1_0/m1_1 / python | done（源清点与职责映射） | done（共享分类任务，独立制品契约） | done（双语 5 级 README） | passed（10 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B4 | mobileone / x5:ac11571 | x5 / s0/s1/s2/s3/s4 / python | done（源清点与职责映射） | done（共享分类任务，独立制品契约） | done（双语 5 级 README） | passed（10 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B4 | resnext / x5:ac11571 | x5 / 50_32x4d / python | done（源清点与职责映射） | done（统一分类；HGNetV2 保留评测/导出能力） | done（双语 5 级 README） | passed（10 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B4 | vargconvnet / x5:ac11571 | x5 / vargconvnet / python | done（源清点与职责映射） | done（统一分类；HGNetV2 保留评测/导出能力） | done（双语 5 级 README） | passed（10 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B4 | googlenet / x5:ac11571 | x5 / googlenet / python | done（源清点与职责映射） | done（统一分类；HGNetV2 保留评测/导出能力） | done（双语 5 级 README） | passed（10 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B4 | hgnetv2 / x5:ac11571 | x5 / b0/b1/b2/b3/b4 / python | done（源清点与职责映射） | done（统一分类；HGNetV2 保留评测/导出能力） | done（双语 5 级 README） | passed（16 项；含每变体 predict/context 与源数值对照） | not-run（留待板端复验） | passed（本地主机独立评审；逐样例测试增强已由主任务复核） | no | [B4 记录](2026-09-22-b4-classification-review.md)、[独立评审](2026-09-22-b4-independent-host-review.md) |
+| B5 | clip / x5:ac11571 | x5 / BPU image + CPU ONNX text / python | done（固定源与双编码器/BPE能力） | done（独立匹配任务；raw runner与cosine分离） | done（双语五级 README） | passed（15 项；真实BPE/源数值/CLI/API） | not-run（用户要求跳过板端环境） | passed（代码及十份README独立复核，3项P2关闭） | no | [B5 记录](2026-09-22-b5-vision-review.md) |
+| B5 | siglip / s:380e1a2 | s100/s100p / 8 variants × 2 submodels / python | done（逐源清点；两板共用资产为源显式支持） | done（特征任务与 packed runner，保持 native dtype） | done（双语五级 README） | passed（19 项；源数值/CLI/API/链接） | not-run（用户要求跳过板端环境） | passed（独立完整复核；路径说明P2已确认关闭） | no | [B5 记录](2026-09-22-b5-vision-review.md)、[SigLIP 证据](evidence/2026-09-23-b5-siglip-host.json) |
+| B5 | dinov2 / s:380e1a2 | s100/s100p/s600 / cls_feat、patch_feat / python | done（固定源与双输出量化契约） | done（复用H1反量化；独立特征任务） | done（双语五级 README） | passed（18 项；真实源数值/API/板测步骤fixture） | not-run（用户要求跳过板端环境） | passed（代码与十份README独立复核；2项P2关闭） | no | [B5 记录](2026-09-22-b5-vision-review.md) |
+| B5 | vit / s:380e1a2 | s100 / int8、int16 / python | done（固定源与能力映射） | done（十分类复用共享核心） | done（双语五级 README） | passed（13 项；源 NV12/分数、README API） | not-run（用户要求跳过板端环境） | passed（独立本地主机复核；无阻断） | no | [B5 记录](2026-09-22-b5-vision-review.md) |
+| B5 | 3dresnet / s:380e1a2 | s100 / r3d_18 / python（五维视频输入） | done（固定源/JSON标签/完整资源） | done（视频任务；共享Top-K；完整包导入） | done（双语五级 README） | passed（16 项；源视频/API/安全shell/精确tie负例） | not-run（用户要求跳过板端环境） | passed（完整独立主机复核；P1/P2已确认关闭） | no | [B5 记录](2026-09-22-b5-vision-review.md) |
+| B6 | efficient_sam / x5:ac11571 + s:380e1a2 | x5/s100/s100p/s600 / python | done（固定源与逐文件哈希） | done（共享六阶段+精确制品绑定） | done（五级双语/完整源能力） | passed（主机总覆盖783；本批受影响范围复跑） | not-run（用户要求跳过板端环境） | passed（host；交叉独立评审） | no | [B6 记录](2026-09-23-b6-sam-review.md)、[独立评审](2026-09-23-b6-independent-host-review.md) |
+| B6 | mobile_sam / x5:ac11571 + s:380e1a2 | x5/s100/s100p/s600 / python | done（固定源与逐文件哈希） | done（共享六阶段+精确制品绑定） | done（五级双语/完整源能力） | passed（主机总覆盖783；本批受影响范围复跑） | not-run（用户要求跳过板端环境） | passed（host；交叉独立评审） | no | [B6 记录](2026-09-23-b6-sam-review.md)、[独立评审](2026-09-23-b6-independent-host-review.md) |
+| B7 | yolov5 / x5:ac11571 + s:380e1a2 | x5+s / python + cpp | done（固定源清点） | in-progress | in-progress | not-run | not-run（用户暂跳过） | not-run | no | [B7 记录](2026-09-23-b7-detection-tracking-review.md)、[源清点](2026-09-23-b7-source-audit.md) |
+| B7 | fcos / x5:ac11571 | x5 / python（依赖 H1） | done（固定源清点） | in-progress | in-progress | not-run | not-run（用户暂跳过） | not-run | no | [B7 记录](2026-09-23-b7-detection-tracking-review.md)、[源清点](2026-09-23-b7-source-audit.md) |
+| B7 | yoloworld / x5:ac11571 | x5 / python | done（固定源清点） | in-progress | in-progress | not-run | not-run（用户暂跳过） | not-run | no | [B7 记录](2026-09-23-b7-detection-tracking-review.md)、[源清点](2026-09-23-b7-source-audit.md) |
+| B7 | lprnet / x5:ac11571 | x5 / python | done（固定源清点） | in-progress | in-progress | not-run | not-run（用户暂跳过） | not-run | no | [B7 记录](2026-09-23-b7-detection-tracking-review.md)、[源清点](2026-09-23-b7-source-audit.md) |
+| B7 | modnet / x5:ac11571 | x5 / python（资产 manual） | done（固定源清点） | in-progress | in-progress | not-run | not-run（用户暂跳过） | not-run | no | [B7 记录](2026-09-23-b7-detection-tracking-review.md)、[源清点](2026-09-23-b7-source-audit.md) |
+| B7 | bytetrack / s:380e1a2 | s / python（依赖 yolov5） | done（固定源清点） | in-progress | in-progress | not-run | not-run（用户暂跳过） | not-run | no | [B7 记录](2026-09-23-b7-detection-tracking-review.md)、[源清点](2026-09-23-b7-source-audit.md) |
 | B8 | unet / x5:ac11571 | x5 / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | unetmobilenet / s:380e1a2 | s / python + cpp（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | pp_liteseg / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
@@ -274,3 +274,11 @@ B2 pass / ready（既定范围）/ Closed=yes；此段更新前述历史未关�
 ### B3 独立评审（2026-09-22）
 
 545 项主机测试与 CI 通过，但确认 B3-R1–R4，Review=changes-required，Closed=no。见 [独立报告](2026-09-22-b3-independent-review.md)。用户授权统筹远程电脑经 Git 对齐板测；环境尚在预检，Board 保持 not-run，Mac 不连接局域网板卡。
+
+## 最新排期：主机侧连续推进（2026-09-22）
+
+用户授权 Codex 接手后续开发与文档评审，板端复验/校准留待用户恢复环境。B3 原 R1–R4 整改已复核，Board=not-run、Closed=no；允许继续 B4 主机开发。三处新增文档清理为 Codex 作者修正。远程 API 与授权暂停，不执行板测。规则和队列见 [主机开发与板端交接](2026-09-22-host-development-and-board-handoff.md)。本节取代历史不进入 B4 的排期限制，不覆盖历史验收证据。
+
+### 2026-09-23 用户暂停
+
+本轮在 B7 整改过程中暂停，未关闭本批；已有子项测试不代表 B7 完整通过。B8 仅完成只读源清点，后续批次状态不升级。接手入口：[Claude Code handoff](2026-09-23-claude-code-handoff.md)，含最新工作区快照、未提交成果及中途修改。
