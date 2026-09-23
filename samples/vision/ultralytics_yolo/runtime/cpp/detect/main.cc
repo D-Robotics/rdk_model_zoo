@@ -1,114 +1,67 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/*
+ * Copyright (c) 2024-2025, WuChao && MaChao D-Robotics.
+ * Copyright (c) 2026, D-Robotics.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Copyright (c) 2024-2025, WuChao && MaChao D-Robotics.
+// YOLO detection sample for RDK X5 and RDK S100/S100P/S600. This program
+// runs on-board. Two head contracts are supported and selected at load time
+// from the model's own output shapes:
+//   * YOLO26 direct-LTRB heads (4-channel box maps).
+//   * DFL heads (YOLOv5u/v8/v9/yolo11/yolo12/yolov13, 64-channel box maps).
+// Two input protocols are supported and likewise probed at load time:
+// packed NV12 (X5 .bin) and split Y/UV NV12 (S-series .hbm).
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-// 注意: 此程序在RDK板端运行
-// Attention: This program runs on RDK board.
-
-// ============================================================================
-// Configuration Parameters
-// ============================================================================
-
-// D-Robotics *.bin 模型路径
-// Path to D-Robotics *.bin model
-#define MODEL_PATH "source/reference_bin_models/yolo13n_detect_bayese_640x640_nv12.bin"
-
-// 测试图片路径
-// Path to test image
-#define TEST_IMG_PATH "../../../../../datasets/coco/assets/bus.jpg"
-
-// 结果保存路径
-// Path to save result
-#define IMG_SAVE_PATH "cpp_result.jpg"
-
-// 前处理方式: 0=Resize, 1=LetterBox
-// Preprocessing method: 0=Resize, 1=LetterBox
-#define RESIZE_TYPE 0
-#define LETTERBOX_TYPE 1
-#define PREPROCESS_TYPE LETTERBOX_TYPE
-
-// 模型参数 / Model Parameters
-#define CLASSES_NUM 80       // 类别数量 / Number of classes
-#define NMS_THRESHOLD 0.7    // NMS阈值 / NMS threshold
-#define SCORE_THRESHOLD 0.25 // 分数阈值 / Score threshold
-#define NMS_TOP_K 300        // NMS最多保留框数 / Max boxes for NMS
-#define REG 16               // DFL 回归参数 / DFL regression parameter
-
-// 可视化参数 / Visualization Parameters
-#define FONT_SCALE 0.6
-#define FONT_THICKNESS 2
-#define BOX_THICKNESS 2
-
-// ============================================================================
-// Includes
-// ============================================================================
-
-#include <iostream>
-#include <vector>
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
 #include <iomanip>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
 
-// OpenCV
-#include <opencv2/opencv.hpp>
 #include <opencv2/dnn/dnn.hpp>
+#include <opencv2/opencv.hpp>
 
-// RDK BPU libDNN API
-#include "dnn/hb_dnn.h"
-#include "dnn/hb_dnn_ext.h"
-#include "dnn/plugin/hb_dnn_layer.h"
-#include "dnn/plugin/hb_dnn_plugin.h"
-#include "dnn/hb_sys.h"
+#include "common/benchmark.h"
+#include "common/dnn_io.h"
+#include "common/decode.h"
+#include "common/tensor_view.h"
 
-// ============================================================================
-// Macros
-// ============================================================================
+namespace {
 
-#define CHECK_SUCCESS(value, errmsg)                                         \
-    do {                                                                     \
-        auto ret_code = value;                                               \
-        if (ret_code != 0) {                                                 \
-            std::cerr << "\033[1;31m[ERROR]\033[0m " << __FILE__ << ":"     \
-                      << __LINE__ << " " << errmsg                           \
-                      << ", error code: " << ret_code << std::endl;          \
-            return ret_code;                                                 \
-        }                                                                    \
-    } while (0)
+const char* kDefaultModel = "yolo26n_detect_bayese_640x640_nv12.bin";
+const char* kDefaultImage = "bus.jpg";
+const char* kDefaultOutput = "cpp_result.jpg";
 
-#define LOG_INFO(msg) \
-    std::cout << "\033[1;32m[INFO]\033[0m " << msg << std::endl
+const int kClasses = 80;
+const int kStrides[] = {8, 16, 32};
+const int kOutputCount = 6;
 
-#define LOG_WARN(msg) \
-    std::cout << "\033[1;33m[WARN]\033[0m " << msg << std::endl
-
-#define LOG_ERROR(msg) \
-    std::cerr << "\033[1;31m[ERROR]\033[0m " << msg << std::endl
-
-#define LOG_TIME(msg, duration) \
-    std::cout << "\033[1;31m" << msg << " = " << std::fixed            \
-              << std::setprecision(2) << (duration) << " ms\033[0m"    \
-              << std::endl
-
-// ============================================================================
-// COCO Class Names
-// ============================================================================
-
-const std::vector<std::string> COCO_NAMES = {
+const std::vector<std::string> kCocoNames = {
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train",
     "truck", "boat", "traffic light", "fire hydrant", "stop sign",
     "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
@@ -120,588 +73,781 @@ const std::vector<std::string> COCO_NAMES = {
     "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table",
     "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
     "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock",
-    "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
-};
+    "vase", "scissors", "teddy bear", "hair drier", "toothbrush"};
 
-// ============================================================================
-// Detection Result Structure
-// ============================================================================
+const std::vector<cv::Scalar> kColors = {
+    cv::Scalar(56, 56, 255), cv::Scalar(151, 157, 255), cv::Scalar(31, 112, 255),
+    cv::Scalar(29, 178, 255), cv::Scalar(49, 210, 207), cv::Scalar(10, 249, 72),
+    cv::Scalar(23, 204, 146), cv::Scalar(134, 219, 61), cv::Scalar(52, 147, 26),
+    cv::Scalar(187, 212, 0), cv::Scalar(168, 153, 44), cv::Scalar(255, 194, 0),
+    cv::Scalar(147, 69, 52), cv::Scalar(255, 115, 100), cv::Scalar(236, 24, 0),
+    cv::Scalar(255, 56, 132), cv::Scalar(133, 0, 82), cv::Scalar(255, 56, 203),
+    cv::Scalar(200, 149, 255), cv::Scalar(199, 55, 255)};
+
+typedef std::chrono::steady_clock Clock;
+
+enum class HeadMode { kAuto, kLtrb, kDfl };
+
+struct Options {
+  std::string model_path = kDefaultModel;
+  std::string image_path = kDefaultImage;
+  std::string output_path = kDefaultOutput;
+  std::string json_path;
+  HeadMode head_mode = HeadMode::kAuto;
+  int resize_type = 1;
+  int opencv_threads = 0;
+  int pipeline_streams = 1;
+  int warmup = 20;
+  int runs = 200;
+  int rounds = 3;
+  float score_threshold = 0.25f;
+  float nms_threshold = 0.7f;
+  bool benchmark = false;
+  bool save_result = true;
+};
 
 struct Detection {
-    int class_id;
-    float confidence;
-    cv::Rect2d bbox;  // x, y, w, h (use double for OpenCV NMSBoxes compatibility)
-
-    Detection(int id, float conf, const cv::Rect2d& box)
-        : class_id(id), confidence(conf), bbox(box) {}
+  int class_id;
+  float confidence;
+  cv::Rect2d bbox;
 };
 
-// ============================================================================
-// Color Palette for Visualization
-// ============================================================================
-
-const std::vector<cv::Scalar> COLORS = {
-    cv::Scalar(56, 56, 255),    cv::Scalar(151, 157, 255),
-    cv::Scalar(31, 112, 255),   cv::Scalar(29, 178, 255),
-    cv::Scalar(49, 210, 207),   cv::Scalar(10, 249, 72),
-    cv::Scalar(23, 204, 146),   cv::Scalar(134, 219, 61),
-    cv::Scalar(52, 147, 26),    cv::Scalar(187, 212, 0),
-    cv::Scalar(168, 153, 44),   cv::Scalar(255, 194, 0),
-    cv::Scalar(147, 69, 52),    cv::Scalar(255, 115, 100),
-    cv::Scalar(236, 24, 0),     cv::Scalar(255, 56, 132),
-    cv::Scalar(133, 0, 82),     cv::Scalar(255, 56, 203),
-    cv::Scalar(200, 149, 255),  cv::Scalar(199, 55, 255)
-};
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-/**
- * @brief Convert BGR image to NV12 format
- * @param bgr_img Input BGR image
- * @return NV12 formatted image (height * 3/2, width, CV_8UC1)
- */
-cv::Mat bgr2nv12(const cv::Mat& bgr_img) {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    int height = bgr_img.rows;
-    int width = bgr_img.cols;
-
-    // BGR to YUV420P
-    cv::Mat yuv_mat;
-    cv::cvtColor(bgr_img, yuv_mat, cv::COLOR_BGR2YUV_I420);
-    uint8_t* yuv = yuv_mat.ptr<uint8_t>();
-
-    // Allocate NV12 image
-    cv::Mat nv12_img(height * 3 / 2, width, CV_8UC1);
-    uint8_t* nv12 = nv12_img.ptr<uint8_t>();
-
-    // Copy Y plane
-    int y_size = height * width;
-    memcpy(nv12, yuv, y_size);
-
-    // Convert UV planar to UV packed (NV12)
-    int uv_height = height / 2;
-    int uv_width = width / 2;
-    uint8_t* nv12_uv = nv12 + y_size;
-    uint8_t* u_data = yuv + y_size;
-    uint8_t* v_data = u_data + uv_height * uv_width;
-
-    for (int i = 0; i < uv_width * uv_height; i++) {
-        *nv12_uv++ = *u_data++;
-        *nv12_uv++ = *v_data++;
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-    LOG_TIME("BGR to NV12 time", duration);
-
-    return nv12_img;
+bool check_ret(int ret, const std::string& action) {
+  if (ret == 0) return true;
+  std::cerr << "[ERROR] " << action << " failed, error code: " << ret << std::endl;
+  return false;
 }
 
-/**
- * @brief Preprocess image with letterbox or resize
- * @param img Input image
- * @param input_h Target height
- * @param input_w Target width
- * @param x_scale Output: x scale factor
- * @param y_scale Output: y scale factor
- * @param x_shift Output: x shift
- * @param y_shift Output: y shift
- * @return Preprocessed image
- */
-cv::Mat preprocess_image(const cv::Mat& img, int input_h, int input_w,
-                         float& x_scale, float& y_scale,
-                         int& x_shift, int& y_shift) {
-    auto start = std::chrono::high_resolution_clock::now();
-    cv::Mat result;
-
-    if (PREPROCESS_TYPE == LETTERBOX_TYPE) {
-        // Letterbox preprocessing
-        x_scale = std::min(1.0f * input_h / img.rows, 1.0f * input_w / img.cols);
-        y_scale = x_scale;
-
-        if (x_scale <= 0 || y_scale <= 0) {
-            throw std::runtime_error("Invalid scale factor");
-        }
-
-        int new_w = static_cast<int>(img.cols * x_scale);
-        int new_h = static_cast<int>(img.rows * y_scale);
-
-        x_shift = (input_w - new_w) / 2;
-        y_shift = (input_h - new_h) / 2;
-        int x_other = input_w - new_w - x_shift;
-        int y_other = input_h - new_h - y_shift;
-
-        cv::resize(img, result, cv::Size(new_w, new_h));
-        cv::copyMakeBorder(result, result, y_shift, y_other, x_shift, x_other,
-                          cv::BORDER_CONSTANT, cv::Scalar(127, 127, 127));
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (LetterBox) time", duration);
-
-    } else if (PREPROCESS_TYPE == RESIZE_TYPE) {
-        // Resize preprocessing
-        cv::resize(img, result, cv::Size(input_w, input_h));
-
-        x_scale = 1.0f * input_w / img.cols;
-        y_scale = 1.0f * input_h / img.rows;
-        x_shift = 0;
-        y_shift = 0;
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (Resize) time", duration);
-    }
-
-    LOG_INFO("Scale: x=" << x_scale << ", y=" << y_scale);
-    LOG_INFO("Shift: x=" << x_shift << ", y=" << y_shift);
-
-    return result;
+void print_usage(const char* program) {
+  std::cout
+      << "Usage: " << program << " [model] [image] [result.jpg] [options]\n"
+      << "Options:\n"
+      << "  --benchmark          Run bounded end-to-end benchmark\n"
+      << "  --warmup N           Warmup frames per round (default: 20)\n"
+      << "  --runs N             Timed frames per round (default: 200)\n"
+      << "  --rounds N           Benchmark rounds (default: 3)\n"
+      << "  --json PATH          Write aggregate benchmark JSON\n"
+      << "  --head auto|dfl|ltrb\n"
+      << "                       Box decode contract (default: auto-detect\n"
+      << "                       from output shapes; dfl covers\n"
+      << "                       YOLOv5u/v8/v9/yolo11/yolo12/yolov13)\n"
+      << "  --score VALUE        Score threshold (default: 0.25)\n"
+      << "  --nms VALUE          NMS IoU threshold (default: 0.7)\n"
+      << "  --resize-type 0|1    0=resize, 1=letterbox (default: 1)\n"
+      << "  --opencv-threads N|all\n"
+      << "                       OpenCV CPU threads (default: all online CPUs)\n"
+      << "  --pipeline-streams N Complete concurrent E2E pipelines (default: 1)\n"
+      << "  --no-save            Do not draw or save the validation result\n"
+      << "  --help               Show this message\n";
 }
 
-/**
- * @brief Draw detection results on image
- * @param img Image to draw on
- * @param detections Detection results
- * @param x_scale X scale factor for coordinate transformation
- * @param y_scale Y scale factor for coordinate transformation
- * @param x_shift X shift for coordinate transformation
- * @param y_shift Y shift for coordinate transformation
- */
-void draw_detections(cv::Mat& img, const std::vector<Detection>& detections,
-                    float x_scale, float y_scale, int x_shift, int y_shift) {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    for (const auto& det : detections) {
-        // Transform coordinates back to original image space
-        float x1 = (det.bbox.x - x_shift) / x_scale;
-        float y1 = (det.bbox.y - y_shift) / y_scale;
-        float x2 = x1 + det.bbox.width / x_scale;
-        float y2 = y1 + det.bbox.height / y_scale;
-
-        // Clamp coordinates
-        x1 = std::max(0.0f, std::min(x1, static_cast<float>(img.cols)));
-        y1 = std::max(0.0f, std::min(y1, static_cast<float>(img.rows)));
-        x2 = std::max(0.0f, std::min(x2, static_cast<float>(img.cols)));
-        y2 = std::max(0.0f, std::min(y2, static_cast<float>(img.rows)));
-
-        // Get color
-        cv::Scalar color = COLORS[det.class_id % COLORS.size()];
-
-        // Draw box
-        cv::rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2),
-                     color, BOX_THICKNESS);
-
-        // Prepare label
-        std::string label = COCO_NAMES[det.class_id] + ": " +
-                           std::to_string(static_cast<int>(det.confidence * 100)) + "%";
-
-        // Get text size
-        int baseline = 0;
-        cv::Size text_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX,
-                                             FONT_SCALE, FONT_THICKNESS, &baseline);
-
-        // Draw label background
-        int label_y = std::max(static_cast<int>(y1), text_size.height + 10);
-        cv::rectangle(img,
-                     cv::Point(x1, label_y - text_size.height - 10),
-                     cv::Point(x1 + text_size.width, label_y),
-                     color, cv::FILLED);
-
-        // Draw label text
-        cv::putText(img, label, cv::Point(x1, label_y - 5),
-                   cv::FONT_HERSHEY_SIMPLEX, FONT_SCALE,
-                   cv::Scalar(255, 255, 255), FONT_THICKNESS, cv::LINE_AA);
-
-        // Print detection info
-        std::cout << "  (" << static_cast<int>(x1) << ", " << static_cast<int>(y1)
-                  << ", " << static_cast<int>(x2) << ", " << static_cast<int>(y2)
-                  << ") -> " << label << std::endl;
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-    LOG_TIME("Draw results time", duration);
+int parse_positive(const std::string& value, const std::string& option) {
+  const int parsed = std::stoi(value);
+  if (parsed <= 0) throw std::runtime_error(option + " must be positive");
+  return parsed;
 }
 
-// ============================================================================
-// Main Function
-// ============================================================================
-
-int main(int argc, char** argv) {
-    LOG_INFO("=== Ultralytics YOLO Detect Demo (C++) ===");
-    LOG_INFO("OpenCV Version: " << CV_VERSION);
-
-    // ========================================================================
-    // 0. Parse command line arguments
-    // ========================================================================
-
-    std::string model_path = MODEL_PATH;
-    std::string test_img_path = TEST_IMG_PATH;
-    std::string save_path = IMG_SAVE_PATH;
-
-    if (argc >= 2) model_path = argv[1];
-    if (argc >= 3) test_img_path = argv[2];
-    if (argc >= 4) save_path = argv[3];
-
-    // ========================================================================
-    // 1. Load BPU model
-    // ========================================================================
-
-    LOG_INFO("Loading model: " << model_path);
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    hbPackedDNNHandle_t packed_dnn_handle;
-    const char* model_file_name = model_path.c_str();
-    CHECK_SUCCESS(
-        hbDNNInitializeFromFiles(&packed_dnn_handle, &model_file_name, 1),
-        "Failed to initialize model from file");
-
-    auto load_duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
-    LOG_TIME("Load model time", load_duration);
-
-    // ========================================================================
-    // 2. Get model handle
-    // ========================================================================
-
-    const char** model_name_list;
-    int model_count = 0;
-    CHECK_SUCCESS(
-        hbDNNGetModelNameList(&model_name_list, &model_count, packed_dnn_handle),
-        "Failed to get model name list");
-
-    if (model_count > 1) {
-        LOG_WARN("Model file contains " << model_count << " models, using the first one");
-    }
-
-    const char* model_name = model_name_list[0];
-    LOG_INFO("Model name: " << model_name);
-
-    hbDNNHandle_t dnn_handle;
-    CHECK_SUCCESS(
-        hbDNNGetModelHandle(&dnn_handle, packed_dnn_handle, model_name),
-        "Failed to get model handle");
-
-    // ========================================================================
-    // 3. Check model input
-    // ========================================================================
-
-    int32_t input_count = 0;
-    CHECK_SUCCESS(
-        hbDNNGetInputCount(&input_count, dnn_handle),
-        "Failed to get input count");
-
-    if (input_count != 1) {
-        LOG_ERROR("Model should have exactly 1 input, but has " << input_count);
-        return -1;
-    }
-
-    hbDNNTensorProperties input_properties;
-    CHECK_SUCCESS(
-        hbDNNGetInputTensorProperties(&input_properties, dnn_handle, 0),
-        "Failed to get input tensor properties");
-
-    // Check tensor type
-    if (input_properties.tensorType != HB_DNN_IMG_TYPE_NV12) {
-        LOG_ERROR("Input tensor type is not HB_DNN_IMG_TYPE_NV12");
-        return -1;
-    }
-    LOG_INFO("Input tensor type: HB_DNN_IMG_TYPE_NV12");
-
-    // Check tensor layout
-    if (input_properties.tensorLayout != HB_DNN_LAYOUT_NCHW) {
-        LOG_ERROR("Input tensor layout is not HB_DNN_LAYOUT_NCHW");
-        return -1;
-    }
-    LOG_INFO("Input tensor layout: HB_DNN_LAYOUT_NCHW");
-
-    // Get input shape
-    if (input_properties.validShape.numDimensions != 4) {
-        LOG_ERROR("Input tensor should have 4 dimensions");
-        return -1;
-    }
-
-    int32_t input_h = input_properties.validShape.dimensionSize[2];
-    int32_t input_w = input_properties.validShape.dimensionSize[3];
-    LOG_INFO("Input shape: (1, 3, " << input_h << ", " << input_w << ")");
-
-    // ========================================================================
-    // 4. Check model outputs
-    // ========================================================================
-
-    int32_t output_count = 0;
-    CHECK_SUCCESS(
-        hbDNNGetOutputCount(&output_count, dnn_handle),
-        "Failed to get output count");
-
-    if (output_count != 6) {
-        LOG_ERROR("Model should have 6 outputs, but has " << output_count);
-        return -1;
-    }
-
-    LOG_INFO("Model outputs:");
-    for (int i = 0; i < output_count; i++) {
-        hbDNNTensorProperties output_properties;
-        CHECK_SUCCESS(
-            hbDNNGetOutputTensorProperties(&output_properties, dnn_handle, i),
-            "Failed to get output tensor properties");
-
-        std::cout << "  output[" << i << "] shape: ("
-                  << output_properties.validShape.dimensionSize[0] << ", "
-                  << output_properties.validShape.dimensionSize[1] << ", "
-                  << output_properties.validShape.dimensionSize[2] << ", "
-                  << output_properties.validShape.dimensionSize[3] << ")";
-
-        if (output_properties.quantiType == SHIFT) std::cout << ", SHIFT";
-        else if (output_properties.quantiType == SCALE) std::cout << ", SCALE";
-        else if (output_properties.quantiType == NONE) std::cout << ", NONE";
-        std::cout << std::endl;
-    }
-
-    // Map output order
-    int32_t H_8 = input_h / 8;
-    int32_t W_8 = input_w / 8;
-    int32_t H_16 = input_h / 16;
-    int32_t W_16 = input_w / 16;
-    int32_t H_32 = input_h / 32;
-    int32_t W_32 = input_w / 32;
-
-    int order[6] = {0, 1, 2, 3, 4, 5};
-    int32_t expected_shapes[6][3] = {
-        {H_8, W_8, CLASSES_NUM},
-        {H_8, W_8, 64},
-        {H_16, W_16, CLASSES_NUM},
-        {H_16, W_16, 64},
-        {H_32, W_32, CLASSES_NUM},
-        {H_32, W_32, 64}
+Options parse_options(int argc, char** argv) {
+  Options options;
+  std::vector<std::string> positional;
+  for (int i = 1; i < argc; ++i) {
+    const std::string arg(argv[i]);
+    const auto next_value = [&](const std::string& option) -> std::string {
+      if (i + 1 >= argc) throw std::runtime_error(option + " requires a value");
+      return std::string(argv[++i]);
     };
 
-    for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 6; j++) {
-            hbDNNTensorProperties props;
-            hbDNNGetOutputTensorProperties(&props, dnn_handle, j);
+    if (arg == "--benchmark") {
+      options.benchmark = true;
+    } else if (arg == "--no-save") {
+      options.save_result = false;
+    } else if (arg == "--warmup") {
+      options.warmup = parse_positive(next_value(arg), arg);
+    } else if (arg == "--runs") {
+      options.runs = parse_positive(next_value(arg), arg);
+    } else if (arg == "--rounds") {
+      options.rounds = parse_positive(next_value(arg), arg);
+    } else if (arg == "--json") {
+      options.json_path = next_value(arg);
+    } else if (arg == "--head") {
+      const std::string value = next_value(arg);
+      if (value == "auto") {
+        options.head_mode = HeadMode::kAuto;
+      } else if (value == "dfl") {
+        options.head_mode = HeadMode::kDfl;
+      } else if (value == "ltrb") {
+        options.head_mode = HeadMode::kLtrb;
+      } else {
+        throw std::runtime_error("--head must be auto, dfl or ltrb");
+      }
+    } else if (arg == "--score") {
+      options.score_threshold = std::stof(next_value(arg));
+    } else if (arg == "--nms") {
+      options.nms_threshold = std::stof(next_value(arg));
+    } else if (arg == "--resize-type") {
+      options.resize_type = std::stoi(next_value(arg));
+    } else if (arg == "--opencv-threads") {
+      const std::string value = next_value(arg);
+      options.opencv_threads = value == "all" ? 0 : parse_positive(value, arg);
+    } else if (arg == "--pipeline-streams") {
+      options.pipeline_streams = parse_positive(next_value(arg), arg);
+    } else if (arg == "--help" || arg == "-h") {
+      print_usage(argv[0]);
+      std::exit(0);
+    } else if (!arg.empty() && arg[0] == '-') {
+      throw std::runtime_error("unknown option: " + arg);
+    } else {
+      positional.push_back(arg);
+    }
+  }
 
-            int32_t h = props.validShape.dimensionSize[1];
-            int32_t w = props.validShape.dimensionSize[2];
-            int32_t c = props.validShape.dimensionSize[3];
+  if (positional.size() > 3) throw std::runtime_error("too many positional arguments");
+  if (!positional.empty()) options.model_path = positional[0];
+  if (positional.size() > 1) options.image_path = positional[1];
+  if (positional.size() > 2) options.output_path = positional[2];
 
-            if (h == expected_shapes[i][0] &&
-                w == expected_shapes[i][1] &&
-                c == expected_shapes[i][2]) {
-                order[i] = j;
-                break;
-            }
+  if (options.resize_type != 0 && options.resize_type != 1) {
+    throw std::runtime_error("--resize-type must be 0 or 1");
+  }
+  if (options.score_threshold < 0.0f || options.score_threshold > 1.0f) {
+    throw std::runtime_error("--score must be in [0, 1]");
+  }
+  if (options.nms_threshold < 0.0f || options.nms_threshold > 1.0f) {
+    throw std::runtime_error("--nms must be in [0, 1]");
+  }
+  return options;
+}
+
+cv::Mat preprocess_image(const cv::Mat& image, int input_h, int input_w,
+                         int resize_type, yolo::ImageTransform* transform) {
+  cv::Mat result;
+  if (resize_type == 0) {
+    cv::resize(image, result, cv::Size(input_w, input_h));
+    transform->scale_x = static_cast<float>(input_w) / image.cols;
+    transform->scale_y = static_cast<float>(input_h) / image.rows;
+    return result;
+  }
+
+  const float scale = std::min(static_cast<float>(input_h) / image.rows,
+                               static_cast<float>(input_w) / image.cols);
+  const int resized_w = static_cast<int>(image.cols * scale);
+  const int resized_h = static_cast<int>(image.rows * scale);
+  transform->scale_x = scale;
+  transform->scale_y = scale;
+  transform->shift_x = (input_w - resized_w) / 2;
+  transform->shift_y = (input_h - resized_h) / 2;
+  const int right = input_w - resized_w - transform->shift_x;
+  const int bottom = input_h - resized_h - transform->shift_y;
+
+  cv::resize(image, result, cv::Size(resized_w, resized_h));
+  cv::copyMakeBorder(result, result, transform->shift_y, bottom,
+                     transform->shift_x, right, cv::BORDER_CONSTANT,
+                     cv::Scalar(127, 127, 127));
+  return result;
+}
+
+// One detection runtime context. Input protocol and head contract are both
+// probed from the model itself.
+class DetectRuntime {
+ public:
+  DetectRuntime() = default;
+  ~DetectRuntime() { release(); }
+
+  bool initialize(const std::string& model_path, HeadMode head_mode) {
+    const char* model_file = model_path.c_str();
+    if (!check_ret(hbDNNInitializeFromFiles(&packed_handle_, &model_file, 1),
+                   "hbDNNInitializeFromFiles")) {
+      return false;
+    }
+
+    const char** model_names = nullptr;
+    int model_count = 0;
+    if (!check_ret(hbDNNGetModelNameList(&model_names, &model_count, packed_handle_),
+                   "hbDNNGetModelNameList") ||
+        model_count <= 0) {
+      return false;
+    }
+    model_name_ = model_names[0];
+    if (!check_ret(hbDNNGetModelHandle(&model_handle_, packed_handle_, model_names[0]),
+                   "hbDNNGetModelHandle")) {
+      return false;
+    }
+
+    std::string protocol_error;
+    input_plan_ = yolo::probe_input_protocol(model_handle_, &protocol_error);
+    if (input_plan_.protocol == yolo::InputProtocol::kUnknown) {
+      std::cerr << "[ERROR] Unsupported model input: " << protocol_error
+                << std::endl;
+      return false;
+    }
+    if (!input_.allocate(model_handle_, input_plan_)) return false;
+
+    int32_t output_count = 0;
+    if (!check_ret(hbDNNGetOutputCount(&output_count, model_handle_),
+                   "hbDNNGetOutputCount") ||
+        output_count != kOutputCount) {
+      std::cerr << "[ERROR] Detect models require six outputs, got "
+                << output_count << std::endl;
+      return false;
+    }
+
+    outputs_.resize(output_count);
+    output_allocated_.assign(output_count, false);
+    std::vector<yolo::OutputShape> shapes(output_count);
+    for (int i = 0; i < output_count; ++i) {
+      std::memset(&outputs_[i], 0, sizeof(outputs_[i]));
+      if (!check_ret(hbDNNGetOutputTensorProperties(&outputs_[i].properties,
+                                                     model_handle_, i),
+                     "hbDNNGetOutputTensorProperties")) {
+        return false;
+      }
+      const hbDNNTensorProperties& properties = outputs_[i].properties;
+      if (properties.tensorType != HB_DNN_TENSOR_TYPE_F32 ||
+          properties.quantiType != NONE ||
+          properties.validShape.numDimensions != 4
+#if defined(YOLO_DNN_STACK_X5)
+          || properties.tensorLayout != HB_DNN_LAYOUT_NHWC
+#endif
+      ) {
+        std::cerr << "[ERROR] output[" << i
+                  << "] must be unquantized FLOAT32"
+#if defined(YOLO_DNN_STACK_X5)
+                  << " NHWC"
+#else
+                  << " (layout validated via strides on this stack)"
+#endif
+                  << std::endl;
+        return false;
+      }
+      const int64_t output_bytes = yolo::output_alloc_bytes(properties);
+      if (output_bytes <= 0) {
+        std::cerr << "[ERROR] output[" << i
+                  << "] reports no usable allocation size" << std::endl;
+        return false;
+      }
+      if (!check_ret(YOLO_SYS_ALLOC_CACHED(YOLO_SYS_MEM(outputs_[i]),
+                                         output_bytes),
+                     "sys alloc cached(output)")) {
+        return false;
+      }
+      output_allocated_[i] = true;
+
+      const hbDNNTensorShape& valid = properties.validShape;
+      shapes[i].h = valid.dimensionSize[1];
+      shapes[i].w = valid.dimensionSize[2];
+      shapes[i].c = valid.dimensionSize[3];
+      std::cout << "[INFO] output[" << i << "] valid=(" << valid.dimensionSize[0]
+                << ", " << valid.dimensionSize[1] << ", " << valid.dimensionSize[2]
+                << ", " << valid.dimensionSize[3] << ") strides=("
+                << yolo::tensor_row_step_floats(properties) << "f/row, "
+                << yolo::tensor_cell_step_floats(properties) << "f/cell)"
+                << std::endl;
+    }
+
+    if (!bind_outputs(shapes, head_mode)) return false;
+
+    std::cout << "[INFO] Model name: " << model_name_ << std::endl;
+    std::cout << "[INFO] Input: "
+              << (input_plan_.protocol == yolo::InputProtocol::kPackedNv12
+                      ? "packed NV12 "
+                      : "split Y/UV NV12 ")
+              << input_plan_.input_w << "x" << input_plan_.input_h << std::endl;
+    std::cout << "[INFO] Head: "
+              << (head_ == yolo::BoxDecode::kDirectLtrb ? "direct-LTRB" : "DFL")
+              << std::endl;
+    std::cout << "[INFO] Output order: [";
+    for (int i = 0; i < kOutputCount; ++i) {
+      if (i) std::cout << ", ";
+      std::cout << output_order_[i];
+    }
+    std::cout << "]" << std::endl;
+    return true;
+  }
+
+  int input_h() const { return input_plan_.input_h; }
+  int input_w() const { return input_plan_.input_w; }
+  yolo::BoxDecode head() const { return head_; }
+
+  bool upload(const cv::Mat& i420) {
+    if (i420.empty() || !i420.isContinuous() ||
+        static_cast<int>(i420.total()) !=
+            input_plan_.input_h * input_plan_.input_w * 3 / 2) {
+      std::cerr << "[ERROR] Invalid I420 input" << std::endl;
+      return false;
+    }
+    return input_.upload(input_plan_, i420.ptr<uint8_t>());
+  }
+
+  bool infer() {
+    return check_ret(yolo::infer_sync(outputs_.data(), input_.tensors(),
+                                      input_.input_count(), model_handle_),
+                     "infer_sync");
+  }
+
+  bool postprocess(const yolo::ImageTransform& transform, int image_w, int image_h,
+                   float score_threshold, float nms_threshold,
+                   std::vector<Detection>* detections) {
+    for (size_t i = 0; i < outputs_.size(); ++i) {
+      if (!check_ret(YOLO_SYS_FLUSH(YOLO_SYS_MEM(outputs_[i]),
+                                   HB_SYS_MEM_CACHE_INVALIDATE),
+                     "sys flush(output invalidate)")) {
+        return false;
+      }
+    }
+
+    const float raw_threshold = yolo::raw_logit_threshold(score_threshold);
+    std::vector<std::vector<cv::Rect2d> > boxes(kClasses);
+    std::vector<std::vector<float> > scores(kClasses);
+
+    for (int scale = 0; scale < 3; ++scale) {
+      const int stride = kStrides[scale];
+      const yolo::TensorView cls_view = output_view(output_order_[scale * 2]);
+      const yolo::TensorView box_view = output_view(output_order_[scale * 2 + 1]);
+
+      for (int y = 0; y < cls_view.h; ++y) {
+        for (int x = 0; x < cls_view.w; ++x) {
+          const float* logits = cls_view.cell(y, x);
+          int class_id = 0;
+          for (int c = 1; c < kClasses; ++c) {
+            if (logits[c] > logits[class_id]) class_id = c;
+          }
+          if (logits[class_id] < raw_threshold) continue;
+
+          float ltrb[4];
+          const float* box_raw = box_view.cell(y, x);
+          if (head_ == yolo::BoxDecode::kDirectLtrb) {
+            yolo::decode_box_ltrb(box_raw, ltrb);
+          } else {
+            yolo::decode_box_dfl(box_raw, ltrb);
+          }
+
+          float x1, y1, x2, y2;
+          yolo::box_from_distances(x + 0.5f, y + 0.5f, ltrb,
+                                   static_cast<float>(stride), &x1, &y1, &x2,
+                                   &y2);
+          if (!yolo::map_to_source(&x1, &y1, &x2, &y2, transform, image_w,
+                                   image_h)) {
+            continue;
+          }
+
+          boxes[class_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
+          scores[class_id].push_back(yolo::sigmoid(logits[class_id]));
         }
+      }
     }
 
-    LOG_INFO("Output order mapping: [" << order[0] << ", " << order[1] << ", "
-             << order[2] << ", " << order[3] << ", " << order[4] << ", "
-             << order[5] << "]");
-
-    // ========================================================================
-    // 5. Load and preprocess image
-    // ========================================================================
-
-    LOG_INFO("Loading image: " << test_img_path);
-    cv::Mat img = cv::imread(test_img_path);
-    if (img.empty()) {
-        LOG_ERROR("Failed to load image: " << test_img_path);
-        return -1;
+    detections->clear();
+    for (int class_id = 0; class_id < kClasses; ++class_id) {
+      if (boxes[class_id].empty()) continue;
+      std::vector<int> keep;
+      cv::dnn::NMSBoxes(boxes[class_id], scores[class_id], score_threshold,
+                        nms_threshold, keep, 1.0f, 0);
+      for (size_t i = 0; i < keep.size(); ++i) {
+        const int index = keep[i];
+        detections->push_back(
+            Detection{class_id, scores[class_id][index], boxes[class_id][index]});
+      }
     }
-    LOG_INFO("Image size: " << img.cols << "x" << img.rows);
+    return true;
+  }
 
-    // Preprocess image
-    float x_scale, y_scale;
-    int x_shift, y_shift;
-    cv::Mat preprocessed = preprocess_image(img, input_h, input_w,
-                                           x_scale, y_scale, x_shift, y_shift);
+ private:
+  yolo::TensorView output_view(int index) const {
+    const hbDNNTensor& tensor = outputs_[index];
+    const hbDNNTensorShape& valid = tensor.properties.validShape;
+    yolo::TensorView view;
+    view.data = reinterpret_cast<const float*>(YOLO_SYS_MEM(tensor)->virAddr);
+    view.h = valid.dimensionSize[1];
+    view.w = valid.dimensionSize[2];
+    view.channels = valid.dimensionSize[3];
+    view.row_step = yolo::tensor_row_step_floats(tensor.properties);
+    view.cell_step = yolo::tensor_cell_step_floats(tensor.properties);
+    if (view.row_step <= 0) view.row_step = view.w * view.channels;
+    if (view.cell_step <= 0) view.cell_step = view.channels;
+    return view;
+  }
 
-    // Convert to NV12
-    cv::Mat nv12_img = bgr2nv12(preprocessed);
-
-    // ========================================================================
-    // 6. Prepare input tensor
-    // ========================================================================
-
-    hbDNNTensor input;
-    input.properties = input_properties;
-
-    int input_memSize = input_h * input_w * 3 / 2;
-    hbSysAllocCachedMem(&input.sysMem[0], input_memSize);
-    memcpy(input.sysMem[0].virAddr, nv12_img.ptr<uint8_t>(), input_memSize);
-    hbSysFlushMem(&input.sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
-
-    // ========================================================================
-    // 7. Prepare output tensors
-    // ========================================================================
-
-    hbDNNTensor* output = new hbDNNTensor[output_count];
-    for (int i = 0; i < output_count; i++) {
-        hbDNNGetOutputTensorProperties(&output[i].properties, dnn_handle, i);
-        int out_size = output[i].properties.alignedByteSize;
-        hbSysAllocCachedMem(&output[i].sysMem[0], out_size);
+  bool bind_outputs(const std::vector<yolo::OutputShape>& shapes,
+                    HeadMode head_mode) {
+    // Try the requested protocol first, then fall back for auto mode.
+    std::vector<yolo::BoxDecode> candidates;
+    if (head_mode == HeadMode::kLtrb) {
+      candidates.push_back(yolo::BoxDecode::kDirectLtrb);
+    } else if (head_mode == HeadMode::kDfl) {
+      candidates.push_back(yolo::BoxDecode::kDfl);
+    } else {
+      candidates.push_back(yolo::BoxDecode::kDirectLtrb);
+      candidates.push_back(yolo::BoxDecode::kDfl);
     }
 
-    // ========================================================================
-    // 8. Run inference
-    // ========================================================================
-
-    LOG_INFO("Running inference...");
-    start_time = std::chrono::high_resolution_clock::now();
-
-    hbDNNTaskHandle_t task_handle = nullptr;
-    hbDNNInferCtrlParam infer_ctrl_param;
-    HB_DNN_INITIALIZE_INFER_CTRL_PARAM(&infer_ctrl_param);
-
-    hbDNNInfer(&task_handle, &output, &input, dnn_handle, &infer_ctrl_param);
-    hbDNNWaitTaskDone(task_handle, 0);
-
-    auto infer_duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
-    LOG_TIME("BPU inference time", infer_duration);
-
-    // ========================================================================
-    // 9. Post-process
-    // ========================================================================
-
-    LOG_INFO("Post-processing...");
-    start_time = std::chrono::high_resolution_clock::now();
-
-    float CONF_THRES_RAW = -std::log(1.0f / SCORE_THRESHOLD - 1.0f);
-
-    std::vector<std::vector<cv::Rect2d>> bboxes(CLASSES_NUM);
-    std::vector<std::vector<float>> scores(CLASSES_NUM);
-
-    // Process 3 scales: 8, 16, 32
-    const int strides[3] = {8, 16, 32};
-    const int heights[3] = {H_8, H_16, H_32};
-    const int widths[3] = {W_8, W_16, W_32};
-
-    for (int scale_idx = 0; scale_idx < 3; scale_idx++) {
-        int cls_output_idx = order[scale_idx * 2];
-        int bbox_output_idx = order[scale_idx * 2 + 1];
-        int stride = strides[scale_idx];
-        int h = heights[scale_idx];
-        int w = widths[scale_idx];
-
-        // Flush memory
-        hbSysFlushMem(&output[cls_output_idx].sysMem[0], HB_SYS_MEM_CACHE_INVALIDATE);
-        hbSysFlushMem(&output[bbox_output_idx].sysMem[0], HB_SYS_MEM_CACHE_INVALIDATE);
-
-        // Get pointers
-        float* cls_raw = reinterpret_cast<float*>(output[cls_output_idx].sysMem[0].virAddr);
-        float* bbox_raw = reinterpret_cast<float*>(output[bbox_output_idx].sysMem[0].virAddr);
-
-        // Process each grid cell
-        for (int gh = 0; gh < h; gh++) {
-            for (int gw = 0; gw < w; gw++) {
-                float* cur_cls = cls_raw;
-                float* cur_bbox = bbox_raw;
-
-                // Find max class score
-                int cls_id = 0;
-                for (int c = 1; c < CLASSES_NUM; c++) {
-                    if (cur_cls[c] > cur_cls[cls_id]) {
-                        cls_id = c;
-                    }
-                }
-
-                // Skip if score is too low
-                if (cur_cls[cls_id] < CONF_THRES_RAW) {
-                    cls_raw += CLASSES_NUM;
-                    bbox_raw += REG * 4;
-                    continue;
-                }
-
-                // Compute score
-                float score = 1.0f / (1.0f + std::exp(-cur_cls[cls_id]));
-
-                // DFL decode (softmax + weighted sum)
-                float ltrb[4] = {0};
-                for (int i = 0; i < 4; i++) {
-                    float sum = 0.0f;
-                    for (int j = 0; j < REG; j++) {
-                        int idx = REG * i + j;
-                        float dfl = std::exp(cur_bbox[idx]);
-                        ltrb[i] += dfl * j;
-                        sum += dfl;
-                    }
-                    ltrb[i] /= sum;
-                }
-
-                // Skip invalid boxes
-                if (ltrb[2] + ltrb[0] <= 0 || ltrb[3] + ltrb[1] <= 0) {
-                    cls_raw += CLASSES_NUM;
-                    bbox_raw += REG * 4;
-                    continue;
-                }
-
-                // Convert to xyxy
-                float x1 = (gw + 0.5f - ltrb[0]) * stride;
-                float y1 = (gh + 0.5f - ltrb[1]) * stride;
-                float x2 = (gw + 0.5f + ltrb[2]) * stride;
-                float y2 = (gh + 0.5f + ltrb[3]) * stride;
-
-                // Store result
-                bboxes[cls_id].push_back(cv::Rect2d(x1, y1, x2 - x1, y2 - y1));
-                scores[cls_id].push_back(score);
-
-                cls_raw += CLASSES_NUM;
-                bbox_raw += REG * 4;
-            }
+    for (size_t candidate = 0; candidate < candidates.size(); ++candidate) {
+      const int box_channels = yolo::box_channels(candidates[candidate]);
+      bool complete = true;
+      for (int scale = 0; scale < 3 && complete; ++scale) {
+        const int h = input_plan_.input_h / kStrides[scale];
+        const int w = input_plan_.input_w / kStrides[scale];
+        const int cls_index = yolo::find_output_by_shape(shapes, h, w, kClasses);
+        const int box_index = yolo::find_output_by_shape(shapes, h, w, box_channels);
+        if (cls_index < 0 || box_index < 0) {
+          complete = false;
+          break;
         }
+        output_order_[scale * 2] = cls_index;
+        output_order_[scale * 2 + 1] = box_index;
+      }
+      if (complete) {
+        head_ = candidates[candidate];
+        return true;
+      }
     }
 
-    // NMS for each class
-    std::vector<Detection> final_detections;
-    for (int cls_id = 0; cls_id < CLASSES_NUM; cls_id++) {
-        if (bboxes[cls_id].empty()) continue;
+    std::cerr << "[ERROR] Missing detect outputs: expected per stride a "
+              << kClasses << "-channel class map plus a 4-channel (YOLO26 "
+              << "direct-LTRB) or 64-channel (DFL) box map" << std::endl;
+    return false;
+  }
 
-        std::vector<int> indices;
-        cv::dnn::NMSBoxes(bboxes[cls_id], scores[cls_id],
-                         SCORE_THRESHOLD, NMS_THRESHOLD,
-                         indices, 1.0f, NMS_TOP_K);
-
-        for (int idx : indices) {
-            final_detections.emplace_back(cls_id, scores[cls_id][idx], bboxes[cls_id][idx]);
+  void release() {
+    for (size_t i = 0; i < outputs_.size(); ++i) {
+      if (i < output_allocated_.size() && output_allocated_[i]) {
+        const int ret = YOLO_SYS_FREE(YOLO_SYS_MEM(outputs_[i]));
+        if (ret != 0) {
+          std::cerr << "[WARN] hbSysFreeMem(output) returned " << ret << std::endl;
         }
+        output_allocated_[i] = false;
+      }
+    }
+    if (packed_handle_ != nullptr) {
+      const int ret = hbDNNRelease(packed_handle_);
+      if (ret != 0) std::cerr << "[WARN] hbDNNRelease returned " << ret << std::endl;
+      packed_handle_ = nullptr;
+      model_handle_ = nullptr;
+    }
+  }
+
+  yolo_packed_handle_t packed_handle_ = nullptr;
+  hbDNNHandle_t model_handle_ = nullptr;
+  yolo::InputPlan input_plan_;
+  yolo::Nv12Input input_;
+  std::vector<hbDNNTensor> outputs_;
+  std::vector<bool> output_allocated_;
+  int output_order_[kOutputCount] = {-1, -1, -1, -1, -1, -1};
+  yolo::BoxDecode head_ = yolo::BoxDecode::kUnknown;
+  std::string model_name_;
+};
+
+bool run_pipeline(DetectRuntime* runtime, const cv::Mat& image,
+                  const Options& options, std::vector<Detection>* detections,
+                  yolo::StageTiming* timing) {
+  const Clock::time_point start = Clock::now();
+  yolo::ImageTransform transform;
+  const cv::Mat resized = preprocess_image(image, runtime->input_h(), runtime->input_w(),
+                                           options.resize_type, &transform);
+  cv::Mat i420;
+  cv::cvtColor(resized, i420, cv::COLOR_BGR2YUV_I420);
+  if (!runtime->upload(i420)) return false;
+  const Clock::time_point preprocessed = Clock::now();
+
+  if (!runtime->infer()) return false;
+  const Clock::time_point inferred = Clock::now();
+
+  if (!runtime->postprocess(transform, image.cols, image.rows,
+                            options.score_threshold, options.nms_threshold,
+                            detections)) {
+    return false;
+  }
+  const Clock::time_point finished = Clock::now();
+
+  if (timing != nullptr) {
+    const auto ms = [](const Clock::time_point& a, const Clock::time_point& b) {
+      return std::chrono::duration_cast<std::chrono::duration<double, std::milli> >(
+                 b - a)
+          .count();
+    };
+    timing->preprocess_ms = ms(start, preprocessed);
+    timing->runtime_ms = ms(preprocessed, inferred);
+    timing->postprocess_ms = ms(inferred, finished);
+    timing->end_to_end_ms = ms(start, finished);
+  }
+  return true;
+}
+
+bool run_pipeline_streams(const std::vector<DetectRuntime*>& runtimes,
+                          const cv::Mat& image, const Options& options,
+                          int frames_per_stream, size_t expected_detections,
+                          bool collect_timing, yolo::BenchmarkRound* result) {
+  if (runtimes.empty()) return false;
+
+  std::vector<yolo::StageSamples> stream_samples(runtimes.size());
+  std::vector<std::thread> workers;
+  workers.reserve(runtimes.size());
+  std::atomic<bool> failed(false);
+  std::mutex start_mutex;
+  std::mutex error_mutex;
+  std::condition_variable ready_condition;
+  std::condition_variable start_condition;
+  size_t ready_workers = 0;
+  bool start = false;
+  std::string error_message;
+
+  const auto fail = [&](const std::string& message) {
+    if (!failed.exchange(true)) {
+      std::lock_guard<std::mutex> lock(error_mutex);
+      error_message = message;
+    }
+  };
+
+  for (size_t stream = 0; stream < runtimes.size(); ++stream) {
+    workers.push_back(std::thread([&, stream]() {
+      {
+        std::unique_lock<std::mutex> lock(start_mutex);
+        ++ready_workers;
+        ready_condition.notify_one();
+        start_condition.wait(lock, [&]() { return start; });
+      }
+
+      try {
+        std::vector<Detection> detections;
+        for (int frame = 0; frame < frames_per_stream && !failed.load(); ++frame) {
+          yolo::StageTiming timing;
+          if (!run_pipeline(runtimes[stream], image, options, &detections,
+                            collect_timing ? &timing : nullptr)) {
+            fail("pipeline stream " + std::to_string(stream) + " failed");
+            break;
+          }
+          if (detections.size() != expected_detections) {
+            fail("pipeline stream " + std::to_string(stream) +
+                 " detection count changed: expected " +
+                 std::to_string(expected_detections) + ", got " +
+                 std::to_string(detections.size()));
+            break;
+          }
+          if (collect_timing) stream_samples[stream].add(timing);
+        }
+      } catch (const std::exception& error) {
+        fail("pipeline stream " + std::to_string(stream) +
+             " raised: " + error.what());
+      } catch (...) {
+        fail("pipeline stream " + std::to_string(stream) +
+             " raised an unknown exception");
+      }
+    }));
+  }
+
+  Clock::time_point wall_start;
+  {
+    std::unique_lock<std::mutex> lock(start_mutex);
+    ready_condition.wait(lock, [&]() { return ready_workers == runtimes.size(); });
+    wall_start = Clock::now();
+    start = true;
+  }
+  start_condition.notify_all();
+  for (size_t i = 0; i < workers.size(); ++i) workers[i].join();
+  const Clock::time_point wall_end = Clock::now();
+
+  if (failed.load()) {
+    std::lock_guard<std::mutex> lock(error_mutex);
+    std::cerr << "[ERROR] " << error_message << std::endl;
+    return false;
+  }
+  if (collect_timing && result != nullptr) {
+    result->wall_ms = std::chrono::duration_cast<
+        std::chrono::duration<double, std::milli> >(wall_end - wall_start)
+        .count();
+    for (size_t stream = 0; stream < stream_samples.size(); ++stream) {
+      result->samples.append(stream_samples[stream]);
+    }
+    result->completed_frames = result->samples.end_to_end.size();
+  }
+  return true;
+}
+
+void draw_detections(cv::Mat* image, const std::vector<Detection>& detections) {
+  for (size_t i = 0; i < detections.size(); ++i) {
+    const Detection& detection = detections[i];
+    const cv::Scalar color = kColors[detection.class_id % kColors.size()];
+    cv::rectangle(*image, detection.bbox, color, 2);
+    const std::string label =
+        kCocoNames[detection.class_id] + " " +
+        std::to_string(static_cast<int>(detection.confidence * 100.0f)) + "%";
+    int baseline = 0;
+    const cv::Size text_size =
+        cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &baseline);
+    const int x = static_cast<int>(detection.bbox.x);
+    const int y = std::max(static_cast<int>(detection.bbox.y), text_size.height + 8);
+    cv::rectangle(*image, cv::Point(x, y - text_size.height - 8),
+                  cv::Point(x + text_size.width, y), color, cv::FILLED);
+    cv::putText(*image, label, cv::Point(x, y - 4), cv::FONT_HERSHEY_SIMPLEX,
+                0.6, cv::Scalar(255, 255, 255), 2, cv::LINE_AA);
+  }
+}
+
+void print_statistics(const std::string& label, const std::vector<double>& values) {
+  const yolo::Statistics stats = yolo::summarize(values);
+  std::cout << std::left << std::setw(13) << label << std::right << std::fixed
+            << std::setprecision(3) << " mean=" << std::setw(8) << stats.mean
+            << " ms  p50=" << std::setw(8) << stats.p50
+            << "  p95=" << std::setw(8) << stats.p95
+            << "  min=" << std::setw(8) << stats.min
+            << "  max=" << std::setw(8) << stats.max << std::endl;
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+  try {
+    const Options options = parse_options(argc, argv);
+    const int online_cpu_threads = std::max(1, cv::getNumberOfCPUs());
+    const int opencv_threads =
+        options.opencv_threads == 0 ? online_cpu_threads : options.opencv_threads;
+    cv::setUseOptimized(true);
+    cv::setNumThreads(opencv_threads);
+
+    std::cout << "[INFO] YOLO detect C++ sample (direct-LTRB + DFL heads)"
+              << std::endl;
+    std::cout << "[INFO] OpenCV: " << CV_VERSION
+              << ", online CPUs: " << online_cpu_threads
+              << ", CPU thread policy: "
+              << (options.opencv_threads == 0 ? "all-online" : "fixed")
+              << ", OpenCV threads: " << cv::getNumThreads() << std::endl;
+    std::cout << "[INFO] Loading model: " << options.model_path << std::endl;
+    std::cout << "[INFO] Pipeline streams: " << options.pipeline_streams << std::endl;
+
+    const Clock::time_point load_start = Clock::now();
+    std::vector<std::unique_ptr<DetectRuntime> > runtime_storage;
+    std::vector<DetectRuntime*> runtimes;
+    runtime_storage.reserve(options.pipeline_streams);
+    runtimes.reserve(options.pipeline_streams);
+    for (int stream = 0; stream < options.pipeline_streams; ++stream) {
+      std::unique_ptr<DetectRuntime> runtime(new DetectRuntime());
+      if (!runtime->initialize(options.model_path, options.head_mode)) return 1;
+      if (!runtimes.empty() &&
+          (runtime->input_h() != runtimes[0]->input_h() ||
+           runtime->input_w() != runtimes[0]->input_w() ||
+           runtime->head() != runtimes[0]->head())) {
+        std::cerr << "[ERROR] Runtime contexts expose different contracts"
+                  << std::endl;
+        return 1;
+      }
+      runtimes.push_back(runtime.get());
+      runtime_storage.push_back(std::move(runtime));
+    }
+    std::cout << "[INFO] Runtime context load: " << std::fixed
+              << std::setprecision(3)
+              << std::chrono::duration_cast<std::chrono::duration<double, std::milli> >(
+                     Clock::now() - load_start)
+                     .count()
+              << " ms" << std::endl;
+
+    const cv::Mat image = cv::imread(options.image_path);
+    if (image.empty()) {
+      std::cerr << "[ERROR] Cannot read image: " << options.image_path << std::endl;
+      return 1;
+    }
+    std::cout << "[INFO] Image: " << image.cols << "x" << image.rows << std::endl;
+
+    std::vector<Detection> detections;
+    yolo::StageTiming validation_timing;
+    if (!run_pipeline(runtimes[0], image, options, &detections,
+                      &validation_timing)) {
+      return 1;
+    }
+    std::cout << "[INFO] Validation detections: " << detections.size() << std::endl;
+    std::cout << "[INFO] Validation timing: preprocess=" << validation_timing.preprocess_ms
+              << " ms, runtime=" << validation_timing.runtime_ms
+              << " ms, postprocess=" << validation_timing.postprocess_ms
+              << " ms, end_to_end=" << validation_timing.end_to_end_ms << " ms"
+              << std::endl;
+
+    if (options.save_result) {
+      cv::Mat rendered = image.clone();
+      draw_detections(&rendered, detections);
+      if (!cv::imwrite(options.output_path, rendered)) {
+        std::cerr << "[ERROR] Cannot write result: " << options.output_path << std::endl;
+        return 1;
+      }
+      std::cout << "[INFO] Result saved: " << options.output_path << std::endl;
     }
 
-    auto post_duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
-    LOG_TIME("Post-processing time", post_duration);
+    if (!options.benchmark) return 0;
 
-    LOG_INFO("Detected " << final_detections.size() << " objects");
+    yolo::StageSamples aggregate;
+    double aggregate_wall_ms = 0.0;
+    size_t completed_frames = 0;
+    const size_t expected_detections = detections.size();
+    for (int round = 0; round < options.rounds; ++round) {
+      if (!run_pipeline_streams(runtimes, image, options, options.warmup,
+                                expected_detections, false, nullptr)) {
+        return 1;
+      }
 
-    // ========================================================================
-    // 10. Draw results
-    // ========================================================================
+      yolo::BenchmarkRound current;
+      if (!run_pipeline_streams(runtimes, image, options, options.runs,
+                                expected_detections, true, &current)) {
+        return 1;
+      }
+      aggregate.append(current.samples);
+      aggregate_wall_ms += current.wall_ms;
+      completed_frames += current.completed_frames;
 
-    if (!final_detections.empty()) {
-        LOG_INFO("Detection results:");
-        draw_detections(img, final_detections, x_scale, y_scale, x_shift, y_shift);
+      std::cout << "\n[ROUND " << round + 1 << "/" << options.rounds << "]" << std::endl;
+      print_statistics("preprocess", current.samples.preprocess);
+      print_statistics("runtime", current.samples.runtime);
+      print_statistics("postprocess", current.samples.postprocess);
+      print_statistics("end_to_end", current.samples.end_to_end);
+      std::cout << "wall_time     " << std::fixed << std::setprecision(3)
+                << current.wall_ms << " ms for " << current.completed_frames
+                << " frames" << std::endl;
+      std::cout << "throughput    " << std::fixed << std::setprecision(3)
+                << (current.wall_ms > 0.0
+                        ? current.completed_frames * 1000.0 / current.wall_ms
+                        : 0.0)
+                << " aggregate fps" << std::endl;
     }
 
-    // Save result
-    cv::imwrite(save_path, img);
-    LOG_INFO("Result saved to: " << save_path);
+    std::cout << "\n[AGGREGATE " << aggregate.end_to_end.size() << " frames]" << std::endl;
+    print_statistics("preprocess", aggregate.preprocess);
+    print_statistics("runtime", aggregate.runtime);
+    print_statistics("postprocess", aggregate.postprocess);
+    print_statistics("end_to_end", aggregate.end_to_end);
+    std::cout << "wall_time     " << std::fixed << std::setprecision(3)
+              << aggregate_wall_ms << " ms for " << completed_frames
+              << " frames" << std::endl;
+    std::cout << "throughput    " << std::fixed << std::setprecision(3)
+              << (aggregate_wall_ms > 0.0
+                      ? completed_frames * 1000.0 / aggregate_wall_ms
+                      : 0.0)
+              << " aggregate fps" << std::endl;
 
-    // ========================================================================
-    // 11. Cleanup
-    // ========================================================================
-
-    hbDNNReleaseTask(task_handle);
-    hbSysFreeMem(&input.sysMem[0]);
-    for (int i = 0; i < output_count; i++) {
-        hbSysFreeMem(&output[i].sysMem[0]);
+    if (!options.json_path.empty()) {
+      yolo::BenchmarkMeta meta;
+      meta.model_path = options.model_path;
+      meta.image_path = options.image_path;
+      meta.implementation = runtimes[0]->head() == yolo::BoxDecode::kDirectLtrb
+                                ? "native_cpp_yolo26_ltrb"
+                                : "native_cpp_yolo_dfl";
+      meta.timing_scope = "in_memory_bgr_to_detections";
+      meta.pipeline_streams = options.pipeline_streams;
+      meta.cpu_thread_policy =
+          options.opencv_threads == 0 ? "all_online" : "fixed";
+      meta.online_cpu_threads = online_cpu_threads;
+      meta.opencv_threads = cv::getNumThreads();
+      meta.warmup_frames_per_round = options.warmup;
+      meta.runs_per_round = options.runs;
+      meta.rounds = options.rounds;
+      meta.score_threshold = options.score_threshold;
+      meta.nms_threshold = options.nms_threshold;
+      if (!yolo::write_benchmark_json(options.json_path, meta, aggregate,
+                                      expected_detections, completed_frames,
+                                      aggregate_wall_ms)) {
+        return 1;
+      }
+      std::cout << "[INFO] Benchmark JSON: " << options.json_path << std::endl;
     }
-    delete[] output;
-    hbDNNRelease(packed_dnn_handle);
-
-    LOG_INFO("=== Demo completed successfully ===");
     return 0;
+  } catch (const std::exception& error) {
+    std::cerr << "[ERROR] " << error.what() << std::endl;
+    print_usage(argv[0]);
+    return 1;
+  }
 }

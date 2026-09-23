@@ -83,12 +83,10 @@ limitations under the License.
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// RDK BPU libDNN API
-#include "dnn/hb_dnn.h"
-#include "dnn/hb_dnn_ext.h"
-#include "dnn/plugin/hb_dnn_layer.h"
-#include "dnn/plugin/hb_dnn_plugin.h"
-#include "dnn/hb_sys.h"
+// RDK BPU libDNN API (stack-portable layer; pulls in the X5 hbSys or the
+// S-series UCP headers itself)
+#include "common/dnn_io.h"
+#include "common/nv12_geometry.h"
 
 // ============================================================================
 // Macros
@@ -158,44 +156,13 @@ struct PoseDetection {
 // ============================================================================
 
 /**
- * @brief Convert BGR image to NV12 format
+ * @brief Convert BGR image to I420 (used by both NV12 input protocols via
+ *        common/nv12_geometry.h)
  */
-cv::Mat bgr2nv12(const cv::Mat& bgr_img) {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    int height = bgr_img.rows;
-    int width = bgr_img.cols;
-
-    // BGR to YUV420P
+cv::Mat bgr2i420(const cv::Mat& bgr_img) {
     cv::Mat yuv_mat;
     cv::cvtColor(bgr_img, yuv_mat, cv::COLOR_BGR2YUV_I420);
-    uint8_t* yuv = yuv_mat.ptr<uint8_t>();
-
-    // Allocate NV12 image
-    cv::Mat nv12_img(height * 3 / 2, width, CV_8UC1);
-    uint8_t* nv12 = nv12_img.ptr<uint8_t>();
-
-    // Copy Y plane
-    int y_size = height * width;
-    memcpy(nv12, yuv, y_size);
-
-    // Convert UV planar to UV packed (NV12)
-    int uv_height = height / 2;
-    int uv_width = width / 2;
-    uint8_t* nv12_uv = nv12 + y_size;
-    uint8_t* u_data = yuv + y_size;
-    uint8_t* v_data = u_data + uv_height * uv_width;
-
-    for (int i = 0; i < uv_width * uv_height; i++) {
-        *nv12_uv++ = *u_data++;
-        *nv12_uv++ = *v_data++;
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-    LOG_TIME("BGR to NV12 time", duration);
-
-    return nv12_img;
+    return yuv_mat;
 }
 
 /**
@@ -357,7 +324,7 @@ int main(int argc, char** argv) {
     LOG_INFO("Loading model: " << model_path);
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    hbPackedDNNHandle_t packed_dnn_handle;
+    yolo_packed_handle_t packed_dnn_handle;
     const char* model_file_name = model_path.c_str();
     CHECK_SUCCESS(
         hbDNNInitializeFromFiles(&packed_dnn_handle, &model_file_name, 1),
@@ -389,44 +356,24 @@ int main(int argc, char** argv) {
     // 3. Check model input
     // ========================================================================
 
-    int32_t input_count = 0;
-    CHECK_SUCCESS(
-        hbDNNGetInputCount(&input_count, dnn_handle),
-        "Failed to get input count");
-
-    if (input_count != 1) {
-        LOG_ERROR("Model should have exactly 1 input, but has " << input_count);
-        return -1;
+    int32_t input_h = 0;
+    int32_t input_w = 0;
+    yolo::InputPlan input_plan;
+    {
+        std::string protocol_error;
+        input_plan = yolo::probe_input_protocol(dnn_handle, &protocol_error);
+        if (input_plan.protocol == yolo::InputProtocol::kUnknown) {
+            LOG_ERROR("Unsupported model input: " << protocol_error);
+            return -1;
+        }
+        input_h = input_plan.input_h;
+        input_w = input_plan.input_w;
+        LOG_INFO("Input: "
+                 << (input_plan.protocol == yolo::InputProtocol::kPackedNv12
+                         ? "packed NV12 "
+                         : "split Y/UV NV12 ")
+                 << input_w << "x" << input_h);
     }
-
-    hbDNNTensorProperties input_properties;
-    CHECK_SUCCESS(
-        hbDNNGetInputTensorProperties(&input_properties, dnn_handle, 0),
-        "Failed to get input tensor properties");
-
-    // Check tensor type
-    if (input_properties.tensorType != HB_DNN_IMG_TYPE_NV12) {
-        LOG_ERROR("Input tensor type is not HB_DNN_IMG_TYPE_NV12");
-        return -1;
-    }
-    LOG_INFO("Input tensor type: HB_DNN_IMG_TYPE_NV12");
-
-    // Check tensor layout
-    if (input_properties.tensorLayout != HB_DNN_LAYOUT_NCHW) {
-        LOG_ERROR("Input tensor layout is not HB_DNN_LAYOUT_NCHW");
-        return -1;
-    }
-    LOG_INFO("Input tensor layout: HB_DNN_LAYOUT_NCHW");
-
-    // Get input shape
-    if (input_properties.validShape.numDimensions != 4) {
-        LOG_ERROR("Input tensor should have 4 dimensions");
-        return -1;
-    }
-
-    int32_t input_h = input_properties.validShape.dimensionSize[2];
-    int32_t input_w = input_properties.validShape.dimensionSize[3];
-    LOG_INFO("Input shape: (1, 3, " << input_h << ", " << input_w << ")");
 
     // ========================================================================
     // 4. Check model outputs
@@ -457,12 +404,16 @@ int main(int argc, char** argv) {
                  << output_properties.validShape.dimensionSize[2] << ", "
                  << output_properties.validShape.dimensionSize[3] << "), ";
 
-        if (output_properties.quantiType == SHIFT)
-            std::cout << "SHIFT";
+        // The quantiType enum is stack-dependent: S-series headers expose
+        // only NONE and SCALE, while X5 additionally defines SHIFT.
+        if (output_properties.quantiType == NONE)
+            std::cout << "NONE";
         else if (output_properties.quantiType == SCALE)
             std::cout << "SCALE";
-        else if (output_properties.quantiType == NONE)
-            std::cout << "NONE";
+#if defined(YOLO_DNN_STACK_X5)
+        else if (output_properties.quantiType == SHIFT)
+            std::cout << "SHIFT";
+#endif
         std::cout << std::endl;
     }
 
@@ -484,20 +435,23 @@ int main(int argc, char** argv) {
     cv::Mat preprocessed = preprocess_image(img, input_h, input_w,
                                            x_scale, y_scale, x_shift, y_shift);
 
-    // Convert to NV12
-    cv::Mat nv12_img = bgr2nv12(preprocessed);
+    // Convert to I420 (shared source for both input protocols)
+    cv::Mat yuv_mat = bgr2i420(preprocessed);
+    const uint8_t* i420 = yuv_mat.ptr<uint8_t>();
 
     // ========================================================================
-    // 6. Prepare input tensor
+    // 6. Prepare input tensor(s)
     // ========================================================================
 
-    hbDNNTensor input;
-    input.properties = input_properties;
-
-    int input_memSize = input_h * input_w * 3 / 2;
-    hbSysAllocCachedMem(&input.sysMem[0], input_memSize);
-    memcpy(input.sysMem[0].virAddr, nv12_img.ptr<uint8_t>(), input_memSize);
-    hbSysFlushMem(&input.sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    yolo::Nv12Input inputs;
+    if (!inputs.allocate(dnn_handle, input_plan)) {
+        LOG_ERROR("Failed to allocate model input tensors");
+        return -1;
+    }
+    if (!inputs.upload(input_plan, i420)) {
+        LOG_ERROR("Failed to upload the preprocessed frame");
+        return -1;
+    }
 
     // ========================================================================
     // 7. Prepare output tensors
@@ -507,8 +461,12 @@ int main(int argc, char** argv) {
     for (int i = 0; i < output_count; i++) {
         hbDNNTensorProperties& output_properties = output[i].properties;
         hbDNNGetOutputTensorProperties(&output_properties, dnn_handle, i);
-        int out_aligned_size = output_properties.alignedByteSize;
-        hbSysAllocCachedMem(&output[i].sysMem[0], out_aligned_size);
+        int out_aligned_size = yolo::output_alloc_bytes(output_properties);
+        if (out_aligned_size <= 0) {
+            LOG_ERROR("Cannot size output tensor " << i << " allocation");
+            return -1;
+        }
+        YOLO_SYS_ALLOC_CACHED(YOLO_SYS_MEM(output[i]), out_aligned_size);
     }
 
     // ========================================================================
@@ -518,12 +476,9 @@ int main(int argc, char** argv) {
     LOG_INFO("Running inference...");
     start_time = std::chrono::high_resolution_clock::now();
 
-    hbDNNTaskHandle_t task_handle = nullptr;
-    hbDNNInferCtrlParam infer_ctrl_param;
-    HB_DNN_INITIALIZE_INFER_CTRL_PARAM(&infer_ctrl_param);
-
-    hbDNNInfer(&task_handle, &output, &input, dnn_handle, &infer_ctrl_param);
-    hbDNNWaitTaskDone(task_handle, 0);
+    CHECK_SUCCESS(
+        yolo::infer_sync(output, inputs.tensors(), inputs.input_count(), dnn_handle),
+        "Inference failed");
 
     auto infer_duration = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
@@ -541,6 +496,12 @@ int main(int argc, char** argv) {
 
     std::vector<PoseDetection> detections;
 
+    // YOLO26 pose heads emit 4-channel direct-LTRB box maps; YOLO11-family
+    // pose heads emit 64-channel DFL maps. Detect once from output[1]
+    // (scale-0 box map) and reuse for every scale.
+    const bool direct_ltrb =
+        output[1].properties.validShape.dimensionSize[3] == 4;
+
     // Process 3 scales
     const int strides[3] = {8, 16, 32};
     const int grid_sizes[3] = {input_h / 8, input_h / 16, input_h / 32};
@@ -555,21 +516,21 @@ int main(int argc, char** argv) {
         float stride = strides[scale];
 
         // Flush memory
-        hbSysFlushMem(&output[box_idx].sysMem[0], HB_SYS_MEM_CACHE_INVALIDATE);
-        hbSysFlushMem(&output[cls_idx].sysMem[0], HB_SYS_MEM_CACHE_INVALIDATE);
-        hbSysFlushMem(&output[kpt_idx].sysMem[0], HB_SYS_MEM_CACHE_INVALIDATE);
+        YOLO_SYS_FLUSH(YOLO_SYS_MEM(output[box_idx]), HB_SYS_MEM_CACHE_INVALIDATE);
+        YOLO_SYS_FLUSH(YOLO_SYS_MEM(output[cls_idx]), HB_SYS_MEM_CACHE_INVALIDATE);
+        YOLO_SYS_FLUSH(YOLO_SYS_MEM(output[kpt_idx]), HB_SYS_MEM_CACHE_INVALIDATE);
 
         // Get data pointers (all are float32 NONE type)
-        float* box_raw = reinterpret_cast<float*>(output[box_idx].sysMem[0].virAddr);
-        float* cls_raw = reinterpret_cast<float*>(output[cls_idx].sysMem[0].virAddr);
-        float* kpt_raw = reinterpret_cast<float*>(output[kpt_idx].sysMem[0].virAddr);
+        float* box_raw = reinterpret_cast<float*>(YOLO_SYS_MEM(output[box_idx])->virAddr);
+        float* cls_raw = reinterpret_cast<float*>(YOLO_SYS_MEM(output[cls_idx])->virAddr);
+        float* kpt_raw = reinterpret_cast<float*>(YOLO_SYS_MEM(output[kpt_idx])->virAddr);
 
         // Process each grid cell
         for (int h = 0; h < grid_h; h++) {
             for (int w = 0; w < grid_w; w++) {
                 int offset = h * grid_w + w;
 
-                float* cur_box = box_raw + offset * (4 * REG);
+                float* cur_box = box_raw + offset * (direct_ltrb ? 4 : 4 * REG);
                 float* cur_cls = cls_raw + offset * CLASSES_NUM;
                 float* cur_kpt = kpt_raw + offset * (KPT_NUM * KPT_ENCODE);
 
@@ -581,21 +542,29 @@ int main(int argc, char** argv) {
                 // Apply sigmoid to get confidence score
                 float score = 1.0f / (1.0f + std::exp(-cur_cls[0]));
 
-                // Decode bbox using DFL (Distribution Focal Loss)
+                // Decode bbox: YOLO26 stores direct LTRB distances,
+                // YOLO11-family uses DFL (Distribution Focal Loss).
                 float ltrb[4] = {0.0f};  // left, top, right, bottom
 
-                for (int i = 0; i < 4; i++) {
-                    float dfl_values[REG];
-                    float dfl_softmax[REG];
+                if (direct_ltrb) {
+                    ltrb[0] = cur_box[0];
+                    ltrb[1] = cur_box[1];
+                    ltrb[2] = cur_box[2];
+                    ltrb[3] = cur_box[3];
+                } else {
+                    for (int i = 0; i < 4; i++) {
+                        float dfl_values[REG];
+                        float dfl_softmax[REG];
 
-                    for (int j = 0; j < REG; j++) {
-                        dfl_values[j] = cur_box[i * REG + j];
-                    }
+                        for (int j = 0; j < REG; j++) {
+                            dfl_values[j] = cur_box[i * REG + j];
+                        }
 
-                    softmax(dfl_values, dfl_softmax, REG);
+                        softmax(dfl_values, dfl_softmax, REG);
 
-                    for (int j = 0; j < REG; j++) {
-                        ltrb[i] += dfl_softmax[j] * j;
+                        for (int j = 0; j < REG; j++) {
+                            ltrb[i] += dfl_softmax[j] * j;
+                        }
                     }
                 }
 
@@ -627,13 +596,26 @@ int main(int argc, char** argv) {
                         float kpt_y = cur_kpt[k * 3 + 1];
                         float kpt_conf = cur_kpt[k * 3 + 2];
 
-                        // Decode keypoint coordinates
-                        // kpts_xy = (kpts[:, :, :2] * 2.0 + (anchor - 0.5)) * stride
-                        float decoded_x = (kpt_x * 2.0f + (w + 0.5f) - 0.5f) * stride;
-                        float decoded_y = (kpt_y * 2.0f + (h + 0.5f) - 0.5f) * stride;
+                        float decoded_x;
+                        float decoded_y;
+                        if (direct_ltrb) {
+                            // YOLO26: keypoints regress directly from the
+                            // grid centre (mirrors decode_pose_layer in
+                            // runtime/python/rdk_yolo_utils/postprocess.py).
+                            decoded_x = (kpt_x + w + 0.5f) * stride;
+                            decoded_y = (kpt_y + h + 0.5f) * stride;
+                        } else {
+                            // YOLO11-family:
+                            // kpts_xy = (kpts[:, :, :2] * 2.0 + (anchor - 0.5)) * stride
+                            decoded_x = (kpt_x * 2.0f + (w + 0.5f) - 0.5f) * stride;
+                            decoded_y = (kpt_y * 2.0f + (h + 0.5f) - 0.5f) * stride;
+                        }
 
                         det.keypoints[k] = cv::Point2f(decoded_x, decoded_y);
-                        det.keypoint_scores[k] = kpt_conf;  // No sigmoid for keypoint score
+                        // Both families keep the raw confidence here; the
+                        // draw pass compares against a raw-logit threshold,
+                        // which is equivalent to sigmoid-space thresholding.
+                        det.keypoint_scores[k] = kpt_conf;
                     }
 
                     detections.push_back(det);
@@ -714,10 +696,8 @@ int main(int argc, char** argv) {
     // 12. Cleanup
     // ========================================================================
 
-    hbDNNReleaseTask(task_handle);
-    hbSysFreeMem(&input.sysMem[0]);
     for (int i = 0; i < output_count; i++) {
-        hbSysFreeMem(&output[i].sysMem[0]);
+        YOLO_SYS_FREE(YOLO_SYS_MEM(output[i]));
     }
     delete[] output;
     hbDNNRelease(packed_dnn_handle);

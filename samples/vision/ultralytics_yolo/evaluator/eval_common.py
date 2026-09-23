@@ -251,6 +251,10 @@ def evaluation_types(args, platform, task):
     if args.family and inferred and args.family!=inferred:
         raise ValueError('--family conflicts with model filename.')
     family=args.family or inferred or 'yolo11'
+    if family=='yolo11' and not inferred and not args.family:
+        print(f'[warn] cannot infer the model family from {args.model_path!r}; '
+              'falling back to the yolo11 DFL decoder. Pass --family explicitly '
+              'if the artifact belongs to another family.')
     return get_task_types(platform,family,task)
 
 

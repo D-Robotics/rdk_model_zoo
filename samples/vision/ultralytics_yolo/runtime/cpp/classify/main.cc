@@ -56,12 +56,10 @@ limitations under the License.
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// RDK BPU libDNN API
-#include "dnn/hb_dnn.h"
-#include "dnn/hb_dnn_ext.h"
-#include "dnn/plugin/hb_dnn_layer.h"
-#include "dnn/plugin/hb_dnn_plugin.h"
-#include "dnn/hb_sys.h"
+// RDK BPU libDNN API (stack-portable layer; pulls in the X5 hbSys or the
+// S-series UCP headers itself)
+#include "common/dnn_io.h"
+#include "common/nv12_geometry.h"
 
 // ============================================================================
 // Macros
@@ -297,7 +295,7 @@ const std::vector<std::string> IMAGENET_CLASSES = {
     "daisy", "yellow lady's slipper", "corn", "acorn", "hip",
     "buckeye", "coral fungus", "agaric", "gyromitra", "stinkhorn",
     "earthstar", "hen-of-the-woods", "bolete", "ear", "toilet tissue",
-}
+};
 
 // ============================================================================
 // Classification Result Structure
@@ -489,7 +487,7 @@ int main(int argc, char** argv) {
     LOG_INFO("Loading model: " << model_path);
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    hbPackedDNNHandle_t packed_dnn_handle;
+    yolo_packed_handle_t packed_dnn_handle;
     const char* model_file_name = model_path.c_str();
     CHECK_SUCCESS(
         hbDNNInitializeFromFiles(&packed_dnn_handle, &model_file_name, 1),
@@ -521,44 +519,24 @@ int main(int argc, char** argv) {
     // 3. Check model input
     // ========================================================================
 
-    int32_t input_count = 0;
-    CHECK_SUCCESS(
-        hbDNNGetInputCount(&input_count, dnn_handle),
-        "Failed to get input count");
-
-    if (input_count != 1) {
-        LOG_ERROR("Model should have exactly 1 input, but has " << input_count);
-        return -1;
+    int32_t input_h = 0;
+    int32_t input_w = 0;
+    yolo::InputPlan input_plan;
+    {
+        std::string protocol_error;
+        input_plan = yolo::probe_input_protocol(dnn_handle, &protocol_error);
+        if (input_plan.protocol == yolo::InputProtocol::kUnknown) {
+            LOG_ERROR("Unsupported model input: " << protocol_error);
+            return -1;
+        }
+        input_h = input_plan.input_h;
+        input_w = input_plan.input_w;
+        LOG_INFO("Input: "
+                 << (input_plan.protocol == yolo::InputProtocol::kPackedNv12
+                         ? "packed NV12 "
+                         : "split Y/UV NV12 ")
+                 << input_w << "x" << input_h);
     }
-
-    hbDNNTensorProperties input_properties;
-    CHECK_SUCCESS(
-        hbDNNGetInputTensorProperties(&input_properties, dnn_handle, 0),
-        "Failed to get input tensor properties");
-
-    // Check tensor type
-    if (input_properties.tensorType != HB_DNN_IMG_TYPE_NV12) {
-        LOG_ERROR("Input tensor type is not HB_DNN_IMG_TYPE_NV12");
-        return -1;
-    }
-    LOG_INFO("Input tensor type: HB_DNN_IMG_TYPE_NV12");
-
-    // Check tensor layout
-    if (input_properties.tensorLayout != HB_DNN_LAYOUT_NCHW) {
-        LOG_ERROR("Input tensor layout is not HB_DNN_LAYOUT_NCHW");
-        return -1;
-    }
-    LOG_INFO("Input tensor layout: HB_DNN_LAYOUT_NCHW");
-
-    // Get input shape
-    if (input_properties.validShape.numDimensions != 4) {
-        LOG_ERROR("Input tensor should have 4 dimensions");
-        return -1;
-    }
-
-    int32_t input_h = input_properties.validShape.dimensionSize[2];
-    int32_t input_w = input_properties.validShape.dimensionSize[3];
-    LOG_INFO("Input shape: (1, 3, " << input_h << ", " << input_w << ")");
 
     // ========================================================================
     // 4. Check model outputs
@@ -606,20 +584,24 @@ int main(int argc, char** argv) {
     cv::Mat preprocessed = preprocess_image(img, input_h, input_w,
                                            x_scale, y_scale, x_shift, y_shift);
 
-    // Convert to NV12
-    cv::Mat nv12_img = bgr2nv12(preprocessed);
+    // Convert to I420 (shared source for both input protocols)
+    cv::Mat yuv_mat;
+    cv::cvtColor(preprocessed, yuv_mat, cv::COLOR_BGR2YUV_I420);
+    const uint8_t* i420 = yuv_mat.ptr<uint8_t>();
 
     // ========================================================================
-    // 6. Prepare input tensor
+    // 6. Prepare input tensor(s)
     // ========================================================================
 
-    hbDNNTensor input;
-    input.properties = input_properties;
-
-    int input_memSize = input_h * input_w * 3 / 2;
-    hbSysAllocCachedMem(&input.sysMem[0], input_memSize);
-    memcpy(input.sysMem[0].virAddr, nv12_img.ptr<uint8_t>(), input_memSize);
-    hbSysFlushMem(&input.sysMem[0], HB_SYS_MEM_CACHE_CLEAN);
+    yolo::Nv12Input inputs;
+    if (!inputs.allocate(dnn_handle, input_plan)) {
+        LOG_ERROR("Failed to allocate model input tensors");
+        return -1;
+    }
+    if (!inputs.upload(input_plan, i420)) {
+        LOG_ERROR("Failed to upload the preprocessed frame");
+        return -1;
+    }
 
     // ========================================================================
     // 7. Prepare output tensor
@@ -627,8 +609,12 @@ int main(int argc, char** argv) {
 
     hbDNNTensor* output = new hbDNNTensor[1];
     output[0].properties = output_properties;
-    int out_size = output_properties.alignedByteSize;
-    hbSysAllocCachedMem(&output[0].sysMem[0], out_size);
+    int out_size = yolo::output_alloc_bytes(output_properties);
+    if (out_size <= 0) {
+        LOG_ERROR("Cannot size the output tensor allocation");
+        return -1;
+    }
+    YOLO_SYS_ALLOC_CACHED(YOLO_SYS_MEM(output[0]), out_size);
 
     // ========================================================================
     // 8. Run inference
@@ -637,12 +623,9 @@ int main(int argc, char** argv) {
     LOG_INFO("Running inference...");
     start_time = std::chrono::high_resolution_clock::now();
 
-    hbDNNTaskHandle_t task_handle = nullptr;
-    hbDNNInferCtrlParam infer_ctrl_param;
-    HB_DNN_INITIALIZE_INFER_CTRL_PARAM(&infer_ctrl_param);
-
-    hbDNNInfer(&task_handle, &output, &input, dnn_handle, &infer_ctrl_param);
-    hbDNNWaitTaskDone(task_handle, 0);
+    CHECK_SUCCESS(
+        yolo::infer_sync(output, inputs.tensors(), inputs.input_count(), dnn_handle),
+        "Inference failed");
 
     auto infer_duration = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
@@ -656,10 +639,10 @@ int main(int argc, char** argv) {
     start_time = std::chrono::high_resolution_clock::now();
 
     // Flush memory
-    hbSysFlushMem(&output[0].sysMem[0], HB_SYS_MEM_CACHE_INVALIDATE);
+    YOLO_SYS_FLUSH(YOLO_SYS_MEM(output[0]), HB_SYS_MEM_CACHE_INVALIDATE);
 
     // Get output data
-    float* output_data = reinterpret_cast<float*>(output[0].sysMem[0].virAddr);
+    float* output_data = reinterpret_cast<float*>(YOLO_SYS_MEM(output[0])->virAddr);
 
     // Convert to vector
     std::vector<float> logits(output_data, output_data + num_classes);
@@ -696,9 +679,7 @@ int main(int argc, char** argv) {
     // 11. Cleanup
     // ========================================================================
 
-    hbDNNReleaseTask(task_handle);
-    hbSysFreeMem(&input.sysMem[0]);
-    hbSysFreeMem(&output[0].sysMem[0]);
+    YOLO_SYS_FREE(YOLO_SYS_MEM(output[0]));
     delete[] output;
     hbDNNRelease(packed_dnn_handle);
 

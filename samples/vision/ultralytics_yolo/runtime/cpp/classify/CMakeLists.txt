@@ -23,19 +23,38 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # D-Robotics BPU DNN library
+# X5 keeps the DNN headers under /usr/include/dnn; S-series boards keep
+# them under /usr/include/hobot/dnn with the library in /usr/hobot/lib.
 set(DNN_PATH "/usr/include/dnn")
 set(DNN_LIB_PATH "/usr/lib/")
+set(DNN_EXTRA_INCLUDES "")
+set(DNN_EXTRA_LIBS "")
+if (NOT EXISTS "${DNN_PATH}/hb_dnn.h")
+    set(DNN_PATH "/usr/include/hobot")
+    set(DNN_LIB_PATH "/usr/hobot/lib")
+    # Mirror the include roots used by the platform S samples: the UCP
+    # headers sit at /usr/include/hobot, the DNN headers under .../dnn, and
+    # some images additionally expose SDK headers via /usr/hobot/include.
+    set(DNN_EXTRA_INCLUDES "/usr/include/hobot/dnn" "/usr/hobot/include")
+    set(DNN_EXTRA_LIBS hbucp)
+endif()
 
-include_directories(${DNN_PATH})
+include_directories(${DNN_PATH} ${DNN_EXTRA_INCLUDES})
 link_directories(${DNN_LIB_PATH})
 
 # Add executable
-add_executable(ultralytics_yolo_classify main.cc)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+add_executable(ultralytics_yolo_classify
+    main.cc
+    ../common/dnn_io.cc
+    ../common/nv12_geometry.cc
+)
 
 # Link libraries
 target_link_libraries(ultralytics_yolo_classify
     ${OpenCV_LIBS}
     dnn
+    ${DNN_EXTRA_LIBS}
     pthread
     rt
     dl
