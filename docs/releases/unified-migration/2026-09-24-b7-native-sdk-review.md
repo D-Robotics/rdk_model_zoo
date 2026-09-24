@@ -96,3 +96,7 @@ native 第二轮作者提交 `fbffddd` 已通过协调者37项 YOLOv5 host tests
 `4d45f9a48b4f1aa785baca083fbfaa5700b467ca` 已由 X5 8GB/S100 从 GitHub 检出，两个真实 SDK 编译 rc=0，默认模型和各自源图片推理 rc=0。X5 产生5个 detection，S100产生14个。协调者重新读取完整 dump 归档：X5 7份负载，S100 8份负载，全部文件哈希、长度与manifest匹配，input/raw/transformed文件路径互不覆盖；native输入均为uint8，S逐通道scale255完整，部署binary SHA与板上实际文件一致。
 
 完整 build/run stdout/stderr、manifest和两份原始bin归档见 [native round2 evidence](evidence/2026-09-24-b7-native-round2/)。此前“不能编译”“无输入bytes/无binary hash/文件覆盖”在这两个真实 case 上已复验消除，但原source C++没有完整数值capture，尚不能称为source/unified数值一致性。独立审查另发现helper的空zero-point指针/中间乘积溢出/非channel量化轴和dump descriptor截断边界待加固，已交原本地GLM任务。GLM同时开发固定源只读观测与C++完整对照工具，不允许用Python源或画图代替C++源验收；因此B7继续changes-required / Closed=no。
+
+## B6 SAM 同类修复独立主机确认
+
+专项 `70a1b0f` 只将共享SAM evaluator接入已有metadata投影，并新增不可deepcopy SDK描述符的真实evaluator回归。协调者核对前后raw捕获与比较容差未改，独立运行shared109 / efficient_sam19 / mobile_sam17全通过。输出见 [SAM独立主机日志](evidence/2026-09-24-sam-metadata-independent-host.json)。这是根据B7 SDK事实排查出的共享风险与主机复现，不伪称SAM已发生实板失败或已完成实板验证；SAM Board仍not-run。修复已提交推送专项分支并纳入板测集成分支，尚未整批合入develop。
