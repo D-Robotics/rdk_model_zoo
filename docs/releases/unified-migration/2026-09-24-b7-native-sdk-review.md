@@ -136,3 +136,23 @@ S100P执行固定提交的 `python3 samples/vision/bytetrack/model/download.py -
 LPRNet首轮采集器直接执行download.py，未按其README的模块命令调用，因导入路径失败；该记录保留。改用已文档化的模块入口，未改产品代码，准备与完整比较通过。采集器首轮安全检查误拒绝tar的根目录`.`，修正为允许根目录但仍拒绝路径穿越后，重新核验全部材料；未放宽任何数值判据。
 
 C++观察工具独立审查另发现真实manifest parameters为dict而工具按pairs读取、空张量集合可能跳过比较、浮点序列化精度与执行身份/依赖绑定不足；已派回本地Claude Code + GLM整改，尚未作为通过证据。B7保持changes-required / Closed=no。
+
+## ByteTrack S100 / S600 真实视频前30帧对照
+
+固定GitHub提交 `4d45f9a48b4f1aa785baca083fbfaa5700b467ca`，两板各用自己的manifest HBM与固定源公开的track_test.mp4（SHA `4bbe5bf11fe8967b28a900fd2add4949aba89b62076eaa03d0c55cdf7dd41397`），新进程分别执行legacy/unified前30帧。S100的830项、S600的841项检查全部通过，分别比较339/350条track记录；每帧ID一致，框/分数在既定1e-4/1e-5范围内，全部图像/原生输入/输出数组逐SHA一致。
+
+[完整证据](evidence/2026-09-24-b7-bytetrack-realvideo30/) 保留两板完整stdout/stderr、argv、源/统一capture与comparison、视频输入及所有720份数组引用。相同字节按完整SHA去重为270份实际npy，分18个小于50MB归档，独立逐文件重新核验hash/shape/dtype/finite并覆盖所有引用，未以单侧输出代替另一侧执行。S100已有隔离tracker环境；S600新增system-site-packages虚拟环境安装lap0.5.12/cython-bbox0.1.5，未升级系统SDK/NumPy。准备阶段S100缺curl后改Python标准库下载，原失败记录保留。
+
+这证明已记录制品/视频前30帧的迁移一致性，不是整段视频、MOT数据集精度、时延或S100P支持。S100P原发布URL404限制仍在；C++对照及客户README尚待完成，B7继续changes-required / Closed=no。
+
+## Native 对照工具整改后独立反例复审
+
+本地作者报告整改完成后，协调者以作者的正常fixture为control，逐次仅改变一个条件，结果见 [完整反例证据](evidence/2026-09-24-b7-native-tool-rereview.json)，其中固定了被评审工具文件摘要。control为rc0；source板身份改为S600但要求s100仍rc0，统一侧payload摘要缺失/bytes=-123仍rc0，统一侧量化类型反转仍rc0。这些是证据校验误放行。source capture缺失虽rc2，但没有承诺的comparison.json。
+
+另两个正向误拒绝：同一原生float32阈值0.45在source17位与统一参数小数字符串间被double全等拒绝；同一float32 scale的17位/9位往返表示也被直接JSON数值全等拒绝。应按原生类型的精确值核验，不扩大推理容差。按真实X5插桩先payload后metadata的顺序编译执行observer，得到failed=true且没有输入记录；手工重排的fixture不能代表实际hook。
+
+静态复核还发现binaryhash没有绑定运行记录、finish(0)不代表真实进程退出、gflags后argv丢参数、tee把混合日志复制为两文件。已派本地GLM第二轮整改，要求外部进程记录实际argv/rc/日志与身份，观察器只保留张量捕获。缺失字段/短payload/不支持layout必须明确拒绝。尚未给出真实C++源数值对照通过结论，不能凭作者62项主机测试关闭本批。
+
+## GitHub 同步与目录测试待办
+
+上传ByteTrack证据期间，远端develop新增 `1cc3000`（YOLO11制品URL更新），原推送因ref竞争被拒绝；已fetch并用合并提交 `14435c2` 保留双方改动，无强推。Node22全目录检查119项中118通过，唯一失败为旧inventory断言595而实际603；B7此前恢复8个YOLOv5 X5资产，但该目录测试尚未同步。已派本地GLM核对精确新增集合后修正，不能仅凭总数改动放行。单独build/typecheck、shared与Ultralytics回归通过，详见[同步验证](evidence/2026-09-24-b7-develop-sync-validation.json)。这是已知待办，未宣称全量CI通过。

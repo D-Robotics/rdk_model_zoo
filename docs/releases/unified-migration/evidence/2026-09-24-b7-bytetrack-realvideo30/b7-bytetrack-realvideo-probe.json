@@ -1,0 +1,16 @@
+[
+  {
+    "host": "s100",
+    "command": "test -x /tmp/rdk-b7-tracker-venv/bin/python && /tmp/rdk-b7-tracker-venv/bin/python -c \"import lap,cython_bbox,scipy,cv2;print(\"dependencies-ok\")\"",
+    "rc": 1,
+    "stdout": "",
+    "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nNameError: name 'dependencies' is not defined\n"
+  },
+  {
+    "host": "s600-64g",
+    "command": "python3 -c \"import lap,cython_bbox,scipy,cv2;print(\"dependencies-ok\")\"; find /tmp/rdk-b7-4d45f9a/samples/vision/yolov5/model -name \"*.hbm\"",
+    "rc": 0,
+    "stdout": "/tmp/rdk-b7-4d45f9a/samples/vision/yolov5/model/s600/yolov5x_672x672_nv12.hbm\n",
+    "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'lap'\nError in sys.excepthook:\nTraceback (most recent call last):\n  File \"/usr/lib/python3/dist-packages/apport_python_hook.py\", line 228, in partial_apport_excepthook\n    return apport_excepthook(binary, exc_type, exc_obj, exc_tb)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3/dist-packages/apport_python_hook.py\", line 66, in apport_excepthook\n    import apport.report\n  File \"/usr/lib/python3/dist-packages/apport/__init__.py\", line 7, in <module>\n    from apport.packaging_impl import impl as packaging\n  File \"/usr/lib/python3/dist-packages/apport/packaging_impl/__init__.py\", line 33, in <module>\n    impl = load_packaging_implementation()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3/dist-packages/apport/packaging_impl/__init__.py\", line 28, in load_packaging_implementation\n    f\"apport.packaging_impl.{determine_packaging_implementation()}\"\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3/dist-packages/apport/packaging_impl/__init__.py\", line 19, in determine_packaging_implementation\n    raise RuntimeError(\nRuntimeError: Could not determine system package manager. Please file a bug and provide /etc/os-release!\n\nOriginal exception was:\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'lap'\n"
+  }
+]

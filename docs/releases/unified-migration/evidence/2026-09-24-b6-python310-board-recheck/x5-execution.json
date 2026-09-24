@@ -1,0 +1,35 @@
+{
+  "commit": "f888c8fa5eb006690a05f6ee0805bca96fc10ee1",
+  "records": [
+    {
+      "host": "x5-8g",
+      "label": "github-checkout",
+      "command": "git -C /tmp/rdk-b7-bindings-73a6de1 diff --exit-code && git -C /tmp/rdk-b7-bindings-73a6de1 diff --cached --exit-code && git -C /tmp/rdk-b7-bindings-73a6de1 fetch --depth=1 origin f888c8fa5eb006690a05f6ee0805bca96fc10ee1 && git -C /tmp/rdk-b7-bindings-73a6de1 checkout --detach f888c8fa5eb006690a05f6ee0805bca96fc10ee1 && git -C /tmp/rdk-b7-bindings-73a6de1 rev-parse HEAD",
+      "started_utc": "2026-09-24T09:54:49.511419+00:00",
+      "rc": 0,
+      "stdout": "f888c8fa5eb006690a05f6ee0805bca96fc10ee1\n",
+      "stderr": "From https://github.com/D-Robotics/rdk_model_zoo\n * branch            f888c8fa5eb006690a05f6ee0805bca96fc10ee1 -> FETCH_HEAD\nWarning: you are leaving 7 commits behind, not connected to\nany of your branches:\n\n  73a6de1 fix(binding): preserve LPRNet native logits and match FCOS outputs by name\n  cdad112 fix(sam): preserve SDK metadata in evaluator evidence without copying\n  4d45f9a fix(yolov5): correct S native SDK layout scheduling and tensor evidence\n  714f56c chore(migration): checkpoint local native remediation for board review\n ... and 3 more.\n\nIf you want to keep them by creating a new branch, this may be a good time\nto do so with:\n\n git branch <new-branch-name> 73a6de1\n\nHEAD is now at f888c8f fix(sam): support Python 3.10 evaluator hashing and execution errors\n",
+      "finished_utc": "2026-09-24T09:54:52.952093+00:00"
+    },
+    {
+      "host": "x5-8g",
+      "label": "efficient_sam-compare",
+      "command": "cd /tmp/rdk-b7-bindings-73a6de1 && python3 samples/vision/efficient_sam/evaluator/compare.py --target x5 --output-dir /tmp/rdk-b6-x5-efficient_sam-f888c8f",
+      "started_utc": "2026-09-24T09:54:52.952708+00:00",
+      "rc": 2,
+      "stdout": "[BPU_PLAT]BPU Platform Version(1.3.6)! soc info(x5)\n[HBRT] set log level as 0. version = 3.15.55.0\n[DNN] Runtime version = 1.24.5_(3.15.55 HBRT)\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,17:54:55.651.669) [HorizonRT] The model builder version = 1.24.3\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,17:54:55.920.771) [HorizonRT] The model builder version = 1.24.3\n[W][DNN]packed_model.cpp:114][Model](2026-09-24,17:54:57.782.950) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/efficient_sam/model/efficient_sam_vitt_encoder_512x512_default_none.bin has loaded, Discard the latest. \n[W][DNN]packed_model.cpp:114][Model](2026-09-24,17:54:57.872.149) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/efficient_sam/model/efficient_sam_vitt_decoder_fixedprompt_512_default.bin has loaded, Discard the latest. \n",
+      "stderr": "error: RuntimeError: encoder scheduling failed: set_scheduling_params(): incompatible function arguments. The following argument types are supported:\n    1. (self: hbm_runtime.HB_HBMRuntime.HB_HBMRuntime, priority: collections.abc.Mapping[str, typing.SupportsInt] | None = None, bpu_cores: collections.abc.Mapping[str, collections.abc.Sequence[typing.SupportsInt]] | None = None, custom_id: collections.abc.Mapping[str, typing.SupportsInt] | None = None, device_id: collections.abc.Mapping[str, typing.SupportsInt] | None = None) -> None\n\nInvoked with: <hbm_runtime.HB_HBMRuntime.HB_HBMRuntime object at 0xffff817705f0>; kwargs: priority=0\n",
+      "finished_utc": "2026-09-24T09:54:59.268748+00:00"
+    },
+    {
+      "host": "x5-8g",
+      "label": "mobile_sam-compare",
+      "command": "cd /tmp/rdk-b7-bindings-73a6de1 && python3 samples/vision/mobile_sam/evaluator/compare.py --target x5 --output-dir /tmp/rdk-b6-x5-mobile_sam-f888c8f",
+      "started_utc": "2026-09-24T09:54:59.269612+00:00",
+      "rc": 2,
+      "stdout": "[BPU_PLAT]BPU Platform Version(1.3.6)! soc info(x5)\n[HBRT] set log level as 0. version = 3.15.55.0\n[DNN] Runtime version = 1.24.5_(3.15.55 HBRT)\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,17:55:02.437.155) [HorizonRT] The model builder version = 1.24.3\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,17:55:02.764.247) [HorizonRT] The model builder version = 1.24.3\n[W][DNN]packed_model.cpp:114][Model](2026-09-24,17:55:04.741.581) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/mobile_sam/model/mobile_sam_image_encoder_norm_512x512_allint16.bin has loaded, Discard the latest. \n[W][DNN]packed_model.cpp:114][Model](2026-09-24,17:55:04.842.475) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/mobile_sam/model/mobile_sam_decoder_512_box_default.bin has loaded, Discard the latest. \n",
+      "stderr": "error: RuntimeError: encoder scheduling failed: set_scheduling_params(): incompatible function arguments. The following argument types are supported:\n    1. (self: hbm_runtime.HB_HBMRuntime.HB_HBMRuntime, priority: collections.abc.Mapping[str, typing.SupportsInt] | None = None, bpu_cores: collections.abc.Mapping[str, collections.abc.Sequence[typing.SupportsInt]] | None = None, custom_id: collections.abc.Mapping[str, typing.SupportsInt] | None = None, device_id: collections.abc.Mapping[str, typing.SupportsInt] | None = None) -> None\n\nInvoked with: <hbm_runtime.HB_HBMRuntime.HB_HBMRuntime object at 0xffff999bb2b0>; kwargs: priority=0\n",
+      "finished_utc": "2026-09-24T09:55:06.038451+00:00"
+    }
+  ]
+}
