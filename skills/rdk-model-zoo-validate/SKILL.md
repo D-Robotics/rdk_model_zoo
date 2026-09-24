@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-validate
 description: "Use when planning or executing sample-scoped RDK Model Zoo smoke, numerical, accuracy, performance, or regression checks and preparing verification evidence. 触发词：样例验收、回归测试、数值一致性。Do not use as a PR verdict, a published-benchmark lookup, or a quantization implementation."
-version: "1.0.0"
+version: "1.0.1"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"

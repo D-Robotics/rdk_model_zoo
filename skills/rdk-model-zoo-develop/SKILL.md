@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-develop
 description: "Use when adding or modifying maintained RDK Model Zoo samples, shared utilities, sample docs, tests, or repository conventions, including bug fixes. 触发词：开发样例、新增模型、修复 sample、公共工具。Do not use as the primary skill for read-only review, ready-made use, or toolchain quantization."
-version: "1.0.0"
+version: "1.0.1"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"

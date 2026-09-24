@@ -1,6 +1,10 @@
 # Model Zoo Skills Changelog
 
-## Unreleased — candidate Pack 1.0.0
+## Pack 1.0.1
+
+- Align the X5/S workspace references and toolchain handoffs with the Hub's current `.drobotics-x5/`, `.drobotics-s/`, and `drobotics-router` paths; bump the affected Pack and Skill patch versions.
+
+## Pack 1.0.0
 
 - Maintain one cross-platform source on `rdk_x5`; determine each task's target platform and revision independently.
 - Support current `docs/manifests/` alongside historical manifest layouts, with explicit ambiguity handling.
@@ -15,5 +19,3 @@
 - Execute the 75-case Codex core suite and seven paired controls, preserving failures, incomplete setup and one control timeout; record focused follow-up runs separately.
 - Clarify repository inventory versus code review discovery after observed misrouting; retain explicit PR and staged-review entrypoints.
 - Correct evaluation fixtures and scope-conflicting assertions with frozen before/after evidence; do not equate host checks or synthetic model records with hardware acceptance.
-
-This is an authored delivery candidate, not a published release or a completed source-ownership migration. See the delivery verification report for what was actually tested.

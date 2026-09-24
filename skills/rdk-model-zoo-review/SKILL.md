@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-review
 description: "Use to assess an RDK Model Zoo sample, PR, local changes, staged diff, or commit range for standards compliance, delivery completeness, technical correctness, and regressions. 触发词：PR review、样例审计、代码评审。Platform, version, directory or untracked-file inventory without a quality assessment belongs to rdk-model-zoo-repo. Do not use to modify code, run quantization, or silently execute board tests."
-version: "1.0.0"
+version: "1.0.1"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"
