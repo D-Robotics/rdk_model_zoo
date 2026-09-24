@@ -30,3 +30,7 @@ X5 C++ 默认 s-v2.0 已实际推理 rc=0，bus.jpg 上输出五个 detection，
 使用实际 `yolov5_dump.cpp` 编译 SDK-free probe，输入同名 output0 的 int32 原始 bytes `{1,0,0,0}` 和 float32 转换 bytes `{0,0,128,63}`：write_dump 返回成功，但两者都写 `0-output0.bin`，原始数组被覆盖。manifest 原始 SHA 与磁盘实测不一致。见 [可复现 probe 源码和结果](evidence/2026-09-24-b7-board-initial/b7-dump-collision-probe.json)。修复需按类别隔离文件名，并测试从磁盘重新读取和核对两侧 digest；同一 dump 目录的覆盖策略也应明确。
 
 代码核对发现六个 B7 evaluator 都存在 dataclasses.asdict(RuntimeMetadata) 或等效写法：YOLOv5、ByteTrack、FCOS、LPRNet、MODNet、YOLOWorld。真实 X5 SDK 已证实无法 deepcopy QuantParams；其他五项尚未逐一实板执行，当前结论为共享风险，不虚称已逐项板端复现。建议统一可 JSON 序列化的 metadata 投影，保留 scale/zero_point/axis/type/stride，不改推理语义，并覆盖真实对象不可 deepcopy 的边界。
+
+## S100 发布资产的实际 padded 输出
+
+已下载 manifest 指定 `s100/yolov5x_672x672_nv12.hbm`，observed SHA-256 `3bc8ffc82a842a5d1fcb493eeedc8f6e3dd0a55379338d27e5cdca4e34121402`（publisher hash 未提供）。真实 HB_HBMRuntime 输出为 S32/SCALE，逻辑 channels=255，但每像素 stride=1024 bytes，即256个S32存储槽：84头 stride `[7225344,86016,1024,4]`，42头 `[1806336,43008,1024,4]`，21头 `[451584,21504,1024,4]`。因此当前 `check_s32_dequant` 要求 `stride[2] == 255*4` 将拒绝真正发布制品；必须按 stride 读取并生成紧凑逻辑输出，不能将所有 padded 布局拒绝作为完成条件。输入SDK报告的前两个 strides为-1，需要依据原有 prepare_input_tensor 初始化后再校验，不能把初始化前描述直接当可寻址存储。该步骤仅为模型加载和 metadata 核对，尚未进行 S 推理。完整输出见 evidence/2026-09-24-b7-board-initial/b7-s100-native-metadata.json。
