@@ -144,3 +144,11 @@ C++观察工具独立审查另发现真实manifest parameters为dict而工具按
 [完整证据](evidence/2026-09-24-b7-bytetrack-realvideo30/) 保留两板完整stdout/stderr、argv、源/统一capture与comparison、视频输入及所有720份数组引用。相同字节按完整SHA去重为270份实际npy，分18个小于50MB归档，独立逐文件重新核验hash/shape/dtype/finite并覆盖所有引用，未以单侧输出代替另一侧执行。S100已有隔离tracker环境；S600新增system-site-packages虚拟环境安装lap0.5.12/cython-bbox0.1.5，未升级系统SDK/NumPy。准备阶段S100缺curl后改Python标准库下载，原失败记录保留。
 
 这证明已记录制品/视频前30帧的迁移一致性，不是整段视频、MOT数据集精度、时延或S100P支持。S100P原发布URL404限制仍在；C++对照及客户README尚待完成，B7继续changes-required / Closed=no。
+
+## Native 对照工具整改后独立反例复审
+
+本地作者报告整改完成后，协调者以作者的正常fixture为control，逐次仅改变一个条件，结果见 [完整反例证据](evidence/2026-09-24-b7-native-tool-rereview.json)，其中固定了被评审工具文件摘要。control为rc0；source板身份改为S600但要求s100仍rc0，统一侧payload摘要缺失/bytes=-123仍rc0，统一侧量化类型反转仍rc0。这些是证据校验误放行。source capture缺失虽rc2，但没有承诺的comparison.json。
+
+另两个正向误拒绝：同一原生float32阈值0.45在source17位与统一参数小数字符串间被double全等拒绝；同一float32 scale的17位/9位往返表示也被直接JSON数值全等拒绝。应按原生类型的精确值核验，不扩大推理容差。按真实X5插桩先payload后metadata的顺序编译执行observer，得到failed=true且没有输入记录；手工重排的fixture不能代表实际hook。
+
+静态复核还发现binaryhash没有绑定运行记录、finish(0)不代表真实进程退出、gflags后argv丢参数、tee把混合日志复制为两文件。已派本地GLM第二轮整改，要求外部进程记录实际argv/rc/日志与身份，观察器只保留张量捕获。缺失字段/短payload/不支持layout必须明确拒绝。尚未给出真实C++源数值对照通过结论，不能凭作者62项主机测试关闭本批。
