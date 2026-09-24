@@ -12,10 +12,10 @@ LPRNet 将车牌裁剪后的 tensor 直接识别为字符序列，不包含独�
 
 | target | variant | Python | C++ | 状态 |
 |---|---|---|---|---|
-| X5 | `lpr.bin` | supported-not-run | not-supported | 主机 fixture 通过；2026-09-24 修复板端绑定（native 输出 `(1,68,18,1)`），板测复验待运行 |
+| X5 | `lpr.bin` | supported-verified | not-supported | 主机 fixture 通过；2026-09-24 在一块 X5 8GB 和一块 X5 4GB 上以内置 `test_input.dat` 完成 source/unified 对照并全部通过（[8GB 复验](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/)、[4GB 运行](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)） |
 | S100/S100P/S600 | — | not-supported | not-supported | 没有源模型资产 |
 
-本 sample 没有 C++ 实现。主机测试不等同于板端验证。
+本 sample 没有 C++ 实现。主机测试不等同于板端验证；上表板端状态来自已记录的 X5 对照，验证的是 native `(1,68,18,1)` logits 在单个输入上的一致性，不是车牌识别精度。
 
 <a id="prerequisites"></a>
 ## 环境前提

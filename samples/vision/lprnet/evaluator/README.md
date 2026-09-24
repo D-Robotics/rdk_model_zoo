@@ -61,15 +61,24 @@ manifest with `error`, `return_code: 2` and `passed: false`.
 <a id="reference-results"></a>
 ## Reference results
 
-The historical source reference is the `lpr.bin` row above (100 frames). This
-migration ran no board comparison, so current board status is `not-run` and the
-sample remains `closed=no`; the evaluator's host fixtures prove the evidence
-schema, not inference numbers.
+The historical source reference is the `lpr.bin` row above (100 frames); it is
+not a retest. Board comparisons (2026-09-24): same-board source/unified runs
+passed on one X5 8GB and one X5 4GB with the bundled `test_input.dat` — both
+rc=0 with every check true and `max_abs_diff` 0.0 for the input tensor, the raw
+`(1,68,18,1)` logits, and the decoded plate (evidence: [8GB
+recheck](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/),
+[4GB
+run](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)).
+The board log prints an HBRT-library/model-build minor-version mismatch warning
+when loading `lpr.bin`; it is preserved verbatim in the evidence and all checks in the recorded comparisons passed. These runs are numerical parity for one input on the unified
+side at board-test commit `73a6de1`, not an accuracy benchmark.
 
 <a id="boundaries"></a>
 ## Boundaries
 
 The evaluator runs both sides itself and never substitutes a hand-supplied file
 for a real inference. It does not download models, prepare an accuracy dataset,
-measure performance, or claim board compatibility; until the same-board
-source/unified run is actually recorded, the result stays `not-run`.
+or measure performance. Same-board runs are recorded for one X5 8GB and one X5
+4GB with the bundled input (2026-09-24, reference results above); any other
+board or input still requires its own run, and no license-plate accuracy claim
+is made from these comparisons.

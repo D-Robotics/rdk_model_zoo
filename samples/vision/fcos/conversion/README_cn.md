@@ -42,7 +42,7 @@
 <a id="validation"></a>
 ## 转换后验证
 
-在匹配 X5 上，对提供的制品运行 `hrt_model_exec model_info --model_file <exact-file>`，再按 runtime README 执行。将命令输出、15 个 raw tensor metadata 和结果 JSON 保存到同一 UTC 证据目录。本轮只有主机源数值检查，转换和板端冒烟均 not-run。
+在匹配 X5 上，对提供的制品运行 `hrt_model_exec model_info --model_file <exact-file>`，再按 runtime README 执行。将命令输出、15 个 raw tensor metadata 和结果 JSON 保存到同一 UTC 证据目录。转换本身 not-run（没有配方，见已知缺口）；已发布制品已在 X5 8GB/4GB 板上由[评估器对照](../evaluator/README_cn.md#reference-results)执行，覆盖 runtime 一致性，但不覆盖 `hrt_model_exec` 检查或转换可复现性。
 
 <a id="artifacts"></a>
 ## 产物
@@ -58,4 +58,4 @@
 
 - 没有 checkpoint、ONNX 导出、校准数据、量化 YAML、工具链版本或可复现源编译流程。
 - manifest 发布 hash 未知；三个源截图不能证明 tensor 数值或数值等价。
-- 因此重建不在已验证边界内；当前只能复现 runtime 协议和主机 fixture。
+- 因此重建不在已验证边界内；当前可复现的是 runtime 协议、主机 fixture，以及已发布制品的同板一致性（2026-09-24 证据见 sample README 链接）。

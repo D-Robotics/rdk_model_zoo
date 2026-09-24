@@ -78,12 +78,15 @@ unified/metadata.json unified/result.json unified/inputs/*.npy unified/raw/*.npy
 | Metric | Reference | Conditions | Source |
 | --- | --- | --- | --- |
 | B0/B2/B3 throughput and post-process time | Historical only: B0 323.0 FPS/9 ms, B2 70.9 FPS/16 ms, B3 38.7 FPS/20 ms | Fixed source benchmark conditions; not this host or board run | Fixed source README and evaluator README |
+| Board source/unified parity, B0/B2/B3 | rc=0, all checks true on one X5 8GB and one X5 4GB each (2026-09-24) | `bus.jpg`, direct resize, `conf=0.5`, `IoU=0.6`, unified side at board-test commit `73a6de1` | [X5 variant evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/), [8GB B0 recheck](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/) |
 | Host/source numeric agreement | Host synthetic quantized and evaluator-seam tests | No model or board; see current host evidence | [B7 host evidence](../../../../docs/releases/unified-migration/evidence/2026-09-23-b7-fcos-host.json) |
 | COCO mAP | not-run | Source supplies no dataset harness or annotations | not-run |
+
+The board logs print an HBRT-library/model-build minor-version mismatch warning when loading these artifacts; the warning is preserved verbatim in the evidence and all checks in the recorded comparisons passed.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-- The evaluator does not download models, prepare COCO, measure performance, or claim board success automatically; board evidence remains not-run until the command is actually executed on an identified X5.
+- The evaluator does not download models, prepare COCO, or measure performance, and never claims board success automatically. Board parity evidence exists for the three variants on one X5 8GB and one X5 4GB (2026-09-24, reference results above); any other board, image, or threshold combination still requires running this command to produce its own evidence.
 - The publisher SHA-256 values for the three manifest rows are unknown, so observed local hashes identify the captured files but do not establish publisher origin.
 - Historical screenshots and FPS values are not current measurements.

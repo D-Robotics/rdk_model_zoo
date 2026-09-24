@@ -12,16 +12,19 @@ YOLOWorld Python 协议。它从用户选择的离线词向量中检测词语；
 
 | 目标 | Python | C++ | 资产 | 状态 |
 | --- | --- | --- | --- | --- |
-| X5 | 本 sample 支持 | 未提供 | `x5:yoloworld:yolo_world.bin` | 注入 runtime 的主机测试通过；板端未运行 |
+| X5 | 本 sample 支持 | 未提供 | `x5:yoloworld:yolo_world.bin` | 注入 runtime 的主机测试通过；2026-09-24 在一块 X5 8GB 和一块 X5 4GB 上以 `dog` 提示和 `test_data/dog.jpeg` 完成 source/unified 对照并全部通过（[8GB](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[4GB](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)） |
 | S100/S100P/S600 | 无发布资产 | 未提供 | 无 | 不支持 |
+
+板端验证只覆盖该提示/图片组合，是张量一致性，不是全词汇精度或时延测量。
 
 <a id="prerequisites"></a>
 ## 前置条件（prerequisites）
 
 主机检查使用仓库 `.venv` 中的 Python 3.14.7、NumPy 2.5.3、OpenCV 4.14.0
 和 PyYAML 6.0.3；这些是主机 fixture 版本，不能替代板端 SDK 依赖。板端
-运行需要与系统镜像匹配的 X5 Python 和 `hbm_runtime`。模型以及
-`test_data/offline_vocabulary_embeddings.json` 必须单独准备。
+运行需要与系统镜像匹配的 X5 Python 和 `hbm_runtime`。模型必须用显式下载
+命令准备；必需词向量 `test_data/offline_vocabulary_embeddings.json` 随
+sample 提供。
 
 <a id="quickstart"></a>
 ## 快速开始（quickstart）

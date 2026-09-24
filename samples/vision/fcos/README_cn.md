@@ -16,16 +16,16 @@ FCOS 是单阶段、无 anchor 的检测器，在五个特征层上预测类别�
 
 | 变体 | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| efficientnetb0 / 512 | supported-not-run | not-supported | not-supported | not-supported | 是 | 否 |
-| efficientnetb2 / 768 | supported-not-run | not-supported | not-supported | not-supported | 是 | 否 |
-| efficientnetb3 / 896 | supported-not-run | not-supported | not-supported | not-supported | 是 | 否 |
+| efficientnetb0 / 512 | supported-verified | not-supported | not-supported | not-supported | 是 | 否 |
+| efficientnetb2 / 768 | supported-verified | not-supported | not-supported | not-supported | 是 | 否 |
+| efficientnetb3 / 896 | supported-verified | not-supported | not-supported | not-supported | 是 | 否 |
 
-`supported-not-run` 表示主机契约测试已通过，本次未连接 X5 板卡。证据见[主机记录](../../../docs/releases/unified-migration/evidence/2026-09-23-b7-fcos-host.json)。
+`supported-verified` 对应 2026-09-24 的同板 source/unified 对照：B0/B2/B3 各在一块 X5 8GB 和一块 X5 4GB 上以 `test_data/bus.jpg`、direct resize、`conf=0.5`、`IoU=0.6` 执行，每次运行退出码 0 且全部检查为 true。证据见 [X5 变体记录](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/) 与 [8GB B0 绑定复验](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/)；主机契约证据在[这里](../../../docs/releases/unified-migration/evidence/2026-09-23-b7-fcos-host.json)。验证只覆盖这三个制品/图片 case，不是 COCO 精度或时延测量。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-- 板卡：RDK X5；板端镜像提供 `hbm_runtime`，板测本轮 not-run。
+- 板卡：RDK X5；板端镜像提供 `hbm_runtime`。2026-09-24 对照使用一块 X5 8GB 和一块 X5 4GB。
 - 主机检查：Python 3.10+，依赖见 [requirements-host.txt](requirements-host.txt)。
 - 推理前必须准备一个 manifest 精确制品；发布记录当前没有 SHA-256。
 
@@ -51,7 +51,7 @@ python3 samples/vision/fcos/runtime/python/main.py \
 <a id="expected-results"></a>
 ## 预期结果
 
-运行时输出 JSON 字段 `asset_id`、`boxes`、`scores`、`class_ids`、`result_path`。框是原图像素坐标的 float32 `[x1,y1,x2,y2]`，分数为源 FCOS confidence，类别 ID 为从 0 开始的 COCO ID。具体值取决于编译制品，本迁移不虚构数值。`demo_rdkx5_fcos_detect.jpg` 是源历史示例图，不是本轮主机实测。
+运行时输出 JSON 字段 `asset_id`、`boxes`、`scores`、`class_ids`、`result_path`。框是原图像素坐标的 float32 `[x1,y1,x2,y2]`，分数为源 FCOS confidence，类别 ID 为从 0 开始的 COCO ID。具体值取决于编译制品，本迁移不虚构数值；2026-09-24 板端对照中，三个变体在两块板上的统一输出与固定源完全一致（见 evaluator README 参考结果）。`demo_rdkx5_fcos_detect.jpg` 是源历史示例图，不是本迁移运行产物。
 
 源历史记录给出 B0/B2/B3 BPU 吞吐 323.0/70.9/38.7 FPS、Python 后处理 9/16/20 ms。这些数字保留源条件，不是本迁移测量。
 

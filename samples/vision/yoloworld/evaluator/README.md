@@ -52,11 +52,15 @@ Inputs and class IDs must be exactly equal; raw tensors use `atol=1e-5`, boxes
 | Source record | Input/protocol | Historical performance | Status |
 | --- | --- | --- | --- |
 | fixed X5 YOLOWorld sample | 640 image; 32 x 512 text; 8400 score/box rows | no published latency or mAP table | preserved fact; no new measurement |
+| 2026-09-24 board parity | `dog` prompt, `test_data/dog.jpeg`, score/NMS 0.05/0.45 | rc=0, all checks true, `max_abs_diff` 0.0 on one X5 8GB and one X5 4GB | [8GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [4GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/) |
 
 The fixed source evaluator README publishes no benchmark table. Therefore the
 historical record is explicitly: `yolo_world.bin`, 640 image input, 32 text
 slots of width 512, 8400 score rows, and score/NMS defaults 0.05/0.45; no
-published latency or mAP number is claimed. Board execution and model
-availability remain environment-dependent and are `not-run` until this command
-creates evidence. The offline vocabulary is a required model companion, not a
+published latency or mAP number is claimed. Recorded board evidence covers
+exactly the `dog` prompt/image pair above (unified side at board-test commits
+`ae0f185` and `73a6de1`); the board log prints an HBRT-library/model-build
+minor-version mismatch warning that is preserved verbatim in the evidence and all checks in the recorded comparisons passed. Any other prompt, image, or board still needs its
+own run of this command, and no full-vocabulary accuracy is extrapolated from
+these comparisons. The offline vocabulary is a required model companion, not a
 classification-label file.

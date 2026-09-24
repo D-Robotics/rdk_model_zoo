@@ -45,9 +45,12 @@ raw 张量 `atol=1e-5`，框 `1e-4`，分数 `1e-5`。执行失败时仍写出�
 | 源记录 | 输入/协议 | 历史性能 | 状态 |
 | --- | --- | --- | --- |
 | 固定 X5 YOLOWorld sample | 640 图片；32×512 文本；8400 行分数/框 | 没有发布延迟或 mAP 表 | 保留事实；没有新测量 |
+| 2026-09-24 板端一致性 | `dog` 提示、`test_data/dog.jpeg`、score/NMS 0.05/0.45 | 一块 X5 8GB 与一块 X5 4GB 上 rc=0、全部检查 true、`max_abs_diff` 0.0 | [8GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[4GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/) |
 
 固定源 evaluator README 没有发布 benchmark 表。因此只保留可核对的历史事实：
 `yolo_world.bin`、640 图片输入、32 个 512 宽文本槽、8400 行分数，以及
-0.05/0.45 的 score/NMS 默认值；不宣称延迟或 mAP 数值。直到命令生成证据前，
-板端执行和模型可用性均为 `not-run`。离线词向量是必需的模型伴随资产，不是
-普通分类标签文件。
+0.05/0.45 的 score/NMS 默认值；不宣称延迟或 mAP 数值。已记录的板端证据只覆盖
+上表的 `dog` 提示/图片组合（统一侧板测提交为 `ae0f185` 与 `73a6de1`）；板端
+日志会打印 HBRT 库与模型构建小版本不一致的警告，证据中原样保留，这些已记录对照的所有检查均通过。
+其它提示、图片或板卡仍需各自运行本命令，不从这些对照外推全词汇精度。离线词向量
+是必需的模型伴随资产，不是普通分类标签文件。
