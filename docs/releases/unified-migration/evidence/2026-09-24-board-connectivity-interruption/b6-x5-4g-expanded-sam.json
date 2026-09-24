@@ -1,0 +1,55 @@
+{
+  "commit": "a72f92b41d4265e36b9fc7c5a85d0b15800cee8d",
+  "records": [
+    {
+      "host": "x5-4g",
+      "label": "github-checkout",
+      "command": "git -C /tmp/rdk-b7-bindings-73a6de1 diff --exit-code && git -C /tmp/rdk-b7-bindings-73a6de1 diff --cached --exit-code && git -C /tmp/rdk-b7-bindings-73a6de1 fetch --depth=1 origin a72f92b41d4265e36b9fc7c5a85d0b15800cee8d && git -C /tmp/rdk-b7-bindings-73a6de1 checkout --detach a72f92b41d4265e36b9fc7c5a85d0b15800cee8d && git -C /tmp/rdk-b7-bindings-73a6de1 rev-parse HEAD",
+      "started_utc": "2026-09-24T10:18:20.054246+00:00",
+      "rc": 0,
+      "stdout": "a72f92b41d4265e36b9fc7c5a85d0b15800cee8d\n",
+      "stderr": "From https://github.com/D-Robotics/rdk_model_zoo\n * branch            a72f92b41d4265e36b9fc7c5a85d0b15800cee8d -> FETCH_HEAD\nWarning: you are leaving 2 commits behind, not connected to\nany of your branches:\n\n  73a6de1 fix(binding): preserve LPRNet native logits and match FCOS outputs by name\n  cdad112 fix(sam): preserve SDK metadata in evaluator evidence without copying\n\nIf you want to keep them by creating a new branch, this may be a good time\nto do so with:\n\n git branch <new-branch-name> 73a6de1\n\nHEAD is now at a72f92b fix(sam): apply native per-model scheduling and record comparison controls\n",
+      "finished_utc": "2026-09-24T10:18:24.829985+00:00"
+    },
+    {
+      "host": "x5-4g",
+      "label": "efficient_sam-prepare",
+      "command": "cd /tmp/rdk-b7-bindings-73a6de1 && python3 samples/vision/efficient_sam/model/download.py --target x5",
+      "started_utc": "2026-09-24T10:18:24.830537+00:00",
+      "rc": 0,
+      "stdout": "Prepared x5:efficient_sam:efficient_sam_vitt_encoder_512x512_default_none.bin at /tmp/rdk-b7-bindings-73a6de1/samples/vision/efficient_sam/model/efficient_sam_vitt_encoder_512x512_default_none.bin; observed_sha256=04f107cf60215ba2bc65378247340a8fa4f39d9d8e2992716e7a654401623e88; publisher_sha256=unknown\nPrepared x5:efficient_sam:efficient_sam_vitt_decoder_fixedprompt_512_default.bin at /tmp/rdk-b7-bindings-73a6de1/samples/vision/efficient_sam/model/efficient_sam_vitt_decoder_fixedprompt_512_default.bin; observed_sha256=a2a4527dfa2981ba71c3d09a12156d1d4b5634cfcc02c7876276cf0f9f57ea81; publisher_sha256=unknown\n",
+      "stderr": "No publisher SHA-256 recorded for x5:efficient_sam:efficient_sam_vitt_encoder_512x512_default_none.bin; observed digest does not verify origin.\nNo publisher SHA-256 recorded for x5:efficient_sam:efficient_sam_vitt_decoder_fixedprompt_512_default.bin; observed digest does not verify origin.\n",
+      "finished_utc": "2026-09-24T10:18:58.679634+00:00"
+    },
+    {
+      "host": "x5-4g",
+      "label": "efficient_sam-compare",
+      "command": "cd /tmp/rdk-b7-bindings-73a6de1 && python3 samples/vision/efficient_sam/evaluator/compare.py --target x5 --output-dir /tmp/rdk-b6-x5-4g-efficient_sam-a72f92b",
+      "started_utc": "2026-09-24T10:18:58.680001+00:00",
+      "rc": 0,
+      "stdout": "[BPU_PLAT]BPU Platform Version(1.3.6)! soc info(x5)\n[HBRT] set log level as 0. version = 3.15.55.0\n[DNN] Runtime version = 1.24.5_(3.15.55 HBRT)\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,18:19:01.986.265) [HorizonRT] The model builder version = 1.24.3\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,18:19:02.275.427) [HorizonRT] The model builder version = 1.24.3\n{\n  \"passed\": true,\n  \"checks\": {\n    \"inputs_equal\": true,\n    \"raw_close\": true,\n    \"mask_equal\": true,\n    \"mask_index_equal\": true,\n    \"iou_close\": true,\n    \"low_res_close\": true\n  },\n  \"evidence\": \"/tmp/rdk-b6-x5-4g-efficient_sam-a72f92b/comparison.json\"\n}\n[W][DNN]packed_model.cpp:114][Model](2026-09-24,18:19:04.175.990) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/efficient_sam/model/efficient_sam_vitt_encoder_512x512_default_none.bin has loaded, Discard the latest. \n[W][DNN]packed_model.cpp:114][Model](2026-09-24,18:19:04.265.324) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/efficient_sam/model/efficient_sam_vitt_decoder_fixedprompt_512_default.bin has loaded, Discard the latest. \n",
+      "stderr": "",
+      "finished_utc": "2026-09-24T10:19:06.997313+00:00"
+    },
+    {
+      "host": "x5-4g",
+      "label": "mobile_sam-prepare",
+      "command": "cd /tmp/rdk-b7-bindings-73a6de1 && python3 samples/vision/mobile_sam/model/download.py --target x5",
+      "started_utc": "2026-09-24T10:19:06.998622+00:00",
+      "rc": 0,
+      "stdout": "Prepared x5:mobile_sam:mobile_sam_image_encoder_norm_512x512_allint16.bin at /tmp/rdk-b7-bindings-73a6de1/samples/vision/mobile_sam/model/mobile_sam_image_encoder_norm_512x512_allint16.bin; observed_sha256=031305e091d072002acbad981f53063a7110c3b4cbeeda32fc409abe8dca5693; publisher_sha256=unknown\nPrepared x5:mobile_sam:mobile_sam_decoder_512_box_default.bin at /tmp/rdk-b7-bindings-73a6de1/samples/vision/mobile_sam/model/mobile_sam_decoder_512_box_default.bin; observed_sha256=6902800073cac55581848656f3220f89b5503b7a12b147f6fc6aee1d9ecae700; publisher_sha256=unknown\n",
+      "stderr": "No publisher SHA-256 recorded for x5:mobile_sam:mobile_sam_image_encoder_norm_512x512_allint16.bin; observed digest does not verify origin.\nNo publisher SHA-256 recorded for x5:mobile_sam:mobile_sam_decoder_512_box_default.bin; observed digest does not verify origin.\n",
+      "finished_utc": "2026-09-24T10:19:54.527170+00:00"
+    },
+    {
+      "host": "x5-4g",
+      "label": "mobile_sam-compare",
+      "command": "cd /tmp/rdk-b7-bindings-73a6de1 && python3 samples/vision/mobile_sam/evaluator/compare.py --target x5 --output-dir /tmp/rdk-b6-x5-4g-mobile_sam-a72f92b",
+      "started_utc": "2026-09-24T10:19:54.528285+00:00",
+      "rc": 0,
+      "stdout": "[BPU_PLAT]BPU Platform Version(1.3.6)! soc info(x5)\n[HBRT] set log level as 0. version = 3.15.55.0\n[DNN] Runtime version = 1.24.5_(3.15.55 HBRT)\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,18:19:57.772.533) [HorizonRT] The model builder version = 1.24.3\n[A][DNN][packed_model.cpp:247][Model](2026-09-24,18:19:58.142.872) [HorizonRT] The model builder version = 1.24.3\n{\n  \"passed\": true,\n  \"checks\": {\n    \"inputs_equal\": true,\n    \"raw_close\": true,\n    \"mask_equal\": true,\n    \"mask_index_equal\": true,\n    \"iou_close\": true,\n    \"low_res_close\": true\n  },\n  \"evidence\": \"/tmp/rdk-b6-x5-4g-mobile_sam-a72f92b/comparison.json\"\n}\n[W][DNN]packed_model.cpp:114][Model](2026-09-24,18:20:00.130.742) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/mobile_sam/model/mobile_sam_image_encoder_norm_512x512_allint16.bin has loaded, Discard the latest. \n[W][DNN]packed_model.cpp:114][Model](2026-09-24,18:20:00.231.414) File /tmp/rdk-b7-bindings-73a6de1/samples/vision/mobile_sam/model/mobile_sam_decoder_512_box_default.bin has loaded, Discard the latest. \n",
+      "stderr": "",
+      "finished_utc": "2026-09-24T10:20:02.979996+00:00"
+    }
+  ]
+}
