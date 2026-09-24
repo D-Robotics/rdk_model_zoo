@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-release
 description: "Use when preparing or checking RDK Model Zoo model releases, Skills Pack releases, manifests, Hub registration migration, tags, or release isolation. 触发词：模型发版、Skills 发版、Hub 接入、Tag 兼容。Do not use for routine sample development, OE Pack releases, or publishing without explicit authorization."
-version: "1.0.0"
+version: "1.0.1"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"

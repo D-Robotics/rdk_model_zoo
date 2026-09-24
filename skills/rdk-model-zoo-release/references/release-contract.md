@@ -11,7 +11,7 @@
 | legacy 模型 | 用户指定的 legacy ref/tag | 该 ref 已有的模型 Tag | 不把历史交付重命名为当前平台版本 |
 | Model Zoo Skills | skills/VERSION | vMAJOR.MINOR.PATCH | 独立 Pack 版本；不是全模型统一版本 |
 
-Tag 标识整个提交，不是子目录。Hub 只镜像注册目录。Skills Pack 候选 1.0.0 中迁移的 rdk-model-zoo 为 1.1.0，以区分旧入口 1.0.0；其他新 Skill 为 1.0.0。Pack 与单 Skill 版本可以不同，不应校验成永远相等。
+Tag 标识整个提交，不是子目录。Hub 只镜像注册目录。Skills Pack 1.0.1 中的 rdk-model-zoo 为 1.1.1，以区分旧入口 1.0.0；其他六个 Skill 为 1.0.1。Pack 与单 Skill 版本可以不同，不应校验成永远相等。
 
 裸 v* 的占用须发版前重新核验。Hub 当前 canonical stable 解析只接受严格 vMAJOR.MINOR.PATCH，不接受 skills-v*、branch、预发布或带数字前导零的版本。不能为了方便改变既有模型 Tag。
 
@@ -35,9 +35,9 @@ Tag 与 Release 不是原子操作。半失败时记录已经存在的 Tag 对�
 
 ## 维护源迁移
 
-一个 Hub PR 同时移除 components.d/rdk-device.yml 的 rdk-model-zoo entry，新增 components.d/rdk-model-zoo.yml 并同步镜像/生成物。catalog_dir 全局唯一；一个 repo 只能映射一个 component。源头保留上游署名/许可与历史，旧 Device 新版本提供迁移说明。直接从旧仓库安装的用户需处理旧副本；Hub 同名入口不变。
+Hub 已注册 components.d/rdk-model-zoo.yml；新版本只更新该组件的 ref、镜像和生成物。catalog_dir 全局唯一；一个 repo 只能映射一个 component。源头保留上游署名、许可与历史。直接从旧仓库安装的用户需处理旧副本；Hub 同名入口不变。
 
-平铺 Skills 不需要 OE workspace 安装器。不能把本 Pack 放入 OE 升级会删除的 `.drobotics/` 或 `.horizon/`。跨平台读取目标 checkout 的代码和规范；安装源维护分支不代表运行平台，独立安装的 Skill 必须携带自身的 references/assets。
+平铺 Skills 不需要 OE workspace 安装器。不能把本 Pack 放入 OE 升级会删除的 `.drobotics-x5/` 或 `.drobotics-s/`。跨平台读取目标 checkout 的代码和规范；安装源维护分支不代表运行平台，独立安装的 Skill 必须携带自身的 references/assets。
 
 ## 来源
 
