@@ -1,0 +1,77 @@
+{
+  "utc": "2026-09-24T10:00:47+00:00",
+  "base_commit": "07f9a09c718bb736cdfd71040d040d5e09cf3f71",
+  "worktree": "rdk-b7-glm-catalog-inventory",
+  "node_version": "v22.23.2",
+  "scope": "Catalog-inventory regression only: prove the 595->603 variant delta is exactly the eight B7-recovered YOLOv5 X5 tag artifacts, then update the reviewed baseline and pin a YOLOv5 asset regression. Not a B7 acceptance run.",
+  "method": "Three catalog builds via tools/catalog-publisher with git-archive exports plus read-only alternates/refs snapshots of the main object store: head=07f9a09 as-is; minus8=07f9a09 with commit 5d91f38's eight-asset hunk and the 9692699 summary reconcile reverted; develop=01c8ddc (develop tip without the recovery).",
+  "three_way_counts": {
+    "head": { "families": 57, "variants": 603, "benchmarks": 820, "asset_count": 577, "downloadable_asset_count": 575 },
+    "minus8": { "families": 57, "variants": 595, "benchmarks": 820, "asset_count": 569, "downloadable_asset_count": 567 },
+    "develop_01c8ddc": { "families": 57, "variants": 595, "benchmarks": 820, "asset_count": 569, "downloadable_asset_count": 567 }
+  },
+  "variant_diff": {
+    "head_only_vs_minus8": [
+      "yolov5|x5|yolov5-sv20-640x640-nv12-object-detection-x5",
+      "yolov5|x5|yolov5-mv20-640x640-nv12-object-detection-x5",
+      "yolov5|x5|yolov5-lv20-640x640-nv12-object-detection-x5",
+      "yolov5|x5|yolov5-xv20-640x640-nv12-object-detection-x5",
+      "yolov5|x5|yolov5-sv70-640x640-nv12-object-detection-x5",
+      "yolov5|x5|yolov5-mv70-640x640-nv12-object-detection-x5",
+      "yolov5|x5|yolov5-lv70-640x640-nv12-object-detection-x5",
+      "yolov5|x5|yolov5-xv70-640x640-nv12-object-detection-x5"
+    ],
+    "minus8_only_vs_head": [],
+    "head_only_vs_develop": "same 8 rows as head_only_vs_minus8",
+    "develop_only_vs_head": [],
+    "family_variant_count_delta": { "yolov5": [36, 44] },
+    "duplicate_variant_keys": "none in head, minus8, or develop",
+    "shared_asset_urls": "4 pre-existing S-side shared URLs (yolov5x_672x672 s100/s600, paddle_ocr det/rec), identical sets in head and minus8; the eight recovered URLs are distinct"
+  },
+  "yolov5_nine_tag_assets": {
+    "on_measured_row_via_asset_filename": "yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin (benchmark yolov5n-v7-640 declares asset_filename)",
+    "asset_only_rows": [
+      "yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5m_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5l_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5x_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5s_tag_v7.0_detect_640x640_bayese_nv12.bin",
+      "yolov5m_tag_v7.0_detect_640x640_bayese_nv12.bin",
+      "yolov5l_tag_v7.0_detect_640x640_bayese_nv12.bin",
+      "yolov5x_tag_v7.0_detect_640x640_bayese_nv12.bin"
+    ],
+    "url_pattern": "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/<filename>, all nine unique, sha256 null as declared",
+    "merge_note": "canonicalTuple maps filename v2.0 to 'lv20' but benchmark id v2 to 'lv2', so the eight recovered assets cannot merge onto the measured rows; only n merges because its benchmark declares asset_filename explicitly"
+  },
+  "mutations": [
+    {
+      "mutation": "restore pre-recovery manifest (minus8) in the worktree",
+      "result": "new regression fails: expected [ Array(1) ] to deeply equal [ …(9) ]"
+    },
+    {
+      "mutation": "duplicate yolov5x_tag_v7.0 asset entry and bump summary 185->186 in the manifest",
+      "result": "new regression fails: expected 185 to be 186 (uniqueAssets collapses the duplicate before the catalog; the manifest-level guard catches it)"
+    }
+  ],
+  "checks": [
+    {
+      "command": "npm --prefix tools/catalog-publisher run check (Node 22)",
+      "rc": 0,
+      "tests": "18 files, 120 passed, 0 failed",
+      "catalog_version": "catalog-v1.0.0-454bf082534bbbf8",
+      "sha256": "a0c9392828f7d76920acb129dd191b58c5047afd88b81a10ed806b7a855570bd (9228680 bytes)",
+      "note": "sha256 matches the standalone head build, confirming reproducibility; matches the coordinator's earlier 2058537 evidence for the same manifest state"
+    },
+    {
+      "command": "npx vitest run tests/multiplatform-catalog.test.ts",
+      "rc": 0,
+      "tests": "12 passed (11 pre-existing + 1 new)"
+    }
+  ],
+  "files_changed": [
+    "tools/catalog-publisher/tests/multiplatform-catalog.test.ts",
+    "docs/releases/unified-migration/2026-09-24-b7-catalog-inventory-author.md",
+    "docs/releases/unified-migration/evidence/2026-09-24-b7-catalog-inventory-author.json"
+  ],
+  "board": "not part of these host checks"
+}
