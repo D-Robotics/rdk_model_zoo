@@ -7,9 +7,11 @@
 #include "yolov5_gate.hpp"
 #include "yolov5_visualize.hpp"
 
-#include <dnn/hb_dnn.h>
-#include <dnn/hb_dnn_ext.h>
-#include <hobot/hb_ucp.h>
+// The S UCP SDK installs its DNN headers under /usr/include/hobot (verified on a
+// real S100 2026-09-24): hb_dnn.h lives at hobot/dnn/hb_dnn.h and there is no
+// hb_dnn_ext.h. The c_utils headers below expect these to be included first.
+#include "hobot/dnn/hb_dnn.h"
+#include "hobot/hb_ucp.h"
 #include "postprocess.hpp"
 #include "preprocess.hpp"
 #include <opencv2/imgcodecs.hpp>
@@ -35,18 +37,21 @@ constexpr std::array<float, 18> kAnchors = {
     10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326};
 
 int tensor_dtype_code(int32_t type) {
+  // Only the enum names the on-board S100 header evidence confirms (F32/S32
+  // among the visible tail of hbDNNDataType) are referenced here. Every other
+  // value maps to unknown, which the gates reject: the S YOLOv5 contract only
+  // ever accepts native S32 (SCALE) or F32 (NONE) outputs.
   if (type == HB_DNN_TENSOR_TYPE_F32) return kDtypeF32;
   if (type == HB_DNN_TENSOR_TYPE_S32) return kDtypeS32;
-  if (type == HB_DNN_TENSOR_TYPE_S8) return kDtypeS8;
-  if (type == HB_DNN_TENSOR_TYPE_U8) return kDtypeU8;
-  if (type == HB_DNN_TENSOR_TYPE_S16) return kDtypeS16;
   return kDtypeUnknown;
 }
 
 int quanti_code(int32_t type) {
+  // The real S100 hbDNNQuantiType enum only defines NONE and SCALE (verified
+  // on-board); any other numeric value stays unknown so the gate rejects it
+  // instead of silently misinterpreting it.
   if (type == NONE) return kQuantiNone;
   if (type == SCALE) return kQuantiScale;
-  if (type == SHIFT) return kQuantiShift;
   return kQuantiUnknown;
 }
 
@@ -57,8 +62,9 @@ TensorMeta project(const hbDNNTensorProperties& properties) {
   meta.num_dimensions = properties.validShape.numDimensions;
   for (int i = 0; i < 4 && i < properties.validShape.numDimensions; ++i)
     meta.valid[i] = properties.validShape.dimensionSize[i];
-  for (int i = 0; i < 4 && i < properties.alignedShape.numDimensions; ++i)
-    meta.aligned[i] = properties.alignedShape.dimensionSize[i];
+  // The real S100 hbDNNTensorProperties has no alignedShape field (verified
+  // on-board): the stored layout is described by stride[] plus alignedByteSize,
+  // which is exactly what the S gates validate, so aligned[] stays unreported.
   meta.aligned_byte_size = properties.alignedByteSize;
   // Outputs are allocated at alignedByteSize; input planes are allocated by
   // prepare_input_tensor as stride[0] * batch, which the caller overrides below.
@@ -69,26 +75,6 @@ TensorMeta project(const hbDNNTensorProperties& properties) {
     meta.zero_point_len = properties.scale.zeroPointLen;
   }
   return meta;
-}
-
-std::string dtype_name(int code) {
-  switch (code) {
-    case kDtypeF32: return "float32";
-    case kDtypeS32: return "int32";
-    case kDtypeS8: return "int8";
-    case kDtypeU8: return "uint8";
-    case kDtypeS16: return "int16";
-    default: return "unknown";
-  }
-}
-
-std::string quanti_name(int code) {
-  switch (code) {
-    case kQuantiNone: return "none";
-    case kQuantiScale: return "scale";
-    case kQuantiShift: return "shift";
-    default: return "unknown";
-  }
 }
 
 std::vector<long long> shape_of(const TensorMeta& meta) {
@@ -189,12 +175,16 @@ int run_native(const RuntimeOptions& options) {
   TensorMeta uv_gate = project(inputs[1].properties);
   uv_gate.storage_bytes = uv_gate.stride[0] * uv_gate.valid[0];
   require_gate(check_s_nv12_plane(uv_gate, kInputSize / 2, kInputSize / 2, 2));
-  std::vector<long long> output_counts;
   for (std::size_t i = 0; i < outputs.size(); ++i) {
     long long count = 0;
     const Gate gate = check_s32_dequant(project(outputs[i].properties), &count);
     if (!gate) throw std::runtime_error("S output " + std::to_string(i) + ": " + gate.reason);
-    output_counts.push_back(count);
+    // The dequantized element count must match what the source helper will
+    // produce for the same valid shape, padding notwithstanding.
+    const auto& valid = outputs[i].properties.validShape.dimensionSize;
+    const long long expected = static_cast<long long>(valid[1]) * valid[2] * valid[3];
+    if (count != expected)
+      throw std::runtime_error("S output " + std::to_string(i) + " has an inconsistent extent");
   }
 
   cv::Mat image = cv::imread(options.image_path);
@@ -245,24 +235,24 @@ int run_native(const RuntimeOptions& options) {
 
   const TensorMeta y_meta = project(inputs[0].properties);
   const TensorMeta uv_meta = project(inputs[1].properties);
-  dump.inputs.push_back({"y", dtype_name(y_meta.dtype), shape_of(y_meta),
-                         quanti_name(y_meta.quanti_type), y_meta.scale_len});
-  dump.inputs.push_back({"uv", dtype_name(uv_meta.dtype), shape_of(uv_meta),
-                         quanti_name(uv_meta.quanti_type), uv_meta.scale_len});
+  dump.inputs.push_back(dump_tensor_info("y", y_meta));
+  dump.inputs.push_back(dump_tensor_info("uv", uv_meta));
 
   std::vector<std::vector<float>> dequantized;
   dequantized.reserve(outputs.size());
   for (std::size_t i = 0; i < outputs.size(); ++i) {
     const auto& meta = output_meta[i];
-    dump.outputs.push_back({"output" + std::to_string(i), dtype_name(meta.dtype),
-                            shape_of(meta), quanti_name(meta.quanti_type), meta.scale_len});
-    const std::size_t bytes = static_cast<std::size_t>(output_counts[i]) * sizeof(int32_t);
-    std::vector<unsigned char> raw_bytes(bytes);
-    if (bytes > 0) std::memcpy(raw_bytes.data(), outputs[i].sysMem.virAddr, bytes);
+    dump.outputs.push_back(dump_tensor_info("output" + std::to_string(i), meta));
+    // The raw file keeps the full allocated extent (alignedByteSize), so a
+    // row-padded layout is dumped exactly as the runtime stored it; the
+    // manifest records the strides needed to interpret it.
+    const std::size_t raw_extent = static_cast<std::size_t>(meta.aligned_byte_size);
+    std::vector<unsigned char> raw_bytes(raw_extent);
+    if (raw_extent > 0) std::memcpy(raw_bytes.data(), outputs[i].sysMem.virAddr, raw_extent);
     dump.raw_tensors.push_back({"output" + std::to_string(i), dtype_name(meta.dtype),
                                 shape_of(meta), std::move(raw_bytes)});
     // Source S32/per-channel helper; the gate above proved the descriptor and
-    // layout it relies on, so no unknown layout is ever read.
+    // the addressing it performs, so no unsupported layout is ever read.
     dequantized.push_back(dequantizeTensorS32(outputs[i]));
     const auto& values = dequantized.back();
     std::vector<unsigned char> float_bytes(values.size() * sizeof(float));

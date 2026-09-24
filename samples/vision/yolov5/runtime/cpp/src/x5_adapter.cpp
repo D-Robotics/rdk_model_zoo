@@ -75,32 +75,6 @@ TensorMeta project(const hbDNNTensorProperties& properties) {
   return meta;
 }
 
-std::string quanti_name(int code) {
-  switch (code) {
-    case kQuantiNone: return "none";
-    case kQuantiScale: return "scale";
-    case kQuantiShift: return "shift";
-    default: return "unknown";
-  }
-}
-
-std::string dtype_name(int code) {
-  switch (code) {
-    case kDtypeF32: return "float32";
-    case kDtypeS32: return "int32";
-    case kDtypeS8: return "int8";
-    case kDtypeU8: return "uint8";
-    case kDtypeS16: return "int16";
-    default: return "unknown";
-  }
-}
-
-std::vector<long long> shape_of(const TensorMeta& meta) {
-  std::vector<long long> shape;
-  for (int i = 0; i < meta.num_dimensions && i < 4; ++i) shape.push_back(meta.valid[i]);
-  return shape;
-}
-
 struct DnnLease {
   hbPackedDNNHandle_t packed = nullptr;
   hbDNNTaskHandle_t task = nullptr;
@@ -214,8 +188,7 @@ int run_native(const RuntimeOptions& options) {
                 "NMS preserves source X5 per-class cv::dnn::NMSBoxes semantics: strict score "
                 "boundary and top_k=300.",
                 "Dump contents are read back from the same buffers the decoder consumed."};
-  dump.inputs.push_back({"input0", dtype_name(input_meta.dtype), shape_of(input_meta),
-                         quanti_name(input_meta.quanti_type), input_meta.scale_len});
+  dump.inputs.push_back(dump_tensor_info("input0", input_meta));
 
   const long long input_bytes = input_meta.aligned_byte_size;
   check(hbSysAllocCachedMem(&lease.input.sysMem[0], static_cast<int>(input_bytes)),
@@ -246,8 +219,7 @@ int run_native(const RuntimeOptions& options) {
       throw std::runtime_error("X5 output stride is duplicated across heads");
     shapes.push_back({static_cast<int>(meta.valid[1]), static_cast<int>(meta.valid[2]),
                       static_cast<int>(meta.valid[3])});
-    dump.outputs.push_back({"output" + std::to_string(i), dtype_name(meta.dtype),
-                            shape_of(meta), quanti_name(meta.quanti_type), meta.scale_len});
+    dump.outputs.push_back(dump_tensor_info("output" + std::to_string(i), meta));
     lease.outputs[static_cast<std::size_t>(i)].properties = properties;
     check(hbSysAllocCachedMem(&lease.outputs[static_cast<std::size_t>(i)].sysMem[0],
                               static_cast<int>(meta.aligned_byte_size)),

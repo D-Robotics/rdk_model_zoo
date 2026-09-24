@@ -106,14 +106,20 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 张量分配、cache 操作、同步前向与清理。
 
 - X5：要求恰好一个 packed NV12 模型，输入为紧凑 `[1,3,640,640]`，三路输出为
-  原生 F32、`NONE` 量化 NHWC 头，stride 必须恰为 8/16/32。输入 gate 拒绝带
-  padding 的 aligned 布局与小于紧凑 NV12 帧的分配；输出 gate 拒绝带 padding 的
-  aligned 布局与装不下 `height*width*channels` 个 float 的分配，因此不会把指针
-  强转到未知存储上。
+  原生 F32、`NONE` 量化 NHWC 头，stride 必须恰为 8/16/32。固定 X5 源就是按紧凑
+  缓冲写入 NV12、按扁平 float 读头，因此 gate 要求上报的 aligned 布局与 valid
+  布局一致：带 padding 的制品会被带精确原因地拒绝而不是误读，dump manifest 会
+  记录其 `alignedShape`/`stride`/`alignedByteSize` 供后续跟进。分配还必须覆盖
+  紧凑 NV12 帧（头为 `height*width*channels` 个 float）。
 - S：要求一个 packed 模型，输入为 split `Y[1,672,672,1]` 与 `UV[1,336,336,2]`，
-  三路输出由元数据描述。任何 int32 读取之前，反量化 gate 会证明原生 dtype、
-  描述符长度、连续 NHWC 字节 stride 以及覆盖全部元素的分配；不满足 gate 的输出
-  被拒绝，而不是凭猜测读取。
+  三路输出由元数据描述。S SDK 不上报 `alignedShape`，存储布局由 `stride[]` 加
+  `alignedByteSize` 描述。任何读取之前，反量化 gate 会证明原生 dtype、描述符
+  长度，以及固定源 `dequantizeTensorS32` 实际执行的寻址（元素 `(h,w,c)` 位于
+  字节偏移 `(h*W + w)*stride[2] + c*stride[3]`）：行内 padding（`stride[2]`
+  大于紧凑行）与通道 padding 是真实受支持的布局并被接受；`stride[1]` 必须等于
+  `width*stride[2]`；分配必须覆盖存储（含 padding）的完整范围。raw dump 保留
+  完整 `alignedByteSize` 范围并在 manifest 中记录 stride，因此带 padding 的
+  运行仍可机器比对。
 - 所有权：两个 adapter 都只释放真正分配成功的资源，部分失败的分配不会变成盲目
   free。X5 通过 RAII lease 释放 task 与缓存；S 的 guard 跳过 `sysMem` 从未赋值
   的张量。
@@ -143,10 +149,15 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
   会写出带 `return_code` 与 `error` 的 manifest，使失败可追溯。
 - 渲染图只是便利产物。机器比对以 dump 为准：`manifest.json` 用 SHA-256 绑定
   `target`、`build_target`、`asset_id`、`model_path`、`image_path`，记录观测到的
-  输入/输出元数据（shape、dtype、量化类型与 scale 长度）、实际参数、UTC 时间戳、
-  `argv`、`cwd`、`return_code`，并逐项列出原始与变换后张量的 shape、字节数、
-  文件名与 SHA-256。
-- X5 的原始与变换后张量同为原生 F32 头；S 的原始张量为原生整型输出、变换后为
-  反量化浮点，因此板端比对可以分别检查两个阶段。
-- 本轮迁移中所有板端结果均为 **not-run**：未编译 SDK、未下载模型文件、未接触
-  板卡。主机测试通过只代表契约/解码器结论，不代表精度或性能结论。
+  输入/输出元数据（shape、dtype、量化类型、scale 长度、`alignedByteSize`、上报的
+  `stride[]`，以及 SDK 上报时的 `alignedShape`——未上报则为 null）、实际参数、UTC
+  时间戳、`argv`、`cwd`、`return_code`，并逐项列出原始与变换后张量的 shape、
+  字节数、文件名与 SHA-256。
+- X5 的原始与变换后张量同为原生 F32 头；S 的原始张量保留完整分配范围
+  （`alignedByteSize`，含行内 padding）、变换后为反量化浮点，因此板端比对可以
+  分别检查两个阶段，并依据 manifest 中的 stride 解释带 padding 的布局。
+- 板端状态（2026-09-24，协调者证据）：整改前提交在真实 X5 8GB 上编译链接
+  `rc=0`，首次 launcher 推理返回 `rc=0`；同一提交在 S100 上编译失败，原因是 S
+  adapter 使用了 X5 独有的 SDK 拼写，本轮已按板端头文件证据修复。本工作树不作
+  任何数值板端对照、精度或性能声明；板卡复验由协调者执行。主机测试通过仍只
+  代表契约/解码器结论。

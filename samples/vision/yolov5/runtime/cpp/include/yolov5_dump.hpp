@@ -9,6 +9,7 @@
 // content hash binding the run to its deployment and input files.
 
 #include "yolov5_decode.hpp"
+#include "yolov5_gate.hpp"
 
 #include <cstddef>
 #include <string>
@@ -25,14 +26,25 @@ struct DumpTensor {
   std::vector<unsigned char> bytes;
 };
 
-// Metadata-only description of a tensor the model actually exposed.
+// Metadata-only description of a tensor the model actually exposed. The
+// layout fields make a padded run diagnosable from the manifest alone:
+// aligned_byte_size and stride[] are what the runtime reported, and aligned[]
+// is the alignedShape the X5 SDK reports (the S SDK has no such field, so its
+// entries stay unreported). -1 serializes as null.
 struct DumpTensorInfo {
   std::string name;
   std::string dtype;
   std::vector<long long> shape;
   std::string quanti;  // "none", "scale", "shift" or "unknown"
   long long scale_len = 0;
+  long long aligned_byte_size = -1;
+  long long stride[4] = {-1, -1, -1, -1};
+  long long aligned[4] = {-1, -1, -1, -1};
 };
+
+// Fills a DumpTensorInfo from a projected TensorMeta using the shared
+// dtype/quanti names, including the reported layout fields.
+DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta);
 
 struct DumpRecord {
   std::string dir;

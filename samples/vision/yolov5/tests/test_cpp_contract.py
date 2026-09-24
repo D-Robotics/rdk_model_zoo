@@ -23,6 +23,212 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 CPP = ROOT / "samples" / "vision" / "yolov5" / "runtime" / "cpp"
 HARNESS = ROOT / "samples" / "vision" / "yolov5" / "tests" / "cpp" / "portable_checks.cpp"
+C_UTILS = ROOT / "utils" / "c_utils" / "inc"
+
+# Minimal SDK-shape stubs derived from the on-board header evidence captured
+# 2026-09-24 (docs/releases/unified-migration/evidence/2026-09-24-b7-native-sdk-preflight.json).
+# They encode the differences that broke the real S100 build: the S100
+# hbDNNTensorProperties has no alignedShape, hbDNNQuantiType has no SHIFT,
+# stride/alignedByteSize are int64, sysMem is a single hbUCPSysMem, and there
+# is no hb_dnn_ext.h; the X5 header has all of those plus sysMem[4]. A real
+# board re-verification is still required; these stubs only keep each adapter
+# honest about its own SDK's shape on a host.
+S100_STUBS = {
+    "hobot/hb_ucp.h": """\
+#pragma once
+#include <stdint.h>
+typedef struct hbUCPSysMem { void *virAddr; uint64_t phyAddr; uint32_t memSize; } hbUCPSysMem;
+typedef void *hbUCPTaskHandle_t;
+typedef struct hbUCPSchedParam { int32_t backend; int32_t priority; } hbUCPSchedParam;
+enum { HB_UCP_BPU_CORE_ANY = -1, HB_SYS_MEM_CACHE_CLEAN = 1, HB_SYS_MEM_CACHE_INVALIDATE = 2 };
+#define HB_UCP_INITIALIZE_SCHED_PARAM(param) \\
+  do { (param)->backend = HB_UCP_BPU_CORE_ANY; (param)->priority = 0; } while (0)
+int32_t hbUCPFree(hbUCPSysMem *mem);
+int32_t hbUCPMallocCached(hbUCPSysMem *mem, uint32_t size, uint32_t align);
+int32_t hbUCPMemFlush(hbUCPSysMem *mem, int type);
+int32_t hbUCPSubmitTask(hbUCPTaskHandle_t task, hbUCPSchedParam *sched_param);
+int32_t hbUCPWaitTaskDone(hbUCPTaskHandle_t task, int32_t timeout);
+int32_t hbUCPReleaseTask(hbUCPTaskHandle_t task);
+""",
+    "hobot/dnn/hb_dnn.h": """\
+#pragma once
+#include <stdint.h>
+#include "../hb_ucp.h"
+#define HB_DNN_TENSOR_MAX_DIMENSIONS 8
+typedef enum {
+  HB_DNN_TENSOR_TYPE_INT8 = 0, HB_DNN_TENSOR_TYPE_UINT8, HB_DNN_TENSOR_TYPE_INT16,
+  HB_DNN_TENSOR_TYPE_UINT16, HB_DNN_TENSOR_TYPE_INT32, HB_DNN_TENSOR_TYPE_UINT32,
+  HB_DNN_TENSOR_TYPE_F32, HB_DNN_TENSOR_TYPE_S32, HB_DNN_TENSOR_TYPE_U32,
+  HB_DNN_TENSOR_TYPE_F64, HB_DNN_TENSOR_TYPE_S64, HB_DNN_TENSOR_TYPE_U64,
+  HB_DNN_TENSOR_TYPE_BOOL8, HB_DNN_TENSOR_TYPE_MAX
+} hbDNNDataType;
+typedef struct hbDNNTensorShape {
+  int32_t dimensionSize[HB_DNN_TENSOR_MAX_DIMENSIONS];
+  int32_t numDimensions;
+} hbDNNTensorShape;
+typedef struct hbDNNQuantiScale {
+  int32_t scaleLen; float *scaleData; int32_t zeroPointLen; int32_t *zeroPointData;
+} hbDNNQuantiScale;
+typedef enum { NONE, SCALE } hbDNNQuantiType;
+typedef struct hbDNNTensorProperties {
+  hbDNNTensorShape validShape;
+  int32_t tensorType;
+  hbDNNQuantiScale scale;
+  hbDNNQuantiType quantiType;
+  int32_t quantizeAxis;
+  int64_t alignedByteSize;
+  int64_t stride[HB_DNN_TENSOR_MAX_DIMENSIONS];
+} hbDNNTensorProperties;
+typedef struct hbDNNTensor { hbUCPSysMem sysMem; hbDNNTensorProperties properties; } hbDNNTensor;
+typedef void *hbPackedDNNHandle_t;
+typedef void *hbDNNHandle_t;
+int32_t hbDNNInitializeFromFiles(hbPackedDNNHandle_t*, const char**, uint32_t);
+int32_t hbDNNGetModelNameList(const char***, int32_t*, hbPackedDNNHandle_t);
+int32_t hbDNNGetModelHandle(hbDNNHandle_t*, hbPackedDNNHandle_t, const char*);
+int32_t hbDNNGetInputCount(int32_t*, hbDNNHandle_t);
+int32_t hbDNNGetOutputCount(int32_t*, hbDNNHandle_t);
+int32_t hbDNNGetInputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int32_t);
+int32_t hbDNNGetOutputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int32_t);
+int32_t hbDNNInferV2(hbUCPTaskHandle_t*, hbDNNTensor*, const hbDNNTensor*, hbDNNHandle_t);
+void hbDNNRelease(hbPackedDNNHandle_t);
+""",
+    "opencv2/core/mat.hpp": """\
+#pragma once
+#include <cstddef>
+#include <string>
+namespace cv {
+struct Point { int x = 0; int y = 0; };
+class Mat {
+ public:
+  Mat() = default;
+  Mat(int rows, int cols, int type) : rows(rows), cols(cols) {}
+  bool empty() const { return rows <= 0 || cols <= 0; }
+  int rows = 0;
+  int cols = 0;
+};
+}
+#define CV_8UC3 16
+""",
+    "opencv2/imgcodecs.hpp": """\
+#pragma once
+#include "core/mat.hpp"
+namespace cv { Mat imread(const std::string& path, int flags = 1); }
+""",
+    "opencv2/imgproc.hpp": "#pragma once\n#include \"core/mat.hpp\"\n",
+    "opencv2/core.hpp": "#pragma once\n#include \"core/mat.hpp\"\n",
+}
+
+X5_STUBS = {
+    "dnn/hb_dnn.h": """\
+#pragma once
+#include <stdint.h>
+#define HB_DNN_TENSOR_MAX_DIMENSIONS 8
+typedef enum {
+  HB_DNN_TENSOR_TYPE_F32 = 0, HB_DNN_TENSOR_TYPE_S32, HB_DNN_TENSOR_TYPE_U32,
+  HB_DNN_TENSOR_TYPE_F64, HB_DNN_TENSOR_TYPE_S64, HB_DNN_TENSOR_TYPE_U64,
+  HB_DNN_TENSOR_TYPE_BOOL8, HB_DNN_TENSOR_TYPE_MAX,
+  HB_DNN_TENSOR_TYPE_S8, HB_DNN_TENSOR_TYPE_U8, HB_DNN_TENSOR_TYPE_S16
+} hbDNNDataType;
+typedef enum { HB_DNN_IMG_TYPE_NV12 = 0 } hbDNNImageType;
+typedef struct {
+  int32_t dimensionSize[HB_DNN_TENSOR_MAX_DIMENSIONS];
+  int32_t numDimensions;
+} hbDNNTensorShape;
+typedef struct { int32_t shiftLen; uint8_t *shiftData; } hbDNNQuantiShift;
+typedef struct {
+  int32_t scaleLen; float *scaleData; int32_t zeroPointLen; int8_t *zeroPointData;
+} hbDNNQuantiScale;
+typedef enum { NONE, SHIFT, SCALE } hbDNNQuantiType;
+typedef struct {
+  hbDNNTensorShape validShape;
+  hbDNNTensorShape alignedShape;
+  int32_t tensorLayout;
+  int32_t tensorType;
+  hbDNNQuantiShift shift;
+  hbDNNQuantiScale scale;
+  hbDNNQuantiType quantiType;
+  int32_t quantizeAxis;
+  int32_t alignedByteSize;
+  int32_t stride[HB_DNN_TENSOR_MAX_DIMENSIONS];
+} hbDNNTensorProperties;
+typedef struct hbSysMem { void *virAddr; uint64_t phyAddr; uint32_t memSize; } hbSysMem;
+typedef struct { hbSysMem sysMem[4]; hbDNNTensorProperties properties; } hbDNNTensor;
+typedef void *hbPackedDNNHandle_t;
+typedef void *hbDNNHandle_t;
+typedef void *hbDNNTaskHandle_t;
+typedef struct hbDNNInferCtrlParam { int32_t more; } hbDNNInferCtrlParam;
+#define HB_DNN_INITIALIZE_INFER_CTRL_PARAM(param) do { (param)->more = 0; } while (0)
+enum { HB_SYS_MEM_CACHE_CLEAN = 1, HB_SYS_MEM_CACHE_INVALIDATE = 2 };
+int32_t hbDNNInitializeFromFiles(hbPackedDNNHandle_t*, const char**, uint32_t);
+int32_t hbDNNGetModelNameList(const char***, int32_t*, hbPackedDNNHandle_t);
+int32_t hbDNNGetModelHandle(hbDNNHandle_t*, hbPackedDNNHandle_t, const char*);
+int32_t hbDNNGetInputCount(int32_t*, hbDNNHandle_t);
+int32_t hbDNNGetOutputCount(int32_t*, hbDNNHandle_t);
+int32_t hbDNNGetInputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int32_t);
+int32_t hbDNNGetOutputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int32_t);
+int32_t hbDNNInfer(hbDNNTaskHandle_t*, hbDNNTensor**, const hbDNNTensor*, hbDNNHandle_t,
+                  hbDNNInferCtrlParam*);
+int32_t hbDNNWaitTaskDone(hbDNNTaskHandle_t, int32_t timeout);
+void hbDNNReleaseTask(hbDNNTaskHandle_t);
+void hbDNNRelease(hbPackedDNNHandle_t);
+int32_t hbSysAllocCachedMem(hbSysMem*, uint32_t);
+int32_t hbSysFreeMem(hbSysMem*);
+int32_t hbSysFlushMem(hbSysMem*, int);
+""",
+    "dnn/hb_dnn_ext.h": '#pragma once\n#include "hb_dnn.h"\n',
+    "opencv2/core/mat.hpp": """\
+#pragma once
+#include <cstddef>
+#include <string>
+namespace cv {
+struct Point { int x = 0; int y = 0; };
+struct Size { int width = 0; int height = 0; Size(int w, int h) : width(w), height(h) {} };
+struct Scalar {
+  double v[4] = {0, 0, 0, 0};
+  Scalar(double s0, double s1, double s2) { v[0] = s0; v[1] = s1; v[2] = s2; }
+};
+struct Rect {
+  int x = 0; int y = 0; int width = 0; int height = 0;
+  Rect(int x_, int y_, int w_, int h_) : x(x_), y(y_), width(w_), height(h_) {}
+};
+class Mat {
+ public:
+  Mat() = default;
+  Mat(int rows, int cols, int type) : rows(rows), cols(cols) {}
+  Mat(int rows, int cols, int type, const Scalar& s) : rows(rows), cols(cols) { (void)s; }
+  bool empty() const { return rows <= 0 || cols <= 0; }
+  Mat operator()(const Rect& roi) const { (void)roi; return Mat(); }
+  void copyTo(Mat& dst) const { dst = *this; }
+  void copyTo(Mat&& dst) const { (void)dst; }
+  int rows = 0;
+  int cols = 0;
+  unsigned char* data = nullptr;
+};
+}
+#define CV_8UC3 16
+""",
+    "opencv2/imgcodecs.hpp": """\
+#pragma once
+#include "core/mat.hpp"
+namespace cv { Mat imread(const std::string& path, int flags = 1); }
+""",
+    "opencv2/imgproc.hpp": """\
+#pragma once
+#include "core/mat.hpp"
+namespace cv {
+enum { COLOR_BGR2YUV_I420 = 84 };
+void resize(const Mat& src, Mat& dst, Size dsize, double fx = 0, double fy = 0,
+            int interpolation = 1);
+void cvtColor(const Mat& src, Mat& dst, int code);
+}
+""",
+    "opencv2/opencv.hpp": """\
+#pragma once
+#include "core/mat.hpp"
+#include "imgcodecs.hpp"
+#include "imgproc.hpp"
+""",
+}
 
 
 class PortableHarness:
@@ -127,13 +333,71 @@ class CppSurfaceTests(unittest.TestCase):
     def test_dump_hashes_are_correct(self):
         self.assert_check("dump", Path(self.harness.directory.name))
 
+    def test_s_adapter_compiles_against_the_recorded_s100_sdk_shape(self):
+        with tempfile.TemporaryDirectory() as stub_root:
+            root = Path(stub_root)
+            for relative, text in S100_STUBS.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text)
+            (root / "hobot" / "dnn" / "hb_dnn_ext.h").write_text("#pragma once\n")
+            result = subprocess.run(
+                ["c++", "-std=c++17", "-Wall", "-Wextra", "-fsyntax-only",
+                 "-I", str(CPP / "include"), "-I", str(root), "-I", str(C_UTILS),
+                 str(CPP / "src" / "s_adapter.cpp")],
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_s_adapter_rejects_x5_only_sdk_spellings(self):
+        # The mirror check: an X5-shaped header set (alignedShape, SHIFT,
+        # hb_dnn_ext.h API) must NOT silently satisfy the S adapter's includes.
+        with tempfile.TemporaryDirectory() as stub_root:
+            root = Path(stub_root)
+            for relative, text in X5_STUBS.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text)
+            for extra in ("opencv2/core.hpp",):
+                path = root / extra
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(S100_STUBS[extra])
+            result = subprocess.run(
+                ["c++", "-std=c++17", "-fsyntax-only",
+                 "-I", str(CPP / "include"), "-I", str(root), "-I", str(C_UTILS),
+                 str(CPP / "src" / "s_adapter.cpp")],
+                capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0,
+                                "s_adapter must not compile against an X5-shaped SDK")
+
+    def test_x5_adapter_compiles_against_the_recorded_x5_sdk_shape(self):
+        with tempfile.TemporaryDirectory() as stub_root:
+            root = Path(stub_root)
+            for relative, text in X5_STUBS.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text)
+            result = subprocess.run(
+                ["c++", "-std=c++17", "-Wall", "-Wextra", "-fsyntax-only",
+                 "-I", str(CPP / "include"), "-I", str(root),
+                 str(CPP / "src" / "x5_adapter.cpp")],
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_dump_manifest_is_independently_verifiable(self):
         scratch = Path(self.harness.directory.name) / "dump-verify"
         self.assert_check("dump", scratch)
         manifest = json.loads((scratch / "manifest.json").read_text())
-        self.assertEqual(manifest["schema"], "rdk-model-zoo/yolov5-cpp-dump/v1")
+        self.assertEqual(manifest["schema"], "rdk-model-zoo/yolov5-cpp-dump/v2")
         self.assertEqual(manifest["return_code"], 0)
         self.assertEqual(manifest["target"], "x5")
+        reported = manifest["outputs"][0]
+        self.assertEqual(reported["aligned_byte_size"], 16)
+        self.assertEqual(reported["stride"], [16, 8, 4, 4])
+        self.assertEqual(reported["aligned"], [1, 2, 2, 4])
+        unreported = manifest["inputs"][0]
+        self.assertIsNone(unreported["aligned_byte_size"])
+        self.assertEqual(unreported["stride"], [None, None, None, None])
+        self.assertEqual(unreported["aligned"], [None, None, None, None])
         raw = manifest["raw_tensors"][0]
         payload = (scratch / raw["file"]).read_bytes()
         self.assertEqual(hashlib.sha256(payload).hexdigest(), raw["sha256"])
