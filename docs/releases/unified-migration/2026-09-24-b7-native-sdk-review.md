@@ -126,3 +126,13 @@ S100P经临时loopback SOCKS SSH转接成功从GitHub检出固定4d45f9a，通�
 ## ByteTrack S100P 正向准备阻断：固定源 URL 返回404
 
 S100P执行固定提交的 `python3 samples/vision/bytetrack/model/download.py --target s100p` 返回2，HTTP404，见 [原始准备记录](evidence/2026-09-24-b7-s100p-negative/bytetrack-asset-download-404.json)。清单URL为 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm`，与固定源 `platforms/s/samples/vision/bytetrack/model/download_model.sh` 的 `rdk_${SOC}` 生成规则一致，故当前证据指向源发布地址不可用，不能擅自换成S100制品或声称S100P实际推理失败/通过。S100P正向tracker尚未开始；S100四帧真实对照通过结论不变。源run.sh另有公开track_test.mp4地址，后续应补其真实视频case，四帧合成smoke不替代完整视频边界验证。
+
+## FCOS 全变体、LPRNet / YOLOWorld X5 4GB 补测
+
+固定 GitHub 提交 `73a6de135ddbcc343922a2a31e31c22729f09296` 新增7个成功case：8GB的FCOS B2/B3，4GB的FCOS B0/B2/B3、LPRNet与YOLOWorld。每项source/unified比较rc=0、checks全部true；合并既有8GB B0记录，FCOS三变体两种内存配置均通过。两板FCOS逐变体的模型/输入摘要、两侧32份推理数组的摘要/shape/dtype相同。
+
+[完整证据](evidence/2026-09-24-b7-other-x5-variants/) 包含执行日志、comparison、7份原始归档及独立核验：185份npy完整覆盖，所有记录摘要、shape/dtype、finite检查通过，另核验FCOS20份metadata/result JSON。原始SDK版本警告保留；不据此声明数据集精度或所有输入等价。
+
+LPRNet首轮采集器直接执行download.py，未按其README的模块命令调用，因导入路径失败；该记录保留。改用已文档化的模块入口，未改产品代码，准备与完整比较通过。采集器首轮安全检查误拒绝tar的根目录`.`，修正为允许根目录但仍拒绝路径穿越后，重新核验全部材料；未放宽任何数值判据。
+
+C++观察工具独立审查另发现真实manifest parameters为dict而工具按pairs读取、空张量集合可能跳过比较、浮点序列化精度与执行身份/依赖绑定不足；已派回本地Claude Code + GLM整改，尚未作为通过证据。B7保持changes-required / Closed=no。
