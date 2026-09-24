@@ -1,14 +1,136 @@
 """Host tests of real legacy/unified SAM evidence capture, never board claims."""
+import hashlib
 import json
 from pathlib import Path
 import tempfile
 import types
 import unittest
+from contextlib import redirect_stderr
+from io import StringIO
 from unittest.mock import patch
 import numpy as np
 from samples._shared.sam_binding import resolve_selection
 from samples._shared.tests.test_sam_binding import FakeRuntime,metadata
-from samples._shared.sam_evaluator import run_comparison,build_parser
+from samples._shared.sam_evaluator import run_comparison,build_parser,main,_digest
+
+
+class _NoFileDigest:
+    """Hide hashlib.file_digest as on real Python 3.10 boards (API added in 3.11)."""
+    def __enter__(self):
+        self._saved=getattr(hashlib,'file_digest',None)
+        if self._saved is not None:del hashlib.file_digest
+        return self
+    def __exit__(self,*exc):
+        if self._saved is not None:hashlib.file_digest=self._saved
+        return False
+
+
+_KNOWN_SHA256={
+    b'':'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    b'abc':'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+}
+
+
+class Python310FileDigestCompatTests(unittest.TestCase):
+    """Board evidence 2026-09-24: X5/S100 run Python 3.10 and have no file_digest."""
+    def test_digest_matches_known_sha256_without_file_digest(self):
+        """Digests stay correct on 3.10: empty file, FIPS vectors and block boundaries."""
+        chunk=1024*1024
+        base=bytes((i*131+7)%256 for i in range(2*chunk+17))
+        sizes=[0,1,1023,1024,1025,65535,65536,65537,chunk-1,chunk,chunk+1,2*chunk+17]
+        with tempfile.TemporaryDirectory() as td:
+            tmp=Path(td)
+            with _NoFileDigest():
+                self.assertFalse(hasattr(hashlib,'file_digest'))
+                for size in sizes:
+                    payload=base[:size]
+                    path=tmp/f'pattern-{size}.bin';path.write_bytes(payload)
+                    expected=hashlib.sha256(payload).hexdigest()
+                    with self.subTest(size=size):
+                        self.assertEqual(_digest(path if size%2 else str(path)),expected)
+                for payload,expected in _KNOWN_SHA256.items():
+                    path=tmp/f'known-{len(payload)}.bin';path.write_bytes(payload)
+                    with self.subTest(known=len(payload)):
+                        self.assertEqual(_digest(path),expected)
+
+    def _run_board_cli(self,sample,target,tmp,sabotage=None,raise_on=None):
+        """Drive main() like the board command, on fixture models and fake SDK."""
+        ep=tmp/'encoder.fixture';ep.write_bytes(b'host-fixture-encoder')
+        dp=tmp/'decoder.fixture';dp.write_bytes(b'host-fixture-decoder')
+        base=resolve_selection(sample,target)
+        argv=['--target',target,'--output-dir',str(tmp/'evidence'),
+              '--encoder-model-path',str(ep),'--decoder-model-path',str(dp),
+              '--encoder-asset-id',base.encoder_asset.reference,
+              '--decoder-asset-id',base.decoder_asset.reference]
+        calls=[]
+        def create(path):
+            stage='encoder' if Path(path)==ep else 'decoder'
+            fake=FakeRuntime(metadata(sample,stage,target))
+            calls.append(fake)
+            if stage=='decoder':fake.outputs['iou_predictions'].reshape(-1)[:]=[0.1,0.9,0.2]
+            if sabotage is not None and len(calls)==4:sabotage(fake)
+            if raise_on is not None and len(calls)==2:
+                def broken_run(inputs,boom=raise_on):raise boom
+                fake.run=broken_run
+            return fake
+        with patch('samples._shared.sam_evaluator.require_execution_target',return_value=target),\
+             patch('samples._shared.model_runner._default_runtime_factory',return_value=create):
+            return main(sample,argv)
+
+    def test_board_cli_passes_without_file_digest(self):
+        """The exact board failure shape (missing file_digest) must complete with rc 0."""
+        for sample,target in (('efficient_sam','s100'),('mobile_sam','x5')):
+            with self.subTest(sample=sample,target=target),tempfile.TemporaryDirectory() as td:
+                tmp=Path(td)
+                with _NoFileDigest():
+                    rc=self._run_board_cli(sample,target,tmp)
+                self.assertEqual(rc,0)
+                stored=json.loads((tmp/'evidence'/'comparison.json').read_text())
+                self.assertTrue(stored['passed'],stored.get('error'))
+                self.assertEqual(stored['artifacts']['encoder']['observed_sha256'],
+                                 hashlib.sha256(b'host-fixture-encoder').hexdigest())
+                self.assertEqual(stored['artifacts']['decoder']['observed_sha256'],
+                                 hashlib.sha256(b'host-fixture-decoder').hexdigest())
+                self.assertGreaterEqual(len(stored['code_sha256']),8)
+
+    def test_board_cli_reports_comparison_failure_as_one(self):
+        """Completed runs with a failed check still exit 1 with full evidence."""
+        with tempfile.TemporaryDirectory() as td:
+            tmp=Path(td)
+            def sabotage(fake):
+                fake.outputs['iou_predictions'].reshape(-1)[:]=[0.9,0.1,0.2]
+                fake.outputs['low_res_masks'][0,0,0,0]=-3
+            rc=self._run_board_cli('efficient_sam','s100',tmp,sabotage=sabotage)
+            self.assertEqual(rc,1)
+            stored=json.loads((tmp/'evidence'/'comparison.json').read_text())
+            self.assertFalse(stored['passed']);self.assertEqual(stored['return_code'],1)
+            self.assertEqual(len(stored['arrays']),14)
+            self.assertFalse(stored['checks']['mask_equal'])
+            self.assertGreater(stored['mask_changed_pixels'],0)
+
+    def test_cli_maps_execution_exception_to_error_code_two(self):
+        """README contract: execution failure exits 2, not an unhandled traceback."""
+        boom=AttributeError("module 'hashlib' has no attribute 'file_digest'")
+        with tempfile.TemporaryDirectory() as td:
+            argv=['--target','s100','--output-dir',str(Path(td)/'evidence')]
+            with patch('samples._shared.sam_evaluator.run_comparison',side_effect=boom),\
+                 redirect_stderr(StringIO()) as err:
+                rc=main('efficient_sam',argv)
+            self.assertEqual(rc,2)
+            self.assertIn('error:',err.getvalue())
+
+    def test_execution_exception_after_capture_keeps_evidence(self):
+        """An unexpected exception mid-run keeps captured arrays and exits 2."""
+        with tempfile.TemporaryDirectory() as td:
+            tmp=Path(td)
+            rc=self._run_board_cli('efficient_sam','s100',tmp,
+                raise_on=AttributeError('simulated SDK failure'))
+            self.assertEqual(rc,2)
+            stored=json.loads((tmp/'evidence'/'comparison.json').read_text())
+            self.assertEqual(stored['error']['type'],'AttributeError')
+            self.assertEqual(stored['return_code'],2)
+            self.assertFalse(stored['passed'])
+            self.assertGreaterEqual(len(stored['arrays']),3)
 
 
 class _BoardQuantParams:

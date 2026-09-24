@@ -8,7 +8,6 @@ This measures migration consistency, not dataset accuracy or performance.
 """
 import argparse
 from datetime import datetime, timezone
-import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -18,6 +17,7 @@ import types
 import cv2
 import numpy as np
 
+from samples._shared.assets import sha256_file
 from samples._shared.platforms import require_execution_target
 from samples._shared.sam_binding import resolve_selection
 from samples._shared.sam_runner import RuntimeModelRunner
@@ -28,8 +28,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 
 
 def _digest(path):
-    with Path(path).open('rb') as handle:
-        return hashlib.file_digest(handle, 'sha256').hexdigest()
+    return sha256_file(path)
 
 
 def _now():
@@ -284,6 +283,8 @@ def main(sample, argv=None):
         print(json.dumps(dict(passed=summary['passed'], checks=summary['checks'],
                               evidence=str(Path(args.output_dir).resolve()/'comparison.json')), indent=2))
         return 0 if summary['passed'] else 1
-    except (OSError, ValueError, RuntimeError) as exc:
-        print(f'error: {exc}', file=sys.stderr)
+    except Exception as exc:
+        # Any execution failure keeps its comparison.json evidence and exits 2
+        # per the README contract; SDK errors are not limited to OSError & co.
+        print(f'error: {type(exc).__name__}: {exc}', file=sys.stderr)
         return 2
