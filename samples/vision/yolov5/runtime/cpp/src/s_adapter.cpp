@@ -318,6 +318,7 @@ int run_native(const RuntimeOptions& options) {
   policy.strict_score_boundary = false;
   const auto detections = decode_heads(dequantized, heads, kInputSize, kClasses, policy, kAnchors);
   dump.detections = detections;
+  dump.detections_original = map_to_original(detections, image.cols, image.rows, kInputSize);
   if (!options.dump_dir.empty()) {
     std::string error;
     if (!write_dump(dump, &error))

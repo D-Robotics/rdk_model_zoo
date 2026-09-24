@@ -23,7 +23,11 @@ Node v26.9.0 可用；编译器 Apple clang 21.0.0。
 | N4 | Node 构建 catalog + 补跑 ultralytics_yolo 此前 not-run 测试 | 暂缓（catalog 计数已在 develop 9692699 由协调者修复） |
 | N5 | 全量主机回归 + CI 同命令 checker + 证据 | 暂缓 |
 | N6 | 本轮作者报告 + 台账追加 | 暂缓 |
-| N7 | dc3aac5 板端发现有界整改（句柄名/dtype 映射/重叠布局 gate/标量描述符/调度掩码/dump 碰撞/dump 完整性） | 已完成，待协调者上板复验 |
+| N7 | dc3aac5 板端发现有界整改（句柄名/dtype 映射/重叠布局 gate/标量描述符/调度掩码/dump 碰撞/dump 完整性） | 已完成（fbffddd/4d45f9a 板端构建+smoke rc=0），数值一致性未做 |
+| N8 | 原生固定源/统一数值比较工具（evaluator/native 三件套）+ SDK-free helper 指定边界修复 | 已完成，待协调者上板执行比较 |
+| N9 | 独立评审六项阻断整改（真实 schema 回归/结构强制/证据身份/观测头硬化/闭包固定/最终坐标） | 已完成；其「全部关闭」结论被第二轮复审推翻 |
+| N10 | 第二轮复审 A-G 整改（双侧校验/真实锚序/float32 位值/失败报告/进程证据 runner/严格解码/fixture 入库） | 已完成，待 Codex 复审与上板 |
+| N11 | 第三轮复审整改（精确板身份+统一侧 runner 记录/audit 协议 fail-closed/通道 stride 边界） | 已完成，待 Codex 复审与板端数值验证 |
 
 ## N1 S100 原生阻断（2026-09-24）
 
@@ -130,3 +134,60 @@ migration checker rc=0 / 0 violations、`git diff --check` 干净、cli_main 与
 adapter 对各自修正后 stub 编译干净。详见
 [evidence](evidence/2026-09-24-b7-native-bounded-round2.json)。板端复验由协调者
 执行；本工作树板端仍 not-run。
+
+## N8 原生源/统一数值比较工具 + helper 边界（2026-09-24，仅 YOLOv5 native）
+
+输入：4d45f9a 板测基线（X5/S100 真实构建与统一 smoke 均 rc=0，数值一致性未做）
+与协调者有界指令。交付 `evaluator/native/` 三件套：SHA 固定 fail-closed 的
+`instrument.py`（X5 9 / S 8 个唯一计数 anchor；X5 仅白名单重绑定两个宏）、
+单头 SDK-free 只读观测 `ycap_observer.hpp`（无环境变量即 no-op；崩溃不留
+manifest）、`compare_native.py`（固定判据 inputs 精确 / raw 1e-5 / scale·zero
+精确 / boxes 1e-4 / scores 1e-5 / class id 精确；stride 还原；拒覆盖；缺料/
+非零运行码/hash·阈值不一致皆非零失败并保全证据）。观测点与判据细节见
+[本轮作者报告](2026-09-24-b7-native-comparison-author.md)。
+
+helper 边界修复：null zero-point 拒绝；count/extent 全链路溢出检查（含负例）；
+精确 extent 改 `(channels-1)*stride3+4`；非标量 scale 强制 `quantizeAxis==3`
+（负例入库）；dump 量化数组超限显式抛错、缺失显式抛错（不再静默空数组）；
+CLI help 核范围 0..3。
+
+主机验证：yolov5 50 OK（+13：插桩生成/漂移与错 pin fail-closed/观测头双模式
+实跑/**插桩固定源 host stub 全量编译**/padded 比较通过/padding 不参与字节相等/
+篡改与五类缺料非零）；bytetrack 11 OK；checker rc=0 / 0 violations。板端
+not-run，待协调者按 README 1–4 步执行（X5 s-v2+bus；S x-672+kite）。
+
+## N9 独立评审整改：比较工具六项阻断（2026-09-24）
+
+逐项复现确认后修复：parameters 真实 dict schema（以真实板端 manifest 回归）、
+空表/缺头/重复/多余全部拒绝 + dtype/finite/量化一致强制、执行时 hash/argv/
+UTC/rc/stdout-stderr 捕获与逐 payload 校验 + 精确 target（s600/s100p 显式）、
+观测头 17 位精度/非空目录拒绝/in-progress 标记/显式失败/SDK 枚举 dtype、S
+构建闭包 @380e1a2 固定复制进 work dir + 浅克隆准备提示、双侧独立最终坐标
+`detections_original` 比较（无则明确不主张最终输出等价）。判据不变。yolov5
+62 OK、bytetrack 11 OK、checker 0 violations。详见[作者报告第 7
+节](2026-09-24-b7-native-comparison-author.md)与
+[evidence](evidence/2026-09-24-b7-native-comparison-remediation.json)。板端
+not-run，待 Codex 复审与上板。
+
+## N10 第二轮复审整改 A-G（2026-09-24）
+
+七项反例全部复现后修复：A 统一侧 digest/quanti/shape/板卡身份强制（三绕过
+均 rc2）；B X5 输入 glue 顺序（meta 先于 payload）+ 实际生成序列重放测试；
+C 阈值与 scale 按 float32 位值比较（0.45f vs "0.450000" 通过、位异失败、阈值
+不放宽、fixtures 全用非可表示值）；D 全部异常路径写完整 comparison.json；
+E 新增 run_capture.py 外部进程证据 runner（真实 argv/stdout/stderr/rc/UTC/
+板卡/前后 hash/audit 校验，compare 必需并交叉核验；C++ tee 移除）；F
+restore 只接受已证实布局、detections 键必填、最终坐标双侧必备否则整批失败；
+G 真实板端 manifest 逐字节入库为常跑 fixture。yolov5 70 OK、bytetrack 11
+OK、checker 0 violations。作者报告第 8 节更正上轮「全部关闭」结论。详见
+[evidence](evidence/2026-09-24-b7-native-tool-rereview-remediation.json)。
+板端 not-run，交 Codex 复审与上板。
+
+## N11 第三轮复审整改（2026-09-24）
+
+精确板身份（别名注册表，S100P/未知串不再放行）+ 统一侧 runner 记录必填；
+audit 协议全量校验且失败不执行二进制；通道 stride 重叠/未对齐/像素重叠拒
+绝、真实布局正例保留。yolov5 76 OK、bytetrack 11 OK、checker 0 violations。
+详见[作者报告第 9 节](2026-09-24-b7-native-comparison-author.md)与
+[evidence](evidence/2026-09-24-b7-native-round3-remediation.json)。固定源
+数值对照仍未在任何板卡运行。板端 not-run，交 Codex 复审与上板。

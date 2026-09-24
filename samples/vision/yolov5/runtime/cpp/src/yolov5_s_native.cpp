@@ -22,6 +22,10 @@ std::vector<float> dequant_s32_nhwc(const unsigned char* base, const TensorMeta&
   if (meta.quanti_type == kQuantiScale && zero_point_len != 0 && zero_point_len != 1 &&
       zero_point_len < meta.valid[3])
     throw std::invalid_argument("dequant_s32_nhwc: unusable zero-point descriptor");
+  // A declared zero point without a buffer must never reach the read below.
+  if (meta.quanti_type == kQuantiScale && zero_point_len > 0 &&
+      zero_point_data == nullptr)
+    throw std::invalid_argument("dequant_s32_nhwc: zero-point length without data");
 
   const long long height = meta.valid[1];
   const long long width = meta.valid[2];

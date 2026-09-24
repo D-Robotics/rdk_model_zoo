@@ -32,8 +32,10 @@ struct DumpTensor {
 // aligned_byte_size and stride[] are what the runtime reported, and aligned[]
 // is the alignedShape the X5 SDK reports (the S SDK has no such field, so its
 // entries stay unreported). -1 serializes as null. The quant arrays record the
-// full descriptor the runtime exposed (bounded to kMaxQuantValues entries) so
-// a board run can be replayed without the model file.
+// complete descriptor the runtime exposed so a board run can be replayed
+// without the model file: a SCALE descriptor without readable values, or one
+// longer than kMaxQuantValues entries, is an error instead of a silent
+// truncation.
 struct DumpTensorInfo {
   std::string name;
   std::string dtype;
@@ -48,14 +50,17 @@ struct DumpTensorInfo {
   std::vector<long long> zero_point_values;  // empty unless a descriptor exists
 };
 
-// Upper bound on descriptor values copied into the manifest; the gates accept
-// at most one value per channel, and real heads are far below this.
-constexpr std::size_t kMaxQuantValues = 1024;
+// Sanity bound for descriptor copying: descriptors above this size are
+// rejected outright (the gates accept at most one value per channel of real
+// heads), never silently truncated.
+constexpr long long kMaxQuantValues = 1LL << 20;
 
 // Fills a DumpTensorInfo from a projected TensorMeta using the shared
-// dtype/quanti names, including the reported layout fields. When scale_data
-// and zero_point_data are provided (S SDK descriptors), up to kMaxQuantValues
-// values of each are copied for the manifest.
+// dtype/quanti names, including the reported layout fields. For a SCALE
+// tensor the full scale (and zero-point, when declared) descriptor is copied;
+// a missing buffer for a declared descriptor, or a descriptor longer than
+// kMaxQuantValues, throws std::invalid_argument so the run fails loudly
+// instead of recording an empty array as if it were complete.
 DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta,
                                 const float* scale_data = nullptr,
                                 const std::int32_t* zero_point_data = nullptr);
@@ -85,6 +90,11 @@ struct DumpRecord {
   std::vector<DumpTensor> raw_tensors;
   std::vector<DumpTensor> transformed_tensors;
   std::vector<Detection> detections;
+  // The same detections mapped to final ORIGINAL-image coordinates with the
+  // exact arithmetic the renderer applies (independent of the fixed source's
+  // own mapping; never derived from it). Compared separately from the
+  // model-space detections.
+  std::vector<Detection> detections_original;
 };
 
 // Writes <dir>/manifest.json and one little-endian file per dumped tensor
@@ -98,6 +108,12 @@ bool write_dump(const DumpRecord& record, std::string* error);
 // available, otherwise argv[0] resolved against the current directory. Empty
 // when neither can be determined.
 std::string current_binary_path(const std::string& argv0);
+
+// Maps model-space letterbox detections to final ORIGINAL-image coordinates
+// with exactly the arithmetic the renderer applies ((coord - pad) / scale,
+// unclamped). SDK-free so the mapping is host-testable.
+std::vector<Detection> map_to_original(const std::vector<Detection>& detections,
+                                       int image_cols, int image_rows, int model_size);
 
 // Lowercase hex SHA-256 of a file's contents, or an empty string if unreadable.
 std::string sha256_file(const std::string& path);

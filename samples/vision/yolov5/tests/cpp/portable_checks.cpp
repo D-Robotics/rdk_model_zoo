@@ -67,7 +67,7 @@ yolov5::TensorMeta s32_output(long long height, long long width, long long chann
                               long long scale_len = 1, long long zero_point_len = 0,
                               long long row_stride = -1, long long storage = -1,
                               long long channel_stride = 4, long long pixel_stride = -1,
-                              long long aligned_bytes = -1) {
+                              long long aligned_bytes = -1, long long axis = 3) {
   yolov5::TensorMeta meta;
   meta.dtype = dtype;
   meta.quanti_type = quanti;
@@ -75,14 +75,15 @@ yolov5::TensorMeta s32_output(long long height, long long width, long long chann
   meta.valid[0] = 1; meta.valid[1] = height; meta.valid[2] = width; meta.valid[3] = channels;
   meta.scale_len = scale_len;
   meta.zero_point_len = zero_point_len;
+  meta.quantize_axis = axis;
   meta.stride[3] = channel_stride;
   meta.stride[2] = pixel_stride < 0 ? channels * channel_stride : pixel_stride;
   meta.stride[1] = row_stride < 0 ? width * meta.stride[2] : row_stride;
   meta.stride[0] = height * meta.stride[1];
   // Allocation needed for the addressing formula's last byte: the final
-  // pixel of the final row, including padding inside earlier rows.
+  // element of the final pixel of the final row.
   const long long required =
-      (height * width - 1) * meta.stride[2] + channels * channel_stride;
+      (height * width - 1) * meta.stride[2] + (channels - 1) * channel_stride + 4;
   meta.aligned_byte_size = aligned_bytes < 0 ? required : aligned_bytes;
   meta.storage_bytes = storage < 0 ? meta.aligned_byte_size : storage;
   return meta;
@@ -252,6 +253,23 @@ void check_s_dequant() {
   overflow.stride[0] = 0;
   expect(!check_s32_dequant(overflow, &count),
          "a layout whose extent overflows must be rejected, not wrap around");
+  expect(!check_s32_dequant(s32_output(1LL << 21, 1LL << 21, 1LL << 21, kDtypeS32,
+                                       kQuantiScale, 1, 0, -1, -1, 4, -1,
+                                       /*aligned_bytes=*/1LL << 40), &count),
+         "an element count that overflows must be rejected, not wrap around");
+
+  // Per-channel descriptors are only readable when the SDK declares the
+  // quantization axis as the channel axis; scalar descriptors are axis-free.
+  expect(!check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 84, 0,
+                                       -1, -1, 4, -1, -1, /*axis=*/-1), &count),
+         "a per-channel descriptor with an unreported axis must be rejected");
+  expect(!check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 84, 0,
+                                       -1, -1, 4, -1, -1, /*axis=*/2), &count),
+         "a per-channel descriptor on a non-channel axis must be rejected");
+  expect(static_cast<bool>(check_s32_dequant(s32_output(84, 84, 84, kDtypeS32,
+                                                       kQuantiScale, 1, 0, -1, -1, 4, -1,
+                                                       -1, /*axis=*/-1), &count)),
+         "a scalar descriptor is axis-free and must be accepted");
 
   expect(static_cast<bool>(check_s32_dequant(
              s32_output(84, 84, 84, kDtypeF32, kQuantiNone), &count)),
@@ -329,6 +347,19 @@ void check_s_dequant_values() {
     refused = true;
   }
   expect(refused, "a short non-scalar descriptor must be refused, never blind-read");
+  // A declared zero point without a buffer must be refused before any read.
+  bool null_zero_refused = false;
+  try {
+    dequant_s32_nhwc(storage, s32_output(1, 2, 2, kDtypeS32, kQuantiScale,
+                                         /*scale_len=*/1, /*zero_point_len=*/1,
+                                         /*row_stride=*/32, /*storage=*/-1,
+                                         /*channel_stride=*/4, /*pixel_stride=*/16),
+                     scale, 1, nullptr, 1);
+  } catch (const std::invalid_argument&) {
+    null_zero_refused = true;
+  }
+  expect(null_zero_refused,
+         "zero_point_len > 0 with a null buffer must be refused, never dereferenced");
   // NONE outputs pass through as float32 at the same offsets.
   TensorMeta raw = s32_output(1, 2, 2, kDtypeF32, kQuantiNone,
                               /*scale_len=*/0, /*zero_point_len=*/0,

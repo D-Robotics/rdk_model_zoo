@@ -163,6 +163,14 @@ Gate check_s32_dequant(const TensorMeta& meta, long long* element_count) {
     if (meta.zero_point_len != 0 && meta.zero_point_len != 1 &&
         meta.zero_point_len < channels)
       return reject("S YOLOv5 output zero-point descriptor is shorter than its channels");
+    // A per-channel descriptor is only readable channel-wise when the SDK
+    // declares the quantization axis as the channel axis (3 for NHWC
+    // [N,H,W,C]). An unreported or different axis is rejected rather than
+    // guessed; the real artifact's axis is visible in the board dump metadata.
+    if (meta.scale_len != 1 && meta.quantize_axis != 3)
+      return reject("S YOLOv5 per-channel descriptor requires quantizeAxis == 3 "
+                    "(NHWC channel axis); got " +
+                    std::to_string(meta.quantize_axis));
   } else if (meta.quanti_type == kQuantiNone) {
     if (meta.dtype != kDtypeF32)
       return reject("S unquantized YOLOv5 output must be native F32");
@@ -194,14 +202,21 @@ Gate check_s32_dequant(const TensorMeta& meta, long long* element_count) {
     return reject("S YOLOv5 output stride[1] must equal width*stride[2]; the "
                   "dequantizer addresses every row at a uniform row stride and "
                   "would misread H-level padding");
-  const long long count = height * width * channels;
+  long long count = 0;
+  long long plane = 0;
+  if (!checked_mul(height, width, &plane) || !checked_mul(plane, channels, &count))
+    return reject("S YOLOv5 output element count overflows");
   // Exact last byte the addressing can touch: the final element of the final
-  // pixel of the final row, with checked arithmetic so an oversized stride
-  // cannot overflow into a passing comparison.
+  // pixel of the final row — (channels-1)*stride[3] + element_bytes inside the
+  // last pixel, not channels*stride[3], which would also demand the channel
+  // padding after the final element. Every product is overflow-checked.
   long long last_pixel = 0;
+  long long tail = 0;
   long long required = 0;
-  if (!checked_mul(height * width - 1, meta.stride[2], &last_pixel) ||
-      !checked_add(last_pixel, pixel_bytes, &required))
+  if (!checked_mul(plane - 1, meta.stride[2], &last_pixel) ||
+      !checked_mul(channels - 1, meta.stride[3], &tail) ||
+      !checked_add(last_pixel, tail, &required) ||
+      !checked_add(required, element_bytes, &required))
     return reject("S YOLOv5 output layout extent overflows");
   if (meta.aligned_byte_size < required)
     return reject("S YOLOv5 output alignedByteSize cannot hold its stored layout");
