@@ -26,6 +26,16 @@ bool same_layout(const TensorMeta& meta) {
   return true;
 }
 
+// Checked arithmetic for the extent proofs: a hostile or corrupted stride must
+// be rejected, not wrap around into an accepting comparison.
+bool checked_mul(long long a, long long b, long long* out) {
+  return !__builtin_mul_overflow(a, b, out);
+}
+
+bool checked_add(long long a, long long b, long long* out) {
+  return !__builtin_add_overflow(a, b, out);
+}
+
 }  // namespace
 
 Gate accept() { return Gate{true, {}}; }
@@ -143,6 +153,9 @@ Gate check_s32_dequant(const TensorMeta& meta, long long* element_count) {
   if (meta.quanti_type == kQuantiScale) {
     if (meta.dtype != kDtypeS32)
       return reject("S YOLOv5 scaled output must be native S32");
+    // A scalar descriptor (length 1) is accepted because the adapter's private
+    // dequant helper broadcasts it; the shared c_utils helper would read
+    // scale_data[c] out of bounds, so passing such a tensor to it is forbidden.
     if (meta.scale_len <= 0)
       return reject("S YOLOv5 scaled output has no scale descriptor");
     if (meta.scale_len != 1 && meta.scale_len < channels)
@@ -157,26 +170,39 @@ Gate check_s32_dequant(const TensorMeta& meta, long long* element_count) {
     return reject("S YOLOv5 output has an unsupported quantization type");
   }
 
-  // The fixed-source dequantizeTensorS32 reads element (h, w, c) at byte
-  // offset (h*W + w) * stride[2] + c * stride[3]. That formula genuinely
-  // supports padding inside a row (stride[2] > W*stride[3]) and per-channel
-  // padding (stride[3] > element size), but it places every row exactly
-  // stride[2] bytes after the previous one, so stride[1] must equal W*stride[2];
-  // H-level padding cannot be addressed and is rejected instead of misread.
+  // The addressing both the fixed-source helper and the adapter's private
+  // dequantizer perform reads element (h, w, c) at byte offset
+  // (h*W + w) * stride[2] + c * stride[3]:
+  //   * stride[3] is the byte distance between channels of one pixel and must
+  //     be a positive multiple of the element size (aligned int32/float reads);
+  //   * stride[2] is the byte distance between pixels and must cover one full
+  //     pixel, i.e. channels elements — a smaller value makes consecutive
+  //     pixels overlap and must be rejected (a width*stride[3] bound would
+  //     wrongly accept e.g. stride[2]=400 for 84x255 layouts);
+  //   * stride[1] must equal width*stride[2] exactly, because the formula
+  //     places every row uniformly stride[2] after the previous one.
   if (meta.stride[3] < element_bytes || meta.stride[3] % element_bytes != 0)
     return reject("S YOLOv5 output channel stride is not element-aligned");
-  if (meta.stride[2] < width * meta.stride[3])
-    return reject("S YOLOv5 output row stride does not cover a full row");
-  if (meta.stride[1] != width * meta.stride[2])
+  if (meta.stride[2] < element_bytes || meta.stride[2] % element_bytes != 0)
+    return reject("S YOLOv5 output pixel stride is not element-aligned");
+  long long pixel_bytes = 0;
+  if (!checked_mul(channels, meta.stride[3], &pixel_bytes) ||
+      meta.stride[2] < pixel_bytes)
+    return reject("S YOLOv5 output pixel stride does not cover all channels");
+  long long row_bytes = 0;
+  if (!checked_mul(width, meta.stride[2], &row_bytes) || meta.stride[1] != row_bytes)
     return reject("S YOLOv5 output stride[1] must equal width*stride[2]; the "
-                  "source dequantizer addresses every row at a uniform row "
-                  "stride and would misread H-level padding");
+                  "dequantizer addresses every row at a uniform row stride and "
+                  "would misread H-level padding");
   const long long count = height * width * channels;
-  // Last byte the addressing formula can touch: the final element of the
-  // final row, including any padding inside earlier rows.
-  const long long required =
-      (height * width - 1) * meta.stride[2] + (channels - 1) * meta.stride[3] +
-      element_bytes;
+  // Exact last byte the addressing can touch: the final element of the final
+  // pixel of the final row, with checked arithmetic so an oversized stride
+  // cannot overflow into a passing comparison.
+  long long last_pixel = 0;
+  long long required = 0;
+  if (!checked_mul(height * width - 1, meta.stride[2], &last_pixel) ||
+      !checked_add(last_pixel, pixel_bytes, &required))
+    return reject("S YOLOv5 output layout extent overflows");
   if (meta.aligned_byte_size < required)
     return reject("S YOLOv5 output alignedByteSize cannot hold its stored layout");
   if (meta.storage_bytes < required)

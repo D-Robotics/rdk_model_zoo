@@ -12,6 +12,7 @@
 #include "yolov5_gate.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -30,7 +31,9 @@ struct DumpTensor {
 // layout fields make a padded run diagnosable from the manifest alone:
 // aligned_byte_size and stride[] are what the runtime reported, and aligned[]
 // is the alignedShape the X5 SDK reports (the S SDK has no such field, so its
-// entries stay unreported). -1 serializes as null.
+// entries stay unreported). -1 serializes as null. The quant arrays record the
+// full descriptor the runtime exposed (bounded to kMaxQuantValues entries) so
+// a board run can be replayed without the model file.
 struct DumpTensorInfo {
   std::string name;
   std::string dtype;
@@ -40,11 +43,22 @@ struct DumpTensorInfo {
   long long aligned_byte_size = -1;
   long long stride[4] = {-1, -1, -1, -1};
   long long aligned[4] = {-1, -1, -1, -1};
+  long long quantize_axis = -1;
+  std::vector<double> scale_values;        // empty unless quanti == "scale"
+  std::vector<long long> zero_point_values;  // empty unless a descriptor exists
 };
 
+// Upper bound on descriptor values copied into the manifest; the gates accept
+// at most one value per channel, and real heads are far below this.
+constexpr std::size_t kMaxQuantValues = 1024;
+
 // Fills a DumpTensorInfo from a projected TensorMeta using the shared
-// dtype/quanti names, including the reported layout fields.
-DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta);
+// dtype/quanti names, including the reported layout fields. When scale_data
+// and zero_point_data are provided (S SDK descriptors), up to kMaxQuantValues
+// values of each are copied for the manifest.
+DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta,
+                                const float* scale_data = nullptr,
+                                const std::int32_t* zero_point_data = nullptr);
 
 struct DumpRecord {
   std::string dir;
@@ -55,6 +69,9 @@ struct DumpRecord {
   std::string model_path;
   std::string image_path;
   std::string cwd;
+  // Executable that produced this run; its SHA-256 is recorded so the dump
+  // binds to the deployed binary, not only to the model and image.
+  std::string binary_path;
   std::vector<std::string> argv;
   int return_code = 0;
   std::string error;
@@ -62,14 +79,25 @@ struct DumpRecord {
   std::vector<DumpTensorInfo> inputs;
   std::vector<DumpTensorInfo> outputs;
   std::vector<std::pair<std::string, std::string>> options;
+  // The input buffers actually submitted with this inference (deterministic
+  // payload bytes; layout lives in the inputs metadata).
+  std::vector<DumpTensor> input_tensors;
   std::vector<DumpTensor> raw_tensors;
   std::vector<DumpTensor> transformed_tensors;
   std::vector<Detection> detections;
 };
 
-// Writes <dir>/manifest.json and one raw little-endian file per dumped tensor.
-// Returns false and fills *error on any filesystem failure.
+// Writes <dir>/manifest.json and one little-endian file per dumped tensor
+// under category subdirectories (input/, raw/, transformed/): the two stages
+// of one output never share a file, so a later write cannot overwrite the
+// original bytes of an earlier one. Returns false and fills *error on any
+// filesystem failure.
 bool write_dump(const DumpRecord& record, std::string* error);
+
+// Best-effort path of the currently running executable: /proc/self/exe where
+// available, otherwise argv[0] resolved against the current directory. Empty
+// when neither can be determined.
+std::string current_binary_path(const std::string& argv0);
 
 // Lowercase hex SHA-256 of a file's contents, or an empty string if unreadable.
 std::string sha256_file(const std::string& path);

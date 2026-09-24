@@ -79,8 +79,10 @@ int main(int argc, char** argv) {
     if (help) { print_help(argv[0]); return 0; }
     if (options.target.empty() || options.model_path.empty() || options.image_path.empty())
       throw std::invalid_argument("--target, --model-path and --test-img are required");
-    if (options.priority < 0 || options.priority > 255 || options.bpu_core < -1)
-      throw std::invalid_argument("invalid scheduling parameter");
+    if (options.priority < 0 || options.priority > 255 || options.bpu_core < -1 ||
+        options.bpu_core > 3)
+      throw std::invalid_argument(
+          "invalid scheduling parameter (--bpu-core must be -1 or a core index 0..3)");
     status = yolov5::run_native(options);
   } catch (const std::exception& error) {
     failure = error.what();
@@ -88,7 +90,8 @@ int main(int argc, char** argv) {
     status = 2;
   }
   if (status != 0 && !options.dump_dir.empty()) {
-    // A failed run still has to be traceable on the board.
+    // A failed run still has to be traceable on the board, and the failure
+    // record keeps the binary identity like a successful one.
     yolov5::DumpRecord record;
     record.dir = options.dump_dir;
     record.utc = yolov5::utc_timestamp();
@@ -98,6 +101,8 @@ int main(int argc, char** argv) {
     record.image_path = options.image_path;
     record.argv = options.argv;
     record.cwd = std::filesystem::current_path().string();
+    record.binary_path =
+        yolov5::current_binary_path(options.argv.empty() ? "" : options.argv.front());
     record.return_code = status;
     record.error = failure;
     record.notes = {"Failure record; no tensor payload was produced."};

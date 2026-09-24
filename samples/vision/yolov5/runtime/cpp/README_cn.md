@@ -114,12 +114,16 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 - S：要求一个 packed 模型，输入为 split `Y[1,672,672,1]` 与 `UV[1,336,336,2]`，
   三路输出由元数据描述。S SDK 不上报 `alignedShape`，存储布局由 `stride[]` 加
   `alignedByteSize` 描述。任何读取之前，反量化 gate 会证明原生 dtype、描述符
-  长度，以及固定源 `dequantizeTensorS32` 实际执行的寻址（元素 `(h,w,c)` 位于
-  字节偏移 `(h*W + w)*stride[2] + c*stride[3]`）：行内 padding（`stride[2]`
-  大于紧凑行）与通道 padding 是真实受支持的布局并被接受；`stride[1]` 必须等于
-  `width*stride[2]`；分配必须覆盖存储（含 padding）的完整范围。raw dump 保留
-  完整 `alignedByteSize` 范围并在 manifest 中记录 stride，因此带 padding 的
-  运行仍可机器比对。
+  长度，以及反量化器实际执行的寻址（元素 `(h,w,c)` 位于字节偏移
+  `(h*W + w)*stride[2] + c*stride[3]`）：`stride[2]` 必须覆盖一个完整像素
+  （`channels` 个元素——已发布 S100 模型 255 通道下 `stride[2]=1024` 的合法
+  pixel padding 被接受；更小导致相邻像素重叠的值被拒绝）；`stride[1]` 必须等于
+  `width*stride[2]`；分配必须在溢出检查的算术下覆盖到最后一个被寻址字节。
+  标量 scale/zero-point 描述符（长度 1）被接受，因为 adapter 私有反量化器对
+  其做广播；共享 `c_utils` 的 `dequantizeTensorS32` 会按 `scale_data[c]` 越界
+  读取，永远不会拿到这类张量。raw dump 保留完整 `alignedByteSize` 范围，并在
+  manifest 中记录 stride 与完整 scale/zero-point 数组，因此带 padding 的运行
+  仍可机器比对。
 - 所有权：两个 adapter 都只释放真正分配成功的资源，部分失败的分配不会变成盲目
   free。X5 通过 RAII lease 释放 task 与缓存；S 的 guard 跳过 `sysMem` 从未赋值
   的张量。
@@ -137,8 +141,11 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 - **预处理。** 两个原生 adapter 均使用 letterbox；统一 Python 路径默认 stretch。
   这是有意的源兼容选择，并不表示两者数值完全一致。
 - **调度。** 固定 S 源把 `priority` 强制写 0；统一 S adapter 应用调用方的
-  `--priority`/`--bpu-core`，使文档参数真实生效。X5 没有经验证的 HB-DNN 映射，
-  因此非默认值被明确拒绝而不是静默忽略。
+  `--priority`/`--bpu-core`，使文档参数真实生效。`--bpu-core` 是核**索引**
+  （`-1` = 任意，`0..3`），并显式转换为 SDK 的 backend 位掩码
+  （`HB_UCP_BPU_CORE_0..3 = 1ULL<<0..3`，`HB_UCP_BPU_CORE_ANY = 1ULL<<7`）；
+  超出 `-1..3` 的索引被拒绝，原始索引绝不会直接赋给 backend 字段。X5 没有
+  经验证的 HB-DNN 映射，因此非默认值被明确拒绝而不是静默忽略。
 - **非有限 score。** 统一解码器丢弃非有限置信度；源 S 解码会保留它们。统一行为
   是已声明的修复。
 
@@ -148,14 +155,20 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 - 退出码 `0` 表示运行完成；`2` 表示被拒绝或失败。失败时若给出 `--dump-dir`，仍
   会写出带 `return_code` 与 `error` 的 manifest，使失败可追溯。
 - 渲染图只是便利产物。机器比对以 dump 为准：`manifest.json` 用 SHA-256 绑定
-  `target`、`build_target`、`asset_id`、`model_path`、`image_path`，记录观测到的
-  输入/输出元数据（shape、dtype、量化类型、scale 长度、`alignedByteSize`、上报的
-  `stride[]`，以及 SDK 上报时的 `alignedShape`——未上报则为 null）、实际参数、UTC
-  时间戳、`argv`、`cwd`、`return_code`，并逐项列出原始与变换后张量的 shape、
-  字节数、文件名与 SHA-256。
-- X5 的原始与变换后张量同为原生 F32 头；S 的原始张量保留完整分配范围
-  （`alignedByteSize`，含行内 padding）、变换后为反量化浮点，因此板端比对可以
-  分别检查两个阶段，并依据 manifest 中的 stride 解释带 padding 的布局。
+  `target`、`build_target`、`asset_id`、`model_path`、`image_path` 以及运行中的
+  `binary_path`，记录观测到的输入/输出元数据（shape、dtype、量化类型、scale
+  长度、完整 scale/zero-point 数值、`quantizeAxis`、`alignedByteSize`、上报的
+  `stride[]`，以及 SDK 上报时的 `alignedShape`——未上报则为 null）、实际参数、
+  UTC 时间戳、`argv`、`cwd`、`return_code`。张量负载按阶段分目录写入
+  `input/`、`raw/`、`transformed/`，各自带 shape、字节数、文件名与 SHA-256，
+  因此同一输出的原始与变换后字节不可能互相覆盖。
+- input 文件保存该次推理实际提交的输入缓冲（X5 为紧凑 NV12 负载，S 为按行
+  汇聚的平面负载）；未初始化的 padding 字节有意不导出。X5 的原始与变换后
+  张量同为原生 F32 头；S 的原始张量保留完整分配范围（`alignedByteSize`，含
+  pixel padding）、变换后为反量化浮点，因此板端比对可以分别检查两个阶段，
+  并依据 manifest 中的 stride 解释带 padding 的布局。dump 记录的是本二进制
+  的产出本身，并不因此声明与固定源 runtime 数值等价——那需要板端 evaluator
+  另行建立。
 - 板端状态（2026-09-24，协调者证据）：整改前提交在真实 X5 8GB 上编译链接
   `rc=0`，首次 launcher 推理返回 `rc=0`；同一提交在 S100 上编译失败，原因是 S
   adapter 使用了 X5 独有的 SDK 拼写，本轮已按板端头文件证据修复。本工作树不作

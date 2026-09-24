@@ -5,6 +5,7 @@
 #include "yolov5_decode.hpp"
 #include "yolov5_dump.hpp"
 #include "yolov5_gate.hpp"
+#include "yolov5_s_native.hpp"
 #include "yolov5_visualize.hpp"
 
 // The S UCP SDK installs its DNN headers under /usr/include/hobot (verified on a
@@ -37,12 +38,14 @@ constexpr std::array<float, 18> kAnchors = {
     10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326};
 
 int tensor_dtype_code(int32_t type) {
-  // Only the enum names the on-board S100 header evidence confirms (F32/S32
-  // among the visible tail of hbDNNDataType) are referenced here. Every other
-  // value maps to unknown, which the gates reject: the S YOLOv5 contract only
-  // ever accepts native S32 (SCALE) or F32 (NONE) outputs.
+  // Enum names confirmed present in the real S100 hb_dnn.h (on-board evidence
+  // 2026-09-24): S8/U8/S16/F32/S32 among others. Values outside the known set
+  // stay unknown so the gates reject them.
   if (type == HB_DNN_TENSOR_TYPE_F32) return kDtypeF32;
   if (type == HB_DNN_TENSOR_TYPE_S32) return kDtypeS32;
+  if (type == HB_DNN_TENSOR_TYPE_S8) return kDtypeS8;
+  if (type == HB_DNN_TENSOR_TYPE_U8) return kDtypeU8;
+  if (type == HB_DNN_TENSOR_TYPE_S16) return kDtypeS16;
   return kDtypeUnknown;
 }
 
@@ -70,6 +73,7 @@ TensorMeta project(const hbDNNTensorProperties& properties) {
   // prepare_input_tensor as stride[0] * batch, which the caller overrides below.
   meta.storage_bytes = properties.alignedByteSize;
   for (int i = 0; i < 4; ++i) meta.stride[i] = properties.stride[i];
+  meta.quantize_axis = properties.quantizeAxis;
   if (properties.quantiType == SCALE) {
     meta.scale_len = properties.scale.scaleLen;
     meta.zero_point_len = properties.scale.zeroPointLen;
@@ -83,6 +87,26 @@ std::vector<long long> shape_of(const TensorMeta& meta) {
   return shape;
 }
 
+DumpTensor gather_plane_rows(const hbDNNTensor& tensor, const TensorMeta& meta,
+                             const std::string& name) {
+  // Deterministic payload of one NV12 plane: the writer fills each row of
+  // valid[2]*valid[3] bytes at a stride[1] pitch, and the padding between rows
+  // is uninitialized memory that is deliberately not copied into the evidence.
+  DumpTensor payload;
+  payload.name = name;
+  payload.dtype = dtype_name(meta.dtype);
+  payload.shape = shape_of(meta);
+  const unsigned char* base = static_cast<const unsigned char*>(tensor.sysMem.virAddr);
+  const long long rows = meta.valid[1];
+  const long long row_bytes = meta.valid[2] * meta.valid[3];
+  payload.bytes.reserve(static_cast<std::size_t>(rows * row_bytes));
+  for (long long row = 0; row < rows; ++row) {
+    const unsigned char* begin = base + static_cast<std::size_t>(row * meta.stride[1]);
+    payload.bytes.insert(payload.bytes.end(), begin, begin + static_cast<std::size_t>(row_bytes));
+  }
+  return payload;
+}
+
 void require_gate(const Gate& gate) {
   if (!gate) throw std::runtime_error(gate.reason);
 }
@@ -92,7 +116,9 @@ void require_gate(const Gate& gate) {
 // Frees only tensors that were actually allocated: a partially failed
 // allocation must not turn into a blind free of a zeroed sysMem.
 struct SResourceGuard {
-  hbPackedDNNHandle_t packed = nullptr;
+  // The real S100 SDK spells the packed handle hbDNNPackedHandle_t (on-board
+  // compile evidence 2026-09-24); hbPackedDNNHandle_t is the X5 spelling.
+  hbDNNPackedHandle_t packed = nullptr;
   hbUCPTaskHandle_t task = nullptr;
   std::vector<hbDNNTensor> inputs;
   std::vector<hbDNNTensor> outputs;
@@ -110,8 +136,11 @@ int run_native(const RuntimeOptions& options) {
   require_gate(check_target_matches_build(options.target, YOLOV5_TARGET_NAME));
   if (options.target != "s100" && options.target != "s600")
     throw std::invalid_argument("S adapter supports s100 and s600 YOLOv5 assets only");
+  unsigned long long backend = 0;
+  if (!bpu_core_to_backend(options.bpu_core, &backend))
+    throw std::invalid_argument("--bpu-core must be -1 (any) or a core index 0..3");
 
-  hbPackedDNNHandle_t packed = nullptr;
+  hbDNNPackedHandle_t packed = nullptr;
   const char* file = options.model_path.c_str();
   if (hbDNNInitializeFromFiles(&packed, &file, 1) != 0)
     throw std::runtime_error("hbDNNInitializeFromFiles failed");
@@ -167,8 +196,9 @@ int run_native(const RuntimeOptions& options) {
   if (prepare_input_tensor(inputs) != 0 || prepare_output_tensor(outputs) != 0)
     throw std::runtime_error("S tensor allocation failed");
 
-  // Allocations exist now, so the stride/capacity assumptions of the writer and
-  // of dequantizeTensorS32 are checked against what the runtime actually gave us.
+  // Allocations exist now, so the stride/capacity assumptions of the NV12
+  // writer and of the dequantizer are checked against what the runtime
+  // actually reported.
   TensorMeta y_gate = project(inputs[0].properties);
   y_gate.storage_bytes = y_gate.stride[0] * y_gate.valid[0];
   require_gate(check_s_nv12_plane(y_gate, kInputSize, kInputSize, 1));
@@ -202,8 +232,11 @@ int run_native(const RuntimeOptions& options) {
   HB_UCP_INITIALIZE_SCHED_PARAM(&schedule);
   // Declared difference from the fixed S source, which hard-codes priority 0 and
   // HB_UCP_BPU_CORE_ANY: the unified CLI exposes scheduling, so silently
-  // dropping the caller's value would make the documented parameters lie.
-  schedule.backend = options.bpu_core < 0 ? HB_UCP_BPU_CORE_ANY : options.bpu_core;
+  // dropping the caller's value would make the documented parameters lie. The
+  // backend is a bitmask (CORE_0..3 = 1ULL<<0..3, ANY = 1ULL<<7), so the CLI's
+  // core index is converted explicitly by bpu_core_to_backend above instead of
+  // being assigned raw (0 would select no backend, 1 would select core 0).
+  schedule.backend = backend;
   schedule.priority = options.priority;
   if (hbUCPSubmitTask(task, &schedule) != 0 || hbUCPWaitTaskDone(task, 0) != 0)
     throw std::runtime_error("S UCP task failed");
@@ -220,10 +253,12 @@ int run_native(const RuntimeOptions& options) {
   dump.image_path = options.image_path;
   dump.argv = options.argv;
   dump.cwd = std::filesystem::current_path().string();
+  dump.binary_path = current_binary_path(options.argv.empty() ? "" : options.argv.front());
   dump.options = {{"score_thres", std::to_string(options.score_threshold)},
                   {"nms_thres", std::to_string(options.nms_threshold)},
                   {"priority", std::to_string(options.priority)},
                   {"bpu_core", std::to_string(options.bpu_core)},
+                  {"bpu_core_backend", std::to_string(backend)},
                   {"preprocess", "letterbox"},
                   {"nms_top_k_per_class", "-1"},
                   {"score_boundary", "greater-or-equal"},
@@ -231,29 +266,44 @@ int run_native(const RuntimeOptions& options) {
   dump.notes = {"S UCP adapter; split NV12 672x672 Y/UV inputs; per-channel S32 dequantization.",
                 "NMS preserves source S nms_bboxes semantics: keep score >= threshold, no "
                 "per-class top_k.",
-                "Scheduling honours the caller's priority/BPU core (source S forces priority 0)."};
+                "Scheduling honours the caller's priority/BPU core (source S forces priority 0); "
+                "the core index is mapped to the SDK's backend bitmask.",
+                "Input files hold the deterministic per-row payload the writer produced; "
+                "inter-row padding bytes are uninitialized and are not dumped."};
 
   const TensorMeta y_meta = project(inputs[0].properties);
   const TensorMeta uv_meta = project(inputs[1].properties);
   dump.inputs.push_back(dump_tensor_info("y", y_meta));
   dump.inputs.push_back(dump_tensor_info("uv", uv_meta));
+  // The input buffers actually submitted with this inference: the NV12 writer
+  // fills each row of cols*channels bytes at stride[1] pitch, so the payload is
+  // gathered row by row (the padding between rows is uninitialized memory).
+  dump.input_tensors.push_back(gather_plane_rows(inputs[0], y_meta, "input0-y"));
+  dump.input_tensors.push_back(gather_plane_rows(inputs[1], uv_meta, "input1-uv"));
 
   std::vector<std::vector<float>> dequantized;
   dequantized.reserve(outputs.size());
   for (std::size_t i = 0; i < outputs.size(); ++i) {
     const auto& meta = output_meta[i];
-    dump.outputs.push_back(dump_tensor_info("output" + std::to_string(i), meta));
+    const auto& props = outputs[i].properties;
+    dump.outputs.push_back(dump_tensor_info("output" + std::to_string(i), meta,
+                                            props.scale.scaleData,
+                                            props.scale.zeroPointData));
     // The raw file keeps the full allocated extent (alignedByteSize), so a
-    // row-padded layout is dumped exactly as the runtime stored it; the
-    // manifest records the strides needed to interpret it.
+    // padded layout is dumped exactly as the runtime stored it; the manifest
+    // records the strides needed to interpret it.
     const std::size_t raw_extent = static_cast<std::size_t>(meta.aligned_byte_size);
     std::vector<unsigned char> raw_bytes(raw_extent);
     if (raw_extent > 0) std::memcpy(raw_bytes.data(), outputs[i].sysMem.virAddr, raw_extent);
     dump.raw_tensors.push_back({"output" + std::to_string(i), dtype_name(meta.dtype),
                                 shape_of(meta), std::move(raw_bytes)});
-    // Source S32/per-channel helper; the gate above proved the descriptor and
-    // the addressing it performs, so no unsupported layout is ever read.
-    dequantized.push_back(dequantizeTensorS32(outputs[i]));
+    // Private broadcasting dequantizer (the shared c_utils helper indexes
+    // scale_data[c] and would read out of bounds for a scalar descriptor);
+    // the gate above proved the addressing contract it relies on.
+    dequantized.push_back(dequant_s32_nhwc(
+        static_cast<const unsigned char*>(outputs[i].sysMem.virAddr), meta,
+        props.scale.scaleData, props.scale.scaleLen, props.scale.zeroPointData,
+        props.scale.zeroPointLen));
     const auto& values = dequantized.back();
     std::vector<unsigned char> float_bytes(values.size() * sizeof(float));
     if (!values.empty()) std::memcpy(float_bytes.data(), values.data(), float_bytes.size());

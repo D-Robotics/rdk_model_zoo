@@ -49,6 +49,7 @@ struct TensorMeta {
   long long stride[4] = {0, 0, 0, 0};
   long long scale_len = 0;
   long long zero_point_len = 0;
+  long long quantize_axis = -1;
 };
 
 struct Gate {
@@ -86,14 +87,18 @@ Gate check_x5_head(const TensorMeta& meta, long long input_size, long long class
 Gate check_s_nv12_plane(const TensorMeta& meta, long long rows, long long cols,
                         long long channels);
 
-// S: one output tensor that dequantizeTensorS32 may read. Validates the native
+// S: one output tensor that the dequantizer may read. Validates the native
 // dtype, the quantization descriptor length and the byte strides against the
-// addressing the fixed-source helper actually performs: element (h, w, c) is
-// read at byte offset (h*W + w) * stride[2] + c * stride[3]. Row padding
-// (stride[2] > W*stride[3]) and channel padding (stride[3] > element size) are
-// genuinely supported and accepted; stride[1] must equal W*stride[2] because
-// the helper addresses every row at a uniform row stride. The allocation must
-// cover the stored (padded) extent. On success writes the element count.
+// addressing actually performed: element (h, w, c) is read at byte offset
+// (h*W + w) * stride[2] + c * stride[3]. stride[3] must be a positive
+// element-size multiple (channel padding is genuinely supported), stride[2]
+// must cover a full pixel (channels elements — smaller values make pixels
+// overlap and are rejected), and stride[1] must equal W*stride[2] exactly
+// (rows are addressed at a uniform pitch; H-level padding is rejected). A
+// scalar scale/zero-point descriptor (length 1) is accepted for the adapter's
+// broadcasting private helper, not for the shared c_utils dequantizer. The
+// allocation must cover the exact last addressed byte, with overflow-checked
+// arithmetic. On success writes the element count.
 Gate check_s32_dequant(const TensorMeta& meta, long long* element_count);
 
 // A native binary is configured for exactly one target (S alignment differs
