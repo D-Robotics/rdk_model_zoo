@@ -34,3 +34,9 @@ X5 C++ 默认 s-v2.0 已实际推理 rc=0，bus.jpg 上输出五个 detection，
 ## S100 发布资产的实际 padded 输出
 
 已下载 manifest 指定 `s100/yolov5x_672x672_nv12.hbm`，observed SHA-256 `3bc8ffc82a842a5d1fcb493eeedc8f6e3dd0a55379338d27e5cdca4e34121402`（publisher hash 未提供）。真实 HB_HBMRuntime 输出为 S32/SCALE，逻辑 channels=255，但每像素 stride=1024 bytes，即256个S32存储槽：84头 stride `[7225344,86016,1024,4]`，42头 `[1806336,43008,1024,4]`，21头 `[451584,21504,1024,4]`。因此当前 `check_s32_dequant` 要求 `stride[2] == 255*4` 将拒绝真正发布制品；必须按 stride 读取并生成紧凑逻辑输出，不能将所有 padded 布局拒绝作为完成条件。输入SDK报告的前两个 strides为-1，需要依据原有 prepare_input_tensor 初始化后再校验，不能把初始化前描述直接当可寻址存储。该步骤仅为模型加载和 metadata 核对，尚未进行 S 推理。完整输出见 evidence/2026-09-24-b7-board-initial/b7-s100-native-metadata.json。
+
+## S100 Python 正常入口：signed dtype alias 阻断
+
+`python3 samples/vision/yolov5/runtime/python/main.py --target s100` 在相同发布制品/基点实板返回2：`Unsupported native output dtype 's32'`。SDK enum `hbDNNDataType.S32` 经共享 `canonicalise_dtype` 变成未识别 s32，而模型绑定要求int32；应把有证据的 S8/S16/S32 与相应 int dtype 对齐，不能放宽未知类型 gate。原始命令/输出见 evidence/2026-09-24-b7-board-initial/b7-s100-python-smoke.json。
+
+本地开发已拆为三个隔离 GLM 工作单元：native 主任务（GLM-5.3），B7 metadata serializer（GLM-5.3-flash），signed dtype alias（GLM-5.3-flash）。Codex 负责逐项复审和 GitHub 同步，作者不自行提交/合并；新增修复尚未声称通过板测。
