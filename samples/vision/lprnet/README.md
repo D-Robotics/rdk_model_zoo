@@ -12,7 +12,7 @@ LPRNet recognizes a cropped license-plate tensor as a character sequence without
 
 | target | variant | Python | C++ | status |
 |---|---|---|---|---|
-| X5 | `lpr.bin` | supported-not-run | not-supported | host fixtures pass; board not-run |
+| X5 | `lpr.bin` | supported-not-run | not-supported | host fixtures pass; board binding remediated 2026-09-24 (native output `(1,68,18,1)`), board re-run pending |
 | S100/S100P/S600 | — | not-supported | not-supported | no source asset |
 
 This sample has no C++ implementation. Host tests do not certify board execution.

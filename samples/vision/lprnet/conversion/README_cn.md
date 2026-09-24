@@ -13,7 +13,7 @@
 <a id="export"></a>
 ## 导出
 
-固定源没有导出配方。用户必须自行提供 ONNX/checkpoint 流程，并产出 `input float32 NCHW (1,3,24,94)`、`output float32 (1,68,18)` 的部署图。本迁移没有虚构或执行该流程。
+固定源没有导出配方。用户必须自行提供 ONNX/checkpoint 流程，并产出 `input float32 NCHW (1,3,24,94)`、`output float32 (1,68,18,1)` 的部署图——即发布版 `lpr.bin` 的 native logits；CTC 解码在移除单元素轴后消费 `(68,18)` 载荷。本迁移没有虚构或执行该流程。
 
 <a id="calibration"></a>
 ## 校准

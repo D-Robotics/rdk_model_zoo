@@ -66,7 +66,13 @@ def _dry_run(args: argparse.Namespace) -> int:
         "target": selection.target, "asset_id": selection.asset.reference,
         "model_path": str(selection.model_path), "model_format": selection.asset.format,
         "input_shape": [1, 3, 24, 94], "input_dtype": "float32",
-        "output_shape": [1, 68, 18], "output_dtype": "float32",
+        "output_shape": [1, 68, 18, 1], "output_dtype": "float32",
+        "output_layout": ("released lpr.bin binds native logits (1, 68, 18, 1) "
+                          "(measured board protocol); the 3D (1, 68, 18) layout "
+                          "is the old host/API compatibility contract and no "
+                          "published SDK artifact has been observed with it; "
+                          "post_process drops only singleton axes to the CTC "
+                          "payload (68, 18)"),
         "source_input": "prepacked float32 .dat; no image preprocessing",
         "model_path_exists": selection.model_path.is_file(),
         "sdk_loaded": False, "downloaded": False,

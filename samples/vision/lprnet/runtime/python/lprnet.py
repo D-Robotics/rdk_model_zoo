@@ -11,7 +11,11 @@ from typing import Mapping
 
 import numpy as np
 
-from samples.vision.lprnet.runtime.python.model_binding import INPUT_SHAPE, ModelBinding
+from samples.vision.lprnet.runtime.python.model_binding import (
+    CTC_LOGITS_SHAPE,
+    INPUT_SHAPE,
+    ModelBinding,
+)
 from samples.vision.lprnet.runtime.python.tensor_io import read_float32_input
 
 
@@ -28,6 +32,25 @@ class PreparedInput:
 
     tensors: Mapping[str, np.ndarray]
     context: Path
+
+
+def ctc_logits(value: np.ndarray) -> np.ndarray:
+    """Reduce bound native logits to the source ``(68, 18)`` CTC payload.
+
+    Only size-1 axes are dropped, never reshaped or reordered: the measured
+    ``(1, 68, 18, 1)`` published artifact and the legacy API-compatible
+    ``(1, 68, 18)`` host contract (no published SDK artifact observed with
+    it) both reduce to ``(68, 18)``.  Any layout that does not reduce by
+    singleton removal alone is rejected instead of guessed.
+    """
+
+    reduced = np.squeeze(np.asarray(value))
+    if reduced.shape != CTC_LOGITS_SHAPE:
+        raise ValueError(
+            f"Bound logits {np.asarray(value).shape} do not reduce to "
+            f"{CTC_LOGITS_SHAPE} by singleton removal; unsupported layout."
+        )
+    return reduced
 
 
 def decode_plate(logits: np.ndarray) -> str:
@@ -71,12 +94,20 @@ class LPRNetTask:
         return self.runner(tensors)
 
     def post_process(self, raw: np.ndarray) -> str:
-        """Decode raw ``(1,68,18)`` logits with source CTC semantics."""
+        """Drop protocol singletons from the bound native logits and decode.
+
+        ``raw`` must be the float32 array exactly as bound — the released
+        artifact reports ``(1, 68, 18, 1)`` — and only size-1 axes are
+        removed before the source CTC decode.
+        """
 
         value = np.asarray(raw)
-        if value.shape != (1, 68, 18) or value.dtype != np.float32:
-            raise ValueError(f"Expected raw float32 logits (1, 68, 18), got {value.shape}/{value.dtype}.")
-        return decode_plate(value[0])
+        if value.shape != self.binding.output_shape or value.dtype != np.float32:
+            raise ValueError(
+                f"Expected raw float32 logits {self.binding.output_shape}, "
+                f"got {value.shape}/{value.dtype}."
+            )
+        return decode_plate(ctc_logits(value))
 
     def predict(self, test_bin: str | Path) -> str:
         """Run pre_process, forward, and post_process for one binary input."""
@@ -87,4 +118,7 @@ class LPRNetTask:
 
 LPRNet = LPRNetTask
 
-__all__ = ["BLANK_INDEX", "CHARS", "LPRNet", "LPRNetTask", "PreparedInput", "decode_plate"]
+__all__ = [
+    "BLANK_INDEX", "CHARS", "LPRNet", "LPRNetTask", "PreparedInput",
+    "ctc_logits", "decode_plate",
+]
