@@ -40,3 +40,9 @@ X5 C++ 默认 s-v2.0 已实际推理 rc=0，bus.jpg 上输出五个 detection，
 `python3 samples/vision/yolov5/runtime/python/main.py --target s100` 在相同发布制品/基点实板返回2：`Unsupported native output dtype 's32'`。SDK enum `hbDNNDataType.S32` 经共享 `canonicalise_dtype` 变成未识别 s32，而模型绑定要求int32；应把有证据的 S8/S16/S32 与相应 int dtype 对齐，不能放宽未知类型 gate。原始命令/输出见 evidence/2026-09-24-b7-board-initial/b7-s100-python-smoke.json。
 
 本地开发已拆为三个隔离 GLM 工作单元：native 主任务（GLM-5.3），B7 metadata serializer（GLM-5.3-flash），signed dtype alias（GLM-5.3-flash）。Codex 负责逐项复审和 GitHub 同步，作者不自行提交/合并；新增修复尚未声称通过板测。
+
+## signed dtype 修复独立复验通过（限定范围）
+
+作者专项 `7f27c8c0e752ef6e7849eb509138bb44d0984ed1` 已推送 GitHub 分支 `codex/b7-glm-dtypes-20260924`。Codex 审查修改仅对 S8/S16/S32 做 signed alias 规范化，独立运行 shared111 / YOLOv5 32 测试全部通过。在 S100 经 GitHub fetch/checkout 该提交后，默认 Python 入口由 rc=2 变为 rc=0，输出14个检测。逐项解析完整 stdout JSON，全部 boxes/scores/class_ids 与同板同模型固定源 Python 结果完全相同。修复后的 runtime_meta.py 板端SHA-256 `563331b8faea635f38a0a26c07d7eded11f063e8872493b2cace84b9a8abebb6`，详见 dtype-recheck 和 result-comparison evidence。
+
+固定源 S C++ 也已用真实 SDK 编译并执行 rc=0。该记录证明环境/制品可用，不替代统一 C++ 尚未完成的整改验证。dtype 单项可关闭；B7 整体 remains changes-required，完整 native input/raw 比较仍待 serializer 修复后补齐。专项分支尚未整批合入 develop。
