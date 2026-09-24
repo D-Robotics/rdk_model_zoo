@@ -41,6 +41,28 @@ class FakeRuntime:
         self.scheduling = kwargs
 
 
+class BoardQuantParams:
+    """Mimics hbm_runtime.QuantParams: attributes read, any copy refuses (X5 board evidence 2026-09-24)."""
+
+    def __init__(self, *, quant_type="NONE", scale=1.0, zero_point=0, axis=0):
+        self.quant_type = types.SimpleNamespace(name=quant_type)
+        self.scale = np.asarray(scale, dtype=np.float32)
+        self.zero_point = np.asarray(zero_point, dtype=np.int32)
+        self.axis = axis
+
+    def __deepcopy__(self, memo):
+        raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+
+    def __copy__(self):
+        raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+
+
+class QuantRuntime(FakeRuntime):
+    """X5-style runtime: a vestigial descriptor rides along the F32 output."""
+
+    output_quants = {"modnet": {"matte": BoardQuantParams()}}
+
+
 class MODNetTests(unittest.TestCase):
     def test_geometry_matches_fixed_source_numeric_helper(self):
         source_path = Path(__file__).resolve().parents[4] / "platforms/x5/samples/vision/modnet/runtime/python/modnet.py"
@@ -264,6 +286,40 @@ class MODNetEvaluatorTests(unittest.TestCase):
                 self.assertEqual(len(entry["sha256"]), 64)
             self.assertTrue((directory / "comparison.json").is_file())
             self.assertTrue(all(summary["checks"].values()))
+
+    def test_evaluator_metadata_survives_copy_hostile_board_quant_params(self):
+        """The old asdict() metadata snapshot raised TypeError on the real board."""
+        compare = importlib.import_module("samples.vision.modnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, image, image_path = self._fixtures(temp)
+            directory = Path(temp) / "quants"
+
+            def factory(mattes):
+                state = {"index": 0}
+
+                def make(path):
+                    value = mattes[min(state["index"], len(mattes) - 1)]
+                    state["index"] += 1
+                    return QuantRuntime(value)
+
+                return make
+
+            summary = self._run(
+                compare, selection, image, image_path, directory,
+                factory([self._matte()]),
+            )
+            self.assertEqual(summary["return_code"], 0, summary.get("error"))
+            self.assertTrue(summary["passed"])
+            for side in ("legacy", "unified"):
+                quant = summary["metadata"][side]["output_quants"]["matte"]
+                self.assertEqual(quant["quant_type"], "NONE")
+                self.assertEqual(quant["scale"], 1.0)
+                self.assertEqual(quant["zero_point"], 0)
+                self.assertEqual(quant["axis"], 0)
+            saved = json.loads((directory / "comparison.json").read_text())
+            self.assertEqual(
+                saved["metadata"]["unified"]["output_quants"]["matte"]["scale"], 1.0
+            )
 
     def test_evaluator_reports_a_real_difference_instead_of_passing(self):
         compare = importlib.import_module("samples.vision.modnet.evaluator.compare")

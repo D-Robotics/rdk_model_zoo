@@ -53,6 +53,16 @@ class Quant:
         self.axis = axis
 
 
+class CopyHostileQuant(Quant):
+    """Quant with the board failure surface: attributes read, any copy refuses."""
+
+    def __deepcopy__(self, memo):
+        raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+
+    def __copy__(self):
+        raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+
+
 def _source_class():
     module_name = "fcos_source_contract_fixture"
     if module_name in sys.modules:
@@ -422,6 +432,80 @@ class FcosContractTests(unittest.TestCase):
             self.assertEqual(errored["return_code"], 2)
             self.assertTrue((execution_error / "errors.json").is_file())
             self.assertIn("fake SDK failure", (execution_error / "errors.json").read_text(encoding="utf-8"))
+
+    def test_evaluator_metadata_survives_copy_hostile_board_quant_params(self):
+        """The old asdict() metadata snapshot raised TypeError on the real board."""
+        from samples.vision.fcos.evaluator.compare import run_comparison
+        from samples.vision.fcos.runtime.python.fcos import FCOSTask
+        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples._shared.runtime_meta import RuntimeMetadata
+
+        metadata = metadata_for("efficientnetb0")
+        metadata["output_quants"] = {
+            name: CopyHostileQuant(0.1, 0) for name in metadata["output_names"]
+        }
+        base_raw = fixture_outputs()
+        image = np.zeros((512, 512, 3), dtype=np.uint8)
+        selection = resolve_selection(
+            "x5",
+            asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin",
+            model_path=tempfile.gettempdir() + "/fcos-evaluator-fixture.bin",
+        )
+        Path(selection.model_path).write_bytes(b"fixture-model")
+
+        def legacy_factory(selection, image, **kwargs):
+            binding = bind_model(selection, metadata)
+            task = FCOSTask(lambda tensors: base_raw, binding)
+            prepared = task.pre_process(image)
+            return {
+                "metadata": RuntimeMetadata.from_mapping(metadata),
+                "inputs": {key: value.copy() for key, value in prepared.tensors.items()},
+                "raw": {key: value.copy() for key, value in base_raw.items()},
+                "result": dict(zip(("boxes", "scores", "class_ids"), task.post_process(base_raw, prepared.context).as_tuple())),
+            }
+
+        class FakeRuntime:
+            model_names = [metadata["model_name"]]
+            input_names = {metadata["model_name"]: metadata["input_names"]}
+            input_shapes = {metadata["model_name"]: metadata["input_shapes"]}
+            output_names = {metadata["model_name"]: metadata["output_names"]}
+            output_shapes = {metadata["model_name"]: metadata["output_shapes"]}
+            input_dtypes = {metadata["model_name"]: metadata["input_dtypes"]}
+            output_dtypes = {metadata["model_name"]: metadata["output_dtypes"]}
+            output_quants = {metadata["model_name"]: metadata["output_quants"]}
+
+            def set_scheduling_params(self, **kwargs):
+                self.scheduling = kwargs
+
+            def run(self, inputs):
+                return {metadata["model_name"]: {key: value.copy() for key, value in base_raw.items()}}
+
+        with tempfile.TemporaryDirectory() as temp:
+            evidence = Path(temp) / "quants"
+            old_sdk = sys.modules.get("hbm_runtime")
+            sys.modules["hbm_runtime"] = types.ModuleType("hbm_runtime")
+            try:
+                with patch("samples.vision.fcos.evaluator.compare.require_execution_target", return_value="x5"):
+                    passed = run_comparison(
+                        selection, image, SAMPLE / "test_data" / "bus.jpg", evidence,
+                        runtime_factory=lambda path: FakeRuntime(),
+                        legacy_runner_factory=legacy_factory,
+                    )
+            finally:
+                if old_sdk is None:
+                    sys.modules.pop("hbm_runtime", None)
+                else:
+                    sys.modules["hbm_runtime"] = old_sdk
+            self.assertEqual(passed["return_code"], 0, passed.get("errors"))
+            self.assertTrue(passed["passed"])
+            self.assertTrue(passed["checks"]["metadata"])
+            for side in ("source", "unified"):
+                payload = json.loads((evidence / side / "metadata.json").read_text(encoding="utf-8"))
+                quant = payload["output_quants"]["cls_8"]
+                self.assertEqual(quant["quant_type"], "SCALE")
+                self.assertEqual(quant["scale"], np.float32(0.1).item())
+                self.assertEqual(quant["zero_point"], 0.0)
+                self.assertEqual(quant["axis"], 0)
 
     def test_runner_binds_injected_runtime_metadata_and_returns_raw_output(self):
         from samples.vision.fcos.runtime.python.model_binding import resolve_selection

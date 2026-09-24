@@ -21,6 +21,13 @@ class FakeRuntime:
     def run(self,inputs): self.calls.append(inputs); return {'yolo':{'scores':self.scores,'boxes':self.boxes}}
     def set_scheduling_params(self,**kwargs): self.scheduling=kwargs
 
+class BoardQuantParams:
+    """Mimics hbm_runtime.QuantParams: attributes read, any copy refuses (X5 board evidence 2026-09-24)."""
+    def __init__(self,quant_type='NONE',scale=1.0,zero_point=0,axis=0):
+        self.quant_type=types.SimpleNamespace(name=quant_type);self.scale=np.asarray(scale,np.float32);self.zero_point=np.asarray(zero_point,np.int32);self.axis=axis
+    def __deepcopy__(self,memo):raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+    def __copy__(self):raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+
 def fixture():
     vocab=json.loads((SAMPLE/'test_data/offline_vocabulary_embeddings.json').read_text())
     runtime=FakeRuntime(); sel=resolve_selection('x5'); runner=RuntimeModelRunner(sel,runtime=runtime); binding=runner.load()
@@ -218,6 +225,31 @@ class YOLOWorldEvaluatorTests(unittest.TestCase):
                 self.assertEqual(len(entry["sha256"]), 64)
             self.assertTrue((directory / "comparison.json").is_file())
             self.assertTrue(all(summary["checks"].values()))
+
+    def test_evaluator_metadata_survives_copy_hostile_board_quant_params(self):
+        """The old asdict() metadata snapshot raised TypeError on the real board."""
+        import importlib
+        compare = importlib.import_module("samples.vision.yoloworld.evaluator.compare")
+        def quant_runtime(_):
+            runtime = self._runtime()
+            runtime.output_quants = {'yolo': {'scores': BoardQuantParams(), 'boxes': BoardQuantParams()}}
+            return runtime
+        with __import__("tempfile").TemporaryDirectory() as temp:
+            selection, image, image_path, vocabulary, vocab_path = self._fixtures(temp)
+            directory = Path(temp) / "quants"
+            summary = self._run(compare, selection, image, image_path, vocabulary, vocab_path,
+                                directory, quant_runtime)
+            self.assertEqual(summary["return_code"], 0, summary.get("error"))
+            self.assertTrue(summary["passed"])
+            for side in ("legacy", "unified"):
+                quants = summary["metadata"][side]["output_quants"]
+                for name in ("scores", "boxes"):
+                    self.assertEqual(quants[name]["quant_type"], "NONE")
+                    self.assertEqual(quants[name]["scale"], 1.0)
+                    self.assertEqual(quants[name]["zero_point"], 0)
+                    self.assertEqual(quants[name]["axis"], 0)
+            saved = json.loads((directory / "comparison.json").read_text())
+            self.assertEqual(saved["metadata"]["unified"]["output_quants"]["scores"]["scale"], 1.0)
 
     def test_evaluator_reports_a_real_difference_instead_of_passing(self):
         import importlib

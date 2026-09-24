@@ -29,11 +29,11 @@ output must stay visible in the binding snapshot instead of being silently
 dropped (the raw_f32 path gates on dtype and never applies it).
 
 Those raw descriptors are SDK objects that refuse to be copied, so evidence
-writers must not run them through :func:`dataclasses.asdict` (it
-``copy.deepcopy``\ s every leaf and the board ``QuantParams`` type raises
-``TypeError`` when pickled — board evidence 2026-09-24).  Use
-:func:`metadata_evidence` to project a ``RuntimeMetadata`` into JSON-ready
-evidence values without copying or mutating anything.
+writers must not run them through :func:`dataclasses.asdict` (it deep-copies
+every leaf and the board ``QuantParams`` type raises ``TypeError`` when
+pickled — board evidence 2026-09-24).  Use :func:`metadata_evidence` to
+project a ``RuntimeMetadata`` into JSON-ready evidence values without copying
+or mutating anything.
 """
 from __future__ import annotations
 
