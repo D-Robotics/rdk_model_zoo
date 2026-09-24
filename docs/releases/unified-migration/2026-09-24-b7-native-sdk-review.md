@@ -24,3 +24,9 @@ X5 C++ 默认 s-v2.0 已实际推理 rc=0，bus.jpg 上输出五个 detection，
 - X5 Python evaluator 在真实 SDK 抛 `TypeError: cannot pickle hbm_runtime.HB_HBMRuntime.QuantParams object`：`compare.py` 对 `RuntimeMetadata` 调用 dataclasses.asdict，触发对 SDK 对象的 deepcopy。失败发生在 legacy 模型初始化的 metadata capture 中，尚未比较输出。需要显式序列化 SDK metadata/quant 字段，并用禁止 deepcopy 的测试替身覆盖；排查其他 evaluator 的同类模式。失败 comparison.json 已原样保留，禁止修改为通过。
 
 证据目录：[首次板端构建/推理/失败记录](evidence/2026-09-24-b7-board-initial/)。C++ raw 输出仍在板端 `/tmp/rdk-b7-x5-native-dump`，尚未作为仓库可携带原始数组归档；故当前不支持完整对照验收。
+
+## 后续独立复现：dump 文件覆盖与共享序列化模式
+
+使用实际 `yolov5_dump.cpp` 编译 SDK-free probe，输入同名 output0 的 int32 原始 bytes `{1,0,0,0}` 和 float32 转换 bytes `{0,0,128,63}`：write_dump 返回成功，但两者都写 `0-output0.bin`，原始数组被覆盖。manifest 原始 SHA 与磁盘实测不一致。见 [可复现 probe 源码和结果](evidence/2026-09-24-b7-board-initial/b7-dump-collision-probe.json)。修复需按类别隔离文件名，并测试从磁盘重新读取和核对两侧 digest；同一 dump 目录的覆盖策略也应明确。
+
+代码核对发现六个 B7 evaluator 都存在 dataclasses.asdict(RuntimeMetadata) 或等效写法：YOLOv5、ByteTrack、FCOS、LPRNet、MODNet、YOLOWorld。真实 X5 SDK 已证实无法 deepcopy QuantParams；其他五项尚未逐一实板执行，当前结论为共享风险，不虚称已逐项板端复现。建议统一可 JSON 序列化的 metadata 投影，保留 scale/zero_point/axis/type/stride，不改推理语义，并覆盖真实对象不可 deepcopy 的边界。
