@@ -62,3 +62,11 @@ S100额外SDK核对确认S8/U8/S16枚举均存在，可正确标注NV12输入U8�
 ## dtype 单项整合 develop
 
 在板端复验通过后，仅将signed dtype独立修复cherry-pick到develop，提交 `4dce619`。在develop实际树重新运行shared111 / YOLOv5 24项通过（此树尚未合入HP/native新增测试，故不混称35项）。原B7整体仍changes-required；native/evaluator整批修改继续隔离。整合日志见 evidence/2026-09-24-b7-dtype-develop-integration.json。
+
+## Python 首轮完整对照通过：ae0f185
+
+将metadata核心检查点 `a141c48` 与已实板通过的dtype修复组合为板测分支提交 `ae0f18522f5512b4505f3bc2457ff2afd39af3c9`，独立shared118 / YOLOv5 32项主机测试通过。两块板均从GitHub获取此提交：X5 8GB使用s-v2.0/bus，S100使用x-672/kite；固定源与统一入口同板、同制品执行，两个 evaluator 均rc=0/所有checks=true。全部输入、raw输出、boxes/scores/class_ids逐项数值最大差均为0（class ID dtype按既有明确契约归一化，不声称全文件逐字节相同）。
+
+原始14份X5数组、16份S100数组及完整metadata/code/model/input SHA、argv/cwd/时间已保存在各自tar.gz，协调者从归档重新读取每份数组并验证comparison.json列出的SHA全部一致。见 evidence/2026-09-24-b7-python-comparison/ 的执行记录、comparison、archive-verification及归档。模型publisher hash仍未知；X5模型/运行库小版本警告原样保留，未用成功对照掩盖。
+
+这是两个具体模型/图片case，不外推到其它变体、板卡、样例或C++。六个evaluator的专项接线回归测试仍由GLM补齐，B7整体保持changes-required；核心代码在专项/板测分支，尚未作为完整B7合入develop。
