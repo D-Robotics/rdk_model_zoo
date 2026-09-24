@@ -32,6 +32,26 @@ Gate accept() { return Gate{true, {}}; }
 
 Gate reject(std::string reason) { return Gate{false, std::move(reason)}; }
 
+std::string dtype_name(int code) {
+  switch (code) {
+    case kDtypeF32: return "float32";
+    case kDtypeS32: return "int32";
+    case kDtypeS8: return "int8";
+    case kDtypeU8: return "uint8";
+    case kDtypeS16: return "int16";
+    default: return "unknown";
+  }
+}
+
+std::string quanti_name(int code) {
+  switch (code) {
+    case kQuantiNone: return "none";
+    case kQuantiScale: return "scale";
+    case kQuantiShift: return "shift";
+    default: return "unknown";
+  }
+}
+
 Gate check_x5_nv12_input(int image_type, const TensorMeta& meta,
                          long long expected_size) {
   if (image_type != kImageNv12) return reject("X5 input must be a NV12 image tensor");
@@ -137,20 +157,30 @@ Gate check_s32_dequant(const TensorMeta& meta, long long* element_count) {
     return reject("S YOLOv5 output has an unsupported quantization type");
   }
 
-  // dequantizeTensorS32 addresses memory as contiguous NHWC; a strided layout
-  // would be read with wrong offsets, so reject anything that is not contiguous.
-  if (meta.stride[3] != element_bytes)
-    return reject("S YOLOv5 output channel stride is not the element size");
-  if (meta.stride[2] != channels * meta.stride[3])
-    return reject("S YOLOv5 output is not contiguous across channels");
+  // The fixed-source dequantizeTensorS32 reads element (h, w, c) at byte
+  // offset (h*W + w) * stride[2] + c * stride[3]. That formula genuinely
+  // supports padding inside a row (stride[2] > W*stride[3]) and per-channel
+  // padding (stride[3] > element size), but it places every row exactly
+  // stride[2] bytes after the previous one, so stride[1] must equal W*stride[2];
+  // H-level padding cannot be addressed and is rejected instead of misread.
+  if (meta.stride[3] < element_bytes || meta.stride[3] % element_bytes != 0)
+    return reject("S YOLOv5 output channel stride is not element-aligned");
+  if (meta.stride[2] < width * meta.stride[3])
+    return reject("S YOLOv5 output row stride does not cover a full row");
   if (meta.stride[1] != width * meta.stride[2])
-    return reject("S YOLOv5 output is not contiguous across rows");
+    return reject("S YOLOv5 output stride[1] must equal width*stride[2]; the "
+                  "source dequantizer addresses every row at a uniform row "
+                  "stride and would misread H-level padding");
   const long long count = height * width * channels;
-  const long long required = count * element_bytes;
+  // Last byte the addressing formula can touch: the final element of the
+  // final row, including any padding inside earlier rows.
+  const long long required =
+      (height * width - 1) * meta.stride[2] + (channels - 1) * meta.stride[3] +
+      element_bytes;
   if (meta.aligned_byte_size < required)
-    return reject("S YOLOv5 output alignedByteSize cannot hold its elements");
+    return reject("S YOLOv5 output alignedByteSize cannot hold its stored layout");
   if (meta.storage_bytes < required)
-    return reject("S YOLOv5 output allocation cannot hold its elements");
+    return reject("S YOLOv5 output allocation cannot hold its stored layout");
   *element_count = count;
   return accept();
 }

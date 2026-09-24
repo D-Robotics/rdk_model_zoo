@@ -61,6 +61,11 @@ struct Gate {
 Gate accept();
 Gate reject(std::string reason);
 
+// Stable names for the SDK-free dtype/quanti codes, used by the adapters and
+// the dump manifest so both platforms describe tensors identically.
+std::string dtype_name(int code);
+std::string quanti_name(int code);
+
 // X5: exactly one packed NV12 input of expected_size x expected_size. The
 // adapter copies a compact NV12 payload into the buffer, so a padded/aligned
 // layout and an undersized allocation are both rejected instead of being
@@ -82,9 +87,13 @@ Gate check_s_nv12_plane(const TensorMeta& meta, long long rows, long long cols,
                         long long channels);
 
 // S: one output tensor that dequantizeTensorS32 may read. Validates the native
-// dtype, the quantization descriptor length and the byte strides against a
-// contiguous NHWC layout, and requires the allocation to cover the whole
-// element count. On success writes the element count.
+// dtype, the quantization descriptor length and the byte strides against the
+// addressing the fixed-source helper actually performs: element (h, w, c) is
+// read at byte offset (h*W + w) * stride[2] + c * stride[3]. Row padding
+// (stride[2] > W*stride[3]) and channel padding (stride[3] > element size) are
+// genuinely supported and accepted; stride[1] must equal W*stride[2] because
+// the helper addresses every row at a uniform row stride. The allocation must
+// cover the stored (padded) extent. On success writes the element count.
 Gate check_s32_dequant(const TensorMeta& meta, long long* element_count);
 
 // A native binary is configured for exactly one target (S alignment differs

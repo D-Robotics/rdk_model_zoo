@@ -112,15 +112,23 @@ synchronous forward and cleanup.
 
 - X5: requires exactly one packed NV12 model with a compact
   `[1,3,640,640]` input and three native F32, `NONE`-quantized NHWC heads whose
-  strides are exactly 8/16/32. The input gate rejects a padded aligned layout
-  and an allocation smaller than a compact NV12 frame; the head gate rejects a
-  padded aligned layout and an allocation that cannot hold
-  `height*width*channels` floats, so no pointer is cast onto unknown storage.
+  strides are exactly 8/16/32. The fixed X5 source writes the NV12 payload and
+  reads the heads as flat compact buffers, so the gates require the reported
+  aligned layout to equal the valid layout: a padded artifact is rejected with
+  a precise reason instead of being misread, and the dump manifest records its
+  `alignedShape`/`stride`/`alignedByteSize` for follow-up. The allocation must
+  also cover a compact NV12 frame (`height*width*channels` floats for heads).
 - S: requires one packed model with split `Y[1,672,672,1]` and
-  `UV[1,336,336,2]` inputs and three metadata-described heads. Before any int32
-  read, the dequantization gate proves native dtype, descriptor length,
-  contiguous NHWC byte strides and an allocation covering every element; an
-  output that fails the gate is rejected instead of being read on a guess.
+  `UV[1,336,336,2]` inputs and three metadata-described heads. The S SDK
+  reports no `alignedShape`; the stored layout is `stride[]` plus
+  `alignedByteSize`. Before any read, the dequantization gate proves native
+  dtype, descriptor length and the addressing the fixed-source
+  `dequantizeTensorS32` actually performs (element `(h,w,c)` at byte offset
+  `(h*W + w)*stride[2] + c*stride[3]`): row padding (`stride[2]` larger than
+  the compact row) and channel padding are genuinely supported and accepted,
+  `stride[1]` must equal `width*stride[2]`, and the allocation must cover the
+  stored (padded) extent. The raw dump keeps the full `alignedByteSize` extent
+  with the strides in the manifest, so a padded run stays machine-comparable.
 - Ownership: both adapters free only resources that were actually allocated, so
   a partially failed allocation never turns into a blind free. The X5 adapter
   releases the task and buffers through an RAII lease; the S adapter uses a
@@ -157,12 +165,20 @@ Declared differences from the fixed sources (preserved, not silently unified):
 - The rendered image is a convenience only. Machine comparison uses the dump:
   `manifest.json` binds `target`, `build_target`, `asset_id`, `model_path` and
   `image_path` with SHA-256 hashes, the observed input/output metadata
-  (shape, dtype, quantization kind and scale length), the effective parameters,
-  the UTC timestamp, `argv`, `cwd` and `return_code`, and lists every raw and
-  transformed tensor with its shape, byte count, file name and SHA-256.
+  (shape, dtype, quantization kind, scale length, `alignedByteSize`, the
+  reported `stride[]`, and `alignedShape` where the SDK reports it — null
+  otherwise), the effective parameters, the UTC timestamp, `argv`, `cwd` and
+  `return_code`, and lists every raw and transformed tensor with its shape,
+  byte count, file name and SHA-256.
 - X5 raw and transformed tensors are the same native F32 heads; S raw tensors
-  are the native integer outputs and the transformed tensors are the
-  dequantized floats, so a board comparison can check both stages.
-- All board results in this migration are **not-run**: no SDK was compiled, no
-  model binary was downloaded, and no board was contacted. A passing host check
-  is a contract/decoder result, not an accuracy or performance result.
+  keep the full allocated extent (`alignedByteSize`, including row padding)
+  and the transformed tensors are the dequantized floats, so a board
+  comparison can check both stages and interpret padded layouts from the
+  manifest strides.
+- Board status (2026-09-24, coordinator evidence): the pre-remediation commit
+  compiled and linked `rc=0` on a real X5 8GB and a first launcher inference
+  returned `rc=0`; the same commit failed to compile on S100 because the S
+  adapter used X5-only SDK spellings, which this round fixes per the on-board
+  header evidence. No numerical board comparison, accuracy or performance
+  claim is made from this tree; re-verification on the boards belongs to the
+  coordinator. Host checks remain contract/decoder results only.

@@ -32,7 +32,11 @@ elseif(YOLOV5_TARGET STREQUAL "s100" OR YOLOV5_TARGET STREQUAL "s100p" OR YOLOV5
     target_compile_definitions(yolov5_cpp PRIVATE SOC_S100P=1)
   endif()
   find_package(OpenCV REQUIRED)
+  # The S UCP SDK installs its DNN headers under /usr/include/hobot (verified on
+  # a real S100 2026-09-24: hobot/dnn/hb_dnn.h; there is no hb_dnn_ext.h), so the
+  # include roots mirror the fixed S delivery's CMakeLists exactly.
   target_include_directories(yolov5_cpp PRIVATE ${OpenCV_INCLUDE_DIRS} /usr/hobot/include /usr/include/hobot/dnn
+                             /usr/include/hobot
                              "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../utils/c_utils/inc")
   target_link_directories(yolov5_cpp PRIVATE /usr/hobot/lib)
   target_sources(yolov5_cpp PRIVATE

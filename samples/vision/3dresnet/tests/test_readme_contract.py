@@ -102,7 +102,25 @@ class ReadmeTests(unittest.TestCase):
                 model.parent.mkdir(parents=True);model.write_bytes(b'host only')
                 legacy_runtime,unified_runtime=FakeRuntime(),FakeRuntime()
                 if tied:
-                    legacy_runtime.raw[:]=0;unified_runtime.raw[:]=0
+                    # The fixture must force a real Top-K ID mismatch on every
+                    # platform. Zeroing both sides (the previous fixture) relied
+                    # on numpy's unspecified unstable-argsort tie order: the
+                    # source helper's default argsort returned a different order
+                    # than the unified stable sort on macOS/arm64 but the same
+                    # first five on HP's Linux build (2026-09-23), where the IDs
+                    # then matched, the recipe correctly passed and the expected
+                    # assertion was never raised. Instead, the unified side gets
+                    # five classes nudged 1e-7 above the tie: raw outputs stay
+                    # inside the recipe's atol=1e-5 while the unified Top-5 is
+                    # deterministically [100..104] against the source side's
+                    # order over all-equal zeros.
+                    legacy_runtime.raw[:]=0
+                    unified_runtime.raw[:]=0;unified_runtime.raw[0,100:105]=np.float32(1e-7)
+                    legacy_ids=[int(i) for i in np.argsort(-np.full(400,0.0025,dtype=np.float32))[:5]]
+                    bump=np.zeros(400,dtype=np.float32);bump[100:105]=np.float32(1e-7)
+                    probs=np.exp(bump.astype(np.float64)-float(bump.max()));probs/=probs.sum()
+                    unified_ids=[int(i) for i in np.argsort(-probs,kind='stable')[:5]]
+                    self.assertNotEqual(legacy_ids,unified_ids,'tied-id fixture no longer forces a Top-K ID mismatch')
                 sdk=types.ModuleType('hbm_runtime')
                 sdk.HB_HBMRuntime=lambda path:legacy_runtime
                 sdk.QuantParams=object

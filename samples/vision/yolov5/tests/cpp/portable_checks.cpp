@@ -63,7 +63,9 @@ yolov5::TensorMeta f32_head(long long input_size, long long classes, long long h
 yolov5::TensorMeta s32_output(long long height, long long width, long long channels,
                               int dtype = yolov5::kDtypeS32, int quanti = yolov5::kQuantiScale,
                               long long scale_len = 1, long long zero_point_len = 0,
-                              long long row_stride = -1, long long storage = -1) {
+                              long long row_stride = -1, long long storage = -1,
+                              long long channel_stride = 4, long long inner_stride = -1,
+                              long long aligned_bytes = -1) {
   yolov5::TensorMeta meta;
   meta.dtype = dtype;
   meta.quanti_type = quanti;
@@ -71,13 +73,17 @@ yolov5::TensorMeta s32_output(long long height, long long width, long long chann
   meta.valid[0] = 1; meta.valid[1] = height; meta.valid[2] = width; meta.valid[3] = channels;
   meta.scale_len = scale_len;
   meta.zero_point_len = zero_point_len;
-  meta.stride[3] = 4;
-  meta.stride[2] = channels * 4;
-  meta.stride[1] = row_stride < 0 ? width * channels * 4 : row_stride;
+  meta.stride[3] = channel_stride;
+  meta.stride[2] = inner_stride < 0 ? channels * channel_stride : inner_stride;
+  meta.stride[1] = row_stride < 0 ? width * meta.stride[2] : row_stride;
   meta.stride[0] = height * meta.stride[1];
-  const long long required = height * width * channels * 4;
-  meta.aligned_byte_size = required;
-  meta.storage_bytes = storage < 0 ? required : storage;
+  // Allocation needed for the addressing formula's last byte: the final
+  // element of the final row, including padding inside earlier rows.
+  const long long required =
+      (height * width - 1) * meta.stride[2] + (channels - 1) * meta.stride[3] +
+      channel_stride;
+  meta.aligned_byte_size = aligned_bytes < 0 ? required : aligned_bytes;
+  meta.storage_bytes = storage < 0 ? meta.aligned_byte_size : storage;
   return meta;
 }
 
@@ -188,10 +194,40 @@ void check_s_dequant() {
          "unsupported quantization type must be rejected");
   expect(!check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0,
                                        /*row_stride=*/100), &count),
-         "non-contiguous S32 layout must be rejected");
+         "a stride[1] that is not width*stride[2] must be rejected");
   expect(!check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0, -1,
                                        /*storage=*/100), &count),
-         "S32 allocation smaller than the element count must be rejected");
+         "S32 allocation smaller than the stored extent must be rejected");
+
+  // Row padding is genuinely supported by the fixed-source dequantizer: it
+  // addresses (h, w, c) at (h*W + w) * stride[2] + c * stride[3], so a row
+  // stride larger than the compact row is read correctly as long as stride[1]
+  // stays width*stride[2] and the allocation covers the padded extent.
+  TensorMeta row_padded = s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0,
+                                     /*row_stride=*/-1, /*storage=*/-1,
+                                     /*channel_stride=*/4, /*inner_stride=*/28256);
+  expect(static_cast<bool>(check_s32_dequant(row_padded, &count)) && count == 84ll * 84 * 84,
+         "row-padded S32 layout must be accepted (stride[2] > compact row)");
+  TensorMeta padded_short = s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0,
+                                       /*row_stride=*/-1, /*storage=*/-1,
+                                       /*channel_stride=*/4, /*inner_stride=*/28256,
+                                       /*aligned_bytes=*/84 * 84 * 84 * 4);
+  expect(!check_s32_dequant(padded_short, &count),
+         "row-padded layout whose allocation cannot cover the stored extent must be rejected");
+  expect(!check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0,
+                                       /*row_stride=*/85 * 84 * 4), &count),
+         "H-level padding (stride[1] > width*stride[2]) must be rejected");
+  expect(static_cast<bool>(check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale,
+                                                        1, 0, -1, -1,
+                                                        /*channel_stride=*/8), &count)),
+         "an element-aligned channel stride above the element size must be accepted");
+  expect(!check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0, -1, -1,
+                                       /*channel_stride=*/6), &count),
+         "a channel stride that is not a multiple of the element size must be rejected");
+  expect(!check_s32_dequant(s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0, -1, -1,
+                                       /*channel_stride=*/2), &count),
+         "a channel stride below the element size must be rejected");
+
   expect(static_cast<bool>(check_s32_dequant(
              s32_output(84, 84, 84, kDtypeF32, kQuantiNone), &count)),
          "unquantized F32 output should be accepted through the raw path");
@@ -289,6 +325,28 @@ void check_dump(const std::string& dir) {
   record.image_path = dir + "/nonexistent.jpg";
   record.argv = {"yolov5_cpp", "--target", "x5"};
   record.return_code = 0;
+  DumpTensorInfo reported;
+  reported.name = "output0";
+  reported.dtype = "float32";
+  reported.shape = {1, 2, 2};
+  reported.quanti = "none";
+  reported.aligned_byte_size = 16;
+  reported.stride[0] = 16;
+  reported.stride[1] = 8;
+  reported.stride[2] = 4;
+  reported.stride[3] = 4;
+  reported.aligned[0] = 1;
+  reported.aligned[1] = 2;
+  reported.aligned[2] = 2;
+  reported.aligned[3] = 4;
+  record.outputs.push_back(reported);
+  DumpTensorInfo unreported;
+  unreported.name = "input0";
+  unreported.dtype = "uint8";
+  unreported.shape = {1, 3, 2, 2};
+  unreported.quanti = "none";
+  // aligned_byte_size/stride/aligned stay unreported and must serialize as null.
+  record.inputs.push_back(unreported);
   const float values[4] = {1.0F, 2.0F, 3.0F, 4.0F};
   DumpTensor tensor;
   tensor.name = "output0";

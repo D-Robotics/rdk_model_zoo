@@ -154,13 +154,31 @@ std::string shape_json(const std::vector<long long>& shape) {
   return out + "]";
 }
 
+// A -1 entry means "not reported by this SDK" and serializes as null so a
+// consumer cannot mistake it for a real stride or dimension.
+std::string opt_number(long long value) {
+  return value < 0 ? std::string("null") : number(value);
+}
+
+std::string opt_array_json(const long long (&values)[4]) {
+  std::string out = "[";
+  for (int i = 0; i < 4; ++i) {
+    if (i) out += ", ";
+    out += opt_number(values[i]);
+  }
+  return out + "]";
+}
+
 std::string tensor_info_json(const DumpTensorInfo& info) {
   std::string block = "      {\n";
   block += "        \"name\": " + quote(info.name) + ",\n";
   block += "        \"dtype\": " + quote(info.dtype) + ",\n";
   block += "        \"shape\": " + shape_json(info.shape) + ",\n";
   block += "        \"quanti\": " + quote(info.quanti) + ",\n";
-  block += "        \"scale_len\": " + number(info.scale_len) + "\n";
+  block += "        \"scale_len\": " + number(info.scale_len) + ",\n";
+  block += "        \"aligned_byte_size\": " + opt_number(info.aligned_byte_size) + ",\n";
+  block += "        \"stride\": " + opt_array_json(info.stride) + ",\n";
+  block += "        \"aligned\": " + opt_array_json(info.aligned) + "\n";
   block += "      }";
   return block;
 }
@@ -180,6 +198,24 @@ std::string sha256_hex(const void* data, std::size_t size) {
   Sha256 hasher;
   hasher.update(static_cast<const unsigned char*>(data), size);
   return hasher.hex();
+}
+
+DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta) {
+  DumpTensorInfo info;
+  info.name = name;
+  info.dtype = dtype_name(meta.dtype);
+  info.shape.clear();
+  for (int i = 0; i < meta.num_dimensions && i < 4; ++i)
+    info.shape.push_back(meta.valid[i]);
+  info.quanti = quanti_name(meta.quanti_type);
+  info.scale_len = meta.scale_len;
+  info.aligned_byte_size = meta.aligned_byte_size;
+  // A non-positive entry means the projection never saw a reported value
+  // (TensorMeta zero-initializes; the X5 gate treats aligned 0 the same way),
+  // so it is recorded as unreported rather than as a fake zero stride.
+  for (int i = 0; i < 4; ++i) info.stride[i] = meta.stride[i] > 0 ? meta.stride[i] : -1;
+  for (int i = 0; i < 4; ++i) info.aligned[i] = meta.aligned[i] > 0 ? meta.aligned[i] : -1;
+  return info;
 }
 
 std::string sha256_file(const std::string& path) {
@@ -261,7 +297,7 @@ bool write_dump(const DumpRecord& record, std::string* error) {
   }
 
   std::string json = "{\n";
-  json += "  \"schema\": \"rdk-model-zoo/yolov5-cpp-dump/v1\",\n";
+  json += "  \"schema\": \"rdk-model-zoo/yolov5-cpp-dump/v2\",\n";
   json += "  \"utc\": " + quote(record.utc) + ",\n";
   json += "  \"target\": " + quote(record.target) + ",\n";
   json += "  \"build_target\": " + quote(record.build_target) + ",\n";
