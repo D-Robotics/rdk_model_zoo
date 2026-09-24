@@ -2,12 +2,24 @@
 import json
 from pathlib import Path
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 import numpy as np
 from samples._shared.sam_binding import resolve_selection
 from samples._shared.tests.test_sam_binding import FakeRuntime,metadata
 from samples._shared.sam_evaluator import run_comparison,build_parser
+
+
+class _BoardQuantParams:
+    """Mimics hbm_runtime.QuantParams: attributes read, any copy refuses (X5 board evidence 2026-09-24)."""
+    def __init__(self,quant_type='SCALE',scale=0.25,zero_point=7,axis=3):
+        self.quant_type=types.SimpleNamespace(name=quant_type)
+        self.scale=np.asarray(scale,dtype=np.float32)
+        self.zero_point=np.asarray(zero_point,dtype=np.int32)
+        self.axis=axis
+    def __deepcopy__(self,memo):raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+    def __copy__(self):raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
 
 
 class SAMEvaluatorTests(unittest.TestCase):
@@ -46,6 +58,46 @@ class SAMEvaluatorTests(unittest.TestCase):
                     self.assertGreaterEqual(len(stored['code_sha256']),8)
                     with self.assertRaises(FileExistsError):
                         run_comparison(selection,image,img,tmp/'evidence',runtime_factory=factory)
+
+    def test_metadata_evidence_survives_copy_hostile_board_quant_params(self):
+        """The old asdict() metadata snapshot raised TypeError on the real board."""
+        with tempfile.TemporaryDirectory() as td:
+            tmp=Path(td)
+            image=np.zeros((3,5,3),dtype=np.uint8)
+            img=tmp/'input.raw'; img.write_bytes(image.tobytes())
+            base=resolve_selection('efficient_sam','s100')
+            ep=tmp/'encoder.fixture';ep.write_bytes(b'host-fixture-encoder')
+            dp=tmp/'decoder.fixture';dp.write_bytes(b'host-fixture-decoder')
+            selection=resolve_selection('efficient_sam','s100',encoder_model_path=ep,decoder_model_path=dp,
+                encoder_asset_id=base.encoder_asset.reference,decoder_asset_id=base.decoder_asset.reference)
+            def factory(path):
+                stage='encoder' if Path(path)==ep else 'decoder'
+                fake=FakeRuntime(metadata('efficient_sam',stage,'s100'))
+                # SDK-like vestigial descriptor riding along the F32 outputs.
+                fake.output_quants={n:_BoardQuantParams() for n in fake.outputs}
+                if stage=='decoder': fake.outputs['iou_predictions'].reshape(-1)[:]=[0.1,0.9,0.2]
+                return fake
+            with patch('samples._shared.sam_evaluator.require_execution_target',return_value='s100'):
+                summary=run_comparison(selection,image,img,tmp/'evidence',runtime_factory=factory)
+            self.assertTrue(summary['passed'],summary.get('error'))
+            # Raw tensors are still captured and the comparison untouched.
+            self.assertTrue(summary['checks']['raw_close'])
+            self.assertTrue(summary['checks']['inputs_equal'])
+            self.assertEqual(summary['mask_changed_pixels'],0)
+            # Every side x stage snapshot keeps the full quant descriptor.
+            for side in ('legacy','unified'):
+                for stage in ('encoder','decoder'):
+                    for quant in summary['metadata'][side][stage]['output_quants'].values():
+                        self.assertEqual(quant['quant_type'],'SCALE')
+                        self.assertEqual(quant['scale'],0.25)
+                        self.assertEqual(quant['zero_point'],7)
+                        self.assertEqual(quant['axis'],3)
+            stored=json.loads((tmp/'evidence/comparison.json').read_text())
+            quant=stored['metadata']['legacy']['encoder']['output_quants']['image_embeddings']
+            self.assertEqual(quant['scale'],0.25)
+            self.assertEqual(quant['zero_point'],7)
+            self.assertEqual(quant['axis'],3)
+            self.assertTrue((tmp/'evidence/legacy_encoder_outputs_image_embeddings.npy').is_file())
 
     def test_runtime_mask_regression_retains_failed_full_capture(self):
         with tempfile.TemporaryDirectory() as td:
