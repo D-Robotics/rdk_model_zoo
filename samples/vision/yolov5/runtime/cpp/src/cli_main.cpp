@@ -24,7 +24,8 @@ void print_help(const char* program) {
             << "  --score-thres <0..1>      default 0.25\n"
             << "  --nms-thres <0..1>        default 0.45\n"
             << "  --priority <0..255>       default 0 (S only; x5 rejects non-defaults)\n"
-            << "  --bpu-core <-1|0..>       default -1 (S only; x5 rejects non-defaults)\n"
+            << "  --bpu-core <-1|0..3>      default -1 = any core (S only; x5 rejects "
+               "non-defaults)\n"
             << "  --help                    show this message\n";
 }
 

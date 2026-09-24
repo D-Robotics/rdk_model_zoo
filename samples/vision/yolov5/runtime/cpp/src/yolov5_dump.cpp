@@ -10,8 +10,10 @@
 #include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 #include <system_error>
 
 namespace yolov5 {
@@ -240,19 +242,23 @@ DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta,
   for (int i = 0; i < 4; ++i) info.aligned[i] = meta.aligned[i] > 0 ? meta.aligned[i] : -1;
   info.quantize_axis = meta.quantize_axis;
   if (meta.quanti_type == kQuantiScale) {
-    if (scale_data != nullptr && meta.scale_len > 0) {
-      const std::size_t count = static_cast<std::size_t>(
-          meta.scale_len < static_cast<long long>(kMaxQuantValues)
-              ? meta.scale_len
-              : static_cast<long long>(kMaxQuantValues));
-      info.scale_values.assign(scale_data, scale_data + count);
-    }
-    if (zero_point_data != nullptr && meta.zero_point_len > 0) {
-      const std::size_t count = static_cast<std::size_t>(
-          meta.zero_point_len < static_cast<long long>(kMaxQuantValues)
-              ? meta.zero_point_len
-              : static_cast<long long>(kMaxQuantValues));
-      info.zero_point_values.assign(zero_point_data, zero_point_data + count);
+    if (scale_data == nullptr || meta.scale_len <= 0)
+      throw std::invalid_argument("dump_tensor_info: SCALE tensor without a readable "
+                                  "scale descriptor: " + name);
+    if (meta.scale_len > kMaxQuantValues)
+      throw std::invalid_argument("dump_tensor_info: scale descriptor exceeds the "
+                                  "recorded bound (" + std::to_string(meta.scale_len) +
+                                  ")");
+    info.scale_values.assign(scale_data, scale_data + meta.scale_len);
+    if (meta.zero_point_len > 0) {
+      if (zero_point_data == nullptr)
+        throw std::invalid_argument("dump_tensor_info: zero-point length without a "
+                                    "buffer: " + name);
+      if (meta.zero_point_len > kMaxQuantValues)
+        throw std::invalid_argument("dump_tensor_info: zero-point descriptor exceeds "
+                                    "the recorded bound");
+      info.zero_point_values.assign(zero_point_data,
+                                    zero_point_data + meta.zero_point_len);
     }
   }
   return info;
@@ -425,18 +431,23 @@ bool write_dump(const DumpRecord& record, std::string* error) {
                                   transformed_hashes)) +
           ",\n";
 
-  json += "  \"detections\": [\n";
-  for (std::size_t i = 0; i < record.detections.size(); ++i) {
-    const auto& det = record.detections[i];
-    json += "    {\"x1\": " + number(static_cast<double>(det.x1)) +
-            ", \"y1\": " + number(static_cast<double>(det.y1)) +
-            ", \"x2\": " + number(static_cast<double>(det.x2)) +
-            ", \"y2\": " + number(static_cast<double>(det.y2)) +
-            ", \"score\": " + number(static_cast<double>(det.score)) +
-            ", \"class_id\": " + number(det.class_id) + "}";
-    json += (i + 1 == record.detections.size()) ? "\n" : ",\n";
-  }
-  json += "  ]\n}\n";
+  const auto detections_block = [](const std::vector<Detection>& list) {
+    std::string block = "[\n";
+    for (std::size_t i = 0; i < list.size(); ++i) {
+      const auto& det = list[i];
+      block += "    {\"x1\": " + number(static_cast<double>(det.x1)) +
+               ", \"y1\": " + number(static_cast<double>(det.y1)) +
+               ", \"x2\": " + number(static_cast<double>(det.x2)) +
+               ", \"y2\": " + number(static_cast<double>(det.y2)) +
+               ", \"score\": " + number(static_cast<double>(det.score)) +
+               ", \"class_id\": " + number(det.class_id) + "}";
+      block += (i + 1 == list.size()) ? "\n" : ",\n";
+    }
+    return block + "  ]";
+  };
+  json += "  \"detections\": " + detections_block(record.detections) + ",\n";
+  json += "  \"detections_original\": " + detections_block(record.detections_original) +
+          "\n}\n";
 
   std::ofstream manifest(std::filesystem::path(record.dir) / "manifest.json",
                          std::ios::binary | std::ios::trunc);
@@ -457,6 +468,32 @@ std::string current_binary_path(const std::string& argv0) {
   const std::filesystem::path resolved = std::filesystem::absolute(argv0, resolve_error);
   if (!resolve_error) return resolved.string();
   return {};
+}
+
+std::vector<Detection> map_to_original(const std::vector<Detection>& detections,
+                                       int image_cols, int image_rows, int model_size) {
+  // Mirrors render_detections: uniform letterbox scale to the square model
+  // input, symmetric padding, then the inverse mapping per coordinate. The
+  // results are unclamped floats — they describe the detection, not the
+  // pixels the renderer ends up drawing.
+  std::vector<Detection> mapped;
+  if (image_cols <= 0 || image_rows <= 0 || model_size <= 0) return mapped;
+  const double scale = std::min(static_cast<double>(model_size) / image_cols,
+                                static_cast<double>(model_size) / image_rows);
+  const double pad_x = (model_size - image_cols * scale) / 2.0;
+  const double pad_y = (model_size - image_rows * scale) / 2.0;
+  mapped.reserve(detections.size());
+  for (const auto& detection : detections) {
+    Detection out;
+    out.x1 = static_cast<float>((detection.x1 - pad_x) / scale);
+    out.y1 = static_cast<float>((detection.y1 - pad_y) / scale);
+    out.x2 = static_cast<float>((detection.x2 - pad_x) / scale);
+    out.y2 = static_cast<float>((detection.y2 - pad_y) / scale);
+    out.score = detection.score;
+    out.class_id = detection.class_id;
+    mapped.push_back(out);
+  }
+  return mapped;
 }
 
 }  // namespace yolov5

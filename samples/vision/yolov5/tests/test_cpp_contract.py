@@ -56,6 +56,7 @@ int32_t hbUCPMemFlush(hbUCPSysMem *mem, int type);
 int32_t hbUCPSubmitTask(hbUCPTaskHandle_t task, hbUCPSchedParam *sched_param);
 int32_t hbUCPWaitTaskDone(hbUCPTaskHandle_t task, int32_t timeout);
 int32_t hbUCPReleaseTask(hbUCPTaskHandle_t task);
+const char *hbUCPGetErrorDesc(int32_t error_code);
 """,
     "hobot/dnn/hb_dnn.h": """\
 #pragma once
@@ -99,6 +100,7 @@ int32_t hbDNNGetInputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int
 int32_t hbDNNGetOutputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int32_t);
 int32_t hbDNNInferV2(hbUCPTaskHandle_t*, hbDNNTensor*, const hbDNNTensor*, hbDNNHandle_t);
 void hbDNNRelease(hbDNNPackedHandle_t);
+const char *hbDNNGetErrorDesc(int32_t error_code);
 """,
     "opencv2/core/mat.hpp": """\
 #pragma once

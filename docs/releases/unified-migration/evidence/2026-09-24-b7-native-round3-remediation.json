@@ -1,0 +1,40 @@
+{
+  "stage": "N11 third review round remediation (exact board identity, audit protocol, channel-stride bounds)",
+  "utc": "2026-09-24T10:17:17Z",
+  "base_commit": "fbffddd (worktree carries N8/N9/N10 uncommitted, preserved)",
+  "branch": "codex/b7-local-glm-20260924",
+  "worktree": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-local-glm",
+  "author": "local Claude Code + GLM (author side; not an independent review)",
+  "counter_evidence": "../.coordination/b7-native-second-review-extra.json — all three reproduced against the prior code before fixing: board_conflict('s100', ['S100P','S100P']) -> None; board_conflict('s100', ['S100Whatever']) -> None; verify_audit(empty {}) -> {'passed': true, 'verified_files': []}; restore_logical accepted stride[3]=6 (misaligned) and stride[3]=2 (overlapping) for int32",
+  "fixes": {
+    "1_exact_board_identity_both_sides": "board_conflict now resolves readings through EXACT alias tables mirroring docs/release/platforms.json + samples/_shared/platforms.py::match_target: soc names {x5|s100|s100p|s600} exact, socinfo names {x5,x5u,x5h,x5m} for x5; every reading must resolve to exactly the comparison target — S100P under s100 and S100Whatever are conflicts, all-empty is not identity. The unified side now needs its OWN process record: run_capture.py gains --role unified (full evidence: real argv incl. verbatim flags, real exit code, separate stdout/stderr, UTC, cwd, board identity, pre==post binary/model/image hashes; no instrumentation audit for this role) and compare_native requires --unified-run-record, cross-checking role/return_code/hash binding to the manifest binary_sha256 and the attested binary, plus the unified side's board identity — build_target and the manifest's internal return_code alone are no longer accepted as physical evidence",
+    "2_audit_protocol_fail_closed": "verify_audit validates the full protocol instrument.py actually emits: schema, target with pinned_commit equal to the pinned constant, the EXACT pinned source set (no extras/missing/duplicates), every blob_sha256 equal to the pinned SHA, every anchor matched exactly once, instrumented file present with its recorded hash; the complete per-target closure (s100 must carry all 13 entries, x5 none), each work-copy present with matching hash; the observer header and generated CMake hashes verified against the work dir. Empty {} / null / wrong-schema / truncated audits are rejected. On audit failure run_capture.py does NOT execute the binary — it aborts, persists a failure run-record (return_code null, error field, empty stdout) and exits 2; the failure record still binds binary/model/image hashes",
+    "3_channel_stride_bounds": "restore_logical rejects channel strides that overlap (stride[3] < itemsize) or misalign (stride[3] % itemsize != 0) elements and pixel strides below channels*stride[3] (overlapping pixels), in addition to the existing uniform-pitch/extent rules; the real supported families still decode — the published S layout (84x84x255, strides 4/1024/86016) and aligned channel padding (stride[3]=8) are positive test cases; thresholds unchanged"
+  },
+  "files": [
+    {"path": "samples/vision/yolov5/evaluator/native/compare_native.py", "sha256": "50b04275d7964fd0dbac94ef8c4757e30aad6721bb29118e6066167ae23afb10"},
+    {"path": "samples/vision/yolov5/evaluator/native/run_capture.py", "sha256": "711c9f806cd012cda391f8ef83867475c52c80ffbdbfe495c5df75da467c3cd4"},
+    {"path": "samples/vision/yolov5/tests/test_native_evaluator.py", "sha256": "950af0e4dd30b0d90b6e3ef6420e07443f81ce987b3a53986f9286a6ed233620"},
+    {"path": "samples/vision/yolov5/evaluator/README.md", "sha256": "cdbd108f94dbdbc587f978ace2d9a6c092f8aad26362871dfd57806b2efd4193"},
+    {"path": "samples/vision/yolov5/evaluator/README_cn.md", "sha256": "381104ad425f21097d099d6eded7b66786c382ab990053a6ce4d55e285ccb188"}
+  ],
+  "host_verification": {
+    "python": "3.14.7 (rdk_model_zoo/.venv, read-only)",
+    "commands": [
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/yolov5/tests", "returncode": 0, "result": "76 tests OK (was 70): +6 — exact-alias board identity unit cases (S100P/S100Whatever/X5U/X5M/s100p-vs-s100), unified-run-record required/bound (missing file, wrong role, rc=7, S600 board), channel-stride boundaries (overlap/misalign/pixel-overlap rejects + published-layout and aligned-padding accepts), empty/truncated audit rejected WITHOUT executing the binary, incomplete-closure and tampered-CMake audits rejected, unified-role runner end-to-end"},
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/bytetrack/tests", "returncode": 0, "result": "11 tests OK"},
+      {"argv": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json --report /tmp/b7-n11.json", "returncode": 0, "result": "36 samples, 0 violations, 84 exemptions"},
+      {"argv": "git diff --check", "returncode": 0}
+    ]
+  },
+  "prior_counterexamples_now": {
+    "s100p_as_s100": "conflict: \"board identity ['s100p'] conflicts with comparison target 's100'\"",
+    "unknown_prefix_as_s100": "conflict: \"board identity 'S100Whatever' is not a known alias...\"",
+    "empty_audit": "rejected ('audit is empty or not an object'); binary not executed; failure record persisted",
+    "channel_stride_overlap/misalign": "rejected with explicit reasons; published layouts still decode"
+  },
+  "boundaries": {
+    "board": "not-run from this worktree; the README board steps now route BOTH binaries through run_capture.py (step 2 source with audit, step 3 unified role); Codex re-reviews then executes the real board numerical comparison",
+    "claims": "no fixed-source comparison pass is claimed — the fixed-vs-unified numerical comparison has still never run on a board; host tests cover the tool behaviour only"
+  }
+}
