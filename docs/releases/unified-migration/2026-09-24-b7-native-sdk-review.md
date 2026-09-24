@@ -58,3 +58,7 @@ X5 C++ 默认 s-v2.0 已实际推理 rc=0，bus.jpg 上输出五个 detection，
 同阶段独立portable probe还证实 gate误放行重叠像素存储（channels255/stride3=4但stride2=400）和单个scale被交给逐channel helper。新gate错误地以width代替channels判定stride2下界。完整probe源码、gate SHA和输出已归档；这是该阶段快照结果，后续修复需另留复验。
 
 S100额外SDK核对确认S8/U8/S16枚举均存在，可正确标注NV12输入U8；UCP backend是位掩码，core0/1/2/3分别为1/2/4/8，ANY为128，不能直接传用户core索引。上述问题、dump覆盖/缺输入bytes及部署身份缺口已作为native第二轮有界任务交同一本地GLM会话；不再让它重复处理已经独立完成的dtype和catalog。代码快照仍只在专项分支，未合入develop。
+
+## dtype 单项整合 develop
+
+在板端复验通过后，仅将signed dtype独立修复cherry-pick到develop，提交 `4dce619`。在develop实际树重新运行shared111 / YOLOv5 24项通过（此树尚未合入HP/native新增测试，故不混称35项）。原B7整体仍changes-required；native/evaluator整批修改继续隔离。整合日志见 evidence/2026-09-24-b7-dtype-develop-integration.json。
