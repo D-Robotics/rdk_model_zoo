@@ -50,3 +50,11 @@ X5 C++ 默认 s-v2.0 已实际推理 rc=0，bus.jpg 上输出五个 detection，
 ## 目录构建补验
 
 在 coordinator develop 使用项目要求的 Node22 补跑 HP 未具备环境的 catalog build/typecheck，发现 X5 summary 仍是补回八个 YOLOv5 制品前的计数。仅将 asset_count 177→185、downloadable_asset_count 176→184、sha256_unrecorded_count 148→156 对齐清单实际条目，未改变任何制品 URL/hash。修复后 build/typecheck rc=0；完整 Ultralytics Python suite 78 tests OK（含需要生成catalog的检查）。这是当前 develop 的独立验证，不把尚未合入的其他 GLM 工作树宣称为全量通过。完整日志见 evidence/2026-09-24-b7-catalog-recheck.json。
+
+## Native 第一阶段 dc3aac5 再审
+
+主机35项 YOLOv5 / 16项 3DResNet 通过后，将 GLM 第一阶段快照 `dc3aac50230e6d6a17324592be1bbc71f04abd53` 经 GitHub 同步 S100。真实构建仍rc=2：S packed handle类型实际为 `hbDNNPackedHandle_t`，代码与其主机stub却用了X5的 `hbPackedDNNHandle_t`。因此stub编译通过不足以关闭真实SDK兼容性，需校正stub而非添加虚构别名。
+
+同阶段独立portable probe还证实 gate误放行重叠像素存储（channels255/stride3=4但stride2=400）和单个scale被交给逐channel helper。新gate错误地以width代替channels判定stride2下界。完整probe源码、gate SHA和输出已归档；这是该阶段快照结果，后续修复需另留复验。
+
+S100额外SDK核对确认S8/U8/S16枚举均存在，可正确标注NV12输入U8；UCP backend是位掩码，core0/1/2/3分别为1/2/4/8，ANY为128，不能直接传用户core索引。上述问题、dump覆盖/缺输入bytes及部署身份缺口已作为native第二轮有界任务交同一本地GLM会话；不再让它重复处理已经独立完成的dtype和catalog。代码快照仍只在专项分支，未合入develop。
