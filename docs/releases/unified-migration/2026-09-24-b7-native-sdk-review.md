@@ -152,3 +152,7 @@ C++观察工具独立审查另发现真实manifest parameters为dict而工具按
 另两个正向误拒绝：同一原生float32阈值0.45在source17位与统一参数小数字符串间被double全等拒绝；同一float32 scale的17位/9位往返表示也被直接JSON数值全等拒绝。应按原生类型的精确值核验，不扩大推理容差。按真实X5插桩先payload后metadata的顺序编译执行observer，得到failed=true且没有输入记录；手工重排的fixture不能代表实际hook。
 
 静态复核还发现binaryhash没有绑定运行记录、finish(0)不代表真实进程退出、gflags后argv丢参数、tee把混合日志复制为两文件。已派本地GLM第二轮整改，要求外部进程记录实际argv/rc/日志与身份，观察器只保留张量捕获。缺失字段/短payload/不支持layout必须明确拒绝。尚未给出真实C++源数值对照通过结论，不能凭作者62项主机测试关闭本批。
+
+## GitHub 同步与目录测试待办
+
+上传ByteTrack证据期间，远端develop新增 `1cc3000`（YOLO11制品URL更新），原推送因ref竞争被拒绝；已fetch并用合并提交 `14435c2` 保留双方改动，无强推。Node22全目录检查119项中118通过，唯一失败为旧inventory断言595而实际603；B7此前恢复8个YOLOv5 X5资产，但该目录测试尚未同步。已派本地GLM核对精确新增集合后修正，不能仅凭总数改动放行。单独build/typecheck、shared与Ultralytics回归通过，详见[同步验证](evidence/2026-09-24-b7-develop-sync-validation.json)。这是已知待办，未宣称全量CI通过。
