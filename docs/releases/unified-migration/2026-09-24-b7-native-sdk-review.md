@@ -122,3 +122,7 @@ S100P第一次GitHub浅克隆300秒观察超时，远程进程与目录随后确
 追加完成15个Python完整源/统一case：8GB剩余7变体、4GB的s-v2与剩余7变体，均rc=0且逐项最大数值差为0。加上既有两板n-v7默认case与8GB s-v2，X5九个发布变体在8GB/4GB均已完整比较。追加210份数组全部按manifest SHA/shape/dtype核验，见 [九变体 evidence](evidence/2026-09-24-b7-yolov5-x5-variants/)。按side/category/tensor_name对齐两种内存配置，九变体所有数组文件hash、shape、dtype均一致；具体跨记录引用在cross-memory-comparison.json。8GB s-v2保留此前ae0f185记录，其余为4d45f9a，不伪称所有case来自同一commit；未涉及后续Python算法变更。
 
 S100P经临时loopback SOCKS SSH转接成功从GitHub检出固定4d45f9a，通道已关闭，无持久Git代理配置/代码直接复制。真实boardinfo=S100P：Python/Cpp各自拒绝无资产s100p；Python请求s100拒绝target mismatch；Cpp请求s100第一次被缺少模型文件提前挡住，该条保留但不算身份验证，随后使用明确标注的非模型sentinel与不存在的native executable，确认target mismatch发生在native启动前。见 [S100P负例证据](evidence/2026-09-24-b7-s100p-negative/)。四种行为负例通过，不代表S100P有YOLOv5正向支持；ByteTrack自己的S100P资产与正向运行单独验证。
+
+## ByteTrack S100P 正向准备阻断：固定源 URL 返回404
+
+S100P执行固定提交的 `python3 samples/vision/bytetrack/model/download.py --target s100p` 返回2，HTTP404，见 [原始准备记录](evidence/2026-09-24-b7-s100p-negative/bytetrack-asset-download-404.json)。清单URL为 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm`，与固定源 `platforms/s/samples/vision/bytetrack/model/download_model.sh` 的 `rdk_${SOC}` 生成规则一致，故当前证据指向源发布地址不可用，不能擅自换成S100制品或声称S100P实际推理失败/通过。S100P正向tracker尚未开始；S100四帧真实对照通过结论不变。源run.sh另有公开track_test.mp4地址，后续应补其真实视频case，四帧合成smoke不替代完整视频边界验证。
