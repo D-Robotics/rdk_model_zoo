@@ -80,3 +80,19 @@ S100额外SDK核对确认S8/U8/S16枚举均存在，可正确标注NV12输入U8�
 - FCOS efficientnetb0：rc=2，实际输出dict的15个name集合与metadata相同，但插入顺序不同；tuple(outputs)比较造成误拒绝。保留18份失败前数组、traceback和完整metadata记录。
 
 三份tar.gz与comparison/执行/归档校验记录均在 evidence/2026-09-24-b7-python-comparison/，失败归档不冒充完整成功对照。LPRNet/FCOS native输出契约已交独立GLM任务修复，保持名字、dtype、实际shape与有限值验证，不允许以任意reshape或删gate规避。
+
+## ByteTrack S100 四帧实板对照与 metadata 接线复核
+
+在 `ae0f185` 使用 S100 真实发布 YOLOv5x 制品（明确 ByteTrack asset ID，模型 SHA 与上述 S100 检测记录相同），源与统一 tracker 分别在全新进程运行。输入是由仓库 bus.jpg 水平平移 0/2/4/6 像素生成的四帧 FFV1 无损视频，逐帧回读 hash 一致；不是实拍视频或跟踪精度数据集。两个进程 rc=0，全部比较条件通过，每帧各4条轨迹，track ID 均为1/2/3/4。没有放宽 ID 或容差。
+
+在隔离 venv 中安装 CPU tracker 的 lap/cython-bbox，保留系统 SDK/NumPy；安装输出、生成配方、输入视频、每侧24份原始数组、完整 capture/comparison/执行输出均已归档到 [ByteTrack S100 evidence](evidence/2026-09-24-b7-bytetrack-s100/)。两份压缩归档分别34,651,854与34,651,847 bytes；协调者重新核验所有48份数组 digest 与 capture.json 一致。范围仍限四帧 smoke，不外推到其它板/长视频/MOTA。
+
+metadata 六 evaluator 接线专项提交 `ac4046c`：独立运行 shared108、YOLOv5 33、ByteTrack12、FCOS25、LPRNet13、MODNet13、YOLOWorld19 全通过。真实 SDK 不可 deepcopy 的 fixture 走实际 evaluator 路径验证完整 quant JSON；完整 host 输出保存为 evidence/2026-09-24-b7-metadata-independent-host.json。核心代码 `a141c48` 已在上述四个实际 board comparison 中使用；LPRNet/FCOS 的剩余失败是分别记录的输出绑定问题。发现 B6 SAM evaluator 同类风险，已交本地 GLM 专项处理，不把 B7 修复外推为 SAM 板测通过。
+
+native 第二轮作者提交 `fbffddd` 已通过协调者37项 YOLOv5 host tests，经 GitHub 组合为 `4d45f9a` 发往 X5/S100 实际构建；这是待板端复验快照，未认定 B7 关闭。所有开发继续由本地 Claude Code + GLM 执行，Codex 负责复审、提交与 GitHub 同步。
+
+## Native 第二轮真实 SDK 编译与推理通过（仍非源数值验收）
+
+`4d45f9a48b4f1aa785baca083fbfaa5700b467ca` 已由 X5 8GB/S100 从 GitHub 检出，两个真实 SDK 编译 rc=0，默认模型和各自源图片推理 rc=0。X5 产生5个 detection，S100产生14个。协调者重新读取完整 dump 归档：X5 7份负载，S100 8份负载，全部文件哈希、长度与manifest匹配，input/raw/transformed文件路径互不覆盖；native输入均为uint8，S逐通道scale255完整，部署binary SHA与板上实际文件一致。
+
+完整 build/run stdout/stderr、manifest和两份原始bin归档见 [native round2 evidence](evidence/2026-09-24-b7-native-round2/)。此前“不能编译”“无输入bytes/无binary hash/文件覆盖”在这两个真实 case 上已复验消除，但原source C++没有完整数值capture，尚不能称为source/unified数值一致性。独立审查另发现helper的空zero-point指针/中间乘积溢出/非channel量化轴和dump descriptor截断边界待加固，已交原本地GLM任务。GLM同时开发固定源只读观测与C++完整对照工具，不允许用Python源或画图代替C++源验收；因此B7继续changes-required / Closed=no。

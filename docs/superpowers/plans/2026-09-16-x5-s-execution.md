@@ -84,3 +84,11 @@ and [independent/standards review](../../releases/unified-migration/2026-09-16-p
 87 host tests passed; YOLOv8n compared on all five supplied boards, ResNet18 on
 X5 8GB/4GB, S100 and S600. S100P classification not run (no published asset).
 Continue with [P2 protocol and composition work](2026-09-16-p2-protocols.md).
+
+## 2026-09-24 恢复执行：本地 GLM 开发、GitHub 同步、真实板端复验
+
+本节为当前安排，取代历史暂停及“不连接板卡/不提交”的执行限制，保留历史结论。用户已授权本地 Claude Code + GLM 开发，Codex 独立评审并负责每轮 commit/push，通过 GitHub 固定提交在板上取回；不再把开发派给 HP。五个既有板卡地址现可达，恢复真实 SDK/制品对照。未执行的板测仍为 not-run，不能由主机结果代替。
+
+B7 仍 changes-required / Closed=no。dtype 单项已经独立实板确认并合入 develop；metadata 核心与 native 整改在隔离分支集成复验。已实际通过的限定 case：YOLOv5 Python X5 8GB s-v2、S100 x-672，YOLOWorld X5 dog，以及 ByteTrack S100 四帧合成运动源对照。LPRNet/FCOS 首次板测失败已留证并交 GLM 修复；native 两类 SDK 构建/完整数值对照继续进行；MODNet manual 制品缺口尚未解决。权威动态记录为仓库 `docs/releases/unified-migration/2026-09-24-b7-native-sdk-review.md` 与迁移台账；不把 feature 分支成果说成已全部进入 develop。
+
+下一步仍包括：B7 修复与独立闭环；B3–B6 已主机通过项的真实板端验证；B8、B9、B10、B11；最终源增量核对、README/Agent 规范与路径整合及全仓验收。不能因当前几个 case 通过而缩小原迁移目标。B8 继续保持 pending，先解决 B7 阻断；跨样例共享缺陷同步排查已迁移消费者。
