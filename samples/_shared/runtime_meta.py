@@ -46,13 +46,16 @@ def canonicalise_dtype(dtype: Any) -> str | None:
     raw = str(getattr(dtype, "name", dtype)).lower()
     if raw in {"f32", "float", "float32", "hbdnndatatype.f32"} or raw.endswith(".f32"):
         return "float32"
-    if raw in {"i8", "int8", "hbdnndatatype.int8"} or raw.endswith(".int8"):
+    # The board SDK exposes signed outputs as hbDNNDataType.S8/S16/S32 enum
+    # members (S100 evidence: <hbDNNDataType.S32: 8>), so their enum names are
+    # accepted next to the i*/int* spellings already handled below.
+    if raw in {"i8", "s8", "int8", "hbdnndatatype.int8"} or raw.endswith((".int8", ".s8")):
         return "int8"
     if raw in {"u8", "uint8", "hbdnndatatype.u8"} or raw.endswith(".u8"):
         return "uint8"
-    if raw in {"i16", "int16", "hbdnndatatype.int16"} or raw.endswith(".int16"):
+    if raw in {"i16", "s16", "int16", "hbdnndatatype.int16"} or raw.endswith((".int16", ".s16")):
         return "int16"
-    if raw in {"i32", "int32", "hbdnndatatype.int32"} or raw.endswith(".int32"):
+    if raw in {"i32", "s32", "int32", "hbdnndatatype.int32"} or raw.endswith((".int32", ".s32")):
         return "int32"
     if raw in {"f16", "float16", "hbdnndatatype.f16"} or raw.endswith(".f16"):
         return "float16"
