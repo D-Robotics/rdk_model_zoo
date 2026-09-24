@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadSourcesDocument, resolvePlatformSources } from "../src/sources";
+import { parse } from "yaml";
+import { loadSourcesDocument, readSourceFile, resolvePlatformSources } from "../src/sources";
 import { buildMultiplatformCatalog } from "../src/pipeline/multiplatform-catalog";
 import { publisherRoot, repositoryCatalog, repositoryRoot } from "./helpers/repository";
 
@@ -83,15 +84,98 @@ describe("multi-platform variant catalog", () => {
     const catalog = await repositoryCatalog();
     const variants = catalog.models.flatMap((model) => model.variants ?? []);
 
-    // The reviewed baseline after the manifest relocation to docs/release:
-    // 57 families, 595 configurations, 820 benchmark observations. The three
-    // new S families (yoloe26_seg, yoloe11_seg, minicpm5-2b) contribute 11
-    // asset-only variants; no benchmark observation changed with the move.
+    // The reviewed baseline after the manifest relocation to docs/release and
+    // the B7 recovery of the eight YOLOv5 X5 tag artifacts: 57 families, 603
+    // configurations, 820 benchmark observations. The three new S families
+    // (yoloe26_seg, yoloe11_seg, minicpm5-2b) contribute 11 asset-only
+    // variants; the B7 recovery adds 8 more asset-only variants (s/m/l/x at
+    // tag v2.0 and v7.0). No family and no benchmark observation changed with
+    // either step; the recovered assets are pinned by the test below.
     expect(catalog.models).toHaveLength(57);
-    expect(variants).toHaveLength(595);
+    expect(variants).toHaveLength(603);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(820);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
+  });
+
+  it("keeps the nine YOLOv5 X5 tag artifacts as nine distinct downloadable configs", async () => {
+    const catalog = await repositoryCatalog();
+    const yolov5 = catalog.models.find((model) => model.id === "yolov5")!;
+    const x5 = (yolov5.variants ?? []).filter((variant) => variant.hardware === "x5");
+
+    // yolov5n_tag_v7.0 predates the B7 recovery and rides on its measured row
+    // (the benchmark declares that asset_filename explicitly); the B7 recovery
+    // restored the other eight (s/m/l/x at tag v2.0 and v7.0) as asset-only
+    // rows, because their measured rows declare no asset_filename and the
+    // filename tuple (v2.0 -> lv20) never matches the benchmark id tuple
+    // (v2 -> lv2). Both row kinds stay; each artifact appears exactly once.
+    const expected = [
+      "yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin",
+      "yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5m_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5l_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5x_tag_v2.0_detect_640x640_bayese_nv12.bin",
+      "yolov5s_tag_v7.0_detect_640x640_bayese_nv12.bin",
+      "yolov5m_tag_v7.0_detect_640x640_bayese_nv12.bin",
+      "yolov5l_tag_v7.0_detect_640x640_bayese_nv12.bin",
+      "yolov5x_tag_v7.0_detect_640x640_bayese_nv12.bin"
+    ];
+    const tagAssets = x5.flatMap((variant) =>
+      variant.assets.filter((asset) => expected.includes(asset.filename))
+    );
+    // An omitted or duplicated manifest entry shows up here first: the X5
+    // slice must carry each of the nine artifacts exactly once.
+    expect(tagAssets.map((asset) => asset.filename).sort()).toEqual([...expected].sort());
+    for (const asset of tagAssets) {
+      expect(asset.url).toBe(`https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/${asset.filename}`);
+    }
+
+    // Exactly one variant row per artifact: a silent re-merge or a duplicated
+    // row both break this one-to-one mapping.
+    const assetRows = x5.filter((variant) =>
+      variant.assets.some((asset) => expected.includes(asset.filename))
+    );
+    expect(assetRows).toHaveLength(9);
+    expect(new Set(assetRows.map((variant) => variant.id)).size).toBe(9);
+    expect(assetRows.every((variant) => variant.task === "object-detection")).toBe(true);
+
+    // Only the n size is measured on its asset row (explicit asset_filename);
+    // the eight recovered rows are download-only and their measured twins stay
+    // asset-less, so neither side silently swallows the other.
+    expect(assetRows.filter((variant) => variant.benchmarks.length > 0).map((variant) => variant.id))
+      .toEqual(["yolov5n-v7-640-object-detection-x5"]);
+    expect(assetRows.filter((variant) => variant.benchmarks.length === 0)).toHaveLength(8);
+    const measuredRows = x5.filter((variant) => /^yolov5[nslmx]-v[27]-640-object-detection-x5$/.test(variant.id));
+    expect(measuredRows).toHaveLength(9);
+    expect(measuredRows.filter((variant) => variant.assets.length > 0).map((variant) => variant.id))
+      .toEqual(["yolov5n-v7-640-object-detection-x5"]);
+
+    // The recovery added configurations only: the family total is 44 variants
+    // (36 before the recovery + the 8 asset-only rows) and no benchmark moved.
+    expect(yolov5.variants).toHaveLength(44);
+    expect((yolov5.variants ?? []).reduce((count, variant) => count + variant.benchmarks.length, 0)).toBe(49);
+
+    // An asset listed twice in the X5 manifest is silently collapsed by the
+    // family merge (uniqueAssets) while still inflating the declared summary,
+    // so the manifest itself is guarded here: 185 asset entries, each
+    // declared exactly once, matching the reviewed summary count.
+    const platformSources = await resolvePlatformSources({
+      repositoryRoot,
+      sources: await loadSourcesDocument(resolve(publisherRoot, "sources.json"))
+    });
+    const x5Source = platformSources.find((source) => source.platform === "x5")!;
+    const x5Models = parse(await readSourceFile(repositoryRoot, x5Source, `${x5Source.manifestDirectory}/models.yaml`)) as {
+      summary: { asset_count: number };
+      models: Array<{ id: string; assets: Array<{ filename: string; url?: string }> }>;
+    };
+    const x5Entries = x5Models.models.flatMap((model) =>
+      model.assets.map((asset) => `${model.id}:${asset.filename}`)
+    );
+    // Qualified manifest identities are unique; different models may legally
+    // share a URL, while two URLs cannot make one duplicate identity valid.
+    expect(new Set(x5Entries).size).toBe(x5Entries.length);
+    expect(x5Entries).toHaveLength(185);
+    expect(x5Models.summary.asset_count).toBe(x5Entries.length);
   });
 
   it("records where each platform was read from, symmetrically", async () => {
