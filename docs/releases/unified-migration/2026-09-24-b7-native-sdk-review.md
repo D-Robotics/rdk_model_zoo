@@ -160,3 +160,9 @@ C++观察工具独立审查另发现真实manifest parameters为dict而工具按
 ## 原生源对照检查点 3d6c14c
 
 第三轮取证整改已推送功能分支，独立重跑76项YOLOv5测试通过，尚非数值验收。S100真实SDK已完成固定源与统一实现两套编译；X5固定源编译SSH在链接阶段中断，随后统一编译未建立连接。原生数值对照未执行。保留 [编译与网络失败记录](evidence/2026-09-24-board-connectivity-interruption/)，恢复后先核对远端任务和产物。
+
+## 原生证据归档补充复审
+
+检查点3d6c14c的主机正常fixture为rc=0；删除统一侧run-record旁的stdout.txt/stderr.txt后仍rc=0，且正常比较输出也未归档统一侧日志。源侧日志已强制检查和归档，两侧处理不一致。这不推翻已有实际运行记录，但不满足独立可携带证据包的要求。详见[反例](evidence/2026-09-24-b7-native-archive-review.json)。
+
+合并整改要求：source完整instrumentation audit随包复制并记录摘要，compare校验/归档；unified日志同样必需且归档，缺文件应非零并保留失败报告；双语说明修正S600插桩源组选项。原生数值板测尚未完成。GLM五小时额度限制使归档补齐任务终止，待额度恢复后续接；不以未执行任务冒充修复。
