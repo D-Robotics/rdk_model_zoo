@@ -1,0 +1,34 @@
+{
+  "utc": "2026-09-24T08:26:48.042707+00:00",
+  "base_commit": "205853707ed9b8dd3c0096bb282f8deaba618ad6",
+  "scope": "Fix X5 summary counters after eight restored YOLOv5 artifact rows; run catalog build/typecheck and full Ultralytics Python suite on coordinator develop",
+  "node_version": "v22.23.2",
+  "manifest_changes": {
+    "asset_count": [
+      177,
+      185
+    ],
+    "downloadable_asset_count": [
+      176,
+      184
+    ],
+    "sha256_unrecorded_count": [
+      148,
+      156
+    ]
+  },
+  "checks": [
+    {
+      "command": "PATH=/opt/homebrew/opt/node@22/bin:$PATH npm --prefix tools/catalog-publisher run build",
+      "rc": 0,
+      "output": "\n> build\n> npm run catalog:build && npm run typecheck\n\n\n> catalog:build\n> tsx scripts/build-catalog.ts\n\nsource x5: worktree develop -> ./docs/release/x5\nsource s: worktree develop -> ./docs/release/s\nsource x3: worktree main -> platforms/x3/release\nx5: Catalog warning: 125 accuracy metrics have no published dataset.\ns: Catalog warning: 35 accuracy metrics have no published dataset.\nx3: Catalog warning: 18 accuracy metrics have no published dataset.\nWrote /Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/tools/catalog-publisher/dist/catalog.json\nWrote /Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/tools/catalog-publisher/dist/catalog.meta.json\ncatalog_version: catalog-v1.0.0-454bf082534bbbf8\nsha256: a0c9392828f7d76920acb129dd191b58c5047afd88b81a10ed806b7a855570bd (9228680 bytes)\nfamilies: 57, benchmarks: 820\n\n> typecheck\n> tsc --noEmit\n\n"
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s samples/vision/ultralytics_yolo/tests",
+      "rc": 0,
+      "tests": 78,
+      "output": ".............................[Error] Local execution requires recognized board identity; an explicit target is not hardware evidence.\n.................................................\n----------------------------------------------------------------------\nRan 78 tests in 14.527s\n\nOK\n\nDetection Report: 1 objects found\n  [0] test: 0.90 | Box (2.0, 2.0, 20.0, 20.0)\n[Saved] Result saved to: /var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpxsj6pduh/detect.jpg\n[Saved] Result saved to: /var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpxsj6pduh/seg.jpg\n[Saved] Result saved to: /var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpxsj6pduh/pose.jpg\n[Saved] Result saved to: /var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpxsj6pduh/obb.jpg\nTop-1 Classification Results:\n  [0] tench, Tinca tinca: 0.9000\nLoading model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=640)...\nLoading model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=640)...\nLoading model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=640)...\nLoading model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=640)...\nExport exception: test exporter failure\nLoading Classify model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=224)...\n\nExport success: output.onnx\nLoading Classify model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=224)...\n\nExport success: output.onnx\nLoading Classify model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=224)...\n\nExport success: output.onnx\nLoading Classify model: mock.pt...\nApplying BPU Monkey Patch (Output Layout: NHWC)...\nStarting export (imgsz=224)...\nExport exception: test exporter failure\nLoading Segment model: mock.pt...\nApplying BPU Monkey Patch for Segmentation (Output Layout: NHWC)...\nStarting export (imgsz=640)...\n\nExport success: output.onnx\nLoading Segment model: mock.pt...\nApplying BPU Monkey Patch for Segmentation (Output Layout: NHWC)...\nStarting export (imgsz=640)...\n\nExport success: output.onnx\nLoading Segment model: mock.pt...\nApplying BPU Monkey Patch for Segmentation (Output Layout: NHWC)...\nStarting export (imgsz=640)...\n\nExport success: output.onnx\nLoading Segment model: mock.pt...\nApplying BPU Monkey Patch for Segmentation (Output Layout: NHWC)...\nStarting export (imgsz=640)...\nExport exception: test exporter failure\nLoading Pose model: mock.pt...\nApplying BPU Monkey Patch for Pose (Output Layout: NHWC)...\nStarting export (imgsz=640)...\n\nExport success: output.onnx\nLoading Pose model: mock.pt...\nApplying BPU Monkey Patch for Pose (Output Layout: NHWC)...\nStarting export (imgsz=640)...\n\nExport success: output.onnx\nLoading Pose model: mock.pt...\nApplying BPU Monkey Patch for Pose (Output Layout: NHWC)...\nStarting export (imgsz=640)...\n\nExport success: output.onnx\nLoading Pose model: mock.pt...\nApplying BPU Monkey Patch for Pose (Output Layout: NHWC)...\nStarting export (imgsz=640)...\nExport exception: test exporter failure\nLoading OBB model: mock.pt...\nDetected OBB Head: OBB26\nMonkey patch applied for OBB task (NHWC layout).\nStarting export (imgsz=640)...\n\nExport success: output.onnx\n\n=== Output Node Description ===\nModel has 9 outputs:\n  Layout: NHWC\n  0-8: [Cls(NC), Box(4), Angle(1)] per scale\n===============================\nLoading OBB model: mock.pt...\nDetected OBB Head: OBB26\nMonkey patch applied for OBB task (NHWC layout).\nStarting export (imgsz=640)...\n\nExport success: output.onnx\n\n=== Output Node Description ===\nModel has 9 outputs:\n  Layout: NHWC\n  0-8: [Cls(NC), Box(4), Angle(1)] per scale\n===============================\nLoading OBB model: mock.pt...\nDetected OBB Head: OBB26\nMonkey patch applied for OBB task (NHWC layout).\nStarting export (imgsz=640)...\n\nExport success: output.onnx\n\n=== Output Node Description ===\nModel has 9 outputs:\n  Layout: NHWC\n  0-8: [Cls(NC), Box(4), Angle(1)] per scale\n===============================\nLoading OBB model: mock.pt...\nDetected OBB Head: OBB26\nMonkey patch applied for OBB task (NHWC layout).\nStarting export (imgsz=640)...\nExport exception: test exporter failure\n"
+    }
+  ],
+  "board": "not part of these host checks"
+}
