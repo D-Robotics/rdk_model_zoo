@@ -27,6 +27,8 @@ python3 samples/vision/mobile_sam/evaluator/compare.py \
 
 Use `--target s100|s100p|s600` for S targets. Optional `--test-img`, stage model paths and matching asset IDs, `--priority` (default `0`) and `--bpu-cores` are passed to both sides. Omit `--bpu-cores` to use S core `[0]`; X5 has no explicit core selection. Exit `0` means every comparison check passed, `1` means the runs completed but a check failed, and `2` means target gating, argument, model, image or execution failed.
 
+Scheduling control: the evaluator first calls the fixed source helper's own `set_scheduling_params` unchanged and records every native scheduling call with its raw outcome. Because the fixed X5 source helper passes a scalar priority that the native API rejects (the source swallows that TypeError and applies nothing), the evaluator additionally applies an explicit verified per-model control mapping to both sides' native runtimes so the comparison executes under identical, actually-applied scheduling. `comparison.json` records each stage's model name, the exact native arguments, and both rejected and applied calls. This explicit control is an evaluator provision, not the fixed source CLI's own scheduling behavior, and it does not change either side's pre/forward/post processing.
+
 | Argument | Default | Meaning |
 |---|---|---|
 | `--target` | required | `x5`, `s100`, `s100p` or `s600`; gates the actual execution target |

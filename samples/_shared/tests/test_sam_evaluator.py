@@ -284,4 +284,87 @@ class SAMEvaluatorTests(unittest.TestCase):
             self.assertEqual(a.priority,0);self.assertIsNone(a.bpu_cores)
             self.assertIn('dogs.jpg',str(a.test_img))
 
+class SchedulingControlTests(unittest.TestCase):
+    """X5 board evidence 2026-09-24: native scheduling needs per-model Mappings."""
+    def _compare(self,sample,target,priority):
+        with tempfile.TemporaryDirectory() as td:
+            tmp=Path(td)
+            image=np.zeros((5,7,3),dtype=np.uint8)
+            img=tmp/'input.raw';img.write_bytes(image.tobytes())
+            ep=tmp/'encoder.fixture';ep.write_bytes(b'enc')
+            dp=tmp/'decoder.fixture';dp.write_bytes(b'dec')
+            base=resolve_selection(sample,target)
+            selection=resolve_selection(sample,target,encoder_model_path=ep,decoder_model_path=dp,
+                encoder_asset_id=base.encoder_asset.reference,decoder_asset_id=base.decoder_asset.reference)
+            def factory(path):
+                stage='encoder' if Path(path)==ep else 'decoder'
+                fake=FakeRuntime(metadata(sample,stage,target))
+                if stage=='decoder':fake.outputs['iou_predictions'].reshape(-1)[:]=[0.1,0.9,0.2]
+                return fake
+            with patch('samples._shared.sam_evaluator.require_execution_target',return_value=target):
+                return run_comparison(selection,image,img,tmp/'evidence',priority=priority,
+                    runtime_factory=factory)
+
+    def _stage_calls(self,summary,side,stage):
+        return [c for c in summary['scheduling']['native_calls'][side] if c['stage']==stage]
+
+    def test_x5_source_helper_scalar_rejection_and_explicit_control_recorded(self):
+        """X5: helper's scalar call is rejected+swallowed; evaluator control is explicit."""
+        for sample in ('efficient_sam','mobile_sam'):
+            for priority in (0,7):
+                with self.subTest(sample=sample,priority=priority):
+                    summary=self._compare(sample,'x5',priority)
+                    self.assertTrue(summary['passed'],summary.get('error'))
+                    sched=summary['scheduling']
+                    self.assertEqual(sched['requested'],{'priority':priority,'bpu_cores':None})
+                    self.assertEqual(sched['source_helper_call'],{'priority':priority})
+                    self.assertIn('scalar',sched['source_helper_behavior'])
+                    for stage in ('encoder','decoder'):
+                        legacy=self._stage_calls(summary,'legacy',stage)
+                        self.assertEqual(legacy[0]['args'],{'priority':priority})
+                        self.assertIn('TypeError',legacy[0]['error'])
+                        self.assertNotIn('applied',legacy[0])
+                        control={'priority':{stage:priority}}
+                        self.assertEqual(legacy[1],{'stage':stage,'args':control,'applied':True})
+                        self.assertEqual(self._stage_calls(summary,'unified',stage),
+                                         [{'stage':stage,'args':control,'applied':True}])
+                        self.assertEqual(sched['explicit_control'][f'legacy.{stage}'],
+                                         {'model_name':stage,'native_args':control})
+                        self.assertEqual(sched['explicit_control'][f'unified.{stage}']['model_name'],stage)
+
+    def test_s100_helper_mapping_and_explicit_control_both_apply(self):
+        """S100: source helper mapping succeeds and explicit control re-applies it."""
+        for sample in ('efficient_sam','mobile_sam'):
+            with self.subTest(sample=sample):
+                summary=self._compare(sample,'s100',0)
+                self.assertTrue(summary['passed'],summary.get('error'))
+                sched=summary['scheduling']
+                self.assertEqual(sched['requested'],{'priority':0,'bpu_cores':[0]})
+                self.assertEqual(sched['source_helper_call'],{'priority':0,'bpu_cores':[0]})
+                self.assertIn('per model name',sched['source_helper_behavior'])
+                for stage in ('encoder','decoder'):
+                    control={'priority':{stage:0},'bpu_cores':{stage:[0]}}
+                    legacy=self._stage_calls(summary,'legacy',stage)
+                    self.assertEqual(legacy,[{'stage':stage,'args':control,'applied':True},
+                                             {'stage':stage,'args':control,'applied':True}])
+                    self.assertEqual(self._stage_calls(summary,'unified',stage),
+                                     [{'stage':stage,'args':control,'applied':True}])
+                    self.assertEqual(sched['explicit_control'][f'legacy.{stage}']['native_args'],control)
+
+    def test_x5_explicit_bpu_cores_rejected_before_evidence_or_native_calls(self):
+        """X5 core-selection rejection stays ahead of any scheduling native call."""
+        with tempfile.TemporaryDirectory() as td:
+            tmp=Path(td)
+            ep=tmp/'encoder.fixture';ep.write_bytes(b'enc')
+            dp=tmp/'decoder.fixture';dp.write_bytes(b'dec')
+            base=resolve_selection('efficient_sam','x5')
+            selection=resolve_selection('efficient_sam','x5',encoder_model_path=ep,decoder_model_path=dp,
+                encoder_asset_id=base.encoder_asset.reference,decoder_asset_id=base.decoder_asset.reference)
+            with patch('samples._shared.sam_evaluator.require_execution_target',return_value='x5'):
+                with self.assertRaises(ValueError):
+                    run_comparison(selection,np.zeros((5,7,3),dtype=np.uint8),tmp/'i',
+                        tmp/'evidence',priority=0,bpu_cores=[0])
+            self.assertFalse((tmp/'evidence').exists())
+
+
 if __name__=='__main__':unittest.main()

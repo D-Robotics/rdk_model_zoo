@@ -26,6 +26,15 @@ from samples._shared.sam_tensor_io import DEFAULT_BOX, validate_box
 
 _ROOT = Path(__file__).resolve().parents[2]
 
+# Verified fixed-source scheduling behavior (do not modify the fixed sources).
+_SOURCE_SCHEDULING = {
+    'x5': ('The fixed X5 source helper passes a scalar priority to the native API and '
+           'swallows the resulting TypeError, so on the real SDK it applies no scheduling; '
+           'its rejected native calls are retained in native_calls.'),
+    's': ('The fixed S source helper maps priority and bpu-cores per model name, matching '
+          'the native Mapping API; its native calls are retained in native_calls.'),
+}
+
 
 def _digest(path):
     return sha256_file(path)
@@ -65,6 +74,22 @@ class _RecordingRuntime:
 
     def __getattr__(self, name):
         return getattr(self._runtime, name)
+
+    def set_scheduling_params(self, **kwargs):
+        """Record every native scheduling call and its outcome, then delegate.
+
+        Rejected calls keep their error entry so evidence retains the source
+        helper's original behavior, including calls the source swallows.
+        """
+        entry = dict(stage=self._stage, args=kwargs)
+        self._record['scheduling'].append(entry)
+        try:
+            result = self._runtime.set_scheduling_params(**kwargs)
+        except Exception as exc:
+            entry['error'] = f'{type(exc).__name__}: {exc}'
+            raise
+        entry['applied'] = True
+        return result
 
     def run(self, physical):
         name = self.model_names[0]
@@ -192,8 +217,19 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
         source_ref='ac115717197920355fc390bb04299b20e6436864' if group == 'x5' else '380e1a2bf42041af54be6f34935e50197cfadff9',
         code_sha256={},
         measurement='fixed-image migration consistency; not accuracy or latency')
-    records = {side: dict(inputs={}, outputs={}) for side in ('legacy', 'unified')}
+    records = {side: dict(inputs={}, outputs={}, scheduling=[]) for side in ('legacy', 'unified')}
     summary['metadata'] = {side: {} for side in records}
+    schedule = dict(priority=priority)
+    if cores is not None:
+        schedule['bpu_cores'] = cores
+    summary['scheduling'] = dict(
+        requested=dict(priority=priority, bpu_cores=cores),
+        source_helper_call=dict(schedule),
+        source_helper_behavior=_SOURCE_SCHEDULING[group],
+        explicit_control={}, native_calls={},
+        note=('explicit_control entries are evaluator-applied verified per-model control so '
+              'both sides run under identical scheduling; they are not the fixed source CLI\'s '
+              'own scheduling behavior. Numeric pre/forward/post stages are unchanged.'))
     directory.mkdir(parents=True, exist_ok=False)
     failure = None
     try:
@@ -205,6 +241,8 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
             from samples._shared.model_runner import _default_runtime_factory
             runtime_factory = _default_runtime_factory()
 
+        legacy_runtimes = {}
+
         def recording_factory(side):
             def create(path):
                 stage = 'encoder' if Path(path) == selection.encoder_model_path else 'decoder'
@@ -214,7 +252,10 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
                 from samples._shared.runtime_meta import RuntimeMetadata, metadata_evidence
                 summary['metadata'][side][stage] = metadata_evidence(
                     RuntimeMetadata.from_runtime(runtime))
-                return _RecordingRuntime(runtime, stage, records[side])
+                wrapper = _RecordingRuntime(runtime, stage, records[side])
+                if side == 'legacy':
+                    legacy_runtimes[stage] = wrapper
+                return wrapper
             return create
 
         source, source_path = _load_legacy(sample, group, recording_factory('legacy'))
@@ -223,14 +264,33 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
         if box is not None:
             cfg['box'] = box
         legacy = getattr(source, prefix+'Segment')(getattr(source, prefix+'Config')(**cfg))
-        schedule = dict(priority=priority)
-        if cores is not None:
-            schedule['bpu_cores'] = cores
+        # Source helper called exactly as the fixed source CLI would; its raw
+        # outcome (including an X5 scalar rejection the source swallows) stays
+        # in native_calls and is never reported as an applied setting.
         legacy.set_scheduling_params(**schedule)
+        # Explicit same-scheduling control: the verified per-model mapping is
+        # applied to the legacy side's own native runtimes so both sides execute
+        # under identical, actually-applied scheduling.
+        for stage in ('encoder', 'decoder'):
+            wrapper = legacy_runtimes[stage]
+            model_name = wrapper.model_names[0]
+            control = {'priority': {model_name: priority}}
+            if cores is not None:
+                control['bpu_cores'] = {model_name: list(cores)}
+            wrapper.set_scheduling_params(**control)
+            summary['scheduling']['explicit_control'][f'legacy.{stage}'] = (
+                dict(model_name=model_name, native_args=control))
         records['legacy']['result'] = legacy.predict(image)
         runner = RuntimeModelRunner(selection, runtime_factory=recording_factory('unified'))
         binding = runner.load()
         runner.set_scheduling_params(priority=priority, bpu_cores=cores)
+        for stage, stage_binding in (('encoder', binding.encoder), ('decoder', binding.decoder)):
+            model_name = stage_binding.model_name
+            control = {'priority': {model_name: priority}}
+            if cores is not None:
+                control['bpu_cores'] = {model_name: list(cores)}
+            summary['scheduling']['explicit_control'][f'unified.{stage}'] = (
+                dict(model_name=model_name, native_args=control))
         records['unified']['result'] = SAMPipeline(runner, binding).predict(image, box=box)
         summary.update(compare_records(records['legacy'], records['unified']))
         summary['result_summaries'] = {side: dict(iou=r['result']['iou'], mask_index=r['result']['mask_index']) for side, r in records.items()}
@@ -238,6 +298,8 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
         summary['error'] = dict(type=type(exc).__name__, message=str(exc))
         failure = exc
     finally:
+        # Snapshot whatever scheduling calls happened, even on early failure.
+        summary['scheduling']['native_calls'] = {side: records[side]['scheduling'] for side in records}
         summary['arrays'] = _save_arrays(directory, records)
         summary['return_code'] = 2 if failure is not None else (0 if summary['passed'] else 1)
         summary['finished_utc'] = _now()
