@@ -12,7 +12,7 @@ LPRNet 将车牌裁剪后的 tensor 直接识别为字符序列，不包含独�
 
 | target | variant | Python | C++ | 状态 |
 |---|---|---|---|---|
-| X5 | `lpr.bin` | supported-not-run | not-supported | 主机 fixture 通过；板测未运行 |
+| X5 | `lpr.bin` | supported-not-run | not-supported | 主机 fixture 通过；2026-09-24 修复板端绑定（native 输出 `(1,68,18,1)`），板测复验待运行 |
 | S100/S100P/S600 | — | not-supported | not-supported | 没有源模型资产 |
 
 本 sample 没有 C++ 实现。主机测试不等同于板端验证。

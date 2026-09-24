@@ -13,7 +13,7 @@ The source names an RDK X5 OpenExplorer environment with `hb_mapper` and `hrt_mo
 <a id="export"></a>
 ## Export
 
-No export recipe is included by the fixed source. An external user-owned ONNX/checkpoint pipeline must produce a graph whose deployment contract is `input float32 NCHW (1,3,24,94)` and `output float32 (1,68,18)`. This migration did not invent or run that pipeline.
+No export recipe is included by the fixed source. An external user-owned ONNX/checkpoint pipeline must produce a graph whose deployment contract is `input float32 NCHW (1,3,24,94)` and `output float32 (1,68,18,1)` — the released `lpr.bin` native logits; CTC decoding consumes the `(68,18)` payload after singleton removal. This migration did not invent or run that pipeline.
 
 <a id="calibration"></a>
 ## Calibration

@@ -20,7 +20,17 @@ class BindingError(ValueError):
 SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 INPUT_SHAPE = (1, 3, 24, 94)
-OUTPUT_SHAPE = (1, 68, 18)
+# Accepted logits layouts, each bound exactly as reported and matched
+# strictly on every runtime call.  (1, 68, 18, 1) is the measured protocol
+# of the one published X5 ``lpr.bin`` (board metadata 2026-09-24).  The 3D
+# (1, 68, 18) layout is the old unified-contract/host-fixture shape kept
+# for API compatibility with existing host tests and injected runners; no
+# published SDK artifact has been observed reporting it.  No other rank or
+# axis order is accepted — the binding never reshapes, squeezes, or
+# permutes.  Singleton elimination for the CTC decoder happens only in the
+# task's post_process stage.
+OUTPUT_SHAPES = ((1, 68, 18), (1, 68, 18, 1))
+CTC_LOGITS_SHAPE = (68, 18)
 ASSET_ID = "x5:lprnet:lpr.bin"
 
 
@@ -36,12 +46,18 @@ class ModelSelection:
 
 @dataclass(frozen=True)
 class ModelBinding:
-    """Validated input/output names and shapes observed from one model."""
+    """Validated input/output names and shapes observed from one model.
+
+    ``output_shape`` is the complete native logits shape reported by the
+    bound runtime metadata (see ``OUTPUT_SHAPES``); every runtime call must
+    reproduce it exactly.
+    """
 
     selection: ModelSelection
     metadata: RuntimeMetadata
     input_name: str
     output_name: str
+    output_shape: tuple[int, ...]
 
     @property
     def model_name(self) -> str:
@@ -119,15 +135,21 @@ def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[st
         raise MetadataMismatchError(f"Expected input shape {INPUT_SHAPE}, got {meta.input_shapes.get(input_name)}.")
     if meta.input_dtypes.get(input_name) != "float32":
         raise MetadataMismatchError("LPRNet input must be float32.")
-    if meta.output_shapes.get(output_name) != OUTPUT_SHAPE:
-        raise MetadataMismatchError(f"Expected output shape {OUTPUT_SHAPE}, got {meta.output_shapes.get(output_name)}.")
+    if meta.output_shapes.get(output_name) not in OUTPUT_SHAPES:
+        raise MetadataMismatchError(
+            f"Expected LPRNet logits metadata shape in {OUTPUT_SHAPES} "
+            "(classes=68, timesteps=18; rank 4 is accepted only as "
+            f"(1, 68, 18, 1)), got {meta.output_shapes.get(output_name)}."
+        )
     if meta.output_dtypes.get(output_name) != "float32":
         raise MetadataMismatchError("LPRNet output must be float32.")
-    return ModelBinding(selection, meta, input_name, output_name)
+    return ModelBinding(
+        selection, meta, input_name, output_name, meta.output_shapes[output_name]
+    )
 
 
 __all__ = [
-    "ASSET_ID", "BindingError", "INPUT_SHAPE", "ModelBinding", "ModelSelection",
-    "OUTPUT_SHAPE", "SAMPLE_DIR", "SUPPORTED_TARGETS", "bind_model",
+    "ASSET_ID", "BindingError", "CTC_LOGITS_SHAPE", "INPUT_SHAPE", "ModelBinding",
+    "ModelSelection", "OUTPUT_SHAPES", "SAMPLE_DIR", "SUPPORTED_TARGETS", "bind_model",
     "list_available_assets", "resolve_selection", "MetadataMismatchError",
 ]

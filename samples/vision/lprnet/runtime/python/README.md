@@ -3,7 +3,7 @@
 <a id="environment"></a>
 ## Environment
 
-Use Python 3 and NumPy on an RDK X5 image with `hbm_runtime` available. The runtime imports the board SDK only after selection, model-file, and board checks. `--help`, `--list-models`, and `--dry-run` are SDK-free. The compiled model must expose one float32 input `(1,3,24,94)` and one float32 output `(1,68,18)`.
+Use Python 3 and NumPy on an RDK X5 image with `hbm_runtime` available. The runtime imports the board SDK only after selection, model-file, and board checks. `--help`, `--list-models`, and `--dry-run` are SDK-free. The compiled model must expose one float32 input `(1,3,24,94)` and one float32 logits output bound exactly as its metadata reports it: the released `lpr.bin` reports `(1,68,18,1)` — the measured board protocol; the 3D `(1,68,18)` layout is kept only as the old host/API compatibility contract (existing host tests and injected runners), and no published SDK artifact has been observed with it. No other rank or axis order is accepted — the binding never reshapes or permutes.
 
 <a id="usage"></a>
 ## Usage
@@ -35,7 +35,7 @@ Success is exit code `0` and one JSON line with `plate`. The zero-argument input
 <a id="results"></a>
 ## Results
 
-The CLI prints `target`, qualified `asset_id`, and `plate`. `LPRNetTask.post_process` returns a Python `str`; it applies argmax over 18 time steps, consecutive duplicate removal, and blank index `67` removal. Raw logits remain float32 and are not softmaxed.
+The CLI prints `target`, qualified `asset_id`, and `plate`. `LPRNetTask.post_process` returns a Python `str`; it first drops only the bound layout's singleton axes — `(1,68,18,1)` for the released artifact — to the source `(68,18)` CTC payload, then applies argmax over 18 time steps, consecutive duplicate removal, and blank index `67` removal. Raw logits remain float32 and are not softmaxed.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -68,8 +68,8 @@ print(plate)
 ## Stage I/O
 
 - `pre_process(test_bin)` reads exactly `1*3*24*94` float32 values and returns `PreparedInput(tensors, context)` with one NCHW tensor. No image transform is performed.
-- `forward(tensors)` validates the bound name/shape/dtype, calls the selected model, and returns an owned raw float32 `(1,68,18)` array.
-- `post_process(raw)` performs only the source CTC-style decode and returns `str`.
+- `forward(tensors)` validates the bound name/shape/dtype, calls the selected model, and returns an owned raw float32 array in the bound native shape — `(1,68,18,1)` for the released `lpr.bin`; every call must match the bound shape exactly.
+- `post_process(raw)` removes only singleton axes of the bound native logits (never a reshape or axis reorder) and applies the source CTC-style decode, returning `str`.
 - `predict(test_bin)` serially composes all three stages; the context is the input path and is not stored as mutable task state.
 
 <a id="troubleshooting"></a>
@@ -78,3 +78,4 @@ print(plate)
 - A model path without `--asset-id x5:lprnet:lpr.bin` is rejected to prevent filename-based protocol guessing.
 - A missing or wrongly sized `.dat` file returns an error before SDK execution.
 - Unknown input/output names, shape, or dtype fail metadata binding; runtime casts are not used to hide a mismatch.
+- An output metadata shape outside `(1,68,18,1)`/`(1,68,18)` — for example `(1,18,68,1)` or `(1,68,18,2)` — fails binding, and a runtime call whose output drifts from the bound shape fails before decoding.

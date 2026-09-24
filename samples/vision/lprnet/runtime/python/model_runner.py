@@ -97,8 +97,13 @@ class RuntimeModelRunner:
         if not isinstance(outputs, Mapping) or set(outputs) != {binding.output_name}:
             raise MetadataMismatchError("Runtime returned unexpected tensor outputs.")
         raw = np.asarray(outputs[binding.output_name])
-        if raw.shape != (1, 68, 18) or raw.dtype != np.float32 or not np.isfinite(raw).all():
-            raise MetadataMismatchError("LPRNet runtime output does not match binding.")
+        if raw.shape != binding.output_shape or raw.dtype != np.float32 or not np.isfinite(raw).all():
+            raise MetadataMismatchError(
+                f"LPRNet runtime output does not match binding: expected "
+                f"{binding.output_shape} float32, got {raw.shape}/{raw.dtype}."
+            )
+        # The raw native logits keep the bound shape (for the released
+        # artifact (1, 68, 18, 1)); singleton removal belongs to post_process.
         return np.array(raw, copy=True)
 
 
