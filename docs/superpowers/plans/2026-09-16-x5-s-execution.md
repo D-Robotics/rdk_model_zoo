@@ -100,3 +100,10 @@ B7：X5 YOLOv5九变体×两种内存、FCOS三变体×两板、LPRNet/YOLOWorld
 B6：真实板测发现Python3.10摘要API与CLI异常退出码缺陷（B6-B1）；修复1bfd8fa经独立主机复核后，通过GitHub f888c8f送板。S100两SAM源对照通过；X5统一runner调度scalar与真实SDK Mapping协议冲突（B6-B2），已交本地GLM。源X5 helper吞掉同类TypeError也须在evaluator控制记录中透明处理，不能伪称source调度成功。修复后继续X5及S100受影响范围；其余目标待测。
 
 B3：本地GLM正在整理convnext/edgenext/fasternet/fastvit共13变体的可复用板端完整证据捕获工具，先独立审核再通过GitHub送两块X5。B4/B5剩余板测、B6剩余目标、B8–B11与最终整体验收均保留。目录inventory旧595断言与当前603的差异另行核对精确新增集合，不降级断言。开发继续使用本地Claude Code+GLM；Codex负责独立复审、板测与GitHub同步。
+
+
+### 2026-09-24 18:17 复验进展
+
+- B6-B2：GitHub检查点a72f92b完成X5 8GB默认/priority7及S100默认两sample共6次源对照，90数组与每例14代码摘要独立核验通过；B6其他目标仍待测，Closed=no。
+- 目录清单测试修正b2e24c0已合入develop，完整Node22检查120项通过；不代表B7关闭。
+- B7原生C++对照工具第三轮身份/审计整改由本地Claude Code+GLM继续，B3取证工具仍在开发。B8及后续范围未缩减。
