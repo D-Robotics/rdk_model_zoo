@@ -1,0 +1,7 @@
+{
+  "scope": "Independent probe of in-progress native GLM worktree, not submitted final patch",
+  "probe_source": "#include \"yolov5_gate.hpp\"\n#include <iostream>\nint main(){yolov5::TensorMeta m;m.dtype=yolov5::kDtypeS32;m.quanti_type=yolov5::kQuantiScale;m.num_dimensions=4;m.valid[0]=1;m.valid[1]=84;m.valid[2]=84;m.valid[3]=255;m.stride[0]=7225344;m.stride[1]=86016;m.stride[2]=1024;m.stride[3]=4;m.aligned_byte_size=7225344;m.storage_bytes=7225344;m.scale_len=255;long long n=0;std::cout<<\"valid_padded=\"<<bool(yolov5::check_s32_dequant(m,&n))<<\"\\n\";m.stride[2]=400;m.stride[1]=33600;std::cout<<\"overlapping_pixels=\"<<bool(yolov5::check_s32_dequant(m,&n))<<\"\\n\";m.stride[2]=1024;m.stride[1]=86016;m.scale_len=1;std::cout<<\"scalar_scale_forwarded_to_channel_indexed_helper=\"<<bool(yolov5::check_s32_dequant(m,&n))<<\"\\n\";}\n",
+  "gate_sha256": "4ab4a843e0f984a43daa9040a6268e87a1221575f85d2240a76f988d878d10ba",
+  "stdout": "valid_padded=1\noverlapping_pixels=1\nscalar_scale_forwarded_to_channel_indexed_helper=1\n",
+  "rc": 0
+}

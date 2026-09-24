@@ -1,0 +1,440 @@
+{
+  "schema": "rdk-model-zoo/yolov5-cpp-dump/v2",
+  "utc": "2026-09-24T09:01:40Z",
+  "target": "s600",
+  "build_target": "s600",
+  "asset_id": "s:yolov5:s600/yolov5x_672x672_nv12.hbm",
+  "model_path": "/tmp/rdk-b7-4d45f9a/samples/vision/yolov5/model/s600/yolov5x_672x672_nv12.hbm",
+  "model_sha256": "8213ffa8b4fa3b8fc1ed2da517debffa8057828ab1e4e159753d9527a543b76a",
+  "binary_path": "/tmp/rdk-b7-build-s600/yolov5_cpp",
+  "binary_sha256": "10c092dec8494784c8bf93872b2d75d41e0594633b1ae869fd2211294e118487",
+  "image_path": "samples/vision/yolov5/test_data/kite.jpg",
+  "image_sha256": "87410f52f79cc256c3949b48a3548632c07c8e9943468ef8caa6250f6643be8e",
+  "cwd": "/tmp/rdk-b7-4d45f9a",
+  "argv": [
+    "/tmp/rdk-b7-build-s600/yolov5_cpp",
+    "--target",
+    "s600",
+    "--model-path",
+    "/tmp/rdk-b7-4d45f9a/samples/vision/yolov5/model/s600/yolov5x_672x672_nv12.hbm",
+    "--test-img",
+    "samples/vision/yolov5/test_data/kite.jpg",
+    "--output",
+    "/tmp/rdk-b7-s600-64g-native-4d45f9a-result.jpg",
+    "--score-thres",
+    "0.25",
+    "--nms-thres",
+    "0.45",
+    "--priority",
+    "0",
+    "--bpu-core",
+    "-1",
+    "--asset-id",
+    "s:yolov5:s600/yolov5x_672x672_nv12.hbm",
+    "--dump-dir",
+    "/tmp/rdk-b7-s600-64g-native-4d45f9a-dump"
+  ],
+  "return_code": 0,
+  "error": "",
+  "notes": [
+    "S UCP adapter; split NV12 672x672 Y/UV inputs; per-channel S32 dequantization.",
+    "NMS preserves source S nms_bboxes semantics: keep score >= threshold, no per-class top_k.",
+    "Scheduling honours the caller's priority/BPU core (source S forces priority 0); the core index is mapped to the SDK's backend bitmask.",
+    "Input files hold the deterministic per-row payload the writer produced; inter-row padding bytes are uninitialized and are not dumped."
+  ],
+  "parameters": {
+    "score_thres": "0.250000",
+    "nms_thres": "0.450000",
+    "priority": "0",
+    "bpu_core": "-1",
+    "bpu_core_backend": "128",
+    "preprocess": "letterbox",
+    "nms_top_k_per_class": "-1",
+    "score_boundary": "greater-or-equal",
+    "label_file": ""
+  },
+  "inputs": [
+    {
+      "name": "y",
+      "dtype": "uint8",
+      "shape": [
+        1,
+        672,
+        672,
+        1
+      ],
+      "quanti": "none",
+      "scale_len": 0,
+      "aligned_byte_size": null,
+      "stride": [
+        473088,
+        704,
+        1,
+        1
+      ],
+      "aligned": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "quantize_axis": 0,
+      "scale_values": [],
+      "zero_point_values": []
+    },
+    {
+      "name": "uv",
+      "dtype": "uint8",
+      "shape": [
+        1,
+        336,
+        336,
+        2
+      ],
+      "quanti": "none",
+      "scale_len": 0,
+      "aligned_byte_size": null,
+      "stride": [
+        236544,
+        704,
+        2,
+        1
+      ],
+      "aligned": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "quantize_axis": 0,
+      "scale_values": [],
+      "zero_point_values": []
+    }
+  ],
+  "outputs": [
+    {
+      "name": "output0",
+      "dtype": "float32",
+      "shape": [
+        1,
+        84,
+        84,
+        255
+      ],
+      "quanti": "none",
+      "scale_len": 0,
+      "aligned_byte_size": 7225344,
+      "stride": [
+        7225344,
+        86016,
+        1024,
+        4
+      ],
+      "aligned": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "quantize_axis": 0,
+      "scale_values": [],
+      "zero_point_values": []
+    },
+    {
+      "name": "output1",
+      "dtype": "float32",
+      "shape": [
+        1,
+        42,
+        42,
+        255
+      ],
+      "quanti": "none",
+      "scale_len": 0,
+      "aligned_byte_size": 1806336,
+      "stride": [
+        1806336,
+        43008,
+        1024,
+        4
+      ],
+      "aligned": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "quantize_axis": 0,
+      "scale_values": [],
+      "zero_point_values": []
+    },
+    {
+      "name": "output2",
+      "dtype": "float32",
+      "shape": [
+        1,
+        21,
+        21,
+        255
+      ],
+      "quanti": "none",
+      "scale_len": 0,
+      "aligned_byte_size": 451584,
+      "stride": [
+        451584,
+        21504,
+        1024,
+        4
+      ],
+      "aligned": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "quantize_axis": 0,
+      "scale_values": [],
+      "zero_point_values": []
+    }
+  ],
+  "input_tensors": [
+    {
+      "name": "input0-y",
+      "dtype": "uint8",
+      "shape": [
+        1,
+        672,
+        672,
+        1
+      ],
+      "bytes": 451584,
+      "file": "input/0-input0-y.bin",
+      "sha256": "43dc81d6fb00dbc2309a071446202d9f33c306bb7e82e06b8f14e4d34f2fcf5b"
+    },
+    {
+      "name": "input1-uv",
+      "dtype": "uint8",
+      "shape": [
+        1,
+        336,
+        336,
+        2
+      ],
+      "bytes": 225792,
+      "file": "input/1-input1-uv.bin",
+      "sha256": "406a11c22cbed7488b9f7ec2a0b9e2145222328ce06fc2b32dca157a0c7f252d"
+    }
+  ],
+  "raw_tensors": [
+    {
+      "name": "output0",
+      "dtype": "float32",
+      "shape": [
+        1,
+        84,
+        84,
+        255
+      ],
+      "bytes": 7225344,
+      "file": "raw/0-output0.bin",
+      "sha256": "5d4800957596b6b2f6f4601266a5b933feee02490b32ac876cad0daaeb6cbf08"
+    },
+    {
+      "name": "output1",
+      "dtype": "float32",
+      "shape": [
+        1,
+        42,
+        42,
+        255
+      ],
+      "bytes": 1806336,
+      "file": "raw/1-output1.bin",
+      "sha256": "554131fe817895b4d46f17f2ecb39e7a51147f35def324a4c9401001b94427a4"
+    },
+    {
+      "name": "output2",
+      "dtype": "float32",
+      "shape": [
+        1,
+        21,
+        21,
+        255
+      ],
+      "bytes": 451584,
+      "file": "raw/2-output2.bin",
+      "sha256": "a0012f023f9199b98650882bdc1d6ac7bfaf753eb66966a0d2f95149ab37a5a9"
+    }
+  ],
+  "transformed_tensors": [
+    {
+      "name": "output0",
+      "dtype": "float32",
+      "shape": [
+        1,
+        84,
+        84,
+        255
+      ],
+      "bytes": 7197120,
+      "file": "transformed/0-output0.bin",
+      "sha256": "bcf74cb985a96a033be22cc9216a909f17384314afc7e07ee11e0e3733cd0259"
+    },
+    {
+      "name": "output1",
+      "dtype": "float32",
+      "shape": [
+        1,
+        42,
+        42,
+        255
+      ],
+      "bytes": 1799280,
+      "file": "transformed/1-output1.bin",
+      "sha256": "b88a4fc32701408ef9b901c39febefdc8459f2e326e8feb209626b656a1c4a44"
+    },
+    {
+      "name": "output2",
+      "dtype": "float32",
+      "shape": [
+        1,
+        21,
+        21,
+        255
+      ],
+      "bytes": 449820,
+      "file": "transformed/2-output2.bin",
+      "sha256": "e2d102561f751ac6e541894040b3ad047c2616ae72073df9ec7bd957627557e1"
+    }
+  ],
+  "detections": [
+    {
+      "x1": 56.8027077,
+      "y1": 415.762512,
+      "x2": 81.9348068,
+      "y2": 491.83905,
+      "score": 0.906365156,
+      "class_id": 0
+    },
+    {
+      "x1": 295.14505,
+      "y1": 151.710358,
+      "x2": 333.530243,
+      "y2": 187.363617,
+      "score": 0.898250878,
+      "class_id": 33
+    },
+    {
+      "x1": 108.438896,
+      "y1": 459.095581,
+      "x2": 134.522202,
+      "y2": 537.227539,
+      "score": 0.890358508,
+      "class_id": 0
+    },
+    {
+      "x1": 138.786896,
+      "y1": 230.199783,
+      "x2": 151.790222,
+      "y2": 252.007004,
+      "score": 0.836047649,
+      "class_id": 33
+    },
+    {
+      "x1": 41.1757622,
+      "y1": 364.408997,
+      "x2": 52.9715004,
+      "y2": 392.931824,
+      "score": 0.734985173,
+      "class_id": 0
+    },
+    {
+      "x1": 538.335571,
+      "y1": 308.027893,
+      "x2": 546.72876,
+      "y2": 322.783203,
+      "score": 0.72508955,
+      "class_id": 33
+    },
+    {
+      "x1": 286.867432,
+      "y1": 283.945526,
+      "x2": 299.127563,
+      "y2": 295.626251,
+      "score": 0.692387283,
+      "class_id": 33
+    },
+    {
+      "x1": 232.800507,
+      "y1": 280.901794,
+      "x2": 241.981964,
+      "y2": 290.63031,
+      "score": 0.647023737,
+      "class_id": 33
+    },
+    {
+      "x1": 152.296997,
+      "y1": 298.586517,
+      "x2": 162.30838,
+      "y2": 314.815582,
+      "score": 0.600408375,
+      "class_id": 33
+    },
+    {
+      "x1": 88.8365326,
+      "y1": 379.95755,
+      "x2": 95.7640533,
+      "y2": 396.967926,
+      "score": 0.597203374,
+      "class_id": 0
+    },
+    {
+      "x1": 258.473999,
+      "y1": 363.058441,
+      "x2": 265.420044,
+      "y2": 374.039764,
+      "score": 0.56733191,
+      "class_id": 0
+    },
+    {
+      "x1": 19.3457336,
+      "y1": 366.404236,
+      "x2": 28.8988266,
+      "y2": 390.105408,
+      "score": 0.564363301,
+      "class_id": 0
+    },
+    {
+      "x1": 266.222839,
+      "y1": 367.883728,
+      "x2": 275.234131,
+      "y2": 377.457642,
+      "score": 0.480284363,
+      "class_id": 0
+    },
+    {
+      "x1": 171.914948,
+      "y1": 354.617706,
+      "x2": 177.09967,
+      "y2": 362.367706,
+      "score": 0.39708218,
+      "class_id": 0
+    },
+    {
+      "x1": 378.534729,
+      "y1": 299.651093,
+      "x2": 383.003479,
+      "y2": 307.185089,
+      "score": 0.38564837,
+      "class_id": 33
+    },
+    {
+      "x1": 10.6391106,
+      "y1": 375.943054,
+      "x2": 18.8435326,
+      "y2": 388.296082,
+      "score": 0.342438161,
+      "class_id": 0
+    }
+  ]
+}
