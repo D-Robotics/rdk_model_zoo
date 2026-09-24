@@ -1,0 +1,21 @@
+{
+  "reviewed_commit": "5fc14a4",
+  "checks": [
+    {
+      "host": "x5-8g",
+      "utc": "2026-09-24T08:04:14.947120+00:00",
+      "command": "sed -n \"82,135p\" /usr/include/dnn/hb_dnn.h",
+      "rc": 0,
+      "stdout": "typedef struct {\n  int32_t dimensionSize[HB_DNN_TENSOR_MAX_DIMENSIONS];\n  int32_t numDimensions;\n} hbDNNTensorShape;\n\ntypedef struct {\n  int32_t shiftLen;\n  uint8_t *shiftData;\n} hbDNNQuantiShift;\n\n/**\n * Quantize/Dequantize by scale\n * For Dequantize:\n * if zeroPointLen = 0 f(x_i) = x_i * scaleData[i]\n * if zeroPointLen > 0 f(x_i) = (x_i - zeroPointData[i]) * scaleData[i]\n * \n * For Quantize:\n * if zeroPointLen = 0 f(x_i) = g(x_i / scaleData[i])\n * if zeroPointLen > 0 f(x_i) = g(x_i / scaleData[i] + zeroPointData[i])\n * which g(x) = clip(nearbyint(x)), use fesetround(FE_TONEAREST), U8: 0 <= g(x) <= 255, S8: -128 <= g(x) <= 127\n */\ntypedef struct {\n  int32_t scaleLen;\n  float *scaleData;\n  int32_t zeroPointLen;\n  int8_t *zeroPointData;\n} hbDNNQuantiScale;\n\ntypedef enum {\n  NONE,  // no quantization\n  SHIFT,\n  SCALE\n} hbDNNQuantiType;\n\ntypedef struct {\n  hbDNNTensorShape validShape;\n  hbDNNTensorShape alignedShape;\n  int32_t tensorLayout;\n  int32_t tensorType;\n  hbDNNQuantiShift shift;\n  hbDNNQuantiScale scale;\n  hbDNNQuantiType quantiType;\n  int32_t quantizeAxis;\n  int32_t alignedByteSize;\n  int32_t stride[HB_DNN_TENSOR_MAX_DIMENSIONS];\n} hbDNNTensorProperties;\n\ntypedef struct {\n  hbSysMem sysMem[4];\n  hbDNNTensorProperties properties;\n} hbDNNTensor;\n\ntypedef struct {\n  int32_t left;\n",
+      "stderr": ""
+    },
+    {
+      "host": "s100",
+      "utc": "2026-09-24T08:04:15.467778+00:00",
+      "command": "sed -n \"32,90p\" /usr/include/hobot/dnn/hb_dnn.h; ls /usr/include/hobot/dnn/hb_dnn_ext.h",
+      "rc": 2,
+      "stdout": "  HB_DNN_TENSOR_TYPE_F32,\n  HB_DNN_TENSOR_TYPE_S32,\n  HB_DNN_TENSOR_TYPE_U32,\n  HB_DNN_TENSOR_TYPE_F64,\n  HB_DNN_TENSOR_TYPE_S64,\n  HB_DNN_TENSOR_TYPE_U64,\n  HB_DNN_TENSOR_TYPE_BOOL8,\n  HB_DNN_TENSOR_TYPE_MAX\n} hbDNNDataType;\n\ntypedef struct hbDNNTensorShape {\n  int32_t dimensionSize[HB_DNN_TENSOR_MAX_DIMENSIONS];\n  int32_t numDimensions;\n} hbDNNTensorShape;\n\n/**\n * Quantize/Dequantize by scale\n * For Dequantize:\n * if zeroPointLen = 0 f(x_i) = x_i * scaleData[i]\n * if zeroPointLen > 0 f(x_i) = (x_i - zeroPointData[i]) * scaleData[i]\n * \n * For Quantize:\n * if zeroPointLen = 0 f(x_i) = g(x_i / scaleData[i])\n * if zeroPointLen > 0 f(x_i) = g(x_i / scaleData[i] + zeroPointData[i])\n * which g(x) = clip(nearbyint(x)), use fesetround(FE_TONEAREST), U8: 0 <= g(x) <= 255, S8: -128 <= g(x) <= 127\n */\ntypedef struct hbDNNQuantiScale {\n  int32_t scaleLen;\n  float *scaleData;\n  int32_t zeroPointLen;\n  int32_t *zeroPointData;\n} hbDNNQuantiScale;\n\ntypedef enum {\n  NONE,  // no quantization\n  SCALE\n} hbDNNQuantiType;\n\ntypedef struct hbDNNTensorProperties {\n  hbDNNTensorShape validShape;\n  int32_t tensorType;\n  hbDNNQuantiScale scale;\n  hbDNNQuantiType quantiType;\n  int32_t quantizeAxis;\n  int64_t alignedByteSize;\n  int64_t stride[HB_DNN_TENSOR_MAX_DIMENSIONS];\n} hbDNNTensorProperties;\n\ntypedef struct hbDNNTensor {\n  hbUCPSysMem sysMem;\n  hbDNNTensorProperties properties;\n} hbDNNTensor;\n\ntypedef enum {\n  HB_DNN_DESC_TYPE_UNKNOWN = 0,\n  HB_DNN_DESC_TYPE_STRING\n} hbDNNDescType;\n\n/**\n",
+      "stderr": "ls: cannot access '/usr/include/hobot/dnn/hb_dnn_ext.h': No such file or directory\n"
+    }
+  ]
+}
