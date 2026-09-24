@@ -31,3 +31,7 @@ B6-B1兼容/退出码问题已由真实运行确认修复；B6整体仍changes-r
 [本轮原始证据](evidence/2026-09-24-b6-scheduling-board-recheck/)包含六个数组包、完整 comparison、两板执行日志和独立校验清单。共90份数组核验 SHA-256/shape/dtype/finite，每例14个代码摘要与板测检查点一致。独立检查实际调度记录：X5 固定源 helper 的 scalar 调用被拒并保留 TypeError，随后 evaluator 明确施加按模型名的 Mapping；统一侧使用同参数且调用成功。S100 原 helper 与显式控制均成功。这里证明的是明示调度控制下的源对照，不声称旧 X5 CLI 自身实现了调度。
 
 B6-B2 在上述范围独立确认修复；尚未覆盖 X5 4GB/S100P/S600，不关闭 B6。运行代码仍在已推送功能/集成分支；develop 保存审核证据并不意味着全部迁移代码已合入。
+
+## 后续矩阵网络中断
+
+X5 4GB 两个 SAM 的完整 CLI 日志均 rc=0，但原始数组回收时 SSH 中断，尚不计独立证据验收通过。S600 下载被连接中断，S100P GitHub fetch SSL 超时，均无新推理结论。连接恢复后先检查远端进程与已有产物，再继续，不重复启动可能存活的下载。详见 [执行记录](evidence/2026-09-24-board-connectivity-interruption/)。

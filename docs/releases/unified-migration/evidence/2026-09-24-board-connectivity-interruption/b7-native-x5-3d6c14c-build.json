@@ -1,0 +1,60 @@
+{
+  "commit": "3d6c14cea7874b8a909524e71d405683cfebc016",
+  "records": [
+    {
+      "host": "x5-8g",
+      "target": "x5",
+      "label": "checkout",
+      "command": "cd /tmp/rdk-b7-5fc14a4 && git diff --exit-code && git diff --cached --exit-code && git fetch --depth=1 origin 3d6c14cea7874b8a909524e71d405683cfebc016 && git checkout --detach 3d6c14cea7874b8a909524e71d405683cfebc016 && git rev-parse HEAD",
+      "started_utc": "2026-09-24T10:21:15.047650+00:00",
+      "rc": 0,
+      "stdout": "3d6c14cea7874b8a909524e71d405683cfebc016\n",
+      "stderr": "From https://github.com/D-Robotics/rdk_model_zoo\n * branch            3d6c14cea7874b8a909524e71d405683cfebc016 -> FETCH_HEAD\nWarning: you are leaving 5 commits behind, not connected to\nany of your branches:\n\n  4d45f9a fix(yolov5): correct S native SDK layout scheduling and tensor evidence\n  714f56c chore(migration): checkpoint local native remediation for board review\n  3a8206c test(evaluator): exercise noncopyable SDK metadata through six samples\n  ae0f185 fix(evidence): project SDK metadata without copying extension objects\n  7f27c8c fix(runtime): recognize native SDK signed tensor dtype aliases\n\nIf you want to keep them by creating a new branch, this may be a good time\nto do so with:\n\n git branch <new-branch-name> 4d45f9a\n\nHEAD is now at 3d6c14c feat(yolov5): capture fixed-source native comparisons with process evidence\n",
+      "finished_utc": "2026-09-24T10:21:19.589613+00:00"
+    },
+    {
+      "host": "x5-8g",
+      "target": "x5",
+      "label": "source-fetch",
+      "command": "cd /tmp/rdk-b7-5fc14a4 && git fetch --depth=1 origin ac115717197920355fc390bb04299b20e6436864",
+      "started_utc": "2026-09-24T10:21:19.590759+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": "From https://github.com/D-Robotics/rdk_model_zoo\n * branch            ac115717197920355fc390bb04299b20e6436864 -> FETCH_HEAD\n",
+      "finished_utc": "2026-09-24T10:22:10.029706+00:00"
+    },
+    {
+      "host": "x5-8g",
+      "target": "x5",
+      "label": "instrument",
+      "command": "cd /tmp/rdk-b7-5fc14a4 && python3 samples/vision/yolov5/evaluator/native/instrument.py --target x5 --repo-root . --work-dir /tmp/rdk-b7-fixed-x5-3d6c14c --model-path /tmp/rdk-b7-5fc14a4/samples/vision/yolov5/model/yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin --image-path /tmp/rdk-b7-5fc14a4/samples/vision/yolov5/test_data/bus.jpg",
+      "started_utc": "2026-09-24T10:22:10.030474+00:00",
+      "rc": 0,
+      "stdout": "{\n  \"work_dir\": \"/tmp/rdk-b7-fixed-x5-3d6c14c\",\n  \"sources\": 1,\n  \"anchors\": 10,\n  \"build\": \"cmake -S /tmp/rdk-b7-fixed-x5-3d6c14c -B /tmp/rdk-b7-fixed-x5-3d6c14c/build && cmake --build /tmp/rdk-b7-fixed-x5-3d6c14c/build -j2\"\n}\n",
+      "stderr": "",
+      "finished_utc": "2026-09-24T10:22:10.965397+00:00"
+    },
+    {
+      "host": "x5-8g",
+      "target": "x5",
+      "label": "fixed-build",
+      "command": "cmake -S /tmp/rdk-b7-fixed-x5-3d6c14c -B /tmp/rdk-b7-fixed-x5-3d6c14c/build && cmake --build /tmp/rdk-b7-fixed-x5-3d6c14c/build -j2",
+      "started_utc": "2026-09-24T10:22:10.966243+00:00",
+      "rc": 255,
+      "stdout": "-- The CXX compiler identification is GNU 11.2.0\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Found OpenCV: /usr (found version \"4.5.4\") \n-- Configuring done\n-- Generating done\n-- Build files have been written to: /tmp/rdk-b7-fixed-x5-3d6c14c/build\n[ 50%] Building CXX object CMakeFiles/yolov5_fixed_capture.dir/main.cc.o\n[100%] Linking CXX executable yolov5_fixed_capture\n",
+      "stderr": "Read from remote host 192.168.3.208: Can't assign requested address\nclient_loop: send disconnect: Broken pipe\n",
+      "finished_utc": "2026-09-24T10:51:25.596747+00:00"
+    },
+    {
+      "host": "x5-8g",
+      "target": "x5",
+      "label": "unified-build",
+      "command": "cd /tmp/rdk-b7-5fc14a4 && cmake -S samples/vision/yolov5/runtime/cpp -B /tmp/rdk-b7-unified-x5-3d6c14c -DYOLOV5_TARGET=x5 && cmake --build /tmp/rdk-b7-unified-x5-3d6c14c -j2",
+      "started_utc": "2026-09-24T10:51:25.598851+00:00",
+      "rc": 255,
+      "stdout": "",
+      "stderr": "Connection closed by 192.168.3.208 port 22\n",
+      "finished_utc": "2026-09-24T10:51:25.613828+00:00"
+    }
+  ]
+}
