@@ -43,6 +43,28 @@ class FakeRuntime:
         self.scheduling = kwargs
 
 
+class BoardQuantParams:
+    """Mimics hbm_runtime.QuantParams: attributes read, any copy refuses (X5 board evidence 2026-09-24)."""
+
+    def __init__(self, *, quant_type="NONE", scale=1.0, zero_point=0, axis=0):
+        self.quant_type = types.SimpleNamespace(name=quant_type)
+        self.scale = np.asarray(scale, dtype=np.float32)
+        self.zero_point = np.asarray(zero_point, dtype=np.int32)
+        self.axis = axis
+
+    def __deepcopy__(self, memo):
+        raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+
+    def __copy__(self):
+        raise TypeError("cannot pickle 'hbm_runtime.HB_HBMRuntime.QuantParams' object")
+
+
+class QuantRuntime(FakeRuntime):
+    """X5-style runtime: a vestigial descriptor rides along the F32 output."""
+
+    output_quants = {"lpr": {"output": BoardQuantParams()}}
+
+
 class LPRNetTests(unittest.TestCase):
     def test_ctc_decoder_matches_fixed_source_for_numeric_fixture(self):
         source_path = ROOT / "platforms/x5/samples/vision/lprnet/runtime/python/lprnet.py"
@@ -256,6 +278,37 @@ class LPRNetEvaluatorTests(unittest.TestCase):
             self.assertTrue((directory / "comparison.json").is_file())
             self.assertEqual(summary["checks"]["result_names"], True)
             self.assertTrue(all(summary["checks"].values()))
+
+    def test_evaluator_metadata_survives_copy_hostile_board_quant_params(self):
+        """The old asdict() metadata snapshot raised TypeError on the real board."""
+        compare = importlib.import_module("samples.vision.lprnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, dat = self._fixtures(temp)
+            directory = Path(temp) / "quants"
+
+            def factory(_outputs):
+                state = {"index": 0}
+
+                def make(path):
+                    value = _outputs[min(state["index"], len(_outputs) - 1)]
+                    state["index"] += 1
+                    return QuantRuntime(value)
+
+                return make
+
+            summary = self._run(compare, selection, dat, directory, factory([self._output()]))
+            self.assertEqual(summary["return_code"], 0, summary.get("error"))
+            self.assertTrue(summary["passed"])
+            for side in ("legacy", "unified"):
+                quant = summary["metadata"][side]["output_quants"]["output"]
+                self.assertEqual(quant["quant_type"], "NONE")
+                self.assertEqual(quant["scale"], 1.0)
+                self.assertEqual(quant["zero_point"], 0)
+                self.assertEqual(quant["axis"], 0)
+            saved = json.loads((directory / "comparison.json").read_text())
+            self.assertEqual(
+                saved["metadata"]["unified"]["output_quants"]["output"]["scale"], 1.0
+            )
 
     def test_evaluator_reports_a_real_difference_instead_of_passing(self):
         compare = importlib.import_module("samples.vision.lprnet.evaluator.compare")

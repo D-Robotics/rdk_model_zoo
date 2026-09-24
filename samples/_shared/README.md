@@ -59,6 +59,16 @@ keyed by output name, so F32 contracts can reject them instead of silently
 dropping metadata. ResNet and PaddleOCR re-export this class as their
 `RuntimeMetadata`; each keeps its own contract checks on top.
 
+For evidence writing, `runtime_meta.py:metadata_evidence` projects a
+`RuntimeMetadata` (or a plain mapping) into JSON-serialisable values without
+copying the SDK descriptors: `dataclasses.asdict` deep-copies every leaf and
+the board `QuantParams` type refuses to be pickled, which crashed the
+evaluator evidence snapshot on X5 (board evidence 2026-09-24). The projection
+keeps names, shapes, dtypes, strides and the complete quant descriptors
+(`quant_type`, `scale`, `zero_point`, `axis` plus further public attributes);
+unknown objects raise instead of being stringified, and the metadata object is
+never mutated. The sample evaluators use it for their `metadata` evidence.
+
 ## Declared output transforms (Phase 1.5 H1)
 
 `quantization.py` implements the binding-declared chain from raw runtime
