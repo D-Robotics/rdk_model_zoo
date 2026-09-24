@@ -7,7 +7,6 @@ inputs/raw outputs and results in a new directory, even on comparison failure.
 This measures migration consistency, not dataset accuracy or performance.
 """
 import argparse
-from dataclasses import asdict
 from datetime import datetime, timezone
 import hashlib
 import importlib.util
@@ -211,8 +210,11 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
             def create(path):
                 stage = 'encoder' if Path(path) == selection.encoder_model_path else 'decoder'
                 runtime = runtime_factory(path)
-                from samples._shared.runtime_meta import RuntimeMetadata
-                summary['metadata'][side][stage] = asdict(RuntimeMetadata.from_runtime(runtime))
+                # Projected without copying SDK quant descriptors (asdict
+                # deepcopies and the board QuantParams refuses it).
+                from samples._shared.runtime_meta import RuntimeMetadata, metadata_evidence
+                summary['metadata'][side][stage] = metadata_evidence(
+                    RuntimeMetadata.from_runtime(runtime))
                 return _RecordingRuntime(runtime, stage, records[side])
             return create
 
