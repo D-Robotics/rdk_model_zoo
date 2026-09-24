@@ -70,3 +70,13 @@ S100额外SDK核对确认S8/U8/S16枚举均存在，可正确标注NV12输入U8�
 原始14份X5数组、16份S100数组及完整metadata/code/model/input SHA、argv/cwd/时间已保存在各自tar.gz，协调者从归档重新读取每份数组并验证comparison.json列出的SHA全部一致。见 evidence/2026-09-24-b7-python-comparison/ 的执行记录、comparison、archive-verification及归档。模型publisher hash仍未知；X5模型/运行库小版本警告原样保留，未用成功对照掩盖。
 
 这是两个具体模型/图片case，不外推到其它变体、板卡、样例或C++。六个evaluator的专项接线回归测试仍由GLM补齐，B7整体保持changes-required；核心代码在专项/板测分支，尚未作为完整B7合入develop。
+
+## X5 扩展三个样例（ae0f185）
+
+同一X5 8GB和板测分支，显式使用manifest下载LPRNet/FCOS默认efficientnetb0/YOLOWorld模型后，执行各自完整source/unified evaluator：
+
+- YOLOWorld默认dog提示、固定dog.jpeg：rc=0/ passed=true，14份原始数组及metadata/参数/代码hash归档，并从tar.gz逐数组复验SHA。仅覆盖这一提示/图片，不声称全开放词汇精度。
+- LPRNet：rc=2，实际发布模型native output是 `(1,68,18,1)`，统一绑定错误地只允许 `(1,68,18)`；保留3份失败前数组和完整失败记录。
+- FCOS efficientnetb0：rc=2，实际输出dict的15个name集合与metadata相同，但插入顺序不同；tuple(outputs)比较造成误拒绝。保留18份失败前数组、traceback和完整metadata记录。
+
+三份tar.gz与comparison/执行/归档校验记录均在 evidence/2026-09-24-b7-python-comparison/，失败归档不冒充完整成功对照。LPRNet/FCOS native输出契约已交独立GLM任务修复，保持名字、dtype、实际shape与有限值验证，不允许以任意reshape或删gate规避。
