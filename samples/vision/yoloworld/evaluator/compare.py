@@ -17,7 +17,6 @@ import argparse
 import hashlib
 import json
 import sys
-from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -30,7 +29,7 @@ if str(ROOT) not in sys.path:
 
 from samples._shared.assets import verify_asset_file  # noqa: E402
 from samples._shared.platforms import require_execution_target  # noqa: E402
-from samples._shared.runtime_meta import RuntimeMetadata  # noqa: E402
+from samples._shared.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
 from samples.vision.yoloworld.runtime.python.model_binding import (  # noqa: E402
     SAMPLE_DIR,
     resolve_selection,
@@ -159,7 +158,8 @@ def run_comparison(selection, image, image_path, prompts, vocabulary, vocab_path
         def factory(side):
             def create(path):
                 runtime = runtime_factory(path)
-                summary["metadata"][side] = asdict(RuntimeMetadata.from_runtime(runtime))
+                # Projected without copying SDK quant descriptors (asdict deepcopies and the board QuantParams refuses it).
+                summary["metadata"][side] = metadata_evidence(RuntimeMetadata.from_runtime(runtime))
 
                 class Recorder:
                     def __getattr__(self, name):
