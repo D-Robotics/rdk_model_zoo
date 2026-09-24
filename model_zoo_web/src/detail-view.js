@@ -25,6 +25,7 @@
   const byPlatformOrder = (a, b) => platformDisplayOrder(a) - platformDisplayOrder(b) || String(a).localeCompare(String(b));
   const sizePreference = ['n', 's', 'm', 'l', 'x'];
   const sizeRank = size => { const index = sizePreference.indexOf(String(size || '').toLowerCase()); return index < 0 ? sizePreference.length : index; };
+  const relatedGroupId = model => model.family || model.catalogId || `${model.name}/${model.taskId || model.task}`;
   const byteSize = value => {
     const bytes = Number(value);
     if (!Number.isFinite(bytes) || bytes <= 0) return null;
@@ -75,9 +76,19 @@
     const hardwareOptions = [...new Set(variants.map(other => hardwareOf(other, data)))].sort(byPlatformOrder);
     const performance = b?.performance || [];
     const conditions = [...new Set(performance.filter(p => ['latency', 'throughput'].includes(p.metric)).map(p => p.concurrency || 1))].sort((a, b) => a - b);
-    const related = models.filter(other => other.id !== m.id
-      && (other.catalogId || `${other.name}/${other.taskId || other.task}`) !== groupId
-      && other.task === m.task).slice(0, 3);
+    const relatedCandidates = models.filter(other => relatedGroupId(other) !== relatedGroupId(m)
+      && other.task === m.task);
+    const relatedByFamily = new Map();
+    for (const other of relatedCandidates) {
+      const key = relatedGroupId(other);
+      const current = relatedByFamily.get(key);
+      if (!current || sizeRank(other.modelSize) < sizeRank(current.modelSize)
+        || (sizeRank(other.modelSize) === sizeRank(current.modelSize)
+          && platformDisplayOrder(hardwareOf(other, data)) < platformDisplayOrder(hardwareOf(current, data)))) {
+        relatedByFamily.set(key, other);
+      }
+    }
+    const related = [...relatedByFamily.values()].slice(0, 3);
     const downloadModels = variants.filter(other => other.assets?.length);
     const selectedDownloadModel = downloadModels.find(other => other.id === m.id) || downloadModels[0];
     const selectedPlatform = selectedDownloadModel ? hardwareOf(selectedDownloadModel, data) : hardware;
