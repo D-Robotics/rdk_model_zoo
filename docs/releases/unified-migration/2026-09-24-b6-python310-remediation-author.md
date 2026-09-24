@@ -112,3 +112,106 @@ checker 不带 `--exemptions` 时为 84 violations（即被 CI 基线豁免的 B
   完整数值对照必须 rc=0 且全部检查通过。原始失败记录保留，不覆盖。
 - 板端 Python 3.10 为协调方日志所述；本任务未连板，未直接观测板端解释器版本。
 - B6/B7 状态不由本记录关闭；等待独立复核（Codex）后再由协调方决定提交与同步。
+
+## 6. B6-B2 追加：共享 SAM 调度根因（2026-09-24 第二轮）
+
+B6-B1 已由 Codex 独立复审并以提交 `1bfd8fa` 推送（非本会话操作）；板端复测用相同补丁的
+GitHub 分支 `f888c8f`。上一节（§1–§5）为第一轮历史记录，原样保留。本轮在
+`rdk-b6-glm-python310` worktree（基线 `1bfd8fa`）继续，**未 commit / 未 push / 未 SSH**；
+板端 **not-run**，不宣称实板通过，不关闭 B6/B7。
+
+### 6.1 缺陷与证据
+
+`../.coordination/b6-x5-python310-recheck.json`（只读引用）：
+
+- **S100**：efficient_sam / mobile_sam 全部检查通过（第一轮修复在 S 侧板端完全生效）。
+- **X5**：两样本越过 hashlib 后，统一 runner 在 encoder 调度处失败，真实 rc=2、证据保存正确：
+  `error: RuntimeError: encoder scheduling failed: set_scheduling_params(): incompatible
+  function arguments. ... priority: collections.abc.Mapping[str, typing.SupportsInt] | None ...
+  Invoked with: ... kwargs: priority=0`。
+
+根因：`samples/_shared/sam_runner.py` 的 X5 分支传**标量** `priority`，而真实原生 API 在所有
+target 上都要求按模型名的 Mapping（共享 classification `model_runner.py:132` 即始终
+`{binding.model_name: priority}` 的既有正确路径；S 固定源同样按模型名构造 Mapping）。
+主机侧 FakeRuntime 的 `set_scheduling_params(**kwargs)` 来者不拒，让该错误在主机测试中
+一直通过——本轮一并修正为真实协议风格。
+
+### 6.2 固定源行为核实（未修改固定源）
+
+逐一读取四个固定源（只读核实，未改动）：
+
+- **X5 两样本**（`platforms/x5/.../{efficient_sam,mobile_sam}.py`）：helper 对 encoder/decoder
+  各尝试 `model.set_scheduling_params(priority=<scalar>)` 并 `except TypeError: pass`——
+  在真实 X5 SDK 上**实际未应用任何调度**。此前板端 legacy 侧能跑完，只是源 helper 的调度
+  配置从未生效；本轮证据与 README 均按此事实表述，不声称 source 已成功应用 priority。
+- **S 两样本**（`platforms/s/...`）：helper 按模型名构造
+  `{'priority': {name: p}, 'bpu_cores': {name: cores}}` 后逐模型调用，与原生 Mapping API
+  一致（S100 板端成功互证）。
+
+### 6.3 修复方案
+
+1. **根因**（`sam_runner.py`）：`priority` 始终以 `{binding.model_name: priority}` 下发
+   （对齐 classification runner 与板端真实签名），`bpu_cores` 原本就是 Mapping 保持不变；
+   X5 显式 `--bpu-cores` 的拒绝语义原样保留。
+2. **evaluator 调度对照**（`sam_evaluator.py`）：
+   - `_RecordingRuntime` 拦截每次原生调度调用，按 side 记录 `{stage, args, applied|error}`
+     时间序列——失败 call 与成功设置都保留（X5 源 helper 的被拒标量调用也如实入账）。
+   - 先**原样**调用固定源 helper（与源 CLI 行为一致，结果不加工）；随后由 evaluator 显式为
+     legacy 侧各原生 runtime 设置同一份**已验证的按模型名 Mapping 控制参数**，使两侧在完全
+     一致且确实生效的调度下对照；统一侧经修复后的 runner 应用同样参数。
+   - `comparison.json` 新增 `scheduling` 节：`requested` / `source_helper_call` /
+     `source_helper_behavior`（分 x5/s 的核实结论）/ `explicit_control`（每 stage 模型名 +
+     原生实参）/ `native_calls`（在 `finally` 快照，早失败也保留部分调用）/ `note`
+     （明示 explicit_control 是 evaluator 对拍控制项、不是固定源 CLI 自身调度行为、
+     不改变两侧 pre/forward/post）。数值阈值与两侧算法零改动，保持 Python 3.10 兼容。
+
+### 6.4 测试与结果（先证伪，再修复）
+
+- **FakeRuntime 协议化**（`test_sam_binding.py`）：签名改为
+  `set_scheduling_params(priority=None, bpu_cores=None)`，仅接受非空 `Mapping[str,int]` /
+  `Mapping[str,序列]`，其余抛板端同款 `incompatible function arguments` TypeError；
+  scheduler 断言更新为按模型名 Mapping，并新增
+  `test_scalar_priority_never_reaches_the_native_protocol`（标量永不触达原生层）。
+- **新增 evaluator 调度用例**（`test_sam_evaluator.py::SchedulingControlTests`）：
+  X5 两样本 × priority 0/7：legacy 每 stage 两条记录（helper 标量被拒 + explicit Mapping
+  生效）、unified 一条 Mapping 生效、explicit_control 模型名逐 stage 正确；
+  S100 两样本：helper Mapping 与 explicit 控制均生效并各自入账；
+  X5 显式 bpu_cores 在任何原生调用与证据目录创建之前被拒。
+- **修复前证伪**：binding 套件 `Ran 12 — FAILED (errors=2)`（两个调度用例被协议 fake 以
+  `TypeError: ... priority must be a nonempty Mapping` 拒绝）；evaluator 套件
+  `Ran 14 — FAILED (failures=1, errors=8)`，其中 X5 用例复现板端同形
+  `RuntimeError: encoder scheduling failed: set_scheduling_params(): incompatible function
+  arguments...`，**既有** X5 全流程用例也转为失败——证明旧 fake 的宽容确实掩盖了板端缺陷；
+  S100 用例因调度证据节缺失而失败（功能当时不存在）。
+- **修复后**（解释器同 §4）：
+
+| 套件 / 命令 | 结果 |
+| --- | --- |
+| `unittest discover -s samples/_shared/tests` | **Ran 128 tests — OK** |
+| `unittest discover -s samples/vision/efficient_sam/tests` | **Ran 19 tests — OK** |
+| `unittest discover -s samples/vision/mobile_sam/tests` | **Ran 17 tests — OK** |
+| `unittest discover -s tools/sample_contract/tests` | **Ran 27 tests — OK** |
+| checker `--scope migration`（含 CI 84 条豁免） | **rc=0；36 samples / 0 violations / 39 skips / 84 exemptions** |
+
+- 数值对照阈值未动：既有全部对拍用例（含 128 shared）继续通过。
+- S100 受影响范围：统一 S 路径数值行为不变（原本即 Mapping），新增的调度证据节与
+  helper/explicit 双记录已由 S100 用例覆盖；板端 S100 复跑由协调方决定。
+
+### 6.5 本轮变更文件
+
+| 文件 | 变更 |
+| --- | --- |
+| `samples/_shared/sam_runner.py` | priority 改为始终按模型名 Mapping（+3/−1 行，含板端证据注释） |
+| `samples/_shared/sam_evaluator.py` | 调度调用拦截记录、helper 原样调用、explicit 同调度控制、`scheduling` 证据节 |
+| `samples/_shared/tests/test_sam_binding.py` | FakeRuntime 原生协议化 + 调度断言更新 + 标量回归 |
+| `samples/_shared/tests/test_sam_evaluator.py` | 新增 `SchedulingControlTests` 3 用例 |
+| 两个 evaluator `README.md` + `README_cn.md` | Command 节追加“Scheduling control/调度控制”说明（中英同步），无板测通过表述 |
+| 本报告 | 追加本节（§6），§1–§5 历史保留 |
+
+### 6.6 未完成项 / 移交
+
+- **X5 板端复验 not-run**：待 Codex 审查后经 GitHub 送板，重跑两组 X5
+  `evaluator/compare.py`，期望越过调度、以 rc=0/1 结束，且 `comparison.json` 的
+  `scheduling.native_calls` 显示 X5 源 helper 标量被拒 + 两侧 explicit/runner Mapping 生效。
+- S100 板端复验（新证据节范围）由协调方决定是否安排。
+- B6/B7 状态不由本记录关闭；等待独立复核。

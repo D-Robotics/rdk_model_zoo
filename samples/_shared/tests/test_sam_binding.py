@@ -35,8 +35,23 @@ class FakeRuntime:
     def run(self,inputs):
         self.calls.append(inputs)
         return {self.name:self.outputs}
-    def set_scheduling_params(self,**kwargs):
-        self.schedules.append(kwargs)
+    def set_scheduling_params(self,priority=None,bpu_cores=None):
+        """Native protocol per X5 board evidence 2026-09-24: Mapping arguments only.
+
+        The real signature is priority: Mapping[str, SupportsInt] and
+        bpu_cores: Mapping[str, Sequence[SupportsInt]]; anything else is an
+        incompatible-arguments TypeError exactly like the scalar board failure.
+        """
+        for name,value in (('priority',priority),('bpu_cores',bpu_cores)):
+            if value is None:continue
+            if not isinstance(value,dict) or not value:
+                raise TypeError(f'set_scheduling_params(): incompatible function arguments: {name} must be a nonempty Mapping')
+            for model,entry in value.items():
+                valid=(type(entry) is int) if name=='priority' else (
+                    isinstance(entry,(list,tuple)) and bool(entry) and all(type(core) is int for core in entry))
+                if not valid:
+                    raise TypeError(f'set_scheduling_params(): incompatible function arguments: {name}[{model!r}]')
+        self.schedules.append({k:v for k,v in (('priority',priority),('bpu_cores',bpu_cores)) if v is not None})
 
 
 class SAMBindingTests(unittest.TestCase):
@@ -163,16 +178,27 @@ class SAMBindingTests(unittest.TestCase):
                     r.decoder({'image_embeddings':np.zeros((1,256,32,32),dtype=np.float32)})
 
     def test_scheduling_is_applied_to_both_and_rejects_invalid_requests(self):
-        for target in ('x5','s100'):
-            r,e,d=self.make_runner(target)
-            r.set_scheduling_params(priority=0,bpu_cores=None if target=='x5' else [0])
-            expected={'priority':0} if target=='x5' else {'priority':{'encoder':0},'bpu_cores':{'encoder':[0]}}
-            self.assertEqual(e.schedules,[expected])
-            self.assertEqual(len(d.schedules),1)
-            for kwargs in ({'priority':-1},{'priority':256},{'bpu_cores':[]},{'bpu_cores':[-1]}):
-                with self.assertRaises(ValueError): r.set_scheduling_params(**kwargs)
+        for priority in (0,7):
+            for target in ('x5','s100'):
+                r,e,d=self.make_runner(target)
+                r.set_scheduling_params(priority=priority,bpu_cores=None if target=='x5' else [0])
+                expected={'priority':{'encoder':priority}} if target=='x5' else {'priority':{'encoder':priority},'bpu_cores':{'encoder':[0]}}
+                self.assertEqual(e.schedules,[expected])
+                self.assertEqual(d.schedules,[{'priority':{'decoder':priority}}] if target=='x5'
+                                 else [{'priority':{'decoder':priority},'bpu_cores':{'decoder':[0]}}])
+                for kwargs in ({'priority':-1},{'priority':256},{'bpu_cores':[]},{'bpu_cores':[-1]}):
+                    with self.assertRaises(ValueError): r.set_scheduling_params(**kwargs)
+                self.assertEqual(len(e.schedules),1)
         r,e,d=self.make_runner('x5')
         with self.assertRaises(ValueError): r.set_scheduling_params(bpu_cores=[0])
+
+    def test_scalar_priority_never_reaches_the_native_protocol(self):
+        """X5 board evidence 2026-09-24: native set_scheduling_params takes Mappings only."""
+        for target in ('x5','s100'):
+            r,e,d=self.make_runner(target)
+            r.set_scheduling_params(priority=5)
+            self.assertEqual(e.schedules,[{'priority':{'encoder':5}}])
+            self.assertEqual(d.schedules,[{'priority':{'decoder':5}}])
 
     def test_runtime_output_must_match_bound_metadata_not_reshape(self):
         r,e,d=self.make_runner(); r.load()
