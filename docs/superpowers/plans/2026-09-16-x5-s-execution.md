@@ -92,3 +92,11 @@ Continue with [P2 protocol and composition work](2026-09-16-p2-protocols.md).
 B7 仍 changes-required / Closed=no。dtype 单项已经独立实板确认并合入 develop；metadata 核心与 native 整改在隔离分支集成复验。已实际通过的限定 case：YOLOv5 Python X5 8GB s-v2、S100 x-672，YOLOWorld X5 dog，以及 ByteTrack S100 四帧合成运动源对照。LPRNet/FCOS 首次板测失败已留证并交 GLM 修复；native 两类 SDK 构建/完整数值对照继续进行；MODNet manual 制品缺口尚未解决。权威动态记录为仓库 `docs/releases/unified-migration/2026-09-24-b7-native-sdk-review.md` 与迁移台账；不把 feature 分支成果说成已全部进入 develop。
 
 下一步仍包括：B7 修复与独立闭环；B3–B6 已主机通过项的真实板端验证；B8、B9、B10、B11；最终源增量核对、README/Agent 规范与路径整合及全仓验收。不能因当前几个 case 通过而缩小原迁移目标。B8 继续保持 pending，先解决 B7 阻断；跨样例共享缺陷同步排查已迁移消费者。
+
+## 2026-09-24 后续板测与整改检查点
+
+B7：X5 YOLOv5九变体×两种内存、FCOS三变体×两板、LPRNet/YOLOWorld两板、ByteTrack S100/S600真实视频前30帧均有完整源对照证据。ByteTrack720数组引用按SHA去重保存270份，已入develop；不代表整段视频或数据集指标。四个样例README复审通过提交8474641（集成b04b6fc），仍在整改分支。C++观察/比较工具仍有独立反例未闭环，B7不关闭；MODNet缺manual模型，ByteTrack S100P源URL404，不跨target替代制品。
+
+B6：真实板测发现Python3.10摘要API与CLI异常退出码缺陷（B6-B1）；修复1bfd8fa经独立主机复核后，通过GitHub f888c8f送板。S100两SAM源对照通过；X5统一runner调度scalar与真实SDK Mapping协议冲突（B6-B2），已交本地GLM。源X5 helper吞掉同类TypeError也须在evaluator控制记录中透明处理，不能伪称source调度成功。修复后继续X5及S100受影响范围；其余目标待测。
+
+B3：本地GLM正在整理convnext/edgenext/fasternet/fastvit共13变体的可复用板端完整证据捕获工具，先独立审核再通过GitHub送两块X5。B4/B5剩余板测、B6剩余目标、B8–B11与最终整体验收均保留。目录inventory旧595断言与当前603的差异另行核对精确新增集合，不降级断言。开发继续使用本地Claude Code+GLM；Codex负责独立复审、板测与GitHub同步。
