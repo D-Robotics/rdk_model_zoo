@@ -17,7 +17,6 @@ import json
 import sys
 import traceback
 import types
-from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -34,7 +33,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from samples._shared.platforms import require_execution_target  # noqa: E402
-from samples._shared.runtime_meta import RuntimeMetadata  # noqa: E402
+from samples._shared.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
 from samples.vision.fcos.runtime.python.fcos import FCOSTask  # noqa: E402
 from samples.vision.fcos.runtime.python.model_binding import (  # noqa: E402
     ModelSelection,
@@ -75,8 +74,10 @@ def _jsonable(value: Any) -> Any:
     return value
 
 
-def _metadata_json(metadata: RuntimeMetadata) -> dict[str, Any]:
-    return _jsonable(asdict(metadata))
+def _metadata_json(metadata: RuntimeMetadata | Mapping[str, Any]) -> dict[str, Any]:
+    # Projected without copying SDK quant descriptors (asdict deepcopies and
+    # the board QuantParams refuses it); mappings keep host test seams working.
+    return metadata_evidence(metadata)
 
 
 def _load_fixed_source_helpers() -> None:

@@ -2,12 +2,11 @@
 from pathlib import Path
 import argparse,hashlib,json,sys
 from datetime import datetime,timezone
-from dataclasses import asdict
 import numpy as np
 import cv2
 ROOT=Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-from samples._shared.runtime_meta import RuntimeMetadata
+from samples._shared.runtime_meta import RuntimeMetadata,metadata_evidence
 from samples._shared.platforms import require_execution_target
 from samples._shared.assets import verify_asset_file
 from samples.vision.yolov5.runtime.python.model_binding import SAMPLE_DIR,ANCHORS,resolve_selection
@@ -64,7 +63,8 @@ def run_comparison(selection,image,image_path,output_dir,*,resize_type=None,scor
         def factory(side):
             def create(path):
                 runtime=runtime_factory(path)
-                summary['metadata'][side]=asdict(RuntimeMetadata.from_runtime(runtime))
+                # Projected without copying SDK quant descriptors (asdict deepcopies and the board QuantParams refuses it).
+                summary['metadata'][side]=metadata_evidence(RuntimeMetadata.from_runtime(runtime))
                 class Recorder:
                     def __getattr__(self,name):return getattr(runtime,name)
                     def run(self,values):
