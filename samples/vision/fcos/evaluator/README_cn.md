@@ -78,12 +78,15 @@ unified/metadata.json unified/result.json unified/inputs/*.npy unified/raw/*.npy
 | 指标 | 参考值 | 条件 | 来源 |
 | --- | --- | --- | --- |
 | B0/B2/B3 throughput 与后处理时间 | 仅历史值：B0 323.0 FPS/9 ms、B2 70.9 FPS/16 ms、B3 38.7 FPS/20 ms | 固定源 benchmark 条件，不是本机或板端测量 | 固定源 README 和 evaluator README |
+| 板端 source/unified 一致性，B0/B2/B3 | 各在一块 X5 8GB 和一块 X5 4GB 上 rc=0、全部检查 true（2026-09-24） | `bus.jpg`、direct resize、`conf=0.5`、`IoU=0.6`，统一侧为板测提交 `73a6de1` | [X5 变体证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)、[8GB B0 复验](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/) |
 | 主机/source 数值一致性 | 主机 synthetic quantized 与 evaluator seam 测试 | 无模型、无板卡；见当前 host evidence | [B7 host evidence](../../../../docs/releases/unified-migration/evidence/2026-09-23-b7-fcos-host.json) |
 | COCO mAP | not-run | 源没有数据集 harness 或标注 | not-run |
+
+板端日志加载这些制品时会打印 HBRT 库与模型构建小版本不一致的警告；证据中原样保留该警告，这些已记录对照的所有检查均通过。
 
 <a id="boundaries"></a>
 ## 边界
 
-- 评估器不下载模型、不准备 COCO、不测性能，也不自动宣称板端通过；只有在已识别的 X5 上实际执行命令后才可产生板端证据，当前仍为 not-run。
+- 评估器不下载模型、不准备 COCO、不测性能，也不自动宣称板端通过。三个变体在一块 X5 8GB 和一块 X5 4GB 上已有板端一致性证据（2026-09-24，见上方参考结果）；其他板卡、图片或阈值组合仍须实际执行本命令生成各自证据。
 - 三个 manifest 行的 publisher SHA-256 均未知，因此本地观测哈希只能识别所捕获文件，不能证明发布者来源。
 - 历史截图和 FPS 不是当前测量。

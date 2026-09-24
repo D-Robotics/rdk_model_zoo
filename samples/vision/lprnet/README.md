@@ -12,10 +12,10 @@ LPRNet recognizes a cropped license-plate tensor as a character sequence without
 
 | target | variant | Python | C++ | status |
 |---|---|---|---|---|
-| X5 | `lpr.bin` | supported-not-run | not-supported | host fixtures pass; board binding remediated 2026-09-24 (native output `(1,68,18,1)`), board re-run pending |
+| X5 | `lpr.bin` | supported-verified | not-supported | host fixtures pass; 2026-09-24 source/unified comparisons passed on one X5 8GB and one X5 4GB with the bundled `test_input.dat` ([8GB recheck](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/), [4GB run](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)) |
 | S100/S100P/S600 | — | not-supported | not-supported | no source asset |
 
-This sample has no C++ implementation. Host tests do not certify board execution.
+This sample has no C++ implementation. Host tests do not certify board execution; the board status above comes from the recorded X5 comparisons, which verify native `(1,68,18,1)` logits parity for one input, not license-plate accuracy.
 
 <a id="prerequisites"></a>
 ## Prerequisites

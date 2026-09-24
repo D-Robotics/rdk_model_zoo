@@ -3,7 +3,7 @@
 <a id="environment"></a>
 ## Environment
 
-Use Python 3 and NumPy on an RDK X5 image with `hbm_runtime` available. The runtime imports the board SDK only after selection, model-file, and board checks. `--help`, `--list-models`, and `--dry-run` are SDK-free. The compiled model must expose one float32 input `(1,3,24,94)` and one float32 logits output bound exactly as its metadata reports it: the released `lpr.bin` reports `(1,68,18,1)` — the measured board protocol; the 3D `(1,68,18)` layout is kept only as the old host/API compatibility contract (existing host tests and injected runners), and no published SDK artifact has been observed with it. No other rank or axis order is accepted — the binding never reshapes or permutes.
+Use Python 3 and NumPy on an RDK X5 image with `hbm_runtime` available. The runtime imports the board SDK only after selection, model-file, and board checks. `--help`, `--list-models`, and `--dry-run` are SDK-free. The compiled model must expose one float32 input `(1,3,24,94)` and one float32 logits output bound exactly as its metadata reports it: the released `lpr.bin` reports `(1,68,18,1)` — the measured board protocol, confirmed by identical source/unified comparisons on one X5 8GB and one X5 4GB (2026-09-24); the 3D `(1,68,18)` layout is kept only as the old host/API compatibility contract (existing host tests and injected runners), and no published SDK artifact has been observed with it. No other rank or axis order is accepted — the binding never reshapes or permutes.
 
 <a id="usage"></a>
 ## Usage

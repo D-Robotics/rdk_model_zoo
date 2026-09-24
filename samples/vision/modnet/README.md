@@ -12,7 +12,7 @@ MODNet is a one-stage portrait matting network: one RGB image produces an alpha 
 
 | target | variant | Python | C++ | status |
 |---|---|---|---|---|
-| X5 | `modnet_512x512_rgb.bin` | supported-not-run | not-supported | host fixtures pass; board not-run |
+| X5 | `modnet_512x512_rgb.bin` | supported-not-run | not-supported | host fixtures pass; board not-run — the manual artifact was not available to the 2026-09-24 X5 board round, so no download or inference exists to record |
 | S100/S100P/S600 | — | not-supported | not-supported | no source asset |
 
 This sample has no C++ implementation. The runtime model is a manual external asset; host tests do not certify board execution.

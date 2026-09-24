@@ -44,7 +44,7 @@ No verified compile command is available. The source's `hb_mapper makertbin --mo
 <a id="validation"></a>
 ## Post-Conversion Validation
 
-On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --model_file <exact-file>` and run the runtime README command. Save the command output, raw fifteen tensor metadata, and result JSON under one UTC evidence directory. This migration performed host source numerical checks only; conversion and board smoke are not-run.
+On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --model_file <exact-file>` and run the runtime README command. Save the command output, raw fifteen tensor metadata, and result JSON under one UTC evidence directory. Conversion itself is not-run (no recipe exists, see known gaps); the published artifacts have been executed on X5 8GB/4GB boards by the [evaluator comparisons](../evaluator/README.md#reference-results), which cover runtime parity but not `hrt_model_exec` inspection or conversion reproducibility.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -60,4 +60,4 @@ On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --
 
 - No checkpoint, ONNX export, calibration data, quantization YAML, toolchain version, or reproducible source compile pipeline is present.
 - Manifest publisher hashes are unknown. The three source screenshots cannot establish tensor values or numerical equivalence.
-- Rebuilding is therefore outside the verified boundary; only the runtime protocol and host fixture are reproducible here.
+- Rebuilding is therefore outside the verified boundary; what is reproducible here is the runtime protocol, the host fixture, and same-board parity of the published artifacts (2026-09-24 evidence linked from the sample README).

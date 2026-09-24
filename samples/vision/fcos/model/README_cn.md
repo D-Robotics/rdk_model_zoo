@@ -50,8 +50,10 @@ Shell wrapper 会从自身目录定位 `download.py`，调用板端镜像提供�
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-| 制品 | 格式 | SHA-256 | 来源 |
+| 制品 | 格式 | 发布者 SHA-256 | 观测 SHA-256（2026-09-24 板端运行） |
 | --- | --- | --- | --- |
-| B0 512 | `.bin` | `null (unknown)` | `docs/release/x5/models.yaml` |
-| B2 768 | `.bin` | `null (unknown)` | `docs/release/x5/models.yaml` |
-| B3 896 | `.bin` | `null (unknown)` | `docs/release/x5/models.yaml` |
+| B0 512 | `.bin` | `null (unknown)`，见 `docs/release/x5/models.yaml` | `fd184f3559af20eef6a61c3cbd1f99cd13dbd611c3e7271853011ff541d69172` |
+| B2 768 | `.bin` | `null (unknown)`，见 `docs/release/x5/models.yaml` | `adf6436d9c2a4e8374b8124786e19ed9069827489ca7611aeabaee038a33e9ea` |
+| B3 896 | `.bin` | `null (unknown)`，见 `docs/release/x5/models.yaml` | `7044d6c96cdc9cd1afa0d7d73f354c47419d518dcf853caad8123a3d9d304099` |
+
+观测摘要是 X5 8GB/4GB 运行中实际下载并对照的字节（[证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)、[8GB B0 复验](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/)）；发布者 hash 未知，因此不能用于来源认证。

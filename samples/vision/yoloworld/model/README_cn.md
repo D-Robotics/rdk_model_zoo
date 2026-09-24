@@ -32,7 +32,11 @@ F32 宽度 512 向量；它提供文本嵌入和 ID 映射，不能用 COCO 标�
 
 默认模型路径为 `model/yolo_world.bin`；显式 `--model-path` 必须同时给出
 `--asset-id x5:yoloworld:yolo_world.bin`。编译产物是 X5 `.bin`。清单发布者
-摘要未知，因此本文不声称校验通过。伴随 JSON 是 UTF-8 JSON，清单未记录摘要。
+摘要未知，因此本文不声称校验通过；两次 2026-09-24 板端对照（X5 8GB 与
+X5 4GB）的观测 SHA-256 均为
+`bc8fd742319c26fb550123a4a1433c9e7bd6e0ccb6a17866d3aedb96472f6239`
+（[8GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[4GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)），
+观测摘要只标识那两次运行使用的字节，不代表发布者认证。伴随 JSON 是 UTF-8 JSON，清单未记录摘要。
 
 ## 入口
 

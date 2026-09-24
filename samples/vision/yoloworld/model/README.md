@@ -47,4 +47,4 @@ explicit preparation entry points. None is invoked by the runtime.
 <a id="formats-checksums"></a>
 ## Formats & Checksums
 
-The artifact format is `.bin`; the manifest records `sha256: null (unknown)` and no publisher digest is claimed.
+The artifact format is `.bin`; the manifest records `sha256: null (unknown)` and no publisher digest is claimed. Both 2026-09-24 board comparisons (X5 8GB and X5 4GB) observed SHA-256 `bc8fd742319c26fb550123a4a1433c9e7bd6e0ccb6a17866d3aedb96472f6239` ([8GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [4GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)); an observed digest identifies the bytes used in those runs, not publisher authentication.

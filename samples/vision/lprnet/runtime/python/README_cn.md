@@ -3,7 +3,7 @@
 <a id="environment"></a>
 ## 环境
 
-在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3 和 NumPy。runtime 只有在选择、模型文件和板卡检查通过后才导入板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。编译模型必须暴露一个 float32 输入 `(1,3,24,94)` 和一个 float32 logits 输出，输出按 runtime metadata 原样绑定：发布版 `lpr.bin` 报告 `(1,68,18,1)`——实测板端协议；3D `(1,68,18)` 仅作为旧 host/API 兼容契约保留（面向既有 host 测试与注入 runner），未观察到报告该布局的已发布 SDK 制品。不接受任何其它秩或轴顺序——绑定不做 reshape 或轴重排。
+在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3 和 NumPy。runtime 只有在选择、模型文件和板卡检查通过后才导入板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。编译模型必须暴露一个 float32 输入 `(1,3,24,94)` 和一个 float32 logits 输出，输出按 runtime metadata 原样绑定：发布版 `lpr.bin` 报告 `(1,68,18,1)`——实测板端协议，并经一块 X5 8GB 与一块 X5 4GB 的 source/unified 对照确认一致（2026-09-24）；3D `(1,68,18)` 仅作为旧 host/API 兼容契约保留（面向既有 host 测试与注入 runner），未观察到报告该布局的已发布 SDK 制品。不接受任何其它秩或轴顺序——绑定不做 reshape 或轴重排。
 
 <a id="usage"></a>
 ## 使用

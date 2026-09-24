@@ -50,8 +50,10 @@ The shell wrappers resolve `download.py` beside themselves and call the board im
 <a id="formats-checksums"></a>
 ## Formats & Checksums
 
-| Artifact | Format | SHA-256 | Source |
+| Artifact | Format | Publisher SHA-256 | Observed SHA-256 (2026-09-24 board runs) |
 | --- | --- | --- | --- |
-| B0 512 | `.bin` | `null (unknown)` | `docs/release/x5/models.yaml` |
-| B2 768 | `.bin` | `null (unknown)` | `docs/release/x5/models.yaml` |
-| B3 896 | `.bin` | `null (unknown)` | `docs/release/x5/models.yaml` |
+| B0 512 | `.bin` | `null (unknown)` per `docs/release/x5/models.yaml` | `fd184f3559af20eef6a61c3cbd1f99cd13dbd611c3e7271853011ff541d69172` |
+| B2 768 | `.bin` | `null (unknown)` per `docs/release/x5/models.yaml` | `adf6436d9c2a4e8374b8124786e19ed9069827489ca7611aeabaee038a33e9ea` |
+| B3 896 | `.bin` | `null (unknown)` per `docs/release/x5/models.yaml` | `7044d6c96cdc9cd1afa0d7d73f354c47419d518dcf853caad8123a3d9d304099` |
+
+The observed digests identify the exact bytes downloaded and compared on the X5 8GB/4GB runs ([evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/), [8GB B0 recheck](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/)); because the publisher hash is unknown, they do not authenticate origin.

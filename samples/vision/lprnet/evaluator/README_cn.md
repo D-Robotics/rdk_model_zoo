@@ -53,13 +53,20 @@ logits 使用 `atol=1e-5`。仅当全部检查通过时返回 `0`，两边不一
 <a id="reference-results"></a>
 ## 参考结果
 
-源历史参考为上表 `lpr.bin` 行（100 帧）。本轮未运行板端对照，因此当前板端状态为
-`not-run`，sample 仍为 `closed=no`；评估器的主机 fixture 只证明证据结构，不代表
-推理数值。
+源历史参考为上表 `lpr.bin` 行（100 帧），不是复测。板端对照（2026-09-24）：在一块
+X5 8GB 与一块 X5 4GB 上，使用内置 `test_input.dat` 的同板 source/unified 运行全部通过
+——两次 rc=0、全部检查为 true，输入张量、raw `(1,68,18,1)` logits 与解码车牌的
+`max_abs_diff` 均为 0.0（证据：[8GB
+复验](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/)、[4GB
+运行](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)）。
+板端日志加载 `lpr.bin` 时会打印 HBRT 库与模型构建小版本不一致的警告；证据中原样
+保留，这些已记录对照的所有检查均通过。这些运行是统一侧（板测提交 `73a6de1`）在单个输入上的数值一致
+性，不是精度基准。
 
 <a id="boundaries"></a>
 ## 边界
 
 评估器自行运行两边，绝不用人工提供的文件替代真实推理。它不下载模型、不准备精度
-数据集、不测性能，也不宣称板端兼容；在真正记录同板源/统一运行之前，结果保持
-`not-run`。
+数据集、也不测性能。一块 X5 8GB 与一块 X5 4GB 已有内置输入的同板运行记录
+（2026-09-24，见上方参考结果）；其它板卡或输入仍需各自运行，且不从这些对照得出
+车牌识别精度结论。
