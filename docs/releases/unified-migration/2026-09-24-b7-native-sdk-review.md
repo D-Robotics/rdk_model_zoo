@@ -100,3 +100,11 @@ native 第二轮作者提交 `fbffddd` 已通过协调者37项 YOLOv5 host tests
 ## B6 SAM 同类修复独立主机确认
 
 专项 `70a1b0f` 只将共享SAM evaluator接入已有metadata投影，并新增不可deepcopy SDK描述符的真实evaluator回归。协调者核对前后raw捕获与比较容差未改，独立运行shared109 / efficient_sam19 / mobile_sam17全通过。输出见 [SAM独立主机日志](evidence/2026-09-24-sam-metadata-independent-host.json)。这是根据B7 SDK事实排查出的共享风险与主机复现，不伪称SAM已发生实板失败或已完成实板验证；SAM Board仍not-run。修复已提交推送专项分支并纳入板测集成分支，尚未整批合入develop。
+
+## 扩展到 Python 默认变体、X5 4GB 与 S600
+
+同一固定板测提交 `4d45f9a`：X5 8GB和4GB都以不传variant的正常选择路径加载n-v7.0，完整Python源/统一比较rc=0；S600使用其独立manifest nash-p制品（SHA `8213ffa8b4fa3b8fc1ed2da517debffa8057828ab1e4e159753d9527a543b76a`），完整Python比较rc=0。X5 4GB的s-v2 C++、S600 x-672 C++也用各自真实SDK构建并运行rc=0，仍仅属于native smoke和dump完整性，未替代C++源数值对照。
+
+三份Python完整数组归档分别14/14/16份，两份native归档7/8份负载已校验digest与形状/类型或字节长度，见 [扩展板测 evidence](evidence/2026-09-24-b7-expanded-boards/)。采集器首轮错误地把Python以文件名为key的arrays映射当成含file字段的记录，完整覆盖断言拒绝了该采集器；按真实schema修正后全部数组覆盖核验通过，未改变任何板端比较记录或数组。其余X5七个变体及4GB的s-v2 Python已排入同提交逐项对照队列，未执行者不计通过。
+
+S100P第一次GitHub浅克隆300秒观察超时，远程进程与目录随后确认均不存在；GitHub HTTP响应可达，改HTTP/1.1和显式无进展检测重新取回固定提交，尚无S100P本批板测结果。MODNet在两块X5的/root、/opt、/home、/userdata、/mnt中仅找到历史源文件，无模型制品；已向用户询问可用路径，其他样例继续推进。
