@@ -30,15 +30,15 @@ tracker 有状态：同一个 `ByteTrackTask` 必须按顺序处理帧。`reset(
 在仓库根目录显式准备 S100 模型和视频，然后运行：
 
 ```bash
-python3 -m samples.vision.bytetrack.model.download --target s100 \\
+python3 -m samples.vision.bytetrack.model.download --target s100 \
   --output-dir samples/vision/bytetrack/model
-curl -L 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4' \\
+curl -L 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4' \
   -o samples/vision/bytetrack/test_data/track_test.mp4
-python3 -m samples.vision.bytetrack.runtime.python.main \\
-  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \\
-  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \\
-  --input samples/vision/bytetrack/test_data/track_test.mp4 \\
-  --output samples/vision/bytetrack/test_data/result_unified.mp4 \\
+python3 -m samples.vision.bytetrack.runtime.python.main \
+  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
+  --output samples/vision/bytetrack/test_data/result_unified.mp4 \
   --records samples/vision/bytetrack/test_data/result_unified.jsonl
 ```
 

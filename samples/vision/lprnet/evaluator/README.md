@@ -3,12 +3,21 @@
 <a id="dataset"></a>
 ## Dataset
 
-There is no source accuracy dataset or label file. The reproducible smoke input is the bundled `../test_data/test_input.dat` (float32 `1x3x24x94`) with `../test_data/example.jpg` as a visual reference. It is a single input fixture, not a license-plate accuracy benchmark.
+There is no source accuracy dataset or label file. The reproducible input is the
+bundled `../test_data/test_input.dat` (float32 `1x3x24x94`), the same pre-packed
+tensor the fixed source reads; `../test_data/example.jpg` is only a visual
+reference. This is a single input fixture, not a license-plate accuracy
+benchmark.
 
 <a id="environment"></a>
 ## Environment
 
-The evaluator itself is host-runnable with Python and NumPy and does not import `hbm_runtime`. Board generation of raw evidence requires the X5 runtime and two model runs under the same model/input conditions. The complete source historical X5 row is preserved below and was not re-run.
+`compare.py` runs both implementations itself on the board: the fixed source
+wrapper from `platforms/x5/samples/vision/lprnet/runtime/python` and the unified
+task from `samples/vision/lprnet/runtime/python`. It requires the X5 runtime
+(imported lazily after the identity gate) and a prepared `lpr.bin` plus the
+`.dat` input. It does not import the SDK on the host and does not download
+anything. Historical source performance is preserved below and was not re-run.
 
 | Model | Test frames | FPS | Average latency | BPU usage | ION memory |
 |---|---:|---:|---:|---:|---:|
@@ -17,34 +26,50 @@ The evaluator itself is host-runnable with Python and NumPy and does not import 
 <a id="command"></a>
 ## Evaluation command
 
-First save complete raw float32 outputs from the legacy and unified board runs to unique files. The legacy source path is `platforms/x5/samples/vision/lprnet/runtime/python`; the unified path is `samples/vision/lprnet/runtime/python`. Then, from the repository root, run:
+From the repository root, on a board with the artifact and input prepared:
 
 ```bash
 python3 samples/vision/lprnet/evaluator/compare.py \
-  --legacy-raw /tmp/lprnet-run-legacy/raw.bin \
-  --unified-raw /tmp/lprnet-run-unified/raw.bin \
-  --shape 1 68 18 \
-  --output /tmp/lprnet-run-unified/compare.json
+  --target x5 \
+  --output-dir /tmp/lprnet-compare-$(date -u +%Y%m%dT%H%M%SZ)
 ```
 
-The files must be complete raw float32 arrays. The command returns `0` only when shape, dtype, every raw value, and decoded plate agree; it returns `2` otherwise. This migration did not run a board comparison.
+Use `--asset-id x5:lprnet:lpr.bin --model-path <file>` to compare an externally
+prepared artifact, and `--input-dat <file>` to point at another packed input.
+The output directory must not already exist.
 
 <a id="metrics"></a>
 ## Metrics
 
-The primary consistency metric is exact `array_equal` for raw float32 logits, followed by exact equality of the source CTC-style decoded plate. No accuracy score is reported because no labeled dataset is included. Performance numbers above are historical source measurements with their original test conditions.
+The evaluator records, for both sides, the prepared input tensor, the raw float32
+logits and the decoded plate, and reports per-tensor shape/dtype/finite checks
+with `max_abs_diff`. Inputs and the decoded plate must be exactly equal; raw
+logits use `atol=1e-5`. It returns `0` only when every check passes, `1` when the
+two sides differ, and `2` when the run failed. No accuracy score is reported
+because no labeled dataset is included.
 
 <a id="outputs"></a>
 ## Outputs
 
-`compare.py` prints and optionally writes JSON containing shape, dtype, raw equality, both decoded strings, and status. Preserve both raw arrays and the report under a unique run directory; do not overwrite a prior evidence run.
+`comparison.json` binds the run to `target`, `asset_id`, model/input/code SHA-256
+digests, observed runtime metadata for both sides, `argv`, `cwd`,
+`started_utc`/`finished_utc` and `return_code`, and lists every saved array file
+with its own digest. Each recorded input, raw logits and result array is written
+to its own `.npy` file in the same directory. A failed execution still writes the
+manifest with `error`, `return_code: 2` and `passed: false`.
 
 <a id="reference-results"></a>
 ## Reference results
 
-Historical source reference is the table above for `lpr.bin` and 100 frames. Current host and board comparison status is `not-run`.
+The historical source reference is the `lpr.bin` row above (100 frames). This
+migration ran no board comparison, so current board status is `not-run` and the
+sample remains `closed=no`; the evaluator's host fixtures prove the evidence
+schema, not inference numbers.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-This evaluator compares complete saved evidence; it does not download models, load an SDK, create a label benchmark, or claim board compatibility. A successful host comparison fixture would still be `supported-not-run` until the same-board source/unified run is recorded.
+The evaluator runs both sides itself and never substitutes a hand-supplied file
+for a real inference. It does not download models, prepare an accuracy dataset,
+measure performance, or claim board compatibility; until the same-board
+source/unified run is actually recorded, the result stays `not-run`.

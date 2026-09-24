@@ -1,44 +1,168 @@
 # YOLOv5 native C++ runtime
 
-This directory is the native C++ counterpart of the unified YOLOv5 sample. It keeps the X5 HB-DNN adapter and the S UCP adapter separate while sharing only the host-testable head validation and decode code. The native binary has four responsibilities: parse already-resolved arguments, perform target-specific input/forward I/O, decode the three raw heads, and pass detections to the separate OpenCV visualizer. Model publication facts are resolved by `launcher.py` through `samples.vision.yolov5.runtime.python.model_binding`.
+This directory is the native C++ counterpart of the unified YOLOv5 sample. It
+keeps the X5 HB-DNN adapter and the S UCP adapter separate and shares only the
+SDK-free pieces: tensor metadata gates (`yolov5_gate.*`), the numeric decoder
+(`yolov5_decode.*`) and the evidence dump writer (`yolov5_dump.*`). The native
+binary parses arguments, performs target-specific input/forward I/O, decodes the
+three raw heads, writes an optional evidence dump, and renders through the
+separate OpenCV visualizer. Publication facts are resolved by `launcher.py`
+through `samples.vision.yolov5.runtime.python.model_binding`; the native binary
+never guesses a layout from a file name.
 
-## Supported targets and assets
+<a id="supported-boards"></a>
+## Supported boards
 
-| target | default asset | other published assets | input | native output contract |
-|---|---|---|---|---|
-| `x5` | `yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin` (`n-v7.0`) | the nine X5 `n/s/m/l/x-v2.0` and `s/m/l/x-v7.0` assets | one packed NV12 tensor, 640x640 | three F32 NHWC heads, 80/40/20 with 255 channels |
-| `s100` | `s100/yolov5x_672x672_nv12.hbm` (`x-672`) | none | split NV12 Y/UV tensors, 672x672 | three metadata-described heads; source S dequantization is applied after cache invalidation |
-| `s600` | `s600/yolov5x_672x672_nv12.hbm` (`x-672`) | none | split NV12 Y/UV tensors, 672x672 | same S contract |
-| `s100p` | none | none | — | rejected because YOLOv5 has no published S100P asset |
+| Board | Status | Note |
+| --- | --- | --- |
+| X5 | supported-not-run | X5 HB-DNN source exists; this host has no X5 SDK, board or published model binary, so the native binary was not compiled or executed on hardware |
+| S100 | supported-not-run | S UCP source exists; no board, SDK or `yolov5x_672x672_nv12.hbm` asset was available |
+| S600 | supported-not-run | Same S source with the 64-byte BPU alignment macro; not built or run |
+| S100P | not-supported | YOLOv5 has no published S100P asset; `--target s100p` is rejected |
 
-The external `--model-path` rule is strict: it is accepted only together with the exact `--asset-id` from the manifest. The path does not identify a model by its filename. The launcher verifies the complete publication row before a native executable is selected.
+Each adapter is compiled for exactly one target and the resulting binary refuses
+a `--target` that differs from its compiled identity (see
+[Interface and lifecycle](#interface-lifecycle)), because the S alignment macros
+differ between S600 and the rest.
 
-## Build and run
+<a id="dependencies"></a>
+## Dependencies
 
-The CMake target is explicit and never reads sysfs during configuration. Build each adapter separately on a target with its native SDK:
+- CMake ≥ 3.16 and a C++17 compiler.
+- OpenCV development headers and libraries (rendered output only).
+- Horizon DNN headers under `/usr/hobot/include` and libraries under
+  `/usr/hobot/lib`; the S target additionally links `hbucp`.
+- The shared C++ helpers in `utils/c_utils` (`preprocess`, `postprocess`,
+  `nn_math`), referenced by relative path in the CMake target.
+- The launcher never installs packages, downloads a model, or reads the board
+  identity: `--help`, `--list-models` and `--dry-run` run without an SDK.
+
+<a id="build"></a>
+## Build
+
+The target is explicit; configuration never reads `/sys/class/boardinfo`.
 
 ```bash
+# cwd: repository root
 cmake -S samples/vision/yolov5/runtime/cpp -B samples/vision/yolov5/runtime/cpp/build/x5 -DYOLOV5_TARGET=x5
-cmake --build samples/vision/yolov5/runtime/cpp/build/x5
+cmake --build samples/vision/yolov5/runtime/cpp/build/x5 --parallel
+
 cmake -S samples/vision/yolov5/runtime/cpp -B samples/vision/yolov5/runtime/cpp/build/s100 -DYOLOV5_TARGET=s100
-cmake --build samples/vision/yolov5/runtime/cpp/build/s100
+cmake --build samples/vision/yolov5/runtime/cpp/build/s100 --parallel
 ```
 
-The host-side launcher is safe for `--help`, `--list-models`, and explicit-target `--dry-run`; those modes do not inspect a board or require an SDK. A real run requires the launcher’s target identity gate and a board matching the selected target:
+`YOLOV5_TARGET` must be `x5`, `s100`, `s100p` or `s600`; any other value is a
+configure-time error. Exactly one adapter source is compiled per target, and
+CMake defines both the SoC alignment macro (`SOC_S600` / `SOC_S100` /
+`SOC_S100P`) and `YOLOV5_TARGET_NAME` used at runtime to reject a mismatching
+`--target`. Expect a `yolov5_cpp` binary in the selected build directory.
+
+<a id="run"></a>
+## Run
+
+Prerequisite: the model artifact prepared by
+[`model/download.sh`](../../model/README.md) and the launcher's identity gate.
 
 ```bash
-samples/vision/yolov5/runtime/cpp/run.sh --target x5 --variant n-v7.0 --dry-run
-samples/vision/yolov5/runtime/cpp/run.sh --target x5 --asset-id <exact-asset-id> --model-path /absolute/model.bin --test-img /absolute/bus.jpg
+# cwd: repository root
+# inspect the resolved publication fact without touching board or SDK
+samples/vision/yolov5/runtime/cpp/run.sh --dry-run --target x5
+
+# real run: exact asset id plus an external path, on a matching board
+samples/vision/yolov5/runtime/cpp/run.sh --target x5 \
+  --asset-id x5:yolov5:yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin \
+  --model-path /absolute/yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin \
+  --test-img /absolute/bus.jpg --dump-dir /tmp/yolov5-x5-dump
+
+# S split-NV12 build
+samples/vision/yolov5/runtime/cpp/run.sh --target s100 \
+  --asset-id s:yolov5:s100/yolov5x_672x672_nv12.hbm \
+  --dump-dir /tmp/yolov5-s100-dump
 ```
 
-Parameters and defaults are: `--target auto`, `--variant` omitted (X5 `n-v7.0`, S `x-672`), `--asset-id` omitted unless `--model-path` is supplied, `--test-img` selected from sample test data, `--output result.jpg`, `--score-thres 0.25`, `--nms-thres 0.45`, `--priority 0`, and `--bpu-core -1` (runtime default). `--label-file` is optional. `--binary` is a host/testing override for an already-built executable.
+`--list-models --target <t>` prints the published assets for a target. An
+external `--model-path` is accepted only together with the exact `--asset-id`
+from the manifest. Expect `result.jpg` (or `--output <file>`) plus, when
+`--dump-dir` is given, a `manifest.json` and one raw file per tensor.
 
+<a id="parameters"></a>
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `--target` | `auto` | `x5`, `s100`, `s100p` or `s600`; `auto` resolves from board identity in the launcher |
+| `--variant` | X5 `s-v2.0`, S `x-672` | Artifact variant; the X5 default is the fixed C++ source default |
+| `--asset-id` | omitted | Required together with `--model-path`; must match the manifest exactly |
+| `--model-path` | resolved manifest path | Model file; only valid with `--asset-id` |
+| `--test-img` | sample test data | BGR input image |
+| `--label-file` | none | One class label per line for rendering |
+| `--output` | `result.jpg` | Rendered output image |
+| `--dump-dir` | none | Directory for the machine-comparable evidence dump |
+| `--score-thres` | `0.25` | Confidence threshold, finite value in `[0,1]` |
+| `--nms-thres` | `0.45` | NMS IoU threshold, finite value in `[0,1]` |
+| `--priority` | `0` | Scheduling priority; applied on S, rejected on X5 |
+| `--bpu-core` | `-1` | BPU core (`-1` = runtime default); applied on S, rejected on X5 |
+
+<a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`yolov5::RuntimeOptions` is the native entry contract. `run_native` owns target-specific model initialization, tensor allocation, cache operations, synchronous forward, and complete cleanup. The X5 adapter requires exactly one packed model, one input, three outputs, rank-4 NHWC heads, and `3 * (5 + classes)` channels. It uses RAII-style cleanup for every input/output buffer and task on success and error paths. The S adapter requires one packed model, two inputs, and three outputs, submits through UCP with the caller’s `priority` and selected BPU core, and frees every UCP tensor and task.
+`yolov5::RuntimeOptions` is the native entry contract; `run_native` owns
+target-specific model initialization, tensor allocation, cache operations,
+synchronous forward and cleanup.
 
-The X5 C++ source uses letterbox-compatible native tensor handling in the legacy sample family; the unified Python path uses stretch by default. This difference is intentional and must be reported in comparisons. The S source also uses letterbox. The three heads are matched by actual metadata stride (8, 16, 32), never by output order or filename. Decode applies sigmoid logits, anchors, score filtering, and class-wise NMS. S output conversion uses the source `dequantizeTensorS32` path when the SDK build wires that helper; no scale is inferred from an asset name.
+- X5: requires exactly one packed NV12 model with a compact
+  `[1,3,640,640]` input and three native F32, `NONE`-quantized NHWC heads whose
+  strides are exactly 8/16/32. The input gate rejects a padded aligned layout
+  and an allocation smaller than a compact NV12 frame; the head gate rejects a
+  padded aligned layout and an allocation that cannot hold
+  `height*width*channels` floats, so no pointer is cast onto unknown storage.
+- S: requires one packed model with split `Y[1,672,672,1]` and
+  `UV[1,336,336,2]` inputs and three metadata-described heads. Before any int32
+  read, the dequantization gate proves native dtype, descriptor length,
+  contiguous NHWC byte strides and an allocation covering every element; an
+  output that fails the gate is rejected instead of being read on a guess.
+- Ownership: both adapters free only resources that were actually allocated, so
+  a partially failed allocation never turns into a blind free. The X5 adapter
+  releases the task and buffers through an RAII lease; the S adapter uses a
+  guard that skips tensors whose `sysMem` was never assigned.
+- The compiled build identity (`YOLOV5_TARGET_NAME`) must equal `--target`, so a
+  binary built for one S alignment cannot run as another target.
 
-## Validation status
+Declared differences from the fixed sources (preserved, not silently unified):
 
-The host test verifies separation of the numeric core, exact-head uniqueness, explicit CMake target selection, launcher identity delegation, and the public parameter/documentation contract. Native SDK compilation, model execution, board identity, rendering, and native S/X5 tensor values are **not-run** in this migration because this host has no target SDK, board, or model asset. A successful host test is therefore a contract/decoder result, not a board performance or accuracy result.
+- **Default X5 variant.** The fixed X5 C++ source defaults to the `s-v2.0`
+  artifact; the unified Python runtime defaults to `n-v7.0`. The native
+  launcher keeps the C++ source default when neither `--variant` nor `--asset-id`
+  is given.
+- **NMS.** X5 preserves the source `cv::dnn::NMSBoxes` behaviour per class: the
+  score boundary is strictly greater than `--score-thres`, and each class is
+  capped at `top_k = 300`. S preserves the source `nms_bboxes` behaviour: a
+  score equal to `--score-thres` is kept and there is no per-class cap.
+- **Preprocessing.** Both native adapters letterbox; the unified Python path
+  uses stretch by default. This is a deliberate source-compatibility choice, not
+  a claim that the two paths are numerically identical.
+- **Scheduling.** The fixed S source forces `priority = 0`; the unified S
+  adapter applies the caller's `--priority`/`--bpu-core` so the documented
+  parameters are real. X5 has no verified HB-DNN mapping for these flags, so
+  non-default values are rejected rather than silently ignored.
+- **Non-finite scores.** The unified decoder drops non-finite confidence values;
+  the source S decode keeps them. The unified behaviour is a declared fix.
+
+<a id="results-interpretation"></a>
+## Results interpretation
+
+- Exit code `0` means the run completed; `2` means a rejected or failed run. On
+  failure with `--dump-dir`, a manifest with `return_code` and `error` is still
+  written so the failure is traceable.
+- The rendered image is a convenience only. Machine comparison uses the dump:
+  `manifest.json` binds `target`, `build_target`, `asset_id`, `model_path` and
+  `image_path` with SHA-256 hashes, the observed input/output metadata
+  (shape, dtype, quantization kind and scale length), the effective parameters,
+  the UTC timestamp, `argv`, `cwd` and `return_code`, and lists every raw and
+  transformed tensor with its shape, byte count, file name and SHA-256.
+- X5 raw and transformed tensors are the same native F32 heads; S raw tensors
+  are the native integer outputs and the transformed tensors are the
+  dequantized floats, so a board comparison can check both stages.
+- All board results in this migration are **not-run**: no SDK was compiled, no
+  model binary was downloaded, and no board was contacted. A passing host check
+  is a contract/decoder result, not an accuracy or performance result.

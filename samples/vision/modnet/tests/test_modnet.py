@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import json
 from pathlib import Path
 import sys
+import tempfile
 import types
 import unittest
 from unittest.mock import patch
@@ -156,9 +158,140 @@ class MODNetTests(unittest.TestCase):
             self.assertEqual(main.main(["--list-models"]), 0)
             self.assertEqual(main.main(["--dry-run", "--target", "x5"]), 0)
 
+    def test_dry_run_rejects_scheduling_and_ref_size_the_run_would_refuse(self):
+        main = importlib.import_module("samples.vision.modnet.runtime.python.main")
+        for args in (
+            ["--dry-run", "--target", "x5", "--priority", "300"],
+            ["--dry-run", "--target", "x5", "--priority", "-1"],
+            ["--dry-run", "--target", "x5", "--bpu-cores", "0", "-1"],
+            ["--dry-run", "--target", "x5", "--ref-size", "256"],
+        ):
+            self.assertEqual(main.main(args), 2, args)
+        self.assertEqual(
+            main.main(["--dry-run", "--target", "x5", "--priority", "5", "--bpu-cores", "0"]), 0
+        )
+
     def test_manual_preparation_never_attempts_network_download(self):
         module = importlib.import_module("samples.vision.modnet.model.download")
         self.assertEqual(module.main(["--target", "x5", "--asset-id", module.ASSET_ID]), 2)
+
+    def test_real_path_gates_before_sdk_and_the_seam_skips_the_gate(self):
+        runner_mod = importlib.import_module(
+            "samples.vision.modnet.runtime.python.model_runner"
+        )
+        binding = importlib.import_module(
+            "samples.vision.modnet.runtime.python.model_binding"
+        )
+        selection = binding.resolve_selection("x5")
+        with patch.object(runner_mod, "require_execution_target",
+                          side_effect=ValueError("no board identity")) as gate:
+            with self.assertRaises(ValueError):
+                runner_mod.RuntimeModelRunner(selection).load()
+            gate.assert_called_once_with("x5")
+        matte = np.zeros((1, 1, 512, 512), dtype=np.float32)
+        with patch.object(runner_mod, "require_execution_target",
+                          side_effect=AssertionError("injected factory is the host seam")):
+            runner = runner_mod.RuntimeModelRunner(
+                selection, runtime_factory=lambda path: FakeRuntime(matte)
+            )
+            self.assertIsNotNone(runner.load())
+
+
+class MODNetEvaluatorTests(unittest.TestCase):
+    """The evaluator must run both sides itself, not compare hand-made mattes."""
+
+    def _fixtures(self, temp):
+        binding = importlib.import_module("samples.vision.modnet.runtime.python.model_binding")
+        model = Path(temp) / "modnet.bin"
+        model.write_bytes(b"fixture-modnet-model")
+        selection = binding.resolve_selection(
+            "x5", asset_id="x5:modnet:modnet_512x512_rgb.bin", model_path=str(model)
+        )
+        image_path = Path(__file__).resolve().parents[4] / "samples/vision/modnet/test_data/person.jpg"
+        image = cv2.imread(str(image_path))
+        assert image is not None
+        return selection, image, image_path
+
+    @staticmethod
+    def _matte(offset: float = 0.0) -> np.ndarray:
+        matte = np.linspace(0.0, 1.0, 512 * 512, dtype=np.float32).reshape(1, 1, 512, 512)
+        if offset:
+            matte = np.clip(matte + offset, 0.0, 1.0)
+        return matte
+
+    def _factory(self, mattes):
+        state = {"index": 0}
+
+        def make(path):
+            value = mattes[min(state["index"], len(mattes) - 1)]
+            state["index"] += 1
+            return FakeRuntime(value)
+
+        return make
+
+    def _run(self, compare, selection, image, image_path, directory, factory):
+        sdk = types.ModuleType("hbm_runtime")
+        sdk.HB_HBMRuntime = FakeRuntime
+        old_sdk = sys.modules.get("hbm_runtime")
+        sys.modules["hbm_runtime"] = sdk
+        try:
+            with patch.object(compare, "require_execution_target", return_value="x5"):
+                return compare.run_comparison(selection, image, image_path, directory,
+                                              runtime_factory=factory)
+        finally:
+            if old_sdk is None:
+                sys.modules.pop("hbm_runtime", None)
+            else:
+                sys.modules["hbm_runtime"] = old_sdk
+
+    def test_evaluator_captures_both_sides_with_complete_identity(self):
+        compare = importlib.import_module("samples.vision.modnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, image, image_path = self._fixtures(temp)
+            directory = Path(temp) / "success"
+            summary = self._run(compare, selection, image, image_path, directory,
+                                self._factory([self._matte()]))
+            self.assertEqual(summary["return_code"], 0, summary.get("error"))
+            self.assertTrue(summary["passed"])
+            self.assertEqual(summary["source_ref"], "ac115717197920355fc390bb04299b20e6436864")
+            self.assertTrue(summary["model_sha256"] and summary["image_sha256"])
+            self.assertTrue(summary["code_sha256"])
+            self.assertEqual(set(summary["metadata"]), {"legacy", "unified"})
+            self.assertTrue(summary["started_utc"] and summary["finished_utc"])
+            self.assertTrue(summary["argv"] and summary["cwd"])
+            for filename, entry in summary["arrays"].items():
+                self.assertTrue((directory / filename).is_file(), filename)
+                self.assertEqual(len(entry["sha256"]), 64)
+            self.assertTrue((directory / "comparison.json").is_file())
+            self.assertTrue(all(summary["checks"].values()))
+
+    def test_evaluator_reports_a_real_difference_instead_of_passing(self):
+        compare = importlib.import_module("samples.vision.modnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, image, image_path = self._fixtures(temp)
+            directory = Path(temp) / "difference"
+            summary = self._run(compare, selection, image, image_path, directory,
+                                self._factory([self._matte(), self._matte(0.25)]))
+            self.assertEqual(summary["return_code"], 1)
+            self.assertFalse(summary["passed"])
+            self.assertFalse(summary["checks"]["result.matte"])
+            self.assertTrue((directory / "comparison.json").is_file())
+
+    def test_evaluator_records_execution_failure_and_still_writes_evidence(self):
+        compare = importlib.import_module("samples.vision.modnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, image, image_path = self._fixtures(temp)
+            directory = Path(temp) / "error"
+
+            def explode(path):
+                raise RuntimeError("fake SDK failure")
+
+            with self.assertRaises(RuntimeError):
+                self._run(compare, selection, image, image_path, directory, explode)
+            payload = json.loads((directory / "comparison.json").read_text())
+            self.assertEqual(payload["return_code"], 2)
+            self.assertEqual(payload["error"]["type"], "RuntimeError")
+            self.assertFalse(payload["passed"])
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ The source supplies `test_data/bus.jpg` for X5 and `test_data/kite.jpg` for S, p
 <a id="environment"></a>
 ## Environment
 
-Run on a host controlling a recognized target board with Python, NumPy, OpenCV, and the target `hbm_runtime`; the evaluator also needs the fixed source runtime import path. The host tests inject a fake runtime and do not certify hardware. No model or image is downloaded by the evaluator.
+Run directly on a recognized target board with Python, NumPy, OpenCV, and the target `hbm_runtime`; the evaluator also needs the fixed source runtime import path. It is not a separate host that drives the board. The host unit tests inject a fake runtime and do not certify hardware or a board result. No model or image is downloaded by the evaluator.
 
 <a id="command"></a>
 ## Evaluation command

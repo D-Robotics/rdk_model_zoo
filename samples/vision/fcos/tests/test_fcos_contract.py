@@ -262,6 +262,18 @@ class FcosContractTests(unittest.TestCase):
         value = np.asarray([2.0], dtype=np.float32)
         np.testing.assert_array_equal(dequantize_tensor(value, Quant(0.5, 0)), np.asarray([1.0], dtype=np.float32))
 
+    def test_non_scale_outputs_pass_through_in_both_helpers(self):
+        # The other half of the dequant contract: a descriptor that is not SCALE
+        # is identity, so an artifact that really is raw float is not rescaled.
+        from samples._shared.quantization import dequantize_tensor as unified
+        _source_class()
+        from utils.py_utils.postprocess import dequantize_tensor as source
+
+        value = np.asarray([2.0, -3.5], dtype=np.float32)
+        descriptor = Quant(0.5, 0, quant_type="NONE")
+        np.testing.assert_array_equal(unified(value, descriptor), value)
+        np.testing.assert_array_equal(source(value, descriptor), value)
+
     def test_binding_rejects_unknown_quant_descriptor(self):
         from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
 

@@ -1,0 +1,348 @@
+// Copyright (c) 2026 D-Robotics Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+#include "yolov5_dump.hpp"
+
+#include <array>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <system_error>
+
+namespace yolov5 {
+namespace {
+
+// ---------------------------------------------------------------- SHA-256 ---
+// Local, dependency-free SHA-256 so the dump can bind a run to its model and
+// input bytes on a board image that has no crypto library.
+
+constexpr std::array<std::uint32_t, 64> kRoundConstants = {
+    0x428a2f98U, 0x71374491U, 0xb5c0fbcfU, 0xe9b5dba5U, 0x3956c25bU, 0x59f111f1U,
+    0x923f82a4U, 0xab1c5ed5U, 0xd807aa98U, 0x12835b01U, 0x243185beU, 0x550c7dc3U,
+    0x72be5d74U, 0x80deb1feU, 0x9bdc06a7U, 0xc19bf174U, 0xe49b69c1U, 0xefbe4786U,
+    0x0fc19dc6U, 0x240ca1ccU, 0x2de92c6fU, 0x4a7484aaU, 0x5cb0a9dcU, 0x76f988daU,
+    0x983e5152U, 0xa831c66dU, 0xb00327c8U, 0xbf597fc7U, 0xc6e00bf3U, 0xd5a79147U,
+    0x06ca6351U, 0x14292967U, 0x27b70a85U, 0x2e1b2138U, 0x4d2c6dfcU, 0x53380d13U,
+    0x650a7354U, 0x766a0abbU, 0x81c2c92eU, 0x92722c85U, 0xa2bfe8a1U, 0xa81a664bU,
+    0xc24b8b70U, 0xc76c51a3U, 0xd192e819U, 0xd6990624U, 0xf40e3585U, 0x106aa070U,
+    0x19a4c116U, 0x1e376c08U, 0x2748774cU, 0x34b0bcb5U, 0x391c0cb3U, 0x4ed8aa4aU,
+    0x5b9cca4fU, 0x682e6ff3U, 0x748f82eeU, 0x78a5636fU, 0x84c87814U, 0x8cc70208U,
+    0x90befffaU, 0xa4506cebU, 0xbef9a3f7U, 0xc67178f2U};
+
+std::uint32_t rotr(std::uint32_t value, int bits) {
+  return (value >> bits) | (value << (32 - bits));
+}
+
+class Sha256 {
+ public:
+  Sha256()
+      : state_{0x6a09e667U, 0xbb67ae85U, 0x3c6ef372U, 0xa54ff53aU,
+               0x510e527fU, 0x9b05688cU, 0x1f83d9abU, 0x5be0cd19U} {}
+
+  void update(const unsigned char* data, std::size_t size) {
+    for (std::size_t i = 0; i < size; ++i) {
+      buffer_[buffer_size_++] = data[i];
+      if (buffer_size_ == 64) {
+        compress(buffer_.data());
+        bit_length_ += 512;
+        buffer_size_ = 0;
+      }
+    }
+  }
+
+  std::string hex() {
+    const std::uint64_t bits = bit_length_ + buffer_size_ * 8U;
+    const unsigned char pad = 0x80U;
+    update(&pad, 1);
+    const unsigned char zero = 0x00U;
+    while (buffer_size_ != 56) update(&zero, 1);
+    unsigned char length[8];
+    for (int i = 0; i < 8; ++i)
+      length[i] = static_cast<unsigned char>((bits >> (56 - 8 * i)) & 0xffU);
+    update(length, 8);
+    std::ostringstream out;
+    out << std::hex << std::setfill('0');
+    for (std::uint32_t word : state_) out << std::setw(8) << word;
+    return out.str();
+  }
+
+ private:
+  void compress(const unsigned char* block) {
+    std::uint32_t words[64];
+    for (int i = 0; i < 16; ++i)
+      words[i] = (static_cast<std::uint32_t>(block[i * 4]) << 24) |
+                 (static_cast<std::uint32_t>(block[i * 4 + 1]) << 16) |
+                 (static_cast<std::uint32_t>(block[i * 4 + 2]) << 8) |
+                 static_cast<std::uint32_t>(block[i * 4 + 3]);
+    for (int i = 16; i < 64; ++i) {
+      const std::uint32_t s0 = rotr(words[i - 15], 7) ^ rotr(words[i - 15], 18) ^
+                               (words[i - 15] >> 3);
+      const std::uint32_t s1 = rotr(words[i - 2], 17) ^ rotr(words[i - 2], 19) ^
+                               (words[i - 2] >> 10);
+      words[i] = words[i - 16] + s0 + words[i - 7] + s1;
+    }
+    std::uint32_t a = state_[0], b = state_[1], c = state_[2], d = state_[3];
+    std::uint32_t e = state_[4], f = state_[5], g = state_[6], h = state_[7];
+    for (int i = 0; i < 64; ++i) {
+      const std::uint32_t s1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const std::uint32_t ch = (e & f) ^ (~e & g);
+      const std::uint32_t temp1 = h + s1 + ch + kRoundConstants[i] + words[i];
+      const std::uint32_t s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const std::uint32_t maj = (a & b) ^ (a & c) ^ (b & c);
+      const std::uint32_t temp2 = s0 + maj;
+      h = g; g = f; f = e; e = d + temp1;
+      d = c; c = b; b = a; a = temp1 + temp2;
+    }
+    state_[0] += a; state_[1] += b; state_[2] += c; state_[3] += d;
+    state_[4] += e; state_[5] += f; state_[6] += g; state_[7] += h;
+  }
+
+  std::uint32_t state_[8];
+  std::array<unsigned char, 64> buffer_{};
+  std::size_t buffer_size_ = 0;
+  std::uint64_t bit_length_ = 0;
+};
+
+// ------------------------------------------------------------------ JSON ----
+
+std::string json_escape(const std::string& value) {
+  std::string out;
+  out.reserve(value.size() + 2);
+  for (const char raw : value) {
+    const unsigned char ch = static_cast<unsigned char>(raw);
+    switch (ch) {
+      case '"': out += "\\\""; break;
+      case '\\': out += "\\\\"; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default:
+        if (ch < 0x20) {
+          char buffer[8];
+          std::snprintf(buffer, sizeof(buffer), "\\u%04x", ch);
+          out += buffer;
+        } else {
+          out += static_cast<char>(ch);
+        }
+    }
+  }
+  return out;
+}
+
+std::string quote(const std::string& value) { return "\"" + json_escape(value) + "\""; }
+
+std::string number(long long value) { return std::to_string(value); }
+std::string number(int value) { return std::to_string(value); }
+
+std::string number(double value) {
+  std::ostringstream out;
+  out << std::setprecision(9) << value;
+  return out.str();
+}
+
+std::string shape_json(const std::vector<long long>& shape) {
+  std::string out = "[";
+  for (std::size_t i = 0; i < shape.size(); ++i) {
+    if (i) out += ", ";
+    out += number(shape[i]);
+  }
+  return out + "]";
+}
+
+std::string tensor_info_json(const DumpTensorInfo& info) {
+  std::string block = "      {\n";
+  block += "        \"name\": " + quote(info.name) + ",\n";
+  block += "        \"dtype\": " + quote(info.dtype) + ",\n";
+  block += "        \"shape\": " + shape_json(info.shape) + ",\n";
+  block += "        \"quanti\": " + quote(info.quanti) + ",\n";
+  block += "        \"scale_len\": " + number(info.scale_len) + "\n";
+  block += "      }";
+  return block;
+}
+
+std::string string_array_json(const std::vector<std::string>& values) {
+  std::string out = "[";
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (i) out += ", ";
+    out += quote(values[i]);
+  }
+  return out + "]";
+}
+
+}  // namespace
+
+std::string sha256_hex(const void* data, std::size_t size) {
+  Sha256 hasher;
+  hasher.update(static_cast<const unsigned char*>(data), size);
+  return hasher.hex();
+}
+
+std::string sha256_file(const std::string& path) {
+  std::ifstream input(path, std::ios::binary);
+  if (!input) return {};
+  Sha256 hasher;
+  std::array<char, 1 << 16> buffer{};
+  while (input) {
+    input.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    const std::streamsize got = input.gcount();
+    if (got > 0)
+      hasher.update(reinterpret_cast<const unsigned char*>(buffer.data()),
+                    static_cast<std::size_t>(got));
+  }
+  return hasher.hex();
+}
+
+std::string utc_timestamp() {
+  const std::time_t now = std::time(nullptr);
+  std::tm utc{};
+#if defined(_WIN32)
+  gmtime_s(&utc, &now);
+#else
+  gmtime_r(&now, &utc);
+#endif
+  char buffer[32];
+  std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", &utc);
+  return buffer;
+}
+
+bool write_dump(const DumpRecord& record, std::string* error) {
+  const auto fail = [error](const std::string& message) {
+    if (error != nullptr) *error = message;
+    return false;
+  };
+  if (record.dir.empty()) return fail("dump directory is empty");
+
+  std::error_code code;
+  std::filesystem::create_directories(record.dir, code);
+  if (code) return fail("cannot create dump directory: " + code.message());
+
+  const auto write_tensor = [&](const DumpTensor& tensor,
+                                std::size_t index) -> std::string {
+    const std::string filename =
+        std::to_string(index) + "-" + (tensor.name.empty() ? "tensor" : tensor.name) + ".bin";
+    const std::filesystem::path path =
+        std::filesystem::path(record.dir) / filename;
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    if (!out) return {};
+    if (!tensor.bytes.empty())
+      out.write(reinterpret_cast<const char*>(tensor.bytes.data()),
+                static_cast<std::streamsize>(tensor.bytes.size()));
+    if (!out) return {};
+    return filename;
+  };
+
+  std::vector<std::string> raw_files;
+  std::vector<std::string> raw_hashes;
+  for (std::size_t i = 0; i < record.raw_tensors.size(); ++i) {
+    const std::string filename = write_tensor(record.raw_tensors[i], i);
+    if (filename.empty()) return fail("cannot write raw tensor file");
+    raw_files.push_back(filename);
+    raw_hashes.push_back(record.raw_tensors[i].bytes.empty()
+                             ? std::string()
+                             : sha256_hex(record.raw_tensors[i].bytes.data(),
+                                          record.raw_tensors[i].bytes.size()));
+  }
+  std::vector<std::string> transformed_files;
+  std::vector<std::string> transformed_hashes;
+  for (std::size_t i = 0; i < record.transformed_tensors.size(); ++i) {
+    const std::string filename = write_tensor(record.transformed_tensors[i], i);
+    if (filename.empty()) return fail("cannot write transformed tensor file");
+    transformed_files.push_back(filename);
+    transformed_hashes.push_back(
+        record.transformed_tensors[i].bytes.empty()
+            ? std::string()
+            : sha256_hex(record.transformed_tensors[i].bytes.data(),
+                         record.transformed_tensors[i].bytes.size()));
+  }
+
+  std::string json = "{\n";
+  json += "  \"schema\": \"rdk-model-zoo/yolov5-cpp-dump/v1\",\n";
+  json += "  \"utc\": " + quote(record.utc) + ",\n";
+  json += "  \"target\": " + quote(record.target) + ",\n";
+  json += "  \"build_target\": " + quote(record.build_target) + ",\n";
+  json += "  \"asset_id\": " + quote(record.asset_id) + ",\n";
+  json += "  \"model_path\": " + quote(record.model_path) + ",\n";
+  json += "  \"model_sha256\": " + quote(sha256_file(record.model_path)) + ",\n";
+  json += "  \"image_path\": " + quote(record.image_path) + ",\n";
+  json += "  \"image_sha256\": " + quote(sha256_file(record.image_path)) + ",\n";
+  json += "  \"cwd\": " + quote(record.cwd) + ",\n";
+  json += "  \"argv\": " + string_array_json(record.argv) + ",\n";
+  json += "  \"return_code\": " + number(record.return_code) + ",\n";
+  json += "  \"error\": " + quote(record.error) + ",\n";
+  json += "  \"notes\": " + string_array_json(record.notes) + ",\n";
+
+  json += "  \"parameters\": {\n";
+  for (std::size_t i = 0; i < record.options.size(); ++i) {
+    json += "    " + quote(record.options[i].first) + ": " +
+            quote(record.options[i].second);
+    json += (i + 1 == record.options.size()) ? "\n" : ",\n";
+  }
+  json += "  },\n";
+
+  json += "  \"inputs\": [\n";
+  for (std::size_t i = 0; i < record.inputs.size(); ++i) {
+    json += tensor_info_json(record.inputs[i]);
+    json += (i + 1 == record.inputs.size()) ? "\n" : ",\n";
+  }
+  json += "  ],\n";
+
+  json += "  \"outputs\": [\n";
+  for (std::size_t i = 0; i < record.outputs.size(); ++i) {
+    json += tensor_info_json(record.outputs[i]);
+    json += (i + 1 == record.outputs.size()) ? "\n" : ",\n";
+  }
+  json += "  ],\n";
+
+  json += "  \"raw_tensors\": [\n";
+  for (std::size_t i = 0; i < record.raw_tensors.size(); ++i) {
+    const auto& tensor = record.raw_tensors[i];
+    json += "    {\"name\": " + quote(tensor.name) +
+            ", \"dtype\": " + quote(tensor.dtype) +
+            ", \"shape\": " + shape_json(tensor.shape) +
+            ", \"bytes\": " + number(static_cast<long long>(tensor.bytes.size())) +
+            ", \"file\": " + quote(raw_files[i]) +
+            ", \"sha256\": " + quote(raw_hashes[i]) + "}";
+    json += (i + 1 == record.raw_tensors.size()) ? "\n" : ",\n";
+  }
+  json += "  ],\n";
+
+  json += "  \"transformed_tensors\": [\n";
+  for (std::size_t i = 0; i < record.transformed_tensors.size(); ++i) {
+    const auto& tensor = record.transformed_tensors[i];
+    json += "    {\"name\": " + quote(tensor.name) +
+            ", \"dtype\": " + quote(tensor.dtype) +
+            ", \"shape\": " + shape_json(tensor.shape) +
+            ", \"bytes\": " + number(static_cast<long long>(tensor.bytes.size())) +
+            ", \"file\": " + quote(transformed_files[i]) +
+            ", \"sha256\": " + quote(transformed_hashes[i]) + "}";
+    json += (i + 1 == record.transformed_tensors.size()) ? "\n" : ",\n";
+  }
+  json += "  ],\n";
+
+  json += "  \"detections\": [\n";
+  for (std::size_t i = 0; i < record.detections.size(); ++i) {
+    const auto& det = record.detections[i];
+    json += "    {\"x1\": " + number(static_cast<double>(det.x1)) +
+            ", \"y1\": " + number(static_cast<double>(det.y1)) +
+            ", \"x2\": " + number(static_cast<double>(det.x2)) +
+            ", \"y2\": " + number(static_cast<double>(det.y2)) +
+            ", \"score\": " + number(static_cast<double>(det.score)) +
+            ", \"class_id\": " + number(det.class_id) + "}";
+    json += (i + 1 == record.detections.size()) ? "\n" : ",\n";
+  }
+  json += "  ]\n}\n";
+
+  std::ofstream manifest(std::filesystem::path(record.dir) / "manifest.json",
+                         std::ios::binary | std::ios::trunc);
+  if (!manifest) return fail("cannot open dump manifest for writing");
+  manifest << json;
+  if (!manifest) return fail("cannot write dump manifest");
+  return true;
+}
+
+}  // namespace yolov5

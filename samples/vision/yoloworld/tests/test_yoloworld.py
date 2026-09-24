@@ -88,4 +88,179 @@ class YOLOWorldTests(unittest.TestCase):
         self.assertIs(raw[task.binding.score_output_name],runtime.scores); self.assertIs(raw[task.binding.box_output_name],runtime.boxes)
         with self.assertRaises(ValueError): task.forward({'wrong':prepared.tensors[task.binding.image_input_name]})
 
+    def test_vocabulary_is_a_read_only_owned_snapshot(self):
+        """A caller mutating its own embedding array must not change later calls."""
+        vocab = json.loads((SAMPLE / 'test_data/offline_vocabulary_embeddings.json').read_text())
+        key = next(iter(vocab))
+        caller_array = np.asarray(vocab[key], dtype=np.float32)
+        supplied = dict(vocab)
+        supplied[key] = caller_array
+        runtime = FakeRuntime()
+        runner = RuntimeModelRunner(resolve_selection('x5'), runtime=runtime)
+        task = YOLOWorldTask(runner, runner.load(), supplied)
+        image = np.zeros((40, 60, 3), np.uint8)
+        before = task.pre_process(image, [key]).tensors[task.binding.text_input_name].copy()
+        self.assertFalse(task.vocabulary[key].flags.writeable)
+        self.assertIsNot(task.vocabulary[key], caller_array)
+        caller_array[:] = 12345.0
+        np.testing.assert_array_equal(task.pre_process(image, [key]).tensors[task.binding.text_input_name], before)
+
+    def test_binding_rejects_a_forged_publication_row(self):
+        import dataclasses
+        sel = resolve_selection('x5')
+        forged_asset = dataclasses.replace(sel.asset, sha256='0' * 64, url='https://example.invalid/evil.bin')
+        forged = type(sel)(sel.target, forged_asset, Path('/tmp/evil.bin'))
+        with self.assertRaises(ValueError):
+            bind_model(forged, RuntimeMetadata.from_runtime(FakeRuntime()))
+
+    def test_runner_rejects_non_finite_outputs(self):
+        from samples._shared.runtime_meta import MetadataMismatchError
+        runtime = FakeRuntime()
+        runtime.scores[0, 0, 0] = np.nan
+        runner = RuntimeModelRunner(resolve_selection('x5'), runtime=runtime)
+        binding = runner.load()
+        tensors = {
+            binding.image_input_name: np.zeros((1, 3, 640, 640), np.float32),
+            binding.text_input_name: np.zeros((1, 32, 512, 1), np.float32),
+        }
+        with self.assertRaises(MetadataMismatchError):
+            runner(tensors)
+
+    def test_real_path_gates_before_sdk_and_the_seam_skips_the_gate(self):
+        # The gate import is function-local, so patch the shared function itself.
+        import samples.vision.yoloworld.runtime.python.model_runner as runner_mod
+        sel = resolve_selection('x5')
+        with patch('samples._shared.platforms.require_execution_target',
+                   side_effect=ValueError('no board identity')) as shared_gate:
+            with self.assertRaises(ValueError):
+                runner_mod.RuntimeModelRunner(sel).load()
+            shared_gate.assert_called_once_with('x5')
+        with patch('samples._shared.platforms.require_execution_target',
+                   side_effect=AssertionError('injected factory is the host seam')):
+            runner = runner_mod.RuntimeModelRunner(sel, runtime_factory=lambda path: FakeRuntime())
+            self.assertIsNotNone(runner.load())
+
+class YOLOWorldEvaluatorTests(unittest.TestCase):
+    """The evaluator must run both sides itself, not compare hand-made files."""
+
+    def _fixtures(self, temp):
+        model = Path(temp) / "yolo_world.bin"
+        model.write_bytes(b"fixture-yoloworld-model")
+        selection = resolve_selection(
+            "x5", model_path=str(model), asset_id="x5:yoloworld:yolo_world.bin"
+        )
+        image_path = SAMPLE / "test_data/dog.jpeg"
+        image = __import__("cv2").imread(str(image_path), __import__("cv2").IMREAD_COLOR)
+        self.assertIsNotNone(image)
+        vocab_path = SAMPLE / "test_data/offline_vocabulary_embeddings.json"
+        vocabulary = json.loads(vocab_path.read_text(encoding="utf-8"))
+        return selection, image, image_path, vocabulary, vocab_path
+
+    @staticmethod
+    def _runtime(score_slot: int = 0) -> "FakeRuntime":
+        # The fixed source squeezes the terminal singleton, so the recorded
+        # native tensors keep the exported (1,8400,32,1)/(1,8400,4,1) shape.
+        runtime = FakeRuntime()
+        runtime.scores = np.zeros((1, 8400, 32, 1), np.float32)
+        runtime.boxes = np.zeros((1, 8400, 4, 1), np.float32)
+        runtime.scores[0, 13, score_slot, 0] = 0.8
+        runtime.scores[0, 21, score_slot, 0] = 0.7
+        runtime.boxes[0, 13, :, 0] = [1, 2, 30, 20]
+        runtime.boxes[0, 21, :, 0] = [2, 3, 31, 21]
+        return runtime
+
+    def _factory(self, runtimes):
+        state = {"index": 0}
+
+        def make(path):
+            value = runtimes[min(state["index"], len(runtimes) - 1)]
+            state["index"] += 1
+            return value
+
+        return make
+
+    def _run(self, compare, selection, image, image_path, vocabulary, vocab_path,
+             directory, factory):
+        sdk = types.ModuleType("hbm_runtime")
+        sdk.HB_HBMRuntime = FakeRuntime
+        old_sdk = sys.modules.get("hbm_runtime")
+        sys.modules["hbm_runtime"] = sdk
+        try:
+            with patch.object(compare, "require_execution_target", return_value="x5"):
+                return compare.run_comparison(
+                    selection, image, image_path, ["dog"], vocabulary, vocab_path, directory,
+                    runtime_factory=factory,
+                )
+        finally:
+            if old_sdk is None:
+                sys.modules.pop("hbm_runtime", None)
+            else:
+                sys.modules["hbm_runtime"] = old_sdk
+
+    def test_evaluator_captures_both_sides_with_complete_identity(self):
+        import importlib
+        compare = importlib.import_module("samples.vision.yoloworld.evaluator.compare")
+        with __import__("tempfile").TemporaryDirectory() as temp:
+            selection, image, image_path, vocabulary, vocab_path = self._fixtures(temp)
+            directory = Path(temp) / "success"
+            summary = self._run(compare, selection, image, image_path, vocabulary, vocab_path,
+                                directory, self._factory([self._runtime()]))
+            self.assertEqual(summary["return_code"], 0, summary.get("error"))
+            self.assertTrue(summary["passed"])
+            self.assertEqual(summary["prompts"], ["dog"])
+            self.assertTrue(summary["model_sha256"] and summary["image_sha256"])
+            self.assertTrue(summary["vocabulary_sha256"] and summary["code_sha256"])
+            self.assertEqual(set(summary["metadata"]), {"legacy", "unified"})
+            self.assertTrue(summary["started_utc"] and summary["finished_utc"])
+            self.assertTrue(summary["argv"] and summary["cwd"])
+            for filename, entry in summary["arrays"].items():
+                self.assertTrue((directory / filename).is_file(), filename)
+                self.assertEqual(len(entry["sha256"]), 64)
+            self.assertTrue((directory / "comparison.json").is_file())
+            self.assertTrue(all(summary["checks"].values()))
+
+    def test_evaluator_reports_a_real_difference_instead_of_passing(self):
+        import importlib
+        compare = importlib.import_module("samples.vision.yoloworld.evaluator.compare")
+        changed = self._runtime()
+        changed.boxes[0, 13, :, 0] = [5, 6, 300, 200]
+        with __import__("tempfile").TemporaryDirectory() as temp:
+            selection, image, image_path, vocabulary, vocab_path = self._fixtures(temp)
+            directory = Path(temp) / "difference"
+            summary = self._run(compare, selection, image, image_path, vocabulary, vocab_path,
+                                directory, self._factory([self._runtime(), changed]))
+            self.assertEqual(summary["return_code"], 1)
+            self.assertFalse(summary["passed"])
+            self.assertFalse(summary["checks"]["result.boxes"])
+            self.assertTrue((directory / "comparison.json").is_file())
+
+    def test_evaluator_records_execution_failure_and_still_writes_evidence(self):
+        import importlib
+        compare = importlib.import_module("samples.vision.yoloworld.evaluator.compare")
+        with __import__("tempfile").TemporaryDirectory() as temp:
+            selection, image, image_path, vocabulary, vocab_path = self._fixtures(temp)
+            directory = Path(temp) / "error"
+
+            def explode(path):
+                raise RuntimeError("fake SDK failure")
+
+            with self.assertRaises(RuntimeError):
+                self._run(compare, selection, image, image_path, vocabulary, vocab_path,
+                          directory, explode)
+            payload = json.loads((directory / "comparison.json").read_text())
+            self.assertEqual(payload["return_code"], 2)
+            self.assertEqual(payload["error"]["type"], "RuntimeError")
+            self.assertFalse(payload["passed"])
+
+    def test_prompt_parsing_rejects_empty_and_overflow(self):
+        import importlib
+        compare = importlib.import_module("samples.vision.yoloworld.evaluator.compare")
+        for text in ("", "dog,,cat", ","):
+            with self.assertRaises(ValueError):
+                compare._parse_prompts(text)
+        with self.assertRaises(ValueError):
+            compare._parse_prompts(",".join(["dog"] * 33))
+        self.assertEqual(compare._parse_prompts("dog, person"), ["dog", "person"])
+
+
 if __name__=='__main__': unittest.main()

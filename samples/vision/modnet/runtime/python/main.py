@@ -59,6 +59,15 @@ def _list_models(target: str) -> int:
     return 0
 
 
+def _validate_scheduling(args: argparse.Namespace) -> None:
+    """Reject scheduling values the run would refuse, including during dry-run."""
+
+    if type(args.priority) is not int or not 0 <= args.priority <= 255:
+        raise ValueError("priority must be an integer between 0 and 255")
+    if not args.bpu_cores or any(type(core) is not int or core < 0 for core in args.bpu_cores):
+        raise ValueError("bpu-cores must be a non-empty list of non-negative integer indexes")
+
+
 def _dry_run(args: argparse.Namespace) -> int:
     selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path)
     print(json.dumps({
@@ -82,6 +91,7 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("MODNet deployment metadata is fixed at ref-size 512.")
         if args.list_models:
             return _list_models(args.target)
+        _validate_scheduling(args)
         if args.dry_run:
             return _dry_run(args)
         if args.ref_size != 512:

@@ -11,10 +11,10 @@ Use Python 3, NumPy, OpenCV, SciPy, `lap==0.5.12`, and `cython-bbox==0.1.5`; the
 The input video is not bundled. After explicit model/video preparation, run from the repository root:
 
 ```bash
-python3 -m samples.vision.bytetrack.runtime.python.main \\
-  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \\
-  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \\
-  --input samples/vision/bytetrack/test_data/track_test.mp4 \\
+python3 -m samples.vision.bytetrack.runtime.python.main \
+  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
   --output samples/vision/bytetrack/test_data/result_unified.mp4
 ```
 

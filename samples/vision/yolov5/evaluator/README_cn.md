@@ -8,7 +8,7 @@
 <a id="environment"></a>
 ## 环境
 
-在能控制已识别目标板的主机运行，需要 Python、NumPy、OpenCV 和目标 `hbm_runtime`，并导入固定源 runtime。主机测试注入 fake runtime，不能证明硬件。评估器不会下载模型或图片。
+直接在已识别的目标板上运行，需要 Python、NumPy、OpenCV 和目标 `hbm_runtime`，并导入固定源 runtime；它不是一台在外部驱动板卡的主机。主机单测注入 fake runtime，不能证明硬件或板端结果。评估器不会下载模型或图片。
 
 <a id="command"></a>
 ## 评估命令

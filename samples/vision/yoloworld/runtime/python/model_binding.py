@@ -57,6 +57,17 @@ def resolve_selection(target: str = "auto", *, model_path: str | Path | None = N
 
 def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | dict[str, Any]) -> ModelBinding:
     """Bind observed metadata to the fixed source protocol without guessing names."""
+    # Re-resolve the manifest first: a caller-created ModelSelection (for example
+    # a forged same-shape publication row) must not be trusted at this boundary.
+    resolved = resolve_selection(
+        selection.target, model_path=selection.model_path, asset_id=selection.asset.reference
+    )
+    if (
+        selection.target != resolved.target
+        or selection.asset != resolved.asset
+        or Path(selection.model_path) != Path(resolved.model_path)
+    ):
+        raise ValueError("ModelSelection does not match the exact published asset and path.")
     facts = metadata if isinstance(metadata, RuntimeMetadata) else RuntimeMetadata.from_mapping(metadata)
     if facts.model_names and facts.model_name not in facts.model_names:
         raise MetadataMismatchError("Selected runtime model is not among model_names.")

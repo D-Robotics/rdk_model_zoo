@@ -17,10 +17,10 @@ python3 -m samples.vision.yolov5.runtime.python.main --target x5 --variant n-v7.
 命令写出 `samples/vision/yolov5/test_data/result_unified.jpg`，打印检测 JSON 数组，退出码 `0` 表示成功。自定义 S 命令如下：
 
 ```bash
-python3 -m samples.vision.yolov5.runtime.python.main \\
-  --target s100 --variant x-672 \\
-  --asset-id s:yolov5:s100/yolov5x_672x672_nv12.hbm \\
-  --model-path samples/vision/yolov5/model/s100/yolov5x_672x672_nv12.hbm \\
+python3 -m samples.vision.yolov5.runtime.python.main \
+  --target s100 --variant x-672 \
+  --asset-id s:yolov5:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/yolov5/model/s100/yolov5x_672x672_nv12.hbm \
   --test-img samples/vision/yolov5/test_data/kite.jpg
 ```
 

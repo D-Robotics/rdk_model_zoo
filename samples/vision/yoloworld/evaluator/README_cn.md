@@ -20,19 +20,23 @@ python3 samples/vision/yoloworld/evaluator/compare.py --target x5 --output-dir /
 ```
 
 `--model-path /absolute/yolo_world.bin` 必须同时给出精确 `--asset-id`。
-`--test-img`、`--vocab-file`、`--prompts`、`--score-thres` 和 `--nms-thres`
-会同时作用于两套实现。命令先检查真实 target，再运行源实现和统一实现的
-pre/forward/post；只有 raw 张量精确相等、类别 ID 精确相等且框/分数零容差
-相等才返回 0。比较失败保留目录并返回 1，执行或准备错误返回 2。
+`--test-img`、`--vocab-file`、`--prompts`、`--score-thres`、`--nms-thres`、
+`--priority` 和 `--bpu-cores` 会同时作用于两套实现。命令先检查真实 target，再
+用同一图片、词向量与模型运行源实现和统一实现的 pre/forward/post，并捕获两边的
+预处理输入、raw 分数/框张量与最终检测结果。仅当全部检查通过时返回 0，两边
+不一致返回 1，运行失败返回 2。
 
 <a id="metrics"></a>
 <a id="outputs"></a>
 ## 指标与输出
 
-这是张量对拍，不是数据集 mAP 或性能测试。输出包含
-`legacy_raw_*.npy`、`unified_raw_*.npy`、两套结果数组、`metadata.json`，以及
-模型、源代码、输入图片和词向量的 SHA-256。元数据记录 target、资产身份、
-prompt、阈值和决策，任何输出目录都不会覆盖。
+这是张量对拍，不是数据集 mAP 或性能测试。输出为 `comparison.json` 以及每个记录
+的输入、raw 输出与结果数组各自的 `.npy` 文件。manifest 用 SHA-256 绑定
+`target`、`asset_id`、模型、图像、词向量与代码摘要，记录两边实际 runtime
+metadata、prompt 列表、阈值、`argv`、`cwd`、`started_utc`/`finished_utc` 与
+`return_code`，并逐个列出保存的数组文件及其摘要。输入与类别 ID 要求完全相等；
+raw 张量 `atol=1e-5`，框 `1e-4`，分数 `1e-5`。执行失败时仍写出带 `error`、
+`return_code: 2`、`passed: false` 的 manifest，任何输出目录都不会覆盖。
 
 <a id="reference-results"></a>
 <a id="boundaries"></a>

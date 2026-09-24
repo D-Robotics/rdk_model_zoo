@@ -1,46 +1,152 @@
-# YOLOv5 原生 C++ 运行时
+# YOLOv5 原生 C++ runtime
 
-本目录是统一 YOLOv5 样例的原生 C++ 对应实现。X5 HB-DNN 适配器与 S UCP 适配器保持独立，只共享主机可测试的输出头校验和解码代码。原生程序负责参数解析、目标平台输入与推理、三路原始输出解码，再交给独立的 OpenCV visualizer 绘制结果。模型发布事实由 `launcher.py` 通过 `samples.vision.yolov5.runtime.python.model_binding` 解析。
+本目录是统一 YOLOv5 样例的 C++ 版本，保留 X5 HB-DNN adapter 与 S UCP adapter
+两套硬件调用，只共享与 SDK 无关的部分：张量元数据 gate（`yolov5_gate.*`）、数值
+解码器（`yolov5_decode.*`）和证据 dump 写入器（`yolov5_dump.*`）。原生二进制
+负责解析参数、执行目标相关的输入/前向 I/O、解码三路原始输出、按需写出证据
+dump，并交给独立的 OpenCV 可视化模块渲染。发布事实由 `launcher.py` 通过
+`samples.vision.yolov5.runtime.python.model_binding` 解析；原生二进制不会根据
+文件名猜测布局。
 
-## 目标与资产
+<a id="supported-boards"></a>
+## 支持板卡
 
-| target | 默认资产 | 其他已发布资产 | 输入 | 原生输出契约 |
-|---|---|---|---|---|
-| `x5` | `yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin`（`n-v7.0`） | 九个 X5 `n/s/m/l/x-v2.0` 与 `s/m/l/x-v7.0` 资产 | 一个 640x640 打包 NV12 tensor | 三路 F32 NHWC，80/40/20、每路 255 通道 |
-| `s100` | `s100/yolov5x_672x672_nv12.hbm`（`x-672`） | 无 | 672x672 分离 Y/UV NV12 tensor | 三路按实际 metadata 描述的 head；缓存失效后遵循源 S 反量化 |
-| `s600` | `s600/yolov5x_672x672_nv12.hbm`（`x-672`） | 无 | 672x672 分离 Y/UV NV12 tensor | 同 S 契约 |
-| `s100p` | 无 | 无 | — | YOLOv5 没有已发布 S100P 资产，因此拒绝 |
+| 板卡 | 状态 | 说明 |
+| --- | --- | --- |
+| X5 | supported-not-run | 有 X5 HB-DNN 源；本主机无 X5 SDK、无板卡、无已发布模型文件，未在硬件上编译或运行 |
+| S100 | supported-not-run | 有 S UCP 源；无板卡、SDK 及 `yolov5x_672x672_nv12.hbm` 资产 |
+| S600 | supported-not-run | 同一 S 源，使用 64 字节 BPU 对齐宏；未编译、未运行 |
+| S100P | not-supported | YOLOv5 无 S100P 发布资产，`--target s100p` 被拒绝 |
 
-外部 `--model-path` 必须同时给出 manifest 中的精确 `--asset-id`。路径本身不能推断模型身份；launcher 会在选择原生程序前校验完整发布行。
+每个 adapter 只为一个目标编译，生成的二进制会拒绝与其编译身份不一致的
+`--target`（见[接口与资源生命周期](#interface-lifecycle)），因为 S600 与其余
+S 目标的 alignment 宏不同。
 
-## 构建与运行
+<a id="dependencies"></a>
+## 依赖
 
-CMake target 必须显式给出，配置阶段不会读取 sysfs。在具有对应 SDK 的目标环境分别构建：
+- CMake ≥ 3.16 与 C++17 编译器。
+- OpenCV 开发头文件与库（仅用于渲染输出）。
+- Horizon DNN 头文件位于 `/usr/hobot/include`、库位于 `/usr/hobot/lib`；
+  S 目标额外链接 `hbucp`。
+- `utils/c_utils` 中的共享 C++ helper（`preprocess`、`postprocess`、`nn_math`），
+  由 CMake 目标以相对路径引用。
+- launcher 不安装软件包、不下载模型、不读板卡身份：`--help`、`--list-models`、
+  `--dry-run` 无需 SDK 即可运行。
+
+<a id="build"></a>
+## 构建
+
+目标是显式的，配置阶段不读取 `/sys/class/boardinfo`。
 
 ```bash
+# cwd: 仓库根目录
 cmake -S samples/vision/yolov5/runtime/cpp -B samples/vision/yolov5/runtime/cpp/build/x5 -DYOLOV5_TARGET=x5
-cmake --build samples/vision/yolov5/runtime/cpp/build/x5
+cmake --build samples/vision/yolov5/runtime/cpp/build/x5 --parallel
+
 cmake -S samples/vision/yolov5/runtime/cpp -B samples/vision/yolov5/runtime/cpp/build/s100 -DYOLOV5_TARGET=s100
-cmake --build samples/vision/yolov5/runtime/cpp/build/s100
+cmake --build samples/vision/yolov5/runtime/cpp/build/s100 --parallel
 ```
 
-主机可以安全执行 `--help`、`--list-models` 和显式 target 的 `--dry-run`，这些模式不读板卡且不需要 SDK。真实运行需要 launcher 的 target 身份门禁以及匹配的板卡：
+`YOLOV5_TARGET` 只能取 `x5`、`s100`、`s100p` 或 `s600`，其它值在配置阶段报错。
+每个目标只编译一个 adapter 源文件；CMake 同时定义 SoC 对齐宏（`SOC_S600` /
+`SOC_S100` / `SOC_S100P`）与运行时用于拒绝不匹配 `--target` 的
+`YOLOV5_TARGET_NAME`。产物为该构建目录下的 `yolov5_cpp`。
+
+<a id="run"></a>
+## 运行
+
+前置条件：由 [`model/download.sh`](../../model/README.md) 准备模型资产，并通过
+launcher 的身份检查。
 
 ```bash
-samples/vision/yolov5/runtime/cpp/run.sh --target x5 --variant n-v7.0 --dry-run
-samples/vision/yolov5/runtime/cpp/run.sh --target x5 --asset-id <精确资产ID> --model-path /absolute/model.bin --test-img /absolute/bus.jpg
+# cwd: 仓库根目录
+# 不接触板卡与 SDK，仅查看解析出的发布事实
+samples/vision/yolov5/runtime/cpp/run.sh --dry-run --target x5
+
+# 真实运行：精确 asset id + 外部路径，需在与目标一致的板卡上执行
+samples/vision/yolov5/runtime/cpp/run.sh --target x5 \
+  --asset-id x5:yolov5:yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin \
+  --model-path /absolute/yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin \
+  --test-img /absolute/bus.jpg --dump-dir /tmp/yolov5-x5-dump
+
+# S split-NV12 构建
+samples/vision/yolov5/runtime/cpp/run.sh --target s100 \
+  --asset-id s:yolov5:s100/yolov5x_672x672_nv12.hbm \
+  --dump-dir /tmp/yolov5-s100-dump
 ```
 
-参数默认值为：`--target auto`，省略 `--variant` 时 X5 为 `n-v7.0`、S 为 `x-672`，给出 `--model-path` 时必须有 `--asset-id`，`--output result.jpg`，`--score-thres 0.25`，`--nms-thres 0.45`，`--priority 0`，`--bpu-core -1`（运行时默认）。`--label-file` 可选，`--binary` 只用于已经构建的可执行文件测试。
+`--list-models --target <t>` 打印该目标的已发布资产。外部 `--model-path` 必须与
+manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`（或
+`--output <file>`）；给出 `--dump-dir` 时另有 `manifest.json` 与每个张量的原始
+文件。
 
+<a id="parameters"></a>
+## 参数
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `--target` | `auto` | `x5`、`s100`、`s100p` 或 `s600`；`auto` 由 launcher 按板卡身份解析 |
+| `--variant` | X5 `s-v2.0`，S `x-672` | 资产变体；X5 默认为固定 C++ 源默认值 |
+| `--asset-id` | 省略 | 与 `--model-path` 成对出现，必须与 manifest 精确一致 |
+| `--model-path` | manifest 解析路径 | 模型文件；仅在给出 `--asset-id` 时有效 |
+| `--test-img` | 样例测试数据 | BGR 输入图像 |
+| `--label-file` | 无 | 每行一个类别标签，用于渲染 |
+| `--output` | `result.jpg` | 渲染输出图像 |
+| `--dump-dir` | 无 | 机器可比证据 dump 目录 |
+| `--score-thres` | `0.25` | 置信度阈值，`[0,1]` 内有限值 |
+| `--nms-thres` | `0.45` | NMS IoU 阈值，`[0,1]` 内有限值 |
+| `--priority` | `0` | 调度优先级；S 生效，X5 拒绝 |
+| `--bpu-core` | `-1` | BPU core（`-1` 为 runtime 默认）；S 生效，X5 拒绝 |
+
+<a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
-原生入口契约是 `yolov5::RuntimeOptions` 与 `run_native`。X5 严格要求一个 packed model、一个输入、三个输出、rank-4 NHWC head 以及 `3 * (5 + classes)` 通道；输入、输出 buffer 和 task 在正常与异常路径均由 RAII 风格清理。S 严格要求一个 packed model、两个输入、三个输出，通过 UCP 使用调用者给出的 `priority` 与 BPU core，并释放所有 UCP tensor 和 task。
+`yolov5::RuntimeOptions` 是原生入口契约；`run_native` 负责目标相关的模型初始化、
+张量分配、cache 操作、同步前向与清理。
 
-三路 head 按实际 metadata 的 stride（8、16、32）匹配，不依据输出顺序或文件名。解码包含 sigmoid、anchor、置信度筛选和按类别 NMS。S 构建接入 SDK 时使用源 `dequantizeTensorS32` 路径；不会根据资产名称猜量化参数。
+- X5：要求恰好一个 packed NV12 模型，输入为紧凑 `[1,3,640,640]`，三路输出为
+  原生 F32、`NONE` 量化 NHWC 头，stride 必须恰为 8/16/32。输入 gate 拒绝带
+  padding 的 aligned 布局与小于紧凑 NV12 帧的分配；输出 gate 拒绝带 padding 的
+  aligned 布局与装不下 `height*width*channels` 个 float 的分配，因此不会把指针
+  强转到未知存储上。
+- S：要求一个 packed 模型，输入为 split `Y[1,672,672,1]` 与 `UV[1,336,336,2]`，
+  三路输出由元数据描述。任何 int32 读取之前，反量化 gate 会证明原生 dtype、
+  描述符长度、连续 NHWC 字节 stride 以及覆盖全部元素的分配；不满足 gate 的输出
+  被拒绝，而不是凭猜测读取。
+- 所有权：两个 adapter 都只释放真正分配成功的资源，部分失败的分配不会变成盲目
+  free。X5 通过 RAII lease 释放 task 与缓存；S 的 guard 跳过 `sysMem` 从未赋值
+  的张量。
+- 编译期构建身份（`YOLOV5_TARGET_NAME`）必须与 `--target` 一致，因此按某一种 S
+  对齐编译的二进制不能当作另一个目标运行。
 
-X5 C++ 源样例族采用与 native 侧一致的 letterbox 处理，而统一 Python 默认是 stretch；这是有意保留的差异，做对照时必须说明。S 源也使用 letterbox。
+与固定源相比的**已声明**差异（保留而非静默抹平）：
 
-## 验证状态
+- **X5 默认变体。** 固定 X5 C++ 源默认 `s-v2.0` 制品；统一 Python runtime 默认
+  `n-v7.0`。原生 launcher 在既未给 `--variant` 也未给 `--asset-id` 时保留 C++
+  源默认。
+- **NMS。** X5 保留源 `cv::dnn::NMSBoxes` 的按类行为：score 边界为严格大于
+  `--score-thres`，每类上限 `top_k = 300`。S 保留源 `nms_bboxes` 行为：等于
+  `--score-thres` 保留，且无每类上限。
+- **预处理。** 两个原生 adapter 均使用 letterbox；统一 Python 路径默认 stretch。
+  这是有意的源兼容选择，并不表示两者数值完全一致。
+- **调度。** 固定 S 源把 `priority` 强制写 0；统一 S adapter 应用调用方的
+  `--priority`/`--bpu-core`，使文档参数真实生效。X5 没有经验证的 HB-DNN 映射，
+  因此非默认值被明确拒绝而不是静默忽略。
+- **非有限 score。** 统一解码器丢弃非有限置信度；源 S 解码会保留它们。统一行为
+  是已声明的修复。
 
-主机测试验证数值核心与平台适配器分离、head 唯一性、显式 CMake target、launcher 身份委托以及参数/文档契约。由于本主机没有目标 SDK、板卡或模型资产，原生 SDK 编译、模型推理、板卡身份、渲染和 X5/S 原生 tensor 数值均为 **not-run**。主机测试结果只代表契约和解码检查，不代表板卡性能或精度。
+<a id="results-interpretation"></a>
+## 结果解读
+
+- 退出码 `0` 表示运行完成；`2` 表示被拒绝或失败。失败时若给出 `--dump-dir`，仍
+  会写出带 `return_code` 与 `error` 的 manifest，使失败可追溯。
+- 渲染图只是便利产物。机器比对以 dump 为准：`manifest.json` 用 SHA-256 绑定
+  `target`、`build_target`、`asset_id`、`model_path`、`image_path`，记录观测到的
+  输入/输出元数据（shape、dtype、量化类型与 scale 长度）、实际参数、UTC 时间戳、
+  `argv`、`cwd`、`return_code`，并逐项列出原始与变换后张量的 shape、字节数、
+  文件名与 SHA-256。
+- X5 的原始与变换后张量同为原生 F32 头；S 的原始张量为原生整型输出、变换后为
+  反量化浮点，因此板端比对可以分别检查两个阶段。
+- 本轮迁移中所有板端结果均为 **not-run**：未编译 SDK、未下载模型文件、未接触
+  板卡。主机测试通过只代表契约/解码器结论，不代表精度或性能结论。

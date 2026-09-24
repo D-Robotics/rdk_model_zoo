@@ -11,10 +11,10 @@
 输入视频不随仓库提供。显式准备模型和视频后，从仓库根目录运行：
 
 ```bash
-python3 -m samples.vision.bytetrack.runtime.python.main \\
-  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \\
-  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \\
-  --input samples/vision/bytetrack/test_data/track_test.mp4 \\
+python3 -m samples.vision.bytetrack.runtime.python.main \
+  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
   --output samples/vision/bytetrack/test_data/result_unified.mp4
 ```
 

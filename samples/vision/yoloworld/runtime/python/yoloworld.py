@@ -36,10 +36,17 @@ class YOLOWorldTask:
         if not vocabulary:
             raise ValueError("Offline vocabulary must not be empty.")
         self.runner, self.binding = runner, binding
-        self.class_names = tuple(vocabulary)
-        self.vocabulary = {str(k): np.asarray(v, dtype=np.float32) for k, v in vocabulary.items()}
-        if any(v.shape != (512,) or not np.isfinite(v).all() for v in self.vocabulary.values()):
-            raise ValueError("Every offline vocabulary embedding must be finite F32[512].")
+        # Own a read-only snapshot: a caller that mutates its own embedding array
+        # afterwards must not be able to change what later calls send.
+        snapshot: dict[str, np.ndarray] = {}
+        for key, value in vocabulary.items():
+            embedding = np.array(value, dtype=np.float32, copy=True)
+            if embedding.shape != (512,) or not np.isfinite(embedding).all():
+                raise ValueError("Every offline vocabulary embedding must be finite F32[512].")
+            embedding.flags.writeable = False
+            snapshot[str(key)] = embedding
+        self.class_names = tuple(snapshot)
+        self.vocabulary = MappingProxyType(snapshot)
         self.score_thres, self.nms_thres = float(score_thres), float(nms_thres)
         if not 0 <= self.score_thres <= 1 or not 0 <= self.nms_thres <= 1:
             raise ValueError("score_thres and nms_thres must be in [0,1].")

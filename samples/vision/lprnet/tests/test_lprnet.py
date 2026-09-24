@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -138,11 +139,44 @@ class LPRNetTests(unittest.TestCase):
         with self.assertRaises(binding.BindingError):
             binding.resolve_selection("x5", model_path="/tmp/lpr.bin")
 
+    def test_real_path_gates_before_sdk_and_the_seam_skips_the_gate(self):
+        runner_mod = importlib.import_module(
+            "samples.vision.lprnet.runtime.python.model_runner"
+        )
+        binding = importlib.import_module(
+            "samples.vision.lprnet.runtime.python.model_binding"
+        )
+        selection = binding.resolve_selection("x5")
+        with patch.object(runner_mod, "require_execution_target",
+                          side_effect=ValueError("no board identity")) as gate:
+            with self.assertRaises(ValueError):
+                runner_mod.RuntimeModelRunner(selection).load()
+            gate.assert_called_once_with("x5")
+        output = np.zeros((1, 68, 18), dtype=np.float32)
+        with patch.object(runner_mod, "require_execution_target",
+                          side_effect=AssertionError("injected factory is the host seam")):
+            runner = runner_mod.RuntimeModelRunner(
+                selection, runtime_factory=lambda path: FakeRuntime(output)
+            )
+            self.assertIsNotNone(runner.load())
+
     def test_cli_list_and_dry_run_do_not_construct_runtime(self):
         main = importlib.import_module("samples.vision.lprnet.runtime.python.main")
         with patch.object(main, "RuntimeModelRunner", side_effect=AssertionError):
             self.assertEqual(main.main(["--list-models"]), 0)
             self.assertEqual(main.main(["--dry-run", "--target", "x5"]), 0)
+
+    def test_dry_run_rejects_scheduling_values_the_run_would_refuse(self):
+        main = importlib.import_module("samples.vision.lprnet.runtime.python.main")
+        for args in (
+            ["--dry-run", "--target", "x5", "--priority", "300"],
+            ["--dry-run", "--target", "x5", "--priority", "-1"],
+            ["--dry-run", "--target", "x5", "--bpu-cores", "0", "-1"],
+        ):
+            self.assertEqual(main.main(args), 2, args)
+        self.assertEqual(
+            main.main(["--dry-run", "--target", "x5", "--priority", "5", "--bpu-cores", "0"]), 0
+        )
 
     def test_download_uses_explicit_asset_helper_without_network_in_test(self):
         module = importlib.import_module("samples.vision.lprnet.model.download")
@@ -151,6 +185,105 @@ class LPRNetTests(unittest.TestCase):
                 self.assertEqual(module.main(["--target", "x5", "--output-dir", temp]), 0)
                 download.assert_called_once()
                 self.assertEqual(download.call_args.args[0].reference, "x5:lprnet:lpr.bin")
+
+
+class LPRNetEvaluatorTests(unittest.TestCase):
+    """The evaluator must run both sides itself, not compare hand-made files."""
+
+    def _fixtures(self, temp):
+        binding = importlib.import_module("samples.vision.lprnet.runtime.python.model_binding")
+        model = Path(temp) / "lpr.bin"
+        model.write_bytes(b"fixture-lpr-model")
+        selection = binding.resolve_selection("x5", asset_id="x5:lprnet:lpr.bin", model_path=str(model))
+        dat = Path(temp) / "input.dat"
+        np.arange(1 * 3 * 24 * 94, dtype=np.float32).reshape(1, 3, 24, 94).tofile(dat)
+        return selection, dat
+
+    def _output(self, *, shifted=False):
+        value = np.full((1, 68, 18), -6.0, dtype=np.float32)
+        value[:, 0, 0] = 6.0
+        value[:, 1, 1] = 6.0
+        if shifted:
+            value[:, 0, 0] = -6.0
+            value[:, 5, 0] = 6.0
+        return value
+
+    def _factory(self, outputs):
+        state = {"index": 0}
+
+        def make(path):
+            value = outputs[min(state["index"], len(outputs) - 1)]
+            state["index"] += 1
+            return FakeRuntime(value)
+
+        return make
+
+    def _run(self, compare, selection, dat, directory, factory):
+        sdk = types.ModuleType("hbm_runtime")
+        sdk.HB_HBMRuntime = FakeRuntime
+        old_sdk = sys.modules.get("hbm_runtime")
+        sys.modules["hbm_runtime"] = sdk
+        try:
+            with patch.object(compare, "require_execution_target", return_value="x5"):
+                return compare.run_comparison(selection, dat, directory, runtime_factory=factory)
+        finally:
+            if old_sdk is None:
+                sys.modules.pop("hbm_runtime", None)
+            else:
+                sys.modules["hbm_runtime"] = old_sdk
+
+    def test_evaluator_captures_both_sides_with_complete_identity(self):
+        compare = importlib.import_module("samples.vision.lprnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, dat = self._fixtures(temp)
+            directory = Path(temp) / "success"
+            summary = self._run(compare, selection, dat, directory, self._factory([self._output()]))
+            self.assertEqual(summary["return_code"], 0, summary.get("error"))
+            self.assertTrue(summary["passed"])
+            self.assertEqual(summary["target"], "x5")
+            self.assertEqual(summary["source_ref"], "ac115717197920355fc390bb04299b20e6436864")
+            # Identity: model, input and code digests are all present and real.
+            self.assertTrue(summary["model_sha256"] and summary["input_sha256"])
+            self.assertTrue(summary["code_sha256"])
+            self.assertTrue(all(len(value) == 64 for value in summary["code_sha256"].values()))
+            self.assertEqual(set(summary["metadata"]), {"legacy", "unified"})
+            self.assertTrue(summary["started_utc"] and summary["finished_utc"] and summary["argv"])
+            self.assertTrue(summary["cwd"])
+            # Both sides' real tensors are on disk with their own digests.
+            for filename, entry in summary["arrays"].items():
+                self.assertTrue((directory / filename).is_file(), filename)
+                self.assertEqual(len(entry["sha256"]), 64)
+            self.assertTrue((directory / "comparison.json").is_file())
+            self.assertEqual(summary["checks"]["result_names"], True)
+            self.assertTrue(all(summary["checks"].values()))
+
+    def test_evaluator_reports_a_real_difference_instead_of_passing(self):
+        compare = importlib.import_module("samples.vision.lprnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, dat = self._fixtures(temp)
+            directory = Path(temp) / "difference"
+            summary = self._run(compare, selection, dat, directory,
+                                self._factory([self._output(), self._output(shifted=True)]))
+            self.assertEqual(summary["return_code"], 1)
+            self.assertFalse(summary["passed"])
+            self.assertFalse(summary["checks"]["result.plate"])
+            self.assertTrue((directory / "comparison.json").is_file())
+
+    def test_evaluator_records_execution_failure_and_still_writes_evidence(self):
+        compare = importlib.import_module("samples.vision.lprnet.evaluator.compare")
+        with tempfile.TemporaryDirectory() as temp:
+            selection, dat = self._fixtures(temp)
+            directory = Path(temp) / "error"
+
+            def explode(path):
+                raise RuntimeError("fake SDK failure")
+
+            with self.assertRaises(RuntimeError):
+                self._run(compare, selection, dat, directory, explode)
+            payload = json.loads((directory / "comparison.json").read_text())
+            self.assertEqual(payload["return_code"], 2)
+            self.assertEqual(payload["error"]["type"], "RuntimeError")
+            self.assertFalse(payload["passed"])
 
 
 if __name__ == "__main__":

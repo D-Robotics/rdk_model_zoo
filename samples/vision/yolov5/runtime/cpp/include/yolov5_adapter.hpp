@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <string>
+#include <vector>
 
 namespace yolov5 {
 
@@ -13,6 +14,12 @@ struct RuntimeOptions {
   std::string output_path;
   std::string label_path;
   std::string target;
+  // Publication fact resolved by the launcher; recorded in the evidence dump.
+  std::string asset_id;
+  // When non-empty the adapter writes a machine-comparable dump record here.
+  std::string dump_dir;
+  // Command line as received, recorded verbatim in the dump.
+  std::vector<std::string> argv;
   float score_threshold = 0.25F;
   float nms_threshold = 0.45F;
   int priority = 0;
