@@ -101,7 +101,10 @@ class RuntimeModelRunner:
             try:
                 kwargs = {}
                 if priority is not None:
-                    kwargs['priority'] = priority if binding.target == 'x5' else {binding.model_name: priority}
+                    # The native API takes per-model Mappings on every target; a scalar
+                    # is an incompatible-arguments TypeError on the real X5 SDK
+                    # (board evidence 2026-09-24), so never send one.
+                    kwargs['priority'] = {binding.model_name: priority}
                 if bpu_cores is not None:
                     kwargs['bpu_cores'] = {binding.model_name: list(bpu_cores)}
                 adapter.runtime.set_scheduling_params(**kwargs)
