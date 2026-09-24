@@ -108,3 +108,11 @@ native 第二轮作者提交 `fbffddd` 已通过协调者37项 YOLOv5 host tests
 三份Python完整数组归档分别14/14/16份，两份native归档7/8份负载已校验digest与形状/类型或字节长度，见 [扩展板测 evidence](evidence/2026-09-24-b7-expanded-boards/)。采集器首轮错误地把Python以文件名为key的arrays映射当成含file字段的记录，完整覆盖断言拒绝了该采集器；按真实schema修正后全部数组覆盖核验通过，未改变任何板端比较记录或数组。其余X5七个变体及4GB的s-v2 Python已排入同提交逐项对照队列，未执行者不计通过。
 
 S100P第一次GitHub浅克隆300秒观察超时，远程进程与目录随后确认均不存在；GitHub HTTP响应可达，改HTTP/1.1和显式无进展检测重新取回固定提交，尚无S100P本批板测结果。MODNet在两块X5的/root、/opt、/home、/userdata、/mnt中仅找到历史源文件，无模型制品；已向用户询问可用路径，其他样例继续推进。
+
+## LPRNet / FCOS 输出绑定修复实板确认
+
+作者修复 `bc1e106` 已独立审查：LPRNet仅接纳明确的四维发布布局与三维旧API兼容布局，每次runner/后处理严格匹配已绑定shape；四维raw不在forward中squeeze，CTC只在post阶段消除已声明单元素轴。三维只是旧host/API兼容契约，没有对应历史SDK制品证据；要求作者删除“早期SDK构建”的无证据说法后再提交。FCOS按精确名字集合逐绑定名校验shape/dtype/finite，保留mapping及数组身份，不按dict顺序推断角色。
+
+主机独立原专项22/37项通过；与metadata接线回归合并为板测分支 `73a6de135ddbcc343922a2a31e31c22729f09296` 后，LPRNet23 / FCOS38全通过。X5 8GB从GitHub fetch该SHA到新的独立worktree，不打断另一固定提交上的YOLOv5矩阵；显式复用原模型路径与精确asset ID。LPRNet lpr.bin及FCOS efficientnetb0分别完整源/统一对照rc=0、全部checks=true；模型/输入digest与各自此前失败case相同。
+
+[LPRNet/FCOS复验证据](evidence/2026-09-24-b7-binding-recheck/) 保存GitHub检出、完整执行/比较、原始归档。协调者重新检查LPRNet6份数组、FCOS33份数组及4份metadata/result JSON的digest；均与各自comparison记录一致。此前失败材料不改写。这两项runtime绑定缺陷可在已测case范围关闭；FCOS其余两个变体、其它板及整个B7验收仍待完成，C++源对照也尚未通过，不能升级B7 Closed。
