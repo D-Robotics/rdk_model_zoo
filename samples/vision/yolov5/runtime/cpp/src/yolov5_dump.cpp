@@ -169,6 +169,24 @@ std::string opt_array_json(const long long (&values)[4]) {
   return out + "]";
 }
 
+std::string double_array_json(const std::vector<double>& values) {
+  std::string out = "[";
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (i) out += ", ";
+    out += number(values[i]);
+  }
+  return out + "]";
+}
+
+std::string long_array_json(const std::vector<long long>& values) {
+  std::string out = "[";
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (i) out += ", ";
+    out += number(values[i]);
+  }
+  return out + "]";
+}
+
 std::string tensor_info_json(const DumpTensorInfo& info) {
   std::string block = "      {\n";
   block += "        \"name\": " + quote(info.name) + ",\n";
@@ -178,7 +196,10 @@ std::string tensor_info_json(const DumpTensorInfo& info) {
   block += "        \"scale_len\": " + number(info.scale_len) + ",\n";
   block += "        \"aligned_byte_size\": " + opt_number(info.aligned_byte_size) + ",\n";
   block += "        \"stride\": " + opt_array_json(info.stride) + ",\n";
-  block += "        \"aligned\": " + opt_array_json(info.aligned) + "\n";
+  block += "        \"aligned\": " + opt_array_json(info.aligned) + ",\n";
+  block += "        \"quantize_axis\": " + opt_number(info.quantize_axis) + ",\n";
+  block += "        \"scale_values\": " + double_array_json(info.scale_values) + ",\n";
+  block += "        \"zero_point_values\": " + long_array_json(info.zero_point_values) + "\n";
   block += "      }";
   return block;
 }
@@ -200,7 +221,9 @@ std::string sha256_hex(const void* data, std::size_t size) {
   return hasher.hex();
 }
 
-DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta) {
+DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta,
+                                const float* scale_data,
+                                const std::int32_t* zero_point_data) {
   DumpTensorInfo info;
   info.name = name;
   info.dtype = dtype_name(meta.dtype);
@@ -215,6 +238,23 @@ DumpTensorInfo dump_tensor_info(const std::string& name, const TensorMeta& meta)
   // so it is recorded as unreported rather than as a fake zero stride.
   for (int i = 0; i < 4; ++i) info.stride[i] = meta.stride[i] > 0 ? meta.stride[i] : -1;
   for (int i = 0; i < 4; ++i) info.aligned[i] = meta.aligned[i] > 0 ? meta.aligned[i] : -1;
+  info.quantize_axis = meta.quantize_axis;
+  if (meta.quanti_type == kQuantiScale) {
+    if (scale_data != nullptr && meta.scale_len > 0) {
+      const std::size_t count = static_cast<std::size_t>(
+          meta.scale_len < static_cast<long long>(kMaxQuantValues)
+              ? meta.scale_len
+              : static_cast<long long>(kMaxQuantValues));
+      info.scale_values.assign(scale_data, scale_data + count);
+    }
+    if (zero_point_data != nullptr && meta.zero_point_len > 0) {
+      const std::size_t count = static_cast<std::size_t>(
+          meta.zero_point_len < static_cast<long long>(kMaxQuantValues)
+              ? meta.zero_point_len
+              : static_cast<long long>(kMaxQuantValues));
+      info.zero_point_values.assign(zero_point_data, zero_point_data + count);
+    }
+  }
   return info;
 }
 
@@ -257,12 +297,18 @@ bool write_dump(const DumpRecord& record, std::string* error) {
   std::filesystem::create_directories(record.dir, code);
   if (code) return fail("cannot create dump directory: " + code.message());
 
-  const auto write_tensor = [&](const DumpTensor& tensor,
+  // Each stage writes into its own subdirectory: the raw and transformed
+  // payloads of one output share neither a file nor bytes, so a later stage
+  // can never overwrite the original evidence of an earlier one.
+  const auto write_tensor = [&](const DumpTensor& tensor, const std::string& category,
                                 std::size_t index) -> std::string {
-    const std::string filename =
-        std::to_string(index) + "-" + (tensor.name.empty() ? "tensor" : tensor.name) + ".bin";
-    const std::filesystem::path path =
-        std::filesystem::path(record.dir) / filename;
+    const std::string filename = category + "/" + std::to_string(index) + "-" +
+                                 (tensor.name.empty() ? "tensor" : tensor.name) + ".bin";
+    const std::filesystem::path path = std::filesystem::path(record.dir) / filename;
+    if (path.has_parent_path()) {
+      std::filesystem::create_directories(path.parent_path(), code);
+      if (code) return {};
+    }
     std::ofstream out(path, std::ios::binary | std::ios::trunc);
     if (!out) return {};
     if (!tensor.bytes.empty())
@@ -271,30 +317,52 @@ bool write_dump(const DumpRecord& record, std::string* error) {
     if (!out) return {};
     return filename;
   };
+  const auto hash_of = [](const DumpTensor& tensor) {
+    return tensor.bytes.empty() ? std::string()
+                                : sha256_hex(tensor.bytes.data(), tensor.bytes.size());
+  };
 
+  std::vector<std::string> input_files;
+  std::vector<std::string> input_hashes;
+  for (std::size_t i = 0; i < record.input_tensors.size(); ++i) {
+    const std::string filename = write_tensor(record.input_tensors[i], "input", i);
+    if (filename.empty()) return fail("cannot write input tensor file");
+    input_files.push_back(filename);
+    input_hashes.push_back(hash_of(record.input_tensors[i]));
+  }
   std::vector<std::string> raw_files;
   std::vector<std::string> raw_hashes;
   for (std::size_t i = 0; i < record.raw_tensors.size(); ++i) {
-    const std::string filename = write_tensor(record.raw_tensors[i], i);
+    const std::string filename = write_tensor(record.raw_tensors[i], "raw", i);
     if (filename.empty()) return fail("cannot write raw tensor file");
     raw_files.push_back(filename);
-    raw_hashes.push_back(record.raw_tensors[i].bytes.empty()
-                             ? std::string()
-                             : sha256_hex(record.raw_tensors[i].bytes.data(),
-                                          record.raw_tensors[i].bytes.size()));
+    raw_hashes.push_back(hash_of(record.raw_tensors[i]));
   }
   std::vector<std::string> transformed_files;
   std::vector<std::string> transformed_hashes;
   for (std::size_t i = 0; i < record.transformed_tensors.size(); ++i) {
-    const std::string filename = write_tensor(record.transformed_tensors[i], i);
+    const std::string filename = write_tensor(record.transformed_tensors[i], "transformed", i);
     if (filename.empty()) return fail("cannot write transformed tensor file");
     transformed_files.push_back(filename);
-    transformed_hashes.push_back(
-        record.transformed_tensors[i].bytes.empty()
-            ? std::string()
-            : sha256_hex(record.transformed_tensors[i].bytes.data(),
-                         record.transformed_tensors[i].bytes.size()));
+    transformed_hashes.push_back(hash_of(record.transformed_tensors[i]));
   }
+
+  const auto tensor_list_json = [](const std::vector<DumpTensor>& tensors,
+                                   const std::vector<std::string>& files,
+                                   const std::vector<std::string>& hashes) {
+    std::string list = "[\n";
+    for (std::size_t i = 0; i < tensors.size(); ++i) {
+      const auto& tensor = tensors[i];
+      list += "    {\"name\": " + quote(tensor.name) +
+              ", \"dtype\": " + quote(tensor.dtype) +
+              ", \"shape\": " + shape_json(tensor.shape) +
+              ", \"bytes\": " + number(static_cast<long long>(tensor.bytes.size())) +
+              ", \"file\": " + quote(files[i]) +
+              ", \"sha256\": " + quote(hashes[i]) + "}";
+      list += (i + 1 == tensors.size()) ? "\n" : ",\n";
+    }
+    return list + "  ]";
+  };
 
   std::string json = "{\n";
   json += "  \"schema\": \"rdk-model-zoo/yolov5-cpp-dump/v2\",\n";
@@ -304,6 +372,12 @@ bool write_dump(const DumpRecord& record, std::string* error) {
   json += "  \"asset_id\": " + quote(record.asset_id) + ",\n";
   json += "  \"model_path\": " + quote(record.model_path) + ",\n";
   json += "  \"model_sha256\": " + quote(sha256_file(record.model_path)) + ",\n";
+  json += "  \"binary_path\": " + quote(record.binary_path) + ",\n";
+  json += "  \"binary_sha256\": " +
+          (record.binary_path.empty()
+               ? std::string("null")
+               : quote(sha256_file(record.binary_path))) +
+          ",\n";
   json += "  \"image_path\": " + quote(record.image_path) + ",\n";
   json += "  \"image_sha256\": " + quote(sha256_file(record.image_path)) + ",\n";
   json += "  \"cwd\": " + quote(record.cwd) + ",\n";
@@ -334,31 +408,22 @@ bool write_dump(const DumpRecord& record, std::string* error) {
   }
   json += "  ],\n";
 
-  json += "  \"raw_tensors\": [\n";
-  for (std::size_t i = 0; i < record.raw_tensors.size(); ++i) {
-    const auto& tensor = record.raw_tensors[i];
-    json += "    {\"name\": " + quote(tensor.name) +
-            ", \"dtype\": " + quote(tensor.dtype) +
-            ", \"shape\": " + shape_json(tensor.shape) +
-            ", \"bytes\": " + number(static_cast<long long>(tensor.bytes.size())) +
-            ", \"file\": " + quote(raw_files[i]) +
-            ", \"sha256\": " + quote(raw_hashes[i]) + "}";
-    json += (i + 1 == record.raw_tensors.size()) ? "\n" : ",\n";
-  }
-  json += "  ],\n";
-
-  json += "  \"transformed_tensors\": [\n";
-  for (std::size_t i = 0; i < record.transformed_tensors.size(); ++i) {
-    const auto& tensor = record.transformed_tensors[i];
-    json += "    {\"name\": " + quote(tensor.name) +
-            ", \"dtype\": " + quote(tensor.dtype) +
-            ", \"shape\": " + shape_json(tensor.shape) +
-            ", \"bytes\": " + number(static_cast<long long>(tensor.bytes.size())) +
-            ", \"file\": " + quote(transformed_files[i]) +
-            ", \"sha256\": " + quote(transformed_hashes[i]) + "}";
-    json += (i + 1 == record.transformed_tensors.size()) ? "\n" : ",\n";
-  }
-  json += "  ],\n";
+  json += "  \"input_tensors\": " +
+          (record.input_tensors.empty()
+               ? std::string("[]")
+               : tensor_list_json(record.input_tensors, input_files, input_hashes)) +
+          ",\n";
+  json += "  \"raw_tensors\": " +
+          (record.raw_tensors.empty()
+               ? std::string("[]")
+               : tensor_list_json(record.raw_tensors, raw_files, raw_hashes)) +
+          ",\n";
+  json += "  \"transformed_tensors\": " +
+          (record.transformed_tensors.empty()
+               ? std::string("[]")
+               : tensor_list_json(record.transformed_tensors, transformed_files,
+                                  transformed_hashes)) +
+          ",\n";
 
   json += "  \"detections\": [\n";
   for (std::size_t i = 0; i < record.detections.size(); ++i) {
@@ -379,6 +444,19 @@ bool write_dump(const DumpRecord& record, std::string* error) {
   manifest << json;
   if (!manifest) return fail("cannot write dump manifest");
   return true;
+}
+
+std::string current_binary_path(const std::string& argv0) {
+#if defined(__linux__)
+  std::error_code code;
+  const std::filesystem::path self = std::filesystem::read_symlink("/proc/self/exe", code);
+  if (!code && !self.empty() && self.is_absolute()) return self.string();
+#endif
+  if (argv0.empty()) return {};
+  std::error_code resolve_error;
+  const std::filesystem::path resolved = std::filesystem::absolute(argv0, resolve_error);
+  if (!resolve_error) return resolved.string();
+  return {};
 }
 
 }  // namespace yolov5

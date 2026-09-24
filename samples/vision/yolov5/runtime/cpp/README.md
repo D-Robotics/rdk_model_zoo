@@ -122,13 +122,19 @@ synchronous forward and cleanup.
   `UV[1,336,336,2]` inputs and three metadata-described heads. The S SDK
   reports no `alignedShape`; the stored layout is `stride[]` plus
   `alignedByteSize`. Before any read, the dequantization gate proves native
-  dtype, descriptor length and the addressing the fixed-source
-  `dequantizeTensorS32` actually performs (element `(h,w,c)` at byte offset
-  `(h*W + w)*stride[2] + c*stride[3]`): row padding (`stride[2]` larger than
-  the compact row) and channel padding are genuinely supported and accepted,
+  dtype, descriptor length and the addressing the dequantizer actually performs
+  (element `(h,w,c)` at byte offset `(h*W + w)*stride[2] + c*stride[3]`):
+  `stride[2]` must cover one full pixel (`channels` elements — the published
+  S100 model's legal pixel padding `stride[2]=1024` for 255 channels is
+  accepted, while a smaller value that makes pixels overlap is rejected),
   `stride[1]` must equal `width*stride[2]`, and the allocation must cover the
-  stored (padded) extent. The raw dump keeps the full `alignedByteSize` extent
-  with the strides in the manifest, so a padded run stays machine-comparable.
+  exact last addressed byte with overflow-checked arithmetic. A scalar
+  scale/zero-point descriptor (length 1) is accepted because the adapter's
+  private dequantizer broadcasts it; the shared `c_utils`
+  `dequantizeTensorS32` would index `scale_data[c]` out of bounds and is never
+  given such a tensor. The raw dump keeps the full `alignedByteSize` extent
+  with the strides and the full scale/zero-point arrays in the manifest, so a
+  padded run stays machine-comparable.
 - Ownership: both adapters free only resources that were actually allocated, so
   a partially failed allocation never turns into a blind free. The X5 adapter
   releases the task and buffers through an RAII lease; the S adapter uses a
@@ -151,7 +157,11 @@ Declared differences from the fixed sources (preserved, not silently unified):
   a claim that the two paths are numerically identical.
 - **Scheduling.** The fixed S source forces `priority = 0`; the unified S
   adapter applies the caller's `--priority`/`--bpu-core` so the documented
-  parameters are real. X5 has no verified HB-DNN mapping for these flags, so
+  parameters are real. `--bpu-core` is a core *index* (`-1` = any, `0..3`) and
+  is converted explicitly to the SDK's backend bitmask
+  (`HB_UCP_BPU_CORE_0..3 = 1ULL<<0..3`, `HB_UCP_BPU_CORE_ANY = 1ULL<<7`);
+  indices outside `-1..3` are rejected, and the raw index is never assigned to
+  the backend field. X5 has no verified HB-DNN mapping for these flags, so
   non-default values are rejected rather than silently ignored.
 - **Non-finite scores.** The unified decoder drops non-finite confidence values;
   the source S decode keeps them. The unified behaviour is a declared fix.
@@ -163,18 +173,26 @@ Declared differences from the fixed sources (preserved, not silently unified):
   failure with `--dump-dir`, a manifest with `return_code` and `error` is still
   written so the failure is traceable.
 - The rendered image is a convenience only. Machine comparison uses the dump:
-  `manifest.json` binds `target`, `build_target`, `asset_id`, `model_path` and
-  `image_path` with SHA-256 hashes, the observed input/output metadata
-  (shape, dtype, quantization kind, scale length, `alignedByteSize`, the
+  `manifest.json` binds `target`, `build_target`, `asset_id`, `model_path`,
+  `image_path` and the running `binary_path` with SHA-256 hashes, the observed
+  input/output metadata (shape, dtype, quantization kind, scale length, the
+  full scale/zero-point values, `quantizeAxis`, `alignedByteSize`, the
   reported `stride[]`, and `alignedShape` where the SDK reports it — null
   otherwise), the effective parameters, the UTC timestamp, `argv`, `cwd` and
-  `return_code`, and lists every raw and transformed tensor with its shape,
-  byte count, file name and SHA-256.
-- X5 raw and transformed tensors are the same native F32 heads; S raw tensors
-  keep the full allocated extent (`alignedByteSize`, including row padding)
-  and the transformed tensors are the dequantized floats, so a board
-  comparison can check both stages and interpret padded layouts from the
-  manifest strides.
+  `return_code`. Tensor payloads are written one file per stage under
+  `input/`, `raw/` and `transformed/` subdirectories with shape, byte count,
+  file name and SHA-256, so the raw and transformed bytes of one output can
+  never overwrite each other.
+- The input files hold the buffers actually submitted with the inference (the
+  compact NV12 payload on X5, the per-row gathered plane payload on S);
+  uninitialized padding bytes are deliberately not dumped. X5 raw and
+  transformed tensors are the same native F32 heads; S raw tensors keep the
+  full allocated extent (`alignedByteSize`, including pixel padding) and the
+  transformed tensors are the dequantized floats, so a board comparison can
+  check both stages and interpret padded layouts from the manifest strides.
+  A dump records what this binary produced; it is not by itself a statement
+  of numerical equivalence with the fixed-source runtime, which the board
+  evaluator has to establish separately.
 - Board status (2026-09-24, coordinator evidence): the pre-remediation commit
   compiled and linked `rc=0` on a real X5 8GB and a first launcher inference
   returned `rc=0`; the same commit failed to compile on S100 because the S

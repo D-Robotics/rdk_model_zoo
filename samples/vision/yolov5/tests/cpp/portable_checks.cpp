@@ -9,11 +9,13 @@
 #include "yolov5_decode.hpp"
 #include "yolov5_dump.hpp"
 #include "yolov5_gate.hpp"
+#include "yolov5_s_native.hpp"
 
 #include <cmath>
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -64,7 +66,7 @@ yolov5::TensorMeta s32_output(long long height, long long width, long long chann
                               int dtype = yolov5::kDtypeS32, int quanti = yolov5::kQuantiScale,
                               long long scale_len = 1, long long zero_point_len = 0,
                               long long row_stride = -1, long long storage = -1,
-                              long long channel_stride = 4, long long inner_stride = -1,
+                              long long channel_stride = 4, long long pixel_stride = -1,
                               long long aligned_bytes = -1) {
   yolov5::TensorMeta meta;
   meta.dtype = dtype;
@@ -74,14 +76,13 @@ yolov5::TensorMeta s32_output(long long height, long long width, long long chann
   meta.scale_len = scale_len;
   meta.zero_point_len = zero_point_len;
   meta.stride[3] = channel_stride;
-  meta.stride[2] = inner_stride < 0 ? channels * channel_stride : inner_stride;
+  meta.stride[2] = pixel_stride < 0 ? channels * channel_stride : pixel_stride;
   meta.stride[1] = row_stride < 0 ? width * meta.stride[2] : row_stride;
   meta.stride[0] = height * meta.stride[1];
   // Allocation needed for the addressing formula's last byte: the final
-  // element of the final row, including padding inside earlier rows.
+  // pixel of the final row, including padding inside earlier rows.
   const long long required =
-      (height * width - 1) * meta.stride[2] + (channels - 1) * meta.stride[3] +
-      channel_stride;
+      (height * width - 1) * meta.stride[2] + channels * channel_stride;
   meta.aligned_byte_size = aligned_bytes < 0 ? required : aligned_bytes;
   meta.storage_bytes = storage < 0 ? meta.aligned_byte_size : storage;
   return meta;
@@ -199,18 +200,18 @@ void check_s_dequant() {
                                        /*storage=*/100), &count),
          "S32 allocation smaller than the stored extent must be rejected");
 
-  // Row padding is genuinely supported by the fixed-source dequantizer: it
-  // addresses (h, w, c) at (h*W + w) * stride[2] + c * stride[3], so a row
-  // stride larger than the compact row is read correctly as long as stride[1]
+  // Row padding is genuinely supported by the addressing formula: it reads
+  // (h, w, c) at (h*W + w) * stride[2] + c * stride[3], so a pixel stride
+  // larger than the compact pixel is read correctly as long as stride[1]
   // stays width*stride[2] and the allocation covers the padded extent.
   TensorMeta row_padded = s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0,
                                      /*row_stride=*/-1, /*storage=*/-1,
-                                     /*channel_stride=*/4, /*inner_stride=*/28256);
+                                     /*channel_stride=*/4, /*pixel_stride=*/28256);
   expect(static_cast<bool>(check_s32_dequant(row_padded, &count)) && count == 84ll * 84 * 84,
          "row-padded S32 layout must be accepted (stride[2] > compact row)");
   TensorMeta padded_short = s32_output(84, 84, 84, kDtypeS32, kQuantiScale, 1, 0,
                                        /*row_stride=*/-1, /*storage=*/-1,
-                                       /*channel_stride=*/4, /*inner_stride=*/28256,
+                                       /*channel_stride=*/4, /*pixel_stride=*/28256,
                                        /*aligned_bytes=*/84 * 84 * 84 * 4);
   expect(!check_s32_dequant(padded_short, &count),
          "row-padded layout whose allocation cannot cover the stored extent must be rejected");
@@ -228,6 +229,30 @@ void check_s_dequant() {
                                        /*channel_stride=*/2), &count),
          "a channel stride below the element size must be rejected");
 
+  // The real published S100 model reports exactly this layout for its large
+  // head (independent probe 2026-09-24): 255 channels, pixel stride 1024,
+  // row stride width*1024. The padding is legal and must be accepted.
+  TensorMeta published = s32_output(84, 84, 255, kDtypeS32, kQuantiScale, 255, 0,
+                                    /*row_stride=*/86016, /*storage=*/7225344,
+                                    /*channel_stride=*/4, /*pixel_stride=*/1024,
+                                    /*aligned_bytes=*/7225344);
+  expect(static_cast<bool>(check_s32_dequant(published, &count)) && count == 84ll * 84 * 255,
+         "the published S100 head layout (pixel stride 1024) must be accepted");
+  // The probe's overlapping counterexample: 400 < 255*4 makes consecutive
+  // pixels share bytes and must be rejected (a width*stride[3] bound would
+  // wrongly accept it because 400 >= 84*4).
+  expect(!check_s32_dequant(s32_output(84, 84, 255, kDtypeS32, kQuantiScale, 255, 0,
+                                       /*row_stride=*/33600, /*storage=*/-1,
+                                       /*channel_stride=*/4, /*pixel_stride=*/400), &count),
+         "an overlapping pixel layout must be rejected");
+  TensorMeta overflow = s32_output(84, 84, 255, kDtypeS32, kQuantiScale, 255, 0,
+                                   /*row_stride=*/0, /*storage=*/-1,
+                                   /*channel_stride=*/4, /*pixel_stride=*/(1LL << 62),
+                                   /*aligned_bytes=*/1LL << 40);
+  overflow.stride[0] = 0;
+  expect(!check_s32_dequant(overflow, &count),
+         "a layout whose extent overflows must be rejected, not wrap around");
+
   expect(static_cast<bool>(check_s32_dequant(
              s32_output(84, 84, 84, kDtypeF32, kQuantiNone), &count)),
          "unquantized F32 output should be accepted through the raw path");
@@ -243,6 +268,100 @@ void check_target_identity() {
          "requested target different from the build target must be rejected");
   expect(!check_target_matches_build("x5", "unknown"),
          "a binary without a build identity must be rejected");
+}
+
+// Drives the private S dequantizer with a tiny 1x2x2 layout whose every byte
+// position is known, including pixel padding and a scalar (broadcasting)
+// descriptor, so the addressing and arithmetic are verified against hand
+// computed values rather than by trusting the formula's shape.
+void check_s_dequant_values() {
+  using namespace yolov5;
+  // Layout: N=1, H=1, W=2, C=2, stride[3]=4, stride[2]=16 (8 bytes of pixel
+  // padding), stride[1]=32. Storage holds two padded pixels of 16 bytes.
+  TensorMeta meta = s32_output(1, 2, 2, kDtypeS32, kQuantiScale,
+                               /*scale_len=*/1, /*zero_point_len=*/1,
+                               /*row_stride=*/32, /*storage=*/-1,
+                               /*channel_stride=*/4, /*pixel_stride=*/16);
+  long long count = 0;
+  expect(static_cast<bool>(check_s32_dequant(meta, &count)) && count == 4,
+         "the tiny padded fixture must pass its gate");
+  const std::int32_t q[4] = {10, 20, 30, 40};   // pixel0 c0/c1, pixel1 c0/c1
+  const unsigned char storage[32] = {};
+  std::memcpy(const_cast<unsigned char*>(storage) + 0, &q[0], 4);
+  std::memcpy(const_cast<unsigned char*>(storage) + 4, &q[1], 4);
+  std::memcpy(const_cast<unsigned char*>(storage) + 16, &q[2], 4);
+  std::memcpy(const_cast<unsigned char*>(storage) + 20, &q[3], 4);
+  // Scalar descriptors: scale 0.5 everywhere, zero point 2 everywhere. A
+  // per-channel reading would index past the single-element arrays.
+  const float scale[1] = {0.5F};
+  const std::int32_t zero[1] = {2};
+  const auto values = dequant_s32_nhwc(storage, meta, scale, 1, zero, 1);
+  expect(values.size() == 4, "broadcasting dequant must return the full element count");
+  if (values.size() == 4) {
+    expect(std::fabs(values[0] - 4.0F) < 1e-6F && std::fabs(values[1] - 9.0F) < 1e-6F &&
+               std::fabs(values[2] - 14.0F) < 1e-6F && std::fabs(values[3] - 19.0F) < 1e-6F,
+           "broadcasting dequant must read the padded pixels at the right offsets");
+  }
+  // Per-channel descriptors must still index channel-wise.
+  TensorMeta per_channel = s32_output(1, 2, 2, kDtypeS32, kQuantiScale,
+                                      /*scale_len=*/2, /*zero_point_len=*/2,
+                                      /*row_stride=*/32, /*storage=*/-1,
+                                      /*channel_stride=*/4, /*pixel_stride=*/16);
+  const float scales[2] = {1.0F, 10.0F};
+  const std::int32_t zeros[2] = {0, 1};
+  const auto channelwise = dequant_s32_nhwc(storage, per_channel, scales, 2, zeros, 2);
+  expect(channelwise.size() == 4 &&
+             std::fabs(channelwise[0] - 10.0F) < 1e-6F &&
+             std::fabs(channelwise[1] - 190.0F) < 1e-6F &&
+             std::fabs(channelwise[2] - 30.0F) < 1e-6F &&
+             std::fabs(channelwise[3] - 390.0F) < 1e-6F,
+         "per-channel descriptors must multiply channel by channel");
+  // A scale descriptor that is neither scalar nor channel-covering is refused
+  // up front instead of being read out of bounds (3 channels, 2 scales).
+  bool refused = false;
+  try {
+    dequant_s32_nhwc(storage, s32_output(1, 2, 3, kDtypeS32, kQuantiScale,
+                                         /*scale_len=*/2, /*zero_point_len=*/0,
+                                         /*row_stride=*/48, /*storage=*/-1,
+                                         /*channel_stride=*/4, /*pixel_stride=*/16),
+                     scales, 2, nullptr, 0);
+  } catch (const std::invalid_argument&) {
+    refused = true;
+  }
+  expect(refused, "a short non-scalar descriptor must be refused, never blind-read");
+  // NONE outputs pass through as float32 at the same offsets.
+  TensorMeta raw = s32_output(1, 2, 2, kDtypeF32, kQuantiNone,
+                              /*scale_len=*/0, /*zero_point_len=*/0,
+                              /*row_stride=*/32, /*storage=*/-1,
+                              /*channel_stride=*/4, /*pixel_stride=*/16);
+  const float raw_values[4] = {1.5F, -2.5F, 3.5F, -4.5F};
+  std::memcpy(const_cast<unsigned char*>(storage) + 0, &raw_values[0], 4);
+  std::memcpy(const_cast<unsigned char*>(storage) + 4, &raw_values[1], 4);
+  std::memcpy(const_cast<unsigned char*>(storage) + 16, &raw_values[2], 4);
+  std::memcpy(const_cast<unsigned char*>(storage) + 20, &raw_values[3], 4);
+  const auto floats = dequant_s32_nhwc(storage, raw, nullptr, 0, nullptr, 0);
+  expect(floats.size() == 4 && std::fabs(floats[0] - 1.5F) < 1e-6F &&
+             std::fabs(floats[3] + 4.5F) < 1e-6F,
+         "unquantized F32 output must pass through at the same offsets");
+}
+
+// The scheduler backend is a bitmask; the CLI core index must be mapped, not
+// assigned (0 would select no backend and 1 would select core 0).
+void check_core_mapping() {
+  using namespace yolov5;
+  unsigned long long backend = 0;
+  expect(bpu_core_to_backend(-1, &backend) && backend == (1ULL << 7),
+         "bpu core -1 must map to HB_UCP_BPU_CORE_ANY (1ULL<<7)");
+  expect(bpu_core_to_backend(0, &backend) && backend == (1ULL << 0),
+         "bpu core 0 must map to HB_UCP_BPU_CORE_0, not to a raw 0 backend");
+  expect(bpu_core_to_backend(1, &backend) && backend == (1ULL << 1),
+         "bpu core 1 must map to HB_UCP_BPU_CORE_1, not to core 0");
+  expect(bpu_core_to_backend(3, &backend) && backend == (1ULL << 3),
+         "bpu core 3 must map to HB_UCP_BPU_CORE_3");
+  expect(!bpu_core_to_backend(4, &backend), "bpu core index 4 must be rejected");
+  expect(!bpu_core_to_backend(-2, &backend), "bpu core index -2 must be rejected");
+  expect(!bpu_core_to_backend(99, &backend), "bpu core index 99 must be rejected");
+  expect(!bpu_core_to_backend(0, nullptr), "a missing backend output must be rejected");
 }
 
 // One anchor whose objectness and class logits are both 0 gives an exact
@@ -339,6 +458,7 @@ void check_dump(const std::string& dir) {
   reported.aligned[1] = 2;
   reported.aligned[2] = 2;
   reported.aligned[3] = 4;
+  reported.quantize_axis = 3;
   record.outputs.push_back(reported);
   DumpTensorInfo unreported;
   unreported.name = "input0";
@@ -354,11 +474,44 @@ void check_dump(const std::string& dir) {
   tensor.shape = {1, 2, 2};
   tensor.bytes.assign(reinterpret_cast<const unsigned char*>(values),
                       reinterpret_cast<const unsigned char*>(values) + sizeof(values));
-  record.raw_tensors.push_back(tensor);
+  DumpTensor input_payload;
+  input_payload.name = "input0";
+  input_payload.dtype = "uint8";
+  input_payload.shape = {1, 3, 2, 2};
+  input_payload.bytes = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 1, 2};
+  record.input_tensors.push_back(input_payload);
+  // The raw and transformed payloads of one output are deliberately different
+  // byte sequences: a dump that lets one overwrite the other loses evidence.
+  DumpTensor raw_tensor = tensor;
+  raw_tensor.dtype = "int32";
+  const std::int32_t raw_values[4] = {11, 22, 33, 44};
+  raw_tensor.bytes.assign(reinterpret_cast<const unsigned char*>(raw_values),
+                          reinterpret_cast<const unsigned char*>(raw_values) +
+                              sizeof(raw_values));
+  record.raw_tensors.push_back(raw_tensor);
   record.transformed_tensors.push_back(tensor);
   record.detections.push_back({1.0F, 2.0F, 3.0F, 4.0F, 0.75F, 7});
   std::string error;
   expect(write_dump(record, &error), "write_dump should succeed: " + error);
+
+  const auto read_file = [](const std::string& path) {
+    std::ifstream input(path, std::ios::binary);
+    return std::vector<unsigned char>((std::istreambuf_iterator<char>(input)),
+                                      std::istreambuf_iterator<char>());
+  };
+  const std::vector<unsigned char> raw_read = read_file(dir + "/raw/0-output0.bin");
+  const std::vector<unsigned char> transformed_read =
+      read_file(dir + "/transformed/0-output0.bin");
+  const std::vector<unsigned char> input_read = read_file(dir + "/input/0-input0.bin");
+  expect(raw_read == raw_tensor.bytes,
+         "the raw payload file must still hold the original int32 bytes");
+  expect(transformed_read == tensor.bytes,
+         "the transformed payload file must hold the float bytes, not the raw ones");
+  expect(input_read == input_payload.bytes,
+         "the input payload file must hold the submitted input bytes");
+  expect(sha256_hex(raw_read.data(), raw_read.size()) ==
+             sha256_hex(raw_tensor.bytes.data(), raw_tensor.bytes.size()),
+         "the raw file digest must match its own content");
 }
 
 int run(const std::string& name, const std::string& scratch) {
@@ -366,6 +519,8 @@ int run(const std::string& name, const std::string& scratch) {
   else if (name == "x5_head") check_x5_head();
   else if (name == "s_plane") check_s_plane();
   else if (name == "s_dequant") check_s_dequant();
+  else if (name == "s_dequant_values") check_s_dequant_values();
+  else if (name == "core_mapping") check_core_mapping();
   else if (name == "target_identity") check_target_identity();
   else if (name == "decode_boundary") check_decode_boundary();
   else if (name == "decode_topk") check_decode_topk();

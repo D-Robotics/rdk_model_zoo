@@ -39,8 +39,15 @@ S100_STUBS = {
 #include <stdint.h>
 typedef struct hbUCPSysMem { void *virAddr; uint64_t phyAddr; uint32_t memSize; } hbUCPSysMem;
 typedef void *hbUCPTaskHandle_t;
-typedef struct hbUCPSchedParam { int32_t backend; int32_t priority; } hbUCPSchedParam;
-enum { HB_UCP_BPU_CORE_ANY = -1, HB_SYS_MEM_CACHE_CLEAN = 1, HB_SYS_MEM_CACHE_INVALIDATE = 2 };
+typedef struct hbUCPSchedParam { uint64_t backend; int32_t priority; } hbUCPSchedParam;
+// Real on-board definitions (2026-09-24 evidence): the scheduler backend is a
+// bitmask, CORE_0..3 at 1ULL<<0..3 and ANY at 1ULL<<7.
+#define HB_UCP_BPU_CORE_0 (1ULL << 0)
+#define HB_UCP_BPU_CORE_1 (1ULL << 1)
+#define HB_UCP_BPU_CORE_2 (1ULL << 2)
+#define HB_UCP_BPU_CORE_3 (1ULL << 3)
+#define HB_UCP_BPU_CORE_ANY (1ULL << 7)
+enum { HB_SYS_MEM_CACHE_CLEAN = 1, HB_SYS_MEM_CACHE_INVALIDATE = 2 };
 #define HB_UCP_INITIALIZE_SCHED_PARAM(param) \\
   do { (param)->backend = HB_UCP_BPU_CORE_ANY; (param)->priority = 0; } while (0)
 int32_t hbUCPFree(hbUCPSysMem *mem);
@@ -56,11 +63,10 @@ int32_t hbUCPReleaseTask(hbUCPTaskHandle_t task);
 #include "../hb_ucp.h"
 #define HB_DNN_TENSOR_MAX_DIMENSIONS 8
 typedef enum {
-  HB_DNN_TENSOR_TYPE_INT8 = 0, HB_DNN_TENSOR_TYPE_UINT8, HB_DNN_TENSOR_TYPE_INT16,
-  HB_DNN_TENSOR_TYPE_UINT16, HB_DNN_TENSOR_TYPE_INT32, HB_DNN_TENSOR_TYPE_UINT32,
+  HB_DNN_TENSOR_TYPE_S8 = 0, HB_DNN_TENSOR_TYPE_U8, HB_DNN_TENSOR_TYPE_S16,
   HB_DNN_TENSOR_TYPE_F32, HB_DNN_TENSOR_TYPE_S32, HB_DNN_TENSOR_TYPE_U32,
   HB_DNN_TENSOR_TYPE_F64, HB_DNN_TENSOR_TYPE_S64, HB_DNN_TENSOR_TYPE_U64,
-  HB_DNN_TENSOR_TYPE_BOOL8, HB_DNN_TENSOR_TYPE_MAX
+  HB_DNN_TENSOR_TYPE_BOOL8
 } hbDNNDataType;
 typedef struct hbDNNTensorShape {
   int32_t dimensionSize[HB_DNN_TENSOR_MAX_DIMENSIONS];
@@ -80,17 +86,19 @@ typedef struct hbDNNTensorProperties {
   int64_t stride[HB_DNN_TENSOR_MAX_DIMENSIONS];
 } hbDNNTensorProperties;
 typedef struct hbDNNTensor { hbUCPSysMem sysMem; hbDNNTensorProperties properties; } hbDNNTensor;
-typedef void *hbPackedDNNHandle_t;
+// The real S100 SDK spells the packed handle hbDNNPackedHandle_t; the X5-only
+// hbPackedDNNHandle_t must fail to compile here.
+typedef void *hbDNNPackedHandle_t;
 typedef void *hbDNNHandle_t;
-int32_t hbDNNInitializeFromFiles(hbPackedDNNHandle_t*, const char**, uint32_t);
-int32_t hbDNNGetModelNameList(const char***, int32_t*, hbPackedDNNHandle_t);
-int32_t hbDNNGetModelHandle(hbDNNHandle_t*, hbPackedDNNHandle_t, const char*);
+int32_t hbDNNInitializeFromFiles(hbDNNPackedHandle_t*, const char**, uint32_t);
+int32_t hbDNNGetModelNameList(const char***, int32_t*, hbDNNPackedHandle_t);
+int32_t hbDNNGetModelHandle(hbDNNHandle_t*, hbDNNPackedHandle_t, const char*);
 int32_t hbDNNGetInputCount(int32_t*, hbDNNHandle_t);
 int32_t hbDNNGetOutputCount(int32_t*, hbDNNHandle_t);
 int32_t hbDNNGetInputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int32_t);
 int32_t hbDNNGetOutputTensorProperties(hbDNNTensorProperties*, hbDNNHandle_t, int32_t);
 int32_t hbDNNInferV2(hbUCPTaskHandle_t*, hbDNNTensor*, const hbDNNTensor*, hbDNNHandle_t);
-void hbDNNRelease(hbPackedDNNHandle_t);
+void hbDNNRelease(hbDNNPackedHandle_t);
 """,
     "opencv2/core/mat.hpp": """\
 #pragma once
@@ -248,6 +256,7 @@ class PortableHarness:
             str(CPP / "src" / "yolov5_gate.cpp"),
             str(CPP / "src" / "yolov5_decode.cpp"),
             str(CPP / "src" / "yolov5_dump.cpp"),
+            str(CPP / "src" / "yolov5_s_native.cpp"),
             "-o", str(self.binary),
         ]
         built = subprocess.run(command, capture_output=True, text=True)
@@ -321,6 +330,12 @@ class CppSurfaceTests(unittest.TestCase):
     def test_s32_dequant_gate(self):
         self.assert_check("s_dequant")
 
+    def test_s_private_dequantizer_values(self):
+        self.assert_check("s_dequant_values")
+
+    def test_bpu_core_maps_to_backend_bitmask(self):
+        self.assert_check("core_mapping")
+
     def test_native_binary_refuses_a_mismatched_target(self):
         self.assert_check("target_identity")
 
@@ -390,18 +405,36 @@ class CppSurfaceTests(unittest.TestCase):
         self.assertEqual(manifest["schema"], "rdk-model-zoo/yolov5-cpp-dump/v2")
         self.assertEqual(manifest["return_code"], 0)
         self.assertEqual(manifest["target"], "x5")
+        self.assertIsNone(manifest["binary_sha256"])
         reported = manifest["outputs"][0]
         self.assertEqual(reported["aligned_byte_size"], 16)
         self.assertEqual(reported["stride"], [16, 8, 4, 4])
         self.assertEqual(reported["aligned"], [1, 2, 2, 4])
+        self.assertEqual(reported["quantize_axis"], 3)
+        self.assertEqual(reported["scale_values"], [])
+        self.assertEqual(reported["zero_point_values"], [])
         unreported = manifest["inputs"][0]
         self.assertIsNone(unreported["aligned_byte_size"])
         self.assertEqual(unreported["stride"], [None, None, None, None])
         self.assertEqual(unreported["aligned"], [None, None, None, None])
+        # Each stage writes into its own subdirectory, so the raw and the
+        # transformed payload of one output can never overwrite each other.
         raw = manifest["raw_tensors"][0]
-        payload = (scratch / raw["file"]).read_bytes()
-        self.assertEqual(hashlib.sha256(payload).hexdigest(), raw["sha256"])
-        self.assertEqual(struct.unpack("<4f", payload), (1.0, 2.0, 3.0, 4.0))
+        transformed = manifest["transformed_tensors"][0]
+        input_entry = manifest["input_tensors"][0]
+        self.assertEqual(raw["file"], "raw/0-output0.bin")
+        self.assertEqual(transformed["file"], "transformed/0-output0.bin")
+        self.assertEqual(input_entry["file"], "input/0-input0.bin")
+        raw_payload = (scratch / raw["file"]).read_bytes()
+        transformed_payload = (scratch / transformed["file"]).read_bytes()
+        input_payload = (scratch / input_entry["file"]).read_bytes()
+        self.assertEqual(hashlib.sha256(raw_payload).hexdigest(), raw["sha256"])
+        self.assertEqual(hashlib.sha256(transformed_payload).hexdigest(),
+                         transformed["sha256"])
+        self.assertEqual(hashlib.sha256(input_payload).hexdigest(), input_entry["sha256"])
+        self.assertNotEqual(raw_payload, transformed_payload)
+        self.assertEqual(struct.unpack("<4i", raw_payload), (11, 22, 33, 44))
+        self.assertEqual(struct.unpack("<4f", transformed_payload), (1.0, 2.0, 3.0, 4.0))
         detection = manifest["detections"][0]
         self.assertEqual(detection["class_id"], 7)
         self.assertAlmostEqual(detection["score"], 0.75)

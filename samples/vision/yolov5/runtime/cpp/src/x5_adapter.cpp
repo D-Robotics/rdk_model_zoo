@@ -68,11 +68,18 @@ TensorMeta project(const hbDNNTensorProperties& properties) {
   // so that is the storage the gates must hold the reads against.
   meta.storage_bytes = properties.alignedByteSize;
   for (int i = 0; i < 4; ++i) meta.stride[i] = properties.stride[i];
+  meta.quantize_axis = properties.quantizeAxis;
   if (properties.quantiType == SCALE) {
     meta.scale_len = properties.scale.scaleLen;
     meta.zero_point_len = properties.scale.zeroPointLen;
   }
   return meta;
+}
+
+std::vector<long long> shape_of(const TensorMeta& meta) {
+  std::vector<long long> shape;
+  for (int i = 0; i < meta.num_dimensions && i < 4; ++i) shape.push_back(meta.valid[i]);
+  return shape;
 }
 
 struct DnnLease {
@@ -163,8 +170,12 @@ int run_native(const RuntimeOptions& options) {
   hbDNNTensorProperties input_properties{};
   check(hbDNNGetInputTensorProperties(&input_properties, model, 0),
         "hbDNNGetInputTensorProperties failed");
-  const TensorMeta input_meta = project(input_properties);
+  TensorMeta input_meta = project(input_properties);
   require_gate(check_x5_nv12_input(image_code(input_properties.tensorType), input_meta, kInput));
+  // The X5 SDK encodes an image input's format in tensorType (HB_DNN_IMG_TYPE_
+  // NV12 for this model), which no data-type name describes; the storage the
+  // compact payload occupies is 8-bit, so the dump records uint8.
+  input_meta.dtype = kDtypeU8;
 
   DumpRecord dump;
   dump.dir = options.dump_dir;
@@ -176,6 +187,7 @@ int run_native(const RuntimeOptions& options) {
   dump.image_path = options.image_path;
   dump.argv = options.argv;
   dump.cwd = std::filesystem::current_path().string();
+  dump.binary_path = current_binary_path(options.argv.empty() ? "" : options.argv.front());
   dump.options = {{"score_thres", std::to_string(options.score_threshold)},
                   {"nms_thres", std::to_string(options.nms_threshold)},
                   {"priority", std::to_string(options.priority)},
@@ -187,7 +199,9 @@ int run_native(const RuntimeOptions& options) {
   dump.notes = {"X5 HB-DNN adapter; packed NV12 640x640 input; native F32 NONE-quantized heads.",
                 "NMS preserves source X5 per-class cv::dnn::NMSBoxes semantics: strict score "
                 "boundary and top_k=300.",
-                "Dump contents are read back from the same buffers the decoder consumed."};
+                "Dump contents are read back from the same buffers the decoder consumed.",
+                "The input tensor file holds the compact NV12 payload actually submitted; "
+                "storage beyond the payload is uninitialized and is not dumped."};
   dump.inputs.push_back(dump_tensor_info("input0", input_meta));
 
   const long long input_bytes = input_meta.aligned_byte_size;
@@ -202,6 +216,7 @@ int run_native(const RuntimeOptions& options) {
   std::memcpy(lease.input.sysMem[0].virAddr, nv12.data(), nv12.size());
   check(hbSysFlushMem(&lease.input.sysMem[0], HB_SYS_MEM_CACHE_CLEAN),
         "hbSysFlushMem input failed");
+  dump.input_tensors.push_back({"input0", "uint8", shape_of(input_meta), nv12});
 
   lease.outputs.resize(static_cast<std::size_t>(output_count));
   lease.output_allocated.assign(static_cast<std::size_t>(output_count), false);

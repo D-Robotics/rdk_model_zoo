@@ -9,7 +9,7 @@ set(YOLOV5_TARGET "x5" CACHE STRING "Explicit runtime target: x5, s100, s100p or
 set_property(CACHE YOLOV5_TARGET PROPERTY STRINGS x5 s100 s100p s600)
 
 add_executable(yolov5_cpp src/cli_main.cpp src/yolov5_decode.cpp src/yolov5_visualize.cpp
-                          src/yolov5_gate.cpp src/yolov5_dump.cpp)
+                          src/yolov5_gate.cpp src/yolov5_dump.cpp src/yolov5_s_native.cpp)
 target_include_directories(yolov5_cpp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(yolov5_cpp PRIVATE -Wall -Wextra -Wpedantic)
 
