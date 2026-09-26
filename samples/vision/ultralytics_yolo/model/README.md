@@ -29,7 +29,7 @@ Publication does not mean that every combination has been board-tested. Do not s
 <a id="preparation"></a>
 ## Prepare a model
 
-Run every command below from the **repository root**. The scripts use `python3` and the repository's Python helpers; help and dry-run need no board runtime or network. A real download needs network access and permission to write the destination. Inspect a single-model plan first:
+Run every command below from the **repository root**. The scripts use `python3`, PyYAML (for manifests) and the repository's Python helpers; help and dry-run need no board runtime or network. A real download needs network access and permission to write the destination. Inspect a single-model plan first:
 
 ```bash
 bash samples/vision/ultralytics_yolo/model/download_model.sh \

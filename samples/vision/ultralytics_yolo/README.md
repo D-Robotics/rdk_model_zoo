@@ -1,66 +1,108 @@
-# Ultralytics YOLO: shared X5 / S sample
+# Ultralytics YOLO — RDK X5 / S
 
 [简体中文](README_cn.md)
 
-One Python entry point selects X5, S100, S100P or S600 through `--platform`. This first merge covers YOLOv8 detection, segmentation, pose and classification and retains the existing YOLOv5u/v9/v10/11/12 combinations and X5 YOLOv13. YOLO26 now shares this entry for detect, cls, seg, pose and obb. YOLOE, standalone YOLOv5 and yolo26_depth remain outside this migration.
+<a id="overview"></a>
+## Overview
 
-The existing layout remains: `conversion/`, `evaluator/`, `model/`, `runtime/` and `test_data/`, with host regression tests in `tests/`. Python preprocessing/decoders, export selection, calibration preparation and compiler planning are shared. `conversion/workflow.py` owns the common conversion steps; `mapper_x5.py` and `mapper_s.py` retain only the X5/S compiler protocol adapters (`hb_mapper` with raw float32 `rgbchw` versus `hb_compile` with normalized `npy`). C++ remains an X5-only reference implementation.
+This sample provides object detection, instance segmentation, pose estimation, classification and YOLO26 oriented boxes for RDK X5, S100, S100P and S600. YOLO detection heads predict classes and boxes at multiple scales; CPU decoding/filtering restores original-image coordinates. Segmentation, pose and OBB also expose masks, keypoints and angles. Model source project: [Ultralytics](https://github.com/ultralytics/ultralytics).
 
-```bash
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --family yolov8 --task detect --dry-run
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s600 --family yolov8 --task cls --dry-run
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s100 --list-models
-```
+The maintained entry is `samples/vision/ultralytics_yolo`. Python binds inputs by target and selects task protocols by family, sharing preparation, rendering and evaluation. YOLO26 is one family within this sample. Standalone YOLOv5, YOLOE and yolo26_depth have distinct capabilities and are not presented as the same model here.
 
-Remove `--dry-run` on the target board to run inference. This existing compatibility entry still downloads missing default assets; explicit `--model-path` files are never downloaded. A recognized filename selects its family; use `--family` for custom names. `--target` is an alias for `--platform`, with `auto` available for detection. Explicit selection works on a development host for listing, dry-run and `--download`; inference rejects unknown local hardware and target mismatches before downloading or loading a model. Target identity comes from [the shared registry](../../../docs/release/platforms.json), independently of artifact support and validation status.
+<a id="support-matrix"></a>
+## Support and validation
 
-| Contract | X5 | S100 / S100P / S600 |
-| --- | --- | --- |
-| Artifact | .bin, bayese | .hbm, nashe/nashm/nashp |
-| NV12 binding | One packed buffer | NHWC Y + UV |
-| Runtime CLI NMS | 0.70 | 0.45 |
-| Classification CLI resize | YOLO26 stretch (0); other families letterbox (1) | stretch (0) |
-| Classification config-class resize | stretch (0) | stretch (0) |
-| Published classifier filename | YOLO26 224x224; older families 640x640 | S600 all 224x224; S100/S100P: YOLO26 224x224, older families 640x640 |
-| YOLOv10 decoder | DFL + NMS | DFL without NMS |
-| C++ | X5 reference | Not supplied |
+States distinguish task and language. supported-verified refers only to the recorded fixed-input migration comparisons below, not all accuracy/performance or every current configuration.
 
-Artifact names are not proof of binary input geometry. Runtime metadata must describe positive, even, square batch-one NV12 inputs. Flat metadata requires `--input-shape HxW`; conflicting geometry is rejected. DFL detection decoders require three feature levels and reg=16; YOLO26 uses direct four-channel LTRB at strides 8/16/32; pose requires 17 keypoints.
+| Scope | x5 | s100 | s100p | s600 |
+|---|---|---|---|---|
+| Python YOLOv8n / YOLO26n detect | supported-verified | supported-verified | supported-verified | supported-verified |
+| Python other published scales/tasks | supported-not-run | supported-not-run | supported-not-run | supported-not-run |
+| Python YOLOv9 seg c/e | supported-not-run | supported-not-run | supported-not-run | not-supported |
+| Python YOLOv13 detect n/s/l/x | supported-not-run | not-supported | not-supported | not-supported |
+| C++ detect/classify/pose/segment reference contracts | supported-not-run | supported-not-run | supported-not-run | supported-not-run |
+| C++ OBB | not-supported | not-supported | not-supported | not-supported |
 
-YOLOv8n DFL and YOLO26n direct-LTRB detection passed fixed-input old/new comparisons on X5 8GB/4GB, S100, S100P and S600. The detection tasks accept injected runner callables; see [the contract](DETECTION_CONTRACT.md), [P1 evidence](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md) and [P2 evidence](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md). This does not validate other scales/tasks, full-dataset accuracy, performance or real toolchain compilation.
+See the [model inventory](model/README.md) for published combinations: YOLOv5u/v10/12 detection; YOLOv8/11 detect/seg/pose/cls; YOLOv9 segmentation only c/e, with no t detection or segmentation on S600; YOLOv13 X5 only. YOLO26 has 25 assets per target (five tasks × n/s/m/l/x), consolidating existing assets rather than releasing 100 new models. C++ scope follows its [input/head contracts and limitations](runtime/cpp/README.md), not the full Python inventory.
 
-Host checks need NumPy, OpenCV and SciPy. Inference additionally needs `hbm_runtime` from the board image. No silent dependency installation occurs. Help, dry-run and inventory commands do not load board runtime.
+Historical detection evidence: [P1](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md), [P2](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md), covering YOLOv8n/YOLO26n on X5 8GB/4GB and the three S targets. These records do not extend to other tasks/scales, dataset accuracy, performance or local conversion. Historical measurements remain in the [X5 evaluator](../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README.md) and [S evaluator](../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README.md); they are not remeasurements of the refactor.
 
-Model preparation and listings additionally use PyYAML to read the existing
-platform Manifest. `--list-models` prints exact `group:sample:filename`
-references accepted by `--asset-id`; these qualify existing identities and are
-not claims of board verification. For example:
+| Runtime contract | X5 | S100 / S100P / S600 |
+|---|---|---|
+| Artifact | `.bin` / bayese | `.hbm` / nashe, nashm, nashp |
+| NV12 input | One packed buffer | NHWC Y + UV |
+| Python detection NMS default | 0.70 | 0.45; YOLOv10 is NMS-free |
+| Classification CLI resize | YOLO26 stretch; others letterbox | Stretch |
+| Published classification input | YOLO26 224, others 640 | S600 all 224; S100/S100P YOLO26 224, others 640 |
 
-```bash
-python samples/vision/ultralytics_yolo/runtime/python/main.py --target x5 --task detect --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
-```
+<a id="prerequisites"></a>
+## Prerequisites
 
-Addresses and publisher hashes come from that Manifest. Explicit preparation
-uses temporary files and hash checking where a publisher hash exists. A local
-observed hash does not replace a missing publisher hash.
+Use a complete checkout, Python 3, NumPy, OpenCV, SciPy and PyYAML. Actual inference additionally needs `hbm_runtime` supplied by the matching board image. No dependencies are silently installed. Image/SDK versions must match your artifact and the validation records above; this sample does not establish one minimum image version for every target. Check storage and memory before choosing a large model; peak memory for every scale was not measured here, and successful download does not prove it will fit.
 
-Old platform Python/conversion/evaluation/download commands forward here. They require a complete repository checkout. Existing platform README tables and manifests remain Benchmark evidence; other samples still live in their platform trees. Historical tags, archive URLs and dashboard snapshots are unchanged.
+Runtime, download and host conversion environments are separate: C++ needs board development libraries, while ONNX/quantization compilation needs training and OE environments. See the subdirectories. Help/list/dry-run/download can run on a host without board inference. Hardware identity uses the [shared registry](../../../docs/release/platforms.json); recognized identity is not artifact availability or validation.
 
-[Python](runtime/python/README.md) · [Models](model/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md) · [C++](runtime/cpp/README.md)
+<a id="quickstart"></a>
+## Quick start
 
-Host tests: `python -m unittest discover -s samples/vision/ultralytics_yolo/tests`. Build catalog assets first with `npm --prefix tools/catalog-publisher run build` for the asset-inventory comparison.
-
-## YOLO26: one family in this sample
-
-Use `--family yolo26` with `--task detect|cls|seg|pose|obb` and `--platform x5|s100|s100p|s600`. Each platform has 25 published assets (five tasks × n/s/m/l/x); all classifier assets use 224×224, other tasks 640×640. This is consolidation of existing support, not 100 newly released models.
+Run from the repository root. Prepare the model with network access, then run on a matching X5 board; the input image is bundled in test_data.
 
 ```bash
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s600 --family yolo26 --task detect --dry-run
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --family yolo26 --task cls --dry-run
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform x5 --family yolov8 --task detect --model-size n
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolov8 --task detect \
+  --model-path samples/vision/ultralytics_yolo/model/yolov8n_detect_bayese_640x640_nv12.bin \
+  --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
+  --img-save-path /tmp/yolov8n-x5.jpg
 ```
+For other targets use matching preparation arguments and paths from [model instructions](model/README.md). Explicit `--model-path` never downloads; when omitted, the compatibility entry downloads missing default assets. Specify `--family` for custom filenames. `--target` aliases `--platform`; actual inference rejects unknown boards and target mismatches.
 
-`yolo_dispatch.py` chooses the task's tensor protocol; YOLO26 direct LTRB is distinct from YOLOv8 DFL. Platform input binding, classification, drawing, downloads and evaluation infrastructure are shared. The five export patches live under `conversion/yolo26/`; only compiler pipelines remain separated by X5/S. Future families can reuse a compatible task protocol after its tensor contract is verified.
+Without a board, inspect selections without downloading or inference:
 
-Old `platforms/{x5,s}/samples/vision/ultralytics_yolo26` paths forward here. Legacy Python adapters retain pose/segmentation return formats. YOLO26 OBB angles are decoded directly as radians on both X5 and S; X5 class-aware NMS and clipping remain distinct from S. Output binding follows geometry instead of compiler enumeration; segmentation reverses letterbox using actual input geometry. These corrections require board accuracy revalidation. Historical Benchmark tables are preserved and are not measurements of this new code.
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --list-models
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s600 --family yolo26 --task cls --dry-run
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --target x5 --task detect \
+  --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
+```
+<a id="expected-results"></a>
+## Expected results
 
-Default OBB labels follow the [Ultralytics DOTAv1 class order](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/DOTAv1.yaml), including ID 9 `large-vehicle` and ID 10 `small-vehicle`. Custom models can override these with `--label-file`. The shared export preserves the raw angle output of the [OBB26 head](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/nn/modules/head.py); no sigmoid angle mapping is needed.
+The detection command prints model/input protocol and detections, writes the rendered image to `/tmp/yolov8n-x5.jpg`, and prints `[Saved]` on success. Boxes use original-image pixels and zero-based class IDs. Classification prints Top-K without an image; segmentation/pose/OBB fields are described in the [Python guide](runtime/python/README.md). A stale image is not a result of a failed binding. This retained historical detection illustration is not a new measurement:
+
+![Historical detection illustration](test_data/ultralytics_YOLO_Detect_demo.jpg)
+
+<a id="directory"></a>
+## Directory responsibilities
+
+```text
+ultralytics_yolo/
+├── model/          # published asset preparation
+├── runtime/python/ # shared task APIs and CLI
+├── runtime/cpp/    # detect/classify/pose/segment reference programs
+├── conversion/    # export, calibration and X5/S compiler adapters
+├── evaluator/     # dataset evaluation and batch CLI
+├── test_data/     # input images, labels and historical illustrations
+└── tests/         # host regression checks
+```
+<a id="entry-points"></a>
+## Usage and source entry points
+
+- [model](model/README.md) — Downloads, inventory, paths and digests.
+- [runtime/python](runtime/python/README.md) — Task CLI, complete parameters, library integration and stage contracts.
+- [runtime/cpp](runtime/cpp/README.md) — Task builds, positional arguments, lifecycle and measurement scope.
+- [conversion](conversion/README.md) — Source weights, export, calibration, compilation and unverified prerequisites.
+- [evaluator](evaluator/README.md) — COCO/ImageNet/DOTA, task evaluation and historical measurements.
+
+Read `main.py` for arguments/files/rendering, `yolo_dispatch.py` for task selection, runner/binding for SDK/tensors, and task classes for preprocessing/inference/postprocessing. Detection DFL and YOLO26 direct LTRB are not interchangeable; see the [detection contract](DETECTION_CONTRACT.md). Input geometry must resolve from metadata or an explicit fallback, not filename guesses. YOLO26 OBB uses radians; X5 class-aware NMS/clipping differs from S. Corrected non-detection behavior still requires board accuracy revalidation.
+
+Legacy `platforms/{x5,s}/samples/vision/ultralytics_yolo` and `ultralytics_yolo26` paths forward here for compatibility; historical tables, URLs and provenance remain. Do not infer that another pending sample is supported by this entry. New tasks require explicit output contracts, host regression coverage, bilingual documentation and scoped validation claims.
+
+<a id="license"></a>
+## License and provenance
+
+Sample code follows the repository [Apache-2.0 LICENSE](../../../LICENSE), preserving file-level copyright notices. Check model weights and upstream training frameworks under their accompanying licenses separately; the repository code license does not automatically cover all weights. Artifact URLs and publisher digests come from manifests; an observed local hash cannot authenticate origin when no publisher hash is recorded.

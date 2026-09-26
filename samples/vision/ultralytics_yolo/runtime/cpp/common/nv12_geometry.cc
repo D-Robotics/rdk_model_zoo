@@ -15,6 +15,7 @@
  */
 
 #include "nv12_geometry.h"
+#include <cstddef>
 
 namespace yolo {
 
