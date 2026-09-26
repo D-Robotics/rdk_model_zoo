@@ -1,0 +1,496 @@
+(1080, 810)
+(1080, 810)
+{
+  "local_links": 64,
+  "parser_commands": [
+    {
+      "page": "samples/vision/yolo26_depth/README.md",
+      "argv": [
+        "python",
+        "-m",
+        "samples.vision.yolo26_depth.runtime.python.main",
+        "--list-models"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/README.md",
+      "argv": [
+        "python",
+        "-m",
+        "samples.vision.yolo26_depth.runtime.python.main",
+        "--target",
+        "s100p",
+        "--variant",
+        "l",
+        "--dry-run"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/model/download.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/runtime/python/run.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "n",
+        "--test-img",
+        "samples/vision/yolo26_depth/test_data/bus.jpg",
+        "--output",
+        "/work/depth/x5-n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/model/download.sh",
+        "--target",
+        "s600",
+        "--variant",
+        "l"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/runtime/python/run.sh",
+        "--target",
+        "s600",
+        "--variant",
+        "l",
+        "--output",
+        "/work/depth/s600-l"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "export.py",
+        "--target",
+        "x5",
+        "--variant",
+        "n",
+        "--weights",
+        "/work/weights/yolo26n-depth.pt",
+        "--output-dir",
+        "/work/depth/export_x5_n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "export.py",
+        "--target",
+        "s100",
+        "--variant",
+        "n",
+        "--weights",
+        "/work/weights/yolo26n-depth.pt",
+        "--output-dir",
+        "/work/depth/export_s_n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "export.py",
+        "--target",
+        "s100",
+        "--variant",
+        "l",
+        "--weights",
+        "/work/weights/yolo26l-depth.pt",
+        "--output-dir",
+        "/work/depth/export_s_l"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "extract_sunrgbd_subset.py",
+        "--archive",
+        "/work/datasets/SUNRGBD.zip",
+        "--split",
+        "train",
+        "--count",
+        "100",
+        "--seed",
+        "20260725",
+        "--output",
+        "/work/depth/train100"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "prepare_calibration.py",
+        "--target",
+        "x5",
+        "--variant",
+        "n",
+        "--images",
+        "/work/depth/train100/images",
+        "--output",
+        "/work/depth/cal_x5",
+        "--count",
+        "100"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "prepare_calibration.py",
+        "--target",
+        "s100",
+        "--variant",
+        "n",
+        "--images",
+        "/work/depth/train100/images",
+        "--output",
+        "/work/depth/cal_s_nv12",
+        "--count",
+        "100"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "prepare_calibration.py",
+        "--target",
+        "s100",
+        "--variant",
+        "l",
+        "--images",
+        "/work/depth/train100/images",
+        "--output",
+        "/work/depth/cal_s_lite",
+        "--count",
+        "100"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "compile.py",
+        "--target",
+        "s100",
+        "--variant",
+        "n",
+        "--onnx",
+        "/work/depth/export_s_n/yolo26n-depth_op11_log.onnx",
+        "--calibration-manifest",
+        "/work/depth/cal_s_nv12.json",
+        "--output",
+        "/work/depth/preflight_s_n",
+        "--prepare-only"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "compile.py",
+        "--target",
+        "s100",
+        "--variant",
+        "n",
+        "--onnx",
+        "/work/depth/export_s_n/yolo26n-depth_op11_log.onnx",
+        "--calibration-manifest",
+        "/work/depth/cal_s_nv12.json",
+        "--output",
+        "/work/depth/compile_s_n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/conversion/README.md",
+      "argv": [
+        "python",
+        "compile.py",
+        "--target",
+        "x5",
+        "--variant",
+        "n",
+        "--onnx",
+        "/work/depth/export_x5_n/yolo26n-depth_op11_log.onnx",
+        "--calibration-manifest",
+        "/work/depth/cal_x5.json",
+        "--output",
+        "/work/depth/compile_x5_n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/evaluator/README.md",
+      "argv": [
+        "python",
+        "prepare_sunrgbd.py",
+        "--source-root",
+        "/work/sunrgbd",
+        "--source-manifest",
+        "/work/sunrgbd/source.json",
+        "--output",
+        "/work/depth/prepared",
+        "--size",
+        "768",
+        "--screen-count",
+        "20",
+        "--screen-seed",
+        "20260726"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/evaluator/README.md",
+      "argv": [
+        "python",
+        "eval_sunrgbd.py",
+        "--prepared-manifest",
+        "/work/depth/prepared/manifest.json",
+        "--source-root",
+        "/work/sunrgbd",
+        "--float-outputs",
+        "/work/depth/float.npz",
+        "--quant-outputs",
+        "/work/depth/quant.npz",
+        "--candidate-name",
+        "x5-n-candidate",
+        "--protocol",
+        "deployment_letterbox",
+        "--boundary",
+        "log",
+        "--variant",
+        "n",
+        "--report",
+        "/work/depth/evaluation.json"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/evaluator/README.md",
+      "argv": [
+        "python",
+        "eval_numeric.py",
+        "--image",
+        "/work/depth/input.png",
+        "--official",
+        "/work/depth/reference_depth.npy",
+        "--candidate",
+        "/work/depth/candidate_depth.npy",
+        "--reference-name",
+        "fp32-reference",
+        "--candidate-name",
+        "s600-l-candidate",
+        "--output",
+        "/work/depth/single-image"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/model/README.md",
+      "argv": [
+        "python",
+        "-m",
+        "samples.vision.yolo26_depth.runtime.python.main",
+        "--list-models"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/model/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/model/download.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/model/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/model/download.sh",
+        "--target",
+        "s100p",
+        "--variant",
+        "l"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/model/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/model/download.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "n",
+        "--output-dir",
+        "/work/models"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/model/README.md",
+      "argv": [
+        "python",
+        "-m",
+        "samples.vision.yolo26_depth.runtime.python.main",
+        "--target",
+        "x5",
+        "--asset-id",
+        "x5:yolo26_depth:yolo26n_depth_bayese_768x768_nv12.bin",
+        "--model-path",
+        "/work/models/yolo26n_depth_bayese_768x768_nv12.bin",
+        "--output",
+        "/work/depth/external-published"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/model/README.md",
+      "argv": [
+        "python",
+        "-m",
+        "samples.vision.yolo26_depth.runtime.python.main",
+        "--target",
+        "x5",
+        "--asset-id",
+        "x5:yolo26_depth:yolo26n_depth_bayese_768x768_nv12.bin",
+        "--model-path",
+        "/work/depth/compile_x5_n/artifacts/yolo26n_depth_bayese_768x768_nv12.bin",
+        "--converted-model",
+        "--output",
+        "/work/depth/custom-x5-n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/cpp/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/model/download.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/cpp/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/runtime/cpp/run.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "n",
+        "--build",
+        "--output",
+        "/work/depth/cpp-n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/cpp/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/runtime/cpp/run.sh",
+        "--list-models"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/cpp/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/runtime/cpp/run.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "l",
+        "--dry-run"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/cpp/README.md",
+      "argv": [
+        "bash",
+        "samples/vision/yolo26_depth/runtime/cpp/run.sh",
+        "--target",
+        "x5",
+        "--variant",
+        "l",
+        "--test-img",
+        "samples/vision/yolo26_depth/test_data/bus.jpg",
+        "--warmup",
+        "3",
+        "--output",
+        "/work/depth/cpp-l"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/python/README.md",
+      "argv": [
+        "python",
+        "samples/vision/yolo26_depth/runtime/python/main.py",
+        "--list-models"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/python/README.md",
+      "argv": [
+        "python",
+        "samples/vision/yolo26_depth/runtime/python/main.py",
+        "--target",
+        "s600",
+        "--variant",
+        "l",
+        "--dry-run"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/python/README.md",
+      "argv": [
+        "python",
+        "samples/vision/yolo26_depth/model/download.py",
+        "--target",
+        "x5",
+        "--variant",
+        "n"
+      ]
+    },
+    {
+      "page": "samples/vision/yolo26_depth/runtime/python/README.md",
+      "argv": [
+        "python",
+        "samples/vision/yolo26_depth/runtime/python/main.py",
+        "--target",
+        "x5",
+        "--variant",
+        "n",
+        "--output",
+        "outputs/depth-x5-n"
+      ]
+    }
+  ],
+  "api_fixture_runs": [
+    "samples/vision/yolo26_depth/runtime/python/README.md",
+    "samples/vision/yolo26_depth/runtime/python/README_cn.md"
+  ],
+  "real_sdk": "not-run",
+  "board": "not-run"
+}

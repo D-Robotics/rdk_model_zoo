@@ -47,3 +47,5 @@
 2026-09-26：B8 PP-LiteSeg（846c519）已完成主机重构及五层双语说明，修正类别图/图片/转换门禁；UNetMobileNet 已完成 Python/C++ 阶段职责分离和六层双语说明，使用共享 split-input runner 并修正逐通道量化排序、原生资源失败处理。真实 SDK 构建及板测仍未执行，独立验收未关闭。见 [PP-LiteSeg](../../releases/unified-migration/2026-09-26-b8-ppliteseg-review.md) 和 [UNetMobileNet](../../releases/unified-migration/2026-09-26-b8-unetmobilenet-review.md)。B8 尚余 YOLO26 Depth、Depth Anything V2、LaneNet、DiffusionDrive；全部 H0–H9 范围保持不变。
 
 YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md). Source audit only; implementation, six-level bilingual documentation and host acceptance remain pending. Preserve all H0–H9 scope.
+
+2026-09-26：YOLO26 Depth 已完成 20 制品 Python 与 X5 C++ 主机迁移、六层双语 README 和离线转换/评测流程，主机结果见 [迁移记录](../../releases/unified-migration/2026-09-26-b8-yolo26-depth-review.md)。板端及真实 SDK/OE 仍 not-run、独立评审未关闭；B8 后续为 Depth Anything V2、LaneNet、DiffusionDrive，全部 H0–H9 范围继续。
