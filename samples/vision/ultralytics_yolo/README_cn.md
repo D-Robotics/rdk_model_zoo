@@ -33,7 +33,7 @@ Python 发布组合详见 [模型清单](model/README_cn.md)：YOLOv5u/v10/12 �
 | NV12 输入 | 一个 packed 缓冲区 | NHWC Y + UV |
 | Python 检测 NMS 默认 | 0.70 | 0.45；YOLOv10 无 NMS |
 | 分类 CLI resize | YOLO26 拉伸；其余 letterbox | 拉伸 |
-| 分类发布输入 | YOLO26 224，其余 640 | S600 全部 224；S100/S100P YOLO26 224，其余 640 |
+| 分类文件名标记（不是输入覆盖） | YOLO26 224，其余 640 | 公开 URL 使用 224；S100/S100P v8/v11 保留 640 兼容 ID |
 
 <a id="prerequisites"></a>
 ## 前置条件

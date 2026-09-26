@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | `s:lanenet:s100/lanenet256x512.hbm` | S100 / nash-e | `s100/lanenet256x512.hbm` | Unknown |
 
-The authoritative URL and asset identity come from [the S release manifest](../../../../platforms/s/docs/release/models.yaml). This is the only published LaneNet artifact. S100P, S600 and X5 have no asset here; renaming or moving the S100 HBM does not add support. The original entry is retained under [the source model directory](../../../../platforms/s/samples/vision/lanenet/model).
+The authoritative URL and asset identity come from [the S release manifest](../../../../docs/release/s/models.yaml). This is the only published LaneNet artifact. S100P, S600 and X5 have no asset here; renaming or moving the S100 HBM does not add support. The original entry is retained under [the source model directory](../../../../platforms/s/samples/vision/lanenet/model).
 
 <a id="preparation"></a>
 ## Explicit preparation

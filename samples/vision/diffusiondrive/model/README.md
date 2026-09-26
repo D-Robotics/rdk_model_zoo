@@ -10,7 +10,7 @@
 | S100P | `nash-m` | `s:diffusiondrive:s100p/diffusiondrive_r34_256x1024_s100p.hbm` |
 | S600 | `nash-p` | `s:diffusiondrive:s600/diffusiondrive_r34_256x1024_s600.hbm` |
 
-After `s:diffusiondrive:`, the remainder is the relative path under this directory. Camera resolution is 256×1024; the graph also consumes LiDAR, ego status and diffusion noise. There is no S100/X5 artifact or interchangeable S100P/S600 file. The [S release manifest](../../../../platforms/s/docs/release/models.yaml) controls URLs and checksums.
+After `s:diffusiondrive:`, the remainder is the relative path under this directory. Camera resolution is 256×1024; the graph also consumes LiDAR, ego status and diffusion noise. There is no S100/X5 artifact or interchangeable S100P/S600 file. The [S release manifest](../../../../docs/release/s/models.yaml) controls URLs and checksums.
 
 <a id="preparation"></a>
 ## Explicit preparation

@@ -10,7 +10,7 @@
 | S100P | `nash-m` | `s:diffusiondrive:s100p/diffusiondrive_r34_256x1024_s100p.hbm` |
 | S600 | `nash-p` | `s:diffusiondrive:s600/diffusiondrive_r34_256x1024_s600.hbm` |
 
-`s:diffusiondrive:` 后的部分为相对本目录的路径。相机分辨率为256×1024，图还接收 LiDAR、自车状态和扩散噪声。不存在 S100/X5 资产，S100P/S600 文件也不能互换。URL 与校验和以 [S 发布清单](../../../../platforms/s/docs/release/models.yaml)为准。
+`s:diffusiondrive:` 后的部分为相对本目录的路径。相机分辨率为256×1024，图还接收 LiDAR、自车状态和扩散噪声。不存在 S100/X5 资产，S100P/S600 文件也不能互换。URL 与校验和以 [S 发布清单](../../../../docs/release/s/models.yaml)为准。
 
 <a id="preparation"></a>
 ## 显式准备

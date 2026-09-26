@@ -126,15 +126,19 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 3. 制品身份：Manifest 中大多数资产没有 SHA-256，工作树也没有这些模型字节；A 列不等于可下载成功或运行通过。
 4. 外部依赖：ACT/PI0 的上游目录未初始化；Gemma4/MiniCPM 的 LLM/OELLM SDK 与版本、许可证、运行边界需要单独取证。
 5. 第一方 Notebook：X5/S 为 0；X3 的 20 个 Notebook 是历史资源，不能在本表中改动或算入 X5/S 迁移完成度。
-6. **S 侧 cls 文件名真伪未裁定**（B9 收编 ultralytics 家族时裁定）：S 快照的
+6. **S 侧 cls 名称兼容关系已核定，实际 HBM 输入尺寸未实测**（2026-09-26）：S 快照的
    `tests/test_yolo_cls_resolution.py` 断言 cls 制品名为 `*_cls_<march>_224x224_nv12.hbm`
    （且 `model_url` 亦返回 224 URL）；s tip（380e1a2）删除了该测试，sample 代码与
    `model/download_model.sh` 改为构造 **640x640** 文件名与 URL，清单 filename 键为
-   640、但清单 URL 仍为 224——即 tip 处于 224→640 改名中途（文件名已改、URL 未跟）。
+   640、但清单 URL 仍为 224。先前据此推断“改名中途”，该推断不构成服务器证据。
    develop 目录侧 errata（`applySCatalogErrata`）按 URL 证据把展示名归一为 224 并注明
    "Legacy 640 URLs remain compatible"。三方（catalog 展示 224 / 清单字节 640 键 /
-   sample 按 manifest 键解析）各自自洽、互不改写；真名需网络实测裁定（用户门禁），
-   裁定前 B9 不得合并或改写任何一侧。
+   sample 按 manifest 键解析）各自自洽、互不改写。当前全面非板端工作授权下，只读
+   HTTP HEAD 验证了 20 个 224 地址及 20 个 640 兼容地址全部返回 200，每对长度与
+   ETag 相同；未下载模型字节，不能据此认定哈希相同或输入尺寸。保留主清单
+   `docs/release/s/models.yaml` 的 640 标识与 224 URL；平台归档不是运行时主清单。
+   此项不再阻塞 B9 源能力归并，归并本身仍待完成；板测仍为 not-run。
+   详见 [核定记录](2026-09-26-b9-cls-assets-review.md) 与其原始 HTTP 证据。
 7. **platforms/s 快照落后 s tip**（A7 勘定，2026-09-21）：快照相对 380e1a2 缺 53 个
    文件——`samples/vision/yoloe26_seg`（30）、`samples/llm/minicpm5-2b`（13，
    legacy evaluator + results + test_data）、`samples/vla/{act,pi0}` gitlink 与

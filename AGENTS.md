@@ -11,8 +11,10 @@ remain historical material, not a new adaptation target.
 - Use [the execution plan](docs/superpowers/plans/2026-09-16-x5-s-execution.md)
   and [the baseline](docs/releases/unified-migration/2026-09-16-baseline.md)
   to distinguish pilots, unmigrated capabilities and acceptance gaps.
-- Use existing `platforms/{x5,s}/docs/release/models.yaml` and
-  `benchmarks.yaml` for artifact and historical measurement facts. Concrete
+- Unified runtime asset resolution reads `docs/release/{x5,s}/models.yaml`.
+  `platforms/{x5,s}/docs/release/models.yaml` and `benchmarks.yaml` are archived
+  source references; their filename keys may differ from the active manifests.
+  Preserve that distinction when checking artifact and historical measurement facts. Concrete
   target identity aliases live in `docs/release/platforms.json`; identity alone
   does not certify any artifact or runtime version.
 - People and Agents use the same native sample commands. Do not require a

@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | `s:lanenet:s100/lanenet256x512.hbm` | S100 / nash-e | `s100/lanenet256x512.hbm` | 未知 |
 
-实际下载 URL 与资产身份以 [S 发布清单](../../../../platforms/s/docs/release/models.yaml)为准。这是唯一已发布的 LaneNet 资产。S100P、S600、X5 在此均无对应资产；重命名或移动 S100 HBM 不会增加平台支持。原入口保留于[源模型目录](../../../../platforms/s/samples/vision/lanenet/model)。
+实际下载 URL 与资产身份以 [S 发布清单](../../../../docs/release/s/models.yaml)为准。这是唯一已发布的 LaneNet 资产。S100P、S600、X5 在此均无对应资产；重命名或移动 S100 HBM 不会增加平台支持。原入口保留于[源模型目录](../../../../platforms/s/samples/vision/lanenet/model)。
 
 <a id="preparation"></a>
 ## 显式准备

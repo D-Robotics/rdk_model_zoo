@@ -33,7 +33,7 @@ Historical detection evidence: [P1](../../../docs/releases/unified-migration/202
 | NV12 input | One packed buffer | NHWC Y + UV |
 | Python detection NMS default | 0.70 | 0.45; YOLOv10 is NMS-free |
 | Classification CLI resize | YOLO26 stretch; others letterbox | Stretch |
-| Published classification input | YOLO26 224, others 640 | S600 all 224; S100/S100P YOLO26 224, others 640 |
+| Classification filename tokens (not an input override) | YOLO26 224, others 640 | Public URLs use 224; S100/S100P v8/v11 retain 640 compatibility IDs |
 
 <a id="prerequisites"></a>
 ## Prerequisites
