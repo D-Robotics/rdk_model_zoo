@@ -124,11 +124,10 @@ decoded. PointNet and UNet share it; float32 outputs keep their declared raw-flo
 semantics and are not forced through integer descriptor validation. This helper
 checks numeric metadata, not artifact identity or task-specific logits shapes.
 
-## Single-array runtime transport
+## Raw-array runtime transport
 
 `single_array_runner.py:SingleArrayRunner` consolidates the transport shared by
-PointNet, UNet and PP-LiteSeg, with split-input support for the ongoing
-UNetMobileNet migration. Each sample still supplies its selection/binding and physical
+PointNet, UNet, PP-LiteSeg, UNetMobileNet, YOLO26 Depth and Depth Anything V2. Each sample still supplies its selection/binding and physical
 input contract: PointNet sends float32 `(1,3,N)` while UNet sends uint8 packed
 NV12 `(1,768,512,1)`, distinct from logical model metadata. Local wrapper names and
 constructor arguments remain unchanged.
@@ -144,10 +143,18 @@ activation, argmax, geometry restoration, file IO or model downloads.
 The result is one raw array. `physical_input` preserves the one-input API;
 `physical_inputs` declares a name-to-shape/dtype mapping for split Y/UV input.
 Exactly one contract must be supplied; missing/extra tensors fail before SDK run.
-The in-progress UNetMobileNet consumer uses this split-input form; its complete
-sample delivery remains pending. Multi-stage SAM/OCR,
+UNetMobileNet uses this split-input form. Multi-stage SAM/OCR,
 tracking state and classification-specific contracts are not silently migrated to
 it; their behavior needs a separate consumer review before any consolidation.
+
+`single_array_runner.py:NamedArrayRunner` now supplies the same transport for
+multiple named raw outputs. LaneNet uses it to retain its float32 embedding,
+int64 binary prediction and any observed auxiliary outputs without assuming their
+order. The sample binding defines required roles; the transport validates every
+observed name, shape, dtype and finite value, then returns owned arrays in a
+mapping. `SingleArrayRunner` is a compatible one-output adapter over this base
+and still rejects additional outputs. No existing caller changes its return type.
+The historical module path remains stable for imports and test injection.
 
 `dequantize_tensor(..., dtype="float64")` is an opt-in precision path for int32
 score ordering; the default remains float32 for existing consumers. Explicit
