@@ -22,7 +22,7 @@
 | `yolov9` | detect、seg | 检测 t/s/m/c/e，S600 无 t；分割仅 c/e，S600 无分割 |
 | `yolov10` | detect | n/s/m/b/l/x |
 | `yolo12` | detect | n/s/m/l/x |
-| `yolov13` | detect | n/s/l/x，仅 X5 |
+| `yolov13` | detect | n/s/l/x；X5 与 S100（S100 使用 iMoonLab 原始记录） |
 
 有发布制品不代表所有组合均完成板测。不能用另一目标的模型替代。统一 X5 完整列表共 92 个制品，其中 YOLO26 为 25 个；历史 X5 通用下载包装器仍保留原来的 67 个。
 
@@ -52,6 +52,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --li
 | `--family` | 默认 yolo11；配合 `--all` 时省略表示所有系列。 |
 | `--task` | detect/seg/pose/cls/obb；省略时 X5 下载 detect/seg/pose/cls，S 只下载 detect。 |
 | `--model-size` | 通常默认 n；YOLOv9 检测为 X5 t、S s。YOLOv9 分割默认 c，可显式选择 c/e。 |
+| `--asset-id` | 默认无；精确选择下文的独立 S 源制品，不能与 `--all` 同用。 |
 | `--model-dir` | 基础存储目录，默认是本 Sample 的 model 目录。 |
 | `--all` | 全部已发布制品，可按 family 限定；此模式不按 task、size 筛选。 |
 | `--dry-run` | 仅打印计划，不下载、不加载模型。 |
@@ -98,3 +99,45 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
 X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。非分类文件名使用 640×640。YOLO26 分类文件名在全部目标上使用 224×224，S600 分类标识同样使用 224×224。S100/S100P v8/v11 分类清单 ID 保留 640×640 兼容名称，下载 URL 则使用 224×224。2026-09-26 只读 HEAD 核对发现全部 20 对地址均可访问，长度与 ETag 相同；这不是完整字节的密码学比较，也不能证明张量尺寸。实际输入几何由运行元数据决定，文件名标记不是形状覆盖。既有限定 ID 与本地路径继续保留。
 
 下载器拒绝空文件；清单提供发布方 SHA-256 时会校验。部分制品没有发布方哈希，此时本地摘要只能标识字节，**不能证明官方来源**。dry-run 只查看路径是否存在，`present` 不代表完整性已验证。下载使用临时 `.part` 文件，校验成功后才安装最终文件。超时、HTTP 错误或 URL 不可用属于准备失败，不能据此换用另一制品。
+
+
+<a id="standalone-assets"></a>
+## S 独立样例的原始制品身份
+
+现有十个独立样例制品可直接选择，不改名为 Ultralytics 家族制品。这是主机准备和入口绑定能力；
+B9 数值与 C++ 归并仍在核查，本轮没有新增板端验证。
+
+| 原 sample ID | task / family | 已发布目标 / 变体 | 源 Python NMS 默认值 |
+|---|---|---|---|
+| `yolo11` | detect / yolo11 | S100、S600 / n | 0.45 |
+| `yolo11_pose` | pose / yolo11 | S100、S600 / n | 0.70 |
+| `yolo11_seg` | seg / yolo11 | S100、S600 / n | 0.70 |
+| `yolov13_imoonlab` | detect / yolov13 | S100 / n,s,l,x | 0.45 |
+
+下载地址仍以 S 主清单为准。文件保存到 `model/standalone/<原sample-id>/<清单filename>`，
+避免同名的旧制品覆盖家族目录中的文件。S600 原始文件在 `s600/` 路径下仍带 `nashe`：
+这里只保留发布记录，不代表已检查 HBM 的实际 march。没有登记独立 S100P 制品。
+
+从仓库根目录分别检查准备计划与推理路由：
+
+```bash
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform s100 --asset-id s:yolo11_pose:s100/yolo11n_pose_nashe_640x640_nv12.hbm --dry-run
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --task pose \
+  --asset-id s:yolo11_pose:s100/yolo11n_pose_nashe_640x640_nv12.hbm --dry-run
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform s100 --family yolov13 --task detect --model-size n --dry-run
+```
+
+需要显式下载时，只去掉下载命令中的 `--dry-run`。下载器新增的 `--asset-id` 仅接受上述独立
+制品 ID，拒绝与 `--all` 或冲突的 family/task/size 同用。`--all` 枚举家族清单（现包含 S100
+的 iMoonLab），不重复下载独立 YOLO11 制品；这些制品须用精确 ID 选择。原默认下载集合不变。
+运行入口同时接受原家族 ID 与这些源 ID，须传正确 `--task`。选择源 ID 时，未显式设置的
+NMS 使用表中默认值；显式 `--nms-thres` 优先。普通 `--family yolo11` 仍采用 S 默认 0.45。
+输入图片与调度参数保留统一 CLI 默认值；对照源流程时显式指定原图片和 `--priority 0 --bpu-cores 0`。
+
+显式 `--model-path` 保留本地路径且不自动准备模型；同时给 asset ID 只是声明预期选择，
+不是文件身份的哈希证明。dry-run 不验证 SDK。源检测/分割封装支持量化输出；源姿态 API 返回
+关键点 logits，统一 API 返回概率。完整数值/源能力对齐仍在核查，详见
+[未关闭的归并记录](../../../../docs/releases/unified-migration/2026-09-27-b9-source-consolidation-review.md)。

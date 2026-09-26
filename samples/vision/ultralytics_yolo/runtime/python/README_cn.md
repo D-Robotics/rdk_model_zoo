@@ -225,3 +225,6 @@ main.py
 
 完整参数请执行 `python samples/vision/ultralytics_yolo/runtime/python/main.py --help`。`--help`、`--dry-run`、
 `--list-models`、`--download` 是不执行板端推理的路径。
+
+
+S 独立 YOLO11 检测/姿态/分割与 S100 iMoonLab YOLOv13 的原始制品，现可通过精确 ID 准备和选择；数值/C++ 归并尚未验收，见 [源制品绑定与边界](../../model/README_cn.md#standalone-assets)。

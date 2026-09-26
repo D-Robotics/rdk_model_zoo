@@ -244,3 +244,6 @@ finite protocols and old-to-new symbol map are in
 Use `python samples/vision/ultralytics_yolo/runtime/python/main.py --help` for the complete CLI. `--help`, `--dry-run`,
 `--list-models`, and `--download` are host-safe paths that do not run board
 inference.
+
+
+Standalone S YOLO11 detection/pose/segmentation and S100 iMoonLab YOLOv13 source artifacts can now be prepared and selected by exact ID; numerical/C++ consolidation is not yet accepted. See [source asset routing and boundaries](../../model/README.md#standalone-assets).

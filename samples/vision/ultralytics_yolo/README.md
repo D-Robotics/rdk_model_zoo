@@ -106,3 +106,6 @@ Legacy `platforms/{x5,s}/samples/vision/ultralytics_yolo` and `ultralytics_yolo2
 ## License and provenance
 
 Sample code follows the repository [Apache-2.0 LICENSE](../../../LICENSE), preserving file-level copyright notices. Check model weights and upstream training frameworks under their accompanying licenses separately; the repository code license does not automatically cover all weights. Artifact URLs and publisher digests come from manifests; an observed local hash cannot authenticate origin when no publisher hash is recorded.
+
+
+Standalone S YOLO11 detection/pose/segmentation and S100 iMoonLab YOLOv13 source artifacts can now be prepared and selected by exact ID; numerical/C++ consolidation is not yet accepted. See [source asset routing and boundaries](model/README.md#standalone-assets).

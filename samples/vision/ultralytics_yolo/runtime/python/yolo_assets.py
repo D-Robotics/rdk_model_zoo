@@ -193,7 +193,13 @@ def family_registry(profile: PlatformProfile) -> Dict[str, FamilySpec]:
     Returns:
         A mapping of canonical family name to `FamilySpec`.
     """
-    return X5_FAMILIES if profile.family == "x5" else S_FAMILIES
+    if profile.family == "x5":
+        return X5_FAMILIES
+    if profile.key == "s100":
+        return {**S_FAMILIES, "yolov13": FamilySpec(
+            "yolov13", "yolo13", (TASK_DETECT,), ("n", "s", "l", "x"), "n",
+            notes="iMoonLab source artifacts, S100 only; board verification separate.")}
+    return S_FAMILIES
 
 
 def available_families(profile: PlatformProfile) -> Tuple[str, ...]:
@@ -361,6 +367,8 @@ def manifest_asset(profile: PlatformProfile, family: str, task: str,
     """
     from samples._shared.assets import resolve_asset
     filename = model_filename(profile, family, task, size)
+    if profile.family == "s" and family == "yolov13":
+        return resolve_asset(f's:yolov13_imoonlab:s100/{filename}')
     if profile.model_subdir:
         filename = profile.model_subdir + '/' + filename
     sample = 'ultralytics_yolo26' if family == 'yolo26' else 'ultralytics_yolo'
@@ -390,10 +398,8 @@ def model_path(model_root: str,
     Raises:
         UnsupportedAssetError: If the platform publishes no such asset.
     """
-    import os
-
-    filename = model_filename(profile, family, task, size)
-    return os.path.join(model_directory(model_root, profile), filename)
+    from standalone_assets import asset_local_path
+    return asset_local_path(model_root, profile, manifest_asset(profile, family, task, size))
 
 
 def is_nms_free(profile: PlatformProfile, family: str) -> bool:

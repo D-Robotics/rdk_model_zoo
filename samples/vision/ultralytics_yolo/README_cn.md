@@ -106,3 +106,6 @@ ultralytics_yolo/
 ## 许可与来源
 
 Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)，保留各文件原版权声明。模型权重和上游训练框架按其随附许可分别核对；仓库代码许可不自动授予所有权重同样的许可。制品地址和发布方摘要以清单为准，缺少发布方哈希时不能把本地摘要当作来源认证。
+
+
+S 独立 YOLO11 检测/姿态/分割与 S100 iMoonLab YOLOv13 的原始制品，现可通过精确 ID 准备和选择；数值/C++ 归并尚未验收，见 [源制品绑定与边界](model/README_cn.md#standalone-assets)。

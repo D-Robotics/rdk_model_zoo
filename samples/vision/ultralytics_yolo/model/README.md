@@ -22,7 +22,7 @@ These scripts prepare compiled models for inference; they do not export or compi
 | `yolov9` | detect, seg | detection t/s/m/c/e; t unavailable on S600; segmentation c/e, unavailable on S600 |
 | `yolov10` | detect | n/s/m/b/l/x |
 | `yolo12` | detect | n/s/m/l/x |
-| `yolov13` | detect | n/s/l/x, X5 only |
+| `yolov13` | detect | n/s/l/x; X5 and S100 (S100 uses the iMoonLab source records) |
 
 Publication does not mean that every combination has been board-tested. Do not substitute a different target's model. The canonical X5 full inventory contains 92 assets, including 25 YOLO26 assets; the historical generic X5 wrapper retains its original 67 assets.
 
@@ -52,6 +52,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --li
 | `--family` | Default yolo11. With `--all`, omission selects all families. |
 | `--task` | detect/seg/pose/cls/obb. Omitted: X5 downloads detect/seg/pose/cls; S downloads detect only. |
 | `--model-size` | Family default: n except YOLOv9 detection (X5 t, S s). YOLOv9 segmentation defaults to c; c/e may be selected explicitly. |
+| `--asset-id` | None; select an exact standalone S source record described below. Cannot combine with `--all`. |
 | `--model-dir` | Base directory; defaults to this sample's model directory. |
 | `--all` | All published assets, optionally restricted by family; task and size do not filter this mode. |
 | `--dry-run` | Plan only; no download or model loading. |
@@ -98,3 +99,55 @@ Historical platform download wrappers retain their original model directories. T
 X5 uses a packed NV12 input; S uses separate Y/UV inputs. Non-classification filenames use 640×640. YOLO26 classification filenames use 224×224 on all targets; S600 classification identifiers also use 224×224. S100/S100P v8/v11 classification manifest IDs retain 640×640 compatibility names, while their download URLs use 224×224. A 2026-09-26 read-only HEAD audit found all 20 URL pairs available with equal lengths and ETags; this is not a cryptographic byte comparison or proof of tensor dimensions. Runtime metadata determines actual input geometry; filename tokens are not shape overrides. Existing qualified IDs/local paths are retained.
 
 The downloader rejects empty files and verifies publisher SHA-256 values when recorded. Some manifest entries have no publisher hash: a locally observed digest then identifies bytes but does **not** verify their official origin. Dry-run only checks path existence; `present` is not an integrity check. Downloads use a temporary `.part` file and install the final file only after successful validation. A timeout, HTTP error or unavailable URL is a preparation failure, not permission to fall back to a different artifact.
+
+
+<a id="standalone-assets"></a>
+## Standalone S source identities
+
+The ten existing standalone records are selectable without renaming them into
+Ultralytics family records. This is host preparation/routing support; B9 numerical
+and C++ consolidation remains under review, and no new board verification is claimed.
+
+| Source sample ID | Task / family | Published targets / sizes | Source Python NMS default |
+|---|---|---|---|
+| `yolo11` | detect / yolo11 | S100, S600 / n | 0.45 |
+| `yolo11_pose` | pose / yolo11 | S100, S600 / n | 0.70 |
+| `yolo11_seg` | seg / yolo11 | S100, S600 / n | 0.70 |
+| `yolov13_imoonlab` | detect / yolov13 | S100 / n,s,l,x | 0.45 |
+
+Their original URLs stay in the active S manifest. Files are stored under
+`model/standalone/<source-sample-id>/<manifest-filename>`; this avoids replacing a
+family file with an older source file of the same basename. S600 source filenames
+contain `nashe` even under `s600/`; the publication row is preserved, not evidence
+that the HBM march has been inspected. No standalone S100P asset is registered.
+
+From the repository root, inspect preparation and inference routing separately:
+
+```bash
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform s100 --asset-id s:yolo11_pose:s100/yolo11n_pose_nashe_640x640_nv12.hbm --dry-run
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --task pose \
+  --asset-id s:yolo11_pose:s100/yolo11n_pose_nashe_640x640_nv12.hbm --dry-run
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform s100 --family yolov13 --task detect --model-size n --dry-run
+```
+
+Remove only the downloader's `--dry-run` to explicitly fetch the chosen model.
+The downloader's new `--asset-id` accepts these standalone IDs only and rejects
+`--all` or conflicting family/task/size flags. `--all` enumerates the family
+inventory (now including S100 iMoonLab), not duplicate YOLO11 source records;
+select those with exact IDs. Existing default download sets are unchanged.
+The runtime accepts both previously supported family IDs and these source IDs;
+pass the correct `--task`. Source IDs retain the table's NMS defaults unless
+`--nms-thres` is explicit. Ordinary `--family yolo11` retains the S default 0.45.
+Input-image and scheduler defaults remain the unified CLI defaults; pass source
+images and `--priority 0 --bpu-cores 0` explicitly for source comparisons.
+
+An explicit `--model-path` keeps that local path and suppresses automatic model
+preparation; pairing it with an asset ID declares the expected selection, not a
+cryptographic proof of file identity. Do not treat dry-run as SDK validation.
+The source detection/segmentation wrappers handle quantized outputs, and the
+source pose API returns raw keypoint logits whereas the unified API returns
+probabilities. Full numeric/source compatibility is still being audited; see the
+[open consolidation record](../../../../docs/releases/unified-migration/2026-09-27-b9-source-consolidation-review.md).

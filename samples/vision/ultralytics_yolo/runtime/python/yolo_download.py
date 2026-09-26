@@ -129,6 +129,8 @@ def build_parser() -> argparse.ArgumentParser:
                         choices=list(SUPPORTED_TASKS),
                         help='Task. Downloads the platform default set when '
                              'omitted.')
+    parser.add_argument('--asset-id', default=None,
+                        help='Exact standalone source reference; incompatible with --all.')
     parser.add_argument('--model-size', type=str, default=None,
                         help='Model scale. Defaults to the family default.')
     parser.add_argument('--model-dir', type=str, default=_DEFAULT_MODEL_DIR,
@@ -188,7 +190,7 @@ def select_assets(args, profile: PlatformProfile):
         UnsupportedAssetError: If the platform publishes no such asset.
     """
     if args.all:
-        return [(f,t,s) for f,t,s in iter_assets(profile) if (args.family is None or f == args.family) and not (args.legacy_families and f == "yolo26")]
+        return [(f,t,s) for f,t,s in iter_assets(profile) if (args.family is None or f == args.family) and not (args.legacy_families and (f == "yolo26" or (profile.family == "s" and f == "yolov13")))]
     family = args.family or DEFAULT_FAMILY
     if args.task is None:
         return [(family, task, args.model_size)
@@ -213,16 +215,22 @@ def main() -> int:
         return 2
 
     try:
-        selections = select_assets(args, profile)
-        targets = []
-        for family, task, size in selections:
-            filename = model_filename(profile, family, task, size)
-            targets.append((
-                filename,
-                os.path.join(
-                    model_directory(args.model_dir, profile), filename),
-                manifest_asset(profile, family, task, size),
-            ))
+        from standalone_assets import select_standalone, asset_local_path
+        if args.asset_id:
+            if args.all:
+                raise UnsupportedAssetError('--asset-id cannot be combined with --all.')
+            selected = select_standalone(profile, args.asset_id)
+            for label, actual, expected in [('family', args.family, selected.family),
+                    ('task', args.task, selected.task), ('model-size', args.model_size, selected.size)]:
+                if actual is not None and actual != expected:
+                    raise UnsupportedAssetError(f'Asset reference conflicts with {label}.')
+            assets = [selected.asset]
+        else:
+            selections = select_assets(args, profile)
+            assets = [manifest_asset(profile, family, task, size)
+                      for family, task, size in selections]
+        targets = [(Path(asset.filename).name, asset_local_path(args.model_dir, profile, asset), asset)
+                   for asset in assets]
     except UnsupportedAssetError as exc:
         print(f"[Error] {exc}", file=sys.stderr)
         return 2

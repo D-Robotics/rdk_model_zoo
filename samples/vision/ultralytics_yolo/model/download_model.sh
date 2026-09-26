@@ -10,6 +10,7 @@
 #   --family    yolo11 | yolov8 | ...      Model family (default: yolo11)
 #   --task      detect | seg | pose | cls  Task (default: the platform default set)
 #   --model-size n | s | m | l | x | ...   Model scale (default: family default)
+#   --asset-id group:sample:filename      Exact standalone S source record
 #   --all                                  Every asset the platform publishes
 #   --dry-run                              Print the plan without downloading
 #
