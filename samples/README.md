@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers all 38 unified samples under root `samples/vision`. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers all 39 unified samples under root `samples/vision`. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -42,6 +42,7 @@ This index covers all 38 unified samples under root `samples/vision`. It is a so
 | [yoloworld](vision/yoloworld/README.md) | [conversion](vision/yoloworld/conversion/README.md) | [evaluator](vision/yoloworld/evaluator/README.md) |
 | [lprnet](vision/lprnet/README.md) | [conversion](vision/lprnet/conversion/README.md) | [evaluator](vision/lprnet/evaluator/README.md) |
 | [modnet](vision/modnet/README.md) | [conversion](vision/modnet/conversion/README.md) | [evaluator](vision/modnet/evaluator/README.md) |
+| [pp_liteseg](vision/pp_liteseg/README.md) | [conversion](vision/pp_liteseg/conversion/README.md) | [evaluator](vision/pp_liteseg/evaluator/README.md) |
 | [pointnet](vision/pointnet/README.md) | [conversion](vision/pointnet/conversion/README.md) | [evaluator](vision/pointnet/evaluator/README.md) |
 | [unet](vision/unet/README.md) | [conversion](vision/unet/conversion/README.md) | [evaluator](vision/unet/evaluator/README.md) |
 | [bytetrack](vision/bytetrack/README.md) | [conversion](vision/bytetrack/conversion/README.md) | [evaluator](vision/bytetrack/evaluator/README.md) |

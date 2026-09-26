@@ -1,3 +1,5 @@
+> 当前统一入口：[PP-LiteSeg](../../../../../samples/vision/pp_liteseg/README_cn.md)。下方保留源文档；其中 street.jpg、自动下载与 logits/argmax 描述不适用于统一运行时。
+
 [English](./README.md) | 简体中文
 
 # PP-LiteSeg-STDC1 语义分割

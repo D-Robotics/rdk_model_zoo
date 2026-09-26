@@ -221,7 +221,7 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B7 | bytetrack / s:380e1a2 | s / python（依赖 yolov5） | done（固定源清点） | in-progress | in-progress | 分支独立通过（ac4046c 12项） | partial（ae0f185/4d45f9a：S100四帧合成及S100/S600真实视频前30帧源对照 passed；S100P源URL404未推理；非整段视频/MOT精度） | changes-required（真实 SDK 独立核对；分支整改中） | no | [B7 记录](2026-09-23-b7-detection-tracking-review.md)、[源清点](2026-09-23-b7-source-audit.md)、[实板独立核对](2026-09-24-b7-native-sdk-review.md)、[历史作者整改](2026-09-23-b7-remediation-author-report.md) |
 | B8 | unet / x5:ac11571 | x5 / resnet18/34/50/101/152 / python | done（四阶段；评估复用 runtime） | done（五配置与导出/编译门禁保留） | done（双语 README 与完整原记录） | passed（20 tests，含源对照/校准 recipe/API/CLI） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-unet-review.md) |
 | B8 | unetmobilenet / s:380e1a2 | s / python + cpp（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B8 | pp_liteseg / x5:ac11571 | x5 / python | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | pp_liteseg / x5:ac11571 | x5 / STDC1 / python | done（类别图四阶段；evaluator 复用） | done（保留配方；修复准备/失败门禁，实际转换未执行） | done（五层双语 README） | passed（18 tests，含源对照/API/CLI/转换边界） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-ppliteseg-review.md) |
 | B8 | yolo26_depth / x5:ac11571 + s:380e1a2 | x5+s / python + x5 cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | depth_anything_v2 / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | lanenet / s:380e1a2 | s / python + cpp（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
