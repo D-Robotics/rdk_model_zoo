@@ -1,3 +1,5 @@
+> **整合树中的原平台资料。** 下文保留原分支背景与历史指标；“当前分支”等措辞描述源发布线，不表示 `develop` 已完成客户交付。已统一入口见 [Sample 索引](../../samples/README_cn.md)，当前清单/分支说明见 [平台注册表](../README_cn.md)。旧命令可能已转发到根 Sample，请保留完整仓库。
+
 <div align="center">
   <img src="docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
 </div>

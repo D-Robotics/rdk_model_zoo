@@ -1,61 +1,42 @@
-# Platform Registry
+# Platforms, branches and release records
 
-The main branch maintains all supported platforms. Platform-local samples remain here; audited shared samples move to the root `samples/` tree with compatibility entry points. Ultralytics YOLO is the first such migration. Historical release tags retain their original self-contained layout.
+[简体中文](README_cn.md)
 
-**English** | [简体中文](./README_cn.md)
+Current X5/S integration proceeds on `develop` and has not completed customer-release acceptance. `rdk_x5` and `rdk_s` are platform delivery lines; historical tags retain their published self-contained layouts. Integration neither moves tags nor turns development status into a release. X3 remains a historical distribution outside new adaptation scope.
 
-| Platform | Directory | Historical branch | Manifest directory | Release tag | Runtime |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| RDK X5 | [`x5/`](./x5) | `rdk_x5` | [`x5/docs/release`](./x5/docs/release) | `x5-v1.1.2` | `hbm_runtime` |
-| RDK S100 / S100P / S600 | [`s/`](./s) | `rdk_s` | [`s/docs/release`](./s/docs/release) | `s-v1.1.2` | `hbm_runtime` |
-| RDK X3 | [`x3/`](./x3) | `rdk_x3` | [`x3/release`](./x3/release) | `x3-v1.1.2` | `hobot_dnn`, `bpu_infer_lib_x3` |
+The table follows this checkout's [registry.json](registry.json). Registered release tags are recorded metadata, not a query for the latest remote release. Manifest paths refer to the current integration tree:
 
-The same registry, with hardware identifiers and license pointers, is published as [`registry.json`](./registry.json) for tooling.
+| Platform | Delivery line | Registered tag | Current manifest | Platform material |
+|---|---|---|---|---|
+| RDK X5 | `rdk_x5` | `x5-v1.1.3` | [docs/release/x5](../docs/release/x5) | [x5](../platforms/x5/README.md) |
+| RDK S100 / S100P / S600 | `rdk_s` | `s-v1.1.2` | [docs/release/s](../docs/release/s) | [s](../platforms/s/README.md) |
+| RDK X3 | `rdk_x3` | `x3-v1.1.2` | [platforms/x3/release](../platforms/x3/release) | [x3](../platforms/x3/README.md) |
 
-## Differences retained across platforms
+## What the three path types mean
 
-The platforms are close relatives, not interchangeable builds. X5 and S both expose a module named `hbm_runtime`, with different platform backends. X5 artifacts use `.bin` and S artifacts use `.hbm`; X3 predates both and runs `hobot_dnn` with `bpu_infer_lib_x3`. Directory conventions differ too — X5 and S use `samples/vision/<model>/`, while X3 uses a legacy `demos/<task>/<Model>/` layout with PascalCase names.
+- Root `samples/`: maintained unified samples in the [complete index](../samples/README.md), extending beyond the initial three pilots.
+- Root `docs/release/x5` and `docs/release/s`: current maintenance locations for artifact identity, URLs, release facts and historical metrics. `tools/catalog-publisher` locates them through the registry. Platform-local manifests remain migration source records; do not create divergence by editing both copies.
+- `platforms/{x5,s}/`: source-platform material, pending capabilities and compatibility entries. Some entries forward to root samples; copying a subdirectory alone can omit dependencies, so keep a complete checkout.
 
-## Shared sample migration
+Historical tags have `samples/`, `docs/release/` or `release/` at their original repository root. Resolve manifest `source.path` against that tagged layout, without imposing a `platforms/` prefix.
 
-The first audited merge is [Ultralytics YOLO](../samples/vision/ultralytics_yolo/README.md). It keeps the existing five-directory sample layout with shared Python task implementations and explicit platform input profiles. X5/S conversion workflows remain separate; C++ remains X5-only. Old platform commands forward to the root sample, so this sample now requires the complete repository checkout. Its original README/Manifest paths remain Benchmark provenance.
+## Runtime and artifact differences
 
-Other samples still use platform-local layouts. Migrate them individually after auditing runtime, compiler, artifact and evaluation differences. Historical tags keep the layouts and APIs they originally published; this local merge does not rewrite tags or require synchronized platform release tags.
+X5 and S both expose a module named `hbm_runtime`, but their SDK backends and models differ. Common X5 image artifacts use `.bin` and packed NV12; S uses `.hbm`, with S100/S100P/S600 mapped to nash-e/m/p and common image inputs split into Y/UV. Point-cloud, feature and audio tasks have their own protocols; not every sample uses NV12. X3 historical runtimes are `hobot_dnn` / `bpu_infer_lib_x3`.
 
-## Platform contents
+[Hardware identity](../docs/release/platforms.json), asset publication, language implementation and board acceptance are distinct. Missing assets must not silently select another board; not-run is not passed. Ultralytics C++ now contains X5/S input adaptations: see its [task/validation limits](../samples/vision/ultralytics_yolo/runtime/cpp/README.md), replacing the obsolete X5-only description.
 
-### `x5/` — RDK X5
+## Retained development references
 
-The X5 implementation maintained on main. `samples/vision/` holds the standardized samples (lowercase names, `hbm_runtime`, packed NV12 input); `samples/robotics/` holds embodied-AI policies. `utils/py_utils/` provides the shared preprocessing, postprocessing, and visualization helpers. `docs/Model_Zoo_Repository_Guidelines.md` is the authoritative specification for sample structure and interfaces.
+- X5: [guidelines](x5/docs/Model_Zoo_Repository_Guidelines.md), [source references](x5/docs/source_reference/README.md), [datasets](x5/datasets), robotics source samples.
+- S: [guidelines](s/docs/Model_Zoo_Repository_Guidelines.md), [Python API](s/docs/Python_API_User_Guide.md), [UCP](s/docs/UCP_User_Guide.md), [datasets](s/datasets), speech/VLA source samples.
+- ACT/Pi0 remain gitlink entries in root [.gitmodules](../.gitmodules); an upstream reference is not migration or acceptance evidence.
+- X3 retains its historical `demos/`, `resource/`, `release/` layout rather than adopting X5/S conventions.
 
-### `s/` — RDK S100 / S100P / S600
+Source-platform READMEs preserve hardware background, model lists, FAQs, conversion/runtime instructions and community links. New shared samples follow the [inference contract](../docs/sample-standards/inference-contract.md) and [README contract](../docs/sample-standards/readme-contract.md); current scope is in the [plan](../docs/superpowers/plans/2026-09-26-host-completion.md) and [ledger](../docs/releases/unified-migration/x5-s-migration-map.md).
 
-Same standardization as X5, with three board targets inside one tree and two additional sample categories: `samples/speech/` and `samples/vla/`. The VLA policies (ACT, Pi0) are declared as git submodules in the repository `.gitmodules`, whose paths carry the `platforms/s/` prefix; the submodule gitlinks themselves are unchanged. `docs/Python_API_User_Guide.md` and `docs/UCP_User_Guide.md` document the S-series runtime and the unified computing platform.
+## Measurements and licenses
 
-### `x3/` — RDK X3
+Historical benchmarks retain their original model, target, version and conditions. Registry/manifest counts and deduplicated catalog counts can differ; recalculate with the publisher instead of treating old snapshot totals as current inventory. See [catalog-publisher](../tools/catalog-publisher) for schemas, build rules and deduplication tests.
 
-The historical demo line, preserved as published: `demos/` for runnable demos, `resource/` for shared assets, and `release/` for the manifest pair. It is a baseline record of what X3 shipped, not an actively standardized tree, and it is not held to the X5/S directory conventions.
-
-## Manifests
-
-Every platform publishes `models.yaml` and `benchmarks.yaml` along with the JSON Schemas that validate them. The manifests are authoritative; the catalog data package produced by [`tools/catalog-publisher`](../tools/catalog-publisher) is a derived view.
-
-| Platform | Samples | Benchmark records | Performance metrics | Accuracy metrics |
-| :--- | ---: | ---: | ---: | ---: |
-| X5 | 37 | 239 | 636 | 419 |
-| S | 35 | 563 | 1382 | 2797 |
-| X3 | 15 | 20 | 104 | 25 |
-
-These are per-manifest counts and are **not additive**. Two RDK X3 `paddleocr` records were historically carried inside the X5 manifest as well; each platform publishes them from its own tree, and the catalog counts them once, under X3. The catalog therefore holds 820 benchmark records, not 822.
-
-## Historical tags
-
-Release tags keep the layout they were published with: the repository root, not `platforms/`. Checking out `x5-v1.1.2`, `s-v1.1.2`, or `x3-v1.1.2` yields `samples/`, `docs/release/`, or `release/` at the top level, and every `source.path` in those manifests resolves against that layout. Published tags are immutable and are never moved to the `platforms/` prefix.
-
-## License
-
-Each platform carries its own license file. X5 and S ship a `LICENSE`; upstream X3 published none, and none was added during the migration.
-
-## Maintenance
-
-All new models, bug fixes, manifests and release preparation land on main. Historical platform branches and tags remain compatibility references. Adding hardware means registering a platform directory and extending the catalog hardware mappings, not changing the main branch or moving the dashboard.
+X5/S retain their license files. Upstream X3 supplied no license file and none is invented during migration. Check unified code and third-party models/data separately; moving directories does not change provenance.

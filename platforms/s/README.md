@@ -1,3 +1,5 @@
+> **Source-platform material within the integration tree.** The text below retains source-branch context and historical measurements; “current branch” describes that delivery line, not completed customer acceptance of `develop`. See the [sample index](../../samples/README.md) for unified entries and the [platform registry](../README.md) for current manifests/branches. Legacy commands may forward to root samples; keep a complete checkout.
+
 <div align="center">
   <img src="docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
 </div>

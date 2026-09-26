@@ -2,90 +2,73 @@
 
 [简体中文](README_cn.md)
 
-The following samples use the canonical implementations in this repository.
-Open a sample guide and prepare artifacts for your board. Keep the full checkout;
-an Agent is not required.
+This index covers all 36 unified samples under root `samples/vision`. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
-| Goal | Usage | Convert your model | Check results |
-| --- | --- | --- | --- |
-| Locate objects and obtain boxes, classes and scores | [YOLO detection](vision/ultralytics_yolo/README.md) | [Export and compile](vision/ultralytics_yolo/conversion/README.md) | [Detection evaluation](vision/ultralytics_yolo/evaluator/README.md) |
-| Obtain Top-K image classes and scores | [ResNet classification](vision/resnet/README.md) | [Conversion](vision/resnet/conversion/README.md) | [Classification validation](vision/resnet/evaluator/README.md) |
-| Locate text regions and recognize text | [PaddleOCR](vision/paddle_ocr/README.md) | [Detector and recognizer conversion](vision/paddle_ocr/conversion/README.md) | [OCR validation](vision/paddle_ocr/evaluator/README.md) |
+## Image classification
 
-## Boards and artifacts
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [resnet](vision/resnet/README.md) | [conversion](vision/resnet/conversion/README.md) | [evaluator](vision/resnet/evaluator/README.md) |
+| [mobilenetv1](vision/mobilenetv1/README.md) | [conversion](vision/mobilenetv1/conversion/README.md) | [evaluator](vision/mobilenetv1/evaluator/README.md) |
+| [mobilenetv2](vision/mobilenetv2/README.md) | [conversion](vision/mobilenetv2/conversion/README.md) | [evaluator](vision/mobilenetv2/evaluator/README.md) |
+| [mobilenetv3](vision/mobilenetv3/README.md) | [conversion](vision/mobilenetv3/conversion/README.md) | [evaluator](vision/mobilenetv3/evaluator/README.md) |
+| [mobilenetv4](vision/mobilenetv4/README.md) | [conversion](vision/mobilenetv4/conversion/README.md) | [evaluator](vision/mobilenetv4/evaluator/README.md) |
+| [efficientnet](vision/efficientnet/README.md) | [conversion](vision/efficientnet/conversion/README.md) | [evaluator](vision/efficientnet/evaluator/README.md) |
+| [efficientformer](vision/efficientformer/README.md) | [conversion](vision/efficientformer/conversion/README.md) | [evaluator](vision/efficientformer/evaluator/README.md) |
+| [efficientformerv2](vision/efficientformerv2/README.md) | [conversion](vision/efficientformerv2/conversion/README.md) | [evaluator](vision/efficientformerv2/evaluator/README.md) |
+| [efficientvit](vision/efficientvit/README.md) | [conversion](vision/efficientvit/conversion/README.md) | [evaluator](vision/efficientvit/evaluator/README.md) |
+| [convnext](vision/convnext/README.md) | [conversion](vision/convnext/conversion/README.md) | [evaluator](vision/convnext/evaluator/README.md) |
+| [edgenext](vision/edgenext/README.md) | [conversion](vision/edgenext/conversion/README.md) | [evaluator](vision/edgenext/evaluator/README.md) |
+| [fasternet](vision/fasternet/README.md) | [conversion](vision/fasternet/conversion/README.md) | [evaluator](vision/fasternet/evaluator/README.md) |
+| [fastvit](vision/fastvit/README.md) | [conversion](vision/fastvit/conversion/README.md) | [evaluator](vision/fastvit/evaluator/README.md) |
+| [repghost](vision/repghost/README.md) | [conversion](vision/repghost/conversion/README.md) | [evaluator](vision/repghost/evaluator/README.md) |
+| [repvgg](vision/repvgg/README.md) | [conversion](vision/repvgg/conversion/README.md) | [evaluator](vision/repvgg/evaluator/README.md) |
+| [repvit](vision/repvit/README.md) | [conversion](vision/repvit/conversion/README.md) | [evaluator](vision/repvit/evaluator/README.md) |
+| [mobileone](vision/mobileone/README.md) | [conversion](vision/mobileone/conversion/README.md) | [evaluator](vision/mobileone/evaluator/README.md) |
+| [resnext](vision/resnext/README.md) | [conversion](vision/resnext/conversion/README.md) | [evaluator](vision/resnext/evaluator/README.md) |
+| [vargconvnet](vision/vargconvnet/README.md) | [conversion](vision/vargconvnet/conversion/README.md) | [evaluator](vision/vargconvnet/evaluator/README.md) |
+| [googlenet](vision/googlenet/README.md) | [conversion](vision/googlenet/conversion/README.md) | [evaluator](vision/googlenet/evaluator/README.md) |
+| [hgnetv2](vision/hgnetv2/README.md) | [conversion](vision/hgnetv2/conversion/README.md) | [evaluator](vision/hgnetv2/evaluator/README.md) |
+| [vit](vision/vit/README.md) | [conversion](vision/vit/conversion/README.md) | [evaluator](vision/vit/evaluator/README.md) |
 
-| Sample | Artifacts checked in this batch | X5 | S100 | S100P | S600 |
-| --- | --- | --- | --- | --- | --- |
-| YOLO | YOLOv8n / YOLO26n detection | 8GB / 4GB | Compared | Compared | Compared |
-| ResNet | ResNet18 | 8GB / 4GB | Compared | No audited artifact | Compared |
-| PaddleOCR | X5 PP-OCRv3 / S100 PP-OCRv6 | 8GB / 4GB | Compared | No audited pair | No audited pair |
+## Detection, OCR, tracking and matting
 
-These are recorded fixed-input checks. Full accuracy and performance require
-separate dataset evaluation. Artifacts are not interchangeable between boards;
-do not mix OCR generations, components or vocabularies.
-
-## Where code lives
-
-Each sample owns its task flow, model binding/call, conversion and evaluation.
-Common target identity, artifact access and image-byte conversion live in
-[`_shared/`](_shared/README.md). The sample guides identify the code to read and edit.
-
-Unmigrated models remain under the [X5](../platforms/x5/README.md) and
-[S-series](../platforms/s/README.md) directories. [X3](../platforms/x3/README.md) is retained as historical content.
-
-S600 comparisons above are the September 16 snapshot. The September 17 revision could not be retested there because SSH connectivity has not recovered.
-
-## Migrated classification samples (2026-09-22)
-
-These are unified source entrypoints. Read each sample and migration ledger for target-specific validation; source availability is not board acceptance. All eight B4 classification samples have host validation only; board checks are not-run.
-
-| Sample | Guide |
-| --- | --- |
-| mobilenetv1 | [mobilenetv1](vision/mobilenetv1/README.md) |
-| mobilenetv2 | [mobilenetv2](vision/mobilenetv2/README.md) |
-| mobilenetv3 | [mobilenetv3](vision/mobilenetv3/README.md) |
-| mobilenetv4 | [mobilenetv4](vision/mobilenetv4/README.md) |
-| efficientnet | [efficientnet](vision/efficientnet/README.md) |
-| efficientformer | [efficientformer](vision/efficientformer/README.md) |
-| efficientformerv2 | [efficientformerv2](vision/efficientformerv2/README.md) |
-| efficientvit | [efficientvit](vision/efficientvit/README.md) |
-| convnext | [convnext](vision/convnext/README.md) |
-| edgenext | [edgenext](vision/edgenext/README.md) |
-| fasternet | [fasternet](vision/fasternet/README.md) |
-| fastvit | [fastvit](vision/fastvit/README.md) |
-| repghost | [repghost](vision/repghost/README.md) |
-| repvgg | [repvgg](vision/repvgg/README.md) |
-| repvit | [repvit](vision/repvit/README.md) |
-| mobileone | [mobileone](vision/mobileone/README.md) |
-| resnext | [resnext](vision/resnext/README.md) |
-| vargconvnet | [vargconvnet](vision/vargconvnet/README.md) |
-| googlenet | [googlenet](vision/googlenet/README.md) |
-| hgnetv2 | [hgnetv2](vision/hgnetv2/README.md) |
-| vit | [ViT CIFAR-10](vision/vit/README.md) |
-
-## Unified feature extraction samples
-
-These entries expose vision features. Current validation is host-only; board verification remains not-run.
-
-| Sample | Guide |
-| --- | --- |
-| SigLIP | [SigLIP](vision/siglip/README.md) |
-| DINOv2 | [DINOv2](vision/dinov2/README.md) |
-
-## Image-text matching and video classification
-
-These unified entries have host tests; real board verification remains not-run.
-
-| Task | Guide |
-| --- | --- |
-| Match one image to candidate text descriptions | [CLIP](vision/clip/README.md) |
-| Classify a prepared 16-frame video tensor | [3DResNet](vision/3dresnet/README.md) |
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [ultralytics_yolo](vision/ultralytics_yolo/README.md) | [conversion](vision/ultralytics_yolo/conversion/README.md) | [evaluator](vision/ultralytics_yolo/evaluator/README.md) |
+| [paddle_ocr](vision/paddle_ocr/README.md) | [conversion](vision/paddle_ocr/conversion/README.md) | [evaluator](vision/paddle_ocr/evaluator/README.md) |
+| [yolov5](vision/yolov5/README.md) | [conversion](vision/yolov5/conversion/README.md) | [evaluator](vision/yolov5/evaluator/README.md) |
+| [fcos](vision/fcos/README.md) | [conversion](vision/fcos/conversion/README.md) | [evaluator](vision/fcos/evaluator/README.md) |
+| [yoloworld](vision/yoloworld/README.md) | [conversion](vision/yoloworld/conversion/README.md) | [evaluator](vision/yoloworld/evaluator/README.md) |
+| [lprnet](vision/lprnet/README.md) | [conversion](vision/lprnet/conversion/README.md) | [evaluator](vision/lprnet/evaluator/README.md) |
+| [modnet](vision/modnet/README.md) | [conversion](vision/modnet/conversion/README.md) | [evaluator](vision/modnet/evaluator/README.md) |
+| [bytetrack](vision/bytetrack/README.md) | [conversion](vision/bytetrack/conversion/README.md) | [evaluator](vision/bytetrack/evaluator/README.md) |
 
 ## Prompted segmentation
 
-These two-stage samples have local host validation. Real board verification and conversion/calibration remain not-run. Their prompt interfaces differ; read the selected guide first.
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [efficient_sam](vision/efficient_sam/README.md) | [conversion](vision/efficient_sam/conversion/README.md) | [evaluator](vision/efficient_sam/evaluator/README.md) |
+| [mobile_sam](vision/mobile_sam/README.md) | [conversion](vision/mobile_sam/conversion/README.md) | [evaluator](vision/mobile_sam/evaluator/README.md) |
 
-| Goal | Guide | Conversion | Validation |
-| --- | --- | --- | --- |
-| Produce a mask using two positive points fixed at export | [EfficientSAM](vision/efficient_sam/README.md) | [Conversion](vision/efficient_sam/conversion/README.md) | [Comparison and performance procedures](vision/efficient_sam/evaluator/README.md) |
-| Produce a mask using one runtime box prompt | [MobileSAM](vision/mobile_sam/README.md) | [Conversion](vision/mobile_sam/conversion/README.md) | [Comparison and performance procedures](vision/mobile_sam/evaluator/README.md) |
+## Features, multimodal matching and video
+
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [siglip](vision/siglip/README.md) | [conversion](vision/siglip/conversion/README.md) | [evaluator](vision/siglip/evaluator/README.md) |
+| [dinov2](vision/dinov2/README.md) | [conversion](vision/dinov2/conversion/README.md) | [evaluator](vision/dinov2/evaluator/README.md) |
+| [clip](vision/clip/README.md) | [conversion](vision/clip/conversion/README.md) | [evaluator](vision/clip/evaluator/README.md) |
+| [3dresnet](vision/3dresnet/README.md) | [conversion](vision/3dresnet/conversion/README.md) | [evaluator](vision/3dresnet/evaluator/README.md) |
+
+## Read validation status correctly
+
+- The three original pilots and B1/B2 have their own board records; one passing case does not certify a family.
+- B3/B4/B5 migration acceptance primarily uses host checks; batch reports retain the board backlog.
+- EfficientSAM/MobileSAM have fully recovered X5 8GB default/priority7 and S100 default evidence. X5 4GB logs-only, unfinished S600 and unverified S100P gaps remain scoped in the [board handoff](../docs/releases/unified-migration/2026-09-24-board-resume.md); neither “all tested” nor “all untested” is accurate.
+- B7 includes scoped passing Python comparisons, MODNet manual-asset gaps, ByteTrack video-scope limits and pending source C++ comparisons. See the [ledger](../docs/releases/unified-migration/x5-s-migration-map.md).
+
+## Choose and extend
+
+Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [_shared](_shared/README.md); responsibilities and documentation requirements are in the [inference contract](../docs/sample-standards/inference-contract.md) and [README contract](../docs/sample-standards/readme-contract.md).
+
+Pending models remain under [X5](../platforms/x5/README.md) and [S](../platforms/s/README.md); [X3](../platforms/x3/README.md) is historical. B8–B11 migration and final review remain active. This index is not a full-delivery acceptance sheet.

@@ -68,18 +68,18 @@ so stale entries fail CI instead of rotting.  Broad directory exemptions
 are not supported by design (plan Q3); each entry must name one finding
 location.
 
-### Audited debt baseline
+### Historical README baseline — retired
 
-`baselines/ultralytics-readme-debt.json` is the B1-R6 baseline: the 84
-pre-existing `R-README-SECTIONS` findings in the `ultralytics_yolo` pilot,
-each entry pinned by exact message.  CI passes it to the scope check, so
-the approved deferral is explicit and bounded: any new violation — in this
-sample or any other, of this rule or any other — still fails the gate,
-and fixing a listed finding surfaces its entry as an unused exemption,
-forcing the baseline to shrink.  Batch B9 rewrites the sample per the Q1
-contract and **must delete the baseline file and the `--exemptions` flag
-from `.github/workflows/sample-contract.yml`**; the deferral may not
-outlive B9.
+The B1-R6 Ultralytics baseline originally allowed 84 exact section findings.
+All model/runtime/conversion/evaluator/sample README sections were restored
+and checked against their entry points on 2026-09-26. The baseline JSON and
+workflow `--exemptions` flag have been deleted; migration CI now runs without
+exemptions. See the [closure record](../../docs/releases/unified-migration/2026-09-26-yolo-readme-debt-closure.md).
+
+Generic exact-message exemption parsing and unused-entry rejection remain
+covered by fixture tests; this does not mean any current migration exemption
+is active. B9 model-family consolidation and YOLOE work remain separate from
+README debt closure.
 
 ## Boundaries
 

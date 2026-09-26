@@ -1,57 +1,42 @@
-# 平台登记 (Platform Registry)
+# 平台、分支与发布记录
 
-main 分支统一维护全部已支持平台。尚未合并的 Sample 保留在 `platforms/`；已审计的同类实现逐个迁入仓库根目录 `samples/`，并保留旧路径兼容入口。首批为 Ultralytics YOLO。历史 Tag 保留原有完整布局。
+[English](README.md)
 
-[English](./README.md) | **简体中文**
+当前 X5/S 整合工作在 `develop` 进行，尚未完成客户发布验收。`rdk_x5`、`rdk_s` 是各平台交付线，历史标签保留其发布时完整布局；本次整合不移动标签，也不把开发状态自动升级为发布。X3 保留为历史分发，不属于本轮新增适配范围。
 
-| 平台 | 目录 | 历史分支 | 清单目录 | 发布 Tag | 运行时 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| RDK X5 | [`x5/`](./x5) | `rdk_x5` | [`x5/docs/release`](./x5/docs/release) | `x5-v1.1.2` | `hbm_runtime` |
-| RDK S100 / S100P / S600 | [`s/`](./s) | `rdk_s` | [`s/docs/release`](./s/docs/release) | `s-v1.1.2` | `hbm_runtime` |
-| RDK X3 | [`x3/`](./x3) | `rdk_x3` | [`x3/release`](./x3/release) | `x3-v1.1.2` | `hobot_dnn`、`bpu_infer_lib_x3` |
+下表来自本仓库 [registry.json](registry.json)。登记的 release tag 是注册表记录，不是对远端“最新版本”的查询。清单位置相对当前整合树：
 
-同一份登记表连同硬件标识与许可证指针，以机器可读形式发布于 [`registry.json`](./registry.json)。
+| 平台 | 交付线 | 登记标签 | 当前清单 | 原平台资料 |
+|---|---|---|---|---|
+| RDK X5 | `rdk_x5` | `x5-v1.1.3` | [docs/release/x5](../docs/release/x5) | [x5](../platforms/x5/README_cn.md) |
+| RDK S100 / S100P / S600 | `rdk_s` | `s-v1.1.2` | [docs/release/s](../docs/release/s) | [s](../platforms/s/README_cn.md) |
+| RDK X3 | `rdk_x3` | `x3-v1.1.2` | [platforms/x3/release](../platforms/x3/release) | [x3](../platforms/x3/README_cn.md) |
 
-## 共用 Sample 迁移
+## 三种路径各自的用途
 
-首批为 [Ultralytics YOLO](../samples/vision/ultralytics_yolo/README_cn.md)：共用 Python 任务实现、显式选择平台，X5/S 转换流程独立，C++ 仅保留 X5 支持。旧平台命令转发到共用实现，因此需要完整仓库；原 README 与 Manifest 仍是 Benchmark 证据。
+- 根 `samples/`：统一维护的 Sample，详见 [完整索引](../samples/README_cn.md)。不再只有最初三个试点。
+- 根 `docs/release/x5`、`docs/release/s`：当前制品身份、URL、发布事实及历史指标的维护位置；`tools/catalog-publisher` 从注册表定位这些清单。原平台清单保留作迁移来源记录，不应更新两份产生分叉。
+- `platforms/{x5,s}/`：原平台资料、尚未迁移的能力和旧入口兼容层。部分入口已转发到根 Sample，单独复制子目录可能缺少依赖，通常需要完整仓库。
 
-其他 Sample 暂保留平台布局，按运行时、编译器、资产及评测差异逐项审计后再迁移。历史 Tag 不重写，也不因本次合并要求各板卡同步打 Tag。
+历史标签中的 `samples/`、`docs/release/` 或 `release/` 位于当时仓库根目录。清单 `source.path` 必须按对应标签布局解析，不能在旧标签路径前强加 `platforms/`。
 
-## 各平台内容
+## 运行时和制品差异
 
-### `x5/` —— RDK X5
+X5 与 S 都使用名为 `hbm_runtime` 的模块，但底层 SDK 和模型不通用。X5 常见图像制品是 `.bin`、packed NV12；S 是 `.hbm`，S100/S100P/S600 对应 nash-e/m/p，图像常用 Y/UV 双输入。点云、特征、音频等任务有自己的输入协议，不能概括为所有 Sample 都使用 NV12。X3 历史运行时为 `hobot_dnn` / `bpu_infer_lib_x3`。
 
-在 main 维护的 X5 实现。`samples/vision/` 存放规范化示例（小写命名、`hbm_runtime`、packed NV12 输入）；`samples/robotics/` 存放具身智能策略。`utils/py_utils/` 提供共用的前处理、后处理与可视化工具。`docs/Model_Zoo_Repository_Guidelines.md` 是示例结构与接口的权威规范。
+[硬件身份注册](../docs/release/platforms.json) 与制品是否发布、语言是否实现、板测是否通过是不同维度。无资产不能静默选择另一板卡；未测不能写作通过。Ultralytics C++ 已有 X5/S 输入适配代码，其实际任务及验证限制见 [C++ 指南](../samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md)，旧“仅 X5”的概括不再适用。
 
-### `s/` —— RDK S100 / S100P / S600
+## 保留的开发资料
 
-规范化方式与 X5 相同，但在同一目录树内面向三个板卡目标，并额外提供两类示例：`samples/speech/` 与 `samples/vla/`。VLA 策略（ACT、Pi0）在仓库 `.gitmodules` 中声明为 git 子模块，其路径带有 `platforms/s/` 前缀；子模块 gitlink 本身未做改动。`docs/Python_API_User_Guide.md` 与 `docs/UCP_User_Guide.md` 分别记录 S 系列运行时与统一计算平台。
+- X5：[仓库规范](x5/docs/Model_Zoo_Repository_Guidelines.md)、[源码资料](x5/docs/source_reference/README.md)、[数据集](x5/datasets)、robotics 源 Sample。
+- S：[仓库规范](s/docs/Model_Zoo_Repository_Guidelines.md)、[Python API](s/docs/Python_API_User_Guide.md)、[UCP](s/docs/UCP_User_Guide.md)、[数据集](s/datasets)、speech/VLA 源 Sample。
+- ACT/Pi0 仍由根 [.gitmodules](../.gitmodules) 记录 gitlink 入口；引用上游仓库不等于本次已经迁移或验收。
+- X3：保留 `demos/`、`resource/`、`release/` 的历史结构，不强套 X5/S 新目录规范。
 
-### `x3/` —— RDK X3
+原平台 README 保留了硬件背景、模型列表、FAQ、转换/运行说明和社区入口。新增共用 Sample 按 [推理契约](../docs/sample-standards/inference-contract.md) 与 [README 契约](../docs/sample-standards/readme-contract.md) 开发；当前范围见 [计划](../docs/superpowers/plans/2026-09-26-host-completion.md) 与 [迁移台账](../docs/releases/unified-migration/x5-s-migration-map.md)。
 
-历史 Demo 线，按发布原样保留：`demos/` 存放可运行 Demo，`resource/` 存放共用资源，`release/` 存放清单对。它是 X3 交付内容的历史基线记录，不是仍在规范化的目录树，也不适用 X5/S 的目录约定。
+## 指标与许可
 
-## 清单 (Manifests)
+历史 Benchmark 保留原模型、目标、版本和测试条件。注册表、清单数量、目录去重后的数量可能不同，应由目录构建器重新计算，不把旧快照合计当成当前库存。模型/指标 Schema、构建规则和去重测试见 [catalog-publisher](../tools/catalog-publisher)。
 
-每个平台都发布 `models.yaml` 与 `benchmarks.yaml`，以及校验它们的 JSON Schema。清单是权威记录；[`tools/catalog-publisher`](../tools/catalog-publisher) 产出的目录数据包只是派生视图。
-
-| 平台 | 示例数 | 基准记录 | 性能指标 | 精度指标 |
-| :--- | ---: | ---: | ---: | ---: |
-| X5 | 37 | 239 | 636 | 419 |
-| S | 35 | 563 | 1382 | 2797 |
-| X3 | 15 | 20 | 104 | 25 |
-
-以上为**各清单自身**的统计，**不可直接相加**。历史上 X5 清单中同时携带了两条 RDK X3 的 `paddleocr` 记录；两个平台都从各自目录树发布这两条记录，目录数据只统计一次并归属 X3。因此目录数据共有 820 条基准记录，而非 822 条。
-
-## 历史 Tag
-
-发布 Tag 保留发布时的布局：仓库根目录，而非 `platforms/`。检出 `x5-v1.1.2`、`s-v1.1.2` 或 `x3-v1.1.2` 后，顶层是 `samples/`、`docs/release/` 或 `release/`，这些清单中的每一个 `source.path` 都按该布局解析。已发布 Tag 不可变，永远不会被移动到 `platforms/` 前缀下。
-
-## 许可证
-
-各平台各自携带许可证文件。X5 与 S 提供 `LICENSE`；上游 X3 未发布许可证，迁移过程中也未新增。
-
-## 维护方式
-
-新增模型、修复、Manifest 与发布准备统一在 main 维护。旧平台分支与 Tag 保留为历史兼容入口。新增板卡需要登记平台目录并扩展目录数据的硬件映射，无需更换 main 或迁移仪表盘。
+X5/S 保留各自 LICENSE；X3 上游没有随附许可文件，未在迁移中补造。统一代码与第三方模型/数据的许可分别核对，不因目录移动变更其来源。

@@ -164,7 +164,7 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 
 | Batch | Sample / source SHA | Target / variant / language | Mapping | Refactor | Docs | Host | Board | Review | Closed | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| pilot | ultralytics_yolo（yolov8n/yolo26n 检测）/ develop@9f17f2a | x5+s / yolov8n、yolo26n / python | done | done | pending（Q1–Q5 合规随 B9 收编验收） | passed | passed（x5 双板+s100+s100p 适用项；S600 not-run） | not-run | no | [2026-09-17-integration-review.md](2026-09-17-integration-review.md) |
+| pilot | ultralytics_yolo（yolov8n/yolo26n 检测）/ develop@9f17f2a | x5+s / yolov8n、yolo26n / python | done | done | done（2026-09-26 全层双语 README；原 84 条豁免清零；实现职责及 B9 收编另验收） | passed | passed（x5 双板+s100+s100p 适用项；S600 not-run） | not-run | no | [2026-09-17-integration-review.md](2026-09-17-integration-review.md) |
 | pilot | resnet（resnet18）/ develop@9f17f2a | x5+s100 / resnet18 / python + s100 cpp | done | done | done（2026-09-21 Q4 参照改造，检查器 0 violations） | passed | passed（x5 双板+s100；s100p 无已批准资产，未验证） | passed（2026-09-21 双视角评审） | no | [2026-09-17-integration-review.md](2026-09-17-integration-review.md)、[2026-09-21-phase05-q4-review.md](2026-09-21-phase05-q4-review.md) |
 | pilot | paddle_ocr（PP-OCRv3/v6）/ develop@9f17f2a | x5+s100 / det+rec 两阶段 / python + s100 cpp | done | done | done（2026-09-21 Q4 参照改造，检查器 0 violations） | passed | passed（x5 双板+s100；s100p/s600 not-run） | passed（2026-09-21 双视角评审） | no | [2026-09-17-integration-review.md](2026-09-17-integration-review.md)、[2026-09-21-phase05-q4-review.md](2026-09-21-phase05-q4-review.md) |
 | B1 | mobilenetv1 / x5:ac11571 | x5 / python | done | done | done（R5 证据/文档同步整改后，待独立复核） | passed（17 OK） | passed（x5-8g 复测过；与 x5-4g/s100/s600 对照全等，v1 maxdiff 0.0） | passed（Codex 716bdca 最终复核；R1–R6 closed） | yes（既定范围；S600 cpp 仍 not-run） | [b1 评审](2026-09-21-b1-mobilenet-resnet-review.md)、[b1 evidence](evidence/2026-09-21-b1-mobilenet-resnet-evidence.json)、[board evidence](evidence/2026-09-21-b1-board-smoke-evidence.json)、[独立评审](2026-09-21-b1-independent-review.md) |
@@ -227,7 +227,7 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B8 | lanenet / s:380e1a2 | s / python + cpp（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | pointnet / s:380e1a2 | s / python（点云输入） | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | diffusiondrive / s:380e1a2 | s / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B9 | ultralytics_yolo 收编 yolo11/yolo11_pose/yolo11_seg/yolov13_imoonlab / s:380e1a2 | s / 新 family/variant / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | —（B9 必须删除 B1-R6 欠账基线 `tools/sample_contract/baselines/ultralytics-readme-debt.json` 及 workflow 中的 `--exemptions` 旗标，见 checker README） |
+| B9 | ultralytics_yolo 收编 yolo11/yolo11_pose/yolo11_seg/yolov13_imoonlab / s:380e1a2 | s / 新 family/variant / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | [README 欠账已于 2026-09-26 提前清零](2026-09-26-yolo-readme-debt-closure.md)（基线与 workflow 旗标已删；本行系列收编仍 pending） |
 | B9 | yoloe（x5 yoloe + s yoloe11_seg + s tip yoloe26_seg）/ x5:ac11571 + s:380e1a2 | x5+s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B10 | himloco / x5:ac11571 | x5 / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B10 | asr / s:380e1a2 | s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
