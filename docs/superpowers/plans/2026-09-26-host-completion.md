@@ -13,10 +13,12 @@
 
 - [ ] H0 汇合未合入的已审修复；修正B3工具依赖隔离、原生audit与两侧日志归档，完成主机回归。
 - [ ] H1 README覆盖审计：根、sample索引、平台说明、每个sample及model/runtime/python/runtime/cpp/conversion/evaluator；建立源能力→新位置映射，修复失链与默认命令矛盾。
+  - 2026-09-26 总入口、36 个 Sample 索引及平台注册说明已更新，362 个本地链接通过；原平台正文保留。逐 Sample 深度内容审核仍继续，H1 不整体关闭。
 - [ ] H2 Ultralytics YOLO全部层级文档与代码规范示范：可复制最短流程、全任务命令、完整API输入变量、参数默认/输出/模型/转换/评估/历史指标/故障说明、中英一致。
+  - 2026-09-26 文档子项已完成：Ultralytics 根/model/runtime/python/runtime/cpp/conversion/evaluator 双语改写；36 samples / 0 violations / 0 exemptions，原 84 条基线与 CI 旗标已删除。H2 的实现职责审计仍待完成。
 - [ ] H3 B7主机整改集成；客户文档跟随实际代码与历史板证据，保持板测缺口。
 - [ ] H4 B8全部样例完整源能力迁移与测试、双语README。
-- [ ] H5 B9独立YOLO样例收编及YOLOE迁移；逐条消除Ultralytics README基线，清理workflow豁免旗标。
+- [ ] H5 B9独立YOLO样例收编及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；系列收编和 YOLOE 迁移仍 pending。
 - [ ] H6 B10语音/机器人样例迁移；保留执行边界，不触发实机控制。
 - [ ] H7 B11大模型和VLA来源/gitlink/资源集成，不用空壳冒充上游能力。
 - [ ] H8 全仓共享职责、datasets、旧路径兼容、manifest/catalog、七skills原包来源与文档/Agent导航、上游增量核对。
