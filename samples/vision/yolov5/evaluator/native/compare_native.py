@@ -440,6 +440,17 @@ def run_comparison(args, output, originals, identity, stages, failures, bail) ->
     if not run_record.get("audit_verification", {}).get("passed"):
         return bail("instrumentation audit verification failed in the run record: "
                     f"{run_record.get('audit_verification', {}).get('error')!r}")
+    if run_record.get("audit_file") != "instrumentation-audit.json":
+        return bail("source run record lacks its archived instrumentation audit")
+    audit_path = capture_dir / "instrumentation-audit.json"
+    if not audit_path.is_file():
+        return bail("archived source instrumentation audit missing")
+    audit_bytes = audit_path.read_bytes()
+    audit_digest = hashlib.sha256(audit_bytes).hexdigest()
+    if audit_digest != run_record.get("audit_sha256"):
+        return bail("archived source instrumentation audit SHA-256 mismatch")
+    (originals / "source-instrumentation-audit.json").write_bytes(audit_bytes)
+    identity["source_audit_sha256"] = audit_digest
     for role, key in (("source", "binary"), ("source", "model"), ("source", "image")):
         before = run_record.get(f"{key}_sha256_before")
         after = run_record.get(f"{key}_sha256_after")
@@ -514,6 +525,12 @@ def run_comparison(args, output, originals, identity, stages, failures, bail) ->
     for key in ("argv", "cwd", "utc_start", "utc_finish"):
         if not unified_record.get(key):
             return bail(f"unified run record lacks {key}")
+    unified_process_dir = args.unified_run_record.parent
+    if not all((unified_process_dir / name).is_file()
+               for name in ("stdout.txt", "stderr.txt")):
+        return bail("unified run record stdout/stderr files missing")
+    for name in ("stdout.txt", "stderr.txt"):
+        shutil.copyfile(unified_process_dir / name, originals / f"unified-{name}")
     unified_conflict = board_conflict(args.target, [
         ("socinfo", unified_record.get("soc_name", "")),
         ("soc", unified_record.get("board_soc", "")),

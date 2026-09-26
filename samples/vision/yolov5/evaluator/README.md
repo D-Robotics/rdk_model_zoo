@@ -58,7 +58,8 @@ python3 samples/vision/yolov5/evaluator/native/instrument.py \
   --target x5 --repo-root . --work-dir /tmp/yolov5-fixed-src \
   --model-path samples/vision/yolov5/model/yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin \
   --image-path samples/vision/yolov5/test_data/bus.jpg
-#    (S passes --target s100 or s600; rebinding happens through gflags at run.)
+#    (S100/S600 use --target s100 here to select the shared S source group;
+#    actual unified build and comparison must select the real board target.)
 
 # 2) Build the instrumented fixed source, then run it THROUGH the external
 #    runner, which records the REAL process evidence (true argv including
@@ -189,3 +190,5 @@ S100/S600 and current source/unified board comparison are `not-run`.
 ## Boundaries
 
 This evaluator does not download models, build conversion artifacts, or claim board compatibility from host tests. X5 source intentionally uses its OpenCV XYXY-to-NMSBoxes quirk while S uses class-wise XYXY NMS; cross-target equality is not a valid assertion.
+
+The source runner archives the exact pre-execution audit bytes as `instrumentation-audit.json` with `audit_file` and `audit_sha256` in the run record. It writes the copy after the child finishes to preserve the observer's empty-directory requirement. Keep the whole source capture and unified process-record directories: comparison rejects a missing or changed audit and missing unified stdout/stderr, and includes the audit plus both sides' logs under `originals/` in its output. Older captures lacking the audit binding are insufficient for this gate; a boolean verification summary cannot replace the audited document.

@@ -19,6 +19,7 @@ import json
 import pathlib
 import re
 import shutil
+import shlex
 import struct
 import subprocess
 import sys
@@ -61,7 +62,11 @@ def make_run_record(capture_dir: Path, *, model: bytes, image: bytes,
                     audit_passed: bool = True, binary_changed: bool = False) -> None:
     (capture_dir / "stdout.txt").write_text("ran\n")
     (capture_dir / "stderr.txt").write_text("")
+    audit_bytes = b'{"schema":"rdk-model-zoo/yolov5-cpp-instrumentation/v1","fixture":true}\n'
+    (capture_dir / "instrumentation-audit.json").write_bytes(audit_bytes)
     record = {
+        "audit_file": "instrumentation-audit.json",
+        "audit_sha256": sha(audit_bytes),
         "schema": "rdk-model-zoo/yolov5-cpp-run-record/v1",
         "utc_start": "2026-09-24T00:00:00Z", "utc_finish": "2026-09-24T00:00:03Z",
         "binary_path": "/tmp/yolov5_fixed_capture",
@@ -293,7 +298,7 @@ def make_unified_run_record(capture_dir: Path, *, model: bytes, image: bytes,
 
 
 def run_compare(tmp: Path, source: Path, unified: Path, output: Path,
-                target: str = "s100") -> subprocess.CompletedProcess:
+                target: str = "s100", missing_log=None) -> subprocess.CompletedProcess:
     binary = tmp / "binaries"
     binary.mkdir(exist_ok=True)
     (binary / "source").write_bytes(b"source-binary")
@@ -303,6 +308,8 @@ def run_compare(tmp: Path, source: Path, unified: Path, output: Path,
     make_unified_run_record(unified_record_dir, model=b"model-bytes",
                             image=b"image-bytes", unified_binary=b"unified-binary",
                             soc=target.upper())
+    if missing_log:
+        (unified_record_dir / missing_log).unlink()
     return subprocess.run(
         [PY, str(NATIVE / "compare_native.py"), "--target", target,
          "--repo-root", str(ROOT), "--source-capture", str(source),
@@ -594,10 +601,16 @@ class RunCaptureTests(unittest.TestCase):
                  "--repo-root", str(ROOT), "--work-dir", str(work)],
                 capture_output=True, text=True)
             self.assertEqual(generated.returncode, 0, generated.stderr)
+            audit_path = work / "instrumentation-audit.json"
+            original_audit = audit_path.read_bytes()
             binary = root / "fake"
-            binary.write_bytes(
-                "#!/bin/sh\necho out-loud\necho err-loud >&2\n"
-                'mkdir -p "$YOLOV5_CAPTURE_DIR"\nexit 0\n'.encode())
+            script = (
+                '#!/bin/sh\n'
+                'test -z "$(ls -A "$YOLOV5_CAPTURE_DIR")" || exit 17\n'
+                'echo out-loud\necho err-loud >&2\n'
+                f'printf changed-during-execution > {shlex.quote(str(audit_path))}\n'
+                'exit 0\n')
+            binary.write_bytes(script.encode())
             binary.chmod(0o755)
             model, image = root / "m.hbm", root / "i.jpg"
             model.write_bytes(b"model-bytes")
@@ -619,6 +632,13 @@ class RunCaptureTests(unittest.TestCase):
                              record["binary_sha256_after"])
             self.assertEqual((capture_dir / "stdout.txt").read_text(), "out-loud\n")
             self.assertEqual((capture_dir / "stderr.txt").read_text(), "err-loud\n")
+            archived_audit = capture_dir / "instrumentation-audit.json"
+            self.assertTrue(archived_audit.is_file())
+            self.assertEqual(audit_path.read_bytes(), b"changed-during-execution")
+            self.assertEqual(archived_audit.read_bytes(), original_audit)
+            audit_path.write_bytes(original_audit)
+            self.assertEqual(record["audit_file"], archived_audit.name)
+            self.assertEqual(record["audit_sha256"], sha(archived_audit.read_bytes()))
             # A nonzero process rc propagates and is recorded.
             binary.write_bytes(b"#!/bin/sh\nexit 3\n")
             binary.chmod(0o755)
@@ -763,8 +783,40 @@ class CompareNativeTests(unittest.TestCase):
                          "detections-final-coordinates-unified.npy",
                          "originals/source-capture.json", "originals/unified-manifest.json",
                          "originals/source-run-record.json", "originals/source-stdout.txt",
+                         "originals/source-instrumentation-audit.json",
+                         "originals/unified-stdout.txt", "originals/unified-stderr.txt",
                          "originals/raw-output0-source-physical.bin", "digests.json"):
                 self.assertTrue((output / name).is_file(), name)
+
+    def test_missing_unified_process_log_is_rejected(self):
+        for name in ("stdout.txt", "stderr.txt"):
+            with self.subTest(log=name), tempfile.TemporaryDirectory() as tmp:
+                base = Path(tmp)
+                source = build_s100_capture(base / "source")
+                unified = build_unified_dump(base / "unified")
+                result = run_compare(base, source, unified, base / "out", missing_log=name)
+                self.assertEqual(result.returncode, 2)
+                report = json.loads((base / "out/comparison.json").read_text())
+                self.assertFalse(report["passed"])
+                self.assertIn("unified", result.stderr)
+                self.assertIn("stdout/stderr", result.stderr)
+
+    def test_missing_or_tampered_archived_audit_is_rejected(self):
+        for missing in (True, False):
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as tmp:
+                base = Path(tmp)
+                source = build_s100_capture(base / "source")
+                audit = source / "instrumentation-audit.json"
+                if missing:
+                    audit.unlink()
+                else:
+                    audit.write_bytes(b'{"changed":true}')
+                unified = build_unified_dump(base / "unified")
+                result = run_compare(base, source, unified, base / "out")
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("audit", result.stderr)
+                report = json.loads((base / "out/comparison.json").read_text())
+                self.assertFalse(report["passed"])
 
     def test_real_v2_manifest_parameters_schema_is_accepted(self):
         """Regression against the REAL board manifest (checked-in copy)."""

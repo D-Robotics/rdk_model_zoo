@@ -31,3 +31,5 @@
 2026-09-26：确认develop仍为3b6f5aa，既有集成分支保留SAM及README修复；已合并最新develop报告。发现根README仍自述三试点，Ultralytics model/evaluator文档相比源严重压缩；先补evaluator可操作流程，不宣称H2整体完成。
 
 2026-09-26：完成 Ultralytics model/evaluator 双语操作说明及 Python 示例纠错；78 项主机测试通过，文档检查 36 samples / 0 violations / 60 exemptions。详见 [质量记录](../../releases/unified-migration/2026-09-26-readme-quality-review.md)。H2 其余层级与全部后续批次继续，未关闭。
+
+2026-09-26：H0 的 B3 依赖隔离及原生 audit/双侧日志归档已修复，分别通过 30 和 79 项主机测试；代码已汇入集成分支。详见 [工具整改](../../releases/unified-migration/2026-09-26-tool-remediation.md)。全部修复分支归并与最终主机回归仍待核对，H0/H3 不提前整体勾选。

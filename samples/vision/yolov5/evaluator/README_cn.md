@@ -52,7 +52,8 @@ python3 samples/vision/yolov5/evaluator/native/instrument.py \
   --target x5 --repo-root . --work-dir /tmp/yolov5-fixed-src \
   --model-path samples/vision/yolov5/model/yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin \
   --image-path samples/vision/yolov5/test_data/bus.jpg
-#    （S 传 --target s100 或 s600；路径经运行时 gflags 重绑定。）
+#    （S100/S600 在此都传 --target s100，选择共同的 S 源代码；
+#    统一入口构建和比较时必须选择实际板卡目标。）
 
 # 2) 编译插桩固定源，经外部 runner 运行。runner 记录真实进程证据（含被
 #    gflags 删除参数在内的完整 argv、分离的 stdout/stderr、真实退出码、
@@ -161,3 +162,5 @@ S100/S600 以及当前源/统一板端比较均为 `not-run`。
 ## 边界
 
 评估器不下载模型、不构建转换产物，也不会把主机测试写成板端兼容。X5 刻意保留源 OpenCV XYXY-to-NMSBoxes quirk，S 使用按类 XYXY NMS；不能跨 target 要求结果相等。
+
+源端 runner 将运行前实际校验的审计字节归档为 `instrumentation-audit.json`，并在运行记录保存 `audit_file`、`audit_sha256`。副本在子进程结束后写入，以满足观测头要求输出目录初始为空的约束。请保留完整源捕获目录和统一入口进程记录目录：审计缺失或内容变化、统一入口 stdout/stderr 缺失均会拒绝比较；成功输出的 `originals/` 包含审计与双方日志。旧捕获若没有审计绑定，不能通过该检查；仅有校验通过布尔值不能代替被校验的文档。

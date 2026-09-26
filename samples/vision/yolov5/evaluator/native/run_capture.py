@@ -49,7 +49,8 @@ def read_first_line(path: str) -> str:
         return ""
 
 
-def verify_audit(audit_path: pathlib.Path, work_dir: pathlib.Path) -> dict:
+def verify_audit(audit_path: pathlib.Path, work_dir: pathlib.Path,
+                 audit_bytes: bytes | None = None) -> dict:
     """Verifies the instrumentation audit against the protocol instrument.py
     actually emits and against the generated work dir.
 
@@ -59,8 +60,8 @@ def verify_audit(audit_path: pathlib.Path, work_dir: pathlib.Path) -> dict:
     CMake hashes, and every recorded file present with its recorded hash.
     Empty or truncated audits are rejected outright."""
     try:
-        audit = json.loads(audit_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
+        audit = json.loads(audit_bytes if audit_bytes is not None else audit_path.read_bytes())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         return {"passed": False, "error": f"unreadable audit: {error}"}
     if not isinstance(audit, dict) or not audit:
         return {"passed": False, "error": "audit is empty or not an object"}
@@ -220,7 +221,17 @@ def main() -> int:
     binary_before = sha256_file(binary)
     model_before = sha256_file(model)
     image_before = sha256_file(image)
-    audit_check = (verify_audit(audit_path, work_dir)
+    # Hold the exact bytes verified before execution. Persist them AFTER the
+    # child exits, because the C++ observer requires an empty capture directory.
+    try:
+        audit_bytes = audit_path.read_bytes() if args.role == "source" else None
+    except OSError as error:
+        print(f"run_capture: unreadable audit: {error}", file=sys.stderr)
+        return 2
+    audit_binding = ({"audit_file": "instrumentation-audit.json",
+                      "audit_sha256": hashlib.sha256(audit_bytes).hexdigest()}
+                     if audit_bytes is not None else {})
+    audit_check = (verify_audit(audit_path, work_dir, audit_bytes)
                    if args.role == "source"
                    else {"passed": True, "verified_files": [],
                          "note": "unified role: no instrumentation audit"})
@@ -237,6 +248,7 @@ def main() -> int:
             "model_path": str(model), "model_sha256_before": sha256_file(model),
             "image_path": str(image), "image_sha256_before": sha256_file(image),
             "audit_path": str(audit_path), "audit_verification": audit_check,
+            **audit_binding,
             "cwd": str(pathlib.Path(args.cwd).resolve()),
             "soc_name": read_first_line("/sys/class/socinfo/soc_name"),
             "board_soc": read_first_line("/sys/class/boardinfo/soc_name"),
@@ -249,6 +261,8 @@ def main() -> int:
             "image_sha256_after": sha256_file(image),
             "error": "audit verification failed; binary not executed",
         }
+        if audit_bytes is not None:
+            (capture_dir / "instrumentation-audit.json").write_bytes(audit_bytes)
         (capture_dir / "stdout.txt").write_text("", encoding="utf-8")
         (capture_dir / "stderr.txt").write_text(
             f"run_capture: {record['error']}\n", encoding="utf-8")
@@ -269,6 +283,7 @@ def main() -> int:
         "image_sha256_before": image_before,
         "audit_path": str(audit_path),
         "audit_verification": audit_check,
+        **audit_binding,
         "cwd": str(pathlib.Path(args.cwd).resolve()),
         "soc_name": read_first_line("/sys/class/socinfo/soc_name"),
         "board_soc": read_first_line("/sys/class/boardinfo/soc_name"),
@@ -300,6 +315,8 @@ def main() -> int:
     record["model_sha256_after"] = sha256_file(model) if model.is_file() else ""
     record["image_sha256_after"] = sha256_file(image) if image.is_file() else ""
 
+    if audit_bytes is not None:
+        (capture_dir / "instrumentation-audit.json").write_bytes(audit_bytes)
     (capture_dir / "stdout.txt").write_text(record.pop("stdout"), encoding="utf-8")
     (capture_dir / "stderr.txt").write_text(record.pop("stderr"), encoding="utf-8")
     (capture_dir / "run-record.json").write_text(

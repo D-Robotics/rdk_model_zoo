@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-26",
+  "base_commit": "9b722e5d19bbaebf91a505764c241f90c4418ee7",
+  "scope": "B7 native audit persistence and unified process log archival",
+  "sha256": {
+    "samples/vision/yolov5/evaluator/native/run_capture.py": "830234136ed8869c13fc509da149b326ec92fff4b0dc3e9d643302d5546177a5",
+    "samples/vision/yolov5/evaluator/native/compare_native.py": "28b9fadb382bb43f5b8842157285927b518b4ba5f3bbca8c7be5c19281ce21ac",
+    "samples/vision/yolov5/tests/test_native_evaluator.py": "c00c62d910d8460743d16d91517e99bd99f090d34d2f9180f5c68b8a21cf72bd"
+  },
+  "red": {
+    "native_tests": 41,
+    "failures": 6,
+    "rc": 1
+  },
+  "green": {
+    "yolov5_tests": 79,
+    "rc": 0,
+    "b3_integration_tests": 30,
+    "b3_rc": 0,
+    "contract_samples": 36,
+    "contract_violations": 0,
+    "contract_exemptions": 60
+  },
+  "verified_behaviors": [
+    "Runner retains exactly the audit bytes it verified before execution, even if the source audit changes during the child process.",
+    "The child sees an empty capture directory; the audit is archived after execution.",
+    "Missing or tampered archived audit rejects comparison.",
+    "Missing unified stdout or stderr rejects comparison.",
+    "Successful comparison archives audit plus both process logs and includes them in generated digests."
+  ],
+  "board": "not-run; no new board SDK or numerical claims",
+  "native_build": "host portable/stub compilation only, not actual board build"
+}
