@@ -19,6 +19,10 @@ never imports a board SDK.  It supports runtimes that host several models in
 one artifact (an explicit model selection is required in that case) and any
 number of output tensors; single-output contracts stay a binding-level rule.
 
+``input_quants`` and ``output_quants`` retain SDK descriptors without copying.
+Input quantization supports multi-input planning samples; absent descriptors stay
+empty and each sample decides whether they are required.
+
 ``output_quants`` carries the raw per-output quantization descriptors
 (``{output_name: quant_info}``) exactly as the runtime exposes them through
 ``output_quants``/``model.output_quants[model_name]`` on both the X5 and S
@@ -64,6 +68,11 @@ def canonicalise_dtype(dtype: Any) -> str | None:
         return "int16"
     if raw in {"i32", "s32", "int32", "hbdnndatatype.int32"} or raw.endswith((".int32", ".s32")):
         return "int32"
+    # DiffusionDrive source accepts unsigned 16/32-bit physical tensors.
+    if raw in {"u16", "uint16"} or raw.endswith((".u16", ".uint16")):
+        return "uint16"
+    if raw in {"u32", "uint32"} or raw.endswith((".u32", ".uint32")):
+        return "uint32"
     # LaneNet's source native binary prediction is S64. Canonicalize the
     # spelling only; each sample still decides whether int64 is valid IO.
     if raw in {"i64", "s64", "int64", "hbdnndatatype.int64"} or raw.endswith((".int64", ".s64")):
@@ -96,6 +105,7 @@ class RuntimeMetadata:
     output_strides: Mapping[str, tuple[int, ...]] = field(default_factory=dict)
     output_quants: Mapping[str, Any] = field(default_factory=dict)
     output_semantics: str | None = None
+    input_quants: Mapping[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, Any]) -> "RuntimeMetadata":
@@ -139,6 +149,7 @@ class RuntimeMetadata:
             output_strides=_normalise_shapes(model_field("output_strides", {})),
             output_quants=_normalise_quants(model_field("output_quants", {})),
             output_semantics=semantics,
+            input_quants=_normalise_quants(model_field("input_quants", {})),
         )
 
     @classmethod
@@ -190,6 +201,7 @@ class RuntimeMetadata:
                 "input_strides": runtime_field("input_strides", {}),
                 "output_strides": runtime_field("output_strides", {}),
                 "output_quants": runtime_field("output_quants", {}),
+                "input_quants": runtime_field("input_quants", {}),
                 "output_semantics": runtime_field("output_semantics", None),
             }
         )

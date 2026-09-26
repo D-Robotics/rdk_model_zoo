@@ -240,6 +240,7 @@ class MetadataEvidenceTests(unittest.TestCase):
                 "input_strides",
                 "output_strides",
                 "output_quants",
+                "input_quants",
                 "output_semantics",
             },
         )

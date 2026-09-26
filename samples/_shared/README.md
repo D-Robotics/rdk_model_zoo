@@ -61,6 +61,12 @@ the raw values are already floats and must not be dequantized again. ResNet
 and PaddleOCR re-export this class as their
 `RuntimeMetadata`; each keeps its own contract checks on top.
 
+`input_quants` also retains per-input descriptors for multi-input planning
+models such as DiffusionDrive. Missing descriptors remain an empty mapping;
+individual bindings decide whether they are required. Input/output descriptors
+are projected without copying SDK objects. U16/U32 dtype spellings normalize to
+uint16/uint32; this does not widen any existing sample's allowed dtype set.
+
 For evidence writing, `runtime_meta.py:metadata_evidence` projects a
 `RuntimeMetadata` (or a plain mapping) into JSON-serialisable values without
 copying the SDK descriptors: `dataclasses.asdict` deep-copies every leaf and
