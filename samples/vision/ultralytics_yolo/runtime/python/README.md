@@ -6,9 +6,10 @@ This is the board-side entry point for the shared Ultralytics YOLO sample. It
 loads a compiled `.bin` (X5) or `.hbm` (S100/S100P/S600) model through the
 `hbm_runtime` supplied by the RDK system image, prepares one BGR image as the
 selected target's NV12 input, runs the task decoder, and saves a rendered
-result image. The script does not install Python packages. Export and compiler
+result image for detect/seg/pose/obb. Classification prints Top-K instead. The script does not install Python packages. Export and compiler
 steps belong in [`conversion/README.md`](../../conversion/README.md).
 
+<a id="environment"></a>
 ## Board preparation
 
 Copy or download the artifact for the same target as the board. X5 binds one
@@ -28,6 +29,7 @@ The board image needs Python 3, NumPy, OpenCV, SciPy, and its matching
 calling user. The runtime never silently falls back to another platform or
 model when a requested artifact is missing.
 
+<a id="usage"></a>
 ## Shortest detection run
 
 Run from the repository root on the matching board:
@@ -55,12 +57,21 @@ The convenience script accepts the same options after a task name:
 download, and dry-run on a host. Actual inference rejects an unknown board or
 a target mismatch before loading the model.
 
-The result is a tuple-compatible `DetectionResult` containing
-`boxes_xyxy` `(N,4)` in original-image pixels, `scores` `(N,)`, and
-`class_ids` `(N,)`. The CLI draws boxes and writes the path given by
-`--img-save-path` (default `result.jpg`). It prints the selected model, input
-protocol, and detections; no result is reported when model loading or binding
-fails.
+The following commands cover the other tasks and the default entry. With no arguments, the board is detected and yolo11 default-scale detection uses bus.jpg. Supply your own aerial image for OBB. Run each line on its matching board; this is not a script to execute all targets on one board.
+
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolo11 --task seg --img-save-path /tmp/yolo-seg.jpg
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --family yolov8 --task pose --img-save-path /tmp/yolo-pose.jpg
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s600 --family yolo26 --task cls \
+  --test-img samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg --topk 5
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolo26 --task obb \
+  --test-img /data/aerial.jpg --img-save-path /tmp/yolo-obb.jpg
+```
 
 ## Task and model selection
 
@@ -91,23 +102,60 @@ Registered families and their decoder protocol:
 | `yolo12` | detect | DFL |
 | `yolov13` | detect | DFL |
 
-Useful options include:
+<a id="parameters"></a>
+## CLI parameters
 
-```text
---score-thres 0.25       score filter
---nms-thres 0.45         platform default is X5 0.70, S 0.45
---resize-type 0|1        stretch or letterbox; defaults follow the profile
---strides 8,16,32        explicit detection feature strides
---reg 16                 DFL bins for YOLOv8/YOLO11 detection
---priority 0             BPU scheduling priority
---bpu-cores 0            one or more BPU core indexes
-```
+The Default column shows parser values. `null` means resolved later from platform, task or artifact; it does not disable the option.
 
-`--input-shape HxW` is only a fallback for runtimes that do not report input
-geometry. A reported geometry that conflicts with it is rejected. `--classes-num`,
-`--strides`, `--reg`, `--mc`, and `--nkpt` are model contract parameters, not
-ways to make an incompatible artifact load.
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `--platform` / `--target` | str | `null` | Auto-detect board; auto/x5/s100/s100p/s600. Explicit preparation can select another target; inference cannot. |
+| `--task` | str | `detect` | detect/seg/pose/cls/obb; availability depends on family. |
+| `--family` | str | `null` | Infer recognized local filename, otherwise yolo11. Conflicting explicit family is rejected. |
+| `--model-size` | str | `null` | Family/task default from the published inventory; see model README. |
+| `--model-path` | str | `null` | Explicit compiled file; never automatically downloaded. |
+| `--asset-id` | str | `null` | Exact group:sample:filename reference; constrains manifest selection. |
+| `--input-shape` | HxW | `null` | Fallback input H×W only when runtime metadata is absent. |
+| `--test-img` | str | `samples/vision/ultralytics_yolo/test_data/bus.jpg` | Readable BGR image loaded by OpenCV. |
+| `--label-file` | str | `null` | COCO for detect/seg/pose, ImageNet for cls, DOTA for obb; override for custom class order. |
+| `--img-save-path` | str | `result.jpg` | Rendered detect/seg/pose/obb image, relative to caller cwd; cls does not write it. |
+| `--score-thres` | float | `0.25` | Detection confidence filter; not used by classification. |
+| `--nms-thres` | float | `null` | Resolve by target/task; X5 detection 0.70, S detection 0.45. S YOLOv10 detection is NMS-free. |
+| `--resize-type` | int | `null` | 0 stretch, 1 letterbox; resolved defaults described below. |
+| `--classes-num` | int | `null` | Use task config default; override detect/seg/obb only to match a custom graph. |
+| `--strides` | comma-separated ints | `[8, 16, 32]` | Feature-map strides, e.g. 8,16,32. |
+| `--mc` | int | `32` | Segmentation mask coefficients; YOLO26 requires 32. |
+| `--angle-sign` | float | `1.0` | OBB angle multiplier. |
+| `--angle-offset` | float | `0.0` | OBB angle offset in degrees. |
+| `--regularize` | int | `1` | OBB rotated-rectangle regularization, 0 or 1. |
+| `--reg` | int | `16` | DFL regression bins; changing this does not convert a direct-LTRB graph. |
+| `--nkpt` | int | `17` | Pose point count for DFL families; YOLO26 requires 17. |
+| `--topk` | int | `5` | Number of classification results. |
+| `--kpt-conf-thres` | float | `0.5` | Pose drawing visibility threshold; not a tensor-binding parameter. |
+| `--priority` | int | `0` | BPU scheduling priority, 0–255. |
+| `--bpu-cores` | space-separated ints | `[0]` | One or more core indexes, e.g. --bpu-cores 0 1. |
+| `--list-models` | flag | `false` | Print supported models and exact references, then exit. |
+| `--dry-run` | flag | `false` | Resolve selection only; no download or inference. |
+| `--download` | flag | `false` | Prepare selected published model and exit without inference. |
 
+Non-classification tasks default to letterbox. YOLO26 classification defaults to stretch on every target; other classification families use letterbox on X5 and stretch on S. Geometry and class counts must match the model; `--reg`, `--strides` and `--mc` cannot force compatibility. YOLO26 non-classification tasks reject DFL/keypoint/mask overrides differing from 16/17/32. YOLOv13 is published only on X5.
+
+<a id="results"></a>
+## Results
+
+Exit status 0 means the command completed; an empty detection list can be valid. Detect/seg/pose/obb write `--img-save-path`, create its parent directory and print `[Saved]`; an existing result at that path is overwritten. Classification prints results without saving an image. Stage APIs do not draw or save files.
+
+| Task | `predict` return | Coordinates / meaning |
+|---|---|---|
+| detect | `DetectionResult(boxes_xyxy, scores, class_ids)`, tuple-compatible | `(N,4)` original-image pixel boxes, `(N,)` scores and zero-based class IDs |
+| seg | `(boxes, scores, ids, masks)` | Original-image pixel boxes and matching instance masks; preserve instance order |
+| pose | `(boxes, scores, ids, xy, confidence)` | Original-image boxes and point coordinates; published pose models have 17 points, with separate point confidence |
+| cls | List of `(class_id, probability)` | Score-sorted Top-K after Softmax, not raw logits |
+| obb | List of dictionaries: `rrect`, `score`, `id` | `rrect=(cx,cy,w,h,angle)`; original-image center/size, angle in radians |
+
+One rendered image is not dataset accuracy or performance validation; use the [evaluator](../../evaluator/README.md). See [model preparation](../../model/README.md) for local paths and published combinations.
+
+<a id="integration-example"></a>
 ## Library entry points
 
 Run this example from the repository root on the matching S600 board, after replacing the model path with your local YOLO11 detection artifact:
@@ -143,7 +191,16 @@ runner orchestration with its reviewed direct-LTRB decoder. Legacy X5 and S
 modules keep their historical class names and tuple shapes while forwarding to
 these maintained paths.
 
+<a id="stage-io"></a>
 ## Code flow
+
+`predict` composes preprocessing, one inference call and postprocessing. File reads, logs, labels and rendering belong to the CLI/helpers. Manual stage calls must preserve the same image geometry and transform; do not interleave images through one stateful model instance.
+
+- `pre_process(img, image_format="BGR")`: H×W×3 image to uint8 NV12 tensors grouped by model/input name. X5 uses a packed buffer; S binds Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`. H/W come from model binding.
+- `forward(inputs)`: run the model and return raw output mappings; no drawing, saving or detection filtering. Postprocessing interprets outputs through binding rather than treating physical output indexes as semantic roles.
+- Detection `post_process(outputs, ori_img_w, ori_img_h, ..., transform=...)`: DFL or LTRB decode, applicable NMS and coordinate restoration, returning the result above. `pre_process_with_transform` also returns the actual resize/padding transform; `pre_process` keeps the historical tensor-only return.
+- Seg/pose also decode masks/keypoints, cls applies Softmax and Top-K, and obb decodes rotated boxes. Their postprocessing signatures differ; prefer each task's `predict` or consult that module's docstrings for manual stage use.
+
 
 ```text
 main.py
@@ -161,6 +218,7 @@ integer resize and padding so inverse boxes use the same transform. The
 finite protocols and old-to-new symbol map are in
 [`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md).
 
+<a id="troubleshooting"></a>
 ## Troubleshooting
 
 * **`hbm_runtime` cannot be imported:** use the matching RDK board/system image
