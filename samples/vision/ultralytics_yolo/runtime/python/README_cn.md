@@ -39,13 +39,13 @@ S100/S100P/S600 使用对应的 `--platform`。如果使用自己准备的制品
 
 ```bash
 python samples/vision/ultralytics_yolo/runtime/python/main.py \
-  --platform s600 --family yolov8 --task detect \
+  --platform s600 --family yolo11 --task detect \
   --model-path /models/yolo11n_nashp_640x640_nv12.hbm \
   --test-img /data/image.jpg --img-save-path /tmp/yolo-s600.jpg
 ```
 
 便捷脚本在任务名后接受同样的参数，例如
-`bash runtime/python/run.sh detect --platform s100`。不传平台时它会从
+`bash samples/vision/ultralytics_yolo/runtime/python/run.sh detect --platform s100`。不传平台时它会从
 `/sys/class/boardinfo` 检测板卡；主机上的列表、下载和 dry-run 可显式选
 目标。真正推理若板卡未知或目标不匹配，会在加载模型前停止。
 
@@ -98,9 +98,15 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 
 ## 库接口
 
-维护中的检测 API 可从 `runtime/python` 导入：
+在匹配的 S600 板卡上从仓库根目录执行下例，并先将模型路径替换为本地 YOLO11 检测制品：
 
 ```python
+import sys
+from pathlib import Path
+import cv2
+
+runtime_dir = Path("samples/vision/ultralytics_yolo/runtime/python").resolve()
+sys.path.insert(0, str(runtime_dir))
 from yolo_platform import resolve_platform
 from yolo_detect import YoloDetect, YoloDetectConfig
 
@@ -109,8 +115,12 @@ config = YoloDetectConfig(
     model_path="/models/yolo11n_nashp_640x640_nv12.hbm",
     platform=profile,
 )
+bgr_image = cv2.imread("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+if bgr_image is None:
+    raise FileNotFoundError("Cannot read test image")
 detector = YoloDetect(config)
 boxes, scores, class_ids = detector.predict(bgr_image)
+print(boxes.shape, scores.shape, class_ids.shape)
 ```
 
 `YoloDetect` 支持注入 runner，便于主机测试或接入其他运行时加载器。runner
@@ -152,5 +162,5 @@ main.py
 * **无法保存结果：** 确认 `--img-save-path` 的父目录可写；相对路径相对
   调用命令所在目录。
 
-完整参数请执行 `python main.py --help`。`--help`、`--dry-run`、
+完整参数请执行 `python samples/vision/ultralytics_yolo/runtime/python/main.py --help`。`--help`、`--dry-run`、
 `--list-models`、`--download` 是不执行板端推理的路径。

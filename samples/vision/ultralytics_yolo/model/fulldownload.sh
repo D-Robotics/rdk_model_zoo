@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Download every Ultralytics YOLO model asset a platform publishes.
 #
-# This is the full inventory: on RDK X5 it is the 67 published `.bin` models
-# (YOLOv5u, YOLOv8, YOLOv9, YOLOv10, YOLO11, YOLO12 and YOLOv13 across detect,
-# segmentation, pose and classification); on the RDK S series it is every
+# This is the full inventory: on RDK X5 it is the 92 published `.bin` models
+# (YOLO26, YOLOv5u, YOLOv8, YOLOv9, YOLOv10, YOLO11, YOLO12 and YOLOv13 across detect,
+# segmentation, pose, classification and YOLO26 OBB); on the RDK S series it is every
 # published `.hbm` model of the selected march.
 #
 # Usage:

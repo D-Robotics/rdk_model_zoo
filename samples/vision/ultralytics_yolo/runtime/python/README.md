@@ -44,13 +44,13 @@ you prepared yourself, pass it explicitly:
 
 ```bash
 python samples/vision/ultralytics_yolo/runtime/python/main.py \
-  --platform s600 --family yolov8 --task detect \
+  --platform s600 --family yolo11 --task detect \
   --model-path /models/yolo11n_nashp_640x640_nv12.hbm \
   --test-img /data/image.jpg --img-save-path /tmp/yolo-s600.jpg
 ```
 
 The convenience script accepts the same options after a task name:
-`bash runtime/python/run.sh detect --platform s100`. It detects the board when
+`bash samples/vision/ultralytics_yolo/runtime/python/run.sh detect --platform s100`. It detects the board when
 `--platform` is omitted; explicit target selection is useful for listing,
 download, and dry-run on a host. Actual inference rejects an unknown board or
 a target mismatch before loading the model.
@@ -110,9 +110,15 @@ ways to make an incompatible artifact load.
 
 ## Library entry points
 
-The maintained detection API is importable from `runtime/python`:
+Run this example from the repository root on the matching S600 board, after replacing the model path with your local YOLO11 detection artifact:
 
 ```python
+import sys
+from pathlib import Path
+import cv2
+
+runtime_dir = Path("samples/vision/ultralytics_yolo/runtime/python").resolve()
+sys.path.insert(0, str(runtime_dir))
 from yolo_platform import resolve_platform
 from yolo_detect import YoloDetect, YoloDetectConfig
 
@@ -121,8 +127,12 @@ config = YoloDetectConfig(
     model_path="/models/yolo11n_nashp_640x640_nv12.hbm",
     platform=profile,
 )
+bgr_image = cv2.imread("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+if bgr_image is None:
+    raise FileNotFoundError("Cannot read test image")
 detector = YoloDetect(config)
 boxes, scores, class_ids = detector.predict(bgr_image)
+print(boxes.shape, scores.shape, class_ids.shape)
 ```
 
 `YoloDetect` accepts an injected runner for host tests and alternate runtime
@@ -173,6 +183,6 @@ finite protocols and old-to-new symbol map are in
   `--img-save-path` is writable and that the path is relative to the caller
   when it is not absolute.
 
-Use `python main.py --help` for the complete CLI. `--help`, `--dry-run`,
+Use `python samples/vision/ultralytics_yolo/runtime/python/main.py --help` for the complete CLI. `--help`, `--dry-run`,
 `--list-models`, and `--download` are host-safe paths that do not run board
 inference.
