@@ -225,7 +225,7 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B8 | yolo26_depth / x5:ac11571 + s:380e1a2 | x5+s / python + x5 cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | depth_anything_v2 / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B8 | lanenet / s:380e1a2 | s / python + cpp（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B8 | pointnet / s:380e1a2 | s / python（点云输入） | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B8 | pointnet / s:380e1a2 | s100 / python（点云输入；其余 target 无制品） | done（四阶段、metadata binding、显式下载） | done（源无可执行配方；图示与缺口保留） | done（双语五层完整 README） | passed（21 tests；真实源点云归一化与 raw 输出对照） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-pointnet-review.md) |
 | B8 | diffusiondrive / s:380e1a2 | s / python（依赖 H1） | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B9 | ultralytics_yolo 收编 yolo11/yolo11_pose/yolo11_seg/yolov13_imoonlab / s:380e1a2 | s / 新 family/variant / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | [README 欠账已于 2026-09-26 提前清零](2026-09-26-yolo-readme-debt-closure.md)（基线与 workflow 旗标已删；本行系列收编仍 pending） |
 | B9 | yoloe（x5 yoloe + s yoloe11_seg + s tip yoloe26_seg）/ x5:ac11571 + s:380e1a2 | x5+s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |

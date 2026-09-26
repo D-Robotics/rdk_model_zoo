@@ -1,3 +1,5 @@
+> 当前统一入口：[PointNet](../../../../../samples/vision/pointnet/README_cn.md)。以下保留源文档正文，其中“附带模型”和旧 API 说明属于历史内容。
+
 [English](./README.md) | 简体中文
 
 # PointNet 模型说明
