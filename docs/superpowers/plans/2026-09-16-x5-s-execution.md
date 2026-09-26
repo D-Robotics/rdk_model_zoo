@@ -1,5 +1,7 @@
 # X5/S Sample Integration Implementation Plan
 
+> 当前执行：见[2026-09-26非板端完整交付计划](2026-09-26-host-completion.md)。Codex全面接手全部非板端工作；下文三试点范围、GLM执行限制及板测阻断后续批次的安排均为历史记录，不再作为当前限制。
+
 > **For agentic workers:** Use superpowers:subagent-driven-development; execute and independently review each bounded task. Do not confuse host tests with board acceptance.
 
 **Goal:** Implement the supplied X5/S architecture in verified batches, preserving source capabilities and historical evidence.
