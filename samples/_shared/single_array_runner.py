@@ -1,7 +1,7 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Lazy transport for single-input/single-output array tasks.
+"""Lazy transport for named physical inputs and one raw output array.
 
 Task bindings retain artifact identity, tensor geometry and numeric semantics.
 This module owns only SDK loading, scheduling, structural validation and an
@@ -32,7 +32,8 @@ class SingleArrayRunner:
         selection: Any,
         *,
         binding_loader: Callable[[Any, RuntimeMetadata], Any],
-        physical_input: Callable[[Any], tuple[tuple[int, ...], Any]],
+        physical_input: Callable[[Any], tuple[tuple[int, ...], Any]] | None = None,
+        physical_inputs: Callable[[Any], Mapping[str, tuple[tuple[int, ...], Any]]] | None = None,
         task_name: str,
         runtime_factory: Callable[[str], Any] | None = None,
         runtime: Any = None,
@@ -40,7 +41,10 @@ class SingleArrayRunner:
     ):
         self.selection = selection
         self._binding_loader = binding_loader
+        if (physical_input is None) == (physical_inputs is None):
+            raise ValueError("Provide exactly one physical_input or physical_inputs contract")
         self._physical_input = physical_input
+        self._physical_inputs = physical_inputs
         self._task_name = task_name
         self._execution_target_gate = execution_target_gate
         self._runtime_factory = runtime_factory
@@ -101,13 +105,19 @@ class SingleArrayRunner:
 
     def __call__(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
         binding = self.load()
-        if set(tensors) != {binding.input_name}:
-            raise MetadataMismatchError(f"Expected input {binding.input_name!r}.")
-        value = tensors[binding.input_name]
-        input_shape, input_dtype = self._physical_input(binding)
-        if (not isinstance(value, np.ndarray) or value.shape != input_shape
-                or value.dtype != np.dtype(input_dtype) or not np.isfinite(value).all()):
-            raise MetadataMismatchError(f"{self._task_name} input does not match bound shape/dtype.")
+        expected = (
+            self._physical_inputs(binding) if self._physical_inputs is not None
+            else {binding.input_name: self._physical_input(binding)}
+        )
+        if set(tensors) != set(expected):
+            raise MetadataMismatchError(f"Expected inputs {tuple(expected)!r}.")
+        for name, (input_shape, input_dtype) in expected.items():
+            value = tensors[name]
+            if (not isinstance(value, np.ndarray) or value.shape != input_shape
+                    or value.dtype != np.dtype(input_dtype) or not np.isfinite(value).all()):
+                raise MetadataMismatchError(
+                    f"{self._task_name} input {name!r} does not match bound shape/dtype."
+                )
         result = self.runtime.run({binding.model_name: dict(tensors)})
         if not isinstance(result, Mapping) or set(result) != {binding.model_name}:
             raise MetadataMismatchError("Runtime returned unexpected model outputs.")

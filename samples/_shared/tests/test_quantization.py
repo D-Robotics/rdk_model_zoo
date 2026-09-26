@@ -199,3 +199,20 @@ class ApplyTransformTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DequantizationPrecisionTests(unittest.TestCase):
+    def test_explicit_float64_retains_int32_differences_default_unchanged(self):
+        from types import SimpleNamespace
+        from samples._shared.quantization import dequantize_tensor
+        q=SimpleNamespace(quant_type=SimpleNamespace(name='SCALE'),axis=0,
+                          scale=np.array([1.],np.float32),zero_point=np.array([0],np.int32))
+        raw=np.array([2**25,2**25+1],np.int32)
+        default=dequantize_tensor(raw,q)
+        precise=dequantize_tensor(raw,q,dtype='float64')
+        self.assertEqual(default.dtype,np.float32)
+        self.assertEqual(precise.dtype,np.float64)
+        self.assertEqual(np.argmax(default),0)
+        self.assertEqual(np.argmax(precise),1)
+        np.testing.assert_array_equal(raw,[2**25,2**25+1])
+        with self.assertRaises(ValueError):dequantize_tensor(raw,q,dtype='int32')

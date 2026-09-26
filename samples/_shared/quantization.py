@@ -99,8 +99,11 @@ def apply_output_transform(
     return result
 
 
-def dequantize_tensor(q_tensor: Any, quant_info: Any) -> Any:
+def dequantize_tensor(q_tensor: Any, quant_info: Any, *, dtype: str = "float32") -> Any:
     """Dequantize one tensor with its runtime quantization descriptor.
+
+    ``dtype`` controls the floating comparison precision (float32 by default;
+    float64 preserves fine int32 differences for segmentation argmax).
 
     Ported from the delivery branches' ``utils/py_utils/postprocess.py``
     (source of record: rdk_s @ 380e1a2), with the scalar zero-point broadcast
@@ -118,15 +121,18 @@ def dequantize_tensor(q_tensor: Any, quant_info: Any) -> Any:
     if quant_type_name not in ("SCALE", "1"):
         return q_tensor
 
+    floating_dtype = np.dtype(dtype)
+    if floating_dtype not in (np.dtype("float32"), np.dtype("float64")):
+        raise OutputTransformError("Dequantization dtype must be float32 or float64.")
     scale = np.asarray(quant_info.scale)
-    zero_point = np.asarray(quant_info.zero_point).astype(np.float32)
+    zero_point = np.asarray(quant_info.zero_point).astype(floating_dtype)
     if zero_point.size == 0:
-        zero_point = np.zeros((1,), dtype=np.float32)
+        zero_point = np.zeros((1,), dtype=floating_dtype)
 
     tensor = np.asarray(q_tensor)
     if scale.ndim == 0 or tensor.ndim == 1 or scale.size == 1:
         # Per-tensor dequantization
-        return (tensor.astype(np.float32) - zero_point.reshape(-1)[0]) * scale
+        return (tensor.astype(floating_dtype) - zero_point.reshape(-1)[0]) * scale
     # Per-channel dequantization
     shape = [1] * tensor.ndim
     shape[int(quant_info.axis)] = -1
@@ -134,8 +140,8 @@ def dequantize_tensor(q_tensor: Any, quant_info: Any) -> Any:
     if zero_point.size == 1:
         reshaped_zero_point = zero_point.reshape(-1)[0]
     else:
-        reshaped_zero_point = zero_point.reshape(shape).astype(np.float32)
-    return (tensor.astype(np.float32) - reshaped_zero_point) * reshaped_scale
+        reshaped_zero_point = zero_point.reshape(shape).astype(floating_dtype)
+    return (tensor.astype(floating_dtype) - reshaped_zero_point) * reshaped_scale
 
 
 def dequantize_outputs(

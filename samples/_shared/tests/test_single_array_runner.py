@@ -77,3 +77,30 @@ class SingleArrayRunnerTests(unittest.TestCase):
             factory.assert_not_called()
         self.assertEqual(order,['identity','artifact'])
         self.assertFalse(runner.loaded)
+
+
+class SplitInputArrayRunnerTests(unittest.TestCase):
+    def test_two_named_physical_inputs_feed_one_raw_array(self):
+        from samples._shared.single_array_runner import SingleArrayRunner
+        selection=SimpleNamespace(target='s100',asset=None,model_path=Path('/not-loaded.hbm'))
+        runtime=SimpleNamespace(model_names=['model'],input_names={'model':['y','uv']},
+            input_shapes={'model':{'y':(1,4,8,1),'uv':(1,2,4,2)}},
+            input_dtypes={'model':{'y':'uint8','uv':'uint8'}},
+            output_names={'model':['scores']},output_shapes={'model':{'scores':(1,2)}},
+            output_dtypes={'model':{'scores':'int32'}})
+        calls=[]
+        raw=np.array([[5,7]],np.int32)
+        runtime.run=lambda tensors:calls.append(tensors) or {'model':{'scores':raw}}
+        def bind(selection,metadata):
+            return SimpleNamespace(model_name='model',output_name='scores',metadata=metadata)
+        runner=SingleArrayRunner(selection,binding_loader=bind,task_name='split',runtime=runtime,
+            physical_inputs=lambda binding:{'y':((1,4,8,1),'uint8'),'uv':((1,2,4,2),'uint8')})
+        inputs={'y':np.zeros((1,4,8,1),np.uint8),'uv':np.zeros((1,2,4,2),np.uint8)}
+        actual=runner(inputs)
+        self.assertEqual(set(calls[0]['model']),{'y','uv'})
+        raw[:]=0
+        np.testing.assert_array_equal(actual,[[5,7]])
+        for bad in ({'y':inputs['y']}, {**inputs,'extra':inputs['y']},
+                    {**inputs,'uv':np.zeros((1,2,4,2),np.float32)}):
+            with self.assertRaises(ValueError):runner(bad)
+        self.assertEqual(len(calls),1)

@@ -127,7 +127,8 @@ checks numeric metadata, not artifact identity or task-specific logits shapes.
 ## Single-array runtime transport
 
 `single_array_runner.py:SingleArrayRunner` consolidates the transport shared by
-PointNet and UNet. Each sample still supplies its selection/binding and physical
+PointNet, UNet and PP-LiteSeg, with split-input support for the ongoing
+UNetMobileNet migration. Each sample still supplies its selection/binding and physical
 input contract: PointNet sends float32 `(1,3,N)` while UNet sends uint8 packed
 NV12 `(1,768,512,1)`, distinct from logical model metadata. Local wrapper names and
 constructor arguments remain unchanged.
@@ -140,6 +141,15 @@ checks exact tensor names, physical input shape/dtype, output metadata and finit
 values, then returns owned raw data. It never performs normalization, dequantization,
 activation, argmax, geometry restoration, file IO or model downloads.
 
-This helper serves single-input/single-output arrays only. Multi-stage SAM/OCR,
+The result is one raw array. `physical_input` preserves the one-input API;
+`physical_inputs` declares a name-to-shape/dtype mapping for split Y/UV input.
+Exactly one contract must be supplied; missing/extra tensors fail before SDK run.
+The in-progress UNetMobileNet consumer uses this split-input form; its complete
+sample delivery remains pending. Multi-stage SAM/OCR,
 tracking state and classification-specific contracts are not silently migrated to
 it; their behavior needs a separate consumer review before any consolidation.
+
+`dequantize_tensor(..., dtype="float64")` is an opt-in precision path for int32
+score ordering; the default remains float32 for existing consumers. Explicit
+NONE tensors are returned unchanged. This does not infer quantization metadata
+or move decoding into the runtime runner.
