@@ -55,8 +55,10 @@ several models requires an explicit `model_name` selection — the former
 `model_names[0]` assumption is gone — and any number of output tensors is
 representable (single-output rules stay with each sample's binding).
 `output_quants` carries the per-output quantization descriptors verbatim,
-keyed by output name, so F32 contracts can reject them instead of silently
-dropping metadata. ResNet and PaddleOCR re-export this class as their
+keyed by output name, so task contracts can inspect them without silently
+dropping metadata. F32 outputs ignore vestigial quantization descriptors;
+the raw values are already floats and must not be dequantized again. ResNet
+and PaddleOCR re-export this class as their
 `RuntimeMetadata`; each keeps its own contract checks on top.
 
 For evidence writing, `runtime_meta.py:metadata_evidence` projects a
@@ -72,8 +74,8 @@ never mutated. The sample evaluators use it for their `metadata` evidence.
 ## Declared output transforms (Phase 1.5 H1)
 
 `quantization.py` implements the binding-declared chain from raw runtime
-outputs to float32 values: `raw_f32` (passthrough; integer dtypes or reported
-quantization descriptors are contract mismatches) and `dequant`
+outputs to float32 values: `raw_f32` (float32 passthrough, including vestigial
+descriptors; integer dtypes are rejected) and `dequant`
 (per-tensor/per-channel SCALE dequantization ported from the delivery
 branches' `utils/py_utils/postprocess.py`, rdk_s @ 380e1a2). Activation
 semantics are deliberately not part of this chain — whether a raw logit needs
@@ -81,6 +83,15 @@ a sigmoid or a dequantized output is already activated is a task-level fact
 declared by each sample's `post_process`. The runner validates containers
 only; the transform executes in `post_process` with the binding's quant
 snapshot.
+
+Affine SCALE decoding uses `(q - zero_point) * scale`. A scalar zero-point
+broadcasts to every channel, a vector follows the declared channel axis,
+and an empty zero-point means zero. On 2026-09-26 the scalar nonzero case was
+corrected: the source helper discarded that offset for per-channel scales.
+For example, raw scores `[2, 4]`, scales `[1, 3]`, and zero-point `7` decode to
+`[-5, -9]` (class 0), not `[2, 12]` (class 1). This is an intentional source
+bug fix, not a new board equivalence claim. Symmetric zero-points, vector
+offsets, per-tensor decoding, and non-SCALE passthrough retain their behavior.
 
 ## SAM encoder and decoder
 

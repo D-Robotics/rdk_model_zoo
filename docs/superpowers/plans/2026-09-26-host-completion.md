@@ -35,3 +35,5 @@
 2026-09-26：完成 Ultralytics model/evaluator 双语操作说明及 Python 示例纠错；78 项主机测试通过，文档检查 36 samples / 0 violations / 60 exemptions。详见 [质量记录](../../releases/unified-migration/2026-09-26-readme-quality-review.md)。H2 其余层级与全部后续批次继续，未关闭。
 
 2026-09-26：H0 的 B3 依赖隔离及原生 audit/双侧日志归档已修复，分别通过 30 和 79 项主机测试；代码已汇入集成分支。详见 [工具整改](../../releases/unified-migration/2026-09-26-tool-remediation.md)。全部修复分支归并与最终主机回归仍待核对，H0/H3 不提前整体勾选。
+
+2026-09-26：B8 源码核对发现共享反量化对逐通道 scale 丢弃单个非零 zero-point；已修正广播，266 项主机测试通过。见 [数值修正](../../releases/unified-migration/2026-09-26-quantization-offset-review.md)。这是明确披露的源代码缺陷修正，不声明板端等价；H4 的八类样例迁移仍未完成。

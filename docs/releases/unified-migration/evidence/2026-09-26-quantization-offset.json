@@ -1,0 +1,69 @@
+{
+  "base_commit": "0ef46c9dbbdef76b65d7160b9c7211b6a5903eef",
+  "scope": "shared affine dequantization scalar nonzero zero-point correction; B8 prerequisite, not B8 completion",
+  "source_divergence": "The original S helper discards a scalar nonzero zero-point for per-channel scales. Unified helper now broadcasts it. Platform snapshot remains unchanged.",
+  "counterexample": {
+    "raw": [
+      2,
+      4
+    ],
+    "scale": [
+      1,
+      3
+    ],
+    "zero_point": 7,
+    "previous": [
+      2,
+      12
+    ],
+    "correct": [
+      -5,
+      -9
+    ],
+    "previous_argmax": 1,
+    "correct_argmax": 0
+  },
+  "checks": [
+    {
+      "suite": "zero-red",
+      "tests": 15,
+      "result": "failed: 3 expected regressions",
+      "log": "evidence/2026-09-26-quantization-offset/2026-09-26-quant-zero-red.log",
+      "sha256": "c9071d73578fe8edbfccaa3b725589ae72dd40696b00896be95da062061b827a"
+    },
+    {
+      "suite": "zero-green",
+      "tests": 131,
+      "result": "passed",
+      "log": "evidence/2026-09-26-quantization-offset/2026-09-26-quant-zero-green.log",
+      "sha256": "091dc2b7154ab33fa2f6f5c1e97a7bb041e3eda38c90899765970a998bca8877"
+    },
+    {
+      "suite": "dinov2",
+      "tests": 18,
+      "result": "passed",
+      "log": "evidence/2026-09-26-quantization-offset/2026-09-26-quant-dinov2.log",
+      "sha256": "a6902d6fa7c20ac35ac4c257f663dc1ae47e73f66a409ea31418f7c2796e142e"
+    },
+    {
+      "suite": "fcos",
+      "tests": 38,
+      "result": "passed",
+      "log": "evidence/2026-09-26-quantization-offset/2026-09-26-quant-fcos.log",
+      "sha256": "46674a612c6a99311a98a62eef1f472f8c7d29d3d2c9ebcdbd565d70b615499b"
+    },
+    {
+      "suite": "yolov5",
+      "tests": 79,
+      "result": "passed",
+      "log": "evidence/2026-09-26-quantization-offset/2026-09-26-quant-yolov5.log",
+      "sha256": "1baeac6accabb325590813285a4a1425bd54895e5adefc307092befa3a10be27"
+    }
+  ],
+  "board": "not-run: user outside board LAN",
+  "record_scan": {
+    "json_files": 269,
+    "matching_nonzero_scalar_per_channel_descriptors": 0,
+    "limitation": "Search only covered persisted JSON objects with literal scale/zero_point keys; absence does not certify all model artifacts or all historical runs."
+  }
+}

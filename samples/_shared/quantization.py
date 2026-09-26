@@ -103,8 +103,11 @@ def dequantize_tensor(q_tensor: Any, quant_info: Any) -> Any:
     """Dequantize one tensor with its runtime quantization descriptor.
 
     Ported from the delivery branches' ``utils/py_utils/postprocess.py``
-    (source of record: rdk_s @ 380e1a2).  Per-tensor and per-channel SCALE
-    dequantization are supported; descriptors whose ``quant_type`` is not
+    (source of record: rdk_s @ 380e1a2), with the scalar zero-point broadcast
+    corrected: a single offset applies to every channel instead of being
+    discarded. Empty zero-points still mean symmetric quantization (zero).
+    Per-tensor and per-channel SCALE dequantization are supported; descriptors
+    whose ``quant_type`` is not
     SCALE are passed through unchanged, exactly like the source helper.
     """
 
@@ -129,7 +132,7 @@ def dequantize_tensor(q_tensor: Any, quant_info: Any) -> Any:
     shape[int(quant_info.axis)] = -1
     reshaped_scale = scale.reshape(shape)
     if zero_point.size == 1:
-        reshaped_zero_point = np.zeros_like(reshaped_scale, dtype=np.float32)
+        reshaped_zero_point = zero_point.reshape(-1)[0]
     else:
         reshaped_zero_point = zero_point.reshape(shape).astype(np.float32)
     return (tensor.astype(np.float32) - reshaped_zero_point) * reshaped_scale

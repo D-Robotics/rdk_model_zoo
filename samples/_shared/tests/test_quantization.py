@@ -63,15 +63,42 @@ class DequantTensorTests(unittest.TestCase):
         expected[:, 2] = (q[:, 2].astype(np.float32) + 1) * 2.0
         np.testing.assert_allclose(out, expected, rtol=0, atol=1e-6)
 
-    def test_per_channel_single_zero_point_uses_zero(self):
+    def test_per_channel_single_zero_point_is_broadcast(self):
         from samples._shared.quantization import dequantize_tensor
 
         q = np.array([[2, 4]], dtype=np.int8)
         info = _QuantInfo(scale=[1.0, 3.0], zero_point=[7], axis=1)
         out = dequantize_tensor(q, info)
-        # Source semantics: a scalar zero_point in the per-channel branch is
-        # replaced by zeros (rdk_s postprocess.py).
-        np.testing.assert_allclose(out, [[2.0, 12.0]], rtol=0, atol=0)
+        # Affine values are (q - zero_point) * scale.  The source helper
+        # incorrectly discarded a scalar nonzero zero-point on this path.
+        np.testing.assert_array_equal(out, [[-5.0, -9.0]])
+
+    def test_scalar_offset_can_change_segmentation_argmax(self):
+        from samples._shared.quantization import dequantize_tensor
+
+        logits = np.array([[[[2, 4]]]], dtype=np.int16)
+        info = _QuantInfo(scale=[1.0, 3.0], zero_point=[7], axis=-1)
+        decoded = dequantize_tensor(logits, info)
+        # With the offset the scores are [-5, -9], so class 0 wins.
+        # Ignoring it gives [2, 12], which incorrectly selects class 1.
+        self.assertEqual(int(np.argmax(decoded, axis=-1).item()), 0)
+        np.testing.assert_array_equal(logits, [[[[2, 4]]]])
+
+    def test_scalar_zero_point_broadcasts_on_non_last_axis(self):
+        from samples._shared.quantization import dequantize_tensor
+
+        q = np.array([[[2, 4], [6, 8]]], dtype=np.int32)
+        info = _QuantInfo(scale=[0.5, 2.0], zero_point=-2, axis=1)
+        np.testing.assert_array_equal(
+            dequantize_tensor(q, info), [[[2, 3], [16, 20]]]
+        )
+
+    def test_empty_per_channel_zero_point_is_symmetric(self):
+        from samples._shared.quantization import dequantize_tensor
+
+        q = np.array([[2, 4]], dtype=np.int16)
+        info = _QuantInfo(scale=[1.0, 3.0], zero_point=[], axis=1)
+        np.testing.assert_array_equal(dequantize_tensor(q, info), [[2, 12]])
 
     def test_empty_zero_point_becomes_zero(self):
         from samples._shared.quantization import dequantize_tensor
