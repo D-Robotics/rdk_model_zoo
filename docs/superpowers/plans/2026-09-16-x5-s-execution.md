@@ -107,3 +107,8 @@ B3：本地GLM正在整理convnext/edgenext/fasternet/fastvit共13变体的可�
 - B6-B2：GitHub检查点a72f92b完成X5 8GB默认/priority7及S100默认两sample共6次源对照，90数组与每例14代码摘要独立核验通过；B6其他目标仍待测，Closed=no。
 - 目录清单测试修正b2e24c0已合入develop，完整Node22检查120项通过；不代表B7关闭。
 - B7原生C++对照工具第三轮身份/审计整改由本地Claude Code+GLM继续，B3取证工具仍在开发。B8及后续范围未缩减。
+
+
+### 2026-09-24 网络中断后恢复顺序
+
+新增仓库恢复入口 `docs/releases/unified-migration/2026-09-24-board-resume.md`。X5 4GB SAM日志rc0但数组待回收；S100两套原生C++编译成功但数值未跑；S600/S100P准备未完成。先检查远端存活任务再恢复，不重复执行。B3固定源依赖与原生audit持久化继续本地GLM整改。B8–B11及完整验收范围不变。
