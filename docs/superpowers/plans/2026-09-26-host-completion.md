@@ -45,3 +45,5 @@
 2026-09-26：H8 子项已统一 PointNet/UNet 的单输入单输出 raw runner，保留各 sample 物理张量与语义契约；178 项受影响主机测试通过。PP-LiteSeg 原文档输出语义、默认图片、导出前提及构建/校准问题已核对并记录，[详见](../../releases/unified-migration/2026-09-26-array-runner-review.md)。这些 PP 项是下一步迁移待修项，未标成已完成。
 
 2026-09-26：B8 PP-LiteSeg（846c519）已完成主机重构及五层双语说明，修正类别图/图片/转换门禁；UNetMobileNet 已完成 Python/C++ 阶段职责分离和六层双语说明，使用共享 split-input runner 并修正逐通道量化排序、原生资源失败处理。真实 SDK 构建及板测仍未执行，独立验收未关闭。见 [PP-LiteSeg](../../releases/unified-migration/2026-09-26-b8-ppliteseg-review.md) 和 [UNetMobileNet](../../releases/unified-migration/2026-09-26-b8-unetmobilenet-review.md)。B8 尚余 YOLO26 Depth、Depth Anything V2、LaneNet、DiffusionDrive；全部 H0–H9 范围保持不变。
+
+YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md). Source audit only; implementation, six-level bilingual documentation and host acceptance remain pending. Preserve all H0–H9 scope.
