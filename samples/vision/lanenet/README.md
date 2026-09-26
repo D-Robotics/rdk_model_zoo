@@ -22,7 +22,7 @@ A target name selects a contract; it does not convert an HBM or certify the curr
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use a matching S100 runtime and a prepared HBM for real inference. Python needs NumPy, OpenCV and the board's `hobot_dnn` runtime; C++ needs matching DNN/UCP development headers/libraries, CMake, a C++17 compiler and OpenCV development libraries. See the [Python environment](runtime/python/README.md#environment) and [native dependencies](runtime/cpp/README.md#dependencies).
+Use a matching S100 runtime and a prepared HBM for real inference. Python needs NumPy, OpenCV and the board's `hbm_runtime` runtime; C++ needs matching DNN/UCP development headers/libraries, CMake, a C++17 compiler and OpenCV development libraries. See the [Python environment](runtime/python/README.md#environment) and [native dependencies](runtime/cpp/README.md#dependencies).
 
 Downloads and native builds are explicit. Runtime wrappers do not install packages or fetch assets. Conversion is optional for the published model; the source export code is incomplete, as described in [conversion](conversion/README.md).
 

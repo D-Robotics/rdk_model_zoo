@@ -5,7 +5,7 @@
 <a id="environment"></a>
 ## 环境
 
-实际推理需要 S100、匹配的 `hobot_dnn` Python 运行库、NumPy 和 OpenCV。主机检查入口（`--list-models`、`--dry-run`）不导入板端 SDK、不下载模型。主机测试显式注入 SDK 夹具，不能证明某个板卡镜像或 SDK 版本受支持。运行时版本可获取时写入报告，否则记为 `unknown`。
+实际推理需要 S100、匹配的 `hbm_runtime` Python 运行库、NumPy 和 OpenCV。主机检查入口（`--list-models`、`--dry-run`）不导入板端 SDK、不下载模型。主机测试显式注入 SDK 夹具，不能证明某个板卡镜像或 SDK 版本受支持。运行时版本可获取时写入报告，否则记为 `unknown`。
 
 通过[显式模型下载器](../../model/README_cn.md)准备 HBM。运行入口不安装依赖。以下命令均从仓库根目录执行；Shell 包装入口也会切换到该目录。
 

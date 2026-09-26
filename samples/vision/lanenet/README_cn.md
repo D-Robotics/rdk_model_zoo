@@ -22,7 +22,7 @@ LaneNet 通过二值分割分支区分车道像素与背景，通过嵌入分支
 <a id="prerequisites"></a>
 ## 前置条件
 
-实际推理需要匹配的 S100 运行环境与已准备好的 HBM。Python 需要 NumPy、OpenCV 和板端 `hobot_dnn`；C++ 需要匹配的 DNN/UCP 开发头文件与库、CMake、C++17 编译器以及 OpenCV 开发库。详见 [Python 环境](runtime/python/README_cn.md#environment)和[原生依赖](runtime/cpp/README_cn.md#dependencies)。
+实际推理需要匹配的 S100 运行环境与已准备好的 HBM。Python 需要 NumPy、OpenCV 和板端 `hbm_runtime`；C++ 需要匹配的 DNN/UCP 开发头文件与库、CMake、C++17 编译器以及 OpenCV 开发库。详见 [Python 环境](runtime/python/README_cn.md#environment)和[原生依赖](runtime/cpp/README_cn.md#dependencies)。
 
 下载与原生构建均需显式执行，运行包装入口不自动安装依赖或拉取资产。使用已发布模型无需自行转换；源导出代码不完整，详见[转换说明](conversion/README_cn.md)。
 

@@ -5,7 +5,7 @@
 <a id="environment"></a>
 ## Environment
 
-Real inference requires S100, its matching `hobot_dnn` Python runtime, NumPy and OpenCV. Host inspection (`--list-models`, `--dry-run`) does not import the board SDK or download a model. Host tests use explicitly injected SDK fixtures; they do not establish a supported board image or SDK version. The actual runtime version is recorded when available, otherwise `unknown`.
+Real inference requires S100, its matching `hbm_runtime` Python runtime, NumPy and OpenCV. Host inspection (`--list-models`, `--dry-run`) does not import the board SDK or download a model. Host tests use explicitly injected SDK fixtures; they do not establish a supported board image or SDK version. The actual runtime version is recorded when available, otherwise `unknown`.
 
 Prepare the HBM with [the explicit model downloader](../../model/README.md). The runtime does not install dependencies. Run all commands below from the repository root; the shell wrapper also changes to that root.
 
