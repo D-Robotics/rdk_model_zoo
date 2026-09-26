@@ -4,9 +4,10 @@
 
 这是共用 Ultralytics YOLO Sample 的板端入口。它通过 RDK 系统镜像提供的
 `hbm_runtime` 加载 X5 的 `.bin` 或 S100/S100P/S600 的 `.hbm`，把一张 BGR
-图片准备为目标板的 NV12 输入，执行任务解码，并保存绘制结果。脚本不会
+图片准备为目标板的 NV12 输入，执行任务解码；detect/seg/pose/obb 保存绘制结果，cls 打印 Top-K。脚本不会
 安装 Python 依赖。导出和编译请看 [`conversion/README_cn.md`](../../conversion/README_cn.md)。
 
+<a id="environment"></a>
 ## 板端准备
 
 将与板卡目标一致的编译制品复制到板端或下载到 Manifest 指定位置。X5 绑定
@@ -23,6 +24,7 @@ Manifest 制品然后退出。
 `hbm_runtime`。模型文件和测试图片必须可由当前用户读取。运行时不会在
 请求制品缺失时静默切换平台或模型。
 
+<a id="usage"></a>
 ## 最短检测命令
 
 在匹配的板卡上从仓库根目录运行：
@@ -49,10 +51,21 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
 `/sys/class/boardinfo` 检测板卡；主机上的列表、下载和 dry-run 可显式选
 目标。真正推理若板卡未知或目标不匹配，会在加载模型前停止。
 
-返回值是可按旧方式解包的 `DetectionResult`：`boxes_xyxy` 为原图像素坐标
-`(N,4)`，`scores` 和 `class_ids` 为 `(N,)`。CLI 绘制检测框并写入
-`--img-save-path`（默认 `result.jpg`），同时打印模型、输入协议和检测结果；
-模型加载或绑定失败时不会伪造结果。
+以下为其他任务及默认入口示例。无参数时自动检测板卡，运行 yolo11 默认尺度检测，默认图片是 bus.jpg。OBB 需自行提供航拍图片；在对应板卡上运行各行，不要在一块板上混跑所有目标。
+
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolo11 --task seg --img-save-path /tmp/yolo-seg.jpg
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --family yolov8 --task pose --img-save-path /tmp/yolo-pose.jpg
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s600 --family yolo26 --task cls \
+  --test-img samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg --topk 5
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolo26 --task obb \
+  --test-img /data/aerial.jpg --img-save-path /tmp/yolo-obb.jpg
+```
 
 ## 任务和模型选择
 
@@ -80,22 +93,60 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 | `yolo12` | detect | DFL |
 | `yolov13` | detect | DFL |
 
-常用参数：
+<a id="parameters"></a>
+## 命令行参数
 
-```text
---score-thres 0.25       置信度过滤
---nms-thres 0.45         X5 默认 0.70，S 默认 0.45
---resize-type 0|1        直接缩放或 letterbox，默认随平台协议
---strides 8,16,32        检测特征层 stride
---reg 16                 YOLOv8/YOLO11 DFL bin 数
---priority 0             BPU 调度优先级
---bpu-cores 0            一个或多个 BPU 核
-```
+默认值列为解析器原值，`null` 表示随后按平台、任务或制品解析，并不表示该功能禁用。
 
-`--input-shape HxW` 只用于运行时没有报告输入尺寸的情况；如果模型报告的
-尺寸与之冲突会拒绝。`--classes-num`、`--strides`、`--reg`、`--mc`、
-`--nkpt` 是模型契约参数，不能用来强行兼容不匹配的制品。
+| 参数 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `--platform` / `--target` | str | `null` | 自动检测；auto/x5/s100/s100p/s600。准备流程可指定目标，实际推理必须匹配本机。 |
+| `--task` | str | `detect` | detect/seg/pose/cls/obb；可用范围取决于系列。 |
+| `--family` | str | `null` | 识别本地文件名中的系列，否则 yolo11；显式系列冲突会拒绝。 |
+| `--model-size` | str | `null` | 使用发布清单中的系列/任务默认尺度，见模型说明。 |
+| `--model-path` | str | `null` | 显式编译文件路径，不自动下载。 |
+| `--asset-id` | str | `null` | 精确 group:sample:filename 引用，约束清单选择。 |
+| `--input-shape` | HxW | `null` | 仅在缺少运行时尺寸元数据时指定 H×W。 |
+| `--test-img` | str | `samples/vision/ultralytics_yolo/test_data/bus.jpg` | 由 OpenCV 读取的 BGR 图片。 |
+| `--label-file` | str | `null` | detect/seg/pose 用 COCO，cls 用 ImageNet，obb 用 DOTA；自定义类别顺序须覆盖。 |
+| `--img-save-path` | str | `result.jpg` | detect/seg/pose/obb 绘制结果，相对调用目录；cls 不写图片。 |
+| `--score-thres` | float | `0.25` | 检测置信度过滤，分类不使用。 |
+| `--nms-thres` | float | `null` | 随目标/任务解析；X5 检测 0.70，S 检测 0.45；S YOLOv10 检测无 NMS。 |
+| `--resize-type` | int | `null` | 0 拉伸、1 letterbox；解析后的默认值见下文。 |
+| `--classes-num` | int | `null` | 使用任务配置默认值；只对 detect/seg/obb 按实际模型类别数覆盖。 |
+| `--strides` | comma-separated ints | `[8, 16, 32]` | 特征图 stride，输入如 8,16,32。 |
+| `--mc` | int | `32` | 分割 mask 系数数量；YOLO26 固定 32。 |
+| `--angle-sign` | float | `1.0` | OBB 角度乘数。 |
+| `--angle-offset` | float | `0.0` | OBB 角度偏移，单位为度。 |
+| `--regularize` | int | `1` | OBB 旋转框规范化，0 或 1。 |
+| `--reg` | int | `16` | DFL 回归 bin 数；修改此值不能改变 direct-LTRB 图。 |
+| `--nkpt` | int | `17` | DFL 系列姿态点数；YOLO26 固定 17。 |
+| `--topk` | int | `5` | 分类输出数量。 |
+| `--kpt-conf-thres` | float | `0.5` | 姿态绘制的可见性阈值，不是张量绑定参数。 |
+| `--priority` | int | `0` | BPU 调度优先级，0–255。 |
+| `--bpu-cores` | space-separated ints | `[0]` | 一个或多个核心编号，例如 --bpu-cores 0 1。 |
+| `--list-models` | flag | `false` | 打印支持模型及精确引用后退出。 |
+| `--dry-run` | flag | `false` | 只解析选择，不下载、不推理。 |
+| `--download` | flag | `false` | 准备所选发布模型后退出，不推理。 |
 
+非分类任务默认 letterbox。分类中，YOLO26 全目标默认拉伸；其他系列 X5 默认 letterbox，S 默认拉伸。输入尺寸与类别数须匹配模型；`--reg`、`--strides`、`--mc` 等不是强行兼容其他模型的开关。YOLO26 非分类任务拒绝偏离 16/17/32 的 DFL/关键点/mask 覆盖参数。YOLOv13 仅在 X5 发布。
+
+<a id="results"></a>
+## 输出结果
+
+退出码 0 表示命令完成；空检测列表仍可能是有效结果，不等于模型失败。detect/seg/pose/obb 输出由 `--img-save-path` 指定，CLI 会创建父目录并打印 `[Saved]`；已有同名结果会被覆盖。cls 只打印分类，不写结果图。阶段接口不负责绘制或保存。
+
+| 任务 | `predict` 返回值 | 坐标与含义 |
+|---|---|---|
+| detect | `DetectionResult(boxes_xyxy, scores, class_ids)`，兼容三元组解包 | `(N,4)` 原图像素框、`(N,)` 置信度与从 0 开始的类别 ID |
+| seg | `(boxes, scores, ids, masks)` | 原图像素框及对应实例 mask；保持实例顺序配对 |
+| pose | `(boxes, scores, ids, xy, confidence)` | 原图像素框和点坐标；发布姿态模型为 17 点，置信度独立返回 |
+| cls | `(class_id, probability)` 列表 | Softmax 后按分数排序的 Top-K，不是原始 logits |
+| obb | 字典列表：`rrect`、`score`、`id` | `rrect=(cx,cy,w,h,angle)`；尺寸/中心在原图坐标中，角度为弧度 |
+
+单图绘制不是数据集精度或性能验证，完整评估见 [evaluator](../../evaluator/README_cn.md)。本地文件选择与发布范围见 [model](../../model/README_cn.md)。
+
+<a id="integration-example"></a>
 ## 库接口
 
 在匹配的 S600 板卡上从仓库根目录执行下例，并先将模型路径替换为本地 YOLO11 检测制品：
@@ -128,7 +179,16 @@ print(boxes.shape, scores.shape, class_ids.shape)
 任务实现负责。`YOLO26Detect` 共用图片准备和 runner 流程，但使用经过审查
 的直接 LTRB 解码。历史 X5/S 模块保留旧类名和 tuple 形状并转发到维护入口。
 
+<a id="stage-io"></a>
 ## 代码流程
+
+`predict` 串联前处理、一次推理和后处理；文件读取、日志、标签与绘制在 CLI/辅助模块。手动分阶段时必须把同一图片的尺寸与变换交给后处理，不要在一个有状态模型实例上交错处理多张图片。
+
+- `pre_process(img, image_format="BGR")`：H×W×3 图片到按模型名/输入名组织的 uint8 NV12 张量。X5 为 packed 缓冲区，S 为 Y `(1,H,W,1)` 与 UV `(1,H/2,W/2,2)`；H/W 来自模型绑定。
+- `forward(inputs)`：执行 runner，返回原始输出映射；此阶段不绘制、保存或筛选结果。后处理按模型绑定解释输出，不能把物理输出序号当作任务角色。
+- 检测 `post_process(outputs, ori_img_w, ori_img_h, ..., transform=...)`：DFL 或 LTRB 解码、所需的 NMS 和原图坐标还原，返回上表结果。`pre_process_with_transform` 可显式返回实际缩放/padding；`pre_process` 保留历史仅返回张量的接口。
+- seg/pose 还解码 mask/关键点，cls 进行 Softmax 与 Top-K，obb 解码旋转框；这些任务的后处理签名不同，应使用各自 `predict` 或阅读对应模块的 docstring。
+
 
 ```text
 main.py
@@ -145,6 +205,7 @@ main.py
 同一个变换。有限检测协议和旧新符号对应见
 [`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md)。
 
+<a id="troubleshooting"></a>
 ## 故障排查
 
 * **无法导入 `hbm_runtime`：** 使用匹配的 RDK 板端系统镜像并检查 Python

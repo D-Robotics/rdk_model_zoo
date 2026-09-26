@@ -1,12 +1,17 @@
-# YOLO 检测模型转换
+# Ultralytics YOLO 模型转换
 
 [English](README.md)
 
 本目录把 Ultralytics 浮点模型导出为 ONNX，再编译为共用 Python Sample
 使用的目标 BPU 制品。导出和编译在主机执行，不能在板端运行。此次合并的
-代表范围是 YOLOv8/YOLO11 的 DFL 检测和 YOLO26 的直接 LTRB 检测；分割、
-姿态、分类和 OBB 的原有任务脚本仍由旧选择器保留，本指南不新增这些任务。
+代表范围是 YOLOv8/YOLO11 的 DFL 检测和 YOLO26 的直接 LTRB 检测。下文也列出已有分类、分割、姿态和 OBB 导出入口；存在脚本不等于已完成各任务端到端转换验证。
 
+<a id="source-model"></a>
+## 源模型与复现身份
+
+输入为与所选任务匹配的 Ultralytics PyTorch `.pt` 权重。`/models/*.pt` 是用户需预先准备的本地路径，不是仓库附带资产。导出时记录权重 SHA-256、训练/导出环境版本与模型类别/输入尺寸；本仓库没有给所有家族固定同一组 Ultralytics、PyTorch、ONNX 版本，也没有提供所有权重的发布摘要。自训练权重须保留训练配置和类别顺序。已发布 `.bin/.hbm` 的 [模型清单](../model/README_cn.md) 不证明某个同名 `.pt` 就是其原始权重。
+
+<a id="toolchain-targets"></a>
 ## 准备两个主机环境
 
 第一步使用 Ultralytics 训练/导出环境，需提前准备 `ultralytics`、PyTorch
@@ -60,6 +65,7 @@ docker run -it --rm --network host --shm-size=15g \
 `-v /workspace` 会把权重、ONNX、标定图片和输出目录暴露给容器；进入容器
 后在 `/workspace` 运行下方 Mapper 命令。
 
+<a id="export"></a>
 ## 导出 ONNX
 
 通用 Ultralytics 检测器通过 `--platform` 选择已核定的 opset 默认值：X5
@@ -67,14 +73,12 @@ docker run -it --rm --network host --shm-size=15g \
 显式传入的值优先。
 
 ```bash
-cd samples/vision/ultralytics_yolo/conversion
-
 # YOLOv8/YOLO11 风格 DFL 检测器，导出给 X5。
-python export_monkey_patch.py \
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
   --platform x5 --pt /models/yolo11n.pt --require-local --opset 11
 
 # 同一模型系列，导出给 S600。
-python export_monkey_patch.py \
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
   --platform s600 --pt /models/yolo11n.pt --require-local --opset 19
 ```
 
@@ -88,12 +92,12 @@ YOLO26 检测器使用单独的图导出器，因为它输出三个 NHWC 分类�
 `opset=19, simplify=0`。
 
 ```bash
-python export_monkey_patch.py \
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
   --family yolo26 --task detect --platform x5 \
   --pt /models/yolo26n.pt --require-local \
   --output /models/yolo26n_det_bpu.onnx
 
-python export_monkey_patch.py \
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
   --family yolo26 --task detect --platform s600 \
   --pt /models/yolo26n.pt --require-local \
   --output /models/yolo26n_det_bpu.onnx
@@ -104,12 +108,37 @@ python export_monkey_patch.py \
 `--require-local`。导出失败会
 返回错误，不会在文档中把一个未生成的路径当成制品。
 
-## 准备标定并编译
+所有 Python 示例从仓库根目录运行。通用导出器根据权重中的 head 类型应用 patch；`--task` 不能将检测权重变成分类/分割权重。YOLO26 由 `--family yolo26 --task ...` 分发到任务专用脚本，默认分类输入 224，其他任务 640。以下只展示现有导出配方，不宣称本轮实际运行了导出：
+
+```bash
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
+  --family yolo26 --task cls --platform x5 \
+  --pt /models/yolo26n-cls.pt --imgsz 224 --output /models/yolo26n_cls_bpu.onnx
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
+  --family yolo26 --task seg --platform x5 \
+  --pt /models/yolo26n-seg.pt --imgsz 640 --output /models/yolo26n_seg_bpu.onnx
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
+  --family yolo26 --task pose --platform x5 \
+  --pt /models/yolo26n-pose.pt --imgsz 640 --output /models/yolo26n_pose_bpu.onnx
+python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
+  --family yolo26 --task obb --platform x5 \
+  --pt /models/yolo26n-obb.pt --imgsz 640 --output /models/yolo26n_obb_bpu.onnx
+```
+
+YOLO26 的 cls/seg/pose/obb 导出器尚不支持 `--require-local`；请在运行前自行确认上述绝对路径存在，不能把该参数传给它们。
+
+将生成的 ONNX 交给下面的 mapper，YOLO26 添加 `--family yolo26`。预期输入为静态 batch-one float32 NCHW；检测 DFL 与直接 LTRB 输出不可互换。分割附带 mask 系数/prototype，姿态附带关键点，OBB 附带角度；分类输出 logits，运行端进行 Softmax。检查对应导出脚本的输出说明和运行时绑定，不要仅按输出数量判断兼容性。
+
+<a id="calibration"></a>
+## 标定数据准备
 
 在标定目录放入 20–50 张有代表性的输入图片。共用流程会把 BGR 转为 RGB，
 缩放到静态 ONNX 宽高，HWC 转 NCHW，并写入 float32。X5 写入未除 255 的
 RGB 张量 `*.rgbchw`；S 写入除以 255 后的 NumPy `*.npy`。这是编译器标定
 格式；运行时的 NV12 打包仍由目标板输入绑定负责。
+
+<a id="compile"></a>
+## 编译
 
 从仓库根目录运行统一入口（历史平台入口会补上相同的 platform）：
 
@@ -136,6 +165,9 @@ python samples/vision/ultralytics_yolo/conversion/mapper.py \
   --output-dir /models/compiled
 ```
 
+<a id="validation"></a>
+## 转换后验证
+
 Mapper 成功后，把对应目标的制品复制到板端，用完整路径运行共用运行时。
 例如上面的 S600 命令生成 `/models/compiled/yolo11n_nashp_640x640_nv12.hbm`：
 
@@ -152,7 +184,7 @@ X5 使用 `--platform x5` 和 `.bin` 文件名；其他 Nash 目标使用对应�
 `--platform s100`/`s100p` 与 `.hbm` 文件名。编译成功不能跳过运行时的
 输入/输出绑定，板端仍会在推理前检查制品元数据及 DFL 或直接 LTRB 契约。
 
-需要权重必须已经存在时传 `--require-local`；省略该参数则保留 Ultralytics
+通用导出器及 YOLO26 检测导出器可传 `--require-local` 要求权重已存在；省略该参数则保留 Ultralytics
 解析已知裸模型名的历史能力。
 
 通用 YOLO 和 YOLO26 mapper 现在调用同一个 `conversion/workflow.py`。其中
@@ -173,6 +205,7 @@ X5 使用 `--platform x5` 和 `.bin` 文件名；其他 Nash 目标使用对应�
 `--overwrite` 才会替换；不会删除用户提供的工作区父目录、输入模型、标定
 图片目录或输出目录。
 
+<a id="artifacts"></a>
 ## 输出名称和路径
 
 当 ONNX 文件名为 `yolo11n`、输入为 640×640 时，默认输出目录是 ONNX 所在
@@ -234,3 +267,12 @@ YOLOv8/YOLO11 检测使用三层 DFL 输出契约；YOLO26 检测使用直接 LT
 本地合并包含规划、配置、入口和运行时契约的主机测试；本地没有执行真实
 ONNX 导出或 OpenExplore 编译。板卡验证记录引用发布证据中的既有运行时制品，
 不能被解释为本地这次转换已经执行。
+
+<a id="known-gaps"></a>
+## 未验证与缺失前提
+
+- 本轮没有实际训练环境、权重导出或 OpenExplore 编译验证；旧发布制品的板测不能替代本地转换验证。
+- 未随仓库提供已固定的数据集版本、校准图片集或全部源权重摘要；20–50 张是脚本建议，不是某个已复现实验。默认 `--cal-sample true --cal-sample-num 20`，`--cal-sample false` 使用全部符合扩展名的图片；复现时保存所选文件列表与摘要。
+- `--quantized` 默认 int8，可选 int16；`--jobs` 默认 16，`--save-cache` 默认 false。不同工具链的优化选项见 `mapper.py --platform x5 --toolchain-help` 或对应 S 目标；选择器不代替工具链兼容性验证。
+- 容器版本链接是原分支保留的环境示例，不代表已核实的最新版本或覆盖所有目标。按实际发布环境保存镜像标识及版本输出。
+- 转换得到的模型需在匹配板卡上完成绑定检查、单图 smoke 和必要的数据集/参考数值比较，才能声明该制品已验证；当前新转换板测为 not-run。
