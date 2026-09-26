@@ -64,6 +64,10 @@ def canonicalise_dtype(dtype: Any) -> str | None:
         return "int16"
     if raw in {"i32", "s32", "int32", "hbdnndatatype.int32"} or raw.endswith((".int32", ".s32")):
         return "int32"
+    # LaneNet's source native binary prediction is S64. Canonicalize the
+    # spelling only; each sample still decides whether int64 is valid IO.
+    if raw in {"i64", "s64", "int64", "hbdnndatatype.int64"} or raw.endswith((".int64", ".s64")):
+        return "int64"
     if raw in {"f16", "float16", "hbdnndatatype.f16"} or raw.endswith(".f16"):
         return "float16"
     if raw in {"nv12", "hbdnndatatype.nv12"} or raw.endswith(".nv12"):

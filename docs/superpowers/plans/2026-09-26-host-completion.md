@@ -53,3 +53,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-26：Depth Anything V2 源审计确认逐像素 RGB z-score 与注释不符、恒定图除零、可选 letterbox 未裁填充、S100P 无独立制品；见 [审计](../../releases/unified-migration/2026-09-26-b8-depth-anything-source-review.md)。统一实现仍在进行，尚未更新完成计数或验收状态。
 
 2026-09-26：Depth Anything V2 已完成主机迁移、五层双语 README 和历史图表保留，见 [记录](../../releases/unified-migration/2026-09-26-b8-depth-anything-review.md)。S100P 缺制品仍拒绝，板测 not-run，独立评审未关闭。B8 继续 LaneNet、DiffusionDrive，H0–H9 全范围不变。
+
+2026-09-26：LaneNet 源审计完成：无聚类、Python/C++ 着色差异、S64 二值输出、第三输出声明未证实、转换脚本/准确率图缺失均已记录；共享 S64 拼写归一化通过回归。见 [审计](../../releases/unified-migration/2026-09-26-b8-lanenet-source-review.md)。LaneNet 样例迁移仍 pending，B8 与 H0–H9 未关闭。
