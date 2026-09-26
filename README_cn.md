@@ -8,7 +8,7 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 
 ## 按任务开始
 
-完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 43 个统一视觉 Sample。每个入口说明自己的 target、变体、语言和验证范围。
+完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 44 个统一视觉 Sample。每个入口说明自己的 target、变体、语言和验证范围。
 
 | 任务 | 统一入口 |
 |---|---|
@@ -22,6 +22,7 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 | 语义分割 | [UNet](samples/vision/unet/README_cn.md) · [PP-LiteSeg](samples/vision/pp_liteseg/README_cn.md) · [UNetMobileNet](samples/vision/unetmobilenet/README_cn.md) |
 | 单目深度 | [YOLO26 Depth](samples/vision/yolo26_depth/README_cn.md) · [Depth Anything V2](samples/vision/depth_anything_v2/README_cn.md) |
 | 车道嵌入与二值标签 | [LaneNet](samples/vision/lanenet/README_cn.md) |
+| 准备特征的轨迹规划 | [DiffusionDrive](samples/vision/diffusiondrive/README_cn.md) |
 | 视觉特征、图文匹配、视频分类 | [DINOv2](samples/vision/dinov2/README_cn.md)、[SigLIP](samples/vision/siglip/README_cn.md)、[CLIP](samples/vision/clip/README_cn.md)、[3DResNet](samples/vision/3dresnet/README_cn.md) |
 
 深度、语义分割、点云、语音、机器人、大模型/VLA 及其他尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。

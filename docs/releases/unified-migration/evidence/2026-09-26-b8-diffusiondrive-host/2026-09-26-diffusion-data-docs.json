@@ -1,0 +1,133 @@
+{
+  "preserved_source_files": [
+    {
+      "file": "conversion/configs/diffusiondrive_r34_256x1024_s100p.yaml",
+      "sha256": "e33f25e8724baa723c798fea6ec2538d00a3a896976eb1d0479bf7d594c26446"
+    },
+    {
+      "file": "conversion/configs/diffusiondrive_r34_256x1024_s600.yaml",
+      "sha256": "faa074ac535c787d2d82faea3cd092e7677557e4f61f8f8ac0bed9793475bea3"
+    },
+    {
+      "file": "model/SHA256SUMS",
+      "sha256": "086a2afc8201f590b0e5badbe04469a9ee12a4737506bf8c20d66ef2ac6df7c0"
+    },
+    {
+      "file": "test_data/case_000/inputs.npz",
+      "sha256": "a0d5c3980b51eb1d623135deabdc0b1a0cc5e231ddc8488724f658a4484868c2"
+    },
+    {
+      "file": "test_data/case_000/reference_outputs.npz",
+      "sha256": "8fc7883b70781a3e2148081752938c68d182d58ce92745e66c4fb74857b90c0c"
+    },
+    {
+      "file": "test_data/case_000/result.png",
+      "sha256": "4e8fdbbf96ab303dfa4547054c6b41f193e7c738d8e87248c687b6b678472f6a"
+    },
+    {
+      "file": "test_data/case_017/inputs.npz",
+      "sha256": "e82a6eeb879dd33c08c5c34280b28885a0162303793c5c3fdba55bd370459d4d"
+    },
+    {
+      "file": "test_data/case_017/reference_outputs.npz",
+      "sha256": "449951bbba7f8f757eb7e03b9d81d2341200dff1f91d3a96dab92589b775d921"
+    },
+    {
+      "file": "test_data/case_017/result.png",
+      "sha256": "b04f1ad77f7adc3304934adaeb7914c710183456132133efe38cca1070a771f1"
+    },
+    {
+      "file": "test_data/case_042/inputs.npz",
+      "sha256": "c72362ca652833684875f4cdcf288ff944a8f2a707c75a70708dc7e3fc284f15"
+    },
+    {
+      "file": "test_data/case_042/reference_outputs.npz",
+      "sha256": "61145a9d3e288b9ee24efec25ec73881627e95ac04d2fff3d90e47edd0f394b5"
+    },
+    {
+      "file": "test_data/case_042/result.png",
+      "sha256": "bdceb24822d5b49fc8eb28a1d2ce98c7ebfb5072fd3b29c010b28a1cfefdcdad"
+    },
+    {
+      "file": "test_data/case_073/inputs.npz",
+      "sha256": "ffcc199b0d6a39fc58f390a5eace4694f57185d8a562643c6f0f742dfc416de7"
+    },
+    {
+      "file": "test_data/case_073/reference_outputs.npz",
+      "sha256": "219c1c14e0380bebf501a357867cdec452249f8ddaff4988c75e55407bee24b9"
+    },
+    {
+      "file": "test_data/case_073/result.png",
+      "sha256": "14490d0f7e08f7ad23a5f8f3ee43c39ef1d9fc25d7c5ac445859f394933bcccc"
+    },
+    {
+      "file": "test_data/case_099/inputs.npz",
+      "sha256": "028b245c22aec35ee9ebf329f7670af98c9989fddbe4d4150cf7206d346a3f57"
+    },
+    {
+      "file": "test_data/case_099/reference_outputs.npz",
+      "sha256": "cfdbbd8c807d1f1da4ad78ba58ad0b5df4f82aeb92dd9db0cd6cab390ce7da6f"
+    },
+    {
+      "file": "test_data/case_099/result.png",
+      "sha256": "412ae9ebd055234bb5d66f0c5de3193e4b2e839ca1d42d79352a852a27666d84"
+    },
+    {
+      "file": "test_data/reference_inputs.npz",
+      "sha256": "e3f6fcf2467a15160913902a6091c474c721f3241ce79b386c5c5e19c903c991"
+    },
+    {
+      "file": "test_data/reference_outputs.npz",
+      "sha256": "03fab2667e4a4296ca65e17d44212f6715c628a2b1a1b95b0b92bfc5f36452f3"
+    },
+    {
+      "file": "test_data/reference_result.png",
+      "sha256": "4e8fdbbf96ab303dfa4547054c6b41f193e7c738d8e87248c687b6b678472f6a"
+    }
+  ],
+  "paired_parser_commands": [
+    [
+      "python3",
+      "-m",
+      "samples.vision.diffusiondrive.evaluator.compare_outputs",
+      "--reference-npz",
+      "samples/vision/diffusiondrive/test_data/reference_outputs.npz",
+      "--board-npz",
+      "outputs/diffusiondrive/outputs.npz",
+      "--output",
+      "outputs/diffusiondrive-comparison.json"
+    ],
+    [
+      "python3",
+      "-m",
+      "samples.vision.diffusiondrive.evaluator.compare_outputs",
+      "--reference-npz",
+      "samples/vision/diffusiondrive/test_data/case_017/reference_outputs.npz",
+      "--candidate-npz",
+      "outputs/diffusiondrive_cases/case_017/outputs.npz",
+      "--output",
+      "outputs/diffusiondrive-case017-comparison.json"
+    ],
+    [
+      "python3",
+      "-m",
+      "samples.vision.diffusiondrive.runtime.python.main",
+      "--target",
+      "s600",
+      "--input-npz",
+      "samples/vision/diffusiondrive/test_data/case_017/inputs.npz",
+      "--output",
+      "outputs/diffusiondrive_case017"
+    ],
+    [
+      "bash",
+      "samples/vision/diffusiondrive/runtime/python/run_all_cases.sh",
+      "--target",
+      "s600",
+      "--output",
+      "outputs/diffusiondrive_cases"
+    ]
+  ],
+  "shell_syntax": "passed",
+  "note": "Only evaluator/test_data README pairs exist; root/model/runtime/conversion docs still pending."
+}

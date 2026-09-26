@@ -57,3 +57,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-26：LaneNet 源审计完成：无聚类、Python/C++ 着色差异、S64 二值输出、第三输出声明未证实、转换脚本/准确率图缺失均已记录；共享 S64 拼写归一化通过回归。见 [审计](../../releases/unified-migration/2026-09-26-b8-lanenet-source-review.md)。LaneNet 样例迁移仍 pending，B8 与 H0–H9 未关闭。
 
 2026-09-26：LaneNet Python/C++ 主机迁移与六层双语 README 已完成；22 项 sample 测试通过，原生核心/SDK 资源管理由主机伪 SDK 验证，完整原生 SDK/OpenCV 构建、OE 与板测均 not-run。独立整体评审仍待执行，Closed=no。见 [记录](../../releases/unified-migration/2026-09-26-b8-lanenet-review.md)。B8 继续 DiffusionDrive，H0–H9 全范围保持开放。
+
+2026-09-26：DiffusionDrive 主机迁移完成，保留四输入/输出、五案例运行、严格离线评估及六层双语 README；23 项 sample 测试通过。见 [记录](../../releases/unified-migration/2026-09-26-b8-diffusiondrive-review.md)。B8 全部样例已有主机实现，独立整体评审仍待执行，板端/真实 SDK/OE 未验证，B8 与 H0–H9 不提前关闭。后续继续 B9 收编及 YOLOE。

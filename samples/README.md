@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers all 43 unified samples under root `samples/vision`. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers all 44 unified samples under root `samples/vision`. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -49,6 +49,7 @@ This index covers all 43 unified samples under root `samples/vision`. It is a so
 | [yolo26_depth](vision/yolo26_depth/README.md) | [conversion](vision/yolo26_depth/conversion/README.md) | [evaluator](vision/yolo26_depth/evaluator/README.md) |
 | [depth_anything_v2](vision/depth_anything_v2/README.md) | [conversion](vision/depth_anything_v2/conversion/README.md) | [evaluator](vision/depth_anything_v2/evaluator/README.md) |
 | [lanenet](vision/lanenet/README.md) | [conversion](vision/lanenet/conversion/README.md) | [evaluator](vision/lanenet/evaluator/README.md) |
+| [diffusiondrive](vision/diffusiondrive/README.md) | [conversion](vision/diffusiondrive/conversion/README.md) | [evaluator](vision/diffusiondrive/evaluator/README.md) |
 | [bytetrack](vision/bytetrack/README.md) | [conversion](vision/bytetrack/conversion/README.md) | [evaluator](vision/bytetrack/evaluator/README.md) |
 
 ## Prompted segmentation

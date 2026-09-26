@@ -8,7 +8,7 @@ RDK Model Zoo provides model preparation, preprocessing, BPU inference, postproc
 
 ## Start by task
 
-The [sample index](samples/README.md) lists all 43 current unified vision samples. Each guide states its own targets, variants, languages and validation scope.
+The [sample index](samples/README.md) lists all 44 current unified vision samples. Each guide states its own targets, variants, languages and validation scope.
 
 | Task | Unified entry |
 |---|---|
@@ -22,6 +22,7 @@ The [sample index](samples/README.md) lists all 43 current unified vision sample
 | Semantic segmentation | [UNet](samples/vision/unet/README.md) · [PP-LiteSeg](samples/vision/pp_liteseg/README.md) · [UNetMobileNet](samples/vision/unetmobilenet/README.md) |
 | Monocular depth | [YOLO26 Depth](samples/vision/yolo26_depth/README.md) · [Depth Anything V2](samples/vision/depth_anything_v2/README.md) |
 | Lane embeddings and binary labels | [LaneNet](samples/vision/lanenet/README.md) |
+| Prepared-feature trajectory planning | [DiffusionDrive](samples/vision/diffusiondrive/README.md) |
 | Features, image-text matching and video classification | [DINOv2](samples/vision/dinov2/README.md), [SigLIP](samples/vision/siglip/README.md), [CLIP](samples/vision/clip/README.md), [3DResNet](samples/vision/3dresnet/README.md) |
 
 Depth, semantic segmentation, point clouds, speech, robotics, LLM/VLA and other pending capabilities remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
