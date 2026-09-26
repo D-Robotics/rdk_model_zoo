@@ -29,7 +29,7 @@
 <a id="preparation"></a>
 ## 准备模型
 
-以下命令都从**仓库根目录**执行。脚本使用 `python3` 和仓库内的 Python 辅助模块；帮助和 dry-run 不需要板端运行时或网络。实际下载需要网络和目标目录写权限。先查看一个模型的下载计划：
+以下命令都从**仓库根目录**执行。脚本使用 `python3`、读取清单所需的 PyYAML 和仓库内的 Python 辅助模块；帮助和 dry-run 不需要板端运行时或网络。实际下载需要网络和目标目录写权限。先查看一个模型的下载计划：
 
 ```bash
 bash samples/vision/ultralytics_yolo/model/download_model.sh \

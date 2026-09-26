@@ -1,83 +1,108 @@
-# Ultralytics YOLO：X5 / S 共用 Sample
-
-`--target` 与 `--platform` 等价，均可用 `auto`。主机上的列表、dry-run 和 `--download` 可以显式选择目标；实际推理在下载或加载模型前校验本机身份，拒绝未知硬件或目标不匹配。身份别名来自[共用注册表](../../../docs/release/platforms.json)，不代表制品支持或实测结论。本历史入口仍保留默认模型缺失时下载的兼容行为。
-
-模型准备和列表额外依赖 PyYAML，直接读取已有平台 Manifest。`--list-models` 显示可传给 `--asset-id` 的精确 `group:sample:filename` 引用，限定既有身份而不更名，也不代表实机通过。例如：
-
-```bash
-python samples/vision/ultralytics_yolo/runtime/python/main.py --target x5 --task detect --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
-```
-
-下载地址和发布摘要来自该 Manifest。显式准备使用临时文件，有发布摘要时核对后才完成；本地观测摘要不能替代缺失的发布摘要。
+# Ultralytics YOLO — RDK X5 / S
 
 [English](README.md)
 
-同一个 Sample、同一个 Python 入口，通过 `--platform x5|s100|s100p|s600` 选择目标。本轮从 X5/S 合并 YOLOv8 的检测、分割、姿态、分类，同时保留本 Sample 中 YOLOv5u、YOLOv9、YOLOv10、YOLO11、YOLO12 及 X5 YOLOv13 的已有模型组合。YOLO26 已接入同一个入口，覆盖 detect / cls / seg / pose / obb。YOLOE、独立 YOLOv5 和 yolo26_depth 暂不改动。
+<a id="overview"></a>
+## 概览
+
+本 Sample 为 RDK X5、S100、S100P、S600 提供目标检测、实例分割、姿态估计、分类及 YOLO26 旋转框任务。YOLO 检测头在多个尺度预测类别与框，CPU 端解码、筛选和还原原图坐标；分割、姿态、OBB 还输出各自的 mask、关键点和角度。模型源项目为 [Ultralytics](https://github.com/ultralytics/ultralytics)。
+
+维护入口是 `samples/vision/ultralytics_yolo`。Python 按目标绑定输入、按模型系列选择任务协议，下载、绘图和评估共用；YOLO26 已作为同一 Sample 的一个系列合并。独立 YOLOv5、YOLOE 和 yolo26_depth 具有不同能力，不在此入口中伪装成同一种模型。
+
+<a id="support-matrix"></a>
+## 支持范围与验证状态
+
+以下状态按任务/语言区分。supported-verified 只表示已有所列固定输入迁移对照证据，不表示全部精度、性能或当前每个配置均已验证。
+
+| Scope | x5 | s100 | s100p | s600 |
+|---|---|---|---|---|
+| Python YOLOv8n / YOLO26n detect | supported-verified | supported-verified | supported-verified | supported-verified |
+| Python other published scales/tasks | supported-not-run | supported-not-run | supported-not-run | supported-not-run |
+| Python YOLOv9 seg c/e | supported-not-run | supported-not-run | supported-not-run | not-supported |
+| Python YOLOv13 detect n/s/l/x | supported-not-run | not-supported | not-supported | not-supported |
+| C++ detect/classify/pose/segment reference contracts | supported-not-run | supported-not-run | supported-not-run | supported-not-run |
+| C++ OBB | not-supported | not-supported | not-supported | not-supported |
+
+Python 发布组合详见 [模型清单](model/README_cn.md)：YOLOv5u/v10/12 为检测；YOLOv8/11 为 detect/seg/pose/cls；YOLOv9 分割仅 c/e，S600 无 t 检测及分割；YOLOv13 仅 X5。YOLO26 全目标各 25 个资产（五任务 × n/s/m/l/x），是既有资产合并，不是新增 100 个模型。C++ 范围以其 [输入/head 契约及限制](runtime/cpp/README_cn.md) 为准，不能直接套用 Python 全清单。
+
+历史检测证据：[P1](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md)、[P2](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md)，覆盖 X5 8GB/4GB 与 S 三目标的 YOLOv8n、YOLO26n。其他任务/尺度、数据集精度、性能和本地转换不据此扩大。原始指标保留在 [X5 评估文档](../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README.md) 与 [S 评估文档](../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README.md)，不是重构后的重测结果。
+
+| 运行契约 | X5 | S100 / S100P / S600 |
+|---|---|---|
+| 制品 | `.bin` / bayese | `.hbm` / nashe、nashm、nashp |
+| NV12 输入 | 一个 packed 缓冲区 | NHWC Y + UV |
+| Python 检测 NMS 默认 | 0.70 | 0.45；YOLOv10 无 NMS |
+| 分类 CLI resize | YOLO26 拉伸；其余 letterbox | 拉伸 |
+| 分类发布输入 | YOLO26 224，其余 640 | S600 全部 224；S100/S100P YOLO26 224，其余 640 |
+
+<a id="prerequisites"></a>
+## 前置条件
+
+需要完整仓库、Python 3、NumPy、OpenCV、SciPy、PyYAML；实际推理还需要匹配板端系统镜像提供的 `hbm_runtime`。不会静默安装依赖。具体镜像/SDK 版本以所用制品和上述验证证据为准，本 Sample 未为全部目标给出一个统一的最低镜像版本。选择大尺度模型前确认存储和内存容量；本轮未测全尺度峰值内存，不能以下载成功推断运行可行。
+
+推理、下载与主机转换环境分开：C++ 需要板端开发库，ONNX/量化编译需要训练与 OE 环境，详见各子目录。主机可使用 help/list/dry-run/download；它们不执行板端推理。硬件身份来自 [统一注册表](../../../docs/release/platforms.json)，身份可识别不等于制品已发布或已验证。
+
+<a id="quickstart"></a>
+## 快速开始
+
+从仓库根目录执行。先联网准备模型，再在匹配的 X5 上运行；输入图片已在仓库 test_data 中。
+
+```bash
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform x5 --family yolov8 --task detect --model-size n
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolov8 --task detect \
+  --model-path samples/vision/ultralytics_yolo/model/yolov8n_detect_bayese_640x640_nv12.bin \
+  --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
+  --img-save-path /tmp/yolov8n-x5.jpg
+```
+其他目标换用对应的模型准备参数和路径，详见 [模型说明](model/README_cn.md)。显式 `--model-path` 不会自动下载；省略时历史兼容入口会下载缺失的默认资产。自定义文件名请明确 `--family`。`--target` 是 `--platform` 的别名；真正推理会拒绝未知板卡及目标不匹配。
+
+无板卡时可检查选择结果，不下载也不推理：
+
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --list-models
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s600 --family yolo26 --task cls --dry-run
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --target x5 --task detect \
+  --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
+```
+<a id="expected-results"></a>
+## 预期结果
+
+检测命令打印所选模型、输入协议及检测信息，并将绘制结果写入 `/tmp/yolov8n-x5.jpg`，成功时打印 `[Saved]`。框采用原图像素坐标；类别 ID 从 0 开始。分类打印 Top-K 而不写图片；分割、姿态、OBB 的结果字段见 [Python 文档](runtime/python/README_cn.md)。模型绑定失败时不能把旧图片当本次结果。下面是保留的历史检测示意图，不是本轮新测量：
+
+![Historical detection illustration](test_data/ultralytics_YOLO_Detect_demo.jpg)
+
+<a id="directory"></a>
+## 目录职责
 
 ```text
 ultralytics_yolo/
-├── conversion/           # 共用导出补丁；mapper.py 选择 X5/S 工具链
-│   ├── export_monkey_patch.py
-│   ├── mapper.py
-│   ├── workflow.py       # 共用 ONNX 检查、标定、配置和制品流程
-│   ├── mapper_x5.py      # hb_mapper，原始 float32 rgbchw 标定
-│   └── mapper_s.py       # hb_compile，归一化 npy 标定
-├── evaluator/            # 共用 COCO / ImageNet 评测入口
-├── model/                # 统一下载；S 模型仍按 nash-e/m/p 存放
-├── runtime/
-│   ├── python/           # main.py + 任务/输出协议分派 + S YOLOv10 后处理
-│   └── cpp/              # 原 X5 C++ 参考实现，不扩展 S 支持
-├── test_data/            # 示例图片及标签
-└── tests/                # 主机回归检查，不要求 BPU
+├── model/          # published asset preparation
+├── runtime/python/ # shared task APIs and CLI
+├── runtime/cpp/    # detect/classify/pose/segment reference programs
+├── conversion/    # export, calibration and X5/S compiler adapters
+├── evaluator/     # dataset evaluation and batch CLI
+├── test_data/     # input images, labels and historical illustrations
+└── tests/         # host regression checks
 ```
+<a id="entry-points"></a>
+## 操作与源码入口
 
-从仓库根目录运行：
+- [model](model/README_cn.md) — 模型下载、清单、路径与摘要.
+- [runtime/python](runtime/python/README_cn.md) — 任务 CLI、完整参数表、库接入与前/推/后处理.
+- [runtime/cpp](runtime/cpp/README_cn.md) — 按任务构建、位置参数、生命周期与测量范围.
+- [conversion](conversion/README_cn.md) — 源权重、导出、标定、编译与未验证前提.
+- [evaluator](evaluator/README_cn.md) — COCO/ImageNet/DOTA、逐任务评估与原始指标.
 
-```bash
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --family yolov8 --task detect --dry-run
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s600 --family yolov8 --task cls --dry-run
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s100 --list-models
-# 在对应板卡上去掉 --dry-run 执行推理；默认模型不存在时会下载。
-```
+源码阅读顺序：`main.py` 处理参数/文件/显示，`yolo_dispatch.py` 选任务，runner/binding 负责 SDK 与张量，任务类处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 不可互换；详见 [检测契约](DETECTION_CONTRACT.md)。输入尺寸必须由元数据/显式回退正确解析，不能按文件名猜测。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别；修正后的非检测行为仍需板端精度复验。
 
-| 差异 | X5 | S100 / S100P / S600 |
-| --- | --- | --- |
-| 编译产物 | .bin / bayese | .hbm / nashe、nashm、nashp |
-| Python 输入 | 单个 packed NV12 | 两个 NHWC Y、UV 张量 |
-| 运行 CLI NMS 默认值 | 0.70 | 0.45 |
-| 运行 CLI 分类缩放 | YOLO26 直接缩放（0）；其他系列 letterbox（1） | 直接缩放，resize-type=0 |
-| 分类配置类默认缩放 | 0，保留原 API | 0，保留原 API |
-| 已发布分类文件名 | YOLO26 为 224x224；其他系列为 640x640 | S600 全部 224x224；S100/S100P：YOLO26 为 224x224，其他系列为 640x640 |
-| YOLOv10 运行路径 | DFL + NMS，保留原实现 | DFL 解码后不做 NMS |
-| C++ | X5 参考实现 | 本 Sample 未提供 |
+旧 `platforms/{x5,s}/samples/vision/ultralytics_yolo` 与 `ultralytics_yolo26` 入口保留转发兼容；历史表格、URL 和来源记录保留。不要把其他尚未迁移 Sample 的状态推断为本入口已支持。新增任务必须先明确输出契约、提供主机回归，再更新双语 README 和验证范围。
 
-分类文件名是发布资产的名称，不能替代二进制输入形状检查。运行时从模型元数据读取尺寸，校验 batch=1、正偶数方形尺寸及输入协议；不明确的 flat 输入需要显式 `--input-shape HxW`，与元数据冲突会报错。DFL 检测类暂限三个特征层、reg=16；YOLO26 使用 stride 8/16/32 的四通道 LTRB；姿态暂限 17 点。
+<a id="license"></a>
+## 许可与来源
 
-YOLOv8n DFL 与 YOLO26n 直接 LTRB 检测已在 X5 8GB/4GB、S100、S100P、S600 通过固定输入旧新对照，检测任务支持注入可替换 runner。详见[契约](DETECTION_CONTRACT.md)、[P1 证据](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md)和 [P2 证据](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md)。这不代表其他尺寸/任务、完整数据集精度、性能或真实编译工具链已验证。
-
-Python 主机检查需要 NumPy、OpenCV、SciPy；实际推理需要板卡系统提供的 `hbm_runtime`，脚本不会静默安装依赖。`--help`、`--dry-run`、下载列表不加载板卡运行时。显式 `--model-path` 不会自动下载文件；可识别的文件名会选择模型家族，自定义名称请同时指定 `--family`。
-
-旧 `platforms/x5/`、`platforms/s/` 下本 Sample 的 Python、导出、转换、评测和下载入口转发到这里，不能再单独拷贝平台子树执行。旧 README 和 Manifest 保留为历史 Benchmark 证据；后续实现修改在本目录进行。其他 Sample 继续使用原平台目录。本轮不改历史 tag、线上下载地址或仪表盘快照。
-
-- [Python 参数与接口](runtime/python/README_cn.md)
-- [下载](model/README_cn.md)
-- [转换](conversion/README_cn.md)
-- [评测](evaluator/README_cn.md)
-- [C++](runtime/cpp/README_cn.md)
-
-回归检查：`python -m unittest discover -s samples/vision/ultralytics_yolo/tests`；资产清单测试需要先运行 `npm --prefix tools/catalog-publisher run build`。
-
-## YOLO26：使用同一个 Sample 入口
-
-通过 `--family yolo26` 选择版本，通过 `--task detect|cls|seg|pose|obb` 选择任务，平台仍使用 `--platform x5|s100|s100p|s600`。每个平台已有 25 个资产（五任务 × n/s/m/l/x），共 100 个；所有分类模型均为 224×224，其余任务为 640×640。这是既有支持的合并，不是新增 100 个模型。
-
-```bash
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform s600 --family yolo26 --task detect --dry-run
-python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --family yolo26 --task cls --dry-run
-```
-
-`yolo_dispatch.py` 按模型系列选择任务输出协议；YOLO26 是四通道 LTRB，YOLOv8 是 DFL。平台输入、分类实现、绘制、下载和评测基础设施共用。五个导出补丁放在 `conversion/yolo26/`，X5/S 编译流程保留各自实现。后续新版本在确认张量协议兼容后可以复用，不需要复制整个 Sample。
-
-旧 `platforms/{x5,s}/samples/vision/ultralytics_yolo26` 路径转发到这里，旧 Python 适配层保留姿态、分割返回格式。YOLO26 OBB 在 X5 和 S 上均直接按弧度解码；X5 按类别 NMS 和裁剪行为仍与 S 分开保留。输出按尺寸与通道绑定，不再依赖编译器枚举顺序；分割根据真实输入尺寸撤销 letterbox。这些修正仍须上板复验精度。原 Benchmark 表作为历史证据保留，不代表新代码已重新实测。
-
-OBB 默认标签遵循 [Ultralytics DOTAv1 类别顺序](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/DOTAv1.yaml)，其中 ID 9 为 `large-vehicle`、ID 10 为 `small-vehicle`；自定义模型可用 `--label-file` 覆盖。共享导出保留 [OBB26 角度头](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/nn/modules/head.py) 的原始弧度输出，不应再次进行 sigmoid 角度映射。
+Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)，保留各文件原版权声明。模型权重和上游训练框架按其随附许可分别核对；仓库代码许可不自动授予所有权重同样的许可。制品地址和发布方摘要以清单为准，缺少发布方哈希时不能把本地摘要当作来源认证。
