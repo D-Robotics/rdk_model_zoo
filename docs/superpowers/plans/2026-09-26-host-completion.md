@@ -55,3 +55,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-26：Depth Anything V2 已完成主机迁移、五层双语 README 和历史图表保留，见 [记录](../../releases/unified-migration/2026-09-26-b8-depth-anything-review.md)。S100P 缺制品仍拒绝，板测 not-run，独立评审未关闭。B8 继续 LaneNet、DiffusionDrive，H0–H9 全范围不变。
 
 2026-09-26：LaneNet 源审计完成：无聚类、Python/C++ 着色差异、S64 二值输出、第三输出声明未证实、转换脚本/准确率图缺失均已记录；共享 S64 拼写归一化通过回归。见 [审计](../../releases/unified-migration/2026-09-26-b8-lanenet-source-review.md)。LaneNet 样例迁移仍 pending，B8 与 H0–H9 未关闭。
+
+2026-09-26：LaneNet Python/C++ 主机迁移与六层双语 README 已完成；22 项 sample 测试通过，原生核心/SDK 资源管理由主机伪 SDK 验证，完整原生 SDK/OpenCV 构建、OE 与板测均 not-run。独立整体评审仍待执行，Closed=no。见 [记录](../../releases/unified-migration/2026-09-26-b8-lanenet-review.md)。B8 继续 DiffusionDrive，H0–H9 全范围保持开放。

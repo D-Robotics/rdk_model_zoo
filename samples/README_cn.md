@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-当前索引覆盖根 `samples/vision` 下全部 42 个统一 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
+当前索引覆盖根 `samples/vision` 下全部 43 个统一 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
 
 ## 图像分类
 
@@ -48,6 +48,7 @@
 | [unetmobilenet](vision/unetmobilenet/README_cn.md) | [conversion](vision/unetmobilenet/conversion/README_cn.md) | [evaluator](vision/unetmobilenet/evaluator/README_cn.md) |
 | [yolo26_depth](vision/yolo26_depth/README_cn.md) | [conversion](vision/yolo26_depth/conversion/README_cn.md) | [evaluator](vision/yolo26_depth/evaluator/README_cn.md) |
 | [depth_anything_v2](vision/depth_anything_v2/README_cn.md) | [conversion](vision/depth_anything_v2/conversion/README_cn.md) | [evaluator](vision/depth_anything_v2/evaluator/README_cn.md) |
+| [lanenet](vision/lanenet/README_cn.md) | [conversion](vision/lanenet/conversion/README_cn.md) | [evaluator](vision/lanenet/evaluator/README_cn.md) |
 | [bytetrack](vision/bytetrack/README_cn.md) | [conversion](vision/bytetrack/conversion/README_cn.md) | [evaluator](vision/bytetrack/evaluator/README_cn.md) |
 
 ## 提示分割
