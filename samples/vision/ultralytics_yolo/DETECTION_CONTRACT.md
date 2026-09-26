@@ -23,10 +23,17 @@ from that artifact. A complete binding requires:
   tensors, or three classification tensors plus three direct four-channel LTRB
   tensors;
 * NHWC output shapes that match the declared grid and channel count;
-* floating point output data. The reviewed DFL contract may use integer output
-  only when the artifact contract supplies an explicit scalar `scale` and
-  optional `zero_point`. The reviewed LTRB contract has no quantization
-  protocol and rejects integer or quantized output metadata.
+* floating or declared affine-quantized DFL output data. DFL requires positive
+  finite scalar/per-channel SCALE metadata for integer outputs. Per-channel axes
+  and zero-point counts must match the physical tensor. SDK NONE descriptors do
+  not transform floating arrays. LTRB remains floating-only and rejects SCALE.
+
+`ModelRunner` now returns a role-keyed `RawOutputs` carrier with SDK arrays and
+binding metadata, preserving values/dtype/layout. It no longer dequantizes in
+forward. `post_process` explicitly performs declared transforms. The legacy
+`binding.read_outputs` is a numeric postprocess operation; use `read_raw_outputs`
+for container validation alone. Raw arrays borrow SDK buffers, whereas returned
+detection results own their arrays. These host changes do not extend board evidence.
 
 An unknown shape, dtype, output role, or quantization parameter stops binding
 before inference. A filename, output enumeration position, or `.bin`/`.hbm`
@@ -155,10 +162,25 @@ and configuration names and forward to this task. They do not define another
 detector algorithm.
 
 `YOLO26Detect` uses the same shared image preparation, runner call, transform
-recording, and result orchestration helpers as `YoloDetect`; only the
+per-call context, and result orchestration helpers as `YoloDetect`; only the
 protocol-specific decoder and binding contract differ.
 
+## Current explicit stage API
+
+Both detectors return `PreparedDetection(tensors, transform)` from preprocessing.
+The transform is frozen and is not stored on the model. Use
+`post_process(forward(prepared.tensors), transform=prepared.transform)`; `predict`
+composes exactly that path. The shared `detection_io.py` owns transport/context,
+`tensor_io.py` owns declared output transforms, and `legacy.py` owns the old
+`pre_process_with_transform` tuple adapter. Tensor mapping access and explicit
+original-width/height postprocess calls remain executable without cached state.
+Missing context or conflicting geometry fails explicitly.
+
 ## Board validation scope
+
+The board results below refer to their recorded historical commits and artifacts.
+The 2026-09-27 raw-output/explicit-context changes have host tests only; no new
+board, real SDK or OE run was performed.
 
 Fixed-input old/new YOLOv8n comparisons passed on X5 8GB/4GB, S100, S100P,
 and S600, using the same per-target artifact and bus image as the original

@@ -1,0 +1,95 @@
+EEEEEFE
+======================================================================
+ERROR: test_interleaved_images_have_frozen_context_and_predict_equivalence (test_detection_context.DetectionContext.test_interleaved_images_have_frozen_context_and_predict_equivalence) (task='YoloDetect', resize=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/tests/test_detection_context.py", line 26, in test_interleaved_images_have_frozen_context_and_predict_equivalence
+    self.assertEqual(pa.transform.original_size,(3,7))
+                     ^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'transform'
+
+======================================================================
+ERROR: test_interleaved_images_have_frozen_context_and_predict_equivalence (test_detection_context.DetectionContext.test_interleaved_images_have_frozen_context_and_predict_equivalence) (task='YoloDetect', resize=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/tests/test_detection_context.py", line 26, in test_interleaved_images_have_frozen_context_and_predict_equivalence
+    self.assertEqual(pa.transform.original_size,(3,7))
+                     ^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'transform'
+
+======================================================================
+ERROR: test_interleaved_images_have_frozen_context_and_predict_equivalence (test_detection_context.DetectionContext.test_interleaved_images_have_frozen_context_and_predict_equivalence) (task='YOLO26Detect', resize=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/tests/test_detection_context.py", line 26, in test_interleaved_images_have_frozen_context_and_predict_equivalence
+    self.assertEqual(pa.transform.original_size,(3,7))
+                     ^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'transform'
+
+======================================================================
+ERROR: test_interleaved_images_have_frozen_context_and_predict_equivalence (test_detection_context.DetectionContext.test_interleaved_images_have_frozen_context_and_predict_equivalence) (task='YOLO26Detect', resize=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/tests/test_detection_context.py", line 26, in test_interleaved_images_have_frozen_context_and_predict_equivalence
+    self.assertEqual(pa.transform.original_size,(3,7))
+                     ^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'transform'
+
+======================================================================
+ERROR: test_invalid_bgr_inputs_fail_at_preprocessing_boundary (test_detection_context.DetectionContext.test_invalid_bgr_inputs_fail_at_preprocessing_boundary) (shape=(3, 7, 3), dtype=dtype('float32'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/tests/test_detection_context.py", line 54, in test_invalid_bgr_inputs_fail_at_preprocessing_boundary
+    task.pre_process(image)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/runtime/python/yolo_detect.py", line 334, in pre_process
+    tensors, _ = self.pre_process_with_transform(img, image_format)
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/runtime/python/yolo_detect.py", line 323, in pre_process_with_transform
+    tensors, transform = _prepare_image(
+                         ~~~~~~~~~~~~~~^
+        self.runner, self.input_adapter, self.input_size,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.cfg.resize_type, img, image_format)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/runtime/python/yolo_detect.py", line 155, in _prepare_image
+    y_plane, uv_plane = pre_utils.bgr_to_nv12_planes(resized)
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/runtime/python/rdk_yolo_utils/preprocess.py", line 46, in bgr_to_nv12_planes
+    return convert(image)
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/_shared/image.py", line 41, in bgr_to_nv12_planes
+    planar = cv2.cvtColor(image, cv2.COLOR_BGR2YUV_I420).reshape(area * 3 // 2)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+cv2.error: OpenCV(4.14.0) /Users/xperience/GHA-OpenCV-Python/_work/opencv-python/opencv-python/opencv/modules/imgproc/src/color.simd_helpers.hpp:94: error: (-2:Unspecified error) in function 'cv::impl::(anonymous namespace)::CvtHelper<cv::impl::(anonymous namespace)::Set<3, 4>, cv::impl::(anonymous namespace)::Set<1>, cv::impl::(anonymous namespace)::Set<0>, cv::impl::(anonymous namespace)::TO_YUV>::CvtHelper(InputArray, OutputArray, int) [VScn = cv::impl::(anonymous namespace)::Set<3, 4>, VDcn = cv::impl::(anonymous namespace)::Set<1>, VDepth = cv::impl::(anonymous namespace)::Set<0>, sizePolicy = cv::impl::(anonymous namespace)::TO_YUV]'
+> Unsupported depth of input image:
+>     'VDepth::contains(depth)'
+> where
+>     'depth' is 5 (CV_32F)
+
+
+======================================================================
+ERROR: test_legacy_tensor_mapping_and_explicit_dimensions_are_stateless (test_detection_context.DetectionContext.test_legacy_tensor_mapping_and_explicit_dimensions_are_stateless)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/tests/test_detection_context.py", line 42, in test_legacy_tensor_mapping_and_explicit_dimensions_are_stateless
+    self.assertIs(prepared['m'],prepared.tensors['m'])
+                                ^^^^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'tensors'
+
+======================================================================
+FAIL: test_invalid_bgr_inputs_fail_at_preprocessing_boundary (test_detection_context.DetectionContext.test_invalid_bgr_inputs_fail_at_preprocessing_boundary) (shape=(0, 7, 3), dtype=dtype('uint8'))
+----------------------------------------------------------------------
+ValueError: original_size must contain positive dimensions.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/ultralytics_yolo/tests/test_detection_context.py", line 53, in test_invalid_bgr_inputs_fail_at_preprocessing_boundary
+    with self.subTest(shape=image.shape,dtype=image.dtype),self.assertRaisesRegex(ValueError,'BGR'):
+                                                           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: "BGR" does not match "original_size must contain positive dimensions."
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.006s
+
+FAILED (failures=1, errors=6)

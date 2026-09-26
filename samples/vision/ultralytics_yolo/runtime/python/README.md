@@ -164,6 +164,7 @@ Run this example from the repository root on the matching S600 board, after repl
 import sys
 from pathlib import Path
 import cv2
+import numpy as np
 
 runtime_dir = Path("samples/vision/ultralytics_yolo/runtime/python").resolve()
 sys.path.insert(0, str(runtime_dir))
@@ -179,7 +180,12 @@ bgr_image = cv2.imread("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 if bgr_image is None:
     raise FileNotFoundError("Cannot read test image")
 detector = YoloDetect(config)
-boxes, scores, class_ids = detector.predict(bgr_image)
+prepared = detector.pre_process(bgr_image)
+raw = detector.forward(prepared.tensors)
+result = detector.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, detector.predict(bgr_image)):
+    np.testing.assert_allclose(staged, predicted)
+boxes, scores, class_ids = result
 print(boxes.shape, scores.shape, class_ids.shape)
 ```
 
@@ -194,13 +200,26 @@ these maintained paths.
 <a id="stage-io"></a>
 ## Code flow
 
-`predict` composes preprocessing, one inference call and postprocessing. File reads, logs, labels and rendering belong to the CLI/helpers. Manual stage calls must preserve the same image geometry and transform; do not interleave images through one stateful model instance.
+`YoloDetect` and `YOLO26Detect` compose exactly three stages. They keep no
+last-image context. Preparing B after A does not overwrite A's geometry; retain
+each prepared object and use its own transform. SDK calls still require external
+serialization; per-call context does not certify thread-safe inference.
 
-- `pre_process(img, image_format="BGR")`: H×W×3 image to uint8 NV12 tensors grouped by model/input name. X5 uses a packed buffer; S binds Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`. H/W come from model binding.
-- `forward(inputs)`: run the model and return raw output mappings; no drawing, saving or detection filtering. Postprocessing interprets outputs through binding rather than treating physical output indexes as semantic roles.
-- Detection `post_process(outputs, ori_img_w, ori_img_h, ..., transform=...)`: DFL or LTRB decode, applicable NMS and coordinate restoration, returning the result above. `pre_process_with_transform` also returns the actual resize/padding transform; `pre_process` keeps the historical tensor-only return.
-- Seg/pose also decode masks/keypoints, cls applies Softmax and Top-K, and obb decodes rotated boxes. Their postprocessing signatures differ; prefer each task's `predict` or consult that module's docstrings for manual stage use.
+- `pre_process(img, image_format="BGR")` requires nonempty uint8 H×W×3 BGR. It returns `PreparedDetection.tensors` and a frozen `.transform` containing original/model/resized sizes, actual integer padding and per-axis scale. X5 tensors are packed NV12; S tensors are Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`, using metadata-derived H/W.
+- `forward(prepared.tensors)` calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays still have the SDK dtype and borrow SDK buffers. Finish postprocessing before another SDK call, or explicitly copy retained raw arrays.
+- `post_process(raw, transform=prepared.transform)` applies declared DFL affine dequantization, then sigmoid/DFL or LTRB decoding, applicable NMS and coordinate restoration. DFL accepts finite positive scalar/per-channel SCALE metadata with matching axis and scalar/empty/per-channel zero-points. SDK NONE metadata means no transform. LTRB remains floating-only and rejects SCALE metadata. Missing metadata for integer logits is an error, never an implicit cast.
+- `predict(img)` composes those methods and returns owned result arrays. Plain semantic mappings from an injected runner must already hold floating values; use the bound raw carrier for physical quantized tensors.
 
+For executable compatibility, prepared results also support `[model_name]` mapping
+access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
+(in `legacy.py`) returns the old `(tensors, transform)` tuple. Explicit
+`post_process(outputs, original_width, original_height)` reconstructs the same
+geometry without cached state. With both dimensions and a transform supplied,
+they must agree. The former `last_transform`/`last_image_transform` attributes
+are removed; keep the prepared object instead. These detector signatures do not
+change the other tasks' APIs: seg/pose decode masks/keypoints, cls applies
+Softmax/Top-K, and OBB returns rotated boxes. Their separate stage contracts and
+standalone-source quantization remain part of the ongoing migration.
 
 ```text
 main.py

@@ -318,6 +318,13 @@ class ModelBinding:
         except TensorContractError as exc:
             raise BindingError(str(exc)) from exc
 
+    def read_raw_outputs(self, outputs: Any):
+        """Validate and bind raw output roles without numeric transformation."""
+        try:
+            return self.output_adapter.read_raw(outputs)
+        except TensorContractError as exc:
+            raise BindingError(str(exc)) from exc
+
     def read_outputs(self, outputs: Any) -> Dict[str, np.ndarray]:
         try:
             return self.output_adapter.read(outputs)
@@ -462,17 +469,21 @@ def _bind_output_roles(selection: ModelSelection,
                                            quantization.get(name))
             if quant_value is None:
                 quant_value = _runtime_quantization(metadata, name)
-            if protocol == "LTRB" and quant_value is not None:
-                raise BindingError(
-                    f"LTRB output {name!r} must be the observed floating tensor; "
-                    "quantization is not part of this contract.")
             try:
                 quant = as_quantization(quant_value)
+                if quant is not None:
+                    quant.validate(physical_shape)
+                if protocol == "LTRB" and quant is not None:
+                    raise BindingError(
+                        f"LTRB output {name!r} must be the observed floating tensor; "
+                        "quantization is not part of this contract.")
             except TensorContractError as exc:
                 raise BindingError(str(exc)) from exc
             quant_map[role] = quant
             if dtype is None:
                 raise BindingError(f"Runtime output {name!r} has no dtype metadata.")
+            if dtype.kind not in "fiu":
+                raise BindingError(f"Output {name!r} must be real floating/integer data, got {dtype}.")
             if np.issubdtype(dtype, np.integer) and quant is None:
                 raise BindingError(
                     f"Output {name!r} is integer {dtype}; no explicit quantization "
@@ -622,7 +633,9 @@ class RuntimeMetadata:
         output_dtypes = per_tensor("output_dtypes", {})
         if not output_dtypes:
             output_dtypes = per_tensor("output_dtype", {})
-        quant = per_tensor("output_quantization", {})
+        quant = per_tensor("output_quants", {})
+        if not quant:
+            quant = per_tensor("output_quantization", {})
         if not quant:
             quant = per_tensor("output_quant_infos", {})
         if not quant:

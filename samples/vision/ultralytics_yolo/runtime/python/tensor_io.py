@@ -14,16 +14,16 @@
 
 """Validated tensor adapters for the YOLO model boundary.
 
-This module contains transport concerns only.  It does not decide which
-tensor is a detection head and it never invents quantization parameters.  The
-binding layer supplies the named roles and the physical metadata; this module
-checks and performs the requested layout conversions.
+The binding layer supplies roles and physical metadata. Raw reading validates
+containers without changing dtype, values or layout. Explicit postprocess reads
+apply declared affine transforms and layout conversion; no parameters are invented.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from types import MappingProxyType, SimpleNamespace
 
 import numpy as np
 
@@ -49,6 +49,10 @@ def normalize_dtype(value: Any) -> Optional[np.dtype]:
         return None
     if isinstance(value, np.dtype):
         return value
+    from samples._shared.runtime_meta import canonicalise_dtype
+    canonical = canonicalise_dtype(value)
+    if canonical in {"float16", "float32", "float64", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32"}:
+        return np.dtype(canonical)
     # SDK enum instances expose their semantic spelling through ``.name``.
     # Check that spelling before NumPy parses strings such as ``U8`` as a
     # Unicode dtype.
@@ -333,38 +337,91 @@ def bind_nv12_inputs(profile: Any,
 
 @dataclass(frozen=True)
 class Quantization:
-    """Explicit affine quantization parameters supplied by model metadata."""
+    """Snapshot of scalar/per-channel affine metadata, applied only in postprocess."""
 
-    scale: float
-    zero_point: float = 0.0
+    scale: Any
+    zero_point: Any = 0.0
+    axis: Optional[int] = None
 
     def __post_init__(self) -> None:
-        if not np.isfinite(self.scale) or self.scale == 0:
-            raise TensorContractError("quantization scale must be finite and non-zero.")
-        if not np.isfinite(self.zero_point):
-            raise TensorContractError("quantization zero_point must be finite.")
+        scale = np.array(self.scale, dtype=np.float32, copy=True).reshape(-1)
+        zero = np.array(self.zero_point, dtype=np.float32, copy=True).reshape(-1)
+        if not scale.size or not np.isfinite(scale).all() or np.any(scale <= 0):
+            raise TensorContractError("quantization scales must be finite and positive.")
+        if not np.isfinite(zero).all():
+            raise TensorContractError("quantization zero-points must be finite.")
+        if scale.size == 1 and zero.size not in (0, 1):
+            raise TensorContractError("Scalar scale requires scalar/empty zero-point.")
+        if scale.size > 1 and zero.size not in (0, 1, scale.size):
+            raise TensorContractError("Per-channel scale/zero-point counts conflict.")
+        scale.setflags(write=False)
+        zero.setflags(write=False)
+        object.__setattr__(self, "scale", scale)
+        object.__setattr__(self, "zero_point", zero)
+
+    def descriptor(self):
+        return SimpleNamespace(quant_type="SCALE", scale=self.scale,
+                               zero_point=self.zero_point, axis=self.axis)
+
+    def validate(self, shape) -> None:
+        from samples._shared.quantization import validate_scale_quantization
+        try:
+            validate_scale_quantization(self.descriptor(), shape)
+        except ValueError as exc:
+            raise TensorContractError(str(exc)) from exc
 
     def apply(self, array: np.ndarray) -> np.ndarray:
-        return (np.asarray(array, dtype=np.float32) - self.zero_point) * self.scale
+        from samples._shared.quantization import dequantize_tensor
+        self.validate(array.shape)
+        return dequantize_tensor(array, self.descriptor())
 
 
 def as_quantization(value: Any) -> Optional[Quantization]:
-    """Parse an explicit quantization object or mapping."""
+    """Parse an explicit mapping or SDK SCALE descriptor; NONE means pass-through."""
     if value is None:
         return None
     if isinstance(value, Quantization):
         return value
     if isinstance(value, Mapping):
-        scale = value.get("scale")
-        zero = value.get("zero_point", 0.0)
-        if np.ndim(scale) != 0 or np.ndim(zero) != 0:
-            raise TensorContractError("Per-channel quantization is not declared by this contract.")
-        if scale is None:
-            raise TensorContractError("Quantization metadata must provide a scalar 'scale'.")
-        return Quantization(float(scale), float(zero))
-    raise TensorContractError(
-        "Quantization metadata must be Quantization or a mapping with 'scale' "
-        "and optional 'zero_point'.")
+        get = value.get
+    elif hasattr(value, "scale"):
+        get = lambda name, default=None: getattr(value, name, default)
+    else:
+        raise TensorContractError("Quantization must provide scale/zero_point metadata.")
+    kind = get("quant_type", "SCALE")
+    kind = str(getattr(kind, "name", kind))
+    if kind in ("NONE", "0"):
+        return None
+    if kind not in ("SCALE", "1"):
+        raise TensorContractError(f"Unsupported quantization type {kind!r}.")
+    scale = get("scale")
+    if scale is None:
+        raise TensorContractError("Quantization metadata must provide scale.")
+    return Quantization(scale, get("zero_point", 0), get("axis"))
+
+
+@dataclass(frozen=True)
+class RawOutputs(Mapping[str, np.ndarray]):
+    """Role-keyed raw arrays plus their binding; values/layout remain SDK-native.
+
+    The immutable mapping borrows array buffers until the next SDK call. Finish
+    postprocessing before reusing the runner, or explicitly copy arrays to retain
+    them. This is not a promise of SDK thread safety or concurrent ownership.
+    """
+    arrays: Mapping[str, np.ndarray]
+    binding: Any
+
+    def __post_init__(self):
+        object.__setattr__(self, "arrays", MappingProxyType(dict(self.arrays)))
+
+    def __getitem__(self, role):
+        return self.arrays[role]
+
+    def __iter__(self):
+        return iter(self.arrays)
+
+    def __len__(self):
+        return len(self.arrays)
 
 
 def pack_nv12_single(binding: InputBinding,
@@ -419,8 +476,14 @@ class OutputBinding:
             return outputs[self.model_name]
         return outputs
 
-    def read(self, outputs: Any) -> Dict[str, np.ndarray]:
-        """Validate runtime output tensors and return role-keyed arrays."""
+    def read_raw(self, outputs: Any) -> RawOutputs:
+        """Validate physical arrays and bind roles without numeric/layout transforms."""
+        if isinstance(outputs, RawOutputs):
+            if outputs.binding is not self:
+                raise TensorContractError("Raw outputs belong to a different model binding.")
+            if set(outputs) != set(self.role_to_name):
+                raise TensorContractError("Raw output roles do not match the binding.")
+            outputs = {name: outputs[role] for role, name in self.role_to_name.items()}
         values = self._unwrap(outputs)
         if isinstance(values, Mapping):
             by_name = values
@@ -460,14 +523,30 @@ class OutputBinding:
                 raise TensorContractError(
                     f"Output {name!r} for role {role!r} contains NaN or infinity.")
             quant = self.quantization.get(role)
-            if quant is not None:
-                value = quant.apply(value)
-            elif not np.issubdtype(value.dtype, np.floating):
+            if quant is None and not np.issubdtype(value.dtype, np.floating):
                 raise TensorContractError(
                     f"Output {name!r} is {value.dtype}; no explicit quantization is "
                     "declared for this semantic tensor.")
-            result[role] = _normalise_output_layout(
-                value, self.layouts.get(role, "NHWC"))
+            result[role] = value
+        return RawOutputs(result, self)
+
+    def read(self, outputs: Any) -> Dict[str, np.ndarray]:
+        """Explicit postprocess transform: validate, dequantize, normalize layout.
+
+        Kept for direct decoder/binding callers. ModelRunner uses read_raw instead.
+        A RawOutputs carrier prevents semantic role names from bypassing declared
+        quantization and prevents ambiguity with injected already-semantic maps.
+        """
+        raw = self.read_raw(outputs)
+        if raw.binding is not self:
+            raise TensorContractError("Raw outputs belong to a different model binding.")
+        result = {}
+        for role, value in raw.items():
+            quant = self.quantization.get(role)
+            transformed = quant.apply(value) if quant is not None else value
+            if not np.isfinite(transformed).all():
+                raise TensorContractError(f"Transformed output {role!r} is not finite.")
+            result[role] = _normalise_output_layout(transformed, self.layouts.get(role, "NHWC"))
         return result
 
 
@@ -499,5 +578,6 @@ __all__ = [
     "pack_nv12_single",
     "pack_nv12_planes",
     "OutputBinding",
+    "RawOutputs",
     "read_output",
 ]

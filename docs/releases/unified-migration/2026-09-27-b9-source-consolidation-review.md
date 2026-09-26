@@ -74,10 +74,15 @@ board/HP/SSH, real SDK, OE conversion, dataset accuracy or performance run occur
 
 [Full commands and return codes](evidence/2026-09-27-b9-source-consolidation/host-results.json)
 record the shared144/ResNet52/OCR44/checker27 regressions and initial Ultralytics89
-run. The final Ultralytics90 run adds the legacy-inventory regression; combined
-final checked scope is **357 tests**. The updated listing text was included in
-that final run. Migration contracts:44 samples /0 violations /45 policy skips /
-0 exemptions. These checks do not prove the unfinished numerical/native work.
+run. The final Ultralytics90 run adds the legacy-inventory regression. The
+357-test total combined runs from different intermediate trees: checker27 ran
+before the last migration-map edit. The saved final contract log actually had
+44 samples /1 R-SCOPE violation /45 policy skips /0 exemptions, and its rc was
+incorrectly transcribed as 0. Correction on 2026-09-27: the original failure log
+is retained, evidence rc is corrected to 1, and the map label is repaired without
+changing checker rules. See the [stage follow-up](2026-09-27-yolo-stage-purity-review.md)
+for final-tree regression. This supersedes the prior overbroad final-tree pass
+claim. These checks do not prove the unfinished numerical/native work.
 
 [README verification](evidence/2026-09-27-b9-source-consolidation/readmes.json)
 records local links across all six changed guides, exact bilingual equality of

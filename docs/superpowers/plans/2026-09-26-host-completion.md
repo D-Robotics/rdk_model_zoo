@@ -61,3 +61,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-26：DiffusionDrive 主机迁移完成，保留四输入/输出、五案例运行、严格离线评估及六层双语 README；23 项 sample 测试通过。见 [记录](../../releases/unified-migration/2026-09-26-b8-diffusiondrive-review.md)。B8 全部样例已有主机实现，独立整体评审仍待执行，板端/真实 SDK/OE 未验证，B8 与 H0–H9 不提前关闭。后续继续 B9 收编及 YOLOE。
 
 2026-09-27：B9 四个独立 YOLO 源目录的 78 个文件已逐字节对齐固定 S pin；十个原始制品身份已接入统一准备/路由，并补充双语路径、阈值和边界说明。反量化职责、姿态 logits/概率差异、显式 context、C++ 和完整转换/评测说明仍需迁移，不能据入口接通关闭 B9/H2。见 [进行中记录](../../releases/unified-migration/2026-09-27-b9-source-consolidation-review.md)。
+
+2026-09-27：DFL/YOLO26 检测已将反量化移出 forward，补齐 SDK 逐通道量化 metadata，并以 PreparedDetection 显式携带几何；旧 stage 访问保留无状态适配。详见 [阶段职责记录](../../releases/unified-migration/2026-09-27-yolo-stage-purity-review.md)。上一轮 B9 台账名称导致的 R-SCOPE 检查失败及错误通过汇总已如实更正。其余 Ultralytics 任务、原生能力、YOLOE 与 H0–H9 全范围仍继续，不提前关闭。

@@ -155,6 +155,7 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 import sys
 from pathlib import Path
 import cv2
+import numpy as np
 
 runtime_dir = Path("samples/vision/ultralytics_yolo/runtime/python").resolve()
 sys.path.insert(0, str(runtime_dir))
@@ -170,7 +171,12 @@ bgr_image = cv2.imread("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 if bgr_image is None:
     raise FileNotFoundError("Cannot read test image")
 detector = YoloDetect(config)
-boxes, scores, class_ids = detector.predict(bgr_image)
+prepared = detector.pre_process(bgr_image)
+raw = detector.forward(prepared.tensors)
+result = detector.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, detector.predict(bgr_image)):
+    np.testing.assert_allclose(staged, predicted)
+boxes, scores, class_ids = result
 print(boxes.shape, scores.shape, class_ids.shape)
 ```
 
@@ -182,13 +188,21 @@ print(boxes.shape, scores.shape, class_ids.shape)
 <a id="stage-io"></a>
 ## 代码流程
 
-`predict` 串联前处理、一次推理和后处理；文件读取、日志、标签与绘制在 CLI/辅助模块。手动分阶段时必须把同一图片的尺寸与变换交给后处理，不要在一个有状态模型实例上交错处理多张图片。
+`YoloDetect` 和 `YOLO26Detect` 直接串联三个阶段，不保存“上一张图片”的 context。
+准备 B 不会覆盖 A 的几何信息；分别保留 prepared，并使用其对应 transform。SDK 调用仍需
+由调用方串行安排；逐调用 context 不代表 SDK 推理线程安全。
 
-- `pre_process(img, image_format="BGR")`：H×W×3 图片到按模型名/输入名组织的 uint8 NV12 张量。X5 为 packed 缓冲区，S 为 Y `(1,H,W,1)` 与 UV `(1,H/2,W/2,2)`；H/W 来自模型绑定。
-- `forward(inputs)`：执行 runner，返回原始输出映射；此阶段不绘制、保存或筛选结果。后处理按模型绑定解释输出，不能把物理输出序号当作任务角色。
-- 检测 `post_process(outputs, ori_img_w, ori_img_h, ..., transform=...)`：DFL 或 LTRB 解码、所需的 NMS 和原图坐标还原，返回上表结果。`pre_process_with_transform` 可显式返回实际缩放/padding；`pre_process` 保留历史仅返回张量的接口。
-- seg/pose 还解码 mask/关键点，cls 进行 Softmax 与 Top-K，obb 解码旋转框；这些任务的后处理签名不同，应使用各自 `predict` 或阅读对应模块的 docstring。
+- `pre_process(img, image_format="BGR")` 要求非空 uint8 H×W×3 BGR，返回 `PreparedDetection.tensors` 和冻结的 `.transform`。后者包含原图/模型/实际缩放尺寸、整数 padding 与横纵缩放比例。X5 张量为 packed NV12；S 为 Y `(1,H,W,1)` 和 UV `(1,H/2,W/2,2)`，H/W 来自模型 metadata。
+- `forward(prepared.tensors)` 只调用一次 runner，返回以角色名索引的 `RawOutputs`。绑定的 runner 校验物理 shape、dtype 和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK dtype，借用 SDK 缓冲区；须先完成后处理再发起下一次 SDK 调用，或主动复制需要长期保留的原始数组。
+- `post_process(raw, transform=prepared.transform)` 执行声明过的 DFL 仿射反量化，再做 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。DFL 支持有限正数的标量/逐通道 SCALE，校验 axis 与通道数，zero-point 可为空、标量或逐通道；SDK NONE 不做变换。LTRB 仍只接受浮点输出并拒绝 SCALE。整数 logits 缺量化信息时显式报错，不直接转浮点凑结果。
+- `predict(img)` 串联这些方法并返回自有结果数组。注入 runner 返回普通语义映射时，数值须已是浮点；物理量化输出应使用绑定后的 raw 容器。
 
+可执行兼容方式：prepared 仍支持 `[model_name]` 映射访问，`forward(prepared)` 会取出
+`.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
+元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
+时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
+这些检测签名不改变其他任务 API：seg/pose 解码 mask/关键点，cls 做 Softmax/Top-K，OBB
+返回旋转框；它们各自的阶段契约与独立源制品量化处理仍在迁移核查中。
 
 ```text
 main.py

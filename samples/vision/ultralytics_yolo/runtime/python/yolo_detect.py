@@ -23,7 +23,7 @@ still builds a runner from ``YoloDetectConfig`` when one is not injected.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Mapping, Optional, Tuple
 
 import numpy as np
 
@@ -31,13 +31,10 @@ import numpy as np
 # algorithm package-qualified avoids collisions with another sample's
 # ``model_runner`` or ``tensor_io`` module when a compatibility wrapper imports
 # this task from an arbitrary working directory.
-from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils import preprocess as pre_utils
 from samples.vision.ultralytics_yolo.runtime.python.decode import decode_dfl
 from samples.vision.ultralytics_yolo.runtime.python.geometry import (
     ImageTransform,
     inverse_boxes,
-    make_transform,
-    resize_with_transform,
 )
 from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     BindingError,
@@ -48,20 +45,12 @@ from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_ru
 from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import PlatformProfile
 
 
-class DetectionResult(NamedTuple):
-    """Tuple-compatible public detector result."""
-
-    boxes_xyxy: np.ndarray
-    scores: np.ndarray
-    class_ids: np.ndarray
-
-    @property
-    def boxes(self) -> np.ndarray:
-        return self.boxes_xyxy
-
-    @property
-    def cls_ids(self) -> np.ndarray:
-        return self.class_ids
+from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
+    DetectionResult, PreparedDetection, _size_from_runner, _normalise_grids,
+    _prepare_image, _forward_runner, _semantic_outputs, _transform_for_postprocess,
+    _set_scheduling_params, _predict_task,
+)
+from samples.vision.ultralytics_yolo.runtime.python.legacy import pre_process_with_transform
 
 
 @dataclass
@@ -79,166 +68,6 @@ class YoloDetectConfig:
     strides: list = field(default_factory=lambda: [8, 16, 32])
     anchor_sizes: Optional[list] = None
     contract: Optional[DFLDetectionContract] = None
-
-
-def _size_from_runner(runner: Any,
-                      config: YoloDetectConfig) -> Tuple[int, int]:
-    value = getattr(runner, "input_size", None)
-    if value is not None:
-        if len(value) != 2:
-            raise ValueError("runner.input_size must be (height, width).")
-        return int(value[0]), int(value[1])
-    height = getattr(runner, "input_height", None)
-    width = getattr(runner, "input_width", None)
-    if height is not None and width is not None:
-        return int(height), int(width)
-    if config.input_shape is not None:
-        return int(config.input_shape[0]), int(config.input_shape[1])
-    raise ValueError(
-        "The injected runner must expose input_size or input_height/input_width.")
-
-
-def _normalise_grids(anchor_sizes: Optional[Sequence[Any]],
-                     input_size: Tuple[int, int],
-                     strides: Sequence[int]) -> list:
-    expected = []
-    for stride in strides:
-        stride = int(stride)
-        if stride <= 0 or input_size[0] % stride or input_size[1] % stride:
-            raise ValueError(
-                f"Stride {stride} does not divide model input {input_size[0]}x{input_size[1]}.")
-        expected.append((input_size[0] // stride, input_size[1] // stride))
-    if anchor_sizes is None:
-        return expected
-    if len(anchor_sizes) != len(expected):
-        raise ValueError("anchor_sizes must contain one grid per stride.")
-    actual = []
-    for value in anchor_sizes:
-        if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-            if len(value) != 2:
-                raise ValueError("Each rectangular anchor grid must be (height, width).")
-            actual.append((int(value[0]), int(value[1])))
-        else:
-            actual.append((int(value), int(value)))
-    if actual != expected:
-        raise ValueError(
-            f"anchor_sizes {actual} conflict with model input and strides {expected}.")
-    return actual
-
-
-def _build_input(runner: Any,
-                 input_adapter: Any,
-                 y_plane: np.ndarray,
-                 uv_plane: np.ndarray):
-    """Build one bound NV12 input through the selected runner."""
-    method = getattr(runner, "prepare_input", None)
-    if method is not None:
-        return method(y_plane, uv_plane)
-    if input_adapter is None:
-        raise BindingError("The injected runner has no input adapter.")
-    return input_adapter.build(y_plane, uv_plane)
-
-
-def _prepare_image(runner: Any,
-                   input_adapter: Any,
-                   input_size: Tuple[int, int],
-                   resize_type: int,
-                   img: np.ndarray,
-                   image_format: str) -> Tuple[Dict[str, Dict[str, np.ndarray]], ImageTransform]:
-    """Share image validation, resize bookkeeping and NV12 transport."""
-    if str(image_format).upper() != "BGR":
-        raise ValueError(f"Unsupported image_format: {image_format}")
-    if not isinstance(img, np.ndarray) or img.ndim != 3 or img.shape[2] != 3:
-        raise ValueError("img must be a BGR HxWx3 NumPy array.")
-    resized, transform = resize_with_transform(
-        img, input_size, resize_type=resize_type)
-    y_plane, uv_plane = pre_utils.bgr_to_nv12_planes(resized)
-    return _build_input(runner, input_adapter, y_plane, uv_plane), transform
-
-
-def _forward_runner(runner: Any, input_tensor: Mapping[str, Any]):
-    """Call one injected or factory-created runner exactly once."""
-    if callable(runner):
-        return runner(input_tensor)
-    method = getattr(runner, "forward", None) or getattr(runner, "run", None)
-    if method is None:
-        raise BindingError("The injected runner is not callable and has no forward/run method.")
-    return method(input_tensor)
-
-
-def _semantic_outputs(binding: Any,
-                      contract: Any,
-                      outputs: Any,
-                      protocol: str) -> Mapping[str, Any]:
-    """Use named semantic outputs or the already validated physical binding."""
-    if isinstance(outputs, Mapping):
-        required = set(contract.required_roles)
-        if required.issubset(set(outputs)):
-            return outputs
-    if binding is not None:
-        reader = getattr(binding, "read_outputs", None)
-        if reader is not None:
-            try:
-                return reader(outputs)
-            except Exception as exc:
-                raise BindingError(str(exc)) from exc
-    raise BindingError(
-        f"Detector outputs are not keyed by semantic roles and no complete {protocol} "
-        "output binding is available.")
-
-
-def _transform_for_postprocess(last_transform: Optional[ImageTransform],
-                               ori_img_w: int,
-                               ori_img_h: int,
-                               input_size: Tuple[int, int],
-                               resize_type: int) -> ImageTransform:
-    """Return the concrete transform used for one image or legacy postprocess."""
-    if last_transform is not None and last_transform.original_size == (ori_img_h, ori_img_w):
-        return last_transform
-    return make_transform((ori_img_h, ori_img_w), input_size, resize_type)
-
-
-def _set_scheduling_params(runner: Any,
-                           model: Any,
-                           model_name: Optional[str],
-                           priority: Optional[int],
-                           bpu_cores: Optional[list]) -> None:
-    """Forward explicit scheduler settings and reject unsupported requests."""
-    method = getattr(runner, "set_scheduling_params", None)
-    if method is not None:
-        method(priority=priority, bpu_cores=bpu_cores)
-        return
-    method = getattr(model, "set_scheduling_params", None)
-    if method is None:
-        if priority is not None or bpu_cores is not None:
-            raise BindingError(
-                "The injected runner/runtime does not support explicit scheduling parameters.")
-        return
-    values: Dict[str, Any] = {}
-    if priority is not None:
-        values["priority"] = {model_name: priority}
-    if bpu_cores is not None:
-        values["bpu_cores"] = {model_name: bpu_cores}
-    if values:
-        method(**values)
-
-
-def _predict_task(task: Any,
-                  img: np.ndarray,
-                  image_format: str,
-                  score_thres: Optional[float],
-                  nms_thres: Optional[float]) -> DetectionResult:
-    """Run the shared image/runner/task orchestration for one detector."""
-    input_tensor, transform = task.pre_process_with_transform(img, image_format)
-    outputs = task.forward(input_tensor)
-    return task.post_process(
-        outputs,
-        ori_img_w=int(img.shape[1]),
-        ori_img_h=int(img.shape[0]),
-        score_thres=score_thres,
-        nms_thres=nms_thres,
-        transform=transform,
-    )
 
 
 class YoloDetect:
@@ -293,8 +122,6 @@ class YoloDetect:
             value = getattr(profile, "nms_thres", None) if profile is not None else None
             if value is not None:
                 self.cfg.nms_thres = float(value)
-        self.last_transform: Optional[ImageTransform] = None
-        self.last_image_transform: Optional[ImageTransform] = None
 
     def set_scheduling_params(self,
                               priority: Optional[int] = None,
@@ -303,54 +130,35 @@ class YoloDetect:
         _set_scheduling_params(
             self.runner, self.model, self.model_name, priority, bpu_cores)
 
-    def _build_input(self, y_plane: np.ndarray, uv_plane: np.ndarray):
-        return _build_input(self.runner, self.input_adapter, y_plane, uv_plane)
+    pre_process_with_transform = pre_process_with_transform
 
-    def pre_process_with_transform(
-            self,
-            img: np.ndarray,
-            image_format: str = "BGR") -> Tuple[Dict[str, Dict[str, np.ndarray]], ImageTransform]:
-        """Prepare one image and return its input tensors and actual transform."""
+    def pre_process(self, img: np.ndarray, image_format: str = "BGR") -> PreparedDetection:
+        """Validate BGR uint8 HxWx3 and return NV12 tensors plus frozen geometry."""
         tensors, transform = _prepare_image(
             self.runner, self.input_adapter, self.input_size,
             self.cfg.resize_type, img, image_format)
-        self.last_transform = transform
-        self.last_image_transform = transform
-        return tensors, transform
-
-    def pre_process(self,
-                    img: np.ndarray,
-                    image_format: str = "BGR") -> Dict[str, Dict[str, np.ndarray]]:
-        """Prepare one image using the legacy tensor-only return shape."""
-        tensors, _ = self.pre_process_with_transform(img, image_format)
-        return tensors
+        return PreparedDetection(tensors, transform)
 
     def forward(self, input_tensor: Mapping[str, Any]):
         """Call the injected runner exactly once."""
         return _forward_runner(self.runner, input_tensor)
 
-    def _semantic_outputs(self, outputs: Any) -> Mapping[str, Any]:
-        return _semantic_outputs(self.binding, self.contract, outputs, "DFL")
-
-    def _transform_for_postprocess(self,
-                                   ori_img_w: int,
-                                   ori_img_h: int,
-                                   transform: Optional[ImageTransform]) -> ImageTransform:
-        if transform is not None:
-            return transform
-        return _transform_for_postprocess(
-            self.last_transform, ori_img_w, ori_img_h,
-            self.input_size, self.cfg.resize_type)
-
     def post_process(self,
                      outputs: Any,
-                     ori_img_w: int,
-                     ori_img_h: int,
+                     ori_img_w: Optional[int] = None,
+                     ori_img_h: Optional[int] = None,
                      score_thres: Optional[float] = None,
                      nms_thres: Optional[float] = None,
                      transform: Optional[ImageTransform] = None) -> DetectionResult:
-        """Decode, suppress, and map boxes to original image pixels."""
-        semantic = self._semantic_outputs(outputs)
+        """Decode DFL outputs into owned DetectionResult arrays.
+
+        Supply the matching PreparedDetection.transform, or explicit original
+        dimensions for the legacy stateless path. RawOutputs uses its validated
+        binding for postprocess transforms; injected semantic mappings must hold
+        floating values. Wrong binding/geometry/quantization raises ValueError
+        (including BindingError); score/NMS overrides follow the decoder contract.
+        """
+        semantic = _semantic_outputs(self.binding, self.contract, outputs, "DFL")
         score = self.cfg.score_thres if score_thres is None else float(score_thres)
         nms = self.cfg.nms_thres if nms_thres is None else float(nms_thres)
         if self.contract.nms == "none":
@@ -362,7 +170,8 @@ class YoloDetect:
             score_thres=score,
             nms_thres=nms,
         )
-        concrete = self._transform_for_postprocess(ori_img_w, ori_img_h, transform)
+        concrete = _transform_for_postprocess(
+            transform, ori_img_w, ori_img_h, self.input_size, self.cfg.resize_type)
         boxes = inverse_boxes(boxes, concrete)
         return DetectionResult(boxes, scores, class_ids)
 

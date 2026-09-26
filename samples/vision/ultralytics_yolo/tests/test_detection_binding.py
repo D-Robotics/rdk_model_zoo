@@ -255,7 +255,7 @@ class DetectionBindingTests(unittest.TestCase):
         self.assertEqual(len(result), 3)
         self.assertEqual(fake.calls, 1)
         self.assertEqual(result.boxes_xyxy.shape[1], 4)
-        self.assertEqual(model.last_transform.resized_size, (41, 96))
+        self.assertEqual(model.pre_process(np.zeros((3, 7, 3), dtype=np.uint8)).transform.resized_size, (41, 96))
         with self.assertRaises(BindingError):
             model.set_scheduling_params(priority=0)
 
