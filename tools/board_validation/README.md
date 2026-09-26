@@ -25,7 +25,7 @@ duration of the source module's execution (snapshot and restore; nothing
 leaks into the process). The root `utils/py_utils/file_io.py` has drifted
 from the pin (`load_imagenet_labels` rewritten as a proxy) and is never
 executed by this tool; any closure mismatch or unavailable pin object
-refuses the run (rc 2, `source_closure` evidence records every hash).
+refuses the run (rc 2, `source_closure` evidence records every hash). Already cached dependency modules are temporarily removed before loading the snapshot and restored afterwards, including their original object identity. The modules actually bound by the source are hashed again and must match the pin before either model is created; recording a mismatch alone is not sufficient. The tool performs this temporary import isolation serially and is not designed for concurrent calls sharing one Python interpreter.
 
 ## Minimal dependencies
 
