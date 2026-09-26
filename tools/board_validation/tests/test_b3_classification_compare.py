@@ -519,6 +519,49 @@ class B3CompareFailureTests(unittest.TestCase):
                 self.assertEqual(quant["zero_point"], 7)
                 self.assertEqual(quant["axis"], 3)
 
+    def test_preloaded_root_dependencies_are_isolated_and_restored(self):
+        """A warm Python process must still execute only the pinned helpers."""
+        with patch.dict(sys.modules):
+            import utils.py_utils.file_io
+            import utils.py_utils.preprocess
+            saved = {name: sys.modules[name] for name in tool._LEGACY_DEP_MODULES}
+            sdk = types.ModuleType("hbm_runtime")
+            sdk.HB_HBMRuntime = object()
+            sys.modules["hbm_runtime"] = sdk
+            path_before = list(sys.path)
+            for sample in sorted(_DEFAULT_ASSET):
+                with self.subTest(sample=sample), tempfile.TemporaryDirectory() as td:
+                    harness = _Harness(Path(td), sample)
+                    rc, err, _ = harness.run()
+                    self.assertEqual(rc, 0, err)
+                    for name, entry in harness.evidence()["legacy_dependency_resolution"].items():
+                        self.assertTrue(entry["matches_pin"], (name, entry))
+                    for name, old_module in saved.items():
+                        self.assertIs(sys.modules[name], old_module)
+                    self.assertIs(sys.modules["hbm_runtime"], sdk)
+                    self.assertEqual(sys.path, path_before)
+
+    def test_actual_loaded_dependency_mismatch_stops_before_model_creation(self):
+        """A verified source tree cannot excuse a different module actually bound."""
+        original_loader = tool._load_legacy
+        def mismatched_loader(sample, factory):
+            module, path, loaded = original_loader(sample, factory)
+            drifted = types.ModuleType("utils.py_utils.file_io")
+            drifted.__file__ = str(tool._ROOT / "utils/py_utils/file_io.py")
+            loaded["utils.py_utils.file_io"] = drifted
+            return module, path, loaded
+
+        with tempfile.TemporaryDirectory() as td:
+            harness = _Harness(Path(td), "convnext")
+            with patch.object(tool, "_load_legacy", side_effect=mismatched_loader):
+                rc, _, _ = harness.run()
+            stored = harness.evidence()
+            self.assertEqual(rc, 2)
+            self.assertFalse(stored["passed"])
+            self.assertIn("utils.py_utils.file_io", stored["error"]["message"])
+            self.assertFalse(stored["legacy_dependency_resolution"]["utils.py_utils.file_io"]["matches_pin"])
+            self.assertEqual(harness.fakes, [])
+
     def test_pin_verification_failure_refuses_to_run(self):
         with tempfile.TemporaryDirectory() as td:
             harness = _Harness(Path(td), "convnext")

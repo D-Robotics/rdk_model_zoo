@@ -381,7 +381,8 @@ def _load_legacy(sample: str, factory):
     bridge.HB_HBMRuntime = factory
     had_sdk_module = "hbm_runtime" in sys.modules
     path_before = list(sys.path)
-    saved_modules = {dep: sys.modules.get(dep) for dep in _LEGACY_DEP_MODULES}
+    absent = object()
+    saved_modules = {dep: sys.modules.get(dep, absent) for dep in _LEGACY_DEP_MODULES}
 
     utils_pkg = types.ModuleType("utils")
     utils_pkg.__path__ = [str(x5_base / "utils")]
@@ -404,6 +405,10 @@ def _load_legacy(sample: str, factory):
 
     loaded_refs = {}
     try:
+        # Replacing the parent package alone leaves already imported children
+        # eligible for reuse. Evict the complete reviewed dependency closure.
+        for dep in _LEGACY_DEP_MODULES:
+            sys.modules.pop(dep, None)
         sys.modules["utils"] = utils_pkg
         sys.modules["utils.py_utils"] = py_utils
         # The real package init executes .file_io/.visualize imports, which
@@ -424,7 +429,7 @@ def _load_legacy(sample: str, factory):
                 sys.modules.pop("hbm_runtime", None)
     finally:
         for dep, previous in saved_modules.items():
-            if previous is None:
+            if previous is absent:
                 sys.modules.pop(dep, None)
             else:
                 sys.modules[dep] = previous
@@ -922,6 +927,16 @@ def run_comparison(
         summary["legacy_dependency_resolution"] = _legacy_dependency_resolution(
             loaded_deps, closure
         )
+        mismatched = [
+            name for name, entry in summary["legacy_dependency_resolution"].items()
+            if not entry["matches_pin"]
+        ]
+        if mismatched:
+            raise ValueError(
+                "Actually loaded fixed-source dependencies do not match pin "
+                f"{SOURCE_REF}: {', '.join(mismatched)}. "
+                "Refusing to create either model."
+            )
 
         legacy_config = getattr(legacy_module, f"{prefix}Config")(
             model_path=str(selection.model_path),
