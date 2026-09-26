@@ -1,5 +1,3 @@
-> Current unified entry: [UNet](../../../../../samples/vision/unet/README.md). Source documentation below is retained; automatic download and the old Python API describe the historical path.
-
 [English](./README.md) | [简体中文](./README_cn.md)
 
 # UNet Model Description
@@ -9,6 +7,7 @@ UNet with ResNet18, ResNet34, ResNet50, ResNet101, and ResNet152 backbones. It
 covers checkpoint export, X5 PTQ conversion, accuracy evaluation, and Python
 inference on RDK X5.
 
+<a id="overview"></a>
 ## Algorithm Overview
 
 UNet uses an encoder-decoder structure with skip connections to combine
@@ -50,6 +49,40 @@ Sharing architecture code and conversion templates does not make an untested
 backbone supported. Each variant must independently pass checkpoint, ONNX, PTQ,
 accuracy, Runtime, and board-performance gates.
 
+<a id="support-matrix"></a>
+## Support and validation
+
+| Target | Variants | Python | C++ |
+| --- | --- | --- | --- |
+| x5 | resnet18/34/50/101/152 | supported-not-run | not-supported |
+| s100 / s100p / s600 | — | not-supported | not-supported |
+
+This is the current unified-entry status. Reference tables above retain their source dataset/artifact scope; they are not fresh board validation.
+
+<a id="prerequisites"></a>
+## Prerequisites
+
+RDK X5, RDK OS 3.5.0+, board-provided hbm_runtime, Python 3.10+, NumPy, OpenCV and PyYAML. Evaluation also needs Pillow and the selected PyTorch/ONNX backend. No minimum memory/storage budget was measured; reserve space for selected BINs, outputs and your dataset.
+
+<a id="quickstart"></a>
+## Quick start
+
+Prepare the model explicitly from the repository root; runtime never downloads. The example image is included.
+
+```bash
+# cwd: repository root
+bash samples/vision/unet/model/download.sh --target x5 --variant resnet18
+python3 samples/vision/unet/runtime/python/main.py --target x5 --variant resnet18
+```
+
+Exit 0 and inspect `unet_mask.png`, `unet_result.png`, and `unet_runtime_report.json`.
+
+<a id="expected-results"></a>
+## Expected results
+
+The mask is fixed 512×512 uint8 class IDs 0..20, without automatic original-size restoration. Overlay uses model resolution too. JSON contains artifact identity, observed metadata, present classes, output paths and timing including preprocessing/postprocessing; it is not pure BPU latency.
+
+<a id="directory"></a>
 ## Directory Structure
 
 ```text
@@ -67,12 +100,15 @@ unet/
 │   ├── README.md
 │   └── README_cn.md
 ├── model/                              # Prebuilt X5 models and downloads
-│   ├── download_model.sh               # Download models by backbone
+│   ├── download.sh               # Download models by backbone
 │   ├── README.md
 │   └── README_cn.md
 ├── runtime/
 │   └── python/                         # RDK X5 hbm_runtime sample
-│       ├── unet.py                     # UNetConfig and UNet model wrapper
+│       ├── unet.py                     # UNetTask four-stage inference
+│       ├── model_binding.py            # Artifact and tensor contracts
+│       ├── model_runner.py             # Lazy SDK and raw tensor validation
+│       ├── visualization.py            # Separate VOC palette
 │       ├── main.py                     # Command-line inference entry
 │       ├── run.sh                      # One-command launcher
 │       ├── README.md
@@ -90,21 +126,7 @@ this sample. The repository does not commit checkpoints, ONNX files,
 calibration data, compiled BIN files, or evaluation datasets; prebuilt BINs are
 downloaded with the script in `model/`.
 
-## QuickStart
-
-The Python Runtime is the user-facing inference entry. Run with zero arguments;
-the launcher downloads the default ResNet18 model when it is missing:
-
-```bash
-cd samples/vision/unet/runtime/python
-./run.sh
-```
-
-The command loads the X5 BIN, converts the BGR image to packed NV12, runs BPU
-inference, and writes a class-index mask, a colored overlay, and a JSON report.
-See the [Python Runtime guide](./runtime/python/README.md) for parameters and API
-details.
-
+<a id="entry-points"></a>
 ## Model Conversion
 
 Ordinary users can skip conversion because precompiled models for all five
@@ -163,6 +185,7 @@ ResNet50 improved over the upstream checkpoint's 0.661483 mIoU but did not
 exceed the ResNet34 result. Download URLs and SHA256 values for the complete
 family are listed in the [model guide](./model/README.md).
 
+<a id="license"></a>
 ## License
 
 This sample follows the repository-level [Apache License 2.0](../../../LICENSE).

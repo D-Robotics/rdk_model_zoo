@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-当前索引覆盖根 `samples/vision` 下全部 37 个统一 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
+当前索引覆盖根 `samples/vision` 下全部 38 个统一 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
 
 ## 图像分类
 
@@ -43,6 +43,7 @@
 | [lprnet](vision/lprnet/README_cn.md) | [conversion](vision/lprnet/conversion/README_cn.md) | [evaluator](vision/lprnet/evaluator/README_cn.md) |
 | [modnet](vision/modnet/README_cn.md) | [conversion](vision/modnet/conversion/README_cn.md) | [evaluator](vision/modnet/evaluator/README_cn.md) |
 | [pointnet](vision/pointnet/README_cn.md) | [conversion](vision/pointnet/conversion/README_cn.md) | [evaluator](vision/pointnet/evaluator/README_cn.md) |
+| [unet](vision/unet/README_cn.md) | [conversion](vision/unet/conversion/README_cn.md) | [evaluator](vision/unet/evaluator/README_cn.md) |
 | [bytetrack](vision/bytetrack/README_cn.md) | [conversion](vision/bytetrack/conversion/README_cn.md) | [evaluator](vision/bytetrack/evaluator/README_cn.md) |
 
 ## 提示分割

@@ -1,0 +1,27 @@
+model_parameters:
+  onnx_model: ../onnx_export/unet_resnet152_voc_512x512.onnx
+  march: bayes-e
+  layer_out_dump: false
+  working_dir: ./workspace/unet_resnet152_voc_512x512_nv12
+  output_model_file_prefix: unet_resnet152_voc_512x512_nv12
+input_parameters:
+  input_name: images
+  input_shape: 1x3x512x512
+  input_type_train: rgb
+  input_layout_train: NCHW
+  input_type_rt: nv12
+  input_batch: 1
+  norm_type: data_scale
+  scale_value: '0.003921568627451'
+calibration_parameters:
+  calibration_type: default
+  cal_data_dir: ./calibration_data_rgb_f32_512
+  cal_data_type: float32
+compiler_parameters:
+  compile_mode: latency
+  debug: false
+  core_num: 1
+  optimize_level: O3
+  input_source:
+    images: pyramid
+  jobs: 8

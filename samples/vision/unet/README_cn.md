@@ -1,5 +1,3 @@
-> 当前统一入口：[UNet](../../../../../samples/vision/unet/README_cn.md)。下方保留源文档，自动下载和旧 Python API 属于历史路径。
-
 [English](./README.md) | [简体中文](./README_cn.md)
 
 # UNet 模型说明
@@ -8,6 +6,7 @@
 UNet Pascal VOC 语义分割部署链路，覆盖 checkpoint 导出、X5 PTQ 转换、精度
 评测和 RDK X5 Python 推理。
 
+<a id="overview"></a>
 ## 算法介绍（Algorithm Overview）
 
 UNet 使用带跳跃连接的编码器—解码器结构，融合高层语义与精细空间信息。本实现
@@ -48,6 +47,40 @@ torchvision 版本与权重标识。
 共享模型源码和转换模板不代表未经测试的 backbone 已经受支持。每个变体都必须
 分别通过 checkpoint、ONNX、PTQ、精度、Runtime 和板端性能门禁。
 
+<a id="support-matrix"></a>
+## 支持与验证
+
+| Target | Variants | Python | C++ |
+| --- | --- | --- | --- |
+| x5 | resnet18/34/50/101/152 | supported-not-run | not-supported |
+| s100 / s100p / s600 | — | not-supported | not-supported |
+
+以上是当前统一入口状态，不扩大历史验证结论。参考结果保留原分支的数据集与制品边界，未在本轮重新板测。
+
+<a id="prerequisites"></a>
+## 环境前提
+
+RDK X5、RDK OS 3.5.0+、板端配套 hbm_runtime、Python 3.10+，以及 NumPy、OpenCV、PyYAML；评估另需 Pillow，PyTorch/ONNX 后端依各自环境安装。未实测最低内存/磁盘预算；预留所选 BIN、输出以及自行准备的数据集空间。
+
+<a id="quickstart"></a>
+## 快速体验
+
+在仓库根目录显式准备模型后运行，不再隐式下载。输入图片已随仓库提供。
+
+```bash
+# cwd: repository root
+bash samples/vision/unet/model/download.sh --target x5 --variant resnet18
+python3 samples/vision/unet/runtime/python/main.py --target x5 --variant resnet18
+```
+
+退出 0 后查看 `unet_mask.png`、`unet_result.png` 和 `unet_runtime_report.json`。
+
+<a id="expected-results"></a>
+## 预期结果
+
+掩码是固定 512×512 uint8 类别 ID 0..20，不自动恢复原图尺寸；叠加图也在模型分辨率。JSON 包含制品身份、实际 metadata、出现类别、输出路径和包括前后处理的耗时。该耗时不是纯 BPU 延迟。
+
+<a id="directory"></a>
 ## 目录结构（Directory Structure）
 
 ```text
@@ -65,12 +98,15 @@ unet/
 │   ├── README.md
 │   └── README_cn.md
 ├── model/                              # 预编译 X5 模型与下载说明
-│   ├── download_model.sh               # 按 backbone 下载模型
+│   ├── download.sh               # 按 backbone 下载模型
 │   ├── README.md
 │   └── README_cn.md
 ├── runtime/
 │   └── python/                         # RDK X5 hbm_runtime 示例
-│       ├── unet.py                     # UNetConfig 与 UNet 封装
+│       ├── unet.py                     # UNetTask 四阶段推理
+│       ├── model_binding.py            # 制品与张量契约
+│       ├── model_runner.py             # 懒加载 SDK 与原始张量校验
+│       ├── visualization.py            # 独立 VOC 调色板
 │       ├── main.py                     # 命令行推理入口
 │       ├── run.sh                      # 一键运行脚本
 │       ├── README.md
@@ -86,20 +122,7 @@ unet/
 训练工具与生成的中间产物维护在本示例之外。仓库不提交 checkpoint、ONNX、
 校准数据、编译后的 BIN 或完整评测数据集；预编译 BIN 通过 `model/` 中的脚本下载。
 
-## 快速体验（QuickStart）
-
-Python Runtime 是面向用户的推理入口。直接零参数运行；默认 ResNet18 不存在时，
-启动脚本会自动下载：
-
-```bash
-cd samples/vision/unet/runtime/python
-./run.sh
-```
-
-该命令加载 X5 BIN，把 BGR 图片转换为 packed NV12，执行 BPU 推理，并保存类别
-索引 mask、彩色叠加图和 JSON 报告。参数与接口说明见
-[Python Runtime 文档](./runtime/python/README_cn.md)。
-
+<a id="entry-points"></a>
 ## 模型转换（Model Conversion）
 
 仓库已经提供五个 backbone 的预编译模型，普通用户可以跳过转换。需要复现 checkpoint
@@ -149,6 +172,7 @@ RDK X5 上使用单线程、200 帧和真实 packed NV12 输入时，`hrt_model_
 ResNet50 相较上游 checkpoint 的 0.661483 mIoU 有提升，但没有超过 ResNet34。
 完整系列的下载地址和 SHA256 见[模型下载说明](./model/README_cn.md)。
 
+<a id="license"></a>
 ## License
 
 本示例遵循仓库顶层 [Apache License 2.0](../../../LICENSE)。参考 UNet 实现派生自

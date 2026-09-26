@@ -115,3 +115,11 @@ requires an explicitly matched board and a new evidence directory in normal
 use. Host fixtures test the capture tool; they do not certify model inference.
 See the [EfficientSAM guide](../vision/efficient_sam/README.md) and
 [MobileSAM guide](../vision/mobile_sam/README.md) for preparation and APIs.
+
+## SCALE descriptor validation
+
+`quantization.validate_scale_quantization` validates positive finite scales,
+finite zero-points and per-channel axis/lengths before integer task outputs are
+decoded. PointNet and UNet share it; float32 outputs keep their declared raw-float
+semantics and are not forced through integer descriptor validation. This helper
+checks numeric metadata, not artifact identity or task-specific logits shapes.

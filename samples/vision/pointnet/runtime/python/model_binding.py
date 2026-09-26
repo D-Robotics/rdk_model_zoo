@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from samples._shared.assets import Asset, list_assets
+from samples._shared.quantization import validate_scale_quantization as _validate_quant
 from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata
 
 
@@ -125,24 +126,3 @@ def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[st
     if dtype != "float32":
         _validate_quant(meta.output_quants.get(output_name), (1, shape[2], 4))
     return ModelBinding(selection, meta, input_name, output_name)
-
-
-def _validate_quant(info, shape):
-    """Integer logits need a finite positive SCALE descriptor, never raw argmax."""
-    import numpy as np
-    kind = getattr(info, "quant_type", None)
-    if str(getattr(kind, "name", kind)) not in ("SCALE", "1"):
-        raise MetadataMismatchError("Integer PointNet logits require a SCALE descriptor.")
-    scale = np.asarray(getattr(info, "scale", []), dtype=np.float32)
-    zero = np.asarray(getattr(info, "zero_point", []), dtype=np.float32)
-    if not scale.size or not np.isfinite(scale).all() or np.any(scale <= 0) or not np.isfinite(zero).all():
-        raise MetadataMismatchError("Invalid PointNet quantization scales/zero-points.")
-    if scale.size == 1:
-        if zero.size not in (0, 1):
-            raise MetadataMismatchError("Scalar scale requires a scalar or empty zero-point.")
-    else:
-        axis = getattr(info, "axis", None)
-        if not isinstance(axis, (int, np.integer)) or not -len(shape) <= axis < len(shape):
-            raise MetadataMismatchError("Invalid PointNet quantization axis.")
-        if scale.size != shape[axis] or zero.size not in (0, 1, scale.size):
-            raise MetadataMismatchError("Quantization descriptor does not match the channel axis.")

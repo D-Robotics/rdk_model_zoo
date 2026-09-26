@@ -148,6 +148,26 @@ def dequantize_outputs(
         for name, value in outputs.items()
     }
 
+def validate_scale_quantization(info, shape):
+    """Integer logits need a finite positive SCALE descriptor, never raw argmax."""
+    import numpy as np
+    kind = getattr(info, "quant_type", None)
+    if str(getattr(kind, "name", kind)) not in ("SCALE", "1"):
+        raise OutputTransformError("Integer tensor logits require a SCALE descriptor.")
+    scale = np.asarray(getattr(info, "scale", []), dtype=np.float32)
+    zero = np.asarray(getattr(info, "zero_point", []), dtype=np.float32)
+    if not scale.size or not np.isfinite(scale).all() or np.any(scale <= 0) or not np.isfinite(zero).all():
+        raise OutputTransformError("Invalid tensor quantization scales/zero-points.")
+    if scale.size == 1:
+        if zero.size not in (0, 1):
+            raise OutputTransformError("Scalar scale requires a scalar or empty zero-point.")
+    else:
+        axis = getattr(info, "axis", None)
+        if not isinstance(axis, (int, np.integer)) or not -len(shape) <= axis < len(shape):
+            raise OutputTransformError("Invalid tensor quantization axis.")
+        if scale.size != shape[axis] or zero.size not in (0, 1, scale.size):
+            raise OutputTransformError("Quantization descriptor does not match the channel axis.")
+
 
 __all__ = [
     "OUTPUT_TRANSFORMS",
@@ -156,4 +176,5 @@ __all__ = [
     "dequantize_outputs",
     "dequantize_tensor",
     "validate_output_transform",
+    "validate_scale_quantization",
 ]
