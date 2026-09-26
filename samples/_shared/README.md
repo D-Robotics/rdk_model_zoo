@@ -123,3 +123,23 @@ finite zero-points and per-channel axis/lengths before integer task outputs are
 decoded. PointNet and UNet share it; float32 outputs keep their declared raw-float
 semantics and are not forced through integer descriptor validation. This helper
 checks numeric metadata, not artifact identity or task-specific logits shapes.
+
+## Single-array runtime transport
+
+`single_array_runner.py:SingleArrayRunner` consolidates the transport shared by
+PointNet and UNet. Each sample still supplies its selection/binding and physical
+input contract: PointNet sends float32 `(1,3,N)` while UNet sends uint8 packed
+NV12 `(1,768,512,1)`, distinct from logical model metadata. Local wrapper names and
+constructor arguments remain unchanged.
+
+Real loading checks local target identity and artifact integrity before importing
+the SDK. Explicit `runtime` / `runtime_factory` injection remains a host test or
+caller-provided evaluator seam, not board verification. Metadata binding failure
+discards the runtime; scheduling with no arguments remains a no-op. The runner
+checks exact tensor names, physical input shape/dtype, output metadata and finite
+values, then returns owned raw data. It never performs normalization, dequantization,
+activation, argmax, geometry restoration, file IO or model downloads.
+
+This helper serves single-input/single-output arrays only. Multi-stage SAM/OCR,
+tracking state and classification-specific contracts are not silently migrated to
+it; their behavior needs a separate consumer review before any consolidation.

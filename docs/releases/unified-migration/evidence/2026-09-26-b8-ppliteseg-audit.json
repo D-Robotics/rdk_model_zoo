@@ -1,0 +1,74 @@
+{
+  "source_pin": "ac115717197920355fc390bb04299b20e6436864",
+  "files": [
+    {
+      "path": "platforms/x5/samples/vision/pp_liteseg/README.md",
+      "sha256": "b15c34495ca7bb78e3da4118e8f5c050c47d771add6f467669d7763dd54258eb",
+      "matches_source_pin": true
+    },
+    {
+      "path": "platforms/x5/samples/vision/pp_liteseg/runtime/python/pp_liteseg.py",
+      "sha256": "9608a23b3b35037b3b507124a0a89407f6f834324d3cbbc3e2616123220a7813",
+      "matches_source_pin": true
+    },
+    {
+      "path": "platforms/x5/samples/vision/pp_liteseg/runtime/python/main.py",
+      "sha256": "4f63e61f36f0ccc8af2a62bef2e656f75dcfa9d62188fc03798da5222ce3b01f",
+      "matches_source_pin": true
+    },
+    {
+      "path": "platforms/x5/samples/vision/pp_liteseg/conversion/README.md",
+      "sha256": "7f565abd2ada09d4c4ba2078f54c410a25d719c77e8e07cbbd0dc98d10b3c35b",
+      "matches_source_pin": true
+    },
+    {
+      "path": "platforms/x5/samples/vision/pp_liteseg/conversion/build_bin.sh",
+      "sha256": "d46125904d26eb1c36a52f1e9ae229641859e2b3f7745622e302e7c8bf541b24",
+      "matches_source_pin": true
+    },
+    {
+      "path": "platforms/x5/samples/vision/pp_liteseg/conversion/onnx_export/export_pp_liteseg_stdc1_onnx.sh",
+      "sha256": "05f7ccfa93e255c5feab84fa55fe105cc843bd32ff5bf3e3d200b1c71dbb7fcf",
+      "matches_source_pin": true
+    },
+    {
+      "path": "platforms/x5/samples/vision/pp_liteseg/conversion/prepare_calibration.py",
+      "sha256": "69a1cc32c9a4526cec78af3d2a5232b8df42c41b563cb46c16275b1d12c1d7bb",
+      "matches_source_pin": true
+    }
+  ],
+  "canonical_sample_exists": false,
+  "board": "not-run",
+  "findings": [
+    {
+      "id": "PP-A1",
+      "fact": "runtime forward/postprocess documents (1,H,W,1) int32 raw class map; postprocess squeezes/casts without argmax. Root/conversion READMEs incorrectly describe logits/argmax. Published model metadata has not been inspected on a board.",
+      "action": "Bind class-index output contract and document it; reject logits instead of blindly argmaxing again."
+    },
+    {
+      "id": "PP-A2",
+      "fact": "Default street.jpg does not exist; delivered files are street.png and test.jpg.",
+      "action": "Use actual default image and test CLI resolution independently of cwd."
+    },
+    {
+      "id": "PP-A3",
+      "fact": "Runtime imports hbm_runtime eagerly; set_scheduling_params is a pass stub.",
+      "action": "Host-safe CLI and lazy shared runner; do not silently advertise scheduler success."
+    },
+    {
+      "id": "PP-A4",
+      "fact": "Exporter does not require CHECKPOINT and depends on an unpinned external PaddleSeg tree/config.",
+      "action": "Require explicit checkpoint and record source pin/output graph semantics; no claim that the existing script reproduces the published artifact."
+    },
+    {
+      "id": "PP-A5",
+      "fact": "build_bin.sh prints missing expected BIN then ends with find ... || true, allowing exit 0.",
+      "action": "Fail when the expected artifact is absent and retain the original script capability."
+    },
+    {
+      "id": "PP-A6",
+      "fact": "Calibration output uses input stem only and exist_ok=True; colliding input basenames or reruns can overwrite outputs.",
+      "action": "Use explicit run-owned outputs and deterministic collision-safe names; preserve RGB float32 CHW numeric semantics."
+    }
+  ]
+}
