@@ -201,8 +201,8 @@ print(boxes.shape, scores.shape, class_ids.shape)
 `.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
 元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
 时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
-这些检测签名不改变其他任务 API：seg/pose 解码 mask/关键点，cls 做 Softmax/Top-K，OBB
-返回旋转框；它们各自的阶段契约与独立源制品量化处理仍在迁移核查中。
+DFL 分割也已采用此传输接口，完整例子见下文；姿态、分类、OBB 与 YOLO26 分割
+的阶段职责审计仍在进行。
 
 ```text
 main.py
@@ -218,6 +218,71 @@ main.py
 只是物理名称。`geometry.py` 记录实际整数缩放和 padding，使框还原使用
 同一个变换。有限检测协议和旧新符号对应见
 [`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md)。
+
+<a id="segmentation-api"></a>
+## DFL 分割库接口
+
+YOLOv8/9/11 分割使用 `YoloSeg`；YOLO26 分割采用不同的直接框协议，不适用本例。
+在匹配的 S100 板卡上，从仓库根目录执行；先按 [模型说明](../../model/README_cn.md)
+准备兼容的本地分割制品，并将例子中的绝对路径换成实际路径。显式设置
+`nms_thres=0.7` 保留独立 S YOLO11 分割的默认值；普通统一系列 CLI 路由在未覆盖时
+仍采用平台默认值。
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import YoloSeg, YoloSegConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+segmenter = YoloSeg(YoloSegConfig(
+    model_path="/models/yolo11n_seg_nashe_640x640_nv12.hbm",
+    platform=resolve_platform("s100"),
+    nms_thres=0.7,
+))
+prepared = segmenter.pre_process(image)
+raw = segmenter.forward(prepared.tensors)
+boxes, scores, ids, masks = segmenter.post_process(raw, transform=prepared.transform)
+expected = segmenter.predict(image)
+for staged, predicted in zip((boxes, scores, ids), expected[:3]):
+    np.testing.assert_allclose(staged, predicted)
+assert len(masks) == len(expected[3])
+for staged, predicted in zip(masks, expected[3]):
+    np.testing.assert_array_equal(staged, predicted)
+print(boxes.shape, scores.shape, ids.shape, [mask.shape for mask in masks])
+```
+
+三个方法与检测共用显式 `PreparedDetection`/`RawOutputs` 传输接口，
+`YoloSeg(config, runner=...)` 支持注入 runner。工厂读取实际输入/输出 metadata，
+在加载真实 SDK 前核对目标身份；推理不下载模型。`pre_process` 接收非空 BGR
+uint8 H×W×3；`post_process` 接收 `prepared.transform`，也兼容旧的
+`(原宽, 原高)` 参数。缺失或冲突的几何会报错，不保存上一张图片的状态。
+
+有限输出协议为 stride 8/16/32 的 NHWC 类别 logits `(1,H/s,W/s,C)`、DFL 框
+logits `(1,H/s,W/s,64)`、系数 `(1,H/s,W/s,32)`，以及 stride-4 原型
+`(1,H/4,W/4,32)` 或 `(1,32,H/4,W/4)`；要求发布模型所用的方形输入。
+按 shape 或显式审查的 `DFLSegmentationContract(output_roles=...)` 绑定角色，
+不依赖输出枚举顺序。缺失、错误或歧义 metadata、非有限张量、缺少 SCALE 的整数输出
+均拒绝。标量/逐通道反量化在后处理进行，先按物理轴反量化，再转换 NCHW 原型布局。
+注入的普通角色映射须已是有限浮点 NHWC 数组。
+
+返回 `(boxes, scores, ids, masks)`：自有 float32 `(N,4)` xyxy 原图框，裁至
+`[0,width]`/`[0,height]`；float32 `(N,)` 概率；int64 `(N,)` 类别 ID；N 个
+uint8 **ROI mask**，不是全图 mask。值为 0/1，每个 mask 高宽为
+`max(int(y2)-int(y1),1)` × `max(int(x2)-int(x1),1)`。空结果保留数组维度/类型，
+`masks=[]`；退化 ROI 使用无有效内容的零 mask，始终与对应框配对。
+保留源代码的系数/原型点积阈值 `>0.5`、Lanczos 缩放及可选 5×5 开运算
+（`do_morph=True`），不据此声明等同于上游 Ultralytics 全图 mask 评测。
+置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]` 内有限值。
+
+明确的源行为修正：逐通道 SCALE 正确广播标量非零 zero-point；坐标还原使用实际
+整数缩放/padding；原型切片先裁至可见图片内容，避免负坐标从另一侧索引，也排除
+letterbox padding。主机夹具与固定 S 源码对照未改变的内部区域行为，另测上述修正。
+这些证据不能证明板端精度、真实 SDK 兼容性、延迟或数据集指标；相应验证仍 not-run。
 
 <a id="troubleshooting"></a>
 ## 故障排查

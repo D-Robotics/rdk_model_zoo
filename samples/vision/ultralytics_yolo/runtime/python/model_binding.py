@@ -141,6 +141,33 @@ class DFLDetectionContract:
 
 
 @dataclass(frozen=True, init=False)
+class DFLSegmentationContract(DFLDetectionContract):
+    """Source YOLOv8/9/11 DFL heads plus 32 mask coefficients and stride-4 prototypes.
+
+    Head tensors are NHWC. Prototypes may be NHWC or NCHW; quantization
+    uses the physical axis before normalization. Ambiguous shapes need an
+    explicit reviewed output_roles map, never runtime enumeration order.
+    """
+
+    mces_num: int
+
+    def __init__(self, classes=80, reg_bins=16, strides=(8, 16, 32),
+                 mces_num=32, input_roles=None, output_roles=None,
+                 output_layouts=None, quantization=None):
+        if int(reg_bins) != 16 or tuple(strides) != (8, 16, 32) or int(mces_num) != 32:
+            raise BindingError("DFL segmentation requires 16 bins, strides 8/16/32 and 32 mask coefficients.")
+        super().__init__(classes=classes, reg_bins=reg_bins, strides=strides,
+                         task="segment", input_roles=input_roles, output_roles=output_roles,
+                         output_layouts=output_layouts, quantization=quantization)
+        object.__setattr__(self, "mces_num", int(mces_num))
+
+    @property
+    def required_roles(self):
+        return tuple(_role_key(kind, stride) for stride in self.strides
+                     for kind in ("cls", "box", "mces")) + ("protos",)
+
+
+@dataclass(frozen=True, init=False)
 class LTRBDetectionContract:
     """Logical direct-offset semantics for the reviewed YOLO26 detect head.
 
@@ -355,11 +382,13 @@ def _expected_grid(adapter: InputBinding, stride: int) -> Tuple[int, int]:
 def _role_shape_descriptor(shape: Tuple[int, ...],
                            grid: Tuple[int, int],
                            channels: int,
-                           name: str) -> Tuple[str, Tuple[int, ...]]:
+                           name: str, allow_nchw: bool = False) -> Tuple[str, Tuple[int, ...]]:
     """Validate a physical shape and return its layout."""
     gh, gw = grid
     if shape == (1, gh, gw, channels):
         return "NHWC", shape
+    if allow_nchw and shape == (1, channels, gh, gw):
+        return "NCHW", shape
     raise BindingError(
         f"Output {name!r} shape {shape} is incompatible with grid {gh}x{gw} and "
         f"{channels} channels; this contract requires NHWC.")
@@ -377,6 +406,16 @@ def _bind_output_roles(selection: ModelSelection,
     protocol = str(getattr(contract, "protocol", "DFL"))
     box_channels = int(getattr(
         contract, "box_channels", 4 * int(getattr(contract, "reg_bins", 16))))
+    specs = []
+    kinds = [("cls", contract.classes), ("box", box_channels)]
+    if contract.task == "segment":
+        kinds.append(("mces", contract.mces_num))
+    for stride in contract.strides:
+        grid = _expected_grid(adapter, stride)
+        specs.extend((_role_key(kind, stride), grid, channels, False)
+                     for kind, channels in kinds)
+    if contract.task == "segment":
+        specs.append(("protos", _expected_grid(adapter, 4), contract.mces_num, True))
     names = tuple(str(name) for name in metadata.output_names)
     if len(set(names)) != len(names):
         raise BindingError("Runtime output names must be unique.")
@@ -422,75 +461,69 @@ def _bind_output_roles(selection: ModelSelection,
         # Compiler names are opaque, so their physical names are matched to
         # the selected protocol by complete shape metadata.  Every assignment
         # must be unique; runtime enumeration order is never consulted.
-        for stride in contract.strides:
-            grid = _expected_grid(adapter, stride)
-            for kind, channels in (("cls", contract.classes),
-                                   ("box", box_channels)):
-                role = _role_key(kind, stride)
-                candidates = []
-                for name in names:
-                    try:
-                        _role_shape_descriptor(shapes[name], grid, channels, name)
-                    except BindingError:
-                        continue
-                    candidates.append(name)
-                if len(candidates) != 1:
-                    if len(candidates) == 0:
-                        raise BindingError(
-                            f"No uniquely identifiable tensor for {protocol} role {role!r}; "
-                            f"expected grid {grid[0]}x{grid[1]} with {channels} channels.")
+        for role, grid, channels, allow_nchw in specs:
+            candidates = []
+            for name in names:
+                try:
+                    _role_shape_descriptor(shapes[name], grid, channels, name, allow_nchw)
+                except BindingError:
+                    continue
+                candidates.append(name)
+            if len(candidates) != 1:
+                if not candidates:
                     raise BindingError(
-                        f"Multiple tensors match {protocol} role {role!r}: {', '.join(candidates)}.")
-                role_to_name[role] = candidates[0]
+                        f"No uniquely identifiable tensor for {protocol} role {role!r}; "
+                        f"expected grid {grid[0]}x{grid[1]} with {channels} channels.")
+                raise BindingError(
+                    f"Multiple tensors match {protocol} role {role!r}: {', '.join(candidates)}.")
+            role_to_name[role] = candidates[0]
+        if len(set(role_to_name.values())) != len(specs):
+            raise BindingError("Each semantic output role must name a distinct tensor.")
 
     expected_shapes: Dict[str, Tuple[int, ...]] = {}
     layouts: Dict[str, str] = {}
     channels_map: Dict[str, int] = {}
     quant_map: Dict[str, Any] = {}
-    for stride in contract.strides:
-        grid = _expected_grid(adapter, stride)
-        for kind, channels in (("cls", contract.classes),
-                               ("box", box_channels)):
-            role = _role_key(kind, stride)
-            name = role_to_name[role]
-            channels_map[role] = channels
-            layout, physical_shape = _role_shape_descriptor(
-                shapes[name], grid, channels, name)
-            declared_layout = contract.output_layouts.get(role)
-            if declared_layout is not None and str(declared_layout).upper() != layout:
+    for role, grid, channels, allow_nchw in specs:
+        name = role_to_name[role]
+        channels_map[role] = channels
+        layout, physical_shape = _role_shape_descriptor(
+            shapes[name], grid, channels, name, allow_nchw)
+        declared_layout = contract.output_layouts.get(role)
+        if declared_layout is not None and str(declared_layout).upper() != layout:
+            raise BindingError(
+                f"Output role {role!r} declares {declared_layout} but runtime shape "
+                f"{shapes.get(name)} is {layout}.")
+        layouts[role] = layout
+        expected_shapes[role] = physical_shape
+        dtype = dtypes.get(name)
+        quantization = getattr(contract, "quantization", {}) or {}
+        quant_value = quantization.get(role,
+                                       quantization.get(name))
+        if quant_value is None:
+            quant_value = _runtime_quantization(metadata, name)
+        try:
+            quant = as_quantization(quant_value)
+            if quant is not None:
+                quant.validate(physical_shape)
+            if protocol == "LTRB" and quant is not None:
                 raise BindingError(
-                    f"Output role {role!r} declares {declared_layout} but runtime shape "
-                    f"{shapes.get(name)} is {layout}.")
-            layouts[role] = layout
-            expected_shapes[role] = physical_shape
-            dtype = dtypes.get(name)
-            quantization = getattr(contract, "quantization", {}) or {}
-            quant_value = quantization.get(role,
-                                           quantization.get(name))
-            if quant_value is None:
-                quant_value = _runtime_quantization(metadata, name)
-            try:
-                quant = as_quantization(quant_value)
-                if quant is not None:
-                    quant.validate(physical_shape)
-                if protocol == "LTRB" and quant is not None:
-                    raise BindingError(
-                        f"LTRB output {name!r} must be the observed floating tensor; "
-                        "quantization is not part of this contract.")
-            except TensorContractError as exc:
-                raise BindingError(str(exc)) from exc
-            quant_map[role] = quant
-            if dtype is None:
-                raise BindingError(f"Runtime output {name!r} has no dtype metadata.")
-            if dtype.kind not in "fiu":
-                raise BindingError(f"Output {name!r} must be real floating/integer data, got {dtype}.")
-            if np.issubdtype(dtype, np.integer) and quant is None:
-                raise BindingError(
-                    f"Output {name!r} is integer {dtype}; no explicit quantization "
-                    "parameters were provided.")
-            elif not np.issubdtype(dtype, np.floating) and quant is None:
-                raise BindingError(
-                    f"Output {name!r} dtype {dtype} is not a floating semantic tensor.")
+                    f"LTRB output {name!r} must be the observed floating tensor; "
+                    "quantization is not part of this contract.")
+        except TensorContractError as exc:
+            raise BindingError(str(exc)) from exc
+        quant_map[role] = quant
+        if dtype is None:
+            raise BindingError(f"Runtime output {name!r} has no dtype metadata.")
+        if dtype.kind not in "fiu":
+            raise BindingError(f"Output {name!r} must be real floating/integer data, got {dtype}.")
+        if np.issubdtype(dtype, np.integer) and quant is None:
+            raise BindingError(
+                f"Output {name!r} is integer {dtype}; no explicit quantization "
+                "parameters were provided.")
+        elif not np.issubdtype(dtype, np.floating) and quant is None:
+            raise BindingError(
+                f"Output {name!r} dtype {dtype} is not a floating semantic tensor.")
 
     return OutputBinding(
         model_name=str(metadata.model_name),
@@ -553,6 +586,7 @@ def bind_model(selection: ModelSelection,
 __all__ = [
     "BindingError",
     "DFLDetectionContract",
+    "DFLSegmentationContract",
     "LTRBDetectionContract",
     "ModelSelection",
     "ModelBinding",

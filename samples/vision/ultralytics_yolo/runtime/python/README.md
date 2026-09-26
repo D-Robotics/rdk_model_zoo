@@ -216,10 +216,8 @@ access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
 `post_process(outputs, original_width, original_height)` reconstructs the same
 geometry without cached state. With both dimensions and a transform supplied,
 they must agree. The former `last_transform`/`last_image_transform` attributes
-are removed; keep the prepared object instead. These detector signatures do not
-change the other tasks' APIs: seg/pose decode masks/keypoints, cls applies
-Softmax/Top-K, and OBB returns rotated boxes. Their separate stage contracts and
-standalone-source quantization remain part of the ongoing migration.
+are removed; keep the prepared object instead. DFL segmentation now shares this transport; see its complete example below.
+Pose, classification, OBB and YOLO26 segmentation stage audits remain ongoing.
 
 ```text
 main.py
@@ -236,6 +234,82 @@ compiler enumeration names are opaque. `geometry.py` records the actual
 integer resize and padding so inverse boxes use the same transform. The
 finite protocols and old-to-new symbol map are in
 [`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md).
+
+<a id="segmentation-api"></a>
+## DFL segmentation library interface
+
+For YOLOv8/9/11 segmentation, use `YoloSeg`; YOLO26 segmentation has a different
+direct-box contract and is not covered by this example. On a matching S100 board,
+run from the repository root after preparing a compatible local segmentation
+model through the [model instructions](../../model/README.md). Replace the example
+absolute model path with your prepared artifact. The explicit `nms_thres=0.7`
+retains the standalone S YOLO11 segmentation default; normal unified family CLI
+routing retains its platform default unless overridden.
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import YoloSeg, YoloSegConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+segmenter = YoloSeg(YoloSegConfig(
+    model_path="/models/yolo11n_seg_nashe_640x640_nv12.hbm",
+    platform=resolve_platform("s100"),
+    nms_thres=0.7,
+))
+prepared = segmenter.pre_process(image)
+raw = segmenter.forward(prepared.tensors)
+boxes, scores, ids, masks = segmenter.post_process(raw, transform=prepared.transform)
+expected = segmenter.predict(image)
+for staged, predicted in zip((boxes, scores, ids), expected[:3]):
+    np.testing.assert_allclose(staged, predicted)
+assert len(masks) == len(expected[3])
+for staged, predicted in zip(masks, expected[3]):
+    np.testing.assert_array_equal(staged, predicted)
+print(boxes.shape, scores.shape, ids.shape, [mask.shape for mask in masks])
+```
+
+The three methods have the same explicit `PreparedDetection`/`RawOutputs`
+transport as detection. `YoloSeg(config, runner=...)` also supports an injected
+runner. The factory reads actual input/output metadata and enforces target
+identity before loading the real SDK. Inference never downloads a model.
+`pre_process` accepts nonempty BGR uint8 H×W×3; `post_process` takes either
+`prepared.transform` or the legacy `(original_width, original_height)` arguments.
+Missing/conflicting geometry is an error. No last-image state is retained.
+
+The finite output contract contains NHWC class logits `(1,H/s,W/s,C)`, DFL box
+logits `(1,H/s,W/s,64)` and coefficients `(1,H/s,W/s,32)` at strides 8/16/32,
+plus stride-4 prototypes `(1,H/4,W/4,32)` or `(1,32,H/4,W/4)`. Published square
+input geometry is required. Roles are bound from shapes or an explicit reviewed
+`DFLSegmentationContract(output_roles=...)`; output enumeration order is ignored.
+Wrong/missing/ambiguous metadata, nonfinite tensors and integer outputs without
+SCALE metadata are rejected. Scalar/per-channel dequantization happens in
+postprocessing, on the physical axis before NCHW prototype normalization.
+Injected plain role mappings must already contain finite floating NHWC arrays.
+
+The result is `(boxes, scores, ids, masks)`: owned float32 `(N,4)` xyxy boxes
+clipped to original-image `[0,width]`/`[0,height]`, float32 `(N,)` probabilities,
+int64 `(N,)` class IDs, and N uint8 **ROI masks**, not full-image masks. Each mask
+has values 0/1 and shape `max(int(y2)-int(y1),1)` × `max(int(x2)-int(x1),1)`.
+Empty results retain these array ranks/dtypes and return `masks=[]`. A degenerate
+ROI uses an empty-content zero mask; keep each mask paired with its own box.
+The source coefficient/prototype dot-product threshold `>0.5`, Lanczos resize
+and optional 5×5 morphological opening (`do_morph=True`) are retained; this is
+not a claim of equivalence to upstream Ultralytics full-image mask evaluation.
+Confidence must be finite in `(0,1)` and NMS in `[0,1]`.
+
+Intentional source corrections: per-channel SCALE now broadcasts a scalar
+nonzero zero-point; geometry uses actual integer resize/padding; prototype crops
+are clipped to visible image content before slicing, so negative coordinates do
+not index from the opposite edge and letterbox padding does not enter the mask.
+Host fixtures compare unchanged interior behavior against fixed S source and
+separately test these corrections. They do **not** establish board accuracy,
+real SDK compatibility, latency or dataset metrics; those remain not-run.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

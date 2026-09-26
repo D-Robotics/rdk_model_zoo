@@ -557,6 +557,8 @@ def _normalise_output_layout(value: np.ndarray,
     array = np.asarray(value)
     if layout == "NHWC":
         return array
+    if layout == "NCHW" and array.ndim == 4:
+        return array.transpose(0, 2, 3, 1)
     raise TensorContractError(
         f"Unsupported output layout {layout!r}; this contract requires NHWC.")
 

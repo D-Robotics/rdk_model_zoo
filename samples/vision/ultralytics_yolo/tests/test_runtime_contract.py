@@ -11,30 +11,15 @@ from yolo_platform import resolve_platform
 
 class RuntimeContract(unittest.TestCase):
     def test_segmentation_chw_and_hwc_prototypes_agree(self):
-        from yolo_seg import YoloSeg, YoloSegConfig
-        model = YoloSeg.__new__(YoloSeg)
-        model.cfg = YoloSegConfig('stub', nms_thres=.7)
-        model.model_name = 'm'
-        model.input_h = model.input_w = 64
-        model.anchor_sizes = [8, 4, 2]
-        model.weights_static = np.arange(16, dtype=np.float32)[None, None, :]
-        outputs = {}
-        for grid in model.anchor_sizes:
-            logits = np.full((1, grid, grid, 80), -20, np.float32)
-            logits[0, 1, 1, 0] = 5
-            for tensor in (logits, np.zeros((1, grid, grid, 64), np.float32),
-                           np.ones((1, grid, grid, 32), np.float32)):
-                outputs[str(len(outputs))] = tensor
-        proto = np.ones((1, 16, 16, 32), np.float32)
-        outputs['proto'] = proto
-        model.output_names = list(outputs)
-        hwc = model.post_process({'m': outputs}, 64, 64)
-        outputs['proto'] = proto.transpose(0, 3, 1, 2)
-        chw = model.post_process({'m': outputs}, 64, 64)
-        for a, b in zip(hwc[:3], chw[:3]):
+        from test_segmentation_binding import fixture
+        hwc, _, _ = fixture(chw=False, quantized=False)
+        chw, _, _ = fixture(chw=True, quantized=False)
+        left = hwc.post_process(hwc.forward({}), 64, 64)
+        right = chw.post_process(chw.forward({}), 64, 64)
+        for a, b in zip(left[:3], right[:3]):
             np.testing.assert_allclose(a, b)
-        self.assertEqual(len(hwc[3]), len(chw[3]))
-        for a, b in zip(hwc[3], chw[3]):
+        self.assertEqual(len(left[3]), len(right[3]))
+        for a, b in zip(left[3], right[3]):
             np.testing.assert_array_equal(a, b)
 
     def test_every_task_binds_platform_input(self):
@@ -56,7 +41,7 @@ class RuntimeContract(unittest.TestCase):
                     fake = types.SimpleNamespace(HB_HBMRuntime=lambda _: runtime)
                     m = importlib.import_module(module)
                     cfg = getattr(m, name + 'Config')(model_path='stub', platform=profile)
-                    if module == 'yolo_detect':
+                    if module in ('yolo_detect', 'yolo_seg'):
                         # The new detector requires the descriptors provided
                         # by the real SDK, not the former names-only fixture.
                         runtime.input_dtypes = {'m': {n: np.dtype(np.uint8) for n in names}}
@@ -66,7 +51,17 @@ class RuntimeContract(unittest.TestCase):
                             for j, channels in enumerate((80, 64))}}
                         runtime.output_dtypes = {'m': {str(i): np.dtype(np.float32) for i in range(count)}}
                         from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-                        runner = build_runner(cfg, runtime_loader=lambda: fake)
+                        if module == 'yolo_seg':
+                            from samples.vision.ultralytics_yolo.runtime.python.model_binding import DFLSegmentationContract, ModelSelection
+                            runtime.output_shapes = {'m': {
+                                str(3*i+j): (1, grid, grid, channels)
+                                for i, grid in enumerate((80,40,20))
+                                for j, channels in enumerate((80,64,32))}}
+                            runtime.output_shapes['m']['9'] = (1,160,160,32)
+                            selection = ModelSelection('stub',target=platform,task='segment',contract=DFLSegmentationContract())
+                            runner = build_runner(selection,runtime_loader=lambda:fake)
+                        else:
+                            runner = build_runner(cfg, runtime_loader=lambda: fake)
                         model = getattr(m, name)(cfg, runner=runner)
                     else:
                         with patch('yolo_runtime.load_hbm_runtime', return_value=fake):

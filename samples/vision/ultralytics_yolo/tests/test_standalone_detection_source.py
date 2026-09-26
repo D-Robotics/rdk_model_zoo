@@ -18,6 +18,7 @@ from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import (
 ROOT = Path(__file__).resolve().parents[4]
 # SOURCE_SHA is populated from Git source pin 380e1a2 at test authoring, not at run time.
 SOURCE_SHA = {
+    'samples/vision/yolo11_seg/runtime/python/yolo11seg.py': 'b1abd70ab03467799d4f2253107c8c251fbd2003c081c19e604df0bed9d77967',
     "samples/vision/yolo11/runtime/python/yolo11.py": "19cbf4e3283259b14db8ea1b93aa3127fdd1bda46eb9d522f58f5cefe1f0909b",
     "samples/vision/yolov13_imoonlab/runtime/python/yolov13.py": "37d39d9b339a71f2d3a2f06590f863f5d2e7508a1014424136ae6b37146b77c5",
     "utils/py_utils/nn_math.py": "c8f431da01b644d26285a013474b775744c0e330bf39ea04477e8542fe1e08ff",
