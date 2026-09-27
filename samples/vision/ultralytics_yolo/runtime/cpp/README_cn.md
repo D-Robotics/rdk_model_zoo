@@ -83,7 +83,7 @@ pose/segment 的源码阈值为 score=0.25、NMS=0.45；pose 点阈值 0.5，cla
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
-这些是独立可执行参考程序，不是与 Python 相同的稳定库 API。`detect/main.cc` 的 `DetectRuntime` 管理模型/张量；`common/dnn_io` 绑定输入，负责 NV12 拷贝及输入 cache clean；执行结束后使输出 cache 可读，再解码/NMS并还原原图坐标。释放张量和模型必须发生在请求完成后。
+这些是独立可执行参考程序，不是与 Python 相同的稳定库 API。`detect/main.cc` 的 `DetectRuntime` 管理模型/张量；`common/dnn_io` 绑定输入，负责 NV12 拷贝及输入 cache clean；执行结束后使输出 cache 可读，再解码/NMS；detect/pose 还原原图坐标，segment 在模型输入空间绘图（见下文）。释放张量和模型必须发生在请求完成后。
 
 每个并发 stream 使用独立运行上下文和张量，不能跨未完成请求复用缓冲区。几何、head 探测/解码与 benchmark 统计集中在 `common/`；pose/segment/classify 仍保留各自的主程序和资源流程。集成时核对所有 SDK 返回码、stride 和有效形状，不要只抽取一次推理调用。
 
@@ -114,6 +114,29 @@ YOLO 家族，也没有 resize 参数；Python YOLO26 分类默认 stretch，Pyt
 评估配方要求 stretch，请将 `PREPROCESS_TYPE` 改为 `RESIZE_TYPE` 后重新构建，
 并在结果中记录该选择。此处没有新增数据集精度结论。
 
+<a id="pose-segment-output-contract"></a>
+## 姿态与分割输出契约
+
+两者要求输入为边长可被 32 整除的方形、batch=1、未量化 FLOAT32 NHWC 输出。
+按空间形状和通道数匹配角色，不依赖 SDK 输出顺序：stride 8/16/32 各有分类
+（姿态 1 类、分割 80 类）、框（4 通道直接 LTRB 或 64 通道 DFL）、附加信息
+（姿态 51 个关键点值、分割 32 个 mask 系数）。三个尺度必须使用同一框编码。
+分割还需要唯一的 stride-4、32 通道 NHWC 原型。缺失/重复角色、混合编码、整数或
+SCALE 张量、不支持的布局和非有限值均明确拒绝。C++ 原型路径**不支持** Python
+可接受的 NCHW 原型；请选择对应 NHWC 导出，或使用 Python 入口。
+
+按 X5 aligned shape 或 S 字节 stride 读取。缓存失效操作成功后，将有效值复制到
+独立拥有内存的紧凑 NHWC 向量，跳过填充；这会增加一份有效输出的临时主机副本。
+分配或缓存操作失败会中止，所有退出路径释放已取得的输出和模型资源。
+DFL 和直接距离数学复用 `common/decode.h`，不再维护私有副本；关键点公式、NMS
+和绘图策略保持原有行为。
+
+这两个程序仍是功能参考，行为比 Python 窄：两者都会丢弃越过模型输入边界的框。
+分割采用不区分类别的 NMS，输出的是**模型输入尺寸**的三联图（框、彩色 mask、
+叠加图），总宽为 `3 * input_width`，不返回 Python 的原图 ROI mask。
+姿态使用原有缩放/填充运算在原图绘制。共用张量传输不能证明 Python 等价性或
+数据集精度；保存图片失败现在会非零退出。
+
 <a id="results-interpretation"></a>
 ## 结果解读与验证
 
@@ -131,8 +154,9 @@ YOLO 家族，也没有 resize 参数；Python YOLO26 分类默认 stretch，Pyt
 ```
 计时从内存中的 BGR 图片开始，到还原后的检测结果结束：包括 resize/letterbox、NV12、拷贝/cache、BPU 与解码/NMS，不包括模型加载、图片文件读取、绘图和保存。`--pipeline-streams 2` 可测两条完整流水线；吞吐量是总完成帧数/共同墙钟时间，延迟是每请求值。OpenCV 线程数和流水线数相互独立，不限定 CPU affinity。不要将 C++ 与 Python、runtime-only 与端到端、单流与多流数据混成同一结论。
 
-主机套件包含五个纯辅助测试（解码、head 探测、NV12 几何、benchmark 统计、分类），
-以及两个使用精简 X5/UCP 描述符替身的分类绑定与资源测试；均不使用真实板卡 SDK：
+主机套件包含六个纯辅助测试（解码、head 探测、NV12 几何、benchmark 统计、分类、
+任务输出绑定），以及四个使用精简 X5/UCP 替身的分类/任务描述符与资源测试；
+均不使用真实板卡 SDK：
 
 ```bash
 cmake -S samples/vision/ultralytics_yolo/runtime/cpp/test -B /tmp/ultralytics-cpp-host

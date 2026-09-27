@@ -83,7 +83,9 @@ Pose/segment source constants are score=0.25 and NMS=0.45; pose point threshold 
 <a id="interface-lifecycle"></a>
 ## Interfaces and resource lifetime
 
-These are standalone reference executables, not a stable library API identical to Python. `DetectRuntime` in `detect/main.cc` owns model/tensors; `common/dnn_io` binds input, copies NV12 and cleans the input cache. After execution, output cache handling precedes decode/NMS and restoration to original-image coordinates. Tensors/models must not be released before requests complete.
+These are standalone reference executables, not a stable library API identical to Python. `DetectRuntime` in `detect/main.cc` owns model/tensors; `common/dnn_io` binds input, copies NV12 and cleans the input cache. After execution, output cache handling precedes decode/NMS. Detect and pose
+restore coordinates to the original image; segment renders in model-input space,
+as detailed below. Tensors/models must not be released before requests complete.
 
 Each concurrent stream owns its runtime context and tensors; do not reuse buffers across unfinished requests. Geometry, head probing/decode and benchmark bookkeeping live in `common/`; pose/segment/classify retain their own main programs and resource flow. Integrations must check SDK return codes, strides and valid shapes, not merely copy the inference call.
 
@@ -120,6 +122,34 @@ an equivalent Python accuracy baseline. Change `PREPROCESS_TYPE` to `RESIZE_TYPE
 and rebuild if the selected model's evaluation recipe requires stretch; record
 that choice with any results. No new accuracy measurement is supplied here.
 
+<a id="pose-segment-output-contract"></a>
+## Pose and segmentation output contract
+
+Both entries require square input dimensions divisible by 32, batch one and
+unquantized FLOAT32 NHWC outputs. Roles are matched by spatial shape and channels,
+not output enumeration: strides 8/16/32 each contain classes (pose 1, segment 80),
+boxes (4 direct LTRB or 64 DFL) and extras (pose 51 keypoint values, segment 32 mask
+coefficients). All three scales must use the same box encoding. Segment adds one
+stride-4, 32-channel NHWC prototype. Missing/duplicate roles, mixed encodings,
+integer/SCALE tensors, unsupported layouts and nonfinite values fail explicitly.
+In particular this C++ prototype path does **not** accept Python's NCHW prototype
+alternative; use the matching NHWC export or the Python entry.
+
+X5 aligned dimensions and S byte strides determine physical reads. After cache
+invalidation, valid values are copied to owned compact NHWC vectors, skipping
+padding. This adds a temporary host copy of the valid outputs. Allocation and
+cache errors abort; acquired output/model resources release on all exit paths.
+DFL and direct-distance math now use `common/decode.h` rather than private copies.
+The existing keypoint equations, NMS and rendering policies remain unchanged.
+
+These programs are functional references with narrower behavior than Python:
+both discard boxes crossing the model-input boundary. Segment uses class-agnostic
+NMS and renders a **model-input-sized** three-panel image (detections, colored mask,
+combined), with total width `3 * input_width`; it does not return Python's
+original-image ROI masks. Pose renders on the original image using its source
+resize/padding arithmetic. Do not infer Python parity or dataset accuracy from
+the shared transport. A failed image save now produces a nonzero exit.
+
 <a id="results-interpretation"></a>
 ## Results and verification
 
@@ -137,9 +167,10 @@ Bounded detection benchmark:
 ```
 Timing starts with an in-memory BGR image and ends with restored detections: resize/letterbox, NV12 conversion, copy/cache operations, BPU and decode/NMS are included; model load, file I/O, drawing and saving are excluded. Set `--pipeline-streams 2` for two complete pipelines. Throughput is total completed frames over shared wall time; latency is per request. OpenCV thread count is independent of stream count, with no CPU-affinity restriction. Keep C++/Python, runtime-only/end-to-end and single/multistream measurements separate.
 
-The host suite contains five pure-helper tests (decode, head probing, NV12 geometry,
-benchmark bookkeeping and classification), plus two classification descriptor/resource
-tests compiled against narrow X5/UCP test doubles. None uses a real board SDK:
+The host suite contains six pure-helper tests (decode, head probing, NV12 geometry,
+benchmark bookkeeping, classification and task output binding), plus four
+classification/task descriptor-resource tests against narrow X5/UCP doubles.
+None uses a real board SDK:
 
 ```bash
 cmake -S samples/vision/ultralytics_yolo/runtime/cpp/test -B /tmp/ultralytics-cpp-host

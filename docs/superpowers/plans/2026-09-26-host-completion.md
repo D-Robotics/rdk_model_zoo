@@ -87,3 +87,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：YOLO26 OBB 改用共用 runner、严格浮点角色绑定和显式图片几何，数值/NMS 下沉到独立解码模块，删除最后已无调用的 Yolo26Runtime。保留 X5/S 旋转 NMS、角度和裁剪差异；双语 README 新增实际执行示例并披露非等比缩放近似及整数几何修正。408 项主机测试、128 本地链接和 16 双语示例通过，见[旋转框记录](../../releases/unified-migration/2026-09-28-yolo26-obb-review.md)。板端/真实 SDK/整体独立评审 not-run，原生、YOLOE、B10/B11/H8 及 H0–H9 继续。
 
 2026-09-28：Ultralytics C++ 分类修正固定类别轴和连续读取假设，严格绑定 1000 类浮点输出与物理步长，新增异常路径资源所有者；标签和数学移出主入口。双语文档明确 C++ letterbox 与 Python 默认值差异。7 个 C++ 主机测试在 ASan/UBSan 下通过，并修复由 sanitizer 发现的旧 DFL 测试夹具越界；408 项主机回归及文档检查通过，见[C++ 分类记录](../../releases/unified-migration/2026-09-28-yolo-cpp-classification-review.md)。真实 SDK 编译/板测/精度 not-run；其他原生任务、YOLOE、B10/B11/H8 与整体独立评审继续，H0–H9 未关闭。
+
+2026-09-28：C++ 姿态/分割取消固定输出索引与连续内存假设，共用严格 NHWC 角色绑定、步长读取、有限值检查与输出资源所有者；DFL 数学合入现有公共解码，保存失败明确报错。双语 README 修正分割三联图空间、NMS 和 Python ROI mask 的区别。10 个 sanitizer 原生主机测试、408 项主机回归及文档检查通过，见[绑定记录](../../releases/unified-migration/2026-09-28-yolo-cpp-heads-review.md)。完整原生阶段拆分、其他审计及 H0–H9 继续；真实 SDK 构建/板测/精度和独立整体评审 not-run。
