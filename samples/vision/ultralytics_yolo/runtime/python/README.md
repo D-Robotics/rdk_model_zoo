@@ -217,7 +217,8 @@ access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
 geometry without cached state. With both dimensions and a transform supplied,
 they must agree. The former `last_transform`/`last_image_transform` attributes
 are removed; keep the prepared object instead. DFL segmentation now shares this transport; see its complete example below.
-DFL pose and classification are documented below; OBB stage auditing remains ongoing.
+DFL pose, classification and YOLO26 OBB stages are documented below; native
+implementation and board verification remain separate.
 
 ```text
 main.py

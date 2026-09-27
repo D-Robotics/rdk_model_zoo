@@ -48,17 +48,19 @@ int main() {
   expect_near("y2", y2, (3.5f + 4.0f) * 16.0f, 1e-4f);
 
   // DFL: a dominant bin at index 5 decodes to a distance of ~5.
-  float bins[yolo::kDflBins] = {0.0f};
-  bins[5] = 20.0f;
+  float bins[4 * yolo::kDflBins] = {0.0f};
+  for (int side=0;side<4;++side) bins[side*yolo::kDflBins+5] = 20.0f;
   yolo::decode_box_dfl(bins, ltrb);
-  expect_near("dfl one-hot", ltrb[0], 5.0f, 1e-3f);
+  for (int side=0;side<4;++side) expect_near("dfl one-hot", ltrb[side], 5.0f, 1e-3f);
 
   // DFL: two equally-weighted bins at 2 and 6 decode to 4.
-  for (int j = 0; j < yolo::kDflBins; ++j) bins[j] = -100.0f;
-  bins[2] = 0.0f;
-  bins[6] = 0.0f;
+  for (int j = 0; j < 4*yolo::kDflBins; ++j) bins[j] = -100.0f;
+  for (int side=0;side<4;++side) {
+    bins[side*yolo::kDflBins+2] = 0.0f;
+    bins[side*yolo::kDflBins+6] = 0.0f;
+  }
   yolo::decode_box_dfl(bins, ltrb);
-  expect_near("dfl two-peak", ltrb[0], 4.0f, 1e-3f);
+  for (int side=0;side<4;++side) expect_near("dfl two-peak", ltrb[side], 4.0f, 1e-3f);
 
   // Threshold inversion matches sigmoid.
   expect_near("raw logit threshold", yolo::raw_logit_threshold(0.25f),

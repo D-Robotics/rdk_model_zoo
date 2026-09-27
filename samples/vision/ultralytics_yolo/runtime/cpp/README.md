@@ -12,7 +12,7 @@ The current sources implement packed NV12 `.bin` input for X5 and split Y/UV `.h
 | detect | YOLO26 four-channel LTRB; YOLO11-family 64-channel DFL | Explicit head selection and benchmark |
 | pose | DFL/LTRB boxes and corresponding keypoint encoding | Functional reference, no benchmark CLI |
 | segment | DFL/LTRB boxes and mask coefficients/prototypes | Functional reference, no benchmark CLI |
-| classify | Classification logits | Prints Top-5, no result image |
+| classify | One unquantized FLOAT32 vector of 1000 logits | Stride-aware Top-5, no result image |
 
 No C++ OBB entry is supplied. This does not claim the Python S YOLOv10 NMS-free semantics are covered by C++. Custom class/model layouts require checking hardcoded labels and dimensions in the sources; a matching extension is insufficient. Use the Python entry above for the complete task interface.
 
@@ -87,6 +87,39 @@ These are standalone reference executables, not a stable library API identical t
 
 Each concurrent stream owns its runtime context and tensors; do not reuse buffers across unfinished requests. Geometry, head probing/decode and benchmark bookkeeping live in `common/`; pose/segment/classify retain their own main programs and resource flow. Integrations must check SDK return codes, strides and valid shapes, not merely copy the inference call.
 
+<a id="classification-contract"></a>
+## Classification output contract
+
+The classification executable accepts exactly one model and one output containing
+1000 finite FLOAT32 logits, with quantization `NONE`. Supported shapes are a
+rank-one `(1000,)` vector or rank 2–4 with batch one, one 1000-class axis and all
+other axes singleton, for example `(1,1000)`, `(1,1000,1,1)` or `(1,1,1,1000)`.
+It does not assume that axis 1 always holds classes. Other class counts, integer
+outputs, flattened spatial maps and batched outputs fail explicitly.
+
+The output requires a positive physical allocation size. X5 reads class strides
+from aligned dimensions; S reads byte strides. Padding is skipped, and the last
+class must fit in the allocation before any read. Stable softmax uses a double
+accumulator; Top-5 returns probability descending, then class ID ascending for
+exact equal probabilities. This defines ties and can differ from the historical
+unspecified ordering. Labels preserve the source's 1000-entry ImageNet order in
+`common/imagenet_labels.h`; classification math lives in `common/classification.h`.
+No manual dequantization is performed.
+
+Model and output owners release acquired resources on early returns and C++
+exceptions. Allocation and output-cache invalidation failures stop decoding.
+Malformed descriptors/nonfinite logits produce a nonzero exit with a diagnostic.
+These host checks cover descriptor arithmetic and ownership with test doubles;
+actual SDK ABI, allocation/cache calls and inference remain unverified.
+
+Preprocessing still uses the source C++ **letterbox with gray 127 padding**.
+The C++ program does not infer a YOLO family from an artifact name and does not
+expose a resize flag. Python YOLO26 classification defaults to stretch, as does
+Python classification on S. Therefore this C++ default must not be presented as
+an equivalent Python accuracy baseline. Change `PREPROCESS_TYPE` to `RESIZE_TYPE`
+and rebuild if the selected model's evaluation recipe requires stretch; record
+that choice with any results. No new accuracy measurement is supplied here.
+
 <a id="results-interpretation"></a>
 ## Results and verification
 
@@ -104,7 +137,9 @@ Bounded detection benchmark:
 ```
 Timing starts with an in-memory BGR image and ends with restored detections: resize/letterbox, NV12 conversion, copy/cache operations, BPU and decode/NMS are included; model load, file I/O, drawing and saving are excluded. Set `--pipeline-streams 2` for two complete pipelines. Throughput is total completed frames over shared wall time; latency is per request. OpenCV thread count is independent of stream count, with no CPU-affinity restriction. Keep C++/Python, runtime-only/end-to-end and single/multistream measurements separate.
 
-These four pure helper tests need no board SDK and validate decode/head probing, NV12 geometry and benchmark bookkeeping only:
+The host suite contains five pure-helper tests (decode, head probing, NV12 geometry,
+benchmark bookkeeping and classification), plus two classification descriptor/resource
+tests compiled against narrow X5/UCP test doubles. None uses a real board SDK:
 
 ```bash
 cmake -S samples/vision/ultralytics_yolo/runtime/cpp/test -B /tmp/ultralytics-cpp-host

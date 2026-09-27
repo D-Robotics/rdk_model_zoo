@@ -12,7 +12,7 @@
 | detect | YOLO26 四通道 LTRB；YOLO11 类 64 通道 DFL | 支持显式 head 选择和 benchmark |
 | pose | DFL/LTRB 检测框及对应关键点编码 | 功能参考入口，无 benchmark CLI |
 | segment | DFL/LTRB 检测框及对应 mask 系数/prototype | 功能参考入口，无 benchmark CLI |
-| classify | 分类 logits | 打印 Top-5，无结果图 |
+| classify | 单个未量化 FLOAT32、1000 类 logits 向量 | 按物理 stride 读取 Top-5，无结果图 |
 
 没有 C++ OBB 入口。这里不声明 S YOLOv10 的 Python NMS-free 语义已被 C++ 覆盖。自定义类别/模型需核对源码中的标签与固定维度，不能仅因扩展名相同就套用。完整 Python 任务入口见上方链接。
 
@@ -87,6 +87,33 @@ pose/segment 的源码阈值为 score=0.25、NMS=0.45；pose 点阈值 0.5，cla
 
 每个并发 stream 使用独立运行上下文和张量，不能跨未完成请求复用缓冲区。几何、head 探测/解码与 benchmark 统计集中在 `common/`；pose/segment/classify 仍保留各自的主程序和资源流程。集成时核对所有 SDK 返回码、stride 和有效形状，不要只抽取一次推理调用。
 
+<a id="classification-contract"></a>
+## 分类输出契约
+
+分类入口只接受一个模型和一个输出：1000 个有限 FLOAT32 logits，量化类型为
+`NONE`。支持一维 `(1000,)`，或 rank 2–4、batch 为 1、仅一个轴为 1000、其余轴
+均为 1 的形状，例如 `(1,1000)`、`(1,1000,1,1)`、`(1,1,1,1000)`。
+不再固定将 axis 1 当成类别轴；其他类别数、整数输出、展开的空间图和 batch>1
+均明确拒绝。
+
+物理分配大小必须为正。X5 从 aligned shape 推导类别步长，S 读取字节 stride；
+跳过填充区域，并在读取前确认最后一类仍位于分配范围内。稳定 softmax 使用
+双精度累加，Top-5 按概率降序，概率完全相等时按类别 ID 升序。这明确了平局
+规则，可能与历史代码未指定的顺序不同。原源码的 1000 项 ImageNet 标签顺序
+保存在 `common/imagenet_labels.h`，分类数学位于 `common/classification.h`。
+不执行手动反量化。
+
+模型和输出资源由所有者在提前返回或 C++ 异常时释放；分配失败、输出缓存失效
+操作失败时停止解码。描述符错误或非有限 logits 会带诊断信息非零退出。
+主机测试用替身验证描述符运算和资源释放，不代表真实 SDK ABI、内存/缓存调用
+及推理已经验证。
+
+前处理仍保留原 C++ 的 **letterbox、灰色 127 填充**。程序不从制品名称推断
+YOLO 家族，也没有 resize 参数；Python YOLO26 分类默认 stretch，Python S 分类
+也默认 stretch。因此不能将 C++ 默认行为当成 Python 的等价精度基线。如果模型
+评估配方要求 stretch，请将 `PREPROCESS_TYPE` 改为 `RESIZE_TYPE` 后重新构建，
+并在结果中记录该选择。此处没有新增数据集精度结论。
+
 <a id="results-interpretation"></a>
 ## 结果解读与验证
 
@@ -104,7 +131,8 @@ pose/segment 的源码阈值为 score=0.25、NMS=0.45；pose 点阈值 0.5，cla
 ```
 计时从内存中的 BGR 图片开始，到还原后的检测结果结束：包括 resize/letterbox、NV12、拷贝/cache、BPU 与解码/NMS，不包括模型加载、图片文件读取、绘图和保存。`--pipeline-streams 2` 可测两条完整流水线；吞吐量是总完成帧数/共同墙钟时间，延迟是每请求值。OpenCV 线程数和流水线数相互独立，不限定 CPU affinity。不要将 C++ 与 Python、runtime-only 与端到端、单流与多流数据混成同一结论。
 
-以下四个纯辅助测试不依赖板卡 SDK，只验证解码/head 探测、NV12 几何和 benchmark 统计：
+主机套件包含五个纯辅助测试（解码、head 探测、NV12 几何、benchmark 统计、分类），
+以及两个使用精简 X5/UCP 描述符替身的分类绑定与资源测试；均不使用真实板卡 SDK：
 
 ```bash
 cmake -S samples/vision/ultralytics_yolo/runtime/cpp/test -B /tmp/ultralytics-cpp-host

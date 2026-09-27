@@ -201,7 +201,7 @@ print(boxes.shape, scores.shape, class_ids.shape)
 `.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
 元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
 时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
-DFL 分割也已采用此传输接口，完整例子见下文；DFL 姿态与分类见下文；OBB 的阶段职责审计仍在进行。
+DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下文；原生实现与板端验证单独记录。
 
 ```text
 main.py
