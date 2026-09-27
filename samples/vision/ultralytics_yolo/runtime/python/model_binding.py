@@ -285,6 +285,25 @@ class LTRBPoseContract(LTRBDetectionContract):
                      for kind in ("cls", "box", "kpts"))
 
 
+@dataclass(frozen=True, init=False)
+class LTRBSegmentationContract(LTRBDetectionContract):
+    """YOLO26 direct LTRB heads with 32 coefficients and stride-4 prototypes."""
+
+    mces_num: int
+
+    def __init__(self, classes=80, strides=(8, 16, 32), input_roles=None,
+                 output_roles=None, output_layouts=None):
+        super().__init__(classes=classes, strides=strides, input_roles=input_roles,
+                         output_roles=output_roles, output_layouts=output_layouts)
+        object.__setattr__(self, "task", "segment")
+        object.__setattr__(self, "mces_num", 32)
+
+    @property
+    def required_roles(self):
+        return tuple(_role_key(kind, stride) for stride in self.strides
+                     for kind in ("cls", "box", "mces")) + ("protos",)
+
+
 @dataclass(frozen=True)
 class ClassificationContract:
     """One floating logit vector; singleton physical axes carry no extra samples."""
@@ -646,6 +665,7 @@ __all__ = [
     "DFLPoseContract",
     "LTRBDetectionContract",
     "LTRBPoseContract",
+    "LTRBSegmentationContract",
     "ModelSelection",
     "ModelBinding",
     "RuntimeMetadata",

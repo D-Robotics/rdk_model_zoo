@@ -217,7 +217,7 @@ access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
 geometry without cached state. With both dimensions and a transform supplied,
 they must agree. The former `last_transform`/`last_image_transform` attributes
 are removed; keep the prepared object instead. DFL segmentation now shares this transport; see its complete example below.
-DFL pose and classification are documented below; OBB and YOLO26 segmentation audits remain ongoing.
+DFL pose and classification are documented below; OBB stage auditing remains ongoing.
 
 ```text
 main.py
@@ -548,6 +548,77 @@ Together with actual integer geometry and stable extreme-logit sigmoid, these
 are intentional corrections, not a claim of bitwise equality for every case.
 Host tests execute both pinned source decoders and the actual X5 compatibility
 adapter. Real SDK, board inference and dataset metrics remain unverified here.
+
+<a id="yolo26-segmentation-api"></a>
+## YOLO26 segmentation stages
+
+YOLO26 segmentation shares the DFL sample's stage transport, validated runner,
+NMS and explicit geometry, but uses direct LTRB box distances. Its mask algorithm
+also differs: combine coefficients/prototypes, apply sigmoid, bilinearly resize
+probabilities to model size, crop by the model-space box, remove actual padding,
+resize probabilities to the original image, threshold at `>0.5`, then take the
+original-image box ROI. Do not substitute DFL's cropped-binary-mask resize or
+morphological opening; interpolation and threshold order change edge pixels.
+
+Run from the repository root on the matching S600 board after preparing a local
+artifact through [model preparation](../../model/README.md); replace the path:
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo26_seg import YOLO26Seg, YOLO26SegConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+segmenter = YOLO26Seg(YOLO26SegConfig(
+    model_path="/models/yolo26n_seg_nashp_640x640_nv12.hbm",
+    platform=resolve_platform("s600"),
+    nms_thres=0.45,
+))
+prepared = segmenter.pre_process(image)
+raw = segmenter.forward(prepared.tensors)
+result = segmenter.post_process(raw, transform=prepared.transform)
+predicted = segmenter.predict(image)
+for staged, repeated in zip(result[:3], predicted[:3]):
+    np.testing.assert_allclose(staged, repeated)
+assert len(result[3]) == len(predicted[3])
+for staged, repeated in zip(result[3], predicted[3]):
+    np.testing.assert_array_equal(staged, repeated)
+boxes, scores, class_ids, masks = result
+print(boxes.shape, [mask.shape for mask in masks])
+```
+
+The contract requires a square model input and ten outputs: class logits, four
+LTRB distances and 32 mask coefficients at each of strides 8/16/32, plus 32
+stride-4 prototypes. Heads are floating NHWC; prototypes may be floating NHWC or
+NCHW when runtime shape proves that layout. In ambiguous custom-class layouts,
+provide a reviewed explicit role map instead of relying on enumeration order.
+Integer/SCALE descriptors, malformed shapes/dtypes and nonfinite values fail.
+Forward preserves the physical prototype layout; postprocess normalizes it.
+
+Raw buffers are borrowed: finish postprocessing before the next inference or
+copy raw arrays. The result owns float32 `(N,4)` boxes, float32 `(N,)` scores,
+int64 `(N,)` IDs and a list of owned **boolean** ROI masks. For each clipped box,
+use `x1,y1,x2,y2 = box.astype(int)` and place its mask at `[y1:y2,x1:x2]` in a
+blank original-size image. A degenerate ROI is `(0,0)`; no detections return
+`(0,4)/(0,)/(0,)/[]`. The X5 legacy adapter still returns a boolean `(N,H,W)`
+full-image mask stack and now also accepts explicit transforms. S legacy returns
+ROI masks. The canonical result remains ROI-based on every target.
+
+Confidence must be finite in `(0,1)` and NMS in `[0,1]`. The library NMS default
+remains 0.65; the CLI supplies X5 0.70 or S 0.45. The common decoder honors valid
+confidence thresholds without the old helper's hidden clamp, and chooses class
+IDs from logits before sigmoid to avoid saturation changing the winning class.
+It uses actual integer geometry and stable mask sigmoid. The original X5 source
+hard-coded a 640-pixel prototype scale and resized masks without removing
+letterbox padding; the maintained path already used the S-style correction and
+continues to do so. Tests demonstrate that source difference rather than claiming
+all X5 masks are identical. Source comparisons, border/NMS/empty fixtures and
+README examples are host checks, not real SDK, board or dataset acceptance.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

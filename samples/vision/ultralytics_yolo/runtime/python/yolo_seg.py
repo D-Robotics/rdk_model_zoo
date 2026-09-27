@@ -81,7 +81,7 @@ class YoloSegConfig:
 
 
 class YoloSeg:
-    """DFL segmentation task with a replaceable raw model runner.
+    """Shared segmentation stages with a replaceable raw model runner.
 
     Loading/metadata and scheduling belong to the runner. Image geometry belongs
     to each PreparedDetection, never a cached last image. Physical output order
@@ -121,7 +121,7 @@ class YoloSeg:
             config.anchor_sizes, self.input_size, self.contract.strides
         )
         if any(h != w for h, w in grids):
-            raise ValueError("Published DFL segmentation requires square input grids.")
+            raise ValueError("Published segmentation requires square input grids.")
         self.anchor_sizes = [h for h, w in grids]
         self.input_names = tuple(getattr(runner, "input_names", ()))
         self.output_names = tuple(getattr(runner, "output_names", ()))
@@ -150,7 +150,7 @@ class YoloSeg:
         return PreparedDetection(tensors, transform)
 
     def forward(self, input_tensor):
-        """Call the runner once, preserving raw dtype, layout and quantization."""
+        """Call the runner once, preserving raw floating dtype and layout."""
         return _forward_runner(self.runner, input_tensor)
 
     def post_process(
@@ -171,7 +171,10 @@ class YoloSeg:
             transform, ori_img_w, ori_img_h, self.input_size, self.cfg.resize_type
         )
         semantic = _semantic_outputs(
-            self.binding, self.contract, outputs, "DFL segmentation"
+            self.binding,
+            self.contract,
+            outputs,
+            f"{getattr(self.contract, 'protocol', 'DFL')} segmentation",
         )
         return decode_segmentation(
             semantic,

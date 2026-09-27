@@ -81,3 +81,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：S YOLOv10 复用 DFL 检测三阶段并固定 no-NMS 契约，删除重复加载/图像处理/位置式解码；X5 NMS 分派保留。补齐双语 API 示例、源代码对照、实际取整几何修正及阈值边界测试，见[v10 记录](../../releases/unified-migration/2026-09-28-yolo-v10-review.md)。板端和独立整体评审 not-run，H2/H0–H9 继续。
 
 2026-09-28：YOLO26 姿态已复用共用 pose 三阶段，单独绑定直接 LTRB/关键点偏移公式；保留 X5 字典列表与 S 四元组旧接口，补齐双语 API 示例。固定源解码、置信度范围、实际取整几何、输出生命周期及两侧旧适配器测试见[姿态记录](../../releases/unified-migration/2026-09-28-yolo26-pose-review.md)。YOLO26 分割/OBB、原生能力及 H0–H9 剩余内容继续，板测/独立整体评审 not-run。
+
+2026-09-28：YOLO26 分割复用共用三阶段和 LTRB 绑定，保留先插值概率再二值化的 mask 算法，与 DFL mask 路径明确区分；X5 整图 mask 适配器补齐显式 transform。双语示例、固定源对照和输出生命周期见[分割记录](../../releases/unified-migration/2026-09-28-yolo26-segmentation-review.md)。OBB、原生、YOLOE、B10/B11/H8 及整体独立评审继续，板测/真实 SDK not-run。

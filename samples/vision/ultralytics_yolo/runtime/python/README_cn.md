@@ -201,7 +201,7 @@ print(boxes.shape, scores.shape, class_ids.shape)
 `.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
 元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
 时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
-DFL 分割也已采用此传输接口，完整例子见下文；DFL 姿态与分类见下文；OBB 与 YOLO26 分割的阶段职责审计仍在进行。
+DFL 分割也已采用此传输接口，完整例子见下文；DFL 姿态与分类见下文；OBB 的阶段职责审计仍在进行。
 
 ```text
 main.py
@@ -486,6 +486,68 @@ raw 引用 SDK 缓冲区，下一次推理前完成后处理，或复制要保�
 `[1e-6,1-1e-6]`，现在严格使用传入的有效阈值。该修改、实际取整几何和极端 logits
 的稳定 sigmoid 均为有意修正，不声称所有输入逐位等价。主机测试实际运行两侧固定源
 解码器及 X5 兼容适配器；真实 SDK、板端推理和数据集指标在此仍未验证。
+
+<a id="yolo26-segmentation-api"></a>
+## YOLO26 分割阶段接口
+
+YOLO26 分割与 DFL sample 共用阶段传输、严格 runner、NMS 和显式几何，但框为直接
+LTRB 距离，mask 算法也不同：系数与原型相乘，执行 sigmoid，把概率双线性放大到模型
+尺寸，按模型坐标框裁剪，去掉实际 padding，把概率图缩放到原图，再以 `>0.5` 二值化，
+最后取原图框 ROI。不能替换成 DFL 的局部二值 mask 缩放或形态学开运算；插值与阈值
+的先后会改变边缘像素。
+
+在匹配的 S600 板卡上，先按[模型准备](../../model/README_cn.md)获取制品并替换
+下例路径，然后从仓库根目录运行：
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo26_seg import YOLO26Seg, YOLO26SegConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+segmenter = YOLO26Seg(YOLO26SegConfig(
+    model_path="/models/yolo26n_seg_nashp_640x640_nv12.hbm",
+    platform=resolve_platform("s600"),
+    nms_thres=0.45,
+))
+prepared = segmenter.pre_process(image)
+raw = segmenter.forward(prepared.tensors)
+result = segmenter.post_process(raw, transform=prepared.transform)
+predicted = segmenter.predict(image)
+for staged, repeated in zip(result[:3], predicted[:3]):
+    np.testing.assert_allclose(staged, repeated)
+assert len(result[3]) == len(predicted[3])
+for staged, repeated in zip(result[3], predicted[3]):
+    np.testing.assert_array_equal(staged, repeated)
+boxes, scores, class_ids, masks = result
+print(boxes.shape, [mask.shape for mask in masks])
+```
+
+契约要求正方形模型输入及十个输出：stride 8/16/32 各包含分类 logits、四个 LTRB
+距离、32 个 mask 系数，另有 stride-4 的 32 通道原型。head 为浮点 NHWC；原型可以
+是 metadata 形状能证明的浮点 NHWC 或 NCHW。自定义类别数造成角色歧义时，须提供
+审定的显式角色映射，不按枚举顺序猜测。整数/SCALE、错误 shape/dtype 和非有限值
+会拒绝。forward 保留原型物理布局，postprocess 才归一化布局。
+
+raw 引用 SDK 缓冲区，下一次推理前完成后处理或复制 raw。结果拥有独立的 float32
+`(N,4)` 框、float32 `(N,)` 分数、int64 `(N,)` 类别和**布尔** ROI mask 列表。
+对已裁到原图的每个框取 `x1,y1,x2,y2 = box.astype(int)`，即可把对应 mask 放到
+原图大小空白数组的 `[y1:y2,x1:x2]`。退化 ROI 为 `(0,0)`；无检测结果保持
+`(0,4)/(0,)/(0,)/[]`。X5 旧适配器仍返回布尔 `(N,H,W)` 整图 mask，并新增显式
+transform 支持；S 旧接口返回 ROI mask。统一入口在所有目标上均返回 ROI。
+
+置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。库 NMS 默认仍为 0.65；CLI 显式
+传 X5 0.70 或 S 0.45。共用解码器不再静默夹紧有效置信度阈值，并在 sigmoid 前从
+logits 选类别，避免大 logits 饱和导致类别改变；mask 使用稳定 sigmoid 和实际取整
+几何。原 X5 源代码把原型比例写死为 640，且缩放 mask 时未去除 letterbox padding；
+此前统一路径已采用 S 侧修正，本次继续保留。测试明确展示源差异，不声称所有 X5 mask
+完全相同。源代码对照、边界/NMS/空结果夹具和 README 示例均为主机验证，不代表真实
+SDK、板端或数据集验收。
 
 <a id="troubleshooting"></a>
 ## 故障排查
