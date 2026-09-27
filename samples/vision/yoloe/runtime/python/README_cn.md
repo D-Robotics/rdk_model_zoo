@@ -102,3 +102,5 @@ X5 保留源中两种 RGB 形状描述符 `[1,3,640,640]` 与 `[1,640,640,3]`，
 | `No unique YOLOE asset` | target/variant/asset-id 冲突或无资产；用 --list-models 检查，不改名冒充目标。 |
 | `Vocabulary checksum mismatch` | 恢复配套词表，禁止通过重排 label 改类别。 |
 | `YOLOE requires the ten declared NHWC float32 outputs` | 编译协议、布局或输出精度不符；检查转换，不能直接 cast 整数。 |
+
+自行生成浮点制品请先阅读[转换准备说明](../../conversion/README_cn.md)；校准完成、编译成功和输出精度验证分别记录。

@@ -7,7 +7,7 @@ import hashlib
 import cv2
 import numpy as np
 
-LABELS_SHA256 = "1a6c943dd251993770e7cf6fed23a38b7ac068f4c8fbc7a0db85cbe0fe5221b3"
+from samples.vision.yoloe.model.vocabulary import LABELS_SHA256
 
 
 def load_inputs(image_path, label_path):

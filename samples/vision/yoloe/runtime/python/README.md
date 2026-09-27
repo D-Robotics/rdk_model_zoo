@@ -102,3 +102,5 @@ X5 accepts the source RGB-shaped metadata layouts `[1,3,640,640]` and `[1,640,64
 | `No unique YOLOE asset` | Conflicting target/variant/asset-id or absent asset; inspect --list-models, never rename a file to impersonate a target. |
 | `Vocabulary checksum mismatch` | Restore matching ordered labels; relabeling does not change learned classes. |
 | `YOLOE requires the ten declared NHWC float32 outputs` | Wrong export, layout or precision; inspect conversion rather than casting integers. |
+
+For a separate float conversion, start with the [conversion preparation guide](../../conversion/README.md); calibration, compile success and verified output precision are reported separately.

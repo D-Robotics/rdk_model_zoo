@@ -49,6 +49,8 @@ bash samples/vision/yoloe/model/download.sh --target s100p --variant 26n
 
 自行转换浮点 HBM 时必须同时指定 `--model-path` 和 `--local-float-sha256`。该摘要识别本地字节，原 `source_asset_id` 仅保留协议来源，不声称转换产物与发布 HBM 相同。加载仍检查目标和十个 float32 NHWC 输出；摘要正确不证明精度或硬件兼容。
 
+ONNX 检查、平台校准与可选编译见[转换准备说明](../conversion/README_cn.md)。生成文件名中的 `_float` 表示目标协议，`compiled_unverified` 不代表运行制品已验证。
+
 <a id="formats-checksums"></a>
 ## 格式与校验和
 

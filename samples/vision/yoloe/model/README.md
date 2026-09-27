@@ -49,6 +49,8 @@ Defaults are `model/<target>/<manifest filename>`; S26 keeps the `nash-e/` or `n
 
 A separately converted float HBM requires both `--model-path` and `--local-float-sha256`. That digest identifies local bytes; `source_asset_id` identifies protocol provenance, not equality with the published HBM. Loading still checks target and all ten NHWC float32 outputs. A matching hash does not establish accuracy or hardware compatibility.
 
+Use the [conversion preparation guide](../conversion/README.md) for ONNX checks, target-specific calibration and optional compilation. Generated `_float` names express intent; `compiled_unverified` is not a verified runtime artifact.
+
 <a id="formats-checksums"></a>
 ## Formats & Checksums
 
