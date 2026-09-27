@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-当前目录提供统一原生运行时所需的浮点输出绑定和 E11/E26 候选解码模块，**尚未提供完整板端可执行程序**。已经实现的统一入口见 [Python runtime](../python/README_cn.md)，运行前仍需满足其制品和 SDK 条件。原始 C++ 程序保留在 [S E11 快照](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md)及 [S E26 快照](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md)；原始量化制品和手动反量化路径不符合这里的新浮点契约。
+当前目录提供统一原生运行时所需的浮点输出绑定、E11/E26 候选解码、BGR 几何及 E26 ROI 掩码恢复模块，**尚未提供完整板端可执行程序**。已经实现的统一入口见 [Python runtime](../python/README_cn.md)，运行前仍需满足其制品和 SDK 条件。原始 C++ 程序保留在 [S E11 快照](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md)及 [S E26 快照](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md)；原始量化制品和手动反量化路径不符合这里的新浮点契约。
 
 <a id="supported-boards"></a>
 ## 目标范围
@@ -14,6 +14,8 @@
 | 模块 | 职责 |
 | --- | --- |
 | `common/float_heads.h` | 按唯一形状绑定十个逻辑角色，不依赖物理输出顺序 |
+| `common/geometry.h` | 显式 E11/E26 缩放几何及实际比例框还原 |
+| `common/image_ops.h` | OpenCV BGR 前处理及 E26 ROI 掩码恢复 |
 | `common/candidate.h` | 两个家族共用、拥有独立数据的候选结果 |
 | `common/e11_decode.h` | DFL16、分类 NMS 及对齐的 E11 系数 |
 | `common/e26_decode.h` | 筛选 E26 PF 候选，解码 LTRB 框并保持掩码系数对齐 |
@@ -32,12 +34,12 @@
 | 掩码系数 | 相同空间形状，32 通道 |
 | Prototype | 单个 `[1,160,160,32]` 张量 |
 
-调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。本目录尚未实现掩码解码及 SDK 输入输出资源管理。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；本轮迁移尚未编译或验证兼容的 S 浮点 HBM。
+调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。本目录尚未实现 E11 掩码解码及 SDK 输入输出资源管理。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；本轮迁移尚未编译或验证兼容的 S 浮点 HBM。
 
 <a id="dependencies"></a>
 ## 依赖
 
-需要 C++17 编译器和仓库检出；三个单元测试不需要 OpenCV 或板端 SDK。在仓库根目录执行：
+需要 C++17 编译器和仓库检出；四个几何/候选测试不需要 OpenCV 或板端 SDK；第五个图像/掩码测试需要 OpenCV C++ core/imgproc 开发库。文档构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。在仓库根目录执行：
 
 <a id="build"></a>
 ## 构建主机测试
@@ -61,6 +63,19 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -I samples/vision/ultralytics_yolo/runtime/cpp \
   samples/vision/yoloe/runtime/cpp/tests/test_e11_decode.cc \
   -o /tmp/yoloe-native-tests/e11-decode
+c++ -std=c++17 -Wall -Wextra -Werror \
+  -fsanitize=address,undefined -fno-omit-frame-pointer \
+  -I samples/vision/yoloe/runtime/cpp/common \
+  samples/vision/yoloe/runtime/cpp/tests/test_geometry.cc \
+  -o /tmp/yoloe-native-tests/geometry
+```
+
+使用真实 OpenCV 安装构建全部五个测试（不需要板端 SDK）：
+
+```bash
+cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
+  -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON
+cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
 
 <a id="run"></a>
@@ -70,9 +85,16 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 /tmp/yoloe-native-tests/float-heads
 /tmp/yoloe-native-tests/e26-decode
 /tmp/yoloe-native-tests/e11-decode
+/tmp/yoloe-native-tests/geometry
 ```
 
 成功时退出码为 0、无输出。解码测试分配完整的 4585 类张量，开启 sanitizer 时应预留数百 MB 内存。断言/契约异常及 sanitizer 报错均为失败。这些命令实际编译 C++ 数学及浮点内存工具，不证明真实 SDK ABI 兼容。
+
+对 CMake 构建执行全部五个检查并显示失败输出：
+
+```bash
+ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
+```
 
 <a id="parameters"></a>
 ## 候选解码
@@ -85,14 +107,18 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 
 筛选保持源静态 Top-K 契约。精确平局依次优先较小的 scale、anchor、类别；多标签扩展按已选 anchor 排名和类别打破平局。原始阈值比较使用严格大于。框处于 640×640 模型画布，分数通过 sigmoid，掩码系数按实例对齐。本模块不执行 IoU NMS、几何恢复、掩码生成或反量化；框解码产生非有限值时拒绝，包括有限距离乘 stride 后溢出的情况。当前多标签扩展内存与已选 anchor 数乘 4585 成正比，大候选上限的开销明显高于默认值。
 
+`prepare_bgr` 返回拥有独立存储的 640×640 BGR 像素和显式几何。E11 letterbox 截断缩放尺寸、填充 127，可选 stretch 使用最近邻；E26 letterbox 使用 ties-to-even 舍入、填充 114，拒绝 stretch。两种 letterbox 均使用线性插值，极窄图片的缩放尺寸至少为 1。框还原采用实际水平/垂直缩放比例，修正归档原生实现按理想 gain 反推导致的取整误差。
+
+`restore_e26_masks` 组合 prototype logits 与系数并检查结果有限值，线性插值到 640×640，按零阈值二值化并在模型坐标裁剪，去除记录的填充，再用最近邻恢复原图尺寸，最后复制裁剪且向零取整后的 ROI。返回独立的浮点框及取值 0/1 的 `CV_8UC1` 掩码，保留空/退化实例位置。反向或非有限框、非法几何、错误 prototype 长度、非有限系数/prototype、数值溢出均失败。不执行 sigmoid、NMS、形态学或反量化；E11 的不同掩码算法仍待接入。
+
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-数值模块头文件提供纯函数，不管理 SDK 资源。`bind_heads` 返回输出索引，不保留引用。`decode_e11` 和 `decode_e26` 仅在调用期间借用十个输入向量，返回拥有独立框、分数和系数的检测结果；返回后调用方可释放输入张量。内部指针视图不逃逸。参数非法时抛出 `std::invalid_argument`，内存分配失败可能向外传播。不加载模型、不隐式选择硬件，也不保存跨调用的图片几何状态。
+数值模块头文件提供纯函数，不管理 SDK 资源。`bind_heads` 返回输出索引，不保留引用。`decode_e11` 和 `decode_e26` 仅在调用期间借用十个输入向量，返回拥有独立框、分数和系数的检测结果；返回后调用方可释放输入张量。内部指针视图不逃逸。OpenCV 结果矩阵拥有引用计数管理的独立存储，不与调用方图片/prototype 别名；需要像素时应保留返回对象。参数非法时抛出 `std::invalid_argument`，内存分配失败可能向外传播。不加载模型、不隐式选择硬件，也不保存跨调用的图片几何状态。
 
 <a id="results-interpretation"></a>
 ## 验证与后续集成
 
-[实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
+[实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。[几何/掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)另行记录真实 OpenCV 编译及完整 ROI 像素对照。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
 
-后续仍需完成掩码恢复、图像/NV12 几何、SDK 资源管理、目标与制品身份门禁、公开 pre/infer/post/predict 阶段、库/CLI 入口及完整板端构建运行说明。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
+后续仍需完成 E11 掩码恢复、NV12 打包、SDK 资源管理、目标与制品身份门禁、公开 pre/infer/post/predict 阶段、库/CLI 入口及完整板端构建运行说明。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
