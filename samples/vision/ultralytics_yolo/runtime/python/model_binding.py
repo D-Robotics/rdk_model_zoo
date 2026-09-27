@@ -665,6 +665,7 @@ def bind_model(selection: ModelSelection,
             getattr(metadata, "input_dtypes", {}),
             roles=contract.input_roles or None,
             input_shape_override=selection.input_shape,
+            allow_packed_nhwc=getattr(contract, "allow_packed_nhwc", False),
         )
     except TensorContractError as exc:
         raise BindingError(str(exc)) from exc

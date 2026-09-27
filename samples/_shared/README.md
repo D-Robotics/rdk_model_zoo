@@ -171,9 +171,9 @@ or move decoding into the runtime runner.
 
 [`yoloe26_geometry.py`](yoloe26_geometry.py) and
 [`yoloe26_decode.py`](yoloe26_decode.py) preserve the fixed 4585-class,
-640-square PF protocol from the S source. These are internal migration modules;
-a canonical YOLOE sample and its runtime integration are still pending. They do
-not load models, download artifacts or interpret quantization descriptors.
+640-square PF protocol from the S source. The [canonical YOLOE Python task](../vision/yoloe/runtime/python/README.md)
+now consumes these modules; conversion and native migration remain pending.
+The modules do not load models, download artifacts or interpret quantization descriptors.
 
 The ten float32 NHWC outputs are class logits (4585), direct LTRB distances (4)
 and mask coefficients (32) at strides 8, 16 and 32, followed by a
@@ -199,8 +199,8 @@ has separate expected-value checks. Run from the repository root:
 python -m unittest discover -s samples/_shared/tests -p test_yoloe26_decode.py
 ```
 
-这两个模块保留 S 源中的 4585 类、640 方形 PF 协议，目前属于迁移内部组件；
-统一 YOLOE sample 和实际 runtime 接入尚未完成。模块不加载模型、不下载制品，
+这两个模块保留 S 源中的 4585 类、640 方形 PF 协议，已由
+[统一 YOLOE Python 任务](../vision/yoloe/runtime/python/README_cn.md)消费；转换和原生迁移仍待完成。模块不加载模型、不下载制品，
 也不执行反量化。输入是上述顺序的十个 NHWC float32 张量，整数和非有限值
 显式拒绝。候选框采用直接 LTRB 解码和确定性 Top-K，支持单标签或多标签，
 分数须严格大于阈值，不执行 NMS；平局沿用源中的尺度、anchor、类别顺序。

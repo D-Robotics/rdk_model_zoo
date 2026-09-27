@@ -109,7 +109,7 @@ def _shape_for_input(shape: Sequence[int],
                      *,
                      packed: bool,
                      override: Optional[Tuple[int, int]],
-                     label: str) -> Tuple[int, int, str]:
+                     label: str, allow_packed_nhwc: bool = False) -> Tuple[int, int, str]:
     """Derive ``(height, width, layout)`` from one input shape."""
     shape = normalize_shape(shape, f"input {label!r} shape")
     if len(shape) == 4 and shape[0] != 1:
@@ -118,6 +118,8 @@ def _shape_for_input(shape: Sequence[int],
     if packed:
         if len(shape) == 4 and shape[1] == 3:
             return shape[2], shape[3], "NCHW"
+        if allow_packed_nhwc and len(shape) == 4 and shape[3] == 3:
+            return shape[1], shape[2], "NHWC"
         raise TensorContractError(
             f"Input {label!r} reports shape {shape}; packed NV12 requires "
             "the observed NCHW (1, 3, H, W) descriptor.")
@@ -238,7 +240,8 @@ def bind_nv12_inputs(profile: Any,
                      input_shapes: Mapping[str, Sequence[int]],
                      input_dtypes: Optional[Mapping[str, Any]] = None,
                      roles: Optional[Mapping[str, str]] = None,
-                     input_shape_override: Optional[Sequence[int]] = None) -> InputBinding:
+                     input_shape_override: Optional[Sequence[int]] = None,
+                     allow_packed_nhwc: bool = False) -> InputBinding:
     """Create a validated NV12 input binding from runtime metadata.
 
     ``roles`` maps logical names (``image`` or ``y``/``uv``) to physical names.
@@ -312,7 +315,8 @@ def bind_nv12_inputs(profile: Any,
     if primary_name not in shapes:
         raise TensorContractError(f"Runtime reports input {primary_name!r} without a shape.")
     height, width, primary_layout = _shape_for_input(
-        shapes[primary_name], packed=packed, override=override, label=primary_name)
+        shapes[primary_name], packed=packed, override=override, label=primary_name,
+        allow_packed_nhwc=allow_packed_nhwc)
     _validate_nv12_geometry(height, width, primary_name)
     if override is not None and (height, width) != override:
         raise TensorContractError("input_shape_override conflicts with model metadata.")

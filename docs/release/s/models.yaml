@@ -1795,9 +1795,9 @@ models:
     tasks:
       - object-detection
       - instance-segmentation
-    sample_path: samples/vision/yoloe26_seg
+    sample_path: samples/vision/yoloe
     download_scripts:
-      - samples/vision/yoloe26_seg/model/download_model.sh
+      - samples/vision/yoloe/model/download.sh
     availability: download
     assets:
       - filename: nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm
@@ -1840,38 +1840,39 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm
         sha256: 2abf9d30dd487f2d5eb53444b7272a71d7be18265a39bd463cfd5b0cd6c14539
-    notes: Registered from the rdk_s tip source (380e1a2), where the sample had
-      no manifest row; the sample itself is not migrated to develop yet, so
-      sample_path and download_scripts keep the source-branch layout until the
-      B9 batch relocates them. Open-vocabulary detection and instance
-      segmentation for S100 (nash-e) and S100P (nash-m) over the 4585-class
-      prompt-free vocabulary; S600 is excluded. The download script verifies
-      each file against the remote manifest.json, so no digest is recorded
-      here; the matching .json/.names sidecar files it co-locates follow the
-      existing convention of not being inventoried as model assets.
+    notes: Original publication ID retained from rdk_s 380e1a2. Canonical
+      Python sample and explicit download entry now live under samples/vision/yoloe.
+      These ten S100/S100P HBM artifacts have quantized outputs and cannot run
+      through the canonical floating-output route without separate conversion.
+      Publisher SHA-256 values were verified against captured manifest/JSON
+      sidecars on 2026-09-28; see unified-migration YOLOE source audit evidence.
+      The fixed 4585-class vocabulary is shared in canonical test_data. Source
+      JSON/names sidecars are preserved in audit evidence, not downloaded by the
+      canonical HBM-only downloader. S600 is excluded; conversion/C++ migration
+      and current board verification remain pending.
   - id: yoloe11_seg
     name: YOLOe11-Seg
     tasks:
       - object-detection
       - instance-segmentation
-    sample_path: samples/vision/yoloe11_seg
+    sample_path: samples/vision/yoloe
     download_scripts:
-      - samples/vision/yoloe11_seg/model/download_model.sh
+      - samples/vision/yoloe/model/download.sh
     availability: download
     assets:
       - filename: yoloe_11s_seg_pf_nashe_640x640_nv12.hbm
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yoloe_11s_seg_pf_nashe_640x640_nv12.hbm
         sha256: null
-    notes: Registered from the rdk_s tip source (380e1a2), where the sample had
-      no manifest row; the sample itself is not migrated to develop yet, so
-      sample_path and download_scripts keep the source-branch layout until the
-      B9 batch relocates them. S100 only — the source scripts reject S600 by
-      platform check — and the download script fetches the file into the sample
-      model/ directory with no target subdirectory, so the filename carries no
-      prefix. A yoloe_v8s_seg_pf_nashe_640x640_nv12.hbm artifact appears in
-      conversion documentation but has no recorded download URL and is not
-      registered here.
+    notes: Original publication ID retained from rdk_s 380e1a2. Canonical
+      Python sample and explicit download entry now live under samples/vision/yoloe.
+      Only S100 has this source artifact; no S100P/S600 fallback is provided.
+      This final HBM has mixed output precision, unlike its floating intermediate
+      graph, and cannot run directly through the canonical floating-output route.
+      Publisher SHA-256 remains unknown. The canonical default download path is
+      model/s100/ plus this unchanged filename. A yoloe_v8s artifact is mentioned
+      by source conversion documentation but has no recorded download URL and is
+      not registered here. Separate float conversion/C++ migration remain pending.
   - id: minicpm5-2b
     name: MiniCPM5-2B
     tasks:

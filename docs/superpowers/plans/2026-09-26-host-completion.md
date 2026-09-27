@@ -93,3 +93,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：YOLOE 源能力审计完成，补回 S26 30 个原始文件并固定发布清单/sidecar 证据及 10 个 HBM 预期哈希；源回归 4 项、publisher 121 项及生成检查通过。S11 中间图浮点信息不能代替最终 HBM 精度，S26 已发布制品均声明量化，不能直接套浮点-only Ultralytics 入口；优先保留反量化输出节点的转换路线，未构建/发布的浮点制品不得声称可运行。见[YOLOE 核定](../../releases/unified-migration/2026-09-28-yoloe-source-review.md)。Canonical YOLOE 实现与完整双语文档仍 pending，B9/H5/H8 及 H0–H9 均未关闭。
 
 2026-09-28：YOLOE-26 PF 数值模块已分离，保留 round/114、Top-K 无 NMS 和 logits 掩码顺序；9 项固定源/边界测试及 417 项主机回归通过，共享说明补齐中英协议和边界。见[内部模块记录](../../releases/unified-migration/2026-09-28-yoloe26-kernels-review.md)。尚无 canonical YOLOE 入口，浮点制品/转换与完整客户文档仍 pending；板端/SDK/OE/独立评审 not-run，H0–H9 保持开放。
+
+2026-09-28：Canonical YOLOE Python 入口、14 制品精确选择、显式下载及根/model/runtime/test_data 八份双语 README 已建立。保留 X5 整图 mask、S11 ROI/morph 默认值和 E26 Top-K 协议；仅明确指定、哈希绑定的独立浮点 S 转换文件可进入 metadata 验证。见[Python 记录](../../releases/unified-migration/2026-09-28-yoloe-python-review.md)。YOLOE 已加入规范检查范围；转换/评测/C++ 及对应完整 README 尚待收编，板端/真实 SDK/OE/独立评审 not-run。B9 和 H0–H9 继续开放。
