@@ -380,6 +380,58 @@ CLI 负责加载 ImageNet 标签并打印结果。
 选择 letterbox，对 S 选择拉伸，YOLO26 全目标拉伸。比较库和 CLI 时须统一该参数。
 主机测试实际执行固定 X5/S 源代码的前后处理，并使用合成输入对照，不代表数据集精度。
 
+<a id="v10-api"></a>
+## S 系列 YOLOv10 不执行 NMS
+
+S 系列 YOLOv10 复用 DFL 检测器的三阶段，绑定契约固定 `nms="none"`。
+CLI 对 S100/S100P/S600 的 v10 选择该适配器；X5 v10 保留源代码的 DFL + NMS 路径。
+不能因为模型都叫 YOLOv10，就用 S 适配器替换 X5 的分派逻辑。
+
+在匹配的 S600 板卡上，先按[模型准备](../../model/README_cn.md)获取制品，
+替换下例绝对路径，再从仓库根目录运行：
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import (
+    YoloV10Detect, YoloV10DetectConfig,
+)
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+detector = YoloV10Detect(YoloV10DetectConfig(
+    model_path="/models/yolov10n_detect_nashp_640x640_nv12.hbm",
+    platform=resolve_platform("s600"),
+    score_thres=0.25,
+))
+prepared = detector.pre_process(image)
+raw = detector.forward(prepared.tensors)
+result = detector.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, detector.predict(image)):
+    np.testing.assert_allclose(staged, predicted)
+print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
+```
+
+六个物理浮点 NHWC 输出按形状绑定为 stride 8/16/32 的分类及 16-bin DFL 框角色，
+不按 SDK 枚举顺序猜测含义。模型输入必须为正方形。raw 缓冲区生命周期、显式逐图
+transform、拥有独立存储的 `(boxes, scores, class_ids)` 结果与共用检测接口一致。
+`post_process(raw, 原图宽, 原图高)` 仍可用；`pre_process` 现在返回兼容映射访问的
+`PreparedDetection` 对象。
+
+所有达到置信度阈值的 anchor 都保留，包括重叠框。输出按 stride、再按网格遍历顺序
+排列，每个 anchor 选一个最高分类。没有 NMS、分数排序或 Top-K 截断，也不保证框
+不会重叠。NMS 阈值在此不起作用；传入启用 NMS 的绑定契约会明确拒绝。
+`score_thres` 使用共用检测器的有限 `[0,1]` 范围：零保留所有有限 logits 的 anchor，
+一不保留任何 anchor。
+
+与旧 S 代码相比，坐标还原使用实际取整后的缩放宽高及 padding，而非理想浮点比例。
+非正方形图片发生取整时，框坐标可能因此修正；测试区分了这一有意修改与无取整情形下
+的源代码等价结果。本次没有新增板端、真实 SDK、性能或数据集验证。
+
 <a id="troubleshooting"></a>
 ## 故障排查
 

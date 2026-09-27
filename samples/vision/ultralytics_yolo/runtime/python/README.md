@@ -425,6 +425,65 @@ and stretch for YOLO26 everywhere. Pass the same resize setting when comparing
 library and CLI results. Host tests execute the pinned X5/S preprocessing and
 postprocessing on synthetic inputs; this does not establish dataset accuracy.
 
+<a id="v10-api"></a>
+## S-series YOLOv10 without NMS
+
+S-series YOLOv10 reuses the DFL detector's three stages with `nms="none"` fixed
+in its binding contract. The CLI selects this adapter for S100/S100P/S600 v10;
+X5 v10 retains its historical DFL + NMS path. Do not replace the X5 dispatcher
+with the S adapter just because both files say YOLOv10.
+
+On a matching S600 board, run from the repository root after preparing the model
+as described in [model preparation](../../model/README.md), then replace this
+absolute path:
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import (
+    YoloV10Detect, YoloV10DetectConfig,
+)
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+detector = YoloV10Detect(YoloV10DetectConfig(
+    model_path="/models/yolov10n_detect_nashp_640x640_nv12.hbm",
+    platform=resolve_platform("s600"),
+    score_thres=0.25,
+))
+prepared = detector.pre_process(image)
+raw = detector.forward(prepared.tensors)
+result = detector.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, detector.predict(image)):
+    np.testing.assert_allclose(staged, predicted)
+print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
+```
+
+The six physical floating NHWC outputs bind by shape to class/16-bin DFL box
+roles at strides 8/16/32; enumeration order does not choose their meaning. Model
+input must be square. The raw buffer lifetime, explicit per-image transform and
+owned `(boxes, scores, class_ids)` result are the same as the common detection
+API. `post_process(raw, original_width, original_height)` remains available;
+`pre_process` now returns the mapping-compatible `PreparedDetection` carrier.
+
+All anchors meeting the confidence threshold remain, including overlapping
+boxes. Results follow stride order and then grid traversal, with one best class
+per anchor. There is no NMS, score sorting, Top-K limit or guarantee that boxes
+cannot overlap. NMS thresholds have no effect here; a supplied binding contract
+that enables NMS is rejected. `score_thres` uses the common detector's finite
+`[0,1]` range. Its endpoint behavior is explicit: zero retains every finite-logit
+anchor and one retains none.
+
+Compared with the old S code, coordinate restoration uses actual integer resized
+width/height and padding instead of an ideal floating scale. Nonsquare images
+with rounding can therefore have corrected coordinates; tests distinguish this
+intentional change from source-equivalent unrounded cases. No new board, real
+SDK, performance or dataset validation is claimed.
+
 <a id="troubleshooting"></a>
 ## Troubleshooting
 

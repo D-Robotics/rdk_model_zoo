@@ -41,7 +41,7 @@ class RuntimeContract(unittest.TestCase):
                     fake = types.SimpleNamespace(HB_HBMRuntime=lambda _: runtime)
                     m = importlib.import_module(module)
                     cfg = getattr(m, name + 'Config')(model_path='stub', platform=profile)
-                    if module in ('yolo_detect', 'yolo_seg', 'yolo_pose', 'yolo_cls'):
+                    if module in ('yolo_detect', 'yolo_seg', 'yolo_pose', 'yolo_cls', 'yolo_v10detect'):
                         # The new detector requires the descriptors provided
                         # by the real SDK, not the former names-only fixture.
                         runtime.input_dtypes = {'m': {n: np.dtype(np.uint8) for n in names}}
@@ -55,6 +55,9 @@ class RuntimeContract(unittest.TestCase):
                             from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, ModelSelection
                             runtime.output_shapes = {'m': {'0': (1,1000,1,1)}}
                             runner = build_runner(ModelSelection('stub',target=platform,task='classify',contract=ClassificationContract()),runtime_loader=lambda:fake)
+                        elif module == 'yolo_v10detect':
+                            from samples.vision.ultralytics_yolo.runtime.python.model_binding import DFLDetectionContract, ModelSelection
+                            runner=build_runner(ModelSelection('stub',target=platform,contract=DFLDetectionContract(nms='none')),runtime_loader=lambda:fake)
                         elif module == 'yolo_seg':
                             from samples.vision.ultralytics_yolo.runtime.python.model_binding import DFLSegmentationContract, ModelSelection
                             runtime.output_shapes = {'m': {
