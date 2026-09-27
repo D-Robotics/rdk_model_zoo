@@ -271,10 +271,11 @@ logits `(1,H/s,W/s,64)`、系数 `(1,H/s,W/s,32)`，以及 stride-4 原型
 返回 `(boxes, scores, ids, masks)`：自有 float32 `(N,4)` xyxy 原图框，裁至
 `[0,width]`/`[0,height]`；float32 `(N,)` 概率；int64 `(N,)` 类别 ID；N 个
 uint8 **ROI mask**，不是全图 mask。值为 0/1，每个 mask 高宽为
-`max(int(y2)-int(y1),1)` × `max(int(x2)-int(x1),1)`。空结果保留数组维度/类型，
-`masks=[]`；退化 ROI 使用无有效内容的零 mask，始终与对应框配对。
+`max(int(y2)-int(y1),0)` × `max(int(x2)-int(x1),0)`。空结果保留数组维度/类型，
+`masks=[]`；退化 ROI 保留每个为零的轴，不人为补成 1 像素，始终与对应框配对。
 保留源代码的系数/原型点积阈值 `>0.5`、Lanczos 缩放及可选 5×5 开运算
 （`do_morph=True`），不据此声明等同于上游 Ultralytics 全图 mask 评测。
+可选开运算结束后，将 Lanczos 过冲统一转回 0/1，保持前景范围不变。
 置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]` 内有限值。
 
 坐标还原使用实际整数缩放/padding；原型切片先裁至可见图片内容，避免负坐标从另一侧索引，也排除

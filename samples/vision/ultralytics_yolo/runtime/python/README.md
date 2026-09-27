@@ -294,12 +294,13 @@ Injected plain role mappings must already contain finite floating NHWC arrays.
 The result is `(boxes, scores, ids, masks)`: owned float32 `(N,4)` xyxy boxes
 clipped to original-image `[0,width]`/`[0,height]`, float32 `(N,)` probabilities,
 int64 `(N,)` class IDs, and N uint8 **ROI masks**, not full-image masks. Each mask
-has values 0/1 and shape `max(int(y2)-int(y1),1)` × `max(int(x2)-int(x1),1)`.
+has values 0/1 and shape `max(int(y2)-int(y1),0)` × `max(int(x2)-int(x1),0)`.
 Empty results retain these array ranks/dtypes and return `masks=[]`. A degenerate
-ROI uses an empty-content zero mask; keep each mask paired with its own box.
+ROI preserves each zero-sized axis; no artificial one-pixel extent is added. Keep each mask paired with its own box.
 The source coefficient/prototype dot-product threshold `>0.5`, Lanczos resize
 and optional 5×5 morphological opening (`do_morph=True`) are retained; this is
 not a claim of equivalence to upstream Ultralytics full-image mask evaluation.
+Lanczos overshoot is normalized back to 0/1 after the optional opening, preserving its foreground support.
 Confidence must be finite in `(0,1)` and NMS in `[0,1]`.
 
 Geometry uses actual integer resize/padding; prototype crops

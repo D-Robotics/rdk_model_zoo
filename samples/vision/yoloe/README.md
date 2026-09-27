@@ -95,7 +95,7 @@ Canonical checkpoint export, conversion preparation and evaluation workflows are
 - [Python](runtime/python/README.md) — Options, protocols, library API and troubleshooting.
 - [Test data](test_data/README.md) — Image/vocabulary provenance.
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md) — Original recipes; S recipes produce quantized outputs. The canonical preparation entry retains float-output nodes, with actual compiled precision still unverified.
-- [Canonical C++ progress](runtime/cpp/README.md) — Float binding, E11/E26 candidates, image geometry and E26 masks; the full board entry is still pending.
+- [Canonical C++ progress](runtime/cpp/README.md) — Float binding, E11/E26 candidates, image geometry and E11/E26 masks; the full board entry is still pending.
 - [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md) — Historical implementations; canonical port pending.
 - [X5 evaluation](../../../platforms/x5/samples/vision/yoloe/evaluator/README.md) / [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md) — Historical records, not current acceptance.
 

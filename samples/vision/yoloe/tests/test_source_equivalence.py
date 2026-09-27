@@ -60,7 +60,7 @@ def load_source(target):
 
 
 class SourceEquivalence(unittest.TestCase):
-    def test_x5_and_s11_numeric_results(self):
+    def test_x5_and_s11_numeric_results_with_binary_correction(self):
         for target in ("x5", "s100"):
             source = load_source("x5" if target == "x5" else "s")
             selection = resolve_selection(target)
@@ -94,8 +94,19 @@ class SourceEquivalence(unittest.TestCase):
                 np.testing.assert_allclose(result.boxes, expected[0], rtol=0, atol=1e-5)
                 np.testing.assert_array_equal(result.scores, expected[1])
                 np.testing.assert_array_equal(result.class_ids, expected[2])
+                if target == "s100" and not morph:
+                    # Pin a real source defect: Lanczos emits values >1 on this
+                    # fixed fixture. The correction changes representation only.
+                    self.assertGreater(
+                        sum(np.count_nonzero(m > 1) for m in expected[3]), 0
+                    )
                 for actual, reference in zip(result.masks, expected[3]):
-                    np.testing.assert_array_equal(actual, reference)
+                    if target == "s100":
+                        np.testing.assert_array_equal(
+                            actual, (reference > 0).astype(np.uint8)
+                        )
+                    else:
+                        np.testing.assert_array_equal(actual, reference)
                 self.assertEqual(len(result.masks), len(expected[3]))
 
     def test_x5_preprocess_matches_source_letterbox_and_stretch(self):

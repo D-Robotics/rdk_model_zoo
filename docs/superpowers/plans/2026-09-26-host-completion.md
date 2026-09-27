@@ -107,3 +107,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：YOLOE C++ E11 DFL/NMS 候选模块已加入，复用 Ultralytics DFL/sigmoid 并与 E26 共用结果类型。保留原生 IoU 等值边界，明确披露与 Python 差异和确定平局排序。三个 ASan/UBSan 原生测试、真实 E11 s/m/l 及 E26 对照、29 项 YOLOE 回归和规范/文档检查通过。见[E11 原生记录](../../releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)。掩码、几何、SDK 管理和完整原生入口继续；全部 H0–H9 范围及独立评审保持开放，板端 not-run。
 
 2026-09-28：YOLOE 原生 E11/E26 图片几何及 E26 ROI 掩码恢复已实现；任务目录实际构建 OpenCV 4.14.0，五个 C++ 测试通过，真实 E26n 的 213 个 ROI 形状/像素与 Python 完全一致。修复初次发现的退化 ROI 0×58 被丢成 0×0 问题并保留失败证据；双语 README 实际构建/测试命令已执行。见[几何/掩码记录](../../releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)。E11 掩码、NV12、SDK 生命周期和完整原生入口继续，H0–H9/整体独立评审均开放；板端/真实 SDK/OE not-run。
+
+2026-09-28：YOLOE 原生 E11 ROI 掩码已补齐，38 个真实候选在开/关形态学下均与 Python 像素一致，E26 213 掩码回归一致。修复共用 Python DFL ROI 的零面积框补成 1 像素及 Lanczos 过冲为 2 两项契约缺陷；源对照明确保留前景、归一二值表示，失败证据留存。463 项 Python 测试、五个原生测试及规范/文档检查通过，见[E11 掩码记录](../../releases/unified-migration/2026-09-28-yoloe-cpp-e11-masks-review.md)。NV12/SDK 管理、身份门禁、完整入口、其余迁移与全分支评审继续；H0–H9 未关闭。

@@ -2,7 +2,7 @@
 
 English | [简体中文](README_cn.md)
 
-This directory currently contains the reusable float-output binding, E11/E26 candidate decoders, BGR geometry and E26 ROI mask restoration for the canonical native runtime. **A complete board executable is not yet available here.** Use the [Python runtime](../python/README.md) for the implemented canonical entry, subject to its artifact/SDK requirements. Source C++ programs remain in the [S E11 snapshot](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26 snapshot](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md); their quantized artifacts and manual dequantization do not satisfy this new float contract.
+This directory currently contains the reusable float-output binding, E11/E26 candidate decoders, BGR geometry and E11/E26 ROI mask restoration for the canonical native runtime. **A complete board executable is not yet available here.** Use the [Python runtime](../python/README.md) for the implemented canonical entry, subject to its artifact/SDK requirements. Source C++ programs remain in the [S E11 snapshot](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26 snapshot](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md); their quantized artifacts and manual dequantization do not satisfy this new float contract.
 
 <a id="supported-boards"></a>
 ## Target scope
@@ -15,7 +15,7 @@ The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This 
 | --- | --- |
 | `common/float_heads.h` | Bind ten logical roles by unique shape, independently of physical output order |
 | `common/geometry.h` | Explicit E11/E26 resize geometry and actual-scale inverse boxes |
-| `common/image_ops.h` | OpenCV BGR preparation and E26 ROI mask restoration |
+| `common/image_ops.h` | OpenCV BGR preparation and E11/E26 ROI mask restoration |
 | `common/candidate.h` | Shared owning candidate result for both families |
 | `common/e11_decode.h` | DFL16, classwise NMS and aligned E11 coefficients |
 | `common/e26_decode.h` | Select E26 PF candidates, decode LTRB boxes and retain aligned mask coefficients |
@@ -34,7 +34,7 @@ Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requir
 | Mask coefficients | Same spatial shapes, 32 channels |
 | Prototype | One `[1,160,160,32]` tensor |
 
-The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. E11 mask decoding and SDK input/output ownership are not implemented in this directory yet. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; no compatible S float HBM has been compiled or verified in this migration.
+The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. SDK input/output ownership is not implemented in this directory yet. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; no compatible S float HBM has been compiled or verified in this migration.
 
 <a id="dependencies"></a>
 ## Dependencies
@@ -109,7 +109,9 @@ Selection preserves the source static Top-K contract. Exact ties prefer lower sc
 
 `prepare_bgr` returns owned 640×640 BGR pixels and explicit geometry. E11 letterbox truncates resized dimensions and pads with 127; its optional stretch uses nearest-neighbor. E26 letterbox uses ties-to-even rounding and padding 114, rejecting stretch. Both letterbox paths use linear interpolation and clamp tiny resized dimensions to at least one pixel. Inverse boxes use actual horizontal/vertical scales, correcting the archived native ideal-gain reconstruction on rounded dimensions.
 
-`restore_e26_masks` combines prototype logits and coefficients, checks finite sums, linearly resizes logits to 640×640, thresholds at zero and crops in model coordinates, removes the recorded padding, uses nearest-neighbor to restore source dimensions, then copies the clipped integer-truncated ROI. It returns owning float boxes and `CV_8UC1` masks with values 0/1, preserving empty/degenerate instance slots. Reversed/nonfinite boxes, malformed geometry, wrong prototype length, nonfinite coefficients/prototypes or arithmetic overflow fail. It has no sigmoid, NMS, morphology or dequantization. E11's distinct mask algorithm remains pending.
+`restore_e26_masks` combines prototype logits and coefficients, checks finite sums, linearly resizes logits to 640×640, thresholds at zero and crops in model coordinates, removes the recorded padding, uses nearest-neighbor to restore source dimensions, then copies the clipped integer-truncated ROI. It returns owning float boxes and `CV_8UC1` masks with values 0/1, preserving empty/degenerate instance slots. Reversed/nonfinite boxes, malformed geometry, wrong prototype length, nonfinite coefficients/prototypes or arithmetic overflow fail. It has no sigmoid, NMS, morphology or dequantization.
+
+`restore_e11_masks` implements the S11 ROI protocol: clip the model box to actual image content, truncate its bounds at prototype scale, combine raw prototype values and coefficients, threshold strictly above 0.5, resize the binary crop with Lanczos4, and optionally apply a 5×5 rectangular opening (`do_morph=false` by default for the library). Final positive values are normalized to 1 because Lanczos can overshoot uint8 binary data to 2. Empty boxes retain exact zero-sized axes. These last two corrections also apply to the shared Python DFL ROI helper; normal foreground support is unchanged. This is distinct from X5 Python's full-image probability-mask path. [E11 mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-masks-review.md) compares both morphology settings with identical real native candidate inputs.
 
 <a id="interface-lifecycle"></a>
 ## Interface and lifetime
@@ -121,4 +123,4 @@ The numerical headers expose pure functions and own no SDK resources. `bind_head
 
 [Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records the earlier E26 checks. The [E11 extension evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md) records all three native tests, E26 regression and real E11 s/m/l ONNX comparisons. The E26n candidate comparison covers both single- and multi-label decoding against Python. [Geometry/mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md) separately records actual OpenCV compilation and full ROI pixel comparison. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
 
-The remaining native work is explicit: E11 mask restoration, NV12 packing, SDK resource ownership, target and artifact identity gates, public pre/infer/post/predict stages, library/CLI entry, and complete board build/run documentation. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
+The remaining native work is explicit: NV12 packing, SDK resource ownership, target and artifact identity gates, public pre/infer/post/predict stages, library/CLI entry, and complete board build/run documentation. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.

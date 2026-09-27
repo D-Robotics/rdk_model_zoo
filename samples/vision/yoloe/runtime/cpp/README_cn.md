@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-当前目录提供统一原生运行时所需的浮点输出绑定、E11/E26 候选解码、BGR 几何及 E26 ROI 掩码恢复模块，**尚未提供完整板端可执行程序**。已经实现的统一入口见 [Python runtime](../python/README_cn.md)，运行前仍需满足其制品和 SDK 条件。原始 C++ 程序保留在 [S E11 快照](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md)及 [S E26 快照](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md)；原始量化制品和手动反量化路径不符合这里的新浮点契约。
+当前目录提供统一原生运行时所需的浮点输出绑定、E11/E26 候选解码、BGR 几何及 E11/E26 ROI 掩码恢复模块，**尚未提供完整板端可执行程序**。已经实现的统一入口见 [Python runtime](../python/README_cn.md)，运行前仍需满足其制品和 SDK 条件。原始 C++ 程序保留在 [S E11 快照](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md)及 [S E26 快照](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md)；原始量化制品和手动反量化路径不符合这里的新浮点契约。
 
 <a id="supported-boards"></a>
 ## 目标范围
@@ -15,7 +15,7 @@
 | --- | --- |
 | `common/float_heads.h` | 按唯一形状绑定十个逻辑角色，不依赖物理输出顺序 |
 | `common/geometry.h` | 显式 E11/E26 缩放几何及实际比例框还原 |
-| `common/image_ops.h` | OpenCV BGR 前处理及 E26 ROI 掩码恢复 |
+| `common/image_ops.h` | OpenCV BGR 前处理及 E11/E26 ROI 掩码恢复 |
 | `common/candidate.h` | 两个家族共用、拥有独立数据的候选结果 |
 | `common/e11_decode.h` | DFL16、分类 NMS 及对齐的 E11 系数 |
 | `common/e26_decode.h` | 筛选 E26 PF 候选，解码 LTRB 框并保持掩码系数对齐 |
@@ -34,7 +34,7 @@
 | 掩码系数 | 相同空间形状，32 通道 |
 | Prototype | 单个 `[1,160,160,32]` 张量 |
 
-调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。本目录尚未实现 E11 掩码解码及 SDK 输入输出资源管理。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；本轮迁移尚未编译或验证兼容的 S 浮点 HBM。
+调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。本目录尚未实现 SDK 输入输出资源管理。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；本轮迁移尚未编译或验证兼容的 S 浮点 HBM。
 
 <a id="dependencies"></a>
 ## 依赖
@@ -109,7 +109,9 @@ ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 
 `prepare_bgr` 返回拥有独立存储的 640×640 BGR 像素和显式几何。E11 letterbox 截断缩放尺寸、填充 127，可选 stretch 使用最近邻；E26 letterbox 使用 ties-to-even 舍入、填充 114，拒绝 stretch。两种 letterbox 均使用线性插值，极窄图片的缩放尺寸至少为 1。框还原采用实际水平/垂直缩放比例，修正归档原生实现按理想 gain 反推导致的取整误差。
 
-`restore_e26_masks` 组合 prototype logits 与系数并检查结果有限值，线性插值到 640×640，按零阈值二值化并在模型坐标裁剪，去除记录的填充，再用最近邻恢复原图尺寸，最后复制裁剪且向零取整后的 ROI。返回独立的浮点框及取值 0/1 的 `CV_8UC1` 掩码，保留空/退化实例位置。反向或非有限框、非法几何、错误 prototype 长度、非有限系数/prototype、数值溢出均失败。不执行 sigmoid、NMS、形态学或反量化；E11 的不同掩码算法仍待接入。
+`restore_e26_masks` 组合 prototype logits 与系数并检查结果有限值，线性插值到 640×640，按零阈值二值化并在模型坐标裁剪，去除记录的填充，再用最近邻恢复原图尺寸，最后复制裁剪且向零取整后的 ROI。返回独立的浮点框及取值 0/1 的 `CV_8UC1` 掩码，保留空/退化实例位置。反向或非有限框、非法几何、错误 prototype 长度、非有限系数/prototype、数值溢出均失败。不执行 sigmoid、NMS、形态学或反量化；
+
+`restore_e11_masks` 实现 S11 ROI 协议：将模型框裁至实际图片内容，按 prototype 尺度向零取整边界，组合原始 prototype 值与系数，以严格大于 0.5 二值化，对二值裁剪区执行 Lanczos4 缩放，可选 5×5 矩形开运算（库默认 `do_morph=false`）。Lanczos 可能把 uint8 二值数据插成 2，最终统一将正值转为 1；空框保留精确的零尺寸轴。这两项修正同时用于共用 Python DFL ROI 工具，正常前景范围不变。该协议不同于 X5 Python 的全图概率掩码流程。[E11 掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-masks-review.md)在相同真实原生候选输入上对照开/关形态学两种设置。
 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
@@ -121,4 +123,4 @@ ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 
 [实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。[几何/掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)另行记录真实 OpenCV 编译及完整 ROI 像素对照。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
 
-后续仍需完成 E11 掩码恢复、NV12 打包、SDK 资源管理、目标与制品身份门禁、公开 pre/infer/post/predict 阶段、库/CLI 入口及完整板端构建运行说明。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
+后续仍需完成 NV12 打包、SDK 资源管理、目标与制品身份门禁、公开 pre/infer/post/predict 阶段、库/CLI 入口及完整板端构建运行说明。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。

@@ -23,12 +23,18 @@ std::vector<float> read_floats(const std::string &path, size_t expected = 0) {
 }
 int main(int argc, char **argv) {
   try {
-    if (argc != 5)
-      throw std::invalid_argument(
-          "usage: mask_probe INPUT_DIR WIDTH HEIGHT NEW_OUTPUT_DIR");
+    if (argc != 5 && argc != 7)
+      throw std::invalid_argument("usage: mask_probe INPUT_DIR WIDTH HEIGHT "
+                                  "NEW_OUTPUT_DIR [11|26 MORPH_0_OR_1]");
     std::filesystem::path input = argv[1], output = argv[4];
+    std::string family = argc == 7 ? argv[5] : "26",
+                morph = argc == 7 ? argv[6] : "0";
+    if ((family != "11" && family != "26") || (morph != "0" && morph != "1") ||
+        (family == "26" && morph != "0"))
+      throw std::invalid_argument("Invalid family/morphology combination");
     auto geometry = yoloe::make_geometry(std::stoi(argv[2]), std::stoi(argv[3]),
-                                         yoloe::Protocol::E26);
+                                         family == "11" ? yoloe::Protocol::E11
+                                                        : yoloe::Protocol::E26);
     auto proto = read_floats((input / "9.f32").string(), 160 * 160 * 32);
     auto values = read_floats((input / "mask-candidates.f32").string());
     if (values.size() % 36)
@@ -41,7 +47,10 @@ int main(int argc, char **argv) {
                   candidate.coefficients.begin());
       candidates.push_back(candidate);
     }
-    auto masks = yoloe::restore_e26_masks(candidates, proto, geometry);
+    auto masks = family == "11"
+                     ? yoloe::restore_e11_masks(candidates, proto, geometry,
+                                                morph == "1")
+                     : yoloe::restore_e26_masks(candidates, proto, geometry);
     if (!std::filesystem::create_directory(output))
       throw std::invalid_argument("Use a new output directory");
     std::cout << std::setprecision(9) << "[";
