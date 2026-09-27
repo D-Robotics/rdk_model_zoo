@@ -139,6 +139,8 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
    `docs/release/s/models.yaml` 的 640 标识与 224 URL；平台归档不是运行时主清单。
    此项不阻塞统一 YOLO 整理；重复 S 独立系列已按用户要求取消收编；板测仍为 not-run。
    详见 [核定记录](2026-09-26-b9-cls-assets-review.md) 与其原始 HTTP 证据。
+> 2026-09-28 进展：下述历史缺口中的 YOLOE-26 30 个文件已逐字节补回平台快照，见[核定与哈希](2026-09-28-yoloe-source-review.md)。统一 Sample 仍 pending；其余 B11/H8 缺口不因此关闭。
+
 7. **platforms/s 快照落后 s tip**（A7 勘定，2026-09-21）：快照相对 380e1a2 缺 53 个
    文件——`samples/vision/yoloe26_seg`（30）、`samples/llm/minicpm5-2b`（13，
    legacy evaluator + results + test_data）、`samples/vla/{act,pi0}` gitlink 与
@@ -232,7 +234,7 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B8 | pointnet / s:380e1a2 | s100 / python（点云输入；其余 target 无制品） | done（四阶段、metadata binding、显式下载） | done（源无可执行配方；图示与缺口保留） | done（双语五层完整 README） | passed（21 tests；真实源点云归一化与 raw 输出对照） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-pointnet-review.md) |
 | B8 | diffusiondrive / s:380e1a2 | s100p/s600 / python | done（四输入三阶段；量化/绘图/SDK 分离；五案例入口） | done（两 YAML 保留；缺失导出/校准前提明确） | done（六层双语，含测试数据及全部历史表） | passed（23 tests；六案例真实源后处理/绘图对照；严格离线评估） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-diffusiondrive-review.md) |
 | B9 | ultralytics_yolo（统一家族职责整改，重复 S 独立系列退役） | x5+s / 统一 Python + cpp | in-progress | in-progress | in-progress | not-run | not-run | not-run | no | 用户取消 yolo11/pose/seg、iMoonLab 的独立收编；仅保留直接浮点输出路线。[范围修订与证据](2026-09-28-yolo-scope-review.md)。统一家族其他任务和整体验收继续；YOLOE/World/Depth 保留。 |
-| B9 | yoloe（x5 yoloe + s yoloe11_seg + s tip yoloe26_seg）/ x5:ac11571 + s:380e1a2 | x5+s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B9 | yoloe（x5 yoloe + s yoloe11_seg + s tip yoloe26_seg）/ x5:ac11571 + s:380e1a2 | x5+s / python + cpp | in-progress（S26 30 个原始文件已补入平台快照；10 个资产哈希已固定） | pending | pending | not-run（源回归 4 项通过，非统一实现验收） | not-run | not-run | no | [来源/制品核定](2026-09-28-yoloe-source-review.md)：S11 中间 FLOAT32 报告不等于最终混合精度 HBM；S26 量化制品不能冒称与浮点统一入口兼容。 |
 | B10 | himloco / x5:ac11571 | x5 / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B10 | asr / s:380e1a2 | s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B10 | kws / s:380e1a2 | s / python | pending | pending | pending | not-run | not-run | not-run | no | — |
