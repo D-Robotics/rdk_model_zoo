@@ -41,10 +41,10 @@ class Yolo26Contracts(unittest.TestCase):
                         # The detector's explicit host seam still exercises
                         # full metadata binding; it does not claim a host board.
                         runtime=Model(Config('stub',platform=profile),runtime_loader=lambda:sdk)
-                    elif task=='cls':
-                        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, ModelSelection
+                    elif task in ('cls','pose'):
+                        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, LTRBPoseContract, ModelSelection
                         from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-                        runner=build_runner(ModelSelection('stub',target=platform,task='classify',contract=ClassificationContract()),runtime_loader=lambda:sdk)
+                        runner=build_runner(ModelSelection('stub',target=platform,task='classify' if task=='cls' else 'pose',contract=ClassificationContract() if task=='cls' else LTRBPoseContract()),runtime_loader=lambda:sdk)
                         runtime=Model(Config('stub',platform=profile),runner=runner)
                     else:
                         with patch('yolo_runtime.load_hbm_runtime',return_value=sdk):
@@ -181,7 +181,8 @@ class Yolo26Contracts(unittest.TestCase):
                 model = types.SimpleNamespace(
                     model_names=['m'], input_names={'m': list(inputs)}, input_shapes={'m': inputs},
                     input_dtypes={'m': {n: 'NV12' if platform == 'x5' else 'U8' for n in inputs}},
-                    output_names={'m': list(shapes)}, output_shapes={'m': shapes})
+                    output_names={'m': list(shapes)}, output_shapes={'m': shapes},
+            output_dtypes={'m': {n:'F32' for n in shapes}})
                 sdk = types.SimpleNamespace(HB_HBMRuntime=lambda _: model)
                 with patch('yolo_runtime.load_hbm_runtime', return_value=sdk):
                     runtime = YOLO26OBB(YOLO26OBBConfig('stub', platform=resolve_platform(platform)))
@@ -251,10 +252,13 @@ class Yolo26Contracts(unittest.TestCase):
             model_names=['m'], input_names={'m': ['image']},
             input_shapes={'m': {'image': (1, 3, 640, 640)}},
             input_dtypes={'m': {'image': 'NV12'}},
-            output_names={'m': list(shapes)}, output_shapes={'m': shapes})
+            output_names={'m': list(shapes)}, output_shapes={'m': shapes},
+            output_dtypes={'m': {n:'F32' for n in shapes}})
         sdk = types.SimpleNamespace(HB_HBMRuntime=lambda _: model)
-        with patch('yolo_runtime.load_hbm_runtime', return_value=sdk):
-            runtime = YOLO26Pose(YOLO26PoseConfig('stub', platform=resolve_platform('x5')))
+        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ModelSelection, LTRBPoseContract
+        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+        runner=build_runner(ModelSelection('stub',target='x5',task='pose',contract=LTRBPoseContract()),runtime_loader=lambda:sdk)
+        runtime = YOLO26Pose(YOLO26PoseConfig('stub', platform=resolve_platform('x5')),runner=runner)
         for grid, row, col, box, point in (
             (80, 30, 60, [476, 236, 492, 252], [484, 244]),
             (40, 15, 30, [472, 232, 504, 264], [488, 248]),

@@ -266,6 +266,25 @@ class LTRBDetectionContract:
                      for role in (_role_key("cls", stride), _role_key("box", stride)))
 
 
+@dataclass(frozen=True, init=False)
+class LTRBPoseContract(LTRBDetectionContract):
+    """YOLO26: direct LTRB distances and COCO-17 grid-relative (x,y,logit)."""
+
+    nkpt: int
+
+    def __init__(self, strides=(8, 16, 32), input_roles=None,
+                 output_roles=None, output_layouts=None):
+        super().__init__(classes=1, strides=strides, input_roles=input_roles,
+                         output_roles=output_roles, output_layouts=output_layouts)
+        object.__setattr__(self, "task", "pose")
+        object.__setattr__(self, "nkpt", 17)
+
+    @property
+    def required_roles(self):
+        return tuple(_role_key(kind, stride) for stride in self.strides
+                     for kind in ("cls", "box", "kpts"))
+
+
 @dataclass(frozen=True)
 class ClassificationContract:
     """One floating logit vector; singleton physical axes carry no extra samples."""
@@ -626,6 +645,7 @@ __all__ = [
     "DFLSegmentationContract",
     "DFLPoseContract",
     "LTRBDetectionContract",
+    "LTRBPoseContract",
     "ModelSelection",
     "ModelBinding",
     "RuntimeMetadata",

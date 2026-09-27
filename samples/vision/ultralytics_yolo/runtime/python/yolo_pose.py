@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""YOLOv8/11 pose stages with raw inference and explicit per-image geometry."""
+"""Shared pose stages with raw inference and explicit per-image geometry."""
 
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
@@ -74,7 +74,7 @@ class YoloPoseConfig:
 
 
 class YoloPose:
-    """DFL COCO pose with owned five-tuple results and probabilities by default."""
+    """COCO pose stages; subclasses select a reviewed box/keypoint protocol."""
 
     def __init__(self, config: YoloPoseConfig, runner=None):
         self.cfg = config
@@ -106,7 +106,7 @@ class YoloPose:
             config.anchor_sizes, self.input_size, self.contract.strides
         )
         if any(h != w for h, w in grids):
-            raise ValueError("Published DFL pose requires square input grids.")
+            raise ValueError("Published pose requires square input grids.")
         self.anchor_sizes = [h for h, w in grids]
         self.nkpt = self.contract.nkpt
         self.input_names = tuple(getattr(runner, "input_names", ()))
@@ -155,7 +155,12 @@ class YoloPose:
         context = _transform_for_postprocess(
             transform, ori_img_w, ori_img_h, self.input_size, self.cfg.resize_type
         )
-        semantic = _semantic_outputs(self.binding, self.contract, outputs, "DFL pose")
+        semantic = _semantic_outputs(
+            self.binding,
+            self.contract,
+            outputs,
+            f"{getattr(self.contract, 'protocol', 'DFL')} pose",
+        )
         return decode_pose(
             semantic,
             self.contract,

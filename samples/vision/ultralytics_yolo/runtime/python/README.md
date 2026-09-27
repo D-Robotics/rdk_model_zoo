@@ -484,6 +484,71 @@ with rounding can therefore have corrected coordinates; tests distinguish this
 intentional change from source-equivalent unrounded cases. No new board, real
 SDK, performance or dataset validation is claimed.
 
+<a id="yolo26-pose-api"></a>
+## YOLO26 pose stages
+
+YOLO26 pose uses the same preprocessing, raw runner, explicit image context,
+NMS and coordinate restoration as DFL pose. Its nine outputs instead contain
+one class logit, **four direct LTRB distances**, and 17 `(x,y,visibility-logit)`
+triplets per anchor at strides 8/16/32. Keypoint coordinates decode as
+`(offset + grid_center) * stride`; DFL pose uses a different factor/offset rule.
+The contract keeps these formulas separate. Neither output-list order nor a
+filename selects a protocol.
+
+Run from the repository root on a matching S600 board, after preparing the model
+through [model preparation](../../model/README.md) and replacing the absolute path:
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo26_pose import YOLO26Pose, YOLO26PoseConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+pose = YOLO26Pose(YOLO26PoseConfig(
+    model_path="/models/yolo26n_pose_nashp_640x640_nv12.hbm",
+    platform=resolve_platform("s600"),
+    nms_thres=0.45,
+))
+prepared = pose.pre_process(image)
+raw = pose.forward(prepared.tensors)
+result = pose.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, pose.predict(image)):
+    np.testing.assert_allclose(staged, predicted)
+boxes, scores, class_ids, keypoint_xy, visibility = result
+print(boxes.shape, keypoint_xy.shape, visibility.shape)
+```
+
+Input must be nonempty BGR uint8 H×W×3. Outputs must already be floating NHWC,
+with complete shape/dtype metadata and no SCALE quantization. Integer arrays,
+nonfinite values, a DFL binding or ambiguous heads are rejected. The raw carrier
+borrows SDK buffers: complete postprocessing before another inference or copy
+retained raw arrays. `pre_process` returns the mapping-compatible
+`PreparedDetection`; legacy explicit original width/height postprocess arguments
+remain supported without cached last-image state.
+
+The five results have the same shape/dtype/ownership as the DFL pose API: float32
+`(N,4)` boxes, float32 `(N,)` detection probabilities, int64 `(N,)` IDs,
+float32 `(N,17,2)` points and float32 `(N,17,1)` point probabilities. Empty results
+retain these ranks. Visibility receives exactly one stable sigmoid. NMS selects
+the same indices for boxes and skeletons. Coordinates use actual integer resize/
+padding and clip to the original-image bounds. The X5 legacy adapter still returns
+a list of `{box, score, kpts}` records with integer boxes; the S legacy adapter
+retains its four-tuple with combined `(N,17,3)` keypoints.
+
+The library NMS default remains 0.65; CLI defaults are X5 0.70 and S 0.45. The
+example explicitly matches S CLI behavior. Confidence must be finite in `(0,1)`
+and NMS in `[0,1]`. The former S helper silently clamped confidence to
+`[1e-6,1-1e-6]`; this interface now honors the supplied valid threshold exactly.
+Together with actual integer geometry and stable extreme-logit sigmoid, these
+are intentional corrections, not a claim of bitwise equality for every case.
+Host tests execute both pinned source decoders and the actual X5 compatibility
+adapter. Real SDK, board inference and dataset metrics remain unverified here.
+
 <a id="troubleshooting"></a>
 ## Troubleshooting
 

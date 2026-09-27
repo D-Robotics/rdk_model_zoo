@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""DFL pose decoding and visibility; no model loading, SDK or drawing."""
+"""DFL/direct-LTRB pose decoding and visibility; no model loading, SDK or drawing."""
 
 import numpy as np
 from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils import (
@@ -33,12 +33,14 @@ def decode_pose(outputs, contract, transform, score_thres, nms_thres):
     if not np.isfinite(nms_thres) or not 0 <= nms_thres <= 1:
         raise ValueError("nms_thres must be finite and between 0 and 1.")
     height, width = transform.model_size
+    direct = getattr(contract, "box_encoding", None) == "ltrb"
+    box_channels = 4 if direct else 4 * contract.reg_bins
     required = {
         f"{kind}_{stride}": (1, height // stride, width // stride, channels)
         for stride in contract.strides
         for kind, channels in [
             ("cls", 1),
-            ("box", 4 * contract.reg_bins),
+            ("box", box_channels),
             ("kpts", 3 * contract.nkpt),
         ]
     }
@@ -54,21 +56,39 @@ def decode_pose(outputs, contract, transform, score_thres, nms_thres):
             raise ValueError(
                 f"Semantic output {name!r} must be finite floating NHWC {shape}."
             )
-    weights = np.arange(contract.reg_bins, dtype=np.float32)[None, None, :]
+    weights = (
+        None
+        if direct
+        else np.arange(contract.reg_bins, dtype=np.float32)[None, None, :]
+    )
     boxes, scores, ids, points, logits = [], [], [], [], []
     threshold = -np.log(1.0 / score_thres - 1.0)
     for stride in contract.strides:
         conf, classes, selected = post.filter_classification(
             outputs[f"cls_{stride}"], threshold
         )
-        boxes.append(
-            post.decode_boxes(
-                outputs[f"box_{stride}"], selected, height // stride, stride, weights
+        if direct:
+            anchors = post.gen_anchor(height // stride)[selected]
+            offsets = outputs[f"box_{stride}"].reshape(-1, 4)[selected]
+            boxes.append(post.decode_ltrb_boxes(anchors, offsets, stride))
+            keypoints = outputs[f"kpts_{stride}"].reshape(-1, contract.nkpt, 3)[
+                selected
+            ]
+            xy = (keypoints[..., :2] + anchors[:, None, :]) * stride
+            visibility = keypoints[..., 2:3]
+        else:
+            boxes.append(
+                post.decode_boxes(
+                    outputs[f"box_{stride}"],
+                    selected,
+                    height // stride,
+                    stride,
+                    weights,
+                )
             )
-        )
-        xy, visibility = post.decode_kpts(
-            outputs[f"kpts_{stride}"], selected, height // stride, stride
-        )
+            xy, visibility = post.decode_kpts(
+                outputs[f"kpts_{stride}"], selected, height // stride, stride
+            )
         scores.append(conf)
         ids.append(classes)
         points.append(xy)

@@ -432,6 +432,61 @@ transform、拥有独立存储的 `(boxes, scores, class_ids)` 结果与共用�
 非正方形图片发生取整时，框坐标可能因此修正；测试区分了这一有意修改与无取整情形下
 的源代码等价结果。本次没有新增板端、真实 SDK、性能或数据集验证。
 
+<a id="yolo26-pose-api"></a>
+## YOLO26 姿态阶段接口
+
+YOLO26 姿态与 DFL 姿态共用前处理、raw runner、显式逐图 context、NMS 和坐标还原。
+但它的九个输出在 stride 8/16/32 上分别为单类 logits、**四个直接 LTRB 距离**及
+17 组 `(x,y,可见性 logit)`。关键点坐标公式为 `(offset + grid_center) * stride`；
+DFL 姿态的倍数和偏移规则不同，绑定契约明确区分两者。文件名和输出枚举顺序都不能
+用来猜测协议。
+
+在匹配的 S600 板卡上，从仓库根目录运行下例；先按[模型准备](../../model/README_cn.md)
+获取制品并替换绝对路径：
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo26_pose import YOLO26Pose, YOLO26PoseConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+pose = YOLO26Pose(YOLO26PoseConfig(
+    model_path="/models/yolo26n_pose_nashp_640x640_nv12.hbm",
+    platform=resolve_platform("s600"),
+    nms_thres=0.45,
+))
+prepared = pose.pre_process(image)
+raw = pose.forward(prepared.tensors)
+result = pose.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, pose.predict(image)):
+    np.testing.assert_allclose(staged, predicted)
+boxes, scores, class_ids, keypoint_xy, visibility = result
+print(boxes.shape, keypoint_xy.shape, visibility.shape)
+```
+
+输入须为非空 BGR uint8 H×W×3。输出须为已反量化的浮点 NHWC，具有完整 shape/dtype
+metadata 且不带 SCALE 量化描述。整数、非有限值、DFL 绑定或角色歧义会明确拒绝。
+raw 引用 SDK 缓冲区，下一次推理前完成后处理，或复制要保留的 raw 数组。
+`pre_process` 返回兼容映射访问的 `PreparedDetection`；后处理仍可显式传原图宽高，
+不依赖最近一次图片的缓存状态。
+
+五个返回值的形状/类型/存储所有权与 DFL 姿态相同：float32 `(N,4)` 框、float32
+`(N,)` 检测概率、int64 `(N,)` 类别、float32 `(N,17,2)` 点坐标、float32 `(N,17,1)`
+点概率。空结果保持维度。可见性只执行一次稳定 sigmoid；NMS 对框和骨架使用相同索引。
+坐标按实际取整缩放/padding 还原并裁到原图范围。X5 旧适配器仍返回含整数框的
+`{box, score, kpts}` 字典列表；S 旧适配器仍返回四元组，关键点合并为 `(N,17,3)`。
+
+库的 NMS 默认仍为 0.65；CLI 的 X5 默认 0.70、S 默认 0.45，本例显式对齐 S CLI。
+置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。旧 S helper 会把置信度静默夹到
+`[1e-6,1-1e-6]`，现在严格使用传入的有效阈值。该修改、实际取整几何和极端 logits
+的稳定 sigmoid 均为有意修正，不声称所有输入逐位等价。主机测试实际运行两侧固定源
+解码器及 X5 兼容适配器；真实 SDK、板端推理和数据集指标在此仍未验证。
+
 <a id="troubleshooting"></a>
 ## 故障排查
 
