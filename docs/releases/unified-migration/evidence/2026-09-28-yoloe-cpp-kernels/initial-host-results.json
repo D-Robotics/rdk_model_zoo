@@ -1,0 +1,62 @@
+[
+  {
+    "name": "documented-native-tests",
+    "argv": [
+      "bash",
+      "-e",
+      "-c",
+      "mkdir -p /tmp/yoloe-native-tests\nc++ -std=c++17 -Wall -Wextra -Werror \\\n  -fsanitize=address,undefined -fno-omit-frame-pointer \\\n  -I samples/vision/yoloe/runtime/cpp/common \\\n  -I samples/vision/ultralytics_yolo/runtime/cpp \\\n  samples/vision/yoloe/runtime/cpp/tests/test_float_heads.cc \\\n  -o /tmp/yoloe-native-tests/float-heads\n/tmp/yoloe-native-tests/float-heads\nc++ -std=c++17 -Wall -Wextra -Werror \\\n  -fsanitize=address,undefined -fno-omit-frame-pointer \\\n  -I samples/vision/yoloe/runtime/cpp/common \\\n  samples/vision/yoloe/runtime/cpp/tests/test_e26_decode.cc \\\n  -o /tmp/yoloe-native-tests/e26-decode\n/tmp/yoloe-native-tests/e26-decode\n"
+    ],
+    "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+    "started_utc": "2026-09-27T21:42:00.381759+00:00",
+    "finished_utc": "2026-09-27T21:42:07.210206+00:00",
+    "rc": 0,
+    "log": "documented-native-tests.log"
+  },
+  {
+    "name": "yoloe",
+    "argv": [
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "samples/vision/yoloe/tests"
+    ],
+    "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+    "started_utc": "2026-09-27T21:42:07.210232+00:00",
+    "finished_utc": "2026-09-27T21:42:10.794396+00:00",
+    "rc": 0,
+    "log": "yoloe.log"
+  },
+  {
+    "name": "contracts",
+    "argv": [
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+      "tools/sample_contract/check.py",
+      "--scope",
+      "migration",
+      "--parser-mode",
+      "import",
+      "--report",
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-yoloe-cpp-kernels/contracts.json"
+    ],
+    "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+    "started_utc": "2026-09-27T21:42:10.794429+00:00",
+    "finished_utc": "2026-09-27T21:42:11.198510+00:00",
+    "rc": 1,
+    "log": "contracts.log"
+  },
+  {
+    "name": "readmes",
+    "argv": [
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-yoloe-evaluation/check_readmes.py"
+    ],
+    "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+    "started_utc": "2026-09-27T21:42:11.198547+00:00",
+    "finished_utc": "2026-09-27T21:42:11.579632+00:00",
+    "rc": 0,
+    "log": "readmes.log"
+  }
+]
