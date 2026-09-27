@@ -166,3 +166,51 @@ The historical module path remains stable for imports and test injection.
 score ordering; the default remains float32 for existing consumers. Explicit
 NONE tensors are returned unchanged. This does not infer quantization metadata
 or move decoding into the runtime runner.
+
+## YOLOE-26 PF numerical kernels / 数值模块
+
+[`yoloe26_geometry.py`](yoloe26_geometry.py) and
+[`yoloe26_decode.py`](yoloe26_decode.py) preserve the fixed 4585-class,
+640-square PF protocol from the S source. These are internal migration modules;
+a canonical YOLOE sample and its runtime integration are still pending. They do
+not load models, download artifacts or interpret quantization descriptors.
+
+The ten float32 NHWC outputs are class logits (4585), direct LTRB distances (4)
+and mask coefficients (32) at strides 8, 16 and 32, followed by a
+`[1,160,160,32]` prototype. Candidate selection uses deterministic Top-K with
+strict confidence comparison, optional multiple labels and no NMS. Equal scores
+retain source scale/anchor/class ordering. Integer or nonfinite arrays fail.
+
+Geometry uses rounded resize dimensions, linear interpolation and padding 114.
+Calibration RGB/255 and runtime BGR pixels share this preprocessing. The
+immutable per-image context records actual horizontal and vertical scales. Mask
+restoration interpolates logits before thresholding at zero, crops in model
+space, removes padding, restores with nearest interpolation and returns owned
+uint8 0/1 ROI masks. Inverse boxes use actual rounded scales; this intentionally
+differs from the source's ideal common gain on images with rounding.
+
+S public HBM artifacts declare quantized outputs. Passing their raw integer
+outputs to these float kernels is unsupported; these modules do not establish
+a working floating-output artifact or board inference. Source comparisons cover
+Top-K, preprocessing pixels and mask operation order; rounded inverse geometry
+has separate expected-value checks. Run from the repository root:
+
+```bash
+python -m unittest discover -s samples/_shared/tests -p test_yoloe26_decode.py
+```
+
+这两个模块保留 S 源中的 4585 类、640 方形 PF 协议，目前属于迁移内部组件；
+统一 YOLOE sample 和实际 runtime 接入尚未完成。模块不加载模型、不下载制品，
+也不执行反量化。输入是上述顺序的十个 NHWC float32 张量，整数和非有限值
+显式拒绝。候选框采用直接 LTRB 解码和确定性 Top-K，支持单标签或多标签，
+分数须严格大于阈值，不执行 NMS；平局沿用源中的尺度、anchor、类别顺序。
+
+前处理按四舍五入尺寸缩放、线性插值并填充 114，校准 RGB/255 与运行 BGR
+共享相同像素流程。每张图显式携带实际横纵缩放比例。掩码先插值 logits，
+再按零阈值二值化、在模型坐标裁剪、去除 padding、最近邻还原，最后返回
+独立拥有内存的 uint8 0/1 ROI。框坐标按实际缩放还原；存在尺寸取整时，
+这是相对源代码理想统一缩放比例的有意修正。
+
+目前 S 公开 HBM 声明量化输出，不能直接把整数输出交给这些浮点模块。
+上述主机测试覆盖固定源代码对照及取整几何修正，不代表浮点制品已生成、
+实际模型已运行或板测通过。
