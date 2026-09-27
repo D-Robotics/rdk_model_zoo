@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-当前目录提供统一原生运行时所需的浮点输出绑定、E11/E26 候选解码、BGR 几何及 E11/E26 ROI 掩码恢复模块，**尚未提供完整板端可执行程序**。已经实现的统一入口见 [Python runtime](../python/README_cn.md)，运行前仍需满足其制品和 SDK 条件。原始 C++ 程序保留在 [S E11 快照](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md)及 [S E26 快照](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md)；原始量化制品和手动反量化路径不符合这里的新浮点契约。
+当前目录提供 C++ 三阶段库，包含独立 NV12 输入、E11/E26 解码及 ROI 掩码，通过显式传入的 runner 执行推理，**尚未提供完整板端可执行程序**。已经实现的统一入口见 [Python runtime](../python/README_cn.md)，运行前仍需满足其制品和 SDK 条件。原始 C++ 程序保留在 [S E11 快照](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md)及 [S E26 快照](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md)；原始量化制品和手动反量化路径不符合这里的新浮点契约。
 
 <a id="supported-boards"></a>
 ## 目标范围
@@ -14,6 +14,11 @@
 | 模块 | 职责 |
 | --- | --- |
 | `common/float_heads.h` | 按唯一形状绑定十个逻辑角色，不依赖物理输出顺序 |
+| `inc/yoloe.h`、`src/yoloe.cpp` | 构造及 pre_process/infer/post_process/predict 编排 |
+| `inc/runner.h`、`inc/pipeline_io.h` | 后端契约、独立输入输出和实例身份 |
+| `inc/config.h` | 分协议配置校验 |
+| `common/nv12.h` | BGR 转 I420 及共用 split-NV12 打包 |
+| `common/postprocess.h` | 家族分派及对齐实例结果组装 |
 | `common/geometry.h` | 显式 E11/E26 缩放几何及实际比例框还原 |
 | `common/image_ops.h` | OpenCV BGR 前处理及 E11/E26 ROI 掩码恢复 |
 | `common/candidate.h` | 两个家族共用、拥有独立数据的候选结果 |
@@ -39,7 +44,7 @@
 <a id="dependencies"></a>
 ## 依赖
 
-需要 C++17 编译器和仓库检出；四个几何/候选测试不需要 OpenCV 或板端 SDK；第五个图像/掩码测试需要 OpenCV C++ core/imgproc 开发库。文档构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。在仓库根目录执行：
+需要 C++17 编译器和仓库检出；四个几何/候选测试不需要 OpenCV 或板端 SDK；图像/掩码及阶段测试需要 OpenCV C++ core/imgproc 开发库。文档构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。在仓库根目录执行：
 
 <a id="build"></a>
 ## 构建主机测试
@@ -70,13 +75,23 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-使用真实 OpenCV 安装构建全部五个测试（不需要板端 SDK）：
+使用真实 OpenCV 安装构建全部六个测试（不需要板端 SDK）：
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
   -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
+
+从独立 CMake 项目构建可复用阶段库及全部六个测试：
+
+```bash
+cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
+  -DYOLOE_BUILD_TESTS=ON -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON
+cmake --build /tmp/yoloe-stage-core --parallel 4
+```
+
+产物为 `libyoloe_core.a`，并非板端可执行程序。正常集成构建可省略 `YOLOE_BUILD_TESTS` 和 `YOLOE_SANITIZERS`（库项目中均默认 OFF）。使用方可通过 CMake `add_subdirectory` 加入目录并链接 `yoloe_core`，头文件路径与 OpenCV 依赖会传递给调用方。`YOLOE_TEST_OPENCV` 控制独立测试项目，不会移除阶段库本身的 OpenCV 依赖。
 
 <a id="run"></a>
 ## 运行主机测试
@@ -90,10 +105,16 @@ cmake --build /tmp/yoloe-native-opencv --parallel 4
 
 成功时退出码为 0、无输出。解码测试分配完整的 4585 类张量，开启 sanitizer 时应预留数百 MB 内存。断言/契约异常及 sanitizer 报错均为失败。这些命令实际编译 C++ 数学及浮点内存工具，不证明真实 SDK ABI 兼容。
 
-对 CMake 构建执行全部五个检查并显示失败输出：
+对 CMake 构建执行全部六个检查并显示失败输出：
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
+```
+
+执行库项目的六个测试：
+
+```bash
+ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
 ```
 
 <a id="parameters"></a>
@@ -116,11 +137,34 @@ ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
+`YOLOE` 独占一个 `std::unique_ptr<Runner>`。构造时验证配置和后端协议，构造失败也会释放传入后端。后端必须返回十个独立拥有存储的紧凑语义 FLOAT32 向量，并在推理前完成硬件/制品身份与 SDK metadata 校验；基类接口本身不证明真实 SDK 实现。当前尚未提供具体 SDK runner，测试 runner 均为显式主机夹具。
+
+`pre_process` 返回独立紧凑 Y 平面（409600 字节）、交错 UV 平面（204800 字节）和实际几何；`infer` 恰好调用 runner 一次，返回独立原始输出并携带对应几何；`post_process` 返回框/分数/类别/ROI 掩码对齐的 `Instance`。不同 task 的 prepared/raw 批次不能串用，即便协议相同也会拒绝；不用自行缓存上一张图的几何。原始输出跨后续调用仍有效，结果掩码不借用 SDK 缓冲。每个推理线程使用一个 task，不承诺后端并发安全。
+
+下面的函数已在主机验证中编译。应用需要提供真正匹配的后端；示例不会下载或伪造模型：
+
+```cpp
+#include "yoloe.h"
+yoloe::Result process_image(yoloe::Config config,
+                            std::unique_ptr<yoloe::Runner> backend,
+                            const cv::Mat& image) {
+    yoloe::YOLOE task(config, std::move(backend));
+    auto prepared = task.pre_process(image);
+    auto raw = task.infer(prepared);
+    return task.post_process(raw);
+    // task.predict(image) composes the same three operations.
+}
+```
+
+配置默认 E11、score 0.25、NMS 未设置（E11 解析为 0.7）、形态学关闭、letterbox、max_det 300、single_label true。E11 拒绝仅属于 E26 的参数覆盖；E26 拒绝显式 NMS、形态学或 stretch。仅在后端匹配时设置 `config.protocol = yoloe::Protocol::E26`。这些是库默认值，源 demo CLI 默认值可能不同。
+
 数值模块头文件提供纯函数，不管理 SDK 资源。`bind_heads` 返回输出索引，不保留引用。`decode_e11` 和 `decode_e26` 仅在调用期间借用十个输入向量，返回拥有独立框、分数和系数的检测结果；返回后调用方可释放输入张量。内部指针视图不逃逸。OpenCV 结果矩阵拥有引用计数管理的独立存储，不与调用方图片/prototype 别名；需要像素时应保留返回对象。参数非法时抛出 `std::invalid_argument`，内存分配失败可能向外传播。不加载模型、不隐式选择硬件，也不保存跨调用的图片几何状态。
 
 <a id="results-interpretation"></a>
 ## 验证与后续集成
 
+[阶段/NV12 证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-stages-review.md)覆盖实际字节对照、生命周期/异常路径及 API 示例编译，不据此认证板端后端。
+
 [实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。[几何/掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)另行记录真实 OpenCV 编译及完整 ROI 像素对照。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
 
-后续仍需完成 NV12 打包、SDK 资源管理、目标与制品身份门禁、公开 pre/infer/post/predict 阶段、库/CLI 入口及完整板端构建运行说明。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
+后续仍需完成具体 SDK runner/资源管理、目标与制品身份门禁、CLI 入口及完整板端构建运行说明。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。

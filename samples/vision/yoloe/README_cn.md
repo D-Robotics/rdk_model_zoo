@@ -95,7 +95,7 @@ yoloe/
 - [Python](runtime/python/README_cn.md) — 参数、协议、库接口与排障。
 - [Test data](test_data/README_cn.md) — 图片和词表来源。
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README_cn.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README_cn.md) — 原配方；S 配方会产生量化输出。统一准备入口保留浮点输出节点，实际编译精度仍待验证。
-- [统一 C++ 进度](runtime/cpp/README_cn.md) — 浮点绑定、E11/E26 候选、图片几何与 E11/E26 掩码模块已提供，完整板端入口仍待集成。
+- [统一 C++ 进度](runtime/cpp/README_cn.md) — 可复用三阶段 C++ 库已提供，包含独立持有的 NV12 输入、浮点绑定和 E11/E26 解码与掩码；SDK 后端及板端入口仍待集成。
 - [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md) — 历史实现，统一移植 pending。
 - [X5 evaluation](../../../platforms/x5/samples/vision/yoloe/evaluator/README_cn.md) / [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README_cn.md) — 历史记录，不是本轮验收。
 

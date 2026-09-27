@@ -2,7 +2,7 @@
 
 English | [简体中文](README_cn.md)
 
-This directory currently contains the reusable float-output binding, E11/E26 candidate decoders, BGR geometry and E11/E26 ROI mask restoration for the canonical native runtime. **A complete board executable is not yet available here.** Use the [Python runtime](../python/README.md) for the implemented canonical entry, subject to its artifact/SDK requirements. Source C++ programs remain in the [S E11 snapshot](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26 snapshot](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md); their quantized artifacts and manual dequantization do not satisfy this new float contract.
+This directory provides a C++ stage library with owned NV12 inputs, E11/E26 decoding and ROI masks, backed by an explicitly supplied inference runner. **A complete board executable is not yet available here.** Use the [Python runtime](../python/README.md) for the implemented canonical entry, subject to its artifact/SDK requirements. Source C++ programs remain in the [S E11 snapshot](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26 snapshot](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md); their quantized artifacts and manual dequantization do not satisfy this new float contract.
 
 <a id="supported-boards"></a>
 ## Target scope
@@ -14,6 +14,11 @@ The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This 
 | Module | Responsibility |
 | --- | --- |
 | `common/float_heads.h` | Bind ten logical roles by unique shape, independently of physical output order |
+| `inc/yoloe.h`, `src/yoloe.cpp` | Task construction and pre_process/infer/post_process/predict orchestration |
+| `inc/runner.h`, `inc/pipeline_io.h` | Backend contract, owned input/output batches and instance identity |
+| `inc/config.h` | Protocol-specific configuration validation |
+| `common/nv12.h` | BGR-to-I420 conversion and shared split-NV12 packing |
+| `common/postprocess.h` | Family dispatch and aligned instance result assembly |
 | `common/geometry.h` | Explicit E11/E26 resize geometry and actual-scale inverse boxes |
 | `common/image_ops.h` | OpenCV BGR preparation and E11/E26 ROI mask restoration |
 | `common/candidate.h` | Shared owning candidate result for both families |
@@ -39,7 +44,7 @@ The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible 
 <a id="dependencies"></a>
 ## Dependencies
 
-Prerequisites: a C++17 compiler and the repository checkout. The four geometry/candidate tests do not need OpenCV or a board SDK. The fifth image/mask test needs OpenCV C++ core/imgproc development libraries. The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment. From the repository root:
+Prerequisites: a C++17 compiler and the repository checkout. The four geometry/candidate tests do not need OpenCV or a board SDK. The image/mask and stage tests need OpenCV C++ core/imgproc development libraries. The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment. From the repository root:
 
 <a id="build"></a>
 ## Build host tests
@@ -70,13 +75,23 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-Build all five tests with a real OpenCV installation (no board SDK):
+Build all six tests with a real OpenCV installation (no board SDK):
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
   -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
+
+Build the reusable stage library and all six tests from its own CMake project:
+
+```bash
+cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
+  -DYOLOE_BUILD_TESTS=ON -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON
+cmake --build /tmp/yoloe-stage-core --parallel 4
+```
+
+The output is `libyoloe_core.a`, not a board executable. For a normal embedding build, omit `YOLOE_BUILD_TESTS` and `YOLOE_SANITIZERS` (both default OFF in the library project). A consumer can add this directory with CMake `add_subdirectory` and link `yoloe_core`; include paths and OpenCV dependencies are propagated. `YOLOE_TEST_OPENCV` controls the standalone test project; it does not remove OpenCV from the stage library.
 
 <a id="run"></a>
 ## Run host tests
@@ -90,10 +105,16 @@ cmake --build /tmp/yoloe-native-opencv --parallel 4
 
 Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands compile actual C++ math and float-memory utilities; they do not establish SDK ABI compatibility.
 
-For the CMake build, run all five checks with failure output:
+For the CMake build, run all six checks with failure output:
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
+```
+
+Run the library project's six tests:
+
+```bash
+ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
 ```
 
 <a id="parameters"></a>
@@ -116,11 +137,34 @@ Selection preserves the source static Top-K contract. Exact ties prefer lower sc
 <a id="interface-lifecycle"></a>
 ## Interface and lifetime
 
+`YOLOE` exclusively owns a `std::unique_ptr<Runner>`. Construction validates configuration and backend protocol; invalid construction releases the supplied backend. The backend must return ten independently owned compact semantic FLOAT32 vectors. It must perform hardware/artifact identity and SDK metadata validation before exposing inference; the base interface itself is not proof of a real SDK implementation. No concrete SDK runner is supplied yet. Test runners are explicit host fixtures.
+
+`pre_process` returns an owned compact Y plane (409600 bytes) and interleaved UV plane (204800 bytes), plus actual geometry. `infer` invokes the runner exactly once and returns owned raw outputs carrying that geometry. `post_process` returns aligned `Instance` values with box/score/label/ROI mask. Prepared/raw batches from another task are rejected, including another task with the same protocol; do not cache a last-image geometry yourself. Raw outputs remain valid across subsequent calls, and result masks do not borrow SDK buffers. Use one task per inference thread; concurrent backend use is not guaranteed.
+
+The following function is compiled in host verification. The application must supply an actual matching backend; it does not download or synthesize a model:
+
+```cpp
+#include "yoloe.h"
+yoloe::Result process_image(yoloe::Config config,
+                            std::unique_ptr<yoloe::Runner> backend,
+                            const cv::Mat& image) {
+    yoloe::YOLOE task(config, std::move(backend));
+    auto prepared = task.pre_process(image);
+    auto raw = task.infer(prepared);
+    return task.post_process(raw);
+    // task.predict(image) composes the same three operations.
+}
+```
+
+Configuration defaults to E11, score 0.25, NMS unset (E11 resolves 0.7), morphology off, letterbox, max_det 300 and single_label true. E11 rejects E26-only overrides; E26 rejects an explicitly supplied NMS threshold, morphology or stretch. Select `config.protocol = yoloe::Protocol::E26` only with a matching backend. These values describe library behavior; source demo CLI defaults may differ.
+
 The numerical headers expose pure functions and own no SDK resources. `bind_heads` returns output indices; it does not retain references. `decode_e11` and `decode_e26` borrow their ten input vectors only for the duration of the call and return owning detections with copied boxes/scores/coefficients. Callers may release input tensors after return. Internal pointer views never escape. OpenCV result matrices use reference-counted owned storage and do not alias the caller's image/prototype; retain a returned result for as long as its pixels are needed. Invalid arguments throw `std::invalid_argument`; allocation failures may propagate. There is no model loading, implicit hardware selection or hidden cross-call geometry state.
 
 <a id="results-interpretation"></a>
 ## Verification and next integration
 
+[Stage/NV12 evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-stages-review.md) covers actual byte comparisons, ownership/error paths and compiled API examples; it does not certify a board backend.
+
 [Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records the earlier E26 checks. The [E11 extension evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md) records all three native tests, E26 regression and real E11 s/m/l ONNX comparisons. The E26n candidate comparison covers both single- and multi-label decoding against Python. [Geometry/mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md) separately records actual OpenCV compilation and full ROI pixel comparison. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
 
-The remaining native work is explicit: NV12 packing, SDK resource ownership, target and artifact identity gates, public pre/infer/post/predict stages, library/CLI entry, and complete board build/run documentation. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
+The remaining native work is explicit: concrete SDK runner/resource ownership, target and artifact identity gates, CLI entry, and complete board build/run documentation. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
