@@ -3,6 +3,7 @@
 #pragma once
 // Source: rdk_s 380e1a2bf42041af54be6f34935e50197cfadff9, YOLOE26 raw-v1.
 // Finite compact float tensors only; no SDK, image I/O, NMS or dequantization.
+#include "candidate.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -10,12 +11,6 @@
 #include <utility>
 #include <vector>
 namespace yoloe {
-struct RawDetection {
-  std::array<float, 4> box{};
-  float score = 0;
-  int label = 0;
-  std::array<float, 32> coefficients{};
-};
 namespace detail {
 constexpr int kModelWidth = 640, kClasses = 4585, kMaskChannels = 32,
               kMaskSize = 160;

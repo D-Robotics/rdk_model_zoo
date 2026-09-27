@@ -1,5 +1,6 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
 // Host verification utility, not a board inference executable.
+#include "e11_decode.h"
 #include "e26_decode.h"
 #include <fstream>
 #include <iomanip>
@@ -7,16 +8,25 @@
 #include <string>
 int main(int argc, char **argv) {
   try {
-    if (argc != 3)
-      throw std::invalid_argument(
-          "usage: decode_probe OUTPUT_TENSOR_DIRECTORY SINGLE_LABEL_0_OR_1");
+    if (argc != 3 && argc != 4)
+      throw std::invalid_argument("usage: decode_probe OUTPUT_TENSOR_DIRECTORY "
+                                  "SINGLE_LABEL_0_OR_1 [11|26]");
     std::string mode = argv[2];
     if (mode != "0" && mode != "1")
       throw std::invalid_argument("mode must be 0 or 1");
+    const std::string family = argc == 4 ? argv[3] : "26";
+    if (family != "11" && family != "26")
+      throw std::invalid_argument("family must be 11 or 26");
+    if (family == "11" && mode != "1")
+      throw std::invalid_argument("E11 has one class per anchor");
     std::array<std::vector<float>, 10> tensors;
     for (int i = 0; i < 10; ++i) {
       int grid = i == 9 ? 160 : 80 >> (i / 3),
-          channels = i == 9 ? 32 : (i % 3 == 0 ? 4585 : (i % 3 == 1 ? 4 : 32));
+          channels =
+              i == 9 ? 32
+                     : (i % 3 == 0
+                            ? 4585
+                            : (i % 3 == 1 ? (family == "11" ? 64 : 4) : 32));
       auto &data = tensors[i];
       data.resize(static_cast<size_t>(grid) * grid * channels);
       std::ifstream stream(std::string(argv[1]) + "/" + std::to_string(i) +
@@ -27,7 +37,9 @@ int main(int argc, char **argv) {
       if (!stream || stream.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Missing, short or oversized float tensor");
     }
-    auto result = yoloe::decode_e26(tensors, 0.25f, 300, mode == "1");
+    auto result = family == "11"
+                      ? yoloe::decode_e11(tensors)
+                      : yoloe::decode_e26(tensors, 0.25f, 300, mode == "1");
     std::cout << std::setprecision(9) << "[";
     for (size_t i = 0; i < result.size(); ++i) {
       const auto &row = result[i];

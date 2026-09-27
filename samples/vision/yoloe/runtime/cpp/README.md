@@ -2,7 +2,7 @@
 
 English | [简体中文](README_cn.md)
 
-This directory currently contains the reusable float-output binding and E26 candidate decoder for the canonical native runtime. **A complete board executable is not yet available here.** Use the [Python runtime](../python/README.md) for the implemented canonical entry, subject to its artifact/SDK requirements. Source C++ programs remain in the [S E11 snapshot](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26 snapshot](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md); their quantized artifacts and manual dequantization do not satisfy this new float contract.
+This directory currently contains the reusable float-output binding and E11/E26 candidate decoders for the canonical native runtime. **A complete board executable is not yet available here.** Use the [Python runtime](../python/README.md) for the implemented canonical entry, subject to its artifact/SDK requirements. Source C++ programs remain in the [S E11 snapshot](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26 snapshot](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md); their quantized artifacts and manual dequantization do not satisfy this new float contract.
 
 <a id="supported-boards"></a>
 ## Target scope
@@ -14,8 +14,11 @@ The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This 
 | Module | Responsibility |
 | --- | --- |
 | `common/float_heads.h` | Bind ten logical roles by unique shape, independently of physical output order |
+| `common/candidate.h` | Shared owning candidate result for both families |
+| `common/e11_decode.h` | DFL16, classwise NMS and aligned E11 coefficients |
 | `common/e26_decode.h` | Select E26 PF candidates, decode LTRB boxes and retain aligned mask coefficients |
 | `tests/test_float_heads.cc` | Shape/precision/stride/allocation and finite-value boundary tests |
+| `tests/test_e11_decode.cc` | DFL, same/different-class suppression, score/IoU equality and malformed outputs |
 | `tests/test_e26_decode.cc` | Candidate ordering, single/multi-label selection, thresholds and invalid outputs |
 | `tests/decode_probe.cc` | Host-only utility for comparison with saved raw float tensors; not an inference application |
 
@@ -29,12 +32,12 @@ Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requir
 | Mask coefficients | Same spatial shapes, 32 channels |
 | Prototype | One `[1,160,160,32]` tensor |
 
-The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. E11 candidate/mask decoding and SDK input/output ownership are not implemented in this directory yet. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; no compatible S float HBM has been compiled or verified in this migration.
+The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. Mask decoding and SDK input/output ownership are not implemented in this directory yet. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; no compatible S float HBM has been compiled or verified in this migration.
 
 <a id="dependencies"></a>
 ## Dependencies
 
-Prerequisites: a C++17 compiler and the repository checkout. The two unit tests do not need OpenCV or a board SDK. From the repository root:
+Prerequisites: a C++17 compiler and the repository checkout. The three unit tests do not need OpenCV or a board SDK. From the repository root:
 
 <a id="build"></a>
 ## Build host tests
@@ -52,6 +55,12 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -I samples/vision/yoloe/runtime/cpp/common \
   samples/vision/yoloe/runtime/cpp/tests/test_e26_decode.cc \
   -o /tmp/yoloe-native-tests/e26-decode
+c++ -std=c++17 -Wall -Wextra -Werror \
+  -fsanitize=address,undefined -fno-omit-frame-pointer \
+  -I samples/vision/yoloe/runtime/cpp/common \
+  -I samples/vision/ultralytics_yolo/runtime/cpp \
+  samples/vision/yoloe/runtime/cpp/tests/test_e11_decode.cc \
+  -o /tmp/yoloe-native-tests/e11-decode
 ```
 
 <a id="run"></a>
@@ -60,12 +69,17 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 ```bash
 /tmp/yoloe-native-tests/float-heads
 /tmp/yoloe-native-tests/e26-decode
+/tmp/yoloe-native-tests/e11-decode
 ```
 
 Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands compile actual C++ math and float-memory utilities; they do not establish SDK ABI compatibility.
 
 <a id="parameters"></a>
 ## Candidate decoding
+
+`decode_e11` accepts the same semantic arrangement with 64 box channels. It reuses Ultralytics' numerically stabilized 16-bin DFL expectation and sigmoid. Defaults are score 0.25 and classwise NMS IoU 0.7; score must be in `(0,1)`, NMS in `[0,1]`. It keeps one class per anchor and applies no E26 candidate cap. Coefficients travel with each candidate through NMS.
+
+The original native E11 boundaries are retained: score **greater than or equal to** the threshold is accepted; a same-class box is suppressed only when IoU is **greater than** the NMS threshold. Python's existing NMS also suppresses equality, so exact-boundary equivalence is not claimed. Native output is ordered by ascending class, then descending score; exact score ties prefer the original scale/anchor index. This makes source unordered-map/OpenMP merging deterministic, but does not reproduce its unspecified tie order or NumPy's tie ordering. Finite tensor values and exact lengths are validated before decoding, including the prototype not yet consumed by candidate math.
 
 `decode_e26` accepts ten finite compact float vectors in semantic order: class/box/coefficients for each stride, then prototype. Every vector length is checked before reading. Defaults are score threshold 0.25, maximum 300 candidates and one class per anchor. The valid threshold range is `(0,1)` and the candidate cap is `1..8400`.
 
@@ -74,11 +88,11 @@ Selection preserves the source static Top-K contract. Exact ties prefer lower sc
 <a id="interface-lifecycle"></a>
 ## Interface and lifetime
 
-The two headers expose pure functions and own no SDK resources. `bind_heads` returns output indices; it does not retain references. `decode_e26` borrows its ten input vectors only for the duration of the call and returns owning detections with copied boxes/scores/coefficients. Callers may release input tensors after return. Internal pointer views never escape. Invalid arguments throw `std::invalid_argument`; allocation failures may propagate. There is no model loading, implicit hardware selection or hidden cross-call geometry state.
+The numerical headers expose pure functions and own no SDK resources. `bind_heads` returns output indices; it does not retain references. `decode_e11` and `decode_e26` borrow their ten input vectors only for the duration of the call and return owning detections with copied boxes/scores/coefficients. Callers may release input tensors after return. Internal pointer views never escape. Invalid arguments throw `std::invalid_argument`; allocation failures may propagate. There is no model loading, implicit hardware selection or hidden cross-call geometry state.
 
 <a id="results-interpretation"></a>
 ## Verification and next integration
 
-[Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records native host tests and real E26n ONNX output comparisons against Python for single- and multi-label decoding. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
+[Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records the earlier E26 checks. The [E11 extension evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md) records all three native tests, E26 regression and real E11 s/m/l ONNX comparisons. The E26n comparison covers both single- and multi-label decoding against Python. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
 
-The remaining native work is explicit: E11 decoding, mask restoration, image/NV12 geometry, SDK resource ownership, target and artifact identity gates, public pre/infer/post/predict stages, library/CLI entry, and complete board build/run documentation. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
+The remaining native work is explicit: mask restoration, image/NV12 geometry, SDK resource ownership, target and artifact identity gates, public pre/infer/post/predict stages, library/CLI entry, and complete board build/run documentation. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
