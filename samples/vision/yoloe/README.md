@@ -18,7 +18,7 @@ Algorithm references and version context are preserved in the [X5 source overvie
 | 11m / 11l | supported-not-run | not-supported | not-supported | not-supported | X5 | no source X5 implementation |
 | 26n/s/m/l/x | not-supported | not-supported* | not-supported* | not-supported | local float S route* | no, pending |
 
-* For S, not-supported means the published artifact cannot run through this floating-output entry, not removal of the capability. S11 final HBM has mixed outputs and S26 public HBM declares quantized outputs. Explicit, hash-bound local float conversions can be selected, but that conversion route has not been built/verified. It is not supported-verified. S600 has no source support and never falls back to S100.
+* For S, not-supported means the published artifact cannot run through this floating-output entry, not removal of the capability. S11 final HBM has mixed outputs and S26 public HBM declares quantized outputs. Explicit, hash-bound local float conversions can be selected, but no compatible S float HBM has been compiled/verified. It is not supported-verified. S600 has no source support and never falls back to S100.
 
 All current board checks are `not-run`. Canonical checkpoint export and calibration/configuration preparation are available; real OE acceptance and C++ integration remain pending. Historical source board results do not verify this code.
 
@@ -77,19 +77,21 @@ X5 values are source single-thread libdnn Runtime records. S100 values are from 
 yoloe/
 ├── model/             # explicit published-artifact preparation
 ├── conversion/        # ONNX checks, calibration, target YAML and optional compile
+├── evaluator/         # explicit category mapping, COCO metrics and prediction export
 ├── runtime/python/    # CLI, binding, raw runner and three-stage task
 ├── test_data/         # source image and fixed vocabulary
 ├── tests/             # host fixtures, source comparisons and README execution
 └── README.md
 ```
 
-Canonical checkpoint export and conversion preparation are available below; evaluator and C++ integration remain pending. Float export checks do not establish real compiler or board acceptance.
+Canonical checkpoint export, conversion preparation and evaluation workflows are available below; C++ integration remains pending. Float export checks do not establish real compiler or board acceptance.
 
 <a id="entry-points"></a>
 ## Entry Points
 
 - [Model](model/README.md) — Publication identity, preparation and checksums.
 - [Conversion](conversion/README.md) — Checkpoint export, float-output checks, target-specific calibration, compiler commands and artifact records.
+- [Evaluation](evaluator/README.md) — Explicit PF mapping, CPU/board backends, COCO metrics, provenance and historical benchmarks.
 - [Python](runtime/python/README.md) — Options, protocols, library API and troubleshooting.
 - [Test data](test_data/README.md) — Image/vocabulary provenance.
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md) — Original recipes; S recipes produce quantized outputs. The canonical preparation entry retains float-output nodes, with actual compiled precision still unverified.

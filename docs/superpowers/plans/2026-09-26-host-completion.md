@@ -99,3 +99,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：YOLOE 统一转换准备已提供 ONNX/词表校验、14 种目标配置、X5 raw 与 S NPY 校准、可选编译完整日志及真实状态分离；两份完整转换 README 与根/model/runtime 导航同步。445 项主机测试、双语准备命令、45-sample 规范检查通过，见[转换准备记录](../../releases/unified-migration/2026-09-28-yoloe-conversion-review.md)。源导出器统一收编、evaluator、C++ 与对应客户文档仍需完成；真实权重/OE/板端/数据集/独立评审 not-run，H0–H9 保持开放。
 
 2026-09-28：YOLOE 统一导出器已收编 E11/E26，八种真实权重均完成主机 ONNX 导出与全输出对照，14 组真实图转换准备通过；修正 11l 第二 attention 配置，保留 E11m 优化执行差异与 E26 m/l/x 非精确平局的排序差异证据。451 项主机测试与 45-sample 规范检查通过，详见[导出记录](../../releases/unified-migration/2026-09-28-yoloe-export-review.md)。未宣称优化执行、数据集精度、OE 或板端通过；evaluator、C++、完整剩余文档、整体独立评审与 H0–H9 继续。
+
+2026-09-28：YOLOE 统一 evaluator 和完整双语说明已实现，保留历史性能表及测量条件，新增严格类别映射、框/掩码 COCO 计分、输入身份和失败留证。14 组真实 ONNX 主机预测、461 项主机测试及 45-sample 规范检查通过；初次文档链接失败和修正均留存。发现 E26 当前 PT 文件哈希与历史 sidecar 不同，未宣称同权重复现或数据集 AP。见[评估记录](../../releases/unified-migration/2026-09-28-yoloe-evaluation-review.md)。原生 C++、剩余迁移与全分支独立验收继续，板端/SDK/OE not-run，H0–H9 未关闭。
