@@ -2,6 +2,8 @@
 #ifndef YOLO_COMMON_TASK_OUTPUT_BINDING_H_
 #define YOLO_COMMON_TASK_OUTPUT_BINDING_H_
 #include <limits>
+#include <cstring>
+#include <functional>
 
 #include "common/dnn_io.h"
 #include "common/task_outputs.h"
@@ -52,11 +54,21 @@ class TaskOutputs {
       if (allocated_[i]) YOLO_SYS_FREE(YOLO_SYS_MEM(tensors_[i]));
   }
   void bind(hbDNNHandle_t model, int h, int w, bool segment) {
+    bind(model, segment ? 10 : 9, [&](const std::vector<OutputShape>& shapes) {
+      heads = bind_task_heads(shapes, h, w, segment);
+    });
+  }
+  // Task-specific semantic validation precedes every allocation; physical
+  // FLOAT32/stride/capacity ownership stays shared across model families.
+  void bind(hbDNNHandle_t model, int expected_count,
+            const std::function<void(const std::vector<OutputShape>&)>& validate) {
+    if (!validate || expected_count <= 0 || expected_count > 64)
+      throw std::invalid_argument("Provide bounded output count and semantic validator.");
     if (!tensors_.empty())
       throw std::invalid_argument("Task outputs already bound.");
     int32_t count = 0;
     check(hbDNNGetOutputCount(&count, model), "Cannot query output count.");
-    if (count != (segment ? 10 : 9))
+    if (count != expected_count)
       throw std::invalid_argument("Unexpected task output count.");
     allocated_.assign(count, false);
     tensors_.resize(count);
@@ -68,7 +80,7 @@ class TaskOutputs {
       plans_.push_back(bind_float_nhwc(tensors_[i].properties));
       shapes.push_back(plans_.back().shape);
     }
-    heads = bind_task_heads(shapes, h, w, segment);
+    validate(shapes);
     bound_ = true;
   }
   void allocate() {

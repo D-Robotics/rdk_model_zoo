@@ -7,7 +7,7 @@ This directory provides a C++ stage library with owned NV12 inputs, E11/E26 deco
 <a id="supported-boards"></a>
 ## Target scope
 
-The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This increment is host-only and does not enable any board executable. S600 remains unsupported. X5 has E11 Python publications; the common shape binder does not create an X5 native implementation.
+The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This increment is host-only and does not enable any board executable. S600 remains unsupported. The new SDK adapter also accepts X5 E11s/m/l with the X5 stack; this is implemented but has not been built against a real SDK or run on a board.
 
 ## Modules and model contract
 
@@ -16,6 +16,7 @@ The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This 
 | `common/float_heads.h` | Bind ten logical roles by unique shape, independently of physical output order |
 | `inc/yoloe.h`, `src/yoloe.cpp` | Task construction and pre_process/infer/post_process/predict orchestration |
 | `inc/runner.h`, `inc/pipeline_io.h` | Backend contract, owned input/output batches and instance identity |
+| `inc/sdk_runner.h`, `src/sdk_runner.cpp` | Model loading, SDK ownership and shared input/output transport after required preflight |
 | `inc/config.h` | Protocol-specific configuration validation |
 | `common/nv12.h` | BGR-to-I420 conversion and shared split-NV12 packing |
 | `common/postprocess.h` | Family dispatch and aligned instance result assembly |
@@ -39,7 +40,7 @@ Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requir
 | Mask coefficients | Same spatial shapes, 32 channels |
 | Prototype | One `[1,160,160,32]` tensor |
 
-The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. SDK input/output ownership is not implemented in this directory yet. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; no compatible S float HBM has been compiled or verified in this migration.
+The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. SDK ownership now reuses Ultralytics `PackedModelOwner`, `Nv12Input` and `TaskOutputs`; semantic YOLOE roles are validated before allocation. Quantized outputs are rejected, not manually dequantized. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; no compatible S float HBM has been compiled or verified in this migration.
 
 <a id="dependencies"></a>
 ## Dependencies
@@ -75,7 +76,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-Build all six tests with a real OpenCV installation (no board SDK):
+Build all eight tests with a real OpenCV installation (no board SDK):
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
@@ -83,7 +84,7 @@ cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
 
-Build the reusable stage library and all six tests from its own CMake project:
+Build the reusable stage library and all eight tests from its own CMake project:
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
@@ -105,13 +106,13 @@ The output is `libyoloe_core.a`, not a board executable. For a normal embedding 
 
 Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands compile actual C++ math and float-memory utilities; they do not establish SDK ABI compatibility.
 
-For the CMake build, run all six checks with failure output:
+For the CMake build, run all eight checks with failure output:
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 ```
 
-Run the library project's six tests:
+Run the library project's eight tests:
 
 ```bash
 ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
@@ -137,7 +138,7 @@ Selection preserves the source static Top-K contract. Exact ties prefer lower sc
 <a id="interface-lifecycle"></a>
 ## Interface and lifetime
 
-`YOLOE` exclusively owns a `std::unique_ptr<Runner>`. Construction validates configuration and backend protocol; invalid construction releases the supplied backend. The backend must return ten independently owned compact semantic FLOAT32 vectors. It must perform hardware/artifact identity and SDK metadata validation before exposing inference; the base interface itself is not proof of a real SDK implementation. No concrete SDK runner is supplied yet. Test runners are explicit host fixtures.
+`YOLOE` exclusively owns a `std::unique_ptr<Runner>`. Construction validates configuration and backend protocol; invalid construction releases the supplied backend. The backend must return ten independently owned compact semantic FLOAT32 vectors. It must perform hardware/artifact identity and SDK metadata validation before exposing inference; the base interface itself is not proof of a real SDK implementation. `SdkRunner` implements the low-level SDK boundary described below. Test runners remain explicit host fixtures.
 
 `pre_process` returns an owned compact Y plane (409600 bytes) and interleaved UV plane (204800 bytes), plus actual geometry. `infer` invokes the runner exactly once and returns owned raw outputs carrying that geometry. `post_process` returns aligned `Instance` values with box/score/label/ROI mask. Prepared/raw batches from another task are rejected, including another task with the same protocol; do not cache a last-image geometry yourself. Raw outputs remain valid across subsequent calls, and result masks do not borrow SDK buffers. Use one task per inference thread; concurrent backend use is not guaranteed.
 
@@ -160,11 +161,75 @@ Configuration defaults to E11, score 0.25, NMS unset (E11 resolves 0.7), morphol
 
 The numerical headers expose pure functions and own no SDK resources. `bind_heads` returns output indices; it does not retain references. `decode_e11` and `decode_e26` borrow their ten input vectors only for the duration of the call and return owning detections with copied boxes/scores/coefficients. Callers may release input tensors after return. Internal pointer views never escape. OpenCV result matrices use reference-counted owned storage and do not alias the caller's image/prototype; retain a returned result for as long as its pixels are needed. Invalid arguments throw `std::invalid_argument`; allocation failures may propagate. There is no model loading, implicit hardware selection or hidden cross-call geometry state.
 
+## SDK backend library
+
+`SdkRunner(SdkModel, SdkPreflight)` owns exactly one model and its input/output
+allocations. `SdkModel` contains `path`, `target` and `variant`. Allowed pairs are
+X5 E11s/m/l, S100 E11s/E26n/s/m/l/x and S100P E26n/s/m/l/x; the compiled SDK stack
+must match. It checks a nonempty file, one named model, target-specific 640×640
+NV12 input and ten finite, unquantized FLOAT32 NHWC output roles. Output order
+may vary; returned vectors always use the semantic order above. No SDK buffer
+escapes the adapter. Destruction frees outputs, inputs, then the packed model;
+failed construction also releases anything already acquired. Inference uploads
+Y/UV directly, cleans input caches, submits/waits/releases the task, invalidates
+output caches and copies output data. It performs no decode or image rendering.
+
+**Preflight is mandatory and has no default.** The application supplies a
+`void(const SdkModel&)` callback that verifies the actual board, selected
+publication or custom float SHA-256, and vocabulary/conversion provenance. It
+runs before any SDK call; throwing stops construction. The adapter's shape,
+target/variant and stack checks cannot prove those identities. A no-op callback
+is used only by host fixtures and is not a valid production policy. The
+canonical launcher supplying this policy is still pending; this API alone is
+not a ready-to-run customer entry.
+
+The second complete API example also compiles in host verification. Its caller
+must supply the described policy, not a placeholder that silently accepts:
+
+```cpp
+#include "sdk_runner.h"
+#include "yoloe.h"
+yoloe::Result process_sdk_image(const cv::Mat& image, yoloe::SdkModel model,
+                                yoloe::SdkPreflight preflight) {
+    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(preflight));
+    yoloe::Config config;
+    config.protocol = backend->protocol();
+    yoloe::YOLOE task(config, std::move(backend));
+    return task.predict(image);
+}
+```
+
+To build the SDK library on a matching board SDK installation (not executed in
+this host-only round):
+
+```sh
+cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-lib \
+  -DYOLOE_BUILD_SDK=ON
+cmake --build /tmp/yoloe-board-lib --parallel 4
+```
+
+This produces `libyoloe_core.a` and `libyoloe_sdk.a`, not an executable. With
+CMake `add_subdirectory`, link the application to `yoloe_sdk`. Set
+`YOLOE_DNN_INCLUDE_DIR` to the directory containing `dnn/hb_dnn.h` and
+`YOLOE_DNN_LIBRARY` to the matching DNN library if discovery fails. UCP headers
+also require `YOLOE_UCP_LIBRARY`; exposing both hbSys and UCP headers is rejected.
+Do not use test-double include paths for a deployable library. OpenCV development
+files are still required. The default host build leaves `YOLOE_BUILD_SDK=OFF`.
+
+The OpenCV host configuration now runs eight tests: the existing six plus X5
+and UCP adapter tests with production code instrumented by ASan/UBSan. They
+cover preflight rejection before SDK calls, metadata/precision rejection before
+allocation, partial allocation and failed initialization cleanup, task/cache
+errors, semantic output order and independence across inference calls. These
+use narrow API doubles, not vendor SDK headers/libraries.
+
 <a id="results-interpretation"></a>
 ## Verification and next integration
+
+[SDK adapter evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-sdk-runner-review.md) records resource/metadata tests and their host-only limits.
 
 [Stage/NV12 evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-stages-review.md) covers actual byte comparisons, ownership/error paths and compiled API examples; it does not certify a board backend.
 
 [Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records the earlier E26 checks. The [E11 extension evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md) records all three native tests, E26 regression and real E11 s/m/l ONNX comparisons. The E26n candidate comparison covers both single- and multi-label decoding against Python. [Geometry/mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md) separately records actual OpenCV compilation and full ROI pixel comparison. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
 
-The remaining native work is explicit: concrete SDK runner/resource ownership, target and artifact identity gates, CLI entry, and complete board build/run documentation. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
+The remaining native work is explicit: a canonical implementation of the target/artifact preflight policy, CLI entry and complete executable build/run documentation. The adapter API does not close those requirements. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.

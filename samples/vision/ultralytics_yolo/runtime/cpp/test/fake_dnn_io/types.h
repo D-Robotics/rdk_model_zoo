@@ -41,12 +41,19 @@ struct hbUCPSchedParam {
 };
 constexpr unsigned long long HB_UCP_BPU_CORE_ANY = 0xffff;
 #define HB_UCP_INITIALIZE_SCHED_PARAM(p) (*(p) = {})
+int hbDNNInitializeFromFiles(void **, const char **, int);
+int hbDNNRelease(void *);
+int hbDNNGetModelNameList(const char ***, int *, void *);
+int hbDNNGetModelHandle(void **, void *, const char *);
+int hbDNNGetOutputCount(int32_t *, hbDNNHandle_t);
+int hbDNNGetOutputTensorProperties(hbDNNTensorProperties *, hbDNNHandle_t, int);
 int hbDNNGetInputCount(int32_t *, hbDNNHandle_t);
 int hbDNNGetInputTensorProperties(hbDNNTensorProperties *, hbDNNHandle_t, int);
 int test_allocate(TestMemory *, int);
 int test_free(TestMemory *);
 int test_flush(TestMemory *, int);
 int test_create(void **);
+int test_infer(void **, hbDNNTensor *, hbDNNTensor *);
 int test_wait(void *);
 int test_release(void *);
 int test_submit(void *, hbUCPSchedParam *);
@@ -60,12 +67,25 @@ inline int hbUCPMallocCached(TestMemory *m, int n, int) {
 }
 inline int hbUCPFree(TestMemory *m) { return test_free(m); }
 inline int hbUCPMemFlush(TestMemory *m, int f) { return test_flush(m, f); }
-inline int hbDNNInfer(void **t, hbDNNTensor **, hbDNNTensor *, void *,
-                      hbDNNInferCtrlParam *) {
+inline int hbDNNInfer(void **t, hbDNNTensor **outputs, hbDNNTensor *inputs,
+                      void *, hbDNNInferCtrlParam *) {
+#ifdef TEST_TENSOR_AWARE_INFER
+  return test_infer(t, *outputs, inputs);
+#else
+  (void)outputs;
+  (void)inputs;
   return test_create(t);
+#endif
 }
-inline int hbDNNInferV2(void **t, hbDNNTensor *, hbDNNTensor *, void *) {
+inline int hbDNNInferV2(void **t, hbDNNTensor *outputs, hbDNNTensor *inputs,
+                        void *) {
+#ifdef TEST_TENSOR_AWARE_INFER
+  return test_infer(t, outputs, inputs);
+#else
+  (void)outputs;
+  (void)inputs;
   return test_create(t);
+#endif
 }
 inline int hbDNNWaitTaskDone(void *t, int) { return test_wait(t); }
 inline int hbUCPWaitTaskDone(void *t, int) { return test_wait(t); }

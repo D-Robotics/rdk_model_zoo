@@ -7,7 +7,7 @@
 <a id="supported-boards"></a>
 ## 目标范围
 
-原始原生能力为 S100 E11s 及 S100/S100P E26 n/s/m/l/x。本增量仅验证主机模块，没有启用任何板端可执行程序。S600 仍不支持。X5 发布了 E11 Python 制品；共用形状绑定模块本身不构成 X5 原生实现。
+原始原生能力为 S100 E11s 及 S100/S100P E26 n/s/m/l/x。本增量仅验证主机模块，没有启用任何板端可执行程序。S600 仍不支持。新增 SDK 适配器也接受 X5 SDK 下的 E11s/m/l；这部分已有实现，但未使用真实 SDK 构建或在板端运行。
 
 ## 模块与模型契约
 
@@ -16,6 +16,7 @@
 | `common/float_heads.h` | 按唯一形状绑定十个逻辑角色，不依赖物理输出顺序 |
 | `inc/yoloe.h`、`src/yoloe.cpp` | 构造及 pre_process/infer/post_process/predict 编排 |
 | `inc/runner.h`、`inc/pipeline_io.h` | 后端契约、独立输入输出和实例身份 |
+| `inc/sdk_runner.h`、`src/sdk_runner.cpp` | 必需预检之后的模型加载、SDK 资源及共用输入输出传输 |
 | `inc/config.h` | 分协议配置校验 |
 | `common/nv12.h` | BGR 转 I420 及共用 split-NV12 打包 |
 | `common/postprocess.h` | 家族分派及对齐实例结果组装 |
@@ -39,7 +40,7 @@
 | 掩码系数 | 相同空间形状，32 通道 |
 | Prototype | 单个 `[1,160,160,32]` 张量 |
 
-调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。本目录尚未实现 SDK 输入输出资源管理。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；本轮迁移尚未编译或验证兼容的 S 浮点 HBM。
+调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。SDK 管理已复用 Ultralytics 的 `PackedModelOwner`、`Nv12Input` 和 `TaskOutputs`；YOLOE 语义角色在分配前校验，量化输出直接拒绝，不在后处理手动反量化。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；本轮迁移尚未编译或验证兼容的 S 浮点 HBM。
 
 <a id="dependencies"></a>
 ## 依赖
@@ -75,7 +76,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-使用真实 OpenCV 安装构建全部六个测试（不需要板端 SDK）：
+使用真实 OpenCV 安装构建全部八个测试（不需要板端 SDK）：
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
@@ -83,7 +84,7 @@ cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
 
-从独立 CMake 项目构建可复用阶段库及全部六个测试：
+从独立 CMake 项目构建可复用阶段库及全部八个测试：
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
@@ -105,13 +106,13 @@ cmake --build /tmp/yoloe-stage-core --parallel 4
 
 成功时退出码为 0、无输出。解码测试分配完整的 4585 类张量，开启 sanitizer 时应预留数百 MB 内存。断言/契约异常及 sanitizer 报错均为失败。这些命令实际编译 C++ 数学及浮点内存工具，不证明真实 SDK ABI 兼容。
 
-对 CMake 构建执行全部六个检查并显示失败输出：
+对 CMake 构建执行全部八个检查并显示失败输出：
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 ```
 
-执行库项目的六个测试：
+执行库项目的八个测试：
 
 ```bash
 ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
@@ -137,7 +138,7 @@ ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-`YOLOE` 独占一个 `std::unique_ptr<Runner>`。构造时验证配置和后端协议，构造失败也会释放传入后端。后端必须返回十个独立拥有存储的紧凑语义 FLOAT32 向量，并在推理前完成硬件/制品身份与 SDK metadata 校验；基类接口本身不证明真实 SDK 实现。当前尚未提供具体 SDK runner，测试 runner 均为显式主机夹具。
+`YOLOE` 独占一个 `std::unique_ptr<Runner>`。构造时验证配置和后端协议，构造失败也会释放传入后端。后端必须返回十个独立拥有存储的紧凑语义 FLOAT32 向量，并在推理前完成硬件/制品身份与 SDK metadata 校验；基类接口本身不证明真实 SDK 实现。`SdkRunner` 已实现下述低层 SDK 边界；测试 runner 仍为显式主机夹具。
 
 `pre_process` 返回独立紧凑 Y 平面（409600 字节）、交错 UV 平面（204800 字节）和实际几何；`infer` 恰好调用 runner 一次，返回独立原始输出并携带对应几何；`post_process` 返回框/分数/类别/ROI 掩码对齐的 `Instance`。不同 task 的 prepared/raw 批次不能串用，即便协议相同也会拒绝；不用自行缓存上一张图的几何。原始输出跨后续调用仍有效，结果掩码不借用 SDK 缓冲。每个推理线程使用一个 task，不承诺后端并发安全。
 
@@ -160,11 +161,66 @@ yoloe::Result process_image(yoloe::Config config,
 
 数值模块头文件提供纯函数，不管理 SDK 资源。`bind_heads` 返回输出索引，不保留引用。`decode_e11` 和 `decode_e26` 仅在调用期间借用十个输入向量，返回拥有独立框、分数和系数的检测结果；返回后调用方可释放输入张量。内部指针视图不逃逸。OpenCV 结果矩阵拥有引用计数管理的独立存储，不与调用方图片/prototype 别名；需要像素时应保留返回对象。参数非法时抛出 `std::invalid_argument`，内存分配失败可能向外传播。不加载模型、不隐式选择硬件，也不保存跨调用的图片几何状态。
 
+## SDK 后端库
+
+`SdkRunner(SdkModel, SdkPreflight)` 持有一个模型及其输入输出分配。
+`SdkModel` 包含 `path`、`target`、`variant`；允许 X5 E11s/m/l、S100
+E11s/E26n/s/m/l/x、S100P E26n/s/m/l/x，且必须与编译使用的 SDK 栈一致。
+它检查非空模型文件、唯一具名模型、目标对应的 640×640 NV12 输入，以及十个
+有限、无量化 FLOAT32 NHWC 输出角色。物理输出顺序可以不同，返回向量始终遵循
+上面的语义顺序，不暴露 SDK 缓冲区。析构顺序为输出、输入、模型；构造失败也会
+释放已获取资源。推理直接上传 Y/UV、清理输入 cache、提交/等待/释放任务，随后
+使输出 cache 可读并复制输出；不做解码或绘图。
+
+**预检回调必填，没有默认值。** 应用提供 `void(const SdkModel&)`，核验实际
+板卡、选定的发布制品或自编译浮点 SHA-256，以及词表/转换来源。回调先于任何
+SDK 调用执行，抛异常即停止构造。适配器的形状、target/variant 和 SDK 栈检查
+不能证明这些身份。主机夹具中的空操作回调不能作为生产策略。提供统一策略的
+launcher 仍待完成，这个 API 本身还不是客户可直接运行的统一入口。
+
+第二个完整 API 示例同样在主机验证中编译；调用者必须传入上述策略，不能用
+静默放行的占位回调：
+
+```cpp
+#include "sdk_runner.h"
+#include "yoloe.h"
+yoloe::Result process_sdk_image(const cv::Mat& image, yoloe::SdkModel model,
+                                yoloe::SdkPreflight preflight) {
+    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(preflight));
+    yoloe::Config config;
+    config.protocol = backend->protocol();
+    yoloe::YOLOE task(config, std::move(backend));
+    return task.predict(image);
+}
+```
+
+在安装了匹配板端 SDK 的环境中构建后端库（本轮主机工作未执行真实 SDK 构建）：
+
+```sh
+cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-lib \
+  -DYOLOE_BUILD_SDK=ON
+cmake --build /tmp/yoloe-board-lib --parallel 4
+```
+
+产物为 `libyoloe_core.a` 和 `libyoloe_sdk.a`，不含可执行程序。通过 CMake
+`add_subdirectory` 集成时将应用链接到 `yoloe_sdk`。自动查找失败时，将
+`YOLOE_DNN_INCLUDE_DIR` 指向包含 `dnn/hb_dnn.h` 的目录，
+`YOLOE_DNN_LIBRARY` 指向匹配的 DNN 库；UCP 头还要求 `YOLOE_UCP_LIBRARY`。
+同时暴露 hbSys/UCP 头会拒绝构建。不要给部署库使用测试替身头；仍需 OpenCV
+开发文件，缺省主机构建保持 `YOLOE_BUILD_SDK=OFF`。
+
+OpenCV 主机配置现在运行八项测试：原有六项，加上使用 ASan/UBSan 检查生产代码
+的 X5/UCP 适配器测试。覆盖先于 SDK 的预检拒绝、先于分配的元数据/精度拒绝、
+部分分配和初始化失败清理、任务/cache 错误、语义输出顺序及跨调用独立持有。
+使用的是精简 API 替身，不是厂商 SDK 头或库。
+
 <a id="results-interpretation"></a>
 ## 验证与后续集成
+
+[SDK 适配器证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-sdk-runner-review.md)记录资源/元数据测试及其主机验证边界。
 
 [阶段/NV12 证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-stages-review.md)覆盖实际字节对照、生命周期/异常路径及 API 示例编译，不据此认证板端后端。
 
 [实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。[几何/掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)另行记录真实 OpenCV 编译及完整 ROI 像素对照。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
 
-后续仍需完成具体 SDK runner/资源管理、目标与制品身份门禁、CLI 入口及完整板端构建运行说明。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
+后续仍需完成目标/制品预检策略的统一实现、CLI 入口及完整可执行程序构建运行说明；适配器 API 不代表这些要求已经关闭。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
