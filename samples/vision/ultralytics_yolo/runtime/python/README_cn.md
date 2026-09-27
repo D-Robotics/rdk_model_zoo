@@ -201,7 +201,7 @@ print(boxes.shape, scores.shape, class_ids.shape)
 `.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
 元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
 时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
-DFL 分割也已采用此传输接口，完整例子见下文；DFL 姿态见下文；分类、OBB 与 YOLO26 分割的阶段职责审计仍在进行。
+DFL 分割也已采用此传输接口，完整例子见下文；DFL 姿态与分类见下文；OBB 与 YOLO26 分割的阶段职责审计仍在进行。
 
 ```text
 main.py
@@ -331,6 +331,54 @@ X5 旧类名适配器仍返回 `(boxes, scores, keypoints)`，最后一项为 `(
 x/y/概率。S 独立 YOLO11Pose 的 logits 返回接口已取消收编，不提供额外兼容模式。
 主机测试对照固定 X5 源码的四组尺寸/缩放案例，并覆盖交错 context、NMS 配对、
 空结果、极端 logits 和缓冲区复用；这些均不是板测或数据集精度验证。
+
+<a id="classification-api"></a>
+## 分类阶段接口
+
+YOLOv8、YOLO11 和 YOLO26 共用分类流程。在匹配的 S600 板卡上，从仓库根目录运行
+下例；先按[模型准备](../../model/README_cn.md)获取制品，并替换绝对路径。
+输入尺寸以 SDK metadata 为准，文件名不能证明是 224 还是 640。尤其 S100/S100P
+旧制品 ID 中的 `640` 对应下载 URL 中的 `224`，保留发布身份并读取实际 metadata。
+
+```python
+from pathlib import Path
+import cv2
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_cls import YoloCls, YoloClsConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+classifier = YoloCls(YoloClsConfig(
+    model_path="/models/yolo11n_cls_nashp_224x224_nv12.hbm",
+    platform=resolve_platform("s600"),
+    resize_type=0,
+    topk=5,
+))
+inputs = classifier.pre_process(image)
+raw = classifier.forward(inputs)
+ranked = classifier.post_process(raw)
+assert ranked == classifier.predict(image)
+print(ranked)
+```
+
+`pre_process` 返回嵌套 NV12 输入字典，分类无需携带几何还原信息。`forward` 只调用
+共用 runner 一次，`raw["logits"]` 保留物理浮点数组及 SDK 缓冲区引用。下一次推理前
+完成后处理，或显式复制需要保存的 raw 数组。必须恰好有一个输出：1000 类向量及可选
+单例维度，例如 `(1,1000)`、`(1,1000,1,1)`；多维输出的首维 batch 必须为 1。
+额外输出、空间特征图、批输入、缺失
+shape/dtype metadata、整数输出和 SCALE 描述均拒绝。这项更严格的 SDK 边界尚未板测。
+
+`post_process` 执行一次 SciPy Softmax 和源代码的 NumPy 降序排序，返回独立的
+Python `(int 类别 ID, float 概率)` 列表。精确平局沿用原排序行为，不新增确定性规则。
+Top-K 必须是正整数（不能是布尔值），超过类别数则返回全部类别。零、负数和非整数
+现在明确报错，不再接受 Python 切片的隐含行为。阶段内部不加载标签、不绘图、不写文件；
+CLI 负责加载 ImageNet 标签并打印结果。
+
+库接口所有系列/目标默认拉伸（`resize_type=0`）；CLI 对 X5 YOLOv8/11 分类显式
+选择 letterbox，对 S 选择拉伸，YOLO26 全目标拉伸。比较库和 CLI 时须统一该参数。
+主机测试实际执行固定 X5/S 源代码的前后处理，并使用合成输入对照，不代表数据集精度。
 
 <a id="troubleshooting"></a>
 ## 故障排查

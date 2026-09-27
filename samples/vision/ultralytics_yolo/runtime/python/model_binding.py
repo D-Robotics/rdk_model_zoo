@@ -267,6 +267,21 @@ class LTRBDetectionContract:
 
 
 @dataclass(frozen=True)
+class ClassificationContract:
+    """One floating logit vector; singleton physical axes carry no extra samples."""
+
+    classes: int = 1000
+    task: str = "classify"
+    input_roles: Mapping[str, str] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if isinstance(self.classes, bool) or not isinstance(self.classes, int) or self.classes < 2:
+            raise BindingError("Classification classes must be an integer greater than one.")
+        if self.task != "classify":
+            raise BindingError("ClassificationContract task must be 'classify'.")
+
+
+@dataclass(frozen=True)
 class ModelSelection:
     """Read-only selection passed from an entrypoint to the runner factory."""
 
@@ -288,6 +303,10 @@ class ModelSelection:
             object.__setattr__(self, "input_shape", (int(self.input_shape[0]),
                                                        int(self.input_shape[1])))
         if self.contract is not None:
+            if getattr(self.contract, "task", None) == "classify":
+                if not all(hasattr(self.contract, name) for name in ("classes", "input_roles")):
+                    raise BindingError("Classification contract requires classes and input_roles.")
+                return
             required = ("classes", "strides", "required_roles")
             if getattr(self.contract, "box_encoding", None) == "ltrb":
                 required += ("box_channels",)
@@ -413,6 +432,29 @@ def _role_shape_descriptor(shape: Tuple[int, ...],
 def _runtime_quantization(metadata: Any, name: str) -> Any:
     values = getattr(metadata, "output_quantization", {}) or {}
     return values.get(name) if isinstance(values, Mapping) else None
+
+
+def _bind_classification_output(contract, metadata):
+    """Reject extra outputs, batches, spatial maps, integer logits and missing metadata."""
+    names = tuple(metadata.output_names)
+    if len(names) != 1:
+        raise BindingError("Classification requires exactly one logit output.")
+    name = names[0]
+    if name not in metadata.output_shapes or name not in metadata.output_dtypes:
+        raise BindingError("Classification requires output shape and dtype metadata.")
+    try:
+        shape = normalize_shape(metadata.output_shapes[name], "classification output")
+        dtype = normalize_dtype(metadata.output_dtypes[name])
+        require_floating_output(dtype, _runtime_quantization(metadata, name), name)
+    except TensorContractError as exc:
+        raise BindingError(str(exc)) from exc
+    if (not 1 <= len(shape) <= 4 or (len(shape) > 1 and shape[0] != 1)
+            or tuple(n for n in shape if n != 1) != (contract.classes,)):
+        raise BindingError(f"Classification output must contain one {contract.classes}-class vector, got {shape}.")
+    return OutputBinding(model_name=metadata.model_name, role_to_name={"logits": name},
+                         shapes={name: shape}, dtypes={name: dtype},
+                         expected_shapes={"logits": shape}, channels={"logits": contract.classes},
+                         layouts={"logits": "NHWC"}, runtime_order=names)
 
 
 def _bind_output_roles(selection: ModelSelection,
@@ -570,8 +612,9 @@ def bind_model(selection: ModelSelection,
         )
     except TensorContractError as exc:
         raise BindingError(str(exc)) from exc
-    output_adapter = _bind_output_roles(selection, contract, metadata,
-                                        input_adapter)
+    output_adapter = (_bind_classification_output(contract, metadata)
+                      if contract.task == "classify" else
+                      _bind_output_roles(selection, contract, metadata, input_adapter))
     return ModelBinding(selection=selection, contract=contract, metadata=metadata,
                         input_adapter=input_adapter, output_adapter=output_adapter)
 
@@ -579,6 +622,7 @@ def bind_model(selection: ModelSelection,
 __all__ = [
     "BindingError",
     "DFLDetectionContract",
+    "ClassificationContract",
     "DFLSegmentationContract",
     "DFLPoseContract",
     "LTRBDetectionContract",

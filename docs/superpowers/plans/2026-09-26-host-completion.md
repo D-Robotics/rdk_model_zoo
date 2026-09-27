@@ -75,3 +75,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-27：DFL/YOLO26 检测已将反量化移出 forward，补齐 SDK 逐通道量化 metadata，并以 PreparedDetection 显式携带几何；旧 stage 访问保留无状态适配。详见 [阶段职责记录](../../releases/unified-migration/2026-09-27-yolo-stage-purity-review.md)。上一轮 B9 台账名称导致的 R-SCOPE 检查失败及错误通过汇总已如实更正。其余 Ultralytics 任务、原生能力、YOLOE 与 H0–H9 全范围仍继续，不提前关闭。
 
 2026-09-27：DFL 分割改用共用 raw runner 与显式几何，补回 S YOLO11 反量化并修正边界 mask 负切片；双语库示例实际在主机夹具执行。见 [分割记录](../../releases/unified-migration/2026-09-27-yolo-segmentation-review.md)。姿态/分类/OBB/YOLO26 分割、原生能力、YOLOE 和 H0–H9 剩余事项仍开放；板端/真实 SDK 未验证。
+
+2026-09-28：Ultralytics YOLOv8/11/26 分类接入共用 raw runner、严格单输出 metadata 绑定与独立数值后处理；双语 README 新增完整分类 API 示例和 CLI/库 resize 差异。固定 X5/S 源前后处理对照见[分类记录](../../releases/unified-migration/2026-09-28-yolo-classification-review.md)。仅主机验证，真实 SDK/板测 not-run；其余任务职责、原生代码及 H0–H9 全范围继续。

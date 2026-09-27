@@ -41,6 +41,11 @@ class Yolo26Contracts(unittest.TestCase):
                         # The detector's explicit host seam still exercises
                         # full metadata binding; it does not claim a host board.
                         runtime=Model(Config('stub',platform=profile),runtime_loader=lambda:sdk)
+                    elif task=='cls':
+                        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, ModelSelection
+                        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+                        runner=build_runner(ModelSelection('stub',target=platform,task='classify',contract=ClassificationContract()),runtime_loader=lambda:sdk)
+                        runtime=Model(Config('stub',platform=profile),runner=runner)
                     else:
                         with patch('yolo_runtime.load_hbm_runtime',return_value=sdk):
                             runtime=Model(Config('stub',platform=profile))

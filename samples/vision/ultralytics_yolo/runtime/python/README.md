@@ -217,7 +217,7 @@ access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
 geometry without cached state. With both dimensions and a transform supplied,
 they must agree. The former `last_transform`/`last_image_transform` attributes
 are removed; keep the prepared object instead. DFL segmentation now shares this transport; see its complete example below.
-DFL pose is documented below; classification, OBB and YOLO26 segmentation audits remain ongoing.
+DFL pose and classification are documented below; OBB and YOLO26 segmentation audits remain ongoing.
 
 ```text
 main.py
@@ -367,6 +367,63 @@ retired, with no additional compatibility mode. Host tests compare four
 size/resize cases against fixed X5 source and cover interleaved context, NMS
 pairing, empty results, extreme logits and buffer reuse. This is neither board
 validation nor a dataset accuracy measurement.
+
+<a id="classification-api"></a>
+## Classification stages
+
+YOLOv8, YOLO11 and YOLO26 use the same classification pipeline. Run this example
+from the repository root on the matching S600 board, replacing the absolute path
+with the artifact prepared through the [model instructions](../../model/README.md).
+The SDK's metadata determines the input geometry; a filename is not evidence of
+224 or 640 pixels. In particular, S100/S100P legacy asset IDs containing `640`
+link to URLs containing `224`; keep the published identity and inspect metadata.
+
+```python
+from pathlib import Path
+import cv2
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_cls import YoloCls, YoloClsConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+classifier = YoloCls(YoloClsConfig(
+    model_path="/models/yolo11n_cls_nashp_224x224_nv12.hbm",
+    platform=resolve_platform("s600"),
+    resize_type=0,
+    topk=5,
+))
+inputs = classifier.pre_process(image)
+raw = classifier.forward(inputs)
+ranked = classifier.post_process(raw)
+assert ranked == classifier.predict(image)
+print(ranked)
+```
+
+`pre_process` returns the nested NV12 input dictionary, with no geometry carrier
+needed for classification. `forward` calls the shared runner once and returns
+`raw["logits"]` as the unchanged physical floating array, borrowing SDK storage.
+Complete postprocessing before another inference or explicitly copy retained raw
+arrays. Exactly one output is required: one 1000-class vector with optional
+singleton axes (for example `(1,1000)` or `(1,1000,1,1)`); multidimensional
+outputs require a leading batch size of one. Extra outputs, spatial
+maps, batches, missing shape/dtype metadata, integer outputs and SCALE descriptors
+are rejected. Real SDK compatibility for this stricter boundary is not board-tested.
+
+`post_process` applies one SciPy Softmax and the source descending NumPy sort,
+then returns independent Python `(int class_id, float probability)` pairs. Exact
+ties retain the existing sort behavior; there is no new deterministic tie rule.
+Top-K must be a positive integer (not a boolean); values above the class count
+return all classes. Zero, negative and noninteger values now raise an error
+instead of accepting Python slice behavior. No labels, drawing or file writes
+occur inside the stages. The CLI loads ImageNet labels and prints the results.
+
+The library defaults to stretch (`resize_type=0`) for every family/target. The
+CLI explicitly selects letterbox for X5 YOLOv8/11 classification, stretch for S,
+and stretch for YOLO26 everywhere. Pass the same resize setting when comparing
+library and CLI results. Host tests execute the pinned X5/S preprocessing and
+postprocessing on synthetic inputs; this does not establish dataset accuracy.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

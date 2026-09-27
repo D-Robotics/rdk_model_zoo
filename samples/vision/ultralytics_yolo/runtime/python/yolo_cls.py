@@ -12,227 +12,106 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# flake8: noqa: E501
-# flake8: noqa: E402
+"""Classification stages: image preparation, raw inference, Softmax/Top-K."""
 
-"""Provide a YOLO classification inference wrapper and pipeline utilities.
-
-This module defines a lightweight YOLO classification runtime wrapper built
-on HBM runtime. It supports YOLO classification models (v8-cls and v11-cls),
-producing top-K class predictions with softmax probabilities.
-
-Key Features:
-    - YoloClsConfig dataclass for configuring model parameters.
-    - YoloCls class providing pre_process, forward, post_process, predict,
-      and __call__ methods.
-    - Top-K classification with softmax probability computation.
-
-Typical Usage:
-    >>> from yolo_cls import YoloCls, YoloClsConfig
-    >>> cfg = YoloClsConfig(model_path="/path/to/yolo11n_cls.hbm")
-    >>> model = YoloCls(cfg)
-    >>> results = model(img)  # List of (class_id, probability)
-
-Notes:
-    - Requires hbm_runtime to be installed in the deployment environment.
-    - Input images are expected in BGR format by default.
-    - Classification models use stretch resize (resize_type=0) by default.
-"""
-
-import os
-import sys
-import numpy as np
-from scipy.special import softmax
 from dataclasses import dataclass
-from typing import Optional, Dict, List, Tuple
-
-# Make the sample-local helper modules importable regardless of the working
-# directory the sample is started from.
-_PYTHON_DIR = os.path.dirname(os.path.abspath(__file__))
-if _PYTHON_DIR not in sys.path:
-    sys.path.insert(0, _PYTHON_DIR)
-
-from rdk_yolo_utils import preprocess as pre_utils
-from rdk_yolo_utils import postprocess as post_utils
-from yolo_platform import PlatformProfile
-from yolo_runtime import open_model, require_dfl_bins, require_square_grid
+from typing import Optional, Tuple
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import PlatformProfile
+from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+    ClassificationContract,
+    ModelSelection,
+)
+from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
+    _prepare_image,
+    _forward_runner,
+    _set_scheduling_params,
+    _size_from_runner,
+)
+from samples.vision.ultralytics_yolo.runtime.python.classification_decode import (
+    classification_topk,
+)
 
 
 @dataclass
 class YoloClsConfig:
-    """Configuration for initializing the YoloCls model.
+    """Local .bin/.hbm path, target, resize (0 stretch/1 letterbox), and Top-K.
 
-    This dataclass stores the model path and all runtime parameters required
-    for preprocessing, inference, and postprocessing in the YOLO classification
-    pipeline. It applies to YOLO classification models (v8-cls and v11-cls).
-
-    Attributes:
-        model_path: Path to the compiled YOLO-Cls `.hbm` model.
-        topk: Number of top classes to return. Defaults to 5.
-        resize_type: Image resize strategy (0=stretch, 1=letterbox).
-            Classification models typically use stretch resize.
+    Library default is stretch on every target; the CLI explicitly applies its
+    family/platform resize policy. Published models have 1000 ImageNet classes.
     """
+
     model_path: str
     platform: Optional[PlatformProfile] = None
     input_shape: Optional[Tuple[int, int]] = None
     topk: int = 5
     resize_type: int = 0
+    contract: Optional[ClassificationContract] = None
 
 
 class YoloCls:
-    """YOLO classification wrapper based on HB_HBMRuntime.
+    """A single-image classifier with validated floating raw output transport."""
 
-    This class provides a unified inference pipeline for YOLO classification
-    models (v8-cls and v11-cls), including input preprocessing, model
-    execution, and postprocessing with softmax and top-K selection.
-
-    Attributes:
-        model: Loaded HBM runtime model instance.
-        model_name: Name of the first loaded model.
-        input_names: Input tensor name list.
-        output_names: Output tensor name list.
-        input_shapes: Input tensor shape dictionary.
-        input_h: Model input height (pixels).
-        input_w: Model input width (pixels).
-        cfg: Model configuration object.
-    """
-
-    def __init__(self, config: YoloClsConfig):
-        """Initialize the YoloCls model with the given configuration.
-
-        Args:
-            config: Configuration object containing model path and all inference
-                parameters. All field semantics are defined in `YoloClsConfig`.
-        """
+    def __init__(self, config: YoloClsConfig, runner=None):
         self.cfg = config
-        self.model, self.input_adapter = open_model(
-            config, config.platform, config.input_shape)
+        requested = config.contract or ClassificationContract()
+        if runner is None:
+            runner = build_runner(
+                ModelSelection(
+                    config.model_path,
+                    target=getattr(config.platform, "key", None),
+                    platform=config.platform,
+                    task="classify",
+                    contract=requested,
+                    input_shape=config.input_shape,
+                )
+            )
+        self.runner = runner
+        self.binding = getattr(runner, "binding", None)
+        if self.binding is None or self.binding.contract.task != "classify":
+            raise ValueError("YoloCls requires a runner with a classification binding.")
+        self.contract = self.binding.contract
+        self.model = getattr(runner, "model", runner)
+        self.model_name = runner.model_name
+        self.input_adapter = runner.input_adapter
+        self.input_h, self.input_w = _size_from_runner(runner, config)
+        self.input_size = (self.input_h, self.input_w)
+        self.input_names = tuple(runner.input_names)
+        self.output_names = tuple(runner.output_names)
+        self.input_shapes = dict(runner.input_shapes)
 
-        self.model_name = self.input_adapter.model_name
-        self.input_names = self.input_adapter.input_names
-        self.output_names = self.model.output_names[self.model_name]
-        self.input_shapes = self.model.input_shapes[self.model_name]
+    def set_scheduling_params(self, priority=None, bpu_cores=None):
+        """Delegate explicit scheduling values to the runtime boundary."""
+        _set_scheduling_params(
+            self.runner, self.model, self.model_name, priority, bpu_cores
+        )
 
-        # Model input resolution (H, W) validated against the input protocol
-        self.input_h = self.input_adapter.input_height
-        self.input_w = self.input_adapter.input_width
+    def pre_process(self, img, image_format="BGR"):
+        """Validate BGR uint8 HxWx3 and return the bound nested NV12 input map."""
+        tensors, _ = _prepare_image(
+            self.runner,
+            self.input_adapter,
+            self.input_size,
+            self.cfg.resize_type,
+            img,
+            image_format,
+        )
+        return tensors
 
-    def set_scheduling_params(self,
-                              priority: Optional[int] = None,
-                              bpu_cores: Optional[list] = None) -> None:
-        """Configure inference scheduling parameters.
+    def forward(self, input_tensor):
+        """Execute once; return the borrowed physical floating logits unchanged."""
+        return _forward_runner(self.runner, input_tensor)
 
-        Args:
-            priority: Inference priority in the range [0, 255].
-            bpu_cores: List of BPU core indices used for inference.
+    def post_process(self, outputs, topk=None):
+        """Validate the raw output and return independent (class ID, probability) pairs."""
+        logits = self.binding.read_raw_outputs(outputs)["logits"]
+        return classification_topk(logits, self.cfg.topk if topk is None else topk)
 
-        Returns:
-            None
-        """
-        kwargs = {}
-        if priority is not None:
-            kwargs["priority"] = {self.model_name: priority}
-        if bpu_cores is not None:
-            kwargs["bpu_cores"] = {self.model_name: bpu_cores}
+    def predict(self, img, image_format="BGR", topk=None):
+        """Compose the three stages for one image."""
+        return self.post_process(
+            self.forward(self.pre_process(img, image_format)), topk
+        )
 
-        if kwargs:
-            self.model.set_scheduling_params(**kwargs)
-
-    def pre_process(self,
-                    img: np.ndarray,
-                    image_format: Optional[str] = "BGR"
-                    ) -> Dict[str, Dict[str, np.ndarray]]:
-        """Preprocess an input image into model-required tensor format.
-
-        The input image is resized and converted from BGR to NV12
-        (Y and UV planes), then the platform adapter binds either one packed
-        input or two NHWC Y/UV inputs.
-
-        Args:
-            img: Input image array in BGR format.
-            image_format: Input image format. Currently only `"BGR"` is supported.
-
-        Returns:
-            A nested input tensor dictionary: `{model_name: {input_name: tensor}}`.
-
-        Raises:
-            ValueError: If an unsupported image format is provided.
-        """
-        if image_format != "BGR":
-            raise ValueError(f"Unsupported image_format: {image_format}")
-
-        resized_img = pre_utils.resized_image(
-            img, self.input_w, self.input_h, self.cfg.resize_type)
-        y, uv = pre_utils.bgr_to_nv12_planes(resized_img)
-
-        return self.input_adapter.build(y, uv)
-
-    def forward(self, input_tensor: Dict[str, Dict[str, np.ndarray]]) -> Dict:
-        """Execute model inference.
-
-        Args:
-            input_tensor: Preprocessed input tensor dictionary produced by
-                `pre_process()`.
-
-        Returns:
-            A dictionary containing raw output tensors returned by the runtime.
-        """
-        return self.model.run(input_tensor)
-
-    def post_process(self,
-                     outputs: Dict,
-                     topk: Optional[int] = None) -> List[Tuple[int, float]]:
-        """Process raw logits to get Top-K classification results.
-
-        The output tensor is reshaped and passed through softmax
-        to obtain probabilities. The top-K classes are returned.
-
-        Args:
-            outputs: Raw output tensors from inference.
-            topk: Number of top results to return. If `None`, uses config value.
-
-        Returns:
-            List of `(class_id, probability)` sorted by probability descending.
-        """
-        topk = topk if topk is not None else self.cfg.topk
-
-        logits = outputs[self.model_name][self.output_names[0]].reshape(-1)
-
-        probs = softmax(logits)
-        top_indices = np.argsort(probs)[::-1][:topk]
-        return [(int(idx), float(probs[idx])) for idx in top_indices]
-
-    def predict(self,
-                img: np.ndarray,
-                image_format: str = "BGR",
-                topk: Optional[int] = None) -> List[Tuple[int, float]]:
-        """Run the complete classification pipeline on a single image.
-
-        This method internally performs preprocessing, inference, and
-        postprocessing.
-
-        Args:
-            img: Input image array in BGR format.
-            image_format: Input image format. Currently supports `"BGR"`.
-            topk: Number of top results to return.
-
-        Returns:
-            List of (class_id, probability) tuples.
-        """
-        inp = self.pre_process(img, image_format)
-        out = self.forward(inp)
-        return self.post_process(out, topk)
-
-    def __call__(self,
-                 img: np.ndarray,
-                 **kwargs) -> List[Tuple[int, float]]:
-        """Callable interface equivalent to predict().
-
-        Args:
-            img: Input image array.
-            **kwargs: Additional keyword arguments passed to predict().
-
-        Returns:
-            List of (class_id, probability) tuples.
-        """
-        return self.predict(img, **kwargs)
+    def __call__(self, img, image_format="BGR", topk=None):
+        return self.predict(img, image_format, topk)
