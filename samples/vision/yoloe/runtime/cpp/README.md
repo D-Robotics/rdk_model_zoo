@@ -1,18 +1,115 @@
-# YOLOE C++ runtime migration
+# YOLOE C++ runtime
 
 English | [简体中文](README_cn.md)
 
-This directory provides a C++ stage library with owned NV12 inputs, E11/E26 decoding and ROI masks, backed by an explicitly supplied inference runner. **A complete board executable is not yet available here.** Use the [Python runtime](../python/README.md) for the implemented canonical entry, subject to its artifact/SDK requirements. Source C++ programs remain in the [S E11 snapshot](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26 snapshot](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md); their quantized artifacts and manual dequantization do not satisfy this new float contract.
+Run E11/E26 prompt-free instance segmentation through `run.sh`, or embed the C++ three-stage library. The launcher selects an exact model, checks the local board and file identity, optionally builds the native executable, and retains logs and image/mask results. **The implementation has host verification only: real SDK compilation and board inference remain not-run.** See the [Python runtime](../python/README.md) for the other canonical entry and its different X5 mask protocol.
 
 <a id="supported-boards"></a>
 ## Target scope
 
-The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This increment is host-only and does not enable any board executable. S600 remains unsupported. The new SDK adapter also accepts X5 E11s/m/l with the X5 stack; this is implemented but has not been built against a real SDK or run on a board.
+| Target | Variants / default | Model requirement | Current validation |
+| --- | --- | --- | --- |
+| X5 | 11s/m/l; default 11s | Published floating-output BIN, matching X5 SDK | Host only; SDK/board not-run |
+| S100 | 11s, 26n/s/m/l/x; default 11s | Locally converted floating-output HBM with explicit SHA-256 | Host only; compatible HBM/SDK/board not verified |
+| S100P | 26n/s/m/l/x; default 26n | Locally converted floating-output HBM with explicit SHA-256 | Host only; compatible HBM/SDK/board not verified |
+| S600 | None | No published route; explicitly rejected | Unsupported |
+
+The 14 publication identities describe model selection, **not 14 runnable native artifacts**. Published S files have quantized outputs and are rejected by this entry. Use the [conversion workflow](../../conversion/README.md) to prepare floating outputs; renaming a quantized file does not change its contract. Source [S E11](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md) programs remain historical references, with their original capabilities and measurements.
+
+## Select, build and run
+
+Commands below start at the repository root. Python 3.10+ and NumPy are required for the launcher; Python OpenCV is not needed by this native entry. `PYTHON` selects the interpreter used by `run.sh`. It also works from another working directory. Relative user paths and the default output directory are resolved from the caller's directory; child processes run from the repository root.
+
+These host-safe commands inspect the active manifests and prepare a command without downloading, building, checking a board or executing inference:
+
+```bash
+bash samples/vision/yoloe/runtime/cpp/run.sh --list-models
+bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s --dry-run
+bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n --dry-run
+```
+
+A dry-run requires an explicit target. Its `executed`, `downloaded` and `runtime_metadata_verified` fields stay false. S publications report that a local floating-output conversion is required; dry-run success is not permission to execute that quantized file.
+
+On an X5 with its matching SDK and C++ dependencies, explicitly download the model, then build and run. These board commands were **not executed** in this host-only migration:
+
+```sh
+python3 samples/vision/yoloe/model/download.py --target x5 --variant 11s
+bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s \
+  --build --output outputs/yoloe_cpp_x5_11s_run1
+```
+
+For S, first complete and retain the conversion evidence. Supply the expected digest from that evidence, not a digest invented to bypass validation. Replace both placeholders below with the actual artifact path and its 64 hexadecimal SHA-256 digits:
+
+```sh
+bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
+  --model-path /path/to/converted-float.hbm \
+  --local-float-sha256 REPLACE_WITH_EXPECTED_64_HEX_SHA256 \
+  --build --output outputs/yoloe_cpp_s100p_26n_run1
+```
+
+The SHA binds local bytes; it does not prove conversion provenance or SDK compatibility. All ten output tensors must still pass runtime metadata checks. No compatible S floating-output HBM is supplied here. The launcher never downloads implicitly and has no hardware-identity override or silent target fallback.
+
+`--build` configures Release mode and creates `runtime/cpp/build/<target>/yoloe_demo`; without it, the existing executable at that path is used. Use `--binary /absolute/path/yoloe_demo` for a separately built executable; it cannot be combined with `--build`. To configure SDK discovery explicitly on a matching SDK installation:
+
+```sh
+cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-cli \
+  -DYOLOE_BUILD_CLI=ON -DCMAKE_BUILD_TYPE=Release \
+  -DYOLOE_DNN_INCLUDE_DIR=/path/to/sdk/include \
+  -DYOLOE_DNN_LIBRARY=/path/to/sdk/lib/libdnn.so
+cmake --build /tmp/yoloe-board-cli --parallel 2
+```
+
+For UCP, also provide `YOLOE_UCP_LIBRARY` when discovery cannot find the matching `libhbucp`. Use `--binary /tmp/yoloe-board-cli/yoloe_demo` in the selected run command. The normal launcher verifies identity and inputs before building. Missing vendor dependencies fail explicitly; host test doubles must never be used as deployment dependencies.
+
+## Launcher parameters
+
+| Option | Default / effect |
+| --- | --- |
+| `--target` | `auto`; detected local board for execution, explicit target required for dry-run |
+| `--variant`, `--asset-id` | Target defaults above; an asset ID is the exact active manifest reference, conflicting choices fail |
+| `--model-path` | Selected model's canonical path; override for an existing file |
+| `--local-float-sha256` | Custom floating-output digest; requires `--model-path` |
+| `--test-img` | Sample `test_data/office_desk.jpg`; decoded as BGR |
+| `--label-file` | Sample `test_data/classes.names`; fixed ordered 4585 labels, exact digest required |
+| `--output` | `outputs/yoloe_cpp`; must be a new directory, never overwrites an earlier run |
+| `--build`, `--binary` | Explicit build or separately built native executable; mutually exclusive |
+| `--score-thres` | 0.25, strictly between 0 and 1 |
+| `--nms-thres` | E11 only, default 0.7 in [0,1]; E26 rejects even an explicit default |
+| `--resize-type` | 1 = letterbox; E11 also permits 0 = stretch; E26 requires 1 |
+| `--max-det` | E26 only, 300 by default, range 1..8400; E11 accepts only the unchanged default |
+| `--multi-label` | E26 only; default one class per selected anchor |
+| `--no-morph` | Disable S E11 CLI's default 5×5 opening; X5 E11/E26 already disable morphology |
+| `--no-contour` | Omit contour drawing; masks and detections are unchanged |
+| `--list-models`, `--dry-run` | Read-only inspection modes; mutually exclusive |
+
+The native binary additionally requires explicit `--target`, `--variant`, `--model-path`, `--model-sha256`, `--test-img`, `--label-file` and `--output`. Normally let the launcher supply these. The native `--model-sha256` is the verified byte digest, not a publication selector. Run the binary with `--help` alone for its options. No CPU/BPU-core or scheduling-priority option is exposed; the SDK adapter uses its default scheduling contract.
+
+## Results and failure records
+
+```text
+outputs/yoloe_cpp_x5_11s_run1/
+  launch-report.json
+  configure.stdout.log / configure.stderr.log   # only with --build
+  build.stdout.log / build.stderr.log           # when configuration succeeds
+  native.stdout.log / native.stderr.log
+  result/
+    report.json
+    annotated.png
+    masks/000000.png ...
+```
+
+`launch-report.json` records the selected publication reference, local/published model kind, expected/observed digests, effective options, binary digest, exact subprocess argv/cwd, UTC times, return codes and result-file digests. Raw stdout/stderr bytes are retained, including non-UTF-8 output. An observed digest is not publisher authentication when the manifest has no checksum; `publisher_checksum_verified` remains false. For custom models, the publication ID names the architecture reference, not the provenance of the new file.
+
+Native `report.json` uses schema `rdk-model-zoo/yoloe-native-run/v1`, with target/variant, model/image/vocabulary hashes, image shape, effective configuration and aligned instances. Each instance contains a zero-based class ID, fixed label, score, original-image `[x1,y1,x2,y2]` box and ROI mask path/shape. Stored PNG masks use 0/255; in-memory masks use 0/1. Zero-area instances keep their exact empty axes and `mask: null`, without an empty PNG. `annotated.png` is a presentation overlay, not an evaluation mask. **All native masks use ROI layout, including X5; Python X5 uses full-image probability masks.** Do not interchange their evaluation inputs without adapting the protocol.
+
+The native report is written last. A zero exit without a valid identity-matched report and its files is a launcher failure. Host fixtures label their reports `host-fixture`; the normal launcher rejects them as SDK evidence. Metadata verification is recorded only after a successful native result. Build/inference/result-validation failures retain logs and a failed launch record; image saving can leave partial output. Preflight failures before output-directory creation print an error without creating a run folder. Pick a new output path for a retry. Native validation errors exit 2; the launcher retains a positive native exit code and maps signal termination to 2.
 
 ## Modules and model contract
 
 | Module | Responsibility |
 | --- | --- |
+| `launcher.py`, `run.sh` | Publication selection, explicit build, process logs and run records |
+| `src/main.cpp`, `src/cli_options.cpp`, `src/cli_io.cpp` | CLI orchestration, option parsing, image/label I/O and saved results |
 | `common/float_heads.h` | Bind ten logical roles by unique shape, independently of physical output order |
 | `inc/yoloe.h`, `src/yoloe.cpp` | Task construction and pre_process/infer/post_process/predict orchestration |
 | `inc/runner.h`, `inc/pipeline_io.h` | Backend contract, owned input/output batches and instance identity |
@@ -46,7 +143,7 @@ The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible 
 <a id="dependencies"></a>
 ## Dependencies
 
-Prerequisites: a C++17 compiler and the repository checkout. The four geometry/candidate tests do not need OpenCV or a board SDK. The image/mask and stage tests need OpenCV C++ core/imgproc development libraries. The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment. From the repository root:
+Prerequisites: a C++17 compiler and the repository checkout. The four geometry/candidate tests do not need OpenCV or a board SDK. The image/mask and stage tests need OpenCV C++ core/imgproc/imgcodecs development libraries. The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment. From the repository root:
 
 <a id="build"></a>
 ## Build host tests
@@ -77,7 +174,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-Build all nine tests with a real OpenCV installation (no board SDK):
+Build all eleven tests with a real OpenCV installation (no board SDK):
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
@@ -85,7 +182,7 @@ cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
 
-Build the reusable stage library and all nine tests from its own CMake project:
+Build the reusable stage library and all eleven tests from its own CMake project:
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
@@ -107,13 +204,13 @@ The output is `libyoloe_core.a`, not a board executable. For a normal embedding 
 
 Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands compile actual C++ math and float-memory utilities; they do not establish SDK ABI compatibility.
 
-For the CMake build, run all nine checks with failure output:
+For the CMake build, run all eleven checks with failure output:
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 ```
 
-Run the library project's nine tests:
+Run the library project's eleven tests:
 
 ```bash
 ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
@@ -181,8 +278,8 @@ publication or custom float SHA-256, and vocabulary/conversion provenance. It
 runs before any SDK call; throwing stops construction. The adapter's shape,
 target/variant and stack checks cannot prove those identities. A no-op callback
 is used only by host fixtures and is not a valid production policy. The built-in `make_preflight(expected_model_sha256, label_path)` supplies local
-board and byte verification; the canonical publication-selection launcher is
-still pending, so this API alone is not a ready-to-run customer entry.
+board and byte verification. The canonical launcher selects the publication or
+custom float file before invoking the executable with its verified digest.
 
 `make_preflight` reads real local sysfs/device-tree using shared target rules.
 It rejects unknown/mismatched boards, missing/empty models, malformed or
@@ -230,8 +327,9 @@ also require `YOLOE_UCP_LIBRARY`; exposing both hbSys and UCP headers is rejecte
 Do not use test-double include paths for a deployable library. OpenCV development
 files are still required. The default host build leaves `YOLOE_BUILD_SDK=OFF`.
 
-The OpenCV host configuration now runs nine tests: the existing six, X5/UCP
-adapter tests and a preflight test. The preflight library itself needs no OpenCV
+The OpenCV host configuration runs eleven tests: six numerical/stage checks,
+X5/UCP adapter checks, preflight, CLI I/O and fixture help. The explicit fixture
+also runs the actual executable entry with synthetic outputs; it is not a SDK backend. The preflight library itself needs no OpenCV
 or SDK. The adapter tests run with production code instrumented by ASan/UBSan. They
 cover preflight rejection before SDK calls, metadata/precision rejection before
 allocation, partial allocation and failed initialization cleanup, task/cache
@@ -239,7 +337,7 @@ errors, semantic output order and independence across inference calls. These
 use narrow API doubles, not vendor SDK headers/libraries.
 
 <a id="results-interpretation"></a>
-## Verification and next integration
+## Verification boundaries
 
 [Native preflight evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-preflight-review.md) covers registry parity, model/vocabulary rejection and shared streaming hashes.
 
@@ -249,4 +347,4 @@ use narrow API doubles, not vendor SDK headers/libraries.
 
 [Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records the earlier E26 checks. The [E11 extension evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md) records all three native tests, E26 regression and real E11 s/m/l ONNX comparisons. The E26n candidate comparison covers both single- and multi-label decoding against Python. [Geometry/mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md) separately records actual OpenCV compilation and full ROI pixel comparison. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
 
-The remaining native work is explicit: canonical publication selection, CLI entry and complete executable build/run documentation. The adapter API does not close those requirements. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
+The canonical selection/CLI/output implementation is now present. [Native entry evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-cli-review.md) separates real OpenCV host execution, Python process-policy tests and SDK API doubles. Board inference, real SDK compilation, OE-produced floating S artifacts and native dataset accuracy remain unverified. Host checks do not close independent migration acceptance.

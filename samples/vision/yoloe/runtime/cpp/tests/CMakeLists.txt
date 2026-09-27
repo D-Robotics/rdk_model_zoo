@@ -23,7 +23,7 @@ add_test(NAME preflight COMMAND test_preflight "${CMAKE_CURRENT_BINARY_DIR}/pref
 add_executable(identity_probe identity_probe.cc)
 target_include_directories(identity_probe PRIVATE "${RDK_SHARED_CPP}")
 if(YOLOE_TEST_OPENCV)
-  find_package(OpenCV REQUIRED COMPONENTS core imgproc)
+  find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
   add_executable(test_image_ops test_image_ops.cc)
   target_include_directories(test_image_ops PRIVATE ../common ${OpenCV_INCLUDE_DIRS})
   target_link_libraries(test_image_ops PRIVATE ${OpenCV_LIBS})
@@ -46,6 +46,21 @@ if(YOLOE_TEST_OPENCV)
     target_link_libraries(test_sdk_runner_${stack} PRIVATE yoloe_core)
     add_test(NAME sdk_runner_${stack} COMMAND test_sdk_runner_${stack} "${CMAKE_CURRENT_BINARY_DIR}/fixture-${stack}.model")
   endforeach()
+  add_executable(test_cli_io test_cli_io.cc ../src/cli_io.cpp ../src/cli_options.cpp)
+  target_link_libraries(test_cli_io PRIVATE yoloe_core yoloe_preflight)
+  target_compile_definitions(test_cli_io PRIVATE YOLOE_HOST_FIXTURE=1)
+  # The test creates a fresh result directory; use a per-run wrapper to retain
+  # its output only in explicit evidence runs.
+  add_test(NAME cli_io COMMAND ${CMAKE_COMMAND}
+    -DTEST_BINARY=$<TARGET_FILE:test_cli_io>
+    -DTEST_OUTPUT=${CMAKE_CURRENT_BINARY_DIR}/cli-io-result
+    -DTEST_LABELS=${CMAKE_CURRENT_SOURCE_DIR}/../../../test_data/classes.names
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_io.cmake)
+  add_executable(yoloe_cli_fixture ../src/main.cpp ../src/cli_options.cpp ../src/cli_io.cpp ../src/preflight.cpp cli_fixture_runner.cpp)
+  target_include_directories(yoloe_cli_fixture PRIVATE "${RDK_SHARED_CPP}")
+  target_compile_definitions(yoloe_cli_fixture PRIVATE YOLOE_HOST_FIXTURE=1)
+  target_link_libraries(yoloe_cli_fixture PRIVATE yoloe_core)
+  add_test(NAME cli_fixture_help COMMAND yoloe_cli_fixture --help)
   add_executable(mask_probe mask_probe.cc)
   target_include_directories(mask_probe PRIVATE ../common ${OpenCV_INCLUDE_DIRS})
   target_link_libraries(mask_probe PRIVATE ${OpenCV_LIBS})

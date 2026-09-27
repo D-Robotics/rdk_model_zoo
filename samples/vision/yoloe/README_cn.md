@@ -14,13 +14,15 @@ YOLOE 在本 sample 中提供固定 4585 类词表的 Prompt-Free（PF）实例�
 
 | Variant | x5 | s100 | s100p | s600 | Canonical Python | Canonical C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| 11s | supported-not-run | not-supported* | not-supported | not-supported | X5; local float S route* | no, pending |
-| 11m / 11l | supported-not-run | not-supported | not-supported | not-supported | X5 | no source X5 implementation |
-| 26n/s/m/l/x | not-supported | not-supported* | not-supported* | not-supported | local float S route* | no, pending |
+| 11s | supported-not-run | not-supported* | not-supported | not-supported | X5; local float S route* | implemented; SDK/board not-run* |
+| 11m / 11l | supported-not-run | not-supported | not-supported | not-supported | X5 | implemented X5 extension; SDK/board not-run |
+| 26n/s/m/l/x | not-supported | not-supported* | not-supported* | not-supported | local float S route* | implemented; SDK/board not-run* |
 
 * 表中 S 的 not-supported 指“当前发布制品不能直接用于本浮点入口”，不是删除该能力。S11 最终 HBM 为混合精度，S26 公开 HBM 声明量化输出。统一代码允许明确指定、哈希固定的本地浮点转换制品，但兼容的 S 浮点 HBM 尚未编译验证，不能标为 supported-verified。S600 无源支持，不回退 S100。
 
-本轮板测全部 `not-run`；统一权重导出和校准/配置准备已提供，真实 OE 验收与 C++ 收编仍 pending。源分支的历史板测不转算为统一代码验证。
+本轮板测全部 `not-run`；统一权重导出和校准/配置准备已提供，C++ 入口已实现，真实 SDK/OE 验收仍未完成。源分支的历史板测不转算为统一代码验证。
+
+原生依赖、精确模型选择、构建运行命令及 ROI 结果见 [C++ 流程](runtime/cpp/README_cn.md)；下面的快速启动使用 Python。
 
 <a id="prerequisites"></a>
 ## 环境与前提
@@ -84,7 +86,7 @@ yoloe/
 └── README.md
 ```
 
-统一权重导出、转换准备和评估流程已提供，C++ 尚待收编。浮点导出检查不代表真实编译器或板端验收完成。
+统一权重导出、转换准备和评估流程已提供，C++ 统一入口已提供，真实 SDK 构建未验证。浮点导出检查不代表真实编译器或板端验收完成。
 
 <a id="entry-points"></a>
 ## 入口
@@ -95,8 +97,8 @@ yoloe/
 - [Python](runtime/python/README_cn.md) — 参数、协议、库接口与排障。
 - [Test data](test_data/README_cn.md) — 图片和词表来源。
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README_cn.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README_cn.md) — 原配方；S 配方会产生量化输出。统一准备入口保留浮点输出节点，实际编译精度仍待验证。
-- [统一 C++ 进度](runtime/cpp/README_cn.md) — 可复用三阶段 C++ 库已提供，包含独立持有的 NV12 输入、浮点绑定和 E11/E26 解码与掩码；SDK 适配器已实现，本机/模型/词表核验已实现，发布制品选择与板端入口仍待集成。
-- [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md) — 历史实现，统一移植 pending。
+- [统一 C++ 进度](runtime/cpp/README_cn.md) — 可复用三阶段 C++ 库已提供，包含独立持有的 NV12 输入、浮点绑定和 E11/E26 解码与掩码；SDK 适配器已实现，本机/模型/词表核验已实现，发布制品选择、CLI 及结果留证已实现，真实 SDK 构建和板测未执行。
+- [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md) — 历史实现，保留来源及旧版能力记录。
 - [X5 evaluation](../../../platforms/x5/samples/vision/yoloe/evaluator/README_cn.md) / [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README_cn.md) — 历史记录，不是本轮验收。
 
 <a id="license"></a>

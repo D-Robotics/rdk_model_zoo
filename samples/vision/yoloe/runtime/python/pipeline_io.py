@@ -3,7 +3,7 @@
 """Protocol-specific prepared/result types and option validation, with no SDK I/O."""
 
 from dataclasses import dataclass
-from numbers import Integral
+from samples.vision.yoloe.runtime.python.config import validate_config
 from typing import Any
 import numpy as np
 from samples._shared.image import bgr_to_nv12_planes
@@ -27,36 +27,6 @@ class Result:
     class_ids: np.ndarray
     masks: Any
     mask_layout: str
-
-
-def validate_config(selection, cfg):
-    if not np.isfinite(cfg.score_thres) or not 0 < cfg.score_thres < 1:
-        raise ValueError("score_thres must be finite and strictly between 0 and 1.")
-    if cfg.resize_type not in (0, 1) or not isinstance(cfg.do_morph, bool):
-        raise ValueError("resize_type must be 0/1 and do_morph must be boolean.")
-    if (
-        isinstance(cfg.max_det, bool)
-        or not isinstance(cfg.max_det, Integral)
-        or not 1 <= cfg.max_det <= 8400
-        or not isinstance(cfg.single_label, bool)
-    ):
-        raise ValueError(
-            "max_det must be an integer in 1..8400; single_label must be boolean."
-        )
-    if selection.variant.startswith("26"):
-        if cfg.nms_thres is not None or cfg.resize_type != 1 or cfg.do_morph:
-            raise ValueError(
-                "YOLOE-26 uses fixed round/114 letterbox, no NMS and no morphology."
-            )
-    else:
-        if cfg.max_det != 300 or not cfg.single_label:
-            raise ValueError("max_det and multi-label apply only to YOLOE-26.")
-        if cfg.nms_thres is not None and (
-            not np.isfinite(cfg.nms_thres) or not 0 <= cfg.nms_thres <= 1
-        ):
-            raise ValueError("nms_thres must be finite in [0,1].")
-        if selection.target == "x5" and cfg.do_morph:
-            raise ValueError("Morphology applies only to S YOLOE-11 ROI masks.")
 
 
 def prepare(image, selection, cfg, runner):

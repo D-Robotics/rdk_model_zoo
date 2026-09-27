@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """YOLOE PF stages: preprocessing, one raw call, postprocessing and composition."""
 
-from dataclasses import dataclass
+from samples.vision.yoloe.runtime.python.config import Config
 from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _semantic_outputs,
 )
@@ -14,16 +14,6 @@ from samples.vision.yoloe.runtime.python.pipeline_io import (
     validate_config,
 )
 from samples.vision.yoloe.runtime.python.postprocess import decode_result
-
-
-@dataclass(frozen=True)
-class Config:
-    score_thres: float = 0.25
-    nms_thres: float | None = None
-    resize_type: int = 1
-    do_morph: bool = False
-    max_det: int = 300
-    single_label: bool = True
 
 
 class YOLOE:

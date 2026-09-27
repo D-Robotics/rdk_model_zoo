@@ -79,6 +79,8 @@ print(result.boxes.shape, result.mask_layout)
 # task.predict(image) composes exactly the same three stages.
 ```
 
+配置及校验位于 `config.py`，与原生启动器共用，不引入图片或 SDK 模块；原有 `from ...yoloe import Config` 导入接口保持兼容。
+
 <a id="stage-io"></a>
 ## 三阶段接口
 

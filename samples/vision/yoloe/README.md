@@ -14,13 +14,15 @@ Algorithm references and version context are preserved in the [X5 source overvie
 
 | Variant | x5 | s100 | s100p | s600 | Canonical Python | Canonical C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| 11s | supported-not-run | not-supported* | not-supported | not-supported | X5; local float S route* | no, pending |
-| 11m / 11l | supported-not-run | not-supported | not-supported | not-supported | X5 | no source X5 implementation |
-| 26n/s/m/l/x | not-supported | not-supported* | not-supported* | not-supported | local float S route* | no, pending |
+| 11s | supported-not-run | not-supported* | not-supported | not-supported | X5; local float S route* | implemented; SDK/board not-run* |
+| 11m / 11l | supported-not-run | not-supported | not-supported | not-supported | X5 | implemented X5 extension; SDK/board not-run |
+| 26n/s/m/l/x | not-supported | not-supported* | not-supported* | not-supported | local float S route* | implemented; SDK/board not-run* |
 
 * For S, not-supported means the published artifact cannot run through this floating-output entry, not removal of the capability. S11 final HBM has mixed outputs and S26 public HBM declares quantized outputs. Explicit, hash-bound local float conversions can be selected, but no compatible S float HBM has been compiled/verified. It is not supported-verified. S600 has no source support and never falls back to S100.
 
-All current board checks are `not-run`. Canonical checkpoint export and calibration/configuration preparation are available; real OE acceptance and C++ integration remain pending. Historical source board results do not verify this code.
+All current board checks are `not-run`. Canonical checkpoint export and calibration/configuration preparation are available; the C++ entry is implemented, while real SDK/OE acceptance remains pending. Historical source board results do not verify this code.
+
+For native prerequisites, exact model selection, build/run commands and saved ROI results, see the [C++ workflow](runtime/cpp/README.md). The quick start below uses Python.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -84,7 +86,7 @@ yoloe/
 └── README.md
 ```
 
-Canonical checkpoint export, conversion preparation and evaluation workflows are available below; C++ integration remains pending. Float export checks do not establish real compiler or board acceptance.
+Canonical checkpoint export, conversion preparation and evaluation workflows are available below; the canonical C++ entry is implemented, with real SDK compilation unverified. Float export checks do not establish real compiler or board acceptance.
 
 <a id="entry-points"></a>
 ## Entry Points
@@ -95,8 +97,8 @@ Canonical checkpoint export, conversion preparation and evaluation workflows are
 - [Python](runtime/python/README.md) — Options, protocols, library API and troubleshooting.
 - [Test data](test_data/README.md) — Image/vocabulary provenance.
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md) — Original recipes; S recipes produce quantized outputs. The canonical preparation entry retains float-output nodes, with actual compiled precision still unverified.
-- [Canonical C++ progress](runtime/cpp/README.md) — Reusable three-stage C++ library with owned NV12 inputs, float binding and E11/E26 decoding/masks; the SDK adapter is implemented; native board/model/vocabulary preflight is implemented; publication selection and the board entry remain pending.
-- [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md) — Historical implementations; canonical port pending.
+- [Canonical C++ progress](runtime/cpp/README.md) — Reusable three-stage C++ library with owned NV12 inputs, float binding and E11/E26 decoding/masks; the SDK adapter is implemented; native board/model/vocabulary preflight is implemented; publication selection, CLI and result records are implemented; real SDK compilation and board checks remain not-run.
+- [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md) — Historical implementations with preserved source capabilities and measurements.
 - [X5 evaluation](../../../platforms/x5/samples/vision/yoloe/evaluator/README.md) / [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md) — Historical records, not current acceptance.
 
 <a id="license"></a>

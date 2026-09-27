@@ -1,0 +1,9 @@
+YOLOE native FLOAT32 PF segmentation
+Required: --target x5|s100|s100p --variant 11s|11m|11l|26n|26s|26m|26l|26x
+  --model-path FILE --model-sha256 HEX64 --test-img FILE --label-file FILE --output NEW_DIR
+Not every target/variant pair is supported. S models need separately converted float outputs.
+Options: --score-thres 0.25 --nms-thres 0.7 (E11 only) --resize-type 1
+  --max-det 300 --multi-label (E26 only) --no-morph --no-contour --help
+S E11 CLI enables 5x5 opening by default; the library default is off.
+Output: report.json, annotated.png, masks/*.png (0/255 ROI masks; empty ROI has no PNG).
+No downloads or board identity override. Use launcher.py for publication selection and run logs.

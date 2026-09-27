@@ -79,6 +79,8 @@ print(result.boxes.shape, result.mask_layout)
 # task.predict(image) composes exactly the same three stages.
 ```
 
+Configuration and validation live in `config.py`, shared with the native launcher without importing image or SDK modules. The existing `from ...yoloe import Config` API remains supported.
+
 <a id="stage-io"></a>
 ## Three-Stage I/O
 

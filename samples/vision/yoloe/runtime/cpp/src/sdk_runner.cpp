@@ -13,16 +13,8 @@ void checked(int rc, const char *action) {
                              " failed: " + std::to_string(rc));
 }
 Protocol model_protocol(const SdkModel &model) {
-  const bool e11 = model.variant == "11s" || model.variant == "11m" ||
-                   model.variant == "11l";
-  const bool e26 = model.variant == "26n" || model.variant == "26s" ||
-                   model.variant == "26m" || model.variant == "26l" ||
-                   model.variant == "26x";
-  const bool allowed =
-      (model.target == "x5" && e11) ||
-      (model.target == "s100" && (model.variant == "11s" || e26)) ||
-      (model.target == "s100p" && e26);
-  if (!allowed)
+  const bool e11 = model.variant.rfind("11", 0) == 0;
+  if (!supported_native_model(model))
     throw std::invalid_argument("Unsupported YOLOE target/variant pair");
 #ifdef YOLO_DNN_STACK_X5
   if (model.target != "x5")

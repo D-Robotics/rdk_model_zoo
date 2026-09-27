@@ -1,18 +1,115 @@
-# YOLOE C++ Runtime 迁移
+# YOLOE C++ Runtime
 
 [English](README.md) | 简体中文
 
-当前目录提供 C++ 三阶段库，包含独立 NV12 输入、E11/E26 解码及 ROI 掩码，通过显式传入的 runner 执行推理，**尚未提供完整板端可执行程序**。已经实现的统一入口见 [Python runtime](../python/README_cn.md)，运行前仍需满足其制品和 SDK 条件。原始 C++ 程序保留在 [S E11 快照](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md)及 [S E26 快照](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md)；原始量化制品和手动反量化路径不符合这里的新浮点契约。
+使用 `run.sh` 执行 E11/E26 无提示实例分割，或将 C++ 三阶段库嵌入应用。启动器精确选择模型，核验本机和文件身份，按显式要求构建原生程序，并保留日志、图片和掩码结果。**当前仅有主机验证：真实 SDK 编译和板端推理仍为 not-run。** 另一个统一入口见 [Python runtime](../python/README_cn.md)，注意其 X5 掩码协议不同。
 
 <a id="supported-boards"></a>
 ## 目标范围
 
-原始原生能力为 S100 E11s 及 S100/S100P E26 n/s/m/l/x。本增量仅验证主机模块，没有启用任何板端可执行程序。S600 仍不支持。新增 SDK 适配器也接受 X5 SDK 下的 E11s/m/l；这部分已有实现，但未使用真实 SDK 构建或在板端运行。
+| 目标 | 变体 / 默认值 | 模型前提 | 当前验证 |
+| --- | --- | --- | --- |
+| X5 | 11s/m/l；默认 11s | 已发布的浮点输出 BIN，匹配 X5 SDK | 仅主机；SDK/板端 not-run |
+| S100 | 11s、26n/s/m/l/x；默认 11s | 自行转换的浮点输出 HBM，显式提供 SHA-256 | 仅主机；兼容 HBM/SDK/板端未验证 |
+| S100P | 26n/s/m/l/x；默认 26n | 自行转换的浮点输出 HBM，显式提供 SHA-256 | 仅主机；兼容 HBM/SDK/板端未验证 |
+| S600 | 无 | 无发布路线，显式拒绝 | 不支持 |
+
+14 个发布身份用于模型选择，**不表示已有 14 个可执行原生制品**。S 已发布文件的输出为量化数据，本入口拒绝加载；通过[转换流程](../../conversion/README_cn.md)准备浮点输出，改名不能改变契约。原始 [S E11](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) 和 [S E26](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md) 保留为历史参考，其能力和测量记录不代表本实现的验收结果。
+
+## 选择、构建与运行
+
+下面命令从仓库根目录执行。启动器需要 Python 3.10+ 和 NumPy，本原生入口不需要 Python OpenCV；用 `PYTHON` 指定 `run.sh` 使用的解释器。脚本也支持从其他目录调用。用户传入的相对路径及默认输出位置相对于调用目录解析；子进程在仓库根目录运行。
+
+以下命令可在主机执行，仅查看当前清单和准备命令，不下载、不构建、不检查板卡、不执行推理：
+
+```bash
+bash samples/vision/yoloe/runtime/cpp/run.sh --list-models
+bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s --dry-run
+bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n --dry-run
+```
+
+Dry-run 必须显式指定 target，`executed`、`downloaded`、`runtime_metadata_verified` 始终为 false。S 发布制品会提示需要本地浮点转换；dry-run 返回成功不代表该量化文件可执行。
+
+在具备匹配 SDK 和 C++ 依赖的 X5 上，先显式下载模型，再构建运行。以下板端命令在本轮主机迁移中**未执行**：
+
+```sh
+python3 samples/vision/yoloe/model/download.py --target x5 --variant 11s
+bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s \
+  --build --output outputs/yoloe_cpp_x5_11s_run1
+```
+
+S 侧先完成转换并保留证据，提供转换记录中的预期摘要，不能随意填写摘要来绕过校验。将下面两个占位符换为真实制品路径及其 64 位十六进制 SHA-256：
+
+```sh
+bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
+  --model-path /path/to/converted-float.hbm \
+  --local-float-sha256 REPLACE_WITH_EXPECTED_64_HEX_SHA256 \
+  --build --output outputs/yoloe_cpp_s100p_26n_run1
+```
+
+摘要绑定本地字节，不证明转换来源或 SDK 兼容性；十个输出仍需通过运行时 metadata 检查。本目录不提供兼容的 S 浮点 HBM。启动器不隐式下载、不提供板卡身份覆盖，也不静默回退 target。
+
+`--build` 配置 Release 构建，生成 `runtime/cpp/build/<target>/yoloe_demo`；不传则使用该位置的现有程序。自行构建时传 `--binary /absolute/path/yoloe_demo`，不能同时传 `--build`。在匹配的 SDK 环境中可显式配置依赖位置：
+
+```sh
+cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-cli \
+  -DYOLOE_BUILD_CLI=ON -DCMAKE_BUILD_TYPE=Release \
+  -DYOLOE_DNN_INCLUDE_DIR=/path/to/sdk/include \
+  -DYOLOE_DNN_LIBRARY=/path/to/sdk/lib/libdnn.so
+cmake --build /tmp/yoloe-board-cli --parallel 2
+```
+
+UCP 环境若无法发现匹配的 `libhbucp`，还需提供 `YOLOE_UCP_LIBRARY`；随后在选定的运行命令中使用 `--binary /tmp/yoloe-board-cli/yoloe_demo`。正常启动器在构建前核验身份和输入。缺少厂商依赖会显式失败；不能把测试替身作为部署依赖。
+
+## 启动器参数
+
+| 参数 | 默认值 / 作用 |
+| --- | --- |
+| `--target` | `auto`；执行时识别本机，dry-run 必须显式指定 |
+| `--variant`、`--asset-id` | 默认变体见上表；asset ID 是当前清单的精确引用，冲突选择拒绝 |
+| `--model-path` | 选定模型的标准路径，可覆盖为现有文件 |
+| `--local-float-sha256` | 自行转换浮点模型的摘要，必须同时提供 `--model-path` |
+| `--test-img` | sample 的 `test_data/office_desk.jpg`，按 BGR 解码 |
+| `--label-file` | sample 的 `test_data/classes.names`；固定顺序的 4585 类，要求摘要一致 |
+| `--output` | `outputs/yoloe_cpp`；必须为新目录，不覆盖已有运行 |
+| `--build`、`--binary` | 显式构建或指定已构建程序，互斥 |
+| `--score-thres` | 0.25，严格位于 0 与 1 之间 |
+| `--nms-thres` | 仅 E11，默认 0.7，范围 [0,1]；E26 即使显式传默认值也拒绝 |
+| `--resize-type` | 1 = letterbox；E11 还支持 0 = stretch；E26 只能为 1 |
+| `--max-det` | 仅 E26 调整，默认 300，范围 1..8400；E11 只接受不变的默认值 |
+| `--multi-label` | 仅 E26；默认每个选中 anchor 只保留一个类别 |
+| `--no-morph` | 关闭 S E11 CLI 默认的 5×5 开运算；X5 E11/E26 原本就不开启 |
+| `--no-contour` | 不画轮廓，不改变检测和掩码 |
+| `--list-models`、`--dry-run` | 只读检查模式，互斥 |
+
+原生程序还要求显式提供 `--target`、`--variant`、`--model-path`、`--model-sha256`、`--test-img`、`--label-file`、`--output`，通常由启动器传入。原生 `--model-sha256` 是核验后的字节摘要，不是发布制品选择器。单独执行程序的 `--help` 可查看参数。未提供 CPU/BPU 核数或调度优先级参数，SDK 适配器使用默认调度契约。
+
+## 输出及失败记录
+
+```text
+outputs/yoloe_cpp_x5_11s_run1/
+  launch-report.json
+  configure.stdout.log / configure.stderr.log   # only with --build
+  build.stdout.log / build.stderr.log           # when configuration succeeds
+  native.stdout.log / native.stderr.log
+  result/
+    report.json
+    annotated.png
+    masks/000000.png ...
+```
+
+`launch-report.json` 记录发布引用、本地/发布模型类别、预期及观察摘要、生效选项、可执行程序摘要、精确子进程 argv/cwd、UTC 时间、退出码及结果文件摘要。stdout/stderr 保留原始字节，包括非 UTF-8 输出。清单没有校验值时，观察摘要不构成发布来源认证，`publisher_checksum_verified` 保持 false。自行转换模型所对应的发布 ID 只是架构参考，不是新文件的来源证明。
+
+原生 `report.json` 使用 `rdk-model-zoo/yoloe-native-run/v1` schema，包含 target/variant、模型/图片/词表摘要、图像形状、生效配置及对齐的实例。每个实例记录从 0 起的类别 ID、固定标签、分数、原图 `[x1,y1,x2,y2]` 框及 ROI 掩码路径/形状。PNG 存储值为 0/255，内存掩码为 0/1；零面积实例保留精确的空轴和 `mask: null`，不写空 PNG。`annotated.png` 是展示叠图，不是评估掩码。**所有原生掩码均为 ROI，包括 X5；Python X5 使用整图概率掩码。** 评估输入不能直接互换，需适配相应协议。
+
+原生报告最后写入。退出码为 0 但缺少身份一致的有效报告或结果文件，启动器仍判失败。主机夹具报告标为 `host-fixture`，正常启动器拒绝将其当作 SDK 证据；只有原生结果成功后才记录 metadata 已验证。构建/推理/结果核验失败会保留日志和失败记录；图片保存中断可能留下部分文件。输出目录建立前的预检失败仅打印错误，不创建运行目录。重试时选择新输出路径。原生校验错误退出码为 2；启动器保留原生正退出码，信号终止映射为 2。
 
 ## 模块与模型契约
 
 | 模块 | 职责 |
 | --- | --- |
+| `launcher.py`、`run.sh` | 发布制品选择、显式构建、进程日志和运行记录 |
+| `src/main.cpp`、`src/cli_options.cpp`、`src/cli_io.cpp` | CLI 编排、参数解析、图片/标签读取及结果保存 |
 | `common/float_heads.h` | 按唯一形状绑定十个逻辑角色，不依赖物理输出顺序 |
 | `inc/yoloe.h`、`src/yoloe.cpp` | 构造及 pre_process/infer/post_process/predict 编排 |
 | `inc/runner.h`、`inc/pipeline_io.h` | 后端契约、独立输入输出和实例身份 |
@@ -46,7 +143,7 @@
 <a id="dependencies"></a>
 ## 依赖
 
-需要 C++17 编译器和仓库检出；四个几何/候选测试不需要 OpenCV 或板端 SDK；图像/掩码及阶段测试需要 OpenCV C++ core/imgproc 开发库。文档构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。在仓库根目录执行：
+需要 C++17 编译器和仓库检出；四个几何/候选测试不需要 OpenCV 或板端 SDK；图像/掩码及阶段测试需要 OpenCV C++ core/imgproc/imgcodecs 开发库。文档构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。在仓库根目录执行：
 
 <a id="build"></a>
 ## 构建主机测试
@@ -77,7 +174,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-使用真实 OpenCV 安装构建全部九个测试（不需要板端 SDK）：
+使用真实 OpenCV 安装构建全部十一个测试（不需要板端 SDK）：
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
@@ -85,7 +182,7 @@ cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
 
-从独立 CMake 项目构建可复用阶段库及全部九个测试：
+从独立 CMake 项目构建可复用阶段库及全部十一个测试：
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
@@ -107,13 +204,13 @@ cmake --build /tmp/yoloe-stage-core --parallel 4
 
 成功时退出码为 0、无输出。解码测试分配完整的 4585 类张量，开启 sanitizer 时应预留数百 MB 内存。断言/契约异常及 sanitizer 报错均为失败。这些命令实际编译 C++ 数学及浮点内存工具，不证明真实 SDK ABI 兼容。
 
-对 CMake 构建执行全部九个检查并显示失败输出：
+对 CMake 构建执行全部十一个检查并显示失败输出：
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 ```
 
-执行库项目的九个测试：
+执行库项目的十一个测试：
 
 ```bash
 ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
@@ -177,7 +274,7 @@ E11s/E26n/s/m/l/x、S100P E26n/s/m/l/x，且必须与编译使用的 SDK 栈一�
 板卡、选定的发布制品或自编译浮点 SHA-256，以及词表/转换来源。回调先于任何
 SDK 调用执行，抛异常即停止构造。适配器的形状、target/variant 和 SDK 栈检查
 不能证明这些身份。主机夹具中的空操作回调不能作为生产策略。内置 `make_preflight(expected_model_sha256, label_path)` 已提供本机身份和字节核验；
-统一发布制品选择的 launcher 仍待完成，这个 API 本身还不是客户可直接运行的入口。
+统一启动器先选择发布制品或本地浮点文件，再将核验后的摘要传给可执行程序。
 
 `make_preflight` 按共用规则读取真实本机 sysfs/device-tree，拒绝未知/不符板卡、
 缺失/空模型、格式错误或不匹配的模型摘要，以及不符合固定有序 PF 文件的词表。
@@ -219,13 +316,13 @@ cmake --build /tmp/yoloe-board-lib --parallel 4
 同时暴露 hbSys/UCP 头会拒绝构建。不要给部署库使用测试替身头；仍需 OpenCV
 开发文件，缺省主机构建保持 `YOLOE_BUILD_SDK=OFF`。
 
-OpenCV 主机配置现在运行九项测试：原有六项，加上 X5/UCP 适配器测试及预检测试。
+OpenCV 主机配置运行十一项测试：六项数值/阶段检查、X5/UCP 适配器、预检、CLI I/O 及夹具 help。显式夹具还使用合成输出执行真实入口；它不是 SDK 后端。
 预检库本身不需要 OpenCV 或 SDK；适配器测试使用 ASan/UBSan 检查生产代码。覆盖先于 SDK 的预检拒绝、先于分配的元数据/精度拒绝、
 部分分配和初始化失败清理、任务/cache 错误、语义输出顺序及跨调用独立持有。
 使用的是精简 API 替身，不是厂商 SDK 头或库。
 
 <a id="results-interpretation"></a>
-## 验证与后续集成
+## 验证边界
 
 [原生预检证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-preflight-review.md)覆盖注册表一致性、模型/词表拒绝及共用流式摘要。
 
@@ -235,4 +332,4 @@ OpenCV 主机配置现在运行九项测试：原有六项，加上 X5/UCP 适�
 
 [实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。[几何/掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)另行记录真实 OpenCV 编译及完整 ROI 像素对照。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
 
-后续仍需完成统一发布制品选择、CLI 入口及完整可执行程序构建运行说明；适配器 API 不代表这些要求已经关闭。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
+统一选择、CLI 和结果输出已有实现。[原生入口证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-cli-review.md)分别记录真实 OpenCV 主机执行、Python 进程策略测试与 SDK API 替身。板端推理、真实 SDK 编译、OE 产出的 S 浮点制品及原生数据集精度仍未验证；主机检查不等于独立迁移验收关闭。
