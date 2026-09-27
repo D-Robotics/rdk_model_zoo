@@ -17,6 +17,7 @@ The source native capabilities are S100 E11s and S100/S100P E26 n/s/m/l/x. This 
 | `inc/yoloe.h`, `src/yoloe.cpp` | Task construction and pre_process/infer/post_process/predict orchestration |
 | `inc/runner.h`, `inc/pipeline_io.h` | Backend contract, owned input/output batches and instance identity |
 | `inc/sdk_runner.h`, `src/sdk_runner.cpp` | Model loading, SDK ownership and shared input/output transport after required preflight |
+| `inc/model_identity.h`, `inc/preflight.h`, `src/preflight.cpp` | Explicit model selection and local board/model/vocabulary verification using shared native helpers |
 | `inc/config.h` | Protocol-specific configuration validation |
 | `common/nv12.h` | BGR-to-I420 conversion and shared split-NV12 packing |
 | `common/postprocess.h` | Family dispatch and aligned instance result assembly |
@@ -76,7 +77,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-Build all eight tests with a real OpenCV installation (no board SDK):
+Build all nine tests with a real OpenCV installation (no board SDK):
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
@@ -84,7 +85,7 @@ cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
 
-Build the reusable stage library and all eight tests from its own CMake project:
+Build the reusable stage library and all nine tests from its own CMake project:
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
@@ -106,13 +107,13 @@ The output is `libyoloe_core.a`, not a board executable. For a normal embedding 
 
 Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands compile actual C++ math and float-memory utilities; they do not establish SDK ABI compatibility.
 
-For the CMake build, run all eight checks with failure output:
+For the CMake build, run all nine checks with failure output:
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 ```
 
-Run the library project's eight tests:
+Run the library project's nine tests:
 
 ```bash
 ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
@@ -179,19 +180,32 @@ output caches and copies output data. It performs no decode or image rendering.
 publication or custom float SHA-256, and vocabulary/conversion provenance. It
 runs before any SDK call; throwing stops construction. The adapter's shape,
 target/variant and stack checks cannot prove those identities. A no-op callback
-is used only by host fixtures and is not a valid production policy. The
-canonical launcher supplying this policy is still pending; this API alone is
-not a ready-to-run customer entry.
+is used only by host fixtures and is not a valid production policy. The built-in `make_preflight(expected_model_sha256, label_path)` supplies local
+board and byte verification; the canonical publication-selection launcher is
+still pending, so this API alone is not a ready-to-run customer entry.
 
-The second complete API example also compiles in host verification. Its caller
-must supply the described policy, not a placeholder that silently accepts:
+`make_preflight` reads real local sysfs/device-tree using shared target rules.
+It rejects unknown/mismatched boards, missing/empty models, malformed or
+mismatching model digests and any vocabulary other than the fixed ordered PF
+file. The 64-digit expected model digest is supplied explicitly, not silently
+computed from the same file and accepted. Model target/variant/SDK-stack and
+tensor contracts are additionally checked by `SdkRunner`. No identity override
+is exposed. For custom conversion, a matching digest proves bytes, not compiler
+provenance; the caller must retain conversion evidence. No compatible S float
+HBM is supplied by this API.
+
+The second complete API example compiles in host verification. Its caller
+supplies the selected model's expected digest and the vocabulary path:
 
 ```cpp
+#include "preflight.h"
 #include "sdk_runner.h"
 #include "yoloe.h"
 yoloe::Result process_sdk_image(const cv::Mat& image, yoloe::SdkModel model,
-                                yoloe::SdkPreflight preflight) {
-    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(preflight));
+                                const std::string& expected_model_sha256,
+                                const std::string& label_path) {
+    auto gate = yoloe::make_preflight(expected_model_sha256, label_path);
+    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(gate));
     yoloe::Config config;
     config.protocol = backend->protocol();
     yoloe::YOLOE task(config, std::move(backend));
@@ -208,7 +222,7 @@ cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-lib \
 cmake --build /tmp/yoloe-board-lib --parallel 4
 ```
 
-This produces `libyoloe_core.a` and `libyoloe_sdk.a`, not an executable. With
+This produces `libyoloe_core.a`, `libyoloe_preflight.a` and `libyoloe_sdk.a`, not an executable. With
 CMake `add_subdirectory`, link the application to `yoloe_sdk`. Set
 `YOLOE_DNN_INCLUDE_DIR` to the directory containing `dnn/hb_dnn.h` and
 `YOLOE_DNN_LIBRARY` to the matching DNN library if discovery fails. UCP headers
@@ -216,8 +230,9 @@ also require `YOLOE_UCP_LIBRARY`; exposing both hbSys and UCP headers is rejecte
 Do not use test-double include paths for a deployable library. OpenCV development
 files are still required. The default host build leaves `YOLOE_BUILD_SDK=OFF`.
 
-The OpenCV host configuration now runs eight tests: the existing six plus X5
-and UCP adapter tests with production code instrumented by ASan/UBSan. They
+The OpenCV host configuration now runs nine tests: the existing six, X5/UCP
+adapter tests and a preflight test. The preflight library itself needs no OpenCV
+or SDK. The adapter tests run with production code instrumented by ASan/UBSan. They
 cover preflight rejection before SDK calls, metadata/precision rejection before
 allocation, partial allocation and failed initialization cleanup, task/cache
 errors, semantic output order and independence across inference calls. These
@@ -226,10 +241,12 @@ use narrow API doubles, not vendor SDK headers/libraries.
 <a id="results-interpretation"></a>
 ## Verification and next integration
 
+[Native preflight evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-preflight-review.md) covers registry parity, model/vocabulary rejection and shared streaming hashes.
+
 [SDK adapter evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-sdk-runner-review.md) records resource/metadata tests and their host-only limits.
 
 [Stage/NV12 evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-stages-review.md) covers actual byte comparisons, ownership/error paths and compiled API examples; it does not certify a board backend.
 
 [Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records the earlier E26 checks. The [E11 extension evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md) records all three native tests, E26 regression and real E11 s/m/l ONNX comparisons. The E26n candidate comparison covers both single- and multi-label decoding against Python. [Geometry/mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md) separately records actual OpenCV compilation and full ROI pixel comparison. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
 
-The remaining native work is explicit: a canonical implementation of the target/artifact preflight policy, CLI entry and complete executable build/run documentation. The adapter API does not close those requirements. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.
+The remaining native work is explicit: canonical publication selection, CLI entry and complete executable build/run documentation. The adapter API does not close those requirements. Board, real SDK, OE compilation and native dataset accuracy remain unverified. This directory is not a completed C++ migration or a replacement for the archived source programs yet.

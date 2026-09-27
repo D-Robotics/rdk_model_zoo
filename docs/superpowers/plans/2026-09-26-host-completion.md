@@ -115,3 +115,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：为接入 YOLOE 原生后端，修正 Ultralytics 共用 NV12 动态容量与 SDK 任务失败释放问题；两项旧代码缺陷已复现并留证。新增长度精确的 Y/UV 直接上传，12 个原生测试及 463 项 Python 回归通过，双语 README 同步输入约束和主机验证边界。见[共用原生 I/O 记录](../../releases/unified-migration/2026-09-28-yolo-native-io-review.md)。YOLOE SDK 后端/CLI 及 H0–H9 其余事项继续，真实 SDK/板端与独立整体评审未执行。
 
 2026-09-28：YOLOE 原生 SDK 适配器已接入共用模型/输入/输出/任务管理，十个浮点输出按语义角色绑定，不新增手动反量化；必需预检回调先于 SDK 执行。两种文档构建方式均通过八项 YOLOE 原生测试，共用层 12 项及 463 项 Python 回归通过；双语完整 API 示例编译通过。见[SDK 适配器记录](../../releases/unified-migration/2026-09-28-yoloe-sdk-runner-review.md)。统一预检策略、CLI 和完整可执行入口仍待完成；真实 SDK/板端/OE 未验证，H0–H9 与独立整体评审保持开放。
+
+2026-09-28：YOLOE 原生预检工厂已提供本机身份、预期模型摘要及固定词表核验；共用 SHA 从 YOLOv5 提取并委托复用，修复目录被当作可哈希文件的边界问题。平台注册表与 Python 识别优先级逐项一致；两种构建方式各九项原生测试、共用层 12 项及 544 项 Python 回归通过，双语 SDK 示例实际使用预检工厂并编译验证。见[原生预检记录](../../releases/unified-migration/2026-09-28-yoloe-native-preflight-review.md)。统一发布制品选择/CLI/输出仍待完成；H0–H9 继续，真实 SDK、板端、OE 与全分支独立评审未执行。

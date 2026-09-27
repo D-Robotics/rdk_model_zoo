@@ -17,6 +17,7 @@
 | `inc/yoloe.h`、`src/yoloe.cpp` | 构造及 pre_process/infer/post_process/predict 编排 |
 | `inc/runner.h`、`inc/pipeline_io.h` | 后端契约、独立输入输出和实例身份 |
 | `inc/sdk_runner.h`、`src/sdk_runner.cpp` | 必需预检之后的模型加载、SDK 资源及共用输入输出传输 |
+| `inc/model_identity.h`、`inc/preflight.h`、`src/preflight.cpp` | 显式模型选择及基于共用原生工具的本机/模型/词表核验 |
 | `inc/config.h` | 分协议配置校验 |
 | `common/nv12.h` | BGR 转 I420 及共用 split-NV12 打包 |
 | `common/postprocess.h` | 家族分派及对齐实例结果组装 |
@@ -76,7 +77,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
   -o /tmp/yoloe-native-tests/geometry
 ```
 
-使用真实 OpenCV 安装构建全部八个测试（不需要板端 SDK）：
+使用真实 OpenCV 安装构建全部九个测试（不需要板端 SDK）：
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
@@ -84,7 +85,7 @@ cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
 cmake --build /tmp/yoloe-native-opencv --parallel 4
 ```
 
-从独立 CMake 项目构建可复用阶段库及全部八个测试：
+从独立 CMake 项目构建可复用阶段库及全部九个测试：
 
 ```bash
 cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
@@ -106,13 +107,13 @@ cmake --build /tmp/yoloe-stage-core --parallel 4
 
 成功时退出码为 0、无输出。解码测试分配完整的 4585 类张量，开启 sanitizer 时应预留数百 MB 内存。断言/契约异常及 sanitizer 报错均为失败。这些命令实际编译 C++ 数学及浮点内存工具，不证明真实 SDK ABI 兼容。
 
-对 CMake 构建执行全部八个检查并显示失败输出：
+对 CMake 构建执行全部九个检查并显示失败输出：
 
 ```bash
 ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
 ```
 
-执行库项目的八个测试：
+执行库项目的九个测试：
 
 ```bash
 ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
@@ -175,18 +176,27 @@ E11s/E26n/s/m/l/x、S100P E26n/s/m/l/x，且必须与编译使用的 SDK 栈一�
 **预检回调必填，没有默认值。** 应用提供 `void(const SdkModel&)`，核验实际
 板卡、选定的发布制品或自编译浮点 SHA-256，以及词表/转换来源。回调先于任何
 SDK 调用执行，抛异常即停止构造。适配器的形状、target/variant 和 SDK 栈检查
-不能证明这些身份。主机夹具中的空操作回调不能作为生产策略。提供统一策略的
-launcher 仍待完成，这个 API 本身还不是客户可直接运行的统一入口。
+不能证明这些身份。主机夹具中的空操作回调不能作为生产策略。内置 `make_preflight(expected_model_sha256, label_path)` 已提供本机身份和字节核验；
+统一发布制品选择的 launcher 仍待完成，这个 API 本身还不是客户可直接运行的入口。
 
-第二个完整 API 示例同样在主机验证中编译；调用者必须传入上述策略，不能用
-静默放行的占位回调：
+`make_preflight` 按共用规则读取真实本机 sysfs/device-tree，拒绝未知/不符板卡、
+缺失/空模型、格式错误或不匹配的模型摘要，以及不符合固定有序 PF 文件的词表。
+64 位模型预期摘要由调用者明确提供，不会对同一文件现算现认。`SdkRunner` 另行
+检查 target/variant/SDK 栈及张量契约，没有身份覆盖入口。自转换模型摘要匹配只
+证明字节一致，不认证编译器来源；调用者仍需保留转换证据，本 API 不提供兼容的
+S 浮点 HBM。
+
+第二个完整 API 示例同样在主机验证中编译；调用者传入选定模型的预期摘要与词表路径：
 
 ```cpp
+#include "preflight.h"
 #include "sdk_runner.h"
 #include "yoloe.h"
 yoloe::Result process_sdk_image(const cv::Mat& image, yoloe::SdkModel model,
-                                yoloe::SdkPreflight preflight) {
-    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(preflight));
+                                const std::string& expected_model_sha256,
+                                const std::string& label_path) {
+    auto gate = yoloe::make_preflight(expected_model_sha256, label_path);
+    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(gate));
     yoloe::Config config;
     config.protocol = backend->protocol();
     yoloe::YOLOE task(config, std::move(backend));
@@ -202,20 +212,22 @@ cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-lib \
 cmake --build /tmp/yoloe-board-lib --parallel 4
 ```
 
-产物为 `libyoloe_core.a` 和 `libyoloe_sdk.a`，不含可执行程序。通过 CMake
+产物为 `libyoloe_core.a`、`libyoloe_preflight.a` 和 `libyoloe_sdk.a`，不含可执行程序。通过 CMake
 `add_subdirectory` 集成时将应用链接到 `yoloe_sdk`。自动查找失败时，将
 `YOLOE_DNN_INCLUDE_DIR` 指向包含 `dnn/hb_dnn.h` 的目录，
 `YOLOE_DNN_LIBRARY` 指向匹配的 DNN 库；UCP 头还要求 `YOLOE_UCP_LIBRARY`。
 同时暴露 hbSys/UCP 头会拒绝构建。不要给部署库使用测试替身头；仍需 OpenCV
 开发文件，缺省主机构建保持 `YOLOE_BUILD_SDK=OFF`。
 
-OpenCV 主机配置现在运行八项测试：原有六项，加上使用 ASan/UBSan 检查生产代码
-的 X5/UCP 适配器测试。覆盖先于 SDK 的预检拒绝、先于分配的元数据/精度拒绝、
+OpenCV 主机配置现在运行九项测试：原有六项，加上 X5/UCP 适配器测试及预检测试。
+预检库本身不需要 OpenCV 或 SDK；适配器测试使用 ASan/UBSan 检查生产代码。覆盖先于 SDK 的预检拒绝、先于分配的元数据/精度拒绝、
 部分分配和初始化失败清理、任务/cache 错误、语义输出顺序及跨调用独立持有。
 使用的是精简 API 替身，不是厂商 SDK 头或库。
 
 <a id="results-interpretation"></a>
 ## 验证与后续集成
+
+[原生预检证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-preflight-review.md)覆盖注册表一致性、模型/词表拒绝及共用流式摘要。
 
 [SDK 适配器证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-sdk-runner-review.md)记录资源/元数据测试及其主机验证边界。
 
@@ -223,4 +235,4 @@ OpenCV 主机配置现在运行八项测试：原有六项，加上使用 ASan/U
 
 [实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。[几何/掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)另行记录真实 OpenCV 编译及完整 ROI 像素对照。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
 
-后续仍需完成目标/制品预检策略的统一实现、CLI 入口及完整可执行程序构建运行说明；适配器 API 不代表这些要求已经关闭。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
+后续仍需完成统一发布制品选择、CLI 入口及完整可执行程序构建运行说明；适配器 API 不代表这些要求已经关闭。板端、真实 SDK、OE 编译和原生数据集精度均未验证；本目录尚不代表 C++ 迁移完成，也尚未替代归档原始程序。
