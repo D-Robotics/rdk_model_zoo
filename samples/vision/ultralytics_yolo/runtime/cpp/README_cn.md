@@ -19,7 +19,7 @@
 <a id="dependencies"></a>
 ## 依赖
 
-板端构建需要 CMake ≥3.10、C++11 编译器、OpenCV 开发文件和对应板端 DNN SDK。CMake 优先查 `/usr/include/dnn/hb_dnn.h` 和 `/usr/lib`；否则使用 `/usr/include/hobot`、`/usr/include/hobot/dnn`、`/usr/hobot/include`、`/usr/hobot/lib` 并链接 `hbucp`。这些文件由匹配的板端镜像/SDK 提供；主机 OE 编译器不能替代它们。源码没有给全部 SDK 版本作兼容承诺。
+下列命令需要 CMake/CTest ≥3.20（包括 `ctest --test-dir`）。板端构建需要C++11 编译器、OpenCV 开发文件和对应板端 DNN SDK。CMake 优先查 `/usr/include/dnn/hb_dnn.h` 和 `/usr/lib`；否则使用 `/usr/include/hobot`、`/usr/include/hobot/dnn`、`/usr/hobot/include`、`/usr/hobot/lib` 并链接 `hbucp`。这些文件由匹配的板端镜像/SDK 提供；主机 OE 编译器不能替代它们。源码没有给全部 SDK 版本作兼容承诺。
 
 <a id="build"></a>
 ## 构建
@@ -155,13 +155,26 @@ DFL 和直接距离数学复用 `common/decode.h`，不再维护私有副本；�
 计时从内存中的 BGR 图片开始，到还原后的检测结果结束：包括 resize/letterbox、NV12、拷贝/cache、BPU 与解码/NMS，不包括模型加载、图片文件读取、绘图和保存。`--pipeline-streams 2` 可测两条完整流水线；吞吐量是总完成帧数/共同墙钟时间，延迟是每请求值。OpenCV 线程数和流水线数相互独立，不限定 CPU affinity。不要将 C++ 与 Python、runtime-only 与端到端、单流与多流数据混成同一结论。
 
 主机套件包含六个纯辅助测试（解码、head 探测、NV12 几何、benchmark 统计、分类、
-任务输出绑定），以及四个使用精简 X5/UCP 替身的分类/任务描述符与资源测试；
-均不使用真实板卡 SDK：
+任务输出绑定），四个分类/任务描述符与资源测试，以及两个输入/任务生命周期测试，
+共 12 项。后两项使用精简 X5/UCP 替身，并以 AddressSanitizer 与
+UndefinedBehaviorSanitizer 检查生产代码；均不使用真实板卡 SDK：
 
 ```bash
 cmake -S samples/vision/ultralytics_yolo/runtime/cpp/test -B /tmp/ultralytics-cpp-host
 cmake --build /tmp/ultralytics-cpp-host
 ctest --test-dir /tmp/ultralytics-cpp-host --output-on-failure
 ```
+
+共用输入对象在分配前校验元数据。X5 packed NV12 接受 RGB 形状的 NCHW/NHWC
+描述，但要求物理形状紧凑；带填充的 packed 存储显式拒绝。Split Y/UV 要求精确的
+单 batch 几何及无量化字节平面。动态 `-1` 跨度/容量按实际行跨度推导；零跨度、
+重叠、容量不足或溢出均拒绝。`upload_planes` 接收长度精确的紧凑 Y 与交错 UV，
+按已分配行跨度拷贝并清理两平面 cache；原有 I420 `upload` 委托同一路径。
+未完成分配或使用不同 plan 时拒绝上传；中途分配失败会释放所有已获取缓冲区。
+
+同步推理要求非空任务句柄；创建、提交或等待报错时仍释放返回的任务，并保留首个
+错误码。UCP 提交明确选择 `HB_UCP_BPU_CORE_ANY`。这些检查不代表某版本 SDK ABI
+或实板验证；[主机回归证据](../../../../../docs/releases/unified-migration/2026-09-28-yolo-native-io-review.md)
+包含原任务释放与动态容量问题的失败记录。
 
 缺少 OpenCV 开发包或 DNN/UCP 头/库会导致构建失败；请核对目标 SDK，而不是复制其他平台库。输入/输出协议拒绝时检查模型 target、任务、layout、dtype 和 head。主机辅助测试通过不代表所有四个板端程序可编译运行，也不代表新的性能结果。

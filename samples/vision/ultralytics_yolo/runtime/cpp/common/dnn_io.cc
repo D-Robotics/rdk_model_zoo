@@ -15,254 +15,245 @@
  */
 
 #include "dnn_io.h"
-
+#include "nv12_geometry.h"
 #include <cstring>
 #include <iostream>
-
-#include "nv12_geometry.h"
+#include <limits>
+#include <vector>
 
 namespace yolo {
-
 namespace {
-
-bool check_ret(int ret, const char* action) {
-  if (ret == 0) return true;
+bool check_ret(int ret, const char *action) {
+  if (ret == 0)
+    return true;
   std::cerr << "[ERROR] " << action << " failed, error code: " << ret
             << std::endl;
   return false;
 }
-
-// Row stride applied to derived (dynamic) split-NV12 layouts. The official
-// dynamic-stride recipe aligns each stride to the platform requirement
-// (32 bytes on S100/S100P, 64 bytes on S600); 64 satisfies both. Widths that
-// are already aligned keep their exact packed stride.
-int64_t align_row_stride(int64_t width) {
-  constexpr int64_t kAlignment = 64;
-  return (width + kAlignment - 1) / kAlignment * kAlignment;
+bool same_plan(const InputPlan &a, const InputPlan &b) {
+  return a.protocol == b.protocol && a.input_h == b.input_h &&
+         a.input_w == b.input_w && a.y_stride == b.y_stride &&
+         a.uv_stride == b.uv_stride;
 }
+bool geometry(int h, int w) {
+  // All SDK allocations are signed-int byte counts, including NV12's UV plane.
+  return h > 0 && w > 0 && !(h & 1) && !(w & 1) &&
+         static_cast<int64_t>(h) * w <= std::numeric_limits<int>::max() / 3 * 2;
+}
+bool split_properties(hbDNNTensorProperties &p, int h, int w, int channels) {
+  if (p.quantiType != NONE || p.validShape.numDimensions != 4 ||
+      p.validShape.dimensionSize[0] != 1 ||
+      p.validShape.dimensionSize[1] != h ||
+      p.validShape.dimensionSize[2] != w ||
+      p.validShape.dimensionSize[3] != channels)
+    return false;
+  bool type_ok = p.tensorType == HB_DNN_TENSOR_TYPE_S8;
+#if !defined(YOLO_DNN_STACK_X5)
+  type_ok = type_ok || p.tensorType == HB_DNN_TENSOR_TYPE_U8;
+#endif
+  if (!type_ok)
+    return false;
+  const int64_t row_bytes = static_cast<int64_t>(w) * channels;
+  const int64_t aligned_row = (row_bytes + 63) / 64 * 64;
+  if (aligned_row > std::numeric_limits<int>::max())
+    return false;
+  if (p.stride[3] == -1)
+    p.stride[3] = 1;
+  if (p.stride[2] == -1)
+    p.stride[2] = channels;
+  if (p.stride[1] == -1)
+    p.stride[1] = aligned_row;
+  if (p.stride[3] != 1 || p.stride[2] != channels || p.stride[1] < row_bytes)
+    return false;
+  const int64_t plane_bytes = static_cast<int64_t>(p.stride[1]) * h;
+  if (plane_bytes <= 0 || plane_bytes > std::numeric_limits<int>::max())
+    return false;
+  if (p.stride[0] == -1)
+    p.stride[0] = plane_bytes;
+  if (p.stride[0] < plane_bytes)
+    return false;
+  if (p.alignedByteSize == -1)
+    p.alignedByteSize = p.stride[0];
+  return p.alignedByteSize >= p.stride[0];
+}
+// One path resolves both probe and allocation metadata, before any allocation.
+bool inspect(hbDNNHandle_t model, InputPlan &plan,
+             hbDNNTensorProperties (&properties)[2], std::string *error) {
+  auto fail = [&](const char *text) {
+    if (error)
+      *error = text;
+    return false;
+  };
+  int32_t count = 0;
+  if (hbDNNGetInputCount(&count, model) != 0 || (count != 1 && count != 2))
+    return fail("Expected one packed or two split NV12 inputs");
+  for (int i = 0; i < count; ++i)
+    if (hbDNNGetInputTensorProperties(&properties[i], model, i) != 0)
+      return fail("Cannot query NV12 input descriptor");
+  if (count == 1) {
+#if defined(YOLO_DNN_STACK_X5)
+    const auto &p = properties[0];
+    if (p.tensorType != HB_DNN_IMG_TYPE_NV12 || p.quantiType != NONE ||
+        p.validShape.numDimensions != 4 || p.alignedShape.numDimensions != 4 ||
+        p.validShape.dimensionSize[0] != 1 ||
+        (p.tensorLayout != HB_DNN_LAYOUT_NCHW &&
+         p.tensorLayout != HB_DNN_LAYOUT_NHWC))
+      return fail("Expected a batch-one packed NV12 input");
+    const int channel = p.tensorLayout == HB_DNN_LAYOUT_NCHW ? 1 : 3;
+    const int height = p.tensorLayout == HB_DNN_LAYOUT_NCHW ? 2 : 1;
+    const int width = p.tensorLayout == HB_DNN_LAYOUT_NCHW ? 3 : 2;
+    if (p.validShape.dimensionSize[channel] != 3)
+      return fail("Packed NV12 descriptor must declare three RGB channels");
+    for (int i = 0; i < 4; ++i)
+      if (p.validShape.dimensionSize[i] != p.alignedShape.dimensionSize[i])
+        return fail("Padded packed NV12 storage is unsupported");
+    const int h = p.validShape.dimensionSize[height],
+              w = p.validShape.dimensionSize[width];
+    if (!geometry(h, w) ||
+        p.alignedByteSize < static_cast<int64_t>(h) * w * 3 / 2)
+      return fail("Invalid packed NV12 geometry or allocation");
+    plan.protocol = InputProtocol::kPackedNv12;
+    plan.input_h = h;
+    plan.input_w = w;
+    return true;
+#else
+    return fail("Packed NV12 requires the X5 stack");
+#endif
+  }
+  const auto &shape = properties[0].validShape;
+  if (shape.numDimensions != 4)
+    return fail("Expected rank-four split NV12");
+  const int h = shape.dimensionSize[1], w = shape.dimensionSize[2];
+  if (!geometry(h, w) || !split_properties(properties[0], h, w, 1) ||
+      !split_properties(properties[1], h / 2, w / 2, 2))
+    return fail("Invalid split NV12 shape/type/stride/allocation");
+  plan.protocol = InputProtocol::kSplitNv12;
+  plan.input_h = h;
+  plan.input_w = w;
+  plan.y_stride = properties[0].stride[1];
+  plan.uv_stride = properties[1].stride[1];
+  return true;
+}
+} // namespace
 
-}  // namespace
-
-int infer_sync(hbDNNTensor* outputs, hbDNNTensor* inputs, int input_count,
+int infer_sync(hbDNNTensor *outputs, hbDNNTensor *inputs, int input_count,
                hbDNNHandle_t model) {
+  if (!outputs || !inputs || !model || (input_count != 1 && input_count != 2))
+    return -1;
 #if defined(YOLO_DNN_STACK_X5)
   hbDNNTaskHandle_t task = nullptr;
   hbDNNInferCtrlParam control;
   HB_DNN_INITIALIZE_INFER_CTRL_PARAM(&control);
-  hbDNNTensor* output_ptr = outputs;
-  const int ret = hbDNNInfer(&task, &output_ptr, inputs, model, &control);
-  if (ret != 0) return ret;
-  const int wait_ret = hbDNNWaitTaskDone(task, 0);
-  const int release_ret = hbDNNReleaseTask(task);
-  return wait_ret != 0 ? wait_ret : release_ret;
+  hbDNNTensor *output_ptr = outputs;
+  int result = hbDNNInfer(&task, &output_ptr, inputs, model, &control);
+  if (result == 0)
+    result = task ? hbDNNWaitTaskDone(task, 0) : -1;
+  const int released = task ? hbDNNReleaseTask(task) : 0;
 #else
   hbUCPTaskHandle_t task = nullptr;
-  const int ret = hbDNNInferV2(&task, outputs, inputs, model);
-  if (ret != 0) return ret;
-  if (task == nullptr) return 0;  // completed synchronously
-  hbUCPSchedParam sched;
-  HB_UCP_INITIALIZE_SCHED_PARAM(&sched);
-  const int submit_ret = hbUCPSubmitTask(task, &sched);
-  if (submit_ret != 0) {
-    hbUCPReleaseTask(task);
-    return submit_ret;
+  int result = hbDNNInferV2(&task, outputs, inputs, model);
+  if (result == 0 && !task)
+    result = -1;
+  if (result == 0) {
+    hbUCPSchedParam sched;
+    HB_UCP_INITIALIZE_SCHED_PARAM(&sched);
+    sched.backend = HB_UCP_BPU_CORE_ANY;
+    result = hbUCPSubmitTask(task, &sched);
+    if (result == 0)
+      result = hbUCPWaitTaskDone(task, 0);
   }
-  const int wait_ret = hbUCPWaitTaskDone(task, 0);
-  const int release_ret = hbUCPReleaseTask(task);
-  return wait_ret != 0 ? wait_ret : release_ret;
+  const int released = task ? hbUCPReleaseTask(task) : 0;
 #endif
+  return result != 0 ? result : released;
 }
-
-InputPlan probe_input_protocol(hbDNNHandle_t model, std::string* error) {
+InputPlan probe_input_protocol(hbDNNHandle_t model, std::string *error) {
   InputPlan plan;
-  int32_t input_count = 0;
-  if (!check_ret(hbDNNGetInputCount(&input_count, model),
-                 "hbDNNGetInputCount")) {
-    if (error) *error = "hbDNNGetInputCount failed";
-    return plan;
-  }
-
-#if defined(YOLO_DNN_STACK_X5)
-  if (input_count == 1) {
-    hbDNNTensorProperties properties;
-    std::memset(&properties, 0, sizeof(properties));
-    if (!check_ret(hbDNNGetInputTensorProperties(&properties, model, 0),
-                   "hbDNNGetInputTensorProperties")) {
-      if (error) *error = "hbDNNGetInputTensorProperties failed";
-      return plan;
-    }
-    if (properties.tensorType != HB_DNN_IMG_TYPE_NV12 ||
-        properties.tensorLayout != HB_DNN_LAYOUT_NCHW ||
-        properties.validShape.numDimensions != 4) {
-      if (error) *error = "single input is not an NCHW NV12 tensor";
-      return plan;
-    }
-    plan.protocol = InputProtocol::kPackedNv12;
-    plan.input_h = properties.validShape.dimensionSize[2];
-    plan.input_w = properties.validShape.dimensionSize[3];
-    if ((plan.input_h & 1) != 0 || (plan.input_w & 1) != 0) {
-      if (error) *error = "NV12 input shape must be even";
-      plan.protocol = InputProtocol::kUnknown;
-      return plan;
-    }
-    return plan;
-  }
-#else
-  if (input_count == 1) {
-    if (error) *error = "packed NV12 single-input models require the X5 stack";
-    return plan;
-  }
-#endif
-
-  if (input_count == 2) {
-    hbDNNTensorProperties y_properties;
-    hbDNNTensorProperties uv_properties;
-    std::memset(&y_properties, 0, sizeof(y_properties));
-    std::memset(&uv_properties, 0, sizeof(uv_properties));
-    if (!check_ret(hbDNNGetInputTensorProperties(&y_properties, model, 0),
-                   "hbDNNGetInputTensorProperties") ||
-        !check_ret(hbDNNGetInputTensorProperties(&uv_properties, model, 1),
-                   "hbDNNGetInputTensorProperties")) {
-      if (error) *error = "hbDNNGetInputTensorProperties failed";
-      return plan;
-    }
-    // UINT8 planes surface as HB_DNN_TENSOR_TYPE_S8 on X5 and as
-    // HB_DNN_TENSOR_TYPE_U8 on the S-series stack.
-    const hbDNNTensorShape& y_shape = y_properties.validShape;
-    const hbDNNTensorShape& uv_shape = uv_properties.validShape;
-    bool types_ok = y_properties.tensorType == HB_DNN_TENSOR_TYPE_S8 &&
-                    uv_properties.tensorType == HB_DNN_TENSOR_TYPE_S8;
-#if !defined(YOLO_DNN_STACK_X5)
-    types_ok = types_ok ||
-               (y_properties.tensorType == HB_DNN_TENSOR_TYPE_U8 &&
-                uv_properties.tensorType == HB_DNN_TENSOR_TYPE_U8);
-#endif
-    if (!types_ok ||
-        y_shape.numDimensions != 4 || uv_shape.numDimensions != 4 ||
-        y_shape.dimensionSize[0] != 1 || uv_shape.dimensionSize[0] != 1) {
-      if (error) *error = "two inputs are not rank-4 UINT8 tensors";
-      return plan;
-    }
-    const int h = y_shape.dimensionSize[1];
-    const int w = y_shape.dimensionSize[2];
-    if (y_shape.dimensionSize[3] != 1 || (h & 1) != 0 || (w & 1) != 0 ||
-        uv_shape.dimensionSize[1] != h / 2 ||
-        uv_shape.dimensionSize[2] != w / 2 ||
-        uv_shape.dimensionSize[3] != 2) {
-      if (error) *error = "split NV12 input shapes do not match the y/uv contract";
-      return plan;
-    }
-    plan.protocol = InputProtocol::kSplitNv12;
-    plan.input_h = h;
-    plan.input_w = w;
-    // Pyramid inputs report dynamic (-1) strides; derive aligned values so
-    // that the strides published at allocation time and the strides used to
-    // write the planes stay identical (see align_row_stride).
-    plan.y_stride = y_properties.stride[1] > 0 ? y_properties.stride[1]
-                                               : align_row_stride(w);
-    plan.uv_stride = uv_properties.stride[1] > 0 ? uv_properties.stride[1]
-                                                 : align_row_stride(w);
-    return plan;
-  }
-
-  if (error) *error = "unsupported input count: " + std::to_string(input_count);
+  hbDNNTensorProperties properties[2]{};
+  if (!inspect(model, plan, properties, error))
+    return InputPlan{};
+  if (error)
+    error->clear();
   return plan;
 }
-
-bool Nv12Input::allocate(hbDNNHandle_t model, const InputPlan& plan) {
+bool Nv12Input::allocate(hbDNNHandle_t model, const InputPlan &plan) {
   release();
-  if (plan.protocol == InputProtocol::kUnknown) {
-    std::cerr << "[ERROR] Cannot allocate an unknown input protocol"
-              << std::endl;
+  InputPlan actual;
+  hbDNNTensorProperties properties[2]{};
+  std::string error;
+  if (!inspect(model, actual, properties, &error) || !same_plan(plan, actual)) {
+    std::cerr << "[ERROR] NV12 allocation contract: " << error << std::endl;
     return false;
   }
-
-  input_count_ = plan.protocol == InputProtocol::kPackedNv12 ? 1 : 2;
+  input_count_ = actual.protocol == InputProtocol::kPackedNv12 ? 1 : 2;
   for (int i = 0; i < input_count_; ++i) {
     std::memset(&tensors_[i], 0, sizeof(tensors_[i]));
-    if (!check_ret(hbDNNGetInputTensorProperties(&tensors_[i].properties,
-                                                 model, i),
-                   "hbDNNGetInputTensorProperties")) {
+    tensors_[i].properties = properties[i];
+    auto *memory = YOLO_SYS_MEM(tensors_[i]);
+    int rc = YOLO_SYS_ALLOC_CACHED(memory, properties[i].alignedByteSize);
+    allocated_[i] = memory->virAddr != nullptr;
+    if (!check_ret(rc, "input allocation") || !memory->virAddr) {
+      release();
       return false;
     }
-    // Split pyramid inputs report dynamic (-1) alignedByteSize and strides;
-    // derive aligned packed values before submission (the runtime rejects
-    // tensors whose strides are left unset). The Y plane [1,h,w,1] has row
-    // stride align(w); the UV plane [1,h/2,w/2,2] has the same row stride
-    // (w/2 cells x 2 bytes) and half the rows. Derived strides must match
-    // the ones InputPlan carried, so upload and submission agree.
-    const int64_t row_stride = align_row_stride(plan.input_w);
-    const int64_t rows = i == 0 ? plan.input_h : plan.input_h / 2;
-    const int64_t plane_size = row_stride * rows;
-    const int64_t inner = i == 0 ? 1 : 2;
-    int64_t size = tensors_[i].properties.alignedByteSize;
-    if (size <= 0) {
-      size = plane_size;
-      tensors_[i].properties.alignedByteSize = size;
-    }
-    int64_t strides[4] = {plane_size, row_stride, inner, 1};
-    for (int d = 0; d < 4; ++d) {
-      if (tensors_[i].properties.stride[d] <= 0) {
-        tensors_[i].properties.stride[d] = strides[d];
-      }
-    }
-    if (!check_ret(YOLO_SYS_ALLOC_CACHED(YOLO_SYS_MEM(tensors_[i]), size),
-                   "sys alloc cached(input)")) {
-      return false;
-    }
-    allocated_[i] = true;
-    std::memset(YOLO_SYS_MEM(tensors_[i])->virAddr, 0, static_cast<size_t>(size));
+    std::memset(memory->virAddr, 0,
+                static_cast<size_t>(properties[i].alignedByteSize));
   }
+  plan_ = actual;
+  ready_ = true;
   return true;
 }
-
-bool Nv12Input::upload(const InputPlan& plan, const uint8_t* i420) {
-  const int h = plan.input_h;
-  const int w = plan.input_w;
-  const int y_size = h * w;
-  const uint8_t* y = i420;
-  const uint8_t* u = i420 + y_size;
-  const uint8_t* v = u + y_size / 4;
-
-  if (plan.protocol == InputProtocol::kPackedNv12) {
-    i420_to_packed_nv12(
-        y, u, v, h, w,
-        reinterpret_cast<uint8_t*>(YOLO_SYS_MEM(tensors_[0])->virAddr));
-    return check_ret(YOLO_SYS_FLUSH(YOLO_SYS_MEM(tensors_[0]),
-                                    HB_SYS_MEM_CACHE_CLEAN),
-                     "sys flush(input clean)");
-  }
-  if (plan.protocol == InputProtocol::kSplitNv12) {
-    i420_to_split_nv12(
-        y, u, v, h, w,
-        reinterpret_cast<uint8_t*>(YOLO_SYS_MEM(tensors_[0])->virAddr),
-        plan.y_stride,
-        reinterpret_cast<uint8_t*>(YOLO_SYS_MEM(tensors_[1])->virAddr),
-        plan.uv_stride);
-    if (!check_ret(YOLO_SYS_FLUSH(YOLO_SYS_MEM(tensors_[0]),
-                                  HB_SYS_MEM_CACHE_CLEAN),
-                   "sys flush(y clean)")) {
-      return false;
+bool Nv12Input::upload_planes(const InputPlan &plan, const uint8_t *y,
+                              size_t y_bytes, const uint8_t *uv,
+                              size_t uv_bytes) {
+  if (!ready_ || !same_plan(plan, plan_) || !y || !uv)
+    return false;
+  const size_t count = static_cast<size_t>(plan_.input_h) * plan_.input_w;
+  if (y_bytes != count || uv_bytes != count / 2)
+    return false;
+  if (plan_.protocol == InputProtocol::kPackedNv12) {
+    auto *destination =
+        static_cast<uint8_t *>(YOLO_SYS_MEM(tensors_[0])->virAddr);
+    std::memcpy(destination, y, count);
+    std::memcpy(destination + count, uv, count / 2);
+  } else {
+    for (int i = 0; i < 2; ++i) {
+      const int rows = i == 0 ? plan_.input_h : plan_.input_h / 2;
+      const int stride = i == 0 ? plan_.y_stride : plan_.uv_stride;
+      const uint8_t *source = i == 0 ? y : uv;
+      auto *destination =
+          static_cast<uint8_t *>(YOLO_SYS_MEM(tensors_[i])->virAddr);
+      for (int row = 0; row < rows; ++row)
+        std::memcpy(destination + static_cast<size_t>(row) * stride,
+                    source + static_cast<size_t>(row) * plan_.input_w,
+                    plan_.input_w);
     }
-    return check_ret(YOLO_SYS_FLUSH(YOLO_SYS_MEM(tensors_[1]),
-                                    HB_SYS_MEM_CACHE_CLEAN),
-                     "sys flush(uv clean)");
   }
-  std::cerr << "[ERROR] Cannot upload an unknown input protocol" << std::endl;
-  return false;
+  for (int i = 0; i < input_count_; ++i)
+    if (!check_ret(
+            YOLO_SYS_FLUSH(YOLO_SYS_MEM(tensors_[i]), HB_SYS_MEM_CACHE_CLEAN),
+            "input cache clean"))
+      return false;
+  return true;
 }
-
+bool Nv12Input::upload(const InputPlan &plan, const uint8_t *i420) {
+  if (!ready_ || !same_plan(plan, plan_) || !i420)
+    return false;
+  const size_t count = static_cast<size_t>(plan_.input_h) * plan_.input_w;
+  std::vector<uint8_t> uv(count / 2);
+  for (size_t i = 0; i < count / 4; ++i) {
+    uv[2 * i] = i420[count + i];
+    uv[2 * i + 1] = i420[count + count / 4 + i];
+  }
+  return upload_planes(plan, i420, count, uv.data(), uv.size());
+}
 void Nv12Input::release() {
-  for (int i = 0; i < 2; ++i) {
+  ready_ = false;
+  for (int i = 0; i < 2; ++i)
     if (allocated_[i]) {
-      const int ret = YOLO_SYS_FREE(YOLO_SYS_MEM(tensors_[i]));
-      if (ret != 0) {
-        std::cerr << "[WARN] sys free(input) returned " << ret << std::endl;
-      }
+      check_ret(YOLO_SYS_FREE(YOLO_SYS_MEM(tensors_[i])), "input release");
       allocated_[i] = false;
     }
-  }
   input_count_ = 0;
+  plan_ = InputPlan{};
 }
-
-}  // namespace yolo
+} // namespace yolo

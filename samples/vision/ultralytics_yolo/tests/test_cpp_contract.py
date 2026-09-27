@@ -1,6 +1,7 @@
 """Static consistency checks between the C++ runtime constants and the Python contracts."""
 from pathlib import Path
 import re, sys, unittest
+import shutil, subprocess, tempfile
 
 S = Path(__file__).resolve().parents[1]
 R = S.parents[2]
@@ -56,8 +57,23 @@ class CppContractTests(unittest.TestCase):
                 self.assertIn('Nv12Input', source)
         # The protocol detection itself is shared, not duplicated per task.
         self.assertIn('HB_DNN_IMG_TYPE_NV12', CPP_DNN_IO)
-        self.assertIn('i420_to_packed_nv12', CPP_DNN_IO)
-        self.assertIn('i420_to_split_nv12', CPP_DNN_IO)
+        # Execute production plumbing against both SDK API doubles. Helper
+        # spelling is not a behavioral contract: owned Y/UV can bypass I420.
+        compiler = shutil.which('c++')
+        if compiler is None:
+            self.skipTest('C++ compiler required for native input protocol tests')
+        cpp = S / 'runtime/cpp'
+        with tempfile.TemporaryDirectory() as directory:
+            for stack in ('x5', 'ucp'):
+                with self.subTest(stack=stack):
+                    binary = Path(directory) / stack
+                    command = [compiler, '-std=c++11', '-Wall', '-Wextra', '-Werror',
+                               '-I', str(cpp / 'test/fake_dnn_io' / stack),
+                               '-I', str(cpp), str(cpp / 'test/test_dnn_io.cc'),
+                               str(cpp / 'common/dnn_io.cc'),
+                               str(cpp / 'common/nv12_geometry.cc'), '-o', str(binary)]
+                    subprocess.run(command, check=True, capture_output=True, text=True)
+                    subprocess.run([str(binary)], check=True, capture_output=True, text=True)
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@ No C++ OBB entry is supplied. This does not claim the Python S YOLOv10 NMS-free 
 <a id="dependencies"></a>
 ## Dependencies
 
-Board builds require CMake ≥3.10, a C++11 compiler, OpenCV development files and the matching board DNN SDK. CMake first checks `/usr/include/dnn/hb_dnn.h` and `/usr/lib`; otherwise it uses `/usr/include/hobot`, `/usr/include/hobot/dnn`, `/usr/hobot/include`, `/usr/hobot/lib` and links `hbucp`. These come from the matching board image/SDK, not the host OE model compiler. The sources do not certify every SDK version.
+The commands below require CMake/CTest ≥3.20 (including `ctest --test-dir`). Board builds require a C++11 compiler, OpenCV development files and the matching board DNN SDK. CMake first checks `/usr/include/dnn/hb_dnn.h` and `/usr/lib`; otherwise it uses `/usr/include/hobot`, `/usr/include/hobot/dnn`, `/usr/hobot/include`, `/usr/hobot/lib` and links `hbucp`. These come from the matching board image/SDK, not the host OE model compiler. The sources do not certify every SDK version.
 
 <a id="build"></a>
 ## Build
@@ -169,13 +169,30 @@ Timing starts with an in-memory BGR image and ends with restored detections: res
 
 The host suite contains six pure-helper tests (decode, head probing, NV12 geometry,
 benchmark bookkeeping, classification and task output binding), plus four
-classification/task descriptor-resource tests against narrow X5/UCP doubles.
-None uses a real board SDK:
+classification/task descriptor-resource tests and two input/task lifecycle tests
+against narrow X5/UCP doubles (12 tests total). The two input/task tests instrument
+production code with AddressSanitizer and UndefinedBehaviorSanitizer. None uses a real board SDK:
 
 ```bash
 cmake -S samples/vision/ultralytics_yolo/runtime/cpp/test -B /tmp/ultralytics-cpp-host
 cmake --build /tmp/ultralytics-cpp-host
 ctest --test-dir /tmp/ultralytics-cpp-host --output-on-failure
 ```
+
+The common input owner validates metadata before allocating. Packed X5 NV12
+accepts RGB-shaped NCHW/NHWC descriptors only when the physical shape is compact;
+padded packed storage is explicitly rejected. Split Y/UV accepts exact batch-one
+geometry and unquantized byte planes. Dynamic `-1` strides/capacity are resolved
+from the actual row pitch; zero/overlapping strides, insufficient allocation and
+overflow are rejected. `upload_planes` takes exact-length compact Y and interleaved
+UV buffers, writes the allocated row pitch and cleans both caches. Existing I420
+`upload` delegates to that path. Uploads before successful allocation or with a
+different plan fail; partial allocation releases all acquired buffers.
+
+Synchronous inference requires a non-null task handle, releases returned tasks
+on creation/submission/wait failures and preserves the first error code. UCP
+submission selects `HB_UCP_BPU_CORE_ANY`. These checks do not certify a particular
+SDK ABI or board execution; [host regression evidence](../../../../../docs/releases/unified-migration/2026-09-28-yolo-native-io-review.md)
+includes the original task-release and dynamic-capacity failures.
 
 Missing OpenCV development files or DNN/UCP headers/libraries cause build failures; check the target SDK rather than copying another platform's libraries. For protocol rejection inspect model target, task, layout, dtype and head. Passing host helper tests does not prove all four board executables build/run or establish new performance measurements.
