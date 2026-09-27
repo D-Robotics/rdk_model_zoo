@@ -620,6 +620,78 @@ continues to do so. Tests demonstrate that source difference rather than claimin
 all X5 masks are identical. Source comparisons, border/NMS/empty fixtures and
 README examples are host checks, not real SDK, board or dataset acceptance.
 
+<a id="yolo26-obb-stages"></a>
+## YOLO26 rotated-box stages
+
+Run this example from the repository root on S600 after preparing the OBB
+artifact through [model preparation](../../model/README.md). Replace the local
+model path. The bundled bus image only demonstrates calling the API; it is not
+an aerial-object benchmark or an expected-detection assertion.
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo26_obb import YOLO26OBB, YOLO26OBBConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+obb = YOLO26OBB(YOLO26OBBConfig(
+    model_path="/models/yolo26n_obb_nashp_640x640_nv12.hbm",
+    platform="s600",
+))
+prepared = obb.pre_process(image)
+raw = obb.forward(prepared.tensors)
+records = obb.post_process(raw, transform=prepared.transform)
+predicted = obb.predict(image)
+assert len(records) == len(predicted)
+for staged, repeated in zip(records, predicted):
+    assert staged["id"] == repeated["id"]
+    np.testing.assert_allclose(staged["rrect"], repeated["rrect"])
+    np.testing.assert_allclose(staged["score"], repeated["score"])
+for record in records:
+    cx, cy, width, height, angle_radians = record["rrect"]
+    print(record["id"], record["score"], record["rrect"])
+```
+
+`pre_process` returns input tensors plus this image's actual integer resize and
+padding. `forward` uses the common runner and returns borrowed raw SDK buffers;
+finish postprocessing before the next inference or copy the buffers. It performs
+no decoding or dequantization. `post_process` produces an owned list of records:
+`rrect=(cx,cy,width,height,angle_radians)`, floating `score`, integer `id`.
+An empty detection set is `[]`. Keep each prepared transform with its outputs;
+interleaved images must not share an implicit last-image context.
+
+The square model requires nine floating heads: 15 class logits, four direct
+LTRB offsets and one **radian angle**, each at strides 8/16/32. Binding uses
+shape/roles rather than output order. Integer/SCALE metadata, wrong geometry,
+dtypes or nonfinite values are rejected. Absolute LTRB distances are used.
+`angle_sign` multiplies the angle; `angle_offset` is in **degrees**, converted
+before addition. `regularize=True` swaps width/height when width is smaller and
+adds π/2. The old S standalone sigmoid-angle decoding is not used with the
+maintained exporter, which already produces radians.
+
+| Behavior | X5 | S100 / S100P / S600 |
+| --- | --- | --- |
+| Rotated NMS | Per class, rotated IoU; suppress IoU ≥ threshold | OpenCV `NMSBoxesRotated`, all classes together |
+| Angle after regularization | Wrapped to [−π/2, π/2) | No additional wrapping |
+| Restored center and dimensions | Each clipped to original width/height | Not clipped |
+
+Library defaults are confidence 0.25, NMS 0.2 and letterbox resize. Confidence
+must be finite in `(0,1)`, NMS in `[0,1]`, and angle controls finite. OpenCV
+intersection errors now propagate instead of silently becoming zero overlap.
+Inverse mapping uses actual integer padding and per-axis scales, correcting
+rounded-letterbox coordinates. It retains the previous interface's axis-wise
+width/height scaling with unchanged angle: under unequal X/Y scales this is an
+**approximate rotated rectangle**, not an exact transformed polygon.
+
+Host tests compare the pre-refactor unified decoder's platform policies and
+exact-resize geometry, and separately test the integer-geometry correction.
+These checks and this example's fake-runtime execution do not establish real
+SDK, board inference or DOTA dataset accuracy.
+
 <a id="troubleshooting"></a>
 ## Troubleshooting
 

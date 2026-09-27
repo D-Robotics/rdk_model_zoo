@@ -549,6 +549,71 @@ logits 选类别，避免大 logits 饱和导致类别改变；mask 使用稳定
 完全相同。源代码对照、边界/NMS/空结果夹具和 README 示例均为主机验证，不代表真实
 SDK、板端或数据集验收。
 
+<a id="yolo26-obb-stages"></a>
+## YOLO26 旋转框三阶段
+
+在 S600 板上从仓库根目录运行，先按[模型准备](../../model/README_cn.md)获取
+OBB 制品并替换本地路径。随附 bus 图片仅演示 API 调用，不是航拍目标基准图，
+也不代表应该检测到某个目标。
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo26_obb import YOLO26OBB, YOLO26OBBConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+obb = YOLO26OBB(YOLO26OBBConfig(
+    model_path="/models/yolo26n_obb_nashp_640x640_nv12.hbm",
+    platform="s600",
+))
+prepared = obb.pre_process(image)
+raw = obb.forward(prepared.tensors)
+records = obb.post_process(raw, transform=prepared.transform)
+predicted = obb.predict(image)
+assert len(records) == len(predicted)
+for staged, repeated in zip(records, predicted):
+    assert staged["id"] == repeated["id"]
+    np.testing.assert_allclose(staged["rrect"], repeated["rrect"])
+    np.testing.assert_allclose(staged["score"], repeated["score"])
+for record in records:
+    cx, cy, width, height, angle_radians = record["rrect"]
+    print(record["id"], record["score"], record["rrect"])
+```
+
+`pre_process` 返回输入张量及当前图片实际的整数缩放、填充信息。`forward`
+复用共用 runner，原样返回借用的 SDK 缓冲区，不解码、不反量化；下一次推理前
+完成后处理，或先复制原始输出。`post_process` 返回独立拥有数据的记录列表：
+`rrect=(cx,cy,width,height,angle_radians)`、浮点 `score`、整数 `id`。
+无检测时返回 `[]`。交错处理图片时，必须将各自 transform 与输出配对，不能依赖
+隐式的“上一次图片”状态。
+
+方形模型需要九个浮点输出：stride 8/16/32 各自的 15 类 logits、4 个直接 LTRB
+距离和 1 个**弧度角度**。按形状与角色绑定，不依赖输出枚举顺序；拒绝整数或
+SCALE 量化描述、错误形状/类型及非有限值。LTRB 距离取绝对值。
+`angle_sign` 乘到角度上；`angle_offset` 使用**度**，转换后相加。
+默认 `regularize=True`，宽小于高时交换宽高并将角度加 π/2。
+维护中的导出器已经输出弧度，不再使用旧 S 独立代码的 sigmoid 角度解码。
+
+| 行为 | X5 | S100 / S100P / S600 |
+| --- | --- | --- |
+| 旋转 NMS | 按类别计算旋转 IoU，IoU ≥ 阈值时抑制 | OpenCV `NMSBoxesRotated`，所有类别一起处理 |
+| 规范化后的角度 | 归一化到 [−π/2, π/2) | 不再额外归一化 |
+| 还原后的中心及宽高 | 分别裁剪到原图宽高范围 | 不裁剪 |
+
+库默认置信度 0.25、NMS 0.2、letterbox 缩放。置信度必须为 `(0,1)` 内有限值，
+NMS 为 `[0,1]` 内有限值，角度参数必须有限。OpenCV 求交异常现在向调用者报告，
+不再静默当成零重叠。逆变换使用实际整数填充和逐轴缩放，修正取整后的 letterbox
+坐标；保留原接口逐轴缩放宽高、保持角度的方式。因此 X/Y 比例不同时返回的是
+**近似旋转矩形**，不是精确变换后的多边形。
+
+主机测试对照重构前统一代码的平台策略和不产生缩放取整误差的几何，并单独验证
+整数几何修正。这些测试及示例的模拟运行时执行不代表真实 SDK、板端推理或
+DOTA 数据集精度已经验证。
+
 <a id="troubleshooting"></a>
 ## 故障排查
 

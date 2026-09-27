@@ -304,6 +304,22 @@ class LTRBSegmentationContract(LTRBDetectionContract):
                      for kind in ("cls", "box", "mces")) + ("protos",)
 
 
+@dataclass(frozen=True, init=False)
+class LTRBOBBContract(LTRBDetectionContract):
+    """YOLO26 direct rotated distances plus one angle in radians per anchor."""
+
+    def __init__(self, classes=15, strides=(8, 16, 32), input_roles=None,
+                 output_roles=None, output_layouts=None):
+        super().__init__(classes=classes, strides=strides, input_roles=input_roles,
+                         output_roles=output_roles, output_layouts=output_layouts)
+        object.__setattr__(self, "task", "obb")
+
+    @property
+    def required_roles(self):
+        return tuple(_role_key(kind, stride) for stride in self.strides
+                     for kind in ("cls", "box", "angle"))
+
+
 @dataclass(frozen=True)
 class ClassificationContract:
     """One floating logit vector; singleton physical axes carry no extra samples."""
@@ -508,6 +524,8 @@ def _bind_output_roles(selection: ModelSelection,
         kinds.append(("mces", contract.mces_num))
     elif contract.task == "pose":
         kinds.append(("kpts", 3 * contract.nkpt))
+    elif contract.task == "obb":
+        kinds.append(("angle", 1))
     for stride in contract.strides:
         grid = _expected_grid(adapter, stride)
         specs.extend((_role_key(kind, stride), grid, channels, False)
@@ -666,6 +684,7 @@ __all__ = [
     "LTRBDetectionContract",
     "LTRBPoseContract",
     "LTRBSegmentationContract",
+    "LTRBOBBContract",
     "ModelSelection",
     "ModelBinding",
     "RuntimeMetadata",

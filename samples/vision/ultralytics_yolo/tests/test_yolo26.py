@@ -9,6 +9,21 @@ S = Path(__file__).resolve().parents[1]
 R = S.parents[2]
 sys.path.insert(0, str(S/'runtime/python'))
 
+def bound_output_names(names, shapes, height, strides, task, classes):
+    """Exercise production metadata validation, including geometry and dtype."""
+    from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+        RuntimeMetadata, ModelSelection, bind_model, LTRBDetectionContract,
+        LTRBPoseContract, LTRBSegmentationContract, LTRBOBBContract,
+    )
+    contract = {'detect': LTRBDetectionContract, 'pose': LTRBPoseContract,
+                'seg': LTRBSegmentationContract, 'obb': LTRBOBBContract}[task](
+                    **({} if task == "pose" else {"classes": classes}), strides=strides)
+    metadata = RuntimeMetadata('m', ('image',), {'image': (1, 3, height, height)},
+        tuple(names), shapes, {'image': np.uint8}, {n: np.float32 for n in names})
+    binding = bind_model(ModelSelection('stub', target='x5',
+                         task=contract.task, contract=contract), metadata)
+    return [binding.output_roles[role] for role in contract.required_roles]
+
 class Yolo26Contracts(unittest.TestCase):
     def test_pose_visibility_preserves_platform_convention(self):
         sys.path.insert(0,str(S/'evaluator'))
@@ -41,15 +56,12 @@ class Yolo26Contracts(unittest.TestCase):
                         # The detector's explicit host seam still exercises
                         # full metadata binding; it does not claim a host board.
                         runtime=Model(Config('stub',platform=profile),runtime_loader=lambda:sdk)
-                    elif task in ('cls','pose','seg'):
-                        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, LTRBPoseContract, LTRBSegmentationContract, ModelSelection
-                        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-                        contract={'cls':ClassificationContract,'pose':LTRBPoseContract,'seg':LTRBSegmentationContract}[task]()
-                        runner=build_runner(ModelSelection('stub',target=platform,task={'cls':'classify','pose':'pose','seg':'segment'}[task],contract=contract),runtime_loader=lambda:sdk)
-                        runtime=Model(Config('stub',platform=profile),runner=runner)
                     else:
-                        with patch('yolo_runtime.load_hbm_runtime',return_value=sdk):
-                            runtime=Model(Config('stub',platform=profile))
+                        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, LTRBPoseContract, LTRBSegmentationContract, LTRBOBBContract, ModelSelection
+                        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+                        contract={'cls':ClassificationContract,'pose':LTRBPoseContract,'seg':LTRBSegmentationContract,'obb':LTRBOBBContract}[task]()
+                        runner=build_runner(ModelSelection('stub',target=platform,task={'cls':'classify','pose':'pose','seg':'segment','obb':'obb'}[task],contract=contract),runtime_loader=lambda:sdk)
+                        runtime=Model(Config('stub',platform=profile),runner=runner)
                     bound=runtime.pre_process(np.zeros((32,48,3),np.uint8))['m']
                     self.assertEqual(list(bound),names)
                     self.assertEqual(sum(t.size for t in bound.values()),height*height*3//2)
@@ -162,13 +174,12 @@ class Yolo26Contracts(unittest.TestCase):
         self.assertEqual(len(urls),100)
 
     def test_output_order_uses_geometry_not_runtime_list_order(self):
-        from yolo26_common import ordered_outputs
         shapes={}
         for grid in (2,8,4):
             for channel in (4,80,32):shapes[f'{grid}-{channel}']=(1,grid,grid,channel)
         shapes['prototype']=(1,16,16,32)
         expected=[f'{g}-{c}' for g in (8,4,2) for c in (80,4,32)]+['prototype']
-        self.assertEqual(ordered_outputs(list(shapes),shapes,64,[8,16,32],'seg',80),expected)
+        self.assertEqual(bound_output_names(list(shapes),shapes,64,[8,16,32],'seg',80),expected)
 
     def test_obb_angles_are_radians_on_all_platforms(self):
         from yolo26_obb import YOLO26OBB, YOLO26OBBConfig
@@ -185,8 +196,10 @@ class Yolo26Contracts(unittest.TestCase):
                     output_names={'m': list(shapes)}, output_shapes={'m': shapes},
             output_dtypes={'m': {n:'F32' for n in shapes}})
                 sdk = types.SimpleNamespace(HB_HBMRuntime=lambda _: model)
-                with patch('yolo_runtime.load_hbm_runtime', return_value=sdk):
-                    runtime = YOLO26OBB(YOLO26OBBConfig('stub', platform=resolve_platform(platform)))
+                from samples.vision.ultralytics_yolo.runtime.python.model_binding import ModelSelection, LTRBOBBContract
+                from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+                runner=build_runner(ModelSelection('stub',target=platform,task='obb',contract=LTRBOBBContract()),runtime_loader=lambda:sdk)
+                runtime = YOLO26OBB(YOLO26OBBConfig('stub', platform=resolve_platform(platform)),runner=runner)
                 outputs = {name: np.zeros(shape, np.float32) for name, shape in shapes.items()}
                 for g in (20, 40, 80):
                     outputs[f'{g}-15'].fill(-20)
@@ -221,12 +234,10 @@ class Yolo26Contracts(unittest.TestCase):
                 self.assertFalse(masks[0, 0, 0])
 
     def test_dfl_output_rejected_as_ltrb(self):
-        from yolo26_common import ordered_outputs
         shapes={f'{g}-{c}':(1,g,g,c) for g in (8,4,2) for c in (80,64)}
-        with self.assertRaises(ValueError):ordered_outputs(list(shapes),shapes,64,[8,16,32],'detect',80)
+        with self.assertRaises(ValueError):bound_output_names(list(shapes),shapes,64,[8,16,32],'detect',80)
 
     def test_640_output_groups_match_stride_for_pose_seg_and_obb(self):
-        from yolo26_common import ordered_outputs
         for task, channels, classes in (
             ('pose', (1, 4, 51), 1),
             ('seg', (80, 4, 32), 80),
@@ -240,7 +251,7 @@ class Yolo26Contracts(unittest.TestCase):
                     shapes['prototype'] = (1, 160, 160, 32)
                     expected.append('prototype')
                 for names in (list(shapes), list(reversed(shapes))):
-                    self.assertEqual(ordered_outputs(
+                    self.assertEqual(bound_output_names(
                         names, shapes, 640, [8, 16, 32], task, classes), expected)
 
     def test_pose_right_side_coordinates_survive_output_reordering(self):
