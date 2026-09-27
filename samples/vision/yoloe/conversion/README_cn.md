@@ -17,7 +17,7 @@
 | s100 | 26n、26s、26m、26l、26x | nash-e | `hb_compile` | NPY RGB float32，0..1 |
 | s100p | 26n、26s、26m、26l、26x | nash-m | `hb_compile` | NPY RGB float32，0..1 |
 
-ONNX 输入固定为 `[1,3,640,640]` RGB float32，运行时输入为 NV12。拒绝 S600、X5 E26、S100P E11，不自动回退到其他平台。这 14 种选择已有主机配置检查，**不等于 OE 编译验收**。X5 源分支只有 11s YAML，将该策略用于 11m/11l 仍需实际编译验证。S26 源记录使用 OE 3.7.0；其他路线的最低可用工具链版本尚未核定。
+ONNX 输入固定为 `[1,3,640,640]` RGB float32，运行时输入为 NV12。拒绝 S600、X5 E26、S100P E11，不自动回退到其他平台。这 14 种选择已有主机配置检查，**不等于 OE 编译验收**。X5 源分支提供 11s YAML，并在说明中要求为 11l 增加第二个 attention 配置；真实模型仍需实际编译验证。S26 源记录使用 OE 3.7.0；其他路线的最低可用工具链版本尚未核定。
 
 主机准备使用 Python 3.10+，建议独立环境：
 
@@ -32,18 +32,29 @@ python3 samples/vision/yoloe/conversion/prepare.py --help
 <a id="export"></a>
 ## 导出
 
-权重导出器尚在统一迁移中。当前保留 [E11 导出器](../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py) 和 [E26 导出器](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py) 作为源实现；独立依赖和版本要求见上述源转换 README，其中 E26 固定 Ultralytics 8.4.127。把权重放入新的工作目录，脚本拒绝覆盖已有输出。
+统一 [export.py](export.py) 加载已经存在的本地 PF 权重，核对头类型、尺寸和有序词表，在新目录保存导出结果。先安装独立的导出依赖，其中 Ultralytics 固定为 S26 源使用的版本：
 
 ```bash
-# cwd: repository root; local PF checkpoint and source export dependencies required
-python3 platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py \
-  --weights /work/export11/yoloe-11s-seg-pf.pt --imgsz 640 --opset 11
-python3 platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py \
-  --weights /work/checkpoints/yoloe-26n-seg-pf.pt --size n \
-  --output-dir /work/export26n
+# cwd: repository root; use a separate CPU export environment
+python3 -m pip install -r samples/vision/yoloe/conversion/requirements-export.txt
+python3 samples/vision/yoloe/conversion/export.py --help
+python3 samples/vision/yoloe/conversion/export.py \
+  --weights /work/checkpoints/yoloe-11s-seg-pf.pt --variant 11s \
+  --output-dir /work/export11s --test-image samples/vision/yoloe/test_data/office_desk.jpg
+python3 samples/vision/yoloe/conversion/export.py \
+  --weights /work/checkpoints/yoloe-26n-seg-pf.pt --variant 26n \
+  --output-dir /work/export26n --test-image samples/vision/yoloe/test_data/office_desk.jpg
 ```
 
-E11 默认在权重旁生成 `.onnx`、`.names`、`.export.json`，但不证明精度一致性。E26 生成 `yoloe_26n_seg_pf.onnx/.names/.json`，检查原始头与上游输出并比较 ONNX Runtime 浮点结果；旧 metadata 固定写 nash-e，但导出的图并非 HBM，准备时仍须显式选择真实 target。本轮迁移尚未用真实权重执行这两个导出器。
+`--weights`、`--variant`、`--output-dir` 必填；支持 11s/m/l、26n/s/m/l/x 八种变体。`--threads` 默认 2，必须为正整数。不传 `--test-image` 时使用 seed 0 的 CPU 随机输入；建议提供图片，让对照结果更有实际意义。不隐式下载权重或编译，拒绝复用已有输出目录。导出失败非零退出（已处理的输入/校验错误为 2）；开始准备后产生的失败会在 `export.json` 留下阶段状态，不写成成功。
+
+E11 使用源 cv2/cv3/cv5 分支、DFL16 和 opset 11；E26 使用 one2one 分支、直接 LTRB 和 opset 17。Linear 词表权重以等价 1×1 卷积执行，不替换权重参数；已有词表卷积直接保留。原始头返回全部 anchor 和十个 NHWC tensor，不做 proposal 筛选。骨干网络的层连接和 `model.<index>` 节点名保留，供 X5 attention 配置识别。
+
+两类模型都先将全部原始 anchor、Top-K 前的解码 tensor 和原型与上游静态 PF 头比较（rtol/atol 1e-4），再检查 ONNX 图，并将十个 ONNX Runtime CPU 输出与 PyTorch 比较（rtol/atol 2e-3）。明确关闭图优化（`ORT_DISABLE_ALL`），以免 CPU 额外融合的舍入差异混入导出图检查；优化执行的验收另行处理。生成 `yoloe_<variant>_seg_pf.onnx`、`yoloe_<variant>_seg_pf.names`、`export.json`；记录包含权重、输入、ONNX、词表哈希、依赖版本、逐输出最大绝对误差和 `status=float_checked`。平台无关的导出记录不硬编码硬件 march。
+
+E26 还要求选中的 `(anchor, class)` 集合与上游完全一致，再按这个身份比较选中值。浮点舍入引起的名次变化用 `order_identical=false` 和 `reordered_rows` 数量如实记录，不称为精确平局或排序完全一致。即使分数接近，只要新增/遗漏 anchor 或类别就失败。导出接口是稠密 tensor，不包含 Top-K 排列；运行时/数据集排序验收仍单独进行。
+
+已用 E11s/m/l、E26n/s/m/l/x 全部八种真实权重和随附图片执行导出、对照，见[主机导出记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-export-review.md)。E26 m/l/x 分别保留了 2/4/2 行 Top-K 名次变化，选中身份集合相同。本检查只证明一张输入的浮点转换一致性，不代表数据集精度或编译后 BIN/HBM 推理。[E11 源导出器](../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py) 和 [E26 源导出器](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py) 继续作为历史参考保留。
 
 `prepare.py` 执行 ONNX checker，拒绝外置 tensor 文件和动态形状，并要求词表与 [classes.names](../test_data/classes.names) 逐字节一致。输出按唯一形状识别，不依赖物理输出排列：
 
@@ -100,7 +111,7 @@ python3 samples/vision/yoloe/conversion/prepare.py \
 | Padding | pyramid 输入 | 输入/输出无 padding | 输入无 padding，允许输出 padding |
 | 删除输出节点请求 | 无 | 无 | 无 |
 
-X5 仅在真实 ONNX 存在 `/model.10/m/m.0/attn/Softmax` 时添加源 int16 attention 配置，否则报告 `source attention node absent`。不能把另一节点改名来冒充。S11 源 YAML 的删除名单残留 v8 节点，本浮点路线直接不请求删除。相关选项删除边界算子的含义见 [S 模型修改规则](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify)。不删除表达浮点输出意图，最终仍须读取编译制品的真实 metadata。
+X5 只为真实 ONNX 中存在的节点添加 int16 attention 配置：所有 E11 尺寸使用 `/model.10/m/m.0/attn/Softmax`，11l 按源说明另需 `/model.10/m/m.1/attn/Softmax`。每个缺失节点都会在 `source attention node absent: ...` 警告中单独列出。不能把另一节点改名来冒充。S11 源 YAML 的删除名单残留 v8 节点，本浮点路线直接不请求删除。相关选项删除边界算子的含义见 [S 模型修改规则](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify)。不删除表达浮点输出意图，最终仍须读取编译制品的真实 metadata。
 
 <a id="validation"></a>
 ## 验证
@@ -121,6 +132,8 @@ python3 samples/vision/yoloe/runtime/python/main.py \
 ```bash
 # cwd: repository root
 python3 -m unittest discover -s samples/vision/yoloe/tests
+# Additionally, in the export environment:
+python3 -m unittest discover -s samples/vision/yoloe/conversion/tests
 ```
 
 <a id="artifacts"></a>
@@ -133,4 +146,4 @@ python3 -m unittest discover -s samples/vision/yoloe/tests
 <a id="known-gaps"></a>
 ## 已知缺口
 
-本统一路线尚未执行真实权重导出、OE 编译、编译输出检查、数据集精度或板端推理；也没有已发布浮点 S HBM。源导出器仍待统一收编，X5 11m/11l 策略和 attention 节点缺失警告仍需真实模型检查。图接口校验不能识别错误标注的权重尺寸或标签语义。C++ 迁移、统一数据集评估器是另外的未完成工作，准备入口不代表它们已经完成。
+本统一路线尚未执行 OE 编译、编译输出检查、数据集精度或板端推理，也没有已发布浮点 S HBM。真实权重检查覆盖全部八种尺寸，但只使用一张图片和未优化的 ONNX Runtime CPU。优化执行、更多输入与 X5 11m/11l 编译验收仍待验证。图接口校验不能识别错误标注的权重尺寸或标签语义。C++ 迁移、统一数据集评估器是另外的未完成工作，准备入口不代表它们已经完成。

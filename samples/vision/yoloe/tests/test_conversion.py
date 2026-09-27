@@ -93,6 +93,33 @@ class CalibrationTests(unittest.TestCase):
 
 
 class ConversionTests(unittest.TestCase):
+    def test_x5_large_recipe_keeps_both_source_attention_overrides(self):
+        from samples.vision.yoloe.conversion.configuration import make_config
+        from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
+
+        names = [f"/model.10/m/m.{i}/attn/Softmax" for i in (0, 1)]
+        for variant, expected in [
+            ("11s", names[:1]),
+            ("11m", names[:1]),
+            ("11l", names),
+        ]:
+            config, warnings = make_config(
+                resolve_selection("x5", variant=variant),
+                self.root,
+                {"softmax_nodes": names},
+            )
+            self.assertEqual(
+                set(config["model_parameters"]["node_info"]), set(expected)
+            )
+            self.assertEqual(warnings, [])
+        config, warnings = make_config(
+            resolve_selection("x5", variant="11l"),
+            self.root,
+            {"softmax_nodes": names[:1]},
+        )
+        self.assertEqual(set(config["model_parameters"]["node_info"]), set(names[:1]))
+        self.assertTrue(any(names[1] in warning for warning in warnings))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -152,7 +179,12 @@ class ConversionTests(unittest.TestCase):
             self.root / "out/calibration" / rows[0]["tensor"], dtype=np.float32
         ).reshape(1, 3, 640, 640)
         self.assertEqual(float(tensor.max()), 127)
-        self.assertIn("source attention node absent", report["warnings"])
+        self.assertTrue(
+            any(
+                w.startswith("source attention node absent:")
+                for w in report["warnings"]
+            )
+        )
 
     def test_invalid_graph_vocab_target_rejected_without_output(self):
         for kwargs in [

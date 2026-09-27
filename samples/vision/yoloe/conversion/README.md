@@ -17,7 +17,7 @@ The source recipes are preserved in [X5 E11](../../../../platforms/x5/samples/vi
 | s100 | 26n, 26s, 26m, 26l, 26x | nash-e | `hb_compile` | NPY RGB float32, 0..1 |
 | s100p | 26n, 26s, 26m, 26l, 26x | nash-m | `hb_compile` | NPY RGB float32, 0..1 |
 
-All inputs are static `[1,3,640,640]` RGB float32 in the ONNX graph. Runtime input is NV12. S600, X5 E26 and S100P E11 are rejected; there is no cross-target fallback. These 14 selections have host configuration coverage, **not OE compilation acceptance**. The X5 source contains only an 11s YAML; applying that policy to 11m/11l needs real compiler validation. S26's source records OE 3.7.0; a minimum accepted toolchain for the other paths has not been established.
+All inputs are static `[1,3,640,640]` RGB float32 in the ONNX graph. Runtime input is NV12. S600, X5 E26 and S100P E11 are rejected; there is no cross-target fallback. These 14 selections have host configuration coverage, **not OE compilation acceptance**. The X5 source contains an 11s YAML and a documented second attention override for 11l; applying those policies to real models still needs compiler validation. S26's source records OE 3.7.0; a minimum accepted toolchain for the other paths has not been established.
 
 Use Python 3.10+ in a separate environment for host preparation:
 
@@ -32,18 +32,29 @@ These dependencies cover graph inspection, image preparation and YAML only. They
 <a id="export"></a>
 ## Export
 
-Canonical checkpoint exporters are still being migrated. Until then, the preserved [E11 exporter](../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py) and [E26 exporter](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py) are the source implementations. Their separate dependency/version instructions are in the source conversion READMEs above; E26 pins Ultralytics 8.4.127. Put checkpoints in a fresh working directory; these scripts reject existing output paths.
+The canonical [export.py](export.py) loads an existing local PF checkpoint, verifies its head family, size and ordered vocabulary, and writes a fresh export directory. Install the separate export dependencies first (Ultralytics is pinned to the source E26 version):
 
 ```bash
-# cwd: repository root; local PF checkpoint and source export dependencies required
-python3 platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py \
-  --weights /work/export11/yoloe-11s-seg-pf.pt --imgsz 640 --opset 11
-python3 platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py \
-  --weights /work/checkpoints/yoloe-26n-seg-pf.pt --size n \
-  --output-dir /work/export26n
+# cwd: repository root; use a separate CPU export environment
+python3 -m pip install -r samples/vision/yoloe/conversion/requirements-export.txt
+python3 samples/vision/yoloe/conversion/export.py --help
+python3 samples/vision/yoloe/conversion/export.py \
+  --weights /work/checkpoints/yoloe-11s-seg-pf.pt --variant 11s \
+  --output-dir /work/export11s --test-image samples/vision/yoloe/test_data/office_desk.jpg
+python3 samples/vision/yoloe/conversion/export.py \
+  --weights /work/checkpoints/yoloe-26n-seg-pf.pt --variant 26n \
+  --output-dir /work/export26n --test-image samples/vision/yoloe/test_data/office_desk.jpg
 ```
 
-E11 writes `.onnx`, `.names` and `.export.json` beside the checkpoint by default, but does not establish accuracy equivalence. E26 writes `yoloe_26n_seg_pf.onnx/.names/.json`, checks the raw head against upstream and compares ONNX Runtime float outputs; its old metadata hard-codes nash-e even though the exported graph is not an HBM. Select the real target explicitly in preparation. Neither exporter has been executed with a real checkpoint during this migration increment.
+`--weights`, `--variant` and `--output-dir` are required. The eight variants are 11s/m/l and 26n/s/m/l/x. `--threads` defaults to 2 and must be positive. If `--test-image` is omitted, validation uses a CPU random tensor with seed 0; an image is recommended for a meaningful model comparison. No checkpoint download or compiler runs implicitly. Existing output directories are rejected. An export failure exits nonzero (2 for handled input/validation errors) and, once preparation starts, preserves `export.json` with the failed stage rather than reporting success.
+
+E11 uses the source cv2/cv3/cv5 branches, DFL16 and opset 11. E26 uses one2one branches, direct LTRB and opset 17. Linear vocabulary weights are applied as equivalent dense 1x1 convolutions without replacing checkpoint parameters; existing vocabulary convolutions are retained. Raw heads return all anchors and ten NHWC tensors, with no proposal filtering. Backbone layer routing and `model.<index>` node names are preserved for X5 attention configuration.
+
+For both families, the exporter compares all raw anchors, decoded pre-Top-K tensors and prototypes with the original static PF head (rtol/atol 1e-4), checks the ONNX graph, then compares all ten ONNX Runtime CPU outputs with PyTorch (rtol/atol 2e-3). Graph optimization is explicitly disabled (`ORT_DISABLE_ALL`) to check the exported graph without additional CPU fusion rounding; acceptance of optimized execution is separate. It writes `yoloe_<variant>_seg_pf.onnx`, `yoloe_<variant>_seg_pf.names` and `export.json`; the record includes checkpoint/input/ONNX/vocabulary hashes, dependency versions, per-output maximum absolute errors and `status=float_checked`. It does not hard-code a hardware march into this platform-independent export.
+
+For E26 it additionally requires the exact same selected `(anchor, class)` set as upstream, then compares selected values by that identity. Order changes caused by floating rounding are recorded as `order_identical=false` and a `reordered_rows` count. They are not labelled exact ties or identical rankings. Any added/dropped anchor or class fails, even when scores are close. The exported interface contains dense tensors, not a Top-K row order; runtime/dataset ranking acceptance remains separate.
+
+All eight real checkpoints (E11s/m/l and E26n/s/m/l/x) have been exported and compared on the bundled image in the [host export record](../../../../docs/releases/unified-migration/2026-09-28-yoloe-export-review.md). The m/l/x E26 checks retain 2/4/2 reordered Top-K rows with identical selected identity sets. This checks float conversion on one input, not dataset accuracy or compiled BIN/HBM inference. The preserved [E11 exporter](../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py) and [E26 exporter](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py) remain historical references.
 
 `prepare.py` runs ONNX checker, rejects external tensor files and dynamic shapes, and requires the vocabulary file to match [classes.names](../test_data/classes.names) byte for byte. It matches outputs by unique shape, not physical output order:
 
@@ -100,7 +111,7 @@ The generated command is `hb_compile -c <absolute config.yaml>` on S, or `hb_map
 | Padding | pyramid input | input/output no-padding | input no-padding, output padding permitted |
 | Output-removal requests | none | none | none |
 
-The X5 int16 attention override is added only if the actual ONNX contains `/model.10/m/m.0/attn/Softmax`; otherwise `conversion.json` records `source attention node absent`. Do not silently rename a different node into that override. The S11 source YAML contains stale v8 removal names; the canonical float route omits removal entirely. [S model modification rules](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify) explain how those options remove boundary operators. Omission expresses float-output intent; final compiler metadata must still verify it.
+The X5 int16 attention override is added only for actual ONNX nodes: `/model.10/m/m.0/attn/Softmax` for all E11 sizes and additionally `/model.10/m/m.1/attn/Softmax` for 11l, as documented by the source. Each missing expected node is named in a `source attention node absent: ...` warning. Do not silently rename a different node into that override. The S11 source YAML contains stale v8 removal names; the canonical float route omits removal entirely. [S model modification rules](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify) explain how those options remove boundary operators. Omission expresses float-output intent; final compiler metadata must still verify it.
 
 <a id="validation"></a>
 ## Validation
@@ -121,6 +132,8 @@ Host tests exercise real ONNX validation with synthetic graphs, calibration pixe
 ```bash
 # cwd: repository root
 python3 -m unittest discover -s samples/vision/yoloe/tests
+# Additionally, in the export environment:
+python3 -m unittest discover -s samples/vision/yoloe/conversion/tests
 ```
 
 <a id="artifacts"></a>
@@ -133,4 +146,4 @@ Expected output is `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen
 <a id="known-gaps"></a>
 ## Known Gaps
 
-Real checkpoint export, OE compilation, compiled output inspection, dataset accuracy and board inference have not been performed for this canonical conversion. No float S HBM has been published. Source exporters still need canonical integration; X5 11m/11l compile policy and absent-attention warnings need real-model checks. Graph/interface validation cannot detect incorrectly labelled checkpoint size or changed label semantics. C++ migration and a canonical dataset evaluator are separate unfinished work, not implied by this preparation entry.
+OE compilation, compiled output inspection, dataset accuracy and board inference have not been performed for this canonical conversion. No float S HBM has been published. Real checkpoint checks cover all eight sizes on one image using unoptimized ONNX Runtime CPU. Optimized-engine behavior, broader inputs and X5 11m/11l compiler acceptance still need validation. Graph/interface validation cannot detect incorrectly labelled checkpoint size or changed label semantics. C++ migration and a canonical dataset evaluator are separate unfinished work, not implied by this preparation entry.

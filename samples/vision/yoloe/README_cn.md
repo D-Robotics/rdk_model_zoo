@@ -20,7 +20,7 @@ YOLOE 在本 sample 中提供固定 4585 类词表的 Prompt-Free（PF）实例�
 
 * 表中 S 的 not-supported 指“当前发布制品不能直接用于本浮点入口”，不是删除该能力。S11 最终 HBM 为混合精度，S26 公开 HBM 声明量化输出。统一代码允许明确指定、哈希固定的本地浮点转换制品，但该路线尚未构建验证，不能标为 supported-verified。S600 无源支持，不回退 S100。
 
-本轮板测全部 `not-run`；统一校准/配置准备已提供，真实权重导出/OE 验收与 C++ 收编仍 pending。源分支的历史板测不转算为统一代码验证。
+本轮板测全部 `not-run`；统一权重导出和校准/配置准备已提供，真实 OE 验收与 C++ 收编仍 pending。源分支的历史板测不转算为统一代码验证。
 
 <a id="prerequisites"></a>
 ## 环境与前提
@@ -83,13 +83,13 @@ yoloe/
 └── README.md
 ```
 
-权重导出器、evaluator、C++ 尚待统一收编。下述转换准备入口已提供，但不代表真实编译器或板端验收完成。
+统一权重导出和转换准备已提供，evaluator、C++ 尚待收编。浮点导出检查不代表真实编译器或板端验收完成。
 
 <a id="entry-points"></a>
 ## 入口
 
 - [Model](model/README_cn.md) — 制品身份、下载、哈希。
-- [转换](conversion/README_cn.md) — 各平台校准、编译命令、制品记录与未验证边界。
+- [转换](conversion/README_cn.md) — 权重导出、浮点输出检查、各平台校准、编译命令与制品记录。
 - [Python](runtime/python/README_cn.md) — 参数、协议、库接口与排障。
 - [Test data](test_data/README_cn.md) — 图片和词表来源。
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README_cn.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README_cn.md) — 原配方；S 配方会产生量化输出。统一准备入口保留浮点输出节点，实际编译精度仍待验证。

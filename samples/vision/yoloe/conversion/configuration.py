@@ -45,16 +45,21 @@ def make_config(selection, root, graph):
             debug=False, optimize_level="O3", input_source={"images": "pyramid"}
         )
         model["layer_out_dump"] = False
-        if ATTENTION_NODE in graph["softmax_nodes"]:
-            model["node_info"] = {
-                ATTENTION_NODE: {
+        attention_nodes = [ATTENTION_NODE]
+        if selection.variant == "11l":
+            attention_nodes.append("/model.10/m/m.1/attn/Softmax")
+        overrides = {}
+        for name in attention_nodes:
+            if name in graph["softmax_nodes"]:
+                overrides[name] = {
                     "ON": "BPU",
                     "InputType": "int16",
                     "OutputType": "int16",
                 }
-            }
-        else:
-            warnings.append("source attention node absent")
+            else:
+                warnings.append(f"source attention node absent: {name}")
+        if overrides:
+            model["node_info"] = overrides
     elif selection.variant.startswith("26"):
         calibration.update(
             calibration_type="kl",
