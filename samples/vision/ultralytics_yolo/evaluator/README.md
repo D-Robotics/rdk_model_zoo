@@ -160,3 +160,5 @@ Those are historical published records, not measurements of the current unified 
 ## Boundaries
 
 These evaluators do not verify model conversion, validate arbitrary custom class orders, or measure end-to-end application performance. Classification skips unreadable/unlabeled images as described above; report the actual processed count. OBB export needs a separate DOTA scorer. Published benchmark rows and prior fixed-image board comparisons are references with their own revisions, not acceptance of every current task/scale. New board and full-dataset runs remain pending.
+
+DFL pose returns point probabilities. COCO JSON serialization preserves the historical rule v=1 for probability >0, otherwise 0; this is not a 0.5 visibility filter and does not remove low-confidence points. Drawing thresholds and evaluation serialization are separate operations.

@@ -32,7 +32,7 @@ from samples.vision.ultralytics_yolo.runtime.python.tensor_io import (
     InputBinding,
     OutputBinding,
     TensorContractError,
-    as_quantization,
+    require_floating_output,
     bind_nv12_inputs,
     normalize_dtype,
     normalize_shape,
@@ -79,7 +79,6 @@ class DFLDetectionContract:
     input_roles: Mapping[str, str]
     output_roles: Mapping[str, str]
     output_layouts: Mapping[str, str]
-    quantization: Mapping[str, Any]
 
     def __init__(self,
                  classes: int = 80,
@@ -91,7 +90,6 @@ class DFLDetectionContract:
                  input_roles: Optional[Mapping[str, str]] = None,
                  output_roles: Optional[Mapping[str, str]] = None,
                  output_layouts: Optional[Mapping[str, str]] = None,
-                 quantization: Optional[Mapping[str, Any]] = None,
                  task: str = "detect") -> None:
         classes = int(classes)
         reg_bins = int(reg_bins)
@@ -130,9 +128,6 @@ class DFLDetectionContract:
         object.__setattr__(self, "output_layouts", {
             str(key): str(value) for key, value in layouts.items()
         })
-        object.__setattr__(self, "quantization", {
-            str(key): value for key, value in (quantization or {}).items()
-        })
 
     @property
     def required_roles(self) -> Tuple[str, ...]:
@@ -141,11 +136,32 @@ class DFLDetectionContract:
 
 
 @dataclass(frozen=True, init=False)
+class DFLPoseContract(DFLDetectionContract):
+    """Single-person-class DFL pose heads with 17 COCO (x,y,logit) triplets."""
+
+    nkpt: int
+
+    def __init__(self, reg_bins=16, strides=(8, 16, 32), nkpt=17,
+                 input_roles=None, output_roles=None, output_layouts=None):
+        if int(reg_bins) != 16 or tuple(strides) != (8, 16, 32) or int(nkpt) != 17:
+            raise BindingError("DFL pose requires 16 bins, strides 8/16/32 and 17 COCO keypoints.")
+        super().__init__(classes=1, reg_bins=reg_bins, strides=strides, task="pose",
+                         input_roles=input_roles, output_roles=output_roles,
+                         output_layouts=output_layouts)
+        object.__setattr__(self, "nkpt", int(nkpt))
+
+    @property
+    def required_roles(self):
+        return tuple(_role_key(kind, stride) for stride in self.strides
+                     for kind in ("cls", "box", "kpts"))
+
+
+@dataclass(frozen=True, init=False)
 class DFLSegmentationContract(DFLDetectionContract):
     """Source YOLOv8/9/11 DFL heads plus 32 mask coefficients and stride-4 prototypes.
 
     Head tensors are NHWC. Prototypes may be NHWC or NCHW; quantization
-    uses the physical axis before normalization. Ambiguous shapes need an
+    is not implemented here: outputs must already be floating. Ambiguous shapes need an
     explicit reviewed output_roles map, never runtime enumeration order.
     """
 
@@ -153,12 +169,12 @@ class DFLSegmentationContract(DFLDetectionContract):
 
     def __init__(self, classes=80, reg_bins=16, strides=(8, 16, 32),
                  mces_num=32, input_roles=None, output_roles=None,
-                 output_layouts=None, quantization=None):
+                 output_layouts=None):
         if int(reg_bins) != 16 or tuple(strides) != (8, 16, 32) or int(mces_num) != 32:
             raise BindingError("DFL segmentation requires 16 bins, strides 8/16/32 and 32 mask coefficients.")
         super().__init__(classes=classes, reg_bins=reg_bins, strides=strides,
                          task="segment", input_roles=input_roles, output_roles=output_roles,
-                         output_layouts=output_layouts, quantization=quantization)
+                         output_layouts=output_layouts)
         object.__setattr__(self, "mces_num", int(mces_num))
 
     @property
@@ -410,6 +426,8 @@ def _bind_output_roles(selection: ModelSelection,
     kinds = [("cls", contract.classes), ("box", box_channels)]
     if contract.task == "segment":
         kinds.append(("mces", contract.mces_num))
+    elif contract.task == "pose":
+        kinds.append(("kpts", 3 * contract.nkpt))
     for stride in contract.strides:
         grid = _expected_grid(adapter, stride)
         specs.extend((_role_key(kind, stride), grid, channels, False)
@@ -483,7 +501,6 @@ def _bind_output_roles(selection: ModelSelection,
     expected_shapes: Dict[str, Tuple[int, ...]] = {}
     layouts: Dict[str, str] = {}
     channels_map: Dict[str, int] = {}
-    quant_map: Dict[str, Any] = {}
     for role, grid, channels, allow_nchw in specs:
         name = role_to_name[role]
         channels_map[role] = channels
@@ -497,33 +514,10 @@ def _bind_output_roles(selection: ModelSelection,
         layouts[role] = layout
         expected_shapes[role] = physical_shape
         dtype = dtypes.get(name)
-        quantization = getattr(contract, "quantization", {}) or {}
-        quant_value = quantization.get(role,
-                                       quantization.get(name))
-        if quant_value is None:
-            quant_value = _runtime_quantization(metadata, name)
         try:
-            quant = as_quantization(quant_value)
-            if quant is not None:
-                quant.validate(physical_shape)
-            if protocol == "LTRB" and quant is not None:
-                raise BindingError(
-                    f"LTRB output {name!r} must be the observed floating tensor; "
-                    "quantization is not part of this contract.")
+            require_floating_output(dtype, _runtime_quantization(metadata, name), name)
         except TensorContractError as exc:
             raise BindingError(str(exc)) from exc
-        quant_map[role] = quant
-        if dtype is None:
-            raise BindingError(f"Runtime output {name!r} has no dtype metadata.")
-        if dtype.kind not in "fiu":
-            raise BindingError(f"Output {name!r} must be real floating/integer data, got {dtype}.")
-        if np.issubdtype(dtype, np.integer) and quant is None:
-            raise BindingError(
-                f"Output {name!r} is integer {dtype}; no explicit quantization "
-                "parameters were provided.")
-        elif not np.issubdtype(dtype, np.floating) and quant is None:
-            raise BindingError(
-                f"Output {name!r} dtype {dtype} is not a floating semantic tensor.")
 
     return OutputBinding(
         model_name=str(metadata.model_name),
@@ -533,7 +527,6 @@ def _bind_output_roles(selection: ModelSelection,
         expected_shapes=expected_shapes,
         channels=channels_map,
         layouts=layouts,
-        quantization=quant_map,
         runtime_order=names,
     )
 
@@ -587,6 +580,7 @@ __all__ = [
     "BindingError",
     "DFLDetectionContract",
     "DFLSegmentationContract",
+    "DFLPoseContract",
     "LTRBDetectionContract",
     "ModelSelection",
     "ModelBinding",

@@ -194,15 +194,14 @@ print(boxes.shape, scores.shape, class_ids.shape)
 
 - `pre_process(img, image_format="BGR")` 要求非空 uint8 H×W×3 BGR，返回 `PreparedDetection.tensors` 和冻结的 `.transform`。后者包含原图/模型/实际缩放尺寸、整数 padding 与横纵缩放比例。X5 张量为 packed NV12；S 为 Y `(1,H,W,1)` 和 UV `(1,H/2,W/2,2)`，H/W 来自模型 metadata。
 - `forward(prepared.tensors)` 只调用一次 runner，返回以角色名索引的 `RawOutputs`。绑定的 runner 校验物理 shape、dtype 和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK dtype，借用 SDK 缓冲区；须先完成后处理再发起下一次 SDK 调用，或主动复制需要长期保留的原始数组。
-- `post_process(raw, transform=prepared.transform)` 执行声明过的 DFL 仿射反量化，再做 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。DFL 支持有限正数的标量/逐通道 SCALE，校验 axis 与通道数，zero-point 可为空、标量或逐通道；SDK NONE 不做变换。LTRB 仍只接受浮点输出并拒绝 SCALE。整数 logits 缺量化信息时显式报错，不直接转浮点凑结果。
-- `predict(img)` 串联这些方法并返回自有结果数组。注入 runner 返回普通语义映射时，数值须已是浮点；物理量化输出应使用绑定后的 raw 容器。
+- `post_process(raw, transform=prepared.transform)` 进行 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。所有维护的检测、DFL 分割/姿态绑定均要求模型直接提供浮点输出；整数或 SCALE metadata 在加载时拒绝，后处理不执行手动反量化。
+- `predict(img)` 串联这些方法并返回自有结果数组。注入 runner 返回普通语义映射时，数值须已是浮点；物理浮点输出使用绑定后的 raw 容器。
 
 可执行兼容方式：prepared 仍支持 `[model_name]` 映射访问，`forward(prepared)` 会取出
 `.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
 元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
 时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
-DFL 分割也已采用此传输接口，完整例子见下文；姿态、分类、OBB 与 YOLO26 分割
-的阶段职责审计仍在进行。
+DFL 分割也已采用此传输接口，完整例子见下文；DFL 姿态见下文；分类、OBB 与 YOLO26 分割的阶段职责审计仍在进行。
 
 ```text
 main.py
@@ -225,8 +224,7 @@ main.py
 YOLOv8/9/11 分割使用 `YoloSeg`；YOLO26 分割采用不同的直接框协议，不适用本例。
 在匹配的 S100 板卡上，从仓库根目录执行；先按 [模型说明](../../model/README_cn.md)
 准备兼容的本地分割制品，并将例子中的绝对路径换成实际路径。显式设置
-`nms_thres=0.7` 保留独立 S YOLO11 分割的默认值；普通统一系列 CLI 路由在未覆盖时
-仍采用平台默认值。
+本例采用 S 平台默认 `nms_thres=0.45`；需要调整时显式覆盖。
 
 ```python
 from pathlib import Path
@@ -242,7 +240,7 @@ if image is None:
 segmenter = YoloSeg(YoloSegConfig(
     model_path="/models/yolo11n_seg_nashe_640x640_nv12.hbm",
     platform=resolve_platform("s100"),
-    nms_thres=0.7,
+    nms_thres=0.45,
 ))
 prepared = segmenter.pre_process(image)
 raw = segmenter.forward(prepared.tensors)
@@ -266,8 +264,8 @@ uint8 H×W×3；`post_process` 接收 `prepared.transform`，也兼容旧的
 logits `(1,H/s,W/s,64)`、系数 `(1,H/s,W/s,32)`，以及 stride-4 原型
 `(1,H/4,W/4,32)` 或 `(1,32,H/4,W/4)`；要求发布模型所用的方形输入。
 按 shape 或显式审查的 `DFLSegmentationContract(output_roles=...)` 绑定角色，
-不依赖输出枚举顺序。缺失、错误或歧义 metadata、非有限张量、缺少 SCALE 的整数输出
-均拒绝。标量/逐通道反量化在后处理进行，先按物理轴反量化，再转换 NCHW 原型布局。
+不依赖输出枚举顺序。缺失、错误或歧义 metadata、非有限张量、所有整数输出
+均拒绝；模型须直接提供浮点张量，后处理只转换 NCHW 原型布局，不做反量化。
 注入的普通角色映射须已是有限浮点 NHWC 数组。
 
 返回 `(boxes, scores, ids, masks)`：自有 float32 `(N,4)` xyxy 原图框，裁至
@@ -279,10 +277,60 @@ uint8 **ROI mask**，不是全图 mask。值为 0/1，每个 mask 高宽为
 （`do_morph=True`），不据此声明等同于上游 Ultralytics 全图 mask 评测。
 置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]` 内有限值。
 
-明确的源行为修正：逐通道 SCALE 正确广播标量非零 zero-point；坐标还原使用实际
-整数缩放/padding；原型切片先裁至可见图片内容，避免负坐标从另一侧索引，也排除
-letterbox padding。主机夹具与固定 S 源码对照未改变的内部区域行为，另测上述修正。
+坐标还原使用实际整数缩放/padding；原型切片先裁至可见图片内容，避免负坐标从另一侧索引，也排除
+letterbox padding。主机夹具覆盖上述边界修正；重复 S 分支的量化对照属于已退役的历史证据。
 这些证据不能证明板端精度、真实 SDK 兼容性、延迟或数据集指标；相应验证仍 not-run。
+
+<a id="pose-api"></a>
+## DFL 姿态库接口
+
+YOLOv8/11 姿态使用同一套三阶段接口。以下从仓库根目录在匹配的 S100 板卡执行，
+模型必须先按 model 目录说明准备到本地，再替换示例绝对路径。省略 NMS 时采用平台
+默认值（S 为 0.45、X5 为 0.70）。YOLO26 姿态使用直接框协议，不适用此 DFL 示例。
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose, YoloPoseConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+pose = YoloPose(YoloPoseConfig(
+    model_path="/models/yolo11n_pose_nashe_640x640_nv12.hbm",
+    platform=resolve_platform("s100"),
+))
+prepared = pose.pre_process(image)
+raw = pose.forward(prepared.tensors)
+result = pose.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, pose.predict(image)):
+    np.testing.assert_allclose(staged, predicted)
+boxes, scores, class_ids, keypoints_xy, visibility = result
+visible = visibility[..., 0] >= 0.5
+print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
+```
+
+`YoloPose(config, runner=...)` 可注入运行器。输入、raw 缓冲区寿命和逐图 transform
+约定与检测一致；`post_process(raw, 原宽, 原高)` 仍兼容，缺失或冲突的几何会报错。
+9 个模型输出为 stride 8/16/32 的 NHWC `(1,H/s,W/s,1)` 类别 logits、
+`(1,H/s,W/s,64)` DFL 框与 `(1,H/s,W/s,51)` 关键点（17 组 x/y/logit）。
+要求方形输入、16 个 DFL bin、17 个 COCO 点，以及模型直接提供的有限浮点张量；
+按 shape 绑定角色，不依赖物理输出枚举顺序，不支持手动反量化的重复版本。
+
+结果为五元组：float32 `(N,4)` 原图框、float32 `(N,)` 检测概率、int64 `(N,)`
+类别 ID（person=0）、float32 `(N,17,2)` 原图点坐标、float32 `(N,17,1)`
+关键点概率。所有数组自有存储；空结果保留这些维度。NMS 对框和骨架使用同一索引。
+坐标按实际缩放/padding 还原并裁至 `[0,width]`/`[0,height]`。关键点置信度只做一次
+稳定 sigmoid；已经是概率，不要再次 sigmoid，也不要按 logits 的零阈值判断可见性。
+示例的 0.5 只用于调用方可见性筛选，不改变返回的坐标或删掉关键点。
+
+X5 旧类名适配器仍返回 `(boxes, scores, keypoints)`，最后一项为 `(N,17,3)`
+x/y/概率。S 独立 YOLO11Pose 的 logits 返回接口已取消收编，不提供额外兼容模式。
+主机测试对照固定 X5 源码的四组尺寸/缩放案例，并覆盖交错 context、NMS 配对、
+空结果、极端 logits 和缓冲区复用；这些均不是板测或数据集精度验证。
 
 <a id="troubleshooting"></a>
 ## 故障排查
@@ -306,4 +354,4 @@ letterbox padding。主机夹具与固定 S 源码对照未改变的内部区域
 `--list-models`、`--download` 是不执行板端推理的路径。
 
 
-S 独立 YOLO11 检测/姿态/分割与 S100 iMoonLab YOLOv13 的原始制品，现可通过精确 ID 准备和选择；数值/C++ 归并尚未验收，见 [源制品绑定与边界](../../model/README_cn.md#standalone-assets)。
+维护入口已取消重复的 S 独立版本，见 [范围与输出要求](../../model/README_cn.md#maintained-scope)。

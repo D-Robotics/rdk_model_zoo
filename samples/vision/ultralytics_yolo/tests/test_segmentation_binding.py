@@ -17,7 +17,7 @@ from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import (
 )
 
 
-def fixture(*, chw=False, quantized=True, target="s100"):
+def fixture(*, chw=False, quantized=False, target="s100"):
     shapes = {
         f"{kind}_{stride}": (1, 64 // stride, 64 // stride, channels)
         for stride in (8, 16, 32)
@@ -95,7 +95,7 @@ class SegmentationBinding(unittest.TestCase):
         for a, b in zip(actual[3], expected[3]):
             np.testing.assert_array_equal(a, b)
 
-    def test_quantized_raw_forward_and_float_decode_agree_both_proto_layouts(self):
+    def test_float_forward_preserves_outputs_both_proto_layouts(self):
         for target in ("x5", "s100", "s600"):
             for chw in (False, True):
                 with self.subTest(target=target, chw=chw):
@@ -104,7 +104,7 @@ class SegmentationBinding(unittest.TestCase):
                     outputs = task.forward({})
                     for name, array in raw.items():
                         self.assertIs(outputs[name], array)
-                        self.assertEqual(array.dtype, np.int8)
+                        self.assertEqual(array.dtype, np.float32)
                     actual = task.post_process(outputs, 64, 64)
                     self.assertEqual(len(actual[0]), 1)
                     self.assert_result_equal(
@@ -173,7 +173,7 @@ class SegmentationBinding(unittest.TestCase):
         binding = task.binding
         metadata = binding.metadata
         for changes in [
-            {"output_quantization": {}},
+            {"output_quantization": {"box_8": {"scale": .25}}},
             {"output_shapes": {**metadata.output_shapes, "protos": (1, 15, 16, 32)}},
             {"output_shapes": {**metadata.output_shapes, "mces_8": (1, 8, 8, 31)}},
         ]:
@@ -204,7 +204,7 @@ class SegmentationBinding(unittest.TestCase):
     def test_bad_semantic_input_and_thresholds_fail_explicitly(self):
         task, raw, _ = fixture()
         with self.assertRaises(ValueError):
-            task.post_process(raw, 64, 64)
+            task.post_process({n:a.astype(np.int8) for n,a in raw.items()}, 64, 64)
         for value in (0, 1, float("nan"), float("inf")):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 task.post_process(task.forward({}), 64, 64, score_thres=value)

@@ -207,8 +207,8 @@ serialization; per-call context does not certify thread-safe inference.
 
 - `pre_process(img, image_format="BGR")` requires nonempty uint8 H×W×3 BGR. It returns `PreparedDetection.tensors` and a frozen `.transform` containing original/model/resized sizes, actual integer padding and per-axis scale. X5 tensors are packed NV12; S tensors are Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`, using metadata-derived H/W.
 - `forward(prepared.tensors)` calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays still have the SDK dtype and borrow SDK buffers. Finish postprocessing before another SDK call, or explicitly copy retained raw arrays.
-- `post_process(raw, transform=prepared.transform)` applies declared DFL affine dequantization, then sigmoid/DFL or LTRB decoding, applicable NMS and coordinate restoration. DFL accepts finite positive scalar/per-channel SCALE metadata with matching axis and scalar/empty/per-channel zero-points. SDK NONE metadata means no transform. LTRB remains floating-only and rejects SCALE metadata. Missing metadata for integer logits is an error, never an implicit cast.
-- `predict(img)` composes those methods and returns owned result arrays. Plain semantic mappings from an injected runner must already hold floating values; use the bound raw carrier for physical quantized tensors.
+- `post_process(raw, transform=prepared.transform)` performs sigmoid/DFL or LTRB decoding, applicable NMS and coordinate restoration. Maintained detection and DFL segmentation/pose require already-floating outputs; integer outputs or SCALE metadata fail at load time. No manual dequantization occurs in postprocessing.
+- `predict(img)` composes those methods and returns owned result arrays. Plain semantic mappings from an injected runner must already hold floating values; use the bound raw carrier for physical floating tensors.
 
 For executable compatibility, prepared results also support `[model_name]` mapping
 access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
@@ -217,7 +217,7 @@ access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
 geometry without cached state. With both dimensions and a transform supplied,
 they must agree. The former `last_transform`/`last_image_transform` attributes
 are removed; keep the prepared object instead. DFL segmentation now shares this transport; see its complete example below.
-Pose, classification, OBB and YOLO26 segmentation stage audits remain ongoing.
+DFL pose is documented below; classification, OBB and YOLO26 segmentation audits remain ongoing.
 
 ```text
 main.py
@@ -242,9 +242,7 @@ For YOLOv8/9/11 segmentation, use `YoloSeg`; YOLO26 segmentation has a different
 direct-box contract and is not covered by this example. On a matching S100 board,
 run from the repository root after preparing a compatible local segmentation
 model through the [model instructions](../../model/README.md). Replace the example
-absolute model path with your prepared artifact. The explicit `nms_thres=0.7`
-retains the standalone S YOLO11 segmentation default; normal unified family CLI
-routing retains its platform default unless overridden.
+absolute model path with your prepared artifact. The example uses the S platform default `nms_thres=0.45`; override it explicitly when needed.
 
 ```python
 from pathlib import Path
@@ -260,7 +258,7 @@ if image is None:
 segmenter = YoloSeg(YoloSegConfig(
     model_path="/models/yolo11n_seg_nashe_640x640_nv12.hbm",
     platform=resolve_platform("s100"),
-    nms_thres=0.7,
+    nms_thres=0.45,
 ))
 prepared = segmenter.pre_process(image)
 raw = segmenter.forward(prepared.tensors)
@@ -287,9 +285,9 @@ logits `(1,H/s,W/s,64)` and coefficients `(1,H/s,W/s,32)` at strides 8/16/32,
 plus stride-4 prototypes `(1,H/4,W/4,32)` or `(1,32,H/4,W/4)`. Published square
 input geometry is required. Roles are bound from shapes or an explicit reviewed
 `DFLSegmentationContract(output_roles=...)`; output enumeration order is ignored.
-Wrong/missing/ambiguous metadata, nonfinite tensors and integer outputs without
-SCALE metadata are rejected. Scalar/per-channel dequantization happens in
-postprocessing, on the physical axis before NCHW prototype normalization.
+Wrong/missing/ambiguous metadata, nonfinite tensors and all integer outputs
+are rejected. The model must directly supply floating arrays; postprocessing
+normalizes NCHW prototypes without manual dequantization.
 Injected plain role mappings must already contain finite floating NHWC arrays.
 
 The result is `(boxes, scores, ids, masks)`: owned float32 `(N,4)` xyxy boxes
@@ -303,13 +301,72 @@ and optional 5×5 morphological opening (`do_morph=True`) are retained; this is
 not a claim of equivalence to upstream Ultralytics full-image mask evaluation.
 Confidence must be finite in `(0,1)` and NMS in `[0,1]`.
 
-Intentional source corrections: per-channel SCALE now broadcasts a scalar
-nonzero zero-point; geometry uses actual integer resize/padding; prototype crops
+Geometry uses actual integer resize/padding; prototype crops
 are clipped to visible image content before slicing, so negative coordinates do
 not index from the opposite edge and letterbox padding does not enter the mask.
-Host fixtures compare unchanged interior behavior against fixed S source and
-separately test these corrections. They do **not** establish board accuracy,
+Host fixtures test these corrections. Quantized comparisons against duplicate S
+variants belong to retired historical evidence. They do **not** establish board accuracy,
 real SDK compatibility, latency or dataset metrics; those remain not-run.
+
+<a id="pose-api"></a>
+## DFL pose library interface
+
+YOLOv8/11 pose shares the three-stage interface. Run from the repository root on
+a matching S100 board after preparing the model locally as described under model/;
+replace the absolute path below. Omitted NMS uses the platform default (S 0.45,
+X5 0.70). YOLO26 pose uses direct boxes and is not covered by this DFL example.
+
+```python
+from pathlib import Path
+import cv2
+import numpy as np
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose, YoloPoseConfig
+
+image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+image = cv2.imread(str(image_path))
+if image is None:
+    raise FileNotFoundError(image_path)
+pose = YoloPose(YoloPoseConfig(
+    model_path="/models/yolo11n_pose_nashe_640x640_nv12.hbm",
+    platform=resolve_platform("s100"),
+))
+prepared = pose.pre_process(image)
+raw = pose.forward(prepared.tensors)
+result = pose.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, pose.predict(image)):
+    np.testing.assert_allclose(staged, predicted)
+boxes, scores, class_ids, keypoints_xy, visibility = result
+visible = visibility[..., 0] >= 0.5
+print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
+```
+
+`YoloPose(config, runner=...)` accepts an injected runner. Input, raw-buffer
+lifetime and per-image transforms follow detection. Legacy
+`post_process(raw, original_width, original_height)` remains supported;
+missing/conflicting geometry fails. The nine outputs are NHWC class logits
+`(1,H/s,W/s,1)`, DFL boxes `(1,H/s,W/s,64)` and keypoints `(1,H/s,W/s,51)`
+(17 x/y/logit triplets) at strides 8/16/32. Square inputs, 16 DFL bins, 17 COCO
+points and finite model-provided floating outputs are required. Roles bind by
+shape, never enumeration order; manually dequantized duplicate variants are
+not supported.
+
+The five-tuple contains float32 `(N,4)` original-image boxes, float32 `(N,)`
+detection probabilities, int64 `(N,)` class IDs (person=0), float32 `(N,17,2)`
+original-image point coordinates and float32 `(N,17,1)` point probabilities.
+Arrays own their storage; empty results retain all ranks. NMS uses the same
+indices for boxes and skeletons. Coordinates use actual resize/padding and clip
+to `[0,width]`/`[0,height]`. Visibility receives one stable sigmoid; do not apply
+another sigmoid or a zero-logit threshold to these probabilities. The example's
+0.5 threshold is caller-side filtering; it does not alter coordinates or remove
+points from the returned arrays.
+
+The X5 legacy-name adapter still returns `(boxes, scores, keypoints)` with
+`(N,17,3)` x/y/probability triplets. The separate S YOLO11Pose logits interface is
+retired, with no additional compatibility mode. Host tests compare four
+size/resize cases against fixed X5 source and cover interleaved context, NMS
+pairing, empty results, extreme logits and buffer reuse. This is neither board
+validation nor a dataset accuracy measurement.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
@@ -339,4 +396,4 @@ Use `python samples/vision/ultralytics_yolo/runtime/python/main.py --help` for t
 inference.
 
 
-Standalone S YOLO11 detection/pose/segmentation and S100 iMoonLab YOLOv13 source artifacts can now be prepared and selected by exact ID; numerical/C++ consolidation is not yet accepted. See [source asset routing and boundaries](../../model/README.md#standalone-assets).
+The maintained YOLO inventory excludes duplicate standalone S variants; see [scope and output requirements](../../model/README.md#maintained-scope).

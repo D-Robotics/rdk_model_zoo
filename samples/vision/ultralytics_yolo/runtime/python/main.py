@@ -239,11 +239,6 @@ def print_model_listing(profile: PlatformProfile) -> None:
                 record = manifest_asset(profile, entry['family'], task, size)
                 print(f'      {task}: {record.reference} (asset available; validation is separate)')
 
-    from standalone_assets import standalone_selections
-    for selection in standalone_selections(profile):
-        print(f'    source {selection.task}: {selection.asset.reference} '
-              '(source publication; numerical/board validation is separate)')
-
 
 def select_manifest_reference(profile: PlatformProfile, args) -> None:
     """Resolve an official reference using the sample's finite task/size policy."""
@@ -252,18 +247,6 @@ def select_manifest_reference(profile: PlatformProfile, args) -> None:
         record = resolve_asset(args.asset_id)
     except ValueError as exc:
         raise UnsupportedAssetError(str(exc)) from exc
-    if record.sample_id in ('yolo11', 'yolo11_pose', 'yolo11_seg', 'yolov13_imoonlab'):
-        from standalone_assets import select_standalone
-        selection = select_standalone(profile, record.reference)
-        if args.task != selection.task:
-            raise UnsupportedAssetError('Asset reference conflicts with task.')
-        if ((args.family and args.family != selection.family) or
-                (args.model_size and args.model_size != selection.size)):
-            raise UnsupportedAssetError('Asset reference conflicts with family or model size.')
-        args.family, args.model_size = selection.family, selection.size
-        if args.nms_thres is None:
-            args.nms_thres = selection.nms_thres
-        return
     if record.group != profile.family or record.sample_id not in ('ultralytics_yolo', 'ultralytics_yolo26'):
         raise UnsupportedAssetError('Asset reference does not belong to this target and Sample.')
     candidates = []
@@ -313,17 +296,15 @@ def describe_plan(profile: PlatformProfile, args) -> dict:
             "present": os.path.exists(args.model_path),
             "explicit": True,
         }
-    from samples._shared.assets import resolve_asset
-    from standalone_assets import asset_local_path
-    asset = (resolve_asset(args.asset_id) if args.asset_id else
-             manifest_asset(profile, args.family, args.task, args.model_size))
-    filename = os.path.basename(asset.filename)
-    path = asset_local_path(_MODEL_DIR, profile, asset)
+    filename = model_filename(
+        profile, args.family, args.task, args.model_size)
+    path = resolve_model_path(
+        _MODEL_DIR, profile, args.family, args.task, args.model_size)
     return {
-        "asset_reference": asset.reference,
+        "asset_reference": manifest_asset(profile, args.family, args.task, args.model_size).reference,
         "filename": filename,
         "path": path,
-        "url": asset.url,
+        "url": model_url(profile, args.family, args.task, args.model_size),
         "present": os.path.exists(path),
         "explicit": False,
     }

@@ -162,7 +162,7 @@ class YoloSeg:
         nms_thres=None,
         transform=None,
     ):
-        """Dequantize, decode/NMS and return original-image boxes and ROI masks.
+        """Decode/NMS and return original-image boxes and ROI masks.
 
         Pass the matching prepared.transform (preferred) or both original image
         dimensions (legacy). Results own their storage and survive SDK reuse.

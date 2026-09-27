@@ -154,7 +154,7 @@ class YoloDetect:
 
         Supply the matching PreparedDetection.transform, or explicit original
         dimensions for the legacy stateless path. RawOutputs uses its validated
-        binding for postprocess transforms; injected semantic mappings must hold
+        binding for postprocess layout adaptation; injected semantic mappings must hold
         floating values. Wrong binding/geometry/quantization raises ValueError
         (including BindingError); score/NMS overrides follow the decoder contract.
         """

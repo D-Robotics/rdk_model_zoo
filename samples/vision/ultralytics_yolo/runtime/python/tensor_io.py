@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
-from types import MappingProxyType, SimpleNamespace
+from types import MappingProxyType
 
 import numpy as np
 
@@ -335,69 +335,20 @@ def bind_nv12_inputs(profile: Any,
                         layouts=layouts)
 
 
-@dataclass(frozen=True)
-class Quantization:
-    """Snapshot of scalar/per-channel affine metadata, applied only in postprocess."""
-
-    scale: Any
-    zero_point: Any = 0.0
-    axis: Optional[int] = None
-
-    def __post_init__(self) -> None:
-        scale = np.array(self.scale, dtype=np.float32, copy=True).reshape(-1)
-        zero = np.array(self.zero_point, dtype=np.float32, copy=True).reshape(-1)
-        if not scale.size or not np.isfinite(scale).all() or np.any(scale <= 0):
-            raise TensorContractError("quantization scales must be finite and positive.")
-        if not np.isfinite(zero).all():
-            raise TensorContractError("quantization zero-points must be finite.")
-        if scale.size == 1 and zero.size not in (0, 1):
-            raise TensorContractError("Scalar scale requires scalar/empty zero-point.")
-        if scale.size > 1 and zero.size not in (0, 1, scale.size):
-            raise TensorContractError("Per-channel scale/zero-point counts conflict.")
-        scale.setflags(write=False)
-        zero.setflags(write=False)
-        object.__setattr__(self, "scale", scale)
-        object.__setattr__(self, "zero_point", zero)
-
-    def descriptor(self):
-        return SimpleNamespace(quant_type="SCALE", scale=self.scale,
-                               zero_point=self.zero_point, axis=self.axis)
-
-    def validate(self, shape) -> None:
-        from samples._shared.quantization import validate_scale_quantization
-        try:
-            validate_scale_quantization(self.descriptor(), shape)
-        except ValueError as exc:
-            raise TensorContractError(str(exc)) from exc
-
-    def apply(self, array: np.ndarray) -> np.ndarray:
-        from samples._shared.quantization import dequantize_tensor
-        self.validate(array.shape)
-        return dequantize_tensor(array, self.descriptor())
-
-
-def as_quantization(value: Any) -> Optional[Quantization]:
-    """Parse an explicit mapping or SDK SCALE descriptor; NONE means pass-through."""
-    if value is None:
-        return None
-    if isinstance(value, Quantization):
-        return value
-    if isinstance(value, Mapping):
-        get = value.get
-    elif hasattr(value, "scale"):
-        get = lambda name, default=None: getattr(value, name, default)
-    else:
-        raise TensorContractError("Quantization must provide scale/zero_point metadata.")
-    kind = get("quant_type", "SCALE")
-    kind = str(getattr(kind, "name", kind))
-    if kind in ("NONE", "0"):
-        return None
-    if kind not in ("SCALE", "1"):
-        raise TensorContractError(f"Unsupported quantization type {kind!r}.")
-    scale = get("scale")
-    if scale is None:
-        raise TensorContractError("Quantization metadata must provide scale.")
-    return Quantization(scale, get("zero_point", 0), get("axis"))
+def require_floating_output(dtype, descriptor, name):
+    """Accept runtime-dequantized floating outputs only; never implement SCALE here."""
+    kind = None
+    if descriptor is not None:
+        if isinstance(descriptor, Mapping):
+            kind = descriptor.get("quant_type", "SCALE")
+        else:
+            kind = getattr(descriptor, "quant_type", "SCALE")
+        kind = str(getattr(kind, "name", kind))
+    if dtype is None or not np.issubdtype(dtype, np.floating) or kind not in (None, "NONE", "0"):
+        raise TensorContractError(
+            f"Output {name!r} requires an already dequantized floating-point tensor "
+            "with NONE/no quantization metadata. Select the maintained Ultralytics "
+            "floating-output artifact; manual output dequantization is not supported.")
 
 
 @dataclass(frozen=True)
@@ -457,7 +408,6 @@ class OutputBinding:
     expected_shapes: Mapping[str, Tuple[int, ...]]
     channels: Mapping[str, int]
     layouts: Mapping[str, str] = field(default_factory=dict)
-    quantization: Mapping[str, Optional[Quantization]] = field(default_factory=dict)
     runtime_order: Tuple[str, ...] = ()
 
     @property
@@ -522,32 +472,25 @@ class OutputBinding:
             if not np.all(np.isfinite(value)):
                 raise TensorContractError(
                     f"Output {name!r} for role {role!r} contains NaN or infinity.")
-            quant = self.quantization.get(role)
-            if quant is None and not np.issubdtype(value.dtype, np.floating):
+            if not np.issubdtype(value.dtype, np.floating):
                 raise TensorContractError(
-                    f"Output {name!r} is {value.dtype}; no explicit quantization is "
-                    "declared for this semantic tensor.")
+                    f"Output {name!r} must already be floating, got {value.dtype}.")
             result[role] = value
         return RawOutputs(result, self)
 
     def read(self, outputs: Any) -> Dict[str, np.ndarray]:
-        """Explicit postprocess transform: validate, dequantize, normalize layout.
+        """Explicit postprocess adapter: validate floating arrays and normalize layout.
 
         Kept for direct decoder/binding callers. ModelRunner uses read_raw instead.
         A RawOutputs carrier prevents semantic role names from bypassing declared
-        quantization and prevents ambiguity with injected already-semantic maps.
+        physical validation and prevents ambiguity with injected semantic maps.
         """
         raw = self.read_raw(outputs)
         if raw.binding is not self:
             raise TensorContractError("Raw outputs belong to a different model binding.")
-        result = {}
-        for role, value in raw.items():
-            quant = self.quantization.get(role)
-            transformed = quant.apply(value) if quant is not None else value
-            if not np.isfinite(transformed).all():
-                raise TensorContractError(f"Transformed output {role!r} is not finite.")
-            result[role] = _normalise_output_layout(transformed, self.layouts.get(role, "NHWC"))
-        return result
+        return {role: _normalise_output_layout(value, self.layouts.get(role, "NHWC"))
+                for role, value in raw.items()}
+
 
 
 def _normalise_output_layout(value: np.ndarray,
@@ -575,8 +518,7 @@ __all__ = [
     "element_count",
     "InputBinding",
     "bind_nv12_inputs",
-    "Quantization",
-    "as_quantization",
+    "require_floating_output",
     "pack_nv12_single",
     "pack_nv12_planes",
     "OutputBinding",

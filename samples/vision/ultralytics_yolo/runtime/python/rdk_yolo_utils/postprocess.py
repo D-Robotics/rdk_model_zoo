@@ -18,13 +18,12 @@
 postprocess: Postprocessing utilities for vision model outputs.
 
 This module provides reusable postprocessing helpers to convert raw model
-outputs into task-level results, including coordinate scaling, quantization
-recovery, prediction filtering, and optional decoding for different output
+outputs into task-level results, including coordinate scaling, prediction filtering, and optional decoding for different output
 types. It is designed to be shared across multiple samples and runtimes.
 
 Key Features:
     - Recover/rescale results back to the original image space.
-    - Dequantize and decode raw outputs into usable representations.
+    - Decode floating outputs into usable representations.
     - Apply common filtering and suppression strategies (e.g., NMS).
     - Provide optional utilities for masks, keypoints, and geometric handling.
 
@@ -38,16 +37,8 @@ Notes:
 import cv2
 import numpy as np
 from scipy.special import softmax
-from typing import TYPE_CHECKING
 
 from .nn_math import sigmoid
-
-if TYPE_CHECKING:  # pragma: no cover - import used only for type checking
-    # `hbm_runtime` ships with the RDK system image. Importing it for an
-    # annotation would make this module unimportable on a host without the
-    # board runtime, so the reference stays inside a type-checking block.
-    from hbm_runtime import QuantParams
-
 
 def recover_to_original_size(img: np.ndarray,
                              orig_w: int,
@@ -99,69 +90,6 @@ def recover_to_original_size(img: np.ndarray,
         raise ValueError(f"Invalid resize_type: {resize_type}, must be 0 or 1")
 
     return img_resized
-
-
-def dequantize_tensor(q_tensor: np.ndarray,
-                      quant_info: "QuantParams") -> np.ndarray:
-    """Dequantize a quantized tensor to floating-point values.
-
-    This function converts a quantized tensor (e.g., int8 or uint8) into
-    floating-point values using the provided quantization parameters.
-    Both per-tensor and per-channel dequantization are supported.
-
-    Args:
-        q_tensor: Quantized input tensor.
-        quant_info: Quantization parameters including scale, zero point,
-            quantization axis, and quantization type.
-
-    Returns:
-        A float32 NumPy array containing the dequantized tensor values.
-    """
-    quant_type = quant_info.quant_type
-    quant_type_name = getattr(quant_type, "name", str(quant_type))
-    if quant_type_name not in ("SCALE", "1"):
-        return q_tensor
-
-    zero_point = quant_info.zero_point.astype(np.float32)
-    if zero_point.size == 0:
-        zero_point = np.zeros((1,), dtype=np.float32)
-
-    if quant_info.scale.ndim == 0 or q_tensor.ndim == 1 or quant_info.scale.size == 1:
-        # Per-tensor dequantization
-        return (q_tensor.astype(np.float32) - zero_point.reshape(-1)[0]) * quant_info.scale
-    else:
-        # Per-channel dequantization
-        shape = [1] * q_tensor.ndim
-        shape[quant_info.axis] = -1
-        scale = quant_info.scale.reshape(shape)
-        if zero_point.size == 1:
-            zero_point = np.zeros_like(scale, dtype=np.float32)
-        else:
-            zero_point = zero_point.reshape(shape)
-        return (q_tensor.astype(np.float32) - zero_point.astype(np.float32)) * scale
-
-
-def dequantize_outputs(outputs: dict, quan_infos: dict) -> dict:
-    """Dequantize a dictionary of quantized model outputs.
-
-    This function applies tensor dequantization to each model output using
-    its corresponding quantization parameters and returns the results as
-    floating-point tensors.
-
-    Args:
-        outputs: Dictionary mapping output tensor names to quantized tensors.
-        quan_infos: Dictionary mapping output tensor names to their
-            corresponding quantization parameters.
-
-    Returns:
-        A dictionary mapping output tensor names to dequantized float32
-        NumPy arrays.
-    """
-    fp32_outputs = {}
-    for name, output in outputs.items():
-        quant_info = quan_infos[name]
-        fp32_outputs[name] = dequantize_tensor(output, quant_info)
-    return fp32_outputs
 
 
 def scale_coords_back(xyxy: np.ndarray,

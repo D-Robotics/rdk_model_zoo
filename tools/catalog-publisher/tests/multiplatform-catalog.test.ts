@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { resolve } from "node:path";
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { loadSourcesDocument, readSourceFile, resolvePlatformSources } from "../src/sources";
@@ -84,18 +85,34 @@ describe("multi-platform variant catalog", () => {
     const catalog = await repositoryCatalog();
     const variants = catalog.models.flatMap((model) => model.variants ?? []);
 
-    // The reviewed baseline after the manifest relocation to docs/release and
-    // the B7 recovery of the eight YOLOv5 X5 tag artifacts: 57 families, 603
-    // configurations, 820 benchmark observations. The three new S families
-    // (yoloe26_seg, yoloe11_seg, minicpm5-2b) contribute 11 asset-only
-    // variants; the B7 recovery adds 8 more asset-only variants (s/m/l/x at
-    // tag v2.0 and v7.0). No family and no benchmark observation changed with
-    // either step; the recovered assets are pinned by the test below.
+    // The user retired four redundant standalone S YOLO sources on 2026-09-27.
+    // The active inventory drops their ten artifacts/eight benchmark rows;
+    // canonical grouping changes 603 configurations to 595, with 57 families.
+    // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(57);
-    expect(variants).toHaveLength(603);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(820);
+    expect(variants).toHaveLength(595);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(812);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
+  });
+
+  it("retires duplicate S YOLO sources while retaining distinct YOLO capabilities", async () => {
+    const catalog = await repositoryCatalog();
+    const variants = catalog.models.flatMap(model => model.variants ?? []);
+    const retired = new Set(["yolo11", "yolo11_pose", "yolo11_seg", "yolov13_imoonlab"]);
+    expect(variants.some(variant => retired.has(variant.sample_path?.split("/").at(-1) ?? ""))).toBe(false);
+    const evidence = JSON.parse(await readFile(resolve(repositoryRoot,
+      "docs/releases/unified-migration/evidence/2026-09-27-yolo-deduplication/retired-records.json"), "utf8"));
+    // YOLO26 deliberately shares the canonical Ultralytics sample directory.
+    expect(catalog.models.some(model => model.id === "yolov26" && model.assets.length > 0)).toBe(true);
+    const removedUrls: string[] = evidence.models.flatMap((model: { assets: { url?: string }[] }) =>
+      model.assets.map(asset => asset.url).filter(Boolean));
+    expect(removedUrls).toHaveLength(10);
+    const currentUrls = new Set(variants.flatMap(variant => variant.assets.map(asset => asset.url)));
+    expect(removedUrls.some(url => currentUrls.has(url))).toBe(false);
+    for (const sample of ["ultralytics_yolo", "yolov5", "yoloe", "yoloworld", "yolo26_depth"]) {
+      expect(variants.some(variant => variant.sample_path?.endsWith(`/` + sample)), sample).toBe(true);
+    }
   });
 
   it("keeps the nine YOLOv5 X5 tag artifacts as nine distinct downloadable configs", async () => {

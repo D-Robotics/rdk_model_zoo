@@ -255,7 +255,7 @@ def _predict_task(
     image_format: str,
     score_thres: Optional[float],
     nms_thres: Optional[float],
-) -> DetectionResult:
+):
     """Compose the exact three public stages with per-call geometry."""
     prepared = task.pre_process(img, image_format)
     outputs = task.forward(prepared.tensors)

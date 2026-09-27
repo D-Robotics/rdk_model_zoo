@@ -23,15 +23,14 @@ from that artifact. A complete binding requires:
   tensors, or three classification tensors plus three direct four-channel LTRB
   tensors;
 * NHWC output shapes that match the declared grid and channel count;
-* floating or declared affine-quantized DFL output data. DFL requires positive
-  finite scalar/per-channel SCALE metadata for integer outputs. Per-channel axes
-  and zero-point counts must match the physical tensor. SDK NONE descriptors do
-  not transform floating arrays. LTRB remains floating-only and rejects SCALE.
+* already-dequantized floating outputs with NONE/absent quantization metadata.
+  Integer tensors and SCALE descriptors are rejected for all maintained YOLO
+  detection protocols. No manual output dequantization is implemented.
 
 `ModelRunner` now returns a role-keyed `RawOutputs` carrier with SDK arrays and
 binding metadata, preserving values/dtype/layout. It no longer dequantizes in
-forward. `post_process` explicitly performs declared transforms. The legacy
-`binding.read_outputs` is a numeric postprocess operation; use `read_raw_outputs`
+forward. `post_process` decodes the floating values. The legacy
+`binding.read_outputs` validates and normalizes layout; use `read_raw_outputs`
 for container validation alone. Raw arrays borrow SDK buffers, whereas returned
 detection results own their arrays. These host changes do not extend board evidence.
 

@@ -1,5 +1,15 @@
 # X5/S 非板端完整交付与 README 修复计划
 
+## 2026-09-27 用户范围修订（2026-09-28 落地）
+
+常规 YOLO 只维护统一 Ultralytics YOLO / YOLO26，以及已有 YOLOv5s sample。
+S 独立 yolo11、yolo11_pose、yolo11_seg、yolov13_imoonlab 属重复实现，取消收编，
+从活动制品/目录数据和客户入口退役；不再要求其独立 Python/C++、量化流程或转换配方迁移。
+优先保留模型直接输出浮点结果的制品，不维护 Python 后处理中手动反量化的重复路径。
+用户另明确：YOLOE、YOLO-World、YOLO26 Depth 的独立能力继续保留。
+历史平台快照、固定源提交和既有评审证据保留追溯，不作为活动支持清单；下文旧收编要求
+按本修订解释。其他非板端工作仍完整执行，板端验证暂缓。
+
 权威范围：用户2026-09-26要求Codex全面接手，完成除板端测试外全部工作，特别对齐原分支根README、sample及子目录README质量，以Ultralytics YOLO为参照。原X5/S Spec仍控制架构。历史报告保留。
 
 ## 执行裁定
@@ -18,7 +28,7 @@
   - 2026-09-26 文档子项已完成：Ultralytics 根/model/runtime/python/runtime/cpp/conversion/evaluator 双语改写；36 samples / 0 violations / 0 exemptions，原 84 条基线与 CI 旗标已删除。H2 的实现职责审计仍待完成。
 - [ ] H3 B7主机整改集成；客户文档跟随实际代码与历史板证据，保持板测缺口。
 - [ ] H4 B8全部样例完整源能力迁移与测试、双语README。
-- [ ] H5 B9独立YOLO样例收编及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；系列收编和 YOLOE 迁移仍 pending。
+- [ ] H5 B9统一YOLO整理、重复独立系列退役及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；重复系列按用户新要求退役，YOLOE 迁移仍 pending。
 - [ ] H6 B10语音/机器人样例迁移；保留执行边界，不触发实机控制。
 - [ ] H7 B11大模型和VLA来源/gitlink/资源集成，不用空壳冒充上游能力。
 - [ ] H8 全仓共享职责、datasets、旧路径兼容、manifest/catalog、七skills原包来源与文档/Agent导航、上游增量核对。

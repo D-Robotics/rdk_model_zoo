@@ -34,7 +34,7 @@ def fixture(*, sdk=False, channels=False, ltrb=False):
         name: np.full(
             shape,
             8 if ltrb and name.startswith("box") else -24,
-            dtype=np.float32 if ltrb else np.int8,
+            dtype=np.float32,
         )
         for name, shape in shapes.items()
     }
@@ -51,13 +51,13 @@ def fixture(*, sdk=False, channels=False, ltrb=False):
                 else np.array([0.25], np.float32)
             )
             quants[name] = SimpleNamespace(
-                quant_type=SimpleNamespace(name="NONE" if ltrb else "SCALE"),
+                quant_type=SimpleNamespace(name="NONE"),
                 scale=np.array([], np.float32) if ltrb else scale,
                 zero_point=np.array([3], np.int32),
                 axis=3,
             )
         else:
-            quants[name] = {"scale": 0.25, "zero_point": 3}
+            quants[name] = {"quant_type": "NONE"}
     runtime = SimpleNamespace(
         model_names=["m"],
         input_names={"m": ["image"]},
@@ -80,7 +80,7 @@ def fixture(*, sdk=False, channels=False, ltrb=False):
 
 
 class ForwardPurity(unittest.TestCase):
-    def test_scalar_quantized_forward_preserves_original_arrays_and_values(self):
+    def test_float_forward_preserves_original_arrays_and_values(self):
         runner, physical, _, contract = fixture()
         task = YoloDetect(
             YoloDetectConfig(
@@ -95,9 +95,9 @@ class ForwardPurity(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
         for name, value in physical.items():
             self.assertIs(outputs[name], value)
-            self.assertEqual(outputs[name].dtype, np.int8)
+            self.assertEqual(outputs[name].dtype, np.float32)
         expected = decode_dfl(
-            {n: (v.astype(np.float32) - 3) * 0.25 for n, v in physical.items()},
+            physical,
             contract,
             input_size=(64, 64),
             score_thres=0.25,
@@ -108,28 +108,6 @@ class ForwardPurity(unittest.TestCase):
         for a, b in zip(actual, expected):
             np.testing.assert_allclose(a, b, rtol=1e-6, atol=1e-5)
         self.assertEqual(physical["cls_8"][0, 3, 3, 0], 16)
-
-    def test_sdk_channel_scale_and_scalar_offset_apply_only_in_postprocess(self):
-        runner, physical, quants, contract = fixture(sdk=True, channels=True)
-        task = YoloDetect(
-            YoloDetectConfig(
-                "fixture.bin", classes_num=1, contract=contract, nms_thres=0.45
-            ),
-            runner=runner,
-        )
-        outputs = task.forward({})
-        for name, value in physical.items():
-            self.assertIs(outputs[name], value)
-        expected = {
-            n: (a.astype(np.float32) - 3) * quants[n].scale.reshape(1, 1, 1, -1)
-            for n, a in physical.items()
-        }
-        decoded = decode_dfl(
-            expected, contract, input_size=(64, 64), score_thres=0.25, nms_thres=0.45
-        )
-        result = task.post_process(outputs, 64, 64)
-        for a, b in zip(result, decoded):
-            np.testing.assert_allclose(a, b, rtol=1e-6, atol=1e-5)
 
     def test_sdk_none_descriptor_does_not_broaden_ltrb_quantized_contract(self):
         runner, physical, _, _ = fixture(sdk=True, ltrb=True)

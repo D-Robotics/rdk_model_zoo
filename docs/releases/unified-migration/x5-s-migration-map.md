@@ -108,12 +108,12 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | platforms/s/samples/vision/ultralytics_yolo26 | ultralytics_yolo26 / object-detection, instance-segmentation, pose-estimation, oriented-bounding-box-detection, image-classification | Py+sh；C++ —；Conv 6；Eval 5 | 75 hbm / 95 | samples/vision/ultralytics_yolo | S/F/H；已有 family=yolo26 wrapper |
 | platforms/s/samples/vision/unetmobilenet | unetmobilenet / semantic-segmentation | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/unetmobilenet | S/F/H；不替换 X5 unet |
 | platforms/s/samples/vision/vit | vit / image-classification | Py+sh；C++ —；Conv 2；Eval 0 | 2 hbm / 1 | samples/vision/vit | S/F/H |
-| platforms/s/samples/vision/yolo11 | yolo11 / object-detection | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/ultralytics_yolo | S/F/H；候选归并 |
-| platforms/s/samples/vision/yolo11_pose | yolo11_pose / pose-estimation | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/ultralytics_yolo | S/F/H；候选归并 |
-| platforms/s/samples/vision/yolo11_seg | yolo11_seg / instance-segmentation | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/ultralytics_yolo | S/F/H；候选归并 |
+| platforms/s/samples/vision/yolo11 | yolo11 / object-detection | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/ultralytics_yolo | 历史源清点；用户决定退役，不收编或维护；使用统一 Ultralytics 制品 |
+| platforms/s/samples/vision/yolo11_pose | yolo11_pose / pose-estimation | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/ultralytics_yolo | 历史源清点；用户决定退役，不收编或维护；使用统一 Ultralytics 制品 |
+| platforms/s/samples/vision/yolo11_seg | yolo11_seg / instance-segmentation | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/ultralytics_yolo | 历史源清点；用户决定退役，不收编或维护；使用统一 Ultralytics 制品 |
 | platforms/s/samples/vision/yolo26_depth | yolo26_depth / monocular-depth-estimation | Py+sh；C++ —；Conv 29；Eval 2 | 15 hbm / 20 | samples/vision/yolo26_depth | S/F/H；独立深度流程 |
 | platforms/s/samples/vision/yoloe11_seg | Manifest 缺行；README 为 4585 类开放词表实例分割 | Py+sh；C++ src/main.cpp；Conv 8；Eval 0 | — / — | samples/vision/yoloe | M-/F/H；仅 S100，S600 明确退出 |
-| platforms/s/samples/vision/yolov13_imoonlab | yolov13_imoonlab / object-detection | Py+sh；C++ —；Conv 4；Eval 0 | 4 hbm / 8 | samples/vision/ultralytics_yolo | S/F/H；候选归并 |
+| platforms/s/samples/vision/yolov13_imoonlab | yolov13_imoonlab / object-detection | Py+sh；C++ —；Conv 4；Eval 0 | 4 hbm / 8 | samples/vision/ultralytics_yolo | 历史源清点；用户决定退役，不收编或维护；使用统一 Ultralytics 制品 |
 | platforms/s/samples/vision/yolov5 | yolov5 / object-detection | Py+sh；C++ src/main.cpp；Conv 0；Eval 0 | 2 hbm / 0 | samples/vision/yolov5 | S/F/H |
 | platforms/s/samples/vla/act | act / robot-manipulation-policy | 外部 gitlink；本仓无入口文件 | 0 / 0 | samples/vla/act | S/F/H；gitlink 326ea043be204de25223d95c7d918efe8672dc66 |
 | platforms/s/samples/vla/pi0 | pi0 / robot-manipulation-policy | 外部 gitlink；本仓无入口文件 | 0 / 0 | samples/vla/pi0 | S/F/H；gitlink a32de276bc1681a2b1531012de111eaa1c16acb6 |
@@ -137,7 +137,7 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
    HTTP HEAD 验证了 20 个 224 地址及 20 个 640 兼容地址全部返回 200，每对长度与
    ETag 相同；未下载模型字节，不能据此认定哈希相同或输入尺寸。保留主清单
    `docs/release/s/models.yaml` 的 640 标识与 224 URL；平台归档不是运行时主清单。
-   此项不再阻塞 B9 源能力归并，归并本身仍待完成；板测仍为 not-run。
+   此项不阻塞统一 YOLO 整理；重复 S 独立系列已按用户要求取消收编；板测仍为 not-run。
    详见 [核定记录](2026-09-26-b9-cls-assets-review.md) 与其原始 HTTP 证据。
 7. **platforms/s 快照落后 s tip**（A7 勘定，2026-09-21）：快照相对 380e1a2 缺 53 个
    文件——`samples/vision/yoloe26_seg`（30）、`samples/llm/minicpm5-2b`（13，
@@ -231,7 +231,7 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B8 | lanenet / s:380e1a2 | s100 / python + cpp | done（嵌入/二值三阶段；原生资源管理） | done（保留 YAML；校准/配置准备；导出缺口明示） | done（六层双语、历史图与真实输出边界） | passed（22 tests；含伪 SDK 原生资源/类型；完整 SDK 构建 not-run） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-lanenet-review.md) |
 | B8 | pointnet / s:380e1a2 | s100 / python（点云输入；其余 target 无制品） | done（四阶段、metadata binding、显式下载） | done（源无可执行配方；图示与缺口保留） | done（双语五层完整 README） | passed（21 tests；真实源点云归一化与 raw 输出对照） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-pointnet-review.md) |
 | B8 | diffusiondrive / s:380e1a2 | s100p/s600 / python | done（四输入三阶段；量化/绘图/SDK 分离；五案例入口） | done（两 YAML 保留；缺失导出/校准前提明确） | done（六层双语，含测试数据及全部历史表） | passed（23 tests；六案例真实源后处理/绘图对照；严格离线评估） | not-run（用户当前无板端环境） | not-run（待整体独立评审） | no | [主机迁移记录](2026-09-26-b8-diffusiondrive-review.md) |
-| B9 | ultralytics_yolo（收编 yolo11、yolo11_pose、yolo11_seg、yolov13_imoonlab） / s:380e1a2 | s / 新 family/variant / python + cpp | in-progress | in-progress | in-progress | not-run | not-run | not-run | no | [README 欠账已于 2026-09-26 提前清零](2026-09-26-yolo-readme-debt-closure.md)（基线与 workflow 旗标已删）；[源清点与制品路由](2026-09-27-b9-source-consolidation-review.md) 已有主机证据，[检测阶段职责](2026-09-27-yolo-stage-purity-review.md) 与 [DFL 分割阶段](2026-09-27-yolo-segmentation-review.md) 已有主机整改证据；其余数值/C++ 归并及整体验收仍 pending |
+| B9 | ultralytics_yolo（统一家族职责整改，重复 S 独立系列退役） | x5+s / 统一 Python + cpp | in-progress | in-progress | in-progress | not-run | not-run | not-run | no | 用户取消 yolo11/pose/seg、iMoonLab 的独立收编；仅保留直接浮点输出路线。[范围修订与证据](2026-09-28-yolo-scope-review.md)。统一家族其他任务和整体验收继续；YOLOE/World/Depth 保留。 |
 | B9 | yoloe（x5 yoloe + s yoloe11_seg + s tip yoloe26_seg）/ x5:ac11571 + s:380e1a2 | x5+s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B10 | himloco / x5:ac11571 | x5 / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
 | B10 | asr / s:380e1a2 | s / python + cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
