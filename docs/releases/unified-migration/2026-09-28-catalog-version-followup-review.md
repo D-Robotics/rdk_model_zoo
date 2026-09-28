@@ -23,3 +23,7 @@ README also still calls `platforms/x5` the future/new layout, contrary to the
 current root `docs/release/x5` layout. Describe the optional tree prefix only for
 tags actually carrying that prefixed tree. Qualify the worktree-only statement
 that a build always reads worktree so it cannot contradict explicit tag pins.
+
+## Independent disposition
+
+Closed by the final recheck in `2026-09-28-catalog-independent-review.md`. Both original counterexamples now select release/VERSION; 130 publisher tests, exact historical-pin build and reproducibility checks pass. Original failing evidence above remains preserved.

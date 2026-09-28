@@ -3,9 +3,13 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { PLATFORMS, loadSourcesDocument, resolvePlatformSources, type SourcesDocument } from "../src/sources";
+import {
+  PLATFORMS, loadSourcesDocument, readSourceFile, resolvePlatformSources,
+  type PlatformSource, type SourcePin, type SourcesDocument
+} from "../src/sources";
 import { buildMultiplatformCatalog } from "../src/pipeline/multiplatform-catalog";
 import { publisherRoot, repositoryRoot } from "./helpers/repository";
+import { createTaggedRepository, fixtureManifests } from "./helpers/tag-repository";
 
 async function sourcesDocument(): Promise<SourcesDocument> {
   return loadSourcesDocument(resolve(publisherRoot, "sources.json"));
@@ -51,6 +55,8 @@ describe("platform source resolution", () => {
     expect(x3.linkRef).toBe("x3-v1.1.2");
     expect(x3.linkPrefix).toBe("");
     expect(x3.manifestDirectory).toBe("release");
+    // The tag carries a root VERSION, resolved from its own layout.
+    expect(x3.versionFile).toBe("VERSION");
   });
 
   it("keeps pinned-tag source links prefix-free while the worktree build is prefixed", async () => {
@@ -106,5 +112,143 @@ describe("platform source resolution", () => {
 
     await expect(resolvePlatformSources({ repositoryRoot, sources: broken }))
       .rejects.toThrow(/no models.yaml found/);
+  });
+});
+
+describe("pinned platform VERSION resolution", () => {
+  async function resolveX5(repository: string, pin: SourcePin): Promise<PlatformSource> {
+    const sources = await resolvePlatformSources({ repositoryRoot: repository, sources: await sourcesDocument(), pins: { x5: pin } });
+    return sources.find((source) => source.platform === "x5")!;
+  }
+
+  it("resolves a pinned platform's VERSION from the layout its tag carries", async () => {
+    // Regression (H8-CATALOG-R2): the advertised pin reads a historical tag
+    // whose VERSION sits at its root. The worktree's colocated
+    // docs/release/x5/VERSION path must not leak into the pinned read.
+    const x5 = await resolveX5(repositoryRoot, { tag: "x5-v1.1.2" });
+
+    expect(x5.kind).toBe("tag");
+    expect(x5.manifestDirectory).toBe("docs/release");
+    expect(x5.versionFile).toBe("VERSION");
+  });
+
+  it("builds the catalog from the advertised historical pin", async () => {
+    const document = await sourcesDocument();
+    const pinned = await buildMultiplatformCatalog({
+      repositoryRoot,
+      sources: await resolvePlatformSources({ repositoryRoot, sources: document, pins: { x5: { tag: "x5-v1.1.2" } } })
+    });
+
+    expect(pinned.release.platform_tags!.x5).toBe("x5-v1.1.2");
+    const x5Variants = pinned.models.flatMap((model) => model.variants ?? [])
+      .filter((variant) => variant.hardware === "x5");
+    expect(x5Variants.length).toBeGreaterThan(0);
+    expect(x5Variants.every((variant) => variant.source_ref === "x5-v1.1.2")).toBe(true);
+  });
+
+  it("resolves a prefixed legacy tag layout", async () => {
+    // A tag that carries the platform under platforms/<id>, with the legacy
+    // root VERSION inside that prefix: the probe applies the tree prefix to
+    // both the manifest directory and the VERSION candidates.
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "1.0.0", "platforms/x5/docs/release"),
+      "platforms/x5/VERSION": "1.0.0\n"
+    });
+
+    const x5 = await resolveX5(root, { tag: "x5-v9.9.9", treePrefix: "platforms/x5" });
+
+    expect(x5.manifestDirectory).toBe("docs/release");
+    expect(x5.versionFile).toBe("VERSION");
+    expect(x5.linkPrefix).toBe("platforms/x5");
+  });
+
+  it("resolves a unified-layout tag's colocated VERSION", async () => {
+    // A future tag already using the unified layout carries the version next
+    // to the manifests it belongs to.
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "2.0.0", "docs/release/x5"),
+      "docs/release/x5/VERSION": "2.0.0\n"
+    });
+
+    const x5 = await resolveX5(root, { tag: "x5-v9.9.9" });
+
+    expect(x5.manifestDirectory).toBe("docs/release/x5");
+    expect(x5.versionFile).toBe("docs/release/x5/VERSION");
+  });
+
+  it("rejects a pinned tag whose VERSION disagrees with its manifest", async () => {
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v1.0.0", "1.0.0", "docs/release/x5"),
+      "docs/release/x5/VERSION": "0.0.1\n"
+    });
+    const resolved = await resolvePlatformSources({
+      repositoryRoot: root,
+      sources: await sourcesDocument(),
+      pins: { x5: { tag: "x5-v9.9.9" } }
+    });
+
+    // The version file the tag layout selected is still checked strictly
+    // against the manifest identity the release published.
+    await expect(buildMultiplatformCatalog({ repositoryRoot: root, sources: resolved }))
+      .rejects.toThrow(/VERSION 0\.0\.1 and manifest release version 1\.0\.0 disagree/);
+  });
+
+  it("resolves VERSION next to a fallback manifest directory", async () => {
+    // The tag's manifests resolve through the probe fallback (`release/`),
+    // and its VERSION sits in that same directory. The VERSION probe must use
+    // the resolved directory, not the sources.json preferred one.
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "1.0.0", "release"),
+      "release/VERSION": "1.0.0\n"
+    });
+
+    const x5 = await resolveX5(root, { tag: "x5-v9.9.9" });
+
+    expect(x5.manifestDirectory).toBe("release");
+    expect(x5.versionFile).toBe("release/VERSION");
+  });
+
+  it("prefers the colocated VERSION over a stale root VERSION", async () => {
+    // Same fallback layout, but the tag also carries an outdated root VERSION
+    // from a predecessor layout: the file colocated with the resolved
+    // manifests wins, and the stale root copy must not be selected.
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "1.0.0", "release"),
+      "release/VERSION": "1.0.0\n",
+      "VERSION": "0.0.1\n"
+    });
+
+    const x5 = await resolveX5(root, { tag: "x5-v9.9.9" });
+
+    expect(x5.manifestDirectory).toBe("release");
+    expect(x5.versionFile).toBe("release/VERSION");
+  });
+
+  it("rejects a tag that carries manifests but no VERSION", async () => {
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "1.0.0", "docs/release/x5")
+    });
+
+    await expect(resolveX5(root, { tag: "x5-v9.9.9" }))
+      .rejects.toThrow(/no VERSION found under x5-v9\.9\.9 \(tried docs\/release\/x5\/VERSION, VERSION\)/);
+  });
+
+  it("keeps worktree VERSION reads strict on the configured path", async () => {
+    const document = await sourcesDocument();
+    const broken: SourcesDocument = {
+      ...document,
+      sources: {
+        ...document.sources,
+        x5: { ...document.sources.x5!, version_file: "docs/release/x5/NONEXISTENT" }
+      }
+    };
+    const sources = await resolvePlatformSources({ repositoryRoot, sources: broken });
+    const x5 = sources.find((source) => source.platform === "x5")!;
+
+    // No layout probing for worktree sources: the configured file is the one
+    // read, and a missing one fails the build instead of silently falling
+    // back to a colocated or root VERSION.
+    expect(x5.versionFile).toBe("docs/release/x5/NONEXISTENT");
+    await expect(readSourceFile(repositoryRoot, x5, x5.versionFile)).rejects.toThrow();
   });
 });

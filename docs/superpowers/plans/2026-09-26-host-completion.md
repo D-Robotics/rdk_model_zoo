@@ -313,3 +313,5 @@ No model download, recipe execution or board access occurred. H2/H9 are not
 implicitly closed by this scoped command check.
 
 2026-09-28：H6/B10 非板端整批独立验收通过，见 B10 batch independent review 的逐能力证据表。176 份已评审文件与 54 份 README 哈希完成复核，仅已接受的两组文档整改存在变化；109 项整批主机测试证据保留。台账 Board=not-run、Closed=no，整体 H1/H8/H9 继续。
+
+2026-09-28：Catalog DOC-R1/R2 及 VERSION 回退反例由 Codex 独立复验关闭：130 tests、TypeScript、当前/历史固定标签构建及两者可复现性通过；完整 source/README 修改由 Claude Code + GLM 实现。元数据摘要与字节长度独立核定，当前制品身份未变。H8 其余共享层/导航/七 skills 和 H9 继续，未发布网站或合入 develop。
