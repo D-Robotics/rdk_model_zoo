@@ -60,3 +60,26 @@ passing tests and should be retained. Discovery counts and links are updated to
 51 native samples; archive identity remains unchanged in the diff. Original R5
 cannot close while its note breaks YAML. Whole MiniCPM acceptance remains
 changes-required; do not advance or mark B11/H7 complete from the 16 green tests.
+
+## CORE-R4 — native test drivers reuse and delete shared temporary paths (P1)
+
+Further review of the R2 candidate found that `s600_metrics.cpp` and
+`s600_stages.cpp` create fixtures at `temp_directory_path()/model`, truncate
+four files there and remove the entire directory afterward. The cleanup driver
+also uses fixed scenario directory names despite claiming concurrent isolation.
+These paths are not owned exclusively by the test. Running the drivers directly
+can overwrite or delete unrelated files; concurrent test runs can corrupt one
+another's fixtures.
+
+Codex compiled the actual metrics driver and production sources, then ran it
+with TMPDIR pointing to a newly created reviewer-owned directory containing
+`model/reviewer-unrelated.txt`. The driver returned success but removed that
+pre-existing sentinel. No external directory was exposed to this reproduction.
+[Full command and result](evidence/2026-09-28-minicpm-core-independent-review/test-temp-isolation.json).
+
+Use atomically allocated unique per-driver scratch directories, with RAII
+cleanup only of owned paths; restore TMPDIR including its initially unset state
+when changed. Preserve this sentinel case and concurrent isolation as meaningful
+regressions. Do not merely hide fixed unsafe paths behind the Python launcher:
+the native drivers must also be safe when invoked directly. This is an additional
+blocking test-harness finding; original CORE-R1–R3 closure awaits final recheck.
