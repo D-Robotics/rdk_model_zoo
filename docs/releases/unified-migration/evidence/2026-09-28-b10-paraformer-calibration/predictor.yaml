@@ -1,0 +1,26 @@
+model_parameters:
+  onnx_model: source/predictor.onnx
+  march: nash-e
+  output_model_file_prefix: predictor_int16
+  working_dir: compiled/predictor
+input_parameters:
+  input_name: /encoder/after_norm/Add_1_output_0
+  input_shape: 1x400x512
+  input_type_rt: featuremap
+  input_type_train: featuremap
+  input_layout_train: NCHW
+  separate_batch: false
+calibration_parameters:
+  cal_data_dir: calibration/encoder_after_norm_Add_1_output_0
+  calibration_type: max
+  quant_config:
+    model_config:
+      all_node_type: int16
+      activation:
+        calibration_type: max
+compiler_parameters:
+  optimize_level: O2
+  compile_mode: latency
+  core_num: 1
+  jobs: 32
+  cache_mode: disable

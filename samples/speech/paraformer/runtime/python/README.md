@@ -82,8 +82,9 @@ from S commit `380e1a2bf42041af54be6f34935e50197cfadff9`; its no-fire case raise
 [review and evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md).
 
 The source publishes S100 models only. No X5, S100P or S600 adaptation is claimed.
-Actual SDK verification, board three-stage inference and full
-conversion/evaluation workflows remain open. Native application host verification
+Actual SDK verification, board three-stage inference and the dedicated evaluator
+remain open. [Conversion tools](../../conversion/README.md) now provide verified
+FP32 export and real-audio calibration plus explicit OE orchestration. Native application host verification
 is recorded separately in the C++ guide.
 Board inference, OE compilation, dataset CER and latency have not been run.
 

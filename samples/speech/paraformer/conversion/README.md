@@ -4,9 +4,9 @@
 
 This directory exports the real-weight encoder, predictor and decoder directly
 from the pinned FunASR architecture, with fixed deployment geometry and numerical
-checks against Torch. CIF stays in the shared CPU implementation. **Calibration,
-OE compilation and the dedicated evaluator are still being migrated**; successful
-FP32 export does not certify an HBM or its board behavior.
+checks against Torch. CIF stays in the shared CPU implementation. **Real-audio calibration and explicit OE compilation orchestration are implemented.**
+Actual OE/SDK/board validation and the dedicated evaluator remain pending;
+successful FP32 export does not certify an HBM or its board behavior.
 
 The source model is
 `iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404`.
@@ -91,6 +91,124 @@ Each full output must satisfy `rtol=1e-4, atol=1e-4`, retain its dtype/shape and
 finite. Parser/preflight failures return 2 before creating output; later errors
 return 2 and preserve partial files plus a `failed` report. Partial artifacts are
 not approved exports. A forcibly terminated process may leave incomplete state.
+
+## Prepare real calibration and compiler configs
+
+After export, prepare a new self-contained workspace. The following two-WAV
+example checks the workflow; it is **not** a representative calibration dataset
+or an accuracy acceptance run:
+
+```bash
+python samples/speech/paraformer/conversion/prepare.py \
+  --export-dir outputs/paraformer_export \
+  --wav-dir samples/speech/paraformer/test_data \
+  --sample-count 2 \
+  --output-dir outputs/paraformer_calibration
+```
+
+For a real conversion, supply a representative collection of your 16 kHz WAVs.
+Selection is a sorted recursive prefix of lowercase `*.wav` files, default 50,
+matching the source recipe's reference count. Fewer files are explicitly recorded;
+50 files alone do not establish representative coverage. Empty selection, bad
+sample rate, malformed audio or invalid stage outputs fail the run; no selected
+file is silently skipped. There is no implicit resampling or random calibration.
+
+The unified frontend averages multichannel audio, computes fbank/LFR/CMVN with
+CPU seed 191009, and pads/truncates to 400 frames. This reuses the documented
+runtime frontend rather than constructing an entire AutoModel just to extract
+features. The source calibration script's global random behavior is not a
+reproducibility contract; current seed, dependencies and input hashes are recorded.
+Actual/retained frame counts and truncation remain visible in each record.
+
+Encoder and predictor execute on CPU ONNX Runtime. Calibration then calls the
+same CPU CIF implementation with **`real_T=None`**, preserving the source's
+unmasked calibration distribution. Runtime inference uses the utterance's valid
+frame count instead. A zero-token result is stored, not silently removed.
+
+| Calibration subdirectory | Shape | dtype | Used for |
+| --- | --- | --- | --- |
+| `speech` | `[1,400,560]` | float32 | encoder input |
+| `encoder_after_norm_Add_1_output_0` | `[1,400,512]` | float32 | predictor and decoder context |
+| `predictor_Add_output_0` | `[1,401]` | float32 | recorded predictor weights / CIF provenance |
+| `predictor_Concat_5_output_0` | `[1,401,512]` | float32 | recorded predictor hidden vectors / CIF provenance |
+| `shape_8609` | `[1,100,512]` | float32 | decoder acoustic embeddings |
+| `token_num` | `[1]` | int32 | decoder valid-token count |
+| `bias_embed` | `[1,1,512]` | float32 | zero contextual bias |
+
+Each directory contains aligned names such as `000000.npy`. The workspace also
+contains `source/{encoder,predictor,decoder}.onnx`, the original export report and
+CMVN snapshot, `configs/{encoder,predictor,decoder}.yaml`, and `preparation.json`.
+The report binds each source/derived array to hashes, shape, dtype and value range.
+Config model/calibration paths are relative to this workspace, so run an original
+config from its workspace root; the compile wrapper below remaps paths explicitly.
+
+| Preparation argument | Default / behavior |
+| --- | --- |
+| `--export-dir` | Required completed exporter directory; report hashes and actual ONNX signatures are checked. External-data ONNX files are rejected. |
+| `--wav-dir` | Required real WAV directory; selected files are read and hashed from the same bytes. |
+| `--output-dir` | Required new workspace; no overwrite or resume into partial output. |
+| `--cmvn-file` | Sample `model/am.mvn`; must match the pinned digest. |
+| `--sample-count` | Positive integer, default 50; actual selected count is recorded. |
+| `--threads` | Positive ONNX Runtime CPU thread count, default 4. |
+| `--jobs` | Positive OE compiler jobs recorded in YAML, default 32 as in the source. |
+
+`status: prepared` means calibration/config creation only. Later preparation
+failure leaves `status: preparation_failed`, the current audio, completed records
+and partial files. Exit code is 2; partial workspaces cannot be compiled by the
+wrapper. Missing required dependencies/preconditions can fail before output exists.
+
+## Explicit S100 / nash-e compilation
+
+The recipe supports **S100 / nash-e only**. It retains source max calibration,
+internal INT16 quantization, NCHW feature maps, O2 latency optimization, one BPU
+core and disabled compiler cache. The integer token-count input remains int32.
+Do not interpret internal INT16 settings as a guarantee of final physical I/O
+precision. Real HBM signatures still need SDK validation before runtime use.
+
+Use a matching installed S OE toolchain with `hb_compile`. The source records
+`ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0` and hbdk4 4.7.5; its image registry and
+availability have not been verified here, so no invented pull URL is provided.
+The FP32 export Python environment alone does not provide the compiler. Run
+the wrapper from an available repository checkout inside the OE environment,
+with NumPy and PyYAML installed; this compilation step does not import Torch.
+
+```bash
+python samples/speech/paraformer/conversion/compile.py \
+  --workspace outputs/paraformer_calibration \
+  --output-dir outputs/paraformer_compiled \
+  --compiler hb_compile
+```
+
+`--workspace` and a **new** `--output-dir` are required; `--compiler` defaults to
+`hb_compile` and may name an explicit executable. The workspace path cannot
+contain `;`, which is the OE calibration-directory separator. Move/mount the
+complete preparation workspace into the toolchain environment before compiling.
+The wrapper checks every snapshot/config/NPY digest and rejects added calibration
+files, then writes per-run absolute-path configs without changing the prepared
+workspace. It invokes `hb_compile -c <stage.yaml>` sequentially and rechecks the
+preparation after compilation.
+
+Each stage retains exact argv/cwd, UTC timestamps, config hash, separate complete
+stdout/stderr logs and return code. A process-start error records no return code;
+a nonzero exit or a zero exit without the expected nonempty HBM is a failure and
+stops later stages. `compile-report.json` preserves completed stages on failure.
+Use a new output directory to retry; earlier logs and partial artifacts remain.
+
+Expected paths relative to the compile run:
+
+| Stage | HBM | Optional quantized ONNX for later evaluation |
+| --- | --- | --- |
+| encoder | `encoder/paraformer_encoder_int16.hbm` | `encoder/paraformer_encoder_int16_ptq_model.onnx` |
+| predictor | `predictor/predictor_int16.hbm` | `predictor/predictor_int16_ptq_model.onnx` |
+| decoder | `decoder/decoder_int16.hbm` | `decoder/decoder_int16_ptq_model.onnx` |
+
+Even with all three nonempty HBM files and zero return codes, the result is
+**`compiled_unverified`**, not board/SDK/accuracy acceptance. Generated files are
+not automatically published, renamed to official assets or copied into runtime
+model directories. This host has no OE compiler; only orchestration fixtures and
+the actual missing-compiler rejection were tested. Calibration preparation does
+not certify quantization quality, and a missing PTQ ONNX is explicitly recorded
+as absent rather than fabricated. See the [calibration/compile preparation evidence](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-calibration-review.md).
 
 ## Fixed deployment semantics
 
@@ -197,9 +315,9 @@ It remains historical reference, with the following migration boundaries:
 | `01_reexport_fixed_shape.py` | Export fixed-shape model | Replaced by direct `export.py` stage export; no full CIF graph, global monkey patch or source overwrite. |
 | `02_extract_decoder.py`, `07_extract_predictor.py`, `08_extract_encoder.py` | Extract three stages from an internal-name-dependent full graph | Replaced by explicit Torch stage boundaries with the same deployment names and shapes. |
 | `03_convert_gather_int64_to_int32.py` through `06_shape_freeze.py` | Adapt Gather, order, Range and axes | Shared primitives are integrated into real-weight stage export. No simplifier is invoked, so no unchecked simplifier result is accepted. |
-| `09_gen_calib_features.py` | Generate features from representative real audio | Pending integration with the unified, reproducible frontend. |
-| `10_gen_real_calib.py` and `cif_numpy.py` | Run stages to prepare decoder/predictor calibration | Pending; source calibration deliberately uses unmasked CIF (`real_T=None`), unlike runtime valid-frame masking. |
-| Three `*_int16.yaml` files | Compile encoder, predictor and decoder for `nash-e` | Historical source recipes only; no unified OE invocation or fresh compiled model validation yet. |
+| `09_gen_calib_features.py` | Generate features from representative real audio | Implemented in `prepare.py` through the unified deterministic frontend. |
+| `10_gen_real_calib.py` and `cif_numpy.py` | Run stages to prepare decoder/predictor calibration | Implemented with real encoder/predictor execution and shared unmasked CIF (`real_T=None`), unlike runtime valid-frame masking. |
+| Three `*_int16.yaml` files | Compile encoder, predictor and decoder for `nash-e` | Generated with consistent workspace paths and source settings. Explicit OE invocation is implemented; actual compiler/SDK validation is not-run. |
 | `11_eval_pipeline.py` | Compare the three-stage speech pipeline | Pending migration into a dedicated evaluator. |
 
 Source recipe settings include maximum calibration, INT16 internal operations,

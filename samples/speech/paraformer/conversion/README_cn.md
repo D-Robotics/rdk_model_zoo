@@ -4,7 +4,8 @@
 
 本目录现在能从固定 FunASR 架构的真实权重直接导出 encoder、predictor、decoder，
 固定部署形状并与 Torch 做数值检查。CIF 继续使用共享 CPU 实现。
-**校准、OE 编译及专用 evaluator 仍在迁移**；FP32 导出通过不能证明 HBM 或板端行为。
+**真实音频校准和显式 OE 编译编排已实现。** 实际 OE/SDK/板端验证及专用 evaluator
+仍待完成；FP32 导出通过不能证明 HBM 或板端行为。
 
 源模型是 `iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404`。
 S 源实现将其拆成 encoder、predictor、decoder，CPU CIF 连接 predictor 和
@@ -82,6 +83,107 @@ python samples/speech/paraformer/conversion/export.py \
 类型和形状不变且数值有限。参数/预检失败返回 2 且不创建输出；之后发生错误
 则返回 2，保留部分文件和 `failed` 报告。部分制品不是可验收导出，强制中断
 进程也可能留下不完整状态。
+
+## 准备真实校准数据与编译配置
+
+导出后，生成新的独立工作目录。下面使用两条自带 WAV 验证操作流程，
+**不构成代表性校准集或精度验收**：
+
+```bash
+python samples/speech/paraformer/conversion/prepare.py \
+  --export-dir outputs/paraformer_export \
+  --wav-dir samples/speech/paraformer/test_data \
+  --sample-count 2 \
+  --output-dir outputs/paraformer_calibration
+```
+
+实际转换应提供能代表业务分布的 16 kHz WAV 集合。递归查找小写 `*.wav`，
+排序后取前 N 条，默认 50，对齐源配方的参考数量；不足时如实记录。
+50 条本身也不能证明覆盖充分。空集合、采样率不符、音频损坏或阶段输出不合规
+都会使本轮失败，不静默跳过选中的文件，不隐式重采样，也不生成随机校准数据。
+
+统一前端执行多声道平均、fbank/LFR/CMVN，CPU 种子固定为 191009，再填充或
+截断至 400 帧；直接复用运行时前端，不为取特征而构造整套 AutoModel。
+源校准脚本依赖的全局随机状态不是可复现契约；当前种子、依赖和输入摘要
+写入报告，每条记录保留原始/有效帧数与截断状态。
+
+encoder、predictor 由 CPU ONNX Runtime 实际执行，之后调用同一 CPU CIF，
+显式传 **`real_T=None`**，保留源校准不按有效帧屏蔽的分布。运行时推理才使用
+音频的有效帧数。零 token 样本仍保存，不静默移除。
+
+| 校准子目录 | 形状 | dtype | 用途 |
+| --- | --- | --- | --- |
+| `speech` | `[1,400,560]` | float32 | encoder 输入 |
+| `encoder_after_norm_Add_1_output_0` | `[1,400,512]` | float32 | predictor/decoder 的 context |
+| `predictor_Add_output_0` | `[1,401]` | float32 | predictor 权重与 CIF 来源记录 |
+| `predictor_Concat_5_output_0` | `[1,401,512]` | float32 | predictor 隐藏向量与 CIF 来源记录 |
+| `shape_8609` | `[1,100,512]` | float32 | decoder 声学嵌入 |
+| `token_num` | `[1]` | int32 | decoder 有效 token 数 |
+| `bias_embed` | `[1,1,512]` | float32 | 全零上下文偏置 |
+
+各目录使用对齐文件名，例如 `000000.npy`。工作目录还包含
+`source/{encoder,predictor,decoder}.onnx`、原导出报告和 CMVN 快照、
+`configs/{encoder,predictor,decoder}.yaml`，以及 `preparation.json`。
+报告给每个源输入和派生数组记录摘要、形状、类型和值域。配置内的模型/校准
+路径相对于工作目录，若直接运行原配置须以工作目录为 cwd；下述编译入口
+会显式重映射路径。
+
+| 准备参数 | 默认值/行为 |
+| --- | --- |
+| `--export-dir` | 必填，已完成的导出目录；核验报告摘要和真实 ONNX 签名，拒绝外部数据文件形式的 ONNX。 |
+| `--wav-dir` | 必填，真实 WAV 目录；读取和哈希使用同一份字节。 |
+| `--output-dir` | 必填且必须不存在；不覆盖或在部分结果中续写。 |
+| `--cmvn-file` | 默认 Sample 的 `model/am.mvn`，必须符合固定摘要。 |
+| `--sample-count` | 正整数，默认 50；另记实际选中数量。 |
+| `--threads` | 正整数 ONNX Runtime CPU 线程数，默认 4。 |
+| `--jobs` | 写入 YAML 的正整数 OE 编译并行数，默认与源相同的 32。 |
+
+`status: prepared` 只表示校准和配置准备完成。开始后的准备失败会写入
+`status: preparation_failed`，保留当前音频、已完成记录和部分文件，退出码为 2；
+编译入口拒绝这些部分工作目录。依赖/前置检查也可能在创建目录之前失败。
+
+## 显式 S100 / nash-e 编译
+
+配方只支持 **S100 / nash-e**，保留源 max 校准、内部 INT16、NCHW featuremap、
+O2 latency 优化、单 BPU 核和关闭编译缓存的设置。token 数输入保持 int32。
+内部 INT16 不等于最终物理 I/O 精度保证，运行前仍需通过 SDK 核验真实 HBM 签名。
+
+应使用匹配的、已安装 `hb_compile` 的 S OE 工具链。源记录为
+`ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`、hbdk4 4.7.5；此处未验证镜像仓库
+及可用性，不虚构拉取地址。FP32 导出环境本身不提供 OE 编译器。在 OE 环境中也须能访问本仓库，
+从仓库根目录运行入口，并安装 NumPy、PyYAML；编译步骤不导入 Torch。
+
+```bash
+python samples/speech/paraformer/conversion/compile.py \
+  --workspace outputs/paraformer_calibration \
+  --output-dir outputs/paraformer_compiled \
+  --compiler hb_compile
+```
+
+`--workspace` 和**新的** `--output-dir` 必填；`--compiler` 默认 `hb_compile`，
+也可指定可执行文件。工作目录路径不能含 OE 校准目录分隔符 `;`。
+先把整个准备目录移动或挂载到工具链环境。入口核验全部快照/配置/NPY 摘要，
+拒绝额外加入的校准文件，再生成本轮绝对路径配置，保持原准备目录不变。
+逐阶段执行 `hb_compile -c <stage.yaml>`，全部结束后再次核验准备目录。
+
+每阶段记录精确 argv/cwd、UTC 时间、配置摘要、完整且分开的 stdout/stderr
+及退出码。进程无法启动时退出码为空；非零退出，或退出为零但没有预期的非空
+HBM，均判失败并停止后续阶段。`compile-report.json` 保留此前完成的阶段。
+重试请使用新输出目录，先前日志和部分制品仍保留。
+
+相对于本轮编译目录的预期输出：
+
+| 阶段 | HBM | 可选量化 ONNX，供后续评估 |
+| --- | --- | --- |
+| encoder | `encoder/paraformer_encoder_int16.hbm` | `encoder/paraformer_encoder_int16_ptq_model.onnx` |
+| predictor | `predictor/predictor_int16.hbm` | `predictor/predictor_int16_ptq_model.onnx` |
+| decoder | `decoder/decoder_int16.hbm` | `decoder/decoder_int16_ptq_model.onnx` |
+
+即使三个非空 HBM 都生成且退出码为零，也只记 **`compiled_unverified`**，
+不是板端/SDK/精度验收。不会自动发布、改名成官方资产或拷入运行时模型目录。
+本机没有 OE，仅做了编排夹具测试及真实的“编译器缺失”拒绝检查。
+校准准备不保证量化质量；没有 PTQ ONNX 时明确记录缺失，不伪造文件。
+详见[校准与编译准备证据](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-calibration-review.md)。
 
 ## 固定部署语义
 
@@ -177,9 +279,9 @@ S 源提交 `380e1a2bf42041af54be6f34935e50197cfadff9` 的
 | `01_reexport_fixed_shape.py` | 导出固定形状模型 | 由 `export.py` 直接导出三个阶段替代；不生成整套 CIF 图、不使用全局补丁或覆盖源输出。 |
 | `02_extract_decoder.py`、`07_extract_predictor.py`、`08_extract_encoder.py` | 依赖内部名称切出三个阶段 | 由显式 Torch 阶段边界替代，保持部署名称和形状。 |
 | `03_convert_gather_int64_to_int32.py` 至 `06_shape_freeze.py` | 处理 Gather、依赖顺序、Range 和轴 | 共享工具已接入真实权重导出。不调用简化器，故不接受未经核验的简化器结果。 |
-| `09_gen_calib_features.py` | 从代表性真实音频生成特征 | 待接入统一可复现前端。 |
-| `10_gen_real_calib.py`、`cif_numpy.py` | 运行阶段模型，生成 predictor/decoder 校准数据 | 待迁移；源校准明确使用无有效帧屏蔽的 CIF（`real_T=None`），与运行时按有效帧屏蔽不同。 |
-| 三份 `*_int16.yaml` | 为 `nash-e` 编译三个阶段 | 仅有历史源配方，尚无统一 OE 调用及新编译模型验证。 |
+| `09_gen_calib_features.py` | 从代表性真实音频生成特征 | 已由 `prepare.py` 接入统一、确定性前端。 |
+| `10_gen_real_calib.py`、`cif_numpy.py` | 运行阶段模型，生成 predictor/decoder 校准数据 | 已实现真实 encoder/predictor 执行及共享不屏蔽 CIF（`real_T=None`），区别于运行时有效帧屏蔽。 |
+| 三份 `*_int16.yaml` | 为 `nash-e` 编译三个阶段 | 已按源参数生成路径一致的配置并提供显式 OE 调用；真实编译/SDK 验证未执行。 |
 | `11_eval_pipeline.py` | 比较三阶段语音流程 | 待迁入专用 evaluator。 |
 
 源配方采用 max 校准、内部 INT16、O2 latency 优化及单 BPU 核。
