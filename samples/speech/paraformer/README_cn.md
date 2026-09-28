@@ -14,20 +14,19 @@ CPU CIF（连续积分触发）和 decoder。部署使用三份独立发布的 S
 上游工具包：[FunASR](https://github.com/modelscope/FunASR)。迁移依据 S 提交
 `380e1a2bf42041af54be6f34935e50197cfadff9`，不直接采用当前上游 main 的其他能力。
 本目录位于 `samples/speech/paraformer`。Python CLI 与真实 CPU 前端已提供，
-原生 C++、转换和评测迁移仍未完成，尚未通过完整 Sample 验收。
+原生 C++ 入口已实现并完成主机流程检查；转换和评测迁移仍未完成，尚未通过完整 Sample 验收。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
 
 | 发布部署 | x5 | s100 | s100p | s600 | Python | 统一 C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| large：encoder 400×560／predictor 400×512／decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | 已实现并做主机检查 | CPU 库／SDK 适配器已做主机检查；CLI 待迁移 |
+| large：encoder 400×560／predictor 400×512／decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | 已实现并做主机检查 | 已实现并做主机流程检查；SDK／板测 not-run |
 
 `supported-not-run` 表示声明的 S100 部署与现有 Python 实现，不代表新增板测通过。
-本轮未执行真实 SDK／模型元数据核验或板端推理。源 C++ 能力仍保留在归档中，需要
-继续迁移完整部署入口。[原生 CPU 库](runtime/cpp/README_cn.md)已提供 CIF、文本解码
-与应用编排及独立 SDK 适配器；生产整组预检和准备特征读取已提供，完整可执行入口仍待接入，不代表完整双语言
-推理支持。
+本轮未执行真实 SDK／模型元数据核验或板端推理。[原生说明](runtime/cpp/README_cn.md#quickstart)
+提供完整准备特征、启动、构建、运行与结果报告流程。主机传输替身测试不能证明
+真实双语言 SDK／模型等价。
 
 <a id="prerequisites"></a>
 ## 前置条件
@@ -116,7 +115,7 @@ paraformer/
 - [Python 运行](runtime/python/README_cn.md#usage)：默认／自定义命令、全部参数、结果、
   阶段接口、完整 CPU 示例和失败处理。
 - [测试数据](test_data/README_cn.md)：输入来源与参考文本。
-- C++ 与转换：源能力存在，统一入口仍在迁移。
+- C++：完整原生应用与启动器已通过明确传输替身做主机检查，真实 SDK／板端未验证；转换仍待迁移。
 - Evaluator：统一实现与文档待迁移，不从两条 smoke 输入推断数据集指标。
 
 <a id="license"></a>

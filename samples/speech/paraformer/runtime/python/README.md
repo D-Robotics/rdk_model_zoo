@@ -5,7 +5,8 @@
 This directory provides the CPU continuous integrate-and-fire (CIF) bridge and
 three-model application pipeline with SDK adapters and metadata binding. The real
 CPU audio frontend and complete Python CLI are available. Real board inference
-has not been run, and the C++ bridge is still being migrated. Do not interpret the host checks below as model inference or accuracy
+has not been run. The [C++ bridge](../cpp/README.md#quickstart) now consumes the
+prepared features through a complete native entry. Do not interpret the host checks below as model inference or accuracy
 validation. The archived [S runtime](../../../../../platforms/s/samples/speech/paraformer/runtime/python/README.md)
 remains a historical reference, not the unified entry.
 
@@ -81,8 +82,9 @@ from S commit `380e1a2bf42041af54be6f34935e50197cfadff9`; its no-fire case raise
 [review and evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md).
 
 The source publishes S100 models only. No X5, S100P or S600 adaptation is claimed.
-Actual SDK verification, board three-stage inference, native C++, full
-conversion/evaluation workflows and bilingual sample documentation remain open.
+Actual SDK verification, board three-stage inference and full
+conversion/evaluation workflows remain open. Native application host verification
+is recorded separately in the C++ guide.
 Board inference, OE compilation, dataset CER and latency have not been run.
 
 <a id="stage-io"></a>

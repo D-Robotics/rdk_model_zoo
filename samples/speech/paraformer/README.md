@@ -15,24 +15,21 @@ punctuation restoration, timestamp output or custom hotword support in this samp
 Upstream toolkit: [FunASR](https://github.com/modelscope/FunASR). This migration is
 based on S commit `380e1a2bf42041af54be6f34935e50197cfadff9`, not whatever upstream
 main currently provides. The sample lives at `samples/speech/paraformer`.
-Python CLI and real CPU preprocessing are available; native C++, conversion and
-evaluator migration are still open. This is not full sample acceptance.
+Python and native C++ entries and real CPU preprocessing are implemented;
+conversion and evaluator migration are still open. This is not full sample acceptance.
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Published deployment | x5 | s100 | s100p | s600 | Python | Unified C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| large, encoder 400×560 / predictor 400×512 / decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | implemented; host-checked | CPU library/SDK adapter host-checked; CLI pending |
+| large, encoder 400×560 / predictor 400×512 / decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | implemented; host-checked | implemented; host application checked, SDK/board not-run |
 
 `supported-not-run` denotes the declared S100 deployment and available Python
 implementation, not a new board result. Real SDK/model metadata and board inference
-have not been exercised here. The source C++ capability is retained in the archive
-and its complete deployment entry must still be migrated. The [native CPU library](runtime/cpp/README.md)
-now provides CIF/text decoding, application composition and a separate SDK adapter;
-production group preflight and prepared-feature reading are implemented; the
-complete executable remains pending. This does not establish
-full dual-language inference support.
+have not been exercised here. The [native guide](runtime/cpp/README.md#quickstart) provides the full prepared-feature
+launcher/build/run flow and result reports. Host transport tests do not establish
+real dual-language SDK/model equivalence.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -134,7 +131,7 @@ paraformer/
 - [Python runtime](runtime/python/README.md#usage): default/custom commands, every parameter,
   result fields, stage interfaces, complete CPU examples and failure handling.
 - [Test data](test_data/README.md): input provenance and reference text.
-- C++ and conversion: source capabilities exist; unified entries are still being migrated.
+- C++: full native application and launcher are host-checked with explicit transport doubles; SDK/board inference is unverified. Conversion migration remains open.
 - Evaluator: unified implementation/documentation pending; do not infer dataset metrics
   from the two bundled smoke inputs.
 

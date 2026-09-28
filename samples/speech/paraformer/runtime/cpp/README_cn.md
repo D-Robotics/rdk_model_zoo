@@ -1,10 +1,10 @@
-# Paraformer 原生数值库与 SDK 适配器
+# Paraformer 原生推理
 
 [English](README.md) · [Sample 概览](../../README_cn.md)
 
-当前目录提供原生 CPU CIF／文本解码、三模型应用编排和单独的 S100 UCP SDK 适配器。
-准备清单／NPY 读取已作为可选主机库提供；完整原生可执行入口仍在迁移，
-具体身份／制品预检工厂已提供。以下测试是主机检查，不是 HBM 推理。
+当前目录提供 S100 原生可执行入口与启动器、CPU CIF／文本解码、三模型应用编排、
+UCP SDK 适配器、生产预检以及准备清单／NPY 读取。主机检查通过明确标记的 SDK
+传输替身验证应用流程，真实 SDK ABI／模型执行尚未验证。以下测试是主机检查，不是 HBM 推理。
 源 Python 前端 → C++ 推理能力仍在迁移范围内，此处不以其他算法近似替换 FunASR。
 
 <a id="environment"></a>
@@ -15,6 +15,101 @@ Torch 或音频库头文件。主机构建在 macOS arm64／Apple Clang 上检�
 [证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-core-review.md)。
 不声明 SDK ABI 或 S100 推理通过。真实特征生成使用单独说明的
 [Python 环境](../python/README_cn.md#environment)。
+
+<a id="quickstart"></a>
+## 运行原生 Sample
+
+以下以仓库根目录为 cwd。启动器需要 Python、NumPy、PyYAML，不加载 Python 推理 SDK。
+实际 C++ 执行需要 S100 和匹配的 UCP SDK；特征生成另需已验证的
+[FunASR 环境](../python/README_cn.md#environment)。不会自动下载模型、安装依赖、回退板型
+或用测试后端替代真实推理。
+
+任意主机均可预览声明的模型组和原生命令：
+
+```bash
+PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --list-models
+PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --dry-run
+```
+
+激活 FunASR 解释器后，准备内置两份 WAV 特征。此 CPU 步骤不需要板卡或模型文件，
+输出目录必须是新目录：
+
+```bash
+python samples/speech/paraformer/runtime/python/main.py --target s100 --preprocess-only --output-dir outputs/paraformer_features
+```
+
+在 S100 上显式准备发布模型包并执行真实原生后端。下列命令需要下载／板端环境，
+本轮迁移**没有执行**它们来充当板测：
+
+```bash
+bash samples/speech/paraformer/model/download_model.sh --target s100
+PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --build --manifest outputs/paraformer_features/prepared-manifest.json
+```
+
+`--build` 以 Release 配置真实 SDK、I/O、CLI，关闭测试，然后构建
+`runtime/cpp/build/s100/paraformer_demo`。按后文提供 SDK／JSON 依赖，CMake 失败也会留证。
+后续可省略 `--build` 使用该二进制，或通过 `--binary /absolute/path/to/paraformer_demo`
+指定已有程序。每轮使用新的输出目录；`--max-utts 1` 仅处理第一条，0 表示全部。
+
+### 启动器参数
+
+| 参数 | 默认值／行为 |
+| --- | --- |
+| `--target` | `auto` 读取真实本机身份；可选 auto/x5/s100/s100p/s600，但仅 S100 有发布资产 |
+| `--list-models` | 主机列表；auto 列出声明的 S100 模型组，不代表探测到板卡支持 |
+| `--dry-run` | 仅预览，须显式 target；与 list 互斥 |
+| `--manifest` | `outputs/paraformer_features/prepared-manifest.json` |
+| `--vocab-file` | `samples/speech/paraformer/model/s100/tokens.json` |
+| `--max-utts` | 0 全部；正数取前 N 条，负数拒绝 |
+| `--output-dir` | `outputs/paraformer_cpp`；必须不存在 |
+| `--build` | 显式配置／构建，与 binary 覆盖互斥 |
+| `--binary` | 未指定时使用 Sample 下的 `build/s100/paraformer_demo` |
+| `--encoder-model-path`、`--predictor-model-path`、`--decoder-model-path` | 默认发布模型路径；覆盖时须提供全部三路径和全部三个匹配制品 ID |
+| `--encoder-asset-id`、`--predictor-asset-id`、`--decoder-asset-id` | 预检表中的准确 ID，全部提供或全部省略 |
+| `--help` | 显示参数帮助，不加载 SDK／模型 |
+
+启动器相对路径按调用时 cwd 解析；子命令在仓库根目录执行，并接收绝对路径。
+`PYTHON` 选择启动器解释器。预处理是显式步骤，此入口只消费已准备特征，不会暗中
+重算特征或改写清单。
+
+直接可执行程序接受 `--help`；否则必需 `--target s100`、`--manifest`、`--vocab-file`、
+`--output-dir`，以及每个阶段的 `--<stage>-model-path`、`--<stage>-asset-id`、
+`--<stage>-sha256`。仅 `--max-utts` 默认 0。启动器根据实际所选文件计算摘要并转发
+完整参数；手动调用二进制时必须全部提供。重复／未知参数或缺值均 rc=2。
+直接二进制不提供 auto／list／dry-run。
+
+### 结果、日志与失败
+
+启动器成功时 rc=0，并生成：
+
+- `launch-report.json`：发布 ID、发布摘要与实际摘要、程序摘要、准确子命令 argv／cwd／
+  UTC 时间、状态和结果文件摘要。
+- 构建时的 `configure.*.log`、`build.*.log`，以及 `binary-help.*.log`、`native.*.log`：
+  每个已启动进程的完整 stdout／stderr。
+- `result/result.json`：目标／后端、三模型摘要及完整物理张量元数据、清单／词表身份
+  和逐条语音结果。
+
+逐条记录保留输入注释／参考文本、特征摘要、有效／原始帧数、截断状态、识别文本、
+ID／token 数、decoder 执行状态和阶段耗时。不宣称数据集 CER 或实测 BPU 延迟。
+阶段计时不含前端、文件 I/O 或 runner／CIF 调用之外的工作。CIF 精确为空时跳过
+ decoder，文本和 ID 为空，decoder 耗时为 null。
+
+两层均拒绝已有输出目录。创建目录前的预检／解析失败为 rc=2、stderr 报错，不创建
+结果目录。之后的原生失败写 `result/failed.json`，含已完成的部分记录、当前语音 ID
+和错误，不写成功结果。启动器记录失败并保留日志，包括构建失败；若报告写入本身
+失败，会在 stderr 说明。`inference_attempted` 在调用编排前变为 true；
+`inference_executed` 在调用前为 false，首条调用失败时为 null（可能已发生部分模型
+执行），任一语音完整处理后为 true。部分输出不能当作整轮成功。
+
+接受成功前，启动器拒绝 `host-fixture`，检查退出码和结果文件，依据 Python 绑定核验
+模型身份、物理形状／类型／角色／字节步长，核对每条所选输入和结果、文本／token／
+耗时一致性，并重新计算输入／模型／词表摘要。这些一致性检查用于将报告绑定到本次执行，
+实际 SDK／模型验证仍需单独完成。主机 CLI 替身不会作为公开二进制安装，
+也不会被接受为原生成功。
+
+[原生 CLI 证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-cli-review.md)
+记录使用明确标记传输替身的实际应用执行，包括零 token、模型调用失败、部分进度和
+已有目录拒绝。真实厂商 SDK 编译／ABI、HBM 推理、板测仍为 not-run。
 
 <a id="build"></a>
 ## 构建并运行主机检查
@@ -39,11 +134,12 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 | --- | --- | --- |
 | `PARAFORMER_BUILD_TESTS` | `OFF` | 构建并注册四个主机测试 |
 | `PARAFORMER_SANITIZERS` | `OFF` | 在 Clang/GNU 下启用 ASan/UBSan 并传播链接选项 |
+| `PARAFORMER_BUILD_CLI` | `OFF` | 构建 `paraformer_demo`；须同时开启 SDK 和 I/O 选项 |
 | `PARAFORMER_BUILD_IO` | `OFF` | 使用 nlohmann JSON 构建准备清单／NPY 库；开启测试时增加对应主机检查 |
 | `PARAFORMER_BUILD_SDK` | `OFF` | 使用真实厂商头文件／库构建 `paraformer_sdk` |
 | `CMAKE_BUILD_TYPE` | CMake 默认 | 文档检查使用 `Release` |
 
-当前没有板端 CLI 参数。嵌入其他 CMake 项目时，通过 `add_subdirectory` 加入目录并
+完整 CLI 与启动器参数见下文。嵌入其他 CMake 项目时，通过 `add_subdirectory` 加入目录并
 链接 `paraformer_contract`，公共头文件为 `contract.h` 和 `pipeline.h`。
 浮点操作顺序属于源对齐契约，不应对本数值库开启 fast-math；Clang/GNU 构建显式
 关闭浮点收缩。
@@ -88,7 +184,7 @@ Encoder／predictor／CIF 毫秒耗时为数值，decoder 为 `std::optional<dou
 
 计时覆盖 runner 调用与 CPU CIF，不含前端、文件 I/O、调用之外的校验及文本渲染，
 不是端到端延迟。主机回调不能测量 BPU 性能，输出也不含 CER 或精度估计。
-后续原生入口还必须提供身份校验及成功／失败记录，才能成为完整部署入口。
+原生入口已接入身份校验及成功／失败记录，具体语义见下文。
 
 <a id="integration-example"></a>
 ## 可执行数值 API 示例
@@ -129,8 +225,8 @@ Python `--preprocess-only` 已能生成内置音频特征，下文可选 I/O 库
 Sanitizer 运行库构建失败时应检查编译／链接器支持；`PARAFORMER_SANITIZERS=OFF`
 可关闭插桩，但不能据此宣称完成 sanitizer 检查。真实 HBM 的形状／类型／名称／身份
 已在 SDK 适配器中实现，但 API 替身不能证明实际 HBM 兼容；具体身份／制品预检
-工厂已单独提供。真实 SDK 构建、板端推理、完整原生
-CLI、OE 与 CER 均按实际状态保持未执行或待完成。
+工厂已单独提供。完整原生 CLI 已做主机流程验证；真实 SDK 构建、板端推理、
+OE 与 CER 尚未执行。
 
 <a id="sdk-adapter"></a>
 ## S100 SDK 适配器
@@ -148,7 +244,7 @@ CLI、OE 与 CER 均按实际状态保持未执行或待完成。
 每个阶段单独构造 `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)`。
 回调必填，先于所有 SDK 调用执行，必须拒绝本机身份以及阶段／发布制品／模型摘要
 不匹配。空操作回调仅适合隔离的主机测试。请使用下文的具体 `make_preflight` 工厂；
-完整 CLI 入口仍待接入，此 API 本身不是可部署命令。每份制品必须只包含一个有名称的模型；绑定按名称进行，
+下文启动器将此 API 接入完整 CLI。每份制品必须只包含一个有名称的模型；绑定按名称进行，
 不依赖张量顺序：
 
 | 阶段 | 输入角色 → 物理名称 | 输出角色 → 物理名称 |
@@ -243,7 +339,7 @@ cmake --build /tmp/rdk-paraformer-io -j 2
 ctest --test-dir /tmp/rdk-paraformer-io --output-on-failure
 ```
 
-应有五项测试通过，包括读取两份已持久化的真实前端特征。`feature_probe` 是主机验证
+应有六项测试通过，包括读取两份已持久化的真实前端特征。`feature_probe` 是主机验证
 工具，不是推理可执行程序。以下是完整的特征读取嵌入函数：
 
 ```cpp
@@ -286,5 +382,4 @@ CMake 应用链接 `paraformer_feature_io`。实际推理应将所选记录的 `
 不完整数据体、非法元数据和内容变化都会抛异常；失败文件不会返回部分成功结果。
 
 [读取器证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-feature-io-review.md)
-记录真实前端数组的字节一致性和格式／错误用例。SDK／板端执行、完整原生 CLI 及
-结果报告不属于这些主机检查。
+记录真实前端数组的字节一致性和格式／错误用例。SDK／板端执行不属于这些文件读取检查；CLI／结果流程的主机验证另见下文。

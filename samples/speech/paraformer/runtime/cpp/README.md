@@ -1,10 +1,11 @@
-# Paraformer native numerical library and SDK adapter
+# Paraformer native inference
 
 [简体中文](README_cn.md) · [Sample overview](../../README.md)
 
-This directory currently provides the native CPU CIF/text kernels and three-model
-application composition plus a separate S100 UCP SDK adapter. The prepared-manifest/NPY reader is available as an optional host library;
-the complete native executable is still being migrated. The tests below are host checks, not
+This directory provides the native S100 executable and launcher, CPU CIF/text
+kernels, three-model application composition, UCP SDK adapter, production preflight
+and prepared-manifest/NPY reader. Host checks cover the application with an explicit
+SDK transport double; real SDK ABI/model execution remains unverified. The tests below are host checks, not
 HBM inference. The source Python frontend → C++ inference capability remains in
 scope; no alternate approximation of FunASR is introduced here.
 
@@ -17,6 +18,112 @@ were checked on macOS arm64 with Apple Clang; exact compiler/platform versions a
 in the [evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-core-review.md).
 No board SDK/ABI or S100 inference result is asserted. Real frontend generation
 uses the separately documented [Python environment](../python/README.md#environment).
+
+<a id="quickstart"></a>
+## Run the native sample
+
+Use repository root as cwd. The launcher needs Python with NumPy and PyYAML; it
+never loads a Python inference SDK. Actual C++ execution requires S100 with the
+matching UCP SDK. Feature generation additionally requires the separate verified
+[FunASR environment](../python/README.md#environment). There is no automatic
+model download, dependency installation, board fallback or test-backend fallback.
+
+Preview the declared model set and native command on any host:
+
+```bash
+PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --list-models
+PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --dry-run
+```
+
+With the FunASR interpreter active, prepare the two bundled WAVs. This CPU step
+works without a board or model files. The output directory must be new:
+
+```bash
+python samples/speech/paraformer/runtime/python/main.py --target s100 --preprocess-only --output-dir outputs/paraformer_features
+```
+
+On S100, explicitly prepare the published package and run the real native backend.
+The following commands require the model download/board environment and were **not
+executed** as board verification in this migration:
+
+```bash
+bash samples/speech/paraformer/model/download_model.sh --target s100
+PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --build --manifest outputs/paraformer_features/prepared-manifest.json
+```
+
+`--build` configures Release with real SDK, I/O and CLI enabled, tests disabled,
+then builds `runtime/cpp/build/s100/paraformer_demo`. Provide SDK/JSON dependencies
+as described below; CMake errors are retained. On later runs omit `--build` to use
+that binary, or provide `--binary /absolute/path/to/paraformer_demo`. Choose a new
+output directory per run. Prefix selection uses `--max-utts 1`; zero means all.
+
+### Launcher options
+
+| Option | Default / behavior |
+| --- | --- |
+| `--target` | `auto` reads actual local identity; choices auto/x5/s100/s100p/s600, only S100 has published assets |
+| `--list-models` | Host-only list; auto lists the declared S100 set, not detected support |
+| `--dry-run` | Preview only; requires explicit target; mutually exclusive with list |
+| `--manifest` | `outputs/paraformer_features/prepared-manifest.json` |
+| `--vocab-file` | `samples/speech/paraformer/model/s100/tokens.json` |
+| `--max-utts` | 0 = all; positive prefix count, negative values rejected |
+| `--output-dir` | `outputs/paraformer_cpp`; must not already exist |
+| `--build` | Explicit configure/build; mutually exclusive with binary override |
+| `--binary` | Otherwise the sample's `build/s100/paraformer_demo` |
+| `--encoder-model-path`, `--predictor-model-path`, `--decoder-model-path` | Published model paths by default; overrides require all three paths and all three matching asset IDs |
+| `--encoder-asset-id`, `--predictor-asset-id`, `--decoder-asset-id` | Exact IDs in the preflight table; supply all three or none |
+| `--help` | Show parser help; no SDK/model loading |
+
+Relative launcher arguments resolve from invocation cwd; child commands run at
+repository root with absolute paths. `PYTHON` selects the launcher's interpreter.
+Preprocessing is explicit: this launcher consumes prepared features and never
+silently recomputes them or modifies the manifest.
+
+The direct executable accepts `--help`; otherwise `--target s100`, `--manifest`,
+`--vocab-file`, `--output-dir`, and each stage's `--<stage>-model-path`,
+`--<stage>-asset-id`, `--<stage>-sha256` are required. Only `--max-utts` defaults to
+0. The launcher derives those hashes from actual selected files and forwards the
+complete arguments; manual direct invocation must supply all of them. Duplicate,
+unknown or missing options fail with rc=2. There is no direct auto/list/dry-run.
+
+### Results, logs and failures
+
+A successful launcher run returns rc=0 and creates:
+
+- `launch-report.json`: selected publication IDs, publisher versus observed
+  digests, binary digest, exact child argv/cwd/UTC times, status and result digest.
+- `configure.*.log`, `build.*.log` when building, `binary-help.*.log` and
+  `native.*.log`: complete stdout/stderr per launched process.
+- `result/result.json`: target/backend, three model digests and full physical
+  tensor metadata, manifest/vocabulary identity and per-utterance results.
+
+Per-utterance records retain input annotations/reference text, feature digest,
+valid/original frames, truncation, recognized text, token IDs/count, decoder
+execution and stage timings. No dataset CER or measured BPU latency is claimed.
+Stage timing excludes frontend, file I/O and other work outside the runner/CIF
+calls. Exact-empty CIF skips decoder with zero IDs/text and null decoder timing.
+
+Both layers reject existing output directories. Preflight/parser failures before
+a directory is created return rc=2 with stderr and no new result directory. Later
+native errors write `result/failed.json` containing partial completed records,
+current utterance and the error; no successful result is written. The launcher
+records failure and retains logs, including failed builds. If report writing itself
+fails, stderr says so. `inference_attempted` becomes true before a pipeline call;
+`inference_executed` is false before calls, null on a failed first call (some model
+work may have occurred), and true after any completed utterance. Partial output
+must not be interpreted as whole-run success.
+
+Before accepting success, the launcher rejects `host-fixture`, checks exit code
+and result existence, validates model identity, physical shapes/types/roles and
+byte strides against the Python binding, checks every selected input/result and
+text/token/timing consistency, and rehashes inputs/models/vocabulary. These report-consistency checks bind the report to the run; actual SDK/model
+validation remains separate. The host CLI fixture is never installed as the public
+binary or accepted as native success.
+
+[Native CLI evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-cli-review.md)
+records actual application execution with a marked transport double, including
+zero tokens, failed model calls, partial progress and output reuse rejection.
+Real vendor SDK compilation/ABI, HBM inference and board testing remain not-run.
 
 <a id="build"></a>
 ## Build and run host checks
@@ -41,11 +148,12 @@ static `paraformer_contract` library; test executables are not an inference CLI.
 | --- | --- | --- |
 | `PARAFORMER_BUILD_TESTS` | `OFF` | Build/register four host tests |
 | `PARAFORMER_SANITIZERS` | `OFF` | Enable ASan/UBSan on Clang/GNU and propagate link flags |
+| `PARAFORMER_BUILD_CLI` | `OFF` | Build `paraformer_demo`; requires both SDK and I/O options enabled |
 | `PARAFORMER_BUILD_IO` | `OFF` | Build prepared-manifest/NPY library using nlohmann JSON; add its host test when tests are enabled |
 | `PARAFORMER_BUILD_SDK` | `OFF` | Build `paraformer_sdk` using actual vendor headers/libraries |
 | `CMAKE_BUILD_TYPE` | CMake default | Documentation checks use `Release` |
 
-There are no board CLI flags yet. In an embedding CMake project, add this directory
+The complete CLI and launcher flags are described below. In an embedding CMake project, add this directory
 with `add_subdirectory` and link `paraformer_contract`; its public include path
 contains `contract.h` and `pipeline.h`. Do not compile this numerical library with
 fast-math: float32 operation order is part of source parity. Clang/GNU builds
@@ -99,8 +207,8 @@ fails before model callbacks; wrong encoder output fails before predictor.
 Timings cover runner calls and CPU CIF, excluding frontend, file I/O, validation
 outside those calls and text rendering. They are not end-to-end latency and host
 callbacks do not measure BPU performance. Pipeline outputs contain no CER or
-accuracy estimate. The eventual native executable must add identity checks and
-result/failure files before it can be called a complete deployment entry.
+accuracy estimate. The native executable applies group identity checks and writes result/failure
+files as documented below.
 
 <a id="integration-example"></a>
 ## Runnable numerical API example
@@ -146,8 +254,8 @@ host evidence fixture, not a new maintained runtime copy.
 A build failure for sanitizer runtime libraries requires matching compiler/linker
 support; `PARAFORMER_SANITIZERS=OFF` builds without instrumentation but does not
 reproduce the sanitizer check. The SDK adapter validates shape/type/name/strides from runtime metadata, but
-its API-double tests cannot establish actual HBM compatibility. The concrete identity/artifact preflight factory is implemented separately. Real SDK compilation, board inference, full native CLI, OE and CER
-remain not-run or pending as appropriate.
+its API-double tests cannot establish actual HBM compatibility. The concrete identity/artifact preflight factory is implemented separately. Real SDK compilation, board inference, OE and CER remain not-run or pending as appropriate. The CLI is implemented and
+host-checked with a clearly identified test transport.
 
 <a id="sdk-adapter"></a>
 ## S100 SDK adapter
@@ -167,8 +275,7 @@ SDK, so a real SDK configuration was checked to fail, not recorded as a build pa
 Construct `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)` separately
 for each stage. The callback is mandatory and runs before any SDK call; it must
 reject wrong local board identity and a mismatched stage/publication/model digest.
-A no-op callback is suitable only for the isolated host test. Use the concrete `make_preflight` factory below. A complete CLI entry is
-still pending; this API alone is not a deployable command. Each artifact must contain
+A no-op callback is suitable only for the isolated host test. Use the concrete `make_preflight` factory below. The launcher below wires this into the complete native CLI. Each artifact must contain
 exactly one named model. The runner binds physical names independently of order:
 
 | Stage | Input roles → physical names | Output roles → physical names |
@@ -282,7 +389,7 @@ cmake --build /tmp/rdk-paraformer-io -j 2
 ctest --test-dir /tmp/rdk-paraformer-io --output-on-failure
 ```
 
-Five tests should pass, including reading the two persisted real frontend feature
+Six tests should pass, including reading the two persisted real frontend feature
 files. `feature_probe` is a host verification tool, not an inference executable.
 A complete feature reader embedding function is:
 
@@ -332,5 +439,5 @@ syntax or data, truncated payloads, malformed metadata and changed bytes fail
 with exceptions. The reading API returns no partial success for a failed file.
 
 [Feature-reader evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-feature-io-review.md)
-records byte equality for real frontend arrays and format/error cases. SDK/board
-execution and complete native CLI/results remain outside these host checks.
+records byte equality for real frontend arrays and format/error cases. SDK/board execution remains outside these file-reader checks; the CLI/results
+flow has its own explicitly marked host verification below.

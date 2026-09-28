@@ -3,7 +3,7 @@
 [English](README.md)
 
 当前目录已提供 CPU CIF（连续积分触发）实现与三模型应用编排。SDK 适配器和模型绑定也已实现；真实 CPU 音频前端也已提供；
-完整 Python CLI 已提供，C++ 桥接仍在迁移；真实板端推理尚未执行。
+完整 Python CLI 已提供，[C++ 桥接](../cpp/README_cn.md#quickstart)已可通过完整原生入口读取准备特征；真实板端推理尚未执行。
 下述主机检查不代表模型推理或精度验证。归档的
 [S 运行说明](../../../../../platforms/s/samples/speech/paraformer/runtime/python/README_cn.md)
 保留作历史参考，不是统一入口。
@@ -69,8 +69,8 @@ python -m unittest discover -s samples/speech/paraformer/tests -v
 `380e1a2bf42041af54be6f34935e50197cfadff9`；源实现无 token 时抛出 `IndexError`，
 统一实现已修复。详见[评审记录与证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md)。
 
-源清单仅发布 S100 模型，本次不声明 X5、S100P 或 S600 适配。真实 SDK 验证、板端三段推理、原生 C++、完整转换和评测流程以及各层双语 Sample 文档
-仍待完成。板端推理、OE 编译、数据集 CER 与延迟均未执行。
+源清单仅发布 S100 模型，本次不声明 X5、S100P 或 S600 适配。真实 SDK 验证、板端三段推理、完整转换和评测流程
+仍待完成；原生应用主机验证单独记录在 C++ 说明中。板端推理、OE 编译、数据集 CER 与延迟均未执行。
 
 <a id="stage-io"></a>
 ## 三模型应用流程
