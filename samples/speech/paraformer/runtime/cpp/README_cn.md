@@ -7,6 +7,15 @@ UCP SDK 适配器、生产预检以及准备清单／NPY 读取。主机检查�
 传输替身验证应用流程，真实 SDK ABI／模型执行尚未验证。以下测试是主机检查，不是 HBM 推理。
 源 Python 前端 → C++ 推理能力仍在迁移范围内，此处不以其他算法近似替换 FunASR。
 
+<a id="supported-boards"></a>
+## 支持板卡
+
+| 板型 | 状态 | 原因 |
+| --- | --- | --- |
+| S100 | supported-not-run | 已发布三个 HBM；本轮仅做原生主机检查 |
+| X5 / S100P / S600 | not-supported | 无匹配的 Paraformer 发布组合 |
+
+<a id="dependencies"></a>
 <a id="environment"></a>
 ## 环境
 
@@ -16,6 +25,23 @@ Torch 或音频库头文件。主机构建在 macOS arm64／Apple Clang 上检�
 不声明 SDK ABI 或 S100 推理通过。真实特征生成使用单独说明的
 [Python 环境](../python/README_cn.md#environment)。
 
+<a id="build"></a>
+## 构建并运行主机检查
+
+从仓库根目录执行，使用新的构建目录：
+
+```bash
+cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-core -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
+cmake --build /tmp/rdk-paraformer-core -j 2
+ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
+```
+
+成功标准是四个 CTest 检查通过：数值契约、合成三模型编排、隔离 API 替身下的 SDK
+控制流以及整组预检。上述命令在 Clang/GNU
+下启用地址／未定义行为检查，Release 测试也保留断言。生产构建产物为静态
+`paraformer_contract` 库，测试可执行文件不是推理 CLI。
+
+<a id="run"></a>
 <a id="quickstart"></a>
 ## 运行原生 Sample
 
@@ -51,6 +77,7 @@ PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --
 后续可省略 `--build` 使用该二进制，或通过 `--binary /absolute/path/to/paraformer_demo`
 指定已有程序。每轮使用新的输出目录；`--max-utts 1` 仅处理第一条，0 表示全部。
 
+<a id="parameters"></a>
 ### 启动器参数
 
 | 参数 | 默认值／行为 |
@@ -111,23 +138,6 @@ ID／token 数、decoder 执行状态和阶段耗时。不宣称数据集 CER �
 记录使用明确标记传输替身的实际应用执行，包括零 token、模型调用失败、部分进度和
 已有目录拒绝。真实厂商 SDK 编译／ABI、HBM 推理、板测仍为 not-run。
 
-<a id="build"></a>
-## 构建并运行主机检查
-
-从仓库根目录执行，使用新的构建目录：
-
-```bash
-cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-core -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
-cmake --build /tmp/rdk-paraformer-core -j 2
-ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
-```
-
-成功标准是四个 CTest 检查通过：数值契约、合成三模型编排、隔离 API 替身下的 SDK
-控制流以及整组预检。上述命令在 Clang/GNU
-下启用地址／未定义行为检查，Release 测试也保留断言。生产构建产物为静态
-`paraformer_contract` 库，测试可执行文件不是推理 CLI。
-
-<a id="parameters"></a>
 ## 构建选项与当前入口
 
 | 选项 | 默认值 | 含义 |
@@ -144,6 +154,7 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 浮点操作顺序属于源对齐契约，不应对本数值库开启 fast-math；Clang/GNU 构建显式
 关闭浮点收缩。
 
+<a id="interface-lifecycle"></a>
 <a id="stage-io"></a>
 ## 数值与阶段契约
 
@@ -174,6 +185,7 @@ CIF 在累计前屏蔽有效帧及之后的权重。无触发返回零数组与�
 不能保存供异步使用。调用方须保证捕获的 SDK 资源存活，非线程安全资源需协调访问。
 数值库不加载模型、不选板型、不读写文件、不设置调度，也不编译假 SDK 回退。
 
+<a id="results-interpretation"></a>
 <a id="results"></a>
 ## 返回值与计时
 

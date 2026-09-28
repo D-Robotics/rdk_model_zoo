@@ -7,12 +7,16 @@
 **真实音频校准和显式 OE 编译编排已实现。** 专用 [evaluator](../evaluator/README_cn.md) 已实现，实际 OE/HMCT/SDK/板端验证
 仍待完成；FP32 导出通过不能证明 HBM 或板端行为。
 
+<a id="source-model"></a>
+## 源模型
+
 源模型是 `iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404`。
 S 源实现将其拆成 encoder、predictor、decoder，CPU CIF 连接 predictor 和
  decoder。已有发布制品的准备方式见[模型说明](../model/README_cn.md)。
 转换自己的权重是另一项操作；这里的图变换不会下载权重、生成 HBM，
 也不构成对已有发布制品的认证。
 
+<a id="toolchain-targets"></a>
 ## 导出环境与快速开始
 
 使用独立的 Python 3.12 环境。本次实际验证的组合是 Torch/torchaudio 2.6.0、
@@ -29,6 +33,9 @@ python3.12 -m venv .venv-paraformer-export
 python -m pip install -r samples/speech/paraformer/conversion/requirements-export.txt
 python samples/speech/paraformer/conversion/export.py --help
 ```
+
+<a id="export"></a>
+## 权重导出 ONNX
 
 若尚无源权重，请先显式下载。`model.pt` 约 913 MB，另有元数据；
 还需为原始及变换后的 ONNX 图预留空间。以下示例只写入
@@ -84,6 +91,7 @@ python samples/speech/paraformer/conversion/export.py \
 则返回 2，保留部分文件和 `failed` 报告。部分制品不是可验收导出，强制中断
 进程也可能留下不完整状态。
 
+<a id="calibration"></a>
 ## 准备真实校准数据与编译配置
 
 导出后，生成新的独立工作目录。下面使用两条自带 WAV 验证操作流程，
@@ -142,6 +150,7 @@ encoder、predictor 由 CPU ONNX Runtime 实际执行，之后调用同一 CPU C
 `status: preparation_failed`，保留当前音频、已完成记录和部分文件，退出码为 2；
 编译入口拒绝这些部分工作目录。依赖/前置检查也可能在创建目录之前失败。
 
+<a id="compile"></a>
 ## 显式 S100 / nash-e 编译
 
 配方只支持 **S100 / nash-e**，保留源 max 校准、内部 INT16、NCHW featuremap、
@@ -170,6 +179,17 @@ python samples/speech/paraformer/conversion/compile.py \
 及退出码。进程无法启动时退出码为空；非零退出，或退出为零但没有预期的非空
 HBM，均判失败并停止后续阶段。`compile-report.json` 保留此前完成的阶段。
 重试请使用新输出目录，先前日志和部分制品仍保留。
+
+<a id="validation"></a>
+## 验证转换结果
+
+导出必须完成数值与接口检查，校准准备必须通过快照与数组检查，编译必须保留成功的
+逐阶段日志与产物。这些检查各自独立：非空 HBM 不代表模型输出验证通过。
+通过[主机评测](../evaluator/README_cn.md)获取 FP32/PTQ 图的逐条转写与 CER；
+具备 S100 环境后，再单独核验 HBM。
+
+<a id="artifacts"></a>
+## 生成产物
 
 相对于本轮编译目录的预期输出：
 
@@ -290,6 +310,7 @@ S 源提交 `380e1a2bf42041af54be6f34935e50197cfadff9` 的
 的路径存在不一致，直接照搬执行不能当作已验证的端到端流程。
 源性能数字只保留历史意义，本次图测试不证明 CER、延迟或数据集精度。
 
+<a id="known-gaps"></a>
 ## 当前验证范围
 
 十项图测试覆盖共享 Gather 常量、常量溢出和求值规模限制、动态 Cast 显式启用、

@@ -8,6 +8,9 @@ checks against Torch. CIF stays in the shared CPU implementation. **Real-audio c
 Actual OE/HMCT/SDK/board validation remains pending; the [host evaluator](../evaluator/README.md) is implemented;
 successful FP32 export does not certify an HBM or its board behavior.
 
+<a id="source-model"></a>
+## Source model
+
 The source model is
 `iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404`.
 The preserved S implementation splits it into encoder, predictor and decoder;
@@ -16,6 +19,7 @@ are described in [model preparation](../model/README.md). Converting your own
 weights is a separate operation; graph transformations do not download weights,
 produce HBM files or certify those published assets.
 
+<a id="toolchain-targets"></a>
 ## Export environment and quickstart
 
 Use Python 3.12 in a separate environment. The verified export stack is Torch and
@@ -33,6 +37,9 @@ python3.12 -m venv .venv-paraformer-export
 python -m pip install -r samples/speech/paraformer/conversion/requirements-export.txt
 python samples/speech/paraformer/conversion/export.py --help
 ```
+
+<a id="export"></a>
+## Export weights to ONNX
 
 If you do not have the source weights, explicitly download them first. This is
 about 913 MB for `model.pt`, plus metadata; reserve additional space for both raw
@@ -92,6 +99,7 @@ finite. Parser/preflight failures return 2 before creating output; later errors
 return 2 and preserve partial files plus a `failed` report. Partial artifacts are
 not approved exports. A forcibly terminated process may leave incomplete state.
 
+<a id="calibration"></a>
 ## Prepare real calibration and compiler configs
 
 After export, prepare a new self-contained workspace. The following two-WAV
@@ -157,6 +165,7 @@ failure leaves `status: preparation_failed`, the current audio, completed record
 and partial files. Exit code is 2; partial workspaces cannot be compiled by the
 wrapper. Missing required dependencies/preconditions can fail before output exists.
 
+<a id="compile"></a>
 ## Explicit S100 / nash-e compilation
 
 The recipe supports **S100 / nash-e only**. It retains source max calibration,
@@ -193,6 +202,18 @@ stdout/stderr logs and return code. A process-start error records no return code
 a nonzero exit or a zero exit without the expected nonempty HBM is a failure and
 stops later stages. `compile-report.json` preserves completed stages on failure.
 Use a new output directory to retry; earlier logs and partial artifacts remain.
+
+<a id="validation"></a>
+## Validate conversion results
+
+Export must complete all numerical/signature checks; calibration must pass its
+snapshot/array checks; compilation must retain successful stage logs and artifacts.
+These are separate checks: a nonempty HBM is not a model-output validation. Use the
+[host evaluator](../evaluator/README.md) on FP32/PTQ graphs to obtain per-utterance
+transcripts and CER, then separately verify the HBM on S100 when available.
+
+<a id="artifacts"></a>
+## Produced artifacts
 
 Expected paths relative to the compile run:
 
@@ -328,6 +349,7 @@ root-relative YAML paths are inconsistent, so running them unchanged is not a
 validated end-to-end procedure. Source benchmark numbers remain historical;
 none of these host graph tests establishes CER, latency or dataset accuracy.
 
+<a id="known-gaps"></a>
 ## What has been checked
 
 Ten graph tests cover shared Gather constants, constant overflow and evaluation

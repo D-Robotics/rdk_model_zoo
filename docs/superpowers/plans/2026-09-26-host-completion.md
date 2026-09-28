@@ -159,3 +159,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer 真实音频校准、三份 nash-e 配置及显式编译编排已实现，复用统一前端和无屏蔽 CPU CIF，拒绝空集、非法音频、被修改/追加的校准输入，保留失败日志。65 项 Sample 测试无跳过通过；12 份真实中间数组与旧校准脚本逐字节一致，2 份 speech 与已有前端证据一致；实际 8 kHz 输入拒绝和 OE 缺失门禁通过。双语转换/root/Python 说明同步，见[校准记录](../../releases/unified-migration/2026-09-28-b10-paraformer-calibration-review.md)。本机无 hb_compile/Docker，真实 OE/SDK/板端未执行；下一步专用 evaluator，Paraformer 与完整 H0–H9 不关闭。
 
 2026-09-28：Paraformer 专用 evaluator 已实现，复用三阶段流程、CIF、词表解码和共享 CER；75 项 Sample 测试通过。两个真实特征的 FP32 转写／编辑距离与源脚本一致，4/28 = 14.2857% CER，不作为数据集精度；HMCT 仅适配测试，实际 OE/HMCT/板端未执行。根、Python、转换和 evaluator 双语说明已同步。见[评测记录](../../releases/unified-migration/2026-09-28-b10-paraformer-evaluator-review.md)。整套 Sample 验收及 H0–H9 继续。
+
+2026-09-28：Paraformer 14 份双语 README 做整套规范核对，修复直接检查的 78 项问题，并统一 evaluator／conversion 输出目录写法；保留 72 个示例，132 个本地文件链接通过。直接 Sample 检查 0 violations / 1 CLI policy skip / 0 exemptions。人工审查仍发现多阶段公开 pre/forward/post 接口及错误阶段归属未完成，下一步修复代码与 API 示例，暂不提升台账状态。见[文档与 API 缺口记录](../../releases/unified-migration/2026-09-28-b10-paraformer-readme-review.md)。

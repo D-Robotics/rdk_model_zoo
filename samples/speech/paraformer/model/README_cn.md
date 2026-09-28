@@ -6,6 +6,9 @@
 模型包。本目录提供显式准备入口，推理不自动下载。当前没有 X5、S100P 或 S600
 对应的 Paraformer 发布组合。
 
+<a id="artifacts"></a>
+## 发布制品
+
 | `s100/` 下的文件 | 用途 | 来源 |
 | --- | --- | --- |
 | `paraformer_large_encoder_400x560_s100.hbm` | encoder | 活动清单 URL（远端 `encoder_int16.hbm`） |
@@ -15,6 +18,7 @@
 | `am.mvn` | 前端 CMVN 统计量 | 仓库内固定 S 源文件 |
 | `paraformer_config.yaml` | 源前端／模型配置 | 仓库内固定 S 源文件 |
 
+<a id="preparation"></a>
 ## 预览与准备
 
 需要 Python、NumPy 和 PyYAML。在主机准备文件不需要 SDK、板卡或 publisher 构建。
@@ -45,6 +49,25 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 或推理通过。活动清单没有 HBM 的发布方哈希，实测摘要不能独立认证官方来源。
 词表与本次迁移核定的固定包不同会被拒绝，但这个本地内容约束不等于发布方哈希。
 
+<a id="accompanying-files"></a>
+## 附属文件
+
+`tokens.json` 是文本推理与 FP32/HMCT 评测的必需词表，仅有类别索引不能确定文本。
+`am.mvn` 是音频前处理所需的 CMVN。仓库内 `paraformer_config.yaml` 记录源模型与
+前端配置，准备模型包时核对；它不是额外的 HBM 推理模型。
+C++ 入口读取 Python 前端生成的 NPY／清单，不重复执行音频前端或 CMVN。
+
+<a id="local-paths"></a>
+## 本地路径
+
+三个 HBM 默认路径是 `samples/speech/paraformer/model/s100/` 下表中对应文件；
+默认词表为 `samples/speech/paraformer/model/s100/tokens.json`。Python 音频准备
+默认读取仓库内 `samples/speech/paraformer/model/am.mvn`，而非复制后的 `s100/am.mvn`，
+两者使用同一源摘要检查。仓库内配置为 `samples/speech/paraformer/model/paraformer_config.yaml`。
+下载时指定 `--output-dir` 不会修改运行时默认值：Python 需要同时提供三个外部模型
+路径及匹配的 asset ID；C++ 启动器需要指定完整模型目录，具体见各运行时说明。
+
+<a id="formats-checksums"></a>
 ## 固定来源与字节身份
 
 `am.mvn`、`paraformer_config.yaml` 逐字节保留 S 提交
@@ -58,6 +81,10 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 最多 400 帧，每帧 560 维。真实 CPU 前端已通过 7 组源实现对照，详见 Python 说明。流程中的全零 context bias
 保留源部署方式，不提供用户自定义热词功能。三模型的具体接口见
 [物理张量契约](../runtime/python/README_cn.md)。INT16 名称描述编译配方，不能据此猜测 I/O 类型。
+
+三个 `.hbm` 是 S100 编译制品，各自发布方 SHA-256 均为 `null (unknown)`。
+`tokens.json` 是 UTF-8 JSON，`am.mvn` 是文本 CMVN，`paraformer_config.yaml` 是 YAML。
+上述摘要固定本次使用的附属文件字节，不等于发布方签名。
 
 ## 当前验证范围
 

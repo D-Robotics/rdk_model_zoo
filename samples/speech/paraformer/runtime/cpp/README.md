@@ -9,6 +9,15 @@ SDK transport double; real SDK ABI/model execution remains unverified. The tests
 HBM inference. The source Python frontend → C++ inference capability remains in
 scope; no alternate approximation of FunASR is introduced here.
 
+<a id="supported-boards"></a>
+## Supported boards
+
+| Target | Status | Reason |
+| --- | --- | --- |
+| S100 | supported-not-run | Three published HBM models; native host checks only |
+| X5 / S100P / S600 | not-supported | No matching published Paraformer package |
+
+<a id="dependencies"></a>
 <a id="environment"></a>
 ## Environment
 
@@ -19,6 +28,23 @@ in the [evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-
 No board SDK/ABI or S100 inference result is asserted. Real frontend generation
 uses the separately documented [Python environment](../python/README.md#environment).
 
+<a id="build"></a>
+## Build and run host checks
+
+From repository root, using a new build directory:
+
+```bash
+cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-core -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
+cmake --build /tmp/rdk-paraformer-core -j 2
+ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
+```
+
+Success means four CTest checks pass: numerical contract, synthetic three-model
+composition, SDK control flow with an isolated API double, and group preflight. Address/undefined-behavior sanitizers are enabled for Clang/GNU in
+this command. Release tests retain assertions. The production artifact is the
+static `paraformer_contract` library; test executables are not an inference CLI.
+
+<a id="run"></a>
 <a id="quickstart"></a>
 ## Run the native sample
 
@@ -57,6 +83,7 @@ as described below; CMake errors are retained. On later runs omit `--build` to u
 that binary, or provide `--binary /absolute/path/to/paraformer_demo`. Choose a new
 output directory per run. Prefix selection uses `--max-utts 1`; zero means all.
 
+<a id="parameters"></a>
 ### Launcher options
 
 | Option | Default / behavior |
@@ -125,23 +152,6 @@ records actual application execution with a marked transport double, including
 zero tokens, failed model calls, partial progress and output reuse rejection.
 Real vendor SDK compilation/ABI, HBM inference and board testing remain not-run.
 
-<a id="build"></a>
-## Build and run host checks
-
-From repository root, using a new build directory:
-
-```bash
-cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-core -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
-cmake --build /tmp/rdk-paraformer-core -j 2
-ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
-```
-
-Success means four CTest checks pass: numerical contract, synthetic three-model
-composition, SDK control flow with an isolated API double, and group preflight. Address/undefined-behavior sanitizers are enabled for Clang/GNU in
-this command. Release tests retain assertions. The production artifact is the
-static `paraformer_contract` library; test executables are not an inference CLI.
-
-<a id="parameters"></a>
 ## Build options and current entry points
 
 | Option | Default | Effect |
@@ -159,6 +169,7 @@ contains `contract.h` and `pipeline.h`. Do not compile this numerical library wi
 fast-math: float32 operation order is part of source parity. Clang/GNU builds
 explicitly disable floating-point contraction for the library.
 
+<a id="interface-lifecycle"></a>
 <a id="stage-io"></a>
 ## Numerical and stage contracts
 
@@ -195,6 +206,7 @@ retain them. The caller must keep any captured SDK resources alive and coordinat
 access if they are not thread-safe. The numerical library does not load models, select
 boards, perform file I/O, set scheduling or compile a fake SDK fallback.
 
+<a id="results-interpretation"></a>
 <a id="results"></a>
 ## Results and timings
 

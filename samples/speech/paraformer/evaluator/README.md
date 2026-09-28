@@ -6,6 +6,17 @@ host simulation, not HBM execution or a board benchmark. It reuses the runtime's
 encoder → predictor → CPU CIF → decoder pipeline and greedy token decoding.
 No dataset, models or toolchain are downloaded by this entry.
 
+<a id="dataset"></a>
+## Dataset
+
+The repository includes two WAVs with reference text for smoke checks, not a full
+AISHELL benchmark. For dataset evaluation, obtain the dataset under its applicable
+license and construct a manifest with one `utt_id`/`text` pair per WAV; the matching
+audio directory must contain `<utt_id>.wav`. Use the preparation command below to
+produce validated feature files and retain its truncation report. No dataset split
+or text normalization is selected implicitly.
+
+<a id="environment"></a>
 ## Environment and preparation
 
 Run all commands from the repository root. The tested FP32 environment is Python
@@ -16,7 +27,7 @@ environment; it is not a substitute package to install from an arbitrary index.
 Actual HMCT evaluation has not been run in this migration.
 
 First follow [conversion](../conversion/README.md) to export the three self-contained
-ONNX graphs into `outputs/paraformer-export`. Obtain the pinned `tokens.json` through
+ONNX graphs into `outputs/paraformer_export`. Obtain the pinned `tokens.json` through
 [model preparation](../model/README.md); its order must match the 8404-class decoder.
 Prepare the bundled two utterances using the real frontend without a board:
 
@@ -34,14 +45,15 @@ manifest and audio directory to the same preparation command. Input audio must b
 truncated with metadata, so a full-length reference may penalize a truncated utterance.
 Inspect this before treating the result as a dataset benchmark.
 
+<a id="command"></a>
 ## FP32 evaluation
 
 ```bash
 python samples/speech/paraformer/evaluator/main.py \
   --pipeline fp32 \
-  --encoder outputs/paraformer-export/encoder.onnx \
-  --predictor outputs/paraformer-export/predictor.onnx \
-  --decoder outputs/paraformer-export/decoder.onnx \
+  --encoder outputs/paraformer_export/encoder.onnx \
+  --predictor outputs/paraformer_export/predictor.onnx \
+  --decoder outputs/paraformer_export/decoder.onnx \
   --manifest outputs/paraformer-features/prepared-manifest.json \
   --vocab samples/speech/paraformer/model/s100/tokens.json \
   --output-dir outputs/paraformer-eval-fp32
@@ -100,14 +112,8 @@ only for selected entries; each digest covers the bytes actually loaded. Stage I
 uses exact semantic-name binding, shapes and dtypes, including the documented acoustic
 alias and optional decoder `token_num` output. No positional fallback or implicit cast.
 
-## Results and metric definition
-
-`evaluation.json` records UTC start/end, executor/version facts, model/manifest/vocabulary
-paths and hashes, tensor interfaces, selected count and per-utterance source metadata,
-feature digest, reference, hypothesis, token IDs/count and stage timings. Model,
-manifest and vocabulary hashes are checked again before successful completion.
-A failure preserves completed utterances and `current_utterance`, but `metrics` stays
-null; partial results are not presented as a complete evaluation.
+<a id="metrics"></a>
+## Metric definition
 
 CER is total Unicode character edit distance divided by total reference characters;
 `cer` is a ratio, not a percentage. Substitution/deletion/insertion counts and per-item
@@ -119,6 +125,17 @@ unified runtime. Zero CIF tokens produce empty text and skip decoder execution.
 Stage timings exclude frontend, model loading and file I/O; they are neither BPU nor
 end-to-end latency.
 
+<a id="outputs"></a>
+## Output records
+
+`evaluation.json` records UTC start/end, executor/version facts, model/manifest/vocabulary
+paths and hashes, tensor interfaces, selected count and per-utterance source metadata,
+feature digest, reference, hypothesis, token IDs/count and stage timings. Model,
+manifest and vocabulary hashes are checked again before successful completion.
+A failure preserves completed utterances and `current_utterance`, but `metrics` stays
+null; partial results are not presented as a complete evaluation.
+
+<a id="reference-results"></a>
 ## Reference results and limits
 
 The [archived S conversion guide](../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md)
@@ -129,7 +146,12 @@ migration results or proof that one backend is more accurate.
 The current host FP32 run on the two bundled utterances measured 4 edits / 28 reference
 characters, CER 14.2857%. This small smoke run is not a reproduction of that 300-item
 benchmark. See the [evaluation review](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-evaluator-review.md)
-for source comparison and exact evidence. Real HMCT, OE compilation, HBM execution,
+for source comparison and exact evidence.
+
+<a id="boundaries"></a>
+## Validation boundaries
+
+Real HMCT, OE compilation, HBM execution,
 board latency and full-dataset accuracy remain unverified. The conversion guide also
 discloses the random-input Torch/ORT discrepancy; this two-utterance run does not
 establish arbitrary-input equivalence.

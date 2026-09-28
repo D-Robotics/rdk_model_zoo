@@ -5,6 +5,15 @@
 不是 HBM 执行或板端性能测试。评测复用运行时的 encoder → predictor → CPU CIF →
 decoder 流程及贪心解码，不自动下载数据集、模型或工具链。
 
+<a id="dataset"></a>
+## 数据集
+
+仓库仅附两条带参考文本的 WAV，用于流程验证，不是完整 AISHELL 基准。
+评测数据集时，请按数据集许可获取音频，构建包含每条 `utt_id`／`text` 的清单，
+音频目录中对应文件为 `<utt_id>.wav`。使用下方准备命令生成经检查的特征并保留
+截断记录。本入口不隐式选择数据集划分或文本归一化规则。
+
+<a id="environment"></a>
 ## 环境与准备
 
 以下命令均在仓库根目录执行。实际验证环境为 Python 3.12、NumPy 1.26.4、
@@ -13,7 +22,7 @@ ONNX 1.17.0、ONNX Runtime 1.20.1。需要预处理音频时，在独立环境�
 环境，不要从不明包源安装同名替代包。本次迁移尚未执行真实 HMCT 评测。
 
 先按照[转换说明](../conversion/README_cn.md)，将三个自包含 ONNX 模型导出到
-`outputs/paraformer-export`。按照[模型准备](../model/README_cn.md)获取固定版本
+`outputs/paraformer_export`。按照[模型准备](../model/README_cn.md)获取固定版本
 `tokens.json`，其顺序必须与 8404 类解码器一致。无需板卡即可用真实前端准备两条内置语音：
 
 ```bash
@@ -28,14 +37,15 @@ python samples/speech/paraformer/runtime/python/main.py \
 音频必须为 16 kHz，前端不静默重采样；超过 400 个 LFR 帧会截断并记录元数据。
 如果参考文本仍覆盖完整语音，截断会影响 CER，不能忽略此条件直接引用数据集精度。
 
+<a id="command"></a>
 ## FP32 评测
 
 ```bash
 python samples/speech/paraformer/evaluator/main.py \
   --pipeline fp32 \
-  --encoder outputs/paraformer-export/encoder.onnx \
-  --predictor outputs/paraformer-export/predictor.onnx \
-  --decoder outputs/paraformer-export/decoder.onnx \
+  --encoder outputs/paraformer_export/encoder.onnx \
+  --predictor outputs/paraformer_export/predictor.onnx \
+  --decoder outputs/paraformer_export/decoder.onnx \
   --manifest outputs/paraformer-features/prepared-manifest.json \
   --vocab samples/speech/paraformer/model/s100/tokens.json \
   --output-dir outputs/paraformer-eval-fp32
@@ -88,12 +98,8 @@ python samples/speech/paraformer/evaluator/main.py \
 模型按准确的语义名称、形状和类型绑定输入输出，支持已声明的 acoustic 名称别名及
 解码器可选的 `token_num` 输出，不按位置猜测，也不隐式转换类型。
 
-## 输出与指标口径
-
-`evaluation.json` 记录 UTC 起止时间、执行器及版本、模型／清单／词表路径和摘要、
-张量接口、选中条目数，以及每条的源元数据、特征摘要、参考文本、识别文本、token
-ID／数量和阶段耗时。结束前再次检查模型、清单和词表摘要。失败时保留已完成条目和
-`current_utterance`，但 `metrics` 保持 null，不把部分结果包装成完整评测。
+<a id="metrics"></a>
+## 指标定义
 
 CER 为 Unicode 字符编辑距离之和除以参考字符总数，`cer` 字段存比例而非百分比。
 同时保留替换、删除、插入次数及逐条错误。不进行空白、大小写或标点归一化；全部
@@ -102,6 +108,15 @@ CER 为 Unicode 字符编辑距离之和除以参考字符总数，`cer` 字段�
 统一运行时保持一致。CIF 零 token 时输出空文本并跳过 decoder。
 阶段耗时不含前端、模型加载及文件 I/O，不是 BPU 耗时或端到端延迟。
 
+<a id="outputs"></a>
+## 输出记录
+
+`evaluation.json` 记录 UTC 起止时间、执行器及版本、模型／清单／词表路径和摘要、
+张量接口、选中条目数，以及每条的源元数据、特征摘要、参考文本、识别文本、token
+ID／数量和阶段耗时。结束前再次检查模型、清单和词表摘要。失败时保留已完成条目和
+`current_utterance`，但 `metrics` 保持 null，不把部分结果包装成完整评测。
+
+<a id="reference-results"></a>
 ## 历史结果与验证边界
 
 [归档 S 转换说明](../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md)
@@ -111,6 +126,10 @@ CER 为 Unicode 字符编辑距离之和除以参考字符总数，`cer` 字段�
 本次 CPU FP32 对两条内置语音实际测得 4 次编辑／28 个参考字符，CER 14.2857%。
 这是小规模流程验证，不是上述 300 条基准的复测；具体源脚本对照与证据见
 [评测记录](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-evaluator-review.md)。
+
+<a id="boundaries"></a>
+## 验证边界
+
 真实 HMCT、OE 编译、HBM 执行、板端延迟和完整数据集精度仍未验证。转换文档已披露
 随机输入的 Torch／ORT 差异，两条语音成功不能证明任意输入等价。
 
