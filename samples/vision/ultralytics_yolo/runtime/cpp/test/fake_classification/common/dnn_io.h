@@ -13,7 +13,11 @@ struct TestMemory { void* virAddr; };
 struct hbDNNTensor { hbDNNTensorProperties properties; TestMemory sysMem; };
 extern int allocations,frees,releases,allocation_error;
 inline int hbDNNRelease(void*) { ++releases;return 0; }
-inline int fake_allocate(TestMemory*,int) { ++allocations;return allocation_error; }
+inline int fake_allocate(TestMemory* memory,int) {
+  ++allocations;
+  memory->virAddr=(allocation_error==0 || allocation_error==-5) ? reinterpret_cast<void*>(1) : nullptr;
+  return allocation_error==1 ? 0 : allocation_error;
+}
 inline int fake_free(TestMemory*) { ++frees;return 0; }
 #define YOLO_SYS_MEM(t) (&(t).sysMem)
 #define YOLO_SYS_ALLOC_CACHED(mem,bytes) fake_allocate(mem,bytes)

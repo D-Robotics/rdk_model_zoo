@@ -196,3 +196,8 @@ SDK ABI or board execution; [host regression evidence](../../../../../docs/relea
 includes the original task-release and dynamic-capacity failures.
 
 Missing OpenCV development files or DNN/UCP headers/libraries cause build failures; check the target SDK rather than copying another platform's libraries. For protocol rejection inspect model target, task, layout, dtype and head. Passing host helper tests does not prove all four board executables build/run or establish new performance measurements.
+
+The shared `OutputTensorOwner` also handles SDK allocation errors that still
+return a nonnull address: the acquired buffer is retained for cleanup. A
+success status with a null address is rejected. X5/UCP host resource tests
+cover both cases; real SDK failure behavior remains unverified.

@@ -23,8 +23,10 @@ class OutputTensorOwner {
     if (allocated_ || properties.alignedByteSize<=0) return -1;
     tensor.properties=properties;
     const int rc=YOLO_SYS_ALLOC_CACHED(YOLO_SYS_MEM(tensor),properties.alignedByteSize);
-    allocated_=rc==0;
-    return rc;
+    // Some failing SDK calls still return an acquired allocation. Own it so
+    // constructor unwinding releases it; a successful null allocation is invalid.
+    allocated_=YOLO_SYS_MEM(tensor)->virAddr != nullptr;
+    return rc != 0 ? rc : (allocated_ ? 0 : -1);
   }
   hbDNNTensor tensor;
  private:

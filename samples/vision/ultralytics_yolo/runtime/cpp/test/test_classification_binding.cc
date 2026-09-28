@@ -40,4 +40,10 @@ int main() {
   allocation_error=-4;
   { yolo::OutputTensorOwner output;expect(output.allocate(p)==-4); }
   expect(allocations==2 && frees==1);
+  allocation_error=-5; // failure with an acquired allocation
+  { yolo::OutputTensorOwner output; expect(output.allocate(p)==-5); }
+  expect(allocations==3 && frees==2);
+  allocation_error=1; // SDK claims success but returns no address
+  { yolo::OutputTensorOwner output; expect(output.allocate(p)!=0); }
+  expect(allocations==4 && frees==2);
 }

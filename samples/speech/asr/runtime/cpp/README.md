@@ -8,7 +8,7 @@ Canonical native integration is in progress. S100/S600 have published model iden
 
 <a id="dependencies"></a>
 ## Dependencies
-The decoding/normalization core requires C++17 and the standard library. Tests use CMake >=3.18, with Clang/GCC AddressSanitizer and UndefinedBehaviorSanitizer enabled by default. The core-only test uses no OpenCV, SDK or audio library. Audio tests additionally require libsndfile and libsamplerate headers/libraries. Host evidence uses libsndfile 1.2.2 and libsamplerate 0.2.2 built in an isolated prefix; this does not certify board library versions. UCP SDK integration remains pending. The tested libsndfile build disables external codecs; WAV PCM/float is verified, while FLAC/other codec availability depends on your build.
+The decoding/normalization core requires C++17 and the standard library. Tests use CMake >=3.18, with Clang/GCC AddressSanitizer and UndefinedBehaviorSanitizer enabled by default. The core-only test uses no OpenCV, SDK or audio library. Audio tests additionally require libsndfile and libsamplerate headers/libraries. Host evidence uses libsndfile 1.2.2 and libsamplerate 0.2.2 built in an isolated prefix; this does not certify board library versions. The UCP adapter and preflight are implemented with host API doubles; real SDK build/ABI validation and the deployment CLI remain pending. The tested libsndfile build disables external codecs; WAV PCM/float is verified, while FLAC/other codec availability depends on your build.
 
 <a id="build"></a>
 ## Build
@@ -22,7 +22,7 @@ This builds `test_contract`, not an ASR deployment binary. Sanitizers can be dis
 
 <a id="run"></a>
 ## Run
-CTest executes `asr_contract`. It checks CTC/legacy decoding, negative logits, ties, nonfinite values, invalid vocabulary/IDs, source chunk geometry and normalization. It does not open a model or transcribe audio. Use the [Python workflow](../python/README.md) for the implemented inference entry; native SDK/CLI work remains pending.
+CTest executes `asr_contract`. It checks CTC/legacy decoding, negative logits, ties, nonfinite values, invalid vocabulary/IDs, source chunk geometry and normalization. It does not open a model or transcribe audio. Use the [Python workflow](../python/README.md) for the implemented inference entry; the deployment CLI and real SDK validation remain pending.
 
 <a id="parameters"></a>
 ## Parameters
@@ -71,7 +71,7 @@ cmake --build /tmp/rdk-asr-audio
 ctest --test-dir /tmp/rdk-asr-audio --output-on-failure
 ```
 
-Expected: `asr_contract`, `asr_audio` and `asr_task` pass. Audio tests write temporary WAV
+Expected: `asr_contract`, `asr_audio`, `asr_task`, `asr_sdk_fixture` and `asr_preflight` pass. Audio tests write temporary WAV
 fixtures at 8/16/44.1 kHz, check independent-window geometry, final padding,
 constant input, ownership and malformed inputs. Assertions remain enabled in
 Release builds. [Additional seven-chunk source comparison evidence](../../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-native-audio/)
@@ -86,7 +86,7 @@ It does not validate a real model or SDK.
 positive logit-step count, ordered 3503-token vocabulary and decoder mode
 (default CTC). The caller must verify model identity, tensor metadata and the
 vocabulary hash before constructing it; the task itself does not open files.
-The SDK adapter that will supply those facts is still pending.
+`SdkRunner::metadata()` supplies observed steps/strides/allocation sizes after its binding checks; use the preflight factory described below before SDK calls.
 
 Preprocessing returns owned fixed-size waveform and valid length. Forward
 validates that input and invokes the transport exactly once, returning owned
@@ -121,3 +121,65 @@ int main() {
   std::cout << task.post_process(raw) << '\n';
 }
 ```
+
+## SDK adapter and identity gate
+
+`SdkRunner(SdkModel{path, target}, preflight)` accepts only S100/S600 and requires
+an explicit preflight callback before any SDK call. Production callers use
+`make_preflight(expected_model_sha256, vocabulary_path)`: it reads the local
+identity through the shared platform registry rules, rejects mismatches
+(including S100 with an S100P board alias), checks the model digest and pins the
+3503-token vocabulary digest. A locally recorded model digest identifies bytes;
+when the manifest lacks a publisher digest, it does not prove publisher origin.
+
+After preflight, the adapter requires exactly one named model, one FLOAT32
+unquantized input `[1,30000]` and one FLOAT32 unquantized output `[1,T,3503]`.
+T must be positive. Positive aligned allocation sizes and nonoverlapping,
+float-aligned byte strides are checked before allocation; dynamic/missing
+stride descriptors and integer outputs are rejected. Do not reinterpret raw
+integer memory as float. Observed steps, byte strides, allocation sizes and
+model name are available through `metadata()` for reports.
+
+`infer(prepared)` validates the finite 30000-element input, zeroes allocation
+padding, copies through the observed strides, cleans the input cache, calls the
+shared synchronous UCP inference helper and invalidates the output cache.
+The returned vector owns compact raw logits copied from observed output strides;
+subsequent inference cannot overwrite it. Scheduling uses the shared UCP default
+`HB_UCP_BPU_CORE_ANY`; this adapter does not expose a priority/core override.
+No activation, CTC or audio I/O happens inside this transport. A task Runner
+can capture a living SdkRunner and delegate to `infer`; keep it alive for all
+calls and do not concurrently reuse a single SDK instance.
+
+Model and tensor owners unwind partially initialized state. The shared tensor
+owner now retains a nonnull allocation even when the SDK call fails, and rejects
+success with a null address. Task creation/submit/wait/release and cache-flush
+errors propagate to the caller. Destructors attempt resource release without
+throwing; release failure itself cannot establish that the SDK freed a resource.
+
+## Library build and verification boundaries
+
+From the repository root, with the audio development libraries already prepared:
+
+```bash
+cmake -S samples/speech/asr/runtime/cpp -B /tmp/rdk-asr-library -DASR_BUILD_TESTS=ON -DASR_AUDIO_TESTS=ON -DCMAKE_PREFIX_PATH="${ASR_AUDIO_PREFIX:-}"
+cmake --build /tmp/rdk-asr-library
+ctest --test-dir /tmp/rdk-asr-library --output-on-failure
+```
+
+The default `ASR_BUILD_SDK=OFF` builds `asr_frontend` and `asr_preflight` static
+libraries without vendor headers. `ASR_BUILD_TESTS` defaults OFF. Tests always
+exercise the adapter against an explicitly named API double, not the vendor ABI.
+To build `asr_sdk`, configure `-DASR_BUILD_SDK=ON` in an environment containing
+`dnn/hb_dnn.h`, `hb_ucp.h`, `hb_ucp_sys.h`, `libdnn` and `libhbucp`. CMake requires
+all of them and never silently substitutes the host double. Custom installations
+can set `ASR_DNN_INCLUDE`, `ASR_UCP_INCLUDE`, `ASR_UCP_SYS_INCLUDE`,
+`ASR_DNN_LIBRARY`, `ASR_UCP_LIBRARY`; use the proper target compiler/sysroot for
+cross compilation. Both X5 and UCP headers visible together are rejected.
+
+No supported minimum SDK/BSP version has yet been established. On this host,
+SDK-enabled configuration was checked to fail because vendor headers are absent.
+There is still no deployment CLI, automatic vocabulary JSON loader or complete
+native transcript report. Use the implemented Python workflow while these are
+integrated. [SDK implementation evidence](../../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-sdk/)
+records five host tests, identity failures, strided tensors and partial-allocation
+failure reproduction. Board/model inference remains not-run.

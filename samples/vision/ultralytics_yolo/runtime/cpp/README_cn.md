@@ -178,3 +178,7 @@ ctest --test-dir /tmp/ultralytics-cpp-host --output-on-failure
 包含原任务释放与动态容量问题的失败记录。
 
 缺少 OpenCV 开发包或 DNN/UCP 头/库会导致构建失败；请核对目标 SDK，而不是复制其他平台库。输入/输出协议拒绝时检查模型 target、任务、layout、dtype 和 head。主机辅助测试通过不代表所有四个板端程序可编译运行，也不代表新的性能结果。
+
+共用 `OutputTensorOwner` 还处理“分配返回错误但已给出非空地址”：保留已取得的
+缓冲区以供清理；“返回成功但地址为空”则拒绝。X5/UCP 主机资源测试覆盖这两种
+情况，真实 SDK 的失败行为仍未验证。
