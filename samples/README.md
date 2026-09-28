@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers all 44 unified samples under root `samples/vision`. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers 45 unified vision samples and the KWS speech sample. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -37,6 +37,7 @@ This index covers all 44 unified samples under root `samples/vision`. It is a so
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README.md) | [conversion](vision/ultralytics_yolo/conversion/README.md) | [evaluator](vision/ultralytics_yolo/evaluator/README.md) |
 | [paddle_ocr](vision/paddle_ocr/README.md) | [conversion](vision/paddle_ocr/conversion/README.md) | [evaluator](vision/paddle_ocr/evaluator/README.md) |
+| [yoloe](vision/yoloe/README.md) | [conversion](vision/yoloe/conversion/README.md) | [evaluator](vision/yoloe/evaluator/README.md) |
 | [yolov5](vision/yolov5/README.md) | [conversion](vision/yolov5/conversion/README.md) | [evaluator](vision/yolov5/evaluator/README.md) |
 | [fcos](vision/fcos/README.md) | [conversion](vision/fcos/conversion/README.md) | [evaluator](vision/fcos/evaluator/README.md) |
 | [yoloworld](vision/yoloworld/README.md) | [conversion](vision/yoloworld/conversion/README.md) | [evaluator](vision/yoloworld/evaluator/README.md) |
@@ -67,6 +68,12 @@ This index covers all 44 unified samples under root `samples/vision`. It is a so
 | [dinov2](vision/dinov2/README.md) | [conversion](vision/dinov2/conversion/README.md) | [evaluator](vision/dinov2/evaluator/README.md) |
 | [clip](vision/clip/README.md) | [conversion](vision/clip/conversion/README.md) | [evaluator](vision/clip/evaluator/README.md) |
 | [3dresnet](vision/3dresnet/README.md) | [conversion](vision/3dresnet/conversion/README.md) | [evaluator](vision/3dresnet/evaluator/README.md) |
+
+## Speech
+
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [kws](speech/kws/README.md) | [conversion](speech/kws/conversion/README.md) | [evaluator](speech/kws/evaluator/README.md) |
 
 ## Read validation status correctly
 

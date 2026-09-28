@@ -1,0 +1,11 @@
+# KWS test audio
+
+[English](README.md) | 简体中文
+
+`sample.wav` 从固定 S 源 `380e1a2bf42041af54be6f34935e50197cfadff9` 逐字节复制。它是源中的“hey snips”演示录音：单声道 PCM16、16000 Hz、40000 帧、2.5 秒。
+
+SHA-256：`eb39ea9bff0e37e262ee3735eba4111a52bb53a84bb776d28a43d7cea6b88cad`。
+
+固定前端补 20000 个零到 60000 点，再生成 float32 `[1,373,80]`。真实主机验证对照了 PCM 解码及全部特征值；历史约 0.985 分数属于源板端运行，不是新增实测。
+
+替换音频时向[运行命令](../runtime/python/README_cn.md)传 `--audio-file /path/to/mono-16k.wav`。非单声道或非 16 kHz 输入显式拒绝；外部转换应保留为独立输入。超过 3.75 秒会截断并记录数量。本目录没有负例集、校准语料或转写标注，不能由单个正例报告准确率，详见[评估说明](../evaluator/README_cn.md)。

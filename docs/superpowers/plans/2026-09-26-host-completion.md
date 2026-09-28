@@ -28,7 +28,7 @@ S 独立 yolo11、yolo11_pose、yolo11_seg、yolov13_imoonlab 属重复实现，
   - 2026-09-26 文档子项已完成：Ultralytics 根/model/runtime/python/runtime/cpp/conversion/evaluator 双语改写；36 samples / 0 violations / 0 exemptions，原 84 条基线与 CI 旗标已删除。H2 的实现职责审计仍待完成。
 - [ ] H3 B7主机整改集成；客户文档跟随实际代码与历史板证据，保持板测缺口。
 - [ ] H4 B8全部样例完整源能力迁移与测试、双语README。
-- [ ] H5 B9统一YOLO整理、重复独立系列退役及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；重复系列按用户新要求退役，YOLOE 迁移仍 pending。
+- [ ] H5 B9统一YOLO整理、重复独立系列退役及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；重复系列按用户新要求退役；YOLOE Python/C++、导出/转换准备/evaluator 及双语说明已完成主机实现，整体验收仍 pending。
 - [ ] H6 B10语音/机器人样例迁移；保留执行边界，不触发实机控制。
 - [ ] H7 B11大模型和VLA来源/gitlink/资源集成，不用空壳冒充上游能力。
 - [ ] H8 全仓共享职责、datasets、旧路径兼容、manifest/catalog、七skills原包来源与文档/Agent导航、上游增量核对。
@@ -121,3 +121,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：YOLOE 原生发布选择、可执行入口及结果留证已实现，完整双语 README 同步模型前提、全部参数、构建/运行、输出及失败判据。557 项 Python 回归、两种文档构建各 11 项原生测试、共用层 12 项和 18 个主机 CLI 检查通过；完整入口夹具明确标为 host-fixture，不能充当 SDK/板测证据。见[原生入口记录](../../releases/unified-migration/2026-09-28-yoloe-native-cli-review.md)。S 浮点制品、真实 SDK/OE/板端与独立整体验收未验证；继续 B10/B11/H8 及 H0–H9 剩余工作。
 
 2026-09-28：B10 四样例 132 个源文件已与固定提交逐字节核验，HIMLoco 21 份输入完备；复现 ASR 非 CTC 折叠行为及 Paraformer 零触发 CIF 越界，确认 KWS 采样时长/目标支持文档矛盾。见[B10 源审计](../../releases/unified-migration/2026-09-28-b10-source-review.md)。统一实现、完整双语文档与各项验收仍待进行；H0–H9 保持开放。
+
+2026-09-28：B10 KWS 统一 Python 三阶段、共享 SDK runner、显式下载和离线指标已实现，六层双语 README 补齐；真实 PaddleAudio 三类输入与源前端逐值一致，13 项 KWS / 432 项相关 Python 回归、121 项 publisher 及 46-sample 规范检查通过。见[KWS 记录](../../releases/unified-migration/2026-09-28-b10-kws-review.md)。源未提供权重/转换配方的缺口保留；真实 SDK/板端分数与独立验收未验证。继续 ASR、Paraformer、HIMLoco、B11/H8 及 H0–H9 剩余事项。

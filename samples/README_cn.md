@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-当前索引覆盖根 `samples/vision` 下全部 44 个统一 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
+当前索引覆盖45 个统一视觉 Sample 及 KWS 语音 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
 
 ## 图像分类
 
@@ -37,6 +37,7 @@
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README_cn.md) | [conversion](vision/ultralytics_yolo/conversion/README_cn.md) | [evaluator](vision/ultralytics_yolo/evaluator/README_cn.md) |
 | [paddle_ocr](vision/paddle_ocr/README_cn.md) | [conversion](vision/paddle_ocr/conversion/README_cn.md) | [evaluator](vision/paddle_ocr/evaluator/README_cn.md) |
+| [yoloe](vision/yoloe/README_cn.md) | [conversion](vision/yoloe/conversion/README_cn.md) | [evaluator](vision/yoloe/evaluator/README_cn.md) |
 | [yolov5](vision/yolov5/README_cn.md) | [conversion](vision/yolov5/conversion/README_cn.md) | [evaluator](vision/yolov5/evaluator/README_cn.md) |
 | [fcos](vision/fcos/README_cn.md) | [conversion](vision/fcos/conversion/README_cn.md) | [evaluator](vision/fcos/evaluator/README_cn.md) |
 | [yoloworld](vision/yoloworld/README_cn.md) | [conversion](vision/yoloworld/conversion/README_cn.md) | [evaluator](vision/yoloworld/evaluator/README_cn.md) |
@@ -67,6 +68,12 @@
 | [dinov2](vision/dinov2/README_cn.md) | [conversion](vision/dinov2/conversion/README_cn.md) | [evaluator](vision/dinov2/evaluator/README_cn.md) |
 | [clip](vision/clip/README_cn.md) | [conversion](vision/clip/conversion/README_cn.md) | [evaluator](vision/clip/evaluator/README_cn.md) |
 | [3dresnet](vision/3dresnet/README_cn.md) | [conversion](vision/3dresnet/conversion/README_cn.md) | [evaluator](vision/3dresnet/evaluator/README_cn.md) |
+
+## 语音
+
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [kws](speech/kws/README_cn.md) | [conversion](speech/kws/conversion/README_cn.md) | [evaluator](speech/kws/evaluator/README_cn.md) |
 
 ## 如何解读验证状态
 

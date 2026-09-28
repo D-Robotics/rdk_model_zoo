@@ -8,11 +8,13 @@ RDK Model Zoo provides model preparation, preprocessing, BPU inference, postproc
 
 ## Start by task
 
-The [sample index](samples/README.md) lists all 44 current unified vision samples. Each guide states its own targets, variants, languages and validation scope.
+The [sample index](samples/README.md) lists 45 unified vision samples and KWS speech. Each guide states its own targets, variants, languages and validation scope.
 
 | Task | Unified entry |
 |---|---|
 | Detection, segmentation, pose, classification, oriented boxes | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README.md) |
+| Prompt-free instance segmentation | [YOLOE](samples/vision/yoloe/README.md) |
+| Keyword spotting | [KWS](samples/speech/kws/README.md) |
 | Image classification | [ResNet](samples/vision/resnet/README.md), MobileNet, EfficientNet, ConvNeXt, Rep families and others in the full index |
 | Text detection and recognition | [PaddleOCR](samples/vision/paddle_ocr/README.md) |
 | Prompted segmentation | [EfficientSAM](samples/vision/efficient_sam/README.md), [MobileSAM](samples/vision/mobile_sam/README.md) |
@@ -25,7 +27,7 @@ The [sample index](samples/README.md) lists all 44 current unified vision sample
 | Prepared-feature trajectory planning | [DiffusionDrive](samples/vision/diffusiondrive/README.md) |
 | Features, image-text matching and video classification | [DINOv2](samples/vision/dinov2/README.md), [SigLIP](samples/vision/siglip/README.md), [CLIP](samples/vision/clip/README.md), [3DResNet](samples/vision/3dresnet/README.md) |
 
-Depth, semantic segmentation, point clouds, speech, robotics, LLM/VLA and other pending capabilities remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
+Remaining speech, robotics, LLM/VLA and other pending capabilities remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
 
 ## Boards, artifacts and environments
 
