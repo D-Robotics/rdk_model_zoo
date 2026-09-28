@@ -83,3 +83,29 @@ when changed. Preserve this sentinel case and concurrent isolation as meaningful
 regressions. Do not merely hide fixed unsafe paths behind the Python launcher:
 the native drivers must also be safe when invoked directly. This is an additional
 blocking test-harness finding; original CORE-R1–R3 closure awaits final recheck.
+
+## Final recheck — CORE-R1–R4 resolved; README example correction pending
+
+Independent rerun after the R3 author exit: 20 tests pass, including direct
+compiled-driver sentinel and concurrent scratch checks. The reviewer also ran
+the original non-elided ownership reproducer: return/copy/move all report owned=1.
+The manifest parses, all non-note structure matches HEAD, and three actual
+MiniCPM assets enumerate correctly. Console streaming now uses the injected sink;
+END/ERROR suppression and contained consumer exceptions have explicit tests.
+Source SDK exit mapping intentionally remains separate from stream_error.
+The cleanup driver additionally passed with TMPDIR absent from its environment
+and asserted restoration to that initially unset state. CORE-R1–R4 are resolved
+within this host scope. Original failures above remain preserved. Evidence:
+[r3 recheck](evidence/2026-09-28-minicpm-core-independent-review/r3-recheck.json),
+[ownership/manifest](evidence/2026-09-28-minicpm-core-independent-review/ownership-manifest-recheck.json),
+[unset environment and hashes](evidence/2026-09-28-minicpm-core-independent-review/unset-snapshot-recheck.json).
+
+CORE-N1: Both legacy runtime README C++ examples claim complete library usage but
+use std::cout/std::flush without including iostream. Extracting their actual
+blocks and placing statements in main fails syntax compilation against the
+production header and explicitly fake SDK header.
+[Actual compiler errors](evidence/2026-09-28-minicpm-core-independent-review/readme-example-compile.json).
+Supply self-contained examples in both languages and verify their actual blocks;
+check the S600 pair in the same bounded documentation pass. No runtime rewrite or
+full-suite rerun is required for this header/example correction. Package acceptance
+awaits that customer documentation correction; B11/H7 remain globally open.
