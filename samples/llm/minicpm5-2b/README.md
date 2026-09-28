@@ -2,11 +2,21 @@
 
 [English](README.md) | [简体中文](README_cn.md)
 
+<a id="overview"></a>
 # MiniCPM5-2B on RDK S100 / S100P / S600
 
 This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and OELLM Runtime. It provides a C++ command-line application, model download with SHA256 verification, conversion guidance and full WikiText2 evaluation evidence.
 
 > S600 currently requires the internal OELLM 2.0 beta SDK; its public release is planned for mid-October 2026. Public S600 SDK 1.0.5 did not pass direct inference with this HBM and cannot substitute for 2.0. S100/S100P use the separate public 1.0.0 workflow below.
+
+<a id="support-matrix"></a>
+## Support matrix
+
+| Target | SDK / native backend | Source accuracy result | New board tests |
+| --- | --- | --- | --- |
+| S100 / S100P | 1.0.0 / legacy | PPL +27.83%, fails ≤3% | not-run |
+| S600 | 2.0 beta SDK / cpp | PPL +1.60%, source target met | not-run |
+| X5 | No matching backend/artifact | not applicable | not applicable |
 
 ## S100 / S100P support
 
@@ -19,18 +29,12 @@ MiniCPM5-2B uses a Llama architecture with 42 layers, hidden size 2048, 16 query
 
 This delivery is verified on **S600** with RDK OS V5.1.0. The artifact is not interchangeable with S100/S100P models. The original model's longer context limit does not apply to this compiled 4096-token configuration. Image input, tool execution and a serving API are outside this sample's scope.
 
-## Directory layout
+<a id="prerequisites"></a>
+## Prerequisites
 
-```text
-conversion/     Host adapter and quantization/compilation instructions
-evaluator/      S600 PPL evaluator and recorded evidence
-evaluator/legacy/ S100/S100P full PPL and generation checks
-model/          Verified model download
-runtime/cpp/    S600 CMake project and run.sh
-runtime/legacy/ S100/S100P CMake project and run.sh
-test_data/      Generation prompts and observed reference results
-```
+The launcher needs Python 3 standard library; native inference needs C++17/CMake, the matching OELLM SDK and prepared target-specific models. S600 also needs gflags/nlohmann-json; legacy memory settings and dependencies are in its runtime guide. Reserve about 6 GB for model download/extraction. Precompiled inference does not require a quantization toolchain.
 
+<a id="quickstart"></a>
 ## S600 quick start
 
 Obtain and extract OpenExplorer LLM 2.0.0-beta1, including its `oellm_runtime` directory. On the S600 board install the build dependencies:
@@ -48,6 +52,7 @@ bash run.sh -- --prompt="What is the capital of France? Answer with the city nam
 
 Allow at least 6 GB free storage for archive download and extraction. The SDK is obtained separately; its libraries and headers are not included in the model download. See [model download](model/README.md) and [runtime options](runtime/cpp/README.md).
 
+<a id="expected-results"></a>
 ## Conversion and evaluation
 
 See [conversion](conversion/README.md) for the external MiniCPM5 adapter and the pinned SDK environment. Do not edit the SDK's `deps_version.conf`. See [evaluation](evaluator/README.md) for data preparation, complete PPL statistics and measurement conditions.
@@ -64,6 +69,32 @@ Observed generation tests include six additional prompts matching reference text
 
 The reference model itself answered one Chinese `1+1` prompt incorrectly and added Markdown fences when asked for bare JSON. Quantization preserved those responses; this sample does not promise strict JSON formatting or universal factual correctness.
 
+<a id="directory"></a>
+## Directory layout
+
+```text
+conversion/     Host adapter and quantization/compilation instructions
+evaluator/      S600 PPL evaluator and recorded evidence
+evaluator/legacy/ S100/S100P full PPL and generation checks
+model/          Verified model download
+runtime/cpp/    S600 CMake project and run.sh
+runtime/legacy/ S100/S100P CMake project and run.sh
+test_data/      Generation prompts and observed reference results
+```
+
+<a id="entry-points"></a>
+## Entry points and next steps
+
+| Task | Guide |
+| --- | --- |
+| Model preparation and hashes | [model](model/README.md) |
+| Launcher options and host preview | [runtime](runtime/README.md) |
+| S600 C++ | [cpp](runtime/cpp/README.md) |
+| S100 / S100P C++ | [legacy](runtime/legacy/README.md) |
+| Conversion recipes | [conversion](conversion/README.md) |
+| Evaluation and historical evidence | [evaluator](evaluator/README.md) |
+| Prompts and reference outputs | [test_data](test_data/README.md) |
+<a id="license"></a>
 ## License and attribution
 
 Original model: [OpenBMB/MiniCPM5-2B](https://huggingface.co/openbmb/MiniCPM5-2B), revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`, Apache-2.0. The model archive includes LICENSE and a notice describing quantization and metadata changes. Sample code follows the repository license. OpenExplorer/OELLM remains subject to its separate SDK terms.

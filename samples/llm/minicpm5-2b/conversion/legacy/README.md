@@ -1,3 +1,5 @@
+> Recipes and measurements below come from pinned S source `380e1a2`; this round reorganizes documentation without running quantization, evaluation or board tests.
+
 [English](README.md) | [简体中文](README_cn.md)
 
 # S100 / S100P quantization and compilation

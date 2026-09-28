@@ -2,6 +2,14 @@
 
 # S600 模型转换
 
+<a id="source-model"></a>
+## 源模型
+
+源模型为 OpenBMB/MiniCPM5-2B，固定 revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`（Apache-2.0）。保留原始权重/config/tokenizer，外部适配器负责 SDK 接入。以下为源配方整理，本轮不执行下载、校准、编译或精度验证。所有代码块依次在同一 shell 环境使用，除非另有目录说明。
+
+<a id="toolchain-targets"></a>
+## 工具链与目标
+
 以解压后的 OpenExplorer LLM 2.0.0-beta1 为准，先读包内 docs/01_环境搭建说明.md 和 docs/02_SkillShare初始化与使用.md。软件包根目录必须同时包含 llm_compression/ 与 package/；缺少 build_env.sh 或 compiler、march、hbm_infer、profiler、PyTorch plugin 五类 host whl 时停止。环境命令始终从软件包根目录执行，不将 llm_compression 本身加入 PYTHONPATH。已有可用 Python3.10 环境可复用，无须重新创建。
 
 ```bash
@@ -24,17 +32,48 @@ export PYTHONPATH="$PWD:$PWD/llm_compression/lightcompress${PYTHONPATH:+:$PYTHON
 
 已验证版本：torch2.8.0+cu128，horizon-plugin-pytorch3.3.5+cu128.torch280，profiler3.3.5，HBDK4 compiler/march4.11.7a2.dev202607040356+dcaae33.develop，hbm-infer3.15.3。校准使用CUDA；编译是CPU任务，入口会在编译阶段隐藏CUDA。编译中间文件可能超过数十GB，应在SDK安装空间之外预留足够磁盘。
 
-## 复现步骤
+<a id="export"></a>
+## 权重与配置准备
+
+本配方由 SDK 编排图导出，不提供独立 ONNX 导出命令。以下获取固定权重和数据，并生成后续阶段共享配置。
 
 ```bash
 mkdir -p "$WORK"
 python -c "from huggingface_hub import snapshot_download; snapshot_download('openbmb/MiniCPM5-2B', revision='0e9c66dce9fedde5ba8663bbcdd54b6810bb929a', local_dir='$WORK/MiniCPM5-2B')"
 DATA_ROOT="$WORK/datasets" bash "$SAMPLE/conversion/download_data.sh"
 python "$SAMPLE/conversion/create_config.py" --model-path "$WORK/MiniCPM5-2B"   --data-root "$WORK/datasets" --output-dir "$WORK/output"
+```
+
+## 浮点参考评估
+
+```bash
 python "$SAMPLE/conversion/main.py" torch_eval --config_path "$WORK/output/s600.yaml"
+```
+
+<a id="calibration"></a>
+## 校准与假量化评估
+
+```bash
 python "$SAMPLE/conversion/main.py" calib --config_path "$WORK/output/s600.yaml"
 python "$SAMPLE/conversion/main.py" torch_eval --config_path "$WORK/output/s600.fake-quant.yaml"
+```
+
+<a id="compile"></a>
+## 编译
+
+```bash
 python "$SAMPLE/conversion/main.py" compile --config_path "$WORK/output/s600.yaml"
+```
+
+<a id="validation"></a>
+## 验证与参考结果
+
+前文已给出浮点和假量化 torch_eval 命令；完整 HBM 评估入口与原始记录见 [evaluator](../evaluator/README_cn.md)。需要分别报告数学一致性、完整性与相对 PPL，不用单段检查替代 140 段全量结果。本轮按源配方整理，不执行这些命令。
+
+<a id="artifacts"></a>
+## 部署文件打包
+
+```bash
 python "$SAMPLE/conversion/prepare_tokenizer.py" "$WORK/MiniCPM5-2B" "$WORK/tokenizer"
 python "$SAMPLE/conversion/package_s600.py"   "$WORK/output/hbm/MiniCPM5-2B_language_chunk_256_cache_4096_w8_nash-p_corenum_4_4.hbm"   "$WORK/tokenizer" "$WORK/deployment"
 ```
@@ -45,6 +84,11 @@ TRAIN 和 TEST 分开下载并固定校验和。TRAIN 仅因SDK按 test-*.parque
 
 继续阅读[板端评估](../evaluator/README_cn.md)。
 
+<a id="known-gaps"></a>
+## 适用范围与已知限制
+
 ## S100 / S100P
 
 独立的 SDK 1.0.0 / leap_llm 编译流程见 [legacy 转换说明](legacy/README_cn.md)。上文 2.0 配置仅用于 S600。
+
+预编译资产仍按 [model](../model/README_cn.md) 的固定摘要选用；重新编译的产物不能借用历史板测结果。S100/S100P 的完整精度结论为未达到 ≤3% 相对 PPL 目标，不能用 S600 数字代替。配方未重跑不作为本轮文档迁移阻塞项。

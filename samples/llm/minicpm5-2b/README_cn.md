@@ -2,11 +2,21 @@
 
 [English](README.md) | [简体中文](README_cn.md)
 
+<a id="overview"></a>
 # 在 RDK S100 / S100P / S600 上运行 MiniCPM5-2B
 
 本示例使用 S600 BPU 和 OELLM Runtime 运行 OpenBMB MiniCPM5-2B 文本生成，提供 C++ 命令行程序、带 SHA256 校验的模型下载、转换说明和完整 WikiText2 测评记录。
 
 > S600 当前对应 OELLM 2.0 内测 SDK，尚未公开，正式版计划于 2026 年 10 月中旬发布。公开 S600 1.0.5 与当前 HBM 的直接运行未通过验证，不能替代 2.0；S100/S100P 使用下方独立的公开 1.0.0 SDK 流程。
+
+<a id="support-matrix"></a>
+## 支持矩阵
+
+| 目标 | SDK / 原生入口 | 源精度结论 | 本轮板测 |
+| --- | --- | --- | --- |
+| S100 / S100P | 1.0.0 / legacy | PPL +27.83%，未达到 ≤3% | 未运行 |
+| S600 | 2.0 beta SDK / cpp | PPL +1.60%，源记录达标 | 未运行 |
+| X5 | 无对应实现/资产 | 不适用 | 不适用 |
 
 ## S100 / S100P 支持
 
@@ -19,18 +29,12 @@ MiniCPM5-2B 使用 Llama 架构，包含 42 层、2048 隐藏维度、16 个 que
 
 本次交付在 **S600、RDK OS V5.1.0** 上验证。模型不能直接用于 S100/S100P。原始模型的更长上下文能力不适用于本次 4096-token 编译配置。图片输入、工具执行和服务端 API 不属于本示例范围。
 
-## 目录结构
+<a id="prerequisites"></a>
+## 前置条件
 
-```text
-conversion/     主机适配代码与量化、编译说明
-evaluator/      S600 PPL 评估与测评证据
-evaluator/legacy/ S100/S100P 全量 PPL 与生成验证
-model/          模型下载及校验
-runtime/cpp/    S600 的 CMake 工程和 run.sh
-runtime/legacy/ S100/S100P 的 CMake 工程和 run.sh
-test_data/      生成提示词与实际参考结果
-```
+启动器需要 Python 3 标准库，原生推理需要 C++17/CMake、对应 OELLM SDK 与已准备的板型模型。S600 另需 gflags/nlohmann-json；legacy 的内存配置与依赖见其运行指南。模型下载/解压预留约 6 GB。仅运行预编译模型不需要量化工具链。
 
+<a id="quickstart"></a>
 ## S600 快速开始
 
 获取并解压 OpenExplorer LLM 2.0.0-beta1，包括其中的 `oellm_runtime` 目录。在 S600 上安装构建依赖：
@@ -48,6 +52,7 @@ bash run.sh -- --prompt="What is the capital of France? Answer with the city nam
 
 下载和解压需要至少 6 GB 可用空间。SDK 单独获取，模型下载包不包含 SDK 库和头文件。详见[模型下载](model/README_cn.md)与[运行参数](runtime/cpp/README_cn.md)。
 
+<a id="expected-results"></a>
 ## 转换与评估
 
 [转换说明](conversion/README_cn.md)介绍外部 MiniCPM5 适配代码及固定版本的 SDK 环境。不要修改 SDK 的 `deps_version.conf`。[评估说明](evaluator/README_cn.md)记录数据准备、完整 PPL 统计及测量条件。
@@ -64,6 +69,32 @@ bash run.sh -- --prompt="What is the capital of France? Answer with the city nam
 
 原始浮点模型对一条中文 `1+1` 提示词回答错误，并在要求裸 JSON 时添加 Markdown 围栏。量化模型保留了这些表现，本示例不承诺严格 JSON 格式或普遍的事实正确性。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/     主机适配代码与量化、编译说明
+evaluator/      S600 PPL 评估与测评证据
+evaluator/legacy/ S100/S100P 全量 PPL 与生成验证
+model/          模型下载及校验
+runtime/cpp/    S600 的 CMake 工程和 run.sh
+runtime/legacy/ S100/S100P 的 CMake 工程和 run.sh
+test_data/      生成提示词与实际参考结果
+```
+
+<a id="entry-points"></a>
+## 入口与下一步
+
+| 任务 | 指南 |
+| --- | --- |
+| 模型准备与哈希 | [model](model/README_cn.md) |
+| 启动器参数与无板预览 | [runtime](runtime/README_cn.md) |
+| S600 C++ | [cpp](runtime/cpp/README_cn.md) |
+| S100 / S100P C++ | [legacy](runtime/legacy/README_cn.md) |
+| 转换配方 | [conversion](conversion/README_cn.md) |
+| 评估与历史证据 | [evaluator](evaluator/README_cn.md) |
+| 提示词与参考输出 | [test_data](test_data/README_cn.md) |
+<a id="license"></a>
 ## 许可与来源
 
 原始模型：[OpenBMB/MiniCPM5-2B](https://huggingface.co/openbmb/MiniCPM5-2B)，版本 `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`，采用 Apache-2.0。模型包包含 LICENSE 和量化、元数据修改说明。示例代码遵循仓库许可，OpenExplorer/OELLM 使用其独立 SDK 条款。
