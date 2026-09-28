@@ -49,3 +49,13 @@ Make adoption exception-safe with transactional bookkeeping and single ownership
 throughout failure. Cover input/output failure positions, subsequent adoption,
 normal cleanup and borrowed-KV behavior. Assigned sequentially to the same
 Claude session after R1; no competing writer was started on Gemma.
+
+## R1/R2 independent correction check — 2026-09-28
+
+The two **specific findings are corrected** in the current candidate, as recorded in `evidence/2026-09-28-gemma-text-tensor-independent-review/r1-r2-independent-recheck.json`; this is not acceptance of the complete tensor package or H7. Reviewer made no implementation changes.
+
+- R1: recompiling the original zero-dimension reproducer with ASan/UBSan now returns 0 with an explicit nonpositive-dimension rejection, no sanitizer diagnostic. Inspection confirms rejection before flattening arithmetic and a second defensive nonpositive check before division.
+- R2: the original allocation-failure reproducer now returns 0 and records exactly one release on both input and output paths. Inspection confirms a temporary RAII owner, capacity rollback after tensor-vector failure and transfer only after both pushes. The permanent adoption test also checks second-allocation failure, subsequent successful adoption/capacity lookup, and repeated clear; existing ownership tests retain borrowed-buffer behavior.
+- Fresh whole Gemma host suite: **29 tests pass**. This includes compiled production-source contract/flow and ownership tests against SDK fixtures. No real model, SDK or board was used.
+
+The entire product candidate remains uncommitted pending the remaining tensor/package review; full TextEngine session-stage reorganization and final H7 acceptance are still open. The prior reproduced failures and their original hashes are retained above and in the original evidence.
