@@ -37,7 +37,7 @@ python3 samples/vision/edgenext/runtime/python/main.py \
   --target x5 \
   --asset-id x5:edgenext:EdgeNeXt_base_224x224_nv12.bin \
   --model-path samples/vision/edgenext/model/EdgeNeXt_base_224x224_nv12.bin \
-  --test-img samples/vision/edgenext/test_data/bittern.JPEG \
+  --test-img samples/vision/edgenext/test_data/Zebra.jpg \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```

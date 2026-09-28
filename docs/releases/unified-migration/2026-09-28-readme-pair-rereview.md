@@ -69,3 +69,21 @@ branch's `(raw_xy + anchor) * stride`. State the correct DFL formula and the
 visibility/geometry steps instead of preserving an incomplete source description.
 The published binding fixes `nkpt=17`, so avoid implying other counts are accepted
 by changing the shape alone. This is static documentation correction only.
+
+## Final scoped disposition — accepted
+
+Claude's third revision was independently inspected after its process exited.
+DOC-R1/R2/R3 and R3-A/B/C/D are now accepted for this documentation package.
+Pose uses the correct 51 channels and one class, the preserved image has an
+adjacent correction caption, the DFL/YOLO26 coordinate formulas and visibility
+activation agree with code, axes and NMS scope are explicit, and source pins are
+separate. Bilingual shell blocks and local links/images were independently
+rechecked. All original Ultralytics shell recipe blocks are unchanged against
+committed HEAD. Final checker: 3 samples, 0 violations, 4 deliberate skips,
+0 exemptions, rc 0. See final-checker.json and accepted-snapshot.json in this
+report's evidence directory. Earlier findings and snapshots remain historical.
+
+This closes these bounded documentation findings, not full H1/H2/H9 or whole
+sample/code acceptance. No recipe was executed and no new board claim is made.
+The concurrent MiniCPM manifest failure is tracked in its separate review; this
+README check does not certify that manifest.

@@ -78,3 +78,7 @@ arbitrary shell or prove every command can run.
 DOC-R1, DOC-R2 and DOC-R3 remain open for the next Claude documentation package, after
 its active MiniCPM package. Do not interrupt or expand the live implementation
 package. H1/H9 remain open; this report does not change batch acceptance states.
+
+## Closure follow-up
+
+DOC-R1/R2/R3 are accepted after Claude implementation and independent revisions; see [the final scoped disposition](2026-09-28-readme-pair-rereview.md). The open statuses above describe the original review. Whole H1/H9 remain open.

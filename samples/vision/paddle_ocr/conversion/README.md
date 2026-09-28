@@ -194,7 +194,7 @@ output):
 hrt_model_exec model_info --model_file \
   model_output/en_PP-OCRv3_det_infer-deploy_640x640_nv12.bin
 hrt_model_exec model_info --model_file \
-  model_output/en_PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
+  model_output/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
 ```
 
 Compare tensor names, shapes, dtypes, and output names with the selected
