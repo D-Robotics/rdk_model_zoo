@@ -147,3 +147,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer 原生 S100 SDK 适配器已按三模型物理名称／形状／类型／字节步长绑定，复用共用资源管理；首次集成暴露共享调用只接受一／两输入，已提取通用多输入调用并保留原图像约束。三项原生测试和双语构建/API 示例通过；真实 SDK 配置因本机缺依赖明确拒绝。见[SDK 记录](../../releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md)。具体身份/制品预检、清单/CLI、转换评测及全部剩余迁移继续，B10/H0–H9 未关闭。
 
 2026-09-28：Paraformer 原生生产预检工厂已校验完整三模型组、实际本机身份及固定词表，任何阶段文件错误先于 SDK 加载拒绝；四项原生测试、双语实际构建/API 编译及真实本机身份拒绝检查通过。见[预检记录](../../releases/unified-migration/2026-09-28-b10-paraformer-preflight-review.md)。原生清单/CLI、转换评测及其余 H0–H9 工作继续；真实 SDK/板端未验证，整体验收不提前关闭。
+
+2026-09-28：Paraformer 原生准备清单/NPY 读取库已接入真实 Python 前端产物，按同一字节缓冲区核验摘要；32 组实际 NumPy/异常用例和五项原生测试通过，两份真实音频特征数组与 Python 逐字节一致。双语三组 shell 命令与两个完整 API 示例已执行/编译，见[读取器记录](../../releases/unified-migration/2026-09-28-b10-paraformer-feature-io-review.md)。完整原生 CLI/结果留证、转换评测及其余 H0–H9 工作继续，未做 SDK/板端验证，整体目标保持开放。

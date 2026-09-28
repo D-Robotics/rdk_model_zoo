@@ -3,9 +3,8 @@
 [简体中文](README_cn.md) · [Sample overview](../../README.md)
 
 This directory currently provides the native CPU CIF/text kernels and three-model
-application composition plus a separate S100 UCP SDK adapter. The prepared-manifest
-reader and complete native executable
-are still being migrated. The tests below are host checks, not
+application composition plus a separate S100 UCP SDK adapter. The prepared-manifest/NPY reader is available as an optional host library;
+the complete native executable is still being migrated. The tests below are host checks, not
 HBM inference. The source Python frontend → C++ inference capability remains in
 scope; no alternate approximation of FunASR is introduced here.
 
@@ -42,6 +41,7 @@ static `paraformer_contract` library; test executables are not an inference CLI.
 | --- | --- | --- |
 | `PARAFORMER_BUILD_TESTS` | `OFF` | Build/register four host tests |
 | `PARAFORMER_SANITIZERS` | `OFF` | Enable ASan/UBSan on Clang/GNU and propagate link flags |
+| `PARAFORMER_BUILD_IO` | `OFF` | Build prepared-manifest/NPY library using nlohmann JSON; add its host test when tests are enabled |
 | `PARAFORMER_BUILD_SDK` | `OFF` | Build `paraformer_sdk` using actual vendor headers/libraries |
 | `CMAKE_BUILD_TYPE` | CMake default | Documentation checks use `Release` |
 
@@ -130,7 +130,7 @@ Expected output is `2 3 8`. This is a complete synthetic numerical example,
 not a recognized transcript. [test_pipeline.cc](tests/test_pipeline.cc) also gives
 an executable callback-composition example with explicit synthetic model outputs.
 The default two WAVs can already be converted to features through the Python
-`--preprocess-only` command; consuming that prepared manifest in C++ is pending.
+`--preprocess-only` command; the optional feature I/O library below reads that prepared manifest in C++.
 
 <a id="troubleshooting"></a>
 ## Verification and limits
@@ -167,7 +167,7 @@ SDK, so a real SDK configuration was checked to fail, not recorded as a build pa
 Construct `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)` separately
 for each stage. The callback is mandatory and runs before any SDK call; it must
 reject wrong local board identity and a mismatched stage/publication/model digest.
-A no-op callback is suitable only for the isolated host test. Use the concrete `make_preflight` factory below. A complete manifest/CLI entry is
+A no-op callback is suitable only for the isolated host test. Use the concrete `make_preflight` factory below. A complete CLI entry is
 still pending; this API alone is not a deployable command. Each artifact must contain
 exactly one named model. The runner binds physical names independently of order:
 
@@ -262,3 +262,75 @@ preflight does not lock files against concurrent replacement.
 checker used in host tests; customer deployment code should use `make_preflight`
 to obtain actual identity rather than supplying a fabricated identity. No bypass
 switch or implicit S100P fallback is provided. See [preflight evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-preflight-review.md).
+
+<a id="prepared-features"></a>
+## Read Python-prepared features
+
+`paraformer_feature_io` reads the actual `prepared-manifest.json` and `.npy`
+files produced by the [Python `--preprocess-only` flow](../python/README.md).
+It does not recompute or approximate FunASR features, resample audio, load models
+or modify the original manifest. Install/provide the nlohmann JSON header library
+first (3.11.3 verified); NumPy is needed for feature generation, not by this C++
+reader. No dependency is installed by CMake. For a nonstandard header location,
+set `CMAKE_PREFIX_PATH` or `-DPARAFORMER_JSON_INCLUDE=/path/to/include`.
+
+Build from repository root in a separate directory:
+
+```bash
+cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-io -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_IO=ON -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
+cmake --build /tmp/rdk-paraformer-io -j 2
+ctest --test-dir /tmp/rdk-paraformer-io --output-on-failure
+```
+
+Five tests should pass, including reading the two persisted real frontend feature
+files. `feature_probe` is a host verification tool, not an inference executable.
+A complete feature reader embedding function is:
+
+```cpp
+#include "feature_io.h"
+std::vector<float> first_features(const std::string &manifest) {
+    const auto items = paraformer::load_prepared_manifest(manifest, 1);
+    return paraformer::load_features(items.front());
+}
+```
+
+Link `paraformer_feature_io` in your CMake application. For full inference pass the
+selected item's `valid_frames` alongside its loaded values to `Pipeline::predict`;
+never substitute 400 for a short utterance. The example returns only values to
+illustrate reading and does not execute a model.
+
+`load_prepared_manifest(path, max_utts=0)` returns `FeatureItem` records. Zero means
+all records; a positive value selects the first N. The entire manifest is checked
+structurally before prefix selection. Only selected feature files need exist when
+loaded. `feature_file` resolves relative to the manifest directory (absolute paths
+are also accepted), independently of later cwd changes. Records require:
+
+| Field | Contract |
+| --- | --- |
+| `utt_id` | Unique nonempty filename stem; no slash, backslash, NUL, dot/dot-dot or surrounding ASCII whitespace |
+| `feat_length` | Integer 1–400; no missing-length fallback |
+| `original_frames` | Positive integer, at most the C++ signed-int limit |
+| `truncated` | Boolean equal to `original_frames > 400` |
+| `feature_file` | Nonempty path to a regular NPY file |
+| `feature_sha256` | 64 hex digits; must match bytes read, case-insensitive |
+| `text` | Optional reference string, not recognized output |
+
+`feat_length` must equal `min(original_frames, 400)`. Unknown annotation fields are
+preserved in `original_record_json`, a semantic JSON serialization (not the
+original whitespace). `reference_text` is an optional string. FeatureItem also
+provides the resolved path, normalized digest and explicit frame/truncation fields.
+A user-supplied file digest identifies bytes; it does not prove frontend provenance.
+
+`load_features(item)` hashes the same owned bytes it parses and returns a compact
+float vector of 224,000 elements. Supported inputs are NPY versions 1.0/2.0/3.0,
+C-order shape `[1,400,560]`, explicit little/big-endian float32 (`<f4`/`>f4`); endian
+conversion preserves values. All values, including padded rows, must be finite.
+The header is parsed as data with arbitrary key order and either quote style;
+Python expressions are never evaluated. Header length is capped at 64 KiB.
+Fortran order, other types/shapes/versions, duplicate/unknown header keys, trailing
+syntax or data, truncated payloads, malformed metadata and changed bytes fail
+with exceptions. The reading API returns no partial success for a failed file.
+
+[Feature-reader evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-feature-io-review.md)
+records byte equality for real frontend arrays and format/error cases. SDK/board
+execution and complete native CLI/results remain outside these host checks.

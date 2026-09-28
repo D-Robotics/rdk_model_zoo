@@ -1,0 +1,52 @@
+[
+  {
+    "command": "cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-core -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON\ncmake --build /tmp/rdk-paraformer-core -j 2\nctest --test-dir /tmp/rdk-paraformer-core --output-on-failure\n",
+    "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+    "returncode": 0,
+    "CMAKE_PREFIX_PATH": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/asr-json"
+  },
+  {
+    "command": "cat > /tmp/rdk-paraformer-core/example.cc <<'CPP'\n#include \"contract.h\"\n#include <iostream>\nint main() {\n    std::vector<float> weights(401, 0.f), hidden(401 * 512, 0.f);\n    weights[0] = .75f; weights[1] = .75f; weights[2] = .5f;\n    for (int h = 0; h < 512; ++h) {\n        hidden[h] = 2.f; hidden[512+h] = 6.f; hidden[1024+h] = 10.f;\n    }\n    const auto result = paraformer::cif(weights, hidden, 3);\n    std::cout << result.token_count << \" \" << result.acoustic[0] << \" \"\n              << result.acoustic[512] << \"\\n\";\n}\nCPP\nc++ -std=c++17 -fsanitize=address,undefined -Isamples/speech/paraformer/runtime/cpp/inc /tmp/rdk-paraformer-core/example.cc /tmp/rdk-paraformer-core/libparaformer_contract.a -o /tmp/rdk-paraformer-core/example\n/tmp/rdk-paraformer-core/example\n",
+    "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+    "returncode": 0,
+    "CMAKE_PREFIX_PATH": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/asr-json"
+  },
+  {
+    "command": "cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-io -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_IO=ON -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON\ncmake --build /tmp/rdk-paraformer-io -j 2\nctest --test-dir /tmp/rdk-paraformer-io --output-on-failure\n",
+    "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+    "returncode": 0,
+    "CMAKE_PREFIX_PATH": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/asr-json"
+  },
+  {
+    "argv": [
+      "c++",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-I/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/paraformer/runtime/cpp/inc",
+      "-I/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/_shared/cpp",
+      "-c",
+      "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/paraformer-io-doc-hcwsm5nr/example-0.cc",
+      "-o",
+      "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/paraformer-io-doc-hcwsm5nr/example-0.o"
+    ],
+    "returncode": 0
+  },
+  {
+    "argv": [
+      "c++",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-I/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/paraformer/runtime/cpp/inc",
+      "-I/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/_shared/cpp",
+      "-c",
+      "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/paraformer-io-doc-hcwsm5nr/example-1.cc",
+      "-o",
+      "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/paraformer-io-doc-hcwsm5nr/example-1.o"
+    ],
+    "returncode": 0
+  }
+]

@@ -3,7 +3,8 @@
 [English](README.md) · [Sample 概览](../../README_cn.md)
 
 当前目录提供原生 CPU CIF／文本解码、三模型应用编排和单独的 S100 UCP SDK 适配器。
-准备清单读取和完整原生可执行入口仍在迁移，具体身份／制品预检工厂已提供。以下测试是主机检查，不是 HBM 推理。
+准备清单／NPY 读取已作为可选主机库提供；完整原生可执行入口仍在迁移，
+具体身份／制品预检工厂已提供。以下测试是主机检查，不是 HBM 推理。
 源 Python 前端 → C++ 推理能力仍在迁移范围内，此处不以其他算法近似替换 FunASR。
 
 <a id="environment"></a>
@@ -38,6 +39,7 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 | --- | --- | --- |
 | `PARAFORMER_BUILD_TESTS` | `OFF` | 构建并注册四个主机测试 |
 | `PARAFORMER_SANITIZERS` | `OFF` | 在 Clang/GNU 下启用 ASan/UBSan 并传播链接选项 |
+| `PARAFORMER_BUILD_IO` | `OFF` | 使用 nlohmann JSON 构建准备清单／NPY 库；开启测试时增加对应主机检查 |
 | `PARAFORMER_BUILD_SDK` | `OFF` | 使用真实厂商头文件／库构建 `paraformer_sdk` |
 | `CMAKE_BUILD_TYPE` | CMake 默认 | 文档检查使用 `Release` |
 
@@ -114,7 +116,7 @@ c++ -std=c++17 -fsanitize=address,undefined -Isamples/speech/paraformer/runtime/
 
 预期输出为 `2 3 8`，这是完整合成数值示例，不是识别文本。
 [test_pipeline.cc](tests/test_pipeline.cc) 另提供明确使用合成模型输出的可执行编排示例。
-Python `--preprocess-only` 已能生成内置音频特征，C++ 消费该准备清单的能力尚待接入。
+Python `--preprocess-only` 已能生成内置音频特征，下文可选 I/O 库可直接读取准备清单。
 
 <a id="troubleshooting"></a>
 ## 验证与限制
@@ -146,7 +148,7 @@ CLI、OE 与 CER 均按实际状态保持未执行或待完成。
 每个阶段单独构造 `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)`。
 回调必填，先于所有 SDK 调用执行，必须拒绝本机身份以及阶段／发布制品／模型摘要
 不匹配。空操作回调仅适合隔离的主机测试。请使用下文的具体 `make_preflight` 工厂；
-完整清单／CLI 入口仍待接入，此 API 本身不是可部署命令。每份制品必须只包含一个有名称的模型；绑定按名称进行，
+完整 CLI 入口仍待接入，此 API 本身不是可部署命令。每份制品必须只包含一个有名称的模型；绑定按名称进行，
 不依赖张量顺序：
 
 | 阶段 | 输入角色 → 物理名称 | 输出角色 → 物理名称 |
@@ -223,3 +225,66 @@ std::vector<float> encode_features(const paraformer::ModelGroup &models,
 `verify_group(group, vocabulary, actual)` 是主机测试使用的显式身份底层检查器；
 客户部署应使用 `make_preflight` 读取实际身份，不应填写虚构身份。没有绕过开关或
 隐式 S100P 回退。详见[预检证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-preflight-review.md)。
+
+<a id="prepared-features"></a>
+## 读取 Python 准备的特征
+
+`paraformer_feature_io` 直接读取 [Python `--preprocess-only` 流程](../python/README_cn.md)
+生成的 `prepared-manifest.json` 和 `.npy`。它不重新计算或近似替代 FunASR、不重采样音频、
+不加载模型，也不改写原始清单。先安装或提供 nlohmann JSON 头文件库（已验证 3.11.3）；
+NumPy 是生成特征的依赖，不是此 C++ 读取库的依赖。CMake 不自动安装依赖。
+非标准路径使用 `CMAKE_PREFIX_PATH` 或 `-DPARAFORMER_JSON_INCLUDE=/path/to/include`。
+
+在仓库根目录使用独立构建目录：
+
+```bash
+cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-io -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_IO=ON -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
+cmake --build /tmp/rdk-paraformer-io -j 2
+ctest --test-dir /tmp/rdk-paraformer-io --output-on-failure
+```
+
+应有五项测试通过，包括读取两份已持久化的真实前端特征。`feature_probe` 是主机验证
+工具，不是推理可执行程序。以下是完整的特征读取嵌入函数：
+
+```cpp
+#include "feature_io.h"
+std::vector<float> first_features(const std::string &manifest) {
+    const auto items = paraformer::load_prepared_manifest(manifest, 1);
+    return paraformer::load_features(items.front());
+}
+```
+
+CMake 应用链接 `paraformer_feature_io`。实际推理应将所选记录的 `valid_frames`
+与读取值一起交给 `Pipeline::predict`，不能把短语音的有效帧数替换为 400。
+此示例只返回数组以演示读取，不执行模型。
+
+`load_prepared_manifest(path, max_utts=0)` 返回 `FeatureItem`；0 表示全部，正数取前 N 条。
+先对整个清单做结构校验，再选择前缀；仅所选特征在加载时要求文件存在。
+`feature_file` 相对清单所在目录解析，也接受绝对路径，之后修改 cwd 不影响已解析路径。
+各字段要求：
+
+| 字段 | 契约 |
+| --- | --- |
+| `utt_id` | 唯一非空文件名主体；不能含斜杠、反斜杠、NUL、点／双点或首尾 ASCII 空白 |
+| `feat_length` | 1–400 的整数；不对缺失长度做默认回退 |
+| `original_frames` | 正整数，不超过 C++ 有符号 int 上限 |
+| `truncated` | 布尔值，等于 `original_frames > 400` |
+| `feature_file` | 指向普通 NPY 文件的非空路径 |
+| `feature_sha256` | 64 位十六进制摘要，大小写均接受，必须匹配实际读取字节 |
+| `text` | 可选参考文本字符串，不是识别输出 |
+
+`feat_length` 必须等于 `min(original_frames, 400)`。未知注释字段通过
+`original_record_json` 保留语义 JSON 序列化，不保留原空白排版；`reference_text`
+为可选字符串。FeatureItem 另提供解析后的路径、规范化摘要和帧数／截断字段。
+用户提供的文件摘要只标识字节，不证明其前端来源。
+
+`load_features(item)` 对同一份自有字节计算摘要并解析，返回包含 224,000 元素的紧凑
+浮点数组。支持 NPY 1.0／2.0／3.0、C 顺序、`[1,400,560]` 形状和显式小／大端 float32
+（`<f4`／`>f4`），转换字节序时保留数值。包括 padding 在内的所有值必须有限。
+头部仅按数据解析，键顺序任意、单双引号均支持，不执行 Python 表达式；头部长度上限
+64 KiB。Fortran 顺序、其他类型／形状／版本、重复／未知头部键、尾随语法或数据、
+不完整数据体、非法元数据和内容变化都会抛异常；失败文件不会返回部分成功结果。
+
+[读取器证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-feature-io-review.md)
+记录真实前端数组的字节一致性和格式／错误用例。SDK／板端执行、完整原生 CLI 及
+结果报告不属于这些主机检查。
