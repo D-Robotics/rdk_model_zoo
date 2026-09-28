@@ -7,7 +7,7 @@ Evaluate a compiled model using the same task implementations as [the Python run
 <a id="dataset"></a>
 ## Prepare the dataset
 
-Use a matching validation split and preserve the original class order. Dataset acquisition and preparation are documented in [X5 COCO](../../../../platforms/x5/datasets/coco/README.md), [S COCO](../../../../platforms/s/datasets/coco/README.md), [X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README.md) and [S ImageNet](../../../../platforms/s/datasets/imagenet/README.md). Obtain datasets under their own licenses; they are not included in this checkout.
+Use a matching validation split and preserve the original class order. Dataset acquisition and preparation are documented in the unified [COCO](../../../../datasets/coco/README.md) and [ImageNet](../../../../datasets/imagenet/README.md) guides; the archived [X5 COCO](../../../../platforms/x5/datasets/coco/README.md), [S COCO](../../../../platforms/s/datasets/coco/README.md), [X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README.md) and [S ImageNet](../../../../platforms/s/datasets/imagenet/README.md) snapshots remain as provenance. Obtain datasets under their own licenses; they are not included in this checkout.
 
 The commands below assume this local layout; replace `/data` and `/models` with your prepared paths:
 

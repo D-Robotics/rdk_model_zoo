@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集与类别映射
 
-使用独立验证集，格式为包含 `images`、`categories`、`annotations` 的 COCO 实例标注。图片需要整数 `id`、相对路径 `file_name`、`width`、`height`；类别需要整数 `id` 和 `name`。框/掩码计分需要有效的实例框、分割标注、面积和 crowd 标记。只导出预测时，可以提供 annotations 为空的图片/类别清单。数据准备参考 [X5 COCO](../../../../platforms/x5/datasets/coco/README.md) 与 [S COCO](../../../../platforms/s/datasets/coco/README.md)，数据集不随本仓库提供。
+使用独立验证集，格式为包含 `images`、`categories`、`annotations` 的 COCO 实例标注。图片需要整数 `id`、相对路径 `file_name`、`width`、`height`；类别需要整数 `id` 和 `name`。框/掩码计分需要有效的实例框、分割标注、面积和 crowd 标记。只导出预测时，可以提供 annotations 为空的图片/类别清单。数据准备参考统一的 [COCO](../../../../datasets/coco/README_cn.md) 指南，X5/S 平台快照（[X5 COCO](../../../../platforms/x5/datasets/coco/README.md)、[S COCO](../../../../platforms/s/datasets/coco/README.md)）保留作溯源；数据集不随本仓库提供。
 
 PF 类别 ID **不是 COCO category ID**。必须提供经过检查的映射，以固定 [4585 类词表](../test_data/classes.names)为依据，同时核对源/目标名称。[mapping.example.json](mapping.example.json) 演示 person（PF 2163 → COCO 1）和 chair（PF 821 → COCO 62）；它只有两个类别，**不是完整 COCO-80 映射**。请按自己的标注类别扩展或替换：
 

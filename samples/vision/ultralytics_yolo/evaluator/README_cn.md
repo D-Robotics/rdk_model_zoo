@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集准备
 
-准备与模型类别顺序一致的验证集。获取和整理方法见[X5 COCO（英文）](../../../../platforms/x5/datasets/coco/README.md)、[S COCO（英文）](../../../../platforms/s/datasets/coco/README.md)、[X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README_cn.md)、[S ImageNet](../../../../platforms/s/datasets/imagenet/README_cn.md)。数据集不随仓库分发，使用时遵守各自许可。
+准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；X5/S 平台快照保留作溯源（[X5 COCO](../../../../platforms/x5/datasets/coco/README.md)、[S COCO](../../../../platforms/s/datasets/coco/README.md)、[X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README_cn.md)、[S ImageNet](../../../../platforms/s/datasets/imagenet/README_cn.md)）。数据集不随仓库分发，使用时遵守各自许可。
 
 以下示例约定本地目录如下；请将`/data`、`/models`替换为实际准备路径：
 

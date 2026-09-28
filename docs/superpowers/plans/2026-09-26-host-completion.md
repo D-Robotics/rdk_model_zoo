@@ -296,3 +296,5 @@ KWS-N1 also closed. H1/H2/H3/H6/H9 broader work is not implicitly closed.
 Fresh 109 runtime/host tests pass (ASR 27, KWS 13, Paraformer 46, HIMLoco 23); 54 README inventory/local-link checks and four zero-violation sample checkers recorded in `2026-09-28-b10-batch-independent-review.md`. H6 remains open for B10-DOC-R1 (Paraformer test-data native-consumer status) and independent reread of the Claude Code + GLM correction. No real recipe, quantization, board or robot run was performed.
 
 2026-09-28：Gemma Text 张量包经 Codex 独立复核接受；R1 零维除零与 R2 接管失败泄漏原反例均通过，29 项主机测试及 15 项 ASan/UBSan CTest 通过，代码哈希复核无漂移，双语 README 15/3 测试计数已校正。见 `2026-09-28-gemma-text-tensor-independent-review.md`。后续由 Claude Code + GLM 完成 Text 会话/前处理/原始推理/后处理职责拆分，H7 未关闭；不做真实量化或板测。
+
+2026-09-28：共享 datasets 双语索引/五类资源指南与 YOLO/YOLOE evaluator 导航共 16 份 README，经 Codex 独立审阅和 R1/R2/R3 整改后接受；11 份资源与 X5 固定源逐字节一致，evaluator 命令不变，链接/锚点/中英命令和检查器通过。见 `2026-09-28-datasets-independent-review.md`。H8 仍待目录历史 pin 等其余项；无下载、量化或板测。

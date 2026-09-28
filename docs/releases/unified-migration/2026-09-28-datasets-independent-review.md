@@ -19,3 +19,13 @@ Both COCO guides suggest invoking `bash download_full_coco.sh` from `datasets/co
 ## Evidence and closure
 
 `evidence/2026-09-28-datasets-independent-review/findings.json` records reviewed document hashes, DOTA ordering counterexample, exact ignore results and the official source. These checks do not run download or quantization recipes. Closure requires corrected bilingual documents and author claims, independent reread of the changed semantics, language-link and command/anchor checks. No broad H8 acceptance follows from this bounded review.
+
+## Rereview follow-up
+
+R1 DOTA identity and R3 language/display-label distinction are corrected in both languages. R2 now correctly states the nested COCO output is not ignored and recommends out-of-checkout acquisition. One command detail remains: the optional `echo ... >> .git/info/exclude` is relative to cwd and assumes `.git` is a directory, whereas the guide previously selects `datasets/coco` and managed worktrees have a `.git` file. Use `git rev-parse --git-path info/exclude` to resolve the real local exclude file from the checkout, or omit the optional command and retain the recommended out-of-checkout path. A read-only query from `datasets/coco` in this actual worktree resolves the primary repository `.git/info/exclude`; no exclusion was modified. Two-file follow-up assigned to Claude Code + GLM before acceptance.
+
+## Final independent disposition
+
+**DATASET-R1/R2/R3 closed; bounded shared dataset README package accepted.** The final COCO inline example uses the Git-resolved exclude path in both languages; it was inspected without changing ignore files or downloading data. Semantic reread confirms native DOTA category names versus conversion-owned IDs, local 15-class ordering distinction, runtime display labels versus evaluator synset ground truth, fixed PF vocabulary, actual download cwd/output behavior and source provenance.
+
+Fresh static checks (`final-checks.json`) cover all 16 README local links/explicit anchors, six bilingual structures, executable dataset-guide command parity, and the affected YOLO/YOLOE sample checkers (zero violations; pre-existing 2/1 policy skips). `resource-and-command-check.json` proves all 11 non-README dataset resources remain byte-identical to X5 pin ac11571 and all evaluator fenced commands are unchanged (7 blocks per Ultralytics language, 4 per YOLOE language). No code/scripts/labels/images/manifest assets were changed. No actual acquisition, inference, board or quantization recipe was run. This closes the dataset-doc sub-item, not all H8.
