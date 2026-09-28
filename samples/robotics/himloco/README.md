@@ -13,9 +13,9 @@ are not interchangeable. The migration source is X5 commit
 `ac115717197920355fc390bb04299b20e6436864`.
 
 The unified Python SDK entry, explicit model preparation and offline inputs are
-implemented. Native C++, evaluator and conversion-document migration are still in
-progress. Quantization instructions will be inherited from the existing source
-scheme; no recipe rerun is required for this documentation work. This is not yet
+implemented. Source conversion/evaluation tools and bilingual guides are now in
+the unified directory; native C++ migration remains in progress. Quantization
+instructions are inherited from the existing source scheme; no recipe rerun is required for this documentation work. This is not yet
 whole-sample independent acceptance.
 
 Input: `obs_history`, float32 `[1,270]`, current frame first. Output: `actions`,
@@ -88,7 +88,7 @@ The compiler estimate was 0.063 ms. These are inherited source values, not this
 migration's results. Timing scopes differ; the new Python task measures its bound
 runner including adapter validation/copy and must not be compared as device-only
 latency. Full source percentiles and evaluation semantics remain in the
-[source evaluator guide](../../../platforms/x5/samples/robotics/himloco/evaluator/README.md).
+[evaluator guide](evaluator/README.md).
 Offline action agreement does not establish observation construction, joint
 mapping, control-loop behavior or closed-loop stability.
 
@@ -99,7 +99,9 @@ mapping, control-loop behavior or closed-loop stability.
 - `runtime/python/`: CLI/application, input provenance, binding/shared runner and pure policy stages.
 - `test_data/`: 21 unchanged observation files and their source manifest.
 - `tests/`: core, metadata and CLI checks with explicit model/SDK fixtures.
-- Native, conversion and evaluator directories: migration pending; source content retained.
+- `conversion/`: source fused export, calibration and Mapper recipe with bilingual guides.
+- `evaluator/`: format/action comparisons, input preparation and historical measurements.
+- Native C++: migration pending; source content retained.
 
 <a id="entry-points"></a>
 ## Entry points
@@ -108,7 +110,8 @@ mapping, control-loop behavior or closed-loop stability.
 - [Python runtime](runtime/python/README.md): commands, all options, outputs and public API.
 - [Input provenance](test_data/README.md): source indices, byte layout and digest checks.
 - [Source C++ guide](../../../platforms/x5/samples/robotics/himloco/runtime/cpp/README.md): historical native implementation, pending unified migration.
-- [Source conversion guide](../../../platforms/x5/samples/robotics/himloco/conversion/README.md): trusted fused export/calibration/MIX recipe, pending documentation relocation.
+- [Model conversion](conversion/README.md): fused export/calibration/MIX recipe.
+- [Model evaluation](evaluator/README.md): data, commands, metrics and source references.
 
 <a id="license"></a>
 ## License

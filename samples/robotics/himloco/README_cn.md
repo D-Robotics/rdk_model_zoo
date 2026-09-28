@@ -11,8 +11,7 @@ HIMLoco 从六帧 45 维观测估计内部状态，输出 12 维策略动作。�
 独立训练的检查点不能互换。迁移源为 X5 提交
 `ac115717197920355fc390bb04299b20e6436864`。
 
-统一 Python SDK 入口、显式模型准备和离线输入已实现；C++、评测及转换文档迁移仍在
-推进。量化说明继承现有源方案，本次文档工作不要求重新实跑验证，尚未完成整套独立验收。
+统一 Python SDK 入口、显式模型准备、离线输入以及源转换／评测工具和双语说明已迁入；C++ 迁移仍在推进。量化说明继承现有源方案，本次文档工作不要求重新实跑验证，尚未完成整套独立验收。
 
 输入 `obs_history` 为 float32 `[1,270]`，当前帧在前；输出 `actions` 为 float32
 `[1,12]`。不额外归一化、不更新历史、不缩放输出、不发送机器人指令。
@@ -75,7 +74,7 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 
 编译器估计为 0.063 ms。以上均继承源记录，不是本轮实测；计时范围不同，新 Python
 任务计时还包含适配器校验／复制，不能当作纯设备耗时比较。完整源百分位数据与评测
-口径见[源评测说明](../../../platforms/x5/samples/robotics/himloco/evaluator/README.md)。
+口径见[评测说明](evaluator/README_cn.md)。
 离线动作一致不能证明观测构造、关节映射、控制环行为或闭环稳定性。
 
 <a id="directory"></a>
@@ -85,7 +84,9 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 - `runtime/python/`：CLI／应用、输入来源、绑定／共享 runner 与纯策略阶段。
 - `test_data/`：21 个原样观测文件和源清单。
 - `tests/`：核心、元数据和 CLI 检查，明确使用模型／SDK 夹具。
-- 原生、转换及评测目录：仍待迁移，源内容保留。
+- `conversion/`：原融合导出、校准和 Mapper 方案及双语说明。
+- `evaluator/`：浮点格式／动作对照、输入准备与历史测量。
+- 原生 C++：仍待迁移，源内容保留。
 
 <a id="entry-points"></a>
 ## 入口
@@ -94,7 +95,8 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 - [Python 运行](runtime/python/README_cn.md)：命令、全部选项、输出与公开 API。
 - [输入来源](test_data/README_cn.md)：源索引、字节格式与摘要检查。
 - [源 C++ 说明](../../../platforms/x5/samples/robotics/himloco/runtime/cpp/README_cn.md)：历史原生实现，待统一迁移。
-- [源转换说明](../../../platforms/x5/samples/robotics/himloco/conversion/README_cn.md)：可信融合导出／校准／MIX 配方，文档位置待整理。
+- [模型转换](conversion/README_cn.md)：融合导出／校准／MIX 配方。
+- [模型评测](evaluator/README_cn.md)：数据、命令、指标及源参考值。
 
 <a id="license"></a>
 ## 许可
