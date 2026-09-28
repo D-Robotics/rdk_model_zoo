@@ -1,81 +1,114 @@
-# HIMLoco C++ 策略核心
+# HIMLoco C++ 运行
 
 [English](README.md)
 
 <a id="supported-boards"></a>
-## 支持板型与迁移状态
+## 支持板型与验证状态
 
-本目录已实现不依赖 SDK 的策略阶段。原生 SDK 适配器已实现并通过显式替身检查，可执行程序及启动脚本
-仍在迁移，当前尚未提供统一板端推理命令。原实现保留在
-[源 C++ 说明](../../../../../platforms/x5/samples/robotics/himloco/runtime/cpp/README_cn.md)。
-已实现的运行接口见统一 [Python 入口](../python/README_cn.md)。
-主机策略测试不代表 SDK 或板端测试。
+统一入口包含四阶段策略、SDK 适配器、离线 CLI 和构建启动器。保持 X5 源提交
+`ac115717197920355fc390bb04299b20e6436864` 的 float32 输入／输出语义，
+不增加归一化、动作缩放或机器人控制。
 
-| 目标 | 发布制品 | 原生状态 |
+| 目标 | 制品 | 状态 |
 | --- | --- | --- |
-| X5 | Bayes-e 融合 Go2 BIN | 纯阶段主机测试通过；SDK 替身检查通过；CLI 待迁移；板端未运行 |
-| S100／S100P／S600 | 无对应策略制品 | 不支持 |
+| X5 | Bayes-e 融合 Go2 BIN | 核心、SDK 替身及 CLI 主机检查通过；真实 SDK 编译／板测未运行 |
+| S100／S100P／S600 | 无匹配发布制品 | 不支持 |
 
-源为 X5 提交 `ac115717197920355fc390bb04299b20e6436864`。保留源阶段语义：
-270 个有限 float 观测输入、12 个有限 float 动作输出，不增加归一化、激活或动作缩放。
+主机替身检查不代表硬件推理。源历史环境为 RDK OS 3.5.0-beta、DNN Runtime 1.24.5、
+HBRT 3.15.55，历史数据见[评测说明](../../evaluator/README_cn.md)。
 
 <a id="dependencies"></a>
 ## 依赖
 
-纯策略核心仅使用 C++17 和标准库，编译不需要 libdnn、gflags、OpenCV、Python、Torch、
-模型下载或转换工具链。以下主机检查使用本机 Apple Clang 执行，不证明板端 SDK 兼容性。
-源历史板测环境为 RDK OS 3.5.0-beta、DNN Runtime 1.24.5、HBRT 3.15.55。
+- 主机核心：C++17、CMake ≥ 3.18；直接使用 `c++` 编译核心也可以。
+- 原生可执行程序：X5 BSP 的 `dnn/hb_dnn.h`、`dnn/hb_sys.h`、libdnn，以及
+  `nlohmann/json.hpp`（通常由 `nlohmann-json3-dev` 提供）。不需要 gflags 或 OpenCV。
+- Python 启动器：Python、NumPy、PyYAML，用于统一制品选择与板型检查；
+  不加载 Python 推理 SDK。可通过 `PYTHON` 指定解释器。
 
-实际 `sdk_runner.cc` 还需要 X5 BSP 的 `dnn/hb_dnn.h`、`dnn/hb_sys.h` 和 libdnn；
-`model_preflight.cc` 复用仓库 `samples/_shared/cpp/` 的板型识别与 SHA-256。
-主机替身头只用于测试，不得作为生产 SDK 头。
+使用发布模型不需要 Torch 或量化工具链。测试替身头只用于主机检查，不能替代真实 SDK。
 
 <a id="build"></a>
-## 构建主机契约检查
+## 构建
 
-在仓库根目录运行：
+以下命令均在仓库根目录执行。无板卡时，仅构建核心并运行主机检查：
 
 ```bash
-build_dir="$(mktemp -d)"
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -I samples/robotics/himloco/runtime/cpp \
-  samples/robotics/himloco/runtime/cpp/policy.cc \
-  samples/robotics/himloco/runtime/cpp/tests/test_policy.cc \
-  -o "$build_dir/test_policy"
+cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-host \
+  -DHIMLOCO_BUILD_TESTS=ON
+cmake --build /tmp/himloco-host --parallel 2
+ctest --test-dir /tmp/himloco-host --output-on-failure
 ```
 
-生成的是使用显式数值 runner 替身的无 SDK 测试程序，不构建或模拟训练策略及量化模型。
+板端启动器自动执行原生构建。若需要手动构建（X5 或配置好的交叉编译环境）：
+
+```bash
+cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-native \
+  -DHIMLOCO_BUILD_SDK=ON -DHIMLOCO_BUILD_CLI=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/himloco-native --parallel 2
+```
+
+生成 `/tmp/himloco-native/himloco_cpp`。三个 `HIMLOCO_BUILD_*` 开关默认均为 OFF；
+CLI 要求 SDK 开关为 ON。非标准 SDK 路径可通过 `HIMLOCO_DNN_INCLUDE`、
+`HIMLOCO_DNN_LIBRARY`、`HIMLOCO_JSON_INCLUDE` 指定；交叉编译使用 CMake toolchain 文件。
+CMake 不推断板型，运行时独立读取真实板型并检查模型摘要。
 
 <a id="run"></a>
-## 执行主机契约检查
+## 运行
 
-保持同一终端，仍在仓库根目录运行：
+任意主机可以预览，不下载、不创建构建目录、不加载 SDK：
 
 ```bash
-"$build_dir/test_policy" samples/robotics/himloco/test_data/obs_history
+bash samples/robotics/himloco/runtime/cpp/run.sh --help
+bash samples/robotics/himloco/runtime/cpp/run.sh --list-models
+bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 --dry-run
 ```
 
-预期打印四行 `passed` 并退出 0。最后一项读取随仓库提供的 21 条源观测，确认前处理
-逐字节保留 float 数据；其余检查覆盖阶段内存独立、逐次计时、非法输入输出拒绝和
-注入的传输异常传播。整个检查不加载 SDK。
+显式准备发布模型后，在 X5 执行：
+
+```bash
+bash samples/robotics/himloco/model/download_model.sh --target x5
+bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 \
+  --output-dir outputs/himloco_cpp
+```
+
+默认预热 10 次，处理 21 条观测，写入 21 个动作 BIN 和 `report.json`。
+每次使用新输出目录；启动器不隐式下载。单文件、自定义输出与调度示例：
+
+```bash
+bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 \
+  --input-path samples/robotics/himloco/test_data/obs_history/000003.bin \
+  --output-dir outputs/himloco_cpp_single --warmup 0 --priority 7
+```
+
+手工构建后可在仓库根目录直接运行 `/tmp/himloco-native/himloco_cpp`，默认路径同下表。
+显式 `--model-path` 必须同时传入准确的 `--asset-id`，且仍需匹配发布摘要。
 
 <a id="parameters"></a>
-## 参数与数据类型
+## 参数
 
-统一原生 CLI 参数尚未提供。主机测试仅接收一个位置参数：随仓库提供的
-`obs_history` 目录。库接口使用 [policy.hpp](policy.hpp) 中的类型：
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `--target` | 启动器 `auto`；原生 `x5` | 实际推理仅 X5；主机 dry-run 必须明确 x5 |
+| `--asset-id` | 启动器自动选择；原生固定发布 ID | `x5:himloco:himloco_go2_bayese_1x270.bin`；外部路径需显式指定 |
+| `--model-path` | `samples/robotics/himloco/model/bayes-e/himloco_go2_bayese_1x270.bin` | 启动器使用仓库绝对默认路径；直接二进制相对当前目录 |
+| `--input-path` | `samples/robotics/himloco/test_data/obs_history` | 单个数字命名 BIN 或目录；启动器默认绝对路径 |
+| `--output-dir` | `outputs/himloco_cpp` | 相对当前工作目录，必须新建 |
+| `--report` | 输出目录下 `report.json` | 必须新建；可指定外部位置 |
+| `--warmup` | `10` | 首条输入预热，范围 0..1000000 |
+| `--priority` | `-1` | SDK 默认；或 0..255 |
+| `--build-dir` | 本目录下 `build` | 仅启动器，原生构建目录 |
+| `--dry-run` | `false` | 仅启动器，输出选择与构建／执行 argv |
+| `--list-models` | `false` | 仅启动器，列出唯一发布制品 |
+| `--help` | `false` | 显示用法 |
 
-| 类型／字段 | 约定 |
-| --- | --- |
-| `PreparedInput::values` | 独立持有的 270 个有限 float32 值 |
-| `RawOutputs::actions` | 独立持有的 12 个有限 float32 值 |
-| `RawOutputs::latency_ms` | 本次 runner 调用的有限非负耗时 |
-| `InferenceResult` | 独立持有的原样动作和对应耗时 |
-| `Runner` | `std::function<RawOutputs(const std::vector<float>&)>`；必需且非空 |
+`--model_path`、`--input_path`、`--output_dir` 保留为旧参数别名；
+原生解析器接受 `--key value` 和 `--key=value`，拒绝重复及未知参数。
+使用启动器时，自定义相对路径仍相对调用者当前工作目录。
 
-观测按当前 45 维帧在前、前五帧在后的顺序排列。调用者提供与训练一致的历史、裁剪、
-缩放和关节顺序，策略核心不构造或更新历史。布局和来源见
-[输入说明](../../test_data/README_cn.md)。
+输入必须为 1080 字节小端 float32，数值有限，文件名数字部分为源索引，重复索引拒绝。
+若输入目录上一级存在 `runtime-input-manifest.json`，校验物理约定、索引、路径和逐文件摘要；
+无清单的自定义输入可执行，报告明确记录空来源清单。输入约定见[输入说明](../../test_data/README_cn.md)。
 
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
@@ -102,7 +135,7 @@ auto complete = task.predict(observation);
 各阶段容器独立持有 vector，后续调用不会覆盖早先的原始输出或耗时；前处理与后处理
 均不调用 runner。任务不保存可变的逐次推理状态，但线程安全仍取决于 runner，
 不要并发使用同一个原生 SDK runner。SDK 加载、元数据、资源生命周期、输入输出文件、
-报告及板型／模型身份检查由适配器和应用负责，SDK 生命周期、元数据及身份检查已在 `SdkRunner` 中实现；文件／报告／CLI 仍待迁移。
+报告及板型／模型身份检查由适配器和应用负责，SDK 生命周期、元数据及身份检查在 `SdkRunner` 中实现；`cli_io.cc` 和 `application.cc` 负责输入、输出和报告。
 
 ### SDK 适配器
 
@@ -128,7 +161,7 @@ runner 必须比引用它的 task 活得更久，二者不能并发使用同一 
 
 主机 SDK 替身检查覆盖容量、对齐、类型／量化拒绝、分配失败、推理／等待／缓存失败、
 非有限输出和资源回收；生产身份检查另用板型读取替身覆盖拒绝路径。
-真实 SDK 编译与运行仍未执行，CLI 尚待完成。
+真实 SDK 编译与运行仍未执行；原生 CLI 已用独立 runner 替身完成主机端到端检查。
 
 <a id="results-interpretation"></a>
 ## 结果解释
@@ -141,3 +174,14 @@ runner 必须比引用它的 task 活得更久，二者不能并发使用同一 
 这些不是统一 C++ 的新结果。离线数值一致不能证明闭环行为。
 
 代码遵循仓库 [Apache-2.0 许可](../../../../../LICENSE)。
+
+### 输出文件与失败状态
+
+动作文件按源索引命名，例如 `000003.bin`，每个 48 字节（12 个小端 float32）。
+报告记录模型／输入清单摘要、每条输入输出摘要、SDK 元数据、预热完成次数、调度和计时。
+`status: completed` 表示本次全部完成；`failed` 保留错误、当前源索引及已完成记录，
+不声明整批延迟。成功汇总含 min/mean/p50/p95/max，mean 大于零时附顺序 FPS。
+退出码 0 表示完成或帮助，2 表示执行或参数错误；启动器构建失败也返回 2。
+
+文件以独占方式创建，不覆盖已有结果。模型或清单在执行中发生变化会导致失败。
+进程强制中断或文件系统写入失败可能留下 `running` 或不完整报告，不能据此认定成功。

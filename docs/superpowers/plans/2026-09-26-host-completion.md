@@ -187,3 +187,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：HIMLoco C++ 纯四阶段核心迁入，SDK 与文件职责分离，返回值持有数据和逐次耗时；新增原生主机测试先失败后通过，21 条源输入逐字节检查及 ASan/UBSan 通过。16 项 Sample 测试、文档契约零违规；C++ 双语说明及根入口同步。SDK／CLI 及整套独立验收仍待完成，见[原生核心记录](../../releases/unified-migration/2026-09-28-b10-himloco-cpp-core-review.md)。
 
 2026-09-28：HIMLoco 原生 SDK 适配器实现，复用共享板型／SHA 校验、补齐张量容量与 RAII 失败清理；主机替身与生产 preflight 拒绝路径分别测试，ASan/UBSan 和19项 Sample 测试通过，双语 C++/根说明同步。真实 SDK 编译/运行未测；CLI、构建/启动及文件报告继续。见[SDK 记录](../../releases/unified-migration/2026-09-28-b10-himloco-sdk-review.md)。
+
+2026-09-28：HIMLoco 原生 CLI/文件报告/CMake/启动器实现，保留源索引与 float 输出，独占结果写入、清单摘要校验、失败部分报告；启动器复用制品与板型门禁，预览不构建/下载。23 项主机测试、CMake/CTest、迁移门禁通过，完整双语原生/根指南同步。真实 SDK/板端未测，整套质量复核与其余 H0–H9 仍继续，见[原生入口记录](../../releases/unified-migration/2026-09-28-b10-himloco-native-cli-review.md)。

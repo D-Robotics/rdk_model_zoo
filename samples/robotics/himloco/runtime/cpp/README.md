@@ -1,89 +1,124 @@
-# HIMLoco C++ policy core
+# HIMLoco C++ runtime
 
 [中文](README_cn.md)
 
 <a id="supported-boards"></a>
-## Supported boards and migration status
+## Supported boards and verification
 
-The SDK-independent policy stages are implemented here. The native SDK adapter is implemented and checked with explicit host doubles;
-the executable and launcher are still being migrated; this directory does
-not yet provide a board inference command. The original implementation remains
-in the [source C++ guide](../../../../../platforms/x5/samples/robotics/himloco/runtime/cpp/README.md).
-Use the unified [Python entry](../python/README.md) for the implemented runtime
-interface. Do not interpret a host policy test as an SDK or board test.
+The unified entry includes the four-stage policy, SDK adapter, offline CLI and
+build launcher. It retains float32 input/output semantics from X5 commit
+`ac115717197920355fc390bb04299b20e6436864`, without extra normalization,
+action scaling or robot control.
 
-| Target | Published artifact | Native status |
+| Target | Artifact | Status |
 | --- | --- | --- |
-| X5 | Bayes-e fused Go2 BIN | Pure stages host-tested; SDK fixture checks pass; CLI pending; board not-run |
-| S100 / S100P / S600 | None for this policy | Not supported |
+| X5 | Bayes-e fused Go2 BIN | Core, SDK-double and CLI host checks pass; real SDK compilation/board tests not-run |
+| S100 / S100P / S600 | No matching publication | Not supported |
 
-Source: X5 commit `ac115717197920355fc390bb04299b20e6436864`.
-The source stage semantics are retained: exactly 270 finite float observations
-and 12 finite float actions, without normalization, activation or action scaling.
+Host doubles do not establish hardware inference. The source environment was
+RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT 3.15.55; historical measurements
+remain in the [evaluator guide](../../evaluator/README.md).
 
 <a id="dependencies"></a>
 ## Dependencies
 
-The core uses C++17 and the standard library only. No libdnn, gflags, OpenCV,
-Python, Torch, model download or conversion toolchain is needed to compile it.
-Host checks below were run with the installed Apple Clang compiler; they do not
-establish compatibility with a board SDK. The historical source board environment
-was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT 3.15.55.
+- Host core: C++17, CMake ≥ 3.18; direct compilation with `c++` also works.
+- Native executable: X5 BSP `dnn/hb_dnn.h`, `dnn/hb_sys.h`, libdnn and
+  `nlohmann/json.hpp` (usually from `nlohmann-json3-dev`). No gflags or OpenCV.
+- Python launcher: Python, NumPy, PyYAML for unified selection and board checks;
+  no Python inference SDK is loaded. Set `PYTHON` to choose its interpreter.
 
-The actual `sdk_runner.cc` also requires X5 BSP headers `dnn/hb_dnn.h`,
-`dnn/hb_sys.h` and libdnn. `model_preflight.cc` reuses board identity and SHA-256
-from `samples/_shared/cpp/`. Test fixture headers must never replace production SDK headers.
+Published model inference requires neither Torch nor a quantization toolchain.
+Fixture headers are only for host tests and must not replace the vendor SDK.
 
 <a id="build"></a>
-## Build the host contract check
+## Build
 
-Run from repository root:
+Run all commands from repository root. Without a board, build the core and host check:
 
 ```bash
-build_dir="$(mktemp -d)"
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -I samples/robotics/himloco/runtime/cpp \
-  samples/robotics/himloco/runtime/cpp/policy.cc \
-  samples/robotics/himloco/runtime/cpp/tests/test_policy.cc \
-  -o "$build_dir/test_policy"
+cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-host \
+  -DHIMLOCO_BUILD_TESTS=ON
+cmake --build /tmp/himloco-host --parallel 2
+ctest --test-dir /tmp/himloco-host --output-on-failure
 ```
 
-This builds an SDK-free test executable with an explicitly injected numerical
-runner. It does not build or simulate a trained policy or quantized model.
+The launcher builds the native executable automatically on X5. For a manual build
+(on X5 or in a configured cross-compilation environment):
+
+```bash
+cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-native \
+  -DHIMLOCO_BUILD_SDK=ON -DHIMLOCO_BUILD_CLI=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/himloco-native --parallel 2
+```
+
+Output: `/tmp/himloco-native/himloco_cpp`. All three `HIMLOCO_BUILD_*` options
+default to OFF; CLI requires SDK=ON. Set `HIMLOCO_DNN_INCLUDE`,
+`HIMLOCO_DNN_LIBRARY` and `HIMLOCO_JSON_INCLUDE` for nonstandard dependencies;
+use a CMake toolchain file for cross-compilation. CMake does not infer board type.
+Execution independently checks actual board identity and model digest.
 
 <a id="run"></a>
-## Run the host contract check
+## Run
 
-In the same shell, still at repository root:
+Preview on any host without downloads, build directories or SDK loading:
 
 ```bash
-"$build_dir/test_policy" samples/robotics/himloco/test_data/obs_history
+bash samples/robotics/himloco/runtime/cpp/run.sh --help
+bash samples/robotics/himloco/runtime/cpp/run.sh --list-models
+bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 --dry-run
 ```
 
-Expect four `passed` lines and exit 0. The last check reads the 21 bundled source
-observations and verifies that preprocessing preserves every float byte.
-The other checks cover owned stage values, per-call timing, rejected inputs and
-outputs, and propagation of an injected transport error. No SDK is loaded.
+Prepare the publication explicitly, then execute on X5:
+
+```bash
+bash samples/robotics/himloco/model/download_model.sh --target x5
+bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 \
+  --output-dir outputs/himloco_cpp
+```
+
+The default warms up 10 times, processes 21 observations, and writes 21 action
+BINs plus `report.json`. Use a new output directory each time; the launcher never
+downloads implicitly. A single-file run with explicit scheduling:
+
+```bash
+bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 \
+  --input-path samples/robotics/himloco/test_data/obs_history/000003.bin \
+  --output-dir outputs/himloco_cpp_single --warmup 0 --priority 7
+```
+
+After a manual build, `/tmp/himloco-native/himloco_cpp` can run directly from
+repository root using the defaults below. An explicit `--model-path` also requires
+the exact `--asset-id`, and the file must still match the published digest.
 
 <a id="parameters"></a>
-## Parameters and data types
+## Parameters
 
-There are no unified native CLI flags yet. The host test takes exactly one
-positional argument: the bundled `obs_history` directory. The library interface
-uses these types from [policy.hpp](policy.hpp):
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `--target` | Launcher `auto`; native `x5` | X5 only for execution; host dry-run requires explicit x5 |
+| `--asset-id` | Launcher resolves; native fixed publication | `x5:himloco:himloco_go2_bayese_1x270.bin`; explicit for external paths |
+| `--model-path` | `samples/robotics/himloco/model/bayes-e/himloco_go2_bayese_1x270.bin` | Launcher default is absolute; binary default is relative to cwd |
+| `--input-path` | `samples/robotics/himloco/test_data/obs_history` | Numeric BIN or directory; launcher default is absolute |
+| `--output-dir` | `outputs/himloco_cpp` | Relative to cwd; must be new |
+| `--report` | Output directory/`report.json` | Must be new; external location allowed |
+| `--warmup` | `10` | First-input warmup, 0..1000000 |
+| `--priority` | `-1` | SDK default, or 0..255 |
+| `--build-dir` | `build` under this directory | Launcher only, native build location |
+| `--dry-run` | `false` | Launcher only, show selection and build/run argv |
+| `--list-models` | `false` | Launcher only, list the single publication |
+| `--help` | `false` | Show usage |
 
-| Type / field | Contract |
-| --- | --- |
-| `PreparedInput::values` | Owned vector of 270 finite float32 values |
-| `RawOutputs::actions` | Owned vector of 12 finite float32 values |
-| `RawOutputs::latency_ms` | Finite, nonnegative duration for this runner call |
-| `InferenceResult` | Owned unchanged actions and the corresponding duration |
-| `Runner` | `std::function<RawOutputs(const std::vector<float>&)>`; required, nonempty |
+Legacy aliases `--model_path`, `--input_path`, `--output_dir` are retained.
+The binary accepts `--key value` and `--key=value`, rejecting duplicates and
+unknown options. Custom relative paths passed to the launcher use the caller's cwd.
 
-Observations contain the current 45-value frame followed by five previous frames.
-The caller must supply the training-equivalent history, clipping, scaling and
-joint order. The task does not construct or update this history. See the
-[input guide](../../test_data/README.md) for layout and source provenance.
+Input must contain 1080 bytes of finite little-endian float32. Numeric filename
+stems identify source rows; duplicate indices are rejected. When
+`runtime-input-manifest.json` exists above the input directory, its physical
+contract, indices, paths and per-file digests are checked. Custom input without
+a manifest is allowed and reports null manifest provenance. See the
+[input guide](../../test_data/README.md).
 
 <a id="interface-lifecycle"></a>
 ## Interface and resource lifecycle
@@ -115,7 +150,7 @@ runner. The task stores no mutable per-call state. Thread safety still depends
 on the supplied runner; do not invoke a shared native SDK runner concurrently.
 The adapter/application owns SDK loading, metadata, resource lifetime, input/output
 files, reports and target/model identity checks; SDK lifecycle, metadata and identity checks are implemented in `SdkRunner`;
-file/report/CLI migration remains pending.
+`cli_io.cc` and `application.cc` own input/output and reports.
 
 ### SDK adapter
 
@@ -147,7 +182,7 @@ application without writing reports inside inference code.
 Host doubles exercise capacity/alignment, dtype/quantization rejection, allocation,
 infer/wait/cache failures, nonfinite output and cleanup. Production preflight
 rejections are checked separately with a board-identity reader double.
-Real SDK compilation/execution has not run; CLI work remains open.
+Real SDK compilation/execution has not run; the CLI has host end-to-end checks with a separately linked runner double.
 
 <a id="results-interpretation"></a>
 ## Interpreting results
@@ -163,3 +198,18 @@ historical source measurements and their scopes; none is a new unified C++ resul
 Offline numerical agreement alone does not establish closed-loop behavior.
 
 Code follows the repository [Apache-2.0 license](../../../../../LICENSE).
+
+### Output files and failures
+
+Action filenames retain source indices, e.g. `000003.bin`, with 48 bytes each
+(12 little-endian float32 values). Reports include model/manifest digests,
+per-record input/output digests, SDK metadata, completed warmups, scheduling and
+timings. `status: completed` means all records finished; `failed` retains the
+error, current source index and completed records without aggregate latency.
+Successful summaries include min/mean/p50/p95/max and sequential FPS when mean>0.
+Exit 0 means completion/help; 2 means execution/argument error. Launcher build
+failure also returns 2.
+
+Files are exclusively created without replacing prior results. A changed model
+or manifest fails the run. Forced termination or filesystem write failure can
+leave a running or incomplete report; neither establishes success.
