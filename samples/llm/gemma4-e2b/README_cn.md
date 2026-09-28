@@ -75,7 +75,7 @@ Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器�
 
 ```bash
 cd samples/llm/gemma4-e2b
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 # S100P: s100p; S600: s600. Keep different targets in separate model directories.
 GEMMA4_SOC=s600 bash model/download_model.sh
 bash third_party/install_tokenizers_cpp.sh
@@ -98,7 +98,7 @@ gemma4> /reset
 gemma4> /quit
 ```
 
-`main` 默认使用 `--max_tokens=0`，即每轮自动使用 prompt 后的全部剩余 KV 容量；`prompt + output` 总计不会超过 4096 tokens。S600 会由 `download_model.sh` 自动选择公开的 `nash-p` Vision/Text HBM。
+`main` 默认使用 `--max_tokens=0`，即每轮自动使用 prompt 后的全部剩余 KV 容量；`prompt + output` 总计不会超过 4096 tokens。显式设置 `GEMMA4_SOC=s600` 后，`download_model.sh` 选择公开的 `nash-p` Vision/Text HBM。
 
 详细步骤见 [runtime/cpp/README_cn.md](./runtime/cpp/README_cn.md)。
 
@@ -106,7 +106,7 @@ gemma4> /quit
 
 ## 模型转换（Model Conversion）
 
-已有预编译 HBM 时可直接运行，因此仅做推理的用户可以**跳过本小节**。下载脚本会自动选择 S100P 与 S600 的公开模型；S100 必须预置匹配 HBM，或通过 `GEMMA4_MODEL_BASE_URL` 指定模型目录。
+已有预编译 HBM 时可直接运行，因此仅做推理的用户可以**跳过本小节**。下载脚本按显式 `GEMMA4_SOC` 选择 S100P 或 S600 的公开模型；S100 必须预置匹配 HBM，或通过 `GEMMA4_MODEL_BASE_URL` 指定模型目录。
 
 如需自定义重新量化（需要 128 GB 内存的 PC + OE-LLM SDK），请参考 [conversion/README.md](./conversion/README.md) 及完整教程：
 

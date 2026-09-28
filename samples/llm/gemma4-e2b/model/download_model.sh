@@ -1,12 +1,24 @@
 #!/bin/bash
 set -euo pipefail
 
+# Preparation is host-side and must not infer a target from the host board.
+dry_run=false
+for argument in "$@"; do
+  case "$argument" in
+    --dry-run) dry_run=true ;;
+    --help|-h)
+      echo "Usage: GEMMA4_SOC=s100p|s600|s100 GEMMA4_HOME=<directory> bash download_model.sh [--dry-run]"
+      echo "--dry-run prints sources/destinations without writing files or using the network."
+      exit 0 ;;
+    *) echo "ERROR: unknown argument '$argument'" >&2; exit 2 ;;
+  esac
+done
 GEMMA4_HOME="${GEMMA4_HOME:-$HOME/gemma4_e2b}"
 SOC="${GEMMA4_SOC:-}"
-if [[ -z "$SOC" && -r /sys/class/boardinfo/soc_name ]]; then
-  SOC=$(tr 'A-Z' 'a-z' </sys/class/boardinfo/soc_name)
+if [[ -z "$SOC" ]]; then
+  echo "ERROR: set GEMMA4_SOC explicitly to s100p, s600, or s100." >&2
+  exit 2
 fi
-SOC="${SOC:-s100p}"
 
 S100P_MODEL_BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model"
 S600_MODEL_BASE_URL="https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/gemma4_e2b/model"
@@ -38,9 +50,17 @@ download_file() {
     echo "Found $destination"
     return
   fi
+  if $dry_run; then
+    echo "Would download $base_url/$file_name -> $destination"
+    return
+  fi
   mkdir -p "$output_dir"
   echo "Downloading $file_name..."
   wget -c -O "$destination.part" "$base_url/$file_name"
+  if [[ ! -s "$destination.part" ]]; then
+    echo "ERROR: empty download for $file_name; destination not published." >&2
+    exit 1
+  fi
   mv -f "$destination.part" "$destination"
 }
 
@@ -76,6 +96,10 @@ download_file "$COMMON_MODEL_BASE_URL" tok_embeddings.bin "$GEMMA4_HOME/model"
 download_file "$TOKENIZER_BASE_URL" tokenizer.json "$GEMMA4_HOME/tokenizer"
 download_file "$TOKENIZER_BASE_URL" tokenizer_config.json "$GEMMA4_HOME/tokenizer"
 
-echo "Download complete."
+if $dry_run; then
+  echo "Preview complete; no files written and no downloads performed."
+else
+  echo "Download complete."
+fi
 echo "Optional integrity check:"
 echo "  sha256sum $GEMMA4_HOME/model/*.hbm"

@@ -72,7 +72,7 @@ Prepare and build explicitly from the repository root (install system packages a
 
 ```bash
 cd samples/llm/gemma4-e2b
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 # S100P: s100p; S600: s600. Keep different targets in separate model directories.
 GEMMA4_SOC=s600 bash model/download_model.sh
 bash third_party/install_tokenizers_cpp.sh
@@ -117,7 +117,7 @@ This produces 5 executables in `build/`:
 ## Download Pre-compiled Models
 
 ```bash
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 GEMMA4_SOC=s600 bash ../../model/download_model.sh
 ```
 
@@ -142,7 +142,7 @@ set `GEMMA4_MODEL_BASE_URL`; missing shared assets are still downloaded.
 After building, enter `samples/llm/gemma4-e2b/runtime/cpp/build` from the repository root. The direct native commands below assume this working directory. Set `GEMMA4_HOME` to the matching target models:
 
 ```bash
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 
 # Manual S600 launch: run.sh applies these settings automatically
 unset LD_LIBRARY_PATH GEMMA4_USE_DNN_V3

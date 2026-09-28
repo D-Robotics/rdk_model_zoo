@@ -18,17 +18,39 @@ use `GEMMA4_SOC=s100p` and a separate data directory for S100P.
 ```bash
 cd samples/llm/gemma4-e2b/model
 export GEMMA4_HOME=~/gemma4_e2b_s600
+GEMMA4_SOC=s600 bash download_model.sh --dry-run
+# Run explicitly when ready to download:
 GEMMA4_SOC=s600 bash download_model.sh
 ```
 
 The public `rdk_s100` archive contains the validated S100P (`nash-m`)
 HBMs, while `rdk_s600` contains the validated S600 (`nash-p`) HBMs. Both
-are selected automatically. For S100 (`nash-e`), pre-place matching HBMs
+are selected by explicit `GEMMA4_SOC`, not by the preparation computer’s identity. For S100 (`nash-e`), pre-place matching HBMs
 under `$GEMMA4_HOME/model` or provide their directory URL explicitly:
 
 ```bash
 GEMMA4_HOME=~/gemma4_e2b_s100 GEMMA4_SOC=s100 GEMMA4_MODEL_BASE_URL=https://your-server/path/to/s100/model bash download_model.sh
 ```
+
+## Preparation interface
+
+| Setting / argument | Meaning |
+| --- | --- |
+| `GEMMA4_SOC` | Required: `s100`, `s100p` or `s600`; no board probing or implicit S100P fallback |
+| `GEMMA4_HOME` | Destination root; defaults to `~/gemma4_e2b`; use separate roots for different targets |
+| `--dry-run` | Print reuse/download decisions and URLs; no network requests or directory creation |
+| `--help` | Print usage without preparing files |
+| `GEMMA4_MODEL_BASE_URL` | Override the target-specific HBM directory URL; needed for missing S100 HBMs |
+| `GEMMA4_COMMON_MODEL_BASE_URL` | Override the common embedding directory URL |
+| `GEMMA4_TOKENIZER_BASE_URL` | Override the tokenizer directory URL |
+
+Run with Bash; actual transfers require `wget` on PATH. Preview needs neither
+`wget` nor board SDKs. Unknown arguments or missing targets are errors. S100
+without a custom HBM URL requires both HBMs already present, including in preview.
+The helper does not validate model contents: a reused nonempty file still needs
+to be the correct target. Remove stale `.part` files before switching a URL or
+artifact version, because `wget -c` resumes them. Transfer failures retain partial
+files and return a nonzero status; empty transfers never replace final files.
 
 <a id="accompanying-files"></a>
 ## Accompanying files

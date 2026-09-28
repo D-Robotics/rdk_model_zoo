@@ -16,14 +16,34 @@ S100P（`nash-m`）与 S600（`nash-p`）各有 Vision/Text HBM，S100（`nash-e
 ```bash
 cd samples/llm/gemma4-e2b/model
 export GEMMA4_HOME=~/gemma4_e2b_s600
+GEMMA4_SOC=s600 bash download_model.sh --dry-run
+# 准备好下载时显式执行：
 GEMMA4_SOC=s600 bash download_model.sh
 ```
 
-公开的 `rdk_s100` 模型归档包含已验证的 S100P（`nash-m`）HBM，`rdk_s600` 包含已验证的 S600（`nash-p`）HBM，两者都会按 SoC 自动选择。S100（`nash-e`）请先将匹配的两个 HBM 放到 `$GEMMA4_HOME/model`，或显式提供对应模型目录 URL：
+公开的 `rdk_s100` 模型归档包含已验证的 S100P（`nash-m`）HBM，`rdk_s600` 包含已验证的 S600（`nash-p`）HBM，脚本按显式 `GEMMA4_SOC` 选择，不根据执行下载的电脑身份推断。S100（`nash-e`）请先将匹配的两个 HBM 放到 `$GEMMA4_HOME/model`，或显式提供对应模型目录 URL：
 
 ```bash
 GEMMA4_HOME=~/gemma4_e2b_s100 GEMMA4_SOC=s100 GEMMA4_MODEL_BASE_URL=https://your-server/path/to/s100/model bash download_model.sh
 ```
+
+## 准备接口
+
+| 设置 / 参数 | 含义 |
+| --- | --- |
+| `GEMMA4_SOC` | 必填：`s100`、`s100p` 或 `s600`；不探测板型，也不默认回退 S100P |
+| `GEMMA4_HOME` | 数据根目录；默认 `~/gemma4_e2b`；不同目标应使用独立目录 |
+| `--dry-run` | 打印复用/下载决策及 URL；不联网、不创建目录 |
+| `--help` | 只打印用法 |
+| `GEMMA4_MODEL_BASE_URL` | 覆盖目标 HBM 目录 URL；S100 缺少本地 HBM 时必须提供 |
+| `GEMMA4_COMMON_MODEL_BASE_URL` | 覆盖共享 embedding 目录 URL |
+| `GEMMA4_TOKENIZER_BASE_URL` | 覆盖 tokenizer 目录 URL |
+
+使用 Bash 执行；实际下载需要 PATH 中有 `wget`，预览不需要 wget 或板端 SDK。
+未知参数、未指定目标均报错。S100 未指定 HBM URL 时，两个 HBM 必须已经存在，预览也遵循此规则。
+脚本不检查模型内容：已有非空文件仍需由使用者确认属于正确目标。
+更换 URL 或制品版本之前先清理旧 `.part` 文件，因为 `wget -c` 会续传它们。
+传输失败保留部分文件并返回非零状态，空下载不会替换最终文件。
 
 <a id="accompanying-files"></a>
 ## 配套文件

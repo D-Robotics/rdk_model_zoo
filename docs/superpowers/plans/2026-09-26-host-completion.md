@@ -209,3 +209,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Gemma KV修复K长度清零V导致越界、失败重分配破坏旧别名、尾部padding参与滚动等问题；事务分配、分层Reset、追加前全层校验及位置提交、前缀保留契约完成。9项原生ASan/UBSan CTest与13项Sample单测通过，门禁50/0/51skips/0exemptions；双语状态/所有权说明同步，见[KV记录](../../releases/unified-migration/2026-09-28-b11-gemma-kv-review.md)。Text SDK/状态职责、模型准备及H0–H9继续，不运行量化或板测。
 
 2026-09-28：Gemma Text构造泄漏在2c4da3fd原源码复现；张量所有权拆为move-only ModelIo，逐槽追踪KV借用，构造失败/正常退出先释放子图再释放packed model。301个获取失败点、6类非法描述符及所有权检查通过，11项ASan/UBSan CTest、14项Sample单测与50-sample门禁零违规；双语C++指南同步，见[Text所有权记录](../../releases/unified-migration/2026-09-28-b11-gemma-text-ownership-review.md)。完整Text张量契约/职责、模型准备与H0–H9继续，量化及板测不执行。
+
+2026-09-28：Gemma模型准备取消隐式S100P回退，要求显式GEMMA4_SOC；新增无网络/无写入预览与参数错误处理，拒绝发布空下载。原脚本5项失败经假wget复现，整改后6项准备测试/20项Sample测试通过，50-sample门禁零违规；根/model/C++六份README同步完整参数、独立目录、S100与断点续传限制。见[准备记录](../../releases/unified-migration/2026-09-28-b11-gemma-preparation-review.md)。未下载模型或验证量化；Text/第三方/MiniCPM/H0–H9继续。

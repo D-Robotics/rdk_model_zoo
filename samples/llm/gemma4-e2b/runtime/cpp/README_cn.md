@@ -72,7 +72,7 @@ runtime/cpp/                            C++ 源码（本目录）
 
 ```bash
 cd samples/llm/gemma4-e2b
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 # S100P: s100p; S600: s600. Keep different targets in separate model directories.
 GEMMA4_SOC=s600 bash model/download_model.sh
 bash third_party/install_tokenizers_cpp.sh
@@ -115,7 +115,7 @@ S100 保留手动 HBM 分支，没有默认公共 HBM。不同板目标使用不
 ## 下载预编译模型
 
 ```bash
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 GEMMA4_SOC=s600 bash ../../model/download_model.sh
 ```
 
@@ -140,7 +140,7 @@ S100P 与 S600 会下载各自已验证的公共 HBM，以及共享 embedding �
 设 `GEMMA4_HOME` 指向模型目录，然后运行：
 
 ```bash
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 
 # S600 手动启动时使用系统 DNN runtime；run.sh 会自动设置这些环境变量
 unset LD_LIBRARY_PATH GEMMA4_USE_DNN_V3

@@ -76,7 +76,7 @@ Install the [C++ prerequisites](runtime/cpp/README.md#prerequisites) first. From
 
 ```bash
 cd samples/llm/gemma4-e2b
-export GEMMA4_HOME=~/gemma4_e2b
+export GEMMA4_HOME=~/gemma4_e2b_s600
 # S100P: s100p; S600: s600. Keep different targets in separate model directories.
 GEMMA4_SOC=s600 bash model/download_model.sh
 bash third_party/install_tokenizers_cpp.sh
@@ -99,7 +99,7 @@ gemma4> /reset
 gemma4> /quit
 ```
 
-`main` defaults to `--max_tokens=0`, which uses all KV capacity remaining after the current prompt while keeping `prompt + output <= 4096`. On S600, `download_model.sh` selects the public `nash-p` Vision/Text HBMs automatically.
+`main` defaults to `--max_tokens=0`, which uses all KV capacity remaining after the current prompt while keeping `prompt + output <= 4096`. With explicit `GEMMA4_SOC=s600`, `download_model.sh` selects the public `nash-p` Vision/Text HBMs automatically.
 
 For step-by-step details see [runtime/cpp/README.md](./runtime/cpp/README.md).
 
@@ -109,7 +109,7 @@ For step-by-step details see [runtime/cpp/README.md](./runtime/cpp/README.md).
 
 Pre-compiled HBM models can be used directly, so users who only need
 inference may **skip this section**. The download helper selects the public
-S100P and S600 assets automatically; S100 requires matching HBMs supplied locally
+S100P or S600 assets using the explicit `GEMMA4_SOC`; S100 requires matching HBMs supplied locally
 or through `GEMMA4_MODEL_BASE_URL`.
 
 For custom re-quantization (requires a PC with 128 GB RAM + OE-LLM SDK),
