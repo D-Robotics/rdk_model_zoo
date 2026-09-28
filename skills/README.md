@@ -2,7 +2,7 @@
 
 本目录是 Model Zoo 专属 Skills 的维护源。Hub 只镜像注册的 `skills/<name>/`，不是维护源，也不安装模型仓库本身。Pack 从 `rdk_x5` 默认分支维护，但该分支只是文档来源，不能把用户目标默认为 X5；目标平台和 ref 必须按用户约束及实际目标仓库事实核对。
 
-**交付状态：候选源码，尚未合入/发布。** Pack 目标版本为 1.0.0；迁移入口 `rdk-model-zoo` 的 Skill 版本为 1.1.0，其余新技能为 1.0.0。Pack 与成员版本分别管理，既有模型版本文件不改变。
+**交付状态：候选源码，尚未合入/发布。** Pack 候选版本为 1.1.0；入口 `rdk-model-zoo` 的 Skill 版本为 1.1.1，`rdk-model-zoo-repo/develop/validate/review` 为 1.1.1，`rdk-model-zoo-integrate/release` 为 1.0.1。上游 `rdk_x5` 已发布 Pack 1.0.1，该状态描述上游 Pack；本分支的迁移适配候选未发布、未打 tag。Pack 与成员版本分别管理，既有模型版本文件不改变。
 
 ## 能力
 
@@ -67,7 +67,7 @@ python3 skills/rdk-model-zoo-validate/scripts/validate_evidence.py "$RECEIPT" --
 
 ## 评测与状态
 
-75 条 eval 定义（原始 70 条及新增 5 条跨平台用例）覆盖五类：正确性、可发现性、安全、有效性、效率。它们不是已执行结果。参见 [行为评测协议](evals/README.md)；本地工具测试不能代替 Agent 基线/对照、真实板卡或生产 Hub 同步。
+83 条 eval 定义（原始 70 条、跨平台 5 条，及 Q5 强化新增 8 条）覆盖五类：正确性、可发现性、安全、有效性、效率。它们不是已执行结果；历史已执行的 75 条核心用例记录见 [行为评测协议](evals/README.md)。本地工具测试不能代替 Agent 基线/对照、真实板卡或生产 Hub 同步。
 
 ## 来源与许可
 

@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-integrate
 description: "Use when integrating a custom model artifact or changed I/O contract into an RDK Model Zoo sample, including class-count, shape, wrapper, or cross-platform adaptation. 触发词：自训练接入、替换权重、接口适配。Do not use to implement PTQ/QAT or to review an unchanged sample."
-version: "1.0.0"
+version: "1.0.1"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"
