@@ -93,6 +93,12 @@ namespace yolo {
 int infer_sync(hbDNNTensor *outputs, hbDNNTensor *inputs, int input_count,
                hbDNNHandle_t model);
 
+// Raw multi-input model transport. The caller validates the full tensor array
+// against SDK metadata and owns all buffers until this synchronous call returns.
+// infer_sync above retains the one/two-input image protocol restriction.
+int infer_tensors_sync(hbDNNTensor *outputs, hbDNNTensor *inputs, int input_count,
+                       hbDNNHandle_t model);
+
 // Physical output strides in floats for an NHWC FLOAT32 tensor. X5 exposes
 // alignedShape extents; S-series exposes per-dimension byte strides.
 inline int tensor_row_step_floats(const hbDNNTensorProperties &properties) {

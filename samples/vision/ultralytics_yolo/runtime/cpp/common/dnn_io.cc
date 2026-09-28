@@ -138,7 +138,13 @@ bool inspect(hbDNNHandle_t model, InputPlan &plan,
 
 int infer_sync(hbDNNTensor *outputs, hbDNNTensor *inputs, int input_count,
                hbDNNHandle_t model) {
-  if (!outputs || !inputs || !model || (input_count != 1 && input_count != 2))
+  if (input_count != 1 && input_count != 2)
+    return -1;
+  return infer_tensors_sync(outputs, inputs, input_count, model);
+}
+int infer_tensors_sync(hbDNNTensor *outputs, hbDNNTensor *inputs, int input_count,
+                       hbDNNHandle_t model) {
+  if (!outputs || !inputs || !model || input_count <= 0)
     return -1;
 #if defined(YOLO_DNN_STACK_X5)
   hbDNNTaskHandle_t task = nullptr;

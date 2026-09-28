@@ -1,10 +1,11 @@
-# Paraformer native numerical library
+# Paraformer native numerical library and SDK adapter
 
 [简体中文](README_cn.md) · [Sample overview](../../README.md)
 
 This directory currently provides the native CPU CIF/text kernels and three-model
-application composition. The SDK adapter, prepared-manifest reader and complete
-native executable are still being migrated. The tests below are host checks, not
+application composition plus a separate S100 UCP SDK adapter. The prepared-manifest
+reader, concrete identity/artifact preflight factory and complete native executable
+are still being migrated. The tests below are host checks, not
 HBM inference. The source Python frontend → C++ inference capability remains in
 scope; no alternate approximation of FunASR is introduced here.
 
@@ -29,8 +30,8 @@ cmake --build /tmp/rdk-paraformer-core -j 2
 ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 ```
 
-Success means two CTest checks pass: numerical contract and synthetic three-model
-composition. Address/undefined-behavior sanitizers are enabled for Clang/GNU in
+Success means three CTest checks pass: numerical contract, synthetic three-model
+composition and SDK control flow with an explicitly isolated API double. Address/undefined-behavior sanitizers are enabled for Clang/GNU in
 this command. Release tests retain assertions. The production artifact is the
 static `paraformer_contract` library; test executables are not an inference CLI.
 
@@ -39,8 +40,9 @@ static `paraformer_contract` library; test executables are not an inference CLI.
 
 | Option | Default | Effect |
 | --- | --- | --- |
-| `PARAFORMER_BUILD_TESTS` | `OFF` | Build/register the two host tests |
+| `PARAFORMER_BUILD_TESTS` | `OFF` | Build/register three host tests |
 | `PARAFORMER_SANITIZERS` | `OFF` | Enable ASan/UBSan on Clang/GNU and propagate link flags |
+| `PARAFORMER_BUILD_SDK` | `OFF` | Build `paraformer_sdk` using actual vendor headers/libraries |
 | `CMAKE_BUILD_TYPE` | CMake default | Documentation checks use `Release` |
 
 There are no board CLI flags yet. In an embedding CMake project, add this directory
@@ -82,7 +84,7 @@ It requires valid_frames 1–400, executes encoder → predictor → CIF → dec
 bypasses decoder when CIF count is zero. Callables must return owned raw arrays
 synchronously. DecoderInput references are only valid during the callback; do not
 retain them. The caller must keep any captured SDK resources alive and coordinate
-access if they are not thread-safe. This library does not load models, select
+access if they are not thread-safe. The numerical library does not load models, select
 boards, perform file I/O, set scheduling or compile a fake SDK fallback.
 
 <a id="results"></a>
@@ -133,7 +135,7 @@ The default two WAVs can already be converted to features through the Python
 <a id="troubleshooting"></a>
 ## Verification and limits
 
-Two native tests exercise fractional integration, padding, empty input, the cap,
+Two numerical tests exercise fractional integration, padding, empty input, the cap,
 invalid contracts, repeated/special/BPE tokens, equal-score ties, callback order,
 zero-token bypass and malformed intermediate tensors. The comparison driver
 checks 27 cases byte-for-byte against both the extracted pinned C++ CIF source
@@ -143,7 +145,76 @@ host evidence fixture, not a new maintained runtime copy.
 
 A build failure for sanitizer runtime libraries requires matching compiler/linker
 support; `PARAFORMER_SANITIZERS=OFF` builds without instrumentation but does not
-reproduce the sanitizer check. Shape/type/name/identity checks for actual HBM
-metadata belong to the upcoming SDK adapter; these host array checks cannot
-replace them. Real SDK compilation, board inference, full native CLI, OE and CER
+reproduce the sanitizer check. The SDK adapter validates shape/type/name/strides from runtime metadata, but
+its API-double tests cannot establish actual HBM compatibility. Concrete
+identity/artifact preflight integration is still pending. Real SDK compilation, board inference, full native CLI, OE and CER
 remain not-run or pending as appropriate.
+
+<a id="sdk-adapter"></a>
+## S100 SDK adapter
+
+The optional `paraformer_sdk` library requires real S-series UCP headers
+`dnn/hb_dnn.h`, `hb_ucp.h`, `hb_ucp_sys.h` and the `dnn`/`hbucp` libraries. On a
+matching SDK development environment, configure a separate directory with
+`cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-sdk -DPARAFORMER_BUILD_SDK=ON`
+and build with `cmake --build /tmp/rdk-paraformer-sdk -j 2`. For a nonstandard SDK
+prefix, provide `CMAKE_PREFIX_PATH` or the explicit CMake cache paths
+`PARAFORMER_DNN_INCLUDE`, `PARAFORMER_UCP_INCLUDE`, `PARAFORMER_UCP_SYS_INCLUDE`,
+`PARAFORMER_DNN_LIBRARY`, `PARAFORMER_UCP_LIBRARY`. No SDK installation is automatic.
+Missing real SDK dependencies fail configuration; host API doubles are included
+only by `test_sdk`, never a fallback for this library. This host has no vendor
+SDK, so a real SDK configuration was checked to fail, not recorded as a build pass.
+
+Construct `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)` separately
+for each stage. The callback is mandatory and runs before any SDK call; it must
+reject wrong local board identity and a mismatched stage/publication/model digest.
+A no-op callback is suitable only for the isolated host test. The concrete
+production preflight factory and three-artifact selection integration are still
+pending; this API alone is not a deployable command. Each artifact must contain
+exactly one named model. The runner binds physical names independently of order:
+
+| Stage | Input roles → physical names | Output roles → physical names |
+| --- | --- | --- |
+| encoder | features → `speech` | context → `/encoder/after_norm/Add_1_output_0` |
+| predictor | context → `/encoder/after_norm/Add_1_output_0` | alphas → `/predictor/Add_output_0`; hidden → `/predictor/Concat_5_output_0` |
+| decoder | context → encoder context name; count → `token_num`; bias → `bias_embed`; acoustic → `onnx::Shape_8609` or `shape_8609` | logits → `logits`; optional count → `token_num` |
+
+Shapes are those in the stage table above. The count uses int32; all other tensors
+use float32. Physical quantization, unknown/duplicate roles, both acoustic aliases
+at once, extra tensors, wrong dimensions, overlapping/misaligned byte strides or
+insufficient allocation are rejected. The optional decoder count output is
+validated and returned when present. No manual dequantization is added.
+
+`RawTensors` maps semantic roles to `variant<vector<float>, vector<int32_t>>`.
+`infer` validates the entire input set before touching SDK buffers, clears padding,
+copies by actual per-axis byte strides, cleans caches, performs one synchronous
+model call, invalidates caches and returns owned compact arrays. Later calls do
+not overwrite prior results. Float inputs must be finite; count must be 0–100.
+Outputs are raw; pipeline/decoding validate finite values before numerical use.
+Use one runner serially, or protect it externally against concurrent calls.
+Scheduling currently uses the shared synchronous transport's default priority
+and any BPU core; no custom scheduling API is claimed.
+
+This complete embedding function compiles against the public header. It requires
+caller-provided validated features and a real preflight callback; it is not a
+synthetic inference result or a self-contained board application:
+
+```cpp
+#include "sdk_runner.h"
+#include <utility>
+std::vector<float> encode_features(const std::string &model_path,
+                                  paraformer::SdkPreflight verify,
+                                  const std::vector<float> &features) {
+    paraformer::SdkRunner encoder(
+        {model_path, "s100", paraformer::Stage::Encoder}, std::move(verify));
+    auto outputs = encoder.infer({{"features", features}});
+    return std::move(std::get<std::vector<float>>(outputs.at("context")));
+}
+```
+
+Packed models, tensor allocations and inference tasks reuse the shared Ultralytics
+owners/transport. The new multi-input transport permits decoder's four inputs;
+the existing image transport retains its one/two-input restriction. API-double
+checks cover all stages, reordered/padded tensors, both acoustic aliases, optional
+output, copy ownership, rejected inputs/metadata, and allocation/inference/cache
+failure cleanup. See [SDK verification](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md).

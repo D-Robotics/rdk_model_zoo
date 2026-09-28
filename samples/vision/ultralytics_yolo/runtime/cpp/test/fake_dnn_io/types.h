@@ -12,7 +12,7 @@ using hbDNNTaskHandle_t = void *;
 using hbUCPTaskHandle_t = void *;
 constexpr int HB_DNN_TENSOR_TYPE_F32 = 1, HB_DNN_TENSOR_TYPE_F16 = 2,
               HB_DNN_TENSOR_TYPE_S16 = 3, HB_DNN_TENSOR_TYPE_S8 = 4,
-              HB_DNN_TENSOR_TYPE_U8 = 5, HB_DNN_IMG_TYPE_NV12 = 6,
+              HB_DNN_TENSOR_TYPE_U8 = 5, HB_DNN_IMG_TYPE_NV12 = 6, HB_DNN_TENSOR_TYPE_S32 = 7,
               HB_DNN_LAYOUT_NCHW = 0, HB_DNN_LAYOUT_NHWC = 1, NONE = 0,
               HB_SYS_MEM_CACHE_CLEAN = 1, HB_SYS_MEM_CACHE_INVALIDATE = 2;
 struct hbDNNTensorShape {
@@ -48,6 +48,8 @@ int hbDNNGetModelHandle(void **, void *, const char *);
 int hbDNNGetOutputCount(int32_t *, hbDNNHandle_t);
 int hbDNNGetOutputTensorProperties(hbDNNTensorProperties *, hbDNNHandle_t, int);
 int hbDNNGetInputCount(int32_t *, hbDNNHandle_t);
+int hbDNNGetInputName(const char **, hbDNNHandle_t, int);
+int hbDNNGetOutputName(const char **, hbDNNHandle_t, int);
 int hbDNNGetInputTensorProperties(hbDNNTensorProperties *, hbDNNHandle_t, int);
 int test_allocate(TestMemory *, int);
 int test_free(TestMemory *);

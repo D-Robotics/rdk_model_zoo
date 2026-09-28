@@ -201,3 +201,9 @@ The shared `OutputTensorOwner` also handles SDK allocation errors that still
 return a nonnull address: the acquired buffer is retained for cleanup. A
 success status with a null address is rejected. X5/UCP host resource tests
 cover both cases; real SDK failure behavior remains unverified.
+
+The shared `common/dnn_io.h` also exposes `infer_tensors_sync` for callers such as
+Paraformer with more than two already validated input tensors. It performs only
+synchronous SDK submission/wait/release; the caller owns and validates the full
+array against model metadata. The image-facing `infer_sync` retains its one/two
+input restriction, so this does not expand YOLO image input protocols.

@@ -1,9 +1,9 @@
-# Paraformer 原生数值库
+# Paraformer 原生数值库与 SDK 适配器
 
 [English](README.md) · [Sample 概览](../../README_cn.md)
 
-当前目录提供原生 CPU CIF／文本解码及三模型应用编排。SDK 适配器、准备清单读取
-和完整原生可执行入口仍在迁移。以下测试是主机检查，不是 HBM 推理。
+当前目录提供原生 CPU CIF／文本解码、三模型应用编排和单独的 S100 UCP SDK 适配器。
+准备清单读取、具体身份／制品预检工厂和完整原生可执行入口仍在迁移。以下测试是主机检查，不是 HBM 推理。
 源 Python 前端 → C++ 推理能力仍在迁移范围内，此处不以其他算法近似替换 FunASR。
 
 <a id="environment"></a>
@@ -26,7 +26,8 @@ cmake --build /tmp/rdk-paraformer-core -j 2
 ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 ```
 
-成功标准是两个 CTest 检查通过：数值契约与合成三模型编排。上述命令在 Clang/GNU
+成功标准是三个 CTest 检查通过：数值契约、合成三模型编排及隔离 API 替身下的 SDK
+控制流。上述命令在 Clang/GNU
 下启用地址／未定义行为检查，Release 测试也保留断言。生产构建产物为静态
 `paraformer_contract` 库，测试可执行文件不是推理 CLI。
 
@@ -35,8 +36,9 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 
 | 选项 | 默认值 | 含义 |
 | --- | --- | --- |
-| `PARAFORMER_BUILD_TESTS` | `OFF` | 构建并注册两个主机测试 |
+| `PARAFORMER_BUILD_TESTS` | `OFF` | 构建并注册三个主机测试 |
 | `PARAFORMER_SANITIZERS` | `OFF` | 在 Clang/GNU 下启用 ASan/UBSan 并传播链接选项 |
+| `PARAFORMER_BUILD_SDK` | `OFF` | 使用真实厂商头文件／库构建 `paraformer_sdk` |
 | `CMAKE_BUILD_TYPE` | CMake 默认 | 文档检查使用 `Release` |
 
 当前没有板端 CLI 参数。嵌入其他 CMake 项目时，通过 `add_subdirectory` 加入目录并
@@ -72,7 +74,7 @@ CIF 在累计前屏蔽有效帧及之后的权重。无触发返回零数组与�
 有效帧须为 1–400，按 encoder → predictor → CIF → decoder 执行，计数为零时跳过
 最后一段。回调必须同步返回独立持有的原始数组；DecoderInput 引用仅在回调期间有效，
 不能保存供异步使用。调用方须保证捕获的 SDK 资源存活，非线程安全资源需协调访问。
-本库不加载模型、不选板型、不读写文件、不设置调度，也不编译假 SDK 回退。
+数值库不加载模型、不选板型、不读写文件、不设置调度，也不编译假 SDK 回退。
 
 <a id="results"></a>
 ## 返回值与计时
@@ -117,12 +119,70 @@ Python `--preprocess-only` 已能生成内置音频特征，C++ 消费该准备�
 <a id="troubleshooting"></a>
 ## 验证与限制
 
-两个原生测试覆盖分数积分、padding、空输出、截断、非法契约、重复／特殊／BPE token、
+两个数值测试覆盖分数积分、padding、空输出、截断、非法契约、重复／特殊／BPE token、
 平局 ID、回调顺序、零 token 跳过与错误中间张量。对照驱动在 27 组数据上与提取的
 固定源 C++ CIF 及统一 Python 逐字节比较，并做 20 组原生／Python 文本对照。
 准确编译器和复现脚本见报告。提取的源函数／驱动只是主机证据，不是另一份维护中的运行实现。
 
 Sanitizer 运行库构建失败时应检查编译／链接器支持；`PARAFORMER_SANITIZERS=OFF`
 可关闭插桩，但不能据此宣称完成 sanitizer 检查。真实 HBM 的形状／类型／名称／身份
-核验属于后续 SDK 适配器，主机数组检查不能替代。真实 SDK 构建、板端推理、完整原生
+已在 SDK 适配器中实现，但 API 替身不能证明实际 HBM 兼容；具体身份／制品预检
+工厂仍待接入。真实 SDK 构建、板端推理、完整原生
 CLI、OE 与 CER 均按实际状态保持未执行或待完成。
+
+<a id="sdk-adapter"></a>
+## S100 SDK 适配器
+
+可选 `paraformer_sdk` 库需要真实 S 系列 UCP 头文件 `dnn/hb_dnn.h`、`hb_ucp.h`、
+`hb_ucp_sys.h` 及 `dnn`／`hbucp` 库。在匹配的 SDK 开发环境中，使用独立目录配置：
+`cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-sdk -DPARAFORMER_BUILD_SDK=ON`，
+然后执行 `cmake --build /tmp/rdk-paraformer-sdk -j 2`。非标准 SDK 路径可通过
+`CMAKE_PREFIX_PATH` 或 CMake 缓存变量 `PARAFORMER_DNN_INCLUDE`、
+`PARAFORMER_UCP_INCLUDE`、`PARAFORMER_UCP_SYS_INCLUDE`、`PARAFORMER_DNN_LIBRARY`、
+`PARAFORMER_UCP_LIBRARY` 指定。不会自动安装 SDK。缺真实依赖时配置失败；主机 API
+替身仅用于 `test_sdk`，不会作为此库的回退。本机缺厂商 SDK，已验证配置明确失败，
+未将其记为真实 SDK 构建通过。
+
+每个阶段单独构造 `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)`。
+回调必填，先于所有 SDK 调用执行，必须拒绝本机身份以及阶段／发布制品／模型摘要
+不匹配。空操作回调仅适合隔离的主机测试。具体生产预检工厂和三制品选择尚未接入，
+此 API 本身不是可部署命令。每份制品必须只包含一个有名称的模型；绑定按名称进行，
+不依赖张量顺序：
+
+| 阶段 | 输入角色 → 物理名称 | 输出角色 → 物理名称 |
+| --- | --- | --- |
+| encoder | features → `speech` | context → `/encoder/after_norm/Add_1_output_0` |
+| predictor | context → `/encoder/after_norm/Add_1_output_0` | alphas → `/predictor/Add_output_0`；hidden → `/predictor/Concat_5_output_0` |
+| decoder | context → encoder context 名称；count → `token_num`；bias → `bias_embed`；acoustic → `onnx::Shape_8609` 或 `shape_8609` | logits → `logits`；可选 count → `token_num` |
+
+形状见上文阶段表。count 使用 int32，其余使用 float32。物理量化、未知／重复角色、
+两个 acoustic 别名同时出现、多余张量、错误维度、重叠／非对齐字节步长或分配容量不足
+均拒绝。decoder 的可选 count 输出存在时核验并返回；不引入手动反量化。
+
+`RawTensors` 将语义角色映射到 `variant<vector<float>, vector<int32_t>>`。
+`infer` 在接触 SDK 缓冲区前验证完整输入，清空 padding，按照每轴真实字节步长拷贝，
+清理缓存，只执行一次同步模型调用，再失效输出缓存并返回自有紧凑数组。后续调用不会
+覆盖先前结果。浮点输入必须有限，count 范围为 0–100。返回值为原始数组，后续编排／
+解码负责在数值处理前校验输出有限性。单个 runner 应串行使用，或由调用方外部加锁。
+调度采用共享同步调用的默认优先级和任意 BPU 核心，不宣称提供自定义调度接口。
+
+以下完整嵌入函数已针对公开头文件编译检查。它需要调用方传入已核验特征和真实预检
+回调，不是合成推理结果，也不是独立板端应用：
+
+```cpp
+#include "sdk_runner.h"
+#include <utility>
+std::vector<float> encode_features(const std::string &model_path,
+                                  paraformer::SdkPreflight verify,
+                                  const std::vector<float> &features) {
+    paraformer::SdkRunner encoder(
+        {model_path, "s100", paraformer::Stage::Encoder}, std::move(verify));
+    auto outputs = encoder.infer({{"features", features}});
+    return std::move(std::get<std::vector<float>>(outputs.at("context")));
+}
+```
+
+模型、张量分配和推理任务复用 Ultralytics 的共享所有者／调用实现。新增多输入调用
+支持 decoder 四输入，现有图像调用仍保留一／两输入约束。API 替身测试覆盖全部阶段、
+乱序／带 padding 张量、两个 acoustic 别名、可选输出、自有结果、非法输入／元数据及
+分配／推理／缓存失败释放。详见[SDK 验证](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md)。

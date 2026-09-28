@@ -143,3 +143,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer Python 完整音频/清单 CLI 和结果留证已接入，真实主机 10 用例通过；生成特征不再改写用户清单，缺音频/重复 ID/已有输出显式拒绝，33 Sample/156 共享测试通过。根与运行双语 README 补齐完整路径、全部参数、结果/失败语义及板测边界；5 组不同 CLI 文档命令实际执行。见[CLI 记录](../../releases/unified-migration/2026-09-28-b10-paraformer-cli-review.md)。C++、转换/评测与剩余文档继续，B10/H0–H9 不关闭。
 
 2026-09-28：Paraformer C++ CPU CIF/文本模块与三模型应用编排已实现，27 组新原生/旧原生/统一 Python 字节对照及 20 组文本对照通过；双语 README 的 Release+ASan/UBSan 构建、两项原生测试及完整 API 示例实际执行，33 项 Python 回归通过。见[原生模块记录](../../releases/unified-migration/2026-09-28-b10-paraformer-native-core-review.md)。原生 SDK/清单加载/CLI、转换评测仍待迁移；真实 SDK/板端未验证，B10/H0–H9 及整体独立验收继续开放。
+
+2026-09-28：Paraformer 原生 S100 SDK 适配器已按三模型物理名称／形状／类型／字节步长绑定，复用共用资源管理；首次集成暴露共享调用只接受一／两输入，已提取通用多输入调用并保留原图像约束。三项原生测试和双语构建/API 示例通过；真实 SDK 配置因本机缺依赖明确拒绝。见[SDK 记录](../../releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md)。具体身份/制品预检、清单/CLI、转换评测及全部剩余迁移继续，B10/H0–H9 未关闭。

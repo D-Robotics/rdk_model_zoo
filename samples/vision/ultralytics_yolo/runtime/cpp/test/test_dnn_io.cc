@@ -145,6 +145,13 @@ void inference_failures() {
   expect(created == 0);
   expect(yolo::infer_sync(nullptr, inputs, 2, model) != 0);
   expect(created == 0);
+  hbDNNTensor raw_inputs[4]{};
+  expect(yolo::infer_sync(outputs, raw_inputs, 4, model) != 0);
+  expect(created == 0);
+  expect(yolo::infer_tensors_sync(outputs, raw_inputs, 0, model) != 0);
+  expect(created == 0);
+  expect(yolo::infer_tensors_sync(outputs, raw_inputs, 4, model) == 0);
+  expect(created == 1 && waited == 1 && released == 1);
 }
 int main() {
   inference_failures();

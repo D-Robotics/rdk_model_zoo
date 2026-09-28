@@ -182,3 +182,8 @@ ctest --test-dir /tmp/ultralytics-cpp-host --output-on-failure
 共用 `OutputTensorOwner` 还处理“分配返回错误但已给出非空地址”：保留已取得的
 缓冲区以供清理；“返回成功但地址为空”则拒绝。X5/UCP 主机资源测试覆盖这两种
 情况，真实 SDK 的失败行为仍未验证。
+
+共享 `common/dnn_io.h` 另提供 `infer_tensors_sync`，供 Paraformer 等超过两个且
+已完整核验输入张量的调用方复用。它仅执行同步 SDK 提交／等待／释放，调用方负责按
+模型元数据核验并持有完整数组。图像入口 `infer_sync` 仍限定一／两个输入，因此不会
+扩展 YOLO 的图像输入协议。
