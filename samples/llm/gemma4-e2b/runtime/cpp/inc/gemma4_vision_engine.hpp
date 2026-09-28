@@ -41,6 +41,8 @@ class VisionEngine {
   std::vector<hbDNNTensor> inputs_;
   std::vector<hbDNNTensor> outputs_;
   double load_ms_ = 0;
+  int64_t input_capacity_ = 0;
+  int64_t output_capacity_ = 0;
 };
 
 }  // namespace gemma4

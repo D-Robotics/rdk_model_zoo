@@ -20,7 +20,9 @@ struct hbDNNShape {
   int numDimensions = 1;
   int32_t dimensionSize[8]{4};
 };
+enum { NONE, SCALE };
 struct hbDNNTensorProperties {
+  int quantiType=NONE;
   hbDNNShape validShape;
   int64_t stride[8]{4};
   int64_t alignedByteSize = 16;

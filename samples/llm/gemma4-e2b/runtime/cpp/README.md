@@ -46,6 +46,10 @@ runtime/cpp/                            C++ source code (this directory)
 │   ├── gemma4_embeddings.hpp           Token embedding lookup + vision injection
 │   ├── gemma4_kv_cache.hpp             Zero-copy KV cache management
 │   ├── gemma4_vision_preprocess.hpp    Image resize + patchify
+│   ├── gemma4_vision_task.hpp          Vision stages and explicit runner composition
+│   ├── gemma4_image_io.hpp             Application image IO
+│   ├── gemma4_vision_tensor.hpp        SDK descriptors and strided packing/extraction
+│   ├── gemma4_vision_debug.hpp         Optional diagnostics
 │   ├── gemma4_native_tokenizer.hpp     Native C++ tokenizer (from OE-LLM-s600)
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge: chat template + image expand
 │   └── hb_utils.hpp                    Horizon BPU helpers (tensor, flush, infer)
@@ -376,21 +380,41 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-Two CTest entries cover stages/ownership/invalid inputs and byte-exact preprocessing comparisons on four source images. Assertions remain enabled in Release builds.
+Three CTest entries cover stages/ownership/invalid inputs, byte-exact preprocessing comparisons on four source images, and strict tensor type/shape/stride/storage conversion. Assertions remain enabled in Release builds.
 An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
 
 ### SDK failure handling
 
 Failed Vision construction releases acquired input/output buffers and the packed model; successful SDK calls returning null handles/buffers are rejected.
-`MakeTensor` also releases memory returned alongside an allocation error. Vision requires exactly one input and one output; complete tensor type/shape/stride review remains ongoing.
+`MakeTensor` also releases memory returned alongside an allocation error. Vision requires exactly one input and one output; tensor type/shape/stride checks are described below; real SDK ABI and board results remain unverified.
 
 Full-flush and Text/KV selective-flush entries share one task lifecycle: input flush → infer → compiled-core scheduling → submit/wait → output flush/property refresh → release.
 Failures after task acquisition release it, including inference errors that still return a task. Normal-path release errors propagate without retrying the same handle.
 Source selective-index semantics, S600 compiled-core selection and optional V3 dispatch are preserved.
 
-Host resource tests use independent SDK doubles across S100/S600 compile branches and cover 72 scenarios. They check memory/handle ownership on errors,
+Host resource tests use independent SDK doubles across S100/S600 compile branches and cover 94 scenarios. They check memory/handle ownership on errors,
 not real SDK ABI, BPU scheduling or board inference. From the repository root:
 
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resources.py -v
 ```
+
+### Vision tensor transport contract
+
+`gemma4_vision_tensor` owns physical descriptor validation, F16 storage packing and strided output extraction; `VisionEngine` composes these operations with SDK calls.
+Descriptors are validated before allocation and output properties are revalidated after inference. A refreshed allocation length does not replace the original buffer capacity.
+
+| Item | Accepted contract |
+| --- | --- |
+| Input | `F16`, no quantization metadata, logical matrix `[2520,768]` |
+| Output | `F16` or `F32`, no quantization metadata, logical matrix `[280,1536]` |
+| Shape | Optional leading singleton axes such as `[1,2520,768]`; no extra batch, transpose or unrelated equal-element-count shapes |
+| Stride | Bytes aligned to element width, nonoverlapping elements/rows, every accessed address within declared allocation and original buffer capacity |
+| Data | Prepared float patches must be finite in `[0,1]`; output NaN/Inf is rejected |
+
+Input retains the source F32→F16 truncation and zeroes padding before writing. Output extraction honors both row and column strides and returns owned floats without padding.
+Unknown/integer outputs are no longer reinterpreted as floats. F16/F32 storage conversion does not modify or rerun the quantization recipe.
+
+Host integration fixtures call the production `VisionEngine::Infer`; SDK doubles inspect packed inputs and populate F16/F32 outputs with row and element gaps.
+They also inject invalid type, quantization flags, shape, stride, post-inference capacity changes and nonfinite output.
+Resource and transport tests total 94 scenarios (46 S100, 48 S600). Matching real published HBM descriptors to this contract still requires later board evidence; host fixtures are not that evidence.

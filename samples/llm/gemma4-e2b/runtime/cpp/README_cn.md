@@ -46,6 +46,10 @@ runtime/cpp/                            C++ 源码（本目录）
 │   ├── gemma4_embeddings.hpp           Token embedding 查表 + vision 注入
 │   ├── gemma4_kv_cache.hpp             零拷贝 KV cache 管理
 │   ├── gemma4_vision_preprocess.hpp    图像缩放 + 分块
+│   ├── gemma4_vision_task.hpp          Vision 三阶段及显式 runner 组合
+│   ├── gemma4_image_io.hpp             应用层图片读取
+│   ├── gemma4_vision_tensor.hpp        SDK 描述符、带 stride 的打包/解包
+│   ├── gemma4_vision_debug.hpp         可选诊断日志
 │   ├── gemma4_native_tokenizer.hpp     原生 C++ tokenizer（来自 OE-LLM-s600）
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge：chat template + 图片展开
 │   └── hb_utils.hpp                    Horizon BPU 辅助函数（tensor、flush、infer）
@@ -369,21 +373,41 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-两项 CTest 分别覆盖三阶段/所有权/异常输入，以及四张源图片前处理逐字节比较。Release 构建仍启用断言。
+三项 CTest 覆盖三阶段/所有权/异常输入、四张源图片前处理逐字节比较，以及严格张量类型/形状/stride 与存储转换。Release 构建仍启用断言。
 这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。
 
 ### SDK 失败处理
 
 Vision 构造失败时会释放已经取得的输入/输出 buffer 和 packed model；成功但返回空 handle/buffer 会显式报错。
-`MakeTensor` 在分配失败但仍返回内存时也会释放该内存。Vision 要求恰好一个输入和一个输出；具体张量类型、形状和 stride 的完整审查仍在进行。
+`MakeTensor` 在分配失败但仍返回内存时也会释放该内存。Vision 要求恰好一个输入和一个输出；具体张量类型、形状和 stride 检查见下节；真实 SDK ABI 与板端结果仍未验证。
 
 全部刷新与 Text/KV 选择性刷新入口共用同一个 task 生命周期：输入刷新 → infer → 按编译核数调度 → submit/wait → 输出刷新与属性更新 → release。
 取得 task 之后的失败（包括 infer 返回错误但已给出 task）都会触发释放；正常路径的 release 错误继续上抛，不重复释放同一 handle。
 选择性刷新的索引语义保持源行为，S600 的编译核数选择和可选 V3 入口也保留。
 
-主机资源测试使用独立 SDK 接口替身，在 S100/S600 两个编译分支下覆盖 72 个场景；它能检查错误处理中的内存/handle 所有权，
+主机资源测试使用独立 SDK 接口替身，在 S100/S600 两个编译分支下覆盖 94 个场景；它能检查错误处理中的内存/handle 所有权，
 不能代替真实 SDK ABI、BPU 调度或板端推理验证。可从仓库根目录运行：
 
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resources.py -v
 ```
+
+### Vision 张量传输契约
+
+`gemma4_vision_tensor` 集中负责物理描述符校验、F16 存储打包与带 stride 的输出读取；`VisionEngine` 只组合这些操作和 SDK 调用。
+描述符先校验再分配，输出属性在推理后重新校验，不把 SDK 返回的新分配长度当成原 buffer 的真实容量。
+
+| 项 | 接受范围 |
+| --- | --- |
+| 输入 | `F16`、无量化 metadata、逻辑矩阵 `[2520,768]` |
+| 输出 | `F16` 或 `F32`、无量化 metadata、逻辑矩阵 `[280,1536]` |
+| 形状 | 可有前导单例轴，如 `[1,2520,768]`；不接受额外 batch、转置或仅元素总数相等的其他形状 |
+| stride | 单位为字节，按元素大小对齐、元素与行不重叠，所有访问地址均落在声明分配及原 buffer 容量内 |
+| 数据 | 输入 float patches 必须有限且在 `[0,1]`；输出 NaN/Inf 显式拒绝 |
+
+输入保持源实现的 F32→F16 截断方式，写入前清零 padding；输出分别按行和列 stride 提取，自有 float 向量不含 padding。
+未知或整数输出不会再尝试强制解释为 float。F16/F32 是运行时存储转换，不涉及修改或重跑量化方案。
+
+主机集成夹具会实际调用生产 `VisionEngine::Infer`，由 SDK 替身检查输入存储并填充带行/元素间隙的 F16/F32 输出；
+同时注入非法类型、量化标记、形状、stride、推理后容量变更和非有限输出。资源与传输共 94 个场景（S100 46、S600 48）。
+真实发布 HBM 的描述符与这些约束是否匹配，仍需后续板端证据，本轮不据主机夹具声明已测。

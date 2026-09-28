@@ -11,41 +11,15 @@
 #include "gemma4_vision_engine.hpp"
 
 #include <chrono>
-#include <cmath>
-#include <cstring>
-#include <iostream>
 #include <stdexcept>
 #include <vector>
 
 #include "gemma4_config.hpp"
+#include "gemma4_vision_debug.hpp"
+#include "gemma4_vision_tensor.hpp"
 #include "hb_utils.hpp"
 
 namespace gemma4 {
-
-namespace {
-
-uint16_t FloatToF16(float value) {
-  uint32_t bits;
-  std::memcpy(&bits, &value, sizeof(bits));
-  const uint32_t sign = (bits >> 16) & 0x8000;
-  int32_t exp = static_cast<int32_t>((bits >> 23) & 0xff) - 127 + 15;
-  uint32_t mant = bits & 0x7fffff;
-
-  if (exp <= 0) {
-    if (exp < -10) {
-      return static_cast<uint16_t>(sign);
-    }
-    mant = (mant | 0x800000) >> (1 - exp);
-    return static_cast<uint16_t>(sign | (mant >> 13));
-  }
-  if (exp >= 31) {
-    return static_cast<uint16_t>(sign | 0x7c00);
-  }
-  return static_cast<uint16_t>(sign | (static_cast<uint32_t>(exp) << 10) |
-                                 (mant >> 13));
-}
-
-}  // namespace
 
 VisionEngine::VisionEngine(const std::string &vision_hbm) {
   try {
@@ -70,10 +44,19 @@ VisionEngine::VisionEngine(const std::string &vision_hbm) {
     if (input_count != 1 || output_count != 1)
       throw std::runtime_error(
           "Vision requires exactly one input and one output");
+    hbDNNTensorProperties input{}, output{};
+    HBDNN_CHECK(hbDNNGetInputTensorProperties(&input, handle_, 0),
+                "get input tensor props");
+    HBDNN_CHECK(hbDNNGetOutputTensorProperties(&output, handle_, 0),
+                "get output tensor props");
+    ValidateVisionTensor(input, true);
+    ValidateVisionTensor(output, false);
+    input_capacity_ = input.alignedByteSize;
+    output_capacity_ = output.alignedByteSize;
     inputs_.reserve(1);
     outputs_.reserve(1);
-    inputs_.push_back(MakeTensor(handle_, true, 0));
-    outputs_.push_back(MakeTensor(handle_, false, 0));
+    inputs_.push_back(AllocateTensor(input));
+    outputs_.push_back(AllocateTensor(output));
   } catch (...) {
     Release();
     throw;
@@ -91,121 +74,15 @@ void VisionEngine::Release() noexcept {
   handle_ = nullptr;
 }
 
-std::vector<float> VisionEngine::Infer(const std::vector<float>& patches) {
-  if (patches.size() != static_cast<size_t>(kVisionPatches) * kVisionPatchDim) {
-    throw std::invalid_argument("Vision SDK input requires [2520,768] patches");
-  }
-
-  // Debug: patch statistics
-  if (RuntimeDebugEnabled()) {
-    double sum = 0, sq = 0;
-    float pmin = patches[0], pmax = patches[0];
-    for (size_t i = 0; i < patches.size(); ++i) {
-      sum += patches[i];
-      sq += patches[i] * patches[i];
-      if (patches[i] < pmin) pmin = patches[i];
-      if (patches[i] > pmax) pmax = patches[i];
-    }
-    double mean = sum / patches.size();
-    double var = sq / patches.size() - mean * mean;
-    std::cerr << "[DEBUG] patches: size=" << patches.size()
-              << " min=" << pmin << " max=" << pmax
-              << " mean=" << mean << " std=" << std::sqrt(var) << std::endl;
-  }
-
-  std::vector<uint16_t> f16(patches.size());
-  for (size_t i = 0; i < patches.size(); ++i) {
-    f16[i] = FloatToF16(patches[i]);
-  }
-
-  // Debug: print input tensor properties
-  if (RuntimeDebugEnabled()) {
-    const auto& props = inputs_[0].properties;
-    std::cerr << "[DEBUG] input tensor: type=" << props.tensorType
-              << " ndim=" << props.validShape.numDimensions
-              << " shape=[";
-    for (int d = 0; d < props.validShape.numDimensions; ++d) {
-      if (d) std::cerr << ",";
-      std::cerr << props.validShape.dimensionSize[d];
-    }
-    std::cerr << "] aligned_bytes=" << props.alignedByteSize << std::endl;
-  }
-
-  WriteInputTensor(inputs_[0], f16.data());
+std::vector<float> VisionEngine::Infer(const std::vector<float> &patches) {
+  WriteVisionInput(inputs_[0], patches, input_capacity_);
+  LogVisionValues("patches", patches);
+  LogVisionTensor("input tensor", inputs_[0].properties);
   RunInfer(handle_, inputs_, outputs_);
-
-  const auto& props = outputs_[0].properties;
-  const int64_t elems =
-      ProdSize(props.validShape.dimensionSize, props.validShape.numDimensions);
-
-  // Debug: output tensor properties
-  if (RuntimeDebugEnabled()) {
-    std::cerr << "[DEBUG] output tensor: type=" << props.tensorType
-              << " ndim=" << props.validShape.numDimensions
-              << " shape=[";
-    for (int dimension = 0; dimension < props.validShape.numDimensions;
-         ++dimension) {
-      if (dimension != 0) {
-        std::cerr << ",";
-      }
-      std::cerr << props.validShape.dimensionSize[dimension];
-    }
-    std::cerr << "] elems=" << elems
-              << " elem_size=" << ElementSize(props.tensorType)
-              << " aligned_bytes=" << props.alignedByteSize << std::endl;
-  }
-
-  std::vector<float> out(static_cast<size_t>(elems));
-  const void* raw_out = outputs_[0].sysMem.virAddr;
-
-  // Handle different output tensor types
-  if (props.tensorType == HB_DNN_TENSOR_TYPE_F32) {
-    const auto* src = static_cast<const float*>(raw_out);
-    std::copy(src, src + elems, out.data());
-  } else if (props.tensorType == HB_DNN_TENSOR_TYPE_F16) {
-    const auto* src = static_cast<const uint16_t*>(raw_out);
-    for (int64_t i = 0; i < elems; ++i) {
-      uint16_t h = src[static_cast<size_t>(i)];
-      uint32_t sign = (h >> 15) & 1;
-      uint32_t exp = (h >> 10) & 0x1f;
-      uint32_t mant = h & 0x3ff;
-      float val;
-      if (exp == 0) {
-        val = mant ? static_cast<float>(mant) / 1024.f * std::ldexp(1.f, -14) : 0.f;
-      } else if (exp == 31) {
-        val = mant ? NAN : (sign ? -INFINITY : INFINITY);
-      } else {
-        val = std::ldexp(1.f + static_cast<float>(mant) / 1024.f,
-                         static_cast<int>(exp) - 15);
-      }
-      out[static_cast<size_t>(i)] = sign ? -val : val;
-    }
-  } else {
-    // Fallback: try float
-    std::cerr << "[WARN] Unexpected Vision output tensor type "
-              << props.tensorType << "; trying float cast." << std::endl;
-    const auto* src = static_cast<const float*>(raw_out);
-    std::copy(src, src + elems, out.data());
-  }
-
-  // Debug: output statistics
-  if (RuntimeDebugEnabled()) {
-    double sum = 0, sq = 0;
-    float omin = out[0], omax = out[0];
-    for (size_t i = 0; i < out.size(); ++i) {
-      sum += out[i];
-      sq += out[i] * out[i];
-      if (out[i] < omin) omin = out[i];
-      if (out[i] > omax) omax = out[i];
-    }
-    double mean = sum / out.size();
-    double var = sq / out.size() - mean * mean;
-    std::cerr << "[DEBUG] vision output: size=" << out.size()
-              << " min=" << omin << " max=" << omax
-              << " mean=" << mean << " std=" << std::sqrt(var) << std::endl;
-  }
-
-  return out;
+  auto features = ReadVisionOutput(outputs_[0], output_capacity_);
+  LogVisionTensor("output tensor", outputs_[0].properties);
+  LogVisionValues("vision output", features);
+  return features;
 }
 
-}  // namespace gemma4
+} // namespace gemma4

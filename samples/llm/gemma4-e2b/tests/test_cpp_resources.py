@@ -12,6 +12,19 @@ SAMPLE = Path(__file__).resolve().parents[1]
 CPP = SAMPLE / "runtime/cpp"
 NATIVE = SAMPLE / "tests/native"
 CASES = {
+    "vision": [
+        "none",
+        "f16",
+        "input_type",
+        "output_type",
+        "quantized",
+        "bad_shape",
+        "overlap",
+        "bad_rank",
+        "after_capacity",
+        "after_shape",
+        "nonfinite",
+    ],
     "tensor": ["none", "alloc", "alloc_null", "zero_bytes", "input_props"],
     "constructor": [
         "none",
@@ -80,6 +93,7 @@ class SdkResourceTests(unittest.TestCase):
                 str(CPP / "inc"),
                 str(NATIVE / "sdk_resources_test.cpp"),
                 str(CPP / "src/gemma4_vision_engine.cpp"),
+                str(CPP / "src/gemma4_vision_tensor.cpp"),
                 "-o",
                 str(binary),
             ]
@@ -106,6 +120,9 @@ class SdkResourceTests(unittest.TestCase):
                     )
                     self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
                     self.assertIn("passed", run.stdout)
+
+    def test_vision_transport_integration(self):
+        self.check("vision")
 
     def test_tensor_allocation_ownership(self):
         self.check("tensor")

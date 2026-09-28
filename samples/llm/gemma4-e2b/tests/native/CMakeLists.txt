@@ -24,3 +24,13 @@ endif()
 enable_testing()
 add_test(NAME vision_contract COMMAND vision_test)
 add_test(NAME vision_source_images COMMAND vision_test "${SAMPLE_ROOT}/test_data")
+
+# Metadata/packing tests use local declarations, not a vendor SDK or BPU.
+add_executable(vision_tensor_test vision_tensor_test.cpp "${CPP}/src/gemma4_vision_tensor.cpp")
+target_include_directories(vision_tensor_test PRIVATE sdk_fixtures "${CPP}/inc")
+if(MSVC)
+  target_compile_options(vision_tensor_test PRIVATE /UNDEBUG)
+else()
+  target_compile_options(vision_tensor_test PRIVATE -UNDEBUG)
+endif()
+add_test(NAME vision_tensor_contract COMMAND vision_tensor_test)

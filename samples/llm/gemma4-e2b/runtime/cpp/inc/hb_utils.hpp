@@ -139,16 +139,10 @@ inline void FlushInvalidate(hbUCPSysMem& mem) {
   HBUCP_CHECK(hbUCPMemFlush(&mem, HB_SYS_MEM_CACHE_INVALIDATE), "flush invalidate");
 }
 
-/// Allocate and zero a tensor buffer for a model input or output slot.
-inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
+/// Allocate a tensor after the caller has validated its metadata.
+inline hbDNNTensor AllocateTensor(const hbDNNTensorProperties& properties) {
   hbDNNTensor tensor{};
-  if (is_input) {
-    HBDNN_CHECK(hbDNNGetInputTensorProperties(&tensor.properties, handle, index),
-                "get input tensor props");
-  } else {
-    HBDNN_CHECK(hbDNNGetOutputTensorProperties(&tensor.properties, handle, index),
-                "get output tensor props");
-  }
+  tensor.properties = properties;
   const int64_t bytes = tensor.properties.alignedByteSize;
   if (bytes <= 0)
     throw std::runtime_error("invalid tensor allocation size");
@@ -164,6 +158,19 @@ inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
       hbUCPFree(&tensor.sysMem);
     throw;
   }
+}
+
+/// Query properties then allocate; callers with semantic contracts validate first.
+inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
+  hbDNNTensor tensor{};
+  if (is_input) {
+    HBDNN_CHECK(hbDNNGetInputTensorProperties(&tensor.properties, handle, index),
+                "get input tensor props");
+  } else {
+    HBDNN_CHECK(hbDNNGetOutputTensorProperties(&tensor.properties, handle, index),
+                "get output tensor props");
+  }
+  return AllocateTensor(tensor.properties);
 }
 
 /// Release all BPU buffers owned by a tensor vector.

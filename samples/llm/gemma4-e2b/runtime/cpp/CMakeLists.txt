@@ -68,6 +68,7 @@ add_library(gemma4_runtime STATIC
   src/gemma4_vision_preprocess.cpp
   src/gemma4_vision_task.cpp
   src/gemma4_image_io.cpp
+  src/gemma4_vision_tensor.cpp
   src/gemma4_vision_engine.cpp
 )
 
