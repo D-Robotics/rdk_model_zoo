@@ -263,3 +263,12 @@ Accepted eight YOLOE/UNetMobileNet subdirectory README status corrections;
 YOLOE-DOC-R1 and the UNetMobileNet pending-review sentence are closed.
 [Independent review](../../releases/unified-migration/2026-09-28-review-status-docs-independent-review.md)
 records the bounded claims and fresh checks. Batch rollups remain open.
+
+### 2026-09-28 — VLA parent integration independently accepted
+
+ACT/Pi0 fixed gitlinks and clean initialized sources, six bilingual parent
+guides, CLI/source comparisons and two parent integration tests are accepted.
+See [VLA independent review](../../releases/unified-migration/2026-09-28-vla-independent-review.md).
+H7 remains open for Gemma and the remaining LLM scope; no board/robot or
+quantization workflow was executed. H8 dataset documentation gaps were assigned
+to Claude Code + GLM as a separate bounded package, not marked complete.
