@@ -4,7 +4,7 @@
 
 本目录现在能从固定 FunASR 架构的真实权重直接导出 encoder、predictor、decoder，
 固定部署形状并与 Torch 做数值检查。CIF 继续使用共享 CPU 实现。
-**真实音频校准和显式 OE 编译编排已实现。** 实际 OE/SDK/板端验证及专用 evaluator
+**真实音频校准和显式 OE 编译编排已实现。** 专用 [evaluator](../evaluator/README_cn.md) 已实现，实际 OE/HMCT/SDK/板端验证
 仍待完成；FP32 导出通过不能证明 HBM 或板端行为。
 
 源模型是 `iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404`。
@@ -282,7 +282,7 @@ S 源提交 `380e1a2bf42041af54be6f34935e50197cfadff9` 的
 | `09_gen_calib_features.py` | 从代表性真实音频生成特征 | 已由 `prepare.py` 接入统一、确定性前端。 |
 | `10_gen_real_calib.py`、`cif_numpy.py` | 运行阶段模型，生成 predictor/decoder 校准数据 | 已实现真实 encoder/predictor 执行及共享不屏蔽 CIF（`real_T=None`），区别于运行时有效帧屏蔽。 |
 | 三份 `*_int16.yaml` | 为 `nash-e` 编译三个阶段 | 已按源参数生成路径一致的配置并提供显式 OE 调用；真实编译/SDK 验证未执行。 |
-| `11_eval_pipeline.py` | 比较三阶段语音流程 | 待迁入专用 evaluator。 |
+| `11_eval_pipeline.py` | 比较三阶段语音流程 | [专用 evaluator](../evaluator/README_cn.md)：真实 FP32 smoke 对照；保留 HMCT 适配，实际 HMCT 未执行。 |
 
 源配方采用 max 校准、内部 INT16、O2 latency 优化及单 BPU 核。
 这些配置不能确定最终物理输入输出类型，也不能证明新 HBM 的运行兼容性；

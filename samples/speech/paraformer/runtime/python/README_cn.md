@@ -69,7 +69,7 @@ python -m unittest discover -s samples/speech/paraformer/tests -v
 `380e1a2bf42041af54be6f34935e50197cfadff9`；源实现无 token 时抛出 `IndexError`，
 统一实现已修复。详见[评审记录与证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md)。
 
-源清单仅发布 S100 模型，本次不声明 X5、S100P 或 S600 适配。真实 SDK 验证、板端三段推理和专用评测仍待完成；
+源清单仅发布 S100 模型，本次不声明 X5、S100P 或 S600 适配。真实 SDK 验证和板端三段推理仍待完成；[专用主机评测](../../evaluator/README_cn.md) 已提供 FP32/HMCT 入口及明确的 CER 报告；
 [转换工具](../../conversion/README_cn.md) 已提供主机验证的 FP32 导出、真实音频校准及显式 OE 编排。原生应用主机验证单独记录在 C++ 说明中。板端推理、OE 编译、数据集 CER 与延迟均未执行。
 
 <a id="stage-io"></a>

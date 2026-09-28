@@ -5,7 +5,7 @@
 This directory exports the real-weight encoder, predictor and decoder directly
 from the pinned FunASR architecture, with fixed deployment geometry and numerical
 checks against Torch. CIF stays in the shared CPU implementation. **Real-audio calibration and explicit OE compilation orchestration are implemented.**
-Actual OE/SDK/board validation and the dedicated evaluator remain pending;
+Actual OE/HMCT/SDK/board validation remains pending; the [host evaluator](../evaluator/README.md) is implemented;
 successful FP32 export does not certify an HBM or its board behavior.
 
 The source model is
@@ -318,7 +318,7 @@ It remains historical reference, with the following migration boundaries:
 | `09_gen_calib_features.py` | Generate features from representative real audio | Implemented in `prepare.py` through the unified deterministic frontend. |
 | `10_gen_real_calib.py` and `cif_numpy.py` | Run stages to prepare decoder/predictor calibration | Implemented with real encoder/predictor execution and shared unmasked CIF (`real_T=None`), unlike runtime valid-frame masking. |
 | Three `*_int16.yaml` files | Compile encoder, predictor and decoder for `nash-e` | Generated with consistent workspace paths and source settings. Explicit OE invocation is implemented; actual compiler/SDK validation is not-run. |
-| `11_eval_pipeline.py` | Compare the three-stage speech pipeline | Pending migration into a dedicated evaluator. |
+| `11_eval_pipeline.py` | Compare the three-stage speech pipeline | [Dedicated evaluator](../evaluator/README.md): real FP32 smoke comparison; HMCT adapter retained, actual HMCT not-run. |
 
 Source recipe settings include maximum calibration, INT16 internal operations,
 O2 latency optimization and a single BPU core. These settings do not establish

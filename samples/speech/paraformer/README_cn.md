@@ -15,7 +15,7 @@ CPU CIF（连续积分触发）和 decoder。部署使用三份独立发布的 S
 `380e1a2bf42041af54be6f34935e50197cfadff9`，不直接采用当前上游 main 的其他能力。
 本目录位于 `samples/speech/paraformer`。Python CLI 与真实 CPU 前端已提供，
 原生 C++ 入口已实现并完成主机流程检查；真实权重三阶段 FP32 导出也已实现。
-真实音频校准和显式 OE 编译编排已实现；实际 OE 验证和评测迁移仍待完成，尚未通过完整 Sample 验收。
+真实音频校准和显式 OE 编译编排已实现；专用主机评测已实现，实际 OE/HMCT 验证仍待完成，尚未通过完整 Sample 验收。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
@@ -94,8 +94,7 @@ CIF 无 token 时返回空文本并标明跳过 decoder。输出目录创建后�
 包含部分结果的 `failed.json`；缺输入、不兼容文件和板型不符均报错，不跳过。
 
 [主机证据](../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cli-review.md)
-覆盖真实预处理 CLI，并明确区分 SDK 替身测试与真实推理。源评估结果属于历史记录，
-后续迁移 evaluator 时单独标注。
+覆盖真实预处理 CLI，并明确区分 SDK 替身测试与真实推理。[评测说明](evaluator/README_cn.md) 分开记录历史数据集指标和本次两条语音的 FP32 实测结果。
 
 <a id="directory"></a>
 ## 目录结构
@@ -106,6 +105,7 @@ paraformer/
 ├── runtime/python/  # CLI/I/O、真实前端、三个原始 runner、CPU CIF 与文本
 ├── runtime/cpp/     # 原生应用、SDK 适配与准备后特征输入
 ├── conversion/      # FP32 导出、真实校准和显式 OE 编排
+├── evaluator/       # CPU FP32/HMCT 适配、严格特征校验及 CER 报告
 ├── test_data/       # 原样保留的源 WAV 与参考清单
 ├── tests/           # 主机行为和 SDK 边界测试
 └── README.md        # 概览、完整操作路径及验证边界
@@ -120,7 +120,7 @@ paraformer/
 - [测试数据](test_data/README_cn.md)：输入来源与参考文本。
 - [C++ 运行](runtime/cpp/README_cn.md)：完整原生应用与启动器已通过明确传输替身做主机检查，真实 SDK／板端未验证。
 - [模型转换](conversion/README_cn.md)：严格本地权重加载、真实三阶段 FP32 导出、数值检查、真实音频校准及显式 OE 编排；实际 OE 仍未执行。
-- Evaluator：统一实现与文档待迁移，不从两条 smoke 输入推断数据集指标。
+- [评测](evaluator/README_cn.md)：特征准备、FP32/HMCT 命令、CER 定义、失败记录和历史指标；两条 smoke 输入不代表数据集精度。
 
 <a id="license"></a>
 ## 许可证

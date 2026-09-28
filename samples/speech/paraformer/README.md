@@ -17,8 +17,8 @@ based on S commit `380e1a2bf42041af54be6f34935e50197cfadff9`, not whatever upstr
 main currently provides. The sample lives at `samples/speech/paraformer`.
 Python and native C++ entries and real CPU preprocessing are implemented;
 real-weight three-stage FP32 export, real-audio calibration and explicit OE
-compilation orchestration are implemented. Actual OE validation and evaluator
-migration remain open. This is not full sample acceptance.
+compilation orchestration and a dedicated host evaluator are implemented. Actual OE/HMCT
+validation and whole-sample acceptance remain open.
 
 <a id="support-matrix"></a>
 ## Support matrix
@@ -111,8 +111,8 @@ missing input, incompatible files and target mismatch are errors, not skipped ca
 
 [Host evidence](../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cli-review.md)
 covers the real preprocessing CLI and explicitly distinguishes synthetic SDK tests
-from actual inference. Source historical evaluator results remain historical until
-the evaluator is migrated and labelled separately.
+from actual inference. The [evaluator](evaluator/README.md) separates historical dataset
+metrics from the actual two-utterance FP32 smoke result.
 
 <a id="directory"></a>
 ## Directory layout
@@ -123,6 +123,7 @@ paraformer/
 ├── runtime/python/  # CLI/I/O, real frontend, three raw runners, CPU CIF and text
 ├── runtime/cpp/     # native application, SDK adapter and prepared-feature input
 ├── conversion/      # FP32 export, real calibration and explicit OE orchestration
+├── evaluator/       # CPU FP32/HMCT adapters, strict features and CER reporting
 ├── test_data/       # unchanged source WAVs and reference manifest
 ├── tests/           # host behavior and SDK-boundary tests
 └── README.md        # overview, complete commands and validation boundaries
@@ -137,8 +138,8 @@ paraformer/
 - [Test data](test_data/README.md): input provenance and reference text.
 - [C++ runtime](runtime/cpp/README.md): full native application and launcher are host-checked with explicit transport doubles; SDK/board inference is unverified.
 - [Conversion](conversion/README.md): strict local weight loading, real three-stage FP32 export, numeric checks, real-audio calibration and explicit OE orchestration; actual OE remains not-run.
-- Evaluator: unified implementation/documentation pending; do not infer dataset metrics
-  from the two bundled smoke inputs.
+- [Evaluator](evaluator/README.md): feature preparation, FP32 and HMCT commands, CER definition,
+  failure records and historical metrics; two smoke inputs do not establish dataset accuracy.
 
 <a id="license"></a>
 ## License

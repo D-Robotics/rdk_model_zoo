@@ -138,18 +138,31 @@ def bind_model(selection, metadata):
         raise MetadataMismatchError(
             "Each Paraformer artifact must expose exactly one model"
         )
-    inputs = _roles(
-        meta.input_names, meta.input_shapes, meta.input_dtypes, INPUTS[selection.stage]
+    inputs, outputs = bind_stage_io(selection.stage, meta)
+    return Binding(selection, meta, inputs, outputs)
+
+
+def bind_stage_io(stage, metadata):
+    """Bind physical stage tensors without claiming a published HBM identity."""
+    if stage not in STAGES:
+        raise ValueError("Unknown Paraformer stage")
+    meta = (
+        metadata
+        if isinstance(metadata, RuntimeMetadata)
+        else RuntimeMetadata.from_mapping(metadata)
     )
-    output_contract = dict(OUTPUTS[selection.stage])
+    inputs = _roles(
+        meta.input_names, meta.input_shapes, meta.input_dtypes, INPUTS[stage]
+    )
+    output_contract = dict(OUTPUTS[stage])
     # The source ONNX decoder also exposes token_num. Some compiled interfaces
     # eliminate that pass-through output. Validate it when present, never by position.
-    if selection.stage == "decoder" and "token_num" in meta.output_names:
+    if stage == "decoder" and "token_num" in meta.output_names:
         output_contract["count"] = (("token_num",), (1,), "int32")
     outputs = _roles(
         meta.output_names, meta.output_shapes, meta.output_dtypes, output_contract
     )
-    return Binding(selection, meta, inputs, outputs)
+    return inputs, outputs
 
 
 def physical_inputs(binding):
