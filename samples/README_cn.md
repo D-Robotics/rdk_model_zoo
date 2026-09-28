@@ -92,7 +92,7 @@ HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制
 | [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
 
-Gemma 已迁入五个原生入口与完整源教程；模型准备已完成，剩余文本核心工作与独立验收仍未关闭。MiniCPM5-2B 已迁入 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口并具备主机侧测试；板测未运行、独立验收待完成，不表示原生核心已验收。
+Gemma 已迁入五个原生入口与完整源教程；模型准备已完成，剩余文本核心工作与独立验收仍未关闭。MiniCPM5-2B 已迁入 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口。其[最终独立核心处置](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md)已在主机范围内接受核心重构：20 项主机测试通过、四段 README 示例编译通过；不声明实板、厂商 ABI 或模型精度验收。B11 批次、厂商 ABI/模型精度与板端验收仍未关闭；板测未运行。
 
 ## 固定第三方策略集成
 
@@ -104,9 +104,10 @@ ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护�
 - B3/B4/B5 的主要迁移验收基于主机，待板测范围见各批报告。
 - EfficientSAM/MobileSAM 已有 X5 8GB 默认/priority7 和 S100 默认等完整回收证据；X5 4GB 仅日志、S600 未完成、S100P 未验证等缺口按 [板端交接记录](../docs/releases/unified-migration/2026-09-24-board-resume.md) 保留，不能笼统标为全部已测或全部未测。
 - B7 包含已验证的部分 Python 对照，也有 MODNet manual 资产缺口、ByteTrack 视频范围限制和 C++ 源对照待补；完整状态见 [台账](../docs/releases/unified-migration/x5-s-migration-map.md)。
+- B8（H4）与 B10（H6）已获得非板端批次验收：B8 的八个样例范围见 [B8 聚合评审](../docs/releases/unified-migration/2026-09-28-b8-batch-independent-review.md)，ASR/KWS/Paraformer/HIMLoco 见 [B10 集成评审](../docs/releases/unified-migration/2026-09-28-b10-batch-independent-review.md)。两者只接受主机/文档范围；板端范围仍未运行。
 
 ## 选择与扩展
 
 先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [_shared](_shared/README.md)，代码职责与文档要求见 [推理契约](../docs/sample-standards/inference-contract.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
 
-尚未进入统一目录的模型保留在 [X5](../platforms/x5/README_cn.md)、[S](../platforms/s/README_cn.md)；[X3](../platforms/x3/README_cn.md) 为历史内容。B8–B11 的迁移和最终审核仍在进行，不能把本索引当作完整交付签收表。
+尚未进入统一目录的模型保留在 [X5](../platforms/x5/README_cn.md)、[S](../platforms/s/README_cn.md)；[X3](../platforms/x3/README_cn.md) 为历史内容。B9、B11 的迁移与独立审核仍在进行；B8/B10 的验收仅为非板范围，仓库级审核（H1/H8/H9）也不因任何批次关闭。不能把本索引当作完整交付签收表。

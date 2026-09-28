@@ -90,6 +90,7 @@ Read [AGENTS.md](AGENTS.md), the [inference contract](docs/sample-standards/infe
 ## Data, source-branch resources and validation
 
 - [Canonical release facts](docs/release) hold artifacts and historical measurements; the [platform registry](platforms/README.md) explains source branches, directories, tags and runtimes.
+- Source-branch online resources, inherited from the archived X5 (`ac11571`) and S (`380e1a2`) root guides: the [online model catalog](https://d-robotics.github.io/rdk_model_zoo/), [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues), the [D-Robotics developer community](https://developer.d-robotics.cc/) and its [user manual](https://developer.d-robotics.cc/information). They reference the delivery branches' published material; browsing the published catalog does not certify this integration branch, and no live link status is claimed here. Legacy demo material stays archived — [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) for X5 and the separate [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) repository for S — and is not an adaptation target.
 - Dataset preparation: [datasets](datasets), [X5 datasets](platforms/x5/datasets), [S datasets](platforms/s/datasets). Large datasets/models are generally not in Git.
 - Retained references: [X5 guidelines](platforms/x5/docs/Model_Zoo_Repository_Guidelines.md), [S Python API](platforms/s/docs/Python_API_User_Guide.md), [S UCP](platforms/s/docs/UCP_User_Guide.md), [TROS](docs/tros/README.md).
 - The [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md) and batch reports distinguish implementation, host checks, board tests, independent review and closure; the [current host completion plan](docs/superpowers/plans/2026-09-26-host-completion.md) does not treat pending board tests as passed.
@@ -117,6 +118,6 @@ Generated `dist/catalog.meta.json` binds `catalog.json` by SHA-256; CI uploads d
 
 ## Community, contribution and license
 
-Use repository Issues with target, image/SDK, model reference, commit and reproducible commands. Preserve original failure output and submit matching documentation/tests with fixes. Source branches retain [community resources](platforms/x5/README.md#community--contribution) and platform-specific guidance.
+Use [repository Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) with target, image/SDK, model reference, commit and reproducible commands. Preserve original failure output and submit matching documentation/tests with fixes. Source branches retain [community resources](platforms/x5/README.md#community--contribution) and platform-specific guidance.
 
 Unified code uses the root [LICENSE](LICENSE); distributions retain [X5 LICENSE](platforms/x5/LICENSE) and [S LICENSE](platforms/s/LICENSE). Upstream X3 supplied no license file and none is invented here. Model weights, datasets and upstream projects retain their respective licenses and provenance.

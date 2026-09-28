@@ -90,6 +90,7 @@ tools/                   # catalog, contract checks and validation tooling
 ## 数据、原分支资料与验证
 
 - [统一发布事实](docs/release) 保存制品与历史测量事实；[平台注册表](platforms/README_cn.md) 说明原分支、目录、标签及运行时差异。
+- 原分支在线资源继承自 X5（`ac11571`）、S（`380e1a2`）归档根指南：[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)、[GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)、[D-Robotics 开发者社区](https://developer.d-robotics.cc/) 及 [RDK 用户手册](https://developer.d-robotics.cc/information)。它们描述交付分支的已发布内容；浏览已发布目录不代表本整合分支通过验收，此处也不声明链接的实时可用性。历史 demo 材料保留在归档中——X5 为 [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) 归档分支，S 为独立 [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) 仓库——都不是本轮适配目标。
 - 数据准备入口：[datasets](datasets)、[X5 datasets](platforms/x5/datasets)、[S datasets](platforms/s/datasets)。大数据集和模型通常不在 Git 中。
 - 保留原指南：[X5 开发规范](platforms/x5/docs/Model_Zoo_Repository_Guidelines.md)、[S Python API](platforms/s/docs/Python_API_User_Guide.md)、[S UCP](platforms/s/docs/UCP_User_Guide.md)、[TROS](docs/tros/README_cn.md)。
 - [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md) 与各批报告说明“实现、主机测试、板测、独立评审、关闭”各状态；[当前非板端计划](docs/superpowers/plans/2026-09-26-host-completion.md) 不把待补板测当作通过。
@@ -117,6 +118,6 @@ npm --prefix tools/catalog-publisher run catalog:build
 
 ## 社区、贡献与许可
 
-问题反馈可使用仓库 Issues，并附 target、系统/SDK、模型引用、提交及可复现命令。先保护原始失败输出，再提交代码与相应文档/测试。原分支保留了[社区资源](platforms/x5/README_cn.md)和平台专属说明。
+问题反馈可使用[仓库 Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)，并附 target、系统/SDK、模型引用、提交及可复现命令。先保护原始失败输出，再提交代码与相应文档/测试。原分支保留了[社区资源](platforms/x5/README_cn.md)和平台专属说明。
 
 统一代码见根 [LICENSE](LICENSE)，平台分发另保留 [X5 LICENSE](platforms/x5/LICENSE) 与 [S LICENSE](platforms/s/LICENSE)；X3 上游没有随附许可文件，此处未补造。模型权重、数据集和上游项目按各自许可及来源记录处理。

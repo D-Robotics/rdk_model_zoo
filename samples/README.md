@@ -92,7 +92,7 @@ HIMLoco consumes prepared six-frame observations and returns policy actions; it 
 | [gemma4-e2b](llm/gemma4-e2b/README.md) | [conversion](llm/gemma4-e2b/conversion/README.md) | [evaluator](llm/gemma4-e2b/evaluator/README.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README.md) | [conversion](llm/minicpm5-2b/conversion/README.md) | [evaluator](llm/minicpm5-2b/evaluator/README.md) |
 
-Gemma includes five native entry points and the full source tutorials; model preparation is complete, while its remaining text-generation core work and independent acceptance stay open. MiniCPM5-2B is migrated with separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) native entries and host-side tests; board tests are not-run and independent acceptance is pending, so native core acceptance is not implied.
+Gemma includes five native entry points and the full source tutorials; model preparation is complete, while its remaining text-generation core work and independent acceptance stay open. MiniCPM5-2B is migrated with separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) native entries. Its final independent core disposition [accepted the core refactor within host scope](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md): 20 passing host tests and four compiled README examples, with no live board, vendor ABI or model accuracy acceptance claimed. Batch B11, vendor ABI/model accuracy and board acceptance remain open; board tests are not-run.
 
 ## Pinned third-party policy integrations
 
@@ -104,9 +104,10 @@ Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 i
 - B3/B4/B5 migration acceptance primarily uses host checks; batch reports retain the board backlog.
 - EfficientSAM/MobileSAM have fully recovered X5 8GB default/priority7 and S100 default evidence. X5 4GB logs-only, unfinished S600 and unverified S100P gaps remain scoped in the [board handoff](../docs/releases/unified-migration/2026-09-24-board-resume.md); neither “all tested” nor “all untested” is accurate.
 - B7 includes scoped passing Python comparisons, MODNet manual-asset gaps, ByteTrack video-scope limits and pending source C++ comparisons. See the [ledger](../docs/releases/unified-migration/x5-s-migration-map.md).
+- B8 (H4) and B10 (H6) hold non-board batch acceptance: the eight B8 scopes in the [B8 aggregate review](../docs/releases/unified-migration/2026-09-28-b8-batch-independent-review.md) and ASR/KWS/Paraformer/HIMLoco in the [B10 integrated review](../docs/releases/unified-migration/2026-09-28-b10-batch-independent-review.md). Both accept host/documentation scope only; their board scope stays not-run.
 
 ## Choose and extend
 
 Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [_shared](_shared/README.md); responsibilities and documentation requirements are in the [inference contract](../docs/sample-standards/inference-contract.md) and [README contract](../docs/sample-standards/readme-contract.md).
 
-Pending models remain under [X5](../platforms/x5/README.md) and [S](../platforms/s/README.md); [X3](../platforms/x3/README.md) is historical. B8–B11 migration and final review remain active. This index is not a full-delivery acceptance sheet.
+Pending models remain under [X5](../platforms/x5/README.md) and [S](../platforms/s/README.md); [X3](../platforms/x3/README.md) is historical. B9 and B11 migration and their independent review remain active; B8/B10 acceptance is non-board only, and repository-wide review (H1/H8/H9) is not closed by any batch. This index is not a full-delivery acceptance sheet.

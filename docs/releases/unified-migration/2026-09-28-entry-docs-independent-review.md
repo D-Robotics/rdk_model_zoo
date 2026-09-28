@@ -41,3 +41,18 @@ Do not copy marketing/badges for length, replace task navigation or rerun recipe
 Scope for Claude Code + GLM: README.md/README_cn.md, samples/README pair,
 platforms/README pair, plus its author report/evidence only. Preserve commands,
 counts, target/artifact facts and customer-release boundary. Codex will review.
+
+## Independent acceptance of the six-file correction
+
+Codex reread the complete root/platform/sample-index changes against sources.json,
+registry use in tests, fixed source README resources and the final MiniCPM/B8/B10
+review dispositions. ENTRY-DOC-R1/R2/N1 are closed. MiniCPM core host acceptance
+is distinct from B11 and real-model acceptance; Gemma Text remains in progress.
+The root still directs customers to published delivery lines rather than declaring
+the integration branch release-ready. Resource links retain source attribution.
+
+`final-recheck.json` records hashes of all six guides, unchanged fenced command
+blocks and 496 resolving local file/directory links. Newly added URLs were checked
+against the fixed source README text, not fetched or asserted live. Source sample
+inventory remains the earlier exact 51-root EN/CN mapping; no table rows changed.
+This closes only the entry package; H1 final sample/body reconciliation remains.
