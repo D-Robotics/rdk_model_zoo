@@ -117,26 +117,7 @@ void KvCache::ValidateAppend(const int8_t *const *keys,
                  (rows - 1)))
       throw std::invalid_argument(
           "KV source pointers or row strides are invalid");
-    if (Aliases(keys[layer]) || Aliases(values[layer]))
-      throw std::invalid_argument(
-          "KV append source memory must be separate from the cache");
   }
-}
-
-bool KvCache::Aliases(const void *ptr) const {
-  const auto *position = static_cast<const int8_t *>(ptr);
-  for (int layer = 0; layer < kNumKvLayers; ++layer) {
-    // ValidateAppend has already checked the size bookkeeping.
-    const auto *k_base = static_cast<const int8_t *>(k_mem_[layer].virAddr);
-    if (k_base != nullptr && position >= k_base &&
-        position < k_base + k_bytes_[layer])
-      return true;
-    const auto *v_base = static_cast<const int8_t *>(v_mem_[layer].virAddr);
-    if (v_base != nullptr && position >= v_base &&
-        position < v_base + v_bytes_[layer])
-      return true;
-  }
-  return false;
 }
 
 void KvCache::RollAppendLayer(int layer, const int8_t *k_src,

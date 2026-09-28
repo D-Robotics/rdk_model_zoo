@@ -18,7 +18,6 @@
 #include "gemma4_embeddings.hpp"
 #include "gemma4_kv_cache.hpp"
 #include "gemma4_model_io.hpp"
-#include "gemma4_text_tensor.hpp"
 
 namespace gemma4 {
 
@@ -221,7 +220,7 @@ class TextEngine {
 
   void SetupZeroCopyKv();
   void FillCommonInputs(ModelIo& io, const std::vector<int64_t>& token_ids,
-                        int chunk_start, int chunk_valid,
+                        int chunk_start, int chunk_valid, bool decode,
                         const float* prebuilt_hidden = nullptr);
   void FillDecodeInputs(int64_t token_id, int pos);
   void RunPrefillChunk(const std::vector<int64_t>& chunk, int chunk_start,
@@ -229,10 +228,8 @@ class TextEngine {
   void PrefillSuffix(const std::vector<int64_t>& ids, int start,
                      const std::vector<float>* hidden = nullptr);
   int64_t RunDecodeStep(int64_t token_id);
-  // Revalidates the refreshed KV output descriptors against the owned
-  // allocations and gathers per-layer rows for the cache append.
-  void GatherKvOutputs(ModelIo& io, int rows, const int8_t** keys,
-                       const int8_t** values, int64_t* row_strides);
+  int64_t ArgmaxLogits(const hbDNNTensor& logits_tensor, int seq_idx);
+  static int64_t OutputRowStrideBytes(const hbDNNTensor& tensor);
 
   static void BuildFullMask(const KvCache& kv, float* mask, int cache_start,
                             int chunk_start, int chunk_valid, int seq_len);

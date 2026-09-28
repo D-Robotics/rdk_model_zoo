@@ -42,6 +42,7 @@ runtime/cpp/                            C++ source code (this directory)
 ├── inc/                                Public headers
 │   ├── gemma4_config.hpp               Model constants (image token IDs, dims, ...)
 │   ├── gemma4_text_engine.hpp          Text LLM engine (prefill + decode + KV cache)
+│   ├── gemma4_text_tensor.hpp          Fixed Text export descriptor contract and strided IO
 │   ├── gemma4_vision_engine.hpp        Vision ViT engine
 │   ├── gemma4_embeddings.hpp           Token embedding lookup + vision injection
 │   ├── gemma4_kv_cache.hpp             Zero-copy KV cache management
@@ -380,7 +381,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-Eleven CTest entries cover three Vision stage/source-image/tensor checks, six KV allocation/reset/append/prefix-retention scenarios, and two Text ownership checks. Assertions remain enabled in Release builds.
+Fifteen CTest entries cover three Vision stage/source-image/tensor checks, seven KV allocation/reset/append/aliasing/prefix-retention scenarios, three Text ownership checks — including tensor adoption under injected allocation failure — one Text tensor contract test and one Text generation-flow test. Assertions remain enabled in Release builds.
 An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
 
 ### SDK failure handling
@@ -435,10 +436,10 @@ Allocation size is not a token-row count, so trailing padding does not participa
 | `PhysicalIndex(pos)` | Right-aligned physical row, or -1 if not resident; `OccupiedLen()` is the logical end and `CacheStart()` the oldest resident position |
 
 Successful reallocation invalidates old aliases and must happen before binding model inputs; failed allocation preserves them.
-Append source output memory must be separate from the cache and readable for at least `(rows-1)*row_stride + head_dim` bytes.
-The raw-pointer interface cannot discover source allocation capacities, so the Text SDK descriptor layer must enforce this prerequisite.
-It also requires equal K/V output row strides per layer. Shared input buffers do not mean zero CPU movement: append and prefix retention
-move/copy rows, and the inference entry flushes CPU-modified KV inputs.
+Append source output memory must be separate from the cache and readable for at least `(rows-1)*row_stride + head_dim` bytes;
+append now rejects source pointers inside any resident K/V allocation directly. It also requires equal K/V output row strides
+per layer, which the Text descriptor layer enforces before every append. Shared input buffers do not mean zero CPU movement:
+append and prefix retention move/copy rows, and the inference entry flushes CPU-modified KV inputs.
 
 The unused `SetOccupiedLen` setter is removed; maintain consistent data/positions through Reset, Append and CompactShift.
 TextEngine's `ContextShift` retains a prefix; callers then re-prefill the suffix they want. This corrects the source header's inaccurate promise
@@ -462,10 +463,60 @@ engine is returned. The embedding loader runs before model acquisition.
 The fixed text export requires 35 inputs (five ordinary inputs and 15 K/V pairs)
 and 31 outputs (logits and 15 K/V pairs). Null model handles, incompatible counts
 and a missing/nonpositive sequence dimension are rejected before indexed use.
-These checks do not yet establish the full Text tensor dtype/stride contract.
+
+### Text tensor transport contract
+
+`gemma4_text_tensor` owns physical descriptor validation, strided input packing,
+KV output row addressing and greedy logits argmax; `TextEngine` composes these
+operations with SDK calls. Every descriptor is validated against the fixed export
+before any allocation; output descriptors are revalidated after each inference
+against the capacity the engine originally allocated, not the refreshed claim.
+A mismatched export is rejected at construction — a 512-position or
+wrong-dtype model can no longer enter the engine, where the previous code
+accepted it and overflowed a 256-entry stack buffer (reproduced on immutable
+baseline source, see the tensor remediation record).
+
+| Binding | Accepted contract |
+| --- | --- |
+| `inputs_embeds` | `F32`, no quantization metadata, matrix `[chunk,1536]` (prefill) / `[1,1536]` (decode) |
+| `token_ids` / `position_ids` | `S64` / `S32`, one row of `seq` elements (source graph declares `[1,seq]`) |
+| `full_mask` / `sliding_mask` | `S16`, matrix `[seq,4096]`; row padding allowed, element gaps rejected |
+| `logits` | `S16`, matrix `[seq,262144]`; row and column strides honored, other widths never reinterpreted |
+| K/V inputs (5..34) | `S8`, dense `[4096,head_dim]` per layer (singleton axes ignored); internal row padding rejected |
+| K/V outputs (1..30) | `S8`, `[seq,head_dim]` per layer; row padding allowed, K/V row strides must agree |
+
+Singleton axes are collapsed before comparison, so `[4096,1,head_dim]`,
+`[1,seq]` and `[seq,1536]` declarations of the same physical layout are all
+accepted. Byte strides must be element aligned, nonoverlapping, and every
+addressed byte must stay inside the declared allocation and the original
+buffer capacity. Sequence dimensions are pinned: prefill 256, decode 1 — the
+`kChunkSize`/`kCacheLen`/`kHiddenSize`/`kVocabSize`/`kHeadDims` constants are
+the export contract, and a differently exported model needs an explicit
+adapter instead of silently entering this engine.
+
+Mask int16 quantization, logits `kLogitScale` dequantization and int8 KV
+storage stay CPU-side source algorithms: descriptors carrying quantization
+metadata are rejected, and the write path zeroes padding before copying
+through the descriptor strides. Greedy argmax scales int16 storage by
+`kLogitScale` and keeps the first maximum; ties and all-zero rows therefore
+behave exactly as the source implementation.
+
+Host coverage: a helper contract test (padding, singleton axes, dtype/shape/
+stride/capacity/quantization rejections, argmax row addressing and tie
+semantics), and a generation-flow test that drives the production engine
+against an SDK double speaking this contract — generated tokens, cache
+transport through the borrowed KV inputs, inference failure cleanup,
+post-inference descriptor drift and a thirteen-case constructor rejection
+matrix. Host fixtures are not vendor ABI or real-model evidence; matching a
+published HBM's descriptors to this contract still requires board evidence.
+
+Host test entry:
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_tensors.py -v
+```
 
 Host tests replace only SDK calls and embedding loading: 301 successive failure
 points, six invalid descriptor cases and normal teardown check that no tensor/model allocation remains. A
 separate owner test covers partial construction, moves, repeated clearing and
 borrowed-cache survival. No weights are loaded and inference calls are forbidden
-in these tests; they do not validate SDK ABI compatibility or generation quality.
+in the ownership tests; they do not validate SDK ABI compatibility or generation quality.

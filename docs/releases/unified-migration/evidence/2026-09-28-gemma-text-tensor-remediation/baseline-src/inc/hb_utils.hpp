@@ -308,3 +308,12 @@ inline void RunInfer(hbDNNHandle_t handle, std::vector<hbDNNTensor> &inputs,
     input_indices.push_back(static_cast<int>(index));
   RunInferSelective(handle, inputs, outputs, input_indices);
 }
+
+inline const int16_t* LogitsRowPtr(const hbDNNTensor& logits, int seq_idx) {
+  const auto& props = logits.properties;
+  const int ndim = props.validShape.numDimensions;
+  const int64_t row_stride_elems =
+      props.stride[ndim - 2] / ElementSize(props.tensorType);
+  const auto* base = static_cast<const int16_t*>(logits.sysMem.virAddr);
+  return base + seq_idx * row_stride_elems;
+}

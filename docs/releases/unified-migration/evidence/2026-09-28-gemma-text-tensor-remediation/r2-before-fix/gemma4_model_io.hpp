@@ -32,18 +32,16 @@ struct ModelIo {
     return *this;
   }
 
-  // Adopt an allocated tensor and record its buffer capacity. Adoption is
-  // transactional: the tensor becomes owned (and its capacity entry
-  // recorded) only when both vectors hold consistent state, so an
-  // allocation failure can neither leak the buffer into a destroyed
-  // parameter nor leave a stale capacity entry behind. The SDK can refresh
-  // output descriptors after inference; the recorded capacity is the
+  // Adopt an allocated tensor and record its buffer capacity. The SDK can
+  // refresh output descriptors after inference; the recorded capacity is the
   // allocation the engine actually owns, not the refreshed claim.
   void AddInput(hbDNNTensor tensor) {
-    Adopt(std::move(tensor), input_capacity_, inputs);
+    input_capacity_.push_back(tensor.properties.alignedByteSize);
+    inputs.push_back(std::move(tensor));
   }
   void AddOutput(hbDNNTensor tensor) {
-    Adopt(std::move(tensor), output_capacity_, outputs);
+    output_capacity_.push_back(tensor.properties.alignedByteSize);
+    outputs.push_back(std::move(tensor));
   }
 
   // Recorded allocation capacity, or 0 for tensors adopted directly through
@@ -93,41 +91,6 @@ struct ModelIo {
   }
 
 private:
-  // RAII owner for a tensor being adopted: releases the buffer unless the
-  // adoption completed. Without it, a throwing vector growth would destroy
-  // the by-value parameter — a trivial POD that cannot free its own buffer —
-  // and leak.
-  struct AdoptionGuard {
-    hbDNNTensor tensor;
-    bool owned;
-    explicit AdoptionGuard(hbDNNTensor adopted)
-        : tensor(adopted), owned(true) {}
-    AdoptionGuard(const AdoptionGuard &) = delete;
-    AdoptionGuard &operator=(const AdoptionGuard &) = delete;
-    ~AdoptionGuard() {
-      if (owned && tensor.sysMem.virAddr)
-        hbUCPFree(&tensor.sysMem);
-    }
-    void Disown() { owned = false; }
-  };
-
-  // Push the tensor and its capacity entry as one transaction. Every
-  // allocation failure leaves both vectors unchanged and releases the
-  // buffer exactly once; success leaves no stale or missing entry.
-  static void Adopt(hbDNNTensor tensor, std::vector<int64_t> &capacities,
-                    std::vector<hbDNNTensor> &tensors) {
-    const int64_t capacity = tensor.properties.alignedByteSize;
-    AdoptionGuard guard(tensor);
-    capacities.push_back(capacity);
-    try {
-      tensors.push_back(guard.tensor);
-    } catch (...) {
-      capacities.pop_back();  // The tensor never joined; drop its entry.
-      throw;
-    }
-    guard.Disown();  // Ownership moved to `tensors`; no double free.
-  }
-
   void Swap(ModelIo &other) noexcept {
     std::swap(handle, other.handle);
     inputs.swap(other.inputs);

@@ -59,3 +59,13 @@ The two **specific findings are corrected** in the current candidate, as recorde
 - Fresh whole Gemma host suite: **29 tests pass**. This includes compiled production-source contract/flow and ownership tests against SDK fixtures. No real model, SDK or board was used.
 
 The entire product candidate remains uncommitted pending the remaining tensor/package review; full TextEngine session-stage reorganization and final H7 acceptance are still open. The prior reproduced failures and their original hashes are retained above and in the original evidence.
+
+## Completed bounded tensor-code review — 2026-09-28
+
+The inspected tensor-code package is accepted within host scope after R1/R2 correction. Fresh `tensor-package-native.json` records successful native configure/build and **15 ASan/UBSan CTests**, plus a zero-violation sample checker (no skips/exemptions); the separate R1/R2 record holds **29 whole-sample host tests** and both original counterexamples. The sanitizer build uses the existing local OpenCV and SDK type/call fixtures, not a board SDK.
+
+Reviewed fixed-role type/rank/shape checks, overflow-bounded byte spans, singleton collapse, original allocation capacities, dense KV inputs, padded KV output rows, equal K/V strides, strided writes and greedy logits reads. InitModelIo validates the 35/31 descriptor groups before allocation, makes ownership transactional and pins prefill/decode geometry. Production fill/read paths use the helper; cache alias rejection and per-layer append validation retain borrowed-cache ownership. Source mask quantization and first-maximum logits selection remain explicit algorithms, not extra forward behavior. Matching actual HBM descriptors is not inferred from SDK doubles.
+
+Customer runtime guides describe the new physical tensor boundary and failure behavior accurately, except the nonblocking stale count paragraph (14 CTests / 2 ownership tests, now 15 / 3). A narrowly scoped Claude Code + GLM correction is running before product commit. This bounded tensor acceptance does not accept the still-monolithic session/generation orchestration: masks/preparation, session bookkeeping, debug console output and benchmark composition remain mixed in TextEngine. Those are the next substantive implementation task; H7 remains open.
+
+Final document check: Claude correction is terminal; both runtime guides now accurately state 15 CTests and 3 ownership tests, including allocation-failure adoption. `final-document-check.json` verifies all code/test hashes unchanged since the independent native run. **Bounded tensor package accepted for commit**; session-stage refactoring/H7 remain open.

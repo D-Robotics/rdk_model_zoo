@@ -121,10 +121,6 @@ private:
                        int rows, int64_t row_stride);
   void ValidateAppend(const int8_t *const *k_outs, const int8_t *const *v_outs,
                       const int64_t *strides, int start, int rows) const;
-  /// True when @p ptr points inside any resident K or V allocation. Append
-  /// sources must stay outside the cache: rows are moved before they are
-  /// copied, so an aliased source would read already-shifted data.
-  bool Aliases(const void *ptr) const;
   void FreeMem() noexcept;
 
   std::vector<hbUCPSysMem> k_mem_;

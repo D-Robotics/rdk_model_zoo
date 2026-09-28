@@ -65,6 +65,7 @@ add_library(gemma4_runtime STATIC
   src/gemma4_embeddings.cpp
   src/gemma4_kv_cache.cpp
   src/gemma4_text_engine.cpp
+  src/gemma4_text_tensor.cpp
   src/gemma4_vision_preprocess.cpp
   src/gemma4_vision_task.cpp
   src/gemma4_image_io.cpp

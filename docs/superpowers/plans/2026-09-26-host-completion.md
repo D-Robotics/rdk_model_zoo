@@ -294,3 +294,5 @@ KWS-N1 also closed. H1/H2/H3/H6/H9 broader work is not implicitly closed.
 ### 2026-09-28 B10 integrated host recheck (Codex)
 
 Fresh 109 runtime/host tests pass (ASR 27, KWS 13, Paraformer 46, HIMLoco 23); 54 README inventory/local-link checks and four zero-violation sample checkers recorded in `2026-09-28-b10-batch-independent-review.md`. H6 remains open for B10-DOC-R1 (Paraformer test-data native-consumer status) and independent reread of the Claude Code + GLM correction. No real recipe, quantization, board or robot run was performed.
+
+2026-09-28：Gemma Text 张量包经 Codex 独立复核接受；R1 零维除零与 R2 接管失败泄漏原反例均通过，29 项主机测试及 15 项 ASan/UBSan CTest 通过，代码哈希复核无漂移，双语 README 15/3 测试计数已校正。见 `2026-09-28-gemma-text-tensor-independent-review.md`。后续由 Claude Code + GLM 完成 Text 会话/前处理/原始推理/后处理职责拆分，H7 未关闭；不做真实量化或板测。

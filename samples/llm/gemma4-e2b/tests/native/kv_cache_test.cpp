@@ -117,6 +117,22 @@ int main(int argc, char **argv) {
         assert(cache.KLayer(0)[4095 * kHeadDims[0]] == 1);
         cache.Reset();
         assert(cache.OccupiedLen() == 0 && cache.PhysicalIndex(0) == -1);
+      } else if (mode == "alias") {
+        // Append sources must live outside the cache: rows are moved before
+        // they are copied, so an aliased source would read shifted data.
+        auto *saved_k = kp[0];
+        auto *saved_v = vp[1];
+        kp[0] = cache.KLayer(0);
+        rejects([&] { cache.AppendDecodeStep(kp, vp, strides, 2); });
+        kp[0] = cache.KLayer(0) + kHeadDims[0] + 1;  // Interior still aliases.
+        rejects([&] { cache.AppendDecodeStep(kp, vp, strides, 2); });
+        kp[0] = saved_k;
+        vp[1] = cache.VLayer(1) + kHeadDims[1];
+        rejects([&] { cache.AppendDecodeStep(kp, vp, strides, 2); });
+        vp[1] = saved_v;
+        assert(cache.OccupiedLen() == 2 && cache.PhysicalIndex(0) == 4094);
+        assert(cache.KLayer(0)[4094 * kHeadDims[0]] == 1);
+        assert(cache.VLayer(1)[4095 * kHeadDims[1]] == 12);
       } else {
         cache.Allocate(ks, vs);
         assert(cache.OccupiedLen() == 0 && cache.PhysicalIndex(0) == -1);

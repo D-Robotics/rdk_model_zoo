@@ -17,7 +17,7 @@ class TextOwnershipTests(unittest.TestCase):
         if compiler is None:
             self.skipTest("C++17 compiler unavailable; Text ownership not-run")
         with tempfile.TemporaryDirectory(prefix="gemma-text-owners-") as directory:
-            for name in ("model_io", "text_resources"):
+            for name in ("model_io", "model_io_adopt", "text_resources"):
                 with self.subTest(name=name):
                     binary = Path(directory) / name
                     command = [
@@ -33,6 +33,7 @@ class TextOwnershipTests(unittest.TestCase):
                         command += [
                             str(CPP / "src/gemma4_text_engine.cpp"),
                             str(CPP / "src/gemma4_kv_cache.cpp"),
+                            str(CPP / "src/gemma4_text_tensor.cpp"),
                         ]
                     command += ["-o", str(binary)]
                     built = subprocess.run(command, capture_output=True, text=True)

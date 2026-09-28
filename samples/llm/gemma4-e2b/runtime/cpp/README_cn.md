@@ -42,6 +42,7 @@ runtime/cpp/                            C++ 源码（本目录）
 ├── inc/                                公共头文件
 │   ├── gemma4_config.hpp               模型常量（图像 token ID、维度等）
 │   ├── gemma4_text_engine.hpp          Text LLM 引擎（prefill + decode + KV cache）
+│   ├── gemma4_text_tensor.hpp          固定 Text 导出的描述符契约与带 stride 读写
 │   ├── gemma4_vision_engine.hpp        Vision ViT 引擎
 │   ├── gemma4_embeddings.hpp           Token embedding 查表 + vision 注入
 │   ├── gemma4_kv_cache.hpp             零拷贝 KV cache 管理
@@ -373,7 +374,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-十一项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，六项覆盖 KV 分配/Reset/追加/前缀保留，两项覆盖 Text 所有权。Release 构建仍启用断言。
+十五项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，七项覆盖 KV 分配/Reset/追加/源别名/前缀保留，三项覆盖 Text 所有权（含注入分配失败下的张量采用），另有一项 Text 张量契约测试与一项 Text 生成流程测试。Release 构建仍启用断言。
 这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。
 
 ### SDK 失败处理
@@ -428,8 +429,9 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resourc
 | `PhysicalIndex(pos)` | 返回右对齐物理行号，未驻留位置返回 -1；`OccupiedLen()` 是逻辑结束位置，`CacheStart()` 是最旧驻留位置 |
 
 成功重新 Allocate 会使旧别名失效，应只在绑定模型输入之前执行；分配失败不会使旧别名失效。
-Append 的源输出内存必须与缓存分离，并至少包含 `(rows-1)*row_stride + head_dim` 个可读字节；原指针接口不能获知源分配容量，
-其上层 Text SDK 描述符检查仍须负责这一前提。当前接口也要求同一层 K/V 输出行 stride 相同。
+Append 的源输出内存必须与缓存分离，并至少包含 `(rows-1)*row_stride + head_dim` 个可读字节；
+现在追加会直接拒绝指向任何已驻留 K/V 分配内部的源指针。同一层 K/V 输出行 stride 必须相同，
+这一前提由 Text 描述符层在每次追加前强制检查。
 共享输入 buffer 不代表 CPU 完全不搬数据：追加和前缀保留都执行 CPU 移动/复制，随后推理入口刷新 CPU 改动的 KV 输入。
 
 不再提供直接修改长度的 `SetOccupiedLen`（源树没有调用方）；通过 Reset、Append 和 CompactShift 维护位置与数据一致。
@@ -450,8 +452,43 @@ embedding 加载发生在模型获取之前。
 
 固定 Text 导出要求 35 个输入（5 个普通输入、15 对 K/V）和 31 个输出
 （logits、15 对 K/V）。空模型句柄、数量不符、缺失或非正的序列维度会在索引使用前拒绝。
-这些检查尚不能证明 Text 张量完整的 dtype/stride 契约。
+
+### Text 张量传输契约
+
+`gemma4_text_tensor` 集中负责物理描述符校验、带 stride 的输入写入、KV 输出行寻址和贪心 logits argmax；
+`TextEngine` 只组合这些操作和 SDK 调用。所有描述符先按固定导出契约校验、再分配；每次推理之后按引擎
+最初分配的容量（而非 SDK 刷新后的声明）重新校验输出描述符。不匹配的导出在构造期拒绝——512 序列长度或
+错误 dtype 的模型不再能进入引擎；整改前的代码会接受它并在 256 项栈缓冲上越界写入（已用不可变基线源码复现，
+见张量整改记录）。
+
+| 绑定 | 接受范围 |
+| --- | --- |
+| `inputs_embeds` | `F32`、无量化 metadata，矩阵 `[chunk,1536]`（prefill）/ `[1,1536]`（decode） |
+| `token_ids` / `position_ids` | `S64` / `S32`，一行 `seq` 个元素（源图声明为 `[1,seq]`） |
+| `full_mask` / `sliding_mask` | `S16`，矩阵 `[seq,4096]`；允许行 padding，拒绝元素间隙 |
+| `logits` | `S16`，矩阵 `[seq,262144]`；行、列 stride 均按描述符读取，其他存储宽度不再重新解释 |
+| K/V 输入（5..34） | 每层 `S8` 稠密 `[4096,head_dim]`（忽略单例轴）；拒绝矩阵内部行 padding |
+| K/V 输出（1..30） | 每层 `S8` `[seq,head_dim]`；允许行 padding，同层 K/V 行 stride 必须一致 |
+
+单例轴在比较前折叠，因此同一物理布局的 `[4096,1,head_dim]`、`[1,seq]`、`[seq,1536]` 声明都会接受。
+byte stride 必须按元素大小对齐、互不重叠，且所有访问地址落在声明分配和原 buffer 容量内。
+序列维度固定：prefill 256、decode 1——`kChunkSize`/`kCacheLen`/`kHiddenSize`/`kVocabSize`/`kHeadDims`
+这些常量就是导出契约；不同导出的模型需要显式适配层，不得静默进入本引擎。
+
+mask 的 int16 量化、logits 的 `kLogitScale` 反量化与 int8 KV 存储仍保留为 CPU 侧源算法：
+携带量化 metadata 的描述符会被拒绝；写入路径先清零 padding，再按描述符 stride 复制。
+贪心 argmax 将 int16 存储乘以 `kLogitScale` 并保留首个最大值；平票与全零行的行为与源实现一致。
+
+主机覆盖包括：一项 helper 契约测试（padding、单例轴、dtype/形状/stride/容量/量化拒绝、argmax 行寻址与平票语义），
+以及一项生成流程测试——用说这套契约的 SDK 替身驱动生产引擎，校验生成 token、经借用 KV 输入的缓存搬运、
+推理失败清理、推理后描述符漂移和 13 类构造期拒绝矩阵。主机夹具不是厂商 ABI 或真实模型证据；
+真实发布 HBM 的描述符与该契约是否匹配仍需板端证据。
+
+主机测试入口：
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_tensors.py -v
+```
 
 主机测试仅替换 SDK 调用与 embedding 加载：逐一注入 301 个失败点、检查 6 类非法描述符及正常销毁，
 确认没有残留的张量/模型分配。独立所有权测试覆盖部分构造、移动、重复清理及借用缓存不被释放。
-测试不加载权重，并禁止调用推理；它不证明真实 SDK ABI 兼容性或生成质量。
+所有权测试不加载权重，并禁止调用推理；它不证明真实 SDK ABI 兼容性或生成质量。

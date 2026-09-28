@@ -26,42 +26,7 @@ namespace gemma4 {
 
 namespace {
 
-// Fixed-export binding of a Text input slot.
-TextTensorRole InputRole(int index) {
-  switch (index) {
-    case 0:
-      return TextTensorRole::kInputsEmbeds;
-    case 1:
-      return TextTensorRole::kTokenIds;
-    case 2:
-      return TextTensorRole::kPositionIds;
-    case 3:
-      return TextTensorRole::kFullMask;
-    case 4:
-      return TextTensorRole::kSlidingMask;
-    default:
-      return TextTensorRole::kKvInput;
-  }
-}
-
-// KV inputs are 15 keys (5..19) followed by 15 values (20..34).
-int InputLayer(int index) {
-  return index < kKvInputStart + kNumKvLayers ? index - kKvInputStart
-                                              : index - kKvInputStart - kNumKvLayers;
-}
-
-TextTensorRole OutputRole(int index) {
-  return index == kLogitsOutputIndex ? TextTensorRole::kLogits
-                                     : TextTensorRole::kKvOutput;
-}
-
-// KV outputs are 15 keys (1..15) followed by 15 values (16..30).
-int OutputLayer(int index) {
-  return index < 1 + kNumKvLayers ? index - 1 : index - 1 - kNumKvLayers;
-}
-
-ModelIo InitModelIo(hbDNNPackedHandle_t packed, const char* name,
-                    int seq_len) {
+ModelIo InitModelIo(hbDNNPackedHandle_t packed, const char* name) {
   ModelIo io;
   HBDNN_CHECK(hbDNNGetModelHandle(&io.handle, packed, name), name);
 
@@ -70,44 +35,24 @@ ModelIo InitModelIo(hbDNNPackedHandle_t packed, const char* name,
   HBDNN_CHECK(hbDNNGetInputCount(&input_count, io.handle), "input count");
   if (input_count != 5 + 2 * kNumKvLayers)
     throw std::runtime_error("text subgraph requires 35 inputs");
+  io.inputs.reserve(static_cast<size_t>(input_count));
+  for (int i = 0; i < input_count; ++i) {
+    io.inputs.push_back(MakeTensor(io.handle, true, i));
+  }
 
   int output_count = 0;
   HBDNN_CHECK(hbDNNGetOutputCount(&output_count, io.handle), "output count");
   if (output_count != 1 + 2 * kNumKvLayers)
     throw std::runtime_error("text subgraph requires 31 outputs");
-
-  // Validate every descriptor against the fixed-export contract before
-  // allocating, so an incompatible export is rejected without acquiring
-  // buffers its bindings can never address.
-  std::vector<hbDNNTensorProperties> input_properties;
-  input_properties.reserve(static_cast<size_t>(input_count));
-  for (int i = 0; i < input_count; ++i) {
-    hbDNNTensorProperties properties{};
-    HBDNN_CHECK(hbDNNGetInputTensorProperties(&properties, io.handle, i),
-                "get input tensor props");
-    ValidateTextTensor(properties, InputRole(i), seq_len, InputLayer(i));
-    input_properties.push_back(properties);
-  }
-  std::vector<hbDNNTensorProperties> output_properties;
-  output_properties.reserve(static_cast<size_t>(output_count));
-  for (int i = 0; i < output_count; ++i) {
-    hbDNNTensorProperties properties{};
-    HBDNN_CHECK(hbDNNGetOutputTensorProperties(&properties, io.handle, i),
-                "get output tensor props");
-    ValidateTextTensor(properties, OutputRole(i), seq_len, OutputLayer(i));
-    output_properties.push_back(properties);
-  }
-
-  io.inputs.reserve(static_cast<size_t>(input_count));
-  for (auto& properties : input_properties) {
-    io.AddInput(AllocateTensor(properties));
-  }
   io.outputs.reserve(static_cast<size_t>(output_count));
-  for (auto& properties : output_properties) {
-    io.AddOutput(AllocateTensor(properties));
+  for (int i = 0; i < output_count; ++i) {
+    io.outputs.push_back(MakeTensor(io.handle, false, i));
   }
 
-  io.seq_len = seq_len;
+  const auto& shape = io.inputs[0].properties.validShape;
+  if (shape.numDimensions < 1 || shape.dimensionSize[0] <= 0)
+    throw std::runtime_error("invalid text sequence dimension");
+  io.seq_len = shape.dimensionSize[0];
   return io;
 }
 
@@ -126,8 +71,8 @@ TextEngine::TextEngine(const std::string& text_hbm, const std::string& embed_pat
     load_ms_ =
         std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-    prefill_ = InitModelIo(packed_, "prefill", kChunkSize);
-    decode_ = InitModelIo(packed_, "decode", 1);
+    prefill_ = InitModelIo(packed_, "prefill");
+    decode_ = InitModelIo(packed_, "decode");
     SetupZeroCopyKv();
 
     decode_hidden_.resize(kHiddenSize, 0.f);
@@ -231,16 +176,6 @@ void TextEngine::SetupZeroCopyKv() {
   std::vector<int64_t> k_bytes(kNumKvLayers);
   std::vector<int64_t> v_bytes(kNumKvLayers);
   for (int i = 0; i < kNumKvLayers; ++i) {
-    // One shared cache buffer backs both subgraphs, so their descriptors
-    // (already validated S8 [kCacheLen, head_dim] matrices) must also
-    // reserve identical room.
-    if (prefill_.inputs[5 + i].properties.alignedByteSize !=
-            decode_.inputs[5 + i].properties.alignedByteSize ||
-        prefill_.inputs[20 + i].properties.alignedByteSize !=
-            decode_.inputs[20 + i].properties.alignedByteSize) {
-      throw std::runtime_error(
-          "prefill/decode KV inputs disagree on the cache allocation size");
-    }
     k_bytes[i] = decode_.inputs[5 + i].properties.alignedByteSize;
     v_bytes[i] = decode_.inputs[20 + i].properties.alignedByteSize;
   }
@@ -248,20 +183,22 @@ void TextEngine::SetupZeroCopyKv() {
 
   // Borrowed slots are tracked independently from the cache owner.
   for (int i = 0; i < kNumKvLayers; ++i) {
-    prefill_.BindBorrowedInput(5 + i, kv_.KMem(i), k_bytes[i]);
-    prefill_.BindBorrowedInput(20 + i, kv_.VMem(i), v_bytes[i]);
-    decode_.BindBorrowedInput(5 + i, kv_.KMem(i), k_bytes[i]);
-    decode_.BindBorrowedInput(20 + i, kv_.VMem(i), v_bytes[i]);
+    prefill_.BindBorrowedInput(5 + i, kv_.KMem(i));
+    prefill_.BindBorrowedInput(20 + i, kv_.VMem(i));
+    decode_.BindBorrowedInput(5 + i, kv_.KMem(i));
+    decode_.BindBorrowedInput(20 + i, kv_.VMem(i));
   }
 }
 
 void TextEngine::FillCommonInputs(ModelIo& io,
                                   const std::vector<int64_t>& token_ids,
-                                  int chunk_start, int chunk_valid,
+                                  int chunk_start, int chunk_valid, bool decode,
                                   const float* prebuilt_hidden) {
   const int seq_len = io.seq_len;
   std::vector<int64_t> padded = token_ids;
-  padded.resize(static_cast<size_t>(seq_len), 0);
+  if (!decode) {
+    padded.resize(static_cast<size_t>(seq_len), 0);
+  }
 
   // Image token ids → pad for PLE token-identity (input[1] and embed lookup base).
   std::vector<int64_t> ple_padded = padded;
@@ -292,23 +229,31 @@ void TextEngine::FillCommonInputs(ModelIo& io,
     embeddings_.Lookup(ple_padded, hidden.data());
   }
 
-  WriteTextInput(io.inputs[0], hidden.data(),
-                 static_cast<int64_t>(seq_len) * kHiddenSize,
-                 TextTensorRole::kInputsEmbeds, seq_len, io.InputCapacity(0));
-  WriteTextInput(io.inputs[1], ple_padded.data(), seq_len,
-                 TextTensorRole::kTokenIds, seq_len, io.InputCapacity(1));
+  auto& embed_in = io.inputs[0];
+  WriteInputTensor(embed_in, hidden.data());
 
-  std::vector<int32_t> positions(static_cast<size_t>(seq_len));
+  auto& token_in = io.inputs[1];
+  int64_t token_buf[256];
+  if (decode) {
+    token_buf[0] = token_ids.back();
+  } else {
+    for (int i = 0; i < seq_len; ++i) {
+      token_buf[i] = ple_padded[static_cast<size_t>(i)];
+    }
+  }
+  WriteInputTensor(token_in, token_buf);
+
+  auto& pos_in = io.inputs[2];
+  int32_t pos_buf[256];
   const int last_pos = chunk_start + std::max(chunk_valid - 1, 0);
   for (int i = 0; i < seq_len; ++i) {
     if (i < chunk_valid) {
-      positions[static_cast<size_t>(i)] = chunk_start + i;
+      pos_buf[i] = chunk_start + i;
     } else {
-      positions[static_cast<size_t>(i)] = last_pos;
+      pos_buf[i] = last_pos;
     }
   }
-  WriteTextInput(io.inputs[2], positions.data(), seq_len,
-                 TextTensorRole::kPositionIds, seq_len, io.InputCapacity(2));
+  WriteInputTensor(pos_in, pos_buf);
 
   std::vector<float> full_mask(static_cast<size_t>(seq_len) * kCacheLen);
   std::vector<float> slide_mask(static_cast<size_t>(seq_len) * kCacheLen);
@@ -321,73 +266,39 @@ void TextEngine::FillCommonInputs(ModelIo& io,
   std::vector<int16_t> slide_q(static_cast<size_t>(seq_len) * kCacheLen);
   QuantizeMask(full_mask.data(), full_q.data(), seq_len, kCacheLen);
   QuantizeMask(slide_mask.data(), slide_q.data(), seq_len, kCacheLen);
-  WriteTextInput(io.inputs[3], full_q.data(),
-                 static_cast<int64_t>(seq_len) * kCacheLen,
-                 TextTensorRole::kFullMask, seq_len, io.InputCapacity(3));
-  WriteTextInput(io.inputs[4], slide_q.data(),
-                 static_cast<int64_t>(seq_len) * kCacheLen,
-                 TextTensorRole::kSlidingMask, seq_len, io.InputCapacity(4));
+  WriteInputTensor(io.inputs[3], full_q.data());
+  WriteInputTensor(io.inputs[4], slide_q.data());
 }
 
 void TextEngine::FillDecodeInputs(int64_t token_id, int pos) {
-  const int seq_len = decode_.seq_len;
   embeddings_.Lookup(std::vector<int64_t>{token_id}, decode_hidden_.data());
 
-  WriteTextInput(decode_.inputs[0], decode_hidden_.data(), kHiddenSize,
-                 TextTensorRole::kInputsEmbeds, seq_len,
-                 decode_.InputCapacity(0));
+  auto& embed_in = decode_.inputs[0];
+  WriteInputTensor(embed_in, decode_hidden_.data());
 
-  WriteTextInput(decode_.inputs[1], &token_id, 1, TextTensorRole::kTokenIds,
-                 seq_len, decode_.InputCapacity(1));
+  auto& token_in = decode_.inputs[1];
+  int64_t token_buf[1] = {token_id};
+  WriteInputTensor(token_in, token_buf);
 
-  const int32_t pos_value = static_cast<int32_t>(pos);
-  WriteTextInput(decode_.inputs[2], &pos_value, 1, TextTensorRole::kPositionIds,
-                 seq_len, decode_.InputCapacity(2));
+  auto& pos_in = decode_.inputs[2];
+  int32_t pos_buf[1] = {static_cast<int32_t>(pos)};
+  WriteInputTensor(pos_in, pos_buf);
 
   BuildFullMask(kv_, decode_mask_.data(), kv_.CacheStart(), pos, 1, 1);
   BuildSlidingMask(kv_, decode_slide_mask_.data(), kv_.CacheStart(), pos, 1, 1);
 
   QuantizeMask(decode_mask_.data(), decode_mask_q_.data(), 1, kCacheLen);
   QuantizeMask(decode_slide_mask_.data(), decode_slide_mask_q_.data(), 1, kCacheLen);
-  WriteTextInput(decode_.inputs[3], decode_mask_q_.data(), kCacheLen,
-                 TextTensorRole::kFullMask, seq_len, decode_.InputCapacity(3));
-  WriteTextInput(decode_.inputs[4], decode_slide_mask_q_.data(), kCacheLen,
-                 TextTensorRole::kSlidingMask, seq_len,
-                 decode_.InputCapacity(4));
-}
-
-void TextEngine::GatherKvOutputs(ModelIo& io, int rows, const int8_t** keys,
-                                 const int8_t** values,
-                                 int64_t* row_strides) {
-  // The export carries one row per subgraph position; a chunk appends only
-  // the leading rows.
-  if (rows <= 0 || rows > io.seq_len)
-    throw std::runtime_error("KV append row count is outside the subgraph shape");
-  for (int i = 0; i < kNumKvLayers; ++i) {
-    // Refreshed descriptors are revalidated against the allocation this
-    // engine owns before any row is consumed.
-    const TextKvRows key_rows = TextKvOutputRows(io.outputs[1 + i], i, io.seq_len,
-                                                 io.OutputCapacity(1 + i));
-    const TextKvRows value_rows =
-        TextKvOutputRows(io.outputs[16 + i], i, io.seq_len,
-                         io.OutputCapacity(16 + i));
-    // RollAppendLayer advances K and V sources with one shared row stride.
-    if (value_rows.row_stride != key_rows.row_stride) {
-      throw std::runtime_error(
-          "K/V output row strides differ; the cache append reads both sides "
-          "with one shared stride");
-    }
-    keys[i] = key_rows.data;
-    values[i] = value_rows.data;
-    row_strides[i] = key_rows.row_stride;
-  }
+  WriteInputTensor(decode_.inputs[3], decode_mask_q_.data());
+  WriteInputTensor(decode_.inputs[4], decode_slide_mask_q_.data());
 }
 
 void TextEngine::RunPrefillChunk(const std::vector<int64_t>& chunk,
                                  int chunk_start,
                                  const float* prebuilt_hidden) {
   const int chunk_valid = static_cast<int>(chunk.size());
-  FillCommonInputs(prefill_, chunk, chunk_start, chunk_valid, prebuilt_hidden);
+  FillCommonInputs(prefill_, chunk, chunk_start, chunk_valid, false,
+                   prebuilt_hidden);
   // KV rows are rolled into the cache on CPU after every inference, so all
   // inputs must be cleaned before the BPU reads the cache again.
   static const std::vector<int> flush_in = PrefillFlushIndices();
@@ -397,8 +308,16 @@ void TextEngine::RunPrefillChunk(const std::vector<int64_t>& chunk,
   const int8_t* k_outs[kNumKvLayers];
   const int8_t* v_outs[kNumKvLayers];
   int64_t row_strides[kNumKvLayers];
-  GatherKvOutputs(prefill_, chunk_valid, k_outs, v_outs, row_strides);
+  for (int i = 0; i < kNumKvLayers; ++i) {
+    k_outs[i] = static_cast<const int8_t*>(prefill_.outputs[1 + i].sysMem.virAddr);
+    v_outs[i] = static_cast<const int8_t*>(prefill_.outputs[16 + i].sysMem.virAddr);
+    row_strides[i] = OutputRowStrideBytes(prefill_.outputs[1 + i]);
+  }
   kv_.AppendPrefillChunk(k_outs, v_outs, row_strides, chunk_start, chunk_valid);
+}
+
+int64_t TextEngine::OutputRowStrideBytes(const hbDNNTensor& tensor) {
+  return tensor.properties.stride[0];
 }
 
 void TextEngine::PrefillSuffix(const std::vector<int64_t>& ids, int start,
@@ -531,8 +450,7 @@ std::vector<int64_t> TextEngine::ContinueGenerateStream(
   }
 
   std::vector<int64_t> out = full_ids;
-  int64_t next = ArgmaxTextLogits(prefill_.outputs[0], last_idx, prefill_.seq_len,
-                                  prefill_.OutputCapacity(0));
+  int64_t next = ArgmaxLogits(prefill_.outputs[0], last_idx);
   out.push_back(next);
 
   if (on_token && !on_token(next)) {
@@ -566,6 +484,22 @@ std::vector<int64_t> TextEngine::GenerateStream(
     TokenCallback on_token) {
   ResetSession();
   return ContinueGenerateStream(prompt_ids, max_new_tokens, on_token, nullptr);
+}
+
+int64_t TextEngine::ArgmaxLogits(const hbDNNTensor& logits_tensor, int seq_idx) {
+  const auto& shape = logits_tensor.properties.validShape;
+  const int vocab = shape.dimensionSize[shape.numDimensions - 1];
+  const int16_t* logits = LogitsRowPtr(logits_tensor, seq_idx);
+  int best = 0;
+  float best_score = -1e30f;
+  for (int i = 0; i < vocab; ++i) {
+    const float score = static_cast<float>(logits[i]) * kLogitScale;
+    if (score > best_score) {
+      best_score = score;
+      best = i;
+    }
+  }
+  return best;
 }
 
 bool TextEngine::IsEos(int64_t token_id) {
@@ -630,11 +564,14 @@ int64_t TextEngine::RunDecodeStep(int64_t token_id) {
   const int8_t* k_outs[kNumKvLayers];
   const int8_t* v_outs[kNumKvLayers];
   int64_t row_strides[kNumKvLayers];
-  GatherKvOutputs(decode_, 1, k_outs, v_outs, row_strides);
+  for (int i = 0; i < kNumKvLayers; ++i) {
+    k_outs[i] = static_cast<const int8_t*>(decode_.outputs[1 + i].sysMem.virAddr);
+    v_outs[i] = static_cast<const int8_t*>(decode_.outputs[16 + i].sysMem.virAddr);
+    row_strides[i] = OutputRowStrideBytes(decode_.outputs[1 + i]);
+  }
   kv_.AppendDecodeStep(k_outs, v_outs, row_strides, pos);
 
-  const int64_t next = ArgmaxTextLogits(decode_.outputs[0], 0, decode_.seq_len,
-                                        decode_.OutputCapacity(0));
+  const int64_t next = ArgmaxLogits(decode_.outputs[0], 0);
   token_offset_ += 1;
   return next;
 }
@@ -681,8 +618,7 @@ BenchmarkResult TextEngine::Benchmark(const std::vector<int64_t>& prompt_ids,
   result.prefill_ms =
       std::chrono::duration<double, std::milli>(pf1 - pf0).count();
 
-  int64_t last = ArgmaxTextLogits(prefill_.outputs[0], last_idx, prefill_.seq_len,
-                                  prefill_.OutputCapacity(0));
+  int64_t last = ArgmaxLogits(prefill_.outputs[0], last_idx);
 
   for (int i = 0; i < warmup_decode; ++i) {
     last = RunDecodeStep(last);

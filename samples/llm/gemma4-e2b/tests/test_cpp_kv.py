@@ -41,6 +41,7 @@ class KvCacheTests(unittest.TestCase):
                 "null",
                 "invalid",
                 "append",
+                "alias",
                 "reallocate",
             ):
                 with self.subTest(case=case):
