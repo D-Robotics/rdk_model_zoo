@@ -1,6 +1,6 @@
 # Copyright (c) 2025 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Source PointNet plot helpers; imported only for explicit CLI visualization."""
+"""Source PointNet plot helpers; runtime/python/main.py is the sole CLI owner."""
 from typing import Dict
 import matplotlib
 matplotlib.use("Agg")
@@ -8,45 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 CHAIR_PARTS = ["back", "seat", "leg", "arm"]
-
-
-def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments for the PointNet sample."""
-    parser = argparse.ArgumentParser(
-        description="Run PointNet point cloud part segmentation."
-    )
-    parser.add_argument(
-        "--model-path",
-        type=str,
-        default="../../model/s100/pointnet.hbm",
-        help="Path to the BPU quantized HBM model.",
-    )
-    parser.add_argument(
-        "--test-pts",
-        type=str,
-        default="../../test_data/chair.pts",
-        help="Path to the input point cloud in .pts format.",
-    )
-    parser.add_argument(
-        "--img-save-path",
-        type=str,
-        default="result.png",
-        help="Path to save the segmented point cloud visualization.",
-    )
-    parser.add_argument(
-        "--priority",
-        type=int,
-        default=0,
-        help="Model scheduling priority in the range 0 to 255.",
-    )
-    parser.add_argument(
-        "--bpu-cores",
-        nargs="+",
-        type=int,
-        default=[0],
-        help="BPU core indexes used by hbm_runtime.",
-    )
-    return parser.parse_args()
 
 
 def create_point_cloud_axes(point_set: np.ndarray):

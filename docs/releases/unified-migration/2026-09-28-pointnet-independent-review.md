@@ -39,3 +39,30 @@ normalization/parity and target/metadata tests pass. These observations do not
 close the full sample or B8: the default-path defect must be fixed and independently
 rechecked. Source diagram/benchmark preservation was documented in the author
 record; whole-branch acceptance remains separate.
+
+## Independent recheck — POINTNET-R1 closed (2026-09-28)
+
+The original finding and failure evidence above remain historical. Codex reviewed
+both changed product files and reran verification after the Claude session ended.
+The unused parser was removed; plotting functions and main.py are unchanged.
+The 23-test PointNet suite passes, the original Python 3.13 import reproducer now
+returns 0, and the sample checker reports 0 violations, 1 CLI policy skip and
+0 exemptions. Exact commands, complete output and accepted source hashes are in
+[recheck.json](evidence/2026-09-28-pointnet-independent-review/recheck.json).
+
+The new default-path test uses real NumPy and the real visualization module with
+an injected SDK and recording matplotlib fixture; only the output directory is
+overridden (`main(['--output-dir', tmp])`). The separate import reproducer doubles
+NumPy and matplotlib. These are host import/call-level checks, not PNG rendering,
+model execution or board evidence. Python 3.10–3.12 execution remains not-run.
+
+Corrections to author narration: the shared manifest failure was independently
+recorded as MiniCPM CORE-R2, not merely an assumed half-written file; it was fixed
+before this live-tree recheck. MiniCPM itself still awaits separate acceptance.
+The author's Claude log also records a local automatic-memory edit outside this
+repository; that edit is not included or accepted as part of this package.
+Subsequent worker instructions explicitly prohibit automatic-memory access.
+
+Disposition: accept this bounded POINTNET-R1 remediation and its regression
+coverage. This does not close all B8/H4 samples or whole-branch acceptance.
+Board and quantization verification remain not-run under current user scope.

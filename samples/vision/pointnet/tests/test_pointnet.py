@@ -164,6 +164,113 @@ class RunnerAndCLITests(unittest.TestCase):
             self.assertNotIn('No module named',result.stderr)
 
 
+class VisualizationDefaultPathTests(unittest.TestCase):
+    vis_name = 'samples.vision.pointnet.runtime.python.visualization'
+    vis_path = ROOT/'samples/vision/pointnet/runtime/python/visualization.py'
+
+    def plot_fixture(self):
+        """Recording matplotlib double covering exactly the calls visualization.py makes."""
+        calls, axes = [], types.SimpleNamespace(
+            set_xlim=lambda *a: calls.append(('xlim', a)),
+            set_ylim=lambda *a: calls.append(('ylim', a)),
+            set_zlim=lambda *a: calls.append(('zlim', a)),
+            set_xlabel=lambda *a, **k: calls.append(('xlabel', a)),
+            set_ylabel=lambda *a, **k: calls.append(('ylabel', a)),
+            set_zlabel=lambda *a, **k: calls.append(('zlabel', a)),
+            scatter3D=lambda *a, **k: calls.append(('scatter3D', a, k)),
+            scatter=lambda *a, **k: calls.append(('scatter', a, k)),
+            set_title=lambda *a, **k: calls.append(('title', a)))
+        fig = types.SimpleNamespace(add_subplot=lambda *a, **k: axes)
+        pyplot = types.ModuleType('matplotlib.pyplot')
+        pyplot.figure = lambda **k: (calls.append(('figure', k)), fig)[1]
+        pyplot.tick_params = lambda **k: calls.append(('tick_params', k))
+        pyplot.legend = lambda **k: calls.append(('legend', k))
+        pyplot.savefig = lambda *a, **k: calls.append(('savefig', a[0]))
+        pyplot.close = lambda: calls.append(('close',))
+        matplotlib = types.ModuleType('matplotlib')
+        matplotlib.use = lambda *a, **k: calls.append(('use', a))
+        matplotlib.pyplot = pyplot
+        return calls, {'matplotlib': matplotlib, 'matplotlib.pyplot': pyplot}
+
+    def normalized_chair(self):
+        p = np.loadtxt(ROOT/'samples/vision/pointnet/test_data/chair.pts').astype(np.float32)
+        centered = p - np.mean(p, axis=0, keepdims=True)
+        return p, centered / np.max(np.sqrt(np.sum(centered ** 2, axis=1)))
+
+    def test_default_path_plots_both_views_via_real_module(self):
+        import tempfile, json
+        from samples.vision.pointnet.runtime.python.main import main
+        from samples.vision.pointnet.runtime.python import model_runner
+        points, cloud = self.normalized_chair()
+        n = len(points)
+        expected = np.arange(n) % 4
+        class Fake:
+            def __init__(self): self.__dict__.update(metadata(n))
+            def run(self, inputs):
+                raw = np.zeros((1, n, 4), np.float32)
+                raw[0, np.arange(n), expected] = 1
+                return {'pointnet': {'pred': raw}}
+            def set_scheduling_params(self, **kwargs): pass
+        real = model_runner.RuntimeModelRunner
+        calls, doubles = self.plot_fixture()
+        with (tempfile.TemporaryDirectory() as tmp,
+              patch.object(model_runner, 'RuntimeModelRunner',
+                           side_effect=lambda s: real(s, runtime=Fake())),
+              patch.dict(sys.modules, doubles)):
+            sys.modules.pop(self.vis_name, None)
+            vis = importlib.import_module(self.vis_name)
+            self.assertEqual(Path(vis.__file__), self.vis_path)
+            self.assertEqual(main(['--output-dir', tmp]), 0)
+            report = json.loads((Path(tmp)/'result.json').read_text())
+            labels = np.load(Path(tmp)/'labels.npy')
+            saved = [c[1] for c in calls if c[0] == 'savefig']
+            original = next(c for c in calls if c[0] == 'scatter3D')
+            parts = [c[2]['label'] for c in calls if c[0] == 'scatter']
+            axes = {c[0]: c[1][0] for c in calls if c[0] in ('xlabel', 'ylabel', 'zlabel')}
+        self.assertEqual(saved, [str(Path(tmp)/'result_orig.png'), str(Path(tmp)/'result.png')])
+        self.assertEqual(report['point_count'], n)
+        self.assertEqual(report['counts'], {name: int((expected == i).sum())
+                                            for i, name in enumerate(('back', 'seat', 'leg', 'arm'))})
+        self.assertEqual(labels.dtype, np.int32)
+        np.testing.assert_array_equal(labels, expected)
+        np.testing.assert_array_equal(original[1][0], cloud[:, 0])
+        np.testing.assert_array_equal(original[1][1], cloud[:, 2])
+        np.testing.assert_array_equal(original[1][2], cloud[:, 1])
+        self.assertEqual(parts, ['back', 'seat', 'leg', 'arm'])
+        self.assertEqual(axes, {'xlabel': 'X', 'ylabel': 'Y', 'zlabel': 'Z'})
+
+    def test_visualization_imports_and_resolves_every_annotation(self):
+        import ast, builtins
+        calls, doubles = self.plot_fixture()
+        with patch.dict(sys.modules, doubles):
+            sys.modules.pop(self.vis_name, None)
+            vis = importlib.import_module(self.vis_name)
+            self.assertEqual(Path(vis.__file__), self.vis_path)
+            self.assertEqual(calls[0], ('use', ('Agg',)))
+            for obj in [vis, *vars(vis).values()]:
+                if callable(obj):
+                    getattr(obj, '__annotations__', None)  # forces deferred evaluation on 3.14+
+        tree = ast.parse(self.vis_path.read_text())
+        bound = {a.asname or a.name.split('.')[0]
+                 for x in tree.body if isinstance(x, (ast.Import, ast.ImportFrom)) for a in x.names}
+        bound |= {x.name for x in tree.body if isinstance(x, (ast.FunctionDef, ast.ClassDef))}
+        bound |= {x.targets[0].id for x in tree.body
+                  if isinstance(x, ast.Assign) and isinstance(x.targets[0], ast.Name)}
+        annotations = [x.returns for x in ast.walk(tree)
+                       if isinstance(x, (ast.FunctionDef, ast.AsyncFunctionDef)) and x.returns]
+        annotations += [a.annotation for x in ast.walk(tree)
+                        if isinstance(x, (ast.FunctionDef, ast.AsyncFunctionDef))
+                        for a in [*x.args.posonlyargs, *x.args.args, *x.args.kwonlyargs] if a.annotation]
+        annotations += [x.annotation for x in ast.walk(tree) if isinstance(x, ast.AnnAssign)]
+        roots = {t.id for node in annotations for t in ast.walk(node) if isinstance(t, ast.Name)}
+        self.assertTrue(roots)
+        self.assertEqual(roots - bound - set(dir(builtins)), set(),
+                         'annotation references a name visualization.py never imports')
+        self.assertNotIn('parse_args', vars(vis))
+        from samples.vision.pointnet.runtime.python.main import build_parser
+        self.assertTrue(callable(build_parser))
+
+
 class SourceAndEntrypointTests(unittest.TestCase):
     def source(self):
         name = 'pointnet_source_fixture'

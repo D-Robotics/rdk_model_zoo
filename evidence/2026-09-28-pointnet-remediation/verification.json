@@ -1,0 +1,86 @@
+{
+  "review_base": "ba05780f530e76d3935b28cc9ad658e858df4fe2",
+  "worktree_head_at_capture": "ecaa8ca8f78412470680e107660a8428262badad",
+  "finding": {
+    "id": "POINTNET-R1",
+    "priority": "P1",
+    "resolution": "fixed: removed the unused source CLI parser (parse_args) from runtime/python/visualization.py instead of importing argparse to keep a second parser; main.py build_parser() remains the sole CLI owner"
+  },
+  "sha256": {
+    "samples/vision/pointnet/runtime/python/visualization.py": "be0f2d41605eae812c6f088822c44943bff307b0d36637593563fef332442dc0",
+    "samples/vision/pointnet/runtime/python/main.py": "43eba30b9a53fa21fe04455d41d3be6e58deb87113b9603fdbba6f23bbf04ec8",
+    "samples/vision/pointnet/tests/test_pointnet.py": "9d08ec20283f8d5df6b06cb7efd74be76adba853fab6c77c7d0c050ad12d9bd9"
+  },
+  "interpreters": {
+    "python3_13_15": "/opt/homebrew/bin/python3.13 — no numpy/PyYAML installed; import reproduction only, unittest suite not-run",
+    "python3_14_7": "../rdk_model_zoo/.venv/bin/python — full host suites; matplotlib not installed, so plot calls are verified with explicit labeled fixture doubles",
+    "python3_10_to_3_12": "absent on this host; not-run"
+  },
+  "records": [
+    {
+      "name": "reviewer import reproduction after fix, Python 3.13.15",
+      "argv": ["/opt/homebrew/bin/python3.13", "docs/releases/unified-migration/evidence/2026-09-28-pointnet-independent-review/reproduce_visualization_import.py"],
+      "returncode": 0,
+      "log": "import-repro-py313-after-fix.log",
+      "note": "was returncode 1 with NameError in the review record"
+    },
+    {
+      "name": "reviewer import reproduction after fix, Python 3.14.7",
+      "argv": ["../rdk_model_zoo/.venv/bin/python", "docs/releases/unified-migration/evidence/2026-09-28-pointnet-independent-review/reproduce_visualization_import.py"],
+      "returncode": 0,
+      "log": "import-repro-py314-after-fix.log"
+    },
+    {
+      "name": "red check: both new tests fail on Python 3.14.7 with the defect temporarily reintroduced",
+      "method": "appended a stub parse_args() -> argparse.Namespace to visualization.py in the working tree, ran only VisualizationDefaultPathTests, then restored the fixed file",
+      "returncode": 1,
+      "result": "Ran 2 tests, errors=2; the import test fails via forced deferred-annotation evaluation (NameError: argparse), the default-path test fails because main's visualization import raises NameError that the CLI does not catch",
+      "log": "red-check-new-tests-py314-with-defect.log"
+    },
+    {
+      "name": "static annotation scan red sanity on a scratch copy",
+      "method": "same scan logic as the test, run on /tmp/viz_bad.py (copy of the fixed file plus a bad annotation)",
+      "result": "flags unimported annotation name 'argparse'; interpreter-independent guard",
+      "log": "static-scan-red-scratch-copy.log"
+    },
+    {
+      "name": "PointNet host suite, live worktree, Python 3.14.7",
+      "argv": ["../rdk_model_zoo/.venv/bin/python", "-m", "unittest", "discover", "-s", "samples/vision/pointnet/tests"],
+      "result": "Ran 23 tests — OK (21 existing + 2 new)",
+      "returncode": 0,
+      "log": "pointnet-tests-py314-live.log"
+    },
+    {
+      "name": "PointNet host suite snapshot taken while the live shared manifest was mid-edit by a parallel task",
+      "method": "rsync copy of the worktree to /tmp/pointnet-verify-wt with docs/release/s/models.yaml restored to HEAD ba05780f; .git excluded",
+      "result": "Ran 23 tests — OK; superseded by the live run above, kept as provenance",
+      "log": "pointnet-tests-py314-isolated-copy.log"
+    },
+    {
+      "name": "shared host suite, live worktree, Python 3.14.7",
+      "result": "Ran 158 tests — OK",
+      "returncode": 0,
+      "log": "regress-shared-py314-live.log"
+    },
+    {
+      "name": "shared host suite captured while docs/release/s/models.yaml was mid-edit by the parallel MiniCPM task",
+      "result": "Ran 158 tests, errors=43 — all in manifest-reading tests (yaml ScannerError line 1898, plain-scalar colon in the parallel task's in-flight notes text); no pointnet or visualization test in this suite; the same tests pass in regress-shared-py314-live.log after the parallel task completed its edit",
+      "log": "regress-shared-py314-manifest-mid-edit.log"
+    },
+    {"name": "resnet suite, live worktree", "result": "Ran 52 tests — OK", "returncode": 0, "log": "regress-resnet-py314-live.log"},
+    {"name": "ultralytics_yolo suite, live worktree", "result": "Ran 143 tests — OK", "returncode": 0, "log": "regress-ultralytics_yolo-py314-live.log"},
+    {"name": "paddle_ocr suite, live worktree", "result": "Ran 44 tests — OK", "returncode": 0, "log": "regress-paddle_ocr-py314-live.log"},
+    {
+      "name": "sample contract checker, isolated copy snapshot and live worktree",
+      "argv": ["../rdk_model_zoo/.venv/bin/python", "tools/sample_contract/check.py", "--sample", "samples/vision/pointnet"],
+      "result": "0 violations, 1 policy skip (R-STAGE-PURITY on main.py: CLI layer), 0 exemptions; returncode 0 in both runs; the checker imports build_parser and does not read the release manifests",
+      "log": "checker-pointnet.log"
+    }
+  ],
+  "not_run": [
+    "Board/SDK inference, model download, conversion, quantization: not-run, out of scope for this host remediation package.",
+    "unittest suite on Python 3.13: not-run (numpy/PyYAML not installed for that interpreter; installing packages was not authorized). The 3.13 import reproduction and the interpreter-independent static annotation scan cover the R1 layer on 3.13.",
+    "unittest suite on Python 3.10/3.11/3.12: not-run, interpreters absent on this host.",
+    "Actual PNG rendering/pixel content: not verified — matplotlib is not installed in the test venv; the default-path regression records plot calls (savefig paths, scatter calls, axis labels) against explicit labeled fixture doubles and does not claim rendered output."
+  ]
+}
