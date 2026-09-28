@@ -2,11 +2,11 @@
 
 [中文](README_cn.md)
 
-This directory currently provides the offline policy core in `policy.py`. The
-unified SDK adapter and CLI are still being migrated; the example below injects
-explicit synthetic outputs and does not execute the published model. The complete
-[source runtime guide](../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md)
-is retained as the migration reference, not a claim that its entry exists here.
+The unified Python entry now provides exact X5 model selection, lazy SDK transport,
+source-indexed input checks, warmup, owned action dumps and failure reports. Host
+integration tests use an explicit SDK double; real board execution remains not-run.
+The [source runtime guide](../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md)
+retains historical board evidence, not a new unified-runtime validation claim.
 
 <a id="environment"></a>
 ## Environment
@@ -26,8 +26,39 @@ The SDK adapter is responsible for target, asset identity and actual model metad
 This core never downloads a model or opens a device. Use `predict(observation)`
 for normal composition, or the three explicit methods shown below.
 
+```bash
+# Repository root; these commands do not load SDKs or download.
+python samples/robotics/himloco/runtime/python/main.py --list-models
+python samples/robotics/himloco/runtime/python/main.py --target x5 --dry-run
+
+# Explicit model preparation, followed by offline inference on X5.
+bash samples/robotics/himloco/model/download_model.sh --target x5
+python samples/robotics/himloco/runtime/python/main.py --target x5 \
+  --input-path samples/robotics/himloco/test_data/obs_history \
+  --output-dir outputs/himloco
+```
+`run.sh` forwards the same arguments and accepts `PYTHON` for the interpreter.
+A new output directory is required for each run. An alternate model path requires
+`--asset-id x5:himloco:himloco_go2_bayese_1x270.bin`; the same published SHA-256
+is enforced. Target mismatch or missing/mismatched BIN fails before SDK creation.
+Use the BSP runtime, not an unrelated PyPI package named hbm_runtime.
+
 <a id="parameters"></a>
 ## Parameters
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `--target` | `auto` | Local detection for execution; list maps auto to x5; dry-run needs explicit x5 |
+| `--list-models` | `false` | Print the exact publication without SDK/network/file writes |
+| `--dry-run` | `false` | Preview selection only; not actual metadata verification |
+| `--asset-id` | `null` | Explicit published identity for external model paths |
+| `--model-path` | `null` | Defaults to model/bayes-e/himloco_go2_bayese_1x270.bin under this sample |
+| `--input-path` | `samples/robotics/himloco/test_data/obs_history` | One numeric BIN or directory; sample-local absolute default |
+| `--output-dir` | `outputs/himloco` | New action directory relative to cwd |
+| `--report` | `null` | Defaults to output-dir/report.json; alternate file must be new |
+| `--warmup` | `10` | Nonnegative runs of the first input, excluded from reported samples |
+| `--priority` | `null` | Optional integer 0–255 passed to SDK |
+| `--bpu-cores` | `null` | Optional nonempty list of nonnegative SDK core indexes |
 
 | API input | Contract |
 | --- | --- |
@@ -54,6 +85,23 @@ silently report B's time. SDK exceptions propagate; there is no fallback action.
 
 The source deployment applies `default_joint_position + 0.25 * actions` outside
 the model boundary. This core returns actions only and does not issue robot commands.
+
+Successful CLI execution returns 0 and writes `000000.bin`-style source-indexed
+little-endian float32 files, 48 bytes each, plus a `completed` JSON report. The
+report includes model/input/output digests, manifest provenance, runtime metadata,
+requested scheduling, completed warmups, UTC times and minimum/mean/p50/p95/maximum
+runner latency. After output creation, errors return 2 and preserve a `failed`
+report, current source index and completed files; aggregate latency is absent on
+partial failure. Preflight failures create no result directory. Existing results
+are never reused or overwritten. A killed process can leave a `running` report;
+treat it as incomplete.
+
+Inputs are numerically named BIN files, exactly 1080 bytes each, sorted by numeric
+source index. Duplicate indexes are rejected. A colocated
+`../runtime-input-manifest.json`, when present, must match the fixed input contract
+and each selected file's index/digest. Without one, the report records null source
+manifest provenance rather than inventing it. Files are hashed from the same bytes
+used for inference. No text transcript or controller action is produced.
 
 <a id="integration-example"></a>
 ## Executable integration example
@@ -107,5 +155,5 @@ Wrong observation count requires reconstructing the training-policy history, not
 padding or truncating blindly. Wrong output dtype/name/shape requires checking the
 bound model interface; the core will not silently cast an incompatible model's
 output. Latency attached to a hand-built `RawOutputs` must be finite and nonnegative.
-Unified CLI, model preparation, native runtime and complete sample documentation
-remain in progress; do not use this core-only status as whole-sample acceptance.
+Native runtime, evaluators and complete sample acceptance remain in progress;
+Python host tests do not establish SDK/board compatibility.

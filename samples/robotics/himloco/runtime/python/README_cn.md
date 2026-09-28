@@ -2,9 +2,10 @@
 
 [English](README.md)
 
-本目录目前提供 `policy.py` 离线策略核心。统一 SDK 适配器和 CLI 尚在迁移，下方示例
-注入明确的模拟输出，不执行发布模型。完整[源运行时说明](../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md)
-作为迁移依据保留，不表示其中入口已在本目录实现。
+统一 Python 入口已提供准确的 X5 模型选择、懒加载 SDK、源索引输入校验、预热、
+独立动作导出和失败报告。主机集成测试使用明确的 SDK 替身，真实板端执行仍未运行。
+[源运行时说明](../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md)
+保留历史板测证据，不代表统一入口重新完成板测。
 
 <a id="environment"></a>
 ## 环境
@@ -21,8 +22,38 @@
 SDK 适配器负责目标板、制品身份和实际模型元数据。核心不下载模型、不打开设备。
 一般调用 `predict(observation)`，也可按下方示例分别执行三个阶段。
 
+```bash
+# Repository root; these commands do not load SDKs or download.
+python samples/robotics/himloco/runtime/python/main.py --list-models
+python samples/robotics/himloco/runtime/python/main.py --target x5 --dry-run
+
+# Explicit model preparation, followed by offline inference on X5.
+bash samples/robotics/himloco/model/download_model.sh --target x5
+python samples/robotics/himloco/runtime/python/main.py --target x5 \
+  --input-path samples/robotics/himloco/test_data/obs_history \
+  --output-dir outputs/himloco
+```
+`run.sh` 转发相同参数，可用 `PYTHON` 指定解释器。每次运行使用新输出目录。
+外部模型路径必须同时指定 `--asset-id x5:himloco:himloco_go2_bayese_1x270.bin`，
+仍校验同一发布 SHA-256。目标板不符或模型缺失／摘要不符，在创建 SDK 前失败。
+使用 BSP 提供的 runtime，不安装 PyPI 上无关的同名 hbm_runtime 包。
+
 <a id="parameters"></a>
 ## 参数
+
+| 参数 | 默认值 | 含义 |
+| --- | --- | --- |
+| `--target` | `auto` | 执行时检测本机；list 的 auto 映射 x5；dry-run 需显式 x5 |
+| `--list-models` | `false` | 列出准确发布信息，不加载 SDK、不联网、不写文件 |
+| `--dry-run` | `false` | 仅预览选择，不验证真实运行时元数据 |
+| `--asset-id` | `null` | 外部模型路径须指定准确发布身份 |
+| `--model-path` | `null` | 默认使用 Sample 下 model/bayes-e/himloco_go2_bayese_1x270.bin |
+| `--input-path` | `samples/robotics/himloco/test_data/obs_history` | 数字命名 BIN 或目录；实际默认值为 Sample 内绝对路径 |
+| `--output-dir` | `outputs/himloco` | 相对工作目录的新动作输出目录 |
+| `--report` | `null` | 默认 output-dir/report.json；另指定的文件也须不存在 |
+| `--warmup` | `10` | 使用首条输入预热的非负次数，不计入输出样本 |
+| `--priority` | `null` | 可选整数 0–255，传入 SDK |
+| `--bpu-cores` | `null` | 可选非空列表，非负 SDK 核心索引 |
 
 | API 输入 | 契约 |
 | --- | --- |
@@ -46,6 +77,18 @@ SDK 适配器负责目标板、制品身份和实际模型元数据。核心不�
 
 源部署在模型边界之外应用 `default_joint_position + 0.25 * actions`。
 本核心只返回动作数组，不发送机器人控制指令。
+
+CLI 成功返回 0，生成按源索引命名的 `000000.bin` 等小端 float32 文件，每个 48 字节，
+以及 `completed` JSON 报告。报告包括模型／输入／输出摘要、清单来源、运行时元数据、
+请求的调度参数、完成的预热次数、UTC 时间，以及最小／平均／p50／p95／最大 runner 耗时。
+输出创建后发生异常返回 2，保留 `failed` 报告、当前源索引和已完成文件，不对部分结果
+提供汇总耗时。前置检查失败不创建输出目录，已有结果不复用、不覆盖。强制终止可能
+留下 `running` 报告，应按未完成处理。
+
+输入必须是数字命名的 BIN，每个恰好 1080 字节，按数值源索引排序；重复索引拒绝。
+若旁边存在 `../runtime-input-manifest.json`，须满足固定输入契约，并匹配选中文件的
+索引与摘要。没有清单时来源明确记录为 null，不伪造。摘要来自实际读入推理的同一份
+字节。不生成文本转写，也不执行控制器动作。
 
 <a id="integration-example"></a>
 ## 可执行集成示例
@@ -92,5 +135,5 @@ PYCODE
 
 观测数量不符时，应按训练策略构建完整历史，不盲目补零或截断。输出名称／形状／类型
 不符时，应核对所绑定模型的接口，核心不会静默强转不兼容模型的输出。
-手动构造 `RawOutputs` 时，耗时须为有限非负数。统一 CLI、模型准备、原生运行时及
-完整 Sample 文档仍在迁移，不能将当前核心状态当作整套 Sample 已验收。
+手动构造 `RawOutputs` 时，耗时须为有限非负数。原生运行时、评测工具及
+整套 Sample 验收仍在推进，Python 主机测试不代表 SDK／板端兼容性验证。
