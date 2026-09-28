@@ -1,10 +1,10 @@
-# Paraformer Python CPU bridge
+# Paraformer Python pipeline and CPU bridge
 
 [简体中文](README_cn.md)
 
-This directory currently provides the CPU continuous integrate-and-fire (CIF)
-bridge. The complete unified audio frontend, three-model runtime, command-line
-entry and C++ bridge are still being migrated. This is not a runnable board
+This directory provides the CPU continuous integrate-and-fire (CIF) bridge and
+three-model application pipeline. The real audio frontend, SDK model binding,
+command-line entry and C++ bridge are still being migrated. This is not a runnable board
 sample yet. Do not interpret the host checks below as model inference or accuracy
 validation. The archived [S runtime](../../../../../platforms/s/samples/speech/paraformer/runtime/python/README.md)
 remains a historical reference, not the unified entry.
@@ -71,7 +71,7 @@ inference masking.
 python -m unittest discover -s samples/speech/paraformer/tests -v
 ```
 
-Seven host tests cover empty output, manually derived fractional crossings,
+Seven CIF host tests cover empty output, manually derived fractional crossings,
 padding versus calibration mode, the 100-token cap, 24 source comparisons,
 input ownership and invalid contracts. The comparison loads the archived source
 from S commit `380e1a2bf42041af54be6f34935e50197cfadff9`; its no-fire case raises
@@ -79,6 +79,85 @@ from S commit `380e1a2bf42041af54be6f34935e50197cfadff9`; its no-fire case raise
 [review and evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md).
 
 The source publishes S100 models only. No X5, S100P or S600 adaptation is claimed.
-Real frontend equivalence, SDK bindings, three-stage inference, native C++, full
+Real frontend equivalence, SDK bindings, board three-stage inference, native C++, full
 conversion/evaluation workflows and bilingual sample documentation remain open.
 Board inference, OE compilation, dataset CER and latency have not been run.
+
+## Three-model application pipeline
+
+[pipeline.py](pipeline.py) composes three independent raw model callables. Each
+callable consumes a mapping of physical input names to arrays and returns a
+mapping of physical output names to arrays. `TensorNames` supplies the exact
+names discovered by the forthcoming model binder; there is no first-output or
+substring fallback in the pipeline. This interface is for application composition,
+not a model `forward` containing CPU processing between several SDK executions.
+
+| Stage | Required input | Required output |
+| --- | --- | --- |
+| Encoder | float32 `[1,400,560]` | float32 context `[1,400,512]` |
+| Predictor | context `[1,400,512]` | float32 weights `[1,401]`, hidden `[1,401,512]` |
+| CPU CIF | predictor arrays + valid frame count | float32 acoustic `[1,100,512]`, int32 count `[1]` |
+| Decoder | context, acoustic, count, zero float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
+
+`predict(features, feature_length)` requires finite float32 prepared features and
+an integer valid length 1–400. Shape/dtype/finiteness are checked at every consumed
+boundary. Intermediate values are copied so later runner buffers cannot overwrite
+retained encoder context. The pipeline does not load an SDK or change scheduling;
+physical-model validation and scheduling must be provided by the runtime adapter.
+INT16 in a compiled artifact's name does not prove INT16 physical I/O.
+
+`Prediction` includes text, selected token IDs, CIF count, per-stage milliseconds,
+and `decoder_executed`. Text follows the S source: argmax on the valid prefix,
+remove tokens enclosed by `<...>`, strip `@@`, concatenate without a separator.
+Repeated tokens remain repeated: this is not CTC. The token count and ID list
+include subsequently removed special tokens. A zero CIF count bypasses the decoder
+and returns empty text, empty IDs, `decoder_executed=False` and decoder timing
+`None`. A stage error propagates and produces no successful prediction.
+
+Timings measure the three runner calls and CPU CIF separately. They exclude
+frontend, loading, validation/copying outside the calls, text decoding and file I/O;
+their sum is not end-to-end latency. No SDK or board performance is measured here.
+
+### Runnable synthetic pipeline example
+
+This example injects three synthetic functions, not models. It demonstrates the
+actual CPU orchestration and text decoder using NumPy only. Run from repository
+root; expected output is `中中文 3 True`.
+
+```bash
+python - <<'PYCODE'
+import numpy as np
+from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline, TensorNames
+
+names = TensorNames("speech", "context", "context", "alphas", "hidden",
+                    "context", "count", "bias", "acoustic", "logits")
+vocabulary = [f"token{i}" for i in range(8404)]
+vocabulary[3] = "中"
+vocabulary[4] = "文@@"
+
+def encoder(inputs):
+    return {"context": np.zeros((1, 400, 512), np.float32)}
+
+def predictor(inputs):
+    weights = np.zeros((1, 401), np.float32)
+    weights[0, :3] = 1
+    return {"alphas": weights, "hidden": np.ones((1, 401, 512), np.float32)}
+
+def decoder(inputs):
+    logits = np.zeros((1, 100, 8404), np.float32)
+    logits[0, np.arange(3), [3, 3, 4]] = 1
+    return {"logits": logits}
+
+pipeline = ParaformerPipeline(encoder, predictor, decoder, names, vocabulary)
+result = pipeline.predict(np.zeros((1, 400, 560), np.float32), 3)
+print(result.text, result.token_count, result.decoder_executed)
+PYCODE
+```
+
+Six pipeline host tests additionally cover model order and named feeds, masking,
+repeat preservation/BPE/special-token decoding, empty-result bypass, malformed
+frontend and decoder data, vocabulary size and missing predictor output. The
+published vocabulary was read from the active manifest URL: 8,404 unique tokens,
+SHA-256 `2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`.
+This observed digest does not certify the publisher's currently null manifest
+hash or validate any compiled model. See [pipeline evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-pipeline-review.md).

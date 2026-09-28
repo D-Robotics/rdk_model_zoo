@@ -77,6 +77,7 @@ class CifTests(unittest.TestCase):
                 expected = self.source(a, h, real_T=length)
                 for got, want in zip(actual, expected):
                     np.testing.assert_array_equal(got, want)
+                    self.assertEqual(got.tobytes(), want.tobytes())
                 self.assertFalse(np.shares_memory(actual[0], h))
                 np.testing.assert_array_equal(a, before_a)
                 np.testing.assert_array_equal(h, before_h)
