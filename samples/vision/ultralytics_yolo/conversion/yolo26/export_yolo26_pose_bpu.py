@@ -12,6 +12,13 @@ Usage:
 import os
 import shutil
 import argparse
+import sys
+
+try:
+    from batch_flex import adapt_calibration_batch8
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from batch_flex import adapt_calibration_batch8
 
 def main():
     """Main entry point for pose model export."""
@@ -22,7 +29,11 @@ def main():
     parser.add_argument('--platform', choices=['x5', 's100', 's100p', 's600'], default='x5')
     parser.add_argument('--opset', '--optse', type=int, default=None)
     parser.add_argument('--simplify', type=int, choices=[0, 1], default=None)
+    parser.add_argument('--require-local', action='store_true',
+                        help='fail unless --weights already exists locally')
     args = parser.parse_args()
+    if args.require_local and not os.path.isfile(args.weights):
+        parser.error(f'checkpoint does not exist locally: {args.weights}')
     export_pose_bpu(args.weights, args.output, args.imgsz, opset=args.opset if args.opset is not None else 11 if args.platform == 'x5' else 19, simplify=bool(args.simplify) if args.simplify is not None else args.platform == 'x5')
 
 def bpu_pose_forward(self, x):
@@ -33,27 +44,30 @@ def bpu_pose_forward(self, x):
         Layout is NHWC.
     """
     res = []
-    use_one2one = hasattr(self, 'one2one_cv2')
-    if use_one2one:
-        box_layers, cls_layers = (self.one2one_cv2, self.one2one_cv3)
-        if hasattr(self, 'one2one_cv4_kpts'):
-            pose_feat_layers, kpts_head_layers, is_pose26 = (self.one2one_cv4, self.one2one_cv4_kpts, True)
-        else:
-            kpt_layers, is_pose26 = (self.one2one_cv4, False)
-    else:
-        box_layers, cls_layers = (self.cv2, self.cv3)
-        if hasattr(self, 'cv4_kpts'):
-            pose_feat_layers, kpts_head_layers, is_pose26 = (self.cv4, self.cv4_kpts, True)
-        else:
-            kpt_layers, is_pose26 = (self.cv4, False)
+    branch = None
+    pose26 = hasattr(self, 'cv4_kpts') or hasattr(self, 'one2one_cv4_kpts')
+    for prefix in ('one2one_', ''):
+        box = getattr(self, prefix + 'cv2', None)
+        cls = getattr(self, prefix + 'cv3', None)
+        pose_feat = getattr(self, prefix + 'cv4', None)
+        kpts_head = getattr(self, prefix + 'cv4_kpts', None)
+        complete = (box is not None and cls is not None and pose_feat is not None
+                    and (not pose26 or kpts_head is not None))
+        if complete:
+            branch = (box, cls, pose_feat, kpts_head)
+            break
+    if branch is None:
+        raise RuntimeError('YOLO26 Pose export requires a complete detection and keypoint head')
+    box_layers, cls_layers, pose_layers, kpts_head_layers = branch
     for i in range(self.nl):
         feat = x[i]
         res.append(cls_layers[i](feat).permute(0, 2, 3, 1))
         res.append(box_layers[i](feat).permute(0, 2, 3, 1))
-        if is_pose26:
+        if pose26:
+            pose_feat_layers = pose_layers
             kpts = kpts_head_layers[i](pose_feat_layers[i](feat)).permute(0, 2, 3, 1)
         else:
-            kpts = kpt_layers[i](feat).permute(0, 2, 3, 1)
+            kpts = pose_layers[i](feat).permute(0, 2, 3, 1)
         res.append(kpts)
     return res
 
@@ -77,6 +91,7 @@ def export_pose_bpu(model_path: str, output_name: str='yolo26_pose_bpu.onnx', im
         print(f'Export exception: {e}')
         raise RuntimeError('YOLO26 export failed; see preceding error')
     if exported_path:
+        adapt_calibration_batch8(exported_path, 'pose')
         if output_name and exported_path != output_name:
             out_dir = os.path.dirname(output_name)
             if out_dir:

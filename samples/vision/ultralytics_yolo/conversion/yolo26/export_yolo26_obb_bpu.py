@@ -14,6 +14,13 @@ import os
 import shutil
 import argparse
 import types
+import sys
+
+try:
+    from batch_flex import adapt_calibration_batch8
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from batch_flex import adapt_calibration_batch8
 
 def main():
     """Main entry point for OBB export."""
@@ -24,7 +31,11 @@ def main():
     parser.add_argument('--platform', choices=['x5', 's100', 's100p', 's600'], default='x5')
     parser.add_argument('--opset', '--optse', type=int, default=None)
     parser.add_argument('--simplify', type=int, choices=[0, 1], default=None)
+    parser.add_argument('--require-local', action='store_true',
+                        help='fail unless --weights already exists locally')
     args = parser.parse_args()
+    if args.require_local and not os.path.isfile(args.weights):
+        parser.error(f'checkpoint does not exist locally: {args.weights}')
     export_obb_bpu(args.weights, args.output, args.imgsz, opset=args.opset if args.opset is not None else 11 if args.platform == 'x5' else 19, simplify=bool(args.simplify) if args.simplify is not None else args.platform == 'x5')
 
 def bpu_obb_forward(self, x):
@@ -39,14 +50,15 @@ def bpu_obb_forward(self, x):
         All tensors are in NHWC layout.
     """
     res = []
-    if hasattr(self, 'one2one_cv2'):
-        box_layers = self.one2one_cv2
-        cls_layers = self.one2one_cv3
-        angle_layers = self.one2one_cv4
+    one2one = tuple(getattr(self, name, None) for name in
+                    ('one2one_cv2', 'one2one_cv3', 'one2one_cv4'))
+    many = tuple(getattr(self, name, None) for name in ('cv2', 'cv3', 'cv4'))
+    if all(layer is not None for layer in one2one):
+        box_layers, cls_layers, angle_layers = one2one
+    elif all(layer is not None for layer in many):
+        box_layers, cls_layers, angle_layers = many
     else:
-        box_layers = self.cv2
-        cls_layers = self.cv3
-        angle_layers = self.cv4
+        raise RuntimeError('YOLO26 OBB export requires complete box, class, and angle heads')
     for i in range(self.nl):
         feat = x[i]
         scores = cls_layers[i](feat).permute(0, 2, 3, 1)
@@ -90,6 +102,7 @@ def export_obb_bpu(model_path: str, output_name: str='yolo26_obb_bpu.onnx', imgs
         print(f'Export exception: {e}')
         raise RuntimeError('YOLO26 export failed; see preceding error')
     if exported_path:
+        adapt_calibration_batch8(exported_path, 'obb')
         if output_name and exported_path != output_name:
             out_dir = os.path.dirname(output_name)
             if out_dir:

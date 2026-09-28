@@ -12,6 +12,13 @@ Usage:
 import os
 import shutil
 import argparse
+import sys
+
+try:
+    from batch_flex import adapt_calibration_batch8
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from batch_flex import adapt_calibration_batch8
 
 def main():
     """Main entry point for classification model export."""
@@ -22,7 +29,11 @@ def main():
     parser.add_argument('--platform', choices=['x5', 's100', 's100p', 's600'], default='x5')
     parser.add_argument('--opset', '--optse', type=int, default=None)
     parser.add_argument('--simplify', type=int, choices=[0, 1], default=None)
+    parser.add_argument('--require-local', action='store_true',
+                        help='fail unless --weights already exists locally')
     args = parser.parse_args()
+    if args.require_local and not os.path.isfile(args.weights):
+        parser.error(f'checkpoint does not exist locally: {args.weights}')
     export_cls_bpu(args.weights, args.output, args.imgsz, opset=args.opset if args.opset is not None else 11 if args.platform == 'x5' else 19, simplify=bool(args.simplify) if args.simplify is not None else args.platform == 'x5')
 
 def bpu_classify_forward(self, x):
@@ -73,6 +84,7 @@ def export_cls_bpu(model_path: str, output_name: str='yolo26_cls_bpu.onnx', imgs
         print(f'Export exception: {e}')
         raise RuntimeError('YOLO26 export failed; see preceding error')
     if exported_path:
+        adapt_calibration_batch8(exported_path, 'cls')
         if output_name and exported_path != output_name:
             out_dir = os.path.dirname(output_name)
             if out_dir:

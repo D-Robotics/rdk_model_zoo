@@ -46,6 +46,25 @@ contract.
 The shared code stops at these protocol adapters. It does not pretend that X5
 and S can consume each other's calibration files or artifact formats.
 
+## YOLO26 task export and calibration batch
+
+Each YOLO26 task exporter (`yolo26/export_yolo26_<task>_bpu.py`) keeps
+`dynamic=False` and then calls `yolo26/batch_flex.py::adapt_calibration_batch8`
+on the exported ONNX. The adapter accepts one static NCHW input with batch one
+and static batch-one outputs, rewrites recognized internal attention `Reshape`
+target constants whose leading value is one to `-1`, validates the ONNX, and
+writes it atomically. It fails closed when no matching node exists or a shape
+constant is shared unsafely.
+
+The patch lets PTQ calibration run internally at batch eight while the graph
+inputs, outputs and runtime contract stay batch one. It does not change the
+calibration image list or count and does not select the calibration batch;
+mapper `--jobs` is compiler parallelism, not calibration batch. A
+`YOLO26_BATCH_FLEX` message proves only that graph nodes changed. Treat a
+`(task, size, platform)` artifact as batch-eight calibrated only when its
+toolchain log shows calibration at batch eight without a reset to one, and
+record its own accuracy result.
+
 ## Reviewed scope and limitations
 
 * Generic representative detection is the three-level DFL protocol used by

@@ -190,6 +190,11 @@ python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
 
 YOLO26 的 cls/seg/pose/obb 导出器不支持 `--require-local`；请在运行前自行确认上述绝对路径存在，不能把该参数传给它们。
 
+所有 YOLO26 任务导出器在导出后都会调用 `yolo26/batch_flex.py`：内部 attention
+`Reshape` 目标允许 PTQ 校准以 batch 8 运行，图的输入输出仍是静态 batch 1。规则及
+batch 8 制品所需证据见
+[CONVERSION_CONTRACT.md](CONVERSION_CONTRACT.md#yolo26-task-export-and-calibration-batch)。
+
 将生成的 ONNX 交给下面的 mapper，YOLO26 添加 `--family yolo26`。预期输入为静态 batch-one float32 NCHW；检测 DFL 与直接 LTRB 输出不可互换。分割附带 mask 系数/prototype，姿态附带关键点，OBB 附带角度；分类输出 logits，运行端进行 Softmax。检查对应导出脚本的输出说明和运行时绑定，不要仅按输出数量判断兼容性。
 
 <a id="dataflow"></a>
