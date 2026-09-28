@@ -183,3 +183,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：HIMLoco 补齐准确模型绑定、共享 SDK runner、离线 CLI 与显式下载，21 源输入及清单原样迁入；根/model/Python/test_data 双语说明已提供。15 Sample 测试及6项真实无 SDK CLI 检查通过，直接 Sample 门禁零违规，台账进入 in-progress。C++/评测/转换文档仍待完成，量化方案不实跑验证。见[Python 入口记录](../../releases/unified-migration/2026-09-28-b10-himloco-cli-review.md)。
 
 2026-09-28：HIMLoco conversion/evaluator 七个源脚本原样迁入，四份双语 README 补齐根目录命令、实际参数、输出、历史来源及制品身份边界；根入口同步。15 主机测试与 Sample 文档契约零违规，未执行量化方案。C++ 与整套重构验收继续，见[文档迁移记录](../../releases/unified-migration/2026-09-28-b10-himloco-docs-review.md)。
+
+2026-09-28：HIMLoco C++ 纯四阶段核心迁入，SDK 与文件职责分离，返回值持有数据和逐次耗时；新增原生主机测试先失败后通过，21 条源输入逐字节检查及 ASan/UBSan 通过。16 项 Sample 测试、文档契约零违规；C++ 双语说明及根入口同步。SDK／CLI 及整套独立验收仍待完成，见[原生核心记录](../../releases/unified-migration/2026-09-28-b10-himloco-cpp-core-review.md)。

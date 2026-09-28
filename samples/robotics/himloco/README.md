@@ -14,7 +14,7 @@ are not interchangeable. The migration source is X5 commit
 
 The unified Python SDK entry, explicit model preparation and offline inputs are
 implemented. Source conversion/evaluation tools and bilingual guides are now in
-the unified directory; native C++ migration remains in progress. Quantization
+the unified directory; native C++ pure stages are host-tested, while SDK/CLI migration remains in progress. Quantization
 instructions are inherited from the existing source scheme; no recipe rerun is required for this documentation work. This is not yet
 whole-sample independent acceptance.
 
@@ -28,7 +28,7 @@ robot command is performed. The source controller applies
 
 | Target | Artifact | Unified Python | Unified C++ |
 | --- | --- | --- | --- |
-| X5 | Bayes-e BIN | Implemented; host SDK-double tests; board not-run | Migration pending; source implementation retained |
+| X5 | Bayes-e BIN | Implemented; host SDK-double tests; board not-run | Pure stages host-tested; SDK/CLI pending; board not-run |
 | S100 / S100P / S600 | No published matching artifact | Not supported | Not supported |
 
 The source board environment was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT
@@ -101,7 +101,7 @@ mapping, control-loop behavior or closed-loop stability.
 - `tests/`: core, metadata and CLI checks with explicit model/SDK fixtures.
 - `conversion/`: source fused export, calibration and Mapper recipe with bilingual guides.
 - `evaluator/`: format/action comparisons, input preparation and historical measurements.
-- Native C++: migration pending; source content retained.
+- `runtime/cpp/`: pure policy stages and host checks; SDK/CLI migration pending.
 
 <a id="entry-points"></a>
 ## Entry points
@@ -109,7 +109,7 @@ mapping, control-loop behavior or closed-loop stability.
 - [Model package](model/README.md): identity, paths, preparation and checksum.
 - [Python runtime](runtime/python/README.md): commands, all options, outputs and public API.
 - [Input provenance](test_data/README.md): source indices, byte layout and digest checks.
-- [Source C++ guide](../../../platforms/x5/samples/robotics/himloco/runtime/cpp/README.md): historical native implementation, pending unified migration.
+- [C++ core](runtime/cpp/README.md): stages, host build, resource boundary and migration status.
 - [Model conversion](conversion/README.md): fused export/calibration/MIX recipe.
 - [Model evaluation](evaluator/README.md): data, commands, metrics and source references.
 
