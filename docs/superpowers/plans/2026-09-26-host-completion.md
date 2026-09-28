@@ -234,3 +234,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28独立评审继续：HIMLoco离线运行时23项通过，Paraformer运行时组合46专项+6原生通过，KWS运行时13项通过但根算法说明需补；ASR21项+5原生通过仍被独立ASR-R1反例阻断（int32经float32形成blank假平局）。以上台账已回填范围化状态；PointNet同类R2正在Claude整改。对应报告为2026-09-28-{himloco,paraformer,kws,asr}-independent-review.md，不能用已有测试通过替代反例修复。B8其余七样例主机评审范围已回填，整批仍等PointNet和共同文档/集成收尾。
 
 2026-09-28：PointNet R2经Codex独立复验关闭：26项通过，原int32精度反例正确输出class 1，checker零违规，26个样例文件哈希在验收期间未变。R1/R2历史失败保留，PointNet主机运行时与关联文档范围接受；B8/H4仍待共同文档和集成收尾，不据此关闭整批。见[独立评审](../../releases/unified-migration/2026-09-28-pointnet-independent-review.md)。
+
+2026-09-28：YOLOE运行时组合和入口经Codex独立审阅，34项Python与11项ASan/UBSan原生主机测试通过，checker零违规；保留S公开量化制品不兼容浮点路径的事实，不宣称板端通过。见[独立评审](../../releases/unified-migration/2026-09-28-yoloe-independent-review.md)。H5/B9转换/评估文档与总体集成仍待最终审核；不执行真实量化验证。
