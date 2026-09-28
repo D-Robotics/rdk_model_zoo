@@ -51,6 +51,7 @@ for filename in ('README.md','README_cn.md'):
         if index==2: assert p.stdout.strip()=='中中文 3 True'
         examples.append({'readme':filename,'block':index,'rc':p.returncode})
     for link in re.findall(r'\]\(([^)]+)\)',content):
+        if link.startswith('#'): continue
         assert (path.parent/link).resolve().exists(),link
 p=subprocess.run([sys.executable,'-m','unittest','samples.speech.paraformer.tests.test_cif','samples.speech.paraformer.tests.test_pipeline','-v'],cwd=ROOT,capture_output=True,text=True)
 (HERE/'green.log').write_text(p.stdout+p.stderr)

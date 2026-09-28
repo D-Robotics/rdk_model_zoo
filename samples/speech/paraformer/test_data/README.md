@@ -22,9 +22,9 @@ No HBM model was run for these results.
 `manifest.json` is a JSON list of objects containing `utt_id` and reference `text`.
 Each corresponding audio file is `audio/<utt_id>.wav`. Keep IDs unique and treat
 IDs as names, not paths. Preserve reference text separately from predictions and
-never rewrite this source manifest when generating features. The full manifest
-CLI and C++ feature-preparation bridge are still being migrated; the archived
-`run.sh` instructions are not a claim of an available unified command.
+never rewrite this source manifest when generating features. The Python manifest CLI now writes separate prepared-manifest/feature outputs;
+see the runtime guide. The native C++ consumer is still being migrated. Archived
+`run.sh` positional arguments are not the unified interface.
 
 The current frontend API accepts finite float32 samples loaded from mono or
 multichannel 16 kHz audio; multichannel audio is averaged. It does not resample.

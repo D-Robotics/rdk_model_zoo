@@ -42,6 +42,7 @@ for name in ('README.md', 'README_cn.md'):
             assert result.stdout.strip() == '(1, 100, 512) [2] [3.0, 8.0]'
         checks.append({'readme': str(path.relative_to(ROOT)), 'block': i, 'rc': result.returncode})
     for target in re.findall(r'\]\(([^)]+)\)', content):
+        if target.startswith('#'): continue
         assert (path.parent / target).resolve().exists(), target
 result = subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', 'samples/speech/paraformer/tests', '-p', 'test_cif.py', '-v'], cwd=ROOT, capture_output=True, text=True)
 (HERE / 'green.log').write_text(result.stdout + result.stderr)

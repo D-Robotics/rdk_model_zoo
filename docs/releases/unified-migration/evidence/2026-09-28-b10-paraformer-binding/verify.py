@@ -42,6 +42,7 @@ for filename in ('README.md', 'README_cn.md'):
             assert 'only for s100' in lines[3]
         examples.append({'readme':filename, 'block':index, 'rc':result.returncode})
     for link in re.findall(r'\]\(([^)]+)\)', content):
+        if link.startswith('#'): continue
         assert (path.parent / link).resolve().exists(), link
 auxiliary = []
 for filename in ('am.mvn', 'paraformer_config.yaml'):
@@ -59,6 +60,7 @@ for filename in ('README.md', 'README_cn.md'):
     assert result.returncode == 0 and len(result.stdout.splitlines()) == 6
     (HERE / f'model-{filename}-preview.log').write_text(result.stdout + result.stderr)
     for link in re.findall(r'\]\(([^)]+)\)', content):
+        if link.startswith('#'): continue
         assert (path.parent / link).resolve().exists(), link
 help_result = subprocess.run([sys.executable, str(ROOT / 'samples/speech/paraformer/model/download.py'), '--help'], cwd=ROOT, capture_output=True, text=True)
 assert help_result.returncode == 0
