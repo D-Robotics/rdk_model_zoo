@@ -46,7 +46,7 @@ S 独立 yolo11、yolo11_pose、yolo11_seg、yolov13_imoonlab 属重复实现，
 - [ ] H3 B7主机整改集成；客户文档跟随实际代码与历史板证据，保持板测缺口。
 - [x] H4 B8全部样例完整源能力迁移与测试、双语README（2026-09-28 非板端整批独立验收通过；板端仍 not-run）。
 - [ ] H5 B9统一YOLO整理、重复独立系列退役及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；重复系列按用户新要求退役；YOLOE Python/C++、导出/转换准备/evaluator 及双语说明已完成主机实现，整体验收仍 pending。
-- [ ] H6 B10语音/机器人样例迁移；保留执行边界，不触发实机控制。
+- [x] H6 B10语音/机器人样例迁移；2026-09-28 非板端整批独立验收通过，保留板测/SDK/实机控制未验证边界。
 - [ ] H7 B11大模型和VLA来源/gitlink/资源集成，不用空壳冒充上游能力。
 - [ ] H8 全仓共享职责、datasets、旧路径兼容、manifest/catalog、七skills原包来源与文档/Agent导航、上游增量核对。
 - [ ] H9 全部相关主机测试、无SDKhelp/list/dry-run、双语命令与本地链接核验、独立整体评审、GitHub同步；最终报告列出板测及外部环境未验证项。
@@ -311,3 +311,5 @@ pass; initial reviewer system-Python/PyYAML errors are retained alongside the
 corrected virtualenv runs. All 118 prior tested runtime/test hashes are unchanged.
 No model download, recipe execution or board access occurred. H2/H9 are not
 implicitly closed by this scoped command check.
+
+2026-09-28：H6/B10 非板端整批独立验收通过，见 B10 batch independent review 的逐能力证据表。176 份已评审文件与 54 份 README 哈希完成复核，仅已接受的两组文档整改存在变化；109 项整批主机测试证据保留。台账 Board=not-run、Closed=no，整体 H1/H8/H9 继续。

@@ -41,3 +41,24 @@ not headings or string matching alone. No recipe was executed.
 batch/ledger reconciliation remains separate. The original finding and prior
 109-test integrated results above are retained. The author report's native-guide
 relative link was corrected by the reviewer as report navigation only.
+
+## Final non-board batch acceptance
+
+**H6/B10 non-board scope accepted by Codex.** The opening in-progress status
+and findings above describe the earlier review stages and are retained.
+
+| Source requirement | Acceptance evidence and current boundary |
+| --- | --- |
+| ASR Python/C++ chunked audio, explicit decoder policy and resampling behavior | ASR independent review and R1 recheck: 27 tests, corrected integer comparison, CTC/legacy and Python/native resampler differences disclosed; prior five native CTests retain their SDK-double scope |
+| KWS source frontend, exact S100 asset and offline scoring | KWS independent review: 13 tests, fixed 60000-sample/373x80 contract, owned raw output and threshold semantics; KWS-N1 source MDTC explanation accepted in the special README review |
+| Paraformer multi-model stages, explicit CIF and native WAV-to-feature handoff | Paraformer independent review: 46 runtime tests, six native checks, separate model execution and CPU bridge, empty-token handling and RNG scope; B10-DOC-R1 above closes stale customer handoff prose |
+| HIMLoco offline policy, source inputs and raw-action boundary | HIMLoco independent review: 23 tests; 270 observations/12 actions, 21 fixed source observations, external controller scaling, SDK doubles and no actuation |
+| Source conversion/evaluation capabilities and historical figures | Original 132-file source audit plus per-sample migration records and this batch's semantic README audit; inherited recipes reviewed as trusted source text, actual quantization execution excluded by user decision |
+| Layered bilingual customer documentation | 54-guide inventory and semantic audit above; corrected KWS overview and Paraformer prerequisite/status prose have separate independent acceptance; command blocks and local links checked |
+| Integrated host behavior and evidence fidelity | 109 fresh host tests in host-suites.json; final-hash-reconciliation.json compares 176 recorded sample-file hashes and 54 README hashes. Only two KWS root and four Paraformer README changes differ, each independently accepted; runtime evidence has no unexplained drift |
+
+The ledger records done for non-board migration/documentation and host-accepted
+for review. Board remains not-run and its overall Closed column remains no,
+matching the existing B8 convention. No vendor SDK ABI, model accuracy/latency,
+robot control or new quantization result is certified. Whole-repository H1/H8/H9
+requirements are not closed by this batch acceptance.
