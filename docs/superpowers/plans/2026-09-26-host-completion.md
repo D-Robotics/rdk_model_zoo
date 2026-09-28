@@ -1,5 +1,8 @@
 # X5/S 非板端完整交付与 README 修复计划
 
+> 2026-09-28 最新分工：用户已改为 Claude Code + GLM 实现，Codex 只做方向、独立评审、整改派发和 GitHub 同步；覆盖下文此前“Codex直接实现”的规则。MiniCPM 实现包请先阅读 [reviewer 基线三项复现](../../releases/unified-migration/2026-09-28-minicpm-reviewer-baseline.md)。不得绕过此分工由 Codex 自行修产品代码。
+
+
 ## 2026-09-28 最新用户裁定：量化 README 只做重构优化
 
 适用于全部 Sample，而非仅 Paraformer：现有 README 中的量化方案由用户确认真实可用，
