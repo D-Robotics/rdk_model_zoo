@@ -38,7 +38,7 @@ S 独立 yolo11、yolo11_pose、yolo11_seg、yolov13_imoonlab 属重复实现，
 
 ## 完成清单
 
-- [ ] H0 汇合未合入的已审修复；修正B3工具依赖隔离、原生audit与两侧日志归档，完成主机回归。
+- [x] H0 汇合未合入的已审修复；修正B3工具依赖隔离、原生audit与两侧日志归档，完成主机回归。 已由2026-09-28独立集成评审确认，见下方记录。
 - [ ] H1 README覆盖审计：根、sample索引、平台说明、每个sample及model/runtime/python/runtime/cpp/conversion/evaluator；建立源能力→新位置映射，修复失链与默认命令矛盾。
   - 2026-09-26 总入口、36 个 Sample 索引及平台注册说明已更新，362 个本地链接通过；原平台正文保留。逐 Sample 深度内容审核仍继续，H1 不整体关闭。
 - [ ] H2 Ultralytics YOLO全部层级文档与代码规范示范：可复制最短流程、全任务命令、完整API输入变量、参数默认/输出/模型/转换/评估/历史指标/故障说明、中英一致。
@@ -240,3 +240,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：首批9个B1/B2 sample根README深度恢复经独立验收（18份双语、50处固定源图引用、5份恢复的ResNet图；命令未变且本地链接无缺失）。MobileNetV3图注和EfficientFormerV2泛化说明已由Claude修正并复核。见[评审](../../releases/unified-migration/2026-09-28-readme-depth-b1b2-independent-review.md)。仅关闭DOC-DEPTH-R1的这9个根文档范围，H1整体及其余样例/子目录仍继续。
 
 2026-09-28：YOLOE evaluator的合成计分/数据契约10项经现有pycocotools缓存环境复验通过（默认环境缺依赖的首次失败保留），14份README本地文件链接无缺失。子目录内容已对照参数/状态和源记录；发现conversion/evaluator的C++进度旧声明，连同UNetMobileNet旧评审状态交Claude做文档同步，未扩大量化验证范围。
+
+2026-09-28：H0独立关闭：9条既有B3/B6/B7修复分支均已通过祖先关系或git cherry等价补丁纳入，B3隔离与native audit/两侧日志归档整改已读码核对，290项相关主机回归通过。见[独立集成评审](../../releases/unified-migration/2026-09-28-integration-independent-review.md)。仅H0当前定义范围完成；H3文档收尾、H8目录/来源全量检查、H9整体交付和其余H项继续，历史板测缺口不变。
