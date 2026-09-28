@@ -36,3 +36,9 @@ Historical tag overrides and separate documentation-site import remain intact.
 No workflow, source configuration, default branch, tag or external site was changed.
 H8 remains open for this correction, dataset documentation and remaining shared
 integration review.
+
+## H8-CATALOG-R2 — Historical tag pin inherits worktree VERSION path (P2)
+
+The advertised `npm run catalog:build -- --pin x5=x5-v1.1.2 --out ...` fails under Node 22.23.2 (rc=1): `git show x5-v1.1.2:docs/release/x5/VERSION` returns 128 because that immutable historical tag has a root VERSION. `resolvePlatformSources` inherits current `entry.version_file` even when `--pin` switches to a different historical layout. Manifest directory probing finds old `docs/release`, but VERSION is not resolved alongside it. Evidence: `historical-pin-failure.json` records full command/output and source hashes. The earlier full current-worktree check passed; it did not exercise this advertised historical-pin command.
+
+Preserve historical annotated-tag capability and current unified worktree validation. Resolve VERSION using the selected immutable tag/layout, handle prefixed tag trees, and reject genuinely absent or mismatching versions. Add behavior tests for old root layout, prefixed legacy layout and unified tags while retaining strict worktree version checking; independently rerun the exact advertised historical example. No tag rewriting, manifest asset changes, release or site publication. Assigned sequentially to the catalog Claude Code + GLM session after its current doc-only task. H8 remains open.
