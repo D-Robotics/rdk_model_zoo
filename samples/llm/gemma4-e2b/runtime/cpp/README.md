@@ -290,6 +290,63 @@ Pass `--help` to any binary to see the gflags-generated full help.
 
 7. **Unified dual-model lifecycle** — `main` always loads Vision before Text and keeps both resident for the process lifetime. This order avoids the S600 cross-core IOVA mapping conflict while preserving identical chat control flow on S100, S100P, and S600; only the matching HBMs, CMake SoC macros, and `run.sh` environment setup differ.
 
+### Vision library interfaces and responsibilities
+
+`gemma4_image_io` reads files; `gemma4_vision_preprocess` transforms in-memory pixels;
+`gemma4_vision_task` composes the stages; `VisionEngine` owns SDK model/tensor transport.
+Interactive and single-shot VLM entry points use the same composition.
+
+| Interface | Input → output | Contract |
+| --- | --- | --- |
+| `LoadImage(path)` | File path → `cv::Mat` | Application IO, OpenCV BGR decoding; throws on read failure |
+| `PreprocessImage(bgr)` | Nonempty 2D `CV_8UC3` → float `[2520,768]` | BGR→RGB, bicubic resize to 960×672, divide by 255, 16×16 patches; no input mutation or file IO |
+| `ForwardVision(patches, runner)` | Prepared float patches → raw runner result | Fixed element count, finite `[0,1]` values, exactly one explicit runner call |
+| `PostprocessVision(raw)` | Float `[280,1536]` → owned feature vector | Count and finite-value checks; no scaling, L2 or extra normalization |
+| `PredictVision(bgr, runner)` | BGR image and runner → features | Three-stage composition; no SDK construction, file IO or printing |
+
+Patch rows precede patch columns; each patch contains pixel rows, pixel columns and interleaved RGB channels.
+Results own their values, so later calls cannot overwrite retained outputs. Serialize access to the SDK engine.
+`VisionEngine::Infer` now takes prepared patches instead of an image path; migrate path-based callers using explicit IO below.
+
+This complete example links `gemma4_runtime` in an SDK-enabled project; it is not a host-only example:
+
+```cpp
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+#include "gemma4_image_io.hpp"
+#include "gemma4_vision_engine.hpp"
+#include "gemma4_vision_task.hpp"
+
+int main(int argc, char** argv) {
+  if (argc != 3) {
+    std::cerr << "Usage: vision_example VISION_HBM IMAGE\n";
+    return 2;
+  }
+  try {
+    const cv::Mat image = gemma4::LoadImage(argv[2]);
+    gemma4::VisionEngine engine(argv[1]);
+    const auto features = gemma4::PredictVision(
+        image, [&engine](const std::vector<float>& patches) {
+          return engine.Infer(patches);
+        });
+    std::cout << features.size() << " vision feature values\n";
+    return 0;
+  } catch (const std::exception& error) {
+    std::cerr << error.what() << "\n";
+    return 1;
+  }
+}
+```
+
+The model must match the board and build target. Success prints `430080 vision feature values`; this example reports Vision features rather than generating text.
+Save it as `vision_example.cpp` in the native CMake project and add:
+
+```cmake
+add_executable(vision_example vision_example.cpp)
+target_link_libraries(vision_example PRIVATE gemma4_runtime)
+```
+
 <a id="results-interpretation"></a>
 ## Verification
 
@@ -307,3 +364,17 @@ These outputs are not dataset accuracy measurements. The golden verifier compare
 embedding maximum absolute error ≤1e-3, and zero error for both masks. Cosine is printed for reference only.
 `ALL PASSED` corresponds to exit code 0; mismatches or exceptions return 1. See [evaluation prerequisites](../../evaluator/README.md).
 Each TextEngine owns one session and its KV state; callers must serialize access. An interactive session is not a stateless, concurrently shared inference function.
+
+### Host regression without the SDK
+
+Checks stage contracts and source preprocessing parity using already installed OpenCV C++ libraries; it installs no dependencies and prepares no models:
+
+```bash
+# From repository root; set OpenCV_DIR if OpenCV is not on CMake's search path.
+cmake -S samples/llm/gemma4-e2b/tests/native -B /tmp/gemma-vision-tests -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/gemma-vision-tests --parallel
+ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
+```
+
+Two CTest entries cover stages/ownership/invalid inputs and byte-exact preprocessing comparisons on four source images. Assertions remain enabled in Release builds.
+An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.

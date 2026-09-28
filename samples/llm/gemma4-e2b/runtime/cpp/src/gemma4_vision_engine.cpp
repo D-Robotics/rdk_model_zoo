@@ -2,7 +2,7 @@
  * @file gemma4_vision_engine.cpp
  * @brief Execute the Gemma4-E2B vision HBM and return image features.
  *
- * The implementation preprocesses an image, submits BPU inference, and
+ * The implementation consumes prepared patches, submits BPU inference, and
  * converts the encoder output into features consumed by the text runtime.
  *
  * @note VisionEngine instances are not thread-safe.
@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "gemma4_config.hpp"
-#include "gemma4_vision_preprocess.hpp"
 #include "hb_utils.hpp"
 
 namespace gemma4 {
@@ -83,8 +82,10 @@ VisionEngine::~VisionEngine() {
   }
 }
 
-std::vector<float> VisionEngine::Infer(const std::string& image_path) {
-  const std::vector<float> patches = PreprocessImage(image_path);
+std::vector<float> VisionEngine::Infer(const std::vector<float>& patches) {
+  if (patches.size() != static_cast<size_t>(kVisionPatches) * kVisionPatchDim) {
+    throw std::invalid_argument("Vision SDK input requires [2520,768] patches");
+  }
 
   // Debug: patch statistics
   if (RuntimeDebugEnabled()) {

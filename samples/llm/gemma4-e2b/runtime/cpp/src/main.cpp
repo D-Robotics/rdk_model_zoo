@@ -31,6 +31,8 @@
 #include "gemma4_config.hpp"
 #include "gemma4_text_engine.hpp"
 #include "gemma4_vision_engine.hpp"
+#include "gemma4_vision_task.hpp"
+#include "gemma4_image_io.hpp"
 
 // -------------------- Command-line flags --------------------
 // Empty default => resolved at runtime from $GEMMA4_HOME.
@@ -411,7 +413,11 @@ int main(int argc, char** argv) {
         }
 
         std::cout << "Processing image: " << img_path << "..." << std::endl;
-        pending_vision_features = vision.Infer(img_path);
+        pending_vision_features =
+            gemma4::PredictVision(gemma4::LoadImage(img_path),
+                                  [&vision](const std::vector<float> &patches) {
+                                    return vision.Infer(patches);
+                                  });
         pending_image = img_path;
         has_pending_image = true;
         std::cout << "Image loaded (" << pending_vision_features.size() << " features).\n";

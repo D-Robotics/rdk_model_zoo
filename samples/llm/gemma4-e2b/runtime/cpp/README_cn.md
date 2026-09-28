@@ -285,6 +285,62 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 
 7. **统一双模型生命周期** — `main` 启动时统一按 Vision→Text 顺序加载两个模型，并在整个进程内常驻。该顺序避免 S600 跨 core IOVA 映射冲突，同时 S100/S100P/S600 共用完全相同的聊天主流程；板型差异只体现在匹配的 HBM、CMake SoC 宏和 `run.sh` 环境设置。
 
+### Vision 库接口与职责
+
+`gemma4_image_io` 负责读图，`gemma4_vision_preprocess` 只处理内存像素，`gemma4_vision_task`
+组合三个阶段；`VisionEngine` 负责 SDK 模型及张量传输。交互与单次 VLM 入口均使用同一组合。
+
+| 接口 | 输入 → 输出 | 契约 |
+| --- | --- | --- |
+| `LoadImage(path)` | 文件路径 → `cv::Mat` | 应用 IO，OpenCV 解码为 BGR；读取失败抛异常 |
+| `PreprocessImage(bgr)` | 非空二维 `CV_8UC3` → float `[2520,768]` | BGR→RGB、bicubic 到 960×672、除 255、16×16 分块；不改输入、不读文件 |
+| `ForwardVision(patches, runner)` | 上述 float patches → runner 原始结果 | 固定元素数、有限 `[0,1]`，显式 runner 调用一次 |
+| `PostprocessVision(raw)` | float `[280,1536]` → 自有 feature 向量 | 元素数及有限值检查，无缩放、L2 或额外归一化 |
+| `PredictVision(bgr, runner)` | BGR 图像与 runner → features | 三阶段组合，不创建 SDK、不读写文件、不打印 |
+
+前处理按 patch 行、patch 列排序，patch 内按像素行、像素列、RGB 通道交错排列。
+输出以值持有，后续调用不会覆写先前结果；SDK engine 本身仍需串行访问。
+`VisionEngine::Infer` 接受已准备 patches，不再接受图片路径。原路径式调用迁移到下面的显式 IO 组合。
+
+以下完整示例在已有 SDK 工程中链接 `gemma4_runtime` 使用，不是无板主机示例：
+
+```cpp
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+#include "gemma4_image_io.hpp"
+#include "gemma4_vision_engine.hpp"
+#include "gemma4_vision_task.hpp"
+
+int main(int argc, char** argv) {
+  if (argc != 3) {
+    std::cerr << "Usage: vision_example VISION_HBM IMAGE\n";
+    return 2;
+  }
+  try {
+    const cv::Mat image = gemma4::LoadImage(argv[2]);
+    gemma4::VisionEngine engine(argv[1]);
+    const auto features = gemma4::PredictVision(
+        image, [&engine](const std::vector<float>& patches) {
+          return engine.Infer(patches);
+        });
+    std::cout << features.size() << " vision feature values\n";
+    return 0;
+  } catch (const std::exception& error) {
+    std::cerr << error.what() << "\n";
+    return 1;
+  }
+}
+```
+
+模型需与板卡及编译目标匹配；成功时输出 `430080 vision feature values`。例子只输出 Vision 特征数量，不生成文本。
+在原生 CMake 工程中将例子保存为 `vision_example.cpp`，增加：
+
+```cmake
+add_executable(vision_example vision_example.cpp)
+target_link_libraries(vision_example PRIVATE gemma4_runtime)
+```
+
 <a id="results-interpretation"></a>
 ## 验证
 
@@ -301,3 +357,17 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 这些输出不等于数据集精度结果。Golden 校验器比较五个 prefill 输入：整数完全一致，embedding 最大绝对误差 ≤1e-3，两个 mask 误差为 0；cosine 仅打印参考。
 `ALL PASSED` 对应退出码 0；不匹配或异常为 1。完整数据前提见 [评测说明](../../evaluator/README_cn.md)。
 每个 TextEngine 持有一个会话及其 KV 状态，调用方应串行访问；不要把交互会话当成无状态、可并发共享的推理函数。
+
+### 无 SDK 的主机回归
+
+仅检查算法边界与源前处理一致性，使用已安装的 OpenCV C++ 库；不安装依赖、不准备模型：
+
+```bash
+# From repository root; set OpenCV_DIR if OpenCV is not on CMake's search path.
+cmake -S samples/llm/gemma4-e2b/tests/native -B /tmp/gemma-vision-tests -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/gemma-vision-tests --parallel
+ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
+```
+
+两项 CTest 分别覆盖三阶段/所有权/异常输入，以及四张源图片前处理逐字节比较。Release 构建仍启用断言。
+这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。

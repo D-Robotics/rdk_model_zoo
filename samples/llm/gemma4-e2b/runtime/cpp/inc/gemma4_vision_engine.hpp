@@ -19,7 +19,7 @@ namespace gemma4 {
 /**
  * @brief Vision ViT inference engine for Gemma4-E2B.
  *
- * Loads the vision HBM model, preprocesses the input image, and returns
+ * Loads the vision HBM model, submits prepared float patches, and returns
  * the ViT output features to be injected into the text decoder.
  */
 class VisionEngine {
@@ -30,7 +30,7 @@ class VisionEngine {
   VisionEngine(const VisionEngine&) = delete;
   VisionEngine& operator=(const VisionEngine&) = delete;
 
-  std::vector<float> Infer(const std::string& image_path);
+  std::vector<float> Infer(const std::vector<float>& patches);
 
   double LoadMs() const { return load_ms_; }
 

@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.15)
+project(gemma4_vision_host_tests CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(OpenCV REQUIRED COMPONENTS core imgcodecs imgproc)
+get_filename_component(SAMPLE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+get_filename_component(REPO_ROOT "${SAMPLE_ROOT}/../../.." ABSOLUTE)
+set(CPP "${SAMPLE_ROOT}/runtime/cpp")
+set(LEGACY "${REPO_ROOT}/platforms/s/samples/llm/gemma4-e2b/runtime/cpp")
+add_library(source_preprocess OBJECT "${LEGACY}/src/gemma4_vision_preprocess.cpp")
+target_include_directories(source_preprocess PRIVATE "${LEGACY}/inc" ${OpenCV_INCLUDE_DIRS})
+target_compile_definitions(source_preprocess PRIVATE PreprocessImage=SourcePreprocessImage)
+add_executable(vision_test vision_test.cpp
+  "${CPP}/src/gemma4_vision_preprocess.cpp"
+  "${CPP}/src/gemma4_vision_task.cpp"
+  "${CPP}/src/gemma4_image_io.cpp"
+  $<TARGET_OBJECTS:source_preprocess>)
+target_include_directories(vision_test PRIVATE "${CPP}/inc" ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(vision_test PRIVATE ${OpenCV_LIBS})
+if(MSVC)
+  target_compile_options(vision_test PRIVATE /UNDEBUG)
+else()
+  target_compile_options(vision_test PRIVATE -UNDEBUG)
+endif()
+enable_testing()
+add_test(NAME vision_contract COMMAND vision_test)
+add_test(NAME vision_source_images COMMAND vision_test "${SAMPLE_ROOT}/test_data")

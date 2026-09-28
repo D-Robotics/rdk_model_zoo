@@ -18,6 +18,8 @@
 #include "gemma4_text_engine.hpp"
 #include "gemma4_tokenizer.hpp"
 #include "gemma4_vision_engine.hpp"
+#include "gemma4_vision_task.hpp"
+#include "gemma4_image_io.hpp"
 
 namespace {
 
@@ -167,7 +169,11 @@ int main(int argc, char** argv) {
 
       std::cout << "Running vision infer on " << image_path << " ..."
                 << std::endl;
-      const auto vision_features = vision.Infer(image_path);
+      const auto vision_features =
+          gemma4::PredictVision(gemma4::LoadImage(image_path),
+                                [&vision](const std::vector<float> &patches) {
+                                  return vision.Infer(patches);
+                                });
       std::cout << "Vision output: " << vision_features.size() << " floats"
                 << std::endl;
 
