@@ -332,4 +332,4 @@ OpenCV 主机配置运行十一项测试：六项数值/阶段检查、X5/UCP �
 
 [实现证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md)记录先前 E26 主机验证；[E11 扩展证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md)记录三个原生测试、E26 回归及真实 E11 s/m/l 对照。E26n 对照覆盖单/多标签模式下与 Python 的候选解码比较。[几何/掩码证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md)另行记录真实 OpenCV 编译及完整 ROI 像素对照。类别和顺序要求完全一致，框、分数、系数按明确数值容差比较。候选解码测试不比较掩码。
 
-统一选择、CLI 和结果输出已有实现。[原生入口证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-cli-review.md)分别记录真实 OpenCV 主机执行、Python 进程策略测试与 SDK API 替身。板端推理、真实 SDK 编译、OE 产出的 S 浮点制品及原生数据集精度仍未验证；主机检查不等于独立迁移验收关闭。
+统一选择、CLI 和结果输出已有实现。[原生入口证据](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-cli-review.md)分别记录真实 OpenCV 主机执行、Python 进程策略测试与 SDK API 替身。独立评审已接受该主机运行时组成与入口范围（[评审记录](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-independent-review.md)）。板端推理、真实 SDK 编译、OE 产出的 S 浮点制品及原生数据集精度仍为 not-run；该评审不关闭转换/评估器验收、全仓库集成或完整 B9 迁移。

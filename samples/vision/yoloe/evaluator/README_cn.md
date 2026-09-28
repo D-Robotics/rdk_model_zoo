@@ -153,4 +153,4 @@ python3 -m unittest discover -s samples/vision/yoloe/evaluator/tests
 python3 -m unittest discover -s samples/vision/yoloe/tests
 ```
 
-测试覆盖已知合成掩码的真实 COCO 计分、空预测、显式映射、严格图片/掩码几何、缺文件时部分失败记录、predictions-only 边界。合成样例满分只验证计分器，不是 YOLOE 模型精度。源运行契约测试保留在归档中，统一运行时测试覆盖共用阶段；C++ 迁移和全分支独立验收仍是另行待完成工作。
+测试覆盖已知合成掩码的真实 COCO 计分、空预测、显式映射、严格图片/掩码几何、缺文件时部分失败记录、predictions-only 边界。合成样例满分只验证计分器，不是 YOLOE 模型精度。源运行契约测试保留在归档中，统一运行时测试覆盖共用阶段。原生 C++ 运行时已提供实现，其主机运行时范围已获独立评审（[评审记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-independent-review.md)）；真实 SDK／板端执行仍为 not-run，全分支独立验收仍未关闭。

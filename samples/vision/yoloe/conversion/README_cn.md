@@ -146,6 +146,6 @@ python3 -m unittest discover -s samples/vision/yoloe/conversion/tests
 <a id="known-gaps"></a>
 ## 已知缺口
 
-本统一路线尚未执行 OE 编译、编译输出检查、数据集精度或板端推理，也没有已发布浮点 S HBM。真实权重检查覆盖全部八种尺寸，但只使用一张图片和未优化的 ONNX Runtime CPU。优化执行、更多输入与 X5 11m/11l 编译验收仍待验证。图接口校验不能识别错误标注的权重尺寸或标签语义。C++ 迁移仍未完成。[统一评估器](../evaluator/README_cn.md)已提供显式数据集映射与计分，但转换准备不代表真实模型的独立验证集精度验收。
+本统一路线尚未执行 OE 编译、编译输出检查、数据集精度或板端推理，也没有已发布浮点 S HBM。真实权重检查覆盖全部八种尺寸，但只使用一张图片和未优化的 ONNX Runtime CPU。优化执行、更多输入与 X5 11m/11l 编译验收仍待验证。图接口校验不能识别错误标注的权重尺寸或标签语义。[C++ 运行时](../runtime/cpp/README_cn.md)已提供实现，其主机运行时范围已获独立评审（[评审记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-independent-review.md)）；真实 SDK 编译与板端推理仍为 not-run。[统一评估器](../evaluator/README_cn.md)已提供显式数据集映射与计分，但转换准备不代表真实模型的独立验证集精度验收。
 
 本轮主机检查所用 E26 PT 文件哈希与归档发布 sidecar 不同。文件摘要不同本身不证明参数张量变化，但不能声称新 ONNX 复现了已发布 HBM 的原始权重基线，详见[权重来源](../../../../docs/releases/unified-migration/2026-09-28-yoloe-evaluation-review.md)。

@@ -256,3 +256,10 @@ accepted within this documentation scope: 26 unchanged command-block sets,
 with zero violations. See
 [the independent review](../../releases/unified-migration/2026-09-28-readme-depth-classifiers-independent-review.md).
 H1 remains open for the remaining sample/subdirectory documentation audit.
+
+### 2026-09-28 — Reviewed host status synchronized in customer guides
+
+Accepted eight YOLOE/UNetMobileNet subdirectory README status corrections;
+YOLOE-DOC-R1 and the UNetMobileNet pending-review sentence are closed.
+[Independent review](../../releases/unified-migration/2026-09-28-review-status-docs-independent-review.md)
+records the bounded claims and fresh checks. Batch rollups remain open.

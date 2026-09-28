@@ -83,3 +83,11 @@ implemented and host-reviewed code from real SDK/board not-run and whole-branch
 review still open. Do not remove genuine float-S-publication or hardware gaps,
 change trusted conversion recipes, or claim B9 completion. Documentation closure
 remains pending this specific correction and final recheck.
+
+## YOLOE-DOC-R1 closure (2026-09-28)
+
+Closed after reading the six revised bilingual subdirectory guides and matching
+the claims against the scoped acceptance above. See the [independent status-doc
+review](2026-09-28-review-status-docs-independent-review.md) for final hashes,
+command invariance, link checks and fresh contract-check output. This does not
+close the complete B9 migration.
