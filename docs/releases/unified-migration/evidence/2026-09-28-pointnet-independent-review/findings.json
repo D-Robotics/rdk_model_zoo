@@ -1,0 +1,37 @@
+{
+  "base": "ba05780f530e76d3935b28cc9ad658e858df4fe2",
+  "findings": [
+    {
+      "id": "POINTNET-R1",
+      "priority": "P1",
+      "status": "open",
+      "fact": "Default plotting imports visualization with unresolved argparse annotation on Python 3.13, within documented Python 3.10+ support. Python 3.14 delays annotations and masks the failure."
+    }
+  ],
+  "records": [
+    {
+      "argv": [
+        "/opt/homebrew/bin/python3.13",
+        "docs/releases/unified-migration/evidence/2026-09-28-pointnet-independent-review/reproduce_visualization_import.py"
+      ],
+      "returncode": 1,
+      "stdout": "3.13.15 (main, Aug  5 2026, 12:25:43) [Clang 21.0.0 (clang-2100.3.34.2)]\n",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-pointnet-independent-review/reproduce_visualization_import.py\", line 14, in <module>\n    import samples.vision.pointnet.runtime.python.visualization\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/pointnet/runtime/python/visualization.py\", line 13, in <module>\n    def parse_args() -> argparse.Namespace:\n                        ^^^^^^^^\nNameError: name 'argparse' is not defined. Did you forget to import 'argparse'?\n"
+    },
+    {
+      "argv": [
+        "../rdk_model_zoo/.venv/bin/python",
+        "docs/releases/unified-migration/evidence/2026-09-28-pointnet-independent-review/reproduce_visualization_import.py"
+      ],
+      "returncode": 0,
+      "stdout": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.3.34.2)]\nimport completed\n",
+      "stderr": ""
+    }
+  ],
+  "scope": "Real visualization module import with explicit NumPy/matplotlib import doubles; no plotting, SDK, model or board execution. Existing 21 tests separately passed on Python 3.14.7, with CLI coverage using --no-plot.",
+  "sha256": {
+    "samples/vision/pointnet/runtime/python/visualization.py": "c767206c09c6cc28ba6f01ad2da051f985135525ec70eea6c4aabec8c516b471",
+    "samples/vision/pointnet/runtime/python/main.py": "43eba30b9a53fa21fe04455d41d3be6e58deb87113b9603fdbba6f23bbf04ec8",
+    "samples/vision/pointnet/tests/test_pointnet.py": "e7b12b62e7dfe63b6276273af4ed6060cc5aa54824f7bbd658a47c2c686ca136"
+  }
+}
