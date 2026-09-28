@@ -55,3 +55,17 @@ bindings that require it and explicitly retain that exception. Do not change cod
 Revise the two Ultralytics READMEs and author record, retaining source depth,
 existing recipes and bilingual parity. Re-run scoped static checks. Independent
 acceptance remains pending these corrections; H1/H9 are not closed.
+
+## Second pass — R3-A/B/C addressed; R3-D remains (P2)
+
+The revised candidate corrects pose shape captions, axes, NMS scope, raw logits
+and source pins. A further code-to-prose check found that the pose paragraph still
+says multiplying keypoint coordinates by stride yields input-image coordinates.
+For maintained DFL pose, `rdk_yolo_utils/postprocess.py:461` computes
+`(raw_xy * 2 + anchor - 0.5) * stride`, with half-integer cell-center anchors;
+`pose_decode.py:101–103` restores original-image geometry and applies sigmoid
+to keypoint visibility logits. This differs from the existing YOLO26 direct
+branch's `(raw_xy + anchor) * stride`. State the correct DFL formula and the
+visibility/geometry steps instead of preserving an incomplete source description.
+The published binding fixes `nkpt=17`, so avoid implying other counts are accepted
+by changing the shape alone. This is static documentation correction only.
