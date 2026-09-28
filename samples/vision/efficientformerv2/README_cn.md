@@ -16,6 +16,30 @@ Size and Speed](https://arxiv.org/abs/2212.08059)）。[English](README.md)
 分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/x5/` 下，其审计记录
 在迁移文档中，不在本 README 展开。
 
+### 算法背景
+
+EfficientFormerV2 以 MobileNet 的尺寸和速度重新审视视觉 Transformer：
+细粒度联合搜索同时优化延迟、参数量与精度；统一 FFN、改进的 MHSA
+（带 locality 的 talking-head 注意力），以及在高分辨率上的注意力与更低
+开销的下采样，相对 EfficientFormer 基线降低了注意力与下采样开销，同时
+保持 MobileNet 量级的尺寸和速度
+（[论文](https://arxiv.org/abs/2212.08059)、
+[snap-research/EfficientFormer](https://github.com/snap-research/EfficientFormer)）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **面向移动端的骨干网络**：混合骨干结构，面向边缘侧高效图像分类。
+- **联合搜索策略**：架构选择时同时优化延迟和参数量。
+- **分层结构设计**：四阶段结构，特征尺寸分别为输入分辨率的 `1/4`、`1/8`、`1/16`、`1/32`。
+- **边缘部署**：提供 S0、S1、S2 三个 RDK X5 部署模型，输入为 packed NV12。
+
+![EfficientFormerV2 架构](./test_data/EfficientFormerV2_architecture.png)
+
+*网络结构，恢复自 X5 源版本（`test_data/EfficientFormerV2_architecture.png`，
+rdk_x5 @ac11571，sha256 `0a3fd26e…`；论文图 2）：(a) EfficientFormer
+基线网络，(b) 统一 FFN，(c) 改进的 MHSA，(d)(e) 更高分辨率上的注意力，
+(f) 注意力下采样。*
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -97,6 +121,13 @@ X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓�
 | EfficientFormerV2-S2 | 224x224 | 12.6 | 77.50% | 70.75% | 6.99 | 26.01 | 152.40 |
 | EfficientFormerV2-S1 | 224x224 | 6.1 | 77.25% | 68.75% | 4.24 | 14.35 | 275.95 |
 | EfficientFormerV2-S0 | 224x224 | 3.5 | 74.25% | 68.50% | 5.79 | 19.96 | 198.45 |
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `907925ac…`）：随仓 [goldfish.JPEG](test_data/goldfish.JPEG) 的
+Rank-1 为 `goldfish`，其后依次为 tench、axolotl、rock beauty、
+coral reef。由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

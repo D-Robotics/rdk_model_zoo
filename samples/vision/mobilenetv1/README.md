@@ -15,6 +15,29 @@ The former platform branch entries remain compatibility shims under
 `platforms/{x5,s}/` until the migration closeout; their audit record
 lives in the migration documents, not here.
 
+### Algorithm background
+
+MobileNetV1 targets efficient image classification on embedded and mobile
+devices. Its efficiency comes from the depthwise separable convolution,
+which factorizes a standard convolution into a per-channel depthwise
+filter and a 1×1 pointwise projection that combines the channel outputs
+([paper](https://arxiv.org/abs/1704.04861),
+[tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md)).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Depthwise separable convolution**: decomposes a standard convolution into depthwise convolution and a 1×1 pointwise convolution.
+- **Lightweight design**: reduces computation and parameter count for embedded deployment.
+- **Classification output**: Top-K class IDs and confidence scores for ImageNet-1k labels.
+
+![Depthwise and pointwise convolution](./test_data/depthwise&pointwise.png)
+
+*Depthwise separable convolution, restored from the X5 source release
+(`test_data/depthwise&pointwise.png`, rdk_x5 @ac11571, sha256
+`48d3cb64…`): each input channel is filtered by its own D_K×D_K depthwise
+kernel; the following 1×1 pointwise convolution mixes the per-channel
+results.*
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -97,6 +120,15 @@ Published MobileNetV1 performance on `RDK X5` from rdk_x5 @ac11571 (x5-v1.1.3):
 
 The S-series source release (rdk_s @380e1a2 (s-v1.1.2)) published no latency or accuracy
 figures for this model; none are inferred here.
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `6f07652b…`): the
+bundled [bulbul.JPEG](test_data/bulbul.JPEG) ranks `bulbul` first,
+followed by junco/snowbird, robin, chickadee, and water ouzel. Recorded
+by the source release on its own runtime entry — not a new run of this
+repository.*
 
 <a id="directory"></a>
 ## Directory

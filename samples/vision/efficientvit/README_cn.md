@@ -19,6 +19,44 @@ Attention](https://arxiv.org/abs/2305.07027)，参考实现
 分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/x5/` 下，其审计记录
 在迁移文档中，不在本 README 展开。
 
+### 算法背景
+
+EfficientViT（MSRA）针对标准自注意力的访存受限开销：运行时剖析显示
+reshape/归一化/拷贝等数据搬移占去 Swin/DeiT 相当比例的延迟（论文图 2），
+而简单削减 MHSA 层会损失精度（论文图 3）。EfficientViT 改用级联组注意力
+——每个注意力头接收前序头的级联输出，在提升表征能力的同时降低每头的
+注意力开销——并使用批归一化以便推理侧融合
+（[论文](https://arxiv.org/abs/2305.07027)、
+[microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **省内存的高效注意力**：降低限制标准 Transformer 推理效率的数据搬移开销。
+- **级联组注意力**：在控制部署成本的同时提升表征能力。
+- **部署友好的归一化**：使用批归一化简化推理侧融合。
+- **分类输出**：输出 ImageNet-1k 类别的 Top-K 类别 ID 及对应置信度。
+
+![运行时剖析](./test_data/comparison_between_transformer_and_cnn.png)
+
+*运行时剖析，恢复自 X5 源版本
+（`test_data/comparison_between_transformer_and_cnn.png`，rdk_x5
+@ac11571，sha256 `be1e2e39…`；论文图 2）：访存受限算子（红色标注）在
+Swin-T/DeiT-T 延迟中占比很大 — 正是 EfficientViT 要削减的开销。*
+
+![MHSA 占比研究](./test_data/mhsa_computation.jpg)
+
+*（`test_data/mhsa_computation.jpg`，rdk_x5 @ac11571，sha256
+`4dda6352…`；论文图 3）：降尺度的 Swin-T/DeiT-T 基线在不同 MHSA 层占比
+下的 top-1 精度 — 单纯减少 MHSA 层并不能直接得到高效设计，这正是改用
+级联组注意力的动机。*
+
+![EfficientViT 架构](./test_data/efficientvit_msra_architecture.png)
+
+*EfficientViT 总览，恢复自 X5 源版本
+（`test_data/efficientvit_msra_architecture.png`，rdk_x5 @ac11571，
+sha256 `403d1c63…`；论文图 6）：(a) 带重叠 patch embedding 的三阶段
+网络，(b) 三明治布局块，(c) 逐头级联、拼接投影的级联组注意力。*
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -94,6 +132,13 @@ X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓�
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | EfficientViT_m5 | 224x224 | 1000 | 12.4 | 73.75% | 72.50% | 6.34 | 174.70 |
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `2a23e138…`）：随仓 [hook.JPEG](test_data/hook.JPEG) 的 Rank-1
+为 `hook`，其后依次为 crane、chain、seashore、dock。由源版本在其自身
+运行入口记录 — 不是本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

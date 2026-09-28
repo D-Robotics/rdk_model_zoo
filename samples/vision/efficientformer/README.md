@@ -2,8 +2,8 @@
 
 EfficientFormer ImageNet-1k classification on RDK X5: one BGR image in, a
 stable Top-K of `(class id, score, label)` out. The X5 release ships the
-EfficientFormer-L1 and L3 variants (paper [EfficientFormer: ImageNet
-Transformers at MobileNet Speed](https://arxiv.org/abs/2206.00171)).
+EfficientFormer-L1 and L3 variants (paper [EfficientFormer: Vision
+Transformers at MobileNet Speed](https://arxiv.org/abs/2206.01191)).
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
@@ -18,6 +18,40 @@ the board identity, loads `hbm_runtime` lazily, and runs a
 The former platform branch entry remains a compatibility shim under
 `platforms/x5/` until the migration closeout; its audit record lives in the
 migration documents, not here.
+
+### Algorithm background
+
+EfficientFormer is a vision-transformer family designed for mobile-speed
+inference. The design starts from latency profiling of ViT-style networks
+and removes the operators that run poorly on edge hardware;
+dimension-consistent MetaBlocks keep 4D conv-style token mixing in the
+early stages and move to 3D global attention only where it pays off,
+which keeps transformer modeling while staying deployment-friendly
+([paper](https://arxiv.org/abs/2206.01191),
+[snap-research/EfficientFormer](https://github.com/snap-research/EfficientFormer)).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Latency-driven design**: latency analysis removes inefficient ViT operations for mobile inference.
+- **Dimension-consistent blocks**: deployment-friendly tensor layouts for efficient execution.
+- **Edge deployment**: L1 and L3 RDK X5 deployment models with packed NV12 input.
+
+![Latency profiling](./test_data/latency_profiling.png)
+
+*Latency profiling, restored from the X5 source release
+(`test_data/latency_profiling.png`, rdk_x5 @ac11571, sha256
+`a3439462…`; Figure 2 of the paper): per-operator latency split for CNNs
+and ViT-style models on iPhone 12/CoreML with ImageNet-1k top-1 in
+parentheses — the design study that motivates dimension-consistent
+blocks. This is a paper measurement, not an RDK X5 number.*
+
+![EfficientFormer architecture](./test_data/EfficientFormer_architecture.png)
+
+*Architecture overview, restored from the X5 source release
+(`test_data/EfficientFormer_architecture.png`, rdk_x5 @ac11571, sha256
+`4fe4662f…`; Figure 3 of the paper): convolution stem as patch embedding,
+4D MetaBlocks with local pooling (stages 1–3i), then 3D MetaBlocks with
+global MHSA (stages 3j–4), arranged in a dimension-consistent manner.*
 
 <a id="support-matrix"></a>
 ## Support matrix
@@ -104,6 +138,15 @@ single-frame single-thread single-core, FPS multi-threaded):
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | EfficientFormer-L3 | 224x224 | 31.3 | 76.75% | 76.05% | 17.55 | 65.56 | 60.52 |
 | EfficientFormer-L1 | 224x224 | 12.3 | 76.75% | 67.72% | 5.88 | 20.69 | 191.605 |
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `7ddbce07…`): the
+bundled [bittern.JPEG](test_data/bittern.JPEG) ranks `bittern` first,
+followed by partridge, European gallinule, bustard, and coucal. Recorded
+by the source release on its own runtime entry — not a new run of this
+repository.*
 
 <a id="directory"></a>
 ## Directory

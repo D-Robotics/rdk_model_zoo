@@ -7,6 +7,25 @@ MobileNetV1 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，
 
 统一实现是一条 Python 流程（全部目标）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
 
+### 算法背景
+
+MobileNetV1 面向嵌入式与移动端设备的高效图像分类。其效率来自深度可分离
+卷积：将标准卷积分解为逐通道的 depthwise 滤波和整合各通道输出的 1×1
+pointwise 投影（[论文](https://arxiv.org/abs/1704.04861)、
+[tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md)）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **深度可分离卷积**：将标准卷积分解为 depthwise 卷积和 1×1 pointwise 卷积。
+- **轻量级设计**：降低计算量和参数量，适合嵌入式部署。
+- **分类输出**：输出 ImageNet-1k 类别的 Top-K 类别 ID 及对应置信度。
+
+![Depthwise 与 Pointwise 卷积](./test_data/depthwise&pointwise.png)
+
+*深度可分离卷积，恢复自 X5 源版本（`test_data/depthwise&pointwise.png`，
+rdk_x5 @ac11571，sha256 `48d3cb64…`）：每个输入通道使用各自的 D_K×D_K
+depthwise 核滤波，随后的 1×1 pointwise 卷积整合各通道结果。*
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -82,6 +101,13 @@ S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。无法识别
 | MobileNetV1 | 224x224 | 1000 | 4.2 | 71.7% | 65.4% | 0.58 | 2800+ |
 
 S 侧源发布（rdk_s @380e1a2 (s-v1.1.2)）未公布该模型的延迟/精度数据，此处不推断、不补造。
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `6f07652b…`）：随仓 [bulbul.JPEG](test_data/bulbul.JPEG) 的
+Rank-1 为 `bulbul`，其后依次为 junco/snowbird、robin、chickadee、
+water ouzel。由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

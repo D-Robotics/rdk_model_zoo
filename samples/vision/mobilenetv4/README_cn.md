@@ -7,6 +7,29 @@ MobileNetV4 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，
 
 统一实现是一条 Python 流程（全部目标）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
 
+### 算法背景
+
+MobileNetV4 把移动端 CNN 的块设计空间统一到 Universal Inverted Bottleneck
+（UIB）：按启用的 depthwise 层不同，同一块可表达 inverted bottleneck、
+ConvNeXt 风格块、FFN 风格块或 ExtraDW 变体；移动端多查询注意力
+（Mobile Multi-Query Attention）在移动加速器上有收益的位置引入注意力
+（[论文](https://arxiv.org/abs/2404.10518)、
+[timm/models/MobileNetV4.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/MobileNetV4.py)）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **Universal Inverted Bottleneck**：统一 inverted bottleneck、ConvNeXt 风格模块、FFN 风格模块和 ExtraDW 变体。
+- **Mobile Multi-Query Attention**：面向移动端加速器优化的注意力结构。
+- **模型变体**：本 sample 提供 Conv-Small 和 Conv-Medium 两个部署模型。
+
+![MobileNetV4 UIB 块](./test_data/MobileNetV4_architecture.png)
+
+*Universal Inverted Bottleneck 块，恢复自 X5 源版本
+（`test_data/MobileNetV4_architecture.png`，rdk_x5 @ac11571，sha256
+`944a191d…`；论文图 4）：带两个可选 depthwise 层的 UIB 块、其
+Extra-DW / Inverted Bottleneck / ConvNeXt / FFN 实例化，以及替代的
+fused IB。*
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -87,6 +110,14 @@ S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。无法识别
 | MobileNetV4-Conv-Small | 224x224 | 1000 | 3.8 | 70.8% | 68.8% | 1.18 | 1436+ |
 
 S 侧源发布（rdk_s @380e1a2 (s-v1.1.2)）未公布该模型的延迟/精度数据，此处不推断、不补造。
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `64930905…`）：随仓
+[great_grey_owl.JPEG](test_data/great_grey_owl.JPEG) 的 Rank-1 为
+`great grey owl`，其后依次为 ruffed grouse、partridge、meerkat、
+prairie chicken。由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

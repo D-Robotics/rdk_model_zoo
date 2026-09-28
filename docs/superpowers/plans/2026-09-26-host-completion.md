@@ -236,3 +236,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：PointNet R2经Codex独立复验关闭：26项通过，原int32精度反例正确输出class 1，checker零违规，26个样例文件哈希在验收期间未变。R1/R2历史失败保留，PointNet主机运行时与关联文档范围接受；B8/H4仍待共同文档和集成收尾，不据此关闭整批。见[独立评审](../../releases/unified-migration/2026-09-28-pointnet-independent-review.md)。
 
 2026-09-28：YOLOE运行时组合和入口经Codex独立审阅，34项Python与11项ASan/UBSan原生主机测试通过，checker零违规；保留S公开量化制品不兼容浮点路径的事实，不宣称板端通过。见[独立评审](../../releases/unified-migration/2026-09-28-yoloe-independent-review.md)。H5/B9转换/评估文档与总体集成仍待最终审核；不执行真实量化验证。
+
+2026-09-28：首批9个B1/B2 sample根README深度恢复经独立验收（18份双语、50处固定源图引用、5份恢复的ResNet图；命令未变且本地链接无缺失）。MobileNetV3图注和EfficientFormerV2泛化说明已由Claude修正并复核。见[评审](../../releases/unified-migration/2026-09-28-readme-depth-b1b2-independent-review.md)。仅关闭DOC-DEPTH-R1的这9个根文档范围，H1整体及其余样例/子目录仍继续。

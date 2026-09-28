@@ -20,6 +20,31 @@ Python entrypoints remain usable compatibility shims that call the same
 canonical implementation; their audit record lives in the migration
 documents, not here.
 
+### Algorithm background
+
+ResNet was proposed by Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian
+Sun. Residual learning with shortcut connections lets each block learn a
+residual instead of the full mapping, which stabilizes deep-network
+optimization and avoids the degradation that plain layer stacks suffer as
+depth grows ([paper](https://arxiv.org/abs/1512.03385),
+[torchvision.models.resnet](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)).
+
+Variant notes carried over from the source deliveries (X5 rdk_x5 @ac11571;
+S rdk_s @380e1a2 resnet18/resnet50/resnet152, merged here in B1):
+
+- **resnet18** — the lightweight residual variant; the S delivery positions it for quick classification validation.
+- **resnet50** — bottleneck residual blocks (`1x1 → 3x3 → 1x1`) build a deeper network with controlled computation.
+- **resnet152** — the 152-layer design trades more compute for representational capacity.
+
+![ResNet residual blocks](./test_data/ResNet_architecture.png)
+
+*Restored from the source deliveries (the same file ships as
+`test_data/ResNet_architecture.png` in rdk_x5 @ac11571 and as
+`test_data/resnet_architecture.png` in rdk_s @380e1a2, sha256
+`cebea796…`): the residual building block of ResNet-18/34 (left, two 3×3
+convolutions) and the bottleneck building block of ResNet-50/101/152
+(right, 1×1 → 3×3 → 1×1), Figure 5 of the ResNet paper.*
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -108,6 +133,41 @@ scores for the same artifact, image, and resize mode) — see the integration
 review linked above. The C++ binary prints the Top-K lines with the label
 file's names. A board that cannot be identified, or a target without a
 matching artifact, exits with an error instead of guessing.
+
+Historical result screenshots restored from the S source delivery
+(rdk_s @380e1a2, one delivery per variant; the source does not state which
+board produced them): each shows the legacy S-runtime result for the
+bundled [zebra_cls.jpg](test_data/zebra_cls.jpg) — zebra, class ID 340 —
+with the recorded top-1 confidence 0.9985 (resnet18), 0.9956 (resnet50),
+and 0.9649 (resnet152). These captures document the source deliveries,
+not a run of the unified sample.
+
+![ResNet18 source result](./test_data/result_resnet18_s.png)
+![ResNet50 source result](./test_data/result_resnet50_s.png)
+![ResNet152 source result](./test_data/result_resnet152_s.png)
+
+<a id="performance"></a>
+## Performance data
+
+Published ResNet18 record from the X5 source release (rdk_x5 @ac11571,
+x5-v1.1.3), not re-measured in this repository. The source does not state
+the latency/FPS threading conditions; the same figure is preserved in the
+[evaluator record](evaluator/README.md). The S source release (rdk_s
+@380e1a2) published no latency or accuracy figures for ResNet18/50/152;
+none are inferred here.
+
+| Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ResNet18 | 224x224 | 1000 | 11.2 | 71.5% | 70.5% | 2.95 | 449+ |
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `16c9d04e…`): the
+bundled [white_wolf.JPEG](test_data/white_wolf.JPEG) ranks `white wolf`
+first, followed by Arctic fox, timber wolf, Samoyed, and polar bear.
+Recorded by the source release on its own runtime entry — not a new run
+of this repository.*
 
 <a id="directory"></a>
 ## Directory

@@ -7,6 +7,35 @@ MobileNetV2 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，
 
 统一实现是一条 Python 流程（全部目标），外加一条 S 系列 C++ 流程（见 runtime/cpp）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 保留经审计的 S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
 
+### 算法背景
+
+MobileNetV2 引入带线性瓶颈的倒残差结构：每个块先用 1×1 卷积扩展通道，
+再做 3×3 depthwise 卷积，最后经线性（不带 ReLU）的 1×1 瓶颈投影回低维；
+stride-2 块去掉快捷连接。线性瓶颈保留了低维空间中会被 ReLU 丢弃的信息
+（[论文](https://arxiv.org/abs/1801.04381)、
+[timm/models/mobilenetv2](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv2.py)）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **倒残差结构**：先扩展通道，再进行 depthwise 卷积，最后通过线性瓶颈投影回低维空间。
+- **深度可分离卷积**：相比标准卷积显著降低计算量。
+- **分类输出**：输出 ImageNet-1k 类别的 Top-K 类别 ID 及对应置信度。
+
+![MobileNetV2 架构](./test_data/mobilenetv2_architecture.png)
+
+*倒残差块，恢复自 X5 源版本（`test_data/mobilenetv2_architecture.png`，
+rdk_x5 @ac11571，sha256 `7995faf5…`）：stride-1 块（左）保留相加快捷
+连接；stride-2 块（右）无快捷连接直接下采样，且仅最后的 1×1 投影为
+线性。*
+
+源码树还携带了论文的可分离卷积演化图（`test_data/seperated_conv.png` —
+在源 README 目录清单中出现但未嵌入正文；此处恢复为正式引用的插图）：
+
+![可分离卷积块的演化](./test_data/seperated_conv.png)
+
+*MobileNetV2 论文图 2：从标准卷积 (a) 到可分离块 (b)、带线性瓶颈的可分
+离块 (c)、带扩展层的瓶颈块 (d)；斜线纹理表示不含非线性层的层。*
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -87,6 +116,15 @@ S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。无法识别
 | MobileNetV2 | 224x224 | 1000 | 3.4 | 72.0% | 68.17% | 1.42 | 1152.07 |
 
 S 侧源发布（rdk_s @380e1a2 (s-v1.1.2)）未公布该模型的延迟/精度数据，此处不推断、不补造。
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `7097e2e3…`）：随仓
+[Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG) 的 Rank-1
+为 `Scottish deerhound`，其后依次为 Irish wolfhound、lynx/catamount、
+standard schnauzer、timber wolf。由源版本在其自身运行入口记录 — 不是
+本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

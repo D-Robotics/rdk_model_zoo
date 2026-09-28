@@ -20,6 +20,33 @@ The former platform branch entry remains a compatibility shim under
 `platforms/x5/` until the migration closeout; its audit record lives in the
 migration documents, not here.
 
+### Algorithm background
+
+EfficientFormerV2 revisits vision transformers at MobileNet size and
+speed: a fine-grained joint search optimizes latency, parameters, and
+accuracy together; unified feed-forward networks, improved MHSA
+(talking-head attention with locality), and attention at higher
+resolutions with cheaper downsampling reduce the attention and
+downsampling overhead relative to the EfficientFormer baseline while
+keeping MobileNet-level size and speed
+([paper](https://arxiv.org/abs/2212.08059),
+[snap-research/EfficientFormer](https://github.com/snap-research/EfficientFormer)).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Mobile-oriented backbone**: hybrid backbone for efficient image classification on edge devices.
+- **Joint search strategy**: latency and parameter count optimized together when selecting architectures.
+- **Hierarchical design**: four stages with feature sizes of `1/4`, `1/8`, `1/16`, and `1/32` of the input resolution.
+- **Edge deployment**: S0, S1, and S2 RDK X5 deployment models with packed NV12 input.
+
+![EfficientFormerV2 architecture](./test_data/EfficientFormerV2_architecture.png)
+
+*Network architectures, restored from the X5 source release
+(`test_data/EfficientFormerV2_architecture.png`, rdk_x5 @ac11571, sha256
+`0a3fd26e…`; Figure 2 of the paper): (a) the EfficientFormer baseline
+network, (b) unified FFN, (c) improved MHSA, (d)(e) attention on higher
+resolution, and (f) attention downsampling.*
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -111,6 +138,15 @@ single-frame single-thread single-core, FPS multi-threaded):
 | EfficientFormerV2-S2 | 224x224 | 12.6 | 77.50% | 70.75% | 6.99 | 26.01 | 152.40 |
 | EfficientFormerV2-S1 | 224x224 | 6.1 | 77.25% | 68.75% | 4.24 | 14.35 | 275.95 |
 | EfficientFormerV2-S0 | 224x224 | 3.5 | 74.25% | 68.50% | 5.79 | 19.96 | 198.45 |
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `907925ac…`): the
+bundled [goldfish.JPEG](test_data/goldfish.JPEG) ranks `goldfish` first,
+followed by tench, axolotl, rock beauty, and coral reef. Recorded by the
+source release on its own runtime entry — not a new run of this
+repository.*
 
 <a id="directory"></a>
 ## Directory
