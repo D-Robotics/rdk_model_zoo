@@ -155,5 +155,6 @@ Wrong observation count requires reconstructing the training-policy history, not
 padding or truncating blindly. Wrong output dtype/name/shape requires checking the
 bound model interface; the core will not silently cast an incompatible model's
 output. Latency attached to a hand-built `RawOutputs` must be finite and nonnegative.
-Native runtime, evaluators and complete sample acceptance remain in progress;
-Python host tests do not establish SDK/board compatibility.
+See the [C++ guide](../cpp/README.md) for native execution and the
+[evaluator guide](../../evaluator/README.md) for action-dump comparisons.
+Host tests do not establish SDK/board compatibility.

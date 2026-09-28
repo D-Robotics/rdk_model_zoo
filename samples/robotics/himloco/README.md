@@ -12,11 +12,11 @@ policy actions. This sample uses the fused estimator/actor exported by
 are not interchangeable. The migration source is X5 commit
 `ac115717197920355fc390bb04299b20e6436864`.
 
-The unified Python SDK entry, explicit model preparation and offline inputs are
-implemented. Source conversion/evaluation tools and bilingual guides are now in
-the unified directory; native C++ core, SDK adapter and CLI have host checks; whole-sample independent review remains open. Quantization
-instructions are inherited from the existing source scheme; no recipe rerun is required for this documentation work. This is not yet
-whole-sample independent acceptance.
+This sample provides Python/C++ offline entries, explicit model preparation,
+source observations and conversion/evaluation tools. Both runtimes have host
+checks; unified board execution is not-run. Conversion instructions and historical
+results are inherited from the source scheme without rerunning quantization.
+See the target and verification scope below.
 
 Input: `obs_history`, float32 `[1,270]`, current frame first. Output: `actions`,
 float32 `[1,12]`. No additional normalization, history update, output scaling or

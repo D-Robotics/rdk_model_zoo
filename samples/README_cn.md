@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-当前索引覆盖45 个统一视觉 Sample 及 ASR/KWS 语音 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
+当前索引覆盖 49 个统一 Sample：45 个视觉、3 个语音和 1 个机器人策略样例。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
 
 ## 图像分类
 
@@ -75,6 +75,15 @@
 |---|---|---|
 | [asr](speech/asr/README_cn.md) | [conversion](speech/asr/conversion/README_cn.md) | [evaluator](speech/asr/evaluator/README_cn.md) |
 | [kws](speech/kws/README_cn.md) | [conversion](speech/kws/conversion/README_cn.md) | [evaluator](speech/kws/evaluator/README_cn.md) |
+| [paraformer](speech/paraformer/README_cn.md) | [conversion](speech/paraformer/conversion/README_cn.md) | [evaluator](speech/paraformer/evaluator/README_cn.md) |
+
+## 机器人策略
+
+| Sample | 转换 | 评估 |
+|---|---|---|
+| [himloco](robotics/himloco/README_cn.md) | [conversion](robotics/himloco/conversion/README_cn.md) | [evaluator](robotics/himloco/evaluator/README_cn.md) |
+
+HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制环或发送机器人指令。
 
 ## 如何解读验证状态
 

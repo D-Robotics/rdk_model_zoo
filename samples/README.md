@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers 45 unified vision samples and the ASR/KWS speech samples. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers 49 unified samples: 45 vision, three speech and one robotics policy sample. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -75,6 +75,15 @@ This index covers 45 unified vision samples and the ASR/KWS speech samples. It i
 |---|---|---|
 | [asr](speech/asr/README.md) | [conversion](speech/asr/conversion/README.md) | [evaluator](speech/asr/evaluator/README.md) |
 | [kws](speech/kws/README.md) | [conversion](speech/kws/conversion/README.md) | [evaluator](speech/kws/evaluator/README.md) |
+| [paraformer](speech/paraformer/README.md) | [conversion](speech/paraformer/conversion/README.md) | [evaluator](speech/paraformer/evaluator/README.md) |
+
+## Robotics policy
+
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [himloco](robotics/himloco/README.md) | [conversion](robotics/himloco/conversion/README.md) | [evaluator](robotics/himloco/evaluator/README.md) |
+
+HIMLoco consumes prepared six-frame observations and returns policy actions; it does not construct a live control loop or send robot commands.
 
 ## Read validation status correctly
 

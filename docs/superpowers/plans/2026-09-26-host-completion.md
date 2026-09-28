@@ -189,3 +189,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：HIMLoco 原生 SDK 适配器实现，复用共享板型／SHA 校验、补齐张量容量与 RAII 失败清理；主机替身与生产 preflight 拒绝路径分别测试，ASan/UBSan 和19项 Sample 测试通过，双语 C++/根说明同步。真实 SDK 编译/运行未测；CLI、构建/启动及文件报告继续。见[SDK 记录](../../releases/unified-migration/2026-09-28-b10-himloco-sdk-review.md)。
 
 2026-09-28：HIMLoco 原生 CLI/文件报告/CMake/启动器实现，保留源索引与 float 输出，独占结果写入、清单摘要校验、失败部分报告；启动器复用制品与板型门禁，预览不构建/下载。23 项主机测试、CMake/CTest、迁移门禁通过，完整双语原生/根指南同步。真实 SDK/板端未测，整套质量复核与其余 H0–H9 仍继续，见[原生入口记录](../../releases/unified-migration/2026-09-28-b10-himloco-native-cli-review.md)。
+
+2026-09-28：HIMLoco 按源能力完成作者审计，Mapping/Refactor/Docs 记 done、Host 仅覆盖已留证23项/原生主机检查；Review=not-run、Closed=no不变。补齐根/索引遗漏的 Paraformer 与 HIMLoco，双语索引与49个实际Sample根完全一致，14份HIMLoco README陈旧说明已修正；相对链接核对见[作者审计](../../releases/unified-migration/2026-09-28-b10-himloco-author-audit.md)。不关闭H6/H0–H9，后续转B11并保留全仓独立评审。
