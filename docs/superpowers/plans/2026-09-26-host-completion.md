@@ -125,3 +125,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：B10 KWS 统一 Python 三阶段、共享 SDK runner、显式下载和离线指标已实现，六层双语 README 补齐；真实 PaddleAudio 三类输入与源前端逐值一致，13 项 KWS / 432 项相关 Python 回归、121 项 publisher 及 46-sample 规范检查通过。见[KWS 记录](../../releases/unified-migration/2026-09-28-b10-kws-review.md)。源未提供权重/转换配方的缺口保留；真实 SDK/板端分数与独立验收未验证。继续 ASR、Paraformer、HIMLoco、B11/H8 及 H0–H9 剩余事项。
 
 2026-09-28：ASR 完整 Python 流程、共享文本指标与原生 CTC/归一化核心已实现，七层双语 README 已补齐并执行示例。15 项 ASR 测试、七块真实音频源前端逐值对照及 C++ sanitizer 核心测试通过；CTC 修正与 legacy 对照明确区分，末块及失败留证边界写入文档。见[ASR 阶段记录](../../releases/unified-migration/2026-09-28-b10-asr-core-review.md)。原生音频/SDK/CLI 仍待集成，不能关闭 ASR；Paraformer/HIMLoco、B11/H8 与 H0–H9 全范围继续，板端/真实 SDK/OE/语料评测和独立整体评审未执行。
+
+2026-09-28：ASR 原生音频读取/重采样/前处理与三阶段任务已实现，真实 libsndfile/libsamplerate 七块源音频对照通过；三个原生测试在 Release+ASan/UBSan 下通过，双语 C++ 完整示例实际编译运行。文档明确独立窗口与 Python Fourier 差异，见[原生音频记录](../../releases/unified-migration/2026-09-28-b10-asr-native-audio-review.md)。SDK 适配/原生 CLI 仍未完成，ASR 与 H0–H9 不关闭；其余样例迁移及独立整体验收继续。
