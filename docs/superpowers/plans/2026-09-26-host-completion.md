@@ -131,3 +131,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：ASR UCP SDK 适配和身份/模型/词表预检已实现，复用共用资源与同步任务管理；失败注入复现并修复共用输出所有者在错误伴随非空分配时的泄漏。五项 ASR 原生、12 项共用原生、11 项 YOLOE 原生及文档示例通过，见[SDK 记录](../../releases/unified-migration/2026-09-28-b10-asr-sdk-review.md)。真实 SDK 开启配置在本机按预期因缺头文件拒绝，未宣称 ABI/模型通过；原生 CLI/词表加载/结果报告继续，ASR 与 H0–H9 保持开放。
 
 2026-09-28：ASR 原生 CLI、固定词表 JSON 解析、完整文件结果/失败报告及显式启动器已集成，七层双语文档对齐实际入口。七项原生测试、16 项原生/启动器用例、21 项 ASR Python 测试与双语示例通过；主机替身始终标记 host-fixture，公开启动器拒绝将其当作 SDK 成功。见[完整入口记录](../../releases/unified-migration/2026-09-28-b10-asr-native-cli-review.md)。ASR 实现已完成主机集成，真实 SDK/ABI/模型与独立整体验收未核定；继续 Paraformer/HIMLoco、B11/H8 与 H0–H9 剩余工作。
+
+2026-09-28：Paraformer CPU CIF 已独立提取并修复无 token 时的空数组访问；7 项主机测试、24 组固定源数值对照与双语 README 示例通过。见[记录](../../releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md)。尚未接入完整运行/转换流程，台账 Refactor 保持 pending；真实前端、三模型运行、C++、转换/评测及完整各层 README 继续，B10/H0–H9 未关闭。
