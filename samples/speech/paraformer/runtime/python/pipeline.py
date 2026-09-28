@@ -5,7 +5,6 @@ SDK loading, physical metadata binding, scheduling, audio/file I/O and reporting
 belong to their respective adapters and application entry, not this module.
 """
 
-from collections.abc import Mapping
 from dataclasses import dataclass, fields
 from numbers import Integral
 from time import perf_counter
@@ -13,8 +12,13 @@ from time import perf_counter
 import numpy as np
 
 from samples.speech.paraformer.runtime.python.cif import cif_numpy
+from samples.speech.paraformer.runtime.python.stages import (
+    EncoderStage,
+    PredictorStage,
+    DecoderStage,
+    StageError,
+)
 from samples.speech.paraformer.runtime.python.decoding import (
-    decode_logits,
     validate_vocabulary,
 )
 
@@ -65,23 +69,6 @@ class Prediction:
     decoder_executed: bool
 
 
-def _tensor(value, shape, label):
-    if (
-        not isinstance(value, np.ndarray)
-        or value.shape != shape
-        or value.dtype != np.float32
-        or not np.isfinite(value).all()
-    ):
-        raise ValueError(f"{label} must be finite float32 {shape}")
-    return np.array(value, dtype=np.float32, order="C", copy=True)
-
-
-def _output(outputs, name, shape):
-    if not isinstance(outputs, Mapping) or name not in outputs:
-        raise ValueError(f"Missing required named model output {name!r}")
-    return _tensor(outputs[name], shape, name)
-
-
 class ParaformerPipeline:
     """Compose encoder → predictor → CPU CIF → decoder → greedy text."""
 
@@ -95,52 +82,68 @@ class ParaformerPipeline:
         self.decoder = decoder
         self.names = names
         self.vocabulary = validate_vocabulary(vocabulary)
+        self.encoder_stage = EncoderStage(
+            lambda feed: self.encoder(feed), names.encoder_input, names.encoder_output
+        )
+        self.predictor_stage = PredictorStage(
+            lambda feed: self.predictor(feed),
+            names.predictor_input,
+            names.predictor_alphas,
+            names.predictor_hidden,
+        )
+        self.decoder_stage = DecoderStage(
+            lambda feed: self.decoder(feed),
+            names.decoder_context,
+            names.decoder_count,
+            names.decoder_bias,
+            names.decoder_acoustic,
+            names.decoder_logits,
+            self.vocabulary,
+        )
 
     def predict(self, features, feature_length):
         """Consume prepared features; report only execution/CPU bridge timings.
 
         Zero CIF tokens bypass decoder and produce empty text. Its timing is
         None, not a measured zero. No frontend, loading or file-I/O latency is
-        included. Exceptions propagate without producing a successful result.
+        included. StageError identifies the failing stage/operation and chains its
+        original exception; no successful result is produced on failure.
         """
-        features = _tensor(features, (1, 400, 560), "frontend features")
         if (
             isinstance(feature_length, (bool, np.bool_))
             or not isinstance(feature_length, Integral)
             or not 1 <= feature_length <= 400
         ):
             raise ValueError("feature_length must be an integer in [1,400]")
-        names = self.names
         timings = {}
+        prepared = self.encoder_stage.pre_process(features)
         start = perf_counter()
-        raw = self.encoder({names.encoder_input: features})
+        raw = self.encoder_stage.forward(prepared.tensors)
         timings["encoder"] = (perf_counter() - start) * 1000
-        context = _output(raw, names.encoder_output, (1, 400, 512))
+        context = self.encoder_stage.post_process(raw)
 
+        prepared = self.predictor_stage.pre_process(context)
         start = perf_counter()
-        raw = self.predictor({names.predictor_input: context.copy()})
+        raw = self.predictor_stage.forward(prepared.tensors)
         timings["predictor"] = (perf_counter() - start) * 1000
-        alphas = _output(raw, names.predictor_alphas, (1, 401))
-        hidden = _output(raw, names.predictor_hidden, (1, 401, 512))
+        alphas, hidden = self.predictor_stage.post_process(raw)
 
         start = perf_counter()
-        acoustic, count = cif_numpy(alphas, hidden, real_T=feature_length)
+        try:
+            acoustic, count = cif_numpy(alphas, hidden, real_T=feature_length)
+        except Exception as error:
+            raise StageError("cif", "integrate", error) from error
         timings["cif"] = (perf_counter() - start) * 1000
         token_count = int(count[0])
         if token_count == 0:
             timings["decoder"] = None
             return Prediction("", (), 0, timings, False)
 
+        prepared = self.decoder_stage.pre_process(context, count, acoustic)
         start = perf_counter()
-        raw = self.decoder(
-            {
-                names.decoder_context: context,
-                names.decoder_count: count,
-                names.decoder_bias: np.zeros((1, 1, 512), np.float32),
-                names.decoder_acoustic: acoustic,
-            }
-        )
+        raw = self.decoder_stage.forward(prepared.tensors)
         timings["decoder"] = (perf_counter() - start) * 1000
-        logits = _output(raw, names.decoder_logits, (1, 100, 8404))
-        text, ids = decode_logits(logits, token_count, self.vocabulary)
-        return Prediction(text, ids, token_count, timings, True)
+        decoded = self.decoder_stage.post_process(raw, prepared.context)
+        return Prediction(
+            decoded.text, decoded.token_ids, decoded.token_count, timings, True
+        )

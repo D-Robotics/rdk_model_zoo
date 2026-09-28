@@ -207,6 +207,23 @@ def decoder(inputs):
 pipeline = ParaformerPipeline(encoder, predictor, decoder, names, vocabulary)
 result = pipeline.predict(np.zeros((1, 400, 560), np.float32), 3)
 print(result.text, result.token_count, result.decoder_executed)
+
+# The same pipeline can be executed explicitly, with CIF kept between models.
+from samples.speech.paraformer.runtime.python.cif import cif_numpy
+features = np.zeros((1, 400, 560), np.float32)
+enc, pred, dec = pipeline.encoder_stage, pipeline.predictor_stage, pipeline.decoder_stage
+prepared = enc.pre_process(features)
+context = enc.post_process(enc.forward(prepared.tensors))
+prepared = pred.pre_process(context)
+weights, hidden = pred.post_process(pred.forward(prepared.tensors))
+acoustic, count = cif_numpy(weights, hidden, real_T=3)
+if int(count[0]) == 0:
+    explicit_text, explicit_ids = "", ()  # Same zero-token bypass as predict.
+else:
+    prepared = dec.pre_process(context, count, acoustic)
+    decoded = dec.post_process(dec.forward(prepared.tensors), prepared.context)
+    explicit_text, explicit_ids = decoded.text, decoded.token_ids
+assert (explicit_text, explicit_ids) == (result.text, result.token_ids)
 PYCODE
 ```
 
@@ -375,6 +392,31 @@ not a model `forward` containing CPU processing between several SDK executions.
 | Predictor | context `[1,400,512]` | float32 weights `[1,401]`, hidden `[1,401,512]` |
 | CPU CIF | predictor arrays + valid frame count | float32 acoustic `[1,100,512]`, int32 count `[1]` |
 | Decoder | context, acoustic, count, zero float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
+
+[stages.py](stages.py) exposes `pipeline.encoder_stage`, `predictor_stage` and
+`decoder_stage`, each with `pre_process`, `forward`, `post_process`. Preprocessing
+returns `PreparedInput.tensors` with owned physical arrays. Decoder preparation
+also snapshots the integer token count in `PreparedInput.context`; pass that same
+context to decoder postprocessing. No per-call context is stored on a stage.
+Encoder postprocessing returns owned context, predictor postprocessing returns
+owned `(weights, hidden)`, and decoder postprocessing returns `Decoded(text,
+token_ids, token_count)`. Full shape/type/error contracts live in the method
+docstrings. The explicit example above runs the same stages as `predict`.
+
+`forward` performs exactly one injected model call and validates/copies raw values;
+it does not apply activation, CIF or decoding. Encoder/predictor postprocessing
+never executes the next model. CPU CIF remains visible in the pipeline, and the
+pipeline bypasses decoder for zero tokens. Prepared tensors are caller-owned,
+mutable arrays, not immutable snapshots; the count context is a separate integer.
+Use separate stage calls serially unless the injected runner provides its own
+concurrency guarantee; the API does not make SDK buffers thread-safe.
+
+Stage failures raise `StageError` (a `ValueError`) with `.stage`, `.operation` and
+the original exception as `__cause__`; CIF errors use stage `cif`/operation
+`integrate`. The CLI failure message retains this attribution. Invalid pipeline
+feature length is rejected before model execution. Timed forward calls include
+raw validation/copy overhead and adapter execution, not isolated accelerator time;
+pre/post, frontend, model loading and I/O are excluded.
 
 `predict(features, feature_length)` requires finite float32 prepared features and
 an integer valid length 1–400. Shape/dtype/finiteness are checked at every consumed

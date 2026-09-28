@@ -60,3 +60,7 @@ Keep Paraformer Refactor/Docs pending until that code/document audit is complete
 do not promote it merely because standard anchors and default tables now pass.
 H0–H9 and final independent whole-branch review remain open. Actual OE/HMCT/SDK
 validation and board execution remain separately not-run.
+
+## Subsequent correction
+
+The API finding above was addressed by the [stage API implementation](2026-09-28-b10-paraformer-stages-review.md), with explicit-stage equivalence, raw purity, error attribution and real FP32 regression evidence. This historical finding remains preserved; whole-sample independent acceptance is still open.

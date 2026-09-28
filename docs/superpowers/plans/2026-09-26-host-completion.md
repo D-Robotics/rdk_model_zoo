@@ -161,3 +161,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer 专用 evaluator 已实现，复用三阶段流程、CIF、词表解码和共享 CER；75 项 Sample 测试通过。两个真实特征的 FP32 转写／编辑距离与源脚本一致，4/28 = 14.2857% CER，不作为数据集精度；HMCT 仅适配测试，实际 OE/HMCT/板端未执行。根、Python、转换和 evaluator 双语说明已同步。见[评测记录](../../releases/unified-migration/2026-09-28-b10-paraformer-evaluator-review.md)。整套 Sample 验收及 H0–H9 继续。
 
 2026-09-28：Paraformer 14 份双语 README 做整套规范核对，修复直接检查的 78 项问题，并统一 evaluator／conversion 输出目录写法；保留 72 个示例，132 个本地文件链接通过。直接 Sample 检查 0 violations / 1 CLI policy skip / 0 exemptions。人工审查仍发现多阶段公开 pre/forward/post 接口及错误阶段归属未完成，下一步修复代码与 API 示例，暂不提升台账状态。见[文档与 API 缺口记录](../../releases/unified-migration/2026-09-28-b10-paraformer-readme-review.md)。
+
+2026-09-28：Paraformer 三模型公开 pre_process/forward/post_process 已落地，CPU CIF 仍显式编排，补齐 StageError 阶段／操作归属和原始异常链。82 项测试通过；两条真实 FP32 的全部文本、token 和 CER 与原记录相同；双语显式阶段示例实际执行。台账提升至 in-progress 纳入迁移检查，整体验收／独立复审仍不关闭。见[阶段整改记录](../../releases/unified-migration/2026-09-28-b10-paraformer-stages-review.md)。

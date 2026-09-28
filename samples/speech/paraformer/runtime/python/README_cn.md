@@ -182,6 +182,23 @@ def decoder(inputs):
 pipeline = ParaformerPipeline(encoder, predictor, decoder, names, vocabulary)
 result = pipeline.predict(np.zeros((1, 400, 560), np.float32), 3)
 print(result.text, result.token_count, result.decoder_executed)
+
+# The same pipeline can be executed explicitly, with CIF kept between models.
+from samples.speech.paraformer.runtime.python.cif import cif_numpy
+features = np.zeros((1, 400, 560), np.float32)
+enc, pred, dec = pipeline.encoder_stage, pipeline.predictor_stage, pipeline.decoder_stage
+prepared = enc.pre_process(features)
+context = enc.post_process(enc.forward(prepared.tensors))
+prepared = pred.pre_process(context)
+weights, hidden = pred.post_process(pred.forward(prepared.tensors))
+acoustic, count = cif_numpy(weights, hidden, real_T=3)
+if int(count[0]) == 0:
+    explicit_text, explicit_ids = "", ()  # Same zero-token bypass as predict.
+else:
+    prepared = dec.pre_process(context, count, acoustic)
+    decoded = dec.post_process(dec.forward(prepared.tensors), prepared.context)
+    explicit_text, explicit_ids = decoded.text, decoded.token_ids
+assert (explicit_text, explicit_ids) == (result.text, result.token_ids)
 PYCODE
 ```
 
@@ -329,6 +346,26 @@ fbank。输入为已加载的有限 float32 数组 `[samples]` 或 `[samples,cha
 | CPU CIF | predictor 数组及有效帧数 | float32 acoustic `[1,100,512]`、int32 count `[1]` |
 | Decoder | context、acoustic、count、全零 float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
 
+[stages.py](stages.py) 提供 `pipeline.encoder_stage`、`predictor_stage` 和
+`decoder_stage`，每个阶段均有 `pre_process`、`forward`、`post_process`。
+前处理返回 `PreparedInput.tensors`，数组具有独立存储；decoder 还将本次 token
+数量保存在整数 `PreparedInput.context` 中，后处理必须传入同一调用的 context。
+阶段对象不保存会被后一次调用覆盖的上下文。encoder 后处理返回独立 context 数组，
+predictor 返回独立 `(weights, hidden)`，decoder 返回
+`Decoded(text, token_ids, token_count)`。方法 docstring 定义完整形状、类型和异常。
+上方显式调用示例与 `predict` 使用同一组阶段。
+
+`forward` 只调用一次注入模型，并校验／复制原始值，不做激活、CIF 或解码。
+encoder／predictor 后处理不会执行下一个模型。CPU CIF 在 pipeline 中保持显式，
+零 token 时由 pipeline 跳过 decoder。准备后的数组归调用者所有且可修改，不是
+不可变快照；token 数量上下文是独立整数。除非注入 runner 自行提供并发保证，
+请串行使用，本 API 不会使 SDK 缓冲区自动具备线程安全性。
+
+阶段失败抛出 `StageError`（继承 `ValueError`），含 `.stage`、`.operation`，原异常
+保留为 `__cause__`；CIF 错误标为 `cif`／`integrate`，CLI 失败信息保留这一归属。
+非法有效帧数在执行模型前拒绝。forward 计时包括原始数据校验／复制和适配器执行，
+不代表独立加速器耗时；前后处理、前端、模型加载和文件 I/O 均不在其中。
+
 `predict(features, feature_length)` 接收有限 float32 特征与 1–400 的有效帧数。
 每个被使用的阶段边界均校验形状、类型和有限性；复制中间数组，避免后续 runner
 复用缓冲区时覆盖保留的 encoder context。流程不加载 SDK，也不设置调度；物理模型
@@ -339,7 +376,7 @@ fbank。输入为已加载的有限 float32 数组 `[samples]` 或 `[samples,cha
 包围的特殊 token，移除 `@@`，直接拼接。重复 token 不折叠，不能套用 CTC。
 计数和 ID 列表包含随后被过滤的特殊 token。CIF 计数为零时跳过 decoder，返回
 空文本、空 ID、`decoder_executed=False`，decoder 耗时为 `None`。
-任何阶段异常直接上抛，不生成成功结果。
+阶段失败通过 `StageError` 保留原始异常链，不生成成功结果。
 
 计时分别覆盖三次 runner 调用与 CPU CIF，不包括前端、加载、调用之外的校验／复制、
 文本解码及文件 I/O；它们的总和不代表端到端延迟。本轮未测 SDK 或板端性能。
