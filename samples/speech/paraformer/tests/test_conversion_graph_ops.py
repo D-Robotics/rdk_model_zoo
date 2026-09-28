@@ -197,6 +197,24 @@ class GraphOperations(unittest.TestCase):
         for value in (0, 17):
             self.equal(model, result, {"x": np.full(4, value, np.float32)})
 
+    def test_range_from_constant_maximum_is_proven_without_probe(self):
+        model = self.model(
+            [
+                self.h.make_node("ReduceMax", ["lengths"], ["limit"], keepdims=0),
+                self.h.make_node("Range", ["zero", "limit", "one"], ["range"]),
+            ],
+            [],
+            [self.info("range", self.tp.INT64, [4])],
+            [
+                self.nh.from_array(np.array([2, 4], np.int64), "lengths"),
+                self.nh.from_array(np.array(0, np.int64), "zero"),
+                self.nh.from_array(np.array(1, np.int64), "one"),
+            ],
+        )
+        result = self.ops.fold_constant_ranges(model)
+        self.assertNotIn("Range", [n.op_type for n in result.graph.node])
+        self.equal(model, result, {})
+
     def test_dynamic_range_cannot_be_frozen_from_one_example(self):
         model = self.model(
             [self.h.make_node("Range", ["zero", "limit", "one"], ["range"])],

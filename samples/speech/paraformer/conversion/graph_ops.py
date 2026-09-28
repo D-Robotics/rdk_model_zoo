@@ -120,6 +120,8 @@ def _constant_values(model):
         "Floor",
         "Ceil",
         "Range",
+        "ReduceMax",
+        "ReduceMin",
         "Transpose",
     }
     opsets = {o.domain: o.version for o in model.opset_import}

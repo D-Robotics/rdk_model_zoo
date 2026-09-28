@@ -153,3 +153,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer 原生完整 CLI/三模型编排/成功失败报告及公开启动器已接通，实际本机身份门禁、测试替身拒绝和结果严格核验均已实现。14 组完整应用主机用例、6 项原生测试、39 项 Python 测试通过；5 组双语主机命令、真实 FunASR 预处理及两个 API 示例已执行/编译。见[原生入口记录](../../releases/unified-migration/2026-09-28-b10-paraformer-native-cli-review.md)。真实 SDK/模型/板端未验证；Paraformer 转换评测、HIMLoco、B11/H8 与完整 H0–H9 工作继续，独立整体验收不提前关闭。
 
 2026-09-28：Paraformer 转换图工具已统一，拒绝残缺图和未经证明的 Range 固化，保留共享常量；两项源缺陷已实际复现。48 项 Sample 测试（含 9 项真实 ONNX/ORT 小图检查）、双语 API 示例和 47-sample 门禁通过。见[图处理记录](../../releases/unified-migration/2026-09-28-b10-paraformer-graph-ops-review.md)。完整权重导出/切图/校准/OE 编排、专用评测与剩余迁移继续，Paraformer 与 H0–H9 未关闭，板端 not-run。
+
+2026-09-28：Paraformer 真实权重三阶段 FP32 导出已实现，直接复用上游阶段并保留固定 400/100 部署语义，不再靠全图内部编号切图及单次探测固化。16 项真实导出检查、56 项无跳过 Sample 测试和双语 API/链接检查通过；两条完整 Torch/ORT 示例 token/text 一致，但参考转录存在识别错误。历史固定宽度 ONNX 与新图在 0/1/17/100 token 对照中完全一致；任意随机隐藏向量的 Torch/ORT 大差异及首次失败均披露，不能扩大为全输入域数值等价。见[导出记录](../../releases/unified-migration/2026-09-28-b10-paraformer-export-review.md)。Ruling: 用显式阶段导出替代内部名称切图，成本是必须分别证明固定部署语义而不能声称原始变长模型等价。校准/OE 编排、evaluator 与剩余 H0–H9 继续，板端未运行，整体验收未关闭。

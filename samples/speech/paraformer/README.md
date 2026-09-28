@@ -16,7 +16,8 @@ Upstream toolkit: [FunASR](https://github.com/modelscope/FunASR). This migration
 based on S commit `380e1a2bf42041af54be6f34935e50197cfadff9`, not whatever upstream
 main currently provides. The sample lives at `samples/speech/paraformer`.
 Python and native C++ entries and real CPU preprocessing are implemented;
-conversion and evaluator migration are still open. This is not full sample acceptance.
+real-weight three-stage FP32 export is also implemented. Calibration, OE compilation
+and evaluator migration remain open. This is not full sample acceptance.
 
 <a id="support-matrix"></a>
 ## Support matrix
@@ -119,6 +120,8 @@ the evaluator is migrated and labelled separately.
 paraformer/
 ├── model/           # explicit six-file preparation, CMVN/config and model guide
 ├── runtime/python/  # CLI/I/O, real frontend, three raw runners, CPU CIF and text
+├── runtime/cpp/     # native application, SDK adapter and prepared-feature input
+├── conversion/      # real-weight FP32 export and graph tools; calibration/OE pending
 ├── test_data/       # unchanged source WAVs and reference manifest
 ├── tests/           # host behavior and SDK-boundary tests
 └── README.md        # overview, complete commands and validation boundaries
@@ -131,14 +134,16 @@ paraformer/
 - [Python runtime](runtime/python/README.md#usage): default/custom commands, every parameter,
   result fields, stage interfaces, complete CPU examples and failure handling.
 - [Test data](test_data/README.md): input provenance and reference text.
-- C++: full native application and launcher are host-checked with explicit transport doubles; SDK/board inference is unverified. Conversion migration remains open.
+- [C++ runtime](runtime/cpp/README.md): full native application and launcher are host-checked with explicit transport doubles; SDK/board inference is unverified.
+- [Conversion](conversion/README.md): strict local weight loading, real three-stage FP32 export, numeric checks and report; calibration/OE remain pending.
 - Evaluator: unified implementation/documentation pending; do not infer dataset metrics
   from the two bundled smoke inputs.
 
 <a id="license"></a>
 ## License
 
-Sample code follows the repository [Apache-2.0 license](../../../LICENSE).
+Sample code follows the repository [Apache-2.0 license](../../../LICENSE), except
+FunASR-derived export composition covered by its [MIT notice](conversion/LICENSE-FunASR).
 Upstream models and data have their own terms; the repository code license does
 not establish a weight/data license. The active binary manifest does not record
 per-artifact licensing, and this migration does not supply a new rights claim.

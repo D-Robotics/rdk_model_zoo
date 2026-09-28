@@ -1,0 +1,34 @@
+Notice: ffmpeg is not installed. torchaudio is used to load audio
+If you want to use ffmpeg backend to load audio, please install it by:
+	sudo apt install ffmpeg # ubuntu
+	# brew install ffmpeg # mac
+Range nodes: 3
+  fold /decoder/make_pad_mask/Range: dtype=float32 shape=(100,)
+  fold /decoder/make_pad_mask_1/Range: dtype=float32 shape=(400,)
+  fold /decoder/make_pad_mask_2/Range: dtype=float32 shape=(1,)
+Saved: /Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/paraformer-export-v4/tmp9ykf1hm3/source-folded.onnx  nodes=2124
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-export/verify_real.py", line 99, in <module>
+    differences = compare(reference, [actual])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/paraformer/conversion/export.py", line 185, in compare
+    np.testing.assert_allclose(right, left, rtol=1e-4, atol=1e-4)
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/paraformer-frontend-venv/lib/python3.12/site-packages/numpy/testing/_private/utils.py", line 1504, in assert_allclose
+    assert_array_compare(compare, actual, desired, err_msg=str(err_msg),
+  File "/Users/Max/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/paraformer-frontend-venv/lib/python3.12/site-packages/numpy/testing/_private/utils.py", line 797, in assert_array_compare
+    raise AssertionError(msg)
+AssertionError: 
+Not equal to tolerance rtol=0.0001, atol=0.0001
+
+Mismatched elements: 6000 / 840400 (0.714%)
+Max absolute difference: 0.00159645
+Max relative difference: 0.00022689
+ x: array([[[-9.120241, -9.120237, -8.842581, ..., -9.23154 , -9.132071,
+         -9.120239],
+        [-9.120241, -9.120237, -8.842581, ..., -9.23154 , -9.132071,...
+ y: array([[[-9.120261, -9.120258, -8.842756, ..., -9.231648, -9.132101,
+         -9.12026 ],
+        [-9.120261, -9.120258, -8.842756, ..., -9.231648, -9.132101,...

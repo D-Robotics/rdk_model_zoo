@@ -14,7 +14,8 @@ CPU CIF（连续积分触发）和 decoder。部署使用三份独立发布的 S
 上游工具包：[FunASR](https://github.com/modelscope/FunASR)。迁移依据 S 提交
 `380e1a2bf42041af54be6f34935e50197cfadff9`，不直接采用当前上游 main 的其他能力。
 本目录位于 `samples/speech/paraformer`。Python CLI 与真实 CPU 前端已提供，
-原生 C++ 入口已实现并完成主机流程检查；转换和评测迁移仍未完成，尚未通过完整 Sample 验收。
+原生 C++ 入口已实现并完成主机流程检查；真实权重三阶段 FP32 导出也已实现。
+校准、OE 编译和评测迁移仍未完成，尚未通过完整 Sample 验收。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
@@ -103,6 +104,8 @@ CIF 无 token 时返回空文本并标明跳过 decoder。输出目录创建后�
 paraformer/
 ├── model/           # 显式六文件准备、CMVN/配置与模型说明
 ├── runtime/python/  # CLI/I/O、真实前端、三个原始 runner、CPU CIF 与文本
+├── runtime/cpp/     # 原生应用、SDK 适配与准备后特征输入
+├── conversion/      # 真实权重 FP32 导出和图工具；校准/OE 待完成
 ├── test_data/       # 原样保留的源 WAV 与参考清单
 ├── tests/           # 主机行为和 SDK 边界测试
 └── README.md        # 概览、完整操作路径及验证边界
@@ -115,12 +118,14 @@ paraformer/
 - [Python 运行](runtime/python/README_cn.md#usage)：默认／自定义命令、全部参数、结果、
   阶段接口、完整 CPU 示例和失败处理。
 - [测试数据](test_data/README_cn.md)：输入来源与参考文本。
-- C++：完整原生应用与启动器已通过明确传输替身做主机检查，真实 SDK／板端未验证；转换仍待迁移。
+- [C++ 运行](runtime/cpp/README_cn.md)：完整原生应用与启动器已通过明确传输替身做主机检查，真实 SDK／板端未验证。
+- [模型转换](conversion/README_cn.md)：严格本地权重加载、真实三阶段 FP32 导出、数值检查与报告；校准/OE 仍待完成。
 - Evaluator：统一实现与文档待迁移，不从两条 smoke 输入推断数据集指标。
 
 <a id="license"></a>
 ## 许可证
 
-Sample 代码遵循仓库 [Apache-2.0 许可证](../../../LICENSE)。上游模型和数据有各自条款，
+Sample 代码遵循仓库 [Apache-2.0 许可证](../../../LICENSE)，FunASR 派生导出编排另遵循其
+[MIT 许可](conversion/LICENSE-FunASR)。上游模型和数据有各自条款，
 代码许可证不能代替权重／数据许可证。活动二进制清单没有逐制品许可字段，
 本次迁移不新增权利声明。

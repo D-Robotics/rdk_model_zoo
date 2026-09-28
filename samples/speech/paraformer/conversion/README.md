@@ -2,10 +2,11 @@
 
 [中文](README_cn.md) · [Sample](../README.md) · [Python runtime](../runtime/python/README.md)
 
-This directory currently provides **host graph transformations**, not a complete
-Paraformer exporter or an OE compilation recipe. The unified export, stage
-extraction, calibration and compiler orchestration are still being migrated.
-Do not treat passing graph tests as validation of a converted speech model.
+This directory exports the real-weight encoder, predictor and decoder directly
+from the pinned FunASR architecture, with fixed deployment geometry and numerical
+checks against Torch. CIF stays in the shared CPU implementation. **Calibration,
+OE compilation and the dedicated evaluator are still being migrated**; successful
+FP32 export does not certify an HBM or its board behavior.
 
 The source model is
 `iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404`.
@@ -15,24 +16,111 @@ are described in [model preparation](../model/README.md). Converting your own
 weights is a separate operation; graph transformations do not download weights,
 produce HBM files or certify those published assets.
 
-## Requirements and verification
+## Export environment and quickstart
 
-The graph module imports NumPy and ONNX. Numerical tests additionally require
-ONNX Runtime with its CPU execution provider. Host verification used Python
-3.14.7, NumPy 2.5.3, ONNX 1.23.0 and ONNX Runtime 1.30.0. These are the observed
-**graph-test environment**, not a supported FunASR export or OE environment.
-Use a separate environment for the source Torch/FunASR exporter; compatibility
-of that exporter with these versions has not been established.
+Use Python 3.12 in a separate environment. The verified export stack is Torch and
+torchaudio 2.6.0, FunASR 1.3.14, NumPy 1.26.4, ONNX 1.17.0, ONNX Runtime 1.20.1,
+protobuf 4.23.0 and ModelScope 1.40.1. The exporter uses CPU only and does not
+require a board SDK, ONNX Simplifier or OE. The architecture and preprocessing
+support files are pinned; a local `model.pt` must load **every parameter strictly**.
+Missing keys cannot fall back to random initial weights.
 
-From the repository root, in an environment containing these dependencies:
+From the repository root:
 
 ```bash
-python -c 'import numpy, onnx, onnxruntime; print(numpy.__version__, onnx.__version__, onnxruntime.__version__)'
-python -m unittest samples.speech.paraformer.tests.test_conversion_graph_ops -v
+python3.12 -m venv .venv-paraformer-export
+. .venv-paraformer-export/bin/activate
+python -m pip install -r samples/speech/paraformer/conversion/requirements-export.txt
+python samples/speech/paraformer/conversion/export.py --help
 ```
 
-An absent ONNX/ORT dependency causes the test module to skip. A skipped test is
-not a successful graph validation: check that all tests actually ran.
+If you do not have the source weights, explicitly download them first. This is
+about 913 MB for `model.pt`, plus metadata; reserve additional space for both raw
+and rewritten ONNX stages. This example writes only to `models/paraformer-source`.
+It fetches the hub's `master` revision; the export report records actual local
+file hashes, **not an immutable publisher weight revision**.
+
+```python
+from modelscope import snapshot_download
+snapshot_download(
+    "iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404",
+    revision="master",
+    local_dir="models/paraformer-source",
+    allow_file_pattern=["model.pt", "config.yaml", "tokens.json", "am.mvn"],
+)
+```
+
+Export to a new directory:
+
+```bash
+python samples/speech/paraformer/conversion/export.py \
+  --model-dir models/paraformer-source \
+  --output-dir outputs/paraformer_export
+```
+
+For checks with your own audio, first use the [Python frontend](../runtime/python/README.md)
+to prepare its feature NPY file, then add one or more `--feature` arguments to a
+new export run:
+
+```bash
+python samples/speech/paraformer/conversion/export.py \
+  --model-dir models/paraformer-source \
+  --output-dir outputs/paraformer_export_with_audio \
+  --feature outputs/paraformer_features/feats/BAC009S0724W0121.npy
+```
+
+The feature path must already exist; it is not a WAV. Each file must contain a
+finite float32 `[1,400,560]` array. Export tests use unmasked CIF to exercise model
+boundaries, not the utterance's valid-frame count, and do not calculate CER.
+
+| Argument | Meaning |
+| --- | --- |
+| `--model-dir` | Required local directory containing `model.pt`, `config.yaml`, `tokens.json`, `am.mvn`. No implicit download. Config, vocabulary and CMVN must match the pinned source digests. |
+| `--output-dir` | Required new directory. Existing output is rejected; source weights and earlier exports are not overwritten. |
+| `--feature` | Optional repeatable prepared NPY input. Zero/random feature checks and decoder counts 0, 1, 17, 100 run even when omitted. |
+| `--threads` | Positive CPU thread count; default 4. |
+
+Outputs are `encoder.onnx`, `predictor.onnx`, `decoder.onnx`, their `*.raw.onnx`
+diagnostic exports, and `export-report.json`. Only the final filenames have the
+validated physical names, shapes and graph transforms. Raw graphs can retain
+Torch-generated names and are not the deployment interface.
+
+A successful report has `status: completed`, source/feature/model SHA-256 values,
+package versions, stage node counts and per-case maximum absolute differences.
+Each full output must satisfy `rtol=1e-4, atol=1e-4`, retain its dtype/shape and be
+finite. Parser/preflight failures return 2 before creating output; later errors
+return 2 and preserve partial files plus a `failed` report. Partial artifacts are
+not approved exports. A forcibly terminated process may leave incomplete state.
+
+## Fixed deployment semantics
+
+The encoder always processes 400 frames; actual utterance length is applied at
+CPU CIF during inference. Predictor returns 401 weights and 401 hidden vectors,
+including the source 0.45 tail and zero hidden frame. Decoder has physical width
+100: `token_num` changes the valid-prefix mask, not the output shape. Its inputs
+retain the published names, including `onnx::Shape_8609`; explicit output binding
+avoids relying on a particular Torch internal tensor-number suffix.
+
+The decoder composition is adapted from FunASR under the included
+[MIT notice](LICENSE-FunASR). The fixed-width masks express the existing deployment
+contract directly, replacing the old one-probe Range freezing. The generic upstream
+decoder with an **unpadded** token sequence is not numerically interchangeable
+for shorter sequences; that comparison failed and is retained in the evidence.
+The deployment comparison instead uses the unmodified upstream decoder export
+followed by the actual archived fixed-100 Range pass. Do not infer original
+variable-length-model accuracy or HBM accuracy from these export checks.
+
+## Graph tests
+
+```bash
+python -m unittest discover -s samples/speech/paraformer/tests -v
+```
+
+The earlier standalone graph tests also ran with Python 3.14.7, NumPy 2.5.3,
+ONNX 1.23.0 and ORT 1.30.0; those versions do not establish FunASR export
+compatibility. Missing optional dependencies can skip tests. Use the export
+environment above and check the actual test counts rather than treating skips
+as evidence of successful validation.
 
 ## Available transformations
 
@@ -106,9 +194,9 @@ It remains historical reference, with the following migration boundaries:
 
 | Source stage | Purpose | Unified status |
 | --- | --- | --- |
-| `01_reexport_fixed_shape.py` | Export fixed-shape full model, 400 feature frames and up to 100 tokens | Pending; source export mutates patches and existing outputs, so do not assume safe reruns. |
-| `02_extract_decoder.py`, `07_extract_predictor.py`, `08_extract_encoder.py` | Extract the three ONNX stages | Pending; single-feed boundary probes must not be interpreted as proofs of constant values. |
-| `03_convert_gather_int64_to_int32.py` through `06_shape_freeze.py` | Adapt Gather, order, Range and axes | Shared primitives above are implemented and tested on small graphs; full-model integration and simplifier validation remain pending. |
+| `01_reexport_fixed_shape.py` | Export fixed-shape model | Replaced by direct `export.py` stage export; no full CIF graph, global monkey patch or source overwrite. |
+| `02_extract_decoder.py`, `07_extract_predictor.py`, `08_extract_encoder.py` | Extract three stages from an internal-name-dependent full graph | Replaced by explicit Torch stage boundaries with the same deployment names and shapes. |
+| `03_convert_gather_int64_to_int32.py` through `06_shape_freeze.py` | Adapt Gather, order, Range and axes | Shared primitives are integrated into real-weight stage export. No simplifier is invoked, so no unchecked simplifier result is accepted. |
 | `09_gen_calib_features.py` | Generate features from representative real audio | Pending integration with the unified, reproducible frontend. |
 | `10_gen_real_calib.py` and `cif_numpy.py` | Run stages to prepare decoder/predictor calibration | Pending; source calibration deliberately uses unmasked CIF (`real_T=None`), unlike runtime valid-frame masking. |
 | Three `*_int16.yaml` files | Compile encoder, predictor and decoder for `nash-e` | Historical source recipes only; no unified OE invocation or fresh compiled model validation yet. |
@@ -124,11 +212,22 @@ none of these host graph tests establishes CER, latency or dataset accuracy.
 
 ## What has been checked
 
-Nine graph tests cover shared Gather constants, constant overflow and evaluation
+Ten graph tests cover shared Gather constants, constant overflow and evaluation
 limits, explicit dynamic casts, unique intermediate names, stable dependency
 sorting, rejection of incomplete graphs, static versus dynamic Range, and shared
 negative axes across different ranks. Numerical comparisons execute the
 original and rewritten small graphs with real ONNX Runtime and require equal
-output dtypes and values. The full sample regression is separate from real
-weights, OE compilation, SDK execution and board tests, all unverified for this
-conversion work. See the [host evidence](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-graph-ops-review.md).
+output dtypes and values. Real-weight stage export and two complete example pipelines are checked separately.
+OE compilation, SDK execution, board tests and dataset CER remain unverified. See the [host evidence](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-graph-ops-review.md).
+
+Real-weight results, initial failures and reproduction commands are in the
+[export report](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-export-review.md).
+
+The 16 export checks use contexts produced by the real encoder (zero/random
+features and two real audio features). Separate arbitrary random hidden-vector
+stress tests showed much larger Torch/ORT differences; they do **not** satisfy
+the export tolerance. The old and new fixed-width ONNX graphs agree in those
+stress cases under the same ORT settings. This preserves source deployment
+behavior but does not establish global Torch/ONNX equivalence. Both sample
+transcripts also contain recognition errors against their references; no dataset
+CER or accuracy improvement is claimed.
