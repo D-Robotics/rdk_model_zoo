@@ -158,6 +158,8 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 
 ---
 
+> 2026-09-28 B11 来源更新：Gemma 67 文件核定；MiniCPM 缺失的 13 文件与 9 份旧 README 已按固定 S tip 补齐，62 文件现与 pin 相同。上文快照缺失属于历史发现，统一实现仍 pending；VLA gitlink 尚未搬迁。见[清点记录](2026-09-28-b11-source-audit.md)。
+
 ## 本轮 B1–B11 迁移进度区（2026-09-20 起）
 
 本区独立记录本轮迁移进度，供人工审阅和 Q3 检查器读取。上方历史 P0 表的 `S/F/H` 是清点口径（S=源码/清单静态核对，F=旧新函数映射未核定，H=板端验证未执行），不是顺序状态机；历史列不因批次工作翻转，不得把 F 再解释为 mapping verified，也不得用历史 P0 状态推断新代码已验收。Q3 检查器纳入范围按本区 Refactor 列（in-progress/done 均纳入）确定。
@@ -241,10 +243,10 @@ P0 没有填写旧函数到新函数的映射，也没有把同名目录标成�
 | B10 | asr / s:380e1a2 | s / python + cpp | done（22 源文件核定） | in-progress（Python/C++ 完整入口已实现，待整体验收） | in-progress（七层双语完整说明及原生使用/API/结果已同步） | passed（21 ASR；7 前端源对照；C++ 七项 sanitizer / 16 CLI 用例；完整范围见报告） | not-run | not-run | no | [ASR 阶段记录](2026-09-28-b10-asr-core-review.md)、[原生音频](2026-09-28-b10-asr-native-audio-review.md)、[SDK 适配](2026-09-28-b10-asr-sdk-review.md)、[完整入口](2026-09-28-b10-asr-native-cli-review.md)；CTC 显式修正、legacy 保留；原生完整入口已迁移，真实 SDK/ABI/模型行为与独立验收未核定。 |
 | B10 | kws / s:380e1a2 | s / python | done（15 源文件核定） | in-progress（统一三阶段/共享 runner、真实 PaddleAudio 前端与离线指标） | in-progress（六层双语流程已提供） | passed（13 KWS / 432 相关主机回归；真实三例前处理逐值一致；121 publisher） | not-run | not-run | no | [B10 源审计](2026-09-28-b10-source-review.md)、[KWS 迁移](2026-09-28-b10-kws-review.md)；转换缺源权重/配方，如实披露，待整体验收。 |
 | B10 | paraformer / s:380e1a2 | s / python + cpp | done（43 源文件核定） | in-progress（Python/原生完整入口与真实前端已实现并做主机检查；真实权重导出/校准/编译编排已实现；专用 FP32/HMCT 评测已实现，真实 OE/HMCT 未验证） | in-progress（根/Python/完整原生/model/test_data 双语说明已提供；完整转换/评测双语说明已提供，直接文档检查零违规；多阶段公开 API 与中英示例已补齐，整体验收继续） | partial（82 Sample 无跳过；2 条真实 FP32 与源评测逐条一致；14 校准数组对照；16 真实导出检查；2 完整 Torch/ORT 示例；6 原生/14 原生 CLI/32 特征读取；10 真实 Python CLI、7 前端/24 CIF/20 文本源对照；非完整 Sample） | not-run | not-run | no | [CPU CIF 记录](2026-09-28-b10-paraformer-cif-review.md)、[流程记录](2026-09-28-b10-paraformer-pipeline-review.md)、[绑定/准备](2026-09-28-b10-paraformer-binding-review.md)、[真实前端](2026-09-28-b10-paraformer-frontend-review.md)、[Python CLI](2026-09-28-b10-paraformer-cli-review.md)、[原生 CPU 库](2026-09-28-b10-paraformer-native-core-review.md)（27 CIF/20 文本对照）、[原生 SDK](2026-09-28-b10-paraformer-sdk-review.md)、[整组预检](2026-09-28-b10-paraformer-preflight-review.md)、[特征读取](2026-09-28-b10-paraformer-feature-io-review.md)、[完整原生入口](2026-09-28-b10-paraformer-native-cli-review.md)、[转换图工具](2026-09-28-b10-paraformer-graph-ops-review.md)、[真实权重导出](2026-09-28-b10-paraformer-export-review.md)（随机隐藏向量跨框架差异如实保留）、[校准/编译准备](2026-09-28-b10-paraformer-calibration-review.md)；修复无 token 崩溃并显式跳过 decoder；[专用评测](2026-09-28-b10-paraformer-evaluator-review.md)已提供；[阶段 API 整改](2026-09-28-b10-paraformer-stages-review.md)已补齐公开接口、错误归属和实际 README 示例，整体验收继续。 |
-| B11 | gemma4-e2b / s:380e1a2 | s / cpp | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B11 | minicpm5-2b / s:380e1a2（快照无，tip 新增） | s / cpp + evaluator（legacy 脚本 + results/*.json）+ test_data | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B11 | vla/act / s:380e1a2（gitlink 326ea043） | s / gitlink | pending | pending | pending | not-run | not-run | not-run | no | — |
-| B11 | vla/pi0 / s:380e1a2（gitlink a32de276） | s / gitlink | pending | pending | pending | not-run | not-run | not-run | no | — |
+| B11 | gemma4-e2b / s:380e1a2 | s / cpp | done（固定 S 源核定；67 文件） | pending | pending | not-run | not-run | not-run | no | [固定源清点与快照修复](2026-09-28-b11-source-audit.md)；统一实现/文档仍待迁移。 |
+| B11 | minicpm5-2b / s:380e1a2（tip 增量已补齐快照） | s / cpp + evaluator（legacy 脚本 + results/*.json）+ test_data | done（62 源文件；缺失13/旧README9已按pin补齐） | pending | pending | not-run | not-run | not-run | no | [固定源清点与快照修复](2026-09-28-b11-source-audit.md)；统一实现/文档仍待迁移。 |
+| B11 | vla/act / s:380e1a2（gitlink 326ea043） | s / gitlink | done（gitlink/URL/pin核对；未初始化） | pending | pending | not-run | not-run | not-run | no | [固定源清点与快照修复](2026-09-28-b11-source-audit.md)；统一实现/文档仍待迁移。 |
+| B11 | vla/pi0 / s:380e1a2（gitlink a32de276） | s / gitlink | done（gitlink/URL/pin核对；未初始化） | pending | pending | not-run | not-run | not-run | no | [固定源清点与快照修复](2026-09-28-b11-source-audit.md)；统一实现/文档仍待迁移。 |
 
 勘误（相对批次 kickoff 表）：depth_anything_v2、lanenet、pointnet 为 S-only 源（kickoff 表 B8 行未单独标注）；B2 的 efficientformer 与 efficientformerv2 为两个独立源 sample；S 侧 yolov13 实际目录为 yolov13_imoonlab；yoloe26_seg、minicpm5-2b、vla gitlink 仅存在于 s tip（快照缺失，见未核定项 7）；B9 收编 ultralytics 家族时先裁定未核定项 6 的 cls 文件名真伪。
 

@@ -34,4 +34,4 @@ Calibration verifies a pinned WikiText2 TRAIN SHA256, joins text with two newlin
 
 Deploy only HBM, deployment tokenizer, LICENSE, modification notice and checksums. Exclude SDK, BC/HBO and caches. Public HBM names are `minicpm5-2b_ctx4096_s100.hbm` and `minicpm5-2b_ctx4096_s100p.hbm`. Tokenizer preparation changes only BPE serialization, the equivalent basic non-thinking template and primary chat EOS 130073; vocabulary and merge order are preserved.
 
-See [models](../../model/README.md) and [basic board validation](../../evaluator/README.md). S600 PPL is not evidence for either legacy HBM; only single-turn English/Chinese and EOS are verified.
+See [models](../../model/README.md) and [full board validation](../../evaluator/README.md). Both legacy HBMs have full PPL 17.91995 (+27.83% over float), failing the ≤3% target. Generation/reference differences and passing functional checks are recorded separately; S600 PPL is not evidence for these artifacts.
