@@ -244,3 +244,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：H0独立关闭：9条既有B3/B6/B7修复分支均已通过祖先关系或git cherry等价补丁纳入，B3隔离与native audit/两侧日志归档整改已读码核对，290项相关主机回归通过。见[独立集成评审](../../releases/unified-migration/2026-09-28-integration-independent-review.md)。仅H0当前定义范围完成；H3文档收尾、H8目录/来源全量检查、H9整体交付和其余H项继续，历史板测缺口不变。
 
 2026-09-28：ASR-R1经Codex独立复验关闭：27项Python通过，原int32分数对在ctc/legacy均正确返回token1，checker零违规，62份样例文件哈希稳定。原生文件与上次独立评审哈希一致，保留原5项CTest范围而不重复无关板测/工具链验证。见[ASR评审](../../releases/unified-migration/2026-09-28-asr-independent-review.md)。H6/B10总体仍待文档/集成收尾。
+
+2026-09-28：当前597份根/平台入口/sample/dataset README导航快照完成：3595处行内链接/图片引用中，本地目标与显式/标题锚点检查无未解析项。初版把C++ lambda误认作链接的扫描器误报已修正，不改客户代码。见[导航评审](../../releases/unified-migration/2026-09-28-navigation-independent-review.md)；仅导航证据，含并行待审文档哈希，不能替代H1内容深度或H9最终快照。
