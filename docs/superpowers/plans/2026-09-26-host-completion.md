@@ -193,3 +193,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：HIMLoco 按源能力完成作者审计，Mapping/Refactor/Docs 记 done、Host 仅覆盖已留证23项/原生主机检查；Review=not-run、Closed=no不变。补齐根/索引遗漏的 Paraformer 与 HIMLoco，双语索引与49个实际Sample根完全一致，14份HIMLoco README陈旧说明已修正；相对链接核对见[作者审计](../../releases/unified-migration/2026-09-28-b10-himloco-author-audit.md)。不关闭H6/H0–H9，后续转B11并保留全仓独立评审。
 
 2026-09-28：B11 固定源清点：Gemma67文件原样；MiniCPM62文件中13缺失、9份README落后，已恢复为S pin原字节，补回S100/S100P完整PPL失败结论及历史结果，不执行量化/评测。ACT/Pi0两个不同gitlink与URL核定，尚未初始化或搬迁。B11仅Mapping记done，Refactor/Docs仍pending，见[源清点](../../releases/unified-migration/2026-09-28-b11-source-audit.md)。
+
+2026-09-28：VLA 两个gitlink按原SHA迁至samples/vla，.gitmodules同步并实际初始化，完整上游代码无改动；双语总览/ACT/Pi0指南及旧路径导航完成，保留板型/LeRobot差异、源历史数字和控制边界。Refactor对固定外部源码记not-applicable，父仓库集成由2项专用检查覆盖，非豁免原生sample规则；独立评审/板端仍未执行。见[VLA集成记录](../../releases/unified-migration/2026-09-28-b11-vla-integration.md)。Gemma/MiniCPM与H0–H9余项继续。

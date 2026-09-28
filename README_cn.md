@@ -29,7 +29,9 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 | 准备特征的轨迹规划 | [DiffusionDrive](samples/vision/diffusiondrive/README_cn.md) |
 | 视觉特征、图文匹配、视频分类 | [DINOv2](samples/vision/dinov2/README_cn.md)、[SigLIP](samples/vision/siglip/README_cn.md)、[CLIP](samples/vision/clip/README_cn.md)、[3DResNet](samples/vision/3dresnet/README_cn.md) |
 
-大模型/VLA 等尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
+大模型等尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
+
+ACT／Pi0 以完整固定 Git 子模块集成，独立于上述 49 个本仓库样例。入口见 [VLA 指南](samples/vla/README_cn.md)：ACT S100 与 S600 使用不同源版本，Pi0 面向 S600，模型资源由使用者准备。本轮未运行机器人控制。
 
 ## 板卡、制品与环境
 

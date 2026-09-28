@@ -85,6 +85,10 @@ This index covers 49 unified samples: 45 vision, three speech and one robotics p
 
 HIMLoco consumes prepared six-frame observations and returns policy actions; it does not construct a live control loop or send robot commands.
 
+## Pinned third-party policy integrations
+
+Complete upstream ACT/Pi0 Git submodules are maintained separately from the 49 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching source does not prepare model assets or establish board validation.
+
 ## Read validation status correctly
 
 - The three original pilots and B1/B2 have their own board records; one passing case does not certify a family.

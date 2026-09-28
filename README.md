@@ -29,7 +29,9 @@ The [sample index](samples/README.md) lists 49 unified samples: 45 vision, three
 | Prepared-feature trajectory planning | [DiffusionDrive](samples/vision/diffusiondrive/README.md) |
 | Features, image-text matching and video classification | [DINOv2](samples/vision/dinov2/README.md), [SigLIP](samples/vision/siglip/README.md), [CLIP](samples/vision/clip/README.md), [3DResNet](samples/vision/3dresnet/README.md) |
 
-LLM/VLA and other pending capabilities remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
+LLM and other pending capabilities remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
+
+ACT/Pi0 are integrated as complete pinned Git submodules, separately from the 49 in-repository samples above. See the [VLA guide](samples/vla/README.md): S100 and S600 ACT use different source versions, Pi0 targets S600, and model resources are operator-supplied. Robot control was not run in this migration.
 
 ## Boards, artifacts and environments
 
