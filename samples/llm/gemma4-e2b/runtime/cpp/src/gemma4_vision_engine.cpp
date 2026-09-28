@@ -47,39 +47,48 @@ uint16_t FloatToF16(float value) {
 
 }  // namespace
 
-VisionEngine::VisionEngine(const std::string& vision_hbm) {
-  const char* path = vision_hbm.c_str();
-  const char* paths[] = {path};
-
-  auto t0 = std::chrono::steady_clock::now();
-  HBDNN_CHECK(hbDNNInitializeFromFiles(&packed_, paths, 1), "load vision hbm");
-  auto t1 = std::chrono::steady_clock::now();
-  load_ms_ = std::chrono::duration<double, std::milli>(t1 - t0).count();
-
-  HBDNN_CHECK(hbDNNGetModelHandle(&handle_, packed_, "Gemma4VisionModel"),
-              "get Gemma4VisionModel");
-
-  int input_count = 0;
-  HBDNN_CHECK(hbDNNGetInputCount(&input_count, handle_), "vision input count");
-  inputs_.reserve(static_cast<size_t>(input_count));
-  for (int i = 0; i < input_count; ++i) {
-    inputs_.push_back(MakeTensor(handle_, true, i));
-  }
-
-  int output_count = 0;
-  HBDNN_CHECK(hbDNNGetOutputCount(&output_count, handle_), "vision output count");
-  outputs_.reserve(static_cast<size_t>(output_count));
-  for (int i = 0; i < output_count; ++i) {
-    outputs_.push_back(MakeTensor(handle_, false, i));
+VisionEngine::VisionEngine(const std::string &vision_hbm) {
+  try {
+    const char *path = vision_hbm.c_str();
+    const auto start = std::chrono::steady_clock::now();
+    HBDNN_CHECK(hbDNNInitializeFromFiles(&packed_, &path, 1),
+                "load vision hbm");
+    if (!packed_)
+      throw std::runtime_error("SDK returned null packed model");
+    load_ms_ = std::chrono::duration<double, std::milli>(
+                   std::chrono::steady_clock::now() - start)
+                   .count();
+    HBDNN_CHECK(hbDNNGetModelHandle(&handle_, packed_, "Gemma4VisionModel"),
+                "get Gemma4VisionModel");
+    if (!handle_)
+      throw std::runtime_error("SDK returned null model handle");
+    int input_count = 0, output_count = 0;
+    HBDNN_CHECK(hbDNNGetInputCount(&input_count, handle_),
+                "vision input count");
+    HBDNN_CHECK(hbDNNGetOutputCount(&output_count, handle_),
+                "vision output count");
+    if (input_count != 1 || output_count != 1)
+      throw std::runtime_error(
+          "Vision requires exactly one input and one output");
+    inputs_.reserve(1);
+    outputs_.reserve(1);
+    inputs_.push_back(MakeTensor(handle_, true, 0));
+    outputs_.push_back(MakeTensor(handle_, false, 0));
+  } catch (...) {
+    Release();
+    throw;
   }
 }
 
-VisionEngine::~VisionEngine() {
+VisionEngine::~VisionEngine() { Release(); }
+
+void VisionEngine::Release() noexcept {
   FreeTensors(inputs_);
   FreeTensors(outputs_);
-  if (packed_) {
+  if (packed_)
     hbDNNRelease(packed_);
-  }
+  packed_ = nullptr;
+  handle_ = nullptr;
 }
 
 std::vector<float> VisionEngine::Infer(const std::vector<float>& patches) {

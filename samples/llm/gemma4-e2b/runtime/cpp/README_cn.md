@@ -371,3 +371,19 @@ ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 
 两项 CTest 分别覆盖三阶段/所有权/异常输入，以及四张源图片前处理逐字节比较。Release 构建仍启用断言。
 这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。
+
+### SDK 失败处理
+
+Vision 构造失败时会释放已经取得的输入/输出 buffer 和 packed model；成功但返回空 handle/buffer 会显式报错。
+`MakeTensor` 在分配失败但仍返回内存时也会释放该内存。Vision 要求恰好一个输入和一个输出；具体张量类型、形状和 stride 的完整审查仍在进行。
+
+全部刷新与 Text/KV 选择性刷新入口共用同一个 task 生命周期：输入刷新 → infer → 按编译核数调度 → submit/wait → 输出刷新与属性更新 → release。
+取得 task 之后的失败（包括 infer 返回错误但已给出 task）都会触发释放；正常路径的 release 错误继续上抛，不重复释放同一 handle。
+选择性刷新的索引语义保持源行为，S600 的编译核数选择和可选 V3 入口也保留。
+
+主机资源测试使用独立 SDK 接口替身，在 S100/S600 两个编译分支下覆盖 72 个场景；它能检查错误处理中的内存/handle 所有权，
+不能代替真实 SDK ABI、BPU 调度或板端推理验证。可从仓库根目录运行：
+
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resources.py -v
+```

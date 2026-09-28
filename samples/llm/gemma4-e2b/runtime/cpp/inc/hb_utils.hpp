@@ -150,9 +150,20 @@ inline hbDNNTensor MakeTensor(hbDNNHandle_t handle, bool is_input, int index) {
                 "get output tensor props");
   }
   const int64_t bytes = tensor.properties.alignedByteSize;
-  HBUCP_CHECK(hbUCPMallocCached(&tensor.sysMem, bytes, 0), "malloc tensor");
-  ZeroTensorMem(tensor);
-  return tensor;
+  if (bytes <= 0)
+    throw std::runtime_error("invalid tensor allocation size");
+  try {
+    HBUCP_CHECK(hbUCPMallocCached(&tensor.sysMem, bytes, 0), "malloc tensor");
+    if (!tensor.sysMem.virAddr)
+      throw std::runtime_error("SDK returned null tensor memory");
+    ZeroTensorMem(tensor);
+    return tensor;
+  } catch (...) {
+    // A failed allocator may still return acquired memory.
+    if (tensor.sysMem.virAddr)
+      hbUCPFree(&tensor.sysMem);
+    throw;
+  }
 }
 
 /// Release all BPU buffers owned by a tensor vector.
@@ -220,76 +231,75 @@ inline uint64_t DNNBpuBackend(hbDNNHandle_t handle) {
 #endif
 }
 
-// OE model_inference flow: hbDNNInferV2 (or opt-in V3) -> hbUCPSubmitTask
-// -> hbUCPWaitTaskDone -> hbDNNGetTaskOutputTensorProperties -> hbUCPReleaseTask
-// Flushes ALL input tensors before inference and ALL output tensors after.
-inline void RunInfer(hbDNNHandle_t handle, std::vector<hbDNNTensor>& inputs,
-                     std::vector<hbDNNTensor>& outputs) {
-  for (auto& in : inputs) {
-    FlushClean(in.sysMem);
+// A task can be acquired even when submission/inference returns an error.
+// Own it before calling the SDK, and release on all subsequent failure paths.
+class DnnTaskOwner {
+public:
+  DnnTaskOwner() = default;
+  DnnTaskOwner(const DnnTaskOwner &) = delete;
+  DnnTaskOwner &operator=(const DnnTaskOwner &) = delete;
+  ~DnnTaskOwner() {
+    if (handle)
+      hbUCPReleaseTask(handle);
   }
+  void Release() {
+    const auto owned = handle;
+    handle = nullptr; // do not retry a release that itself reports an error
+    HBUCP_CHECK(hbUCPReleaseTask(owned), "release task");
+  }
+  hbUCPTaskHandle_t handle = nullptr;
+};
 
-  hbUCPTaskHandle_t task = nullptr;
-  HBDNN_CHECK(DNNInfer(&task, outputs.data(), inputs.data(), handle), "infer");
-
+// Caller selects CPU-modified inputs. Empty output selection retains the source
+// behavior of invalidating and refreshing all outputs. Out-of-range indices are
+// ignored for compatibility with the existing Text/KV callers.
+inline void
+RunInferSelective(hbDNNHandle_t handle, std::vector<hbDNNTensor> &inputs,
+                  std::vector<hbDNNTensor> &outputs,
+                  const std::vector<int> &flush_input_indices,
+                  const std::vector<int> &flush_output_indices = {}) {
+  for (int idx : flush_input_indices) {
+    if (idx >= 0 && idx < static_cast<int>(inputs.size()))
+      FlushClean(inputs[static_cast<size_t>(idx)].sysMem);
+  }
+  DnnTaskOwner task;
+  HBDNN_CHECK(DNNInfer(&task.handle, outputs.data(), inputs.data(), handle),
+              "infer");
+  if (!task.handle)
+    throw std::runtime_error("SDK returned null inference task");
   hbUCPSchedParam sched{};
   HB_UCP_INITIALIZE_SCHED_PARAM(&sched);
   sched.backend = DNNBpuBackend(handle);
-  HBUCP_CHECK(hbUCPSubmitTask(task, &sched), "submit");
-  HBUCP_CHECK(hbUCPWaitTaskDone(task, 0), "wait");
-
-  for (size_t i = 0; i < outputs.size(); ++i) {
-    FlushInvalidate(outputs[i].sysMem);
-    HBDNN_CHECK(hbDNNGetTaskOutputTensorProperties(&outputs[i].properties, task, 0,
-                                                   static_cast<int32_t>(i)),
+  HBUCP_CHECK(hbUCPSubmitTask(task.handle, &sched), "submit");
+  HBUCP_CHECK(hbUCPWaitTaskDone(task.handle, 0), "wait");
+  auto refresh = [&](size_t index) {
+    FlushInvalidate(outputs[index].sysMem);
+    HBDNN_CHECK(hbDNNGetTaskOutputTensorProperties(&outputs[index].properties,
+                                                   task.handle, 0,
+                                                   static_cast<int32_t>(index)),
                 "get task output props");
+  };
+  if (flush_output_indices.empty()) {
+    for (size_t index = 0; index < outputs.size(); ++index)
+      refresh(index);
+  } else {
+    for (int index : flush_output_indices) {
+      if (index >= 0 && index < static_cast<int>(outputs.size()))
+        refresh(static_cast<size_t>(index));
+    }
   }
-
-  HBUCP_CHECK(hbUCPReleaseTask(task), "release task");
+  task.Release();
 }
 
-// Selective-flush variant: only flush the input tensors at the given indices.
-// This skips flushing KV cache tensors (which BPU owns and haven't changed on CPU),
-// saving ~30 cache flush operations per decode step.
-inline void RunInferSelective(hbDNNHandle_t handle,
-                              std::vector<hbDNNTensor>& inputs,
-                              std::vector<hbDNNTensor>& outputs,
-                              const std::vector<int>& flush_input_indices,
-                              const std::vector<int>& flush_output_indices = {}) {
-  for (int idx : flush_input_indices) {
-    if (idx >= 0 && idx < static_cast<int>(inputs.size())) {
-      FlushClean(inputs[static_cast<size_t>(idx)].sysMem);
-    }
-  }
-
-  hbUCPTaskHandle_t task = nullptr;
-  HBDNN_CHECK(DNNInfer(&task, outputs.data(), inputs.data(), handle), "infer");
-
-  hbUCPSchedParam sched{};
-  HB_UCP_INITIALIZE_SCHED_PARAM(&sched);
-  sched.backend = DNNBpuBackend(handle);
-  HBUCP_CHECK(hbUCPSubmitTask(task, &sched), "submit");
-  HBUCP_CHECK(hbUCPWaitTaskDone(task, 0), "wait");
-
-  if (flush_output_indices.empty()) {
-    for (size_t i = 0; i < outputs.size(); ++i) {
-      FlushInvalidate(outputs[i].sysMem);
-      HBDNN_CHECK(hbDNNGetTaskOutputTensorProperties(&outputs[i].properties, task, 0,
-                                                     static_cast<int32_t>(i)),
-                  "get task output props");
-    }
-  } else {
-    for (int idx : flush_output_indices) {
-      if (idx >= 0 && idx < static_cast<int>(outputs.size())) {
-        FlushInvalidate(outputs[static_cast<size_t>(idx)].sysMem);
-        HBDNN_CHECK(hbDNNGetTaskOutputTensorProperties(
-                        &outputs[static_cast<size_t>(idx)].properties, task, 0, idx),
-                    "get task output props");
-      }
-    }
-  }
-
-  HBUCP_CHECK(hbUCPReleaseTask(task), "release task");
+// Full-flush entry shares the same owned task lifecycle as selective Text/KV
+// IO.
+inline void RunInfer(hbDNNHandle_t handle, std::vector<hbDNNTensor> &inputs,
+                     std::vector<hbDNNTensor> &outputs) {
+  std::vector<int> input_indices;
+  input_indices.reserve(inputs.size());
+  for (size_t index = 0; index < inputs.size(); ++index)
+    input_indices.push_back(static_cast<int>(index));
+  RunInferSelective(handle, inputs, outputs, input_indices);
 }
 
 inline const int16_t* LogitsRowPtr(const hbDNNTensor& logits, int seq_idx) {

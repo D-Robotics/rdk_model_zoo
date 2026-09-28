@@ -201,3 +201,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Gemma14份双语README组织与导航补齐，保留原参数/图示/历史值，澄清模型目标及哈希来源、golden判据并修正命令参数与工作目录；21份转换脚本/完整教程保持原字节。迁移门禁50samples/0violations/51skips/0exemptions，四项主机预览通过；见[文档记录](../../releases/unified-migration/2026-09-28-b11-gemma-readme-review.md)。核心职责/显式模型准备及全分支验收继续，不执行量化/板测，不关闭H0–H9。
 
 2026-09-28：Gemma Vision 读图移至应用层，纯前处理/显式runner/后处理与Predict组合接入main/demo；4张源图片与固定源C++前处理逐字节一致，Release及ASan/UBSan各2项CTest通过，7项启动器回归通过，门禁50/0/51skips/0exemptions。双语运行README补完整接口示例。SDK张量/资源生命周期、Text/KV、模型准备继续，见[Vision职责记录](../../releases/unified-migration/2026-09-28-b11-gemma-vision-review.md)；不执行量化/板测，H0–H9开放。
+
+2026-09-28：Gemma复现并修复buffer/task/packed-model三类失败泄漏；全量和选择性推理共用task所有权，保留S600编译核数与V3入口。S100/S600主机72场景及ASan/UBSan通过，Gemma11项单测通过，门禁50/0/51skips/0exemptions。双语失败说明同步，见[资源记录](../../releases/unified-migration/2026-09-28-b11-gemma-resource-review.md)。Vision严格张量/stride、TextKV、模型准备与全范围验收继续；量化/板测不执行，H0–H9开放。

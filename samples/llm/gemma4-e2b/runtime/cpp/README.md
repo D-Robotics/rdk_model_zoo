@@ -378,3 +378,19 @@ ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 
 Two CTest entries cover stages/ownership/invalid inputs and byte-exact preprocessing comparisons on four source images. Assertions remain enabled in Release builds.
 An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
+
+### SDK failure handling
+
+Failed Vision construction releases acquired input/output buffers and the packed model; successful SDK calls returning null handles/buffers are rejected.
+`MakeTensor` also releases memory returned alongside an allocation error. Vision requires exactly one input and one output; complete tensor type/shape/stride review remains ongoing.
+
+Full-flush and Text/KV selective-flush entries share one task lifecycle: input flush → infer → compiled-core scheduling → submit/wait → output flush/property refresh → release.
+Failures after task acquisition release it, including inference errors that still return a task. Normal-path release errors propagate without retrying the same handle.
+Source selective-index semantics, S600 compiled-core selection and optional V3 dispatch are preserved.
+
+Host resource tests use independent SDK doubles across S100/S600 compile branches and cover 72 scenarios. They check memory/handle ownership on errors,
+not real SDK ABI, BPU scheduling or board inference. From the repository root:
+
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resources.py -v
+```

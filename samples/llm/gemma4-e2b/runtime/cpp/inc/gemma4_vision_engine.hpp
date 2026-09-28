@@ -35,6 +35,7 @@ class VisionEngine {
   double LoadMs() const { return load_ms_; }
 
  private:
+  void Release() noexcept;
   hbDNNPackedHandle_t packed_ = nullptr;
   hbDNNHandle_t handle_ = nullptr;
   std::vector<hbDNNTensor> inputs_;
