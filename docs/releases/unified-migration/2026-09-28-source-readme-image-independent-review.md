@@ -59,3 +59,14 @@ scan, but that observation does not prove full source content or semantic parity
 This inventory does not yet cover root/platform README or external VLA gitlinks.
 H1/H2/H9 remain open; this finding remains open until all affected active samples
 have independent disposition.
+
+## DOC-DEPTH-R1 closure (2026-09-28)
+
+All 24 affected destinations now have independent disposition: nine B1/B2 roots
+([review](2026-09-28-readme-depth-b1b2-independent-review.md)), twelve classifier
+roots plus ConvNeXt evaluator ([review](2026-09-28-readme-depth-classifiers-independent-review.md)),
+and Ultralytics/FCOS/ByteTrack ([review](2026-09-28-readme-depth-special-independent-review.md)).
+Source images, context, current command invariance and corrected captions were
+reviewed per package; non-restored assets have explicit provenance/disposition.
+Close this source-image finding. It does not by itself certify every README
+paragraph, repository/platform guide or H1/H2/H9 completion.

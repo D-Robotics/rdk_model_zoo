@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## 概览
 
-本 Sample 为 RDK X5、S100、S100P、S600 提供目标检测、实例分割、姿态估计、分类及 YOLO26 旋转框任务。YOLO 检测头在多个尺度预测类别与框，CPU 端解码、筛选和还原原图坐标；分割、姿态、OBB 还输出各自的 mask、关键点和角度。模型源项目为 [Ultralytics](https://github.com/ultralytics/ultralytics)。
+本 Sample 为 RDK X5、S100、S100P、S600 提供目标检测、实例分割、姿态估计、分类及 YOLO26 旋转框任务。两份固定交付源 README 均将 Ultralytics YOLO 描述为覆盖目标检测、实例分割、姿态估计与图像分类的实时视觉模型系列；同期交付的 direct-LTRB 系列 YOLO26 在本入口中作为一个系列维护。YOLO 检测头在多个尺度预测类别与框，CPU 端解码、筛选和还原原图坐标；分割、姿态、OBB 还输出各自的 mask、关键点和角度。模型源项目为 [Ultralytics](https://github.com/ultralytics/ultralytics)。
 
 维护入口是 `samples/vision/ultralytics_yolo`。Python 按目标绑定输入、按模型系列选择任务协议，下载、绘图和评估共用；YOLO26 已作为同一 Sample 的一个系列合并。独立 YOLOv5、YOLOE 和 yolo26_depth 具有不同能力，不在此入口中伪装成同一种模型。
 
@@ -75,6 +75,14 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
 检测命令打印所选模型、输入协议及检测信息，并将绘制结果写入 `/tmp/yolov8n-x5.jpg`，成功时打印 `[Saved]`。框采用原图像素坐标；类别 ID 从 0 开始。分类打印 Top-K 而不写图片；分割、姿态、OBB 的结果字段见 [Python 文档](runtime/python/README_cn.md)。模型绑定失败时不能把旧图片当本次结果。下面是保留的历史检测示意图，不是本轮新测量：
 
 ![Historical detection illustration](test_data/ultralytics_YOLO_Detect_demo.jpg)
+
+固定 S 交付根 README 为同一张随仓 bus 场景嵌入了它自己的检测示意图，下面按来源身份保留，不作为新的测量结果（`test_data/result_detect.jpg`，S pin `380e1a2`，sha256 `5d792a47…`）：
+
+![Historical S delivery detection illustration](test_data/result_detect.jpg)
+
+S 侧 `ultralytics_yolo26` 交付（其独立目录已并入本入口）嵌入了它自己的 `result_detect.jpg`，此处恢复为 `result_detect_yolo26.jpg`（S pin `380e1a2`，sha256 `2631c661…`）。YOLO26 检测现在由本统一入口提供；该图是那次交付的历史示意图（类别 ID + 分数标签），不是新的测量结果：
+
+![Historical S YOLO26 delivery detection illustration](test_data/result_detect_yolo26.jpg)
 
 <a id="directory"></a>
 ## 目录职责

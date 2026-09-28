@@ -43,3 +43,11 @@ measured fact. Keep the corrected 3.75-second window, exact target support,
 current commands and historical evidence boundaries intact. No code or recipe
 execution is needed. This bounded documentation follow-up remains open; runtime
 host review and whole-sample documentation acceptance are separate dispositions.
+
+## KWS-N1 closure (2026-09-28)
+
+Closed after independent reading of the restored bilingual root overview and
+comparison with fixed-source description and current frontend/scoring modules.
+The algorithm claims remain source-attributed; 60000 samples = 3.75 seconds,
+[1,373,80] fbank and max-probability threshold decision are stated directly.
+Commands and runtime code are unchanged. See [final documentation review](2026-09-28-readme-depth-special-independent-review.md).

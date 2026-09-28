@@ -281,3 +281,12 @@ to Claude Code + GLM as a separate bounded package, not marked complete.
 [整批独立报告](../../releases/unified-migration/2026-09-28-b8-batch-independent-review.md)
 逐项列出能力、证据与边界。H4 按当前用户非板端范围关闭；Board=not-run，
 整仓 H1/H8/H9 与其他批次继续，不新增实际量化验证要求。
+
+### 2026-09-28 — Source-image depth finding and KWS overview closed
+
+Accepted Ultralytics/FCOS/ByteTrack/KWS README package after two ByteTrack
+findings and final caption/conditional refinements: ten changed documents,
+twenty source-identical image references, unchanged command blocks and four
+passing checkers. [Independent report](../../releases/unified-migration/2026-09-28-readme-depth-special-independent-review.md).
+DOC-DEPTH-R1 now has independent disposition for all 24 affected destinations;
+KWS-N1 also closed. H1/H2/H3/H6/H9 broader work is not implicitly closed.

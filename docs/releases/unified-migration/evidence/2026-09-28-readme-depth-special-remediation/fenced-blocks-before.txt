@@ -1,0 +1,266 @@
+### samples/vision/ultralytics_yolo/README.md: 3 fenced blocks
+---- block 1 ----
+```bash
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform x5 --family yolov8 --task detect --model-size n
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolov8 --task detect \
+  --model-path samples/vision/ultralytics_yolo/model/yolov8n_detect_bayese_640x640_nv12.bin \
+  --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
+  --img-save-path /tmp/yolov8n-x5.jpg
+```
+---- end block 1 ----
+---- block 2 ----
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --list-models
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s600 --family yolo26 --task cls --dry-run
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --target x5 --task detect \
+  --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
+```
+---- end block 2 ----
+---- block 3 ----
+```text
+ultralytics_yolo/
+├── model/          # published asset preparation
+├── runtime/python/ # shared task APIs and CLI
+├── runtime/cpp/    # detect/classify/pose/segment reference programs
+├── conversion/    # export, calibration and X5/S compiler adapters
+├── evaluator/     # dataset evaluation and batch CLI
+├── test_data/     # input images, labels and historical illustrations
+└── tests/         # host regression checks
+```
+---- end block 3 ----
+### samples/vision/ultralytics_yolo/README_cn.md: 3 fenced blocks
+---- block 1 ----
+```bash
+bash samples/vision/ultralytics_yolo/model/download_model.sh \
+  --platform x5 --family yolov8 --task detect --model-size n
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolov8 --task detect \
+  --model-path samples/vision/ultralytics_yolo/model/yolov8n_detect_bayese_640x640_nv12.bin \
+  --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
+  --img-save-path /tmp/yolov8n-x5.jpg
+```
+---- end block 1 ----
+---- block 2 ----
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s100 --list-models
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform s600 --family yolo26 --task cls --dry-run
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --target x5 --task detect \
+  --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
+```
+---- end block 2 ----
+---- block 3 ----
+```text
+ultralytics_yolo/
+├── model/          # published asset preparation
+├── runtime/python/ # shared task APIs and CLI
+├── runtime/cpp/    # detect/classify/pose/segment reference programs
+├── conversion/    # export, calibration and X5/S compiler adapters
+├── evaluator/     # dataset evaluation and batch CLI
+├── test_data/     # input images, labels and historical illustrations
+└── tests/         # host regression checks
+```
+---- end block 3 ----
+### samples/vision/fcos/README.md: 2 fenced blocks
+---- block 1 ----
+```bash
+# cwd: repository root; downloads the manifest-selected B0 artifact
+bash samples/vision/fcos/model/download.sh --target x5 --variant efficientnetb0
+# expect: samples/vision/fcos/model/fcos_efficientnetb0_detect_512x512_bayese_nv12.bin
+
+# cwd: repository root; board image only; writes an annotated JPEG
+python3 samples/vision/fcos/runtime/python/main.py \
+  --target x5 \
+  --asset-id x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin \
+  --test-img samples/vision/fcos/test_data/bus.jpg \
+  --img-save-path /tmp/fcos-result.jpg
+# success: exit 0, JSON includes boxes/scores/class_ids, and /tmp/fcos-result.jpg exists.
+```
+---- end block 1 ----
+---- block 2 ----
+```text
+fcos/
+├── conversion/    # source conversion notes and hb_perf screenshots
+├── evaluator/     # reproducible board/source comparison procedure
+├── model/         # explicit manifest-backed artifact downloader
+├── runtime/python/# binding, runner, tensor IO, FCOS stages, and CLI
+├── test_data/     # source bus image and historical demonstration image
+├── tests/         # host contract and source numerical regression tests
+└── README*.md     # bilingual sample guide
+```
+---- end block 2 ----
+### samples/vision/fcos/README_cn.md: 2 fenced blocks
+---- block 1 ----
+```bash
+# cwd：仓库根目录；准备 manifest 中的 B0 制品
+bash samples/vision/fcos/model/download.sh --target x5 --variant efficientnetb0
+# 预期：samples/vision/fcos/model/fcos_efficientnetb0_detect_512x512_bayese_nv12.bin
+
+# cwd：仓库根目录；仅板端执行；写出标注 JPEG
+python3 samples/vision/fcos/runtime/python/main.py \
+  --target x5 \
+  --asset-id x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin \
+  --test-img samples/vision/fcos/test_data/bus.jpg \
+  --img-save-path /tmp/fcos-result.jpg
+# 成功判断：退出码 0，JSON 含 boxes/scores/class_ids，且 /tmp/fcos-result.jpg 存在。
+```
+---- end block 1 ----
+---- block 2 ----
+```text
+fcos/
+├── conversion/    # 源转换说明与 hb_perf 截图
+├── evaluator/     # 板端/源对照及证据流程
+├── model/         # 显式 manifest 制品下载器
+├── runtime/python/# binding、runner、tensor IO、四阶段任务和 CLI
+├── test_data/     # 源 bus 输入和历史演示图
+├── tests/         # 主机契约与源数值回归测试
+└── README*.md     # 中英文 sample 文档
+```
+---- end block 2 ----
+### samples/vision/fcos/conversion/README.md: 2 fenced blocks
+---- block 1 ----
+```text
+No export recipe is included in the fixed source. An ONNX checkpoint, export commit,
+input preprocessing provenance, and output naming contract must be supplied before
+rebuilding any artifact.
+```
+---- end block 1 ----
+---- block 2 ----
+```text
+No verified compile command is available. The source's `hb_mapper makertbin --model-type onnx --config your_fcos_config.yaml` is only a placeholder and cannot reproduce these artifacts without missing inputs/configuration.
+```
+---- end block 2 ----
+### samples/vision/fcos/conversion/README_cn.md: 2 fenced blocks
+---- block 1 ----
+```text
+固定源没有导出配方。重建前必须补充 ONNX checkpoint、导出 commit、输入前处理来源和输出命名契约。
+```
+---- end block 1 ----
+---- block 2 ----
+```text
+没有已验证的编译命令。源文档中的 `hb_mapper makertbin --model-type onnx --config your_fcos_config.yaml` 是占位示例，缺少输入和配置，不能重现制品。
+```
+---- end block 2 ----
+### samples/vision/bytetrack/README.md: 2 fenced blocks
+---- block 1 ----
+```bash
+python3 -m samples.vision.bytetrack.model.download --target s100 \
+  --output-dir samples/vision/bytetrack/model
+curl -L 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4' \
+  -o samples/vision/bytetrack/test_data/track_test.mp4
+python3 -m samples.vision.bytetrack.runtime.python.main \
+  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
+  --output samples/vision/bytetrack/test_data/result_unified.mp4 \
+  --records samples/vision/bytetrack/test_data/result_unified.jsonl
+```
+---- end block 1 ----
+---- block 2 ----
+```text
+.
+├── model/                 # explicit S HBM preparation
+├── runtime/python/        # detector binding, tracker state, CLI, source map
+├── conversion/            # detector conversion boundary and OE resources
+├── evaluator/             # fresh-process full capture/comparison
+├── test_data/              # images, labels, reference GIFs; video is external
+└── tests/                 # CPU tracker, source comparison, CLI and evidence fixtures
+```
+---- end block 2 ----
+### samples/vision/bytetrack/README_cn.md: 2 fenced blocks
+---- block 1 ----
+```bash
+python3 -m samples.vision.bytetrack.model.download --target s100 \
+  --output-dir samples/vision/bytetrack/model
+curl -L 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4' \
+  -o samples/vision/bytetrack/test_data/track_test.mp4
+python3 -m samples.vision.bytetrack.runtime.python.main \
+  --target s100 --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
+  --output samples/vision/bytetrack/test_data/result_unified.mp4 \
+  --records samples/vision/bytetrack/test_data/result_unified.jsonl
+```
+---- end block 1 ----
+---- block 2 ----
+```text
+.
+├── model/                 # 显式 S HBM 准备
+├── runtime/python/        # detector binding、tracker 状态、CLI、source map
+├── conversion/            # 仅 detector 的转换边界和 OE 资源
+├── evaluator/             # 新进程完整捕获/对照
+├── test_data/              # 图片、标签、参考 GIF；视频需外部准备
+└── tests/                 # CPU tracker、源对照、CLI、证据 fixture
+```
+---- end block 2 ----
+### samples/vision/bytetrack/evaluator/README.md: 1 fenced blocks
+---- block 1 ----
+```bash
+python3 samples/vision/bytetrack/evaluator/compare.py \
+  --target s100 \
+  --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
+  --output-dir /tmp/bytetrack-evidence-unique \
+  --max-frames 30
+```
+---- end block 1 ----
+### samples/vision/bytetrack/evaluator/README_cn.md: 1 fenced blocks
+---- block 1 ----
+```bash
+python3 samples/vision/bytetrack/evaluator/compare.py \
+  --target s100 \
+  --asset-id s:bytetrack:s100/yolov5x_672x672_nv12.hbm \
+  --model-path samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
+  --output-dir /tmp/bytetrack-evidence-unique \
+  --max-frames 30
+```
+---- end block 1 ----
+### samples/speech/kws/README.md: 3 fenced blocks
+---- block 1 ----
+```bash
+bash samples/speech/kws/runtime/python/run.sh --list-models
+bash samples/speech/kws/runtime/python/run.sh --target s100 --dry-run
+```
+---- end block 1 ----
+---- block 2 ----
+```sh
+bash samples/speech/kws/model/download.sh --target s100
+bash samples/speech/kws/runtime/python/run.sh --target s100 --output-dir outputs/kws-run1
+```
+---- end block 2 ----
+---- block 3 ----
+```sh
+bash samples/speech/kws/runtime/python/run.sh --target s100 \
+  --asset-id s:kws:s100/kws.hbm --model-path /path/to/kws.hbm \
+  --audio-file /path/to/mono-16k.wav --output-dir outputs/kws-run2
+```
+---- end block 3 ----
+### samples/speech/kws/README_cn.md: 3 fenced blocks
+---- block 1 ----
+```bash
+bash samples/speech/kws/runtime/python/run.sh --list-models
+bash samples/speech/kws/runtime/python/run.sh --target s100 --dry-run
+```
+---- end block 1 ----
+---- block 2 ----
+```sh
+bash samples/speech/kws/model/download.sh --target s100
+bash samples/speech/kws/runtime/python/run.sh --target s100 --output-dir outputs/kws-run1
+```
+---- end block 2 ----
+---- block 3 ----
+```sh
+bash samples/speech/kws/runtime/python/run.sh --target s100 \
+  --asset-id s:kws:s100/kws.hbm --model-path /path/to/kws.hbm \
+  --audio-file /path/to/mono-16k.wav --output-dir outputs/kws-run2
+```
+---- end block 3 ----

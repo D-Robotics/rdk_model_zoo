@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Overview
 
-This sample provides object detection, instance segmentation, pose estimation, classification and YOLO26 oriented boxes for RDK X5, S100, S100P and S600. YOLO detection heads predict classes and boxes at multiple scales; CPU decoding/filtering restores original-image coordinates. Segmentation, pose and OBB also expose masks, keypoints and angles. Model source project: [Ultralytics](https://github.com/ultralytics/ultralytics).
+This sample provides object detection, instance segmentation, pose estimation, classification and YOLO26 oriented boxes for RDK X5, S100, S100P and S600. Both fixed delivery READMEs describe Ultralytics YOLO as a real-time vision model family covering object detection, instance segmentation, pose estimation and image classification; YOLO26, delivered alongside as a direct-LTRB series, is maintained here as one family of this entry. YOLO detection heads predict classes and boxes at multiple scales; CPU decoding/filtering restores original-image coordinates. Segmentation, pose and OBB also expose masks, keypoints and angles. Model source project: [Ultralytics](https://github.com/ultralytics/ultralytics).
 
 The maintained entry is `samples/vision/ultralytics_yolo`. Python binds inputs by target and selects task protocols by family, sharing preparation, rendering and evaluation. YOLO26 is one family within this sample. Standalone YOLOv5, YOLOE and yolo26_depth have distinct capabilities and are not presented as the same model here.
 
@@ -75,6 +75,14 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
 The detection command prints model/input protocol and detections, writes the rendered image to `/tmp/yolov8n-x5.jpg`, and prints `[Saved]` on success. Boxes use original-image pixels and zero-based class IDs. Classification prints Top-K without an image; segmentation/pose/OBB fields are described in the [Python guide](runtime/python/README.md). A stale image is not a result of a failed binding. This retained historical detection illustration is not a new measurement:
 
 ![Historical detection illustration](test_data/ultralytics_YOLO_Detect_demo.jpg)
+
+The fixed S delivery root README embedded its own detection illustration for the same bundled bus scene. It is retained with its source identity below, not as a new measurement (`test_data/result_detect.jpg`, S pin `380e1a2`, sha256 `5d792a47…`):
+
+![Historical S delivery detection illustration](test_data/result_detect.jpg)
+
+The S `ultralytics_yolo26` delivery — whose standalone directory is consolidated into this entry — embedded its own `result_detect.jpg`, restored here as `result_detect_yolo26.jpg` (S pin `380e1a2`, sha256 `2631c661…`). YOLO26 detection runs from this unified entry today; the image is that delivery's historical illustration with class-ID + score labels, not a new measurement:
+
+![Historical S YOLO26 delivery detection illustration](test_data/result_detect_yolo26.jpg)
 
 <a id="directory"></a>
 ## Directory responsibilities

@@ -49,6 +49,29 @@ python3 samples/vision/bytetrack/evaluator/compare.py \
 
 这些是源/论文历史参考。当前板端 capture 和 MOT benchmark 状态为 `not-run`。
 
+### 参考跟踪效果（历史）
+
+固定 S 源 evaluator 嵌入了两段 MOT17 `SDP` 序列上的 ByteTrack 动态参考效果。此处逐字保留，作为上游方法在这些序列上的历史可视化；本迁移没有在板端重跑：
+
+![MOT17-01-SDP](../test_data/readme_img/MOT17-01-SDP.gif)
+
+`MOT17-01-SDP` 序列，源参考 GIF（`../test_data/readme_img/MOT17-01-SDP.gif`，S pin `380e1a2`，sha256 `6b7a613f…`）。
+
+![MOT17-07-SDP](../test_data/readme_img/MOT17-07-SDP.gif)
+
+`MOT17-07-SDP` 序列，源参考 GIF（sha256 `ff99c85a…`）。
+
+### tracker 参数调优与适用条件
+
+沿用源调参说明，并已对照本 sample 的 tracker 代码核实：
+
+- `--score-thres`（默认 `0.25`）：在 tracker 之前生效的检测置信度过滤；检出框过少时调低。调低 `--track-thresh` 不能找回 detector 已丢弃的框。
+- `--track-thresh`（默认 `0.3`）：每帧划分 tracker 输入——高于它的分数进入第一次关联；(0.1, track-thresh) 区间的分数以固定代价上限 `0.5` 与仍在跟踪的目标进行第二次关联；新轨迹只从首次关联中未匹配且分数 ≥ `track_thresh + 0.1`（`det_thresh`）的框初始化。
+- `--match-thresh`（默认 `0.8`）：第一次关联分配接受的最大代价（代价 = 1 − IoU，默认模式与检测分数融合；`--mot20` 开关（默认 `false`）关闭融合，此时代价即 1 − IoU）。调大允许更不相似的匹配，调小则只允许更接近的重叠。第二次关联保持固定 `0.5` 上限。
+- `--track-buffer`（默认 `60`）：丢失轨迹保留窗口，以 30 fps 帧数表示，并按 `frame_rate / 30` 缩放（`--frame-rate`，默认 `30`）。
+
+多类别跟踪时，可为每个类别各维护一个 tracker，或扩展 tracker 携带 `class_id` 并在关联时处理类别信息。当前流程只保留 COCO `person`（class `0`）。
+
 <a id="boundaries"></a>
 ## 边界
 

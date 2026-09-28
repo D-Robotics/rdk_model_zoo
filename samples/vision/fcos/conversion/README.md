@@ -16,7 +16,21 @@
 | x5 / B2 768 | bayes-e | not recorded in source | no YAML in source |
 | x5 / B3 896 | bayes-e | not recorded in source | no YAML in source |
 
-The three PNG files in this directory are copied source `hb_perf` snapshots; they are evidence of historical documentation, not conversion output from this checkout.
+The three PNG files in this directory are copied source `hb_perf` snapshots; they are evidence of historical documentation, not conversion output from this checkout. Each graph records the deployed dataflow of one published variant: the packed NV12 input is converted by a BPU `NV12TOYUV444` node into `YUV444, NHWC, INT8`, executes as `torch-jit-export_subgraph_0` on BPU, and emits fifteen INT32 outputs — five stride levels × three branches (80-channel classification scores, 4-channel box regression, 1-channel center-ness). This is the source output protocol: 5 classification, 5 box-regression, and 5 center-ness outputs, which the Python runtime reorders by their fixed tensor shapes before decoding; decode semantics are documented in the [runtime guide](../runtime/python/README.md).
+
+Reference graphs (verbatim source snapshots, not produced by this checkout):
+
+![FCOS EfficientNet-B0 hb_perf](./fcos_efficientnetb0_512x512_nv12.png)
+
+FCOS EfficientNet-B0, 512×512 input: score/box/center-ness heads on 64×64, 32×32, 16×16, 8×8 and 4×4 levels (strides 8–128).
+
+![FCOS EfficientNet-B2 hb_perf](./fcos_efficientnetb2_768x768_nv12.png)
+
+FCOS EfficientNet-B2, 768×768 input: the same three branches on 96×96 down to 6×6 levels.
+
+![FCOS EfficientNet-B3 hb_perf](./fcos_efficientnetb3_896x896_nv12.png)
+
+FCOS EfficientNet-B3, 896×896 input: the same three branches on 112×112 down to 7×7 levels.
 
 <a id="export"></a>
 ## Export (ONNX)

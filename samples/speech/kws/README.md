@@ -7,7 +7,11 @@ English | [简体中文](README_cn.md)
 
 This sample runs the published MDTC wake-word model on mono 16 kHz audio. It returns one confidence score, the maximum model probability over the supplied clip, and an optional threshold decision for “hey snips”. It is not speech transcription or an arbitrary-keyword model. Only the first 60000 samples are used; shorter clips are zero-padded. At 16 kHz this is **3.75 seconds**, correcting the source comment's 60 seconds. Longer recordings need explicitly chosen windows; the sample does not silently scan them.
 
-The source implementation, algorithm context and historical examples remain in the [S snapshot](../../../platforms/s/samples/speech/kws/README.md). The canonical task keeps preprocess → forward → postprocess → predict; audio files, SDK transport, feature extraction and numeric scoring have separate modules.
+### Algorithm and pipeline (MDTC)
+
+The published S100 asset implements MDTC (Multi-Scale Dynamic Temporal Convolution) from the PaddlePaddle + PaddleAudio speech stack. The fixed source describes MDTC as a multi-scale temporal-convolution model whose convolutions capture speech features at different time scales and whose dynamic convolution adapts weights to different speakers and environments, and calls the design edge-friendly and accurate. The fixed source ships only a compiled artifact and no training code, so these statements are preserved as source descriptions, not re-verified behaviors of this sample.
+
+The deployment pipeline, restored in place: mono 16 kHz float32 audio is cut to the first 60000 samples (3.75 seconds; shorter clips zero-padded), the PaddleAudio fbank frontend (25 ms frames, 10 ms shift, 80 mel bins) turns that window into a `[1, 373, 80]` feature tensor, the BPU MDTC model maps the window to keyword probabilities, and post-processing validates those probabilities and reduces them to one clip-level confidence by taking the maximum — no extra sigmoid is applied. The application decision is `score >= threshold` (default `0.5`), a configurable rule rather than a calibrated false-alarm guarantee. Historical examples and the archived implementation remain reachable through the [S snapshot](../../../platforms/s/samples/speech/kws/README.md). The canonical task keeps preprocess → forward → postprocess → predict; audio files, SDK transport, feature extraction and numeric scoring have separate modules.
 
 <a id="support-matrix"></a>
 ## Support matrix

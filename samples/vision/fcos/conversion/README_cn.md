@@ -16,7 +16,21 @@
 | x5 / B2 768 | bayes-e | 源未记录 | 源无 YAML |
 | x5 / B3 896 | bayes-e | 源未记录 | 源无 YAML |
 
-目录中的三个 PNG 是源 `hb_perf` 截图副本，只能证明历史文档存在，不能当成本 checkout 的转换产物。
+目录中的三个 PNG 是源 `hb_perf` 截图副本，只能证明历史文档存在，不能当成本 checkout 的转换产物。每张图记录一个已发布变体的部署数据流：packed NV12 输入先经 BPU `NV12TOYUV444` 节点转成 `YUV444, NHWC, INT8`，再以 `torch-jit-export_subgraph_0` 在 BPU 上执行，输出 15 个 INT32 张量——5 个 stride 层级 × 3 个分支（80 通道分类分数、4 通道框回归、1 通道 center-ness）。这就是源输出协议：5 路分类、5 路框回归、5 路 center-ness 输出；Python runtime 会先按固定张量 shape 重排这些输出，再执行解码，解码语义见 [runtime 说明](../runtime/python/README_cn.md)。
+
+参考图（逐字源快照，非本 checkout 产物）：
+
+![FCOS EfficientNet-B0 hb_perf](./fcos_efficientnetb0_512x512_nv12.png)
+
+FCOS EfficientNet-B0，512×512 输入：64×64、32×32、16×16、8×8、4×4 五个层级（stride 8–128）上的分数/框/center-ness 头。
+
+![FCOS EfficientNet-B2 hb_perf](./fcos_efficientnetb2_768x768_nv12.png)
+
+FCOS EfficientNet-B2，768×768 输入：同样三个分支位于 96×96 至 6×6 层级。
+
+![FCOS EfficientNet-B3 hb_perf](./fcos_efficientnetb3_896x896_nv12.png)
+
+FCOS EfficientNet-B3，896×896 输入：同样三个分支位于 112×112 至 7×7 层级。
 
 <a id="export"></a>
 ## 导出（ONNX）

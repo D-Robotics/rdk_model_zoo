@@ -49,6 +49,29 @@ Each side retains complete `.npy` image/input/output arrays and `capture.json`; 
 
 These values are historical source/paper references. Current board capture and MOT benchmark status are `not-run`.
 
+### Reference tracking effects (historical)
+
+The fixed S source evaluator embedded two animated ByteTrack results on MOT17 `SDP` sequences as reference effects. They are retained verbatim as historical visualizations of the upstream method on those sequences; this migration did not rerun them on a board:
+
+![MOT17-01-SDP](../test_data/readme_img/MOT17-01-SDP.gif)
+
+`MOT17-01-SDP` sequence, source reference GIF (`../test_data/readme_img/MOT17-01-SDP.gif`, S pin `380e1a2`, sha256 `6b7a613f…`).
+
+![MOT17-07-SDP](../test_data/readme_img/MOT17-07-SDP.gif)
+
+`MOT17-07-SDP` sequence, source reference GIF (sha256 `ff99c85a…`).
+
+### Tracker parameter tuning and applicability
+
+Carried from the source tuning notes and verified against this sample's tracker code:
+
+- `--score-thres` (default `0.25`): detector confidence filter applied before the tracker; lower it when too few boxes are detected. Lowering `--track-thresh` does not restore boxes the detector already discarded.
+- `--track-thresh` (default `0.3`): partitions tracker input each frame — scores above it enter first association; scores in (0.1, track-thresh) enter second association against still-tracked targets at a fixed cost limit of `0.5`; new tracks initiate only from unmatched first-association boxes with score ≥ `track_thresh + 0.1` (`det_thresh`).
+- `--match-thresh` (default `0.8`): maximum accepted cost for the first-association assignment (cost = 1 − IoU, fused with detection score in the default mode; the maintained `--mot20` flag, default `false`, disables the fusion so the cost is plain 1 − IoU). Larger values accept less-similar matches; smaller values restrict matching to closer overlaps. The second association keeps its fixed `0.5` limit.
+- `--track-buffer` (default `60`): lost-track keep window in 30 fps frames, scaled by `frame_rate / 30` (`--frame-rate`, default `30`).
+
+For multi-class tracking, either maintain one tracker per class or extend the tracker to carry `class_id` and handle class information during association. The shipped pipeline filters to COCO `person` (class `0`) only.
+
 <a id="boundaries"></a>
 ## Boundaries
 
