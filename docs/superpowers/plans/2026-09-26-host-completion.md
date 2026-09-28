@@ -238,3 +238,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：YOLOE运行时组合和入口经Codex独立审阅，34项Python与11项ASan/UBSan原生主机测试通过，checker零违规；保留S公开量化制品不兼容浮点路径的事实，不宣称板端通过。见[独立评审](../../releases/unified-migration/2026-09-28-yoloe-independent-review.md)。H5/B9转换/评估文档与总体集成仍待最终审核；不执行真实量化验证。
 
 2026-09-28：首批9个B1/B2 sample根README深度恢复经独立验收（18份双语、50处固定源图引用、5份恢复的ResNet图；命令未变且本地链接无缺失）。MobileNetV3图注和EfficientFormerV2泛化说明已由Claude修正并复核。见[评审](../../releases/unified-migration/2026-09-28-readme-depth-b1b2-independent-review.md)。仅关闭DOC-DEPTH-R1的这9个根文档范围，H1整体及其余样例/子目录仍继续。
+
+2026-09-28：YOLOE evaluator的合成计分/数据契约10项经现有pycocotools缓存环境复验通过（默认环境缺依赖的首次失败保留），14份README本地文件链接无缺失。子目录内容已对照参数/状态和源记录；发现conversion/evaluator的C++进度旧声明，连同UNetMobileNet旧评审状态交Claude做文档同步，未扩大量化验证范围。

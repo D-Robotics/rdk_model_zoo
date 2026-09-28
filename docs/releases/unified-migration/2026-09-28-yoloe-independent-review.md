@@ -52,3 +52,34 @@ conversion/evaluator instruction or the complete B9 migration. Continue the
 source-depth documentation audit and shared integration checks. No weights were
 downloaded; no board/robot, real SDK, calibration, compiler or quantization
 accuracy run occurred. Historical author results retain their own original scope.
+
+## Evaluator and subdirectory follow-up (2026-09-28)
+
+Codex read the model, conversion and evaluator instructions in both languages and
+compared public options/defaults/status/output descriptions with the preparation
+parser and evaluator parser, backend, dataset, execution and scoring modules.
+All 14 local README files have no missing local file links. Source performance
+figures retain source conditions and failed/absent measurements; host prediction
+counts are not described as dataset AP or reproduced quantized-model counts.
+No actual export, calibration or compiler invocation was performed in this review.
+
+The synthetic evaluator suite initially failed with five missing-pycocotools
+errors in the default environment. The documented scorer dependency already
+existed in the coordination cache; rerunning with that explicit PYTHONPATH
+passed all 10 tests without installation or product changes. The initial output
+is preserved in [evaluator-docs.json](evidence/2026-09-28-yoloe-independent-review/evaluator-docs.json);
+[recheck](evidence/2026-09-28-yoloe-independent-review/evaluator-recheck.json)
+records the environment and successful full output. These tests use synthetic
+masks and a fake predictor, not a real model. Pycocotools/NumPy deprecation
+warnings are retained. Accept this bounded scorer/data-contract host check.
+
+### YOLOE-DOC-R1 — stale C++ implementation status
+
+The conversion guides' known-gaps paragraph still says C++ migration remains
+unfinished; the evaluator closing paragraph repeats that status. This contradicts
+the implemented native library/entrypoint and the scoped host acceptance above.
+Claude Code + GLM has been assigned a documentation-only update: distinguish
+implemented and host-reviewed code from real SDK/board not-run and whole-branch
+review still open. Do not remove genuine float-S-publication or hardware gaps,
+change trusted conversion recipes, or claim B9 completion. Documentation closure
+remains pending this specific correction and final recheck.
