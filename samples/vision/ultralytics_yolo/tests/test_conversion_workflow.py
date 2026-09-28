@@ -24,11 +24,13 @@ if str(CONVERSION) not in sys.path:
 from workflow import (  # noqa: E402
     OnnxInput,
     make_conversion_plan,
+    prepare_calibration,
     render_config,
     run_conversion,
     s_toolchain,
     x5_toolchain,
 )
+from samples.vision.ultralytics_yolo.runtime.python.geometry import resize_with_transform
 
 
 def options(**overrides):
@@ -50,6 +52,48 @@ def options(**overrides):
 
 
 class ConversionWorkflowTests(unittest.TestCase):
+    def test_task_calibration_matches_runtime_letterbox_pixels(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            images = root / "images"
+            images.mkdir()
+            image = np.arange(4 * 7 * 3, dtype=np.uint8).reshape(4, 7, 3)
+            cv2.imwrite(str(images / "sample.png"), image)
+            plan = make_conversion_plan(
+                options(onnx=str(root / "model.onnx"), cal_images=str(images),
+                        ws=str(root / "work"),
+                        calibration_resize="letterbox",
+                        calibration_interpolation="linear",
+                        calibration_pad=127),
+                s_toolchain(), OnnxInput("images", "tensor(float)", 16, 16),
+            )
+            generated = prepare_calibration(plan, ["sample.png"])
+            actual = np.load(generated[0])[0].transpose(1, 2, 0) * 255
+            expected = cv2.cvtColor(
+                resize_with_transform(image, (16, 16), resize_type=1)[0], cv2.COLOR_BGR2RGB)
+            np.testing.assert_array_equal(actual.astype(np.uint8), expected)
+
+    def test_task_calibration_matches_runtime_stretch_pixels(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            images = root / "images"
+            images.mkdir()
+            image = np.arange(4 * 7 * 3, dtype=np.uint8).reshape(4, 7, 3)
+            cv2.imwrite(str(images / "sample.png"), image)
+            plan = make_conversion_plan(
+                options(onnx=str(root / "model.onnx"), cal_images=str(images),
+                        ws=str(root / "work"),
+                        calibration_resize="stretch",
+                        calibration_interpolation="nearest"),
+                x5_toolchain(), OnnxInput("images", "tensor(float)", 16, 16),
+            )
+            generated = prepare_calibration(plan, ["sample.png"])
+            actual = np.fromfile(generated[0], dtype=np.float32).reshape(1, 3, 16, 16)[0]
+            actual = actual.transpose(1, 2, 0)
+            expected = cv2.cvtColor(
+                resize_with_transform(image, (16, 16), resize_type=0)[0], cv2.COLOR_BGR2RGB)
+            np.testing.assert_array_equal(actual.astype(np.uint8), expected)
+
     def test_x5_plan_keeps_mapper_protocol_and_artifact_paths(self):
         plan = make_conversion_plan(
             options(),

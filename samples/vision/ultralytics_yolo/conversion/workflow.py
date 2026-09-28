@@ -28,6 +28,7 @@ from typing import Callable, Iterable, Optional, Sequence, Tuple
 
 
 LOGGER = logging.getLogger("MZOO")
+CALIBRATION_GEOMETRY_API = 1
 CALIBRATION_EXTENSIONS = (".jpg", ".jpeg", ".png")
 FLOAT32 = "tensor(float)"
 
@@ -84,6 +85,9 @@ class ConversionPlan:
     calibration_sample_num: int
     save_cache: bool
     overwrite: bool
+    calibration_resize: str
+    calibration_interpolation: str
+    calibration_pad: int
 
     @property
     def calibration_suffix(self) -> str:
@@ -192,6 +196,18 @@ def build_mapper_parser(
     parser.add_argument(
         "--cal-images", default="./cal_images", type=str,
         help="Directory containing JPG/PNG calibration images (20-50 recommended).",
+    )
+    parser.add_argument(
+        "--calibration-resize", choices=("stretch", "letterbox"), default="stretch",
+        help="Calibration image geometry; legacy default is stretch.",
+    )
+    parser.add_argument(
+        "--calibration-interpolation", choices=("nearest", "linear"), default="linear",
+        help="OpenCV resize interpolation; legacy default is linear.",
+    )
+    parser.add_argument(
+        "--calibration-pad", type=int, default=127,
+        help="RGB padding value for letterbox calibration (0..255).",
     )
     parser.add_argument(
         "--onnx", default=None if onnx_required else "./yolo11n.onnx",
@@ -368,6 +384,15 @@ def make_conversion_plan(
         )
     artifact_path = output_dir / (model_prefix + profile.artifact_suffix)
     log_path = output_dir / profile.log_name
+    calibration_resize = str(getattr(options, "calibration_resize", "stretch"))
+    calibration_interpolation = str(getattr(options, "calibration_interpolation", "linear"))
+    calibration_pad = int(getattr(options, "calibration_pad", 127))
+    if calibration_resize not in {"stretch", "letterbox"}:
+        raise ValueError(f"unsupported calibration resize: {calibration_resize}")
+    if calibration_interpolation not in {"nearest", "linear"}:
+        raise ValueError(f"unsupported calibration interpolation: {calibration_interpolation}")
+    if not 0 <= calibration_pad <= 255:
+        raise ValueError("calibration pad must be in [0, 255]")
     return ConversionPlan(
         toolchain=profile,
         onnx_path=onnx_path,
@@ -390,6 +415,9 @@ def make_conversion_plan(
         calibration_sample_num=int(getattr(options, "cal_sample_num", 20)),
         save_cache=bool(getattr(options, "save_cache", False)),
         overwrite=bool(getattr(options, "overwrite", False)),
+        calibration_resize=calibration_resize,
+        calibration_interpolation=calibration_interpolation,
+        calibration_pad=calibration_pad,
     )
 
 
@@ -475,6 +503,11 @@ def prepare_calibration(
                 "dependencies are never installed automatically") from exc
 
     plan.calibration_dir.mkdir(parents=True, exist_ok=True)
+    interpolation = (cv2_module.INTER_NEAREST if plan.calibration_interpolation == "nearest"
+                     else cv2_module.INTER_LINEAR)
+    LOGGER.info("Calibration preprocessing: resize=%s interpolation=%s pad=%d",
+                plan.calibration_resize, plan.calibration_interpolation,
+                plan.calibration_pad)
     generated = []
     for name in names:
         source = cv2_module.imread(str(plan.calibration_images / name))
@@ -482,7 +515,24 @@ def prepare_calibration(
             LOGGER.warning("failed to load calibration image: %s", name)
             continue
         tensor = cv2_module.cvtColor(source, cv2_module.COLOR_BGR2RGB)
-        tensor = cv2_module.resize(tensor, (plan.input.width, plan.input.height))
+        if plan.calibration_resize == "stretch":
+            tensor = cv2_module.resize(
+                tensor, (plan.input.width, plan.input.height),
+                interpolation=interpolation)
+        else:
+            height, width = tensor.shape[:2]
+            scale = min(plan.input.height / height, plan.input.width / width)
+            new_width, new_height = int(width * scale), int(height * scale)
+            tensor = cv2_module.resize(
+                tensor, (new_width, new_height), interpolation=interpolation)
+            pad_width = plan.input.width - new_width
+            pad_height = plan.input.height - new_height
+            left, right = pad_width // 2, pad_width - pad_width // 2
+            top, bottom = pad_height // 2, pad_height - pad_height // 2
+            tensor = cv2_module.copyMakeBorder(
+                tensor, top, bottom, left, right,
+                borderType=cv2_module.BORDER_CONSTANT,
+                value=(plan.calibration_pad,) * 3)
         tensor = np_module.transpose(tensor, (2, 0, 1))
         tensor = np_module.expand_dims(tensor, axis=0).astype(np_module.float32)
         if plan.normalize_calibration:
