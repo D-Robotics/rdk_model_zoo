@@ -62,3 +62,25 @@ path and the already-present nlohmann/json header at
 respectively. `metric` and `init_exception` select S600 cases. Each returned 1 to
 signal reproduction of the defect; stdout is persisted in findings.json. Fixture
 model files contain only the word fixture and are never interpreted as weights.
+
+## Navigation follow-up — verified 2026-09-28 at 3d1afeb0 (P2)
+
+R4: Root English/Chinese README and samples indexes still state 50 native samples
+and one LLM. The current four-category inventory is 45 vision + 3 speech + 1 robotics
++ 2 LLM = 51. None of those four files links MiniCPM, so the new sample is absent
+from the customer/Agent discovery path. Add bilingual MiniCPM links and update
+counts while retaining its in-progress status; do not imply native core acceptance.
+Gemma model-preparation wording is also stale against the completed preparation
+commits and should distinguish preparation completion from core work still open.
+
+R5: `docs/release/s/models.yaml` already registers MiniCPM's three pinned archives
+and uses `samples/llm/minicpm5-2b` paths, but its note says those paths still retain
+the source-branch layout until B11 relocation. Update the explanatory note to the
+actual migration state, preserving all archive URLs and digests. This is not a
+request to download or validate the archives. Evidence: navigation.json.
+
+These additions belong to the delegated MiniCPM package's allowed index/manifest
+synchronization scope. They are reviewer instructions, not direct implementation
+changes by Codex. Skills pack files were observed to exist (seven SKILL.md files);
+H8 must verify their integration rather than assuming they are missing or blindly
+recopying them from upstream. Existing pack provenance reports remain historical.
