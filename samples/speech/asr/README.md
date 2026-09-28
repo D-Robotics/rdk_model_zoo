@@ -7,15 +7,15 @@ English | [简体中文](README_cn.md)
 
 This sample transcribes audio using the published S-series Wav2Vec2 ASR model and a fixed 3503-token vocabulary. It reads WAV/FLAC in bounded chunks, mixes channels to mono, resamples to 16 kHz, normalizes each chunk and submits 30000 samples per inference (1.875 seconds). It handles the whole file, including the final padded chunk. This is independent-window processing, not an acoustic model with hidden streaming state or overlap stitching.
 
-The canonical Python workflow is implemented. Native migration is in progress: portable CTC, audio I/O and preprocessing with host tests exist, while the SDK adapter is host-tested and the deployment CLI remains pending. Preserve the original [S source](../../../platforms/s/samples/speech/asr/README.md) for historical implementation context. No board test or new real model transcription has run in this migration.
+The canonical Python workflow is implemented. The native workflow is also implemented: audio preprocessing, CTC/legacy decoding, SDK adapter, explicit launcher and full-file result reporting have host tests. Real vendor SDK build/ABI and model inference remain unverified. Preserve the original [S source](../../../platforms/s/samples/speech/asr/README.md) for historical implementation context. No board test or new real model transcription has run in this migration.
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Target | Publication | Canonical Python | Canonical C++ | Board validation |
 | --- | --- | --- | --- | --- |
-| S100 | `s:asr:s100/asr.hbm` | Implemented | SDK adapter host-tested; CLI pending | not-run |
-| S600 | `s:asr:s600/asr.hbm` | Implemented | SDK adapter host-tested; CLI pending | not-run |
+| S100 | `s:asr:s100/asr.hbm` | Implemented | Implemented; host-tested | not-run |
+| S600 | `s:asr:s600/asr.hbm` | Implemented | Implemented; host-tested | not-run |
 | X5 / S100P | None | Rejected | Unsupported | not-run |
 
 Published targets follow the active manifest, not contradictory source comments. S600's publication does not certify runtime behavior: its actual model/SDK metadata still needs validation. No target fallback is provided.
@@ -59,7 +59,7 @@ Default `ctc` collapses adjacent duplicate token IDs **before** removing blank I
 | --- | --- |
 | `model/` | Exact manifest selection and explicit target download |
 | `runtime/python/` | Audio reader, pure frontend/decoder, shared raw runner and CLI |
-| `runtime/cpp/` | Portable contracts, audio preprocessing and host tests; CLI/real SDK validation pending |
+| `runtime/cpp/` | Native audio, task, SDK adapter, launcher and host tests; real SDK validation pending |
 | `test_data/` | Original WAV, fixed vocabulary and historical figures |
 | `conversion/` | Honest export/compiler prerequisites missing from the source |
 | `evaluator/` | Saved-transcript character error metrics and historical results |
@@ -76,3 +76,11 @@ Host source comparisons cover original 16 kHz speech, 44.1 kHz stereo and 8 kHz 
 ## License
 
 The sample follows the repository [Apache-2.0 license](../../../LICENSE). Source copyrights, data and screenshots are retained from the pinned S branch; external dependencies retain their own licenses.
+
+## Native entry
+
+On the matching board, after explicit model/dependency preparation, run
+`bash samples/speech/asr/runtime/cpp/run.sh --target s100 --build` from the
+repository root (use s600 for S600). No implicit model download occurs.
+[The native guide](runtime/cpp/README.md) covers host dry-run, complete build/run
+parameters, results, API examples and the Python/native resampling difference.

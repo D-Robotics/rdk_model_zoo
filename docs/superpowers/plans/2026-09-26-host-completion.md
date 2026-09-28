@@ -129,3 +129,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：ASR 原生音频读取/重采样/前处理与三阶段任务已实现，真实 libsndfile/libsamplerate 七块源音频对照通过；三个原生测试在 Release+ASan/UBSan 下通过，双语 C++ 完整示例实际编译运行。文档明确独立窗口与 Python Fourier 差异，见[原生音频记录](../../releases/unified-migration/2026-09-28-b10-asr-native-audio-review.md)。SDK 适配/原生 CLI 仍未完成，ASR 与 H0–H9 不关闭；其余样例迁移及独立整体验收继续。
 
 2026-09-28：ASR UCP SDK 适配和身份/模型/词表预检已实现，复用共用资源与同步任务管理；失败注入复现并修复共用输出所有者在错误伴随非空分配时的泄漏。五项 ASR 原生、12 项共用原生、11 项 YOLOE 原生及文档示例通过，见[SDK 记录](../../releases/unified-migration/2026-09-28-b10-asr-sdk-review.md)。真实 SDK 开启配置在本机按预期因缺头文件拒绝，未宣称 ABI/模型通过；原生 CLI/词表加载/结果报告继续，ASR 与 H0–H9 保持开放。
+
+2026-09-28：ASR 原生 CLI、固定词表 JSON 解析、完整文件结果/失败报告及显式启动器已集成，七层双语文档对齐实际入口。七项原生测试、16 项原生/启动器用例、21 项 ASR Python 测试与双语示例通过；主机替身始终标记 host-fixture，公开启动器拒绝将其当作 SDK 成功。见[完整入口记录](../../releases/unified-migration/2026-09-28-b10-asr-native-cli-review.md)。ASR 实现已完成主机集成，真实 SDK/ABI/模型与独立整体验收未核定；继续 Paraformer/HIMLoco、B11/H8 与 H0–H9 剩余工作。

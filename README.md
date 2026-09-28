@@ -14,7 +14,7 @@ The [sample index](samples/README.md) lists 45 unified vision samples and ASR/KW
 |---|---|
 | Detection, segmentation, pose, classification, oriented boxes | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README.md) |
 | Prompt-free instance segmentation | [YOLOE](samples/vision/yoloe/README.md) |
-| Speech recognition (C++ integration pending) | [ASR](samples/speech/asr/README.md) |
+| Speech recognition | [ASR](samples/speech/asr/README.md) |
 | Keyword spotting | [KWS](samples/speech/kws/README.md) |
 | Image classification | [ResNet](samples/vision/resnet/README.md), MobileNet, EfficientNet, ConvNeXt, Rep families and others in the full index |
 | Text detection and recognition | [PaddleOCR](samples/vision/paddle_ocr/README.md) |

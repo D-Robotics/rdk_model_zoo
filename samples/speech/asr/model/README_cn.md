@@ -48,3 +48,11 @@ bash samples/speech/asr/runtime/python/run.sh --target s600 \
 要求严格单个具名模型、一个 float32 `[1,30000]` 输入和一个 `[1,T,3503]` 输出，T 为正。张量名称和 T 读取实际 SDK metadata；float32 logits 保持原值，整数 logits 必须有有效 SCALE 描述符，经共享反量化后 argmax。NaN/Inf 或非法张量拒绝。无需增加不改变有限 float argmax 的 softmax。
 
 本轮没有板端新采集的模型描述符或推理结果。HBM 不是 ONNX 或训练权重；[转换说明](../conversion/README_cn.md)列出缺失前提，不虚构导出命令。
+
+## 原生模型身份
+
+[原生启动器](../runtime/cpp/README_cn.md)使用同一活动清单，在构建/运行前验证
+制品；将观察到的 SHA-256 传给二进制，后者在 SDK 调用前再次核对本机、模型
+和词表身份。清单缺发布方摘要时，本地摘要只固定字节，不认证发布来源。原生
+输入输出必须为无量化 FLOAT32，不能从 Python SCALE 支持推断原生也支持整数。
+真实 SDK 元数据尚未在硬件验证。

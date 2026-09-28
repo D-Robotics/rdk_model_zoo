@@ -7,15 +7,15 @@
 
 本样例使用已发布的 S 系列 Wav2Vec2 ASR 模型和固定 3503-token 词表转写音频。WAV/FLAC 按有限大小分块读取，声道平均为单声道，重采样到 16 kHz，再逐块归一化，每次推理输入 30000 点（1.875 秒）。处理完整文件，包括最后补零块；这是独立窗口处理，不是带隐藏流状态或重叠拼接的声学模型。
 
-统一 Python 流程已实现。原生迁移仍在进行：已有可移植 CTC、音频读取、前处理及主机测试，SDK 适配已完成主机测试，部署入口尚待集成。原 [S 源](../../../platforms/s/samples/speech/asr/README.md)保留历史实现背景；本轮没有板测或新的真实模型转写结果。
+统一 Python 流程已实现。原生流程也已实现：音频前处理、CTC/legacy、SDK 适配、显式启动器及完整文件结果报告都有主机测试；真实 SDK 构建/ABI 和模型推理尚未验证。原 [S 源](../../../platforms/s/samples/speech/asr/README.md)保留历史实现背景；本轮没有板测或新的真实模型转写结果。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
 
 | 目标 | 发布身份 | 统一 Python | 统一 C++ | 板测 |
 | --- | --- | --- | --- | --- |
-| S100 | `s:asr:s100/asr.hbm` | 已实现 | SDK 适配主机验证，CLI 待完成 | not-run |
-| S600 | `s:asr:s600/asr.hbm` | 已实现 | SDK 适配主机验证，CLI 待完成 | not-run |
+| S100 | `s:asr:s100/asr.hbm` | 已实现 | 已实现，主机验证 | not-run |
+| S600 | `s:asr:s600/asr.hbm` | 已实现 | 已实现，主机验证 | not-run |
 | X5 / S100P | 无 | 拒绝 | 不支持 | not-run |
 
 发布目标以当前清单为准，不沿用源中互相矛盾的注释。S600 有发布制品不等于运行时已验收，仍需验证实际模型/SDK metadata；不提供目标回退。
@@ -59,7 +59,7 @@ S600 将两条命令都改为 `s600`，不能将 S100 HBM 改名使用。`PYTHON
 | --- | --- |
 | `model/` | 精确清单选择及显式目标下载 |
 | `runtime/python/` | 音频读取、纯前处理/解码、共享 raw runner 和 CLI |
-| `runtime/cpp/` | 可移植数值契约、音频前处理和主机测试，部署入口/真实 SDK 验证待完成 |
+| `runtime/cpp/` | 原生音频、任务、SDK 适配、启动器与主机测试，真实 SDK 验证待完成 |
 | `test_data/` | 原始 WAV、固定词表及历史图片 |
 | `conversion/` | 如实记录源中缺失的导出/编译前提 |
 | `evaluator/` | 已保存转写的字符错误指标与历史结果 |
@@ -76,3 +76,10 @@ S600 将两条命令都改为 `s600`，不能将 S100 HBM 改名使用。`PYTHON
 ## 许可
 
 遵循仓库 [Apache-2.0 许可](../../../LICENSE)。保留固定 S 源版权、数据和截图；外部依赖遵循各自许可。
+
+## 原生入口
+
+在匹配板卡显式准备模型和依赖后，从仓库根目录执行
+`bash samples/speech/asr/runtime/cpp/run.sh --target s100 --build`，S600 将目标
+改为 s600。不会自动下载模型。[原生指南](runtime/cpp/README_cn.md)覆盖主机预检、
+全部构建/运行参数、结果、API 示例及 Python/C++ 重采样差异。

@@ -48,3 +48,13 @@ The exact ID is required with a path override. The default path is sample-relati
 A model must expose exactly one named model, one float32 `[1,30000]` input and one `[1,T,3503]` output with T positive. Tensor names and T come from real SDK metadata. Float32 logits remain raw; integer logits need valid SCALE metadata and shared dequantization before argmax. NaN/Inf or malformed tensors fail. The runtime does not add softmax because it cannot change finite float argmax.
 
 No model descriptor or inference has been newly captured from a board. HBM is not ONNX or a training checkpoint; the [conversion guide](../conversion/README.md) describes missing reproducibility prerequisites rather than inventing an export command.
+
+## Native model identity
+
+The [native launcher](../runtime/cpp/README.md) resolves these same active
+manifest identities and verifies the file before building/running. It passes
+the observed SHA-256 to the binary, which rechecks local board/model/vocabulary
+identity before SDK calls. A local digest pins bytes but does not authenticate
+publisher origin when the manifest digest is absent. Native input and output
+must be unquantized FLOAT32; do not infer native integer support from Python's
+SCALE conversion support. Actual SDK metadata is still unverified on hardware.
