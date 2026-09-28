@@ -3,8 +3,8 @@
 [简体中文](README_cn.md)
 
 This directory provides the CPU continuous integrate-and-fire (CIF) bridge and
-three-model application pipeline. The real audio frontend, SDK model binding,
-command-line entry and C++ bridge are still being migrated. This is not a runnable board
+three-model application pipeline with SDK adapters and metadata binding. The real
+audio frontend, command-line entry and C++ bridge are still being migrated. This is not a runnable board
 sample yet. Do not interpret the host checks below as model inference or accuracy
 validation. The archived [S runtime](../../../../../platforms/s/samples/speech/paraformer/runtime/python/README.md)
 remains a historical reference, not the unified entry.
@@ -79,7 +79,7 @@ from S commit `380e1a2bf42041af54be6f34935e50197cfadff9`; its no-fire case raise
 [review and evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md).
 
 The source publishes S100 models only. No X5, S100P or S600 adaptation is claimed.
-Real frontend equivalence, SDK bindings, board three-stage inference, native C++, full
+Real frontend equivalence, actual SDK verification, board three-stage inference, native C++, full
 conversion/evaluation workflows and bilingual sample documentation remain open.
 Board inference, OE compilation, dataset CER and latency have not been run.
 
@@ -88,7 +88,7 @@ Board inference, OE compilation, dataset CER and latency have not been run.
 [pipeline.py](pipeline.py) composes three independent raw model callables. Each
 callable consumes a mapping of physical input names to arrays and returns a
 mapping of physical output names to arrays. `TensorNames` supplies the exact
-names discovered by the forthcoming model binder; there is no first-output or
+names discovered by the model binder; there is no first-output or
 substring fallback in the pipeline. This interface is for application composition,
 not a model `forward` containing CPU processing between several SDK executions.
 
@@ -103,7 +103,7 @@ not a model `forward` containing CPU processing between several SDK executions.
 an integer valid length 1–400. Shape/dtype/finiteness are checked at every consumed
 boundary. Intermediate values are copied so later runner buffers cannot overwrite
 retained encoder context. The pipeline does not load an SDK or change scheduling;
-physical-model validation and scheduling must be provided by the runtime adapter.
+physical-model validation and scheduling are provided by the runtime adapter below.
 INT16 in a compiled artifact's name does not prove INT16 physical I/O.
 
 `Prediction` includes text, selected token IDs, CIF count, per-stage milliseconds,
@@ -161,3 +161,99 @@ published vocabulary was read from the active manifest URL: 8,404 unique tokens,
 SHA-256 `2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`.
 This observed digest does not certify the publisher's currently null manifest
 hash or validate any compiled model. See [pipeline evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-pipeline-review.md).
+
+## Publication selection and runtime binding
+
+[model_binding.py](model_binding.py) reads the active S publication manifest.
+`resolve_selections("s100")` returns encoder, predictor and decoder in that order;
+`auto` uses the shared local-board detector. X5, S100P and S600 are rejected because
+there is no corresponding published model set. Selection does not load the SDK,
+connect to a board, download a file or claim that the files already exist.
+
+From repository root, this host-safe example prints the three qualified asset IDs
+and an explicit rejection for S100P:
+
+```bash
+python - <<'PYCODE'
+from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+for selection in resolve_selections("s100"):
+    print(selection.stage, selection.asset.reference)
+try:
+    resolve_selections("s100p")
+except ValueError as error:
+    print(error)
+PYCODE
+```
+
+Default paths are under `samples/speech/paraformer/model/s100/` and retain published
+filenames `paraformer_large_encoder_400x560_s100.hbm`,
+`paraformer_large_predictor_400x512_s100.hbm` and
+`paraformer_large_decoder_400x512_s100.hbm`. Alternate locations require both
+`model_paths={"encoder": ..., "predictor": ..., "decoder": ...}` and
+`asset_ids={"encoder": ..., "predictor": ..., "decoder": ...}`. Each ID must exactly
+match its stage's selected publication. Partial, mixed or relabelled sets fail.
+The active manifest has no publisher SHA-256 for these assets: file hashing records
+observed bytes and cannot by itself establish official origin or model compatibility.
+
+Each HBM must expose one model. All physical input/output names, shapes and dtypes
+are validated; tensor order is irrelevant. Names follow the fixed S extraction
+and native lookup:
+
+| Role | Exact name |
+| --- | --- |
+| Encoder input | `speech` |
+| Encoder output / predictor input / decoder context | `/encoder/after_norm/Add_1_output_0` |
+| Predictor weights | `/predictor/Add_output_0` |
+| Predictor hidden | `/predictor/Concat_5_output_0` |
+| Decoder count / bias | `token_num` / `bias_embed` |
+| Decoder acoustic | `onnx::Shape_8609` or the source Python alias `shape_8609` |
+| Decoder logits | `logits` |
+
+The optional decoder pass-through `token_num` output must be int32 `[1]` when
+exposed. All other unexpected tensors, duplicate/ambiguous names, wrong shapes
+and wrong dtypes are rejected. The shapes are those in the pipeline table; only
+the count uses int32, all other tensors require float32. A differing compiled
+contract must be inspected and explicitly adapted, not cast silently.
+
+[runtime.py](runtime.py) constructs three shared `NamedArrayRunner` instances.
+`load_runtime` validates the entire declared model set before creating any SDK
+object. On the normal path each runner checks local target identity and its model
+file before importing/constructing `hbm_runtime`. It then binds observed metadata.
+Only tests use an explicit `runtime_factory` to inject SDK doubles and bypass the
+real board/file gates; this seam is not a customer deployment mode.
+
+### Board integration API (not run here)
+
+The following is an integration sketch, **not a complete audio command**. It needs
+an S100, matching `hbm_runtime`, three local model files, the exact vocabulary and
+prepared frontend features. No command-line audio entry is claimed yet.
+
+```python
+import json
+from pathlib import Path
+from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+from samples.speech.paraformer.runtime.python.runtime import load_runtime
+
+# Board-only integration sketch: files must already exist; features must be
+# generated by the matching FunASR frontend (still being migrated).
+vocabulary = json.loads(Path("samples/speech/paraformer/model/s100/tokens.json").read_text())
+bundle = load_runtime(resolve_selections("s100"), vocabulary)
+bundle.set_scheduling_params(priority=7, bpu_cores=[0])
+# features: float32 [1,400,560]; feature_length: valid integer 1..400.
+result = bundle.pipeline.predict(features, feature_length)
+```
+
+Scheduling is optional. If specified, `priority` is an integer 0–255 and `bpu_cores`
+is a nonempty sequence of nonnegative integer indexes; supported hardware/core
+combinations remain the SDK's responsibility. Parameters are delegated to **all
+three models** through model-keyed SDK dictionaries. Missing setters are rejected
+before any setter is called. Invalid values are rejected by the shared runner;
+an SDK failure is propagated and there is no rollback guarantee if an earlier
+model already accepted its setting. With both arguments omitted, no SDK setter
+is invoked. This corrects the source wrapper's silently ignored parameters.
+
+The suite now includes eight binding/adapter checks (23 total, including two package-preparation checks): publication and
+path identity, metadata order/shape/type/names, the documented acoustic alias and
+optional count output, pre-SDK rejection, and an actual shared-runner pipeline
+with SDK doubles and scheduling propagation. [Binding evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-binding-review.md)
+distinguishes those host checks from real SDK/board execution, still not-run.

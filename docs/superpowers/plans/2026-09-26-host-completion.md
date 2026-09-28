@@ -135,3 +135,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer CPU CIF 已独立提取并修复无 token 时的空数组访问；7 项主机测试、24 组固定源数值对照与双语 README 示例通过。见[记录](../../releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md)。尚未接入完整运行/转换流程，台账 Refactor 保持 pending；真实前端、三模型运行、C++、转换/评测及完整各层 README 继续，B10/H0–H9 未关闭。
 
 2026-09-28：Paraformer 应用层三模型编排与独立文本解码已实现；空 CIF 输出显式跳过 decoder，未混入任务 forward。13 项主机测试、20 组固定源文本对照和 6 个双语文档命令通过；8,404 项发布词表已实测并留存摘要。见[流程记录](../../releases/unified-migration/2026-09-28-b10-paraformer-pipeline-review.md)。完整 SDK/前端/转换/原生流程仍未接入；H0–H9 和独立验收保持开放。
+
+2026-09-28：Paraformer S100 三模型精确选择、共享 SDK runner 绑定及实际调度委托已实现，错误组合先于 SDK 创建拒绝；新增六文件模型包准备、源前端文件固定摘要与双语模型说明。23 项 Sample、156 项共享回归及双语示例通过，初次共享回归缺下载入口的失败与修复留存。见[记录](../../releases/unified-migration/2026-09-28-b10-paraformer-binding-review.md)。真实前端、完整音频/原生/转换评测继续；真实 SDK、HBM 推理、板测未执行，H0–H9 未关闭。
