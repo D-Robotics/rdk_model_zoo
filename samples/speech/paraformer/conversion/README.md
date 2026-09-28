@@ -76,9 +76,16 @@ python samples/speech/paraformer/conversion/export.py \
   --feature outputs/paraformer_features/feats/BAC009S0724W0121.npy
 ```
 
-The feature path must already exist; it is not a WAV. Each file must contain a
-finite float32 `[1,400,560]` array. Export tests use unmasked CIF to exercise model
-boundaries, not the utterance's valid-frame count, and do not calculate CER.
+The example `--feature` path is the first bundled utterance prepared by the
+documented two-WAV preparation command writing to the same directory, shown in the
+[native guide](../runtime/cpp/README.md#quickstart) (`--preprocess-only
+--output-dir outputs/paraformer_features`). That directory spelling is an example,
+not a CLI default; other guides use `outputs/paraformer-prepared` and
+`outputs/paraformer-features` for the same preparation. Any preparation output
+directory works if `--feature` points at its `feats/<utt_id>.npy` file. The feature
+path must already exist; it is not a WAV. Each file must contain a finite float32
+`[1,400,560]` array. Export tests use unmasked CIF to exercise model boundaries,
+not the utterance's valid-frame count, and do not calculate CER.
 
 | Argument | Meaning |
 | --- | --- |

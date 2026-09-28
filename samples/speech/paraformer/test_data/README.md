@@ -22,8 +22,12 @@ No HBM model was run for these results.
 `manifest.json` is a JSON list of objects containing `utt_id` and reference `text`.
 Each corresponding audio file is `audio/<utt_id>.wav`. Keep IDs unique and treat
 IDs as names, not paths. Preserve reference text separately from predictions and
-never rewrite this source manifest when generating features. The Python manifest CLI now writes separate prepared-manifest/feature outputs;
-see the runtime guide. The native C++ consumer is still being migrated. Archived
+never rewrite this source manifest when generating features. The Python manifest
+CLI writes separate prepared-manifest/feature outputs; see the runtime guide. The
+native consumer of those outputs is implemented: the native launcher reads the
+Python-prepared `prepared-manifest.json` and feature NPY files instead of audio,
+as described in the [native guide](../runtime/cpp/README.md#quickstart). That
+handoff is host-checked only; S100 SDK/board inference remains not-run. Archived
 `run.sh` positional arguments are not the unified interface.
 
 The current frontend API accepts finite float32 samples loaded from mono or

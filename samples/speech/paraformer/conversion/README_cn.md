@@ -70,9 +70,14 @@ python samples/speech/paraformer/conversion/export.py \
   --feature outputs/paraformer_features/feats/BAC009S0724W0121.npy
 ```
 
-特征路径必须已经存在，它不是 WAV；文件必须是有限值 float32 `[1,400,560]`
-数组。导出检查使用不按有效帧屏蔽的 CIF 来验证模型边界，不使用单条音频的
-有效帧长度，也不计算 CER。
+示例中的 `--feature` 路径来自对两条内置 WAV 的既定准备命令，输出目录与本例一致，
+该命令见[原生说明](../runtime/cpp/README_cn.md#quickstart)（`--preprocess-only
+--output-dir outputs/paraformer_features`）。目录拼写只是示例，不是 CLI 默认值；
+其他说明对同一次准备使用 `outputs/paraformer-prepared` 和
+`outputs/paraformer-features`。只要 `--feature` 指向某次准备输出中的
+`feats/<utt_id>.npy`，使用哪个输出目录都可以。特征路径必须已经存在，它不是 WAV；
+文件必须是有限值 float32 `[1,400,560]` 数组。导出检查使用不按有效帧屏蔽的 CIF
+来验证模型边界，不使用单条音频的有效帧长度，也不计算 CER。
 
 | 参数 | 含义 |
 | --- | --- |
@@ -288,7 +293,7 @@ print("Gather-only rewrite validated; input model preserved")
 再保存为新文件；不要覆盖源模型。动态索引的 Cast 还需要模型契约提供范围依据，
 几个测试输入通过不足以证明这一点。API 不自动替调用者作出这两个判断。
 
-## 源流程与待迁移部分
+## 源流程与剩余迁移边界
 
 S 源提交 `380e1a2bf42041af54be6f34935e50197cfadff9` 的
 [完整原始中文说明](../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md)

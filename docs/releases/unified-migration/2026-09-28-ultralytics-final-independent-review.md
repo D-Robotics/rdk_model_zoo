@@ -46,3 +46,25 @@ entry, no S-v10 NMS-free coverage, per-task CLI differences and classification
 preprocessing differences. Whole-sample closure still requires the in-flight
 source-figure documentation package, dataset-navigation update, and final
 cross-layer command/catalog review. No board/model/quantization run occurred.
+
+## Final cross-layer command and document check
+
+Codex reviewed model selection, Python CLI defaults, per-task native limitations,
+conversion prerequisites and evaluator thresholds/output semantics together.
+Runtime help, X5 model listing and five task dry-runs (detect/seg/pose/cls/obb)
+pass. Three documented downloader dry-runs also pass with the existing virtualenv
+on PATH, including positional syntax and a custom model directory. They only
+print asset plans; nothing was downloaded. The first reviewer invocation used
+a symlink-resolved system Python directory and failed importing PyYAML. Both the
+original errors and corrected runs are retained in `cross-layer-doc-check.json`
+and `cross-layer-download-recheck.json` under this review's evidence directory.
+This was a reviewer environment error, not a product change.
+
+The 118 recorded runtime/test hashes from the prior 143-test suite have no drift.
+Bilingual shell blocks compared after removing comment-only lines are equivalent.
+The source figure and dataset navigation packages were separately accepted in
+commits 7287b499 and 8cfc4b7b. Native task support is deliberately documented per
+program, including absent OBB/S-v10 paths; evaluator metrics, score thresholds
+and historical results are not conflated with SDK or board certification.
+No real conversion, quantization or board test was run. H2 final requirement
+reconciliation and repository-wide H9 remain separate from these scoped checks.

@@ -300,3 +300,14 @@ Fresh 109 runtime/host tests pass (ASR 27, KWS 13, Paraformer 46, HIMLoco 23); 5
 2026-09-28：共享 datasets 双语索引/五类资源指南与 YOLO/YOLOE evaluator 导航共 16 份 README，经 Codex 独立审阅和 R1/R2/R3 整改后接受；11 份资源与 X5 固定源逐字节一致，evaluator 命令不变，链接/锚点/中英命令和检查器通过。见 `2026-09-28-datasets-independent-review.md`。H8 仍待目录历史 pin 等其余项；无下载、量化或板测。
 
 2026-09-28：B7 整批复核：117 个既有独立评审代码/测试哈希无漂移，184 项当前主机测试通过。发现 YOLOv5/ByteTrack 多层 README 仍宣称迁移中从未板测，遗漏已归档固定提交的历史 Python 对照及 native smoke；B7-DOC-R1 已交 Claude Code + GLM 修正文档区分历史范围与当前未重测，保留 C++ 源数值对照、S100P 与 MODNet 缺口。见 `2026-09-28-b7-batch-independent-review.md`；H3 保持开放，无新板测或真实量化验证。
+
+### 2026-09-28 B10 documentation and Ultralytics cross-layer follow-up (Codex)
+
+B10-DOC-R1 closed after independent review of all four Claude Code + GLM edits:
+17 static checks, zero sample violations and unchanged command blocks. See the
+B10 batch independent review; H6 final ledger reconciliation remains open.
+Ultralytics help/list/five task dry-runs and three downloader preview commands
+pass; initial reviewer system-Python/PyYAML errors are retained alongside the
+corrected virtualenv runs. All 118 prior tested runtime/test hashes are unchanged.
+No model download, recipe execution or board access occurred. H2/H9 are not
+implicitly closed by this scoped command check.

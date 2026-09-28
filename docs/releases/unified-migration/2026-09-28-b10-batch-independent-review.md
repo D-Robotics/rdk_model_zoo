@@ -19,3 +19,25 @@ Read Paraformer root/model/test-data/conversion/evaluator guides against the exi
 **B10-DOC-R1 remains open:** test-data guides still call the C++ consumer unmigrated. See `2026-09-28-b10-readme-followup-review.md`, already dispatched to Claude Code + GLM. The difference between allowed example output directories merits a clearer prerequisite link, not changing runtime defaults. Until the corrected text is independently reread, these checks do not close H6 or certify the complete batch.
 
 Prior runtime/native reviews remain separate scoped evidence: `2026-09-28-{asr,kws,paraformer,himloco}-independent-review.md`. Actual SDK/board/robot behavior stays not-run. Customer README recipe validation is outside the user-authorized verification scope and is not a blocker.
+
+## B10-DOC-R1 independent follow-up acceptance
+
+Codex reread the four Claude Code + GLM README edits against the Python
+application writer, native quickstart/launcher contract and bundled manifest.
+The stale native-consumer statement is removed in both languages; the prepared
+NPY/manifest handoff and S100 SDK/board not-run boundary are explicit. The
+conversion prerequisite now links to the exact producing command and explains
+that the three output-directory spellings are examples. The Chinese heading
+change is appropriate; it does not claim actual OE/HMCT execution.
+
+Fresh evidence: `evidence/2026-09-28-b10-batch-independent-review/doc-followup-independent-check.json`.
+All 17 static checks pass, sample checker has zero violations and one existing
+CLI policy skip, and all fenced commands in the four files are byte-identical
+to their pre-edit versions. The reviewer inspected the check script before
+running it; semantic acceptance is based on the source/doc comparison above,
+not headings or string matching alone. No recipe was executed.
+
+**B10-DOC-R1 is closed.** This accepts the documentation correction; H6 final
+batch/ledger reconciliation remains separate. The original finding and prior
+109-test integrated results above are retained. The author report's native-guide
+relative link was corrected by the reviewer as report navigation only.

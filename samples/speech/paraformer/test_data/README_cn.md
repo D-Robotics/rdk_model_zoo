@@ -19,8 +19,11 @@
 
 `manifest.json` 是包含 `utt_id` 和参考 `text` 的 JSON 对象列表，对应音频为
 `audio/<utt_id>.wav`。ID 应唯一，应作为名称而非路径处理。参考文本与预测分开保存，
-生成特征时不能改写此源清单。Python 清单 CLI 已提供独立清单与特征输出，见运行说明；C++ 消费端仍待迁移。
-归档源 `run.sh` 的位置参数不是统一接口。
+生成特征时不能改写此源清单。Python 清单 CLI 已提供独立清单与特征输出，见运行说明。
+这些输出的原生消费端已实现：原生启动器读取 Python 准备的 `prepared-manifest.json`
+和特征 NPY 而非音频，流程见[原生说明](../runtime/cpp/README_cn.md#quickstart)。
+该交接仅完成主机检查，S100 SDK／板端推理仍为 not-run。归档源 `run.sh` 的位置参数
+不是统一接口。
 
 当前前端 API 接收从 16 kHz 单／多声道音频加载的有限 float32 样本，多声道取均值，
 不重采样。LFR 超过 400 帧时仅保留前 400 帧并返回 `truncated=True`，这不是长音频
