@@ -6,6 +6,13 @@ The active integration design is
 It supersedes the X3-inclusive historical plan; X3 sources, tags and evidence
 remain historical material, not a new adaptation target.
 
+- Latest user scope (2026-09-28): treat existing README quantization recipes as
+  trusted source material. Improve their structure, wording, bilingual consistency
+  and navigation; do not rerun weight downloads/export/calibration/OE or Mapper
+  compilation/HMCT/quantized accuracy to validate those recipes. Do not provision
+  toolchains or remote hosts for that purpose. Missing such runs is not a delivery
+  blocker. Preserve source attribution and existing evidence; ordinary host tests
+  for code refactoring remain in scope. See the current host-completion plan.
 - Start with the relevant Sample README, its source and existing platform
   Guidelines. The active Spec controls conflicts during this migration.
 - Use [the execution plan](docs/superpowers/plans/2026-09-16-x5-s-execution.md)

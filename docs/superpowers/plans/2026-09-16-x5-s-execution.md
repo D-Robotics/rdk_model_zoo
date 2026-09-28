@@ -1,5 +1,7 @@
 # X5/S Sample Integration Implementation Plan
 
+> 2026-09-28 最新用户裁定：全部 Sample 的既有量化 README 方案按可信源继承，只做文档重构优化，不再要求实际导出、校准、量化编译／仿真或精度验证。相关环境缺口不阻塞本次交付；详见 [当前主机完成计划](2026-09-26-host-completion.md)。
+
 > 2026-09-27 用户变更：取消重复 S 独立 YOLO 的收编与手动反量化兼容，保留统一 Ultralytics YOLO/YOLO26、YOLOv5s；YOLOE/World/Depth 独立能力保留。当前细则见下方非板端计划。
 
 > 当前执行：见[2026-09-26非板端完整交付计划](2026-09-26-host-completion.md)。Codex全面接手全部非板端工作；下文三试点范围、GLM执行限制及板测阻断后续批次的安排均为历史记录，不再作为当前限制。
