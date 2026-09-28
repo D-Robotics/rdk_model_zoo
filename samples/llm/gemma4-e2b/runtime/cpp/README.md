@@ -380,7 +380,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-Nine CTest entries cover three Vision stage/source-image/tensor checks and six KV allocation/reset/append/prefix-retention scenarios. Assertions remain enabled in Release builds.
+Eleven CTest entries cover three Vision stage/source-image/tensor checks, six KV allocation/reset/append/prefix-retention scenarios, and two Text ownership checks. Assertions remain enabled in Release builds.
 An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
 
 ### SDK failure handling
@@ -448,3 +448,24 @@ Independent host test entry:
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_kv.py -v
 ```
+
+### Text initialization and tensor ownership
+
+`ModelIo` is a move-only owner of one subgraph's input/output allocations. Its
+subgraph handle is borrowed from the packed HBM; KV input slots explicitly borrow
+memory from `KvCache`. Moving an owner transfers those flags with the tensors.
+Partial construction releases completed allocations. TextEngine clears both
+subgraphs before releasing the packed model, including when initialization fails.
+A constructor failure propagates to the application; no partially initialized
+engine is returned. The embedding loader runs before model acquisition.
+
+The fixed text export requires 35 inputs (five ordinary inputs and 15 K/V pairs)
+and 31 outputs (logits and 15 K/V pairs). Null model handles, incompatible counts
+and a missing/nonpositive sequence dimension are rejected before indexed use.
+These checks do not yet establish the full Text tensor dtype/stride contract.
+
+Host tests replace only SDK calls and embedding loading: 301 successive failure
+points, six invalid descriptor cases and normal teardown check that no tensor/model allocation remains. A
+separate owner test covers partial construction, moves, repeated clearing and
+borrowed-cache survival. No weights are loaded and inference calls are forbidden
+in these tests; they do not validate SDK ABI compatibility or generation quality.

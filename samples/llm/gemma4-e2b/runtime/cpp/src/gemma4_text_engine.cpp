@@ -30,8 +30,11 @@ ModelIo InitModelIo(hbDNNPackedHandle_t packed, const char* name) {
   ModelIo io;
   HBDNN_CHECK(hbDNNGetModelHandle(&io.handle, packed, name), name);
 
+  if (!io.handle) throw std::runtime_error("null text subgraph handle");
   int input_count = 0;
   HBDNN_CHECK(hbDNNGetInputCount(&input_count, io.handle), "input count");
+  if (input_count != 5 + 2 * kNumKvLayers)
+    throw std::runtime_error("text subgraph requires 35 inputs");
   io.inputs.reserve(static_cast<size_t>(input_count));
   for (int i = 0; i < input_count; ++i) {
     io.inputs.push_back(MakeTensor(io.handle, true, i));
@@ -39,12 +42,16 @@ ModelIo InitModelIo(hbDNNPackedHandle_t packed, const char* name) {
 
   int output_count = 0;
   HBDNN_CHECK(hbDNNGetOutputCount(&output_count, io.handle), "output count");
+  if (output_count != 1 + 2 * kNumKvLayers)
+    throw std::runtime_error("text subgraph requires 31 outputs");
   io.outputs.reserve(static_cast<size_t>(output_count));
   for (int i = 0; i < output_count; ++i) {
     io.outputs.push_back(MakeTensor(io.handle, false, i));
   }
 
   const auto& shape = io.inputs[0].properties.validShape;
+  if (shape.numDimensions < 1 || shape.dimensionSize[0] <= 0)
+    throw std::runtime_error("invalid text sequence dimension");
   io.seq_len = shape.dimensionSize[0];
   return io;
 }
@@ -53,43 +60,39 @@ ModelIo InitModelIo(hbDNNPackedHandle_t packed, const char* name) {
 
 TextEngine::TextEngine(const std::string& text_hbm, const std::string& embed_path)
     : embeddings_(embed_path) {
-  const char* path = text_hbm.c_str();
-  const char* paths[] = {path};
+  try {
+    const char* path = text_hbm.c_str();
+    const char* paths[] = {path};
 
-  auto t0 = std::chrono::steady_clock::now();
-  HBDNN_CHECK(hbDNNInitializeFromFiles(&packed_, paths, 1), "load hbm");
-  auto t1 = std::chrono::steady_clock::now();
-  load_ms_ =
-      std::chrono::duration<double, std::milli>(t1 - t0).count();
+    auto t0 = std::chrono::steady_clock::now();
+    HBDNN_CHECK(hbDNNInitializeFromFiles(&packed_, paths, 1), "load hbm");
+    if (!packed_) throw std::runtime_error("load hbm returned null packed model");
+    auto t1 = std::chrono::steady_clock::now();
+    load_ms_ =
+        std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-  prefill_ = InitModelIo(packed_, "prefill");
-  decode_ = InitModelIo(packed_, "decode");
-  SetupZeroCopyKv();
+    prefill_ = InitModelIo(packed_, "prefill");
+    decode_ = InitModelIo(packed_, "decode");
+    SetupZeroCopyKv();
 
-  decode_hidden_.resize(kHiddenSize, 0.f);
-  decode_mask_.resize(kCacheLen);
-  decode_slide_mask_.resize(kCacheLen);
-  decode_mask_q_.resize(kCacheLen);
-  decode_slide_mask_q_.resize(kCacheLen);
+    decode_hidden_.resize(kHiddenSize, 0.f);
+    decode_mask_.resize(kCacheLen);
+    decode_slide_mask_.resize(kCacheLen);
+    decode_mask_q_.resize(kCacheLen);
+    decode_slide_mask_q_.resize(kCacheLen);
+  } catch (...) {
+    prefill_.Clear();
+    decode_.Clear();
+    if (packed_) hbDNNRelease(packed_);
+    packed_ = nullptr;
+    throw;
+  }
 }
 
 TextEngine::~TextEngine() {
-  // Null out virAddr for KV input tensors to prevent double-free
-  // (the actual memory is owned by kv_)
-  for (int i = 0; i < kNumKvLayers; ++i) {
-    prefill_.inputs[5 + i].sysMem.virAddr = nullptr;
-    prefill_.inputs[20 + i].sysMem.virAddr = nullptr;
-    decode_.inputs[5 + i].sysMem.virAddr = nullptr;
-    decode_.inputs[20 + i].sysMem.virAddr = nullptr;
-  }
-
-  FreeTensors(prefill_.inputs);
-  FreeTensors(prefill_.outputs);
-  FreeTensors(decode_.inputs);
-  FreeTensors(decode_.outputs);
-  if (packed_) {
-    hbDNNRelease(packed_);
-  }
+  prefill_.Clear();
+  decode_.Clear();
+  if (packed_) hbDNNRelease(packed_);
 }
 
 // leap_llm mask algorithm: right-aligned cache layout.
@@ -178,18 +181,12 @@ void TextEngine::SetupZeroCopyKv() {
   }
   kv_.Allocate(k_bytes, v_bytes);
 
-  // Redirect KV input tensors to point at the shared cache memory.
-  // After hbUCPFree, we null out virAddr so FreeTensors() will skip them.
+  // Borrowed slots are tracked independently from the cache owner.
   for (int i = 0; i < kNumKvLayers; ++i) {
-    hbUCPFree(&prefill_.inputs[5 + i].sysMem);
-    prefill_.inputs[5 + i].sysMem = kv_.KMem(i);
-    hbUCPFree(&prefill_.inputs[20 + i].sysMem);
-    prefill_.inputs[20 + i].sysMem = kv_.VMem(i);
-
-    hbUCPFree(&decode_.inputs[5 + i].sysMem);
-    decode_.inputs[5 + i].sysMem = kv_.KMem(i);
-    hbUCPFree(&decode_.inputs[20 + i].sysMem);
-    decode_.inputs[20 + i].sysMem = kv_.VMem(i);
+    prefill_.BindBorrowedInput(5 + i, kv_.KMem(i));
+    prefill_.BindBorrowedInput(20 + i, kv_.VMem(i));
+    decode_.BindBorrowedInput(5 + i, kv_.KMem(i));
+    decode_.BindBorrowedInput(20 + i, kv_.VMem(i));
   }
 }
 

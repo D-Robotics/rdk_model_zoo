@@ -373,7 +373,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-九项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，六项覆盖 KV 分配/Reset/追加/前缀保留。Release 构建仍启用断言。
+十一项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，六项覆盖 KV 分配/Reset/追加/前缀保留，两项覆盖 Text 所有权。Release 构建仍启用断言。
 这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。
 
 ### SDK 失败处理
@@ -439,3 +439,19 @@ TextEngine 的 `ContextShift` 会调用前缀保留，后续由调用方重新 p
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_kv.py -v
 ```
+
+### Text 初始化与张量所有权
+
+`ModelIo` 只能移动，不能复制，负责一个子图的输入/输出内存。子图句柄借用自
+packed HBM；KV 输入槽显式借用 `KvCache` 内存，移动时连同借用标记一起转移。
+部分构造失败会释放已完成的分配；TextEngine 无论正常销毁还是初始化失败，
+都先清理两个子图，再释放 packed model。构造异常传给应用，不返回半初始化对象。
+embedding 加载发生在模型获取之前。
+
+固定 Text 导出要求 35 个输入（5 个普通输入、15 对 K/V）和 31 个输出
+（logits、15 对 K/V）。空模型句柄、数量不符、缺失或非正的序列维度会在索引使用前拒绝。
+这些检查尚不能证明 Text 张量完整的 dtype/stride 契约。
+
+主机测试仅替换 SDK 调用与 embedding 加载：逐一注入 301 个失败点、检查 6 类非法描述符及正常销毁，
+确认没有残留的张量/模型分配。独立所有权测试覆盖部分构造、移动、重复清理及借用缓存不被释放。
+测试不加载权重，并禁止调用推理；它不证明真实 SDK ABI 兼容性或生成质量。

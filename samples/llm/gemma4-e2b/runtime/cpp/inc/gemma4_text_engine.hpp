@@ -17,6 +17,7 @@
 
 #include "gemma4_embeddings.hpp"
 #include "gemma4_kv_cache.hpp"
+#include "gemma4_model_io.hpp"
 
 namespace gemma4 {
 
@@ -40,16 +41,6 @@ struct PrefillChunkTensors {
   std::vector<float> inputs_embeds;
   std::vector<float> full_mask;
   std::vector<float> sliding_mask;
-};
-
-/**
- * @brief Own the DNN handle and tensors for one compiled text subgraph.
- */
-struct ModelIo {
-  hbDNNHandle_t handle = nullptr;
-  std::vector<hbDNNTensor> inputs;
-  std::vector<hbDNNTensor> outputs;
-  int seq_len = 0;
 };
 
 // Called for each newly generated token id. Return false to stop early.
