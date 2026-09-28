@@ -44,7 +44,7 @@ S 独立 yolo11、yolo11_pose、yolo11_seg、yolov13_imoonlab 属重复实现，
 - [ ] H2 Ultralytics YOLO全部层级文档与代码规范示范：可复制最短流程、全任务命令、完整API输入变量、参数默认/输出/模型/转换/评估/历史指标/故障说明、中英一致。
   - 2026-09-26 文档子项已完成：Ultralytics 根/model/runtime/python/runtime/cpp/conversion/evaluator 双语改写；36 samples / 0 violations / 0 exemptions，原 84 条基线与 CI 旗标已删除。H2 的实现职责审计仍待完成。
 - [ ] H3 B7主机整改集成；客户文档跟随实际代码与历史板证据，保持板测缺口。
-- [ ] H4 B8全部样例完整源能力迁移与测试、双语README。
+- [x] H4 B8全部样例完整源能力迁移与测试、双语README（2026-09-28 非板端整批独立验收通过；板端仍 not-run）。
 - [ ] H5 B9统一YOLO整理、重复独立系列退役及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；重复系列按用户新要求退役；YOLOE Python/C++、导出/转换准备/evaluator 及双语说明已完成主机实现，整体验收仍 pending。
 - [ ] H6 B10语音/机器人样例迁移；保留执行边界，不触发实机控制。
 - [ ] H7 B11大模型和VLA来源/gitlink/资源集成，不用空壳冒充上游能力。
@@ -272,3 +272,12 @@ See [VLA independent review](../../releases/unified-migration/2026-09-28-vla-ind
 H7 remains open for Gemma and the remaining LLM scope; no board/robot or
 quantization workflow was executed. H8 dataset documentation gaps were assigned
 to Claude Code + GLM as a separate bounded package, not marked complete.
+
+### 2026-09-28 — H4 B8 非板端整批关闭
+
+八个 sample 全部已有独立内容/代码验收，304 个文件记录重新核对，唯一差异为
+已独立通过的 UNetMobileNet evaluator 双语状态修正。当前共享实现下 181 项测试
+全部通过，90 份 README 本地文件链接无缺失，8 个规范检查零违规/零豁免。
+[整批独立报告](../../releases/unified-migration/2026-09-28-b8-batch-independent-review.md)
+逐项列出能力、证据与边界。H4 按当前用户非板端范围关闭；Board=not-run，
+整仓 H1/H8/H9 与其他批次继续，不新增实际量化验证要求。
