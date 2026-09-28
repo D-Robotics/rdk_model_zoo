@@ -29,3 +29,23 @@ source mask/logit semantics are directionally appropriate, but passing author
 suites do not cover the demonstrated zero-dimension case. Remaining ownership,
 layout and engine integration review continues after remediation; no broad
 acceptance or board/quantization claim is made.
+
+## GEMMA-TEXT-R2 — Adoption leaks on bookkeeping allocation failure (P2)
+
+ModelIo::AddInput and AddOutput receive an already allocated tensor, push its
+capacity into a new vector, then put the tensor into the owning vector. If the
+capacity push throws std::bad_alloc, the raw tensor is not adopted and Clear
+cannot release it. InitModelIo reserves the input/output vectors but not these
+new capacity vectors, so the production construction path has this failure gap.
+
+[Independent driver](evidence/2026-09-28-gemma-text-tensor-independent-review/adoption_failure.cpp)
+reserves the owning vector as production does and fails the next host allocation.
+Both input and output paths catch the exception but release zero buffers on
+destruction (expected one). [Output and exact header hash](evidence/2026-09-28-gemma-text-tensor-independent-review/adoption-failure.json)
+record build rc=0 and driver rc=1. The driver explicitly frees leaked fixture
+buffers after observing the missing owner cleanup.
+
+Make adoption exception-safe with transactional bookkeeping and single ownership
+throughout failure. Cover input/output failure positions, subsequent adoption,
+normal cleanup and borrowed-KV behavior. Assigned sequentially to the same
+Claude session after R1; no competing writer was started on Gemma.
