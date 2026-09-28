@@ -3,9 +3,21 @@
 <a id="overview"></a>
 ## Overview
 
-HGNetV2 is a convolutional backbone for vision tasks; this sample exposes b0–b4 ImageNet-1k classification models.
+HGNetV2 is a convolutional backbone for vision tasks; this sample exposes b0–b4 ImageNet-1k classification models. The source README introduces it as a next-generation CNN backbone designed for a strong accuracy/latency balance, succeeding the original HGNet, and performing well in classification, detection and segmentation.
 
 [PP-HGNetV2](https://github.com/PaddlePaddle/PaddleClas/blob/develop/docs/en/models/ImageNet1k/PP-HGNetV2.md)
+
+The source README's feature highlights:
+
+- **Aggregating multiple receptive fields** — the HG-Block combines
+  multi-scale features from shallow to deep layers, which is friendly to
+  small-object detection and recognition.
+- **Improved stem module** — the input stem stacks more 2×2 convolution
+  kernels to learn rich local features while using smaller channel
+  numbers, boosting performance on high-resolution tasks.
+- **Learnable downsampling (LDS)** — an adaptive downsampling layer
+  preserves more useful spatial details while reducing computational
+  redundancy.
 
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 
@@ -72,6 +84,19 @@ python3 samples/vision/hgnetv2/runtime/python/main.py \
 ## Expected results
 
 Default variant `b0` preserves the source entrypoint. Choose `b1`, `b2`, `b3`, `b4` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `sandbar.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+published its run as the `result.jpg` drawing below: the legacy demo
+overlaid the top-5 ranks on the image, with rank 1 being class 977
+(sandbar, sand bar) on the bundled `sandbar.JPEG`. This is a historical
+screenshot from the source delivery, not a run of the current entrypoint
+in this repository (the current flow saves an image only with
+`--img-save-path`).
+
+![Historical inference result from the X5 source README: sandbar test
+image with the legacy top-5 overlay, rank 1 class 977 (sandbar, sand
+bar)](./test_data/result.jpg)
 
 <a id="performance"></a>
 ## Performance data

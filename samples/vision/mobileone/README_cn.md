@@ -8,6 +8,25 @@ MobileOne 是面向低时延边缘部署的轻量级 CNN 骨干网络。模型�
 - **论文**: [MobileOne: An Improved One millisecond Mobile Backbone](http://arxiv.org/abs/2206.04040)
 - **参考实现**: [apple/ml-mobileone](https://github.com/apple/ml-mobileone)
 
+源 README 提炼的特性：
+
+- **结构重参数化**——训练期的多分支模块（k 个并行卷积分支、逐分支
+  BN 与恒等分支，激活用 ReLU 或 SE-ReLU）在推理期融合为每个 block 单条
+  卷积的部署友好结构。
+- **低时延骨干**——面向移动与嵌入式部署，吞吐能力强。
+- **变体缩放**——提供 `S0` 到 `S4` 多个发布变体，过参数化因子 `k`
+  按变体调优。
+- **分类输出**——产出 ImageNet-1k 标签的 Top-K 类别 ID 与置信度。
+
+![MobileOne block：训练期多分支结构经重参数化得到推理期单卷积](./test_data/MobileOne_architecture.png)
+
+*图（上游论文 Fig. 3）：MobileOne block 有两种结构——训练期带可重参数
+化分支（左），推理期把分支折叠为单个 3×3 / 1×1 卷积（右）。恢复自
+X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864）；训练/推理双结构也解释了
+部署制品为何是已重参数化的 INT8 s0–s4 变体（224×224 NV12，见
+[支持与实测矩阵](#support-matrix)）。*
+
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
 
 <a id="support-matrix"></a>
@@ -73,6 +92,15 @@ python3 samples/vision/mobileone/runtime/python/main.py \
 ## 预期结果
 
 默认变体 `s0` 保留源入口选择，其余变体 `s1`、`s2`、`s3`、`s4` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`tiger_beetle.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+
+供参考：X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
+截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
+`tiger_beetle.JPEG` 的 rank 1 为 class 300（tiger beetle）。这是源交付
+中的历史截图，不是本仓库当前入口的运行结果。
+
+![X5 源 README 的历史推理截图：tiger beetle 测试图与旧版 Top-5 叠加，
+rank 1 为 class 300（tiger beetle）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

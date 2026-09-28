@@ -8,6 +8,25 @@ RepVGG 是一种 VGG 风格的卷积神经网络家族，核心思想是结构�
 - **论文**: [RepVGG: Making VGG-style ConvNets Great Again](https://arxiv.org/abs/2101.03697)
 - **参考实现**: [DingXiaoH/RepVGG](https://github.com/DingXiaoH/RepVGG)
 
+源 README 提炼的特性：
+
+- **直连推理结构**——部署转换后网络即为 `3x3` 卷积 + ReLU 的
+  VGG 风格直连堆叠。
+- **结构重参数化**——训练期的恒等分支与 1×1 分支被折叠进部署期的
+  卷积层。
+- **硬件效率**——纯卷积 + ReLU 算子对边缘推理友好。
+- **变体缩放**——提供 `A0`、`A1`、`A2`、`B0`、`B1g2`、`B1g4`
+  六个变体。
+
+![RepVGG 架构示意：ResNet 对比 RepVGG 训练期与推理期](./test_data/RepVGG_architecture.png)
+
+*图（上游论文 Fig. 2）：(A) ResNet；(B) RepVGG 训练期——3×3 block 额外
+携带仅训练期使用的恒等与 1×1 分支；(C) RepVGG 推理期——分支折叠成纯
+3×3 堆叠（5 个 stage，stage 起始用 stride-2 下采样）。恢复自 X5 源
+README（rdk_x5 @ac115717197920355fc390bb04299b20e6436864）；实际部署
+制品是已重参数化的 INT8 a0/b0/b1g2/… 变体（224×224 NV12，见
+[支持与实测矩阵](#support-matrix)）。*
+
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
 
 <a id="support-matrix"></a>
@@ -77,6 +96,15 @@ python3 samples/vision/repvgg/runtime/python/main.py \
 ## 预期结果
 
 默认变体 `a0` 保留源入口选择，其余变体 `a1`、`a2`、`b0`、`b1g2`、`b1g4` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`gooze.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+
+供参考：X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
+截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
+`gooze.JPEG` 的 rank 1 为 class 99（goose）。这是源交付中的历史截图，
+不是本仓库当前入口的运行结果。
+
+![X5 源 README 的历史推理截图：goose 测试图与旧版 Top-5 叠加，rank 1 为
+class 99（goose）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

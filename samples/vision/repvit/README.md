@@ -8,6 +8,47 @@ RepViT revisits lightweight mobile CNN design from a ViT perspective. It keeps a
 - **Paper**: [RepViT: Revisiting Mobile CNN From ViT Perspective](http://arxiv.org/abs/2307.09283)
 - **Reference Implementation**: [THU-MIG/RepViT](https://github.com/THU-MIG/RepViT)
 
+The source README's feature highlights:
+
+- **ViT-inspired mobile CNN** — revisits the MobileNet-style
+  architecture from a lightweight ViT perspective.
+- **Structural reparameterization** — fuses training-time structural
+  branches (3×3DW with a 1×1DW branch) into a single 3×3DW for
+  deployment-time inference.
+- **Separated mixers** — inside a single block, the token-mixer part
+  (3×3 depthwise convolution, with SE in the SE variant) and the
+  channel-mixer part (the 1×1 FFN) are decoupled and stacked one after
+  the other, replacing the MobileNetV3 layout where both sit inside the
+  inverted-bottleneck block — not two separate network blocks.
+- **Efficient deployment** — m0.9, m1.0, and m1.1 RDK X5 deployment
+  models with packed NV12 input.
+
+![RepViT architecture overview: stem, four stages, block and SE
+variants](./test_data/RepViT_architecture.png)
+
+*Figure (upstream paper Fig. 3): the four-stage overview. Stem: two
+stacked stride-2 3×3 convolutions. In-stage RepViTBlock (yellow): a 3×3DW
+token mixer with a parallel 1×1DW branch, both summed by a residual add,
+followed by the FFN channel mixer. Downsample unit between stages
+(orange): a RepViTBlock at the stage resolution, then a stride-2 3×3DW,
+a 1×1, and an FFN — halving the resolution and mapping C_i to C_i+1.
+RepViTSEBlock (green): the same structure with an SE module between the
+token mixer and the FFN. Bottom: at inference the parallel 3×3DW + 1×1DW
+branches fuse into a single 3×3DW. Restored from the X5 source README
+(rdk_x5 @ac115717197920355fc390bb04299b20e6436864).*
+
+![Depthwise block: from MobileNetV3 block to separated-mixer RepViT
+block](./test_data/RepViT_DW.png)
+
+*Figure (upstream paper Fig. 4): (a) a MobileNetV3 block with optional
+squeeze-and-excite; (b) structural reparameterization separates the
+token mixer (3×3DW) and channel mixer (1×1) by relocating the depthwise
+convolution and SE layer; (c) the multi-branch topology consolidates
+into a single branch at inference. Together with the overview above this
+explains why the deployed artifacts are the already-fused INT8
+m0_9/m1_0/m1_1 variants at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 
 <a id="support-matrix"></a>
@@ -65,6 +106,18 @@ python3 samples/vision/repvit/runtime/python/main.py \
 ## Expected results
 
 Default variant `m0_9` preserves the source entrypoint. Choose `m1_0`, `m1_1` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `yurt.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+illustrated its run with the screenshot below: the legacy `result.jpg`
+drawing overlaid the top-5 ranks on the image, with rank 1 being class
+915 (yurt) on the bundled `yurt.JPEG`. This is a historical screenshot
+from the source delivery, not a run of the current entrypoint in this
+repository.
+
+![Historical inference screenshot from the X5 source README: yurt test
+image with the legacy top-5 overlay, rank 1 class 915
+(yurt)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

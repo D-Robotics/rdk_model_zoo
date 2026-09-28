@@ -8,6 +8,30 @@ Reparameterization](https://arxiv.org/abs/2303.14189)，按源交付引用）。
 <a id="overview"></a>
 ## 概述
 
+FastViT 是使用结构重参数化构建高效 token 混合模块的混合视觉
+Transformer 系列：训练期模块保留跳连与额外分支，推理期再把它们折叠成
+普通卷积，降低访存开销。家族内 token 混合器并不一致：按上游模型定义，
+已发布的 t8/t12/s12 四个 stage 全部使用 RepMixer token 混合，只有 sa12
+在 stage 1–3 保持 RepMixer、仅 stage 4 使用自注意力（并带 RepCPE 位置
+编码）——源 README 概括的卷积/注意力混合设计即指此类配置。
+ImageNet-1k 1000 类分类精度保持竞争力。源 README 提炼的特性：
+
+- **RepMixer token 混合**——利用结构重参数化减少访存开销。
+- **混合架构**——卷积运算与注意力结合，平衡精度与效率。
+- **高效部署**——提供 T8、T12、S12、SA12 四个 RDK X5 部署模型，使用
+  打包 NV12 输入。
+
+![FastViT 架构：训练期与推理期结构、stem、ConvFFN 与 RepMixer](./test_data/FastViT_architecture.png)
+
+*图（上游论文 Fig. 2）：(a) FastViT 总览，训练期与推理期结构解耦；
+(b) 卷积 stem；(c) 卷积 FFN；(d) RepMixer——推理期把跳连重参数化。
+论文把 stage 4 画成自注意力 token 混合器——这是 sa12 的配置（stage 1–3
+RepMixer、stage 4 注意力），并不代表已发布的 t8/t12/s12：它们的上游定义
+四个 stage 全部使用 RepMixer（见 apple/ml-fastvit 的
+`models/fastvit.py`）。恢复自 X5 源 README（rdk_x5 @ac11571，
+x5-v1.1.3）；训练/推理双结构也解释了部署制品为何是已重参数化的 INT8
+s12/sa12/t12/t8 变体（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
+
 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
 核验板卡身份，懒加载 `hbm_runtime`，执行
@@ -79,6 +103,14 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并�
 `test_data/result.jpg`——该副作用已移除）。使用随附 `bucket.JPEG` 时
 Top-5 含水桶相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部
 S 目标）会显式报错退出。
+
+供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
+下面的截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，
+rank 1 为 class 463（bucket）。这是源交付中的历史截图，不是本仓库当前
+入口的运行结果。
+
+![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：bucket 测试图与旧版
+Top-5 叠加，rank 1 为 class 463（bucket）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

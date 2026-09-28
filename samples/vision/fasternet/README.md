@@ -10,6 +10,48 @@ the source delivery).
 <a id="overview"></a>
 ## Overview
 
+FasterNet is a lightweight CNN family designed around one idea: chase a
+higher *effective* FLOPS (actual computed operations per second) instead
+of only minimizing theoretical FLOPs. Its core operator, partial
+convolution (PConv), applies the spatial convolution to only a fraction
+of the input channels and leaves the rest untouched, cutting redundant
+memory access and improving practical runtime efficiency on edge
+devices. It targets ImageNet-1k 1000-class classification. The source
+README's four feature highlights:
+
+- **High-FLOPS design** — emphasizes practical compute efficiency
+  instead of minimizing theoretical FLOPs only.
+- **Partial convolution (PConv)** — reduces redundant computation and
+  memory access.
+- **Lightweight CNN backbone** — keeps a deployment-friendly CNN
+  structure for efficient board-side inference.
+- **Efficient deployment** — S, T0, T1, and T2 RDK X5 deployment models
+  with packed NV12 input.
+
+![Effective FLOPS and latency comparison against other networks on
+CPU](./test_data/FLOPs%20of%20Nets.png)
+
+*Figure (upstream paper Fig. 2): (a) FLOPS under varied FLOPs on CPU —
+many networks run at a lower effective FLOPS than ResNet50, while
+FasterNet stays high; (b) latency under varied FLOPs on CPU — FasterNet
+is faster at the same FLOPs. Restored from the X5 source README
+(rdk_x5 @ac11571, x5-v1.1.3); conditions are the upstream CPU
+measurements, not RDK board numbers (see [Performance
+data](#performance)).*
+
+![FasterNet architecture: four-stage hierarchy and the FasterNet block
+with partial convolution](./test_data/FasterNet_architecture.png)
+
+*Figure (upstream paper Fig. 4): the overall architecture — four
+hierarchical stages of FasterNet blocks with embedding/merging layers —
+the PConv detail (convolution applied only to a channel fraction) and
+the block layout PConv 3×3 → two pointwise convs, with normalization and
+activation only after the middle layer to preserve feature diversity.
+Restored from the X5 source README (rdk_x5 @ac11571); it depicts the
+upstream training architecture, while the deployed artifacts are the
+INT8-quantized s/t0/t1/t2 variants at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 The maintained implementation is one Python flow (X5 only; this sample has
 no S-branch delivery and no C++ runtime on either source). Python resolves
 one exact artifact reference from the platform release manifests, verifies
@@ -91,6 +133,16 @@ side effect is gone). With the bundled `drake.JPEG` the Top-5 contains a
 drake-related ImageNet class. A board that cannot be identified, or a
 target without a matching artifact (all S targets), exits with an error
 instead of guessing.
+
+For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
+Python entrypoint) illustrated its run with the screenshot below: the
+legacy `result.jpg` drawing overlaid the top-5 ranks on the image, with
+rank 1 being class 97 (drake). This is a historical screenshot from the
+source delivery, not a run of the current entrypoint in this repository.
+
+![Historical inference screenshot from the X5 source README (rdk_x5
+@ac11571): drake test image with the legacy top-5 overlay, rank 1 class
+97 (drake)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

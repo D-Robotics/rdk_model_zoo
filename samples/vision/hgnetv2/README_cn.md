@@ -3,9 +3,18 @@
 <a id="overview"></a>
 ## 概述
 
-HGNetV2 是用于视觉任务的卷积骨干网络；本 sample 提供 b0–b4 的 ImageNet-1k 分类入口。
+HGNetV2 是用于视觉任务的卷积骨干网络；本 sample 提供 b0–b4 的 ImageNet-1k 分类入口。源 README 将其定位为面向精度/延迟平衡设计的下一代 CNN 骨干，是原 HGNet 的后继，在分类、检测与分割任务中均有良好表现。
 
 [PP-HGNetV2](https://github.com/PaddlePaddle/PaddleClas/blob/develop/docs/zh_CN/models/ImageNet1k/PP-HGNetV2.md)
+
+源 README 提炼的特性：
+
+- **聚合多感受野**——HG-Block 组合由浅至深的多尺度特征，对小型
+  目标的检测与识别友好。
+- **改进的 stem 模块**——网络入口堆叠更多 2×2 卷积核以学习丰富的
+  局部特征，同时使用更小的通道数，提升高分辨率任务表现。
+- **可学习下采样（LDS）**——自适应下采样层在降低计算冗余的同时保留
+  更多有效空间细节。
 
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
 
@@ -72,6 +81,16 @@ python3 samples/vision/hgnetv2/runtime/python/main.py \
 ## 预期结果
 
 默认变体 `b0` 保留源入口选择，其余变体 `b1`、`b2`、`b3`、`b4` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`sandbar.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+
+供参考：X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）以下面的
+`result.jpg` 绘制公布运行效果：旧版 demo 把 Top-5 排名叠在图上，随附
+`sandbar.JPEG` 的 rank 1 为 class 977（sandbar, sand bar）。这是源交付
+中的历史截图，不是本仓库当前入口的运行结果（当前流程仅在指定
+`--img-save-path` 时保存图像）。
+
+![X5 源 README 的历史推理结果：sandbar 测试图与旧版 Top-5 叠加，
+rank 1 为 class 977（sandbar, sand bar）](./test_data/result.jpg)
 
 <a id="performance"></a>
 ## 性能数据

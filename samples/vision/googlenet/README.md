@@ -8,6 +8,30 @@ GoogLeNet is an image classification network based on the Inception module. It w
 - **Paper**: [Going Deeper with Convolutions](https://arxiv.org/abs/1409.4842)
 - **Reference Implementation**: [torchvision/models/googlenet.py](https://github.com/pytorch/vision/blob/main/torchvision/models/googlenet.py)
 
+The source README's feature highlights:
+
+- **Inception module** — extracts multi-scale features using parallel
+  convolution and pooling branches (1×1 / 3×3 / 5×5 convolutions and 3×3
+  max pooling, concatenated per module).
+- **Parameter efficiency** — reduces model parameters compared with
+  wider dense CNN designs.
+- **Deep architecture** — a 22-layer classification backbone with
+  efficient branch aggregation.
+- **Embedded deployment** — the RDK X5 deployment model uses packed NV12
+  input and a quantized `.bin` artifact.
+
+![Inception module: naive version and with dimension
+reductions](./test_data/GoogLeNet_architecture.png)
+
+*Figure (upstream paper Fig. 2): (a) the naive Inception module;
+(b) the Inception module with dimension reductions — 1×1 convolutions
+before the 3×3/5×5 branches and after pooling, which keeps compute
+affordable at scale. Restored from the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864); it depicts the upstream
+training architecture, while the deployed artifact is the INT8-quantized
+`googlenet` variant at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 
 <a id="support-matrix"></a>
@@ -57,6 +81,17 @@ python3 samples/vision/googlenet/runtime/python/main.py \
 ## Expected results
 
 The only published variant is `googlenet`, selected by default. Inference prints Top-5 IDs, softmax scores and labels. Exact ties use ascending class-ID order. The bundled image is a functional input; board verification is not-run. Files are written only with `--img-save-path`.
+
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+illustrated its run with the screenshot below: the legacy `result.jpg`
+drawing overlaid the top-5 ranks on the image, with rank 1 being class 14
+(indigo bunting). This is a historical screenshot from the source
+delivery, not a run of the current entrypoint in this repository.
+
+![Historical inference screenshot from the X5 source README: indigo
+bunting test image with the legacy top-5 overlay, rank 1 class 14
+(indigo bunting)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

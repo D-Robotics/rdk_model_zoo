@@ -8,6 +8,29 @@ RepGhost is a lightweight CNN family designed to improve hardware efficiency by 
 - **Paper**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
 - **Reference Implementation**: [ChengpengChen/RepGhost](https://github.com/ChengpengChen/RepGhost)
 
+The source README's feature highlights:
+
+- **Structural re-parameterization** — converts training-time complex
+  branches into efficient inference-time structures.
+- **Implicit feature reuse** — moves GhostNet-style feature reuse from
+  feature space (`Concat`) to weight space, avoiding costly memory
+  copies.
+- **Hardware efficiency** — reduces memory-copy overhead and improves
+  deployment efficiency on edge devices.
+- **Variant scaling** — published variants from `100` to `200`.
+
+![RepGhost bottleneck compared with the Ghost bottleneck: training-time
+add branches fused for inference](./test_data/RepGhost_architecture.png)
+
+*Figure (upstream paper Fig. 4): (a) Ghost bottleneck with its explicit
+`Concat` feature reuse; (b) RG-bneck at training — reuse moves to weight
+space via `add` branches; (c) RG-bneck at inference — the branches are
+fused away. Restored from the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864); it depicts the upstream
+architecture, while the deployed artifacts are the INT8-quantized
+100–200 variants at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 
 <a id="support-matrix"></a>
@@ -73,6 +96,18 @@ python3 samples/vision/repghost/runtime/python/main.py \
 ## Expected results
 
 The default is variant `100`, preserving the source entrypoint. `111`, `130`, `150`, `200` must be selected explicitly. Top-K scores use the source softmax policy; exact ties use stable ascending class-ID order. The ibex image is a functional input, not a dataset accuracy test; no current-board reference output exists yet. No image is saved unless `--img-save-path` is supplied.
+
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+illustrated its run with the screenshot below: the legacy `result.jpg`
+drawing overlaid the top-5 ranks on the image, with rank 1 being class
+350 (ibex, Capra ibex) on the bundled `ibex.JPEG`. This is a historical
+screenshot from the source delivery, not a run of the current entrypoint
+in this repository.
+
+![Historical inference screenshot from the X5 source README: ibex test
+image with the legacy top-5 overlay, rank 1 class 350 (ibex, Capra
+ibex)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

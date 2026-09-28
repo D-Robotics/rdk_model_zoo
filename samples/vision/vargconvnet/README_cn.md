@@ -57,6 +57,16 @@ python3 samples/vision/vargconvnet/runtime/python/main.py \
 
 唯一发布变体为 `vargconvnet`，默认即选中它。推理打印 Top-5 ID、softmax 分数与标签。完全平局按 ID 升序排序。随附图片用于功能检查；板测 not-run。仅指定 `--img-save-path` 才写文件。
 
+供参考：X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
+截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名和分数叠在图上——
+随附 `box_turtle.JPEG` 的 rank 1 为 class 37（box turtle, box
+tortoise），分数 0.8582。这是源交付中的历史截图，不是本仓库当前入口的
+运行结果。
+
+![X5 源 README 的历史推理截图：box turtle 测试图与旧版 Top-5 叠加，
+rank 1 为 class 37（box turtle, box tortoise），分数 0.8582](./test_data/inference.png)
+
 <a id="performance"></a>
 ## 性能数据
 

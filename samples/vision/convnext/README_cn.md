@@ -12,6 +12,25 @@ ConvNeXt（现代化 ConvNet 系列）在 RDK X5 上的 ImageNet-1k 分类：
 <a id="overview"></a>
 ## 概述
 
+ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造而来的纯
+卷积网络（"A ConvNet for the 2020s"）。它面向 ImageNet-1k 1000 类图像
+分类，输出 Top-K 类别及置信度。源 README 提炼了相对经典 ResNet 的四项
+设计改动：
+
+- **大核深度可分离卷积**——用 7×7 深度卷积替代传统 3×3 卷积，在
+  MobileNet/EfficientNet 量级的参数与计算成本下扩大感受野。
+- **更少的激活函数，GELU 替代 ReLU**——激活层更稀疏，非线性采用
+  Transformer 风格。
+- **LayerNorm 替代 BatchNorm**——对小批量数据更稳。
+- **简化的残差设计**——精简全连接部分，去掉 ResNet 的瓶颈结构。
+
+![ConvNeXt block 与 ResNet、Swin Transformer block 的对比](./test_data/ConvNeXt_Block.png)
+
+*图：上游论文的 block 对比——Swin Transformer block（左）、ResNet
+block（中）、ConvNeXt block（右）。恢复自 X5 源 README（rdk_x5 @ac11571，
+x5-v1.1.3）；图中为上游训练结构，X5 上实际部署的是 INT8 量化的 atto
+变体（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
+
 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
 核验板卡身份，懒加载 `hbm_runtime`，执行
@@ -84,6 +103,15 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并�
 含挂钩相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部 S
 目标）会显式报错退出。
 
+供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
+下面的截图演示运行效果：旧版 demo 把 top-1 标签画到图上（即已移除的
+`result.jpg` 副作用），随附 `cheetah.JPEG` 得到
+`cheetah, chetoh, Acinonyx jubatus: 0.8048811`（标签文字按历史运行原样
+保留）。这是源交付中的历史截图，不是本仓库当前入口的运行结果。
+
+![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：旧版可视化代码与
+cheetah 结果，top-1 分数 0.8048811](./test_data/inference.png)
+
 <a id="performance"></a>
 ## 性能数据
 
@@ -97,9 +125,13 @@ BPU 1xBayes-e@1GHz）：
 | ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
 | ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
 | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
+| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
 
-已发布表覆盖 nano/pico/femto——不含 atto（唯一有可下载制品的变体反而
-没有基准行）；按发布原样记录。
+四行数据——包括唯一有可下载制品的 atto——都来自同一张已发布源表
+（rdk_x5 @ac11571 的 "Performance Data" 小节，其中本就列出 atto）；归档
+平台基准快照（`platforms/x5/docs/release/benchmarks.yaml`，条目
+`convnext-atto-x5`）记录的 atto 数值与此一致。均为历史发布值，未在本
+仓库重测。
 
 <a id="directory"></a>
 ## 目录职责

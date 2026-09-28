@@ -10,6 +10,27 @@ Applications](https://arxiv.org/abs/2206.10589)，参考实现
 <a id="overview"></a>
 ## 概述
 
+EdgeNeXt 是面向移动视觉的高效 CNN-Transformer 混合架构：四级金字塔把
+卷积编码器与 SDTA（Split Depth-wise Transpose Attention）编码器组合在
+一起，在分类精度、模型体积与推理速度之间取得平衡，面向 ImageNet-1k
+1000 类分类。源 README 提炼的四项特性：
+
+- **CNN-Transformer 混合设计**——结合卷积的推理效率与 Transformer 风格
+  的全局特征建模。
+- **四级金字塔**——采用对部署友好的层级化特征提取结构。
+- **SDTA 编码器**——通过通道拆分（拆分 3×3 分支）与转置注意力编码
+  多尺度特征。
+- **高效部署**——提供 base、small、x-small、xx-small 四个 RDK X5
+  部署模型，使用打包 NV12 输入。
+
+![EdgeNeXt 架构：四级金字塔及 NxN 卷积编码器与 SDTA 编码器细节](./test_data/EdgeNeXt_architecture.png)
+
+*图：EdgeNeXt 架构——四级金字塔（上）与 NxN 卷积编码器（左下）、含
+拆分 3×3 分支和转置注意力的 SDTA 编码器（右下）。恢复自 X5 源 README
+（rdk_x5 @ac11571，x5-v1.1.3）；图中为上游训练结构，实际部署制品是
+INT8 量化的 base/small/x_small/xx_small 变体（224×224 NV12，见
+[支持与实测矩阵](#support-matrix)）。*
+
 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
 核验板卡身份，懒加载 `hbm_runtime`，执行
@@ -81,6 +102,14 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并�
 `test_data/result.jpg`——该副作用已移除）。使用随附 `Zebra.jpg` 时
 Top-5 含斑马相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部
 S 目标）会显式报错退出。
+
+供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
+下面的截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，
+rank 1 为 class 340（zebra）。这是源交付中的历史截图，不是本仓库当前
+入口的运行结果。
+
+![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：zebra 测试图与旧版
+Top-5 叠加，rank 1 为 class 340（zebra）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

@@ -246,3 +246,13 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：ASR-R1经Codex独立复验关闭：27项Python通过，原int32分数对在ctc/legacy均正确返回token1，checker零违规，62份样例文件哈希稳定。原生文件与上次独立评审哈希一致，保留原5项CTest范围而不重复无关板测/工具链验证。见[ASR评审](../../releases/unified-migration/2026-09-28-asr-independent-review.md)。H6/B10总体仍待文档/集成收尾。
 
 2026-09-28：当前597份根/平台入口/sample/dataset README导航快照完成：3595处行内链接/图片引用中，本地目标与显式/标题锚点检查无未解析项。初版把C++ lambda误认作链接的扫描器误报已修正，不改客户代码。见[导航评审](../../releases/unified-migration/2026-09-28-navigation-independent-review.md)；仅导航证据，含并行待审文档哈希，不能替代H1内容深度或H9最终快照。
+
+### 2026-09-28 — Twelve classifier README depth accepted
+
+Codex independently closed DOC-CLASS-R1/R2/R3 after Claude Code + GLM
+remediation. The twelve root README pairs and ConvNeXt evaluator pair are
+accepted within this documentation scope: 26 unchanged command-block sets,
+48 fixed-source image references, and three fresh affected-sample checkers
+with zero violations. See
+[the independent review](../../releases/unified-migration/2026-09-28-readme-depth-classifiers-independent-review.md).
+H1 remains open for the remaining sample/subdirectory documentation audit.

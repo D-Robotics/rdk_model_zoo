@@ -11,6 +11,41 @@ source delivery).
 <a id="overview"></a>
 ## Overview
 
+FastViT is a hybrid vision transformer family that uses structural
+reparameterization to build efficient token-mixing blocks: training-time
+blocks keep their skip connections and extra branches, which are then
+folded into plain convolutions for inference, cutting memory access
+overhead. The token mixers differ across the family: in the upstream
+model definitions, the published t8/t12/s12 variants use RepMixer token
+mixing in all four stages, while sa12 keeps RepMixer in stages 1–3 and
+uses self-attention (with a RepCPE positional encoding) only in stage 4
+— the conv/attention hybrid the source README summarizes. ImageNet-1k
+1000-class classification accuracy stays competitive. The source
+README's feature highlights:
+
+- **RepMixer token mixing** — uses structural reparameterization to
+  reduce memory access overhead.
+- **Hybrid architecture** — combines convolutional operations and
+  attention to balance accuracy and efficiency.
+- **Efficient deployment** — T8, T12, S12, and SA12 RDK X5 deployment
+  models with packed NV12 input.
+
+![FastViT architecture: train-time vs inference-time structures, stem,
+ConvFFN and RepMixer](./test_data/FastViT_architecture.png)
+
+*Figure (upstream paper Fig. 2): (a) FastViT overview with decoupled
+train-time and inference-time architectures; (b) convolutional stem;
+(c) convolutional FFN; (d) RepMixer, which reparameterizes a skip
+connection at inference. The paper draws stage 4 with a self-attention
+token mixer — that is the configuration sa12 uses (RepMixer in stages
+1–3, attention in stage 4); it does not represent the published
+t8/t12/s12, whose upstream definitions use RepMixer in all four stages
+(see `models/fastvit.py` in apple/ml-fastvit). Restored from the X5
+source README (rdk_x5 @ac11571, x5-v1.1.3); the train/inference split
+explains why the deployed artifacts are the already-reparameterized INT8
+s12/sa12/t12/t8 variants at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 The maintained implementation is one Python flow (X5 only; this sample has
 no S-branch delivery and no C++ runtime on either source). Python resolves
 one exact artifact reference from the platform release manifests, verifies
@@ -92,6 +127,16 @@ side effect is gone). With the bundled `bucket.JPEG` the Top-5 contains a
 bucket-related ImageNet class. A board that cannot be identified, or a
 target without a matching artifact (all S targets), exits with an error
 instead of guessing.
+
+For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
+Python entrypoint) illustrated its run with the screenshot below: the
+legacy `result.jpg` drawing overlaid the top-5 ranks on the image, with
+rank 1 being class 463 (bucket). This is a historical screenshot from the
+source delivery, not a run of the current entrypoint in this repository.
+
+![Historical inference screenshot from the X5 source README (rdk_x5
+@ac11571): bucket test image with the legacy top-5 overlay, rank 1 class
+463 (bucket)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

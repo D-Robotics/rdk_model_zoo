@@ -8,6 +8,30 @@ ResNeXt extends the residual network family with a split-transform-merge design 
 - **Paper**: [Aggregated Residual Transformations for Deep Neural Networks](https://arxiv.org/abs/1611.05431)
 - **Reference Implementation**: [facebookresearch/ResNeXt](https://github.com/facebookresearch/ResNeXt)
 
+The source README's feature highlights:
+
+- **Cardinality** — improves representation power by increasing the
+  number of parallel transformation paths (the "32" in 32×4d: 32 groups)
+  instead of only scaling depth or width.
+- **Grouped convolution** — balances accuracy and compute efficiency
+  while keeping parameters/FLOPs close to the ResNet counterpart.
+- **Residual backbone** — preserves the stable residual learning pattern
+  (split-transform-merge inside each block).
+- **Classification output** — Top-K class IDs and confidence scores for
+  ImageNet-1k labels.
+
+![ResNeXt-50 32x4d vs ResNet-50 stage table from the upstream
+paper](./test_data/ResNeXt_architecture.png)
+
+*Figure (upstream paper Table 1): the stage-by-stage block table — each
+ResNeXt bottleneck replaces the dense 1×1/3×3/1×1 transform with a
+grouped 3×3 (C=32), keeping parameters (25.0 vs 25.5 M) and FLOPs
+(4.2 vs 4.1 G) nearly unchanged versus ResNet-50. Restored from the X5
+source README (rdk_x5 @ac115717197920355fc390bb04299b20e6436864); it
+depicts the upstream training architecture, while the deployed artifact
+is the INT8-quantized `50_32x4d` variant at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 
 <a id="support-matrix"></a>
@@ -57,6 +81,18 @@ python3 samples/vision/resnext/runtime/python/main.py \
 ## Expected results
 
 The only published variant is `50_32x4d`, selected by default. Inference prints Top-5 IDs, softmax scores and labels. Exact ties use ascending class-ID order. The bundled image is a functional input; board verification is not-run. Files are written only with `--img-save-path`.
+
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+illustrated its run with the screenshot below: the legacy `result.jpg`
+drawing overlaid the top-5 ranks on the image, with rank 1 being class 92
+(bee eater) on the bundled `bee_eater.JPEG`. This is a historical
+screenshot from the source delivery, not a run of the current entrypoint
+in this repository.
+
+![Historical inference screenshot from the X5 source README: bee eater
+test image with the legacy top-5 overlay, rank 1 class 92 (bee
+eater)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data
