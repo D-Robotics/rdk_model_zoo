@@ -5,8 +5,8 @@
 <a id="supported-boards"></a>
 ## Supported boards and migration status
 
-The SDK-independent policy stages are implemented here. The unified native SDK
-adapter, executable and launcher are still being migrated; this directory does
+The SDK-independent policy stages are implemented here. The native SDK adapter is implemented and checked with explicit host doubles;
+the executable and launcher are still being migrated; this directory does
 not yet provide a board inference command. The original implementation remains
 in the [source C++ guide](../../../../../platforms/x5/samples/robotics/himloco/runtime/cpp/README.md).
 Use the unified [Python entry](../python/README.md) for the implemented runtime
@@ -14,7 +14,7 @@ interface. Do not interpret a host policy test as an SDK or board test.
 
 | Target | Published artifact | Native status |
 | --- | --- | --- |
-| X5 | Bayes-e fused Go2 BIN | Pure stages host-tested; SDK/CLI migration pending; board not-run |
+| X5 | Bayes-e fused Go2 BIN | Pure stages host-tested; SDK fixture checks pass; CLI pending; board not-run |
 | S100 / S100P / S600 | None for this policy | Not supported |
 
 Source: X5 commit `ac115717197920355fc390bb04299b20e6436864`.
@@ -29,6 +29,10 @@ Python, Torch, model download or conversion toolchain is needed to compile it.
 Host checks below were run with the installed Apple Clang compiler; they do not
 establish compatibility with a board SDK. The historical source board environment
 was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT 3.15.55.
+
+The actual `sdk_runner.cc` also requires X5 BSP headers `dnn/hb_dnn.h`,
+`dnn/hb_sys.h` and libdnn. `model_preflight.cc` reuses board identity and SHA-256
+from `samples/_shared/cpp/`. Test fixture headers must never replace production SDK headers.
 
 <a id="build"></a>
 ## Build the host contract check
@@ -110,7 +114,40 @@ raw output or its duration; preprocessing and postprocessing do not call the
 runner. The task stores no mutable per-call state. Thread safety still depends
 on the supplied runner; do not invoke a shared native SDK runner concurrently.
 The adapter/application owns SDK loading, metadata, resource lifetime, input/output
-files, reports and target/model identity checks; those migration pieces are pending.
+files, reports and target/model identity checks; SDK lifecycle, metadata and identity checks are implemented in `SdkRunner`;
+file/report/CLI migration remains pending.
+
+### SDK adapter
+
+`SdkRunner(NativeConfig)` first reads actual board identity, requires X5 and checks
+the explicit local `.bin` path against the published SHA-256, before loading the
+SDK. There is no download, environment override or S-platform fallback.
+`NativeConfig::priority` defaults to `-1` (SDK default), with `[0,255]` accepted;
+`model_path` must be supplied explicitly.
+
+```cpp
+himloco::SdkRunner runner({model_path, 7});
+himloco::HimLoco task([&runner](const std::vector<float>& input) {
+  return runner.run(input);
+});
+auto result = task.predict(observation);
+```
+
+The runner must outlive any task referencing it; do not use the same SDK resources
+concurrently. The adapter requires one model, one `obs_history` input and one
+`actions` output, float32 without manual dequantization. It checks four-dimensional
+X5 logical/aligned shapes, element counts and allocation capacity before copying.
+Input retains the source compact-submission convention, with remaining memory
+zeroed. Output extraction follows aligned strides to return 12 owned logical values.
+Task handles release on every exit; failed construction and destruction release
+tensors before the packed model. `input_metadata()`/`output_metadata()`,
+`model_name()`, `runtime_version()` and `priority()` supply report facts to the
+application without writing reports inside inference code.
+
+Host doubles exercise capacity/alignment, dtype/quantization rejection, allocation,
+infer/wait/cache failures, nonfinite output and cleanup. Production preflight
+rejections are checked separately with a board-identity reader double.
+Real SDK compilation/execution has not run; CLI work remains open.
 
 <a id="results-interpretation"></a>
 ## Interpreting results
@@ -120,8 +157,8 @@ controller applies `default_joint_position + 0.25 * actions` outside the model
 boundary. No live control loop is included.
 
 The core reports the duration supplied with each `RawOutputs`; it does not add
-preprocessing or postprocessing time. The future native runner must identify its
-actual timing scope. The [evaluator guide](../../evaluator/README.md) retains
+preprocessing or postprocessing time. The native runner measures `hbDNNInfer` plus `hbDNNWaitTaskDone`, excluding
+cache maintenance, input copying, output extraction and file I/O. The [evaluator guide](../../evaluator/README.md) retains
 historical source measurements and their scopes; none is a new unified C++ result.
 Offline numerical agreement alone does not establish closed-loop behavior.
 

@@ -14,7 +14,7 @@ are not interchangeable. The migration source is X5 commit
 
 The unified Python SDK entry, explicit model preparation and offline inputs are
 implemented. Source conversion/evaluation tools and bilingual guides are now in
-the unified directory; native C++ pure stages are host-tested, while SDK/CLI migration remains in progress. Quantization
+the unified directory; native C++ pure stages are host-tested, with SDK fixture checks passing; CLI migration remains in progress. Quantization
 instructions are inherited from the existing source scheme; no recipe rerun is required for this documentation work. This is not yet
 whole-sample independent acceptance.
 
@@ -28,7 +28,7 @@ robot command is performed. The source controller applies
 
 | Target | Artifact | Unified Python | Unified C++ |
 | --- | --- | --- | --- |
-| X5 | Bayes-e BIN | Implemented; host SDK-double tests; board not-run | Pure stages host-tested; SDK/CLI pending; board not-run |
+| X5 | Bayes-e BIN | Implemented; host SDK-double tests; board not-run | Pure stages host-tested; SDK fixture checks pass; CLI pending; board not-run |
 | S100 / S100P / S600 | No published matching artifact | Not supported | Not supported |
 
 The source board environment was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT
@@ -101,7 +101,7 @@ mapping, control-loop behavior or closed-loop stability.
 - `tests/`: core, metadata and CLI checks with explicit model/SDK fixtures.
 - `conversion/`: source fused export, calibration and Mapper recipe with bilingual guides.
 - `evaluator/`: format/action comparisons, input preparation and historical measurements.
-- `runtime/cpp/`: pure policy stages and host checks; SDK/CLI migration pending.
+- `runtime/cpp/`: pure policy stages and host checks; SDK adapter and fixture checks; CLI migration pending.
 
 <a id="entry-points"></a>
 ## Entry points
