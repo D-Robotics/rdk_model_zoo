@@ -66,3 +66,22 @@ Subsequent worker instructions explicitly prohibit automatic-memory access.
 Disposition: accept this bounded POINTNET-R1 remediation and its regression
 coverage. This does not close all B8/H4 samples or whole-branch acceptance.
 Board and quantization verification remain not-run under current user scope.
+
+## POINTNET-R2 — accepted int32 logits lose ordering before argmax (P2)
+
+Full-sample follow-up found that binding accepts int32 SCALE output, but the task
+uses apply_output_transform whose dequant path casts raw values to float32 before
+argmax. With accepted scalar scale=1 and zero_point=0, raw scores
+[16777216,16777217,0,0] should select class 1. Production post_process selects
+class 0 because float32 rounds the first two values to an artificial tie.
+[Reproducer evidence](evidence/2026-09-28-pointnet-independent-review/int32-argmax.json).
+This is a synthetic host tensor case, not an observed board artifact failure or
+a quantization recipe check. The current claimed int32 contract makes it relevant.
+
+Preserve integer ordering during affine decoding for argmax (the existing shared
+dequantize_tensor supports float64 comparison). Keep raw inference unchanged and
+F32 vestigial-descriptor behavior intact; do not change shared defaults for other
+samples or silently drop the advertised integer contract. Cover int32 distinction,
+per-channel scale/offset and true ties. Clarify comparison precision in the two
+runtime guides, run the bounded PointNet suite and checker, and return for review.
+POINTNET-R1 remains closed; full PointNet/B8 acceptance stays changes-required.
