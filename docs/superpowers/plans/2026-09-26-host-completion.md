@@ -242,3 +242,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：YOLOE evaluator的合成计分/数据契约10项经现有pycocotools缓存环境复验通过（默认环境缺依赖的首次失败保留），14份README本地文件链接无缺失。子目录内容已对照参数/状态和源记录；发现conversion/evaluator的C++进度旧声明，连同UNetMobileNet旧评审状态交Claude做文档同步，未扩大量化验证范围。
 
 2026-09-28：H0独立关闭：9条既有B3/B6/B7修复分支均已通过祖先关系或git cherry等价补丁纳入，B3隔离与native audit/两侧日志归档整改已读码核对，290项相关主机回归通过。见[独立集成评审](../../releases/unified-migration/2026-09-28-integration-independent-review.md)。仅H0当前定义范围完成；H3文档收尾、H8目录/来源全量检查、H9整体交付和其余H项继续，历史板测缺口不变。
+
+2026-09-28：ASR-R1经Codex独立复验关闭：27项Python通过，原int32分数对在ctc/legacy均正确返回token1，checker零违规，62份样例文件哈希稳定。原生文件与上次独立评审哈希一致，保留原5项CTest范围而不重复无关板测/工具链验证。见[ASR评审](../../releases/unified-migration/2026-09-28-asr-independent-review.md)。H6/B10总体仍待文档/集成收尾。

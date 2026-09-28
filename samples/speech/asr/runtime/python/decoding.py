@@ -1,6 +1,7 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Greedy CTC and an explicit archived concatenate-only comparison mode."""
+"""Greedy CTC in float32 or exact comparison precision, plus an explicit
+archived concatenate-only comparison mode."""
 
 from numbers import Integral
 import numpy as np
@@ -49,4 +50,27 @@ def decode_logits(logits, vocabulary, mode="ctc"):
         or not np.isfinite(logits).all()
     ):
         raise ValueError("Expected finite float32 logits [1,T,vocabulary_size], T > 0")
+    return decode_ids(np.argmax(logits[0], axis=-1), tokens, mode)
+
+
+def decode_exact_logits(logits, vocabulary, mode="ctc"):
+    """Greedy decode of float64 logits carrying exact integer affine scores.
+
+    Integer SCALE outputs dequantized with ``dequantize_tensor(dtype="float64")``
+    keep distinct raw scores distinct through argmax; the float32
+    :func:`decode_logits` rounds adjacent int32 magnitudes such as 2**24 and
+    2**24 + 1 into artificial ties.  Genuinely equal scores still tie to the
+    lowest ID exactly like :func:`decode_logits`.
+    """
+    tokens = validate_vocabulary(vocabulary)
+    if (
+        not isinstance(logits, np.ndarray)
+        or logits.ndim != 3
+        or logits.shape[0] != 1
+        or logits.shape[1] < 1
+        or logits.shape[2] != len(tokens)
+        or logits.dtype != np.float64
+        or not np.isfinite(logits).all()
+    ):
+        raise ValueError("Expected finite float64 logits [1,T,vocabulary_size], T > 0")
     return decode_ids(np.argmax(logits[0], axis=-1), tokens, mode)

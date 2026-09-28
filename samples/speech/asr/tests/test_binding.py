@@ -85,3 +85,24 @@ class BindingTests(unittest.TestCase):
         self.assertIs(task.forward(calls[0]), raw)
         legacy = ASR(runner, binding, vocabulary, decode_mode="legacy")
         self.assertEqual(legacy.post_process(raw), vocabulary[5] * 3)
+        meta32 = metadata()
+        meta32["output_dtypes"] = {"logits": "int32"}
+        meta32["output_quants"] = {
+            "logits": SimpleNamespace(
+                quant_type="SCALE", scale=[1.0], zero_point=[0], axis=2
+            )
+        }
+        binding32 = bind_model(resolve_selection("s100"), meta32)
+        raw32 = np.zeros((1, 4, 3503), np.int32)
+        raw32[0, 0, 0] = 16777216
+        raw32[0, 0, 1] = 16777217
+        raw32[0, 1:4, 5] = 1
+        task32 = ASR(lambda tensors: raw32, binding32, vocabulary)
+        self.assertEqual(
+            task32.predict(np.ones(20, np.float32), 16000),
+            vocabulary[1] + vocabulary[5],
+        )
+        legacy32 = ASR(lambda tensors: raw32, binding32, vocabulary, decode_mode="legacy")
+        self.assertEqual(
+            legacy32.post_process(raw32), vocabulary[1] + vocabulary[5] * 3
+        )
