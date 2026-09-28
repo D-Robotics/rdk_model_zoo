@@ -1,4 +1,4 @@
-> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration only; quantization recipes are preserved without rerunning, and board tests are not-run.
+> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration and the native core refactor with host-side SDK-double tests; quantization recipes are preserved without rerunning, and board tests are not-run.
 
 [English](README.md) | [简体中文](README_cn.md)
 

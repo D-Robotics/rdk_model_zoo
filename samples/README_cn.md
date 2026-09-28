@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-当前索引覆盖 50 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 1 个大模型样例。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
+当前索引覆盖 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
 
 ## 图像分类
 
@@ -90,12 +90,13 @@ HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制
 | Sample | 转换 | 评测 |
 | --- | --- | --- |
 | [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
+| [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
 
-Gemma 已迁入五个原生入口与完整源教程；模型准备和核心职责仍在重构，未完成独立验收。
+Gemma 已迁入五个原生入口与完整源教程；模型准备已完成，剩余文本核心工作与独立验收仍未关闭。MiniCPM5-2B 已迁入 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口并具备主机侧测试；板测未运行、独立验收待完成，不表示原生核心已验收。
 
 ## 固定第三方策略集成
 
-ACT／Pi0 的完整上游 Git 子模块与 50 个本仓库 Sample 分开维护。参阅 [VLA 总览](vla/README_cn.md)、[ACT 板型选择](vla/guides/act_cn.md)、[Pi0 离线与实机边界](vla/guides/pi0_cn.md)。源码获取不等于模型已准备或板端验证通过。
+ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护。参阅 [VLA 总览](vla/README_cn.md)、[ACT 板型选择](vla/guides/act_cn.md)、[Pi0 离线与实机边界](vla/guides/pi0_cn.md)。源码获取不等于模型已准备或板端验证通过。
 
 ## 如何解读验证状态
 

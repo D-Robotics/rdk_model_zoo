@@ -1,71 +1,69 @@
 /** @file minicpm5.cc
- * @brief Portable configuration and synchronous OELLM text inference.
+ * @brief OELLM generation stages: pre-process, inference and post-processing.
+ *
+ * Configuration and file IO live in runtime_config.cc; this file holds only
+ * the generation stages and their validation.
  */
 #include "minicpm5.hpp"
 
-#include <cstdio>
-#include <filesystem>
+#include <cmath>
 #include <stdexcept>
-#include <unistd.h>
-#include <nlohmann/json.hpp>
+#include <utility>
+
+#include "runtime_config.hpp"
 
 namespace minicpm5 {
-namespace {
-constexpr const char* kModel = "MiniCPM5-2B_language_chunk_256_cache_4096_w8_nash-p_corenum_4_4.hbm";
-constexpr const char* kEmbedding = "MiniCPM5-2B_embed_tokens.bin";
-}
 
 MiniCPM5::MiniCPM5(const Config& config) : config_(config) {
-  if (config.max_new_tokens < 1 || config.max_new_tokens > 4096) {
+  if (config_.max_new_tokens < 1 || config_.max_new_tokens > 4096) {
     throw std::runtime_error("max_new_tokens must be between 1 and 4096");
   }
-  const auto directory = std::filesystem::canonical(config.model_path);
-  for (const auto* name : {kModel, kEmbedding, "tokenizer.json", "tokenizer_config.json"}) {
-    if (!std::filesystem::is_regular_file(directory / name)) {
-      throw std::runtime_error(std::string("Missing model file: ") + name);
-    }
-  }
-  // OELLM backend enums differ from hbm_infer's zero-based core IDs.
-  const nlohmann::json settings = {
-      {"work_dir", directory.string()}, {"lm_model_file", kModel},
-      {"embed_weight_name", kEmbedding}, {"runtime_type", "LLM"},
-      {"max_batch_size", 1}, {"max_conv_cache_num", 0},
-      {"backends", {{"prefill", {1, 2, 3, 4}}, {"decode", {1, 2, 3, 4}}}}};
-  std::string filename = (std::filesystem::temp_directory_path() / "minicpm5-XXXXXX").string();
-  const int fd = mkstemp(filename.data());
-  if (fd < 0) throw std::runtime_error("Cannot create temporary runtime configuration");
-  const std::string serialized = settings.dump();
-  const auto written = write(fd, serialized.data(), serialized.size());
-  close(fd);
-  if (written != static_cast<ssize_t>(serialized.size())) {
-    std::remove(filename.c_str());
-    throw std::runtime_error("Cannot write runtime configuration");
-  }
-  const auto code = runtime_.Init(filename);
-  std::remove(filename.c_str());
-  if (code != oellm::OellmErrorCode::kOk) {
-    throw std::runtime_error("OELLM initialization failed: " + std::to_string(static_cast<int>(code)));
-  }
+  configure_runtime(config_.model_path, runtime_);
 }
 
-Result MiniCPM5::Generate(const std::string& prompt, bool new_chat) {
+void validate_metrics(double ttft_ms, double decode_tps, double e2e_ms) {
+  if (!std::isfinite(ttft_ms))
+    throw std::runtime_error("Non-finite TTFT metric");
+  if (ttft_ms < 0) throw std::runtime_error("Negative TTFT metric");
+  if (!std::isfinite(decode_tps))
+    throw std::runtime_error("Non-finite decode_tps metric");
+  if (decode_tps < 0) throw std::runtime_error("Negative decode_tps metric");
+  if (!std::isfinite(e2e_ms)) throw std::runtime_error("Non-finite e2e metric");
+  if (e2e_ms < 0) throw std::runtime_error("Negative e2e metric");
+}
+
+oellm::OellmRequest pre_process(const std::string& prompt, bool new_chat,
+                                int32_t max_new_tokens, int32_t request_id) {
   if (prompt.empty()) throw std::runtime_error("Prompt must not be empty");
+  // Enforced here because this is a public entry: direct callers cannot
+  // bypass the bounds that the constructor also checks.
+  if (max_new_tokens < 1 || max_new_tokens > 4096)
+    throw std::runtime_error("max_new_tokens must be between 1 and 4096");
   oellm::OellmRequest request;
   oellm::OellmRequest::Request item;
-  item.request_id = ++request_id_;
+  item.request_id = request_id;
   item.conversation_id = 1;
   item.new_chat = new_chat;
-  item.max_new_tokens = config_.max_new_tokens;
+  item.max_new_tokens = max_new_tokens;
   oellm::OellmPrompt::TextPrompt text_prompt;
   text_prompt.text = prompt;
   item.prompt.user_prompt = text_prompt;
   request.oellm_requests.push_back(item);
-  oellm::OellmResponse response;
-  const auto code = runtime_.Infer(request, response);
-  if (code != oellm::OellmErrorCode::kOk || response.response_datas.size() != 1 ||
-      !response.response_datas.front()) {
-    throw std::runtime_error("OELLM inference failed: " + std::to_string(static_cast<int>(code)));
+  return request;
+}
+
+void infer(oellm::OellmRuntime& runtime, const oellm::OellmRequest& request,
+           oellm::OellmResponse& response) {
+  const auto code = runtime.Infer(request, response);
+  if (code != oellm::OellmErrorCode::kOk ||
+      response.response_datas.size() != 1 || !response.response_datas.front()) {
+    throw std::runtime_error("OELLM inference failed: " +
+                             std::to_string(static_cast<int>(code)));
   }
+}
+
+Result post_process(const oellm::OellmResponse& response,
+                    oellm::OellmRuntime& runtime) {
   const auto& data = *response.response_datas.front();
   Result result;
   result.text = data.text_result;
@@ -74,17 +72,28 @@ Result MiniCPM5::Generate(const std::string& prompt, bool new_chat) {
   if (data.status != oellm::OellmStatus::kNormalFinished &&
       data.status != oellm::OellmStatus::kLengthFinished &&
       data.status != oellm::OellmStatus::kMaxContextFinished) {
-    throw std::runtime_error("Unexpected generation status: " + std::to_string(result.status));
+    throw std::runtime_error("Unexpected generation status: " +
+                             std::to_string(result.status));
   }
   oellm::OellmMetric metrics;
-  if (runtime_.GetOellmInferMetric(metrics) != oellm::OellmErrorCode::kOk ||
+  if (runtime.GetOellmInferMetric(metrics) != oellm::OellmErrorCode::kOk ||
       metrics.metric_datas.size() != 1 || !metrics.metric_datas.front()) {
     throw std::runtime_error("Cannot obtain request metrics");
   }
   const auto& metric = *metrics.metric_datas.front();
+  validate_metrics(metric.ttft, metric.decode_tps, metric.e2e);
   result.ttft_ms = metric.ttft;
   result.decode_tps = metric.decode_tps;
   result.e2e_ms = metric.e2e;
   return result;
+}
+
+Result MiniCPM5::Generate(const std::string& prompt, bool new_chat) {
+  const int32_t request_id = ++request_id_;
+  const auto request =
+      pre_process(prompt, new_chat, config_.max_new_tokens, request_id);
+  oellm::OellmResponse response;
+  infer(runtime_, request, response);
+  return post_process(response, runtime_);
 }
 }  // namespace minicpm5

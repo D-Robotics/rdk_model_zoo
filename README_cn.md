@@ -8,7 +8,7 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 
 ## 按任务开始
 
-完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 50 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 1 个大模型样例。每个入口说明自己的 target、变体、语言和验证范围。
+完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。每个入口说明自己的 target、变体、语言和验证范围。
 
 | 任务 | 统一入口 |
 |---|---|
@@ -17,6 +17,7 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 | 语音识别 | [ASR](samples/speech/asr/README_cn.md)、[Paraformer](samples/speech/paraformer/README_cn.md) |
 | 离线机器人策略 | [HIMLoco](samples/robotics/himloco/README_cn.md)：六帧观测到动作，不执行实机控制 |
 | 视觉语言模型（迁移中） | [Gemma4-E2B](samples/llm/gemma4-e2b/README_cn.md)：原生对话、HTTP、单次推理及验证工具 |
+| 文本生成（迁移中） | [MiniCPM5-2B](samples/llm/minicpm5-2b/README_cn.md)：S100/S100P OELLM 1.0.0 与 S600 OELLM 2.0 beta 原生入口 |
 | 唤醒词检测 | [KWS](samples/speech/kws/README_cn.md) |
 | 图像分类 | [ResNet](samples/vision/resnet/README_cn.md)、MobileNet、EfficientNet、ConvNeXt、Rep 系列等，见完整索引 |
 | 文本检测与识别 | [PaddleOCR](samples/vision/paddle_ocr/README_cn.md) |
@@ -30,9 +31,9 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 | 准备特征的轨迹规划 | [DiffusionDrive](samples/vision/diffusiondrive/README_cn.md) |
 | 视觉特征、图文匹配、视频分类 | [DINOv2](samples/vision/dinov2/README_cn.md)、[SigLIP](samples/vision/siglip/README_cn.md)、[CLIP](samples/vision/clip/README_cn.md)、[3DResNet](samples/vision/3dresnet/README_cn.md) |
 
-大模型等尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
+尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
 
-ACT／Pi0 以完整固定 Git 子模块集成，独立于上述 50 个本仓库样例。入口见 [VLA 指南](samples/vla/README_cn.md)：ACT S100 与 S600 使用不同源版本，Pi0 面向 S600，模型资源由使用者准备。本轮未运行机器人控制。
+ACT／Pi0 以完整固定 Git 子模块集成，独立于上述 51 个本仓库样例。入口见 [VLA 指南](samples/vla/README_cn.md)：ACT S100 与 S600 使用不同源版本，Pi0 面向 S600，模型资源由使用者准备。本轮未运行机器人控制。
 
 ## 板卡、制品与环境
 

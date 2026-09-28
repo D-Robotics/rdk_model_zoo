@@ -1,4 +1,4 @@
-> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration only; quantization recipes are preserved without rerunning, and board tests are not-run.
+> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration and the native core refactor with host-side SDK-double tests; quantization recipes are preserved without rerunning, and board tests are not-run.
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -55,7 +55,34 @@ export LD_LIBRARY_PATH="$OELLM_SDK_ROOT/oellm_runtime/lib${LD_LIBRARY_PATH:+:$LD
 timeout 120 ./build/main --model-path ../../model/s100/minicpm5-2b_ctx4096_s100.hbm   --tokenizer-path ../../model/s100/tokenizer   --template-path ../../model/s100/tokenizer/simple-chat.jinja --prompt 'What is the capital of France?'
 ```
 
-`inc/minicpm5.hpp` defines configuration and model ownership; `src/minicpm5.cc` handles the SDK lifecycle/callback; `src/main.cc` parses arguments. Tokenization, template rendering, BPU execution and sampling use the SDK directly.
+`inc/minicpm5.hpp` defines the configuration, `prepare_request` (pre-process) and the `RequestOutcome` status record; `src/chat_template.cc` loads and size-checks the chat template outside the inference file; `src/minicpm5.cc` handles SDK initialization, streaming through an injected sink and the single-request teardown; `src/main.cc` parses arguments, injects the stdout sink, prints the RESULT line and maps `RequestOutcome::exit_code()`. The inference file performs no console IO of its own. Tokenization, template rendering, BPU execution and sampling use the SDK directly. Each instance serves exactly one request: `init()` after `predict()` is rejected, so create a new instance or process per request. Streaming tokens reach the sink while the SDK runs; the RESULT line afterwards carries the same status values as before.
+
+Complete native library usage as one self-contained program — copy it, compile against the SDK headers and run:
+
+```cpp
+#include <iostream>
+
+#include "minicpm5.hpp"
+
+int main() {
+  MiniCPM5Config config;
+  config.model_path = "model/s100/minicpm5-2b_ctx4096_s100.hbm";
+  config.tokenizer_path = "model/s100/tokenizer";
+  config.template_path = "model/s100/tokenizer/simple-chat.jinja";
+  config.prompt = "请用一句话介绍你自己。";
+  config.text_sink = [](const char* chunk) {  // optional; omit for silent use
+    std::cout << chunk << std::flush;
+  };
+  MiniCPM5 model(config);                    // stores settings only
+  model.init();                              // loads model and tokenizer; one request per instance
+  RequestOutcome outcome = model.predict();  // streams via the sink
+  // consume: outcome.ended, outcome.failed, outcome.sdk_status, outcome.destroy_status,
+  // outcome.stream_error; outcome.exit_code() is zero only for normal EOS with cleanup.
+  return outcome.exit_code();
+}
+```
+
+A sink that throws is contained inside the callback: the exception never crosses the vendor C boundary, `stream_error` is recorded on the outcome, streaming stops, and the request still runs to its normal status mapping. END-state and ERROR-state text is suppressed as in the source. `PreparedRequest` owns its prompt and template strings and rebinds its embedded SDK view on copy and move; pass `&request.input` to the SDK only while that instance is alive and unmodified.
 
 ## Limits
 

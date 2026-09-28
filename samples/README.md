@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers 50 unified samples: 45 vision, three speech, one robotics policy and one LLM sample. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -90,12 +90,13 @@ HIMLoco consumes prepared six-frame observations and returns policy actions; it 
 | Sample | Conversion | Evaluation |
 | --- | --- | --- |
 | [gemma4-e2b](llm/gemma4-e2b/README.md) | [conversion](llm/gemma4-e2b/conversion/README.md) | [evaluator](llm/gemma4-e2b/evaluator/README.md) |
+| [minicpm5-2b](llm/minicpm5-2b/README.md) | [conversion](llm/minicpm5-2b/conversion/README.md) | [evaluator](llm/minicpm5-2b/evaluator/README.md) |
 
-Gemma includes five native entry points and the full source tutorials; model preparation and core refactoring remain in progress, with independent acceptance pending.
+Gemma includes five native entry points and the full source tutorials; model preparation is complete, while its remaining text-generation core work and independent acceptance stay open. MiniCPM5-2B is migrated with separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) native entries and host-side tests; board tests are not-run and independent acceptance is pending, so native core acceptance is not implied.
 
 ## Pinned third-party policy integrations
 
-Complete upstream ACT/Pi0 Git submodules are maintained separately from the 50 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching source does not prepare model assets or establish board validation.
+Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching source does not prepare model assets or establish board validation.
 
 ## Read validation status correctly
 

@@ -1895,10 +1895,12 @@ models:
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz
         sha256: 8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841
     notes: Registered from the rdk_s tip source (380e1a2), where the sample had
-      no manifest row; the sample itself is not migrated to develop yet, so
-      sample_path and download_scripts keep the source-branch layout until the
-      B11 batch relocates them. The digests are the archive SHA256 values the
-      download script pins and verifies against; each archive extracts to a
-      per-board directory containing the model files and a pinned SHA256SUMS
-      manifest. S600 currently requires the internal OELLM 2.0 beta SDK per the
-      sample README.
+      no manifest row. The sample now lives at this unified path, where the
+      B11 batch migrated its pinned source files and split launch orchestration
+      into explicit prepare/build/run steps, keeping the two SDK families
+      separate (S100/S100P OELLM 1.0.0 legacy, S600 OELLM 2.0 beta). The
+      digests are the archive SHA256 values the download script pins and
+      verifies against; each archive extracts to a per-board directory
+      containing the model files and a pinned SHA256SUMS manifest. S600 still
+      requires the internal OELLM 2.0 beta SDK per the sample README; board
+      tests and independent acceptance remain pending.

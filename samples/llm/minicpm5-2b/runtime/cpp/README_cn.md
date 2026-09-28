@@ -1,4 +1,4 @@
-> 迁移状态：进行中。以下历史板测、精度和 SDK 发布计划来自固定 S 源提交 `380e1a2`，不是本轮测试或最新发布状态。本轮只完成主机侧启动编排；量化方案保留、不重新验证，板测未运行。
+> 迁移状态：进行中。以下历史板测、精度和 SDK 发布计划来自固定 S 源提交 `380e1a2`，不是本轮测试或最新发布状态。本轮覆盖主机侧启动编排与原生核心重构（含主机 SDK 替身测试）；量化方案保留、不重新验证，板测未运行。
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -54,10 +54,32 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-inc/minicpm5.hpp 定义 Config、Result 和顺序调用的模型类，src/minicpm5.cc 实现初始化与推理，src/main.cc 负责 gflags 参数及输出。分词、BPU推理与解码由 runtime 完成，生成的代码文本不会被执行。初始化结束后删除临时 runtime JSON。
+inc/minicpm5.hpp 定义 Config、Result、生成阶段函数和顺序调用的模型类；src/minicpm5.cc 实现各阶段；src/runtime_config.cc 负责模型文件校验、OELLM JSON 配置与临时配置文件；src/main.cc 负责 gflags 参数及 RESULT 输出。生成的代码文本不会被执行。
 
-`MiniCPM5(Config)` 持有一个 runtime/会话，`Generate(prompt, new_chat=true)` 开始新会话，后续轮传 `false`。同一实例顺序调用，返回值拥有文本/token 数据。SDK 内部负责分词、执行和解码；本轮尚未把这些内部阶段包装成统一的公开阶段 API。
+公开阶段函数为 `pre_process`（构建并校验一个 OELLM 请求，不调用 SDK）、`infer`（一次同步推理调用加响应形态校验）与 `post_process`（提取文本、token 和状态，并读取与校验请求指标）；`Generate` 按此串联。分词与模板渲染保留在 runtime 内部——SDK 未暴露分词接口，因此不虚构公开分词阶段。配置与文件 IO 位于 `src/runtime_config.cc`，不在推理阶段文件内；临时 runtime JSON 由 RAII 守护持有，在成功、SDK 错误返回和异常路径上都会删除。
+
+`MiniCPM5(Config)` 持有一个 runtime/会话，`Generate(prompt, new_chat=true)` 开始新会话，后续轮传 `false`。同一实例顺序调用，返回值拥有文本/token 数据。`validate_metrics` 按指标名称拒绝非有限或负数的测量值，绝不将其改写为 0，因此 RESULT 行只包含有效测量值；只生成一个 token 的长度限制请求允许 decode_tps 为 0。
+
+完整的原生库使用示例（自包含程序）——可直接复制、对照 SDK 头文件编译并运行：
+
+```cpp
+#include "minicpm5.hpp"
+
+int main() {
+  minicpm5::Config config;              // model_path 默认 ../../model/s600
+  config.max_new_tokens = 128;          // 1-4096
+  minicpm5::MiniCPM5 model(config);     // 校验配置并准备 runtime；失败抛异常
+  minicpm5::Result first = model.Generate("What is 1+1?");  // 开启会话
+  if (first.status == 3) {              // 3 EOS；6 生成上限；4 上下文上限
+    // 消费 first.text、first.tokens、first.ttft_ms、first.decode_tps、first.e2e_ms
+  }
+  minicpm5::Result follow = model.Generate("Translate that.", false);  // 同一会话
+  return first.status == 3 && follow.status == 3 ? 0 : 1;
+}
+```
+
+`pre_process` 是公开函数，因此其参数约束在函数内部强制执行：空 prompt 或超出 1–4096 的 `max_new_tokens` 对所有调用方直接抛错，与构造函数在加载模型前的校验相互独立。runtime 负责分词、BPU 执行与解码；生成的代码文本不会被执行。
 <a id="results-interpretation"></a>
 ## 结果解释
 
-每次请求输出一行以 RESULT 开头的 JSON，包含 text、token_ids、status、ttft_ms、decode_tps 和 e2e_ms；同时可能出现 SDK 日志。状态3表示EOS结束，6表示达到生成上限，4表示达到上下文上限。达到限制按有界请求成功处理；输入或运行错误返回非零退出码。只生成一个token的长度限制请求可能报告 decode_tps 为0。
+每次请求输出一行以 RESULT 开头的 JSON，包含 text、token_ids、status、ttft_ms、decode_tps 和 e2e_ms；同时可能出现 SDK 日志。状态3表示EOS结束，6表示达到生成上限，4表示达到上下文上限。达到限制按有界请求成功处理；输入或运行错误返回非零退出码。只生成一个token的长度限制请求可能报告 decode_tps 为0。若指标非有限或为负数，该请求以非零退出码失败，不会输出 RESULT 行。

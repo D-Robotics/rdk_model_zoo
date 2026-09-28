@@ -109,3 +109,23 @@ Supply self-contained examples in both languages and verify their actual blocks;
 check the S600 pair in the same bounded documentation pass. No runtime rewrite or
 full-suite rerun is required for this header/example correction. Package acceptance
 awaits that customer documentation correction; B11/H7 remain globally open.
+
+## Final disposition — MiniCPM core package accepted within host scope
+
+CORE-N1 is resolved. After Claude exited, Codex extracted each complete C++ block
+from the two runtime guides in both languages and syntax-compiled it unchanged
+with C++17 -Wall -Wextra -Werror against production headers and the existing
+explicit SDK doubles. All four pass.
+[Full example sources and compiler results](evidence/2026-09-28-minicpm-core-independent-review/readme-example-recheck.json).
+Hash comparison with the independently tested core snapshot confirms only those
+four README files changed; the 20-test code baseline remains identical.
+
+Accept the current MiniCPM core refactor and CORE-R1–R4/CORE-N1 remediation.
+The original failed review and reproductions are retained above. Root/index
+integration adds the previously missing MiniCPM link and updates the native
+inventory to 51; the S manifest change is notes-only with asset identity intact.
+Author timeline entries are historical self-reports, superseded by this scoped
+independent disposition. Keep the source S100/S100P precision failure
+(PPL +27.83%, 2/6 reference matches) and S600 historical +1.60% distinct.
+No live board, vendor ABI, model precision or performance acceptance is claimed.
+Gemma Text, B11 as a batch, H8/H9 and whole-branch acceptance remain open.

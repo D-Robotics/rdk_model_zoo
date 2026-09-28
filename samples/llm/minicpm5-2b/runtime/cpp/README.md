@@ -1,4 +1,4 @@
-> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration only; quantization recipes are preserved without rerunning, and board tests are not-run.
+> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration and the native core refactor with host-side SDK-double tests; quantization recipes are preserved without rerunning, and board tests are not-run.
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -54,10 +54,32 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`inc/minicpm5.hpp` defines Config, Result and the sequential MiniCPM5 wrapper; `src/minicpm5.cc` implements model setup and generation; `src/main.cc` handles gflags and output. The runtime performs tokenization, BPU execution and decoding. No generated text is executed as code. The temporary runtime JSON is removed after initialization.
+`inc/minicpm5.hpp` defines Config, Result, the generation-stage functions and the sequential MiniCPM5 wrapper; `src/minicpm5.cc` implements the stages; `src/runtime_config.cc` owns model-file validation, the OELLM JSON settings and the temporary configuration file; `src/main.cc` handles gflags and RESULT output. No generated text is executed as code.
 
-`MiniCPM5(Config)` owns one runtime/conversation. `Generate(prompt, new_chat=true)` starts a new conversation; pass `false` for a follow-up. Calls on one instance are sequential; the returned value owns text/token data. Tokenization, execution and decoding are SDK-owned; a unified public stage API has not yet been introduced in this migration.
+The public stage functions are `pre_process` (builds and validates one OELLM request; no SDK calls), `infer` (one synchronous runtime call plus a response-shape check) and `post_process` (extracts text, tokens and status, then reads and validates request metrics); `Generate` chains them. Tokenization and template rendering stay inside the runtime because the SDK exposes no tokenization API, so no public tokenization stage is invented. Configuration and file IO live in `src/runtime_config.cc`, outside the inference-stage file; the temporary runtime JSON is owned by an RAII guard and removed on success, SDK error return and exception paths alike.
+
+`MiniCPM5(Config)` owns one runtime/conversation. `Generate(prompt, new_chat=true)` starts a new conversation; pass `false` for a follow-up. Calls on one instance are sequential; the returned value owns text/token data. `validate_metrics` rejects non-finite or negative measurements with a message naming the metric and never coerces them to zero, so a RESULT line only contains valid measurements; zero `decode_tps` remains valid for one-token length-limited requests.
+
+Complete native library usage as one self-contained program — copy it, compile against the SDK headers and run:
+
+```cpp
+#include "minicpm5.hpp"
+
+int main() {
+  minicpm5::Config config;              // model_path defaults to ../../model/s600
+  config.max_new_tokens = 128;          // 1-4096
+  minicpm5::MiniCPM5 model(config);     // validates settings, prepares the runtime; throws on failure
+  minicpm5::Result first = model.Generate("What is 1+1?");  // opens the conversation
+  if (first.status == 3) {              // 3 EOS; 6 output limit; 4 context limit
+    // consume first.text, first.tokens, first.ttft_ms, first.decode_tps, first.e2e_ms
+  }
+  minicpm5::Result follow = model.Generate("Translate that.", false);  // same conversation
+  return first.status == 3 && follow.status == 3 ? 0 : 1;
+}
+```
+
+`pre_process` is public, so its own argument contract is enforced inside it: an empty prompt or a `max_new_tokens` outside 1–4096 throws there for every caller, independent of the constructor check that runs before model loading. The runtime performs tokenization, BPU execution and decoding; no generated text is executed as code.
 <a id="results-interpretation"></a>
 ## Interpret results
 
-Each request prints a `RESULT` JSON line with text, token_ids, status, ttft_ms, decode_tps and e2e_ms. SDK diagnostics may also appear. Status 3 means EOS, 6 means the output limit and 4 means the context limit. Limits are reported as successful bounded requests; invalid input or runtime errors return nonzero. A one-token length-limited request may report zero decode_tps.
+Each request prints a `RESULT` JSON line with text, token_ids, status, ttft_ms, decode_tps and e2e_ms. SDK diagnostics may also appear. Status 3 means EOS, 6 means the output limit and 4 means the context limit. Limits are reported as successful bounded requests; invalid input or runtime errors return nonzero. A one-token length-limited request may report zero decode_tps. A request whose metrics are non-finite or negative fails with a nonzero exit code instead of printing a RESULT line.
