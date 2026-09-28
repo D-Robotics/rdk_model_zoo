@@ -99,7 +99,7 @@ Offline host entry points:
 Preview prints JSON with `executed=false`; it loads no SDK and does not validate model hashes or board compatibility.
 Real commands propagate the native exit code; launcher preflight errors return 2 with a missing-binary or target message.
 
-Dependency preparation needs network access and may install a Rust 1.80+ rustup toolchain.
+Dependency preparation needs Git/network access and an explicitly installed stable Rust 1.80+ toolchain; it never installs or upgrades Rust.
 Neither the launcher nor CMake calls that installer automatically. Compiling Rust dependencies may still access package registries;
 offline builds require pre-populated dependency caches.
 Use `GEMMA4_ABSL_PREFIX=/opt/abseil ./run.sh --target s600 --build` for a separately installed Abseil package.

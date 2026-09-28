@@ -1,92 +1,76 @@
 #!/bin/bash
-# Download and set up tokenizers-cpp (HuggingFace tokenizers C++ binding +
-# sentencepiece) at a pinned commit, including its git submodules.
-# Called by runtime/cpp/run.sh before the first build; safe to re-run
-# (skips if already present).
-#
-# Network: set HTTP_PROXY/HTTPS_PROXY if git clone is slow or blocked.
+# Explicit dependency preparation; neither launcher nor CMake invokes this.
 set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST="$SCRIPT_DIR/tokenizers-cpp"
-
-# Pinned commit from mlc-ai/tokenizers-cpp (master).
-# The Rust binding uses tokenizers 0.21.2 + onig, matching the reference
-# OpenExplorer_LLM-s600 tokenizer stack.
 COMMIT="c586c52f93f7b060753bd2388eb96a105cb7374d"
-MIN_RUST_VERSION="1.80.0"
+URL="https://github.com/mlc-ai/tokenizers-cpp.git"
+case "${1:-}" in
+  --help|-h) echo "Usage: bash install_tokenizers_cpp.sh [--dry-run]"; exit 0 ;;
+  --dry-run)
+    [[ $# == 1 ]] || { echo "Unexpected arguments" >&2; exit 2; }
+    echo "Prepare $URL @ $COMMIT -> $DEST"
+    echo "Requires Git and Rust >= 1.80; no toolchain installation. Existing trees are checked, never replaced."
+    exit 0 ;;
+  '') ;;
+  *) echo "Unknown argument: $1" >&2; exit 2 ;;
+esac
+export PATH="$HOME/.cargo/bin:$PATH"
+for tool in git rustc cargo; do
+  command -v "$tool" >/dev/null || { echo "Missing $tool; install dependencies explicitly (see third_party/README.md)." >&2; exit 2; }
+done
+version="$(rustc --version | awk '{print $2}')"
+if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] ||
+   (( BASH_REMATCH[1] < 1 || (BASH_REMATCH[1] == 1 && BASH_REMATCH[2] < 80) )); then
+  echo "Rust >= 1.80 stable required; found $version. Install a compatible toolchain explicitly." >&2
+  exit 2
+fi
 
-version_at_least() {
-  local current="$1"
-  local required="$2"
-  [[ "$(printf '%s\n' "$required" "$current" | sort -V | head -n 1)" == "$required" ]]
+verify_checkout() {
+  local tree="$1" status
+  [[ -d "$tree/.git" && -f "$tree/CMakeLists.txt" && -f "$tree/msgpack/CMakeLists.txt" && -f "$tree/sentencepiece/CMakeLists.txt" ]] || {
+    echo "Incomplete existing dependency: $tree; preserve it and choose a clean preparation location." >&2; return 1;
+  }
+  [[ "$(git -C "$tree" rev-parse HEAD)" == "$COMMIT" ]] || { echo "Dependency commit mismatch; existing tree preserved." >&2; return 1; }
+  status="$(git -C "$tree" status --porcelain --untracked-files=all)"
+  # The only permitted local change is the documented lockfile-format patch.
+  if [[ -n "$status" ]]; then
+    [[ "$status" == ' M rust/Cargo.lock' ]] &&
+      cmp -s "$tree/rust/Cargo.lock" <(git -C "$tree" show HEAD:rust/Cargo.lock | awk 'NR<=5 && /^version = 4$/ {sub(/4/,"3")} {print}') || {
+        echo "Dependency has local changes; preserved without replacement." >&2; return 1;
+      }
+  fi
+  status="$(git -C "$tree" submodule status --recursive)"
+  if [[ -n "$status" ]] && printf '%s\n' "$status" | grep -q '^[+-U]'; then
+    echo "Dependency submodules are uninitialized or differ from their pins." >&2; return 1
+  fi
+  git -C "$tree" submodule foreach --quiet --recursive 'test -z "$(git status --porcelain --untracked-files=all)"'
 }
-
-ensure_compatible_rust() {
-  export PATH="$HOME/.cargo/bin:$PATH"
-
-  local current=""
-  if command -v rustc >/dev/null 2>&1; then
-    current="$(rustc --version 2>/dev/null | awk '{print $2}' || true)"
-  fi
-  if [[ -n "$current" ]] && version_at_least "$current" "$MIN_RUST_VERSION"; then
-    echo "Rust $current already satisfies >= $MIN_RUST_VERSION."
-    return
-  fi
-
-  if ! command -v curl >/dev/null 2>&1; then
-    echo "ERROR: Rust >= $MIN_RUST_VERSION is required and curl is unavailable." >&2
-    echo "Install curl, then rerun this script." >&2
-    exit 1
-  fi
-
-  echo "Installing a current Rust toolchain (found: ${current:-none}) ..."
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-    | sh -s -- -y --profile minimal --default-toolchain stable
-  export PATH="$HOME/.cargo/bin:$PATH"
-
-  current="$(rustc --version | awk '{print $2}')"
-  if ! version_at_least "$current" "$MIN_RUST_VERSION"; then
-    echo "ERROR: Rust upgrade failed; found $current, need >= $MIN_RUST_VERSION." >&2
-    exit 1
-  fi
-  echo "Rust $current is ready."
-}
-
-normalize_cargo_lock() {
-  local lock_file="$DEST/rust/Cargo.lock"
-  if [[ -f "$lock_file" ]] && grep -q '^version = 4' "$lock_file"; then
-    sed -i '1,5s/^version = 4/version = 3/' "$lock_file"
-    echo "Normalized Cargo.lock to stable lockfile version 3."
+normalize_lock() {
+  local tree="$1" temporary
+  if [[ -f "$tree/rust/Cargo.lock" ]]; then
+    temporary="$(mktemp "$tree/rust/Cargo.lock.XXXXXX")"
+    awk 'NR<=5 && /^version = 4$/ {sub(/4/,"3")} {print}' "$tree/rust/Cargo.lock" > "$temporary"
+    mv "$temporary" "$tree/rust/Cargo.lock"
   fi
 }
-
-ensure_compatible_rust
-
-if [[ -d "$DEST" && -f "$DEST/CMakeLists.txt" && -f "$DEST/msgpack/CMakeLists.txt" ]]; then
-  normalize_cargo_lock
-  echo "tokenizers-cpp already present at $DEST, skip download."
+if [[ -e "$DEST" || -L "$DEST" ]]; then
+  [[ ! -L "$DEST" ]] || { echo "Dependency destination is a symlink; preserved." >&2; exit 2; }
+  verify_checkout "$DEST"
+  normalize_lock "$DEST"
+  echo "tokenizers-cpp already prepared at $DEST @ $COMMIT"
   exit 0
 fi
-
-echo "Downloading tokenizers-cpp @ ${COMMIT:0:8} ..."
-if ! command -v curl >/dev/null 2>&1; then
-  echo "ERROR: curl not found. Install with: sudo apt install -y curl" >&2
-  exit 1
-fi
-if ! command -v git >/dev/null 2>&1; then
-  echo "ERROR: git not found. Install with: sudo apt install -y git" >&2
-  exit 1
-fi
-
-# Clone at the pinned commit and fetch submodules (sentencepiece, msgpack).
-# A shallow clone + submodule init keeps the download small.
-rm -rf "$DEST"
-git clone --depth 1 "https://github.com/mlc-ai/tokenizers-cpp.git" "$DEST"
-cd "$DEST"
-git fetch --depth 1 origin "$COMMIT"
-git checkout "$COMMIT"
-git submodule update --init --depth 1
-normalize_cargo_lock
-
-echo "tokenizers-cpp ready at $DEST"
+# Work only in a newly created staging directory. Failed preparation never
+# destroys a pre-existing destination; trap removes only this invocation's stage.
+STAGE="$(mktemp -d "$SCRIPT_DIR/.tokenizers-stage.XXXXXX")"
+trap 'rm -rf "$STAGE"' EXIT
+git clone --depth 1 "$URL" "$STAGE/source"
+git -C "$STAGE/source" fetch --depth 1 origin "$COMMIT"
+git -C "$STAGE/source" checkout --detach "$COMMIT"
+git -C "$STAGE/source" submodule update --init --recursive --depth 1
+verify_checkout "$STAGE/source"
+normalize_lock "$STAGE/source"
+[[ ! -e "$DEST" && ! -L "$DEST" ]] || { echo "Destination appeared during preparation; preserved." >&2; exit 2; }
+mv "$STAGE/source" "$DEST"
+echo "tokenizers-cpp ready at $DEST @ $COMMIT"

@@ -211,3 +211,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Gemma Text构造泄漏在2c4da3fd原源码复现；张量所有权拆为move-only ModelIo，逐槽追踪KV借用，构造失败/正常退出先释放子图再释放packed model。301个获取失败点、6类非法描述符及所有权检查通过，11项ASan/UBSan CTest、14项Sample单测与50-sample门禁零违规；双语C++指南同步，见[Text所有权记录](../../releases/unified-migration/2026-09-28-b11-gemma-text-ownership-review.md)。完整Text张量契约/职责、模型准备与H0–H9继续，量化及板测不执行。
 
 2026-09-28：Gemma模型准备取消隐式S100P回退，要求显式GEMMA4_SOC；新增无网络/无写入预览与参数错误处理，拒绝发布空下载。原脚本5项失败经假wget复现，整改后6项准备测试/20项Sample测试通过，50-sample门禁零违规；根/model/C++六份README同步完整参数、独立目录、S100与断点续传限制。见[准备记录](../../releases/unified-migration/2026-09-28-b11-gemma-preparation-review.md)。未下载模型或验证量化；Text/第三方/MiniCPM/H0–H9继续。
+
+2026-09-28：Gemma第三方准备改为显式稳定Rust/Git前置检查、固定提交与递归子模块检查、保留现有修改及临时目录准备；取消自动Rust安装与删除未知目录，Cargo.lock补丁改为可移植写法。8项本地Git/真实gitlink夹具测试、28项Sample测试与50-sample门禁通过，四份双语README同步。见[依赖准备记录](../../releases/unified-migration/2026-09-28-b11-gemma-dependencies-review.md)。未远程下载依赖/模型、编译量化或板测；Text/MiniCPM/H0–H9继续。

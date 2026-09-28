@@ -98,7 +98,7 @@ S100 保留手动 HBM 分支，没有默认公共 HBM。不同板目标使用不
 预览输出 JSON，`executed=false`；不加载 SDK，不证明模型哈希或板端兼容性。
 实际命令保留原生退出码；启动器预检失败返回 2，并提示缺失可执行文件或目标不符。
 
-第三方准备脚本需要网络，可能安装 Rust 1.80+ 的 rustup 工具链。它不再由启动器或 CMake 自动调用。
+第三方准备脚本需要 Git/网络及显式安装的稳定版 Rust 1.80+ 工具链；不会安装或升级 Rust。它不再由启动器或 CMake 自动调用。
 编译 Rust 依赖仍可能访问包仓库；离线构建需要提前准备全部依赖缓存。
 独立 Abseil 可通过 `GEMMA4_ABSL_PREFIX=/opt/abseil ./run.sh --target s600 --build` 指定。
 
