@@ -177,3 +177,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer 14 份双语 README 做整套规范核对，修复直接检查的 78 项问题，并统一 evaluator／conversion 输出目录写法；保留 72 个示例，132 个本地文件链接通过。直接 Sample 检查 0 violations / 1 CLI policy skip / 0 exemptions。人工审查仍发现多阶段公开 pre/forward/post 接口及错误阶段归属未完成，下一步修复代码与 API 示例，暂不提升台账状态。见[文档与 API 缺口记录](../../releases/unified-migration/2026-09-28-b10-paraformer-readme-review.md)。
 
 2026-09-28：Paraformer 三模型公开 pre_process/forward/post_process 已落地，CPU CIF 仍显式编排，补齐 StageError 阶段／操作归属和原始异常链。82 项测试通过；两条真实 FP32 的全部文本、token 和 CER 与原记录相同；双语显式阶段示例实际执行。台账提升至 in-progress 纳入迁移检查，整体验收／独立复审仍不关闭。见[阶段整改记录](../../releases/unified-migration/2026-09-28-b10-paraformer-stages-review.md)。
+
+2026-09-28：开始 HIMLoco 迁移，52 源文件与 X5 固定提交逐字节一致；离线 Python 四阶段核心及双语 API 文档完成初版，6 项测试、21 条真实源观测前处理对照、双语可执行示例通过。SDK/CLI/C++/评测及其余 README 继续，台账仍 pending，不以核心片段宣称完整迁移。量化方案仅按源文档重构，不重新验证。见[源清点与核心记录](../../releases/unified-migration/2026-09-28-b10-himloco-core-review.md)。
