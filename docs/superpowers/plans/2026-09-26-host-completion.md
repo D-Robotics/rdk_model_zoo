@@ -213,3 +213,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Gemma模型准备取消隐式S100P回退，要求显式GEMMA4_SOC；新增无网络/无写入预览与参数错误处理，拒绝发布空下载。原脚本5项失败经假wget复现，整改后6项准备测试/20项Sample测试通过，50-sample门禁零违规；根/model/C++六份README同步完整参数、独立目录、S100与断点续传限制。见[准备记录](../../releases/unified-migration/2026-09-28-b11-gemma-preparation-review.md)。未下载模型或验证量化；Text/第三方/MiniCPM/H0–H9继续。
 
 2026-09-28：Gemma第三方准备改为显式稳定Rust/Git前置检查、固定提交与递归子模块检查、保留现有修改及临时目录准备；取消自动Rust安装与删除未知目录，Cargo.lock补丁改为可移植写法。8项本地Git/真实gitlink夹具测试、28项Sample测试与50-sample门禁通过，四份双语README同步。见[依赖准备记录](../../releases/unified-migration/2026-09-28-b11-gemma-dependencies-review.md)。未远程下载依赖/模型、编译量化或板测；Text/MiniCPM/H0–H9继续。
+
+2026-09-28：MiniCPM62源文件核对固定pin后迁入，S100/S100P旧SDK与S600新SDK保持独立实现；统一启动编排拆开模型准备/构建/运行，保留原生参数及legacy超时，主机预览无副作用、实际运行先板型检查。8项编排测试通过，八份双语入口指南同步历史证据边界；纳入门禁后51samples/70violations（MiniCPM缺README章节标记）/51skips/0exemptions，如实保持未完成。见[入口记录](../../releases/unified-migration/2026-09-28-b11-minicpm-entry-review.md)。核心/全层README/清单与H0–H9继续，不执行量化或板测。
