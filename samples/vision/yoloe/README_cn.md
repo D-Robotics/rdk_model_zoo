@@ -3,9 +3,16 @@
 <a id="overview"></a>
 ## 概述
 
-YOLOE 在本 sample 中提供固定 4585 类词表的 Prompt-Free（PF）实例分割。11 使用 DFL16 框回归和类别内 NMS；26 使用直接 LTRB 与 Top-K，不做 NMS。模型词表固定，不提供任意文字或视觉提示输入。
+YOLOE 在本 sample 中提供固定 4585 类词表的 Prompt-Free（PF）实例分割。11（E11）使用 DFL16 框回归——64 个框通道在 stride 8/16/32 上按 LTRB 四边各解码为 16-bin 分布——随后做类别内 NMS。26（E26）不使用 DFL（reg_max=1）：框头对每边直接输出一个 LTRB 距离，候选筛选取全局 Top-K 分数，不做 NMS。模型词表固定，不提供任意文字或视觉提示输入。
+
+两版的实例掩码组合方式相同：每个保留候选携带 32 个掩码系数，与模型 32 通道 160×160 原型特征线性组合，再按 sigmoid 中点二值化。
 
 统一代码位于 `samples/vision/yoloe`。
+
+来源出处，继承自固定 X5/S 源：
+
+- 论文：[YOLOE: Real-Time Seeing Anything](https://arxiv.org/pdf/2503.07465v1)；官方仓库：[um-assn/yoloe](https://github.com/um-assn/yoloe)（X5 源）
+- 基础检测器谱系：[ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)（S11 源）
 
 算法出处和版本背景保留在 [X5 源说明](../../../platforms/x5/samples/vision/yoloe/README_cn.md)及 [S26 源说明](../../../platforms/s/samples/vision/yoloe26_seg/README_cn.md).
 
@@ -72,6 +79,18 @@ S dry-run 成功仅表示选择解析成功；输出会明确提示需要独立�
 
 X5 为源单线程 libdnn Runtime 记录。S100 为源 2026-09-08、200 帧、warmup、thread_num=1/core_id=0 记录，不含前后处理。S100P 未测 Runtime 性能。完整条件和精度边界见 [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README_cn.md).
 
+两份固定 S 源交付各自在随附的同一张 `office_desk.jpg` 上嵌入过一张历史结果插图。此处以独立文件名逐字节恢复，避免与运行时生成的 `test_data/result.jpg` 混淆：
+
+![S11 源历史结果插图](test_data/source_s11_result_figure.jpg)
+
+固定 S11 源（[platforms/s/samples/vision/yoloe11_seg](../../../platforms/s/samples/vision/yoloe11_seg/README.md)，rdk_s `380e1a2b`）发布的历史结果插图。该源交付仅支持 S100，其唯一可运行发布制品是量化 11s PF HBM；源未记录该图由哪次运行产生。
+
+![S26 源历史结果插图](test_data/source_s26_result_figure.jpg)
+
+固定 S26 源（[platforms/s/samples/vision/yoloe26_seg](../../../platforms/s/samples/vision/yoloe26_seg/README.md)）发布的历史示例：按源图注说明，使用已发布量化 S100 YOLOE-26n PF 模型的实测输出，标签按 PF 检查点类别 ID 顺序导出。
+
+两者均为历史量化 S 发布结果——不是本 sample 浮点路径的输出，不是当前代码的预期结果，也不构成精度/AP 证据。
+
 <a id="directory"></a>
 ## 目录职责
 
@@ -81,7 +100,8 @@ yoloe/
 ├── conversion/        # ONNX checks, calibration, target YAML and optional compile
 ├── evaluator/         # explicit category mapping, COCO metrics and prediction export
 ├── runtime/python/    # CLI, binding, raw runner and three-stage task
-├── test_data/         # source image and fixed vocabulary
+├── runtime/cpp/       # reusable three-stage C++ library, SDK adapter, CLI, E11/E26 decoding
+├── test_data/         # source image, fixed vocabulary, historical source figures
 ├── tests/             # host fixtures, source comparisons and README execution
 └── README.md
 ```
@@ -95,7 +115,7 @@ yoloe/
 - [转换](conversion/README_cn.md) — 权重导出、浮点输出检查、各平台校准、编译命令与制品记录。
 - [评估](evaluator/README_cn.md) — 显式 PF 映射、CPU/板端后端、COCO 指标、来源与历史性能。
 - [Python](runtime/python/README_cn.md) — 参数、协议、库接口与排障。
-- [Test data](test_data/README_cn.md) — 图片和词表来源。
+- [Test data](test_data/README_cn.md) — 图片、词表与历史源结果插图来源。
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README_cn.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README_cn.md) — 原配方；S 配方会产生量化输出。统一准备入口保留浮点输出节点，实际编译精度仍待验证。
 - [统一 C++ 进度](runtime/cpp/README_cn.md) — 可复用三阶段 C++ 库已提供，包含独立持有的 NV12 输入、浮点绑定和 E11/E26 解码与掩码；SDK 适配器已实现，本机/模型/词表核验已实现，发布制品选择、CLI 及结果留证已实现，真实 SDK 构建和板测未执行。
 - [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md) — 历史实现，保留来源及旧版能力记录。

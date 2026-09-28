@@ -26,3 +26,7 @@ than receiving a fabricated pass. No whole-H8 closure follows from a process exi
 Runtime records live under `.coordination/20260928-skills-behavior/` outside the
 checkout until reviewed and persisted. The supervisor's process state identifies
 the exact active case/PID; observation timeouts must not restart a live case.
+
+## 2026-09-29 execution follow-up
+
+All fourteen initial sessions completed. [Independent grading and durable evidence](2026-09-29-skills-behavior-independent-review.md) retain three failed initial accuracy/reporting dimensions and three explicitly prompted corrections. Explicit-load minimum behaviors are bounded acceptance, not 84 eval definitions executed, automatic discovery, production installation or all-accuracy pass. The queued status above is the original protocol snapshot.

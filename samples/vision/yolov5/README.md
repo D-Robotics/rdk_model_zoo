@@ -5,19 +5,21 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Algorithm and source
 
-YOLOv5 is a one-stage, anchor-based object detector. It predicts three feature-map scales and returns COCO-style boxes, scores, and class IDs. The source resource is [ultralytics/yolov5](https://github.com/ultralytics/yolov5); this sample keeps the source X5 and S tensor protocols as separate target contracts.
+YOLOv5 is a one-stage, anchor-based object detector: a CSPDarknet backbone with FPN+PAN feature fusion feeds detection heads on three feature-map scales (strides 8/16/32), which return COCO-style boxes, scores, and class IDs. The `n/s/m/l/x` scale variants trade speed against accuracy. The source resource is [ultralytics/yolov5](https://github.com/ultralytics/yolov5); this sample keeps the source X5 and S tensor protocols as separate target contracts.
 
 <a id="support-matrix"></a>
 ## Support and verification matrix
 
 | target | variant(s) | Python | C++ | status |
 |---|---|---|---|---|
-| X5 | n-v7.0, s/m/l/x-v2.0, s/m/l/x-v7.0 | supported-not-run | supported-not-run | host contract fixtures; board not-run |
-| S100 | x-672 | supported-not-run | supported-not-run | host contract fixtures; board not-run |
-| S100P | — | not-supported | not-supported | no YOLOv5 manifest asset |
-| S600 | x-672 | supported-not-run | supported-not-run | host contract fixtures; board not-run |
+| X5 | n-v7.0, s/m/l/x-v2.0, s/m/l/x-v7.0 | supported-verified | supported-not-run | Python: all nine variants, source/unified on 8GB+4GB. C++: no numerical comparison; smoke records cover the `s-v2.0` default only — see note |
+| S100 | x-672 | supported-verified | supported-not-run | Python: `x-672` `kite.jpg` comparison. C++: no numerical comparison; `x-672` build/smoke record — see note |
+| S100P | — | not-supported | not-supported | no YOLOv5 manifest asset; recorded rejection paths only |
+| S600 | x-672 | supported-verified | supported-not-run | Python: `x-672` `kite.jpg` comparison. C++: no numerical comparison; `x-672` build/smoke record — see note |
 
-The Python X5 path uses one packed NV12 input and defaults to direct stretch; S Python uses split Y/UV inputs and defaults to letterbox. The C++ runtime has its own source defaults and remains documented in `runtime/cpp/`; this README does not claim either language was run on a board.
+`supported-verified` (Python) marks the recorded 2026-09-24 same-board source/unified comparisons at pinned board-test commits (`ae0f185`/`4d45f9a`), archived under the [python comparison](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [X5 nine-variant matrix](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-yolov5-x5-variants/) and [expanded boards](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/) evidence: X5 covers all nine published variants on one 8GB and one 4GB board (`bus.jpg`), S100/S600 cover the `x-672` `kite.jpg` case. They validate exactly those artifact/image cases — not COCO accuracy — and they are historical records: this tree adds no new board validation of the current HEAD. The C++ column is `supported-not-run`: no source/unified numerical comparison has been recorded on any board. Separate 2026-09-24 real-board build + inference smoke records exist for the C++ default variants only — the `s-v2.0` artifact on X5 8GB/4GB and the `x-672` artifact on S100 (after its first-round compile failure was fixed) and S600 — with archived dumps ([initial round](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-board-initial/), [round 2](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-native-round2/), [X5 4GB/S600](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)); smoke is not numerical verification of any variant, does not extend to the other X5 C++ variants, and carries no accuracy or performance claim. The S100P rejection checks ([negative evidence](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-s100p-negative/)) are not positive support.
+
+The Python X5 path uses one packed NV12 input and defaults to direct stretch; S Python uses split Y/UV inputs and defaults to letterbox. The C++ runtime has its own source defaults and remains documented in `runtime/cpp/`.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -27,7 +29,7 @@ Host checks use Python 3, NumPy, OpenCV, and PyYAML for manifest tools. Board in
 <a id="quickstart"></a>
 ## Quick start
 
-From the repository root, prepare one published artifact explicitly, then run the Python detector. This example uses X5 `n-v7.0`; it was not downloaded or run in this migration:
+From the repository root, prepare one published artifact explicitly, then run the Python detector. This example uses X5 `n-v7.0` — the default artifact/image case of the 2026-09-24 X5 8GB/4GB records, where the same downloader prepared the artifact and the full source/unified comparison ran ([expanded-boards evidence](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)); the argv below were not themselves the recorded board commands, and this tree performs no new download or board run:
 
 ```bash
 python3 -m samples.vision.yolov5.model.download \

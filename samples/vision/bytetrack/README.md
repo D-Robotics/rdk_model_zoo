@@ -25,17 +25,19 @@ The detection example carried by the fixed S source README (`test_data/readme_im
 
 | target | variant | Python | C++ | status |
 |---|---|---|---|---|
-| S100 | YOLOv5x 672 | supported-not-run | not-supported | host tracker fixtures; board not-run |
-| S100P | YOLOv5x 672 | supported-not-run | not-supported | host tracker fixtures; board not-run |
-| S600 | YOLOv5x 672 | supported-not-run | not-supported | host tracker fixtures; board not-run |
+| S100 | YOLOv5x 672 | supported-verified | not-supported | 2026-09-24 board records: four-frame synthetic check + first-30-frames real-video comparison |
+| S100P | YOLOv5x 672 | supported-not-run | not-supported | manifest row exists, but the published S100P URL returned HTTP 404 in the 2026-09-24 record; that round has no successful download or positive inference for S100P |
+| S600 | YOLOv5x 672 | supported-verified | not-supported | 2026-09-24 board record: first-30-frames real-video comparison |
 | X5 | — | not-supported | not-supported | no ByteTrack asset |
+
+`supported-verified` marks the recorded same-board source/unified tracker comparisons at pinned board-test commits — the S100 four-frame synthetic video (bus.jpg shifted 0/2/4/6 px) and, with S600, the first 30 frames of the public `track_test.mp4` ([four-frame evidence](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-s100/), [real-video evidence](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)). They cover exactly those frames and artifacts — not MOT-dataset accuracy, not the whole video — and they are historical records: this tree adds no new board run and re-runs nothing. S100P is not positive support: the recorded downloader attempt for its published asset URL returned HTTP 404 ([negative evidence](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-s100p-negative/bytetrack-asset-download-404.json)), so the cited round has no successful S100P download or positive inference record.
 
 The tracker is stateful: one `ByteTrackTask` must process frames in order. `reset()` clears stream history and frame index but deliberately keeps the process-global track ID counter monotonic.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Host tracker checks use Python, NumPy, SciPy, OpenCV, `lap==0.5.12`, and `cython-bbox==0.1.5`. Board inference additionally needs the target `hbm_runtime` and the exact target HBM. The source video is missing from `test_data`; prepare it explicitly from `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4`. No model/video download was performed here.
+Host tracker checks use Python, NumPy, SciPy, OpenCV, `lap==0.5.12`, and `cython-bbox==0.1.5`. Board inference additionally needs the target `hbm_runtime` and the exact target HBM. The source video is missing from `test_data`; prepare it explicitly from `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4`. The 2026-09-24 board rounds compared these same recorded resources for S100/S600 — the manifest YOLOv5x HBM and this exact video (recorded SHA in the linked evidence) — through their own retrieval commands (see Quick start); this tree performs no new download.
 
 <a id="quickstart"></a>
 ## Quick start
@@ -55,7 +57,7 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
   --records samples/vision/bytetrack/test_data/result_unified.jsonl
 ```
 
-The first two commands are explicit preparation commands and were not run. Successful inference writes a decodable MP4 and optional per-frame JSONL, prints the frame count, and exits `0`. `run.sh` never installs or downloads them.
+These two commands are the documented explicit preparation route for the same recorded resources the 2026-09-24 S100/S600 rounds compared — the manifest YOLOv5x HBM and the public `track_test.mp4` (recorded SHA `4bbe5bf1…`). The retained preparation records used their own retrieval — `curl --fail --location --retry 2` into a temporary directory (the S100 board lacked `curl` and fell back to the Python standard library), and the comparisons reused the YOLOv5x HBM prepared under `samples/vision/yolov5/model/` — so these exact argv were not themselves executed ([preparation records](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)). This tree performs no new preparation. Successful inference writes a decodable MP4 and optional per-frame JSONL, prints the frame count, and exits `0`. `run.sh` never installs or downloads them.
 
 <a id="expected-results"></a>
 ## Expected results

@@ -34,6 +34,9 @@ class TextOwnershipTests(unittest.TestCase):
                             str(CPP / "src/gemma4_text_engine.cpp"),
                             str(CPP / "src/gemma4_kv_cache.cpp"),
                             str(CPP / "src/gemma4_text_tensor.cpp"),
+                            str(CPP / "src/gemma4_text_inputs.cpp"),
+                            str(CPP / "src/gemma4_text_session.cpp"),
+                            str(CPP / "src/gemma4_text_transport.cpp"),
                         ]
                     command += ["-o", str(binary)]
                     built = subprocess.run(command, capture_output=True, text=True)

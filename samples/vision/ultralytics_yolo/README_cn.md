@@ -105,6 +105,7 @@ ultralytics_yolo/
 - [runtime/cpp](runtime/cpp/README_cn.md) — 按任务构建、位置参数、生命周期与测量范围.
 - [conversion](conversion/README_cn.md) — 源权重、导出、标定、编译与未验证前提.
 - [evaluator](evaluator/README_cn.md) — COCO/ImageNet/DOTA、逐任务评估与原始指标.
+- [test_data](test_data/README_cn.md) — 随仓输入图片、显示标签表与历史示意图，含逐字节标识与使用边界.
 
 源码阅读顺序：`main.py` 处理参数/文件/显示，`yolo_dispatch.py` 选任务，runner/binding 负责 SDK 与张量，任务类处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 不可互换；详见 [检测契约](DETECTION_CONTRACT.md)。输入尺寸必须由元数据/显式回退正确解析，不能按文件名猜测。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别；修正后的非检测行为仍需板端精度复验。
 

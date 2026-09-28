@@ -18,6 +18,9 @@ CASES = {
         CPP / "src/gemma4_text_tensor.cpp",
         CPP / "src/gemma4_kv_cache.cpp",
         CPP / "src/gemma4_text_engine.cpp",
+        CPP / "src/gemma4_text_inputs.cpp",
+        CPP / "src/gemma4_text_session.cpp",
+        CPP / "src/gemma4_text_transport.cpp",
     ],
 }
 

@@ -15,3 +15,7 @@ invented numeric category IDs). Label source figures historical, never fresh
 refactor evidence. Use source provenance already recorded in independent depth
 reviews and pinned source paths. Keep all existing files byte-identical and all
 existing commands unchanged. No downloads, inference or quantization execution.
+
+## 2026-09-29 independent follow-up
+
+H2-DATA-R1 accepted in [the document-remediation review](2026-09-29-document-remediation-independent-review.md). Original findings above are retained as history; the new review binds the corrected files and evidence. Broader rollup status is tracked separately.

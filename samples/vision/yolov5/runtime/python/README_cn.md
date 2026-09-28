@@ -24,7 +24,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
   --test-img samples/vision/yolov5/test_data/kite.jpg
 ```
 
-`bash samples/vision/yolov5/runtime/python/run.sh ...` 等价。S 命令需要准备模型并在可识别 S100 板端执行，本轮均未使用。
+`bash samples/vision/yolov5/runtime/python/run.sh ...` 等价。S 命令需要准备模型并在可识别 S100 板端执行。上面的 X5 示例就是 2026-09-24 真实板测记录（X5 8GB/4GB）中的默认 case，等价的 S100 `x-672` `kite.jpg` 运行也在真实 S100 上执行过（见 [python 对照](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)与[扩展板测](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)证据）；本工作树不做新的板端运行。
 
 <a id="parameters"></a>
 ## 参数

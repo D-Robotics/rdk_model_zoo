@@ -50,7 +50,7 @@ hb_perf ./yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin
 hrt_model_exec model_info --model_file ./yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin
 ```
 
-成功条件是三个 `(1,H/stride,W/stride,255)` head、640 输入 metadata 与所选目标路径的输出行为一致。本轮没有转换或板测。
+成功条件是三个 `(1,H/stride,W/stride,255)` head、640 输入 metadata 与所选目标路径的输出行为一致。本迁移没有执行转换，因此从未有本地转换产物经过板端验证；2026-09-24 板端记录针对的是 `model/README_cn.md` 列出的发布 runtime 制品，与在本地转换是两回事。
 
 <a id="artifacts"></a>
 ## 产物
@@ -62,4 +62,4 @@ hrt_model_exec model_info --model_file ./yolov5n_tag_v7.0_detect_640x640_bayese_
 
 - 没有锁定上游 commit、checkpoint、exporter、校准生成器或 S 转换配方。
 - X5 Python 与 S 的物理 tensor 协议、NMS 和反量化不同，不能用一段共享转换说明替代 target-specific metadata。
-- 编译、导出、校准和板测均为 `not-run`；manifest 发布 SHA-256 未知。
+- 本迁移的导出、校准、编译均为 `not-run`，不存在本地转换产物；发布 runtime 制品另有 2026-09-24 板端对照记录（见根 README 支持矩阵），这不构成对任何本地转换的验证。manifest 发布 SHA-256 未知。

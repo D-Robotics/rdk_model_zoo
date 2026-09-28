@@ -3,7 +3,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-源有静态图和参考 GIF/PNG，但没有 `track_test.mp4` 或 MOT ground-truth 目录。需从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 显式准备，本轮未下载。评估器比较两次完整源/统一 capture，不计算带标签数据集的 MOTA/IDF1。
+源有静态图和参考 GIF/PNG，但没有 `track_test.mp4` 或 MOT ground-truth 目录。需从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 显式准备；2026-09-24 板测轮次下载的正是该视频（[真实视频证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)中记录了 SHA `4bbe5bf1…`），本工作树不做新的下载。评估器比较两次完整源/统一 capture，不计算带标签数据集的 MOTA/IDF1。
 
 <a id="environment"></a>
 ## 环境
@@ -25,7 +25,7 @@ python3 samples/vision/bytetrack/evaluator/compare.py \
   --max-frames 30
 ```
 
-命令保存每帧图片、native detector 输入/输出、track 记录、metadata、模型/视频/代码 hash 和子进程日志到 `legacy/`、`unified/`、`comparison.json`。只有 frame/input/track ID 在声明容差内全部一致才返回 `0`，已有输出目录会拒绝。本轮没有板端运行。
+命令保存每帧图片、native detector 输入/输出、track 记录、metadata、模型/视频/代码 hash 和子进程日志到 `legacy/`、`unified/`、`comparison.json`。只有 frame/input/track ID 在声明容差内全部一致才返回 `0`，已有输出目录会拒绝。该工具在 2026-09-24 记录中于真实板端、固定提交上运行过——S100 四帧合成 case 与 S100/S600 使用 `track_test.mp4` 的前 30 帧 case，全部检查为 true（[四帧](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-s100/)、[真实视频](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)证据）——当前工作树不追加新的板端运行，这些记录不重新验证当前 HEAD，MOT 数据集精度也仍为 `not-run`。
 
 <a id="metrics"></a>
 ## 指标
@@ -47,7 +47,7 @@ python3 samples/vision/bytetrack/evaluator/compare.py \
 | ByteTrack 论文 IDF1 | MOT17 test / V100 | 77.3 | 论文参考 |
 | ByteTrack 论文吞吐 | V100 GPU | about 30 FPS | 论文参考 |
 
-这些是源/论文历史参考。当前板端 capture 和 MOT benchmark 状态为 `not-run`。
+这些是源/论文历史参考。板端源/统一 capture 在上方链接的已记录 case、固定提交上存在；MOT benchmark（MOTA/IDF1）评估仍为 `not-run`，本工作树不追加新的 capture。
 
 ### 参考跟踪效果（历史）
 

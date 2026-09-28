@@ -41,7 +41,10 @@ runtime/cpp/                            C++ 源码（本目录）
 ├── run.sh                              显式编译或启动
 ├── inc/                                公共头文件
 │   ├── gemma4_config.hpp               模型常量（图像 token ID、维度等）
-│   ├── gemma4_text_engine.hpp          Text LLM 引擎（prefill + decode + KV cache）
+│   ├── gemma4_text_engine.hpp          Text 编排器（prefill + decode + KV 会话）
+│   ├── gemma4_text_inputs.hpp          Text 阶段 1：CPU 输入准备（ids/嵌入/位置/mask）
+│   ├── gemma4_text_transport.hpp       Text 阶段 2：原始 SDK 写入/推理/KV 收集
+│   ├── gemma4_text_session.hpp         Text 会话状态与续写策略
 │   ├── gemma4_text_tensor.hpp          固定 Text 导出的描述符契约与带 stride 读写
 │   ├── gemma4_vision_engine.hpp        Vision ViT 引擎
 │   ├── gemma4_embeddings.hpp           Token embedding 查表 + vision 注入
@@ -176,7 +179,7 @@ This is a photograph of a Red Panda resting on a wooden structure...
 - `/context` 显示当前使用量、剩余容量和轮数。停止 token 不会显示或写入 assistant 正文。
 - `main` 在进入交互循环前统一加载 Text 和 Vision，两者在整个会话期间常驻；S100/S100P/S600 共用同一生命周期，`/image` 只执行图片预处理和 Vision 推理，不会重新加载模型。
 - 图文追问会保留原始图片轮，并在当前用户问题旁再次显式注入同一组 Vision 特征；prompt 中最多包含两个 280-token 图片块。
-- 运行时默认不打印内部诊断；仅当设置 `GEMMA4_DEBUG=1` 时输出 `[DEBUG]` / `[VLM-FIX]` 信息。
+- 运行时默认不打印内部诊断。`[VLM-FIX]` 输出仍跟随 `GEMMA4_DEBUG=1`；Text 引擎诊断改为需要显式安装 `SetDebugSink` 接收器，不再读环境变量。
 
 <a id="parameters"></a>
 ## 命令行参数
@@ -374,7 +377,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-十五项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，七项覆盖 KV 分配/Reset/追加/源别名/前缀保留，三项覆盖 Text 所有权（含注入分配失败下的张量采用），另有一项 Text 张量契约测试与一项 Text 生成流程测试。Release 构建仍启用断言。
+十九项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，七项覆盖 KV 分配/Reset/追加/源别名/前缀保留，三项覆盖 Text 所有权（含注入分配失败下的张量采用），一项 Text 张量契约测试、一项 Text 生成流程测试，以及四项 Text 阶段/会话测试（纯会话策略、阶段行为、引擎组合与可运行的 README 示例）。Release 构建仍启用断言。
 这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。
 
 ### SDK 失败处理
@@ -481,7 +484,7 @@ mask 的 int16 量化、logits 的 `kLogitScale` 反量化与 int8 KV 存储仍�
 
 主机覆盖包括：一项 helper 契约测试（padding、单例轴、dtype/形状/stride/容量/量化拒绝、argmax 行寻址与平票语义），
 以及一项生成流程测试——用说这套契约的 SDK 替身驱动生产引擎，校验生成 token、经借用 KV 输入的缓存搬运、
-推理失败清理、推理后描述符漂移和 13 类构造期拒绝矩阵。主机夹具不是厂商 ABI 或真实模型证据；
+推理失败清理、推理后描述符漂移和 14 类构造期拒绝矩阵。主机夹具不是厂商 ABI 或真实模型证据；
 真实发布 HBM 的描述符与该契约是否匹配仍需板端证据。
 
 主机测试入口：
@@ -492,3 +495,98 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_te
 主机测试仅替换 SDK 调用与 embedding 加载：逐一注入 301 个失败点、检查 6 类非法描述符及正常销毁，
 确认没有残留的张量/模型分配。独立所有权测试覆盖部分构造、移动、重复清理及借用缓存不被释放。
 所有权测试不加载权重，并禁止调用推理；它不证明真实 SDK ABI 兼容性或生成质量。
+
+### Text 流水线阶段
+
+Text 流水线拆分为三个显式阶段加一个会话策略模块；`TextEngine` 只负责编排。行为与源实现一致——
+贪心 `kLogitScale` 解码、首个最大值平票、EOS/turn-end 集合、完整返回向量、前缀续写对齐和基准计时范围均未改变——
+但每项职责现在都有独立可寻的单元：
+
+| 阶段 | 头文件 | 职责 |
+| --- | --- | --- |
+| 1. 输入准备 | `gemma4_text_inputs.hpp` | `PrepareBatchInputs` / `PrepareDecodeInputs` 生成 `TextBatchInputs`（PLE 替换后的 ids、嵌入行、位置、量化 mask），纯 vector、无 SDK 类型；同时拥有源 mask 构建算法。 |
+| 2. SDK 传输 | `gemma4_text_transport.hpp` | `InitTextSubgraph`（描述符契约 + 分配）、`BindKvCache`（零拷贝借用）、`WriteBatchInputs`（带 stride 写入）、`RunSubgraphInference`（刷新 → 推理 → 刷新输出）、`CollectKvOutputs`（重校验后的 KV 行）。不做解码、不做 IO。 |
+| 3. 解码 + KV 更新 | `gemma4_text_engine.cpp` | 显式步骤：`ArgmaxTextLogits` 解码、`KvCache::Append*` 更新缓存，随后才推进会话计数。 |
+| 会话策略 | `gemma4_text_session.hpp` | 对 `TextSessionState` 的纯决策：上下文平移、自动截断、续写对齐、logits 行选择。 |
+
+容量与窗口契约（在任何分配、查表或写入之前用带溢出保护的符号检查校验；违约抛出
+`std::invalid_argument`/`std::runtime_error`，绝不静默钳制注意力）：
+
+- mask 几何（阶段 1 与公开 mask 助手）：`0 <= chunk_valid <= seq_len`、
+  `1 <= seq_len <= 4096` 且 `chunk_start + seq_len <= 4096`。超出固定
+  4096-token 上下文的 chunk 或解码位置都是错误——`AutoTruncate`/`ContextShift`
+  才是留在窗口内的工具。
+- prepared token 数：每个 chunk 恰好 `chunk_valid` 个 id。
+- prebuilt hidden：两个续写入口与 `GenerateWithPromptEmbeddings` 要求恰好
+  `full_ids.size() * kHiddenSize` 个 float，从 prompt 起始处索引（不是后缀）；
+  尺寸不符在会话状态变更前抛出。`PrepareBatchInputs` 自身也会拒绝小于其所索引
+  行数的 hidden。
+- 续写入口在对齐平移之前校验 hidden 容量，因此被拒绝的调用之后会话仍可复用。
+
+引擎自身不做任何隐式打印。`SetDebugSink` 安装显式接收器；不安装时诊断被丢弃
+（输入准备中原先 `GEMMA4_DEBUG` → `std::cerr` 的路径已移除，应用可通过 sink 自行接线）。
+
+下面的示例由主机检查实际编译并运行（`tests/native/readme_text_stages_example.cpp`），
+对宿主替身会产生与文档完全一致的输出。板端只需把夹具模型句柄换成对已准备 HBM 的
+`hbDNNInitializeFromFiles`，其余代码不变。
+
+```cpp
+#include "text_fixture.hpp"   // 离线检查用的 SDK 宿主替身
+#include <iostream>
+#include <vector>
+
+int main() {
+  // 阶段准备：子图 owner 加一个借用的 KV cache。
+  hbDNNPackedHandle_t packed = text_fixture::Packed();
+  gemma4::TokenEmbeddings embeddings("tok_embeddings.bin");
+  gemma4::ModelIo prefill = gemma4::InitTextSubgraph(packed, "prefill", gemma4::kChunkSize);
+  gemma4::ModelIo decode  = gemma4::InitTextSubgraph(packed, "decode", 1);
+  gemma4::KvCache cache;
+  gemma4::BindKvCache(prefill, decode, cache);  // KV 槽位借用 cache
+
+  const std::vector<int64_t> prompt = {11, 22, 33, 44, 55};
+  // 阶段 1：按调用准备的上下文。
+  const auto batch = gemma4::PrepareBatchInputs(
+      embeddings, prompt, 0, static_cast<int>(prompt.size()), nullptr,
+      gemma4::kChunkSize);
+  // 阶段 2：带 stride 写入 + 一次选择性刷新推理。
+  gemma4::WriteBatchInputs(prefill, batch);
+  gemma4::RunSubgraphInference(prefill);
+  // 阶段 3：追加校验后的 KV 行，再贪心解码。
+  const auto rows = gemma4::CollectKvOutputs(prefill, 5);
+  //（经 cache.AppendPrefillChunk 追加；完整代码见可运行示例）
+  const int64_t first = gemma4::ArgmaxTextLogits(
+      prefill.outputs[0], 4, prefill.seq_len, prefill.OutputCapacity(0));
+  std::cout << "stage first token: " << first << std::endl;
+  prefill.Clear();
+  decode.Clear();
+
+  // 高层会话：同一组阶段的多轮编排。
+  gemma4::TextEngine engine("text.hbm", "tok_embeddings.bin");
+  engine.SetDebugSink([](const std::string &m) { std::cerr << m << "\n"; });
+  const auto out = engine.Generate(prompt, 2);
+  const auto next = engine.ContinueGenerate(out, 1);
+  std::cout << "session processed: " << engine.ProcessedTokens() << std::endl;
+  engine.ResetSession();
+  return 0;
+}
+```
+
+主机检查的精确输出（板端 token id 随真实模型不同）：
+
+```
+stage first token: 104
+session out: 11 22 33 44 55 104 100
+session processed: 7
+```
+
+示例的生命周期规则：子图句柄借用自 packed model，因此必须在释放 packed model 之前
+`Clear()` `prefill`/`decode`；KV 输入槽借用 `KvCache` 内存，其有效性持续到 cache 重新分配或销毁；
+`CollectKvOutputs` 返回的行借用输出 tensor，仅在下一次推理之前有效。`TextEngine`
+（以及对 `ModelIo` 操作的各阶段）都不是线程安全——需串行化访问；阶段函数本身不持有全局状态。
+推理失败以异常上抛，task 已释放、所有 buffer 仍被持有，因此会话可以 `ResetSession()` 后继续。
+
+主机测试入口：
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_stages.py -v
+```

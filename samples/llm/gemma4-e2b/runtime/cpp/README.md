@@ -41,7 +41,10 @@ runtime/cpp/                            C++ source code (this directory)
 ├── run.sh                              Explicit build or native launch
 ├── inc/                                Public headers
 │   ├── gemma4_config.hpp               Model constants (image token IDs, dims, ...)
-│   ├── gemma4_text_engine.hpp          Text LLM engine (prefill + decode + KV cache)
+│   ├── gemma4_text_engine.hpp          Text orchestrator (prefill + decode + KV session)
+│   ├── gemma4_text_inputs.hpp          Text stage 1: prepared CPU inputs (ids/embeds/positions/masks)
+│   ├── gemma4_text_transport.hpp       Text stage 2: raw SDK writes/inference/KV collection
+│   ├── gemma4_text_session.hpp         Text session state and continuation policy
 │   ├── gemma4_text_tensor.hpp          Fixed Text export descriptor contract and strided IO
 │   ├── gemma4_vision_engine.hpp        Vision ViT engine
 │   ├── gemma4_embeddings.hpp           Token embedding lookup + vision injection
@@ -178,7 +181,7 @@ This is a photograph of a Red Panda resting on a wooden structure...
 - `/context` reports used tokens, remaining capacity, and turn count. Stop tokens are neither printed nor stored in assistant text.
 - `main` loads both Text and Vision before entering the interactive loop and keeps both resident for the process lifetime. S100, S100P, and S600 share this lifecycle; `/image` only runs image preprocessing and Vision inference and never reloads either model.
 - Multimodal follow-ups retain the original image turn and explicitly inject the same Vision features beside the latest user question, with at most two 280-token image blocks in the prompt.
-- Internal diagnostics are quiet by default. Set `GEMMA4_DEBUG=1` to enable `[DEBUG]` and `[VLM-FIX]` output.
+- Internal diagnostics are quiet by default. `[VLM-FIX]` output still follows `GEMMA4_DEBUG=1`; Text engine diagnostics now require an explicitly installed `SetDebugSink` receiver instead of an environment variable.
 
 <a id="parameters"></a>
 ## Command-line Parameters
@@ -381,7 +384,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-Fifteen CTest entries cover three Vision stage/source-image/tensor checks, seven KV allocation/reset/append/aliasing/prefix-retention scenarios, three Text ownership checks — including tensor adoption under injected allocation failure — one Text tensor contract test and one Text generation-flow test. Assertions remain enabled in Release builds.
+Nineteen CTest entries cover three Vision stage/source-image/tensor checks, seven KV allocation/reset/append/aliasing/prefix-retention scenarios, three Text ownership checks — including tensor adoption under injected allocation failure — one Text tensor contract test, one Text generation-flow test, and four Text stage/session tests (pure session policy, stage behavior, engine compositions, and the runnable README example). Assertions remain enabled in Release builds.
 An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
 
 ### SDK failure handling
@@ -506,7 +509,7 @@ stride/capacity/quantization rejections, argmax row addressing and tie
 semantics), and a generation-flow test that drives the production engine
 against an SDK double speaking this contract — generated tokens, cache
 transport through the borrowed KV inputs, inference failure cleanup,
-post-inference descriptor drift and a thirteen-case constructor rejection
+post-inference descriptor drift and a fourteen-case constructor rejection
 matrix. Host fixtures are not vendor ABI or real-model evidence; matching a
 published HBM's descriptors to this contract still requires board evidence.
 
@@ -520,3 +523,112 @@ points, six invalid descriptor cases and normal teardown check that no tensor/mo
 separate owner test covers partial construction, moves, repeated clearing and
 borrowed-cache survival. No weights are loaded and inference calls are forbidden
 in the ownership tests; they do not validate SDK ABI compatibility or generation quality.
+
+### Text pipeline stages
+
+The Text pipeline is separated into three explicit stages plus a session
+policy module; `TextEngine` only sequences them. The behavior is the source
+implementation's — greedy `kLogitScale` decoding, first-max ties, the
+EOS/turn-end set, full return vectors, prefix-continuation alignment and
+benchmark timing scope are unchanged — but each responsibility now has one
+addressable unit:
+
+| Stage | Header | Responsibility |
+| --- | --- | --- |
+| 1. Input preparation | `gemma4_text_inputs.hpp` | `PrepareBatchInputs` / `PrepareDecodeInputs` build a `TextBatchInputs` value (PLE-substituted ids, embedding rows, positions, quantized masks) with plain vectors — no SDK types. Also owns the source mask builders. |
+| 2. SDK transport | `gemma4_text_transport.hpp` | `InitTextSubgraph` (descriptor contract + allocation), `BindKvCache` (zero-copy borrowing), `WriteBatchInputs` (strided writes), `RunSubgraphInference` (flush → infer → refresh), `CollectKvOutputs` (revalidated KV rows). No decoding, no IO. |
+| 3. Decode + KV update | `gemma4_text_engine.cpp` | Explicit steps: `ArgmaxTextLogits` decodes, `KvCache::Append*` updates the cache, then session counters advance. |
+| Session policy | `gemma4_text_session.hpp` | Pure decisions over `TextSessionState`: context shift, auto-truncate, continuation alignment, logits row selection. |
+
+Extent and window contracts (validated with overflow-safe signed checks
+before any allocation, lookup or write; violations throw
+`std::invalid_argument`/`std::runtime_error` instead of clamping attention):
+
+- Mask geometry (stage 1 and the public mask helpers): `0 <= chunk_valid <=
+  seq_len`, `1 <= seq_len <= 4096` and `chunk_start + seq_len <= 4096`. A
+  chunk or decode position beyond the fixed 4096-token context is an error —
+  `AutoTruncate`/`ContextShift` are the tools to stay inside the window.
+- Prepared token count: exactly `chunk_valid` ids per chunk.
+- Prebuilt hidden: the continuation entry points and `GenerateWithPrompt
+  Embeddings` require exactly `full_ids.size() * kHiddenSize` floats indexed
+  from the prompt start (not a suffix); the rejection happens before any
+  session state changes. `PrepareBatchInputs` itself refuses a hidden smaller
+  than the rows it indexes.
+- Continuation entry points validate the hidden extent before the alignment
+  shift, so a rejected call leaves the session reusable.
+
+The engine prints nothing on its own. `SetDebugSink` installs an explicit
+receiver; without one, diagnostics are discarded (the previous
+`GEMMA4_DEBUG` → `std::cerr` path inside input preparation is gone, and
+applications wire their own policy through the sink).
+
+The example below is compiled and executed by the host check
+(`tests/native/readme_text_stages_example.cpp`); against the host doubles it
+produces exactly the output shown. On a board, replace the fixture model
+handle with `hbDNNInitializeFromFiles` over the prepared HBM — everything
+else is identical.
+
+```cpp
+#include "text_fixture.hpp"   // host double for the SDK in the offline check
+#include <iostream>
+#include <vector>
+
+int main() {
+  // Stage setup: subgraph owners plus one borrowed KV cache.
+  hbDNNPackedHandle_t packed = text_fixture::Packed();
+  gemma4::TokenEmbeddings embeddings("tok_embeddings.bin");
+  gemma4::ModelIo prefill = gemma4::InitTextSubgraph(packed, "prefill", gemma4::kChunkSize);
+  gemma4::ModelIo decode  = gemma4::InitTextSubgraph(packed, "decode", 1);
+  gemma4::KvCache cache;
+  gemma4::BindKvCache(prefill, decode, cache);  // KV slots borrow the cache
+
+  const std::vector<int64_t> prompt = {11, 22, 33, 44, 55};
+  // Stage 1: prepared per-call context.
+  const auto batch = gemma4::PrepareBatchInputs(
+      embeddings, prompt, 0, static_cast<int>(prompt.size()), nullptr,
+      gemma4::kChunkSize);
+  // Stage 2: strided write, then one selective-flush inference.
+  gemma4::WriteBatchInputs(prefill, batch);
+  gemma4::RunSubgraphInference(prefill);
+  // Stage 3: append validated KV rows, then decode greedily.
+  const auto rows = gemma4::CollectKvOutputs(prefill, 5);
+  // (append rows via cache.AppendPrefillChunk; see the runnable example)
+  const int64_t first = gemma4::ArgmaxTextLogits(
+      prefill.outputs[0], 4, prefill.seq_len, prefill.OutputCapacity(0));
+  std::cout << "stage first token: " << first << std::endl;
+  prefill.Clear();
+  decode.Clear();
+
+  // High-level session: the same stages orchestrated multi-turn.
+  gemma4::TextEngine engine("text.hbm", "tok_embeddings.bin");
+  engine.SetDebugSink([](const std::string &m) { std::cerr << m << "\n"; });
+  const auto out = engine.Generate(prompt, 2);
+  const auto next = engine.ContinueGenerate(out, 1);
+  std::cout << "session processed: " << engine.ProcessedTokens() << std::endl;
+  engine.ResetSession();
+  return 0;
+}
+```
+
+Exact host-check output (board token ids differ with the real model):
+
+```
+stage first token: 104
+session out: 11 22 33 44 55 104 100
+session processed: 7
+```
+
+Lifetime rules for the example: subgraph handles are borrowed from the packed
+model, so `prefill`/`decode` must be `Clear()`ed before the packed model is
+released; KV input slots borrow `KvCache` memory, which stays valid until the
+cache is reallocated or destroyed; `CollectKvOutputs` rows borrow the output
+tensors and are only valid until the next inference. A `TextEngine` (and each
+stage operating on a `ModelIo`) is not thread-safe — serialize access; the
+stage functions themselves hold no global state. Inference failures propagate
+as exceptions with the task released and all buffers still owned, so a session
+can `ResetSession()` and continue.
+
+Host test entry:
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_stages.py -v
+```

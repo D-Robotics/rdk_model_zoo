@@ -25,17 +25,19 @@ ByteTrack 是有状态多目标跟踪器，通过高分和低分检测框关联�
 
 | target | variant | Python | C++ | 状态 |
 |---|---|---|---|---|
-| S100 | YOLOv5x 672 | supported-not-run | not-supported | 主机 tracker fixture；板测未运行 |
-| S100P | YOLOv5x 672 | supported-not-run | not-supported | 主机 tracker fixture；板测未运行 |
-| S600 | YOLOv5x 672 | supported-not-run | not-supported | 主机 tracker fixture；板测未运行 |
+| S100 | YOLOv5x 672 | supported-verified | not-supported | 2026-09-24 板测记录：四帧合成检查 + 真实视频前 30 帧对照 |
+| S100P | YOLOv5x 672 | supported-not-run | not-supported | manifest 有该行，但发布 S100P URL 在 2026-09-24 记录中返回 HTTP 404；该轮没有成功的下载或 S100P 正向推理记录 |
+| S600 | YOLOv5x 672 | supported-verified | not-supported | 2026-09-24 板测记录：真实视频前 30 帧对照 |
 | X5 | — | not-supported | not-supported | 没有 ByteTrack 制品 |
+
+`supported-verified` 表示板测固定提交上记录的同板源/统一 tracker 对照——S100 的四帧合成视频（bus.jpg 平移 0/2/4/6 像素），以及 S100/S600 使用公开 `track_test.mp4` 的前 30 帧（[四帧证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-s100/)、[真实视频证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)）。它们只覆盖这些帧和制品——不是 MOT 数据集精度，也不是整段视频——并且是历史记录：本工作树不追加新的板端运行，也不复跑任何 case。S100P 不是正向支持：记录中的下载器对其发布资产 URL 返回 HTTP 404（[负例证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-s100p-negative/bytetrack-asset-download-404.json)），因此该轮没有成功的 S100P 下载或正向推理记录。
 
 tracker 有状态：同一个 `ByteTrackTask` 必须按顺序处理帧。`reset()` 清除流历史和 frame index，但故意不把进程级 track ID 计数器归零。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-主机 tracker 检查需要 Python、NumPy、SciPy、OpenCV、`lap==0.5.12` 和 `cython-bbox==0.1.5`。板端还需要目标 `hbm_runtime` 和精确 HBM。源视频不在 `test_data`，需显式从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 准备。本轮没有下载模型或视频。
+主机 tracker 检查需要 Python、NumPy、SciPy、OpenCV、`lap==0.5.12` 和 `cython-bbox==0.1.5`。板端还需要目标 `hbm_runtime` 和精确 HBM。源视频不在 `test_data`，需显式从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 准备。2026-09-24 板测轮次为 S100/S600 对照的正是这批已记录资源——manifest 的 YOLOv5x HBM 与该视频（SHA 见链接证据）——但取回用的是它们自己的命令（见快速体验）；本工作树不做新的下载。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -55,7 +57,7 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
   --records samples/vision/bytetrack/test_data/result_unified.jsonl
 ```
 
-前两条是显式准备命令，本轮未执行。成功推理会写出可解码 MP4 和可选逐帧 JSONL，打印帧数并退出 `0`。`run.sh` 不会安装或下载。
+这两条命令是针对 2026-09-24 S100/S600 轮次所对照的同一批已记录资源——manifest 的 YOLOv5x HBM 与公开 `track_test.mp4`（记录 SHA `4bbe5bf1…`）——的文档化显式准备路径。保留的准备记录使用的是各自的取回方式——`curl --fail --location --retry 2` 下载到临时目录（S100 板缺 `curl`，改用 Python 标准库下载），对照复用准备在 `samples/vision/yolov5/model/` 下的 YOLOv5x HBM——因此这两条 argv 本身并未被执行（[准备记录](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)）。本工作树不做新的准备。成功推理会写出可解码 MP4 和可选逐帧 JSONL，打印帧数并退出 `0`。`run.sh` 不会安装或下载。
 
 <a id="expected-results"></a>
 ## 预期结果

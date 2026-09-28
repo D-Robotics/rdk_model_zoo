@@ -18,7 +18,7 @@ Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-R
 
 > Supported platforms: **RDK S100P / S600**. Both use the same C++ runtime, but each board requires HBM files compiled for its SoC.
 
-> Migration status: source import and launcher separation are implemented; deeper refactoring and documentation acceptance are ongoing. Screenshots and board performance below are historical evidence from pinned S source `380e1a2`, not new migration board tests.
+> Migration status: source import, launcher separation, model preparation and the Vision/Text stage/resource refactoring are implemented, with bounded host acceptance — the latest Text-stage package passed independent recheck of 30/30 host tests and 19/19 ASan/UBSan CTests ([independent review](../../../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md)). Screenshots and board performance below are historical evidence from pinned S source `380e1a2`, not new migration board tests; no vendor ABI, live model, board or quantization result is claimed, and aggregate B11 acceptance stays open.
 
 ---
 

@@ -105,6 +105,7 @@ ultralytics_yolo/
 - [runtime/cpp](runtime/cpp/README.md) — Task builds, positional arguments, lifecycle and measurement scope.
 - [conversion](conversion/README.md) — Source weights, export, calibration, compilation and unverified prerequisites.
 - [evaluator](evaluator/README.md) — COCO/ImageNet/DOTA, task evaluation and historical measurements.
+- [test_data](test_data/README.md) — Bundled input images, display-label tables and historical illustrations, with byte identities and usage boundaries.
 
 Read `main.py` for arguments/files/rendering, `yolo_dispatch.py` for task selection, runner/binding for SDK/tensors, and task classes for preprocessing/inference/postprocessing. Detection DFL and YOLO26 direct LTRB are not interchangeable; see the [detection contract](DETECTION_CONTRACT.md). Input geometry must resolve from metadata or an explicit fallback, not filename guesses. YOLO26 OBB uses radians; X5 class-aware NMS/clipping differs from S. Corrected non-detection behavior still requires board accuracy revalidation.
 

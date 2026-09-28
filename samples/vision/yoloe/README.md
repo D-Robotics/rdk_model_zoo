@@ -3,9 +3,16 @@
 <a id="overview"></a>
 ## Overview
 
-YOLOE provides prompt-free (PF) instance segmentation over a fixed, ordered 4585-class vocabulary. Version 11 uses DFL16 box regression and classwise NMS; version 26 uses direct LTRB and Top-K without NMS. These exports do not accept arbitrary text or visual prompts.
+YOLOE provides prompt-free (PF) instance segmentation over a fixed, ordered 4585-class vocabulary. Version 11 (E11) uses DFL16 box regression — the 64 box channels decode into a 16-bin distribution per LTRB side at strides 8/16/32 — followed by classwise NMS. Version 26 (E26) uses no DFL (reg_max=1): its box head directly emits one LTRB distance per side, and candidate selection keeps global Top-K scores without NMS. These exports do not accept arbitrary text or visual prompts.
+
+Both versions compose instance masks the same way: each kept candidate carries 32 mask coefficients that are linearly combined with the model's 32-channel 160×160 prototype features, and the combined map is thresholded at the sigmoid midpoint.
 
 The canonical sample is `samples/vision/yoloe`.
+
+Source attribution, inherited from the fixed X5/S sources:
+
+- Paper: [YOLOE: Real-Time Seeing Anything](https://arxiv.org/pdf/2503.07465v1); official repo: [um-assn/yoloe](https://github.com/um-assn/yoloe) (X5 source)
+- Base detector lineage: [ultralytics/ultralytics](https://github.com/ultralytics/ultralytics) (S11 source)
 
 Algorithm references and version context are preserved in the [X5 source overview](../../../platforms/x5/samples/vision/yoloe/README.md) and [S26 source overview](../../../platforms/s/samples/vision/yoloe26_seg/README.md).
 
@@ -72,6 +79,18 @@ No real model result is available this round; no fixed detection count is promis
 
 X5 values are source single-thread libdnn Runtime records. S100 values are from 2026-09-08, 200 frames, warmup, thread_num=1/core_id=0, excluding preprocessing/postprocessing. S100P Runtime performance was not measured. See complete conditions and accuracy limits in [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md).
 
+The two fixed S source publications each embedded one historical result illustration over the same bundled `office_desk.jpg`. They are restored here byte-exact under distinct names, so they can never be confused with the runtime-generated `test_data/result.jpg`:
+
+![Historical S11 source result figure](test_data/source_s11_result_figure.jpg)
+
+Historical result figure published with the fixed S11 source sample ([platforms/s/samples/vision/yoloe11_seg](../../../platforms/s/samples/vision/yoloe11_seg/README.md), rdk_s `380e1a2b`). That source delivery runs only on S100 and its only published runnable artifact is a quantized 11s PF HBM; the source does not record which run produced the figure.
+
+![Historical S26 source result figure](test_data/source_s26_result_figure.jpg)
+
+Historical example published with the fixed S26 source ([platforms/s/samples/vision/yoloe26_seg](../../../platforms/s/samples/vision/yoloe26_seg/README.md)): recorded outputs from the released quantized S100 YOLOE-26n PF model, labels exported in PF checkpoint class-ID order, as stated by the source caption.
+
+Both are historical quantized S publication results — not output of this sample's floating route, not expected results for the current code, and not accuracy/AP evidence.
+
 <a id="directory"></a>
 ## Directory Layout
 
@@ -81,7 +100,8 @@ yoloe/
 ├── conversion/        # ONNX checks, calibration, target YAML and optional compile
 ├── evaluator/         # explicit category mapping, COCO metrics and prediction export
 ├── runtime/python/    # CLI, binding, raw runner and three-stage task
-├── test_data/         # source image and fixed vocabulary
+├── runtime/cpp/       # reusable three-stage C++ library, SDK adapter, CLI, E11/E26 decoding
+├── test_data/         # source image, fixed vocabulary, historical source figures
 ├── tests/             # host fixtures, source comparisons and README execution
 └── README.md
 ```
@@ -95,7 +115,7 @@ Canonical checkpoint export, conversion preparation and evaluation workflows are
 - [Conversion](conversion/README.md) — Checkpoint export, float-output checks, target-specific calibration, compiler commands and artifact records.
 - [Evaluation](evaluator/README.md) — Explicit PF mapping, CPU/board backends, COCO metrics, provenance and historical benchmarks.
 - [Python](runtime/python/README.md) — Options, protocols, library API and troubleshooting.
-- [Test data](test_data/README.md) — Image/vocabulary provenance.
+- [Test data](test_data/README.md) — Image/vocabulary provenance and historical source figures.
 - [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md) — Original recipes; S recipes produce quantized outputs. The canonical preparation entry retains float-output nodes, with actual compiled precision still unverified.
 - [Canonical C++ progress](runtime/cpp/README.md) — Reusable three-stage C++ library with owned NV12 inputs, float binding and E11/E26 decoding/masks; the SDK adapter is implemented; native board/model/vocabulary preflight is implemented; publication selection, CLI and result records are implemented; real SDK compilation and board checks remain not-run.
 - [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md) — Historical implementations with preserved source capabilities and measurements.

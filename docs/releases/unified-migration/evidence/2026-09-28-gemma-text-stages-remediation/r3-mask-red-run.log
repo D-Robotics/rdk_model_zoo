@@ -1,0 +1,54 @@
+=================================================================
+==82905==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x00010ccfc404 at pc 0x000104f0fc24 bp 0x00016aefda30 sp 0x00016aefda28
+WRITE of size 4 at 0x00010ccfc404 thread T0
+    #0 0x000104f0fc20 in gemma4::BuildFullMask(float*, int, int, int) gemma4_text_inputs.cpp:42
+    #1 0x000104f12304 in gemma4::PrepareBatchInputs(gemma4::TokenEmbeddings const&, std::__1::vector<long long, std::__1::allocator<long long>> const&, int, int, float const*, int) gemma4_text_inputs.cpp:138
+    #2 0x000104f01114 in main mask-boundary.cpp:11
+    #3 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)
+
+0x00010ccfc404 is located 1020 bytes before 4194304-byte region [0x00010ccfc800,0x00010d0fc800)
+allocated by thread T0 here:
+    #0 0x000105874150 in _Znwm+0x74 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x50150)
+    #1 0x000104f1e6d4 in float* std::__1::__libcpp_allocate[abi:nqe220106]<float>(std::__1::__element_count, unsigned long) allocate.h:60
+    #2 0x000104f1e5c4 in std::__1::allocator<float>::allocate[abi:nqe220106](unsigned long) allocator.h:92
+    #3 0x000104f1e214 in std::__1::__allocation_result<std::__1::allocator_traits<std::__1::allocator<float>>::pointer, std::__1::allocator_traits<std::__1::allocator<float>>::size_type> std::__1::__allocate_at_least[abi:nqe220106]<std::__1::allocator<float>, std::__1::allocator_traits<std::__1::allocator<float>>>(std::__1::allocator<float>&, unsigned long) allocate_at_least.h:46
+    #4 0x000104f1c92c in std::__1::vector<float, std::__1::allocator<float>>::__vallocate[abi:nqe220106](unsigned long) vector.h:597
+    #5 0x000104f28300 in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long) vector.h:150
+    #6 0x000104f14778 in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long) vector.h:147
+    #7 0x000104f122c0 in gemma4::PrepareBatchInputs(gemma4::TokenEmbeddings const&, std::__1::vector<long long, std::__1::allocator<long long>> const&, int, int, float const*, int) gemma4_text_inputs.cpp:136
+    #8 0x000104f01114 in main mask-boundary.cpp:11
+    #9 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow gemma4_text_inputs.cpp:42 in gemma4::BuildFullMask(float*, int, int, int)
+Shadow bytes around the buggy address:
+  0x00010ccfc180: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc280: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc300: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc380: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+=>0x00010ccfc400:[fa]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc480: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc500: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc580: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc600: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x00010ccfc680: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==82905==ABORTING

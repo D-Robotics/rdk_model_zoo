@@ -37,15 +37,19 @@ Synthetic data and failure injection do not certify board inference.
 ## Image bytes
 
 `image.py:bgr_to_nv12_planes` is the single OpenCV I420 → interleaved NV12
-implementation used by all three samples. It accepts an even-sized uint8 BGR
+implementation for the unified samples. `samples/_shared/tensor_io.py` wraps it
+(and the classification samples reach it through that surface); the Ultralytics
+YOLO, PaddleOCR, YOLOv5, YOLOE, FCOS, YOLO26 Depth, PP-LiteSeg, UNet and
+UNetMobileNet runtimes import it directly. It accepts an even-sized uint8 BGR
 image and returns contiguous uint8 `(1,H,W,1)` Y and `(1,H/2,W/2,2)` UV arrays.
 The sample adapters preserve their existing validation and error behavior.
 Resize/interpolation, packed-versus-split transport and tensor naming remain
 sample-local because their contracts differ. NumPy/OpenCV imports are lazy.
 
-The extraction preserves the operation order and chroma byte ordering from
-all three implementations. Known-color and noncontiguous-input tests cover
-the byte contract; sample tests and affected-board comparisons cover consumers.
+The extraction preserves the operation order and chroma byte ordering of the
+source implementations it was extracted from. Known-color and noncontiguous-input
+tests cover the byte contract; sample tests and affected-board comparisons cover
+consumers.
 
 ## Runtime metadata (Phase 1.5 H3)
 
@@ -172,7 +176,11 @@ or move decoding into the runtime runner.
 [`yoloe26_geometry.py`](yoloe26_geometry.py) and
 [`yoloe26_decode.py`](yoloe26_decode.py) preserve the fixed 4585-class,
 640-square PF protocol from the S source. The [canonical YOLOE Python task](../vision/yoloe/runtime/python/README.md)
-now consumes these modules; conversion and native migration remain pending.
+now consumes these modules, and the [canonical conversion guide](../vision/yoloe/conversion/README.md)
+and [native C++ runtime](../vision/yoloe/runtime/cpp/README.md) are implemented
+and host-reviewed (independent YOLOE runtime/scorer review plus native host
+reviews). Real SDK execution, board inference and a published S floating-output
+asset remain not-run/not available.
 The modules do not load models, download artifacts or interpret quantization descriptors.
 
 The ten float32 NHWC outputs are class logits (4585), direct LTRB distances (4)
@@ -200,7 +208,11 @@ python -m unittest discover -s samples/_shared/tests -p test_yoloe26_decode.py
 ```
 
 这两个模块保留 S 源中的 4585 类、640 方形 PF 协议，已由
-[统一 YOLOE Python 任务](../vision/yoloe/runtime/python/README_cn.md)消费；转换和原生迁移仍待完成。模块不加载模型、不下载制品，
+[统一 YOLOE Python 任务](../vision/yoloe/runtime/python/README_cn.md)消费；
+[转换指南](../vision/yoloe/conversion/README_cn.md)与
+[原生 C++ 运行时](../vision/yoloe/runtime/cpp/README_cn.md)也已实现并通过
+主机审查（YOLOE 运行时/评分独立审查及原生主机审查）。真实 SDK 执行、
+板测推理和已发布的 S 浮点输出制品仍未运行/仍不存在。模块不加载模型、不下载制品，
 也不执行反量化。输入是上述顺序的十个 NHWC float32 张量，整数和非有限值
 显式拒绝。候选框采用直接 LTRB 解码和确定性 Top-K，支持单标签或多标签，
 分数须严格大于阈值，不执行 NMS；平局沿用源中的尺度、anchor、类别顺序。

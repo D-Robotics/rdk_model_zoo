@@ -38,18 +38,20 @@ S 独立 yolo11、yolo11_pose、yolo11_seg、yolov13_imoonlab 属重复实现，
 
 ## 完成清单
 
+> 2026-09-29 最终独立对齐：以下勾选仅表示用户当前裁定的非板端范围已验收；各行及进度记录中的旧 pending 是历史时间点。见 [最终独立报告](../../releases/unified-migration/2026-09-29-host-completion-independent-review.md)。板端、真实 SDK/ABI/模型结果和正式发布不在本次完成声明内；GitHub 同步须以实际远端哈希确认。
+
 - [x] H0 汇合未合入的已审修复；修正B3工具依赖隔离、原生audit与两侧日志归档，完成主机回归。 已由2026-09-28独立集成评审确认，见下方记录。
-- [ ] H1 README覆盖审计：根、sample索引、平台说明、每个sample及model/runtime/python/runtime/cpp/conversion/evaluator；建立源能力→新位置映射，修复失链与默认命令矛盾。
+- [x] H1 README覆盖审计：根、sample索引、平台说明、每个sample及model/runtime/python/runtime/cpp/conversion/evaluator；建立源能力→新位置映射，修复失链与默认命令矛盾。
   - 2026-09-26 总入口、36 个 Sample 索引及平台注册说明已更新，362 个本地链接通过；原平台正文保留。逐 Sample 深度内容审核仍继续，H1 不整体关闭。
-- [ ] H2 Ultralytics YOLO全部层级文档与代码规范示范：可复制最短流程、全任务命令、完整API输入变量、参数默认/输出/模型/转换/评估/历史指标/故障说明、中英一致。
+- [x] H2 Ultralytics YOLO全部层级文档与代码规范示范：可复制最短流程、全任务命令、完整API输入变量、参数默认/输出/模型/转换/评估/历史指标/故障说明、中英一致。
   - 2026-09-26 文档子项已完成：Ultralytics 根/model/runtime/python/runtime/cpp/conversion/evaluator 双语改写；36 samples / 0 violations / 0 exemptions，原 84 条基线与 CI 旗标已删除。H2 的实现职责审计仍待完成。
-- [ ] H3 B7主机整改集成；客户文档跟随实际代码与历史板证据，保持板测缺口。
+- [x] H3 B7主机整改集成；客户文档跟随实际代码与历史板证据，保持板测缺口。
 - [x] H4 B8全部样例完整源能力迁移与测试、双语README（2026-09-28 非板端整批独立验收通过；板端仍 not-run）。
-- [ ] H5 B9统一YOLO整理、重复独立系列退役及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；重复系列按用户新要求退役；YOLOE Python/C++、导出/转换准备/evaluator 及双语说明已完成主机实现，整体验收仍 pending。
+- [x] H5 B9统一YOLO整理、重复独立系列退役及YOLOE迁移；README 基线及 workflow 豁免旗标已于 2026-09-26 提前清零；重复系列按用户新要求退役；YOLOE Python/C++、导出/转换准备/evaluator 及双语说明已完成主机实现，2026-09-29 非板端整体验收通过。
 - [x] H6 B10语音/机器人样例迁移；2026-09-28 非板端整批独立验收通过，保留板测/SDK/实机控制未验证边界。
-- [ ] H7 B11大模型和VLA来源/gitlink/资源集成，不用空壳冒充上游能力。
-- [ ] H8 全仓共享职责、datasets、旧路径兼容、manifest/catalog、七skills原包来源与文档/Agent导航、上游增量核对。
-- [ ] H9 全部相关主机测试、无SDKhelp/list/dry-run、双语命令与本地链接核验、独立整体评审、GitHub同步；最终报告列出板测及外部环境未验证项。
+- [x] H7 B11大模型和VLA来源/gitlink/资源集成，不用空壳冒充上游能力。
+- [x] H8 全仓共享职责、datasets、旧路径兼容、manifest/catalog、七skills原包来源与文档/Agent导航、上游增量核对。
+- [x] H9 全部相关主机测试、无SDKhelp/list/dry-run、双语命令与本地链接核验、独立整体评审、GitHub同步；最终报告列出板测及外部环境未验证项。
 
 ## 文档验收
 
@@ -319,3 +321,5 @@ implicitly closed by this scoped command check.
 2026-09-28：H1 层级清点覆盖51个本仓库Sample、536份契约适用指南及2314个本地路径引用，无缺文件/路径。见 hierarchy-inventory-review；这只是结构证据，Gemma/B7活动修改尚未接受，源深度、正文语义、入口整改和稳定版本复核继续。test_data不因目录存在自动新增模板要求，Ultralytics具体混合资源说明缺口另按H2-DATA-R1整改。
 
 2026-09-28：Gemma Text 阶段包独立复审 changes-required：30主机/19原生测试虽通过，新增两个ASan反例确认mask窗口越界写与continuation短hidden越界读，另有公开API注释错误；已派Claude Code + GLM整改。B7文档需收紧历史exact-command/S100P表述并恢复三态词汇，H3/H7保持开放；见对应独立评审及反例，不进行板测或真实量化。
+
+2026-09-29：H1/H2/H3/H5/H7/H8 的剩余文档、Gemma Text 和 Skills 清单发现整改已独立验收；H0–H9 非板端对齐完成。1,631 项主机测试、单独复跑的 42 项 CTest、130 项 publisher 测试通过；599 份 README 的 3,365 本地 inline 引用无失链。保留首次依赖错误、13 项跳过与修正后全通过记录；Skills 三个首轮回答错误与显式纠正分别留存，不声明全部准确性维度通过。完整审查链、边界和源码摘要见最终独立报告。只提交/推送现有集成分支，不合并 develop 或发布。

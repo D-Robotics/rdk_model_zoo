@@ -24,7 +24,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
   --test-img samples/vision/yolov5/test_data/kite.jpg
 ```
 
-`bash samples/vision/yolov5/runtime/python/run.sh ...` is the same module entry. The S command is conditional on a prepared model and recognized S100 board; neither was used here.
+`bash samples/vision/yolov5/runtime/python/run.sh ...` is the same module entry. The S command is conditional on a prepared model and recognized S100 board. The X5 example is the default case from the 2026-09-24 real-board records (X5 8GB/4GB), and the equivalent S100 `x-672` `kite.jpg` run was executed on a real S100 (see the [python comparison](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/) and [expanded boards](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/) evidence); this tree performs no new board run.
 
 <a id="parameters"></a>
 ## Parameters

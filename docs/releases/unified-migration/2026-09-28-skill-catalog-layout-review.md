@@ -25,3 +25,7 @@ Scope: read_catalog.py, appropriate skills tests and user-facing usage/help;
 version/governance metadata only if required by pack rules, documenting unreleased
 candidate status. No published tags/installations/Hub changes. Existing upstream
 corrections and Q5 constraints must remain intact. Codex independently reviews.
+
+## 2026-09-29 independent closure
+
+H8-SKILL-R1 accepted after actual-checkout ambiguity/explicit-selection checks and 63 host tests. See [current Skills disposition](2026-09-29-skills-behavior-independent-review.md) and its source-bound evidence. The original failure above is retained.

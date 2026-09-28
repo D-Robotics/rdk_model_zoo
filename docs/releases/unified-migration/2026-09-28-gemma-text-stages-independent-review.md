@@ -50,3 +50,28 @@ with an observable assertion; it cannot verify any output.
 This package is not accepted and H7 stays open. Original tensor/ownership fixes
 must remain intact. Product remediation belongs to Claude Code + GLM; Codex will
 rerun the exact two original drivers and affected checks independently.
+
+## Independent correction and bounded acceptance — 2026-09-29
+
+TEXT-R1, TEXT-R2 and TEXT-DOC-R1 are closed for the reviewed Text stage package.
+Codex rebuilt and ran both original reviewer drivers, unchanged, against the
+current sources under ASan/UBSan: mask-boundary and short-hidden both exit zero
+with explicit rejection, without sanitizer errors. The original failing runs
+remain above. Evidence: [original drivers rechecked](evidence/2026-09-29-independent-closeout/original-reproducers.json).
+
+The mask geometry validates signed bounds before any allocation/write; the
+prepared-input API carries hidden extent as a vector. Both continuation methods
+validate whole-prompt hidden length before altering session state. The valid
+4096-token boundary, prefix offsets and reuse after rejection are exercised.
+Input preparation, raw SDK transport, output/KV consumption and session policy
+now have explicit boundaries; orchestration and benchmarking remain engine
+operations. Pure helpers have no model download, file output or console effects.
+Public comments describe prompt-inclusive return values and whole-prompt hidden
+rows; the vacuous output assertion is replaced by observed completion output.
+
+Fresh sample tests: 30/30. Fresh native build and ASan/UBSan CTest: 19/19.
+[Commands and source snapshot](evidence/2026-09-29-independent-closeout/checks.json),
+[final unchanged Gemma source binding](evidence/2026-09-29-independent-closeout/gemma-final-binding.json).
+The paired runtime guides and compiled README example agree. This accepts the
+current package for commit; no vendor ABI, live model, board or quantization
+result is claimed. B11 aggregate/status reconciliation is recorded separately.

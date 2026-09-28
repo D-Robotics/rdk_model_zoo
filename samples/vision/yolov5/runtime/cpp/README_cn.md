@@ -13,10 +13,12 @@ dump，并交给独立的 OpenCV 可视化模块渲染。发布事实由 `launch
 
 | 板卡 | 状态 | 说明 |
 | --- | --- | --- |
-| X5 | supported-not-run | 有 X5 HB-DNN 源；本主机无 X5 SDK、无板卡、无已发布模型文件，未在硬件上编译或运行 |
-| S100 | supported-not-run | 有 S UCP 源；无板卡、SDK 及 `yolov5x_672x672_nv12.hbm` 资产 |
-| S600 | supported-not-run | 同一 S 源，使用 64 字节 BPU 对齐宏；未编译、未运行 |
-| S100P | not-supported | YOLOv5 无 S100P 发布资产，`--target s100p` 被拒绝 |
+| X5 | supported-not-run | 无源/统一数值对照；真实 X5 8GB 和 4GB 板端对 `s-v2.0` 默认制品完成编译 + 推理 smoke（2026-09-24 记录，固定提交）；dump 已归档 |
+| S100 | supported-not-run | 无数值对照；首轮因使用 X5 独有 SDK 拼写编译失败（已修复）；第二轮在真实 S100 SDK 上编译并运行（`x-672`）；dump 已归档 |
+| S600 | supported-not-run | 无数值对照；有 `x-672` 真实板端构建 + smoke 记录（2026-09-24） |
+| S100P | not-supported | YOLOv5 无 S100P 发布资产，`--target s100p` 被拒绝。真实 S100P 板上的拒绝路径记录只是负例，不是正向支持 |
+
+`supported-not-run` 在此表示尚未记录源/统一数值对照；表内说明列出 2026-09-24 真实板端编译/推理 smoke 记录及其精确 case（[首轮](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-board-initial/)、[第二轮](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-native-round2/)、[X5 4GB/S600](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)）。smoke 证据不是数值验证，也不包含任何精度或性能结论；本工作树不追加新的板端运行。
 
 每个 adapter 只为一个目标编译，生成的二进制会拒绝与其编译身份不一致的
 `--target`（见[接口与资源生命周期](#interface-lifecycle)），因为 S600 与其余
@@ -171,6 +173,12 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
   另行建立。
 - 板端状态（2026-09-24，协调者证据）：整改前提交在真实 X5 8GB 上编译链接
   `rc=0`，首次 launcher 推理返回 `rc=0`；同一提交在 S100 上编译失败，原因是 S
-  adapter 使用了 X5 独有的 SDK 拼写，本轮已按板端头文件证据修复。本工作树不作
-  任何数值板端对照、精度或性能声明；板卡复验由协调者执行。主机测试通过仍只
-  代表契约/解码器结论。
+  adapter 使用了 X5 独有的 SDK 拼写。第二轮（`4d45f9a`）在两套真实 SDK 上编译并
+  运行（X5 8GB 与 S100，后者输出 14 个检测），X5 4GB 的 `s-v2.0` 与 S600 的
+  `x-672` 构建也各自在板端运行；构建/运行日志与 dump 归档保存在
+  [首轮](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-board-initial/)、
+  [第二轮](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-native-round2/)与
+  [扩展板测](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)
+  证据中。这些只是 smoke 与 dump 完整性记录：C++ 源数值对照仍未完成，也不作任何
+  精度或性能声明。本工作树不追加新的板端运行；主机测试通过仍只代表契约/解码器
+  结论。

@@ -1,0 +1,320 @@
+diff --git a/skills/CHANGELOG.md b/skills/CHANGELOG.md
+index b7dc34dc..8c1a16fb 100644
+--- a/skills/CHANGELOG.md
++++ b/skills/CHANGELOG.md
+@@ -2,6 +2,9 @@
+ 
+ ## Unreleased — candidate Pack 1.1.0
+ 
++- H8-SKILL-R1 remediation (unreleased candidate; nothing is published, tagged, or installed by this change): `rdk-model-zoo/scripts/read_catalog.py` default discovery now also probes the unified per-platform layouts `docs/release/{x5,s,x3}/models.yaml` and the frozen `platforms/{platform}/...` snapshots, preferring the active unified manifest over the same platform's snapshot — consistent with `inspect_repo.py`. Discovery stays local to the script (no sibling-skill or repository import), so single-skill flat installs remain self-contained. Explicit `--manifest` selection and the historic flat single-platform layouts are preserved: exactly one candidate is still selected implicitly, multiple candidates fail with `ambiguous-manifest` plus the actionable `manifest_candidates` path list and are never narrowed by branch, filename, or the S group, and missing manifests remain `manifest-not-found` (unknown). Implicitly or explicitly selecting a `platforms/` snapshot is disclosed with a warning.
++- Entry member `rdk-model-zoo` advances 1.1.1 → 1.1.2 for that behavior change (pack.json, SKILL.md frontmatter, governance card, pack README, structural test expectation). The Pack stays candidate 1.1.0 with `release_state: unreleased-candidate`. Per the governance card's change-review rule, one eval definition (`zoo-eval-013`, unified multi-platform lookup without a selected target) is added to expose the former default-invocation false absence; it is a behavior definition only, not an executed Agent result.
++- This fixes the recorded default-invocation failure on the unified checkout (`docs/releases/unified-migration/2026-09-28-skill-catalog-layout-review.md`, finding H8-SKILL-R1: documented `read_catalog.py --repo <unified checkout>` returned rc=2 `manifest-not-found` although the active unified manifests exist). Codex independently reviews this remediation; the whole H8 item is not closed by it.
+ - Integrate the upstream rdk_x5 increment (commit `d1b24f65`, "fix(skills): align Model Zoo routes with current OE workspaces (#175)") into this migration adaptation: OE workspace paths `.drobotics-x5/` and `.drobotics-s/` replace the retired `.drobotics/`/`.horizon/` names, the S-series router handoff becomes `drobotics-router`, and the S deployment-workflow source link points to `D-Robotics/oe-skills-s` tag `v1.1.0` instead of the retired `rdk-skills` path. Upstream declares Pack 1.0.1 released; that state describes the upstream pack — this branch's adapted candidate remains unpublished and untagged.
+ - Member versions absorb the increment without regressing earlier local levels: entry `rdk-model-zoo` 1.1.0 → 1.1.1 (matches upstream), `rdk-model-zoo-repo/develop/validate/review` 1.1.0 → 1.1.1 (the Q5 1.1.0 feature level is preserved; upstream's 1.0.1 is not adopted as a downgrade), `rdk-model-zoo-integrate/release` 1.0.0 → 1.0.1 (matches upstream). The Pack version advances 1.0.0 → 1.1.0 as a candidate because the tree now contains 1.1.x members, and `release_state` stays `unreleased-candidate`.
+ - Governance cards now restate the real member versions: the Q5 step had left the repo/develop/validate/review cards at 1.0.0 while `pack.json`/SKILL.md frontmatter said 1.1.0; this inconsistency is corrected as part of version self-consistency.
+diff --git a/skills/README.md b/skills/README.md
+index 5f957241..05676196 100644
+--- a/skills/README.md
++++ b/skills/README.md
+@@ -2,7 +2,7 @@
+ 
+ 本目录是 Model Zoo 专属 Skills 的维护源。Hub 只镜像注册的 `skills/<name>/`，不是维护源，也不安装模型仓库本身。Pack 从 `rdk_x5` 默认分支维护，但该分支只是文档来源，不能把用户目标默认为 X5；目标平台和 ref 必须按用户约束及实际目标仓库事实核对。
+ 
+-**交付状态：候选源码，尚未合入/发布。** Pack 候选版本为 1.1.0；入口 `rdk-model-zoo` 的 Skill 版本为 1.1.1，`rdk-model-zoo-repo/develop/validate/review` 为 1.1.1，`rdk-model-zoo-integrate/release` 为 1.0.1。上游 `rdk_x5` 已发布 Pack 1.0.1，该状态描述上游 Pack；本分支的迁移适配候选未发布、未打 tag。Pack 与成员版本分别管理，既有模型版本文件不改变。
++**交付状态：候选源码，尚未合入/发布。** Pack 候选版本为 1.1.0；入口 `rdk-model-zoo` 的 Skill 版本为 1.1.2，`rdk-model-zoo-repo/develop/validate/review` 为 1.1.1，`rdk-model-zoo-integrate/release` 为 1.0.1。上游 `rdk_x5` 已发布 Pack 1.0.1，该状态描述上游 Pack；本分支的迁移适配候选未发布、未打 tag。Pack 与成员版本分别管理，既有模型版本文件不改变。
+ 
+ ## 能力
+ 
+@@ -22,7 +22,19 @@
+ 
+ 每次使用先解析 `SKILL_ROOT`（当前 Skill 安装目录）和 `REPO_ROOT`（用户指定的 Model Zoo 工作区）。目标可能是 X5 的 `rdk_x5`/`x5-v*`、S100/S100P/S600 的 `rdk_s`/`s-v*`、X3 的 `rdk_x3`/`x3-v*`，或用户指定的 `rdk_x5_legacy`/历史 ref。分支名和模型文件名只是线索；以目标 ref 的 README、实际代码和（有清单时）Manifest/metadata 交叉核对。S100、S100P、S600 的支持必须落实到具体 sample、artifact 和 runtime，不能从 S 版本的总清单推断全仓兼容。用户给出的平台、版本、路径与候选 ref 冲突时保留约束并报告，不切换分支来消除冲突。
+ 
+-当前目标 ref 优先查 `docs/manifests/`；历史 ref 可能保留 `docs/release/` 或根 `release/`。多个清单要显式选择，缺少清单要保持未知，不能拿维护源的模型数据代替目标 ref。
++清单按目标 ref 的实际布局解析。统一集成线使用按平台的活动清单
++`docs/release/x5/models.yaml` 与 `docs/release/s/models.yaml`；它们是当前维护
++位置，区别于 `platforms/{x5,s}/docs/release/`、`platforms/x3/release/` 等迁移期
++冻结快照。交付 ref 保留 `docs/manifests/`，历史 ref 可能保留根 `release/`。
++`inspect_repo` 只报告实际存在的候选清单并标注统一/快照来源（同一平台两者并存
++时统一清单优先），且不据此推断目标硬件。`read_catalog` 的默认发现覆盖同一组
++布局：扁平布局与已知按平台布局（`docs/release/{x5,s,x3}/` 与 `platforms/…`
++快照，同一平台统一清单优先）合并为候选；恰好一个候选时仍隐式选择（历史扁平
++布局行为不变，选中 `platforms/` 快照会在警告中注明），多个候选报
++`ambiguous-manifest` 并在结果中列出候选路径，需显式传 `--manifest`（如
++`--manifest docs/release/s/models.yaml`），且不按分支、文件名或 S 组收窄目标；
++缺少清单报 `manifest-not-found`，保持未知，不能拿维护源的模型数据代替目标
++ref。
+ 
+ ## 目录与资源
+ 
+@@ -67,7 +79,7 @@ python3 skills/rdk-model-zoo-validate/scripts/validate_evidence.py "$RECEIPT" --
+ 
+ ## 评测与状态
+ 
+-83 条 eval 定义（原始 70 条、跨平台 5 条，及 Q5 强化新增 8 条）覆盖五类：正确性、可发现性、安全、有效性、效率。它们不是已执行结果；历史已执行的 75 条核心用例记录见 [行为评测协议](evals/README.md)。本地工具测试不能代替 Agent 基线/对照、真实板卡或生产 Hub 同步。
++84 条 eval 定义（原始 70 条、跨平台 5 条、Q5 强化新增 8 条，及 H8-SKILL-R1 清单发现整改新增 1 条）覆盖五类：正确性、可发现性、安全、有效性、效率。它们不是已执行结果；历史已执行的 75 条核心用例记录见 [行为评测协议](evals/README.md)。本地工具测试不能代替 Agent 基线/对照、真实板卡或生产 Hub 同步。
+ 
+ ## 来源与许可
+ 
+diff --git a/skills/pack.json b/skills/pack.json
+index fd9aa5db..0c3237c6 100644
+--- a/skills/pack.json
++++ b/skills/pack.json
+@@ -8,7 +8,7 @@
+   "skills": [
+     {
+       "name": "rdk-model-zoo",
+-      "version": "1.1.1",
++      "version": "1.1.2",
+       "shared_references": [
+         "context-policy.md",
+         "toolchain-handoff.md",
+diff --git a/skills/rdk-model-zoo/SKILL.md b/skills/rdk-model-zoo/SKILL.md
+index 2b2e7e76..d6144de7 100644
+--- a/skills/rdk-model-zoo/SKILL.md
++++ b/skills/rdk-model-zoo/SKILL.md
+@@ -1,7 +1,7 @@
+ ---
+ name: rdk-model-zoo
+ description: "Use when asking about ready-made RDK Model Zoo models, matching branches, downloads, sample execution, or published benchmarks. 触发词：现成模型、跑示例、模型目录、帧率查询。Do not use as the primary skill for PR review, repository development, custom quantization, or fresh performance measurement."
+-version: "1.1.1"
++version: "1.1.2"
+ license: Apache-2.0
+ metadata:
+   author: "RDK Model Zoo maintainers"
+@@ -30,7 +30,7 @@ metadata:
+    ```bash
+    python3 "$SKILL_ROOT/scripts/read_catalog.py" --repo "$REPO_ROOT" --model "$MODEL_QUERY"
+    ```
+-   `MODEL_QUERY` 可省略 `--model` 来列出全部。没有 Manifest 时阅读真实目录/README；多个 Manifest 时显式选择。返回空集不能解释为板卡不支持。
++   `MODEL_QUERY` 可省略 `--model` 来列出全部。脚本报告实际存在的候选清单（含统一按平台与迁移快照布局，同平台统一清单优先）：恰好一个候选时隐式选择，多个候选时报 `ambiguous-manifest` 和候选路径，需显式 `--manifest` 选择，不按分支、文件名或 S 组推断目标；缺少清单时保持未知，阅读真实目录/README。返回空集不能解释为板卡不支持。
+ 3. 按请求选一个实际存在的样例，核对精确模型资产、任务、下载方式、输入输出与运行语言。`availability: manual` 说明自行提供条件；`sha256: null` 保持未知。多模型 pipeline 不强制只有一个 BPU 文件。
+ 4. 查询性能只转述绑定原始版本和条件的记录；保留 qualifier、缺失字段和 source。不同平台/变体不能代填，无对应实测就明确说未提供。
+ 5. 运行前先读 runtime README、main、run.sh、下载脚本和所需公共函数。记录 cwd/argv、输入、输出及安装/下载/写系统路径的副作用。优先使用已编译模型；不要为一次 smoke test 自动安装 OE。
+diff --git a/skills/rdk-model-zoo/evals/tasks.yaml b/skills/rdk-model-zoo/evals/tasks.yaml
+index 95bef1ba..5f9bc5a1 100644
+--- a/skills/rdk-model-zoo/evals/tasks.yaml
++++ b/skills/rdk-model-zoo/evals/tasks.yaml
+@@ -114,3 +114,13 @@
+     - 区分仓库级范围和具体样例产物支持
+     - 不从聚合 compatibility 推出 S100P 已支持
+     - 说明需要对应产物/runtime 或实测证据
++- id: zoo-eval-013
++  dimension: correctness
++  prompt: 在这个统一仓库里查 efficientnet 有哪些现成模型和帧率。
++  context: 目标 checkout 同时存在 docs/release/x5/models.yaml、docs/release/s/models.yaml 与 platforms/x3/release/models.yaml；用户未选平台。
++  expect:
++    skill: rdk-model-zoo
++    behavior:
++    - 报告候选清单路径并要求显式选择，不默认取 X5 也不默认取 S 组
++    - 不按分支名、文件名或维护源身份推断目标平台
++    - 未选定清单或记录缺失时保持未知，不拿维护源数据代替目标 ref
+diff --git a/skills/rdk-model-zoo/scripts/read_catalog.py b/skills/rdk-model-zoo/scripts/read_catalog.py
+index d745f103..7c459daa 100644
+--- a/skills/rdk-model-zoo/scripts/read_catalog.py
++++ b/skills/rdk-model-zoo/scripts/read_catalog.py
+@@ -3,6 +3,10 @@
+ """Read local, versioned Model Zoo manifests; never infer missing metrics.
+ 
+ Requires PyYAML. Outputs a working-tree snapshot, not a Release attestation.
++Discovery: an explicit --manifest always wins. Otherwise the known flat and
++per-platform layouts are probed; a single candidate is selected implicitly,
++several candidates require explicit selection, and none means the manifest
++stays unknown.
+ """
+ from __future__ import annotations
+ import argparse
+@@ -19,6 +23,15 @@ except ImportError:
+     yaml=None
+ MAX_BYTES=16*1024*1024
+ MANIFEST_LAYOUTS=('docs/manifests','docs/release','release')
++# Unified per-platform layouts and migration-window snapshots, probed in
++# preference order: the active unified manifest wins over the frozen snapshot
++# copy of the same platform. Declared here instead of imported so one installed
++# skill directory stays self-contained; branch names are never consulted.
++PLATFORM_MANIFEST_PATTERNS=(
++    ('docs/release/{platform}','unified'),
++    ('platforms/{platform}/docs/release','snapshot'),
++    ('platforms/{platform}/release','snapshot'))
++MANIFEST_PLATFORMS=('x5','s','x3')
+ 
+ 
+ def safe_path(root: Path, relative: str) -> Path:
+@@ -30,6 +43,29 @@ def safe_path(root: Path, relative: str) -> Path:
+     return out
+ 
+ 
++class AmbiguousManifest(ValueError):
++    def __init__(self,candidates:list[str]):
++        super().__init__('ambiguous-manifest; choose --manifest explicitly; candidates: '+', '.join(candidates))
++        self.candidates=tuple(candidates)
++
++
++def manifest_candidates(root: Path) -> list[str]:
++    """Return manifest files actually present; active copies win over snapshots.
++
++    Flat layouts describe single-platform refs. One candidate may be selected
++    implicitly; several candidates require an explicit --manifest and are never
++    narrowed by branch, filename, or the S release group.
++    """
++    flat=[f'{directory}/models.yaml' for directory in MANIFEST_LAYOUTS if (root/directory/'models.yaml').is_file()]
++    per_platform:dict[str,str]={}
++    for platform in MANIFEST_PLATFORMS:
++        for pattern,_kind in PLATFORM_MANIFEST_PATTERNS:
++            directory=pattern.format(platform=platform)
++            if (root/directory/'models.yaml').is_file():
++                per_platform.setdefault(platform,f'{directory}/models.yaml');break
++    return sorted(set(flat)|set(per_platform.values()))
++
++
+ def guard_tree(value, stack=None, budget=None, depth=0):
+     """Bound YAML aliases/depth and reject cycles before JSON expansion."""
+     stack=set() if stack is None else stack;budget=[250000] if budget is None else budget
+@@ -101,12 +137,14 @@ def catalog(repo:str,model:str|None=None,manifest:str|None=None,benchmarks:str|N
+     root=Path(repo).expanduser().resolve()
+     if not root.is_dir():raise ValueError('repository-directory-not-found')
+     if manifest is None:
+-        options=[f'{directory}/models.yaml' for directory in MANIFEST_LAYOUTS if (root/directory/'models.yaml').is_file()]
++        options=manifest_candidates(root)
+         if not options:raise ValueError('manifest-not-found')
+-        if len(options)!=1:raise ValueError('ambiguous-manifest; choose --manifest explicitly')
++        if len(options)!=1:raise AmbiguousManifest(options)
+         manifest=options[0]
+     models,mi=load(root,manifest,'models')
+     warnings=[];bi=None;bench_rows=[]
++    if manifest.startswith('platforms/'):
++        warnings.append('Selected manifest is a frozen migration-window snapshot under platforms/; it is not the active unified release location.')
+     benchmark_path=benchmarks or (PurePosixPath(manifest).parent/'benchmarks.yaml').as_posix()
+     if (root/benchmark_path).is_file() or benchmarks:
+         raw,bi=load(root,benchmark_path,'benchmarks');bench_rows=raw['benchmarks']
+@@ -136,6 +174,8 @@ def main()->int:
+     try:r=catalog(a.repo,a.model,a.manifest,a.benchmark_manifest);code=0
+     except Exception as e:
+         # No commands have been taken from manifests. Parser failures stay explicit.
+-        r={'ok':False,'reason':str(e),'board_verified':False};code=2
++        r={'ok':False,'reason':str(e),'board_verified':False}
++        if isinstance(e,AmbiguousManifest):r['manifest_candidates']=list(e.candidates)
++        code=2
+     print(json.dumps(r,ensure_ascii=False,indent=2,default=str));return code
+ if __name__=='__main__':sys.exit(main())
+diff --git a/skills/rdk-model-zoo/skill-card.md b/skills/rdk-model-zoo/skill-card.md
+index 85e06254..35ea6fd2 100644
+--- a/skills/rdk-model-zoo/skill-card.md
++++ b/skills/rdk-model-zoo/skill-card.md
+@@ -4,7 +4,7 @@
+ | 字段 | 内容 |
+ |---|---|
+ | Owner | RDK Model Zoo maintainers（角色负责人；合入时按仓库 CODEOWNERS 分配具体 reviewer） |
+-| Skill 版本 | 1.1.1 |
++| Skill 版本 | 1.1.2 |
+ | Pack 候选版本 | 1.1.0（未发布） |
+ | 文档许可证 | CC-BY-4.0；frontmatter 的 Apache-2.0 为 Hub 兼容字段，不覆盖内容许可 |
+ | 脚本许可证 | Apache-2.0 |
+diff --git a/skills/tests/test_pack.py b/skills/tests/test_pack.py
+index c646d215..45f51cf6 100644
+--- a/skills/tests/test_pack.py
++++ b/skills/tests/test_pack.py
+@@ -52,7 +52,7 @@ class PackTests(unittest.TestCase):
+         self.assertEqual(manifest['release_state'],'unreleased-candidate')
+         self.assertEqual((ROOT/'VERSION').read_text(encoding='utf-8').strip(),manifest['version'])
+         self.assertEqual({row['name']:row['version'] for row in manifest['skills']}, {
+-            'rdk-model-zoo':'1.1.1',
++            'rdk-model-zoo':'1.1.2',
+             'rdk-model-zoo-repo':'1.1.1',
+             'rdk-model-zoo-integrate':'1.0.1',
+             'rdk-model-zoo-develop':'1.1.1',
+@@ -62,7 +62,10 @@ class PackTests(unittest.TestCase):
+         })
+         readme=(ROOT/'README.md').read_text(encoding='utf-8')
+         self.assertIn('Pack 候选版本为 1.1.0',readme)
+-        self.assertIn('Skill 版本为 1.1.1',readme)
++        # The entry advanced 1.1.1 -> 1.1.2 for the H8-SKILL-R1 discovery fix;
++        # the other 1.1.1 members keep their level.
++        self.assertIn('入口 `rdk-model-zoo` 的 Skill 版本为 1.1.2',readme)
++        self.assertIn('`rdk-model-zoo-repo/develop/validate/review` 为 1.1.1',readme)
+         self.assertNotIn('Pack 1.1.0 已发布',readme)
+         self.assertIn('上游 `rdk_x5` 已发布 Pack 1.0.1',readme)
+         changelog=(ROOT/'CHANGELOG.md').read_text(encoding='utf-8')
+diff --git a/skills/tests/test_tools.py b/skills/tests/test_tools.py
+index 7d43630d..db57464e 100644
+--- a/skills/tests/test_tools.py
++++ b/skills/tests/test_tools.py
+@@ -5,6 +5,7 @@ import hashlib
+ import json
+ import os
+ from pathlib import Path
++import shutil
+ import subprocess
+ import sys
+ import tempfile
+@@ -154,6 +155,15 @@ models:
+       - {filename: fixture.bin, format: bin, sha256: null}
+ ''')
+ 
++    def manifest(self, path, platform, tag, model_id):
++        """Minimal per-platform manifest fixture with an identifying model id."""
++        return self.write(path,f'''schema_version: 1
++release: {{platform: {platform}, tag: {tag}}}
++models:
++  - id: {model_id}
++    name: {model_id}
++''')
++
+     def test_current_manifest_layout(self):
+         self.model('docs/manifests/models.yaml')
+         self.write('docs/manifests/benchmarks.yaml','''schema_version: 1
+@@ -196,6 +206,55 @@ benchmarks:
+         self.assertIn('ambiguous',x['reason'])
+         self.assertIn('--manifest',x['reason'])
+ 
++    def test_unified_multi_platform_requires_target_selection(self):
++        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
++        self.manifest('docs/release/s/models.yaml','s','fixture-s-v1.0.0','fixture-s-demo')
++        self.manifest('platforms/x3/release/models.yaml','x3','fixture-x3-v9','fixture-x3-demo')
++        x=self.invoke(CATALOG,'--repo',self.root,code=2)
++        self.assertIn('ambiguous',x['reason']);self.assertIn('--manifest',x['reason'])
++        self.assertEqual(x['manifest_candidates'],['docs/release/s/models.yaml','docs/release/x5/models.yaml','platforms/x3/release/models.yaml'])
++        # A model query narrows records, never the target platform.
++        y=self.invoke(CATALOG,'--repo',self.root,'--model','fixture-s-demo',code=2)
++        self.assertIn('ambiguous',y['reason'])
++
++    def test_single_per_platform_manifest_is_implicit(self):
++        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
++        self.write('docs/release/x5/benchmarks.yaml','schema_version: 1\nrelease: {platform: x5, tag: fixture-x5-v1.0.0}\nbenchmarks: []\n')
++        x=self.invoke(CATALOG,'--repo',self.root)
++        self.assertEqual(x['model_manifest']['path'],'docs/release/x5/models.yaml')
++        self.assertEqual(x['benchmark_manifest']['path'],'docs/release/x5/benchmarks.yaml')
++        self.assertEqual(x['models'][0]['id'],'fixture-x5-demo')
++
++    def test_unified_manifest_wins_over_same_platform_snapshot(self):
++        self.manifest('docs/release/s/models.yaml','s','fixture-s-v2.0.0','fixture-s-unified')
++        self.manifest('platforms/s/docs/release/models.yaml','s','fixture-s-v1.0.0','fixture-s-snapshot')
++        x=self.invoke(CATALOG,'--repo',self.root)
++        self.assertEqual(x['model_manifest']['path'],'docs/release/s/models.yaml')
++        self.assertEqual(x['models'][0]['id'],'fixture-s-unified')
++        self.assertFalse(any('snapshot' in warning for warning in x['warnings']))
++
++    def test_snapshot_only_selection_is_disclosed(self):
++        self.manifest('platforms/x5/docs/release/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
++        x=self.invoke(CATALOG,'--repo',self.root)
++        self.assertEqual(x['model_manifest']['path'],'platforms/x5/docs/release/models.yaml')
++        self.assertTrue(any('snapshot' in warning for warning in x['warnings']))
++
++    def test_mixed_flat_and_per_platform_requires_selection(self):
++        self.manifest('docs/manifests/models.yaml','x5','fixture-x5-v1.0.0','fixture-demo')
++        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v2.0.0','fixture-x5-demo')
++        x=self.invoke(CATALOG,'--repo',self.root,code=2)
++        self.assertIn('ambiguous',x['reason'])
++        self.assertEqual(x['manifest_candidates'],['docs/manifests/models.yaml','docs/release/x5/models.yaml'])
++
++    def test_script_runs_without_sibling_skills(self):
++        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
++        with tempfile.TemporaryDirectory() as td:
++            script=Path(td)/'read_catalog.py';shutil.copyfile(CATALOG,script)
++            p=subprocess.run([sys.executable,str(script),'--repo',str(self.root)],text=True,capture_output=True,timeout=20,
++                             env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1','PYTHONPATH':''})
++            self.assertEqual(p.returncode,0,p.stdout+p.stderr)
++            self.assertEqual(json.loads(p.stdout)['model_manifest']['path'],'docs/release/x5/models.yaml')
++
+     def test_redefined_yaml_anchors_are_read_without_inference(self):
+         self.model('docs/manifests/models.yaml')
+         self.write('docs/manifests/benchmarks.yaml','''schema_version: 1

@@ -24,7 +24,7 @@ python3 samples/vision/yolov5/evaluator/compare.py \
   --output-dir /tmp/yolov5-evidence-unique
 ```
 
-The utility runs source and unified paths, stores complete native input/output/result arrays as `.npy`, records metadata, code/model/image hashes, thresholds and board identity in `comparison.json`, and returns `0` only when every declared comparison passes. The output directory must not already exist. This migration did not run it on a board.
+The utility runs source and unified paths, stores complete native input/output/result arrays as `.npy`, records metadata, code/model/image hashes, thresholds and board identity in `comparison.json`, and returns `0` only when every declared comparison passes. The output directory must not already exist. This tool ran on real boards in the 2026-09-24 records at pinned commits — X5 (all nine variants on 8GB/4GB) and the S100/S600 `x-672` cases, all checks true ([python comparison](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [nine-variant matrix](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-yolov5-x5-variants/), [expanded boards](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)) — while the current tree adds no new board run and those records do not re-validate the current HEAD.
 
 ### Native C++ source/unified comparison (board)
 
@@ -148,8 +148,14 @@ capture emits it and the unified dump since this round); a missing or
 one-sided final-coordinate capture fails the whole comparison rather than
 passing with a disclaimer. Any missing material, nonzero run, model/image
 hash or threshold mismatch fails nonzero with the gathered evidence
-preserved; a native failure can never pass as empty arrays. **Board status: not-run in this migration; the
-coordinator runs these steps on the real boards.** Host tests cover
+preserved; a native failure can never pass as empty arrays. **Native board
+status: the complete source/unified numerical comparison has not finished on
+any board** — at checkpoint `3d6c14c` the S100 completed fixed-source and
+unified real-SDK compiles while the X5 link step was interrupted
+([connectivity record](../../../../docs/releases/unified-migration/evidence/2026-09-24-board-connectivity-interruption/)),
+and no numerical comparison has been recorded; these steps run on the real
+boards. The C++ board work that does exist is build/smoke only (see
+`runtime/cpp/README.md`). Host tests cover
 instrumentation generation (including the pinned closure and the shallow-
 clone preparation hint), stub compiles of the instrumented sources (which
 prove only that the injected glue compiles, not that a real SDK build
@@ -184,7 +190,7 @@ The complete source historical X5 table is retained below; it was not re-run:
 | YOLOv5l_v7.0 | 640x640 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640x640 | 86.7 M | 13.1 FPS | 12 ms |
 
-S100/S600 and current source/unified board comparison are `not-run`.
+The 2026-09-24 records include Python source/unified comparisons for the S100 and S600 `x-672` (`kite.jpg`) cases and all nine X5 variants (evidence linked above); MOT-style accuracy and the native C++ comparison remain `not-run`, and none of those records re-validate the current tree.
 
 <a id="boundaries"></a>
 ## Boundaries

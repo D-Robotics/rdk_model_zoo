@@ -15,10 +15,12 @@ never guesses a layout from a file name.
 
 | Board | Status | Note |
 | --- | --- | --- |
-| X5 | supported-not-run | X5 HB-DNN source exists; this host has no X5 SDK, board or published model binary, so the native binary was not compiled or executed on hardware |
-| S100 | supported-not-run | S UCP source exists; no board, SDK or `yolov5x_672x672_nv12.hbm` asset was available |
-| S600 | supported-not-run | Same S source with the 64-byte BPU alignment macro; not built or run |
-| S100P | not-supported | YOLOv5 has no published S100P asset; `--target s100p` is rejected |
+| X5 | supported-not-run | no source/unified numerical comparison; real-board build + inference smoke ran for the `s-v2.0` default on X5 8GB and 4GB (2026-09-24 records, pinned commits); dumps archived |
+| S100 | supported-not-run | no numerical comparison; first round failed to compile (X5-only SDK spellings, since fixed); round 2 compiled and ran on the real S100 SDK (`x-672`); dump archived |
+| S600 | supported-not-run | no numerical comparison; `x-672` real-board build + smoke recorded (2026-09-24) |
+| S100P | not-supported | YOLOv5 has no published S100P asset; `--target s100p` is rejected. Recorded rejection checks on a real S100P board are negative paths only, not positive support |
+
+`supported-not-run` here means no source/unified numerical comparison has been recorded; the notes list the 2026-09-24 real-board build/inference smoke records with their exact cases ([initial round](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-board-initial/), [round 2](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-native-round2/), [X5 4GB/S600](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)). Smoke evidence is not numerical verification, carries no accuracy or performance claim, and this tree adds no new board run.
 
 Each adapter is compiled for exactly one target and the resulting binary refuses
 a `--target` that differs from its compiled identity (see
@@ -195,8 +197,15 @@ Declared differences from the fixed sources (preserved, not silently unified):
   evaluator has to establish separately.
 - Board status (2026-09-24, coordinator evidence): the pre-remediation commit
   compiled and linked `rc=0` on a real X5 8GB and a first launcher inference
-  returned `rc=0`; the same commit failed to compile on S100 because the S
-  adapter used X5-only SDK spellings, which this round fixes per the on-board
-  header evidence. No numerical board comparison, accuracy or performance
-  claim is made from this tree; re-verification on the boards belongs to the
-  coordinator. Host checks remain contract/decoder results only.
+  returned `rc=0`, while the same commit failed to compile on S100 because the S
+  adapter used X5-only SDK spellings. Round 2 (`4d45f9a`) compiled and ran on
+  both real SDKs (X5 8GB and S100, the latter with 14 detections), and the X5
+  4GB `s-v2.0` and S600 `x-672` builds also ran on their boards; build/run logs
+  and dump archives are preserved in the
+  [initial](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-board-initial/),
+  [round-2](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-native-round2/)
+  and [expanded-board](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)
+  evidence. These are smoke and dump-integrity records only: the source C++
+  numerical comparison is still incomplete, and no accuracy or performance
+  claim is made. This tree adds no new board run; host checks remain
+  contract/decoder results only.

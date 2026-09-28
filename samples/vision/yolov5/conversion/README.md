@@ -50,7 +50,7 @@ hb_perf ./yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin
 hrt_model_exec model_info --model_file ./yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin
 ```
 
-Success requires three `(1,H/stride,W/stride,255)` heads, the expected 640 input metadata, and output behavior matching the selected target path. No conversion or board validation was performed.
+Success requires three `(1,H/stride,W/stride,255)` heads, the expected 640 input metadata, and output behavior matching the selected target path. No conversion was performed in this migration, so no locally converted artifact has ever been board-validated; the 2026-09-24 board records concern the published runtime artifacts listed in `model/README.md`, which is a separate matter from converting here.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -62,4 +62,4 @@ Success requires three `(1,H/stride,W/stride,255)` heads, the expected 640 input
 
 - No pinned upstream commit, checkpoint files, export script, calibration producer, or S conversion recipe is included.
 - The source X5 Python path and S path have different physical tensor protocols and NMS/dequant behavior; a shared conversion paragraph cannot replace target-specific metadata.
-- All compiler/export/calibration/board results are `not-run`; manifest publisher SHA-256 values are unknown.
+- Export, calibration, and compilation are `not-run` in this migration and no locally converted artifact exists; the published runtime artifacts carry separate 2026-09-24 board comparison records (see the root README support matrix), which do not validate any local conversion. Manifest publisher SHA-256 values are unknown.

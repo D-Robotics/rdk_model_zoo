@@ -92,7 +92,7 @@ HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制
 | [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
 
-Gemma 已迁入五个原生入口与完整源教程；模型准备已完成，剩余文本核心工作与独立验收仍未关闭。MiniCPM5-2B 已迁入 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口。其[最终独立核心处置](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md)已在主机范围内接受核心重构：20 项主机测试通过、四段 README 示例编译通过；不声明实板、厂商 ABI 或模型精度验收。B11 批次、厂商 ABI/模型精度与板端验收仍未关闭；板测未运行。
+Gemma 已迁入五个原生入口与完整源教程；源内容迁入、启动流程拆分、模型准备与 Vision/Text 阶段及资源重构已实现，最新 Text 阶段包获得有边界的主机验收：[Text 阶段独立评审](../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md) 复核两个原始 ASan/UBSan 驱动并记录 30/30 项主机测试与 19/19 项 ASan/UBSan CTest 通过，不声明厂商 ABI、实机模型、板端或量化结果。MiniCPM5-2B 已迁入 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口。其[最终独立核心处置](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md)已在主机范围内接受核心重构：20 项主机测试通过、四段 README 示例编译通过；不声明实板、厂商 ABI 或模型精度验收。B11 批次、厂商 ABI/模型精度与板端验收仍未关闭；板测未运行。
 
 ## 固定第三方策略集成
 

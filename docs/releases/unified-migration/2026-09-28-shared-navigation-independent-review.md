@@ -36,3 +36,7 @@ an explicit S manifest for efficientnet. Full output and helper source hashes
 are in `evidence/2026-09-28-shared-navigation-independent-review/tools-and-context.json`.
 These checks certify deterministic tools/resource structure only; current-candidate
 Agent behavior remains a separate H8 acceptance requirement.
+
+## 2026-09-29 independent follow-up
+
+H8-NAV-R1 accepted in [the document-remediation review](2026-09-29-document-remediation-independent-review.md). Original findings above are retained as history; the new review binds the corrected files and evidence. Broader rollup status is tracked separately.

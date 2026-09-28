@@ -24,7 +24,7 @@ python3 samples/vision/yolov5/evaluator/compare.py \
   --output-dir /tmp/yolov5-evidence-unique
 ```
 
-工具运行源路径和统一路径，把完整 native 输入/输出/结果数组保存为 `.npy`，在 `comparison.json` 记录 metadata、代码/模型/图片 hash、阈值和板卡身份；所有比较通过才返回 `0`。输出目录必须不存在。本轮没有板端运行。
+工具运行源路径和统一路径，把完整 native 输入/输出/结果数组保存为 `.npy`，在 `comparison.json` 记录 metadata、代码/模型/图片 hash、阈值和板卡身份；所有比较通过才返回 `0`。输出目录必须不存在。该工具在 2026-09-24 记录中于真实板端、固定提交上运行过——X5（8GB/4GB 全部九个变体）与 S100/S600 `x-672` case，全部检查为 true（[python 对照](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[九变体矩阵](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-yolov5-x5-variants/)、[扩展板测](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)）——当前工作树不追加新的板端运行，这些记录也不重新验证当前 HEAD。
 
 ### 原生 C++ 源/统一比较（板端）
 
@@ -124,7 +124,11 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 `detections_original`——捕获端与本轮起的统一 dump 都会产出）；最终坐标缺失
 或单侧缺失直接判整个比较失败，而不是以免责声明放行。任何材料缺失、运行
 非零返回码、模型/图片 hash 或阈值不一致都以非零返回码失败并保留已收集
-证据；native 失败绝不能以空数组通过。**板端状态：本轮 not-run；上述步骤由协调者在真实板卡执行。**
+证据；native 失败绝不能以空数组通过。**native 板端状态：完整的源/统一数值对照尚未在任何板端完成**——检查点
+`3d6c14c` 时 S100 已完成固定源与统一实现的真实 SDK 编译，而 X5 的链接步骤被中断
+（[连接中断记录](../../../../docs/releases/unified-migration/evidence/2026-09-24-board-connectivity-interruption/)），
+尚未记录任何数值对照；这些步骤在真实板卡上执行。已完成的 C++ 板端工作只是
+build/smoke（见 `runtime/cpp/README_cn.md`）。
 主机测试覆盖插桩生成（含固定闭包与浅克隆准备提示）、插桩源的 stub 编译
 （只证明注入代码可编译，不代表真实 SDK 构建通过）、观测头精度/标记/拒绝
 行为、对**真实 v2 板端 manifest schema** 的比较、stride 还原与全部失败模式。
@@ -156,7 +160,7 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 | YOLOv5l_v7.0 | 640x640 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640x640 | 86.7 M | 13.1 FPS | 12 ms |
 
-S100/S600 以及当前源/统一板端比较均为 `not-run`。
+2026-09-24 记录包含 S100 与 S600 `x-672`（`kite.jpg`）case 以及全部九个 X5 变体的 Python 源/统一对照（证据见上方链接）；MOT 类精度与 native C++ 对照仍为 `not-run`，这些记录都不重新验证当前工作树。
 
 <a id="boundaries"></a>
 ## 边界

@@ -28,7 +28,7 @@ After an external ONNX/checkpoint, target-specific YAML, and calibration set exi
 <a id="validation"></a>
 ## Post-conversion validation
 
-Validate detector metadata with the S YOLOv5 runtime, then run the tracker on a prepared video. Compare complete detector tensors and track IDs using `evaluator/compare.py`. No export, compile, board, or video validation was run.
+Validate detector metadata with the S YOLOv5 runtime, then run the tracker on a prepared video. Compare complete detector tensors and track IDs using `evaluator/compare.py`. No export or compile was run in this migration, so no locally converted artifact exists to validate. The published HBM rows and the first 30 frames of the public video were exercised on S100/S600 boards in the 2026-09-24 comparisons (see the [evaluator README](../evaluator/README.md)); that history neither validates a local conversion nor extends beyond those recorded frames.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -40,4 +40,4 @@ The three external outputs are the manifest HBM rows in `model/README.md`; ByteT
 
 - No S export script, checkpoint pin, YAML, calibration producer, or compiler log is present.
 - The source video is absent and has only an explicit archive URL in the customer docs.
-- Conversion and board validation are `not-run`; all publisher SHA-256 values are unknown.
+- Conversion (export/compile) is `not-run` and no locally converted artifact exists; the published HBM rows carry historical 2026-09-24 board comparison records (see the [evaluator README](../evaluator/README.md)), which do not validate any local conversion. All publisher SHA-256 values are unknown.

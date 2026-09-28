@@ -31,3 +31,7 @@ Numerical source C++ comparison remains incomplete. Current HEAD was not reteste
 
 Scope remains the existing YOLOv5/ByteTrack README package and author evidence.
 No code/recipes/commands/board operations or checker-rule changes are needed.
+
+## 2026-09-29 independent follow-up
+
+B7-DOC-R1/R2/R3 accepted in [the document-remediation review](2026-09-29-document-remediation-independent-review.md). Original findings above are retained as history; the new review binds the corrected files and evidence. Broader rollup status is tracked separately.

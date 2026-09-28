@@ -3,7 +3,7 @@
 <a id="dataset"></a>
 ## Dataset
 
-The source contains still images and reference GIF/PNG files but no `track_test.mp4` and no MOT ground-truth directory. Prepare the video explicitly from `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4`; this migration did not download it. The evaluator compares two complete source/unified captures, not MOTA/IDF1 from a labeled dataset.
+The source contains still images and reference GIF/PNG files but no `track_test.mp4` and no MOT ground-truth directory. Prepare the video explicitly from `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4`; the 2026-09-24 board rounds downloaded exactly this video (recorded SHA `4bbe5bf1…` in the [real-video evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)), while this tree performs no new download. The evaluator compares two complete source/unified captures, not MOTA/IDF1 from a labeled dataset.
 
 <a id="environment"></a>
 ## Environment
@@ -25,7 +25,7 @@ python3 samples/vision/bytetrack/evaluator/compare.py \
   --max-frames 30
 ```
 
-The command captures every frame's image, native detector inputs/outputs, track records, metadata, model/video/code hashes, and subprocess logs under `legacy/`, `unified/`, and `comparison.json`. It returns `0` only for exact frame/input/track-ID agreement within declared box/score tolerances. Existing output directories are rejected. This migration did not run it on a board.
+The command captures every frame's image, native detector inputs/outputs, track records, metadata, model/video/code hashes, and subprocess logs under `legacy/`, `unified/`, and `comparison.json`. It returns `0` only for exact frame/input/track-ID agreement within declared box/score tolerances. Existing output directories are rejected. This tool ran on real boards in the 2026-09-24 records at pinned commits — the S100 four-frame synthetic case and the S100/S600 first-30-frames `track_test.mp4` cases, all checks true ([four-frame](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-s100/), [real-video](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/) evidence) — while the current tree adds no new board run, those records do not re-validate the current HEAD, and MOT-dataset accuracy remains `not-run`.
 
 <a id="metrics"></a>
 ## Metrics
@@ -47,7 +47,7 @@ Each side retains complete `.npy` image/input/output arrays and `capture.json`; 
 | ByteTrack paper IDF1 | MOT17 test / V100 | 77.3 | paper reference |
 | ByteTrack paper throughput | V100 GPU | about 30 FPS | paper reference |
 
-These values are historical source/paper references. Current board capture and MOT benchmark status are `not-run`.
+These values are historical source/paper references. Board source/unified captures exist for the recorded cases linked above at pinned commits; MOT benchmark (MOTA/IDF1) evaluation remains `not-run`, and this tree adds no new capture.
 
 ### Reference tracking effects (historical)
 
