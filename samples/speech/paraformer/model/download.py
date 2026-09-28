@@ -13,14 +13,13 @@ if str(ROOT) not in sys.path:
 
 from samples._shared.assets import download_asset, list_assets, sha256_file
 from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary
-from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+from samples.speech.paraformer.runtime.python.model_binding import (
+    resolve_selections,
+    LOCAL_DIGESTS,
+    VOCABULARY_DIGEST,
+)
 
 MODEL_DIR = Path(__file__).resolve().parent
-LOCAL_DIGESTS = {
-    "am.mvn": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
-    "paraformer_config.yaml": "1d9057edeaba9e131cb98f26011606497cf3af187d8943525ddb5ee36c836b1b",
-}
-VOCABULARY_DIGEST = "2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127"
 
 
 def _check_digest(path, expected):

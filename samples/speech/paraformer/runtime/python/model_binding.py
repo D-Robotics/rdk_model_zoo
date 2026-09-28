@@ -16,6 +16,12 @@ FILENAMES = {
 }
 CONTEXT = "/encoder/after_norm/Add_1_output_0"
 
+LOCAL_DIGESTS = {
+    "am.mvn": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
+    "paraformer_config.yaml": "1d9057edeaba9e131cb98f26011606497cf3af187d8943525ddb5ee36c836b1b",
+}
+VOCABULARY_DIGEST = "2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127"
+
 # Names/shapes follow the archived native lookup and ONNX extraction graphs.
 # The lower-case acoustic alias is also handled by the source Python runtime.
 INPUTS = {

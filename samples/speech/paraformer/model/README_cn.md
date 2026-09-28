@@ -55,7 +55,7 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 - 已下载 `tokens.json`：`2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`
 
 源前端使用 16 kHz、80 个 mel 频带、25 ms 窗长、10 ms 帧移，LFR 堆叠 7 帧、步长 6，
-最多 400 帧，每帧 560 维。真实前端迁移与验证仍待完成。流程中的全零 context bias
+最多 400 帧，每帧 560 维。真实 CPU 前端已通过 7 组源实现对照，详见 Python 说明。流程中的全零 context bias
 保留源部署方式，不提供用户自定义热词功能。三模型的具体接口见
 [物理张量契约](../runtime/python/README_cn.md)。INT16 名称描述编译配方，不能据此猜测 I/O 类型。
 

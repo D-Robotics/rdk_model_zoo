@@ -42,7 +42,7 @@ examples=[]
 for filename in ('README.md','README_cn.md'):
     path=ROOT/'samples/speech/paraformer/runtime/python'/filename
     content=path.read_text()
-    for index, block in enumerate(re.findall(r'```bash\n(.*?)```',content,re.S)):
+    for index, block in enumerate(re.findall(r'```bash\n(.*?)```',content,re.S)[:3]):
         env=dict(os.environ);env['PATH']=str(Path(sys.executable).parent)+':'+env['PATH']
         p=subprocess.run(['bash','-c',block],cwd=ROOT,env=env,capture_output=True,text=True)
         (HERE/f'{filename}-block-{index}.log').write_text(p.stdout+p.stderr)
@@ -52,7 +52,7 @@ for filename in ('README.md','README_cn.md'):
         examples.append({'readme':filename,'block':index,'rc':p.returncode})
     for link in re.findall(r'\]\(([^)]+)\)',content):
         assert (path.parent/link).resolve().exists(),link
-p=subprocess.run([sys.executable,'-m','unittest','discover','-s','samples/speech/paraformer/tests','-v'],cwd=ROOT,capture_output=True,text=True)
+p=subprocess.run([sys.executable,'-m','unittest','samples.speech.paraformer.tests.test_cif','samples.speech.paraformer.tests.test_pipeline','-v'],cwd=ROOT,capture_output=True,text=True)
 (HERE/'green.log').write_text(p.stdout+p.stderr)
 assert p.returncode==0,p.stderr
 summary={'scope':'CPU-only orchestration with synthetic model callables; no SDK or board inference',

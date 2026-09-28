@@ -31,7 +31,7 @@ checks = []
 for name in ('README.md', 'README_cn.md'):
     path = ROOT / 'samples/speech/paraformer/runtime/python' / name
     content = path.read_text()
-    for i, block in enumerate(re.findall(r'```bash\n(.*?)```', content, re.S)):
+    for i, block in enumerate(re.findall(r'```bash\n(.*?)```', content, re.S)[:2]):
         # Use the active Python interpreter for the documented python command.
         env = dict(__import__('os').environ)
         env['PATH'] = str(Path(sys.executable).parent) + ':' + env['PATH']

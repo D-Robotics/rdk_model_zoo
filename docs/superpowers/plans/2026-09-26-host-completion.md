@@ -137,3 +137,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer 应用层三模型编排与独立文本解码已实现；空 CIF 输出显式跳过 decoder，未混入任务 forward。13 项主机测试、20 组固定源文本对照和 6 个双语文档命令通过；8,404 项发布词表已实测并留存摘要。见[流程记录](../../releases/unified-migration/2026-09-28-b10-paraformer-pipeline-review.md)。完整 SDK/前端/转换/原生流程仍未接入；H0–H9 和独立验收保持开放。
 
 2026-09-28：Paraformer S100 三模型精确选择、共享 SDK runner 绑定及实际调度委托已实现，错误组合先于 SDK 创建拒绝；新增六文件模型包准备、源前端文件固定摘要与双语模型说明。23 项 Sample、156 项共享回归及双语示例通过，初次共享回归缺下载入口的失败与修复留存。见[记录](../../releases/unified-migration/2026-09-28-b10-paraformer-binding-review.md)。真实前端、完整音频/原生/转换评测继续；真实 SDK、HBM 推理、板测未执行，H0–H9 未关闭。
+
+2026-09-28：Paraformer 真实 FunASR 前端已迁移，7 组真实输入与源特征逐字节一致；修复全局 CPU 随机状态污染并验证异常恢复，保留超长输入前 400 帧并显式报告截断。26 项 Sample/156 项共享测试通过，Python/model/test_data 双语说明和源音频/清单同步。见[真实前端记录](../../releases/unified-migration/2026-09-28-b10-paraformer-frontend-review.md)。完整音频 CLI、C++、转换/评测和剩余文档继续；真实 SDK/板端与整体验收未执行，H0–H9 保持开放。

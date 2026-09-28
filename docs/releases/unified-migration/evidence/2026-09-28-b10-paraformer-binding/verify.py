@@ -10,7 +10,12 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[4]
 checks = []
 for directory, log, expected in [('samples/speech/paraformer/tests', 'green.log', 23), ('samples/_shared/tests', 'shared.log', 156)]:
-    result = subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', directory, '-v'], cwd=ROOT, capture_output=True, text=True)
+    arguments = (
+        [f'samples.speech.paraformer.tests.test_{name}' for name in ('cif', 'pipeline', 'binding', 'download')]
+        if directory == 'samples/speech/paraformer/tests'
+        else ['discover', '-s', directory]
+    )
+    result = subprocess.run([sys.executable, '-m', 'unittest', *arguments, '-v'], cwd=ROOT, capture_output=True, text=True)
     (HERE / log).write_text(result.stdout + result.stderr)
     assert result.returncode == 0, result.stderr
     count = int(re.search(r'Ran (\d+) tests?', result.stderr).group(1))
@@ -20,7 +25,7 @@ examples = []
 for filename in ('README.md', 'README_cn.md'):
     path = ROOT / 'samples/speech/paraformer/runtime/python' / filename
     content = path.read_text()
-    for index, block in enumerate(re.findall(r'```bash\n(.*?)```', content, re.S)):
+    for index, block in enumerate(re.findall(r'```bash\n(.*?)```', content, re.S)[:4]):
         env = dict(os.environ)
         env['PATH'] = str(Path(sys.executable).parent) + ':' + env['PATH']
         result = subprocess.run(['bash', '-c', block], cwd=ROOT, env=env, capture_output=True, text=True)

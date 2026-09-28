@@ -63,8 +63,7 @@ local pin does not become a publisher-provided hash.
 - Downloaded `tokens.json`: `2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`
 
 The source frontend uses 16 kHz, 80 mel bands, 25 ms windows, 10 ms shifts,
-LFR stacking 7 with step 6, and at most 400 frames of width 560. Its real frontend
-migration/verification remains pending. The pipeline's zero context bias preserves
+LFR stacking 7 with step 6, and at most 400 frames of width 560. Its real CPU frontend has passed seven source comparisons; see the Python guide. The pipeline's zero context bias preserves
 the source deployment; it does not implement user-supplied contextual hotwords.
 See [physical tensor contracts](../runtime/python/README.md) for the three models.
 INT16 names describe the compiled model recipe, not permission to guess I/O dtype.
