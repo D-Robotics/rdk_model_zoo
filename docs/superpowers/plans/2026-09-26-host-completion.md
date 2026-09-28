@@ -290,3 +290,7 @@ twenty source-identical image references, unchanged command blocks and four
 passing checkers. [Independent report](../../releases/unified-migration/2026-09-28-readme-depth-special-independent-review.md).
 DOC-DEPTH-R1 now has independent disposition for all 24 affected destinations;
 KWS-N1 also closed. H1/H2/H3/H6/H9 broader work is not implicitly closed.
+
+### 2026-09-28 B10 integrated host recheck (Codex)
+
+Fresh 109 runtime/host tests pass (ASR 27, KWS 13, Paraformer 46, HIMLoco 23); 54 README inventory/local-link checks and four zero-violation sample checkers recorded in `2026-09-28-b10-batch-independent-review.md`. H6 remains open for B10-DOC-R1 (Paraformer test-data native-consumer status) and independent reread of the Claude Code + GLM correction. No real recipe, quantization, board or robot run was performed.
