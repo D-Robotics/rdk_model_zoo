@@ -21,11 +21,12 @@ CPU CIF（连续积分触发）和 decoder。部署使用三份独立发布的 S
 
 | 发布部署 | x5 | s100 | s100p | s600 | Python | 统一 C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| large：encoder 400×560／predictor 400×512／decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | 已实现并做主机检查 | 待迁移 |
+| large：encoder 400×560／predictor 400×512／decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | 已实现并做主机检查 | CPU 库已做主机检查；SDK／CLI 待迁移 |
 
 `supported-not-run` 表示声明的 S100 部署与现有 Python 实现，不代表新增板测通过。
 本轮未执行真实 SDK／模型元数据核验或板端推理。源 C++ 能力仍保留在归档中，需要
-继续迁移；当前不宣称新增双语言支持。
+继续迁移完整部署入口。[原生 CPU 库](runtime/cpp/README_cn.md)已提供 CIF、文本解码
+与应用编排，但不代表完整双语言推理支持。
 
 <a id="prerequisites"></a>
 ## 前置条件

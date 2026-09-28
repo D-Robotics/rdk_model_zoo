@@ -23,12 +23,14 @@ evaluator migration are still open. This is not full sample acceptance.
 
 | Published deployment | x5 | s100 | s100p | s600 | Python | Unified C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| large, encoder 400×560 / predictor 400×512 / decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | implemented; host-checked | pending migration |
+| large, encoder 400×560 / predictor 400×512 / decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | implemented; host-checked | CPU library host-checked; SDK/CLI pending |
 
 `supported-not-run` denotes the declared S100 deployment and available Python
 implementation, not a new board result. Real SDK/model metadata and board inference
 have not been exercised here. The source C++ capability is retained in the archive
-and must still be migrated; no new dual-language support is claimed.
+and its complete deployment entry must still be migrated. The [native CPU library](runtime/cpp/README.md)
+now provides CIF/text decoding and application composition; this does not establish
+full dual-language inference support.
 
 <a id="prerequisites"></a>
 ## Prerequisites

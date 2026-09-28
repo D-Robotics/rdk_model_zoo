@@ -141,3 +141,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：Paraformer 真实 FunASR 前端已迁移，7 组真实输入与源特征逐字节一致；修复全局 CPU 随机状态污染并验证异常恢复，保留超长输入前 400 帧并显式报告截断。26 项 Sample/156 项共享测试通过，Python/model/test_data 双语说明和源音频/清单同步。见[真实前端记录](../../releases/unified-migration/2026-09-28-b10-paraformer-frontend-review.md)。完整音频 CLI、C++、转换/评测和剩余文档继续；真实 SDK/板端与整体验收未执行，H0–H9 保持开放。
 
 2026-09-28：Paraformer Python 完整音频/清单 CLI 和结果留证已接入，真实主机 10 用例通过；生成特征不再改写用户清单，缺音频/重复 ID/已有输出显式拒绝，33 Sample/156 共享测试通过。根与运行双语 README 补齐完整路径、全部参数、结果/失败语义及板测边界；5 组不同 CLI 文档命令实际执行。见[CLI 记录](../../releases/unified-migration/2026-09-28-b10-paraformer-cli-review.md)。C++、转换/评测与剩余文档继续，B10/H0–H9 不关闭。
+
+2026-09-28：Paraformer C++ CPU CIF/文本模块与三模型应用编排已实现，27 组新原生/旧原生/统一 Python 字节对照及 20 组文本对照通过；双语 README 的 Release+ASan/UBSan 构建、两项原生测试及完整 API 示例实际执行，33 项 Python 回归通过。见[原生模块记录](../../releases/unified-migration/2026-09-28-b10-paraformer-native-core-review.md)。原生 SDK/清单加载/CLI、转换评测仍待迁移；真实 SDK/板端未验证，B10/H0–H9 及整体独立验收继续开放。
