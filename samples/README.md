@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers 45 unified vision samples and the KWS speech sample. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers 45 unified vision samples and the ASR/KWS speech samples. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -73,6 +73,7 @@ This index covers 45 unified vision samples and the KWS speech sample. It is a s
 
 | Sample | Conversion | Evaluation |
 |---|---|---|
+| [asr](speech/asr/README.md) | [conversion](speech/asr/conversion/README.md) | [evaluator](speech/asr/evaluator/README.md) |
 | [kws](speech/kws/README.md) | [conversion](speech/kws/conversion/README.md) | [evaluator](speech/kws/evaluator/README.md) |
 
 ## Read validation status correctly

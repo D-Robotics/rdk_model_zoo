@@ -1,0 +1,268 @@
+{
+  "commands": [
+    {
+      "page": "samples/speech/asr/README.md",
+      "kind": "host-shell",
+      "command": "bash samples/speech/asr/runtime/python/run.sh --list-models\nbash samples/speech/asr/runtime/python/run.sh --target s100 --dry-run\nbash samples/speech/asr/runtime/python/run.sh --target s600 --dry-run\n",
+      "rc": 0,
+      "stdout": "root-shell-0.stdout.log",
+      "stderr": "root-shell-0.stderr.log"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README.md",
+      "kind": "host-shell",
+      "command": "# cwd: repository root; synthetic example, not model predictions\nasr_eval_dir=$(mktemp -d)\ncat > \"$asr_eval_dir/transcripts.json\" <<'JSON'\n{\n  \"schema\": \"rdk-model-zoo/asr-transcripts/v1\",\n  \"provenance\": {\"dataset\": \"synthetic-example\", \"model\": \"none\", \"decode_mode\": \"ctc\"},\n  \"records\": [\n    {\"id\": \"one\", \"reference\": \"\u4f60\u597d\", \"hypothesis\": \"\u4f60\u53f7\"},\n    {\"id\": \"two\", \"reference\": \"\u4e16\u754c\", \"hypothesis\": \"\u4e16\u754c\"}\n  ]\n}\nJSON\npython3 samples/speech/asr/evaluator/evaluate.py --predictions \"$asr_eval_dir/transcripts.json\" --output \"$asr_eval_dir/metrics.json\"\n# Expected: count=2, reference_characters=4, substitutions=1, cer=0.25\n",
+      "rc": 0,
+      "stdout": "evaluator-shell-0.stdout.log",
+      "stderr": "evaluator-shell-0.stderr.log"
+    },
+    {
+      "page": "samples/speech/asr/runtime/cpp/README.md",
+      "kind": "host-shell",
+      "command": "# cwd: repository root; CMake and a C++17 compiler must be on PATH\ncmake -S samples/speech/asr/runtime/cpp/tests -B /tmp/rdk-asr-contract -DASR_SANITIZERS=ON\ncmake --build /tmp/rdk-asr-contract\nctest --test-dir /tmp/rdk-asr-contract --output-on-failure\n",
+      "rc": 0,
+      "stdout": "runtime-cpp-shell-0.stdout.log",
+      "stderr": "runtime-cpp-shell-0.stderr.log"
+    },
+    {
+      "page": "samples/speech/asr/runtime/python/README.md",
+      "kind": "real-frontend-api-fake-sdk",
+      "stdout": "AAAAAA\n"
+    }
+  ],
+  "local_links": [
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "../../../platforms/s/samples/speech/asr/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "runtime/python/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "model/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "runtime/python/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "runtime/cpp/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "conversion/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "evaluator/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "test_data/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README.md",
+      "link": "../../../LICENSE"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "README.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "../../../platforms/s/samples/speech/asr/README.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "runtime/python/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "model/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "runtime/python/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "runtime/cpp/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "conversion/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "evaluator/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "test_data/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/README_cn.md",
+      "link": "../../../LICENSE"
+    },
+    {
+      "page": "samples/speech/asr/conversion/README.md",
+      "link": "README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/conversion/README.md",
+      "link": "../model/README.md"
+    },
+    {
+      "page": "samples/speech/asr/conversion/README.md",
+      "link": "../../../../platforms/s/samples/speech/asr/conversion/"
+    },
+    {
+      "page": "samples/speech/asr/conversion/README_cn.md",
+      "link": "README.md"
+    },
+    {
+      "page": "samples/speech/asr/conversion/README_cn.md",
+      "link": "../model/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/conversion/README_cn.md",
+      "link": "../../../../platforms/s/samples/speech/asr/conversion/"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README.md",
+      "link": "README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README.md",
+      "link": "../test_data/readme_img/perf.jpg"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README.md",
+      "link": "../test_data/readme_img/print.jpg"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README.md",
+      "link": "../test_data/readme_img/acc.jpg"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README.md",
+      "link": "../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-core/"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README_cn.md",
+      "link": "README.md"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README_cn.md",
+      "link": "../test_data/readme_img/perf.jpg"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README_cn.md",
+      "link": "../test_data/readme_img/print.jpg"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README_cn.md",
+      "link": "../test_data/readme_img/acc.jpg"
+    },
+    {
+      "page": "samples/speech/asr/evaluator/README_cn.md",
+      "link": "../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-core/"
+    },
+    {
+      "page": "samples/speech/asr/model/README.md",
+      "link": "README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/model/README.md",
+      "link": "../../../../docs/release/s/models.yaml"
+    },
+    {
+      "page": "samples/speech/asr/model/README.md",
+      "link": "../test_data/README.md"
+    },
+    {
+      "page": "samples/speech/asr/model/README.md",
+      "link": "../conversion/README.md"
+    },
+    {
+      "page": "samples/speech/asr/model/README_cn.md",
+      "link": "README.md"
+    },
+    {
+      "page": "samples/speech/asr/model/README_cn.md",
+      "link": "../../../../docs/release/s/models.yaml"
+    },
+    {
+      "page": "samples/speech/asr/model/README_cn.md",
+      "link": "../test_data/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/model/README_cn.md",
+      "link": "../conversion/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/cpp/README.md",
+      "link": "README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/cpp/README.md",
+      "link": "../../../../../platforms/s/samples/speech/asr/runtime/cpp/"
+    },
+    {
+      "page": "samples/speech/asr/runtime/cpp/README.md",
+      "link": "../python/README.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/cpp/README_cn.md",
+      "link": "README.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/cpp/README_cn.md",
+      "link": "../../../../../platforms/s/samples/speech/asr/runtime/cpp/"
+    },
+    {
+      "page": "samples/speech/asr/runtime/cpp/README_cn.md",
+      "link": "../python/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/python/README.md",
+      "link": "README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/python/README.md",
+      "link": "../../model/README.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/python/README.md",
+      "link": "../../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-core/"
+    },
+    {
+      "page": "samples/speech/asr/runtime/python/README_cn.md",
+      "link": "README.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/python/README_cn.md",
+      "link": "../../model/README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/runtime/python/README_cn.md",
+      "link": "../../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-core/"
+    },
+    {
+      "page": "samples/speech/asr/test_data/README.md",
+      "link": "README_cn.md"
+    },
+    {
+      "page": "samples/speech/asr/test_data/README_cn.md",
+      "link": "README.md"
+    }
+  ],
+  "board_or_sdk_executed": false
+}

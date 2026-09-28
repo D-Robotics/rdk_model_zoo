@@ -214,3 +214,13 @@ python -m unittest discover -s samples/_shared/tests -p test_yoloe26_decode.py
 目前 S 公开 HBM 声明量化输出，不能直接把整数输出交给这些浮点模块。
 上述主机测试覆盖固定源代码对照及取整几何修正，不代表浮点制品已生成、
 实际模型已运行或板测通过。
+
+`text_metrics.py` scores saved Unicode transcripts without importing a model or
+SDK. `edit_counts` returns Levenshtein substitution/deletion/insertion counts
+with deterministic diagonal/deletion/insertion tie preference;
+`score_transcripts` aggregates micro CER over unique utterance IDs. Characters
+are Unicode code points, with whitespace, case and punctuation retained. Empty
+reference corpora yield null CER while retaining insertion counts. These
+metrics do not authenticate prediction provenance or execute inference. See
+the [ASR evaluator](../speech/asr/evaluator/README.md) for a complete input schema
+and runnable synthetic example.

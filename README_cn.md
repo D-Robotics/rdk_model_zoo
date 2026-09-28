@@ -8,12 +8,13 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 
 ## 按任务开始
 
-完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 45 个统一视觉 Sample 及 KWS 语音样例。每个入口说明自己的 target、变体、语言和验证范围。
+完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 45 个统一视觉 Sample 及 ASR/KWS 语音样例。每个入口说明自己的 target、变体、语言和验证范围。
 
 | 任务 | 统一入口 |
 |---|---|
 | 检测、分割、姿态、分类、旋转框 | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README_cn.md) |
 | 无提示实例分割 | [YOLOE](samples/vision/yoloe/README_cn.md) |
+| 语音识别（C++ 集成中） | [ASR](samples/speech/asr/README_cn.md) |
 | 唤醒词检测 | [KWS](samples/speech/kws/README_cn.md) |
 | 图像分类 | [ResNet](samples/vision/resnet/README_cn.md)、MobileNet、EfficientNet、ConvNeXt、Rep 系列等，见完整索引 |
 | 文本检测与识别 | [PaddleOCR](samples/vision/paddle_ocr/README_cn.md) |
