@@ -317,3 +317,5 @@ implicitly closed by this scoped command check.
 2026-09-28：Catalog DOC-R1/R2 及 VERSION 回退反例由 Codex 独立复验关闭：130 tests、TypeScript、当前/历史固定标签构建及两者可复现性通过；完整 source/README 修改由 Claude Code + GLM 实现。元数据摘要与字节长度独立核定，当前制品身份未变。H8 其余共享层/导航/七 skills 和 H9 继续，未发布网站或合入 develop。
 
 2026-09-28：H1 层级清点覆盖51个本仓库Sample、536份契约适用指南及2314个本地路径引用，无缺文件/路径。见 hierarchy-inventory-review；这只是结构证据，Gemma/B7活动修改尚未接受，源深度、正文语义、入口整改和稳定版本复核继续。test_data不因目录存在自动新增模板要求，Ultralytics具体混合资源说明缺口另按H2-DATA-R1整改。
+
+2026-09-28：Gemma Text 阶段包独立复审 changes-required：30主机/19原生测试虽通过，新增两个ASan反例确认mask窗口越界写与continuation短hidden越界读，另有公开API注释错误；已派Claude Code + GLM整改。B7文档需收紧历史exact-command/S100P表述并恢复三态词汇，H3/H7保持开放；见对应独立评审及反例，不进行板测或真实量化。
