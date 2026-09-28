@@ -45,8 +45,36 @@ Claude follow-up: align the English command with the documented/configured outpu
 and Chinese counterpart. This is a README filename correction only; preserve the
 source conversion recipe and do not execute it to verify this finding.
 
+## DOC-R3 — Ultralytics source explanation lost from maintained guide (P2)
+
+Follow-up source-depth review at `2e1dfbe1`: X5 and S conversion guides each
+embed four illustrations under detection, segmentation and pose explanations:
+`ultralytics_yolo_detect_dataflow.png`, `ltrb2xyxy.jpg`,
+`ultralytics_yolo_seg_dataflow.png`, and `ultralytics_yolo_pose_dataflow.png`.
+The files already exist under the maintained `conversion/imgs/` directory, but
+neither maintained conversion README references any of them. Thus simply keeping
+the image files does not preserve the source's illustrated explanation for readers
+following the maintained guide. This violates the plan's explicit retention of
+source diagrams and explanatory depth; a passing heading/link checker cannot
+establish that requirement.
+
+Claude follow-up: restore bilingual explanations with the applicable existing
+illustrations, describing graph/BPU outputs versus CPU postprocessing. Clearly
+scope historical DFL illustrations and any differences from YOLO26 direct-LTRB;
+do not imply one diagram describes all protocols or reintroduce manual runtime
+dequantization. Review the source prose and current stage contracts, preserve
+source attribution and existing command recipes. No model/toolchain execution is
+required. Acceptance is explanatory content and local-link review, not a new
+quantization validation claim.
+
+The supplemental repository-relative command-path scan also reviewed absent
+runtime/test_data paths. Apart from DOC-R1, the observed paths were explicitly
+prepared ByteTrack video, generated result images/videos/records or build outputs;
+those are not treated as missing bundled assets. This lexical scan does not parse
+arbitrary shell or prove every command can run.
+
 ## Status
 
-DOC-R1 and DOC-R2 remain open for the next Claude documentation package, after
+DOC-R1, DOC-R2 and DOC-R3 remain open for the next Claude documentation package, after
 its active MiniCPM package. Do not interrupt or expand the live implementation
 package. H1/H9 remain open; this report does not change batch acceptance states.
