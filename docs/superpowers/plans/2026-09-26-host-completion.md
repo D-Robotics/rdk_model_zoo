@@ -195,3 +195,5 @@ YOLO26 Depth source audit: [contract findings](../../releases/unified-migration/
 2026-09-28：B11 固定源清点：Gemma67文件原样；MiniCPM62文件中13缺失、9份README落后，已恢复为S pin原字节，补回S100/S100P完整PPL失败结论及历史结果，不执行量化/评测。ACT/Pi0两个不同gitlink与URL核定，尚未初始化或搬迁。B11仅Mapping记done，Refactor/Docs仍pending，见[源清点](../../releases/unified-migration/2026-09-28-b11-source-audit.md)。
 
 2026-09-28：VLA 两个gitlink按原SHA迁至samples/vla，.gitmodules同步并实际初始化，完整上游代码无改动；双语总览/ACT/Pi0指南及旧路径导航完成，保留板型/LeRobot差异、源历史数字和控制边界。Refactor对固定外部源码记not-applicable，父仓库集成由2项专用检查覆盖，非豁免原生sample规则；独立评审/板端仍未执行。见[VLA集成记录](../../releases/unified-migration/2026-09-28-b11-vla-integration.md)。Gemma/MiniCPM与H0–H9余项继续。
+
+2026-09-28：Gemma67源文件迁入统一目录，58文件原字节保留；五入口显式准备/构建/启动拆分及三层双语说明完成初版。7项主机编排测试、42本地文件链接通过。新纳入迁移门禁后50samples/70violations（均Gemma缺标准README锚点）/51skips/0exemptions，未掩盖未完成项；核心职责、制品准备、全层文档继续，见[启动迁移记录](../../releases/unified-migration/2026-09-28-b11-gemma-launcher-review.md)。不执行量化或板测，H0–H9保持开放。
