@@ -4,7 +4,7 @@
 
 This directory currently provides the native CPU CIF/text kernels and three-model
 application composition plus a separate S100 UCP SDK adapter. The prepared-manifest
-reader, concrete identity/artifact preflight factory and complete native executable
+reader and complete native executable
 are still being migrated. The tests below are host checks, not
 HBM inference. The source Python frontend → C++ inference capability remains in
 scope; no alternate approximation of FunASR is introduced here.
@@ -30,8 +30,8 @@ cmake --build /tmp/rdk-paraformer-core -j 2
 ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 ```
 
-Success means three CTest checks pass: numerical contract, synthetic three-model
-composition and SDK control flow with an explicitly isolated API double. Address/undefined-behavior sanitizers are enabled for Clang/GNU in
+Success means four CTest checks pass: numerical contract, synthetic three-model
+composition, SDK control flow with an isolated API double, and group preflight. Address/undefined-behavior sanitizers are enabled for Clang/GNU in
 this command. Release tests retain assertions. The production artifact is the
 static `paraformer_contract` library; test executables are not an inference CLI.
 
@@ -40,7 +40,7 @@ static `paraformer_contract` library; test executables are not an inference CLI.
 
 | Option | Default | Effect |
 | --- | --- | --- |
-| `PARAFORMER_BUILD_TESTS` | `OFF` | Build/register three host tests |
+| `PARAFORMER_BUILD_TESTS` | `OFF` | Build/register four host tests |
 | `PARAFORMER_SANITIZERS` | `OFF` | Enable ASan/UBSan on Clang/GNU and propagate link flags |
 | `PARAFORMER_BUILD_SDK` | `OFF` | Build `paraformer_sdk` using actual vendor headers/libraries |
 | `CMAKE_BUILD_TYPE` | CMake default | Documentation checks use `Release` |
@@ -146,8 +146,7 @@ host evidence fixture, not a new maintained runtime copy.
 A build failure for sanitizer runtime libraries requires matching compiler/linker
 support; `PARAFORMER_SANITIZERS=OFF` builds without instrumentation but does not
 reproduce the sanitizer check. The SDK adapter validates shape/type/name/strides from runtime metadata, but
-its API-double tests cannot establish actual HBM compatibility. Concrete
-identity/artifact preflight integration is still pending. Real SDK compilation, board inference, full native CLI, OE and CER
+its API-double tests cannot establish actual HBM compatibility. The concrete identity/artifact preflight factory is implemented separately. Real SDK compilation, board inference, full native CLI, OE and CER
 remain not-run or pending as appropriate.
 
 <a id="sdk-adapter"></a>
@@ -168,9 +167,8 @@ SDK, so a real SDK configuration was checked to fail, not recorded as a build pa
 Construct `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)` separately
 for each stage. The callback is mandatory and runs before any SDK call; it must
 reject wrong local board identity and a mismatched stage/publication/model digest.
-A no-op callback is suitable only for the isolated host test. The concrete
-production preflight factory and three-artifact selection integration are still
-pending; this API alone is not a deployable command. Each artifact must contain
+A no-op callback is suitable only for the isolated host test. Use the concrete `make_preflight` factory below. A complete manifest/CLI entry is
+still pending; this API alone is not a deployable command. Each artifact must contain
 exactly one named model. The runner binds physical names independently of order:
 
 | Stage | Input roles → physical names | Output roles → physical names |
@@ -196,17 +194,21 @@ Scheduling currently uses the shared synchronous transport's default priority
 and any BPU core; no custom scheduling API is claimed.
 
 This complete embedding function compiles against the public header. It requires
-caller-provided validated features and a real preflight callback; it is not a
+caller-provided model group/vocabulary and validated features; it constructs the
+real preflight callback itself. It is not a
 synthetic inference result or a self-contained board application:
 
 ```cpp
-#include "sdk_runner.h"
+#include "preflight.h"
+#include <algorithm>
 #include <utility>
-std::vector<float> encode_features(const std::string &model_path,
-                                  paraformer::SdkPreflight verify,
+std::vector<float> encode_features(const paraformer::ModelGroup &models,
+                                  const std::string &vocabulary,
                                   const std::vector<float> &features) {
-    paraformer::SdkRunner encoder(
-        {model_path, "s100", paraformer::Stage::Encoder}, std::move(verify));
+    auto verify = paraformer::make_preflight(models, vocabulary);
+    const auto encoder_model = std::find_if(models.begin(), models.end(),
+        [](const auto &a) { return a.model.stage == paraformer::Stage::Encoder; });
+    paraformer::SdkRunner encoder(encoder_model->model, std::move(verify));
     auto outputs = encoder.infer({{"features", features}});
     return std::move(std::get<std::vector<float>>(outputs.at("context")));
 }
@@ -218,3 +220,45 @@ the existing image transport retains its one/two-input restriction. API-double
 checks cover all stages, reordered/padded tensors, both acoustic aliases, optional
 output, copy ownership, rejected inputs/metadata, and allocation/inference/cache
 failure cleanup. See [SDK verification](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md).
+
+<a id="preflight"></a>
+## Three-model preflight
+
+Link `paraformer_preflight` for the SDK-independent checks, or `paraformer_sdk`
+which links it transitively. `ModelGroup` is an array of three `ModelArtifact`
+records. Each record contains `SdkModel{path, "s100", stage}`, `asset_id`, and a
+64-digit expected SHA-256. Order is arbitrary; exactly one encoder, predictor and
+decoder is required. `expected_asset_id(stage)` returns the fixed publication ID:
+
+| Stage | Asset ID |
+| --- | --- |
+| Encoder | `s:paraformer:s100/paraformer_large_encoder_400x560_s100.hbm` |
+| Predictor | `s:paraformer:s100/paraformer_large_predictor_400x512_s100.hbm` |
+| Decoder | `s:paraformer:s100/paraformer_large_decoder_400x512_s100.hbm` |
+
+Pass the vocabulary path separately. Its required SHA-256 is
+`2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`.
+Use observed model digests captured during package preparation for reproducible
+file identity. The publisher has not recorded model digests; a locally supplied
+expected digest does **not** authenticate publisher origin or prove that the HBM
+implements the selected model. Actual runtime metadata validation remains required.
+Do not replace the expected digest with a new one merely to silence a mismatch.
+
+`make_preflight(group, vocabulary)` reads actual local identity through the shared
+platform reader and immediately verifies the entire group before any runner is
+constructed. S100P board aliases override a generic S100 SoC identity. Unknown
+identity, other targets, wrong stage/asset IDs, duplicate stages, missing/empty or
+non-regular files, symbolic/hard-link aliases between stages, changed model bytes
+and a different vocabulary fail. Hex model digests are case-insensitive.
+
+The returned callback validates the runner's stage/target/path and rechecks local
+identity plus all three model digests and vocabulary before each model load.
+Thus a bad decoder file is caught before encoder is loaded. Rechecking incurs
+three-file hashing at factory creation and at each runner construction, not at
+every inference. Keep artifacts unchanged throughout loading and execution;
+preflight does not lock files against concurrent replacement.
+
+`verify_group(group, vocabulary, actual)` is the explicit-identity lower-level
+checker used in host tests; customer deployment code should use `make_preflight`
+to obtain actual identity rather than supplying a fabricated identity. No bypass
+switch or implicit S100P fallback is provided. See [preflight evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-preflight-review.md).

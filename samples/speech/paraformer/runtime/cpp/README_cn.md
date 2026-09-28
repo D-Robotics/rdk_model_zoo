@@ -3,7 +3,7 @@
 [English](README.md) · [Sample 概览](../../README_cn.md)
 
 当前目录提供原生 CPU CIF／文本解码、三模型应用编排和单独的 S100 UCP SDK 适配器。
-准备清单读取、具体身份／制品预检工厂和完整原生可执行入口仍在迁移。以下测试是主机检查，不是 HBM 推理。
+准备清单读取和完整原生可执行入口仍在迁移，具体身份／制品预检工厂已提供。以下测试是主机检查，不是 HBM 推理。
 源 Python 前端 → C++ 推理能力仍在迁移范围内，此处不以其他算法近似替换 FunASR。
 
 <a id="environment"></a>
@@ -26,8 +26,8 @@ cmake --build /tmp/rdk-paraformer-core -j 2
 ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 ```
 
-成功标准是三个 CTest 检查通过：数值契约、合成三模型编排及隔离 API 替身下的 SDK
-控制流。上述命令在 Clang/GNU
+成功标准是四个 CTest 检查通过：数值契约、合成三模型编排、隔离 API 替身下的 SDK
+控制流以及整组预检。上述命令在 Clang/GNU
 下启用地址／未定义行为检查，Release 测试也保留断言。生产构建产物为静态
 `paraformer_contract` 库，测试可执行文件不是推理 CLI。
 
@@ -36,7 +36,7 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 
 | 选项 | 默认值 | 含义 |
 | --- | --- | --- |
-| `PARAFORMER_BUILD_TESTS` | `OFF` | 构建并注册三个主机测试 |
+| `PARAFORMER_BUILD_TESTS` | `OFF` | 构建并注册四个主机测试 |
 | `PARAFORMER_SANITIZERS` | `OFF` | 在 Clang/GNU 下启用 ASan/UBSan 并传播链接选项 |
 | `PARAFORMER_BUILD_SDK` | `OFF` | 使用真实厂商头文件／库构建 `paraformer_sdk` |
 | `CMAKE_BUILD_TYPE` | CMake 默认 | 文档检查使用 `Release` |
@@ -127,7 +127,7 @@ Python `--preprocess-only` 已能生成内置音频特征，C++ 消费该准备�
 Sanitizer 运行库构建失败时应检查编译／链接器支持；`PARAFORMER_SANITIZERS=OFF`
 可关闭插桩，但不能据此宣称完成 sanitizer 检查。真实 HBM 的形状／类型／名称／身份
 已在 SDK 适配器中实现，但 API 替身不能证明实际 HBM 兼容；具体身份／制品预检
-工厂仍待接入。真实 SDK 构建、板端推理、完整原生
+工厂已单独提供。真实 SDK 构建、板端推理、完整原生
 CLI、OE 与 CER 均按实际状态保持未执行或待完成。
 
 <a id="sdk-adapter"></a>
@@ -145,8 +145,8 @@ CLI、OE 与 CER 均按实际状态保持未执行或待完成。
 
 每个阶段单独构造 `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)`。
 回调必填，先于所有 SDK 调用执行，必须拒绝本机身份以及阶段／发布制品／模型摘要
-不匹配。空操作回调仅适合隔离的主机测试。具体生产预检工厂和三制品选择尚未接入，
-此 API 本身不是可部署命令。每份制品必须只包含一个有名称的模型；绑定按名称进行，
+不匹配。空操作回调仅适合隔离的主机测试。请使用下文的具体 `make_preflight` 工厂；
+完整清单／CLI 入口仍待接入，此 API 本身不是可部署命令。每份制品必须只包含一个有名称的模型；绑定按名称进行，
 不依赖张量顺序：
 
 | 阶段 | 输入角色 → 物理名称 | 输出角色 → 物理名称 |
@@ -166,17 +166,20 @@ CLI、OE 与 CER 均按实际状态保持未执行或待完成。
 解码负责在数值处理前校验输出有限性。单个 runner 应串行使用，或由调用方外部加锁。
 调度采用共享同步调用的默认优先级和任意 BPU 核心，不宣称提供自定义调度接口。
 
-以下完整嵌入函数已针对公开头文件编译检查。它需要调用方传入已核验特征和真实预检
-回调，不是合成推理结果，也不是独立板端应用：
+以下完整嵌入函数已针对公开头文件编译检查。它需要调用方传入模型组、词表及已核验特征，
+内部创建真实预检回调；不是合成推理结果，也不是独立板端应用：
 
 ```cpp
-#include "sdk_runner.h"
+#include "preflight.h"
+#include <algorithm>
 #include <utility>
-std::vector<float> encode_features(const std::string &model_path,
-                                  paraformer::SdkPreflight verify,
+std::vector<float> encode_features(const paraformer::ModelGroup &models,
+                                  const std::string &vocabulary,
                                   const std::vector<float> &features) {
-    paraformer::SdkRunner encoder(
-        {model_path, "s100", paraformer::Stage::Encoder}, std::move(verify));
+    auto verify = paraformer::make_preflight(models, vocabulary);
+    const auto encoder_model = std::find_if(models.begin(), models.end(),
+        [](const auto &a) { return a.model.stage == paraformer::Stage::Encoder; });
+    paraformer::SdkRunner encoder(encoder_model->model, std::move(verify));
     auto outputs = encoder.infer({{"features", features}});
     return std::move(std::get<std::vector<float>>(outputs.at("context")));
 }
@@ -186,3 +189,37 @@ std::vector<float> encode_features(const std::string &model_path,
 支持 decoder 四输入，现有图像调用仍保留一／两输入约束。API 替身测试覆盖全部阶段、
 乱序／带 padding 张量、两个 acoustic 别名、可选输出、自有结果、非法输入／元数据及
 分配／推理／缓存失败释放。详见[SDK 验证](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md)。
+
+<a id="preflight"></a>
+## 三模型整体预检
+
+不依赖 SDK 的预检链接 `paraformer_preflight`，或链接已传递依赖它的 `paraformer_sdk`。
+`ModelGroup` 是含三条 `ModelArtifact` 的数组；每条包含
+`SdkModel{path, "s100", stage}`、`asset_id` 和 64 位预期 SHA-256。顺序任意，
+但 encoder、predictor、decoder 必须各一个。`expected_asset_id(stage)` 返回固定发布 ID：
+
+| 阶段 | Asset ID |
+| --- | --- |
+| Encoder | `s:paraformer:s100/paraformer_large_encoder_400x560_s100.hbm` |
+| Predictor | `s:paraformer:s100/paraformer_large_predictor_400x512_s100.hbm` |
+| Decoder | `s:paraformer:s100/paraformer_large_decoder_400x512_s100.hbm` |
+
+词表路径单独传入，固定 SHA-256 为
+`2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`。
+模型预期摘要采用准备模型包时记录的实际文件摘要，用于可追溯文件身份。发布方没有
+记录模型摘要；本地预期摘要**不能认证发布来源或证明 HBM 实现了所选模型**，仍须
+进行实际运行时元数据校验。不要只为消除 mismatch 就重新计算并覆盖预期摘要。
+
+`make_preflight(group, vocabulary)` 通过共享平台读取器读取真实本机身份，立即验证
+整组模型，再允许创建 runner。S100P 板型别名优先于通用 S100 SoC 身份。未知身份、
+其他目标、阶段／制品 ID 错配、重复阶段、缺失／空／非普通文件、阶段间符号链接／
+硬链接别名、模型内容变化及不同词表均拒绝；十六进制模型摘要大小写均接受。
+
+返回回调会核验 runner 的阶段／目标／路径，并在每个模型加载前重新检查本机身份、
+三份模型摘要和词表，因此 decoder 文件有问题时不会先加载 encoder。整个工厂创建时
+以及各 runner 构造时都会计算三文件摘要，每次推理不重算。加载与推理期间须保持制品
+不变；预检不会锁定文件以阻止并发替换。
+
+`verify_group(group, vocabulary, actual)` 是主机测试使用的显式身份底层检查器；
+客户部署应使用 `make_preflight` 读取实际身份，不应填写虚构身份。没有绕过开关或
+隐式 S100P 回退。详见[预检证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-preflight-review.md)。

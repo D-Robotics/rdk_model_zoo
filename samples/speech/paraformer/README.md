@@ -30,7 +30,7 @@ implementation, not a new board result. Real SDK/model metadata and board infere
 have not been exercised here. The source C++ capability is retained in the archive
 and its complete deployment entry must still be migrated. The [native CPU library](runtime/cpp/README.md)
 now provides CIF/text decoding, application composition and a separate SDK adapter;
-production preflight and the complete executable remain pending. This does not establish
+production group preflight is implemented; the complete executable remains pending. This does not establish
 full dual-language inference support.
 
 <a id="prerequisites"></a>
