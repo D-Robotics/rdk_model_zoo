@@ -4,6 +4,7 @@
 - Interface icons: `public/assets/icons/`.
 - Model imagery: none until the formal model migration begins.
 - Visual mode: preserve the compact catalog and detail-page design.
+- Product direction: Apple-inspired hierarchy, spacing, and control states while retaining D-Robotics branding and scannable technical data.
 - Typography: system sans-serif for interface copy and system monospace for filenames and commands.
 - Palette: neutral white/ink surfaces with restrained task accents.
 - Spacing and radius: keep the existing compact density and 8px-or-smaller component radius.

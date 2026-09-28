@@ -11,6 +11,33 @@
   }
 
   const messages = {
+    '关闭 Ask AI': 'Close Ask AI',
+    '向 Ask AI 发消息': 'Message Ask AI',
+    '继续提问': 'Ask a follow-up',
+    '询问模型': 'Ask about a model',
+    '发送': 'Send',
+    '提交模型需求': 'Request a model',
+    '询问此模型': 'Ask about this model',
+    '申请收录公开模型': 'Request a public model',
+    '编译我的模型': 'Compile my model',
+    '需求类型': 'Request type',
+    '模型名称': 'Model name',
+    '目标板卡': 'Target board',
+    '选择板卡': 'Select board',
+    '官方来源 URL': 'Official source URL',
+    '模型任务': 'Model task',
+    '选择任务': 'Select task',
+    '联系邮箱': 'Contact email',
+    '使用场景': 'Use case',
+    '希望在目标板卡上完成什么任务？': 'What do you want to do on the target board?',
+    '例如：目标检测模型': 'For example: object detection model',
+    '例如：1 × 3 × 640 × 640': 'For example: 1 × 3 × 640 × 640',
+    '选择文件': 'Choose file',
+    '未选择文件': 'No file selected',
+    '输入形状': 'Input shape',
+    '校准与评测资料': 'Calibration and evaluation data',
+    '数据来源、前后处理、参考指标': 'Data source, pre/post-processing and reference metrics',
+    '查看预览': 'Preview request',
     '当前目录暂未发布任何模型。': 'No models have been published to this catalog yet.',
     '没有匹配的模型': 'No matching models',
     '试试其他关键词，或清除筛选条件。': 'Try another search term or clear the filters.',
@@ -236,11 +263,11 @@
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     let node;
     while ((node = walker.nextNode())) {
-      if (node.parentElement?.closest('script, style, [data-language], [data-i18n-zh][data-i18n-en]')) continue;
+      if (node.parentElement?.closest('script, style, [data-language], [data-no-i18n], [data-i18n-zh][data-i18n-en]')) continue;
       localize(node, 'text', () => node.nodeValue, value => { node.nodeValue = value; });
     }
     document.querySelectorAll('[aria-label], [placeholder], [title], img[alt]').forEach(element => {
-      if (element.closest('[data-language], [data-i18n-zh][data-i18n-en]')) return;
+      if (element.closest('[data-language], [data-no-i18n], [data-i18n-zh][data-i18n-en]')) return;
       for (const attribute of ['aria-label', 'placeholder', 'title', 'alt']) {
         if (element.hasAttribute(attribute)) {
           localize(element, attribute, () => element.getAttribute(attribute), value => element.setAttribute(attribute, value));

@@ -52,7 +52,7 @@
   const external = (url, label) => `<a href="${esc(url)}" target="_blank" rel="noopener">${label}<span aria-hidden="true"> ↗</span></a>`;
 
   const languageSwitch = '<div class="language-switch" role="group" aria-label="Language / 语言"><button type="button" data-language="en" lang="en" aria-label="English">EN</button><button type="button" data-language="zh" lang="zh-CN" aria-label="简体中文">中文</button></div>';
-  const header = `<header class="header"><a href="#" class="brand"><img src="assets/rdk-brand/logo.png" alt="D-Robotics"><span class="brand-separator"></span><span>RDK <b>Model Zoo</b></span></a><nav aria-label="主导航">${external(repositoryUrl, 'GitHub')}</nav>${languageSwitch}</header>`;
+  const header = `<header class="header"><a href="#" class="brand"><img src="assets/rdk-brand/logo.png" alt="D-Robotics"><span class="brand-separator"></span><span>RDK <b>Model Zoo</b></span></a><div class="header-actions"><nav aria-label="主导航"><button type="button" class="header-action ask-nav-button" data-ask-open aria-controls="ask-ai-panel" aria-expanded="false"><span class="header-action-icon" style="--header-icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>Ask AI</button><a class="header-action" href="${esc(repositoryUrl)}" target="_blank" rel="noopener"><span class="header-action-icon" style="--header-icon:url('assets/icons/external-link.svg')" aria-hidden="true"></span>GitHub</a></nav>${languageSwitch}</div></header>`;
   const footer = '<footer><div class="footer-inner"><span>© 2026 D-Robotics <span class="muted">/ Model Zoo</span></span></div></footer>';
   const search = '<label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" placeholder="搜索模型" aria-label="搜索模型"></label>';
   const taskFilters = `<div id="filters" class="task-domains">${facets.groups.map(group => `<div class="task-domain" data-domain="${group.id}"><div class="domain-heading"><button type="button" class="domain-label" data-task-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" data-active="false"><span class="domain-symbol domain-symbol-${group.id}" aria-hidden="true"></span><span>${group.label}</span></button><button type="button" class="domain-toggle" data-toggle-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" aria-label="${group.label}子类"></button></div><div class="task-children" id="tasks-${group.id}" hidden>${group.tasks.map(([id, label]) => `<button type="button" class="task-option" data-task-id="${id}" aria-pressed="false"><span>${label}</span><span class="selection-mark" aria-hidden="true"></span></button>`).join('')}</div></div>`).join('')}</div>`;
@@ -128,7 +128,7 @@
     if (!models.length) {
       $('grid').innerHTML = '<div class="empty"><p>当前目录暂未发布任何模型。</p></div>';
     } else if (!items.length) {
-      $('grid').innerHTML = '<div class="empty"><h3>没有匹配的模型</h3><p>试试其他关键词，或清除筛选条件。</p><button class="button" id="empty-reset">清除筛选</button></div>';
+      $('grid').innerHTML = '<div class="empty"><h3>没有匹配的模型</h3><p>试试其他关键词，或清除筛选条件。</p><div class="ask-empty-actions"><button class="button secondary" id="empty-reset" type="button">清除筛选</button><button class="button secondary" type="button" data-ask-open>Ask AI</button><button class="button" type="button" data-ask-request>提交模型需求</button></div></div>';
       $('empty-reset').addEventListener('click', reset);
     } else {
       $('grid').innerHTML = items.slice(0, state.visibleCount).map(card).join('');

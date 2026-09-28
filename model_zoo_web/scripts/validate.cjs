@@ -8,7 +8,7 @@ const webRoot = path.resolve(__dirname, '..');
 const root = path.join(webRoot, 'dist');
 const requiredFiles = [
   'index.html', 'app.js', 'data.js', 'style.css', 'gallery.css',
-  'reference.css', 'detail.css', 'i18n.js', 'facets.js',
+  'reference.css', 'detail.css', 'ask-ai.css', 'ask-ai.js', 'product-ui.css', 'i18n.js', 'facets.js',
   'model-properties.js', 'detail-view.js', 'reports.html', 'reports.js',
   'reports.css', 'reports/reports-data.js', 'reports/inventory.json',
 ];
@@ -21,6 +21,7 @@ const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 assert.match(index, /<body class="compare">/);
 assert.match(index, /detail-view\.js/);
 assert.match(index, /model-properties\.js/);
+assert.match(index, /ask-ai\.js/);
 
 const reportPage = fs.readFileSync(path.join(root, 'reports.html'), 'utf8');
 assert.match(reportPage, /reports\/reports-data\.js/);
@@ -28,7 +29,7 @@ assert.match(reportPage, /reports\.js/);
 
 const pagesCompatibleFiles = [
   'index.html', 'reports.html', 'app.js', 'detail-view.js', 'reports.js',
-  'style.css', 'gallery.css', 'reference.css', 'detail.css', 'reports.css',
+  'style.css', 'gallery.css', 'reference.css', 'detail.css', 'ask-ai.css', 'ask-ai.js', 'product-ui.css', 'reports.css',
 ];
 for (const filename of pagesCompatibleFiles) {
   const source = fs.readFileSync(path.join(root, filename), 'utf8');
@@ -127,7 +128,7 @@ assert(
   `Unexpected model/demo asset in build: ${assetFiles.join(', ')}`,
 );
 
-for (const filename of ['app.js', 'i18n.js', 'facets.js', 'model-properties.js', 'detail-view.js', 'reports.js']) {
+for (const filename of ['app.js', 'ask-ai.js', 'i18n.js', 'facets.js', 'model-properties.js', 'detail-view.js', 'reports.js']) {
   const source = fs.readFileSync(path.join(root, filename), 'utf8');
   new vm.Script(source, { filename });
   if (!preview) {
