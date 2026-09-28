@@ -380,7 +380,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-Three CTest entries cover stages/ownership/invalid inputs, byte-exact preprocessing comparisons on four source images, and strict tensor type/shape/stride/storage conversion. Assertions remain enabled in Release builds.
+Nine CTest entries cover three Vision stage/source-image/tensor checks and six KV allocation/reset/append/prefix-retention scenarios. Assertions remain enabled in Release builds.
 An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
 
 ### SDK failure handling
@@ -418,3 +418,33 @@ Unknown/integer outputs are no longer reinterpreted as floats. F16/F32 storage c
 Host integration fixtures call the production `VisionEngine::Infer`; SDK doubles inspect packed inputs and populate F16/F32 outputs with row and element gaps.
 They also inject invalid type, quantization flags, shape, stride, post-inference capacity changes and nonfinite output.
 Resource and transport tests total 94 scenarios (46 S100, 48 S600). Matching real published HBM descriptors to this contract still requires later board evidence; host fixtures are not that evidence.
+
+### KV state and ownership
+
+One `KvCache` owns 30 UCP buffers for 15 K/V layers in one serialized session. Each layer is a contiguous S8 `[4096, head_dim]`
+matrix, with head dimensions fixed to 256 or 512 by `kHeadDims`. Trailing allocation padding is supported; internal row padding is not.
+Allocation size is not a token-row count, so trailing padding does not participate in rolling or prefix retention.
+
+| Operation | State and aliases |
+| --- | --- |
+| `Allocate(k_bytes, v_bytes)` | Exactly 15 sizes each, at least the logical matrix size; replaces buffers/resets positions only after complete success; failure preserves old buffers/state |
+| `Reset()` | Zeroes K/V using their own capacities and clears positions without freeing or changing addresses; bound input aliases remain valid |
+| `AppendPrefillChunk(...)` | Appends 1–256 contiguous token positions starting at `OccupiedLen()`; validates all layer pointers, strides and positions before cache mutation |
+| `AppendDecodeStep(...)` | Same append path for one row |
+| `CompactShift(n_keep, discard)` | Retains the first `n_keep` resident rows, discards the suffix and renumbers positions from zero; `discard` must equal old logical length minus `n_keep` |
+| `PhysicalIndex(pos)` | Right-aligned physical row, or -1 if not resident; `OccupiedLen()` is the logical end and `CacheStart()` the oldest resident position |
+
+Successful reallocation invalidates old aliases and must happen before binding model inputs; failed allocation preserves them.
+Append source output memory must be separate from the cache and readable for at least `(rows-1)*row_stride + head_dim` bytes.
+The raw-pointer interface cannot discover source allocation capacities, so the Text SDK descriptor layer must enforce this prerequisite.
+It also requires equal K/V output row strides per layer. Shared input buffers do not mean zero CPU movement: append and prefix retention
+move/copy rows, and the inference entry flushes CPU-modified KV inputs.
+
+The unused `SetOccupiedLen` setter is removed; maintain consistent data/positions through Reset, Append and CompactShift.
+TextEngine's `ContextShift` retains a prefix; callers then re-prefill the suffix they want. This corrects the source header's inaccurate promise
+of deleting a middle range while preserving both sides.
+
+Independent host test entry:
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_kv.py -v
+```

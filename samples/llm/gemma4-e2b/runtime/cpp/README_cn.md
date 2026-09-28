@@ -373,7 +373,7 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-三项 CTest 覆盖三阶段/所有权/异常输入、四张源图片前处理逐字节比较，以及严格张量类型/形状/stride 与存储转换。Release 构建仍启用断言。
+九项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，六项覆盖 KV 分配/Reset/追加/前缀保留。Release 构建仍启用断言。
 这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。
 
 ### SDK 失败处理
@@ -411,3 +411,31 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resourc
 主机集成夹具会实际调用生产 `VisionEngine::Infer`，由 SDK 替身检查输入存储并填充带行/元素间隙的 F16/F32 输出；
 同时注入非法类型、量化标记、形状、stride、推理后容量变更和非有限输出。资源与传输共 94 个场景（S100 46、S600 48）。
 真实发布 HBM 的描述符与这些约束是否匹配，仍需后续板端证据，本轮不据主机夹具声明已测。
+
+### KV 缓存状态与所有权
+
+一个 `KvCache` 对应一个串行会话，拥有 15 层 K/V 的 30 个 UCP buffer。每层使用连续 S8 `[4096, head_dim]`
+矩阵，`head_dim` 由 `kHeadDims` 固定为 256 或 512；可有矩阵尾部 padding，但这里不支持矩阵内部行 padding。
+分配长度不是有效 token 行数，尾部对齐空间不会参与滚动和前缀保留。
+
+| 操作 | 状态与别名 |
+| --- | --- |
+| `Allocate(k_bytes, v_bytes)` | 各 15 个大小，不能小于对应逻辑矩阵；全部成功后替换旧内存并清空位置；失败保留旧内存和状态 |
+| `Reset()` | 按 K/V 各自长度清零、清空位置；不释放或改变地址，因此已绑定的输入别名仍有效 |
+| `AppendPrefillChunk(...)` | 1–256 个连续位置的 token，从 `OccupiedLen()` 追加；先检查所有层指针、stride 和位置，再修改 cache |
+| `AppendDecodeStep(...)` | 同一追加逻辑，固定一行 |
+| `CompactShift(n_keep, discard)` | 保留当前驻留窗口最前面的 `n_keep` 行、丢弃其余行，重新编号为 0…`n_keep-1`；`discard` 必须等于旧逻辑长度减 `n_keep` |
+| `PhysicalIndex(pos)` | 返回右对齐物理行号，未驻留位置返回 -1；`OccupiedLen()` 是逻辑结束位置，`CacheStart()` 是最旧驻留位置 |
+
+成功重新 Allocate 会使旧别名失效，应只在绑定模型输入之前执行；分配失败不会使旧别名失效。
+Append 的源输出内存必须与缓存分离，并至少包含 `(rows-1)*row_stride + head_dim` 个可读字节；原指针接口不能获知源分配容量，
+其上层 Text SDK 描述符检查仍须负责这一前提。当前接口也要求同一层 K/V 输出行 stride 相同。
+共享输入 buffer 不代表 CPU 完全不搬数据：追加和前缀保留都执行 CPU 移动/复制，随后推理入口刷新 CPU 改动的 KV 输入。
+
+不再提供直接修改长度的 `SetOccupiedLen`（源树没有调用方）；通过 Reset、Append 和 CompactShift 维护位置与数据一致。
+TextEngine 的 `ContextShift` 会调用前缀保留，后续由调用方重新 prefill 需要保留的后缀。此处修复了源头文件“删除中间段且保留两端”的错误承诺。
+
+独立主机测试入口：
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_kv.py -v
+```
