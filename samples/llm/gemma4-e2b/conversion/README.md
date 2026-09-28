@@ -4,6 +4,16 @@
 
 PTQ quantization and HBM compilation run on a **development PC**, not on the board.
 
+<a id="source-model"></a>
+## Source model and recipe
+
+This directory preserves the Gemma4-E2B conversion recipe from pinned S source `380e1a2`: original weights,
+Gemma4 leap_llm adaptation, Vision/Text calibration, PTQ compilation and verification tools.
+The model source is `google/gemma-4-e2b`; follow full tutorial §3.4 for weight acquisition and access requirements.
+Commands here start in `samples/llm/gemma4-e2b` (sample root) unless a code block changes directory explicitly.
+This migration reorganizes the tutorial without rerunning its quantization workflow.
+
+<a id="toolchain-targets"></a>
 ## Requirements
 
 | Item | Minimum | Recommended |
@@ -42,12 +52,30 @@ conversion/
     └── verify/               BC/HBM accuracy verification
 ```
 
-## Quick Reference
+<a id="export"></a>
+## Model adaptation and export entry
+
+Install the Gemma4 adaptation into an already prepared OE-LLM environment:
+
+```bash
+bash conversion/leap_llm_gemma4/install.sh
+```
+
+Graph export is handled by the OE-LLM model adaptation and compiler entry points; this recipe has no separate ONNX export step.
+See full tutorial §2, §5 and §6 for architecture and Vision/Text interfaces; do not substitute another sample's ONNX commands.
+
+<a id="calibration"></a>
+## Calibration data
 
 ```bash
 # Prepare exactly 50 deterministic real COCO val2017 images.
 python3 conversion/scripts/calibration/download_coco_images.py
+```
 
+<a id="compile"></a>
+## Compilation
+
+```bash
 # Select one target; use s100 or s100p for the other boards.
 TARGET_SOC=s600 bash conversion/scripts/compile/run_vision_compile.sh
 TARGET_SOC=s600 bash conversion/scripts/compile/run_text_compile.sh
@@ -69,13 +97,32 @@ settings before rebuilding the board runtime.
 
 ## Full Tutorial
 
+The full tutorial preserves the source workflow. For board startup/build instructions, use the current [C++ README](../runtime/cpp/README.md#build), which separates preparation, build and run. The quantization recipe itself is unchanged.
+
 See the step-by-step guide with pitfalls and solutions:
 
 - [QUANTIZATION_TUTORIAL.md](./QUANTIZATION_TUTORIAL.md) (English)
 - [QUANTIZATION_TUTORIAL_zh.md](./QUANTIZATION_TUTORIAL_zh.md) (中文)
 
-Install Gemma4 adapters into your OE-LLM environment:
+<a id="validation"></a>
+## Verification workflow
 
-```bash
-bash conversion/leap_llm_gemma4/install.sh
-```
+The [evaluator guide](../evaluator/README.md) preserves PC BC/float comparison and board golden-input alignment commands.
+The full tutorial explains accuracy observations and troubleshooting. These are workflows for users, not new migration test claims.
+
+<a id="artifacts"></a>
+## Produced artifacts
+
+Vision and Text use `conversion/output/gemma4_e2b_vision_<target>/` and
+`conversion/output/gemma4_e2b_text_<target>/`. Board inference uses `gemma4-e2b_vit_ptq.hbm` and
+`gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm`, plus embedding and tokenizer files.
+See [model preparation](../model/README.md) for layout and source checksum records.
+A `.bc` is a PC verification artifact, not a board HBM.
+
+<a id="known-gaps"></a>
+## Usage boundaries
+
+The original prerequisites remain: weights, SDK and text calibration corpus must be prepared; Vision uses real images with a manifest.
+Conversion support does not imply a public HBM exists for that target (S100 still requires supplied artifacts).
+Documentation acceptance does not require repeating quantization. This migration publishes no new models,
+expands no context size and makes no new board-test claim. Original tutorials, scripts and historical illustrations remain available.

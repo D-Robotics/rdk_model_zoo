@@ -2,22 +2,38 @@
 
 **简体中文** | [English](./README.md)
 
-S100、S100P 与 S600 使用相同的文件名和目录结构，但两个 HBM 文件必须与板端 SoC 匹配。下载脚本会自动识别 SoC，不会用其他平台 HBM 替代当前平台模型。
+<a id="artifacts"></a>
+## 发布组合
+
+S100P（`nash-m`）与 S600（`nash-p`）各有 Vision/Text HBM，S100（`nash-e`）没有默认公共 HBM。
+目录结构和文件名相同不代表制品可跨目标使用。当前下载脚本检查文件是否非空后复用，并不自动校验已有文件的目标或 SHA-256。
+
+<a id="preparation"></a>
+## 显式准备
+
+从仓库根目录进入 sample 的 model 目录，显式选择目标；以下为 S600。S100P 改用 `GEMMA4_SOC=s100p`，并使用独立目录。
 
 ```bash
-export GEMMA4_HOME=~/gemma4_e2b   # 可选，默认值
-bash download_model.sh
+cd samples/llm/gemma4-e2b/model
+export GEMMA4_HOME=~/gemma4_e2b_s600
+GEMMA4_SOC=s600 bash download_model.sh
 ```
 
 公开的 `rdk_s100` 模型归档包含已验证的 S100P（`nash-m`）HBM，`rdk_s600` 包含已验证的 S600（`nash-p`）HBM，两者都会按 SoC 自动选择。S100（`nash-e`）请先将匹配的两个 HBM 放到 `$GEMMA4_HOME/model`，或显式提供对应模型目录 URL：
 
 ```bash
-GEMMA4_SOC=s100 GEMMA4_MODEL_BASE_URL=https://your-server/path/to/s100/model bash download_model.sh
+GEMMA4_HOME=~/gemma4_e2b_s100 GEMMA4_SOC=s100 GEMMA4_MODEL_BASE_URL=https://your-server/path/to/s100/model bash download_model.sh
 ```
+
+<a id="accompanying-files"></a>
+## 配套文件
 
 Token embedding 表和 tokenizer 在三个目标平台间共用，缺失时仍从公共归档下载。
 
-脚本会下载以下运行时文件：
+<a id="local-paths"></a>
+## 本地路径
+
+$GEMMA4_HOME 下的文件布局（未设置时默认 `~/gemma4_e2b`）：
 
 ```bash
 model/gemma4-e2b_vit_ptq.hbm
@@ -36,12 +52,19 @@ tokenizer/tokenizer_config.json
 | `model/tok_embeddings.bin` | 1.5 GB | 外挂 token embedding 表 |
 | `tokenizer/` | ~32 MB | tokenizer.json、chat template、config |
 
+<a id="formats-checksums"></a>
 ## 完整性校验（可选）
 
 ```bash
-sha256sum ~/gemma4_e2b/model/*.hbm
+sha256sum "$GEMMA4_HOME"/model/*.hbm
 # S100P Vision: 470791849d21cffadb388cc61c8f4b1452078c1722d302fd8a8ac775ee9769f1
 # S100P Text:   3e4d4940051e4e8dc0cb434e972e7aae75d49504da3fac435e303f68af73a25f
 # S600 Vision:  a5998ca829cff121aa5672567b20e7be9f527da5b0220962b0fe7467bf8ff7b7
 # S600 Text:    aab1831b1ea2b86763d5457890d89c55b684e4ba4834c1e008c668813d1cf646
 ```
+
+以上四个 HBM 哈希保留自 S 源提交 `380e1a2` 的 README；本次迁移没有下载模型重新计算。
+活动发布清单目前仍使用 `sha256: null`，不能据此声称下载器已执行哈希校验。HBM 是板端模型，
+`tok_embeddings.bin` 是配套 embedding 数据，不是 X5 推理 BIN。下载使用 `.part` 临时文件并在完成后改名；
+已有非空文件会跳过下载。`GEMMA4_MODEL_BASE_URL`、`GEMMA4_COMMON_MODEL_BASE_URL`、`GEMMA4_TOKENIZER_BASE_URL`
+可显式替换三个来源。下载过程本身不会运行量化。

@@ -8,7 +8,7 @@ RDK Model Zoo provides model preparation, preprocessing, BPU inference, postproc
 
 ## Start by task
 
-The [sample index](samples/README.md) lists 49 unified samples: 45 vision, three speech and one robotics policy sample. Each guide states its own targets, variants, languages and validation scope.
+The [sample index](samples/README.md) lists 50 unified samples: 45 vision, three speech, one robotics policy and one LLM sample. Each guide states its own targets, variants, languages and validation scope.
 
 | Task | Unified entry |
 |---|---|
@@ -16,6 +16,7 @@ The [sample index](samples/README.md) lists 49 unified samples: 45 vision, three
 | Prompt-free instance segmentation | [YOLOE](samples/vision/yoloe/README.md) |
 | Speech recognition | [ASR](samples/speech/asr/README.md), [Paraformer](samples/speech/paraformer/README.md) |
 | Offline robotics policy | [HIMLoco](samples/robotics/himloco/README.md): six-frame observations to actions, without robot control |
+| Vision-language model (migration in progress) | [Gemma4-E2B](samples/llm/gemma4-e2b/README.md): native chat, HTTP, single-shot inference and verification tools |
 | Keyword spotting | [KWS](samples/speech/kws/README.md) |
 | Image classification | [ResNet](samples/vision/resnet/README.md), MobileNet, EfficientNet, ConvNeXt, Rep families and others in the full index |
 | Text detection and recognition | [PaddleOCR](samples/vision/paddle_ocr/README.md) |
@@ -31,7 +32,7 @@ The [sample index](samples/README.md) lists 49 unified samples: 45 vision, three
 
 LLM and other pending capabilities remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
 
-ACT/Pi0 are integrated as complete pinned Git submodules, separately from the 49 in-repository samples above. See the [VLA guide](samples/vla/README.md): S100 and S600 ACT use different source versions, Pi0 targets S600, and model resources are operator-supplied. Robot control was not run in this migration.
+ACT/Pi0 are integrated as complete pinned Git submodules, separately from the 50 in-repository samples above. See the [VLA guide](samples/vla/README.md): S100 and S600 ACT use different source versions, Pi0 targets S600, and model resources are operator-supplied. Robot control was not run in this migration.
 
 ## Boards, artifacts and environments
 

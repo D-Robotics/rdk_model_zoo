@@ -6,6 +6,14 @@ RDK S100P / S600 板端 Gemma4-E2B VLM 推理 C++ runtime，加载与对应 SoC 
 
 > 属于 [Gemma4-E2B 示例](../../README_cn.md)。完整上游项目：[gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)。
 
+<a id="supported-boards"></a>
+## 板卡与运行范围
+
+S100P 使用 `nash-m` HBM，S600 使用 `nash-p` HBM；S100 保留 `nash-e` 运行分支，但需自备匹配 HBM。
+本次迁移没有新增板测。`--target` 是目标选择，不会把现有模型转换为该目标。
+主机只能执行启动器帮助和预览；原生可执行文件需要板端 SDK。
+
+<a id="dependencies"></a>
 ## 前置条件
 
 板端需安装 OE-LLM runtime：
@@ -53,6 +61,7 @@ runtime/cpp/                            C++ 源码（本目录）
 └── tokenizers-cpp/                     显式准备（见 third_party/README_cn.md）
 ```
 
+<a id="build"></a>
 ## 编译
 
 从仓库根目录准备并显式构建（系统包按上节安装）：
@@ -119,6 +128,7 @@ S100P 与 S600 会下载各自已验证的公共 HBM，以及共享 embedding �
     └── tokenizer_config.json
 ```
 
+<a id="run"></a>
 ## 运行
 
 下面的直接原生命令从 `samples/llm/gemma4-e2b/runtime/cpp/build` 目录执行（先完成构建）。
@@ -163,6 +173,7 @@ This is a photograph of a Red Panda resting on a wooden structure...
 - 图文追问会保留原始图片轮，并在当前用户问题旁再次显式注入同一组 Vision 特征；prompt 中最多包含两个 280-token 图片块。
 - 运行时默认不打印内部诊断；仅当设置 `GEMMA4_DEBUG=1` 时输出 `[DEBUG]` / `[VLM-FIX]` 信息。
 
+<a id="parameters"></a>
 ## 命令行参数
 
 5 个可执行文件统一使用 [gflags](https://github.com/gflags/gflags) 解析命令行，参数名采用 `snake_case`（与 Model Zoo 规范一致）。每个参数都有合理默认值，导出 `GEMMA4_HOME` 后零参数即可运行。
@@ -257,6 +268,7 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 
 任意 binary 加 `--help` 可查看 gflags 自动生成的完整帮助。
 
+<a id="interface-lifecycle"></a>
 ## 核心设计
 
 1. **Vision 原样注入** — ViT 输出 `[280, 1536]` 直接替换 image soft-token 位置（token ID 249560）的 `inputs_embeds`，不做 L2-norm 缩放，不乘 √1536。
@@ -273,6 +285,7 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 
 7. **统一双模型生命周期** — `main` 启动时统一按 Vision→Text 顺序加载两个模型，并在整个进程内常驻。该顺序避免 S600 跨 core IOVA 映射冲突，同时 S100/S100P/S600 共用完全相同的聊天主流程；板型差异只体现在匹配的 HBM、CMake SoC 宏和 `run.sh` 环境设置。
 
+<a id="results-interpretation"></a>
 ## 验证
 
 验证板端推理与 PC golden 数据是否一致：
@@ -283,3 +296,8 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 ./gemma4_golden_verify --prompt_id prompt_0
 # 预期：ALL PASSED（全部 5 个张量 cosine=1.0）
 ```
+
+`main`、`demo` 输出生成文本；`server` 返回 JSON 或 SSE，`text_bench` 输出生成/吞吐记录。
+这些输出不等于数据集精度结果。Golden 校验器比较五个 prefill 输入：整数完全一致，embedding 最大绝对误差 ≤1e-3，两个 mask 误差为 0；cosine 仅打印参考。
+`ALL PASSED` 对应退出码 0；不匹配或异常为 1。完整数据前提见 [评测说明](../../evaluator/README_cn.md)。
+每个 TextEngine 持有一个会话及其 KV 状态，调用方应串行访问；不要把交互会话当成无状态、可并发共享的推理函数。

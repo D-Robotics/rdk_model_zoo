@@ -6,6 +6,14 @@ C++ inference runtime for Gemma4-E2B VLM on D-Robotics RDK S100P and S600. It lo
 
 > Part of [Gemma4-E2B sample](../../README.md). Full upstream project: [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p).
 
+<a id="supported-boards"></a>
+## Boards and runtime scope
+
+S100P uses `nash-m` HBMs and S600 uses `nash-p` HBMs. The S100 `nash-e` runtime branch requires separately supplied matching HBMs.
+No new board test was performed during this migration. `--target` selects a target; it does not convert an existing model.
+Hosts can run launcher help and preview; native executables require the board SDK.
+
+<a id="dependencies"></a>
 ## Prerequisites
 
 The board must have the OE-LLM runtime installed:
@@ -53,6 +61,7 @@ runtime/cpp/                            C++ source code (this directory)
 └── tokenizers-cpp/                     Explicitly prepared (see third_party/README.md)
 ```
 
+<a id="build"></a>
 ## Build
 
 Prepare and build explicitly from the repository root (install system packages above first):
@@ -123,6 +132,7 @@ set `GEMMA4_MODEL_BASE_URL`; missing shared assets are still downloaded.
     └── tokenizer_config.json
 ```
 
+<a id="run"></a>
 ## Run
 
 After building, enter `samples/llm/gemma4-e2b/runtime/cpp/build` from the repository root. The direct native commands below assume this working directory. Set `GEMMA4_HOME` to the matching target models:
@@ -165,6 +175,7 @@ This is a photograph of a Red Panda resting on a wooden structure...
 - Multimodal follow-ups retain the original image turn and explicitly inject the same Vision features beside the latest user question, with at most two 280-token image blocks in the prompt.
 - Internal diagnostics are quiet by default. Set `GEMMA4_DEBUG=1` to enable `[DEBUG]` and `[VLM-FIX]` output.
 
+<a id="parameters"></a>
 ## Command-line Parameters
 
 All five binaries use [gflags](https://github.com/gflags/gflags) for argument
@@ -262,6 +273,7 @@ For ChatBox, set the API type to OpenAI-compatible, the base URL to `http://BOAR
 
 Pass `--help` to any binary to see the gflags-generated full help.
 
+<a id="interface-lifecycle"></a>
 ## Key Design Decisions
 
 1. **Vision injection is raw** — ViT output `[280, 1536]` is injected directly into `inputs_embeds` at image soft-token positions (token ID 249560). No L2-norm scaling, no √1536 multiplication.
@@ -278,6 +290,7 @@ Pass `--help` to any binary to see the gflags-generated full help.
 
 7. **Unified dual-model lifecycle** — `main` always loads Vision before Text and keeps both resident for the process lifetime. This order avoids the S600 cross-core IOVA mapping conflict while preserving identical chat control flow on S100, S100P, and S600; only the matching HBMs, CMake SoC macros, and `run.sh` environment setup differ.
 
+<a id="results-interpretation"></a>
 ## Verification
 
 To verify board inference matches the PC golden data:
@@ -286,5 +299,11 @@ To verify board inference matches the PC golden data:
 # Optional internal verification data: place golden_mask_kv/ under
 # $GEMMA4_HOME/golden_mask_kv/. It is not included in the public model archive.
 ./gemma4_golden_verify --prompt_id prompt_0
-# Expected: ALL PASSED (cosine=1.0 for all 5 tensors)
+# Expected: ALL PASSED (five input comparisons satisfy their individual criteria)
 ```
+
+`main` and `demo` print generated text; `server` returns JSON or SSE; `text_bench` prints generation/throughput records.
+These outputs are not dataset accuracy measurements. The golden verifier compares five prefill inputs: exact integer equality,
+embedding maximum absolute error ≤1e-3, and zero error for both masks. Cosine is printed for reference only.
+`ALL PASSED` corresponds to exit code 0; mismatches or exceptions return 1. See [evaluation prerequisites](../../evaluator/README.md).
+Each TextEngine owns one session and its KV state; callers must serialize access. An interactive session is not a stateless, concurrently shared inference function.

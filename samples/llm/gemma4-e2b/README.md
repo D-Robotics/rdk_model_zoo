@@ -22,6 +22,7 @@ Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-R
 
 ---
 
+<a id="overview"></a>
 ## Algorithm Overview
 
 Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT encoder with a 2B-parameter Text LLM decoder. Official materials:
@@ -45,6 +46,7 @@ Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT
 
 ---
 
+<a id="support-matrix"></a>
 ## Platform Compatibility
 
 | Platform | Support | Notes |
@@ -59,35 +61,15 @@ no S100 board connection is required or claimed.
 
 ---
 
-## Directory Structure
+<a id="prerequisites"></a>
+## Prerequisites
 
-```bash
-samples/llm/gemma4-e2b/
-├── README.md / README_cn.md     Sample overview (this file)
-├── model/                       Pre-compiled HBM download
-│   ├── download_model.sh
-│   └── README.md
-├── conversion/                  PC-side PTQ compile and quantization tutorial
-│   ├── QUANTIZATION_TUTORIAL.md
-│   ├── QUANTIZATION_TUTORIAL_zh.md
-│   ├── leap_llm_gemma4/
-│   ├── scripts/
-│   └── README.md
-├── runtime/
-│   └── cpp/                     ★ Board-side C++ inference (main)
-│       ├── run.sh
-│       └── README.md
-├── evaluator/                   Accuracy / golden verification
-│   └── README.md
-├── test_data/                   VLM test images and result screenshots
-│   └── results/
-└── third_party/                 tokenizers-cpp (explicit preparation)
-    ├── install_tokenizers_cpp.sh
-    └── README.md
-```
+The board needs the matching OE-LLM runtime, C++17 build tools, OpenCV, gflags, JSON headers and Rust 1.80+.
+The launcher additionally uses the Python 3 standard library. See [native dependencies](runtime/cpp/README.md#dependencies) for installation commands.
+Prepare the two SoC-matched HBMs, shared embedding table and tokenizer. Keep targets in separate data directories because HBM filenames are identical.
+See [model preparation](model/README.md) for sizes and source-recorded checksums. Inference does not require a PC quantization toolchain.
 
----
-
+<a id="quickstart"></a>
 ## Quick Start
 
 Install the [C++ prerequisites](runtime/cpp/README.md#prerequisites) first. From the repository root, for S600:
@@ -138,6 +120,46 @@ see [conversion/README.md](./conversion/README.md) and the full guide:
 
 ---
 
+<a id="expected-results"></a>
+## Inference Result
+
+![VLM demo](./test_data/results/test1.jpg)
+
+*VLM chat on S100P: image + Chinese prompt → streamed BPU reply.*
+
+---
+
+<a id="directory"></a>
+## Directory Structure
+
+```bash
+samples/llm/gemma4-e2b/
+├── README.md / README_cn.md     Sample overview (this file)
+├── model/                       Pre-compiled HBM download
+│   ├── download_model.sh
+│   └── README.md
+├── conversion/                  PC-side PTQ compile and quantization tutorial
+│   ├── QUANTIZATION_TUTORIAL.md
+│   ├── QUANTIZATION_TUTORIAL_zh.md
+│   ├── leap_llm_gemma4/
+│   ├── scripts/
+│   └── README.md
+├── runtime/
+│   └── cpp/                     ★ Board-side C++ inference (main)
+│       ├── run.sh
+│       └── README.md
+├── evaluator/                   Accuracy / golden verification
+│   └── README.md
+├── test_data/                   VLM test images and result screenshots
+│   └── results/
+└── third_party/                 tokenizers-cpp (explicit preparation)
+    ├── install_tokenizers_cpp.sh
+    └── README.md
+```
+
+---
+
+<a id="entry-points"></a>
 ## Runtime
 
 This sample provides a **C++** board-side runtime only (LLM inference is
@@ -153,14 +175,7 @@ See [evaluator/README.md](./evaluator/README.md).
 
 ---
 
-## Inference Result
-
-![VLM demo](./test_data/results/test1.jpg)
-
-*VLM chat on S100P: image + Chinese prompt → streamed BPU reply.*
-
----
-
+<a id="license"></a>
 ## License
 
 Runtime C++ code in this sample is MIT-licensed (see upstream

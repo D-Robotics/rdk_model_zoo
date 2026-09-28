@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers 49 unified samples: 45 vision, three speech and one robotics policy sample. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers 50 unified samples: 45 vision, three speech, one robotics policy and one LLM sample. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -85,9 +85,17 @@ This index covers 49 unified samples: 45 vision, three speech and one robotics p
 
 HIMLoco consumes prepared six-frame observations and returns policy actions; it does not construct a live control loop or send robot commands.
 
+## Language and vision-language models
+
+| Sample | Conversion | Evaluation |
+| --- | --- | --- |
+| [gemma4-e2b](llm/gemma4-e2b/README.md) | [conversion](llm/gemma4-e2b/conversion/README.md) | [evaluator](llm/gemma4-e2b/evaluator/README.md) |
+
+Gemma includes five native entry points and the full source tutorials; model preparation and core refactoring remain in progress, with independent acceptance pending.
+
 ## Pinned third-party policy integrations
 
-Complete upstream ACT/Pi0 Git submodules are maintained separately from the 49 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching source does not prepare model assets or establish board validation.
+Complete upstream ACT/Pi0 Git submodules are maintained separately from the 50 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching source does not prepare model assets or establish board validation.
 
 ## Read validation status correctly
 

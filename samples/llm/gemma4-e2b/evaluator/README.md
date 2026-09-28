@@ -4,6 +4,22 @@
 
 Tools and workflows to verify quantized accuracy and on-board tensor alignment.
 
+<a id="dataset"></a>
+## Data and inputs
+
+PC comparisons use the conversion tutorial's COCO image, text verification prompts, original float weights and matching-target BC.
+Board golden verification needs five files under `$GEMMA4_HOME/golden_mask_kv/<prompt_id>/prefill_chunk_0/`:
+`input_ids.int64.bin`, `position_ids.int32.bin`, `inputs_embeds.f32.bin`, `full_mask.f32.bin` and `sliding_mask.f32.bin`.
+This internal golden dataset is not included in the public model archive. The four demo images are qualitative examples, not an accuracy dataset.
+
+<a id="environment"></a>
+## Environment
+
+Run PC commands in the OE-LLM conda environment prepared by the [conversion guide](../conversion/README.md).
+Board commands require matching-target HBMs, embeddings, SDK and all native executables.
+Each code block containing `cd samples/...` below starts from the repository root.
+
+<a id="command"></a>
 ## PC-side (BC / float comparison)
 
 From your OE-LLM conda environment:
@@ -42,17 +58,15 @@ Build **all** runtime targets (not only `main`):
 
 ```bash
 cd samples/llm/gemma4-e2b/runtime/cpp
-mkdir -p build && cd build
-cmake ..
-make -j"$(nproc)"
+./run.sh --target s600 --build
 ```
 
 Then run the golden verifier:
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b
-cd runtime/cpp/build
-./gemma4_golden_verify --prompt prompt_0
+cd samples/llm/gemma4-e2b/runtime/cpp
+./run.sh --target s600 golden_verify --prompt_id prompt_0
 ```
 
 Expected: `ALL PASSED` for input_ids, masks, and inputs_embeds.
@@ -60,9 +74,9 @@ Expected: `ALL PASSED` for input_ids, masks, and inputs_embeds.
 ## VLM smoke test
 
 ```bash
-cd runtime/cpp/build
+cd samples/llm/gemma4-e2b/runtime/cpp
 export GEMMA4_HOME=~/gemma4_e2b
-./main
+./run.sh --target s600
 # /image ../../test_data/image1.jpg
 # What do you see?
 ```
@@ -70,3 +84,32 @@ export GEMMA4_HOME=~/gemma4_e2b
 > **Note:** The primary chat entry was renamed to `main` (Model Zoo convention). `./gemma4_chat` no longer exists.
 
 See [QUANTIZATION_TUTORIAL.md §9.4](../conversion/QUANTIZATION_TUTORIAL.md) for expected output.
+
+<a id="metrics"></a>
+## Metric definitions
+
+The PC text quick check records per-prompt logits cosine and `mean_cosine`; a normal exit is not a fixed accuracy-threshold pass.
+The golden verifier checks prefill input construction only: exact integer input_ids/position_ids,
+inputs_embeds maximum absolute error ≤1e-3, and zero maximum error for full_mask/sliding_mask.
+Printed cosine is not the pass criterion. This does not measure model-output accuracy or complete generated-answer quality.
+
+<a id="outputs"></a>
+## Outputs and interpretation
+
+PC text results go to `conversion/output/e2b_text_verify_quick_<target>.json`, containing `results` and `mean_cosine`.
+Golden verification prints per-input OK/FAIL, errors and final `ALL PASSED`/`SOME FAILED`; success returns 0, mismatches or exceptions return 1.
+Missing golden files are errors, not skipped passes. Interactive examples stream answers to the terminal and do not produce accuracy reports.
+
+<a id="reference-results"></a>
+## Historical references
+
+The source README and full tutorial retain the S100P demonstrations, approximately 6.9 tok/s text screenshot and S600 source regression notes.
+They come from pinned S source `380e1a2`, not new migration measurements. The documented golden expected output is not a new test record either.
+Current host checks cover launcher orchestration only; board execution is not-run.
+
+<a id="boundaries"></a>
+## Boundaries
+
+PC and board verification commands are retained so users can reuse the original workflow. This migration does not rerun quantization,
+BC accuracy or board workflows, nor require those runs for README acceptance.
+Demo images, equal golden inputs and throughput screenshots do not establish dataset-level task accuracy.

@@ -22,6 +22,7 @@ Google **Gemma4-E2B** 视觉语言模型在 **地瓜 RDK S100P / S600** 上的�
 
 ---
 
+<a id="overview"></a>
 ## 算法介绍
 
 Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器与 2B 参数 Text LLM decoder 组成。官方资料：
@@ -45,6 +46,7 @@ Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器�
 
 ---
 
+<a id="support-matrix"></a>
 ## 平台兼容性
 
 | 平台 | 支持 | 说明 |
@@ -58,35 +60,15 @@ Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器�
 
 ---
 
-## 目录结构
+<a id="prerequisites"></a>
+## 前置条件
 
-```bash
-samples/llm/gemma4-e2b/
-├── README.md / README_cn.md     示例总览（本文件）
-├── model/                       预编译 HBM 下载
-│   ├── download_model.sh
-│   └── README.md
-├── conversion/                  PC 端 PTQ 量化编译和完整量化教程
-│   ├── QUANTIZATION_TUTORIAL.md
-│   ├── QUANTIZATION_TUTORIAL_zh.md
-│   ├── leap_llm_gemma4/
-│   ├── scripts/
-│   └── README.md
-├── runtime/
-│   └── cpp/                     ★ 板端 C++ 推理（main）
-│       ├── run.sh
-│       └── README.md
-├── evaluator/                   精度 / golden 验证
-│   └── README.md
-├── test_data/                   VLM 测试图片和结果截图
-│   └── results/
-└── third_party/                 tokenizers-cpp（显式准备）
-    ├── install_tokenizers_cpp.sh
-    └── README.md
-```
+板端需要与目标匹配的 OE-LLM runtime、C++17 编译环境、OpenCV、gflags、JSON 头文件和 Rust 1.80+；
+启动器额外使用 Python 3 标准库。完整依赖命令见 [C++ 运行说明](runtime/cpp/README_cn.md#dependencies)。
+准备两份与目标 SoC 匹配的 HBM、共享 embedding 和 tokenizer；不同目标的 HBM 文件同名，数据目录应分开。
+模型体积与源记录校验值见 [模型说明](model/README_cn.md)。仅推理无需在开发 PC 上安装量化工具链。
 
----
-
+<a id="quickstart"></a>
 ## 快速体验（QuickStart）
 
 先按 [C++ 前置条件](runtime/cpp/README_cn.md#前置条件) 安装系统依赖。以下命令从仓库根目录开始，以 S600 为例：
@@ -133,6 +115,46 @@ gemma4> /quit
 
 ---
 
+<a id="expected-results"></a>
+## 推理结果
+
+![VLM 演示](./test_data/results/test1.jpg)
+
+*S100P 板端 VLM 对话：图片 + 中文提问 → BPU 流式回复。*
+
+---
+
+<a id="directory"></a>
+## 目录结构
+
+```bash
+samples/llm/gemma4-e2b/
+├── README.md / README_cn.md     示例总览（本文件）
+├── model/                       预编译 HBM 下载
+│   ├── download_model.sh
+│   └── README.md
+├── conversion/                  PC 端 PTQ 量化编译和完整量化教程
+│   ├── QUANTIZATION_TUTORIAL.md
+│   ├── QUANTIZATION_TUTORIAL_zh.md
+│   ├── leap_llm_gemma4/
+│   ├── scripts/
+│   └── README.md
+├── runtime/
+│   └── cpp/                     ★ 板端 C++ 推理（main）
+│       ├── run.sh
+│       └── README.md
+├── evaluator/                   精度 / golden 验证
+│   └── README.md
+├── test_data/                   VLM 测试图片和结果截图
+│   └── results/
+└── third_party/                 tokenizers-cpp（显式准备）
+    ├── install_tokenizers_cpp.sh
+    └── README.md
+```
+
+---
+
+<a id="entry-points"></a>
 ## 模型推理（Runtime）
 
 本示例仅提供 **C++** 板端推理（LLM 推理为 C++ 原生，不提供 Python 路径）。编译、参数、交互式对话和 OpenAI 兼容接口用法请参考 [runtime/cpp/README_cn.md](./runtime/cpp/README_cn.md)。
@@ -145,14 +167,7 @@ gemma4> /quit
 
 ---
 
-## 推理结果
-
-![VLM 演示](./test_data/results/test1.jpg)
-
-*S100P 板端 VLM 对话：图片 + 中文提问 → BPU 流式回复。*
-
----
-
+<a id="license"></a>
 ## License
 
 本示例中的 C++ runtime 代码为 MIT 许可（见上游 [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p)）。预编译模型单独发布在地瓜机器人模型服务器。示例本身遵循 Model Zoo 顶层 License。
