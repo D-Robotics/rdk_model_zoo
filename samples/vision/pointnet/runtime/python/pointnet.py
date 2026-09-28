@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from typing import Mapping
 import numpy as np
-from samples._shared.quantization import apply_output_transform
+from samples._shared.quantization import dequantize_tensor
 from samples.vision.pointnet.runtime.python.model_binding import ModelBinding
 
 
@@ -58,18 +58,27 @@ class PointNetTask:
     def post_process(self, raw: np.ndarray) -> np.ndarray:
         """Decode raw (1,N,4) logits to owned int32 (N,) IDs in input point order.
 
-        Integer outputs use validated SCALE dequantization; F32 stays raw even if
-        metadata carries a vestigial descriptor. No softmax is needed for argmax.
-        Ties choose the lowest part index. Context is not consumed: no geometry
-        restoration or point reordering occurs. Invalid raw tensors raise ValueError.
+        Integer outputs use validated SCALE dequantization computed in float64,
+        so distinct int8..int32 raw values keep their ordering for argmax
+        (float32 decoding rounds large integers into artificial ties; see
+        POINTNET-R2). F32 stays raw even if metadata carries a vestigial
+        descriptor. No softmax is needed for argmax. Ties choose the lowest
+        part index. Context is not consumed: no geometry restoration or point
+        reordering occurs. Invalid raw tensors raise ValueError.
         """
         name = self.binding.output_name
         meta = self.binding.metadata
         if (not isinstance(raw, np.ndarray) or raw.shape != meta.output_shapes[name]
                 or raw.dtype != np.dtype(meta.output_dtypes[name]) or not np.isfinite(raw).all()):
             raise ValueError("PointNet raw output shape/dtype/values differ from binding.")
-        transform = 'raw_f32' if raw.dtype == np.float32 else 'dequant'
-        decoded = apply_output_transform(transform, {name: raw}, meta.output_quants)[name]
+        if raw.dtype == np.float32:
+            decoded = raw
+        else:
+            quant_info = meta.output_quants.get(name)
+            if quant_info is None:
+                raise ValueError(
+                    "PointNet integer output requires a SCALE quantization descriptor.")
+            decoded = dequantize_tensor(raw, quant_info, dtype="float64")
         if not np.isfinite(decoded).all():
             raise ValueError("PointNet dequantization produced nonfinite logits.")
         return np.argmax(decoded[0], axis=1).astype(np.int32)

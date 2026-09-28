@@ -90,12 +90,14 @@ labels_again = task.predict(points)
 | --- | --- | --- |
 | pre_process | 有限实数 ndarray `(N,3)` XYZ | 自有连续 float32 `(1,3,N)`；减去质心，再除最大欧氏半径 |
 | forward | 使用绑定输入名的张量映射 | 从 runtime 取得自有 raw `(1,N,4)` logits，不做 argmax/反量化/IO |
-| post_process | 与绑定 shape/dtype 一致的 raw 张量 | int32 `(N,)` 标签；整数先 SCALE 解码再 argmax，float32 不变 |
+| post_process | 与绑定 shape/dtype 一致的 raw 张量 | int32 `(N,)` 标签；整数以 float64 做 SCALE 解码后再 argmax，float32 不变 |
 | predict | 原始 `(N,3)` 坐标 | 串联同样阶段和标签结果 |
 
 N 来自编译模型 metadata，必须精确匹配，不采样/补点。冻结的 `prepared.context` 保存每次
 质心、半径和点数，不会被下一次调用覆盖。后处理无需消费 context，因为点序未变。
-argmax 平局取最小 ID。整数输出必须有有限正 SCALE 参数，缺失或无效时拒绝，不猜测。
+整数输出以 float64 做仿射解码，int8 到 int32 的不同 raw 值在 argmax 前保持大小关系；
+float32 解码会把大整数舍入成人为平局（独立评审 POINTNET-R2）。只有解码后完全相等的
+分数才算平局，取最小 ID。整数输出必须有有限正 SCALE 参数，缺失或无效时拒绝，不猜测。
 
 <a id="troubleshooting"></a>
 ## 故障排查

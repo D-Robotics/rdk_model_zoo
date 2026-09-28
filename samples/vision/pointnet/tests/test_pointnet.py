@@ -88,6 +88,41 @@ class PointNetTests(unittest.TestCase):
         np.testing.assert_array_equal(task.forward(task.pre_process(self.points()).tensors), raw)
         np.testing.assert_array_equal(task.predict(self.points()), [0, 0, 0, 0])
 
+    def test_int32_fine_differences_survive_decode(self):
+        # POINTNET-R2: float32 spacing is 2 above 2**24, so decoding rounds
+        # 2**24+1 and -(2**24+1) onto their neighbors and manufactures ties
+        # that argmax resolves to the wrong class on both signs.
+        q = types.SimpleNamespace(quant_type=types.SimpleNamespace(name='SCALE'),
+                                  scale=np.array([1.0], np.float32),
+                                  zero_point=np.array([0]), axis=2)
+        raw = np.array([[[2 ** 24, 2 ** 24 + 1, 0, 0],
+                         [-(2 ** 24 + 1), -(2 ** 24), -2 ** 25, -2 ** 25]]], np.int32)
+        task = self.task(raw, bound(n=2, dtype='int32', quant=q))
+        np.testing.assert_array_equal(task.post_process(raw), [1, 1])
+        np.testing.assert_array_equal(raw, [[[2 ** 24, 2 ** 24 + 1, 0, 0],
+                                             [-(2 ** 24 + 1), -(2 ** 24), -2 ** 25, -2 ** 25]]])
+
+    def test_int32_per_channel_scale_and_offset_ranking(self):
+        # Decoded ranking is decided by per-channel scale and zero_point, and
+        # large-magnitude offsets only stay exact when decoding is float64.
+        q = types.SimpleNamespace(quant_type=types.SimpleNamespace(name='SCALE'),
+                                  scale=np.array([1.0, 2.0, 1.0, 1.0], np.float32),
+                                  zero_point=np.array([0, 0, 2 ** 30, 2 ** 30], np.int32), axis=2)
+        raw = np.array([[[2 ** 30, 2 ** 29 + 1, 2 ** 30 + 5, 2 ** 30 + 3]]], np.int32)
+        task = self.task(raw, bound(n=1, dtype='int32', quant=q))
+        # Decoded scores [2**30, 2**30+2, 5, 3]: class 1 wins on both the
+        # doubled scale and the shifted offsets despite the lowest raw value.
+        np.testing.assert_array_equal(task.post_process(raw), [1])
+
+    def test_int32_true_ties_keep_lowest_index(self):
+        # 3*2 == 6*1: an exact decoded tie, not a rounding artifact.
+        q = types.SimpleNamespace(quant_type=types.SimpleNamespace(name='SCALE'),
+                                  scale=np.array([2.0, 1.0, 1.0, 1.0], np.float32),
+                                  zero_point=np.array([0]), axis=2)
+        raw = np.array([[[3, 6, 6, 0]]], np.int32)
+        task = self.task(raw, bound(n=1, dtype='int32', quant=q))
+        np.testing.assert_array_equal(task.post_process(raw), [0])
+
     def test_raw_f32_ignores_vestigial_quantization(self):
         q = types.SimpleNamespace(quant_type='SCALE', scale=[99], zero_point=[3], axis=2)
         np.testing.assert_array_equal(self.task(binding=bound(quant=q)).predict(self.points()), [0, 1, 2, 3])

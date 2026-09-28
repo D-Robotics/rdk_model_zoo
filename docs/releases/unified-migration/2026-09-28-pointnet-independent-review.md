@@ -1,4 +1,4 @@
-# PointNet independent host review — changes required
+# PointNet independent host review — host scope accepted
 
 Reviewer: Codex. Base `ba05780f`. B8/PointNet remains open. This review found a
 blocking defect in the documented default CLI path; the author suite's 21 tests
@@ -85,3 +85,28 @@ samples or silently drop the advertised integer contract. Cover int32 distinctio
 per-channel scale/offset and true ties. Clarify comparison precision in the two
 runtime guides, run the bounded PointNet suite and checker, and return for review.
 POINTNET-R1 remains closed; full PointNet/B8 acceptance stays changes-required.
+
+## Independent recheck — POINTNET-R2 closed (2026-09-28)
+
+Codex inspected the four changed PointNet files after the Claude Code + GLM
+process exited, then reran all 26 PointNet tests and the sample checker. The
+checker reports 0 violations, 1 documented CLI policy skip, 0 exemptions.
+The original accepted int32 metadata and raw [16777216,16777217,0,0] reproducer
+now selects class 1; raw input remains unchanged. All 26 sample file hashes stayed
+stable across verification. Full commands, outputs and hashes are in
+[r2-recheck.json](evidence/2026-09-28-pointnet-independent-review/r2-recheck.json).
+
+The integer branch now requests float64 from the existing dequantizer before
+argmax. New tests cover positive/negative large integer distinctions, per-channel
+scale/offset and exact decoded ties. F32 still bypasses quantization descriptors;
+the shared default, binding contract, visualization and target gate were not
+changed. Different per-channel transforms may of course change raw-value ranking:
+the intended comparison is between decoded scores, not between raw integers.
+These tests establish the reported precision regression is fixed; they do not
+claim an exact-arithmetic proof for every possible quantization descriptor.
+
+Disposition: close POINTNET-R2 and accept the reviewed PointNet host runtime and
+associated documentation scope, including the previously closed R1. This is not
+whole-batch B8/H4 or whole-branch closure. Python 3.10–3.12, board inference and
+real quantization execution remain not-run; R1's Python 3.13 import-only evidence
+retains its original limits. Original failures and author evidence are preserved.

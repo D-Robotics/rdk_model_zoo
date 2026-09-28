@@ -98,14 +98,18 @@ SDK execution guarantee is made.
 | --- | --- | --- |
 | pre_process | finite real ndarray `(N,3)` XYZ | owned contiguous float32 `(1,3,N)`; subtract centroid, divide by maximum Euclidean radius |
 | forward | tensor mapping using bound input name | owned raw `(1,N,4)` logits from runtime; no argmax, dequant or IO |
-| post_process | raw tensor with bound shape/dtype | int32 `(N,)` IDs; integer SCALE decoding before argmax, float32 unchanged |
+| post_process | raw tensor with bound shape/dtype | int32 `(N,)` IDs; integer SCALE decoding in float64 before argmax, float32 unchanged |
 | predict | raw `(N,3)` points | same stages and labels |
 
 N comes from compiled metadata and must match exactly; no resampling/padding.
 Frozen `prepared.context` stores centroid/radius/count per call and cannot be
 overwritten by a later call. Postprocess does not consume it because point order
-is unchanged. Argmax ties choose the lowest ID. Integer outputs require finite
-positive SCALE metadata; missing/invalid metadata is rejected instead of guessing.
+is unchanged. Integer outputs are affine-decoded in float64 so distinct int8
+through int32 raw values keep their ordering for argmax; float32 decoding would
+round large integers into artificial ties (independent review POINTNET-R2). Only
+exactly equal decoded scores tie, choosing the lowest ID. Integer outputs require
+finite positive SCALE metadata; missing/invalid metadata is rejected instead of
+guessing.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
