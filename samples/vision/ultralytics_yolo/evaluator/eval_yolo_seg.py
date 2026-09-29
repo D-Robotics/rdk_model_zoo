@@ -146,6 +146,7 @@ def main(argv=None) -> int:
 
     results = []
     dump_handle = None
+    dumped = 0
     if args.dump_only:
         dump_handle = open(args.json_save_path, "w", encoding="utf-8")
     start = time.time()
@@ -167,11 +168,12 @@ def main(argv=None) -> int:
             }
             if dump_handle is not None:
                 dump_handle.write(json.dumps(record) + "\n")
+                dumped += 1
             else:
                 results.append(record)
     if dump_handle is not None:
         dump_handle.close()
-        print(f"dumped {sum(1 for _ in open(args.json_save_path))} NDJSON "
+        print(f"dumped {dumped} NDJSON "
               f"prediction line(s) to {args.json_save_path}; host-side scoring "
               f"is required (--dump-only).")
         print(f"elapsed: {time.time() - start:.3f}s")
