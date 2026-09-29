@@ -16,6 +16,41 @@ The former platform branch entries remain compatibility shims under
 `platforms/{x5,s}/` until the migration closeout; their audit record
 lives in the migration documents, not here.
 
+### Algorithm background
+
+MobileNetV2 introduces inverted residual blocks with linear bottlenecks:
+each block expands the channels with a 1×1 convolution, applies a 3×3
+depthwise convolution, and projects back through a linear (non-ReLU) 1×1
+bottleneck; stride-2 blocks drop the shortcut. The linear bottleneck
+keeps information that ReLU would discard in low-dimensional spaces
+([paper](https://arxiv.org/abs/1801.04381),
+[timm/models/mobilenetv2](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv2.py)).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Inverted residuals**: expand channels before the depthwise convolution and project back through a linear bottleneck.
+- **Depthwise separable convolution**: reduces computation compared with standard convolution.
+- **Classification output**: Top-K class IDs and confidence scores for ImageNet-1k labels.
+
+![MobileNetV2 architecture](./test_data/mobilenetv2_architecture.png)
+
+*Inverted residual blocks, restored from the X5 source release
+(`test_data/mobilenetv2_architecture.png`, rdk_x5 @ac11571, sha256
+`7995faf5…`): the stride-1 block (left) keeps the additive shortcut; the
+stride-2 block (right) downsamples without it, and only the final 1×1
+projection is linear.*
+
+The source tree also shipped the paper's block-evolution figure
+(`test_data/seperated_conv.png` — listed in the source README's directory
+section but not embedded there; restored as a referenced figure here):
+
+![Evolution of separable convolution blocks](./test_data/seperated_conv.png)
+
+*Figure 2 of the MobileNetV2 paper: from a regular convolution (a) to a
+separable block (b), a separable block with linear bottleneck (c), and a
+bottleneck with expansion layer (d); hatched layers carry no
+non-linearity.*
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -105,6 +140,15 @@ Published MobileNetV2 performance on `RDK X5` from rdk_x5 @ac11571 (x5-v1.1.3):
 
 The S-series source release (rdk_s @380e1a2 (s-v1.1.2)) published no latency or accuracy
 figures for this model; none are inferred here.
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `7097e2e3…`): the
+bundled [Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG)
+ranks `Scottish deerhound` first, followed by Irish wolfhound, lynx/
+catamount, standard schnauzer, and timber wolf. Recorded by the source
+release on its own runtime entry — not a new run of this repository.*
 
 <a id="directory"></a>
 ## Directory

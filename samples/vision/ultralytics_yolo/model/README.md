@@ -22,7 +22,7 @@ These scripts prepare compiled models for inference; they do not export or compi
 | `yolov9` | detect, seg | detection t/s/m/c/e; t unavailable on S600; segmentation c/e, unavailable on S600 |
 | `yolov10` | detect | n/s/m/b/l/x |
 | `yolo12` | detect | n/s/m/l/x |
-| `yolov13` | detect | n/s/l/x, X5 only |
+| `yolov13` | detect | n/s/l/x; X5 only |
 
 Publication does not mean that every combination has been board-tested. Do not substitute a different target's model. The canonical X5 full inventory contains 92 assets, including 25 YOLO26 assets; the historical generic X5 wrapper retains its original 67 assets.
 
@@ -95,6 +95,27 @@ Historical platform download wrappers retain their original model directories. T
 <a id="formats-checksums"></a>
 ## Formats and integrity
 
-X5 uses a packed NV12 input; S uses separate Y/UV inputs. Non-classification published models use 640×640 inputs. YOLO26 classification uses 224×224 on all targets; all S600 classification assets use 224×224; the other classification families on X5/S100/S100P use 640×640. Runtime metadata remains authoritative and incompatible bindings are rejected.
+X5 uses a packed NV12 input; S uses separate Y/UV inputs. Non-classification filenames use 640×640. YOLO26 classification filenames use 224×224 on all targets; S600 classification identifiers also use 224×224. S100/S100P v8/v11 classification manifest IDs retain 640×640 compatibility names, while their download URLs use 224×224. A 2026-09-26 read-only HEAD audit found all 20 URL pairs available with equal lengths and ETags; this is not a cryptographic byte comparison or proof of tensor dimensions. Runtime metadata determines actual input geometry; filename tokens are not shape overrides. Existing qualified IDs/local paths are retained.
 
 The downloader rejects empty files and verifies publisher SHA-256 values when recorded. Some manifest entries have no publisher hash: a locally observed digest then identifies bytes but does **not** verify their official origin. Dry-run only checks path existence; `present` is not an integrity check. Downloads use a temporary `.part` file and install the final file only after successful validation. A timeout, HTTP error or unavailable URL is a preparation failure, not permission to fall back to a different artifact.
+
+
+<a id="maintained-scope"></a>
+## Maintained scope and floating outputs
+
+Conventional detection, segmentation and pose use Ultralytics YOLO / YOLO26
+artifacts. YOLOv5s remains in the separate YOLOv5 sample. Redundant S `yolo11`,
+`yolo11_pose`, `yolo11_seg` and `yolov13_imoonlab` are no longer maintained or
+registered in the active manifests; they have no separate preparation/runtime
+route. Distinct YOLOE, YOLO-World and YOLO26 Depth capabilities remain. Historical
+source, release records and reviews are retained for provenance, not current
+support. X5's existing Ultralytics `yolov13` family remains; S has no such family.
+
+Use the normal family/task/size preparation commands above. Runtime `--asset-id`
+accepts registered Ultralytics YOLO/YOLO26 identities only; the downloader has no
+standalone `--asset-id` branch. Detection and DFL segmentation/pose require finite
+floating outputs with NONE or absent quantization metadata. Python postprocessing
+never manually dequantizes integer outputs or substitutes an integer-to-float cast.
+Select the matching Ultralytics floating-output artifact when a model is rejected.
+Actual shape/dtype is checked at load time; filenames alone cannot establish it.
+Board compatibility still requires later board testing.

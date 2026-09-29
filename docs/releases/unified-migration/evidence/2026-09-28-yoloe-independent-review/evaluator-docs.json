@@ -1,0 +1,90 @@
+{
+  "utc": "2026-09-28T11:20:16.863724+00:00",
+  "scope": "synthetic evaluator scoring and document link review; no real model/export/calibration execution",
+  "run": {
+    "argv": [
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "samples/vision/yoloe/evaluator/tests",
+      "-v"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": "test_annotation_size_mismatch_is_not_skipped (test_evaluation.EvaluationTests.test_annotation_size_mismatch_is_not_skipped) ... ok\ntest_dataset_rejects_duplicate_ids_path_escape_and_invalid_limits (test_evaluation.EvaluationTests.test_dataset_rejects_duplicate_ids_path_escape_and_invalid_limits) ... ok\ntest_execution_preserves_partial_failure_and_rejects_overwrite (test_evaluation.EvaluationTests.test_execution_preserves_partial_failure_and_rejects_overwrite) ... ERROR\ntest_full_and_roi_masks_encode_identical_pixels_without_resizing (test_evaluation.EvaluationTests.test_full_and_roi_masks_encode_identical_pixels_without_resizing) ... ERROR\ntest_help_without_packages_and_documented_parser_options (test_evaluation.EvaluationTests.test_help_without_packages_and_documented_parser_options) ... ok\ntest_mapping_requires_vocabulary_names_and_complete_dataset_coverage (test_evaluation.EvaluationTests.test_mapping_requires_vocabulary_names_and_complete_dataset_coverage) ... ok\ntest_model_identity_and_board_thread_option_fail_before_sdk (test_evaluation.EvaluationTests.test_model_identity_and_board_thread_option_fail_before_sdk) ... ok\ntest_prediction_only_and_ground_truth_free_scoring_are_distinct (test_evaluation.EvaluationTests.test_prediction_only_and_ground_truth_free_scoring_are_distinct) ... ERROR\ntest_real_coco_scoring_perfect_and_empty_predictions (test_evaluation.EvaluationTests.test_real_coco_scoring_perfect_and_empty_predictions) ... ERROR\ntest_unmapped_predictions_are_counted_and_invalid_scores_rejected (test_evaluation.EvaluationTests.test_unmapped_predictions_are_counted_and_invalid_scores_rejected) ... ERROR\n\n======================================================================\nERROR: test_execution_preserves_partial_failure_and_rejects_overwrite (test_evaluation.EvaluationTests.test_execution_preserves_partial_failure_and_rejects_overwrite)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/tests/test_evaluation.py\", line 118, in test_execution_preserves_partial_failure_and_rejects_overwrite\n    evaluate_dataset(dataset, mapping, fixture, out, predictions_only=True)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/engine.py\", line 88, in evaluate_dataset\n    b, s, dropped = serialize_predictions(\n                    ~~~~~~~~~~~~~~~~~~~~~^\n        result, row[\"id\"], image.shape[:2], mapping.ids\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/results.py\", line 11, in serialize_predictions\n    from pycocotools import mask as mask_utils\nModuleNotFoundError: No module named 'pycocotools'\n\n======================================================================\nERROR: test_full_and_roi_masks_encode_identical_pixels_without_resizing (test_evaluation.EvaluationTests.test_full_and_roi_masks_encode_identical_pixels_without_resizing)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/tests/test_evaluation.py\", line 237, in test_full_and_roi_masks_encode_identical_pixels_without_resizing\n    from pycocotools import mask as mask_utils\nModuleNotFoundError: No module named 'pycocotools'\n\n======================================================================\nERROR: test_prediction_only_and_ground_truth_free_scoring_are_distinct (test_evaluation.EvaluationTests.test_prediction_only_and_ground_truth_free_scoring_are_distinct)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/tests/test_evaluation.py\", line 145, in test_prediction_only_and_ground_truth_free_scoring_are_distinct\n    result = evaluate_dataset(\n        dataset, mapping, fixture, self.root / \"predictions\", predictions_only=True\n    )\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/engine.py\", line 88, in evaluate_dataset\n    b, s, dropped = serialize_predictions(\n                    ~~~~~~~~~~~~~~~~~~~~~^\n        result, row[\"id\"], image.shape[:2], mapping.ids\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/results.py\", line 11, in serialize_predictions\n    from pycocotools import mask as mask_utils\nModuleNotFoundError: No module named 'pycocotools'\n\n======================================================================\nERROR: test_real_coco_scoring_perfect_and_empty_predictions (test_evaluation.EvaluationTests.test_real_coco_scoring_perfect_and_empty_predictions)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/tests/test_evaluation.py\", line 272, in test_real_coco_scoring_perfect_and_empty_predictions\n    from pycocotools import mask as mask_utils\nModuleNotFoundError: No module named 'pycocotools'\n\n======================================================================\nERROR: test_unmapped_predictions_are_counted_and_invalid_scores_rejected (test_evaluation.EvaluationTests.test_unmapped_predictions_are_counted_and_invalid_scores_rejected)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/tests/test_evaluation.py\", line 263, in test_unmapped_predictions_are_counted_and_invalid_scores_rejected\n    boxes, masks, dropped = serialize_predictions(result, 7, (8, 10), {2163: 1})\n                            ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/vision/yoloe/evaluator/results.py\", line 11, in serialize_predictions\n    from pycocotools import mask as mask_utils\nModuleNotFoundError: No module named 'pycocotools'\n\n----------------------------------------------------------------------\nRan 10 tests in 0.249s\n\nFAILED (errors=5)\n"
+  },
+  "readmes": [
+    {
+      "path": "samples/vision/yoloe/README.md",
+      "sha256": "be12fc2217942909fe6e0167eada729f3f5e1350d8b876ba8e5c6c5b6fea10a2",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/README_cn.md",
+      "sha256": "6178ab49455748e4f8a6c55af1272cc880d48735a37bbca41dfdc5ad2f2c7e69",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/conversion/README.md",
+      "sha256": "5975014450d5aba814f1c10d17c2c2221a12322562ff07deb57dd36cd22b4169",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/conversion/README_cn.md",
+      "sha256": "d02cdec871bdb9b742438428cb32660d14e9d7f1daacdc6d423b05bbda928d2f",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/evaluator/README.md",
+      "sha256": "e87b0b09d8d4dd3e5f57a2bea45fd90bcf186cc7ef6855b5313fe7c3e1993512",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/evaluator/README_cn.md",
+      "sha256": "c287c158abb7c48b97f774dfdcc02e928f9795c140edee82c5e9df035b3ee457",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/model/README.md",
+      "sha256": "a11a6de4e9e7293d768eb90396125cdf9d5703a89af8bb1470ec46fd9e0c91ec",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/model/README_cn.md",
+      "sha256": "6262b4d8aef6f2411a4a199b5dd96330fc55e55b63e2988335224bd86b69893a",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/runtime/cpp/README.md",
+      "sha256": "370cb774df688a4f4f29d23f78d09582aee9d9c4351444d710e57a580a147b84",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/runtime/cpp/README_cn.md",
+      "sha256": "8c679a37c9242f85f27e0ce0dee257283f9bb199a7ab64e6f91aa082a233d1c0",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/runtime/python/README.md",
+      "sha256": "a455fe6381459032def5b012711a07b994d1d1e863985fcbfdaeccf73980a111",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/runtime/python/README_cn.md",
+      "sha256": "c3b9bd61f8ca54db0643073d9964bf0806e079ad6737985ee33162b0c894791d",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/test_data/README.md",
+      "sha256": "bb2929a0d86b6c4fb6738d4ee0fc69cff94f3c384a6e9e8e83101f69eb871aa2",
+      "missing_local_links": []
+    },
+    {
+      "path": "samples/vision/yoloe/test_data/README_cn.md",
+      "sha256": "505d5d2a90acddcf0415a065bc85b889d06c3a1cbe39b67d6ba4badb3b983811",
+      "missing_local_links": []
+    }
+  ]
+}

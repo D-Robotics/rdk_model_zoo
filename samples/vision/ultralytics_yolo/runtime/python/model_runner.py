@@ -159,13 +159,13 @@ class ModelRunner:
         return self.input_adapter.build(y_plane, uv_plane)
 
     def __call__(self, prepared_input: Mapping[str, Any]):
-        """Execute exactly one inference and return semantic role outputs."""
+        """Execute once and return role-keyed raw arrays without changing their values."""
         try:
             raw_outputs = self.model.run(prepared_input)
         except Exception as exc:
             raise RunnerError(f"Model execution failed: {exc}") from exc
         try:
-            return self.binding.read_outputs(raw_outputs)
+            return self.binding.read_raw_outputs(raw_outputs)
         except BindingError as exc:
             raise RunnerError(str(exc)) from exc
 

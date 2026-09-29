@@ -13,7 +13,7 @@ The source names an RDK X5 OpenExplorer environment with `hb_mapper` and `hrt_mo
 <a id="export"></a>
 ## Export
 
-No export recipe is included by the fixed source. An external user-owned ONNX/checkpoint pipeline must produce a graph whose deployment contract is `input float32 NCHW (1,3,24,94)` and `output float32 (1,68,18)`. This migration did not invent or run that pipeline.
+No export recipe is included by the fixed source. An external user-owned ONNX/checkpoint pipeline must produce a graph whose deployment contract is `input float32 NCHW (1,3,24,94)` and `output float32 (1,68,18,1)` — the released `lpr.bin` native logits; CTC decoding consumes the `(68,18)` payload after singleton removal. This migration did not invent or run that pipeline.
 
 <a id="calibration"></a>
 ## Calibration
@@ -37,7 +37,7 @@ The exact output filename, calibration options, quantization settings, and sourc
 <a id="validation"></a>
 ## Post-conversion validation
 
-Inspect the generated model with `hrt_model_exec model_info --model_file ./lpr.bin`, then compare its metadata to the runtime binding. No conversion, metadata inspection, or board test was run in this migration.
+Inspect the generated model with `hrt_model_exec model_info --model_file ./lpr.bin`, then compare its metadata to the runtime binding. No conversion or `hrt_model_exec` metadata inspection was run in this migration; the published artifact itself passed same-board source/unified comparison on one X5 8GB and one X5 4GB (2026-09-24, see the evaluator README), which validates runtime parity but not conversion reproducibility.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -49,4 +49,4 @@ The only manifest-backed deployment artifact is `x5:lprnet:lpr.bin`; the runtime
 
 - No source export script, checkpoint version, calibration producer, PTQ YAML, or reproducible OE package is provided.
 - `your_lprnet_config.yaml` is a source placeholder, not a repository file.
-- Publisher SHA-256 is unknown; conversion and board validation are `not-run`.
+- Publisher SHA-256 is unknown; conversion is `not-run`. Board parity of the published artifact is recorded in the evaluator README and does not extend to rebuilding.

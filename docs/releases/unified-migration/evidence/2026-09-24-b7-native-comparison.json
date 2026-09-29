@@ -1,0 +1,73 @@
+{
+  "stage": "N8 native fixed-source/unified comparison tooling + SDK-free helper boundary fixes",
+  "utc": "2026-09-24T09:15:57Z",
+  "base_commit": "fbffddd",
+  "board_baseline": "coordinator 4d45f9a: X5-8G and S100 real-SDK cmake builds rc=0, both unified C++ default model/image smoke runs rc=0 (.coordination/b7-{x5,s100}-native-4d45f9a-{build,run}.json); numerical source consistency NOT established",
+  "branch": "codex/b7-local-glm-20260924",
+  "worktree": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-local-glm",
+  "author": "local Claude Code + GLM (author side; not an independent review)",
+  "pinned_sources": {
+    "x5": {
+      "commit": "ac115717197920355fc390bb04299b20e6436864",
+      "samples/vision/yolov5/runtime/cpp/main.cc": "e5c4eb4a445749ad8e009b9ddf9f412f533628fef390aa5d7e8a944357a07257"
+    },
+    "s100": {
+      "commit": "380e1a2bf42041af54be6f34935e50197cfadff9",
+      "samples/vision/yolov5/runtime/cpp/src/main.cpp": "f010965a35432c24397ab05b10c0af73eae120db0d0f5f12a6a9535219bb919a",
+      "samples/vision/yolov5/runtime/cpp/src/yolov5.cpp": "b5ef5427dcba7066d917d733dbdd2c183113985b92e6c110e5e59eaeb9985eb3"
+    },
+    "note": "git cat-file blobs verified byte-identical to the working-tree platforms/ copies at generation time"
+  },
+  "deliverables": [
+    {"path": "samples/vision/yolov5/evaluator/native/ycap_observer.hpp", "sha256": "08ceabf38b8ad508e12105facbf24356c4b61a0abcc603c75fa50014c5778eb5", "note": "single-header SDK-free read-only observer; no-op without YOLOV5_CAPTURE_DIR; manifest written only at finish (a crash leaves no capture.json and the comparison refuses)"},
+    {"path": "samples/vision/yolov5/evaluator/native/instrument.py", "sha256": "c8083a17916bc57cf81882b8193105bdaf07aee818df105cea1782a39f4a1afb", "note": "SHA-pinned git-blob sources, unique-count anchors (9 X5 / 8 S), whitelisted X5 MODEL_PATH/TESR_IMG_PATH rebinding only, generated CMake + full audit json; refuses non-empty workdir"},
+    {"path": "samples/vision/yolov5/evaluator/native/compare_native.py", "sha256": "7a724cd658b8ad0d9195a8d5d39cddc59cfb9428bda24a30f67e4bf5b47cf8e0", "note": "same-board source-capture vs unified-dump comparison; vectorized stride restoration; fixed criteria inputs-exact / raw atol 1e-5 / scale-zero exact / boxes 1e-4 / scores 1e-5 / class ids exact with declared sort normalization; refuses overwrite; nonzero on any missing material, nonzero run codes, model/image hash or threshold mismatch; saves all restored arrays as .npy"}
+  ],
+  "observation_points": {
+    "x5": "submitted compact NV12 bytes; per-output SDK-derived dtype/quanti/stride/alignedByteSize/axis; per-head raw bytes right after each INVALIDATE flush (the same coherency point the source reads); post-NMS model-space xyxy per class",
+    "s100": "post-init per-output metadata + full scale/zero arrays; both NV12 planes full allocation bytes with strides after bgr_to_nv12_tensor; per-output raw full extent after the infer INVALIDATE flush loop; model-space detections between nms_bboxes and scale_letterbox_bboxes_back"
+  },
+  "helper_boundary_fixes": [
+    "dequant_s32_nhwc rejects zero_point_len>0 with a null buffer (previously would dereference)",
+    "check_s32_dequant: height*width, *channels and every extent product/add overflow-checked; negative cases for 1LL<<21 dims and 1LL<<62 stride",
+    "exact extent now (H*W-1)*stride2 + (channels-1)*stride3 + element_bytes (no longer over-counts the trailing channel padding); published layout 84x84x255/4/1024/86016/7225344 still accepted",
+    "non-scalar scale requires quantizeAxis==3 (NHWC channel axis); axis -1/2 rejected with a precise reason, scalar descriptors exempt; tests added",
+    "dump quant arrays: over kMaxQuantValues (2^20) throws, never truncates silently; SCALE tensor missing a scale buffer or a declared zero-point length without a buffer throws instead of an empty array masquerading as complete",
+    "CLI help --bpu-core range synchronized to <-1|0..3>"
+  ],
+  "host_verification": {
+    "python": "3.14.7 (rdk_model_zoo/.venv, read-only)",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "commands": [
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/yolov5/tests", "returncode": 0, "result": "50 tests OK (was 37): +13 native-evaluator tests incl. instrumented X5/S source stub compiles"},
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/bytetrack/tests", "returncode": 0, "result": "11 tests OK"},
+      {"argv": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json --report /tmp/b7-n8-contract.json", "returncode": 0, "result": "36 samples, 0 violations, 84 exemptions"},
+      {"argv": "instrument.py --target x5 --repo-root . --work-dir /tmp/b7-instr-x5 ...", "returncode": 0, "result": "9 anchors matched once; audit pins e5c4eb4a...; refuses reuse of workdir (rc 2)"},
+      {"argv": "instrument.py --target s100 --repo-root . --work-dir /tmp/b7-instr-s", "returncode": 0, "result": "8 anchors matched once across main.cpp (3) and yolov5.cpp (5)"},
+      {"argv": "c++ -fsyntax-only instrumented main.cc (X5 stubs + opencv-lite stubs)", "returncode": 0},
+      {"argv": "c++ -fsyntax-only instrumented src/main.cpp and src/yolov5.cpp (S100 stubs + c_utils + fixed inc)", "returncode": 0, "note": "proves the injected glue references real variables; NOT a real SDK build"},
+      {"argv": "git diff --check", "returncode": 0}
+    ]
+  },
+  "changed_files": [
+    {"path": "samples/vision/yolov5/runtime/cpp/include/yolov5_gate.hpp", "sha256": "370eabc13f38eb215c991b636d358e0ea7400d27c533632d47450d1cb2cc8927"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/yolov5_gate.cpp", "sha256": "c022d67663655a5664ca4924f5a8af7b80e60298f332d31eaa39b2fcd3a19a64"},
+    {"path": "samples/vision/yolov5/runtime/cpp/include/yolov5_dump.hpp", "sha256": "446ce7fe7a06790114afc1cadc48b56020dc8e603dec58a8975b985b9b754c1e"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/yolov5_dump.cpp", "sha256": "606565ef79a1f7b189728e210174a321fed35bedbced2e73e796f8da6a739646"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/yolov5_s_native.cpp", "sha256": "995297c2c409bb1f81a91fff952d5d7223ebe6b0df36b2fa871c773547770f7d"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/cli_main.cpp", "sha256": "d4b0984708a4c701e6b4ae833f24e0d68934f1c198545e04720a477e27beb67e"},
+    {"path": "samples/vision/yolov5/tests/cpp/portable_checks.cpp", "sha256": "3915919fce54ca07cc6250fe0208a1280a053cd27c02cbc5b5c329aef162d277"},
+    {"path": "samples/vision/yolov5/tests/test_cpp_contract.py", "sha256": "fd5c3831428b5ae3f0ada6a5ddc4bc8f123f5804b3beed0108038665ffa7ab94"},
+    {"path": "samples/vision/yolov5/tests/test_native_evaluator.py", "sha256": "ee0d70216f7a554f4586fd7e81990936fe24ea803ad16252fe66b3249c0780c8", "note": "new"},
+    {"path": "samples/vision/yolov5/evaluator/native/ycap_observer.hpp", "sha256": "08ceabf38b8ad508e12105facbf24356c4b61a0abcc603c75fa50014c5778eb5", "note": "new"},
+    {"path": "samples/vision/yolov5/evaluator/native/instrument.py", "sha256": "c8083a17916bc57cf81882b8193105bdaf07aee818df105cea1782a39f4a1afb", "note": "new"},
+    {"path": "samples/vision/yolov5/evaluator/native/compare_native.py", "sha256": "7a724cd658b8ad0d9195a8d5d39cddc59cfb9428bda24a30f67e4bf5b47cf8e0", "note": "new"},
+    {"path": "samples/vision/yolov5/evaluator/README.md", "sha256": "d02952b86218567c8b13a9503310cee265888c253caa48feab3adbe90c9b568a"},
+    {"path": "samples/vision/yolov5/evaluator/README_cn.md", "sha256": "ead269007f8c95e14a365ac5efbec56fb7353d2ae1a31bc0f79c04a43441edde"}
+  ],
+  "environment_note": "the local dev sandbox denies compiler access to headers whose filename contains 'hooks', so the observer header is named ycap_observer.hpp (content-irrelevant naming; boards have no such restriction)",
+  "boundaries": {
+    "board": "not-run from this worktree; the coordinator executes evaluator README steps 1-4 on X5 (s-v2 default + bus.jpg) and S100 (x-672 default + kite.jpg) with identical thresholds; unexpected board metadata (e.g. quantizeAxis != 3) fails loudly in the gate rather than misreading",
+    "untouched": "platforms/ fixed sources, shared utils/c_utils, Python evaluator commands (kept in README), dtype aliases (7f27c8c), catalog (develop 9692699), metadata serializer (other session)"
+  }
+}

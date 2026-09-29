@@ -7,6 +7,29 @@ MobileNetV3 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，
 
 统一实现是一条 Python 流程（全部目标）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
 
+### 算法背景
+
+MobileNetV3 是 MobileNet 家族中经神经架构搜索得到的成员：NAS 加 NetAdapt
+共同确定块配置，squeeze-and-excitation 注意力在倒残差块内重新标定通道
+权重，h-swish 激活在移动硬件上保持低开销
+（[论文](https://arxiv.org/abs/1905.02244)、
+[timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py)）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **深度可分离卷积**：保留 MobileNet 系列的高效卷积结构。
+- **倒残差结构**：使用 expansion–depthwise–projection 结构进行高效特征提取。
+- **SE 注意力模块**：重新标定通道权重，提高特征表达能力。
+- **H-Swish 激活函数**：硬件友好的激活函数，适合嵌入式部署。
+
+![MobileNetV3 块](./test_data/MobileNetV3_architecture.png)
+
+*MobileNetV3 块，恢复自 X5 源版本（`test_data/MobileNetV3_architecture.png`，
+rdk_x5 @ac11571，sha256 `bc978181…`；论文图 4）：在残差路径上施加
+squeeze-and-excite 的倒残差块 — 在 NL depthwise 3×3 之后，全局池化加
+FC-ReLU / FC-hard-sigmoid 门控作用于扩展通道，门控结果再经最后的 NL 1×1
+投影输出（非线性按层选择）。*
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -82,6 +105,13 @@ S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。无法识别
 | MobileNetV3-Large | 224x224 | 1000 | 5.5 | 74.8% | 64.8% | 2.02 | 714+ |
 
 S 侧源发布（rdk_s @380e1a2 (s-v1.1.2)）未公布该模型的延迟/精度数据，此处不推断、不补造。
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `03b15192…`）：随仓 [kit_fox.JPEG](test_data/kit_fox.JPEG) 的
+Rank-1 为 `kit fox`，其后依次为 red fox、grey fox、lion、lynx/catamount。
+由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

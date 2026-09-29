@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -154,6 +155,15 @@ models:
       - {filename: fixture.bin, format: bin, sha256: null}
 ''')
 
+    def manifest(self, path, platform, tag, model_id):
+        """Minimal per-platform manifest fixture with an identifying model id."""
+        return self.write(path,f'''schema_version: 1
+release: {{platform: {platform}, tag: {tag}}}
+models:
+  - id: {model_id}
+    name: {model_id}
+''')
+
     def test_current_manifest_layout(self):
         self.model('docs/manifests/models.yaml')
         self.write('docs/manifests/benchmarks.yaml','''schema_version: 1
@@ -195,6 +205,55 @@ benchmarks:
         x=self.invoke(CATALOG,'--repo',self.root,code=2)
         self.assertIn('ambiguous',x['reason'])
         self.assertIn('--manifest',x['reason'])
+
+    def test_unified_multi_platform_requires_target_selection(self):
+        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
+        self.manifest('docs/release/s/models.yaml','s','fixture-s-v1.0.0','fixture-s-demo')
+        self.manifest('platforms/x3/release/models.yaml','x3','fixture-x3-v9','fixture-x3-demo')
+        x=self.invoke(CATALOG,'--repo',self.root,code=2)
+        self.assertIn('ambiguous',x['reason']);self.assertIn('--manifest',x['reason'])
+        self.assertEqual(x['manifest_candidates'],['docs/release/s/models.yaml','docs/release/x5/models.yaml','platforms/x3/release/models.yaml'])
+        # A model query narrows records, never the target platform.
+        y=self.invoke(CATALOG,'--repo',self.root,'--model','fixture-s-demo',code=2)
+        self.assertIn('ambiguous',y['reason'])
+
+    def test_single_per_platform_manifest_is_implicit(self):
+        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
+        self.write('docs/release/x5/benchmarks.yaml','schema_version: 1\nrelease: {platform: x5, tag: fixture-x5-v1.0.0}\nbenchmarks: []\n')
+        x=self.invoke(CATALOG,'--repo',self.root)
+        self.assertEqual(x['model_manifest']['path'],'docs/release/x5/models.yaml')
+        self.assertEqual(x['benchmark_manifest']['path'],'docs/release/x5/benchmarks.yaml')
+        self.assertEqual(x['models'][0]['id'],'fixture-x5-demo')
+
+    def test_unified_manifest_wins_over_same_platform_snapshot(self):
+        self.manifest('docs/release/s/models.yaml','s','fixture-s-v2.0.0','fixture-s-unified')
+        self.manifest('platforms/s/docs/release/models.yaml','s','fixture-s-v1.0.0','fixture-s-snapshot')
+        x=self.invoke(CATALOG,'--repo',self.root)
+        self.assertEqual(x['model_manifest']['path'],'docs/release/s/models.yaml')
+        self.assertEqual(x['models'][0]['id'],'fixture-s-unified')
+        self.assertFalse(any('snapshot' in warning for warning in x['warnings']))
+
+    def test_snapshot_only_selection_is_disclosed(self):
+        self.manifest('platforms/x5/docs/release/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
+        x=self.invoke(CATALOG,'--repo',self.root)
+        self.assertEqual(x['model_manifest']['path'],'platforms/x5/docs/release/models.yaml')
+        self.assertTrue(any('snapshot' in warning for warning in x['warnings']))
+
+    def test_mixed_flat_and_per_platform_requires_selection(self):
+        self.manifest('docs/manifests/models.yaml','x5','fixture-x5-v1.0.0','fixture-demo')
+        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v2.0.0','fixture-x5-demo')
+        x=self.invoke(CATALOG,'--repo',self.root,code=2)
+        self.assertIn('ambiguous',x['reason'])
+        self.assertEqual(x['manifest_candidates'],['docs/manifests/models.yaml','docs/release/x5/models.yaml'])
+
+    def test_script_runs_without_sibling_skills(self):
+        self.manifest('docs/release/x5/models.yaml','x5','fixture-x5-v1.0.0','fixture-x5-demo')
+        with tempfile.TemporaryDirectory() as td:
+            script=Path(td)/'read_catalog.py';shutil.copyfile(CATALOG,script)
+            p=subprocess.run([sys.executable,str(script),'--repo',str(self.root)],text=True,capture_output=True,timeout=20,
+                             env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1','PYTHONPATH':''})
+            self.assertEqual(p.returncode,0,p.stdout+p.stderr)
+            self.assertEqual(json.loads(p.stdout)['model_manifest']['path'],'docs/release/x5/models.yaml')
 
     def test_redefined_yaml_anchors_are_read_without_inference(self):
         self.model('docs/manifests/models.yaml')

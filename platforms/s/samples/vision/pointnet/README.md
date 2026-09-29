@@ -1,3 +1,5 @@
+> Current unified entry: [PointNet](../../../../../samples/vision/pointnet/README.md). The body below is retained source documentation; its bundled-model claim and old API are historical.
+
 English | [简体中文](./README_cn.md)
 
 # PointNet Model Description

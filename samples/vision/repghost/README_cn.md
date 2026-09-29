@@ -8,6 +8,24 @@ RepGhost 是面向硬件高效部署的轻量级 CNN 模型家族，通过将特
 - **论文**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
 - **参考实现**: [ChengpengChen/RepGhost](https://github.com/ChengpengChen/RepGhost)
 
+源 README 提炼的特性：
+
+- **结构重参数化**——把训练期的复杂分支转换为推理期的高效结构。
+- **隐式特征复用**——把 GhostNet 式的特征复用从特征空间（`Concat`）
+  移到权重空间，避免昂贵的内存拷贝。
+- **硬件效率**——减少内存拷贝开销，提升边缘设备部署效率。
+- **变体缩放**——提供 `100` 到 `200` 多个发布变体。
+
+![RepGhost bottleneck 与 Ghost bottleneck 对比：训练期 add 分支在推理
+期融合](./test_data/RepGhost_architecture.png)
+
+*图（上游论文 Fig. 4）：(a) 带 `Concat` 显式特征复用的 Ghost
+bottleneck；(b) 训练期 RG-bneck——复用经 `add` 分支移入权重空间；
+(c) 推理期 RG-bneck——分支已融合消失。恢复自 X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864）；图中为上游结构，实际部署
+制品是 INT8 量化的 100–200 变体（224×224 NV12，见
+[支持与实测矩阵](#support-matrix)）。*
+
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
 
 <a id="support-matrix"></a>
@@ -73,6 +91,15 @@ python3 samples/vision/repghost/runtime/python/main.py \
 ## 预期结果
 
 默认变体 `100` 保留源入口选择；`111`、`130`、`150`、`200` 需显式指定。分数沿用源 softmax 策略，完全平局时按类别 ID 升序稳定排序。ibex 图片用于功能检查，不代表数据集精度；当前尚无迁移后的板端参考输出。仅指定 `--img-save-path` 才保存图像。
+
+供参考：X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
+截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
+`ibex.JPEG` 的 rank 1 为 class 350（ibex, Capra ibex）。这是源交付中的
+历史截图，不是本仓库当前入口的运行结果。
+
+![X5 源 README 的历史推理截图：ibex 测试图与旧版 Top-5 叠加，rank 1 为
+class 350（ibex, Capra ibex）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

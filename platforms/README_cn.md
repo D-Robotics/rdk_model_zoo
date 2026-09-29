@@ -15,7 +15,7 @@
 ## 三种路径各自的用途
 
 - 根 `samples/`：统一维护的 Sample，详见 [完整索引](../samples/README_cn.md)。不再只有最初三个试点。
-- 根 `docs/release/x5`、`docs/release/s`：当前制品身份、URL、发布事实及历史指标的维护位置；`tools/catalog-publisher` 从注册表定位这些清单。原平台清单保留作迁移来源记录，不应更新两份产生分叉。
+- 根 `docs/release/x5`、`docs/release/s`：当前制品身份、URL、发布事实及历史指标的维护位置；`tools/catalog-publisher` 从其自身的 `sources.json` 解析这些清单路径；`platforms/registry.json` 由测试与该配置交叉核对，构建本身不读取注册表。原平台清单保留作迁移来源记录，不应更新两份产生分叉。
 - `platforms/{x5,s}/`：原平台资料、尚未迁移的能力和旧入口兼容层。部分入口已转发到根 Sample，单独复制子目录可能缺少依赖，通常需要完整仓库。
 
 历史标签中的 `samples/`、`docs/release/` 或 `release/` 位于当时仓库根目录。清单 `source.path` 必须按对应标签布局解析，不能在旧标签路径前强加 `platforms/`。
@@ -32,6 +32,8 @@ X5 与 S 都使用名为 `hbm_runtime` 的模块，但底层 SDK 和模型不通
 - S：[仓库规范](s/docs/Model_Zoo_Repository_Guidelines.md)、[Python API](s/docs/Python_API_User_Guide.md)、[UCP](s/docs/UCP_User_Guide.md)、[数据集](s/datasets)、speech/VLA 源 Sample。
 - ACT/Pi0 仍由根 [.gitmodules](../.gitmodules) 记录 gitlink 入口；引用上游仓库不等于本次已经迁移或验收。
 - X3：保留 `demos/`、`resource/`、`release/` 的历史结构，不强套 X5/S 新目录规范。
+- 原分支在线资源继承自 X5（`ac11571`）、S（`380e1a2`）归档根指南：[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)、[GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)、[D-Robotics 开发者社区](https://developer.d-robotics.cc/) 及 [RDK 用户手册](https://developer.d-robotics.cc/information)。它们描述交付分支的已发布内容；浏览已发布目录不代表本整合分支通过验收，此处也不声明链接的实时可用性。各平台工具链手册仍保留在归档指南中，不在此重新声明其为当前内容。
+- 历史条目是归档，不是适配目标：X5 历史 demo 在 [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) 归档分支，S 历史 demo 在独立 [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) 仓库。`rdk_x5`/`rdk_s` 交付线仍以上表登记为准。
 
 原平台 README 保留了硬件背景、模型列表、FAQ、转换/运行说明和社区入口。新增共用 Sample 按 [推理契约](../docs/sample-standards/inference-contract.md) 与 [README 契约](../docs/sample-standards/readme-contract.md) 开发；当前范围见 [计划](../docs/superpowers/plans/2026-09-26-host-completion.md) 与 [迁移台账](../docs/releases/unified-migration/x5-s-migration-map.md)。
 

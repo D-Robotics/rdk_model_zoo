@@ -24,7 +24,7 @@ S100P has no YOLOv5 asset. Every manifest publisher checksum is `sha256: null (u
 <a id="preparation"></a>
 ## Preparation
 
-Run from the repository root in an environment where explicit network access is allowed. This migration did not run it:
+Run from the repository root in an environment where explicit network access is allowed. The 2026-09-24 board rounds obtained the compared artifacts through this same downloader, executed there in its default-target form (see the [expanded-boards records](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)); the spelling with explicit `--variant`/`--output-dir` below was not itself the executed argv, and this tree performs no new download:
 
 ```bash
 python3 -m samples.vision.yolov5.model.download \
@@ -49,7 +49,7 @@ With the commands above, X5 files are under `samples/vision/yolov5/model/`; S fi
 <a id="formats-checksums"></a>
 ## Formats and checksums
 
-X5 artifacts are flat `.bin` Bayes-e/NV12 deployments at 640x640. S artifacts are target-relative `.hbm` Nash-e deployments at 672x672 with split NV12 inputs. The manifest does not record publisher SHA-256 values; local observed hashes printed by the downloader are evidence of downloaded bytes only.
+X5 artifacts are flat `.bin` Bayes-e/NV12 deployments at 640x640. S artifacts are target-relative `.hbm` Nash-e deployments at 672x672 with split NV12 inputs. The manifest does not record publisher SHA-256 values; local observed hashes printed by the downloader are evidence of downloaded bytes only. The 2026-09-24 board evidence archives record the observed digests of the exact published artifacts those rounds downloaded (linked above).
 
 <a id="license"></a>
 ## License

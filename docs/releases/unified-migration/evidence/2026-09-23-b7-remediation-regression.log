@@ -1,0 +1,245 @@
+=== B7 remediation regression (final): 2026-09-23T08:11:16Z ===
+=== base commit d28d8c9b042e2b92823c8b57f77b80c2a4ac0fb2 branch codex/b7-remediation-20260923 ===
+=== Python 3.12.14 ===
+
+### CI step 1: checker unit tests
+test_external_links_are_out_of_scope (test_check.BrokenLinkTests.test_external_links_are_out_of_scope) ... ok
+test_local_and_fragment_links_fail_with_lines (test_check.BrokenLinkTests.test_local_and_fragment_links_fail_with_lines) ... ok
+test_parser_default_forms (test_check.CanonicalizationTests.test_parser_default_forms) ... ok
+test_readme_default_forms (test_check.CanonicalizationTests.test_readme_default_forms) ... ok
+test_drift_lines_point_at_table_rows (test_check.CliDriftTests.test_drift_lines_point_at_table_rows) ... ok
+test_drift_missing_and_extra_options_reported_per_language (test_check.CliDriftTests.test_drift_missing_and_extra_options_reported_per_language) ... ok
+test_static_mode_skips_cli_without_claiming_pass (test_check.CliDriftTests.test_static_mode_skips_cli_without_claiming_pass) ... ok
+test_exemptions_without_reason_are_rejected (test_check.ExemptionTests.test_exemptions_without_reason_are_rejected) ... ok
+test_matching_exemption_suppresses_one_finding (test_check.ExemptionTests.test_matching_exemption_suppresses_one_finding) ... ok
+test_message_pinned_exemption_rejects_other_message (test_check.ExemptionTests.test_message_pinned_exemption_rejects_other_message) ... ok
+test_message_pinned_exemption_tolerates_only_that_finding (test_check.ExemptionTests.test_message_pinned_exemption_tolerates_only_that_finding) ... ok
+test_multi_sample_run_has_no_phantom_unused_exemptions (test_check.ExemptionTests.test_multi_sample_run_has_no_phantom_unused_exemptions) ... ok
+test_unused_exemption_is_itself_a_violation (test_check.ExemptionTests.test_unused_exemption_is_itself_a_violation) ... ok
+test_cli_defaults_actually_verified_in_import_mode (test_check.GoodSampleTests.test_cli_defaults_actually_verified_in_import_mode) ... ok
+test_compliant_fixture_passes_with_exit_zero (test_check.GoodSampleTests.test_compliant_fixture_passes_with_exit_zero) ... ok
+test_stage_purity_reports_policy_skip_visibly (test_check.GoodSampleTests.test_stage_purity_reports_policy_skip_visibly) ... ok
+test_missing_main_py_is_a_skip_not_a_pass (test_check.I18nParamsTests.test_missing_main_py_is_a_skip_not_a_pass) ... ok
+test_option_set_and_default_mismatch_between_languages (test_check.I18nParamsTests.test_option_set_and_default_mismatch_between_languages) ... ok
+test_parser_import_failure_is_recorded_as_skip (test_check.ImportFailureTests.test_parser_import_failure_is_recorded_as_skip) ... ok
+test_chinese_readme_stays_clean (test_check.MissingSectionTests.test_chinese_readme_stays_clean) ... ok
+test_missing_duplicate_and_order_findings_with_lines (test_check.MissingSectionTests.test_missing_duplicate_and_order_findings_with_lines) ... ok
+test_missing_chinese_readme_reported_at_model_level (test_check.PairingTests.test_missing_chinese_readme_reported_at_model_level) ... ok
+test_json_report_file_is_written (test_check.ReportTests.test_json_report_file_is_written) ... ok
+test_infrastructure_rows_are_excluded_by_tilde_marker (test_check.ScopeTests.test_infrastructure_rows_are_excluded_by_tilde_marker) ... ok
+test_migration_scope_reads_refactor_column_of_progress_region (test_check.ScopeTests.test_migration_scope_reads_refactor_column_of_progress_region) ... ok
+test_download_save_subprocess_calls_flagged_with_lines (test_check.StagePurityTests.test_download_save_subprocess_calls_flagged_with_lines) ... ok
+test_non_stage_helpers_are_not_flagged (test_check.StagePurityTests.test_non_stage_helpers_are_not_flagged) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 0.040s
+
+OK
+### rc=0
+
+### CI step 2: migration checker (flags from .github/workflows/sample-contract.yml; report path differs)
+sample: samples/vision/ultralytics_yolo
+  skipped R-CLI-DEFAULTS samples/vision/ultralytics_yolo/runtime/python/README.md: no parameters section (see R-README-SECTIONS)
+  skipped R-CLI-DEFAULTS samples/vision/ultralytics_yolo/runtime/python/README_cn.md: no parameters section (see R-README-SECTIONS)
+  skipped R-STAGE-PURITY samples/vision/ultralytics_yolo/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/model/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/python/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/runtime/cpp/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/conversion/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+  exempted R-README-SECTIONS samples/vision/ultralytics_yolo/evaluator/README_cn.md:0 — Pre-existing ultralytics_yolo README-section debt deferred to B9 by the migration plan (B1-R6 baseline); exact finding pinned by message. Remove at B9.
+sample: samples/vision/resnet
+  skipped R-STAGE-PURITY samples/vision/resnet/runtime/python/legacy.py: policy skip: documented compatibility shim (inference-contract §4)
+  skipped R-STAGE-PURITY samples/vision/resnet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/paddle_ocr
+  skipped R-STAGE-PURITY samples/vision/paddle_ocr/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/mobilenetv1
+  skipped R-STAGE-PURITY samples/vision/mobilenetv1/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/mobilenetv2
+  skipped R-STAGE-PURITY samples/vision/mobilenetv2/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/mobilenetv3
+  skipped R-STAGE-PURITY samples/vision/mobilenetv3/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/mobilenetv4
+  skipped R-STAGE-PURITY samples/vision/mobilenetv4/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/efficientnet
+  skipped R-STAGE-PURITY samples/vision/efficientnet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/efficientformer
+  skipped R-STAGE-PURITY samples/vision/efficientformer/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/efficientformerv2
+  skipped R-STAGE-PURITY samples/vision/efficientformerv2/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/efficientvit
+  skipped R-STAGE-PURITY samples/vision/efficientvit/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/convnext
+  skipped R-STAGE-PURITY samples/vision/convnext/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/edgenext
+  skipped R-STAGE-PURITY samples/vision/edgenext/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/fasternet
+  skipped R-STAGE-PURITY samples/vision/fasternet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/fastvit
+  skipped R-STAGE-PURITY samples/vision/fastvit/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/repghost
+  skipped R-STAGE-PURITY samples/vision/repghost/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/repvgg
+  skipped R-STAGE-PURITY samples/vision/repvgg/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/repvit
+  skipped R-STAGE-PURITY samples/vision/repvit/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/mobileone
+  skipped R-STAGE-PURITY samples/vision/mobileone/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/resnext
+  skipped R-STAGE-PURITY samples/vision/resnext/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/vargconvnet
+  skipped R-STAGE-PURITY samples/vision/vargconvnet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/googlenet
+  skipped R-STAGE-PURITY samples/vision/googlenet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/hgnetv2
+  skipped R-STAGE-PURITY samples/vision/hgnetv2/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/clip
+  skipped R-STAGE-PURITY samples/vision/clip/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/siglip
+  skipped R-STAGE-PURITY samples/vision/siglip/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/dinov2
+  skipped R-STAGE-PURITY samples/vision/dinov2/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/vit
+  skipped R-STAGE-PURITY samples/vision/vit/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/3dresnet
+  skipped R-STAGE-PURITY samples/vision/3dresnet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/efficient_sam
+  skipped R-STAGE-PURITY samples/vision/efficient_sam/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/mobile_sam
+  skipped R-STAGE-PURITY samples/vision/mobile_sam/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/yolov5
+  skipped R-STAGE-PURITY samples/vision/yolov5/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/fcos
+  skipped R-STAGE-PURITY samples/vision/fcos/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/yoloworld
+  skipped R-STAGE-PURITY samples/vision/yoloworld/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/lprnet
+  skipped R-STAGE-PURITY samples/vision/lprnet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/modnet
+  skipped R-STAGE-PURITY samples/vision/modnet/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+sample: samples/vision/bytetrack
+  skipped R-STAGE-PURITY samples/vision/bytetrack/runtime/python/main.py: policy skip: CLI layer: saving output and argument handling live here
+summary: 36 samples, 0 violations, 39 skips, 84 exemptions applied
+### rc=0
+
+### git diff --check
+### rc=0
+
+### Full host regression: unittest discover -s <suite> for every suite
+samples/_shared/tests                         Ran 101 tests in 0.541s OK 
+samples/vision/3dresnet/tests                 Ran 16 tests in 0.814s FAILED (failures=1) 
+samples/vision/bytetrack/tests                Ran 11 tests in 1.411s OK 
+samples/vision/clip/tests                     Ran 15 tests in 1.181s OK 
+samples/vision/convnext/tests                 Ran 28 tests in 0.515s OK 
+samples/vision/dinov2/tests                   Ran 18 tests in 0.715s OK 
+samples/vision/edgenext/tests                 Ran 26 tests in 0.790s OK 
+samples/vision/efficient_sam/tests            Ran 19 tests in 0.888s OK 
+samples/vision/efficientformer/tests          Ran 25 tests in 0.604s OK 
+samples/vision/efficientformerv2/tests        Ran 26 tests in 0.701s OK 
+samples/vision/efficientnet/tests             Ran 28 tests in 1.640s OK 
+samples/vision/efficientvit/tests             Ran 27 tests in 0.517s OK 
+samples/vision/fasternet/tests                Ran 28 tests in 0.787s OK 
+samples/vision/fastvit/tests                  Ran 28 tests in 0.795s OK 
+samples/vision/fcos/tests                     Ran 24 tests in 0.951s OK 
+samples/vision/googlenet/tests                Ran 10 tests in 0.503s OK 
+samples/vision/hgnetv2/tests                  Ran 16 tests in 0.482s OK 
+samples/vision/lprnet/tests                   Ran 12 tests in 0.098s OK 
+samples/vision/mobile_sam/tests               Ran 17 tests in 0.906s OK 
+samples/vision/mobilenetv1/tests              Ran 17 tests in 1.144s OK 
+samples/vision/mobilenetv2/tests              Ran 24 tests in 1.200s OK 
+samples/vision/mobilenetv3/tests              Ran 17 tests in 1.145s OK 
+samples/vision/mobilenetv4/tests              Ran 20 tests in 1.623s OK 
+samples/vision/mobileone/tests                Ran 10 tests in 0.512s OK 
+samples/vision/modnet/tests                   Ran 12 tests in 0.228s OK 
+samples/vision/paddle_ocr/tests               Ran 44 tests in 0.658s OK 
+samples/vision/repghost/tests                 Ran 8 tests in 0.494s OK 
+samples/vision/repvgg/tests                   Ran 10 tests in 0.513s OK 
+samples/vision/repvit/tests                   Ran 10 tests in 0.498s OK 
+samples/vision/resnet/tests                   Ran 52 tests in 0.792s OK 
+samples/vision/resnext/tests                  Ran 10 tests in 0.501s OK 
+samples/vision/siglip/tests                   Ran 19 tests in 0.688s OK 
+samples/vision/ultralytics_yolo/tests         Ran 78 tests in 17.096s FAILED (errors=2) 
+samples/vision/vargconvnet/tests              Ran 10 tests in 0.502s OK 
+samples/vision/vit/tests                      Ran 13 tests in 0.638s OK 
+samples/vision/yolov5/tests                   Ran 32 tests in 7.137s OK 
+samples/vision/yoloworld/tests                Ran 18 tests in 0.795s OK 
+tools/catalog-publisher/tests                 Ran 0 tests in 0.000s 
+tools/sample_contract/tests                   Ran 27 tests in 0.041s OK 

@@ -8,6 +8,35 @@ Networks](https://arxiv.org/abs/2303.03667)，按源交付引用）。[English](
 <a id="overview"></a>
 ## 概述
 
+FasterNet 是围绕一个核心思想设计的轻量 CNN 系列：追求更高的*有效*
+FLOPS（实际每秒计算量），而不是只压低理论 FLOPs。其核心算子部分卷积
+（PConv）只对输入通道的一部分做空间卷积、其余通道保持不动，从而减少
+冗余访存，提升边缘设备上的实际运行效率。面向 ImageNet-1k 1000 类分类。
+源 README 提炼的四项特性：
+
+- **高 FLOPS 设计**——强调实际计算效率，而不是只最小化理论 FLOPs。
+- **部分卷积（PConv）**——减少冗余计算与内存访问。
+- **轻量 CNN 骨干**——保持对部署友好的 CNN 结构，便于板端高效推理。
+- **高效部署**——提供 S、T0、T1、T2 四个 RDK X5 部署模型，使用打包
+  NV12 输入。
+
+![与其他网络在 CPU 上的有效 FLOPS 与延迟对比](./test_data/FLOPs%20of%20Nets.png)
+
+*图（上游论文 Fig. 2）：(a) CPU 上不同 FLOPs 对应的 FLOPS——许多网络的
+有效 FLOPS 低于 ResNet50，FasterNet 保持更高；(b) CPU 上不同 FLOPs 对应
+的延迟——同等 FLOPs 下 FasterNet 更快。恢复自 X5 源 README（rdk_x5
+@ac11571，x5-v1.1.3）；图中条件为上游 CPU 测量，不是 RDK 板端数据（板端
+数字见[性能数据](#performance)）。*
+
+![FasterNet 架构：四级层级结构与含部分卷积的 FasterNet block](./test_data/FasterNet_architecture.png)
+
+*图（上游论文 Fig. 4）：整体架构——四级层级堆叠 FasterNet block，前置
+embedding/merging 层；PConv 细节（只对部分通道卷积）与 block 布局
+PConv 3×3 → 两层逐点卷积，归一化与激活只放在中间层之后以保留特征多样性。
+恢复自 X5 源 README（rdk_x5 @ac11571）；图中为上游训练结构，实际部署
+制品是 INT8 量化的 s/t0/t1/t2 变体（224×224 NV12，见
+[支持与实测矩阵](#support-matrix)）。*
+
 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
 核验板卡身份，懒加载 `hbm_runtime`，执行
@@ -79,6 +108,14 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并�
 `test_data/result.jpg`——该副作用已移除）。使用随附 `drake.JPEG` 时
 Top-5 含鸭相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部
 S 目标）会显式报错退出。
+
+供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
+下面的截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，
+rank 1 为 class 97（drake）。这是源交付中的历史截图，不是本仓库当前
+入口的运行结果。
+
+![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：drake 测试图与旧版
+Top-5 叠加，rank 1 为 class 97（drake）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

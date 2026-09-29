@@ -8,6 +8,37 @@ RepViT 从轻量级 ViT 的角度重新审视移动端 CNN 设计。该模型保
 - **论文**：[RepViT: Revisiting Mobile CNN From ViT Perspective](http://arxiv.org/abs/2307.09283)
 - **参考实现**：[THU-MIG/RepViT](https://github.com/THU-MIG/RepViT)
 
+源 README 提炼的特性：
+
+- **ViT 视角的移动端 CNN**——从轻量级 ViT 视角重新审视
+  MobileNet 式架构。
+- **结构重参数化**——把训练期的结构分支（3×3DW 带 1×1DW 分支）融合为
+  单条 3×3DW，加快部署期推理。
+- **混合器分离**——在同一个 block 内部，token 混合部分（3×3 深度卷积，
+  SE 变体另加 SE）与通道混合部分（1×1 FFN）解耦并先后堆叠，替代
+  MobileNetV3 中两者同处倒瓶颈 block 内部的布局——并非两个独立的网络块。
+- **高效部署**——提供 m0.9、m1.0、m1.1 三个 RDK X5 部署模型，使用
+  打包 NV12 输入。
+
+![RepViT 架构总览：stem、四个 stage、block 与 SE 变体](./test_data/RepViT_architecture.png)
+
+*图（上游论文 Fig. 3）：四级结构总览。stem：两层堆叠的 stride-2 3×3
+卷积。stage 内 RepViTBlock（黄色）：3×3DW token 混合器与并行的 1×1DW
+分支经残差相加，后接 FFN 通道混合器。stage 间下采样单元（橙色）：先在
+本 stage 分辨率上过一个 RepViTBlock，再经 stride-2 3×3DW、1×1 和 FFN
+——分辨率减半、通道 C_i 映射到 C_i+1。RepViTSEBlock（绿色）：相同结构
+在 token 混合器与 FFN 之间加入 SE 模块。底部：推理期并行的 3×3DW +
+1×1DW 分支融合为单个 3×3DW。恢复自 X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864）。*
+
+![深度卷积 block：从 MobileNetV3 block 到混合器分离的 RepViT block](./test_data/RepViT_DW.png)
+
+*图（上游论文 Fig. 4）：(a) 带可选 squeeze-and-excite 的 MobileNetV3
+block；(b) 结构重参数化通过挪动深度卷积与 SE 层，把 token 混合器
+（3×3DW）与通道混合器（1×1）分离；(c) 推理期把多分支拓扑合并为单分支。
+结合上图即可理解部署制品为何是已融合的 INT8 m0_9/m1_0/m1_1 变体
+（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
+
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
 
 <a id="support-matrix"></a>
@@ -65,6 +96,15 @@ python3 samples/vision/repvit/runtime/python/main.py \
 ## 预期结果
 
 默认变体 `m0_9` 保留源入口选择，其余变体 `m1_0`、`m1_1` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`yurt.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+
+供参考：X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
+截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
+`yurt.JPEG` 的 rank 1 为 class 915（yurt）。这是源交付中的历史截图，
+不是本仓库当前入口的运行结果。
+
+![X5 源 README 的历史推理截图：yurt 测试图与旧版 Top-5 叠加，rank 1 为
+class 915（yurt）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

@@ -60,11 +60,13 @@ std::vector<int> order_heads_by_shape(const std::vector<HeadShape>& heads,
 std::vector<Detection> decode_heads(
     const std::vector<std::vector<float>>& raw_heads,
     const std::vector<HeadShape>& heads, int input_size, int classes,
-    float score_threshold, float nms_threshold,
+    const DecodePolicy& policy,
     const std::array<float, 18>& anchors) {
-  if (raw_heads.size() != heads.size() || !std::isfinite(score_threshold) ||
-      !std::isfinite(nms_threshold) || score_threshold < 0.0F ||
-      nms_threshold < 0.0F || nms_threshold > 1.0F)
+  if (raw_heads.size() != heads.size() || !std::isfinite(policy.score_threshold) ||
+      !std::isfinite(policy.nms_threshold) || policy.score_threshold < 0.0F ||
+      policy.score_threshold > 1.0F || policy.nms_threshold < 0.0F ||
+      policy.nms_threshold > 1.0F || policy.top_k_per_class == 0 ||
+      policy.top_k_per_class < -1)
     throw std::invalid_argument("Invalid YOLOv5 decode arguments");
   const auto ordered = order_heads_by_shape(heads, input_size, classes);
   const int channels = 3 * (5 + classes);
@@ -91,7 +93,10 @@ std::vector<Detection> decode_heads(
           for (int candidate = 1; candidate < classes; ++candidate)
             if (raw[base + 5 + candidate] > raw[base + 5 + cls]) cls = candidate;
           const float score = objectness * sigmoid(raw[base + 5 + cls]);
-          if (!std::isfinite(score) || score < score_threshold) continue;
+          if (!std::isfinite(score)) continue;
+          if (policy.strict_score_boundary ? !(score > policy.score_threshold)
+                                           : score < policy.score_threshold)
+            continue;
           const float cx = (2.0F * sigmoid(raw[base]) - 0.5F + x) * stride;
           const float cy = (2.0F * sigmoid(raw[base + 1]) - 0.5F + y) * stride;
           const float w = std::pow(2.0F * sigmoid(raw[base + 2]), 2.0F) * anchors[level * 6 + a * 2];
@@ -107,12 +112,21 @@ std::vector<Detection> decode_heads(
   });
   std::vector<Detection> result;
   std::vector<bool> suppressed(candidates.size(), false);
+  std::vector<int> kept_per_class(static_cast<std::size_t>(classes), 0);
   for (std::size_t i = 0; i < candidates.size(); ++i) {
     if (suppressed[i]) continue;
+    const int cls = candidates[i].class_id;
+    // Candidates are sorted by descending score, so once a class reaches its
+    // cap every remaining candidate of that class is dropped as well; this is
+    // the source X5 NMSBoxes top_k break.
+    if (policy.top_k_per_class > 0 && kept_per_class[static_cast<std::size_t>(cls)] >=
+                                          policy.top_k_per_class)
+      continue;
     result.push_back(candidates[i]);
+    ++kept_per_class[static_cast<std::size_t>(cls)];
     for (std::size_t j = i + 1; j < candidates.size(); ++j) {
       if (!suppressed[j] && candidates[i].class_id == candidates[j].class_id &&
-          iou(candidates[i], candidates[j]) > nms_threshold)
+          iou(candidates[i], candidates[j]) > policy.nms_threshold)
         suppressed[j] = true;
     }
   }

@@ -1,0 +1,108 @@
+{
+  "stage": "N1 native SDK blocker remediation (S100 compile + per-side SDK adaptation)",
+  "utc": "2026-09-24T08:25:16Z",
+  "base_commit": "5fc14a4995110990f2abaa6ec8189d052a0195e6",
+  "branch": "codex/b7-local-glm-20260924",
+  "worktree": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-local-glm",
+  "author": "local Claude Code + GLM (author side; not an independent review)",
+  "inputs": {
+    "sdk_review": "docs/releases/unified-migration/2026-09-24-b7-native-sdk-review.md (read-only, coordinator)",
+    "sdk_preflight_evidence": "docs/releases/unified-migration/evidence/2026-09-24-b7-native-sdk-preflight.json",
+    "board_logs": [
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/b7-native-s100.json (rc=2, first error: dnn/hb_dnn.h not found; real header at /usr/include/hobot/dnn/hb_dnn.h)",
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/b7-native-x5.json (rc=0 build+link on x5-8g)",
+      "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/b7-x5-first-inference.json (rc=0 launcher run on x5-8g)"
+    ]
+  },
+  "verified_sdk_facts_applied": {
+    "s100_hbDNNTensorProperties": "validShape/tensorType/scale/quantiType/quantizeAxis/alignedByteSize(int64)/stride(int64[]); NO alignedShape, NO tensorLayout, NO shift",
+    "s100_hbDNNQuantiType": "NONE, SCALE only (no SHIFT)",
+    "s100_zeroPointData": "int32_t* (X5 uses int8_t*)",
+    "s100_sysMem": "single hbUCPSysMem (X5: hbSysMem sysMem[4])",
+    "s100_headers": "hobot/dnn/hb_dnn.h exists; dnn/hb_dnn_ext.h does NOT exist; hobot/hb_ucp.h used by the fixed source",
+    "tensor_type_names_on_s100": "only F32/S32/U32/F64/S64/U64/BOOL8 confirmed by evidence; the repo's proven S-side code references no HB_DNN_TENSOR_TYPE_* by name, so s_adapter now maps only F32/S32 and rejects everything else as unknown"
+  },
+  "changes": [
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/CMakeLists.txt",
+      "sha256": "fc8a3d1888a43f769bf278e1746e1cabfad1594487999e56ed95d85817a1670f",
+      "note": "S include roots now /usr/hobot/include, /usr/include/hobot/dnn, /usr/include/hobot (mirrors the fixed S delivery CMake); X5 branch unchanged"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/src/s_adapter.cpp",
+      "sha256": "cfdc1933a6702ff4771c1f8143de435a704409dbacbef81c96fc93290b15c609",
+      "note": "includes hobot/dnn/hb_dnn.h + hobot/hb_ucp.h (hb_dnn_ext.h include removed); project() no longer reads alignedShape (field absent on S100); quanti_code drops SHIFT (enum absent); tensor_dtype_code maps only evidence-confirmed names; raw dump copies the full alignedByteSize extent instead of a compact count*4 prefix"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/src/x5_adapter.cpp",
+      "sha256": "6d1b9269e4c477fb632cc6a46879f7e55829e1ce0b3b7f893a5cf877219b5f26",
+      "note": "keeps the X5 spellings (alignedShape/SHIFT/hb_dnn_ext.h/hbSys* all proven by the rc=0 real build); uses the shared dump helper; dead shape_of removed"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/include/yolov5_gate.hpp",
+      "sha256": "c426d651bf0a3de19521f87a78b05903f5e9761942c6f14ed7facc27ef46c39e",
+      "note": "check_s32_dequant contract documented as the fixed-source addressing formula; shared dtype_name/quanti_name declared"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/src/yolov5_gate.cpp",
+      "sha256": "4ab4a843e0f984a43daa9040a6268e87a1221575f85d2240a76f988d878d10ba",
+      "note": "check_s32_dequant now accepts genuinely supported padded layouts (stride[2] > W*stride[3] row padding, stride[3] >= element size and element-aligned) and requires stride[1] == width*stride[2] plus allocation covering the padded extent (last addressed byte), matching what the fixed-source dequantizeTensorS32 actually reads; X5 gates unchanged"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/include/yolov5_dump.hpp",
+      "sha256": "86f7525fa626c4d9e7ddd5d95609ed0b94bae59bf67232a83ad790f2ed1f3df3",
+      "note": "DumpTensorInfo gains aligned_byte_size/stride[4]/aligned[4] (unreported -> null); dump_tensor_info(name, meta) helper"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/src/yolov5_dump.cpp",
+      "sha256": "e02a3f4611c53aa0c8bebd4b19856512304f0d491666ce8eddf2b274c61a3ca4",
+      "note": "manifest schema bumped to rdk-model-zoo/yolov5-cpp-dump/v2; tensor info serializes the layout fields with null for unreported"
+    },
+    {
+      "path": "samples/vision/yolov5/tests/cpp/portable_checks.cpp",
+      "sha256": "ed43bdfcac7fa103013f922d97e07bd390acdbaa8226009720b2b1e731e94f03",
+      "note": "s32_output fixture extended (channel_stride/inner_stride/aligned_bytes); new cases: row-padded accept, padded-extent undersized reject, H-padding reject, channel-stride 8 accept, 6 and 2 reject"
+    },
+    {
+      "path": "samples/vision/yolov5/tests/test_cpp_contract.py",
+      "sha256": "b28f2c69d32efc746c693baa0b6a4a05eec8d8787fa12747a230f145b5bad6ab",
+      "note": "schema v2 assertions + new tensor-info layout-field assertions; three new SDK-shape tests compile s_adapter against an S100-shaped stub header set (would have failed on the pre-fix adapter), assert s_adapter does NOT compile against an X5-shaped set, and compile x5_adapter against an X5-shaped set"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/README.md",
+      "sha256": "4fa5b1918c6b75ecab35497c2d19470dded4583b83dbf4e3724655b859a99ee7",
+      "note": "interface-lifecycle and results-interpretation sections updated for the S addressing contract, dump v2 layout fields, full-extent S raw dump, and the 2026-09-24 coordinator board facts"
+    },
+    {
+      "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+      "sha256": "9262c0800c03b74e18adf61a32bedfef31bc4341de20b6a477e375eb336b8020",
+      "note": "same updates in Chinese, kept in sync"
+    }
+  ],
+  "host_verification": {
+    "python": "3.14.7 (rdk_model_zoo/.venv, read-only)",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "commands": [
+      {
+        "argv": ".venv/bin/python -m unittest discover -s samples/vision/yolov5/tests",
+        "returncode": 0,
+        "result": "35 tests OK (was 32 before this stage; +3 SDK-shape compile tests)"
+      },
+      {
+        "argv": "c++ -std=c++17 -Wall -Wextra -fsyntax-only -I<cpp/include> -I<s100-stub> -I<utils/c_utils/inc> src/s_adapter.cpp",
+        "returncode": 0,
+        "note": "stub header set reproduces the real S100 definitions from the preflight evidence (no alignedShape, NONE/SCALE only, int64 stride/alignedByteSize, single hbUCPSysMem, no hb_dnn_ext.h)"
+      },
+      {
+        "argv": "c++ -std=c++17 -Wall -Wextra -fsyntax-only -I<cpp/include> -I<x5-stub> src/x5_adapter.cpp",
+        "returncode": 0,
+        "note": "X5 stub reproduces the evidence X5 header block (alignedShape, SHIFT, sysMem[4], hbSys* API); X5 adapter untouched in behavior"
+      }
+    ]
+  },
+  "boundaries": {
+    "board": "not-run from this worktree (no board, SDK or model binary touched locally); the coordinator owns re-verification: rebuild s100/s100p/s600 targets, rerun the x5 build to guard against regressions, and fetch a dump manifest to confirm the recorded layout fields on a real artifact",
+    "x5_padded_layouts": "the fixed X5 source itself writes/reads compact buffers (main.cc:397 flat NV12 memcpy; main.cc:471/543/615 flat float reads), so the X5 gates keep requiring aligned==valid; a padded X5 artifact is rejected with a precise reason and its aligned/stride/alignedByteSize are recorded in the dump for a follow-up stride-addressed implementation with board evidence",
+    "s600_s100p": "same S adapter; SOC_S600 alignment macro handling unchanged from 5fc14a4"
+  }
+}

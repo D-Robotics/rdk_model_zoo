@@ -1,0 +1,63 @@
+=================================================================
+==82955==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x602000000b34 at pc 0x00010118bb44 bp 0x00016f60c500 sp 0x00016f60bcb0
+READ of size 6144 at 0x602000000b34 thread T0
+    #0 0x00010118bb40 in __asan_memmove+0x19c (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x8fb40)
+    #1 0x000100827de4 in float* std::__1::__constexpr_memmove[abi:nqe220106]<float, float const>(float*, float const*, std::__1::__element_count) constexpr_c_functions.h:227
+    #2 0x000100827bc4 in std::__1::pair<float const*, float*> std::__1::__copy_trivial_impl[abi:nqe220106]<float const, float>(float const*, float const*, float*) copy_move_common.h:64
+    #3 0x000100826ddc in std::__1::pair<float const*, float*> std::__1::__copy_impl::operator()[abi:nqe220106]<float const, float, 0>(float const*, float const*, float*) const copy.h:115
+    #4 0x000100862b10 in std::__1::pair<float const*, float*> std::__1::__copy_move_unwrap_iters[abi:nqe220106]<std::__1::__copy_impl, float const*, float const*, float*, 0>(float const*, float const*, float*) copy_move_common.h:94
+    #5 0x0001008628dc in std::__1::pair<float const*, float*> std::__1::__copy[abi:nqe220106]<float const*, float const*, float*>(float const*, float const*, float*) copy.h:122
+    #6 0x00010085bf80 in float* std::__1::copy[abi:nqe220106]<float const*, float*>(float const*, float const*, float*) copy.h:128
+    #7 0x00010085a010 in gemma4::PrepareBatchInputs(gemma4::TokenEmbeddings const&, std::__1::vector<long long, std::__1::allocator<long long>> const&, int, int, float const*, int) gemma4_text_inputs.cpp:125
+    #8 0x000100834ccc in gemma4::TextEngine::RunPrefillChunk(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, float const*) gemma4_text_engine.cpp:105
+    #9 0x0001008358fc in gemma4::TextEngine::PrefillSuffix(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, std::__1::vector<float, std::__1::allocator<float>> const*) gemma4_text_engine.cpp:134
+    #10 0x000100837880 in gemma4::TextEngine::ContinueGenerateStream(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, std::__1::function<bool (long long)>, std::__1::vector<float, std::__1::allocator<float>> const*) gemma4_text_engine.cpp:202
+    #11 0x000100836d78 in gemma4::TextEngine::ContinueGenerate(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, std::__1::vector<float, std::__1::allocator<float>> const*) gemma4_text_engine.cpp:178
+    #12 0x0001007fcac0 in main short-hidden.cpp:6
+    #13 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)
+
+0x602000000b34 is located 0 bytes after 4-byte region [0x602000000b30,0x602000000b34)
+allocated by thread T0 here:
+    #0 0x00010114c150 in _Znwm+0x74 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x50150)
+    #1 0x000100825140 in float* std::__1::__libcpp_allocate[abi:nqe220106]<float>(std::__1::__element_count, unsigned long) allocate.h:60
+    #2 0x000100825030 in std::__1::allocator<float>::allocate[abi:nqe220106](unsigned long) allocator.h:92
+    #3 0x000100824628 in std::__1::__allocation_result<std::__1::allocator_traits<std::__1::allocator<float>>::pointer, std::__1::allocator_traits<std::__1::allocator<float>>::size_type> std::__1::__allocate_at_least[abi:nqe220106]<std::__1::allocator<float>, std::__1::allocator_traits<std::__1::allocator<float>>>(std::__1::allocator<float>&, unsigned long) allocate_at_least.h:46
+    #4 0x000100823760 in std::__1::vector<float, std::__1::allocator<float>>::__vallocate[abi:nqe220106](unsigned long) vector.h:597
+    #5 0x00010082334c in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long, float const&) vector.h:171
+    #6 0x0001007fbe40 in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long, float const&) vector.h:168
+    #7 0x0001007fca04 in main short-hidden.cpp:5
+    #8 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow constexpr_c_functions.h:227 in float* std::__1::__constexpr_memmove[abi:nqe220106]<float, float const>(float*, float const*, std::__1::__element_count)
+Shadow bytes around the buggy address:
+  0x602000000880: fa fa 00 00 fa fa 00 00 fa fa 00 00 fa fa 00 03
+  0x602000000900: fa fa 00 00 fa fa 00 fa fa fa fd fd fa fa fd fd
+  0x602000000980: fa fa 00 00 fa fa fd fa fa fa fd fd fa fa fd fa
+  0x602000000a00: fa fa fd fd fa fa fd fa fa fa 00 fa fa fa fd fd
+  0x602000000a80: fa fa 04 fa fa fa fd fa fa fa fd fd fa fa 00 fa
+=>0x602000000b00: fa fa 00 fa fa fa[04]fa fa fa 00 00 fa fa 00 00
+  0x602000000b80: fa fa fd fd fa fa fa fa fa fa fa fa fa fa fa fa
+  0x602000000c00: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x602000000c80: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x602000000d00: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x602000000d80: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==82955==ABORTING

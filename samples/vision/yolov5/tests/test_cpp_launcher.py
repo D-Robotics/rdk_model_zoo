@@ -60,6 +60,33 @@ class CppLauncherTests(unittest.TestCase):
         core = self.invoke("--dry-run", "--target", "x5", "--bpu-core", "-2")
         self.assertEqual(core.returncode, 2)
 
+    def test_x5_defaults_to_the_cpp_source_variant_not_the_python_default(self):
+        # The fixed X5 C++ source (runtime/cpp/main.cc) defaults to s-v2.0 while
+        # the unified Python runtime defaults to n-v7.0; the native launcher must
+        # keep the C++ source default rather than silently inheriting the other.
+        default = self.invoke("--dry-run", "--target", "x5")
+        self.assertEqual(default.returncode, 0, default.stderr)
+        payload = json.loads(default.stdout)
+        self.assertEqual(payload["variant"], "s-v2.0")
+        self.assertEqual(
+            payload["filename"], "yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin"
+        )
+        python_default = self.invoke("--dry-run", "--target", "x5", "--variant", "n-v7.0")
+        self.assertEqual(python_default.returncode, 0, python_default.stderr)
+        self.assertEqual(
+            json.loads(python_default.stdout)["variant"], "n-v7.0"
+        )
+
+    def test_x5_rejects_unapplied_scheduling_parameters(self):
+        priority = self.invoke("--dry-run", "--target", "x5", "--priority", "3")
+        self.assertEqual(priority.returncode, 2)
+        self.assertIn("no verified HB-DNN scheduling mapping", priority.stderr)
+        core = self.invoke("--dry-run", "--target", "x5", "--bpu-core", "2")
+        self.assertEqual(core.returncode, 2)
+        # The S adapter does apply them, so the same values stay valid there.
+        s_target = self.invoke("--dry-run", "--target", "s600", "--priority", "3", "--bpu-core", "2")
+        self.assertEqual(s_target.returncode, 0, s_target.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

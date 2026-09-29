@@ -99,12 +99,18 @@ def apply_output_transform(
     return result
 
 
-def dequantize_tensor(q_tensor: Any, quant_info: Any) -> Any:
+def dequantize_tensor(q_tensor: Any, quant_info: Any, *, dtype: str = "float32") -> Any:
     """Dequantize one tensor with its runtime quantization descriptor.
 
+    ``dtype`` controls the floating comparison precision (float32 by default;
+    float64 preserves fine int32 differences for segmentation argmax).
+
     Ported from the delivery branches' ``utils/py_utils/postprocess.py``
-    (source of record: rdk_s @ 380e1a2).  Per-tensor and per-channel SCALE
-    dequantization are supported; descriptors whose ``quant_type`` is not
+    (source of record: rdk_s @ 380e1a2), with the scalar zero-point broadcast
+    corrected: a single offset applies to every channel instead of being
+    discarded. Empty zero-points still mean symmetric quantization (zero).
+    Per-tensor and per-channel SCALE dequantization are supported; descriptors
+    whose ``quant_type`` is not
     SCALE are passed through unchanged, exactly like the source helper.
     """
 
@@ -115,24 +121,27 @@ def dequantize_tensor(q_tensor: Any, quant_info: Any) -> Any:
     if quant_type_name not in ("SCALE", "1"):
         return q_tensor
 
+    floating_dtype = np.dtype(dtype)
+    if floating_dtype not in (np.dtype("float32"), np.dtype("float64")):
+        raise OutputTransformError("Dequantization dtype must be float32 or float64.")
     scale = np.asarray(quant_info.scale)
-    zero_point = np.asarray(quant_info.zero_point).astype(np.float32)
+    zero_point = np.asarray(quant_info.zero_point).astype(floating_dtype)
     if zero_point.size == 0:
-        zero_point = np.zeros((1,), dtype=np.float32)
+        zero_point = np.zeros((1,), dtype=floating_dtype)
 
     tensor = np.asarray(q_tensor)
     if scale.ndim == 0 or tensor.ndim == 1 or scale.size == 1:
         # Per-tensor dequantization
-        return (tensor.astype(np.float32) - zero_point.reshape(-1)[0]) * scale
+        return (tensor.astype(floating_dtype) - zero_point.reshape(-1)[0]) * scale
     # Per-channel dequantization
     shape = [1] * tensor.ndim
     shape[int(quant_info.axis)] = -1
     reshaped_scale = scale.reshape(shape)
     if zero_point.size == 1:
-        reshaped_zero_point = np.zeros_like(reshaped_scale, dtype=np.float32)
+        reshaped_zero_point = zero_point.reshape(-1)[0]
     else:
-        reshaped_zero_point = zero_point.reshape(shape).astype(np.float32)
-    return (tensor.astype(np.float32) - reshaped_zero_point) * reshaped_scale
+        reshaped_zero_point = zero_point.reshape(shape).astype(floating_dtype)
+    return (tensor.astype(floating_dtype) - reshaped_zero_point) * reshaped_scale
 
 
 def dequantize_outputs(
@@ -145,6 +154,26 @@ def dequantize_outputs(
         for name, value in outputs.items()
     }
 
+def validate_scale_quantization(info, shape):
+    """Integer logits need a finite positive SCALE descriptor, never raw argmax."""
+    import numpy as np
+    kind = getattr(info, "quant_type", None)
+    if str(getattr(kind, "name", kind)) not in ("SCALE", "1"):
+        raise OutputTransformError("Integer tensor logits require a SCALE descriptor.")
+    scale = np.asarray(getattr(info, "scale", []), dtype=np.float32)
+    zero = np.asarray(getattr(info, "zero_point", []), dtype=np.float32)
+    if not scale.size or not np.isfinite(scale).all() or np.any(scale <= 0) or not np.isfinite(zero).all():
+        raise OutputTransformError("Invalid tensor quantization scales/zero-points.")
+    if scale.size == 1:
+        if zero.size not in (0, 1):
+            raise OutputTransformError("Scalar scale requires a scalar or empty zero-point.")
+    else:
+        axis = getattr(info, "axis", None)
+        if not isinstance(axis, (int, np.integer)) or not -len(shape) <= axis < len(shape):
+            raise OutputTransformError("Invalid tensor quantization axis.")
+        if scale.size != shape[axis] or zero.size not in (0, 1, scale.size):
+            raise OutputTransformError("Quantization descriptor does not match the channel axis.")
+
 
 __all__ = [
     "OUTPUT_TRANSFORMS",
@@ -153,4 +182,5 @@ __all__ = [
     "dequantize_outputs",
     "dequantize_tensor",
     "validate_output_transform",
+    "validate_scale_quantization",
 ]

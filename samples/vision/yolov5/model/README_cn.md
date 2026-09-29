@@ -24,7 +24,7 @@ S100P 没有 YOLOv5 制品。所有 manifest 发布校验值均为 `sha256: null
 <a id="preparation"></a>
 ## 准备步骤
 
-在允许显式联网的环境中从仓库根目录运行；本轮没有执行：
+在允许显式联网的环境中从仓库根目录运行。2026-09-24 板测轮次通过同一个下载器取得了被对照制品，当时以默认 target 形式执行（见[扩展板测记录](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)）；下面带显式 `--variant`/`--output-dir` 的写法本身不是当时执行的 argv，本工作树也不做新的下载：
 
 ```bash
 python3 -m samples.vision.yolov5.model.download \
@@ -49,7 +49,7 @@ S100/S600 使用 `--target s100 --variant x-672` 或 `--target s600 --variant x-
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-X5 制品是 640x640 Bayes-e/NV12 的 `.bin`；S 制品是 672x672、拆分 NV12 输入的目标子目录 `.hbm`。manifest 没有发布 SHA-256；下载器打印的本地观测 hash 只能证明本地字节。
+X5 制品是 640x640 Bayes-e/NV12 的 `.bin`；S 制品是 672x672、拆分 NV12 输入的目标子目录 `.hbm`。manifest 没有发布 SHA-256；下载器打印的本地观测 hash 只能证明本地字节。2026-09-24 板端证据归档记录了当轮所下载的确切发布制品的观测 digest（见上方链接）。
 
 <a id="license"></a>
 ## 许可

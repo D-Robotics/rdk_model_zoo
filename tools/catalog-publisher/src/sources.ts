@@ -28,9 +28,11 @@ export interface SourceEntry {
   manifest_root?: string;
   /**
    * File that holds this platform's release version, relative to the platform
-   * root. The unified layout colocates it with the manifests
-   * (`docs/release/<platform>/VERSION`) because one repository root can no
-   * longer hold three disagreeing version files. Defaults to `VERSION`.
+   * root. Worktree mode reads this exact path, strictly. The unified layout
+   * colocates it with the manifests (`docs/release/<platform>/VERSION`)
+   * because one repository root can no longer hold three disagreeing version
+   * files. Defaults to `VERSION`. Tag sources ignore this field: a pinned
+   * release is read with the layout that tag itself carries.
    */
   version_file?: string;
   /** Git ref used for repository source links (`blob/<ref>/...`). */
@@ -56,7 +58,11 @@ export interface PlatformSource {
   treePrefix: string;
   /** Manifest directory, relative to the platform root. */
   manifestDirectory: string;
-  /** File that holds this platform's release version, relative to the platform root. */
+  /**
+   * File that holds this platform's release version, relative to the platform
+   * root. For worktree sources this is the configured path; for tag sources it
+   * is resolved from the layout the selected tag actually carries.
+   */
   versionFile: string;
   /** Git ref used for repository source links. */
   linkRef: string;
@@ -155,6 +161,46 @@ async function resolveManifestDirectory(repositoryRoot: string, source: Platform
   );
 }
 
+/**
+ * Candidate VERSION paths inside one platform root, in probe order: the
+ * unified layout colocates the version with the manifests; the legacy layouts
+ * kept it at the platform root.
+ */
+const VERSION_PROBE_ORDER = (manifestDirectory: string): string[] => [
+  `${manifestDirectory}/VERSION`,
+  "VERSION"
+].filter((candidate, index, all) => all.indexOf(candidate) === index);
+
+/**
+ * Resolves the VERSION path a source reads, from the manifest directory that
+ * resolveManifestDirectory actually selected for it — pass that resolved
+ * directory explicitly, not the source's original preferred field. A worktree
+ * source reads exactly the configured file — the unified layout is fixed, so
+ * a missing file must fail the build instead of silently falling back. A tag
+ * source describes a historical checkout whose layout the pin selects, so the
+ * worktree's configured path cannot stand in for it: the version is resolved
+ * from the layout that tag actually carries, probed like the manifest
+ * directory. A tag carrying manifests but no VERSION at all is a broken
+ * release, not a default.
+ */
+async function resolveVersionFile(
+  repositoryRoot: string,
+  source: PlatformSource,
+  manifestDirectory: string
+): Promise<string> {
+  if (source.kind === "worktree") return source.versionFile;
+  const candidates = VERSION_PROBE_ORDER(manifestDirectory);
+  for (const candidate of candidates) {
+    if (await repositoryBlobExists(repositoryRoot, source.ref!, joinTreePath(source.treePrefix, candidate))) {
+      return candidate;
+    }
+  }
+  throw new Error(
+    `${source.platform}: no VERSION found under ${source.ref} `
+    + `(tried ${candidates.map((candidate) => joinTreePath(source.treePrefix, candidate)).join(", ")})`
+  );
+}
+
 export interface ResolveSourcesOptions {
   repositoryRoot: string;
   sources: SourcesDocument;
@@ -219,7 +265,12 @@ export async function resolvePlatformSources(options: ResolveSourcesOptions): Pr
       const type = await execFileAsync("git", ["-C", options.repositoryRoot, "cat-file", "-t", source.ref!]);
       if (type.stdout.trim() !== "tag") throw new Error(`Annotated source tag required: ${source.ref}`);
     }
-    resolved.push({ ...source, manifestDirectory: await resolveManifestDirectory(options.repositoryRoot, source) });
+    // Resolve the manifest directory first, then VERSION against it: the
+    // probe result is what the VERSION candidates must be colocated with, and
+    // fields of one object literal cannot see each other's resolved values.
+    const manifestDirectory = await resolveManifestDirectory(options.repositoryRoot, source);
+    const versionFile = await resolveVersionFile(options.repositoryRoot, source, manifestDirectory);
+    resolved.push({ ...source, manifestDirectory, versionFile });
   }
   return resolved;
 }

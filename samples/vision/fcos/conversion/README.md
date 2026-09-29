@@ -16,7 +16,21 @@
 | x5 / B2 768 | bayes-e | not recorded in source | no YAML in source |
 | x5 / B3 896 | bayes-e | not recorded in source | no YAML in source |
 
-The three PNG files in this directory are copied source `hb_perf` snapshots; they are evidence of historical documentation, not conversion output from this checkout.
+The three PNG files in this directory are copied source `hb_perf` snapshots; they are evidence of historical documentation, not conversion output from this checkout. Each graph records the deployed dataflow of one published variant: the packed NV12 input is converted by a BPU `NV12TOYUV444` node into `YUV444, NHWC, INT8`, executes as `torch-jit-export_subgraph_0` on BPU, and emits fifteen INT32 outputs — five stride levels × three branches (80-channel classification scores, 4-channel box regression, 1-channel center-ness). This is the source output protocol: 5 classification, 5 box-regression, and 5 center-ness outputs, which the Python runtime reorders by their fixed tensor shapes before decoding; decode semantics are documented in the [runtime guide](../runtime/python/README.md).
+
+Reference graphs (verbatim source snapshots, not produced by this checkout):
+
+![FCOS EfficientNet-B0 hb_perf](./fcos_efficientnetb0_512x512_nv12.png)
+
+FCOS EfficientNet-B0, 512×512 input: score/box/center-ness heads on 64×64, 32×32, 16×16, 8×8 and 4×4 levels (strides 8–128).
+
+![FCOS EfficientNet-B2 hb_perf](./fcos_efficientnetb2_768x768_nv12.png)
+
+FCOS EfficientNet-B2, 768×768 input: the same three branches on 96×96 down to 6×6 levels.
+
+![FCOS EfficientNet-B3 hb_perf](./fcos_efficientnetb3_896x896_nv12.png)
+
+FCOS EfficientNet-B3, 896×896 input: the same three branches on 112×112 down to 7×7 levels.
 
 <a id="export"></a>
 ## Export (ONNX)
@@ -44,7 +58,7 @@ No verified compile command is available. The source's `hb_mapper makertbin --mo
 <a id="validation"></a>
 ## Post-Conversion Validation
 
-On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --model_file <exact-file>` and run the runtime README command. Save the command output, raw fifteen tensor metadata, and result JSON under one UTC evidence directory. This migration performed host source numerical checks only; conversion and board smoke are not-run.
+On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --model_file <exact-file>` and run the runtime README command. Save the command output, raw fifteen tensor metadata, and result JSON under one UTC evidence directory. Conversion itself is not-run (no recipe exists, see known gaps); the published artifacts have been executed on X5 8GB/4GB boards by the [evaluator comparisons](../evaluator/README.md#reference-results), which cover runtime parity but not `hrt_model_exec` inspection or conversion reproducibility.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -60,4 +74,4 @@ On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --
 
 - No checkpoint, ONNX export, calibration data, quantization YAML, toolchain version, or reproducible source compile pipeline is present.
 - Manifest publisher hashes are unknown. The three source screenshots cannot establish tensor values or numerical equivalence.
-- Rebuilding is therefore outside the verified boundary; only the runtime protocol and host fixture are reproducible here.
+- Rebuilding is therefore outside the verified boundary; what is reproducible here is the runtime protocol, the host fixture, and same-board parity of the published artifacts (2026-09-24 evidence linked from the sample README).

@@ -8,7 +8,7 @@ Model Zoo 负责样例选择、接口合同、代码/文档规范、接入、回
 
 ## 选择能力，而不是匹配后缀
 
-先根据 `REPO_ROOT` 的 README、SoC、用户约束和（有清单时）Manifest 确认目标，再选择工具链；`rdk_x5` 只是本 Pack 的维护源，不能触发 X5 工具链。目标明确为 X5 且需要转换/编译/底层诊断时检查 `x5-router`；S100、S100P、S600 按目标实际可用的 S/horizon router 和版本检查；X3 不借用 X5 Pack，先用 `rdk-docs-reference` 查目标官方文档；legacy 继续使用其历史 ref 对应的工具链说明，不自动升级成当前 X5/S 流程。`.pt` 可能是权重、TorchScript、QAT 产物等；先识别内容及用户目标，不凭扩展名自动开始 QAT。
+先根据 `REPO_ROOT` 的 README、SoC、用户约束和（有清单时）Manifest 确认目标，再选择工具链；`rdk_x5` 只是本 Pack 的维护源，不能触发 X5 工具链。目标明确为 X5 且需要转换/编译/底层诊断时检查 `x5-router`；S100、S100P、S600 按目标实际可用的 S 系列 `drobotics-router` 和版本检查；X3 不借用 X5 Pack，先用 `rdk-docs-reference` 查目标官方文档；legacy 继续使用其历史 ref 对应的工具链说明，不自动升级成当前 X5/S 流程。`.pt` 可能是权重、TorchScript、QAT 产物等；先识别内容及用户目标，不凭扩展名自动开始 QAT。
 
 只运行已安装、可读取且与当前宿主兼容的 Skill。引用一个名字不等于已经调用。缺少 router 时：解释需安装的 Pack、写入位置、权限和会话加载要求；通过可用 `rdk-pack-installer` 按确认流程安装。安装未授权、网络失败或会话不可用时，保存未执行交接，不默默改成手写工具链命令。
 
@@ -31,4 +31,4 @@ Model Zoo 负责样例选择、接口合同、代码/文档规范、接入、回
 - [X5 router 与范围](https://github.com/D-Robotics/rdk-skills/blob/131d3048d5b1b8012b1383dc70be4f8264e25918/skills/oe-skills-x5/skills/x5-router/SKILL.md)
 - [X5 PTQ 完成条件](https://github.com/D-Robotics/rdk-skills/blob/131d3048d5b1b8012b1383dc70be4f8264e25918/skills/oe-skills-x5/skills/x5-ptq-deploy/SKILL.md)
 - [X5 QAT 产物边界](https://github.com/D-Robotics/rdk-skills/blob/131d3048d5b1b8012b1383dc70be4f8264e25918/skills/oe-skills-x5/skills/x5-qat-compile/SKILL.md)
-- [S 全链路部署范围](https://github.com/D-Robotics/rdk-skills/blob/131d3048d5b1b8012b1383dc70be4f8264e25918/skills/oe-skills-s/skills/horizon-router/references/deployment-workflow.md)
+- [S 全链路部署范围](https://github.com/D-Robotics/oe-skills-s/blob/v1.1.0/drobotics-s/skills/drobotics-router/references/deployment-workflow.md)

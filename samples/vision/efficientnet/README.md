@@ -3,7 +3,7 @@
 EfficientNet ImageNet-1k classification on RDK boards: one BGR image in, a
 stable Top-K of `(class id, score, label)` out. The X5 side ships the
 EfficientNet B2/B3/B4 variants (paper [EfficientNet: Rethinking Model Scaling
-for Convolutional Neural Networks](https://arxiv.org/abs/1905.11942)); the
+for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)); the
 S100/S600 side ships the EfficientNet-Lite lite0..lite4 family (the
 [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)
 implementation, as cited by the source delivery). [中文说明](README_cn.md)
@@ -20,6 +20,34 @@ board identity, loads `hbm_runtime` lazily, and runs a
 The former platform branch entries remain compatibility shims under
 `platforms/{x5,s}/` until the migration closeout; their audit record
 lives in the migration documents, not here.
+
+### Algorithm background
+
+EfficientNet balances input resolution, depth, and width through compound
+scaling: instead of tuning one dimension independently, a fixed compound
+coefficient scales all three together, improving accuracy under a fixed
+compute budget; neural architecture search provides the efficient
+baseline network ([paper](https://arxiv.org/abs/1905.11946),
+[EfficientNet-PyTorch](https://github.com/lukemelas/EfficientNet-PyTorch)).
+The X5 deployment ships B2/B3/B4; the S delivery ships the
+edge-oriented EfficientNet-Lite family (lite0–lite4, TensorFlow TPU
+implementation), served by the same Python flow with per-variant input
+geometry (224/240/260/300/380).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Compound scaling**: jointly scales resolution, depth, and width to balance accuracy and efficiency.
+- **AutoML backbone search**: neural architecture search obtains the efficient baseline network.
+- **Efficient deployment**: B2/B3/B4 RDK X5 deployment models with packed NV12 input.
+
+![Model scaling](./test_data/efficientnet_architecture.png)
+
+*Compound scaling, restored from the source deliveries (the same file
+ships as `test_data/EfficientNet_architecture.png` in rdk_x5 @ac11571 and
+as `test_data/efficientnet_architecture.png` in rdk_s @380e1a2, sha256
+`f0c7ccbe…`; Figure 2 of the paper): baseline network (a), conventional
+single-dimension scaling (b)–(d), and the compound scaling (e) that
+uniformly scales width, depth, and resolution with a fixed ratio.*
 
 <a id="support-matrix"></a>
 ## Support matrix
@@ -125,6 +153,15 @@ S-series (rdk_s @380e1a2, s-v1.1.2):
 | Lite2 | 0.565 ms | 1702.519 | 0.935 ms | 3123.682 |
 | Lite3 | 0.668 ms | 1451.031 | 1.249 ms | 2345.518 |
 | Lite4 | 0.915 ms | 1064.339 | 1.979 ms | 1487.055 |
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `8ecf7529…`): the
+bundled [redshank.JPEG](test_data/redshank.JPEG) ranks `redshank` first,
+followed by ruddy turnstone, water ouzel, oystercatcher, and dowitcher.
+Recorded by the source release on its own runtime entry — not a new run
+of this repository.*
 
 <a id="directory"></a>
 ## Directory

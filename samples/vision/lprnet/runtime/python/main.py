@@ -41,6 +41,15 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _validate_scheduling(args: argparse.Namespace) -> None:
+    """Reject scheduling values the run would refuse, including during dry-run."""
+
+    if type(args.priority) is not int or not 0 <= args.priority <= 255:
+        raise ValueError("priority must be an integer between 0 and 255")
+    if not args.bpu_cores or any(type(core) is not int or core < 0 for core in args.bpu_cores):
+        raise ValueError("bpu-cores must be a non-empty list of non-negative integer indexes")
+
+
 def _list_models(target: str) -> int:
     rows = list_available_assets(target)
     print(json.dumps([
@@ -57,7 +66,13 @@ def _dry_run(args: argparse.Namespace) -> int:
         "target": selection.target, "asset_id": selection.asset.reference,
         "model_path": str(selection.model_path), "model_format": selection.asset.format,
         "input_shape": [1, 3, 24, 94], "input_dtype": "float32",
-        "output_shape": [1, 68, 18], "output_dtype": "float32",
+        "output_shape": [1, 68, 18, 1], "output_dtype": "float32",
+        "output_layout": ("released lpr.bin binds native logits (1, 68, 18, 1) "
+                          "(measured board protocol); the 3D (1, 68, 18) layout "
+                          "is the old host/API compatibility contract and no "
+                          "published SDK artifact has been observed with it; "
+                          "post_process drops only singleton axes to the CTC "
+                          "payload (68, 18)"),
         "source_input": "prepacked float32 .dat; no image preprocessing",
         "model_path_exists": selection.model_path.is_file(),
         "sdk_loaded": False, "downloaded": False,
@@ -72,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.list_models:
             return _list_models(args.target)
+        _validate_scheduling(args)
         if args.dry_run:
             return _dry_run(args)
         selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path)

@@ -14,16 +14,16 @@
 
 """Validated tensor adapters for the YOLO model boundary.
 
-This module contains transport concerns only.  It does not decide which
-tensor is a detection head and it never invents quantization parameters.  The
-binding layer supplies the named roles and the physical metadata; this module
-checks and performs the requested layout conversions.
+The binding layer supplies roles and physical metadata. Raw reading validates
+containers without changing dtype, values or layout. Explicit postprocess reads
+apply declared affine transforms and layout conversion; no parameters are invented.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from types import MappingProxyType
 
 import numpy as np
 
@@ -49,6 +49,10 @@ def normalize_dtype(value: Any) -> Optional[np.dtype]:
         return None
     if isinstance(value, np.dtype):
         return value
+    from samples._shared.runtime_meta import canonicalise_dtype
+    canonical = canonicalise_dtype(value)
+    if canonical in {"float16", "float32", "float64", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32"}:
+        return np.dtype(canonical)
     # SDK enum instances expose their semantic spelling through ``.name``.
     # Check that spelling before NumPy parses strings such as ``U8`` as a
     # Unicode dtype.
@@ -105,7 +109,7 @@ def _shape_for_input(shape: Sequence[int],
                      *,
                      packed: bool,
                      override: Optional[Tuple[int, int]],
-                     label: str) -> Tuple[int, int, str]:
+                     label: str, allow_packed_nhwc: bool = False) -> Tuple[int, int, str]:
     """Derive ``(height, width, layout)`` from one input shape."""
     shape = normalize_shape(shape, f"input {label!r} shape")
     if len(shape) == 4 and shape[0] != 1:
@@ -114,6 +118,8 @@ def _shape_for_input(shape: Sequence[int],
     if packed:
         if len(shape) == 4 and shape[1] == 3:
             return shape[2], shape[3], "NCHW"
+        if allow_packed_nhwc and len(shape) == 4 and shape[3] == 3:
+            return shape[1], shape[2], "NHWC"
         raise TensorContractError(
             f"Input {label!r} reports shape {shape}; packed NV12 requires "
             "the observed NCHW (1, 3, H, W) descriptor.")
@@ -234,7 +240,8 @@ def bind_nv12_inputs(profile: Any,
                      input_shapes: Mapping[str, Sequence[int]],
                      input_dtypes: Optional[Mapping[str, Any]] = None,
                      roles: Optional[Mapping[str, str]] = None,
-                     input_shape_override: Optional[Sequence[int]] = None) -> InputBinding:
+                     input_shape_override: Optional[Sequence[int]] = None,
+                     allow_packed_nhwc: bool = False) -> InputBinding:
     """Create a validated NV12 input binding from runtime metadata.
 
     ``roles`` maps logical names (``image`` or ``y``/``uv``) to physical names.
@@ -308,7 +315,8 @@ def bind_nv12_inputs(profile: Any,
     if primary_name not in shapes:
         raise TensorContractError(f"Runtime reports input {primary_name!r} without a shape.")
     height, width, primary_layout = _shape_for_input(
-        shapes[primary_name], packed=packed, override=override, label=primary_name)
+        shapes[primary_name], packed=packed, override=override, label=primary_name,
+        allow_packed_nhwc=allow_packed_nhwc)
     _validate_nv12_geometry(height, width, primary_name)
     if override is not None and (height, width) != override:
         raise TensorContractError("input_shape_override conflicts with model metadata.")
@@ -331,40 +339,44 @@ def bind_nv12_inputs(profile: Any,
                         layouts=layouts)
 
 
+def require_floating_output(dtype, descriptor, name):
+    """Accept runtime-dequantized floating outputs only; never implement SCALE here."""
+    kind = None
+    if descriptor is not None:
+        if isinstance(descriptor, Mapping):
+            kind = descriptor.get("quant_type", "SCALE")
+        else:
+            kind = getattr(descriptor, "quant_type", "SCALE")
+        kind = str(getattr(kind, "name", kind))
+    if dtype is None or not np.issubdtype(dtype, np.floating) or kind not in (None, "NONE", "0"):
+        raise TensorContractError(
+            f"Output {name!r} requires an already dequantized floating-point tensor "
+            "with NONE/no quantization metadata. Select the maintained Ultralytics "
+            "floating-output artifact; manual output dequantization is not supported.")
+
+
 @dataclass(frozen=True)
-class Quantization:
-    """Explicit affine quantization parameters supplied by model metadata."""
+class RawOutputs(Mapping[str, np.ndarray]):
+    """Role-keyed raw arrays plus their binding; values/layout remain SDK-native.
 
-    scale: float
-    zero_point: float = 0.0
+    The immutable mapping borrows array buffers until the next SDK call. Finish
+    postprocessing before reusing the runner, or explicitly copy arrays to retain
+    them. This is not a promise of SDK thread safety or concurrent ownership.
+    """
+    arrays: Mapping[str, np.ndarray]
+    binding: Any
 
-    def __post_init__(self) -> None:
-        if not np.isfinite(self.scale) or self.scale == 0:
-            raise TensorContractError("quantization scale must be finite and non-zero.")
-        if not np.isfinite(self.zero_point):
-            raise TensorContractError("quantization zero_point must be finite.")
+    def __post_init__(self):
+        object.__setattr__(self, "arrays", MappingProxyType(dict(self.arrays)))
 
-    def apply(self, array: np.ndarray) -> np.ndarray:
-        return (np.asarray(array, dtype=np.float32) - self.zero_point) * self.scale
+    def __getitem__(self, role):
+        return self.arrays[role]
 
+    def __iter__(self):
+        return iter(self.arrays)
 
-def as_quantization(value: Any) -> Optional[Quantization]:
-    """Parse an explicit quantization object or mapping."""
-    if value is None:
-        return None
-    if isinstance(value, Quantization):
-        return value
-    if isinstance(value, Mapping):
-        scale = value.get("scale")
-        zero = value.get("zero_point", 0.0)
-        if np.ndim(scale) != 0 or np.ndim(zero) != 0:
-            raise TensorContractError("Per-channel quantization is not declared by this contract.")
-        if scale is None:
-            raise TensorContractError("Quantization metadata must provide a scalar 'scale'.")
-        return Quantization(float(scale), float(zero))
-    raise TensorContractError(
-        "Quantization metadata must be Quantization or a mapping with 'scale' "
-        "and optional 'zero_point'.")
+    def __len__(self):
+        return len(self.arrays)
 
 
 def pack_nv12_single(binding: InputBinding,
@@ -400,7 +412,6 @@ class OutputBinding:
     expected_shapes: Mapping[str, Tuple[int, ...]]
     channels: Mapping[str, int]
     layouts: Mapping[str, str] = field(default_factory=dict)
-    quantization: Mapping[str, Optional[Quantization]] = field(default_factory=dict)
     runtime_order: Tuple[str, ...] = ()
 
     @property
@@ -419,8 +430,14 @@ class OutputBinding:
             return outputs[self.model_name]
         return outputs
 
-    def read(self, outputs: Any) -> Dict[str, np.ndarray]:
-        """Validate runtime output tensors and return role-keyed arrays."""
+    def read_raw(self, outputs: Any) -> RawOutputs:
+        """Validate physical arrays and bind roles without numeric/layout transforms."""
+        if isinstance(outputs, RawOutputs):
+            if outputs.binding is not self:
+                raise TensorContractError("Raw outputs belong to a different model binding.")
+            if set(outputs) != set(self.role_to_name):
+                raise TensorContractError("Raw output roles do not match the binding.")
+            outputs = {name: outputs[role] for role, name in self.role_to_name.items()}
         values = self._unwrap(outputs)
         if isinstance(values, Mapping):
             by_name = values
@@ -459,16 +476,25 @@ class OutputBinding:
             if not np.all(np.isfinite(value)):
                 raise TensorContractError(
                     f"Output {name!r} for role {role!r} contains NaN or infinity.")
-            quant = self.quantization.get(role)
-            if quant is not None:
-                value = quant.apply(value)
-            elif not np.issubdtype(value.dtype, np.floating):
+            if not np.issubdtype(value.dtype, np.floating):
                 raise TensorContractError(
-                    f"Output {name!r} is {value.dtype}; no explicit quantization is "
-                    "declared for this semantic tensor.")
-            result[role] = _normalise_output_layout(
-                value, self.layouts.get(role, "NHWC"))
-        return result
+                    f"Output {name!r} must already be floating, got {value.dtype}.")
+            result[role] = value
+        return RawOutputs(result, self)
+
+    def read(self, outputs: Any) -> Dict[str, np.ndarray]:
+        """Explicit postprocess adapter: validate floating arrays and normalize layout.
+
+        Kept for direct decoder/binding callers. ModelRunner uses read_raw instead.
+        A RawOutputs carrier prevents semantic role names from bypassing declared
+        physical validation and prevents ambiguity with injected semantic maps.
+        """
+        raw = self.read_raw(outputs)
+        if raw.binding is not self:
+            raise TensorContractError("Raw outputs belong to a different model binding.")
+        return {role: _normalise_output_layout(value, self.layouts.get(role, "NHWC"))
+                for role, value in raw.items()}
+
 
 
 def _normalise_output_layout(value: np.ndarray,
@@ -478,6 +504,8 @@ def _normalise_output_layout(value: np.ndarray,
     array = np.asarray(value)
     if layout == "NHWC":
         return array
+    if layout == "NCHW" and array.ndim == 4:
+        return array.transpose(0, 2, 3, 1)
     raise TensorContractError(
         f"Unsupported output layout {layout!r}; this contract requires NHWC.")
 
@@ -494,10 +522,10 @@ __all__ = [
     "element_count",
     "InputBinding",
     "bind_nv12_inputs",
-    "Quantization",
-    "as_quantization",
+    "require_floating_output",
     "pack_nv12_single",
     "pack_nv12_planes",
     "OutputBinding",
+    "RawOutputs",
     "read_output",
 ]

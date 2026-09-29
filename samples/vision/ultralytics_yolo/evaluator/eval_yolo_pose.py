@@ -19,8 +19,8 @@
 The metric definition is the standard COCO `keypoints` average precision
 computed by `pycocotools.COCOeval`. Keypoints are emitted as the flat
 `[x, y, v] * 17` list COCO expects; `v` is 1 when the model reports a positive
-keypoint score and 0 otherwise, so an unconfident keypoint is excluded from
-the metric rather than being counted at the origin.
+keypoint probability and 0 otherwise. This historical serialization is not a
+0.5 visibility filter and does not remove low-confidence points.
 """
 
 import argparse

@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Overview
 
-This sample provides object detection, instance segmentation, pose estimation, classification and YOLO26 oriented boxes for RDK X5, S100, S100P and S600. YOLO detection heads predict classes and boxes at multiple scales; CPU decoding/filtering restores original-image coordinates. Segmentation, pose and OBB also expose masks, keypoints and angles. Model source project: [Ultralytics](https://github.com/ultralytics/ultralytics).
+This sample provides object detection, instance segmentation, pose estimation, classification and YOLO26 oriented boxes for RDK X5, S100, S100P and S600. Both fixed delivery READMEs describe Ultralytics YOLO as a real-time vision model family covering object detection, instance segmentation, pose estimation and image classification; YOLO26, delivered alongside as a direct-LTRB series, is maintained here as one family of this entry. YOLO detection heads predict classes and boxes at multiple scales; CPU decoding/filtering restores original-image coordinates. Segmentation, pose and OBB also expose masks, keypoints and angles. Model source project: [Ultralytics](https://github.com/ultralytics/ultralytics).
 
 The maintained entry is `samples/vision/ultralytics_yolo`. Python binds inputs by target and selects task protocols by family, sharing preparation, rendering and evaluation. YOLO26 is one family within this sample. Standalone YOLOv5, YOLOE and yolo26_depth have distinct capabilities and are not presented as the same model here.
 
@@ -33,7 +33,7 @@ Historical detection evidence: [P1](../../../docs/releases/unified-migration/202
 | NV12 input | One packed buffer | NHWC Y + UV |
 | Python detection NMS default | 0.70 | 0.45; YOLOv10 is NMS-free |
 | Classification CLI resize | YOLO26 stretch; others letterbox | Stretch |
-| Published classification input | YOLO26 224, others 640 | S600 all 224; S100/S100P YOLO26 224, others 640 |
+| Classification filename tokens (not an input override) | YOLO26 224, others 640 | Public URLs use 224; S100/S100P v8/v11 retain 640 compatibility IDs |
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -76,6 +76,14 @@ The detection command prints model/input protocol and detections, writes the ren
 
 ![Historical detection illustration](test_data/ultralytics_YOLO_Detect_demo.jpg)
 
+The fixed S delivery root README embedded its own detection illustration for the same bundled bus scene. It is retained with its source identity below, not as a new measurement (`test_data/result_detect.jpg`, S pin `380e1a2`, sha256 `5d792a47…`):
+
+![Historical S delivery detection illustration](test_data/result_detect.jpg)
+
+The S `ultralytics_yolo26` delivery — whose standalone directory is consolidated into this entry — embedded its own `result_detect.jpg`, restored here as `result_detect_yolo26.jpg` (S pin `380e1a2`, sha256 `2631c661…`). YOLO26 detection runs from this unified entry today; the image is that delivery's historical illustration with class-ID + score labels, not a new measurement:
+
+![Historical S YOLO26 delivery detection illustration](test_data/result_detect_yolo26.jpg)
+
 <a id="directory"></a>
 ## Directory responsibilities
 
@@ -97,6 +105,7 @@ ultralytics_yolo/
 - [runtime/cpp](runtime/cpp/README.md) — Task builds, positional arguments, lifecycle and measurement scope.
 - [conversion](conversion/README.md) — Source weights, export, calibration, compilation and unverified prerequisites.
 - [evaluator](evaluator/README.md) — COCO/ImageNet/DOTA, task evaluation and historical measurements.
+- [test_data](test_data/README.md) — Bundled input images, display-label tables and historical illustrations, with byte identities and usage boundaries.
 
 Read `main.py` for arguments/files/rendering, `yolo_dispatch.py` for task selection, runner/binding for SDK/tensors, and task classes for preprocessing/inference/postprocessing. Detection DFL and YOLO26 direct LTRB are not interchangeable; see the [detection contract](DETECTION_CONTRACT.md). Input geometry must resolve from metadata or an explicit fallback, not filename guesses. YOLO26 OBB uses radians; X5 class-aware NMS/clipping differs from S. Corrected non-detection behavior still requires board accuracy revalidation.
 
@@ -106,3 +115,6 @@ Legacy `platforms/{x5,s}/samples/vision/ultralytics_yolo` and `ultralytics_yolo2
 ## License and provenance
 
 Sample code follows the repository [Apache-2.0 LICENSE](../../../LICENSE), preserving file-level copyright notices. Check model weights and upstream training frameworks under their accompanying licenses separately; the repository code license does not automatically cover all weights. Artifact URLs and publisher digests come from manifests; an observed local hash cannot authenticate origin when no publisher hash is recorded.
+
+
+The maintained YOLO inventory excludes duplicate standalone S variants; see [scope and output requirements](model/README.md#maintained-scope).

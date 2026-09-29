@@ -8,13 +8,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(YOLOV5_TARGET "x5" CACHE STRING "Explicit runtime target: x5, s100, s100p or s600")
 set_property(CACHE YOLOV5_TARGET PROPERTY STRINGS x5 s100 s100p s600)
 
-add_executable(yolov5_cpp src/cli_main.cpp src/yolov5_decode.cpp src/yolov5_visualize.cpp)
+add_executable(yolov5_cpp src/cli_main.cpp src/yolov5_decode.cpp src/yolov5_visualize.cpp
+                          src/yolov5_gate.cpp src/yolov5_dump.cpp src/yolov5_s_native.cpp)
 target_include_directories(yolov5_cpp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(yolov5_cpp PRIVATE -Wall -Wextra -Wpedantic)
 
 if(YOLOV5_TARGET STREQUAL "x5")
   target_sources(yolov5_cpp PRIVATE src/x5_adapter.cpp)
-  target_compile_definitions(yolov5_cpp PRIVATE YOLOV5_TARGET_X5=1)
+  # The compiled target identity lets the binary refuse a mismatching --target.
+  target_compile_definitions(yolov5_cpp PRIVATE YOLOV5_TARGET_X5=1 YOLOV5_TARGET_NAME="x5")
   find_package(OpenCV REQUIRED)
   target_include_directories(yolov5_cpp PRIVATE ${OpenCV_INCLUDE_DIRS} /usr/hobot/include /usr/include/hobot/dnn)
   target_link_directories(yolov5_cpp PRIVATE /usr/hobot/lib)
@@ -30,7 +32,11 @@ elseif(YOLOV5_TARGET STREQUAL "s100" OR YOLOV5_TARGET STREQUAL "s100p" OR YOLOV5
     target_compile_definitions(yolov5_cpp PRIVATE SOC_S100P=1)
   endif()
   find_package(OpenCV REQUIRED)
+  # The S UCP SDK installs its DNN headers under /usr/include/hobot (verified on
+  # a real S100 2026-09-24: hobot/dnn/hb_dnn.h; there is no hb_dnn_ext.h), so the
+  # include roots mirror the fixed S delivery's CMakeLists exactly.
   target_include_directories(yolov5_cpp PRIVATE ${OpenCV_INCLUDE_DIRS} /usr/hobot/include /usr/include/hobot/dnn
+                             /usr/include/hobot
                              "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../utils/c_utils/inc")
   target_link_directories(yolov5_cpp PRIVATE /usr/hobot/lib)
   target_sources(yolov5_cpp PRIVATE

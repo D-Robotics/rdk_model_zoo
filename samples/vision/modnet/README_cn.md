@@ -12,7 +12,7 @@ MODNet 是单阶段人像抠图网络：输入一张 RGB 图像即可输出 alph
 
 | target | variant | Python | C++ | 状态 |
 |---|---|---|---|---|
-| X5 | `modnet_512x512_rgb.bin` | supported-not-run | not-supported | 主机 fixture 通过；板测未运行 |
+| X5 | `modnet_512x512_rgb.bin` | supported-not-run | not-supported | 主机 fixture 通过；板测未运行——2026-09-24 X5 板端批次没有拿到该手工制品，因此没有可记录的下载或推理 |
 | S100/S100P/S600 | — | not-supported | not-supported | 没有源制品 |
 
 本 sample 没有 C++ 实现。运行模型是外部手工制品；主机测试不等同于板端验证。

@@ -25,8 +25,13 @@ class RuntimeModelRunner:
         if self.loaded:
             return self.binding  # type: ignore[return-value]
         if self._runtime is None and self._runtime_factory is None:
+            # Real execution path: identity and publication gates run before the
+            # SDK factory is constructed.  An injected factory is the documented
+            # host seam and the only way to skip them.
             from samples._shared.platforms import require_execution_target
+            from samples._shared.assets import verify_asset_file
             require_execution_target(self.selection.target)
+            verify_asset_file(self.selection.asset, self.selection.model_path)
         try:
             if self._runtime is None:
                 factory = self._runtime_factory or _default_runtime_factory()
@@ -78,4 +83,6 @@ class RuntimeModelRunner:
         score = np.asarray(flat[binding.score_output_name]); box = np.asarray(flat[binding.box_output_name])
         if score.shape not in ((1, 8400, 32), (1, 8400, 32, 1)) or box.shape not in ((1, 8400, 4), (1, 8400, 4, 1)) or score.dtype != np.float32 or box.dtype != np.float32:
             raise MetadataMismatchError("Runtime outputs must preserve native F32 score/box shapes (logical [1,8400,32] and [1,8400,4], with an optional terminal singleton).")
+        if not np.isfinite(score).all() or not np.isfinite(box).all():
+            raise MetadataMismatchError("Runtime outputs must be finite.")
         return {binding.score_output_name: score, binding.box_output_name: box}

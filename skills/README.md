@@ -2,7 +2,7 @@
 
 本目录是 Model Zoo 专属 Skills 的维护源。Hub 只镜像注册的 `skills/<name>/`，不是维护源，也不安装模型仓库本身。Pack 从 `rdk_x5` 默认分支维护，但该分支只是文档来源，不能把用户目标默认为 X5；目标平台和 ref 必须按用户约束及实际目标仓库事实核对。
 
-**交付状态：候选源码，尚未合入/发布。** Pack 目标版本为 1.0.0；迁移入口 `rdk-model-zoo` 的 Skill 版本为 1.1.0，其余新技能为 1.0.0。Pack 与成员版本分别管理，既有模型版本文件不改变。
+**交付状态：候选源码，尚未合入/发布。** Pack 候选版本为 1.1.0；入口 `rdk-model-zoo` 的 Skill 版本为 1.1.2，`rdk-model-zoo-repo/develop/validate/review` 为 1.1.1，`rdk-model-zoo-integrate/release` 为 1.0.1。上游 `rdk_x5` 已发布 Pack 1.0.1，该状态描述上游 Pack；本分支的迁移适配候选未发布、未打 tag。Pack 与成员版本分别管理，既有模型版本文件不改变。
 
 ## 能力
 
@@ -22,7 +22,19 @@
 
 每次使用先解析 `SKILL_ROOT`（当前 Skill 安装目录）和 `REPO_ROOT`（用户指定的 Model Zoo 工作区）。目标可能是 X5 的 `rdk_x5`/`x5-v*`、S100/S100P/S600 的 `rdk_s`/`s-v*`、X3 的 `rdk_x3`/`x3-v*`，或用户指定的 `rdk_x5_legacy`/历史 ref。分支名和模型文件名只是线索；以目标 ref 的 README、实际代码和（有清单时）Manifest/metadata 交叉核对。S100、S100P、S600 的支持必须落实到具体 sample、artifact 和 runtime，不能从 S 版本的总清单推断全仓兼容。用户给出的平台、版本、路径与候选 ref 冲突时保留约束并报告，不切换分支来消除冲突。
 
-当前目标 ref 优先查 `docs/manifests/`；历史 ref 可能保留 `docs/release/` 或根 `release/`。多个清单要显式选择，缺少清单要保持未知，不能拿维护源的模型数据代替目标 ref。
+清单按目标 ref 的实际布局解析。统一集成线使用按平台的活动清单
+`docs/release/x5/models.yaml` 与 `docs/release/s/models.yaml`；它们是当前维护
+位置，区别于 `platforms/{x5,s}/docs/release/`、`platforms/x3/release/` 等迁移期
+冻结快照。交付 ref 保留 `docs/manifests/`，历史 ref 可能保留根 `release/`。
+`inspect_repo` 只报告实际存在的候选清单并标注统一/快照来源（同一平台两者并存
+时统一清单优先），且不据此推断目标硬件。`read_catalog` 的默认发现覆盖同一组
+布局：扁平布局与已知按平台布局（`docs/release/{x5,s,x3}/` 与 `platforms/…`
+快照，同一平台统一清单优先）合并为候选；恰好一个候选时仍隐式选择（历史扁平
+布局行为不变，选中 `platforms/` 快照会在警告中注明），多个候选报
+`ambiguous-manifest` 并在结果中列出候选路径，需显式传 `--manifest`（如
+`--manifest docs/release/s/models.yaml`），且不按分支、文件名或 S 组收窄目标；
+缺少清单报 `manifest-not-found`，保持未知，不能拿维护源的模型数据代替目标
+ref。
 
 ## 目录与资源
 
@@ -67,7 +79,7 @@ python3 skills/rdk-model-zoo-validate/scripts/validate_evidence.py "$RECEIPT" --
 
 ## 评测与状态
 
-75 条 eval 定义（原始 70 条及新增 5 条跨平台用例）覆盖五类：正确性、可发现性、安全、有效性、效率。它们不是已执行结果。参见 [行为评测协议](evals/README.md)；本地工具测试不能代替 Agent 基线/对照、真实板卡或生产 Hub 同步。
+84 条 eval 定义（原始 70 条、跨平台 5 条、Q5 强化新增 8 条，及 H8-SKILL-R1 清单发现整改新增 1 条）覆盖五类：正确性、可发现性、安全、有效性、效率。它们不是已执行结果；历史已执行的 75 条核心用例记录见 [行为评测协议](evals/README.md)。本地工具测试不能代替 Agent 基线/对照、真实板卡或生产 Hub 同步。
 
 ## 来源与许可
 

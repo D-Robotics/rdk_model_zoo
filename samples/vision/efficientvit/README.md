@@ -21,6 +21,50 @@ The former platform branch entry remains a compatibility shim under
 `platforms/x5/` until the migration closeout; its audit record lives in the
 migration documents, not here.
 
+### Algorithm background
+
+EfficientViT (MSRA) attacks the memory-bound cost of standard
+self-attention: runtime profiling shows that reshape/normalization/copy
+data movement takes a large share of Swin/DeiT latency (paper Figure 2),
+and simply thinning out MHSA layers hurts accuracy (paper Figure 3).
+EfficientViT instead uses cascaded group attention — each attention head
+receives the cascaded output of the previous heads, reducing the
+per-head attention cost while improving representation — and batch
+normalization for inference-friendly fusion
+([paper](https://arxiv.org/abs/2305.07027),
+[microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Memory-efficient attention**: reduces the data-movement overhead that limits standard transformer inference efficiency.
+- **Cascaded group attention**: improves representation capability while controlling deployment cost.
+- **Deployment-friendly normalization**: batch normalization simplifies inference-side fusion.
+- **Classification output**: Top-K class IDs and confidence scores for ImageNet-1k labels.
+
+![Runtime profiling](./test_data/comparison_between_transformer_and_cnn.png)
+
+*Runtime profiling, restored from the X5 source release
+(`test_data/comparison_between_transformer_and_cnn.png`, rdk_x5 @ac11571,
+sha256 `be1e2e39…`; Figure 2 of the paper): memory-bound operations
+(red labels) take a large share of Swin-T/DeiT-T latency — the overhead
+EfficientViT targets.*
+
+![MHSA proportion study](./test_data/mhsa_computation.jpg)
+
+*(`test_data/mhsa_computation.jpg`, rdk_x5 @ac11571, sha256
+`4dda6352…`; Figure 3 of the paper): top-1 accuracy of downscaled
+Swin-T/DeiT-T baselines against the proportion of MHSA layers — thinning
+MHSA alone does not by itself produce an efficient design, motivating
+the cascaded group attention instead.*
+
+![EfficientViT architecture](./test_data/efficientvit_msra_architecture.png)
+
+*EfficientViT overview, restored from the X5 source release
+(`test_data/efficientvit_msra_architecture.png`, rdk_x5 @ac11571, sha256
+`403d1c63…`; Figure 6 of the paper): (a) the three-stage network with
+overlap patch embedding, (b) the sandwich-layout block, and (c) cascaded
+group attention with per-head cascading and concat projection.*
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -104,6 +148,14 @@ source table does not state the latency threading conditions):
 | Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | EfficientViT_m5 | 224x224 | 1000 | 12.4 | 73.75% | 72.50% | 6.34 | 174.70 |
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `2a23e138…`): the
+bundled [hook.JPEG](test_data/hook.JPEG) ranks `hook` first, followed by
+crane, chain, seashore, and dock. Recorded by the source release on its
+own runtime entry — not a new run of this repository.*
 
 <a id="directory"></a>
 ## Directory

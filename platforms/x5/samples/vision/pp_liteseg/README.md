@@ -1,3 +1,5 @@
+> Current unified entry: [PP-LiteSeg](../../../../../samples/vision/pp_liteseg/README.md). The source text below is retained; its street.jpg, automatic-download and logits/argmax descriptions do not describe the unified runtime.
+
 English | [简体中文](./README_cn.md)
 
 # PP-LiteSeg-STDC1 Semantic Segmentation

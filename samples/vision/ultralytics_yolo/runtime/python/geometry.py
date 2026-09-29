@@ -266,3 +266,20 @@ __all__ = [
     "restore_boxes",
     "scale_boxes_to_original",
 ]
+
+
+def inverse_points(points: np.ndarray, transform: ImageTransform) -> np.ndarray:
+    """Map finite (...,2) model points through the actual resize/padding.
+
+    Return owned float32 original-image coordinates clipped to inclusive image
+    bounds. Unlike confidence values, coordinates undergo geometry exactly once.
+    """
+    values = np.asarray(points, dtype=np.float32)
+    if values.ndim < 2 or values.shape[-1] != 2 or not np.isfinite(values).all():
+        raise ValueError("points must be finite coordinates with shape (...,2).")
+    result = values.copy()
+    result[..., 0] = (result[..., 0] - transform.padding[0]) / transform.scale_x + transform.crop_offset[0]
+    result[..., 1] = (result[..., 1] - transform.padding[1]) / transform.scale_y + transform.crop_offset[1]
+    result[..., 0] = np.clip(result[..., 0], 0, transform.original_size[1])
+    result[..., 1] = np.clip(result[..., 1], 0, transform.original_size[0])
+    return result

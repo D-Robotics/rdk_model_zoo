@@ -12,6 +12,32 @@ with no published asset (see [conversion/README.md](conversion/README.md)).
 <a id="overview"></a>
 ## Overview
 
+ConvNeXt is a pure convolutional network modernized from the original
+ResNet by progressively adopting designs borrowed from the Swin
+Transformer ("A ConvNet for the 2020s"). It targets ImageNet-1k
+1000-class image classification and outputs Top-K classes with
+confidence scores. The source README highlights four design changes
+against a classic ResNet:
+
+- **Large-kernel depthwise convolution** — a 7×7 depthwise convolution
+  replaces the traditional 3×3 convolutions, enlarging the receptive
+  field at a MobileNet/EfficientNet-like parameter and compute cost.
+- **Fewer activation functions, GELU instead of ReLU** — activation
+  layers are sparser and the nonlinearity follows the Transformer style.
+- **LayerNorm instead of BatchNorm** — more robust for small-batch data.
+- **Simplified residual design** — the fully connected part is slimmed
+  down and the ResNet bottleneck structure is removed.
+
+![ConvNeXt block compared with the ResNet and Swin Transformer
+blocks](./test_data/ConvNeXt_Block.png)
+
+*Figure: the upstream paper's block comparison — Swin Transformer block
+(left), ResNet block (middle), ConvNeXt block (right). Restored from the
+X5 source README (rdk_x5 @ac11571, x5-v1.1.3); it depicts the upstream
+training architecture, while the deployed artifact on X5 is the
+INT8-quantized atto variant at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 The maintained implementation is one Python flow (X5 only; this sample has
 no S-branch delivery and no C++ runtime on either source). Python resolves
 one exact artifact reference from the platform release manifests, verifies
@@ -92,6 +118,18 @@ cheetah-related ImageNet classes. A board that cannot be identified, or a
 target without a matching artifact (all S targets), exits with an error
 instead of guessing.
 
+For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
+Python entrypoint) illustrated its run with the screenshot below: the
+legacy demo drew the top-1 label onto the image (the removed
+`result.jpg` side effect) and the bundled `cheetah.JPEG` produced
+`cheetah, chetoh, Acinonyx jubatus: 0.8048811` (label text as printed by
+the historical run). This is a historical screenshot from the source
+delivery, not a run of the current entrypoint in this repository.
+
+![Historical inference screenshot from the X5 source README (rdk_x5
+@ac11571): legacy visualization code and the cheetah result with top-1
+score 0.8048811](./test_data/inference.png)
+
 <a id="performance"></a>
 ## Performance data
 
@@ -106,9 +144,14 @@ single-frame single-thread single-core, FPS 4-thread concurrent; CPU
 | ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
 | ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
 | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
+| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
 
-The published table covers nano/pico/femto, not atto — the only variant
-with a downloadable artifact has no benchmark row; recorded as published.
+All four rows — including atto, the only variant with a downloadable
+artifact — come from the same published source table (rdk_x5 @ac11571,
+"Performance Data"), which also lists atto; the archived platform
+benchmark snapshot (`platforms/x5/docs/release/benchmarks.yaml`, entry
+`convnext-atto-x5`) records the same atto values. Historical published
+values, not re-measured in this repository.
 
 <a id="directory"></a>
 ## Directory

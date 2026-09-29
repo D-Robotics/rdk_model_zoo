@@ -57,6 +57,18 @@ python3 samples/vision/vargconvnet/runtime/python/main.py \
 
 The only published variant is `vargconvnet`, selected by default. Inference prints Top-5 IDs, softmax scores and labels. Exact ties use ascending class-ID order. The bundled image is a functional input; board verification is not-run. Files are written only with `--img-save-path`.
 
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+illustrated its run with the screenshot below: the legacy `result.jpg`
+drawing overlaid the top-5 ranks and scores on the image — rank 1 being
+class 37 (box turtle, box tortoise) with score 0.8582 on the bundled
+`box_turtle.JPEG`. This is a historical screenshot from the source
+delivery, not a run of the current entrypoint in this repository.
+
+![Historical inference screenshot from the X5 source README: box turtle
+test image with the legacy top-5 overlay, rank 1 class 37 (box turtle,
+box tortoise) score 0.8582](./test_data/inference.png)
+
 <a id="performance"></a>
 ## Performance data
 

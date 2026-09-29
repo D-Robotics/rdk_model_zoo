@@ -1,11 +1,36 @@
 # EfficientNet 图像分类
 
-EfficientNet 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 侧发布 EfficientNet B2/B3/B4 变体（论文 [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11942)）；S100/S600 侧发布 EfficientNet-Lite lite0..lite4 系列（源交付引用的 [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) 实现）。[English](README.md)
+EfficientNet 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 侧发布 EfficientNet B2/B3/B4 变体（论文 [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)）；S100/S600 侧发布 EfficientNet-Lite lite0..lite4 系列（源交付引用的 [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) 实现）。[English](README.md)
 
 <a id="overview"></a>
 ## 概述
 
 统一实现是一条 Python 流程（全部目标；两个源分支均未提供该 sample 的 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
+
+### 算法背景
+
+EfficientNet 通过复合缩放平衡输入分辨率、深度和宽度：不再单独调节某一
+维度，而是用固定复合系数同时缩放三者，在固定计算预算下提升精度；神经
+架构搜索提供高效的基础网络
+（[论文](https://arxiv.org/abs/1905.11946)、
+[EfficientNet-PyTorch](https://github.com/lukemelas/EfficientNet-PyTorch)）。
+X5 部署提供 B2/B3/B4；S 交付提供面向边缘的 EfficientNet-Lite 系列
+（lite0–lite4，TensorFlow TPU 实现），由同一 Python 流程按变体解析输入
+几何（224/240/260/300/380）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **复合缩放**：同时缩放分辨率、深度和宽度，平衡精度与效率。
+- **AutoML 骨干搜索**：用神经架构搜索得到高效的基础网络。
+- **高效部署**：提供 B2/B3/B4 三个 RDK X5 部署模型，输入为 packed NV12。
+
+![模型缩放](./test_data/efficientnet_architecture.png)
+
+*复合缩放，恢复自源交付（同一文件在 rdk_x5 @ac11571 中为
+`test_data/EfficientNet_architecture.png`，在 rdk_s @380e1a2 中为
+`test_data/efficientnet_architecture.png`，sha256 `f0c7ccbe…`；论文
+图 2）：基础网络 (a)、传统单维缩放 (b)–(d)，以及按固定比例统一缩放
+宽度、深度和分辨率的复合缩放 (e)。*
 
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
@@ -93,6 +118,14 @@ S 系列（rdk_s @380e1a2，s-v1.1.2）：
 | Lite2 | 0.565 ms | 1702.519 | 0.935 ms | 3123.682 |
 | Lite3 | 0.668 ms | 1451.031 | 1.249 ms | 2345.518 |
 | Lite4 | 0.915 ms | 1064.339 | 1.979 ms | 1487.055 |
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `8ecf7529…`）：随仓 [redshank.JPEG](test_data/redshank.JPEG) 的
+Rank-1 为 `redshank`，其后依次为 ruddy turnstone、water ouzel、
+oystercatcher、dowitcher。由源版本在其自身运行入口记录 — 不是本仓库的
+新运行。*
 
 <a id="directory"></a>
 ## 目录职责

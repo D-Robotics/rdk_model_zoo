@@ -1,0 +1,7 @@
+ASR migration decisions for implementation:
+- Exact S100/S600 assets; S100P/X5 reject. Never infer support from obsolete source docstrings.
+- Default greedy CTC collapses adjacent repeated IDs before blank removal. Explicit legacy mode preserves original concatenate-without-collapse behavior for source comparisons. Both preserve nonblank token text verbatim and reset per independent audio chunk.
+- Python remains SciPy Fourier resampling; native keeps libsamplerate sinc. Match Python zscore epsilon in native, record the original difference. No cross-language waveform equality claim for resampled input.
+- 30000 target samples at 16000 Hz. Source-rate read sizes use ceil; normalize each nonempty resampled chunk before final zero padding. Final padded output is decoded as the source did; no invented valid-output-frame mask.
+- Separate audio I/O, pure frontend, vocabulary/CTC, raw SDK runner, CLI/report. Original Python+C++ capabilities remain required.
+- Preserve 3503-entry ordered vocabulary and bundled wav/figures; exact source identity checked, final model metadata shape validation.

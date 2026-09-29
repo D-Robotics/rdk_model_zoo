@@ -15,6 +15,33 @@ The former platform branch entries remain compatibility shims under
 `platforms/{x5,s}/` until the migration closeout; their audit record
 lives in the migration documents, not here.
 
+### Algorithm background
+
+MobileNetV3 is the NAS-searched member of the MobileNet family:
+architecture search plus NetAdapt tune the block configuration,
+squeeze-and-excitation attention recalibrates channel weights inside the
+inverted residual blocks, and the h-swish activation keeps the
+non-linearity cheap on mobile hardware
+([paper](https://arxiv.org/abs/1905.02244),
+[timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py)).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Depthwise separable convolution**: retains the efficient MobileNet convolution structure.
+- **Inverted residual blocks**: expansion–depthwise–projection blocks for efficient feature extraction.
+- **SE attention module**: recalibrates channel weights to improve feature representation.
+- **H-Swish activation**: hardware-friendly activation for embedded deployment.
+
+![MobileNetV3 block](./test_data/MobileNetV3_architecture.png)
+
+*MobileNetV3 block, restored from the X5 source release
+(`test_data/MobileNetV3_architecture.png`, rdk_x5 @ac11571, sha256
+`bc978181…`; Figure 4 of the paper): the inverted residual block with
+squeeze-and-excite applied on the residual path — after the NL depthwise
+3×3, a global pool plus FC-ReLU / FC-hard-sigmoid gate modulates the
+expanded channels, and the gated result passes through the final NL 1×1
+projection (the non-linearity is chosen per layer).*
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -97,6 +124,15 @@ Published MobileNetV3 performance on `RDK X5` from rdk_x5 @ac11571 (x5-v1.1.3):
 
 The S-series source release (rdk_s @380e1a2 (s-v1.1.2)) published no latency or accuracy
 figures for this model; none are inferred here.
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `03b15192…`): the
+bundled [kit_fox.JPEG](test_data/kit_fox.JPEG) ranks `kit fox` first,
+followed by red fox, grey fox, lion, and lynx/catamount. Recorded by the
+source release on its own runtime entry — not a new run of this
+repository.*
 
 <a id="directory"></a>
 ## Directory

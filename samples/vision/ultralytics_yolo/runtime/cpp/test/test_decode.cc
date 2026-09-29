@@ -48,17 +48,43 @@ int main() {
   expect_near("y2", y2, (3.5f + 4.0f) * 16.0f, 1e-4f);
 
   // DFL: a dominant bin at index 5 decodes to a distance of ~5.
-  float bins[yolo::kDflBins] = {0.0f};
-  bins[5] = 20.0f;
+  float bins[4 * yolo::kDflBins] = {0.0f};
+  for (int side = 0; side < 4; ++side) bins[side * yolo::kDflBins + 5] = 20.0f;
   yolo::decode_box_dfl(bins, ltrb);
-  expect_near("dfl one-hot", ltrb[0], 5.0f, 1e-3f);
+  for (int side = 0; side < 4; ++side)
+    expect_near("dfl one-hot", ltrb[side], 5.0f, 1e-3f);
 
   // DFL: two equally-weighted bins at 2 and 6 decode to 4.
-  for (int j = 0; j < yolo::kDflBins; ++j) bins[j] = -100.0f;
-  bins[2] = 0.0f;
-  bins[6] = 0.0f;
+  for (int j = 0; j < 4 * yolo::kDflBins; ++j) bins[j] = -100.0f;
+  for (int side = 0; side < 4; ++side) {
+    bins[side * yolo::kDflBins + 2] = 0.0f;
+    bins[side * yolo::kDflBins + 6] = 0.0f;
+  }
   yolo::decode_box_dfl(bins, ltrb);
-  expect_near("dfl two-peak", ltrb[0], 4.0f, 1e-3f);
+  for (int side = 0; side < 4; ++side)
+    expect_near("dfl two-peak", ltrb[side], 4.0f, 1e-3f);
+
+  // Compare the shared expectation with the former pose/segment sequence:
+  // normalize each bin first, then accumulate bin * probability (base 929a2aa).
+  for (int trial = 0; trial < 200; ++trial) {
+    for (int j = 0; j < 4 * yolo::kDflBins; ++j)
+      bins[j] = std::sin(float(trial * 19 + j * 7)) * 30.0f;
+    yolo::decode_box_dfl(bins, ltrb);
+    for (int side = 0; side < 4; ++side) {
+      float* values = bins + side * yolo::kDflBins;
+      float maximum = values[0];
+      for (int j = 1; j < yolo::kDflBins; ++j)
+        maximum = std::max(maximum, values[j]);
+      float probabilities[yolo::kDflBins], sum = 0, expected = 0;
+      for (int j = 0; j < yolo::kDflBins; ++j) {
+        probabilities[j] = std::exp(values[j] - maximum);
+        sum += probabilities[j];
+      }
+      for (int j = 0; j < yolo::kDflBins; ++j)
+        expected += (probabilities[j] / sum) * j;
+      expect_near("former pose/segment DFL", ltrb[side], expected, 1e-5f);
+    }
+  }
 
   // Threshold inversion matches sigmoid.
   expect_near("raw logit threshold", yolo::raw_logit_threshold(0.25f),
@@ -73,8 +99,8 @@ int main() {
   expect_near("sigmoid(-4)", yolo::sigmoid(-4.0f), 0.0179862f, 1e-5f);
 
   // Channel-count dispatch.
-  expect_true("4ch -> direct LTRB",
-              yolo::box_decode_from_channels(4) == yolo::BoxDecode::kDirectLtrb);
+  expect_true("4ch -> direct LTRB", yolo::box_decode_from_channels(4) ==
+                                        yolo::BoxDecode::kDirectLtrb);
   expect_true("64ch -> DFL",
               yolo::box_decode_from_channels(64) == yolo::BoxDecode::kDfl);
   expect_true("7ch -> unknown",

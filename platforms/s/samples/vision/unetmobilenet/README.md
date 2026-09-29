@@ -1,3 +1,5 @@
+> 当前统一入口：[UNetMobileNet](../../../../../samples/vision/unetmobilenet/README_cn.md)。下方保留源文档；旧自动安装/下载、API 绘图职责和原生两次 resize 行为不代表统一入口。
+
 # UnetMobileNet 模型说明
 
 本目录描述 UnetMobileNet 在本 Model Zoo 中的完整使用流程，包括：算法介绍、模型转换、运行时推理（Python/C++）、前后处理接口说明，以及模型评估步骤。

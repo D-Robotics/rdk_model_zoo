@@ -1,3 +1,5 @@
+> 当前统一入口：[UNet](../../../../../samples/vision/unet/README_cn.md)。下方保留源文档，自动下载和旧 Python API 属于历史路径。
+
 [English](./README.md) | [简体中文](./README_cn.md)
 
 # UNet 模型说明

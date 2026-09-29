@@ -1,0 +1,68 @@
+{
+  "environment_overrides": {
+    "OpenCV_DIR": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/opencv-native/install/lib/cmake/opencv4",
+    "PATH_prefix": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/native-build-tools/cmake/data/bin"
+  },
+  "runs": [
+    {
+      "name": "documented-native",
+      "argv": [
+        "bash",
+        "-e",
+        "-c",
+        "mkdir -p /tmp/yoloe-native-tests\nc++ -std=c++17 -Wall -Wextra -Werror \\\n  -fsanitize=address,undefined -fno-omit-frame-pointer \\\n  -I samples/vision/yoloe/runtime/cpp/common \\\n  -I samples/vision/ultralytics_yolo/runtime/cpp \\\n  samples/vision/yoloe/runtime/cpp/tests/test_float_heads.cc \\\n  -o /tmp/yoloe-native-tests/float-heads\nc++ -std=c++17 -Wall -Wextra -Werror \\\n  -fsanitize=address,undefined -fno-omit-frame-pointer \\\n  -I samples/vision/yoloe/runtime/cpp/common \\\n  samples/vision/yoloe/runtime/cpp/tests/test_e26_decode.cc \\\n  -o /tmp/yoloe-native-tests/e26-decode\nc++ -std=c++17 -Wall -Wextra -Werror \\\n  -fsanitize=address,undefined -fno-omit-frame-pointer \\\n  -I samples/vision/yoloe/runtime/cpp/common \\\n  -I samples/vision/ultralytics_yolo/runtime/cpp \\\n  samples/vision/yoloe/runtime/cpp/tests/test_e11_decode.cc \\\n  -o /tmp/yoloe-native-tests/e11-decode\nc++ -std=c++17 -Wall -Wextra -Werror \\\n  -fsanitize=address,undefined -fno-omit-frame-pointer \\\n  -I samples/vision/yoloe/runtime/cpp/common \\\n  samples/vision/yoloe/runtime/cpp/tests/test_geometry.cc \\\n  -o /tmp/yoloe-native-tests/geometry\n\ncmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \\\n  -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON\ncmake --build /tmp/yoloe-native-opencv --parallel 4\n\n/tmp/yoloe-native-tests/float-heads\n/tmp/yoloe-native-tests/e26-decode\n/tmp/yoloe-native-tests/e11-decode\n/tmp/yoloe-native-tests/geometry\n\nctest --test-dir /tmp/yoloe-native-opencv --output-on-failure\n"
+      ],
+      "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+      "started_utc": "2026-09-27T22:01:54.893086+00:00",
+      "finished_utc": "2026-09-27T22:02:16.353635+00:00",
+      "rc": 0,
+      "log": "documented-native.log"
+    },
+    {
+      "name": "yoloe",
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "samples/vision/yoloe/tests"
+      ],
+      "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+      "started_utc": "2026-09-27T22:02:16.353656+00:00",
+      "finished_utc": "2026-09-27T22:02:22.105748+00:00",
+      "rc": 0,
+      "log": "yoloe.log"
+    },
+    {
+      "name": "contracts",
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+        "tools/sample_contract/check.py",
+        "--scope",
+        "migration",
+        "--parser-mode",
+        "import",
+        "--report",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-yoloe-cpp-masks/contracts.json"
+      ],
+      "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+      "started_utc": "2026-09-27T22:02:22.105769+00:00",
+      "finished_utc": "2026-09-27T22:02:22.445477+00:00",
+      "rc": 0,
+      "log": "contracts.log"
+    },
+    {
+      "name": "readmes",
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/bin/python",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-yoloe-evaluation/check_readmes.py"
+      ],
+      "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+      "started_utc": "2026-09-27T22:02:22.445508+00:00",
+      "finished_utc": "2026-09-27T22:02:22.748819+00:00",
+      "rc": 0,
+      "log": "readmes.log"
+    }
+  ]
+}

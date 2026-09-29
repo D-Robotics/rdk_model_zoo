@@ -8,19 +8,32 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 
 ## 按任务开始
 
-完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 36 个统一视觉 Sample。每个入口说明自己的 target、变体、语言和验证范围。
+完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。每个入口说明自己的 target、变体、语言和验证范围。
 
 | 任务 | 统一入口 |
 |---|---|
 | 检测、分割、姿态、分类、旋转框 | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README_cn.md) |
+| 无提示实例分割 | [YOLOE](samples/vision/yoloe/README_cn.md) |
+| 语音识别 | [ASR](samples/speech/asr/README_cn.md)、[Paraformer](samples/speech/paraformer/README_cn.md) |
+| 离线机器人策略 | [HIMLoco](samples/robotics/himloco/README_cn.md)：六帧观测到动作，不执行实机控制 |
+| 视觉语言模型（迁移中） | [Gemma4-E2B](samples/llm/gemma4-e2b/README_cn.md)：原生对话、HTTP、单次推理及验证工具 |
+| 文本生成（迁移中） | [MiniCPM5-2B](samples/llm/minicpm5-2b/README_cn.md)：S100/S100P OELLM 1.0.0 与 S600 OELLM 2.0 beta 原生入口 |
+| 唤醒词检测 | [KWS](samples/speech/kws/README_cn.md) |
 | 图像分类 | [ResNet](samples/vision/resnet/README_cn.md)、MobileNet、EfficientNet、ConvNeXt、Rep 系列等，见完整索引 |
 | 文本检测与识别 | [PaddleOCR](samples/vision/paddle_ocr/README_cn.md) |
 | 提示分割 | [EfficientSAM](samples/vision/efficient_sam/README_cn.md)、[MobileSAM](samples/vision/mobile_sam/README_cn.md) |
 | 检测、开放词汇与跟踪 | [YOLOv5](samples/vision/yolov5/README_cn.md)、[FCOS](samples/vision/fcos/README_cn.md)、[YOLOWorld](samples/vision/yoloworld/README_cn.md)、[ByteTrack](samples/vision/bytetrack/README_cn.md) |
 | 车牌识别、抠图 | [LPRNet](samples/vision/lprnet/README_cn.md)、[MODNet](samples/vision/modnet/README_cn.md) |
+| 点云部件分割 | [PointNet](samples/vision/pointnet/README_cn.md) |
+| 语义分割 | [UNet](samples/vision/unet/README_cn.md) · [PP-LiteSeg](samples/vision/pp_liteseg/README_cn.md) · [UNetMobileNet](samples/vision/unetmobilenet/README_cn.md) |
+| 单目深度 | [YOLO26 Depth](samples/vision/yolo26_depth/README_cn.md) · [Depth Anything V2](samples/vision/depth_anything_v2/README_cn.md) |
+| 车道嵌入与二值标签 | [LaneNet](samples/vision/lanenet/README_cn.md) |
+| 准备特征的轨迹规划 | [DiffusionDrive](samples/vision/diffusiondrive/README_cn.md) |
 | 视觉特征、图文匹配、视频分类 | [DINOv2](samples/vision/dinov2/README_cn.md)、[SigLIP](samples/vision/siglip/README_cn.md)、[CLIP](samples/vision/clip/README_cn.md)、[3DResNet](samples/vision/3dresnet/README_cn.md) |
 
-深度、语义分割、点云、语音、机器人、大模型/VLA 及其他尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
+尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
+
+ACT／Pi0 以完整固定 Git 子模块集成，独立于上述 51 个本仓库样例。入口见 [VLA 指南](samples/vla/README_cn.md)：ACT S100 与 S600 使用不同源版本，Pi0 面向 S600，模型资源由使用者准备。本轮未运行机器人控制。
 
 ## 板卡、制品与环境
 
@@ -77,6 +90,7 @@ tools/                   # catalog, contract checks and validation tooling
 ## 数据、原分支资料与验证
 
 - [统一发布事实](docs/release) 保存制品与历史测量事实；[平台注册表](platforms/README_cn.md) 说明原分支、目录、标签及运行时差异。
+- 原分支在线资源继承自 X5（`ac11571`）、S（`380e1a2`）归档根指南：[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)、[GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)、[D-Robotics 开发者社区](https://developer.d-robotics.cc/) 及 [RDK 用户手册](https://developer.d-robotics.cc/information)。它们描述交付分支的已发布内容；浏览已发布目录不代表本整合分支通过验收，此处也不声明链接的实时可用性。历史 demo 材料保留在归档中——X5 为 [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) 归档分支，S 为独立 [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) 仓库——都不是本轮适配目标。
 - 数据准备入口：[datasets](datasets)、[X5 datasets](platforms/x5/datasets)、[S datasets](platforms/s/datasets)。大数据集和模型通常不在 Git 中。
 - 保留原指南：[X5 开发规范](platforms/x5/docs/Model_Zoo_Repository_Guidelines.md)、[S Python API](platforms/s/docs/Python_API_User_Guide.md)、[S UCP](platforms/s/docs/UCP_User_Guide.md)、[TROS](docs/tros/README_cn.md)。
 - [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md) 与各批报告说明“实现、主机测试、板测、独立评审、关闭”各状态；[当前非板端计划](docs/superpowers/plans/2026-09-26-host-completion.md) 不把待补板测当作通过。
@@ -104,6 +118,6 @@ npm --prefix tools/catalog-publisher run catalog:build
 
 ## 社区、贡献与许可
 
-问题反馈可使用仓库 Issues，并附 target、系统/SDK、模型引用、提交及可复现命令。先保护原始失败输出，再提交代码与相应文档/测试。原分支保留了[社区资源](platforms/x5/README_cn.md)和平台专属说明。
+问题反馈可使用[仓库 Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)，并附 target、系统/SDK、模型引用、提交及可复现命令。先保护原始失败输出，再提交代码与相应文档/测试。原分支保留了[社区资源](platforms/x5/README_cn.md)和平台专属说明。
 
 统一代码见根 [LICENSE](LICENSE)，平台分发另保留 [X5 LICENSE](platforms/x5/LICENSE) 与 [S LICENSE](platforms/s/LICENSE)；X3 上游没有随附许可文件，此处未补造。模型权重、数据集和上游项目按各自许可及来源记录处理。

@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集准备
 
-准备与模型类别顺序一致的验证集。获取和整理方法见[X5 COCO（英文）](../../../../platforms/x5/datasets/coco/README.md)、[S COCO（英文）](../../../../platforms/s/datasets/coco/README.md)、[X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README_cn.md)、[S ImageNet](../../../../platforms/s/datasets/imagenet/README_cn.md)。数据集不随仓库分发，使用时遵守各自许可。
+准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；X5/S 平台快照保留作溯源（[X5 COCO](../../../../platforms/x5/datasets/coco/README.md)、[S COCO](../../../../platforms/s/datasets/coco/README.md)、[X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README_cn.md)、[S ImageNet](../../../../platforms/s/datasets/imagenet/README_cn.md)）。数据集不随仓库分发，使用时遵守各自许可。
 
 以下示例约定本地目录如下；请将`/data`、`/models`替换为实际准备路径：
 
@@ -160,3 +160,5 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 ## 能力边界
 
 这些脚本不验证模型转换正确性、不支持任意自定义类别顺序，也不测量完整应用性能。分类会按上述规则跳过不可读或无标签图像，必须报告实际处理数量。OBB需另行使用DOTA评分器。发布基准与既有固定图板测属于各自源码版本的参考，不能作为当前所有任务和尺寸的验收。本次未执行的新板测及全数据集测量仍为待办。
+
+DFL 姿态接口返回关键点概率。当前 COCO JSON 序列化保留历史规则：概率 >0 时 v=1，否则为 0；这不是 0.5 可见性筛选，不会删除低置信度点。绘制阈值与评测序列化是不同操作。

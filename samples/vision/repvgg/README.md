@@ -8,6 +8,29 @@ RepVGG is a VGG-style convolutional network family that uses structural re-param
 - **Paper**: [RepVGG: Making VGG-style ConvNets Great Again](https://arxiv.org/abs/2101.03697)
 - **Reference Implementation**: [DingXiaoH/RepVGG](https://github.com/DingXiaoH/RepVGG)
 
+The source README's feature highlights:
+
+- **Plain inference structure** — after deployment conversion the network
+  is a VGG-style stack of `3x3` convolution + ReLU layers.
+- **Structural re-parameterization** — the training-time identity and 1×1
+  branches are folded into the deployment-time convolutions.
+- **Hardware efficiency** — plain conv + ReLU operators are friendly to
+  edge inference.
+- **Variant scaling** — published variants `A0`, `A1`, `A2`, `B0`,
+  `B1g2`, and `B1g4`.
+
+![RepVGG architecture sketch: ResNet vs RepVGG training vs RepVGG
+inference](./test_data/RepVGG_architecture.png)
+
+*Figure (upstream paper Fig. 2): (A) ResNet; (B) RepVGG training — the
+3×3 blocks additionally carry identity and 1×1 branches, used only for
+training; (C) RepVGG inference — the branches are folded into a plain
+3×3 stack (5 stages, stride-2 downsampling at each stage start). Restored
+from the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864); the deployed artifacts are
+the already-reparameterized INT8 a0/b0/b1g2/... variants at 224×224 NV12
+(see [Support matrix](#support-matrix)).*
+
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 
 <a id="support-matrix"></a>
@@ -77,6 +100,18 @@ python3 samples/vision/repvgg/runtime/python/main.py \
 ## Expected results
 
 Default variant `a0` preserves the source entrypoint. Choose `a1`, `a2`, `b0`, `b1g2`, `b1g4` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `gooze.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+illustrated its run with the screenshot below: the legacy `result.jpg`
+drawing overlaid the top-5 ranks on the image, with rank 1 being class 99
+(goose) on the bundled `gooze.JPEG`. This is a historical screenshot from
+the source delivery, not a run of the current entrypoint in this
+repository.
+
+![Historical inference screenshot from the X5 source README: goose test
+image with the legacy top-5 overlay, rank 1 class 99
+(goose)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

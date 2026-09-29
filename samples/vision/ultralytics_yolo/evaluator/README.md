@@ -7,7 +7,7 @@ Evaluate a compiled model using the same task implementations as [the Python run
 <a id="dataset"></a>
 ## Prepare the dataset
 
-Use a matching validation split and preserve the original class order. Dataset acquisition and preparation are documented in [X5 COCO](../../../../platforms/x5/datasets/coco/README.md), [S COCO](../../../../platforms/s/datasets/coco/README.md), [X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README.md) and [S ImageNet](../../../../platforms/s/datasets/imagenet/README.md). Obtain datasets under their own licenses; they are not included in this checkout.
+Use a matching validation split and preserve the original class order. Dataset acquisition and preparation are documented in the unified [COCO](../../../../datasets/coco/README.md) and [ImageNet](../../../../datasets/imagenet/README.md) guides; the archived [X5 COCO](../../../../platforms/x5/datasets/coco/README.md), [S COCO](../../../../platforms/s/datasets/coco/README.md), [X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README.md) and [S ImageNet](../../../../platforms/s/datasets/imagenet/README.md) snapshots remain as provenance. Obtain datasets under their own licenses; they are not included in this checkout.
 
 The commands below assume this local layout; replace `/data` and `/models` with your prepared paths:
 
@@ -160,3 +160,5 @@ Those are historical published records, not measurements of the current unified 
 ## Boundaries
 
 These evaluators do not verify model conversion, validate arbitrary custom class orders, or measure end-to-end application performance. Classification skips unreadable/unlabeled images as described above; report the actual processed count. OBB export needs a separate DOTA scorer. Published benchmark rows and prior fixed-image board comparisons are references with their own revisions, not acceptance of every current task/scale. New board and full-dataset runs remain pending.
+
+DFL pose returns point probabilities. COCO JSON serialization preserves the historical rule v=1 for probability >0, otherwise 0; this is not a 0.5 visibility filter and does not remove low-confidence points. Drawing thresholds and evaluation serialization are separate operations.

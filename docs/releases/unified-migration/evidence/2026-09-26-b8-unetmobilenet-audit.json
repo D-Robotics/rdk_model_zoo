@@ -1,0 +1,150 @@
+{
+  "source_pin": "380e1a2bf42041af54be6f34935e50197cfadff9",
+  "files": [
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/README.md",
+      "source_sha256": "7cabfe504dae19c070c39af8fea8bdd48597f227e2326738d1e50c67bbc50816",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/conversion/README.md",
+      "source_sha256": "6c0c97633c64163982e2da7b2e6eada085aeb2a370d500052f1c89c7337f38cf",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/evaluator/README.md",
+      "source_sha256": "e99e620223045486912e373b855e8fd72ebecbe0c7ac6b6b494d56c6c24cf52d",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/model/README.md",
+      "source_sha256": "7e4af2456eaa1e8b33b58a8fb5c1573f609046199149546da242897accb7e263",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/model/download_model.sh",
+      "source_sha256": "2824d37d9bed2e8b287c34808d4d574aa589a8473142189a21c07fbfd165362d",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/cpp/CMakeLists.txt",
+      "source_sha256": "c7a21a092799a24c0a240de44635ba10505bbe570621ff18da1d7d7e47cb7d51",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/cpp/README.md",
+      "source_sha256": "473f5dab8f7e339178fd5f1931bac71ba89a423ed1f3ba0968af938c1108330c",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/cpp/inc/unetmobilenet.hpp",
+      "source_sha256": "04da1c761e20eff064d710cffcdb759e371d752c66cad059691563f2801cb0e4",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/cpp/run.sh",
+      "source_sha256": "b9ff849862de97662bbedb8854a98fb987a13440138a6cdc9bb0217e02ef3c52",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/cpp/src/main.cpp",
+      "source_sha256": "a86b85dacf3140f3288287737b02965afdb7be6c9b864abf9315bc6442b65036",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/cpp/src/unetmobilenet.cpp",
+      "source_sha256": "3a8323950fcffad77e806d5670dc18a4b4d88c0c53f97168d0757961a5627016",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/python/README.md",
+      "source_sha256": "9a35ee82ea1ee976b49d8d3b3e6ba8410e52ecd898f79ac2d4037061fdca3bda",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/python/main.py",
+      "source_sha256": "58caf842381e01be556669884a2809662364df8aaf3e430a6e6c1dda697eeab4",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/python/run.sh",
+      "source_sha256": "a47cc3ea09e363f1e4d9a7af337164933cccf4396ca2f71348b563b5d0ce75d5",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/runtime/python/unetmobilenet.py",
+      "source_sha256": "2de78c4fddb6e7b67c804ff97a58ab571f3cc94a809a0ba806ff5c72d95f55c5",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/test_data/result.jpg",
+      "source_sha256": "4990be2df3615934a70ea47e440ad452a7b3330320224e3eee22fc846491ad67",
+      "matches_pin": true
+    },
+    {
+      "path": "platforms/s/samples/vision/unetmobilenet/test_data/segmentation.png",
+      "source_sha256": "c6492da61de7fcf2fbc0d4cb6b2876015c0f502de64a0c8a9502104a8bd98afc",
+      "matches_pin": true
+    }
+  ],
+  "quantized_argmax_counterexample": {
+    "raw": [
+      10,
+      2
+    ],
+    "scale": [
+      1.0,
+      100.0
+    ],
+    "source_raw_winner": 0,
+    "affine_winner": 1
+  },
+  "resize_counterexample": {
+    "source_python_direct": [
+      [
+        0,
+        0,
+        1,
+        1,
+        2,
+        2
+      ]
+    ],
+    "source_cpp_via_input_width_2048": [
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2
+      ]
+    ],
+    "condition": "Output spatial dimensions not an exact divisor of model input; actual published output metadata not observed"
+  },
+  "decisions": [
+    "retain S100 and S600 separate assets, unknown publisher SHA; explicitly reject S100P/X5",
+    "INTER_AREA stretch and split NV12 source bytes preserved",
+    "predict returns original-resolution int32 labels; rendering separately retains alpha_f original-image weight",
+    "explicit NONE int32 compares integers directly; valid SCALE dequantizes in postprocess with optional float64, F32 raw",
+    "canonical Python and C++ should use direct nearest restoration to match source Python, with divergence documented for non-divisor output shapes",
+    "source conversion/evaluator contain no implementation; do not invent conversion recipes or dataset results",
+    "C++ source lifecycle and validation need rewrite outside task stages before sample completion"
+  ],
+  "native_static_findings": [
+    {
+      "location": "runtime/cpp/src/unetmobilenet.cpp:init/destructor",
+      "finding": "counts set before vectors resize; early count-query failure can leave destructor indexing empty vectors; unchecked prepare_input/output return codes and task early returns can leak resources"
+    },
+    {
+      "location": "runtime/cpp/src/unetmobilenet.cpp:post_process",
+      "finding": "raw int32 argmax ignores SCALE channel semantics; extra resize stage can differ from Python on non-divisor geometry"
+    },
+    {
+      "location": "runtime/cpp/run.sh/CMakeLists.txt",
+      "finding": "implicit install/download and unchecked SoC macro fallback must become explicit preparation and identity gating"
+    }
+  ],
+  "current_status": "Source audit complete; canonical Python core is an uncommitted work in progress; C++ and complete bilingual README migration pending. No sample acceptance.",
+  "board": "not-run; no board environment"
+}

@@ -19,6 +19,10 @@ never imports a board SDK.  It supports runtimes that host several models in
 one artifact (an explicit model selection is required in that case) and any
 number of output tensors; single-output contracts stay a binding-level rule.
 
+``input_quants`` and ``output_quants`` retain SDK descriptors without copying.
+Input quantization supports multi-input planning samples; absent descriptors stay
+empty and each sample decides whether they are required.
+
 ``output_quants`` carries the raw per-output quantization descriptors
 (``{output_name: quant_info}``) exactly as the runtime exposes them through
 ``output_quants``/``model.output_quants[model_name]`` on both the X5 and S
@@ -27,10 +31,17 @@ toolchains.  The values are deliberately not float-coerced: their structure
 :mod:`samples._shared.quantization`, and a descriptor that rides along an F32
 output must stay visible in the binding snapshot instead of being silently
 dropped (the raw_f32 path gates on dtype and never applies it).
+
+Those raw descriptors are SDK objects that refuse to be copied, so evidence
+writers must not run them through :func:`dataclasses.asdict` (it deep-copies
+every leaf and the board ``QuantParams`` type raises ``TypeError`` when
+pickled — board evidence 2026-09-24).  Use :func:`metadata_evidence` to
+project a ``RuntimeMetadata`` into JSON-ready evidence values without copying
+or mutating anything.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any, Mapping
 
 
@@ -57,6 +68,15 @@ def canonicalise_dtype(dtype: Any) -> str | None:
         return "int16"
     if raw in {"i32", "s32", "int32", "hbdnndatatype.int32"} or raw.endswith((".int32", ".s32")):
         return "int32"
+    # DiffusionDrive source accepts unsigned 16/32-bit physical tensors.
+    if raw in {"u16", "uint16"} or raw.endswith((".u16", ".uint16")):
+        return "uint16"
+    if raw in {"u32", "uint32"} or raw.endswith((".u32", ".uint32")):
+        return "uint32"
+    # LaneNet's source native binary prediction is S64. Canonicalize the
+    # spelling only; each sample still decides whether int64 is valid IO.
+    if raw in {"i64", "s64", "int64", "hbdnndatatype.int64"} or raw.endswith((".int64", ".s64")):
+        return "int64"
     if raw in {"f16", "float16", "hbdnndatatype.f16"} or raw.endswith(".f16"):
         return "float16"
     if raw in {"nv12", "hbdnndatatype.nv12"} or raw.endswith(".nv12"):
@@ -85,6 +105,7 @@ class RuntimeMetadata:
     output_strides: Mapping[str, tuple[int, ...]] = field(default_factory=dict)
     output_quants: Mapping[str, Any] = field(default_factory=dict)
     output_semantics: str | None = None
+    input_quants: Mapping[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, Any]) -> "RuntimeMetadata":
@@ -128,6 +149,7 @@ class RuntimeMetadata:
             output_strides=_normalise_shapes(model_field("output_strides", {})),
             output_quants=_normalise_quants(model_field("output_quants", {})),
             output_semantics=semantics,
+            input_quants=_normalise_quants(model_field("input_quants", {})),
         )
 
     @classmethod
@@ -179,6 +201,7 @@ class RuntimeMetadata:
                 "input_strides": runtime_field("input_strides", {}),
                 "output_strides": runtime_field("output_strides", {}),
                 "output_quants": runtime_field("output_quants", {}),
+                "input_quants": runtime_field("input_quants", {}),
                 "output_semantics": runtime_field("output_semantics", None),
             }
         )
@@ -212,4 +235,77 @@ def _normalise_quants(values: Any) -> dict[str, Any]:
     return {str(name): info for name, info in values.items()}
 
 
-__all__ = ["MetadataMismatchError", "RuntimeMetadata", "canonicalise_dtype"]
+def _evidence_value(value: Any) -> Any:
+    """Project one metadata value onto JSON-serialisable primitives.
+
+    SDK objects are read attribute by attribute and never copied, and unknown
+    objects raise instead of being stringified, so evidence can never
+    silently degrade into ``str(...)`` text.
+    """
+
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    import numpy as np
+
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, Mapping):
+        return {str(key): _evidence_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_evidence_value(item) for item in value]
+    if is_dataclass(value) and not isinstance(value, type):
+        return {
+            entry.name: _evidence_value(getattr(value, entry.name))
+            for entry in fields(value)
+        }
+    if hasattr(value, "quant_type"):
+        # Raw runtime quantization descriptor (hbm_runtime QuantParams and
+        # alike): keep every reported fact verbatim instead of copying the
+        # object.  quant_type is reduced to its enum-like name exactly like
+        # the dequantization chain reads it; scale/zero_point may be scalars
+        # or per-channel arrays; further public attributes ride along so an
+        # SDK extension cannot be dropped from evidence silently.
+        projected: dict[str, Any] = {
+            "quant_type": str(getattr(value.quant_type, "name", value.quant_type)),
+            "scale": _evidence_value(getattr(value, "scale", None)),
+            "zero_point": _evidence_value(getattr(value, "zero_point", None)),
+            "axis": _evidence_value(getattr(value, "axis", None)),
+        }
+        for name in sorted(getattr(value, "__dict__", {})):
+            if not name.startswith("_") and name not in projected:
+                projected[name] = _evidence_value(getattr(value, name))
+        return projected
+    raise TypeError(f"Unsupported evidence value {type(value).__name__}.")
+
+
+def metadata_evidence(metadata: Any) -> dict[str, Any]:
+    """Project runtime metadata into JSON-serialisable evidence values.
+
+    ``asdict(RuntimeMetadata.from_runtime(runtime))`` fails on real boards:
+    :func:`dataclasses.asdict` deep-copies leaf values and the SDK's
+    ``QuantParams`` forbids pickling (X5 board evidence 2026-09-24).  This
+    projection keeps every tensor fact — model names, input/output names,
+    shapes, dtypes, strides and the complete per-output quant descriptors
+    (``quant_type``, ``scale``, ``zero_point``, ``axis``, plus any further
+    public attributes the SDK reports) — while never copying or mutating the
+    metadata object or its SDK descriptors.  A ``RuntimeMetadata`` (or any
+    dataclass) and plain mappings are both accepted, so host-test seams can
+    pass either form.
+    """
+
+    if is_dataclass(metadata) and not isinstance(metadata, type):
+        return {
+            entry.name: _evidence_value(getattr(metadata, entry.name))
+            for entry in fields(metadata)
+        }
+    if isinstance(metadata, Mapping):
+        return _evidence_value(metadata)
+    raise TypeError(
+        f"Unsupported metadata object {type(metadata).__name__}; expected a "
+        "RuntimeMetadata or a mapping."
+    )
+
+
+__all__ = ["MetadataMismatchError", "RuntimeMetadata", "canonicalise_dtype", "metadata_evidence"]

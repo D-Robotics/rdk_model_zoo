@@ -1,5 +1,7 @@
 > **Source-platform material within the integration tree.** The text below retains source-branch context and historical measurements; “current branch” describes that delivery line, not completed customer acceptance of `develop`. See the [sample index](../../samples/README.md) for unified entries and the [platform registry](../README.md) for current manifests/branches. Legacy commands may forward to root samples; keep a complete checkout.
 
+> **YOLOE-26 source restoration (2026-09-28):** its 30 files were restored from the fixed S commit for provenance. This is not a migrated unified sample or a new board verification. See the [source and artifact audit](../../docs/releases/unified-migration/2026-09-28-yoloe-source-review.md).
+
 <div align="center">
   <img src="docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
 </div>

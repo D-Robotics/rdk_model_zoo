@@ -1,0 +1,31 @@
+{
+  "utc": "2026-09-28T13:19:10.104556+00:00",
+  "records": [
+    {
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-g",
+        "-I",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/inc",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-gemma-text-stages-independent-review/mask-boundary.cpp",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/src/gemma4_text_inputs.cpp",
+        "-o",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/gemma-mask-boundary-review"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/gemma-mask-boundary-review"
+      ],
+      "rc": -6,
+      "stdout": "",
+      "stderr": "=================================================================\n==80692==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x00010a00c404 at pc 0x0001023afc24 bp 0x00016da5ddb0 sp 0x00016da5dda8\nWRITE of size 4 at 0x00010a00c404 thread T0\n    #0 0x0001023afc20 in gemma4::BuildFullMask(float*, int, int, int) gemma4_text_inputs.cpp:42\n    #1 0x0001023b2304 in gemma4::PrepareBatchInputs(gemma4::TokenEmbeddings const&, std::__1::vector<long long, std::__1::allocator<long long>> const&, int, int, float const*, int) gemma4_text_inputs.cpp:138\n    #2 0x0001023a1114 in main mask-boundary.cpp:11\n    #3 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)\n\n0x00010a00c404 is located 1020 bytes before 4194304-byte region [0x00010a00c800,0x00010a40c800)\nallocated by thread T0 here:\n    #0 0x000102cb4150 in _Znwm+0x74 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x50150)\n    #1 0x0001023be6d4 in float* std::__1::__libcpp_allocate[abi:nqe220106]<float>(std::__1::__element_count, unsigned long) allocate.h:60\n    #2 0x0001023be5c4 in std::__1::allocator<float>::allocate[abi:nqe220106](unsigned long) allocator.h:92\n    #3 0x0001023be214 in std::__1::__allocation_result<std::__1::allocator_traits<std::__1::allocator<float>>::pointer, std::__1::allocator_traits<std::__1::allocator<float>>::size_type> std::__1::__allocate_at_least[abi:nqe220106]<std::__1::allocator<float>, std::__1::allocator_traits<std::__1::allocator<float>>>(std::__1::allocator<float>&, unsigned long) allocate_at_least.h:46\n    #4 0x0001023bc92c in std::__1::vector<float, std::__1::allocator<float>>::__vallocate[abi:nqe220106](unsigned long) vector.h:597\n    #5 0x0001023c8300 in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long) vector.h:150\n    #6 0x0001023b4778 in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long) vector.h:147\n    #7 0x0001023b22c0 in gemma4::PrepareBatchInputs(gemma4::TokenEmbeddings const&, std::__1::vector<long long, std::__1::allocator<long long>> const&, int, int, float const*, int) gemma4_text_inputs.cpp:136\n    #8 0x0001023a1114 in main mask-boundary.cpp:11\n    #9 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)\n\nSUMMARY: AddressSanitizer: heap-buffer-overflow gemma4_text_inputs.cpp:42 in gemma4::BuildFullMask(float*, int, int, int)\nShadow bytes around the buggy address:\n  0x00010a00c180: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c280: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c300: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c380: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n=>0x00010a00c400:[fa]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c480: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c500: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c580: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c600: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x00010a00c680: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\nShadow byte legend (one shadow byte represents 8 application bytes):\n  Addressable:           00\n  Partially addressable: 01 02 03 04 05 06 07 \n  Heap left redzone:       fa\n  Freed heap region:       fd\n  Stack left redzone:      f1\n  Stack mid redzone:       f2\n  Stack right redzone:     f3\n  Stack after return:      f5\n  Stack use after scope:   f8\n  Global redzone:          f9\n  Global init order:       f6\n  Poisoned by user:        f7\n  Container overflow:      fc\n  Array cookie:            ac\n  Intra object redzone:    bb\n  ASan internal:           fe\n  Left alloca redzone:     ca\n  Right alloca redzone:    cb\n==80692==ABORTING\n"
+    }
+  ]
+}

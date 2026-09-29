@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers all 36 unified samples under root `samples/vision`. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
+This index covers 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
 ## Image classification
 
@@ -37,11 +37,20 @@ This index covers all 36 unified samples under root `samples/vision`. It is a so
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README.md) | [conversion](vision/ultralytics_yolo/conversion/README.md) | [evaluator](vision/ultralytics_yolo/evaluator/README.md) |
 | [paddle_ocr](vision/paddle_ocr/README.md) | [conversion](vision/paddle_ocr/conversion/README.md) | [evaluator](vision/paddle_ocr/evaluator/README.md) |
+| [yoloe](vision/yoloe/README.md) | [conversion](vision/yoloe/conversion/README.md) | [evaluator](vision/yoloe/evaluator/README.md) |
 | [yolov5](vision/yolov5/README.md) | [conversion](vision/yolov5/conversion/README.md) | [evaluator](vision/yolov5/evaluator/README.md) |
 | [fcos](vision/fcos/README.md) | [conversion](vision/fcos/conversion/README.md) | [evaluator](vision/fcos/evaluator/README.md) |
 | [yoloworld](vision/yoloworld/README.md) | [conversion](vision/yoloworld/conversion/README.md) | [evaluator](vision/yoloworld/evaluator/README.md) |
 | [lprnet](vision/lprnet/README.md) | [conversion](vision/lprnet/conversion/README.md) | [evaluator](vision/lprnet/evaluator/README.md) |
 | [modnet](vision/modnet/README.md) | [conversion](vision/modnet/conversion/README.md) | [evaluator](vision/modnet/evaluator/README.md) |
+| [pp_liteseg](vision/pp_liteseg/README.md) | [conversion](vision/pp_liteseg/conversion/README.md) | [evaluator](vision/pp_liteseg/evaluator/README.md) |
+| [pointnet](vision/pointnet/README.md) | [conversion](vision/pointnet/conversion/README.md) | [evaluator](vision/pointnet/evaluator/README.md) |
+| [unet](vision/unet/README.md) | [conversion](vision/unet/conversion/README.md) | [evaluator](vision/unet/evaluator/README.md) |
+| [unetmobilenet](vision/unetmobilenet/README.md) | [conversion](vision/unetmobilenet/conversion/README.md) | [evaluator](vision/unetmobilenet/evaluator/README.md) |
+| [yolo26_depth](vision/yolo26_depth/README.md) | [conversion](vision/yolo26_depth/conversion/README.md) | [evaluator](vision/yolo26_depth/evaluator/README.md) |
+| [depth_anything_v2](vision/depth_anything_v2/README.md) | [conversion](vision/depth_anything_v2/conversion/README.md) | [evaluator](vision/depth_anything_v2/evaluator/README.md) |
+| [lanenet](vision/lanenet/README.md) | [conversion](vision/lanenet/conversion/README.md) | [evaluator](vision/lanenet/evaluator/README.md) |
+| [diffusiondrive](vision/diffusiondrive/README.md) | [conversion](vision/diffusiondrive/conversion/README.md) | [evaluator](vision/diffusiondrive/evaluator/README.md) |
 | [bytetrack](vision/bytetrack/README.md) | [conversion](vision/bytetrack/conversion/README.md) | [evaluator](vision/bytetrack/evaluator/README.md) |
 
 ## Prompted segmentation
@@ -60,15 +69,45 @@ This index covers all 36 unified samples under root `samples/vision`. It is a so
 | [clip](vision/clip/README.md) | [conversion](vision/clip/conversion/README.md) | [evaluator](vision/clip/evaluator/README.md) |
 | [3dresnet](vision/3dresnet/README.md) | [conversion](vision/3dresnet/conversion/README.md) | [evaluator](vision/3dresnet/evaluator/README.md) |
 
+## Speech
+
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [asr](speech/asr/README.md) | [conversion](speech/asr/conversion/README.md) | [evaluator](speech/asr/evaluator/README.md) |
+| [kws](speech/kws/README.md) | [conversion](speech/kws/conversion/README.md) | [evaluator](speech/kws/evaluator/README.md) |
+| [paraformer](speech/paraformer/README.md) | [conversion](speech/paraformer/conversion/README.md) | [evaluator](speech/paraformer/evaluator/README.md) |
+
+## Robotics policy
+
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [himloco](robotics/himloco/README.md) | [conversion](robotics/himloco/conversion/README.md) | [evaluator](robotics/himloco/evaluator/README.md) |
+
+HIMLoco consumes prepared six-frame observations and returns policy actions; it does not construct a live control loop or send robot commands.
+
+## Language and vision-language models
+
+| Sample | Conversion | Evaluation |
+| --- | --- | --- |
+| [gemma4-e2b](llm/gemma4-e2b/README.md) | [conversion](llm/gemma4-e2b/conversion/README.md) | [evaluator](llm/gemma4-e2b/evaluator/README.md) |
+| [minicpm5-2b](llm/minicpm5-2b/README.md) | [conversion](llm/minicpm5-2b/conversion/README.md) | [evaluator](llm/minicpm5-2b/evaluator/README.md) |
+
+Gemma includes five native entry points and the full source tutorials; source import, launcher separation, model preparation and the Vision/Text stage/resource refactor are implemented, and the latest Text-stage package has bounded host acceptance — the [independent Text-stages review](../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md) rechecked both original sanitizer drivers and recorded 30/30 host tests and 19/19 ASan/UBSan CTests, claiming no vendor ABI, live model, board or quantization result. MiniCPM5-2B is migrated with separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) native entries. Its final independent core disposition [accepted the core refactor within host scope](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md): 20 passing host tests and four compiled README examples, with no live board, vendor ABI or model accuracy acceptance claimed. Batch B11, vendor ABI/model accuracy and board acceptance remain open; board tests are not-run.
+
+## Pinned third-party policy integrations
+
+Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching source does not prepare model assets or establish board validation.
+
 ## Read validation status correctly
 
 - The three original pilots and B1/B2 have their own board records; one passing case does not certify a family.
 - B3/B4/B5 migration acceptance primarily uses host checks; batch reports retain the board backlog.
 - EfficientSAM/MobileSAM have fully recovered X5 8GB default/priority7 and S100 default evidence. X5 4GB logs-only, unfinished S600 and unverified S100P gaps remain scoped in the [board handoff](../docs/releases/unified-migration/2026-09-24-board-resume.md); neither “all tested” nor “all untested” is accurate.
 - B7 includes scoped passing Python comparisons, MODNet manual-asset gaps, ByteTrack video-scope limits and pending source C++ comparisons. See the [ledger](../docs/releases/unified-migration/x5-s-migration-map.md).
+- B8 (H4) and B10 (H6) hold non-board batch acceptance: the eight B8 scopes in the [B8 aggregate review](../docs/releases/unified-migration/2026-09-28-b8-batch-independent-review.md) and ASR/KWS/Paraformer/HIMLoco in the [B10 integrated review](../docs/releases/unified-migration/2026-09-28-b10-batch-independent-review.md). Both accept host/documentation scope only; their board scope stays not-run.
 
 ## Choose and extend
 
 Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [_shared](_shared/README.md); responsibilities and documentation requirements are in the [inference contract](../docs/sample-standards/inference-contract.md) and [README contract](../docs/sample-standards/readme-contract.md).
 
-Pending models remain under [X5](../platforms/x5/README.md) and [S](../platforms/s/README.md); [X3](../platforms/x3/README.md) is historical. B8–B11 migration and final review remain active. This index is not a full-delivery acceptance sheet.
+Pending models remain under [X5](../platforms/x5/README.md) and [S](../platforms/s/README.md); [X3](../platforms/x3/README.md) is historical. B9 and B11 migration and their independent review remain active; B8/B10 acceptance is non-board only, and repository-wide review (H1/H8/H9) is not closed by any batch. This index is not a full-delivery acceptance sheet.

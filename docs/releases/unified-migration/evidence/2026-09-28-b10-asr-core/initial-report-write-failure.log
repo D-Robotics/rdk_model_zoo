@@ -1,0 +1,37 @@
+E
+======================================================================
+ERROR: test_report_write_failure_returns_original_error_without_traceback (samples.speech.asr.tests.test_runtime.RuntimeTests.test_report_write_failure_returns_original_error_without_traceback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/asr/runtime/python/main.py", line 157, in main
+    (output / "result.json").write_text(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/asr/tests/test_runtime.py", line 132, in fail_reports
+    raise OSError("fixture disk full")
+OSError: fixture disk full
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/asr/tests/test_runtime.py", line 136, in test_report_write_failure_returns_original_error_without_traceback
+    self.assertEqual(main(["--target", "s100", "--asset-id", selection.asset.reference, "--model-path", str(model), "--output-dir", str(root / "out")]), 2)
+                     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/asr/runtime/python/main.py", line 166, in main
+    (output / "failed.json").write_text(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/speech/asr/tests/test_runtime.py", line 132, in fail_reports
+    raise OSError("fixture disk full")
+OSError: fixture disk full
+
+----------------------------------------------------------------------
+Ran 1 test in 0.058s
+
+FAILED (errors=1)

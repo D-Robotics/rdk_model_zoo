@@ -225,7 +225,7 @@ def print_model_listing(profile: PlatformProfile) -> None:
           f"{os.path.join('model', profile.model_subdir) if profile.model_subdir else 'model'}")
     print(f"  NV12 input      : {profile.input_protocol}")
     print(f"  default NMS IoU : {profile.nms_thres}")
-    print(f"  C++ runtime     : {'yes' if profile.supports_cpp else 'no'}")
+    print("  C++ sources     : detect/classify/pose/segment; board verification separate")
     print("  published assets:")
     for entry in family_listing(profile):
         tasks = ", ".join(

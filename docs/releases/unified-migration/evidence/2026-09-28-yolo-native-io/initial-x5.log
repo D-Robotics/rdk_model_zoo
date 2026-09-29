@@ -1,0 +1,23 @@
+samples/vision/ultralytics_yolo/runtime/cpp/test/test_dnn_io.cc:65:71: error: no member named 'upload_planes' in 'yolo::Nv12Input'
+   65 |  yolo::Nv12Input input;expect(input.allocate(nullptr,p));expect(input.upload_planes(p,y.data(),y.size(),uv.data(),uv.size()));
+      |                                                                 ~~~~~ ^
+samples/vision/ultralytics_yolo/runtime/cpp/test/test_dnn_io.cc:69:16: error: no member named 'upload_planes' in 'yolo::Nv12Input'
+   69 |  expect(!input.upload_planes(p,y.data(),y.size()-1,uv.data(),uv.size()));
+      |          ~~~~~ ^
+samples/vision/ultralytics_yolo/runtime/cpp/test/test_dnn_io.cc:70:50: error: no member named 'upload_planes' in 'yolo::Nv12Input'
+   70 |  auto foreign=p;foreign.y_stride=6;expect(!input.upload_planes(foreign,y.data(),y.size(),uv.data(),uv.size()));
+      |                                            ~~~~~ ^
+samples/vision/ultralytics_yolo/runtime/cpp/test/test_dnn_io.cc:71:30: error: no member named 'upload_planes' in 'yolo::Nv12Input'
+   71 |  fail_flush=-1;expect(!input.upload_planes(p,y.data(),y.size(),uv.data(),uv.size()));fail_flush=0;
+      |                        ~~~~~ ^
+samples/vision/ultralytics_yolo/runtime/cpp/test/test_dnn_io.cc:78:129: error: no member named 'upload_planes' in 'yolo::Nv12Input'
+   78 |  split();p=plan();fail_alloc=1;{yolo::Nv12Input input;expect(!input.allocate(nullptr,p));expect(allocated==freed);expect(!input.upload_planes(p,y.data(),24,uv.data(),12));}
+      |                                                                                                                           ~~~~~ ^
+samples/vision/ultralytics_yolo/runtime/cpp/test/test_dnn_io.cc:93:72: error: no member named 'upload_planes' in 'yolo::Nv12Input'
+   93 |  {yolo::Nv12Input input;expect(input.allocate(nullptr,p));expect(input.upload_planes(p,y.data(),24,uv.data(),12));auto* bytes=static_cast<uint8_t*>(YOLO_SYS_MEM(input.tensors()[0])->virAddr);expect(std::equal(y.begin(),y.end(),bytes));expect(std::equal(uv.begin(),uv.end(),bytes+24));}
+      |                                                                  ~~~~~ ^
+6 errors generated.
+samples/vision/ultralytics_yolo/runtime/cpp/common/dnn_io.cc:46:63: error: unused parameter 'input_count' [-Werror,-Wunused-parameter]
+   46 | int infer_sync(hbDNNTensor* outputs, hbDNNTensor* inputs, int input_count,
+      |                                                               ^
+1 error generated.

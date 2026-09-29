@@ -139,6 +139,222 @@ YOLO26 cls/seg/pose/obb exporters do not currently accept `--require-local`. Che
 
 Pass the generated ONNX to the mapper below, adding `--family yolo26` for YOLO26. Expected input is static batch-one float32 NCHW. Detection DFL and direct-LTRB outputs are not interchangeable; segmentation includes mask coefficients/prototypes, pose keypoints, OBB angles, and classification logits with runtime Softmax. Check each exporter's output description and runtime binding rather than inferring compatibility from tensor count alone.
 
+<a id="dataflow"></a>
+## DFL-family dataflow: graph outputs and runtime decode
+
+The source conversion guides (X5: rdk_x5 @ac11571; S: rdk_s
+@380e1a2bf42041af54be6f34935e50197cfadff9 — the revisions byte-identical to
+the archived `platforms/x5` and `platforms/s` copies) explain the DFL-family
+deployment pipeline with the illustrations below, kept here as source
+material. They describe the DFL detection protocol
+(YOLOv5u/v8/v9/v10/11/12/13) and its segmentation/pose extensions. YOLO26
+detection has no diagram here; its protocol difference is scoped at the end of
+this section.
+
+### Object detection (DFL)
+
+![](./imgs/ultralytics_yolo_detect_dataflow.png)
+
+In the standard processing flow, the scores, categories, and xyxy coordinates
+of all 8400 bounding boxes (bbox) are fully computed so that loss can be
+calculated together with the ground truth during training. During deployment,
+only bbox results that meet the score threshold need to be preserved, so there
+is no need to fully compute all 8400 bbox results.
+
+The optimization mainly uses the monotonicity of the Sigmoid function to
+filter candidates before computing them. The same "filter first, then
+compute" idea is also used in the DFL and feature decoding stages, saving a
+large amount of computation and reducing inference latency.
+
+- **Classification branch: ReduceMax operation**
+
+ReduceMax obtains the maximum value on a specified dimension. In the YOLO
+detection head, it finds the maximum among the 80 class scores of each of the
+8400 grid cells. The operation is performed on the C dimension and outputs
+the maximum value, not the index of that maximum.
+
+The Sigmoid function is monotonic, so the relative ordering of the 80 scores
+does not change before and after Sigmoid:
+
+$$Sigmoid(x)=\frac{1}{1+e^{-x}}$$
+
+$$Sigmoid(x_1) > Sigmoid(x_2) \Leftrightarrow x_1 > x_2$$
+
+The position of the maximum value output by the model is therefore the
+position of the final maximum score, and applying Sigmoid to that output
+value yields the maximum class score of the float model:
+$\operatorname{Sigmoid}(\max \mathrm{logits}) = \max \operatorname{Sigmoid}(\mathrm{logits})$.
+The argmax ordering agrees before and after Sigmoid; the raw output value
+itself is a logit, not yet a probability.
+
+- **Classification branch: Threshold(TopK) operation**
+
+Threshold(TopK) filters the grid cells that meet the threshold requirement.
+It operates on the 8400 grid cells along the H/W dimensions; implementations
+may flatten H/W for convenience, which does not change the semantics. Assume
+the raw score of one class on a grid cell is $x$, the value after Sigmoid is
+$y$, and the threshold is $C$. The necessary and sufficient condition for
+this score to qualify is:
+
+$$y=Sigmoid(x)=\frac{1}{1+e^{-x}}>C$$
+
+which can be transformed into:
+
+$$x > -ln\left(\frac{1}{C}-1\right)$$
+
+This operation obtains the indices of the qualifying grid cells and their
+corresponding maximum values. After Sigmoid, each maximum value is the class
+score of that grid cell.
+
+- **Classification branch: GatherElements and ArgMax operations**
+
+Using the indices produced by Threshold(TopK), GatherElements extracts the
+qualifying grid cells, and ArgMax determines which of the classes carries the
+maximum, producing the class id of each selected grid cell.
+
+- **Bounding box branch: GatherElements operation**
+
+Using the same grid-cell indices, GatherElements extracts the corresponding
+bbox information and obtains bbox features with shape `1×64×k×1`.
+
+- **Bounding box branch: DFL (SoftMax + Conv)**
+
+Each grid cell uses 4 numbers to describe the bbox position. The DFL
+structure provides 16 estimates for the offset of one side relative to the
+cell (anchor) position. These 16 estimates are passed through SoftMax, and
+the expected value is calculated by convolution. This is a core Anchor-Free
+design: each grid cell predicts exactly one bounding box. For one side
+offset, assume the 16 estimates are $l_p$, where $p=0,1,...,15$. The offset
+is calculated as:
+
+$$\hat{l} = \sum_{p=0}^{15}{\frac{p·e^{l_p}}{S}}, S =\sum_{p=0}^{15}{e^{l_p}}$$
+
+- **Bounding box branch: Decode (dist2bbox / ltrb2xyxy)**
+
+This operation decodes the ltrb description of each bounding box into an
+xyxy description. ltrb represents the distances of the left, top, right, and
+bottom sides from the grid-cell center:
+
+![](./imgs/ltrb2xyxy.jpg)
+
+For an input size $Size=640$ and feature level $i$ ($i=1, 2, 3$) with
+downsampling factor $Stride(i)$, YOLOv8-Detect uses $Stride(1)=8$,
+$Stride(2)=16$, $Stride(3)=32$, corresponding to feature map sizes
+$n_i = Size/Stride(i)$, i.e. $n_1 = 80$, $n_2 = 40$, $n_3 = 20$, and
+$n_1^2+n_2^2+n_3^2=8400$ grid cells in total. For the cell at column $x$,
+row $y$ of level $i$ ($x$ counts along the horizontal axis and $y$ along the
+vertical axis; $x,y \in [0, n_i)\cap Z$, with $Z$ the integers), the
+ltrb-to-xyxy conversion is:
+
+$$x_1 = (x+0.5-l)\times{Stride(i)},\quad y_1 = (y+0.5-t)\times{Stride(i)}$$
+
+$$x_2 = (x+0.5+r)\times{Stride(i)},\quad y_2 = (y+0.5+b)\times{Stride(i)}$$
+
+The final detection results are the class (id), score, and position (xyxy).
+
+**Where these stages run in this sample.** The diagram is the source guides'
+data-flow view of the DFL pipeline. In this repository the exported graph
+stops at the per-stride messages drawn at the top of the figure — NHWC
+classification logits (`1×80×80×80` at stride 8, `1×40×40×80` at 16,
+`1×20×20×80` at 32 for an 80-class model; a custom class count changes the
+80) and DFL box logits (`...×64`) — and the maintained runtime performs the
+equivalents of the ReduceMax / threshold-filter / gather / ArgMax, DFL
+SoftMax-plus-expected-bin, and dist2bbox stages, followed by class-wise NMS
+where the selected binding requires one, in its Python post-processing
+(`decode_dfl` in `runtime/python/decode.py`; protocol in
+[`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)). The S-series YOLOv10
+binding is the maintained NMS-free exception: it reuses the same decode
+stages with `nms='none'` fixed (see the [runtime
+README](../runtime/python/README.md)). The runtime
+consumes already-dequantized floating outputs: integer tensors or SCALE
+quantization metadata fail at binding, and no manual output dequantization is
+implemented. Historical wording such as "after dequantization" therefore
+describes what the runtime SDK already provides, not a step to hand-write.
+
+### Instance segmentation (DFL families)
+
+![](./imgs/ultralytics_yolo_seg_dataflow.png)
+
+Instance segmentation extends the object detection flow. After bbox results
+that meet the requirement are selected from the detection branch, two
+GatherElements operations extract that grid cell's 32 mask coefficients,
+which are linearly combined with the prototype branch output (a weighted
+sum, drawn as MatMul; prototypes are `1×160×160×32`, i.e. stride 4) to
+generate the instance masks. The ReduceMax, Threshold(TopK), GatherElements,
+DFL, and Decode optimizations of the detection branch therefore still apply.
+The maintained runtime performs the same coefficient–prototype combination
+in post-processing on floating heads (`segmentation_decode`).
+
+### Pose estimation (DFL families)
+
+![](./imgs/ultralytics_yolo_pose_dataflow.png)
+
+> **Historical-figure correction (labels in the image are stale).** The
+> preserved source diagram labels the pose message `×57` per grid cell and
+> keeps 80 class channels, while also reshaping to 3×17. Today's maintained
+> binding is different: one class channel (single-class person pose models)
+> and `3 × 17 = 51` keypoint channels per cell for the 17 COCO keypoints.
+> The diagram is retained unmodified as source material; read its pose/class
+> channel labels as historical, not as the current contract.
+
+Ultralytics YOLO Pose keypoints are based on the object detection result.
+The COCO keypoint definitions:
+
+```python
+COCO_keypoint_indexes = {
+    0: 'nose',
+    1: 'left_eye',
+    2: 'right_eye',
+    3: 'left_ear',
+    4: 'right_ear',
+    5: 'left_shoulder',
+    6: 'right_shoulder',
+    7: 'left_elbow',
+    8: 'right_elbow',
+    9: 'left_wrist',
+    10: 'right_wrist',
+    11: 'left_hip',
+    12: 'right_hip',
+    13: 'left_knee',
+    14: 'right_knee',
+    15: 'left_ankle',
+    16: 'right_ankle'
+}
+```
+
+The object detection part of the Pose model is the same as the Detect model,
+and the pose head adds one per-cell feature map. Under the published
+17-keypoint COCO contract, the maintained binding requires one class channel
+plus `3 × 17 = 51` keypoint channels per cell: each keypoint has an x/y
+coordinate relative to that feature level's downsampling factor, plus a
+visibility score (`pose_decode.py` binds `cls` with 1 channel and `kpts`
+with `3 × nkpt`; the published binding fixes `nkpt = 17`, and changing the
+shape declaration alone does not produce a supported variant). After the
+detection branch selects a cell, the DFL decode computes each keypoint's
+model-input position as `(raw_xy × 2 + anchor − 0.5) × stride`, where
+`anchor` is the cell's half-integer center (`decode_kpts` in
+`runtime/python/rdk_yolo_utils/postprocess.py`); `inverse_points`, together
+with `inverse_boxes`, then restores original-image geometry from the
+model-input letterbox, and Sigmoid converts the keypoint visibility logits
+into scores (`pose_decode.py`). For comparison, the YOLO26 direct-LTRB pose
+branch uses `(raw_xy + anchor) × stride`, without the DFL ×2 form. The
+maintained runtime decodes these heads in post-processing (`pose_decode`).
+
+### YOLO26 direct-LTRB difference
+
+The two box diagrams above describe the **DFL protocol only**; they do not
+describe YOLO26. YOLO26 detection exports three NHWC classification tensors
+plus three **direct four-channel LTRB** tensors (`[1,Hs,Ws,4]`, not
+`[1,Hs,Ws,64]`): the four channels are already the left/top/right/bottom
+distances in cell units, so the DFL SoftMax + 16-bin expectation stage does
+not exist in that protocol. The `ltrb2xyxy.jpg` illustration belongs to the
+DFL protocol's decode. The YOLO26 decoder takes the maximum class in
+raw-logit space, applies Sigmoid to the selected class only, converts the
+four distances using the same cell-center grid geometry, and then applies
+the shared class-wise NMS (`decode_ltrb`). DFL and direct-LTRB artifacts are
+not interchangeable, as stated in the export section above and in
+[`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md).
+
 <a id="calibration"></a>
 ## Calibration data preparation
 

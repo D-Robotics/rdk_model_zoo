@@ -93,13 +93,18 @@ single-core, FPS is 4-thread concurrent at 100% BPU utilization, CPU
 | ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
 | ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
 | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
+| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
 
-The published table covers nano/pico/femto — **not atto**, the only variant
-with a published artifact; no benchmark row exists for the downloadable
-model. Recorded as published, not re-measured or explained here.
+All four rows — including atto, the only variant with a downloadable
+artifact — come from the same published source table (rdk_x5 @ac11571,
+"Performance Data"); the archived platform benchmark snapshot
+(`platforms/x5/docs/release/benchmarks.yaml`, entry `convnext-atto-x5`)
+records the same atto values. Recorded as published, not re-measured
+here.
 
-The quantized Top-1 (72.50%) stays close to the float value (73.75%) in
-the published record; this is recorded as published, not re-measured here.
+In the published record the quantized Top-1 stays close to the float
+value for each variant (e.g. femto 72.25% vs 73.75%, atto 69.75% vs
+73.25%); recorded as published, not re-measured here.
 
 <a id="boundaries"></a>
 ## Boundaries

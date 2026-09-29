@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-当前索引覆盖根 `samples/vision` 下全部 36 个统一 Sample。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
+当前索引覆盖 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
 
 ## 图像分类
 
@@ -37,11 +37,20 @@
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README_cn.md) | [conversion](vision/ultralytics_yolo/conversion/README_cn.md) | [evaluator](vision/ultralytics_yolo/evaluator/README_cn.md) |
 | [paddle_ocr](vision/paddle_ocr/README_cn.md) | [conversion](vision/paddle_ocr/conversion/README_cn.md) | [evaluator](vision/paddle_ocr/evaluator/README_cn.md) |
+| [yoloe](vision/yoloe/README_cn.md) | [conversion](vision/yoloe/conversion/README_cn.md) | [evaluator](vision/yoloe/evaluator/README_cn.md) |
 | [yolov5](vision/yolov5/README_cn.md) | [conversion](vision/yolov5/conversion/README_cn.md) | [evaluator](vision/yolov5/evaluator/README_cn.md) |
 | [fcos](vision/fcos/README_cn.md) | [conversion](vision/fcos/conversion/README_cn.md) | [evaluator](vision/fcos/evaluator/README_cn.md) |
 | [yoloworld](vision/yoloworld/README_cn.md) | [conversion](vision/yoloworld/conversion/README_cn.md) | [evaluator](vision/yoloworld/evaluator/README_cn.md) |
 | [lprnet](vision/lprnet/README_cn.md) | [conversion](vision/lprnet/conversion/README_cn.md) | [evaluator](vision/lprnet/evaluator/README_cn.md) |
 | [modnet](vision/modnet/README_cn.md) | [conversion](vision/modnet/conversion/README_cn.md) | [evaluator](vision/modnet/evaluator/README_cn.md) |
+| [pp_liteseg](vision/pp_liteseg/README_cn.md) | [conversion](vision/pp_liteseg/conversion/README_cn.md) | [evaluator](vision/pp_liteseg/evaluator/README_cn.md) |
+| [pointnet](vision/pointnet/README_cn.md) | [conversion](vision/pointnet/conversion/README_cn.md) | [evaluator](vision/pointnet/evaluator/README_cn.md) |
+| [unet](vision/unet/README_cn.md) | [conversion](vision/unet/conversion/README_cn.md) | [evaluator](vision/unet/evaluator/README_cn.md) |
+| [unetmobilenet](vision/unetmobilenet/README_cn.md) | [conversion](vision/unetmobilenet/conversion/README_cn.md) | [evaluator](vision/unetmobilenet/evaluator/README_cn.md) |
+| [yolo26_depth](vision/yolo26_depth/README_cn.md) | [conversion](vision/yolo26_depth/conversion/README_cn.md) | [evaluator](vision/yolo26_depth/evaluator/README_cn.md) |
+| [depth_anything_v2](vision/depth_anything_v2/README_cn.md) | [conversion](vision/depth_anything_v2/conversion/README_cn.md) | [evaluator](vision/depth_anything_v2/evaluator/README_cn.md) |
+| [lanenet](vision/lanenet/README_cn.md) | [conversion](vision/lanenet/conversion/README_cn.md) | [evaluator](vision/lanenet/evaluator/README_cn.md) |
+| [diffusiondrive](vision/diffusiondrive/README_cn.md) | [conversion](vision/diffusiondrive/conversion/README_cn.md) | [evaluator](vision/diffusiondrive/evaluator/README_cn.md) |
 | [bytetrack](vision/bytetrack/README_cn.md) | [conversion](vision/bytetrack/conversion/README_cn.md) | [evaluator](vision/bytetrack/evaluator/README_cn.md) |
 
 ## 提示分割
@@ -60,15 +69,45 @@
 | [clip](vision/clip/README_cn.md) | [conversion](vision/clip/conversion/README_cn.md) | [evaluator](vision/clip/evaluator/README_cn.md) |
 | [3dresnet](vision/3dresnet/README_cn.md) | [conversion](vision/3dresnet/conversion/README_cn.md) | [evaluator](vision/3dresnet/evaluator/README_cn.md) |
 
+## 语音
+
+| Sample | Conversion | Evaluation |
+|---|---|---|
+| [asr](speech/asr/README_cn.md) | [conversion](speech/asr/conversion/README_cn.md) | [evaluator](speech/asr/evaluator/README_cn.md) |
+| [kws](speech/kws/README_cn.md) | [conversion](speech/kws/conversion/README_cn.md) | [evaluator](speech/kws/evaluator/README_cn.md) |
+| [paraformer](speech/paraformer/README_cn.md) | [conversion](speech/paraformer/conversion/README_cn.md) | [evaluator](speech/paraformer/evaluator/README_cn.md) |
+
+## 机器人策略
+
+| Sample | 转换 | 评估 |
+|---|---|---|
+| [himloco](robotics/himloco/README_cn.md) | [conversion](robotics/himloco/conversion/README_cn.md) | [evaluator](robotics/himloco/evaluator/README_cn.md) |
+
+HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制环或发送机器人指令。
+
+## 大模型
+
+| Sample | 转换 | 评测 |
+| --- | --- | --- |
+| [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
+| [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
+
+Gemma 已迁入五个原生入口与完整源教程；源内容迁入、启动流程拆分、模型准备与 Vision/Text 阶段及资源重构已实现，最新 Text 阶段包获得有边界的主机验收：[Text 阶段独立评审](../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md) 复核两个原始 ASan/UBSan 驱动并记录 30/30 项主机测试与 19/19 项 ASan/UBSan CTest 通过，不声明厂商 ABI、实机模型、板端或量化结果。MiniCPM5-2B 已迁入 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口。其[最终独立核心处置](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md)已在主机范围内接受核心重构：20 项主机测试通过、四段 README 示例编译通过；不声明实板、厂商 ABI 或模型精度验收。B11 批次、厂商 ABI/模型精度与板端验收仍未关闭；板测未运行。
+
+## 固定第三方策略集成
+
+ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护。参阅 [VLA 总览](vla/README_cn.md)、[ACT 板型选择](vla/guides/act_cn.md)、[Pi0 离线与实机边界](vla/guides/pi0_cn.md)。源码获取不等于模型已准备或板端验证通过。
+
 ## 如何解读验证状态
 
 - 原三个试点及 B1/B2 有各自的实板记录；不要将一例通过推广为整个系列。
 - B3/B4/B5 的主要迁移验收基于主机，待板测范围见各批报告。
 - EfficientSAM/MobileSAM 已有 X5 8GB 默认/priority7 和 S100 默认等完整回收证据；X5 4GB 仅日志、S600 未完成、S100P 未验证等缺口按 [板端交接记录](../docs/releases/unified-migration/2026-09-24-board-resume.md) 保留，不能笼统标为全部已测或全部未测。
 - B7 包含已验证的部分 Python 对照，也有 MODNet manual 资产缺口、ByteTrack 视频范围限制和 C++ 源对照待补；完整状态见 [台账](../docs/releases/unified-migration/x5-s-migration-map.md)。
+- B8（H4）与 B10（H6）已获得非板端批次验收：B8 的八个样例范围见 [B8 聚合评审](../docs/releases/unified-migration/2026-09-28-b8-batch-independent-review.md)，ASR/KWS/Paraformer/HIMLoco 见 [B10 集成评审](../docs/releases/unified-migration/2026-09-28-b10-batch-independent-review.md)。两者只接受主机/文档范围；板端范围仍未运行。
 
 ## 选择与扩展
 
 先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [_shared](_shared/README.md)，代码职责与文档要求见 [推理契约](../docs/sample-standards/inference-contract.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
 
-尚未进入统一目录的模型保留在 [X5](../platforms/x5/README_cn.md)、[S](../platforms/s/README_cn.md)；[X3](../platforms/x3/README_cn.md) 为历史内容。B8–B11 的迁移和最终审核仍在进行，不能把本索引当作完整交付签收表。
+尚未进入统一目录的模型保留在 [X5](../platforms/x5/README_cn.md)、[S](../platforms/s/README_cn.md)；[X3](../platforms/x3/README_cn.md) 为历史内容。B9、B11 的迁移与独立审核仍在进行；B8/B10 的验收仅为非板范围，仓库级审核（H1/H8/H9）也不因任何批次关闭。不能把本索引当作完整交付签收表。

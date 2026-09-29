@@ -8,6 +8,26 @@ ResNeXt 在残差网络的基础上引入 split-transform-merge 设计，通过�
 - **论文地址**: [Aggregated Residual Transformations for Deep Neural Networks](https://arxiv.org/abs/1611.05431)
 - **参考实现**: [facebookresearch/ResNeXt](https://github.com/facebookresearch/ResNeXt)
 
+源 README 提炼的特性：
+
+- **Cardinality（分支数）**——通过增加并行变换路径数（32×4d 中的
+  "32"：32 组）提升表达能力，而不是只加深或加宽网络。
+- **组卷积**——在保持参数量/FLOPs 与对应 ResNet 接近的同时平衡精度与
+  计算效率。
+- **残差主干**——保留稳定的残差学习模式（block 内
+  split-transform-merge）。
+- **分类输出**——产出 ImageNet-1k 标签的 Top-K 类别 ID 与置信度。
+
+![上游论文中 ResNeXt-50 32x4d 与 ResNet-50 的逐 stage 结构表](./test_data/ResNeXt_architecture.png)
+
+*图（上游论文 Table 1）：逐 stage 的 block 结构表——每个 ResNeXt
+bottleneck 把稠密 1×1/3×3/1×1 变换替换为分组 3×3（C=32），参数量
+（25.0 对 25.5 M）与 FLOPs（4.2 对 4.1 G）相对 ResNet-50 几乎不变。
+恢复自 X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864）；图中为上游训练结构，实际
+部署制品是 INT8 量化的 `50_32x4d` 变体（224×224 NV12，见
+[支持与实测矩阵](#support-matrix)）。*
+
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
 
 <a id="support-matrix"></a>
@@ -57,6 +77,15 @@ python3 samples/vision/resnext/runtime/python/main.py \
 ## 预期结果
 
 唯一发布变体为 `50_32x4d`，默认即选中它。推理打印 Top-5 ID、softmax 分数与标签。完全平局按 ID 升序排序。随附图片用于功能检查；板测 not-run。仅指定 `--img-save-path` 才写文件。
+
+供参考：X5 源 README（rdk_x5
+@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
+截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
+`bee_eater.JPEG` 的 rank 1 为 class 92（bee eater）。这是源交付中的
+历史截图，不是本仓库当前入口的运行结果。
+
+![X5 源 README 的历史推理截图：bee eater 测试图与旧版 Top-5 叠加，
+rank 1 为 class 92（bee eater）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据

@@ -32,8 +32,11 @@ class YOLO26SegConfig(_Config):
 YOLO26SegConfig=YOLO26SegConfig
 class YOLO26Seg(_Base):
     """Retain the old import and return contract."""
-    def post_process(self,outputs,ori_img_w,ori_img_h,*args,**kwargs):
+    def post_process(self,outputs,ori_img_w=None,ori_img_h=None,*args,**kwargs):
         boxes,scores,ids,crops=super().post_process(outputs,ori_img_w,ori_img_h,*args,**kwargs)
+        transform=kwargs.get("transform")
+        if transform is not None:
+            ori_img_h,ori_img_w=transform.original_size
         masks=np.zeros((len(boxes),ori_img_h,ori_img_w),dtype=bool)
         for i,(box,crop) in enumerate(zip(boxes,crops)):
             x1,y1=max(0,int(box[0])),max(0,int(box[1]))

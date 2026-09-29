@@ -1,3 +1,5 @@
+> Current unified entry: [UNet](../../../../../samples/vision/unet/README.md). Source documentation below is retained; automatic download and the old Python API describe the historical path.
+
 [English](./README.md) | [简体中文](./README_cn.md)
 
 # UNet Model Description

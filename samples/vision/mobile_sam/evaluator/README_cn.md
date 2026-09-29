@@ -27,6 +27,8 @@ python3 samples/vision/mobile_sam/evaluator/compare.py \
 
 S 系列使用 `--target s100|s100p|s600`。可选的 `--test-img`、stage 模型路径及配对 asset ID、`--priority`（默认 `0`）和 `--bpu-cores` 会传给两侧。省略 `--bpu-cores` 时 S 使用 `[0]`；X5 不支持显式 core 选择。退出码 `0` 表示全部检查通过，`1` 表示执行完成但有比较失败，`2` 表示 target gate、参数、模型、图像或执行失败。
 
+调度控制：evaluator 先按固定源自带行为原样调用其 `set_scheduling_params`，并记录每一次原生调度调用及其原始结果。由于固定 X5 源 helper 传入标量 priority 会被原生 API 拒绝（源内部吞掉该 TypeError、实际未应用任何调度），evaluator 另行为两侧原生 runtime 显式设置同一份已验证的按模型名 Mapping 控制参数，使对照在完全一致且确实生效的调度下执行。`comparison.json` 记录每个 stage 的模型名、原生实参，以及被拒绝与成功生效的调用。该显式控制是 evaluator 的对拍控制项，不是固定源 CLI 自身的调度行为，也不改变两侧 pre/forward/post 处理。
+
 | 参数 | 默认值 | 含义 |
 |---|---|---|
 | `--target` | 必填 | `x5`、`s100`、`s100p` 或 `s600`；会 gate 实际执行 target |

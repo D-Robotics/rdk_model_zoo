@@ -2,8 +2,8 @@
 
 EfficientFormer 在 RDK X5 上的 ImageNet-1k 分类：输入一张 BGR 图像，
 输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 发布交付 EfficientFormer-L1
-与 L3 变体（论文 [EfficientFormer: ImageNet Transformers at MobileNet
-Speed](https://arxiv.org/abs/2206.00171)）。[English](README.md)
+与 L3 变体（论文 [EfficientFormer: Vision Transformers at MobileNet
+Speed](https://arxiv.org/abs/2206.01191)）。[English](README.md)
 
 <a id="overview"></a>
 ## 概述
@@ -15,6 +15,35 @@ Speed](https://arxiv.org/abs/2206.00171)）。[English](README.md)
 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台
 分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/x5/` 下，其审计记录
 在迁移文档中，不在本 README 展开。
+
+### 算法背景
+
+EfficientFormer 是面向移动端推理速度设计的视觉 Transformer 家族。其设计
+从 ViT 类网络的延迟剖析出发，剔除在边缘硬件上表现不佳的算子；维度一致的
+MetaBlock 在早期阶段保持 4D 卷积式 token 混合，只在有收益的阶段切换到
+3D 全局注意力，从而在保持 Transformer 建模能力的同时维持部署友好性
+（[论文](https://arxiv.org/abs/2206.01191)、
+[snap-research/EfficientFormer](https://github.com/snap-research/EfficientFormer)）。
+
+源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+
+- **延迟驱动设计**：通过延迟分析剔除低效的 ViT 算子，面向移动端推理。
+- **维度一致的块**：保持部署友好的张量布局，保证高效执行。
+- **边缘部署**：提供 L1、L3 两个 RDK X5 部署模型，输入为 packed NV12。
+
+![延迟剖析](./test_data/latency_profiling.png)
+
+*延迟剖析，恢复自 X5 源版本（`test_data/latency_profiling.png`，
+rdk_x5 @ac11571，sha256 `a3439462…`；论文图 2）：iPhone 12/CoreML 上
+CNN 与 ViT 类模型的分算子延迟拆分，括号内为 ImageNet-1k top-1 —
+这是引出维度一致块设计的研究依据，为论文实验数据，不是 RDK X5 实测。*
+
+![EfficientFormer 架构](./test_data/EfficientFormer_architecture.png)
+
+*架构总览，恢复自 X5 源版本（`test_data/EfficientFormer_architecture.png`，
+rdk_x5 @ac11571，sha256 `4fe4662f…`；论文图 3）：卷积 stem 作为 patch
+embedding，阶段 1–3i 为带局部池化的 4D MetaBlock，阶段 3j–4 为带全局
+MHSA 的 3D MetaBlock，整体按维度一致方式组织。*
 
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
@@ -93,6 +122,13 @@ X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | EfficientFormer-L3 | 224x224 | 31.3 | 76.75% | 76.05% | 17.55 | 65.56 | 60.52 |
 | EfficientFormer-L1 | 224x224 | 12.3 | 76.75% | 67.72% | 5.88 | 20.69 | 191.605 |
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `7ddbce07…`）：随仓 [bittern.JPEG](test_data/bittern.JPEG) 的
+Rank-1 为 `bittern`，其后依次为 partridge、European gallinule、bustard、
+coucal。由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

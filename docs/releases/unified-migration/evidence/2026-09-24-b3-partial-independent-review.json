@@ -1,0 +1,52 @@
+{
+  "utc": "2026-09-24T11:12:48.532786+00:00",
+  "decision": "changes-required",
+  "author_status": "partial work; GLM terminated with five-hour usage-limit 429",
+  "host_tests": {
+    "tests": 28,
+    "rc": 0
+  },
+  "finding": {
+    "id": "B3-TOOL-R1",
+    "trigger": "pre-import root utils.py_utils.file_io before _load_legacy",
+    "observed": "fixed-source entry binds preloaded root module; observed matches_pin false is recorded but not enforced before inference",
+    "required": "temporarily remove all relevant cached modules, load verified closure, restore exact previous objects in finally; require actual loaded dependency hashes to match pin before inference; regression with preloaded modules and restoration check"
+  },
+  "probe": {
+    "preloaded": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b3-glm-board-capture/utils/py_utils/file_io.py",
+    "bound": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b3-glm-board-capture/utils/py_utils/file_io.py",
+    "same_object": true,
+    "dependency_check": {
+      "utils.py_utils": {
+        "pin_path": "utils/py_utils/__init__.py",
+        "observed_file": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b3-glm-board-capture/platforms/x5/utils/py_utils/__init__.py",
+        "observed_sha256": "8d0f6a70afb95dcff43543cd0244017102b4991c3255dd27199ca69795b4838e",
+        "pin_sha256": "8d0f6a70afb95dcff43543cd0244017102b4991c3255dd27199ca69795b4838e",
+        "matches_pin": true
+      },
+      "utils.py_utils.file_io": {
+        "pin_path": "utils/py_utils/file_io.py",
+        "observed_file": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b3-glm-board-capture/utils/py_utils/file_io.py",
+        "observed_sha256": "1bc493be35c03a13ecdf561e34354d543e2779a282b6d4f88b3c87a1f70f767d",
+        "pin_sha256": "7b158f3f2a7cfa81898ef6430287a4efaae4b6f31875131f0e8ebb3a105bdc1a",
+        "matches_pin": false
+      },
+      "utils.py_utils.preprocess": {
+        "pin_path": "utils/py_utils/preprocess.py",
+        "observed_file": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b3-glm-board-capture/platforms/x5/utils/py_utils/preprocess.py",
+        "observed_sha256": "63c2bd0c64fb7d7f397e00d8b631d0437aef8817759f46e5b4633db5b8eb06f4",
+        "pin_sha256": "63c2bd0c64fb7d7f397e00d8b631d0437aef8817759f46e5b4633db5b8eb06f4",
+        "matches_pin": true
+      },
+      "utils.py_utils.visualize": {
+        "pin_path": "utils/py_utils/visualize.py",
+        "observed_file": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b3-glm-board-capture/utils/py_utils/visualize.py",
+        "observed_sha256": "7566563fb3bf78ddc6c930605da982420f0bf9a6de88943c888222374f980538",
+        "pin_sha256": "9f5ddb7d22537b9f732097cd5e1108526f9b15bb24983a00c73947eaa5ac867a",
+        "matches_pin": false
+      }
+    }
+  },
+  "tool_sha256": "f2bf4160a4385bad91a32be1314d53c9adb4e34e8ac573d2c2b7329f03e1955e",
+  "board": "not-run"
+}

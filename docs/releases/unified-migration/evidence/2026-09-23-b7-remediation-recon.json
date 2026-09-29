@@ -1,0 +1,194 @@
+{
+  "utc": "2026-09-23T07:44:24Z",
+  "phase": "R0 baseline reproduction",
+  "base_commit": "d28d8c9b042e2b92823c8b57f77b80c2a4ac0fb2",
+  "branch": "codex/b7-remediation-20260923",
+  "fixed_sources": {
+    "x5": "ac115717197920355fc390bb04299b20e6436864",
+    "s": "380e1a2bf42041af54be6f34935e50197cfadff9"
+  },
+  "host": {
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+    "packages": {
+      "numpy": "2.5.3",
+      "opencv": "5.0.0",
+      "scipy": "1.18.1",
+      "pyyaml": "6.0.3",
+      "lap": "0.5.12"
+    }
+  },
+  "network": {
+    "package_source_access": true,
+    "model_downloads": false,
+    "sdk_loaded": false,
+    "board_used": false
+  },
+  "host_tests": {
+    "samples/vision/yolov5": {
+      "command": ".venv/bin/python -m unittest discover -s samples/vision/yolov5/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 24 tests in 3.586s",
+        "OK"
+      ]
+    },
+    "samples/vision/bytetrack": {
+      "command": ".venv/bin/python -m unittest discover -s samples/vision/bytetrack/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 11 tests in 1.422s",
+        "OK"
+      ]
+    },
+    "samples/vision/fcos": {
+      "command": ".venv/bin/python -m unittest discover -s samples/vision/fcos/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 23 tests in 0.965s",
+        "OK"
+      ]
+    },
+    "samples/vision/lprnet": {
+      "command": ".venv/bin/python -m unittest discover -s samples/vision/lprnet/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 7 tests in 0.090s",
+        "OK"
+      ]
+    },
+    "samples/vision/modnet": {
+      "command": ".venv/bin/python -m unittest discover -s samples/vision/modnet/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 7 tests in 0.111s",
+        "OK"
+      ]
+    },
+    "samples/vision/yoloworld": {
+      "command": ".venv/bin/python -m unittest discover -s samples/vision/yoloworld/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 10 tests in 0.624s",
+        "OK"
+      ]
+    },
+    "samples/_shared": {
+      "command": ".venv/bin/python -m unittest discover -s samples/_shared/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 101 tests in 0.541s",
+        "OK"
+      ]
+    },
+    "tools/sample_contract": {
+      "command": ".venv/bin/python -m unittest discover -s tools/sample_contract/tests -v",
+      "returncode": 0,
+      "summary": [
+        "Ran 27 tests in 0.040s",
+        "OK"
+      ]
+    }
+  },
+  "contract_checker": {
+    "command": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json --report /tmp/b7-recon-contract.json",
+    "returncode": 1,
+    "summary": [
+      "summary: 36 samples, 14 violations, 39 skips, 84 exemptions applied"
+    ],
+    "violation_count": 14,
+    "violations": [
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README.md",
+        "message": "missing required section anchor 'supported-boards'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README.md",
+        "message": "missing required section anchor 'dependencies'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README.md",
+        "message": "missing required section anchor 'build'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README.md",
+        "message": "missing required section anchor 'run'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README.md",
+        "message": "missing required section anchor 'parameters'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README.md",
+        "message": "missing required section anchor 'interface-lifecycle'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README.md",
+        "message": "missing required section anchor 'results-interpretation'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+        "message": "missing required section anchor 'supported-boards'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+        "message": "missing required section anchor 'dependencies'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+        "message": "missing required section anchor 'build'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+        "message": "missing required section anchor 'run'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+        "message": "missing required section anchor 'parameters'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+        "message": "missing required section anchor 'interface-lifecycle'"
+      },
+      {
+        "sample": "samples/vision/yolov5",
+        "rule": "R-README-SECTIONS",
+        "path": "samples/vision/yolov5/runtime/cpp/README_cn.md",
+        "message": "missing required section anchor 'results-interpretation'"
+      }
+    ]
+  },
+  "board": "not-run",
+  "closed": "no",
+  "notes": [
+    "The 14 violations are all YOLOv5 C++ bilingual README missing template section anchors.",
+    "With numpy/cv2 absent the checker skips R-CLI-DEFAULTS; installing them reduced skips 49->39 with violations unchanged at 14.",
+    "Unittest verbosity -v; only summary lines retained here, full logs in evidence/2026-09-23-b7-remediation-recon.log."
+  ]
+}

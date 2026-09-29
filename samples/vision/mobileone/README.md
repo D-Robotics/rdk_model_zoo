@@ -8,6 +8,29 @@ MobileOne is a lightweight CNN backbone designed for low-latency deployment on e
 - **Paper**: [MobileOne: An Improved One millisecond Mobile Backbone](http://arxiv.org/abs/2206.04040)
 - **Reference Implementation**: [apple/ml-mobileone](https://github.com/apple/ml-mobileone)
 
+The source README's feature highlights:
+
+- **Structural re-parameterization** — fuses multi-branch training blocks
+  (k parallel conv branches plus branch-wise BN and an identity branch,
+  with ReLU or SE-ReLU) into a single inference-friendly conv per block.
+- **Low-latency backbone** — targets mobile and embedded deployment with
+  strong throughput.
+- **Variant scaling** — published variants from `S0` to `S4`, with the
+  over-parameterization factor `k` tuned per variant.
+- **Classification output** — Top-K class IDs and confidence scores for
+  ImageNet-1k labels.
+
+![MobileOne block: train-time multi-branch structure reparameterized
+into the inference-time plain conv](./test_data/MobileOne_architecture.png)
+
+*Figure (upstream paper Fig. 3): the MobileOne block has two structures —
+train time with reparameterizable branches (left), inference time with
+the branches folded into a single 3×3 / 1×1 convolution (right). Restored
+from the X5 source README (rdk_x5 @ac115717197920355fc390bb04299b20e6436864);
+the train/inference split explains why the deployed artifacts are the
+already-reparameterized INT8 s0–s4 variants at 224×224 NV12 (see [Support
+matrix](#support-matrix)).*
+
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 
 <a id="support-matrix"></a>
@@ -73,6 +96,18 @@ python3 samples/vision/mobileone/runtime/python/main.py \
 ## Expected results
 
 Default variant `s0` preserves the source entrypoint. Choose `s1`, `s2`, `s3`, `s4` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `tiger_beetle.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+
+For reference, the X5 source README (rdk_x5
+@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
+illustrated its run with the screenshot below: the legacy `result.jpg`
+drawing overlaid the top-5 ranks on the image, with rank 1 being class
+300 (tiger beetle) on the bundled `tiger_beetle.JPEG`. This is a
+historical screenshot from the source delivery, not a run of the current
+entrypoint in this repository.
+
+![Historical inference screenshot from the X5 source README: tiger
+beetle test image with the legacy top-5 overlay, rank 1 class 300 (tiger
+beetle)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

@@ -16,6 +16,29 @@ S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/READ
 原 X5 与 S18 的 Python 入口仍可用，作为调用同一 canonical 实现的兼容
 wrapper；其审计记录在迁移文档中，不在本文重复。
 
+### 算法背景
+
+ResNet 由 Kaiming He、Xiangyu Zhang、Shaoqing Ren 和 Jian Sun 提出。残差
+学习通过快捷连接让每个块只学习残差而非完整映射，稳定深层网络优化，避免
+普通层堆叠随深度增加出现的退化问题
+（[论文](https://arxiv.org/abs/1512.03385)、
+[torchvision.models.resnet](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)）。
+
+源交付中保留的变体说明（X5 rdk_x5 @ac11571；S rdk_s @380e1a2 的
+resnet18/resnet50/resnet152，B1 并入本 sample）：
+
+- **resnet18** — 轻量残差变体；S 交付将其定位为快速分类验证模型。
+- **resnet50** — 瓶颈残差块（`1x1 → 3x3 → 1x1`）在受控计算量下构建更深的网络。
+- **resnet152** — 152 层设计以更多计算换取更强的特征表达能力。
+
+![ResNet 残差块](./test_data/ResNet_architecture.png)
+
+*恢复自源交付（同一文件在 rdk_x5 @ac11571 中为
+`test_data/ResNet_architecture.png`，在 rdk_s @380e1a2 中为
+`test_data/resnet_architecture.png`，sha256 `cebea796…`）：ResNet-18/34
+的残差基础块（左，两个 3×3 卷积）与 ResNet-50/101/152 的瓶颈构建块
+（右，1×1 → 3×3 → 1×1），即 ResNet 论文图 5。*
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -96,6 +119,36 @@ canonical 运行与旧入口在 X5 双板与 S100 上结果一致（同制品、
 模式下类别 ID 与 raw 分数相同），见上方链接的集成评审。C++ 二进制按标签
 文件逐行打印 Top-K。无法识别的板卡或无匹配制品的 target 会报错退出，
 不进行猜测。
+
+从 S 源交付恢复的历史结果截图（rdk_s @380e1a2，每个变体一份交付；源文档
+未注明截图产自哪块板）：均展示旧 S 运行时对随仓
+[zebra_cls.jpg](test_data/zebra_cls.jpg) 的结果 — zebra，类别 ID 340 —
+记录的 Top-1 置信度分别为 0.9985（resnet18）、0.9956（resnet50）、
+0.9649（resnet152）。这些截图记录的是源交付的结果，不是本统一 sample
+的运行结果。
+
+![ResNet18 源结果](./test_data/result_resnet18_s.png)
+![ResNet50 源结果](./test_data/result_resnet50_s.png)
+![ResNet152 源结果](./test_data/result_resnet152_s.png)
+
+<a id="performance"></a>
+## 性能数据
+
+X5 源版本（rdk_x5 @ac11571，x5-v1.1.3）发布的 ResNet18 记录，本仓库未
+重新实测。源文档未注明延迟/FPS 的线程条件；同一数字保留在
+[评估记录](evaluator/README_cn.md)中。S 源版本（rdk_s @380e1a2）未发布
+ResNet18/50/152 的延迟或精度数据，此处不做推断。
+
+| 模型 | 尺寸 | 类别数 | 参数量 (M) | 浮点 Top-1 | 量化 Top-1 | 延迟 (ms) | FPS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ResNet18 | 224x224 | 1000 | 11.2 | 71.5% | 70.5% | 2.95 | 449+ |
+
+![推理结果](./test_data/inference.png)
+
+*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
+sha256 `16c9d04e…`）：随仓 [white_wolf.JPEG](test_data/white_wolf.JPEG)
+的 Rank-1 为 `white wolf`，其后依次为 Arctic fox、timber wolf、Samoyed、
+polar bear。由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
 
 <a id="directory"></a>
 ## 目录职责

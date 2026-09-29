@@ -22,7 +22,7 @@
 | `yolov9` | detect、seg | 检测 t/s/m/c/e，S600 无 t；分割仅 c/e，S600 无分割 |
 | `yolov10` | detect | n/s/m/b/l/x |
 | `yolo12` | detect | n/s/m/l/x |
-| `yolov13` | detect | n/s/l/x，仅 X5 |
+| `yolov13` | detect | n/s/l/x；仅 X5 |
 
 有发布制品不代表所有组合均完成板测。不能用另一目标的模型替代。统一 X5 完整列表共 92 个制品，其中 YOLO26 为 25 个；历史 X5 通用下载包装器仍保留原来的 67 个。
 
@@ -95,6 +95,23 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
 <a id="formats-checksums"></a>
 ## 格式与完整性
 
-X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。已发布的非分类模型输入为 640×640。YOLO26 分类在全部目标上是 224×224；S600 的所有分类制品也是 224×224；其他分类系列在 X5/S100/S100P 上为 640×640。运行时仍以模型元数据为准，不兼容的绑定会被拒绝。
+X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。非分类文件名使用 640×640。YOLO26 分类文件名在全部目标上使用 224×224，S600 分类标识同样使用 224×224。S100/S100P v8/v11 分类清单 ID 保留 640×640 兼容名称，下载 URL 则使用 224×224。2026-09-26 只读 HEAD 核对发现全部 20 对地址均可访问，长度与 ETag 相同；这不是完整字节的密码学比较，也不能证明张量尺寸。实际输入几何由运行元数据决定，文件名标记不是形状覆盖。既有限定 ID 与本地路径继续保留。
 
 下载器拒绝空文件；清单提供发布方 SHA-256 时会校验。部分制品没有发布方哈希，此时本地摘要只能标识字节，**不能证明官方来源**。dry-run 只查看路径是否存在，`present` 不代表完整性已验证。下载使用临时 `.part` 文件，校验成功后才安装最终文件。超时、HTTP 错误或 URL 不可用属于准备失败，不能据此换用另一制品。
+
+
+<a id="maintained-scope"></a>
+## 维护范围与浮点输出
+
+常规 YOLO 检测、分割、姿态统一使用 Ultralytics YOLO / YOLO26 制品；YOLOv5s
+保留在独立 YOLOv5 sample。重复的 S `yolo11`、`yolo11_pose`、`yolo11_seg` 和
+`yolov13_imoonlab` 不再维护或登记到活动清单，不再提供独立下载/运行入口。
+YOLOE、YOLO-World 和 YOLO26 Depth 的独立能力继续保留。历史源码、发布记录和
+旧评审仍可追溯，但不代表当前支持。X5 原 Ultralytics `yolov13` 保留；S 无此系列。
+
+选择模型时使用本页正常的 family/task/size 下载命令。运行入口 `--asset-id` 只接受
+Ultralytics YOLO/YOLO26 的登记身份；下载器不提供独立样例 `--asset-id` 分支。
+检测、DFL 分割/姿态要求模型直接提供有限浮点输出，量化 metadata 为 NONE 或不存在。
+不会在 Python 后处理中手动反量化整数张量，也不会把整数强制转成浮点冒充正确结果。
+不兼容输出应更换为匹配的 Ultralytics 浮点输出制品；实际 shape/dtype 仍以加载时
+metadata 为准，不能仅靠文件名判断。板端兼容性须由后续板测验证。

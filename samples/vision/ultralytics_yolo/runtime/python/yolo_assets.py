@@ -14,11 +14,11 @@
 
 """Resolve Ultralytics YOLO model assets for a selected platform.
 
-Published asset names are not uniform across platforms: the classification
-resolution differs (X5 publishes `640x640`, the S series publishes `224x224`),
-the filename suffix encodes the march, and the S series stores artifacts in a
-per-march sub-directory. This module derives names from the platform profile
-and refuses to produce a name that the platform does not publish.
+Asset filename tokens are not uniform across platforms or families. S100/S100P
+v8/v11 classifiers retain `640x640` manifest identities with `224x224` public
+URLs. Tokens are compatibility identifiers; actual input geometry comes from
+runtime metadata. The suffix encodes the march and S artifacts use per-march
+directories. This module derives names and resolves exact active manifest entries.
 
 Nothing here downloads anything; Manifest resolution is separated from I/O so the
 downloader can run as a dry run on a host without board runtime.
@@ -171,12 +171,11 @@ S_FAMILIES: Dict[str, FamilySpec] = {
     "yolo12": _spec("yolo12", (TASK_DETECT,), _COMMON_SMALL_TO_LARGE, "n"),
 }
 
-#: Classification input resolution is published per family and toolchain, not
-#: per platform: YOLO26 classification artifacts are named `224x224` on every
-#: target, S600 (nash-p) publishes every classification artifact at `224x224`,
-#: and the remaining families on X5, S100 and S100P are named `640x640`.
-#: Facts follow the release manifests (docs/release/{x5,s}/models.yaml) and
-#: the platform download scripts.
+#: Compatibility filename tokens, not authoritative input geometry. The active
+#: S100/S100P manifest keeps legacy 640 identities but its URLs use 224 names;
+#: both URL spellings were available in the 2026-09-26 HEAD audit. S600 and
+#: YOLO26 identities already use 224. Preserve exact manifest references and
+#: derive execution geometry from runtime metadata, never these tokens.
 CLASSIFICATION_LOW_RESOLUTION_FAMILIES = frozenset({"yolo26"})
 CLASSIFICATION_LOW_RESOLUTION_TARGETS = frozenset({"s600"})
 
@@ -210,7 +209,7 @@ def available_families(profile: PlatformProfile) -> Tuple[str, ...]:
 
 
 def classification_resolution(profile: PlatformProfile, family: str) -> str:
-    """Return the published classification input resolution of one family.
+    """Return the compatibility filename resolution token of one family.
 
     Args:
         profile: Platform that publishes the classification artifacts.
@@ -225,7 +224,7 @@ def classification_resolution(profile: PlatformProfile, family: str) -> str:
 
 
 def asset_resolution(profile: PlatformProfile, family: str, task: str) -> str:
-    """Return the published input resolution of one asset.
+    """Return the filename resolution token, not observed runtime geometry.
 
     Args:
         profile: Platform that publishes the asset.
@@ -306,7 +305,7 @@ def model_filename(profile: PlatformProfile,
                    family: str,
                    task: str,
                    size: Optional[str] = None) -> str:
-    """Build the published filename of a model asset.
+    """Build the existing manifest filename, including compatibility identities.
 
     Args:
         profile: Platform that publishes the asset.

@@ -1,0 +1,50 @@
+{
+  "stage": "N10 second independent re-review remediation (items A-G)",
+  "utc": "2026-09-24T09:59:28Z",
+  "base_commit": "fbffddd (worktree carries the N8/N9 rounds uncommitted, preserved)",
+  "branch": "codex/b7-local-glm-20260924",
+  "worktree": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-local-glm",
+  "author": "local Claude Code + GLM (author side; not an independent review)",
+  "counter_evidence": "evidence/2026-09-24-b7-native-tool-rereview.json + .coordination/b7-native-rereview-probes.py (all seven probes reproduced against the prior code before fixing; the prior round's 'all closed' claim was wrong and is not repeated)",
+  "fixes": {
+    "A_both_sides_validated": "unified payload entries MUST carry bytes+SHA-256 (missing/negative rejected, verified against the files); unified outputs validated for dtype/shape/quanti; per-head quantization KIND, axis, scale_len and scale VALUES enforced equal on both sides; input dtype AND shape must agree across sides; board identity (capture + run-record readings) conflicting with the target (S600 under s100) fails — all previously rc0 bypasses now rc2 with tests (board conflict, dropped digests, flipped quanti)",
+    "B_real_anchor_order": "the X5 input glue recorded payload BEFORE tensor_meta, so the observer failed with 'payload without matching tensor metadata' and inputs stayed empty; the glue order is fixed (meta first) and a NEW test extracts the actual generated X5 hook sequence from the instrumented main.cc, replays it verbatim against the real observer, and requires a valid capture with 1 input and 3 outputs",
+    "C_float32_semantics": "thresholds and scale descriptors compare by float32 BITS (f32(x)==f32(y) via tobytes): 0.45f serialized as 0.44999998807907104 vs manifest '0.450000' now PASS; 17- vs 9-digit scale spellings of the same float32 PASS; different bits FAIL. Fixtures use non-representable values (0.45, 0.0041891187...) throughout, including the standard pass path; no tolerance was widened",
+    "D_complete_failure_reports": "the whole comparison runs inside one try/except: missing capture.json, JSON errors, unexpected exceptions and every ComparisonError still write comparison.json (passed=false) and exit 2 — verified by tests for a missing and a corrupt capture.json",
+    "E_process_evidence_runner": "new run_capture.py wraps the source binary as a real subprocess and records the true argv (verbatim, including arguments gflags strips), cwd, separate stdout/stderr files, the actual exit code, start/end UTC, board identity, pre AND post hashes of binary/model/image, and an instrumentation-audit verification (instrumented + closure SHAs against the actual generated files); compare_native REQUIRES run-record.json and cross-checks all of it (rc==0, audit passed, before==after hashes, attested binary == recorded hash, model/image == capture-time hashes, unified manifest binary_sha256 == attested unified binary). The intrusive C++ stdout/stderr tee is REMOVED (it merged both streams into both files); the observer keeps only out-of-process-unobtainable tensor/stage data; finish(0) is no longer treated as the process exit code",
+    "F_strict_decoding": "restore_rows rejects pitch<row_bytes and short buffers; restore_logical accepts ONLY the two proven families — uniform-pitch strided (stride[1]==width*stride[2], stride[0] covers the plane, payload covers the extent) and exact-size compact (all strides zero AND len==count*itemsize) — mixed/null-as-compact layouts are rejected instead of mis-decoded; 'detections' and 'detections_original' keys are REQUIRED on both manifests (no default [] masquerade) and final coordinates are mandatory on BOTH sides — missing or one-sided blocks the whole comparison (the old pass-with-disclaimer stage is gone)",
+    "G_in_branch_fixture": "the real 4d45f9a X5 board manifest is checked in verbatim under samples/vision/yolov5/tests/data/native/x5-board-manifest.json (sha256 fec7e9b5..., byte-identical to the coordinator's evidence copy; PROVENANCE.md documents the source) — the schema regression runs in every checkout instead of skipping on a sibling workspace"
+  },
+  "files": [
+    {"path": "samples/vision/yolov5/evaluator/native/ycap_observer.hpp", "sha256": "0dde7a19ddd248d97e11f276da30edf2e0951fda64b1ac6a6dc9bab078b3bec5", "note": "tee removed; observer keeps tensor/stage data, marker/refusal/precision semantics"},
+    {"path": "samples/vision/yolov5/evaluator/native/instrument.py", "sha256": "6bc30ebc48933240ace647a8b8c4d3f12343dd870d5bfc72628c63a0b772a8de", "note": "X5 input glue order fixed (meta before payload); closure pinning unchanged (kept from N9)"},
+    {"path": "samples/vision/yolov5/evaluator/native/compare_native.py", "sha256": "b399c80f980ac12db5b6d4859b46632d16634fe07a85b30d5a68414736e57983", "note": "A/C/D/E/F enforcement"},
+    {"path": "samples/vision/yolov5/evaluator/native/run_capture.py", "sha256": "420a1d1214313b534ccea72ab8f2ca259e98d77086c3abc6abf8ef0271f5f7f4", "note": "new external process-evidence runner"},
+    {"path": "samples/vision/yolov5/tests/test_native_evaluator.py", "sha256": "a496f6e3821d835768f0a29a45bf02907c0dc0ec04249bff7898430006949d5e", "note": "38 tests: real-anchor-order replay, runner end-to-end (argv/stdout/stderr/rc/audit tamper), float32 bits, every A-F bypass, in-branch real manifest"},
+    {"path": "samples/vision/yolov5/tests/data/native/x5-board-manifest.json", "sha256": "fec7e9b5450db0e3272c2802b248865522a9d922edc8b829266b45f10a80ee19", "note": "new verbatim fixture (item G)"},
+    {"path": "samples/vision/yolov5/evaluator/README.md", "sha256": "b6a6a8e5280bb058ef675c04b7af370f090967a77b523d8488512d6cefcbb910"},
+    {"path": "samples/vision/yolov5/evaluator/README_cn.md", "sha256": "bdc3a75128f4d9924bf76f587e0d5c5bef3c7cddb09cdd2300bdb0be06ff2a50"}
+  ],
+  "host_verification": {
+    "python": "3.14.7 (rdk_model_zoo/.venv, read-only)",
+    "commands": [
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/yolov5/tests", "returncode": 0, "result": "70 tests OK (was 62): +9 rereview tests, incl. replay of the actual generated X5 hook order and the runner end-to-end"},
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/bytetrack/tests", "returncode": 0, "result": "11 tests OK"},
+      {"argv": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json --report /tmp/b7-n10-contract.json", "returncode": 0, "result": "36 samples, 0 violations, 84 exemptions"},
+      {"argv": "git diff --check", "returncode": 0}
+    ]
+  },
+  "prior_counterexamples_now_failing": {
+    "different_board": "rc2 'conflicts with comparison target'",
+    "missing_payload_hashes": "rc2 'lacks a valid bytes count'/'lacks its SHA-256'",
+    "wrong_quant_kind": "rc2 'quantization kind'",
+    "real_float32_threshold": "rc0 — f32-bit equal ('0.450000' == 0.44999998807907104)",
+    "real_float32_scale": "rc0 — f32-bit equal across 17/9-digit spellings; different bits still rc2",
+    "x5_actual_anchor_order": "capture.failed=false, inputs=[1], outputs=[3] with the real generated sequence",
+    "missing_source_manifest": "rc2 WITH comparison.json written"
+  },
+  "boundaries": {
+    "board": "not-run from this worktree; Codex re-reviews and executes the board runs via README steps 0-4 (now including run_capture.py as step 2)",
+    "claims": "no identity/finiteness rule is claimed satisfied beyond what the listed host tests exercise against the checked-in real manifest schema; the prior round's blanket closure claim is retracted in the author report"
+  }
+}

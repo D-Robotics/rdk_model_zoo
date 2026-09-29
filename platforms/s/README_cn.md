@@ -1,5 +1,7 @@
 > **整合树中的原平台资料。** 下文保留原分支背景与历史指标；“当前分支”等措辞描述源发布线，不表示 `develop` 已完成客户交付。已统一入口见 [Sample 索引](../../samples/README_cn.md)，当前清单/分支说明见 [平台注册表](../README_cn.md)。旧命令可能已转发到根 Sample，请保留完整仓库。
 
+> **YOLOE-26 来源补齐（2026-09-28）：**已从固定 S 提交补回 30 个文件，供来源追溯；不代表统一 Sample 已迁移或新增板测通过。见[来源与制品核定](../../docs/releases/unified-migration/2026-09-28-yoloe-source-review.md)。
+
 <div align="center">
   <img src="docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
 </div>

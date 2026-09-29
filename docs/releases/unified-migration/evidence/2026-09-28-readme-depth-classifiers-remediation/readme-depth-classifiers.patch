@@ -1,0 +1,1285 @@
+diff --git a/samples/vision/convnext/README.md b/samples/vision/convnext/README.md
+index bc7a5cde..e9eeda8f 100644
+--- a/samples/vision/convnext/README.md
++++ b/samples/vision/convnext/README.md
+@@ -12,6 +12,32 @@ with no published asset (see [conversion/README.md](conversion/README.md)).
+ <a id="overview"></a>
+ ## Overview
+ 
++ConvNeXt is a pure convolutional network modernized from the original
++ResNet by progressively adopting designs borrowed from the Swin
++Transformer ("A ConvNet for the 2020s"). It targets ImageNet-1k
++1000-class image classification and outputs Top-K classes with
++confidence scores. The source README highlights four design changes
++against a classic ResNet:
++
++- **Large-kernel depthwise convolution** — a 7×7 depthwise convolution
++  replaces the traditional 3×3 convolutions, enlarging the receptive
++  field at a MobileNet/EfficientNet-like parameter and compute cost.
++- **Fewer activation functions, GELU instead of ReLU** — activation
++  layers are sparser and the nonlinearity follows the Transformer style.
++- **LayerNorm instead of BatchNorm** — more robust for small-batch data.
++- **Simplified residual design** — the fully connected part is slimmed
++  down and the ResNet bottleneck structure is removed.
++
++![ConvNeXt block compared with the ResNet and Swin Transformer
++blocks](./test_data/ConvNeXt_Block.png)
++
++*Figure: the upstream paper's block comparison — Swin Transformer block
++(left), ResNet block (middle), ConvNeXt block (right). Restored from the
++X5 source README (rdk_x5 @ac11571, x5-v1.1.3); it depicts the upstream
++training architecture, while the deployed artifact on X5 is the
++INT8-quantized atto variant at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ The maintained implementation is one Python flow (X5 only; this sample has
+ no S-branch delivery and no C++ runtime on either source). Python resolves
+ one exact artifact reference from the platform release manifests, verifies
+@@ -92,6 +118,18 @@ cheetah-related ImageNet classes. A board that cannot be identified, or a
+ target without a matching artifact (all S targets), exits with an error
+ instead of guessing.
+ 
++For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
++Python entrypoint) illustrated its run with the screenshot below: the
++legacy demo drew the top-1 label onto the image (the removed
++`result.jpg` side effect) and the bundled `cheetah.JPEG` produced
++`cheetah, chetoh, Acinonyx jubatus: 0.8048811` (label text as printed by
++the historical run). This is a historical screenshot from the source
++delivery, not a run of the current entrypoint in this repository.
++
++![Historical inference screenshot from the X5 source README (rdk_x5
++@ac11571): legacy visualization code and the cheetah result with top-1
++score 0.8048811](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+@@ -106,9 +144,14 @@ single-frame single-thread single-core, FPS 4-thread concurrent; CPU
+ | ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
+ | ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
+ | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
+-
+-The published table covers nano/pico/femto, not atto — the only variant
+-with a downloadable artifact has no benchmark row; recorded as published.
++| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
++
++All four rows — including atto, the only variant with a downloadable
++artifact — come from the same published source table (rdk_x5 @ac11571,
++"Performance Data"), which also lists atto; the archived platform
++benchmark snapshot (`platforms/x5/docs/release/benchmarks.yaml`, entry
++`convnext-atto-x5`) records the same atto values. Historical published
++values, not re-measured in this repository.
+ 
+ <a id="directory"></a>
+ ## Directory
+diff --git a/samples/vision/convnext/README_cn.md b/samples/vision/convnext/README_cn.md
+index 4d047b15..7ede2c01 100644
+--- a/samples/vision/convnext/README_cn.md
++++ b/samples/vision/convnext/README_cn.md
+@@ -12,6 +12,25 @@ ConvNeXt（现代化 ConvNet 系列）在 RDK X5 上的 ImageNet-1k 分类：
+ <a id="overview"></a>
+ ## 概述
+ 
++ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造而来的纯
++卷积网络（"A ConvNet for the 2020s"）。它面向 ImageNet-1k 1000 类图像
++分类，输出 Top-K 类别及置信度。源 README 提炼了相对经典 ResNet 的四项
++设计改动：
++
++- **大核深度可分离卷积**——用 7×7 深度卷积替代传统 3×3 卷积，在
++  MobileNet/EfficientNet 量级的参数与计算成本下扩大感受野。
++- **更少的激活函数，GELU 替代 ReLU**——激活层更稀疏，非线性采用
++  Transformer 风格。
++- **LayerNorm 替代 BatchNorm**——对小批量数据更稳。
++- **简化的残差设计**——精简全连接部分，去掉 ResNet 的瓶颈结构。
++
++![ConvNeXt block 与 ResNet、Swin Transformer block 的对比](./test_data/ConvNeXt_Block.png)
++
++*图：上游论文的 block 对比——Swin Transformer block（左）、ResNet
++block（中）、ConvNeXt block（右）。恢复自 X5 源 README（rdk_x5 @ac11571，
++x5-v1.1.3）；图中为上游训练结构，X5 上实际部署的是 INT8 量化的 atto
++变体（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
++
+ 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
+ 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
+ 核验板卡身份，懒加载 `hbm_runtime`，执行
+@@ -84,6 +103,15 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并
+ 含挂钩相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部 S
+ 目标）会显式报错退出。
+ 
++供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
++下面的截图演示运行效果：旧版 demo 把 top-1 标签画到图上（即已移除的
++`result.jpg` 副作用），随附 `cheetah.JPEG` 得到
++`cheetah, chetoh, Acinonyx jubatus: 0.8048811`（标签文字按历史运行原样
++保留）。这是源交付中的历史截图，不是本仓库当前入口的运行结果。
++
++![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：旧版可视化代码与
++cheetah 结果，top-1 分数 0.8048811](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+@@ -97,9 +125,13 @@ BPU 1xBayes-e@1GHz）：
+ | ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
+ | ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
+ | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
++| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
+ 
+-已发布表覆盖 nano/pico/femto——不含 atto（唯一有可下载制品的变体反而
+-没有基准行）；按发布原样记录。
++四行数据——包括唯一有可下载制品的 atto——都来自同一张已发布源表
++（rdk_x5 @ac11571 的 "Performance Data" 小节，其中本就列出 atto）；归档
++平台基准快照（`platforms/x5/docs/release/benchmarks.yaml`，条目
++`convnext-atto-x5`）记录的 atto 数值与此一致。均为历史发布值，未在本
++仓库重测。
+ 
+ <a id="directory"></a>
+ ## 目录职责
+diff --git a/samples/vision/convnext/evaluator/README.md b/samples/vision/convnext/evaluator/README.md
+index 3418c899..bbc6d375 100644
+--- a/samples/vision/convnext/evaluator/README.md
++++ b/samples/vision/convnext/evaluator/README.md
+@@ -93,13 +93,18 @@ single-core, FPS is 4-thread concurrent at 100% BPU utilization, CPU
+ | ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
+ | ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
+ | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
+-
+-The published table covers nano/pico/femto — **not atto**, the only variant
+-with a published artifact; no benchmark row exists for the downloadable
+-model. Recorded as published, not re-measured or explained here.
+-
+-The quantized Top-1 (72.50%) stays close to the float value (73.75%) in
+-the published record; this is recorded as published, not re-measured here.
++| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
++
++All four rows — including atto, the only variant with a downloadable
++artifact — come from the same published source table (rdk_x5 @ac11571,
++"Performance Data"); the archived platform benchmark snapshot
++(`platforms/x5/docs/release/benchmarks.yaml`, entry `convnext-atto-x5`)
++records the same atto values. Recorded as published, not re-measured
++here.
++
++In the published record the quantized Top-1 stays close to the float
++value for each variant (e.g. femto 72.25% vs 73.75%, atto 69.75% vs
++73.25%); recorded as published, not re-measured here.
+ 
+ <a id="boundaries"></a>
+ ## Boundaries
+diff --git a/samples/vision/convnext/evaluator/README_cn.md b/samples/vision/convnext/evaluator/README_cn.md
+index 84996585..a690b308 100644
+--- a/samples/vision/convnext/evaluator/README_cn.md
++++ b/samples/vision/convnext/evaluator/README_cn.md
+@@ -84,9 +84,15 @@ Float Top-1 为量化前 ONNX 结果，Quant Top-1 为部署模型结果；延
+ | ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
+ | ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
+ | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
++| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
+ 
+-已发布表覆盖 nano/pico/femto——**不含 atto**（唯一有已发布制品的变体）；
+-可下载模型没有基准行。按发布原样记录，此处不复测。
++四行数据——包括唯一有可下载制品的 atto——都来自同一张已发布源表
++（rdk_x5 @ac11571 的 "Performance Data" 小节）；归档平台基准快照
++（`platforms/x5/docs/release/benchmarks.yaml`，条目 `convnext-atto-x5`）
++记录的 atto 数值与此一致。按发布原样记录，此处不复测。
++
++在该发布记录中，各变体的量化 Top-1 与浮点值接近（如 femto 72.25% 对
++73.75%、atto 69.75% 对 73.25%）；按发布原样记录，此处不复测。
+ 
+ <a id="boundaries"></a>
+ ## 边界
+diff --git a/samples/vision/edgenext/README.md b/samples/vision/edgenext/README.md
+index 8ea74ae3..ce8b8194 100644
+--- a/samples/vision/edgenext/README.md
++++ b/samples/vision/edgenext/README.md
+@@ -11,6 +11,32 @@ Applications](https://arxiv.org/abs/2206.10589), reference
+ <a id="overview"></a>
+ ## Overview
+ 
++EdgeNeXt is an efficient hybrid CNN-Transformer architecture for mobile
++vision: a four-stage pyramid combines convolutional encoders with SDTA
++(Split Depth-wise Transpose Attention) encoders to balance classification
++accuracy, model size, and inference speed. It targets ImageNet-1k
++1000-class classification. The source README's four feature highlights:
++
++- **Hybrid CNN-Transformer design** — combines the inference efficiency
++  of convolutions with transformer-style global feature modeling.
++- **Four-stage pyramid** — a deployment-friendly hierarchical feature
++  extraction structure.
++- **SDTA encoder** — encodes multi-scale features through channel
++  splitting (split 3×3 branches) and transpose attention.
++- **Efficient deployment** — base, small, x-small, and xx-small RDK X5
++  deployment models with packed NV12 input.
++
++![EdgeNeXt architecture: four-stage pyramid with NxN convolution encoder
++and SDTA encoder details](./test_data/EdgeNeXt_architecture.png)
++
++*Figure: the EdgeNeXt architecture — the four-stage pyramid (top) with
++the NxN convolution encoder (bottom left) and the SDTA encoder with its
++split 3×3 branches and transpose attention (bottom right). Restored from
++the X5 source README (rdk_x5 @ac11571, x5-v1.1.3); it depicts the
++upstream training architecture, while the deployed artifacts are the
++INT8-quantized base/small/x_small/xx_small variants at 224×224 NV12 (see
++[Support matrix](#support-matrix)).*
++
+ The maintained implementation is one Python flow (X5 only; this sample has
+ no S-branch delivery and no C++ runtime on either source). Python resolves
+ one exact artifact reference from the platform release manifests, verifies
+@@ -93,6 +119,16 @@ zebra-related ImageNet class. A board that cannot be identified, or a
+ target without a matching artifact (all S targets), exits with an error
+ instead of guessing.
+ 
++For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
++Python entrypoint) illustrated its run with the screenshot below: the
++legacy `result.jpg` drawing overlaid the top-5 ranks on the image, with
++rank 1 being class 340 (zebra). This is a historical screenshot from the
++source delivery, not a run of the current entrypoint in this repository.
++
++![Historical inference screenshot from the X5 source README (rdk_x5
++@ac11571): zebra test image with the legacy top-5 overlay, rank 1 class
++340 (zebra)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/edgenext/README_cn.md b/samples/vision/edgenext/README_cn.md
+index 4cca33e1..e3bc7960 100644
+--- a/samples/vision/edgenext/README_cn.md
++++ b/samples/vision/edgenext/README_cn.md
+@@ -10,6 +10,27 @@ Applications](https://arxiv.org/abs/2206.10589)，参考实现
+ <a id="overview"></a>
+ ## 概述
+ 
++EdgeNeXt 是面向移动视觉的高效 CNN-Transformer 混合架构：四级金字塔把
++卷积编码器与 SDTA（Split Depth-wise Transpose Attention）编码器组合在
++一起，在分类精度、模型体积与推理速度之间取得平衡，面向 ImageNet-1k
++1000 类分类。源 README 提炼的四项特性：
++
++- **CNN-Transformer 混合设计**——结合卷积的推理效率与 Transformer 风格
++  的全局特征建模。
++- **四级金字塔**——采用对部署友好的层级化特征提取结构。
++- **SDTA 编码器**——通过通道拆分（拆分 3×3 分支）与转置注意力编码
++  多尺度特征。
++- **高效部署**——提供 base、small、x-small、xx-small 四个 RDK X5
++  部署模型，使用打包 NV12 输入。
++
++![EdgeNeXt 架构：四级金字塔及 NxN 卷积编码器与 SDTA 编码器细节](./test_data/EdgeNeXt_architecture.png)
++
++*图：EdgeNeXt 架构——四级金字塔（上）与 NxN 卷积编码器（左下）、含
++拆分 3×3 分支和转置注意力的 SDTA 编码器（右下）。恢复自 X5 源 README
++（rdk_x5 @ac11571，x5-v1.1.3）；图中为上游训练结构，实际部署制品是
++INT8 量化的 base/small/x_small/xx_small 变体（224×224 NV12，见
++[支持与实测矩阵](#support-matrix)）。*
++
+ 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
+ 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
+ 核验板卡身份，懒加载 `hbm_runtime`，执行
+@@ -82,6 +103,14 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并
+ Top-5 含斑马相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部
+ S 目标）会显式报错退出。
+ 
++供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
++下面的截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，
++rank 1 为 class 340（zebra）。这是源交付中的历史截图，不是本仓库当前
++入口的运行结果。
++
++![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：zebra 测试图与旧版
++Top-5 叠加，rank 1 为 class 340（zebra）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/fasternet/README.md b/samples/vision/fasternet/README.md
+index 86e37dee..332b7501 100644
+--- a/samples/vision/fasternet/README.md
++++ b/samples/vision/fasternet/README.md
+@@ -10,6 +10,48 @@ the source delivery).
+ <a id="overview"></a>
+ ## Overview
+ 
++FasterNet is a lightweight CNN family designed around one idea: chase a
++higher *effective* FLOPS (actual computed operations per second) instead
++of only minimizing theoretical FLOPs. Its core operator, partial
++convolution (PConv), applies the spatial convolution to only a fraction
++of the input channels and leaves the rest untouched, cutting redundant
++memory access and improving practical runtime efficiency on edge
++devices. It targets ImageNet-1k 1000-class classification. The source
++README's four feature highlights:
++
++- **High-FLOPS design** — emphasizes practical compute efficiency
++  instead of minimizing theoretical FLOPs only.
++- **Partial convolution (PConv)** — reduces redundant computation and
++  memory access.
++- **Lightweight CNN backbone** — keeps a deployment-friendly CNN
++  structure for efficient board-side inference.
++- **Efficient deployment** — S, T0, T1, and T2 RDK X5 deployment models
++  with packed NV12 input.
++
++![Effective FLOPS and latency comparison against other networks on
++CPU](./test_data/FLOPs%20of%20Nets.png)
++
++*Figure (upstream paper Fig. 2): (a) FLOPS under varied FLOPs on CPU —
++many networks run at a lower effective FLOPS than ResNet50, while
++FasterNet stays high; (b) latency under varied FLOPs on CPU — FasterNet
++is faster at the same FLOPs. Restored from the X5 source README
++(rdk_x5 @ac11571, x5-v1.1.3); conditions are the upstream CPU
++measurements, not RDK board numbers (see [Performance
++data](#performance)).*
++
++![FasterNet architecture: four-stage hierarchy and the FasterNet block
++with partial convolution](./test_data/FasterNet_architecture.png)
++
++*Figure (upstream paper Fig. 4): the overall architecture — four
++hierarchical stages of FasterNet blocks with embedding/merging layers —
++the PConv detail (convolution applied only to a channel fraction) and
++the block layout PConv 3×3 → two pointwise convs, with normalization and
++activation only after the middle layer to preserve feature diversity.
++Restored from the X5 source README (rdk_x5 @ac11571); it depicts the
++upstream training architecture, while the deployed artifacts are the
++INT8-quantized s/t0/t1/t2 variants at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ The maintained implementation is one Python flow (X5 only; this sample has
+ no S-branch delivery and no C++ runtime on either source). Python resolves
+ one exact artifact reference from the platform release manifests, verifies
+@@ -92,6 +134,16 @@ drake-related ImageNet class. A board that cannot be identified, or a
+ target without a matching artifact (all S targets), exits with an error
+ instead of guessing.
+ 
++For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
++Python entrypoint) illustrated its run with the screenshot below: the
++legacy `result.jpg` drawing overlaid the top-5 ranks on the image, with
++rank 1 being class 97 (drake). This is a historical screenshot from the
++source delivery, not a run of the current entrypoint in this repository.
++
++![Historical inference screenshot from the X5 source README (rdk_x5
++@ac11571): drake test image with the legacy top-5 overlay, rank 1 class
++97 (drake)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/fasternet/README_cn.md b/samples/vision/fasternet/README_cn.md
+index 18d14413..3b1a1bea 100644
+--- a/samples/vision/fasternet/README_cn.md
++++ b/samples/vision/fasternet/README_cn.md
+@@ -8,6 +8,35 @@ Networks](https://arxiv.org/abs/2303.03667)，按源交付引用）。[English](
+ <a id="overview"></a>
+ ## 概述
+ 
++FasterNet 是围绕一个核心思想设计的轻量 CNN 系列：追求更高的*有效*
++FLOPS（实际每秒计算量），而不是只压低理论 FLOPs。其核心算子部分卷积
++（PConv）只对输入通道的一部分做空间卷积、其余通道保持不动，从而减少
++冗余访存，提升边缘设备上的实际运行效率。面向 ImageNet-1k 1000 类分类。
++源 README 提炼的四项特性：
++
++- **高 FLOPS 设计**——强调实际计算效率，而不是只最小化理论 FLOPs。
++- **部分卷积（PConv）**——减少冗余计算与内存访问。
++- **轻量 CNN 骨干**——保持对部署友好的 CNN 结构，便于板端高效推理。
++- **高效部署**——提供 S、T0、T1、T2 四个 RDK X5 部署模型，使用打包
++  NV12 输入。
++
++![与其他网络在 CPU 上的有效 FLOPS 与延迟对比](./test_data/FLOPs%20of%20Nets.png)
++
++*图（上游论文 Fig. 2）：(a) CPU 上不同 FLOPs 对应的 FLOPS——许多网络的
++有效 FLOPS 低于 ResNet50，FasterNet 保持更高；(b) CPU 上不同 FLOPs 对应
++的延迟——同等 FLOPs 下 FasterNet 更快。恢复自 X5 源 README（rdk_x5
++@ac11571，x5-v1.1.3）；图中条件为上游 CPU 测量，不是 RDK 板端数据（板端
++数字见[性能数据](#performance)）。*
++
++![FasterNet 架构：四级层级结构与含部分卷积的 FasterNet block](./test_data/FasterNet_architecture.png)
++
++*图（上游论文 Fig. 4）：整体架构——四级层级堆叠 FasterNet block，前置
++embedding/merging 层；PConv 细节（只对部分通道卷积）与 block 布局
++PConv 3×3 → 两层逐点卷积，归一化与激活只放在中间层之后以保留特征多样性。
++恢复自 X5 源 README（rdk_x5 @ac11571）；图中为上游训练结构，实际部署
++制品是 INT8 量化的 s/t0/t1/t2 变体（224×224 NV12，见
++[支持与实测矩阵](#support-matrix)）。*
++
+ 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
+ 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
+ 核验板卡身份，懒加载 `hbm_runtime`，执行
+@@ -80,6 +109,14 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并
+ Top-5 含鸭相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部
+ S 目标）会显式报错退出。
+ 
++供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
++下面的截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，
++rank 1 为 class 97（drake）。这是源交付中的历史截图，不是本仓库当前
++入口的运行结果。
++
++![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：drake 测试图与旧版
++Top-5 叠加，rank 1 为 class 97（drake）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/fastvit/README.md b/samples/vision/fastvit/README.md
+index 8cfc75b7..20602972 100644
+--- a/samples/vision/fastvit/README.md
++++ b/samples/vision/fastvit/README.md
+@@ -11,6 +11,41 @@ source delivery).
+ <a id="overview"></a>
+ ## Overview
+ 
++FastViT is a hybrid vision transformer family that uses structural
++reparameterization to build efficient token-mixing blocks: training-time
++blocks keep their skip connections and extra branches, which are then
++folded into plain convolutions for inference, cutting memory access
++overhead. The token mixers differ across the family: in the upstream
++model definitions, the published t8/t12/s12 variants use RepMixer token
++mixing in all four stages, while sa12 keeps RepMixer in stages 1–3 and
++uses self-attention (with a RepCPE positional encoding) only in stage 4
++— the conv/attention hybrid the source README summarizes. ImageNet-1k
++1000-class classification accuracy stays competitive. The source
++README's feature highlights:
++
++- **RepMixer token mixing** — uses structural reparameterization to
++  reduce memory access overhead.
++- **Hybrid architecture** — combines convolutional operations and
++  attention to balance accuracy and efficiency.
++- **Efficient deployment** — T8, T12, S12, and SA12 RDK X5 deployment
++  models with packed NV12 input.
++
++![FastViT architecture: train-time vs inference-time structures, stem,
++ConvFFN and RepMixer](./test_data/FastViT_architecture.png)
++
++*Figure (upstream paper Fig. 2): (a) FastViT overview with decoupled
++train-time and inference-time architectures; (b) convolutional stem;
++(c) convolutional FFN; (d) RepMixer, which reparameterizes a skip
++connection at inference. The paper draws stage 4 with a self-attention
++token mixer — that is the configuration sa12 uses (RepMixer in stages
++1–3, attention in stage 4); it does not represent the published
++t8/t12/s12, whose upstream definitions use RepMixer in all four stages
++(see `models/fastvit.py` in apple/ml-fastvit). Restored from the X5
++source README (rdk_x5 @ac11571, x5-v1.1.3); the train/inference split
++explains why the deployed artifacts are the already-reparameterized INT8
++s12/sa12/t12/t8 variants at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ The maintained implementation is one Python flow (X5 only; this sample has
+ no S-branch delivery and no C++ runtime on either source). Python resolves
+ one exact artifact reference from the platform release manifests, verifies
+@@ -93,6 +128,16 @@ bucket-related ImageNet class. A board that cannot be identified, or a
+ target without a matching artifact (all S targets), exits with an error
+ instead of guessing.
+ 
++For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
++Python entrypoint) illustrated its run with the screenshot below: the
++legacy `result.jpg` drawing overlaid the top-5 ranks on the image, with
++rank 1 being class 463 (bucket). This is a historical screenshot from the
++source delivery, not a run of the current entrypoint in this repository.
++
++![Historical inference screenshot from the X5 source README (rdk_x5
++@ac11571): bucket test image with the legacy top-5 overlay, rank 1 class
++463 (bucket)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/fastvit/README_cn.md b/samples/vision/fastvit/README_cn.md
+index 441e7465..9486c7b1 100644
+--- a/samples/vision/fastvit/README_cn.md
++++ b/samples/vision/fastvit/README_cn.md
+@@ -8,6 +8,30 @@ Reparameterization](https://arxiv.org/abs/2303.14189)，按源交付引用）。
+ <a id="overview"></a>
+ ## 概述
+ 
++FastViT 是使用结构重参数化构建高效 token 混合模块的混合视觉
++Transformer 系列：训练期模块保留跳连与额外分支，推理期再把它们折叠成
++普通卷积，降低访存开销。家族内 token 混合器并不一致：按上游模型定义，
++已发布的 t8/t12/s12 四个 stage 全部使用 RepMixer token 混合，只有 sa12
++在 stage 1–3 保持 RepMixer、仅 stage 4 使用自注意力（并带 RepCPE 位置
++编码）——源 README 概括的卷积/注意力混合设计即指此类配置。
++ImageNet-1k 1000 类分类精度保持竞争力。源 README 提炼的特性：
++
++- **RepMixer token 混合**——利用结构重参数化减少访存开销。
++- **混合架构**——卷积运算与注意力结合，平衡精度与效率。
++- **高效部署**——提供 T8、T12、S12、SA12 四个 RDK X5 部署模型，使用
++  打包 NV12 输入。
++
++![FastViT 架构：训练期与推理期结构、stem、ConvFFN 与 RepMixer](./test_data/FastViT_architecture.png)
++
++*图（上游论文 Fig. 2）：(a) FastViT 总览，训练期与推理期结构解耦；
++(b) 卷积 stem；(c) 卷积 FFN；(d) RepMixer——推理期把跳连重参数化。
++论文把 stage 4 画成自注意力 token 混合器——这是 sa12 的配置（stage 1–3
++RepMixer、stage 4 注意力），并不代表已发布的 t8/t12/s12：它们的上游定义
++四个 stage 全部使用 RepMixer（见 apple/ml-fastvit 的
++`models/fastvit.py`）。恢复自 X5 源 README（rdk_x5 @ac11571，
++x5-v1.1.3）；训练/推理双结构也解释了部署制品为何是已重参数化的 INT8
++s12/sa12/t12/t8 变体（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
++
+ 统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
+ 也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
+ 核验板卡身份，懒加载 `hbm_runtime`，执行
+@@ -80,6 +104,14 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并
+ Top-5 含水桶相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部
+ S 目标）会显式报错退出。
+ 
++供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
++下面的截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，
++rank 1 为 class 463（bucket）。这是源交付中的历史截图，不是本仓库当前
++入口的运行结果。
++
++![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：bucket 测试图与旧版
++Top-5 叠加，rank 1 为 class 463（bucket）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/googlenet/README.md b/samples/vision/googlenet/README.md
+index 6760e06f..8eba867c 100644
+--- a/samples/vision/googlenet/README.md
++++ b/samples/vision/googlenet/README.md
+@@ -8,6 +8,30 @@ GoogLeNet is an image classification network based on the Inception module. It w
+ - **Paper**: [Going Deeper with Convolutions](https://arxiv.org/abs/1409.4842)
+ - **Reference Implementation**: [torchvision/models/googlenet.py](https://github.com/pytorch/vision/blob/main/torchvision/models/googlenet.py)
+ 
++The source README's feature highlights:
++
++- **Inception module** — extracts multi-scale features using parallel
++  convolution and pooling branches (1×1 / 3×3 / 5×5 convolutions and 3×3
++  max pooling, concatenated per module).
++- **Parameter efficiency** — reduces model parameters compared with
++  wider dense CNN designs.
++- **Deep architecture** — a 22-layer classification backbone with
++  efficient branch aggregation.
++- **Embedded deployment** — the RDK X5 deployment model uses packed NV12
++  input and a quantized `.bin` artifact.
++
++![Inception module: naive version and with dimension
++reductions](./test_data/GoogLeNet_architecture.png)
++
++*Figure (upstream paper Fig. 2): (a) the naive Inception module;
++(b) the Inception module with dimension reductions — 1×1 convolutions
++before the 3×3/5×5 branches and after pooling, which keeps compute
++affordable at scale. Restored from the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864); it depicts the upstream
++training architecture, while the deployed artifact is the INT8-quantized
++`googlenet` variant at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+ 
+ <a id="support-matrix"></a>
+@@ -58,6 +82,17 @@ python3 samples/vision/googlenet/runtime/python/main.py \
+ 
+ The only published variant is `googlenet`, selected by default. Inference prints Top-5 IDs, softmax scores and labels. Exact ties use ascending class-ID order. The bundled image is a functional input; board verification is not-run. Files are written only with `--img-save-path`.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++illustrated its run with the screenshot below: the legacy `result.jpg`
++drawing overlaid the top-5 ranks on the image, with rank 1 being class 14
++(indigo bunting). This is a historical screenshot from the source
++delivery, not a run of the current entrypoint in this repository.
++
++![Historical inference screenshot from the X5 source README: indigo
++bunting test image with the legacy top-5 overlay, rank 1 class 14
++(indigo bunting)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/googlenet/README_cn.md b/samples/vision/googlenet/README_cn.md
+index 36305f7a..12a81db7 100644
+--- a/samples/vision/googlenet/README_cn.md
++++ b/samples/vision/googlenet/README_cn.md
+@@ -8,6 +8,24 @@ GoogLeNet 是基于 Inception 模块的图像分类网络，在 2014 年 ImageNe
+ - **论文**: [Going Deeper with Convolutions](https://arxiv.org/abs/1409.4842)
+ - **参考实现**: [torchvision/models/googlenet.py](https://github.com/pytorch/vision/blob/main/torchvision/models/googlenet.py)
+ 
++源 README 提炼的特性：
++
++- **Inception 模块**——用并行的卷积与池化分支提取多尺度特征
++  （1×1 / 3×3 / 5×5 卷积与 3×3 最大池化，每个模块内拼接）。
++- **参数效率**——相比更宽的密集 CNN 设计减少模型参数。
++- **深层结构**——22 层分类骨干，分支聚合高效。
++- **嵌入式部署**——RDK X5 部署模型使用打包 NV12 输入与量化
++  `.bin` 制品。
++
++![Inception 模块：朴素版本与带降维版本](./test_data/GoogLeNet_architecture.png)
++
++*图（上游论文 Fig. 2）：(a) 朴素 Inception 模块；(b) 带降维的 Inception
++模块——3×3/5×5 分支前与池化后插入 1×1 卷积，使计算量在大规模下可控。
++恢复自 X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864）；图中为上游训练结构，实际
++部署制品是 INT8 量化的 `googlenet` 变体（224×224 NV12，见
++[支持与实测矩阵](#support-matrix)）。*
++
+ 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+ 
+ <a id="support-matrix"></a>
+@@ -58,6 +76,15 @@ python3 samples/vision/googlenet/runtime/python/main.py \
+ 
+ 唯一发布变体为 `googlenet`，默认即选中它。推理打印 Top-5 ID、softmax 分数与标签。完全平局按 ID 升序排序。随附图片用于功能检查；板测 not-run。仅指定 `--img-save-path` 才写文件。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
++截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，rank 1
++为 class 14（indigo bunting）。这是源交付中的历史截图，不是本仓库当前
++入口的运行结果。
++
++![X5 源 README 的历史推理截图：indigo bunting 测试图与旧版 Top-5 叠加，
++rank 1 为 class 14（indigo bunting）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/hgnetv2/README.md b/samples/vision/hgnetv2/README.md
+index c992d622..17ea7868 100644
+--- a/samples/vision/hgnetv2/README.md
++++ b/samples/vision/hgnetv2/README.md
+@@ -3,10 +3,22 @@
+ <a id="overview"></a>
+ ## Overview
+ 
+-HGNetV2 is a convolutional backbone for vision tasks; this sample exposes b0–b4 ImageNet-1k classification models.
++HGNetV2 is a convolutional backbone for vision tasks; this sample exposes b0–b4 ImageNet-1k classification models. The source README introduces it as a next-generation CNN backbone designed for a strong accuracy/latency balance, succeeding the original HGNet, and performing well in classification, detection and segmentation.
+ 
+ [PP-HGNetV2](https://github.com/PaddlePaddle/PaddleClas/blob/develop/docs/en/models/ImageNet1k/PP-HGNetV2.md)
+ 
++The source README's feature highlights:
++
++- **Aggregating multiple receptive fields** — the HG-Block combines
++  multi-scale features from shallow to deep layers, which is friendly to
++  small-object detection and recognition.
++- **Improved stem module** — the input stem stacks more 2×2 convolution
++  kernels to learn rich local features while using smaller channel
++  numbers, boosting performance on high-resolution tasks.
++- **Learnable downsampling (LDS)** — an adaptive downsampling layer
++  preserves more useful spatial details while reducing computational
++  redundancy.
++
+ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+ 
+ <a id="support-matrix"></a>
+@@ -73,6 +85,19 @@ python3 samples/vision/hgnetv2/runtime/python/main.py \
+ 
+ Default variant `b0` preserves the source entrypoint. Choose `b1`, `b2`, `b3`, `b4` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `sandbar.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++published its run as the `result.jpg` drawing below: the legacy demo
++overlaid the top-5 ranks on the image, with rank 1 being class 977
++(sandbar, sand bar) on the bundled `sandbar.JPEG`. This is a historical
++screenshot from the source delivery, not a run of the current entrypoint
++in this repository (the current flow saves an image only with
++`--img-save-path`).
++
++![Historical inference result from the X5 source README: sandbar test
++image with the legacy top-5 overlay, rank 1 class 977 (sandbar, sand
++bar)](./test_data/result.jpg)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/hgnetv2/README_cn.md b/samples/vision/hgnetv2/README_cn.md
+index ffefdf96..8a7802cb 100644
+--- a/samples/vision/hgnetv2/README_cn.md
++++ b/samples/vision/hgnetv2/README_cn.md
+@@ -3,10 +3,19 @@
+ <a id="overview"></a>
+ ## 概述
+ 
+-HGNetV2 是用于视觉任务的卷积骨干网络；本 sample 提供 b0–b4 的 ImageNet-1k 分类入口。
++HGNetV2 是用于视觉任务的卷积骨干网络；本 sample 提供 b0–b4 的 ImageNet-1k 分类入口。源 README 将其定位为面向精度/延迟平衡设计的下一代 CNN 骨干，是原 HGNet 的后继，在分类、检测与分割任务中均有良好表现。
+ 
+ [PP-HGNetV2](https://github.com/PaddlePaddle/PaddleClas/blob/develop/docs/zh_CN/models/ImageNet1k/PP-HGNetV2.md)
+ 
++源 README 提炼的特性：
++
++- **聚合多感受野**——HG-Block 组合由浅至深的多尺度特征，对小型
++  目标的检测与识别友好。
++- **改进的 stem 模块**——网络入口堆叠更多 2×2 卷积核以学习丰富的
++  局部特征，同时使用更小的通道数，提升高分辨率任务表现。
++- **可学习下采样（LDS）**——自适应下采样层在降低计算冗余的同时保留
++  更多有效空间细节。
++
+ 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+ 
+ <a id="support-matrix"></a>
+@@ -73,6 +82,16 @@ python3 samples/vision/hgnetv2/runtime/python/main.py \
+ 
+ 默认变体 `b0` 保留源入口选择，其余变体 `b1`、`b2`、`b3`、`b4` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`sandbar.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）以下面的
++`result.jpg` 绘制公布运行效果：旧版 demo 把 Top-5 排名叠在图上，随附
++`sandbar.JPEG` 的 rank 1 为 class 977（sandbar, sand bar）。这是源交付
++中的历史截图，不是本仓库当前入口的运行结果（当前流程仅在指定
++`--img-save-path` 时保存图像）。
++
++![X5 源 README 的历史推理结果：sandbar 测试图与旧版 Top-5 叠加，
++rank 1 为 class 977（sandbar, sand bar）](./test_data/result.jpg)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/mobileone/README.md b/samples/vision/mobileone/README.md
+index 8ffdf873..279430a6 100644
+--- a/samples/vision/mobileone/README.md
++++ b/samples/vision/mobileone/README.md
+@@ -8,6 +8,29 @@ MobileOne is a lightweight CNN backbone designed for low-latency deployment on e
+ - **Paper**: [MobileOne: An Improved One millisecond Mobile Backbone](http://arxiv.org/abs/2206.04040)
+ - **Reference Implementation**: [apple/ml-mobileone](https://github.com/apple/ml-mobileone)
+ 
++The source README's feature highlights:
++
++- **Structural re-parameterization** — fuses multi-branch training blocks
++  (k parallel conv branches plus branch-wise BN and an identity branch,
++  with ReLU or SE-ReLU) into a single inference-friendly conv per block.
++- **Low-latency backbone** — targets mobile and embedded deployment with
++  strong throughput.
++- **Variant scaling** — published variants from `S0` to `S4`, with the
++  over-parameterization factor `k` tuned per variant.
++- **Classification output** — Top-K class IDs and confidence scores for
++  ImageNet-1k labels.
++
++![MobileOne block: train-time multi-branch structure reparameterized
++into the inference-time plain conv](./test_data/MobileOne_architecture.png)
++
++*Figure (upstream paper Fig. 3): the MobileOne block has two structures —
++train time with reparameterizable branches (left), inference time with
++the branches folded into a single 3×3 / 1×1 convolution (right). Restored
++from the X5 source README (rdk_x5 @ac115717197920355fc390bb04299b20e6436864);
++the train/inference split explains why the deployed artifacts are the
++already-reparameterized INT8 s0–s4 variants at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+ 
+ <a id="support-matrix"></a>
+@@ -74,6 +97,18 @@ python3 samples/vision/mobileone/runtime/python/main.py \
+ 
+ Default variant `s0` preserves the source entrypoint. Choose `s1`, `s2`, `s3`, `s4` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `tiger_beetle.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++illustrated its run with the screenshot below: the legacy `result.jpg`
++drawing overlaid the top-5 ranks on the image, with rank 1 being class
++300 (tiger beetle) on the bundled `tiger_beetle.JPEG`. This is a
++historical screenshot from the source delivery, not a run of the current
++entrypoint in this repository.
++
++![Historical inference screenshot from the X5 source README: tiger
++beetle test image with the legacy top-5 overlay, rank 1 class 300 (tiger
++beetle)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/mobileone/README_cn.md b/samples/vision/mobileone/README_cn.md
+index 44f9d2f5..4f07498a 100644
+--- a/samples/vision/mobileone/README_cn.md
++++ b/samples/vision/mobileone/README_cn.md
+@@ -8,6 +8,25 @@ MobileOne 是面向低时延边缘部署的轻量级 CNN 骨干网络。模型
+ - **论文**: [MobileOne: An Improved One millisecond Mobile Backbone](http://arxiv.org/abs/2206.04040)
+ - **参考实现**: [apple/ml-mobileone](https://github.com/apple/ml-mobileone)
+ 
++源 README 提炼的特性：
++
++- **结构重参数化**——训练期的多分支模块（k 个并行卷积分支、逐分支
++  BN 与恒等分支，激活用 ReLU 或 SE-ReLU）在推理期融合为每个 block 单条
++  卷积的部署友好结构。
++- **低时延骨干**——面向移动与嵌入式部署，吞吐能力强。
++- **变体缩放**——提供 `S0` 到 `S4` 多个发布变体，过参数化因子 `k`
++  按变体调优。
++- **分类输出**——产出 ImageNet-1k 标签的 Top-K 类别 ID 与置信度。
++
++![MobileOne block：训练期多分支结构经重参数化得到推理期单卷积](./test_data/MobileOne_architecture.png)
++
++*图（上游论文 Fig. 3）：MobileOne block 有两种结构——训练期带可重参数
++化分支（左），推理期把分支折叠为单个 3×3 / 1×1 卷积（右）。恢复自
++X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864）；训练/推理双结构也解释了
++部署制品为何是已重参数化的 INT8 s0–s4 变体（224×224 NV12，见
++[支持与实测矩阵](#support-matrix)）。*
++
+ 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+ 
+ <a id="support-matrix"></a>
+@@ -74,6 +93,15 @@ python3 samples/vision/mobileone/runtime/python/main.py \
+ 
+ 默认变体 `s0` 保留源入口选择，其余变体 `s1`、`s2`、`s3`、`s4` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`tiger_beetle.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
++截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
++`tiger_beetle.JPEG` 的 rank 1 为 class 300（tiger beetle）。这是源交付
++中的历史截图，不是本仓库当前入口的运行结果。
++
++![X5 源 README 的历史推理截图：tiger beetle 测试图与旧版 Top-5 叠加，
++rank 1 为 class 300（tiger beetle）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/repghost/README.md b/samples/vision/repghost/README.md
+index 5ef58c1f..d6ada128 100644
+--- a/samples/vision/repghost/README.md
++++ b/samples/vision/repghost/README.md
+@@ -8,6 +8,29 @@ RepGhost is a lightweight CNN family designed to improve hardware efficiency by
+ - **Paper**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
+ - **Reference Implementation**: [ChengpengChen/RepGhost](https://github.com/ChengpengChen/RepGhost)
+ 
++The source README's feature highlights:
++
++- **Structural re-parameterization** — converts training-time complex
++  branches into efficient inference-time structures.
++- **Implicit feature reuse** — moves GhostNet-style feature reuse from
++  feature space (`Concat`) to weight space, avoiding costly memory
++  copies.
++- **Hardware efficiency** — reduces memory-copy overhead and improves
++  deployment efficiency on edge devices.
++- **Variant scaling** — published variants from `100` to `200`.
++
++![RepGhost bottleneck compared with the Ghost bottleneck: training-time
++add branches fused for inference](./test_data/RepGhost_architecture.png)
++
++*Figure (upstream paper Fig. 4): (a) Ghost bottleneck with its explicit
++`Concat` feature reuse; (b) RG-bneck at training — reuse moves to weight
++space via `add` branches; (c) RG-bneck at inference — the branches are
++fused away. Restored from the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864); it depicts the upstream
++architecture, while the deployed artifacts are the INT8-quantized
++100–200 variants at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+ 
+ <a id="support-matrix"></a>
+@@ -74,6 +97,18 @@ python3 samples/vision/repghost/runtime/python/main.py \
+ 
+ The default is variant `100`, preserving the source entrypoint. `111`, `130`, `150`, `200` must be selected explicitly. Top-K scores use the source softmax policy; exact ties use stable ascending class-ID order. The ibex image is a functional input, not a dataset accuracy test; no current-board reference output exists yet. No image is saved unless `--img-save-path` is supplied.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++illustrated its run with the screenshot below: the legacy `result.jpg`
++drawing overlaid the top-5 ranks on the image, with rank 1 being class
++350 (ibex, Capra ibex) on the bundled `ibex.JPEG`. This is a historical
++screenshot from the source delivery, not a run of the current entrypoint
++in this repository.
++
++![Historical inference screenshot from the X5 source README: ibex test
++image with the legacy top-5 overlay, rank 1 class 350 (ibex, Capra
++ibex)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/repghost/README_cn.md b/samples/vision/repghost/README_cn.md
+index 3c4c5b0a..dc62aee2 100644
+--- a/samples/vision/repghost/README_cn.md
++++ b/samples/vision/repghost/README_cn.md
+@@ -8,6 +8,24 @@ RepGhost 是面向硬件高效部署的轻量级 CNN 模型家族，通过将特
+ - **论文**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
+ - **参考实现**: [ChengpengChen/RepGhost](https://github.com/ChengpengChen/RepGhost)
+ 
++源 README 提炼的特性：
++
++- **结构重参数化**——把训练期的复杂分支转换为推理期的高效结构。
++- **隐式特征复用**——把 GhostNet 式的特征复用从特征空间（`Concat`）
++  移到权重空间，避免昂贵的内存拷贝。
++- **硬件效率**——减少内存拷贝开销，提升边缘设备部署效率。
++- **变体缩放**——提供 `100` 到 `200` 多个发布变体。
++
++![RepGhost bottleneck 与 Ghost bottleneck 对比：训练期 add 分支在推理
++期融合](./test_data/RepGhost_architecture.png)
++
++*图（上游论文 Fig. 4）：(a) 带 `Concat` 显式特征复用的 Ghost
++bottleneck；(b) 训练期 RG-bneck——复用经 `add` 分支移入权重空间；
++(c) 推理期 RG-bneck——分支已融合消失。恢复自 X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864）；图中为上游结构，实际部署
++制品是 INT8 量化的 100–200 变体（224×224 NV12，见
++[支持与实测矩阵](#support-matrix)）。*
++
+ 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+ 
+ <a id="support-matrix"></a>
+@@ -74,6 +92,15 @@ python3 samples/vision/repghost/runtime/python/main.py \
+ 
+ 默认变体 `100` 保留源入口选择；`111`、`130`、`150`、`200` 需显式指定。分数沿用源 softmax 策略，完全平局时按类别 ID 升序稳定排序。ibex 图片用于功能检查，不代表数据集精度；当前尚无迁移后的板端参考输出。仅指定 `--img-save-path` 才保存图像。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
++截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
++`ibex.JPEG` 的 rank 1 为 class 350（ibex, Capra ibex）。这是源交付中的
++历史截图，不是本仓库当前入口的运行结果。
++
++![X5 源 README 的历史推理截图：ibex 测试图与旧版 Top-5 叠加，rank 1 为
++class 350（ibex, Capra ibex）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/repvgg/README.md b/samples/vision/repvgg/README.md
+index 942c5b4c..2061a842 100644
+--- a/samples/vision/repvgg/README.md
++++ b/samples/vision/repvgg/README.md
+@@ -8,6 +8,29 @@ RepVGG is a VGG-style convolutional network family that uses structural re-param
+ - **Paper**: [RepVGG: Making VGG-style ConvNets Great Again](https://arxiv.org/abs/2101.03697)
+ - **Reference Implementation**: [DingXiaoH/RepVGG](https://github.com/DingXiaoH/RepVGG)
+ 
++The source README's feature highlights:
++
++- **Plain inference structure** — after deployment conversion the network
++  is a VGG-style stack of `3x3` convolution + ReLU layers.
++- **Structural re-parameterization** — the training-time identity and 1×1
++  branches are folded into the deployment-time convolutions.
++- **Hardware efficiency** — plain conv + ReLU operators are friendly to
++  edge inference.
++- **Variant scaling** — published variants `A0`, `A1`, `A2`, `B0`,
++  `B1g2`, and `B1g4`.
++
++![RepVGG architecture sketch: ResNet vs RepVGG training vs RepVGG
++inference](./test_data/RepVGG_architecture.png)
++
++*Figure (upstream paper Fig. 2): (A) ResNet; (B) RepVGG training — the
++3×3 blocks additionally carry identity and 1×1 branches, used only for
++training; (C) RepVGG inference — the branches are folded into a plain
++3×3 stack (5 stages, stride-2 downsampling at each stage start). Restored
++from the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864); the deployed artifacts are
++the already-reparameterized INT8 a0/b0/b1g2/... variants at 224×224 NV12
++(see [Support matrix](#support-matrix)).*
++
+ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+ 
+ <a id="support-matrix"></a>
+@@ -78,6 +101,18 @@ python3 samples/vision/repvgg/runtime/python/main.py \
+ 
+ Default variant `a0` preserves the source entrypoint. Choose `a1`, `a2`, `b0`, `b1g2`, `b1g4` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `gooze.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++illustrated its run with the screenshot below: the legacy `result.jpg`
++drawing overlaid the top-5 ranks on the image, with rank 1 being class 99
++(goose) on the bundled `gooze.JPEG`. This is a historical screenshot from
++the source delivery, not a run of the current entrypoint in this
++repository.
++
++![Historical inference screenshot from the X5 source README: goose test
++image with the legacy top-5 overlay, rank 1 class 99
++(goose)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/repvgg/README_cn.md b/samples/vision/repvgg/README_cn.md
+index 3f116348..8325ed30 100644
+--- a/samples/vision/repvgg/README_cn.md
++++ b/samples/vision/repvgg/README_cn.md
+@@ -8,6 +8,25 @@ RepVGG 是一种 VGG 风格的卷积神经网络家族，核心思想是结构
+ - **论文**: [RepVGG: Making VGG-style ConvNets Great Again](https://arxiv.org/abs/2101.03697)
+ - **参考实现**: [DingXiaoH/RepVGG](https://github.com/DingXiaoH/RepVGG)
+ 
++源 README 提炼的特性：
++
++- **直连推理结构**——部署转换后网络即为 `3x3` 卷积 + ReLU 的
++  VGG 风格直连堆叠。
++- **结构重参数化**——训练期的恒等分支与 1×1 分支被折叠进部署期的
++  卷积层。
++- **硬件效率**——纯卷积 + ReLU 算子对边缘推理友好。
++- **变体缩放**——提供 `A0`、`A1`、`A2`、`B0`、`B1g2`、`B1g4`
++  六个变体。
++
++![RepVGG 架构示意：ResNet 对比 RepVGG 训练期与推理期](./test_data/RepVGG_architecture.png)
++
++*图（上游论文 Fig. 2）：(A) ResNet；(B) RepVGG 训练期——3×3 block 额外
++携带仅训练期使用的恒等与 1×1 分支；(C) RepVGG 推理期——分支折叠成纯
++3×3 堆叠（5 个 stage，stage 起始用 stride-2 下采样）。恢复自 X5 源
++README（rdk_x5 @ac115717197920355fc390bb04299b20e6436864）；实际部署
++制品是已重参数化的 INT8 a0/b0/b1g2/… 变体（224×224 NV12，见
++[支持与实测矩阵](#support-matrix)）。*
++
+ 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+ 
+ <a id="support-matrix"></a>
+@@ -78,6 +97,15 @@ python3 samples/vision/repvgg/runtime/python/main.py \
+ 
+ 默认变体 `a0` 保留源入口选择，其余变体 `a1`、`a2`、`b0`、`b1g2`、`b1g4` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`gooze.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
++截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
++`gooze.JPEG` 的 rank 1 为 class 99（goose）。这是源交付中的历史截图，
++不是本仓库当前入口的运行结果。
++
++![X5 源 README 的历史推理截图：goose 测试图与旧版 Top-5 叠加，rank 1 为
++class 99（goose）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/repvit/README.md b/samples/vision/repvit/README.md
+index 89bb7850..10f1a318 100644
+--- a/samples/vision/repvit/README.md
++++ b/samples/vision/repvit/README.md
+@@ -8,6 +8,47 @@ RepViT revisits lightweight mobile CNN design from a ViT perspective. It keeps a
+ - **Paper**: [RepViT: Revisiting Mobile CNN From ViT Perspective](http://arxiv.org/abs/2307.09283)
+ - **Reference Implementation**: [THU-MIG/RepViT](https://github.com/THU-MIG/RepViT)
+ 
++The source README's feature highlights:
++
++- **ViT-inspired mobile CNN** — revisits the MobileNet-style
++  architecture from a lightweight ViT perspective.
++- **Structural reparameterization** — fuses training-time structural
++  branches (3×3DW with a 1×1DW branch) into a single 3×3DW for
++  deployment-time inference.
++- **Separated mixers** — inside a single block, the token-mixer part
++  (3×3 depthwise convolution, with SE in the SE variant) and the
++  channel-mixer part (the 1×1 FFN) are decoupled and stacked one after
++  the other, replacing the MobileNetV3 layout where both sit inside the
++  inverted-bottleneck block — not two separate network blocks.
++- **Efficient deployment** — m0.9, m1.0, and m1.1 RDK X5 deployment
++  models with packed NV12 input.
++
++![RepViT architecture overview: stem, four stages, block and SE
++variants](./test_data/RepViT_architecture.png)
++
++*Figure (upstream paper Fig. 3): the four-stage overview. Stem: two
++stacked stride-2 3×3 convolutions. In-stage RepViTBlock (yellow): a 3×3DW
++token mixer with a parallel 1×1DW branch, both summed by a residual add,
++followed by the FFN channel mixer. Downsample unit between stages
++(orange): a RepViTBlock at the stage resolution, then a stride-2 3×3DW,
++a 1×1, and an FFN — halving the resolution and mapping C_i to C_i+1.
++RepViTSEBlock (green): the same structure with an SE module between the
++token mixer and the FFN. Bottom: at inference the parallel 3×3DW + 1×1DW
++branches fuse into a single 3×3DW. Restored from the X5 source README
++(rdk_x5 @ac115717197920355fc390bb04299b20e6436864).*
++
++![Depthwise block: from MobileNetV3 block to separated-mixer RepViT
++block](./test_data/RepViT_DW.png)
++
++*Figure (upstream paper Fig. 4): (a) a MobileNetV3 block with optional
++squeeze-and-excite; (b) structural reparameterization separates the
++token mixer (3×3DW) and channel mixer (1×1) by relocating the depthwise
++convolution and SE layer; (c) the multi-branch topology consolidates
++into a single branch at inference. Together with the overview above this
++explains why the deployed artifacts are the already-fused INT8
++m0_9/m1_0/m1_1 variants at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+ 
+ <a id="support-matrix"></a>
+@@ -66,6 +107,18 @@ python3 samples/vision/repvit/runtime/python/main.py \
+ 
+ Default variant `m0_9` preserves the source entrypoint. Choose `m1_0`, `m1_1` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `yurt.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++illustrated its run with the screenshot below: the legacy `result.jpg`
++drawing overlaid the top-5 ranks on the image, with rank 1 being class
++915 (yurt) on the bundled `yurt.JPEG`. This is a historical screenshot
++from the source delivery, not a run of the current entrypoint in this
++repository.
++
++![Historical inference screenshot from the X5 source README: yurt test
++image with the legacy top-5 overlay, rank 1 class 915
++(yurt)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/repvit/README_cn.md b/samples/vision/repvit/README_cn.md
+index b70a84da..d6f41dcf 100644
+--- a/samples/vision/repvit/README_cn.md
++++ b/samples/vision/repvit/README_cn.md
+@@ -8,6 +8,37 @@ RepViT 从轻量级 ViT 的角度重新审视移动端 CNN 设计。该模型保
+ - **论文**：[RepViT: Revisiting Mobile CNN From ViT Perspective](http://arxiv.org/abs/2307.09283)
+ - **参考实现**：[THU-MIG/RepViT](https://github.com/THU-MIG/RepViT)
+ 
++源 README 提炼的特性：
++
++- **ViT 视角的移动端 CNN**——从轻量级 ViT 视角重新审视
++  MobileNet 式架构。
++- **结构重参数化**——把训练期的结构分支（3×3DW 带 1×1DW 分支）融合为
++  单条 3×3DW，加快部署期推理。
++- **混合器分离**——在同一个 block 内部，token 混合部分（3×3 深度卷积，
++  SE 变体另加 SE）与通道混合部分（1×1 FFN）解耦并先后堆叠，替代
++  MobileNetV3 中两者同处倒瓶颈 block 内部的布局——并非两个独立的网络块。
++- **高效部署**——提供 m0.9、m1.0、m1.1 三个 RDK X5 部署模型，使用
++  打包 NV12 输入。
++
++![RepViT 架构总览：stem、四个 stage、block 与 SE 变体](./test_data/RepViT_architecture.png)
++
++*图（上游论文 Fig. 3）：四级结构总览。stem：两层堆叠的 stride-2 3×3
++卷积。stage 内 RepViTBlock（黄色）：3×3DW token 混合器与并行的 1×1DW
++分支经残差相加，后接 FFN 通道混合器。stage 间下采样单元（橙色）：先在
++本 stage 分辨率上过一个 RepViTBlock，再经 stride-2 3×3DW、1×1 和 FFN
++——分辨率减半、通道 C_i 映射到 C_i+1。RepViTSEBlock（绿色）：相同结构
++在 token 混合器与 FFN 之间加入 SE 模块。底部：推理期并行的 3×3DW +
++1×1DW 分支融合为单个 3×3DW。恢复自 X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864）。*
++
++![深度卷积 block：从 MobileNetV3 block 到混合器分离的 RepViT block](./test_data/RepViT_DW.png)
++
++*图（上游论文 Fig. 4）：(a) 带可选 squeeze-and-excite 的 MobileNetV3
++block；(b) 结构重参数化通过挪动深度卷积与 SE 层，把 token 混合器
++（3×3DW）与通道混合器（1×1）分离；(c) 推理期把多分支拓扑合并为单分支。
++结合上图即可理解部署制品为何是已融合的 INT8 m0_9/m1_0/m1_1 变体
++（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
++
+ 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+ 
+ <a id="support-matrix"></a>
+@@ -66,6 +97,15 @@ python3 samples/vision/repvit/runtime/python/main.py \
+ 
+ 默认变体 `m0_9` 保留源入口选择，其余变体 `m1_0`、`m1_1` 须显式指定。分数沿用源 softmax 策略，完全平局时按 ID 升序稳定排序。`yurt.JPEG` 仅作功能输入，不代表数据集精度；统一实现板端结果尚未产生。仅指定 `--img-save-path` 才保存文件。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
++截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
++`yurt.JPEG` 的 rank 1 为 class 915（yurt）。这是源交付中的历史截图，
++不是本仓库当前入口的运行结果。
++
++![X5 源 README 的历史推理截图：yurt 测试图与旧版 Top-5 叠加，rank 1 为
++class 915（yurt）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/resnext/README.md b/samples/vision/resnext/README.md
+index f730c184..6e6765ef 100644
+--- a/samples/vision/resnext/README.md
++++ b/samples/vision/resnext/README.md
+@@ -8,6 +8,30 @@ ResNeXt extends the residual network family with a split-transform-merge design
+ - **Paper**: [Aggregated Residual Transformations for Deep Neural Networks](https://arxiv.org/abs/1611.05431)
+ - **Reference Implementation**: [facebookresearch/ResNeXt](https://github.com/facebookresearch/ResNeXt)
+ 
++The source README's feature highlights:
++
++- **Cardinality** — improves representation power by increasing the
++  number of parallel transformation paths (the "32" in 32×4d: 32 groups)
++  instead of only scaling depth or width.
++- **Grouped convolution** — balances accuracy and compute efficiency
++  while keeping parameters/FLOPs close to the ResNet counterpart.
++- **Residual backbone** — preserves the stable residual learning pattern
++  (split-transform-merge inside each block).
++- **Classification output** — Top-K class IDs and confidence scores for
++  ImageNet-1k labels.
++
++![ResNeXt-50 32x4d vs ResNet-50 stage table from the upstream
++paper](./test_data/ResNeXt_architecture.png)
++
++*Figure (upstream paper Table 1): the stage-by-stage block table — each
++ResNeXt bottleneck replaces the dense 1×1/3×3/1×1 transform with a
++grouped 3×3 (C=32), keeping parameters (25.0 vs 25.5 M) and FLOPs
++(4.2 vs 4.1 G) nearly unchanged versus ResNet-50. Restored from the X5
++source README (rdk_x5 @ac115717197920355fc390bb04299b20e6436864); it
++depicts the upstream training architecture, while the deployed artifact
++is the INT8-quantized `50_32x4d` variant at 224×224 NV12 (see [Support
++matrix](#support-matrix)).*
++
+ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+ 
+ <a id="support-matrix"></a>
+@@ -58,6 +82,18 @@ python3 samples/vision/resnext/runtime/python/main.py \
+ 
+ The only published variant is `50_32x4d`, selected by default. Inference prints Top-5 IDs, softmax scores and labels. Exact ties use ascending class-ID order. The bundled image is a functional input; board verification is not-run. Files are written only with `--img-save-path`.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++illustrated its run with the screenshot below: the legacy `result.jpg`
++drawing overlaid the top-5 ranks on the image, with rank 1 being class 92
++(bee eater) on the bundled `bee_eater.JPEG`. This is a historical
++screenshot from the source delivery, not a run of the current entrypoint
++in this repository.
++
++![Historical inference screenshot from the X5 source README: bee eater
++test image with the legacy top-5 overlay, rank 1 class 92 (bee
++eater)](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/resnext/README_cn.md b/samples/vision/resnext/README_cn.md
+index ae35bb60..9fa82b5a 100644
+--- a/samples/vision/resnext/README_cn.md
++++ b/samples/vision/resnext/README_cn.md
+@@ -8,6 +8,26 @@ ResNeXt 在残差网络的基础上引入 split-transform-merge 设计，通过
+ - **论文地址**: [Aggregated Residual Transformations for Deep Neural Networks](https://arxiv.org/abs/1611.05431)
+ - **参考实现**: [facebookresearch/ResNeXt](https://github.com/facebookresearch/ResNeXt)
+ 
++源 README 提炼的特性：
++
++- **Cardinality（分支数）**——通过增加并行变换路径数（32×4d 中的
++  "32"：32 组）提升表达能力，而不是只加深或加宽网络。
++- **组卷积**——在保持参数量/FLOPs 与对应 ResNet 接近的同时平衡精度与
++  计算效率。
++- **残差主干**——保留稳定的残差学习模式（block 内
++  split-transform-merge）。
++- **分类输出**——产出 ImageNet-1k 标签的 Top-K 类别 ID 与置信度。
++
++![上游论文中 ResNeXt-50 32x4d 与 ResNet-50 的逐 stage 结构表](./test_data/ResNeXt_architecture.png)
++
++*图（上游论文 Table 1）：逐 stage 的 block 结构表——每个 ResNeXt
++bottleneck 把稠密 1×1/3×3/1×1 变换替换为分组 3×3（C=32），参数量
++（25.0 对 25.5 M）与 FLOPs（4.2 对 4.1 G）相对 ResNet-50 几乎不变。
++恢复自 X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864）；图中为上游训练结构，实际
++部署制品是 INT8 量化的 `50_32x4d` 变体（224×224 NV12，见
++[支持与实测矩阵](#support-matrix)）。*
++
+ 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+ 
+ <a id="support-matrix"></a>
+@@ -58,6 +78,15 @@ python3 samples/vision/resnext/runtime/python/main.py \
+ 
+ 唯一发布变体为 `50_32x4d`，默认即选中它。推理打印 Top-5 ID、softmax 分数与标签。完全平局按 ID 升序排序。随附图片用于功能检查；板测 not-run。仅指定 `--img-save-path` 才写文件。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
++截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
++`bee_eater.JPEG` 的 rank 1 为 class 92（bee eater）。这是源交付中的
++历史截图，不是本仓库当前入口的运行结果。
++
++![X5 源 README 的历史推理截图：bee eater 测试图与旧版 Top-5 叠加，
++rank 1 为 class 92（bee eater）](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 
+diff --git a/samples/vision/vargconvnet/README.md b/samples/vision/vargconvnet/README.md
+index e3ae8745..75c14228 100644
+--- a/samples/vision/vargconvnet/README.md
++++ b/samples/vision/vargconvnet/README.md
+@@ -57,6 +57,18 @@ python3 samples/vision/vargconvnet/runtime/python/main.py \
+ 
+ The only published variant is `vargconvnet`, selected by default. Inference prints Top-5 IDs, softmax scores and labels. Exact ties use ascending class-ID order. The bundled image is a functional input; board verification is not-run. Files are written only with `--img-save-path`.
+ 
++For reference, the X5 source README (rdk_x5
++@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
++illustrated its run with the screenshot below: the legacy `result.jpg`
++drawing overlaid the top-5 ranks and scores on the image — rank 1 being
++class 37 (box turtle, box tortoise) with score 0.8582 on the bundled
++`box_turtle.JPEG`. This is a historical screenshot from the source
++delivery, not a run of the current entrypoint in this repository.
++
++![Historical inference screenshot from the X5 source README: box turtle
++test image with the legacy top-5 overlay, rank 1 class 37 (box turtle,
++box tortoise) score 0.8582](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## Performance data
+ 
+diff --git a/samples/vision/vargconvnet/README_cn.md b/samples/vision/vargconvnet/README_cn.md
+index 0daf3d4f..eac84f6d 100644
+--- a/samples/vision/vargconvnet/README_cn.md
++++ b/samples/vision/vargconvnet/README_cn.md
+@@ -57,6 +57,16 @@ python3 samples/vision/vargconvnet/runtime/python/main.py \
+ 
+ 唯一发布变体为 `vargconvnet`，默认即选中它。推理打印 Top-5 ID、softmax 分数与标签。完全平局按 ID 升序排序。随附图片用于功能检查；板测 not-run。仅指定 `--img-save-path` 才写文件。
+ 
++供参考：X5 源 README（rdk_x5
++@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
++截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名和分数叠在图上——
++随附 `box_turtle.JPEG` 的 rank 1 为 class 37（box turtle, box
++tortoise），分数 0.8582。这是源交付中的历史截图，不是本仓库当前入口的
++运行结果。
++
++![X5 源 README 的历史推理截图：box turtle 测试图与旧版 Top-5 叠加，
++rank 1 为 class 37（box turtle, box tortoise），分数 0.8582](./test_data/inference.png)
++
+ <a id="performance"></a>
+ ## 性能数据
+ 

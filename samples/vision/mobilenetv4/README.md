@@ -15,6 +15,30 @@ The former platform branch entries remain compatibility shims under
 `platforms/{x5,s}/` until the migration closeout; their audit record
 lives in the migration documents, not here.
 
+### Algorithm background
+
+MobileNetV4 unifies the block design space of mobile CNNs in the
+Universal Inverted Bottleneck (UIB): depending on which depthwise layers
+are enabled, one block expresses an inverted bottleneck, a
+ConvNeXt-style block, an FFN-style block, or the ExtraDW variant; a
+mobile multi-query attention design adds attention where it pays off on
+mobile accelerators ([paper](https://arxiv.org/abs/2404.10518),
+[timm/models/MobileNetV4.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/MobileNetV4.py)).
+
+Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+
+- **Universal Inverted Bottleneck**: unifies inverted bottleneck, ConvNeXt-style blocks, FFN-style blocks, and ExtraDW variants.
+- **Mobile Multi-Query Attention**: an attention structure optimized for mobile accelerators.
+- **Model variants**: this sample ships the Conv-Small and Conv-Medium deployment models.
+
+![MobileNetV4 UIB blocks](./test_data/MobileNetV4_architecture.png)
+
+*Universal Inverted Bottleneck blocks, restored from the X5 source
+release (`test_data/MobileNetV4_architecture.png`, rdk_x5 @ac11571,
+sha256 `944a191d…`; Fig. 4 of the paper): the UIB block with two optional
+depthwise layers, its Extra-DW / Inverted Bottleneck / ConvNeXt / FFN
+instantiations, and the alternative fused IB.*
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -102,6 +126,15 @@ Published MobileNetV4 performance on `RDK X5` from rdk_x5 @ac11571 (x5-v1.1.3):
 
 The S-series source release (rdk_s @380e1a2 (s-v1.1.2)) published no latency or accuracy
 figures for this model; none are inferred here.
+
+![Inference result](./test_data/inference.png)
+
+*Historical inference screenshot from the X5 source release
+(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `64930905…`): the
+bundled [great_grey_owl.JPEG](test_data/great_grey_owl.JPEG) ranks
+`great grey owl` first, followed by ruffed grouse, partridge, meerkat,
+and prairie chicken. Recorded by the source release on its own runtime
+entry — not a new run of this repository.*
 
 <a id="directory"></a>
 ## Directory

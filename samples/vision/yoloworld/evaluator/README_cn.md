@@ -20,19 +20,23 @@ python3 samples/vision/yoloworld/evaluator/compare.py --target x5 --output-dir /
 ```
 
 `--model-path /absolute/yolo_world.bin` 必须同时给出精确 `--asset-id`。
-`--test-img`、`--vocab-file`、`--prompts`、`--score-thres` 和 `--nms-thres`
-会同时作用于两套实现。命令先检查真实 target，再运行源实现和统一实现的
-pre/forward/post；只有 raw 张量精确相等、类别 ID 精确相等且框/分数零容差
-相等才返回 0。比较失败保留目录并返回 1，执行或准备错误返回 2。
+`--test-img`、`--vocab-file`、`--prompts`、`--score-thres`、`--nms-thres`、
+`--priority` 和 `--bpu-cores` 会同时作用于两套实现。命令先检查真实 target，再
+用同一图片、词向量与模型运行源实现和统一实现的 pre/forward/post，并捕获两边的
+预处理输入、raw 分数/框张量与最终检测结果。仅当全部检查通过时返回 0，两边
+不一致返回 1，运行失败返回 2。
 
 <a id="metrics"></a>
 <a id="outputs"></a>
 ## 指标与输出
 
-这是张量对拍，不是数据集 mAP 或性能测试。输出包含
-`legacy_raw_*.npy`、`unified_raw_*.npy`、两套结果数组、`metadata.json`，以及
-模型、源代码、输入图片和词向量的 SHA-256。元数据记录 target、资产身份、
-prompt、阈值和决策，任何输出目录都不会覆盖。
+这是张量对拍，不是数据集 mAP 或性能测试。输出为 `comparison.json` 以及每个记录
+的输入、raw 输出与结果数组各自的 `.npy` 文件。manifest 用 SHA-256 绑定
+`target`、`asset_id`、模型、图像、词向量与代码摘要，记录两边实际 runtime
+metadata、prompt 列表、阈值、`argv`、`cwd`、`started_utc`/`finished_utc` 与
+`return_code`，并逐个列出保存的数组文件及其摘要。输入与类别 ID 要求完全相等；
+raw 张量 `atol=1e-5`，框 `1e-4`，分数 `1e-5`。执行失败时仍写出带 `error`、
+`return_code: 2`、`passed: false` 的 manifest，任何输出目录都不会覆盖。
 
 <a id="reference-results"></a>
 <a id="boundaries"></a>
@@ -41,9 +45,12 @@ prompt、阈值和决策，任何输出目录都不会覆盖。
 | 源记录 | 输入/协议 | 历史性能 | 状态 |
 | --- | --- | --- | --- |
 | 固定 X5 YOLOWorld sample | 640 图片；32×512 文本；8400 行分数/框 | 没有发布延迟或 mAP 表 | 保留事实；没有新测量 |
+| 2026-09-24 板端一致性 | `dog` 提示、`test_data/dog.jpeg`、score/NMS 0.05/0.45 | 一块 X5 8GB 与一块 X5 4GB 上 rc=0、全部检查 true、`max_abs_diff` 0.0 | [8GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[4GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/) |
 
 固定源 evaluator README 没有发布 benchmark 表。因此只保留可核对的历史事实：
 `yolo_world.bin`、640 图片输入、32 个 512 宽文本槽、8400 行分数，以及
-0.05/0.45 的 score/NMS 默认值；不宣称延迟或 mAP 数值。直到命令生成证据前，
-板端执行和模型可用性均为 `not-run`。离线词向量是必需的模型伴随资产，不是
-普通分类标签文件。
+0.05/0.45 的 score/NMS 默认值；不宣称延迟或 mAP 数值。已记录的板端证据只覆盖
+上表的 `dog` 提示/图片组合（统一侧板测提交为 `ae0f185` 与 `73a6de1`）；板端
+日志会打印 HBRT 库与模型构建小版本不一致的警告，证据中原样保留，这些已记录对照的所有检查均通过。
+其它提示、图片或板卡仍需各自运行本命令，不从这些对照外推全词汇精度。离线词向量
+是必需的模型伴随资产，不是普通分类标签文件。

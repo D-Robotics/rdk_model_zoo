@@ -1,0 +1,92 @@
+{
+  "utc": "2026-09-28T10:54:15.817902+00:00",
+  "cwd": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration",
+  "records": [
+    {
+      "readme": "samples/llm/minicpm5-2b/runtime/legacy/README.md",
+      "readme_sha256": "bd1487e68ab19ceb4588e252331a21dd635c9721a54c8e19fe2b4efdf66a9020",
+      "source": "#include <iostream>\n\n#include \"minicpm5.hpp\"\n\nint main() {\n  MiniCPM5Config config;\n  config.model_path = \"model/s100/minicpm5-2b_ctx4096_s100.hbm\";\n  config.tokenizer_path = \"model/s100/tokenizer\";\n  config.template_path = \"model/s100/tokenizer/simple-chat.jinja\";\n  config.prompt = \"\u8bf7\u7528\u4e00\u53e5\u8bdd\u4ecb\u7ecd\u4f60\u81ea\u5df1\u3002\";\n  config.text_sink = [](const char* chunk) {  // optional; omit for silent use\n    std::cout << chunk << std::flush;\n  };\n  MiniCPM5 model(config);                    // stores settings only\n  model.init();                              // loads model and tokenizer; one request per instance\n  RequestOutcome outcome = model.predict();  // streams via the sink\n  // consume: outcome.ended, outcome.failed, outcome.sdk_status, outcome.destroy_status,\n  // outcome.stream_error; outcome.exit_code() is zero only for normal EOS with cleanup.\n  return outcome.exit_code();\n}\n",
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fsyntax-only",
+        "-I",
+        "samples/llm/minicpm5-2b/runtime/legacy/inc",
+        "-I",
+        "samples/llm/minicpm5-2b/tests/native/fixtures",
+        "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpg5avwc1q/example.cpp"
+      ],
+      "rc": 0,
+      "stderr": ""
+    },
+    {
+      "readme": "samples/llm/minicpm5-2b/runtime/legacy/README_cn.md",
+      "readme_sha256": "3a3e7fbc8d69394f05eb5d3e5840f6c38486cde64ffd77ff52ecade14db083b3",
+      "source": "#include <iostream>\n\n#include \"minicpm5.hpp\"\n\nint main() {\n  MiniCPM5Config config;\n  config.model_path = \"model/s100/minicpm5-2b_ctx4096_s100.hbm\";\n  config.tokenizer_path = \"model/s100/tokenizer\";\n  config.template_path = \"model/s100/tokenizer/simple-chat.jinja\";\n  config.prompt = \"\u8bf7\u7528\u4e00\u53e5\u8bdd\u4ecb\u7ecd\u4f60\u81ea\u5df1\u3002\";\n  config.text_sink = [](const char* chunk) {  // \u53ef\u9009\uff1b\u4e0d\u8bbe\u7f6e\u5219\u9759\u9ed8\n    std::cout << chunk << std::flush;\n  };\n  MiniCPM5 model(config);                    // \u4ec5\u4fdd\u5b58\u914d\u7f6e\n  model.init();                              // \u52a0\u8f7d\u6a21\u578b\u4e0e\u5206\u8bcd\u5668\uff1b\u6bcf\u4e2a\u5b9e\u4f8b\u4e00\u6b21\u8bf7\u6c42\n  RequestOutcome outcome = model.predict();  // \u7ecf sink \u6d41\u5f0f\u8f93\u51fa\n  // \u6d88\u8d39\uff1aoutcome.ended\u3001outcome.failed\u3001outcome.sdk_status\u3001outcome.destroy_status\u3001\n  // outcome.stream_error\uff1b\u4ec5\u6b63\u5e38 EOS \u4e14\u6210\u529f\u91ca\u653e\u65f6 outcome.exit_code() \u4e3a\u96f6\u3002\n  return outcome.exit_code();\n}\n",
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fsyntax-only",
+        "-I",
+        "samples/llm/minicpm5-2b/runtime/legacy/inc",
+        "-I",
+        "samples/llm/minicpm5-2b/tests/native/fixtures",
+        "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmprx7h2mvj/example.cpp"
+      ],
+      "rc": 0,
+      "stderr": ""
+    },
+    {
+      "readme": "samples/llm/minicpm5-2b/runtime/cpp/README.md",
+      "readme_sha256": "a52b28e7be911a9618e30fea666c888aa0a25217368ccd8a7cdbe6ad854fd7c0",
+      "source": "#include \"minicpm5.hpp\"\n\nint main() {\n  minicpm5::Config config;              // model_path defaults to ../../model/s600\n  config.max_new_tokens = 128;          // 1-4096\n  minicpm5::MiniCPM5 model(config);     // validates settings, prepares the runtime; throws on failure\n  minicpm5::Result first = model.Generate(\"What is 1+1?\");  // opens the conversation\n  if (first.status == 3) {              // 3 EOS; 6 output limit; 4 context limit\n    // consume first.text, first.tokens, first.ttft_ms, first.decode_tps, first.e2e_ms\n  }\n  minicpm5::Result follow = model.Generate(\"Translate that.\", false);  // same conversation\n  return first.status == 3 && follow.status == 3 ? 0 : 1;\n}\n",
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fsyntax-only",
+        "-I",
+        "samples/llm/minicpm5-2b/runtime/cpp/inc",
+        "-I",
+        "samples/llm/minicpm5-2b/tests/native/fixtures",
+        "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpn09284ik/example.cpp"
+      ],
+      "rc": 0,
+      "stderr": ""
+    },
+    {
+      "readme": "samples/llm/minicpm5-2b/runtime/cpp/README_cn.md",
+      "readme_sha256": "e77214ee7a0747707181bc72d5a672eb6c8906f9adcd073012837aeae1608e2d",
+      "source": "#include \"minicpm5.hpp\"\n\nint main() {\n  minicpm5::Config config;              // model_path \u9ed8\u8ba4 ../../model/s600\n  config.max_new_tokens = 128;          // 1-4096\n  minicpm5::MiniCPM5 model(config);     // \u6821\u9a8c\u914d\u7f6e\u5e76\u51c6\u5907 runtime\uff1b\u5931\u8d25\u629b\u5f02\u5e38\n  minicpm5::Result first = model.Generate(\"What is 1+1?\");  // \u5f00\u542f\u4f1a\u8bdd\n  if (first.status == 3) {              // 3 EOS\uff1b6 \u751f\u6210\u4e0a\u9650\uff1b4 \u4e0a\u4e0b\u6587\u4e0a\u9650\n    // \u6d88\u8d39 first.text\u3001first.tokens\u3001first.ttft_ms\u3001first.decode_tps\u3001first.e2e_ms\n  }\n  minicpm5::Result follow = model.Generate(\"Translate that.\", false);  // \u540c\u4e00\u4f1a\u8bdd\n  return first.status == 3 && follow.status == 3 ? 0 : 1;\n}\n",
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fsyntax-only",
+        "-I",
+        "samples/llm/minicpm5-2b/runtime/cpp/inc",
+        "-I",
+        "samples/llm/minicpm5-2b/tests/native/fixtures",
+        "/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmp1f6w545b/example.cpp"
+      ],
+      "rc": 0,
+      "stderr": ""
+    }
+  ],
+  "changed_since_core_snapshot": [
+    "samples/llm/minicpm5-2b/runtime/legacy/README.md",
+    "samples/llm/minicpm5-2b/runtime/legacy/README_cn.md",
+    "samples/llm/minicpm5-2b/runtime/cpp/README.md",
+    "samples/llm/minicpm5-2b/runtime/cpp/README_cn.md"
+  ]
+}

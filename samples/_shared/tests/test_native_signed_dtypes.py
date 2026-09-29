@@ -94,14 +94,21 @@ class SignedAliasTests(unittest.TestCase):
         self.assertEqual(canonicalise_dtype("nv12"), "nv12")
         self.assertEqual(canonicalise_dtype(None), None)
 
+    def test_lanenet_signed64_public_binary_output_tokens(self):
+        from samples._shared.runtime_meta import canonicalise_dtype
+        for value in ("s64", "i64", "int64", "hbDNNDataType.S64", _NamedOnly("S64")):
+            self.assertEqual(canonicalise_dtype(value), "int64")
+        # Canonical spelling is not permission for classification bindings to
+        # accept another dtype; their existing allowed sets still govern.
+        self.assertNotIn("int64", _S_ALLOWED)
+        self.assertEqual(canonicalise_dtype("u64"), "u64")
+
     def test_unknown_tokens_return_verbatim_without_guessing(self):
         from samples._shared.runtime_meta import canonicalise_dtype
 
         self.assertEqual(canonicalise_dtype("weird"), "weird")
-        self.assertEqual(canonicalise_dtype("s64"), "s64")
         self.assertEqual(canonicalise_dtype("hbDNNDataType.WEIRD"), "hbdnndatatype.weird")
         self.assertEqual(canonicalise_dtype(_NamedOnly("S128")), "s128")
-        self.assertNotIn(canonicalise_dtype("s64"), ("int64", "uint64"))
 
 
 class _S100EvidenceRuntime:

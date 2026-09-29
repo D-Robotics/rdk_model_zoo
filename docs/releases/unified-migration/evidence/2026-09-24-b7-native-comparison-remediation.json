@@ -1,0 +1,51 @@
+{
+  "stage": "N9 independent-review remediation of the native comparison tooling",
+  "utc": "2026-09-24T09:40:48Z",
+  "base_commit": "fbffddd (with the N8 round's uncommitted worktree carried forward, per the coordinator's instruction)",
+  "branch": "codex/b7-local-glm-20260924",
+  "worktree": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-local-glm",
+  "author": "local Claude Code + GLM (author side; not an independent review)",
+  "review_observations_verified_before_fixing": {
+    "1_parameters_dict": "CONFIRMED against the real board fixture ../rdk_model_zoo/docs/releases/unified-migration/evidence/2026-09-24-b7-native-round2/x5-manifest.json: parameters is a JSON object; the previous pairs parsing would iterate keys and crash/misparse",
+    "2_empty_lists": "CONFIRMED by inspection: 0==0 input-count check passed and empty output loops produced no stages, so both-empty passed",
+    "3_optional_hashes": "CONFIRMED: `unified.get('model_sha256') not in (None, '', ...)` let a missing hash pass; the capture recorded only paths and the comparison recomputed hashes from mutable paths",
+    "4_precision_and_inference": "CONFIRMED: default 6-significant-digit ostream serialization; the S glue derived dtype from quantiType instead of reading tensorType; failures were silent `return`s",
+    "5_mutable_closure": "CONFIRMED: the generated S CMake compiled utils/c_utils from the working tree; a shallow clone lacks the pinned commits and the old error gave no preparation path",
+    "6_model_space_only": "CONFIRMED: detections compared in model space with no explicit statement that final-output equivalence was not claimed, and no final-coordinate capture"
+  },
+  "fixes": [
+    {"item": 1, "what": "compare_native.py reads the real v2 schema: parameters must be a JSON object (a pairs list is rejected with a clear error); regression test runs against the REAL x5-manifest.json fixture and asserts the comparison gets past parameter parsing"},
+    {"item": 2, "what": "structural enforcement: x5 requires exactly 1 input, s100/s100p/s600 exactly 2; exactly 3 output heads on both sides; source and unified shapes must be unique and form a complete bijection (missing/duplicate/extra shapes all fail); per-record dtype validated against {uint8,int32,float32}, finite values checked, quantization kind/scale-length/scale-values consistency enforced; raw comparison requires identical dtypes (require_same_dtype) so a float cast can never mask a type error"},
+    {"item": 3, "what": "identity hardening: the observer computes model/image SHA-256 at capture time (built-in SHA-256); the unified manifest's model/image hashes are REQUIRED (missing = failure) and must equal the capture-time hashes; binary hashes are computed from the attested binaries; every payload is verified against the size and SHA-256 recorded at write time on both sides; capture return_code/failed/utc_start/utc_finish recorded and checked; capture-in-progress.json and capture-error.txt markers reject the capture; target must equal build_target EXACTLY (s100 rejects s100p/s600 builds; s600 and s100p are explicit --target choices); the output preserves originals/ (both manifests + physical payloads) and digests.json over every produced file"},
+    {"item": 4, "what": "observer hardening: all floats serialize with setprecision(17) (detection/box/scale values roundtrip exactly — asserted in tests); begin() refuses a non-empty capture directory (writes capture-error.txt, disables capture) so a stale capture can never pass; an in-progress marker is only removed by a successful finish, so early death/crash leaves a detectable state; payload writes check open/write results and fail the capture on short writes, null pointers or duplicate/unknown tensors; tensor_meta rejects negative dims/strides; dtype comes from the SDK tensorType enum on BOTH sides (S glue maps S32/F32/S8/U8/S16, X5 glue likewise; quanti never implies dtype); stdout/stderr are teed into the capture dir (best effort, failures recorded as warnings)"},
+    {"item": 5, "what": "closure pinning: S_CLOSURE_SHA256 pins yolov5.hpp + all 7 c_utils headers + all 5 c_utils sources at 380e1a2 (verified byte-identical to the current tree, but pinned regardless); instrument.py copies the verified blobs INTO the work dir and the generated CMake references only those copies; the audit records every closure hash and work-copy path; a missing pinned commit (shallow clone) fails closed with the exact preparation command (git fetch --depth=1 origin <sha> / non-shallow clone / GitHub archive) and states that working-tree files are never a substitute — tested with a fresh repo that lacks the commit"},
+    {"item": 6, "what": "final-coordinate comparison: the capture gains detections_original (X5 anchor inside the render loop where x1..y2 are the source's own final coordinates; S anchor right after scale_letterbox_bboxes_back); the unified adapters compute detections_original from THEIR OWN model-space detections via the SDK-free map_to_original (the exact render arithmetic, unclamped, never derived from the source); compare_native compares them under the same box criteria when both sides have them, else records an explicit not-performed stage stating that final-output equivalence is NOT claimed; the model-space nature of the main detection stage is stated in every report (identity.final_coordinate_claim)"}
+  ],
+  "thresholds": "unchanged: inputs exact / raw atol 1e-5 rtol 0 / scale-zero exact / boxes 1e-4 / scores 1e-5 / class ids exact",
+  "files": [
+    {"path": "samples/vision/yolov5/evaluator/native/ycap_observer.hpp", "sha256": "cf433e823f67ba3d62228259873aa7f6ceca80ad1efc67b8b5198e3193bfa69f"},
+    {"path": "samples/vision/yolov5/evaluator/native/instrument.py", "sha256": "4b0f91485e7f01edb133687610b255929e12d198f458fe3e23799ad1e192fd3e"},
+    {"path": "samples/vision/yolov5/evaluator/native/compare_native.py", "sha256": "19faa44e09602454ce2cfd16e8fe0a019d64547ce873a7e7e3de33723db3aae0"},
+    {"path": "samples/vision/yolov5/tests/test_native_evaluator.py", "sha256": "46573611beb634916907275e6b6f4c0ec68502a874302ba91d3099ff72eb9f84"},
+    {"path": "samples/vision/yolov5/evaluator/README.md", "sha256": "adb79de98cd5cb5382a2c6714d661845a082f331a8656e14e3ba7eee7ed54c69"},
+    {"path": "samples/vision/yolov5/evaluator/README_cn.md", "sha256": "777ab6c1c23d504f241c34855bb97a0f5901d530da0b5f46c69fe82777c4809a"},
+    {"path": "samples/vision/yolov5/runtime/cpp/include/yolov5_dump.hpp", "sha256": "15788548e20d686408862855aa1f53c76e38b8c9a0ee2de3868a6f0d109e3113", "note": "map_to_original + detections_original field"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/yolov5_dump.cpp", "sha256": "9c207f8beb3dfbdb9bb1aa64151e633cba01971845e57d3213eb5c960c1cc4f7"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/x5_adapter.cpp", "sha256": "3c3c14430c368e23699d41d81a6d6068f93ed948e904a2c93bcaf67b778c7778"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/s_adapter.cpp", "sha256": "b3aefab948de82174ffb0fefa49b7400e63a8bc8473c20df07243796b5307107"}
+  ],
+  "host_verification": {
+    "python": "3.14.7 (rdk_model_zoo/.venv, read-only)",
+    "commands": [
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/yolov5/tests", "returncode": 0, "result": "62 tests OK (was 50): +12 — real-v2-manifest schema regression, pairs rejection, empty-list/extra-head/dtype-mismatch/missing-hash/marker/tampered-payload/exact-target rejections, final-coordinates pass + not-claimed path, observer roundtrip/marker/refusal, shallow-clone hint, closure audit"},
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/bytetrack/tests", "returncode": 0, "result": "11 tests OK"},
+      {"argv": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json --report /tmp/b7-n9-contract.json", "returncode": 0, "result": "36 samples, 0 violations, 84 exemptions"},
+      {"argv": "git diff --check", "returncode": 0}
+    ],
+    "real_fixture": "evidence/2026-09-24-b7-native-round2/x5-manifest.json (4d45f9a X5 board run) drives the schema regression; the test skips with an explicit message if the sibling checkout is absent"
+  },
+  "boundaries": {
+    "board": "not-run from this worktree; Codex re-reviews and executes the board runs (README steps 0-4; X5 s-v2+bus, S100/S600 x-672+kite, thresholds identical); the real quantizeAxis and any remaining board metadata come back in the capture/dump and are validated rather than assumed",
+    "no_history_rewritten": "the N8 author report, evidence and failure records are preserved; this round appends its own report section and evidence"
+  }
+}

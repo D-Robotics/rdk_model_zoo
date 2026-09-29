@@ -11,6 +11,32 @@ Applications](https://arxiv.org/abs/2206.10589), reference
 <a id="overview"></a>
 ## Overview
 
+EdgeNeXt is an efficient hybrid CNN-Transformer architecture for mobile
+vision: a four-stage pyramid combines convolutional encoders with SDTA
+(Split Depth-wise Transpose Attention) encoders to balance classification
+accuracy, model size, and inference speed. It targets ImageNet-1k
+1000-class classification. The source README's four feature highlights:
+
+- **Hybrid CNN-Transformer design** — combines the inference efficiency
+  of convolutions with transformer-style global feature modeling.
+- **Four-stage pyramid** — a deployment-friendly hierarchical feature
+  extraction structure.
+- **SDTA encoder** — encodes multi-scale features through channel
+  splitting (split 3×3 branches) and transpose attention.
+- **Efficient deployment** — base, small, x-small, and xx-small RDK X5
+  deployment models with packed NV12 input.
+
+![EdgeNeXt architecture: four-stage pyramid with NxN convolution encoder
+and SDTA encoder details](./test_data/EdgeNeXt_architecture.png)
+
+*Figure: the EdgeNeXt architecture — the four-stage pyramid (top) with
+the NxN convolution encoder (bottom left) and the SDTA encoder with its
+split 3×3 branches and transpose attention (bottom right). Restored from
+the X5 source README (rdk_x5 @ac11571, x5-v1.1.3); it depicts the
+upstream training architecture, while the deployed artifacts are the
+INT8-quantized base/small/x_small/xx_small variants at 224×224 NV12 (see
+[Support matrix](#support-matrix)).*
+
 The maintained implementation is one Python flow (X5 only; this sample has
 no S-branch delivery and no C++ runtime on either source). Python resolves
 one exact artifact reference from the platform release manifests, verifies
@@ -92,6 +118,16 @@ side effect is gone). With the bundled `Zebra.jpg` the Top-5 contains a
 zebra-related ImageNet class. A board that cannot be identified, or a
 target without a matching artifact (all S targets), exits with an error
 instead of guessing.
+
+For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
+Python entrypoint) illustrated its run with the screenshot below: the
+legacy `result.jpg` drawing overlaid the top-5 ranks on the image, with
+rank 1 being class 340 (zebra). This is a historical screenshot from the
+source delivery, not a run of the current entrypoint in this repository.
+
+![Historical inference screenshot from the X5 source README (rdk_x5
+@ac11571): zebra test image with the legacy top-5 overlay, rank 1 class
+340 (zebra)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data

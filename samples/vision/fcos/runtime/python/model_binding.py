@@ -151,9 +151,28 @@ class ModelBinding:
             raise BindingError("Packed NV12 input must be contiguous.")
 
     def validate_outputs(self, outputs: Mapping[str, Any]) -> dict[str, np.ndarray]:
-        """Validate raw output containers and return the same ndarray objects."""
-        if tuple(outputs) != self.output_names:
-            raise BindingError(f"Output names {tuple(outputs)!r} != {self.output_names!r}.")
+        """Validate raw output containers and return the same ndarray objects.
+
+        Matching is by exact name set, never by insertion order: the board
+        ``hbm_runtime`` ``run()`` mapping does not preserve
+        ``metadata.output_names`` order while the fifteen names themselves
+        are identical (X5 evidence 2026-09-24).  Missing and extra names are
+        both rejected, and every bound name is checked against the binding's
+        shape, dtype, and finiteness.  The mapping and each ndarray stay
+        caller-owned and identity-stable; roles are resolved only from the
+        binding's own name tuples, never by iterating the caller's dict.
+        """
+        if not isinstance(outputs, Mapping):
+            raise BindingError("Runtime output must be a name→ndarray mapping.")
+        observed = set(outputs)
+        bound = set(self.output_names)
+        missing = sorted(bound - observed)
+        extra = sorted(observed - bound)
+        if missing or extra:
+            raise BindingError(
+                f"Output names must match the binding exactly; "
+                f"missing={missing}, unexpected={extra}."
+            )
         for name in self.output_names:
             value = outputs[name]
             if not isinstance(value, np.ndarray):

@@ -3,7 +3,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-源有静态图和参考 GIF/PNG，但没有 `track_test.mp4` 或 MOT ground-truth 目录。需从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 显式准备，本轮未下载。评估器比较两次完整源/统一 capture，不计算带标签数据集的 MOTA/IDF1。
+源有静态图和参考 GIF/PNG，但没有 `track_test.mp4` 或 MOT ground-truth 目录。需从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 显式准备；2026-09-24 板测轮次下载的正是该视频（[真实视频证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)中记录了 SHA `4bbe5bf1…`），本工作树不做新的下载。评估器比较两次完整源/统一 capture，不计算带标签数据集的 MOTA/IDF1。
 
 <a id="environment"></a>
 ## 环境
@@ -25,7 +25,7 @@ python3 samples/vision/bytetrack/evaluator/compare.py \
   --max-frames 30
 ```
 
-命令保存每帧图片、native detector 输入/输出、track 记录、metadata、模型/视频/代码 hash 和子进程日志到 `legacy/`、`unified/`、`comparison.json`。只有 frame/input/track ID 在声明容差内全部一致才返回 `0`，已有输出目录会拒绝。本轮没有板端运行。
+命令保存每帧图片、native detector 输入/输出、track 记录、metadata、模型/视频/代码 hash 和子进程日志到 `legacy/`、`unified/`、`comparison.json`。只有 frame/input/track ID 在声明容差内全部一致才返回 `0`，已有输出目录会拒绝。该工具在 2026-09-24 记录中于真实板端、固定提交上运行过——S100 四帧合成 case 与 S100/S600 使用 `track_test.mp4` 的前 30 帧 case，全部检查为 true（[四帧](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-s100/)、[真实视频](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)证据）——当前工作树不追加新的板端运行，这些记录不重新验证当前 HEAD，MOT 数据集精度也仍为 `not-run`。
 
 <a id="metrics"></a>
 ## 指标
@@ -47,7 +47,30 @@ python3 samples/vision/bytetrack/evaluator/compare.py \
 | ByteTrack 论文 IDF1 | MOT17 test / V100 | 77.3 | 论文参考 |
 | ByteTrack 论文吞吐 | V100 GPU | about 30 FPS | 论文参考 |
 
-这些是源/论文历史参考。当前板端 capture 和 MOT benchmark 状态为 `not-run`。
+这些是源/论文历史参考。板端源/统一 capture 在上方链接的已记录 case、固定提交上存在；MOT benchmark（MOTA/IDF1）评估仍为 `not-run`，本工作树不追加新的 capture。
+
+### 参考跟踪效果（历史）
+
+固定 S 源 evaluator 嵌入了两段 MOT17 `SDP` 序列上的 ByteTrack 动态参考效果。此处逐字保留，作为上游方法在这些序列上的历史可视化；本迁移没有在板端重跑：
+
+![MOT17-01-SDP](../test_data/readme_img/MOT17-01-SDP.gif)
+
+`MOT17-01-SDP` 序列，源参考 GIF（`../test_data/readme_img/MOT17-01-SDP.gif`，S pin `380e1a2`，sha256 `6b7a613f…`）。
+
+![MOT17-07-SDP](../test_data/readme_img/MOT17-07-SDP.gif)
+
+`MOT17-07-SDP` 序列，源参考 GIF（sha256 `ff99c85a…`）。
+
+### tracker 参数调优与适用条件
+
+沿用源调参说明，并已对照本 sample 的 tracker 代码核实：
+
+- `--score-thres`（默认 `0.25`）：在 tracker 之前生效的检测置信度过滤；检出框过少时调低。调低 `--track-thresh` 不能找回 detector 已丢弃的框。
+- `--track-thresh`（默认 `0.3`）：每帧划分 tracker 输入——高于它的分数进入第一次关联；(0.1, track-thresh) 区间的分数以固定代价上限 `0.5` 与仍在跟踪的目标进行第二次关联；新轨迹只从首次关联中未匹配且分数 ≥ `track_thresh + 0.1`（`det_thresh`）的框初始化。
+- `--match-thresh`（默认 `0.8`）：第一次关联分配接受的最大代价（代价 = 1 − IoU，默认模式与检测分数融合；`--mot20` 开关（默认 `false`）关闭融合，此时代价即 1 − IoU）。调大允许更不相似的匹配，调小则只允许更接近的重叠。第二次关联保持固定 `0.5` 上限。
+- `--track-buffer`（默认 `60`）：丢失轨迹保留窗口，以 30 fps 帧数表示，并按 `frame_rate / 30` 缩放（`--frame-rate`，默认 `30`）。
+
+多类别跟踪时，可为每个类别各维护一个 tracker，或扩展 tracker 携带 `class_id` 并在关联时处理类别信息。当前流程只保留 COCO `person`（class `0`）。
 
 <a id="boundaries"></a>
 ## 边界

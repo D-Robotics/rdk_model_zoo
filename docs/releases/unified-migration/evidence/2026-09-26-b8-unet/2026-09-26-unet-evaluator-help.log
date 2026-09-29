@@ -1,0 +1,23 @@
+usage: eval_unet.py [-h] --model MODEL --manifest MANIFEST --report REPORT
+                    [--backend {auto,pytorch,onnx,x5}]
+                    [--backbone {resnet18,resnet34,resnet50,resnet101,resnet152}]
+                    [--limit LIMIT] [--progress-every PROGRESS_EVERY]
+                    [--min-miou MIN_MIOU]
+
+Evaluate UNet ResNet checkpoints, ONNX models, or X5 binaries on VOC pairs.
+
+options:
+  -h, --help            show this help message and exit
+  --model MODEL         .pth, .onnx, or X5 .bin model
+  --manifest MANIFEST   image<TAB>mask VOC pair list
+  --report REPORT       new JSON report path
+  --backend {auto,pytorch,onnx,x5}
+                        inference backend; auto selects it from the model
+                        suffix
+  --backbone {resnet18,resnet34,resnet50,resnet101,resnet152}
+                        required for .pth checkpoints and custom-named .bin
+                        artifacts
+  --limit LIMIT         evaluate only the first N samples
+  --progress-every PROGRESS_EVERY
+                        print progress every N samples
+  --min-miou MIN_MIOU   return 2 below this mIoU

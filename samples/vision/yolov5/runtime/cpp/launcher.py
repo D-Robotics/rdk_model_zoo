@@ -18,6 +18,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 binding = importlib.import_module("samples.vision.yolov5.runtime.python.model_binding")
 
+# The fixed X5 C++ source (runtime/cpp/main.cc MODEL_PATH) defaults to the
+# s-v2.0 artifact, while the unified Python runtime defaults to n-v7.0. Neither
+# choice is a substitute for the other, so the native launcher keeps the C++
+# source default when the caller names no variant and no asset id.
+X5_CPP_SOURCE_DEFAULT_VARIANT = "s-v2.0"
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -28,6 +34,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--test-img")
     parser.add_argument("--label-file")
     parser.add_argument("--output", default="result.jpg")
+    parser.add_argument("--dump-dir", type=Path)
     parser.add_argument("--score-thres", type=float, default=0.25)
     parser.add_argument("--nms-thres", type=float, default=0.45)
     parser.add_argument("--priority", type=int, default=0)
@@ -40,8 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _selection(args):
+    variant = args.variant
+    if args.target == "x5" and variant is None and args.asset_id is None:
+        variant = X5_CPP_SOURCE_DEFAULT_VARIANT
     return binding.resolve_selection(
-        args.target, variant=args.variant, asset_id=args.asset_id, model_path=args.model_path
+        args.target, variant=variant, asset_id=args.asset_id, model_path=args.model_path
     )
 
 
@@ -53,6 +63,11 @@ def _validate_runtime_args(args) -> None:
         raise ValueError("priority must be between 0 and 255")
     if args.bpu_core < -1:
         raise ValueError("bpu-core must be -1 or a non-negative index")
+    if args.target == "x5" and (args.priority != 0 or args.bpu_core != -1):
+        raise ValueError(
+            "x5 has no verified HB-DNN scheduling mapping; only --priority 0 "
+            "--bpu-core -1 are accepted"
+        )
 
 
 def main(argv=None) -> int:
@@ -97,6 +112,8 @@ def main(argv=None) -> int:
                    "--asset-id", selection.asset.reference]
         if args.label_file:
             command.extend(["--label-file", args.label_file])
+        if args.dump_dir is not None:
+            command.extend(["--dump-dir", str(args.dump_dir)])
         return subprocess.call(command)
     except (ValueError, OSError, RuntimeError, ImportError) as error:
         print(f"yolov5_cpp launcher: {error}", file=sys.stderr)

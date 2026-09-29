@@ -20,7 +20,7 @@ python3 -m samples.vision.lprnet.model.download \
   --output-dir samples/vision/lprnet/model
 ```
 
-成功判断是 `samples/vision/lprnet/model/lpr.bin` 存在且脚本打印 `Prepared ...`。本轮没有执行该命令。runtime 不会下载或覆盖模型文件。
+成功判断是 `samples/vision/lprnet/model/lpr.bin` 存在且脚本打印 `Prepared ...`。2026-09-24 板端运行（一块 X5 8GB、一块 X5 4GB，均 rc=0）执行的就是本文档的模块命令，观测 SHA-256 见下。runtime 不会下载或覆盖模型文件。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -36,4 +36,4 @@ runtime 默认路径为 `samples/vision/lprnet/model/lpr.bin`。外部路径必�
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-`lpr.bin` 是 X5 `bin` 部署制品。active manifest URL 为 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/LPRNet/lpr.bin`，发布者字段为 `sha256: null (unknown)`。本地观测 digest 只能说明本次使用的字节，不代表发布者认证。
+`lpr.bin` 是 X5 `bin` 部署制品。active manifest URL 为 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/LPRNet/lpr.bin`，发布者字段为 `sha256: null (unknown)`。两次 2026-09-24 板端运行的观测 SHA-256 均为 `f480391507b6d15274bfff90900acc3271f4e46ac9afd4bf7d0fee4aa50f91bc`（[8GB 复验](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/)、[4GB 运行](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)）；本地观测 digest 只能说明本次使用的字节，不代表发布者认证。

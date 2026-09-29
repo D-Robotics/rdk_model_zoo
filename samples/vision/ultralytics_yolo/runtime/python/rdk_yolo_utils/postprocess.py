@@ -18,13 +18,12 @@
 postprocess: Postprocessing utilities for vision model outputs.
 
 This module provides reusable postprocessing helpers to convert raw model
-outputs into task-level results, including coordinate scaling, quantization
-recovery, prediction filtering, and optional decoding for different output
+outputs into task-level results, including coordinate scaling, prediction filtering, and optional decoding for different output
 types. It is designed to be shared across multiple samples and runtimes.
 
 Key Features:
     - Recover/rescale results back to the original image space.
-    - Dequantize and decode raw outputs into usable representations.
+    - Decode floating outputs into usable representations.
     - Apply common filtering and suppression strategies (e.g., NMS).
     - Provide optional utilities for masks, keypoints, and geometric handling.
 
@@ -38,16 +37,8 @@ Notes:
 import cv2
 import numpy as np
 from scipy.special import softmax
-from typing import TYPE_CHECKING
 
 from .nn_math import sigmoid
-
-if TYPE_CHECKING:  # pragma: no cover - import used only for type checking
-    # `hbm_runtime` ships with the RDK system image. Importing it for an
-    # annotation would make this module unimportable on a host without the
-    # board runtime, so the reference stays inside a type-checking block.
-    from hbm_runtime import QuantParams
-
 
 def recover_to_original_size(img: np.ndarray,
                              orig_w: int,
@@ -99,69 +90,6 @@ def recover_to_original_size(img: np.ndarray,
         raise ValueError(f"Invalid resize_type: {resize_type}, must be 0 or 1")
 
     return img_resized
-
-
-def dequantize_tensor(q_tensor: np.ndarray,
-                      quant_info: "QuantParams") -> np.ndarray:
-    """Dequantize a quantized tensor to floating-point values.
-
-    This function converts a quantized tensor (e.g., int8 or uint8) into
-    floating-point values using the provided quantization parameters.
-    Both per-tensor and per-channel dequantization are supported.
-
-    Args:
-        q_tensor: Quantized input tensor.
-        quant_info: Quantization parameters including scale, zero point,
-            quantization axis, and quantization type.
-
-    Returns:
-        A float32 NumPy array containing the dequantized tensor values.
-    """
-    quant_type = quant_info.quant_type
-    quant_type_name = getattr(quant_type, "name", str(quant_type))
-    if quant_type_name not in ("SCALE", "1"):
-        return q_tensor
-
-    zero_point = quant_info.zero_point.astype(np.float32)
-    if zero_point.size == 0:
-        zero_point = np.zeros((1,), dtype=np.float32)
-
-    if quant_info.scale.ndim == 0 or q_tensor.ndim == 1 or quant_info.scale.size == 1:
-        # Per-tensor dequantization
-        return (q_tensor.astype(np.float32) - zero_point.reshape(-1)[0]) * quant_info.scale
-    else:
-        # Per-channel dequantization
-        shape = [1] * q_tensor.ndim
-        shape[quant_info.axis] = -1
-        scale = quant_info.scale.reshape(shape)
-        if zero_point.size == 1:
-            zero_point = np.zeros_like(scale, dtype=np.float32)
-        else:
-            zero_point = zero_point.reshape(shape)
-        return (q_tensor.astype(np.float32) - zero_point.astype(np.float32)) * scale
-
-
-def dequantize_outputs(outputs: dict, quan_infos: dict) -> dict:
-    """Dequantize a dictionary of quantized model outputs.
-
-    This function applies tensor dequantization to each model output using
-    its corresponding quantization parameters and returns the results as
-    floating-point tensors.
-
-    Args:
-        outputs: Dictionary mapping output tensor names to quantized tensors.
-        quan_infos: Dictionary mapping output tensor names to their
-            corresponding quantization parameters.
-
-    Returns:
-        A dictionary mapping output tensor names to dequantized float32
-        NumPy arrays.
-    """
-    fp32_outputs = {}
-    for name, output in outputs.items():
-        quant_info = quan_infos[name]
-        fp32_outputs[name] = dequantize_tensor(output, quant_info)
-    return fp32_outputs
 
 
 def scale_coords_back(xyxy: np.ndarray,
@@ -681,11 +609,16 @@ def resize_masks_to_boxes(masks: list[np.ndarray],
     """
     resized_masks = []
     for mask, (x1, y1, x2, y2) in zip(masks, boxes):
-        x1, y1 = max(int(x1), 0), max(int(y1), 0)
-        x2, y2 = min(int(x2), img_w), min(int(y2), img_h)
+        x1, y1 = min(max(int(x1), 0), img_w), min(max(int(y1), 0), img_h)
+        x2, y2 = min(max(int(x2), 0), img_w), min(max(int(y2), 0), img_h)
 
-        target_w = max(x2 - x1, 1)
-        target_h = max(y2 - y1, 1)
+        target_w = max(x2 - x1, 0)
+        target_h = max(y2 - y1, 0)
+        # A clipped zero-area box has no pixels. Preserve each zero-sized axis
+        # instead of inventing a 1-pixel mask that violates the ROI contract.
+        if target_w == 0 or target_h == 0:
+            resized_masks.append(np.zeros((target_h, target_w), dtype=np.uint8))
+            continue
 
         if mask is None or getattr(mask, "size", 0) == 0:
             resized_masks.append(np.zeros((target_h, target_w), dtype=np.uint8))
@@ -696,7 +629,9 @@ def resize_masks_to_boxes(masks: list[np.ndarray],
         if do_morph and resized.size > 0:
             resized = cv2.morphologyEx(resized, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
 
-        resized_masks.append(resized)
+        # Lanczos can overshoot binary uint8 data to 2. Preserve its foreground
+        # support while returning the declared 0/1 instance-mask representation.
+        resized_masks.append((resized > 0).astype(np.uint8))
 
     return resized_masks
 def scale_keypoints_to_original_image(kpts_xy: np.ndarray,
@@ -909,127 +844,3 @@ def process_mask(protos: np.ndarray, masks_in: np.ndarray,
         masks = np.array(final_masks)
 
     return masks > 0.5
-
-
-def decode_seg_layer(box_feat: np.ndarray, cls_feat: np.ndarray,
-                     mc_feat: np.ndarray, stride: int,
-                     score_thres: float, classes_num: int = 80) -> np.ndarray:
-    """Decode a single segmentation feature layer.
-
-    Args:
-        box_feat: Raw box output `(1, H, W, 4)`.
-        cls_feat: Raw cls output `(1, H, W, num_classes)`.
-        mc_feat: Raw mask coefficient output `(1, H, W, 32)`.
-        stride: Feature stride.
-        score_thres: Confidence threshold.
-        classes_num: Number of object classes.
-
-    Returns:
-        Array of shape `(N, 38)` with `[x1, y1, x2, y2, score, cls, mc0..mc31]`.
-    """
-    if box_feat.shape[0] == 1:
-        box_feat = box_feat[0]
-    if cls_feat.shape[0] == 1:
-        cls_feat = cls_feat[0]
-    if mc_feat.shape[0] == 1:
-        mc_feat = mc_feat[0]
-
-    h, w, _ = box_feat.shape
-
-    safe_thres = np.clip(score_thres, 1e-6, 1.0 - 1e-6)
-    logit_thres = -np.log(1.0 / safe_thres - 1.0)
-
-    max_logits = np.max(cls_feat, axis=-1)
-    mask = max_logits >= logit_thres
-
-    if not np.any(mask):
-        return np.empty((0, 6 + 32), dtype=np.float32)
-
-    grid_y, grid_x = np.indices((h, w))
-    valid_grid_x = grid_x[mask]
-    valid_grid_y = grid_y[mask]
-
-    valid_box = box_feat[mask]
-    valid_mc = mc_feat[mask]
-    valid_cls_logits = cls_feat[mask]
-
-    valid_cls_scores = sigmoid(valid_cls_logits)
-    valid_score = np.max(valid_cls_scores, axis=-1)
-    valid_cls_id = np.argmax(valid_cls_scores, axis=-1)
-
-    grid_center_x = valid_grid_x.astype(np.float32) + 0.5
-    grid_center_y = valid_grid_y.astype(np.float32) + 0.5
-
-    x1 = (grid_center_x - valid_box[:, 0]) * stride
-    y1 = (grid_center_y - valid_box[:, 1]) * stride
-    x2 = (grid_center_x + valid_box[:, 2]) * stride
-    y2 = (grid_center_y + valid_box[:, 3]) * stride
-
-    out = np.stack([x1, y1, x2, y2, valid_score, valid_cls_id], axis=-1)
-    return np.concatenate([out, valid_mc], axis=-1)
-
-
-def decode_pose_layer(box_feat: np.ndarray, cls_feat: np.ndarray,
-                      kpt_feat: np.ndarray, stride: int,
-                      score_thres: float) -> np.ndarray:
-    """Decode a single pose feature layer.
-
-    Args:
-        box_feat: Raw box output `(1, H, W, 4)`.
-        cls_feat: Raw cls output `(1, H, W, 1)`.
-        kpt_feat: Raw keypoint output `(1, H, W, 51)`.
-        stride: Feature stride.
-        score_thres: Confidence threshold.
-
-    Returns:
-        Array of shape `(N, 57)` with `[x1,y1,x2,y2,score,cls,kpt(51)]`.
-    """
-    if box_feat.shape[0] == 1:
-        box_feat = box_feat[0]
-    if cls_feat.shape[0] == 1:
-        cls_feat = cls_feat[0]
-    if kpt_feat.shape[0] == 1:
-        kpt_feat = kpt_feat[0]
-
-    h, w, _ = box_feat.shape
-
-    safe_thres = np.clip(score_thres, 1e-6, 1.0 - 1e-6)
-    logit_thres = -np.log(1.0 / safe_thres - 1.0)
-
-    raw_logits = cls_feat[..., 0]
-    mask = raw_logits >= logit_thres
-    if not np.any(mask):
-        return np.empty((0, 6 + 51), dtype=np.float32)
-
-    grid_y, grid_x = np.indices((h, w))
-    valid_grid_x = grid_x[mask]
-    valid_grid_y = grid_y[mask]
-
-    valid_box = box_feat[mask]
-    valid_kpt = kpt_feat[mask]
-    valid_logits = raw_logits[mask]
-
-    valid_score = sigmoid(valid_logits)
-    valid_cls_id = np.zeros_like(valid_score)
-
-    grid_center_x = valid_grid_x.astype(np.float32) + 0.5
-    grid_center_y = valid_grid_y.astype(np.float32) + 0.5
-
-    x1 = (grid_center_x - valid_box[:, 0]) * stride
-    y1 = (grid_center_y - valid_box[:, 1]) * stride
-    x2 = (grid_center_x + valid_box[:, 2]) * stride
-    y2 = (grid_center_y + valid_box[:, 3]) * stride
-
-    num_kpts = valid_kpt.shape[1] // 3
-    valid_kpt = valid_kpt.reshape(-1, num_kpts, 3)
-
-    grid_stack = np.stack([valid_grid_x, valid_grid_y], axis=-1)[:, None, :]
-    grid_stack = grid_stack.astype(np.float32) + 0.5
-
-    kpt_xy = (valid_kpt[..., :2] + grid_stack) * stride
-    kpt_conf = sigmoid(valid_kpt[..., 2:3])
-
-    decoded_kpt_flat = np.concatenate([kpt_xy, kpt_conf], axis=-1).reshape(-1, num_kpts * 3)
-
-    out = np.stack([x1, y1, x2, y2, valid_score, valid_cls_id], axis=-1)
-    return np.concatenate([out, decoded_kpt_flat], axis=-1)

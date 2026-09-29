@@ -16,16 +16,16 @@ FCOS is a one-stage, anchor-free detector that predicts class scores, left/top/r
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| efficientnetb0 / 512 | supported-not-run | not-supported | not-supported | not-supported | yes | no |
-| efficientnetb2 / 768 | supported-not-run | not-supported | not-supported | not-supported | yes | no |
-| efficientnetb3 / 896 | supported-not-run | not-supported | not-supported | not-supported | yes | no |
+| efficientnetb0 / 512 | supported-verified | not-supported | not-supported | not-supported | yes | no |
+| efficientnetb2 / 768 | supported-verified | not-supported | not-supported | not-supported | yes | no |
+| efficientnetb3 / 896 | supported-verified | not-supported | not-supported | not-supported | yes | no |
 
-`supported-not-run` means the host contract tests passed; no X5 board was used in this migration. See the [host evidence](../../../docs/releases/unified-migration/evidence/2026-09-23-b7-fcos-host.json).
+`supported-verified` reflects the 2026-09-24 same-board source/unified comparisons: each of B0/B2/B3 ran on one X5 8GB and one X5 4GB with `test_data/bus.jpg`, direct resize, `conf=0.5`, `IoU=0.6`; every run exited 0 with all checks true. See the [X5 variant evidence](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/) and the [8GB B0 binding recheck](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/); host contract evidence is [here](../../../docs/releases/unified-migration/evidence/2026-09-23-b7-fcos-host.json). Verification covers exactly those three artifact/image cases — it is not a COCO accuracy or latency measurement.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-- Board: RDK X5 with the board image supplying `hbm_runtime`; board validation is not-run.
+- Board: RDK X5 with the board image supplying `hbm_runtime`; the 2026-09-24 comparisons ran on one X5 8GB and one X5 4GB.
 - Host checks: Python 3.10+ with the packages in [requirements-host.txt](requirements-host.txt).
 - Prepare exactly one manifest artifact before inference; publisher SHA-256 values are currently unknown.
 
@@ -51,7 +51,7 @@ Use `--variant efficientnetb2` or `efficientnetb3` with the corresponding exact 
 <a id="expected-results"></a>
 ## Expected Results
 
-The runtime prints JSON with `asset_id`, `boxes`, `scores`, `class_ids`, and `result_path`. Boxes are float32 `[x1,y1,x2,y2]` pixels in the original image; scores are source FCOS confidence values; class IDs are zero-based COCO IDs. Detection values depend on the compiled artifact and are not invented here. The bundled `demo_rdkx5_fcos_detect.jpg` is a historical source image, not this host run.
+The runtime prints JSON with `asset_id`, `boxes`, `scores`, `class_ids`, and `result_path`. Boxes are float32 `[x1,y1,x2,y2]` pixels in the original image; scores are source FCOS confidence values; class IDs are zero-based COCO IDs. Detection values depend on the compiled artifact and are not invented here; in the 2026-09-24 board comparisons the unified output matched the fixed source exactly for all three variants on both boards (see the evaluator README reference results). The bundled `demo_rdkx5_fcos_detect.jpg` is a historical source image, not produced by this migration's runs.
 
 Historical source records list B0/B2/B3 BPU throughput of 323.0/70.9/38.7 FPS and Python post-process times of 9/16/20 ms. These values retain their source conditions and are not this migration's measurements.
 

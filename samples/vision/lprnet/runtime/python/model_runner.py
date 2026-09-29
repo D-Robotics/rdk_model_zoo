@@ -43,8 +43,13 @@ class RuntimeModelRunner:
         if self.loaded:
             return self.binding  # type: ignore[return-value]
         if self._runtime is None:
-            require_execution_target(self.selection.target)
-            verify_asset_file(self.selection.asset, self.selection.model_path)
+            if self._runtime_factory is None:
+                # Real execution path: the board identity and publication gates
+                # run before the SDK factory is ever constructed.  Passing an
+                # explicit runtime_factory is the documented host seam and is the
+                # only way to skip them.
+                require_execution_target(self.selection.target)
+                verify_asset_file(self.selection.asset, self.selection.model_path)
             factory = self._runtime_factory or _default_runtime_factory()
             self._runtime = factory(str(self.selection.model_path))
         try:
@@ -92,8 +97,13 @@ class RuntimeModelRunner:
         if not isinstance(outputs, Mapping) or set(outputs) != {binding.output_name}:
             raise MetadataMismatchError("Runtime returned unexpected tensor outputs.")
         raw = np.asarray(outputs[binding.output_name])
-        if raw.shape != (1, 68, 18) or raw.dtype != np.float32 or not np.isfinite(raw).all():
-            raise MetadataMismatchError("LPRNet runtime output does not match binding.")
+        if raw.shape != binding.output_shape or raw.dtype != np.float32 or not np.isfinite(raw).all():
+            raise MetadataMismatchError(
+                f"LPRNet runtime output does not match binding: expected "
+                f"{binding.output_shape} float32, got {raw.shape}/{raw.dtype}."
+            )
+        # The raw native logits keep the bound shape (for the released
+        # artifact (1, 68, 18, 1)); singleton removal belongs to post_process.
         return np.array(raw, copy=True)
 
 

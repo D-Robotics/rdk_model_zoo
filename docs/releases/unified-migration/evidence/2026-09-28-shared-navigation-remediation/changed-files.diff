@@ -1,0 +1,89 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index d54bdb37..1ea0a835 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -63,7 +63,7 @@ C++ runtimes follow the structure declared in each sample's runtime README (conf
+ 
+ ## Manifests and release data flow
+ 
+-Manifests are authoritative; the web catalog (an `rdk_x5`/doc-site concern, ADR-0001) is only their presentation layer. **Active manifests in this tree: `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`**, with target-identity aliases in `docs/release/platforms.json`. `platforms/{x5,s,x3}/docs/release/*.yaml` are archived frozen snapshots of the delivery branches (`platforms/README.md`, `platforms/registry.json`) — usable for historical facts only; their filename keys may differ from the active manifests. `docs/manifests/` is the `rdk_x5` layout, not present here. Rules: update manifests in the same commit that adds/removes/moves a model; benchmarks record only published values with immutable evidence — never infer missing conditions; release notes disclose incomplete coverage.
++Manifests are authoritative; the web catalog (an `rdk_x5`/doc-site concern, ADR-0001) is only their presentation layer. **Active manifests in this tree: `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`**, with target-identity aliases in `docs/release/platforms.json`. `platforms/{x5,s}/docs/release/*.yaml` are archived frozen snapshots of the delivery branches (`platforms/README.md`, `platforms/registry.json`) — usable for historical facts only; their filename keys may differ from the active manifests. X3 is the layout exception: its historical manifests live at `platforms/x3/release/` (the delivery-line root `release/` layout, recorded as `manifest_directory` in `platforms/registry.json`), not under `platforms/x3/docs/`, and that directory remains a current catalog input (inspect_repo lists it as a candidate; the catalog publisher's X3 source resolves it) — still historical X3 material, never a new adaptation target. `docs/manifests/` is the `rdk_x5` layout, not present here. Rules: update manifests in the same commit that adds/removes/moves a model; benchmarks record only published values with immutable evidence — never infer missing conditions; release notes disclose incomplete coverage.
+ 
+ ## Skills pack (`skills/`)
+ 
+diff --git a/samples/_shared/README.md b/samples/_shared/README.md
+index 2f5f7cb4..647d104b 100644
+--- a/samples/_shared/README.md
++++ b/samples/_shared/README.md
+@@ -37,15 +37,19 @@ Synthetic data and failure injection do not certify board inference.
+ ## Image bytes
+ 
+ `image.py:bgr_to_nv12_planes` is the single OpenCV I420 → interleaved NV12
+-implementation used by all three samples. It accepts an even-sized uint8 BGR
++implementation for the unified samples. `samples/_shared/tensor_io.py` wraps it
++(and the classification samples reach it through that surface); the Ultralytics
++YOLO, PaddleOCR, YOLOv5, YOLOE, FCOS, YOLO26 Depth, PP-LiteSeg, UNet and
++UNetMobileNet runtimes import it directly. It accepts an even-sized uint8 BGR
+ image and returns contiguous uint8 `(1,H,W,1)` Y and `(1,H/2,W/2,2)` UV arrays.
+ The sample adapters preserve their existing validation and error behavior.
+ Resize/interpolation, packed-versus-split transport and tensor naming remain
+ sample-local because their contracts differ. NumPy/OpenCV imports are lazy.
+ 
+-The extraction preserves the operation order and chroma byte ordering from
+-all three implementations. Known-color and noncontiguous-input tests cover
+-the byte contract; sample tests and affected-board comparisons cover consumers.
++The extraction preserves the operation order and chroma byte ordering of the
++source implementations it was extracted from. Known-color and noncontiguous-input
++tests cover the byte contract; sample tests and affected-board comparisons cover
++consumers.
+ 
+ ## Runtime metadata (Phase 1.5 H3)
+ 
+@@ -172,7 +176,11 @@ or move decoding into the runtime runner.
+ [`yoloe26_geometry.py`](yoloe26_geometry.py) and
+ [`yoloe26_decode.py`](yoloe26_decode.py) preserve the fixed 4585-class,
+ 640-square PF protocol from the S source. The [canonical YOLOE Python task](../vision/yoloe/runtime/python/README.md)
+-now consumes these modules; conversion and native migration remain pending.
++now consumes these modules, and the [canonical conversion guide](../vision/yoloe/conversion/README.md)
++and [native C++ runtime](../vision/yoloe/runtime/cpp/README.md) are implemented
++and host-reviewed (independent YOLOE runtime/scorer review plus native host
++reviews). Real SDK execution, board inference and a published S floating-output
++asset remain not-run/not available.
+ The modules do not load models, download artifacts or interpret quantization descriptors.
+ 
+ The ten float32 NHWC outputs are class logits (4585), direct LTRB distances (4)
+@@ -200,7 +208,11 @@ python -m unittest discover -s samples/_shared/tests -p test_yoloe26_decode.py
+ ```
+ 
+ 这两个模块保留 S 源中的 4585 类、640 方形 PF 协议，已由
+-[统一 YOLOE Python 任务](../vision/yoloe/runtime/python/README_cn.md)消费；转换和原生迁移仍待完成。模块不加载模型、不下载制品，
++[统一 YOLOE Python 任务](../vision/yoloe/runtime/python/README_cn.md)消费；
++[转换指南](../vision/yoloe/conversion/README_cn.md)与
++[原生 C++ 运行时](../vision/yoloe/runtime/cpp/README_cn.md)也已实现并通过
++主机审查（YOLOE 运行时/评分独立审查及原生主机审查）。真实 SDK 执行、
++板测推理和已发布的 S 浮点输出制品仍未运行/仍不存在。模块不加载模型、不下载制品，
+ 也不执行反量化。输入是上述顺序的十个 NHWC float32 张量，整数和非有限值
+ 显式拒绝。候选框采用直接 LTRB 解码和确定性 Top-K，支持单标签或多标签，
+ 分数须严格大于阈值，不执行 NMS；平局沿用源中的尺度、anchor、类别顺序。
+diff --git a/skills/README.md b/skills/README.md
+index 5f957241..d9b3e0a4 100644
+--- a/skills/README.md
++++ b/skills/README.md
+@@ -22,7 +22,16 @@
+ 
+ 每次使用先解析 `SKILL_ROOT`（当前 Skill 安装目录）和 `REPO_ROOT`（用户指定的 Model Zoo 工作区）。目标可能是 X5 的 `rdk_x5`/`x5-v*`、S100/S100P/S600 的 `rdk_s`/`s-v*`、X3 的 `rdk_x3`/`x3-v*`，或用户指定的 `rdk_x5_legacy`/历史 ref。分支名和模型文件名只是线索；以目标 ref 的 README、实际代码和（有清单时）Manifest/metadata 交叉核对。S100、S100P、S600 的支持必须落实到具体 sample、artifact 和 runtime，不能从 S 版本的总清单推断全仓兼容。用户给出的平台、版本、路径与候选 ref 冲突时保留约束并报告，不切换分支来消除冲突。
+ 
+-当前目标 ref 优先查 `docs/manifests/`；历史 ref 可能保留 `docs/release/` 或根 `release/`。多个清单要显式选择，缺少清单要保持未知，不能拿维护源的模型数据代替目标 ref。
++清单按目标 ref 的实际布局解析。统一集成线使用按平台的活动清单
++`docs/release/x5/models.yaml` 与 `docs/release/s/models.yaml`；它们是当前维护
++位置，区别于 `platforms/{x5,s}/docs/release/`、`platforms/x3/release/` 等迁移期
++冻结快照。交付 ref 保留 `docs/manifests/`，历史 ref 可能保留根 `release/`。
++`inspect_repo` 只报告实际存在的候选清单并标注统一/快照来源（同一平台两者并存
++时统一清单优先），且不据此推断目标硬件；`read_catalog` 仅在恰好存在一个扁平布局
++清单（`docs/manifests/`、`docs/release/` 或根 `release/`）时隐式选择，多个清单报
++`ambiguous-manifest`、缺少清单报 `manifest-not-found`，统一按平台清单需显式传
++`--manifest`（如 `--manifest docs/release/s/models.yaml`）。缺少清单要保持未知，
++不能拿维护源的模型数据代替目标 ref。
+ 
+ ## 目录与资源
+ 

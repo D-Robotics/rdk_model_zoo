@@ -1,14 +1,13 @@
 """Capture one fresh-process legacy or unified ByteTrack stream for comparison."""
 from pathlib import Path
 import argparse,hashlib,importlib,importlib.util,json,sys,types
-from dataclasses import asdict
 from datetime import datetime,timezone
 import numpy as np
 import cv2
 ROOT=Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from samples._shared.platforms import require_execution_target
-from samples._shared.runtime_meta import RuntimeMetadata
+from samples._shared.runtime_meta import RuntimeMetadata,metadata_evidence
 from samples._shared.assets import verify_asset_file
 from samples.vision.bytetrack.runtime.python.model_binding import SAMPLE_DIR,resolve_selection
 from samples.vision.yolov5.evaluator.compare import _hash,_json
@@ -65,7 +64,8 @@ def capture_frames(selection,frames,output_dir,*,side,video_path,runtime_factory
             from samples._shared.model_runner import _default_runtime_factory
             runtime_factory=_default_runtime_factory()
         def factory(path):
-            runtime=runtime_factory(path);summary['metadata']=asdict(RuntimeMetadata.from_runtime(runtime))
+            # Projected without copying SDK quant descriptors (asdict deepcopies and the board QuantParams refuses it).
+            runtime=runtime_factory(path);summary['metadata']=metadata_evidence(RuntimeMetadata.from_runtime(runtime))
             class Recorder:
                 def __getattr__(self,name):return getattr(runtime,name)
                 def run(self,values):

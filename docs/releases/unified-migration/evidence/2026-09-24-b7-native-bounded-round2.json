@@ -1,0 +1,85 @@
+{
+  "stage": "N7 bounded YOLOv5 native round (post-dc3aac5 board findings)",
+  "utc": "2026-09-24T08:44:57Z",
+  "base_commit": "dc3aac50230e6d6a17324592be1bbc71f04abd53",
+  "branch": "codex/b7-local-glm-20260924",
+  "worktree": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-local-glm",
+  "author": "local Claude Code + GLM (author side; not an independent review)",
+  "scope": "YOLOv5 native C++ only. dtype aliases were board-verified by the coordinator in 7f27c8c; the catalog asset-count mismatch is fixed on develop 9692699; the metadata serializer is another session's task. Python evaluators, shared dtype work, other samples: untouched this round.",
+  "inputs": {
+    "s100_build_log": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/b7-s100-native-dc3aac5.json (rc=2: 'hbPackedDNNHandle_t does not name a type; did you mean hbDNNPackedHandle_t')",
+    "gate_probe": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/b7-native-gate-wip-probe.json (valid_padded=1 wrongly accepted overlapping_pixels=1 and scalar_scale forwarded to a channel-indexed helper)",
+    "dump_probe": "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/b7-dump-collision-probe.json (raw and transformed share 0-output0.bin; the later write clobbers the raw bytes)",
+    "coordinator_directives": "hbDNNPackedHandle_t is the real S100 type; real S100 header contains HB_DNN_TENSOR_TYPE_S8/U8/S16/F32/S32; published S100 model strides stride[2]=1024, stride[1]=86016/43008/21504, channels=255 are legal padding; hb_ucp.h BPU core mask is a bitmask (CORE_0..3=1ULL<<0..3, ANY=1ULL<<7); X5 board smoke exposed missing native input bytes, unknown input dtype and no binary digest in the dump"
+  },
+  "fixes": [
+    {
+      "item": 1,
+      "summary": "s_adapter and the in-test S100 stub now use hbDNNPackedHandle_t (the stub previously defined the X5 name hbPackedDNNHandle_t, which is why the host check passed while the board failed)",
+      "verification": "negative check: sed-reverting s_adapter to hbPackedDNNHandle_t against the corrected stub reproduces the exact board error ('unknown type name hbPackedDNNHandle_t'); the current file compiles clean (-Wall -Wextra, -fsyntax-only) against the same stub"
+    },
+    {
+      "item": 2,
+      "summary": "S dtype mapping restored to the evidenced enum names S8/U8/S16/F32/S32 (dump inputs are no longer 'unknown'); the stub enum was corrected to the real names",
+      "verification": "test_s_adapter_compiles_against_the_recorded_s100_sdk_shape compiles s_adapter against the corrected stub; portable dump/gate tests cover the mapping via dtype_name"
+    },
+    {
+      "item": 3,
+      "summary": "check_s32_dequant: stride[2] lower bound corrected from width*stride[3] to channels*stride[3] (one full pixel), stride[1] must equal width*stride[2], both strides must be element-aligned, and the exact last addressed byte is computed with overflow-checked arithmetic (__builtin_mul/add_overflow)",
+      "verification": "portable_checks s_dequant: the probe's published layout (84x84x255, stride 4/1024/86016, alignedByteSize 7225344) is accepted with count 84*84*255; the probe's overlapping layout (stride[2]=400, stride[1]=33600) is rejected; a 1LL<<62 pixel stride is rejected as overflow instead of wrapping"
+    },
+    {
+      "item": 4,
+      "summary": "scalar descriptors: the adapter no longer calls the shared c_utils dequantizeTensorS32 (which indexes scale_data[c]/zero_pointData[c] and would read out of bounds for scale_len==1); a new SDK-free private helper dequant_s32_nhwc implements explicit broadcast (scalar -> every channel, 0 -> no zero point) and refuses short non-scalar descriptors up front. The gate keeps accepting scale_len==1 only because of this helper. The published per-channel artifacts (scale_len 255) keep the identical per-channel path.",
+      "verification": "portable_checks s_dequant_values: hand-computed 1x2x2 padded layout with scalar scale/zero (values 4/9/14/19), per-channel descriptors (10/190/30/390), F32 pass-through, and the short-descriptor refusal"
+    },
+    {
+      "item": 5,
+      "summary": "scheduling: new SDK-free bpu_core_to_backend maps the CLI core index to the real backend bitmask (-1 -> 1ULL<<7, 0..3 -> 1ULL<<index) and rejects everything else; s_adapter applies the converted mask instead of assigning the raw index; cli_main rejects --bpu-core outside -1..3 with a precise message",
+      "verification": "portable_checks core_mapping: -1->0x80, 0->0x1, 1->0x2, 3->0x8, 4/-2/99/null rejected"
+    },
+    {
+      "item": 6,
+      "summary": "write_dump: tensor payloads are written one file per stage under input/, raw/ and transformed/ subdirectories, so the transformed bytes of an output can no longer overwrite its raw file; the manifest records each file's own path and digest",
+      "verification": "portable_checks dump writes raw int32 {11,22,33,44} and transformed float {1,2,3,4} under the same output0 name and reads both files back byte-exact; the Python test asserts both digests, both payloads, the distinct file paths and the input payload file"
+    },
+    {
+      "item": 7,
+      "summary": "dump completeness: input_tensors carry the buffers actually submitted with the inference (X5 compact NV12 payload; S per-row gathered plane payload, uninitialized padding excluded); the X5 input dtype records uint8 for the NV12 image input instead of unknown; DumpTensorInfo records quantize_axis and the full scale/zero-point value arrays (bounded to 1024 entries); manifest gains binary_path/binary_sha256 via current_binary_path (/proc/self/exe with argv[0] fallback); the failure path keeps return_code=2 and now also records the binary identity",
+      "verification": "test_dump_manifest_is_independently_verifiable asserts binary_sha256 null handling, quantize_axis, empty value arrays for NONE outputs, input/raw/transformed separation and payload digests"
+    }
+  ],
+  "files": [
+    {"path": "samples/vision/yolov5/runtime/cpp/CMakeLists.txt", "sha256": "d67bbe6147376192b8f3ffc752f78dbc5c1faf0a874b01cfacb7680d84d60f80"},
+    {"path": "samples/vision/yolov5/runtime/cpp/include/yolov5_gate.hpp", "sha256": "370eabc13f38eb215c991b636d358e0ea7400d27c533632d47450d1cb2cc8927"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/yolov5_gate.cpp", "sha256": "ae0cff95b6e87b99b7a032a05eb76482690f507ec67c2b334d2e1ce19a9ad7f3"},
+    {"path": "samples/vision/yolov5/runtime/cpp/include/yolov5_dump.hpp", "sha256": "211df5e895e4b7ff599cb737bd44fd19a4ecf5d47407db94e5214636b229013b"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/yolov5_dump.cpp", "sha256": "fbdfe2a11058dbdb26ba843514059523c5bf51a0ed62666ddef8d01574ee39be"},
+    {"path": "samples/vision/yolov5/runtime/cpp/include/yolov5_s_native.hpp", "sha256": "e1181e3f74eb92a82514406458e788613924727f7ce7d6ab36833dcfeb537b4b", "note": "new SDK-free module"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/yolov5_s_native.cpp", "sha256": "14f19941566d116ffab7bcccaaee30fb06e90c832e73dcf6f79edfe23ddc2f0a", "note": "new SDK-free module"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/s_adapter.cpp", "sha256": "8ff2d487cdd5a23f5073968c72f31ebf6e253d9e445c2e498b0417a6ca281417"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/x5_adapter.cpp", "sha256": "8456d789490870918d9c915d099cca8ef278219b3bed28eccd08e63d6298316e"},
+    {"path": "samples/vision/yolov5/runtime/cpp/src/cli_main.cpp", "sha256": "2819de60ab11918818009a1ccb88eff6da4043e5ea6e1bdd17ebd5d9483d5dd4"},
+    {"path": "samples/vision/yolov5/tests/cpp/portable_checks.cpp", "sha256": "830105f75c707e7dfdf30f29f8cd15a756e9315ef7b1fd2596b57931c2c4e9a6"},
+    {"path": "samples/vision/yolov5/tests/test_cpp_contract.py", "sha256": "0a7a8259cbea2a4ba005624ff8252bb75fcfd13f130cb1033397203ba1cfb452"},
+    {"path": "samples/vision/yolov5/runtime/cpp/README.md", "sha256": "1c99031694aa9a9c4404bf0affbd467c96f1eba705b59134888fbee19e4e0090"},
+    {"path": "samples/vision/yolov5/runtime/cpp/README_cn.md", "sha256": "f46e5c40079fec528320294f481b578853e7ff3d577541ddc11eafd002e508e9"}
+  ],
+  "host_verification": {
+    "python": "3.14.7 (rdk_model_zoo/.venv, read-only)",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "commands": [
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/yolov5/tests", "returncode": 0, "result": "37 tests OK (was 35 at dc3aac5)"},
+      {"argv": ".venv/bin/python -m unittest discover -s samples/vision/bytetrack/tests", "returncode": 0, "result": "11 tests OK"},
+      {"argv": ".venv/bin/python tools/sample_contract/check.py --scope migration --parser-mode import --exemptions tools/sample_contract/baselines/ultralytics-readme-debt.json --report /tmp/b7-bounded-contract.json", "returncode": 0, "result": "36 samples, 0 violations, 39 skips, 84 exemptions applied"},
+      {"argv": "c++ -std=c++17 -Wall -Wextra -fsyntax-only -I<cpp/include> <s_adapter.cpp> (against the corrected S100-shaped stub)", "returncode": 0},
+      {"argv": "same compile with s_adapter reverted to hbPackedDNNHandle_t", "result": "fails with 'unknown type name hbPackedDNNHandle_t' — the stub now catches the board failure class"},
+      {"argv": "git diff --check", "returncode": 0}
+    ]
+  },
+  "boundaries": {
+    "board": "not-run from this worktree; the coordinator owns the on-board re-verification (S100/S100P/S600 rebuild, X5 rebuild + rerun, dump manifest fetch).",
+    "shared_utils": "utils/c_utils (dequantizeTensorS32, preprocess) untouched; the broadcasting dequantizer is a yolov5-private SDK-free module so other samples are unaffected.",
+    "not_claimed": "no numerical equivalence with the fixed-source runtime is claimed by any dump; that requires the board evaluator."
+  }
+}

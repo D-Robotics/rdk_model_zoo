@@ -28,7 +28,7 @@ ByteTrack 没有导出步骤，因为 tracker 没有神经图。重建 detector 
 <a id="validation"></a>
 ## 转换后验证
 
-先用 S YOLOv5 runtime 检查 detector metadata，再对准备好的视频运行 tracker。用 `evaluator/compare.py` 比较完整 detector tensor 和 track ID。本轮未运行导出、编译、板测或视频验证。
+先用 S YOLOv5 runtime 检查 detector metadata，再对准备好的视频运行 tracker。用 `evaluator/compare.py` 比较完整 detector tensor 和 track ID。本迁移没有运行导出或编译，因此不存在待验证的本地转换产物。发布的 HBM 行与公开视频的前 30 帧在 2026-09-24 对照中于 S100/S600 板端实际运行过（见[评估器说明](../evaluator/README_cn.md)）；该历史既不验证本地转换，也不超出这些已记录帧的范围。
 
 <a id="artifacts"></a>
 ## 产物
@@ -40,4 +40,4 @@ ByteTrack 没有导出步骤，因为 tracker 没有神经图。重建 detector 
 
 - 没有 S 导出脚本、checkpoint pin、YAML、校准生成器或编译日志。
 - 源视频缺失，客户文档只保留显式 archive URL。
-- 转换和板端验证为 `not-run`；发布 SHA-256 均未知。
+- 转换（导出/编译）为 `not-run`，不存在本地转换产物；发布的 HBM 行有 2026-09-24 的历史板端对照记录（见[评估器说明](../evaluator/README_cn.md)），这不构成对任何本地转换的验证。发布 SHA-256 均未知。

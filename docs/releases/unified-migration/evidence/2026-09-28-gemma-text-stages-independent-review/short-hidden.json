@@ -1,0 +1,41 @@
+{
+  "utc": "2026-09-28T13:19:46.696528+00:00",
+  "records": [
+    {
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-g",
+        "-I",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/native",
+        "-I",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/native/sdk_fixtures",
+        "-I",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/inc",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/docs/releases/unified-migration/evidence/2026-09-28-gemma-text-stages-independent-review/short-hidden.cpp",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/src/gemma4_text_engine.cpp",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/src/gemma4_text_inputs.cpp",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/src/gemma4_text_session.cpp",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/src/gemma4_text_tensor.cpp",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/src/gemma4_text_transport.cpp",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/runtime/cpp/src/gemma4_kv_cache.cpp",
+        "-ldl",
+        "-o",
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/gemma-short-hidden-review"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/.coordination/gemma-short-hidden-review"
+      ],
+      "rc": -6,
+      "stdout": "",
+      "stderr": "=================================================================\n==80795==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x602000000af4 at pc 0x00010368bb44 bp 0x00016d10c880 sp 0x00016d10c030\nREAD of size 6144 at 0x602000000af4 thread T0\n    #0 0x00010368bb40 in __asan_memmove+0x19c (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x8fb40)\n    #1 0x000102d27de4 in float* std::__1::__constexpr_memmove[abi:nqe220106]<float, float const>(float*, float const*, std::__1::__element_count) constexpr_c_functions.h:227\n    #2 0x000102d27bc4 in std::__1::pair<float const*, float*> std::__1::__copy_trivial_impl[abi:nqe220106]<float const, float>(float const*, float const*, float*) copy_move_common.h:64\n    #3 0x000102d26ddc in std::__1::pair<float const*, float*> std::__1::__copy_impl::operator()[abi:nqe220106]<float const, float, 0>(float const*, float const*, float*) const copy.h:115\n    #4 0x000102d62b10 in std::__1::pair<float const*, float*> std::__1::__copy_move_unwrap_iters[abi:nqe220106]<std::__1::__copy_impl, float const*, float const*, float*, 0>(float const*, float const*, float*) copy_move_common.h:94\n    #5 0x000102d628dc in std::__1::pair<float const*, float*> std::__1::__copy[abi:nqe220106]<float const*, float const*, float*>(float const*, float const*, float*) copy.h:122\n    #6 0x000102d5bf80 in float* std::__1::copy[abi:nqe220106]<float const*, float*>(float const*, float const*, float*) copy.h:128\n    #7 0x000102d5a010 in gemma4::PrepareBatchInputs(gemma4::TokenEmbeddings const&, std::__1::vector<long long, std::__1::allocator<long long>> const&, int, int, float const*, int) gemma4_text_inputs.cpp:125\n    #8 0x000102d34ccc in gemma4::TextEngine::RunPrefillChunk(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, float const*) gemma4_text_engine.cpp:105\n    #9 0x000102d358fc in gemma4::TextEngine::PrefillSuffix(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, std::__1::vector<float, std::__1::allocator<float>> const*) gemma4_text_engine.cpp:134\n    #10 0x000102d37880 in gemma4::TextEngine::ContinueGenerateStream(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, std::__1::function<bool (long long)>, std::__1::vector<float, std::__1::allocator<float>> const*) gemma4_text_engine.cpp:202\n    #11 0x000102d36d78 in gemma4::TextEngine::ContinueGenerate(std::__1::vector<long long, std::__1::allocator<long long>> const&, int, std::__1::vector<float, std::__1::allocator<float>> const*) gemma4_text_engine.cpp:178\n    #12 0x000102cfcac0 in main short-hidden.cpp:6\n    #13 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)\n\n0x602000000af4 is located 0 bytes after 4-byte region [0x602000000af0,0x602000000af4)\nallocated by thread T0 here:\n    #0 0x00010364c150 in _Znwm+0x74 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x50150)\n    #1 0x000102d25140 in float* std::__1::__libcpp_allocate[abi:nqe220106]<float>(std::__1::__element_count, unsigned long) allocate.h:60\n    #2 0x000102d25030 in std::__1::allocator<float>::allocate[abi:nqe220106](unsigned long) allocator.h:92\n    #3 0x000102d24628 in std::__1::__allocation_result<std::__1::allocator_traits<std::__1::allocator<float>>::pointer, std::__1::allocator_traits<std::__1::allocator<float>>::size_type> std::__1::__allocate_at_least[abi:nqe220106]<std::__1::allocator<float>, std::__1::allocator_traits<std::__1::allocator<float>>>(std::__1::allocator<float>&, unsigned long) allocate_at_least.h:46\n    #4 0x000102d23760 in std::__1::vector<float, std::__1::allocator<float>>::__vallocate[abi:nqe220106](unsigned long) vector.h:597\n    #5 0x000102d2334c in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long, float const&) vector.h:171\n    #6 0x000102cfbe40 in std::__1::vector<float, std::__1::allocator<float>>::vector[abi:nqe220106](unsigned long, float const&) vector.h:168\n    #7 0x000102cfca04 in main short-hidden.cpp:5\n    #8 0x000183c53e7c in start+0x1a1c (dyld:arm64e+0x31e7c)\n\nSUMMARY: AddressSanitizer: heap-buffer-overflow constexpr_c_functions.h:227 in float* std::__1::__constexpr_memmove[abi:nqe220106]<float, float const>(float*, float const*, std::__1::__element_count)\nShadow bytes around the buggy address:\n  0x602000000800: fa fa 00 00 fa fa 00 00 fa fa 00 00 fa fa 00 00\n  0x602000000880: fa fa 00 00 fa fa 00 00 fa fa 00 00 fa fa 00 03\n  0x602000000900: fa fa 00 00 fa fa 00 fa fa fa 00 00 fa fa fd fa\n  0x602000000980: fa fa fd fd fa fa fd fa fa fa fd fd fa fa fd fa\n  0x602000000a00: fa fa 00 fa fa fa fd fd fa fa 04 fa fa fa fd fa\n=>0x602000000a80: fa fa fd fd fa fa 00 fa fa fa 00 fa fa fa[04]fa\n  0x602000000b00: fa fa 00 00 fa fa 00 00 fa fa fd fd fa fa fa fa\n  0x602000000b80: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x602000000c00: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x602000000c80: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x602000000d00: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\nShadow byte legend (one shadow byte represents 8 application bytes):\n  Addressable:           00\n  Partially addressable: 01 02 03 04 05 06 07 \n  Heap left redzone:       fa\n  Freed heap region:       fd\n  Stack left redzone:      f1\n  Stack mid redzone:       f2\n  Stack right redzone:     f3\n  Stack after return:      f5\n  Stack use after scope:   f8\n  Global redzone:          f9\n  Global init order:       f6\n  Poisoned by user:        f7\n  Container overflow:      fc\n  Array cookie:            ac\n  Intra object redzone:    bb\n  ASan internal:           fe\n  Left alloca redzone:     ca\n  Right alloca redzone:    cb\n==80795==ABORTING\n"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+"""Execute fixed S/X5 source code and verify their different public score domains."""
+
+import json
+from pathlib import Path
+import sys
+import types
+import unittest
+from unittest.mock import patch
+import numpy as np
+from test_pose_binding import fixture
+import test_pose_binding as checks
+from source_reference import load_source, ROOT
+from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+    RuntimeMetadata,
+    bind_model,
+)
+from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose
+
+
+def x5_source_task(names):
+    base = Path(__file__).parent / "fixtures"
+    provenance = json.loads((base / "x5_pose_source.json").read_text())
+    packages = {
+        name: types.ModuleType(name)
+        for name in ["utils", "utils.py_utils", "hbm_runtime"]
+    }
+    packages["utils"].__path__ = []
+    packages["utils.py_utils"].__path__ = []
+    packages["utils"].py_utils = packages["utils.py_utils"]
+    packages["hbm_runtime"].QuantParams = object
+    with patch.dict(sys.modules, packages), patch.object(sys, "path", list(sys.path)):
+        for helper in ("nn_math", "preprocess", "postprocess"):
+            module = load_source(
+                f"utils/py_utils/{helper}.py",
+                f"utils.py_utils.{helper}",
+                base=ROOT / "platforms/x5",
+                hashes=provenance["helpers"],
+            )
+            setattr(packages["utils.py_utils"], helper, module)
+        module = load_source(
+            "x5_pose_source.py",
+            "fixed_x5_pose",
+            base=base,
+            hashes={"x5_pose_source.py": provenance["sha256"]},
+        )
+    source = module.UltralyticsYOLOPose.__new__(module.UltralyticsYOLOPose)
+    source.cfg = module.UltralyticsYOLOPoseConfig("fixture.bin")
+    source.model_name = "m"
+    source.output_names = list(names)
+    source.input_h = source.input_w = 64
+    source.conf_thres_raw = -np.log(1 / source.cfg.score_thres - 1)
+    source.weights_static = np.arange(16, dtype=np.float32)[None, None, :]
+    return source
+
+
+class PoseSource(unittest.TestCase):
+    def test_x5_source_three_tuple_probability_domain(self):
+        task, raw, _ = fixture(target="x5", quantized=False)
+        source = x5_source_task(raw)
+        for resize in (0, 1):
+            source.cfg.resize_type = task.cfg.resize_type = resize
+            for width, height in ((64, 64), (128, 64)):
+                expected = source.post_process({"m": raw}, width, height)
+                result = task.post_process(task.forward({}), width, height)
+                actual = (
+                    result[0],
+                    result[1],
+                    np.concatenate([result[3], result[4]], axis=-1),
+                )
+                for a, b in zip(actual, expected):
+                    np.testing.assert_allclose(a, b, rtol=1e-6, atol=1e-5)
+
+    def test_x5_legacy_adapter_predict_runs_real_canonical_stages(self):
+        import importlib.util
+
+        path = (
+            ROOT
+            / "platforms/x5/samples/vision/ultralytics_yolo/runtime/python/ultralytics_yolo_pose.py"
+        )
+        spec = importlib.util.spec_from_file_location("stage_legacy_pose", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        task, _, _ = fixture(target="x5", quantized=False)
+        legacy = module.UltralyticsYOLOPose(
+            module.UltralyticsYOLOPoseConfig("fixture.bin"), runner=task.runner
+        )
+        image = np.zeros((31, 73, 3), np.uint8)
+        actual = legacy.predict(image)
+        expected = task.predict(image)
+        self.assertEqual(len(actual), 3)
+        np.testing.assert_array_equal(actual[0], expected[0])
+        np.testing.assert_array_equal(actual[1], expected[1])
+        np.testing.assert_array_equal(
+            actual[2], np.concatenate([expected[3], expected[4]], axis=-1)
+        )

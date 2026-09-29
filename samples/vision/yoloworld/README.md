@@ -14,8 +14,10 @@ region detector; the upstream algorithm reference is [YOLO-World](https://github
 
 | Target | Python | C++ | Asset | Status |
 | --- | --- | --- | --- | --- |
-| X5 | supported by this sample | not provided | `x5:yoloworld:yolo_world.bin` | host-tested with injected runtime; board not-run |
+| X5 | supported by this sample | not provided | `x5:yoloworld:yolo_world.bin` | host-tested with injected runtime; 2026-09-24 source/unified comparisons passed on one X5 8GB and one X5 4GB with the `dog` prompt and `test_data/dog.jpeg` ([8GB](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [4GB](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)) |
 | S100/S100P/S600 | no published asset | not provided | none | unsupported |
+
+The board verification covers exactly that prompt/image pair; it is tensor parity, not a full-vocabulary accuracy or latency measurement.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -23,8 +25,9 @@ region detector; the upstream algorithm reference is [YOLO-World](https://github
 Host checks use Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3
 from the repository `.venv`; these versions describe the host fixture and do not
 replace board SDK requirements. Board execution needs the X5 system Python and
-`hbm_runtime` matching the installed image. The model and
-`test_data/offline_vocabulary_embeddings.json` must be prepared separately.
+`hbm_runtime` matching the installed image. The model must be prepared with the
+explicit download command; the required vocabulary
+`test_data/offline_vocabulary_embeddings.json` ships with the sample.
 
 <a id="quickstart"></a>
 ## Quickstart

@@ -78,21 +78,33 @@ def resolve_asset(reference: str) -> Asset:
     return matches[0]
 
 
+_SHA256_BLOCK_BYTES = 1024 * 1024
+
+
+def sha256_file(path: Path) -> str:
+    """Return a file's SHA-256 hex digest, hashed in bounded blocks.
+
+    Shared with evaluators that support board Python 3.10, where
+    ``hashlib.file_digest`` (added in 3.11) does not exist.
+    """
+    import hashlib
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as handle:
+        for block in iter(lambda: handle.read(_SHA256_BLOCK_BYTES), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def verify_asset_file(asset: Asset, path: Path) -> str:
     """Check a local file against a recorded publisher hash when one exists.
 
     Returns the observed SHA-256. An observation without an expected publisher
     hash is byte identity only, not proof of official origin or compatibility.
     """
-    import hashlib
     path = Path(path)
     if not path.is_file() or path.stat().st_size == 0:
         raise ValueError(f'Missing or empty model file: {path}.')
-    digest = hashlib.sha256()
-    with path.open('rb') as handle:
-        for block in iter(lambda: handle.read(1024 * 1024), b''):
-            digest.update(block)
-    observed = digest.hexdigest()
+    observed = sha256_file(path)
     if asset.sha256 is not None and observed != asset.sha256.lower():
         raise ValueError(f'SHA-256 mismatch for {asset.reference}: {path}.')
     return observed

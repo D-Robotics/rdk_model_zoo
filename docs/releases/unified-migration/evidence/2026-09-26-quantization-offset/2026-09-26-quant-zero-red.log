@@ -1,0 +1,78 @@
+...........F.FF
+======================================================================
+FAIL: test_per_channel_single_zero_point_is_broadcast (test_quantization.DequantTensorTests.test_per_channel_single_zero_point_is_broadcast)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/_shared/tests/test_quantization.py", line 74, in test_per_channel_single_zero_point_is_broadcast
+    np.testing.assert_array_equal(out, [[-5.0, -9.0]])
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/lib/python3.14/site-packages/numpy/testing/_private/utils.py", line 1128, in assert_array_equal
+    assert_array_compare(operator.__eq__, actual, desired, err_msg=err_msg,
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         verbose=verbose, header='Arrays are not equal',
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         strict=strict)
+                         ^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/lib/python3.14/site-packages/numpy/testing/_private/utils.py", line 988, in assert_array_compare
+    raise AssertionError(msg)
+AssertionError: 
+Arrays are not equal
+
+Mismatched elements: 2 / 2 (100%)
+Mismatch at indices:
+ [0, 0]: 2.0 (ACTUAL), -5.0 (DESIRED)
+ [0, 1]: 12.0 (ACTUAL), -9.0 (DESIRED)
+Max absolute difference among violations: 21.
+Max relative difference among violations: 2.33333333
+ ACTUAL: array([[ 2., 12.]], dtype=float32)
+ DESIRED: array([[-5., -9.]])
+
+======================================================================
+FAIL: test_scalar_offset_can_change_segmentation_argmax (test_quantization.DequantTensorTests.test_scalar_offset_can_change_segmentation_argmax)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/_shared/tests/test_quantization.py", line 84, in test_scalar_offset_can_change_segmentation_argmax
+    self.assertEqual(int(np.argmax(decoded, axis=-1).item()), 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_scalar_zero_point_broadcasts_on_non_last_axis (test_quantization.DequantTensorTests.test_scalar_zero_point_broadcasts_on_non_last_axis)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/_shared/tests/test_quantization.py", line 92, in test_scalar_zero_point_broadcasts_on_non_last_axis
+    np.testing.assert_array_equal(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dequantize_tensor(q, info), [[[2, 3], [16, 20]]]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/lib/python3.14/site-packages/numpy/testing/_private/utils.py", line 1128, in assert_array_equal
+    assert_array_compare(operator.__eq__, actual, desired, err_msg=err_msg,
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         verbose=verbose, header='Arrays are not equal',
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         strict=strict)
+                         ^^^^^^^^^^^^^^
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk_model_zoo/.venv/lib/python3.14/site-packages/numpy/testing/_private/utils.py", line 988, in assert_array_compare
+    raise AssertionError(msg)
+AssertionError: 
+Arrays are not equal
+
+Mismatched elements: 4 / 4 (100%)
+Mismatch at indices:
+ [0, 0, 0]: 1.0 (ACTUAL), 2 (DESIRED)
+ [0, 0, 1]: 2.0 (ACTUAL), 3 (DESIRED)
+ [0, 1, 0]: 12.0 (ACTUAL), 16 (DESIRED)
+ [0, 1, 1]: 16.0 (ACTUAL), 20 (DESIRED)
+Max absolute difference among violations: 4.
+Max relative difference among violations: 0.5
+ ACTUAL: array([[[ 1.,  2.],
+        [12., 16.]]], dtype=float32)
+ DESIRED: array([[[ 2,  3],
+        [16, 20]]])
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.018s
+
+FAILED (failures=3)

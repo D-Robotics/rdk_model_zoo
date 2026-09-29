@@ -23,7 +23,7 @@ the other YOLO26 tasks continue to use their existing runtime.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, Mapping, Optional, Tuple
 
 import numpy as np
 
@@ -41,7 +41,8 @@ from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     ModelSelection,
 )
 from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import (
+from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
+    PreparedDetection,
     DetectionResult,
     _forward_runner,
     _normalise_grids,
@@ -52,6 +53,7 @@ from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import (
     _size_from_runner,
     _transform_for_postprocess,
 )
+from samples.vision.ultralytics_yolo.runtime.python.legacy import pre_process_with_transform
 from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import (
     PlatformProfile,
     resolve_platform,
@@ -184,8 +186,6 @@ class YOLO26Detect:
         profile = _profile_from_config(config)
         if self.cfg.nms_thres is None and profile is not None:
             self.cfg.nms_thres = float(profile.nms_thres)
-        self.last_transform: Optional[ImageTransform] = None
-        self.last_image_transform: Optional[ImageTransform] = None
 
     @staticmethod
     def logit_threshold(score: float) -> float:
@@ -200,40 +200,35 @@ class YOLO26Detect:
         _set_scheduling_params(
             self.runner, self.model, self.model_name, priority, bpu_cores)
 
-    def pre_process_with_transform(
-            self,
-            img: np.ndarray,
-            image_format: str = "BGR") -> Tuple[Dict[str, Dict[str, np.ndarray]], ImageTransform]:
+    pre_process_with_transform = pre_process_with_transform
+
+    def pre_process(self, img: np.ndarray, image_format: str = "BGR") -> PreparedDetection:
+        """Validate BGR uint8 HxWx3 and return NV12 tensors plus frozen geometry."""
         tensors, transform = _prepare_image(
             self.runner, self.input_adapter, self.input_size,
             self.cfg.resize_type, img, image_format)
-        self.last_transform = transform
-        self.last_image_transform = transform
-        return tensors, transform
-
-    def pre_process(self,
-                    img: np.ndarray,
-                    image_format: str = "BGR") -> Dict[str, Dict[str, np.ndarray]]:
-        """Prepare one image using the legacy tensor-only return shape."""
-        tensors, _ = self.pre_process_with_transform(img, image_format)
-        return tensors
+        return PreparedDetection(tensors, transform)
 
     def forward(self, input_tensor: Mapping[str, Any]):
         """Call the injected or factory-created runner exactly once."""
         return _forward_runner(self.runner, input_tensor)
 
-    def _semantic_outputs(self, outputs: Any) -> Mapping[str, Any]:
-        return _semantic_outputs(self.binding, self.contract, outputs, "LTRB")
-
     def post_process(self,
                      outputs: Any,
-                     ori_img_w: int,
-                     ori_img_h: int,
+                     ori_img_w: Optional[int] = None,
+                     ori_img_h: Optional[int] = None,
                      score_thres: Optional[float] = None,
                      nms_thres: Optional[float] = None,
                      transform: Optional[ImageTransform] = None) -> DetectionResult:
-        """Decode direct LTRB heads and map boxes to original image pixels."""
-        semantic = self._semantic_outputs(outputs)
+        """Decode direct LTRB outputs into owned DetectionResult arrays.
+
+        Supply the matching PreparedDetection.transform, or explicit original
+        dimensions for the legacy stateless path. RawOutputs uses its validated
+        binding for postprocess transforms; injected semantic mappings must hold
+        floating values. Wrong binding/geometry/quantization raises ValueError
+        (including BindingError); score/NMS overrides follow the decoder contract.
+        """
+        semantic = _semantic_outputs(self.binding, self.contract, outputs, "LTRB")
         score = self.cfg.score_thres if score_thres is None else float(score_thres)
         nms = self.cfg.nms_thres if nms_thres is None else float(nms_thres)
         try:
@@ -246,8 +241,8 @@ class YOLO26Detect:
             )
         except DecodeError as exc:
             raise BindingError(str(exc)) from exc
-        concrete = transform or _transform_for_postprocess(
-            self.last_transform, ori_img_w, ori_img_h,
+        concrete = _transform_for_postprocess(
+            transform, ori_img_w, ori_img_h,
             self.input_size, self.cfg.resize_type)
         boxes = inverse_boxes(boxes, concrete)
         profile = _profile_from_config(self.cfg)

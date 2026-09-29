@@ -8,19 +8,32 @@ RDK Model Zoo provides model preparation, preprocessing, BPU inference, postproc
 
 ## Start by task
 
-The [sample index](samples/README.md) lists all 36 current unified vision samples. Each guide states its own targets, variants, languages and validation scope.
+The [sample index](samples/README.md) lists 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. Each guide states its own targets, variants, languages and validation scope.
 
 | Task | Unified entry |
 |---|---|
 | Detection, segmentation, pose, classification, oriented boxes | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README.md) |
+| Prompt-free instance segmentation | [YOLOE](samples/vision/yoloe/README.md) |
+| Speech recognition | [ASR](samples/speech/asr/README.md), [Paraformer](samples/speech/paraformer/README.md) |
+| Offline robotics policy | [HIMLoco](samples/robotics/himloco/README.md): six-frame observations to actions, without robot control |
+| Vision-language model (migration in progress) | [Gemma4-E2B](samples/llm/gemma4-e2b/README.md): native chat, HTTP, single-shot inference and verification tools |
+| Text generation (migration in progress) | [MiniCPM5-2B](samples/llm/minicpm5-2b/README.md): S100/S100P OELLM 1.0.0 and S600 OELLM 2.0 beta native entries |
+| Keyword spotting | [KWS](samples/speech/kws/README.md) |
 | Image classification | [ResNet](samples/vision/resnet/README.md), MobileNet, EfficientNet, ConvNeXt, Rep families and others in the full index |
 | Text detection and recognition | [PaddleOCR](samples/vision/paddle_ocr/README.md) |
 | Prompted segmentation | [EfficientSAM](samples/vision/efficient_sam/README.md), [MobileSAM](samples/vision/mobile_sam/README.md) |
 | Detection, open vocabulary and tracking | [YOLOv5](samples/vision/yolov5/README.md), [FCOS](samples/vision/fcos/README.md), [YOLOWorld](samples/vision/yoloworld/README.md), [ByteTrack](samples/vision/bytetrack/README.md) |
 | License plates and image matting | [LPRNet](samples/vision/lprnet/README.md), [MODNet](samples/vision/modnet/README.md) |
+| Point cloud part segmentation | [PointNet](samples/vision/pointnet/README.md) |
+| Semantic segmentation | [UNet](samples/vision/unet/README.md) · [PP-LiteSeg](samples/vision/pp_liteseg/README.md) · [UNetMobileNet](samples/vision/unetmobilenet/README.md) |
+| Monocular depth | [YOLO26 Depth](samples/vision/yolo26_depth/README.md) · [Depth Anything V2](samples/vision/depth_anything_v2/README.md) |
+| Lane embeddings and binary labels | [LaneNet](samples/vision/lanenet/README.md) |
+| Prepared-feature trajectory planning | [DiffusionDrive](samples/vision/diffusiondrive/README.md) |
 | Features, image-text matching and video classification | [DINOv2](samples/vision/dinov2/README.md), [SigLIP](samples/vision/siglip/README.md), [CLIP](samples/vision/clip/README.md), [3DResNet](samples/vision/3dresnet/README.md) |
 
-Depth, semantic segmentation, point clouds, speech, robotics, LLM/VLA and other pending capabilities remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
+Capabilities not yet unified remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
+
+ACT/Pi0 are integrated as complete pinned Git submodules, separately from the 51 in-repository samples above. See the [VLA guide](samples/vla/README.md): S100 and S600 ACT use different source versions, Pi0 targets S600, and model resources are operator-supplied. Robot control was not run in this migration.
 
 ## Boards, artifacts and environments
 
@@ -77,6 +90,7 @@ Read [AGENTS.md](AGENTS.md), the [inference contract](docs/sample-standards/infe
 ## Data, source-branch resources and validation
 
 - [Canonical release facts](docs/release) hold artifacts and historical measurements; the [platform registry](platforms/README.md) explains source branches, directories, tags and runtimes.
+- Source-branch online resources, inherited from the archived X5 (`ac11571`) and S (`380e1a2`) root guides: the [online model catalog](https://d-robotics.github.io/rdk_model_zoo/), [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues), the [D-Robotics developer community](https://developer.d-robotics.cc/) and its [user manual](https://developer.d-robotics.cc/information). They reference the delivery branches' published material; browsing the published catalog does not certify this integration branch, and no live link status is claimed here. Legacy demo material stays archived — [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) for X5 and the separate [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) repository for S — and is not an adaptation target.
 - Dataset preparation: [datasets](datasets), [X5 datasets](platforms/x5/datasets), [S datasets](platforms/s/datasets). Large datasets/models are generally not in Git.
 - Retained references: [X5 guidelines](platforms/x5/docs/Model_Zoo_Repository_Guidelines.md), [S Python API](platforms/s/docs/Python_API_User_Guide.md), [S UCP](platforms/s/docs/UCP_User_Guide.md), [TROS](docs/tros/README.md).
 - The [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md) and batch reports distinguish implementation, host checks, board tests, independent review and closure; the [current host completion plan](docs/superpowers/plans/2026-09-26-host-completion.md) does not treat pending board tests as passed.
@@ -104,6 +118,6 @@ Generated `dist/catalog.meta.json` binds `catalog.json` by SHA-256; CI uploads d
 
 ## Community, contribution and license
 
-Use repository Issues with target, image/SDK, model reference, commit and reproducible commands. Preserve original failure output and submit matching documentation/tests with fixes. Source branches retain [community resources](platforms/x5/README.md#community--contribution) and platform-specific guidance.
+Use [repository Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) with target, image/SDK, model reference, commit and reproducible commands. Preserve original failure output and submit matching documentation/tests with fixes. Source branches retain [community resources](platforms/x5/README.md#community--contribution) and platform-specific guidance.
 
 Unified code uses the root [LICENSE](LICENSE); distributions retain [X5 LICENSE](platforms/x5/LICENSE) and [S LICENSE](platforms/s/LICENSE). Upstream X3 supplied no license file and none is invented here. Model weights, datasets and upstream projects retain their respective licenses and provenance.

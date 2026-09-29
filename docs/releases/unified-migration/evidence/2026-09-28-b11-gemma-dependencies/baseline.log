@@ -1,0 +1,163 @@
+test_dirty_pinned_submodule_is_rejected (dep_test.DependencyPreparationTests.test_dirty_pinned_submodule_is_rejected) ... FAIL
+test_failed_clone_leaves_no_destination_or_stage (dep_test.DependencyPreparationTests.test_failed_clone_leaves_no_destination_or_stage) ... ok
+test_incomplete_existing_directory_is_preserved (dep_test.DependencyPreparationTests.test_incomplete_existing_directory_is_preserved) ... ERROR
+test_local_pin_install_and_reuse (dep_test.DependencyPreparationTests.test_local_pin_install_and_reuse) ... FAIL
+test_modified_existing_checkout_is_preserved_and_rejected (dep_test.DependencyPreparationTests.test_modified_existing_checkout_is_preserved_and_rejected) ... FAIL
+test_old_rust_is_rejected_without_installation (dep_test.DependencyPreparationTests.test_old_rust_is_rejected_without_installation) ... FAIL
+test_preview_has_no_writes (dep_test.DependencyPreparationTests.test_preview_has_no_writes) ... FAIL
+test_wrong_commit_is_preserved (dep_test.DependencyPreparationTests.test_wrong_commit_is_preserved) ... FAIL
+
+======================================================================
+ERROR: test_incomplete_existing_directory_is_preserved (dep_test.DependencyPreparationTests.test_incomplete_existing_directory_is_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/test_dependency_preparation.py", line 97, in test_incomplete_existing_directory_is_preserved
+    self.assertEqual((self.dest / "my-work").read_text(), "keep")
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 787, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpjt71w28x/tokenizers-cpp/my-work'
+
+======================================================================
+FAIL: test_dirty_pinned_submodule_is_rejected (dep_test.DependencyPreparationTests.test_dirty_pinned_submodule_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/test_dependency_preparation.py", line 174, in test_dirty_pinned_submodule_is_rejected
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Rust 1.80.0 already satisfies >= 1.80.0.
+Downloading tokenizers-cpp @ 4de34e0c ...
+Submodule path 'msgpack': checked out '91c31800dd2b06e33dc1c520467b8e612433e5ce'
+Cloning into '/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmppsxkyxhm/tokenizers-cpp'...
+warning: --depth is ignored in local clones; use file:// instead.
+done.
+From /var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmppsxkyxhm/upstream
+ * branch            4de34e0ca0597b3895025bfd611d27655991dd3b -> FETCH_HEAD
+Note: switching to '4de34e0ca0597b3895025bfd611d27655991dd3b'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 4de34e0 add local submodule
+Submodule 'msgpack' (/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmppsxkyxhm/upstream) registered for path 'msgpack'
+Cloning into '/private/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmppsxkyxhm/tokenizers-cpp/msgpack'...
+warning: --depth is ignored in local clones; use file:// instead.
+done.
+sed: 1: "/var/folders/04/9p6f6bf ...": invalid command code f
+
+
+======================================================================
+FAIL: test_local_pin_install_and_reuse (dep_test.DependencyPreparationTests.test_local_pin_install_and_reuse)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/test_dependency_preparation.py", line 101, in test_local_pin_install_and_reuse
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Rust 1.80.0 already satisfies >= 1.80.0.
+Downloading tokenizers-cpp @ 91c31800 ...
+Cloning into '/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmp6k_kgky3/tokenizers-cpp'...
+warning: --depth is ignored in local clones; use file:// instead.
+done.
+From /var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmp6k_kgky3/upstream
+ * branch            91c31800dd2b06e33dc1c520467b8e612433e5ce -> FETCH_HEAD
+Note: switching to '91c31800dd2b06e33dc1c520467b8e612433e5ce'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 91c3180 fixture
+sed: 1: "/var/folders/04/9p6f6bf ...": invalid command code f
+
+
+======================================================================
+FAIL: test_modified_existing_checkout_is_preserved_and_rejected (dep_test.DependencyPreparationTests.test_modified_existing_checkout_is_preserved_and_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/test_dependency_preparation.py", line 113, in test_modified_existing_checkout_is_preserved_and_rejected
+    self.assertEqual(self.run_script().returncode, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_old_rust_is_rejected_without_installation (dep_test.DependencyPreparationTests.test_old_rust_is_rejected_without_installation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/test_dependency_preparation.py", line 124, in test_old_rust_is_rejected_without_installation
+    self.assertNotIn("unexpected-network", result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'unexpected-network' unexpectedly found in 'unexpected-network\n'
+
+======================================================================
+FAIL: test_preview_has_no_writes (dep_test.DependencyPreparationTests.test_preview_has_no_writes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/test_dependency_preparation.py", line 183, in test_preview_has_no_writes
+    self.assertEqual(result.returncode, 0, result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Cloning into '/var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpl_xdz3uu/tokenizers-cpp'...
+warning: --depth is ignored in local clones; use file:// instead.
+done.
+From /var/folders/04/9p6f6bf54t3f5j_khcdj2jr40000gn/T/tmpl_xdz3uu/upstream
+ * branch            b91a38e301288c41523c606c5cb860f6edd455b2 -> FETCH_HEAD
+Note: switching to 'b91a38e301288c41523c606c5cb860f6edd455b2'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at b91a38e fixture
+sed: 1: "/var/folders/04/9p6f6bf ...": invalid command code f
+
+
+======================================================================
+FAIL: test_wrong_commit_is_preserved (dep_test.DependencyPreparationTests.test_wrong_commit_is_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/Max/Workspace/company/development/RDK_MODEL_ZOO/rdk-b7-board-integration/samples/llm/gemma4-e2b/tests/test_dependency_preparation.py", line 128, in test_wrong_commit_is_preserved
+    self.assertEqual(self.run_script().returncode, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 8 tests in 2.198s
+
+FAILED (failures=6, errors=1)
