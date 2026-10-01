@@ -93,9 +93,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--test-img', type=str, default=_DEFAULT_IMAGE,
                         help='Path to the test image.')
     parser.add_argument('--label-file', type=str, default=None,
-                        help='Path to a label file. Defaults to the sample '
-                             'COCO labels for detect/seg/pose and the sample '
-                             'ImageNet labels for cls.')
+                        help='Path to a label file. Official default models '
+                             'use the sample COCO labels (detect/seg), a '
+                             'single person label (pose), ImageNet (cls) or '
+                             'DOTA (obb); an explicit --model-path is treated '
+                             'as a custom model that shows class IDs unless '
+                             'this option is given.')
     parser.add_argument('--img-save-path', type=str, default='result.jpg',
                         help='Path to save the rendered result image.')
     parser.add_argument('--score-thres', type=float, default=0.25,
@@ -334,12 +337,17 @@ def ensure_model(plan: dict) -> None:
     download_asset(asset, Path(plan['path']))
 
 
-def load_labels(args, task: str) -> list:
+def load_labels(args, task: str, *, custom_model: bool = False) -> list:
     """Load the label names a task renders with.
 
     Args:
         args: Parsed command-line arguments.
         task: Task name.
+        custom_model: True when the run uses an explicit local model path.
+            Custom models never inherit the official COCO/ImageNet/DOTA
+            label sets: without ``--label-file`` the caller renders class
+            IDs (spec §6 — no default label guessing for self-trained
+            models).
 
     Returns:
         A list of label names, empty when no label file is available.
@@ -353,12 +361,41 @@ def load_labels(args, task: str) -> list:
         if not os.path.exists(args.label_file):
             raise FileNotFoundError(f"Label file not found: {args.label_file}")
         return file_io.load_class_names(args.label_file)
+    if custom_model:
+        return []
+    if task == 'pose':
+        # Published pose models are single-class person. The old default
+        # applied the 80-class COCO file (accidentally correct only because
+        # COCO id 0 is "person"); the exact single label is returned now.
+        return ['person']
     if task == 'obb':
         return file_io.load_class_names(_OBB_LABELS)
     default = _IMAGENET_LABELS if task == 'cls' else _COCO_LABELS
     if os.path.exists(default):
         return file_io.load_class_names(default)
     return []
+
+
+def validate_label_count(labels, model) -> None:
+    """Reject explicit labels whose count disagrees with the bound model.
+
+    The class count comes from the model's bound contract (``contract.classes``
+    exists for every dispatched task, including the 1000-class classification
+    contract and the single-class pose contracts); ``--classes-num`` alone is
+    not trusted. Models that do not expose an integer class count (injected
+    host doubles) are skipped rather than guessed from output protocols.
+    """
+
+    if not labels:
+        return
+    count = getattr(getattr(model, "contract", None), "classes", None)
+    if not isinstance(count, int) or isinstance(count, bool):
+        return
+    if len(labels) != count:
+        raise ValueError(
+            f"{len(labels)} labels do not match the bound model's "
+            f"{count} classes; check --label-file / --classes-num against "
+            "the compiled model.")
 
 
 def present_result(args, image, result, labels: list) -> None:
@@ -400,7 +437,12 @@ def present_result(args, image, result, labels: list) -> None:
             label = labels[item['id']] if 0 <= item['id'] < len(labels) else str(item['id'])
             cv2.putText(result_img, f"{label} {item['score']:.2f}", tuple(points[0]), cv2.FONT_HERSHEY_SIMPLEX, .5, color, 1)
     else:
-        visualize.print_classification_results(result, file_io.load_labels(args.label_file or _IMAGENET_LABELS))
+        # Use the caller's validated labels; without labels render class
+        # IDs. The default ImageNet file is never re-read here (custom
+        # models must not fall back to official label sets).
+        idx2label = {index: str(name) for index, name in enumerate(labels)} if labels \
+            else {int(class_id): str(class_id) for class_id, _ in result}
+        visualize.print_classification_results(result, idx2label)
     if result_img is not None:
         os.makedirs(os.path.dirname(os.path.abspath(args.img_save_path)), exist_ok=True)
         if not cv2.imwrite(args.img_save_path, result_img):

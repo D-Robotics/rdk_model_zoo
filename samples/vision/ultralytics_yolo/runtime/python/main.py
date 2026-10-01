@@ -67,6 +67,7 @@ from yolo_cli import (  # noqa: E402 - import paths kept for existing callers
     present_result,
     print_dry_run,
     print_model_listing,
+    validate_label_count,
 )
 
 
@@ -115,9 +116,13 @@ def main() -> int:
         print(f"[Ready] {plan['path']}")
         return 0
 
+    # An explicit local model path marks a custom (self-trained) run; keep
+    # that choice before args.model_path is normalized to the plan path so
+    # labels never fall back to official sets for custom models.
+    custom_model = bool(plan.get('explicit'))
     args.model_path = plan['path']
     try:
-        labels = load_labels(args, args.task)
+        labels = load_labels(args, args.task, custom_model=custom_model)
 
         # The readable flow itself: construct the dispatched task model,
         # run one prediction, present the result.
@@ -125,6 +130,9 @@ def main() -> int:
         from yolo_dispatch import create_runtime_model
 
         model = create_runtime_model(profile, args)
+        # Explicit labels must match the bound model's class count before
+        # any inference runs (never trusting --classes-num alone).
+        validate_label_count(labels, model)
         model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         inspect_utils.print_model_info(model.model)
         image = file_io.load_image(args.test_img)
@@ -147,6 +155,7 @@ def run_inference(profile, args, labels) -> None:
     from yolo_dispatch import create_runtime_model
 
     model = create_runtime_model(profile, args)
+    validate_label_count(labels, model)
     model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
     inspect_utils.print_model_info(model.model)
     image = file_io.load_image(args.test_img)
