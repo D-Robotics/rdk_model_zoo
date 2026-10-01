@@ -13,12 +13,19 @@ the exact fetch command::
 
     git fetch origin d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d
 
-Materialized files land in a per-process temporary directory; nothing is
-written into the repository worktree.
+There is deliberately no "exists?" probe: source verification must go
+through :func:`legacy_path`/:func:`legacy_tree`, which raise on missing
+objects, so an absent historical file can never silently skip a check.
+
+Materialized files land in a per-process temporary directory that is
+removed at interpreter exit; nothing is written into the repository
+worktree.
 """
 
 from __future__ import annotations
 
+import atexit
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -31,6 +38,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PIN = "d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d"
 
 _TEMP = Path(tempfile.mkdtemp(prefix="rdk-model-zoo-platforms-pin-"))
+atexit.register(shutil.rmtree, _TEMP, ignore_errors=True)
 
 
 def _git(*args: str) -> subprocess.CompletedProcess:
@@ -43,6 +51,10 @@ def legacy_path(relative: str) -> Path:
 
     ``relative`` is the path below ``platforms/``, for example
     ``"x5/samples/vision/repvit/runtime/python/repvit.py"``.
+
+    Raises:
+        FileNotFoundError: When the object is not readable at the pin —
+            including the shallow-clone case, with the exact fetch command.
     """
 
     repo_relative = f"platforms/{relative}"
@@ -60,26 +72,30 @@ def legacy_path(relative: str) -> Path:
     return target
 
 
-def legacy_exists(relative: str) -> bool:
-    """Whether ``platforms/<relative>`` exists in the pinned tree."""
-
-    return _git("cat-file", "-e", f"{PIN}:platforms/{relative}").returncode == 0
-
-
 def legacy_tree(relative: str) -> Path:
     """Materialize the pinned directory ``platforms/<relative>`` and return it.
 
     Use for fixtures that need a whole subtree (for example a conversion
     directory); prefer :func:`legacy_path` for single files.
+
+    Raises:
+        FileNotFoundError: When the directory is not present at the pin, or
+            any listed blob fails to materialize (never a silent skip).
     """
 
-    listing = _git("ls-tree", "-r", "--name-only", PIN, "--", f"platforms/{relative}")
+    # -z: paths come NUL-terminated and unquoted. Git's default ls-tree
+    # output C-quotes non-ASCII names (the historical tree contains such
+    # names), which would corrupt the materialized filenames.
+    listing = _git("ls-tree", "-r", "-z", "--name-only", PIN, "--",
+                   f"platforms/{relative}")
     if listing.returncode != 0 or not listing.stdout.strip():
         raise FileNotFoundError(
             f"platforms/{relative} is not present in the pinned tree {PIN[:12]}")
     target_root = _TEMP / relative
-    for line in listing.stdout.decode("utf-8").splitlines():
-        repo_relative = line.strip()
+    for raw in listing.stdout.split(b"\0"):
+        if not raw:
+            continue
+        repo_relative = raw.decode("utf-8")
         inside = repo_relative[len("platforms/"):]
         target = _TEMP / inside
         if target.is_file():
@@ -128,7 +144,6 @@ def legacy_module_namespace():
 __all__ = [
     "PIN",
     "ROOT",
-    "legacy_exists",
     "legacy_module_namespace",
     "legacy_path",
     "legacy_tree",

@@ -1,6 +1,6 @@
 # ResNet / YOLO 可读范例架构方案
 
-日期：2026-09-30。状态：依据用户已确认的对话方案整理；未实施。
+日期：2026-09-30。状态：已于 2026-10-01 实施于分支 `codex/readable-model-examples-20261001`（基线 `bfbe6aaf`，任务 1–5 提交 `5afdb6a5`/`966eeb90`/`eb9a33a4`/`8f83c402`/`e324e356`，评审修复 `15a8553a`）；主机验证与 not-run 边界见 `docs/migration/2026-09-30-model-examples.md`，Codex 独立核对未完成。
 核对基线：develop，`eed26ce610d7fba03a68d1c0ee6e62603cd9b85d`。
 
 执行位置修订（2026-10-01 用户指示）：继续开发，不去服务器，都在本地进行。

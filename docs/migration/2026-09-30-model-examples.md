@@ -76,8 +76,11 @@
 - 干净 checkout（临时 `git worktree`，未初始化 VLA 子模块）：两个范例入口
   `--help`/`--list-models`/`--dry-run` 与上述回归全部通过；catalog 用本地
   node_modules 生成后 YOLO 目录对照测试通过。
-- 环境限制（非本次改动引入）：`samples/vision/yoloe/tests/test_conversion.py`
-  需要 onnx 包，本 venv 未安装；gemma CMake configure 需 cmake，本机未安装。
+- 依赖补齐：yoloe 转换测试所需的 onnx 以二进制 wheel 安装进隔离 venv
+  （`pip install --only-binary=:all: onnx`，版本 1.23.1），yoloe 44 项全部通过。
+- 验证限制：gemma CMake configure 需要 cmake、resnet/paddle_ocr C++ 目标需要
+  OpenCV 开发组件，本机均未安装——C++ 构建本轮未验证（not-run），不宣称
+  C++ 已验证。
 - `samples/_shared/tests` 计数口径：任务 1 时的 158/168 曾意外包含 2 个 VLA
   测试（范围口径问题，未触碰子模块），此后显式排除。
 

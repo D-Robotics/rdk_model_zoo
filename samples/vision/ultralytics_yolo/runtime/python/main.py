@@ -15,7 +15,8 @@
 """Ultralytics YOLO unified inference entry point.
 
 This file stays deliberately small: parse the arguments, resolve the plan,
-construct the selected task model, call ``predict``, present the result.
+construct the selected task model, call ``predict``, present the result —
+the construct/predict/presentation sequence runs inline in ``main()``.
 Option declarations, the model-free listing/dry-run/download-preparation
 modes and result presentation live in ``yolo_cli.py``; each task's readable
 flow lives in its task module (``detect.py`` for DFL detection).
@@ -117,14 +118,31 @@ def main() -> int:
     args.model_path = plan['path']
     try:
         labels = load_labels(args, args.task)
-        return _run_task(profile, args, labels)
+
+        # The readable flow itself: construct the dispatched task model,
+        # run one prediction, present the result.
+        from rdk_yolo_utils import file_io, inspect as inspect_utils
+        from yolo_dispatch import create_runtime_model
+
+        model = create_runtime_model(profile, args)
+        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+        inspect_utils.print_model_info(model.model)
+        image = file_io.load_image(args.test_img)
+        result = model.predict(image)
+        present_result(args, image, result, labels)
+        return 0
     except (BoardRuntimeUnavailableError, UnsupportedAssetError, ValueError) as exc:
         print(f"[Error] {exc}", file=sys.stderr)
         return 2
 
 
-def _run_task(profile, args, labels) -> int:
-    """Construct the selected task model, run one prediction, present it."""
+def run_inference(profile, args, labels) -> None:
+    """Compatibility entry for callers that resolved the plan themselves.
+
+    Mirrors the construct → predict → present sequence ``main()`` performs
+    inline (update the two together); the task-renderer tests patch the
+    same helper seams both paths use.
+    """
     from rdk_yolo_utils import file_io, inspect as inspect_utils
     from yolo_dispatch import create_runtime_model
 
@@ -134,12 +152,6 @@ def _run_task(profile, args, labels) -> int:
     image = file_io.load_image(args.test_img)
     result = model.predict(image)
     present_result(args, image, result, labels)
-    return 0
-
-
-def run_inference(profile, args, labels) -> None:
-    """Compatibility entry retained for existing callers; same task flow."""
-    _run_task(profile, args, labels)
 
 
 if __name__ == "__main__":

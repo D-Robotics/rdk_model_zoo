@@ -55,4 +55,3 @@ remain historical material, not a new adaptation target.
   `python -m unittest discover -s samples/_shared/tests -p test_vla_integration.py`;
   native sample README anchor rules do not require modifying upstream gitlinks.
   Board/control and model availability remain separate from source integration.
-

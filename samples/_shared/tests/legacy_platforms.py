@@ -7,7 +7,6 @@ The implementation lives in :mod:`samples._shared.legacy_platforms`
 from samples._shared.legacy_platforms import (  # noqa: F401 - re-exported surface
     PIN,
     ROOT,
-    legacy_exists,
     legacy_module_namespace,
     legacy_path,
     legacy_tree,
@@ -17,7 +16,6 @@ from samples._shared.legacy_platforms import (  # noqa: F401 - re-exported surfa
 __all__ = [
     "PIN",
     "ROOT",
-    "legacy_exists",
     "legacy_module_namespace",
     "legacy_path",
     "legacy_tree",

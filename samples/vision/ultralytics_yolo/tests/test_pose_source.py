@@ -70,4 +70,3 @@ class PoseSource(unittest.TestCase):
                 )
                 for a, b in zip(actual, expected):
                     np.testing.assert_allclose(a, b, rtol=1e-6, atol=1e-5)
-
