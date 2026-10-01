@@ -360,7 +360,7 @@ def load_labels(args, task: str, *, custom_model: bool = False) -> list:
     if args.label_file:
         if not os.path.exists(args.label_file):
             raise FileNotFoundError(f"Label file not found: {args.label_file}")
-        return file_io.load_class_names(args.label_file)
+        return _load_explicit_label_file(args.label_file)
     if custom_model:
         return []
     if task == 'pose':
@@ -374,6 +374,51 @@ def load_labels(args, task: str, *, custom_model: bool = False) -> list:
     if os.path.exists(default):
         return file_io.load_class_names(default)
     return []
+
+
+class _IdFallbackLabels:
+    """Label sequence rendering any class index as its ID string.
+
+    Custom models without a label file must show class IDs on every
+    presentation path; ``visualize.draw_boxes`` indexes
+    ``class_names[cls_id]`` directly, so an empty list would crash. A zero
+    length keeps guard-style consumers (``print_detections``) on their own
+    ID fallback.
+    """
+
+    def __len__(self):
+        return 0
+
+    def __getitem__(self, index):
+        return str(int(index))
+
+
+def _render_labels(labels):
+    """Return a label sequence that never IndexErrors on unknown IDs."""
+    return labels if labels else _IdFallbackLabels()
+
+
+def _load_explicit_label_file(path: str) -> list:
+    """Load one explicit ``--label-file`` preserving the legacy formats.
+
+    The historical presentation path read cls label files through
+    ``file_io.load_labels``, which accepts json dicts, json lists and
+    line-per-name files; keep those working. The result must be a
+    contiguous 0..N-1 mapping so the count validation and the render
+    sequences stay meaningful; sparse mappings fail with a clear error
+    instead of silently renumbering classes.
+    """
+    from rdk_yolo_utils import file_io  # noqa: PLC0415 - keeps imports lazy
+
+    mapping = file_io.load_labels(path)
+    if not mapping:
+        raise ValueError(
+            f"Label file is empty or unreadable: {path}")
+    if set(mapping) != set(range(len(mapping))):
+        raise ValueError(
+            f"Label file must map contiguous class IDs 0..{len(mapping) - 1} "
+            f"found sparse keys {sorted(mapping)}: {path}")
+    return [mapping[index] for index in range(len(mapping))]
 
 
 def validate_label_count(labels, model) -> None:
@@ -390,7 +435,10 @@ def validate_label_count(labels, model) -> None:
         return
     count = getattr(getattr(model, "contract", None), "classes", None)
     if not isinstance(count, int) or isinstance(count, bool):
-        return
+        raise ValueError(
+            "Cannot validate labels: the constructed model does not expose "
+            "an integer contract.classes. Real task models always do; "
+            "injected test doubles must declare their actual class count.")
     if len(labels) != count:
         raise ValueError(
             f"{len(labels)} labels do not match the bound model's "
@@ -415,14 +463,15 @@ def present_result(args, image, result, labels: list) -> None:
     from rdk_yolo_utils import file_io, visualize
 
     result_img = None
+    render_labels = _render_labels(labels)
     if args.task == 'detect':
         boxes, scores, ids = result
-        visualize.print_detections(boxes, scores, ids, labels)
-        result_img = visualize.draw_boxes(image, boxes, ids, scores, labels, visualize.rdk_colors)
+        visualize.print_detections(boxes, scores, ids, render_labels)
+        result_img = visualize.draw_boxes(image, boxes, ids, scores, render_labels, visualize.rdk_colors)
     elif args.task == 'seg':
         boxes, scores, ids, masks = result
         visualize.draw_masks(image, boxes, masks, ids, visualize.rdk_colors)
-        result_img = visualize.draw_boxes(image, boxes, ids, scores, labels, visualize.rdk_colors)
+        result_img = visualize.draw_boxes(image, boxes, ids, scores, render_labels, visualize.rdk_colors)
     elif args.task == 'pose':
         boxes, scores, ids, xy, confidence = result
         kpts = np.concatenate([xy, confidence], axis=-1)

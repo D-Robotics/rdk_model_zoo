@@ -102,7 +102,7 @@ class Yolo26Contracts(unittest.TestCase):
             for task,result in results.items():
                 with self.subTest(task=task):
                     args=main.build_parser().parse_args(['--family','yolo26','--task',task,'--platform','x5','--img-save-path',str(Path(directory)/(task+'.jpg'))])
-                    model=MagicMock();model.predict.return_value=result
+                    model=MagicMock();model.predict.return_value=result;model.contract.classes=len(['test'])
                     with patch('yolo_dispatch.create_runtime_model',return_value=model),patch('rdk_yolo_utils.file_io.load_image',return_value=np.zeros((32,32,3),np.uint8)),patch('rdk_yolo_utils.inspect.print_model_info'):
                         main.run_inference(resolve_platform('x5'),args,['test'])
                     if task!='cls':self.assertTrue(Path(args.img_save_path).is_file())

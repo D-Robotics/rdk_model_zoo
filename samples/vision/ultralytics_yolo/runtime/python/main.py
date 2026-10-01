@@ -139,7 +139,7 @@ def main() -> int:
         result = model.predict(image)
         present_result(args, image, result, labels)
         return 0
-    except (BoardRuntimeUnavailableError, UnsupportedAssetError, ValueError) as exc:
+    except (BoardRuntimeUnavailableError, UnsupportedAssetError, ValueError, OSError) as exc:
         print(f"[Error] {exc}", file=sys.stderr)
         return 2
 

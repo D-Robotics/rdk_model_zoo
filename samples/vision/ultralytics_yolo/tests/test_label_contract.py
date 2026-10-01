@@ -81,13 +81,6 @@ class LabelCountValidationTests(unittest.TestCase):
     def test_empty_labels_skip_validation(self):
         validate_label_count([], _Model(4))
 
-    def test_non_integer_contract_class_count_is_skipped_not_guessed(self):
-        # Injected host doubles (MagicMock-like) do not expose an int class
-        # count; the validator must skip rather than guess from the output
-        # protocol.
-        validate_label_count(["a"], _Model(object()))
-
-
 class ClsPresentationTests(unittest.TestCase):
     def _present(self, labels, result):
         import io
@@ -116,6 +109,134 @@ class ClsPresentationTests(unittest.TestCase):
                         side_effect=AssertionError("default label re-read")):
             output = self._present([], [(3, 0.9)])
         self.assertIn("3", output)
+
+
+class PresentationWithoutLabelsTests(unittest.TestCase):
+    """Real presentation calls (draw to temp files) with empty label lists.
+
+    Custom models without ``--label-file`` must render class IDs on every
+    task path that draws labels — ``visualize.draw_boxes`` indexes
+    ``class_names[cls_id]`` directly, so an empty list would crash the user
+    path. Testing ``load_labels`` alone proves nothing about presentation.
+    """
+
+    def _run_task(self, task, result):
+        import contextlib
+        import io
+        import tempfile
+
+        args = types.SimpleNamespace(
+            task=task, label_file=None,
+            img_save_path=str(Path(tempfile.mkdtemp()) / f"{task}.jpg"),
+            kpt_conf_thres=0.5)
+        image = None
+        if task != "cls":
+            import numpy as np
+            image = np.zeros((32, 48, 3), np.uint8)
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            yolo_cli.present_result(args, image, result, [])
+        self.assertTrue(Path(args.img_save_path).is_file(),
+                        f"{task} result image missing")
+        return buffer.getvalue()
+
+    def test_detect_without_labels_renders_ids_and_draws(self):
+        import numpy as np
+        boxes = np.array([[4.0, 4.0, 24.0, 20.0]], np.float32)
+        scores = np.array([0.9], np.float32)
+        ids = np.array([2], np.int64)
+        output = self._run_task("detect", (boxes, scores, ids))
+        self.assertIn("2", output)
+
+    def test_seg_without_labels_draws_ids_into_image(self):
+        import numpy as np
+        boxes = np.array([[4.0, 4.0, 24.0, 20.0]], np.float32)
+        scores = np.array([0.9], np.float32)
+        ids = np.array([1], np.int64)
+        masks = [np.ones((16, 20), np.uint8)]
+        # seg prints nothing to stdout; the ID label is drawn into the
+        # image. The bug under test was draw_boxes IndexError-ing on the
+        # empty label list, so a written file with drawn pixels is the
+        # observable proof.
+        self._run_task("seg", (boxes, scores, ids, masks))
+
+    def test_pose_without_labels_draws(self):
+        import numpy as np
+        boxes = np.array([[4.0, 4.0, 24.0, 20.0]], np.float32)
+        scores = np.array([0.9], np.float32)
+        ids = np.array([0], np.int64)
+        xy = np.zeros((1, 17, 2), np.float32)
+        confidence = np.ones((1, 17, 1), np.float32)
+        self._run_task("pose", (boxes, scores, ids, xy, confidence))
+
+    def test_obb_without_labels_renders_ids(self):
+        records = [{"rrect": (16.0, 10.0, 8.0, 6.0, 0.2),
+                    "score": 0.9, "id": 3}]
+        output = self._run_task("obb", records)
+        self.assertIn("3", output)
+
+
+class LabelFileFormatTests(unittest.TestCase):
+    def _tmp(self, content):
+        import tempfile
+        path = Path(tempfile.mkdtemp()) / "labels.txt"
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def test_explicit_empty_label_file_is_an_error_not_unspecified(self):
+        empty = self._tmp("\n \n")
+        with self.assertRaises(ValueError) as raised:
+            load_labels(_args(str(empty)), "detect", custom_model=True)
+        self.assertIn(str(empty), str(raised.exception))
+
+    def test_legacy_json_dict_label_file_still_loads(self):
+        # Legacy cls label files in json/dict format (consumed by the old
+        # file_io.load_labels presentation path) keep working.
+        path = self._tmp('{"0": "cat", "1": "dog"}')
+        self.assertEqual(
+            load_labels(_args(str(path)), "cls", custom_model=True),
+            ["cat", "dog"])
+
+    def test_json_list_label_file_still_loads(self):
+        path = self._tmp('["cat", "dog"]')
+        self.assertEqual(
+            load_labels(_args(str(path)), "detect", custom_model=True),
+            ["cat", "dog"])
+
+    def test_sparse_label_mapping_fails_with_clear_error(self):
+        path = self._tmp('{"0": "cat", "5": "dog"}')
+        with self.assertRaises(ValueError) as raised:
+            load_labels(_args(str(path)), "detect", custom_model=True)
+        self.assertIn("contiguous", str(raised.exception))
+
+
+class ValidatorStrictnessTests(unittest.TestCase):
+    def test_model_without_contract_raises_instead_of_skipping(self):
+        class _Bare:
+            pass
+        with self.assertRaises(ValueError) as raised:
+            validate_label_count(["a"], _Bare())
+        self.assertIn("class count", str(raised.exception))
+
+    def test_non_integer_contract_class_count_raises(self):
+        with self.assertRaises(ValueError):
+            validate_label_count(["a"], _Model(object()))
+
+
+class PlanExplicitFlagTests(unittest.TestCase):
+    def test_explicit_flag_comes_from_describe_plan(self):
+        from yolo_platform import resolve_platform
+        profile = resolve_platform("x5")
+        explicit_args = types.SimpleNamespace(
+            asset_id=None, family=None, model_size=None, model_path="custom.bin",
+            task="detect")
+        plan = yolo_cli.describe_plan(profile, explicit_args)
+        self.assertTrue(plan["explicit"])
+        default_args = types.SimpleNamespace(
+            asset_id=None, family=None, model_size=None, model_path=None,
+            task="detect")
+        plan = yolo_cli.describe_plan(profile, default_args)
+        self.assertFalse(plan["explicit"])
 
 
 if __name__ == "__main__":
