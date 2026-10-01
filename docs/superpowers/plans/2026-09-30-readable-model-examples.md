@@ -14,8 +14,9 @@
 `codex/readable-model-examples-20261001`，工作基线 `bfbe6aaf`）。任务 1–5
 对应提交：`5afdb6a5`（薄会话）、`966eeb90`（ResNet）、`eb9a33a4`（YOLO）、
 `8f83c402`（文档）、`e324e356`（platforms/ 移除）；评审修复 `15a8553a`
-及收尾提交见分支 git log。实施者自查项已勾选；Codex 的独立核对（见交付
-与核对末项）保持未勾选，由 Codex 自行确认。
+及收尾提交见分支 git log。实施者自查及 Codex 独立核对已完成；通过范围为本轮代码、文档、历史迁移
+和受影响主机检查，真实模型转换与板端验证保持 not-run。结论及后续板端清单见
+[Codex 验收报告](../../releases/unified-migration/2026-10-01-readable-examples-codex-review.md)。
 
 > 执行位置修订（2026-10-01 用户指示）：继续开发，不去服务器，都在本地进行。
 > 本计划所有“sz-dev / 服务器执行 / 服务器干净 checkout”步骤改为在本地工作区
@@ -121,7 +122,7 @@
 - [x] 每任务报告提交 SHA、改动摘要、运行命令、失败及修复、未验证项。
 - [x] 最终确认 main.py 简单、模型类完整可读、公共 Runtime 无模型算法，旧能力和自训练路径有据可查。
 - [x] 将真实导出、工具链编译、板端推理分别列为 not-run；不要累计测试数包装为模型认证。
-- [ ] Codex 核对报告与 diff，整理剩余板端验证事项；未确认结果前不将本计划勾为完成。（实施者不代勾；报告与 diff 已就绪：本地执行目录 `local-execution/20261001-readable-model-examples/report.md`）
+- [x] Codex 已独立核对方案、源码、diff、41 项受影响检查的版本/退出码及最终干净 checkout 的 10 项检查，记录剩余板端验证事项。详见 [独立验收报告](../../releases/unified-migration/2026-10-01-readable-examples-codex-review.md)；未将主机证据当作实际模型转换或板端通过。
 
 ## 计划自查
 
