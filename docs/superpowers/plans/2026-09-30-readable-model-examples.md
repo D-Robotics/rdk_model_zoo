@@ -79,14 +79,14 @@
 
 **接口：** detect.py 提供 `YoloDetect` 与 `YoloDetectConfig`，沿用现有构造参数与 DetectionResult；`predict(source, image_format="BGR", score_thres=None, nms_thres=None)` 扩展本地图片路径支持。数组路径保持现有参数语义。旧 yolo_detect.py 作为再导出/转接入口；pre_process/forward/post_process 保留别名。
 
-- [ ] 读取现有 DFL、LTRB、NMS-free 检测及其他任务分派，记录公开入口与配置。不能把这些协议归并成仅按板卡区分。
-- [ ] 写行为测试：连续异尺寸图像坐标恢复正确、输入不变；错误类别/输出协议报具体错误；predict 调一次推理；旧导入得到同一实现；不同协议继续选到对应任务类。
-- [ ] 执行 `python -m unittest discover -s samples/vision/ultralytics_yolo/tests -p test_predict_entry.py`，确认新增行为尚未支持。
-- [ ] 将 DFL 检测类的完整主线放入 detect.py；复用现有 decode/geometry/binding。其他协议沿用自身类，保持流程可读，不强塞进 DFL 类。
-- [ ] model_runner 复用任务 1 会话，保持输入输出适配、元信息校验与调度；main.py 用已有显式任务分派构造对象并调用 predict，删除入口里的算法重复。
-- [ ] 同步 README 的最小 main 与库调用示例，明确不同任务/协议入口和自训练支持边界。
-- [ ] 执行 YOLO tests 以及各现有任务的 --help。Catalog 对比用例需要生成 Catalog 时，在本地使用原有 build；缺少历史 Git 对象应记录并补取精确对象，不能改测试掩盖失败。
-- [ ] 全部受影响检查通过后独立提交；分类、分割、姿态、OBB 原有能力不得默默减少。
+- [x] 读取现有 DFL、LTRB、NMS-free 检测及其他任务分派，记录公开入口与配置。不能把这些协议归并成仅按板卡区分。
+- [x] 写行为测试：连续异尺寸图像坐标恢复正确、输入不变；错误类别/输出协议报具体错误；predict 调一次推理；旧导入得到同一实现；不同协议继续选到对应任务类。
+- [x] 执行 `python -m unittest discover -s samples/vision/ultralytics_yolo/tests -p test_predict_entry.py`，确认新增行为尚未支持。
+- [x] 将 DFL 检测类的完整主线放入 detect.py；复用现有 decode/geometry/binding。其他协议沿用自身类，保持流程可读，不强塞进 DFL 类。
+- [x] model_runner 复用任务 1 会话，保持输入输出适配、元信息校验与调度；main.py 用已有显式任务分派构造对象并调用 predict，删除入口里的算法重复。
+- [x] 同步 README 的最小 main 与库调用示例，明确不同任务/协议入口和自训练支持边界。
+- [x] 执行 YOLO tests 以及各现有任务的 --help。Catalog 对比用例需要生成 Catalog 时，在本地使用原有 build；缺少历史 Git 对象应记录并补取精确对象，不能改测试掩盖失败。
+- [x] 全部受影响检查通过后独立提交；分类、分割、姿态、OBB 原有能力不得默默减少。
 
 ## 任务 4：完整操作路径与迁移说明
 

@@ -109,35 +109,33 @@ class ModelRunner:
             )
         if runtime_loader is None:
             # Direct library use is an execution path too.  The canonical CLI
-            # performs the same check before model selection; repeating it here
-            # prevents a caller from loading a board model on an unknown or
-            # mismatched host by bypassing that entrypoint.
-            from samples._shared.platforms import require_execution_target
+            # performs the same check before model selection; the shared SDK
+            # session repeats the exact-target identity gate here so a caller
+            # cannot load a board model on an unknown or mismatched host by
+            # bypassing that entrypoint, then imports the SDK and constructs
+            # the model.
+            from samples._shared.runtime import RuntimeSession
+
             requested = selection.target
             if requested is None:
                 requested = getattr(selection.platform, "key", selection.platform)
+            session = RuntimeSession(str(selection.model_path), target=requested)
             try:
-                require_execution_target(requested)
+                session.load()
             except Exception as exc:
                 raise RunnerError(str(exc)) from exc
-            # Keep the import lazy: --help, dry-runs and host-side inspection do
-            # not need the board-only SDK.  Import the system module directly
-            # so this package does not inherit the legacy top-level module
-            # graph used by compatibility tasks.
+            model = session.runtime
+        else:
+            # ``runtime_loader`` stays the documented host-test seam: it
+            # injects the SDK module directly and carries no claim about
+            # local hardware.
             try:
-                import hbm_runtime
-            except ImportError as exc:
-                raise RunnerError(
-                    "hbm_runtime is not installed; on-board inference requires "
-                    "the RDK system image.") from exc
-            runtime_loader = lambda: hbm_runtime
-        try:
-            runtime_module = runtime_loader()
-            model = runtime_module.HB_HBMRuntime(selection.model_path)
-        except Exception as exc:
-            if isinstance(exc, RunnerError):
-                raise
-            raise RunnerError(f"Unable to load model {selection.model_path!r}: {exc}") from exc
+                runtime_module = runtime_loader()
+                model = runtime_module.HB_HBMRuntime(selection.model_path)
+            except Exception as exc:
+                if isinstance(exc, RunnerError):
+                    raise
+                raise RunnerError(f"Unable to load model {selection.model_path!r}: {exc}") from exc
         try:
             metadata = RuntimeMetadata.from_runtime(model)
         except Exception as exc:

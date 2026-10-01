@@ -2,9 +2,14 @@
 
 [English](README.md)
 
-这是共用 Ultralytics YOLO Sample 的板端入口。它通过 RDK 系统镜像提供的
-`hbm_runtime` 加载 X5 的 `.bin` 或 S100/S100P/S600 的 `.hbm`，把一张 BGR
-图片准备为目标板的 NV12 输入，执行任务解码；detect/seg/pose/obb 保存绘制结果，cls 打印 Top-K。脚本不会
+这是共用 Ultralytics YOLO Sample 的板端入口。`main.py` 保持轻量入口：
+解析参数、解析执行计划、构造所选任务模型、调用 `predict`、展示结果；
+选项声明与 model-free 的列表/dry-run/下载准备及结果展示在 `yolo_cli.py`。
+各任务的可读流程在各自任务模块中——DFL 检测在 [`detect.py`](detect.py)
+（`YoloDetect`：初始化、`preprocess`、`infer`、`postprocess`、`predict` 同文件
+可见；历史 `yolo_detect` 导入路径是同一实现的再导出）。入口通过 RDK 系统
+镜像提供的 `hbm_runtime` 加载 X5 的 `.bin` 或 S100/S100P/S600 的 `.hbm`，把一张
+BGR 图片准备为目标板的 NV12 输入，执行任务解码；detect/seg/pose/obb 保存绘制结果，cls 打印 Top-K。脚本不会
 安装 Python 依赖。导出和编译请看 [`conversion/README_cn.md`](../../conversion/README_cn.md)。
 
 <a id="environment"></a>
@@ -149,55 +154,66 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 <a id="integration-example"></a>
 ## 库接口
 
-在匹配的 S600 板卡上从仓库根目录执行下例，并先将模型路径替换为本地 YOLO11 检测制品：
+可读的 DFL 检测流程在 `detect.py`（`YoloDetect`）；历史 `yolo_detect`
+导入路径再导出同一批类。`predict` 接受本地图片路径或 BGR `uint8` 数组，
+且不会原地修改数组。在匹配的 S600 板卡上从仓库根目录执行下例，并先将
+模型路径替换为本地 YOLO11 检测制品：
 
 ```python
-import sys
-from pathlib import Path
-import cv2
-import numpy as np
-
-runtime_dir = Path("samples/vision/ultralytics_yolo/runtime/python").resolve()
-sys.path.insert(0, str(runtime_dir))
-from yolo_platform import resolve_platform
-from yolo_detect import YoloDetect, YoloDetectConfig
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
+    YoloDetect, YoloDetectConfig)
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import (
+    resolve_platform)
 
 profile = resolve_platform("s600")
 config = YoloDetectConfig(
     model_path="/models/yolo11n_nashp_640x640_nv12.hbm",
     platform=profile,
 )
-bgr_image = cv2.imread("samples/vision/ultralytics_yolo/test_data/bus.jpg")
-if bgr_image is None:
-    raise FileNotFoundError("Cannot read test image")
 detector = YoloDetect(config)
-prepared = detector.pre_process(bgr_image)
-raw = detector.forward(prepared.tensors)
-result = detector.post_process(raw, transform=prepared.transform)
-for staged, predicted in zip(result, detector.predict(bgr_image)):
-    np.testing.assert_allclose(staged, predicted)
+result = detector.predict("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 boxes, scores, class_ids = result
 print(boxes.shape, scores.shape, class_ids.shape)
 ```
 
+三阶段也可显式驱动——`predict` 恰好按各自 transform 串联这三步：
+
+```python
+import cv2
+import numpy as np
+
+bgr_image = cv2.imread("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+if bgr_image is None:
+    raise FileNotFoundError("Cannot read test image")
+prepared = detector.preprocess(bgr_image)
+raw = detector.infer(prepared)
+result = detector.post_process(raw, transform=prepared.transform)
+for staged, predicted in zip(result, detector.predict(bgr_image)):
+    np.testing.assert_allclose(staged, predicted)
+```
+
 `YoloDetect` 支持注入 runner，便于主机测试或接入其他运行时加载器。runner
 负责模型执行；图像几何、协议绑定、DFL 解码、按类别 NMS 和坐标还原由共用
-任务实现负责。`YOLO26Detect` 共用图片准备和 runner 流程，但使用经过审查
+任务实现负责。`pre_process` / `forward` / `post_process` 是可读阶段方法的
+薄别名（同一实现）。`YOLO26Detect` 共用图片准备和 runner 流程，但使用经过审查
 的直接 LTRB 解码。历史 X5/S 模块保留旧类名和 tuple 形状并转发到维护入口。
 
 <a id="stage-io"></a>
 ## 代码流程
 
-`YoloDetect` 和 `YOLO26Detect` 直接串联三个阶段，不保存“上一张图片”的 context。
+`YoloDetect`（`detect.py`）和 `YOLO26Detect` 直接串联三个阶段，不保存“上一张图片”的 context。
 准备 B 不会覆盖 A 的几何信息；分别保留 prepared，并使用其对应 transform。SDK 调用仍需
 由调用方串行安排；逐调用 context 不代表 SDK 推理线程安全。
+`YoloDetect` 的阶段命名为 `preprocess` / `infer` / `postprocess`，
+`pre_process` / `forward` / `post_process` 为薄别名；其他任务类沿用既有的
+`pre_process` / `forward` / `post_process` 命名，职责相同。
 
-- `pre_process(img, image_format="BGR")` 要求非空 uint8 H×W×3 BGR，返回 `PreparedDetection.tensors` 和冻结的 `.transform`。后者包含原图/模型/实际缩放尺寸、整数 padding 与横纵缩放比例。X5 张量为 packed NV12；S 为 Y `(1,H,W,1)` 和 UV `(1,H/2,W/2,2)`，H/W 来自模型 metadata。
-- `forward(prepared.tensors)` 只调用一次 runner，返回以角色名索引的 `RawOutputs`。绑定的 runner 校验物理 shape、dtype 和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK dtype，借用 SDK 缓冲区；须先完成后处理再发起下一次 SDK 调用，或主动复制需要长期保留的原始数组。
-- `post_process(raw, transform=prepared.transform)` 进行 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。所有维护的检测、DFL 分割/姿态绑定均要求模型直接提供浮点输出；整数或 SCALE metadata 在加载时拒绝，后处理不执行手动反量化。
-- `predict(img)` 串联这些方法并返回自有结果数组。注入 runner 返回普通语义映射时，数值须已是浮点；物理浮点输出使用绑定后的 raw 容器。
+- `preprocess(图片或路径, image_format="BGR")`（别名 `pre_process`）要求非空 uint8 H×W×3 BGR 或可读的本地图片路径，返回 `PreparedDetection.tensors` 和冻结的 `.transform`。后者包含原图/模型/实际缩放尺寸、整数 padding 与横纵缩放比例。X5 张量为 packed NV12；S 为 Y `(1,H,W,1)` 和 UV `(1,H/2,W/2,2)`，H/W 来自模型 metadata。
+- `infer(prepared)`（别名 `forward`）只调用一次 runner，返回以角色名索引的 `RawOutputs`。绑定的 runner 校验物理 shape、dtype 和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK dtype，借用 SDK 缓冲区；须先完成后处理再发起下一次 SDK 调用，或主动复制需要长期保留的原始数组。
+- `postprocess(raw, transform=prepared.transform)`（别名 `post_process`）进行 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。所有维护的检测、DFL 分割/姿态绑定均要求模型直接提供浮点输出；整数或 SCALE metadata 在加载时拒绝，后处理不执行手动反量化。
+- `predict(图片或路径)` 串联这些方法并返回自有结果数组。注入 runner 返回普通语义映射时，数值须已是浮点；物理浮点输出使用绑定后的 raw 容器。
 
-可执行兼容方式：prepared 仍支持 `[model_name]` 映射访问，`forward(prepared)` 会取出
+可执行兼容方式：prepared 仍支持 `[model_name]` 映射访问，`infer`/`forward(prepared)` 会取出
 `.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
 元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
 时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
@@ -205,12 +221,13 @@ DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下�
 
 ```text
 main.py
-  -> resolve_target / 平台 Manifest 选择
+  -> resolve_target / 平台 Manifest 选择（yolo_cli 负责列表、dry-run、
+     下载准备与结果展示）
   -> yolo_dispatch.get_task_types / create_runtime_model
-  -> ModelRunner + ModelBinding（输入/输出契约）
+  -> ModelRunner + ModelBinding（输入/输出契约，共享 SDK 会话）
   -> geometry.resize_with_transform + NV12 输入绑定
   -> YoloDetect 或 YOLO26Detect 解码 + NMS
-  -> DetectionResult -> visualize -> --img-save-path
+  -> DetectionResult -> yolo_cli.present_result -> --img-save-path
 ```
 
 `model_binding.py` 按审查过的形状/类型契约识别输出角色，编译器枚举名称

@@ -2,12 +2,20 @@
 
 [简体中文](README_cn.md)
 
-This is the board-side entry point for the shared Ultralytics YOLO sample. It
-loads a compiled `.bin` (X5) or `.hbm` (S100/S100P/S600) model through the
-`hbm_runtime` supplied by the RDK system image, prepares one BGR image as the
-selected target's NV12 input, runs the task decoder, and saves a rendered
-result image for detect/seg/pose/obb. Classification prints Top-K instead. The script does not install Python packages. Export and compiler
-steps belong in [`conversion/README.md`](../../conversion/README.md).
+This is the board-side entry point for the shared Ultralytics YOLO sample.
+`main.py` stays a thin entry: it parses arguments, resolves the plan,
+constructs the selected task model, calls `predict`, and presents the result;
+option declarations and the model-free listing/dry-run/download modes live in
+`yolo_cli.py`. Each task's readable flow lives in its task module — DFL
+detection in [`detect.py`](detect.py) (`YoloDetect`: initialization,
+`preprocess`, `infer`, `postprocess`, `predict` in one file; the historical
+`yolo_detect` import path re-exports it). The entry loads a compiled `.bin`
+(X5) or `.hbm` (S100/S100P/S600) model through the `hbm_runtime` supplied by
+the RDK system image, prepares one BGR image as the selected target's NV12
+input, runs the task decoder, and saves a rendered result image for
+detect/seg/pose/obb. Classification prints Top-K instead. The script does not
+install Python packages. Export and compiler steps belong in
+[`conversion/README.md`](../../conversion/README.md).
 
 <a id="environment"></a>
 ## Board preparation
@@ -158,41 +166,53 @@ One rendered image is not dataset accuracy or performance validation; use the [e
 <a id="integration-example"></a>
 ## Library entry points
 
-Run this example from the repository root on the matching S600 board, after replacing the model path with your local YOLO11 detection artifact:
+The readable DFL detection flow lives in `detect.py` (`YoloDetect`); the
+historical `yolo_detect` import path re-exports the same classes.
+`predict` accepts a local image path or a BGR `uint8` array and never
+modifies the array in place. Run this example from the repository root on
+the matching S600 board, after replacing the model path with your local
+YOLO11 detection artifact:
 
 ```python
-import sys
-from pathlib import Path
-import cv2
-import numpy as np
-
-runtime_dir = Path("samples/vision/ultralytics_yolo/runtime/python").resolve()
-sys.path.insert(0, str(runtime_dir))
-from yolo_platform import resolve_platform
-from yolo_detect import YoloDetect, YoloDetectConfig
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
+    YoloDetect, YoloDetectConfig)
+from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import (
+    resolve_platform)
 
 profile = resolve_platform("s600")
 config = YoloDetectConfig(
     model_path="/models/yolo11n_nashp_640x640_nv12.hbm",
     platform=profile,
 )
+detector = YoloDetect(config)
+result = detector.predict("samples/vision/ultralytics_yolo/test_data/bus.jpg")
+boxes, scores, class_ids = result
+print(boxes.shape, scores.shape, class_ids.shape)
+```
+
+The three stages can also be driven explicitly — `predict` chains exactly
+these steps with the per-call transform:
+
+```python
+import cv2
+import numpy as np
+
 bgr_image = cv2.imread("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 if bgr_image is None:
     raise FileNotFoundError("Cannot read test image")
-detector = YoloDetect(config)
-prepared = detector.pre_process(bgr_image)
-raw = detector.forward(prepared.tensors)
+prepared = detector.preprocess(bgr_image)
+raw = detector.infer(prepared)
 result = detector.post_process(raw, transform=prepared.transform)
 for staged, predicted in zip(result, detector.predict(bgr_image)):
     np.testing.assert_allclose(staged, predicted)
-boxes, scores, class_ids = result
-print(boxes.shape, scores.shape, class_ids.shape)
 ```
 
 `YoloDetect` accepts an injected runner for host tests and alternate runtime
 loaders. The runner is responsible for model execution; geometry preparation,
 protocol binding, DFL decode, class-wise NMS, and coordinate restoration remain
-in the shared task implementation. `YOLO26Detect` uses the shared image and
+in the shared task implementation. `pre_process` / `forward` / `post_process`
+stay thin aliases of the readable stage methods (one implementation).
+`YOLO26Detect` uses the shared image and
 runner orchestration with its reviewed direct-LTRB decoder. Legacy X5 and S
 modules keep their historical class names and tuple shapes while forwarding to
 these maintained paths.
@@ -200,18 +220,23 @@ these maintained paths.
 <a id="stage-io"></a>
 ## Code flow
 
-`YoloDetect` and `YOLO26Detect` compose exactly three stages. They keep no
+`YoloDetect` (in `detect.py`) and `YOLO26Detect` compose exactly three stages.
+They keep no
 last-image context. Preparing B after A does not overwrite A's geometry; retain
 each prepared object and use its own transform. SDK calls still require external
 serialization; per-call context does not certify thread-safe inference.
+`YoloDetect` spells the stages `preprocess` / `infer` / `postprocess` with
+`pre_process` / `forward` / `post_process` as thin aliases; the other task
+classes keep their established `pre_process` / `forward` / `post_process`
+spelling with identical responsibilities.
 
-- `pre_process(img, image_format="BGR")` requires nonempty uint8 H×W×3 BGR. It returns `PreparedDetection.tensors` and a frozen `.transform` containing original/model/resized sizes, actual integer padding and per-axis scale. X5 tensors are packed NV12; S tensors are Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`, using metadata-derived H/W.
-- `forward(prepared.tensors)` calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays still have the SDK dtype and borrow SDK buffers. Finish postprocessing before another SDK call, or explicitly copy retained raw arrays.
-- `post_process(raw, transform=prepared.transform)` performs sigmoid/DFL or LTRB decoding, applicable NMS and coordinate restoration. Maintained detection and DFL segmentation/pose require already-floating outputs; integer outputs or SCALE metadata fail at load time. No manual dequantization occurs in postprocessing.
-- `predict(img)` composes those methods and returns owned result arrays. Plain semantic mappings from an injected runner must already hold floating values; use the bound raw carrier for physical floating tensors.
+- `preprocess(img_or_path, image_format="BGR")` (alias `pre_process`) requires nonempty uint8 H×W×3 BGR, or a readable local image path. It returns `PreparedDetection.tensors` and a frozen `.transform` containing original/model/resized sizes, actual integer padding and per-axis scale. X5 tensors are packed NV12; S tensors are Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`, using metadata-derived H/W.
+- `infer(prepared)` (alias `forward`) calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays still have the SDK dtype and borrow SDK buffers. Finish postprocessing before another SDK call, or explicitly copy retained raw arrays.
+- `postprocess(raw, transform=prepared.transform)` (alias `post_process`) performs sigmoid/DFL or LTRB decoding, applicable NMS and coordinate restoration. Maintained detection and DFL segmentation/pose require already-floating outputs; integer outputs or SCALE metadata fail at load time. No manual dequantization occurs in postprocessing.
+- `predict(img_or_path)` composes those methods and returns owned result arrays. Plain semantic mappings from an injected runner must already hold floating values; use the bound raw carrier for physical floating tensors.
 
 For executable compatibility, prepared results also support `[model_name]` mapping
-access, `forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
+access, `infer`/`forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
 (in `legacy.py`) returns the old `(tensors, transform)` tuple. Explicit
 `post_process(outputs, original_width, original_height)` reconstructs the same
 geometry without cached state. With both dimensions and a transform supplied,
@@ -222,12 +247,13 @@ implementation and board verification remain separate.
 
 ```text
 main.py
-  -> resolve_target / platform Manifest selection
+  -> resolve_target / platform Manifest selection (yolo_cli for listing,
+     dry-run, download preparation and presentation)
   -> yolo_dispatch.get_task_types / create_runtime_model
-  -> ModelRunner + ModelBinding (input/output contract)
+  -> ModelRunner + ModelBinding (input/output contract, shared SDK session)
   -> geometry.resize_with_transform + NV12 input binding
   -> YoloDetect or YOLO26Detect decoder + NMS
-  -> DetectionResult -> visualize -> --img-save-path
+  -> DetectionResult -> yolo_cli.present_result -> --img-save-path
 ```
 
 `model_binding.py` identifies output roles by reviewed shape/dtype contracts;

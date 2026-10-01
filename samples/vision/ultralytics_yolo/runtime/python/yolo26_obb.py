@@ -103,6 +103,11 @@ class YOLO26OBB:
         self.output_names = tuple(runner.output_names)
         self.input_shapes = dict(runner.input_shapes)
 
+    # Borrow the readable DFL stage implementations (this class provides the
+    # same runner/binding attributes) plus their compatibility aliases; only
+    # the OBB post-processing below is protocol-specific.
+    preprocess = YoloDetect.preprocess
+    infer = YoloDetect.infer
     pre_process = YoloDetect.pre_process
     forward = YoloDetect.forward
     set_scheduling_params = YoloDetect.set_scheduling_params
