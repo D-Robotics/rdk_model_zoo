@@ -202,6 +202,11 @@ class ModelSelection:
     contract: ClassificationContract
     sample_id: str
     explicit_model_path: bool = False
+    #: True when the selection was built from an explicit local contract
+    #: (e.g. a caller-declared custom model) instead of a manifest row.
+    #: Binding then validates the actual runtime tensors against the declared
+    #: contract without requiring the asset to be manifest-published.
+    custom: bool = False
 
 
 @dataclass(frozen=True)
@@ -340,18 +345,19 @@ def bind_model(
 ) -> ModelBinding:
     """Validate actual runtime metadata against the sample contract table."""
 
-    expected_records = [
-        record
-        for record in read_manifest_asset_records(table)
-        if record.asset_id == selection.asset_id
-        and record.variant == selection.variant
-        and record.target == selection.target
-    ]
-    if len(expected_records) != 1:
-        raise UnsupportedAssetError(
-            f"Selection {selection.asset_id!r} is not published for "
-            f"{selection.target!r}."
-        )
+    if not getattr(selection, "custom", False):
+        expected_records = [
+            record
+            for record in read_manifest_asset_records(table)
+            if record.asset_id == selection.asset_id
+            and record.variant == selection.variant
+            and record.target == selection.target
+        ]
+        if len(expected_records) != 1:
+            raise UnsupportedAssetError(
+                f"Selection {selection.asset_id!r} is not published for "
+                f"{selection.target!r}."
+            )
 
     facts = (
         metadata

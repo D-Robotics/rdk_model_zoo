@@ -1,8 +1,11 @@
 # ResNet18 Python 运行时
 
-`main.py` 是 canonical 的用户命令。它从发布 Manifest 解析唯一模型引用，
-校验检测到的板卡，懒加载 `hbm_runtime`，执行一次 `ClassificationTask`
-流程。模型准备是显式操作；本运行时不下载、不安装任何包。
+`main.py` 是 canonical 的用户命令：解析参数、构造模型、调用 `predict`、
+展示结果。完整分类流程在 [`classify.py`](classify.py) 中：
+`ResNetClassifier` 用一个可读文件展示初始化、`preprocess`、`infer`、
+`postprocess` 与 `predict`。它从发布 Manifest 解析唯一模型引用（或显式
+自定义契约），校验检测到的板卡，经共享 SDK 会话懒加载 `hbm_runtime`，
+执行一次分类流程。模型准备是显式操作；本运行时不下载、不安装任何包。
 
 <a id="environment"></a>
 ## 环境
@@ -50,7 +53,7 @@ S100/S600 替换为 `s:resnet18:<target>/...` 引用与 `s100/`/`s600/` 制品�
 | `--variant` | choice | null | 模型变体（`resnet18` 全目标；`resnet50`/`resnet152` 仅 s100/s600） |
 | `--model-path` | string | null | 已存在的 `.bin`/`.hbm`；必须与 `--asset-id` 配对；缺省时按所解析引用的 `model/` 位置查找 |
 | `--test-img` | string | samples/vision/resnet/test_data/white_wolf.JPEG | BGR 输入图像 |
-| `--label-file` | string | datasets/imagenet/imagenet_classes.names | 逐行一个类别的 ImageNet 标签 |
+| `--label-file` | string | null | 逐行一个类别的标签文件；默认：1000 类模型用内置 ImageNet 标签，自定义类别数保留原始类别 ID |
 | `--top-k` | int | 5 | 打印的结果数量 |
 | `--topk` | int | 5 | `--top-k` 的旧拼写 |
 | `--resize-type` | int | null | `0` 直接拉伸或 `1` letterbox（BGR 127 填充）；默认跟随绑定源 |
@@ -83,39 +86,57 @@ squeeze 成 `(1000,)` 的单批次/单空间维拼写均可绑定（已发布制
 OpenCV-Python 可导入。示例内所有输入变量均有定义：
 
 ```python
-import cv2
-
-from samples.vision.resnet.runtime.python.classification import ClassificationTask
-from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
-from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+from samples.vision.resnet.runtime.python.model_binding import resolve_selection
 
 selection = resolve_selection(
     "x5",
     asset_id="x5:resnet:resnet18_224x224_nv12.bin",
     model_path="samples/vision/resnet/model/resnet18_224x224_nv12.bin",
 )
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-task = ClassificationTask(runner, binding, top_k=5)
-image = cv2.imread("samples/vision/resnet/test_data/white_wolf.JPEG")
-result = task.predict(image)
+model = ResNetClassifier(selection, top_k=5)
+result = model.predict("samples/vision/resnet/test_data/white_wolf.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-三阶段也可显式驱动：`prepared = task.pre_process(image)`、
-`outputs = task.forward(prepared.tensors)`、
-`result = task.post_process(outputs)` —— `predict` 恰好串联这三步（由
-stage-contract 测试验证）。
+`predict` 接受本地图片路径或 BGR `uint8` NumPy 数组，且不会原地修改
+数组。三阶段也可显式驱动：`prepared = model.preprocess(image)`、
+`outputs = model.infer(prepared)`、
+`result = model.postprocess(outputs)` —— `predict` 恰好串联这三步（由
+入口行为测试验证）。既有的 `pre_process` / `forward` / `post_process`
+拼写保留为薄别名，共享的 `ClassificationTask` 流程仍可从
+[`classification.py`](classification.py) 导入。
+
+<a id="custom-model"></a>
+## 自定义（自训练）模型
+
+本地编译的分类模型无需 Manifest 注册。声明制品构建时的契约即可；
+绑定仍会对照该声明校验实际运行时张量名、形状、类型与类别数：
+
+```python
+from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+from samples.vision.resnet.runtime.python.model_binding import custom_selection
+
+selection = custom_selection(
+    "mymodels/my_resnet_4class.bin", "x5",
+    input_height=224, input_width=224, class_count=4,
+)
+model = ResNetClassifier(selection, top_k=2, labels=["cat", "dog", "bus", "ship"])
+result = model.predict(image_or_path)
+```
+
+不传 `labels` 时结果保留原始类别 ID——自定义类别数不会默认套用
+ImageNet 名称。标签数量与类别数不一致时给出具体报错，而不是错误标注。
 
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
 | 阶段 | 输入 | 输出 |
 | --- | --- | --- |
-| `pre_process` | 一张 BGR `uint8` 数组（任意尺寸） | `PreparedInput.tensors`（按 target 成形的 NV12 张量）+ `PreparedInput.transform`（本次调用冻结的缩放上下文） |
-| `forward` | `prepared.tensors` | 原始 `{'prob': ndarray}`（X5，F32 `[1,1000,1,1]`）或 `{'output': ndarray}`（S，F32 `[1,1000]`）——与 runner 输出逐位一致，无解码 |
-| `post_process` | 原始输出（无 context：分类不消费几何信息） | `ClassificationResult(class_ids, scores, labels)`，`legacy_softmax` 后稳定降序 Top-K |
-| `predict` | BGR `uint8` 数组 | 串联三阶段，返回同一 `ClassificationResult` |
+| `preprocess`（`pre_process`） | 图片路径或一张 BGR `uint8` 数组（任意尺寸） | `PreparedInput.tensors`（按 target 成形的 NV12 张量）+ `PreparedInput.transform`（本次调用冻结的缩放上下文） |
+| `infer`（`forward`） | `PreparedInput` | 原始 `{'prob': ndarray}`（X5，F32 `[1,1000,1,1]`）或 `{'output': ndarray}`（S，F32 `[1,1000]`）——与 runner 输出逐位一致，无解码 |
+| `postprocess`（`post_process`） | 原始输出（无 context：分类不消费几何信息） | `ClassificationResult(class_ids, scores, labels)`，`legacy_softmax` 后稳定降序 Top-K |
+| `predict` | 图片路径或 BGR `uint8` 数组 | 串联三阶段，返回同一 `ClassificationResult` |
 
 <a id="troubleshooting"></a>
 ## 故障排查

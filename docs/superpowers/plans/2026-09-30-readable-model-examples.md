@@ -18,6 +18,14 @@
 > “干净 checkout 验证”改为本地临时目录的 `git worktree add` 检出。其余全局约束
 > （不下载权重、不跑实际导出/量化编译/板端推理、不动 VLA 子仓库、不发布、不合并
 > develop）不变。
+>
+> 入口简约性裁定（2026-10-01 用户纠偏）：main.py 必须真正简单（约 50–80 行量级，
+> 非硬性行数指标）——解析参数、必要时委托 list/dry-run 等准备模式、解析选择、
+> 构造模型类、在主流程中可见地调用 `predict`、经命名辅助函数展示结果。冗长选项
+> 声明与既有 list/dry-run 辅助移入示例本地 `cli.py`（YOLO 侧沿用平铺命名
+> `yolo_cli.py`）；不得把旧 main 整体塞进不透明的 `run(args)`，不引入通用 CLI
+> 框架；测试/调用方依赖的旧导入（如契约检查器要求 main 暴露 `build_parser`）以
+> 显式再导出保留。
 
 ## 全局约束
 
@@ -56,14 +64,14 @@
 
 **接口：** `ResNetClassifier(selection: ModelSelection, *, top_k: int = 5, labels: Mapping[int, str] | Sequence[str] | None = None, resize_type: int | None = None)`；`predict(source: str | Path | np.ndarray) -> ClassificationResult`。preprocess 返回现有 PreparedInput，infer 接收 PreparedInput 并调用 runner，postprocess 返回 ClassificationResult；分类后处理不需要坐标上下文。配置沿用 ClassificationTask 的参数，不增加第二套配置对象。未提供标签时结果保留类别 ID，不强制加载 ImageNet 标签。
 
-- [ ] 阅读现有分类任务、选择与标签逻辑，列出准备迁移的函数及公开参数；已有未说明行为写入任务报告。
-- [ ] 增加行为测试：BGR 数组不被原地改写；路径不存在明确报错；predict 调用一次 runner；自定义类别不默认使用 ImageNet 标签；两次不同尺寸输入不共享错误上下文。
-- [ ] 执行 `python -m unittest discover -s samples/vision/resnet/tests -p test_predict_entry.py`，确认新增行为测试失败。
-- [ ] 实现 ResNetClassifier；runner 采用任务 1 会话，保留原模型绑定、输入校验、输出检查与调度行为。
-- [ ] 核对自定义 ModelSelection.contract 的构造路径，使显式自定义分类合同不受官方资产枚举限制；保持张量、类别数、目标检查。增加非 1000 类输出用例和标签长度不匹配用例，前者返回对应类别 ID，后者明确失败；官方选择路径保持原约束。
-- [ ] 简化 main.py 为参数处理、模型构造、predict、结果展示。保留可用的旧参数别名，移走入口中的实际分类算法。
-- [ ] 更新双语 Runtime 文档，给出准确的最小导入示例及旧入口对应关系。
-- [ ] 执行 `python -m unittest discover -s samples/vision/resnet/tests` 和 `python samples/vision/resnet/runtime/python/main.py --help`；通过后提交。不把假 runner 结果称为 ResNet 实机通过。
+- [x] 阅读现有分类任务、选择与标签逻辑，列出准备迁移的函数及公开参数；已有未说明行为写入任务报告。
+- [x] 增加行为测试：BGR 数组不被原地改写；路径不存在明确报错；predict 调用一次 runner；自定义类别不默认使用 ImageNet 标签；两次不同尺寸输入不共享错误上下文。
+- [x] 执行 `python -m unittest discover -s samples/vision/resnet/tests -p test_predict_entry.py`，确认新增行为测试失败。
+- [x] 实现 ResNetClassifier；runner 采用任务 1 会话，保留原模型绑定、输入校验、输出检查与调度行为。
+- [x] 核对自定义 ModelSelection.contract 的构造路径，使显式自定义分类合同不受官方资产枚举限制；保持张量、类别数、目标检查。增加非 1000 类输出用例和标签长度不匹配用例，前者返回对应类别 ID，后者明确失败；官方选择路径保持原约束。
+- [x] 简化 main.py 为参数处理、模型构造、predict、结果展示。保留可用的旧参数别名，移走入口中的实际分类算法。
+- [x] 更新双语 Runtime 文档，给出准确的最小导入示例及旧入口对应关系。
+- [x] 执行 `python -m unittest discover -s samples/vision/resnet/tests` 和 `python samples/vision/resnet/runtime/python/main.py --help`；通过后提交。不把假 runner 结果称为 ResNet 实机通过。
 
 ## 任务 3：YOLO 检测主线与多任务兼容
 

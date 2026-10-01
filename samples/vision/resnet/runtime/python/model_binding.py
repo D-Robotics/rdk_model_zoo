@@ -161,6 +161,88 @@ def bind_model(
     return cls_binding.bind_model(BINDING_TABLE, selection, metadata)
 
 
+def custom_selection(
+    model_path: str | Path,
+    target: str,
+    *,
+    input_height: int,
+    input_width: int,
+    class_count: int,
+    output_transform: str = "raw_f32",
+    output_semantics: str = "unverified_score_vector",
+    output_score_policy: str = "softmax",
+    resize_type: int = 1,
+    resize_interpolation: str = "linear",
+    letterbox_interpolation: str = "linear",
+    soc_name: Optional[str] = None,
+    board_type: Optional[str] = None,
+) -> ModelSelection:
+    """Build an explicit selection for a locally compiled custom model.
+
+    A self-trained model does not need a manifest asset ID or official
+    registration.  The caller declares the contract the artifact was built
+    for — input geometry, class count, output transform and score policy —
+    and binding still validates the actual runtime tensor names, shapes and
+    dtypes against this declaration (a mismatch fails concretely; it is
+    never reinterpreted as another protocol).  ``target`` must name the
+    concrete board the artifact was compiled for; execution additionally
+    requires that board to be the one running the model.
+
+    The defaults describe the common case of a compiled float-output
+    classifier whose scores should be normalized before Top-K; adjust
+    ``output_score_policy`` (``none`` keeps already-activated outputs) and
+    ``output_semantics`` to what the training export actually produces.
+    """
+
+    from samples._shared.platforms import resolve_target
+    from samples._shared.quantization import validate_output_transform
+
+    resolved_target = resolve_target(
+        target, soc_name=soc_name, board_type=board_type)
+    path = Path(model_path).expanduser()
+    if not str(path).strip():
+        raise UnsupportedAssetError("model_path must be a non-empty path.")
+    if input_height <= 0 or input_width <= 0:
+        raise UnsupportedAssetError("input_height/input_width must be positive.")
+    if input_height % 2 or input_width % 2:
+        raise UnsupportedAssetError("NV12 model input dimensions must be even.")
+    if class_count <= 0:
+        raise UnsupportedAssetError("class_count must be at least 1.")
+    if resize_type not in (0, 1):
+        raise UnsupportedAssetError("resize_type must be 0 (stretch) or 1 (letterbox).")
+    if output_score_policy not in cls_binding.SCORE_POLICIES:
+        raise UnsupportedAssetError(
+            f"output_score_policy must be one of {cls_binding.SCORE_POLICIES}.")
+
+    contract = ClassificationContract(
+        asset_id=f"local:{path.name}",
+        variant="custom",
+        target=resolved_target,
+        model_format=path.suffix.lstrip(".").lower() or "bin",
+        input_protocol="packed_nv12" if resolved_target == "x5" else "split_nv12",
+        input_height=int(input_height),
+        input_width=int(input_width),
+        class_count=int(class_count),
+        output_transform=validate_output_transform(output_transform),
+        output_semantics=output_semantics,
+        output_score_policy=output_score_policy,
+        resize_type=resize_type,
+        resize_interpolation=resize_interpolation,
+        letterbox_interpolation=letterbox_interpolation,
+        source_manifest="(local custom model)",
+    )
+    return ModelSelection(
+        asset_id=contract.asset_id,
+        variant="custom",
+        target=resolved_target,
+        model_path=path,
+        contract=contract,
+        sample_id="resnet",
+        explicit_model_path=True,
+        custom=True,
+    )
+
+
 __all__ = [
     "AssetRecord",
     "BindingError",
@@ -181,6 +263,7 @@ __all__ = [
     "VariantFacts",
     "bind_model",
     "contract_input_is_packed",
+    "custom_selection",
     "list_available_assets",
     "normalise_score_vector",
     "resolve_selection",

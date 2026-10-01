@@ -1,8 +1,13 @@
 # ResNet18 Python runtime
 
-`main.py` is the canonical user-facing command. It resolves one exact model
-reference from the release manifests, checks the detected board, loads
-`hbm_runtime` lazily, and executes one `ClassificationTask` flow. Model
+`main.py` is the canonical user-facing command: it parses arguments,
+constructs the model, calls `predict`, and shows the result. The complete
+classification flow lives in [`classify.py`](classify.py):
+`ResNetClassifier` shows initialization, `preprocess`, `infer`,
+`postprocess` and `predict` in one readable file. It resolves one exact
+model reference from the release manifests (or an explicit custom
+contract), checks the detected board, loads `hbm_runtime` lazily through
+the shared SDK session, and executes one classification flow. Model
 preparation is explicit; this runtime never downloads or installs packages.
 
 <a id="environment"></a>
@@ -55,7 +60,7 @@ loading, or download.
 | `--variant` | choice | null | model variant (`resnet18` on all targets; `resnet50`/`resnet152` on s100/s600 only) |
 | `--model-path` | string | null | existing `.bin`/`.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
 | `--test-img` | string | samples/vision/resnet/test_data/white_wolf.JPEG | BGR input image |
-| `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
+| `--label-file` | string | null | one-label-per-line labels file; default: the bundled ImageNet labels for 1000-class models, raw class IDs for custom class counts |
 | `--top-k` | int | 5 | number of printed results |
 | `--topk` | int | 5 | legacy spelling of `--top-k` |
 | `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source |
@@ -91,39 +96,60 @@ Prerequisites: artifact prepared (see [model/README.md](../../model/README.md))
 and OpenCV-Python importable. Every input variable is defined in the example:
 
 ```python
-import cv2
-
-from samples.vision.resnet.runtime.python.classification import ClassificationTask
-from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
-from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+from samples.vision.resnet.runtime.python.model_binding import resolve_selection
 
 selection = resolve_selection(
     "x5",
     asset_id="x5:resnet:resnet18_224x224_nv12.bin",
     model_path="samples/vision/resnet/model/resnet18_224x224_nv12.bin",
 )
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-task = ClassificationTask(runner, binding, top_k=5)
-image = cv2.imread("samples/vision/resnet/test_data/white_wolf.JPEG")
-result = task.predict(image)
+model = ResNetClassifier(selection, top_k=5)
+result = model.predict("samples/vision/resnet/test_data/white_wolf.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-The three stages can also be driven explicitly: `prepared = task.pre_process(image)`,
-`outputs = task.forward(prepared.tensors)`,
-`result = task.post_process(outputs)` — `predict` chains exactly these
-steps (verified by the stage-contract tests).
+`predict` accepts a local image path or a BGR `uint8` NumPy array and never
+modifies the array in place. The three stages can also be driven explicitly:
+`prepared = model.preprocess(image)`, `outputs = model.infer(prepared)`,
+`result = model.postprocess(outputs)` — `predict` chains exactly these
+steps (verified by the entry behavior tests). The established
+`pre_process` / `forward` / `post_process` spellings remain thin aliases, and
+the shared `ClassificationTask` flow stays importable from
+[`classification.py`](classification.py).
+
+<a id="custom-model"></a>
+## Custom (self-trained) models
+
+A locally compiled classifier needs no manifest registration. Declare the
+contract the artifact was built for; binding still validates the actual
+runtime tensor names, shapes, dtypes and class count against it:
+
+```python
+from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+from samples.vision.resnet.runtime.python.model_binding import custom_selection
+
+selection = custom_selection(
+    "mymodels/my_resnet_4class.bin", "x5",
+    input_height=224, input_width=224, class_count=4,
+)
+model = ResNetClassifier(selection, top_k=2, labels=["cat", "dog", "bus", "ship"])
+result = model.predict(image_or_path)
+```
+
+Without `labels`, results keep the raw class IDs — ImageNet names are never
+assumed for a custom class count. A label list whose length differs from the
+class count fails with a concrete error instead of mislabeling results.
 
 <a id="stage-io"></a>
 ## Stage I/O
 
 | Stage | Input | Output |
 | --- | --- | --- |
-| `pre_process` | one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context) |
-| `forward` | `prepared.tensors` | raw `{'prob': ndarray}` (X5, F32 `[1,1000,1,1]`) or `{'output': ndarray}` (S, F32 `[1,1000]`) — bit-identical to the runner output, no decode |
-| `post_process` | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K after `legacy_softmax` |
-| `predict` | BGR `uint8` array | chains the three stages, same `ClassificationResult` |
+| `preprocess` (`pre_process`) | image path or one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context) |
+| `infer` (`forward`) | `PreparedInput` | raw `{'prob': ndarray}` (X5, F32 `[1,1000,1,1]`) or `{'output': ndarray}` (S, F32 `[1,1000]`) — bit-identical to the runner output, no decode |
+| `postprocess` (`post_process`) | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K after `legacy_softmax` |
+| `predict` | image path or BGR `uint8` array | chains the three stages, same `ClassificationResult` |
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

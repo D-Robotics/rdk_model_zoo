@@ -221,6 +221,20 @@ def topk_from_logits(
 
 
 def _extract_output(outputs: Any, binding: ModelBinding) -> np.ndarray:
+    """Compatibility name for :func:`extract_score_tensor`."""
+
+    return extract_score_tensor(outputs, binding)
+
+
+def extract_score_tensor(outputs: Any, binding: ModelBinding) -> np.ndarray:
+    """Return the bound score tensor from a runner output container.
+
+    Accepts the flat ``{output_name: array}`` mapping the canonical runner
+    returns, the SDK-nested ``{model_name: {output_name: array}}`` form, or
+    a bare array from an injected test runner.  Shape and dtype follow the
+    binding's declared contract (H4 squeeze rule, raw_f32 dtype) so the
+    readable per-sample task classes can share one validated extraction.
+    """
     value: Any
     if isinstance(outputs, np.ndarray):
         value = outputs
@@ -268,6 +282,7 @@ def _label_for(labels: Optional[Mapping[int, str] | Sequence[str]], index: int) 
 __all__ = [
     "ClassificationResult",
     "ClassificationTask",
+    "extract_score_tensor",
     "topk_from_logits",
     "topk_from_scores",
 ]

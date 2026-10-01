@@ -7,7 +7,6 @@ and use the installed board runtime.
 
 from __future__ import annotations
 
-import importlib
 from typing import Any, Callable, Mapping, Optional
 
 import numpy as np
@@ -21,6 +20,9 @@ from samples._shared.cls_binding import (
     bind_model,
     score_vector_shape,
 )
+from samples._shared.runtime import RuntimeSession
+from samples._shared.runtime import RuntimeUnavailableError  # noqa: F401 - re-exported surface
+from samples._shared.runtime import _default_runtime_factory  # noqa: F401 - re-exported seam
 from samples._shared.tensor_io import validate_input_tensors
 
 
@@ -77,22 +79,27 @@ class RuntimeModelRunner:
         # Importing the shared platform module is dependency-free.  The check
         # is deferred to execution so help/list/dry-run and host imports stay
         # usable without a board.
-        from samples._shared.platforms import require_execution_target
-
-        # An injected runtime is a host-test seam and carries no claim about
-        # local hardware.  Production construction still requires the exact
-        # detected target before loading an SDK model.
         if self._runtime is None and self._runtime_factory is None:
-            require_execution_target(self.selection.target)
-        if self._runtime is None:
-            factory = self._runtime_factory
-            if factory is None:
-                factory = _default_runtime_factory()
+            # Production path: the shared session owns the exact-target
+            # identity gate, the SDK import and the model construction.
+            session = RuntimeSession(
+                str(self.selection.model_path), target=self.selection.target)
             try:
-                self._runtime = factory(str(self.selection.model_path))
+                session.load()
+                self._runtime = session.runtime
             except Exception:
                 # Preserve the original runtime exception and avoid pretending
                 # that a failed model construction was a valid empty runner.
+                self._runtime = None
+                raise
+        elif self._runtime is None:
+            # ``runtime_factory`` stays the documented host-test seam and
+            # injects construction directly; it carries no claim about local
+            # hardware, so the identity gate is not applied to it.
+            try:
+                self._runtime = self._runtime_factory(
+                    str(self.selection.model_path))
+            except Exception:
                 self._runtime = None
                 raise
         try:
@@ -181,22 +188,6 @@ def create_runner(selection: ModelSelection, *,
         runtime_factory=runtime_factory,
         runtime=runtime,
     )
-
-
-def _default_runtime_factory() -> Callable[[str], Any]:
-    try:
-        runtime_module = importlib.import_module("hbm_runtime")
-    except ImportError as exc:
-        raise RuntimeUnavailableError(
-            "hbm_runtime is required for board execution. Install/use the "
-            "matching RDK Python environment; host help/list/dry-run do not need it."
-        ) from exc
-    factory = getattr(runtime_module, "HB_HBMRuntime", None)
-    if not callable(factory):
-        raise RuntimeUnavailableError(
-            "Installed hbm_runtime does not expose HB_HBMRuntime."
-        )
-    return factory
 
 
 __all__ = ["RuntimeModelRunner", "RuntimeUnavailableError", "create_runner"]
