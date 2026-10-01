@@ -90,14 +90,17 @@
 - 终审修复后（`c639827f`）：resnet 63 / YOLO 148（+1 main 结构冒烟）/
   shared 172（+5 legacy_platforms 回归）/ yoloe 44（onnx 补齐后）/
   checker 51-0。
-- 标签契约与自训练导出补齐后（`2eefbae4`、`7f929025`，当前计数）：
-  resnet **69**（+6 mock 导出测试）/ YOLO **168**（+10 标签契约与展示
-  测试）/ shared 172 / yoloe 44 / checker 51-0；catalog check 130 项，
-  `catalog-v1.0.0-8457fa691252f928`（57 families / 812 benchmarks）。
+- 标签契约与自训练导出补齐后（`2eefbae4`、`7f929025`、`c7b10758`，当前计数）：
+  resnet **72**（`--checkpoint` 自然 CLI 测试净增 3：增 4 删 1 旧组合测试，
+  含此前 6 项 mock 导出测试）/ YOLO **168**（+10 标签契约与展示
+  测试）/ shared 172 / yoloe 44 / checker 51-0；catalog check 130 项
+  （测试夹具修复 `427703b1` 后本轮实际重跑确认全部通过；夹具修复不触碰
+  生产来源逻辑，产物哈希不变），`catalog-v1.0.0-8457fa691252f928`
+  （57 families / 812 benchmarks）。
 - 干净 checkout 记录（均为本地临时 `git worktree`，未初始化 VLA 子模块，
   catalog 生成复用本地 node_modules，非独立零依赖复现）：第一次在
-  `e324e356`；验收轮在 `bc97a632`；本轮（标签/导出补齐后）在最终代码
-  提交上重跑，见本地执行目录 `logs/` 对应日志。
+  `e324e356`；验收轮在 `bc97a632`；本轮（标签/导出/catalog 夹具补齐后）
+  在最终代码提交上重跑，见本地执行目录 `logs/` 对应日志。
 - 依赖补齐：yoloe 转换测试所需的 onnx 以二进制 wheel 安装进隔离 venv
   （`pip install --only-binary=:all: onnx`，版本 1.23.1），yoloe 44 项全部通过。
 - C++ 主机验证（2026-10-01 追加，详见
