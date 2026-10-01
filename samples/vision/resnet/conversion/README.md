@@ -285,6 +285,11 @@ python3 export_resnet18_onnx.py \
 Rules and guarantees (mock-verified on host; the real export is
 **not-run** here):
 
+- CLI contract: `--checkpoint` and `--weights` are mutually exclusive
+  (argparse rejects combining them); `--num-classes` is required with
+  `--checkpoint` and rejected without it; when neither weight option is
+  given, the official `IMAGENET1K_V1` default (1000-class output)
+  applies unchanged.
 - Architecture: TorchVision `resnet18` only. The classifier head is
   rebuilt as `nn.Linear(512, num_classes)` and the checkpoint must load
   with `strict=True` — a checkpoint from any other ResNet variant or a

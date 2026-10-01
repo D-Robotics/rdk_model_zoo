@@ -83,6 +83,27 @@ class _FakeModel:
         self.eval_called = True
 
 
+def _fake_torch_stack(state):
+    """Build the fake torch/torchvision modules and their sys.modules map."""
+    torch = _FakeTorch(state)
+    model = _FakeModel()
+    resnet18_calls = []
+    torchvision = types.ModuleType("torchvision")
+    torchvision.__version__ = "0.0.0-mock"
+    models = types.ModuleType("torchvision.models")
+
+    def resnet18(weights=None):
+        resnet18_calls.append(weights)
+        return model
+
+    models.resnet18 = resnet18
+    models.ResNet18_Weights = types.SimpleNamespace(IMAGENET1K_V1=object())
+    torchvision.models = models
+    modules = {"torch": torch, "torchvision": torchvision,
+               "torchvision.models": models}
+    return torch, model, resnet18_calls, models, modules
+
+
 class CustomExportTests(unittest.TestCase):
     def _run(self, state, *, num_classes=4, **kwargs):
         # A real (empty) checkpoint file: only its existence is checked on
@@ -91,22 +112,8 @@ class CustomExportTests(unittest.TestCase):
         checkpoint = Path(tempfile.mkdtemp()) / "ckpt.pth"
         checkpoint.write_bytes(b"")
         module = _load_exporter()
-        torch = _FakeTorch(state)
-        model = _FakeModel()
-        resnet18_calls = []
-        torchvision = types.ModuleType("torchvision")
-        torchvision.__version__ = "0.0.0-mock"
-        models = types.ModuleType("torchvision.models")
-
-        def resnet18(weights=None):
-            resnet18_calls.append(weights)
-            return model
-
-        models.resnet18 = resnet18
-        models.ResNet18_Weights = types.SimpleNamespace(IMAGENET1K_V1=object())
-        torchvision.models = models
-        with mock.patch.dict(sys.modules, {"torch": torch, "torchvision": torchvision,
-                                           "torchvision.models": models}):
+        torch, model, resnet18_calls, _, modules = _fake_torch_stack(state)
+        with mock.patch.dict(sys.modules, modules):
             destination = module.export_resnet18(
                 "out.onnx", checkpoint=checkpoint, num_classes=num_classes,
                 check=False, **kwargs)
@@ -157,19 +164,73 @@ class CustomExportTests(unittest.TestCase):
                     module.export_resnet18("out.onnx", checkpoint="ckpt.pth",
                                            num_classes=bad, check=False)
 
-    def test_cli_rejects_checkpoint_with_official_weights(self):
+    def test_cli_checkpoint_without_weights_flag_runs_naturally(self):
+        # The documented self-trained invocation carries no --weights at
+        # all; the official default must not reject it.
+        import tempfile
+        checkpoint = Path(tempfile.mkdtemp()) / "ckpt.pth"
+        checkpoint.write_bytes(b"")
+        state = {"fc.weight": "w", "fc.bias": "b"}
         module = _load_exporter()
-        args = module.build_parser().parse_args(
-            ["--checkpoint", "ckpt.pth", "--num-classes", "4",
-             "--weights", "IMAGENET1K_V1"])
-        self.assertEqual(module.main([
-            "--checkpoint", "ckpt.pth", "--num-classes", "4",
-            "--weights", "IMAGENET1K_V1"]), 2)
+        torch, model, resnet18_calls, _, modules = _fake_torch_stack(state)
+        output = Path(tempfile.mkdtemp()) / "custom.onnx"
+        with mock.patch.dict(sys.modules, modules):
+            import contextlib
+            import io
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                status = module.main(["--checkpoint", str(checkpoint),
+                                      "--num-classes", "4",
+                                      "--output", str(output), "--no-check"])
+        self.assertEqual(status, 0)
+        # The natural CLI executes the full checkpoint contract.
+        self.assertEqual(resnet18_calls, [None])
+        self.assertEqual(torch._linear_calls, [(512, 4)])
+        self.assertEqual(model.load_state_dict_calls, [(state, True)])
+        self.assertEqual(torch.load_calls, [(str(checkpoint), "cpu")])
+        self.assertIn("4", buffer.getvalue())
+
+    def test_cli_default_official_weights_when_neither_flag_given(self):
+        module = _load_exporter()
+        torch, model, resnet18_calls, models, modules = _fake_torch_stack({})
+        import tempfile
+        output = Path(tempfile.mkdtemp()) / "official.onnx"
+        with mock.patch.dict(sys.modules, modules):
+            import contextlib
+            import io
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                status = module.main(["--output", str(output), "--no-check"])
+        self.assertEqual(status, 0)
+        # Unspecified weights keep the official default and 1000 classes.
+        self.assertEqual(resnet18_calls, [models.ResNet18_Weights.IMAGENET1K_V1])
+        self.assertEqual(torch._linear_calls, [])
+        self.assertIn("1000", buffer.getvalue())
+
+    def test_cli_rejects_checkpoint_combined_with_weights(self):
+        module = _load_exporter()
+        import contextlib
+        import io
+        for weights in ("IMAGENET1K_V1", "none"):
+            with self.subTest(weights=weights):
+                with self.assertRaises(SystemExit) as raised, \
+                        contextlib.redirect_stderr(io.StringIO()):
+                    module.main(["--checkpoint", "ckpt.pth",
+                                 "--num-classes", "4",
+                                 "--weights", weights])
+                self.assertEqual(raised.exception.code, 2)
 
     def test_cli_requires_num_classes_with_checkpoint(self):
         module = _load_exporter()
         self.assertEqual(
             module.main(["--checkpoint", "ckpt.pth"]), 2)
+
+    def test_cli_rejects_num_classes_without_checkpoint(self):
+        module = _load_exporter()
+        for extra in ([], ["--weights", "none"]):
+            with self.subTest(argv=extra):
+                self.assertEqual(
+                    module.main(extra + ["--num-classes", "4"]), 2)
 
 
 if __name__ == "__main__":

@@ -254,6 +254,9 @@ python3 export_resnet18_onnx.py \
 
 规则与保证（主机侧以 mock 验证调用约定；真实导出本轮 **not-run**）：
 
+- CLI 约定：`--checkpoint` 与 `--weights` 互斥（argparse 直接拒绝组合）；
+  `--num-classes` 仅随 `--checkpoint` 使用，缺失或单独给出都明确报错；
+  两个权重选项都不给时保持官方 `IMAGENET1K_V1` 默认（1000 类输出）不变。
 - 结构：仅支持 TorchVision `resnet18`。分类头重建为
   `nn.Linear(512, num_classes)`，checkpoint 必须以 `strict=True` 加载——
   来自其他 ResNet 变体或类别数不符的 checkpoint 会直接失败，而不是导出

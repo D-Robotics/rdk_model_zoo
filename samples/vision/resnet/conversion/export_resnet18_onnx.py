@@ -33,16 +33,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=11,
         help="ONNX opset passed to torch.onnx.export (default: 11).",
     )
-    parser.add_argument(
+    weight_source = parser.add_mutually_exclusive_group()
+    weight_source.add_argument(
         "--weights",
         choices=("IMAGENET1K_V1", "none"),
-        default="IMAGENET1K_V1",
+        default=None,
         help=(
-            "TorchVision weight source (default: explicit IMAGENET1K_V1; "
+            "TorchVision weight source. Omitting both weight options "
+            "keeps the official default (explicit IMAGENET1K_V1; "
             "downloads official weights when absent)."
         ),
     )
-    parser.add_argument(
+    weight_source.add_argument(
         "--checkpoint",
         type=Path,
         default=None,
@@ -107,7 +109,8 @@ def export_resnet18(
             raise FileNotFoundError(
                 f"self-trained checkpoint not found: {checkpoint_path}")
         # A checkpoint is authoritative: official weights are not consulted.
-        # The CLI enforces the --checkpoint/--weights mutual exclusion.
+        # The CLI's mutually exclusive group keeps --checkpoint from being
+        # combined with --weights at all.
 
     try:
         import torch
@@ -185,15 +188,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.checkpoint is not None and args.num_classes is None:
         print("error: --checkpoint requires --num-classes")
         return 2
-    if args.checkpoint is not None and args.weights == "IMAGENET1K_V1":
-        print("error: --checkpoint replaces --weights; drop --weights "
-              "IMAGENET1K_V1 for a self-trained export")
+    if args.checkpoint is None and args.num_classes is not None:
+        print("error: --num-classes only describes a --checkpoint export; "
+              "official weights always output 1000 classes")
         return 2
     try:
         export_resnet18(
             args.output,
             opset=args.opset,
-            weights=(None if args.checkpoint is not None else args.weights),
+            # Neither weight option given keeps the official default; a
+            # checkpoint makes weights irrelevant (argparse already
+            # rejected combining the two).
+            weights=args.weights or "IMAGENET1K_V1",
             checkpoint=args.checkpoint,
             num_classes=args.num_classes,
             check=not args.no_check,
