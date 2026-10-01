@@ -1,6 +1,6 @@
 # ResNet / YOLO 可读范例实施计划
 
-> 执行者：用户指定的 sz-dev / machao / Claude Code + GLM。按任务顺序实施；适用时使用 superpowers:executing-plans，不另行派生 Agent。Codex 负责制定任务和核对结果。
+> 执行者：用户指定的 Claude Code + GLM（2026-10-01 起在本地工作区实施，原为 sz-dev / machao）。按任务顺序实施；适用时使用 superpowers:executing-plans，不另行派生 Agent。Codex 负责制定任务和核对结果。
 
 **Goal:** 简单 main.py 调用模型类 predict，完成 ResNet 和 YOLO 的可读、可扩展范例。
 
@@ -12,9 +12,16 @@
 
 状态：任务已制定，尚未派发实施。基线为 `eed26ce610d7fba03a68d1c0ee6e62603cd9b85d`；文档提交在其后。
 
+> 执行位置修订（2026-10-01 用户指示）：继续开发，不去服务器，都在本地进行。
+> 本计划所有“sz-dev / 服务器执行 / 服务器干净 checkout”步骤改为在本地工作区
+> （`rdk-b7-board-integration` worktree）用既有 `rdk_model_zoo/.venv` 解释器执行；
+> “干净 checkout 验证”改为本地临时目录的 `git worktree add` 检出。其余全局约束
+> （不下载权重、不跑实际导出/量化编译/板端推理、不动 VLA 子仓库、不发布、不合并
+> develop）不变。
+
 ## 全局约束
 
-- 仅在 sz-dev 以 machao 身份实施及测试。复用用户指定 Claude Code + GLM，不在本机装环境。
+- 在本地工作区实施及测试（2026-10-01 修订，原为仅在 sz-dev 以 machao 身份）。复用用户指定 Claude Code + GLM，使用既有 `rdk_model_zoo/.venv`，不新装环境。
 - main.py 只做必要参数处理、模型构造、predict 与结果使用；禁止把算法放进入口。
 - 模型类显式串起 preprocess、infer、postprocess，不按函数拆文件。
 - 不新增 rdk_zoo 顶层包、通用插件或统一模型描述文件框架。
@@ -38,7 +45,7 @@
 **接口：** `RuntimeSession(model_path: str, *, target: str)`；`load() -> None`；`run(inputs: Mapping[str, Any]) -> Mapping[str, Any]`；只读 `runtime` 返回已加载 SDK 对象，未加载时报错。run 接受/返回 SDK 原生映射。保持内部 SDK 工厂可 mock，不公开关闭硬件检查的 CLI 开关。
 
 - [ ] 在新测试中覆盖：构造不导入 SDK；目标不匹配时 SDK 工厂调用次数为 0；连续 run 只构造一次模型；run 原样传递映射；加载失败后可重试且未标记成功。
-- [ ] 在服务器执行 `python -m unittest discover -s samples/_shared/tests -p test_runtime_session.py`，记录新增接口尚不存在时的失败。
+- [ ] 在本地执行 `python -m unittest discover -s samples/_shared/tests -p test_runtime_session.py`，记录新增接口尚不存在时的失败。
 - [ ] 实现会话，复用 require_execution_target 和 HB_HBMRuntime，不引入分类/YOLO 类型，不假设 SDK 有 close 接口。
 - [ ] 重跑同一组测试，检查通过；核对异常保留原始原因。记录为包装单元测试，非 SDK 实机测试。
 - [ ] 独立提交代码和相关测试，提供 diff 与命令结果。
@@ -70,7 +77,7 @@
 - [ ] 将 DFL 检测类的完整主线放入 detect.py；复用现有 decode/geometry/binding。其他协议沿用自身类，保持流程可读，不强塞进 DFL 类。
 - [ ] model_runner 复用任务 1 会话，保持输入输出适配、元信息校验与调度；main.py 用已有显式任务分派构造对象并调用 predict，删除入口里的算法重复。
 - [ ] 同步 README 的最小 main 与库调用示例，明确不同任务/协议入口和自训练支持边界。
-- [ ] 执行 YOLO tests 以及各现有任务的 --help。Catalog 对比用例需要生成 Catalog 时，只在服务器使用原有 build；缺少历史 Git 对象应记录并补取精确对象，不能改测试掩盖失败。
+- [ ] 执行 YOLO tests 以及各现有任务的 --help。Catalog 对比用例需要生成 Catalog 时，在本地使用原有 build；缺少历史 Git 对象应记录并补取精确对象，不能改测试掩盖失败。
 - [ ] 全部受影响检查通过后独立提交；分类、分割、姿态、OBB 原有能力不得默默减少。
 
 ## 任务 4：完整操作路径与迁移说明
@@ -93,7 +100,7 @@
 - [ ] 将 X3 Catalog 来源改为已核实固定 Git 引用读取，先使用现有 source reader 能力；若缺少对应配置模式，只为固定引用补最小支持。
 - [ ] 在 Catalog sources 测试覆盖：固定对象读取正确；对象缺失明确报错并指示获取所需对象，不能返回空成功。执行 `npm --prefix tools/catalog-publisher run check`，预期既有和新增检查通过。
 - [ ] 迁移其余活动文件依赖，修正指向删除目录的当前使用指南；历史报告保持历史事实并增加集中访问说明。
-- [ ] 删除已解除依赖的 platforms/ 跟踪文件；在服务器干净 checkout 验证两个范例入口、相关回归与 Catalog。不得初始化 VLA 子仓库。
+- [ ] 删除已解除依赖的 platforms/ 跟踪文件；在本地临时 `git worktree` 干净 checkout 验证两个范例入口、相关回归与 Catalog。不得初始化 VLA 子仓库。
 - [ ] 更新迁移说明，提交移除改动与证据。该验证仅证明来源解析和代码依赖完整，不代表模型链路复现。
 
 ## 交付与核对
