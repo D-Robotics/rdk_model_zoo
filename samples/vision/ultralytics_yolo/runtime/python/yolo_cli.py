@@ -427,8 +427,10 @@ def validate_label_count(labels, model) -> None:
     The class count comes from the model's bound contract (``contract.classes``
     exists for every dispatched task, including the 1000-class classification
     contract and the single-class pose contracts); ``--classes-num`` alone is
-    not trusted. Models that do not expose an integer class count (injected
-    host doubles) are skipped rather than guessed from output protocols.
+    not trusted. A model that does not expose an integer class count is an
+    error, not a silent skip: real task models always expose one, and injected
+    host doubles must declare their actual class count instead of leaving the
+    count to be guessed from output protocols.
     """
 
     if not labels:

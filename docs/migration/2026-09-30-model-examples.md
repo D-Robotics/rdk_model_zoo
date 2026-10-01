@@ -59,8 +59,9 @@
    `custom_model` 参数，`main` 在 `args.model_path` 被计划路径覆盖前从
    `plan['explicit']` 保留该判定）。
 2. 显式标签数与已绑定模型的 `contract.classes`（含 cls 1000 类与 pose 单类
-   合同）核对，不符在推理前报错退出；`--classes-num` 单独不作依据；无整数
-   类数的注入替身跳过而非猜测。
+   合同）核对，不符在推理前报错退出；`--classes-num` 单独不作依据；模型未
+   暴露整数 `contract.classes` 时同样报错而非跳过（真实任务模型均有该字段，
+   注入替身需声明实际类数），不从输出协议猜测。
 3. cls 展示使用已验证的传入标签，空标签回退类别 ID，不再重读默认
    ImageNet 文件。
 4. 官方默认 pose 标签由“80 类 COCO 文件（id 0 恰为 person）”改为精确的

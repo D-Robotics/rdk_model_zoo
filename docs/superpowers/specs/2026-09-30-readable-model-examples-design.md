@@ -80,13 +80,13 @@ samples/
 
 ## 5. 公共 Runtime
 
-调用关系：`main.py → 模型类.predict → 模型类.infer → runner/薄 SDK 会话 → hbm_runtime`。
+调用关系：`main.py → 模型类.predict → 模型类.infer → runner → hbm_runtime`；runner 的生产加载路径经薄 SDK 会话完成。
 
-`samples/_shared/runtime.py` 只承接 SDK 导入、模型实例创建、获取原始元信息、执行推理和已有调度能力。真实硬件 Runtime 是板端安装的 SDK，该文件不是自研推理引擎。
+`samples/_shared/runtime.py` 只承接目标身份检查、SDK 懒导入与模型实例构造；`run(inputs)` 是可选的原生映射透传。输入输出沿用 SDK 的原生映射，不在公共层猜测模型名称或输出语义。真实硬件 Runtime 是板端安装的 SDK，该文件不是自研推理引擎。
 
-首轮会话接口为 `RuntimeSession(model_path, *, target)`、`load()`、`run(inputs)` 及只读 `runtime` 属性。输入输出沿用 SDK 的原生映射，不在公共层猜测模型名称或输出语义。初始化保持延迟加载，load/run 时做实际目标检查；模型类及其 runner 负责把命名张量绑定到这个接口。SDK 适配不能依赖分类或 YOLO 的类型。
+首轮会话接口为 `RuntimeSession(model_path, *, target)`、`load()`、`run(inputs)` 及只读 `runtime` 属性。初始化保持延迟加载，load/run 时做实际目标检查。SDK 适配不能依赖分类或 YOLO 的类型。
 
-实现边界（2026-10-01 验收确认，按用户“轻量且保留既有 native 行为”要求接受现状）：会话收敛目标身份检查、SDK 懒导入与模型实例构造，`run(inputs)` 是可选的原生映射透传；示例 runner 复用该加载/身份边界后，直接在同一个已加载 SDK 对象上执行自身已校验的调用，运行时元信息读取与调度参数（set_scheduling_params 及其校验）保留在各 runner。此为接受的实现，不为文字一致性重构已验证的 native 行为。
+职责分工（2026-10-01 验收确认的单一口径）：模型类及其 runner 负责把命名张量绑定到已加载的 SDK 对象——示例 runner 复用会话的加载/身份边界后，直接在同一个已加载 SDK 对象上执行自身已校验的调用（行为上等价于经 `session.run` 透传，不另建第二条执行路径）；运行时元信息读取与调度参数（`set_scheduling_params` 及其校验）保留在各 runner。该分工经 Codex 架构评估接受：保留 runner 的既有职责使会话保持无模型算法的轻量加载边界，符合轻量约束，不为文字一致性重构已验证的 native 行为，也不声称所有推理都经过 `session.run`。
 
 目前两类 Python 示例都调用 `hbm_runtime.HB_HBMRuntime`，先收敛实际相同操作，不人为拆出 X5/S 两个 Python backend。不设计假设 SDK 支持的 close/context manager；只使用已核实的资源释放能力。
 
