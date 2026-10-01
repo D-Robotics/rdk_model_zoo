@@ -40,10 +40,18 @@ ctest --test-dir /tmp/gemma-native-build --output-on-failure                # ex
   均通过。
 - **重复 configure**：同一构建目录二次 configure exit 0、无错误——
   `if(NOT EXISTS "${LEGACY}/cpp")` 的重入保护有效，不重复 rename。
-- **缺失对象错误路径**：将 CMakeLists 复制到临时目录并把
-  `GEMMA_PLATFORMS_PIN` 改为全零 SHA 后 configure **exit 1**，FATAL_ERROR
-  原文包含 `Cannot read pinned legacy sources (0000…). Fetch the commit
-  first: git fetch origin 0000…`——不存在静默跳过。
+- **缺失对象错误路径（已修正证据）**：首次临时副本探针存在缺陷——其
+  `SAMPLE_ROOT`/`REPO_ROOT` 按临时目录祖先推导，`git -C` 落在仓库之外，
+  日志（本地 `logs/native-gemma-bogus-pin.txt`，保留为反面证据）先出现
+  `fatal: not a git repository`，未真正测试"仓库内缺失对象"。修正后的探针
+  在临时副本中显式将 `REPO_ROOT` 指向真实工作区、`SAMPLE_ROOT` 指向真实
+  gemma sample，仅把 `GEMMA_PLATFORMS_PIN` 替换为全零 SHA：configure
+  **exit 1**，Git 报 `fatal: not a tree object: 0000…`（真实仓库内的无效
+  对象），CMake FATAL_ERROR 原文包含 `Cannot read pinned legacy sources
+  (0000…). Fetch the commit first: git fetch origin 0000…`——不存在静默
+  跳过（日志 `logs/native-gemma-missing-pin-valid-repo.txt`）。
+- **正确 PIN 的重复 configure/提取**：上文两轮 configure 与 19/19 ctest
+  已在同一构建目录验证（重入保护与提取见前述），本节不重复。
 - 19 项测试含 vision（统一 vs 固定 legacy 预处理对照）、kv_cache 七项、
   model_io（含注入分配失败的 adopt）、text 全链（engine/tensor/session/
   stages/README 示例）。
