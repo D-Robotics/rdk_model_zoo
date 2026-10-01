@@ -54,15 +54,32 @@
 
 ## 4. 验证与 not-run
 
-主机验证（本地，`rdk_model_zoo/.venv`）：
+主机验证（本地，`rdk_model_zoo/.venv`；任务 2/3 完成时、platforms/ 移除前）：
 
 - `samples/vision/resnet/tests` 67 项通过（52 基线 + 15 新增行为测试）。
 - `samples/vision/ultralytics_yolo/tests` 156 项通过（143 基线 + 13 新增）。
-- `samples/_shared/tests`（显式排除 `test_vla_integration.py`）167 项通过；
-  任务 1 时的 158/168 计数曾意外包含 2 个 VLA 测试（范围口径问题，未触碰子模块）。
 - `tools/sample_contract/check.py --sample samples/vision/{resnet,ultralytics_yolo}`
   0 violations。
 - 共享 runner 消费方回归：lprnet 23、mobilenetv3 17、himloco 23 通过。
+
+主机验证（platforms/ 移除后，最终态）：
+
+- `samples/vision/resnet/tests` 63 项（移除 4 项 shim 行为测试）、
+  `samples/vision/ultralytics_yolo/tests` 147 项（移除旧 CLI/适配器/shell 等
+  shim 面测试）、`samples/_shared/tests`（显式排除 `test_vla_integration.py`）
+  167 项全部通过。
+- 约 30 个 sample 的历史源码基线测试、yolov5/bytetrack/fcos/lprnet/modnet/
+  yoloworld 评估器测试、B3 工具 30 项全部通过（legacy 侧经固定提交物化）。
+- `tools/sample_contract/check.py --scope migration`：51 samples 0 violations。
+- `npm --prefix tools/catalog-publisher run check`：130 项测试通过，catalog
+  可复现（`catalog-v1.0.0-8457fa691252f928`，57 families / 812 benchmarks）。
+- 干净 checkout（临时 `git worktree`，未初始化 VLA 子模块）：两个范例入口
+  `--help`/`--list-models`/`--dry-run` 与上述回归全部通过；catalog 用本地
+  node_modules 生成后 YOLO 目录对照测试通过。
+- 环境限制（非本次改动引入）：`samples/vision/yoloe/tests/test_conversion.py`
+  需要 onnx 包，本 venv 未安装；gemma CMake configure 需 cmake，本机未安装。
+- `samples/_shared/tests` 计数口径：任务 1 时的 158/168 曾意外包含 2 个 VLA
+  测试（范围口径问题，未触碰子模块），此后显式排除。
 
 not-run（本轮明确未执行，不以主机测试替代）：真实 ONNX 导出、OE/Mapper/
 HMCT 量化编译、板端 `hbm_runtime` 推理与精度/性能验证。历史 README 中的
