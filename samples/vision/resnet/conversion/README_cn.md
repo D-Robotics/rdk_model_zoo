@@ -237,3 +237,40 @@ ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只
   比较 target、输入元数据、输出 shape/dtype 与数值结果之前不等价。
 - 本 sample 未执行真实 OE 编译（**not-run**）；仅记录了 ResNet18 的
   主机导出冒烟。
+
+<a id="self-trained"></a>
+## 自训练 TorchVision ResNet18 checkpoint
+
+默认导出脚本面向官方 `IMAGENET1K_V1` 权重；自训练 `state_dict` 走同一固定
+合同导出：
+
+```bash
+# conversion 环境（已装 PyTorch + TorchVision）；cwd：本目录
+python3 export_resnet18_onnx.py \
+  --checkpoint /path/to/my_resnet18.pth \
+  --num-classes 4 \
+  --output my_resnet18_4class.onnx
+```
+
+规则与保证（主机侧以 mock 验证调用约定；真实导出本轮 **not-run**）：
+
+- 结构：仅支持 TorchVision `resnet18`。分类头重建为
+  `nn.Linear(512, num_classes)`，checkpoint 必须以 `strict=True` 加载——
+  来自其他 ResNet 变体或类别数不符的 checkpoint 会直接失败，而不是导出
+  半随机的图。不承诺任意 ResNet 结构或自定义输出头兼容。
+- `--num-classes`（>= 2）决定 ONNX `output` 宽度；导出会打印所用
+  torch/torchvision 版本，请随训练记录一并留存。
+- 图合同与官方导出完全一致：NCHW 输入 `data` `[1, 3, 224, 224]`
+  float32、输出 `output` `[1, num_classes]`、静态形状、TorchScript
+  导出器（`dynamo=False`）。
+- 前处理：训练变换必须与编译所用的 OE 配置兼容（与官方制品相同：
+  `--resize-type` 对应的 letterbox/直接缩放、OE 配置内置的归一化）；
+  导出脚本不改动前处理。
+- 产物用 [工具链与目标](#toolchain-targets) 下的既有 OE 配置编译（X5
+  `hb_mapper` → `.bin`，S100/S600 `hb_compile` → `.hbm`）；不暗示任何
+  已发布制品配方适用于自训练输出。
+- 运行时合同：用 `model_binding.custom_selection(model_path, target,
+  input_height=224, input_width=224, class_count=<num-classes>)` 加载
+  编译产物，标签可选（见 [自定义模型
+  章节](../runtime/python/README_cn.md#custom-model)）；绑定会把实际输出
+  宽度与 `class_count` 核对。

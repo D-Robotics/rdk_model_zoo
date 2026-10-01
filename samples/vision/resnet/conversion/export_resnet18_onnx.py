@@ -43,6 +43,27 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--checkpoint",
+        type=Path,
+        default=None,
+        help=(
+            "Path to a self-trained TorchVision ResNet18 state_dict "
+            "(.pth, CPU-mapped). Replaces --weights; the classifier head "
+            "is rebuilt for --num-classes and the checkpoint must match "
+            "that architecture exactly (strict load)."
+        ),
+    )
+    parser.add_argument(
+        "--num-classes",
+        type=int,
+        default=None,
+        help=(
+            "Class count of the self-trained checkpoint (required with "
+            "--checkpoint; >= 2). Determines the ONNX output width and "
+            "the runtime custom_selection class_count."
+        ),
+    )
+    parser.add_argument(
         "--no-check",
         action="store_true",
         help="Skip onnx.checker after export (use only when ONNX is unavailable).",
@@ -55,14 +76,19 @@ def export_resnet18(
     *,
     opset: int = 11,
     weights: str = "IMAGENET1K_V1",
+    checkpoint: str | Path | None = None,
+    num_classes: int | None = None,
     check: bool = True,
 ) -> Path:
     """Export one fixed-shape ResNet18 graph and return its path.
 
     The generated graph has one NCHW input named ``data`` with shape
-    ``[1, 3, 224, 224]`` and one score output named ``output`` with shape
-    ``[1, 1000]``. Runtime NV12 conversion remains the board conversion
-    contract and is handled by the selected OE configuration.
+    ``[1, 3, 224, 224]`` float32 and one score output named ``output``
+    whose width is ``1000`` for official weights or ``num_classes`` for a
+    self-trained ``checkpoint`` (the classifier head is rebuilt for that
+    count and the checkpoint must load strictly against it). Runtime NV12
+    conversion remains the board conversion contract and is handled by
+    the selected OE configuration.
     """
 
     if opset < 11:
@@ -70,8 +96,22 @@ def export_resnet18(
     destination = Path(output).expanduser()
     destination.parent.mkdir(parents=True, exist_ok=True)
 
+    if checkpoint is not None:
+        if not isinstance(num_classes, int) or isinstance(num_classes, bool) \
+                or num_classes < 2:
+            raise ValueError(
+                "--num-classes must be an integer >= 2 for a self-trained "
+                "checkpoint (the classifier head needs at least two classes).")
+        checkpoint_path = Path(checkpoint).expanduser()
+        if not checkpoint_path.is_file():
+            raise FileNotFoundError(
+                f"self-trained checkpoint not found: {checkpoint_path}")
+        # A checkpoint is authoritative: official weights are not consulted.
+        # The CLI enforces the --checkpoint/--weights mutual exclusion.
+
     try:
         import torch
+        import torchvision
         from torchvision.models import ResNet18_Weights, resnet18
     except ImportError as exc:
         raise RuntimeError(
@@ -79,12 +119,26 @@ def export_resnet18(
             "conversion environment described by conversion/README.md."
         ) from exc
 
-    if weights not in ("IMAGENET1K_V1", "none"):
-        raise ValueError("weights must be IMAGENET1K_V1 or none.")
-    model_weights = (
-        ResNet18_Weights.IMAGENET1K_V1 if weights == "IMAGENET1K_V1" else None
-    )
-    model = resnet18(weights=model_weights)
+    if checkpoint is not None:
+        model = resnet18(weights=None)
+        # Rebuild the classifier head for the declared class count, then
+        # require the checkpoint to match the modified architecture
+        # exactly: a strict load proves the fc width and every parameter
+        # agree instead of silently keeping random weights.
+        model.fc = torch.nn.Linear(model.fc.in_features, int(num_classes))
+        state = torch.load(str(checkpoint_path), map_location="cpu")
+        if isinstance(state, dict) and "state_dict" in state:
+            state = state["state_dict"]
+        model.load_state_dict(state, strict=True)
+        class_count = int(num_classes)
+    else:
+        if weights not in ("IMAGENET1K_V1", "none"):
+            raise ValueError("weights must be IMAGENET1K_V1 or none.")
+        model_weights = (
+            ResNet18_Weights.IMAGENET1K_V1 if weights == "IMAGENET1K_V1" else None
+        )
+        model = resnet18(weights=model_weights)
+        class_count = 1000
     model.eval()
     dummy = torch.zeros((1, 3, 224, 224), dtype=torch.float32)
     with torch.no_grad():
@@ -113,6 +167,14 @@ def export_resnet18(
             ) from exc
         onnx.checker.check_model(onnx.load(str(destination)))
     print(f"Exported TorchVision ResNet18 ONNX graph to {destination}")
+    print(f"  output width: {class_count} classes")
+    print(f"  training stack: torch {torch.__version__}, "
+          f"torchvision {torchvision.__version__}")
+    if checkpoint is not None:
+        print(
+            "  runtime contract: custom_selection(..., class_count="
+            f"{class_count}) with the compiled artifact; record this stack "
+            "in your training provenance.")
     return destination
 
 
@@ -120,11 +182,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     """Run the exporter and return a shell status."""
 
     args = build_parser().parse_args(argv)
+    if args.checkpoint is not None and args.num_classes is None:
+        print("error: --checkpoint requires --num-classes")
+        return 2
+    if args.checkpoint is not None and args.weights == "IMAGENET1K_V1":
+        print("error: --checkpoint replaces --weights; drop --weights "
+              "IMAGENET1K_V1 for a self-trained export")
+        return 2
     try:
         export_resnet18(
             args.output,
             opset=args.opset,
-            weights=args.weights,
+            weights=(None if args.checkpoint is not None else args.weights),
+            checkpoint=args.checkpoint,
+            num_classes=args.num_classes,
             check=not args.no_check,
         )
     except (OSError, RuntimeError, ValueError) as exc:

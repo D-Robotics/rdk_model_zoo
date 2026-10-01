@@ -267,3 +267,49 @@ artifact contract.
   numerical results are compared.
 - Real OE compilation in this sample has not been executed
   (**not-run**); only the host ResNet18 export smoke test is recorded.
+
+<a id="self-trained"></a>
+## Self-trained TorchVision ResNet18 checkpoints
+
+The default exporter targets official `IMAGENET1K_V1` weights. A
+self-trained `state_dict` exports through the same fixed contract:
+
+```bash
+# conversion environment (PyTorch + TorchVision installed); cwd: this directory
+python3 export_resnet18_onnx.py \
+  --checkpoint /path/to/my_resnet18.pth \
+  --num-classes 4 \
+  --output my_resnet18_4class.onnx
+```
+
+Rules and guarantees (mock-verified on host; the real export is
+**not-run** here):
+
+- Architecture: TorchVision `resnet18` only. The classifier head is
+  rebuilt as `nn.Linear(512, num_classes)` and the checkpoint must load
+  with `strict=True` — a checkpoint from any other ResNet variant or a
+  mismatched class count fails instead of exporting a partly random
+  graph. No compatibility with arbitrary ResNet structures or custom
+  output heads is claimed.
+- `--num-classes` (>= 2) sets the ONNX `output` width; the exporter
+  prints the torch/torchvision versions of the exporting environment —
+  record them with your training provenance.
+- Fixed graph contract, identical to the official export: one NCHW
+  input `data` `[1, 3, 224, 224]` float32, one output `output`
+  `[1, num_classes]`, static shapes, TorchScript exporter
+  (`dynamo=False`).
+- Preprocessing: training must use a transform compatible with the OE
+  conversion configuration you compile with — the same one the official
+  artifact uses (letterbox/direct resize per `--resize-type`, the
+  normalization baked into the OE config). The exporter does not alter
+  preprocessing.
+- Compile the resulting ONNX with the existing OE configurations
+  documented under [Toolchain and targets](#toolchain-targets) (X5
+  `hb_mapper` → `.bin`, S100/S600 `hb_compile` → `.hbm`); no published
+  artifact recipe is implied for self-trained outputs.
+- Runtime contract: load the compiled artifact with
+  `model_binding.custom_selection(model_path, target,
+  input_height=224, input_width=224, class_count=<num-classes>)` and
+  optional labels (see the [custom models
+  section](../runtime/python/README.md#custom-model)); the binding
+  validates the actual output width against `class_count`.
