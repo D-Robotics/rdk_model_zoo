@@ -32,8 +32,8 @@ its own nash-m assets and never reuses nash-e implicitly.
 | s600 | l | lite | `nash-p/yolo26l_depth_lite_nashp_768x768.hbm` |
 | s600 | x | lite | `nash-p/yolo26x_depth_lite_nashp_768x768.hbm` |
 
-Authoritative filenames, URLs and hashes are in the [X5 manifest](../../../../platforms/x5/docs/release/models.yaml)
-and [S manifest](../../../../platforms/s/docs/release/models.yaml). The list command
+Authoritative filenames, URLs and hashes are in the X5 manifest (historical `../../../../platforms/x5/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
+and S manifest (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md). The list command
 below prints exact asset IDs and URLs. A declaration of availability in a source
 manifest is not a new download or inference verification.
 

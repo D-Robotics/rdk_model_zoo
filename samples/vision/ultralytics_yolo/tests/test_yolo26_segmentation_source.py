@@ -79,29 +79,5 @@ class SegmentationSource(unittest.TestCase):
         self.assertFalse(np.array_equal(old[3][0], current))
         self.assertEqual(int(current.sum()), 256)
 
-    def test_actual_x5_adapter_supports_explicit_geometry(self):
-        path = (
-            ROOT
-            / "platforms/x5/samples/vision/ultralytics_yolo26/runtime/python/yolo26_seg.py"
-        )
-        spec = importlib.util.spec_from_file_location("legacy_y26_seg_test", path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        unified, _, _, _ = fixture("x5")
-        legacy = module.YOLO26Seg(
-            module.YOLO26SegConfig("stub", classes_num=1), runner=unified.runner
-        )
-        image = np.zeros((37, 59, 3), np.uint8)
-        boxes, scores, ids, full = legacy.predict(image)
-        expected = unified.predict(image)
-        for a, b in zip((boxes, scores, ids), expected[:3]):
-            np.testing.assert_array_equal(a, b)
-        self.assertEqual(full.shape, (1, 37, 59))
-        self.assertEqual(full.dtype, np.bool_)
-        x1, y1, x2, y2 = boxes[0].astype(int)
-        np.testing.assert_array_equal(full[0, y1:y2, x1:x2], expected[3][0])
-
-
 if __name__ == "__main__":
     unittest.main()

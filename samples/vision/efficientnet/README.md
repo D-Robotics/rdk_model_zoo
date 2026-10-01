@@ -9,6 +9,7 @@ S100/S600 side ships the EfficientNet-Lite lite0..lite4 family (the
 implementation, as cited by the source delivery). [中文说明](README_cn.md)
 
 <a id="overview"></a>
+
 ## Overview
 
 The maintained implementation is one Python flow (all targets, no C++

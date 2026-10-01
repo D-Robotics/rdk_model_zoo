@@ -8,6 +8,7 @@ import types
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
+from samples._shared.legacy_platforms import legacy_path
 
 
 def source_paths(target: str = "x5") -> tuple[Path, ...]:
@@ -15,8 +16,7 @@ def source_paths(target: str = "x5") -> tuple[Path, ...]:
 
     if target != "x5":
         raise ValueError("MODNet has no fixed source outside X5.")
-    base = ROOT / "platforms" / "x5"
-    return (base / "samples" / "vision" / "modnet" / "runtime" / "python" / "modnet.py",)
+    return (legacy_path("x5/samples/vision/modnet/runtime/python/modnet.py"),)
 
 
 def load_legacy(selection, factory, *, ref_size: int = 512):

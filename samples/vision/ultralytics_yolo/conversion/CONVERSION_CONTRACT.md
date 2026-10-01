@@ -1,7 +1,10 @@
 # Conversion contract and migration map
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
 This note records what was consolidated for representative detection. It is a
 source map, not a claim that a local host run has compiled a model.
+
 
 ## Old symbols to maintained symbols
 

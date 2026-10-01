@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -67,7 +68,7 @@ class QuantRuntime(FakeRuntime):
 
 class LPRNetTests(unittest.TestCase):
     def test_ctc_decoder_matches_fixed_source_for_numeric_fixture(self):
-        source_path = ROOT / "platforms/x5/samples/vision/lprnet/runtime/python/lprnet.py"
+        source_path = legacy_path("x5/samples/vision/lprnet/runtime/python/lprnet.py")
         fake_hbm = types.ModuleType("hbm_runtime")
         old_hbm = sys.modules.get("hbm_runtime")
         sys.modules["hbm_runtime"] = fake_hbm

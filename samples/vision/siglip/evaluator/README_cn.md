@@ -1,5 +1,8 @@
 [English](./README.md) | 简体中文
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
+
 # 模型评估 — SigLIP 视觉特征
 
 本文所有数值表都是固定 S sample 和发布 benchmark 中的历史源记录，用于保留来源和可比性；不是本轮重新跑出的 benchmark。本轮未使用评估脚本、数据集下载、板卡或 HBM 下载。

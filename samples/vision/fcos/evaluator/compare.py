@@ -25,8 +25,9 @@ import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
+from samples._shared.legacy_platforms import legacy_path, pinned_name  # noqa: E402
 SAMPLE_DIR = ROOT / "samples" / "vision" / "fcos"
-SOURCE_FILE = ROOT / "platforms" / "x5" / "samples" / "vision" / "fcos" / "runtime" / "python" / "fcos_det.py"
+SOURCE_FILE = legacy_path("x5/samples/vision/fcos/runtime/python/fcos_det.py")
 SOURCE_REF = "ac115717197920355fc390bb04299b20e6436864"
 _FIXED_SOURCE_MODULES: dict[str, types.ModuleType] = {}
 if str(ROOT) not in sys.path:
@@ -316,14 +317,17 @@ def run_comparison(
         summary["hashes"]["input_npy_sha256"] = _sha256(directory / "input.npy")
         code_files = [
             SOURCE_FILE,
-            ROOT / "platforms" / "x5" / "utils" / "py_utils" / "preprocess.py",
-            ROOT / "platforms" / "x5" / "utils" / "py_utils" / "postprocess.py",
+            legacy_path("x5/utils/py_utils/preprocess.py"),
+            legacy_path("x5/utils/py_utils/postprocess.py"),
             Path(__file__),
             *sorted((SAMPLE_DIR / "runtime" / "python").glob("*.py")),
             *(ROOT / "samples" / "_shared" / name for name in ("assets.py", "platforms.py", "runtime_meta.py", "quantization.py", "image.py")),
         ]
         summary["hashes"]["code_sha256"] = {
-            str(path.relative_to(ROOT)): _sha256(path) for path in code_files if path.is_file()
+            (str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else pinned_name(path)):
+                _sha256(path)
+            for path in code_files
+            if path.is_file()
         }
         if legacy_runner_factory is None:
             source_data = _run_source(selection, image, resize_type=resize_type, conf_thres=conf_thres, iou_thres=iou_thres, priority=priority, bpu_cores=cores)

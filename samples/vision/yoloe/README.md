@@ -14,7 +14,7 @@ Source attribution, inherited from the fixed X5/S sources:
 - Paper: [YOLOE: Real-Time Seeing Anything](https://arxiv.org/pdf/2503.07465v1); official repo: [um-assn/yoloe](https://github.com/um-assn/yoloe) (X5 source)
 - Base detector lineage: [ultralytics/ultralytics](https://github.com/ultralytics/ultralytics) (S11 source)
 
-Algorithm references and version context are preserved in the [X5 source overview](../../../platforms/x5/samples/vision/yoloe/README.md) and [S26 source overview](../../../platforms/s/samples/vision/yoloe26_seg/README.md).
+Algorithm references and version context are preserved in the X5 source overview (historical `../../../platforms/x5/samples/vision/yoloe/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and S26 source overview (historical `../../../platforms/s/samples/vision/yoloe26_seg/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
 
 <a id="support-matrix"></a>
 ## Support Matrix
@@ -77,17 +77,17 @@ No real model result is available this round; no fixed detection count is promis
 | YOLOE-26l PF | S100 | 13.417 ms / 74.18 |
 | YOLOE-26x PF | S100 | 22.013 ms / 45.31 |
 
-X5 values are source single-thread libdnn Runtime records. S100 values are from 2026-09-08, 200 frames, warmup, thread_num=1/core_id=0, excluding preprocessing/postprocessing. S100P Runtime performance was not measured. See complete conditions and accuracy limits in [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md).
+X5 values are source single-thread libdnn Runtime records. S100 values are from 2026-09-08, 200 frames, warmup, thread_num=1/core_id=0, excluding preprocessing/postprocessing. S100P Runtime performance was not measured. See complete conditions and accuracy limits in S26 evaluation (historical `../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
 
 The two fixed S source publications each embedded one historical result illustration over the same bundled `office_desk.jpg`. They are restored here byte-exact under distinct names, so they can never be confused with the runtime-generated `test_data/result.jpg`:
 
 ![Historical S11 source result figure](test_data/source_s11_result_figure.jpg)
 
-Historical result figure published with the fixed S11 source sample ([platforms/s/samples/vision/yoloe11_seg](../../../platforms/s/samples/vision/yoloe11_seg/README.md), rdk_s `380e1a2b`). That source delivery runs only on S100 and its only published runnable artifact is a quantized 11s PF HBM; the source does not record which run produced the figure.
+Historical result figure published with the fixed S11 source sample (platforms/s/samples/vision/yoloe11_seg (historical `../../../platforms/s/samples/vision/yoloe11_seg/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), rdk_s `380e1a2b`). That source delivery runs only on S100 and its only published runnable artifact is a quantized 11s PF HBM; the source does not record which run produced the figure.
 
 ![Historical S26 source result figure](test_data/source_s26_result_figure.jpg)
 
-Historical example published with the fixed S26 source ([platforms/s/samples/vision/yoloe26_seg](../../../platforms/s/samples/vision/yoloe26_seg/README.md)): recorded outputs from the released quantized S100 YOLOE-26n PF model, labels exported in PF checkpoint class-ID order, as stated by the source caption.
+Historical example published with the fixed S26 source (platforms/s/samples/vision/yoloe26_seg (historical `../../../platforms/s/samples/vision/yoloe26_seg/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)): recorded outputs from the released quantized S100 YOLOE-26n PF model, labels exported in PF checkpoint class-ID order, as stated by the source caption.
 
 Both are historical quantized S publication results — not output of this sample's floating route, not expected results for the current code, and not accuracy/AP evidence.
 
@@ -116,10 +116,10 @@ Canonical checkpoint export, conversion preparation and evaluation workflows are
 - [Evaluation](evaluator/README.md) — Explicit PF mapping, CPU/board backends, COCO metrics, provenance and historical benchmarks.
 - [Python](runtime/python/README.md) — Options, protocols, library API and troubleshooting.
 - [Test data](test_data/README.md) — Image/vocabulary provenance and historical source figures.
-- [X5 conversion](../../../platforms/x5/samples/vision/yoloe/conversion/README.md) / [S11 conversion](../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md) / [S26 conversion](../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md) — Original recipes; S recipes produce quantized outputs. The canonical preparation entry retains float-output nodes, with actual compiled precision still unverified.
+- X5 conversion (historical `../../../platforms/x5/samples/vision/yoloe/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) / S11 conversion (historical `../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) / S26 conversion (historical `../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) — Original recipes; S recipes produce quantized outputs. The canonical preparation entry retains float-output nodes, with actual compiled precision still unverified.
 - [Canonical C++ progress](runtime/cpp/README.md) — Reusable three-stage C++ library with owned NV12 inputs, float binding and E11/E26 decoding/masks; the SDK adapter is implemented; native board/model/vocabulary preflight is implemented; publication selection, CLI and result records are implemented; real SDK compilation and board checks remain not-run.
-- [S11 C++](../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) / [S26 C++](../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md) — Historical implementations with preserved source capabilities and measurements.
-- [X5 evaluation](../../../platforms/x5/samples/vision/yoloe/evaluator/README.md) / [S26 evaluation](../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md) — Historical records, not current acceptance.
+- S11 C++ (historical `../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) / S26 C++ (historical `../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) — Historical implementations with preserved source capabilities and measurements.
+- X5 evaluation (historical `../../../platforms/x5/samples/vision/yoloe/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) / S26 evaluation (historical `../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) — Historical records, not current acceptance.
 
 <a id="license"></a>
 ## License

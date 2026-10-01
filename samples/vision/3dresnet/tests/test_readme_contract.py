@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shlex
 import unittest
+from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
 from unittest.mock import patch
 import numpy as np
 from test_3dresnet import SAMPLE, FakeRuntime, local_module
@@ -93,11 +94,16 @@ class ReadmeTests(unittest.TestCase):
             self.assertEqual(len(snippets),1)
             with tempfile.TemporaryDirectory() as directory:
                 repo=Path(directory)
-                for relative in ['samples/vision/3dresnet/test_data/video0.npy',
-                                 'samples/vision/3dresnet/test_data/kinetics_classnames.json',
-                                 'platforms/s/samples/vision/3dresnet/runtime/python/resnet3d.py']:
+                fixtures=['samples/vision/3dresnet/test_data/video0.npy',
+                          'samples/vision/3dresnet/test_data/kinetics_classnames.json']
+                for relative in fixtures:
                     dest=repo/relative;dest.parent.mkdir(parents=True,exist_ok=True)
                     shutil.copyfile(ROOT/relative,dest)
+                # The historical source file now lives only in Git; seed the
+                # fixture repo's platforms/s copy from the pinned commit.
+                legacy='platforms/s/samples/vision/3dresnet/runtime/python/resnet3d.py'
+                dest=repo/legacy;dest.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copyfile(legacy_path('s/samples/vision/3dresnet/runtime/python/resnet3d.py'),dest)
                 model=repo/'samples/vision/3dresnet/model/s100/r3d_18.hbm'
                 model.parent.mkdir(parents=True);model.write_bytes(b'host only')
                 legacy_runtime,unified_runtime=FakeRuntime(),FakeRuntime()

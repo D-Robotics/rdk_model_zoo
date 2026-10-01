@@ -17,6 +17,7 @@ from samples.speech.paraformer.conversion.calibration import CALIBRATION
 from samples.speech.paraformer.conversion.configuration import STAGES, make_config
 from samples.speech.paraformer.conversion.compile import main, compile_workspace
 from samples.speech.paraformer.conversion.workspace import verify_prepared
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -95,9 +96,8 @@ out.mkdir()
     def test_all_nonpath_recipe_settings_match_archived_source(self):
         for stage in STAGES:
             source = yaml.safe_load(
-                (
-                    ROOT
-                    / f"platforms/s/samples/speech/paraformer/conversion/configs/{stage}_int16.yaml"
+                legacy_path(
+                    f"s/samples/speech/paraformer/conversion/configs/{stage}_int16.yaml"
                 ).read_text()
             )
             generated = make_config(stage)

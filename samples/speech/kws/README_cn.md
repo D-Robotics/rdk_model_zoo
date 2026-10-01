@@ -11,7 +11,7 @@
 
 已发布的 S100 制品实现 PaddlePaddle + PaddleAudio 语音栈中的 MDTC（Multi-Scale Dynamic Temporal Convolution）。固定源将 MDTC 描述为多尺度时序卷积模型：不同时间尺度的卷积捕获语音特征，动态卷积自适应调整卷积权重以适配不同说话人和环境，并称其设计边缘友好、检测准确率高。固定源只提供编译制品、没有训练代码，因此这些表述按源描述原样保留，不是本样例重新验证过的行为。
 
-部署流程原地恢复如下：单声道 16 kHz float32 音频截取前 60000 个采样点（3.75 秒，短音频补零），PaddleAudio fbank 前端（25 ms 帧、10 ms 帧移、80 mel bin）把该窗口转成 `[1, 373, 80]` 特征张量，BPU 上的 MDTC 模型把窗口映射为关键词概率，后处理校验这些概率并按最大值归约为一个片段级置信度，不再叠加 sigmoid。应用层判定为 `score >= threshold`（默认 `0.5`），是可配置规则，不是校准过的误唤醒率保证。历史示例和归档实现仍可经 [S 快照](../../../platforms/s/samples/speech/kws/README_cn.md)查阅。统一任务保留 preprocess → forward → postprocess → predict，音频文件、SDK 传输、特征提取和数值评分分别放在独立模块。
+部署流程原地恢复如下：单声道 16 kHz float32 音频截取前 60000 个采样点（3.75 秒，短音频补零），PaddleAudio fbank 前端（25 ms 帧、10 ms 帧移、80 mel bin）把该窗口转成 `[1, 373, 80]` 特征张量，BPU 上的 MDTC 模型把窗口映射为关键词概率，后处理校验这些概率并按最大值归约为一个片段级置信度，不再叠加 sigmoid。应用层判定为 `score >= threshold`（默认 `0.5`），是可配置规则，不是校准过的误唤醒率保证。历史示例和归档实现仍可经 S 快照 (historical `../../../platforms/s/samples/speech/kws/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)查阅。统一任务保留 preprocess → forward → postprocess → predict，音频文件、SDK 传输、特征提取和数值评分分别放在独立模块。
 
 <a id="support-matrix"></a>
 ## 支持矩阵

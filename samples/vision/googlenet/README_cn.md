@@ -1,6 +1,7 @@
 # GoogLeNet 图像分类
 
 <a id="overview"></a>
+
 ## 概述
 
 GoogLeNet 是基于 Inception 模块的图像分类网络，在 2014 年 ImageNet 分类竞赛中取得冠军，并提出了面向多感受野特征提取的多分支结构。

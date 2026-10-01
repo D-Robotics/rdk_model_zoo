@@ -1,5 +1,6 @@
 """RepGhost migration acceptance on a host; no inference on hardware."""
 from pathlib import Path
+from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
 import contextlib
 import importlib.util
 import io
@@ -59,7 +60,7 @@ class SourceComparisonTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Only import the preserved source; SDK construction is never invoked.
-        spec=importlib.util.spec_from_file_location('_repghost_source', ROOT/'platforms/x5/samples/vision/repghost/runtime/python/repghost.py')
+        spec=importlib.util.spec_from_file_location('_repghost_source', legacy_path('x5/samples/vision/repghost/runtime/python/repghost.py'))
         mod=importlib.util.module_from_spec(spec)
         old_path=sys.path[:]
         with patch.dict(sys.modules, {'hbm_runtime':types.ModuleType('hbm_runtime'),spec.name:mod}):
@@ -133,5 +134,5 @@ class SourceComparisonTests(unittest.TestCase):
     def test_conversion_recipes_remain_identical_to_source(self):
         for v in VARIANTS:
             filename=f'RepGhost_{v}.yaml'
-            expected=(ROOT/'platforms/x5/samples/vision/repghost/conversion'/filename).read_bytes()
+            expected=legacy_path(f'x5/samples/vision/repghost/conversion/{filename}').read_bytes()
             self.assertEqual((SAMPLE/'conversion'/filename).read_bytes(),expected)

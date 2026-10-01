@@ -1,6 +1,7 @@
 # YOLOWorld X5 open-vocabulary detection
 
 <a id="overview"></a>
+
 ## Overview
 
 This sample migrates the fixed X5 YOLOWorld Python protocol from source commit

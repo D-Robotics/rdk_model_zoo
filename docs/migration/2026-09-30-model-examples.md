@@ -67,3 +67,48 @@
 not-run（本轮明确未执行，不以主机测试替代）：真实 ONNX 导出、OE/Mapper/
 HMCT 量化编译、板端 `hbm_runtime` 推理与精度/性能验证。历史 README 中的
 量化配方按 2026-09-28 用户约定视为可信源材料，未重跑。
+
+<a id="platforms-removal"></a>
+## 5. 历史 platforms/ 目录移除（2026-10-01）
+
+用户已授权移除。活动依赖先迁移，目录随后从活动树删除；历史内容不换目录
+保存，以既有 Git 引用保留。
+
+### 5.1 固定引用
+
+| 引用 | 值 | 说明 |
+| --- | --- | --- |
+| platforms/ 整树固定提交 | `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` | 触碰 platforms/ 的最后一个提交（2026-09-28），其树与移除前工作区逐字节一致；可从 `origin/develop` 历史到达 |
+| X3 Catalog 数据固定提交 | `6fcef2b87c12435e11fbd7327ea70d4efd917b1c` | 最后一个触碰 `platforms/x3/release` 的提交（2026-09-14）；`tools/catalog-publisher/sources.json` 以 `commit` 模式读取该树（`release/` 清单与 `VERSION`），x3 变体链接改用 `blob/<该提交>/platforms/x3/...` |
+| 交付分支 | `rdk_x5`、`rdk_s`、`rdk_x3` | 平台交付线仍持有各自完整历史与文档（X5 指南、S Python API/UCP、社区资源等），见根 README 链接 |
+
+全新克隆须知：默认完整克隆（非 shallow）即包含上述对象；shallow/部分克隆需
+先 `git fetch origin d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`（Catalog 另需
+`git fetch origin 6fcef2b87c12435e11fbd7327ea70d4efd917b1c`），否则相关测试与
+Catalog 构建按设计报错并指明精确 fetch 命令，不会静默丢数据。
+
+### 5.2 依赖迁移清单
+
+| 依赖 | 迁移方式 |
+| --- | --- |
+| X3 Catalog 来源 | `sources.json` x3 改 `commit` 模式（`sources.ts` 新增最小 commit 支持：40 位 SHA 校验、对象类型校验、缺失对象报错并给出 fetch 命令）；`platforms/registry.json` 交叉检查测试随注册表一起移除 |
+| 测试读取历史源码（约 30 个 sample 的基线对照测试） | 新增 `samples/_shared/legacy_platforms.py`：`legacy_path`/`legacy_tree` 从固定提交物化到进程临时目录（sha256 夹具继续校验同字节）；测试侧经 `samples/_shared/tests/legacy_platforms.py` 再导出 |
+| YOLO 数值基线（`source_reference.load_source`） | base 指向 platforms 时自动改经固定提交读取 |
+| 过渡兼容 shim 的行为测试（resnet `test_integration` 4 项、YOLO 旧 CLI/pose/seg/yolo26 适配器与 shell 编译检查） | 随 shim 一并移除——被测的兼容面不复存在；转发目标的统一行为仍由既有测试覆盖 |
+| yolov5/bytetrack 评估器与 B3 板端对照工具 | legacy 侧改从固定提交物化执行；证据 `code_sha256`/`observed_file` 以 `platforms/<相对路径>` 树名记录，保持可比性；B3 的 pin 逐字节校验语义不变 |
+| C++ 共享工具 `platforms/s/utils/c_utils` | `git mv` 至 `samples/_shared/cpp/c_utils`（活动依赖，保留在活动树）；resnet/paddle_ocr C++ 构建路径与文档同步更新 |
+| PaddleOCR 字体 `FangSong.ttf` | `git mv` 至 `samples/vision/paddle_ocr/test_data/` |
+| gemma C++ 主机对照测试 | CMake configure 阶段 `git archive` 固定提交提取 legacy 预处理源码到构建目录（缺失对象时 FATAL_ERROR 并给出 fetch 命令）；本轮本机无 cmake，configure 未运行（not-run） |
+| 文档导航（根 README/AGENTS/CLAUDE/datasets/samples 索引/各 evaluator·model·conversion README/skills） | 链接去链为“固定提交 + 路径”指引；涉及可执行路径的文档追加双语 pinned 访问说明；历史报告（docs/releases、superpowers、adr、SOURCE_MAP、evidence）原文不动 |
+| `_shared` 清单覆盖测试 | 原有断言（清单不得指向 platforms/ 下）保持不变，继续守护活动清单 |
+
+### 5.3 保留与不兼容说明
+
+- 移除的是过渡兼容入口与冻结快照，不是能力删除：统一树 51 个 sample 覆盖
+  已迁移能力；未迁移能力的权威仍在交付分支。
+- 旧导入路径（如 `platforms/x5/samples/vision/resnet/runtime/python/resnet.py`
+  的 `ResNet`）不再存在于活动树——这是本次移除的明确不兼容项；统一导入见
+  第 2、3 节映射。
+- Catalog x3 变体的 `source_ref` 由 `main` 变为固定提交 SHA，因此 catalog
+  版本哈希变化（`catalog-v1.0.0-8457fa691252f928`，57 families / 812
+  benchmarks 与基线一致，无数据丢失）；这不构成发布。

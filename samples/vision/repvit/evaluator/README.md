@@ -1,6 +1,9 @@
 # RepViT evaluation
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
 <a id="dataset"></a>
+
 ## Dataset
 
 Functional input: bundled `test_data/yurt.JPEG`. No dataset-level evaluator is delivered by the source; ImageNet validation data and its preparation are not included. One image cannot prove ImageNet accuracy.

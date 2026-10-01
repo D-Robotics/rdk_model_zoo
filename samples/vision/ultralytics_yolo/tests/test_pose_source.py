@@ -71,27 +71,3 @@ class PoseSource(unittest.TestCase):
                 for a, b in zip(actual, expected):
                     np.testing.assert_allclose(a, b, rtol=1e-6, atol=1e-5)
 
-    def test_x5_legacy_adapter_predict_runs_real_canonical_stages(self):
-        import importlib.util
-
-        path = (
-            ROOT
-            / "platforms/x5/samples/vision/ultralytics_yolo/runtime/python/ultralytics_yolo_pose.py"
-        )
-        spec = importlib.util.spec_from_file_location("stage_legacy_pose", path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        task, _, _ = fixture(target="x5", quantized=False)
-        legacy = module.UltralyticsYOLOPose(
-            module.UltralyticsYOLOPoseConfig("fixture.bin"), runner=task.runner
-        )
-        image = np.zeros((31, 73, 3), np.uint8)
-        actual = legacy.predict(image)
-        expected = task.predict(image)
-        self.assertEqual(len(actual), 3)
-        np.testing.assert_array_equal(actual[0], expected[0])
-        np.testing.assert_array_equal(actual[1], expected[1])
-        np.testing.assert_array_equal(
-            actual[2], np.concatenate([expected[3], expected[4]], axis=-1)
-        )

@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="source-model"></a>
 ## Source model
 
-The source identifies an MDTC keyword model from the PaddlePaddle/PaddleAudio ecosystem, but includes no training checkpoint, export script or checkpoint digest. Its [conversion page](../../../../platforms/s/samples/speech/kws/conversion/README.md) was a placeholder. This directory makes the missing prerequisites explicit; it is not a conversion recipe.
+The source identifies an MDTC keyword model from the PaddlePaddle/PaddleAudio ecosystem, but includes no training checkpoint, export script or checkpoint digest. Its conversion page (historical `../../../../platforms/s/samples/speech/kws/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) was a placeholder. This directory makes the missing prerequisites explicit; it is not a conversion recipe.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and target

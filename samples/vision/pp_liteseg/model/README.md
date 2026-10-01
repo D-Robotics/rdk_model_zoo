@@ -9,7 +9,7 @@ English | [简体中文](README_cn.md)
 | --- | --- | --- |
 | x5 | `pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin` | BIN, STDC1 Cityscapes inference |
 
-Exact asset-id: `x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`. Source: [X5 model manifest](../../../../platforms/x5/docs/release/models.yaml). No S-series assets or alternate variants are published.
+Exact asset-id: `x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`. Source: X5 model manifest (historical `../../../../platforms/x5/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md). No S-series assets or alternate variants are published.
 
 <a id="preparation"></a>
 ## Preparation

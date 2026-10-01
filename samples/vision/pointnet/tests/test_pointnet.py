@@ -10,6 +10,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -309,7 +310,7 @@ class VisualizationDefaultPathTests(unittest.TestCase):
 class SourceAndEntrypointTests(unittest.TestCase):
     def source(self):
         name = 'pointnet_source_fixture'
-        path = ROOT/'platforms/s/samples/vision/pointnet/runtime/python/pointnet.py'
+        path = legacy_path('s/samples/vision/pointnet/runtime/python/pointnet.py')
         spec = importlib.util.spec_from_file_location(name, path)
         module = importlib.util.module_from_spec(spec)
         with patch.dict(sys.modules, {name: module, 'hbm_runtime': types.ModuleType('hbm_runtime')}):

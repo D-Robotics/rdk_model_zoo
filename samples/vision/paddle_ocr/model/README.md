@@ -1,6 +1,9 @@
 # PaddleOCR model preparation
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
 <a id="artifacts"></a>
+
 ## Artifacts
 
 This directory holds no model binaries. The sample consumes four published
@@ -59,7 +62,7 @@ contract:
 SHA-256 matches the audited digest below; any other content is rejected.
 The S-series C++ runtime additionally uses a TrueType font for result
 rendering; it is carried from the audited source delivery at
-`platforms/s/samples/vision/paddle_ocr/test_data/FangSong.ttf` and is
+`samples/vision/paddle_ocr/test_data/FangSong.ttf` and is
 selectable with the C++ `--font_path` flag.
 
 <a id="local-paths"></a>

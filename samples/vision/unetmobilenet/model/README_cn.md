@@ -10,7 +10,7 @@
 | s100 | s100/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm |
 | s600 | s600/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s600/unet_mobilenet_1024x2048_nv12.hbm |
 
-两者均为 HBM 部署制品。[发布清单](../../../../platforms/s/docs/release/models.yaml)。同名不代表模型字节可以互换，没有发布的 S100P/X5 制品。
+两者均为 HBM 部署制品。发布清单 (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。同名不代表模型字节可以互换，没有发布的 S100P/X5 制品。
 
 <a id="preparation"></a>
 ## 准备步骤

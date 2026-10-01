@@ -3,6 +3,7 @@
 [English](README.md)
 
 <a id="overview"></a>
+
 ## 概览
 
 本 Sample 为 RDK X5、S100、S100P、S600 提供目标检测、实例分割、姿态估计、分类及 YOLO26 旋转框任务。两份固定交付源 README 均将 Ultralytics YOLO 描述为覆盖目标检测、实例分割、姿态估计与图像分类的实时视觉模型系列；同期交付的 direct-LTRB 系列 YOLO26 在本入口中作为一个系列维护。YOLO 检测头在多个尺度预测类别与框，CPU 端解码、筛选和还原原图坐标；分割、姿态、OBB 还输出各自的 mask、关键点和角度。模型源项目为 [Ultralytics](https://github.com/ultralytics/ultralytics)。
@@ -25,7 +26,7 @@
 
 Python 发布组合详见 [模型清单](model/README_cn.md)：YOLOv5u/v10/12 为检测；YOLOv8/11 为 detect/seg/pose/cls；YOLOv9 分割仅 c/e，S600 无 t 检测及分割；YOLOv13 仅 X5。YOLO26 全目标各 25 个资产（五任务 × n/s/m/l/x），是既有资产合并，不是新增 100 个模型。C++ 范围以其 [输入/head 契约及限制](runtime/cpp/README_cn.md) 为准，不能直接套用 Python 全清单。
 
-历史检测证据：[P1](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md)、[P2](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md)，覆盖 X5 8GB/4GB 与 S 三目标的 YOLOv8n、YOLO26n。其他任务/尺度、数据集精度、性能和本地转换不据此扩大。原始指标保留在 [X5 评估文档](../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README.md) 与 [S 评估文档](../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README.md)，不是重构后的重测结果。
+历史检测证据：[P1](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md)、[P2](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md)，覆盖 X5 8GB/4GB 与 S 三目标的 YOLOv8n、YOLO26n。其他任务/尺度、数据集精度、性能和本地转换不据此扩大。原始指标保留在 X5 评估文档 (historical `../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 与 S 评估文档 (historical `../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)，不是重构后的重测结果。
 
 | 运行契约 | X5 | S100 / S100P / S600 |
 |---|---|---|

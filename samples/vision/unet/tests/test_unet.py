@@ -9,6 +9,7 @@ import types
 import unittest
 import cv2
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -145,12 +146,12 @@ class SourceAndDocsTests(unittest.TestCase):
     def test_source_preprocessing_and_postprocessing_match(self):
         import importlib.util
         from unittest.mock import patch
-        pre_path=ROOT/'platforms/x5/utils/py_utils/preprocess.py'
+        pre_path=legacy_path('x5/utils/py_utils/preprocess.py')
         spec=importlib.util.spec_from_file_location('unet_source_pre',pre_path)
         pre=importlib.util.module_from_spec(spec);spec.loader.exec_module(pre)
         utils=types.ModuleType('utils');py=types.ModuleType('utils.py_utils')
         utils.py_utils=py;py.preprocess=pre
-        source_path=ROOT/'platforms/x5/samples/vision/unet/runtime/python/unet.py'
+        source_path=legacy_path('x5/samples/vision/unet/runtime/python/unet.py')
         spec=importlib.util.spec_from_file_location('unet_source',source_path)
         source=importlib.util.module_from_spec(spec)
         original_path=list(sys.path)

@@ -14,7 +14,7 @@ Run E11/E26 prompt-free instance segmentation through `run.sh`, or embed the C++
 | S100P | 26n/s/m/l/x; default 26n | Locally converted floating-output HBM with explicit SHA-256 | Host only; compatible HBM/SDK/board not verified |
 | S600 | None | No published route; explicitly rejected | Unsupported |
 
-The 14 publication identities describe model selection, **not 14 runnable native artifacts**. Published S files have quantized outputs and are rejected by this entry. Use the [conversion workflow](../../conversion/README.md) to prepare floating outputs; renaming a quantized file does not change its contract. Source [S E11](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) and [S E26](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md) programs remain historical references, with their original capabilities and measurements.
+The 14 publication identities describe model selection, **not 14 runnable native artifacts**. Published S files have quantized outputs and are rejected by this entry. Use the [conversion workflow](../../conversion/README.md) to prepare floating outputs; renaming a quantized file does not change its contract. Source S E11 (historical `../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and S E26 (historical `../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) programs remain historical references, with their original capabilities and measurements.
 
 ## Select, build and run
 

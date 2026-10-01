@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | S100 | `s:depth_anything_v2:s100/depth_any.hbm` | `s100/depth_any.hbm` | 未知（`null`） |
 
-已发布文件名和 URL 以 [S 清单](../../../../platforms/s/docs/release/models.yaml)为准。
+已发布文件名和 URL 以 S 清单 (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)为准。
 源文字还提到 S100P，但清单没有独立 S100P 制品或兼容证据。S100P、S600、X5 均
 显式拒绝，传入外部路径也不例外。`auto` 选择唯一 S100 契约，真实执行仍在加载
 SDK 前检查本机身份。

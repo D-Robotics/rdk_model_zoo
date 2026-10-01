@@ -1,10 +1,13 @@
 # MobileNetV3 评估
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 评估有两个独立目的：确认板卡按声明的张量契约执行所选制品，以及以明确的
 数据集与工具链度量精度或延迟。本目录记录两者；不含自己的精度 harness
 （见[边界](#boundaries)）。
 
 <a id="dataset"></a>
+
 ## 数据集
 
 当前范围为不适用：本 sample 做功能检查（内置测试图），不运行数据集级精度

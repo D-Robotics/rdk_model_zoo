@@ -103,13 +103,13 @@
 
 **文件：** `tools/catalog-publisher/sources.json`、`tools/catalog-publisher/src/sources.ts`（仅现有固定引用机制不能满足时修改）、相关 sources 测试；`platforms/`；通过引用清点确定的活动源码、文档与测试；迁移说明。
 
-- [ ] 使用 `rg -n 'platforms/' samples tools docs .github AGENTS.md README*` 清点引用，区分活动文件访问、来源链接、历史报告文字。
-- [ ] 核实保留平台快照的已有远程可访问提交及其路径，记录完整 SHA；不新增发布标签，不把历史副本换个目录继续保存。
-- [ ] 将 X3 Catalog 来源改为已核实固定 Git 引用读取，先使用现有 source reader 能力；若缺少对应配置模式，只为固定引用补最小支持。
-- [ ] 在 Catalog sources 测试覆盖：固定对象读取正确；对象缺失明确报错并指示获取所需对象，不能返回空成功。执行 `npm --prefix tools/catalog-publisher run check`，预期既有和新增检查通过。
-- [ ] 迁移其余活动文件依赖，修正指向删除目录的当前使用指南；历史报告保持历史事实并增加集中访问说明。
-- [ ] 删除已解除依赖的 platforms/ 跟踪文件；在本地临时 `git worktree` 干净 checkout 验证两个范例入口、相关回归与 Catalog。不得初始化 VLA 子仓库。
-- [ ] 更新迁移说明，提交移除改动与证据。该验证仅证明来源解析和代码依赖完整，不代表模型链路复现。
+- [x] 使用 `rg -n 'platforms/' samples tools docs .github AGENTS.md README*` 清点引用，区分活动文件访问、来源链接、历史报告文字。
+- [x] 核实保留平台快照的已有远程可访问提交及其路径，记录完整 SHA；不新增发布标签，不把历史副本换个目录继续保存。
+- [x] 将 X3 Catalog 来源改为已核实固定 Git 引用读取，先使用现有 source reader 能力；若缺少对应配置模式，只为固定引用补最小支持。
+- [x] 在 Catalog sources 测试覆盖：固定对象读取正确；对象缺失明确报错并指示获取所需对象，不能返回空成功。执行 `npm --prefix tools/catalog-publisher run check`，预期既有和新增检查通过。
+- [x] 迁移其余活动文件依赖，修正指向删除目录的当前使用指南；历史报告保持历史事实并增加集中访问说明。
+- [x] 删除已解除依赖的 platforms/ 跟踪文件；在本地临时 `git worktree` 干净 checkout 验证两个范例入口、相关回归与 Catalog。不得初始化 VLA 子仓库。
+- [x] 更新迁移说明，提交移除改动与证据。该验证仅证明来源解析和代码依赖完整，不代表模型链路复现。
 
 ## 交付与核对
 

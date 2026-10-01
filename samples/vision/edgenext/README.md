@@ -9,6 +9,7 @@ Applications](https://arxiv.org/abs/2206.10589), reference
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
+
 ## Overview
 
 EdgeNeXt is an efficient hybrid CNN-Transformer architecture for mobile

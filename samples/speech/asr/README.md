@@ -7,7 +7,7 @@ English | [简体中文](README_cn.md)
 
 This sample transcribes audio using the published S-series Wav2Vec2 ASR model and a fixed 3503-token vocabulary. It reads WAV/FLAC in bounded chunks, mixes channels to mono, resamples to 16 kHz, normalizes each chunk and submits 30000 samples per inference (1.875 seconds). It handles the whole file, including the final padded chunk. This is independent-window processing, not an acoustic model with hidden streaming state or overlap stitching.
 
-The canonical Python workflow is implemented. The native workflow is also implemented: audio preprocessing, CTC/legacy decoding, SDK adapter, explicit launcher and full-file result reporting have host tests. Real vendor SDK build/ABI and model inference remain unverified. Preserve the original [S source](../../../platforms/s/samples/speech/asr/README.md) for historical implementation context. No board test or new real model transcription has run in this migration.
+The canonical Python workflow is implemented. The native workflow is also implemented: audio preprocessing, CTC/legacy decoding, SDK adapter, explicit launcher and full-file result reporting have host tests. Real vendor SDK build/ABI and model inference remain unverified. Preserve the original S source (historical `../../../platforms/s/samples/speech/asr/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) for historical implementation context. No board test or new real model transcription has run in this migration.
 
 <a id="support-matrix"></a>
 ## Support matrix

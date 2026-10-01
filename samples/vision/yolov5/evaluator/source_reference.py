@@ -2,13 +2,15 @@
 from pathlib import Path
 import importlib.util,sys,types
 ROOT=Path(__file__).resolve().parents[4]
+from samples._shared.legacy_platforms import legacy_module_namespace, legacy_path
 
 
 def source_paths(target):
     group='x5' if target=='x5' else 's'
-    base=ROOT/'platforms'/group
-    return (base/'samples/vision/yolov5/runtime/python'/('yolov5_det.py' if group=='x5' else 'yolov5.py'),
-            base/'utils/py_utils/preprocess.py',base/'utils/py_utils/postprocess.py',base/'utils/py_utils/nn_math.py')
+    return (legacy_path(f'{group}/samples/vision/yolov5/runtime/python/'+('yolov5_det.py' if group=='x5' else 'yolov5.py')),
+            legacy_path(f'{group}/utils/py_utils/preprocess.py'),
+            legacy_path(f'{group}/utils/py_utils/postprocess.py'),
+            legacy_path(f'{group}/utils/py_utils/nn_math.py'))
 
 
 def load_legacy(selection,factory,*,resize_type,score_thres,nms_thres,anchors):
@@ -19,6 +21,7 @@ def load_legacy(selection,factory,*,resize_type,score_thres,nms_thres,anchors):
     """
     group='x5' if selection.target=='x5' else 's'
     paths=source_paths(selection.target)
+    legacy_module_namespace()  # sources import each other as platforms.<group>...
     def load(path,name):
         spec=importlib.util.spec_from_file_location(name,path);mod=importlib.util.module_from_spec(spec);sys.modules[name]=mod
         spec.loader.exec_module(mod);return mod

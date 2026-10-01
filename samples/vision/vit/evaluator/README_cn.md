@@ -1,6 +1,9 @@
 # ViT 评测
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 <a id="dataset"></a>
+
 ## 数据集
 
 随附十张 CIFAR-10 图片每类一张，仅做功能检查，不代表完整数据集精度。未含完整 CIFAR-10 评测集，源没有专用数据集精度 evaluator。历史子集/版本/协议记录不完整，不能把十张图片当历史基准集。

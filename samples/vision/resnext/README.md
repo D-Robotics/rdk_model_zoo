@@ -1,6 +1,7 @@
 # ResNeXt image classification
 
 <a id="overview"></a>
+
 ## Overview
 
 ResNeXt extends the residual network family with a split-transform-merge design that increases cardinality instead of only scaling depth or width. It keeps a simple residual backbone while using grouped convolution to improve representation efficiency.

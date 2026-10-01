@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from samples.speech.paraformer.conversion import export
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -24,7 +25,7 @@ class ExportCLI(unittest.TestCase):
             source = Path(temporary) / "source"
             source.mkdir()
             (source / "model.pt").write_bytes(b"dummy: preflight only, never loaded")
-            archived = ROOT / "platforms/s/samples/speech/paraformer/model"
+            archived = legacy_tree("s/samples/speech/paraformer/model")
             shutil.copyfile(archived / "am.mvn", source / "am.mvn")
             shutil.copyfile(archived / "paraformer_config.yaml", source / "config.yaml")
             shutil.copyfile(

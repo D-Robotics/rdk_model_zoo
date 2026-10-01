@@ -108,7 +108,7 @@ in the [source audit](../../../docs/releases/unified-migration/2026-09-26-b8-dep
 
 Start with the commands above, then the runtime guide's API and stage table.
 Conversion/evaluation pages preserve source detail while marking unavailable
-inputs. Original [S source](../../../platforms/s/samples/vision/depth_anything_v2/README.md)
+inputs. Original S source (historical `../../../platforms/s/samples/vision/depth_anything_v2/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 remains available; its implicit installation/download script and API are historical.
 No board test, dataset score, conversion run or SDK compatibility acceptance is
 claimed by this canonical entry.

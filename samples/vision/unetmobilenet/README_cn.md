@@ -60,7 +60,7 @@ Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原
 <a id="entry-points"></a>
 ## 入口索引
 
-[模型](model/README_cn.md) · [Python](runtime/python/README_cn.md) · [C++](runtime/cpp/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。[原 S 文档](../../../platforms/s/samples/vision/unetmobilenet/README.md) 保留旧 API 和自动准备行为的历史说明。
+[模型](model/README_cn.md) · [Python](runtime/python/README_cn.md) · [C++](runtime/cpp/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。原 S 文档 (historical `../../../platforms/s/samples/vision/unetmobilenet/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 保留旧 API 和自动准备行为的历史说明。
 
 <a id="license"></a>
 ## 许可

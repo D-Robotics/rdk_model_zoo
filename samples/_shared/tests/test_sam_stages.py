@@ -9,6 +9,7 @@ import importlib.util
 import sys
 import types
 import unittest
+from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
 from pathlib import Path
 
 import numpy as np
@@ -97,8 +98,9 @@ def load_source(name: str, path: Path):
 
 
 def source_class(sample: str, platform: str):
-    path = ROOT / "platforms" / platform / "samples" / "vision" / sample / "runtime/python" / (
-        "efficient_sam.py" if sample == "efficient_sam" else "mobile_sam.py")
+    path = legacy_path(
+        f"{platform}/samples/vision/{sample}/runtime/python/"
+        + ("efficient_sam.py" if sample == "efficient_sam" else "mobile_sam.py"))
     return load_source(f"source_{platform}_{sample}", path)
 
 

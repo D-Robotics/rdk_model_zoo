@@ -139,8 +139,8 @@ For self-converted artifacts use explicit `--converted-model` together with
 bytes are labeled user-converted; they do not inherit a publisher hash or measured
 accuracy. S lite calibration constants must match the declared checkpoint.
 
-[Archived X5](../../../platforms/x5/samples/vision/yolo26_depth/README.md) and
-[archived S](../../../platforms/s/samples/vision/yolo26_depth/README.md) retain the
+Archived X5 (historical `../../../platforms/x5/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and
+archived S (historical `../../../platforms/s/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) retain the
 original implementations and records. They are provenance, not the unified entry.
 
 <a id="license"></a>

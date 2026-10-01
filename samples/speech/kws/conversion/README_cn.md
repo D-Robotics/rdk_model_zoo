@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源中将模型描述为 PaddlePaddle/PaddleAudio 体系的 MDTC 关键词模型，但没有训练权重、导出脚本或权重摘要。原[转换页](../../../../platforms/s/samples/speech/kws/conversion/README_cn.md)只有占位内容。本目录明确缺失前提，不冒充转换配方。
+源中将模型描述为 PaddlePaddle/PaddleAudio 体系的 MDTC 关键词模型，但没有训练权重、导出脚本或权重摘要。原转换页 (historical `../../../../platforms/s/samples/speech/kws/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)只有占位内容。本目录明确缺失前提，不冒充转换配方。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标

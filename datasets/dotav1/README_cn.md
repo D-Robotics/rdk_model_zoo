@@ -1,5 +1,8 @@
 [English](./README.md) | 简体中文
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
+
 # DOTA-v1.0 数据集资源
 
 **DOTA-v1.0** 是面向旋转框目标检测的大规模航拍图像基准：2,806 张大尺寸航拍图，
@@ -60,8 +63,8 @@ OBB 路径也只输出预测：[Ultralytics YOLO OBB 评估器](../../samples/vi
 
 - X5 交付分支的 `ultralytics_yolo26` sample 曾用 `asset/P0009.png` 作 OBB 测试图、
   `dota_classes.names` 作标签文件——见归档的
-  [X5 YOLO26 运行指南](../../platforms/x5/samples/vision/ultralytics_yolo26/runtime/python/README_cn.md)
-  与[评估指南](../../platforms/x5/samples/vision/ultralytics_yolo26/evaluator/README_cn.md)。
+  X5 YOLO26 运行指南 (historical `../../platforms/x5/samples/vision/ultralytics_yolo26/runtime/python/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
+  与评估指南 (historical `../../platforms/x5/samples/vision/ultralytics_yolo26/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。
 - 当前 [Ultralytics YOLO sample](../../samples/vision/ultralytics_yolo/README_cn.md)
   使用自带的 `test_data/ultralytics_dota_classes.names`（模型顺序）和随仓 OBB
   测试图；上述归档文件保持冻结参考。

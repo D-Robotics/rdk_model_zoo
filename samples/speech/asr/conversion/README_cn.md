@@ -32,4 +32,4 @@ S 源实现将模型标为 Wav2Vec2 ASR，但未提供完整 checkpoint→HBM �
 
 <a id="known-gaps"></a>
 ## 已知缺口
-尚缺精确权重/导出配方、校准语料、编译器版本/配置及真实源模型/导出/HBM 验证。[历史转换目录](../../../../platforms/s/samples/speech/asr/conversion/)保留供追溯。可沿运行时流程使用已发布 HBM，但下载并运行不等于完成模型转换。
+尚缺精确权重/导出配方、校准语料、编译器版本/配置及真实源模型/导出/HBM 验证。历史转换目录 (historical `../../../../platforms/s/samples/speech/asr/conversion/` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)保留供追溯。可沿运行时流程使用已发布 HBM，但下载并运行不等于完成模型转换。

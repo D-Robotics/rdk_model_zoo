@@ -8,6 +8,7 @@ import unittest
 
 import cv2
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -80,7 +81,7 @@ class StageTests(unittest.TestCase):
         import importlib.util, sys, types
         modules = {}
         for name in ['preprocess', 'postprocess', 'visualize']:
-            spec = importlib.util.spec_from_file_location('utils.py_utils.'+name, ROOT/f'platforms/s/utils/py_utils/{name}.py')
+            spec = importlib.util.spec_from_file_location('utils.py_utils.'+name, legacy_path(f's/utils/py_utils/{name}.py'))
             module = importlib.util.module_from_spec(spec)
             with patch.dict(sys.modules, {"hbm_runtime": SimpleNamespace(QuantParams=object)}):
                 spec.loader.exec_module(module)
@@ -89,7 +90,7 @@ class StageTests(unittest.TestCase):
         for name in ['preprocess','postprocess','visualize']:
             setattr(py, name, modules['utils.py_utils.'+name])
         modules.update({'utils':utils, 'utils.py_utils':py, 'hbm_runtime':SimpleNamespace()})
-        path = ROOT/'platforms/s/samples/vision/unetmobilenet/runtime/python/unetmobilenet.py'
+        path = legacy_path('s/samples/vision/unetmobilenet/runtime/python/unetmobilenet.py')
         spec = importlib.util.spec_from_file_location('source_unetmobile', path)
         source = importlib.util.module_from_spec(spec)
         original_path = list(sys.path)
@@ -103,7 +104,7 @@ class StageTests(unittest.TestCase):
         old.input_names = ['y','uv']; old.output_names = ['scores']
         old.cfg = source.UnetMobileNetConfig('/not-used.hbm')
         task, raw = make_task()
-        image = cv2.imread(str(ROOT/'platforms/s/samples/vision/unetmobilenet/test_data/segmentation.png'))
+        image = cv2.imread(str(legacy_path('s/samples/vision/unetmobilenet/test_data/segmentation.png')))
         image = cv2.resize(image, (37, 23), interpolation=cv2.INTER_AREA)
         prepared = task.pre_process(image)
         for name, array in old.pre_process(image)['unet'].items():
@@ -180,7 +181,7 @@ class RuntimeAndCLITests(unittest.TestCase):
     def test_alpha_weights_original_and_source_palette_is_preserved(self):
         import importlib.util
         from samples.vision.unetmobilenet.runtime.python.visualization import render_overlay,PALETTE_BGR
-        spec=importlib.util.spec_from_file_location('source_vis',ROOT/'platforms/s/utils/py_utils/visualize.py')
+        spec=importlib.util.spec_from_file_location('source_vis',legacy_path('s/utils/py_utils/visualize.py'))
         source=importlib.util.module_from_spec(spec);spec.loader.exec_module(source)
         np.testing.assert_array_equal(PALETTE_BGR,np.asarray(source.rdk_colors,np.uint8))
         image=np.full((3,7,3),83,np.uint8);labels=np.full((3,7),5,np.int32)

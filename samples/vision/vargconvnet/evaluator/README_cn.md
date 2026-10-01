@@ -1,6 +1,9 @@
 # VargConvNet 评测
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 <a id="dataset"></a>
+
 ## 数据集
 
 功能输入为随附 `test_data/box_turtle.JPEG`。源没有交付数据集级评测程序，也没有包含 ImageNet 验证集及其准备流程。单图不能证明 ImageNet 精度。

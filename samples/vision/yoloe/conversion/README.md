@@ -1,11 +1,13 @@
 # YOLOE PF conversion
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
 <a id="source-model"></a>
 ## Source Model
 
 This directory prepares calibration data and an auditable, target-specific OE configuration from a **local, already exported** YOLOE PF ONNX model. It does not download checkpoints. Version 11 exposes DFL16 heads; version 26 exposes direct LTRB heads. Both use the fixed 4585-class vocabulary, three strides (8/16/32), 32 mask coefficients and a prototype tensor. Text/visual-prompt models are incompatible.
 
-The source recipes are preserved in [X5 E11](../../../../platforms/x5/samples/vision/yoloe/conversion/README.md), [S E11](../../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md), and [S E26](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md). The canonical path retains floating output nodes: it does not request `remove_node_type` or `remove_node_name`. Original S publications have quantized outputs and cannot be substituted for a newly converted float model.
+The source recipes are preserved in X5 E11 (historical `../../../../platforms/x5/samples/vision/yoloe/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), S E11 (historical `../../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), and S E26 (historical `../../../../platforms/s/samples/vision/yoloe26_seg/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md). The canonical path retains floating output nodes: it does not request `remove_node_type` or `remove_node_name`. Original S publications have quantized outputs and cannot be substituted for a newly converted float model.
 
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
@@ -54,7 +56,7 @@ For both families, the exporter compares all raw anchors, decoded pre-Top-K tens
 
 For E26 it additionally requires the exact same selected `(anchor, class)` set as upstream, then compares selected values by that identity. Order changes caused by floating rounding are recorded as `order_identical=false` and a `reordered_rows` count. They are not labelled exact ties or identical rankings. Any added/dropped anchor or class fails, even when scores are close. The exported interface contains dense tensors, not a Top-K row order; runtime/dataset ranking acceptance remains separate.
 
-All eight real checkpoints (E11s/m/l and E26n/s/m/l/x) have been exported and compared on the bundled image in the [host export record](../../../../docs/releases/unified-migration/2026-09-28-yoloe-export-review.md). The m/l/x E26 checks retain 2/4/2 reordered Top-K rows with identical selected identity sets. This checks float conversion on one input, not dataset accuracy or compiled BIN/HBM inference. The preserved [E11 exporter](../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py) and [E26 exporter](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py) remain historical references.
+All eight real checkpoints (E11s/m/l and E26n/s/m/l/x) have been exported and compared on the bundled image in the [host export record](../../../../docs/releases/unified-migration/2026-09-28-yoloe-export-review.md). The m/l/x E26 checks retain 2/4/2 reordered Top-K rows with identical selected identity sets. This checks float conversion on one input, not dataset accuracy or compiled BIN/HBM inference. The preserved E11 exporter (historical `../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and E26 exporter (historical `../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) remain historical references.
 
 `prepare.py` runs ONNX checker, rejects external tensor files and dynamic shapes, and requires the vocabulary file to match [classes.names](../test_data/classes.names) byte for byte. It matches outputs by unique shape, not physical output order:
 

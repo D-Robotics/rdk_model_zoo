@@ -6,6 +6,7 @@ FastViT 在 RDK X5 上的 ImageNet-1k 分类：输入一张 BGR 图像，输出�
 Reparameterization](https://arxiv.org/abs/2303.14189)，按源交付引用）。[English](README.md)
 
 <a id="overview"></a>
+
 ## 概述
 
 FastViT 是使用结构重参数化构建高效 token 混合模块的混合视觉

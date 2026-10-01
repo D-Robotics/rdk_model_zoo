@@ -4,7 +4,7 @@ English | [简体中文](README_cn.md)
 
 <a id="supported-boards"></a>
 ## Supported boards
-The native workflow implements S100 and S600 selection, fixed-vocabulary ASR and complete-file chunk processing. X5/S100P have no ASR publication and are rejected. The SDK adapter is implemented and tested with API doubles; real vendor SDK compilation/ABI, model inference and board tests remain **not-run**. Host success is not a BSP certification. The [original native source](../../../../../platforms/s/samples/speech/asr/runtime/cpp/) remains available for comparison.
+The native workflow implements S100 and S600 selection, fixed-vocabulary ASR and complete-file chunk processing. X5/S100P have no ASR publication and are rejected. The SDK adapter is implemented and tested with API doubles; real vendor SDK compilation/ABI, model inference and board tests remain **not-run**. Host success is not a BSP certification. The original native source (historical `../../../../../platforms/s/samples/speech/asr/runtime/cpp/` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) remains available for comparison.
 
 <a id="dependencies"></a>
 ## Dependencies

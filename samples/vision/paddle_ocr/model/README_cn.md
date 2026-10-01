@@ -1,6 +1,9 @@
 # PaddleOCR 模型准备
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 <a id="artifacts"></a>
+
 ## 制品
 
 本目录不保存模型二进制。sample 消费四条已发布清单行——每个模型对两条
@@ -53,7 +56,7 @@ S100 将两条引用换成 `s:paddle_ocr:s100/...`，`--model-dir` 例如
 `--vocabulary-path` 替换 S100 词典时，文件 SHA-256 必须命中下方审计
 摘要；其他内容一律拒绝。S 系列 C++ 运行时另需 TrueType 字体渲染结果，
 字体自审计源交付携带于
-`platforms/s/samples/vision/paddle_ocr/test_data/FangSong.ttf`，可用
+`samples/vision/paddle_ocr/test_data/FangSong.ttf`，可用
 C++ `--font_path` 指定。
 
 <a id="local-paths"></a>

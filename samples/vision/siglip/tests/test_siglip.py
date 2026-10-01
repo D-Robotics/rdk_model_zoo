@@ -9,6 +9,7 @@ import types
 import unittest
 from unittest.mock import patch
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT=Path(__file__).resolve().parents[4]
 SAMPLE=ROOT/'samples/vision/siglip'
@@ -91,7 +92,7 @@ class BindingTests(unittest.TestCase):
 class TaskTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        spec=importlib.util.spec_from_file_location('_siglip_source',ROOT/'platforms/s/samples/vision/siglip/runtime/python/siglip.py')
+        spec=importlib.util.spec_from_file_location('_siglip_source',legacy_path('s/samples/vision/siglip/runtime/python/siglip.py'))
         mod=importlib.util.module_from_spec(spec)
         with patch.dict(sys.modules,{spec.name:mod,'hbm_runtime':types.ModuleType('hbm_runtime')}):spec.loader.exec_module(mod)
         cls.source=mod

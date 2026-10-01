@@ -1,5 +1,8 @@
 English | [简体中文](./README_cn.md)
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
+
 # Evaluator — SigLIP vision features
 
 All numeric tables in this document are historical source records copied from the fixed S sample and release benchmark records. They are retained for provenance and comparability; they are not a benchmark rerun in this migration. No evaluator script, dataset download, board, or HBM download was used here.

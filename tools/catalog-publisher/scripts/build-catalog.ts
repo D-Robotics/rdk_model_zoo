@@ -65,9 +65,12 @@ const sources = await resolvePlatformSources({
 });
 
 for (const source of sources) {
+  const origin = source.kind === "worktree"
+    ? [source.worktreeRoot, source.manifestDirectory]
+    : [source.ref, source.treePrefix, source.manifestDirectory];
   console.log(
     `source ${source.platform}: ${source.kind} ${source.linkRef}`
-    + ` -> ${source.kind === "worktree" ? source.worktreeRoot : source.ref}/${source.manifestDirectory}`
+    + ` -> ${origin.filter((part) => part !== undefined && part !== "").join("/")}`
   );
 }
 

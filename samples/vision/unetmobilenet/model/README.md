@@ -10,7 +10,7 @@ English | [简体中文](README_cn.md)
 | s100 | s100/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm |
 | s600 | s600/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s600/unet_mobilenet_1024x2048_nv12.hbm |
 
-Both are HBM deployment artifacts. [Manifest](../../../../platforms/s/docs/release/models.yaml). The identical basenames do not mean interchangeable model bytes. No S100P/X5 artifact is published.
+Both are HBM deployment artifacts. Manifest (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md). The identical basenames do not mean interchangeable model bytes. No S100P/X5 artifact is published.
 
 <a id="preparation"></a>
 ## Preparation

@@ -55,7 +55,7 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
 <a id="entry-points"></a>
 ## 入口索引
 
-[模型准备](model/README_cn.md) · [Python CLI 与 API](runtime/python/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。原 X5 快照仍保留在 [platforms/x5](../../../platforms/x5/samples/vision/pp_liteseg/README_cn.md)。
+[模型准备](model/README_cn.md) · [Python CLI 与 API](runtime/python/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。原 X5 快照仍保留在 platforms/x5 (historical `../../../platforms/x5/samples/vision/pp_liteseg/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。
 
 <a id="license"></a>
 ## 许可

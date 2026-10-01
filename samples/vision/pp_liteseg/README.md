@@ -55,7 +55,7 @@ Success returns 0 and writes `outputs/pp_liteseg/result.jpg` (3078×548, Origina
 <a id="entry-points"></a>
 ## Entry points
 
-[Model preparation](model/README.md) · [Python CLI and API](runtime/python/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md). The original X5 snapshot remains under [platforms/x5](../../../platforms/x5/samples/vision/pp_liteseg/README.md).
+[Model preparation](model/README.md) · [Python CLI and API](runtime/python/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md). The original X5 snapshot remains under platforms/x5 (historical `../../../platforms/x5/samples/vision/pp_liteseg/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
 
 <a id="license"></a>
 ## License

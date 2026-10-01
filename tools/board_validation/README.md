@@ -9,7 +9,7 @@ convnext (atto), edgenext (base/small/x_small/xx_small), fasternet
 
 It runs **one sample/target/variant per invocation**, on the board itself,
 against the fixed X5 source pin `ac115717197920355fc390bb04299b20e6436864`.
-The fixed source wrapper (`platforms/x5/samples/vision/<sample>/runtime/python/<sample>.py`)
+The fixed source wrapper (historical `platforms/x5/samples/vision/<sample>/runtime/python/<sample>.py`, materialized from pinned commit `d2d2a4e0` by `samples/_shared/legacy_platforms.py`)
 and the unified entry (`resolve_selection` → `RuntimeModelRunner` →
 `ClassificationTask`) each execute their own complete
 pre_process → forward → post_process on the same image bytes, resize type,
@@ -19,13 +19,14 @@ Top-K and scheduling; neither side's result substitutes for the other's.
 before the source module executes, every file in its closure — the legacy
 entry plus the `utils.py_utils` modules it imports (`__init__`, `file_io`,
 `preprocess`, `visualize`) — is byte-compared with the pin's git blob
-(`git show <pin>:<path>`) against the `platforms/x5` snapshot copies, and the
+(`git show <pin>:<path>`) against the pinned-commit materialization, and the
 pinned dependency modules are installed into `sys.modules` only for the
 duration of the source module's execution (snapshot and restore; nothing
 leaks into the process). The root `utils/py_utils/file_io.py` has drifted
 from the pin (`load_imagenet_labels` rewritten as a proxy) and is never
 executed by this tool; any closure mismatch or unavailable pin object
 refuses the run (rc 2, `source_closure` evidence records every hash). Already cached dependency modules are temporarily removed before loading the snapshot and restored afterwards, including their original object identity. The modules actually bound by the source are hashed again and must match the pin before either model is created; recording a mismatch alone is not sufficient. The tool performs this temporary import isolation serially and is not designed for concurrent calls sharing one Python interpreter.
+
 
 ## Minimal dependencies
 

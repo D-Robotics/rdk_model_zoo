@@ -16,7 +16,7 @@ include_directories(
     /usr/hobot/include
     /usr/include/hobot/dnn
     /usr/include/hobot
-    ../../../../../platforms/s/utils/c_utils/inc
+    ../../../../_shared/cpp/c_utils/inc
     inc/
 )
 
@@ -27,11 +27,11 @@ link_directories(/usr/hobot/lib)
 add_executable(resnet18
     src/main.cpp
     src/resnet18.cpp
-    ../../../../../platforms/s/utils/c_utils/src/file_io.cpp
-    ../../../../../platforms/s/utils/c_utils/src/nn_math.cpp
-    ../../../../../platforms/s/utils/c_utils/src/preprocess.cpp
-    ../../../../../platforms/s/utils/c_utils/src/postprocess.cpp
-    ../../../../../platforms/s/utils/c_utils/src/visualize.cpp
+    ../../../../_shared/cpp/c_utils/src/file_io.cpp
+    ../../../../_shared/cpp/c_utils/src/nn_math.cpp
+    ../../../../_shared/cpp/c_utils/src/preprocess.cpp
+    ../../../../_shared/cpp/c_utils/src/postprocess.cpp
+    ../../../../_shared/cpp/c_utils/src/visualize.cpp
 )
 
 # Find package (required)

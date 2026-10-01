@@ -4,6 +4,7 @@
 
 **交付状态：候选源码，尚未合入/发布。** Pack 候选版本为 1.1.0；入口 `rdk-model-zoo` 的 Skill 版本为 1.1.2，`rdk-model-zoo-repo/develop/validate/review` 为 1.1.1，`rdk-model-zoo-integrate/release` 为 1.0.1。上游 `rdk_x5` 已发布 Pack 1.0.1，该状态描述上游 Pack；本分支的迁移适配候选未发布、未打 tag。Pack 与成员版本分别管理，既有模型版本文件不改变。
 
+
 ## 能力
 
 | Skill | 职责 |
@@ -24,8 +25,10 @@
 
 清单按目标 ref 的实际布局解析。统一集成线使用按平台的活动清单
 `docs/release/x5/models.yaml` 与 `docs/release/s/models.yaml`；它们是当前维护
-位置，区别于 `platforms/{x5,s}/docs/release/`、`platforms/x3/release/` 等迁移期
-冻结快照。交付 ref 保留 `docs/manifests/`，历史 ref 可能保留根 `release/`。
+位置。2026-10-01 起，统一树中的 `platforms/` 迁移期冻结快照（含
+`platforms/{x5,s}/docs/release/`、`platforms/x3/release/`）已整体移除，仅可经
+固定提交或交付分支访问；候选发现不再会在统一工作区命中它们。交付 ref 保留
+`docs/manifests/`，历史 ref 可能保留根 `release/`。
 `inspect_repo` 只报告实际存在的候选清单并标注统一/快照来源（同一平台两者并存
 时统一清单优先），且不据此推断目标硬件。`read_catalog` 的默认发现覆盖同一组
 布局：扁平布局与已知按平台布局（`docs/release/{x5,s,x3}/` 与 `platforms/…`

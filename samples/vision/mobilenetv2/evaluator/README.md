@@ -1,5 +1,7 @@
 # MobileNetV2 evaluation
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
 Evaluation has two separate purposes: confirm that one board executes the
 selected artifact with the expected tensor contract, and measure accuracy
 or latency with a stated dataset and toolchain. This directory documents
@@ -7,6 +9,7 @@ both; it contains no accuracy harness of its own (see
 [boundaries](#boundaries)).
 
 <a id="dataset"></a>
+
 ## Dataset
 
 Not applicable for the current scope: this sample performs functional

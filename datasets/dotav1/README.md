@@ -1,5 +1,8 @@
 English | [简体中文](./README_cn.md)
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
+
 # DOTA-v1.0 Dataset Resources
 
 **DOTA-v1.0** is a large-scale aerial-image benchmark for oriented object
@@ -72,8 +75,8 @@ today. Historical consumers, preserved as archived provenance:
 
 - The X5 delivery branch's `ultralytics_yolo26` sample used
   `asset/P0009.png` as an OBB test image and `dota_classes.names` as its label
-  file — see the archived [X5 YOLO26 runtime guide](../../platforms/x5/samples/vision/ultralytics_yolo26/runtime/python/README.md)
-  and [evaluator guide](../../platforms/x5/samples/vision/ultralytics_yolo26/evaluator/README.md).
+  file — see the archived X5 YOLO26 runtime guide (historical `../../platforms/x5/samples/vision/ultralytics_yolo26/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
+  and evaluator guide (historical `../../platforms/x5/samples/vision/ultralytics_yolo26/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
 - The current [Ultralytics YOLO sample](../../samples/vision/ultralytics_yolo/README.md)
   keeps its own `test_data/ultralytics_dota_classes.names` (model order) and
   bundled OBB test images; the archived files above remain frozen references.

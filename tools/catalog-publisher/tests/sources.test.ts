@@ -9,35 +9,104 @@ import {
 } from "../src/sources";
 import { buildMultiplatformCatalog } from "../src/pipeline/multiplatform-catalog";
 import { publisherRoot, repositoryRoot } from "./helpers/repository";
-import { createTaggedRepository, fixtureManifests } from "./helpers/tag-repository";
+import { createTaggedRepository, fixtureManifests, fixtureSourcesDocument } from "./helpers/tag-repository";
+
+/** The full commit the removed historical platforms/x3 tree is pinned to. */
+const X3_PIN = "6fcef2b87c12435e11fbd7327ea70d4efd917b1c";
 
 async function sourcesDocument(): Promise<SourcesDocument> {
   return loadSourcesDocument(resolve(publisherRoot, "sources.json"));
 }
 
 describe("platform source resolution", () => {
-  it("resolves every platform from the checked-out distribution by default", async () => {
+  it("resolves the unified worktree platforms and the commit-pinned x3", async () => {
     const sources = await resolvePlatformSources({ repositoryRoot, sources: await sourcesDocument() });
 
     expect(sources.map((source) => source.platform)).toEqual(PLATFORMS);
     for (const source of sources) {
-      expect(source.kind).toBe("worktree");
-      // X5 and S are unified into the repository root; only the archived X3
-      // still reads from its frozen subtree. Sample links follow the layout
-      // that actually holds the sample directory on the ref being linked.
+      // X5 and S are unified into the repository root and read from the
+      // worktree; the historical X3 tree was removed from the active branch
+      // and is read from its pinned full-SHA commit instead.
       const unified = source.platform !== "x3";
-      expect(source.worktreeRoot).toBe(unified ? "." : `platforms/${source.platform}`);
-      expect(source.linkRef).toBe(unified ? "develop" : "main");
-      expect(source.linkPrefix).toBe(unified ? "" : `platforms/${source.platform}`);
+      expect(source.kind).toBe(unified ? "worktree" : "commit");
+      expect(source.worktreeRoot).toBe(unified ? "." : undefined);
+      expect(source.linkRef).toBe(unified ? "develop" : X3_PIN);
+      expect(source.linkPrefix).toBe(unified ? "" : "platforms/x3");
     }
     // Each distribution's own manifest directory: the unified groups live at
-    // docs/release/<platform>, the archived X3 keeps its historical root.
+    // docs/release/<platform>, the pinned X3 keeps its historical root under
+    // the tree prefix its commit carries.
     expect(Object.fromEntries(sources.map((source) => [source.platform, source.manifestDirectory])))
       .toEqual({ x5: "docs/release/x5", s: "docs/release/s", x3: "release" });
-    // The version file travels with the manifests, so one repository root can
-    // hold three disagreeing platform versions.
+    // The version file travels with the manifests; the commit-pinned X3
+    // resolves VERSION from the layout the pin itself carries.
     expect(Object.fromEntries(sources.map((source) => [source.platform, source.versionFile])))
       .toEqual({ x5: "docs/release/x5/VERSION", s: "docs/release/s/VERSION", x3: "VERSION" });
+  });
+
+  it("reads the removed x3 tree from the pinned commit byte-for-byte", async () => {
+    const sources = await resolvePlatformSources({ repositoryRoot, sources: await sourcesDocument() });
+    const x3 = sources.find((source) => source.platform === "x3")!;
+
+    expect(x3.kind).toBe("commit");
+    expect(x3.ref).toBe(X3_PIN);
+    expect(x3.treePrefix).toBe("platforms/x3");
+    const manifest = await readSourceFile(repositoryRoot, x3, "release/models.yaml");
+    // The pinned bytes equal what `git show` itself returns for the pin.
+    const { execFile } = await import("node:child_process");
+    const { promisify } = await import("node:util");
+    const git = promisify(execFile);
+    const direct = await git("git", ["-C", repositoryRoot, "show", `${X3_PIN}:platforms/x3/release/models.yaml`], { encoding: "utf8" });
+    expect(manifest).toBe(direct.stdout);
+  });
+
+  it("reports the exact fetch requirement when the pinned commit object is absent", async () => {
+    // A fixture repository has no platforms history: the real sources.json
+    // pin is missing from its object store, and the error must name the
+    // object and the fetch command instead of returning an empty success.
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "1.0.0", "docs/release/x5"),
+      "docs/release/x5/VERSION": "1.0.0\n"
+    });
+
+    await expect(resolvePlatformSources({
+      repositoryRoot: root, sources: await sourcesDocument()
+    })).rejects.toThrow(
+      new RegExp(`Commit source ${X3_PIN} is not present in the local Git object store[\\s\\S]*git fetch origin ${X3_PIN}`));
+  });
+
+  it("rejects a commit pin that is not a full 40-hex SHA", async () => {
+    const document = await sourcesDocument();
+    const short: SourcesDocument = {
+      ...document,
+      sources: { ...document.sources, x3: { ...document.sources.x3!, mode: "commit", commit: "deadbeef" } }
+    };
+
+    await expect(resolvePlatformSources({ repositoryRoot, sources: short }))
+      .rejects.toThrow(/full 40-hex commit SHA/);
+  });
+
+  it("rejects a commit pin that resolves to a non-commit ref", async () => {
+    // An annotated tag is immutable but is not a commit; commit mode pins
+    // commits so shallow-clone fetch requirements stay exact.
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "1.0.0", "docs/release/x5"),
+      "docs/release/x5/VERSION": "1.0.0\n"
+    });
+    const document = await sourcesDocument();
+    // The annotated tag OBJECT's own SHA is 40-hex, so the hex check passes
+    // and the object-type check is what rejects it.
+    const { execFile } = await import("node:child_process");
+    const { promisify } = await import("node:util");
+    const git = promisify(execFile);
+    const { stdout } = await git("git", ["-C", root, "rev-parse", "x5-v9.9.9"], { encoding: "utf8" });
+    const tagged: SourcesDocument = {
+      ...document,
+      sources: { ...document.sources, x3: { ...document.sources.x3!, mode: "commit", commit: stdout.trim() } }
+    };
+
+    await expect(resolvePlatformSources({ repositoryRoot: root, sources: tagged }))
+      .rejects.toThrow(/Commit source required: .* is a tag/);
   });
 
   it("reads a pinned platform from its frozen tag with the layout that tag carries", async () => {
@@ -117,7 +186,14 @@ describe("platform source resolution", () => {
 
 describe("pinned platform VERSION resolution", () => {
   async function resolveX5(repository: string, pin: SourcePin): Promise<PlatformSource> {
-    const sources = await resolvePlatformSources({ repositoryRoot: repository, sources: await sourcesDocument(), pins: { x5: pin } });
+    // Fixture repositories resolve x5 through a tag pin and x3 through a
+    // commit pin on the fixture's own HEAD (the real 6fcef2b8 object is not
+    // part of the fixture's history).
+    const sources = await resolvePlatformSources({
+      repositoryRoot: repository,
+      sources: await fixtureSourcesDocument(repository),
+      pins: { x5: pin }
+    });
     return sources.find((source) => source.platform === "x5")!;
   }
 
@@ -183,7 +259,7 @@ describe("pinned platform VERSION resolution", () => {
     });
     const resolved = await resolvePlatformSources({
       repositoryRoot: root,
-      sources: await sourcesDocument(),
+      sources: await fixtureSourcesDocument(root),
       pins: { x5: { tag: "x5-v9.9.9" } }
     });
 

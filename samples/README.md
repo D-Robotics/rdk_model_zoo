@@ -4,6 +4,7 @@
 
 This index covers 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
 
+
 ## Image classification
 
 | Sample | Conversion | Evaluation |
@@ -110,4 +111,4 @@ Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 i
 
 Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [_shared](_shared/README.md); responsibilities and documentation requirements are in the [inference contract](../docs/sample-standards/inference-contract.md) and [README contract](../docs/sample-standards/readme-contract.md).
 
-Pending models remain under [X5](../platforms/x5/README.md) and [S](../platforms/s/README.md); [X3](../platforms/x3/README.md) is historical. B9 and B11 migration and their independent review remain active; B8/B10 acceptance is non-board only, and repository-wide review (H1/H8/H9) is not closed by any batch. This index is not a full-delivery acceptance sheet.
+Pending models are not carried in this tree: the historical `platforms/` copies were removed (pinned commit `d2d2a4e0`, delivery branches). B9 and B11 migration and their independent review remain active; B8/B10 acceptance is non-board only, and repository-wide review (H1/H8/H9) is not closed by any batch. This index is not a full-delivery acceptance sheet.

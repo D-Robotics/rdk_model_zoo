@@ -9,7 +9,7 @@
 | --- | --- | --- |
 | x5 | `pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin` | BIN，STDC1 Cityscapes 推理 |
 
-精确 asset-id：`x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`。来源：[X5 模型清单](../../../../platforms/x5/docs/release/models.yaml)。没有已发布的 S 系列制品或其他变体。
+精确 asset-id：`x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`。来源：X5 模型清单 (historical `../../../../platforms/x5/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。没有已发布的 S 系列制品或其他变体。
 
 <a id="preparation"></a>
 ## 准备步骤

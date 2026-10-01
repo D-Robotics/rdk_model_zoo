@@ -14,15 +14,19 @@ export const PLATFORMS: CatalogPlatform[] = ["x5", "s", "x3"];
 export interface SourceEntry {
   /**
    * `worktree` reads the checked-out platform distribution; `tag` reads an
-   * immutable annotated release tag through `git show`. Both modes share the
-   * same manifest layout probe, so no platform is privileged.
+   * immutable annotated release tag through `git show`; `commit` reads a
+   * full-SHA commit the same way — for historical trees removed from the
+   * active branch that stay reachable only through Git. All modes share
+   * the same manifest layout probe, so no platform is privileged.
    */
-  mode: "worktree" | "tag";
+  mode: "worktree" | "tag" | "commit";
   /** Platform root, repository-relative. Required by `worktree` mode. */
   path?: string;
   /** Annotated tag read by `tag` mode. */
   tag?: string;
-  /** Path of the platform inside the tag tree. Legacy tags place it at the root. */
+  /** Full 40-hex commit SHA read by `commit` mode. */
+  commit?: string;
+  /** Path of the platform inside the tag/commit tree; legacy layouts nest it under `platforms/`. */
   tree_prefix?: string;
   /** Preferred manifest directory inside the platform root. */
   manifest_root?: string;
@@ -31,8 +35,8 @@ export interface SourceEntry {
    * root. Worktree mode reads this exact path, strictly. The unified layout
    * colocates it with the manifests (`docs/release/<platform>/VERSION`)
    * because one repository root can no longer hold three disagreeing version
-   * files. Defaults to `VERSION`. Tag sources ignore this field: a pinned
-   * release is read with the layout that tag itself carries.
+   * files. Defaults to `VERSION`. Tag and commit sources ignore this field:
+   * a pinned tree is read with the layout that ref itself carries.
    */
   version_file?: string;
   /** Git ref used for repository source links (`blob/<ref>/...`). */
@@ -52,7 +56,7 @@ export interface PlatformSource {
   kind: SourceEntry["mode"];
   /** Absolute platform root when read from the worktree. */
   worktreeRoot?: string;
-  /** Git ref that holds the platform tree when read from a tag. */
+  /** Git ref that holds the platform tree when read from a tag or commit. */
   ref?: string;
   /** Path of the platform inside the ref tree; also the repository link prefix for that ref. */
   treePrefix: string;
@@ -247,6 +251,22 @@ export async function resolvePlatformSources(options: ResolveSourcesOptions): Pr
         linkRef: entry.tag,
         linkPrefix: entry.tree_prefix ?? ""
       };
+    } else if (entry.mode === "commit") {
+      if (!entry.commit) throw new Error(`${platform}: commit mode requires a commit`);
+      if (!/^[0-9a-f]{40}$/.test(entry.commit)) {
+        throw new Error(
+          `${platform}: commit mode requires a full 40-hex commit SHA (got ${entry.commit})`);
+      }
+      source = {
+        platform,
+        kind: "commit",
+        ref: entry.commit,
+        treePrefix: entry.tree_prefix ?? "",
+        manifestDirectory: entry.manifest_root ?? "docs/release",
+        versionFile: entry.version_file ?? "VERSION",
+        linkRef: entry.link_ref || entry.commit,
+        linkPrefix: entry.link_prefix
+      };
     } else {
       if (!entry.path) throw new Error(`${platform}: worktree mode requires a path`);
       source = {
@@ -264,6 +284,30 @@ export async function resolvePlatformSources(options: ResolveSourcesOptions): Pr
     if (source.kind === "tag") {
       const type = await execFileAsync("git", ["-C", options.repositoryRoot, "cat-file", "-t", source.ref!]);
       if (type.stdout.trim() !== "tag") throw new Error(`Annotated source tag required: ${source.ref}`);
+    }
+    if (source.kind === "commit") {
+      // A commit pin must resolve to a real commit object in this repository.
+      // A shallow clone that lacks the object gets the exact fetch command;
+      // a ref that exists but is not a commit (a tag, a branch) is rejected
+      // because it is not immutable.
+      let type: { stdout: string };
+      try {
+        type = await execFileAsync("git", ["-C", options.repositoryRoot, "cat-file", "-t", source.ref!]);
+      } catch (exc) {
+        const stderr = String((exc as { stderr?: string }).stderr ?? "");
+        // `cat-file -t <full-sha>` reports an absent object as "could not
+        // get object info"; `rev-parse`-style spellings say "Not a valid
+        // object". Both mean the pinned commit must be fetched.
+        if (stderr.includes("could not get object info") || stderr.includes("Not a valid object")) {
+          throw new Error(
+            `Commit source ${source.ref} is not present in the local Git object store. `
+            + `Fetch it first, for example: git fetch origin ${source.ref}`);
+        }
+        throw exc;
+      }
+      if (type.stdout.trim() !== "commit") {
+        throw new Error(`Commit source required: ${source.ref} is a ${type.stdout.trim()}`);
+      }
     }
     // Resolve the manifest directory first, then VERSION against it: the
     // probe result is what the VERSION candidates must be colocated with, and

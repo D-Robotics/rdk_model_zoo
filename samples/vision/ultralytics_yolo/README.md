@@ -3,6 +3,7 @@
 [简体中文](README_cn.md)
 
 <a id="overview"></a>
+
 ## Overview
 
 This sample provides object detection, instance segmentation, pose estimation, classification and YOLO26 oriented boxes for RDK X5, S100, S100P and S600. Both fixed delivery READMEs describe Ultralytics YOLO as a real-time vision model family covering object detection, instance segmentation, pose estimation and image classification; YOLO26, delivered alongside as a direct-LTRB series, is maintained here as one family of this entry. YOLO detection heads predict classes and boxes at multiple scales; CPU decoding/filtering restores original-image coordinates. Segmentation, pose and OBB also expose masks, keypoints and angles. Model source project: [Ultralytics](https://github.com/ultralytics/ultralytics).
@@ -25,7 +26,7 @@ States distinguish task and language. supported-verified refers only to the reco
 
 See the [model inventory](model/README.md) for published combinations: YOLOv5u/v10/12 detection; YOLOv8/11 detect/seg/pose/cls; YOLOv9 segmentation only c/e, with no t detection or segmentation on S600; YOLOv13 X5 only. YOLO26 has 25 assets per target (five tasks × n/s/m/l/x), consolidating existing assets rather than releasing 100 new models. C++ scope follows its [input/head contracts and limitations](runtime/cpp/README.md), not the full Python inventory.
 
-Historical detection evidence: [P1](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md), [P2](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md), covering YOLOv8n/YOLO26n on X5 8GB/4GB and the three S targets. These records do not extend to other tasks/scales, dataset accuracy, performance or local conversion. Historical measurements remain in the [X5 evaluator](../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README.md) and [S evaluator](../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README.md); they are not remeasurements of the refactor.
+Historical detection evidence: [P1](../../../docs/releases/unified-migration/2026-09-16-pilot-validation.md), [P2](../../../docs/releases/unified-migration/2026-09-16-p2-validation.md), covering YOLOv8n/YOLO26n on X5 8GB/4GB and the three S targets. These records do not extend to other tasks/scales, dataset accuracy, performance or local conversion. Historical measurements remain in the X5 evaluator (historical `../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and S evaluator (historical `../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md); they are not remeasurements of the refactor.
 
 | Runtime contract | X5 | S100 / S100P / S600 |
 |---|---|---|

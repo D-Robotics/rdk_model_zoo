@@ -26,7 +26,7 @@ On the board image: CMake and a C++17 compiler; OpenCV development
 headers/libraries; `gflags` and `fmt` development libraries; Horizon DNN
 headers under `/usr/hobot/include` and libraries under `/usr/hobot/lib`
 (`hbDNN`, `hbucp`). The source utility implementations come from the
-existing `platforms/s/utils/c_utils` files referenced by the canonical
+existing `samples/_shared/cpp/c_utils` files referenced by the canonical
 CMake target. The launcher does not install system packages, modify the
 SDK, or download a model.
 
@@ -46,7 +46,7 @@ cmake --build samples/vision/resnet/runtime/cpp/build --parallel
 The compatibility path selects the same canonical target:
 
 ```bash
-cmake -S platforms/s/samples/vision/resnet18/runtime/cpp \
+cmake -S samples/vision/resnet/runtime/cpp \
   -B /tmp/resnet18-legacy-build
 cmake --build /tmp/resnet18-legacy-build --parallel
 ```
@@ -108,7 +108,7 @@ tensor metadata, converts the BGR image through the model's preprocessing
 tensors, decodes the F32 output with the Top-K postprocess, prints the
 configured Top-K classes, and releases the DNN resources at scope exit.
 The heavy work happens after construction, not in the constructor; the
-utility implementations are the existing `platforms/s/utils/c_utils`
+utility implementations are the existing `samples/_shared/cpp/c_utils`
 sources. There is no background thread; the process performs one
 synchronous inference.
 

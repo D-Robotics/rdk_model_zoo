@@ -18,6 +18,7 @@ from samples.vision.yolo26_depth.conversion import prepare_calibration as cal
 from samples.vision.yolo26_depth.conversion import compile as compiler
 from samples.vision.yolo26_depth.conversion import export
 from test_depth import ROOT
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
 class ConversionTests(unittest.TestCase):
@@ -117,8 +118,7 @@ class ConversionTests(unittest.TestCase):
                 for profile in profiles:
                     template = compiler.template_path(target, variant, profile)
                     source = (
-                        ROOT
-                        / f'platforms/{"x5" if target=="x5" else "s"}/samples/vision/yolo26_depth/conversion/ptq_yamls'
+                        legacy_tree(f'{"x5" if target=="x5" else "s"}/samples/vision/yolo26_depth/conversion/ptq_yamls')
                         / template.name
                     )
                     self.assertEqual(template.read_bytes(), source.read_bytes())

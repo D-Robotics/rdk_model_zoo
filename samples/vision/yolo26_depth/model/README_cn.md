@@ -31,8 +31,8 @@ S100P 有独立 nash-m 制品，不会隐式复用 nash-e。
 | s600 | l | lite | `nash-p/yolo26l_depth_lite_nashp_768x768.hbm` |
 | s600 | x | lite | `nash-p/yolo26x_depth_lite_nashp_768x768.hbm` |
 
-文件名、URL 和摘要以 [X5 清单](../../../../platforms/x5/docs/release/models.yaml) 与
-[S 清单](../../../../platforms/s/docs/release/models.yaml)为准。
+文件名、URL 和摘要以 X5 清单 (historical `../../../../platforms/x5/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 与
+S 清单 (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)为准。
 下方 list 命令打印精确 ID 和 URL。源清单声明可下载，不代表本轮已经下载或验证推理。
 
 <a id="preparation"></a>

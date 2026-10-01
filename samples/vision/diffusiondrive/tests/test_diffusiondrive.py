@@ -19,9 +19,8 @@ from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
 )
 from samples.vision.diffusiondrive.runtime.python.quantization import quantize, decode
 
-SOURCE = (
-    Path(__file__).resolve().parents[4] / "platforms/s/samples/vision/diffusiondrive"
-)
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+SOURCE = legacy_tree("s/samples/vision/diffusiondrive")
 
 
 def metadata(integer=False):

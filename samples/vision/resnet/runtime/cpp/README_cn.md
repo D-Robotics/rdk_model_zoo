@@ -23,7 +23,7 @@ CMake 读取 `/sys/class/boardinfo/soc_name` 并定义原源码使用的 SoC 宏
 板端镜像需要：CMake 与 C++17 编译器；OpenCV 开发头文件/库；`gflags` 与
 `fmt` 开发库；`/usr/hobot/include` 下的 Horizon DNN 头文件与
 `/usr/hobot/lib` 下的库（`hbDNN`、`hbucp`）。工具实现来自 canonical CMake
-目标引用的既有 `platforms/s/utils/c_utils` 文件。启动脚本不安装系统包、
+目标引用的既有 `samples/_shared/cpp/c_utils` 文件。启动脚本不安装系统包、
 不修改 SDK、不下载模型。
 
 <a id="build"></a>
@@ -41,7 +41,7 @@ cmake --build samples/vision/resnet/runtime/cpp/build --parallel
 兼容路径选择的是同一个 canonical 目标：
 
 ```bash
-cmake -S platforms/s/samples/vision/resnet18/runtime/cpp \
+cmake -S samples/vision/resnet/runtime/cpp \
   -B /tmp/resnet18-legacy-build
 cmake --build /tmp/resnet18-legacy-build --parallel
 ```
@@ -99,7 +99,7 @@ bash samples/vision/resnet/runtime/cpp/run.sh \
 预处理（NV12 Y/UV 张量构建）转换 BGR 图像，对 S 系列输入张量调用
 `hbDNNInferV2`，用 Top-K 后处理解码 F32 输出，按标签文件打印配置数量的
 类别，并在作用域退出时释放 DNN 资源。重活发生在构造之后而非构造函数中；
-工具实现是既有的 `platforms/s/utils/c_utils` 源码。没有后台线程，进程执行
+工具实现是既有的 `samples/_shared/cpp/c_utils` 源码。没有后台线程，进程执行
 一次同步推理。
 
 <a id="results-interpretation"></a>

@@ -4,7 +4,7 @@
 
 <a id="supported-boards"></a>
 ## 支持范围
-原生流程实现 S100/S600 选择、固定词表 ASR 与完整文件分块处理。X5/S100P 无对应发布制品，明确拒绝。SDK 适配已用主机 API 替身验证；真实 SDK 编译/ABI、模型推理及板测仍为 **not-run**，主机通过不代表 BSP 认证。[原生源实现](../../../../../platforms/s/samples/speech/asr/runtime/cpp/)保留供对照。
+原生流程实现 S100/S600 选择、固定词表 ASR 与完整文件分块处理。X5/S100P 无对应发布制品，明确拒绝。SDK 适配已用主机 API 替身验证；真实 SDK 编译/ABI、模型推理及板测仍为 **not-run**，主机通过不代表 BSP 认证。原生源实现 (historical `../../../../../platforms/s/samples/speech/asr/runtime/cpp/` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)保留供对照。
 
 <a id="dependencies"></a>
 ## 依赖

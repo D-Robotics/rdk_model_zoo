@@ -11,19 +11,6 @@ ENTRY = Path(__file__).resolve().parents[1] / 'runtime/python/main.py'
 
 
 class ExecutionTargetTests(unittest.TestCase):
-    def test_legacy_yolo26_library_imports_outside_checkout(self):
-        root = ENTRY.parents[5]
-        entry = root / 'platforms/s/samples/vision/ultralytics_yolo26/runtime/python/yolo26_det.py'
-        code = ('import importlib.util,sys; '
-                f's=importlib.util.spec_from_file_location("legacy", {str(entry)!r}); '
-                'm=importlib.util.module_from_spec(s); sys.modules[s.name]=m; '
-                's.loader.exec_module(m); from unittest.mock import patch; '
-                'p=patch("samples._shared.platforms.detect_target", return_value="s100"); '
-                'p.start(); m.YOLO26DetectConfig(model_path="model.hbm")')
-        result = subprocess.run([sys.executable, '-c', code], cwd=tempfile.gettempdir(),
-                                capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-
     def test_url_comes_from_manifest_not_filename_formula(self):
         from samples._shared import assets
         sys.path.insert(0, str(ENTRY.parent))

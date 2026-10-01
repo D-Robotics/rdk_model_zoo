@@ -120,8 +120,8 @@ pre_process → forward → post_process，不另写一套处理。
 自转换制品显式组合 `--converted-model`、`--model-path` 及精确 `--asset-id` 契约参照。
 新文件标为 user-converted，不继承发布方摘要或实测精度；S lite 校准系数必须与声明权重一致。
 
-[归档 X5](../../../platforms/x5/samples/vision/yolo26_depth/README.md) 和
-[归档 S](../../../platforms/s/samples/vision/yolo26_depth/README.md)保留原实现与记录，用于溯源，不是统一入口。
+归档 X5 (historical `../../../platforms/x5/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 和
+归档 S (historical `../../../platforms/s/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)保留原实现与记录，用于溯源，不是统一入口。
 
 <a id="license"></a>
 ## 许可证

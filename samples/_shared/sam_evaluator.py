@@ -19,6 +19,7 @@ import numpy as np
 
 from samples._shared.assets import sha256_file
 from samples._shared.platforms import require_execution_target
+from samples._shared.legacy_platforms import legacy_path, pinned_name
 from samples._shared.sam_binding import resolve_selection
 from samples._shared.sam_runner import RuntimeModelRunner
 from samples._shared.sam_stages import SAMPipeline
@@ -130,7 +131,7 @@ def compare_records(legacy, unified):
 
 
 def _load_legacy(sample, group, factory):
-    path = _ROOT/'platforms'/group/'samples'/'vision'/sample/'runtime'/'python'/f'{sample}.py'
+    path = legacy_path(f'{group}/samples/vision/{sample}/runtime/python/{sample}.py')
     name = f'_sam_comparison_legacy_{group}_{sample}'
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
@@ -206,7 +207,7 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
     code_paths = list((_ROOT/'samples'/'_shared').glob('sam_*.py'))
     code_paths += [_ROOT/'samples'/'_shared'/name for name in ('runtime_meta.py', 'platforms.py', 'assets.py')]
     code_paths += list((_ROOT/'samples'/'vision'/sample/'runtime'/'python').glob('*.py'))
-    code_paths += [_ROOT/'platforms'/group/'samples'/'vision'/sample/'runtime'/'python'/f'{sample}.py']
+    code_paths += [legacy_path(f'{group}/samples/vision/{sample}/runtime/python/{sample}.py')]
     summary = dict(sample=sample, target=selection.target, started_utc=_now(),
         argv=list(sys.argv), cwd=str(Path.cwd()), output_dir=str(directory), artifacts=assets,
         board_identity=_board_identity(actual_target),
@@ -236,7 +237,13 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
         for entry in assets.values():
             entry['observed_sha256'] = _digest(entry['path'])
         summary['image']['sha256'] = _digest(image_path)
-        summary['code_sha256'] = {str(p.relative_to(_ROOT)): _digest(p) for p in code_paths}
+        # Historical sources materialize from the pinned commit; record
+        # them under their platforms/ tree names so evidence stays comparable.
+        summary['code_sha256'] = {
+            (str(p.relative_to(_ROOT)) if p.is_relative_to(_ROOT) else pinned_name(p)):
+                _digest(p)
+            for p in code_paths
+        }
         if runtime_factory is None:
             from samples._shared.model_runner import _default_runtime_factory
             runtime_factory = _default_runtime_factory()

@@ -7,6 +7,7 @@ from pathlib import Path
 from types import ModuleType, SimpleNamespace
 import sys
 import unittest
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 from unittest.mock import patch
 import numpy as np
 from test_runtime import fake_runtime, ROOT
@@ -26,11 +27,11 @@ def load_file(name, path):
 def load_source(target):
     for record in json.loads((Path(__file__).parent / "source-facts.json").read_text()):
         if (
-            hashlib.sha256((ROOT / record["path"]).read_bytes()).hexdigest()
+            hashlib.sha256(legacy_path(record["path"][len("platforms/"):]).read_bytes()).hexdigest()
             != record["sha256"]
         ):
             raise AssertionError(f"Pinned source changed: {record['path']}")
-    platform = ROOT / "platforms" / target
+    platform = legacy_tree(f"{target}/utils/py_utils").parents[0]
     relative = (
         "samples/vision/yoloe/runtime/python/yoloe_seg.py"
         if target == "x5"
@@ -43,7 +44,7 @@ def load_source(target):
         package = ModuleType("utils")
         package.__path__ = []
         sub = ModuleType("utils.py_utils")
-        sub.__path__ = [str(platform / "utils/py_utils")]
+        sub.__path__ = [str(legacy_tree(f"{target}/utils/py_utils"))]
         sys.modules["utils"] = package
         sys.modules["utils.py_utils"] = sub
         package.py_utils = sub
@@ -52,10 +53,10 @@ def load_source(target):
                 sub,
                 name,
                 load_file(
-                    "utils.py_utils." + name, platform / "utils/py_utils" / f"{name}.py"
+                    "utils.py_utils." + name, legacy_path(f"{target}/utils/py_utils/{name}.py")
                 ),
             )
-        module = load_file("legacy_yoloe_" + target, platform / relative)
+        module = load_file("legacy_yoloe_" + target, legacy_path(f"{target}/{relative}"))
     return module
 
 

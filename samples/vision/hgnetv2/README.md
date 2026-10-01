@@ -1,6 +1,7 @@
 # HGNetV2 image classification
 
 <a id="overview"></a>
+
 ## Overview
 
 HGNetV2 is a convolutional backbone for vision tasks; this sample exposes b0–b4 ImageNet-1k classification models. The source README introduces it as a next-generation CNN backbone designed for a strong accuracy/latency balance, succeeding the original HGNet, and performing well in classification, detection and segmentation.

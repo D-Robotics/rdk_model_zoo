@@ -44,7 +44,7 @@ python3 samples/speech/kws/evaluator/evaluate.py \
 <a id="reference-results"></a>
 ## 源参考结果
 
-[归档 S evaluator](../../../../platforms/s/samples/speech/kws/evaluator/README_cn.md)记录：
+归档 S evaluator (historical `../../../../platforms/s/samples/speech/kws/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)记录：
 
 | 范围 | 源数值 | 当前状态 |
 | --- | --- | --- |

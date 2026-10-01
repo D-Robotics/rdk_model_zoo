@@ -1,6 +1,7 @@
 # RepGhost image classification
 
 <a id="overview"></a>
+
 ## Overview
 
 RepGhost is a lightweight CNN family designed to improve hardware efficiency by replacing explicit feature reuse in feature space with re-parameterized reuse in weight space. It avoids costly `Concat` operations while keeping strong classification performance.

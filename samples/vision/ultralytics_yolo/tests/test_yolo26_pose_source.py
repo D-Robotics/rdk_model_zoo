@@ -94,56 +94,5 @@ class SourceDirectPose(unittest.TestCase):
         self.assertEqual(len(current[0]), 1)
         self.assertGreater(current[1][0], 5e-7)
 
-    def test_actual_s_legacy_adapter_returns_four_tuple(self):
-        path = (
-            ROOT
-            / "platforms/s/samples/vision/ultralytics_yolo26/runtime/python/yolo26_pose.py"
-        )
-        spec = importlib.util.spec_from_file_location("legacy_s_y26_pose_test", path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import (
-            resolve_platform,
-        )
-
-        unified, _, _, _ = fixture("s100")
-        legacy = module.YOLO26Pose(
-            module.YOLO26PoseConfig("stub", platform=resolve_platform("s100")),
-            runner=unified.runner,
-        )
-        image = np.zeros((64, 64, 3), np.uint8)
-        actual = legacy.predict(image)
-        expected = unified.predict(image)
-        self.assertEqual(len(actual), 4)
-        for left, right in zip(actual[:3], expected[:3]):
-            np.testing.assert_array_equal(left, right)
-        np.testing.assert_array_equal(
-            actual[3], np.concatenate([expected[3], expected[4]], axis=-1)
-        )
-
-    def test_actual_x5_legacy_adapter_returns_list(self):
-        path = (
-            ROOT
-            / "platforms/x5/samples/vision/ultralytics_yolo26/runtime/python/yolo26_pose.py"
-        )
-        spec = importlib.util.spec_from_file_location("legacy_y26_pose_test", path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        unified, _, _, _ = fixture("x5")
-        legacy = module.YOLO26Pose(
-            module.YOLO26PoseConfig("stub", nms_thres=0.65), runner=unified.runner
-        )
-        image = np.zeros((64, 64, 3), np.uint8)
-        actual = legacy.predict(image)
-        expected = unified.predict(image)
-        self.assertEqual(len(actual), 1)
-        np.testing.assert_array_equal(actual[0]["box"], expected[0][0].astype(int))
-        np.testing.assert_allclose(
-            actual[0]["kpts"], np.concatenate([expected[3][0], expected[4][0]], axis=-1)
-        )
-
-
 if __name__ == "__main__":
     unittest.main()

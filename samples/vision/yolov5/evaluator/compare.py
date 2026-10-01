@@ -8,6 +8,7 @@ ROOT=Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from samples._shared.runtime_meta import RuntimeMetadata,metadata_evidence
 from samples._shared.platforms import require_execution_target
+from samples._shared.legacy_platforms import pinned_name
 from samples._shared.assets import verify_asset_file
 from samples.vision.yolov5.runtime.python.model_binding import SAMPLE_DIR,ANCHORS,resolve_selection
 from samples.vision.yolov5.runtime.python.model_runner import RuntimeModelRunner
@@ -56,7 +57,9 @@ def run_comparison(selection,image,image_path,output_dir,*,resize_type=None,scor
         summary['model_sha256']=_hash(selection.model_path);summary['image_sha256']=_hash(image_path)
         verify_asset_file(selection.asset,selection.model_path)
         code=list((SAMPLE_DIR/'runtime/python').glob('*.py'))+list((SAMPLE_DIR/'evaluator').glob('*.py'))+list(source_paths(selection.target))+[ROOT/'samples/_shared'/n for n in ['assets.py','platforms.py','runtime_meta.py','quantization.py','image.py']]
-        summary['code_sha256']={str(p.relative_to(ROOT)):_hash(p) for p in code}
+        # Historical sources materialize from the pinned commit outside the
+        # worktree; record them under their platforms/ tree names.
+        summary['code_sha256']={ (str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else pinned_name(p)):_hash(p) for p in code}
         if runtime_factory is None:
             from samples._shared.model_runner import _default_runtime_factory
             runtime_factory=_default_runtime_factory()

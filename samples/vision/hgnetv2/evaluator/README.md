@@ -1,6 +1,9 @@
 # HGNetV2 evaluation
 
+> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+
 <a id="dataset"></a>
+
 ## Dataset
 
 Use a separately obtained ImageNet-1k validation set (normally 50,000 images); no dataset or download is bundled. The evaluator recursively scans JPEG/PNG files and matches CSV paths relative to --image-path, preserving subdirectories. Prepare CSV with UTF-8 header image:file,category and zero-based labels 0–999. Example layout:

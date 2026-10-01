@@ -21,6 +21,7 @@ from samples.vision.yolo26_depth.runtime.python.model_binding import (
 from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 from samples.vision.yolo26_depth.runtime.python.visualization import colorize_depth
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -40,7 +41,7 @@ def metadata(lite=False):
 
 def source_module():
     path = (
-        ROOT / "platforms/s/samples/vision/yolo26_depth/runtime/python/yolo26_depth.py"
+        legacy_path("s/samples/vision/yolo26_depth/runtime/python/yolo26_depth.py")
     )
     spec = importlib.util.spec_from_file_location("_depth_source_oracle", path)
     module = importlib.util.module_from_spec(spec)

@@ -1,13 +1,36 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18)
 project(gemma4_vision_host_tests CXX)
 set(CMAKE_CXX_STANDARD 17)
 find_package(OpenCV REQUIRED COMPONENTS core imgcodecs imgproc)
 get_filename_component(SAMPLE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 get_filename_component(REPO_ROOT "${SAMPLE_ROOT}/../../.." ABSOLUTE)
 set(CPP "${SAMPLE_ROOT}/runtime/cpp")
-set(LEGACY "${REPO_ROOT}/platforms/s/samples/llm/gemma4-e2b/runtime/cpp")
-add_library(source_preprocess OBJECT "${LEGACY}/src/gemma4_vision_preprocess.cpp")
-target_include_directories(source_preprocess PRIVATE "${LEGACY}/inc" ${OpenCV_INCLUDE_DIRS})
+# The historical platforms/ tree now lives only in Git. The legacy side of
+# the preprocess comparison is extracted from the pinned commit into the
+# build tree (same bytes the worktree copy used to carry); a shallow clone
+# must fetch the pin first:
+#   git fetch origin d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d
+set(GEMMA_PLATFORMS_PIN "d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d")
+set(LEGACY_ARCHIVE "${CMAKE_CURRENT_BINARY_DIR}/gemma-legacy-pin.tar")
+set(LEGACY "${CMAKE_CURRENT_BINARY_DIR}/gemma-legacy-pin")
+find_package(Git REQUIRED)
+execute_process(
+  COMMAND ${GIT_EXECUTABLE} -C "${REPO_ROOT}" archive --format=tar
+          "${GEMMA_PLATFORMS_PIN}" "platforms/s/samples/llm/gemma4-e2b/runtime/cpp"
+  OUTPUT_FILE "${LEGACY_ARCHIVE}"
+  RESULT_VARIABLE _archive_result)
+if(NOT _archive_result EQUAL 0)
+  message(FATAL_ERROR
+    "Cannot read pinned legacy sources (${GEMMA_PLATFORMS_PIN}). "
+    "Fetch the commit first: git fetch origin ${GEMMA_PLATFORMS_PIN}")
+endif()
+file(ARCHIVE_EXTRACT INPUT "${LEGACY_ARCHIVE}" DESTINATION "${LEGACY}")
+if(NOT EXISTS "${LEGACY}/cpp")
+  file(RENAME "${LEGACY}/platforms/s/samples/llm/gemma4-e2b/runtime/cpp"
+       "${LEGACY}/cpp")
+endif()
+add_library(source_preprocess OBJECT "${LEGACY}/cpp/src/gemma4_vision_preprocess.cpp")
+target_include_directories(source_preprocess PRIVATE "${LEGACY}/cpp/inc" ${OpenCV_INCLUDE_DIRS})
 target_compile_definitions(source_preprocess PRIVATE PreprocessImage=SourcePreprocessImage)
 add_executable(vision_test vision_test.cpp
   "${CPP}/src/gemma4_vision_preprocess.cpp"

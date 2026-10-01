@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集与类别映射
 
-使用独立验证集，格式为包含 `images`、`categories`、`annotations` 的 COCO 实例标注。图片需要整数 `id`、相对路径 `file_name`、`width`、`height`；类别需要整数 `id` 和 `name`。框/掩码计分需要有效的实例框、分割标注、面积和 crowd 标记。只导出预测时，可以提供 annotations 为空的图片/类别清单。数据准备参考统一的 [COCO](../../../../datasets/coco/README_cn.md) 指南，X5/S 平台快照（[X5 COCO](../../../../platforms/x5/datasets/coco/README.md)、[S COCO](../../../../platforms/s/datasets/coco/README.md)）保留作溯源；数据集不随本仓库提供。
+使用独立验证集，格式为包含 `images`、`categories`、`annotations` 的 COCO 实例标注。图片需要整数 `id`、相对路径 `file_name`、`width`、`height`；类别需要整数 `id` 和 `name`。框/掩码计分需要有效的实例框、分割标注、面积和 crowd 标记。只导出预测时，可以提供 annotations 为空的图片/类别清单。数据准备参考统一的 [COCO](../../../../datasets/coco/README_cn.md) 指南，X5/S 平台快照（X5 COCO (historical `../../../../platforms/x5/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S COCO (historical `../../../../platforms/s/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)）保留作溯源；数据集不随本仓库提供。
 
 PF 类别 ID **不是 COCO category ID**。必须提供经过检查的映射，以固定 [4585 类词表](../test_data/classes.names)为依据，同时核对源/目标名称。[mapping.example.json](mapping.example.json) 演示 person（PF 2163 → COCO 1）和 chair（PF 821 → COCO 62）；它只有两个类别，**不是完整 COCO-80 映射**。请按自己的标注类别扩展或替换：
 
@@ -136,9 +136,9 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
 | E26l | S100 | 13.417 ms / 74.18 | 未发布 |
 | E26x | S100 | 22.013 ms / 45.31 | 未发布 |
 
-X5 条件：RDK X5 V1.0、OS 3.4.1-rp1.0.2、libdnn 1.24.5/HBRT 3.15.55、1000 MHz、单线程/core_id=1（BPU core 0）、固定 NV12，三轮、每轮 10 帧 warmup 加 200 帧计时。11s 双线程因 ION 分配错误失败，详见 [X5 完整源记录](../../../../platforms/x5/samples/vision/yoloe/evaluator/README_cn.md)。
+X5 条件：RDK X5 V1.0、OS 3.4.1-rp1.0.2、libdnn 1.24.5/HBRT 3.15.55、1000 MHz、单线程/core_id=1（BPU core 0）、固定 NV12，三轮、每轮 10 帧 warmup 加 200 帧计时。11s 双线程因 ION 分配错误失败，详见 X5 完整源记录 (historical `../../../../platforms/x5/samples/vision/yoloe/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。
 
-S100 条件：V1P0、OS 4.0.5-Beta、UCP 3.13.6/HBRT 4.7.5、OE 3.7.0 INT8 KL、2026-09-08、200 帧/warmup、thread_num=1/core_id=0。S100P 未测性能。[S26 源记录](../../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README_cn.md)另有原 n 模型在 S100P 的单图 Python/C++ 掩码逐像素对照，不能替代本轮代码、其他尺寸或数据集 mAP。[S11 源评估目录](../../../../platforms/s/samples/vision/yoloe11_seg/evaluator/README.md)原本为空占位，没有可迁移的已验收指标。
+S100 条件：V1P0、OS 4.0.5-Beta、UCP 3.13.6/HBRT 4.7.5、OE 3.7.0 INT8 KL、2026-09-08、200 帧/warmup、thread_num=1/core_id=0。S100P 未测性能。S26 源记录 (historical `../../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)另有原 n 模型在 S100P 的单图 Python/C++ 掩码逐像素对照，不能替代本轮代码、其他尺寸或数据集 mAP。S11 源评估目录 (historical `../../../../platforms/s/samples/vision/yoloe11_seg/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)原本为空占位，没有可迁移的已验收指标。
 
 本轮真实 ONNX 预测使用随附图片和显式生成的 PF 类别清单，**没有真值**，不是 COCO AP 测量。近期导出所用 E26 PT 文件与归档发布 sidecar 的文件哈希不同；这本身不证明参数张量变化，但不能声称复现同一原始权重基线。尤其不能把浮点检测数写成复现 INT8 数量，也不能把差异仅归因于量化。完整证据见[评估实现记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-evaluation-review.md)。
 

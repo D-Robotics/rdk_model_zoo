@@ -7,6 +7,7 @@ from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask,Track
 from samples.vision.yolov5.runtime.python.detection import DetectionResult,YOLOv5Task
 from samples.vision.yolov5.runtime.python.model_binding import resolve_selection,bind_model
 from samples.vision.yolov5.tests.test_yolov5 import FakeRuntime
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 ROOT=Path(__file__).resolve().parents[4]
 
 
@@ -69,7 +70,7 @@ class TrackingTests(unittest.TestCase):
 
     def test_real_tracker_matches_fixed_source_sequence(self):
         from samples.vision.bytetrack.runtime.python.tracker_backend.byte_tracker import BYTETracker
-        source=ROOT/'platforms/s/samples/vision/bytetrack/3rdparty'
+        source=legacy_tree('s/samples/vision/bytetrack/3rdparty')
         old_path=list(sys.path);sys.path.insert(0,str(source))
         try:legacy=importlib.import_module('tracker.byte_tracker').BYTETracker
         finally:sys.path[:]=old_path

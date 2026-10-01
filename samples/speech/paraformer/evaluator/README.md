@@ -138,7 +138,7 @@ null; partial results are not presented as a complete evaluation.
 <a id="reference-results"></a>
 ## Reference results and limits
 
-The [archived S conversion guide](../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md)
+The archived S conversion guide (historical `../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 records AISHELL dev 300-utterance CER: FP32 5.20%, HMCT INT16 5.02%, S100 Python
 3.13%, S100 C++ 3.13%. These are source historical measurements, not reproduced
 migration results or proof that one backend is more accurate.

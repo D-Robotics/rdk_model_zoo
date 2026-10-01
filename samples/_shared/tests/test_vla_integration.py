@@ -44,11 +44,15 @@ class VlaIntegrationTests(unittest.TestCase):
             self.assertEqual(row["sample_path"], "samples/vla/" + name)
             self.assertEqual(row["availability"], "manual")
             self.assertEqual(row["assets"], [])
-            old = subprocess.check_output(
-                ["git", "ls-files", "--stage", "--", "platforms/s/samples/vla/" + name],
-                cwd=ROOT,
-                text=True,
-            )
-            self.assertFalse(
-                any(line.startswith("160000 ") for line in old.splitlines())
-            )
+        # The historical platforms/s tree (whose stray gitlinks this check
+        # originally guarded against) was removed with the migration
+        # closeout; verify no gitlink shadows exist anywhere under the
+        # active tree instead.
+        entries = subprocess.check_output(
+            ["git", "ls-files", "--stage", "--", "samples/"],
+            cwd=ROOT,
+            text=True,
+        )
+        self.assertFalse(
+            any(line.startswith("160000 ") for line in entries.splitlines())
+        )

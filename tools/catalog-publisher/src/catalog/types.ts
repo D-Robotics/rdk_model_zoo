@@ -95,8 +95,8 @@ export type CatalogPlatform = "x5" | "s" | "x3";
 
 /** Provenance of one platform distribution used to build a catalog version. */
 export interface CatalogSourceRecord {
-  kind: "worktree" | "tag";
-  /** Git ref that holds the platform tree (`main`, or the pinned tag). */
+  kind: "worktree" | "tag" | "commit";
+  /** Git ref that holds the platform tree (a branch, a pinned tag, or a pinned commit). */
   ref: string;
   /** Path of the platform inside `ref`. */
   path: string;

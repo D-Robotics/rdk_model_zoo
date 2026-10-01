@@ -32,4 +32,4 @@ A complete conversion handoff should contain checkpoint identity/license, ONNX a
 
 <a id="known-gaps"></a>
 ## Known gaps
-Missing: exact checkpoint/export recipe, calibration corpus, compiler versions/configs and real source/export/HBM validation. [Historical conversion directory](../../../../platforms/s/samples/speech/asr/conversion/) is retained for traceability. Use published HBM for the documented runtime path; do not describe download-and-run as model conversion.
+Missing: exact checkpoint/export recipe, calibration corpus, compiler versions/configs and real source/export/HBM validation. Historical conversion directory (historical `../../../../platforms/s/samples/speech/asr/conversion/` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) is retained for traceability. Use published HBM for the documented runtime path; do not describe download-and-run as model conversion.

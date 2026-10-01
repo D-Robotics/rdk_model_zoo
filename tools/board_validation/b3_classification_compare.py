@@ -72,6 +72,11 @@ from samples._shared.assets import (  # noqa: E402
     verify_asset_file,
 )
 from samples._shared.platforms import require_execution_target  # noqa: E402
+from samples._shared.legacy_platforms import (  # noqa: E402
+    legacy_path,
+    legacy_tree,
+    pinned_name,
+)
 from samples._shared.runtime_meta import (  # noqa: E402
     RuntimeMetadata,
     metadata_evidence,
@@ -308,21 +313,22 @@ def _verify_source_closure(sample: str) -> Mapping[str, Any]:
 
     The ``source_ref`` constant alone does not pin anything: the legacy entry
     plus each ``utils.py_utils`` dependency that will actually execute is
-    compared with the pin's git blob (against the ``platforms/x5`` snapshot
-    copies).  Any mismatch, missing file or unavailable pin object keeps
+    compared with the pin's git blob (the historical ``platforms/x5`` tree is
+    materialized from the pinned commit).  Any mismatch, missing file or unavailable pin object keeps
     ``verified`` false so the caller refuses to run.
     """
 
-    x5_base = _ROOT / "platforms" / SOURCE_GROUP
     targets = [
         (
             "entry",
             f"samples/vision/{sample}/runtime/python/{sample}.py",
-            x5_base / "samples" / "vision" / sample / "runtime" / "python" / f"{sample}.py",
+            legacy_path(
+                f"{SOURCE_GROUP}/samples/vision/{sample}/runtime/python/{sample}.py"),
         )
     ]
     targets += [
-        ("dependency", pin_path, x5_base / pin_path) for pin_path in _LEGACY_DEP_FILES
+        ("dependency", pin_path, legacy_path(f"{SOURCE_GROUP}/{pin_path}"))
+        for pin_path in _LEGACY_DEP_FILES
     ]
     files = []
     for role, pin_path, local_path in targets:
@@ -356,7 +362,7 @@ def _load_legacy(sample: str, factory):
     """Execute the fixed X5 source wrapper with an injected recording factory.
 
     The pin-verified ``utils.py_utils`` closure is installed from the
-    ``platforms/x5`` snapshot under the canonical module names for the
+    pinned-commit materialization under the canonical module names for the
     duration of the legacy module execution only: ``sys.modules`` and
     ``sys.path`` are snapshot and restored afterwards, so nothing leaks into
     the process (and the drifted root ``utils/`` copies are never bound).
@@ -368,10 +374,8 @@ def _load_legacy(sample: str, factory):
     entry actually bound.
     """
 
-    x5_base = _ROOT / "platforms" / SOURCE_GROUP
-    path = (
-        x5_base / "samples" / "vision" / sample / "runtime" / "python" / f"{sample}.py"
-    )
+    path = legacy_path(
+        f"{SOURCE_GROUP}/samples/vision/{sample}/runtime/python/{sample}.py")
     name = f"_b3_compare_legacy_{SOURCE_GROUP}_{sample}"
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
@@ -385,17 +389,17 @@ def _load_legacy(sample: str, factory):
     saved_modules = {dep: sys.modules.get(dep, absent) for dep in _LEGACY_DEP_MODULES}
 
     utils_pkg = types.ModuleType("utils")
-    utils_pkg.__path__ = [str(x5_base / "utils")]
-    py_utils_path = x5_base / "utils" / "py_utils" / "__init__.py"
+    utils_pkg.__path__ = [str(legacy_tree(f"{SOURCE_GROUP}/utils"))]
+    py_utils_path = legacy_path(f"{SOURCE_GROUP}/utils/py_utils/__init__.py")
     py_utils_spec = importlib.util.spec_from_file_location(
         "utils.py_utils",
         py_utils_path,
-        submodule_search_locations=[str(x5_base / "utils" / "py_utils")],
+        submodule_search_locations=[str(legacy_tree(f"{SOURCE_GROUP}/utils/py_utils"))],
     )
     if py_utils_spec is None or py_utils_spec.loader is None:
         raise ImportError(f"Cannot load pinned package init: {py_utils_path}")
     py_utils = importlib.util.module_from_spec(py_utils_spec)
-    preprocess_path = x5_base / "utils" / "py_utils" / "preprocess.py"
+    preprocess_path = legacy_path(f"{SOURCE_GROUP}/utils/py_utils/preprocess.py")
     preprocess_spec = importlib.util.spec_from_file_location(
         "utils.py_utils.preprocess", preprocess_path
     )
@@ -447,7 +451,16 @@ def _legacy_dependency_resolution(loaded: Mapping[str, Any], closure) -> Mapping
     for module_name, pin_path in _PIN_PATH_BY_MODULE.items():
         module = loaded.get(module_name)
         file = getattr(module, "__file__", None)
-        entry = {"pin_path": pin_path, "observed_file": str(file) if file else None}
+        entry = {
+            "pin_path": pin_path,
+            # Materialized files record their platforms/ tree name so the
+            # evidence stays comparable after the worktree copy's removal.
+            "observed_file": (
+                pinned_name(file)
+                if file and not Path(file).is_relative_to(_ROOT)
+                else (str(file) if file else None)
+            ),
+        }
         if file:
             entry["observed_sha256"] = _digest(file)
         closure_entry = pin_sha_by_path.get(pin_path, {})
@@ -822,10 +835,10 @@ def run_comparison(
         "variant": selection.variant,
         "asset_id": selection.asset_id,
         "source_ref": SOURCE_REF,
-        "source_entry": str(
-            _ROOT / "platforms" / SOURCE_GROUP / "samples" / "vision" / sample
-            / "runtime" / "python" / f"{sample}.py"
-        ),
+        "source_entry": pinned_name(
+            legacy_path(
+                f"{SOURCE_GROUP}/samples/vision/{sample}/runtime/python/{sample}.py")),
+
         "unified_entry": (
             f"samples/vision/{sample}/runtime/python (resolve_selection -> "
             "RuntimeModelRunner -> ClassificationTask)"
@@ -921,7 +934,7 @@ def run_comparison(
             )
 
         prefix = SAMPLES[sample]["prefix"]
-        legacy_module, legacy_path, loaded_deps = _load_legacy(
+        legacy_module, legacy_entry_path, loaded_deps = _load_legacy(
             sample, recording_factory("legacy")
         )
         summary["legacy_dependency_resolution"] = _legacy_dependency_resolution(
@@ -1002,7 +1015,7 @@ def run_comparison(
         summary["comparison"] = comparison
         summary["passed"] = comparison["passed"]
 
-        code_paths = [Path(__file__).resolve(), legacy_path]
+        code_paths = [Path(__file__).resolve(), legacy_entry_path]
         code_paths += [
             Path(file)
             for name in ("utils.py_utils.file_io", "utils.py_utils.preprocess")
@@ -1012,8 +1025,15 @@ def run_comparison(
         code_paths += sorted(
             (_ROOT / "samples" / "vision" / sample / "runtime" / "python").glob("*.py")
         )
+        # Historical sources materialize from the pinned commit; record them
+        # under their platforms/ tree names so evidence stays comparable
+        # across the removal of the worktree copy.
         summary["code_sha256"] = {
-            str(path.relative_to(_ROOT)) if path.is_relative_to(_ROOT) else str(path): _digest(path)
+            (
+                str(path.relative_to(_ROOT))
+                if path.is_relative_to(_ROOT)
+                else pinned_name(path)
+            ): _digest(path)
             for path in code_paths
         }
         summary["records"] = {

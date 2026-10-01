@@ -17,6 +17,7 @@ Model Zoo assets or an automatic model download.
 `pi0/` names the second integration, not a Pi0-only repository. It also contains
 the S600 ACT backend. Initializing only `act/` does not provide S600 ACT.
 
+
 ## Initialize the exact sources
 
 From Model Zoo repository root:
@@ -67,5 +68,6 @@ incomplete Model Zoo runtime wrapper. Integration checks live in
 Both pinned repositories include Apache-2.0 [licenses](act/LICENSE); checkpoints,
 datasets, vendor SDKs and robot hardware retain their respective terms. Changes
 to a submodule require an explicit new upstream commit and an intentional parent
-pin update. Old `platforms/s/samples/vla/` paths provide navigation only; initialize
+pin update. The old `platforms/s/samples/vla/` paths were removed with the historical
+tree (pinned commit `d2d2a4e0`); initialize
 and use the unified paths above.

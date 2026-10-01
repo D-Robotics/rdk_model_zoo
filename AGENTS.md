@@ -18,12 +18,16 @@ remain historical material, not a new adaptation target.
 - Use [the execution plan](docs/superpowers/plans/2026-09-16-x5-s-execution.md)
   and [the baseline](docs/releases/unified-migration/2026-09-16-baseline.md)
   to distinguish pilots, unmigrated capabilities and acceptance gaps.
-- Unified runtime asset resolution reads `docs/release/{x5,s}/models.yaml`.
-  `platforms/{x5,s}/docs/release/models.yaml` and `benchmarks.yaml` are archived
-  source references; their filename keys may differ from the active manifests.
-  Preserve that distinction when checking artifact and historical measurement facts. Concrete
-  target identity aliases live in `docs/release/platforms.json`; identity alone
-  does not certify any artifact or runtime version.
+- Unified runtime asset resolution reads `docs/release/{x5,s}/models.yaml`
+  (the only active manifests). The archived `platforms/` snapshots — including
+  the former `platforms/{x5,s}/docs/release` manifests and the historical X3
+  `release/` tree — were removed from the active tree (2026-10-01); their
+  content stays reachable through pinned commit
+  `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` and the delivery branches. The
+  catalog's X3 source reads that pinned commit (commit mode in
+  `tools/catalog-publisher/sources.json`). Concrete target identity aliases
+  live in `docs/release/platforms.json`; identity alone does not certify any
+  artifact or runtime version.
 - People and Agents use the same native sample commands. Do not require a
   Skill, Node, or publisher to perform model inference. Seven-skill import and
   release integration are not complete merely because this file exists.
@@ -51,3 +55,4 @@ remain historical material, not a new adaptation target.
   `python -m unittest discover -s samples/_shared/tests -p test_vla_integration.py`;
   native sample README anchor rules do not require modifying upstream gitlinks.
   Board/control and model availability remain separate from source integration.
+

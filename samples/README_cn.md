@@ -4,6 +4,7 @@
 
 当前索引覆盖 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
 
+
 ## 图像分类
 
 | Sample | 转换 | 评估 |
@@ -110,4 +111,4 @@ ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护�
 
 先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [_shared](_shared/README.md)，代码职责与文档要求见 [推理契约](../docs/sample-standards/inference-contract.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
 
-尚未进入统一目录的模型保留在 [X5](../platforms/x5/README_cn.md)、[S](../platforms/s/README_cn.md)；[X3](../platforms/x3/README_cn.md) 为历史内容。B9、B11 的迁移与独立审核仍在进行；B8/B10 的验收仅为非板范围，仓库级审核（H1/H8/H9）也不因任何批次关闭。不能把本索引当作完整交付签收表。
+尚未进入统一目录的模型不再随本树携带：历史 `platforms/` 副本已移除（固定提交 `d2d2a4e0`，交付分支可访问）。B9、B11 的迁移与独立审核仍在进行；B8/B10 的验收仅为非板范围，仓库级审核（H1/H8/H9）也不因任何批次关闭。不能把本索引当作完整交付签收表。

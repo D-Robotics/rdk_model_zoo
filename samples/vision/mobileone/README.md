@@ -1,6 +1,7 @@
 # MobileOne image classification
 
 <a id="overview"></a>
+
 ## Overview
 
 MobileOne is a lightweight CNN backbone designed for low-latency deployment on edge devices. The model uses structural re-parameterization to keep training-time expressiveness while simplifying the inference-time structure.

@@ -1,6 +1,7 @@
 # GoogLeNet image classification
 
 <a id="overview"></a>
+
 ## Overview
 
 GoogLeNet is an image classification network based on the Inception module. It won the ImageNet classification challenge in 2014 and introduced a practical multi-branch structure for extracting features at different receptive fields.

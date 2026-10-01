@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/repvit'
@@ -82,7 +83,7 @@ class SourceComparisonTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Only import the preserved source; SDK construction is never invoked.
-        spec=importlib.util.spec_from_file_location('_repvit_source', ROOT/'platforms/x5/samples/vision/repvit/runtime/python/repvit.py')
+        spec=importlib.util.spec_from_file_location('_repvit_source', legacy_path('x5/samples/vision/repvit/runtime/python/repvit.py'))
         mod=importlib.util.module_from_spec(spec)
         old_path=sys.path[:]
         with patch.dict(sys.modules, {'hbm_runtime':types.ModuleType('hbm_runtime'),spec.name:mod}):
@@ -154,7 +155,7 @@ class SourceComparisonTests(unittest.TestCase):
             self.assertEqual(chained.labels, explicit.labels)
 
     def test_conversion_recipes_remain_identical_to_source(self):
-        source = ROOT / 'platforms/x5/samples/vision/repvit/conversion'
+        source = legacy_tree('x5/samples/vision/repvit/conversion')
         recipes = list(source.glob('*.yaml'))
         self.assertEqual(len(recipes), len(VARIANTS))
         for recipe in recipes:

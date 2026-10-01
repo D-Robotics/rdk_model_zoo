@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 import cv2
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
 class FakeRuntime:
@@ -65,7 +66,7 @@ class QuantRuntime(FakeRuntime):
 
 class MODNetTests(unittest.TestCase):
     def test_geometry_matches_fixed_source_numeric_helper(self):
-        source_path = Path(__file__).resolve().parents[4] / "platforms/x5/samples/vision/modnet/runtime/python/modnet.py"
+        source_path = legacy_path("x5/samples/vision/modnet/runtime/python/modnet.py")
         fake_hbm = types.ModuleType("hbm_runtime")
         utils = types.ModuleType("utils")
         utils_py = types.ModuleType("utils.py_utils")

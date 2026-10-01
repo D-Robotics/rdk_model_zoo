@@ -60,7 +60,7 @@ Python success returns 0 and writes result.jpg, unetmobilenet_mask.npy (original
 <a id="entry-points"></a>
 ## Entry points
 
-[Model](model/README.md) · [Python](runtime/python/README.md) · [C++](runtime/cpp/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md). [Original S documentation](../../../platforms/s/samples/vision/unetmobilenet/README.md) remains archived with its old API and automatic setup behavior.
+[Model](model/README.md) · [Python](runtime/python/README.md) · [C++](runtime/cpp/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md). Original S documentation (historical `../../../platforms/s/samples/vision/unetmobilenet/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) remains archived with its old API and automatic setup behavior.
 
 <a id="license"></a>
 ## License

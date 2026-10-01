@@ -14,7 +14,7 @@
 | S100P | 26n/s/m/l/x；默认 26n | 自行转换的浮点输出 HBM，显式提供 SHA-256 | 仅主机；兼容 HBM/SDK/板端未验证 |
 | S600 | 无 | 无发布路线，显式拒绝 | 不支持 |
 
-14 个发布身份用于模型选择，**不表示已有 14 个可执行原生制品**。S 已发布文件的输出为量化数据，本入口拒绝加载；通过[转换流程](../../conversion/README_cn.md)准备浮点输出，改名不能改变契约。原始 [S E11](../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md) 和 [S E26](../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md) 保留为历史参考，其能力和测量记录不代表本实现的验收结果。
+14 个发布身份用于模型选择，**不表示已有 14 个可执行原生制品**。S 已发布文件的输出为量化数据，本入口拒绝加载；通过[转换流程](../../conversion/README_cn.md)准备浮点输出，改名不能改变契约。原始 S E11 (historical `../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 和 S E26 (historical `../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 保留为历史参考，其能力和测量记录不代表本实现的验收结果。
 
 ## 选择、构建与运行
 

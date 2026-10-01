@@ -1,5 +1,6 @@
 [English](README.md) | [简体中文](README_cn.md)
 
+
 # DiffusionDrive 确定性示例
 
 本目录逐字节保留源分支六组输入/参考对及六幅历史结果图。源文档将图片描述为 S600 结果；它们不是本次迁移新生成的图片或板端验证证据。原说明保留于 `platforms/s/samples/vision/diffusiondrive/test_data`。

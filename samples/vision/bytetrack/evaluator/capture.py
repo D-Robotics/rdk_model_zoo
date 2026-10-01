@@ -9,6 +9,7 @@ if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from samples._shared.platforms import require_execution_target
 from samples._shared.runtime_meta import RuntimeMetadata,metadata_evidence
 from samples._shared.assets import verify_asset_file
+from samples._shared.legacy_platforms import legacy_tree, pinned_name
 from samples.vision.bytetrack.runtime.python.model_binding import SAMPLE_DIR,resolve_selection
 from samples.vision.yolov5.evaluator.compare import _hash,_json
 from samples.vision.yolov5.evaluator.source_reference import load_legacy,source_paths
@@ -19,7 +20,10 @@ def _legacy_task(selection,factory):
     """Use the source wrapper's actual predict/person-filter/update implementation."""
     detector=load_legacy(selection,factory,resize_type=1,score_thres=.25,nms_thres=.45,anchors=ANCHORS)
     detector_module=sys.modules['yolov5_source_s']
-    source=ROOT/'platforms/s/samples/vision/bytetrack'
+    # The historical platforms/ tree now lives only in Git; the legacy side
+    # executes from the pinned-commit materialization (same bytes the
+    # evidence hashes used to record from the worktree copy).
+    source=legacy_tree('s/samples/vision/bytetrack')
     before=list(sys.path);old=sys.modules.get('yolov5')
     sys.path.insert(0,str(source/'3rdparty'))
     sys.modules['yolov5']=types.SimpleNamespace(YoloV5X=lambda cfg:detector,YOLOv5Config=detector_module.YOLOv5Config)
@@ -57,9 +61,11 @@ def capture_frames(selection,frames,output_dir,*,side,video_path,runtime_factory
         summary['model_sha256']=_hash(selection.model_path);summary['video_sha256']=_hash(video_path)
         verify_asset_file(selection.asset,selection.model_path)
         for package in ('scipy','lap','cython-bbox'):summary['versions'][package]=importlib.metadata.version(package)
-        source=ROOT/'platforms/s/samples/vision/bytetrack'
+        source=legacy_tree('s/samples/vision/bytetrack')
         code=list((SAMPLE_DIR/'runtime/python').rglob('*.py'))+list((SAMPLE_DIR/'evaluator').glob('*.py'))+list((SAMPLE_DIR.parent/'yolov5/runtime/python').glob('*.py'))+list((SAMPLE_DIR.parent/'yolov5/evaluator').glob('*.py'))+list(source_paths('s100'))+list((source/'runtime/python').glob('*.py'))+list((source/'3rdparty/tracker').glob('*.py'))+[ROOT/'samples/_shared'/n for n in ('assets.py','platforms.py','runtime_meta.py','quantization.py','image.py')]
-        summary['code_sha256']={str(p.relative_to(ROOT)):_hash(p) for p in code}
+        # Historical files materialize from the pinned commit; record them
+        # under their platforms/ tree names so evidence stays comparable.
+        summary['code_sha256']={ (str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else pinned_name(p)):_hash(p) for p in code}
         if runtime_factory is None:
             from samples._shared.model_runner import _default_runtime_factory
             runtime_factory=_default_runtime_factory()

@@ -1,11 +1,13 @@
 # YOLOE PF 模型转换
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 <a id="source-model"></a>
 ## 源模型
 
 本目录从**已经导出到本地**的 YOLOE PF ONNX 生成校准数据和可核查的 OE 配置，不自动下载权重。11 系列使用 DFL16，26 系列直接输出 LTRB；两者都有固定顺序的 4585 类词表、三个步长（8/16/32）、32 个掩码系数和原型输出。文本提示、视觉提示模型不适用。
 
-原始配方保留在 [X5 E11](../../../../platforms/x5/samples/vision/yoloe/conversion/README_cn.md)、[S E11](../../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md)、[S E26](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/README_cn.md)。统一转换路线保留浮点输出节点，不设置 `remove_node_type` 或 `remove_node_name`。S 原始发布制品输出为量化数据，不能冒充本路线新生成的浮点模型。
+原始配方保留在 X5 E11 (historical `../../../../platforms/x5/samples/vision/yoloe/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S E11 (historical `../../../../platforms/s/samples/vision/yoloe11_seg/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S E26 (historical `../../../../platforms/s/samples/vision/yoloe26_seg/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。统一转换路线保留浮点输出节点，不设置 `remove_node_type` 或 `remove_node_name`。S 原始发布制品输出为量化数据，不能冒充本路线新生成的浮点模型。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
@@ -54,7 +56,7 @@ E11 使用源 cv2/cv3/cv5 分支、DFL16 和 opset 11；E26 使用 one2one 分�
 
 E26 还要求选中的 `(anchor, class)` 集合与上游完全一致，再按这个身份比较选中值。浮点舍入引起的名次变化用 `order_identical=false` 和 `reordered_rows` 数量如实记录，不称为精确平局或排序完全一致。即使分数接近，只要新增/遗漏 anchor 或类别就失败。导出接口是稠密 tensor，不包含 Top-K 排列；运行时/数据集排序验收仍单独进行。
 
-已用 E11s/m/l、E26n/s/m/l/x 全部八种真实权重和随附图片执行导出、对照，见[主机导出记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-export-review.md)。E26 m/l/x 分别保留了 2/4/2 行 Top-K 名次变化，选中身份集合相同。本检查只证明一张输入的浮点转换一致性，不代表数据集精度或编译后 BIN/HBM 推理。[E11 源导出器](../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py) 和 [E26 源导出器](../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py) 继续作为历史参考保留。
+已用 E11s/m/l、E26n/s/m/l/x 全部八种真实权重和随附图片执行导出、对照，见[主机导出记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-export-review.md)。E26 m/l/x 分别保留了 2/4/2 行 Top-K 名次变化，选中身份集合相同。本检查只证明一张输入的浮点转换一致性，不代表数据集精度或编译后 BIN/HBM 推理。E11 源导出器 (historical `../../../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 和 E26 源导出器 (historical `../../../../platforms/s/samples/vision/yoloe26_seg/conversion/onnx_export/export_yoloe26_seg_pf.py` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 继续作为历史参考保留。
 
 `prepare.py` 执行 ONNX checker，拒绝外置 tensor 文件和动态形状，并要求词表与 [classes.names](../test_data/classes.names) 逐字节一致。输出按唯一形状识别，不依赖物理输出排列：
 

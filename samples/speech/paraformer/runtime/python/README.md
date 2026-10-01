@@ -7,7 +7,7 @@ three-model application pipeline with SDK adapters and metadata binding. The rea
 CPU audio frontend and complete Python CLI are available. Real board inference
 has not been run. The [C++ bridge](../cpp/README.md#quickstart) now consumes the
 prepared features through a complete native entry. Do not interpret the host checks below as model inference or accuracy
-validation. The archived [S runtime](../../../../../platforms/s/samples/speech/paraformer/runtime/python/README.md)
+validation. The archived S runtime (historical `../../../../../platforms/s/samples/speech/paraformer/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 remains a historical reference, not the unified entry.
 
 Start with [CLI usage](#usage), [all parameters](#parameters) and [results](#results); the later sections explain the numerical/API contracts.

@@ -23,7 +23,7 @@ endif()
 
 # The C++ utility sources are the existing S utility contract.  They remain
 # outside this sample because they are consumed by other S C++ samples too.
-set(RDK_S_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../platforms/s/utils/c_utils")
+set(RDK_S_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../_shared/cpp/c_utils")
 
 include_directories(
     /usr/hobot/include

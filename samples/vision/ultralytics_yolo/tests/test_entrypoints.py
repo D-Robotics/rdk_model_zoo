@@ -15,9 +15,6 @@ class Entrypoints(unittest.TestCase):
     def test_help_without_board(self):
         paths=list((S/'evaluator').glob('eval_*.py'))+[S/'runtime/python/main.py',S/'runtime/python/yolo_download.py',S/'conversion/mapper.py',S/'conversion/export_monkey_patch.py']
         paths=[p for p in paths if p.name!='eval_common.py']
-        for tree in ('x5','s'):
-            old=R/f'platforms/{tree}/samples/vision/ultralytics_yolo'
-            paths += list((old/'evaluator').glob('*.py'))+list((old/'conversion').glob('*.py'))+[old/'runtime/python/main.py']
         for path in paths:
             with self.subTest(path=path):
                 r=command(path,'--help');self.assertEqual(r.returncode,0,r.stderr);self.assertIn('usage:',r.stdout)
@@ -41,16 +38,4 @@ class Entrypoints(unittest.TestCase):
     def test_conversion_conflict(self):
         r=command(S/'conversion/mapper.py','--platform','s600','--march','nash-e')
         self.assertEqual(r.returncode,2);self.assertIn('different architectures',r.stderr)
-    def test_s_import_is_not_circular(self):
-        old=R/'platforms/s/samples/vision/ultralytics_yolo/runtime/python'
-        code='import sys;sys.path.insert(0,sys.argv[1]);import yolo_detect,yolo_seg,yolo_pose,yolo_cls,yolo_v10detect;print("ok")'
-        r=subprocess.run([sys.executable,'-c',code,str(old)],cwd=tempfile.gettempdir(),capture_output=True,text=True)
-        self.assertEqual(r.returncode,0,r.stderr)
-    def test_pose_legacy_returns_three(self):
-        p=R/'platforms/x5/samples/vision/ultralytics_yolo/runtime/python/ultralytics_yolo_pose.py'
-        spec=importlib.util.spec_from_file_location('legacy_pose_test',p);m=importlib.util.module_from_spec(spec);sys.modules[spec.name]=m;spec.loader.exec_module(m)
-        result=(np.zeros((0,4)),np.zeros(0),np.zeros(0),np.zeros((0,17,2)),np.zeros((0,17,1)))
-        with patch.object(m._BaseModel,'post_process',return_value=result):
-            out=m.UltralyticsYOLOPose.__new__(m.UltralyticsYOLOPose).post_process(None)
-        self.assertEqual(len(out),3);self.assertEqual(out[2].shape,(0,17,3))
 if __name__=='__main__':unittest.main()

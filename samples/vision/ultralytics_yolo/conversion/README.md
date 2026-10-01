@@ -9,6 +9,7 @@ supported scope for this migration is representative YOLOv8/YOLO11 DFL
 detection and YOLO26 direct-LTRB detection. Existing classification, segmentation, pose and OBB export entries are also listed below. Having an exporter is not evidence that every task has completed end-to-end conversion validation.
 
 <a id="source-model"></a>
+
 ## Source model and reproducibility
 
 Input is a local Ultralytics PyTorch `.pt` checkpoint matching the selected task. `/models/*.pt` paths below must be prepared by the user; these weights are not bundled. Record the checkpoint SHA-256, training/export package versions, classes and input geometry. This repository does not pin one Ultralytics/PyTorch/ONNX version combination or publisher digest for every checkpoint family. Preserve training configuration and class order for custom weights. A compiled file in the [published model inventory](../model/README.md) does not prove that a similarly named `.pt` is its exact source checkpoint.

@@ -1,5 +1,8 @@
 [English](./README.md) | 简体中文
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
+
 # 模型评估 — CLIP 图文匹配
 
 本文记录源验证路径。源没有发布 benchmark 表，因此不虚构延迟或精度数值。本轮没有执行模型或板端运行。

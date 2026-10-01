@@ -10,6 +10,7 @@ import sys
 import unittest
 import cv2
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 ROOT=Path(__file__).resolve().parents[4]
 
 
@@ -30,7 +31,7 @@ def task(raw=None):
 
 class StageTests(unittest.TestCase):
     def source(self):
-        path=ROOT/'platforms/x5/samples/vision/pp_liteseg/runtime/python/pp_liteseg.py'
+        path=legacy_path('x5/samples/vision/pp_liteseg/runtime/python/pp_liteseg.py')
         spec=importlib.util.spec_from_file_location('pp_source',path)
         module=importlib.util.module_from_spec(spec)
         with patch.dict(sys.modules,{'hbm_runtime':SimpleNamespace(HB_HBMRuntime=None)}):
@@ -41,7 +42,7 @@ class StageTests(unittest.TestCase):
 
     def test_source_tensor_and_mask_parity(self):
         t,raw=task();old=self.source()
-        image=cv2.imread(str(ROOT/'platforms/x5/samples/vision/pp_liteseg/test_data/street.png'))
+        image=cv2.imread(str(legacy_path('x5/samples/vision/pp_liteseg/test_data/street.png')))
         prepared=t.pre_process(image)
         np.testing.assert_array_equal(prepared.tensors['images'],old.pre_process(image))
         self.assertEqual(prepared.tensors['images'].shape,(768,1024))

@@ -4,7 +4,7 @@
 
 统一 Python 入口已提供准确的 X5 模型选择、懒加载 SDK、源索引输入校验、预热、
 独立动作导出和失败报告。主机集成测试使用明确的 SDK 替身，真实板端执行仍未运行。
-[源运行时说明](../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md)
+源运行时说明 (historical `../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 保留历史板测证据，不代表统一入口重新完成板测。
 
 <a id="environment"></a>

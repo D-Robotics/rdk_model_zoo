@@ -1,11 +1,12 @@
 # VargConvNet image classification
 
 <a id="overview"></a>
+
 ## Overview
 
 VargConvNet is a lightweight convolutional classification model used for ImageNet-1k image classification on edge devices. The RDK X5 sample provides a prebuilt packed-NV12 `.bin` model and a Python runtime based on `hbm_runtime`.
 
-[Preserved source description](../../../platforms/x5/samples/vision/vargconvnet/README.md): the delivered source provides no separate paper or upstream repository link.
+Preserved source description (historical `../../../platforms/x5/samples/vision/vargconvnet/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md): the delivered source provides no separate paper or upstream repository link.
 
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
 

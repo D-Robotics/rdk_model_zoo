@@ -1,11 +1,12 @@
 # VargConvNet 图像分类
 
 <a id="overview"></a>
+
 ## 概述
 
 VargConvNet 是面向边缘设备的轻量级卷积分类模型，用于 ImageNet-1k 图像分类。RDK X5 sample 提供 packed-NV12 `.bin` 模型和基于 `hbm_runtime` 的 Python 运行时。
 
-[固定源说明](../../../platforms/x5/samples/vision/vargconvnet/README_cn.md)：源材料未提供独立论文或上游仓库链接。
+固定源说明 (historical `../../../platforms/x5/samples/vision/vargconvnet/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)：源材料未提供独立论文或上游仓库链接。
 
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
 

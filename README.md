@@ -6,6 +6,7 @@ RDK Model Zoo provides model preparation, preprocessing, BPU inference, postproc
 
 > `develop` is the ongoing X5/S integration branch, not a completed customer migration release. Customer delivery should use the matching published platform branch/tag and its documentation. The unified tree extends beyond the original three pilots; migration, host checks, board tests, conversion and release readiness are tracked separately.
 
+
 ## Start by task
 
 The [sample index](samples/README.md) lists 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. Each guide states its own targets, variants, languages and validation scope.
@@ -31,7 +32,12 @@ The [sample index](samples/README.md) lists 51 unified samples: 45 vision, three
 | Prepared-feature trajectory planning | [DiffusionDrive](samples/vision/diffusiondrive/README.md) |
 | Features, image-text matching and video classification | [DINOv2](samples/vision/dinov2/README.md), [SigLIP](samples/vision/siglip/README.md), [CLIP](samples/vision/clip/README.md), [3DResNet](samples/vision/3dresnet/README.md) |
 
-Capabilities not yet unified remain accessible through the [X5 source entry](platforms/x5/README.md) and [S source entry](platforms/s/README.md). Pending migration does not mean the source capability was deleted. See the [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
+Capabilities not yet unified are not carried in this tree anymore: the historical
+`platforms/` copies were removed (2026-10-01) and stay reachable through the pinned
+commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` and the delivery branches
+(`rdk_x5`, `rdk_s`). Pending migration does not mean the source capability was
+deleted. See the [removal record](docs/migration/2026-09-30-model-examples.md) and the
+[migration ledger](docs/releases/unified-migration/x5-s-migration-map.md).
 
 ACT/Pi0 are integrated as complete pinned Git submodules, separately from the 51 in-repository samples above. See the [VLA guide](samples/vla/README.md): S100 and S600 ACT use different source versions, Pi0 targets S600, and model resources are operator-supplied. Robot control was not run in this migration.
 
@@ -43,7 +49,7 @@ ACT/Pi0 are integrated as complete pinned Git submodules, separately from the 51
 | RDK S100 | `.hbm`, nash-e | Not interchangeable with S100P/S600 |
 | RDK S100P | `.hbm`, nash-m | Only published combinations; no silent S100 fallback |
 | RDK S600 | `.hbm`, nash-p | Input geometry/combinations follow the actual artifact |
-| RDK X3 | Historical directory | Original documentation/releases retained; outside new X5/S adaptation |
+| RDK X3 | Historical | Removed from the active tree; reachable via the pinned commit and the `rdk_x3` branch; never a new adaptation target |
 
 Use the SDK supplied by the matching board image; a module named `hbm_runtime` is not a cross-platform installation package. Sample guides control host/board dependencies, image versions and memory requirements. Common Python dependencies include NumPy, OpenCV, SciPy and PyYAML; tasks do not all share one input protocol or install set. C++ needs board development headers/libraries; conversion needs host training/OE environments.
 
@@ -74,8 +80,6 @@ Success prints `[Saved]` and writes `/tmp/rdk-yolov8n.jpg`; the input is bundled
 
 ```text
 samples/                  # unified task implementations and guides
-platforms/{x5,s}/         # retained source material and compatibility entries
-platforms/x3/             # historical X3 distribution
 docs/release/             # artifact/benchmark facts and target identity
 docs/sample-standards/    # README and inference contracts
 docs/architecture/        # readable model example architecture (ResNet/YOLO)
@@ -91,10 +95,10 @@ Read [AGENTS.md](AGENTS.md), the [inference contract](docs/sample-standards/infe
 
 ## Data, source-branch resources and validation
 
-- [Canonical release facts](docs/release) hold artifacts and historical measurements; the [platform registry](platforms/README.md) explains source branches, directories, tags and runtimes.
+- [Canonical release facts](docs/release) hold artifacts and historical measurements. The former `platforms/registry.json` statement of the delivery-branch layouts was removed with the `platforms/` tree; branch/tag facts now live in the [removal record](docs/migration/2026-09-30-model-examples.md).
 - Source-branch online resources, inherited from the archived X5 (`ac11571`) and S (`380e1a2`) root guides: the [online model catalog](https://d-robotics.github.io/rdk_model_zoo/), [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues), the [D-Robotics developer community](https://developer.d-robotics.cc/) and its [user manual](https://developer.d-robotics.cc/information). They reference the delivery branches' published material; browsing the published catalog does not certify this integration branch, and no live link status is claimed here. Legacy demo material stays archived — [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) for X5 and the separate [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) repository for S — and is not an adaptation target.
-- Dataset preparation: [datasets](datasets), [X5 datasets](platforms/x5/datasets), [S datasets](platforms/s/datasets). Large datasets/models are generally not in Git.
-- Retained references: [X5 guidelines](platforms/x5/docs/Model_Zoo_Repository_Guidelines.md), [S Python API](platforms/s/docs/Python_API_User_Guide.md), [S UCP](platforms/s/docs/UCP_User_Guide.md), [TROS](docs/tros/README.md).
+- Dataset preparation: [datasets](datasets). Large datasets/models are generally not in Git; the former per-platform dataset trees went with the `platforms/` removal.
+- Retained references on the delivery branches: [X5 guidelines](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_x5/docs/Model_Zoo_Repository_Guidelines.md), [S Python API](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_s/docs/Python_API_User_Guide.md), [S UCP](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_s/docs/UCP_User_Guide.md), [TROS](docs/tros/README.md) in this tree.
 - The [migration ledger](docs/releases/unified-migration/x5-s-migration-map.md) and batch reports distinguish implementation, host checks, board tests, independent review and closure; the [current host completion plan](docs/superpowers/plans/2026-09-26-host-completion.md) does not treat pending board tests as passed.
 
 SAM has partial board evidence and must no longer be described as wholly untested. Likewise, one YOLO/classification case or video excerpt cannot certify all targets/variants, dataset accuracy or release readiness. Read exact commits, inputs, artifacts and scope in each sample and evidence record.
@@ -120,6 +124,6 @@ Generated `dist/catalog.meta.json` binds `catalog.json` by SHA-256; CI uploads d
 
 ## Community, contribution and license
 
-Use [repository Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) with target, image/SDK, model reference, commit and reproducible commands. Preserve original failure output and submit matching documentation/tests with fixes. Source branches retain [community resources](platforms/x5/README.md#community--contribution) and platform-specific guidance.
+Use [repository Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) with target, image/SDK, model reference, commit and reproducible commands. Preserve original failure output and submit matching documentation/tests with fixes. The delivery branches retain [community resources](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_x5/README.md#community--contribution) and platform-specific guidance.
 
-Unified code uses the root [LICENSE](LICENSE); distributions retain [X5 LICENSE](platforms/x5/LICENSE) and [S LICENSE](platforms/s/LICENSE). Upstream X3 supplied no license file and none is invented here. Model weights, datasets and upstream projects retain their respective licenses and provenance.
+Unified code uses the root [LICENSE](LICENSE); the delivery branches carry their own X5/S license files (historical `platforms/{x5,s}/LICENSE`, reachable through the pinned commit). Upstream X3 supplied no license file and none is invented here. Model weights, datasets and upstream projects retain their respective licenses and provenance.

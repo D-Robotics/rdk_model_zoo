@@ -1,6 +1,7 @@
 # ResNeXt 图像分类
 
 <a id="overview"></a>
+
 ## 概述
 
 ResNeXt 在残差网络的基础上引入 split-transform-merge 设计，通过增加 cardinality 而不只是单纯增加网络深度或宽度，提升模型表达能力。该结构保留了简洁的残差主干，并通过组卷积提高表示效率。

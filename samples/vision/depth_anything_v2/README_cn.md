@@ -95,7 +95,7 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 ## 入口
 
 先使用上述命令，再看运行时文档的 API 和阶段表。转换/评测说明保留源细节并指出
-缺失输入。[原始 S 源](../../../platforms/s/samples/vision/depth_anything_v2/README_cn.md)
+缺失输入。原始 S 源 (historical `../../../platforms/s/samples/vision/depth_anything_v2/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 仍可查阅，其自动安装/下载脚本和 API 属于历史入口。统一入口不声称完成板测、
 数据集评分、模型转换或 SDK 兼容性验收。
 

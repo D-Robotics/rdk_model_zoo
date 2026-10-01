@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/vit'
@@ -81,11 +82,11 @@ class EntryTests(unittest.TestCase):
 class SourceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        spec=importlib.util.spec_from_file_location('_vit_legacy',ROOT/'platforms/s/samples/vision/vit/runtime/python/vit.py')
+        spec=importlib.util.spec_from_file_location('_vit_legacy',legacy_path('s/samples/vision/vit/runtime/python/vit.py'))
         mod=importlib.util.module_from_spec(spec)
-        utils=types.ModuleType('utils');utils.__path__=[str(ROOT/'platforms/s/utils')]
+        utils=types.ModuleType('utils');utils.__path__=[str(legacy_tree('s/utils'))]
         # Import only the two real helpers used by ViT, not package-wide SDK exports.
-        pyutils=types.ModuleType('utils.py_utils');pyutils.__path__=[str(ROOT/'platforms/s/utils/py_utils')]
+        pyutils=types.ModuleType('utils.py_utils');pyutils.__path__=[str(legacy_tree('s/utils/py_utils'))]
         oldpath=sys.path[:]
         with patch.dict(sys.modules,{'utils':utils,'utils.py_utils':pyutils,'hbm_runtime':types.ModuleType('hbm_runtime'),spec.name:mod}):
             try:spec.loader.exec_module(mod)
@@ -184,7 +185,7 @@ class SourceTests(unittest.TestCase):
 
     def test_preserves_conversion_log_recipe_and_all_test_resources(self):
         for folder in ('conversion','test_data'):
-            source=ROOT/'platforms/s/samples/vision/vit'/folder
+            source=legacy_tree(f's/samples/vision/vit/{folder}')
             for f in source.rglob('*'):
                 if f.is_file() and not f.name.startswith('README'):
                     self.assertEqual((SAMPLE/folder/f.relative_to(source)).read_bytes(),f.read_bytes())

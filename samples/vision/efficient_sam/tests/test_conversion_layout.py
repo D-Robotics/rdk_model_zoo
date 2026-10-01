@@ -8,6 +8,7 @@ import unittest
 import zipfile
 from pathlib import Path
 from unittest import mock
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -38,21 +39,27 @@ class ConversionLayoutTest(unittest.TestCase):
             unified = CONVERSION / entry["unified"]
             self.assertTrue(unified.is_file(), entry["unified"])
             for source in entry["sources"]:
-                path = ROOT / source["path"]
-                self.assertTrue(path.is_file(), source["path"])
+                # The historical platforms/ tree now lives only in Git; the
+                # recorded hashes still pin the same bytes at the pin.
+                relative = source["path"][len("platforms/"):]
+                path = legacy_path(relative)
                 self.assertEqual(sha256(path), source["sha256"], source["path"])
-                mapped.add(path)
+                mapped.add(relative)
                 if entry["kind"] == "verbatim":
                     self.assertEqual(sha256(unified), source["sha256"], entry["unified"])
                 if "unified_sha256" in source:
                     self.assertEqual(sha256(unified), source["unified_sha256"], entry["unified"])
         for source in data["source_only"]:
-            path = ROOT / source["path"]
-            self.assertTrue(path.is_file(), source["path"])
+            relative = source["path"][len("platforms/"):]
+            path = legacy_path(relative)
             self.assertEqual(sha256(path), source["sha256"], source["path"])
-            mapped.add(path)
-        source_root = {p for p in (ROOT / "platforms/x5/samples/vision/efficient_sam/conversion").rglob("*") if p.is_file() and "__pycache__" not in p.parts}
-        source_root |= {p for p in (ROOT / "platforms/s/samples/vision/efficient_sam/conversion").rglob("*") if p.is_file() and "__pycache__" not in p.parts}
+            mapped.add(relative)
+        x5_tree = legacy_tree("x5/samples/vision/efficient_sam/conversion")
+        x5_prefix = f"x5/samples/vision/efficient_sam/conversion"
+        source_root = {f"{x5_prefix}/{p.relative_to(x5_tree)}" for p in x5_tree.rglob("*") if p.is_file() and "__pycache__" not in p.parts}
+        s_tree = legacy_tree("s/samples/vision/efficient_sam/conversion")
+        s_prefix = f"s/samples/vision/efficient_sam/conversion"
+        source_root |= {f"{s_prefix}/{p.relative_to(s_tree)}" for p in s_tree.rglob("*") if p.is_file() and "__pycache__" not in p.parts}
         self.assertEqual(mapped, source_root)
 
     def test_bilingual_contract_anchors_match(self):

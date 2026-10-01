@@ -1,6 +1,9 @@
 # HGNetV2 评测
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 <a id="dataset"></a>
+
 ## 数据集
 
 自行准备 ImageNet-1k 验证集（通常 50,000 张），仓库不附带数据或下载。评测器递归扫描 JPEG/PNG，CSV 路径相对 --image-path，保留子目录。准备 UTF-8 CSV，表头 image:file,category，标签从 0 到 999。示例布局：

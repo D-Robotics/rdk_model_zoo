@@ -35,6 +35,7 @@ from samples.vision.lprnet.runtime.python.model_binding import (  # noqa: E402
     resolve_selection,
 )
 from samples.vision.lprnet.runtime.python.model_runner import RuntimeModelRunner  # noqa: E402
+from samples._shared.legacy_platforms import pinned_name  # noqa: E402
 from samples.vision.lprnet.evaluator.source_reference import (  # noqa: E402
     load_legacy,
     source_paths,
@@ -129,7 +130,10 @@ def run_comparison(selection, input_path, output_dir, *, priority=0, bpu_cores=N
         code += list(source_paths("x5"))
         code += [ROOT / "samples" / "_shared" / name
                  for name in ("assets.py", "platforms.py", "runtime_meta.py")]
-        summary["code_sha256"] = {str(path.relative_to(ROOT)): _hash(path) for path in code}
+        summary["code_sha256"] = {
+            (str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else pinned_name(path)): _hash(path)
+            for path in code
+        }
 
         if runtime_factory is None:
             from samples._shared.model_runner import _default_runtime_factory

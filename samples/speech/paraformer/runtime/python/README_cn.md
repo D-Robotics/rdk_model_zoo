@@ -5,7 +5,7 @@
 当前目录已提供 CPU CIF（连续积分触发）实现与三模型应用编排。SDK 适配器和模型绑定也已实现；真实 CPU 音频前端也已提供；
 完整 Python CLI 已提供，[C++ 桥接](../cpp/README_cn.md#quickstart)已可通过完整原生入口读取准备特征；真实板端推理尚未执行。
 下述主机检查不代表模型推理或精度验证。归档的
-[S 运行说明](../../../../../platforms/s/samples/speech/paraformer/runtime/python/README_cn.md)
+S 运行说明 (historical `../../../../../platforms/s/samples/speech/paraformer/runtime/python/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 保留作历史参考，不是统一入口。
 
 先看 [CLI 用法](#usage)、[全部参数](#parameters) 和 [结果文件](#results)；后续章节解释数值与 API 契约。

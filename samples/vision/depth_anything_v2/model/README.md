@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | S100 | `s:depth_anything_v2:s100/depth_any.hbm` | `s100/depth_any.hbm` | unknown (`null`) |
 
-The [S manifest](../../../../platforms/s/docs/release/models.yaml) is authoritative
+The S manifest (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) is authoritative
 for the published filename and URL. Source prose also names S100P, but the
 manifest has no separate S100P asset or compatibility evidence. S100P, S600 and
 X5 are refused, even if an external path is supplied. `auto` selects the sole

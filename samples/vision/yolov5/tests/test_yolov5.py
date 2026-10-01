@@ -9,6 +9,7 @@ import numpy as np
 from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError
 from samples.vision.yolov5.runtime.python.model_binding import resolve_selection, bind_model, list_available_assets
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
+from samples._shared.tests.legacy_platforms import legacy_module_namespace, legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -46,13 +47,14 @@ def load(path, name):
 
 def legacy(target, runtime, resize=None):
     group='x5' if target=='x5' else 's'
+    legacy_module_namespace()  # sources import each other as platforms.<group>...
     old=sys.modules.get('hbm_runtime')
     sys.modules['hbm_runtime']=types.SimpleNamespace(HB_HBMRuntime=lambda _:runtime,QuantParams=object)
     try:
-        p=ROOT/f'platforms/{group}/samples/vision/yolov5/runtime/python'/('yolov5_det.py' if group=='x5' else 'yolov5.py')
+        p=legacy_path(f'{group}/samples/vision/yolov5/runtime/python/'+('yolov5_det.py' if group=='x5' else 'yolov5.py'))
         mod=load(p,'legacy_y5_'+group)
-        mod.pre_utils=load(ROOT/f'platforms/{group}/utils/py_utils/preprocess.py','legacy_y5_pre_'+group)
-        mod.post_utils=load(ROOT/f'platforms/{group}/utils/py_utils/postprocess.py',f'platforms.{group}.utils.py_utils.postprocess')
+        mod.pre_utils=load(legacy_path(f'{group}/utils/py_utils/preprocess.py'),'legacy_y5_pre_'+group)
+        mod.post_utils=load(legacy_path(f'{group}/utils/py_utils/postprocess.py'),f'platforms.{group}.utils.py_utils.postprocess')
     finally:
         if old is None:sys.modules.pop('hbm_runtime',None)
         else:sys.modules['hbm_runtime']=old

@@ -9,6 +9,7 @@
 README 契约（`docs/sample-standards/readme-contract.md`）与推理契约
 （`docs/sample-standards/inference-contract.md`）继续适用。
 
+
 ## 1. 调用链与分层
 
 ```text

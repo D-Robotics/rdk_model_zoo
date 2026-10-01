@@ -8,6 +8,7 @@ Applications](https://arxiv.org/abs/2206.10589)，参考实现
 [mmaaz60/EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)）。[English](README.md)
 
 <a id="overview"></a>
+
 ## 概述
 
 EdgeNeXt 是面向移动视觉的高效 CNN-Transformer 混合架构：四级金字塔把

@@ -8,6 +8,7 @@
 > （来源：`rdk_x5` @ `ac11571`、`rdk_s` @ `380e1a2`），目录与文档章节按 develop 目录
 > 结构改写。交付分支 `rdk_x5` / `rdk_s` 上的同名文件在各自 ref 上继续有效。
 
+
 ## 定位与规范层级
 
 `develop` 采用 sample 为中心的统一架构：X5 与 S（S100/S100P/S600）的 sample 统一存放
@@ -109,7 +110,7 @@ develop 当前目录组织如下（仅用于说明各目录职责，实际内容
 │   ├── Model_Zoo_Repository_Guidelines.md # 本规范
 │   ├── Python_API_User_Guide.md           # hbm_runtime Python 接口指引（来源 rdk_s）
 │   └── UCP_User_Guide.md                  # libdnn/libucp 接口指引（来源 rdk_s）
-├── platforms/{x5,s,x3}/                   # 迁移期冻结快照（来源分支为准；收尾 x5/s 删除、x3 归档）
+（platforms/ 冻结快照已于 2026-10-01 移除；历史内容经固定提交 d2d2a4e0 与交付分支访问）
 ├── samples/                               # 统一 sample（迁移目标形态）
 │   ├── _shared/                           # 平台身份/资产绑定/NV12 等已证双消费者共享设施
 │   ├── vision/…                           # 每样本：model/ runtime/ conversion/ evaluator/ test_data/ tests/

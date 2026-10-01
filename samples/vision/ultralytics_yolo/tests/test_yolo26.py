@@ -107,39 +107,6 @@ class Yolo26Contracts(unittest.TestCase):
                         main.run_inference(resolve_platform('x5'),args,['test'])
                     if task!='cls':self.assertTrue(Path(args.img_save_path).is_file())
 
-    def test_legacy_cli_and_help(self):
-        def run(path,*args):
-            result=subprocess.run([sys.executable,str(path),*args],capture_output=True,text=True,timeout=30)
-            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-            return result.stdout
-        for platform in ('x5','s'):
-            old=R/f'platforms/{platform}/samples/vision/ultralytics_yolo26'
-            for task in ('detect','cls','seg','pose','obb'):
-                with self.subTest(platform=platform,task=task):
-                    target='x5' if platform=='x5' else 's600'
-                    output=run(old/'runtime/python/main.py','--platform',target,'--task',task,'--dry-run')
-                    self.assertIn('yolo26',output)
-                    run(old/f'evaluator/eval_yolo26_{"det" if task=="detect" else task}.py','--help')
-                    run(old/f'conversion/onnx_export/export_yolo26_{task}_bpu.py','--help')
-            run(old/'conversion/mapper.py','--help')
-
-    def test_legacy_evaluator_defaults_parse(self):
-        import runpy
-        execute=runpy.run_path
-        sys.path.insert(0,str(S/'evaluator'))
-        for platform in ('x5','s'):
-            for task in ('det','cls','seg','pose','obb'):
-                with self.subTest(platform=platform,task=task):
-                    old=R/f'platforms/{platform}/samples/vision/ultralytics_yolo26/evaluator/eval_yolo26_{task}.py'
-                    def capture(*args,**kwargs):return list(sys.argv[1:])
-                    with patch.object(sys,'argv',[str(old),'--model-path','custom.bin']),patch('runpy.run_path',side_effect=capture) as forward:
-                        execute(str(old),run_name='__main__')
-                        argv=list(sys.argv[1:])
-                    evaluator=importlib.import_module('eval_yolo_'+task)
-                    args=evaluator.build_parser().parse_args(argv)
-                    self.assertEqual(args.family,'yolo26')
-                    self.assertTrue(args.image_dir)
-
     def test_mask_inverse_letterbox_at_non640_size(self):
         from rdk_yolo_utils.postprocess import process_mask
         proto=np.full((32,16,16),10,np.float32)

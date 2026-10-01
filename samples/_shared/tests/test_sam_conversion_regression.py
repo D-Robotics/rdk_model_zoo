@@ -18,6 +18,7 @@ import sys
 import tempfile
 import types
 import unittest
+from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
 
 import cv2
 import numpy as np
@@ -148,7 +149,7 @@ class SAMConversionRegressionTests(unittest.TestCase):
                     image = _write_image(image_dir)
                     source_out = root / "source"
                     unified_out = root / "unified"
-                    source_path = ROOT / "platforms" / ("x5" if target == "x5" else "s") / "samples" / "vision" / sample / "conversion" / "scripts" / source_name
+                    source_path = legacy_path(f'{"x5" if target == "x5" else "s"}/samples/vision/{sample}/conversion/scripts/{source_name}')
                     unified_path = ROOT / "samples" / "vision" / sample / "conversion" / "scripts" / unified_name
                     source_args = ["--src", str(image.parent), "--out", str(source_out), "--num", "20", "--size", "8"]
                     unified_args = ["--target", target, "--src", str(image.parent), "--out", str(unified_out), "--num", "20", "--size", "8"]
@@ -173,7 +174,7 @@ class SAMConversionRegressionTests(unittest.TestCase):
                     embedding.tofile(embedding_path)
                     source_out = root / "source"
                     unified_out = root / "unified"
-                    source_path = ROOT / "platforms" / ("x5" if target == "x5" else "s") / "samples" / "vision" / sample / "conversion" / "scripts" / source_name
+                    source_path = legacy_path(f'{"x5" if target == "x5" else "s"}/samples/vision/{sample}/conversion/scripts/{source_name}')
                     unified_path = ROOT / "samples" / "vision" / sample / "conversion" / "scripts" / unified_name
                     source_args = ["--embedding", str(embedding_path), "--out", str(source_out), "--num", "4"]
                     unified_args = ["--target", target, "--embedding", str(embedding_path), "--out", str(unified_out), "--num", "4"]
@@ -200,7 +201,7 @@ class SAMConversionRegressionTests(unittest.TestCase):
                     unified_out = root / "unified.bin"
                     onnx_path = root / "encoder.onnx"
                     onnx_path.write_bytes(b"fixture")
-                    source_path = ROOT / "platforms" / "s" / "samples" / "vision" / sample / "conversion" / "scripts" / "dump_encoder_embedding.py"
+                    source_path = legacy_path(f"s/samples/vision/{sample}/conversion/scripts/dump_encoder_embedding.py")
                     unified_path = ROOT / "samples" / "vision" / sample / "conversion" / "scripts" / "dump_encoder_embedding.py"
                     source_ort = _RecordingORT(embedding)
                     unified_ort = _RecordingORT(embedding)

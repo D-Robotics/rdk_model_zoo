@@ -22,10 +22,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / "samples/vision/dinov2"
-SOURCE = ROOT / "platforms/s/samples/vision/dinov2/runtime/python/dinov2.py"
+SOURCE = legacy_path("s/samples/vision/dinov2/runtime/python/dinov2.py")
 _LEGACY_SOURCE = None
 
 
@@ -98,7 +99,7 @@ def load_legacy_source():
     fake_hbm.QuantParams = object
     spec = importlib.util.spec_from_file_location("_dinov2_legacy", SOURCE)
     module = importlib.util.module_from_spec(spec)
-    source_utils = str(ROOT / "platforms/s")
+    source_utils = str(legacy_tree("s/utils").parent)
     previous_module = sys.modules.get(spec.name)
     sys.modules[spec.name] = module
     sys.path.insert(0, source_utils)

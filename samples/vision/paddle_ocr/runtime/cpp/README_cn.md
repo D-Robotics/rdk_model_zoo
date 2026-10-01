@@ -79,7 +79,7 @@ samples/vision/paddle_ocr/runtime/cpp/build/paddle_ocr \
   --rec_model_path /opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
   --test_image samples/vision/paddle_ocr/test_data/s100/gt_2322.jpg \
   --label_file samples/vision/paddle_ocr/test_data/s100/ppocrv6_dict.txt \
-  --font_path platforms/s/samples/vision/paddle_ocr/test_data/FangSong.ttf
+  --font_path samples/vision/paddle_ocr/test_data/FangSong.ttf
 ```
 
 <a id="parameters"></a>

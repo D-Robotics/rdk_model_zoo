@@ -7,7 +7,7 @@
 
 本样例使用已发布的 S 系列 Wav2Vec2 ASR 模型和固定 3503-token 词表转写音频。WAV/FLAC 按有限大小分块读取，声道平均为单声道，重采样到 16 kHz，再逐块归一化，每次推理输入 30000 点（1.875 秒）。处理完整文件，包括最后补零块；这是独立窗口处理，不是带隐藏流状态或重叠拼接的声学模型。
 
-统一 Python 流程已实现。原生流程也已实现：音频前处理、CTC/legacy、SDK 适配、显式启动器及完整文件结果报告都有主机测试；真实 SDK 构建/ABI 和模型推理尚未验证。原 [S 源](../../../platforms/s/samples/speech/asr/README.md)保留历史实现背景；本轮没有板测或新的真实模型转写结果。
+统一 Python 流程已实现。原生流程也已实现：音频前处理、CTC/legacy、SDK 适配、显式启动器及完整文件结果报告都有主机测试；真实 SDK 构建/ABI 和模型推理尚未验证。原 S 源 (historical `../../../platforms/s/samples/speech/asr/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)保留历史实现背景；本轮没有板测或新的真实模型转写结果。
 
 <a id="support-matrix"></a>
 ## 支持矩阵

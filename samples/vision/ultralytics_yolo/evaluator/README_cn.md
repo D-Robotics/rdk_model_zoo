@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集准备
 
-准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；X5/S 平台快照保留作溯源（[X5 COCO](../../../../platforms/x5/datasets/coco/README.md)、[S COCO](../../../../platforms/s/datasets/coco/README.md)、[X5 ImageNet](../../../../platforms/x5/datasets/imagenet/README_cn.md)、[S ImageNet](../../../../platforms/s/datasets/imagenet/README_cn.md)）。数据集不随仓库分发，使用时遵守各自许可。
+准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；X5/S 平台快照保留作溯源（X5 COCO (historical `../../../../platforms/x5/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S COCO (historical `../../../../platforms/s/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、X5 ImageNet (historical `../../../../platforms/x5/datasets/imagenet/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S ImageNet (historical `../../../../platforms/s/datasets/imagenet/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)）。数据集不随仓库分发，使用时遵守各自许可。
 
 以下示例约定本地目录如下；请将`/data`、`/models`替换为实际准备路径：
 
@@ -142,7 +142,7 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 <a id="reference-results"></a>
 ## 参考结果与验证范围
 
-源分支完整基准表在仓库内保留：[X5评估与基准](../../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README_cn.md)、[S评估与基准](../../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README_cn.md)、[X5 YOLO26](../../../../platforms/x5/samples/vision/ultralytics_yolo26/README_cn.md)、[S YOLO26](../../../../platforms/s/samples/vision/ultralytics_yolo26/README_cn.md)。制品和历史测量事实见[X5清单](../../../../docs/release/x5/)及[S清单](../../../../docs/release/s/)。
+源分支完整基准表在仓库内保留：X5评估与基准 (historical `../../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S评估与基准 (historical `../../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、X5 YOLO26 (historical `../../../../platforms/x5/samples/vision/ultralytics_yolo26/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S YOLO26 (historical `../../../../platforms/s/samples/vision/ultralytics_yolo26/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。制品和历史测量事实见[X5清单](../../../../docs/release/x5/)及[S清单](../../../../docs/release/s/)。
 
 这些是历史发布记录，不是当前统一代码的新测量。[sample说明](../README_cn.md)列出YOLOv8n/YOLO26n检测代表制品的板端对照范围。本次非板端工作没有新执行全数据集精度、延迟或板测。
 

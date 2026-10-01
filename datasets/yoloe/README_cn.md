@@ -1,5 +1,7 @@
 [English](./README.md) | 简体中文
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 # YOLOE 数据集资源
 
 本目录存放 [YOLOE sample](../../samples/vision/yoloe/README_cn.md) 使用的固定
@@ -57,7 +59,7 @@ Ultralytics 80 类 COCO 输出顺序。文件中实测的位置示例：索引 2
 原 X5 README 写明该文件由转换期的
 `conversion/onnx_export/export_yoloe11seg_bpu.py` 生成。该路径存在于 X5 交付
 分支，现归档于
-[`platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py`](../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py)；
+`platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py` (historical `../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)；
 它**不在统一目录中**。当前规范流程是：
 
 - [conversion/export.py](../../samples/vision/yoloe/conversion/README_cn.md)

@@ -296,7 +296,7 @@ print("Gather-only rewrite validated; input model preserved")
 ## 源流程与剩余迁移边界
 
 S 源提交 `380e1a2bf42041af54be6f34935e50197cfadff9` 的
-[完整原始中文说明](../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md)
+完整原始中文说明 (historical `../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 作为历史资料保留。各步骤当前边界如下：
 
 | 源步骤 | 用途 | 统一实现状态 |

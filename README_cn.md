@@ -6,6 +6,7 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 
 > 当前 `develop` 是 X5/S 全量整合中的开发分支，尚不是已完成迁移的客户发布版。客户交付仍应选择匹配的已发布平台分支/标签及其文档。整合树已超出最初三个试点；源码迁移、主机验证、板测、转换和发布就绪分别记录，不能相互代替。
 
+
 ## 按任务开始
 
 完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。每个入口说明自己的 target、变体、语言和验证范围。
@@ -31,7 +32,10 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 | 准备特征的轨迹规划 | [DiffusionDrive](samples/vision/diffusiondrive/README_cn.md) |
 | 视觉特征、图文匹配、视频分类 | [DINOv2](samples/vision/dinov2/README_cn.md)、[SigLIP](samples/vision/siglip/README_cn.md)、[CLIP](samples/vision/clip/README_cn.md)、[3DResNet](samples/vision/3dresnet/README_cn.md) |
 
-尚未统一的能力仍可从 [X5 原平台入口](platforms/x5/README_cn.md)、[S 原平台入口](platforms/s/README_cn.md) 查阅。待迁移不等于源能力被删除；后续批次见 [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
+尚未统一的能力不再随本树携带：历史 `platforms/` 副本已于 2026-10-01 移除，内容可经固定提交
+`d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 与交付分支（`rdk_x5`、`rdk_s`）访问。
+待迁移不等于源能力被删除；见[移除记录](docs/migration/2026-09-30-model-examples.md)与
+[迁移台账](docs/releases/unified-migration/x5-s-migration-map.md)。
 
 ACT／Pi0 以完整固定 Git 子模块集成，独立于上述 51 个本仓库样例。入口见 [VLA 指南](samples/vla/README_cn.md)：ACT S100 与 S600 使用不同源版本，Pi0 面向 S600，模型资源由使用者准备。本轮未运行机器人控制。
 
@@ -43,7 +47,7 @@ ACT／Pi0 以完整固定 Git 子模块集成，独立于上述 51 个本仓库�
 | RDK S100 | `.hbm`，nash-e | 不能替代 S100P/S600 制品 |
 | RDK S100P | `.hbm`，nash-m | 只有明确发布的组合才可运行，无资产不回退 S100 |
 | RDK S600 | `.hbm`，nash-p | 输入形状/模型组合按实际制品解析 |
-| RDK X3 | 历史目录 | 保留原始文档与发布记录，不属于本轮新增适配目标 |
+| RDK X3 | 历史 | 已移出活动树；经固定提交与 `rdk_x3` 分支访问，绝非新增适配目标 |
 
 使用匹配板卡镜像提供的 SDK；不能把同名 `hbm_runtime` 当作跨平台通用安装包。主机和板端依赖、镜像版本及模型内存要求以具体 Sample 为准。Python 常见依赖为 NumPy、OpenCV、SciPy、PyYAML；并非每个任务都使用相同输入协议或安装集。C++ 需要板端开发头/库，模型转换需要主机训练/OE 环境。
 
@@ -74,8 +78,6 @@ python3 samples/vision/ultralytics_yolo/runtime/python/main.py \
 
 ```text
 samples/                  # unified task implementations and guides
-platforms/{x5,s}/         # retained source material and compatibility entries
-platforms/x3/             # historical X3 distribution
 docs/release/             # artifact/benchmark facts and target identity
 docs/sample-standards/    # README and inference contracts
 docs/architecture/        # 可读模型范例架构（ResNet/YOLO）
@@ -91,10 +93,10 @@ tools/                   # catalog, contract checks and validation tooling
 
 ## 数据、原分支资料与验证
 
-- [统一发布事实](docs/release) 保存制品与历史测量事实；[平台注册表](platforms/README_cn.md) 说明原分支、目录、标签及运行时差异。
+- [统一发布事实](docs/release) 保存制品与历史测量事实。原 `platforms/registry.json` 的分支/目录/标签说明随 `platforms/` 移除，事实改记于[移除记录](docs/migration/2026-09-30-model-examples.md)。
 - 原分支在线资源继承自 X5（`ac11571`）、S（`380e1a2`）归档根指南：[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)、[GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)、[D-Robotics 开发者社区](https://developer.d-robotics.cc/) 及 [RDK 用户手册](https://developer.d-robotics.cc/information)。它们描述交付分支的已发布内容；浏览已发布目录不代表本整合分支通过验收，此处也不声明链接的实时可用性。历史 demo 材料保留在归档中——X5 为 [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) 归档分支，S 为独立 [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) 仓库——都不是本轮适配目标。
-- 数据准备入口：[datasets](datasets)、[X5 datasets](platforms/x5/datasets)、[S datasets](platforms/s/datasets)。大数据集和模型通常不在 Git 中。
-- 保留原指南：[X5 开发规范](platforms/x5/docs/Model_Zoo_Repository_Guidelines.md)、[S Python API](platforms/s/docs/Python_API_User_Guide.md)、[S UCP](platforms/s/docs/UCP_User_Guide.md)、[TROS](docs/tros/README_cn.md)。
+- 数据准备入口：[datasets](datasets)。大数据集和模型通常不在 Git 中；原各平台数据目录随 `platforms/` 移除。
+- 交付分支上的原指南：[X5 开发规范](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_x5/docs/Model_Zoo_Repository_Guidelines.md)、[S Python API](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_s/docs/Python_API_User_Guide.md)、[S UCP](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_s/docs/UCP_User_Guide.md)；本树内见 [TROS](docs/tros/README_cn.md)。
 - [迁移台账](docs/releases/unified-migration/x5-s-migration-map.md) 与各批报告说明“实现、主机测试、板测、独立评审、关闭”各状态；[当前非板端计划](docs/superpowers/plans/2026-09-26-host-completion.md) 不把待补板测当作通过。
 
 SAM 已有部分板端证据，不能再笼统写成“全部未测”；同样，单个 YOLO、分类或视频片段通过也不能推广为所有 target/变体、数据集精度或发布就绪。应读取 Sample 及证据中精确的提交、输入、制品和范围。
@@ -120,6 +122,6 @@ npm --prefix tools/catalog-publisher run catalog:build
 
 ## 社区、贡献与许可
 
-问题反馈可使用[仓库 Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)，并附 target、系统/SDK、模型引用、提交及可复现命令。先保护原始失败输出，再提交代码与相应文档/测试。原分支保留了[社区资源](platforms/x5/README_cn.md)和平台专属说明。
+问题反馈可使用[仓库 Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)，并附 target、系统/SDK、模型引用、提交及可复现命令。先保护原始失败输出，再提交代码与相应文档/测试。交付分支保留了[社区资源](https://github.com/D-Robotics/rdk_model_zoo/blob/rdk_x5/README_cn.md)和平台专属说明。
 
-统一代码见根 [LICENSE](LICENSE)，平台分发另保留 [X5 LICENSE](platforms/x5/LICENSE) 与 [S LICENSE](platforms/s/LICENSE)；X3 上游没有随附许可文件，此处未补造。模型权重、数据集和上游项目按各自许可及来源记录处理。
+统一代码见根 [LICENSE](LICENSE)；交付分支各自携带 X5/S 许可文件（历史 `platforms/{x5,s}/LICENSE` 可经固定提交访问）；X3 上游没有随附许可文件，此处未补造。模型权重、数据集和上游项目按各自许可及来源记录处理。

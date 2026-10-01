@@ -36,8 +36,9 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[4]
+from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
 SAMPLE = ROOT / "samples" / "vision" / "fcos"
-SOURCE = ROOT / "platforms" / "x5" / "samples" / "vision" / "fcos" / "runtime" / "python" / "fcos_det.py"
+SOURCE = legacy_path("x5/samples/vision/fcos/runtime/python/fcos_det.py")
 
 
 class QuantType:

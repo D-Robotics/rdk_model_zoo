@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 import numpy as np
 from test_dinov2 import FakeRuntime, ROOT, SAMPLE
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
 class ReadmeTests(unittest.TestCase):
@@ -51,7 +52,7 @@ class ReadmeTests(unittest.TestCase):
 
     def test_checkpoint_digest_and_conversion_scripts_match_fixed_source(self):
         files = ['mapper.py', 'onnx_export/export_dinov2.py']
-        source = ROOT/'platforms/s/samples/vision/dinov2/conversion'
+        source = legacy_tree('s/samples/vision/dinov2/conversion')
         digests = set()
         for rel in files:
             code = (SAMPLE/'conversion'/rel).read_bytes()

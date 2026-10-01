@@ -11,9 +11,10 @@ from samples._shared.yoloe26_decode import (
     OUTPUT_SHAPES,
 )
 from samples._shared.yoloe26_geometry import letterbox
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
-SOURCE = ROOT / "platforms/s/samples/vision/yoloe26_seg/runtime/python/yoloe26seg.py"
+SOURCE = legacy_path("s/samples/vision/yoloe26_seg/runtime/python/yoloe26seg.py")
 
 
 def source_module():

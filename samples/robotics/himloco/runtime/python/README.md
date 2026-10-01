@@ -5,7 +5,7 @@
 The unified Python entry now provides exact X5 model selection, lazy SDK transport,
 source-indexed input checks, warmup, owned action dumps and failure reports. Host
 integration tests use an explicit SDK double; real board execution remains not-run.
-The [source runtime guide](../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md)
+The source runtime guide (historical `../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 retains historical board evidence, not a new unified-runtime validation claim.
 
 <a id="environment"></a>

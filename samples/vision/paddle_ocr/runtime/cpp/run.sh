@@ -24,7 +24,7 @@ fi
 # explicitly supplied user flag override any fixture path.
 DEFAULT_IMAGE="${SAMPLE_DIR}/test_data/s100/gt_2322.jpg"
 DEFAULT_LABEL="${SAMPLE_DIR}/test_data/s100/ppocrv6_dict.txt"
-FONT_PATH="${REPO_ROOT}/platforms/s/samples/vision/paddle_ocr/test_data/FangSong.ttf"
+FONT_PATH="${REPO_ROOT}/samples/vision/paddle_ocr/test_data/FangSong.ttf"
 has_flag() {
     local name="$1"
     shift

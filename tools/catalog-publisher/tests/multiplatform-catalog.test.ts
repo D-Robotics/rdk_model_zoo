@@ -201,10 +201,12 @@ describe("multi-platform variant catalog", () => {
     expect(Object.keys(catalog.sources ?? {}).sort()).toEqual(["s", "x3", "x5"]);
     for (const platform of ["x5", "s", "x3"] as const) {
       const record = catalog.sources![platform]!;
-      expect(record.kind).toBe("worktree");
-      // X5 and S are read from the repository root; only the archived X3
-      // keeps its frozen subtree, so its manifests keep the subtree prefix.
-      expect(record.path).toBe(platform === "x3" ? "platforms/x3" : ".");
+      // X5 and S are read from the repository root; the removed X3 tree is
+      // read from its pinned commit, so its record keeps the subtree prefix
+      // plus the manifest directory the pin carries.
+      const pinned = platform === "x3";
+      expect(record.kind).toBe(pinned ? "commit" : "worktree");
+      expect(record.path).toBe(pinned ? "platforms/x3/release" : ".");
       expect(record.release_tag).toBe(catalog.release.platform_tags![platform]);
       expect(record.manifest_sha256).toMatch(/^[a-f0-9]{64}$/);
     }
@@ -214,10 +216,10 @@ describe("multi-platform variant catalog", () => {
     const catalog = await repositoryCatalog();
 
     // X5/S variants link into the unified branch at the repository root; X3
-    // variants keep pointing at the frozen subtree that holds their demos.
+    // variants keep pointing at the pinned commit that preserves their demos.
     for (const variant of catalog.models.flatMap((model) => model.variants ?? [])) {
       const unified = variant.hardware !== "x3";
-      expect(variant.source_ref).toBe(unified ? "develop" : "main");
+      expect(variant.source_ref).toBe(unified ? "develop" : "6fcef2b87c12435e11fbd7327ea70d4efd917b1c");
       expect(variant.source_path_prefix).toBe(unified ? "" : "platforms/x3");
       if (!unified) {
         expect(variant.sample_path.startsWith(variant.source_path_prefix!)).toBe(false);

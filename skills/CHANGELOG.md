@@ -1,5 +1,6 @@
 # Model Zoo Skills Changelog
 
+
 ## Unreleased — candidate Pack 1.1.0
 
 - H8-SKILL-R1 remediation (unreleased candidate; nothing is published, tagged, or installed by this change): `rdk-model-zoo/scripts/read_catalog.py` default discovery now also probes the unified per-platform layouts `docs/release/{x5,s,x3}/models.yaml` and the frozen `platforms/{platform}/...` snapshots, preferring the active unified manifest over the same platform's snapshot — consistent with `inspect_repo.py`. Discovery stays local to the script (no sibling-skill or repository import), so single-skill flat installs remain self-contained. Explicit `--manifest` selection and the historic flat single-platform layouts are preserved: exactly one candidate is still selected implicitly, multiple candidates fail with `ambiguous-manifest` plus the actionable `manifest_candidates` path list and are never narrowed by branch, filename, or the S group, and missing manifests remain `manifest-not-found` (unknown). Implicitly or explicitly selecting a `platforms/` snapshot is disclosed with a warning.

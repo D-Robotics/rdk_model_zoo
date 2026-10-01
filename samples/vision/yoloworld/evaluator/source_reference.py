@@ -8,6 +8,7 @@ import types
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
+from samples._shared.legacy_platforms import legacy_path
 
 
 def source_paths(target: str = "x5") -> tuple[Path, ...]:
@@ -15,10 +16,9 @@ def source_paths(target: str = "x5") -> tuple[Path, ...]:
 
     if target != "x5":
         raise ValueError("YOLOWorld has no fixed source outside X5.")
-    base = ROOT / "platforms" / "x5"
     return (
-        base / "samples" / "vision" / "yoloworld" / "runtime" / "python" / "yoloworld_det.py",
-        base / "utils" / "py_utils" / "postprocess.py",
+        legacy_path("x5/samples/vision/yoloworld/runtime/python/yoloworld_det.py"),
+        legacy_path("x5/utils/py_utils/postprocess.py"),
     )
 
 

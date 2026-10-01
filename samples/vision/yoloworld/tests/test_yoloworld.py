@@ -9,6 +9,7 @@ from samples.vision.yoloworld.runtime.python.model_runner import RuntimeModelRun
 from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask
 from samples._shared.runtime_meta import RuntimeMetadata
 from unittest.mock import patch
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 SAMPLE=Path(__file__).resolve().parents[1]
 
 class FakeRuntime:
@@ -64,7 +65,7 @@ class YOLOWorldTests(unittest.TestCase):
 
     def test_preprocess_and_postprocess_match_fixed_source_fixture(self):
         task, runtime = fixture()
-        spec = importlib.util.spec_from_file_location("yoloworld_fixed_source", SAMPLE.parent.parent.parent / "platforms/x5/samples/vision/yoloworld/runtime/python/yoloworld_det.py")
+        spec = importlib.util.spec_from_file_location("yoloworld_fixed_source", legacy_path("x5/samples/vision/yoloworld/runtime/python/yoloworld_det.py"))
         legacy = importlib.util.module_from_spec(spec)
         fake_hbm = types.ModuleType("hbm_runtime")
         fake_hbm.QuantParams = type("QuantParams", (), {})

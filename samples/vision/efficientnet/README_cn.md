@@ -3,6 +3,7 @@
 EfficientNet 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 侧发布 EfficientNet B2/B3/B4 变体（论文 [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)）；S100/S600 侧发布 EfficientNet-Lite lite0..lite4 系列（源交付引用的 [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) 实现）。[English](README.md)
 
 <a id="overview"></a>
+
 ## 概述
 
 统一实现是一条 Python 流程（全部目标；两个源分支均未提供该 sample 的 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。

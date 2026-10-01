@@ -1,6 +1,7 @@
 # RepVGG image classification
 
 <a id="overview"></a>
+
 ## Overview
 
 RepVGG is a VGG-style convolutional network family that uses structural re-parameterization. During training it can use multi-branch structures, while during deployment it is converted into a plain stack of `3x3` convolution and ReLU layers for efficient inference.

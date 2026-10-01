@@ -1,10 +1,13 @@
 # EfficientNet 评估
 
+> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
+
 评估有两个独立目的：确认某块板卡以预期的张量契约执行所选制品，以及
 在声明数据集与工具链的条件下测量精度或延迟。本目录对两者做出说明；
 目录本身不含精度评估工具（见[边界](#boundaries)）。
 
 <a id="dataset"></a>
+
 ## 数据集
 
 当前范围不适用：本 sample 做功能检查（随附测试图），不运行数据集级

@@ -44,7 +44,7 @@ Predicted positive means score >= threshold. The report includes TP/TN/FP/FN, ac
 <a id="reference-results"></a>
 ## Source reference results
 
-The [archived S evaluator](../../../../platforms/s/samples/speech/kws/evaluator/README.md) records:
+The archived S evaluator (historical `../../../../platforms/s/samples/speech/kws/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) records:
 
 | Scope | Source value | Current status |
 | --- | --- | --- |

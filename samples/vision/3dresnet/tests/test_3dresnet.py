@@ -19,10 +19,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / "samples/vision/3dresnet"
-SOURCE = ROOT / "platforms/s/samples/vision/3dresnet/runtime/python/resnet3d.py"
+SOURCE = legacy_path("s/samples/vision/3dresnet/runtime/python/resnet3d.py")
 RUNTIME = SAMPLE / "runtime/python"
 MODEL = SAMPLE / "model"
 PACKAGE = "samples.vision.3dresnet.runtime.python"
@@ -80,7 +81,7 @@ def load_legacy_source():
     spec = importlib.util.spec_from_file_location("_resnet3d_legacy", SOURCE)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
-    source_root = str(ROOT / "platforms/s")
+    source_root = str(legacy_tree("s/utils").parent)
     sys.path.insert(0, source_root)
     try:
         with patch.dict(sys.modules, {"hbm_runtime": fake_hbm}):

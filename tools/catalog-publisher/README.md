@@ -2,6 +2,7 @@
 
 This module belongs to `rdk_model_zoo`. It is the sole generator of the dashboard data consumed by `model_zoo_doc/catalog`.
 
+
 ## Local development
 
 Use Node.js 22.12 or later in the Node 22 series.
@@ -16,15 +17,15 @@ The check validates platform manifests and source references, runs tests and Typ
 
 ## Data sources
 
-`sources.json` defines one source per platform. All three currently use `worktree` mode: the build reads files from the checked-out repository itself — including uncommitted local changes — never from a branch, tag or remote. (`sources.json` also supports `tag` mode, which reads an immutable annotated release tag through `git show`; no source uses it by default, but per-platform pins select it, see below.) The build resolves paths from `sources.json`; `platforms/registry.json` is cross-checked against it by tests, not read by the build.
+`sources.json` defines one source per platform. X5 and S use `worktree` mode: the build reads files from the checked-out repository itself — including uncommitted local changes. X3 uses `commit` mode: the historical `platforms/` tree was removed from the active branch (2026-10-01), so its distribution is read from the full-SHA commit `6fcef2b87c12435e11fbd7327ea70d4efd917b1c` through `git show` — byte-identical to the removed worktree copy. (`sources.json` also supports `tag` mode for immutable annotated release tags; per-platform pins select it, see below.) A clone without the commit object fails with the exact fetch command (`git fetch origin <sha>`). The former `platforms/registry.json` cross-check was removed with the tree; source identity now lives in `sources.json` alone.
 
 | Platform | Manifests read from the worktree | Version file | Generated source links |
 | --- | --- | --- | --- |
 | `x5` | `docs/release/x5/models.yaml`, `benchmarks.yaml` | `docs/release/x5/VERSION` | `blob/develop/...` |
 | `s` | `docs/release/s/models.yaml`, `benchmarks.yaml` | `docs/release/s/VERSION` | `blob/develop/...` |
-| `x3` | `platforms/x3/release/models.yaml`, `benchmarks.yaml` | `platforms/x3/VERSION` | `blob/main/platforms/x3/...` |
+| `x3` | `6fcef2b8…/platforms/x3/release/models.yaml`, `benchmarks.yaml` | `6fcef2b8…/platforms/x3/VERSION` | `blob/6fcef2b87c12435e11fbd7327ea70d4efd917b1c/platforms/x3/...` |
 
-New models, fixes and measurements for X5 and S are maintained in the unified manifests `docs/release/{x5,s}` together with their per-platform `VERSION` files (the build rejects a `VERSION` that disagrees with the manifest's release version). Do not edit `platforms/{x5,s}/docs/release/*.yaml`: those are archived frozen snapshots of the `rdk_x5`/`rdk_s` delivery branches, kept as historical source references, and `sources.json` never reads them. `platforms/x3/release` is read because X3 is an archived historical distribution with no unified successor; it is not a new-adaptation target.
+New models, fixes and measurements for X5 and S are maintained in the unified manifests `docs/release/{x5,s}` together with their per-platform `VERSION` files (the build rejects a `VERSION` that disagrees with the manifest's release version). The archived `platforms/` snapshots (including the former `platforms/{x5,s}/docs/release/*.yaml`) were removed from the active tree; historical content stays reachable through the pinned commit and the delivery branches. The pinned X3 tree is read because X3 is an archived historical distribution with no unified successor; it is not a new-adaptation target.
 
 ### Worktree reads versus generated links
 

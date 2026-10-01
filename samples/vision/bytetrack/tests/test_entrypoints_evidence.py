@@ -7,6 +7,7 @@ from samples.vision.bytetrack.runtime.python.model_binding import resolve_select
 from samples.vision.bytetrack.evaluator.capture import capture_frames
 from samples.vision.bytetrack.evaluator.compare import compare_captures
 from samples.vision.yolov5.tests.test_yolov5 import FakeRuntime
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 ROOT=Path(__file__).resolve().parents[4]
 
 
@@ -46,7 +47,7 @@ class EntryEvidenceTests(unittest.TestCase):
             base=resolve_selection('s100p');selected=resolve_selection('s100p',model_path=mp,asset_id=base.asset.reference)
             images=[np.zeros((97,151,3),np.uint8) for _ in range(3)]
             from samples.vision.bytetrack.runtime.python.tracker_backend.basetrack import BaseTrack
-            oldpath=list(sys.path);sys.path.insert(0,str(ROOT/'platforms/s/samples/vision/bytetrack/3rdparty'))
+            oldpath=list(sys.path);sys.path.insert(0,str(legacy_tree('s/samples/vision/bytetrack/3rdparty')))
             try:LegacyBase=importlib.import_module('tracker.basetrack').BaseTrack
             finally:sys.path[:]=oldpath
             # Production uses fresh CLI subprocesses. Fixtures isolate those counters explicitly.

@@ -15,7 +15,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/clip'
-LEGACY = ROOT / 'platforms/x5/samples/vision/clip/runtime/python'
+from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+LEGACY = legacy_tree('x5/samples/vision/clip/runtime/python')
 
 
 def source_module():

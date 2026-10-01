@@ -5,6 +5,7 @@ stable Top-K of `(class id, score, label)` out. Source model: [tensorflow/models
 paper [MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861). [中文说明](README_cn.md)
 
 <a id="overview"></a>
+
 ## Overview
 
 The maintained implementation is one Python flow (all targets). Python resolves one exact artifact reference from the platform

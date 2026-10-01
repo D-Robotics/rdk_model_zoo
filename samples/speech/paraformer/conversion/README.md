@@ -335,7 +335,7 @@ inputs. The API deliberately does not automate either decision.
 ## Source workflow and remaining migration
 
 The source snapshot at S commit `380e1a2bf42041af54be6f34935e50197cfadff9`
-contains [the full original Chinese walkthrough](../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md).
+contains the full original Chinese walkthrough (historical `../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
 It remains historical reference, with the following migration boundaries:
 
 | Source stage | Purpose | Unified status |

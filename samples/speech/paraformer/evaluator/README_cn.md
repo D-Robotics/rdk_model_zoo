@@ -119,7 +119,7 @@ ID／数量和阶段耗时。结束前再次检查模型、清单和词表摘要
 <a id="reference-results"></a>
 ## 历史结果与验证边界
 
-[归档 S 转换说明](../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md)
+归档 S 转换说明 (historical `../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 记录 AISHELL dev 300 条语音的 CER：FP32 5.20%、HMCT INT16 5.02%、S100 Python
 3.13%、S100 C++ 3.13%。这些是源分支历史记录，本次没有复现，也不据此断言某后端更准确。
 
