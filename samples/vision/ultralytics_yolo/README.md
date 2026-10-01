@@ -131,8 +131,13 @@ entry that constructs the dispatched task model and calls `predict`. Each
 protocol keeps its own task class (YOLO26 direct-LTRB, S-series NMS-free
 YOLOv10, cls/seg/pose/obb). Custom-trained detectors connect through the
 conversion flow plus `--model-path`/`--family` (and `--classes-num` with a
-matching label file); predict accepts an image path or BGR array. Three usage
-paths are described in
+matching label file); predict accepts an image path or BGR array. An explicit
+`--model-path` is treated as a custom model: without `--label-file` results
+render class IDs (official COCO/ImageNet/DOTA sets are never applied
+silently), and an explicit label file whose count differs from the bound
+model's classes fails before inference. The image-path predict convenience
+applies to the DFL detector (`detect.py`) of this round; cls/seg/pose/obb
+keep their array interfaces. Three usage paths are described in
 [docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md);
 the old-to-new interface mapping is in
 [docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md).

@@ -11,7 +11,7 @@
 
 | 旧入口 | 新入口 | 兼容状态 |
 | --- | --- | --- |
-| `samples/_shared/model_runner.RuntimeModelRunner`（自行做目标检查、SDK 导入、构造） | 生产加载路径改经 `samples/_shared/runtime.RuntimeSession`（身份检查 → SDK 导入 → 构造） | 公开 API 不变；`runtime`/`runtime_factory` 注入缝不变（host 测试语义不变） |
+| `samples/_shared/model_runner.RuntimeModelRunner`（自行做目标检查、SDK 导入、构造） | 生产加载路径改经 `samples/_shared/runtime.RuntimeSession`（身份检查 → SDK 导入 → 构造）；runner 随后直接在已加载 SDK 对象上执行，元信息读取与调度保留在 runner（`session.run` 为可选透传，接受现状不重构） | 公开 API 不变；`runtime`/`runtime_factory` 注入缝不变（host 测试语义不变） |
 | `model_runner.RuntimeUnavailableError` | 同名类现在就是 `samples/_shared/runtime.py` 中会话抛出的那个类（此前 model_runner 内重复定义并被导入名遮蔽，已修复为单一类型） | `except model_runner.RuntimeUnavailableError` 现在能捕获会话失败 |
 | `samples/_shared/classification._extract_output` | 公开为 `extract_score_tensor`；私有名保留为别名 | 单一实现 |
 | `cls_binding.ModelSelection` | 新增带默认值的 `custom` 字段；`bind_model` 对 `custom=True` 的选择只跳过 Manifest 重新枚举，张量/类别数/目标检查全部保留 | 追加字段，既有构造不受影响 |
@@ -51,6 +51,21 @@
 | 其他任务类（`yolo26_det/seg/pose/cls`、`yolo_v10detect`、`yolo_seg/pose/cls`） | 不变 | 原有能力未减少 |
 
 不兼容项：无。`run_inference` 返回值维持旧约定（无返回值），调用方不受影响。
+
+行为变化（2026-10-01 验收纠偏，随提交 `19264e76`）：
+
+1. 显式 `--model-path` 视为自定义模型：未给 `--label-file` 时结果只显示
+   类别 ID，不再默认套用 COCO/ImageNet/DOTA（`load_labels` 增加
+   `custom_model` 参数，`main` 在 `args.model_path` 被计划路径覆盖前从
+   `plan['explicit']` 保留该判定）。
+2. 显式标签数与已绑定模型的 `contract.classes`（含 cls 1000 类与 pose 单类
+   合同）核对，不符在推理前报错退出；`--classes-num` 单独不作依据；无整数
+   类数的注入替身跳过而非猜测。
+3. cls 展示使用已验证的传入标签，空标签回退类别 ID，不再重读默认
+   ImageNet 文件。
+4. 官方默认 pose 标签由“80 类 COCO 文件（id 0 恰为 person）”改为精确的
+   单标签 `person`；其余官方默认标签集（COCO 80/ImageNet 1000/DOTA 15）
+   保持不变。
 
 ## 4. 验证与 not-run
 

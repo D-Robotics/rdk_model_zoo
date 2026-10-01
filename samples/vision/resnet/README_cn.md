@@ -191,3 +191,7 @@ Manifest 注册；predict 接受图片路径或 BGR 数组。官方模型运行�
 [docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)；
 旧新接口映射见
 [docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md)。
+范围说明：本 CLI 只覆盖官方 Manifest 合同；自训练模型经库调用接入
+（`model_binding.custom_selection` → `classify.ResNetClassifier`），不扩展
+CLI。本轮的图片路径输入便利仅适用于本范例与 YOLO 的 DFL 检测；YOLO 其他
+任务沿用既有数组接口。

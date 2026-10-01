@@ -129,8 +129,11 @@ Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)，保留各文�
 保持薄入口，构造分派到的任务模型并调用 `predict`。各协议保留自身任务类
 （YOLO26 直接 LTRB、S 系 NMS-free YOLOv10、cls/seg/pose/obb）。自训练检测
 模型经 conversion 流程编译后用 `--model-path`/`--family` 接入（自定义类别数
-配 `--classes-num` 与标签文件）；predict 接受图片路径或 BGR 数组。三条使用
-路径见
+配 `--classes-num` 与标签文件）；predict 接受图片路径或 BGR 数组。显式
+`--model-path` 视为自定义模型：未给 `--label-file` 时结果只显示类别 ID，
+不静默套用官方 COCO/ImageNet/DOTA 标签；显式标签数与已绑定模型类别数不符
+时在推理前报错。本轮的图片路径 predict 便利仅适用于 DFL 检测
+（`detect.py`）；cls/seg/pose/obb 沿用既有数组接口。三条使用路径见
 [docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)；
 旧新接口映射见
 [docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md)。

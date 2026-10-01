@@ -213,3 +213,8 @@ self-trained weights, modified business calls) are described in
 [docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md);
 the old-to-new interface mapping is in
 [docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md).
+Scope notes: this CLI covers the official manifest contracts; self-trained
+models connect through the library call (`model_binding.custom_selection` →
+`classify.ResNetClassifier`) instead of CLI flags. The image-path input
+convenience of this round applies to this example and the YOLO DFL detector
+only; other YOLO tasks keep their array interfaces.
