@@ -203,6 +203,17 @@ variants:
 - 同时记录浮点基线和板端 Runtime 结果。
 - 浮点基线必须说明真实模型阶段，例如导出的 FP32 ONNX，不能笼统写成原模型。
 - COCO Detect 至少记录 mAP50-95、mAP50 和 mAP75。
+- `accuracy-metrics.json` 是 Catalog 校验、预览序列化和详情页标签共用的任务指标表；精度统一用 `[0, 1]` 比例记录。
+- 浮点评测和板端评测 receipt 到 Web `accuracy` 字段的映射如下；存在有效同集对比证据时，分别填入 `float_onnx` 与 `runtime`，不从单独的板端结果推导浮点值：
+
+  | 任务 | receipt 指标 | Web 字段 |
+  | --- | --- | --- |
+  | Cls | `top1`、`top5` | `top1`、`top5` |
+  | Seg | `bbox/AP`、`segm/AP` | `box_ap`、`mask_ap` |
+  | Pose | `keypoints/AP` | `keypoints_ap` |
+  | OBB | `mAP50` | `map_50` |
+
+- OBB 的 `dataset` 记为 `DOTA val`，`evaluation_scope` 必须是 `local_dota_val_single_scale`；评测范围保留在数据中供审计，详情页不展示该范围说明，不得标成官方 test 结果。
 - 网页中的精度说明必须能追溯到评测命令和输出文件。
 
 ### Runtime 性能
@@ -375,3 +386,35 @@ PR 描述中复制并完成以下清单：
 - [ ] 已人工检查中文、英文、桌面端和移动端
 - [ ] PR 未包含模型制品、OE HTML、数据集、凭据或生成目录
 ```
+
+## YOLO26 task-b8 候选预览
+
+冻结的 `candidate-staging/yolo26-task-b8-audit-*` 快照保存 Cls、Seg、Pose、OBB 在 S600、S100P、S100 上的 60 条数据。技术筛选通过的记录进入独立混合预览；它们不属于 `data/`，也不进入正式 `release/inputs.json`。模型状态仍为 `candidate`，不会因此通过正式发布门禁。
+
+Web 精度字段映射如下：
+
+| 回执字段 | Web 字段 |
+| --- | --- |
+| Cls `top1`, `top5` | `top1`, `top5` |
+| Seg `bbox/AP`, `segm/AP` | `box_ap`, `mask_ap` |
+| Pose `keypoints/AP` | `keypoints_ap` |
+| OBB `mAP50` | `map_50` |
+
+Cls、Seg、Pose、OBB 有同一评测集上的 Float ONNX 与板端结果，预览以 `float`、`quantized` 两组记录成对展示，数值逐项对应冻结 catalog 与有效的比较回执。各任务分别使用 RGB float32 与板端 NV12 流程，差值是端到端差异，不能当作纯量化损失。OBB 指标限定为本地 DOTA-v1 val 单尺度 458 张图，不代表官方 DOTA test 结果。
+
+预览下载校验支持两份独立清单：现有 `release/preview-downloads/yolo26-cls-seg-20260930.json` 覆盖 30 个 Cls/Seg HBM；`release/preview-downloads/yolo26-pose-obb-20260930.json` 仅在 26 个技术筛选通过的 Pose/OBB HBM 完成真实上传并生成回执后才会生效。每项都绑定 catalog 文件名、格式、字节数、SHA-256，以及 `upload_object.py` 生成的公开 OSS 上传回执；构建和校验器会核对清单、冻结审计、快照、所选 release ID 和回执。4 个精度异常排除项不进入清单、不提供下载。目前仅有前一份清单时，预览总下载数为 70（40 个原有 Detect + 30 个 Cls/Seg）；两份都验证后为 96。下载叠加不改变正式发布状态；人工精度复核、正式发布批准和其他候选发布门禁仍按原状态保留。
+
+冻结候选快照中的四张 WebP 是 AI 生成的任务示意图，`release/assets/yolo26-task-banners.json` 保留原生成 prompt 和文件摘要。当前网页通过独立的 `release/assets/yolo26-real-task-banners.json` 使用清洁底图上的真实 YOLO26x 浮点推理标注：Cls 展示实际分类概率，Seg 展示实际掩码与轮廓，Pose 展示实际关键点与骨架，OBB 展示实际旋转框。`scripts/task-banner-assets.mjs` 核对权重摘要与 catalog，以及底图、原始预测、推理记录和封面摘要；不修改冻结快照。中英文描述由 `release/presentation-overrides.json` 提供。
+
+刷新候选快照后，混合预览构建必须显式指定不可变快照、权威审计和评审矩阵路径：
+
+```bash
+python3 model_zoo_web/scripts/stage_yolo26_task_b8.py
+npm --prefix model_zoo_web run build:mixed-technical-preview -- \
+  --snapshot-dir SNAPSHOT_ID \
+  --audit-path /absolute/path/to/authoritative-audit.json \
+  --review-path /absolute/path/to/review-matrix.json \
+  --expected-selected-count N
+```
+
+构建先写入 `model_zoo_web/.dist-candidates-passed-next/` 并验证；只有显式执行 promote 才替换 `dist-candidates-passed/`。正常 `build:preview` 与 `build:release` 仍读取活动 catalog 和正式 `release/inputs.json`。

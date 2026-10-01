@@ -5,7 +5,11 @@ import { createServer, request as httpRequest } from 'node:http';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
+const outputDirectory = process.env.PREVIEW_OUTPUT || 'dist';
+if (!['dist', 'dist-candidates', 'dist-candidates-passed'].includes(outputDirectory)) {
+  throw new Error('PREVIEW_OUTPUT must name a generated preview directory');
+}
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', outputDirectory);
 const host = process.env.PREVIEW_HOST || '127.0.0.1';
 const port = Number(process.env.PREVIEW_PORT || 4173);
 const backend = new URL(process.env.ASK_AI_BACKEND_URL || 'http://127.0.0.1:8787');
@@ -87,5 +91,5 @@ const server = createServer((req, res) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`Model Zoo preview: http://${host}:${port}/ (Ask AI via /api)`);
+  console.log(`Model Zoo preview: http://${host}:${port}/ (${outputDirectory}; Ask AI via /api)`);
 });

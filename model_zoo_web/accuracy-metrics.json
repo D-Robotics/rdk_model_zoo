@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "task_aliases": {
+    "classify": "cls",
+    "segment": "seg"
+  },
+  "tasks": {
+    "detect": {
+      "required": ["map_50_95", "map_50", "map_75"],
+      "display": [
+        {
+          "receipt_field": "mAP50-95",
+          "field": "map_50_95",
+          "metric": "bbox-all-map-50-95",
+          "labels": {"zh": "检测 mAP50–95", "en": "Detection mAP50–95"}
+        }
+      ]
+    },
+    "cls": {
+      "required": ["top1", "top5"],
+      "display": [
+        {
+          "receipt_field": "top1",
+          "field": "top1",
+          "metric": "top-1",
+          "labels": {"zh": "Top-1 准确率", "en": "Top-1 accuracy"}
+        },
+        {
+          "receipt_field": "top5",
+          "field": "top5",
+          "metric": "top-5",
+          "labels": {"zh": "Top-5 准确率", "en": "Top-5 accuracy"}
+        }
+      ]
+    },
+    "seg": {
+      "required": ["box_ap", "mask_ap"],
+      "display": [
+        {
+          "receipt_field": "bbox/AP",
+          "field": "box_ap",
+          "metric": "segmentation-box-all-map-50-95",
+          "labels": {"zh": "检测框 AP50–95", "en": "Box AP50–95"}
+        },
+        {
+          "receipt_field": "segm/AP",
+          "field": "mask_ap",
+          "metric": "mask-all-map-50-95",
+          "labels": {"zh": "掩码 AP50–95", "en": "Mask AP50–95"}
+        }
+      ]
+    },
+    "pose": {
+      "required": ["keypoints_ap"],
+      "display": [
+        {
+          "receipt_field": "keypoints/AP",
+          "field": "keypoints_ap",
+          "metric": "keypoints-all-map-50-95",
+          "labels": {"zh": "关键点 AP50–95", "en": "Keypoint AP50–95"}
+        }
+      ]
+    },
+    "obb": {
+      "required": ["map_50"],
+      "dataset": "DOTA val",
+      "evaluation_scope": {
+        "value": "local_dota_val_single_scale",
+        "labels": {
+          "zh": "本地 DOTA val · 单尺度",
+          "en": "Local DOTA val · single scale"
+        }
+      },
+      "display": [
+        {
+          "receipt_field": "mAP50",
+          "field": "map_50",
+          "metric": "obb-map-50",
+          "labels": {"zh": "旋转框 mAP50", "en": "Oriented box mAP50"}
+        }
+      ]
+    }
+  }
+}

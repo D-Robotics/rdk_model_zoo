@@ -95,20 +95,21 @@
   function quantizationPanel(data) {
     const quantization = data.quantization || {};
     const nodes = quantization.nodes || [];
+    const hasSubgraph = nodes.some(node => node.subgraph != null);
     const outputs = quantization.outputs || [];
     const summary = quantization.summary || {};
     const units = summary.unit_counts || {};
     const types = [...new Set(nodes.map(node => node.type))].sort();
     return `<section class="rd-panel" data-panel="quantization" role="tabpanel" hidden>
       ${nodes.length ? `<div class="rd-filters"><input type="search" id="rd-node-search" aria-label="搜索节点" placeholder="搜索节点"><select id="rd-node-unit" aria-label="执行单元"><option value="">执行单元：全部</option>${Object.keys(units).map(unit => `<option value="${esc(unit)}">${esc(unit)}</option>`).join('')}</select><select id="rd-node-type" aria-label="算子类型"><option value="">算子：全部</option>${types.map(type => `<option value="${esc(type)}">${esc(type)}</option>`).join('')}</select></div>
-      <div class="rd-table-wrap"><table class="rd-table"><thead><tr><th>节点</th><th>执行单元</th><th>子图</th><th>算子类型</th><th>余弦相似度</th><th>阈值</th><th>数据类型</th></tr></thead><tbody id="rd-node-body"></tbody></table></div>
+      <div class="rd-table-wrap"><table class="rd-table"><thead><tr><th>节点</th><th>执行单元</th>${hasSubgraph ? '<th>子图</th>' : ''}<th>算子类型</th><th>余弦相似度</th><th>阈值</th><th>数据类型</th></tr></thead><tbody id="rd-node-body"></tbody></table></div>
       ${outputs.length ? `<div class="rd-section"><h2>输出级对比</h2><div class="rd-table-wrap"><table class="rd-table rd-outputs"><thead><tr><th>输出</th><th>余弦相似度</th><th>L1 距离</th><th>L2 距离</th><th>切比雪夫距离</th></tr></thead><tbody>${outputs.map(item => `<tr><td><code>${esc(item.name)}</code></td><td class="rd-cosine ${cosineClass(item.cosine)}">${fmt(item.cosine, 6)}</td><td>${fmt(item.l1_distance, 4)}</td><td>${fmt(item.l2_distance, 6)}</td><td>${fmt(item.chebyshev_distance, 4)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`
       : '<div class="report-empty"><h2>暂无逐层数据</h2></div>'}
     </section>`;
   }
 
-  function nodeRows(nodes) {
-    return nodes.map(node => `<tr><td><code>${esc(node.name)}</code></td><td>${esc(node.on)}</td><td>${node.subgraph}</td><td>${esc(node.type)}</td><td class="rd-cosine ${cosineClass(node.cosine)}">${node.cosine == null ? '未测量' : fmt(node.cosine, 6)}</td><td>${fmt(node.threshold, 4)}</td><td>${esc(node.dtype)}</td></tr>`).join('');
+  function nodeRows(nodes, showSubgraph) {
+    return nodes.map(node => `<tr><td><code>${esc(node.name)}</code></td><td>${esc(node.on)}</td>${showSubgraph ? `<td>${node.subgraph == null ? '—' : esc(node.subgraph)}</td>` : ''}<td>${esc(node.type)}</td><td class="rd-cosine ${cosineClass(node.cosine)}">${node.cosine == null ? '未测量' : fmt(node.cosine, 6)}</td><td>${fmt(node.threshold, 4)}</td><td>${esc(node.dtype)}</td></tr>`).join('');
   }
 
   function fitCardValues(scope) {
@@ -140,6 +141,7 @@
     }));
 
     const nodes = data.quantization?.nodes || [];
+    const hasSubgraph = nodes.some(node => node.subgraph != null);
     const search = root.querySelector('#rd-node-search');
     const unit = root.querySelector('#rd-node-unit');
     const type = root.querySelector('#rd-node-type');
@@ -150,7 +152,7 @@
         body.innerHTML = nodeRows(nodes.filter(node =>
           (!query || node.name.toLowerCase().includes(query) || node.type.toLowerCase().includes(query))
           && (!unit?.value || node.on === unit.value)
-          && (!type?.value || node.type === type.value)));
+          && (!type?.value || node.type === type.value)), hasSubgraph);
         window.HubI18n.apply();
       };
       search?.addEventListener('input', apply);

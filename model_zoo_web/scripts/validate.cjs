@@ -132,7 +132,7 @@ for (const filename of ['app.js', 'ask-ai.js', 'i18n.js', 'facets.js', 'model-pr
   const source = fs.readFileSync(path.join(root, filename), 'utf8');
   new vm.Script(source, { filename });
   if (!preview) {
-    assert.doesNotMatch(source, /yolo|convnext|efficient[-_ ]?sam|clip-cover|demo-v1/i, `${filename} still contains demo-model data`);
+    assert.doesNotMatch(source, /clip-cover|demo-v1/i, `${filename} still contains demo-model data`);
   }
 }
 

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
 const sourceRoot = resolve(webRoot, 'src');
-const outputRoot = resolve(webRoot, 'dist');
+const outputRoot = resolve(process.env.MODEL_ZOO_OUTPUT_ROOT || resolve(webRoot, 'dist'));
 const repositoryUrl = 'https://github.com/D-Robotics/rdk_model_zoo';
 
 const data = {

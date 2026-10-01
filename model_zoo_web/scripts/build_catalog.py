@@ -24,7 +24,10 @@ CATALOG_PATH = BUILD_ROOT / "catalog.json"
 META_PATH = BUILD_ROOT / "catalog.meta.json"
 OSS_HOST = "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+BUILD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 SIZE_ORDER = {name: index for index, name in enumerate(("n", "s", "m", "l", "x"))}
+ACCURACY_SCHEMA_PATH = WEB_ROOT / "accuracy-metrics.json"
+ACCURACY_SCHEMA = json.loads(ACCURACY_SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
 class CatalogError(ValueError):
@@ -70,6 +73,13 @@ def require_positive_int(value: Any, label: str) -> int:
     return value
 
 
+def require_positive_number(value: Any, label: str) -> float:
+    number = require_number(value, label)
+    if number <= 0:
+        raise CatalogError(f"{label} must be greater than zero")
+    return number
+
+
 def require_nonnegative_int(value: Any, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise CatalogError(f"{label} must be a non-negative integer")
@@ -95,6 +105,7 @@ def validate_artifact(
     size: str,
     platform: str,
     label: str,
+    build_id: str | None = None,
 ) -> None:
     url = require_string(artifact.get("url"), f"{label}.url")
     parsed = urlparse(url)
@@ -102,7 +113,12 @@ def validate_artifact(
         raise CatalogError(f"{label}.url must be a direct HTTPS URL on {OSS_HOST}")
     filename = PurePosixPath(unquote(parsed.path)).name
     expected_path = f"/models/{source}/{family}/{task}/{size}/{platform}/{filename}"
-    if unquote(parsed.path) != expected_path:
+    allowed_paths = {expected_path}
+    if isinstance(build_id, str) and BUILD_ID_RE.fullmatch(build_id):
+        allowed_paths.add(
+            f"/models/{source}/{family}/{task}/{size}/{platform}/rebuilds/{build_id}/{filename}"
+        )
+    if unquote(parsed.path) not in allowed_paths:
         raise CatalogError(f"{label}.url must use {expected_path}")
 
     sha256 = require_string(artifact.get("sha256"), f"{label}.sha256")
@@ -158,11 +174,11 @@ def validate_end_to_end_record(end_to_end: dict[str, Any], label: str) -> int:
             "for the all_online policy"
         )
     require_string(end_to_end.get("cpu_governor"), f"{label}.cpu_governor")
-    require_positive_int(
+    require_positive_number(
         end_to_end.get("cpu_frequency_mhz"),
         f"{label}.cpu_frequency_mhz",
     )
-    require_positive_int(
+    require_positive_number(
         end_to_end.get("bpu_frequency_mhz"),
         f"{label}.bpu_frequency_mhz",
     )
@@ -228,6 +244,39 @@ def validate_end_to_end_record(end_to_end: dict[str, Any], label: str) -> int:
     if not math.isclose(throughput_fps, expected_fps, rel_tol=0.001):
         raise CatalogError(f"{label}.throughput_fps does not match its timing evidence")
     return pipeline_streams
+
+
+def validate_accuracy(value: Any, task: str, label: str) -> None:
+    accuracy = require_mapping(value, label)
+    require_string(accuracy.get("dataset"), f"{label}.dataset")
+    require_string(accuracy.get("task"), f"{label}.task")
+    require_positive_int(accuracy.get("images"), f"{label}.images")
+
+    canonical_task = ACCURACY_SCHEMA.get("task_aliases", {}).get(task, task)
+    profile = ACCURACY_SCHEMA.get("tasks", {}).get(canonical_task)
+    if not isinstance(profile, dict):
+        supported = ", ".join(sorted(ACCURACY_SCHEMA.get("tasks", {})))
+        raise CatalogError(f"{label}: unsupported model task {task!r}; expected one of {supported}")
+
+    expected_dataset = profile.get("dataset")
+    if expected_dataset and accuracy["dataset"] != expected_dataset:
+        raise CatalogError(f"{label}.dataset must be {expected_dataset}")
+
+    evaluation_scope = profile.get("evaluation_scope")
+    if evaluation_scope:
+        expected_scope = evaluation_scope["value"]
+        actual_scope = require_string(accuracy.get("evaluation_scope"), f"{label}.evaluation_scope")
+        if actual_scope != expected_scope:
+            raise CatalogError(f"{label}.evaluation_scope must be {expected_scope}")
+
+    for stage in ("float_onnx", "runtime"):
+        stage_label = f"{label}.{stage}"
+        stage_accuracy = require_mapping(accuracy.get(stage), stage_label)
+        for field in profile["required"]:
+            metric_label = f"{stage_label}.{field}"
+            metric_value = require_number(stage_accuracy.get(field), metric_label)
+            if not 0 <= metric_value <= 1:
+                raise CatalogError(f"{metric_label} must be a ratio between 0 and 1")
 
 
 def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
@@ -311,6 +360,7 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
                 size=size,
                 platform=platform,
                 label=f"{platform_label}.artifact",
+                build_id=(platform_record.get("provenance") or {}).get("build_id"),
             )
 
             reports = require_mapping(platform_record.get("reports"), f"{platform_label}.reports")
@@ -321,9 +371,11 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
                     f"{platform_label}.reports.oe_conversion_url must be {expected_report_url}"
                 )
 
-            accuracy = require_mapping(platform_record.get("accuracy"), f"{platform_label}.accuracy")
-            runtime_accuracy = require_mapping(accuracy.get("runtime"), f"{platform_label}.accuracy.runtime")
-            require_number(runtime_accuracy.get("map_50_95"), f"{platform_label}.accuracy.runtime.map_50_95")
+            validate_accuracy(
+                platform_record.get("accuracy"),
+                task,
+                f"{platform_label}.accuracy",
+            )
             performance = require_mapping(platform_record.get("performance"), f"{platform_label}.performance")
             require_string(performance.get("tool"), f"{platform_label}.performance.tool")
             require_string(performance.get("implementation"), f"{platform_label}.performance.implementation")
@@ -414,7 +466,10 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
 
 
 def build_catalog() -> tuple[bytes, bytes]:
-    source_paths = sorted(DATA_ROOT.rglob("*.yaml"))
+    source_paths = sorted(
+        path for path in DATA_ROOT.rglob("*.yaml")
+        if not any(part.startswith(".") for part in path.relative_to(DATA_ROOT).parts)
+    )
     if not source_paths:
         raise CatalogError(f"no YAML records found below {DATA_ROOT}")
 
