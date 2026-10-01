@@ -118,3 +118,18 @@ Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)，保留各文�
 
 
 维护入口已取消重复的 S 独立版本，见 [范围与输出要求](model/README_cn.md#maintained-scope)。
+
+<a id="readable-example"></a>
+## 可读范例与自定义模型
+
+本 sample 是两个可读模型范例之一：完整 DFL 检测流程（初始化、`preprocess`、
+`infer`、`postprocess`、`predict`）在
+[`runtime/python/detect.py`](runtime/python/detect.py) 中可见；`main.py`
+保持薄入口，构造分派到的任务模型并调用 `predict`。各协议保留自身任务类
+（YOLO26 直接 LTRB、S 系 NMS-free YOLOv10、cls/seg/pose/obb）。自训练检测
+模型经 conversion 流程编译后用 `--model-path`/`--family` 接入（自定义类别数
+配 `--classes-num` 与标签文件）；predict 接受图片路径或 BGR 数组。三条使用
+路径见
+[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)；
+旧新接口映射见
+[docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md)。

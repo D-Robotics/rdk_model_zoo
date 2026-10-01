@@ -78,6 +78,8 @@ platforms/{x5,s}/         # retained source material and compatibility entries
 platforms/x3/             # historical X3 distribution
 docs/release/             # artifact/benchmark facts and target identity
 docs/sample-standards/    # README and inference contracts
+docs/architecture/        # readable model example architecture (ResNet/YOLO)
+docs/migration/           # old-to-new interface mappings
 docs/releases/           # migration ledger, reviews and validation evidence
 datasets/                # dataset entry points
 utils/                   # compatibility utilities
@@ -85,7 +87,7 @@ tools/                   # catalog, contract checks and validation tooling
 ```
 `main.py` owns CLI, files and rendering; task modules own preprocessing, inference, postprocessing and optional `predict`; runner/binding isolate SDK and tensor contracts. `conversion/` and `evaluator/` each have actionable guides. Share mechanisms used by multiple samples while retaining real differences such as OCR vocabularies and DFL/LTRB. A common directory structure does not imply identical audit maturity.
 
-Read [AGENTS.md](AGENTS.md), the [inference contract](docs/sample-standards/inference-contract.md) and [README contract](docs/sample-standards/readme-contract.md) before development. People and Agents use the same native commands, not separate hidden execution paths.
+Read [AGENTS.md](AGENTS.md), the [inference contract](docs/sample-standards/inference-contract.md) and [README contract](docs/sample-standards/readme-contract.md) before development. People and Agents use the same native commands, not separate hidden execution paths. The readable model example pattern (thin `main.py`, visible three-step model class, thin SDK session) is described in [docs/architecture/model-examples.md](docs/architecture/model-examples.md), with ResNet ([classify.py](samples/vision/resnet/runtime/python/classify.py)) and YOLO detection ([detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)) as the reference implementations.
 
 ## Data, source-branch resources and validation
 

@@ -118,3 +118,20 @@ Sample code follows the repository [Apache-2.0 LICENSE](../../../LICENSE), prese
 
 
 The maintained YOLO inventory excludes duplicate standalone S variants; see [scope and output requirements](model/README.md#maintained-scope).
+
+<a id="readable-example"></a>
+## Readable example and custom models
+
+This sample is one of the two readable model examples: the complete DFL
+detection flow (initialization, `preprocess`, `infer`, `postprocess`,
+`predict`) is visible in
+[`runtime/python/detect.py`](runtime/python/detect.py); `main.py` stays a thin
+entry that constructs the dispatched task model and calls `predict`. Each
+protocol keeps its own task class (YOLO26 direct-LTRB, S-series NMS-free
+YOLOv10, cls/seg/pose/obb). Custom-trained detectors connect through the
+conversion flow plus `--model-path`/`--family` (and `--classes-num` with a
+matching label file); predict accepts an image path or BGR array. Three usage
+paths are described in
+[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md);
+the old-to-new interface mapping is in
+[docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md).

@@ -197,3 +197,19 @@ source model is TorchVision ResNet18; upstream model/weights licensing is
 governed by the TorchVision distribution (see the upstream link above).
 Published artifacts follow the platform release manifests; the manifests
 carry no separate license field, and no additional license is claimed here.
+
+<a id="readable-example"></a>
+## Readable example and custom models
+
+This sample is one of the two readable model examples: the complete
+classification flow (initialization, `preprocess`, `infer`, `postprocess`,
+`predict`) is visible in
+[`runtime/python/classify.py`](runtime/python/classify.py); `main.py` stays a
+thin entry (parse arguments, construct `ResNetClassifier`, call `predict`,
+show the result). Self-trained classifiers connect through
+`model_binding.custom_selection` without manifest registration, and predict
+accepts an image path or BGR array. Three usage paths (official model,
+self-trained weights, modified business calls) are described in
+[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md);
+the old-to-new interface mapping is in
+[docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md).

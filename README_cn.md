@@ -78,6 +78,8 @@ platforms/{x5,s}/         # retained source material and compatibility entries
 platforms/x3/             # historical X3 distribution
 docs/release/             # artifact/benchmark facts and target identity
 docs/sample-standards/    # README and inference contracts
+docs/architecture/        # 可读模型范例架构（ResNet/YOLO）
+docs/migration/           # 旧新接口映射
 docs/releases/           # migration ledger, reviews and validation evidence
 datasets/                # dataset entry points
 utils/                   # compatibility utilities
@@ -85,7 +87,7 @@ tools/                   # catalog, contract checks and validation tooling
 ```
 `main.py` 负责 CLI、文件和显示；模型任务模块负责前处理、推理、后处理及可选 `predict`；runner/binding 隔离 SDK 与张量契约。`conversion/`、`evaluator/` 各自保存可操作说明。共享机制只放已被多个样例需要的通用能力；OCR 字典、DFL/LTRB 等真实差异保留。目录规范不意味着所有样例已经完成同等程度的审核。
 
-开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令，不为 Agent 添加另一套隐藏执行入口。
+开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令，不为 Agent 添加另一套隐藏执行入口。可读模型范例模式（薄 `main.py`、三步可见的模型类、薄 SDK 会话）见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。
 
 ## 数据、原分支资料与验证
 

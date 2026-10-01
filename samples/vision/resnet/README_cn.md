@@ -177,3 +177,17 @@ sample 代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为 TorchVisi
 ResNet18，其模型/权重许可由 TorchVision 发行版约定（见上游链接）。已发布
 制品以平台发布 Manifest 为准；Manifest 未携带独立许可字段，本文不主张额外
 许可。
+
+<a id="readable-example"></a>
+## 可读范例与自定义模型
+
+本 sample 是两个可读模型范例之一：完整分类流程（初始化、`preprocess`、
+`infer`、`postprocess`、`predict`）在
+[`runtime/python/classify.py`](runtime/python/classify.py) 中可见；
+`main.py` 保持薄入口（解析参数、构造 `ResNetClassifier`、调用 `predict`、
+展示结果）。自训练分类模型经 `model_binding.custom_selection` 接入，无需
+Manifest 注册；predict 接受图片路径或 BGR 数组。官方模型运行、自训练权重
+接入、修改业务调用三条路径见
+[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)；
+旧新接口映射见
+[docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md)。

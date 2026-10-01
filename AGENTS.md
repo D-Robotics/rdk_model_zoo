@@ -27,6 +27,12 @@ remain historical material, not a new adaptation target.
 - People and Agents use the same native sample commands. Do not require a
   Skill, Node, or publisher to perform model inference. Seven-skill import and
   release integration are not complete merely because this file exists.
+- The readable model example pattern (thin `main.py`, visible three-step model
+  class, thin SDK session in `samples/_shared/runtime.py`) is described in
+  [docs/architecture/model-examples.md](docs/architecture/model-examples.md);
+  ResNet `classify.py` and YOLO `detect.py` are the reference implementations,
+  with the old-to-new mapping in
+  [docs/migration/2026-09-30-model-examples.md](docs/migration/2026-09-30-model-examples.md).
 - Host checks: `python -m unittest discover -s samples/_shared/tests`,
   `python -m unittest discover -s samples/vision/resnet/tests`, and
   `python -m unittest discover -s samples/vision/ultralytics_yolo/tests`.
