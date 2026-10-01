@@ -45,7 +45,7 @@
 | `YoloDetect.pre_process/forward/post_process` | 薄别名指向 `preprocess/infer/postprocess` | 单一实现；`YoloV10Detect` 子类与 `_predict_task` 兼容 |
 | `YoloDetect.predict(img, …)` | `predict(source, image_format="BGR", score_thres=None, nms_thres=None)`：`source` 额外接受本地图片路径 | 数组语义不变；路径读取错误指明路径；输入数组不原地修改 |
 | `yolo26_obb.YOLO26OBB` 借用 `YoloDetect.pre_process/forward` | 改为借用 `YoloDetect.preprocess/infer` 及别名 | 外部行为不变 |
-| `runtime/python/main.py`（入口内联渲染与执行） | 薄入口：`yolo_cli` 委托 + `create_runtime_model` 构造 + `predict`（`_run_task` 内可见）+ `present_result` 展示 | CLI 参数与模式不变；`build_parser`、`load_labels`、`run_inference` 仍可从 `main` 导入（`run_inference` 委托 `_run_task`，测试补丁目标不变） |
+| `runtime/python/main.py`（入口内联渲染与执行） | 薄入口：`main()` 内联完成 `create_runtime_model` 构造 → `model.predict(image)` → `present_result` 展示（无中间任务函数）；`run_inference` 为镜像同一流程的兼容缝 | CLI 参数与模式不变；`build_parser`、`load_labels`、`run_inference` 仍可从 `main` 导入（测试补丁目标不变；`_run_task` 曾短暂存在，终态已内联并删除） |
 | 入口内 `build_parser`/`print_model_listing`/`describe_plan`/`print_dry_run`/`ensure_model`/`load_labels`/渲染 | `runtime/python/yolo_cli.py`（平铺导入风格与补丁目标保持不变） | 仓内测试 `from main import …` 继续成立 |
 | `ModelRunner.from_selection`（自行做目标检查、SDK 导入、构造） | 生产路径改经共享 `RuntimeSession`；失败包装为 `RunnerError` 并保留原因 | `runtime_loader` 注入缝不变；注入路径不走会话 |
 | 其他任务类（`yolo26_det/seg/pose/cls`、`yolo_v10detect`、`yolo_seg/pose/cls`） | 不变 | 原有能力未减少 |
@@ -77,20 +77,26 @@
   0 violations。
 - 共享 runner 消费方回归：lprnet 23、mobilenetv3 17、himloco 23 通过。
 
-主机验证（platforms/ 移除后，最终态）：
+主机验证（platforms/ 移除后；分阶段记录，非单一“最终态”）：
 
-- `samples/vision/resnet/tests` 63 项（移除 4 项 shim 行为测试）、
-  `samples/vision/ultralytics_yolo/tests` 147 项（移除旧 CLI/适配器/shell 等
-  shim 面测试）、`samples/_shared/tests`（显式排除 `test_vla_integration.py`）
-  167 项全部通过。
-- 约 30 个 sample 的历史源码基线测试、yolov5/bytetrack/fcos/lprnet/modnet/
-  yoloworld 评估器测试、B3 工具 30 项全部通过（legacy 侧经固定提交物化）。
-- `tools/sample_contract/check.py --scope migration`：51 samples 0 violations。
-- `npm --prefix tools/catalog-publisher run check`：130 项测试通过，catalog
-  可复现（`catalog-v1.0.0-8457fa691252f928`，57 families / 812 benchmarks）。
-- 干净 checkout（临时 `git worktree`，未初始化 VLA 子模块）：两个范例入口
-  `--help`/`--list-models`/`--dry-run` 与上述回归全部通过；catalog 用本地
-  node_modules 生成后 YOLO 目录对照测试通过。
+- 移除当刻（`e324e356`）：resnet 63（移除 4 项 shim 行为测试）、YOLO 147
+  （移除旧 CLI/适配器/shell 等 shim 面测试）、shared（显式排除
+  `test_vla_integration.py`）167 全部通过；约 30 个 sample 的历史源码基线
+  测试、yolov5/bytetrack/fcos/lprnet/modnet/yoloworld 评估器测试、B3 工具
+  30 项全部通过（legacy 侧经固定提交物化）。注意
+  `task5-post-removal-suites.txt` 是该阶段的**中间失败日志**（迁移过程中
+  逐步修复），不表示全部通过；各修复后的定向重跑记录见本地执行目录。
+- 终审修复后（`c639827f`）：resnet 63 / YOLO 148（+1 main 结构冒烟）/
+  shared 172（+5 legacy_platforms 回归）/ yoloe 44（onnx 补齐后）/
+  checker 51-0。
+- 标签契约与自训练导出补齐后（`2eefbae4`、`7f929025`，当前计数）：
+  resnet **69**（+6 mock 导出测试）/ YOLO **168**（+10 标签契约与展示
+  测试）/ shared 172 / yoloe 44 / checker 51-0；catalog check 130 项，
+  `catalog-v1.0.0-8457fa691252f928`（57 families / 812 benchmarks）。
+- 干净 checkout 记录（均为本地临时 `git worktree`，未初始化 VLA 子模块，
+  catalog 生成复用本地 node_modules，非独立零依赖复现）：第一次在
+  `e324e356`；验收轮在 `bc97a632`；本轮（标签/导出补齐后）在最终代码
+  提交上重跑，见本地执行目录 `logs/` 对应日志。
 - 依赖补齐：yoloe 转换测试所需的 onnx 以二进制 wheel 安装进隔离 venv
   （`pip install --only-binary=:all: onnx`，版本 1.23.1），yoloe 44 项全部通过。
 - C++ 主机验证（2026-10-01 追加，详见

@@ -113,7 +113,7 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 | `--asset-id` | str | `null` | 精确 group:sample:filename 引用，约束清单选择。 |
 | `--input-shape` | HxW | `null` | 仅在缺少运行时尺寸元数据时指定 H×W。 |
 | `--test-img` | str | `samples/vision/ultralytics_yolo/test_data/bus.jpg` | 由 OpenCV 读取的 BGR 图片。 |
-| `--label-file` | str | `null` | detect/seg/pose 用 COCO，cls 用 ImageNet，obb 用 DOTA；自定义类别顺序须覆盖。 |
+| `--label-file` | str | `null` | 官方默认：detect/seg 用 COCO，pose 用单一 `person` 标签，cls 用 ImageNet，obb 用 DOTA。显式 `--model-path` 视为自定义模型：不给本项时显示类别 ID；给出时标签数必须等于已绑定模型类别数（支持 json 字典/列表与逐行格式）。 |
 | `--img-save-path` | str | `result.jpg` | detect/seg/pose/obb 绘制结果，相对调用目录；cls 不写图片。 |
 | `--score-thres` | float | `0.25` | 检测置信度过滤，分类不使用。 |
 | `--nms-thres` | float | `null` | 随目标/任务解析；X5 检测 0.70，S 检测 0.45；S YOLOv10 检测无 NMS。 |

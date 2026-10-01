@@ -125,7 +125,7 @@ The Default column shows parser values. `null` means resolved later from platfor
 | `--asset-id` | str | `null` | Exact group:sample:filename reference; constrains manifest selection. |
 | `--input-shape` | HxW | `null` | Fallback input H×W only when runtime metadata is absent. |
 | `--test-img` | str | `samples/vision/ultralytics_yolo/test_data/bus.jpg` | Readable BGR image loaded by OpenCV. |
-| `--label-file` | str | `null` | COCO for detect/seg/pose, ImageNet for cls, DOTA for obb; override for custom class order. |
+| `--label-file` | str | `null` | Official defaults: COCO for detect/seg, a single `person` label for pose, ImageNet for cls, DOTA for obb. An explicit `--model-path` is a custom model: without this option class IDs are shown; with it, the label count must equal the bound model's classes (json dict/list and line formats supported). |
 | `--img-save-path` | str | `result.jpg` | Rendered detect/seg/pose/obb image, relative to caller cwd; cls does not write it. |
 | `--score-thres` | float | `0.25` | Detection confidence filter; not used by classification. |
 | `--nms-thres` | float | `null` | Resolve by target/task; X5 detection 0.70, S detection 0.45. S YOLOv10 detection is NMS-free. |
