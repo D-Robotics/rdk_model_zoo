@@ -78,9 +78,17 @@
   node_modules 生成后 YOLO 目录对照测试通过。
 - 依赖补齐：yoloe 转换测试所需的 onnx 以二进制 wheel 安装进隔离 venv
   （`pip install --only-binary=:all: onnx`，版本 1.23.1），yoloe 44 项全部通过。
-- 验证限制：gemma CMake configure 需要 cmake、resnet/paddle_ocr C++ 目标需要
-  OpenCV 开发组件，本机均未安装——C++ 构建本轮未验证（not-run），不宣称
-  C++ 已验证。
+- C++ 主机验证（2026-10-01 追加，详见
+  [native-validation 报告](../releases/unified-migration/2026-10-01-readable-examples-native-validation.md)）：
+  cmake 4.4.3 以二进制 wheel 装入隔离 venv、OpenCV 5.0.0 与 nlohmann-json
+  3.12.0 使用 Homebrew bottle（无源码编译）。gemma 原生主机套件 19/19 通过
+  （含固定提交提取的 legacy 预处理对照 vision_contract；重复 configure 与
+  缺失对象的 FATAL_ERROR+fetch 提示均已验证）；YOLO C++ 主机测试 12/12 通过
+  （含 ASan/UBSan 的 dnn_io 双栈）；迁移后的 `samples/_shared/cpp/c_utils`
+  以真实 OpenCV 主机编译 file_io.cpp（-Wall -Wextra -Werror）并验证头文件
+  内联数学。板端产物（resnet18 生产应用、preprocess/visualize 等 SDK 耦合
+  单元）仍为 not-run：需要板端 SDK 头文件与 `/sys/class/boardinfo/soc_name`，
+  本轮不宣称 vendorSDK/板端构建通过。
 - `samples/_shared/tests` 计数口径：任务 1 时的 158/168 曾意外包含 2 个 VLA
   测试（范围口径问题，未触碰子模块），此后显式排除。
 
@@ -118,7 +126,7 @@ Catalog 构建按设计报错并指明精确 fetch 命令，不会静默丢数�
 | yolov5/bytetrack 评估器与 B3 板端对照工具 | legacy 侧改从固定提交物化执行；证据 `code_sha256`/`observed_file` 以 `platforms/<相对路径>` 树名记录，保持可比性；B3 的 pin 逐字节校验语义不变 |
 | C++ 共享工具 `platforms/s/utils/c_utils` | `git mv` 至 `samples/_shared/cpp/c_utils`（活动依赖，保留在活动树）；resnet/paddle_ocr C++ 构建路径与文档同步更新 |
 | PaddleOCR 字体 `FangSong.ttf` | `git mv` 至 `samples/vision/paddle_ocr/test_data/` |
-| gemma C++ 主机对照测试 | CMake configure 阶段 `git archive` 固定提交提取 legacy 预处理源码到构建目录（缺失对象时 FATAL_ERROR 并给出 fetch 命令）；本轮本机无 cmake，configure 未运行（not-run） |
+| gemma C++ 主机对照测试 | CMake configure 阶段 `git archive` 固定提交提取 legacy 预处理源码到构建目录（缺失对象时 FATAL_ERROR 并给出 fetch 命令）；2026-10-01 已在本地完成 configure/build/ctest（19/19），见 native-validation 报告 |
 | 文档导航（根 README/AGENTS/CLAUDE/datasets/samples 索引/各 evaluator·model·conversion README/skills） | 链接去链为“固定提交 + 路径”指引；涉及可执行路径的文档追加双语 pinned 访问说明；历史报告（docs/releases、superpowers、adr、SOURCE_MAP、evidence）原文不动 |
 | `_shared` 清单覆盖测试 | 原有断言（清单不得指向 platforms/ 下）保持不变，继续守护活动清单 |
 
