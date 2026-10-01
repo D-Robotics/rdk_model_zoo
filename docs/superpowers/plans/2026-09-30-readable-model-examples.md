@@ -44,11 +44,11 @@
 
 **接口：** `RuntimeSession(model_path: str, *, target: str)`；`load() -> None`；`run(inputs: Mapping[str, Any]) -> Mapping[str, Any]`；只读 `runtime` 返回已加载 SDK 对象，未加载时报错。run 接受/返回 SDK 原生映射。保持内部 SDK 工厂可 mock，不公开关闭硬件检查的 CLI 开关。
 
-- [ ] 在新测试中覆盖：构造不导入 SDK；目标不匹配时 SDK 工厂调用次数为 0；连续 run 只构造一次模型；run 原样传递映射；加载失败后可重试且未标记成功。
-- [ ] 在本地执行 `python -m unittest discover -s samples/_shared/tests -p test_runtime_session.py`，记录新增接口尚不存在时的失败。
-- [ ] 实现会话，复用 require_execution_target 和 HB_HBMRuntime，不引入分类/YOLO 类型，不假设 SDK 有 close 接口。
-- [ ] 重跑同一组测试，检查通过；核对异常保留原始原因。记录为包装单元测试，非 SDK 实机测试。
-- [ ] 独立提交代码和相关测试，提供 diff 与命令结果。
+- [x] 在新测试中覆盖：构造不导入 SDK；目标不匹配时 SDK 工厂调用次数为 0；连续 run 只构造一次模型；run 原样传递映射；加载失败后可重试且未标记成功。
+- [x] 在本地执行 `python -m unittest discover -s samples/_shared/tests -p test_runtime_session.py`，记录新增接口尚不存在时的失败。
+- [x] 实现会话，复用 require_execution_target 和 HB_HBMRuntime，不引入分类/YOLO 类型，不假设 SDK 有 close 接口。
+- [x] 重跑同一组测试，检查通过；核对异常保留原始原因。记录为包装单元测试，非 SDK 实机测试。
+- [x] 独立提交代码和相关测试，提供 diff 与命令结果。
 
 ## 任务 2：ResNet 完整可读入口
 

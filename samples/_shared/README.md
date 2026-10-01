@@ -34,6 +34,21 @@ does not overwrite existing files; existing known hashes are checked too.
 Host tests: `python -m unittest discover -s samples/_shared/tests`.
 Synthetic data and failure injection do not certify board inference.
 
+## Thin SDK session
+
+`runtime.py:RuntimeSession(model_path, *, target)` is the narrow shared wrapper
+around the board-side `hbm_runtime` SDK. Construction is SDK-free; `load()`
+applies `platforms.require_execution_target` before the SDK import and model
+construction, so a requested/detected target mismatch fails with zero SDK
+factory calls, and a failed load leaves no fake-success state (retry stays
+possible). `run(inputs)` passes the SDK's native mappings through unchanged —
+tensor names, input validation, output semantics and scheduling stay with each
+sample's binding and runner. No `close`/context-manager behavior is assumed.
+Host tests patch the module's `_default_runtime_factory` and the board
+identity source; they pin the wrapper's call contract, not SDK behavior:
+`python -m unittest discover -s samples/_shared/tests -p test_runtime_session.py`.
+
+
 ## Image bytes
 
 `image.py:bgr_to_nv12_planes` is the single OpenCV I420 → interleaved NV12
