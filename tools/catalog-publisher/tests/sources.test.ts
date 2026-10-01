@@ -186,12 +186,17 @@ describe("platform source resolution", () => {
 
 describe("pinned platform VERSION resolution", () => {
   async function resolveX5(repository: string, pin: SourcePin): Promise<PlatformSource> {
-    // Fixture repositories resolve x5 through a tag pin and x3 through a
-    // commit pin on the fixture's own HEAD (the real 6fcef2b8 object is not
-    // part of the fixture's history).
+    // The real repository resolves x3 through the fixed 6fcef2b8 commit pin
+    // sources.json carries — its current HEAD no longer contains platforms/x3,
+    // so pinning x3 to the fixture's `rev-parse HEAD` cannot resolve. Fixture
+    // repositories do contain a platforms/x3 stub and lack the real object,
+    // so they resolve x3 through a commit pin on their own HEAD.
+    const realRepository = repository === repositoryRoot;
     const sources = await resolvePlatformSources({
       repositoryRoot: repository,
-      sources: await fixtureSourcesDocument(repository),
+      sources: realRepository
+        ? await sourcesDocument()
+        : await fixtureSourcesDocument(repository),
       pins: { x5: pin }
     });
     return sources.find((source) => source.platform === "x5")!;
