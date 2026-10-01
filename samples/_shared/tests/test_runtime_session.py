@@ -175,5 +175,41 @@ class RuntimeSessionExecutionTests(unittest.TestCase):
         self.assertFalse(session.loaded)
 
 
+class SharedRunnerSessionIntegrationTests(unittest.TestCase):
+    def test_production_sdk_import_failure_is_catchable_via_legacy_export(self):
+        """The runner's legacy exception name must catch session failures.
+
+        Regression: ``model_runner`` once re-defined its own
+        ``RuntimeUnavailableError`` after importing the session's, so the
+        class exported to callers was a different type than the one
+        ``RuntimeSession`` raises — a ``except model_runner.RuntimeUnavailableError``
+        guard silently missed production load failures.
+        """
+
+        import importlib.util
+        from types import SimpleNamespace
+
+        from samples._shared import model_runner
+
+        if importlib.util.find_spec("hbm_runtime") is not None:
+            self.skipTest("board SDK present: import-failure path not reachable")
+
+        selection = SimpleNamespace(model_path="/tmp/model.bin", target="x5")
+        runner = model_runner.RuntimeModelRunner(
+            selection, binding_loader=lambda selection, metadata: None)
+
+        with mock.patch(
+            "samples._shared.platforms.detect_target", return_value="x5"
+        ), self.assertRaises(model_runner.RuntimeUnavailableError) as raised:
+            runner.load()
+
+        # One exception type across the session and its legacy export, with
+        # the original ImportError preserved as the cause.
+        self.assertIs(
+            type(raised.exception), shared_runtime.RuntimeUnavailableError)
+        self.assertIsInstance(raised.exception.__cause__, ImportError)
+        self.assertFalse(runner.loaded)
+
+
 if __name__ == "__main__":
     unittest.main()

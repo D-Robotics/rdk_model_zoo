@@ -32,7 +32,6 @@ from samples.vision.resnet.runtime.python.cli import (  # noqa: E402
 from samples.vision.resnet.runtime.python.labels import load_labels as _load_labels  # noqa: E402 - import path kept for existing callers
 from samples.vision.resnet.runtime.python.model_binding import (  # noqa: E402
     BindingError,
-    ModelSelection,
     resolve_selection,
 )
 
@@ -61,37 +60,33 @@ def main(argv: Sequence[str] | None = None) -> int:
         from samples._shared.platforms import require_execution_target
 
         require_execution_target(selection.target)
-        return _classify(selection, args)
+
+        # Imported inside real execution: OpenCV and hbm_runtime load only
+        # after the selection, file, and board checks above have passed.
+        from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+
+        model = ResNetClassifier(
+            selection,
+            top_k=args.top_k,
+            labels=default_labels(selection, args.label_file),
+            resize_type=args.resize_type,
+        )
+        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+
+        result = model.predict(args.test_img)
+        print_classification_result(result, selection, top_k=args.top_k)
+
+        if args.img_save_path:
+            save_result_image(
+                Path(args.img_save_path).expanduser(),
+                read_bgr_image(args.test_img),
+                result,
+            )
+            print(f"Saved result image: {args.img_save_path}")
+        return 0
     except (BindingError, FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-
-
-def _classify(selection: ModelSelection, args) -> int:
-    """Construct the model, run one prediction, and present the result."""
-    # Imported inside real execution: OpenCV and hbm_runtime load only after
-    # the selection, file, and board checks above have passed.
-    from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-
-    model = ResNetClassifier(
-        selection,
-        top_k=args.top_k,
-        labels=default_labels(selection, args.label_file),
-        resize_type=args.resize_type,
-    )
-    model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-
-    result = model.predict(args.test_img)
-    print_classification_result(result, selection, top_k=args.top_k)
-
-    if args.img_save_path:
-        save_result_image(
-            Path(args.img_save_path).expanduser(),
-            read_bgr_image(args.test_img),
-            result,
-        )
-        print(f"Saved result image: {args.img_save_path}")
-    return 0
 
 
 if __name__ == "__main__":

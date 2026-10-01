@@ -2,7 +2,13 @@
 
 The constructor is SDK-free.  ``runtime_factory`` and ``runtime`` are
 explicit injection seams for host tests; production callers leave both unset
-and use the installed board runtime.
+and use the installed board runtime.  The production load path goes through
+:class:`samples._shared.runtime.RuntimeSession`, which owns the exact-target
+identity gate, the SDK import and the model construction; execution then
+continues through this runner's validated call on the loaded SDK object —
+behaviorally identical to the session's ``run`` passthrough, without a
+second execution path.  ``RuntimeUnavailableError`` is the session's own
+exception type, re-exported here for established callers.
 """
 
 from __future__ import annotations
@@ -24,10 +30,6 @@ from samples._shared.runtime import RuntimeSession
 from samples._shared.runtime import RuntimeUnavailableError  # noqa: F401 - re-exported surface
 from samples._shared.runtime import _default_runtime_factory  # noqa: F401 - re-exported seam
 from samples._shared.tensor_io import validate_input_tensors
-
-
-class RuntimeUnavailableError(RuntimeError):
-    """The board runtime is unavailable in the current Python environment."""
 
 
 class RuntimeModelRunner:

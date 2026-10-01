@@ -44,8 +44,14 @@ factory calls, and a failed load leaves no fake-success state (retry stays
 possible). `run(inputs)` passes the SDK's native mappings through unchanged —
 tensor names, input validation, output semantics and scheduling stay with each
 sample's binding and runner. No `close`/context-manager behavior is assumed.
-Host tests patch the module's `_default_runtime_factory` and the board
-identity source; they pin the wrapper's call contract, not SDK behavior:
+The integrated shared runner (`model_runner.py`) and the YOLO `ModelRunner`
+use the session for the production loading boundary and then execute on the
+loaded SDK object through their own validated calls (the same passthrough the
+session's `run` performs) rather than routing execution through a second path.
+`model_runner.RuntimeUnavailableError` is the session's exception type,
+re-exported for established callers. Host tests patch the module's
+`_default_runtime_factory` and the board identity source; they pin the
+wrapper's call contract, not SDK behavior:
 `python -m unittest discover -s samples/_shared/tests -p test_runtime_session.py`.
 
 
