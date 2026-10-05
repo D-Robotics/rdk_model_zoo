@@ -4,7 +4,7 @@
 
 RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、后处理及应用验证示例。每个 Sample 的 README 是用户与 Agent 共同的操作入口，包含运行命令、输入输出、源码结构、转换/评估流程及已知限制。运行推理不需要 Agent、Node.js 或模型目录发布工具。
 
-> 当前 `develop` 是 X5/S 全量整合中的开发分支，尚不是已完成迁移的客户发布版。客户交付仍应选择匹配的已发布平台分支/标签及其文档。整合树已超出最初三个试点；源码迁移、主机验证、板测、转换和发布就绪分别记录，不能相互代替。
+> `develop` 是 X5/S 统一源码：全部 51 个本仓样例已完成可读 Runtime 架构迁移并通过独立主机验收（2026-10-05）。源码版本为 **2.0.0 候选**（仓库根 `VERSION`；tag 方案 `zoo-vX.Y.Z`，尚未发布）——版本线、支持/验证矩阵与 main 提升流程见[统一源码发布候选记录](docs/releases/unified-source-release.md)。平台制品版本与 Skills 包各自独立。板端验证不是全覆盖声明：历史板测证据保留原始范围，未测维度保持 not-run。统一版本正式发布之前，已发布的客户交付仍是平台分支标签（`rdk_x5`、`rdk_s`）。
 
 
 ## 按任务开始
@@ -17,8 +17,8 @@ RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、�
 | 无提示实例分割 | [YOLOE](samples/vision/yoloe/README_cn.md) |
 | 语音识别 | [ASR](samples/speech/asr/README_cn.md)、[Paraformer](samples/speech/paraformer/README_cn.md) |
 | 离线机器人策略 | [HIMLoco](samples/robotics/himloco/README_cn.md)：六帧观测到动作，不执行实机控制 |
-| 视觉语言模型（迁移中） | [Gemma4-E2B](samples/llm/gemma4-e2b/README_cn.md)：原生对话、HTTP、单次推理及验证工具 |
-| 文本生成（迁移中） | [MiniCPM5-2B](samples/llm/minicpm5-2b/README_cn.md)：S100/S100P OELLM 1.0.0 与 S600 OELLM 2.0 beta 原生入口 |
+| 视觉语言模型 | [Gemma4-E2B](samples/llm/gemma4-e2b/README_cn.md)：原生对话、HTTP、单次推理及验证工具 |
+| 文本生成 | [MiniCPM5-2B](samples/llm/minicpm5-2b/README_cn.md)：S100/S100P OELLM 1.0.0 与 S600 OELLM 2.0 beta 原生入口 |
 | 唤醒词检测 | [KWS](samples/speech/kws/README_cn.md) |
 | 图像分类 | [ResNet](samples/vision/resnet/README_cn.md)、MobileNet、EfficientNet、ConvNeXt、Rep 系列等，见完整索引 |
 | 文本检测与识别 | [PaddleOCR](samples/vision/paddle_ocr/README_cn.md) |
@@ -53,7 +53,7 @@ ACT／Pi0 以完整固定 Git 子模块集成，独立于上述 51 个本仓库�
 
 ## 快速开始：查看整合树并运行一个示例
 
-以下是贡献者/评审查看 `develop` 的路径，不代替客户发布选择。保留完整仓库；先在相应 Python 环境中准备 Sample 文档列明的依赖。无需为普通推理初始化 VLA 子模块。
+以下是贡献者/评审查看统一源码的路径——它是发布候选，不是已发布的客户版本（后者仍是平台分支标签）。保留完整仓库；先在相应 Python 环境中准备 Sample 文档列明的依赖。无需为普通推理初始化 VLA 子模块。
 
 ```bash
 git clone --branch develop https://github.com/D-Robotics/rdk_model_zoo.git
@@ -82,17 +82,18 @@ docs/release/             # artifact/benchmark facts and target identity
 docs/sample-standards/    # README and inference contracts
 docs/architecture/        # 可读 Runtime 架构（全 51 本仓样例）
 docs/migration/           # 旧新接口映射
-docs/releases/           # migration ledger, reviews and validation evidence
+docs/releases/           # migration ledger, reviews and validation evidence（含统一源码发布候选记录）
 datasets/                # dataset entry points
 utils/                   # compatibility utilities
 tools/                   # catalog, contract checks and validation tooling
 ```
 `main.py` 负责 CLI、文件和显示；模型任务模块负责前处理、推理、后处理及公开 `predict`；runner/binding 隔离 SDK 与张量契约。`conversion/`、`evaluator/` 各自保存可操作说明。共享机制只放已被多个样例需要的通用能力；OCR 字典、DFL/LTRB 等真实差异保留。目录规范不意味着所有样例已经完成同等程度的审核。
 
-开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令，不为 Agent 添加另一套隐藏执行入口。可读模型范例模式（显式构造模型并调用 `predict` 的薄 `main.py`、单一文件内真实可见 `preprocess`/`infer`/`postprocess`/`predict` 主线的本地具名模型类——旧名 `pre_process`/`forward`/`post_process` 保留为兼容委托——样例本地 `cli.py` 辅助与薄 SDK 会话）见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。自 2026-10-05 起该模式覆盖全部 51 个本仓样例；ACT/Pi0 仍是本范围之外的 VLA gitlink，两个 `samples/llm` 样例保留原生 generate/stream/reset C++ 接口（不伪造 Python Runtime）。逐样例映射见 [2026-10-05-all-sample-readable-runtime.md](docs/migration/2026-10-05-all-sample-readable-runtime.md)，状态行表见 [2026-10-05-all-sample-coverage.json](docs/releases/unified-migration/2026-10-05-all-sample-coverage.json)；该推广的源码架构与主机检查已通过 [Codex 独立验收](docs/releases/unified-migration/2026-10-05-all-sample-codex-review.md)。本轮未复跑真实板端推理、权重导出或工具链编译，本地开发完成不代表迁移发布。
+开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令，不为 Agent 添加另一套隐藏执行入口。可读模型范例模式（显式构造模型并调用 `predict` 的薄 `main.py`、单一文件内真实可见 `preprocess`/`infer`/`postprocess`/`predict` 主线的本地具名模型类——旧名 `pre_process`/`forward`/`post_process` 保留为兼容委托——样例本地 `cli.py` 辅助与薄 SDK 会话）见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。自 2026-10-05 起该模式覆盖全部 51 个本仓样例；ACT/Pi0 仍是本范围之外的 VLA gitlink，两个 `samples/llm` 样例保留原生 generate/stream/reset C++ 接口（不伪造 Python Runtime）。逐样例映射见 [2026-10-05-all-sample-readable-runtime.md](docs/migration/2026-10-05-all-sample-readable-runtime.md)，状态行表见 [2026-10-05-all-sample-coverage.json](docs/releases/unified-migration/2026-10-05-all-sample-coverage.json)；该推广的源码架构与主机检查已通过 [Codex 独立验收](docs/releases/unified-migration/2026-10-05-all-sample-codex-review.md)。本轮未复跑真实板端推理、权重导出或工具链编译；源码版本候选与支持/验证矩阵记录于[统一源码发布候选](docs/releases/unified-source-release.md)。
 
 ## 数据、原分支资料与验证
 
+- 版本线有三条，互不替代：统一源码版本（仓库根 `VERSION`，2.0.0 候选，未来 `zoo-vX.Y.Z` tag）、平台制品版本（`docs/release/{x5,s}/VERSION` 及各自 `x5-v*`/`s-v*` tag）、Skills 包（`skills/pack.json`，当前为未发布的 1.1.0 候选）。见[统一源码发布候选](docs/releases/unified-source-release.md)与 [CHANGELOG.md](CHANGELOG.md)。
 - [统一发布事实](docs/release) 保存制品与历史测量事实。原 `platforms/registry.json` 的分支/目录/标签说明随 `platforms/` 移除，事实改记于[移除记录](docs/migration/2026-09-30-model-examples.md)。
 - 原分支在线资源继承自 X5（`ac11571`）、S（`380e1a2`）归档根指南：[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)、[GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues)、[D-Robotics 开发者社区](https://developer.d-robotics.cc/) 及 [RDK 用户手册](https://developer.d-robotics.cc/information)。它们描述交付分支的已发布内容；浏览已发布目录不代表本整合分支通过验收，此处也不声明链接的实时可用性。历史 demo 材料保留在归档中——X5 为 [`rdk_x5_legacy`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5_legacy) 归档分支，S 为独立 [`rdk_model_zoo_s`](https://github.com/D-Robotics/rdk_model_zoo_s) 仓库——都不是本轮适配目标。
 - 数据准备入口：[datasets](datasets)。大数据集和模型通常不在 Git 中；原各平台数据目录随 `platforms/` 移除。
@@ -118,7 +119,7 @@ npm --prefix tools/catalog-publisher ci
 npm --prefix tools/catalog-publisher run check
 npm --prefix tools/catalog-publisher run catalog:build
 ```
-生成的 `dist/catalog.meta.json` 用 SHA-256 绑定 `catalog.json`；CI 上传数据制品。目录数据、网页发布和板端 Sample 是不同交付，不因代码迁移自动发布新模型或更新历史标签。
+生成的 `dist/catalog.meta.json` 用 SHA-256 绑定 `catalog.json`；CI 上传数据制品。生成数据中的工作树来源链接解析为构建时的确切提交（`sources.json` 的 `link_ref: "HEAD"`），绝不是分支名；历史来源保持固定引用。目录数据、网页发布和板端 Sample 是不同交付，不因代码迁移自动发布新模型或更新历史标签。
 
 ## 社区、贡献与许可
 

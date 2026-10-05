@@ -39,7 +39,12 @@ export interface SourceEntry {
    * a pinned tree is read with the layout that ref itself carries.
    */
   version_file?: string;
-  /** Git ref used for repository source links (`blob/<ref>/...`). */
+  /**
+   * Git ref used for repository source links (`blob/<ref>/...`). Worktree
+   * sources name `HEAD`; the loader resolves it (or any ref) to the complete
+   * commit SHA before links are emitted, so a generated artifact never cites
+   * a moving target like `/tree/HEAD` or `/tree/<branch>`.
+   */
   link_ref: string;
   /** Path prefix of the platform inside `link_ref`. Empty for legacy layouts. */
   link_prefix: string;
@@ -68,7 +73,11 @@ export interface PlatformSource {
    * is resolved from the layout the selected tag actually carries.
    */
   versionFile: string;
-  /** Git ref used for repository source links. */
+  /**
+   * Git ref used for repository source links. Worktree sources carry the
+   * commit `link_ref` resolved to in this repository; tag/commit sources
+   * carry their immutable pin.
+   */
   linkRef: string;
   /** Path prefix of the platform inside `linkRef`; empty for legacy layouts. */
   linkPrefix: string;
@@ -213,6 +222,50 @@ export interface ResolveSourcesOptions {
 }
 
 /**
+ * Resolves a worktree source's `link_ref` to the complete commit SHA it names
+ * in `repositoryRoot`. The artifact's source links must be immutable, so the
+ * configured ref — `HEAD` in sources.json, whatever branch the checkout
+ * builds from — is resolved once, here; the literal `HEAD` and any branch
+ * name are never emitted. A checkout without Git context, or a ref that does
+ * not resolve, fails the build explicitly instead of labeling the artifact
+ * with a moving target.
+ */
+async function resolveWorktreeLinkRef(
+  repositoryRoot: string,
+  linkRef: string,
+  platform: CatalogPlatform
+): Promise<string> {
+  let stdout: string;
+  try {
+    const result = await execFileAsync("git", ["-C", repositoryRoot, "rev-parse", `${linkRef}^{commit}`]);
+    stdout = result.stdout;
+  } catch (exc) {
+    const error = exc as { code?: unknown; stderr?: unknown; message?: unknown };
+    const stderr = String(error.stderr ?? "");
+    if (error.code === "ENOENT") {
+      throw new Error(
+        `${platform}: worktree link_ref "${linkRef}" needs the git executable to resolve to an immutable commit, `
+        + "and it was not found on PATH.");
+    }
+    if (stderr.includes("not a git repository")) {
+      throw new Error(
+        `${platform}: worktree link_ref "${linkRef}" needs a Git repository, `
+        + `and ${repositoryRoot} is not one.`);
+    }
+    throw new Error(
+      `${platform}: worktree link_ref "${linkRef}" does not resolve to a commit in ${repositoryRoot}. `
+      + String(stderr.trim() || (error.message ?? "")).split("\n")[0]);
+  }
+  const commit = stdout.trim();
+  if (!/^[0-9a-f]{40}$/.test(commit)) {
+    throw new Error(
+      `${platform}: worktree link_ref "${linkRef}" resolved to "${commit}", `
+      + "which is not a full 40-hex commit SHA.");
+  }
+  return commit;
+}
+
+/**
  * Resolves every platform source symmetrically. The checked-out distribution is
  * the default for all three platforms; a pin replaces one platform with the
  * immutable tag it names, so a historical catalog version stays reproducible
@@ -276,7 +329,7 @@ export async function resolvePlatformSources(options: ResolveSourcesOptions): Pr
         treePrefix: entry.path,
         manifestDirectory: entry.manifest_root ?? "docs/release",
         versionFile: entry.version_file ?? "VERSION",
-        linkRef: entry.link_ref,
+        linkRef: await resolveWorktreeLinkRef(options.repositoryRoot, entry.link_ref, platform),
         linkPrefix: entry.link_prefix
       };
     }

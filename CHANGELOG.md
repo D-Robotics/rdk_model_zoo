@@ -18,6 +18,34 @@ release; no root `VERSION` is introduced at this point.
 
 ---
 
+## Unreleased — unified source 2.0.0 candidate (zoo-v2.0.0, tag not created)
+
+First unified-source release candidate of the merged X5/S tree (ADR-0006).
+Local source version only: no `zoo-v*` tag exists, no GitHub Release was
+created, and the remote default branch is still `rdk_x5` (no `main`). See
+[unified-source-release.md](docs/releases/unified-source-release.md) for the
+version identities, the support/verification matrix and the main
+promotion/rollback procedure.
+
+- Source version `2.0.0` introduced at the repository root (`VERSION`);
+  unified source tags will use `zoo-vX.Y.Z`. Platform artifact versions stay
+  separate and unchanged (X5 `x5-v1.1.3`, S `s-v1.1.2`), and the Skills pack
+  (candidate 1.1.0) keeps its own independent versioning; nothing is re-tagged.
+- All 51 in-repo samples now follow the approved readable-runtime
+  architecture with independent host acceptance (2026-10-05: 1871 tests,
+  1859 executed-passed, 12 explicit optional-dependency skips; ACT/Pi0
+  gitlinks excluded). Board dimensions are preserved as recorded: scoped
+  historical evidence stays scoped, 33 samples remain board not-run.
+- Catalog provenance now binds worktree builds to the immutable commit they
+  are generated from (`sources.json` `link_ref: "HEAD"` resolved by the
+  loader); artifact links are `blob/<full-commit>/...`, never `/tree/HEAD`
+  or a branch name. Historical X3/pinned-tag links and all asset/benchmark
+  values are unchanged.
+- No runtime code rewrite is part of this candidate; promotion to `main` is
+  a procedure over equivalent CI gates, not a code change.
+
+---
+
 ## rdk_x5 — source: rdk_x5 @ ac11571 (x5-v1.1.3)
 
 

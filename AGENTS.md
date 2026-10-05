@@ -1,11 +1,24 @@
 # Model Zoo contributor entry
 
 Read the actual working tree, branch, full commit and local changes before work.
+Determine the current state from that checkout (`git rev-parse HEAD`,
+`git status`, the root `VERSION`), not from assumptions about a named work
+branch — development rounds land on different `codex/*` branches and are
+integrated into `develop` by Codex; whether a given round is merged is a fact
+of the refs, recorded in the release/migration documents, never of this file.
 The active integration design is
 [the X5/S Spec](docs/superpowers/specs/2026-09-16-rdk-model-zoo-x5-s-agent-people-spec.md).
 It supersedes the X3-inclusive historical plan; X3 sources, tags and evidence
 remain historical material, not a new adaptation target.
 
+- This tree is the unified X5/S source at version **2.0.0 candidate**
+  ([ADR-0006](docs/adr/0006-unified-source-releases-and-platform-matrix.md):
+  root `VERSION`, future `zoo-vX.Y.Z` tags — none published). Platform
+  artifact versions (`docs/release/{x5,s}/VERSION`) and the Skills pack
+  (`skills/pack.json`) version independently. The candidate record,
+  support/verification matrix and main promotion/rollback procedure live in
+  [docs/releases/unified-source-release.md](docs/releases/unified-source-release.md);
+  a candidate entry sits atop [CHANGELOG.md](CHANGELOG.md).
 - Latest user scope (2026-09-28): treat existing README quantization recipes as
   trusted source material. Improve their structure, wording, bilingual consistency
   and navigation; do not rerun weight downloads/export/calibration/OE or Mapper
@@ -24,8 +37,11 @@ remain historical material, not a new adaptation target.
   `release/` tree — were removed from the active tree (2026-10-01); their
   content stays reachable through pinned commit
   `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` and the delivery branches. The
-  catalog's X3 source reads that pinned commit (commit mode in
-  `tools/catalog-publisher/sources.json`). Concrete target identity aliases
+  catalog's X3 source independently reads commit
+  `6fcef2b87c12435e11fbd7327ea70d4efd917b1c` (commit mode in
+  `tools/catalog-publisher/sources.json`); its worktree sources resolve
+  `link_ref: "HEAD"` to the exact build commit, so generated links are
+  immutable. Concrete target identity aliases
   live in `docs/release/platforms.json`; identity alone does not certify any
   artifact or runtime version.
 - People and Agents use the same native sample commands. Do not require a
@@ -54,12 +70,25 @@ remain historical material, not a new adaptation target.
   The sample-contract checker scans
   both stage-name spellings; module-level helpers in `cli.py`/`yolo_cli.py`
   are the recorded CLI application boundary.
-- Host checks: `python -m unittest discover -s samples/_shared/tests`,
-  `python -m unittest discover -s samples/vision/resnet/tests`, and
-  `python -m unittest discover -s samples/vision/ultralytics_yolo/tests`.
-  OCR checks: `python -m unittest discover -s samples/vision/paddle_ocr/tests`.
-  YOLO's existing catalog comparison additionally requires a generated catalog
-  from `npm --prefix tools/catalog-publisher run build`.
+- Host checks — the maintainer entry is
+  `python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]`
+  (supplied by the 2026-10-05 host-validation work; if it is absent from this
+  checkout, that work has not landed here yet — use the per-suite commands
+  below and say so). It runs every applicable Python suite (all 51 sample
+  `tests/` directories, nested conversion/evaluator suites, `samples/_shared`
+  including the safe parent-repository VLA gitlink integrity test; ACT/Pi0 upstream code is excluded), the affected tool/Skills tests, the
+  static contract checker, applicable native CTest and the catalog check, and
+  writes a structured report bound to the actual commands, counts, skip
+  reasons and source identity. Claimed CI status stays with Codex's
+  independent verification, not with this file. Individual suites still run
+  directly, e.g. `python -m unittest discover -s samples/vision/resnet/tests`;
+  the shared modules are
+  `python -m unittest discover -s samples/_shared/tests` (VLA:
+  `-p test_vla_integration.py`). Static contract:
+  `python3 tools/sample_contract/check.py --scope migration`. Catalog:
+  `npm --prefix tools/catalog-publisher run check`. YOLO's existing catalog
+  comparison additionally requires a generated catalog from
+  `npm --prefix tools/catalog-publisher run build`.
 - Report host tests, board tests, artifact availability, and migration status
   separately. No board or no result means `not-run`, not passed. Preserve
   historical reports, source/version pairs, licenses and gitlinks.

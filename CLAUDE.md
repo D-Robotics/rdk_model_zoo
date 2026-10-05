@@ -8,9 +8,10 @@ RDK Model Zoo: D-Robotics' BPU model samples and end-to-end deployment pipelines
 
 ## Where you are (branches)
 
-- **Verify the checkout and branch before work.** The 2026-10-05 readable-runtime work lives on `codex/readable-model-examples-20261001`; source architecture and host checks are independently accepted within that round's scope. It is **not merged into `develop` and not released**. This does not close the broader X5/S migration or certify board execution; never describe local development as shipped or merged.
+- **Verify the checkout and branch before work** (`git rev-parse HEAD`, `git status`, root `VERSION`); do not assume a named work branch. Development rounds land on various `codex/*` branches and are integrated into `develop` by Codex — whether a given round is merged is a fact of the refs and the release/migration records, never of this file. The 2026-10-05 readable-runtime rollout (all 51 in-repo samples) is independently accepted for source architecture and host checks; board execution and release acceptance are outside that verdict. Never describe local development as shipped, merged or published without checking the actual refs.
+- The unified source carries version **2.0.0 candidate** (root `VERSION`; `zoo-vX.Y.Z` tag scheme per ADR-0006, no tag published). Platform artifact versions and the Skills pack version independently. The candidate record, support/verification matrix and main promotion/rollback procedure: `docs/releases/unified-source-release.md`; candidate entry atop `CHANGELOG.md`.
 - `develop` is the sample-centric integration line: X5 and S (S100/S100P/S600) samples unified under `samples/`, hardware selected per sample via `--target auto|x5|s100|s100p|s600`, resolved from board identity (`/sys/class/boardinfo/soc_name` → socinfo → device-tree) with no silent fallback.
-- `rdk_x5` and `rdk_s` are the customer delivery lines until the migration closes. Their tags, READMEs and release conventions govern their own refs; treat them as historical references here, not adaptation targets.
+- `rdk_x5` and `rdk_s` are the customer delivery lines until a unified release is actually published. Their tags, READMEs and release conventions govern their own refs; treat them as historical references here, not adaptation targets.
 - `rdk_x3` is archive-only: historical material, never a new adaptation target (ADR-0007 records only a bounded native-API compatibility evaluation, `accepted-for-evaluation`).
 - Branch/model-filename suffixes are hints only — verify the actual platform from the target sample's README, code, and manifests. Per `AGENTS.md`: never switch branches or reset the worktree to resolve a conflict with user constraints; report conflicts instead. Read-only investigation is allowed by default; downloads, board runs, and publishing require explicit authorization.
 - People and Agents use the same native sample commands; no Skill, Node, or publisher is required for model inference (ADR-0003).
@@ -22,23 +23,24 @@ RDK Model Zoo: D-Robotics' BPU model samples and end-to-end deployment pipelines
 - Standards baseline: `docs/Model_Zoo_Repository_Guidelines.md` (develop unified-architecture edition; naming/layout conventions live here, not in this file).
 - Contracts: `docs/sample-standards/readme-contract.md` (per-level README requirements, fixed anchor IDs, bilingual pairing) and `docs/sample-standards/inference-contract.md` (public interfaces, stage responsibilities, required tests); templates in `docs/sample-standards/templates/`.
 - Decisions: `docs/adr/` — ADR-0001 source/doc-site split, ADR-0002 unified entry with transitional compatibility, ADR-0003 agent-assisted development with independently runnable samples, ADR-0005 samples run inside a full source checkout, ADR-0006 unified-source releases and platform matrix, ADR-0007 X3 native-API subset evaluation.
-- Migration state and package records: `docs/releases/unified-migration/` (see `x5-s-migration-map.md`).
+- Migration state and package records: `docs/releases/unified-migration/` (see `x5-s-migration-map.md`); unified-source release candidate, support/verification matrix and main promotion procedure: `docs/releases/unified-source-release.md`.
 
 ## Host commands (dev machine; no board or toolchain required)
 
-From the repo root with `python3`:
+The maintainer entry for a full verification pass is `python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]` (supplied by the 2026-10-05 host-validation work; if it is absent from this checkout, that work has not landed here yet — run the per-suite commands below and say so). It enumerates every applicable Python test directory (all 51 sample `tests/`, nested conversion/evaluator suites, `samples/_shared` including the safe parent-repository VLA gitlink integrity test; ACT/Pi0 upstream code is excluded), the affected tool/Skills tests, the static contract, applicable native CTest and the catalog check, and writes a structured report; final CI status is recorded by Codex from observed runs, not claimed here.
+
+Individual suites and checks, from the repo root with `python3`:
 
 ```bash
 python3 -m unittest discover -s samples/_shared/tests -v
-python3 -m unittest discover -s samples/vision/resnet/tests -v
-python3 -m unittest discover -s samples/vision/ultralytics_yolo/tests -v
-python3 -m unittest discover -s samples/vision/paddle_ocr/tests -v
+python3 -m unittest discover -s samples/vision/resnet/tests -v            # pattern: any samples/<domain>/<sample>/tests
 python3 -m unittest discover -s samples/_shared/tests -p test_vla_integration.py   # VLA pinned-submodule integration
-python3 tools/sample_contract/check.py --sample samples/vision/resnet              # static contract checker (--scope migration for CI scope)
-python3 -m unittest discover -s tools/sample_contract/tests -v                     # checker's own tests (fixtures)
-python3 skills/tools/sync_references.py                                            # skills pack: reference-copy drift check (add --apply to write)
+python3 tools/sample_contract/check.py --scope migration                  # static contract checker, all 51 samples
+python3 -m unittest discover -s tools/sample_contract/tests -v            # checker's own tests (fixtures)
+python3 skills/tools/sync_references.py                                   # skills pack: reference-copy drift check (add --apply to write)
 python3 skills/tools/validate_pack.py --pack-root skills
 python3 -m unittest discover -s skills/tests -v
+npm --prefix tools/catalog-publisher run check                            # catalog: validate + test + build + reproducibility
 ```
 
 Model samples and conversion only run on RDK hardware / in the OpenExplorer Docker toolchain — not on a dev machine. Host checks green is not board verification: report host tests, board tests, artifact availability, and migration status separately; no result means `not-run`, not passed. The YOLO catalog comparison additionally needs a generated catalog: `npm --prefix tools/catalog-publisher run build`. Still absent from this tree (they remain `rdk_x5` concerns per ADR-0001 source/doc-site separation): `docs/catalog/` and `docs/RELEASE.md`.
@@ -63,7 +65,7 @@ C++ runtimes follow the structure declared in each sample's runtime README (conf
 
 ## Manifests and release data flow
 
-Manifests are authoritative; the web catalog (an `rdk_x5`/doc-site concern, ADR-0001) is only their presentation layer. **Active manifests in this tree: `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`**, with target-identity aliases in `docs/release/platforms.json`. The `platforms/` tree (X5/S compatibility entries and the historical X3 distribution) was removed from the active tree on 2026-10-01; its content is reachable via pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (reachable from develop history) and the delivery branches — usable for historical facts only. The catalog's X3 source reads that pinned commit (commit mode in `tools/catalog-publisher/sources.json`; `samples/_shared/legacy_platforms.py` materializes pinned files for tests/evaluators). X3 remains historical material, never a new adaptation target. `docs/manifests/` is the `rdk_x5` layout, not present here. Rules: update manifests in the same commit that adds/removes/moves a model; benchmarks record only published values with immutable evidence — never infer missing conditions; release notes disclose incomplete coverage.
+Manifests are authoritative; the web catalog (an `rdk_x5`/doc-site concern, ADR-0001) is only their presentation layer. **Active manifests in this tree: `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`**, with target-identity aliases in `docs/release/platforms.json`. The `platforms/` tree (X5/S compatibility entries and the historical X3 distribution) was removed from the active tree on 2026-10-01; its content is reachable via pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (reachable from develop history) and the delivery branches — usable for historical facts only, and historical platform copies stay Git-only. The catalog's X3 source independently reads `6fcef2b87c12435e11fbd7327ea70d4efd917b1c` (commit mode in `tools/catalog-publisher/sources.json`); `samples/_shared/legacy_platforms.py` uses the separate `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` pin for tests/evaluators; its worktree sources configure `link_ref: "HEAD"`, which the loader resolves to the exact build commit, so generated artifact links are immutable full-SHA links — never a branch name or literal `HEAD` — without touching asset/benchmark values. X3 remains historical material, never a new adaptation target. `docs/manifests/` is the `rdk_x5` layout, not present here. Rules: update manifests in the same commit that adds/removes/moves a model; benchmarks record only published values with immutable evidence — never infer missing conditions; release notes disclose incomplete coverage.
 
 ## Skills pack (`skills/`)
 
@@ -73,5 +75,5 @@ Seven skills (`rdk-model-zoo*`) live in this tree as an integration candidate �
 
 - **Bilingual docs**: user-facing READMEs exist as `README.md` + `README_cn.md` with matching fixed anchor IDs (readme-contract §2–3); keep them in sync.
 - **README hierarchy**: when changing anything in a directory, check whether the parent README (up to the root model list) needs updating.
-- **Releases**: the target model is the unified-source scheme of ADR-0006 (unified version + per-platform support/verification matrix; Skills versioned independently). Delivery-line conventions (per-platform `x5-v*`/`s-v*` tags, per-ref `VERSION`, `CHANGELOG.md` as the sole release-notes location) govern the `rdk_x5`/`rdk_s` refs and are historical references on this branch; this work branch makes no release. Published tags are never moved — fixes go in a patch release.
+- **Releases**: the target model is the unified-source scheme of ADR-0006 (unified version + per-platform support/verification matrix; Skills versioned independently): source version at root `VERSION` (2.0.0 candidate), source tags `zoo-vX.Y.Z` (none published), platform artifact versions and their `x5-v*`/`s-v*` tags separate, Skills pack versioning untouched by source releases. The promotion/rollback procedure and matrix live in `docs/releases/unified-source-release.md`. Delivery-line conventions (per-platform `x5-v*`/`s-v*` tags, per-ref `VERSION`, `CHANGELOG.md` as the sole release-notes location) govern the `rdk_x5`/`rdk_s` refs and are historical references on this branch; this work branch makes no release. Published tags are never moved — fixes go in a patch release.
 - **Catalog data boundaries** (catalog tooling lives under `tools/catalog-publisher/`): one row per actual model config; never merge across configs or sum stage timings into end-to-end numbers; missing values render as `—`, not guesses.

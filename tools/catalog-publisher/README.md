@@ -21,15 +21,17 @@ The check validates platform manifests and source references, runs tests and Typ
 
 | Platform | Manifests read from the worktree | Version file | Generated source links |
 | --- | --- | --- | --- |
-| `x5` | `docs/release/x5/models.yaml`, `benchmarks.yaml` | `docs/release/x5/VERSION` | `blob/develop/...` |
-| `s` | `docs/release/s/models.yaml`, `benchmarks.yaml` | `docs/release/s/VERSION` | `blob/develop/...` |
+| `x5` | `docs/release/x5/models.yaml`, `benchmarks.yaml` | `docs/release/x5/VERSION` | `blob/<resolved commit>/...` |
+| `s` | `docs/release/s/models.yaml`, `benchmarks.yaml` | `docs/release/s/VERSION` | `blob/<resolved commit>/...` |
 | `x3` | `6fcef2b8…/platforms/x3/release/models.yaml`, `benchmarks.yaml` | `6fcef2b8…/platforms/x3/VERSION` | `blob/6fcef2b87c12435e11fbd7327ea70d4efd917b1c/platforms/x3/...` |
 
 New models, fixes and measurements for X5 and S are maintained in the unified manifests `docs/release/{x5,s}` together with their per-platform `VERSION` files (the build rejects a `VERSION` that disagrees with the manifest's release version). The archived `platforms/` snapshots (including the former `platforms/{x5,s}/docs/release/*.yaml`) were removed from the active tree; historical content stays reachable through the pinned commit and the delivery branches. The pinned X3 tree is read because X3 is an archived historical distribution with no unified successor; it is not a new-adaptation target.
 
 ### Worktree reads versus generated links
 
-`link_ref`/`link_prefix` do not select what is read. They only label what the artifact emits: the per-record `source_ref`/`source_path_prefix` (rendered by consumers as `blob/<ref>/<prefix>/...` repository links) and the per-platform `ref` in `catalog.meta.json` provenance. A worktree build therefore reads the current checkout while reporting whichever ref the links name; a `--pin` build reads the pinned tag's tree instead, and its links name that tag. An integration-branch worktree build emits `develop` links for X5/S even though its content comes from the integration branch's own files — such links do not prove that `develop` already contains those candidates; that becomes true only after the branch merges. What was actually read is pinned by the per-platform `manifest_sha256` in the provenance, which is what reproducibility is checked against.
+`link_ref`/`link_prefix` do not select what is read. They only label what the artifact emits: the per-record `source_ref`/`source_path_prefix` (rendered by consumers as `blob/<ref>/<prefix>/...` repository links) and the per-platform `ref` in `catalog.meta.json` provenance. A worktree build therefore reads the current checkout while its links name an immutable ref; a `--pin` build reads the pinned tag's tree instead, and its links name that tag.
+
+For worktree sources, `sources.json` configures `link_ref: "HEAD"`, and the loader resolves it — before anything is emitted — to the complete 40-hex commit the checkout actually builds from (`git rev-parse HEAD^{commit}`). Generating on `develop`, on `main` or from any PR checkout therefore yields links to that exact commit; the artifact never carries the literal `HEAD`, a branch name, or any other moving target. A checkout without Git context, or a configured ref that does not resolve, fails the build explicitly. Historical sources are unaffected: the X3 commit pin and every `--pin` tag keep their original immutable links. Ref resolution changes only these labels — never a model, asset or benchmark value — and what was actually read stays pinned by the per-platform `manifest_sha256` in the provenance, which is what reproducibility is checked against.
 
 ## Data identity and historical releases
 
@@ -60,6 +62,6 @@ The CI workflow (`.github/workflows/model-catalog-data.yml`) runs `npm run check
 
 ## Adding hardware
 
-Add a complete platform tree and registry entry, then extend `sources.json`, catalog platform/hardware types and normalization mappings with tests. Choosing a new featured board is a presentation choice; it does not require moving the dashboard or relocating the maintained manifests.
+Add a complete platform distribution, then extend `sources.json`, catalog platform/hardware types and normalization mappings with tests. Choosing a new featured board is a presentation choice; it does not require moving the dashboard or relocating the maintained manifests.
 
 Static manifest checks do not replace board inference testing. Missing measurements remain missing; no values are synthesized.

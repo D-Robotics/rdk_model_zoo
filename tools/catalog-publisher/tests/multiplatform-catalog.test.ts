@@ -214,12 +214,18 @@ describe("multi-platform variant catalog", () => {
 
   it("stamps every variant with the layout its sample path lives in", async () => {
     const catalog = await repositoryCatalog();
+    const { execFile } = await import("node:child_process");
+    const { promisify } = await import("node:util");
+    const run = promisify(execFile);
+    const { stdout } = await run("git", ["-C", repositoryRoot, "rev-parse", "HEAD"], { encoding: "utf8" });
+    const head = stdout.trim();
 
-    // X5/S variants link into the unified branch at the repository root; X3
-    // variants keep pointing at the pinned commit that preserves their demos.
+    // X5/S variants link to the exact commit this checkout builds from —
+    // resolved from the configured HEAD, never a branch name; X3 variants
+    // keep pointing at the pinned commit that preserves their demos.
     for (const variant of catalog.models.flatMap((model) => model.variants ?? [])) {
       const unified = variant.hardware !== "x3";
-      expect(variant.source_ref).toBe(unified ? "develop" : "6fcef2b87c12435e11fbd7327ea70d4efd917b1c");
+      expect(variant.source_ref).toBe(unified ? head : "6fcef2b87c12435e11fbd7327ea70d4efd917b1c");
       expect(variant.source_path_prefix).toBe(unified ? "" : "platforms/x3");
       if (!unified) {
         expect(variant.sample_path.startsWith(variant.source_path_prefix!)).toBe(false);

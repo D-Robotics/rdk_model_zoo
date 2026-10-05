@@ -12,14 +12,19 @@ async function workflowNames(): Promise<string[]> {
 }
 
 /**
- * The catalog data package is the only thing this repository publishes from CI.
- * These checks keep a website deployment from creeping back into a model
- * branch: the data workflow may build and upload, never deploy. The sample
- * contract workflow only runs host-side checks and uploads nothing.
+ * Catalog data and CI gate reports are the only things this repository
+ * publishes from CI. These checks keep a website deployment from creeping
+ * back into a model branch: the data workflow may build and upload, never
+ * deploy; the sample-contract and host-validation workflows run host-side
+ * checks and upload their reports. None of them is a website publisher.
  */
 describe("catalog release workflow", () => {
-  it("runs exactly the data and sample-contract workflows and deploys no website", async () => {
-    expect(await workflowNames()).toEqual(["model-catalog-data.yml", "sample-contract.yml"]);
+  it("runs exactly the data, sample-contract and host-validation workflows and deploys no website", async () => {
+    expect(await workflowNames()).toEqual([
+      "host-validation.yml",
+      "model-catalog-data.yml",
+      "sample-contract.yml",
+    ]);
 
     const workflows = await Promise.all((await workflowNames()).map((name) => readFile(join(WORKFLOW_DIRECTORY, name), "utf8")));
     for (const workflow of workflows) {

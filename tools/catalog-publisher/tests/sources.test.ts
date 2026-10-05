@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -18,11 +18,24 @@ async function sourcesDocument(): Promise<SourcesDocument> {
   return loadSourcesDocument(resolve(publisherRoot, "sources.json"));
 }
 
+async function git(args: string[], cwd = repositoryRoot): Promise<string> {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const run = promisify(execFile);
+  const { stdout } = await run("git", ["-C", cwd, ...args], { encoding: "utf8" });
+  return stdout.trim();
+}
+
+/** Every ref the artifact may cite as an immutable source link: a full commit
+ * SHA, or an annotated release tag (historical pins). Never a branch name. */
+const IMMUTABLE_REF = /^(?:[0-9a-f]{40}|[a-z0-9]+-v\d+\.\d+\.\d+)$/;
+
 describe("platform source resolution", () => {
   it("resolves the unified worktree platforms and the commit-pinned x3", async () => {
     const sources = await resolvePlatformSources({ repositoryRoot, sources: await sourcesDocument() });
 
     expect(sources.map((source) => source.platform)).toEqual(PLATFORMS);
+    const head = await git(["rev-parse", "HEAD"]);
     for (const source of sources) {
       // X5 and S are unified into the repository root and read from the
       // worktree; the historical X3 tree was removed from the active branch
@@ -30,7 +43,10 @@ describe("platform source resolution", () => {
       const unified = source.platform !== "x3";
       expect(source.kind).toBe(unified ? "worktree" : "commit");
       expect(source.worktreeRoot).toBe(unified ? "." : undefined);
-      expect(source.linkRef).toBe(unified ? "develop" : X3_PIN);
+      // A worktree source's configured link_ref is HEAD, which the loader
+      // resolves to the complete commit this checkout actually builds from;
+      // the pinned X3 keeps its immutable full-SHA link.
+      expect(source.linkRef).toBe(unified ? head : X3_PIN);
       expect(source.linkPrefix).toBe(unified ? "" : "platforms/x3");
     }
     // Each distribution's own manifest directory: the unified groups live at
@@ -181,6 +197,139 @@ describe("platform source resolution", () => {
 
     await expect(resolvePlatformSources({ repositoryRoot, sources: broken }))
       .rejects.toThrow(/no models.yaml found/);
+  });
+});
+
+describe("worktree link_ref HEAD resolution", () => {
+  it("resolves the configured worktree link_ref to the checkout's actual HEAD commit", async () => {
+    // sources.json configures HEAD, not a branch: whatever ref develop or
+    // main is built on, the artifact must cite the complete commit it was
+    // generated from, never the literal string HEAD.
+    const document = await sourcesDocument();
+    for (const platform of ["x5", "s"] as const) {
+      expect(document.sources[platform]!.link_ref).toBe("HEAD");
+    }
+
+    const sources = await resolvePlatformSources({ repositoryRoot, sources: document });
+    const head = await git(["rev-parse", "HEAD"]);
+    for (const platform of ["x5", "s"] as const) {
+      const source = sources.find((candidate) => candidate.platform === platform)!;
+      expect(source.linkRef).toMatch(/^[0-9a-f]{40}$/);
+      expect(source.linkRef).toBe(head);
+      expect(source.linkRef).not.toBe("HEAD");
+    }
+  });
+
+  it("resolves a fixture worktree's HEAD and never emits a mutable ref", async () => {
+    const root = await createTaggedRepository("x5-v9.9.9", {
+      ...fixtureManifests("x5", "x5-v9.9.9", "1.0.0", "docs/release/x5"),
+      "docs/release/x5/VERSION": "1.0.0\n"
+    });
+    const head = await git(["rev-parse", "HEAD"], root);
+
+    const sources = await resolvePlatformSources({
+      repositoryRoot: root, sources: await fixtureSourcesDocument(root)
+    });
+    for (const platform of ["x5", "s"] as const) {
+      const source = sources.find((candidate) => candidate.platform === platform)!;
+      expect(source.linkRef).toBe(head);
+    }
+  });
+
+  it("fails explicitly when the repository has no Git context", async () => {
+    // A directory with the unified manifest layout but no .git cannot bind
+    // its artifact to a commit; that must fail the build instead of
+    // silently labeling the artifact with a literal HEAD or a branch name.
+    const root = await mkdtemp(join(tmpdir(), "catalog-nogit-"));
+    await mkdir(join(root, "docs/release/x5"), { recursive: true });
+    await mkdir(join(root, "docs/release/s"), { recursive: true });
+    await mkdir(join(root, "platforms/x3/release"), { recursive: true });
+    await writeFile(join(root, "docs/release/x5/models.yaml"), "schema_version: 1\nrelease:\n  platform: x5\n  version: 1.0.0\n  tag: x5-v1.0.0\nmodels: []\n");
+    await writeFile(join(root, "docs/release/s/models.yaml"), "schema_version: 1\nrelease:\n  platform: s\n  version: 1.0.0\n  tag: s-v1.0.0\nmodels: []\n");
+    await writeFile(join(root, "platforms/x3/release/models.yaml"), "schema_version: 1\nrelease:\n  platform: x3\n  version: 1.0.0\n  tag: x3-v1.0.0\nmodels: []\n");
+
+    const document = await sourcesDocument();
+    const documentForNoGit: SourcesDocument = {
+      ...document,
+      sources: {
+        x5: { ...document.sources.x5!, mode: "worktree", path: ".", link_ref: "HEAD" },
+        s: { ...document.sources.s! },
+        x3: { ...document.sources.x3!, commit: X3_PIN }
+      }
+    };
+
+    await expect(resolvePlatformSources({ repositoryRoot: root, sources: documentForNoGit }))
+      .rejects.toThrow(/worktree link_ref "HEAD"[^]*Git/);
+  });
+
+  it("rejects a worktree link_ref that does not resolve to a commit", async () => {
+    const document = await sourcesDocument();
+    const broken: SourcesDocument = {
+      ...document,
+      sources: { ...document.sources, x5: { ...document.sources.x5!, link_ref: "no-such-ref" } }
+    };
+
+    await expect(resolvePlatformSources({ repositoryRoot, sources: broken }))
+      .rejects.toThrow(/worktree link_ref "no-such-ref" does not resolve to a commit/);
+  });
+
+  it("changing how the ref is written changes no model, asset or benchmark value", async () => {
+    // Resolving HEAD instead of naming a branch must only re-label source
+    // links; the catalog's data values stay byte-equal. Build the same
+    // checkout twice — once through the configured HEAD resolution, once
+    // with the same commit written explicitly — and diff everything except
+    // the fields whose job is to carry the ref.
+    const head = await git(["rev-parse", "HEAD"]);
+    const document = await sourcesDocument();
+    const explicit: SourcesDocument = {
+      ...document,
+      sources: {
+        ...document.sources,
+        x5: { ...document.sources.x5!, link_ref: head },
+        s: { ...document.sources.s!, link_ref: head }
+      }
+    };
+    const [viaHead, viaExplicit] = await Promise.all([
+      resolvePlatformSources({ repositoryRoot, sources: document }),
+      resolvePlatformSources({ repositoryRoot, sources: explicit })
+    ]);
+    const [headCatalog, explicitCatalog] = await Promise.all([
+      buildMultiplatformCatalog({ repositoryRoot, sources: viaHead }),
+      buildMultiplatformCatalog({ repositoryRoot, sources: viaExplicit })
+    ]);
+
+    const stripRefFields = (catalog: typeof headCatalog) => JSON.stringify({
+      ...catalog,
+      release: { ...catalog.release, tag: undefined, catalog_version: undefined },
+      sources: undefined,
+      models: catalog.models.map((model) => ({
+        ...model,
+        variants: (model.variants ?? []).map(({ source_ref: ref, ...variant }) => {
+          expect(ref).toMatch(IMMUTABLE_REF);
+          return variant;
+        })
+      }))
+    });
+    expect(stripRefFields(headCatalog)).toBe(stripRefFields(explicitCatalog));
+  });
+
+  it("stamps every emitted source link with an immutable ref", async () => {
+    // The whole artifact — provenance records and per-variant links alike —
+    // must cite commits or annotated tags, so a generated catalog never
+    // renders a moving target like /tree/HEAD or /tree/develop.
+    const catalog = await buildMultiplatformCatalog({
+      repositoryRoot,
+      sources: await resolvePlatformSources({ repositoryRoot, sources: await sourcesDocument() })
+    });
+
+    for (const record of Object.values(catalog.sources ?? {})) {
+      expect(record.ref).toMatch(IMMUTABLE_REF);
+    }
+    const variants = catalog.models.flatMap((model) => model.variants ?? []);
+    expect(variants.length).toBeGreaterThan(0);
+    for (const variant of variants) {
+      expect(variant.source_ref).toMatch(IMMUTABLE_REF);
+    }
   });
 });
 

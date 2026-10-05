@@ -64,9 +64,10 @@ export async function createTaggedRepository(
 
 /**
  * A sources document for fixture repositories: X5/S keep the unified
- * worktree layout, and X3 uses commit mode pinned to the fixture's own
- * HEAD (the fixture commits its `platforms/x3` stub), mirroring how the
- * real sources.json pins the removed historical tree to a full commit SHA.
+ * worktree layout with their links resolved from HEAD exactly like the real
+ * sources.json, and X3 uses commit mode pinned to the fixture's own HEAD
+ * (the fixture commits its `platforms/x3` stub), mirroring how the real
+ * sources.json pins the removed historical tree to a full commit SHA.
  */
 export async function fixtureSourcesDocument(root: string): Promise<SourcesDocument> {
   const { stdout } = await run("git", ["-C", root, "rev-parse", "HEAD"]);
@@ -77,11 +78,11 @@ export async function fixtureSourcesDocument(root: string): Promise<SourcesDocum
     sources: {
       x5: {
         mode: "worktree", path: ".", manifest_root: "docs/release/x5",
-        version_file: "docs/release/x5/VERSION", link_ref: "develop", link_prefix: ""
+        version_file: "docs/release/x5/VERSION", link_ref: "HEAD", link_prefix: ""
       },
       s: {
         mode: "worktree", path: ".", manifest_root: "docs/release/s",
-        version_file: "docs/release/s/VERSION", link_ref: "develop", link_prefix: ""
+        version_file: "docs/release/s/VERSION", link_ref: "HEAD", link_prefix: ""
       },
       x3: {
         mode: "commit", commit, tree_prefix: "platforms/x3", manifest_root: "release",

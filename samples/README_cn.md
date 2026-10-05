@@ -101,14 +101,15 @@ ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护�
 
 ## 如何解读验证状态
 
-- 原三个试点及 B1/B2 有各自的实板记录；不要将一例通过推广为整个系列。
+- 51 个本仓样例共享同一源码状态：可读 Runtime 架构已实现并通过独立主机验收（2026-10-05；[覆盖表](../docs/releases/unified-migration/2026-10-05-all-sample-coverage.json)、[Codex 验收](../docs/releases/unified-migration/2026-10-05-all-sample-codex-review.md)——1871 项测试，1859 项执行通过，12 项显式可选依赖跳过）。主机验收不替代板端验证。
+- [支持/验证矩阵](../docs/releases/unified-source-release.md) 按原始范围记录每个样例的历史板测证据：原三个试点及 B1/B2 有各自的实板记录；不要将一例通过推广为整个系列。
 - B3/B4/B5 的主要迁移验收基于主机，待板测范围见各批报告。
 - EfficientSAM/MobileSAM 已有 X5 8GB 默认/priority7 和 S100 默认等完整回收证据；X5 4GB 仅日志、S600 未完成、S100P 未验证等缺口按 [板端交接记录](../docs/releases/unified-migration/2026-09-24-board-resume.md) 保留，不能笼统标为全部已测或全部未测。
 - B7 包含已验证的部分 Python 对照，也有 MODNet manual 资产缺口、ByteTrack 视频范围限制和 C++ 源对照待补；完整状态见 [台账](../docs/releases/unified-migration/x5-s-migration-map.md)。
-- B8（H4）与 B10（H6）已获得非板端批次验收：B8 的八个样例范围见 [B8 聚合评审](../docs/releases/unified-migration/2026-09-28-b8-batch-independent-review.md)，ASR/KWS/Paraformer/HIMLoco 见 [B10 集成评审](../docs/releases/unified-migration/2026-09-28-b10-batch-independent-review.md)。两者只接受主机/文档范围；板端范围仍未运行。
+- B8（H4）、B9（H5）、B10（H6）、B11（H7）已获得非板端批次验收——见[非板端最终对齐](../docs/releases/unified-migration/2026-09-29-host-completion-independent-review.md)及其链接的各批复核。仅限主机/文档范围；各批的板端维度保持未运行，台账 `Closed` 列的完整交付口径仍为 `no`。
 
 ## 选择与扩展
 
 先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [_shared](_shared/README.md)，代码职责与文档要求见 [推理契约](../docs/sample-standards/inference-contract.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
 
-尚未进入统一目录的模型不再随本树携带：历史 `platforms/` 副本已移除（固定提交 `d2d2a4e0`，交付分支可访问）。B9、B11 的迁移与独立审核仍在进行；B8/B10 的验收仅为非板范围，仓库级审核（H1/H8/H9）也不因任何批次关闭。不能把本索引当作完整交付签收表。
+从未统一的模型不再随本树携带：历史 `platforms/` 副本已移除（固定提交 `d2d2a4e0`，交付分支可访问）。51 个已统一样例本身的源码迁移与主机验收已完成；仍未关闭的是逐样例板端验证与完整交付口径，按样例记录于[迁移台账](../docs/releases/unified-migration/x5-s-migration-map.md)与[支持/验证矩阵](../docs/releases/unified-source-release.md)。不能把本索引当作完整交付签收表。
