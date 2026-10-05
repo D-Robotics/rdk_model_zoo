@@ -225,10 +225,10 @@ They keep no
 last-image context. Preparing B after A does not overwrite A's geometry; retain
 each prepared object and use its own transform. SDK calls still require external
 serialization; per-call context does not certify thread-safe inference.
-`YoloDetect` spells the stages `preprocess` / `infer` / `postprocess` with
-`pre_process` / `forward` / `post_process` as thin aliases; the other task
-classes keep their established `pre_process` / `forward` / `post_process`
-spelling with identical responsibilities.
+Every task class — detect, cls, seg, pose, OBB, in both the DFL and YOLO26
+families — spells the stages `preprocess` / `infer` / `postprocess` with
+`pre_process` / `forward` / `post_process` as thin aliases (one implementation
+per stage, visible in each task module).
 
 - `preprocess(img_or_path, image_format="BGR")` (alias `pre_process`) requires nonempty uint8 H×W×3 BGR, or a readable local image path. It returns `PreparedDetection.tensors` and a frozen `.transform` containing original/model/resized sizes, actual integer padding and per-axis scale. X5 tensors are packed NV12; S tensors are Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`, using metadata-derived H/W.
 - `infer(prepared)` (alias `forward`) calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays still have the SDK dtype and borrow SDK buffers. Finish postprocessing before another SDK call, or explicitly copy retained raw arrays.
@@ -287,9 +287,9 @@ segmenter = YoloSeg(YoloSegConfig(
     platform=resolve_platform("s100"),
     nms_thres=0.45,
 ))
-prepared = segmenter.pre_process(image)
-raw = segmenter.forward(prepared.tensors)
-boxes, scores, ids, masks = segmenter.post_process(raw, transform=prepared.transform)
+prepared = segmenter.preprocess(image)
+raw = segmenter.infer(prepared)
+boxes, scores, ids, masks = segmenter.postprocess(raw, transform=prepared.transform)
 expected = segmenter.predict(image)
 for staged, predicted in zip((boxes, scores, ids), expected[:3]):
     np.testing.assert_allclose(staged, predicted)
@@ -303,7 +303,8 @@ The three methods have the same explicit `PreparedDetection`/`RawOutputs`
 transport as detection. `YoloSeg(config, runner=...)` also supports an injected
 runner. The factory reads actual input/output metadata and enforces target
 identity before loading the real SDK. Inference never downloads a model.
-`pre_process` accepts nonempty BGR uint8 H×W×3; `post_process` takes either
+`preprocess` (alias `pre_process`) accepts nonempty BGR uint8 H×W×3;
+`postprocess` (alias `post_process`) takes either
 `prepared.transform` or the legacy `(original_width, original_height)` arguments.
 Missing/conflicting geometry is an error. No last-image state is retained.
 
@@ -359,9 +360,9 @@ pose = YoloPose(YoloPoseConfig(
     model_path="/models/yolo11n_pose_nashe_640x640_nv12.hbm",
     platform=resolve_platform("s100"),
 ))
-prepared = pose.pre_process(image)
-raw = pose.forward(prepared.tensors)
-result = pose.post_process(raw, transform=prepared.transform)
+prepared = pose.preprocess(image)
+raw = pose.infer(prepared)
+result = pose.postprocess(raw, transform=prepared.transform)
 for staged, predicted in zip(result, pose.predict(image)):
     np.testing.assert_allclose(staged, predicted)
 boxes, scores, class_ids, keypoints_xy, visibility = result
@@ -371,8 +372,8 @@ print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
 
 `YoloPose(config, runner=...)` accepts an injected runner. Input, raw-buffer
 lifetime and per-image transforms follow detection. Legacy
-`post_process(raw, original_width, original_height)` remains supported;
-missing/conflicting geometry fails. The nine outputs are NHWC class logits
+`post_process(raw, original_width, original_height)` (alias of `postprocess`)
+remains supported; missing/conflicting geometry fails. The nine outputs are NHWC class logits
 `(1,H/s,W/s,1)`, DFL boxes `(1,H/s,W/s,64)` and keypoints `(1,H/s,W/s,51)`
 (17 x/y/logit triplets) at strides 8/16/32. Square inputs, 16 DFL bins, 17 COCO
 points and finite model-provided floating outputs are required. Roles bind by
@@ -422,15 +423,16 @@ classifier = YoloCls(YoloClsConfig(
     resize_type=0,
     topk=5,
 ))
-inputs = classifier.pre_process(image)
-raw = classifier.forward(inputs)
-ranked = classifier.post_process(raw)
+inputs = classifier.preprocess(image)
+raw = classifier.infer(inputs)
+ranked = classifier.postprocess(raw)
 assert ranked == classifier.predict(image)
 print(ranked)
 ```
 
-`pre_process` returns the nested NV12 input dictionary, with no geometry carrier
-needed for classification. `forward` calls the shared runner once and returns
+`preprocess` (alias `pre_process`) returns the nested NV12 input dictionary,
+with no geometry carrier needed for classification. `infer` (alias `forward`)
+calls the shared runner once and returns
 `raw["logits"]` as the unchanged physical floating array, borrowing SDK storage.
 Complete postprocessing before another inference or explicitly copy retained raw
 arrays. Exactly one output is required: one 1000-class vector with optional
@@ -439,7 +441,8 @@ outputs require a leading batch size of one. Extra outputs, spatial
 maps, batches, missing shape/dtype metadata, integer outputs and SCALE descriptors
 are rejected. Real SDK compatibility for this stricter boundary is not board-tested.
 
-`post_process` applies one SciPy Softmax and the source descending NumPy sort,
+`postprocess` (alias `post_process`) applies one SciPy Softmax and the source
+descending NumPy sort,
 then returns independent Python `(int class_id, float probability)` pairs. Exact
 ties retain the existing sort behavior; there is no new deterministic tie rule.
 Top-K must be a positive integer (not a boolean); values above the class count
@@ -483,9 +486,9 @@ detector = YoloV10Detect(YoloV10DetectConfig(
     platform=resolve_platform("s600"),
     score_thres=0.25,
 ))
-prepared = detector.pre_process(image)
-raw = detector.forward(prepared.tensors)
-result = detector.post_process(raw, transform=prepared.transform)
+prepared = detector.preprocess(image)
+raw = detector.infer(prepared)
+result = detector.postprocess(raw, transform=prepared.transform)
 for staged, predicted in zip(result, detector.predict(image)):
     np.testing.assert_allclose(staged, predicted)
 print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
@@ -495,8 +498,10 @@ The six physical floating NHWC outputs bind by shape to class/16-bin DFL box
 roles at strides 8/16/32; enumeration order does not choose their meaning. Model
 input must be square. The raw buffer lifetime, explicit per-image transform and
 owned `(boxes, scores, class_ids)` result are the same as the common detection
-API. `post_process(raw, original_width, original_height)` remains available;
-`pre_process` now returns the mapping-compatible `PreparedDetection` carrier.
+API. The stage aliases `pre_process` / `forward` / `post_process` remain
+available; `post_process(raw, original_width, original_height)` reconstructs the
+geometry explicitly and `pre_process` returns the mapping-compatible
+`PreparedDetection` carrier.
 
 All anchors meeting the confidence threshold remain, including overlapping
 boxes. Results follow stride order and then grid traversal, with one best class
@@ -542,9 +547,9 @@ pose = YOLO26Pose(YOLO26PoseConfig(
     platform=resolve_platform("s600"),
     nms_thres=0.45,
 ))
-prepared = pose.pre_process(image)
-raw = pose.forward(prepared.tensors)
-result = pose.post_process(raw, transform=prepared.transform)
+prepared = pose.preprocess(image)
+raw = pose.infer(prepared)
+result = pose.postprocess(raw, transform=prepared.transform)
 for staged, predicted in zip(result, pose.predict(image)):
     np.testing.assert_allclose(staged, predicted)
 boxes, scores, class_ids, keypoint_xy, visibility = result
@@ -555,8 +560,9 @@ Input must be nonempty BGR uint8 H×W×3. Outputs must already be floating NHWC,
 with complete shape/dtype metadata and no SCALE quantization. Integer arrays,
 nonfinite values, a DFL binding or ambiguous heads are rejected. The raw carrier
 borrows SDK buffers: complete postprocessing before another inference or copy
-retained raw arrays. `pre_process` returns the mapping-compatible
-`PreparedDetection`; legacy explicit original width/height postprocess arguments
+retained raw arrays. `preprocess` returns the mapping-compatible
+`PreparedDetection`; the `pre_process`/`forward`/`post_process` aliases and the
+legacy explicit original width/height postprocess arguments
 remain supported without cached last-image state.
 
 The five results have the same shape/dtype/ownership as the DFL pose API: float32
@@ -607,9 +613,9 @@ segmenter = YOLO26Seg(YOLO26SegConfig(
     platform=resolve_platform("s600"),
     nms_thres=0.45,
 ))
-prepared = segmenter.pre_process(image)
-raw = segmenter.forward(prepared.tensors)
-result = segmenter.post_process(raw, transform=prepared.transform)
+prepared = segmenter.preprocess(image)
+raw = segmenter.infer(prepared)
+result = segmenter.postprocess(raw, transform=prepared.transform)
 predicted = segmenter.predict(image)
 for staged, repeated in zip(result[:3], predicted[:3]):
     np.testing.assert_allclose(staged, repeated)
@@ -670,9 +676,9 @@ obb = YOLO26OBB(YOLO26OBBConfig(
     model_path="/models/yolo26n_obb_nashp_640x640_nv12.hbm",
     platform="s600",
 ))
-prepared = obb.pre_process(image)
-raw = obb.forward(prepared.tensors)
-records = obb.post_process(raw, transform=prepared.transform)
+prepared = obb.preprocess(image)
+raw = obb.infer(prepared)
+records = obb.postprocess(raw, transform=prepared.transform)
 predicted = obb.predict(image)
 assert len(records) == len(predicted)
 for staged, repeated in zip(records, predicted):
@@ -684,10 +690,14 @@ for record in records:
     print(record["id"], record["score"], record["rrect"])
 ```
 
-`pre_process` returns input tensors plus this image's actual integer resize and
-padding. `forward` uses the common runner and returns borrowed raw SDK buffers;
+The class reuses the readable detector's shared image transport and raw runner
+call (`preprocess`/`infer`, also reachable through the `pre_process`/`forward`
+aliases) and adds its own rotated decode: `preprocess` returns input tensors
+plus this image's actual integer resize and
+padding. `infer` uses the common runner and returns borrowed raw SDK buffers;
 finish postprocessing before the next inference or copy the buffers. It performs
-no decoding or dequantization. `post_process` produces an owned list of records:
+no decoding or dequantization. `postprocess` (alias `post_process`) produces an
+owned list of records:
 `rrect=(cx,cy,width,height,angle_radians)`, floating `score`, integer `id`.
 An empty detection set is `[]`. Keep each prepared transform with its outputs;
 interleaved images must not share an implicit last-image context.

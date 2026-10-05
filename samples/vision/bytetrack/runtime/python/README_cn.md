@@ -49,7 +49,7 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
 <a id="results"></a>
 ## 结果
 
-CLI 写出带 person track 的 MP4，并可写 JSONL：`{frame, tracks:[{track_id, tlbr, score, frame_id}]}`。`ByteTrackTask.post_process` 过滤 class `0`，在更新 tracker 前丢弃宽/高不正的框，并返回自有内存的不可变 `Track` snapshot。空检测仍调用 `tracker.update` 并推进状态。ID 是进程级单调计数；新进程会从自己的计数开始。
+CLI 写出带 person track 的 MP4，并可写 JSONL：`{frame, tracks:[{track_id, tlbr, score, frame_id}]}`。`ByteTrackTask.postprocess`（别名 `post_process`）过滤 class `0`，在更新 tracker 前丢弃宽/高不正的框，并返回自有内存的不可变 `Track` snapshot。空检测仍调用 `tracker.update` 并推进状态。ID 是进程级单调计数；新进程会从自己的计数开始。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -78,9 +78,9 @@ frame_path = Path("samples/vision/bytetrack/test_data/bus.jpg")
 frame = cv2.imread(str(frame_path), cv2.IMREAD_COLOR)
 if frame is None:
     raise FileNotFoundError(frame_path)
-prepared = task.pre_process(frame)
-native_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(native_outputs, prepared.context)
+prepared = task.preprocess(frame)
+native_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(native_outputs, prepared.context)
 composed_result = task.predict(frame)
 assert isinstance(explicit_result, tuple) and isinstance(composed_result, tuple)
 print(explicit_result, composed_result)
@@ -91,9 +91,9 @@ print(explicit_result, composed_result)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `pre_process(frame)` 委托 detector，返回 tensor 和不可变几何 context。
-- `forward(tensors)` 委托 native detector 推理，不推进 tracker 状态。
-- `post_process(outputs, context)` 解码 detector、过滤 person、丢弃无效 clip 框、更新 tracker 一次，返回 `tuple[Track,...]`。
+- `preprocess(frame)`（别名 `pre_process`）委托 detector，返回 tensor 和不可变几何 context。
+- `infer(tensors)`（别名 `forward`）委托 native detector 推理，不推进 tracker 状态。
+- `postprocess(outputs, context)`（别名 `post_process`）解码 detector、过滤 person、丢弃无效 clip 框、更新 tracker 一次，返回 `tuple[Track,...]`。
 - `predict(frame)` 组合一个有序帧；`reset()` 建立 `frame_index == 0` 的新流，但保留进程级 ID 单调性。
 
 <a id="troubleshooting"></a>

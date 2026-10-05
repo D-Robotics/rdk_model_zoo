@@ -247,21 +247,3 @@ def _set_scheduling_params(
         values["bpu_cores"] = {model_name: bpu_cores}
     if values:
         method(**values)
-
-
-def _predict_task(
-    task: Any,
-    img: np.ndarray,
-    image_format: str,
-    score_thres: Optional[float],
-    nms_thres: Optional[float],
-):
-    """Compose the exact three public stages with per-call geometry."""
-    prepared = task.pre_process(img, image_format)
-    outputs = task.forward(prepared.tensors)
-    return task.post_process(
-        outputs,
-        score_thres=score_thres,
-        nms_thres=nms_thres,
-        transform=prepared.transform,
-    )

@@ -72,9 +72,9 @@ selection = resolve_selection("x5", variant="11s")
 runner = build_runner(selection)
 image, labels = load_inputs(SAMPLE_DIR / "test_data/office_desk.jpg", SAMPLE_DIR / "test_data/classes.names")
 task = YOLOE(selection, Config(), runner=runner)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-result = task.post_process(raw, prepared.context)
+prepared = task.preprocess(image)
+raw = task.infer(prepared)
+result = task.postprocess(raw, prepared.context)
 print(result.boxes.shape, result.mask_layout)
 # task.predict(image) composes exactly the same three stages.
 ```
@@ -84,11 +84,13 @@ print(result.boxes.shape, result.mask_layout)
 <a id="stage-io"></a>
 ## 三阶段接口
 
-`YOLOE(selection, Config(), runner=...)` 构造任务，Config 冻结。pre_process 接受非空 uint8 BGR HWC；返回 `Prepared.tensors` 和本次 `context`。X5 发送一维 packed NV12，共 614400 字节；S 发送 Y `[1,640,640,1]`、UV `[1,320,320,2]`。11 使用截断尺寸/127 填充（拉伸使用最近邻），26 使用四舍五入尺寸/114 填充。
+`YOLOE(selection, Config(), runner=...)` 构造任务，Config 冻结。阶段统一命名为
+`preprocess` / `infer` / `postprocess`，既有 `pre_process` / `forward` / `post_process`
+为薄别名（每阶段只有一个实现）。preprocess 接受非空 uint8 BGR HWC；返回 `Prepared.tensors` 和本次 `context`。X5 发送一维 packed NV12，共 614400 字节；S 发送 Y `[1,640,640,1]`、UV `[1,320,320,2]`。11 使用截断尺寸/127 填充（拉伸使用最近邻），26 使用四舍五入尺寸/114 填充。
 
-forward 只调用一次 runner，保留 raw float32，不做激活或反量化；输出是借用的 `RawOutputs`，必须在下一次 SDK 调用前消费，或由调用者复制。每 stride 8/16/32 为 cls 4585、box 64（11）或 4（26）、mces 32，另有 NHWC `[1,160,160,32]` proto。实际输出按完整形状唯一绑定，不依赖名字/枚举顺序。
+infer 只调用一次 runner，保留 raw float32，不做激活或反量化；输出是借用的 `RawOutputs`，必须在下一次 SDK 调用前消费，或由调用者复制。每 stride 8/16/32 为 cls 4585、box 64（11）或 4（26）、mces 32，另有 NHWC `[1,160,160,32]` proto。实际输出按完整形状唯一绑定，不依赖名字/枚举顺序。
 
-post_process 必须收到匹配的 context。11 使用 DFL 与 NMS；X5 在低分辨率裁剪 mask 概率后两次线性插值，S 使用 ROI 二值掩码流程。26 在 640 尺寸插值 logits 后二值化，去 padding 并最近邻还原。框按实际整数 resize 的横纵比例还原，这修正了源代码理想缩放带来的取整误差。predict 只串联三阶段；不缓存上一张图，不承诺 SDK 并发安全。
+postprocess 必须收到匹配的 context。11 使用 DFL 与 NMS；X5 在低分辨率裁剪 mask 概率后两次线性插值，S 使用 ROI 二值掩码流程。26 在 640 尺寸插值 logits 后二值化，去 padding 并最近邻还原。框按实际整数 resize 的横纵比例还原，这修正了源代码理想缩放带来的取整误差。predict 只串联三阶段；不缓存上一张图，不承诺 SDK 并发安全。
 
 库 Config 的 do_morph 缺省 False，沿用 S11 库接口；CLI 在 S11 上缺省 True，沿用源命令行。调度使用 `runner.set_scheduling_params`。
 

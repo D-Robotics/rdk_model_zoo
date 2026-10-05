@@ -19,7 +19,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _normalise_grids,
     _semantic_outputs,
     _transform_for_postprocess,
-    _predict_task,
 )
 from samples.vision.ultralytics_yolo.runtime.python.obb_decode import decode_obb
 
@@ -104,8 +103,10 @@ class YOLO26OBB:
         self.input_shapes = dict(runner.input_shapes)
 
     # Borrow the readable DFL stage implementations (this class provides the
-    # same runner/binding attributes) plus their compatibility aliases; only
-    # the OBB post-processing below is protocol-specific.
+    # same runner/binding attributes, and image transport plus the raw model
+    # call are genuinely protocol-independent) together with their
+    # compatibility aliases; only the OBB post-processing below is
+    # protocol-specific.  The full orchestration stays visible in predict.
     preprocess = YoloDetect.preprocess
     infer = YoloDetect.infer
     pre_process = YoloDetect.pre_process
@@ -113,7 +114,7 @@ class YOLO26OBB:
     set_scheduling_params = YoloDetect.set_scheduling_params
     pre_process_with_transform = YoloDetect.pre_process_with_transform
 
-    def post_process(
+    def postprocess(
         self,
         outputs,
         ori_w=None,
@@ -140,8 +141,32 @@ class YOLO26OBB:
         )
 
     def predict(self, img, image_format="BGR", score_thres=None, nms_thres=None):
-        """Compose the common input/raw stages and return owned rotated records."""
-        return _predict_task(self, img, image_format, score_thres, nms_thres)
+        """Compose the three stages and return owned rotated records.
+
+        preprocess (shared image transport) → infer (one raw model call) →
+        postprocess (the OBB-specific rotated decode below).
+        """
+        prepared = self.preprocess(img, image_format)
+        outputs = self.infer(prepared)
+        return self.postprocess(
+            outputs,
+            score_thres=score_thres,
+            nms_thres=nms_thres,
+            transform=prepared.transform,
+        )
 
     def __call__(self, img, image_format="BGR", score_thres=None, nms_thres=None):
         return self.predict(img, image_format, score_thres, nms_thres)
+
+    def post_process(
+        self,
+        outputs,
+        ori_w=None,
+        ori_h=None,
+        score_thres=None,
+        nms_thres=None,
+        transform=None,
+    ):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(
+            outputs, ori_w, ori_h, score_thres, nms_thres, transform)

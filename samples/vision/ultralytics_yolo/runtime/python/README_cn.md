@@ -204,9 +204,10 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
 `YoloDetect`（`detect.py`）和 `YOLO26Detect` 直接串联三个阶段，不保存“上一张图片”的 context。
 准备 B 不会覆盖 A 的几何信息；分别保留 prepared，并使用其对应 transform。SDK 调用仍需
 由调用方串行安排；逐调用 context 不代表 SDK 推理线程安全。
-`YoloDetect` 的阶段命名为 `preprocess` / `infer` / `postprocess`，
-`pre_process` / `forward` / `post_process` 为薄别名；其他任务类沿用既有的
-`pre_process` / `forward` / `post_process` 命名，职责相同。
+所有任务类 —— 检测、分类、分割、姿态、OBB，DFL 与 YOLO26 两族 —— 的阶段
+统一命名为 `preprocess` / `infer` / `postprocess`，
+`pre_process` / `forward` / `post_process` 为薄别名（每个阶段只有一个实现，
+在各自任务模块内可见）。
 
 - `preprocess(图片或路径, image_format="BGR")`（别名 `pre_process`）要求非空 uint8 H×W×3 BGR 或可读的本地图片路径，返回 `PreparedDetection.tensors` 和冻结的 `.transform`。后者包含原图/模型/实际缩放尺寸、整数 padding 与横纵缩放比例。X5 张量为 packed NV12；S 为 Y `(1,H,W,1)` 和 UV `(1,H/2,W/2,2)`，H/W 来自模型 metadata。
 - `infer(prepared)`（别名 `forward`）只调用一次 runner，返回以角色名索引的 `RawOutputs`。绑定的 runner 校验物理 shape、dtype 和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK dtype，借用 SDK 缓冲区；须先完成后处理再发起下一次 SDK 调用，或主动复制需要长期保留的原始数组。
@@ -259,9 +260,9 @@ segmenter = YoloSeg(YoloSegConfig(
     platform=resolve_platform("s100"),
     nms_thres=0.45,
 ))
-prepared = segmenter.pre_process(image)
-raw = segmenter.forward(prepared.tensors)
-boxes, scores, ids, masks = segmenter.post_process(raw, transform=prepared.transform)
+prepared = segmenter.preprocess(image)
+raw = segmenter.infer(prepared)
+boxes, scores, ids, masks = segmenter.postprocess(raw, transform=prepared.transform)
 expected = segmenter.predict(image)
 for staged, predicted in zip((boxes, scores, ids), expected[:3]):
     np.testing.assert_allclose(staged, predicted)
@@ -273,8 +274,9 @@ print(boxes.shape, scores.shape, ids.shape, [mask.shape for mask in masks])
 
 三个方法与检测共用显式 `PreparedDetection`/`RawOutputs` 传输接口，
 `YoloSeg(config, runner=...)` 支持注入 runner。工厂读取实际输入/输出 metadata，
-在加载真实 SDK 前核对目标身份；推理不下载模型。`pre_process` 接收非空 BGR
-uint8 H×W×3；`post_process` 接收 `prepared.transform`，也兼容旧的
+在加载真实 SDK 前核对目标身份；推理不下载模型。`preprocess`（别名 `pre_process`）
+接收非空 BGR
+uint8 H×W×3；`postprocess`（别名 `post_process`）接收 `prepared.transform`，也兼容旧的
 `(原宽, 原高)` 参数。缺失或冲突的几何会报错，不保存上一张图片的状态。
 
 有限输出协议为 stride 8/16/32 的 NHWC 类别 logits `(1,H/s,W/s,C)`、DFL 框
@@ -321,9 +323,9 @@ pose = YoloPose(YoloPoseConfig(
     model_path="/models/yolo11n_pose_nashe_640x640_nv12.hbm",
     platform=resolve_platform("s100"),
 ))
-prepared = pose.pre_process(image)
-raw = pose.forward(prepared.tensors)
-result = pose.post_process(raw, transform=prepared.transform)
+prepared = pose.preprocess(image)
+raw = pose.infer(prepared)
+result = pose.postprocess(raw, transform=prepared.transform)
 for staged, predicted in zip(result, pose.predict(image)):
     np.testing.assert_allclose(staged, predicted)
 boxes, scores, class_ids, keypoints_xy, visibility = result
@@ -332,7 +334,8 @@ print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
 ```
 
 `YoloPose(config, runner=...)` 可注入运行器。输入、raw 缓冲区寿命和逐图 transform
-约定与检测一致；`post_process(raw, 原宽, 原高)` 仍兼容，缺失或冲突的几何会报错。
+约定与检测一致；`post_process(raw, 原宽, 原高)`（`postprocess` 的别名）仍兼容，
+缺失或冲突的几何会报错。
 9 个模型输出为 stride 8/16/32 的 NHWC `(1,H/s,W/s,1)` 类别 logits、
 `(1,H/s,W/s,64)` DFL 框与 `(1,H/s,W/s,51)` 关键点（17 组 x/y/logit）。
 要求方形输入、16 个 DFL bin、17 个 COCO 点，以及模型直接提供的有限浮点张量；
@@ -374,21 +377,22 @@ classifier = YoloCls(YoloClsConfig(
     resize_type=0,
     topk=5,
 ))
-inputs = classifier.pre_process(image)
-raw = classifier.forward(inputs)
-ranked = classifier.post_process(raw)
+inputs = classifier.preprocess(image)
+raw = classifier.infer(inputs)
+ranked = classifier.postprocess(raw)
 assert ranked == classifier.predict(image)
 print(ranked)
 ```
 
-`pre_process` 返回嵌套 NV12 输入字典，分类无需携带几何还原信息。`forward` 只调用
+`preprocess`（别名 `pre_process`）返回嵌套 NV12 输入字典，分类无需携带几何还原
+信息。`infer`（别名 `forward`）只调用
 共用 runner 一次，`raw["logits"]` 保留物理浮点数组及 SDK 缓冲区引用。下一次推理前
 完成后处理，或显式复制需要保存的 raw 数组。必须恰好有一个输出：1000 类向量及可选
 单例维度，例如 `(1,1000)`、`(1,1000,1,1)`；多维输出的首维 batch 必须为 1。
 额外输出、空间特征图、批输入、缺失
 shape/dtype metadata、整数输出和 SCALE 描述均拒绝。这项更严格的 SDK 边界尚未板测。
 
-`post_process` 执行一次 SciPy Softmax 和源代码的 NumPy 降序排序，返回独立的
+`postprocess`（别名 `post_process`）执行一次 SciPy Softmax 和源代码的 NumPy 降序排序，返回独立的
 Python `(int 类别 ID, float 概率)` 列表。精确平局沿用原排序行为，不新增确定性规则。
 Top-K 必须是正整数（不能是布尔值），超过类别数则返回全部类别。零、负数和非整数
 现在明确报错，不再接受 Python 切片的隐含行为。阶段内部不加载标签、不绘图、不写文件；
@@ -426,9 +430,9 @@ detector = YoloV10Detect(YoloV10DetectConfig(
     platform=resolve_platform("s600"),
     score_thres=0.25,
 ))
-prepared = detector.pre_process(image)
-raw = detector.forward(prepared.tensors)
-result = detector.post_process(raw, transform=prepared.transform)
+prepared = detector.preprocess(image)
+raw = detector.infer(prepared)
+result = detector.postprocess(raw, transform=prepared.transform)
 for staged, predicted in zip(result, detector.predict(image)):
     np.testing.assert_allclose(staged, predicted)
 print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
@@ -437,7 +441,8 @@ print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
 六个物理浮点 NHWC 输出按形状绑定为 stride 8/16/32 的分类及 16-bin DFL 框角色，
 不按 SDK 枚举顺序猜测含义。模型输入必须为正方形。raw 缓冲区生命周期、显式逐图
 transform、拥有独立存储的 `(boxes, scores, class_ids)` 结果与共用检测接口一致。
-`post_process(raw, 原图宽, 原图高)` 仍可用；`pre_process` 现在返回兼容映射访问的
+`pre_process` / `forward` / `post_process` 别名仍可用；
+`post_process(raw, 原图宽, 原图高)` 显式重建几何，`pre_process` 返回兼容映射访问的
 `PreparedDetection` 对象。
 
 所有达到置信度阈值的 anchor 都保留，包括重叠框。输出按 stride、再按网格遍历顺序
@@ -478,9 +483,9 @@ pose = YOLO26Pose(YOLO26PoseConfig(
     platform=resolve_platform("s600"),
     nms_thres=0.45,
 ))
-prepared = pose.pre_process(image)
-raw = pose.forward(prepared.tensors)
-result = pose.post_process(raw, transform=prepared.transform)
+prepared = pose.preprocess(image)
+raw = pose.infer(prepared)
+result = pose.postprocess(raw, transform=prepared.transform)
 for staged, predicted in zip(result, pose.predict(image)):
     np.testing.assert_allclose(staged, predicted)
 boxes, scores, class_ids, keypoint_xy, visibility = result
@@ -490,7 +495,8 @@ print(boxes.shape, keypoint_xy.shape, visibility.shape)
 输入须为非空 BGR uint8 H×W×3。输出须为已反量化的浮点 NHWC，具有完整 shape/dtype
 metadata 且不带 SCALE 量化描述。整数、非有限值、DFL 绑定或角色歧义会明确拒绝。
 raw 引用 SDK 缓冲区，下一次推理前完成后处理，或复制要保留的 raw 数组。
-`pre_process` 返回兼容映射访问的 `PreparedDetection`；后处理仍可显式传原图宽高，
+`preprocess` 返回兼容映射访问的 `PreparedDetection`；`pre_process`/`forward`/
+`post_process` 别名及后处理显式传原图宽高仍可用，
 不依赖最近一次图片的缓存状态。
 
 五个返回值的形状/类型/存储所有权与 DFL 姿态相同：float32 `(N,4)` 框、float32
@@ -533,9 +539,9 @@ segmenter = YOLO26Seg(YOLO26SegConfig(
     platform=resolve_platform("s600"),
     nms_thres=0.45,
 ))
-prepared = segmenter.pre_process(image)
-raw = segmenter.forward(prepared.tensors)
-result = segmenter.post_process(raw, transform=prepared.transform)
+prepared = segmenter.preprocess(image)
+raw = segmenter.infer(prepared)
+result = segmenter.postprocess(raw, transform=prepared.transform)
 predicted = segmenter.predict(image)
 for staged, repeated in zip(result[:3], predicted[:3]):
     np.testing.assert_allclose(staged, repeated)
@@ -588,9 +594,9 @@ obb = YOLO26OBB(YOLO26OBBConfig(
     model_path="/models/yolo26n_obb_nashp_640x640_nv12.hbm",
     platform="s600",
 ))
-prepared = obb.pre_process(image)
-raw = obb.forward(prepared.tensors)
-records = obb.post_process(raw, transform=prepared.transform)
+prepared = obb.preprocess(image)
+raw = obb.infer(prepared)
+records = obb.postprocess(raw, transform=prepared.transform)
 predicted = obb.predict(image)
 assert len(records) == len(predicted)
 for staged, repeated in zip(records, predicted):
@@ -602,9 +608,11 @@ for record in records:
     print(record["id"], record["score"], record["rrect"])
 ```
 
-`pre_process` 返回输入张量及当前图片实际的整数缩放、填充信息。`forward`
+该类复用可读检测器的图像传输与原始 runner 调用（`preprocess`/`infer`，也可通过
+`pre_process`/`forward` 别名访问），自身提供旋转框解码：
+`preprocess` 返回输入张量及当前图片实际的整数缩放、填充信息。`infer`
 复用共用 runner，原样返回借用的 SDK 缓冲区，不解码、不反量化；下一次推理前
-完成后处理，或先复制原始输出。`post_process` 返回独立拥有数据的记录列表：
+完成后处理，或先复制原始输出。`postprocess`（别名 `post_process`）返回独立拥有数据的记录列表：
 `rrect=(cx,cy,width,height,angle_radians)`、浮点 `score`、整数 `id`。
 无检测时返回 `[]`。交错处理图片时，必须将各自 transform 与输出配对，不能依赖
 隐式的“上一次图片”状态。

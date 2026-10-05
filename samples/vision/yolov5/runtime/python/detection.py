@@ -40,16 +40,16 @@ class YOLOv5Task:
         if anchors.size!=18 or not np.isfinite(anchors).all() or np.any(anchors<=0):raise ValueError('anchors must contain 18 finite positive numbers.')
         self.anchors=np.frombuffer(anchors.tobytes(),dtype=np.float32).reshape(3,3,2)
 
-    def pre_process(self,image,*,resize_type=None):
+    def preprocess(self,image,*,resize_type=None):
         """Return owned packed/split uint8 inputs + frozen context for HWC U8 BGR."""
         return prepare_image(image,self.binding,resize_type)
 
-    def forward(self,tensors):
+    def infer(self,tensors):
         """Return metadata-validated native output arrays without numeric changes."""
         inputs=validate_tensors(self.binding,tensors)
         return validate_tensors(self.binding,self.runner(inputs),outputs=True)
 
-    def post_process(self,outputs,context,*,score_thres=None,nms_thres=None):
+    def postprocess(self,outputs,context,*,score_thres=None,nms_thres=None):
         """Decode bound native heads using matching per-call geometry.
 
         X5 raw F32 and S declared dequant are followed by source sigmoid anchor
@@ -74,6 +74,18 @@ class YOLOv5Task:
 
     def predict(self,image,*,resize_type=None,score_thres=None,nms_thres=None):
         """Compose the same three public stages; explicit zero thresholds are valid."""
-        prepared=self.pre_process(image,resize_type=resize_type)
-        outputs=self.forward(prepared.tensors)
-        return self.post_process(outputs,prepared.context,score_thres=score_thres,nms_thres=nms_thres)
+        prepared=self.preprocess(image,resize_type=resize_type)
+        outputs=self.infer(prepared.tensors)
+        return self.postprocess(outputs,prepared.context,score_thres=score_thres,nms_thres=nms_thres)
+
+    def pre_process(self,image,*,resize_type=None):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image,resize_type=resize_type)
+
+    def forward(self,tensors):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self,outputs,context,*,score_thres=None,nms_thres=None):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs,context,score_thres=score_thres,nms_thres=nms_thres)

@@ -47,7 +47,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _forward_runner,
     _normalise_grids,
     _prepare_image,
-    _predict_task,
     _semantic_outputs,
     _set_scheduling_params,
     _size_from_runner,
@@ -202,24 +201,24 @@ class YOLO26Detect:
 
     pre_process_with_transform = pre_process_with_transform
 
-    def pre_process(self, img: np.ndarray, image_format: str = "BGR") -> PreparedDetection:
+    def preprocess(self, img: np.ndarray, image_format: str = "BGR") -> PreparedDetection:
         """Validate BGR uint8 HxWx3 and return NV12 tensors plus frozen geometry."""
         tensors, transform = _prepare_image(
             self.runner, self.input_adapter, self.input_size,
             self.cfg.resize_type, img, image_format)
         return PreparedDetection(tensors, transform)
 
-    def forward(self, input_tensor: Mapping[str, Any]):
+    def infer(self, input_tensor: Mapping[str, Any]):
         """Call the injected or factory-created runner exactly once."""
         return _forward_runner(self.runner, input_tensor)
 
-    def post_process(self,
-                     outputs: Any,
-                     ori_img_w: Optional[int] = None,
-                     ori_img_h: Optional[int] = None,
-                     score_thres: Optional[float] = None,
-                     nms_thres: Optional[float] = None,
-                     transform: Optional[ImageTransform] = None) -> DetectionResult:
+    def postprocess(self,
+                    outputs: Any,
+                    ori_img_w: Optional[int] = None,
+                    ori_img_h: Optional[int] = None,
+                    score_thres: Optional[float] = None,
+                    nms_thres: Optional[float] = None,
+                    transform: Optional[ImageTransform] = None) -> DetectionResult:
         """Decode direct LTRB outputs into owned DetectionResult arrays.
 
         Supply the matching PreparedDetection.transform, or explicit original
@@ -257,7 +256,14 @@ class YOLO26Detect:
                 score_thres: Optional[float] = None,
                 nms_thres: Optional[float] = None) -> DetectionResult:
         """Run preprocessing, one model call and direct-offset postprocessing."""
-        return _predict_task(self, img, image_format, score_thres, nms_thres)
+        prepared = self.preprocess(img, image_format)
+        outputs = self.infer(prepared)
+        return self.postprocess(
+            outputs,
+            score_thres=score_thres,
+            nms_thres=nms_thres,
+            transform=prepared.transform,
+        )
 
     def __call__(self,
                  img: np.ndarray,
@@ -266,6 +272,30 @@ class YOLO26Detect:
                  nms_thres: Optional[float] = None) -> DetectionResult:
         """Tuple-compatible alias for :meth:`predict`."""
         return self.predict(img, image_format, score_thres, nms_thres)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin
+    # aliases of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, img: np.ndarray, image_format: str = "BGR") -> PreparedDetection:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(img, image_format)
+
+    def forward(self, input_tensor: Mapping[str, Any]):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(input_tensor)
+
+    def post_process(self,
+                     outputs: Any,
+                     ori_img_w: Optional[int] = None,
+                     ori_img_h: Optional[int] = None,
+                     score_thres: Optional[float] = None,
+                     nms_thres: Optional[float] = None,
+                     transform: Optional[ImageTransform] = None) -> DetectionResult:
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(
+            outputs, ori_img_w, ori_img_h, score_thres, nms_thres, transform)
 
 
 __all__ = ["YOLO26DetectConfig", "YOLO26Detect"]

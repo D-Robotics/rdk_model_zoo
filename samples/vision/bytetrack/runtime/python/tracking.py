@@ -54,9 +54,12 @@ def _create_tracker(config):
 class ByteTrackTask:
     """One ordered frame stream. Stateless detector stages + one tracking update.
 
-    pre_process and forward do not advance tracking. post_process decodes,
+    preprocess and infer do not advance tracking. postprocess decodes,
     keeps only COCO person (class 0), then updates the CPU tracker once, including
     on empty detections. predict composes exactly those three operations.
+    The detector stages are reached through their established public names
+    (``pre_process``/``forward``/``post_process``), which every detector
+    implementation keeps as aliases of the readable stages.
     Not thread safe; do not share a task across independent videos. reset clears
     history/frame index but does not reset the process-global ID counter. After
     a backend update exception, reset before reusing the stream.
@@ -74,15 +77,15 @@ class ByteTrackTask:
         """Discard stream history, preserve detector/parameters, keep IDs monotonic."""
         self.tracker=self._tracker_factory(self.config)
 
-    def pre_process(self,image):
+    def preprocess(self,image):
         """Prepare one HWC U8 BGR frame and immutable detector geometry context."""
         return self.detector.pre_process(image)
 
-    def forward(self,tensors):
+    def infer(self,tensors):
         """Delegate native tensor inference only; no tracking/state transition."""
         return self.detector.forward(tensors)
 
-    def post_process(self,outputs,context):
+    def postprocess(self,outputs,context):
         """Decode detections, update tracker once, return tuple of owned Track snapshots."""
         detections=self.detector.post_process(outputs,context)
         # Clipping a detection wholly in letterbox padding can leave zero area.
@@ -96,6 +99,18 @@ class ByteTrackTask:
 
     def predict(self,image):
         """Process one ordered frame through the three public stages exactly once."""
-        prepared=self.pre_process(image)
-        raw=self.forward(prepared.tensors)
-        return self.post_process(raw,prepared.context)
+        prepared=self.preprocess(image)
+        raw=self.infer(prepared.tensors)
+        return self.postprocess(raw,prepared.context)
+
+    def pre_process(self,image):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image)
+
+    def forward(self,tensors):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self,outputs,context):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs,context)

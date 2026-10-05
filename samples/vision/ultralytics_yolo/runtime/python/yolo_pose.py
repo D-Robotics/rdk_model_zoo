@@ -31,7 +31,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _set_scheduling_params,
     _size_from_runner,
     _normalise_grids,
-    _predict_task,
 )
 from samples.vision.ultralytics_yolo.runtime.python.legacy import (
     pre_process_with_transform,
@@ -123,7 +122,7 @@ class YoloPose:
 
     pre_process_with_transform = pre_process_with_transform
 
-    def pre_process(self, img, image_format="BGR") -> PreparedDetection:
+    def preprocess(self, img, image_format="BGR") -> PreparedDetection:
         """Validate BGR uint8 HxWx3 and prepare NV12 with immutable geometry."""
         tensors, transform = _prepare_image(
             self.runner,
@@ -135,11 +134,11 @@ class YoloPose:
         )
         return PreparedDetection(tensors, transform)
 
-    def forward(self, input_tensor):
+    def infer(self, input_tensor):
         """Execute the runner once without changing raw output values or layout."""
         return _forward_runner(self.runner, input_tensor)
 
-    def post_process(
+    def postprocess(
         self,
         outputs,
         ori_img_w=None,
@@ -170,8 +169,41 @@ class YoloPose:
         )
 
     def predict(self, img, image_format="BGR", score_thres=None, nms_thres=None):
-        """Compose all three stages; keep the same explicit visibility domain."""
-        return _predict_task(self, img, image_format, score_thres, nms_thres)
+        """Compose all three public stages; keep the same visibility domain."""
+        prepared = self.preprocess(img, image_format)
+        outputs = self.infer(prepared)
+        return self.postprocess(
+            outputs,
+            score_thres=score_thres,
+            nms_thres=nms_thres,
+            transform=prepared.transform,
+        )
 
     def __call__(self, img, image_format="BGR", score_thres=None, nms_thres=None):
         return self.predict(img, image_format, score_thres, nms_thres)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin
+    # aliases of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, img, image_format="BGR") -> PreparedDetection:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(img, image_format)
+
+    def forward(self, input_tensor):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(input_tensor)
+
+    def post_process(
+        self,
+        outputs,
+        ori_img_w=None,
+        ori_img_h=None,
+        score_thres=None,
+        nms_thres=None,
+        transform=None,
+    ):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(
+            outputs, ori_img_w, ori_img_h, score_thres, nms_thres, transform)

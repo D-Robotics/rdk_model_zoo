@@ -72,9 +72,9 @@ selection = resolve_selection("x5", variant="11s")
 runner = build_runner(selection)
 image, labels = load_inputs(SAMPLE_DIR / "test_data/office_desk.jpg", SAMPLE_DIR / "test_data/classes.names")
 task = YOLOE(selection, Config(), runner=runner)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-result = task.post_process(raw, prepared.context)
+prepared = task.preprocess(image)
+raw = task.infer(prepared)
+result = task.postprocess(raw, prepared.context)
 print(result.boxes.shape, result.mask_layout)
 # task.predict(image) composes exactly the same three stages.
 ```
@@ -84,11 +84,11 @@ Configuration and validation live in `config.py`, shared with the native launche
 <a id="stage-io"></a>
 ## Three-Stage I/O
 
-`YOLOE(selection, Config(), runner=...)` constructs the task; Config is frozen. pre_process accepts nonempty uint8 BGR HWC and returns `Prepared.tensors` plus this image’s `context`. X5 sends 614400 packed NV12 bytes as a 1D array. S sends Y `[1,640,640,1]` and UV `[1,320,320,2]`. Version 11 truncates resize dimensions and pads 127 (stretch uses nearest); 26 rounds dimensions and pads 114.
+`YOLOE(selection, Config(), runner=...)` constructs the task; Config is frozen. The stages are spelled `preprocess` / `infer` / `postprocess`, with the established `pre_process` / `forward` / `post_process` names as thin aliases (one implementation per stage). preprocess accepts nonempty uint8 BGR HWC and returns `Prepared.tensors` plus this image’s `context`. X5 sends 614400 packed NV12 bytes as a 1D array. S sends Y `[1,640,640,1]` and UV `[1,320,320,2]`. Version 11 truncates resize dimensions and pads 127 (stretch uses nearest); 26 rounds dimensions and pads 114.
 
-forward calls the runner once, preserving raw float32 without activation/dequantization. `RawOutputs` borrows SDK arrays: consume before the next call, or copy explicitly. Each stride 8/16/32 provides cls 4585, box 64 (11) or 4 (26), and mces 32 channels, plus NHWC `[1,160,160,32]` proto. Complete shapes uniquely bind actual outputs; names/enumeration order are not assumptions.
+infer calls the runner once, preserving raw float32 without activation/dequantization. `RawOutputs` borrows SDK arrays: consume before the next call, or copy explicitly. Each stride 8/16/32 provides cls 4585, box 64 (11) or 4 (26), and mces 32 channels, plus NHWC `[1,160,160,32]` proto. Complete shapes uniquely bind actual outputs; names/enumeration order are not assumptions.
 
-post_process requires matching context. Version 11 uses DFL and NMS: X5 crops low-resolution mask probabilities before two linear resizes; S uses binary ROI masks. Version 26 interpolates logits at 640 before binarization, unpadding and nearest restoration. Boxes use actual per-axis integer resize scales, correcting source ideal-gain rounding error. predict only composes stages, with no last-image state or SDK thread-safety promise.
+postprocess requires matching context. Version 11 uses DFL and NMS: X5 crops low-resolution mask probabilities before two linear resizes; S uses binary ROI masks. Version 26 interpolates logits at 640 before binarization, unpadding and nearest restoration. Boxes use actual per-axis integer resize scales, correcting source ideal-gain rounding error. predict only composes stages, with no last-image state or SDK thread-safety promise.
 
 Library Config defaults do_morph=False, preserving S11 library behavior; the CLI defaults to True for S11, preserving the source CLI. Scheduling is exposed through `runner.set_scheduling_params`.
 

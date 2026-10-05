@@ -86,7 +86,7 @@ class YoloCls:
             self.runner, self.model, self.model_name, priority, bpu_cores
         )
 
-    def pre_process(self, img, image_format="BGR"):
+    def preprocess(self, img, image_format="BGR"):
         """Validate BGR uint8 HxWx3 and return the bound nested NV12 input map."""
         tensors, _ = _prepare_image(
             self.runner,
@@ -98,20 +98,37 @@ class YoloCls:
         )
         return tensors
 
-    def forward(self, input_tensor):
+    def infer(self, input_tensor):
         """Execute once; return the borrowed physical floating logits unchanged."""
         return _forward_runner(self.runner, input_tensor)
 
-    def post_process(self, outputs, topk=None):
+    def postprocess(self, outputs, topk=None):
         """Validate the raw output and return independent (class ID, probability) pairs."""
         logits = self.binding.read_raw_outputs(outputs)["logits"]
         return classification_topk(logits, self.cfg.topk if topk is None else topk)
 
     def predict(self, img, image_format="BGR", topk=None):
-        """Compose the three stages for one image."""
-        return self.post_process(
-            self.forward(self.pre_process(img, image_format)), topk
-        )
+        """Compose the three public stages for one image."""
+        prepared = self.preprocess(img, image_format)
+        outputs = self.infer(prepared)
+        return self.postprocess(outputs, topk)
 
     def __call__(self, img, image_format="BGR", topk=None):
         return self.predict(img, image_format, topk)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin
+    # aliases of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, img, image_format="BGR"):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(img, image_format)
+
+    def forward(self, input_tensor):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(input_tensor)
+
+    def post_process(self, outputs, topk=None):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs, topk)

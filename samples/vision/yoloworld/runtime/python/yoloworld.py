@@ -69,7 +69,7 @@ class YOLOWorldTask:
             ids = ids + (ids[-1],)
         return values, ids, np.asarray(rows, dtype=np.float32).reshape(1, 32, 512, 1)
 
-    def pre_process(self, image: np.ndarray, prompts: Sequence[str]) -> PreparedInput:
+    def preprocess(self, image: np.ndarray, prompts: Sequence[str]) -> PreparedInput:
         if not isinstance(image, np.ndarray) or image.ndim != 3 or image.shape[2] != 3 or image.shape[0] <= 0 or image.shape[1] <= 0:
             raise ValueError("image must be a nonempty HxWx3 BGR array")
         if image.dtype not in (np.uint8, np.float32):
@@ -88,7 +88,7 @@ class YOLOWorldTask:
         return PreparedInput(MappingProxyType({self.binding.image_input_name: rgb,
                                                  self.binding.text_input_name: text}), context)
 
-    def forward(self, prepared: PreparedInput | Mapping[str, np.ndarray]):
+    def infer(self, prepared: PreparedInput | Mapping[str, np.ndarray]):
         tensors = prepared.tensors if isinstance(prepared, PreparedInput) else prepared
         return self.runner(tensors)
 
@@ -111,7 +111,7 @@ class YOLOWorldTask:
                 order = rest[iou < threshold]
         return keep
 
-    def post_process(self, outputs: Mapping[str, np.ndarray], context: DetectionContext) -> DetectionResult:
+    def postprocess(self, outputs: Mapping[str, np.ndarray], context: DetectionContext) -> DetectionResult:
         score_raw = np.asarray(outputs[self.binding.score_output_name]); box_raw = np.asarray(outputs[self.binding.box_output_name])
         if score_raw.shape not in ((1, 8400, 32), (1, 8400, 32, 1)) or box_raw.shape not in ((1, 8400, 4), (1, 8400, 4, 1)) or score_raw.dtype != np.float32 or box_raw.dtype != np.float32:
             raise ValueError("Raw outputs must preserve native F32 logical score/box shapes.")
@@ -132,5 +132,17 @@ class YOLOWorldTask:
         return DetectionResult(boxes, scores, ids, context.prompts)
 
     def predict(self, image: np.ndarray, prompts: Sequence[str]) -> DetectionResult:
-        prepared = self.pre_process(image, prompts)
-        return self.post_process(self.forward(prepared), prepared.context)
+        prepared = self.preprocess(image, prompts)
+        return self.postprocess(self.infer(prepared), prepared.context)
+
+    def pre_process(self, image: np.ndarray, prompts: Sequence[str]) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image, prompts)
+
+    def forward(self, prepared: PreparedInput | Mapping[str, np.ndarray]):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(prepared)
+
+    def post_process(self, outputs: Mapping[str, np.ndarray], context: DetectionContext) -> DetectionResult:
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs, context)

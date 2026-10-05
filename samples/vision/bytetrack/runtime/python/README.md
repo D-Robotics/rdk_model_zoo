@@ -49,7 +49,7 @@ Success writes a nonempty output video, prints `Saved <N> tracked frames ...`, a
 <a id="results"></a>
 ## Results
 
-The CLI writes an MP4 annotated with person tracks and optional JSONL rows `{frame, tracks:[{track_id, tlbr, score, frame_id}]}`. `ByteTrackTask.post_process` filters class `0`, removes non-positive-width/height boxes before tracker update, and returns owned immutable `Track` snapshots. Empty detections still call `tracker.update` and advance frame state. IDs are process-global and monotonic; a fresh process starts its own counter.
+The CLI writes an MP4 annotated with person tracks and optional JSONL rows `{frame, tracks:[{track_id, tlbr, score, frame_id}]}`. `ByteTrackTask.postprocess` (alias `post_process`) filters class `0`, removes non-positive-width/height boxes before tracker update, and returns owned immutable `Track` snapshots. Empty detections still call `tracker.update` and advance frame state. IDs are process-global and monotonic; a fresh process starts its own counter.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -78,9 +78,9 @@ frame_path = Path("samples/vision/bytetrack/test_data/bus.jpg")
 frame = cv2.imread(str(frame_path), cv2.IMREAD_COLOR)
 if frame is None:
     raise FileNotFoundError(frame_path)
-prepared = task.pre_process(frame)
-native_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(native_outputs, prepared.context)
+prepared = task.preprocess(frame)
+native_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(native_outputs, prepared.context)
 composed_result = task.predict(frame)
 assert isinstance(explicit_result, tuple) and isinstance(composed_result, tuple)
 print(explicit_result, composed_result)
@@ -91,9 +91,9 @@ print(explicit_result, composed_result)
 <a id="stage-io"></a>
 ## Stage I/O
 
-- `pre_process(frame)` delegates the detector and returns its tensors plus immutable geometry context.
-- `forward(tensors)` delegates native detector inference and does not update tracker state.
-- `post_process(outputs, context)` decodes the detector, filters person class, removes invalid clipped boxes, updates tracker once, and returns `tuple[Track,...]`.
+- `preprocess(frame)` (alias `pre_process`) delegates the detector and returns its tensors plus immutable geometry context.
+- `infer(tensors)` (alias `forward`) delegates native detector inference and does not update tracker state.
+- `postprocess(outputs, context)` (alias `post_process`) decodes the detector, filters person class, removes invalid clipped boxes, updates tracker once, and returns `tuple[Track,...]`.
 - `predict(frame)` composes one ordered frame. `reset()` creates a fresh stream with `frame_index == 0` while preserving the process-global ID counter.
 
 <a id="troubleshooting"></a>

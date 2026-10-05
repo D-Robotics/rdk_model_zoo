@@ -30,22 +30,39 @@ class YOLOE:
             raise ValueError("Injected runner does not match the YOLOE selection.")
         self.contract = self.binding.contract
 
-    def pre_process(self, image):
+    def preprocess(self, image):
         """BGR uint8 HWC -> NV12 tensors plus immutable per-image context."""
         return prepare(image, self.selection, self.cfg, self.runner)
 
-    def forward(self, prepared):
+    def infer(self, prepared):
         """Exactly one runner call; return borrowed raw floating arrays unchanged."""
         return self.runner(
             prepared.tensors if isinstance(prepared, Prepared) else prepared
         )
 
-    def post_process(self, outputs, context):
+    def postprocess(self, outputs, context):
         """Raw outputs plus matching context -> owned original-coordinate results."""
         semantic = _semantic_outputs(self.binding, self.contract, outputs, "YOLOE PF")
         return decode_result(semantic, self.contract, self.selection, self.cfg, context)
 
     def predict(self, image):
         """Compose the public stages, carrying this image's context explicitly."""
-        prepared = self.pre_process(image)
-        return self.post_process(self.forward(prepared), prepared.context)
+        prepared = self.preprocess(image)
+        return self.postprocess(self.infer(prepared), prepared.context)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin
+    # aliases of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image)
+
+    def forward(self, prepared):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(prepared)
+
+    def post_process(self, outputs, context):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs, context)

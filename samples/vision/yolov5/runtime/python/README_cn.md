@@ -54,7 +54,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 <a id="results"></a>
 ## 结果
 
-CLI 打印 `boxes`、`scores`、`class_ids`，并保存到 `--img-save-path`。`YOLOv5Task.forward` 原样返回 native 输出，不做反量化或 reshape；`post_process` 在需要时按 S metadata 反量化，然后完成 sigmoid/anchor 解码、阈值和 NMS、几何逆变换。X5 刻意保留源把 XYXY 传给 OpenCV `NMSBoxes`（其 Rect 解释为 XYWH）的历史 quirk；S 使用按类 XYXY NMS，这是目标协议差异。
+CLI 打印 `boxes`、`scores`、`class_ids`，并保存到 `--img-save-path`。`YOLOv5Task.infer`（别名 `forward`）原样返回 native 输出，不做反量化或 reshape；`postprocess`（别名 `post_process`）在需要时按 S metadata 反量化，然后完成 sigmoid/anchor 解码、阈值和 NMS、几何逆变换。X5 刻意保留源把 XYXY 传给 OpenCV `NMSBoxes`（其 Rect 解释为 XYWH）的历史 quirk；S 使用按类 XYXY NMS，这是目标协议差异。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -82,9 +82,9 @@ runner = RuntimeModelRunner(selection)
 binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = YOLOv5Task(runner, binding, score_thres=0.25, nms_thres=0.45)
-prepared = task.pre_process(image)
-native_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(native_outputs, prepared.context)
+prepared = task.preprocess(image)
+native_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(native_outputs, prepared.context)
 composed_result = task.predict(image)
 for key in ("boxes", "scores", "class_ids"):
     assert np.array_equal(getattr(explicit_result, key), getattr(composed_result, key))
@@ -94,9 +94,9 @@ print(explicit_result.boxes, explicit_result.scores, explicit_result.class_ids)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `pre_process(image, resize_type=None)` 接受 HWC uint8 BGR，返回 `PreparedInput(tensors, context)`；转换为目标 NV12，并把原图高宽和 resize 模式放入不可变 context。
-- `forward(tensors)` 校验名称、shape、dtype 和有限值，返回 native 输出，不解码、反量化、reshape 或修改。
-- `post_process(outputs, context, score_thres=None, nms_thres=None)` 消费匹配 context，返回自有内存的 `DetectionResult(boxes, scores, class_ids)`。
+- `preprocess(image, resize_type=None)`（别名 `pre_process`）接受 HWC uint8 BGR，返回 `PreparedInput(tensors, context)`；转换为目标 NV12，并把原图高宽和 resize 模式放入不可变 context。
+- `infer(tensors)`（别名 `forward`）校验名称、shape、dtype 和有限值，返回 native 输出，不解码、反量化、reshape 或修改。
+- `postprocess(outputs, context, score_thres=None, nms_thres=None)`（别名 `post_process`）消费匹配 context，返回自有内存的 `DetectionResult(boxes, scores, class_ids)`。
 - `predict` 串联同样的阶段；context 按调用隔离，显式 0 阈值不会被替换。
 
 <a id="troubleshooting"></a>

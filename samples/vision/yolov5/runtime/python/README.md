@@ -54,7 +54,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 <a id="results"></a>
 ## Results
 
-The CLI prints `boxes`, `scores`, and `class_ids`, then saves the image path given by `--img-save-path`. `YOLOv5Task.forward` returns native output arrays without dequantization or reshaping; `post_process` applies S metadata dequantization when required, sigmoid/anchor decoding, thresholding, NMS, and inverse geometry. X5 intentionally preserves the source quirk of passing XYXY boxes to OpenCV `NMSBoxes` (which treats the list as XYWH); S uses class-wise XYXY NMS. This visible difference is part of the target protocol.
+The CLI prints `boxes`, `scores`, and `class_ids`, then saves the image path given by `--img-save-path`. `YOLOv5Task.infer` (alias `forward`) returns native output arrays without dequantization or reshaping; `postprocess` (alias `post_process`) applies S metadata dequantization when required, sigmoid/anchor decoding, thresholding, NMS, and inverse geometry. X5 intentionally preserves the source quirk of passing XYXY boxes to OpenCV `NMSBoxes` (which treats the list as XYWH); S uses class-wise XYXY NMS. This visible difference is part of the target protocol.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -82,9 +82,9 @@ runner = RuntimeModelRunner(selection)
 binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = YOLOv5Task(runner, binding, score_thres=0.25, nms_thres=0.45)
-prepared = task.pre_process(image)
-native_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(native_outputs, prepared.context)
+prepared = task.preprocess(image)
+native_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(native_outputs, prepared.context)
 composed_result = task.predict(image)
 for key in ("boxes", "scores", "class_ids"):
     assert np.array_equal(getattr(explicit_result, key), getattr(composed_result, key))
@@ -94,9 +94,9 @@ print(explicit_result.boxes, explicit_result.scores, explicit_result.class_ids)
 <a id="stage-io"></a>
 ## Stage I/O
 
-- `pre_process(image, resize_type=None)` accepts HWC uint8 BGR and returns `PreparedInput(tensors, context)`. It converts to target NV12 and stores original H/W and resize mode in immutable context.
-- `forward(tensors)` validates names, shape, dtype, and finiteness, then returns native output arrays. It does not decode, dequantize, reshape, or mutate them.
-- `post_process(outputs, context, score_thres=None, nms_thres=None)` consumes the matching context and returns owned `DetectionResult(boxes, scores, class_ids)`.
+- `preprocess(image, resize_type=None)` (alias `pre_process`) accepts HWC uint8 BGR and returns `PreparedInput(tensors, context)`. It converts to target NV12 and stores original H/W and resize mode in immutable context.
+- `infer(tensors)` (alias `forward`) validates names, shape, dtype, and finiteness, then returns native output arrays. It does not decode, dequantize, reshape, or mutate them.
+- `postprocess(outputs, context, score_thres=None, nms_thres=None)` (alias `post_process`) consumes the matching context and returns owned `DetectionResult(boxes, scores, class_ids)`.
 - `predict` composes the same stages. Context is per call; zero threshold overrides are preserved.
 
 <a id="troubleshooting"></a>

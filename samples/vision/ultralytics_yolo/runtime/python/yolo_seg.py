@@ -32,7 +32,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _set_scheduling_params,
     _size_from_runner,
     _normalise_grids,
-    _predict_task,
 )
 from samples.vision.ultralytics_yolo.runtime.python.legacy import (
     pre_process_with_transform,
@@ -137,7 +136,7 @@ class YoloSeg:
 
     pre_process_with_transform = pre_process_with_transform
 
-    def pre_process(self, img, image_format="BGR") -> PreparedDetection:
+    def preprocess(self, img, image_format="BGR") -> PreparedDetection:
         """Return owned NV12 tensors and immutable geometry for BGR uint8 HxWx3."""
         tensors, transform = _prepare_image(
             self.runner,
@@ -149,11 +148,11 @@ class YoloSeg:
         )
         return PreparedDetection(tensors, transform)
 
-    def forward(self, input_tensor):
+    def infer(self, input_tensor):
         """Call the runner once, preserving raw floating dtype and layout."""
         return _forward_runner(self.runner, input_tensor)
 
-    def post_process(
+    def postprocess(
         self,
         outputs,
         ori_img_w=None,
@@ -187,7 +186,40 @@ class YoloSeg:
 
     def predict(self, img, image_format="BGR", score_thres=None, nms_thres=None):
         """Compose the same three public stages without I/O or last-image state."""
-        return _predict_task(self, img, image_format, score_thres, nms_thres)
+        prepared = self.preprocess(img, image_format)
+        outputs = self.infer(prepared)
+        return self.postprocess(
+            outputs,
+            score_thres=score_thres,
+            nms_thres=nms_thres,
+            transform=prepared.transform,
+        )
 
     def __call__(self, img, image_format="BGR", score_thres=None, nms_thres=None):
         return self.predict(img, image_format, score_thres, nms_thres)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin
+    # aliases of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, img, image_format="BGR") -> PreparedDetection:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(img, image_format)
+
+    def forward(self, input_tensor):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(input_tensor)
+
+    def post_process(
+        self,
+        outputs,
+        ori_img_w=None,
+        ori_img_h=None,
+        score_thres=None,
+        nms_thres=None,
+        transform=None,
+    ):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(
+            outputs, ori_img_w, ori_img_h, score_thres, nms_thres, transform)

@@ -71,9 +71,9 @@ with open('samples/vision/yoloworld/test_data/offline_vocabulary_embeddings.json
     vocabulary = json.load(f)
 task = YOLOWorldTask(runner, binding, vocabulary)
 image = cv2.imread('samples/vision/yoloworld/test_data/dog.jpeg')
-prepared = task.pre_process(image, ['dog'])
-raw = task.forward(prepared)
-explicit_result = task.post_process(raw, prepared.context)
+prepared = task.preprocess(image, ['dog'])
+raw = task.infer(prepared)
+explicit_result = task.postprocess(raw, prepared.context)
 composed_result = task.predict(image, ['dog'])
 ```
 
@@ -86,9 +86,9 @@ composed_result = task.predict(image, ['dog'])
 
 | 阶段 | 输入 | 输出和职责 |
 | --- | --- | --- |
-| `pre_process` | BGR HxWx3 uint8/F32 图片、prompt 序列 | 不可变图片 F32[1,3,640,640]、文本 F32[1,32,512,1]、缩放/原尺寸/prompt ID context |
-| `forward` | prepared tensors | 原生 raw F32[1,8400,32] 和 F32[1,8400,4]，不 reshape/dequant/NMS |
-| `post_process` | raw tensors 与本次 context | 槽位 argmax、分数阈值、按类 NMS、坐标还原和结果数组 |
+| `preprocess` (alias `pre_process`) | BGR HxWx3 uint8/F32 图片、prompt 序列 | 不可变图片 F32[1,3,640,640]、文本 F32[1,32,512,1]、缩放/原尺寸/prompt ID context |
+| `infer` (alias `forward`) | prepared tensors | 原生 raw F32[1,8400,32] 和 F32[1,8400,4]，不 reshape/dequant/NMS |
+| `postprocess` (alias `post_process`) | raw tensors 与本次 context | 槽位 argmax、分数阈值、按类 NMS、坐标还原和结果数组 |
 | `predict` | 图片和 prompts | 对一次调用严格编排上述三阶段 |
 
 runner 先校验实际 metadata，再执行且不改变原生输出；task 负责源 F32
