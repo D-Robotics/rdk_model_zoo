@@ -990,8 +990,17 @@ class _SectionRunner:
             "--start-dir", str(self.repo / rel),
         ]
         started = time.monotonic()
+        # Suite subprocesses execute at the requested repository: the
+        # suites' README-command checks and their nested child
+        # interpreters resolve repo-relative paths and repo-root imports
+        # from the working directory, which must be the checkout — never
+        # the caller's, since the maintainer may be launched from
+        # anywhere.  Subprocess isolation, the outside-the-source report
+        # rule and the caller's own cwd are unaffected; the worker's
+        # --repo stays a path/sys.path identity input.
         try:
-            proc = self.run(command, timeout=self.options["timeout_s"])
+            proc = self.run(command, cwd=self.repo,
+                            timeout=self.options["timeout_s"])
             timed_out = False
         except subprocess.TimeoutExpired as exc:
             proc = None

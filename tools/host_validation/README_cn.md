@@ -26,8 +26,10 @@ python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]
 | 原生 CTest | 六个主机安全工程，**默认开启**完整门禁开关：`gemma4-e2b/tests/native`（C++17 + OpenCV + 固定 platforms 提交）、`yoloe/runtime/cpp/tests`（`YOLOE_TEST_OPENCV=ON`：真实 OpenCV 图像/掩码/流水线测试 + SDK 替身与 CLI fixture）、`asr/runtime/cpp/tests`（`ASR_AUDIO_TESTS=ON` + `ASR_CLI_TESTS=ON`：真实 libsndfile/libsamplerate 前端与主机 CLI 测试）、`ultralytics_yolo/runtime/cpp/test`（面向窄 API 替身的共享辅助与描述符适配器）、`paraformer/runtime/cpp`（`PARAFORMER_BUILD_TESTS=ON` + `PARAFORMER_BUILD_IO=ON` + `PARAFORMER_SANITIZERS=ON`：带消毒剂的 contract/pipeline 测试、面向显式伪头文件的 SDK 替身测试、基于 Git 跟踪证据文件（相对路径、不下载/不导出）的 preflight 与 prepared-feature 检查、`PARAFORMER_HOST_FIXTURE` CLI 帮助测试）、`himloco/runtime/cpp`（`HIMLOCO_BUILD_TESTS=ON`：基于仓库内置 `obs_history` fixture 的无 SDK 数值策略测试）——仅 SDK 替身与主机库；无厂商 SDK、无模型文件、无下载、不编译生产 SDK 工程，也无板端 SDK 与真实推理。两个 `runtime/cpp` 工程的厂商 SDK 适配器与生产 CLI 开关（`PARAFORMER_BUILD_SDK`/`PARAFORMER_BUILD_CLI`、`HIMLOCO_BUILD_SDK`/`HIMLOCO_BUILD_CLI`）被强制保持 **OFF**：`runtime/cpp` 下的源码目录被配置本身并不意味着厂商执行——这些 OFF 默认值是强制性安全要求，不是主机测试范围的缩减，试图开启的 `--cmake-define` 会在任何构建之前被拒绝（`VAR:BOOL`/`VAR:STRING`/`VAR:PATH` 这类带类型的 CMake 缓存拼写会在选项解析阶段被直接拒绝：CMake 允许靠后的类型化定义覆盖先前的裸值，因此类型化键名正是绕过强制 OFF 开关、或在不记录范围缩减的情况下悄悄关闭默认 ON 开关的途径；带空白填充的假值同样被拒绝——CMake 保留 `-D` 值的前导空白，`" OFF "` 会使开关保持开启，只有精确无填充的 CMake 假常量重申才是可接受的无操作：OFF/FALSE/0/NO/N/IGNORE 与空值大小写不敏感，精确的 `NOTFOUND` 与任何以 `-NOTFOUND` 结尾的值则区分大小写） |
 | Catalog | `tools/catalog-publisher` 内执行 `npm run check`（来源校验、Vitest 套件、构建、`catalog:check`）——仅在包自身 `engines` 声明的 Node 范围内执行（范围缺失、不可解析或不满足即带原因失败） |
 
-每个套件在独立子进程中运行，因此各 Sample 中同名测试模块相互隔离。结果来自
-机器可读的 `unittest` 结果：精确计数、逐条 skip 的身份与原因、逐条失败信息。
+每个套件在独立子进程中运行，因此各 Sample 中同名测试模块相互隔离。每个套件
+子进程都以被请求的仓库为工作目录启动：无论维护者从哪个目录启动执行器，相对
+示例路径与子解释器对仓库根模块的导入都能确定性解析。结果来自机器可读的
+`unittest` 结果：精确计数、逐条 skip 的身份与原因、逐条失败信息。
 
 运行还会校验源码树自身声明的历史 Git 对象（`samples/_shared/legacy_platforms.py`、
 Gemma 原生 CMake 固定提交、catalog 提交来源）：缺失固定提交即为显式失败，
@@ -125,9 +127,10 @@ clone 历史（不含子模块）、安装声明的原生前置依赖，报告�
 ## 文件
 
 - `run.py` —— 编排器与逐套件 worker（即上述 `--repo/--report/--python` 接口）。
-- `test_run.py` —— 针对执行器的 fixture 测试（发现、隔离、skip 策略、超时、
-  固定提交、源码漂移、CTest 分阶段失败与注册工程的安全默认值/禁止覆盖守卫、
-  catalog engines、必需的 Sample 清单、报告结构），基于合成仓库。
+- `test_run.py` —— 针对执行器的 fixture 测试（发现、隔离、套件工作目录、
+  skip 策略、超时、固定提交、源码漂移、CTest 分阶段失败与注册工程的安全
+  默认值/禁止覆盖守卫、catalog engines、必需的 Sample 清单、报告结构），
+  基于合成仓库。
 - `requirements.txt` —— 核心主机依赖集合（含环境标记与实测版本记录）。
 - `native_dependencies.py` / `test_native_dependencies.py` —— 与 LLM 主机测试
   共用的可移植原生依赖发现（解析顺序与环境变量覆盖见模块文档字符串）。

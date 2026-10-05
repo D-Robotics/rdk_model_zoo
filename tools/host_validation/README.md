@@ -31,7 +31,10 @@ interpreter running `run.py`). Exit code 0 means every section passed.
 | Catalog | `npm run check` in `tools/catalog-publisher` (sources validation, Vitest suite, build, `catalog:check`) — run only under the Node `engines` range the package itself declares (an undeclared, unparseable or unsatisfied range fails with the reason) |
 
 Each suite runs in its own subprocess, so identical test module names across
-samples stay isolated. Results come from a machine-readable `unittest`
+samples stay isolated. Every suite subprocess starts at the requested
+repository: relative example paths and nested child-interpreter imports of
+repo-root modules resolve deterministically no matter which directory the
+maintainer was launched from. Results come from a machine-readable `unittest`
 result: exact counts, per-skip identities/reasons, per-failure messages.
 
 The run also verifies the historical Git objects the tree declares
@@ -148,11 +151,11 @@ local run is not a CI claim: CI results are only what the GitHub jobs show.
 
 - `run.py` — orchestrator and per-suite worker (the `--repo/--report/--python`
   interface above).
-- `test_run.py` — fixture tests for the runner (discovery, isolation, skip
-  policy, timeouts, pins, source drift, CTest stage failures and the
-  safe-default/prohibited-override guards of the registered projects,
-  catalog engines, required sample inventory, report structure) against
-  synthetic repositories.
+- `test_run.py` — fixture tests for the runner (discovery, isolation, suite
+  working directory, skip policy, timeouts, pins, source drift, CTest stage
+  failures and the safe-default/prohibited-override guards of the
+  registered projects, catalog engines, required sample inventory, report
+  structure) against synthetic repositories.
 - `requirements.txt` — core host dependency set with environment markers
   and the tested-version record.
 - `native_dependencies.py` / `test_native_dependencies.py` — portable native

@@ -49,7 +49,13 @@ The synthetic repositories deliberately contain:
 * sample-inventory coverage fixtures (happy path with real-shaped rows,
   deleted tests directory, extra sample, broken JSON, absent inventory,
   empty rows array and malformed/duplicate rows) — the accepted inventory
-  is required proof: a checkout without it fails the gate.
+  is required proof: a checkout without it fails the gate;
+* a cwd-probe repository launched from a distinct temporary directory
+  outside it with ``PYTHONPATH``/``PYTHONHOME`` cleared (the independent
+  clean-clone gate's shape): its suite asserts the repo-root working
+  directory, reads a tracked repo-relative file and imports a repo-root
+  module from a nested child interpreter — every path that broke when
+  suite subprocesses inherited the caller's directory.
 
 Running these tests requires no board SDK, no model files and no network.
 Tests that build CMake fixtures need ``cmake`` (or ``ctest``) on PATH or
@@ -305,6 +311,113 @@ def _green_layout(repo: Path) -> None:
     _contract_stub(repo)
 
 
+def _cwd_probe_layout(repo: Path) -> None:
+    """A repository whose probe suite only passes at the repo root.
+
+    Mirrors the 2026-10-05 independent clean-clone delivery run: the
+    maintainer was launched from outside the checkout with an absolute
+    ``--repo`` and a cleared ``PYTHONPATH``, and the suite subprocesses
+    inherited the caller's directory, so repo-relative paths and child
+    imports of the repo-root ``samples`` package failed while the same
+    suites passed from the repository root.  The probe suite asserts its
+    working directory, reads a tracked repo-relative file and imports a
+    repo-root module from a nested child interpreter — none of which can
+    pass from any other cwd.
+    """
+    # Cache directories must stay ignored: the child import writes
+    # bytecode inside the fixture repository during the run.
+    _write(repo / ".gitignore", "*__pycache__*\n")
+    # Tracked repo-root file the probe reads through a relative path.
+    _write(repo / "VERSION", "fixture-repo-1.0\n")
+    _write(
+        repo / "samples/vision/alpha/tests/test_model.py",
+        """
+        import unittest
+
+        class AlphaModelTests(unittest.TestCase):
+            def test_one(self):
+                self.assertTrue(True)
+        """,
+    )
+    # Import target for the child interpreter: resolvable only through the
+    # repo root on sys.path — the exact "No module named 'samples'"
+    # failure shape the shared import guard hit in the clean-clone run.
+    _write(
+        repo / "samples/vision/cwdprobe/child_helper.py",
+        'MARKER = "child-import-ok"\n',
+    )
+    _write(
+        repo / "samples/vision/cwdprobe/tests/test_repo_cwd.py",
+        '''
+        import subprocess
+        import sys
+        import unittest
+        from pathlib import Path
+
+
+        class RepoCwdTests(unittest.TestCase):
+            def test_worker_cwd_is_requested_repo_root(self):
+                repo_root = Path(__file__).resolve().parents[4]
+                self.assertEqual(Path.cwd(), repo_root)
+
+            def test_repo_relative_tracked_file_is_readable(self):
+                self.assertEqual(
+                    Path("VERSION").read_text().strip(), "fixture-repo-1.0")
+
+            def test_child_python_imports_repo_root_module(self):
+                proc = subprocess.run(
+                    [sys.executable, "-c",
+                     "import samples.vision.cwdprobe.child_helper as helper;"
+                     "print(helper.MARKER)"],
+                    capture_output=True, text=True)
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                self.assertEqual(proc.stdout.strip(), "child-import-ok")
+        ''',
+    )
+    _write(
+        repo / "tools/board_validation/tests/test_tool.py",
+        """
+        import unittest
+
+        class ToolTests(unittest.TestCase):
+            def test_tool(self):
+                self.assertTrue(True)
+        """,
+    )
+    _write(
+        repo / "tools/sample_contract/tests/test_check.py",
+        """
+        import unittest
+
+        class CheckerTests(unittest.TestCase):
+            def test_checker(self):
+                self.assertTrue(True)
+        """,
+    )
+    _write(
+        repo / "skills/tests/test_pack.py",
+        """
+        import unittest
+
+        class PackTests(unittest.TestCase):
+            def test_pack(self):
+                self.assertTrue(True)
+        """,
+    )
+    _write(
+        repo / "tools/host_validation/test_smoke.py",
+        """
+        import unittest
+
+        class SmokeTests(unittest.TestCase):
+            def test_smoke(self):
+                self.assertTrue(True)
+        """,
+    )
+    _write_inventory(repo, ("vision/alpha", "vision/cwdprobe"))
+    _contract_stub(repo)
+
+
 def _init_repo(base: Path, layout) -> Path:
     repo = base / "repo"
     repo.mkdir(parents=True, exist_ok=True)
@@ -323,6 +436,22 @@ def run_runner(repo: Path, *args: str, timeout: float = 300) -> subprocess.Compl
         capture_output=True, text=True, timeout=timeout,
     )
     return proc
+
+
+def run_runner_outside(launch_dir: Path, repo: Path, *args: str,
+                       timeout: float = 300) -> subprocess.CompletedProcess:
+    """Launch the maintainer from ``launch_dir`` with ``PYTHONPATH`` and
+    ``PYTHONHOME`` cleared — the shape of the independent clean-clone gate,
+    which invokes the runner from outside the checkout with an absolute
+    ``--repo`` and no ambient import environment."""
+    env = {key: value for key, value in os.environ.items()
+           if key not in ("PYTHONPATH", "PYTHONHOME")}
+    return subprocess.run(
+        [sys.executable, str(RUNNER), "--repo", str(repo),
+         "--python", sys.executable, *args],
+        capture_output=True, text=True, timeout=timeout,
+        cwd=str(launch_dir), env=env,
+    )
 
 
 def _interpreter_tool(tool: str):
@@ -508,6 +637,78 @@ class GreenRepositoryTests(RunnerFixtureTestCase):
         # The checker's own report file is kept outside the source tree.
         self.assertTrue(Path(contract["report_file"]).is_file())
         self.assertNotIn(str(repo), contract["report_file"])
+
+
+class RequestedRepoCwdTests(RunnerFixtureTestCase):
+    """Suite subprocesses execute at the requested repository root.
+
+    Regression for the 2026-10-05 independent clean-clone delivery run:
+    launched from outside the clone with an absolute ``--repo`` and a
+    cleared ``PYTHONPATH``, the Python suites inherited the caller's
+    directory, so README-command tests resolved repo-relative paths
+    against the wrong cwd and nested child interpreters could not import
+    ``samples`` — an orchestration defect, since the same suites pass when
+    the repository root is the working directory.  Suite subprocesses now
+    start at the requested repository, deterministically for any
+    maintainer launch directory, while subprocess isolation, the
+    outside-the-source report rule and the caller's own working directory
+    all stay intact.
+    """
+
+    def probe_repo(self) -> Path:
+        cls = type(self)
+        if not hasattr(cls, "_cwd_probe_repo"):
+            cls._cwd_probe_repo = _init_repo(self.tmp / "cwd-probe",
+                                             _cwd_probe_layout)
+        return cls._cwd_probe_repo
+
+    def test_outside_launch_runs_suites_at_requested_repo(self):
+        repo = self.probe_repo()
+        # A distinct temporary launch directory: outside the fixture
+        # repository and different from this process's own cwd.
+        launch_dir = self.tmp / "outside-launch"
+        launch_dir.mkdir(exist_ok=True)
+        caller_cwd = Path.cwd()
+        self.assertNotEqual(launch_dir, caller_cwd)
+        self.assertNotIn(str(repo), str(launch_dir))
+        self.assertNotIn(str(launch_dir), str(repo))
+        out = self.tmp / "cwd-reports"
+        report = out / "report.json"
+        proc = run_runner_outside(
+            launch_dir, repo, "--report", str(report),
+            "--skip-ctest", "--skip-catalog", "--timeout", "120")
+        # The maintainer never relocates its caller.
+        self.assertEqual(Path.cwd(), caller_cwd)
+
+        data = self.load_report(proc, report)
+        self.assertEqual(data["overall"]["status"], "passed")
+        self.assertEqual(data["overall"]["reasons"], [])
+        # Exact executed counts: every discovered fixture suite ran.
+        self.assertEqual(data["python_suites"]["discovered"], 6)
+        self.assertEqual(data["python_suites"]["selected"], 6)
+        self.assertEqual(data["python_suites"]["totals"],
+                         {"tests": 8, "failures": 0, "errors": 0,
+                          "skipped": 0, "optional_missing_modules": 0})
+        probe = self.suite_by_dir(data, "samples/vision/cwdprobe/tests")
+        self.assertEqual(probe["status"], "passed")
+        self.assertEqual(probe["tests"], 3)
+        self.assertEqual(probe["failures"], 0)
+        self.assertEqual(probe["errors"], 0)
+        # The requested repository is unchanged and clean.
+        self.assertFalse(data["source"]["source_drift"])
+        self.assertFalse(data["source"]["content_drift"])
+        self.assertEqual(data["source"]["dirty_files_start"], [])
+        self.assertEqual(data["source"]["dirty_files_end"], [])
+        porcelain = subprocess.run(
+            ["git", "-C", str(repo), "status", "--porcelain"],
+            capture_output=True, text=True)
+        self.assertEqual(porcelain.returncode, 0)
+        self.assertEqual(porcelain.stdout, "")
+        # Report and artifacts stay outside the source tree.
+        self.assertNotIn(str(repo), str(report))
+        artifacts = out / "host-validation-artifacts"
+        self.assertTrue(artifacts.is_dir())
+        self.assertNotIn(str(repo), str(artifacts))
 
 
 class FailureModeTests(RunnerFixtureTestCase):
