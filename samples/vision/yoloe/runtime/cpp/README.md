@@ -145,6 +145,8 @@ The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible 
 
 Prerequisites: a C++17 compiler and the repository checkout. The four geometry/candidate tests do not need OpenCV or a board SDK. The image/mask and stage tests need OpenCV C++ core/imgproc/imgcodecs development libraries. The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment. From the repository root:
 
+On macOS, sanitizer builds of the OpenCV-enabled test project (`YOLOE_TEST_OPENCV=ON` with `YOLOE_SANITIZERS=ON`) additionally resolve the real TBB that OpenCV was built against through CMake's standard TBB CONFIG package and link it directly to the OpenCV-linked test executables. Under ASan, an executable that loads libtbb only transitively through `libopencv_core` aborts at process exit in `tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce`; a minimal empty `main` linked against OpenCV core alone reproduces the crash. The direct TBB reference keeps ASan+UBSan enabled; if CMake cannot discover the package, point `CMAKE_PREFIX_PATH` at the prefix that installed TBB. Linux and OpenCV-off builds take no such branch and need no TBB. This notes host sanitizer behavior only; no board verification is implied.
+
 <a id="build"></a>
 ## Build host tests
 

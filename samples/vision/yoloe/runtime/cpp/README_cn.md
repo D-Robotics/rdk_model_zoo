@@ -145,6 +145,8 @@ outputs/yoloe_cpp_x5_11s_run1/
 
 需要 C++17 编译器和仓库检出；四个几何/候选测试不需要 OpenCV 或板端 SDK；图像/掩码及阶段测试需要 OpenCV C++ core/imgproc/imgcodecs 开发库。文档构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。在仓库根目录执行：
 
+在 macOS 上，开启 OpenCV 的测试项目以 sanitizer 构建（`YOLOE_TEST_OPENCV=ON` 且 `YOLOE_SANITIZERS=ON`）时，还会通过 CMake 标准 TBB CONFIG 包解析 OpenCV 构建所依赖的真实 TBB，并将其直接链接到使用 OpenCV 的测试可执行程序。在 ASan 下，仅经由 `libopencv_core` 间接加载 libtbb 的进程会在退出时于 `tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce` 中中止；仅链接 OpenCV core 的空 `main` 即可复现该崩溃。直接的 TBB 引用使 ASan+UBSan 得以保留；若 CMake 无法发现该包，将 `CMAKE_PREFIX_PATH` 指向安装 TBB 的前缀。Linux 构建与关闭 OpenCV 的构建不经过该分支，也不需要 TBB。此处仅说明主机 sanitizer 行为，不意味着板端验证。
+
 <a id="build"></a>
 ## 构建主机测试
 

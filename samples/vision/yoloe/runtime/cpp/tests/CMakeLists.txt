@@ -64,6 +64,20 @@ if(YOLOE_TEST_OPENCV)
   add_executable(mask_probe mask_probe.cc)
   target_include_directories(mask_probe PRIVATE ../common ${OpenCV_INCLUDE_DIRS})
   target_link_libraries(mask_probe PRIVATE ${OpenCV_LIBS})
+  # Under ASan on macOS an executable that loads libtbb only transitively
+  # through libopencv_core aborts at process exit inside
+  # tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce; a minimal empty main
+  # linked against OpenCV core alone reproduces it. Linking the same real TBB
+  # (standard CMake CONFIG lookup of the dependency OpenCV was built against)
+  # directly into every OpenCV-linked test executable keeps ASan+UBSan enabled.
+  # Linux and OpenCV-off builds never take this branch and gain no dependency.
+  if(YOLOE_SANITIZERS AND APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    find_package(TBB CONFIG REQUIRED)
+    foreach(tgt test_image_ops test_pipeline input_probe test_sdk_runner_x5
+                   test_sdk_runner_ucp test_cli_io yoloe_cli_fixture mask_probe)
+      target_link_libraries(${tgt} PRIVATE TBB::tbb)
+    endforeach()
+  endif()
 endif()
 get_property(test_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
 foreach(target IN LISTS test_targets)
