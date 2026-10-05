@@ -1,0 +1,103 @@
+name: host-validation
+
+# Maintainer host gate: the complete supported host suites (all 51 native
+# samples plus nested conversion/evaluator suites, shared suites including
+# the safe parent-repo VLA gitlink integrity guard test_vla_integration.py
+# — gitlinks stay uninitialized and upstream ACT/Pi0 code is never run,
+# board_validation, the contract checker's own tests, skills), the static
+# sample contract, the host-safe native CTest projects and the catalog
+# check — one run of tools/host_validation/run.py per matrix leg.
+#
+# Equivalent gates for develop/main pushes and pull requests: no path
+# filters, no migration-state scope decisions, reports uploaded even on
+# failure.  The report and its artifacts are written under $RUNNER_TEMP,
+# never into the checkout: the runner gates on source content identity, so
+# workspace-local reports would be self-induced source drift.  Linux
+# results are proven by these jobs; a green local run is not a CI claim.
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-validation:
+    name: ${{ matrix.os }} py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            python-version: "3.10"
+          - os: ubuntu-24.04
+            python-version: "3.12"
+          # Applicable macOS host coverage: the portable native dependency
+          # discovery (iconv/gflags/json) and the host suites must hold on a
+          # second platform; board execution is never claimed here.
+          - os: macos-15
+            python-version: "3.12"
+    steps:
+      - name: Check out repository (full history, no submodules)
+        uses: actions/checkout@v4
+        with:
+          # Pinned historical sources (samples/_shared/legacy_platforms.py,
+          # the Gemma native CMake pin, catalog commit sources) read Git
+          # objects, so the run requires complete history.  The VLA ACT/Pi0
+          # gitlinks stay uninitialized by design.
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install native host dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            pkg-config \
+            libopencv-dev \
+            libgflags-dev \
+            nlohmann-json3-dev \
+            libsndfile1-dev \
+            libsamplerate0-dev
+      - name: Install native host dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake pkg-config opencv gflags nlohmann-json \
+            libsndfile libsamplerate
+      - name: Install core Python host dependencies
+        run: python -m pip install -r tools/host_validation/requirements.txt
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          # tools/catalog-publisher engines: >=22.12 <23
+          node-version: "22.12"
+      - name: Install catalog dependencies
+        run: npm ci
+        working-directory: tools/catalog-publisher
+      - name: Run host validation
+        env:
+          HOST_VALIDATION_OUTPUT: ${{ runner.temp }}/host-validation-report
+        run: >
+          python tools/host_validation/run.py
+          --repo "$GITHUB_WORKSPACE"
+          --report "$HOST_VALIDATION_OUTPUT/report.json"
+      - name: Upload host validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-validation-report-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: |
+            ${{ runner.temp }}/host-validation-report/report.json
+            ${{ runner.temp }}/host-validation-report/host-validation-artifacts/
+          if-no-files-found: warn
+          retention-days: 30
