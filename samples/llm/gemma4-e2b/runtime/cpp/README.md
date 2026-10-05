@@ -41,6 +41,7 @@ runtime/cpp/                            C++ source code (this directory)
 ├── run.sh                              Explicit build or native launch
 ├── inc/                                Public headers
 │   ├── gemma4_config.hpp               Model constants (image token IDs, dims, ...)
+│   ├── gemma4_chat_app.hpp             Interactive chat application session (facade)
 │   ├── gemma4_text_engine.hpp          Text orchestrator (prefill + decode + KV session)
 │   ├── gemma4_text_inputs.hpp          Text stage 1: prepared CPU inputs (ids/embeds/positions/masks)
 │   ├── gemma4_text_transport.hpp       Text stage 2: raw SDK writes/inference/KV collection
@@ -58,7 +59,8 @@ runtime/cpp/                            C++ source code (this directory)
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge: chat template + image expand
 │   └── hb_utils.hpp                    Horizon BPU helpers (tensor, flush, infer)
 └── src/                                Implementation + executables
-    ├── main.cpp                        ★ Interactive VLM chat (primary entry)
+    ├── main.cpp                        ★ Thin entry: flags → paths → app construct & run
+    ├── gemma4_chat_app.cpp             ★ Interactive chat session (REPL, history, console IO)
     ├── gemma4_server.cpp               HTTP API server
     ├── gemma4_demo.cpp                 Single-shot VLM demo
     ├── gemma4_text_bench.cpp           Text-only benchmark
@@ -298,6 +300,21 @@ Pass `--help` to any binary to see the gflags-generated full help.
 
 7. **Unified dual-model lifecycle** — `main` always loads Vision before Text and keeps both resident for the process lifetime. This order avoids the S600 cross-core IOVA mapping conflict while preserving identical chat control flow on S100, S100P, and S600; only the matching HBMs, CMake SoC macros, and `run.sh` environment setup differ.
 
+### Interactive chat entry: application facade vs. model classes
+
+`main` is split at the application boundary. `main.cpp` is the thin entry: it parses
+gflags, resolves `$GEMMA4_HOME` defaults, validates the generation flags, then
+constructs `gemma4::chat::InteractiveChatApp` (`gemma4_chat_app.hpp/.cpp`) and calls
+`Run()`. The app facade owns everything console- and session-shaped — banner/help,
+REPL prompts, UTF-8/GB18030 terminal normalization, chat-history JSON, oldest-turn
+trimming against the 4096-token budget, prefix-mismatch resets and the streaming
+echo. It performs no model math: text generation is delegated to the real runtime
+classes `TextEngine::ContinueGenerateStream` (with `BuildPromptHidden` for image
+turns) and image encoding to `PredictVision` + `VisionEngine::Infer`, exactly as the
+historical monolithic entry did. The facade is an application class, not a model
+class — no `predict`-style engine API performs console IO, and the engines
+themselves never print implicitly.
+
 ### Vision library interfaces and responsibilities
 
 `gemma4_image_io` reads files; `gemma4_vision_preprocess` transforms in-memory pixels;
@@ -386,6 +403,27 @@ ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 
 Nineteen CTest entries cover three Vision stage/source-image/tensor checks, seven KV allocation/reset/append/aliasing/prefix-retention scenarios, three Text ownership checks — including tensor adoption under injected allocation failure — one Text tensor contract test, one Text generation-flow test, and four Text stage/session tests (pure session policy, stage behavior, engine compositions, and the runnable README example). Assertions remain enabled in Release builds.
 An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
+
+The interactive chat entry has its own host check, which compiles the production
+`src/gemma4_chat_app.cpp` and the real `src/main.cpp` against the engine doubles in
+`tests/native/chat_app_doubles.cpp`, the SDK header double in `tests/native/sdk_fixtures`
+and clearly-marked compile stubs for the third-party tokenizers-cpp / OpenCV headers
+(`tests/native/app_stubs/`), then drives the REPL through redirected stdin:
+
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_app.py -v
+```
+
+Eleven scenarios verify the host-verifiable session logic: engine construction
+messages, streaming echo, `/reset` `/context` commands, image-turn wiring (one
+`LoadImage`/`PredictVision`/`Infer` chain with prompt-hidden injection), oversize-prompt
+rejection, oldest-turn history trimming, per-turn rebuild mode, cross-turn context
+growth, GB18030 terminal conversion, and the thin entry's flag validation and
+construct-and-run flow (linked against the host gflags). The doubles load no HBM,
+run no BPU, tokenize nothing and decode no image — linking the real
+SDK/OpenCV/tokenizers-cpp stack and board generation remain not-run on the host.
+`GEMMA_CXX` selects the compiler; `GEMMA_JSON_INCLUDE` points at a `nlohmann` header
+directory.
 
 ### SDK failure handling
 

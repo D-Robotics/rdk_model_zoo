@@ -88,8 +88,8 @@ target_link_libraries(gemma4_runtime PUBLIC
 
 # ── Executables ──────────────────────────────────────────────────────────────
 
-# Interactive VLM chat (Model Zoo standard entry: main.cpp -> main)
-add_executable(main src/main.cpp)
+# Interactive VLM chat (Model Zoo standard entry: main.cpp + chat app session)
+add_executable(main src/main.cpp src/gemma4_chat_app.cpp)
 target_link_libraries(main PRIVATE gemma4_runtime gflags)
 
 # HTTP API server

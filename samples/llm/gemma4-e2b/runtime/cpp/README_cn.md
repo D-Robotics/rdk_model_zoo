@@ -41,6 +41,7 @@ runtime/cpp/                            C++ 源码（本目录）
 ├── run.sh                              显式编译或启动
 ├── inc/                                公共头文件
 │   ├── gemma4_config.hpp               模型常量（图像 token ID、维度等）
+│   ├── gemma4_chat_app.hpp             交互式对话应用会话（应用 facade）
 │   ├── gemma4_text_engine.hpp          Text 编排器（prefill + decode + KV 会话）
 │   ├── gemma4_text_inputs.hpp          Text 阶段 1：CPU 输入准备（ids/嵌入/位置/mask）
 │   ├── gemma4_text_transport.hpp       Text 阶段 2：原始 SDK 写入/推理/KV 收集
@@ -58,7 +59,8 @@ runtime/cpp/                            C++ 源码（本目录）
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge：chat template + 图片展开
 │   └── hb_utils.hpp                    Horizon BPU 辅助函数（tensor、flush、infer）
 └── src/                                实现 + 入口
-    ├── main.cpp                        ★ 交互式 VLM 对话（主入口）
+    ├── main.cpp                        ★ 薄入口：flags → 路径 → 构造并运行应用
+    ├── gemma4_chat_app.cpp             ★ 交互式对话会话（REPL、历史、控制台 IO）
     ├── gemma4_server.cpp               HTTP API 服务
     ├── gemma4_demo.cpp                 单次 VLM 演示
     ├── gemma4_text_bench.cpp           纯文本基准测试
@@ -293,6 +295,18 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 
 7. **统一双模型生命周期** — `main` 启动时统一按 Vision→Text 顺序加载两个模型，并在整个进程内常驻。该顺序避免 S600 跨 core IOVA 映射冲突，同时 S100/S100P/S600 共用完全相同的聊天主流程；板型差异只体现在匹配的 HBM、CMake SoC 宏和 `run.sh` 环境设置。
 
+### 交互式对话入口：应用 facade 与模型类
+
+`main` 在应用边界上拆分。`main.cpp` 是薄入口：解析 gflags、解析 `$GEMMA4_HOME`
+默认路径、校验生成参数后构造 `gemma4::chat::InteractiveChatApp`
+（`gemma4_chat_app.hpp/.cpp`）并调用 `Run()`。应用 facade 持有全部控制台与会话
+职责——banner/help、REPL 提示符、UTF-8/GB18030 终端编码归一、对话历史 JSON、
+按 4096-token 预算裁剪最旧轮次、前缀失配重置与流式回显。它不承担任何模型
+计算：文本生成委托给真正的运行时类 `TextEngine::ContinueGenerateStream`
+（图文轮次配合 `BuildPromptHidden`），图像编码委托给 `PredictVision` +
+`VisionEngine::Infer`，与历史单文件入口完全一致。该 facade 是应用类而非模型
+类——不存在执行控制台 IO 的 `predict` 型引擎 API，引擎自身也从不会隐式打印。
+
 ### Vision 库接口与职责
 
 `gemma4_image_io` 负责读图，`gemma4_vision_preprocess` 只处理内存像素，`gemma4_vision_task`
@@ -379,6 +393,25 @@ ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 
 十九项 CTest：三项覆盖 Vision 三阶段、源图前处理和张量存储，七项覆盖 KV 分配/Reset/追加/源别名/前缀保留，三项覆盖 Text 所有权（含注入分配失败下的张量采用），一项 Text 张量契约测试、一项 Text 生成流程测试，以及四项 Text 阶段/会话测试（纯会话策略、阶段行为、引擎组合与可运行的 README 示例）。Release 构建仍启用断言。
 这些测试使用显式测试 runner，不加载 BPU 或证明真实 SDK 的描述符、资源生命周期及板端数值；相关审查继续进行。
+
+交互式对话入口另有专属主机检查：编译生产 `src/gemma4_chat_app.cpp` 与真实
+`src/main.cpp`，链接 `tests/native/chat_app_doubles.cpp` 引擎替身、
+`tests/native/sdk_fixtures` 的 SDK 头替身，以及 `tests/native/app_stubs/`
+中明确标注的 tokenizers-cpp / OpenCV 第三方头编译桩，再通过重定向 stdin
+驱动 REPL：
+
+```bash
+python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_app.py -v
+```
+
+十一个场景验证主机可验证的会话逻辑：引擎构造信息、流式回显、`/reset`
+`/context` 命令、图文轮次接线（一次 `LoadImage`/`PredictVision`/`Infer`
+链路并注入 prompt hidden）、超长 prompt 拒绝、最旧轮次裁剪、每轮重建模式、
+跨轮上下文增长、GB18030 终端编码转换，以及薄入口的参数校验与构造运行
+流程（链接主机 gflags）。替身不加载 HBM、不跑 BPU、不做分词也不解码
+图片——链接真实 SDK/OpenCV/tokenizers-cpp 栈与板端生成在主机上仍为
+not-run。`GEMMA_CXX` 选择编译器；`GEMMA_JSON_INCLUDE` 指向 `nlohmann`
+头文件目录。
 
 ### SDK 失败处理
 
