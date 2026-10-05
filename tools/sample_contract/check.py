@@ -17,8 +17,10 @@ Rules (IDs are decoupled from section IDs; see readme-contract §8):
                       intra-document fragments resolve to explicit anchors
   R-CLI-DEFAULTS      README parameter tables match the real parser
   R-I18N-PARAMS       en/zh parameter tables agree with each other
-  R-STAGE-PURITY      pre/forward/post-style functions contain no download,
-                      save/write, subprocess, or destructive calls (AST)
+  R-STAGE-PURITY      stage functions (canonical preprocess/infer/postprocess
+                      and the legacy pre_process/forward/post_process
+                      spellings) contain no download, save/write, subprocess,
+                      or destructive calls (AST)
   R-EXEMPTION         exemption bookkeeping (unknown/unused entries fail)
 
 Canonical default-value forms compared between the README ``Default`` column
@@ -82,8 +84,18 @@ OPTION_RE = re.compile(r"--[a-z0-9][a-z0-9-]*")
 SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 
 # Stage functions whose bodies are purity-checked (inference-contract §1/§3).
-STAGE_EXACT = {"pre_process", "forward", "post_process", "predict"}
-STAGE_PREFIXES = ("forward_", "pre_process_", "post_process_", "run_")
+# The 2026-10-05 readable-runtime rollout made preprocess/infer/postprocess
+# the primary stage spellings; the established pre_process/forward/
+# post_process names remain covered as compatibility aliases (same body,
+# thin delegation — both spellings must stay pure).
+STAGE_EXACT = {
+    "preprocess", "infer", "postprocess", "predict",
+    "pre_process", "forward", "post_process",
+}
+STAGE_PREFIXES = (
+    "preprocess_", "infer_", "postprocess_",
+    "forward_", "pre_process_", "post_process_", "run_",
+)
 
 # Files inside runtime/python that are exempt by policy, with the recorded
 # reason.  These are reported as skips, never silently ignored.
@@ -91,6 +103,15 @@ POLICY_SKIPPED_FILES = {
     "main.py": "CLI layer: saving output and argument handling live here",
     "legacy.py": "documented compatibility shim (inference-contract §4)",
 }
+
+# Sample-local CLI helper files.  Their *module-level* functions are the
+# application boundary (argument handling, model-free listing/dry-run, model
+# preparation, presentation), so stage-shaped names there — e.g. a
+# ``run_prepare`` that downloads on explicit request — are recorded as
+# skips, never treated as model stages.  Stage-named *methods* inside these
+# files and every function in any other file stay checked; this is not a
+# blanket file exemption like POLICY_SKIPPED_FILES.
+CLI_HELPER_FILES = {"cli.py", "yolo_cli.py"}
 
 DENY_CALLS: dict[str, set[str]] = {
     "download/network": {
@@ -594,10 +615,19 @@ def check_stage_purity(report: SampleReport, sample_dir: Path) -> None:
                 RULE_PURITY, py_file, exc.lineno or 0,
                 f"cannot parse module ({exc})")
             continue
+        module_level_ids = {
+            id(node) for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        }
+        cli_boundary_names: list[str] = []
         for node in ast.walk(tree):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
             if not is_stage(node.name):
+                continue
+            if py_file.name in CLI_HELPER_FILES \
+                    and id(node) in module_level_ids:
+                cli_boundary_names.append(node.name)
                 continue
             for child in ast.walk(node):
                 if not isinstance(child, ast.Call):
@@ -610,6 +640,12 @@ def check_stage_purity(report: SampleReport, sample_dir: Path) -> None:
                     RULE_PURITY, py_file, child.lineno,
                     f"stage function {node.name}() calls {name}() — "
                     f"{category} boundary (inference-contract §3)")
+        if cli_boundary_names:
+            report.skip(
+                RULE_PURITY, py_file,
+                "policy skip: module-level application helpers "
+                f"({', '.join(sorted(cli_boundary_names))}) are the CLI "
+                "boundary, not model stages")
 
 
 def run_sample(sample_dir: Path, templates: dict[str, tuple[str, ...]],

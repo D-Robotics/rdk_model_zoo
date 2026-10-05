@@ -15,7 +15,7 @@ skip and never counts as a pass.
 | `R-README-LINKS` | relative links/images resolve to existing files; intra-document fragments resolve to explicit anchors; external URLs are out of scope (no network) |
 | `R-CLI-DEFAULTS` | runtime/python parameter tables match the real `build_parser()` defaults, per language |
 | `R-I18N-PARAMS` | the en/zh parameter tables agree with each other (option set and defaults) |
-| `R-STAGE-PURITY` | AST scan: `pre_process`/`forward`/`post_process`/`predict`/`forward_*`/`run_*` functions contain no download, file-write/save, subprocess, or destructive calls (`main.py` and `legacy.py` are policy-skipped with a recorded reason, not silently ignored) |
+| `R-STAGE-PURITY` | AST scan: stage functions — canonical `preprocess`/`infer`/`postprocess`/`predict` plus the legacy `pre_process`/`forward`/`post_process` spellings, with the matching `preprocess_*`/`infer_*`/`postprocess_*`/`forward_*`/`pre_process_*`/`post_process_*`/`run_*` prefixes — contain no download, file-write/save, subprocess, or destructive calls. `main.py` and `legacy.py` are policy-skipped with a recorded reason; module-level helpers in `cli.py`/`yolo_cli.py` (e.g. a `run_prepare` that downloads on explicit request) are the CLI application boundary and are recorded as skips, while stage-named methods inside those files stay checked |
 
 ## Usage
 
@@ -34,8 +34,21 @@ python3 -m unittest discover -s tools/sample_contract/tests -v
 ```
 
 Exit codes: `0` no violations, `1` violations found, `2` usage/config error.
-Skips (missing `main.py`, import failure, static mode, policy-skipped files)
-are always printed and included in the JSON report.
+Skips (missing `main.py`, import failure, static mode, policy-skipped files,
+CLI-boundary module-level helpers in `cli.py`/`yolo_cli.py`) are always
+printed and included in the JSON report.
+
+### Stage-name scope (2026-10-05)
+
+The readable-runtime rollout made `preprocess`/`infer`/`postprocess` the
+primary stage spellings with `pre_process`/`forward`/`post_process` kept as
+thin compatibility aliases of the same bodies, so the purity scan covers both
+spellings — an alias must not become the place where a download or file write
+hides. The CLI-boundary exemption is deliberately narrow: only module-level
+functions in the sample-local `cli.py`/`yolo_cli.py` files, only when their
+names are stage-shaped, always recorded as a named skip. It never applies to
+class methods (those are model logic wherever they live), to other files, or
+to whole directories.
 
 ## Canonical default-value forms
 

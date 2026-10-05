@@ -169,6 +169,58 @@ class StagePurityTests(unittest.TestCase):
         self.assertNotIn("save_report", joined)
 
 
+class CanonicalStagePurityTests(unittest.TestCase):
+    # 2026-10-05 readable-runtime rollout: preprocess/infer/postprocess are
+    # the primary stage spellings and cli.py module-level helpers are the
+    # application boundary.
+
+    def test_canonical_stage_download_and_save_are_flagged(self):
+        report = report_for("bad_stage_purity_canonical")
+        findings = findings_for(report, CHECK.RULE_PURITY)
+        messages = " | ".join(f.message for f in findings)
+        self.assertIn("preprocess() calls urllib.request.urlretrieve()",
+                      messages)
+        self.assertIn("download/network", messages)
+        self.assertIn("infer() calls cv2.imwrite()", messages)
+        self.assertIn("postprocess() calls np.save()", messages)
+        self.assertIn("infer_calibration() calls open()", messages)
+        self.assertIn("file write/save", messages)
+
+    def test_canonical_findings_pin_their_lines(self):
+        report = report_for("bad_stage_purity_canonical")
+        by_call = {}
+        for finding in findings_for(report, CHECK.RULE_PURITY):
+            if finding.path.endswith("task.py"):
+                stage = finding.message.split(" calls ")[0]
+                by_call[stage.removeprefix("stage function ")] = finding.line
+        self.assertEqual(
+            by_call,
+            {"preprocess()": 21, "infer()": 25, "postprocess()": 29,
+             "infer_calibration()": 36})
+
+    def test_cli_module_level_helpers_are_boundary_skips_not_findings(self):
+        report = report_for("bad_stage_purity_canonical")
+        purity = findings_for(report, CHECK.RULE_PURITY)
+        self.assertFalse(any("run_prepare" in f.message for f in purity))
+        skips = [s for s in report.skips
+                 if s.rule == CHECK.RULE_PURITY and s.path.endswith("cli.py")]
+        self.assertEqual(len(skips), 1)
+        self.assertIn("run_prepare", skips[0].reason)
+        self.assertIn("CLI", skips[0].reason)
+
+    def test_stage_methods_inside_cli_files_stay_checked(self):
+        report = report_for("bad_stage_purity_canonical")
+        matched = [f for f in findings_for(report, CHECK.RULE_PURITY)
+                   if "postprocess() calls cv2.imwrite()" in f.message]
+        self.assertEqual(len(matched), 1)
+        self.assertTrue(matched[0].path.endswith("cli.py"))
+
+    def test_non_stage_helper_in_canonical_fixture_stays_clean(self):
+        report = report_for("bad_stage_purity_canonical")
+        joined = " ".join(f.message for f in report.findings)
+        self.assertNotIn("save_report", joined)
+
+
 class I18nParamsTests(unittest.TestCase):
     def test_option_set_and_default_mismatch_between_languages(self):
         report = report_for("bad_i18n_params")
