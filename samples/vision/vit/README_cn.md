@@ -77,7 +77,7 @@ tests/          # SDK-free host/source regressions
 
 [Model](model/README_cn.md) · [Python runtime](runtime/python/README_cn.md) · [Conversion](conversion/README_cn.md) · [Evaluation](evaluator/README_cn.md)
 
-原始入口仍保留。新集成使用 ClassificationTask；`--model-variant` 保留为 `--variant` 别名，本地 run.sh 接受原位置参数 int8/int16。
+原始入口仍保留。新集成使用可读的 `ViTClassifier`（[classify.py](runtime/python/classify.py)；共享 `ClassificationTask` 流程仍可从 [classification.py](runtime/python/classification.py) 导入）；`--model-variant` 保留为 `--variant` 别名，本地 run.sh 接受原位置参数 int8/int16。
 
 <a id="license"></a>
 ## 许可

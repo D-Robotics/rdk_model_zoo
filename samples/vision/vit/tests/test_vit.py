@@ -54,9 +54,14 @@ class EntryTests(unittest.TestCase):
 
     def test_execution_target_mismatch_stops_before_runtime(self):
         from samples.vision.vit.runtime.python import main
-        with patch('samples._shared.platforms.detect_target',return_value='s100p'), patch.object(Path,'is_file',return_value=True), patch.object(main,'_run') as execute, contextlib.redirect_stderr(io.StringIO()):
+        sys.modules.pop('samples.vision.vit.runtime.python.classify', None)
+        with patch('samples._shared.platforms.detect_target',return_value='s100p'), patch.object(Path,'is_file',return_value=True), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main.main(['--target','s100']),2)
-            execute.assert_not_called()
+            # The thin entry stops at the board check before constructing the
+            # model: the readable classifier module is never imported (the
+            # former seam patched main._run; construction now happens after
+            # this check inside the entry's execution path).
+            self.assertNotIn('samples.vision.vit.runtime.python.classify', sys.modules)
 
     def test_download_defaults_and_each_variant_use_exact_manifest(self):
         from samples.vision.vit.model import download
@@ -162,7 +167,8 @@ class SourceTests(unittest.TestCase):
             snippets=re.findall(r'```python\n(.*?)```',text,re.S)
             self.assertEqual(len(snippets),1)
             scope={}
-            with patch.object(model_runner,'RuntimeModelRunner',HostRunner),contextlib.redirect_stdout(io.StringIO()):
+            from samples.vision.vit.runtime.python import classify
+            with patch.object(model_runner,'RuntimeModelRunner',HostRunner),patch.object(classify,'RuntimeModelRunner',HostRunner),contextlib.redirect_stdout(io.StringIO()):
                 exec(compile(snippets[0],str(SAMPLE/'runtime/python'/fn),'exec'),scope)
             self.assertEqual(scope['result'].labels[0],'deer')
             self.assertEqual(scope['result'].class_ids.tolist(),[4,5,2,6,9])

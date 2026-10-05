@@ -1,5 +1,11 @@
 # ViT Python 运行
 
+`main.py` 是面向用户的规范化入口：解析参数、构造模型、调用 `predict`、
+展示结果。完整的分类流程在 [`classify.py`](classify.py) 中：
+`ViTClassifier` 在一个可读文件里展示初始化、`preprocess`、`infer`、
+`postprocess` 与 `predict`，复用共享的 NV12 打包、Top-K 数学与懒加载
+runner。
+
 <a id="environment"></a>
 ## 环境
 
@@ -58,36 +64,32 @@ ClassificationResult 包含 class_ids（整数数组）、scores（softmax 概�
 <a id="integration-example"></a>
 ## 集成示例
 
-板端示例，先准备 int8；导入不下载模型。测试使用注入主机运行器验证同一处理链。
+板端示例，先准备 int8；导入不下载任何内容。测试中使用注入的主机
+runner 验证同一管线。
 
 ```python
 # cwd: repository root on S100; prepare int8 first
 from pathlib import Path
-import cv2
+from samples.vision.vit.runtime.python.classify import ViTClassifier
 from samples.vision.vit.runtime.python.model_binding import resolve_selection
-from samples.vision.vit.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.vit.runtime.python.classification import ClassificationTask
 from samples.vision.vit.runtime.python.labels import load_labels
-image_path = Path("samples/vision/vit/test_data/airplane_0000.png")
-image = cv2.imread(str(image_path))
-if image is None:
-    raise FileNotFoundError(image_path)
+
 selection = resolve_selection("s100", variant="int8")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
 labels = load_labels(Path("samples/vision/vit/test_data/cifar10_classes.names"))
-task = ClassificationTask(runner, binding, top_k=5, labels=labels)
-prepared = task.pre_process(image)
-raw = task.forward(prepared)
-result = task.post_process(raw)
-print(result.class_ids.tolist(), result.scores.tolist(), result.labels)
+model = ViTClassifier(selection, top_k=5, labels=labels)
+model.set_scheduling_params(priority=0, bpu_cores=[0])
+result = model.predict("samples/vision/vit/test_data/airplane_0000.png")
+print(result.class_ids, result.scores, result.labels)
 ```
+
+`predict` 接受本地图像路径或 BGR `uint8` 数组。阶段也可显式驱动
+（`preprocess`/`infer`/`postprocess`）；既有拼写为薄别名，共享的
+`ClassificationTask` 仍可从 [`classification.py`](classification.py) 导入。
 
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-pre_process：BGR U8 H×W×3 → PreparedInput，含 Y U8 [1,224,224,1]、UV U8 [1,112,112,2] 和每次调用独立几何信息。直接缩放用 nearest，letterbox 用 linear、127填充。forward 只调用运行器并保留 raw 映射。post_process 压缩 F32 十类向量，稳定 softmax 后取 Top-K，不读文件或加载 SDK。predict 组合三阶段。运行前核对 metadata；量化 raw 输出显式拒绝，不静默当浮点。
+preprocess（pre_process）：图像路径或 BGR U8 H×W×3 → PreparedInput，含 Y U8 [1,224,224,1]、UV U8 [1,112,112,2] 和每次调用独立几何信息。直接缩放用 nearest，letterbox 用 linear、127填充。infer 只调用运行器并保留 raw 映射。postprocess 压缩 F32 十类向量，稳定 softmax 后取 Top-K，不读文件或加载 SDK。predict 组合三阶段；既有 pre_process/forward/post_process 拼写为薄别名。运行前核对 metadata；量化 raw 输出显式拒绝，不静默当浮点。
 
 <a id="troubleshooting"></a>
 ## 排错

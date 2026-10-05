@@ -1,9 +1,14 @@
 # EfficientFormerV2 Python runtime
 
-`main.py` is the canonical user-facing command. It resolves one exact model
-reference from the release manifests, checks the detected board, loads
-`hbm_runtime` lazily, and executes one `ClassificationTask` flow. Model
-preparation is explicit; this runtime never downloads or installs packages.
+`main.py` is the canonical user-facing command: it parses arguments,
+constructs the model, calls `predict`, and shows the result. The complete
+classification flow lives in [`classify.py`](classify.py):
+`EfficientFormerV2Classifier` shows initialization, `preprocess`, `infer`, `postprocess` and
+`predict` in one readable file. It resolves one exact model reference
+from the release manifests, checks the detected board, loads
+`hbm_runtime` lazily through the shared SDK session, and executes one
+classification flow. Model preparation is explicit; this runtime never
+downloads or installs packages.
 
 <a id="environment"></a>
 ## Environment
@@ -88,39 +93,37 @@ Prerequisites: artifact prepared (see [model/README.md](../../model/README.md))
 and OpenCV-Python importable. Every input variable is defined in the example:
 
 ```python
-import cv2
-
-from samples.vision.efficientformerv2.runtime.python.classification import ClassificationTask
-from samples.vision.efficientformerv2.runtime.python.model_binding import bind_model, resolve_selection
-from samples.vision.efficientformerv2.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.efficientformerv2.runtime.python.classify import EfficientFormerV2Classifier
+from samples.vision.efficientformerv2.runtime.python.model_binding import resolve_selection
 
 selection = resolve_selection(
     "x5",
     asset_id="x5:efficientformerv2:EfficientFormerv2_s1_224x224_nv12.bin",
     model_path="samples/vision/efficientformerv2/model/EfficientFormerv2_s1_224x224_nv12.bin",
 )
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-task = ClassificationTask(runner, binding, top_k=5)
-image = cv2.imread("samples/vision/efficientformerv2/test_data/goldfish.JPEG")
-result = task.predict(image)
+model = EfficientFormerV2Classifier(selection, top_k=5)
+result = model.predict("samples/vision/efficientformerv2/test_data/goldfish.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-The three stages can also be driven explicitly: `prepared = task.pre_process(image)`,
-`outputs = task.forward(prepared.tensors)`,
-`result = task.post_process(outputs)` — `predict` chains exactly these
-stages (verified by the stage-contract tests).
+`predict` accepts a local image path or a BGR `uint8` NumPy array and never
+modifies the array in place. The three stages can also be driven explicitly:
+`prepared = model.preprocess(source)`, `outputs = model.infer(prepared)`,
+`result = model.postprocess(outputs)` — `predict` chains exactly these
+steps (verified by the entry behavior tests). The established
+`pre_process` / `forward` / `post_process` spellings remain thin aliases,
+and the shared `ClassificationTask` flow stays importable from
+[`classification.py`](classification.py).
 
 <a id="stage-io"></a>
 ## Stage I/O
 
 | Stage | Input | Output |
 | --- | --- | --- |
-| `pre_process` | one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context) |
-| `forward` | `prepared.tensors` | raw output dict (X5 F32 `[1,1000,1,1]`) — bit-identical to the runner output, no decode |
-| `post_process` | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K under the declared score policy |
-| `predict` | BGR `uint8` array | chains the three stages, same `ClassificationResult` |
+| `preprocess` (`pre_process`) | image path or one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context) |
+| `infer` (`forward`) | `PreparedInput` | raw output dict (X5 F32 `[1,1000,1,1]`) — bit-identical to the runner output, no decode |
+| `postprocess` (`post_process`) | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K under the declared score policy |
+| `predict` | image path or BGR `uint8` array | chains the three stages, same `ClassificationResult` |
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

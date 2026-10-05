@@ -1,5 +1,12 @@
 # ViT Python runtime
 
+`main.py` is the canonical user-facing command: it parses arguments,
+constructs the model, calls `predict`, and shows the result. The complete
+classification flow lives in [`classify.py`](classify.py):
+`ViTClassifier` shows initialization, `preprocess`, `infer`, `postprocess` and
+`predict` in one readable file, reusing the shared NV12 packing, Top-K
+math and lazy runner.
+
 <a id="environment"></a>
 ## Environment
 
@@ -58,36 +65,34 @@ ClassificationResult contains class_ids (integer array), scores (softmax probabi
 <a id="integration-example"></a>
 ## Integration example
 
-Board example, after preparing int8; imports do not download anything. The same pipeline is exercised with an injected host runner in tests.
+Board example, after preparing int8; imports do not download anything.
+The same pipeline is exercised with an injected host runner in tests.
 
 ```python
 # cwd: repository root on S100; prepare int8 first
 from pathlib import Path
-import cv2
+from samples.vision.vit.runtime.python.classify import ViTClassifier
 from samples.vision.vit.runtime.python.model_binding import resolve_selection
-from samples.vision.vit.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.vit.runtime.python.classification import ClassificationTask
 from samples.vision.vit.runtime.python.labels import load_labels
-image_path = Path("samples/vision/vit/test_data/airplane_0000.png")
-image = cv2.imread(str(image_path))
-if image is None:
-    raise FileNotFoundError(image_path)
+
 selection = resolve_selection("s100", variant="int8")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
 labels = load_labels(Path("samples/vision/vit/test_data/cifar10_classes.names"))
-task = ClassificationTask(runner, binding, top_k=5, labels=labels)
-prepared = task.pre_process(image)
-raw = task.forward(prepared)
-result = task.post_process(raw)
-print(result.class_ids.tolist(), result.scores.tolist(), result.labels)
+model = ViTClassifier(selection, top_k=5, labels=labels)
+model.set_scheduling_params(priority=0, bpu_cores=[0])
+result = model.predict("samples/vision/vit/test_data/airplane_0000.png")
+print(result.class_ids, result.scores, result.labels)
 ```
+
+`predict` accepts a local image path or a BGR `uint8` array. The stages
+can also be driven explicitly (`preprocess`/`infer`/`postprocess`); the
+established `pre_process`/`forward`/`post_process` spellings are thin
+aliases, and the shared `ClassificationTask` stays importable from
+[`classification.py`](classification.py).
 
 <a id="stage-io"></a>
 ## Stage I/O
 
-pre_process: BGR U8 H×W×3 → PreparedInput with Y U8 [1,224,224,1], UV U8 [1,112,112,2] and per-call geometry. Direct resize uses nearest; letterbox uses linear and padding 127. forward only calls the runner, preserving the raw mapping. post_process squeezes a F32 ten-score vector, applies stable softmax and selects Top-K; no file or SDK access. predict composes these stages. Runtime metadata validates shapes/dtypes before run; quantized raw outputs are rejected rather than silently reinterpreted.
+preprocess (pre_process): image path or BGR U8 H×W×3 → PreparedInput with Y U8 [1,224,224,1], UV U8 [1,112,112,2] and per-call geometry. Direct resize uses nearest; letterbox uses linear and padding 127. infer only calls the runner, preserving the raw mapping. postprocess squeezes a F32 ten-score vector, applies stable softmax and selects Top-K; no file or SDK access. predict composes these stages; the established pre_process/forward/post_process spellings are thin aliases. Runtime metadata validates shapes/dtypes before run; quantized raw outputs are rejected rather than silently reinterpreted.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

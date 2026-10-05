@@ -1,9 +1,11 @@
 # EfficientViT Python 运行时
 
-`main.py` 是面向用户的规范化入口。它从发布 Manifest 解析唯一的模型引用，
-核对被检测的板卡，懒加载 `hbm_runtime`，并执行一个
-`ClassificationTask` 流程。模型准备是显式动作；本运行时绝不下载模型或
-安装软件包。
+`main.py` 是面向用户的规范化入口：解析参数、构造模型、调用 `predict`、
+展示结果。完整的分类流程在 [`classify.py`](classify.py) 中：
+`EfficientViTClassifier` 在一个可读文件里展示初始化、`preprocess`、`infer`、
+`postprocess` 与 `predict`。它从发布 Manifest 解析唯一的模型引用，核对
+被检测的板卡，经共享 SDK 会话懒加载 `hbm_runtime`，执行一次分类流程。
+模型准备是显式动作；本运行时绝不下载模型或安装软件包。
 
 <a id="environment"></a>
 ## 环境
@@ -85,39 +87,36 @@ X5 侧以规范化的 flat 1-D uint8 数组（`H*W*3/2` 字节，224x224 → 75,
 OpenCV-Python 可导入。示例中每个输入变量都有定义：
 
 ```python
-import cv2
-
-from samples.vision.efficientvit.runtime.python.classification import ClassificationTask
-from samples.vision.efficientvit.runtime.python.model_binding import bind_model, resolve_selection
-from samples.vision.efficientvit.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.efficientvit.runtime.python.classify import EfficientViTClassifier
+from samples.vision.efficientvit.runtime.python.model_binding import resolve_selection
 
 selection = resolve_selection(
     "x5",
     asset_id="x5:efficientvit:EfficientViT_m5_224x224_nv12.bin",
     model_path="samples/vision/efficientvit/model/EfficientViT_m5_224x224_nv12.bin",
 )
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-task = ClassificationTask(runner, binding, top_k=5)
-image = cv2.imread("samples/vision/efficientvit/test_data/hook.JPEG")
-result = task.predict(image)
+model = EfficientViTClassifier(selection, top_k=5)
+result = model.predict("samples/vision/efficientvit/test_data/hook.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-三个阶段也可以显式驱动：`prepared = task.pre_process(image)`、
-`outputs = task.forward(prepared.tensors)`、
-`result = task.post_process(outputs)`——`predict` 恰好串联这些阶段（由
-阶段契约测试验证）。
+`predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，且绝不原地修改
+数组。三个阶段也可以显式驱动：`prepared = model.preprocess(source)`、
+`outputs = model.infer(prepared)`、`result = model.postprocess(outputs)`
+——`predict` 恰好串联这些步骤（由入口行为测试验证）。既有的
+`pre_process` / `forward` / `post_process` 拼写保持为薄别名，共享的
+`ClassificationTask` 流程仍可从 [`classification.py`](classification.py)
+导入。
 
 <a id="stage-io"></a>
 ## 阶段 I/O
 
 | 阶段 | 输入 | 输出 |
 | --- | --- | --- |
-| `pre_process` | 一张任意尺寸的 BGR `uint8` 数组 | `PreparedInput.tensors`（目标形状的 NV12 张量）+ `PreparedInput.transform`（每次调用冻结的 resize 上下文） |
-| `forward` | `prepared.tensors` | 原始输出字典（X5 F32 `[1,1000,1,1]`）——与 runner 输出逐位一致，无解码 |
-| `post_process` | 原始输出（无上下文：分类不消费几何） | `ClassificationResult(class_ids, scores, labels)`，声明分数策略下稳定降序 Top-K |
-| `predict` | BGR `uint8` 数组 | 串联三阶段，同一 `ClassificationResult` |
+| `preprocess`（`pre_process`） | 图像路径或一张任意尺寸的 BGR `uint8` 数组 | `PreparedInput.tensors`（目标形状的 NV12 张量）+ `PreparedInput.transform`（每次调用冻结的 resize 上下文） |
+| `infer`（`forward`） | `PreparedInput` | 原始输出字典（X5 F32 `[1,1000,1,1]`）——与 runner 输出逐位一致，无解码 |
+| `postprocess`（`post_process`） | 原始输出（无上下文：分类不消费几何） | `ClassificationResult(class_ids, scores, labels)`，声明分数策略下稳定降序 Top-K |
+| `predict` | 图像路径或 BGR `uint8` 数组 | 串联三阶段，同一 `ClassificationResult` |
 
 <a id="troubleshooting"></a>
 ## 故障排查

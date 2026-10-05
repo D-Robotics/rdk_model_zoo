@@ -1,5 +1,11 @@
 # HGNetV2 Python 运行
 
+`main.py` 是面向用户的规范化入口：解析参数、构造模型、调用 `predict`、
+展示结果。完整的分类流程在 [`classify.py`](classify.py) 中：
+`HGNetV2Classifier` 在一个可读文件里展示初始化、`preprocess`、`infer`、
+`postprocess` 与 `predict`，复用共享的 NV12 打包、Top-K 数学与懒加载
+runner。
+
 <a id="environment"></a>
 ## 环境
 
@@ -65,37 +71,35 @@ python3 samples/vision/hgnetv2/runtime/python/main.py
 <a id="integration-example"></a>
 ## 集成示例
 
-cwd：X5 仓库根，先下载变体 b0。API 不下载模型。本例省略可选标签，因此标签值为类别 ID 字符串。
+cwd：仓库根目录，先准备制品。API 不下载模型。本例省略可选标签，因此
+标签值为类别 ID 字符串。
 
 ```python
-import cv2
-from samples.vision.hgnetv2.runtime.python.classification import ClassificationTask
+from samples.vision.hgnetv2.runtime.python.classify import HGNetV2Classifier
 from samples.vision.hgnetv2.runtime.python.model_binding import resolve_selection
-from samples.vision.hgnetv2.runtime.python.model_runner import RuntimeModelRunner
 
 selection = resolve_selection("x5", variant="b0")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = ClassificationTask(runner, binding, top_k=5)
-image = cv2.imread("samples/vision/hgnetv2/test_data/sandbar.JPEG")
-if image is None:
-    raise FileNotFoundError("sandbar.JPEG")
-result = task.predict(image)
+model = HGNetV2Classifier(selection, top_k=5)
+result = model.predict("samples/vision/hgnetv2/test_data/sandbar.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
+
+`predict` 接受本地图像路径或 BGR `uint8` 数组，且绝不原地修改数组。
+既有的 `pre_process` / `forward` / `post_process` 拼写保持为薄别名，
+共享的 `ClassificationTask` 流程仍可从
+[`classification.py`](classification.py) 导入。
 
 <a id="stage-io"></a>
 ## 阶段输入输出
 
 | 阶段 | 输入 | 输出 |
 | --- | --- | --- |
-| pre_process | BGR uint8 H×W×3 | PreparedInput：命名的扁平 NV12 uint8 张量（75264 字节）及不可变缩放上下文 |
-| forward | prepared.tensors | 原样返回 runner 原始输出，不做 softmax 或排序 |
-| post_process | squeeze 后为 (1000,) 的 F32 分数 | softmax 与稳定 Top-K ClassificationResult |
-| predict | BGR 图像 | 串联上述三个阶段 |
+| preprocess（pre_process） | 图像路径或 BGR uint8 H×W×3 | PreparedInput：命名的扁平 NV12 uint8 张量（75264 字节）及不可变缩放上下文 |
+| infer（forward） | PreparedInput | 原样返回 runner 原始输出，不做 softmax 或排序 |
+| postprocess（post_process） | squeeze 后为 (1000,) 的 F32 分数 | softmax 与稳定 Top-K ClassificationResult |
+| predict | 图像路径或 BGR 图像 | 串联上述三个阶段 |
 
-默认前处理为线性 letterbox，填充值 BGR 127。分类后处理不消费几何上下文。runner 负责 SDK 加载、调度、metadata 检查；文件/标签读取与绘图留在 main.py。
+默认前处理为线性 letterbox，填充值 BGR 127。分类后处理不消费几何上下文。runner 负责 SDK 加载、调度、metadata 检查；文件/标签读取与绘图留在 CLI 层（`cli.py`）。
 
 <a id="troubleshooting"></a>
 ## 排障

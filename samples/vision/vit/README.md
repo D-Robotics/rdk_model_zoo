@@ -77,7 +77,7 @@ tests/          # SDK-free host/source regressions
 
 [Model](model/README.md) · [Python runtime](runtime/python/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md)
 
-The preserved legacy entry remains available. New integrations use ClassificationTask; `--model-variant` remains an alias for `--variant`. The local run.sh accepts legacy positional int8/int16.
+The preserved legacy entry remains available. New integrations use the readable `ViTClassifier` ([classify.py](runtime/python/classify.py); the shared `ClassificationTask` flow stays importable from [classification.py](runtime/python/classification.py)); `--model-variant` remains an alias for `--variant`. The local run.sh accepts legacy positional int8/int16.
 
 <a id="license"></a>
 ## License
