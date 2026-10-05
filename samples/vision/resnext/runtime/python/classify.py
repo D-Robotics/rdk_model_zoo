@@ -125,10 +125,11 @@ class ResNeXtClassifier:
         image = _read_source_image(source)
         return prepare_nv12(image, self.binding, resize_type=self.resize_type)
 
-    def infer(self, prepared: PreparedInput) -> object:
+    def infer(self, prepared: "PreparedInput | Mapping[str, np.ndarray]") -> object:
         """Execute exactly one model call on the prepared NV12 tensors."""
 
-        return self.runner(prepared.tensors)
+        tensors = prepared.tensors if isinstance(prepared, PreparedInput) else prepared
+        return self.runner(tensors)
 
     def postprocess(self, outputs: object) -> ClassificationResult:
         """Apply the declared output transform and decode the Top-K results."""
@@ -167,8 +168,7 @@ class ResNeXtClassifier:
     def forward(self, prepared: "PreparedInput | Mapping[str, np.ndarray]") -> object:
         """Compatibility alias for :meth:`infer` (raw tensors also accepted)."""
 
-        tensors = prepared.tensors if isinstance(prepared, PreparedInput) else prepared
-        return self.runner(tensors)
+        return self.infer(prepared)
 
     def post_process(self, outputs: object) -> ClassificationResult:
         """Compatibility alias for :meth:`postprocess`."""

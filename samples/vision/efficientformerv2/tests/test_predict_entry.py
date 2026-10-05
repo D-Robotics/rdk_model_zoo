@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import unittest
+from unittest import mock
 
 import numpy as np
 
@@ -150,6 +151,27 @@ class ClassifierFlowTests(unittest.TestCase):
             via_predict.class_ids.tolist(), via_legacy.class_ids.tolist())
         np.testing.assert_array_equal(via_predict.scores, via_legacy.scores)
         self.assertEqual(via_predict.labels, via_legacy.labels)
+
+    def test_forward_delegates_to_infer_for_prepared_and_raw_tensors(self):
+        calls: list = []
+        target = _TARGETS[0]
+        scores = _shaped_scores(resolve_selection(target), 1)
+        model = _classifier(target, [scores] * 2, calls)
+        prepared = model.preprocess(np.full((30, 40, 3), 90, dtype=np.uint8))
+        sentinel = object()
+
+        with mock.patch.object(model, "infer",
+                               return_value=sentinel) as patched_infer:
+            via_prepared = model.forward(prepared)
+            via_raw = model.forward(prepared.tensors)
+
+        # forward must delegate to the same infer implementation for both
+        # legal input forms; it never runs the runner itself.
+        forwarded = [call.args[0] for call in patched_infer.call_args_list]
+        self.assertIs(via_prepared, sentinel)
+        self.assertIs(via_raw, sentinel)
+        self.assertEqual(forwarded, [prepared, prepared.tensors])
+        self.assertEqual(len(calls), 0)
 
     def test_predict_calls_the_runner_once_per_image(self):
         calls: list = []
