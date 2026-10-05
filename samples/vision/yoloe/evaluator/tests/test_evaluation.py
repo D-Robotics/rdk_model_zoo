@@ -320,3 +320,58 @@ class EvaluationTests(unittest.TestCase):
         empty = score_predictions(self.ann, [], [], [7], [1])
         self.assertEqual(empty["bbox"]["AP"], 0.0)
         self.assertEqual(empty["segm"]["AP"], 0.0)
+
+    def test_scoring_normalizes_missing_optional_metadata_in_memory_only(self):
+        """Valid no-info documents score on every pycocotools without file edits.
+
+        The public loader requires images/categories/annotations and never
+        requires COCO 'info'; pycocotools 2.0.10 loadRes still reads
+        dataset['info'] directly. Missing metadata must be normalized only in
+        the in-memory COCO copy, provided metadata must survive untouched, and
+        neither the annotation file nor the caller-held document may gain an
+        'info' key or change bytes.
+        """
+        from pycocotools import mask as mask_utils
+
+        binary = np.zeros((8, 10), np.uint8)
+        binary[2:5, 1:4] = 1
+        encoded = mask_utils.encode(np.asfortranarray(binary))
+        encoded["counts"] = encoded["counts"].decode()
+        self.annotation["annotations"] = [
+            {
+                "id": 1,
+                "image_id": 7,
+                "category_id": 1,
+                "bbox": [1, 2, 3, 3],
+                "segmentation": encoded,
+                "area": 9,
+                "iscrowd": 0,
+            }
+        ]
+        self.ann.write_text(json.dumps(self.annotation))
+        boxes = [{"image_id": 7, "category_id": 1, "bbox": [1, 2, 3, 3], "score": 0.9}]
+        masks = [
+            {"image_id": 7, "category_id": 1, "segmentation": encoded, "score": 0.9}
+        ]
+        held = load_dataset(self.ann, self.root).document
+        self.assertNotIn("info", held)
+        before = self.ann.read_bytes()
+        scored = score_predictions(self.ann, boxes, masks, [7], [1])
+        self.assertEqual(self.ann.read_bytes(), before)
+        self.assertNotIn("info", json.loads(self.ann.read_text()))
+        self.assertNotIn("info", held)
+        self.assertAlmostEqual(scored["bbox"]["AP"], 1.0)
+        self.assertAlmostEqual(scored["segm"]["AP"], 1.0)
+        self.annotation["info"] = {"description": "regression", "version": "1"}
+        self.ann.write_text(json.dumps(self.annotation))
+        before = self.ann.read_bytes()
+        with_info = score_predictions(self.ann, boxes, masks, [7], [1])
+        self.assertEqual(self.ann.read_bytes(), before)
+        self.assertEqual(
+            json.loads(self.ann.read_text())["info"],
+            {"description": "regression", "version": "1"},
+        )
+        for kind in ("bbox", "segm"):
+            self.assertEqual(scored[kind]["parameters"], with_info[kind]["parameters"])
+            for name in ("AP", "AP50", "AP75", "AR100"):
+                self.assertAlmostEqual(scored[kind][name], with_info[kind][name])

@@ -79,6 +79,46 @@ class EntryTests(unittest.TestCase):
         self.assertGreaterEqual(checked, 8)
 
 
+_FRESH_PROCESS_CV2_CHECK = """
+import importlib.util, sys
+root, test_file = sys.argv[1], sys.argv[2]
+sys.path.insert(0, root)
+assert 'cv2' not in sys.modules, 'cv2 pre-imported: the fresh-process check would be masked'
+spec = importlib.util.spec_from_file_location('fresh_googlenet_fixture', test_file)
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+assert 'cv2' not in sys.modules, 'test module import pre-imported cv2'
+module.SourceComparisonTests.setUpClass()
+# The pinned source imports cv2 at module level; the fixture must leave it in place.
+assert 'cv2' in sys.modules, 'fixture rolled back sys.modules and evicted cv2'
+import cv2
+import numpy as np
+resized = cv2.resize(np.zeros((6, 4, 3), np.uint8), (2, 3))
+assert resized.shape == (3, 2, 3), resized.shape
+assert cv2.dnn.DictValue is not None, 'cv2.dnn wrapper broken after the fixture'
+assert cv2.gapi.wip.draw.Text is not None, 'cv2.gapi wrapper broken after the fixture'
+print('cv2-import-and-use-ok', cv2.__version__)
+"""
+
+
+class FixtureIsolationTests(unittest.TestCase):
+    def test_source_fixture_leaves_cv2_importable_and_usable_in_a_fresh_process(self):
+        """The pinned-source fixture must not evict third-party imports.
+
+        A whole-``sys.modules`` rollback around the legacy load removes the cv2
+        the pinned source imported while its C extension stays initialized, and
+        the next cv2 import then fails on OpenCV builds that cannot
+        re-bootstrap. The subprocess proves, in a genuinely fresh interpreter
+        with cv2 asserted absent beforehand, that ``setUpClass`` keeps cv2 in
+        ``sys.modules`` and leaves the wrappers reported broken (cv2.dnn,
+        cv2.gapi) usable afterwards.
+        """
+        run = subprocess.run([sys.executable, '-c', _FRESH_PROCESS_CV2_CHECK, str(ROOT), str(Path(__file__).resolve())], cwd='/tmp', capture_output=True, text=True)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn('cv2-import-and-use-ok', run.stdout)
+
+
 class SourceComparisonTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -86,9 +126,23 @@ class SourceComparisonTests(unittest.TestCase):
         spec=importlib.util.spec_from_file_location('_googlenet_source', legacy_path('x5/samples/vision/googlenet/runtime/python/googlenet.py'))
         mod=importlib.util.module_from_spec(spec)
         old_path=sys.path[:]
-        with patch.dict(sys.modules, {'hbm_runtime':types.ModuleType('hbm_runtime'),spec.name:mod}):
-            try: spec.loader.exec_module(mod)
-            finally: sys.path[:]=old_path
+        # Register only the two keys this fixture owns and restore exactly those.
+        # patch.dict(sys.modules, ...) rolls the whole mapping back, evicting the
+        # modules the pinned source imports transitively (cv2 first of all) while
+        # their C extensions stay initialized; the next cv2 import then breaks on
+        # OpenCV builds that cannot re-bootstrap (4.12 loses cv2.dnn.DictValue /
+        # cv2.gapi.wip.draw.Text). Third-party imports must survive the fixture.
+        absent=object()
+        saved={name:sys.modules.get(name,absent) for name in ('hbm_runtime',spec.name)}
+        sys.modules['hbm_runtime']=types.ModuleType('hbm_runtime')
+        sys.modules[spec.name]=mod
+        try:
+            spec.loader.exec_module(mod)
+        finally:
+            sys.path[:]=old_path
+            for name,original in saved.items():
+                if original is absent: sys.modules.pop(name,None)
+                else: sys.modules[name]=original
         cls.source=mod.GoogLeNet.__new__(mod.GoogLeNet)
         cls.source.cfg=mod.GoogLeNetConfig('not-loaded',resize_type=1,topk=5)
         cls.source.model_name='fixture';cls.source.input_names=['data'];cls.source.output_names=['prob']

@@ -89,6 +89,12 @@ def score_predictions(annotation, bboxes, masks, image_ids, category_ids):
     from pycocotools.cocoeval import COCOeval
 
     ground_truth = COCO(str(annotation))
+    # The public loader accepts annotation documents without optional COCO
+    # metadata, but pycocotools loadRes reads dataset['info'] unconditionally
+    # on some versions (2.0.10). COCO() re-parses the file into a private
+    # in-memory dict, so normalizing here cannot touch the annotation file or
+    # any caller-held document; a provided 'info' is preserved as-is.
+    ground_truth.dataset.setdefault("info", {})
     metrics = {}
     names = (
         "AP",
