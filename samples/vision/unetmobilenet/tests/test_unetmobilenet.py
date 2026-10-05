@@ -150,6 +150,58 @@ class StageTests(unittest.TestCase):
             with self.assertRaises(ValueError):task.post_process(value,context)
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """Canonical preprocess/infer/postprocess names drive predict."""
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        task, raw = make_task()
+        image = np.zeros((7, 13, 3), np.uint8)
+        for name in ['preprocess', 'infer', 'postprocess', 'predict']:
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        pn = task.preprocess(image); po = task.pre_process(image)
+        self.assertEqual(pn.context, po.context)
+        for name in pn.tensors:
+            np.testing.assert_array_equal(pn.tensors[name], po.tensors[name])
+        np.testing.assert_array_equal(task.infer(pn.tensors), task.forward(po.tensors))
+        np.testing.assert_array_equal(task.postprocess(raw, pn.context),
+                                      task.post_process(raw, po.context))
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        task, raw = make_task(); routed = []; calls = []
+        original_infer = task.infer
+        def counting(tensors):
+            calls.append(tensors); return original_infer(tensors)
+        task.infer = counting
+        for canonical in ['preprocess', 'postprocess']:
+            attr = getattr(task, canonical)
+            def spy(*args, _a=attr, _c=canonical, **kw):
+                routed.append(_c); return _a(*args, **kw)
+            setattr(task, canonical, spy)
+        image = np.zeros((7, 13, 3), np.uint8)
+        mask = task.predict(image)
+        self.assertEqual(routed, ['preprocess', 'postprocess'])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(mask.shape, (7, 13))
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        task, raw = make_task(); routed = []
+        for canonical in ['preprocess', 'infer', 'postprocess']:
+            attr = getattr(task, canonical)
+            def spy(*args, _a=attr, _c=canonical, **kw):
+                routed.append(_c); return _a(*args, **kw)
+            setattr(task, canonical, spy)
+        image = np.zeros((7, 13, 3), np.uint8)
+        prepared = task.pre_process(image)
+        task.post_process(task.forward(prepared.tensors), prepared.context)
+        self.assertEqual(routed, ['preprocess', 'infer', 'postprocess'])
+
+    def test_predict_equals_canonical_manual_composition(self):
+        task, raw = make_task()
+        for image in (np.zeros((7, 13, 3), np.uint8), np.zeros((11, 17, 3), np.uint8)):
+            prepared = task.preprocess(image)
+            manual = task.postprocess(task.infer(prepared.tensors), prepared.context)
+            np.testing.assert_array_equal(task.predict(image), manual)
+
+
 class RuntimeAndCLITests(unittest.TestCase):
     def fake(self):
         runtime = SimpleNamespace(**metadata(), version='host-fixture')

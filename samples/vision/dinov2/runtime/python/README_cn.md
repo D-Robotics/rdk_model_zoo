@@ -56,10 +56,14 @@ python3 samples/vision/dinov2/runtime/python/main.py \
 
 CLI 打印 JSON 字段 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm`。使用第二张图时还打印 `second_image`、`cosine_similarity`；文件缺失时状态为 `skipped_missing`。`cls_feat` 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，结果均为 owned float32。整数 HBM 输出依据 output quantization metadata 反量化；不执行 softmax、L2 归一化、patch pooling 或其他特征变换。
 
+入口按可读性拆分：`main.py` 解析选择、构造 `DINOv2Task`、逐图调用 `predict` 并输出
+JSON 摘要；参数声明、`--list-models`/`--dry-run` 模式、特征摘要/余弦相似度辅助与可选
+张量导出在 `cli.py`。嵌入算法本身不变，只存在于 `embedding.py`。
+
 <a id="integration-example"></a>
 ## 集成示例
 
-前置：按 [`../../model/README_cn.md`](../../model/README_cn.md) 准备 S100 制品，并在 S100 板端运行。使用其他板卡时将 `target = "s100"` 改为 `"s100p"` 或 `"s600"`，selection 会解析对应的独立 manifest HBM。示例定义全部路径、输入、target、asset identity、调度值、runner、binding、task、`explicit_result`、`composed_result`。`DINOv2Task.post_process` 返回所选 ndarray；将 `output="patch_feat"` 运行同一片段即可对照另一个 output key。
+前置：按 [`../../model/README_cn.md`](../../model/README_cn.md) 准备 S100 制品，并在 S100 板端运行。使用其他板卡时将 `target = "s100"` 改为 `"s100p"` 或 `"s600"`，selection 会解析对应的独立 manifest HBM。示例定义全部路径、输入、target、asset identity、调度值、runner、binding、task、`explicit_result`、`composed_result`。`DINOv2Task.postprocess` 返回所选 ndarray；将 `output="patch_feat"` 运行同一片段即可对照另一个 output key。
 
 ```python
 from pathlib import Path
@@ -87,9 +91,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 output = "cls_feat"
 task = DINOv2Task(runner, binding, output)
-prepared = task.pre_process(image)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(image)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(image)
 np.testing.assert_array_equal(explicit_result, composed_result)
 print({"output": output, "shape": composed_result.shape,
@@ -99,10 +103,12 @@ print({"output": output, "shape": composed_result.shape,
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `pre_process`：BGR `uint8` `H×W×3` → `PreparedInput`；OpenCV 转 RGB，bicubic 将短边 resize 到 256，中心 crop 224，执行 `/255` 和 ImageNet mean/std，生成 owned contiguous float32 `{"input": (1,3,224,224)}`。`context` 保存原图/缩放尺寸和 crop 起点。
-- `forward`：输入 mapping → 精确包含 `cls_feat` `(1,384)` 和 `patch_feat` `(1,256,384)` 的原始 mapping。runner 校验名称、shape 和原生 metadata dtype，原样返回。
-- `post_process`：原始双输出 mapping → 所选 output 的 owned float32 ndarray。float32 输出保持 raw；整数输出只依据绑定 quantization metadata 反量化。不执行 softmax 或 L2 归一化。
+- `preprocess`：BGR `uint8` `H×W×3` → `PreparedInput`；OpenCV 转 RGB，bicubic 将短边 resize 到 256，中心 crop 224，执行 `/255` 和 ImageNet mean/std，生成 owned contiguous float32 `{"input": (1,3,224,224)}`。`context` 保存原图/缩放尺寸和 crop 起点。
+- `infer`：输入 mapping → 精确包含 `cls_feat` `(1,384)` 和 `patch_feat` `(1,256,384)` 的原始 mapping。runner 校验名称、shape 和原生 metadata dtype，原样返回。
+- `postprocess`：原始双输出 mapping → 所选 output 的 owned float32 ndarray。float32 输出保持 raw；整数输出只依据绑定 quantization metadata 反量化。不执行 softmax 或 L2 归一化。
 - `predict(image)` 为所选 output 串联三个阶段；不会下载、写文件或评估。
+
+既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>
 ## 故障排查

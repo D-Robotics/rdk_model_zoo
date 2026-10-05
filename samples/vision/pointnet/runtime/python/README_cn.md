@@ -72,15 +72,22 @@ points = np.loadtxt(SAMPLE_DIR / "test_data/chair.pts", dtype=np.float32)
 runner = RuntimeModelRunner(resolve_selection("s100"))
 binding = runner.load()
 task = PointNetTask(runner, binding)
-prepared = task.pre_process(points)
-raw = task.forward(prepared.tensors)
-labels = task.post_process(raw)
+prepared = task.preprocess(points)
+raw = task.infer(prepared.tensors)
+labels = task.postprocess(raw)
 print(labels.shape, labels.dtype)
 # Equivalent three-stage convenience call:
 labels_again = task.predict(points)
+# 同时保留本次调用的归一化点云与质心/半径上下文时：
+details = task.predict(points, return_details=True)
+print(details.prepared.tensors["point"].shape, details.prepared.context.radius)
 ```
 
-主机可用注入 runner 和经过校验的 metadata fixture 测试前后处理。真实 runner 懒加载，
+主机可用注入 runner 和经过校验的 metadata fixture 测试前后处理。
+`PointNetPredictionDetails`（通过 `return_details=True` 显式开启）将标签与本次调用的
+prepared 记录（精确的 `(1,3,N)` 归一化张量加冻结的质心/半径上下文）打包返回，绘图与
+归档无需二次执行；默认 `predict` 仍返回普通标签数组，task 不保存上一次点云。
+真实 runner 懒加载，
 先校验板卡/制品，再导入 SDK、核对 metadata。不承诺 SDK 并发执行安全。
 
 <a id="stage-io"></a>
@@ -88,10 +95,12 @@ labels_again = task.predict(points)
 
 | 阶段 | 输入 | 输出与语义 |
 | --- | --- | --- |
-| pre_process | 有限实数 ndarray `(N,3)` XYZ | 自有连续 float32 `(1,3,N)`；减去质心，再除最大欧氏半径 |
-| forward | 使用绑定输入名的张量映射 | 从 runtime 取得自有 raw `(1,N,4)` logits，不做 argmax/反量化/IO |
-| post_process | 与绑定 shape/dtype 一致的 raw 张量 | int32 `(N,)` 标签；整数以 float64 做 SCALE 解码后再 argmax，float32 不变 |
-| predict | 原始 `(N,3)` 坐标 | 串联同样阶段和标签结果 |
+| preprocess | 有限实数 ndarray `(N,3)` XYZ | 自有连续 float32 `(1,3,N)`；减去质心，再除最大欧氏半径 |
+| infer | 使用绑定输入名的张量映射 | 从 runtime 取得自有 raw `(1,N,4)` logits，不做 argmax/反量化/IO |
+| postprocess | 与绑定 shape/dtype 一致的 raw 张量 | int32 `(N,)` 标签；整数以 float64 做 SCALE 解码后再 argmax，float32 不变 |
+| predict | 原始 `(N,3)` 坐标 | 串联同样阶段和标签结果；`return_details=True` 额外返回本次调用的 prepared 记录 |
+
+既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 N 来自编译模型 metadata，必须精确匹配，不采样/补点。冻结的 `prepared.context` 保存每次
 质心、半径和点数，不会被下一次调用覆盖。后处理无需消费 context，因为点序未变。

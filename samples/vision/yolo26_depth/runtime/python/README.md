@@ -93,15 +93,20 @@ runner = RuntimeModelRunner(selection)
 binding = runner.load()
 task = Yolo26DepthTask(runner, binding)
 image = cv2.imread("samples/vision/yolo26_depth/test_data/bus.jpg")
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-result = task.post_process(raw, prepared.context)
-# Equivalently: result = task.predict(image)
+result = task.predict(image)
 print(result.depth_native.shape)
+# To reproduce the CLI's measured run (explicit warmup, one timed forward):
+details = task.predict(image, warmup=3, return_details=True)
+print(details.warmup, details.latency_ms)
 ```
 
 `PreparedInput` carries tensors and immutable per-call geometry. `DepthResult`
 carries `log_depth`, `depth_native`, optional `raw_logit` and that context.
+`DepthPredictionDetails` (opt-in via `return_details=True`) bundles the result
+with this call's prepared input, raw output, the applied warmup count and the
+one-forward latency (transport validation and owned copy included,
+preprocessing/postprocessing excluded); the default `predict` return stays the
+plain `DepthResult` and the task never retains a last image, output or timing.
 Keep the matching context with each frame; no mutable last-frame transform is
 stored on the task. Runner injection is a host-test seam, not board validation.
 The CLI separately sets scheduling parameters; applications may call
@@ -114,10 +119,12 @@ and `predict`; timing, image IO and rendering belong to the caller.
 
 | Stage | Contract |
 | --- | --- |
-| `pre_process(image)` | Nonempty BGR uint8 HWC → `PreparedInput` |
-| `forward(tensors)` | Named physical input → unchanged single float32 SDK output |
-| `post_process(raw, context)` | Bound output and matching geometry → owned relative-depth arrays |
-| `predict(image)` | Exactly the same three stages, once |
+| `preprocess(image)` | Nonempty BGR uint8 HWC → `PreparedInput` |
+| `infer(tensors)` | Named physical input → unchanged single float32 SDK output |
+| `postprocess(raw, context)` | Bound output and matching geometry → owned relative-depth arrays |
+| `predict(image)` | Exactly the same three stages, once; `warmup`/`return_details=True` add unmeasured warmup forwards and return this call's prepared/raw data, warmup count and one-forward latency |
+
+The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 X5 all variants and S `n/s/m` use 768×768 INTER_LINEAR letterbox with fill 114,
 then **one flat packed NV12 uint8 array of 884736 bytes**, not separate Y/UV

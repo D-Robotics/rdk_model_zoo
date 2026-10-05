@@ -1,6 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""UNet model-resolution semantic masks; file IO and plotting are separate."""
+"""UNet model-resolution semantic masks; file IO and plotting are separate.
+
+``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+established ``pre_process``/``forward``/``post_process`` names stay thin
+aliases of those implementations.
+"""
 from dataclasses import dataclass
 from typing import Mapping
 import cv2
@@ -30,7 +35,11 @@ class UNetTask:
         self.runner = runner
         self.binding = binding
 
-    def pre_process(self, image: np.ndarray) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, image: np.ndarray) -> PreparedInput:
         """BGR uint8 nonempty HWC → owned packed NV12 (1,768,512,1).
 
         Direct INTER_LINEAR resize preserves the source stretch geometry.
@@ -45,11 +54,11 @@ class UNetTask:
         packed = np.concatenate((y.reshape(-1),uv.reshape(-1))).reshape(1,768,512,1)
         return PreparedInput({self.binding.input_name: packed}, ImageContext(*image.shape[:2]))
 
-    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+    def infer(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
         """Return raw runner-validated logits without dequantization or argmax."""
         return self.runner(tensors)
 
-    def post_process(self, raw: np.ndarray) -> np.ndarray:
+    def postprocess(self, raw: np.ndarray) -> np.ndarray:
         """Raw NCHW/NHWC 21-class logits → owned uint8 (512,512) class IDs.
 
         Integer logits require SCALE decoding; float32 is already decoded.
@@ -71,5 +80,22 @@ class UNetTask:
 
     def predict(self, image: np.ndarray) -> np.ndarray:
         """Run the same three stages, returning a model-resolution class mask."""
-        prepared = self.pre_process(image)
-        return self.post_process(self.forward(prepared.tensors))
+        prepared = self.preprocess(image)
+        return self.postprocess(self.infer(prepared.tensors))
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image: np.ndarray) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image)
+
+    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self, raw: np.ndarray) -> np.ndarray:
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(raw)

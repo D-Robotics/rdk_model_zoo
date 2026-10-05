@@ -68,9 +68,9 @@ runner = RuntimeModelRunner(resolve_selection("s100"))
 binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = UnetMobileNetTask(runner, binding)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-mask = task.post_process(raw, prepared.context)
+prepared = task.preprocess(image)
+raw = task.infer(prepared.tensors)
+mask = task.postprocess(raw, prepared.context)
 mask_again = task.predict(image)
 overlay = render_overlay(image, mask, alpha_f=0.75)
 print(mask.shape, mask.dtype)  # original image height/width, int32
@@ -80,7 +80,7 @@ Unlike the archived UnetMobileNet.predict API, task.predict returns class IDs; c
 <a id="stage-io"></a>
 ## Stage IO
 
-pre_process accepts nonempty BGR uint8 HWC, stretches with INTER_AREA to 2048×1024, creates Y uint8 [1,1024,2048,1] and UV uint8 [1,512,1024,2], and freezes original geometry per call. No CPU normalization or letterbox. forward returns raw [1,H,W,19] int32/F32 unchanged. post_process accepts bound geometry/dtype and finite values. Explicit NONE int32 scores compare without float rounding; SCALE uses validated positive scales/offsets and float64 affine decoding, fixing the source assumption that raw integer argmax always preserves order. F32 is not dequantized again. Lowest class ID wins exact ties. IDs resize directly to original dimensions with INTER_NEAREST; no coloring or file IO occurs. Missing integer quantization metadata fails explicitly.
+preprocess accepts nonempty BGR uint8 HWC, stretches with INTER_AREA to 2048×1024, creates Y uint8 [1,1024,2048,1] and UV uint8 [1,512,1024,2], and freezes original geometry per call. No CPU normalization or letterbox. infer returns raw [1,H,W,19] int32/F32 unchanged. postprocess accepts bound geometry/dtype and finite values. Explicit NONE int32 scores compare without float rounding; SCALE uses validated positive scales/offsets and float64 affine decoding, fixing the source assumption that raw integer argmax always preserves order. F32 is not dequantized again. Lowest class ID wins exact ties. IDs resize directly to original dimensions with INTER_NEAREST; no coloring or file IO occurs. Missing integer quantization metadata fails explicitly. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

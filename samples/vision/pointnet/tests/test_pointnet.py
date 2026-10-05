@@ -129,6 +129,128 @@ class PointNetTests(unittest.TestCase):
         np.testing.assert_array_equal(self.task(binding=bound(quant=q)).predict(self.points()), [0, 1, 2, 3])
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """Canonical preprocess/infer/postprocess names drive predict."""
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        base = PointNetTests()
+        task = base.task()
+        points = base.points()
+        for name in ('preprocess', 'infer', 'postprocess', 'predict'):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        pn = task.preprocess(points)
+        po = task.pre_process(points)
+        self.assertEqual(pn.context, po.context)
+        np.testing.assert_array_equal(pn.tensors['point'], po.tensors['point'])
+        np.testing.assert_array_equal(task.infer(pn.tensors), task.forward(po.tensors))
+        raw = task.infer(pn.tensors)
+        np.testing.assert_array_equal(task.postprocess(raw), task.post_process(raw))
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        base = PointNetTests()
+        calls = []
+        raw = np.eye(4, dtype=np.float32)[None]
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw
+
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+        task = PointNetTask(runner, bound())
+        routed = []
+        for canonical in ('preprocess', 'infer', 'postprocess'):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        labels = task.predict(base.points())
+        self.assertEqual(routed, ['preprocess', 'infer', 'postprocess'])
+        self.assertEqual(len(calls), 1)
+        np.testing.assert_array_equal(labels, [0, 1, 2, 3])
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        base = PointNetTests()
+        task = base.task()
+        routed = []
+        for canonical in ('preprocess', 'infer', 'postprocess'):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        task.post_process(task.forward(task.pre_process(base.points()).tensors))
+        self.assertEqual(routed, ['preprocess', 'infer', 'postprocess'])
+
+    def test_predict_equals_canonical_manual_composition(self):
+        base = PointNetTests()
+        task = base.task()
+        points = base.points()
+        manual = task.postprocess(task.infer(task.preprocess(points).tensors))
+        np.testing.assert_array_equal(task.predict(points), manual)
+        shifted = points * 3 + 7
+        manual_shifted = task.postprocess(task.infer(task.preprocess(shifted).tensors))
+        np.testing.assert_array_equal(task.predict(shifted), manual_shifted)
+
+
+class PredictionDetailsTests(unittest.TestCase):
+    """Opt-in ``return_details`` keeps normalized points and context per call."""
+
+    def detailed_task(self):
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+
+        calls = []
+        raw = np.eye(4, dtype=np.float32)[None]
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw.copy()
+
+        return PointNetTask(runner, bound()), calls
+
+    def test_default_predict_still_returns_plain_int32_labels(self):
+        task, calls = self.detailed_task()
+        labels = task.predict(PointNetTests().points())
+        self.assertEqual(labels.dtype, np.int32)
+        self.assertEqual(labels.tolist(), [0, 1, 2, 3])
+        self.assertEqual(len(calls), 1)
+
+    def test_details_equal_explicit_stages_with_one_runner_call(self):
+        base = PointNetTests()
+        task, calls = self.detailed_task()
+        points = base.points()
+        prepared = task.preprocess(points)
+        raw = task.infer(prepared.tensors)
+        expected = task.postprocess(raw)
+        before = len(calls)
+        details = task.predict(points, return_details=True)
+        np.testing.assert_array_equal(details.labels, expected)
+        np.testing.assert_array_equal(details.prepared.tensors['point'], prepared.tensors['point'])
+        self.assertEqual(details.prepared.context, prepared.context)
+        self.assertEqual(len(calls) - before, 1)
+        # The prepared tensor is exactly the archived normalized cloud.
+        normalized = details.prepared.tensors['point'][0].T
+        centered = points - np.mean(points, axis=0, keepdims=True)
+        np.testing.assert_array_equal(
+            normalized, centered / np.max(np.sqrt(np.sum(centered ** 2, axis=1))))
+
+    def test_details_context_is_per_call_across_shifted_clouds(self):
+        base = PointNetTests()
+        task, _ = self.detailed_task()
+        points = base.points()
+        shifted = points * 3 + 7
+        first = task.predict(points, return_details=True)
+        second = task.predict(shifted, return_details=True)
+        again = task.predict(points, return_details=True)
+        self.assertEqual(first.prepared.context, again.prepared.context)
+        self.assertNotEqual(first.prepared.context, second.prepared.context)
+        self.assertEqual(set(vars(task)) >= {'runner', 'binding'}, True)
+
+
 class BindingTests(unittest.TestCase):
     def test_exact_asset_and_default(self):
         from samples.vision.pointnet.runtime.python.model_binding import resolve_selection
@@ -382,4 +504,5 @@ class SourceAndEntrypointTests(unittest.TestCase):
         tree=ast.parse((ROOT/'samples/vision/pointnet/runtime/python/pointnet.py').read_text())
         cls=next(x for x in tree.body if isinstance(x,ast.ClassDef) and x.name=='PointNetTask')
         self.assertEqual({x.name for x in cls.body if isinstance(x,ast.FunctionDef)},
-                         {'__init__','pre_process','forward','post_process','predict'})
+                         {'__init__','preprocess','infer','postprocess','predict',
+                          'pre_process','forward','post_process'})

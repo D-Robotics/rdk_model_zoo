@@ -68,9 +68,9 @@ runner = RuntimeModelRunner(resolve_selection("s100"))
 binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = UnetMobileNetTask(runner, binding)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-mask = task.post_process(raw, prepared.context)
+prepared = task.preprocess(image)
+raw = task.infer(prepared.tensors)
+mask = task.postprocess(raw, prepared.context)
 mask_again = task.predict(image)
 overlay = render_overlay(image, mask, alpha_f=0.75)
 print(mask.shape, mask.dtype)  # original image height/width, int32
@@ -80,7 +80,7 @@ print(mask.shape, mask.dtype)  # original image height/width, int32
 <a id="stage-io"></a>
 ## 阶段 I/O
 
-pre_process 接收非空 BGR uint8 HWC，以 INTER_AREA 拉伸到 2048×1024，产生 Y uint8 [1,1024,2048,1]、UV uint8 [1,512,1024,2]，并逐次保存不可变的原图尺寸；不做 CPU 归一化或 letterbox。forward 原样返回 [1,H,W,19] int32/F32。post_process 校验绑定的几何／dtype 和有限数值。显式 NONE int32 直接比较，避免浮点舍入；SCALE 校验正 scale／offset 后以 float64 仿射解码，修正“整数 argmax 总保序”的源假设。F32 不重复反量化；精确平局取最小类别 ID。类别图直接以 INTER_NEAREST 恢复原图尺寸，不绘图或读写文件。缺失整数量化元数据时明确拒绝。
+preprocess 接收非空 BGR uint8 HWC，以 INTER_AREA 拉伸到 2048×1024，产生 Y uint8 [1,1024,2048,1]、UV uint8 [1,512,1024,2]，并逐次保存不可变的原图尺寸；不做 CPU 归一化或 letterbox。infer 原样返回 [1,H,W,19] int32/F32。postprocess 校验绑定的几何／dtype 和有限数值。显式 NONE int32 直接比较，避免浮点舍入；SCALE 校验正 scale／offset 后以 float64 仿射解码，修正“整数 argmax 总保序”的源假设。F32 不重复反量化；精确平局取最小类别 ID。类别图直接以 INTER_NEAREST 恢复原图尺寸，不绘图或读写文件。缺失整数量化元数据时明确拒绝。既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>
 ## 故障排查

@@ -220,6 +220,93 @@ class MODNetTests(unittest.TestCase):
             self.assertIsNotNone(runner.load())
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def task(self):
+        runtime_mod = importlib.import_module(
+            "samples.vision.modnet.runtime.python.model_runner"
+        )
+        task_mod = importlib.import_module(
+            "samples.vision.modnet.runtime.python.modnet"
+        )
+        binding_mod = importlib.import_module(
+            "samples.vision.modnet.runtime.python.model_binding"
+        )
+        selection = binding_mod.resolve_selection("x5")
+        matte = np.linspace(0.0, 1.0, 512 * 512, dtype=np.float32).reshape(1, 1, 512, 512)
+        runtime = FakeRuntime(matte)
+        runner = runtime_mod.RuntimeModelRunner(selection, runtime=runtime)
+        return task_mod.MODNetTask(runner, runner.load()), runtime
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        task, runtime = self.task()
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        image = np.zeros((80, 160, 3), dtype=np.uint8)
+        prepared_new = task.preprocess(image)
+        prepared_old = task.pre_process(image)
+        self.assertEqual(prepared_new.context, prepared_old.context)
+        np.testing.assert_array_equal(
+            prepared_new.tensors["input"], prepared_old.tensors["input"]
+        )
+        np.testing.assert_array_equal(
+            task.infer(prepared_new.tensors), task.forward(prepared_old.tensors)
+        )
+        matte = runtime.matte
+        np.testing.assert_array_equal(
+            task.postprocess(matte, prepared_new.context),
+            task.post_process(matte, prepared_old.context),
+        )
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        task, runtime = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        image = np.zeros((80, 160, 3), dtype=np.uint8)
+        calls_before = len(runtime.calls)
+        matte = task.predict(image)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(runtime.calls), calls_before + 1)
+        self.assertEqual(matte.shape, image.shape[:2])
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        task, runtime = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        image = np.zeros((80, 160, 3), dtype=np.uint8)
+        prepared = task.pre_process(image)
+        task.post_process(task.forward(prepared.tensors), prepared.context)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(runtime.calls), 1)
+
+    def test_predict_equals_canonical_manual_composition_across_geometries(self):
+        task, runtime = self.task()
+        image_a = np.zeros((80, 160, 3), dtype=np.uint8)
+        image_b = np.zeros((240, 100, 3), dtype=np.uint8)
+        manual_a = task.postprocess(task.infer(task.preprocess(image_a).tensors),
+                                    task.preprocess(image_a).context)
+        manual_b = task.postprocess(task.infer(task.preprocess(image_b).tensors),
+                                    task.preprocess(image_b).context)
+        np.testing.assert_array_equal(task.predict(image_a), manual_a)
+        np.testing.assert_array_equal(task.predict(image_b), manual_b)
+        self.assertEqual(len(runtime.calls), 4)
+
+
 class MODNetEvaluatorTests(unittest.TestCase):
     """The evaluator must run both sides itself, not compare hand-made mattes."""
 

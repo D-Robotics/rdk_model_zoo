@@ -195,7 +195,16 @@ class LaneTests(unittest.TestCase):
         )
         self.assertEqual(
             {n.name for n in c.body if isinstance(n, ast.FunctionDef)},
-            {"__init__", "pre_process", "forward", "post_process", "predict"},
+            {
+                "__init__",
+                "preprocess",
+                "infer",
+                "postprocess",
+                "predict",
+                "pre_process",
+                "forward",
+                "post_process",
+            },
         )
         with patch(
             "samples.vision.lanenet.runtime.python.model_runner.require_execution_target",
@@ -203,6 +212,121 @@ class LaneTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(ValueError, "wrong board"):
                 RuntimeModelRunner(resolve_selection("s100")).load()
+
+
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        binding = bind_model(resolve_selection("s100"), metadata())
+        t = LaneNetTask(lambda inputs: raw_outputs(), binding)
+        image = np.zeros((37, 71, 3), np.uint8)
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(t, name, None)), name)
+        np.testing.assert_array_equal(
+            t.preprocess(image)["input"], t.pre_process(image)["input"]
+        )
+        raw_new = t.infer(t.preprocess(image))
+        raw_old = t.forward(t.pre_process(image))
+        self.assertEqual(set(raw_new), set(raw_old))
+        for name in raw_new:
+            np.testing.assert_array_equal(raw_new[name], raw_old[name])
+        result_new = t.postprocess(raw_new)
+        result_old = t.post_process(raw_old)
+        np.testing.assert_array_equal(result_new.embedding, result_old.embedding)
+        np.testing.assert_array_equal(result_new.binary, result_old.binary)
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        calls = []
+        raw = raw_outputs()
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw
+
+        binding = bind_model(resolve_selection("s100"), metadata())
+        t = LaneNetTask(runner, binding)
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(t, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(t, canonical, spy)
+        result = t.predict(np.zeros((37, 71, 3), np.uint8))
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(result.binary.shape, (256, 512))
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        binding = bind_model(resolve_selection("s100"), metadata())
+        t = LaneNetTask(lambda inputs: raw_outputs(), binding)
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(t, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(t, canonical, spy)
+        image = np.zeros((37, 71, 3), np.uint8)
+        t.post_process(t.forward(t.pre_process(image)))
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+
+    def test_predict_equals_canonical_manual_composition(self):
+        binding = bind_model(resolve_selection("s100"), metadata())
+        t = LaneNetTask(lambda inputs: raw_outputs(), binding)
+        for image in (np.zeros((37, 71, 3), np.uint8), np.zeros((8, 9, 3), np.uint8)):
+            manual = t.postprocess(t.infer(t.preprocess(image)))
+            result = t.predict(image)
+            np.testing.assert_array_equal(manual.embedding, result.embedding)
+            np.testing.assert_array_equal(manual.binary, result.binary)
+
+
+class PredictionDetailsTests(unittest.TestCase):
+    """Opt-in ``return_details`` archives raw outputs in one pass."""
+
+    def detailed_task(self):
+        calls = []
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw_outputs()
+
+        binding = bind_model(resolve_selection("s100"), metadata())
+        return LaneNetTask(runner, binding), calls
+
+    def test_default_predict_still_returns_the_plain_lane_result(self):
+        t, calls = self.detailed_task()
+        result = t.predict(np.zeros((37, 71, 3), np.uint8))
+        self.assertEqual(result.binary.shape, (256, 512))
+        self.assertEqual(len(calls), 1)
+
+    def test_details_equal_explicit_stages_with_one_runner_call(self):
+        t, calls = self.detailed_task()
+        image = np.zeros((37, 71, 3), np.uint8)
+        prepared = t.preprocess(image)
+        raw = t.infer(prepared)
+        expected = t.postprocess(raw)
+        before = len(calls)
+        details = t.predict(image, return_details=True)
+        np.testing.assert_array_equal(details.result.embedding, expected.embedding)
+        np.testing.assert_array_equal(details.result.binary, expected.binary)
+        self.assertEqual(set(details.raw), set(raw))
+        for name in raw:
+            np.testing.assert_array_equal(details.raw[name], raw[name])
+        np.testing.assert_array_equal(
+            details.prepared["input"], prepared["input"]
+        )
+        self.assertEqual(len(calls) - before, 1)
+        # Details describe only their own call; a second image keeps its own raw.
+        second = t.predict(np.zeros((8, 9, 3), np.uint8), return_details=True)
+        self.assertEqual(details.result.embedding.shape, (3, 256, 512))
+        self.assertEqual(second.result.embedding.shape, (3, 256, 512))
+        self.assertIsNot(details.raw, second.raw)
 
 
 if __name__ == "__main__":

@@ -91,15 +91,18 @@ binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = DepthAnythingV2Task(runner, binding, resize_type=0)
 image = cv2.imread("samples/vision/depth_anything_v2/test_data/furseal.jpg")
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-result = task.post_process(raw, prepared.context)
-# 等价调用：result = task.predict(image)
+result = task.predict(image)
 print(result.depth_native.shape)
+# 同时保留本次调用的原始 [1,518,686] 张量（raw_depth.npy 契约）时：
+details = task.predict(image, return_details=True)
+print(details.raw.shape, details.result.depth_native.shape)
 ```
 
 `PreparedInput` 携带按名称组织的物理张量和不可变 `ImageContext`。
-`DepthResult` 包含独立存储的浮点 `depth_native` 与其上下文。每帧保持匹配上下文，
+`DepthResult` 包含独立存储的浮点 `depth_native` 与其上下文。
+`DepthPredictionDetails`（通过 `return_details=True` 显式开启）把常规结果与本次
+调用的 prepared 输入和原始输出打包返回，归档无需二次推理；默认 `predict` 仍返回
+普通 `DepthResult`，task 不保存上一帧图像或输出。每帧保持匹配上下文，
 task 不保存上一帧尺寸。注入 runner 用于主机测试，不证明硬件执行；API 不保证共享
 runner 并发安全。
 
@@ -113,10 +116,12 @@ runner 并发安全。
 
 | 阶段 | 输入 → 输出 |
 | --- | --- |
-| `pre_process` | 非空 BGR uint8 HWC → 含 float32 `[1,3,518,686]` 的 `PreparedInput` |
-| `forward` | 命名输入映射 → 独立原始 float32 `[1,518,686]`，不做激活 |
-| `post_process` | 原始张量 + 匹配上下文 → 原图尺寸浮点 `DepthResult` |
-| `predict` | 三阶段执行一次，无计时、渲染、IO |
+| `preprocess` | 非空 BGR uint8 HWC → 含 float32 `[1,3,518,686]` 的 `PreparedInput` |
+| `infer` | 命名输入映射 → 独立原始 float32 `[1,518,686]`，不做激活 |
+| `postprocess` | 原始张量 + 匹配上下文 → 原图尺寸浮点 `DepthResult` |
+| `predict` | 三阶段执行一次；`return_details=True` 额外返回本次调用的 prepared 输入与原始输出；无计时、渲染、IO |
+
+既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 默认输入缩放为 INTER_NEAREST，保留源 helper 的实际行为。BGR→RGB 后，每像素三
 通道使用 `(rgb - mean(rgb)) / sqrt(var(rgb) + 1e-5)`，再转置并转换 float32。

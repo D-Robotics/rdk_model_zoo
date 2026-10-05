@@ -65,9 +65,9 @@ image = cv2.imread(str(SAMPLE_DIR / "test_data/2007_000033.jpg"))
 runner = RuntimeModelRunner(resolve_selection("x5", variant="resnet18"))
 binding = runner.load()
 task = UNetTask(runner, binding)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-mask = task.post_process(raw)
+prepared = task.preprocess(image)
+raw = task.infer(prepared.tensors)
+mask = task.postprocess(raw)
 mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 512), uint8
 ```
@@ -78,7 +78,7 @@ The task owns stages; binding owns artifact/tensor contracts, runner lazily load
 
 Preprocess accepts nonempty BGR uint8 HWC, stretches with INTER_LINEAR to 512×512, then creates contiguous packed NV12 uint8 `(1,768,512,1)`. Metadata may describe logical NCHW `(1,3,512,512)`, NHWC `(1,512,512,3)` or physical packed shape, with NV12 dtype. Each call returns independent frozen original-size context.
 
-forward only returns runner-validated raw logits, with no dequantization or argmax. post_process accepts `(1,21,512,512)` or `(1,512,512,21)`. Integer outputs require valid SCALE parameters; float32 is not dequantized again even with a vestigial descriptor. Class argmax breaks ties by lowest ID. Model-resolution output needs no context restoration; no softmax, automatic resize-back or file IO occurs.
+infer only returns runner-validated raw logits, with no dequantization or argmax. postprocess accepts `(1,21,512,512)` or `(1,512,512,21)`. Integer outputs require valid SCALE parameters; float32 is not dequantized again even with a vestigial descriptor. Class argmax breaks ties by lowest ID. Model-resolution output needs no context restoration; no softmax, automatic resize-back or file IO occurs. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

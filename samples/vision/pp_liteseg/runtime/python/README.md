@@ -66,9 +66,9 @@ image = cv2.imread(str(SAMPLE_DIR / "test_data/street.png"))
 runner = RuntimeModelRunner(resolve_selection("x5"))
 binding = runner.load()
 task = PPLiteSegTask(runner, binding)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-mask = task.post_process(raw)
+prepared = task.preprocess(image)
+raw = task.infer(prepared.tensors)
+mask = task.postprocess(raw)
 mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 1024), int32
 ```
@@ -78,7 +78,7 @@ The task contains only stage logic. Binding owns artifact/tensor contracts, the 
 <a id="stage-io"></a>
 ## Stage IO
 
-pre_process takes nonempty HWC BGR uint8, stretches to 1024×512 with INTER_LINEAR, then packs contiguous NV12 uint8 `(768,1024)`. No CPU normalization or letterbox. Returned context carries independent original dimensions; it is not mutable task state. forward returns raw int32 `(1,512,1024,1)` unchanged. post_process requires IDs 0..18 and returns an owned int32 `(512,1024)` array. It never applies softmax, argmax, dequantization or resize-back. Binding accepts logical NV12 metadata NCHW/NHWC or physical packed shape; logits exports and wrong dtype/geometry are rejected.
+preprocess takes nonempty HWC BGR uint8, stretches to 1024×512 with INTER_LINEAR, then packs contiguous NV12 uint8 `(768,1024)`. No CPU normalization or letterbox. Returned context carries independent original dimensions; it is not mutable task state. infer returns raw int32 `(1,512,1024,1)` unchanged. postprocess requires IDs 0..18 and returns an owned int32 `(512,1024)` array. It never applies softmax, argmax, dequantization or resize-back. Binding accepts logical NV12 metadata NCHW/NHWC or physical packed shape; logits exports and wrong dtype/geometry are rejected. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

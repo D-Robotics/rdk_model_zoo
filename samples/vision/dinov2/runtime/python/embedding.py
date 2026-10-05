@@ -23,8 +23,10 @@ class DINOv2Task:
     """One selected DINOv2 output over a validated dual-output runner.
 
     ``RawOutputs`` is a flat mapping containing both source outputs.  Numeric
-    conversion happens only in ``post_process`` and no activation is applied.
-    Returned arrays are owned float32 feature tensors.
+    conversion happens only in ``postprocess`` and no activation is applied.
+    Returned arrays are owned float32 feature tensors.  ``predict`` composes
+    ``preprocess`` → ``infer`` → ``postprocess``; the established
+    ``pre_process``/``forward``/``post_process`` names stay thin aliases.
     """
 
     def __init__(self, runner, binding: ModelBinding, output: str = CLS_FEAT):
@@ -36,19 +38,23 @@ class DINOv2Task:
         self.binding = binding
         self.output = output
 
-    def pre_process(self, image: np.ndarray, image_format: str = "BGR") -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, image: np.ndarray, image_format: str = "BGR") -> PreparedInput:
         """Validate BGR uint8 image and build one per-call prepared input."""
 
         if image_format != "BGR":
             raise ValueError(f"Unsupported image_format: {image_format}")
         return prepare_image(image, self.binding)
 
-    def forward(self, tensors: Mapping[str, np.ndarray]) -> Mapping[str, np.ndarray]:
+    def infer(self, tensors: Mapping[str, np.ndarray]) -> Mapping[str, np.ndarray]:
         """Call the runner and preserve its raw output values and containers."""
 
         return self.runner(tensors)
 
-    def post_process(self, outputs: Mapping[str, np.ndarray]) -> np.ndarray:
+    def postprocess(self, outputs: Mapping[str, np.ndarray]) -> np.ndarray:
         """Dequantize/validate the selected output and return an owned F32 array."""
 
         if not isinstance(outputs, Mapping) or set(outputs) != set(OUTPUTS):
@@ -73,10 +79,30 @@ class DINOv2Task:
         return result
 
     def predict(self, image: np.ndarray, image_format: str = "BGR") -> np.ndarray:
-        """Compose exactly pre_process → forward → post_process."""
+        """Compose exactly preprocess → infer → postprocess."""
 
-        prepared = self.pre_process(image, image_format)
-        return self.post_process(self.forward(prepared.tensors))
+        prepared = self.preprocess(image, image_format)
+        return self.postprocess(self.infer(prepared.tensors))
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image: np.ndarray, image_format: str = "BGR") -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+
+        return self.preprocess(image, image_format)
+
+    def forward(self, tensors: Mapping[str, np.ndarray]) -> Mapping[str, np.ndarray]:
+        """Compatibility alias for :meth:`infer`."""
+
+        return self.infer(tensors)
+
+    def post_process(self, outputs: Mapping[str, np.ndarray]) -> np.ndarray:
+        """Compatibility alias for :meth:`postprocess`."""
+
+        return self.postprocess(outputs)
 
     def __call__(self, image: np.ndarray, image_format: str = "BGR") -> np.ndarray:
         return self.predict(image, image_format)

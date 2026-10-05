@@ -1,6 +1,6 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""FCOS four-stage task: pre-process, forward, post-process, and predict."""
+"""FCOS readable task: preprocess, infer, postprocess, and predict."""
 
 from __future__ import annotations
 
@@ -39,10 +39,12 @@ class FCOSTask:
     contiguous packed-NV12 ``uint8`` vector of ``input_h*input_w*3/2`` bytes.
     Context is an immutable :class:`ImageContext`.  RawOutputs are the exact
     fifteen runtime arrays after shape/dtype validation; quantization is owned
-    by post_process.  Result contains owned float32 ``boxes (N,4)`` in
+    by ``postprocess``.  Result contains owned float32 ``boxes (N,4)`` in
     original-image ``xyxy`` pixels, float32 ``scores (N,)``, and int32
     ``class_ids (N,)``.  ``ValueError`` identifies invalid input, metadata, or
-    quantization contracts before model math is attempted.
+    quantization contracts before model math is attempted.  ``predict``
+    composes ``preprocess`` → ``infer`` → ``postprocess``; the established
+    ``pre_process``/``forward``/``post_process`` names stay thin aliases.
     """
 
     def __init__(self, runner: Callable[[Mapping[str, np.ndarray]], Any], binding, *, conf_thres: float | None = None, iou_thres: float | None = None, resize_type: int | None = None):
@@ -56,11 +58,15 @@ class FCOSTask:
         if not 0 <= self.conf_thres <= 1 or not 0 <= self.iou_thres <= 1:
             raise ValueError("conf_thres and iou_thres must be in [0,1].")
 
-    def pre_process(self, image: np.ndarray) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, image: np.ndarray) -> PreparedInput:
         """Produce packed NV12 tensors and a frozen per-call geometry context."""
         return prepare(image, self.binding, resize_type=self.resize_type)
 
-    def forward(self, prepared: PreparedInput | Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def infer(self, prepared: PreparedInput | Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
         """Invoke the runner and validate raw tensors without decoding them."""
         tensors = prepared.tensors if isinstance(prepared, PreparedInput) else prepared
         outputs = self.runner(tensors)
@@ -70,7 +76,7 @@ class FCOSTask:
             raise ValueError("FCOS runner must return a mapping of raw output tensors.")
         return self.binding.validate_outputs(outputs)
 
-    def post_process(self, outputs: Mapping[str, np.ndarray], context: ImageContext) -> DetectionResult:
+    def postprocess(self, outputs: Mapping[str, np.ndarray], context: ImageContext) -> DetectionResult:
         """Dequantize, decode FCOS heads, apply source NMS, and restore pixels."""
         _validate_context(context, self.binding)
         raw = self.binding.validate_outputs(outputs)
@@ -126,9 +132,26 @@ class FCOSTask:
         return DetectionResult(boxes.astype(np.float32, copy=True), scores[keep].astype(np.float32, copy=True), class_ids[keep].astype(np.int32, copy=True))
 
     def predict(self, image: np.ndarray) -> DetectionResult:
-        """Run exactly ``pre_process → forward → post_process`` for one image."""
-        prepared = self.pre_process(image)
-        return self.post_process(self.forward(prepared), prepared.context)
+        """Run exactly ``preprocess → infer → postprocess`` for one image."""
+        prepared = self.preprocess(image)
+        return self.postprocess(self.infer(prepared), prepared.context)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image: np.ndarray) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image)
+
+    def forward(self, prepared: PreparedInput | Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(prepared)
+
+    def post_process(self, outputs: Mapping[str, np.ndarray], context: ImageContext) -> DetectionResult:
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs, context)
 
     def __call__(self, image: np.ndarray) -> DetectionResult:
         """Delegate to :meth:`predict`."""

@@ -18,6 +18,7 @@ from samples.vision.depth_anything_v2.runtime.python.model_runner import (
 )
 from samples.vision.depth_anything_v2.runtime.python.depth_anything_v2 import (
     DepthAnythingV2Task,
+    DepthResult,
 )
 from samples.vision.depth_anything_v2.runtime.python.visualization import (
     normalize_depth,
@@ -179,7 +180,16 @@ class DepthTests(unittest.TestCase):
         )
         self.assertEqual(
             {n.name for n in c.body if isinstance(n, ast.FunctionDef)},
-            {"__init__", "pre_process", "forward", "post_process", "predict"},
+            {
+                "__init__",
+                "preprocess",
+                "infer",
+                "postprocess",
+                "predict",
+                "pre_process",
+                "forward",
+                "post_process",
+            },
         )
 
     def test_real_gate_before_sdk(self):
@@ -189,6 +199,118 @@ class DepthTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(ValueError, "wrong board"):
                 RuntimeModelRunner(resolve_selection("s100")).load()
+
+
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        t = task(np.zeros((1, 518, 686), np.float32))
+        image = np.zeros((13, 17, 3), np.uint8)
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(t, name, None)), name)
+        pn = t.preprocess(image)
+        po = t.pre_process(image)
+        self.assertEqual(vars(pn.context), vars(po.context))
+        np.testing.assert_array_equal(pn.tensors["image"], po.tensors["image"])
+        np.testing.assert_array_equal(t.infer(pn.tensors), t.forward(po.tensors))
+        raw = np.zeros((1, 518, 686), np.float32)
+        np.testing.assert_array_equal(
+            t.postprocess(raw, pn.context).depth_native,
+            t.post_process(raw, po.context).depth_native,
+        )
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        raw = np.zeros((1, 518, 686), np.float32)
+        calls = []
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw.copy()
+
+        binding = bind_model(resolve_selection("s100"), metadata())
+        t = DepthAnythingV2Task(runner, binding)
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(t, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(t, canonical, spy)
+        result = t.predict(np.zeros((13, 17, 3), np.uint8))
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(result.depth_native.shape, (13, 17))
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        t = task(np.zeros((1, 518, 686), np.float32))
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(t, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(t, canonical, spy)
+        image = np.zeros((13, 17, 3), np.uint8)
+        prepared = t.pre_process(image)
+        t.post_process(t.forward(prepared.tensors), prepared.context)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+
+    def test_predict_equals_canonical_manual_composition_across_geometries(self):
+        t = task(np.zeros((1, 518, 686), np.float32), mode=1)
+        for image in (np.zeros((13, 17, 3), np.uint8), np.zeros((259, 686, 3), np.uint8)):
+            prepared = t.preprocess(image)
+            manual = t.postprocess(t.infer(prepared.tensors), prepared.context)
+            np.testing.assert_array_equal(t.predict(image).depth_native, manual.depth_native)
+
+
+class PredictionDetailsTests(unittest.TestCase):
+    """Opt-in ``return_details`` archives this call's raw tensor in one pass."""
+
+    def detailed_task(self):
+        calls = []
+        raw = np.arange(518 * 686, dtype=np.float32).reshape(1, 518, 686)
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw.copy()
+
+        binding = bind_model(resolve_selection("s100"), metadata())
+        return DepthAnythingV2Task(runner, binding), calls
+
+    def test_default_predict_still_returns_the_plain_result(self):
+        t, calls = self.detailed_task()
+        result = t.predict(np.zeros((13, 17, 3), np.uint8))
+        self.assertIsInstance(result, DepthResult)
+        self.assertEqual(len(calls), 1)
+
+    def test_details_equal_explicit_stages_with_one_runner_call(self):
+        t, calls = self.detailed_task()
+        image = np.zeros((13, 17, 3), np.uint8)
+        prepared = t.preprocess(image)
+        raw = t.infer(prepared.tensors)
+        expected = t.postprocess(raw, prepared.context)
+        before = len(calls)
+        details = t.predict(image, return_details=True)
+        np.testing.assert_array_equal(details.result.depth_native, expected.depth_native)
+        np.testing.assert_array_equal(details.raw, raw)
+        np.testing.assert_array_equal(details.prepared.tensors["image"], prepared.tensors["image"])
+        self.assertEqual(vars(details.prepared.context), vars(prepared.context))
+        self.assertEqual(len(calls) - before, 1)
+
+    def test_details_are_per_call_and_leave_no_state(self):
+        t, _ = self.detailed_task()
+        first = t.predict(np.zeros((13, 17, 3), np.uint8), return_details=True)
+        second = t.predict(np.zeros((7, 9, 3), np.uint8), return_details=True)
+        again = t.predict(np.zeros((13, 17, 3), np.uint8), return_details=True)
+        self.assertEqual(first.result.depth_native.shape, (13, 17))
+        self.assertEqual(second.result.depth_native.shape, (7, 9))
+        self.assertEqual(again.result.depth_native.shape, (13, 17))
+        self.assertEqual(set(vars(t)), {"runner", "binding", "resize_type"})
 
 
 if __name__ == "__main__":

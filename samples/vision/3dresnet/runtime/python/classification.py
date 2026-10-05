@@ -16,7 +16,7 @@ from .tensor_io import PreparedInput, prepare_clip
 class VideoClassificationTask:
     """Classify one already-normalized ``(1,3,16,112,112)`` video clip.
 
-    The four public operations make the inference-contract data flow explicit:
+    The readable pipeline makes the inference-contract data flow explicit:
 
     - **Input**: one numeric RGB clip with exact shape ``(1,3,16,112,112)``;
       the clip is already normalized and is not decoded or resized here.
@@ -26,11 +26,13 @@ class VideoClassificationTask:
       containing the source shape, dtype, and bound tensor shape.  The task
       has no mutable per-call context field.
     - **RawOutputs**: one finite float32 400-score tensor under the output
-      name exposed by runtime metadata.  ``forward`` does no softmax or I/O.
+      name exposed by runtime metadata.  ``infer`` does no softmax or I/O.
     - **Result**: an owned :class:`ClassificationResult` produced by the
       shared source-compatible softmax and stable Top-K helper.
 
-    ``predict`` composes ``pre_process`` → ``forward`` → ``post_process``.
+    ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``.  The
+    established ``pre_process``/``forward``/``post_process`` names stay thin
+    aliases of those implementations.
     """
 
     def __init__(
@@ -50,14 +52,18 @@ class VideoClassificationTask:
         self.top_k = int(top_k)
         self.labels = labels
 
-    def pre_process(self, clip: np.ndarray) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, clip: np.ndarray) -> PreparedInput:
         return prepare_clip(clip, self.binding)
 
-    def forward(self, prepared: PreparedInput | Mapping[str, np.ndarray]) -> Mapping[str, np.ndarray]:
+    def infer(self, prepared: PreparedInput | Mapping[str, np.ndarray]) -> Mapping[str, np.ndarray]:
         tensors = prepared.tensors if isinstance(prepared, PreparedInput) else prepared
         return self.runner(tensors)
 
-    def post_process(self, outputs: Mapping[str, np.ndarray], *, top_k: int | None = None) -> ClassificationResult:
+    def postprocess(self, outputs: Mapping[str, np.ndarray], *, top_k: int | None = None) -> ClassificationResult:
         if not isinstance(outputs, Mapping) or set(outputs) != {self.binding.output_name}:
             raise ValueError("R3D-18 raw outputs must contain exactly the bound score tensor.")
         raw = np.asarray(outputs[self.binding.output_name])
@@ -75,8 +81,28 @@ class VideoClassificationTask:
         return topk_from_scores(raw, int(selected_k), self.labels, softmax=True)
 
     def predict(self, clip: np.ndarray, *, top_k: int | None = None) -> ClassificationResult:
-        prepared = self.pre_process(clip)
-        return self.post_process(self.forward(prepared.tensors), top_k=top_k)
+        prepared = self.preprocess(clip)
+        return self.postprocess(self.infer(prepared.tensors), top_k=top_k)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, clip: np.ndarray) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+
+        return self.preprocess(clip)
+
+    def forward(self, prepared: PreparedInput | Mapping[str, np.ndarray]) -> Mapping[str, np.ndarray]:
+        """Compatibility alias for :meth:`infer`."""
+
+        return self.infer(prepared)
+
+    def post_process(self, outputs: Mapping[str, np.ndarray], *, top_k: int | None = None) -> ClassificationResult:
+        """Compatibility alias for :meth:`postprocess`."""
+
+        return self.postprocess(outputs, top_k=top_k)
 
     def __call__(self, clip: np.ndarray, *, top_k: int | None = None) -> ClassificationResult:
         return self.predict(clip, top_k=top_k)

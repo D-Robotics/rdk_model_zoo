@@ -56,10 +56,16 @@ python3 samples/vision/dinov2/runtime/python/main.py \
 
 The CLI prints JSON fields `output`, `shape`, `dtype`, `mean`, `std`, `min`, `max`, and `l2_norm`. If the second image is used, it also prints `second_image` and `cosine_similarity`; a missing file has status `skipped_missing`. `cls_feat` is `(1,384)`, `patch_feat` is `(1,256,384)`, and both results are owned float32 arrays. Integer HBM outputs are dequantized by the output quantization metadata. No softmax, L2 normalization, patch pooling, or other feature transformation is applied.
 
+The entry is split for readability: `main.py` resolves the selection, constructs
+`DINOv2Task`, calls `predict` (once per image) and prints the JSON summary;
+option declarations, the `--list-models`/`--dry-run` modes, the feature
+summary/cosine helpers and the optional tensor export live in `cli.py`. The
+embedding algorithm itself is unchanged and lives only in `embedding.py`.
+
 <a id="integration-example"></a>
 ## Integration Example
 
-Prerequisite: prepare the S100 artifact using [`../../model/README.md`](../../model/README.md), and run this snippet on an S100 board. Change `target = "s100"` to `"s100p"` or `"s600"` when using those boards; selection then resolves that target's independent manifest HBM. The example defines all paths, input, target, asset identity, scheduling values, runner, binding, task, `explicit_result`, and `composed_result`. `DINOv2Task.post_process` returns the selected ndarray; repeat the same block with `output="patch_feat"` to compare the other output key.
+Prerequisite: prepare the S100 artifact using [`../../model/README.md`](../../model/README.md), and run this snippet on an S100 board. Change `target = "s100"` to `"s100p"` or `"s600"` when using those boards; selection then resolves that target's independent manifest HBM. The example defines all paths, input, target, asset identity, scheduling values, runner, binding, task, `explicit_result`, and `composed_result`. `DINOv2Task.postprocess` returns the selected ndarray; repeat the same block with `output="patch_feat"` to compare the other output key.
 
 ```python
 from pathlib import Path
@@ -87,9 +93,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 output = "cls_feat"
 task = DINOv2Task(runner, binding, output)
-prepared = task.pre_process(image)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(image)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(image)
 np.testing.assert_array_equal(explicit_result, composed_result)
 print({"output": output, "shape": composed_result.shape,
@@ -99,10 +105,12 @@ print({"output": output, "shape": composed_result.shape,
 <a id="stage-io"></a>
 ## Three-Stage I/O
 
-- `pre_process`: BGR `uint8` `H×W×3` → `PreparedInput`; OpenCV converts RGB, bicubic-resizes the short side to 256, center-crops 224, scales by `/255`, applies ImageNet mean/std, and emits owned contiguous float32 `{"input": (1,3,224,224)}`. `context` records original/resized shape and crop origin.
-- `forward`: input mapping → raw mapping containing exactly `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`. The runner validates names, shape, and native metadata dtype and returns raw values unchanged.
-- `post_process`: raw dual-output mapping → the selected output as an owned float32 ndarray. Float32 output stays raw; integer output uses only its bound quantization metadata for dequantization. No softmax or L2 normalization is applied.
+- `preprocess`: BGR `uint8` `H×W×3` → `PreparedInput`; OpenCV converts RGB, bicubic-resizes the short side to 256, center-crops 224, scales by `/255`, applies ImageNet mean/std, and emits owned contiguous float32 `{"input": (1,3,224,224)}`. `context` records original/resized shape and crop origin.
+- `infer`: input mapping → raw mapping containing exactly `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`. The runner validates names, shape, and native metadata dtype and returns raw values unchanged.
+- `postprocess`: raw dual-output mapping → the selected output as an owned float32 ndarray. Float32 output stays raw; integer output uses only its bound quantization metadata for dequantization. No softmax or L2 normalization is applied.
 - `predict(image)` composes the three stages for the task's selected output. It does not download, write files, or evaluate.
+
+The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

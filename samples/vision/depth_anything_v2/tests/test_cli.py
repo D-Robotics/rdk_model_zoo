@@ -68,6 +68,9 @@ class CliTests(unittest.TestCase):
                 )
             self.assertEqual(rc, 0)
             self.assertEqual(np.load(p / "out/depth_native.npy").shape, (7, 13))
+            raw_saved = np.load(p / "out/raw_depth.npy")
+            self.assertEqual(raw_saved.shape, (1, 518, 686))
+            self.assertEqual(raw_saved.dtype, np.float32)
             self.assertEqual(cv2.imread(str(p / "legacy.jpg")).shape, (7, 13, 3))
             report = json.loads((p / "out/report.json").read_text())
             self.assertEqual(

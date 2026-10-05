@@ -22,13 +22,36 @@ class PreparedInput:
     context: PointContext
 
 
+@dataclass(frozen=True)
+class PointNetPredictionDetails:
+    """One predict call's owned labels plus its prepared normalized points.
+
+    The prepared record carries the exact normalized ``(1,3,N)`` tensor and the
+    centroid/radius context needed to interpret or archive it; callers request
+    it with ``return_details=True`` instead of recomputing stages.  It
+    describes only its own call; the task never retains a last cloud.
+    """
+
+    labels: np.ndarray
+    prepared: PreparedInput
+
+
 class PointNetTask:
-    """Four-stage PointNet API; no file IO, plotting, downloads or mutable context."""
+    """Four-stage PointNet API; no file IO, plotting, downloads or mutable context.
+
+    ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+    established ``pre_process``/``forward``/``post_process`` names stay thin
+    aliases of those implementations.
+    """
     def __init__(self, runner, binding: ModelBinding):
         self.runner = runner
         self.binding = binding
 
-    def pre_process(self, points: np.ndarray) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, points: np.ndarray) -> PreparedInput:
         """Normalize finite real (N,3) XYZ points to centroid 0 and max radius 1.
 
         N must equal compiled metadata. No resampling, padding or point reordering.
@@ -51,11 +74,11 @@ class PointNetTask:
         return PreparedInput({self.binding.input_name: tensor},
                              PointContext(tuple(float(x) for x in centroid), radius, n))
 
-    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+    def infer(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
         """Return raw runner-validated (1,N,4) logits, with no numerical transform."""
         return self.runner(tensors)
 
-    def post_process(self, raw: np.ndarray) -> np.ndarray:
+    def postprocess(self, raw: np.ndarray) -> np.ndarray:
         """Decode raw (1,N,4) logits to owned int32 (N,) IDs in input point order.
 
         Integer outputs use validated SCALE dequantization computed in float64,
@@ -83,7 +106,33 @@ class PointNetTask:
             raise ValueError("PointNet dequantization produced nonfinite logits.")
         return np.argmax(decoded[0], axis=1).astype(np.int32)
 
-    def predict(self, points: np.ndarray) -> np.ndarray:
-        """Run exactly pre_process → forward → post_process on raw XYZ points."""
-        prepared = self.pre_process(points)
-        return self.post_process(self.forward(prepared.tensors))
+    def predict(self, points: np.ndarray, *, return_details: bool = False):
+        """Run exactly preprocess → infer → postprocess on raw XYZ points.
+
+        ``return_details=True`` wraps the usual ``(N,)`` int32 labels with
+        this call's prepared record (normalized tensor plus centroid/radius
+        context), so plotting and archiving need no second pass; the default
+        return stays the plain labels array.
+        """
+        prepared = self.preprocess(points)
+        labels = self.postprocess(self.infer(prepared.tensors))
+        if return_details:
+            return PointNetPredictionDetails(labels, prepared)
+        return labels
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, points: np.ndarray) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(points)
+
+    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self, raw: np.ndarray) -> np.ndarray:
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(raw)

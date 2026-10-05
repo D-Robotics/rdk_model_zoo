@@ -74,6 +74,12 @@ Successful CLI execution prints one JSON object to stdout:
 
 `predictions` contains exactly `--top-k` entries sorted by source-compatible softmax probability. `class_id` is an integer in `[0,399]`; `score` is the float32 softmax value; `label` is the source JSON name with literal double quotes removed. No output file is written by the CLI.
 
+The entry is split for readability: `main.py` resolves the selection, constructs
+`VideoClassificationTask`, calls `predict` once and prints the JSON report;
+option declarations, the `--list-models`/`--dry-run` modes and the report
+assembly live in `cli.py`. The classification algorithm itself is unchanged and
+lives only in `classification.py`.
+
 <a id="integration-example"></a>
 ## Integration Example
 
@@ -103,9 +109,9 @@ labels = labels_mod.load_labels(repo / "samples/vision/3dresnet/test_data/kineti
 task = task_mod.VideoClassificationTask(runner, binding, top_k=5, labels=labels)
 clip = np.load(repo / "samples/vision/3dresnet/test_data/video0.npy", allow_pickle=False)
 
-prepared = task.pre_process(clip)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(clip)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(clip)
 assert np.array_equal(explicit_result.class_ids, composed_result.class_ids)
 assert np.array_equal(explicit_result.scores, composed_result.scores)
@@ -113,14 +119,16 @@ assert explicit_result.labels == composed_result.labels
 ```
 
 <a id="stage-io"></a>
-## Four-stage API I/O
+## Stage API I/O
 
 | Stage | Contract |
 | --- | --- |
-| `pre_process(clip)` | Input NumPy numeric clip of exact shape `(1,3,16,112,112)`; returns `PreparedInput.tensors` under the runtime-reported input name, contiguous float32 with the same values after casting, plus a per-call `VideoContext`. |
-| `forward(tensors)` | Validates one actual input name, five-dimensional shape, F32 finite values, and one actual runtime output name; returns raw F32 scores without softmax or file I/O. |
-| `post_process(outputs)` | Validates the actual output name, bound 400-score shape, F32 dtype, and finite values; delegates softmax/Top-K to `samples._shared.classification.topk_from_scores`. |
-| `predict(clip)` | Runs the three stages in order and returns a `ClassificationResult`; it does not keep context in task state. |
+| `preprocess(clip)` | Input NumPy numeric clip of exact shape `(1,3,16,112,112)`; returns `PreparedInput.tensors` under the runtime-reported input name, contiguous float32 with the same values after casting, plus a per-call `VideoContext`. |
+| `infer(tensors)` | Validates one actual input name, five-dimensional shape, F32 finite values, and one actual runtime output name; returns raw F32 scores without softmax or file I/O. |
+| `postprocess(outputs)` | Validates the actual output name, bound 400-score shape, F32 dtype, and finite values; delegates softmax/Top-K to `samples._shared.classification.topk_from_scores`. |
+| `predict(clip)` | Runs `preprocess` → `infer` → `postprocess` in order and returns a `ClassificationResult`; it does not keep context in task state. |
+
+The established `pre_process(clip)`, `forward(tensors)`, and `post_process(outputs)` names remain importable thin aliases of the three stages above — one implementation, two names.
 
 The input clip is already RGB and normalized. The task performs no image or video decoding, resizing, or normalization.
 

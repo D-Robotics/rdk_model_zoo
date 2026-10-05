@@ -1,8 +1,14 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Three-stage depth inference with explicit per-call restoration geometry."""
+"""Three-stage depth inference with explicit per-call restoration geometry.
+
+``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+established ``pre_process``/``forward``/``post_process`` names stay thin
+aliases of those implementations.
+"""
 
 from dataclasses import dataclass
+import time
 from typing import Mapping
 
 import cv2
@@ -32,14 +38,41 @@ class DepthResult:
     context: ImageContext
 
 
+@dataclass(frozen=True)
+class DepthPredictionDetails:
+    """One predict call's owned result plus warmup count and forward latency.
+
+    ``latency_ms`` covers exactly one forward call (transport validation and
+    the owned output copy included, preprocessing/postprocessing excluded) and
+    ``warmup`` records how many unmeasured forwards preceded it.  Callers
+    request this record with ``return_details=True``; the task never retains a
+    last image, output or timing.
+    """
+
+    result: DepthResult
+    prepared: PreparedInput
+    raw: np.ndarray
+    warmup: int
+    latency_ms: float
+
+
 class Yolo26DepthTask:
-    """BGR → profile-specific input → raw F32 → original-size relative depth."""
+    """BGR → profile-specific input → raw F32 → original-size relative depth.
+
+    ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+    established ``pre_process``/``forward``/``post_process`` names stay thin
+    aliases of those implementations.
+    """
 
     def __init__(self, runner, binding):
         self.runner = runner
         self.binding = binding
 
-    def pre_process(self, image: np.ndarray) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, image: np.ndarray) -> PreparedInput:
         """Nonempty BGR uint8 HWC → owned flat NV12 or RGB float32 NCHW.
 
         NV12 uses INTER_LINEAR letterbox with padding 114; lite uses scale-fill
@@ -83,11 +116,11 @@ class Yolo26DepthTask:
             value = np.concatenate((y.reshape(-1), uv.reshape(-1)))
         return PreparedInput({self.binding.input_name: value}, ctx)
 
-    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+    def infer(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
         """Return the runner's raw float32 single-channel tensor without decoding."""
         return self.runner(tensors)
 
-    def post_process(self, raw: np.ndarray, context: ImageContext) -> DepthResult:
+    def postprocess(self, raw: np.ndarray, context: ImageContext) -> DepthResult:
         """Raw F32 192-square output → calibrated log map and relative depth.
 
         NV12 is already calibrated: exp, resize to 768, crop padding, restore.
@@ -115,7 +148,44 @@ class Yolo26DepthTask:
         restored = restore_log_depth(log_depth, context)
         return DepthResult(log_depth, restored, raw_logit, context)
 
-    def predict(self, image: np.ndarray) -> DepthResult:
-        """Run the same three stages once, with no warmup, timing or file IO."""
-        prepared = self.pre_process(image)
-        return self.post_process(self.forward(prepared.tensors), prepared.context)
+    def predict(self, image: np.ndarray, *, warmup: int = 0,
+                return_details: bool = False):
+        """Run the same three stages once, with no file IO or rendering.
+
+        ``warmup`` (validated before any execution) runs that many unmeasured
+        forwards on the prepared tensors first.  ``return_details=True`` wraps
+        the usual :class:`DepthResult` with this call's prepared input, raw
+        output, the applied warmup count and the one-forward latency; the
+        default return stays the plain :class:`DepthResult` and the timing
+        never includes preprocessing or postprocessing.
+        """
+        if not isinstance(warmup, int) or warmup < 0:
+            raise ValueError("warmup must be a nonnegative integer")
+        prepared = self.preprocess(image)
+        for _ in range(warmup):
+            self.infer(prepared.tensors)
+        started = time.perf_counter()
+        raw = self.infer(prepared.tensors)
+        latency_ms = (time.perf_counter() - started) * 1000
+        result = self.postprocess(raw, prepared.context)
+        if return_details:
+            return DepthPredictionDetails(
+                result, prepared, raw, warmup, latency_ms)
+        return result
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image: np.ndarray) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image)
+
+    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self, raw: np.ndarray, context: ImageContext) -> DepthResult:
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(raw, context)

@@ -109,8 +109,7 @@ def main(argv: list[str] | None = None) -> int:
         binding = runner.load()
         runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         task = MODNetTask(runner, binding)
-        prepared = task.pre_process(image)
-        matte = task.post_process(task.forward(prepared.tensors), prepared.context)
+        matte = task.predict(image)
         matte_path = Path(args.matte_save_path).expanduser()
         matte_path.parent.mkdir(parents=True, exist_ok=True)
         if not cv2.imwrite(str(matte_path), matte):

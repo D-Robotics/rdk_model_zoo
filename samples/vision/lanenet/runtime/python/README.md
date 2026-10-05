@@ -89,19 +89,30 @@ if image is None:
 result = task.predict(image)
 assert result.embedding.shape == (3, 256, 512)
 assert result.binary.shape == (256, 512)
+# To also keep this call's raw named outputs (the raw_outputs.npz contract):
+details = task.predict(image, return_details=True)
+assert set(details.raw) == set(binding.metadata.output_names)
 ```
 
-For raw output comparisons call `pre_process`, `forward`, then `post_process` separately and retain the `forward` mapping. Keep visualization and filesystem operations in the application. Do not share a mutable SDK runner across concurrent calls without an application-level synchronization policy.
+`LanePredictionDetails` (opt-in via `return_details=True`) bundles the usual
+result with this call's prepared input and raw outputs, so archiving raw
+tensors needs no second inference; the default `predict` return stays the
+plain `LaneResult` and the task never retains a last output. Keep
+visualization and filesystem operations in the application. Do not share a
+mutable SDK runner across concurrent calls without an application-level
+synchronization policy.
 
 <a id="stage-io"></a>
 ## Stage IO and binding
 
 | Stage | Input | Output |
 | --- | --- | --- |
-| `pre_process` | Nonempty BGR uint8 HWC with 3 channels | Mapping from bound input name to contiguous float32 NCHW `[1,3,256,512]` |
-| `forward` | Prepared mapping | All actual named raw output arrays, copied from runtime storage |
-| `post_process` | Raw mapping matching metadata | `LaneResult`: CHW float embedding and HW uint8 binary labels |
-| `predict` | BGR image | Composition of the three stages |
+| `preprocess` | Nonempty BGR uint8 HWC with 3 channels | Mapping from bound input name to contiguous float32 NCHW `[1,3,256,512]` |
+| `infer` | Prepared mapping | All actual named raw output arrays, copied from runtime storage |
+| `postprocess` | Raw mapping matching metadata | `LaneResult`: CHW float embedding and HW uint8 binary labels |
+| `predict` | BGR image | Composition of the three stages; `return_details=True` additionally returns this call's prepared input and raw outputs |
+
+The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 Preprocessing is source-compatible: BGR→RGB, INTER_AREA stretch to width 512/height 256, /255, mean `[0.485,0.456,0.406]`, std `[0.229,0.224,0.225]`, CHW and batch. The same pure image function prepares calibration data. No letterbox, sigmoid, softmax, argmax or clustering is added.
 

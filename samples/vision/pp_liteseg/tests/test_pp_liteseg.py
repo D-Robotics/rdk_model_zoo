@@ -77,6 +77,60 @@ class StageTests(unittest.TestCase):
         np.testing.assert_array_equal(render_result(image,labels,alpha=0.55),self.source().visualize(image,labels))
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """Canonical preprocess/infer/postprocess names drive predict."""
+    def task(self):
+        return task()
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        t,raw=self.task()
+        for name in ('preprocess','infer','postprocess','predict'):
+            self.assertTrue(callable(getattr(t,name,None)),name)
+        image=np.zeros((11,17,3),np.uint8)
+        pn=t.preprocess(image);po=t.pre_process(image)
+        self.assertEqual(pn.context,po.context)
+        np.testing.assert_array_equal(pn.tensors['images'],po.tensors['images'])
+        np.testing.assert_array_equal(t.infer(pn.tensors),t.forward(po.tensors))
+        np.testing.assert_array_equal(t.postprocess(raw),t.post_process(raw))
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        t,raw=self.task();calls=[];original=t.infer
+        def counting(tensors):
+            calls.append(tensors);return original(tensors)
+        t.infer=counting
+        routed=[]
+        for canonical in ('preprocess','postprocess'):
+            attr=getattr(t,canonical)
+            def spy(*args,_a=attr,_c=canonical,**kw):
+                routed.append(_c);return _a(*args,**kw)
+            setattr(t,canonical,spy)
+        image=np.zeros((11,17,3),np.uint8)
+        labels=t.predict(image)
+        self.assertEqual(routed,['preprocess','postprocess'])
+        self.assertEqual(len(calls),1)
+        self.assertEqual(labels.shape,(512,1024))
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        t,raw=self.task();routed=[]
+        for canonical in ('preprocess','infer','postprocess'):
+            attr=getattr(t,canonical)
+            def spy(*args,_a=attr,_c=canonical,**kw):
+                routed.append(_c);return _a(*args,**kw)
+            setattr(t,canonical,spy)
+        image=np.zeros((11,17,3),np.uint8)
+        t.post_process(t.forward(t.pre_process(image).tensors))
+        self.assertEqual(routed,['preprocess','infer','postprocess'])
+
+    def test_predict_equals_canonical_manual_composition(self):
+        t,raw=self.task()
+        image=np.zeros((11,17,3),np.uint8)
+        manual=t.postprocess(t.infer(t.preprocess(image).tensors))
+        np.testing.assert_array_equal(t.predict(image),manual)
+        image_b=np.zeros((21,13,3),np.uint8)
+        manual_b=t.postprocess(t.infer(t.preprocess(image_b).tensors))
+        np.testing.assert_array_equal(t.predict(image_b),manual_b)
+
+
 class BindingAndCLITests(unittest.TestCase):
     def test_exact_x5_asset_and_no_s_fallback(self):
         from samples.vision.pp_liteseg.runtime.python.model_binding import resolve_selection,ASSET_ID

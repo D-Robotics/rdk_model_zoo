@@ -78,16 +78,24 @@ points = np.loadtxt(SAMPLE_DIR / "test_data/chair.pts", dtype=np.float32)
 runner = RuntimeModelRunner(resolve_selection("s100"))
 binding = runner.load()
 task = PointNetTask(runner, binding)
-prepared = task.pre_process(points)
-raw = task.forward(prepared.tensors)
-labels = task.post_process(raw)
+prepared = task.preprocess(points)
+raw = task.infer(prepared.tensors)
+labels = task.postprocess(raw)
 print(labels.shape, labels.dtype)
 # Equivalent three-stage convenience call:
 labels_again = task.predict(points)
+# To also keep this call's normalized points and centroid/radius context:
+details = task.predict(points, return_details=True)
+print(details.prepared.tensors["point"].shape, details.prepared.context.radius)
 ```
 
-`pre_process` and `post_process` can be tested on a host with an injected runner
-and a validated metadata fixture. The real runner is lazy, verifies target and
+`preprocess` and `postprocess` can be tested on a host with an injected runner
+and a validated metadata fixture. `PointNetPredictionDetails` (opt-in via
+`return_details=True`) bundles the labels with this call's prepared record —
+the exact normalized `(1,3,N)` tensor plus the frozen centroid/radius context —
+so plotting and archiving need no second pass; the default `predict` return
+stays the plain labels array and the task never retains a last cloud. The real
+runner is lazy, verifies target and
 artifact before importing the SDK, and then checks tensor metadata. No concurrent
 SDK execution guarantee is made.
 
@@ -96,10 +104,12 @@ SDK execution guarantee is made.
 
 | Stage | Input | Output / semantics |
 | --- | --- | --- |
-| pre_process | finite real ndarray `(N,3)` XYZ | owned contiguous float32 `(1,3,N)`; subtract centroid, divide by maximum Euclidean radius |
-| forward | tensor mapping using bound input name | owned raw `(1,N,4)` logits from runtime; no argmax, dequant or IO |
-| post_process | raw tensor with bound shape/dtype | int32 `(N,)` IDs; integer SCALE decoding in float64 before argmax, float32 unchanged |
-| predict | raw `(N,3)` points | same stages and labels |
+| preprocess | finite real ndarray `(N,3)` XYZ | owned contiguous float32 `(1,3,N)`; subtract centroid, divide by maximum Euclidean radius |
+| infer | tensor mapping using bound input name | owned raw `(1,N,4)` logits from runtime; no argmax, dequant or IO |
+| postprocess | raw tensor with bound shape/dtype | int32 `(N,)` IDs; integer SCALE decoding in float64 before argmax, float32 unchanged |
+| predict | raw `(N,3)` points | same stages and labels; `return_details=True` additionally returns this call's prepared record |
+
+The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 N comes from compiled metadata and must match exactly; no resampling/padding.
 Frozen `prepared.context` stores centroid/radius/count per call and cannot be

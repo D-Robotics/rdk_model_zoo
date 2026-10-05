@@ -1,6 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Cityscapes segmentation stages; file IO, rendering and SDK loading live elsewhere."""
+"""Cityscapes segmentation stages; file IO, rendering and SDK loading live elsewhere.
+
+``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+established ``pre_process``/``forward``/``post_process`` names stay thin
+aliases of those implementations.
+"""
 from dataclasses import dataclass
 from typing import Mapping
 
@@ -31,7 +36,11 @@ class UnetMobileNetTask:
         self.runner = runner
         self.binding = binding
 
-    def pre_process(self, image: np.ndarray) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, image: np.ndarray) -> PreparedInput:
         """Stretch nonempty BGR uint8 HWC with INTER_AREA to 2048×1024.
 
         Returns Y [1,1024,2048,1], UV [1,512,1024,2], both contiguous uint8,
@@ -48,11 +57,11 @@ class UnetMobileNetTask:
         return PreparedInput({self.binding.y_name: y, self.binding.uv_name: uv},
                              ImageContext(*image.shape[:2]))
 
-    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+    def infer(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
         """Return runner-validated raw [1,H,W,19] int32/float32 unchanged."""
         return self.runner(tensors)
 
-    def post_process(self, raw: np.ndarray, context: ImageContext) -> np.ndarray:
+    def postprocess(self, raw: np.ndarray, context: ImageContext) -> np.ndarray:
         """Decode scores and resize class IDs directly to the original image.
 
         SCALE logits are affine-dequantized only here, using float64 comparison
@@ -78,5 +87,22 @@ class UnetMobileNetTask:
 
     def predict(self, image: np.ndarray) -> np.ndarray:
         """Run the same three stages and return class IDs, not a visualization."""
-        prepared = self.pre_process(image)
-        return self.post_process(self.forward(prepared.tensors), prepared.context)
+        prepared = self.preprocess(image)
+        return self.postprocess(self.infer(prepared.tensors), prepared.context)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image: np.ndarray) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image)
+
+    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self, raw: np.ndarray, context: ImageContext) -> np.ndarray:
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(raw, context)

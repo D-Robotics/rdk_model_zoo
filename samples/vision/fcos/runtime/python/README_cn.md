@@ -75,11 +75,12 @@ print(result.boxes, result.scores, result.class_ids)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `pre_process`：BGR `uint8 (H,W,3)` → contiguous packed NV12 `uint8 (1.5*input_h*input_w,)` 和冻结 `ImageContext`。
-- `forward`：packed tensor → 15 个原始数组；shape 为 `(1,input_h/stride,input_w/stride,{80,4,1})`；不做激活、反量化、NMS 或文件 I/O。原始输出映射按精确名字集合匹配——板端 `run()` 返回 dict 的键顺序可能与 `metadata.output_names` 不同（X5 证据 2026-09-24）——但缺失/多余的名字，或任何 shape/dtype/非有限值与绑定不符，都会拒绝，且调用方数组身份保持不变。
-- `post_process`：原始数组和 context → `sqrt(sigmoid(cls_max)*sigmoid(center))`、stride 框解码、源 OpenCV NMS 和原图结果。direct resize 使用独立的宽高比例；letterbox 会减去冻结的上/左 padding，再按实际整数 resized 宽高反向缩放并裁剪。
+- `preprocess`：BGR `uint8 (H,W,3)` → contiguous packed NV12 `uint8 (1.5*input_h*input_w,)` 和冻结 `ImageContext`。
+- `infer`：packed tensor → 15 个原始数组；shape 为 `(1,input_h/stride,input_w/stride,{80,4,1})`；不做激活、反量化、NMS 或文件 I/O。原始输出映射按精确名字集合匹配——板端 `run()` 返回 dict 的键顺序可能与 `metadata.output_names` 不同（X5 证据 2026-09-24）——但缺失/多余的名字，或任何 shape/dtype/非有限值与绑定不符，都会拒绝，且调用方数组身份保持不变。
+- `postprocess`：原始数组和 context → `sqrt(sigmoid(cls_max)*sigmoid(center))`、stride 框解码、源 OpenCV NMS 和原图结果。direct resize 使用独立的宽高比例；letterbox 会减去冻结的上/左 padding，再按实际整数 resized 宽高反向缩放并裁剪。
 - 量化：FCOS 遵循固定源的 `dequantize_outputs` 路径；即使 runtime 数组是 F32，只要观察到 SCALE descriptor 也会应用它。每个输出必须有可检查的 descriptor，缺失或未知 descriptor 会拒绝，不能只按 dtype 选择 raw-F32 路径。
 - `predict` 每次严格按上述三阶段串联一次。
+- 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>
 ## 故障排查

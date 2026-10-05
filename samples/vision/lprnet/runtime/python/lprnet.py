@@ -76,24 +76,33 @@ def decode_plate(logits: np.ndarray) -> str:
 
 
 class LPRNetTask:
-    """Four-stage LPRNet task: binary input, raw logits, and CTC plate text."""
+    """Four-stage LPRNet task: binary input, raw logits, and CTC plate text.
+
+    ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+    established ``pre_process``/``forward``/``post_process`` names stay thin
+    aliases of those implementations.
+    """
 
     def __init__(self, runner, binding: ModelBinding):
         self.runner = runner
         self.binding = binding
 
-    def pre_process(self, test_bin: str | Path) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, test_bin: str | Path) -> PreparedInput:
         """Read the source-provided float32 binary input without image transforms."""
 
         tensor, path = read_float32_input(test_bin)
         return PreparedInput({self.binding.input_name: tensor}, path)
 
-    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+    def infer(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
         """Run the selected model and return an owned raw float32 logits array."""
 
         return self.runner(tensors)
 
-    def post_process(self, raw: np.ndarray) -> str:
+    def postprocess(self, raw: np.ndarray) -> str:
         """Drop protocol singletons from the bound native logits and decode.
 
         ``raw`` must be the float32 array exactly as bound — the released
@@ -110,10 +119,30 @@ class LPRNetTask:
         return decode_plate(ctc_logits(value))
 
     def predict(self, test_bin: str | Path) -> str:
-        """Run pre_process, forward, and post_process for one binary input."""
+        """Run preprocess, infer, and postprocess for one binary input."""
 
-        prepared = self.pre_process(test_bin)
-        return self.post_process(self.forward(prepared.tensors))
+        prepared = self.preprocess(test_bin)
+        return self.postprocess(self.infer(prepared.tensors))
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, test_bin: str | Path) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+
+        return self.preprocess(test_bin)
+
+    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+        """Compatibility alias for :meth:`infer`."""
+
+        return self.infer(tensors)
+
+    def post_process(self, raw: np.ndarray) -> str:
+        """Compatibility alias for :meth:`postprocess`."""
+
+        return self.postprocess(raw)
 
 
 LPRNet = LPRNetTask

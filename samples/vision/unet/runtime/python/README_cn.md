@@ -65,9 +65,9 @@ image = cv2.imread(str(SAMPLE_DIR / "test_data/2007_000033.jpg"))
 runner = RuntimeModelRunner(resolve_selection("x5", variant="resnet18"))
 binding = runner.load()
 task = UNetTask(runner, binding)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-mask = task.post_process(raw)
+prepared = task.preprocess(image)
+raw = task.infer(prepared.tensors)
+mask = task.postprocess(raw)
 mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 512), uint8
 ```
@@ -78,7 +78,7 @@ print(mask.shape, mask.dtype)  # (512, 512), uint8
 
 前处理接受非空 BGR uint8 HWC，INTER_LINEAR 直接缩放至 512×512，再转换为连续 packed NV12 uint8 `(1,768,512,1)`。metadata 可表达逻辑 NCHW `(1,3,512,512)`、NHWC `(1,512,512,3)` 或物理 packed 形状，dtype 必须 NV12。每次返回独立冻结 context，记录原始尺寸。
 
-forward 仅返回经 runner 校验的原始 logits，不做反量化或 argmax。post_process 接受 `(1,21,512,512)` 或 `(1,512,512,21)`；整数需有效 SCALE 参数，float32 不重复反量化，即使带遗留 descriptor。随后按类别 argmax，平局取最小 ID。输出为模型分辨率，因此后处理无需 context；没有 softmax、自动拉回原图或文件 IO。
+infer 仅返回经 runner 校验的原始 logits，不做反量化或 argmax。postprocess 接受 `(1,21,512,512)` 或 `(1,512,512,21)`；整数需有效 SCALE 参数，float32 不重复反量化，即使带遗留 descriptor。随后按类别 argmax，平局取最小 ID。输出为模型分辨率，因此后处理无需 context；没有 softmax、自动拉回原图或文件 IO。既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>
 ## 排查

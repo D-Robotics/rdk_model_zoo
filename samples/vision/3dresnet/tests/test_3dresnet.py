@@ -203,6 +203,81 @@ class TaskTests(unittest.TestCase):
             self.make_task(top_k=401)
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def make_task(self, **kwargs):
+        return TaskTests().make_task(**kwargs)
+
+    def test_canonical_stage_names_exist_and_legacy_names_delegate(self):
+        task, _ = self.make_task()
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        clip = np.zeros((1, 3, 16, 112, 112), dtype=np.float32)
+        prepared_new, prepared_old = task.preprocess(clip), task.pre_process(clip)
+        np.testing.assert_array_equal(
+            prepared_new.tensors["physical_input"], prepared_old.tensors["physical_input"]
+        )
+        self.assertIsNotNone(prepared_new.context)
+        np.testing.assert_array_equal(
+            task.infer(prepared_new)["scores_out"], task.forward(prepared_old)["scores_out"]
+        )
+        explicit_new = task.postprocess({"scores_out": np.zeros((1, 400), np.float32)})
+        explicit_old = task.post_process({"scores_out": np.zeros((1, 400), np.float32)})
+        np.testing.assert_array_equal(explicit_new.class_ids, explicit_old.class_ids)
+        np.testing.assert_array_equal(explicit_new.scores, explicit_old.scores)
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        task, runtime = self.make_task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        clip = np.zeros((1, 3, 16, 112, 112), dtype=np.float32)
+        calls_before = len(runtime.calls)
+        result = task.predict(clip)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(runtime.calls), calls_before + 1)
+        self.assertEqual(len(result.class_ids), 5)
+
+    def test_legacy_stage_names_delegate_to_canonical_implementations(self):
+        task, runtime = self.make_task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        clip = np.zeros((1, 3, 16, 112, 112), dtype=np.float32)
+        prepared = task.pre_process(clip)
+        raw = task.forward(prepared)
+        task.post_process(raw)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(runtime.calls), 1)
+
+    def test_predict_equals_canonical_manual_composition_and_per_call_state(self):
+        task, runtime = self.make_task()
+        first = np.zeros((1, 3, 16, 112, 112), dtype=np.float32)
+        second = np.full((1, 3, 16, 112, 112), 0.5, dtype=np.float32)
+        manual = task.postprocess(task.infer(task.preprocess(first)))
+        self.assertEqual(manual.class_ids.tolist(), task.predict(first).class_ids.tolist())
+        np.testing.assert_allclose(manual.scores, task.predict(first).scores)
+        runtime.raw[0, 7] = 40.0
+        changed = task.predict(second)
+        self.assertEqual(int(changed.class_ids[0]), 7)
+        unchanged = task.predict(first)
+        self.assertEqual(int(unchanged.class_ids[0]), 7)
+        self.assertEqual(len(runtime.calls), 5)
+
+
 class LabelsAndCLITests(unittest.TestCase):
     def test_clean_repo_root_importlib_loads_task_and_runner(self):
         code = (

@@ -92,19 +92,28 @@ task = DiffusionDriveTask(runner, binding, agent_score_threshold=0.5)
 result = task.predict(features)
 assert result["trajectory"].shape == (1, 8, 3)
 assert result["bev_labels"].shape == (1, 128, 256)
+# To also keep this call's physical inputs and raw outputs (the archive contract):
+details = task.predict(features, return_details=True)
+assert set(details.physical) == set(features) and set(details.raw) == set(details.result) | {"agent_labels"}
 ```
 
-Call the stages individually to retain physical inputs and raw outputs. Results own their arrays. Keep the SDK runner alive while using the task; do not share it across concurrent calls without synchronization. The task no longer owns the SDK or supplies a `__call__` alias; use `predict`. It does not accept raw camera/LiDAR sensors in place of prepared feature tensors.
+`DiffusionDriveDetails` (opt-in via `return_details=True`) bundles the decoded
+result with this call's physical inputs and raw outputs, so archiving
+`physical_inputs.npz`/`raw_outputs.npz` needs no second inference; the default
+`predict` return stays the decoded mapping alone and the task never retains a
+last output. Results own their arrays. Keep the SDK runner alive while using the task; do not share it across concurrent calls without synchronization. The task no longer owns the SDK or supplies a `__call__` alias; use `predict`. It does not accept raw camera/LiDAR sensors in place of prepared feature tensors.
 
 <a id="stage-io"></a>
 ## Stage IO and quantization
 
 | Stage | Input | Output |
 | --- | --- | --- |
-| `pre_process` | Exact four finite float32 logical arrays | Flat name→physical array mapping using bound dtype/quantization |
-| `forward` | Physical mapping | Owned raw named outputs; no semantic decoding |
-| `post_process` | Exact four raw arrays matching metadata | Owned decoded six-array result |
-| `predict` | Logical features | Composition of the three stages |
+| `preprocess` | Exact four finite float32 logical arrays | Flat name→physical array mapping using bound dtype/quantization |
+| `infer` | Physical mapping | Owned raw named outputs; no semantic decoding |
+| `postprocess` | Exact four raw arrays matching metadata | Owned decoded six-array result |
+| `predict` | Logical features | Composition of the three stages; `return_details=True` additionally returns this call's physical inputs and raw outputs |
+
+The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 Logical input shapes: camera `[1,3,256,1024]`, lidar `[1,1,256,256]`, status `[1,8]`, noise `[1,20,8,2]`. Source output names/shapes: trajectory `[1,8,3]`, agent_states `[1,30,5]`, agent_labels `[1,30]`, bev_semantic_map `[1,7,128,256]`. Binding requires exactly one model and exact name sets; name order is irrelevant.
 

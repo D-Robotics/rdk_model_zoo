@@ -230,7 +230,16 @@ class DepthTests(unittest.TestCase):
         )
         self.assertEqual(
             {n.name for n in node.body if isinstance(n, ast.FunctionDef)},
-            {"__init__", "pre_process", "forward", "post_process", "predict"},
+            {
+                "__init__",
+                "preprocess",
+                "infer",
+                "postprocess",
+                "predict",
+                "pre_process",
+                "forward",
+                "post_process",
+            },
         )
 
     def test_runner_transport_lazy_owned_and_exact_names(self):
@@ -268,6 +277,212 @@ class DepthTests(unittest.TestCase):
         ):
             with self.assertRaises(ValueError):
                 colorize_depth(bad)
+
+
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def setUp(self):
+        self.image = np.arange(37 * 23 * 3, dtype=np.uint8).reshape(37, 23, 3)
+        self.raw = np.linspace(-6, 6, 192 * 192, dtype=np.float32).reshape(
+            1, 192, 192, 1
+        )
+
+    def task(self, target="x5", variant="n", runner=None):
+        selection = resolve_selection(target, variant=variant)
+        binding = bind_model(selection, metadata(selection.profile == "lite"))
+        return Yolo26DepthTask(runner or (lambda tensors: self.raw.copy()), binding)
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        task = self.task()
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        pn = task.preprocess(self.image)
+        po = task.pre_process(self.image)
+        self.assertEqual(vars(pn.context), vars(po.context))
+        np.testing.assert_array_equal(
+            pn.tensors["images"], po.tensors["images"]
+        )
+        np.testing.assert_array_equal(
+            task.infer(pn.tensors), task.forward(po.tensors)
+        )
+        result_new = task.postprocess(self.raw, pn.context)
+        result_old = task.post_process(self.raw, po.context)
+        np.testing.assert_array_equal(result_new.depth_native, result_old.depth_native)
+        np.testing.assert_array_equal(result_new.log_depth, result_old.log_depth)
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        calls = []
+
+        def runner(tensors):
+            calls.append(tensors)
+            return self.raw.copy()
+
+        task = self.task(runner=runner)
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        result = task.predict(self.image)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(result.depth_native.shape, (37, 23))
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        task = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        prepared = task.pre_process(self.image)
+        task.post_process(task.forward(prepared.tensors), prepared.context)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+
+    def test_predict_equals_canonical_manual_composition(self):
+        for target, variant in (("x5", "n"), ("s600", "l")):
+            task = self.task(target, variant)
+            prepared = task.preprocess(self.image)
+            manual = task.postprocess(task.infer(prepared.tensors), prepared.context)
+            result = task.predict(self.image)
+            np.testing.assert_array_equal(manual.log_depth, result.log_depth)
+            np.testing.assert_array_equal(manual.depth_native, result.depth_native)
+
+
+class PredictionDetailsTests(unittest.TestCase):
+    """Opt-in ``return_details`` keeps explicit warmup and one-forward latency."""
+
+    def setUp(self):
+        self.image = np.arange(37 * 23 * 3, dtype=np.uint8).reshape(37, 23, 3)
+        self.raw = np.linspace(-6, 6, 192 * 192, dtype=np.float32).reshape(
+            1, 192, 192, 1
+        )
+
+    def task(self, runner=None, target="x5", variant="n"):
+        selection = resolve_selection(target, variant=variant)
+        binding = bind_model(selection, metadata(selection.profile == "lite"))
+        return Yolo26DepthTask(runner or (lambda tensors: self.raw.copy()), binding)
+
+    def test_default_predict_still_returns_plain_result_with_one_call(self):
+        calls = []
+
+        def runner(tensors):
+            calls.append(tensors)
+            return self.raw.copy()
+
+        task = self.task(runner=runner)
+        result = task.predict(self.image)
+        self.assertEqual(result.depth_native.shape, (37, 23))
+        self.assertEqual(len(calls), 1)
+
+    def test_negative_warmup_is_rejected_before_any_execution(self):
+        import time as _time
+
+        calls = []
+        windows = {"preprocess": None}
+
+        def runner(tensors):
+            calls.append(tensors)
+            return self.raw.copy()
+
+        task = self.task(runner=runner)
+        original_preprocess = task.preprocess
+
+        def spying_preprocess(image):
+            windows["preprocess"] = _time.perf_counter()
+            return original_preprocess(image)
+
+        task.preprocess = spying_preprocess
+        for kwargs in ({"warmup": -1}, {"warmup": -1, "return_details": True}):
+            with self.assertRaises(ValueError):
+                task.predict(self.image, **kwargs)
+        self.assertEqual(calls, [])
+        self.assertIsNone(windows["preprocess"])
+
+    def test_details_match_explicit_stages_with_one_runner_call(self):
+        calls = []
+
+        def runner(tensors):
+            calls.append(tensors)
+            return self.raw.copy()
+
+        task = self.task(runner=runner)
+        prepared = task.preprocess(self.image)
+        raw = task.infer(prepared.tensors)
+        expected = task.postprocess(raw, prepared.context)
+        before = len(calls)
+        details = task.predict(self.image, return_details=True)
+        np.testing.assert_array_equal(details.result.log_depth, expected.log_depth)
+        np.testing.assert_array_equal(details.result.depth_native, expected.depth_native)
+        np.testing.assert_array_equal(details.raw, raw)
+        self.assertEqual(vars(details.prepared.context), vars(prepared.context))
+        self.assertEqual(details.warmup, 0)
+        self.assertEqual(len(calls) - before, 1)
+
+    def test_details_warmup_count_and_latency_cover_one_forward_only(self):
+        import time as _time
+
+        forward_windows = []
+        pre_window = [None, None]
+        post_window = [None, None]
+
+        def runner(tensors):
+            started = _time.perf_counter()
+            if len(forward_windows) == 2:  # exactly the measured third call
+                _time.sleep(0.08)
+            forward_windows.append((started, _time.perf_counter()))
+            return self.raw.copy()
+
+        task = self.task(runner=runner)
+        original_preprocess, original_postprocess = task.preprocess, task.postprocess
+
+        def timed_preprocess(image):
+            pre_window[0] = _time.perf_counter()
+            try:
+                return original_preprocess(image)
+            finally:
+                pre_window[1] = _time.perf_counter()
+
+        def timed_postprocess(raw, context):
+            post_window[0] = _time.perf_counter()
+            try:
+                return original_postprocess(raw, context)
+            finally:
+                post_window[1] = _time.perf_counter()
+
+        task.preprocess = timed_preprocess
+        task.postprocess = timed_postprocess
+        details = task.predict(self.image, warmup=2, return_details=True)
+        self.assertEqual(details.warmup, 2)
+        self.assertEqual(len(forward_windows), 3)
+        self.assertEqual(details.result.depth_native.shape, (37, 23))
+        measured_start, measured_end = forward_windows[-1]
+        self.assertGreaterEqual(details.latency_ms / 1000.0, measured_end - measured_start - 0.02)
+        self.assertLessEqual(details.latency_ms / 1000.0, measured_end - measured_start + 0.02)
+        # Timing excludes preprocessing and postprocessing...
+        self.assertLessEqual(pre_window[1], measured_start + 1e-9)
+        self.assertGreaterEqual(post_window[0], measured_end - 1e-9)
+        # ...and covers exactly the measured forward, not the warmup calls.
+        self.assertGreaterEqual(
+            details.latency_ms / 1000.0,
+            (measured_end - measured_start),
+        )
+        warmup_total = forward_windows[1][1] - forward_windows[0][0]
+        self.assertLess(details.latency_ms / 1000.0, (measured_end - measured_start) + warmup_total + 0.02)
+
+    def test_details_leave_no_state_on_the_task(self):
+        task = self.task()
+        task.predict(self.image, warmup=1, return_details=True)
+        self.assertEqual(set(vars(task)), {"runner", "binding"})
 
 
 if __name__ == "__main__":

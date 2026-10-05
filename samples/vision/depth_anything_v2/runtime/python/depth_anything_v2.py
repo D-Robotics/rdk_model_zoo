@@ -25,12 +25,37 @@ class DepthResult:
     context: ImageContext
 
 
+@dataclass(frozen=True)
+class DepthPredictionDetails:
+    """One predict call's owned result plus its prepared input and raw output.
+
+    Callers that archive the raw tensor (``raw_depth.npy``) request this record
+    with ``return_details=True`` instead of recomputing stages.  It describes
+    only its own call; the task never retains a last image or last output.
+    """
+
+    result: DepthResult
+    prepared: PreparedInput
+    raw: np.ndarray
+
+
 class DepthAnythingV2Task:
+    """Actual source pixelwise RGB z-score → raw inference → relative float depth.
+
+    ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+    established ``pre_process``/``forward``/``post_process`` names stay thin
+    aliases of those implementations.
+    """
+
     def __init__(self, runner, binding, *, resize_type=0):
         make_context(1, 1, resize_type)
         self.runner, self.binding, self.resize_type = runner, binding, resize_type
 
-    def pre_process(self, image):
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, image):
         """BGR uint8 HWC → owned normalized RGB float32 NCHW plus geometry.
 
         Stretch uses source INTER_NEAREST; optional letterbox uses INTER_LINEAR
@@ -71,11 +96,11 @@ class DepthAnythingV2Task:
         )
         return PreparedInput({self.binding.input_name: tensor}, ctx)
 
-    def forward(self, tensors):
+    def infer(self, tensors):
         """Return owned raw float32 [1,518,686] without scaling or rendering."""
         return self.runner(tensors)
 
-    def post_process(self, raw, context):
+    def postprocess(self, raw, context):
         """Finite float depth → crop optional padding, restore original H×W.
 
         OpenCV bilinear replaces source Torch align_corners=False. No numerical
@@ -102,7 +127,34 @@ class DepthAnythingV2Task:
             raise ValueError("Nonfinite restored depth")
         return DepthResult(result.copy(), context)
 
-    def predict(self, image):
-        """Execute the same three stages with no IO, visualization or timing."""
-        prepared = self.pre_process(image)
-        return self.post_process(self.forward(prepared.tensors), prepared.context)
+    def predict(self, image, *, return_details=False):
+        """Execute the same three stages with no IO, visualization or timing.
+
+        ``return_details=True`` wraps the usual :class:`DepthResult` with this
+        call's prepared input and raw output, so one production inference also
+        serves callers that archive ``raw_depth.npy``; the default return stays
+        the plain :class:`DepthResult`.
+        """
+        prepared = self.preprocess(image)
+        raw = self.infer(prepared.tensors)
+        result = self.postprocess(raw, prepared.context)
+        if return_details:
+            return DepthPredictionDetails(result, prepared, raw)
+        return result
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(image)
+
+    def forward(self, tensors):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self, raw, context):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(raw, context)

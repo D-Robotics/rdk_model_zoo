@@ -82,15 +82,20 @@ runner = RuntimeModelRunner(selection)
 binding = runner.load()
 task = Yolo26DepthTask(runner, binding)
 image = cv2.imread("samples/vision/yolo26_depth/test_data/bus.jpg")
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-result = task.post_process(raw, prepared.context)
-# 等价调用：result = task.predict(image)
+result = task.predict(image)
 print(result.depth_native.shape)
+# 复现 CLI 的测量式运行（显式 warmup、单次前向计时）时：
+details = task.predict(image, warmup=3, return_details=True)
+print(details.warmup, details.latency_ms)
 ```
 
 `PreparedInput` 携带张量和不可变的单次调用几何上下文。`DepthResult` 携带
-`log_depth`、`depth_native`、可选 `raw_logit` 和对应上下文。每帧必须保留匹配的
+`log_depth`、`depth_native`、可选 `raw_logit` 和对应上下文。
+`DepthPredictionDetails`（通过 `return_details=True` 显式开启）将结果与本次调用的
+prepared 输入、原始输出、warmup 次数和单次前向延时打包返回（延时含传输校验与
+输出拷贝，不含预处理/后处理）；默认 `predict` 仍返回普通 `DepthResult`，task
+不保存上一帧图像、输出或计时。
+每帧必须保留匹配的
 上下文，task 不保存“上一帧变换”。注入 runner 是主机测试接口，不是板测证明。
 CLI 单独设置调度参数；应用可在支持时调用
 `runner.set_scheduling_params(priority=0, bpu_cores=[0])`。
@@ -101,10 +106,12 @@ CLI 单独设置调度参数；应用可在支持时调用
 
 | 阶段 | 契约 |
 | --- | --- |
-| `pre_process(image)` | 非空 BGR uint8 HWC → `PreparedInput` |
-| `forward(tensors)` | 按名称传入物理张量 → 未解码的单个 float32 SDK 输出 |
-| `post_process(raw, context)` | 已绑定输出及匹配几何 → 拥有独立存储的相对深度数组 |
-| `predict(image)` | 顺序执行上述三个阶段一次 |
+| `preprocess(image)` | 非空 BGR uint8 HWC → `PreparedInput` |
+| `infer(tensors)` | 按名称传入物理张量 → 未解码的单个 float32 SDK 输出 |
+| `postprocess(raw, context)` | 已绑定输出及匹配几何 → 拥有独立存储的相对深度数组 |
+| `predict(image)` | 顺序执行上述三个阶段一次；`warmup`/`return_details=True` 增加不计时预热前向并返回本次调用的 prepared/raw 数据、warmup 次数与单次前向延时 |
+
+既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 X5 全部变体及 S 的 `n/s/m` 使用 768×768 INTER_LINEAR letterbox，填充值 114，
 再转换为**单个 884736 字节的扁平 NV12 uint8 数组**，不是独立 Y/UV 输入。

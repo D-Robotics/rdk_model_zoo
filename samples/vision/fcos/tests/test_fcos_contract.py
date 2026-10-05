@@ -611,5 +611,98 @@ class FcosContractTests(unittest.TestCase):
         ])
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def task(self, **kwargs):
+        from samples.vision.fcos.runtime.python.fcos import FCOSTask
+        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+
+        binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
+        raw = fixture_outputs()
+        return FCOSTask(lambda tensors: raw, binding, **kwargs), raw
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        task, raw = self.task()
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        image = np.zeros((300, 500, 3), dtype=np.uint8)
+        prepared_new = task.preprocess(image)
+        prepared_old = task.pre_process(image)
+        self.assertEqual(prepared_new.context, prepared_old.context)
+        np.testing.assert_array_equal(
+            prepared_new.tensors[task.binding.input_names[0]],
+            prepared_old.tensors[task.binding.input_names[0]],
+        )
+        self.assertIs(task.infer(prepared_new), task.forward(prepared_old))
+        result_new = task.postprocess(raw, prepared_new.context)
+        result_old = task.post_process(raw, prepared_old.context)
+        self.assertEqual(result_new, result_old)
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        task, raw = self.task()
+        calls = []
+        original_infer = task.infer
+        original_preprocess = task.preprocess
+        original_postprocess = task.postprocess
+        routed = []
+
+        def spy_preprocess(image):
+            routed.append("preprocess")
+            return original_preprocess(image)
+
+        def spy_infer(prepared):
+            routed.append("infer")
+            calls.append(prepared)
+            return original_infer(prepared)
+
+        def spy_postprocess(outputs, context):
+            routed.append("postprocess")
+            return original_postprocess(outputs, context)
+
+        task.preprocess = spy_preprocess
+        task.infer = spy_infer
+        task.postprocess = spy_postprocess
+        image = np.zeros((300, 500, 3), dtype=np.uint8)
+        result = task.predict(image)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(result.boxes.shape[1], 4)
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        task, raw = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        image = np.zeros((300, 500, 3), dtype=np.uint8)
+        prepared = task.pre_process(image)
+        task.post_process(task.forward(prepared), prepared.context)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+
+    def test_predict_equals_canonical_manual_composition_and_single_call(self):
+        task, raw = self.task()
+        runner_calls = []
+        binding = task.binding
+
+        def counting_runner(tensors):
+            runner_calls.append(tensors)
+            return raw
+
+        task.runner = counting_runner
+        image = np.zeros((300, 500, 3), dtype=np.uint8)
+        prepared = task.preprocess(image)
+        manual = task.postprocess(task.infer(prepared), prepared.context)
+        self.assertEqual(len(runner_calls), 1)
+        predicted = task.predict(image)
+        self.assertEqual(manual, predicted)
+        self.assertEqual(len(runner_calls), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

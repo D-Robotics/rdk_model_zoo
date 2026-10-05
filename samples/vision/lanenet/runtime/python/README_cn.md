@@ -89,19 +89,27 @@ if image is None:
 result = task.predict(image)
 assert result.embedding.shape == (3, 256, 512)
 assert result.binary.shape == (256, 512)
+# 同时保留本次调用的原始具名输出（raw_outputs.npz 契约）时：
+details = task.predict(image, return_details=True)
+assert set(details.raw) == set(binding.metadata.output_names)
 ```
 
-需要比较原始输出时，分开调用 `pre_process`、`forward`、`post_process`，保留 `forward` 返回的映射。绘图与文件读写放在应用层。未建立应用层同步策略前，不应在并发调用间共享可变 SDK runner。
+`LanePredictionDetails`（通过 `return_details=True` 显式开启）将常规结果与本次
+调用的 prepared 输入、原始输出打包返回，归档原始张量无需二次推理；默认
+`predict` 仍返回普通 `LaneResult`，task 不保存上一次输出。
+绘图与文件读写放在应用层。未建立应用层同步策略前，不应在并发调用间共享可变 SDK runner。
 
 <a id="stage-io"></a>
 ## 阶段 IO 与绑定
 
 | 阶段 | 输入 | 输出 |
 | --- | --- | --- |
-| `pre_process` | 非空三通道 BGR uint8 HWC | 从绑定输入名到连续 float32 NCHW `[1,3,256,512]` 的映射 |
-| `forward` | 预处理映射 | 从运行库存储复制出的全部实际具名原始数组 |
-| `post_process` | 与元数据匹配的原始映射 | `LaneResult`：CHW 浮点嵌入和 HW uint8 二值标签 |
-| `predict` | BGR 图像 | 组合上述三阶段 |
+| `preprocess` | 非空三通道 BGR uint8 HWC | 从绑定输入名到连续 float32 NCHW `[1,3,256,512]` 的映射 |
+| `infer` | 预处理映射 | 从运行库存储复制出的全部实际具名原始数组 |
+| `postprocess` | 与元数据匹配的原始映射 | `LaneResult`：CHW 浮点嵌入和 HW uint8 二值标签 |
+| `predict` | BGR 图像 | 组合上述三阶段；`return_details=True` 额外返回本次调用的 prepared 输入与原始输出 |
+
+既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 前处理保持源算术：BGR→RGB，INTER_AREA 拉伸到宽 512/高 256，/255，均值 `[0.485,0.456,0.406]`，标准差 `[0.229,0.224,0.225]`，转 CHW 并加 batch。校准数据复用同一纯图像函数。不增加 letterbox、sigmoid、softmax、argmax 或聚类。
 

@@ -55,7 +55,7 @@ X5 11 preserves its source clamp of confidence to `[1e-6,1-1e-6]` before logit c
 
 `Result.boxes` is float32 `[N,4]` continuous original-image xyxy pixels, clipped to `[0,W]/[0,H]`; `scores` is float32 `[N]` sigmoid probability and `class_ids` is int64 `[N]` fixed-vocabulary ID, not COCO category ID. X5 `masks` is bool `[N,H,W]` (`mask_layout="full"`); S returns N uint8 0/1 ROI arrays (`mask_layout="roi"`), sliced using integer-truncated box bounds with empty ROI alignment retained. Returned results own their memory. S11 now retains exact zero-axis ROI shapes and normalizes Lanczos overshoot to binary 0/1 without changing foreground support.
 
-The CLI saves a colored overlay, default `test_data/result.jpg`. It does not save raw tensors or present inference as an accuracy report.
+The CLI saves a colored overlay, default `test_data/result.jpg`. It does not save raw tensors or present inference as an accuracy report. The entry is split for readability: `main.py` resolves the selection, builds the `Config`, constructs `YOLOE` with its runner, calls `predict` once and renders the result; option declarations, the `--list-models`/`--dry-run` modes and the JSON result report live in `cli.py`. The segmentation algorithm itself is unchanged and lives only in `yoloe.py` with its decode/IO modules.
 
 <a id="integration-example"></a>
 ## Integration Example

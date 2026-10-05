@@ -76,11 +76,12 @@ print(result.boxes, result.scores, result.class_ids)
 <a id="stage-io"></a>
 ## Three-Stage I/O
 
-- `pre_process`: BGR `uint8 (H,W,3)` → packed contiguous NV12 `uint8 (1.5*input_h*input_w,)` plus frozen `ImageContext`.
-- `forward`: validated packed tensor → raw mapping of 15 arrays; output shapes are `(1,input_h/stride,input_w/stride,{80,4,1})`; no activation, dequantization, NMS, or file I/O. The raw mapping is matched by exact name set — the board `run()` dict order may differ from `metadata.output_names` (X5 evidence 2026-09-24) — while missing or extra names, or any shape/dtype/non-finite drift from the binding, are rejected and the caller's arrays keep their identity.
-- `post_process`: raw mapping + context → dequantized FCOS confidence `sqrt(sigmoid(cls_max)*sigmoid(center))`, stride-scaled `xyxy`, source OpenCV NMS, and original-image result. Direct resize uses independent width/height ratios; letterbox subtracts the frozen top/left padding and divides by the effective integer resized width/height before clipping.
+- `preprocess`: BGR `uint8 (H,W,3)` → packed contiguous NV12 `uint8 (1.5*input_h*input_w,)` plus frozen `ImageContext`.
+- `infer`: validated packed tensor → raw mapping of 15 arrays; output shapes are `(1,input_h/stride,input_w/stride,{80,4,1})`; no activation, dequantization, NMS, or file I/O. The raw mapping is matched by exact name set — the board `run()` dict order may differ from `metadata.output_names` (X5 evidence 2026-09-24) — while missing or extra names, or any shape/dtype/non-finite drift from the binding, are rejected and the caller's arrays keep their identity.
+- `postprocess`: raw mapping + context → dequantized FCOS confidence `sqrt(sigmoid(cls_max)*sigmoid(center))`, stride-scaled `xyxy`, source OpenCV NMS, and original-image result. Direct resize uses independent width/height ratios; letterbox subtracts the frozen top/left padding and divides by the effective integer resized width/height before clipping.
 - Quantization: FCOS follows the fixed source `dequantize_outputs` path. A SCALE descriptor is applied even when the observed runtime array is F32; every output must carry an inspectable descriptor. Missing or unknown descriptors are rejected, and dtype alone never selects a raw-F32 path.
 - `predict` calls the three stages exactly once in that order for each image.
+- The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

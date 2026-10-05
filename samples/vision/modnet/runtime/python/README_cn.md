@@ -40,7 +40,7 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
 <a id="results"></a>
 ## 结果
 
-`MODNetTask.post_process` 返回原图几何的 owned uint8 灰度 matte。可选合成使用源线性 alpha 公式并写出 BGR 图像。raw forward 结果保持 float32 `[0,1]`，runner 不保存也不再归一化。
+`MODNetTask.postprocess` 返回原图几何的 owned uint8 灰度 matte。可选合成使用源线性 alpha 公式并写出 BGR 图像。raw forward 结果保持 float32 `[0,1]`，runner 不保存也不再归一化。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -67,9 +67,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = MODNetTask(runner, binding)
 image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
-prepared = task.pre_process(image)
-raw_matte = task.forward(prepared.tensors)
-explicit_matte = task.post_process(raw_matte, prepared.context)
+prepared = task.preprocess(image)
+raw_matte = task.infer(prepared.tensors)
+explicit_matte = task.postprocess(raw_matte, prepared.context)
 composed_result = composite(image, explicit_matte, cv2.imread(str(background_path)))
 assert np.array_equal(explicit_matte, task.predict(image))
 print(explicit_matte.shape, composed_result.shape)
@@ -78,10 +78,11 @@ print(explicit_matte.shape, composed_result.shape)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `pre_process(image)` 校验 BGR HWC，执行 BGR→RGB、`(pixel-127.5)/127.5`、长边 512 resize 和居中 zero padding，返回含 `tensors, context` 的 `PreparedInput`。
-- `forward(tensors)` 校验绑定 tensor，返回 owned raw float32 `(1,1,512,512)` matte。
-- `post_process(raw, context)` 将源 `[0,1]` matte 转 uint8、去 padding 并恢复原图几何。
+- `preprocess(image)` 校验 BGR HWC，执行 BGR→RGB、`(pixel-127.5)/127.5`、长边 512 resize 和居中 zero padding，返回含 `tensors, context` 的 `PreparedInput`。
+- `infer(tensors)` 校验绑定 tensor，返回 owned raw float32 `(1,1,512,512)` matte。
+- `postprocess(raw, context)` 将源 `[0,1]` matte 转 uint8、去 padding 并恢复原图几何。
 - `predict(image)` 串联三个阶段；geometry 放在本次调用的冻结 context 中，不放入可变 task 字段。
+- 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>
 ## 故障排查

@@ -92,19 +92,27 @@ task = DiffusionDriveTask(runner, binding, agent_score_threshold=0.5)
 result = task.predict(features)
 assert result["trajectory"].shape == (1, 8, 3)
 assert result["bev_labels"].shape == (1, 128, 256)
+# 同时保留本次调用的物理输入与原始输出（归档契约）时：
+details = task.predict(features, return_details=True)
+assert set(details.physical) == set(features) and set(details.raw) == set(details.result) | {"agent_labels"}
 ```
 
-需要保留物理输入与原始输出时分阶段调用。结果独立持有数组，使用任务时须保持 SDK runner 存活；未建立同步机制前不应并发共享。任务不再持有 SDK，也不提供 `__call__` 别名，请使用 `predict`。它不接受原始相机/LiDAR 传感器数据替代准备后的特征张量。
+`DiffusionDriveDetails`（通过 `return_details=True` 显式开启）将解码结果与本次
+调用的物理输入、原始输出打包返回，归档 `physical_inputs.npz`/`raw_outputs.npz`
+无需二次推理；默认 `predict` 仍只返回解码映射，task 不保存上一次输出。
+结果独立持有数组，使用任务时须保持 SDK runner 存活；未建立同步机制前不应并发共享。任务不再持有 SDK，也不提供 `__call__` 别名，请使用 `predict`。它不接受原始相机/LiDAR 传感器数据替代准备后的特征张量。
 
 <a id="stage-io"></a>
 ## 阶段 IO 与量化
 
 | 阶段 | 输入 | 输出 |
 | --- | --- | --- |
-| `pre_process` | 精确四份有限 float32 逻辑数组 | 按绑定类型/量化生成的平坦名称→物理数组映射 |
-| `forward` | 物理映射 | 独立原始具名输出，不做语义解码 |
-| `post_process` | 精确匹配元数据的四份原始数组 | 独立解码六数组结果 |
-| `predict` | 逻辑特征 | 组合上述三阶段 |
+| `preprocess` | 精确四份有限 float32 逻辑数组 | 按绑定类型/量化生成的平坦名称→物理数组映射 |
+| `infer` | 物理映射 | 独立原始具名输出，不做语义解码 |
+| `postprocess` | 精确匹配元数据的四份原始数组 | 独立解码六数组结果 |
+| `predict` | 逻辑特征 | 组合上述三阶段；`return_details=True` 额外返回本次调用的物理输入与原始输出 |
+
+既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 逻辑输入：camera `[1,3,256,1024]`、lidar `[1,1,256,256]`、status `[1,8]`、noise `[1,20,8,2]`。源输出名称/形状：trajectory `[1,8,3]`、agent_states `[1,30,5]`、agent_labels `[1,30]`、bev_semantic_map `[1,7,128,256]`。绑定要求单模型和精确名称集合，名称顺序不影响绑定。
 

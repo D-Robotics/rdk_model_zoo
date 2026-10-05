@@ -59,13 +59,22 @@ def resize_with_padding(image: np.ndarray, target_size: int) -> tuple[np.ndarray
 
 
 class MODNetTask:
-    """Four-stage MODNet task with per-call geometry and raw output ownership."""
+    """Four-stage MODNet task with per-call geometry and raw output ownership.
+
+    ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+    established ``pre_process``/``forward``/``post_process`` names stay thin
+    aliases of those implementations.
+    """
 
     def __init__(self, runner, binding: ModelBinding):
         self.runner = runner
         self.binding = binding
 
-    def pre_process(self, image: np.ndarray) -> PreparedInput:
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, image: np.ndarray) -> PreparedInput:
         """Convert BGR HWC input to source RGB F32 NCHW ``[-1,1]``."""
 
         if image is None:
@@ -76,12 +85,12 @@ class MODNetTask:
         tensor = np.transpose(padded, (2, 0, 1))[None].astype(np.float32, copy=True)
         return PreparedInput({self.binding.input_name: tensor}, context)
 
-    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+    def infer(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
         """Run the selected model and return an owned raw F32 matte tensor."""
 
         return self.runner(tensors)
 
-    def post_process(self, raw: np.ndarray, context: GeometryContext) -> np.ndarray:
+    def postprocess(self, raw: np.ndarray, context: GeometryContext) -> np.ndarray:
         """Convert raw ``[0,1]`` matte to uint8 original-image geometry."""
 
         value = np.asarray(raw)
@@ -97,8 +106,28 @@ class MODNetTask:
     def predict(self, image: np.ndarray) -> np.ndarray:
         """Run preprocessing, raw forward, and geometry-aware postprocessing."""
 
-        prepared = self.pre_process(image)
-        return self.post_process(self.forward(prepared.tensors), prepared.context)
+        prepared = self.preprocess(image)
+        return self.postprocess(self.infer(prepared.tensors), prepared.context)
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, image: np.ndarray) -> PreparedInput:
+        """Compatibility alias for :meth:`preprocess`."""
+
+        return self.preprocess(image)
+
+    def forward(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
+        """Compatibility alias for :meth:`infer`."""
+
+        return self.infer(tensors)
+
+    def post_process(self, raw: np.ndarray, context: GeometryContext) -> np.ndarray:
+        """Compatibility alias for :meth:`postprocess`."""
+
+        return self.postprocess(raw, context)
 
 
 MODNet = MODNetTask

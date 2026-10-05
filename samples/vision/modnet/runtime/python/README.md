@@ -40,7 +40,7 @@ Success is exit code `0`, `matte_path` in the JSON, and a written uint8 matte. T
 <a id="results"></a>
 ## Results
 
-`MODNetTask.post_process` returns an owned uint8 grayscale matte in the original image geometry. Optional compositing uses the source linear alpha formula and writes a BGR image. The raw forward result remains float32 `[0,1]` and is not saved or normalized by the runner.
+`MODNetTask.postprocess` returns an owned uint8 grayscale matte in the original image geometry. Optional compositing uses the source linear alpha formula and writes a BGR image. The raw forward result remains float32 `[0,1]` and is not saved or normalized by the runner.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -67,9 +67,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = MODNetTask(runner, binding)
 image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
-prepared = task.pre_process(image)
-raw_matte = task.forward(prepared.tensors)
-explicit_matte = task.post_process(raw_matte, prepared.context)
+prepared = task.preprocess(image)
+raw_matte = task.infer(prepared.tensors)
+explicit_matte = task.postprocess(raw_matte, prepared.context)
 composed_result = composite(image, explicit_matte, cv2.imread(str(background_path)))
 assert np.array_equal(explicit_matte, task.predict(image))
 print(explicit_matte.shape, composed_result.shape)
@@ -78,10 +78,11 @@ print(explicit_matte.shape, composed_result.shape)
 <a id="stage-io"></a>
 ## Stage I/O
 
-- `pre_process(image)` validates BGR HWC input, converts BGR→RGB, normalizes `(pixel-127.5)/127.5`, resizes the long side to 512 with centered zero padding, and returns `PreparedInput(tensors, context)`.
-- `forward(tensors)` validates the bound tensor and returns an owned raw float32 `(1,1,512,512)` matte.
-- `post_process(raw, context)` scales the source `[0,1]` matte to uint8, removes padding, and resizes to the original geometry.
+- `preprocess(image)` validates BGR HWC input, converts BGR→RGB, normalizes `(pixel-127.5)/127.5`, resizes the long side to 512 with centered zero padding, and returns `PreparedInput(tensors, context)`.
+- `infer(tensors)` validates the bound tensor and returns an owned raw float32 `(1,1,512,512)` matte.
+- `postprocess(raw, context)` scales the source `[0,1]` matte to uint8, removes padding, and resizes to the original geometry.
 - `predict(image)` composes all three stages; geometry lives in the current call's frozen context, not a mutable task field.
+- The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

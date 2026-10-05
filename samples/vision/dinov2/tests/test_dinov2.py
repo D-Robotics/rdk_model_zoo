@@ -299,6 +299,77 @@ class TaskTests(unittest.TestCase):
             task.post_process({"cls_feat": np.zeros((1, 2), np.int16), "patch_feat": np.zeros((1, 256, 384), np.int16)})
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def task(self, **kwargs):
+        return TaskTests().task(**kwargs)
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        task, runtime = self.task()
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        image = np.zeros((224, 224, 3), dtype=np.uint8)
+        np.testing.assert_array_equal(
+            task.preprocess(image).tensors["input"],
+            task.pre_process(image).tensors["input"],
+        )
+        prepared = task.preprocess(image)
+        np.testing.assert_array_equal(
+            task.infer(prepared.tensors)["cls_feat"], task.forward(prepared.tensors)["cls_feat"]
+        )
+        raw = {"cls_feat": runtime.raw["cls_feat"], "patch_feat": runtime.raw["patch_feat"]}
+        np.testing.assert_array_equal(task.postprocess(raw), task.post_process(raw))
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        task, runtime = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        image = np.zeros((224, 224, 3), dtype=np.uint8)
+        calls_before = len(runtime.calls)
+        result = task.predict(image)
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(runtime.calls), calls_before + 1)
+        self.assertEqual(result.shape, (1, 384))
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        task, runtime = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        image = np.zeros((224, 224, 3), dtype=np.uint8)
+        task.post_process(task.forward(task.pre_process(image).tensors))
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(runtime.calls), 1)
+
+    def test_predict_equals_canonical_manual_composition_across_consecutive_calls(self):
+        task, runtime = self.task()
+        first = np.zeros((224, 224, 3), dtype=np.uint8)
+        second = np.zeros((100, 60, 3), dtype=np.uint8)
+        manual_first = task.postprocess(task.infer(task.preprocess(first).tensors))
+        manual_second = task.postprocess(task.infer(task.preprocess(second).tensors))
+        np.testing.assert_array_equal(task.predict(first), manual_first)
+        np.testing.assert_array_equal(task.predict(second), manual_second)
+        self.assertEqual(len(runtime.calls), 4)
+        runtime.raw["cls_feat"][0, 11] = 900
+        changed = task.predict(first)
+        np.testing.assert_array_equal(changed, task.postprocess(task.infer(task.preprocess(first).tensors)))
+        self.assertNotEqual(float(changed[0, 11]), float(manual_first[0, 11]))
+
+
 class RunnerAndCLITests(unittest.TestCase):
     def test_runner_metadata_and_scheduling_are_real_fixture_pipeline(self):
         from samples.vision.dinov2.runtime.python.model_binding import resolve_selection

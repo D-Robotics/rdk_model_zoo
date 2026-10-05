@@ -1,9 +1,30 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Three planning stages: logical features, raw inference and decoded predictions."""
+"""Three planning stages: logical features, raw inference and decoded predictions.
+
+``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
+established ``pre_process``/``forward``/``post_process`` names stay thin
+aliases of those implementations.
+"""
+
+from dataclasses import dataclass
 
 import numpy as np
 from samples.vision.diffusiondrive.runtime.python.quantization import quantize, decode
+
+
+@dataclass(frozen=True)
+class DiffusionDriveDetails:
+    """One predict call's decoded result plus its physical inputs and raw outputs.
+
+    Callers that archive ``physical_inputs.npz``/``raw_outputs.npz`` request
+    this record with ``return_details=True`` instead of recomputing stages.
+    It describes only its own call; the task never retains a last output.
+    """
+
+    result: dict
+    physical: dict
+    raw: dict
 
 
 class DiffusionDriveTask:
@@ -17,7 +38,11 @@ class DiffusionDriveTask:
         self.binding = binding
         self.agent_score_threshold = float(agent_score_threshold)
 
-    def pre_process(self, features):
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, features):
         """Exact four float32 feature arrays to metadata-declared physical IO."""
         if set(features) != set(self.binding.input_transforms):
             raise ValueError("Exact four logical input names required")
@@ -26,11 +51,11 @@ class DiffusionDriveTask:
             for name, spec in self.binding.input_transforms.items()
         }
 
-    def forward(self, prepared):
+    def infer(self, prepared):
         """Return all raw named outputs; never dequantize or render here."""
         return self.runner(prepared)
 
-    def post_process(self, outputs):
+    def postprocess(self, outputs):
         """Raw physical tensors to owned trajectory/agents/BEV, no filesystem IO."""
         if set(outputs) != set(self.binding.output_transforms):
             raise ValueError("Exact four raw output names required")
@@ -50,6 +75,34 @@ class DiffusionDriveTask:
             ),
         }
 
-    def predict(self, features):
-        """Compose the same three stages once with fixed caller-provided noise."""
-        return self.post_process(self.forward(self.pre_process(features)))
+    def predict(self, features, *, return_details=False):
+        """Compose the same three stages once with fixed caller-provided noise.
+
+        ``return_details=True`` wraps the usual decoded mapping with this
+        call's physical inputs and raw outputs, so one production inference
+        also serves callers that archive the raw IO; the default return stays
+        the decoded mapping alone.
+        """
+        physical = self.preprocess(features)
+        raw = self.infer(physical)
+        result = self.postprocess(raw)
+        if return_details:
+            return DiffusionDriveDetails(result, physical, raw)
+        return result
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, features):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(features)
+
+    def forward(self, prepared):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(prepared)
+
+    def post_process(self, outputs):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs)

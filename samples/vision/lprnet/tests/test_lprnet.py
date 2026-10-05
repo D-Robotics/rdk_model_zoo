@@ -210,6 +210,94 @@ class LPRNetTests(unittest.TestCase):
                 self.assertEqual(download.call_args.args[0].reference, "x5:lprnet:lpr.bin")
 
 
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def task(self):
+        runtime_mod = importlib.import_module(
+            "samples.vision.lprnet.runtime.python.model_runner"
+        )
+        task_mod = importlib.import_module(
+            "samples.vision.lprnet.runtime.python.lprnet"
+        )
+        binding_mod = importlib.import_module(
+            "samples.vision.lprnet.runtime.python.model_binding"
+        )
+        output = np.full((1, 68, 18), -4.0, dtype=np.float32)
+        output[:, 0, 0] = 4.0
+        fake = FakeRuntime(output)
+        selection = binding_mod.resolve_selection("x5")
+        runner = runtime_mod.RuntimeModelRunner(selection, runtime=fake)
+        runner.load()
+        return task_mod.LPRNetTask(runner, runner.binding), fake
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        task, fake = self.task()
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "input.dat"
+            np.zeros((1, 3, 24, 94), dtype=np.float32).tofile(path)
+            prepared_new = task.preprocess(path)
+            prepared_old = task.pre_process(path)
+            self.assertEqual(prepared_new.context, prepared_old.context)
+            np.testing.assert_array_equal(
+                prepared_new.tensors["input"], prepared_old.tensors["input"]
+            )
+            np.testing.assert_array_equal(
+                task.infer(prepared_new.tensors), task.forward(prepared_old.tensors)
+            )
+            raw = task.infer(prepared_new.tensors)
+            self.assertEqual(task.postprocess(raw), task.post_process(raw))
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        task, fake = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "input.dat"
+            np.zeros((1, 3, 24, 94), dtype=np.float32).tofile(path)
+            calls_before = len(fake.calls)
+            plate = task.predict(path)
+            self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+            self.assertEqual(len(fake.calls), calls_before + 1)
+            self.assertIsInstance(plate, str)
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        task, fake = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "input.dat"
+            np.zeros((1, 3, 24, 94), dtype=np.float32).tofile(path)
+            task.post_process(task.forward(task.pre_process(path).tensors))
+            self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+            self.assertEqual(len(fake.calls), 1)
+
+    def test_predict_equals_canonical_manual_composition(self):
+        task, fake = self.task()
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "input.dat"
+            np.arange(1 * 3 * 24 * 94, dtype=np.float32).reshape(1, 3, 24, 94).tofile(path)
+            manual = task.postprocess(task.infer(task.preprocess(path).tensors))
+            self.assertEqual(manual, task.predict(path))
+            self.assertEqual(len(fake.calls), 2)
+
+
 class LPRNetEvaluatorTests(unittest.TestCase):
     """The evaluator must run both sides itself, not compare hand-made files."""
 

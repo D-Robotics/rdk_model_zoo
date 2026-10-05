@@ -324,8 +324,133 @@ class DiffusionTests(unittest.TestCase):
         )
         self.assertEqual(
             {n.name for n in cls.body if isinstance(n, ast.FunctionDef)},
-            {"__init__", "pre_process", "forward", "post_process", "predict"},
+            {
+                "__init__",
+                "preprocess",
+                "infer",
+                "postprocess",
+                "predict",
+                "pre_process",
+                "forward",
+                "post_process",
+            },
         )
+
+
+class ReadableInterfaceTests(unittest.TestCase):
+    """The canonical preprocess/infer/postprocess names drive predict."""
+
+    def task(self):
+        features = arrays("reference_inputs.npz")
+        raw = arrays("reference_outputs.npz")
+        binding = bind_model(resolve_selection("s600"), metadata())
+        return DiffusionDriveTask(lambda x: raw, binding), features, raw
+
+    def test_canonical_stages_exist_and_legacy_names_delegate(self):
+        task, features, raw = self.task()
+        for name in ("preprocess", "infer", "postprocess", "predict"):
+            self.assertTrue(callable(getattr(task, name, None)), name)
+        pn = task.preprocess(features)
+        po = task.pre_process(features)
+        self.assertEqual(set(pn), set(po))
+        for name in pn:
+            np.testing.assert_array_equal(pn[name], po[name])
+        self.assertEqual(set(task.infer(pn)), set(task.forward(po)))
+        for name in ("trajectory", "agent_labels"):
+            np.testing.assert_array_equal(task.infer(pn)[name], task.forward(po)[name])
+        for name in ("trajectory", "agent_scores"):
+            np.testing.assert_array_equal(
+                task.postprocess(raw)[name], task.post_process(raw)[name]
+            )
+
+    def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
+        calls = []
+        raw = arrays("reference_outputs.npz")
+
+        def runner(values):
+            calls.append(values)
+            return raw
+
+        binding = bind_model(resolve_selection("s600"), metadata())
+        task = DiffusionDriveTask(runner, binding)
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        result = task.predict(arrays("reference_inputs.npz"))
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+        self.assertEqual(len(calls), 1)
+        self.assertIn("trajectory", result)
+
+    def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
+        task, features, raw = self.task()
+        routed = []
+        for canonical in ("preprocess", "infer", "postprocess"):
+            original = getattr(task, canonical)
+
+            def spy(*args, _original=original, _canonical=canonical, **kwargs):
+                routed.append(_canonical)
+                return _original(*args, **kwargs)
+
+            setattr(task, canonical, spy)
+        task.post_process(task.forward(task.pre_process(features)))
+        self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
+
+    def test_predict_equals_canonical_manual_composition(self):
+        task, features, raw = self.task()
+        manual = task.postprocess(task.infer(task.preprocess(features)))
+        result = task.predict(features)
+        self.assertEqual(set(manual), set(result))
+        for name in manual:
+            np.testing.assert_array_equal(manual[name], result[name])
+
+
+class PredictionDetailsTests(unittest.TestCase):
+    """Opt-in ``return_details`` archives physical/raw IO in one pass."""
+
+    def detailed_task(self):
+        calls = []
+        raw = arrays("reference_outputs.npz")
+
+        def runner(values):
+            calls.append(values)
+            return {name: value.copy() for name, value in raw.items()}
+
+        binding = bind_model(resolve_selection("s600"), metadata())
+        return DiffusionDriveTask(runner, binding), calls
+
+    def test_default_predict_still_returns_the_plain_decoded_result(self):
+        task, calls = self.detailed_task()
+        result = task.predict(arrays("reference_inputs.npz"))
+        self.assertIn("trajectory", result)
+        self.assertEqual(len(calls), 1)
+
+    def test_details_equal_explicit_stages_with_one_runner_call(self):
+        task, calls = self.detailed_task()
+        features = arrays("reference_inputs.npz")
+        physical = task.preprocess(features)
+        raw = task.infer(physical)
+        decoded = task.postprocess(raw)
+        before = len(calls)
+        details = task.predict(features, return_details=True)
+        self.assertEqual(set(details.result), set(decoded))
+        for name in decoded:
+            np.testing.assert_array_equal(details.result[name], decoded[name])
+        self.assertEqual(set(details.physical), set(physical))
+        for name in physical:
+            np.testing.assert_array_equal(details.physical[name], physical[name])
+        self.assertEqual(set(details.raw), set(raw))
+        for name in raw:
+            np.testing.assert_array_equal(details.raw[name], raw[name])
+        self.assertEqual(len(calls) - before, 1)
+        # Archived physical IO stays reusable after later mutation of the record.
+        details.raw["trajectory"].fill(0)
+        self.assertTrue(raw["trajectory"].any())
 
 
 if __name__ == "__main__":

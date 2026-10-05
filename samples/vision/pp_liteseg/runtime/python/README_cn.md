@@ -66,9 +66,9 @@ image = cv2.imread(str(SAMPLE_DIR / "test_data/street.png"))
 runner = RuntimeModelRunner(resolve_selection("x5"))
 binding = runner.load()
 task = PPLiteSegTask(runner, binding)
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-mask = task.post_process(raw)
+prepared = task.preprocess(image)
+raw = task.infer(prepared.tensors)
+mask = task.postprocess(raw)
 mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 1024), int32
 ```
@@ -78,7 +78,7 @@ print(mask.shape, mask.dtype)  # (512, 1024), int32
 <a id="stage-io"></a>
 ## 阶段 I/O
 
-pre_process 接收非空 HWC BGR uint8，以 INTER_LINEAR 拉伸到 1024×512，再打包为连续 NV12 uint8 `(768,1024)`；不做 CPU 归一化或 letterbox。返回 context 独立携带原图尺寸，不写入任务可变状态。forward 原样返回 int32 `(1,512,1024,1)`。post_process 校验类别 0..18 并返回拥有独立内存的 int32 `(512,1024)`；不做 softmax、argmax、反量化或尺寸恢复。binding 接受 NV12 逻辑 NCHW/NHWC 或物理 packed 元数据；logits 导出、错误 dtype/尺寸会明确拒绝。
+preprocess 接收非空 HWC BGR uint8，以 INTER_LINEAR 拉伸到 1024×512，再打包为连续 NV12 uint8 `(768,1024)`；不做 CPU 归一化或 letterbox。返回 context 独立携带原图尺寸，不写入任务可变状态。infer 原样返回 int32 `(1,512,1024,1)`。postprocess 校验类别 0..18 并返回拥有独立内存的 int32 `(512,1024)`；不做 softmax、argmax、反量化或尺寸恢复。binding 接受 NV12 逻辑 NCHW/NHWC 或物理 packed 元数据；logits 导出、错误 dtype/尺寸会明确拒绝。既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>
 ## 故障排查

@@ -55,7 +55,7 @@ X5 11 保留源逻辑：先将置信阈值夹紧至 `[1e-6,1-1e-6]`，再转为 
 
 `Result.boxes` 为 float32 `[N,4]` 原图连续 xyxy 像素坐标，裁剪到 `[0,W]/[0,H]`；`scores` 是 `[N]` float32 sigmoid 概率；`class_ids` 是 `[N]` int64 固定词表 ID，不能直接用作 COCO 类别 ID。`masks` 在 X5 为 bool `[N,H,W]`（`mask_layout="full"`），在 S 为 N 个 uint8 0/1 ROI（`mask_layout="roi"`），坐标截断成整数后截取，保留空 ROI 对齐。返回数据独立拥有内存。 S11 保留精确零轴 ROI 形状，并将 Lanczos 过冲归一为 0/1，不改变前景范围。
 
-CLI 保存彩色叠加图，默认 `test_data/result.jpg`，不会保存原始张量或把模型推理当作精度报告。
+CLI 保存彩色叠加图，默认 `test_data/result.jpg`，不会保存原始张量或把模型推理当作精度报告。入口按可读性拆分：`main.py` 解析选择、构造 `Config`、用 runner 构造 `YOLOE`、调用一次 `predict` 并渲染结果；参数声明、`--list-models`/`--dry-run` 模式与 JSON 结果报告在 `cli.py`。分割算法本身不变，只存在于 `yoloe.py` 及其解码/IO 模块。
 
 <a id="integration-example"></a>
 ## 集成示例

@@ -99,15 +99,19 @@ binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = DepthAnythingV2Task(runner, binding, resize_type=0)
 image = cv2.imread("samples/vision/depth_anything_v2/test_data/furseal.jpg")
-prepared = task.pre_process(image)
-raw = task.forward(prepared.tensors)
-result = task.post_process(raw, prepared.context)
-# Equivalently: result = task.predict(image)
+result = task.predict(image)
 print(result.depth_native.shape)
+# To also keep this call's raw [1,518,686] tensor (the raw_depth.npy contract):
+details = task.predict(image, return_details=True)
+print(details.raw.shape, details.result.depth_native.shape)
 ```
 
 `PreparedInput` carries the named physical tensor and immutable `ImageContext`.
-`DepthResult` contains owned float `depth_native` and its context. Keep the
+`DepthResult` contains owned float `depth_native` and its context.
+`DepthPredictionDetails` (opt-in via `return_details=True`) bundles the usual
+result with this call's prepared input and raw output so archiving needs no
+second inference; the default `predict` return stays the plain `DepthResult`
+and the task never retains a last image or last output. Keep the
 matching context with every frame; the task stores no last-image dimensions.
 Runner injection is for host tests, not evidence of hardware execution. Shared
 runner concurrency is not guaranteed by this API.
@@ -123,10 +127,12 @@ The archived source remains available; silent old-API compatibility is not claim
 
 | Stage | Input → output |
 | --- | --- |
-| `pre_process` | nonempty BGR uint8 HWC → `PreparedInput` with float32 `[1,3,518,686]` |
-| `forward` | named input mapping → owned raw float32 `[1,518,686]`, no activation |
-| `post_process` | raw tensor + matching context → float original-size `DepthResult` |
-| `predict` | exactly those three stages once; no timing, rendering or IO |
+| `preprocess` | nonempty BGR uint8 HWC → `PreparedInput` with float32 `[1,3,518,686]` |
+| `infer` | named input mapping → owned raw float32 `[1,518,686]`, no activation |
+| `postprocess` | raw tensor + matching context → float original-size `DepthResult` |
+| `predict` | exactly those three stages once; `return_details=True` additionally returns this call's prepared input and raw output; no timing, rendering or IO |
+
+The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 Default input resize is INTER_NEAREST, preserving the actual source helper.
 After BGR→RGB, each pixel's three channels use `(rgb - mean(rgb)) /

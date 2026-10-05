@@ -74,6 +74,10 @@ CLI 成功时向 stdout 输出一个 JSON 对象：
 
 `predictions` 恰好包含 `--top-k` 条按 source 兼容 softmax 概率降序排列的结果。`class_id` 在 `[0,399]`；`score` 是 float32 softmax 值；`label` 是去除字面双引号后的 source JSON 名称。CLI 不写输出文件。
 
+入口按可读性拆分：`main.py` 解析选择、构造 `VideoClassificationTask`、调用一次
+`predict` 并输出 JSON 报告；参数声明、`--list-models`/`--dry-run` 模式与报告组装在
+`cli.py`。分类算法本身不变，只存在于 `classification.py`。
+
 <a id="integration-example"></a>
 ## 集成示例
 
@@ -103,9 +107,9 @@ labels = labels_mod.load_labels(repo / "samples/vision/3dresnet/test_data/kineti
 task = task_mod.VideoClassificationTask(runner, binding, top_k=5, labels=labels)
 clip = np.load(repo / "samples/vision/3dresnet/test_data/video0.npy", allow_pickle=False)
 
-prepared = task.pre_process(clip)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(clip)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(clip)
 assert np.array_equal(explicit_result.class_ids, composed_result.class_ids)
 assert np.array_equal(explicit_result.scores, composed_result.scores)
@@ -113,14 +117,16 @@ assert explicit_result.labels == composed_result.labels
 ```
 
 <a id="stage-io"></a>
-## 四阶段 API I/O
+## 阶段 API I/O
 
 | 阶段 | 契约 |
 | --- | --- |
-| `pre_process(clip)` | 输入精确 shape `(1,3,16,112,112)` 的 NumPy numeric clip；返回使用 runtime 实际 input name 的 `PreparedInput.tensors`，值 cast 为 contiguous float32，并返回本调用的 `VideoContext`。 |
-| `forward(tensors)` | 校验实际 input name、五维 shape、F32 finite 值和唯一实际 output name；返回 raw F32 score，不做 softmax 或文件 I/O。 |
-| `post_process(outputs)` | 校验实际 output name、400-score shape、F32 和 finite；委托 `samples._shared.classification.topk_from_scores` 执行 softmax/Top-K。 |
-| `predict(clip)` | 按顺序串联三个阶段并返回 `ClassificationResult`；不把 context 存入 task 状态。 |
+| `preprocess(clip)` | 输入精确 shape `(1,3,16,112,112)` 的 NumPy numeric clip；返回使用 runtime 实际 input name 的 `PreparedInput.tensors`，值 cast 为 contiguous float32，并返回本调用的 `VideoContext`。 |
+| `infer(tensors)` | 校验实际 input name、五维 shape、F32 finite 值和唯一实际 output name；返回 raw F32 score，不做 softmax 或文件 I/O。 |
+| `postprocess(outputs)` | 校验实际 output name、400-score shape、F32 和 finite；委托 `samples._shared.classification.topk_from_scores` 执行 softmax/Top-K。 |
+| `predict(clip)` | 按顺序串联 `preprocess` → `infer` → `postprocess` 并返回 `ClassificationResult`；不把 context 存入 task 状态。 |
+
+既有的 `pre_process(clip)`、`forward(tensors)`、`post_process(outputs)` 名称保留为上述三个阶段的薄别名——同一实现，两个名字。
 
 输入片段已经是 RGB 且已经归一化；task 不做视频/图像解码、resize 或归一化。
 
