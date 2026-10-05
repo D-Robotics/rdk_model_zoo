@@ -170,10 +170,19 @@ class PresentationWithoutLabelsTests(unittest.TestCase):
         self._run_task("pose", (boxes, scores, ids, xy, confidence))
 
     def test_obb_without_labels_renders_ids(self):
+        import cv2
+
         records = [{"rrect": (16.0, 10.0, 8.0, 6.0, 0.2),
                     "score": 0.9, "id": 3}]
-        output = self._run_task("obb", records)
-        self.assertIn("3", output)
+        # The OBB path only prints the saved-image path; the fallback class
+        # ID is drawn into the image (yolo_cli passes f"{label} {score:.2f}"
+        # to cv2.putText). Spy on the real cv2.putText — wrapping it keeps
+        # the drawing side effect — and assert the annotation text itself,
+        # independent of the tempdir name or stdout.
+        with mock.patch.object(cv2, "putText", wraps=cv2.putText) as put_text:
+            self._run_task("obb", records)
+        texts = [call.args[1] for call in put_text.call_args_list]
+        self.assertEqual(texts, ["3 0.90"])
 
 
 class LabelFileFormatTests(unittest.TestCase):

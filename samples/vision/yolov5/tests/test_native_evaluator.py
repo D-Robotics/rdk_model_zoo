@@ -1236,6 +1236,12 @@ FIXED_SOURCE_STUBS = {
     "opencv2/core/mat.hpp": """\
 #pragma once
 #include <cstddef>
+// The pinned fixed sources call std::exp/std::pow through the OpenCV core
+// headers they include; real OpenCV declares that standard math surface, so
+// this stub core header must include <cmath> explicitly instead of relying
+// on the host standard library providing it transitively (libc++ does,
+// libstdc++ does not).
+#include <cmath>
 #include <string>
 #include <vector>
 namespace cv {

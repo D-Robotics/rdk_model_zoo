@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib.util
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -45,12 +46,29 @@ def _load_module(path: Path, name: str, *, ort_module=None):
             sys.modules["onnxruntime"] = old_ort
 
 
+@contextlib.contextmanager
+def _chdir(path):
+    """``contextlib.chdir`` equivalent for Python 3.10 hosts.
+
+    ``contextlib.chdir`` only exists from Python 3.11 on; the conversion
+    helpers below must keep working on the oldest supported host
+    interpreter, so the working directory is switched and restored here
+    with ``os.getcwd``/``os.chdir`` and a ``finally`` block.
+    """
+    old_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(old_cwd)
+
+
 def _run_legacy(path: Path, argv: list[str], *, ort_module=None):
     module = _load_module(path, f"sam_legacy_{path.stem}_{abs(hash(str(path)))}", ort_module=ort_module)
     old_argv = sys.argv
     try:
         sys.argv = [str(path), *argv]
-        with contextlib.chdir(path.parent):
+        with _chdir(path.parent):
             return module.main()
     finally:
         sys.argv = old_argv
@@ -64,7 +82,7 @@ def _run_unified(path: Path, argv: list[str], *, ort_module=None):
         if ort_module is not None:
             sys.modules["onnxruntime"] = ort_module
         sys.argv = [str(path), *argv]
-        with contextlib.chdir(path.parent):
+        with _chdir(path.parent):
             return module.main(argv)
     finally:
         sys.argv = old_argv
@@ -229,6 +247,61 @@ class SAMConversionRegressionTests(unittest.TestCase):
                     chw = rgb.transpose(2, 0, 1).astype(np.float32)
                     expected = ((chw - np.array([123.675, 116.28, 103.53], dtype=np.float32).reshape(3, 1, 1)) / np.array([58.395, 57.12, 57.375], dtype=np.float32).reshape(3, 1, 1))[None] if normalise else chw[None] / 255.0
                     self.assertTrue(np.array_equal(source_tensor, expected))
+
+
+class ChdirCompatibilityTests(unittest.TestCase):
+    """The ``_chdir`` helper backs both conversion runners on Python 3.10.
+
+    These checks use throwaway probe scripts only — no model, export, or
+    calibration input is involved.
+    """
+
+    def test_helper_switches_and_restores_cwd_on_normal_exit(self):
+        original = Path.cwd()
+        with tempfile.TemporaryDirectory(prefix="sam-chdir-") as temp:
+            target = Path(temp).resolve()
+            with _chdir(target):
+                self.assertEqual(Path.cwd(), target)
+            self.assertEqual(Path.cwd(), original)
+
+    def test_helper_restores_cwd_and_propagates_exception(self):
+        original = Path.cwd()
+        with tempfile.TemporaryDirectory(prefix="sam-chdir-raise-") as temp:
+            with self.assertRaises(RuntimeError):
+                with _chdir(Path(temp)):
+                    raise RuntimeError("synthetic helper failure")
+            self.assertEqual(Path.cwd(), original)
+
+    def _probe(self, root: Path, name: str, body: str) -> Path:
+        path = root / name
+        path.write_text(
+            "import os\n"
+            "SEEN = []\n"
+            "def main(argv=None):\n"
+            f"    {body}\n",
+            encoding="utf-8",
+        )
+        return path
+
+    def test_runners_execute_inside_script_dir_and_restore_cwd(self):
+        original = Path.cwd()
+        with tempfile.TemporaryDirectory(prefix="sam-runner-cwd-") as temp:
+            root = Path(temp).resolve()
+            probe = self._probe(root, "probe_cwd.py", "SEEN.append(os.getcwd())\n    return SEEN[-1]")
+            self.assertEqual(Path(_run_legacy(probe, [])), root)
+            self.assertEqual(Path(_run_unified(probe, [])), root)
+            self.assertEqual(Path.cwd(), original)
+
+    def test_runners_restore_cwd_when_script_raises(self):
+        original = Path.cwd()
+        with tempfile.TemporaryDirectory(prefix="sam-runner-raise-") as temp:
+            root = Path(temp)
+            probe = self._probe(root, "probe_raise.py", "raise RuntimeError('synthetic runner failure')")
+            for runner in (_run_legacy, _run_unified):
+                with self.subTest(runner=runner.__name__):
+                    with self.assertRaises(RuntimeError):
+                        runner(probe, [])
+                    self.assertEqual(Path.cwd(), original)
 
 
 if __name__ == "__main__":
