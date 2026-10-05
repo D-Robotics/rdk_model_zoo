@@ -1,15 +1,17 @@
 # 可读模型范例架构（ResNet / Ultralytics YOLO → 全 51 本仓样例）
 
-日期：2026-10-01（两个范例）；2026-10-05 扩展至全部本仓样例。状态：51 个本仓
-样例的可读 Runtime 推广已实施，并通过 Codex 的源码评审、主机回归与干净 Git
-checkout 入口检查（分支 `codex/readable-model-examples-20261001`）。
-[独立验收记录](../releases/unified-migration/2026-10-05-all-sample-codex-review.md)
+日期：2026-10-01 两个范例；2026-10-05 扩展至全部本仓样例；2026-10-06 交付状态更新。
+状态：51 个本仓样例已完成可读 Runtime 重构并合入 Develop，实施提交
+`545a3b5874ae723663d2c817ae9ef964bc495746` 通过完整干净克隆与实际跨平台 CI。
+最新范围和记录见 [Develop 交付验收](../releases/2026-10-06-develop-delivery-review.md)。
+
+[2026-10-05 独立架构验收](../releases/unified-migration/2026-10-05-all-sample-codex-review.md)
 和[覆盖状态表](../releases/unified-migration/2026-10-05-all-sample-coverage.json)
-记录验证范围；本轮未执行真实板端推理、权重导出或工具链编译，也未合入 develop
-或发布。实施映射见 [迁移说明](../migration/2026-09-30-model-examples.md)
-（范例）与 [全仓映射](../migration/2026-10-05-all-sample-readable-runtime.md)
-（2026-10-05），方案见
-[设计文档](../superpowers/specs/2026-09-30-readable-model-examples-design.md)与
+保留当时 feature 分支的源码、计数和未整合状态，作为历史记录。
+本轮真实板端推理、权重导出与工具链编译仍未执行，未发布 tag/Release。
+实施映射见 [范例迁移](../migration/2026-09-30-model-examples.md)与
+[全仓映射](../migration/2026-10-05-all-sample-readable-runtime.md)，方案见
+[范例设计](../superpowers/specs/2026-09-30-readable-model-examples-design.md)与
 [全仓设计](../superpowers/specs/2026-10-05-all-sample-readable-runtime-design.md)。
 
 本文回答四个问题：示例代码各层放什么、调用链长什么样、自训练模型从哪里接入、

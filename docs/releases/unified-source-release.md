@@ -1,15 +1,21 @@
-# 统一源码发布候选与支持/验证矩阵（2026-10-05）
+# 统一源码发布候选与支持/验证矩阵（2026-10-06 更新）
 
-状态：**候选记录，未发布**。本文记录首个统一源码版本候选（`VERSION` 2.0.0，tag 方案
-`zoo-vX.Y.Z`）、面向 main 的提升与回退流程，以及基于真实声明数据构建的支持/验证矩阵。
-截至 2026-10-05 的远端观察：存在 `develop`，默认分支仍为 `rdk_x5`，**不存在 `main`**；
-本文不创建任何 tag、Release、分支或默认分支变更，也未把任何 CI 运行记为通过——正式
-状态由 Codex 在整合后按实际执行记录。版本策略依据
+状态：**统一源码 2.0.0 候选，全部 51 个本仓 Sample 已完成重构并合入 Develop**。
+实施验收提交为 `545a3b5874ae723663d2c817ae9ef964bc495746`，已合入 Develop；
+整合时本地与实际远端一致，该提交的完整干净克隆及 Linux 3.10/3.12、
+macOS 3.12 CI 已通过。
+本页与验收摘要为其后的文档收尾；交付时仍须核对当前 Develop HEAD 的等价 CI，
+不能用实施基线的 CI 代替后续提交的结果。实际计数、可选范围、失败修复链与 workflow
+run IDs 见 [2026-10-06 交付验收](2026-10-06-develop-delivery-review.md) 和
+[机器可读摘要](2026-10-06-develop-delivery-review.json)。
+
+2026-10-05 的历史观察保留：存在 `develop`，默认分支为 `rdk_x5`，无 `main`。
+2026-10-06 整合时仍未创建 main/tag/Release、未切换默认分支或发布网站。
+源码版本、平台制品与 Skills 的独立生命周期见
 [ADR-0006](../adr/0006-unified-source-releases-and-platform-matrix.md)。
-
-本轮分支：`codex/readable-model-examples-20261001`（候选基线 `11d4168f`；最终源码提交
-由 Codex 整合确定）。板测、权重下载、导出/量化与工具链编译仍为 **not-run**，本文不将
-任何 not-run 维度记为通过。
+板测、真实权重下载、导出/量化与工具链编译本轮仍为 **not-run**；按用户确认范围，
+不构成本轮源码交付阻断，也不记为通过。第 2 节保留 2026-10-05 的逐 Sample
+架构验收计数与历史板测条件；完整主机/CI 新证据由上面的交付记录补充。
 
 ## 1. 三条版本线（互不替代）
 
@@ -116,9 +122,11 @@ X5 4GB（仅日志）、S600（未完成）、S100P（未验证）缺口见
 
 1. **维护者全量主机验证**：`python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]`
    （由 2026-10-05 host-validation 工作提供；覆盖原生 Sample Python 套件、嵌套
-   conversion/evaluator 套件、共享模块（排除 VLA）、受影响工具/Skills 测试、静态契约、
-   适用原生 CTest 与 Catalog）。本文件仅引用该入口；**实际 CI 状态由 Codex 在整合后按
-   观察记录，本文不预记为通过**。
+   conversion/evaluator 套件、共享模块（含父仓 VLA gitlink 完整性守卫；ACT/Pi0 上游
+   不初始化、不运行）、受影响工具/Skills 测试、静态契约、
+   适用原生 CTest 与 Catalog）。实施提交的实际 CI 见
+   [交付验收](2026-10-06-develop-delivery-review.md)；本页后续文档提交仍须在其实际
+   Develop HEAD 单独确认等价 CI，不能沿用实施提交的结果。
 2. **静态契约**：`python3 tools/sample_contract/check.py --scope migration`（本轮基线：
    51 samples，0 violations，87 个显式 policy skips，0 exemptions）。
 3. **Catalog**：`npm --prefix tools/catalog-publisher run check`（本轮 136 项测试、

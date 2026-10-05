@@ -43,7 +43,7 @@
 - [x] Declare repeatable core host dependency versions supporting Python 3.10/3.12. Install ONNX/ORT for synthetic graph tests; missing Torch/FunASR model export tests remain explicit optional scope, not fake successes.
   Independent fresh-env evidence: `local-execution/20261005-develop-delivery-readiness/independent-fresh-findings.md` (workspace outer directory). SciPy1.15.3 failed standalone on local macOS; SciPy1.17.1 imports successfully in Python3.12. Ensure version markers cover Python3.10 Linux separately. Include ftfy, regex and Pillow; do not skip CLIP/UNet/source-reference checks to hide missing dependencies.
 - [x] Add Ubuntu 3.10/3.12 CI and applicable macOS host coverage with compiler/CMake/OpenCV/nlohmann-json/gflags dependencies and full-history checkout; enforce no skipped native coverage. Trigger equivalent gates for develop/main and PR. Update stale platforms workflow comments/paths.
-- [ ] Run runner unit tests and real full command, fix only identified issues; Codex independently verifies clean checkout/fresh Python deps and live CI after integration.
+- [x] Run runner unit tests and real full command, fix only identified issues; Codex independently verifies clean checkout/fresh Python deps and live CI after integration.
 
 ## Task 3: Customer documentation, source version and Catalog provenance
 
@@ -59,10 +59,10 @@
 ## Task 4: Independent closeout and develop delivery
 
 - [x] Review all packages, fix material findings through bounded Claude tasks; confirm approved runtime architecture preserved and all native Sample directories covered.
-- [ ] Use an independent full-history clone and fresh Python dependencies; run the maintained verification command, all model-free entries from outside clone and source/evidence stability checks. Preserve first failures and exact scope.
-- [ ] Recheck remote/local develop and all checkout states; integrate without rewriting history, record source commit and local/remote hashes.
-- [ ] Execute CI on the exact develop snapshot, inspect every job including counts/skips/failures and correct regressions. Unobserved CI is not passed.
-- [ ] Write independent final evidence, complete requirements matrix and delivery report. Audit the full goal against actual develop and external state before declaring complete; no tag, formal release or default-branch switch.
+- [x] Use an independent full-history clone and fresh Python dependencies; run the maintained verification command, all model-free entries from outside clone and source/evidence stability checks. Preserve first failures and exact scope.
+- [x] Recheck remote/local develop and all checkout states; integrate without rewriting history, record source commit and local/remote hashes.
+- [x] Execute CI on the exact develop snapshot, inspect every job including counts/skips/failures and correct regressions. Unobserved CI is not passed.
+- [x] Write independent final evidence, complete requirements matrix and delivery report. Audit the full goal against actual develop and external state before declaring complete; no tag, formal release or default-branch switch.
 
 ## Independent review checkpoint (2026-10-05)
 
@@ -86,3 +86,29 @@
 All five owned packages are accepted for commit. The final bounded repair classifies actual CMake false values, including case-sensitive NOTFOUND suffixes and trailing-cache whitespace semantics, while the protected vendor/production switches reject any padded value. Root independently ran78 runner fixtures and35 resolver tests, with stable owned-file hashes;14 previously recorded real-CMake observations matched the resulting scope classification. No material guard finding remains in the targeted independent review.
 
 The complete committed clean-clone pass and actual develop CI are the remaining delivery gates. Their absence here is not a passed result; the final evidence record will bind them to the actual implementation commit. Board, real export/calibration/compiler work remain outside this accepted scope by user decision.
+
+## Independent implementation closeout (2026-10-06)
+
+The five accepted packages were committed, followed by bounded real-failure fixes:
+`565ab9d8` executes suites from the requested repo, `24668498` builds Catalog before
+its dependent Python tests, and `545a3b58` repairs three Linux test fixtures without
+changing Runtime, support, pins or skips. Original failed clean-clone and CI
+receipts remain intact; earlier checkpoints above retain their as-of status.
+
+Implementation C=`545a3b5874ae723663d2c817ae9ef964bc495746` passed an independent
+full-history clean clone with isolated declared dependencies:58 suites/2315 Python
+checks (0F/0E,2 explicit optional skips,1 optional missing Torch module),6 CTest
+projects/56 cases,Catalog136,contract51/0/87/0 and149 successful SDK-free final
+entry checks with17 expected unsupported-target probes. Source digests and clean
+Git states held; pins present,upstream gitlinks uninitialized.
+
+C was fast-forwarded and pushed to actual develop; local/tracking/remote matched.
+Its observed host run37360844437 passed all Linux3.10/Linux3.12/macOS3.12 jobs;
+contract37360844575 and Catalog37360844432 passed. Downloaded reports and payload
+hashes were independently verified. Scope, requirements and evidence live in
+[delivery review](../../releases/2026-10-06-develop-delivery-review.md) and its JSON.
+
+This record binds implementation C. The subsequent documentation-only closeout
+must pass the same workflows on its actual Develop HEAD before final delivery;
+earlier C CI is not substituted for that snapshot. Board/export/compiler scopes
+stay deferred by user decision. No main/tag/Release/default-branch/site action.
