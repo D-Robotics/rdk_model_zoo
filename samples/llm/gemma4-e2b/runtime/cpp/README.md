@@ -422,8 +422,16 @@ growth, GB18030 terminal conversion, and the thin entry's flag validation and
 construct-and-run flow (linked against the host gflags). The doubles load no HBM,
 run no BPU, tokenize nothing and decode no image — linking the real
 SDK/OpenCV/tokenizers-cpp stack and board generation remain not-run on the host.
-`GEMMA_CXX` selects the compiler; `GEMMA_JSON_INCLUDE` points at a `nlohmann` header
-directory.
+`GEMMA_CXX` selects the compiler. nlohmann-json headers come from the
+`GEMMA_JSON_INCLUDE` override, `pkg-config nlohmann_json`, or standard system
+include roots (`/usr/include`, `/usr/local/include`, `/opt/homebrew/include`);
+the entry check likewise links the real host gflags from
+`GFLAGS_INCLUDE_DIR` + `GFLAGS_LIB_DIR` (both together), `pkg-config gflags`,
+or standard system roots — no personal paths outside the repository are read.
+A missing dependency skips the affected host checks with the recorded reason
+(the CI gates install these dependencies and reject the skips), while an
+invalid override fails the run. iconv links `-liconv` only on macOS; Linux
+uses the libc iconv.
 
 ### SDK failure handling
 

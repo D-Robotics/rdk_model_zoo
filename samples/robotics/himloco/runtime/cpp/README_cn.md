@@ -23,6 +23,10 @@ HBRT 3.15.55，历史数据见[评测说明](../../evaluator/README_cn.md)。
 - 主机核心：C++17、CMake ≥ 3.18；直接使用 `c++` 编译核心也可以。
 - 原生可执行程序：X5 BSP 的 `dnn/hb_dnn.h`、`dnn/hb_sys.h`、libdnn，以及
   `nlohmann/json.hpp`（通常由 `nlohmann-json3-dev` 提供）。不需要 gflags 或 OpenCV。
+- 主机 CLI 检查（`tests/test_cpp_cli.py`）：同样的 `nlohmann/json.hpp` 由共享的
+  主机依赖发现（pkg-config 或标准系统 include 路径）解析。可用
+  `NLOHMANN_JSON_INCLUDE` 显式指定 include 目录；无效的 override 会使检查失败，
+  缺少该头文件的主机显式跳过。不回退到任何个人目录。
 - Python 启动器：Python、NumPy、PyYAML，用于统一制品选择与板型检查；
   不加载 Python 推理 SDK。可通过 `PYTHON` 指定解释器。
 

@@ -20,6 +20,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -28,38 +29,53 @@ CPP = SAMPLE / "runtime/cpp"
 NATIVE = SAMPLE / "tests/native"
 REPO = SAMPLE.parents[2]
 CXX = os.environ.get("GEMMA_CXX", "c++")
-JSON_INCLUDE = Path(
-    os.environ.get(
-        "GEMMA_JSON_INCLUDE", REPO.parent / ".coordination/asr-json/include"
-    )
+HOST_VALIDATION = REPO / "tools" / "host_validation"
+if str(HOST_VALIDATION) not in sys.path:
+    sys.path.insert(0, str(HOST_VALIDATION))
+
+from native_dependencies import (  # noqa: E402
+    NativeDependencyMissing,
+    gflags_compile_flags,
+    iconv_link_flags,
+    json_include_dir,
 )
 
-COMMON_INCLUDES = [
-    "-I",
-    str(NATIVE / "sdk_fixtures"),
-    "-I",
-    str(NATIVE / "app_stubs"),
-    "-I",
-    str(CPP / "inc"),
-    "-I",
-    str(JSON_INCLUDE),
-]
+
+def resolve_json_include():
+    """nlohmann include dir: ``GEMMA_JSON_INCLUDE`` override or discovery.
+
+    Standard discovery (pkg-config / system include roots) lives in
+    ``tools/host_validation/native_dependencies.py``; a machine without any
+    nlohmann headers skips these host checks explicitly, while an invalid
+    override fails the run.
+    """
+    try:
+        return json_include_dir(os.environ.get("GEMMA_JSON_INCLUDE"))
+    except NativeDependencyMissing as error:
+        raise unittest.SkipTest(f"{error}; chat app not-run") from error
 
 
-def compile_sources(sources, output, *, extra_includes=(), extra_flags=()):
+def compile_sources(sources, output, *, json_include, extra_includes=(), extra_flags=()):
     command = [
         CXX,
         "-std=c++17",
         "-Wall",
         "-Wextra",
         "-Werror",
-        *COMMON_INCLUDES,
+        "-I",
+        str(NATIVE / "sdk_fixtures"),
+        "-I",
+        str(NATIVE / "app_stubs"),
+        "-I",
+        str(CPP / "inc"),
+        "-I",
+        str(json_include),
         *extra_includes,
         *[str(source) for source in sources],
         "-o",
         str(output),
-        # macOS keeps iconv in libiconv rather than libc.
-        "-liconv",
+        # iconv lives in libiconv on macOS and in libc on Linux.
+        *iconv_link_flags(),
         *extra_flags,
     ]
     done = subprocess.run(command, capture_output=True, text=True)
@@ -75,10 +91,7 @@ class ChatAppScenarioTests(unittest.TestCase):
     def setUpClass(cls):
         if shutil.which(CXX) is None:
             raise unittest.SkipTest("C++17 compiler unavailable; chat app not-run")
-        if not JSON_INCLUDE.is_dir():
-            raise unittest.SkipTest(
-                "nlohmann json headers unavailable; chat app not-run"
-            )
+        cls.json_include = resolve_json_include()
         cls.build = tempfile.TemporaryDirectory(prefix="gemma-chat-app-")
         cls.addClassCleanup(cls.build.cleanup)
         cls.binary = Path(cls.build.name) / "chat_app_test"
@@ -89,6 +102,7 @@ class ChatAppScenarioTests(unittest.TestCase):
                 CPP / "src/gemma4_chat_app.cpp",
             ],
             cls.binary,
+            json_include=cls.json_include,
         )
 
     def run_scenario(self, scenario, stdin_text, *, image_path=None):
@@ -179,18 +193,13 @@ class ChatAppEntryTests(unittest.TestCase):
     def setUpClass(cls):
         if shutil.which(CXX) is None:
             raise unittest.SkipTest("C++17 compiler unavailable; entry not-run")
-        if not JSON_INCLUDE.is_dir():
-            raise unittest.SkipTest("nlohmann json headers unavailable; entry not-run")
-        cls.gflags_include = Path("/opt/homebrew/include")
-        cls.gflags_lib = Path("/opt/homebrew/lib")
-        for candidate in (
-            cls.gflags_include / "gflags" / "gflags.h",
-            cls.gflags_lib / "libgflags.dylib",
-        ):
-            if not candidate.exists():
-                raise unittest.SkipTest(
-                    f"host gflags unavailable ({candidate}); entry not-run"
-                )
+        cls.json_include = resolve_json_include()
+        try:
+            # Real host gflags: explicit GFLAGS_INCLUDE_DIR/GFLAGS_LIB_DIR
+            # override, pkg-config, or standard system roots.
+            cls.gflags_compile, cls.gflags_link = gflags_compile_flags()
+        except NativeDependencyMissing as error:
+            raise unittest.SkipTest(f"{error}; entry not-run") from error
         cls.build = tempfile.TemporaryDirectory(prefix="gemma-chat-main-")
         cls.addClassCleanup(cls.build.cleanup)
         cls.binary = Path(cls.build.name) / "chat_main_host"
@@ -201,12 +210,9 @@ class ChatAppEntryTests(unittest.TestCase):
                 NATIVE / "chat_app_doubles.cpp",
             ],
             cls.binary,
-            extra_includes=["-I", str(cls.gflags_include)],
-            extra_flags=[
-                "-L",
-                str(cls.gflags_lib),
-                "-lgflags",
-            ],
+            json_include=cls.json_include,
+            extra_includes=cls.gflags_compile,
+            extra_flags=cls.gflags_link,
         )
 
     def run_entry(self, arguments, stdin_text=""):

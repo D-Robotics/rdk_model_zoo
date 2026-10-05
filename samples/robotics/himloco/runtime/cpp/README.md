@@ -25,6 +25,11 @@ remain in the [evaluator guide](../../evaluator/README.md).
 - Host core: C++17, CMake ≥ 3.18; direct compilation with `c++` also works.
 - Native executable: X5 BSP `dnn/hb_dnn.h`, `dnn/hb_sys.h`, libdnn and
   `nlohmann/json.hpp` (usually from `nlohmann-json3-dev`). No gflags or OpenCV.
+- Host CLI check (`tests/test_cpp_cli.py`): the same `nlohmann/json.hpp` is
+  resolved by the shared host dependency discovery (pkg-config or standard
+  system include roots). Set `NLOHMANN_JSON_INCLUDE` to an include directory
+  to override; an invalid override fails the check and a host without the
+  header skips it explicitly. No personal directory is consulted.
 - Python launcher: Python, NumPy, PyYAML for unified selection and board checks;
   no Python inference SDK is loaded. Set `PYTHON` to choose its interpreter.
 

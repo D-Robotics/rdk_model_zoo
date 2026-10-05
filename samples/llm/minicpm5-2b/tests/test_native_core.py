@@ -8,6 +8,7 @@ not the vendor SDK: no model weights, no BPU device and no board is involved.
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -16,10 +17,13 @@ SAMPLE = TESTS.parent
 REPO = SAMPLE.parents[2]
 NATIVE = TESTS / "native"
 CXX = os.environ.get("MINICPM_CXX", "c++")
-JSON_INCLUDE = Path(
-    os.environ.get(
-        "MINICPM_JSON_INCLUDE", REPO.parent / ".coordination/asr-json/include"
-    )
+HOST_VALIDATION = REPO / "tools" / "host_validation"
+if str(HOST_VALIDATION) not in sys.path:
+    sys.path.insert(0, str(HOST_VALIDATION))
+
+from native_dependencies import (  # noqa: E402
+    NativeDependencyMissing,
+    json_include_dir,
 )
 
 LEGACY_INC = SAMPLE / "runtime/legacy/inc"
@@ -37,6 +41,10 @@ FIXTURES = NATIVE / "fixtures"
 # -fno-elide-constructors keeps the PreparedRequest ownership regression
 # honest: no return-value optimization can mask a rebinding bug.
 EXTRA_FLAGS = ["-fno-elide-constructors"]
+
+# S600 drivers compile runtime_config.cc, which includes nlohmann/json.hpp
+# (MINICPM_JSON_INCLUDE override, pkg-config or standard system discovery).
+JSON_DRIVERS = frozenset({"s600_config_cleanup", "s600_metrics", "s600_stages"})
 
 DRIVERS = {
     "legacy_lifecycle": (
@@ -62,23 +70,38 @@ DRIVERS = {
     "s600_config_cleanup": (
         [NATIVE / "s600_config_cleanup.cpp"],
         CPP_SRC,
-        [FIXTURES, CPP_INC, JSON_INCLUDE],
+        [FIXTURES, CPP_INC],
     ),
     "s600_metrics": (
         [NATIVE / "s600_metrics.cpp"],
         CPP_SRC,
-        [FIXTURES, CPP_INC, JSON_INCLUDE],
+        [FIXTURES, CPP_INC],
     ),
     "s600_stages": (
         [NATIVE / "s600_stages.cpp"],
         CPP_SRC,
-        [FIXTURES, CPP_INC, JSON_INCLUDE],
+        [FIXTURES, CPP_INC],
     ),
 }
 
 
-def compile_driver(name, build_dir):
+def resolve_json_include():
+    """nlohmann include dir: ``MINICPM_JSON_INCLUDE`` override or discovery.
+
+    Returns ``(include, None)`` on success or ``(None, reason)`` when no
+    headers are installed, so only the JSON-dependent S600 drivers skip; an
+    invalid override raises and fails the run.
+    """
+    try:
+        return json_include_dir(os.environ.get("MINICPM_JSON_INCLUDE")), None
+    except NativeDependencyMissing as error:
+        return None, f"{error}; S600 drivers not-run"
+
+
+def compile_driver(name, build_dir, json_include=None):
     driver, sources, includes = DRIVERS[name]
+    if name in JSON_DRIVERS:
+        includes = [*includes, json_include]
     binary = build_dir / name
     command = [
         CXX,
@@ -103,9 +126,14 @@ class NativeCoreTests(unittest.TestCase):
     def setUp(self):
         self.build = tempfile.TemporaryDirectory()
         self.addCleanup(self.build.cleanup)
-        self.binaries = {
-            name: compile_driver(name, Path(self.build.name)) for name in DRIVERS
-        }
+        self.json_include, self.json_skip = resolve_json_include()
+        self.binaries = {}
+        for name in DRIVERS:
+            if name in JSON_DRIVERS and self.json_include is None:
+                continue
+            self.binaries[name] = compile_driver(
+                name, Path(self.build.name), self.json_include
+            )
 
     def run_driver(self, name):
         done = subprocess.run(
@@ -113,6 +141,10 @@ class NativeCoreTests(unittest.TestCase):
         )
         self.assertEqual(done.returncode, 0, f"{name} stderr:\n{done.stderr}")
         self.assertIn("OK", done.stdout)
+
+    def require_json_driver(self, name):
+        if name not in self.binaries:
+            self.skipTest(self.json_skip)
 
     def test_legacy_lifecycle_single_use(self):
         self.run_driver("legacy_lifecycle")
@@ -127,19 +159,26 @@ class NativeCoreTests(unittest.TestCase):
         self.run_driver("legacy_stream_sink")
 
     def test_s600_config_cleanup(self):
+        self.require_json_driver("s600_config_cleanup")
         self.run_driver("s600_config_cleanup")
 
     def test_s600_metric_validation(self):
+        self.require_json_driver("s600_metrics")
         self.run_driver("s600_metrics")
 
     def test_s600_stage_boundaries(self):
+        self.require_json_driver("s600_stages")
         self.run_driver("s600_stages")
 
     def test_drivers_preserve_parent_temp_sentinel(self):
         """CORE-R4: a hostile TMPDIR with a pre-existing model/ sentinel must
         survive every driver; the binaries are invoked directly, without the
         Python wrapper, and all RED demonstrations use this fresh directory."""
-        for name in DRIVERS:
+        if set(self.binaries) != set(DRIVERS):
+            # Reduced driver coverage (missing nlohmann headers) must be
+            # visible, not a partial pass.
+            self.skipTest(self.json_skip)
+        for name in self.binaries:
             with self.subTest(driver=name), tempfile.TemporaryDirectory() as parent:
                 model_dir = Path(parent) / "model"
                 model_dir.mkdir()
@@ -168,6 +207,9 @@ class NativeCoreTests(unittest.TestCase):
             "s600_metrics",
             "s600_stages",
         )
+        missing = [name for name in names if name not in self.binaries]
+        if missing:
+            self.skipTest(self.json_skip)
         procs = [
             (
                 name,

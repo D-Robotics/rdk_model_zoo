@@ -410,8 +410,14 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_ap
 跨轮上下文增长、GB18030 终端编码转换，以及薄入口的参数校验与构造运行
 流程（链接主机 gflags）。替身不加载 HBM、不跑 BPU、不做分词也不解码
 图片——链接真实 SDK/OpenCV/tokenizers-cpp 栈与板端生成在主机上仍为
-not-run。`GEMMA_CXX` 选择编译器；`GEMMA_JSON_INCLUDE` 指向 `nlohmann`
-头文件目录。
+not-run。`GEMMA_CXX` 选择编译器。nlohmann-json 头文件依次从
+`GEMMA_JSON_INCLUDE` 覆盖、`pkg-config nlohmann_json` 或标准系统包含根
+（`/usr/include`、`/usr/local/include`、`/opt/homebrew/include`）获取；入口
+检查同样链接真实主机 gflags，来源为 `GFLAGS_INCLUDE_DIR` +
+`GFLAGS_LIB_DIR`（须成对设置）、`pkg-config gflags` 或标准系统路径——
+不读取仓库外个人路径。依赖缺失时相关主机检查以记录在案的原因显式跳过
+（CI 门禁安装这些依赖并拒绝该跳过），无效覆盖则直接失败。iconv 仅在
+macOS 链接 `-liconv`；Linux 使用 libc 中的 iconv。
 
 ### SDK 失败处理
 

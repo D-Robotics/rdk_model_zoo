@@ -10,4 +10,4 @@ Covered behavior: legacy single-use lifecycle (R1 regression), request construct
 ../rdk_model_zoo/.venv/bin/python -m unittest discover -s tests -v
 ```
 
-Overrides: `MINICPM_CXX` selects the compiler; `MINICPM_JSON_INCLUDE` points at a `nlohmann` header directory.
+Overrides: `MINICPM_CXX` selects the compiler; `MINICPM_JSON_INCLUDE` points at a `nlohmann` header directory. Without the override, headers are discovered via `pkg-config nlohmann_json` or standard system include roots (`/usr/include`, `/usr/local/include`, `/opt/homebrew/include`) by `tools/host_validation/native_dependencies.py`; no personal path outside the repository is read. A machine with no headers skips only the JSON-dependent S600 drivers (with the reason recorded and the two full-driver-set helpers skipped rather than partially run), while an invalid override fails the suite.
