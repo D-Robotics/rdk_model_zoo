@@ -80,7 +80,7 @@ python3 samples/vision/ultralytics_yolo/runtime/python/main.py \
 samples/                  # unified task implementations and guides
 docs/release/             # artifact/benchmark facts and target identity
 docs/sample-standards/    # README and inference contracts
-docs/architecture/        # 可读模型范例架构（ResNet/YOLO）
+docs/architecture/        # 可读 Runtime 架构（全 51 本仓样例）
 docs/migration/           # 旧新接口映射
 docs/releases/           # migration ledger, reviews and validation evidence
 datasets/                # dataset entry points
@@ -89,7 +89,7 @@ tools/                   # catalog, contract checks and validation tooling
 ```
 `main.py` 负责 CLI、文件和显示；模型任务模块负责前处理、推理、后处理及可选 `predict`；runner/binding 隔离 SDK 与张量契约。`conversion/`、`evaluator/` 各自保存可操作说明。共享机制只放已被多个样例需要的通用能力；OCR 字典、DFL/LTRB 等真实差异保留。目录规范不意味着所有样例已经完成同等程度的审核。
 
-开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令，不为 Agent 添加另一套隐藏执行入口。可读模型范例模式（薄 `main.py`、三步可见的模型类、薄 SDK 会话）见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。
+开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令，不为 Agent 添加另一套隐藏执行入口。可读模型范例模式（显式构造模型并调用 `predict` 的薄 `main.py`、单一文件内真实可见 `preprocess`/`infer`/`postprocess`/`predict` 主线的本地具名模型类——旧名 `pre_process`/`forward`/`post_process` 保留为兼容委托——样例本地 `cli.py` 辅助与薄 SDK 会话）见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。自 2026-10-05 起该模式覆盖全部 51 个本仓样例；ACT/Pi0 仍是本范围之外的 VLA gitlink，两个 `samples/llm` 样例保留原生 generate/stream/reset C++ 接口（不伪造 Python Runtime）。逐样例映射见 [2026-10-05-all-sample-readable-runtime.md](docs/migration/2026-10-05-all-sample-readable-runtime.md)，状态行表见 [2026-10-05-all-sample-coverage.json](docs/releases/unified-migration/2026-10-05-all-sample-coverage.json)；该推广的最终行为验收为待评审状态，此处不宣称完成。
 
 ## 数据、原分支资料与验证
 

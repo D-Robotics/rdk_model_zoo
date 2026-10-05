@@ -1,0 +1,1647 @@
+{
+  "round": "2026-10-05-all-sample-readable-runtime",
+  "generated_utc": "2026-10-05T06:23:55+00:00",
+  "worktree_branch": "codex/readable-model-examples-20261001",
+  "head_commit": "aecd19808f4aa47be077d9965b95ffaa58aa7b14",
+  "note": "Rows are curated from the 2026-10-05 batch dispatch (batches.json) and the working tree at generation time; this refresh (docs_closeout batch, 2026-10-05) corrects curated row facts against the current source — native LLM engine classes (gemma4::TextEngine/VisionEngine + InteractiveChatApp facade), Paraformer's offline per-utterance semantics, the asr/yolo26_depth details wording and cli_helper paths. Other executors were still editing speech/policy entries in parallel, so per-row source facts remain a snapshot, not a frozen acceptance record. 51 rows = 49 Python-runtime samples + 2 C++-only native LLM samples; the pinned VLA gitlinks (vla/act, vla/pi0) are excluded. stage_surface_inventory is an AST-level method-name inventory only — it is NOT behavioral acceptance; every row keeps implementation_evaluation=pending_final_review until Codex's final all-sample assessment. No full-repo final run result exists yet; none is implied here.",
+  "excluded": {
+    "vla/act": "pinned upstream gitlink (samples/vla/README.md); outside the readable-runtime scope by user decision",
+    "vla/pi0": "pinned upstream gitlink; outside the readable-runtime scope by user decision"
+  },
+  "category_shapes": {
+    "classifiers_21_plus_resnet": "local named classifier class in classify.py (full chain visible), thin main.py, cli.py helpers; classification.py keeps the shared-class compat import (old-name surface, no canonical methods)",
+    "single_task_vision": "canonical preprocess/infer/postprocess + predict in the task module; old names compat delegates; lawful details opt-in (return_details) for intermediate outputs",
+    "detection_tracking": "per-family task classes; YoloDetect exemplar; tracking keeps explicit per-video state",
+    "multistage": "per-stage public three-step interface (canonical names) + explicit pipeline.predict orchestration; pipelines are not forced to exactly three top-level methods; shared-legacy implementations may keep the old-name surface with a local canonical view on top (SAM pattern — one implementation, two names)",
+    "speech_policy": "streaming/window/policy semantics preserved; predict stays side-effect free (no print/draw/file write)",
+    "llm_native_exception": "C++-only samples keep native generate/stream/reset interfaces; no Python runtime is fabricated"
+  },
+  "filesystem_check": {
+    "expected_domains": [
+      "vision",
+      "speech",
+      "robotics",
+      "llm"
+    ],
+    "non_sample_entries_excluded": [
+      "_shared",
+      "vla"
+    ],
+    "found_sample_dirs": 51,
+    "rows": 51,
+    "missing": [],
+    "duplicates": [],
+    "extra_dirs_without_rows": [],
+    "result": "ok"
+  },
+  "rows": [
+    {
+      "sample": "vision/convnext",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "ConvNeXtClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "ConvNeXtClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/edgenext",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "EdgeNeXtClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "EdgeNeXtClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/efficientformer",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "EfficientFormerClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "EfficientFormerClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/efficientformerv2",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "EfficientFormerV2Classifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "EfficientFormerV2Classifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/efficientnet",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "EfficientNetClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "EfficientNetClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/efficientvit",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "EfficientViTClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "EfficientViTClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/fasternet",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "FasterNetClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "FasterNetClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/fastvit",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "FastViTClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "FastViTClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/googlenet",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "GoogLeNetClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "GoogLeNetClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/hgnetv2",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "HGNetV2Classifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "HGNetV2Classifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/mobilenetv1",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "MobileNetV1Classifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "MobileNetV1Classifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/mobilenetv2",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "MobileNetV2Classifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "MobileNetV2Classifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/mobilenetv3",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "MobileNetV3Classifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "MobileNetV3Classifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/mobilenetv4",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "MobileNetV4Classifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "MobileNetV4Classifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/mobileone",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "MobileOneClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "MobileOneClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/repghost",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "RepGhostClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "RepGhostClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/repvgg",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "RepVGGClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "RepVGGClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/repvit",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "RepViTClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "RepViTClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/resnext",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "ResNeXtClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "ResNeXtClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/vargconvnet",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "VargConvNetClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "VargConvNetClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/vit",
+      "domain": "vision",
+      "batch": "classifiers",
+      "entry": "runtime/python/main.py",
+      "model_class": "ViTClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification; per-target NV12 layout, labels/top_k/output transform follow each binding contract; classification.py keeps the shared-class compat import (old-name surface only, no canonical methods there); forward is a pure delegate to infer (2026-10-05 classifier-alias-fix)",
+      "stage_surface_inventory": {
+        "ViTClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/resnet",
+      "domain": "vision",
+      "batch": "baseline-exemplar (2026-09-30 round)",
+      "entry": "runtime/python/main.py",
+      "model_class": "ResNetClassifier",
+      "model_file": "runtime/python/classify.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-image classification reference; custom_selection supports self-trained contracts (no new export support added)",
+      "stage_surface_inventory": {
+        "ResNetClassifier": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/3dresnet",
+      "domain": "vision",
+      "batch": "vision_tasks",
+      "entry": "runtime/python/main.py",
+      "model_class": "VideoClassificationTask",
+      "model_file": "runtime/python/classification.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "16-frame video clip input; frame-consistent transform context",
+      "stage_surface_inventory": {
+        "VideoClassificationTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/depth_anything_v2",
+      "domain": "vision",
+      "batch": "vision_tasks + entrypoint_polish_vision",
+      "entry": "runtime/python/main.py",
+      "model_class": "DepthAnythingV2Task",
+      "model_file": "runtime/python/depth_anything_v2.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "monocular depth; per-call geometry; opt-in return_details (DepthPredictionDetails) carries the raw tensor archived as raw_depth.npy; default return unchanged",
+      "stage_surface_inventory": {
+        "DepthAnythingV2Task": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/diffusiondrive",
+      "domain": "vision",
+      "batch": "vision_tasks + entrypoint_polish_vision",
+      "entry": "runtime/python/main.py",
+      "model_class": "DiffusionDriveTask",
+      "model_file": "runtime/python/diffusiondrive.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "prepared-feature trajectory planning; per-case npz archives kept as application outputs; opt-in return_details (DiffusionDriveDetails)",
+      "stage_surface_inventory": {
+        "DiffusionDriveTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/dinov2",
+      "domain": "vision",
+      "batch": "vision_tasks + entrypoint_polish_vision",
+      "entry": "runtime/python/main.py",
+      "model_class": "DINOv2Task",
+      "model_file": "runtime/python/embedding.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "feature embedding extraction",
+      "stage_surface_inventory": {
+        "DINOv2Task": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/fcos",
+      "domain": "vision",
+      "batch": "vision_tasks",
+      "entry": "runtime/python/main.py",
+      "model_class": "FCOSTask",
+      "model_file": "runtime/python/fcos.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "anchor-free detection; NMS in postprocess only",
+      "stage_surface_inventory": {
+        "FCOSTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/lanenet",
+      "domain": "vision",
+      "batch": "vision_tasks + entrypoint_polish_vision",
+      "entry": "runtime/python/main.py",
+      "model_class": "LaneNetTask",
+      "model_file": "runtime/python/lanenet.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "lane embedding + binary branch; raw outputs retained via opt-in details pattern (LanePredictionDetails)",
+      "stage_surface_inventory": {
+        "LaneNetTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/lprnet",
+      "domain": "vision",
+      "batch": "vision_tasks",
+      "entry": "runtime/python/main.py",
+      "model_class": "LPRNetTask",
+      "model_file": "runtime/python/lprnet.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "license-plate character decoding (CTC-style ordering)",
+      "stage_surface_inventory": {
+        "LPRNetTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/modnet",
+      "domain": "vision",
+      "batch": "vision_tasks",
+      "entry": "runtime/python/main.py",
+      "model_class": "MODNetTask",
+      "model_file": "runtime/python/modnet.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "image matting alpha output",
+      "stage_surface_inventory": {
+        "MODNetTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/pointnet",
+      "domain": "vision",
+      "batch": "vision_tasks + entrypoint_polish_vision",
+      "entry": "runtime/python/main.py",
+      "model_class": "PointNetTask",
+      "model_file": "runtime/python/pointnet.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "point-cloud part segmentation (non-image input); normalized points + frozen centroid/radius context via opt-in details (PointNetPredictionDetails)",
+      "stage_surface_inventory": {
+        "PointNetTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/pp_liteseg",
+      "domain": "vision",
+      "batch": "vision_tasks",
+      "entry": "runtime/python/main.py",
+      "model_class": "PPLiteSegTask",
+      "model_file": "runtime/python/pp_liteseg.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "semantic segmentation mask",
+      "stage_surface_inventory": {
+        "PPLiteSegTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/unet",
+      "domain": "vision",
+      "batch": "vision_tasks",
+      "entry": "runtime/python/main.py",
+      "model_class": "UNetTask",
+      "model_file": "runtime/python/unet.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "semantic segmentation mask",
+      "stage_surface_inventory": {
+        "UNetTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/unetmobilenet",
+      "domain": "vision",
+      "batch": "vision_tasks",
+      "entry": "runtime/python/main.py",
+      "model_class": "UnetMobileNetTask",
+      "model_file": "runtime/python/unetmobilenet.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "semantic segmentation mask",
+      "stage_surface_inventory": {
+        "UnetMobileNetTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/yolo26_depth",
+      "domain": "vision",
+      "batch": "vision_tasks + entrypoint_polish_vision",
+      "entry": "runtime/python/main.py",
+      "model_class": "Yolo26DepthTask",
+      "model_file": "runtime/python/yolo26_depth.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "monocular depth; default warmup=0 returns the old DepthResult unchanged; warmup is an explicit predict parameter independent of details; the one-forward latency clock runs on every predict but is exposed only via return_details (DepthPredictionDetails: result/prepared/raw/warmup/latency_ms); implemented in source, evaluation pending final review",
+      "stage_surface_inventory": {
+        "Yolo26DepthTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/ultralytics_yolo",
+      "domain": "vision",
+      "batch": "detection_tracking",
+      "entry": "runtime/python/main.py",
+      "model_class": "YoloDetect (+per-task classes)",
+      "model_file": "runtime/python/detect.py (+yolo_cls/seg/pose, yolo26_*)",
+      "cli_helper": "runtime/python/yolo_cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "family x task dispatch (detect/seg/pose/obb/cls); DFL, direct-LTRB and S-series NMS-free protocols stay distinct",
+      "stage_surface_inventory": {
+        "YoloDetect": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/yoloe",
+      "domain": "vision",
+      "batch": "detection_tracking + entrypoint_polish_vision",
+      "entry": "runtime/python/main.py",
+      "model_class": "YOLOE",
+      "model_file": "runtime/python/yoloe.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "prompt-free instance segmentation",
+      "stage_surface_inventory": {
+        "YOLOE": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/yolov5",
+      "domain": "vision",
+      "batch": "detection_tracking",
+      "entry": "runtime/python/main.py",
+      "model_class": "YOLOv5Task",
+      "model_file": "runtime/python/detection.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "single-family detection",
+      "stage_surface_inventory": {
+        "YOLOv5Task": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/yoloworld",
+      "domain": "vision",
+      "batch": "detection_tracking",
+      "entry": "runtime/python/main.py",
+      "model_class": "YOLOWorldTask",
+      "model_file": "runtime/python/yoloworld.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "open-vocabulary detection (text prompts + image)",
+      "stage_surface_inventory": {
+        "YOLOWorldTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/bytetrack",
+      "domain": "vision",
+      "batch": "detection_tracking",
+      "entry": "runtime/python/main.py",
+      "model_class": "ByteTrackTask",
+      "model_file": "runtime/python/tracking.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "stateful multi-object tracking across a video; per-video tracker state",
+      "stage_surface_inventory": {
+        "ByteTrackTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/clip",
+      "domain": "vision",
+      "batch": "multistage",
+      "entry": "runtime/python/main.py",
+      "model_class": "CLIPTask",
+      "model_file": "runtime/python/matching.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "two-encoder image-text matching; tokenizer on the text path",
+      "stage_surface_inventory": {
+        "CLIPTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/siglip",
+      "domain": "vision",
+      "batch": "multistage",
+      "entry": "runtime/python/main.py",
+      "model_class": "SigLIPTask",
+      "model_file": "runtime/python/embedding.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "two-encoder image-text embedding/matching",
+      "stage_surface_inventory": {
+        "SigLIPTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/efficient_sam",
+      "domain": "vision",
+      "batch": "multistage",
+      "entry": "runtime/python/main.py",
+      "model_class": "EfficientSAMEncoder/EfficientSAMDecoder + EfficientSAMPipeline",
+      "model_file": "runtime/python/pipeline.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "encoder -> prompted decoder; shared SAM stage implementations under samples/_shared keep the old-name public surface — the local canonical-name stage views delegate to that same shared implementation (one implementation, two names; not a reverse delegation)",
+      "stage_surface_inventory": {
+        "EfficientSAMEncoder": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess"
+          ],
+          "compat_aliases": []
+        },
+        "EfficientSAMDecoder": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess"
+          ],
+          "compat_aliases": []
+        },
+        "EfficientSAMPipeline": {
+          "canonical_stages": [
+            "predict"
+          ],
+          "compat_aliases": []
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/mobile_sam",
+      "domain": "vision",
+      "batch": "multistage",
+      "entry": "runtime/python/main.py",
+      "model_class": "MobileSAMEncoder/MobileSAMDecoder + MobileSAMPipeline",
+      "model_file": "runtime/python/pipeline.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "encoder -> prompted decoder (mobile variant); same shared-SAM canonical-view pattern as efficient_sam",
+      "stage_surface_inventory": {
+        "MobileSAMEncoder": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess"
+          ],
+          "compat_aliases": []
+        },
+        "MobileSAMDecoder": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess"
+          ],
+          "compat_aliases": []
+        },
+        "MobileSAMPipeline": {
+          "canonical_stages": [
+            "predict"
+          ],
+          "compat_aliases": []
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "vision/paddle_ocr",
+      "domain": "vision",
+      "batch": "multistage",
+      "entry": "runtime/python/main.py",
+      "model_class": "OCRPipeline (per-stage prepare/forward/postprocess + run composers)",
+      "model_file": "runtime/python/pipeline.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "detect -> ordered crop -> recognize; per-crop loop with stage/crop error attribution; zero-detection short-circuit",
+      "stage_surface_inventory": {
+        "OCRPipeline": {
+          "canonical_stages": [
+            "predict"
+          ],
+          "compat_aliases": []
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "speech/paraformer",
+      "domain": "speech",
+      "batch": "multistage",
+      "entry": "runtime/python/main.py",
+      "model_class": "EncoderStage/PredictorStage/DecoderStage (RawStage base) + ParaformerPipeline",
+      "model_file": "runtime/python/stages.py + pipeline.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "offline per-utterance three-model transcription: encoder -> predictor -> CPU CIF (cif_numpy) -> decoder, zero tokens bypass the decoder; NO cross-chunk streaming state (chunked streaming is the asr sample's mode — the two are distinct); per-stage three-step public, pipeline.predict orchestrates per utterance; StageError operation wording keeps the legacy strings (deliberate compat); thin main via application.prepare/run, entry rework in progress by the speech/policy entrypoint batch at snapshot time",
+      "stage_surface_inventory": {
+        "RawStage": {
+          "canonical_stages": [
+            "infer"
+          ],
+          "compat_aliases": [
+            "forward"
+          ]
+        },
+        "EncoderStage": {
+          "canonical_stages": [
+            "preprocess",
+            "postprocess"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "post_process"
+          ]
+        },
+        "PredictorStage": {
+          "canonical_stages": [
+            "preprocess",
+            "postprocess"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "post_process"
+          ]
+        },
+        "DecoderStage": {
+          "canonical_stages": [
+            "preprocess",
+            "postprocess"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "post_process"
+          ]
+        },
+        "ParaformerPipeline": {
+          "canonical_stages": [
+            "predict"
+          ],
+          "compat_aliases": []
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "speech/asr",
+      "domain": "speech",
+      "batch": "speech_policy_native",
+      "entry": "runtime/python/main.py",
+      "model_class": "ASR",
+      "model_file": "runtime/python/asr.py",
+      "cli_helper": "runtime/python/cli.py",
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "chunked streaming recognition with no cross-chunk model state (distinct from Paraformer's CIF three-model orchestration); thin main calls predict once per chunk, optionally with return_details for the per-chunk resampling geometry (source snapshot mid-batch, evaluation pending)",
+      "stage_surface_inventory": {
+        "ASR": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "speech/kws",
+      "domain": "speech",
+      "batch": "speech_policy_native",
+      "entry": "runtime/python/main.py",
+      "model_class": "KWS",
+      "model_file": "runtime/python/kws.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "sliding-window keyword spotting over an audio stream",
+      "stage_surface_inventory": {
+        "KWS": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "robotics/himloco",
+      "domain": "robotics",
+      "batch": "speech_policy_native",
+      "entry": "runtime/python/main.py",
+      "model_class": "HimLocoTask",
+      "model_file": "runtime/python/policy.py",
+      "cli_helper": null,
+      "actual_backend": "hbm_runtime (board SDK) via samples/_shared/runtime.py RuntimeSession + per-sample model_runner.py",
+      "special_semantics": "offline policy: six-frame observation + proprio history -> actions; no robot control; entry via application.py, entry rework in progress at snapshot time",
+      "stage_surface_inventory": {
+        "HimLocoTask": {
+          "canonical_stages": [
+            "preprocess",
+            "infer",
+            "postprocess",
+            "predict"
+          ],
+          "compat_aliases": [
+            "pre_process",
+            "forward",
+            "post_process"
+          ]
+        }
+      },
+      "entry_predict_shape_snapshot": "main.py visibly calls predict",
+      "languages": [
+        "python",
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "llm/gemma4-e2b",
+      "domain": "llm",
+      "batch": "speech_policy_native",
+      "entry": "runtime/cpp (README-declared native entries)",
+      "model_class": "gemma4::TextEngine / gemma4::VisionEngine (C++ engines); gemma4::chat::InteractiveChatApp application facade",
+      "model_file": "runtime/cpp/inc/gemma4_text_engine.hpp (+ inc/gemma4_vision_engine.hpp, inc/gemma4_chat_app.hpp)",
+      "cli_helper": null,
+      "actual_backend": "native C++ engine (chat app / server / bench front-ends)",
+      "special_semantics": "native engine surfaces: TextEngine Generate, GenerateStream, GenerateWithPromptEmbeddings, ContinueGenerate(Stream), ResetSession; VisionEngine::Infer. The interactive entry is the gemma4::chat::InteractiveChatApp application facade — an application class, NOT a model class; console IO lives only in the facade, the engines never print. No class named Gemma4TextEngine exists. No Python runtime exists or is fabricated",
+      "stage_surface_inventory": "n/a (no runtime/python)",
+      "entry_predict_shape_snapshot": "n/a - native C++ entry",
+      "languages": [
+        "cpp"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    },
+    {
+      "sample": "llm/minicpm5-2b",
+      "domain": "llm",
+      "batch": "speech_policy_native",
+      "entry": "runtime/cpp (README-declared native entries)",
+      "model_class": "minicpm5::MiniCPM5 (C++)",
+      "model_file": "runtime/cpp/inc/minicpm5.hpp",
+      "cli_helper": null,
+      "actual_backend": "native C++ engine (S-series OELLM)",
+      "special_semantics": "native Generate(prompt, new_chat) chaining the public pre_process/infer/post_process stage functions (session-reset semantics); reviewed this round as already conforming (zero changes); runtime/legacy retained as delivered",
+      "stage_surface_inventory": "n/a (no runtime/python)",
+      "entry_predict_shape_snapshot": "n/a - native C++ entry",
+      "languages": [
+        "cpp",
+        "legacy"
+      ],
+      "implementation_evaluation": "pending_final_review"
+    }
+  ]
+}

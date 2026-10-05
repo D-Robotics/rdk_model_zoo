@@ -6,6 +6,10 @@
 设计依据：`docs/superpowers/specs/2026-10-05-all-sample-readable-runtime-design.md`；范例为 ResNet `classify.py` 与 Ultralytics `detect.py`。
 本报告只覆盖本批次五个样例；代码与测试未提交，由 Codex 按路径评估提交。外部证据日志目录：`local-execution/20261005-all-sample-readable-runtime/detection_tracking/`。
 
+> **批次快照声明**：本报告是本批次的执行快照（yoloe 的入口其后由
+> entrypoint_polish_vision 批次继续重写）；测试计数与结论均为批次时点记录，
+> **最终状态以 Codex 终审报告为准**，本文不构成行为验收结论。
+
 ## 统一改动模式
 
 每个任务类将既有 `pre_process` / `forward` / `post_process` 实现更名为规范名

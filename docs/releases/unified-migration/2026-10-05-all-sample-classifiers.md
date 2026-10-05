@@ -6,6 +6,11 @@
 设计依据：`docs/superpowers/specs/2026-10-05-all-sample-readable-runtime-design.md`；范例为 ResNet `classify.py`（`main.py`/`classify.py`/`cli.py` 三件套）。
 本报告只覆盖本批次二十一个分类样例；代码与测试未提交，由 Codex 按路径评估提交。外部证据日志目录：`local-execution/20261005-all-sample-readable-runtime/classifiers/`（baseline-/failing-first-/final4- 日志、checker- 日志、cli-snapshot-before.json / cli-verify-after.json、generate_classifiers.py、progress.json）。开始时工作树内已有其他批次并行修改（vision_tasks、detection_tracking 等），本批次未触碰。
 
+> **批次快照声明**：本报告是本批次的执行快照（含同日
+> [classifier-alias-fix](2026-10-05-all-sample-classifier-alias-fix.md) 后的状态）；
+> 测试计数与结论均为批次时点记录，**最终状态以 Codex 终审报告为准**，本文不构成
+> 行为验收结论。
+
 ## 统一改动模式
 
 二十一个样例原先的 `runtime/python/classification.py` 只是共享
@@ -21,8 +26,11 @@
   NV12（X5 packed / S 系 split 由 binding 决定，不硬编码平台），`infer` 恰好
   一次模型调用，`postprocess` 执行声明的 output_transform 与
   output_score_policy 后做稳定 Top-K，`predict` 类内串联三步。旧拼写
-  `pre_process`/`forward`/`post_process` 为薄兼容委托（`forward` 额外接受裸
-  tensors 映射，与共享任务类一致）；`__call__`、`set_scheduling_params` 转发
+  `pre_process`/`forward`/`post_process` 为薄兼容委托：`infer` 同时接受
+  `PreparedInput` 与裸 tensors 映射，`forward` 只委托 `infer`（本批首版
+  `forward` 曾自行解包直调 runner 形成第二条路径，已按
+  [classifier-alias-fix 记录](2026-10-05-all-sample-classifier-alias-fix.md)
+  于同日修正并补 21 份委托测试）；`__call__`、`set_scheduling_params` 转发
   保留。可复用部分不复制：NV12 打包在 `samples/_shared/tensor_io.py`，Top-K
   数学与输出提取在 `samples/_shared/classification.py`，量化变换在
   `samples/_shared/quantization.py`。`predict` 不打印、不绘图、不写文件。
@@ -45,8 +53,10 @@
   导入它）；错误面（BindingError/FileNotFoundError/OSError/RuntimeError/
   ValueError → stderr + exit 2）与返回码不变。
 * **`classification.py`（未改动）**：共享 `ClassificationTask` 的旧导入路径与
-  构造签名原样保留，既有调用方（hgnetv2 evaluator、各既有测试、README 兼容
-  说明）不受影响。
+  构造签名原样保留——它是**兼容出口**，公共面仍是旧名
+  （`pre_process`/`forward`/`post_process` + `predict`），不带 canonical 方法，
+  也不假装有；canonical 主线只在新 `classify.py` 本地类。既有调用方（hgnetv2
+  evaluator、各既有测试、README 兼容说明）不受影响。
 * **README/README_cn（runtime/python 级，锚定式编辑）**：标题后段落改为
   classify.py/<类名> 描述；集成示例改为最小 `Classifier(selection)` +
   `predict(路径)` 用法（原示例中的 selection 表达式按样例逐字节保留，asset-id/

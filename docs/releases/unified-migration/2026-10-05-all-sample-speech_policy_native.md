@@ -4,6 +4,12 @@
 基线：`c1510ede652d30d83eeb691ff0e90b3f735a70a4`（分支 `codex/readable-model-examples-20261001`；批次进行中工作树 HEAD 已被 Codex 依次推进至 `9bc2fdc0` 以提交其他批次，本批次未依赖该推进，改动只落在下述五个样例目录与本报告）。
 执行器：本地 Claude Code 2.1.276 + GLM `glm-5.3[1m]`；主机 Python 为 `rdk_model_zoo/.venv/bin/python`（3.14.7）。
 设计依据：`docs/superpowers/specs/2026-10-05-all-sample-readable-runtime-design.md`；范例为 ResNet `classify.py`。C++ 侧按用户补充范围：Gemma 仅整理交互式入口 main.cpp 的应用边界，不重构引擎算法；MiniCPM5 若已符合原生标准则复核保留。
+
+> **批次快照声明**：本报告是本批次的执行快照。asr/kws/himloco 的入口（及
+> paraformer 入口）其后由 speech/policy 入口批次继续重写（本报告成文时仍在
+> 进行中，如 asr 逐 chunk `predict(return_details=True)` 已出现在工作树）；
+> 本报告的测试计数与"入口原样达标"等结论均为批次时点记录，**最终状态以
+> Codex 终审报告为准**，本文不构成行为验收结论。
 外部证据日志目录：`local-execution/20261005-all-sample-readable-runtime/speech_policy_native/`（baseline-/tdd-fail-/post-/final- 日志、contract- 日志、gemma-chatapp-first/second-run.log、progress.json）。代码与测试未提交，由 Codex 按路径评估提交。
 
 ## 统一改动模式（Python 三样例：asr / kws / himloco）
