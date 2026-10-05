@@ -1,5 +1,8 @@
 # 全部本仓 Sample 可读 Runtime — integration_docs_checker 批次报告
 
+> 批次时点记录：最终代码已在本地提交，本文保留执行时的计数和状态。
+> 全 51 Sample 的最终源码/主机验收结果见 [Codex 独立验收](2026-10-05-all-sample-codex-review.md)。
+
 日期：2026-10-05。分支：`codex/readable-model-examples-20261001`（共享本地
 worktree；`develop` 与远端未动）。执行器：本地 Claude Code 2.1.276 + GLM
 `glm-5.3[1m]`；主机 Python `rdk_model_zoo/.venv/bin/python`。

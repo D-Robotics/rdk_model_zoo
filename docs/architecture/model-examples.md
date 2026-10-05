@@ -1,10 +1,12 @@
 # 可读模型范例架构（ResNet / Ultralytics YOLO → 全 51 本仓样例）
 
-日期：2026-10-01（两个范例）；2026-10-05 扩展至全部本仓样例。状态：范例已实施
-（分支 `codex/readable-model-examples-20261001`）；全仓推广由各批次在共享
-worktree 实现，**最终行为验收待 Codex 统一评审（pending_final_review），本文与
-[覆盖状态表](../releases/unified-migration/2026-10-05-all-sample-coverage.json)
-不预支结论**。实施映射见 [迁移说明](../migration/2026-09-30-model-examples.md)
+日期：2026-10-01（两个范例）；2026-10-05 扩展至全部本仓样例。状态：51 个本仓
+样例的可读 Runtime 推广已实施，并通过 Codex 的源码评审、主机回归与干净 Git
+checkout 入口检查（分支 `codex/readable-model-examples-20261001`）。
+[独立验收记录](../releases/unified-migration/2026-10-05-all-sample-codex-review.md)
+和[覆盖状态表](../releases/unified-migration/2026-10-05-all-sample-coverage.json)
+记录验证范围；本轮未执行真实板端推理、权重导出或工具链编译，也未合入 develop
+或发布。实施映射见 [迁移说明](../migration/2026-09-30-model-examples.md)
 （范例）与 [全仓映射](../migration/2026-10-05-all-sample-readable-runtime.md)
 （2026-10-05），方案见
 [设计文档](../superpowers/specs/2026-09-30-readable-model-examples-design.md)与

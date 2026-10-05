@@ -39,7 +39,7 @@ remain historical material, not a new adaptation target.
   `samples/_shared/runtime.py`) is described in
   [docs/architecture/model-examples.md](docs/architecture/model-examples.md);
   ResNet `classify.py` and YOLO `detect.py` are the reference
-  implementations. Since 2026-10-05 the pattern targets all 51 in-repo
+  implementations. Since 2026-10-05 the pattern covers all 51 in-repo
   samples (ACT/Pi0 gitlinks excluded; the two `samples/llm` samples keep
   their native generate/stream/reset C++ interfaces instead of a fabricated
   Python runtime). Old-to-new mappings:
@@ -48,8 +48,10 @@ remain historical material, not a new adaptation target.
   [2026-10-05 all-sample rollout](docs/migration/2026-10-05-all-sample-readable-runtime.md);
   per-sample status lives in
   [2026-10-05-all-sample-coverage.json](docs/releases/unified-migration/2026-10-05-all-sample-coverage.json)
-  (`implementation_evaluation: pending_final_review` — rollout completion is
-  assessed by Codex, not self-declared). The sample-contract checker scans
+  (`implementation_evaluation: accepted_host`, independently reviewed by Codex;
+  [review scope](docs/releases/unified-migration/2026-10-05-all-sample-codex-review.md)
+  excludes real export/compiler/board execution and release acceptance).
+  The sample-contract checker scans
   both stage-name spellings; module-level helpers in `cli.py`/`yolo_cli.py`
   are the recorded CLI application boundary.
 - Host checks: `python -m unittest discover -s samples/_shared/tests`,

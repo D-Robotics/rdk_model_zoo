@@ -28,3 +28,6 @@
 ## 执行责任
 
 Codex 制定方案、分派并评估；本地 Claude Code 2.1.276 + GLM `glm-5.3[1m]` 实现和测试。每批新上下文，不访问服务器。互不重叠的样例可并行修改；公共文件和最终集成串行。执行器不得全仓 git add/commit，Codex 在评估后按路径提交，防止共享 index 混入别批工作。
+
+实施状态：2026-10-05 完成全部 51 个本仓 Sample 的本轮源码架构与主机验收。
+结果与边界见[独立验收](../../releases/unified-migration/2026-10-05-all-sample-codex-review.md)。

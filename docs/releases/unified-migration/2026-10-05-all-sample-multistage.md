@@ -1,5 +1,8 @@
 # 全部本仓 Sample 可读 Runtime — multistage 批次报告
 
+> 批次时点记录：最终代码已在本地提交，本文保留执行时的计数和状态。
+> 全 51 Sample 的最终源码/主机验收结果见 [Codex 独立验收](2026-10-05-all-sample-codex-review.md)。
+
 日期：2026-10-05
 执行分支：`codex/readable-model-examples-20261001`；批次开始时 HEAD `c1510ede652d30d83eeb691ff0e90b3f735a70a4`，本批次六个样例在 `c1510ede..HEAD`（`9bc2fdc0ef39fca550e8f2ed9e752ba348adf021`）间无提交，因此 HEAD 即本批次六个样例的改前基线。
 执行器：本地 Claude Code 2.1.276 + GLM `glm-5.3[1m]`；主机 Python 为 `rdk_model_zoo/.venv/bin/python`（3.14.7）。

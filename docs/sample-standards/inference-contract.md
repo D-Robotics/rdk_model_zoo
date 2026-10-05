@@ -12,7 +12,9 @@
 单模型任务的公开业务接口统一为四个方法：首选（canonical）阶段名
 `preprocess` → `infer` → `postprocess`，由 `predict` 串联。既有
 `pre_process`/`forward`/`post_process` 名称保留为**同一实现的薄兼容委托**
-（alias 调 canonical，不维护第二份实现）；静态检查器对两套拼写同等做纯度扫描。
+（通常 alias 调 canonical，不维护第二份实现）；共享 SAM stage 与既有共享分类兼容
+出口允许复用原实现、本地提供 canonical 视图，具体边界见上述迁移说明。静态
+检查器对两套拼写同等做纯度扫描。
 允许另加初始化、必要调度/资源生命周期接口（如 `set_scheduling_params`、
 `close`）和委托 `predict` 的 `__call__`。**不以“整个文件只能四个函数”作为
 规则**——辅助函数与本地模块见 §4。
@@ -126,10 +128,11 @@ helper 继续留在共享或本地模块。`main.py` 是薄入口：解析参数
   （`ResNetClassifier`；`PreparedInput.tensors + .transform` 即 Tensors+Context，
   旧名 `pre_process`/`forward`/`post_process` 为薄 alias）。
 - 多阶段：`samples/vision/paddle_ocr/runtime/python/pipeline.py`
-  （`OCRPipeline`；每 stage 的 prepare/forward/postprocess 与 `predict` 编排）。
+  （`OCRPipeline`；每 stage 的 preprocess/infer/postprocess 与 `predict` 编排）。
 
 两参照在 Q2 落地时按本契约调整并在 Q4 双视角验收；2026-10-05 起全仓 51 个本仓
 sample 按同一门槛推广（映射见 `docs/migration/
 2026-10-05-all-sample-readable-runtime.md`，逐样例验收状态以
 `docs/releases/unified-migration/2026-10-05-all-sample-coverage.json` 为准），
-行为验收由统一评审收口，不在本文件内预支结论。
+本轮源码架构和主机验证已由 `docs/releases/unified-migration/
+2026-10-05-all-sample-codex-review.md` 收口；真实板端执行与发布验收另行记录。

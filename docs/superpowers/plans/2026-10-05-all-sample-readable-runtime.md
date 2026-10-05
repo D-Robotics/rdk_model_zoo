@@ -15,34 +15,43 @@
 
 ### Batch 1: classifiers (21)
 
-- [ ] Implement and test: `samples/vision/convnext`, `samples/vision/edgenext`, `samples/vision/efficientformer`, `samples/vision/efficientformerv2`, `samples/vision/efficientnet`, `samples/vision/efficientvit`, `samples/vision/fasternet`, `samples/vision/fastvit`, `samples/vision/googlenet`, `samples/vision/hgnetv2`, `samples/vision/mobilenetv1`, `samples/vision/mobilenetv2`, `samples/vision/mobilenetv3`, `samples/vision/mobilenetv4`, `samples/vision/mobileone`, `samples/vision/repghost`, `samples/vision/repvgg`, `samples/vision/repvit`, `samples/vision/resnext`, `samples/vision/vargconvnet`, `samples/vision/vit`.
-- [ ] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
+- [x] Implement and test: `samples/vision/convnext`, `samples/vision/edgenext`, `samples/vision/efficientformer`, `samples/vision/efficientformerv2`, `samples/vision/efficientnet`, `samples/vision/efficientvit`, `samples/vision/fasternet`, `samples/vision/fastvit`, `samples/vision/googlenet`, `samples/vision/hgnetv2`, `samples/vision/mobilenetv1`, `samples/vision/mobilenetv2`, `samples/vision/mobilenetv3`, `samples/vision/mobilenetv4`, `samples/vision/mobileone`, `samples/vision/repghost`, `samples/vision/repvgg`, `samples/vision/repvit`, `samples/vision/resnext`, `samples/vision/vargconvnet`, `samples/vision/vit`.
+- [x] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
 
 ### Batch 2: vision_tasks (13)
 
-- [ ] Implement and test: `samples/vision/3dresnet`, `samples/vision/depth_anything_v2`, `samples/vision/diffusiondrive`, `samples/vision/dinov2`, `samples/vision/fcos`, `samples/vision/lanenet`, `samples/vision/lprnet`, `samples/vision/modnet`, `samples/vision/pointnet`, `samples/vision/pp_liteseg`, `samples/vision/unet`, `samples/vision/unetmobilenet`, `samples/vision/yolo26_depth`.
-- [ ] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
+- [x] Implement and test: `samples/vision/3dresnet`, `samples/vision/depth_anything_v2`, `samples/vision/diffusiondrive`, `samples/vision/dinov2`, `samples/vision/fcos`, `samples/vision/lanenet`, `samples/vision/lprnet`, `samples/vision/modnet`, `samples/vision/pointnet`, `samples/vision/pp_liteseg`, `samples/vision/unet`, `samples/vision/unetmobilenet`, `samples/vision/yolo26_depth`.
+- [x] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
 
 ### Batch 3: detection_tracking (5)
 
-- [ ] Implement and test: `samples/vision/ultralytics_yolo`, `samples/vision/yoloe`, `samples/vision/yolov5`, `samples/vision/yoloworld`, `samples/vision/bytetrack`.
-- [ ] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
+- [x] Implement and test: `samples/vision/ultralytics_yolo`, `samples/vision/yoloe`, `samples/vision/yolov5`, `samples/vision/yoloworld`, `samples/vision/bytetrack`.
+- [x] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
 
 ### Batch 4: multistage (6)
 
-- [ ] Implement and test: `samples/vision/clip`, `samples/vision/siglip`, `samples/vision/efficient_sam`, `samples/vision/mobile_sam`, `samples/vision/paddle_ocr`, `samples/speech/paraformer`.
-- [ ] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
+- [x] Implement and test: `samples/vision/clip`, `samples/vision/siglip`, `samples/vision/efficient_sam`, `samples/vision/mobile_sam`, `samples/vision/paddle_ocr`, `samples/speech/paraformer`.
+- [x] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
 
 ### Batch 5: speech_policy_native (5)
 
-- [ ] Implement and test: `samples/speech/asr`, `samples/speech/kws`, `samples/robotics/himloco`, `samples/llm/gemma4-e2b`, `samples/llm/minicpm5-2b`.
-- [ ] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
+- [x] Implement and test: `samples/speech/asr`, `samples/speech/kws`, `samples/robotics/himloco`, `samples/llm/gemma4-e2b`, `samples/llm/minicpm5-2b`.
+- [x] Codex review actual diff and behavioral evidence; fix material regressions; commit only owned paths.
 
 ### Final integration (51 Samples)
 
-- [ ] Recheck ResNet exemplar, collect a complete coverage matrix: sample, entry, model class/file, stage APIs, actual backend, batch, evidence. Detect missing/duplicate rows against filesystem.
-- [ ] Update `docs/architecture/model-examples.md`, new `docs/migration/2026-10-05-all-sample-readable-runtime.md` and repository entry navigation as necessary. Preserve trusted compile/export recipes.
-- [ ] Run every native sample test directory in isolated processes, shared tests excluding VLA, sample-contract/metadata/docs/tool tests affected, applicable C++ fixture builds and Catalog build/check. Fix source issues in a fresh bounded Claude task.
-- [ ] Run SDK-free entry checks from a clean temporary checkout; dependencies may be reused but record that boundary. No initialized VLA gitlinks.
-- [ ] Validate no public legacy imports/CLI flags disappeared without documented compatibility, no `platforms/` resurrected, no remote/download/board results claimed.
-- [ ] Codex independently assess evidence, submit complete all-Sample status and remaining board-only checks. Local commits only.
+- [x] Recheck ResNet exemplar, collect a complete coverage matrix: sample, entry, model class/file, stage APIs, actual backend, batch, evidence. Detect missing/duplicate rows against filesystem.
+- [x] Update `docs/architecture/model-examples.md`, new `docs/migration/2026-10-05-all-sample-readable-runtime.md` and repository entry navigation as necessary. Preserve trusted compile/export recipes.
+- [x] Run every native sample test directory in isolated processes, shared tests excluding VLA, sample-contract/metadata/docs/tool tests affected, applicable C++ fixture builds and Catalog build/check. Fix source issues in a fresh bounded Claude task.
+- [x] Run SDK-free entry checks from a clean temporary checkout; dependencies may be reused but record that boundary. No initialized VLA gitlinks.
+- [x] Validate no public legacy imports/CLI flags disappeared without documented compatibility, no `platforms/` resurrected, no remote/download/board results claimed.
+- [x] Codex independently assess evidence, submit complete all-Sample status and remaining board-only checks. Local commits only.
+
+## Closeout
+
+All five batches and final integration are complete for the approved source/host scope.
+[Codex assessment](../../releases/unified-migration/2026-10-05-all-sample-codex-review.md)
+records 51 Sample suites, 2298 tests including 12 optional-dependency skips, 0 contract
+violations and 149 clean-checkout entry checks. The clean checkout reused existing
+dependencies. Real export/toolchain/board execution and release integration remain
+outside this round; no server, VLA initialization, merge, push or publication occurred.
