@@ -248,10 +248,12 @@ class RunnerEntryTests(unittest.TestCase):
 
     def test_cli_identity_and_image_size_errors_precede_inference(self):
         from samples.vision.siglip.runtime.python import main
+        from samples.vision.siglip.runtime.python import embedding
         for argv,board in ((['--target','s100'],'s100p'),(['--target','s100','--image-size','384'],'s100'),(['--dry-run'],'s100')):
-            with patch('samples._shared.platforms.detect_target',return_value=board),patch.object(main,'_run') as run,contextlib.redirect_stderr(io.StringIO()):
+            with patch('samples._shared.platforms.detect_target',return_value=board),patch.object(
+                embedding,'SigLIPTask',side_effect=AssertionError('must not construct')) as task,contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(main.main(argv),2)
-                run.assert_not_called()
+                task.assert_not_called()
 
     def test_runner_rejects_changed_output_metadata_and_invalid_input_values(self):
         from samples.vision.siglip.runtime.python.model_binding import resolve_selection

@@ -9,6 +9,15 @@ S 运行说明 (historical `../../../../../platforms/s/samples/speech/paraformer
 保留作历史参考，不是统一入口。
 
 先看 [CLI 用法](#usage)、[全部参数](#parameters) 和 [结果文件](#results)；后续章节解释数值与 API 契约。
+入口为薄 `main.py`：[cli.py](cli.py) 承载参数声明、参数校验与 model-free 的
+列表/预览渲染；`main.py` 负责板卡校验、经 `application.prepare` 收集输入证据、
+显式构造 `ParaformerFrontend` 与三模型 runtime bundle，并在入口内逐语句运行
+循环——每语句一次
+`bundle.pipeline.predict(features.tensor, features.valid_frames)`，语句间的
+准备/记录由 `application` 的 `prepare_utterance`/`mark_attempted`/
+`record_prediction`/`save_features` 助手完成，`complete` 复验全部输入摘要并写
+结果/失败记录。`application.run`/`application.execute` 保留为同一助手的兼容
+组合。
 
 <a id="environment"></a>
 ### 显式安装依赖
@@ -187,16 +196,16 @@ print(result.text, result.token_count, result.decoder_executed)
 from samples.speech.paraformer.runtime.python.cif import cif_numpy
 features = np.zeros((1, 400, 560), np.float32)
 enc, pred, dec = pipeline.encoder_stage, pipeline.predictor_stage, pipeline.decoder_stage
-prepared = enc.pre_process(features)
-context = enc.post_process(enc.forward(prepared.tensors))
-prepared = pred.pre_process(context)
-weights, hidden = pred.post_process(pred.forward(prepared.tensors))
+prepared = enc.preprocess(features)
+context = enc.postprocess(enc.infer(prepared.tensors))
+prepared = pred.preprocess(context)
+weights, hidden = pred.postprocess(pred.infer(prepared.tensors))
 acoustic, count = cif_numpy(weights, hidden, real_T=3)
 if int(count[0]) == 0:
     explicit_text, explicit_ids = "", ()  # Same zero-token bypass as predict.
 else:
-    prepared = dec.pre_process(context, count, acoustic)
-    decoded = dec.post_process(dec.forward(prepared.tensors), prepared.context)
+    prepared = dec.preprocess(context, count, acoustic)
+    decoded = dec.postprocess(dec.infer(prepared.tensors), prepared.context)
     explicit_text, explicit_ids = decoded.text, decoded.token_ids
 assert (explicit_text, explicit_ids) == (result.text, result.token_ids)
 PYCODE
@@ -347,7 +356,8 @@ fbank。输入为已加载的有限 float32 数组 `[samples]` 或 `[samples,cha
 | Decoder | context、acoustic、count、全零 float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
 
 [stages.py](stages.py) 提供 `pipeline.encoder_stage`、`predictor_stage` 和
-`decoder_stage`，每个阶段均有 `pre_process`、`forward`、`post_process`。
+`decoder_stage`，每个阶段均有规范拼写 `preprocess`、`infer`、`postprocess`；
+既有 `pre_process`、`forward`、`post_process` 保留为同一实现的兼容别名。
 前处理返回 `PreparedInput.tensors`，数组具有独立存储；decoder 还将本次 token
 数量保存在整数 `PreparedInput.context` 中，后处理必须传入同一调用的 context。
 阶段对象不保存会被后一次调用覆盖的上下文。encoder 后处理返回独立 context 数组，
@@ -355,15 +365,17 @@ predictor 返回独立 `(weights, hidden)`，decoder 返回
 `Decoded(text, token_ids, token_count)`。方法 docstring 定义完整形状、类型和异常。
 上方显式调用示例与 `predict` 使用同一组阶段。
 
-`forward` 只调用一次注入模型，并校验／复制原始值，不做激活、CIF 或解码。
+`infer` 只调用一次注入模型，并校验／复制原始值，不做激活、CIF 或解码。
 encoder／predictor 后处理不会执行下一个模型。CPU CIF 在 pipeline 中保持显式，
 零 token 时由 pipeline 跳过 decoder。准备后的数组归调用者所有且可修改，不是
 不可变快照；token 数量上下文是独立整数。除非注入 runner 自行提供并发保证，
 请串行使用，本 API 不会使 SDK 缓冲区自动具备线程安全性。
 
 阶段失败抛出 `StageError`（继承 `ValueError`），含 `.stage`、`.operation`，原异常
-保留为 `__cause__`；CIF 错误标为 `cif`／`integrate`，CLI 失败信息保留这一归属。
-非法有效帧数在执行模型前拒绝。forward 计时包括原始数据校验／复制和适配器执行，
+保留为 `__cause__`；CIF 错误标为 `cif`／`integrate`。无论调用哪种拼写，operation
+标签保持既有措辞（`pre_process`、`forward`、`post_process`），既有报告看到的消息
+不变；CLI 失败信息保留这一归属。
+非法有效帧数在执行模型前拒绝。模型调用计时（`infer` 实现）包括原始数据校验／复制和适配器执行，
 不代表独立加速器耗时；前后处理、前端、模型加载和文件 I/O 均不在其中。
 
 `predict(features, feature_length)` 接收有限 float32 特征与 1–400 的有效帧数。

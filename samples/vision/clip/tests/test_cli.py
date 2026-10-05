@@ -43,9 +43,12 @@ class EntryTests(unittest.TestCase):
 
     def test_wrong_board_refuses_before_pipeline(self):
         from samples.vision.clip.runtime.python import main
-        with patch('samples._shared.platforms.detect_target', return_value='s100'), patch.object(main, '_run') as run, contextlib.redirect_stderr(io.StringIO()):
+        from samples.vision.clip.runtime.python import matching
+        with patch('samples._shared.platforms.detect_target', return_value='s100'), patch.object(
+            matching, 'CLIPTask', side_effect=AssertionError('must not construct')
+        ) as task, contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main.main(['--target','x5']), 2)
-            run.assert_not_called()
+            task.assert_not_called()
 
     def test_download_fetches_both_manifest_assets_without_network(self):
         from samples.vision.clip.model import download

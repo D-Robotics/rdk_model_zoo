@@ -1,5 +1,13 @@
 """Public per-model stages; CIF remains explicit in application composition.
 
+Each stage exposes the canonical ``preprocess``/``infer``/``postprocess``
+spellings; the established ``pre_process``/``forward``/``post_process``
+names remain as compatibility aliases of the same single implementation.
+Error attribution keeps its established operation wording (for example
+``encoder forward failed``) through the ``label`` argument of
+:func:`attributed`, so existing reports and tests see identical messages
+whichever spelling is called.
+
 Prepared tensors and returned arrays own their storage. No SDK loading, file I/O,
 metrics or next-model execution is performed here. Instances retain no per-call
 context. The injected runner may still require serialized access to SDK buffers.
@@ -24,15 +32,20 @@ class StageError(ValueError):
         super().__init__(f"{stage} {operation} failed: {error}")
 
 
-def attributed(operation):
-    @wraps(operation)
-    def execute(self, *args, **kwargs):
-        try:
-            return operation(self, *args, **kwargs)
-        except Exception as error:
-            raise StageError(self.stage, operation.__name__, error) from error
+def attributed(label):
+    """Decorate one stage operation; ``label`` pins the established error wording."""
 
-    return execute
+    def decorate(operation):
+        @wraps(operation)
+        def execute(self, *args, **kwargs):
+            try:
+                return operation(self, *args, **kwargs)
+            except Exception as error:
+                raise StageError(self.stage, label, error) from error
+
+        return execute
+
+    return decorate
 
 
 def tensor(value, shape, name, dtype="float32"):
@@ -87,8 +100,8 @@ class RawStage:
             for name, (shape, dtype) in accepted.items()
         }
 
-    @attributed
-    def forward(self, tensors):
+    @attributed(label="forward")
+    def infer(self, tensors):
         """Validate physical inputs, call only this model, return owned raw values.
 
         No activation, CIF, greedy decoding or file access occurs. Float tensors
@@ -102,6 +115,10 @@ class RawStage:
             self.runner(feed), self.outputs, optional_count=self.stage == "decoder"
         )
 
+    def forward(self, tensors):
+        """Compatibility alias for :meth:`infer` (error wording unchanged)."""
+        return self.infer(tensors)
+
 
 class EncoderStage(RawStage):
     stage = "encoder"
@@ -114,17 +131,25 @@ class EncoderStage(RawStage):
             {output_name: ((1, 400, 512), "float32")},
         )
 
-    @attributed
-    def pre_process(self, features):
+    @attributed(label="pre_process")
+    def preprocess(self, features):
         """Own prepared finite float32 [1,400,560] LFR/CMVN features; no audio I/O."""
         return PreparedInput(
             {self.input_name: tensor(features, (1, 400, 560), "features")}
         )
 
-    @attributed
-    def post_process(self, outputs):
+    @attributed(label="post_process")
+    def postprocess(self, outputs):
         """Return owned float32 context [1,400,512]; no predictor execution."""
         return self._validate(outputs, self.outputs)[self.output_name]
+
+    def pre_process(self, features):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(features)
+
+    def post_process(self, outputs):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs)
 
 
 class PredictorStage(RawStage):
@@ -145,18 +170,26 @@ class PredictorStage(RawStage):
             },
         )
 
-    @attributed
-    def pre_process(self, context):
+    @attributed(label="pre_process")
+    def preprocess(self, context):
         """Own encoder context float32 [1,400,512]; no normalization or casting."""
         return PreparedInput(
             {self.input_name: tensor(context, (1, 400, 512), "context")}
         )
 
-    @attributed
-    def post_process(self, outputs):
+    @attributed(label="post_process")
+    def postprocess(self, outputs):
         """Return owned (alphas [1,401], hidden [1,401,512]); CIF is a separate step."""
         raw = self._validate(outputs, self.outputs)
         return raw[self.alphas_name], raw[self.hidden_name]
+
+    def pre_process(self, context):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(context)
+
+    def post_process(self, outputs):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs)
 
 
 class DecoderStage(RawStage):
@@ -191,13 +224,13 @@ class DecoderStage(RawStage):
             {logits_name: ((1, 100, 8404), "float32")},
         )
 
-    @attributed
-    def pre_process(self, context, count, acoustic):
+    @attributed(label="pre_process")
+    def preprocess(self, context, count, acoustic):
         """Own decoder inputs and snapshot count 0..100 as per-call context.
 
         Inputs: context float32 [1,400,512], count int32 [1], acoustic float32
         [1,100,512]. Bias is source-compatible zeros float32 [1,1,512].
-        Zero-count bypass belongs to pipeline.predict, not this stage's forward.
+        Zero-count bypass belongs to pipeline.predict, not this stage's infer.
         """
         values = {
             self.context_name: context,
@@ -211,8 +244,8 @@ class DecoderStage(RawStage):
             raise ValueError("token count must be in [0,100]")
         return PreparedInput(values, length)
 
-    @attributed
-    def post_process(self, outputs, context):
+    @attributed(label="post_process")
+    def postprocess(self, outputs, context):
         """Greedy decode logits [1,100,8404] using this call's integer count.
 
         Returns Decoded with special/BPE markers removed, no CTC repeat collapse.
@@ -221,3 +254,11 @@ class DecoderStage(RawStage):
         raw = self._validate(outputs, self.outputs, optional_count=True)
         text, ids = decode_logits(raw[self.logits_name], context, self.vocabulary)
         return Decoded(text, ids, context)
+
+    def pre_process(self, context, count, acoustic):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(context, count, acoustic)
+
+    def post_process(self, outputs, context):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs, context)

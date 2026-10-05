@@ -116,17 +116,17 @@ class ParaformerPipeline:
         ):
             raise ValueError("feature_length must be an integer in [1,400]")
         timings = {}
-        prepared = self.encoder_stage.pre_process(features)
+        prepared = self.encoder_stage.preprocess(features)
         start = perf_counter()
-        raw = self.encoder_stage.forward(prepared.tensors)
+        raw = self.encoder_stage.infer(prepared.tensors)
         timings["encoder"] = (perf_counter() - start) * 1000
-        context = self.encoder_stage.post_process(raw)
+        context = self.encoder_stage.postprocess(raw)
 
-        prepared = self.predictor_stage.pre_process(context)
+        prepared = self.predictor_stage.preprocess(context)
         start = perf_counter()
-        raw = self.predictor_stage.forward(prepared.tensors)
+        raw = self.predictor_stage.infer(prepared.tensors)
         timings["predictor"] = (perf_counter() - start) * 1000
-        alphas, hidden = self.predictor_stage.post_process(raw)
+        alphas, hidden = self.predictor_stage.postprocess(raw)
 
         start = perf_counter()
         try:
@@ -139,11 +139,11 @@ class ParaformerPipeline:
             timings["decoder"] = None
             return Prediction("", (), 0, timings, False)
 
-        prepared = self.decoder_stage.pre_process(context, count, acoustic)
+        prepared = self.decoder_stage.preprocess(context, count, acoustic)
         start = perf_counter()
-        raw = self.decoder_stage.forward(prepared.tensors)
+        raw = self.decoder_stage.infer(prepared.tensors)
         timings["decoder"] = (perf_counter() - start) * 1000
-        decoded = self.decoder_stage.post_process(raw, prepared.context)
+        decoded = self.decoder_stage.postprocess(raw, prepared.context)
         return Prediction(
             decoded.text, decoded.token_ids, decoded.token_count, timings, True
         )

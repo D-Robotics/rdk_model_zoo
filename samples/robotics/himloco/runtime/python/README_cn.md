@@ -4,6 +4,12 @@
 
 统一 Python 入口已提供准确的 X5 模型选择、懒加载 SDK、源索引输入校验、预热、
 独立动作导出和失败报告。主机集成测试使用明确的 SDK 替身，真实板端执行仍未运行。
+入口（`main.py`）显式运行离线循环：经 `application.load_task` 取得绑定的
+`HimLocoTask`，执行显式要求的预热预测，逐输入调用一次 `task.predict(observation)`
+并通过 `application.record_sample` 记录每个动作导出；证据纪律（目标/制品校验、
+报告文件预留、摘要复验、延迟汇总、失败记录）位于 `application.py` 的
+`prepare`/`load_task`/`record_sample`/`complete` 助手，其单调用组合
+`application.execute` 保留为兼容 API。
 源运行时说明 (historical `../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 保留历史板测证据，不代表统一入口重新完成板测。
 
@@ -59,9 +65,9 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 | --- | --- |
 | `runner` | 必填可调用对象，无默认值，不隐式创建 SDK |
 | `observation` | 恰好 270 个有限实数，按输入顺序展平并转为 float32 |
-| `pre_process(...).tensors` | 独立存储、连续的 float32 `obs_history` `[1,270]` |
-| `forward(tensors)` | 准确命名的物理输入；返回含原始动作及本次耗时的 `RawOutputs` |
-| `post_process(raw)` | 必须传入 `RawOutputs`，不依赖实例中的“上次结果” |
+| `preprocess(...).tensors` | 独立存储、连续的 float32 `obs_history` `[1,270]` |
+| `infer(tensors)` | 准确命名的物理输入；返回含原始动作及本次耗时的 `RawOutputs` |
+| `postprocess(raw)` | 必须传入 `RawOutputs`，不依赖实例中的“上次结果” |
 
 扁平 `[270]`、批次 `[1,270]`、历史 `[6,45]` 均保持源实现展平规则。
 复数、布尔、字符串／对象、非有限值及 float32 溢出会拒绝。输入原始传感器数据
@@ -104,9 +110,9 @@ def fixture_runner(tensors):
 
 task = HimLocoTask(fixture_runner)
 observation = np.zeros((6, 45), dtype=np.float32)
-prepared = task.pre_process(observation)
-raw = task.forward(prepared.tensors)
-explicit = task.post_process(raw)
+prepared = task.preprocess(observation)
+raw = task.infer(prepared.tensors)
+explicit = task.postprocess(raw)
 result = task.predict(observation)
 np.testing.assert_array_equal(explicit.actions, result.actions)
 print(result.actions.shape, result.actions.tolist())
@@ -124,8 +130,10 @@ PYCODE
 相对关节位置（12）、相对关节速度（12，源缩放 0.05）、上次动作（12）。
 当前帧在前，之后是五帧历史。核心不会重复执行缩放、积累历史或选择关节顺序。
 
-`pre_process` 打包并独立持有特征，`forward` 只调用一次模型，`post_process`
-校验并独立持有动作，`predict` 串联三步。已使用源清单摘要核对全部 21 个归档观测文件，
+`preprocess` 打包并独立持有特征，`infer` 只调用一次模型，`postprocess`
+校验并独立持有动作，`predict` 串联三步。既有 `pre_process`、`forward`、
+`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——
+同一实现，两个名称。已使用源清单摘要核对全部 21 个归档观测文件，
 前处理与源实现一致；后处理仅以模拟动作输出对照。未测试板端／模型精度、控制稳定性
 或机器人运动。源实现可变的“上次耗时”字段和可能共享缓冲区的结果，改为每次调用
 独立的记录与结果存储。

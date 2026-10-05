@@ -5,6 +5,14 @@
 The unified Python entry now provides exact X5 model selection, lazy SDK transport,
 source-indexed input checks, warmup, owned action dumps and failure reports. Host
 integration tests use an explicit SDK double; real board execution remains not-run.
+The entry (`main.py`) visibly runs the offline loop: it obtains the bound
+`HimLocoTask` through `application.load_task`, executes the explicitly requested
+warmup predictions, calls `task.predict(observation)` once per input and records
+each action dump via `application.record_sample`; the evidence discipline
+(target/asset gating, report reservation, digest re-verification, latency summary,
+failure records) lives in `application.py` helpers (`prepare`, `load_task`,
+`record_sample`, `complete`), whose single-call composition `application.execute`
+remains the compatibility API.
 The source runtime guide (historical `../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
 retains historical board evidence, not a new unified-runtime validation claim.
 
@@ -64,9 +72,9 @@ Use the BSP runtime, not an unrelated PyPI package named hbm_runtime.
 | --- | --- |
 | `runner` | Required callable; no default or implicit SDK construction |
 | `observation` | Exactly 270 finite real numeric values, flattened in input order and converted to float32 |
-| `pre_process(...).tensors` | Owned, contiguous float32 `obs_history` `[1,270]` |
-| `forward(tensors)` | Exact named physical input; returns `RawOutputs` containing raw actions and this call's latency |
-| `post_process(raw)` | Requires `RawOutputs`; no instance-level “last result” dependency |
+| `preprocess(...).tensors` | Owned, contiguous float32 `obs_history` `[1,270]` |
+| `infer(tensors)` | Exact named physical input; returns `RawOutputs` containing raw actions and this call's latency |
+| `postprocess(raw)` | Requires `RawOutputs`; no instance-level “last result” dependency |
 
 Flat `[270]`, batch `[1,270]` and history `[6,45]` arrays preserve the source's
 flattening convention. Complex, boolean, string/object, non-finite and float32
@@ -117,9 +125,9 @@ def fixture_runner(tensors):
 
 task = HimLocoTask(fixture_runner)
 observation = np.zeros((6, 45), dtype=np.float32)
-prepared = task.pre_process(observation)
-raw = task.forward(prepared.tensors)
-explicit = task.post_process(raw)
+prepared = task.preprocess(observation)
+raw = task.infer(prepared.tensors)
+explicit = task.postprocess(raw)
 result = task.predict(observation)
 np.testing.assert_array_equal(explicit.actions, result.actions)
 print(result.actions.shape, result.actions.tolist())
@@ -140,8 +148,11 @@ joint velocities (12, source scale 0.05), and previous actions (12). The current
 observation comes first, followed by five earlier observations. This task does not
 apply those scales again, accumulate history or choose a joint ordering.
 
-`pre_process` packs and owns features; `forward` performs one raw model call;
-`post_process` validates and owns raw actions; `predict` composes these methods.
+`preprocess` packs and owns features; `infer` performs one raw model call;
+`postprocess` validates and owns raw actions; `predict` composes these methods.
+The established `pre_process`, `forward`, and `post_process` names remain
+importable thin aliases of `preprocess`, `infer`, and `postprocess` — one
+implementation, two names.
 Source preprocessing was compared against all 21 archived observation files with
 manifest digest checks. Postprocessing uses synthetic action outputs for numerical
 comparison. No board/model accuracy, control stability or robot motion was tested.

@@ -57,20 +57,21 @@ class MainTests(unittest.TestCase):
     def test_execution_auto_resolves_detected_target_before_default_pair(self):
         from unittest.mock import patch
 
-        from samples.vision.paddle_ocr.runtime.python import main as entry
+        from samples.vision.paddle_ocr.runtime.python import cli
 
-        args = entry.build_parser().parse_args(["--target", "auto"])
+        args = cli.build_parser().parse_args(["--target", "auto"])
         with patch(
             "samples._shared.platforms.resolve_target", return_value="x5"
         ) as resolve_target:
-            pair = entry._resolve_pair_from_args(args, for_execution=True)
+            pair = cli.resolve_pair_from_args(args, for_execution=True)
         self.assertEqual(pair.target, "x5")
         resolve_target.assert_called_once_with("auto")
 
     def test_prepare_rejects_destination_collision_after_model_dir_rewrite(self):
-        from samples.vision.paddle_ocr.runtime.python import main as entry
+        from samples.vision.paddle_ocr.runtime.python import cli
+        from samples.vision.paddle_ocr.runtime.python.model_binding import BindingError
 
-        args = entry.build_parser().parse_args(
+        args = cli.build_parser().parse_args(
             [
                 "--prepare",
                 "--target",
@@ -87,8 +88,8 @@ class MainTests(unittest.TestCase):
                 "collision-test",
             ]
         )
-        with self.assertRaises(entry.BindingError):
-            entry._prepare(args)
+        with self.assertRaises(BindingError):
+            cli.run_prepare(args)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,17 @@ validation. The archived S runtime (historical `../../../../../platforms/s/sampl
 remains a historical reference, not the unified entry.
 
 Start with [CLI usage](#usage), [all parameters](#parameters) and [results](#results); the later sections explain the numerical/API contracts.
+The entry is a thin `main.py`: [cli.py](cli.py) holds option declarations,
+argument validation and the model-free listing/dry-run rendering; `main.py`
+gates the board, collects input evidence through `application.prepare`,
+constructs the `ParaformerFrontend` and the three-model runtime bundle
+visibly, and then runs the per-utterance loop itself — one
+`bundle.pipeline.predict(features.tensor, features.valid_frames)` per
+utterance between the application's `prepare_utterance`/`mark_attempted`/
+`record_prediction`/`save_features` helpers, with `complete` re-verifying
+every input digest and writing the result/failure records.
+`application.run`/`application.execute` remain compatibility compositions
+of the same helpers.
 
 <a id="environment"></a>
 ### Install dependencies explicitly
@@ -212,16 +223,16 @@ print(result.text, result.token_count, result.decoder_executed)
 from samples.speech.paraformer.runtime.python.cif import cif_numpy
 features = np.zeros((1, 400, 560), np.float32)
 enc, pred, dec = pipeline.encoder_stage, pipeline.predictor_stage, pipeline.decoder_stage
-prepared = enc.pre_process(features)
-context = enc.post_process(enc.forward(prepared.tensors))
-prepared = pred.pre_process(context)
-weights, hidden = pred.post_process(pred.forward(prepared.tensors))
+prepared = enc.preprocess(features)
+context = enc.postprocess(enc.infer(prepared.tensors))
+prepared = pred.preprocess(context)
+weights, hidden = pred.postprocess(pred.infer(prepared.tensors))
 acoustic, count = cif_numpy(weights, hidden, real_T=3)
 if int(count[0]) == 0:
     explicit_text, explicit_ids = "", ()  # Same zero-token bypass as predict.
 else:
-    prepared = dec.pre_process(context, count, acoustic)
-    decoded = dec.post_process(dec.forward(prepared.tensors), prepared.context)
+    prepared = dec.preprocess(context, count, acoustic)
+    decoded = dec.postprocess(dec.infer(prepared.tensors), prepared.context)
     explicit_text, explicit_ids = decoded.text, decoded.token_ids
 assert (explicit_text, explicit_ids) == (result.text, result.token_ids)
 PYCODE
@@ -394,7 +405,9 @@ not a model `forward` containing CPU processing between several SDK executions.
 | Decoder | context, acoustic, count, zero float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
 
 [stages.py](stages.py) exposes `pipeline.encoder_stage`, `predictor_stage` and
-`decoder_stage`, each with `pre_process`, `forward`, `post_process`. Preprocessing
+`decoder_stage`, each with the canonical `preprocess`, `infer`, `postprocess`
+spellings; the established `pre_process`, `forward`, `post_process` names remain
+as compatibility aliases of the same single implementation. Preprocessing
 returns `PreparedInput.tensors` with owned physical arrays. Decoder preparation
 also snapshots the integer token count in `PreparedInput.context`; pass that same
 context to decoder postprocessing. No per-call context is stored on a stage.
@@ -403,7 +416,7 @@ owned `(weights, hidden)`, and decoder postprocessing returns `Decoded(text,
 token_ids, token_count)`. Full shape/type/error contracts live in the method
 docstrings. The explicit example above runs the same stages as `predict`.
 
-`forward` performs exactly one injected model call and validates/copies raw values;
+`infer` performs exactly one injected model call and validates/copies raw values;
 it does not apply activation, CIF or decoding. Encoder/predictor postprocessing
 never executes the next model. CPU CIF remains visible in the pipeline, and the
 pipeline bypasses decoder for zero tokens. Prepared tensors are caller-owned,
@@ -413,8 +426,11 @@ concurrency guarantee; the API does not make SDK buffers thread-safe.
 
 Stage failures raise `StageError` (a `ValueError`) with `.stage`, `.operation` and
 the original exception as `__cause__`; CIF errors use stage `cif`/operation
-`integrate`. The CLI failure message retains this attribution. Invalid pipeline
-feature length is rejected before model execution. Timed forward calls include
+`integrate`. Operation labels keep their established wording (`pre_process`,
+`forward`, `post_process`) whichever spelling is called, so existing reports see
+identical messages. The CLI failure message retains this attribution. Invalid
+pipeline feature length is rejected before model execution. Timed model calls
+(the `infer` implementations) include
 raw validation/copy overhead and adapter execution, not isolated accelerator time;
 pre/post, frontend, model loading and I/O are excluded.
 

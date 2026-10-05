@@ -1,4 +1,13 @@
-"""HIMLoco: published X5 model selection and source-indexed offline inference."""
+"""HIMLoco: published X5 model selection and source-indexed offline inference.
+
+This entry stays deliberately small: parse the arguments, handle the
+model-free listing/dry-run modes, resolve the selection, then run the
+offline loop visibly — obtain the bound policy task through
+``application.load_task``, execute the explicitly requested warmups, call
+``task.predict`` once per observation and record each action dump through
+``application`` helpers, which also own the report/failure evidence. The
+policy's preprocess → infer → postprocess chain lives in ``policy.py``.
+"""
 
 import argparse
 import json
@@ -14,7 +23,7 @@ from samples.robotics.himloco.runtime.python.model_binding import (
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
         "--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto"
     )
@@ -70,14 +79,35 @@ def main(argv=None):
                 )
             )
             return 0
-        from samples.robotics.himloco.runtime.python.application import execute
+        from samples.robotics.himloco.runtime.python import application
+        from samples.robotics.himloco.runtime.python.input_io import load_observation
 
-        report = execute(args, selected)
+        run = application.prepare(args, selected)
+        try:
+            task = application.load_task(run)
+            first, _ = load_observation(run.records[0])
+            for _ in range(args.warmup):
+                task.predict(first)
+                run.report["warmup_completed"] += 1
+            latencies = []
+            for record in run.records:
+                run.report["current_source_index"] = record.source_index
+                run.persist()
+                values, digest = load_observation(record)
+                result = task.predict(values)
+                application.record_sample(run, record, result, digest)
+                latencies.append(result.latency_ms)
+            application.complete(run, latencies)
+        except Exception as error:
+            run.mark_failed(error)
+            raise
+        finally:
+            run.close()
         print(
             json.dumps(
                 {
-                    "status": report["status"],
-                    "sample_count": report["sample_count"],
+                    "status": run.report["status"],
+                    "sample_count": run.report["sample_count"],
                     "output_dir": str(args.output_dir),
                 }
             )

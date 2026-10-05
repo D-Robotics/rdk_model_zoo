@@ -56,18 +56,20 @@ runner.set_scheduling_params(priority=0, bpu_cores=[0])
 task = ASR(runner, binding, load_vocabulary(SAMPLE_DIR / "test_data/vocab.json"))
 texts = []
 for chunk in read_chunks(SAMPLE_DIR / "test_data/chi_sound.wav", task.config):
-    prepared = task.pre_process(chunk.waveform, chunk.sample_rate)
-    raw = task.forward({binding.input_name: prepared.tensor})
-    texts.append(task.post_process(raw))
+    prediction = task.predict(
+        chunk.waveform, chunk.sample_rate, return_details=True)
+    texts.append(prediction.text)  # prediction.prepared holds this chunk's geometry
 print("".join(texts))
 ```
 
 <a id="stage-io"></a>
 ## Three-stage I/O
-- `pre_process(waveform, sample_rate)` accepts finite float waveform `[frames]` or `[frames,channels]`, bounded by `ceil(30000 × source_rate / 16000)`. It averages channels, uses SciPy Fourier resampling, normalizes by `sqrt(var + 1e-5)` before zero padding, and returns `PreparedChunk.tensor` as owned float32 `[1,30000]` plus geometry.
-- `forward({input_name: tensor})` calls the runner once. The runner validates names/shapes/dtypes and returns independently owned raw output. No decoder or activation runs here.
-- `post_process(raw)` checks observed `[1,T,3503]` metadata, takes argmax and returns text. FLOAT32 output is decoded directly as before; declared integer SCALE output is dequantized through the shared quantization helper at float64 comparison precision, so distinct raw integers stay ordered through argmax — float32 would round adjacent magnitudes such as `2**24` and `2**24 + 1` into an artificial tie. No softmax is required for argmax.
-- `predict(waveform, sample_rate)` composes the three stages for one chunk. File reading, vocabulary loading and saving belong to the caller, not ASR.
+- `preprocess(waveform, sample_rate)` accepts finite float waveform `[frames]` or `[frames,channels]`, bounded by `ceil(30000 × source_rate / 16000)`. It averages channels, uses SciPy Fourier resampling, normalizes by `sqrt(var + 1e-5)` before zero padding, and returns `PreparedChunk.tensor` as owned float32 `[1,30000]` plus geometry.
+- `infer({input_name: tensor})` calls the runner once. The runner validates names/shapes/dtypes and returns independently owned raw output. No decoder or activation runs here.
+- `postprocess(raw)` checks observed `[1,T,3503]` metadata, takes argmax and returns text. FLOAT32 output is decoded directly as before; declared integer SCALE output is dequantized through the shared quantization helper at float64 comparison precision, so distinct raw integers stay ordered through argmax — float32 would round adjacent magnitudes such as `2**24` and `2**24 + 1` into an artificial tie. No softmax is required for argmax.
+- `predict(waveform, sample_rate, *, return_details=False)` composes the three stages for one chunk and returns the decoded text by default. With `return_details=True` it returns a `ChunkPrediction(text, prepared)` carrying the same text plus this call's prepared chunk (owned tensor, valid sample count, source geometry), so streaming callers record per-chunk evidence from the single execution `predict` performs — exactly one runner call per request either way, and no per-call state is retained on the model. The CLI uses this form for its per-chunk report records. File reading, vocabulary loading and saving belong to the caller, not ASR.
+
+The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 CTC collapses adjacent equal IDs before removing blank 0; legacy only removes blank. Blank separates repeated tokens: `[5,5,0,5]` becomes `AA` under CTC and `AAA` under legacy. Only exactly equal scores tie, and ties go to the lowest ID: float32 output compares in float32, while integer SCALE output compares at float64 so distinct raw integers cannot round into an artificial tie. All nonblank vocabulary strings, including `|` and special tokens, are retained literally. No state or duplicate suppression crosses chunk boundaries. Final padding still produces a full logit sequence; the model has no verified valid-output-length contract, so all frames are decoded. Independent windows can split words; this is not overlap-aware streaming. Python Fourier and the historical C++ sinc resampler are different algorithms.
 

@@ -6,6 +6,63 @@ import numpy as np
 from samples.robotics.himloco.runtime.python.policy import HimLocoTask
 
 
+class CanonicalStageTests(unittest.TestCase):
+    """Readable-runtime canonical stage names on the offline policy task."""
+
+    @staticmethod
+    def make_task():
+        actions = np.arange(12, dtype=np.float32).reshape(1, 12)
+        calls = []
+
+        def runner(feed):
+            calls.append(feed)
+            return {"actions": actions.copy()}
+
+        return HimLocoTask(runner), calls
+
+    def test_canonical_stages_match_legacy_aliases(self):
+        task, _ = self.make_task()
+        values = np.arange(270, dtype=np.float32)
+        first = task.preprocess(values)
+        second = task.pre_process(values)
+        np.testing.assert_array_equal(
+            first.tensors["obs_history"], second.tensors["obs_history"]
+        )
+        self.assertTrue(first.tensors["obs_history"].flags.c_contiguous)
+        raw = task.infer(first.tensors)
+        np.testing.assert_array_equal(
+            raw.tensors["actions"], task.forward(second.tensors).tensors["actions"]
+        )
+        legacy = task.post_process(task.forward(first.tensors))
+        np.testing.assert_array_equal(task.postprocess(raw).actions, legacy.actions)
+
+    def test_predict_equals_explicit_canonical_chain(self):
+        task, calls = self.make_task()
+        values = np.arange(270, dtype=np.float32).reshape(6, 45)
+        prepared = task.preprocess(values)
+        explicit = task.postprocess(task.infer(prepared.tensors))
+        result = task.predict(values)
+        np.testing.assert_array_equal(explicit.actions, result.actions)
+        # Latency measures each runner call separately; both stay valid.
+        self.assertGreaterEqual(explicit.latency_ms, 0)
+        self.assertGreaterEqual(result.latency_ms, 0)
+        self.assertEqual(len(calls), 2)
+
+    def test_consecutive_calls_keep_geometry_and_call_count(self):
+        task, calls = self.make_task()
+        first = task.predict(np.zeros(270))
+        second = task.predict(np.ones(270))
+        self.assertEqual(first.actions.shape, (1, 12))
+        self.assertEqual(second.actions.shape, (1, 12))
+        self.assertEqual(len(calls), 2)
+        task.predict(np.full(270, 5.0))
+        self.assertEqual(len(calls), 3)
+        np.testing.assert_array_equal(
+            task.preprocess(np.full(270, 7.0)).tensors["obs_history"][0, :270],
+            np.full(270, 7.0, np.float32),
+        )
+
+
 class PolicyTests(unittest.TestCase):
     def test_predict_matches_explicit_steps(self):
         runner = Mock(

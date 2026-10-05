@@ -24,6 +24,70 @@ def metadata():
     )
 
 
+class CanonicalStageTests(unittest.TestCase):
+    """Readable-runtime canonical stage names on the ASR task."""
+
+    @staticmethod
+    def make_task(raw, vocabulary=("<pad>", "a", "b"), decode_mode="ctc"):
+        meta = metadata()
+        meta["output_shapes"] = {"logits": tuple(raw.shape)}
+        meta["output_quants"] = {
+            "logits": SimpleNamespace(
+                quant_type="SCALE", scale=[1.0], zero_point=[0], axis=2
+            )
+        }
+        binding = SimpleNamespace(
+            input_name="audio",
+            output_name="logits",
+            metadata=SimpleNamespace(
+                output_shapes=meta["output_shapes"],
+                output_dtypes={"logits": raw.dtype},
+                output_quants=meta["output_quants"],
+            ),
+        )
+        calls = []
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw
+
+        return ASR(runner, binding, vocabulary, decode_mode=decode_mode), calls
+
+    def test_canonical_stages_match_legacy_aliases(self):
+        raw = np.zeros((1, 2, 3), np.int32)
+        raw[0, 0, 1] = 2
+        task, _ = self.make_task(raw)
+        wave = np.ones(20, np.float32)
+        first = task.preprocess(wave, 16000)
+        second = task.pre_process(wave, 16000)
+        np.testing.assert_array_equal(first.tensor, second.tensor)
+        self.assertEqual(first.valid_samples, second.valid_samples)
+        self.assertIs(task.infer({"audio": first.tensor}), task.forward({"audio": first.tensor}))
+        self.assertEqual(task.postprocess(raw), task.post_process(raw))
+
+    def test_predict_equals_explicit_canonical_chain(self):
+        raw = np.zeros((1, 3, 3), np.int32)
+        raw[0, 0, 1] = 2
+        raw[0, 1, 0] = 1
+        raw[0, 2, 1] = 2
+        task, calls = self.make_task(raw)
+        wave = np.ones(20, np.float32)
+        prepared = task.preprocess(wave, 16000)
+        explicit = task.postprocess(task.infer({"audio": prepared.tensor}))
+        self.assertEqual(task.predict(wave, 16000), explicit)
+        # CTC collapses [1, 1] but keeps tokens separated by blank 0: "aa".
+        self.assertEqual(task.predict(wave, 16000), "aa")
+        # One runner call per explicit infer plus one per predict.
+        self.assertEqual(len(calls), 3)
+
+    def test_infer_returns_fixture_unchanged(self):
+        raw = np.zeros((1, 1, 3), np.int32)
+        task, calls = self.make_task(raw)
+        tensor = np.zeros((1, 30000), np.float32)
+        self.assertIs(task.infer({"audio": tensor}), raw)
+        self.assertEqual(calls, [{"audio": tensor}])
+
+
 class BindingTests(unittest.TestCase):
     def test_exact_targets_and_no_external_path_guess(self):
         for target in ("s100", "s600"):

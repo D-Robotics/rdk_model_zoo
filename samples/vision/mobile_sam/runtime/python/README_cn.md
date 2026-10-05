@@ -97,7 +97,7 @@ assert result["mask"].shape == (512, 512)
 <a id="stage-io"></a>
 ## 阶段 I/O
 
-每个 stage 都有独立的三个方法。encoder `pre_process` 校验 BGR HWC 输入，按 source ImageNet mean/std 归一化并返回独立持有的 contiguous RGB NCHW float32 tensor，以及不可变的本次几何 context；encoder `forward` 发送该 tensor 并保留经 metadata 校验的 native embedding；encoder `post_process` 负责独立持有的 float32 副本。decoder `pre_process` 负责独立持有 embedding 和 box context；decoder `forward` 发送 decoder tensor 并保留 native `low_res_masks`/`iou_predictions`；decoder `post_process` 将已接受的 native 数值数组 cast 为独立 float32，选择 IoU 最大者，将 raw logits resize 到 `512x512` 后以 `>0` 阈值化。`predict` 按 `encoder.pre_process → encoder.forward → encoder.post_process → decoder.pre_process → decoder.forward → decoder.post_process` 串联。不会隐式 dequantize。decoder box 遵循实际 metadata：S 使用 `[1,4]`，X5 接受 `[1,4]` 或 `[1,4,1,1]`；decoder mask 为 `[1,3,H,W]` 且观察到的 `H/W` 为正，IoU 为 `[1,3]` 或 `[1,3,1,1]`。
+每个 stage 都有独立的三个方法，以 [pipeline.py](pipeline.py) 中本地 `MobileSAMEncoder`/`MobileSAMDecoder` 视图的规范拼写 `preprocess`/`infer`/`postprocess` 暴露——继承的共享拼写 `pre_process`/`forward`/`post_process` 保留为同一实现的兼容别名。encoder `preprocess` 校验 BGR HWC 输入，按 source ImageNet mean/std 归一化并返回独立持有的 contiguous RGB NCHW float32 tensor，以及不可变的本次几何 context；encoder `infer` 发送该 tensor 并保留经 metadata 校验的 native embedding；encoder `postprocess` 负责独立持有的 float32 副本。decoder `preprocess` 负责独立持有 embedding 和 box context；decoder `infer` 发送 decoder tensor 并保留 native `low_res_masks`/`iou_predictions`；decoder `postprocess` 将已接受的 native 数值数组 cast 为独立 float32，选择 IoU 最大者，将 raw logits resize 到 `512x512` 后以 `>0` 阈值化。`predict(image, box=...)` 按 `encoder.preprocess → encoder.infer → encoder.postprocess → decoder.preprocess → decoder.infer → decoder.postprocess` 串联（等价于先 `encode_image` 再 `decode_masks`），透传每次调用的 box prompt，失败经由 `StageError` 归属到出错 stage，且不会执行后续 stage。不会隐式 dequantize。decoder box 遵循实际 metadata：S 使用 `[1,4]`，X5 接受 `[1,4]` 或 `[1,4,1,1]`；decoder mask 为 `[1,3,H,W]` 且观察到的 `H/W` 为正，IoU 为 `[1,3]` 或 `[1,3,1,1]`。
 
 | 绑定输出 | X5 | S100 / S100P / S600 |
 | --- | --- | --- |
@@ -116,3 +116,5 @@ assert result["mask"].shape == (512, 512)
 - box 无效：传入四个有限、递增且位于 `[0,512]` 的坐标。
 - shape 不匹配：检查 `--dry-run` 和 runtime metadata，不从文件名猜尺寸。
 - 板卡身份或 SDK 错误：确认 target 与匹配的 `hbm_runtime` 镜像。
+
+CLI 参数声明（含 box 解析）、model-free 的 `--list-models`/`--dry-run` 模式、图像读取与 overlay/mask 写入位于 [cli.py](cli.py)；`main.py` 负责解析、构造 pipeline 并调用 `predict`。

@@ -77,9 +77,9 @@ runner = RuntimeModelRunner(selection)
 binding = runner.load()
 audio, sample_rate = load_audio(SAMPLE_DIR / "test_data/sample.wav")
 task = KWS(runner, binding)
-tensors = task.pre_process(audio, sample_rate)
-raw = task.forward(tensors)
-score = task.post_process(raw)
+tensors = task.preprocess(audio, sample_rate)
+raw = task.infer(tensors)
+score = task.postprocess(raw)
 print(score)
 # task.predict(audio, sample_rate) composes the same three calls.
 ```
@@ -87,11 +87,11 @@ print(score)
 <a id="stage-io"></a>
 ## 阶段及生命周期
 
-`pre_process` 接受非空、有限、单声道 float32 `[N]` 波形，幅值 [-1,1]，采样率 16000。复制前 60000 个点，短段补零，不暗中重采样或平均声道。PaddleAudio fbank 使用 25 ms 帧、10 ms 移动、80 bins 及源默认值（包括 dither=0、snip_edges=True），得到 373 帧。具名 `[1,373,80]` 张量独立持有连续数据。
+`preprocess` 接受非空、有限、单声道 float32 `[N]` 波形，幅值 [-1,1]，采样率 16000。复制前 60000 个点，短段补零，不暗中重采样或平均声道。PaddleAudio fbank 使用 25 ms 帧、10 ms 移动、80 bins 及源默认值（包括 dither=0、snip_edges=True），得到 373 帧。具名 `[1,373,80]` 张量独立持有连续数据。
 
-`forward` 仅调用一次共享 runner，返回原始输出，不做 sigmoid、反量化、文件访问或最大值计算。runner 核验名称/形状/类型/有限值并复制 SDK 输出，后续调用不会覆盖旧结果。`post_process` 核验绑定输出，仅对整数用共享 SCALE 转换，要求结果在 [0,1] 后取最大值；float 输出即使附带历史量化描述符也不再转换，不额外 sigmoid。
+`infer` 仅调用一次共享 runner，返回原始输出，不做 sigmoid、反量化、文件访问或最大值计算。runner 核验名称/形状/类型/有限值并复制 SDK 输出，后续调用不会覆盖旧结果。`postprocess` 核验绑定输出，仅对整数用共享 SCALE 转换，要求结果在 [0,1] 后取最大值；float 输出即使附带历史量化描述符也不再转换，不额外 sigmoid。
 
-`predict` 仅组合三阶段，不缓存上一次音频状态。实例用于串行执行，不承诺 SDK 并发安全。纯特征/评分助手位于 `frontend.py`、`postprocess.py`，文件由 `audio_io.py` 管理，报告在 `main.py`，`model_runner.py` 委托共享 SDK/调度实现。
+`predict` 仅组合三阶段，不缓存上一次音频状态。既有 `pre_process`、`forward`、`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名称。实例用于串行执行，不承诺 SDK 并发安全。纯特征/评分助手位于 `frontend.py`、`postprocess.py`，文件由 `audio_io.py` 管理，报告在 `main.py`，`model_runner.py` 委托共享 SDK/调度实现。
 
 <a id="troubleshooting"></a>
 ## 排错

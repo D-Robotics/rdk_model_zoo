@@ -101,9 +101,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 task = SigLIPTask(runner, binding)
 
-prepared = task.pre_process(image)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(image)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(image)
 assert np.array_equal(explicit_result, composed_result)
 print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
@@ -112,10 +112,12 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 <a id="stage-io"></a>
 ## Three-Stage I/O
 
-- `pre_process`: BGR `uint8` `H×W×3` → `PreparedInput`; its `_input_0` is owned contiguous RGB `float32` `(1,3,size,size)` in `[-1,1]`, and `context` stores original/resized shapes plus `(top,bottom,left,right)` padding.
-- `forward`: `{"_input_0": tensor}` → raw `{"_output_0": ndarray}` for the selected packed submodel. `model_runner` validates metadata and containers but preserves native numeric dtype and values.
-- `post_process`: raw output → owned ndarray with metadata-bound shape/dtype; it rejects wrong shape/dtype and NaN/Inf. This vision feature task consumes no geometry context.
-- `predict(image)` composes exactly pre-process → forward → post-process. It does not download, save, activate, normalize, or evaluate results.
+- `preprocess`: BGR `uint8` `H×W×3` → `PreparedInput`; its `_input_0` is owned contiguous RGB `float32` `(1,3,size,size)` in `[-1,1]`, and `context` stores original/resized shapes plus `(top,bottom,left,right)` padding.
+- `infer`: `{"_input_0": tensor}` → raw `{"_output_0": ndarray}` for the selected packed submodel. `model_runner` validates metadata and containers but preserves native numeric dtype and values.
+- `postprocess`: raw output → owned ndarray with metadata-bound shape/dtype; it rejects wrong shape/dtype and NaN/Inf. This vision feature task consumes no geometry context.
+- `predict(image)` composes exactly preprocess → infer → postprocess. It does not download, save, activate, normalize, or evaluate results.
+
+The established legacy spellings `pre_process`, `forward` and `post_process` remain as thin compatibility aliases of the canonical methods above — one implementation, no second pipeline. The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, image reading, the summary and the optional NumPy save, while `main.py` parses, resolves, constructs `SigLIPTask` and calls `predict`.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

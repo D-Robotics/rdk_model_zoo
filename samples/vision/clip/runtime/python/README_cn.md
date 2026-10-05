@@ -102,9 +102,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 task = CLIPTask(runner, binding, PromptTokenizer())
 
-prepared = task.pre_process(image, texts)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(image, texts)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(image, texts)
 np.testing.assert_array_equal(explicit_result.scores, composed_result.scores)
 np.testing.assert_array_equal(explicit_result.order, composed_result.order)
@@ -115,10 +115,12 @@ print({"scores": composed_result.scores.tolist(),
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `pre_process`：BGR `uint8` `H×W×3` 加非空文本序列 → `PreparedInput`。图像转 RGB，将短边固定为 224、长边按比例四舍五入后进行 bicubic resize，中心 crop 224，除以 255，生成 contiguous float32 `image` `(1,3,224,224)`。不使用 CLIP mean/std。真实 BPE 词表生成 contiguous int32 `texts` `(N,77)`，包含源 SOT/EOT ID。`context` 保存几何信息和文本。
-- `forward`：语义 `image`/`texts` tensor → `image_feature` float32 `(1,512)`、`text_features` float32 `(N,512)` 原始 mapping。runner 将语义 key 适配到动态 image metadata 名称和 ONNX 文本名称；文本 metadata 必须为 I32 `[N,77]` 输入、F32 `[N,512]` 输出。
-- `post_process`：原始特征 → `MatchResult(scores, order)`。计算 cosine similarity 和降序 `argsort`，不返回 softmax 或特征 L2 变换。
-- `predict(image, texts)` 严格串联三阶段。词表读取与初始化、绘图和文件写入在 task 外部；pre_process 委托注入的 tokenizer 编码。
+- `preprocess`：BGR `uint8` `H×W×3` 加非空文本序列 → `PreparedInput`。图像转 RGB，将短边固定为 224、长边按比例四舍五入后进行 bicubic resize，中心 crop 224，除以 255，生成 contiguous float32 `image` `(1,3,224,224)`。不使用 CLIP mean/std。真实 BPE 词表生成 contiguous int32 `texts` `(N,77)`，包含源 SOT/EOT ID。`context` 保存几何信息和文本。
+- `infer`：语义 `image`/`texts` tensor → `image_feature` float32 `(1,512)`、`text_features` float32 `(N,512)` 原始 mapping。runner 将语义 key 适配到动态 image metadata 名称和 ONNX 文本名称；文本 metadata 必须为 I32 `[N,77]` 输入、F32 `[N,512]` 输出。
+- `postprocess`：原始特征 → `MatchResult(scores, order)`。计算 cosine similarity 和降序 `argsort`，不返回 softmax 或特征 L2 变换。
+- `predict(image, texts)` 严格串联三阶段。词表读取与初始化、绘图和文件写入在 task 外部；preprocess 委托注入的 tokenizer 编码。
+
+既有旧拼写 `pre_process`、`forward`、`post_process` 保留为上述规范方法的薄兼容别名——同一实现，不存在第二套流程。CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、prompt 解析与结果展示，`main.py` 负责解析、解析模型对、构造 `CLIPTask` 并调用 `predict`。
 
 <a id="troubleshooting"></a>
 ## 故障排查

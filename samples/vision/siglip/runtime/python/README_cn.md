@@ -101,9 +101,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 task = SigLIPTask(runner, binding)
 
-prepared = task.pre_process(image)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(image)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(image)
 assert np.array_equal(explicit_result, composed_result)
 print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
@@ -112,10 +112,12 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `pre_process`：BGR `uint8` `H×W×3` → `PreparedInput`；`_input_0` 是 owned contiguous RGB `float32` `(1,3,size,size)`，范围 `[-1,1]`，`context` 保存原图/缩放尺寸及 `(top,bottom,left,right)` padding。
-- `forward`：`{"_input_0": tensor}` → 所选打包子模型的原始 `{"_output_0": ndarray}`。`model_runner` 校验 metadata 和容器，但保留原生数值 dtype 和值。
-- `post_process`：原始输出 → metadata 绑定 shape/dtype 的 owned ndarray；错误 shape/dtype 和 NaN/Inf 会报错。本视觉特征任务不消费几何 context。
-- `predict(image)` 严格串联 pre-process → forward → post-process；不下载、保存、激活、归一化或评估结果。
+- `preprocess`：BGR `uint8` `H×W×3` → `PreparedInput`；`_input_0` 是 owned contiguous RGB `float32` `(1,3,size,size)`，范围 `[-1,1]`，`context` 保存原图/缩放尺寸及 `(top,bottom,left,right)` padding。
+- `infer`：`{"_input_0": tensor}` → 所选打包子模型的原始 `{"_output_0": ndarray}`。`model_runner` 校验 metadata 和容器，但保留原生数值 dtype 和值。
+- `postprocess`：原始输出 → metadata 绑定 shape/dtype 的 owned ndarray；错误 shape/dtype 和 NaN/Inf 会报错。本视觉特征任务不消费几何 context。
+- `predict(image)` 严格串联 preprocess → infer → postprocess；不下载、保存、激活、归一化或评估结果。
+
+既有旧拼写 `pre_process`、`forward`、`post_process` 保留为上述规范方法的薄兼容别名——同一实现，不存在第二套流程。CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、图像读取、摘要与可选 NumPy 保存，`main.py` 负责解析、解析模型、构造 `SigLIPTask` 并调用 `predict`。
 
 <a id="troubleshooting"></a>
 ## 故障排查

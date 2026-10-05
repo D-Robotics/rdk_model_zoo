@@ -102,9 +102,9 @@ binding = runner.load()
 runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 task = CLIPTask(runner, binding, PromptTokenizer())
 
-prepared = task.pre_process(image, texts)
-raw_outputs = task.forward(prepared.tensors)
-explicit_result = task.post_process(raw_outputs)
+prepared = task.preprocess(image, texts)
+raw_outputs = task.infer(prepared.tensors)
+explicit_result = task.postprocess(raw_outputs)
 composed_result = task.predict(image, texts)
 np.testing.assert_array_equal(explicit_result.scores, composed_result.scores)
 np.testing.assert_array_equal(explicit_result.order, composed_result.order)
@@ -115,10 +115,12 @@ print({"scores": composed_result.scores.tolist(),
 <a id="stage-io"></a>
 ## Three-Stage I/O
 
-- `pre_process`: BGR `uint8` `H×W×3` plus nonempty text sequence → `PreparedInput`. The image is RGB bicubic resized with the short side fixed to 224 and the proportional long side rounded, center-cropped to 224, divided by 255, and emitted as contiguous float32 `image` `(1,3,224,224)`. No CLIP mean/std normalization is applied. The real BPE vocabulary produces contiguous int32 `texts` `(N,77)` with source SOT/EOT IDs. `context` stores geometry and texts.
-- `forward`: semantic `image`/`texts` tensors → raw mapping `image_feature` float32 `(1,512)` and `text_features` float32 `(N,512)`. The runner adapts semantic keys to dynamic image metadata names and ONNX text names; text metadata must be I32 `[N,77]` input and F32 `[N,512]` output.
-- `post_process`: raw features → `MatchResult(scores, order)`. It computes cosine similarity and descending `argsort`; no softmax or feature L2 mutation is returned.
-- `predict(image, texts)` composes exactly the three stages. Vocabulary loading/initialization, visualization, and file writing stay outside the task; pre_process delegates token encoding to the injected tokenizer.
+- `preprocess`: BGR `uint8` `H×W×3` plus nonempty text sequence → `PreparedInput`. The image is RGB bicubic resized with the short side fixed to 224 and the proportional long side rounded, center-cropped to 224, divided by 255, and emitted as contiguous float32 `image` `(1,3,224,224)`. No CLIP mean/std normalization is applied. The real BPE vocabulary produces contiguous int32 `texts` `(N,77)` with source SOT/EOT IDs. `context` stores geometry and texts.
+- `infer`: semantic `image`/`texts` tensors → raw mapping `image_feature` float32 `(1,512)` and `text_features` float32 `(N,512)`. The runner adapts semantic keys to dynamic image metadata names and ONNX text names; text metadata must be I32 `[N,77]` input and F32 `[N,512]` output.
+- `postprocess`: raw features → `MatchResult(scores, order)`. It computes cosine similarity and descending `argsort`; no softmax or feature L2 mutation is returned.
+- `predict(image, texts)` composes exactly the three stages. Vocabulary loading/initialization, visualization, and file writing stay outside the task; preprocess delegates token encoding to the injected tokenizer.
+
+The established legacy spellings `pre_process`, `forward` and `post_process` remain as thin compatibility aliases of the canonical methods above — one implementation, no second pipeline. The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, prompt parsing and presentation, while `main.py` parses, resolves, constructs `CLIPTask` and calls `predict`.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

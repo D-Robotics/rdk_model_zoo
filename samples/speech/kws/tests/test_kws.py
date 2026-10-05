@@ -35,6 +35,54 @@ def metadata(dtype="float32", quant=None):
     )
 
 
+class CanonicalStageTests(unittest.TestCase):
+    """Readable-runtime canonical stage names on the KWS task."""
+
+    @staticmethod
+    def make_task(raw):
+        binding = bind_model(resolve_selection("s100"), metadata())
+        calls = []
+
+        def runner(tensors):
+            calls.append(tensors)
+            return raw
+
+        return KWS(
+            runner, binding, frontend=lambda w, c: np.zeros((373, 80), np.float32)
+        ), calls
+
+    def test_canonical_stages_match_legacy_aliases(self):
+        raw = np.array([[[0.25], [0.985]]], np.float32)
+        task, _ = self.make_task(raw)
+        wave = np.ones(10, np.float32)
+        np.testing.assert_array_equal(
+            task.preprocess(wave, 16000)["features"],
+            task.pre_process(wave, 16000)["features"],
+        )
+        feed = {"features": np.zeros((1, 373, 80), np.float32)}
+        self.assertIs(task.infer(feed), task.forward(feed))
+        self.assertEqual(task.postprocess(raw), task.post_process(raw))
+
+    def test_predict_equals_explicit_canonical_chain(self):
+        raw = np.array([[[0.25], [0.985]]], np.float32)
+        task, calls = self.make_task(raw)
+        wave = np.ones(10, np.float32)
+        prepared = task.preprocess(wave, 16000)
+        explicit = task.postprocess(task.infer(prepared))
+        self.assertEqual(task.predict(wave, 16000), explicit)
+        self.assertAlmostEqual(explicit, 0.985, places=6)
+        # One runner call inside predict plus the explicit infer above.
+        self.assertEqual(len(calls), 2)
+
+    def test_infer_returns_fixture_once_per_call(self):
+        raw = np.array([[[0.25], [0.985]]], np.float32)
+        task, calls = self.make_task(raw)
+        feed = task.preprocess(np.ones(10, np.float32), 16000)
+        self.assertIs(task.infer(feed), raw)
+        self.assertIs(task.infer(feed), raw)
+        self.assertEqual(calls, [feed, feed])
+
+
 class ContractTests(unittest.TestCase):
     def test_exact_asset_and_no_target_fallback(self):
         self.assertEqual(

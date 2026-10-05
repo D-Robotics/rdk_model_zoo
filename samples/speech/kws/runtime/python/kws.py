@@ -1,6 +1,17 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""KWS task: waveform → features → raw inference → keyword probability."""
+"""KWS task: waveform → features → raw inference → keyword probability.
+
+:class:`KWS` is the readable single-window model class: :meth:`preprocess`
+turns one 16 kHz waveform into the owned named ``[1,373,80]`` feature tensor,
+:meth:`infer` performs exactly one raw runner call, :meth:`postprocess`
+validates the bound output and returns the maximum keyword probability, and
+:meth:`predict` chains the three steps. The established
+``pre_process``/``forward``/``post_process`` names stay thin aliases — one
+implementation, two names. Feature extraction lives in
+:mod:`samples.speech.kws.runtime.python.frontend`; scoring lives in
+:mod:`samples.speech.kws.runtime.python.postprocess`.
+"""
 
 from samples.speech.kws.runtime.python.frontend import (
     Config,
@@ -20,20 +31,41 @@ class KWS:
         self.config = config
         self.frontend = frontend
 
-    def pre_process(self, waveform, sample_rate):
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, waveform, sample_rate):
         """Return owned named float32 [1,373,80] from mono float32 16 kHz samples."""
         return prepare_features(
             waveform, sample_rate, self.config, self.binding, self.frontend
         )
 
-    def forward(self, tensors):
+    def infer(self, tensors):
         """One raw runner call; no activation, reduction or dequantization."""
         return self.runner(tensors)
 
-    def post_process(self, raw):
+    def postprocess(self, raw):
         """Return maximum validated model probability; never apply another sigmoid."""
         return keyword_score(raw, self.binding)
 
     def predict(self, waveform, sample_rate):
-        """Compose pre_process, forward and post_process without cached context."""
-        return self.post_process(self.forward(self.pre_process(waveform, sample_rate)))
+        """Compose preprocess → infer → postprocess without cached context."""
+        return self.postprocess(self.infer(self.preprocess(waveform, sample_rate)))
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, waveform, sample_rate):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(waveform, sample_rate)
+
+    def forward(self, tensors):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self, raw):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(raw)

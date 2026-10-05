@@ -62,7 +62,11 @@ class HimLocoTask:
             raise TypeError("runner must be callable")
         self.runner = runner
 
-    def pre_process(self, observation):
+    # ------------------------------------------------------------------
+    # The three pipeline stages, each public and usable on its own.
+    # ------------------------------------------------------------------
+
+    def preprocess(self, observation):
         """Pack exactly 270 finite real numeric values into owned float32 [1,270].
 
         Preserve source flattening order and values (apart from float32 casting).
@@ -81,7 +85,7 @@ class HimLocoTask:
             raise ValueError("Observation must contain finite float32 values")
         return PreparedInput({INPUT_NAME: tensor})
 
-    def forward(self, tensors):
+    def infer(self, tensors):
         """Call one runner with float32 obs_history [1,270], preserve raw actions.
 
         The runner returns exactly actions float32 [1,12]. Names, shape, dtype
@@ -97,7 +101,7 @@ class HimLocoTask:
         actions = _physical(outputs, OUTPUT_NAME, (1, 12))
         return RawOutputs({OUTPUT_NAME: actions}, elapsed)
 
-    def post_process(self, outputs):
+    def postprocess(self, outputs):
         """Return owned actions [1,12] unchanged, with this raw call's latency.
 
         Requires RawOutputs, finite nonnegative latency and exact float32 actions.
@@ -118,6 +122,23 @@ class HimLocoTask:
         )
 
     def predict(self, observation):
-        """Execute pre_process → forward → post_process with no retained call state."""
-        prepared = self.pre_process(observation)
-        return self.post_process(self.forward(prepared.tensors))
+        """Execute preprocess → infer → postprocess with no retained call state."""
+        prepared = self.preprocess(observation)
+        return self.postprocess(self.infer(prepared.tensors))
+
+    # ------------------------------------------------------------------
+    # Compatibility surface: the established stage names stay thin aliases
+    # of the implementations above (no second implementation).
+    # ------------------------------------------------------------------
+
+    def pre_process(self, observation):
+        """Compatibility alias for :meth:`preprocess`."""
+        return self.preprocess(observation)
+
+    def forward(self, tensors):
+        """Compatibility alias for :meth:`infer`."""
+        return self.infer(tensors)
+
+    def post_process(self, outputs):
+        """Compatibility alias for :meth:`postprocess`."""
+        return self.postprocess(outputs)

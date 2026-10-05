@@ -1,9 +1,14 @@
 # PaddleOCR Python runtime
 
 `main.py` is the canonical entrypoint for the X5 PP-OCRv3 and S100 PP-OCRv6
-pairs. It resolves a qualified detector/recognizer pair, checks the execution
-target against detected hardware, loads each stage lazily, and emits ordered
-boxes and texts.
+pairs. It stays a thin entry: parse the arguments, run the model-free
+listing/dry-run/prepare modes, resolve a qualified detector/recognizer pair,
+check the execution target against detected hardware, construct
+`OCRPipeline`, call `predict`, and show the ordered boxes and texts. Option
+declarations, the model-free modes, the explicit `--prepare` fetch and result
+rendering live in [cli.py](cli.py); the detection → crop → recognition
+composition lives in [pipeline.py](pipeline.py) with each stage's three
+public steps.
 
 <a id="environment"></a>
 ## Environment
