@@ -24,12 +24,21 @@ python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]
 | 原生前置检查 | C++17 编译器、cmake/ctest、git、`native_dependencies.py` 的可移植解析（nlohmann-json、gflags、iconv）——均为声明必需；缺失即失败，不允许隐藏原生覆盖。libsndfile/libsamplerate 一并探测并记录（它们是默认开启的 ASR CTest 开关的门禁） |
 | 静态契约 | `tools/sample_contract/check.py --scope migration --parser-mode import`，检查报告一并保留 |
 | 原生 CTest | 六个主机安全工程，**默认开启**完整门禁开关：`gemma4-e2b/tests/native`（C++17 + OpenCV + 固定 platforms 提交）、`yoloe/runtime/cpp/tests`（`YOLOE_TEST_OPENCV=ON`：真实 OpenCV 图像/掩码/流水线测试 + SDK 替身与 CLI fixture）、`asr/runtime/cpp/tests`（`ASR_AUDIO_TESTS=ON` + `ASR_CLI_TESTS=ON`：真实 libsndfile/libsamplerate 前端与主机 CLI 测试）、`ultralytics_yolo/runtime/cpp/test`（面向窄 API 替身的共享辅助与描述符适配器）、`paraformer/runtime/cpp`（`PARAFORMER_BUILD_TESTS=ON` + `PARAFORMER_BUILD_IO=ON` + `PARAFORMER_SANITIZERS=ON`：带消毒剂的 contract/pipeline 测试、面向显式伪头文件的 SDK 替身测试、基于 Git 跟踪证据文件（相对路径、不下载/不导出）的 preflight 与 prepared-feature 检查、`PARAFORMER_HOST_FIXTURE` CLI 帮助测试）、`himloco/runtime/cpp`（`HIMLOCO_BUILD_TESTS=ON`：基于仓库内置 `obs_history` fixture 的无 SDK 数值策略测试）——仅 SDK 替身与主机库；无厂商 SDK、无模型文件、无下载、不编译生产 SDK 工程，也无板端 SDK 与真实推理。两个 `runtime/cpp` 工程的厂商 SDK 适配器与生产 CLI 开关（`PARAFORMER_BUILD_SDK`/`PARAFORMER_BUILD_CLI`、`HIMLOCO_BUILD_SDK`/`HIMLOCO_BUILD_CLI`）被强制保持 **OFF**：`runtime/cpp` 下的源码目录被配置本身并不意味着厂商执行——这些 OFF 默认值是强制性安全要求，不是主机测试范围的缩减，试图开启的 `--cmake-define` 会在任何构建之前被拒绝（`VAR:BOOL`/`VAR:STRING`/`VAR:PATH` 这类带类型的 CMake 缓存拼写会在选项解析阶段被直接拒绝：CMake 允许靠后的类型化定义覆盖先前的裸值，因此类型化键名正是绕过强制 OFF 开关、或在不记录范围缩减的情况下悄悄关闭默认 ON 开关的途径；带空白填充的假值同样被拒绝——CMake 保留 `-D` 值的前导空白，`" OFF "` 会使开关保持开启，只有精确无填充的 CMake 假常量重申才是可接受的无操作：OFF/FALSE/0/NO/N/IGNORE 与空值大小写不敏感，精确的 `NOTFOUND` 与任何以 `-NOTFOUND` 结尾的值则区分大小写） |
-| Catalog | `tools/catalog-publisher` 内执行 `npm run check`（来源校验、Vitest 套件、构建、`catalog:check`）——仅在包自身 `engines` 声明的 Node 范围内执行（范围缺失、不可解析或不满足即带原因失败） |
+| Catalog | `tools/catalog-publisher` 内执行 `npm run check`（来源校验、Vitest 套件、构建、`catalog:check`）——仅在包自身 `engines` 声明的 Node 范围内执行（范围缺失、不可解析或不满足即带原因失败）；**最先运行**（先于 Python 套件），使其构建阶段生成的 `dist/catalog.json` 在 ultralytics_yolo 资产/清单快照套件读取之前就已存在 |
 
 每个套件在独立子进程中运行，因此各 Sample 中同名测试模块相互隔离。每个套件
 子进程都以被请求的仓库为工作目录启动：无论维护者从哪个目录启动执行器，相对
 示例路径与子解释器对仓库根模块的导入都能确定性解析。结果来自机器可读的
 `unittest` 结果：精确计数、逐条 skip 的身份与原因、逐条失败信息。
+
+部分顺序是有意义的：**catalog 检查先于 Python 套件运行**，因为其构建阶段会
+生成 `tools/catalog-publisher/dist/catalog.json`，而 ultralytics_yolo 的
+资产/清单快照套件（`test_platform_assets`、`test_yolo26`）读取的正是这个
+文件。`dist/` 是被忽略的构建产物，干净 checkout 上并不存在，若在这些套件
+之后才构建 catalog，它们必然失败（只有脏开发 checkout 上遗留的被忽略
+`dist/` 掩盖了这一依赖）。catalog 部分仍在同一源码稳定性区间内运行——位于
+起始快照之后、结束快照之前——顺序调整绝不弱化内容门禁；`tools/catalog-publisher`
+内的 `npm ci` 仍是维护者前置条件：执行器从不安装任何东西。
 
 运行还会校验源码树自身声明的历史 Git 对象（`samples/_shared/legacy_platforms.py`、
 Gemma 原生 CMake 固定提交、catalog 提交来源）：缺失固定提交即为显式失败，
@@ -69,7 +78,7 @@ checkout 绝不可能通过：源码身份是前置条件，不是可选注记�
 | `--timeout N` | 单套件超时秒数（默认 1800） |
 | `--suite SUBSTRING` | 只运行目录匹配的套件（可重复；报告标记 `ci_equivalent: false`） |
 | `--list` | 打印发现结果（套件、仅原生目录、Sample 覆盖、固定提交、CTest 注册表与默认开关）并退出 |
-| `--skip-ctest` / `--skip-contract` / `--skip-catalog` | 跳过一个部分，显式记录为 `skipped-explicit`；不等价于 CI |
+| `--skip-ctest` / `--skip-contract` / `--skip-catalog` | 跳过一个部分，显式记录为 `skipped-explicit`；不等价于 CI；`--skip-catalog` 不会构建 `dist/catalog.json`，ultralytics_yolo 资产/清单快照套件因此需要事先生成的 catalog（缺失即失败） |
 | `--allow-native-skips` | 记录而非拒绝原生前置 skip；不等价于 CI |
 | `--cmake` / `--ctest` | 可执行文件覆盖（也会在解释器旁查找，例如 pip 安装的 cmake） |
 | `--cmake-define PROJECT:VAR=VALUE` | 覆盖某个 CTest 工程的定义；完整门禁默认值（`YOLOE_TEST_OPENCV`、`ASR_AUDIO_TESTS`、`ASR_CLI_TESTS`、`PARAFORMER_BUILD_TESTS`/`BUILD_IO`/`SANITIZERS`、`HIMLOCO_BUILD_TESTS` = `ON`）自动合并——以任意 CMake 假常量关闭默认 ON 的开关，会记录为以原始值命名的范围缩减并将 `ci_equivalent` 置 `false`。分类依据真实 CMake 对 `-D` 值的实际读取方式（已对照 CMake 4.4.4 验证）：命名常量 OFF/FALSE/0/NO/N/IGNORE 与空值大小写不敏感；精确的 `NOTFOUND` 与任何以 `-NOTFOUND` 结尾的值区分大小写（`notfound`/`X-notfound` 为真值，不是假常量）；尾随空白由 CMake 的 `-D` 缓存写入自行剥离（`NO ` 实际为 OFF），前导空白则保留（` NO` 与 `" NO "` 使开关保持开启，不记录缩减）。厂商 SDK / 生产 CLI 开关（`PARAFORMER_BUILD_SDK`/`BUILD_CLI`、`HIMLOCO_BUILD_SDK`/`BUILD_CLI`）被强制 OFF：试图开启的覆盖在任何构建之前即被拒绝，原因输出到 stderr（只有精确、无填充的假常量重申是无操作——CMake 保留 `-D` 值的前导空白，守卫绝不猜测 CMake 会剥离哪种填充，因此带空白填充的假值一律以失败关闭方式拒绝）。仅接受无类型的 `PROJECT:VAR=VALUE` 拼写——带类型的 CMake 缓存键（`VAR:BOOL`、`VAR:STRING`、`VAR:PATH` 等）属于不支持的语法，会在选项解析阶段以可操作的报错直接拒绝，先于任何 configure/build |
@@ -129,8 +138,8 @@ clone 历史（不含子模块）、安装声明的原生前置依赖，报告�
 - `run.py` —— 编排器与逐套件 worker（即上述 `--repo/--report/--python` 接口）。
 - `test_run.py` —— 针对执行器的 fixture 测试（发现、隔离、套件工作目录、
   skip 策略、超时、固定提交、源码漂移、CTest 分阶段失败与注册工程的安全
-  默认值/禁止覆盖守卫、catalog engines、必需的 Sample 清单、报告结构），
-  基于合成仓库。
+  默认值/禁止覆盖守卫、catalog engines、catalog 先于 Python 的顺序、必需的
+  Sample 清单、报告结构），基于合成仓库。
 - `requirements.txt` —— 核心主机依赖集合（含环境标记与实测版本记录）。
 - `native_dependencies.py` / `test_native_dependencies.py` —— 与 LLM 主机测试
   共用的可移植原生依赖发现（解析顺序与环境变量覆盖见模块文档字符串）。

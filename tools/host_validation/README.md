@@ -28,7 +28,7 @@ interpreter running `run.py`). Exit code 0 means every section passed.
 | Native prerequisites | C++17 compiler, cmake/ctest, git, the portable resolver in `native_dependencies.py` (nlohmann-json, gflags, iconv) — declared mandatory; a missing prerequisite fails the run instead of hiding native coverage. libsndfile/libsamplerate are probed and reported (they gate the default-on ASR CTest flags) |
 | Static contract | `tools/sample_contract/check.py --scope migration --parser-mode import` with its report preserved |
 | Native CTest | the six host-safe projects with the full-gate flags **on by default**: `gemma4-e2b/tests/native` (C++17 + OpenCV + pinned platforms commit), `yoloe/runtime/cpp/tests` (`YOLOE_TEST_OPENCV=ON`: real OpenCV image/mask/pipeline tests plus SDK-double and CLI fixtures), `asr/runtime/cpp/tests` (`ASR_AUDIO_TESTS=ON` + `ASR_CLI_TESTS=ON`: real libsndfile/libsamplerate frontend and host CLI tests), `ultralytics_yolo/runtime/cpp/test` (shared helpers/descriptor adapters against narrow API doubles), `paraformer/runtime/cpp` (`PARAFORMER_BUILD_TESTS=ON` + `PARAFORMER_BUILD_IO=ON` + `PARAFORMER_SANITIZERS=ON`: sanitised contract/pipeline tests, the SDK-double test against explicit fake headers, preflight and prepared-feature checks over Git-tracked evidence files (relative paths, no download/export) and the `PARAFORMER_HOST_FIXTURE` CLI help test), and `himloco/runtime/cpp` (`HIMLOCO_BUILD_TESTS=ON`: the SDK-free numerical policy test over the checked-in `obs_history` fixture) — SDK doubles and host libraries only; no vendor SDK, no model files, no downloads, no production SDK project, no board SDK and no real inference. The two `runtime/cpp` projects keep their vendor SDK adapter and production CLI switches (`PARAFORMER_BUILD_SDK`/`PARAFORMER_BUILD_CLI`, `HIMLOCO_BUILD_SDK`/`HIMLOCO_BUILD_CLI`) mandated **OFF**: a configured source directory under `runtime/cpp` alone does not imply vendor execution — those OFF defaults are mandatory safety, not a reduction of host test scope, and an enabling `--cmake-define` is rejected before any build (typed CMake cache spellings such as `VAR:BOOL`/`VAR:STRING`/`VAR:PATH` are rejected outright at option parsing: CMake lets a later typed define override the bare mandated value, so a typed key is exactly how an OFF switch could otherwise be re-enabled or a default-ON flag quietly disabled without a recorded scope reduction; whitespace-padded false tokens are rejected too — CMake preserves the leading whitespace of a `-D` value, so `" OFF "` would leave the switch enabled, and only exact, unpadded CMake false constants (OFF/FALSE/0/NO/N/IGNORE and the empty value case-insensitively, the exact `NOTFOUND` token and any `*-NOTFOUND` value case-sensitively) are accepted no-op restatements) |
-| Catalog | `npm run check` in `tools/catalog-publisher` (sources validation, Vitest suite, build, `catalog:check`) — run only under the Node `engines` range the package itself declares (an undeclared, unparseable or unsatisfied range fails with the reason) |
+| Catalog | `npm run check` in `tools/catalog-publisher` (sources validation, Vitest suite, build, `catalog:check`) — run only under the Node `engines` range the package itself declares (an undeclared, unparseable or unsatisfied range fails with the reason); runs **first**, before the Python suites, so the `dist/catalog.json` its build stage generates exists before the ultralytics_yolo asset/manifest snapshot suites read it |
 
 Each suite runs in its own subprocess, so identical test module names across
 samples stay isolated. Every suite subprocess starts at the requested
@@ -36,6 +36,18 @@ repository: relative example paths and nested child-interpreter imports of
 repo-root modules resolve deterministically no matter which directory the
 maintainer was launched from. Results come from a machine-readable `unittest`
 result: exact counts, per-skip identities/reasons, per-failure messages.
+
+Section order is load-bearing: the **catalog check runs before the Python
+suites** because its build stage generates
+`tools/catalog-publisher/dist/catalog.json` — the file the ultralytics_yolo
+asset/manifest snapshot suites (`test_platform_assets`, `test_yolo26`) read.
+`dist/` is ignored build output, so a clean checkout carries none and
+building the catalog after those suites would fail them (only a stale
+ignored `dist/` on a dirty development checkout masks the dependency). The
+catalog section still runs inside the same source-stability interval — after
+the starting snapshots, before the ending ones — so the ordering never
+weakens the content gate, and `npm ci` in `tools/catalog-publisher` remains
+a maintainer prerequisite: the runner never installs anything.
 
 The run also verifies the historical Git objects the tree declares
 (`samples/_shared/legacy_platforms.py`, the Gemma native CMake pin, the
@@ -82,7 +94,7 @@ Python unittest totals.
 | `--timeout N` | per-suite timeout in seconds (default 1800) |
 | `--suite SUBSTRING` | run only matching suites (repeatable; sets `ci_equivalent: false`) |
 | `--list` | print discovery (suites, native-only dirs, sample coverage, pins, CTest registry + defaults) and exit |
-| `--skip-ctest` / `--skip-contract` / `--skip-catalog` | skip one section, recorded explicitly (`skipped-explicit`); not CI-equivalent |
+| `--skip-ctest` / `--skip-contract` / `--skip-catalog` | skip one section, recorded explicitly (`skipped-explicit`); not CI-equivalent; with `--skip-catalog` no `dist/catalog.json` is built, so the ultralytics_yolo asset/manifest snapshot suites then need a previously generated catalog (they fail without one) |
 | `--allow-native-skips` | record native-prerequisite skips instead of rejecting them; not CI-equivalent |
 | `--cmake` / `--ctest` | executable overrides (also found next to the interpreter, e.g. a pip-installed cmake) |
 | `--cmake-define PROJECT:VAR=VALUE` | override a define for one CTest project; the full-gate defaults (`YOLOE_TEST_OPENCV`, `ASR_AUDIO_TESTS`, `ASR_CLI_TESTS`, `PARAFORMER_BUILD_TESTS`/`BUILD_IO`/`SANITIZERS`, `HIMLOCO_BUILD_TESTS` = `ON`) are merged in — turning a default-ON flag off via any CMake false constant is recorded as a scope reduction naming the raw value and sets `ci_equivalent: false`. Classification matches real CMake's own reading of a `-D` value (verified against CMake 4.4.4): the named constants OFF/FALSE/0/NO/N/IGNORE and the empty value compare case-insensitively; the exact `NOTFOUND` token and any value ending in `-NOTFOUND` compare case-sensitively (`notfound`/`X-notfound` are truthy, not false constants); trailing whitespace is stripped by CMake's `-D` caching itself (so `NO ` is a real OFF), while leading whitespace survives (so ` NO` and `" NO "` keep the flag on and record no reduction). The vendor SDK / production CLI switches (`PARAFORMER_BUILD_SDK`/`BUILD_CLI`, `HIMLOCO_BUILD_SDK`/`BUILD_CLI`) are mandated OFF: an override that enables one is rejected before any build, with the reason on stderr (only an exact, unpadded false-constant restatement is a no-op — CMake keeps leading whitespace on `-D` values, and the guard never guesses which padding CMake might strip, so whitespace-padded false-looking tokens are rejected fail-closed). Only the untyped `PROJECT:VAR=VALUE` spelling is accepted — typed CMake cache keys (`VAR:BOOL`, `VAR:STRING`, `VAR:PATH`, …) are unsupported syntax and rejected with an actionable error at option parsing, before any configure/build |
@@ -154,8 +166,9 @@ local run is not a CI claim: CI results are only what the GitHub jobs show.
 - `test_run.py` — fixture tests for the runner (discovery, isolation, suite
   working directory, skip policy, timeouts, pins, source drift, CTest stage
   failures and the safe-default/prohibited-override guards of the
-  registered projects, catalog engines, required sample inventory, report
-  structure) against synthetic repositories.
+  registered projects, catalog engines, catalog-before-Python ordering,
+  required sample inventory, report structure) against synthetic
+  repositories.
 - `requirements.txt` — core host dependency set with environment markers
   and the tested-version record.
 - `native_dependencies.py` / `test_native_dependencies.py` — portable native

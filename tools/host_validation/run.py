@@ -42,7 +42,14 @@ and never runs on a board.  It executes, in isolated subprocesses:
   a scope reduction naming the raw value, so the run can never stay
   CI-equivalent);
 * the model-catalog check (``npm run check`` in ``tools/catalog-publisher``)
-  under the Node ``engines`` range the package itself declares.
+  under the Node ``engines`` range the package itself declares.  This
+  section runs **first**, before the Python suites: its build stage
+  generates ``tools/catalog-publisher/dist/catalog.json``, which the
+  ultralytics_yolo asset/manifest snapshot suites compare against, so the
+  catalog must exist before those suites execute (``npm ci`` remains a
+  maintainer prerequisite — the runner never installs; with
+  ``--skip-catalog`` no catalog is built, and those suites then need one
+  generated beforehand or they fail).
 
 Every suite runs in its own process, so identical test module names in
 different samples cannot mask each other, and results are collected from a
@@ -1825,7 +1832,10 @@ def build_parser() -> argparse.ArgumentParser:
                              "recorded; not CI-equivalent)")
     parser.add_argument("--skip-catalog", action="store_true",
                         help="skip the catalog section (explicitly recorded; "
-                             "not CI-equivalent)")
+                             "not CI-equivalent); no dist/catalog.json is "
+                             "built then, so the ultralytics_yolo asset/"
+                             "manifest snapshot suites need a previously "
+                             "generated catalog or they fail")
     parser.add_argument("--allow-native-skips", action="store_true",
                         help="record native-prerequisite skips instead of "
                              "rejecting them (not CI-equivalent)")
@@ -1980,6 +1990,15 @@ def main(argv=None) -> int:
     runner_section = _SectionRunner(repo, report, args.python, options)
     runner_section.artifacts.mkdir(parents=True, exist_ok=True)
 
+    # The catalog gate runs before the Python suites: its ``npm run check``
+    # build stage generates ``tools/catalog-publisher/dist/catalog.json``
+    # (ignored build output), which the ultralytics_yolo asset/manifest
+    # snapshot suites read — on a clean checkout no ``dist/`` exists, so
+    # building the catalog after those suites fails them.  It still runs
+    # after the starting source snapshots and before the ending ones, i.e.
+    # inside the same source-stability interval, so the ordering never
+    # weakens the content gate.
+    catalog_section = runner_section.run_catalog()
     python_section = runner_section.run_python_suites(discovery)
     coverage_section = validate_sample_coverage(repo, discovery)
     if coverage_section["status"] != "ok":
@@ -1997,7 +2016,6 @@ def main(argv=None) -> int:
         options["skipped_sections"] = sorted(
             set(options["skipped_sections"]) | {"contract"})
     ctest_section = runner_section.run_ctest()
-    catalog_section = runner_section.run_catalog()
 
     for pin in pins:
         if not pin["present"]:

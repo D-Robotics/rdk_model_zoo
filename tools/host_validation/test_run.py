@@ -46,6 +46,14 @@ The synthetic repositories deliberately contain:
   spelling can disable required flags while the run stays CI-equivalent;
 * catalog fixtures for Node ``engines`` enforcement (satisfied, mismatched,
   missing, unparseable);
+* a catalog-before-Python ordering fixture (the 2026-10-06 clean-clone
+  defect): a fake node/npm pair whose ``npm run check`` writes the ignored
+  generated catalog (``tools/catalog-publisher/dist/catalog.json``) that a
+  dependent sample suite reads — no initial ``dist/`` — with the maintainer
+  launched from outside the repository, ``PYTHONPATH``/``PYTHONHOME``
+  cleared, the catalog section enabled and only CTest skipped; the check
+  must run exactly once, before that suite, and a failing check (exit 7)
+  still fails the whole run;
 * sample-inventory coverage fixtures (happy path with real-shaped rows,
   deleted tests directory, extra sample, broken JSON, absent inventory,
   empty rows array and malformed/duplicate rows) — the accepted inventory
@@ -416,6 +424,61 @@ def _cwd_probe_layout(repo: Path) -> None:
     )
     _write_inventory(repo, ("vision/alpha", "vision/cwdprobe"))
     _contract_stub(repo)
+
+
+#: The generated catalog build output the real ultralytics_yolo asset and
+#: manifest snapshot suites (test_platform_assets/test_yolo26) read at the
+#: repository root — produced only by ``npm run check``'s build stage.
+CATALOG_MARKER_RELATIVE = "tools/catalog-publisher/dist/catalog.json"
+
+
+def _catalog_dependent_layout(repo: Path) -> None:
+    """Green repository plus a catalog package and a dependent suite.
+
+    Mirrors the dependency the 2026-10-06 clean-clone gate exposed: the
+    ultralytics_yolo asset/manifest snapshot suites read the generated
+    ``tools/catalog-publisher/dist/catalog.json``, an ignored build output
+    that only the catalog section's ``npm run check`` produces — a clean
+    clone carries no ``dist/``, so those suites fail unless the catalog is
+    built before the Python suites run.  The dependent suite reads the
+    generated marker exactly the way those suites read the real catalog.
+    """
+    _green_layout(repo)
+    # Mirror the real repository's ignore rule for the generated catalog:
+    # the in-run build (like node_modules and caches) must never count as
+    # source drift.
+    _write(
+        repo / ".gitignore",
+        "*__pycache__*\n"
+        "tools/catalog-publisher/node_modules/\n"
+        "tools/catalog-publisher/dist/\n",
+    )
+    _write(
+        repo / "tools/catalog-publisher/package.json",
+        '{"name": "fixture-catalog", "private": true,'
+        ' "engines": {"node": ">=22.12 <23"},'
+        ' "scripts": {"check": "node -e \\"process.exit(0)\\""}}\n',
+    )
+    (repo / "tools/catalog-publisher/node_modules").mkdir(
+        parents=True, exist_ok=True)
+    _write_inventory(repo, GREEN_INVENTORY_SAMPLES + ("vision/yolo",))
+    _write(
+        repo / "samples/vision/yolo/tests/test_catalog_assets.py",
+        """
+        import json
+        import unittest
+        from pathlib import Path
+
+        REPO_ROOT = Path(__file__).resolve().parents[4]
+
+        class CatalogAssetTests(unittest.TestCase):
+            def test_generated_catalog_exists_when_suites_run(self):
+                catalog = json.loads(
+                    (REPO_ROOT / "tools/catalog-publisher/dist/catalog.json")
+                    .read_text(encoding="utf-8"))
+                self.assertEqual(catalog["marker"], "fixture-catalog")
+        """,
+    )
 
 
 def _init_repo(base: Path, layout) -> Path:
@@ -2025,6 +2088,141 @@ class CatalogEnginesTests(RunnerFixtureTestCase):
         self.assertEqual(proc.returncode, 1)
         data = json.loads(report.read_text())
         self.assertEqual(data["catalog"]["status"], "engines-invalid")
+
+
+class CatalogBeforePythonTests(RunnerFixtureTestCase):
+    """The catalog gate runs before the Python suites that read its output.
+
+    Regression for the 2026-10-06 ordering defect: the catalog section ran
+    after the Python suites, so on a clean checkout — no ignored ``dist/``
+    left over from a previous local build — the ultralytics_yolo
+    asset/manifest snapshot suites failed to find the generated
+    ``tools/catalog-publisher/dist/catalog.json`` they compare against
+    (only a stale ignored ``dist/`` on a dirty development checkout masked
+    the dependency; the independent clean-clone full run failed exactly
+    those two suites while the catalog itself passed afterwards).  The
+    fixture reproduces that shape: a fake node/npm pair whose
+    ``npm run check`` builds the catalog the dependent suite reads, no
+    initial ``dist/``, the maintainer launched from outside the repository
+    with ``PYTHONPATH``/``PYTHONHOME`` cleared, the catalog section enabled
+    and only CTest skipped.
+    """
+
+    def _fake_node_tools(self, name: str, npm_body: str):
+        """Fake node/npm executables on a PATH directory (fake-tool idiom).
+
+        The fake node reports a version inside the fixture package's
+        ``engines`` range; the fake npm's behavior for ``run check`` is the
+        caller's body (build the catalog, fail, ...), so the fixture never
+        needs a real Node installation.
+        """
+        directory = self.tmp / "fake-node" / name
+        directory.mkdir(parents=True, exist_ok=True)
+        node = directory / "node"
+        node.write_text(
+            '#!/bin/sh\n'
+            'case "$*" in\n'
+            '  --version) echo "v22.12.0"; exit 0 ;;\n'
+            '  *) exit 0 ;;\n'
+            'esac\n')
+        npm = directory / "npm"
+        npm.write_text(f"#!/bin/sh\n{npm_body}\n")
+        node.chmod(0o755)
+        npm.chmod(0o755)
+        return directory
+
+    def _launch_outside(self, repo: Path, bin_dir: Path, *args: str):
+        """Launch the maintainer from outside the repository with the fake
+        tools first on PATH and ``PYTHONPATH``/``PYTHONHOME`` cleared."""
+        launch_dir = self.tmp / "catalog-outside-launch"
+        launch_dir.mkdir(exist_ok=True)
+        env = {key: value for key, value in os.environ.items()
+               if key not in ("PYTHONPATH", "PYTHONHOME")}
+        env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
+        return subprocess.run(
+            [sys.executable, str(RUNNER), "--repo", str(repo),
+             "--python", sys.executable, *args],
+            capture_output=True, text=True, timeout=300,
+            cwd=str(launch_dir), env=env)
+
+    def test_catalog_check_builds_catalog_before_dependent_suite(self):
+        repo = _init_repo(self.tmp / "catalog-before-python",
+                          _catalog_dependent_layout)
+        # The clean-clone shape: no generated catalog exists yet.
+        self.assertFalse((repo / CATALOG_MARKER_RELATIVE).exists())
+        log = self.tmp / "catalog-before-python" / "npm-invocations.log"
+        bin_dir = self._fake_node_tools(
+            "before-python",
+            'case "$*" in\n'
+            '  "run check")\n'
+            '    mkdir -p dist\n'
+            '    printf \'{"marker": "fixture-catalog", "models": []}\\n\''
+            ' > dist/catalog.json\n'
+            f'    echo "run check" >> {log}\n'
+            '    exit 0 ;;\n'
+            '  *) exit 0 ;;\n'
+            'esac')
+        out = self.tmp / "catalog-before-python" / "reports"
+        report = out / "report.json"
+        proc = self._launch_outside(repo, bin_dir, "--report", str(report),
+                                    "--skip-ctest", "--timeout", "120")
+        data = self.load_report(proc, report)
+        self.assertEqual(data["overall"]["status"], "passed")
+        self.assertEqual(data["overall"]["reasons"], [])
+        # The catalog section ran and passed — exactly once, no repetition.
+        self.assertEqual(data["catalog"]["status"], "passed")
+        self.assertEqual(data["catalog"]["exit_code"], 0)
+        self.assertEqual(log.read_text().splitlines(), ["run check"])
+        # The dependent suite executed its real test against the catalog the
+        # check generated: it can only pass if the build happened first.
+        suite = self.suite_by_dir(data, "samples/vision/yolo/tests")
+        self.assertEqual(suite["status"], "passed")
+        self.assertEqual(suite["tests"], 1)
+        self.assertEqual(suite["failures"], 0)
+        self.assertEqual(suite["errors"], 0)
+        # True executed count: every discovered suite ran its real tests —
+        # nothing was filtered away to manufacture the pass (green layout:
+        # 13 discovered-and-run, including the optional-export skip, plus
+        # the dependent suite; one optional-missing torch module, as
+        # everywhere in these fixtures).
+        self.assertEqual(data["python_suites"]["selected"],
+                         data["python_suites"]["discovered"])
+        self.assertEqual(data["python_suites"]["totals"],
+                         {"tests": 14, "failures": 0, "errors": 0,
+                          "skipped": 1, "optional_missing_modules": 1})
+        # The generated catalog is ignored build output: no drift, and the
+        # checkout stays clean after the run.
+        self.assertFalse(data["source"]["content_drift"])
+        self.assertEqual(data["source"]["dirty_files_end"], [])
+        marker = repo / CATALOG_MARKER_RELATIVE
+        self.assertTrue(marker.is_file())
+        self.assertEqual(
+            json.loads(marker.read_text())["marker"], "fixture-catalog")
+        # CTest is the only reduced section: the catalog gate stayed on.
+        self.assertEqual(data["options"]["skipped_sections"], ["ctest"])
+
+    def test_failing_catalog_check_fails_the_run(self):
+        # A catalog check that exits nonzero fails the whole run with an
+        # explicit reason — the earlier position never softens failure
+        # reporting (engines enforcement is covered above; this is the
+        # command-failure path).
+        repo = _init_repo(self.tmp / "catalog-fails",
+                          _catalog_dependent_layout)
+        bin_dir = self._fake_node_tools(
+            "check-fails",
+            'case "$*" in\n'
+            '  "run check") echo "fixture catalog check failed" >&2; exit 7 ;;\n'
+            '  *) exit 0 ;;\n'
+            'esac')
+        report = self.tmp / "catalog-fails" / "report.json"
+        proc = self._launch_outside(repo, bin_dir, "--report", str(report),
+                                    "--skip-ctest", "--timeout", "120")
+        self.assertEqual(proc.returncode, 1)
+        data = json.loads(report.read_text())
+        self.assertEqual(data["catalog"]["status"], "failed")
+        self.assertEqual(data["catalog"]["exit_code"], 7)
+        reasons = " ".join(data["overall"]["reasons"])
+        self.assertIn("catalog check failed (exit 7)", reasons)
 
 
 class SampleInventoryTests(RunnerFixtureTestCase):
