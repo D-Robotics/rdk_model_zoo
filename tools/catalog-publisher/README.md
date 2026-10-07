@@ -2,7 +2,6 @@
 
 This module belongs to `rdk_model_zoo`. It is the sole generator of the dashboard data consumed by `model_zoo_doc/catalog`.
 
-
 ## Local development
 
 Use Node.js 22.12 or later in the Node 22 series.
@@ -17,7 +16,7 @@ The check validates platform manifests and source references, runs tests and Typ
 
 ## Data sources
 
-`sources.json` defines one source per platform. X5 and S use `worktree` mode: the build reads files from the checked-out repository itself — including uncommitted local changes. X3 uses `commit` mode: the historical `platforms/` tree was removed from the active branch (2026-10-01), so its distribution is read from the full-SHA commit `6fcef2b87c12435e11fbd7327ea70d4efd917b1c` through `git show` — byte-identical to the removed worktree copy. (`sources.json` also supports `tag` mode for immutable annotated release tags; per-platform pins select it, see below.) A clone without the commit object fails with the exact fetch command (`git fetch origin <sha>`). The former `platforms/registry.json` cross-check was removed with the tree; source identity now lives in `sources.json` alone.
+`sources.json` defines one input per platform. X5 and S use `worktree` mode and read the checked-out manifests. X3 uses `commit` mode at `6fcef2b87c12435e11fbd7327ea70d4efd917b1c`; Git reads that tree with `git show`. Full history is required. `tag` mode selects an immutable annotated release tag; a missing object reports the required `git fetch origin <sha>` command.
 
 | Platform | Manifests read from the worktree | Version file | Generated source links |
 | --- | --- | --- | --- |
@@ -25,7 +24,7 @@ The check validates platform manifests and source references, runs tests and Typ
 | `s` | `docs/release/s/models.yaml`, `benchmarks.yaml` | `docs/release/s/VERSION` | `blob/<resolved commit>/...` |
 | `x3` | `6fcef2b8…/platforms/x3/release/models.yaml`, `benchmarks.yaml` | `6fcef2b8…/platforms/x3/VERSION` | `blob/6fcef2b87c12435e11fbd7327ea70d4efd917b1c/platforms/x3/...` |
 
-New models, fixes and measurements for X5 and S are maintained in the unified manifests `docs/release/{x5,s}` together with their per-platform `VERSION` files (the build rejects a `VERSION` that disagrees with the manifest's release version). The archived `platforms/` snapshots (including the former `platforms/{x5,s}/docs/release/*.yaml`) were removed from the active tree; historical content stays reachable through the pinned commit and the delivery branches. The pinned X3 tree is read because X3 is an archived historical distribution with no unified successor; it is not a new-adaptation target.
+Maintain X5 and S models and benchmarks in `docs/release/{x5,s}` with the matching per-platform `VERSION`. The build checks that each version file agrees with its manifest release version. X3 catalog inputs use the commit tree configured in `sources.json`.
 
 ### Worktree reads versus generated links
 
@@ -45,7 +44,7 @@ npm run catalog:build -- --pin x5=x5-v1.1.2 --out dist/historical
 
 For a tag whose tree carries the platform under a `platforms/<id>` prefix, name that prefix after a colon: `--pin x5=<annotated-tag>:platforms/x5`. The same override works for `s` and `x3`.
 
-A pinned build resolves each platform's VERSION from the layout its tag actually carries — colocated with the manifest directory, or at the platform root in legacy layouts; the worktree's configured `version_file` is never applied to a tag. A tag that publishes manifests but no VERSION is rejected, and the resolved version must agree with the manifest's release version. Do not rewrite published tags or rename existing download URLs as part of a source layout migration.
+A pinned build resolves each platform's VERSION from the layout its tag actually carries — colocated with the manifest directory, or at the platform root in legacy layouts; the worktree's configured `version_file` is never applied to a tag. A tag that publishes manifests but no VERSION is rejected, and the resolved version must agree with the manifest's release version. Do not rewrite published tags or rename existing download URLs when the source layout changes.
 
 ## Import into the documentation repository
 
@@ -58,7 +57,7 @@ npm run check
 
 Commit the imported snapshot and lock in the documentation repository. A normal docs build verifies its own checked-in snapshot and never reads a sibling checkout or generates model data.
 
-The CI workflow (`.github/workflows/model-catalog-data.yml`) runs `npm run check` on three triggers: `pull_request` (path-filtered), pushes to `main` only (path-filtered), and manual `workflow_dispatch`. It uploads the two artifact files only for non-PR runs — a push to `main` or a manual dispatch; a pull request validates but uploads nothing. Pushes of integration work branches trigger no workflow at all, so nothing built on this branch is published anywhere by a push. Enabling that workflow remotely and publishing the website are separate actions; this migration only prepares the local files. The old website redirect is in `../catalog-redirect`.
+The workflow `.github/workflows/model-catalog-data.yml` runs `npm run check` for pull requests, pushes to `develop` and `main`, and manual dispatch. Push and manual runs upload `catalog.json` and `catalog.meta.json` as `model-catalog-data`; pull requests run validation. Website import follows the documentation-repository commands above.
 
 ## Adding hardware
 

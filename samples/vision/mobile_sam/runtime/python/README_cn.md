@@ -14,7 +14,7 @@
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-若仅缺普通 Python 依赖，在板端 SDK 实际使用的 Python 环境安装（`python3 -m pip install numpy opencv-python PyYAML`）。源配方未固定板端依赖版本，应保留镜像与 SDK 的兼容约束。上述命令仅检查导入可用性；磁盘/RAM需求尚未测量，两个模型都须能由目标 runtime 同时加载。
+若仅缺普通 Python 依赖，在板端 SDK 实际使用的 Python 环境安装（`python3 -m pip install numpy opencv-python PyYAML`）。源配方未固定板端依赖版本，应保留镜像与 SDK 的兼容约束。上述命令仅检查导入可用性；磁盘/RAM 需求以在目标 runtime 中同时加载 encoder 与 decoder 为准，请按两个模型同时驻留规划。
 
 <a id="usage"></a>
 ## 使用
@@ -105,7 +105,7 @@ assert result["mask"].shape == (512, 512)
 | Decoder masks | `[1,3,128,128]` | `[1,3,H,W]`；正数 H/W 从实际 metadata 读取 |
 | Decoder IoU | `[1,3,1,1]` | 按实际 metadata 为 `[1,3]` 或 `[1,3,1,1]` |
 
-允许的 native 输出 dtype 为 `float16`、`float32`、`int8`、`uint8`、`int16`、`int32`，每个数组必须与观察到的 metadata 完全匹配。兼容规则不代表已读到发布模型的实际 dtype；仅保留源 float32 cast，不做反量化。IoU 是模型预测的 mask 质量分数，不是带真实标注的数据集实测。结果字段为 `mask`（独立持有的 bool `[512,512]`）、`iou`（float）、`mask_index`（整数 0–2）和 `low_res_masks`（独立 float32 `[1,3,H,W]`）。PNG 将 false/true 编码为 0/255。不声明 SDK 实例可并发使用。
+允许的 native 输出 dtype 为 `float16`、`float32`、`int8`、`uint8`、`int16`、`int32`，每个数组必须与观察到的 metadata 完全匹配。每个数组的实际 dtype 以观察到的 metadata 为准；本 runtime 仅做源 float32 cast，不做反量化。IoU 是模型预测的 mask 质量分数，带标注的数据集实测需另行执行。结果字段为 `mask`（独立持有的 bool `[512,512]`）、`iou`（float）、`mask_index`（整数 0–2）和 `low_res_masks`（独立 float32 `[1,3,H,W]`）。PNG 将 false/true 编码为 0/255。不声明 SDK 实例可并发使用。
 
 <a id="troubleshooting"></a>
 ## 故障排查

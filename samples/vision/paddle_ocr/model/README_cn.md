@@ -1,7 +1,5 @@
 # PaddleOCR 模型准备
 
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
 <a id="artifacts"></a>
 
 ## 制品
@@ -16,9 +14,9 @@
 | S100 | 检测器 | `s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm` | `.hbm`，march `nash-e`，split NV12 640×640 |
 | S100 | 识别器 | `s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` | `.hbm`，march `nash-e`，RGB 48×320 |
 
-这些行位于平台发布清单（迁移窗口期内为
+这些行位于平台发布清单（
 `platforms/x5/docs/release/models.yaml` 与
-`platforms/s/docs/release/models.yaml`）。S100P 与 S600 没有经审计的
+`platforms/s/docs/release/models.yaml`）。S100P 与 S600 没有对应的
 PaddleOCR 行，因此不对这两个目标声明任何制品。
 
 <a id="preparation"></a>
@@ -53,9 +51,9 @@ S100 将两条引用换成 `s:paddle_ocr:s100/...`，`--model-dir` 例如
 | X5 | 固定 96 字符字母表 | 内嵌于 `runtime/python/model_binding.py`（`X5_ALPHABET`） | 非文件；解码时前置 blank 类 |
 | S100 | PP-OCRv6 UTF-8 词典 | [`test_data/s100/ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt) | 18,708 行；加载时前置 blank、追加末尾空格 → 18,710 类 |
 
-`--vocabulary-path` 替换 S100 词典时，文件 SHA-256 必须命中下方审计
+`--vocabulary-path` 替换 S100 词典时，文件 SHA-256 必须命中下方记录的
 摘要；其他内容一律拒绝。S 系列 C++ 运行时另需 TrueType 字体渲染结果，
-字体自审计源交付携带于
+字体自源交付携带于
 `samples/vision/paddle_ocr/test_data/FangSong.ttf`，可用
 C++ `--font_path` 指定。
 
@@ -81,7 +79,7 @@ C++ `--font_path` 指定。
 | `en_PP-OCRv3_rec_48x320_rgb.bin` | null | 未记录发布方摘要 |
 | `PP-OCRv6_det_infer-deploy_640x640_nv12.hbm` | null | 未记录发布方摘要 |
 | `PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` | null | 未记录发布方摘要 |
-| `test_data/s100/ppocrv6_dict.txt` | `b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d` | 已审计；`--vocabulary-path` 替换时强制校验 |
+| `test_data/s100/ppocrv6_dict.txt` | `b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d` | 已记录；`--vocabulary-path` 替换时强制校验 |
 
 未知摘要保持 `null`，不复制、不猜测；板端运行需要溯源时，请把
 `--prepare` 打印的实测摘要记入自己的证据。各制品的运行时张量契约

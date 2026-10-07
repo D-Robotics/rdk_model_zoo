@@ -18,7 +18,7 @@ Google **Gemma4-E2B** 视觉语言模型在 **地瓜 RDK S100P / S600** 上的�
 
 > 支持平台：**RDK S100P / S600**。运行时共用同一套 C++ 代码，但必须使用与板端 SoC 匹配的 HBM。
 
-> 迁移状态：源内容迁入、启动流程拆分、模型准备与 Vision/Text 阶段及资源重构已实现，最新 Text 阶段包通过有边界的主机验收：独立复核 30/30 项主机测试与 19/19 项 ASan/UBSan CTest 通过（[独立评审](../../../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md)）。本文演示图和板端性能来自固定 S 源提交 `380e1a2`，不是本次迁移板测；不声明厂商 ABI、实机模型、板端或量化结果，B11 整体验收仍未关闭。
+> 本文演示图与板端性能数据为源 S 发布的记录。
 
 ---
 
@@ -53,10 +53,9 @@ Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器�
 | --- | --- | --- |
 | RDK S100P | ✅ | 主要目标平台（`nash-m`，`core_num=1`） |
 | RDK S600 | ✅ | `nash-p`；使用公开的 S600 HBM，Vision 与 Text 在启动时各加载一次并常驻 |
-| RDK S100 | ⚠️ | Runtime 保留 SoC 分支，本示例未完成板端验证 |
+| RDK S100 | ⚠️ | Runtime 保留 SoC 分支；需自备匹配 HBM，板端运行按本指南命令执行 |
 
-本次更新只在 RDK S600 上执行板端回归。S100/S100P 仅检查同源代码的目标矩阵
-与兼容性逻辑，不需要连接 S100，也不声明完成了 S100 板端实测。
+S100 使用板型对应的 SoC 分支；请通过 `GEMMA4_MODEL_BASE_URL` 提供匹配的 S100 HBM（见[模型说明](model/README_cn.md)）。性能数据为 S600 源发布记录。
 
 ---
 
@@ -71,7 +70,7 @@ Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器�
 <a id="quickstart"></a>
 ## 快速体验（QuickStart）
 
-先按 [C++ 前置条件](runtime/cpp/README_cn.md#前置条件) 安装系统依赖。以下命令从仓库根目录开始，以 S600 为例：
+先按 [C++ 前置条件](runtime/cpp/README_cn.md#dependencies) 安装系统依赖。以下命令从仓库根目录开始，以 S600 为例：
 
 ```bash
 cd samples/llm/gemma4-e2b
@@ -86,7 +85,7 @@ cd runtime/cpp
 ./run.sh --target s600 main --max_tokens=512
 ```
 
-模型下载、第三方准备、构建和启动为独立步骤。`run.sh` 使用 Python 3 做目标识别与进程启动；实际分词与推理仍为 C++。启动不会安装依赖、下载模型或自动编译。无板主机可以运行 `./run.sh --target s600 --dry-run` 预览命令；预览不证明制品兼容。
+模型下载、第三方准备、构建和启动为独立步骤。`run.sh` 使用 Python 3 做目标识别与进程启动；实际分词与推理仍为 C++。启动不会安装依赖、下载模型或自动编译。无板主机可以运行 `./run.sh --target s600 --dry-run` 预览启动命令（不执行）。
 
 交互示例：
 

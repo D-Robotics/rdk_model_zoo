@@ -31,9 +31,9 @@ S100P 有独立 nash-m 制品，不会隐式复用 nash-e。
 | s600 | l | lite | `nash-p/yolo26l_depth_lite_nashp_768x768.hbm` |
 | s600 | x | lite | `nash-p/yolo26x_depth_lite_nashp_768x768.hbm` |
 
-文件名、URL 和摘要以 X5 清单 (historical `../../../../platforms/x5/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 与
-S 清单 (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)为准。
-下方 list 命令打印精确 ID 和 URL。源清单声明可下载，不代表本轮已经下载或验证推理。
+文件名、URL 和摘要以 X5 清单 与
+S 清单为准。
+下方 list 命令打印精确 ID 和 URL。
 
 <a id="preparation"></a>
 ## 显式准备
@@ -48,7 +48,7 @@ bash samples/vision/yolo26_depth/model/download.sh --target s100p --variant l
 
 每次下载一个制品。其他条目使用对应目标、变体或精确 `--asset-id`。
 `download_model.sh` 委托同一个统一下载器，参数也是显式旗标，不沿用旧 shell 位置参数。
-下载与推理分开，本轮主机迁移未实际下载模型。
+下载与推理分开。
 
 <a id="accompanying-files"></a>
 ## 附属文件
@@ -103,5 +103,5 @@ S lite 的运行时系数必须与导出权重校准参数一致。
 它只能标识本地字节，不能独立认证发布方来源。原生启动器在构建或运行前校验 X5 发布摘要。
 显式自转换模式不会将参照制品的发布摘要当成新生成文件的摘要。
 
-摘要不证明精度或板卡兼容性。运行时加载时按声明方案校验 metadata；本轮主机迁移尚未观察
+摘要确认字节；精度与板卡兼容性以运行时 metadata 校验和板端执行为准。
 真实制品 metadata，也没有新增板测结果。

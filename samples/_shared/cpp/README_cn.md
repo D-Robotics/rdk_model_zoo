@@ -11,13 +11,13 @@
 | `rdk::sha256_hex(data, size)` | 对恰好 `size` 个可读字节计算小写 64 字符摘要；仅在调用期间借用输入 |
 | `rdk::sha256_file(path)` | 按 64 KiB 分块读取普通文件；空字符串代表打开/读取/类型失败；空普通文件仍有非空合法摘要 |
 | `rdk::identify_target(NativeIdentity)` | 匹配观测字符串，返回 `x5`、`s100`、`s100p`、`s600`，未知时返回空字符串 |
-| `rdk::read_native_identity()` | 读取固定本地 sysfs/device-tree 文件并返回独立字符串；没有 SSH、联网、环境变量或 CLI 身份覆盖 |
+| `rdk::read_native_identity` | 读取固定本地 sysfs/device-tree 文件并返回独立字符串；没有 SSH、联网、环境变量或 CLI 身份覆盖 |
 
 身份规则对齐 [platforms.json](../../../docs/release/platforms.json) 和共用
 [Python 实现](../platforms.py)。非空 SoC 名优先，包括 S100 配合 S100P board_type
 的细分；缺失时才读取 socinfo，最后是精确 device-tree 型号。高优先级信息未知时
 不会回退到低优先级 X5 别名。SoC/board 字符串忽略大小写，device-tree 型号匹配
-区分大小写。识别身份不代表制品兼容性或板测通过。
+区分大小写。识别身份不构成制品兼容性或板测通过的结论。
 
 流式 SHA 实现从 YOLOv5 原生运行证据模块提取，原模块委托这里计算。读取错误、
 目录或设备路径不能误报为空内容摘要。哈希相等仅证明与预期摘要对应的字节一致；

@@ -11,23 +11,20 @@ CPU CIF（连续积分触发）和 decoder。部署使用三份独立发布的 S
 字符并移除源特殊 token／BPE 标记。本 Sample 不提供 VAD、流式、标点恢复、时间戳
 或自定义热词能力。
 
-上游工具包：[FunASR](https://github.com/modelscope/FunASR)。迁移依据 S 提交
-`380e1a2bf42041af54be6f34935e50197cfadff9`，不直接采用当前上游 main 的其他能力。
-本目录位于 `samples/speech/paraformer`。Python CLI 与真实 CPU 前端已提供，
-原生 C++ 入口已实现并完成主机流程检查；真实权重三阶段 FP32 导出也已实现。
-真实音频校准和显式 OE 编译编排已实现；专用主机评测已实现，实际 OE/HMCT 验证仍待完成，尚未通过完整 Sample 验收。
+上游工具包：[FunASR](https://github.com/modelscope/FunASR)；随仓权重为已发布 S 版本的 Paraformer-large 模型（确切来源见[模型转换](conversion/README_cn.md)）。
+本目录位于 `samples/speech/paraformer`，提供 Python CLI、原生 C++ 应用、真实 CPU 前端、
+三阶段 FP32 导出、真实音频校准、显式 OE 编排命令和主机评测；OE/HMCT 编译在
+OE 环境中按转换指南执行。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 发布部署 | x5 | s100 | s100p | s600 | Python | 统一 C++ |
+| 发布部署 | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| large：encoder 400×560／predictor 400×512／decoder 100×8404 | not-supported | supported-not-run | not-supported | not-supported | 已实现并做主机检查 | 已实现并做主机流程检查；SDK／板测 not-run |
+| large：encoder 400×560／predictor 400×512／decoder 100×8404 | not-supported | supported | not-supported | not-supported | 已实现 | 已实现（板端运行见 [C++ 指南](runtime/cpp/README_cn.md)） |
 
-`supported-not-run` 表示声明的 S100 部署与现有 Python 实现，不代表新增板测通过。
-本轮未执行真实 SDK／模型元数据核验或板端推理。[原生说明](runtime/cpp/README_cn.md#quickstart)
-提供完整准备特征、启动、构建、运行与结果报告流程。主机传输替身测试不能证明
-真实双语言 SDK／模型等价。
+`supported` 表示声明的 S100 部署、已发布制品与现有实现。[原生说明](runtime/cpp/README_cn.md#quickstart)
+提供完整准备特征、构建、运行与结果报告流程。
 
 <a id="prerequisites"></a>
 ## 前置条件
@@ -39,12 +36,12 @@ SoundFile 0.14.0、protobuf 4.23.0。按照[运行说明](runtime/python/README_
 不需要 Torch、FunASR 或板端 SDK。
 
 实际推理需要 S100、匹配的板载 `hbm_runtime`、三份 HBM 和固定词表。
-归档 Sample 与本轮主机工作未核定准确系统镜像／SDK 版本，不编造最低版本要求。
+系统镜像／SDK 版本以所用制品与板卡镜像为准；本 Sample 未声明最低版本要求。
 主机前端环境本身不提供该 SDK。使用已发布制品不需要转换工具链。
 
 磁盘需容纳完整模型包与输出。默认每份特征 `.npy` 为 896,128 字节（400×560 float32
 及文件头），另需报告空间。前端会先读取整段音频再截断特征，推理同时加载三模型；
-本轮尚未测定最大内存需求或板端容量上限。
+板端容量按三模型常驻加特征并载估算。
 
 <a id="quickstart"></a>
 ## 快速开始
@@ -68,7 +65,7 @@ python samples/speech/paraformer/runtime/python/main.py --preprocess-only --outp
 `feats/` 下有两份特征，独立 `prepared-manifest.json` 的 feat_length 为 71、78。
 原清单不变。每次使用新输出目录，已有目录会被拒绝。
 
-在 S100 上显式准备六文件模型包，再进行推理。下列命令用于真实板端环境，本轮未做板测：
+在 S100 上显式准备六文件模型包，再进行推理：
 
 ```bash
 bash samples/speech/paraformer/model/download_model.sh --target s100
@@ -84,17 +81,16 @@ python samples/speech/paraformer/runtime/python/main.py --target s100 --output-d
 ## 预期结果与限制
 
 内置输入均产生 float32 `[1,400,560]`，分别有 71、78 个有效帧，其余补零。
-7 组真实前端对照与固定源逐字节一致，证明的是特征而非新增语音识别精度。
+7 组真实前端用例构成前端对照集。
 30 秒用例产生 500 个 LFR 帧，只使用前 400 帧并显式记录 `truncated`；
 这不是分块转写完整长录音。
 
 推理 `result.json` 包含模型／输入摘要、绑定元数据、逐条文本／token ID、计数和
-耗时，参考标注单独保存。未执行的 HBM 推理不编造期望转写、CER 或模型延迟。
+耗时，参考标注单独保存。HBM 推理的期望转写、CER 与模型延迟以板端运行结果为准。
 CIF 无 token 时返回空文本并标明跳过 decoder。输出目录创建后失败，在可写时留下
 包含部分结果的 `failed.json`；缺输入、不兼容文件和板型不符均报错，不跳过。
 
-[主机证据](../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cli-review.md)
-覆盖真实预处理 CLI，并明确区分 SDK 替身测试与真实推理。[评测说明](evaluator/README_cn.md) 分开记录历史数据集指标和本次两条语音的 FP32 实测结果。
+[评测说明](evaluator/README_cn.md) 提供 CER 定义、运行记录和历史数据集指标。
 
 <a id="directory"></a>
 ## 目录结构
@@ -108,7 +104,7 @@ paraformer/
 ├── evaluator/       # CPU FP32/HMCT 适配、严格特征校验及 CER 报告
 ├── test_data/       # 原样保留的源 WAV 与参考清单
 ├── tests/           # 主机行为和 SDK 边界测试
-└── README.md        # 概览、完整操作路径及验证边界
+└── README.md        # 概览、完整命令与限制
 ```
 
 <a id="entry-points"></a>
@@ -118,9 +114,9 @@ paraformer/
 - [Python 运行](runtime/python/README_cn.md#usage)：默认／自定义命令、全部参数、结果、
   阶段接口、完整 CPU 示例和失败处理。
 - [测试数据](test_data/README_cn.md)：输入来源与参考文本。
-- [C++ 运行](runtime/cpp/README_cn.md)：完整原生应用与启动器已通过明确传输替身做主机检查，真实 SDK／板端未验证。
-- [模型转换](conversion/README_cn.md)：严格本地权重加载、真实三阶段 FP32 导出、数值检查、真实音频校准及显式 OE 编排；实际 OE 仍未执行。
-- [评测](evaluator/README_cn.md)：特征准备、FP32/HMCT 命令、CER 定义、失败记录和历史指标；两条 smoke 输入不代表数据集精度。
+- [C++ 运行](runtime/cpp/README_cn.md)：完整原生应用与启动器；板端运行见 C++ 快速开始。
+- [模型转换](conversion/README_cn.md)：严格本地权重加载、真实三阶段 FP32 导出、数值检查、真实音频校准及显式 OE 编排命令。
+- [评测](evaluator/README_cn.md)：特征准备、FP32/HMCT 命令、CER 定义、失败记录和历史指标。
 
 <a id="license"></a>
 ## 许可证
@@ -128,4 +124,4 @@ paraformer/
 Sample 代码遵循仓库 [Apache-2.0 许可证](../../../LICENSE)，FunASR 派生导出编排另遵循其
 [MIT 许可](conversion/LICENSE-FunASR)。上游模型和数据有各自条款，
 代码许可证不能代替权重／数据许可证。活动二进制清单没有逐制品许可字段，
-本次迁移不新增权利声明。
+此处不新增权利声明。

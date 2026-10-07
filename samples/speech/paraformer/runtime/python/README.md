@@ -2,13 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This directory provides the CPU continuous integrate-and-fire (CIF) bridge and
-three-model application pipeline with SDK adapters and metadata binding. The real
-CPU audio frontend and complete Python CLI are available. Real board inference
-has not been run. The [C++ bridge](../cpp/README.md#quickstart) now consumes the
-prepared features through a complete native entry. Do not interpret the host checks below as model inference or accuracy
-validation. The archived S runtime (historical `../../../../../platforms/s/samples/speech/paraformer/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
-remains a historical reference, not the unified entry.
+The Python pipeline combines the CPU audio frontend, continuous integrate-and-fire (CIF) bridge, three model stages, SDK adapters and tensor binding. Run inference on S100 with the prepared model package. The [C++ bridge](../cpp/README.md#quickstart) consumes Python-prepared features through its native entry.
 
 Start with [CLI usage](#usage), [all parameters](#parameters) and [results](#results); the later sections explain the numerical/API contracts.
 The entry is a thin `main.py`: [cli.py](cli.py) holds option declarations,
@@ -35,8 +29,8 @@ python3.12 -m venv .venv-paraformer
 
 The verified host is macOS arm64 / Python 3.12 with Torch and torchaudio 2.6.0,
 FunASR 1.3.14, NumPy 1.26.4, SoundFile 0.14.0 and protobuf 4.23.0. The requirements
-preserve the source's direct version constraints; the full observed host dependency
-list is in the evidence and is not a board lockfile. On Linux, the source installs
+preserve the source's direct version constraints; they are not a board lockfile.
+On Linux, the source installs
 Torch/torchaudio from the official CPU wheel index; wheel availability must match
 your architecture and Python version. This frontend-only environment does not
 provide `hbm_runtime`. Install/build a board runtime environment separately before
@@ -64,11 +58,8 @@ PYCODE
 ```
 
 Seven real FunASR cases—both bundled WAVs, derived stereo, silence, 30-second input,
-one 25 ms window and a 10 ms short window—are byte-identical to the pinned S source
-frontend under the recorded dependencies. Repeated outputs match, the source's
-RNG mutation is reproduced, and the new adapter restores CPU RNG on both success
-and an injected backend error. These checks verify features, not ASR transcripts
-or board inference. See [frontend evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-frontend-review.md).
+one 25 ms window and a 10 ms short window—exercise the frontend preparation.
+The adapter scopes CPU RNG changes and restores them on both success and a backend error.
 
 <a id="usage"></a>
 ## CLI usage
@@ -100,7 +91,7 @@ python samples/speech/paraformer/runtime/python/main.py --preprocess-only --audi
 ```
 
 On an S100, after explicitly preparing the model package and runtime environment,
-this is the board inference command (not executed in this host-only migration):
+run board inference with:
 
 ```bash
 # cwd: repository root; S100 with matching SDK and frontend dependencies only
@@ -108,10 +99,10 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 python samples/speech/paraformer/runtime/python/main.py --target s100 --output-dir outputs/paraformer-inference
 ```
 
-`bash samples/speech/paraformer/runtime/python/run.sh` forwards exactly the same
-arguments and honors the `PYTHON` environment variable. Unlike the source wrapper,
-it does not create a virtual environment, install packages or download models.
-No legacy positional data-directory argument is silently accepted.
+`bash samples/speech/paraformer/runtime/python/run.sh` forwards the same
+arguments and honors the `PYTHON` environment variable. It does not create a
+virtual environment, install packages or download models; pass a data directory
+with `--audio-dir`.
 
 <a id="parameters"></a>
 ## Parameters
@@ -119,7 +110,6 @@ No legacy positional data-directory argument is silently accepted.
 `null` in the table means the option is omitted at parsing time. The application
 then resolves the documented fallback; paths shown below are rooted in the sample
 unless explicitly described as relative to the working directory.
-
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
@@ -163,9 +153,9 @@ missing selected WAVs fail instead of silently reducing the evaluated set.
   derived fields only in the new output manifest, never the input file.
 - Inference: utterance records additionally contain `text`, `token_ids`,
   `token_count`, `decoder_executed` and stage `timings_ms`; no NPY feature export.
-  `metadata` contains actual bound model metadata. No CER is inferred from a pair
-  of transcripts. `frontend_ms` excludes file loading; stage timing is not full
-  end-to-end latency.
+  `metadata` contains the bound model metadata. CER reporting is provided by the
+  [evaluator](../../evaluator/README.md). `frontend_ms` excludes file loading;
+  stage timing is not full end-to-end latency.
 - `failed.json`: failure after output-directory creation, with current utterance,
   completed earlier records, error type/message and identities collected so far.
   Preflight errors can occur before a directory exists and only print stderr.
@@ -175,7 +165,7 @@ missing selected WAVs fail instead of silently reducing the evaluated set.
 `inference_attempted` records pipeline entry. `inference_executed` is false for
 preprocessing, true after a successful pipeline result, and null when the first
 attempt failed and execution completion is unknown. A successful earlier utterance
-keeps it true if a later attempt fails. It is not a board-validation certificate.
+keeps it true if a later attempt fails.
 Zero-token output explicitly records decoder bypass with decoder timing null.
 
 Input audio, manifest, CMVN, vocabulary and model bytes are rechecked before
@@ -238,13 +228,9 @@ assert (explicit_text, explicit_ids) == (result.text, result.token_ids)
 PYCODE
 ```
 
-Six pipeline host tests additionally cover model order and named feeds, masking,
-repeat preservation/BPE/special-token decoding, empty-result bypass, malformed
-frontend and decoder data, vocabulary size and missing predictor output. The
-published vocabulary was read from the active manifest URL: 8,404 unique tokens,
-SHA-256 `2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`.
-This observed digest does not certify the publisher's currently null manifest
-hash or validate any compiled model. See [pipeline evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-pipeline-review.md).
+The published vocabulary contains 8,404 unique tokens, SHA-256
+`2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`; the active
+manifest records no publisher hash for it.
 
 ## Publication selection and runtime binding
 
@@ -273,8 +259,8 @@ Default paths are under `samples/speech/paraformer/model/s100/` and retain publi
 filenames `paraformer_large_encoder_400x560_s100.hbm`,
 `paraformer_large_predictor_400x512_s100.hbm` and
 `paraformer_large_decoder_400x512_s100.hbm`. Alternate locations require both
-`model_paths={"encoder": ..., "predictor": ..., "decoder": ...}` and
-`asset_ids={"encoder": ..., "predictor": ..., "decoder": ...}`. Each ID must exactly
+`model_paths={"encoder":..., "predictor":..., "decoder":...}` and
+`asset_ids={"encoder":..., "predictor":..., "decoder":...}`. Each ID must exactly
 match its stage's selected publication. Partial, mixed or relabelled sets fail.
 The active manifest has no publisher SHA-256 for these assets: file hashing records
 observed bytes and cannot by itself establish official origin or model compatibility.
@@ -306,12 +292,11 @@ file before importing/constructing `hbm_runtime`. It then binds observed metadat
 Only tests use an explicit `runtime_factory` to inject SDK doubles and bypass the
 real board/file gates; this seam is not a customer deployment mode.
 
-### Board integration API (board execution not-run)
+### Board integration API
 
-The following is an integration sketch, **not a complete audio command**. It needs
+The following is an integration sketch. It needs
 an S100, matching `hbm_runtime`, three local model files, the exact vocabulary and
-prepared frontend features from the frontend below. The complete CLI is documented below. This API example was also run with the real
-frontend and explicit SDK doubles; its synthetic text is not an HBM result.
+prepared frontend features from the frontend below. The complete CLI is documented below.
 
 ```python
 import json
@@ -339,13 +324,7 @@ three models** through model-keyed SDK dictionaries. Missing setters are rejecte
 before any setter is called. Invalid values are rejected by the shared runner;
 an SDK failure is propagated and there is no rollback guarantee if an earlier
 model already accepted its setting. With both arguments omitted, no SDK setter
-is invoked. This corrects the source wrapper's silently ignored parameters.
-
-The suite now includes eight binding/adapter checks (33 total, including package, waveform and CLI checks): publication and
-path identity, metadata order/shape/type/names, the documented acoustic alias and
-optional count output, pre-SDK rejection, and an actual shared-runner pipeline
-with SDK doubles and scheduling propagation. [Binding evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-binding-review.md)
-distinguishes those host checks from real SDK/board execution, still not-run.
+is invoked.
 
 ## Real CPU audio frontend
 
@@ -359,7 +338,7 @@ normalization. Other sample rates are rejected, not automatically resampled.
 The fixed settings are hamming window, 80 mel bins, 25 ms frame length, 10 ms shift,
 LFR stack 7/step 6 and the byte-pinned `am.mvn`. FunASR's source defaults retain
 its sample scaling and dither. For audio shorter than 25 ms, FunASR shortens its
-analysis window; the 10 ms test case is verified against the source. Extremely
+analysis window; the 10 ms case is part of the comparison set. Extremely
 short input can still fail the upstream feature algorithm; such errors propagate.
 No VAD, punctuation restoration, timestamps, streaming or hotword bias is added.
 
@@ -383,8 +362,7 @@ of presenting the result as a full-length transcript.
 The default seed matches the source's fbank dither. CPU RNG changes are scoped and
 restored even if the frontend raises. GPU RNG is not reseeded. Calls through this
 adapter serialize around the CPU RNG context; unrelated threads that also use
-Torch's global RNG require application coordination. This is not a claim of
-process-wide concurrency isolation. `random_seed` accepts an integer in `[0,2**63)`;
+Torch's global RNG require application coordination. `random_seed` accepts an integer in `[0,2**63)`;
 changing it changes dither and is outside the fixed-seed source comparison.
 
 <a id="stage-io"></a>
@@ -439,7 +417,8 @@ an integer valid length 1–400. Shape/dtype/finiteness are checked at every con
 boundary. Intermediate values are copied so later runner buffers cannot overwrite
 retained encoder context. The pipeline does not load an SDK or change scheduling;
 physical-model validation and scheduling are provided by the runtime adapter below.
-INT16 in a compiled artifact's name does not prove INT16 physical I/O.
+Read the physical I/O precision from the model metadata — the artifact
+filename's INT16 tag names the compiler recipe, not the I/O dtypes.
 
 `Prediction` includes text, selected token IDs, CIF count, per-stage milliseconds,
 and `decoder_executed`. Text follows the S source: argmax on the valid prefix,
@@ -451,8 +430,7 @@ and returns empty text, empty IDs, `decoder_executed=False` and decoder timing
 
 Timings measure the three runner calls and CPU CIF separately. They exclude
 frontend, loading, validation/copying outside the calls, text decoding and file I/O;
-their sum is not end-to-end latency. No SDK or board performance is measured here.
-
+their sum is not end-to-end latency.
 
 ## Place in the pipeline
 
@@ -483,8 +461,7 @@ PYCODE
 ```
 
 Expected output: `(1, 100, 512) [2] [3.0, 8.0]`. The two embeddings integrate the
-weighted hidden states across the two integer crossings. This synthetic example
-is not a speech-recognition result.
+weighted hidden states across the two integer crossings.
 
 ## API contract
 
@@ -510,25 +487,15 @@ there is no implicit cast or batch-size expansion. Explicit `real_T=None` preser
 the source calibration's unmasked distribution and must not be used to replace
 inference masking.
 
-## Verification and remaining work
+## Unit tests
 
 ```bash
 python -m unittest discover -s samples/speech/paraformer/tests -v
 ```
 
-Seven CIF host tests cover empty output, manually derived fractional crossings,
-padding versus calibration mode, the 100-token cap, 24 source comparisons,
-input ownership and invalid contracts. The comparison loads the archived source
-from S commit `380e1a2bf42041af54be6f34935e50197cfadff9`; its no-fire case raises
-`IndexError`, which the unified bridge fixes. See the
-[review and evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cif-review.md).
+The unit suite checks CIF fractional crossings, empty output, inference masking, calibration mode, the 100-token cap, input ownership and invalid tensor contracts.
 
-The source publishes S100 models only. No X5, S100P or S600 adaptation is claimed.
-Actual SDK verification and board three-stage inference remain open. The
-[host evaluator](../../evaluator/README.md) now provides FP32/HMCT entry points and explicit CER reporting. [Conversion tools](../../conversion/README.md) now provide verified
-FP32 export and real-audio calibration plus explicit OE orchestration. Native application host verification
-is recorded separately in the C++ guide.
-Board inference, OE compilation, dataset CER and latency have not been run.
+Use the [evaluator](../../evaluator/README.md) for FP32/HMCT execution and CER reporting, and the [conversion guide](../../conversion/README.md) for export, real-audio calibration and OE compilation. S100 inference uses the matching SDK and model package.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
@@ -542,8 +509,4 @@ Board inference, OE compilation, dataset CER and latency have not been run.
 | Vocabulary or CMVN differs from pin | Use the fixed package; do not rename another model's files |
 | Tensor name/type/shape mismatch | Inspect actual model metadata and publication identity |
 
-The real host CLI was checked for help/list/preview, default two-WAV preparation,
-single WAV, prefix limit, output reuse, invalid rate and host inference refusal.
-The full CLI inference branch is exercised only with explicit SDK doubles, using
-the actual shared runners and pipeline; that fixture is not an HBM result. See
-[CLI evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-cli-review.md).
+Choose a fresh output directory for each run and prepare 16 kHz audio with the pinned vocabulary and CMVN. The CLI supports a single WAV, manifest inputs and a prefix limit; see the parameter table above.

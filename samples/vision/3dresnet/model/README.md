@@ -22,7 +22,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 # expect: samples/vision/3dresnet/model/s100/r3d_18.hbm
 ```
 
-The downloader resolves `s:3dresnet:s100/r3d_18.hbm` from the shared S manifest and uses the shared atomic download/verification helper. The manifest currently has no publisher SHA-256, so the observed digest is reported but cannot independently verify origin. Existing files are verified and are not silently overwritten. `download_model.sh` is a compatibility delegate to the same explicit command. Runtime execution never downloads a model automatically.
+The downloader resolves `s:3dresnet:s100/r3d_18.hbm` from the shared S manifest and uses the shared atomic download/verification helper. The manifest records no publisher SHA-256, so the downloader reports the observed digest after download but cannot verify it against a published value. Existing files are verified and are not silently overwritten. `download_model.sh` is a compatibility delegate to the same explicit command. Runtime execution never downloads a model automatically.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files
@@ -30,7 +30,7 @@ The downloader resolves `s:3dresnet:s100/r3d_18.hbm` from the shared S manifest 
 | File | Required for | Purpose |
 | --- | --- | --- |
 | `../test_data/video0.npy` | runtime smoke test | Already normalized RGB float32 clip, shape `(1,3,16,112,112)` |
-| `../test_data/kinetics_classnames.json` | CLI label display | 400-entry source `name → id` mapping, decoded into `id → name` with source quote removal |
+| `../test_data/kinetics_classnames.json` | CLI label display | 400-entry `name → id` mapping, decoded into `id → name` (embedded quote characters in names are stripped) |
 
 The screenshot files under `../test_data/readme_img/` are documentation evidence only.
 
@@ -52,4 +52,4 @@ When `--model-path` is omitted, the runtime resolves this path from the exact se
 | --- | --- | --- |
 | `s100/r3d_18.hbm` | HBM | `sha256: null (unknown)` |
 
-The `null` value is from the active manifest; no checksum is guessed or copied from another artifact.
+The `null` value reflects the active manifest; no checksum is guessed or copied from another artifact.

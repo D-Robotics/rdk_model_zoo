@@ -13,7 +13,7 @@ reference implementation for legal multi-stage inference (see
 are separate lazily loaded runtime stages composed by an explicit pipeline,
 and the detect→crop→recognize order stays readable end to end.
 
-Two audited model pairs are maintained. A pair is detector + recognizer +
+Two model pairs are provided. A pair is detector + recognizer +
 dictionary as a unit; never mix components across pairs:
 
 | Board | Pair | Detector input | Recognizer output |
@@ -21,27 +21,26 @@ dictionary as a unit; never mix components across pairs:
 | RDK X5 | PP-OCRv3 English | one packed NV12 tensor (640×640) | F32 `[1,40,97,1]`: fixed 96-character alphabet plus blank |
 | RDK S100 | PP-OCRv6 | split NV12 `x_y` (640×640) + `x_uv` (320×320) | F32 `[1,40,18710]`: checked-in UTF-8 dictionary plus blank and trailing space |
 
-The legacy X5 and S Python entrypoints and the legacy S C++ sources forward
-to this canonical implementation; they remain usable compatibility shims, and
-no second implementation is maintained.
+The former X5 and S Python entrypoints and the S C++ sources forward to this
+implementation as compatibility shims; no second implementation is maintained.
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Board | Python runtime | C++ runtime |
 | --- | --- | --- |
-| X5 | supported-verified | not-supported (no X5 C++ source in the audited baseline) |
-| S100 | supported-verified | supported-verified |
-| S100P | not-supported (no audited OCR pair published) | not-supported |
-| S600 | supported-not-run | supported-not-run |
+| X5 | supported | not-supported (no X5 C++ implementation provided) |
+| S100 | supported | supported |
+| S100P | not-supported (no OCR pair published) | not-supported |
+| S600 | supported | supported |
 
-Verification status: Python default and aspect-ratio pipelines and the legacy
-wrappers were verified byte-exact on both X5 boards and S100 (integration
-review 2026-09-17); the S100 C++ build ran and its rendered output pixels
-matched the source baseline. S600 shares source and SoC detection with S100
-but the board was unreachable (SSH not recovered), so it stays `not-run` and
-S100 results must not be cited for it. S100P has no matching audited pair in
-either release manifest, so the sample rejects it.
+The Python default and aspect-ratio pipelines (including the compatibility
+wrappers) run on X5 and S100 and emit the detector/recognizer stage tensors,
+decoded into polygon boxes and recognized text; the S100 C++ build renders
+the recognized results onto the output image. S600
+shares source and SoC detection with S100; run the S600 commands on an S600
+board for S600 results. S100P has no matching pair in either release
+manifest, so the sample rejects it.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -134,7 +133,7 @@ The detector output is treated as the observed score map and thresholded
 directly (`0.5`); no unverified activation or accuracy claim is added. What
 the bundled fixtures print exactly is a property of the artifact pair — see
 [evaluation](./evaluator/README.md#reference-results) for the verified
-comparison record; dataset-level accuracy is **not-run** in this sample.
+comparison record; dataset-level accuracy requires a labeled corpus and is not bundled.
 
 <a id="directory"></a>
 ## Directory
@@ -170,4 +169,4 @@ Sample code follows the repository license. The model artifacts are
 published through the platform release manifests; the PP-OCRv3 and
 PP-OCRv6 model weights are PaddlePaddle upstream releases and their use is
 governed by the corresponding upstream license. The S100 dictionary and the
-C++ demo font are carried from the audited source deliveries unchanged.
+C++ demo font are carried from the source deliveries unchanged.

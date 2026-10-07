@@ -124,10 +124,10 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 
 | 现象 | 原因 | 处置 |
 | --- | --- | --- |
-| `Model not found: ...; prepare it explicitly with model/download.sh.` | 解析路径没有 HBM。 | 在 `model/` 准备对应 variant，或同时传入精确 `--asset-id` 和 `--model-path`。 |
+| `Model not found:...; prepare it explicitly with model/download.sh.` | 解析路径没有 HBM。 | 在 `model/` 准备对应 variant，或同时传入精确 `--asset-id` 和 `--model-path`。 |
 | `No published SigLIP support for x5/s600` | target 不在 S100/S100P 发布范围。 | 使用 S100 或 S100P 板卡/target。 |
 | `Host dry-run requires --target s100 or --target s100p` | 主机 dry-run 无法从 `auto` 推断板卡。 | 显式传入 `--target`。 |
-| `image-size must be ...` | 显式尺寸与 variant 固定几何尺寸不一致。 | 省略 `--image-size` 或使用 variant 对应尺寸。 |
+| `image-size must be...` | 显式尺寸与 variant 固定几何尺寸不一致。 | 省略 `--image-size` 或使用 variant 对应尺寸。 |
 | `SigLIP output shape/dtype differs from bound metadata.` | 制品 metadata 不匹配所选子模型契约。 | 检查精确 HBM 并选择匹配制品；不要 reshape 或 cast 输出。 |
 
 ## 许可

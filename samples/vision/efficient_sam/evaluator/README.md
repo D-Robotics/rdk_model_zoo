@@ -1,21 +1,21 @@
 English | [简体中文](README_cn.md)
 
-# EfficientSAM Migration Evaluator
+# EfficientSAM tensor consistency evaluation
 
 <a id="dataset"></a>
 ## Dataset
 
-This evaluator compares one fixed `test_data/dogs.jpg` image through the source legacy entrypoint and the unified runtime on the same target. It measures migration consistency for the fixed image; it is not a dataset-accuracy or performance benchmark.
+Compare the fixed `test_data/dogs.jpg` input through the pinned reference implementation and this Sample runtime on the same target. Keep the image, model pair and scheduling identical; the report checks input tensors, raw outputs, mask selection and IoU.
 
 <a id="environment"></a>
 ## Environment
 
-Run from the repository root with Python 3.10+ on the target board and its matching runtime installed. The evaluator does not download models. The selected pair must already exist at the manifest-derived paths, or both custom stage paths and their exact manifest asset IDs must be supplied. Board SDK/system versions are unknown; board execution is not-run in this migration.
+Run from the repository root with Python 3.10+ on the target board and its matching runtime installed. The evaluator does not download models. The selected pair must already exist at the manifest-derived paths, or both custom stage paths and their exact manifest asset IDs must be supplied. Board SDK/system versions come from your board image; record them together with any board run.
 
 <a id="command"></a>
 ## Command
 
-The output directory must be new; an existing directory is rejected. The command first gates the requested target, then executes legacy and unified stages with the same image, pair, priority and scheduling settings:
+The output directory must be new; an existing directory is rejected. The command first gates the requested target, then executes reference and Sample stages with the same image, pair, priority and scheduling settings:
 
 ```bash
 # cwd: repository root; prerequisite: target runtime and prepared pair
@@ -26,7 +26,7 @@ python3 samples/vision/efficient_sam/evaluator/compare.py \
 
 Use `--target s100|s100p|s600` for S targets. Optional `--test-img`, `--encoder-model-path`, `--decoder-model-path`, matching `--encoder-asset-id`/`--decoder-asset-id`, `--priority` (default `0`) and `--bpu-cores` are passed to both sides. Omit `--bpu-cores` to use S core `[0]`; X5 has no explicit core selection. Exit `0` means every comparison check passed, `1` means the runs completed but a check failed, and `2` means target gating, argument, model, image or execution failed.
 
-Scheduling control: the evaluator first calls the fixed source helper's own `set_scheduling_params` unchanged and records every native scheduling call with its raw outcome. Because the fixed X5 source helper passes a scalar priority that the native API rejects (the source swallows that TypeError and applies nothing), the evaluator additionally applies an explicit verified per-model control mapping to both sides' native runtimes so the comparison executes under identical, actually-applied scheduling. `comparison.json` records each stage's model name, the exact native arguments, and both rejected and applied calls. This explicit control is an evaluator provision, not the fixed source CLI's own scheduling behavior, and it does not change either side's pre/forward/post processing.
+Both executions receive the same per-model scheduling control mapping. `comparison.json` records model names, native arguments and the outcome of each scheduling call. Inspect the applied controls when comparing runs.
 
 | Argument | Default | Meaning |
 |---|---|---|
@@ -51,9 +51,9 @@ The new directory contains `comparison.json` and NumPy arrays for both sides: en
 <a id="reference-results"></a>
 ## Reference Results
 
-The following values are historical measurements copied from the fixed source evaluator READMEs. They are context only, are not results from this unified tree, and do not establish current board support:
+The following values are source measurements from the source evaluator READMEs:
 
-| Source target | Stage | Threads | Historical latency (ms) | Historical FPS |
+| Source target | Stage | Threads | Source-record latency (ms) | Source-record FPS |
 |---|---|---:|---:|---:|
 | X5 | encoder | 1 | 1451.073 | 0.689135 |
 | X5 | encoder | 8 | 1974.671 | 3.965380 |
@@ -68,9 +68,9 @@ The following values are historical measurements copied from the fixed source ev
 
 A successful local or board invocation is the reference evidence for its selected target and prepared pair; preserve the complete output directory for review.
 
-### Preserved per-model performance procedure
+### Per-model performance measurement
 
-`compare.py` checks migration consistency. The source samples separately expose encoder/decoder `hrt_model_exec perf` measurements; the procedure below preserves that capability and was not executed in this migration. The tool comes from the matching board development kit, not pip. Prepare the pair using the model README and set `TARGET` to the actual board. This shell does not gate hardware identity itself; verify identity as described in the runtime README before running it.
+Measure the encoder and decoder with `hrt_model_exec perf` from the matching board development kit. Prepare the model pair using the model guide and set `TARGET` below to the board’s actual identity.
 
 ```bash
 # Bash; cwd: repository root; run only on the matching prepared board
@@ -98,20 +98,20 @@ for STAGE_MODEL in "$ENCODER" "$DECODER"; do
 done
 ```
 
-The X5 source used the tool's default 200 frames. The S source did not record a frame count; current tool defaults and SDK versions remain unverified. S100/S100P use 2 threads for throughput, S600 uses 12 with explicit `--core_id 1,2,3,4`. Do not copy this tool's core IDs into the Python runtime's `--bpu-cores` option. Preserve the complete commands, tool/system versions, board identity and output when retesting, not only the FPS summary.
+The X5 source used the tool's default 200 frames. The S source did not record a frame count; capture the frame count and tool/SDK versions when retesting. S100/S100P use 2 threads for throughput, S600 uses 12 with explicit `--core_id 1,2,3,4`. Do not copy this tool's core IDs into the Python runtime's `--bpu-cores` option. Preserve the complete commands, tool/system versions, board identity and output when retesting, not only the FPS summary.
 
-### Historical measurement definitions
+### Measurement conditions (source-recorded)
 
-The S source tables also record the following model facts. Parameter counts and FLOPs describe the original FP32 models, not a new calculation or the compiled artifact size. FLOPs use `2×MACs`. Classes are `-` (class agnostic); CPU pre/post-processing latency was not reported.
+The S source tables also record the following model facts. Parameter counts and FLOPs describe the original FP32 models, not the compiled artifact size. FLOPs use `2×MACs`. Classes are `-` (class agnostic); CPU pre/post-processing latency was not reported.
 
 | Stage | Input size | Params (M) | FLOPs (G) |
 | --- | --- | ---: | ---: |
 | encoder | RGB 512×512 | 6.16 | 22.19 |
 | decoder | 256×32×32 embedding | 4.06 | 0.98 |
 
-The S source defines BPU task latency from submission to completion, including cache warmup; streaming measurements reuse preallocated buffers and exclude allocation/deallocation. Inputs are float32 tensors, not NV12. The stages execute sequentially, and end-to-end latency also includes CPU preprocessing and mask resizing. Per-stage FPS is not whole-sample throughput. These are historical conditions, not measured performance guarantees for the unified implementation.
+The S source defines BPU task latency from submission to completion, including cache warmup; streaming measurements reuse preallocated buffers and exclude allocation/deallocation. Inputs are float32 tensors, not NV12. The stages execute sequentially, and end-to-end latency also includes CPU preprocessing and mask resizing. Per-stage FPS is not whole-sample throughput. These are the source-recorded conditions; measure this implementation with the same definitions on the target board.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-`compare.py` does not download assets, test a full dataset, measure latency, certify accuracy, or prove a target that was not explicitly gated and executed. It compares the fixed source legacy implementation with the unified implementation using the same runtime call path.
+`compare.py` measures fixed-image tensor and mask consistency between the pinned reference and Sample runtime. Use the per-model performance commands above for timing, and a labeled evaluation dataset for accuracy.

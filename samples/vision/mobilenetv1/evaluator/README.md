@@ -1,22 +1,10 @@
 # MobileNetV1 evaluation
-
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
-
-Evaluation has two separate purposes: confirm that one board executes the
-selected artifact with the expected tensor contract, and measure accuracy
-or latency with a stated dataset and toolchain. This directory documents
-both; it contains no accuracy harness of its own (see
-[boundaries](#boundaries)).
+Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-
-Not applicable for the current scope: this sample performs functional
-checks (bundled test images) and does not run a dataset-level accuracy
-evaluation. A dataset-based evaluation would require ImageNet validation
-data (ILSVRC2012 val, 50,000 images) prepared separately by the user; no
-dataset download or preparation script is provided.
+The functional check uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
 
 <a id="environment"></a>
 ## Environment
@@ -51,13 +39,11 @@ python3 samples/vision/mobilenetv1/runtime/python/main.py \
 ```
 
 On S100/S600 substitute the `s:` reference and the `s100/`/`s600/`
-artifact path; the labels file is shared. For a same-board before/after
-comparison, run the legacy platform entrypoint
-(`platforms/x5/samples/vision/mobilenetv1/runtime/python/main.py` or
-`platforms/s/samples/vision/mobilenetv1/runtime/python/main.py`) with the same
-image, model bytes, labels, resize type, and Top-K, and compare class IDs
-and raw scores before label formatting. Comparing X5 against S is not a
-substitute for a same-board before/after comparison.
+artifact path; the labels file is shared. For a same-board comparison between runs, keep the compared run fixed —
+same image, model bytes, labels, resize type, and Top-K — and compare
+class IDs and raw scores before label formatting; expect identical IDs
+and scores within 1e-5. Comparing X5 against S results is not a
+same-board comparison.
 
 <a id="metrics"></a>
 ## Metrics
@@ -65,9 +51,9 @@ substitute for a same-board before/after comparison.
 | Metric | Definition | Conditions |
 | --- | --- | --- |
 | contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
-| Top-K agreement | identical class IDs and raw scores between canonical and legacy runs | same board, same artifact bytes, image, resize type, Top-K |
-| Top-1 accuracy | fraction of argmax-correct predictions | ImageNet val — not evaluated in this sample |
-| latency / FPS | inference timing | not evaluated in this sample; historical figures below carry unstated conditions |
+| Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
+| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the functional check |
+| latency / FPS | inference timing on the matching board | compare with the published figures under [Reference results](#reference-results), measured under the conditions stated there |
 
 <a id="outputs"></a>
 ## Outputs
@@ -81,28 +67,17 @@ output, image path, resize type, and command line.
 <a id="reference-results"></a>
 ## Reference results
 
-| Item | Value | Source |
-| --- | --- | --- |
-| host tests | 17 OK (2026-09-21, B1 host evidence JSON) | migration evidence |
-| board comparison (canonical vs legacy) | passed (2026-09-21: x5 8GB/4GB + S100 + S600 — Top-K ids equal, scores allclose, labels equal against the platforms/ legacy entry) | [B1 board evidence](../../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json) |
-| dataset accuracy / latency | not-run in this sample | — |
-
-Published historical figures from the X5 source release (rdk_x5 @ac11571 (x5-v1.1.3);
-conditions unstated, not presented as results of the canonical sample):
+Figures published in the X5 release (x5-v1.1.3):
 
 | Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | MobileNetV1 | 224x224 | 1000 | 4.2 | 71.7% | 65.4% | 0.58 | 2800+ |
 
-The S source release (rdk_s @380e1a2 (s-v1.1.2)) published no accuracy or latency figures
-for this model; none are inferred here.
+For S100/S600 artifacts from release `s-v1.1.2`, run the selected artifact
+on the matching board and use [Dataset-level evaluation](#boundaries) to
+calculate accuracy and timing.
 
 <a id="boundaries"></a>
-## Boundaries
+## Dataset-level evaluation
 
-No dataset-level accuracy or latency harness ships with this sample: the
-checked-in material covers host contract tests and functional board
-checks only. Host test success never certifies a board. A board that is
-unreachable or an artifact that is unavailable makes the corresponding
-item `not-run`, not failed-and-forgotten. S600 was re-validated
-2026-09-21 after board access recovered.
+For dataset Top-1 accuracy, pass each validation image to the runtime entry through `--test-img`, compare the returned Top-1 class ID with that image’s ground-truth model index, and divide correct predictions by the number of labeled images evaluated. Keep the artifact, resize mode, Top-K, board image and scheduling settings fixed when comparing runs. For latency or FPS, time the inference stage on the matching board and record the thread count and operating mode alongside the result.

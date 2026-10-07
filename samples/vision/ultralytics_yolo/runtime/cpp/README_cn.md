@@ -5,7 +5,7 @@
 <a id="supported-boards"></a>
 ## 实现范围与板卡状态
 
-当前源码实现 X5 packed NV12 `.bin` 与 S100/S100P/S600 split Y/UV `.hbm` 输入，使用模型元数据选择输入/输出协议。C++ 已不是仅 X5 的代码，但接口实现与实板验证是不同维度。本轮没有板端编译、运行或性能测量：以下实现按 supported-not-run 记录，不能用 Python 板测替代 C++ 证据。
+当前 C++ 入口依据模型元数据选择协议：X5 使用 packed NV12 `.bin` 输入，S100/S100P/S600 使用 split Y/UV `.hbm` 输入。各任务的目标板构建与运行方法见下文。
 
 | 程序 | 已实现协议 | 限制 |
 |---|---|---|
@@ -14,7 +14,7 @@
 | segment | DFL/LTRB 检测框及对应 mask 系数/prototype | 功能参考入口，无 benchmark CLI |
 | classify | 单个未量化 FLOAT32、1000 类 logits 向量 | 按物理 stride 读取 Top-5，无结果图 |
 
-没有 C++ OBB 入口。这里不声明 S YOLOv10 的 Python NMS-free 语义已被 C++ 覆盖。自定义类别/模型需核对源码中的标签与固定维度，不能仅因扩展名相同就套用。完整 Python 任务入口见上方链接。
+自定义类别/模型需符合所选 C++ 任务使用的标签和维度。YOLOv10 NMS-free 任务入口见上方 Python 链接。
 
 <a id="dependencies"></a>
 ## 依赖
@@ -105,8 +105,6 @@ pose/segment 的源码阈值为 score=0.25、NMS=0.45；pose 点阈值 0.5，cla
 
 模型和输出资源由所有者在提前返回或 C++ 异常时释放；分配失败、输出缓存失效
 操作失败时停止解码。描述符错误或非有限 logits 会带诊断信息非零退出。
-主机测试用替身验证描述符运算和资源释放，不代表真实 SDK ABI、内存/缓存调用
-及推理已经验证。
 
 前处理仍保留原 C++ 的 **letterbox、灰色 127 填充**。程序不从制品名称推断
 YOLO 家族，也没有 resize 参数；Python YOLO26 分类默认 stretch，Python S 分类
@@ -173,15 +171,12 @@ ctest --test-dir /tmp/ultralytics-cpp-host --output-on-failure
 未完成分配或使用不同 plan 时拒绝上传；中途分配失败会释放所有已获取缓冲区。
 
 同步推理要求非空任务句柄；创建、提交或等待报错时仍释放返回的任务，并保留首个
-错误码。UCP 提交明确选择 `HB_UCP_BPU_CORE_ANY`。这些检查不代表某版本 SDK ABI
-或实板验证；[主机回归证据](../../../../../docs/releases/unified-migration/2026-09-28-yolo-native-io-review.md)
-包含原任务释放与动态容量问题的失败记录。
+错误码。UCP 提交选择 `HB_UCP_BPU_CORE_ANY`。在目标板上使用匹配的 DNN/UCP SDK
+头文件和库进行构建。模型绑定失败时，核对 artifact 的 target、任务、layout、dtype
+和输出 head 是否符合所选程序。
 
-缺少 OpenCV 开发包或 DNN/UCP 头/库会导致构建失败；请核对目标 SDK，而不是复制其他平台库。输入/输出协议拒绝时检查模型 target、任务、layout、dtype 和 head。主机辅助测试通过不代表所有四个板端程序可编译运行，也不代表新的性能结果。
-
-共用 `OutputTensorOwner` 还处理“分配返回错误但已给出非空地址”：保留已取得的
-缓冲区以供清理；“返回成功但地址为空”则拒绝。X5/UCP 主机资源测试覆盖这两种
-情况，真实 SDK 的失败行为仍未验证。
+共用 `OutputTensorOwner` 在分配返回错误但已给出非空地址时保留缓冲区以供清理，
+并拒绝“返回成功但地址为空”的结果。
 
 共享 `common/dnn_io.h` 另提供 `infer_tensors_sync`，供 Paraformer 等超过两个且
 已完整核验输入张量的调用方复用。它仅执行同步 SDK 提交／等待／释放，调用方负责按

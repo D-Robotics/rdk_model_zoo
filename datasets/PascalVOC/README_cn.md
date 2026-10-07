@@ -1,8 +1,5 @@
 [English](./README.md) | 简体中文
 
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
-
 # Pascal VOC 数据集资源
 
 **PASCAL VOC**（2007/2012）是经典的目标检测与分割基准：20 个前景类别加背景
@@ -13,8 +10,7 @@
 <a id="files"></a>
 ## 目录内容
 
-本目录不包含数据集、类别表或示例图片。本页与[英文指南](./README.md)保留交付
-分支随附的源参考链接。
+本目录不包含数据集、类别表或示例图片。获取方式见下方的官方项目链接。
 
 <a id="usage"></a>
 ## 本仓库中 Pascal VOC 的使用方
@@ -49,7 +45,4 @@
 <a id="provenance"></a>
 ## 来源
 
-X5 交付分支（`ac11571`）随附的本目录只有同样两条链接（英文 README 近乎空白，
-中文 README 很短）；S 交付分支（`380e1a2`）完全没有 `PascalVOC/` 目录。本指南
-在该继承内容上补充了当前使用方映射。归档副本位于
-`platforms/x5/datasets/PascalVOC/`。
+PASCAL VOC 图像和标注由 [VOC 官方项目](http://host.robots.ox.ac.uk/pascal/VOC/)提供。UNet 评估使用 VOC 2012 分割数据，掩码须保留调色板索引。

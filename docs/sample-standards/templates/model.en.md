@@ -18,13 +18,13 @@
 <a id="preparation"></a>
 ## Preparation
 
-> **Must answer:** the exact command (cwd, `--target`) or the manual steps; what
+> **Must answer:** the exact command (cwd, actual target-selection syntax) or the manual steps; what
 > happens on hash mismatch; alternative route if the primary one fails.
 
 ```bash
 # cwd: repository root
-bash samples/⟪domain⟫/⟪name⟫/model/download.sh --target ⟪target⟫
-# expect: files listed above under model/, sha256 verified against manifest
+⟪actual model-preparation command with the sample's supported arguments⟫
+# expect: files listed above under model/; checksum check when supplied in manifest
 ```
 
 ⟪Manual-only artifacts: where to obtain them (internal archive, vendor portal),

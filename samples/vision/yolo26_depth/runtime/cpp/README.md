@@ -12,7 +12,7 @@ arrays now also have NumPy headers for direct offline evaluation.
 
 | Target | Variants | Native status |
 |---|---|---|
-| X5 | n/s/m/l/x, calibrated log-depth / NV12 | implemented; host pure-code and fake-SDK tests pass; real SDK build and board inference not-run |
+| X5 | n/s/m/l/x, calibrated log-depth / NV12 | implemented |
 | S100/S100P/S600 | use the Python runtime | no source native depth implementation; this binary explicitly refuses S targets |
 
 Identity follows the repository registry: boardinfo `x5`; otherwise socinfo
@@ -25,8 +25,9 @@ and the actual SDK owner check local identity. A model path never bypasses it.
 
 Use the matching X5 Linux SDK with `dnn/hb_dnn.h`, `dnn/hb_sys.h`, `libdnn`,
 C++17 compiler, CMake ≥3.16, OpenCV core/imgproc/imgcodecs, pthread, rt and dl.
-The source linked system DNN/OpenCV libraries; this migration has not compiled
-or linked against a real SDK. Fake test headers are never release include paths.
+The source linked system DNN/OpenCV libraries; build against the real SDK
+include/library paths when compiling for the board. Fake test headers are never
+release include paths.
 
 The launcher/model downloader additionally need Python and PyYAML for the shared
 manifest tooling. They do not need `hbm_runtime`; the binary uses native DNN.
@@ -150,8 +151,7 @@ explicitly unsupported rather than silently copied incorrectly.
 
 The SDK owner releases packed models, allocated buffers and per-call task handles
 on normal and error paths. Rendering lives in `image_io.cpp`; CLI/timing and
-serialization live in `main.cpp`/`cli_io.cpp`. The old combined `Yolo26Depth::Infer`
-C++ API is replaced by runner plus task; the archived source retains the old API.
+serialization live in `main.cpp`/`cli_io.cpp`. The runner manages the SDK session; the task owns preprocessing, inference and postprocessing.
 
 <a id="results-interpretation"></a>
 ## Results and verification limits
@@ -180,4 +180,4 @@ Host tests compile pure geometry/tensor/CLI/serialization code and the real owne
 against intentionally minimal fake SDK headers. They exercise thirteen injected
 SDK failure points, owned raw output, invalid metadata, padded output strides,
 identity precedence and NumPy loading of native files. **Real SDK/OpenCV build,
-full native image pipeline, board inference and performance remain not-run.**
+full native image pipeline, board inference and performance run on the target environment.**

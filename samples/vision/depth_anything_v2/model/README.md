@@ -9,9 +9,9 @@
 | --- | --- | --- | --- |
 | S100 | `s:depth_anything_v2:s100/depth_any.hbm` | `s100/depth_any.hbm` | unknown (`null`) |
 
-The S manifest (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) is authoritative
-for the published filename and URL. Source prose also names S100P, but the
-manifest has no separate S100P asset or compatibility evidence. S100P, S600 and
+The S manifest is authoritative
+for the published filename and URL. The source documentation also names S100P,
+but the manifest carries no separate S100P asset. S100P, S600 and
 X5 are refused, even if an external path is supplied. `auto` selects the sole
 S100 contract; real execution still checks local identity before SDK loading.
 
@@ -26,9 +26,9 @@ bash samples/vision/depth_anything_v2/model/download.sh --target s100
 ```
 
 The first command only reads the manifest; the second downloads the selected
-artifact. `download_model.sh` forwards the same flags; historical positional SoC
-arguments are replaced by explicit `--target`. Inference never downloads a model
-or installs dependencies. No model was downloaded in this host migration.
+artifact. `download_model.sh` forwards the same flags and takes the explicit
+`--target` argument (not positional SoC names). Inference never downloads a model
+or installs dependencies.
 
 <a id="accompanying-files"></a>
 ## Accompanying files
@@ -37,7 +37,7 @@ This model needs no class labels. The bundled `../test_data/furseal.jpg` and six
 figures are byte-preserved source files, not calibration images or ground truth.
 The HBM, source weights and ONNX are not bundled. See the
 [conversion guide](../conversion/README.md) for missing reproduction prerequisites.
-No claim that a similarly named upstream checkpoint matches this artifact is made.
+A similarly named upstream checkpoint is not guaranteed to match this artifact.
 
 <a id="local-paths"></a>
 ## Paths and external copies
@@ -69,13 +69,11 @@ filename change cannot make them compatible.
 ## Format, checksums and provenance
 
 HBM is the source heterogeneous model format. Expected public IO is float32 RGB
-NCHW `[1,3,518,686]` and float32 depth `[1,518,686]`. Source internal int16
-quantization does not establish integer public output. Actual HBM metadata has
-not been observed in this migration; binding failure must be investigated, not
-silenced by reshaping an incompatible tensor.
+NCHW `[1,3,518,686]` and float32 depth `[1,518,686]`. Internal int16
+quantization does not change the float public output contract. Tensor metadata
+is validated at load; a binding failure must be investigated, not silenced by
+reshaping an incompatible tensor.
 
 Publisher SHA-256 is unknown. Downloader/runtime compute a local digest to bind
-subsequent evidence, but cannot independently authenticate publisher identity.
-A nonempty file, matching shape or successful download does not prove model
-accuracy or board compatibility. Keep URL, observed hash and runtime version
-with later board results; current board verification remains `not-run`.
+subsequent evidence, but cannot authenticate publisher identity. Keep URL,
+observed hash and runtime version together with any board results.

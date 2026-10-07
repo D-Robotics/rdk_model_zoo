@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # MobileSAM conversion
 
-This directory records the source conversion capability for the MobileSAM image encoder and box-prompt decoder. The unified scripts accept `--target x5`, `--target s100`, `--target s100p`, or `--target s600`; conversion has not been run in this migration.
+This directory provides the conversion scripts for the MobileSAM image encoder and box-prompt decoder. The scripts accept `--target x5`, `--target s100`, `--target s100p`, or `--target s600`.
 
 <a id="source-model"></a>
 ## Source model
@@ -21,7 +21,25 @@ Preprocessing is RGB resize to 512×512 followed by ImageNet normalization in ch
 | `s100p` | `configs/s100p/` | `nash-m` | `hb_compile` |
 | `s600` | `configs/s600/` | `nash-p` | `hb_compile` |
 
-X5 source configs use the OE X5 environment and default calibration. S configs use the OE S-series 3.7.0 environment, `set_all_nodes_int16`, max calibration, and `max_percentile: 0.9999`. Published asset names and SHA fields are authoritative in `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`; the source manifests mark SHA values as unknown (`null`).
+X5 source configs run inside the OE X5 Docker image `openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8-py310`, started from this conversion directory, and use default calibration. S configs use the OE S-series 3.7.0 environment, `set_all_nodes_int16`, max calibration, and `max_percentile: 0.9999`. Toolchain documentation and download:
+
+- OE online documentation: <https://developer.d-robotics.cc/oe_s_doc/index.html>
+- RDK S100 toolchain documentation: <https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100>
+- RDK S600 toolchain documentation: <https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600>
+
+For the S targets, obtain the OpenExplore CPU Docker image (shared across S100/S100P/S600), load it, and start the container with the repository mounted:
+
+```bash
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe/3.7.0/ai_toolchain_ubuntu_22_s100_s600_cpu_v3.7.0.tar
+sudo docker load -i ai_toolchain_ubuntu_22_s100_s600_cpu_v3.7.0.tar
+sudo docker images
+
+sudo docker run -it --rm --network host --shm-size=15g \
+  -v "$(pwd)":/workspace --workdir /workspace \
+  <docker-image-name> /bin/bash
+```
+
+Alternatively, pull the image online: `docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`. If the download URL expires, check the latest link on the OE online documentation. Published asset names and SHA fields are authoritative in `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`; the source manifests mark SHA values as unknown (`null`).
 
 Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. The fixed sources do not pin their package versions or the upstream repository revision; this remains a reproducibility prerequisite, not a tested environment specification. Check these imports inside the chosen export environment, separate from board inference:
 
@@ -64,7 +82,7 @@ Change `--target` for S100/S100P/S600. The exporter defaults to size 512 and ops
 <a id="calibration"></a>
 ## Calibration
 
-Encoder calibration reads representative RGB images, resizes them to 512×512, converts to NCHW, and applies the exact ImageNet mean/std above. X5 writes raw `.rgbchw` tensors; S writes `.npy` tensors. The producer count is an output-file count; it does not establish that the inputs are independent or representative.
+Encoder calibration reads representative RGB images, resizes them to 512×512, converts to NCHW, and applies the exact ImageNet mean/std above. X5 writes raw `.rgbchw` tensors; S writes `.npy` tensors. The producer count is an output-file count; select independent, representative inputs yourself.
 
 ```bash
 python3 scripts/prepare_calibration.py --target x5 \
@@ -92,9 +110,24 @@ python3 scripts/prepare_decoder_calibration.py --target s100 \
   --num 30 --box 185 120 380 445
 ```
 
-This writes `./calibration_data_norm_512/normalized_images/*.npy`, `./decoder_calibration/image_embeddings/*.npy`, and `./decoder_calibration/boxes/*.npy`. The dump helper runs the float encoder ONNX with the source ImageNet transform and requires host `onnxruntime`; it was not run here. No embedding was generated in this migration.
+This writes `./calibration_data_norm_512/normalized_images/*.npy`, `./decoder_calibration/image_embeddings/*.npy`, and `./decoder_calibration/boxes/*.npy`. The dump helper runs the float encoder ONNX with the source ImageNet transform and requires host `onnxruntime` (`pip install onnxruntime`).
 
-The dump example uses the committed `../test_data/dogs.jpg` after ONNX export, so its input exists. Replace it with a representative calibration photograph for actual quantization. The helper was derived from the S source and can consume either target's float encoder ONNX with the same tensor protocol; this migration only exercised an injected ORT fixture. The `calibration_images/` set is user-supplied, not bundled. Scaling one embedding and jittering boxes preserves the source demonstration recipe; it does not establish a representative calibration dataset. Only size 512 is covered by the committed configurations and runtime; changing exporter `--size` also requires corresponding new configurations and runtime bindings.
+Encoder calibration uses 20 to 50 representative RGB images. The decoder's calibration input is a real encoder embedding (`1×256×32×32` float32), not an image; it exists only after the encoder runs, so the two models are prepared in a strict order. Two routes produce `./encoder_embedding.bin`:
+
+- **Float encoder on the host** (simplest, no board required): `dump_encoder_embedding.py` runs the exported float encoder ONNX on a single image and writes the `image_embeddings` output to a raw `.bin`. This helper executes the float ONNX only — it is not a compiled-model runner.
+- **Compiled encoder on the board** (best fidelity): calibrate the decoder against the exact quantized-encoder output distribution. Compile the encoder first, run it once on the board with `hrt_model_exec` and dump the `image_embeddings` output to the same `.bin`, then prepare the decoder calibration and compile the decoder:
+
+  ```bash
+  # cwd: this conversion directory; S100 shown — S100P/S600 use the matching march configs
+  python3 scripts/quantize.py --target s100 --config configs/s100/mobile_sam_encoder_nashe_config.yaml
+  # board: run the compiled encoder once with hrt_model_exec and dump its image_embeddings output to ./encoder_embedding.bin
+  python3 scripts/prepare_decoder_calibration.py --target s100 --embedding ./encoder_embedding.bin --out ./decoder_calibration
+  python3 scripts/quantize.py --target s100 --config configs/s100/mobile_sam_decoder_512_nashe_config.yaml
+  ```
+
+`--embedding` must be a raw float32 array with exactly `1×256×32×32` (262144) values — an encoder output, not an image or an `.npy` file; any other value count fails the reshape. The operator preparation applied to that raw float tensor is fixed by the script: each of the `--num` samples scales the embedding by `1.0 + (index - num // 2) * 0.001` and jitters the box by `(index % 5) - 2` pixels on both axes, writing float32 calibration tensors; the int16 target precision is applied later by `set_all_nodes_int16` in the committed configs. The box prompt is a runtime input, so the decoder calibration keeps both the `image_embeddings` and `boxes` inputs.
+
+The dump example uses the committed `../test_data/dogs.jpg` after ONNX export, so its input exists. Replace it with a representative calibration photograph for actual quantization. The helper can consume either target's float encoder ONNX with the same tensor protocol. The `calibration_images/` set is user-supplied, not bundled. Scaling one embedding and jittering boxes preserves the source demonstration recipe; build the real calibration set from representative photographs. Only size 512 is covered by the committed configurations and runtime; changing exporter `--size` also requires corresponding new configurations and runtime bindings.
 
 <a id="compile"></a>
 ## Compile
@@ -108,7 +141,7 @@ python3 scripts/quantize.py --target s100p
 python3 scripts/quantize.py --target s600
 ```
 
-Use `--target <target> --config <path>` to compile one YAML. X5 invokes `hb_mapper makertbin --model-type onnx`; S invokes `hb_compile --config`. X5 outputs are under `bpu_model_output_norm_512_allint16/` and `bpu_model_output_decoder_default/`. S outputs are under target-specific encoder/decoder working directories and use the manifest names in the YAMLs. Compilation was not run here. The committed S paths are:
+Use `--target <target> --config <path>` to compile one YAML. X5 invokes `hb_mapper makertbin --model-type onnx`; S invokes `hb_compile --config`. X5 outputs are under `bpu_model_output_norm_512_allint16/` and `bpu_model_output_decoder_default/`. S outputs are under target-specific encoder/decoder working directories and use the manifest names in the YAMLs. The committed S paths are:
 
 | target | role | ONNX | calibration | working directory | output prefix |
 |---|---|---|---|---|---|
@@ -129,7 +162,7 @@ Every config and expected compiler output (relative to this conversion cwd):
 | `configs/s100p/mobile_sam_encoder_nashm_config.yaml` | `./mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashm/mobile_sam_image_encoder_norm_512x512_nashm.hbm` |
 | `configs/s600/mobile_sam_decoder_512_nashp_config.yaml` | `./mobile_sam_decoder_512_op11.onnx` | `./decoder_calibration/image_embeddings;./decoder_calibration/boxes` | `bpu_model_output_decoder_nashp/mobile_sam_decoder_512_nashp.hbm` |
 | `configs/s600/mobile_sam_encoder_nashp_config.yaml` | `./mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashp/mobile_sam_image_encoder_norm_512x512_nashp.hbm` |
-| `configs/x5/mobile_sam_decoder_512_box_default_config.yaml` | `./mobile_sam_decoder_512_box_op11.onnx` | `./decoder_calibration/calibration_embeddings; ./decoder_calibration/calibration_boxes` | `bpu_model_output_decoder_default/mobile_sam_decoder_512_box_default.bin` |
+| `configs/x5/mobile_sam_decoder_512_box_default_config.yaml` | `./mobile_sam_decoder_512_box_op11.onnx` | `./decoder_calibration/calibration_embeddings;./decoder_calibration/calibration_boxes` | `bpu_model_output_decoder_default/mobile_sam_decoder_512_box_default.bin` |
 | `configs/x5/mobile_sam_image_encoder_norm_512x512_config.yaml` | `./mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512` | `bpu_model_output_norm_512_allint16/mobile_sam_image_encoder_norm_512x512_allint16.bin` |
 
 A single-config command must include its matching `--target`: the script does not infer the compiler from YAML and otherwise defaults to X5. For example: `python3 scripts/quantize.py --target s100 --config configs/s100/mobile_sam_decoder_512_nashe_config.yaml`.
@@ -150,7 +183,7 @@ These input fields are copied from each compilation config, not observed SDK met
 <a id="validation"></a>
 ## Post-conversion validation
 
-No export, calibration, compile, model download, or board validation was run in this migration. Before accepting an artifact, inspect actual SDK metadata and require matching input/output names, ranks, shapes, and native dtypes for both submodels. Confirm the decoder box input remains `(1,4)` and is in the same 512-pixel coordinate system as preprocessing. Runtime casts cannot prove native quantization metadata. The source contains no dataset-level accuracy harness; any board result must record its own image, box, model, SDK, and resource conditions.
+Before accepting an artifact, inspect actual SDK metadata and require matching input/output names, ranks, shapes, and native dtypes for both submodels. Confirm the decoder box input remains `(1,4)` and is in the same 512-pixel coordinate system as preprocessing. Runtime casts cannot prove native quantization metadata. The source contains no dataset-level accuracy harness; any board result must record its own image, box, model, SDK, and resource conditions.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -165,13 +198,12 @@ No export, calibration, compile, model download, or board validation was run in 
 Generated ONNX, calibration tensors, quantizer metadata, and compiled models remain outside version control. The active manifests and target YAMLs determine exact filenames.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
 - Upstream source and checkpoint versions/digests are not pinned by the fixed source.
 - S has no source `download_assets.py`; acquiring its upstream checkout and checkpoint is a manual prerequisite.
 - X5 and S use different calibration file formats and target config layouts, so the unified producer branches on target while retaining the source recipes.
 - Decoder output rank and all compiled native dtypes require real SDK metadata inspection.
-- Conversion, downloads, and board validation are not-run in this migration.
 
 ## Provenance
 

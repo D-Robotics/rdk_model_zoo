@@ -36,9 +36,9 @@ infer_board.py 不计算数据集分数或计时指标。其输出支持逐像�
 <a id="reference-results"></a>
 ## 参考记录
 
-源 README 写有 1024×512 单核约 95 FPS、10.5 ms 的预期，但未提供可复现测量记录；此处保留为未验证的源预期，不作为验收阈值或新结果。主机源行为对照和 fixture 不证明模型精度。本轮没有板端、OE 或数据集结果。参见[源审计](../../../../docs/releases/unified-migration/evidence/2026-09-26-b8-ppliteseg-audit.json)。
+源 README 写有 1024×512 单核约 95 FPS、10.5 ms 的预期，但未提供可复现测量记录；应将其视为源记录预期，阈值以自己的实测为准。主机对照和 fixture 不测量推理精度。板端、OE 和数据集结果在产生时另行记录。
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
-板卡环境不可用，本轮板测为 not-run。本示例不支持 S100/S100P/S600 或 C++。本地编译模型须满足相同张量契约；声明 asset-id 和未知发布 SHA 不能证明来源。实际性能命令和图对照前提见[转换验证章节](../conversion/README_cn.md#validation)。
+板端执行需要 RDK X5 环境。本示例不支持 S100/S100P/S600 或 C++。本地编译模型须满足相同张量契约；声明 asset-id 和未知发布 SHA 不能证明来源。实际性能命令和图对照前提见[转换验证章节](../conversion/README_cn.md#validation)。

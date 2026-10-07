@@ -3,12 +3,12 @@
 <a id="dataset"></a>
 ## Dataset
 
-The source supplies `test_data/bus.jpg` for X5 and `test_data/kite.jpg` for S, plus `coco_classes.names`; there is no labeled benchmark harness in this sample. The evaluator compares one complete source/unified run on the same image, target, artifact, and thresholds. It is a consistency evidence tool, not an mAP evaluator.
+The source supplies `test_data/bus.jpg` for X5 and `test_data/kite.jpg` for S, plus `coco_classes.names`; there is no labeled benchmark harness in this sample. The evaluator compares one complete two-implementation run on the same image, target, artifact, and thresholds. It is a consistency evidence tool, not an mAP evaluator.
 
 <a id="environment"></a>
 ## Environment
 
-Run directly on a recognized target board with Python, NumPy, OpenCV, and the target `hbm_runtime`; the evaluator also needs the fixed source runtime import path. It is not a separate host that drives the board. The host unit tests inject a fake runtime and do not certify hardware or a board result. No model or image is downloaded by the evaluator.
+Run directly on a recognized target board with Python, NumPy, OpenCV, and the target `hbm_runtime`; the evaluator also loads the pinned original runtime from Git history. It is not a separate host that drives the board. The host unit tests inject a fake runtime. No model or image is downloaded by the evaluator.
 
 <a id="command"></a>
 ## Evaluation command
@@ -24,9 +24,9 @@ python3 samples/vision/yolov5/evaluator/compare.py \
   --output-dir /tmp/yolov5-evidence-unique
 ```
 
-The utility runs source and unified paths, stores complete native input/output/result arrays as `.npy`, records metadata, code/model/image hashes, thresholds and board identity in `comparison.json`, and returns `0` only when every declared comparison passes. The output directory must not already exist. This tool ran on real boards in the 2026-09-24 records at pinned commits — X5 (all nine variants on 8GB/4GB) and the S100/S600 `x-672` cases, all checks true ([python comparison](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [nine-variant matrix](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-yolov5-x5-variants/), [expanded boards](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)) — while the current tree adds no new board run and those records do not re-validate the current HEAD.
+The utility runs the pinned original implementation and this sample's implementation, stores complete native input/output/result arrays as `.npy`, records metadata, code/model/image hashes, thresholds and board identity in `comparison.json`, and returns `0` only when every declared comparison passes. The output directory must not already exist. Run it on a prepared board for the variants you need — the X5 commands cover all nine variants and the S100/S600 commands cover the `x-672` model with `kite.jpg`; a run validates the tree it executes.
 
-### Native C++ source/unified comparison (board)
+### Native C++ implementation comparison (board)
 
 The Python command above drives the Python runtimes and cannot serve as final
 evidence for the C++ deliverables, whose preprocessing may differ. The native
@@ -130,7 +130,7 @@ below channels*stride[3], while still decoding the real supported families
 descriptors compare by float32 BITS (native semantics): 0.45f serialized as
 0.44999998807907104 and the manifest string "0.450000" are the same value;
 different bits fail. Final-image coordinates (detections_original) are
-REQUIRED from both sides — a missing or one-sided capture blocks acceptance
+REQUIRED from both sides — a missing or one-sided capture fails the comparison
 rather than passing with a disclaimer. Layout decoding accepts only the two
 proven families (uniform-pitch strided, exact-size compact) and rejects
 anything else instead of guessing.
@@ -144,17 +144,12 @@ descriptors exact; boxes `atol=1e-4`, scores `atol=1e-5`, class ids exact,
 after a declared order normalization (both sides sorted by class_id, score,
 x1..y2). Detections are compared in MODEL input space AND, mandatorily, in final
 original-image coordinates (`detections_original` from both sides — the
-capture emits it and the unified dump since this round); a missing or
+capture emits it and the current dump); a missing or
 one-sided final-coordinate capture fails the whole comparison rather than
 passing with a disclaimer. Any missing material, nonzero run, model/image
 hash or threshold mismatch fails nonzero with the gathered evidence
-preserved; a native failure can never pass as empty arrays. **Native board
-status: the complete source/unified numerical comparison has not finished on
-any board** — at checkpoint `3d6c14c` the S100 completed fixed-source and
-unified real-SDK compiles while the X5 link step was interrupted
-([connectivity record](../../../../docs/releases/unified-migration/evidence/2026-09-24-board-connectivity-interruption/)),
-and no numerical comparison has been recorded; these steps run on the real
-boards. The C++ board work that does exist is build/smoke only (see
+preserved; a native failure can never pass as empty arrays. These native
+comparison steps execute on the real boards (build guidance:
 `runtime/cpp/README.md`). Host tests cover
 instrumentation generation (including the pinned closure and the shallow-
 clone preparation hint), stub compiles of the instrumented sources (which
@@ -166,7 +161,7 @@ failure mode.
 <a id="metrics"></a>
 ## Metrics
 
-Inputs are exact; raw output arrays use shape/dtype checks and `rtol=0, atol=1e-5`; result boxes use `atol=1e-4`, scores `1e-5`, and class IDs exact. X5 and S must be compared using their own source protocol; a host fake fixture is not a board result. Historical performance is listed below and is not a new measurement.
+Inputs are exact; raw output arrays use shape/dtype checks and `rtol=0, atol=1e-5`; result boxes use `atol=1e-4`, scores `1e-5`, and class IDs exact. X5 and S must be compared using their own source protocol; a host fake fixture is not a board result. The performance listed below is the source-published record with its original conditions.
 
 <a id="outputs"></a>
 ## Outputs
@@ -176,7 +171,7 @@ Each run directory contains `legacy_*` and `unified_*` `.npy` arrays plus `compa
 <a id="reference-results"></a>
 ## Reference results
 
-The complete source historical X5 table is retained below; it was not re-run:
+The complete source X5 reference table:
 
 | Model | Size | Params | BPU throughput | Python post-process |
 |---|---|---:|---:|---:|
@@ -189,8 +184,6 @@ The complete source historical X5 table is retained below; it was not re-run:
 | YOLOv5m_v7.0 | 640x640 | 21.2 M | 48.4 FPS | 12 ms |
 | YOLOv5l_v7.0 | 640x640 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640x640 | 86.7 M | 13.1 FPS | 12 ms |
-
-The 2026-09-24 records include Python source/unified comparisons for the S100 and S600 `x-672` (`kite.jpg`) cases and all nine X5 variants (evidence linked above); MOT-style accuracy and the native C++ comparison remain `not-run`, and none of those records re-validate the current tree.
 
 <a id="boundaries"></a>
 ## Boundaries

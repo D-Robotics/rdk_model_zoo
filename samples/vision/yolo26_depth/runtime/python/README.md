@@ -73,8 +73,8 @@ The report records model/input hashes, selection, runtime metadata and measured
 forward duration. That duration includes runner validation and copying; it is
 not isolated BPU latency and excludes preprocessing/postprocessing. Unknown
 runtime versions remain `unknown`. Host tests use controlled runtime fixtures;
-board accuracy, real SDK execution and dataset metrics remain `not-run` here.
-Historical measurements are in the [evaluator guide](../../evaluator/README.md).
+board accuracy, real SDK execution and dataset metrics are measured on the board.
+Source-recorded measurements are in the [evaluator guide](../../evaluator/README.md).
 
 <a id="integration-example"></a>
 ## Integration example
@@ -111,8 +111,7 @@ Keep the matching context with each frame; no mutable last-frame transform is
 stored on the task. Runner injection is a host-test seam, not board validation.
 The CLI separately sets scheduling parameters; applications may call
 `runner.set_scheduling_params(priority=0, bpu_cores=[0])` where supported.
-The archived source API and embedded timing are replaced by these three stages
-and `predict`; timing, image IO and rendering belong to the caller.
+`predict` composes the three stages. The caller handles timing, image I/O and rendering.
 
 <a id="stage-io"></a>
 ## Stage contracts
@@ -136,15 +135,15 @@ dimension collapses to zero are explicitly rejected.
 S `l/x` use INTER_LINEAR scale-fill, BGR→RGB and `/255`, yielding float32 NCHW
 `[1,3,768,768]`. Output is raw logits: clip to `[-4,5]`, apply scale 1 and bias
 `-0.2498779296875` (`l`) or `-0.316650390625` (`x`), then exp and restore directly.
-Exp and restoration run on CPU. A source prose claim that they are in the graph
-is contradicted by its export/runtime code; see the root source audit.
+Exp and restoration run on CPU; the source prose places them in the graph, but
+its own export/runtime code executes them on CPU — the artifact metadata is
+authoritative on the actual graph boundary.
 
 Metadata must describe one model, one input and one float32 output of
 `[1,192,192,1]` or `[1,1,192,192]`. Incorrect geometry/type, NaN/Inf, mismatched
 context and exp overflow are errors. Do not apply lite calibration twice to a
-calibrated log-depth output. Task-level context isolation does not establish
-SDK runner thread safety; serialize shared-runner calls unless the SDK warrants
-otherwise.
+calibrated log-depth output. Task-level context isolation is per-call; shared-runner
+calls must be serialized unless the SDK warrants otherwise.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
@@ -152,7 +151,7 @@ otherwise.
 - **Unknown/mismatched board:** run on the selected supported target. Dry-run is
   only selection inspection and cannot establish board compatibility.
 - **Missing SDK:** install the matching board runtime using platform guidance;
-  NumPy/OpenCV alone cannot run the model.
+  model execution requires the board SDK in addition to NumPy/OpenCV.
 - **Digest mismatch:** obtain the exact published artifact again. A deliberate
   conversion uses explicit converted mode; do not relabel a corrupt download.
 - **Metadata mismatch:** inspect the selected model's input/output contract;

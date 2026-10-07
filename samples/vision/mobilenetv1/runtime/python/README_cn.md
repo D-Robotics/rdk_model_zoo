@@ -62,7 +62,7 @@ S100/S600 替换为对应的 `s:` 引用与 `s100/`/`s600/` 制品路径；标�
 | `--list-models` | flag | false | 无板卡访问列出 Manifest 支持的引用 |
 | `--dry-run` | flag | false | 不加载模型或 SDK 地解析/检查选择 |
 
-上面的默认值由 Q3 检查器对照 `build_parser()` 做机器校验。
+上面的默认值即 [`cli.py`](cli.py) 中 `build_parser` 定义的值。
 
 <a id="results"></a>
 ## 结果
@@ -99,8 +99,7 @@ print(result.class_ids, result.scores, result.labels)
 `predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，且绝不原地修改
 数组。三个阶段也可以显式驱动：`prepared = model.preprocess(source)`、
 `outputs = model.infer(prepared)`、`result = model.postprocess(outputs)`
-——`predict` 恰好串联这些步骤（由入口行为测试验证）。既有的
-`pre_process` / `forward` / `post_process` 拼写保持为薄别名，共享的
+——`predict` 恰好串联这些步骤。共享的
 `ClassificationTask` 流程仍可从 [`classification.py`](classification.py)
 导入。
 
@@ -121,7 +120,6 @@ print(result.class_ids, result.scores, result.labels)
 | --- | --- |
 | `Cannot identify this board` | 先用显式 target 做 dry-run，再只在匹配的板卡上执行；显式 target 不是硬件证据。 |
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整引用；不要用裸文件名。 |
-| `No published ... asset`（S100P） | Manifest 没有 s100p 资产行；在匹配板卡上使用 S100/S600 制品。 |
 | 输入 shape 或 dtype 不匹配 | 核对制品引用与运行时 metadata；不要互换 X5 packed 与 S split 制品。 |
 | 输出与旧实现不一致 | 先固定相同制品、图像、缩放方式、Top-K 比较 raw 输出，再考虑分数语义。 |
 

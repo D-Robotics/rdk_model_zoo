@@ -34,7 +34,7 @@ bash samples/vision/clip/model/download.sh --target x5 --output-dir /tmp/clip-mo
 # 预期：/tmp/clip-model/img_encoder.bin 和 /tmp/clip-model/text_encoder.onnx
 ```
 
-manifest 将两个 SHA-256 均记录为未知。下载器打印观测 digest，并说明它们不能独立验证发布方来源。I/O 或选择错误退出 2。本轮未下载任一文件。
+manifest 将两个 SHA-256 均记录为未知。下载器打印观测 digest，并说明无法对照已发布数值校验。I/O 或选择错误退出 2。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -63,4 +63,4 @@ manifest 将两个 SHA-256 均记录为未知。下载器打印观测 digest，�
 
 ## 许可
 
-准备代码遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。源模型制品沿用发布记录中的来源和许可证 metadata；不在此新增断言。
+准备代码遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。模型制品沿用发布记录中的来源和许可证 metadata；不在此新增断言。

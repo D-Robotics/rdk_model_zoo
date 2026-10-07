@@ -1,4 +1,4 @@
-> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration and the native core refactor with host-side SDK-double tests; quantization recipes are preserved without rerunning, and board tests are not-run.
+> Board results, accuracy figures and SDK release notes below are records from the source S release; board runs follow the commands in this guide.
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -55,7 +55,7 @@ export LD_LIBRARY_PATH="$OELLM_SDK_ROOT/oellm_runtime/lib${LD_LIBRARY_PATH:+:$LD
 timeout 120 ./build/main --model-path ../../model/s100/minicpm5-2b_ctx4096_s100.hbm   --tokenizer-path ../../model/s100/tokenizer   --template-path ../../model/s100/tokenizer/simple-chat.jinja --prompt 'What is the capital of France?'
 ```
 
-`inc/minicpm5.hpp` defines the configuration, `prepare_request` (pre-process) and the `RequestOutcome` status record; `src/chat_template.cc` loads and size-checks the chat template outside the inference file; `src/minicpm5.cc` handles SDK initialization, streaming through an injected sink and the single-request teardown; `src/main.cc` parses arguments, injects the stdout sink, prints the RESULT line and maps `RequestOutcome::exit_code()`. The inference file performs no console IO of its own. Tokenization, template rendering, BPU execution and sampling use the SDK directly. Each instance serves exactly one request: `init()` after `predict()` is rejected, so create a new instance or process per request. Streaming tokens reach the sink while the SDK runs; the RESULT line afterwards carries the same status values as before.
+`inc/minicpm5.hpp` defines the configuration, `prepare_request` (pre-process) and the `RequestOutcome` status record; `src/chat_template.cc` loads and size-checks the chat template outside the inference file; `src/minicpm5.cc` handles SDK initialization, streaming through an injected sink and the single-request teardown; `src/main.cc` parses arguments, injects the stdout sink, prints the RESULT line and maps `RequestOutcome::exit_code`. The inference file performs no console IO of its own. Tokenization, template rendering, BPU execution and sampling use the SDK directly. Each instance serves exactly one request: `init` after `predict` is rejected, so create a new instance or process per request. Streaming tokens reach the sink while the SDK runs; the RESULT line afterwards carries the same status values as before.
 
 Complete native library usage as one self-contained program — copy it, compile against the SDK headers and run:
 
@@ -86,6 +86,6 @@ A sink that throws is contained inside the callback: the exception never crosses
 
 ## Limits
 
-Fixed chunk=256 and cache=4096; input and output share the context budget. This entry point uses a process timeout because it has no usable output-token limit in the old API. The separate [full evaluator](../../evaluator/legacy/README.md) covers PPL, two-turn conversation, long input and 50 repeated requests. Current PPL and reference-text matching fail the acceptance targets; see [results](../../evaluator/README.md). This CLI remains single-request. Tools, multimodal input and long-duration stability are unverified.
+Fixed chunk=256 and cache=4096; input and output share the context budget. This entry point uses a process timeout because it has no usable output-token limit in the old API. The separate [full evaluator](../../evaluator/legacy/README.md) covers PPL, two-turn conversation, long input and 50 repeated requests. Current PPL and reference-text matching do not meet the ≤3% target; see [results](../../evaluator/README.md). This CLI is single-request; tool calls, multimodal input and long-duration stability are outside its scope.
 
 Legacy BPE merges use strings and a simplified non-thinking template. The deployment primary EOS is the existing `<|im_end|>` (130073). Preparation preserves the original checkpoint. A single request uses request_id=0 as in the SDK demo.

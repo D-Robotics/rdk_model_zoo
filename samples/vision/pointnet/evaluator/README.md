@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# PointNet validation and historical results
+# PointNet validation and source-recorded results
 
 <a id="dataset"></a>
 ## Input data
@@ -34,13 +34,13 @@ Smoke options: `--target s100` (parser default auto→s100), `--no-plot` (defaul
 false), `--output-dir outputs/pointnet-check` (default outputs/pointnet).
 Input defaults to the delivered chair; other options are in the
 [complete runtime table](../runtime/python/README.md#parameters). Host tests are
-small fixture checks; board duration is not measured in this migration.
+small fixture checks; board duration is measured on the board itself.
 
 <a id="metrics"></a>
 ## Interpretation
 
 A functional run should produce N labels in 0..3; counts sum to N. Inspect point
-regions using the historical figures below. Seeing all four colors is neither a
+regions using the source figures below. Seeing all four colors is neither a
 mandatory condition for every cloud nor an accuracy metric. Dataset mIoU, per-part
 IoU and throughput of the new entry have not been measured. The source's “trans”
 and “pred” quantization numbers lack a named metric and cannot be called mIoU.
@@ -56,11 +56,11 @@ normalization and metadata. Remove `--no-plot` to also write `result_orig.png` a
 ![Source segmentation](../test_data/readme_img/chair_res.png)
 
 <a id="reference-results"></a>
-## Historical reference results
+## Source-recorded reference results
 
 The original S branch evaluator records these `hrt_model_exec` values. Its table
 does not state latency units, exact invocation, SDK version, or artifact digest;
-values below are retained verbatim and are not current unified-entry measurements.
+values below are retained verbatim from the source record.
 
 | Threads | Frames | Total Latency | Average Latency | FPS |
 | --- | --- | --- | --- | --- |
@@ -71,14 +71,12 @@ values below are retained verbatim and are not current unified-entry measurement
 
 The original conversion record also reports int16 “trans > 0.9999” and “pred > 0.98”;
 see the [preserved screenshot and limitations](../conversion/README.md#calibration).
-Unified-entry board status: **not-run**. Host checks: see the test command above;
-fixture success is not hardware acceptance.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-No labeled dataset evaluator, BPU benchmark wrapper or current board numerical
-comparison is provided here. Reproducing historical performance requires the
-missing artifact/environment/command identity. S100P/S600 have no published
+No labeled dataset evaluator or BPU benchmark wrapper is bundled; reproducing
+the source-recorded performance requires the artifact, environment and command
+identity listed above. S100P/S600 have no published
 PointNet asset and are not silently mapped to S100. Code follows
 [Apache-2.0](../../../../LICENSE).

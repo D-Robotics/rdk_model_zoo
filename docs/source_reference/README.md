@@ -1,157 +1,133 @@
-# BPU Sample Documentation
+# BPU Sample 源码说明文档
 
-本仓库用于发布 **BPU Sample 源码说明文档**，包含 C/C++ 与 Python 相关实现的源码结构、接口与示例说明。
+本目录提供 **BPU Sample 源码 API 参考文档**，覆盖仓库根目录 `samples/` 与 `utils/` 下的 Python 与 C/C++ 实现，以静态 HTML 站点形式交付：
 
-文档以 **静态 HTML 站点** 的形式提供，支持：
-- 普通用户 **无需任何编译环境，直接浏览**
-- 开发者 **本地构建、更新并打包发布**
+- 普通用户：直接解压浏览已构建的文档包，无需任何构建环境。
+- 开发者：本地重建文档并打包。
 
----
+## 一、查看已构建文档（普通用户）
 
-## 一、普通用户（推荐阅读）
+### 1. 解压文档包
 
-> **如果你只是想查看文档内容，请只看本节即可。**
+在仓库根目录执行：
 
-### 获取文档包
+```bash
+mkdir -p /tmp/bpu_sample_docs_html
+tar -xf docs/source_reference/bpu_sample_docs_html.tar.xz -C /tmp/bpu_sample_docs_html
+```
 
-仓库中已提供构建完成的文档压缩包：
+压缩包根目录即站点根目录，解压后主要入口：
 
 ```text
-bpu_sample_docs_html.tar.xz
-
+/tmp/bpu_sample_docs_html/
+├── index.html            # 站点首页
+├── python/               # Python 导航页（samples 按任务/模型分组、utils）
+├── autoapi/              # AutoAPI 生成的 Python API 页面
+├── cpp/                  # C/C++ 说明页（链接到 Doxygen 站点）
+└── doxygen_site/html/    # Doxygen 生成的 C/C++ API 站点（index.html / files.html）
 ```
 
-### 解压文档
+### 2. 浏览文档
 
-在 Linux 下：
-
-```bash
-mkdir -p bpu_sample_docs_html && \
-tar -xf bpu_sample_docs_html.tar.xz -C bpu_sample_docs_html
-```
-
-解压后会得到一个目录，内部结构类似：
-
-```bash
-index.html
-_static/
-python/
-cpp/
-search.html
-...
-```
-
-### 浏览文档
-
-- 本地环境（有图形界面）
-    - 使用任意浏览器直接打开解压目录中的：
-
-        ```text
-        index.html
-        ```
-
-    - 即可开始浏览完整文档内容。
-
-- SSH / 远程服务器环境（无图形界面）
-
-    - 在本地终端执行：
-
-        ```bash
-        # 例如 ssh -L 8000:localhost:8000 sunrise@192.168.1.1
-        ssh -L 8000:localhost:8000 user@remote_host
-        ```
-
-    - 在远程服务器上进入文档目录并启动临时 HTTP 服务：
-
-        ```bash
-        cd /path/to/docs_html
-        python3 -m http.server 8000
-        ```
-
-    - 然后在本地浏览器中访问：
-
-        ```bash
-        http://localhost:8000
-        ```
-## 二、开发者（文档构建与发布）
-
-> **本节仅面向需要维护 / 更新文档的开发者。**
-
-### 目录结构说明
-
-```bash
-.
-├── build_docs.sh                  # 文档构建与打包脚本（推荐入口）
-├── bpu_sample_docs_html.tar.xz     # 已构建好的文档包（发布物）
-├── doxygen/                        # C/C++ 文档配置
-│   └── Doxyfile
-└── sphinx/                         # Sphinx 文档工程
-    ├── source/                     # 文档源文件（rst）
-    ├── build/                      # 构建输出（html / doctrees）
-    └── tools/                      # 辅助脚本（导航生成等）
-```
-
-### 构建环境要求
--  系统依赖（Linux / Ubuntu 推荐）
-    ```bash
-    sudo apt update
-    sudo apt install -y doxygen
-    ```
-- Python 虚拟环境（强烈推荐）
-    > 默认已经有python的基本环境
-
-    所有 Python 依赖均建议安装在 虚拟环境 中，避免污染系统环境。
+- 本地（有图形界面）：用浏览器直接打开 `/tmp/bpu_sample_docs_html/index.html`。
+- 命令行方式（本地或远程均适用）：
 
     ```bash
-    python -m venv ~/.venvs/bpu-docs/
-    source  ~/.venvs/bpu-docs/bin/activate
+    python3 -m http.server 8000 --directory /tmp/bpu_sample_docs_html
     ```
 
-    安装文档依赖：
+    在浏览器中访问 `http://localhost:8000`。
+
+- 远程服务器无图形界面时，先在本地终端做端口转发，再按上述方式访问：
 
     ```bash
-    pip install -U \
-    sphinx \
-    sphinx-rtd-theme \
-    sphinx-autoapi \
-    breathe \
-    sphinxcontrib-napoleon
+    # 例如 ssh -L 8000:localhost:8000 sunrise@192.168.1.1
+    ssh -L 8000:localhost:8000 user@remote_host
     ```
 
-### 文档构建流程
+## 二、文档内容
 
-仓库已提供 统一构建脚本，推荐直接使用：
+- **Python API**（`python/` + `autoapi/`）：由 sphinx-autoapi 静态扫描仓库根的 `samples/` 与 `utils/` 全部 Python 源码生成，跳过 `__pycache__`、`tests`、`dist` 目录；samples 导航按 **任务（vision / llm / robotics / speech / vla）→ 模型** 两级组织，utils 入口为 `python/utils/`。
+- **C/C++ API**（`doxygen_site/`）：由 Doxygen 递归扫描仓库根的 `samples/` 与 `utils/` 下的 C/C++ 源文件（`*.c`、`*.cc`、`*.cpp`、`*.h`、`*.hpp` 等），跳过 `build/`、`CMakeFiles/` 目录；从站点首页或 `cpp/` 页面进入。
 
-```bash
-./build_docs.sh
+## 三、本地构建（开发者）
+
+### 目录结构
+
+```text
+docs/source_reference/
+├── README.md                        # 本说明
+├── bpu_sample_docs_html.tar.xz     # 已构建的 HTML 文档包（发布物）
+├── doxygen/
+│   └── Doxyfile                     # Doxygen 配置：INPUT=../../../samples/ 与 ../../../utils/，输出 ../sphinx/build/html/doxygen_site
+└── sphinx/
+    ├── Makefile                     # Sphinx 构建入口（make html）
+    ├── make.bat                     # Windows 等价入口
+    ├── source/                      # 文档源文件（rst）
+    │   ├── conf.py                  # Sphinx 配置：扩展 autoapi.extension、sphinx.ext.napoleon；主题 sphinx_rtd_theme；扫描仓库根 samples/ 与 utils/
+    │   ├── index.rst                # 站点首页（C/C++、Python 两个入口）
+    │   ├── cpp/doxygen_ref.rst      # C/C++ 入口页，链接到 doxygen_site/html/
+    │   ├── python/                  # Python 导航页（samples 导航由 gen_samples_nav.py 生成）
+    │   └── autoapi/                 # 构建时由 AutoAPI 生成（构建产物）
+    ├── tools/
+    │   └── gen_samples_nav.py       # 依据 AutoAPI 输出生成 samples 导航页
+    └── build/                       # 构建输出（html / doctrees / doxygen_site，构建产物）
 ```
 
-该脚本会按以下顺序执行：
+### 构建环境
 
-- Sphinx 第一次构建
+系统依赖 Doxygen（生成 C/C++ 部分）：
 
-    - 清理旧的 autoapi 与中间产物
+```bash
+sudo apt install -y doxygen        # Ubuntu/Debian；macOS 可用 brew install doxygen
+```
 
-    - 扫描 Python 源码，生成 AutoAPI 文档
+Python 依赖建议安装在虚拟环境中，自行创建与管理：
 
-- Doxygen 构建
+```bash
+python3 -m venv ~/.venvs/bpu-docs
+source ~/.venvs/bpu-docs/bin/activate
+pip install -U sphinx sphinx-autoapi sphinx-rtd-theme
+```
 
-    - 生成 C/C++ 源码说明
+依赖与 `sphinx/source/conf.py` 一致：扩展 `autoapi.extension`（Python 静态扫描）、`sphinx.ext.napoleon`（Sphinx 内置，解析 Google/NumPy 风格 docstring），主题 `sphinx_rtd_theme`。
 
-- 自动生成 Samples 导航
+### 构建步骤
 
-    - 根据 AutoAPI 结果生成 Python Samples 的导航页面
+从仓库根目录出发，按以下顺序执行：
 
-- Sphinx 第二次构建
+```bash
+# 1. Sphinx 第一次构建：扫描 Python 源码，生成 AutoAPI 文档源文件
+#    输入：仓库根 samples/、utils/（conf.py 的 autoapi_dirs）
+#    输出：sphinx/source/autoapi/**（rst）与 sphinx/build/html/
+cd docs/source_reference/sphinx
+make html
 
-    - 生成最终 HTML 文档站点
+# 2. Doxygen 构建：扫描 C/C++ 源码
+#    输入：../../../samples/、../../../utils/（Doxyfile 的 INPUT，相对 doxygen/ 目录）
+#    输出：sphinx/build/html/doxygen_site/html/
+cd ../doxygen
+doxygen Doxyfile
 
-- 文档打包
+# 3. 生成 Samples 导航页
+#    输入：sphinx/source/autoapi/samples/**/index.rst
+#    输出：sphinx/source/python/samples/index.rst 及 <task>/<model>/index.rst
+cd ../sphinx
+python3 tools/gen_samples_nav.py .
 
-    - 输出高压缩比的文档包（tar.xz / tar.zst）
+# 4. Sphinx 第二次构建：纳入导航页，生成最终 HTML 站点
+#    输出：docs/source_reference/sphinx/build/html/index.html
+make html
+```
 
-### 构建产物说明
-- 发布压缩包，如有新的模型新增，注意及时更新
-    ```bash
-    bpu_sample_docs_html.tar.xz
-    ```
+### 构建产物与打包
+
+最终站点位于 `docs/source_reference/sphinx/build/html/`，首页为 `index.html`。
+
+打包新构建的文档（从仓库根目录执行；输出到 `/tmp`，不改动仓库内文件）：
+
+```bash
+tar -cJf /tmp/bpu_sample_docs_html.tar.xz -C docs/source_reference/sphinx/build/html .
+```
+
+包根即站点根（`index.html` 位于包根，与已发布文档包布局一致）。仓库内 `docs/source_reference/bpu_sample_docs_html.tar.xz` 为已发布文档包；新增或更新模型、接口注释后，按上述步骤重新构建并替换该文件。

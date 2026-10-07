@@ -10,7 +10,7 @@ math and lazy runner.
 <a id="environment"></a>
 ## Environment
 
-Full checkout required. Host tested: Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0, PyYAML 6.0.3. S100 inference requires its board-provided `hbm_runtime`; exact board image/SDK/Python versions, minimum RAM and disk capacity remain unverified. Allow disk space for the checkout, selected HBM and outputs. OE is only needed for conversion.
+Full checkout required. Host tested: Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0, PyYAML 6.0.3. S100 inference requires the board-provided `hbm_runtime`; use an S100 board image with its matching SDK and Python environment. Allow disk space for the checkout, selected HBM and outputs. OE is only needed for conversion.
 
 ```bash
 # cwd: repository root
@@ -52,7 +52,7 @@ python3 samples/vision/vit/runtime/python/main.py --dry-run --target s100 --vari
 | `--priority` | int | 0 | 0..255 |
 | `--bpu-cores` | int list | [0] | board core indexes |
 | `--img-save-path` | str | None | optional annotated image |
-| `--list-models` | flag | false | no SDK or download |
+| `--list-models` | flag | false | lists manifest references without executing the model |
 | `--dry-run` | flag | false | selection only; no inference |
 
 Image/label defaults resolve to absolute paths inside the checkout. `None` for variant/resize means the bound source default, not a missing setting. List/dry-run are mutually exclusive.
@@ -92,7 +92,7 @@ aliases, and the shared `ClassificationTask` stays importable from
 <a id="stage-io"></a>
 ## Stage I/O
 
-preprocess (pre_process): image path or BGR U8 H×W×3 → PreparedInput with Y U8 [1,224,224,1], UV U8 [1,112,112,2] and per-call geometry. Direct resize uses nearest; letterbox uses linear and padding 127. infer only calls the runner, preserving the raw mapping. postprocess squeezes a F32 ten-score vector, applies stable softmax and selects Top-K; no file or SDK access. predict composes these stages; the established pre_process/forward/post_process spellings are thin aliases. Runtime metadata validates shapes/dtypes before run; quantized raw outputs are rejected rather than silently reinterpreted.
+preprocess (pre_process): image path or BGR U8 H×W×3 → PreparedInput with Y U8 [1,224,224,1], UV U8 [1,112,112,2] and per-call geometry. Direct resize uses nearest; letterbox uses linear and padding 127. infer only calls the runner, preserving the raw mapping. postprocess squeezes a F32 ten-score vector, applies stable softmax and selects Top-K; without an SDK call or file output. predict composes these stages; the established pre_process/forward/post_process spellings are thin aliases. Runtime metadata validates shapes/dtypes before run; quantized raw outputs are rejected rather than silently reinterpreted.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

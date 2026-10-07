@@ -1,5 +1,8 @@
 # TROS
 
-This directory will describe how to use TROS to efficiently run inference with the delivered Model Zoo content.
+RDK board samples use the runtime and `hbm_runtime` supplied by the matching
+board image. For model-specific commands, target support, model files,
+dependencies and input/output formats, use the selected sample's runtime guide
+in [the sample index](../../samples/README.md).
 
-The content is under development.
+For a first board session, follow the [board smoke-test guide](../validation/board-smoke-test.md).

@@ -6,21 +6,18 @@ EfficientNet B2/B3/B4 variants (paper [EfficientNet: Rethinking Model Scaling
 for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)); the
 S100/S600 side ships the EfficientNet-Lite lite0..lite4 family (the
 [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)
-implementation, as cited by the source delivery). [中文说明](README_cn.md)
+implementation). [中文说明](README_cn.md)
 
 <a id="overview"></a>
 
 ## Overview
 
-The maintained implementation is one Python flow (all targets, no C++
-runtime exists for this sample on either source branch). Python resolves one
-exact artifact reference from the platform release manifests, verifies the
-board identity, loads `hbm_runtime` lazily, and runs a
-`pre_process → forward → post_process` task
-([runtime/python/README.md](runtime/python/README.md)).
-The former platform branch entries remain compatibility shims under
-`platforms/{x5,s}/` until the migration closeout; their audit record
-lives in the migration documents, not here.
+A single Python runtime serves all supported targets.
+The `EfficientNetClassifier` class runs a `preprocess → infer →
+postprocess` flow chained by `predict`: it resolves one exact artifact
+reference from the platform release manifest for the detected board,
+verifies the board identity, loads `hbm_runtime` lazily, and returns a
+typed Top-K result ([runtime/python/README.md](runtime/python/README.md)).
 
 ### Algorithm background
 
@@ -35,7 +32,7 @@ edge-oriented EfficientNet-Lite family (lite0–lite4, TensorFlow TPU
 implementation), served by the same Python flow with per-variant input
 geometry (224/240/260/300/380).
 
-Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+Feature summary:
 
 - **Compound scaling**: jointly scales resolution, depth, and width to balance accuracy and efficiency.
 - **AutoML backbone search**: neural architecture search obtains the efficient baseline network.
@@ -43,36 +40,24 @@ Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
 
 ![Model scaling](./test_data/efficientnet_architecture.png)
 
-*Compound scaling, restored from the source deliveries (the same file
-ships as `test_data/EfficientNet_architecture.png` in rdk_x5 @ac11571 and
-as `test_data/efficientnet_architecture.png` in rdk_s @380e1a2, sha256
-`f0c7ccbe…`; Figure 2 of the paper): baseline network (a), conventional
-single-dimension scaling (b)–(d), and the compound scaling (e) that
-uniformly scales width, depth, and resolution with a fixed ratio.*
+*Compound scaling (Figure 2 of the paper): baseline network (a),
+conventional single-dimension scaling (b)–(d), and the compound scaling
+(e) that uniformly scales width, depth, and resolution with a fixed
+ratio.*
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | b2, b3, b4 | python | supported (board smoke passed 2026-09-21 on x5-8g + x5-4g, see below) |
-| s100 | lite0..lite4 | python | supported (board smoke passed 2026-09-21 on s100, see below) |
-| s600 | lite0..lite4 | python | supported (board smoke passed 2026-09-21 on s600, see below) |
+| x5 | b2, b3, b4 | python | supported |
+| s100 | lite0..lite4 | python | supported |
+| s600 | lite0..lite4 | python | supported |
 | s100p | any | python | not-supported (no s100p asset row in the release manifest; selection is an explicit error, no fallback) |
 
-Source baselines: X5 rdk_x5 @ac11571 (x5-v1.1.3); S rdk_s @380e1a2
-(s-v1.1.2). The unified sample's host tests (28) all pass. Board smoke
-(2026-09-21; same board, same artifact bytes, same input image, legacy
-wrapper vs unified entry): x5-8g and x5-4g return exactly equal b2/b3/b4
-top-5 ids (max abs score diff <=1.2e-7); s100 and s600 return exactly
-equal lite0..lite4 top-5 ids (max <=1.2e-7) with the per-variant geometry
-224/240/260/300/380 resolved correctly; the `run.sh` CLI exited 0 on all
-four boards. With the variant omitted, the default entry resolves b2 on
-x5 and lite0 on s100/s600 (re-verified on both S boards after the B2-R1
-fix; explicit `--variant`/`--asset-id` matching is unchanged). s100p
-rejects selection with an explicit no-published-asset error — no fallback.
-Raw-tensor equality, dataset accuracy, and latency are not covered; the
-published benchmark tables remain source records. Evidence: [B2 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json).
+With the variant omitted, the default entry resolves `b2` on x5 and
+`lite0` on s100/s600; the S geometry follows the variant
+(lite0..lite4 = 224/240/260/300/380).
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -124,20 +109,16 @@ commands: [runtime/python/README.md](runtime/python/README.md).
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; no output files are written unless `--img-save-path` is
-given. With the bundled `Scottish_deerhound.JPEG` the Top-5 contains a
+labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `Scottish_deerhound.JPEG` the Top-5 contains a
 deerhound-related ImageNet class; with `redshank.JPEG` a redshank-related
-class. A board that cannot be identified, or a target without a matching
-artifact, exits with an error instead of guessing — in particular the legacy
-S behavior of silently running the lite0 S100 model on every non-S600 SoC
-(including S100P) is gone: S100P is an explicit no-published-asset error.
+class. Select a target and variant listed in the [Support matrix](#support-matrix), prepare the matching manifest artifact, and run the sample on that board. The runtime pairs each model path with its exact target reference.
 
 <a id="performance"></a>
 ## Performance data
 
-Published records, not re-measured in this repository.
+Published performance records.
 
-X5 (rdk_x5 @ac11571, x5-v1.1.3):
+X5 (x5-v1.1.3):
 
 | Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread Latency (ms) | Multi-thread Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -145,7 +126,7 @@ X5 (rdk_x5 @ac11571, x5-v1.1.3):
 | EfficientNet-B3 | 224x224 | 12.19 | 76.22% | 74.05% | 3.96 | 12.76 | 310.30 |
 | EfficientNet-B2 | 224x224 | 9.07 | 76.50% | 73.25% | 3.31 | 10.51 | 376.77 |
 
-S-series (rdk_s @380e1a2, s-v1.1.2):
+S-series (s-v1.1.2):
 
 | Variant | Single-thread latency | Single-thread FPS | Multi-thread latency | Multi-thread FPS |
 | --- | --- | --- | --- | --- |
@@ -157,12 +138,9 @@ S-series (rdk_s @380e1a2, s-v1.1.2):
 
 ![Inference result](./test_data/inference.png)
 
-*Historical inference screenshot from the X5 source release
-(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `8ecf7529…`): the
-bundled [redshank.JPEG](test_data/redshank.JPEG) ranks `redshank` first,
-followed by ruddy turnstone, water ouzel, oystercatcher, and dowitcher.
-Recorded by the source release on its own runtime entry — not a new run
-of this repository.*
+*Reference inference result from the X5 release: the bundled
+[redshank.JPEG](test_data/redshank.JPEG) ranks `redshank` first, followed
+by ruddy turnstone, water ouzel, oystercatcher, and dowitcher.*
 
 <a id="directory"></a>
 ## Directory

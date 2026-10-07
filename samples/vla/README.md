@@ -17,7 +17,6 @@ Model Zoo assets or an automatic model download.
 `pi0/` names the second integration, not a Pi0-only repository. It also contains
 the S600 ACT backend. Initializing only `act/` does not provide S600 ACT.
 
-
 ## Initialize the exact sources
 
 From Model Zoo repository root:
@@ -56,18 +55,13 @@ set; these are supplied by the operator and are not included here.
   become available locally after initialization, together with all source code,
   demos and workflow documents.
 
-The migration verified pins, source availability, documentation paths and manifest
-registration. Board inference and robot-control execution were not run. Historical
-upstream measurements retain their original scope; no quantization recipe was rerun.
-These third-party repositories retain their own layout rather than imitating an
-incomplete Model Zoo runtime wrapper. Integration checks live in
-`python -m unittest discover -s samples/_shared/tests -p test_vla_integration.py`.
+Offline board inference workflows are documented in the guides. Live robot
+control follows the upstream guides and uses operator-supplied hardware and
+calibration.
 
 ## License and changes
 
 Both pinned repositories include Apache-2.0 [licenses](act/LICENSE); checkpoints,
 datasets, vendor SDKs and robot hardware retain their respective terms. Changes
 to a submodule require an explicit new upstream commit and an intentional parent
-pin update. The old `platforms/s/samples/vla/` paths were removed with the historical
-tree (pinned commit `d2d2a4e0`); initialize
-and use the unified paths above.
+pin update. Initialize and use the unified paths above.

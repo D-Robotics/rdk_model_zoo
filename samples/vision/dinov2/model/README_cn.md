@@ -36,7 +36,7 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 # 预期：/tmp/dinov2-model/nash-p/dinov2_vits14_224_int16_nashp.hbm
 ```
 
-`download_model.sh` 是位置兼容入口，使用同样的必需 target 参数。manifest 的 SHA-256 均未知；下载器会打印观测 digest，并说明无法独立验证来源。I/O、选择或下载错误退出 2。本轮未下载制品。
+`download_model.sh` 是位置兼容入口，使用同样的必需 target 参数。manifest 的 SHA-256 均未知；下载器会打印观测 digest，并说明无法独立验证来源。I/O、选择或下载错误退出 2。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -58,7 +58,7 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-active manifest 将三个发布 SHA-256 均记录为未知。下载观测 digest 不等于来源验证。
+active manifest 将三个发布 SHA-256 均记录为未知；下载观测 digest 用于跨主机识别同一份字节，发布者认证以发布摘要为准。
 
 | 制品 | 格式 | SHA-256 | 数值来源 |
 | --- | --- | --- | --- |

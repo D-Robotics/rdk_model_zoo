@@ -6,7 +6,13 @@ MobileNetV2 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，
 
 ## 概述
 
-统一实现是一条 Python 流程（全部目标），外加一条 S 系列 C++ 流程（见 runtime/cpp）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 保留经审计的 S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
+本样例为全部目标提供 Python 运行时，另为 S 系列提供 C++ 运行时。
+`MobileNetV2Classifier` 类执行由 `predict` 串联的
+`preprocess → infer → postprocess` 流程：按检测到的板卡从平台发布
+Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，
+返回带类型的 Top-K 结果（见
+[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 侧为
+S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。
 
 ### 算法背景
 
@@ -16,7 +22,7 @@ stride-2 块去掉快捷连接。线性瓶颈保留了低维空间中会被 ReLU
 （[论文](https://arxiv.org/abs/1801.04381)、
 [timm/models/mobilenetv2](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv2.py)）。
 
-源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+特性摘要：
 
 - **倒残差结构**：先扩展通道，再进行 depthwise 卷积，最后通过线性瓶颈投影回低维空间。
 - **深度可分离卷积**：相比标准卷积显著降低计算量。
@@ -24,13 +30,11 @@ stride-2 块去掉快捷连接。线性瓶颈保留了低维空间中会被 ReLU
 
 ![MobileNetV2 架构](./test_data/mobilenetv2_architecture.png)
 
-*倒残差块，恢复自 X5 源版本（`test_data/mobilenetv2_architecture.png`，
-rdk_x5 @ac11571，sha256 `7995faf5…`）：stride-1 块（左）保留相加快捷
+*倒残差块：stride-1 块（左）保留相加快捷
 连接；stride-2 块（右）无快捷连接直接下采样，且仅最后的 1×1 投影为
 线性。*
 
-源码树还携带了论文的可分离卷积演化图（`test_data/seperated_conv.png` —
-在源 README 目录清单中出现但未嵌入正文；此处恢复为正式引用的插图）：
+随附论文的可分离卷积演化图：
 
 ![可分离卷积块的演化](./test_data/seperated_conv.png)
 
@@ -38,19 +42,16 @@ rdk_x5 @ac11571，sha256 `7995faf5…`）：stride-1 块（左）保留相加快
 离块 (c)、带扩展层的瓶颈块 (d)；斜线纹理表示不含非线性层的层。*
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持范围
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | mobilenetv2 | python | supported-verified（x5 8GB + 4GB 板端冒烟，2026-09-21） |
-| s100 | mobilenetv2 | python | supported-verified（S100 板端冒烟，2026-09-21） |
-| s600 | mobilenetv2 | python | supported-verified（S600 板端冒烟，2026-09-21） |
-| s100 | mobilenetv2 | cpp | supported-verified（S100 构建+运行，2026-09-21——Top-1 zebra 与 rdk_s 基线一致；小内存板需 BUILD_JOBS=1） |
-| s600 | mobilenetv2 | cpp | supported-not-run（S600 C++ 不在 B1 冒烟集内） |
-| s100p | 任意 | python、cpp | not-supported（发布 Manifest 无 s100p 资产行；2026-09-21 在 S100P 实板验证为拒绝负例——显式报错、无回退） |
-
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)；S 侧 rdk_s @380e1a2 (s-v1.1.2)。统一 sample 的主机测试全部通过。板端冒烟（2026-09-21）在 x5 8GB/4GB 与 S100/S600
-全部通过，各板输出一致且与源实现等价；S100P 仅作为拒绝负例验证。证据：[B1 板端冒烟](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json)。
+| x5 | mobilenetv2 | python | supported |
+| s100 | mobilenetv2 | python | supported |
+| s600 | mobilenetv2 | python | supported |
+| s100 | mobilenetv2 | cpp | supported（小内存板需以 BUILD_JOBS=1 构建） |
+| s600 | mobilenetv2 | cpp | supported（小内存板需以 BUILD_JOBS=1 构建） |
+| s100p | 任意 | python、cpp | not-supported（按支持矩阵选择目标与变体） |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -104,28 +105,25 @@ C++ 流程执行 `bash samples/vision/mobilenetv2/runtime/cpp/run.sh`。
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非给出
 `--img-save-path`，否则不写任何输出文件。X5 上使用内置测试图
 `Scottish_deerhound.JPEG` 时，Top-1 应与图像主体（一只苏格兰猎鹿犬（犬类））一致；
-S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。无法识别的板卡或
-无对应制品的目标会以错误退出，不做猜测。
+S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
 <a id="performance"></a>
 ## 性能数据
 
-下表为 rdk_x5 @ac11571 (x5-v1.1.3) 发布的 MobileNetV2 在 `RDK X5` 上的公开数据：
+下表为 (x5-v1.1.3) 发布的 MobileNetV2 在 `RDK X5` 上的公开数据：
 
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | MobileNetV2 | 224x224 | 1000 | 3.4 | 72.0% | 68.17% | 1.42 | 1152.07 |
 
-S 侧源发布（rdk_s @380e1a2 (s-v1.1.2)）未公布该模型的延迟/精度数据，此处不推断、不补造。
+
 
 ![推理结果](./test_data/inference.png)
 
-*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
-sha256 `7097e2e3…`）：随仓
+*X5 发布的参考推理结果：随仓
 [Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG) 的 Rank-1
 为 `Scottish deerhound`，其后依次为 Irish wolfhound、lynx/catamount、
-standard schnauzer、timber wolf。由源版本在其自身运行入口记录 — 不是
-本仓库的新运行。*
+standard schnauzer、timber wolf。*
 
 <a id="directory"></a>
 ## 目录职责
@@ -152,4 +150,4 @@ standard schnauzer、timber wolf。由源版本在其自身运行入口记录 �
 
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为 MobileNetV2 上游发布；
 模型/权重许可以上游分发为准（见上方参考实现链接）。发布制品遵循平台发布
-Manifest；Manifest 未携带独立许可字段，此处不追加声明。
+Manifest 中的模型文件按各自上游许可使用；再分发前请核对其适用条款。

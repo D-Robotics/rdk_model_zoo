@@ -10,7 +10,8 @@
 | S100 | `s:asr:s100/asr.hbm` | `model/s100/asr.hbm` |
 | S600 | `s:asr:s600/asr.hbm` | `model/s600/asr.hbm` |
 
-URL 来自[当前 S 清单](../../../../docs/release/s/models.yaml)，两项均未记录发布方 SHA-256。X5/S100P 没有制品；观察摘要仅绑定本地字节，不认证发布来源。
+URL 来自[当前 S 清单](../../../../docs/release/s/models.yaml)，清单没有发布方 SHA-256
+字段。X5/S100P 没有制品。本地 SHA-256 摘要用于识别下载后的字节。
 
 <a id="preparation"></a>
 ## 显式下载
@@ -27,7 +28,7 @@ bash samples/speech/asr/model/download.sh --target s600
 <a id="accompanying-files"></a>
 ## 词表与音频
 
-`test_data/vocab.json` 含 3503 个 token→ID，ID 连续为 0..3502，blank `<pad>` 为 0。运行时核验固定源摘要再构建有序词表；仅输出宽度一致不能保证词序正确，任意换词表可能静默改变文本，因此拒绝替换。见[输入摘要](../test_data/README_cn.md)。随附 WAV 是演示数据，不是校准或有标签准确率语料。
+`test_data/vocab.json` 含 3503 个 token→ID，ID 连续为 0..3502，blank `<pad>` 为 0。运行时核验已发布源摘要再构建有序词表；仅输出宽度一致不能保证词序正确，任意换词表可能静默改变文本，因此拒绝替换。见[输入摘要](../test_data/README_cn.md)。随附 WAV 是演示数据，不是校准或有标签准确率语料。
 
 <a id="local-paths"></a>
 ## 已有模型
@@ -40,19 +41,20 @@ bash samples/speech/asr/runtime/python/run.sh --target s600 \
   --output-dir outputs/asr-s600-run1
 ```
 
-覆盖路径必须提供精确 ID；默认路径相对 sample，用户相对路径相对调用目录。构造 SDK 前核验实际板卡，清单选择本身不证明硬件或制品兼容性。
+覆盖路径必须提供精确 ID；默认路径相对 sample，用户相对路径相对调用目录。运行时在
+构造 SDK 前核验板卡身份。
 
 <a id="formats-checksums"></a>
 ## 运行契约
 
 要求严格单个具名模型、一个 float32 `[1,30000]` 输入和一个 `[1,T,3503]` 输出，T 为正。张量名称和 T 读取实际 SDK metadata；float32 logits 保持原值，整数 logits 必须有有效 SCALE 描述符，经共享反量化后 argmax。NaN/Inf 或非法张量拒绝。无需增加不改变有限 float argmax 的 softmax。
 
-本轮没有板端新采集的模型描述符或推理结果。HBM 不是 ONNX 或训练权重；[转换说明](../conversion/README_cn.md)列出缺失前提，不虚构导出命令。
+推理使用 HBM 部署制品；ONNX 或训练权重需按[转换说明](../conversion/README_cn.md)
+准备并编译。
 
 ## 原生模型身份
 
-[原生启动器](../runtime/cpp/README_cn.md)使用同一活动清单，在构建/运行前验证
-制品；将观察到的 SHA-256 传给二进制，后者在 SDK 调用前再次核对本机、模型
-和词表身份。清单缺发布方摘要时，本地摘要只固定字节，不认证发布来源。原生
-输入输出必须为无量化 FLOAT32，不能从 Python SCALE 支持推断原生也支持整数。
-真实 SDK 元数据尚未在硬件验证。
+[原生启动器](../runtime/cpp/README_cn.md)使用同一清单身份，在构建/运行前检查
+制品；将本地 SHA-256 传给二进制，后者在 SDK 调用前再次核对本机、模型和词表身份。
+原生接口直接使用无量化 FLOAT32 输入输出；整数 SCALE 输出由 Python 运行时支持。
+推理前请在目标板检查实际 SDK metadata。

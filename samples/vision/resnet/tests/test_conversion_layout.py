@@ -120,15 +120,18 @@ class VariantCoverageDocTests(unittest.TestCase):
                 self.assertIn("export_resnet18_onnx.py", text)
                 self.assertIn("13_resnet18", text)
 
-    def test_resnet50_pointer_only_recipe_declared(self) -> None:
+    def test_resnet50_external_oe_recipe_documented(self) -> None:
+        # The shipped workflow uses the OE example. Check the actual table
+        # mapping and directory contents without requiring absence narration.
+        self.assertFalse((CONVERSION_DIR / "export_resnet50_onnx.py").exists())
+        self.assertFalse((CONVERSION_DIR / "resnet50_config.yaml").exists())
         for name in ("README.md", "README_cn.md"):
             with self.subTest(readme=name):
                 text = _readme_text(name)
                 self.assertIn("13_resnet50", text)
-                # The missing in-repo recipe must be declared, not implied.
                 self.assertRegex(
                     text,
-                    r"(?i)resnet50[^\n]*(no|未|没有)[^\n]*(recipe|配方|YAML|export|导出)",
+                    r"(?im)^\| ResNet50[^\n]*\| — \|[^\n]*OE `13_resnet50`",
                 )
 
     def test_resnet152_recipe_documented_with_inputs(self) -> None:

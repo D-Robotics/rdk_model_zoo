@@ -21,7 +21,7 @@ python3 samples/vision/yoloe/runtime/python/main.py --target x5 --variant 11s
 python3 samples/vision/yoloe/runtime/python/main.py --target x5 --variant 11m --score-thres 0.35 --resize-type 0
 ```
 
-成功为 rc=0，JSON 含检测数/类别/分数/结果图路径；rc=2 表示错误。单纯 dry-run 成功不证明 SDK 兼容。
+成功为 rc=0，JSON 含检测数/类别/分数/结果图路径；rc=2 表示错误。dry-run 只确认选择与契约，SDK 兼容性以实际加载为准。
 
 <a id="parameters"></a>
 ## 参数
@@ -48,19 +48,19 @@ python3 samples/vision/yoloe/runtime/python/main.py --target x5 --variant 11m --
 | `--list-models` | flag | `false` | 列出发布矩阵，不加载 SDK |
 | `--dry-run` | flag | `false` | 解析并输出选择，不加载模型；须显式 target |
 
-X5 11 保留源逻辑：先将置信阈值夹紧至 `[1e-6,1-1e-6]`，再转为 logit；S11/26 直接使用给定阈值。
+X5 11 先将置信阈值夹紧至 `[1e-6,1-1e-6]`，再转为 logit；S11/26 直接使用给定阈值。
 
 <a id="results"></a>
 ## 结果
 
 `Result.boxes` 为 float32 `[N,4]` 原图连续 xyxy 像素坐标，裁剪到 `[0,W]/[0,H]`；`scores` 是 `[N]` float32 sigmoid 概率；`class_ids` 是 `[N]` int64 固定词表 ID，不能直接用作 COCO 类别 ID。`masks` 在 X5 为 bool `[N,H,W]`（`mask_layout="full"`），在 S 为 N 个 uint8 0/1 ROI（`mask_layout="roi"`），坐标截断成整数后截取，保留空 ROI 对齐。返回数据独立拥有内存。 S11 保留精确零轴 ROI 形状，并将 Lanczos 过冲归一为 0/1，不改变前景范围。
 
-CLI 保存彩色叠加图，默认 `test_data/result.jpg`，不会保存原始张量或把模型推理当作精度报告。入口按可读性拆分：`main.py` 解析选择、构造 `Config`、用 runner 构造 `YOLOE`、调用一次 `predict` 并渲染结果；参数声明、`--list-models`/`--dry-run` 模式与 JSON 结果报告在 `cli.py`。分割算法本身不变，只存在于 `yoloe.py` 及其解码/IO 模块。
+CLI 保存彩色叠加图，默认 `test_data/result.jpg`，不会保存原始张量或把模型推理当作精度报告。CLI 入口组织为：`main.py` 解析选择、构造 `Config`、用 runner 构造 `YOLOE`、调用一次 `predict` 并渲染结果；参数声明、`--list-models`/`--dry-run` 模式与 JSON 结果报告在 `cli.py`。分割实现位于 `yoloe.py` 及其解码/IO 模块。
 
 <a id="integration-example"></a>
 ## 集成示例
 
-前提：在 X5 上显式下载 11s 模型。下述代码在 sample 测试中使用真实绑定与合成 SDK 输出执行，不代表板测。
+前提：Python 3.10+ 环境，并已在 X5 上通过 `model/download.sh` 显式准备 11s 模型；板端运行会加载板端 `hbm_runtime` SDK。
 
 ```python
 # cwd: repository root; on X5 after the explicit model/download.sh step
@@ -72,29 +72,34 @@ selection = resolve_selection("x5", variant="11s")
 runner = build_runner(selection)
 image, labels = load_inputs(SAMPLE_DIR / "test_data/office_desk.jpg", SAMPLE_DIR / "test_data/classes.names")
 task = YOLOE(selection, Config(), runner=runner)
-prepared = task.preprocess(image)
-raw = task.infer(prepared)
-result = task.postprocess(raw, prepared.context)
+result = task.predict(image)
 print(result.boxes.shape, result.mask_layout)
-# task.predict(image) composes exactly the same three stages.
 ```
 
-配置及校验位于 `config.py`，与原生启动器共用，不引入图片或 SDK 模块；原有 `from ...yoloe import Config` 导入接口保持兼容。
+配置及校验位于 `config.py`，与原生启动器共用，不引入图片或 SDK 模块；`from...yoloe import Config` 导入方式同样支持。
 
 <a id="stage-io"></a>
 ## 三阶段接口
 
-`YOLOE(selection, Config(), runner=...)` 构造任务，Config 冻结。阶段统一命名为
+`YOLOE(selection, Config, runner=...)` 构造任务，Config 冻结。阶段统一命名为
 `preprocess` / `infer` / `postprocess`，既有 `pre_process` / `forward` / `post_process`
-为薄别名（每阶段只有一个实现）。preprocess 接受非空 uint8 BGR HWC；返回 `Prepared.tensors` 和本次 `context`。X5 发送一维 packed NV12，共 614400 字节；S 发送 Y `[1,640,640,1]`、UV `[1,320,320,2]`。11 使用截断尺寸/127 填充（拉伸使用最近邻），26 使用四舍五入尺寸/114 填充。
+为薄别名（每阶段只有一个实现）。preprocess 接受非空 uint8 BGR HWC；返回 `Prepared.tensors` 和本次调用关联的 `context`。X5 发送一维 packed NV12，共 614400 字节；S 发送 Y `[1,640,640,1]`、UV `[1,320,320,2]`。11 使用截断尺寸/127 填充（拉伸使用最近邻），26 使用四舍五入尺寸/114 填充。
 
 infer 只调用一次 runner，保留 raw float32，不做激活或反量化；输出是借用的 `RawOutputs`，必须在下一次 SDK 调用前消费，或由调用者复制。每 stride 8/16/32 为 cls 4585、box 64（11）或 4（26）、mces 32，另有 NHWC `[1,160,160,32]` proto。实际输出按完整形状唯一绑定，不依赖名字/枚举顺序。
 
-postprocess 必须收到匹配的 context。11 使用 DFL 与 NMS；X5 在低分辨率裁剪 mask 概率后两次线性插值，S 使用 ROI 二值掩码流程。26 在 640 尺寸插值 logits 后二值化，去 padding 并最近邻还原。框按实际整数 resize 的横纵比例还原，这修正了源代码理想缩放带来的取整误差。predict 只串联三阶段；不缓存上一张图，不承诺 SDK 并发安全。
+postprocess 必须收到匹配的 context。11 使用 DFL 与 NMS；X5 在低分辨率裁剪 mask 概率后两次线性插值，S 使用 ROI 二值掩码流程。26 在 640 尺寸插值 logits 后二值化，去 padding 并最近邻还原。框按实际整数 resize 的横纵比例还原。predict 只串联三阶段；不缓存上一张图，不承诺 SDK 并发安全。
+
+需要中间张量时可以显式调用三个阶段；它与 `predict` 等价，同样只执行一次推理：
+
+```python
+prepared = task.preprocess(image)
+raw = task.infer(prepared)
+result = task.postprocess(raw, prepared.context)
+```
 
 库 Config 的 do_morph 缺省 False，沿用 S11 库接口；CLI 在 S11 上缺省 True，沿用源命令行。调度使用 `runner.set_scheduling_params`。
 
-X5 保留源中两种 RGB 形状描述符 `[1,3,640,640]` 与 `[1,640,640,3]`，两者实际仍发送 614400 字节 packed NV12。共享绑定器只为明确声明的 YOLOE-11 协议启用 NHWC RGB 描述符，不放宽其他 sample 的输入契约。
+X5 接受两种 RGB 形状描述符 `[1,3,640,640]` 与 `[1,640,640,3]`，两者实际仍发送 614400 字节 packed NV12。共享绑定器只为明确声明的 YOLOE-11 协议启用 NHWC RGB 描述符，不放宽其他 sample 的输入契约。
 
 <a id="troubleshooting"></a>
 ## 排障

@@ -3,7 +3,7 @@
 <a id="artifacts"></a>
 ## 制品
 
-下表列出 14 个原始发布制品。S 行是源制品清单，不表示浮点统一入口可执行；没有已发布的浮点 S 替代品。
+下表列出 14 个原始发布制品。S 行为已发布的量化输出模型；在 S 上进行浮点输出推理，请按[转换说明](../conversion/README_cn.md)准备本地浮点模型（当前没有发布浮点 S HBM）。
 
 | Asset ID | Target | Variant | Output route |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@
 bash samples/vision/yoloe/model/download.sh --target x5 --variant 11s
 ```
 
-下载失败或哈希不符会非零退出；已存在且哈希不符的文件不覆盖。离线复制原制品后使用精确 `--asset-id` 与 `--model-path`。S 原制品允许显式下载做历史对照，但不能在浮点入口运行。
+下载失败或哈希不符会非零退出；已存在且哈希不符的文件不覆盖。离线复制原制品后使用精确 `--asset-id` 与 `--model-path`。S 原制品可显式下载，用于量化输出路线与来源对照；浮点入口请使用自行转换的浮点制品。
 
 ```bash
 # cwd: repository root; original quantized publication only
@@ -47,14 +47,14 @@ bash samples/vision/yoloe/model/download.sh --target s100p --variant 26n
 
 默认路径为 `model/<target>/<manifest filename>`，S26 保留 `nash-e/` 或 `nash-m/` 子目录；`--output-dir` 则在指定目录后直接拼接 manifest filename。`--model-path=null` 按选择推导。X5/S100 默认 11s，S100P 默认 26n；显式 asset-id 在未指定 variant 时优先。
 
-自行转换浮点 HBM 时必须同时指定 `--model-path` 和 `--local-float-sha256`。该摘要识别本地字节，原 `source_asset_id` 仅保留协议来源，不声称转换产物与发布 HBM 相同。加载仍检查目标和十个 float32 NHWC 输出；摘要正确不证明精度或硬件兼容。
+自行转换浮点 HBM 时必须同时指定 `--model-path` 和 `--local-float-sha256`：摘要用于精确识别本地字节并完成选择，`source_asset_id` 记录该转换的协议来源。加载时核验目标平台和全部十个 NHWC float32 输出角色，目标兼容性由这些加载检查与板端运行共同确认。
 
-ONNX 检查、平台校准与可选编译见[转换准备说明](../conversion/README_cn.md)。生成文件名中的 `_float` 表示目标协议，`compiled_unverified` 不代表运行制品已验证。
+ONNX 检查、平台校准与可选编译见[转换准备说明](../conversion/README_cn.md)。生成文件名中的 `_float` 表示目标协议；`compiled_unverified` 表示编译产物还需按验证步骤完成元数据与数值检查。
 
 <a id="formats-checksums"></a>
 ## 格式与校验和
 
-X5 为 BIN，S 为 HBM。已知值取自活跃发布清单；S11 发布哈希仍未知，不复制相邻制品摘要。
+X5 为 BIN，S 为 HBM。已知值取自活跃发布清单；S11 发布哈希未知，相邻制品摘要不互用。
 
 | Asset ID | SHA-256 | Authority |
 | --- | --- | --- |

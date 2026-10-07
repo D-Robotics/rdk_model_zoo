@@ -1,8 +1,5 @@
 English | [简体中文](./README_cn.md)
 
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
-
-
 # Pascal VOC Dataset Resources
 
 **PASCAL VOC** (2007/2012) is a classic benchmark for object detection and
@@ -15,9 +12,8 @@ official hosts under their terms.
 <a id="files"></a>
 ## Contents
 
-No datasets, class lists or example images live in this directory. The paired
-[Chinese guide](./README_cn.md) and this page carry the source references that
-the delivery branches shipped here.
+This directory contains no datasets, class lists or example images. Use the
+official project links in the acquisition section below.
 
 <a id="usage"></a>
 ## Where Pascal VOC is used in this checkout
@@ -55,8 +51,4 @@ original copyright holders.
 <a id="provenance"></a>
 ## Provenance
 
-The X5 delivery branch (`ac11571`) shipped this directory with the same two
-links in a nearly empty English README and a short Chinese README; the S
-delivery line (`380e1a2`) carried no `PascalVOC/` directory at all. This guide
-expands that inherited content with the current consumer map. Archived copies
-remain under `platforms/x5/datasets/PascalVOC/`.
+PASCAL VOC images and annotations are distributed by the [official VOC project](http://host.robots.ox.ac.uk/pascal/VOC/). Use the VOC 2012 segmentation split and preserve palette-indexed masks for the UNet evaluator.

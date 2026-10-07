@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | `s:lanenet:s100/lanenet256x512.hbm` | S100 / nash-e | `s100/lanenet256x512.hbm` | 未知 |
 
-实际下载 URL 与资产身份以 [S 发布清单](../../../../docs/release/s/models.yaml)为准。这是唯一已发布的 LaneNet 资产。S100P、S600、X5 在此均无对应资产；重命名或移动 S100 HBM 不会增加平台支持。原入口保留于源模型目录 (historical `../../../../platforms/s/samples/vision/lanenet/model` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。
+实际下载 URL 与资产身份以 [S 发布清单](../../../../docs/release/s/models.yaml)为准。这是唯一已发布的 LaneNet 资产。S100P、S600、X5 在此均无对应资产；重命名或移动 S100 HBM 不会增加平台支持。
 
 <a id="preparation"></a>
 ## 显式准备
@@ -35,7 +35,7 @@ python3 -m samples.vision.lanenet.model.download --target s100 --output-dir /dat
 <a id="accompanying-files"></a>
 ## 配套文件
 
-无需类别名称文件。运行需要 HBM 与输入图片；源输入图像为 [test_data/lane.jpg](../test_data/lane.jpg)。结果不是具名类别或车道实例列表。[转换目录](../conversion/README_cn.md)保留编译 YAML 和历史 checkpoint URL；checkpoint 本身不是可部署模型，源导出脚本仍缺失。
+无需类别名称文件。运行需要 HBM 与输入图片；源输入图像为 [test_data/lane.jpg](../test_data/lane.jpg)。结果不是具名类别或车道实例列表。[转换目录](../conversion/README_cn.md)提供编译 YAML 和 checkpoint URL；checkpoint 需先转换为 ONNX 后才能编译，导出所需的配套代码见转换说明。
 
 <a id="local-paths"></a>
 ## 本地路径与身份
@@ -46,11 +46,11 @@ python3 -m samples.vision.lanenet.model.download --target s100 --output-dir /dat
 python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/lanenet-models/s100/lanenet256x512.hbm --dry-run
 ```
 
-Dry-run 不打开 HBM；实际加载会检查板卡身份与模型真实元数据。匹配的资产 ID 只是调用者声明了预期契约，不证明任意提供的字节属于已发布模型。本地编译产物同样需要完整元数据与数值验证；不能把测得的本地摘要写成发布方校验和。
+Dry-run 不打开 HBM；实际加载会检查板卡身份与模型真实元数据。匹配的资产 ID 声明预期契约；字节身份以发布校验和与加载检查为准。本地编译产物同样需要完整元数据与数值验证；本地摘要与发布方校验和分别记录。
 
 <a id="formats-checksums"></a>
 ## 格式与校验和
 
 HBM 契约为单个 float32 RGB NCHW `[1,3,256,512]` 输入，由 sample 完成 ImageNet 归一化。必需输出为 float32 `[1,3,256,512]` 嵌入张量，以及离散 int64 `[1,1,256,512]` 或 `[1,256,512]` 二值张量。Python 按 `instance_seg_logits`、`binary_seg_pred` 绑定，原生代码按唯一形状/类型绑定角色。额外观察到的输出原样保留，不依据源文案虚构第三个名称。
 
-下载器打印实际 SHA-256。清单没有发布方 SHA-256，因此它可用于跨主机跟踪字节身份，但不能独立认证下载内容。运行报告记录实际摘要供后续比较。本次主机迁移验证未下载模型，也未在板端加载模型。
+下载器打印实际 SHA-256。清单没有发布方 SHA-256，因此它可用于跨主机跟踪字节身份，但不能独立认证下载内容。运行报告记录实际摘要供后续比较。

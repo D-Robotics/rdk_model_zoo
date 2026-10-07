@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | `s:lanenet:s100/lanenet256x512.hbm` | S100 / nash-e | `s100/lanenet256x512.hbm` | Unknown |
 
-The authoritative URL and asset identity come from [the S release manifest](../../../../docs/release/s/models.yaml). This is the only published LaneNet artifact. S100P, S600 and X5 have no asset here; renaming or moving the S100 HBM does not add support. The original entry is retained under the source model directory (historical `../../../../platforms/s/samples/vision/lanenet/model` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
+The authoritative URL and asset identity come from [the S release manifest](../../../../docs/release/s/models.yaml). This is the only published LaneNet artifact. S100P, S600 and X5 have no asset here; renaming or moving the S100 HBM does not add support.
 
 <a id="preparation"></a>
 ## Explicit preparation
@@ -35,7 +35,7 @@ python3 -m samples.vision.lanenet.model.download --target s100 --output-dir /dat
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-No class-name file is required. The runtime needs the HBM and an image, with the source image available at [test_data/lane.jpg](../test_data/lane.jpg). The output is not a list of named classes or lane instances. [Conversion](../conversion/README.md) retains the compiler YAML and the historical checkpoint URL; the checkpoint alone is not a deployable model, and the source export script is missing.
+No class-name file is required. The runtime needs the HBM and an image, with the source image available at [test_data/lane.jpg](../test_data/lane.jpg). The output is not a list of named classes or lane instances. [Conversion](../conversion/README.md) provides the compiler YAML and the checkpoint URL; the checkpoint alone is not a deployable model, and building an ONNX from it requires the matching export code described there.
 
 <a id="local-paths"></a>
 ## Local paths and identity
@@ -53,4 +53,4 @@ Dry-run does not open the HBM. Real loading checks board identity and actual mod
 
 The HBM contract has one float32 RGB NCHW `[1,3,256,512]` input with ImageNet normalization performed by the sample. Required outputs are an embedding `[1,3,256,512]` float32 tensor and a discrete binary int64 tensor `[1,1,256,512]` or `[1,256,512]`. Python binds `instance_seg_logits` and `binary_seg_pred`; native code binds unique shape/type roles. Additional observed outputs are retained without inventing a third name from source prose.
 
-The downloader prints the observed SHA-256. Because the manifest has no publisher SHA-256, this can track byte identity across hosts but cannot independently authenticate the download. Runtime reports retain observed digests for later comparison. No model download or board loading was performed as part of the host migration validation.
+The downloader and runtime reports record the observed SHA-256. The publisher checksum is `null`; keep the observed digest when copying artifacts between hosts.

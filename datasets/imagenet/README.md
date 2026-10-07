@@ -1,16 +1,12 @@
 English | [简体中文](./README_cn.md)
 
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
-
-
 # ImageNet Dataset Resources
 
-**ImageNet ILSVRC-2012 (ImageNet-1k)** is the standard image-classification
-benchmark: 1,000 classes with about 1.28 million training and 50,000 validation
-images. Every classification sample in this repository reports its accuracy
-against this class set. This directory bundles the label list and one example
-image only; the dataset itself is **not included** and must be acquired
-manually under the official terms (the validation set requires registration).
+**ImageNet ILSVRC-2012 (ImageNet-1k)** is an image-classification dataset with
+1,000 classes, about 1.28 million training images and 50,000 validation images.
+Classification samples use this class order. This directory bundles the label
+list and one example image; acquire the dataset separately under the official
+terms (the validation set requires registration).
 
 <a id="files"></a>
 ## Bundled files
@@ -26,7 +22,7 @@ imagenet/
 
 ### imagenet_classes.names
 
-Verified from the file: a **Python dict literal** spanning all 1000 classes,
+The file is a **Python dict literal** spanning all 1000 classes,
 keys are the model output class indices 0–999 in the standard ILSVRC-2012
 order (index 0 = `tench, Tinca tinca`, index 999 = `toilet tissue, toilet
 paper, bathroom tissue`); each value is a comma-separated list of synonymous
@@ -56,14 +52,7 @@ consumer rows below.
 
 ### asset/zebra_cls.jpg
 
-One bundled zebra photo used as a smoke input for offline checks — it is **not**
-an accuracy statement and no model is guaranteed to classify it correctly. It
-is byte-identical to `samples/vision/resnet/test_data/zebra_cls.jpg` and
-`samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg`. Each sample guide
-records the expected class for its own verified models (for example, the
-MobileNetV3 S100/S600 record expects `zebra` in Top-5); when checking your
-model, compare against index 340, `zebra`, in this label file and against that
-model's own recorded evidence.
+The bundled zebra image is a classification example with ImageNet class index 340 (`zebra`). It is byte-identical to `samples/vision/resnet/test_data/zebra_cls.jpg` and `samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg`.
 
 <a id="usage"></a>
 ## Where these resources are used
@@ -101,8 +90,4 @@ Official sources — obtain access and use the data under their terms:
 <a id="provenance"></a>
 ## Provenance
 
-The X5 delivery branch (`ac11571`) and the S delivery line (`380e1a2`) carried
-the same pair of reference-only READMEs; this guide expands them with the
-verified file inventory, loader behavior and consumer map. Archived copies
-remain under `platforms/x5/datasets/imagenet/` and
-`platforms/s/datasets/imagenet/`.
+Dataset source: [ImageNet](https://image-net.org/). `imagenet_classes.names` maps model output indices to display names. Dataset scoring additionally requires an image-to-ground-truth-class mapping in the same 0–999 class order.

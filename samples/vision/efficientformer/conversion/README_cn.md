@@ -1,43 +1,46 @@
 # EfficientFormer 转换
 
-本目录是 rdk_x5 @ac11571 的原样交付：两份参考 PTQ YAML
+本目录提供转换资产：两份参考 PTQ YAML
 （`EfficientFormer_l1_config.yaml`、`EfficientFormer_l3_config.yaml`）。
-X5 源**未提供导出脚本和校准数据生成脚本**，因此这是参考配置，不是可
-复现流程；缺口列在[已知缺口](#known-gaps)。本次迁移未执行任何转换
-（未运行 OpenExplorer 环境）。
+编译前，按 YAML 指定路径准备模型 ONNX 图与校准数据，再使用下文 OE 命令。
 
 <a id="source-model"></a>
 ## 源模型
 
 EfficientFormer-L1 与 EfficientFormer-L3（论文 [EfficientFormer:
-ImageNet Transformers at MobileNet
-Speed](https://arxiv.org/abs/2206.00171)）。YAML 期望
-`./efficientformer_l1.onnx` / `./efficientformer_l3.onnx`，但源交付没有
-记录导出配方，也没有固定权重——ONNX 来源未经核实。
+Vision Transformers at MobileNet
+Speed](https://arxiv.org/abs/2206.01191)）。YAML 期望
+`./efficientformer_l1.onnx` / `./efficientformer_l3.onnx`；导出时按模型变体准备匹配权重，并将图保存至对应 YAML 路径。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
 模型转换在 x86 Linux 主机上的 RDK X5 OpenExplorer Docker 内执行
-（march `bayes-e`），从不在板卡上运行。源 README 指向通用 OE 流程
-（`hb_mapper checker` / `hb_mapper makertbin` / `hb_compile`）；离线
-Docker 镜像可从 D-Robotics 开发者论坛获取。
+（march `bayes-e`），从不在板卡上运行。请准备含 `hb_mapper`、
+`hb_perf`、`hrt_model_exec` 的工具链；离线
+Docker 镜像可从 D-Robotics 开发者论坛
+（[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
 
 <a id="export"></a>
 ## 导出
 
-本交付没有导出脚本。要重新生成 ONNX 输入，需自行复现上游
-EfficientFormer 导出；产物必须命名为 `efficientformer_l1.onnx` /
+使用上游 EfficientFormer 流程和 `timm` 导出 ONNX：
+
+1. 用 `timm.models.create_model` 创建目标 EfficientFormer 模型，如
+   `efficientformer_l1` 或 `efficientformer_l3`。
+2. 用 `torch.onnx.export` 导出模型。
+3. 用 `onnxsim.simplify` 化简 ONNX 模型。
+4. 在 OE 环境中编译化简后的 ONNX 模型（见"编译"）。
+
+产物必须命名为 `efficientformer_l1.onnx` /
 `efficientformer_l3.onnx` 并放在本目录（或修改 YAML 的 `onnx_model`）。
-该步骤在此未经验证。
 
 <a id="calibration"></a>
 ## 校准
 
-本交付没有校准数据生成脚本。YAML 期望 `./calibration_data_rgb_f32`
-（float32 RGB `.npy`）。等价数据必须遵循 YAML 数值（mean
-`123.675 116.28 103.53`、scale `0.01712475 0.017507 0.01742919`、
-224x224）；这是声明的要求，不是经验证的流水线。
+按 YAML 准备校准数据： `./calibration_data_rgb_f32`
+（float32 RGB `.npy`）。在 224x224 尺寸下按 YAML 数值处理数据：mean
+`123.675 116.28 103.53`、scale `0.01712475 0.017507 0.01742919`。
 
 <a id="compile"></a>
 ## 编译
@@ -46,7 +49,8 @@ EfficientFormer 导出；产物必须命名为 `efficientformer_l1.onnx` /
 
 ```bash
 # 输入：./efficientformer_l1.onnx + ./calibration_data_rgb_f32
-# 输出前缀：EfficientFormer_224x224_nv12（不含变体名——见缺口）
+# 输出前缀：EfficientFormer_224x224_nv12
+hb_mapper checker --config EfficientFormer_l1_config.yaml
 hb_mapper makertbin --config EfficientFormer_l1_config.yaml
 ```
 
@@ -58,34 +62,20 @@ hb_mapper makertbin --config EfficientFormer_l1_config.yaml
 <a id="validation"></a>
 ## 验证
 
-本交付没有 x86 参考脚本。功能检查走板上的统一运行时：
-`python3 samples/vision/efficientformer/runtime/python/main.py --target x5 --asset-id x5:efficientformer:EfficientFormer_l1_224x224_nv12.bin ...`
+使用 OE 包中的以下工具进行主机模型检查： `hb_perf` 与
+`hrt_model_exec`。板端功能检查走样例运行时：
+`python3 samples/vision/efficientformer/runtime/python/main.py --target x5 --asset-id x5:efficientformer:EfficientFormer_l1_224x224_nv12.bin...`
 （见 [runtime/python/README_cn.md](../runtime/python/README_cn.md)）。
-**本次迁移未运行：**未执行导出、校准或编译；此处的一致性结论是 YAML
-内容与文件名/前缀同 Manifest 吻合的静态交叉核对。
+运行时期望的输入张量为 NV12 打包前的 `1x3x224x224`，输出为
+ImageNet-1k 分类 logits。
 
 <a id="artifacts"></a>
-## 保留材料
+## 产物
 
-两份 YAML 按源 rdk_x5 @ac11571 原字节保留；其 SHA-256 由
-`tests/test_conversion_layout.py` 钉住，今后的任何改动都会被主机套件
-发现。
+使用 `EfficientFormer_l1_config.yaml` 或 `EfficientFormer_l3_config.yaml`
+及其匹配的 ONNX 图和校准目录。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
-按源交付原样保留：
-
-1. **无 ONNX 导出脚本。** `efficientformer_l1.onnx` 与
-   `efficientformer_l3.onnx` 都没有生成脚本、固定权重或成文导出配方。
-2. **无校准数据生成脚本。** `./calibration_data_rgb_f32` 在源树中没有
-   生成脚本。
-3. **输出前缀不含变体名。** 两份 YAML 的
-   `output_model_file_prefix` 都是 `'EfficientFormer_224x224_nv12'`（且
-   共用 `working_dir: 'EfficientFormer_224x224_nv12_int16'`），编译产物
-   不带 L1/L3 身份，在同一工作目录连续构建会互相覆盖。要复现 Manifest
-   制品，需把产出 `.bin` 改名为 Manifest 名称
-   （`EfficientFormer_l1_224x224_nv12.bin`、...）或先按变体改写前缀。
-4. **无固定编译命令。** 源 README 指向通用 OE 流程；产出已发布
-   `.bin` 的确切命令没有记录，复现未经核实。
-5. **本次迁移未执行转换。**
+从匹配的上游权重与导出流程准备 `efficientformer_l1.onnx` 或 `efficientformer_l3.onnx`。按所选 YAML 的 RGB/NCHW 归一化准备 `./calibration_data_rgb_f32`（mean `123.675 116.28 103.53`、scale `0.01712475 0.017507 0.01742919`）。两份 YAML 共用 `working_dir: 'EfficientFormer_224x224_nv12_int16'` 与 `output_model_file_prefix: 'EfficientFormer_224x224_nv12'`；每次在独立工作目录构建一个变体，并在部署前使用对应 Manifest 文件名。使用匹配 YAML 执行上文 OE 命令。

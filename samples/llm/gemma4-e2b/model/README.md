@@ -91,9 +91,9 @@ sha256sum "$GEMMA4_HOME"/model/*.hbm
 # S600 Text:    aab1831b1ea2b86763d5457890d89c55b684e4ba4834c1e008c668813d1cf646
 ```
 
-The four HBM hashes above are preserved from the README at pinned S source `380e1a2`; this migration did not download models to recompute them.
-The active release manifest still has `sha256: null`, so automatic downloader hash verification is not claimed.
+The four HBM hashes above are preserved from the S source release's README.
+The active release manifest records `sha256: null` for these files; the downloader prints the observed digest, which you can compare with the published digests above.
 HBM files are board models; `tok_embeddings.bin` is companion embedding data, not an X5 inference BIN.
 Downloads use a `.part` file renamed on completion; existing nonempty files are skipped.
 `GEMMA4_MODEL_BASE_URL`, `GEMMA4_COMMON_MODEL_BASE_URL` and `GEMMA4_TOKENIZER_BASE_URL` explicitly override the three sources.
-Downloading does not run quantization.
+For the model conversion/quantization workflow, see the [conversion guide](../conversion/README.md).

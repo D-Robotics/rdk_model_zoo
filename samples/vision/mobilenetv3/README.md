@@ -8,13 +8,8 @@ paper [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244). [中文说�
 
 ## Overview
 
-The maintained implementation is one Python flow (all targets). Python resolves one exact artifact reference from the platform
-release manifests, verifies the board identity, loads `hbm_runtime`
-lazily, and runs a `pre_process → forward → post_process` task
+The sample ships one Python runtime for all targets. The `MobileNetV3Classifier` class runs a `preprocess → infer → postprocess` flow chained by `predict`: it resolves one exact artifact reference from the platform release manifest for the detected board, verifies the board identity, loads `hbm_runtime` lazily, and returns a typed Top-K result
 ([runtime/python/README.md](runtime/python/README.md)).
-The former platform branch entries remain compatibility shims under
-`platforms/{x5,s}/` until the migration closeout; their audit record
-lives in the migration documents, not here.
 
 ### Algorithm background
 
@@ -26,7 +21,7 @@ non-linearity cheap on mobile hardware
 ([paper](https://arxiv.org/abs/1905.02244),
 [timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py)).
 
-Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+Feature summary:
 
 - **Depthwise separable convolution**: retains the efficient MobileNet convolution structure.
 - **Inverted residual blocks**: expansion–depthwise–projection blocks for efficient feature extraction.
@@ -35,9 +30,7 @@ Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
 
 ![MobileNetV3 block](./test_data/MobileNetV3_architecture.png)
 
-*MobileNetV3 block, restored from the X5 source release
-(`test_data/MobileNetV3_architecture.png`, rdk_x5 @ac11571, sha256
-`bc978181…`; Figure 4 of the paper): the inverted residual block with
+*MobileNetV3 block (Figure 4 of the paper): the inverted residual block with
 squeeze-and-excite applied on the residual path — after the NL depthwise
 3×3, a global pool plus FC-ReLU / FC-hard-sigmoid gate modulates the
 expanded channels, and the gated result passes through the final NL 1×1
@@ -48,16 +41,10 @@ projection (the non-linearity is chosen per layer).*
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | mobilenetv3 | python | supported-verified (x5 8GB + 4GB board smoke, 2026-09-21) |
-| s100 | mobilenetv3 | python | supported-verified (S100 board smoke, 2026-09-21) |
-| s600 | mobilenetv3 | python | supported-verified (S600 board smoke, 2026-09-21) |
-| s100p | any | python, cpp | not-supported (no s100p asset row in the release manifest; rejection verified on S100P hardware 2026-09-21 — explicit error, no fallback) |
-
-Source baselines: X5 rdk_x5 @ac11571 (x5-v1.1.3); S rdk_s @380e1a2 (s-v1.1.2). The unified sample's host
-tests all pass. Board smoke (2026-09-21) passed on x5 8GB/4GB and
-S100/S600 with outputs identical across boards and equal to the source
-implementations; S100P was verified as a rejection case only. Evidence:
-[B1 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json).
+| x5 | mobilenetv3 | python | supported |
+| s100 | mobilenetv3 | python | supported |
+| s600 | mobilenetv3 | python | supported |
+| s100p | any | python, cpp | not-supported (no s100p asset row in the release manifest; selection is an explicit error, no fallback) |
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -108,32 +95,25 @@ same root `datasets/imagenet/` labels. Full commands:
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; no output files are written unless `--img-save-path` is
-given. On X5 with the bundled `kit_fox.JPEG` the Top-1 matches the
+labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. On X5 with the bundled `kit_fox.JPEG` the Top-1 matches the
 image subject (a kit fox); on S100/S600 with `zebra_cls.jpg` the
-Top-5 includes `zebra`. A board that cannot be identified, or a target
-without a matching artifact, exits with an error instead of guessing.
+Top-5 includes `zebra`. Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
 <a id="performance"></a>
 ## Performance data
 
-Published MobileNetV3 performance on `RDK X5` from rdk_x5 @ac11571 (x5-v1.1.3):
+Published MobileNetV3 performance on `RDK X5` (x5-v1.1.3):
 
 | Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | MobileNetV3-Large | 224x224 | 1000 | 5.5 | 74.8% | 64.8% | 2.02 | 714+ |
 
-The S-series source release (rdk_s @380e1a2 (s-v1.1.2)) published no latency or accuracy
-figures for this model; none are inferred here.
 
 ![Inference result](./test_data/inference.png)
 
-*Historical inference screenshot from the X5 source release
-(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `03b15192…`): the
+*Reference inference result from the X5 release: the
 bundled [kit_fox.JPEG](test_data/kit_fox.JPEG) ranks `kit fox` first,
-followed by red fox, grey fox, lion, and lynx/catamount. Recorded by the
-source release on its own runtime entry — not a new run of this
-repository.*
+followed by red fox, grey fox, lion, and lynx/catamount.*
 
 <a id="directory"></a>
 ## Directory

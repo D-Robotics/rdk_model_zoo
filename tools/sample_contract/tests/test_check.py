@@ -41,6 +41,21 @@ def load_check():
 CHECK = load_check()
 
 
+def run_link_check(content: str, anchor_ids: frozenset[str] = frozenset()):
+    """Write one temporary README and run the real check_links on it.
+
+    Returns the findings; temp documents keep the regression fixtures for
+    the fenced-code rule out of the committed fixture tree.
+    """
+
+    report = CHECK.SampleReport(path="(temporary readme)")
+    with tempfile.TemporaryDirectory() as tmp:
+        readme = Path(tmp) / "README.md"
+        readme.write_text(content, encoding="utf-8")
+        CHECK.check_links(report, readme, set(anchor_ids))
+    return report.findings
+
+
 def run_fixture(name: str, *extra: str):
     """Run check.main against one fixture; return (exit code, stdout)."""
 
@@ -120,6 +135,139 @@ class BrokenLinkTests(unittest.TestCase):
     def test_external_links_are_out_of_scope(self):
         _, output = run_fixture("bad_links")
         self.assertNotIn("example.com", output)
+
+
+class FencedCodeLinkTests(unittest.TestCase):
+    # Rendered Markdown shows fenced code verbatim: a link-shaped snippet
+    # such as YOLOv5's ``[i](x[i])`` indexing inside a fence is source
+    # text, not a hyperlink.  check_links must therefore scan only the
+    # prose outside fences — while real broken links before/after a fence
+    # keep failing at their exact original line numbers.
+
+    def test_yolov5_indexing_inside_python_fence_is_not_a_link(self):
+        # Reproduces samples/vision/yolov5/conversion/README.md:46 (and
+        # README_cn.md): 2 false "x[i]" findings from the fenced snippet.
+        content = (
+            "# temporary fenced README\n"
+            "\n"
+            "<a id=\"overview\"></a>\n"
+            "\n"
+            "Valid [fragment](#overview) link.\n"
+            "\n"
+            "```python\n"
+            "def forward(self, x):\n"
+            "    return [self.m[i](x[i]).permute(0, 2, 3, 1).contiguous()"
+            " for i in range(self.nl)]\n"
+            "```\n"
+        )
+        self.assertEqual(
+            [f.message for f in run_link_check(content, {"overview"})], [])
+
+    def test_broken_links_before_and_after_fence_fail_with_exact_lines(self):
+        content = (
+            "# temporary fenced README\n"                       # 1
+            "\n"                                                # 2
+            "<a id=\"overview\"></a>\n"                         # 3
+            "\n"                                                # 4
+            "Broken [model guide](model/README.md) before.\n"   # 5
+            "\n"                                                # 6
+            "```python\n"                                       # 7
+            "def forward(self, x):\n"                           # 8
+            "    return [self.m[i](x[i]).permute(0, 2, 3, 1)"
+            ".contiguous() for i in range(self.nl)]\n"          # 9
+            "```\n"                                             # 10
+            "\n"                                                # 11
+            "Broken ![photo](test_data/missing.png) and the\n"  # 12
+            "[broken fragment](#no-such-anchor) after.\n"       # 13
+        )
+        findings = run_link_check(content, {"overview"})
+        by_line = {f.line: f.message for f in findings}
+        self.assertEqual(sorted(by_line), [5, 12, 13])
+        self.assertIn("model/README.md", by_line[5])
+        self.assertIn("test_data/missing.png", by_line[12])
+        self.assertIn("#no-such-anchor", by_line[13])
+
+    def test_tilde_fence_ignores_content_and_backticks_do_not_close_it(self):
+        content = (
+            "# temporary tilde README\n"                                  # 1
+            "\n"                                                          # 2
+            "Broken [guide](no/such.md) before the tilde fence.\n"        # 3
+            "\n"                                                          # 4
+            "~~~bash [i](tilde.md)\n"                                     # 5
+            "run [fenced](fenced.md) with ```bash markers\n"              # 6
+            "```bash\n"                                                   # 7
+            "wget [x](y.md)\n"                                            # 8
+            "~~~\n"                                                       # 9
+            "\n"                                                          # 10
+            "Broken [after](also-missing.md) after the tilde fence.\n"    # 11
+        )
+        findings = run_link_check(content)
+        by_line = {f.line: f.message for f in findings}
+        self.assertEqual(sorted(by_line), [3, 11])
+        self.assertIn("no/such.md", by_line[3])
+        self.assertIn("also-missing.md", by_line[11])
+
+    def test_shorter_backtick_fence_does_not_close_longer_fence(self):
+        content = (
+            "# temporary longer-fence README\n"                   # 1
+            "\n"                                                  # 2
+            "````markdown\n"                                      # 3
+            "```python\n"                                         # 4
+            "[inner](not-a-link.md)\n"                            # 5
+            "```\n"                                               # 6
+            "still fenced [content](fenced-too.md)\n"             # 7
+            "````\n"                                              # 8
+            "\n"                                                  # 9
+            "Broken [after](missing.md) outside.\n"               # 10
+        )
+        findings = run_link_check(content)
+        by_line = {f.line: f.message for f in findings}
+        self.assertEqual(sorted(by_line), [10])
+        self.assertIn("missing.md", by_line[10])
+
+    def test_closing_fence_with_info_string_does_not_close(self):
+        content = (
+            "# temporary info-closer README\n"                     # 1
+            "\n"                                                   # 2
+            "```text\n"                                            # 3
+            "```python [hidden](not-a-link.md)\n"                  # 4
+            "```\n"                                                # 5
+            "\n"                                                   # 6
+            "Broken [after](missing.md) outside.\n"                # 7
+        )
+        findings = run_link_check(content)
+        by_line = {f.line: f.message for f in findings}
+        self.assertEqual(sorted(by_line), [7])
+        self.assertIn("missing.md", by_line[7])
+
+    def test_fence_indented_up_to_three_spaces_is_a_fence(self):
+        content = (
+            "# temporary indented README\n"             # 1
+            "\n"                                        # 2
+            "   ```python\n"                            # 3
+            "   [i](x[i]) code line\n"                  # 4
+            "   ```\n"                                  # 5
+            "\n"                                        # 6
+            "Broken [after](missing.md) outside.\n"     # 7
+        )
+        findings = run_link_check(content)
+        by_line = {f.line: f.message for f in findings}
+        self.assertEqual(sorted(by_line), [7])
+        self.assertIn("missing.md", by_line[7])
+
+    def test_unterminated_fence_masks_to_end_of_document(self):
+        content = (
+            "# temporary unterminated README\n"              # 1
+            "\n"                                             # 2
+            "Broken [before](gone.md) before the fence.\n"   # 3
+            "\n"                                             # 4
+            "```python\n"                                    # 5
+            "[never closed](fenced.md) trailing content\n"   # 6
+        )
+        findings = run_link_check(content)
+        by_line = {f.line: f.message for f in findings}
+        self.assertEqual(sorted(by_line), [3])
+        self.assertIn("gone.md", by_line[3])
 
 
 class CliDriftTests(unittest.TestCase):

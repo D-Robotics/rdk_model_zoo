@@ -3,6 +3,7 @@
 """Execute the exact bilingual importlib API and parse documented commands."""
 import contextlib
 import importlib
+import importlib.util
 import io
 from pathlib import Path
 import re
@@ -12,6 +13,16 @@ from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
 from unittest.mock import patch
 import numpy as np
 from test_3dresnet import SAMPLE, FakeRuntime, local_module
+
+
+def comparison_fixture():
+    """Load the test-only parity recipe removed from the customer-facing README."""
+    path=Path(__file__).resolve().parent/'fixtures/migration_comparison.py'
+    spec=importlib.util.spec_from_file_location('migration_comparison_3dresnet',path)
+    assert spec is not None and spec.loader is not None
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class ReadmeTests(unittest.TestCase):
@@ -78,7 +89,11 @@ class ReadmeTests(unittest.TestCase):
                     count+=1
             self.assertGreaterEqual(count,8)
 
-    def test_board_recipe_keeps_evidence_and_never_auto_accepts_tied_ids(self):
+    def test_migration_comparison_fixture_keeps_evidence_and_never_auto_accepts_tied_ids(self):
+        """Test-only source-parity check, not documented usage: execute the
+        legacy/unified comparison recipe preserved verbatim in
+        tests/fixtures/migration_comparison.py (the heredoc the customer-facing
+        evaluator rewrite removed) under a fake SDK and temporary repository."""
         import json
         import os
         import shutil
@@ -88,10 +103,11 @@ class ReadmeTests(unittest.TestCase):
         from test_3dresnet import ROOT
         runner_mod=local_module('model_runner')
         original=runner_mod.RuntimeModelRunner
-        for filename, tied in [('README.md',False),('README_cn.md',True)]:
-            text=(SAMPLE/'evaluator'/filename).read_text()
-            snippets=re.findall(r"python3 - <<'PY'\n(.*?)\nPY\n",text,re.S)
-            self.assertEqual(len(snippets),1)
+        fixture=comparison_fixture()
+        for variant, tied in [('README_MD',False),('README_CN_MD',True)]:
+            snippet=getattr(fixture,variant)
+            self.assertTrue(snippet.strip(),variant)
+            filename=f'fixtures/migration_comparison.py:{variant}'
             with tempfile.TemporaryDirectory() as directory:
                 repo=Path(directory)
                 fixtures=['samples/vision/3dresnet/test_data/video0.npy',
@@ -138,9 +154,9 @@ class ReadmeTests(unittest.TestCase):
                     try:
                         if tied:
                             with self.assertRaisesRegex(AssertionError,'No automatic tie exemption'):
-                                exec(compile(snippets[0],filename,'exec'),{})
+                                exec(compile(snippet,filename,'exec'),{})
                         else:
-                            exec(compile(snippets[0],filename,'exec'),{})
+                            exec(compile(snippet,filename,'exec'),{})
                     finally:
                         fake_source=str(repo/'platforms/s')
                         if fake_source in sys.path:sys.path.remove(fake_source)

@@ -65,7 +65,7 @@ The two inspection modes are mutually exclusive. Additional display files must b
 
 Do not interpret NPZ keys as semantic output names: use the recorded map. Additional observed tensors remain raw even when the task does not consume them. The source prose's third output is unnamed and no third identity is invented here.
 
-The display clips embeddings to [0,1], multiplies by 255, uses nearest ties-to-even rounding and preserves channel order. Source Python instead multiplied and cast to uint8, which truncated or wrapped out-of-range values. This intentional display change does not change `embedding.npy`. Binary labels outside 0/1 are rejected rather than displayed as plausible masks. Results stay at 256×512; no original-resolution interpolation or lane fitting occurs.
+The display renders the embedding as a color image: values are clipped to [0,1], multiplied by 255, rounded with nearest ties-to-even and kept in channel order; `embedding.npy` is unaffected. Binary labels outside 0/1 are rejected rather than displayed as plausible masks. Results stay at 256×512; no original-resolution interpolation or lane fitting occurs.
 
 <a id="integration-example"></a>
 ## Application integration
@@ -125,6 +125,6 @@ Binding requires one model, one float32 `[1,3,256,512]` input, `instance_seg_log
 - Identity rejection: verify the physical board. S100P/S600 names are not interchangeable with S100.
 - Metadata mismatch: retain actual names/shapes/dtypes; do not bypass validation by renaming a tensor without establishing semantics.
 - Invalid image or existing output path: choose a decodable image and a new output directory. A partial IO failure can leave an incomplete directory; inspect the error before reusing results.
-- Unexpected colors: inspect raw embeddings separately; no instance clustering is implemented.
+- Unexpected colors: inspect the raw embeddings separately; the colored render is a semantic lane-segmentation view without instance IDs.
 
-Host tests cover source preprocessing, binding, raw ownership, labels, displays and the actual CLI using a fake SDK. Board inference, real SDK compatibility, dataset accuracy and latency remain **not-run**. See [evaluation boundaries](../../evaluator/README.md) before reporting accuracy or equivalence.
+Host tests cover source preprocessing, binding, raw ownership, labels, displays and the actual CLI using a fake SDK; board inference requires the S100 board SDK. See [evaluation boundaries](../../evaluator/README.md) before reporting accuracy or equivalence.

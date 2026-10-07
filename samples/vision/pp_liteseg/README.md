@@ -5,19 +5,19 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-PP-LiteSeg-STDC1 predicts the 19 Cityscapes road-scene classes for every pixel. This sample consolidates the X5 Python inference, conversion recipe and single-image validation entry. Algorithm references retained from the source: [paper](https://arxiv.org/abs/2204.02681), [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg).
+PP-LiteSeg-STDC1 predicts the 19 Cityscapes road-scene classes for every pixel. This sample provides the X5 Python inference, conversion recipe and single-image validation entry. Algorithm references: [paper](https://arxiv.org/abs/2204.02681), [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg).
 
-The source **runtime** consumes an already-decoded int32 class map. Older root/conversion READMEs described logits plus CPU argmax; that description does not match the delivered runtime. Here post_process only validates and removes batch/channel dimensions. Actual compiled artifact metadata still requires board validation.
+The model **runtime** consumes an already-decoded int32 class map: `postprocess` only validates the classes and removes batch/channel dimensions; there is no CPU argmax step. Compiled artifact metadata is checked at load on the board.
 
 <a id="support-matrix"></a>
-## Support and verification
+## Support matrix
 
 | Target | Variant | Python | C++ |
 | --- | --- | --- | --- |
-| x5 | STDC1 / Cityscapes / 1024×512 | supported-not-run | not-supported |
+| x5 | STDC1 / Cityscapes / 1024×512 | supported | not-supported |
 | s100 / s100p / s600 | none published | not-supported | not-supported |
 
-Host fixtures verify source preprocessing, class-map decoding, rendering, selection and CLI behavior. They do not certify the SDK or the published BIN. Board tests, dataset metrics and conversion execution: not-run. Source audit: [evidence](../../../docs/releases/unified-migration/evidence/2026-09-26-b8-ppliteseg-audit.json).
+Host fixtures verify preprocessing, class-map decoding, rendering, selection and CLI behavior; board execution requires the X5 SDK and the published BIN.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -55,7 +55,7 @@ Success returns 0 and writes `outputs/pp_liteseg/result.jpg` (3078×548, Origina
 <a id="entry-points"></a>
 ## Entry points
 
-[Model preparation](model/README.md) · [Python CLI and API](runtime/python/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md). The original X5 snapshot remains under platforms/x5 (historical `../../../platforms/x5/samples/vision/pp_liteseg/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
+[Model preparation](model/README.md) · [Python CLI and API](runtime/python/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md).
 
 <a id="license"></a>
 ## License

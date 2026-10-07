@@ -4,16 +4,16 @@ English | [简体中文](README_cn.md)
 
 <a id="dataset"></a>
 ## Dataset
-This evaluator scores previously saved reference/hypothesis pairs. No labeled corpus is supplied and no dataset accuracy was measured. Use unique utterance IDs and preserve your dataset version, split, license and model/decoder provenance. Runtime chunk reports are not labeled prediction datasets: align their full transcripts with independent references before constructing the input schema below.
+This evaluator computes character error rate from saved reference/hypothesis pairs. Use unique utterance IDs and preserve the dataset version, split, license, model and decoder metadata. For chunked runtime output, assemble each full transcript and pair it with its independent reference before adding the record.
 
 <a id="environment"></a>
 ## Environment
-Python 3.10+ standard library only; no board, SDK, NumPy or model download. The evaluator performs no inference. Supplied provenance is retained but is not independently authenticated.
+Python 3.10+ standard library only. The evaluator reads transcript JSON and writes metrics without model inference; the supplied provenance object is copied to the report.
 
 <a id="command"></a>
 ## Command
 ```bash
-# cwd: repository root; synthetic example, not model predictions
+# Repository root; example input with two transcript records.
 asr_eval_dir=$(mktemp -d)
 cat > "$asr_eval_dir/transcripts.json" <<'JSON'
 {
@@ -36,18 +36,18 @@ Character error rate is `(substitutions + deletions + insertions) / total refere
 
 <a id="outputs"></a>
 ## Outputs
-The exclusive output JSON uses `rdk-model-zoo/asr-metrics/v1` and includes `count`, `reference_characters`, `exact_matches`, `cer`, aggregate `errors`, per-utterance `utterances`, normalization policy, input SHA-256 and unchanged provenance. `inference_executed` and `provenance_independently_verified` are false. Exit 0 means scoring succeeded, not recognition passed; malformed input or an existing output returns 2.
+The exclusive output JSON uses `rdk-model-zoo/asr-metrics/v1` and includes `count`, `reference_characters`, `exact_matches`, `cer`, aggregate `errors`, per-utterance `utterances`, normalization policy, input SHA-256 and unchanged provenance. The schema records `inference_executed=false` and `provenance_independently_verified=false`. Exit 0 means the input was scored and the report was written; malformed input or an existing output returns 2.
 
 <a id="reference-results"></a>
 ## Reference results
-The S source records S100 `hrt_model_exec perf --model_file asr.hbm --frame_count 100`: 100 frames, 34.426 ms average latency and 29.008 FPS. These are historical model-execution figures, not migrated end-to-end audio latency, not S600 results and not newly reproduced measurements. SDK/toolchain/model digest details are incomplete in the source.
+The S source records this S100 command: `hrt_model_exec perf --model_file asr.hbm --frame_count 100`. It reports 100 frames, 34.426 ms average latency and 29.008 FPS for model execution; these figures are not end-to-end audio latency.
 
-![Historical performance](../test_data/readme_img/perf.jpg)
-![Historical transcription](../test_data/readme_img/print.jpg)
-![Historical quantization comparison](../test_data/readme_img/acc.jpg)
+![Reference performance](../test_data/readme_img/perf.jpg)
+![Reference transcription](../test_data/readme_img/print.jpg)
+![Reference quantization comparison](../test_data/readme_img/acc.jpg)
 
-The accuracy illustration concerns a historical quantization comparison, not corpus CER. The source's “first three seconds” description is corrected: the bundled 4.59-second file is processed as three independent windows in the canonical runtime. Host tests and numerical frontend comparisons are tracked in [migration evidence](../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-core/); no real model transcript is inferred from fake SDK outputs.
+The figures show model-execution performance, a transcription example and a quantization comparison. The bundled 4.59-second WAV is processed as three independent windows. For corpus CER, align full-file transcripts with independent utterance references using the schema above.
 
 <a id="boundaries"></a>
 ## Boundaries
-CTC and legacy must be reported separately because they can decode the same logits differently. Chunking, resampling and final padding also affect transcription. Offline scoring cannot establish runtime correctness, quantization equivalence, model accuracy without authentic predictions, or latency. Board/model execution, OE conversion and corpus evaluation remain not-run.
+CTC and legacy decode the same logits differently, so report their results separately. Chunking, resampling and final padding affect transcription. For system comparisons, use complete transcripts with matched references and record the target, model, decoder, dataset split and runtime configuration.

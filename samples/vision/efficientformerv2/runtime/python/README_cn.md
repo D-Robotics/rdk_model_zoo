@@ -64,7 +64,7 @@ python3 samples/vision/efficientformerv2/runtime/python/main.py \
 | `--list-models` | flag | false | 不接触板卡列出 Manifest 支持的引用 |
 | `--dry-run` | flag | false | 不加载模型与 SDK 解析/检查选择 |
 
-以上默认值由 Q3 检查器对照 `build_parser()` 机器核对。
+以上默认值即 [`cli.py`](cli.py) 中 `build_parser` 定义的值。
 
 <a id="results"></a>
 ## 结果
@@ -74,7 +74,7 @@ python3 samples/vision/efficientformerv2/runtime/python/main.py \
 `--img-save-path` 时写标注图。X5 侧以规范化的 flat 1-D uint8 数组
 （`H*W*3/2` 字节，224x224 → 75,264 字节）接收 packed NV12 缓冲。已发布
 制品返回 raw logits；任务在 Top-K 前施加稳定 softmax。缺省 resize 为
-letterbox（类型 1）加线性插值，与源预处理一致。输出形状遵循 rank 规则：
+letterbox（类型 1）加线性插值，与模型参考预处理一致。输出形状遵循 rank 规则：
 任何可 squeeze 到 `(1000,)` 的单例批次/空间拼写均可绑定（已发布制品声明
 `raw_f32` 变换；量化制品需要显式 `dequant` 契约）。
 
@@ -101,8 +101,7 @@ print(result.class_ids, result.scores, result.labels)
 `predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，且绝不原地修改
 数组。三个阶段也可以显式驱动：`prepared = model.preprocess(source)`、
 `outputs = model.infer(prepared)`、`result = model.postprocess(outputs)`
-——`predict` 恰好串联这些步骤（由入口行为测试验证）。既有的
-`pre_process` / `forward` / `post_process` 拼写保持为薄别名，共享的
+——`predict` 恰好串联这些步骤。共享的
 `ClassificationTask` 流程仍可从 [`classification.py`](classification.py)
 导入。
 
@@ -121,11 +120,10 @@ print(result.class_ids, result.scores, result.labels)
 
 | 症状 | 检查 |
 | --- | --- |
-| `Cannot identify this board` | 先用显式 target 做 dry-run，再只在该匹配板卡上执行；显式 target 不是硬件证据。 |
+| `Cannot identify this board` | 按支持矩阵选择目标，并在匹配的板卡上运行推理。 |
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用；不要使用裸文件名。 |
-| S 目标的 `No published ... asset` | S Manifest 没有 EfficientFormerV2 行；本 sample 是发布意义上的 X5-only，不是遗漏。 |
 | 输入形状或 dtype 不匹配 | 核对制品引用与运行时 metadata；不得跨平台复用 X5 制品。 |
-| 输出与 legacy 运行不一致 | 先在同一制品、图像、resize 模式、Top-K 和原始输出上对照，再考虑分数语义。 |
+| 输出与参考运行不一致 | 先在同一制品、图像、resize 模式、Top-K 和原始输出上对照，再考虑分数语义。 |
 
 主机检查（仓库根目录）：
 `python3 -m unittest discover -s samples/vision/efficientformerv2/tests -v`。

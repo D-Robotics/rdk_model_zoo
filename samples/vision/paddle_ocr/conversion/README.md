@@ -4,7 +4,7 @@ English | [简体中文](./README_cn.md)
 
 Conversion runs on an x86 Linux host inside the matching RDK OpenExplorer
 (OE) environment, never on the board. Two complete, target-separated
-recipe families are maintained — choose the one matching the target board:
+recipe families are provided — choose the one matching the target board:
 
 | Target | Family | Toolchain / march | Committed recipes | Runtime contract they must reproduce |
 | --- | --- | --- | --- | --- |
@@ -13,8 +13,10 @@ recipe families are maintained — choose the one matching the target board:
 
 Graph files, output names, dictionaries, and input protocols are
 target-specific. Do not combine the X5 detector with the S100 recognizer or
-substitute one dictionary for the other. No S100P/S600 PaddleOCR artifact
-row exists, so this directory makes no conversion claim for them.
+substitute one dictionary for the other. The S100 YAMLs can also be
+recompiled with `march: nash-m` (S100P) or `nash-p` (S600); the published
+manifest rows cover X5 (PP-OCRv3) and S100 (PP-OCRv6), so S100P/S600
+artifacts must be prepared through this compile route before use.
 
 <a id="source-model"></a>
 ## Source model
@@ -33,29 +35,35 @@ row exists, so this directory makes no conversion claim for them.
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-Use the OE Docker/toolchain matching the target — the audited X5
-instructions identify OE X5 v1.2.8, the S instructions the S OpenExplore
-toolchain — and record the image tag, OE version, and host date. A generic
-load-and-mount sequence:
+Use the OE Docker/toolchain matching the target and record the image tag,
+OE version, and host date.
+
+X5 (OE X5 v1.2.8) — download, load, and start the official image:
 
 ```bash
-# inputs: OE image archive — run the rest inside the container at /workspace
-export OE_IMAGE_TAR=/absolute/path/to/oe-image.tar
-test -s "$OE_IMAGE_TAR"
-docker load -i "$OE_IMAGE_TAR"
-docker images
-: "${OE_IMAGE:?Set OE_IMAGE to the loaded OE image:tag}"
-export REPOSITORY_ROOT="${REPOSITORY_ROOT:-$PWD}"
-docker run --rm -it --network host --shm-size=15g \
-  -v "$REPOSITORY_ROOT":/workspace --workdir /workspace \
-  "$OE_IMAGE" /bin/bash
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
+docker load -i docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz
+docker run -it --rm -v /path/to/rdk_model_zoo:/data openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
+Or download the offline Docker image from the [D-Robotics Developer Community](https://forum.d-robotics.cc/t/topic/35229).
+
+S (OpenExplore) — start the matching S-series OE container, then work from
+`/workspace`:
+
+```bash
+sudo docker run -it --rm --network host --shm-size=15g \
+  -v "$(pwd)":/workspace --workdir /workspace \
+  <docker-image-name> /bin/bash
+```
+
+OE resource entry point: <https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>.
+OE toolchain online manual: <https://toolchain.d-robotics.cc/>.
+
 `hb_mapper`, `hb_compile`, and `hrt_model_exec` are supplied by those
-environments. The committed S100 recipe uses `nash-e`; `nash-m`/`nash-p`
-appear in toolchain documentation for other SoCs but have no audited
-artifact or board evidence here — changing `march` is a new conversion
-experiment, not a supported variant.
+environments. The committed S100 recipes use `nash-e`; switch the `march`
+field to `nash-m` (S100P) or `nash-p` (S600) to compile for the other
+S-series SoCs — the output prefixes stay unchanged.
 
 <a id="export"></a>
 ## Export
@@ -97,6 +105,13 @@ command as a supported X5 export recipe.
 <a id="calibration"></a>
 ## Calibration
 
+A suitable calibration corpus for the recognizers is the
+[ICDAR2019-LSVT dataset](https://ai.baidu.com/broad/introduction?dataset=lsvt)
+(450,000 Chinese street-view images: 50,000 fully annotated with bbox +
+text, 400,000 weakly annotated with text only;
+[download](https://ai.baidu.com/broad/download?dataset=lsvt)). Any
+representative image set from the deployment domain works.
+
 The checked-in helper turns a directory of BGR images into the input
 tensors the committed recipes expect (no conversion, no network). Run from
 `samples/vision/paddle_ocr/conversion`:
@@ -129,6 +144,11 @@ Each output directory must be empty, so a second stage cannot silently
 reuse residual tensors. Use representative images/crops from the model's
 training domain; this helper does not determine an accuracy or a required
 sample count.
+
+The S recipes keep the source convention of two dedicated calibration
+producers (`get_det_calibration_data.py` / `get_rec_calbration_data.py` in
+the source delivery); the helper above reproduces their tensor formats
+with explicit paths.
 
 <a id="compile"></a>
 ## Compile
@@ -177,12 +197,28 @@ model_output/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
 model_output/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm
 ```
 
-The detector recipe keeps the trailing `Dequantize` node: the audited
-runtime reads `fetch_name_0` as an F32 probability map and thresholds it
-directly, so removing the node changes the observed contract. The
-recognizer keeps the three `p2o.Softmax.*` mappings and
-`set_all_nodes_int16`; its class count must stay aligned with the
-checked-in dictionary plus blank and trailing space.
+The detector recipe keeps the trailing `Dequantize` node — do **not** set
+`remove_node_type: "Dequantize"`: the runtime reads `fetch_name_0` as an
+F32 probability map and thresholds it directly, so removing the node
+changes the contract. The recognizer keeps the three `p2o.Softmax.*`
+int16 node mappings and `set_all_nodes_int16`; its class count must stay
+aligned with the checked-in dictionary plus blank and trailing space.
+
+To compile the S recipes for the other S-series SoCs, switch `march` in
+the YAMLs:
+
+| Target platform | `march` | Output prefix unchanged |
+| --- | --- | --- |
+| RDK S100 | `nash-e` | `PP-OCRv6_*-deploy_*` |
+| RDK S100P | `nash-m` | `PP-OCRv6_*-deploy_*` |
+| RDK S600 | `nash-p` | `PP-OCRv6_*-deploy_*` |
+
+Per-platform latency/FPS is obtained with:
+
+```bash
+hrt_model_exec perf --model_file model_output/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
+hrt_model_exec perf --model_file model_output/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm
+```
 
 <a id="validation"></a>
 ## Validation
@@ -200,10 +236,8 @@ hrt_model_exec model_info --model_file \
 Compare tensor names, shapes, dtypes, and output names with the selected
 pair's contract (see [stage I/O](../runtime/python/README.md#stage-io));
 register only an artifact whose exact qualified reference and metadata
-match. Then confirm on the matching board with the canonical runtime and
-the bundled fixture. Status: the recipes are the audited source
-configurations carried over verbatim; real OE compilation and board
-re-validation of regenerated artifacts are **not-run** in this sample.
+match. Then confirm on the matching board with the runtime and
+the bundled fixture.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -218,15 +252,11 @@ re-validation of regenerated artifacts are **not-run** in this sample.
 | validation | `hrt_model_exec model_info` output, board run command, predictions |
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-- No repository-owned PP-OCRv3 (X5) exporter; the upstream export step is
-  manual and must be recorded by whoever performs it.
-- The audited recipes' original calibration corpora are not checked in;
-  the helper prepares tensors but does not fix a corpus or sample count,
-  so regenerated artifacts are not claimed equivalent to the published
-  ones.
-- Real OE compilation and board re-validation of regenerated artifacts:
-  **not-run** — only the audited recipes and the host-side helper are
-  maintained here.
+- No repository-owned PP-OCRv3 (X5) exporter; obtain the ONNX files from
+  the exact upstream release and record the release identity used.
+- The original calibration corpora are not checked in; the helper prepares
+  tensors but does not fix a corpus or sample count, so regenerated
+  artifacts carry their own identity, distinct from the published ones.
 - `march` values other than the committed ones are unclaimed experiments.

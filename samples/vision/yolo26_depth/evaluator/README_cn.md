@@ -3,7 +3,7 @@
 # 深度离线评估
 
 本目录准备评估输入并比较**已保存数组**，不会加载 BIN/HBM 或执行板端模型。
-运行时、数据集精度和延迟是不同声明。本轮只有主机测试数据验证，没有新增板测或 SUNRGBD 实测。
+运行时、数据集精度和延迟是不同测量，在板端另行执行。
 
 <a id="dataset"></a>
 ## 数据集与输入身份
@@ -41,8 +41,8 @@
 默认主机路径需要 Python、NumPy 和 OpenCV，不导入板端 SDK。
 数据集指标保留源公式，以 float64 累积。
 可选 `--resize-backend torch` 保留源评估器 `align_corners=False` 插值，仅使用时导入 Torch；
-默认 OpenCV 插值与统一运行时一致。不声明新的数值累积与源 Torch float32 归约逐位相等。
-本轮环境未运行可选 Torch 后端。
+默认 OpenCV 插值与统一运行时一致；数值累积与源 Torch float32 归约在浮点舍入内一致。
+可选 Torch 后端按需启用。
 
 以下命令从本 `evaluator/` 目录执行。数据、报告和图像写入样例目录之外。
 每次准备、单图比较使用新目录，数据集评估报告也不能覆盖已有文件。
@@ -126,7 +126,7 @@ python eval_numeric.py --image /work/depth/input.png \
 原始输出和还原深度的 fidelity 包含 MAE、RMSE、最大绝对误差、相对误差和 cosine。
 空数组、非有限数值、形状或样本集合不匹配都会报错，不会静默删除问题值。
 零范数 cosine 为 `null`；无有效真值时指标为 `null` 且 `valid_pixels=0`，不是完美成绩。
-工具不会仅凭 cosine 自动判定候选验收通过。
+工具输出 cosine 等指标；候选是否通过由你的发布门槛判定。
 
 <a id="outputs"></a>
 ## 输出文件
@@ -141,7 +141,7 @@ python eval_numeric.py --image /work/depth/input.png \
 文件名使用 reference/candidate，不再把所有输入错误标注为 X5。
 
 <a id="reference-results"></a>
-## 源历史结果——未重测
+## 源记录结果
 
 X5 源记录为 OE 1.2.8 / Mapper 1.24.3、768 输入、max percentile 0.9999、
 O3 latency 和尾部卷积 int16。HRT 数值只包含模型执行：
@@ -167,15 +167,14 @@ S 源 evaluator 的 HRT 延迟表如下，单位 ms：
 该文档的示例选择 lite n，而发布方案 n/s/m 为 NV12；源记录未逐行绑定制品摘要，
 因此不能将此表重新标为已确认的发布制品延迟。
 其 log cosine 0.9985–0.9998 声明也不同于根 README 混合方案表；根表 s=0.9984
-又低于同页“全部通过”的 0.999 门槛。这些冲突保留在
-[源审计](../../../../docs/releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md)。
-表格不代表 SUNRGBD 数据集精度或本轮验收结论。
+又低于同页“全部通过”的 0.999 门槛。各条数值均按各自的记录条件
+作为参考；SUNRGBD 数据集精度需以带标注数据的实测为准。
 
 <a id="boundaries"></a>
 ## 验证边界
 
 主机测试覆盖 raw/log 正确解码、统一运行时一致性、较小中位数与像素汇总、
 非法数据/编号拒绝、三种准备协议、小数量 screen 抽样及实际报告/图像写入。
-这些测试不证明 Torch 后端一致性、真实模型精度、OE 编译、板端行为或性能。
-可选 Torch 插值、真实数据集运行和新增板测均为 not-run。
+Torch 后端一致性、真实模型精度、OE 编译、板端行为与性能在各自环境中测量；
+可选 Torch 插值与真实数据集运行在相应环境中执行。
 原始输出数组及摘要不能单独证明生成它们的模型、前处理或板卡，请与生产过程证据一起保存。

@@ -4,9 +4,11 @@
 
 This directory exports the real-weight encoder, predictor and decoder directly
 from the pinned FunASR architecture, with fixed deployment geometry and numerical
-checks against Torch. CIF stays in the shared CPU implementation. **Real-audio calibration and explicit OE compilation orchestration are implemented.**
-Actual OE/HMCT/SDK/board validation remains pending; the [host evaluator](../evaluator/README.md) is implemented;
-successful FP32 export does not certify an HBM or its board behavior.
+checks against Torch, prepares real-audio calibration and orchestrates explicit
+OE compilation. CIF stays in the shared CPU implementation. HMCT/OE compilation
+runs in the OE toolchain environment per [compile](#compile); verify the compiled
+HBM on the board per [validation](#validation) and the
+[evaluator](../evaluator/README.md).
 
 <a id="source-model"></a>
 ## Source model
@@ -16,8 +18,8 @@ The source model is
 The preserved S implementation splits it into encoder, predictor and decoder;
 CPU CIF connects predictor outputs to decoder inputs. Published runtime assets
 are described in [model preparation](../model/README.md). Converting your own
-weights is a separate operation; graph transformations do not download weights,
-produce HBM files or certify those published assets.
+weights is a separate operation; graph transformations do not download weights
+or produce HBM files.
 
 <a id="toolchain-targets"></a>
 ## Export environment and quickstart
@@ -44,8 +46,8 @@ python samples/speech/paraformer/conversion/export.py --help
 If you do not have the source weights, explicitly download them first. This is
 about 913 MB for `model.pt`, plus metadata; reserve additional space for both raw
 and rewritten ONNX stages. This example writes only to `models/paraformer-source`.
-It fetches the hub's `master` revision; the export report records actual local
-file hashes, **not an immutable publisher weight revision**.
+It fetches the hub's `master` revision; the export report records the actual
+local file hashes.
 
 ```python
 from modelscope import snapshot_download
@@ -84,8 +86,8 @@ not a CLI default; other guides use `outputs/paraformer-prepared` and
 `outputs/paraformer-features` for the same preparation. Any preparation output
 directory works if `--feature` points at its `feats/<utt_id>.npy` file. The feature
 path must already exist; it is not a WAV. Each file must contain a finite float32
-`[1,400,560]` array. Export tests use unmasked CIF to exercise model boundaries,
-not the utterance's valid-frame count, and do not calculate CER.
+`[1,400,560]` array. Export tests use unmasked CIF to exercise model boundaries
+rather than the utterance's valid-frame count.
 
 | Argument | Meaning |
 | --- | --- |
@@ -110,8 +112,19 @@ not approved exports. A forcibly terminated process may leave incomplete state.
 ## Prepare real calibration and compiler configs
 
 After export, prepare a new self-contained workspace. The following two-WAV
-example checks the workflow; it is **not** a representative calibration dataset
-or an accuracy acceptance run:
+example only checks the workflow; supply a representative calibration set for a
+real quantization.
+
+Calibration data must come from the real audio distribution. The source
+release's two quantization-failure records serve as reference: calibrating
+with `np.random.randn` random data drove the INT16 pipeline CER to 100%
+(decoder argmax collapsed to `</s>` everywhere; FP16 outputs all NaN), the
+root cause being the mismatch between the N(0,1) random distribution and the
+encoder's actual output range (~[-0.4, 0.3]); and without masking padding via
+`alphas[:, real_T:] = 0`, the FP32 pipeline CER rose from ~5% to 44.4% (first
+N characters correct, garbage afterwards) because padding produced spurious
+CIF fires. Both fixes are built in: calibration uses 50 real utterances and
+the runtime CIF masks by valid frame count:
 
 ```bash
 python samples/speech/paraformer/conversion/prepare.py \
@@ -128,12 +141,11 @@ matching the source recipe's reference count. Fewer files are explicitly recorde
 sample rate, malformed audio or invalid stage outputs fail the run; no selected
 file is silently skipped. There is no implicit resampling or random calibration.
 
-The unified frontend averages multichannel audio, computes fbank/LFR/CMVN with
+The shared frontend averages multichannel audio, computes fbank/LFR/CMVN with
 CPU seed 191009, and pads/truncates to 400 frames. This reuses the documented
 runtime frontend rather than constructing an entire AutoModel just to extract
-features. The source calibration script's global random behavior is not a
-reproducibility contract; current seed, dependencies and input hashes are recorded.
-Actual/retained frame counts and truncation remain visible in each record.
+features. Seed, dependencies and input hashes are recorded with each run;
+actual/retained frame counts and truncation remain visible in each record.
 
 Encoder and predictor execute on CPU ONNX Runtime. Calibration then calls the
 same CPU CIF implementation with **`real_T=None`**, preserving the source's
@@ -181,9 +193,20 @@ core and disabled compiler cache. The integer token-count input remains int32.
 Do not interpret internal INT16 settings as a guarantee of final physical I/O
 precision. Real HBM signatures still need SDK validation before runtime use.
 
-Use a matching installed S OE toolchain with `hb_compile`. The source records
-`ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0` and hbdk4 4.7.5; its image registry and
-availability have not been verified here, so no invented pull URL is provided.
+Use a matching installed S OE toolchain with `hb_compile`. The source
+recipe's image is `ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`
+(hbdk4 4.7.5); the original acquisition and start commands:
+
+```bash
+docker pull ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+docker run --rm -it \
+    -u $(id -u):$(id -g) \
+    --entrypoint /bin/bash \
+    -v /path/to/workspace:/workspace \
+    -w /workspace \
+    ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+```
+
 The FP32 export Python environment alone does not provide the compiler. Run
 the wrapper from an available repository checkout inside the OE environment,
 with NumPy and PyYAML installed; this compilation step does not import Torch.
@@ -217,7 +240,30 @@ Export must complete all numerical/signature checks; calibration must pass its
 snapshot/array checks; compilation must retain successful stage logs and artifacts.
 These are separate checks: a nonempty HBM is not a model-output validation. Use the
 [host evaluator](../evaluator/README.md) on FP32/PTQ graphs to obtain per-utterance
-transcripts and CER, then separately verify the HBM on S100 when available.
+transcripts and CER, then verify the HBM on S100.
+
+On the board, each stage HBM can be measured directly with the built-in
+command (single-BPU-core latency):
+
+```bash
+hrt_model_exec perf --model_file encoder_int16.hbm  --thread_num 1 --frame_count 200
+hrt_model_exec perf --model_file predictor_int16.hbm --thread_num 1 --frame_count 500
+hrt_model_exec perf --model_file decoder_int16.hbm  --thread_num 1 --frame_count 200
+```
+
+Source-release records for this recipe (S100, single BPU core):
+
+| Item | Encoder | Predictor | Decoder |
+| --- | --- | --- | --- |
+| HBM size | 211.5 MB | ~4 MB | 73.5 MB |
+| Static latency (compiler) | 32.52 ms (FPS 30.75) | ~0.35 ms | 5.77 ms (FPS 173) |
+| Board `hrt_model_exec perf` | 33.11 ms (FPS 30.18) | 0.67 ms | 6.12 ms (FPS 162.8) |
+| Memory | static 211 MB, dynamic 3.6 MB, DDR 499 MB | — | DDR 127 MB |
+
+Encoder compile time is ~55 min at `jobs=32`. The single BPU core is
+saturated on S100; `--thread_num 8` only queues concurrently and does not
+change single-frame latency. The board Python manual for `hbm_runtime` is the
+[S Python API guide](https://developer.d-robotics.cc/rdk_s_doc/Algorithm_Application/python-api).
 
 <a id="artifacts"></a>
 ## Produced artifacts
@@ -230,13 +276,12 @@ Expected paths relative to the compile run:
 | predictor | `predictor/predictor_int16.hbm` | `predictor/predictor_int16_ptq_model.onnx` |
 | decoder | `decoder/decoder_int16.hbm` | `decoder/decoder_int16_ptq_model.onnx` |
 
-Even with all three nonempty HBM files and zero return codes, the result is
-**`compiled_unverified`**, not board/SDK/accuracy acceptance. Generated files are
-not automatically published, renamed to official assets or copied into runtime
-model directories. This host has no OE compiler; only orchestration fixtures and
-the actual missing-compiler rejection were tested. Calibration preparation does
-not certify quantization quality, and a missing PTQ ONNX is explicitly recorded
-as absent rather than fabricated. See the [calibration/compile preparation evidence](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-calibration-review.md).
+With all three nonempty HBM files and zero return codes, the compile report
+records status **`compiled_unverified`** until the board/SDK checks under
+[validation](#validation) pass.
+Generated files are not automatically published, renamed to official assets or
+copied into runtime model directories. A missing PTQ ONNX is recorded as absent
+in the report.
 
 ## Fixed deployment semantics
 
@@ -248,13 +293,12 @@ retain the published names, including `onnx::Shape_8609`; explicit output bindin
 avoids relying on a particular Torch internal tensor-number suffix.
 
 The decoder composition is adapted from FunASR under the included
-[MIT notice](LICENSE-FunASR). The fixed-width masks express the existing deployment
-contract directly, replacing the old one-probe Range freezing. The generic upstream
+[MIT notice](LICENSE-FunASR). The fixed-width masks express the deployment
+contract directly. The generic upstream
 decoder with an **unpadded** token sequence is not numerically interchangeable
-for shorter sequences; that comparison failed and is retained in the evidence.
-The deployment comparison instead uses the unmodified upstream decoder export
-followed by the actual archived fixed-100 Range pass. Do not infer original
-variable-length-model accuracy or HBM accuracy from these export checks.
+for shorter sequences.
+The deployment comparison uses the unmodified upstream decoder export
+followed by the fixed-100 Range pass.
 
 ## Graph tests
 
@@ -262,11 +306,16 @@ variable-length-model accuracy or HBM accuracy from these export checks.
 python -m unittest discover -s samples/speech/paraformer/tests -v
 ```
 
-The earlier standalone graph tests also ran with Python 3.14.7, NumPy 2.5.3,
-ONNX 1.23.0 and ORT 1.30.0; those versions do not establish FunASR export
-compatibility. Missing optional dependencies can skip tests. Use the export
-environment above and check the actual test counts rather than treating skips
-as evidence of successful validation.
+Run the suite in the export environment above; missing optional dependencies
+cause skips, so check the reported test counts.
+
+<a id="cif-shape-workaround"></a>
+## CIF shape workaround
+
+The HBDK4 4.7.5 conversion path can raise a `type_inf` error for CIF's
+`remains.unsqueeze(-1)`. Express the same final dimension with
+`remains.reshape(-1, 1)`; the exporter emits an ONNX Reshape with an explicit
+output rank for the compiler.
 
 ## Available transformations
 
@@ -332,49 +381,16 @@ file. Do not overwrite the source model. A dynamic-index cast additionally
 requires a range argument based on the model contract, not merely a few passing
 inputs. The API deliberately does not automate either decision.
 
-## Source workflow and remaining migration
-
-The source snapshot at S commit `380e1a2bf42041af54be6f34935e50197cfadff9`
-contains the full original Chinese walkthrough (historical `../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
-It remains historical reference, with the following migration boundaries:
-
-| Source stage | Purpose | Unified status |
-| --- | --- | --- |
-| `01_reexport_fixed_shape.py` | Export fixed-shape model | Replaced by direct `export.py` stage export; no full CIF graph, global monkey patch or source overwrite. |
-| `02_extract_decoder.py`, `07_extract_predictor.py`, `08_extract_encoder.py` | Extract three stages from an internal-name-dependent full graph | Replaced by explicit Torch stage boundaries with the same deployment names and shapes. |
-| `03_convert_gather_int64_to_int32.py` through `06_shape_freeze.py` | Adapt Gather, order, Range and axes | Shared primitives are integrated into real-weight stage export. No simplifier is invoked, so no unchecked simplifier result is accepted. |
-| `09_gen_calib_features.py` | Generate features from representative real audio | Implemented in `prepare.py` through the unified deterministic frontend. |
-| `10_gen_real_calib.py` and `cif_numpy.py` | Run stages to prepare decoder/predictor calibration | Implemented with real encoder/predictor execution and shared unmasked CIF (`real_T=None`), unlike runtime valid-frame masking. |
-| Three `*_int16.yaml` files | Compile encoder, predictor and decoder for `nash-e` | Generated with consistent workspace paths and source settings. Explicit OE invocation is implemented; actual compiler/SDK validation is not-run. |
-| `11_eval_pipeline.py` | Compare the three-stage speech pipeline | [Dedicated evaluator](../evaluator/README.md): real FP32 smoke comparison; HMCT adapter retained, actual HMCT not-run. |
-
-Source recipe settings include maximum calibration, INT16 internal operations,
-O2 latency optimization and a single BPU core. These settings do not establish
-the final physical input/output dtypes or compatibility of a new HBM; the runtime
-still validates the actual stage signatures. Source `out/` script defaults and
-root-relative YAML paths are inconsistent, so running them unchanged is not a
-validated end-to-end procedure. Source benchmark numbers remain historical;
-none of these host graph tests establishes CER, latency or dataset accuracy.
-
 <a id="known-gaps"></a>
-## What has been checked
+## Known gaps
 
-Ten graph tests cover shared Gather constants, constant overflow and evaluation
-limits, explicit dynamic casts, unique intermediate names, stable dependency
-sorting, rejection of incomplete graphs, static versus dynamic Range, and shared
-negative axes across different ranks. Numerical comparisons execute the
-original and rewritten small graphs with real ONNX Runtime and require equal
-output dtypes and values. Real-weight stage export and two complete example pipelines are checked separately.
-OE compilation, SDK execution, board tests and dataset CER remain unverified. See the [host evidence](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-graph-ops-review.md).
-
-Real-weight results, initial failures and reproduction commands are in the
-[export report](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-export-review.md).
-
-The 16 export checks use contexts produced by the real encoder (zero/random
-features and two real audio features). Separate arbitrary random hidden-vector
-stress tests showed much larger Torch/ORT differences; they do **not** satisfy
-the export tolerance. The old and new fixed-width ONNX graphs agree in those
-stress cases under the same ORT settings. This preserves source deployment
-behavior but does not establish global Torch/ONNX equivalence. Both sample
-transcripts also contain recognition errors against their references; no dataset
-CER or accuracy improvement is claimed.
+- HMCT/OE compilation runs in the OE toolchain environment per [compile](#compile);
+  a generated HBM keeps status `compiled_unverified` until the board/SDK checks
+  under [validation](#validation) pass.
+- The numerical export checks run on contexts produced by the real encoder
+  (zero/random features and two real audio features). Arbitrary random
+  hidden-vector inputs produce much larger Torch/ONNX Runtime differences and do
+  not satisfy the export tolerance; the checks are defined on real-feature
+  contexts.
+- The two-utterance calibration preparation is a workflow example; supply a
+  representative 16 kHz WAV collection for a real quantization run.

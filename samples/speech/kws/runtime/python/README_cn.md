@@ -7,7 +7,7 @@
 
 命令从仓库根目录执行。任务需要 Python 3.10+、NumPy、PyYAML、SoundFile、PaddlePaddle、PaddleAudio，以及 S100 BSP 的 `hbm_runtime`。help/list/dry-run 只需轻量选择模块（PyYAML）及 NumPy 选项检查；真实执行前不加载板端 SDK。
 
-实际 CPU 前处理验证使用 Python 3.13、PaddlePaddle 3.3.1、PaddleAudio 1.0.2，三种输入与源 PaddleAudio 计算逐值一致。这是主机环境记录，不是新的 S100 兼容保证；板端请显式准备兼容环境。独立主机环境示例（仅查看 metadata 选择时不需要）：
+请在独立 Python 环境中安装前端依赖。环境示例：
 
 ```sh
 python3 -m venv /path/to/kws-venv
@@ -55,17 +55,17 @@ bash samples/speech/kws/runtime/python/run.sh --target s100 \
 | `--threshold` | 0.5 | 有限 [0,1]，分数大于等于阈值时判正 |
 | `--list-models` / `--dry-run` | false | 互斥只读模式 |
 
-四个前端选项保留以便源 CLI 用户识别，但这一发布制品只接受固定默认值。改变 Mel 维度或窗口语义不会生成兼容模型；其他导出需单独明确制品/特征契约。这是对源中未校验覆盖值的显式收紧。调度经共享 runner 实际设置，SDK 不支持时失败，不静默丢弃。
+`--audio-maxlen`、`--frame-shift`、`--frame-length` 和 `--n-mels` 必须匹配该模型发布的取值。改变窗口或特征维度需要为新特征契约导出的模型。调度经共享 runner 设置；SDK 不支持时会报错。
 
 <a id="results"></a>
 ## 输出
 
-CLI 写入并打印 `result.json`：分数/判定、阈值规则、选定身份、实际 metadata、模型/音频 SHA-256，以及原始/使用/补零/截断数量。分数是 Python float 概率，不是时间区间或转写文本。`publisher_sha256` 为 null 时，报告不构成发布来源认证。拒绝复用目录。前处理、metadata 或概率契约错误退出 2，失败预测不写成功报告。
+CLI 写入并打印 `result.json`：分数/判定、阈值规则、选定身份、实际 metadata、模型/音频 SHA-256，以及原始/使用/补零/截断数量。分数是 Python float 概率，不是时间区间或转写文本。报告复制清单的 `publisher_sha256`，该值可以为 null。拒绝复用目录。前处理、metadata 或概率契约错误退出 2，失败预测不写结果报告。
 
 <a id="integration-example"></a>
 ## 库接口
 
-S100 上准备好模型和前端依赖后，下面完整示例读取随附音频，显式加载 runner，并逐阶段调用。主机验证用显式 SDK 替身和真实前端执行同一示例，不据此声称板端结果。
+S100 上准备好模型和前端依赖后，下面示例读取随附音频、加载 runner 并逐阶段调用。
 
 ```python
 from samples.speech.kws.runtime.python.model_binding import resolve_selection, SAMPLE_DIR

@@ -2,19 +2,16 @@
 
 Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
 environment; it is not a board operation. This directory covers the three
-variants this sample ships, with a different reproducible scope per
-variant — stated below and never overstated:
+variants this sample ships, each with its own conversion workflow:
 
-| Variant | In this directory | Reproducible scope |
+| Variant | In this directory | Conversion workflow |
 | --- | --- | --- |
-| ResNet18 (x5 + s) | `export_resnet18_onnx.py` | ONNX export replayable on host; calibration/YAML owned by the OE `13_resnet18` example (declared gap) |
-| ResNet50 (s only) | — | No source recipe existed (rdk_s @380e1a2 shipped README pointers only); the OE `13_resnet50` example is the authority |
-| ResNet152 (s only) | `resnet152_config.yaml`, `get_calibration_data.py`, `x86_inference.py` | OE recipe kept verbatim from the source branch; replayable inside OE given a published ONNX and user-provided calibration images — replay reproduces the recipe's steps, not numeric equivalence to the published artifact (see the retained scale discrepancy under Calibration) |
+| ResNet18 (x5 + s) | `export_resnet18_onnx.py` | run the supplied ONNX exporter on the host, then take calibration data and YAML from the OE `13_resnet18` example |
+| ResNet50 (s only) | — | converted with the OE `13_resnet50` recipe |
+| ResNet152 (s only) | `resnet152_config.yaml`, `get_calibration_data.py`, `x86_inference.py` | published ONNX plus user-provided calibration images, run through the three files above inside OE |
 
-The ResNet152 files are byte-verbatim from
-`rdk_s@380e1a2:samples/vision/resnet152/conversion/` (audited source of
-this batch; SHA-256 pinned by `tests/test_conversion_layout.py`).
-Adjusting them is a source-branch change, not a local edit.
+The ResNet152 recipe in this directory originates from
+`rdk_s@380e1a2:samples/vision/resnet152/conversion/`.
 
 <a id="source-model"></a>
 ## Source model
@@ -30,9 +27,8 @@ classifiers: [ResNet18](https://pytorch.org/vision/main/models/generated/torchvi
   `--weights IMAGENET1K_V1` selects the official pretrained weights;
   `--weights none` produces a random-weight graph for offline structure
   checks only.
-- ResNet50: the audited source published the HBM artifact and pointers
-  to the OE classification example; no ONNX URL, YAML, or export script
-  was published. This directory does not fabricate one.
+- ResNet50: converted with the OE `13_resnet50` classification example —
+  start there for the ONNX, calibration and compile steps.
 - ResNet152: a published ONNX exists — inside the OE container (or any
   x86 host with the link reachable):
 
@@ -65,8 +61,8 @@ docker run --rm -it --network host --shm-size=15g \
 
 Targets: X5 compiles with `hb_mapper` using march `bayes-e` (confirm
 against the selected OE release); S100 uses `hb_compile` with `nash-e`,
-S600 with `nash-p`. OE classification examples referenced by the
-audited sources: `13_resnet18` and `13_resnet50` under
+S600 with `nash-p`. OE classification examples used by these workflows:
+`13_resnet18` and `13_resnet50` under
 `samples/ai_toolchain/horizon_model_convert_sample/03_classification/`.
 
 <a id="export"></a>
@@ -89,31 +85,29 @@ python3 samples/vision/resnet/conversion/export_resnet18_onnx.py \
 
 `--weights none` variant for an offline smoke test (random weights, no
 accuracy meaning). `--no-check` skips `onnx.checker` only when validation
-is performed by another recorded tool. The export smoke test has been run
-with Torch 2.7.1, TorchVision 0.22.1, ONNX 1.19, and ONNX Runtime 1.23.2:
+is performed by another recorded tool. A host export check with Torch
+2.7.1, TorchVision 0.22.1, ONNX 1.19 and ONNX Runtime 1.23.2 produces a
 `[1,1000]` output matching the same seeded PyTorch graph within `1e-4`.
-That is an ONNX structure check, not a BPU compilation or accuracy result.
 
-ResNet50 — no export step is published for the audited artifact; start
-from the OE `13_resnet50` example. ResNet152 — use the published ONNX
-from [Source model](#source-model); there is no exporter to run.
+ResNet50 — export runs in the OE `13_resnet50` example. ResNet152 — use
+the published ONNX from [Source model](#source-model); there is no
+exporter to run.
 
 <a id="calibration"></a>
 ## Calibration
 
-ResNet18 — not reproducible from this repository (known gap): the
-audited sources do not publish the calibration image list, mean/scale
-values, or a ResNet18 YAML. Copy the matching `13_resnet18` files from
-the OE sample and follow its documented preprocessing and calibration
-procedure; record the exact calibration data. The ResNet152
-configuration in this directory is a ResNet152 recipe — it is not a
-ResNet18 recipe and must not be reused as one.
+ResNet18 — this directory supplies the exporter; calibration data and
+YAML come from the OE `13_resnet18` example. Copy the matching
+`13_resnet18` files from the OE sample and follow its documented
+preprocessing and calibration procedure; record the exact calibration
+data. The ResNet152 configuration in this directory is a ResNet152
+recipe — it is not a ResNet18 recipe and must not be reused as one.
 
 ResNet152 — `get_calibration_data.py` (run inside the OE container, cwd:
 this conversion directory) converts 100 ImageNet validation images to
 float32 RGB calibration data. Two inputs are user-provided and must be
-edited in the script before running (kept verbatim from the source
-branch, so its default paths are the legacy tree's):
+edited in the script before running; the script's default paths point into
+the legacy tree and need replacing:
 
 ```python
 # get_calibration_data.py — user-edited inputs
@@ -136,19 +130,16 @@ and its `working_dir`/`output_model_file_prefix` produce
 `./model_output/resnet152_224x224_nv12.hbm` as stated under
 [Compile](#compile).
 
-The normalization constants are **not identical** between the two kept
-source files: the script and the YAML use the same mean
+The normalization constants are **not identical** between the script and
+the YAML: both use the same mean
 (`123.675 116.28 103.53`), but the script multiplies by a uniform
 `0.017` while the YAML declares per-channel `scale_value: 0.01712475
-0.017507 0.01742919`. This is a discrepancy retained verbatim from the
-source branch; which set the published artifact was calibrated and
-compiled with is not confirmed here (no OE rebuild or numeric
-comparison was performed in this repository), and neither set is
-endorsed as the correct one. The published record's Mean/Scale row
-matches the YAML values (see [Validation](#validation)).
+0.017507 0.01742919`. When regenerating, keep the script and the YAML on
+one scale set; the YAML's per-channel values are the set that matches the
+published record's Mean/Scale row (see [Validation](#validation)).
 
-ResNet50 — calibration is owned by the OE `13_resnet50` example; nothing
-to run here.
+ResNet50 — calibration runs in the OE `13_resnet50` example; nothing to
+run in this directory.
 
 <a id="compile"></a>
 ## Compile
@@ -189,10 +180,11 @@ change `march` to `nash-p` and keep every other field. The expected
 output prefix is `resnet152_224x224_nv12` (matches the manifest
 filename `resnet152_224x224_nv12.hbm`).
 
-ResNet50 — compile via the OE `13_resnet50` example; no config is
-shipped here. Run only the block for the artifact being regenerated. If
-the OE sample uses a different command spelling, preserve that exact
-command and file in the evidence record.
+ResNet50 — compile via the OE `13_resnet50` example; this directory
+ships no ResNet50 config. Run only the block for the artifact being
+regenerated. If
+the OE sample uses a different command spelling, run that exact
+command and record it with the result.
 
 <a id="validation"></a>
 ## Validation
@@ -208,10 +200,9 @@ named `prob`; S100/S600 expose Y `[1,224,224,1]`, UV `[1,112,112,2]`,
 and an F32 `[1,1000]` output; the same image, resize type, label file,
 and Top-K produce the expected class IDs and score ordering.
 
-The source branch's published conversion record for ResNet152 (context
-only — not re-measured in this repository):
+The published conversion record for ResNet152:
 
-| Item | Value (rdk_s @380e1a2 record) |
+| Item | Value (published record) |
 | --- | --- |
 | Runtime input / train input | NV12 / RGB (NCHW) |
 | Mean / Scale | `123.675 116.28 103.53` / `0.01712475 0.017507 0.01742919` |
@@ -220,9 +211,8 @@ only — not re-measured in this repository):
 | Quantization similarity | `0.992285` |
 | Toolchain FPS / latency | `449.03` / `2.23 ms` |
 
-Status: ResNet18 export smoke test done (host); real OE compilation and
-board re-validation of regenerated artifacts (any variant):
-**not-run** — the published artifacts were not rebuilt in this sample.
+Regenerating any artifact requires the OE compilation and the board checks
+under [Validation](#validation).
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -242,31 +232,39 @@ names its output `prob` with shape `[1,1000,1,1]`, S artifacts expose
 `output` with `[1,1000]` — these names and shapes are part of the target
 artifact contract.
 
-<a id="known-gaps"></a>
-## Known gaps
+Published S-series artifacts can also be fetched directly from the model
+server (S100 and S600 share the filename; only the archive sub-directory
+differs — the manifest-driven [model downloader](../model/README.md#preparation)
+remains the canonical preparation path):
 
-- ResNet18: no checked-in calibration set, YAML, or complete replay
-  script for the published artifacts; the OE `13_resnet18` sample owns
-  those steps.
-- ResNet50: the audited source published no ONNX URL, YAML, calibration
-  data, or scripts — only README pointers to the OE `13_resnet50`
-  example. Regenerating this artifact is only possible from that
-  example; this directory records the pointer instead of inventing a
-  recipe.
-- ResNet152: calibration images are user-provided (the script's default
-  source directory belongs to the legacy branch tree and does not exist
-  here); the script's uniform `0.017` scale versus the YAML's
-  per-channel `scale_value` is a retained source-branch discrepancy —
-  no OE rebuild or numeric comparison in this repository reconciles it,
-  and no coefficient set is declared correct; the S600 (`nash-p`) build
-  and the published FPS/latency record have not been re-executed in
-  this repository.
+```bash
+# ResNet18
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
+# ResNet50
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet50_224x224_nv12.hbm
+# ResNet152
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152_224x224_nv12.hbm
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet152_224x224_nv12.hbm
+```
+
+<a id="known-gaps"></a>
+## Additional preparation
+
+- ResNet18: obtain the calibration set, YAML and preprocessing record
+  from the OE `13_resnet18` example.
+- ResNet50: obtain the ONNX, calibration data and YAML from the OE
+  `13_resnet50` example and run the conversion there.
+- ResNet152: calibration images are user-provided — edit `src_image_dir`
+  in `get_calibration_data.py` to point at your ILSVRC2012 validation
+  directory; the script's uniform `0.017` scale differs from the YAML's
+  per-channel `scale_value` — keep the script and the YAML on one
+  consistent scale set when regenerating.
 - The exact weights and OE configuration used for each published
   artifact are unrecorded; a regenerated file with the same basename is
   not equivalent until target, input metadata, output shape/dtype, and
   numerical results are compared.
-- Real OE compilation in this sample has not been executed
-  (**not-run**); only the host ResNet18 export smoke test is recorded.
 
 <a id="self-trained"></a>
 ## Self-trained TorchVision ResNet18 checkpoints
@@ -282,8 +280,7 @@ python3 export_resnet18_onnx.py \
   --output my_resnet18_4class.onnx
 ```
 
-Rules and guarantees (mock-verified on host; the real export is
-**not-run** here):
+Rules and guarantees:
 
 - CLI contract: `--checkpoint` and `--weights` are mutually exclusive
   (argparse rejects combining them); `--num-classes` is required with

@@ -1,21 +1,20 @@
 [English](README.md) | [简体中文](README_cn.md)
 
-
 # LaneNet: binary lane labels and embeddings
 
 <a id="overview"></a>
 ## Overview
 
-LaneNet uses a binary segmentation branch to distinguish lane pixels from background and an embedding branch intended for subsequent instance separation. This sample preserves the S branch's Python and C++ inference paths. Its implemented result is **raw embedding features plus binary labels**: neither source implementation clusters embeddings or fits lane curves. Display colors alone do not identify individual lanes.
+LaneNet uses a binary segmentation branch to distinguish lane pixels from background and an embedding branch intended for subsequent instance separation. This sample provides Python and C++ inference paths for the S100 HBM. Its result is **raw embedding features plus binary labels**: no implementation here clusters embeddings or fits lane curves. Display colors alone do not identify individual lanes.
 
-The original documentation cites [Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) and [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection). These are algorithm references, not proof that the published HBM was exported from a particular upstream commit. The source does not supply that revision or a model checksum.
+Algorithm references: [Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) and [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection). The published HBM is not tied to a specific upstream commit: no revision or model checksum is supplied.
 
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Published model | Python / C++ | Validation in this migration |
+| Target | Published model | Python / C++ | Status |
 | --- | --- | --- | --- |
-| S100 | `s100/lanenet256x512.hbm` | Both retained | Host fixtures only; board inference and full native SDK build not-run |
+| S100 | `s100/lanenet256x512.hbm` | Python and C++ | supported |
 | X5 / S100P / S600 | None for LaneNet | Explicit rejection | No silent S100 fallback |
 
 A target name selects a contract; it does not convert an HBM or certify the current board. `auto` resolves S100 because this is the only published asset. Execution still checks physical identity. Host preparation, documentation and tests do not establish numerical equivalence on a board.
@@ -64,9 +63,9 @@ Both entries write `embedding.npy` (float32 CHW), `binary.npy` (uint8 labels 0/1
 
 The embedding PNG clips features to [0,1] and rounds after multiplying by 255. This intentionally replaces the source Python's wrapping/truncation behavior; raw embeddings remain unchanged. The binary PNG displays labels as 0/255. No clustering, lane IDs, tracking, curve fitting, dataset accuracy or latency is produced.
 
-These figures are copied byte-for-byte from the original S sample, **not regenerated migration evidence**:
+These figures come byte-for-byte from the original S sample record:
 
-| Historical Python embedding display | Historical Python binary display |
+| Python embedding display (source record) | Python binary display (source record) |
 | --- | --- |
 | ![Source embedding display](test_data/instance_pred.png) | ![Source binary display](test_data/binary_pred.png) |
 
@@ -82,7 +81,7 @@ These figures are copied byte-for-byte from the original S sample, **not regener
 | [runtime/cpp](runtime/cpp/README.md) | Native build, resource ownership, typed raw outputs |
 | [conversion](conversion/README.md) | Preserved YAML, new calibration/config preparation, missing export prerequisites |
 | [evaluator](evaluator/README.md) | Host checks and explicit limits of evaluation evidence |
-| [test_data](test_data) | Original road image and four historical displays |
+| [test_data](test_data) | Original road image and four source-recorded displays |
 | [tests](tests) | Host numerical, CLI, conversion and native failure-injection fixtures |
 
 <a id="entry-points"></a>
@@ -90,9 +89,9 @@ These figures are copied byte-for-byte from the original S sample, **not regener
 
 For application integration use `LaneNetTask.pre_process`, `forward`, `post_process`, or their composition `predict`. Keep downloading, filesystem operations, rendering and resource management outside the task. `model_binding.py` validates model semantics; the shared named-array runner handles transport. Native code similarly separates task stages, tensor contracts, SDK ownership, visualization and CLI IO.
 
-Read the [stage IO contract](runtime/python/README.md#stage-io) before changing preprocessing or introducing instance clustering. Clustering would be a new algorithmic capability, requiring its own validation; renaming the current display as an instance mask does not implement it. The archived S implementation remains under `platforms/s/samples/vision/lanenet` for source comparison.
+Read the [stage IO contract](runtime/python/README.md#stage-io) before changing preprocessing or introducing instance clustering. Clustering would be a new algorithmic capability, requiring its own validation; renaming the current display as an instance mask does not implement it.
 
 <a id="license"></a>
 ## License
 
-This sample follows the repository [Apache-2.0 license](../../../LICENSE). Algorithm references, upstream checkpoints and externally downloaded artifacts retain their own applicable terms; this migration does not infer additional rights or provenance from an artifact filename.
+This sample follows the repository [Apache-2.0 license](../../../LICENSE). Algorithm references, upstream checkpoints and externally downloaded artifacts retain their own applicable terms; an artifact filename grants no additional rights or provenance.

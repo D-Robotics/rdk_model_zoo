@@ -82,7 +82,7 @@ identified — it never guesses from a filename.
 | `--rec-asset-id` | string | null | qualified recognizer reference for the same pair |
 | `--det-model-path` | string | null | existing local detector artifact; never downloaded implicitly; defaults to `model/<filename>` lookup when omitted |
 | `--rec-model-path` | string | null | existing local recognizer artifact; required together with the detector path |
-| `--vocabulary-path` | string | null | optional S100 dictionary replacement; accepted only on the audited digest |
+| `--vocabulary-path` | string | null | optional S100 dictionary replacement; accepted only on the recorded digest |
 | `--test-img` | string | null | BGR input image; when omitted, the fixture of the resolved pair is used |
 | `--output-format` | choice | text | `text` or `json` result rendering |
 | `--json-output` | string | null | also write the JSON inference result to this path |
@@ -94,7 +94,7 @@ identified — it never guesses from a filename.
 | `--prepare` | flag | false | explicitly fetch the selected manifest assets into local paths |
 
 `--list-models`, `--dry-run`, and `--prepare` are mutually exclusive modes.
-Defaults above are machine-checked against `build_parser()` by the Q3
+Defaults above are machine-checked against `build_parser` by the Q3
 checker.
 
 <a id="results"></a>
@@ -107,7 +107,7 @@ and aligned `boxes`/`texts` (example in the
 the same object to a file. Boxes and texts keep detector order; returned
 arrays are owned by the result; an empty detector output skips recognition.
 Model output semantics remain the observed score-map/CTC policies — no
-unverified activation is inserted. `s100p` and `s600` have no audited
+unverified activation is inserted. `s100p` and `s600` have no
 PaddleOCR pair and are rejected at pair resolution.
 
 <a id="integration-example"></a>
@@ -169,7 +169,7 @@ by host tests).
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
-- **No audited pair / mixed references:** run `--list-models`; take both
+- **No published pair / mixed references:** run `--list-models`; take both
   references from one row and the pair's dictionary.
 - **Model file not found:** run `--prepare` or copy an existing artifact,
   then pass both paths explicitly; the inference path never fetches.

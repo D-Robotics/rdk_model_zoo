@@ -1,18 +1,10 @@
 # EfficientNet 评估
-
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
-评估有两个独立目的：确认某块板卡以预期的张量契约执行所选制品，以及
-在声明数据集与工具链的条件下测量精度或延迟。本目录对两者做出说明；
-目录本身不含精度评估工具（见[边界](#boundaries)）。
+使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 <a id="dataset"></a>
 
 ## 数据集
-
-当前范围不适用：本 sample 做功能检查（随附测试图），不运行数据集级
-精度评估。数据集级评估需要用户自行准备 ImageNet 验证集（ILSVRC2012
-val，50,000 张）；不提供数据集下载或准备脚本。
+功能检查使用随附测试图。数据集级精度使用 ImageNet ILSVRC2012 验证集（50,000 张、1,000 类）。准备逐图到模型零起始类别索引的真值映射，并与运行时返回的 Top-1 类别 ID 对照。`datasets/imagenet/imagenet_classes.names` 将输出索引映射为显示名称；逐图真值取自数据集标注。参见 [ImageNet 数据准备](../../../../datasets/imagenet/README_cn.md)。
 
 <a id="environment"></a>
 ## 环境
@@ -47,12 +39,10 @@ python3 samples/vision/efficientnet/runtime/python/main.py \
 
 S100/S600 换用 `s:` 引用与 `s100/`/`s600/` 制品路径（例如 240x240 的
 lite1：`s:efficientnet:s100/efficientnet_lite1_240x240_nv12.hbm`）；标签
-文件共用。同板迁移前后对照请用相同的图像、制品字节、标签、resize
-类型和 Top-K 运行旧平台入口
-（`platforms/x5/samples/vision/efficientnet/runtime/python/main.py` 或
-`platforms/s/samples/vision/efficientnet/runtime/python/main.py`），
-在标签格式化之前对比类别 ID 与 Top-K 分数（ids 相同；分数按声明的容差判定——2026-09-21 板测按 |分数差| < 1e-5 判定；不声明 raw tensor 逐位相等）。X5 与 S 互相对照不能替代
-同板前后对照。相同输入重复运行时输出应当有限、非零且稳定。
+文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize
+类型和 Top-K，在标签格式化之前对比类别 ID 与 Top-K 分数；预期类别 ID
+相同、分数差在 1e-5 内。X5 与 S 的结果互相对照不构成同板对照。相同输入
+重复运行时输出应当有限、非零且稳定。
 
 <a id="metrics"></a>
 ## 指标
@@ -60,9 +50,9 @@ lite1：`s:efficientnet:s100/efficientnet_lite1_240x240_nv12.hbm`）；标签
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
 | 契约通过 | 运行时接受制品，张量名/形状/dtype 与绑定一致，返回一个 F32 分数向量 | 任何已准备制品在匹配板卡上 |
-| Top-K 一致 | 规范实现与旧实现 softmax 后 Top-K 类别 ID 相同，分数在容差内（2026-09-21 板测实测最大差 ≤1.2e-7，判据 1e-5；不声明 raw tensor 逐位相等） | 同板、同制品字节、同图像、同 resize、同 Top-K |
-| Top-1 精度 | argmax 正确的样本比例 | ImageNet val —— 本 sample 未评估 |
-| 延迟 / FPS | 推理耗时 | 本 sample 未评估；下方历史数值的条件未完整声明 |
+| Top-K 一致 | 同一制品重复运行 softmax 后 Top-K 类别 ID 相同，分数差在 1e-5 内 | 同板、同制品字节、同图像、同 resize、同 Top-K |
+| Top-1 精度 | argmax 正确的样本比例 | 在准备好的 ImageNet ILSVRC2012 验证集上度量 |
+| 延迟 / FPS | 在匹配板卡上的推理计时 | 与[参考结果](#reference-results)的已发布数值按其声明的条件对照 |
 
 <a id="outputs"></a>
 ## 输出
@@ -75,15 +65,9 @@ Top-K 输出、图像路径、resize 类型与命令行。
 <a id="reference-results"></a>
 ## 参考结果
 
-| 项目 | 取值 | 来源 |
-| --- | --- | --- |
-| 主机测试 | 28 OK（2026-09-21；批次完成时 25 项，B2-R1 整改 +3 项回归测试，作者自检） | 迁移证据 |
-| 板上对照（规范 vs 旧实现） | passed（2026-09-21：x5-8g/x5-4g b2/b3/b4 与 s100/s600 lite0..lite4 Top-5 ids 全等，最大分差 ≤1.2e-7；run.sh 四板 rc=0；B2-R1 修复后 s100/s600 复验省略变体默认入口；s100p 显式拒绝） | [B2 板测证据](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
-| 数据集精度 / 延迟 | 本 sample not-run | — |
+已发布性能记录。
 
-已发布的历史数值，未在本仓库重测。
-
-X5 源发布（rdk_x5 @ac11571，x5-v1.1.3；源说明：Float Top-1 为量化前
+X5 源发布（x5-v1.1.3；Float Top-1 为量化前
 ONNX 结果，Quant Top-1 为部署模型结果，延迟为单帧单线程单核，FPS 为
 多线程；CPU 8xA55@1.8GHz 性能模式，BPU 1xBayes-e@1GHz）：
 
@@ -93,7 +77,7 @@ ONNX 结果，Quant Top-1 为部署模型结果，延迟为单帧单线程单核
 | EfficientNet-B3 | 224x224 | 12.19 | 76.22% | 74.05% | 3.96 | 12.76 | 310.30 |
 | EfficientNet-B2 | 224x224 | 9.07 | 76.50% | 73.25% | 3.31 | 10.51 | 376.77 |
 
-S 源发布（rdk_s @380e1a2，s-v1.1.2；除表格外条件未声明）：
+S 源发布（s-v1.1.2；除表格外条件未声明）：
 
 | 变体 | 单线程延迟 | 单线程 FPS | 多线程延迟 | 多线程 FPS |
 | --- | --- | --- | --- | --- |
@@ -104,8 +88,6 @@ S 源发布（rdk_s @380e1a2，s-v1.1.2；除表格外条件未声明）：
 | Lite4 | 0.915 ms | 1064.339 | 1.979 ms | 1487.055 |
 
 <a id="boundaries"></a>
-## 边界
+## 数据集级评估
 
-本 sample 不附带数据集级精度或延迟评估工具：检入材料只覆盖主机契约
-测试与板上功能检查。主机测试通过绝不等于板卡认证。板卡不可达或制品
-不可用时，对应项记为 `not-run`，而不是失败后略过。
+计算数据集 Top-1 精度时，将每张验证图像通过 `--test-img` 传给运行时入口，把返回的 Top-1 类别 ID 与该图像的模型真值索引对照，再用正确预测数除以已评测的带标签图像数。对照运行时固定制品、resize 模式、Top-K、板卡镜像和调度设置。测量延迟或 FPS 时，在匹配板卡上计时推理阶段，并记录线程数和工作模式。

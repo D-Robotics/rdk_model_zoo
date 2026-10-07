@@ -7,7 +7,7 @@ Evaluate a compiled model using the same task implementations as [the Python run
 <a id="dataset"></a>
 ## Prepare the dataset
 
-Use a matching validation split and preserve the original class order. Dataset acquisition and preparation are documented in the unified [COCO](../../../../datasets/coco/README.md) and [ImageNet](../../../../datasets/imagenet/README.md) guides; the archived X5 COCO (historical `../../../../platforms/x5/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), S COCO (historical `../../../../platforms/s/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), X5 ImageNet (historical `../../../../platforms/x5/datasets/imagenet/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and S ImageNet (historical `../../../../platforms/s/datasets/imagenet/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) snapshots remain as provenance. Obtain datasets under their own licenses; they are not included in this checkout.
+Use a matching validation split and preserve the original class order. Prepare datasets using the [COCO](../../../../datasets/coco/README.md) and [ImageNet](../../../../datasets/imagenet/README.md) guides under their respective licenses.
 
 The commands below assume this local layout; replace `/data` and `/models` with your prepared paths:
 
@@ -34,7 +34,7 @@ Inference runs on the selected RDK board with its matching `hbm_runtime`, Python
 python3 -m pip install pycocotools
 ```
 
-Install this user-space dependency into your intended Python environment; no script installs dependencies automatically. Models must already exist and match the target, task and family. Use [model preparation](../model/README.md) first. `--help` works without loading the board SDK. Dataset runs require hardware; the commands below were checked against the parsers, not executed as new board accuracy measurements.
+Install this user-space dependency into your intended Python environment; no script installs dependencies automatically. Models must already exist and match the target, task and family. Use [model preparation](../model/README.md) first. `--help` works without loading the board SDK. Dataset runs require the board hardware connected to the prepared model.
 
 <a id="command"></a>
 ## Run an evaluation
@@ -93,7 +93,7 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_yolo_obb.py \
   --json-save-path /tmp/yolo-obb.json
 ```
 
-This writes oriented rectangles and polygon coordinates; it does **not compute DOTA AP**. `--label-path` is accepted for legacy command compatibility but is not scored. Keep the default angle sign/offset unless your reviewed custom output contract requires otherwise.
+This writes oriented rectangles and polygon coordinates; it does **not compute DOTA AP**. `--label-path` is accepted for legacy command compatibility but is not scored. Keep the default angle sign/offset unless your custom output contract explicitly requires otherwise.
 
 ### Batch evaluation
 
@@ -130,7 +130,7 @@ Each script's `--help` lists its task-specific contract options. YOLO26 uses dir
 
 COCO uses `pycocotools.COCOeval` with `bbox`, `segm` or `keypoints`; the printed AP/AR summary is evaluated only over the selected image IDs. Classification `top1`/`top5` are fractions of processed labeled images, not percentages. OBB JSON is an intermediate result, not an accuracy metric. Elapsed wall time includes Python/data processing and is not BPU inference latency.
 
-Record the source revision, target/system/SDK, model digest, dataset/split, processed count, resize policy and thresholds with any result. A change in any of these can invalidate comparisons with historical benchmark tables. Fixed-image source/unified consistency tests do not establish dataset accuracy.
+Record the source revision, target/system/SDK, model digest, dataset/split, processed count, resize policy and thresholds with any result. A change in any of these can invalidate comparisons with historical benchmark tables.
 
 <a id="outputs"></a>
 ## Outputs and success criteria
@@ -140,11 +140,11 @@ Detection JSON contains COCO `image_id`, `category_id`, `[x,y,width,height]` box
 Existing output files are overwritten by the current scripts. Choose a unique output name for each run and preserve stdout containing the COCO summary. Exit 0 means execution completed; empty predictions, no annotations, or classification `total=0` do not constitute a passing accuracy result. COCO empty outputs are written as `[]` and metric computation is skipped explicitly.
 
 <a id="reference-results"></a>
-## Reference results and validation scope
+## Reference results
 
-The full source benchmark tables remain available locally: X5 evaluator and benchmarks (historical `../../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), S evaluator and benchmarks (historical `../../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), X5 YOLO26 (historical `../../../../platforms/x5/samples/vision/ultralytics_yolo26/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md), S YOLO26 (historical `../../../../platforms/s/samples/vision/ultralytics_yolo26/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md). Artifact and benchmark facts are maintained in [X5 manifests](../../../../docs/release/x5/) and [S manifests](../../../../docs/release/s/).
+Artifact and benchmark facts are maintained in the [X5 benchmark manifest](../../../../docs/release/x5/benchmarks.yaml) and [S benchmark manifest](../../../../docs/release/s/benchmarks.yaml).
 
-Those are historical published records, not measurements of the current unified code. Representative YOLOv8n/YOLO26n detection board comparisons are documented in the [sample guide](../README.md); no new full-dataset accuracy or latency run is claimed here. The current host-only work excludes new board validation.
+The [sample guide](../README.md) describes the YOLOv8n and YOLO26n detection comparisons and their target conditions.
 
 ## Troubleshooting and code navigation
 
@@ -159,6 +159,6 @@ Those are historical published records, not measurements of the current unified 
 <a id="boundaries"></a>
 ## Boundaries
 
-These evaluators do not verify model conversion, validate arbitrary custom class orders, or measure end-to-end application performance. Classification skips unreadable/unlabeled images as described above; report the actual processed count. OBB export needs a separate DOTA scorer. Published benchmark rows and prior fixed-image board comparisons are references with their own revisions, not acceptance of every current task/scale. New board and full-dataset runs remain pending.
+These evaluators do not verify model conversion, do not validate arbitrary custom class orders, and do not measure end-to-end application performance. Classification skips unreadable/unlabeled images as described above; report the actual processed count. OBB export needs a separate DOTA scorer. Published benchmark rows and prior fixed-image board comparisons are references with their own revisions and do not extend to every current task/scale. New board and full-dataset runs are performed per this guide.
 
 DFL pose returns point probabilities. COCO JSON serialization preserves the historical rule v=1 for probability >0, otherwise 0; this is not a 0.5 visibility filter and does not remove low-confidence points. Drawing thresholds and evaluation serialization are separate operations.

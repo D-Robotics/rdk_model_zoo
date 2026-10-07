@@ -10,7 +10,7 @@
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-仅适用 X5，march=bayes-e，无 S 系列配方。源文档使用 PaddlePaddle 3.0.0（其中建议 Python 3.8–3.10）和 OE 1.2.8。导出包兼容性须按选定的 PaddleSeg 版本确认；paddle2onnx/onnx/onnxsim 没有钉住版本。脚本不再隐式安装依赖。下列保留源环境配置细节，本轮主机迁移未实际执行。
+仅适用 X5，march=bayes-e，无 S 系列配方。源文档使用 PaddlePaddle 3.0.0（其中建议 Python 3.8–3.10）和 OE 1.2.8。导出包兼容性须按选定的 PaddleSeg 版本确认；paddle2onnx/onnx/onnxsim 没有钉住版本。脚本不再隐式安装依赖。下列保留源环境配置细节。
 
 ```bash
 # Export environment, separate from the board SDK environment
@@ -28,7 +28,7 @@ hb_mapper --version
 hb_perf --version
 ```
 
-可选源安装包：[OE SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/horizon_x5_open_explorer_v1.2.8-py310_20240926.tar.gz)、[中文手册](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-cn.zip)、[英文手册](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-en.zip)。归档 URL 来自源文档，未重新下载验证。
+可选源安装包：[OE SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/horizon_x5_open_explorer_v1.2.8-py310_20240926.tar.gz)、[中文手册](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-cn.zip)、[英文手册](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-en.zip)。使用匹配的 OE 1.2.8 安装包与手册。
 
 <a id="export"></a>
 ## 导出
@@ -41,7 +41,7 @@ PADDLESEG_DIR=/data/PaddleSeg CHECKPOINT=/data/checkpoints/pp_liteseg_stdc1_city
 
 进入 PaddleSeg 前解析 checkpoint 路径；CONFIG 如非绝对路径则相对于该外部仓库。上例 EXPORT_DIR/ONNX_DIR 使用绝对路径以消除 cwd 歧义。源 Paddle 3 配方假定 tools/export.py 产生 model.json/model.pdiparams，再以 opset 11 执行 paddle2onnx，并用 onnxsim 固定尺寸；须核对所选版本的实际文件名。缺少 checkpoint/config 会在导出前失败。预期 ONNX 为 `onnx/pp_liteseg_stdc1_cityscapes_1024x512_sim.onnx`。
 
-编译前核对输出名称、shape 和 dtype。统一运行时要求 `(1,512,1024,1)` int32 类别图；尚未证明外部导出配方能产出这一部署边界。logits 输出需要明确验证的图适配或另行支持的运行时契约，改文件名或再做一次 argmax 不能解决契约不符。
+编译前核对输出名称、shape 和 dtype。统一运行时要求 `(1,512,1024,1)` int32 类别图；外部导出配方需先验证能产出这一部署边界。logits 输出需要明确验证的图适配或另行支持的运行时契约，改文件名或再做一次 argmax 不能解决契约不符。
 
 <a id="calibration"></a>
 ## 校准
@@ -73,7 +73,7 @@ bash build_bin.sh
 <a id="validation"></a>
 ## 验证
 
-主机测试以假工具覆盖校准字节/命名与 shell 失败分支；实际导出、编译及性能测试均为 not-run。须检查实际元数据，并在相同输入下逐像素比较类别 ID。源文档的 logits 余弦阈值 ≥0.95 仅在两侧显式暴露相同 argmax 前 logits 时适用，不能用于整数类别 ID。数据集 mIoU 需要标注验证集和数据集执行器，本示例未提供该执行器。
+主机测试以假工具覆盖校准字节/命名与 shell 失败分支。须检查实际元数据，并在相同输入下逐像素比较类别 ID。源文档的 logits 余弦阈值 ≥0.95 仅在两侧显式暴露相同 argmax 前 logits 时适用，不能用于整数类别 ID。数据集 mIoU 需要标注验证集和数据集执行器，本示例未提供该执行器。
 
 ```bash
 # cwd: sample directory inside OE; source expected compiler output location
@@ -86,9 +86,9 @@ hrt_model_exec perf --model_file model/pp_liteseg_stdc1_cityscapes_1024x512_nv12
 <a id="artifacts"></a>
 ## 产物
 
-预期产物链：训练 .pdparams → 推理 model.json/model.pdiparams → 原始／简化 ONNX → OE 日志和 *_output BIN → 本地验证报告。为本地编译模型保留 checkpoint、PaddleSeg 版本、环境版本、校准 manifest、模型摘要和日志。不要因文件名相同就覆盖发布模型。自定义文件可显式指定 runtime asset-id 请求相同张量契约，但未知的发布摘要不能认证文件来源。
+预期产物链：训练.pdparams → 推理 model.json/model.pdiparams → 原始／简化 ONNX → OE 日志和 *_output BIN → 本地验证报告。为本地编译模型保留 checkpoint、PaddleSeg 版本、环境版本、校准 manifest、模型摘要和日志。不要因文件名相同就覆盖发布模型。自定义文件可显式指定 runtime asset-id 请求相同张量契约，但未知的发布摘要不能认证文件来源。
 
 <a id="known-gaps"></a>
 ## 已知缺口
 
-缺少钉住的 checkpoint/PaddleSeg/导出包组合；未观察实际导出图或编译产物；实际输出元数据、数值精度和性能均未验证。源文档预期的约 95 FPS／10.5 ms 不是本轮测量结果。不支持算子需要检查，不能盲目删除 argmax，因为运行时边界已经是类别图。把 calibration_type 改为 mix 或补充代表性数据属于需要重新验证的实验，不是保证有效的修复。
+缺少钉住的 checkpoint/PaddleSeg/导出包组合；未随附导出图或编译产物；输出元数据、数值精度和性能未在本仓库验证。源文档预期的约 95 FPS／10.5 ms 不是本仓库的实测值。不支持算子需要检查，不能盲目删除 argmax，因为运行时边界已经是类别图。把 calibration_type 改为 mix 或补充代表性数据属于需要重新验证的实验，不是保证有效的修复。

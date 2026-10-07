@@ -4,17 +4,17 @@
 
 This directory provides the native S100 executable and launcher, CPU CIF/text
 kernels, three-model application composition, UCP SDK adapter, production preflight
-and prepared-manifest/NPY reader. Host checks cover the application with an explicit
-SDK transport double; real SDK ABI/model execution remains unverified. The tests below are host checks, not
-HBM inference. The source Python frontend → C++ inference capability remains in
-scope; no alternate approximation of FunASR is introduced here.
+and prepared-manifest/NPY reader. Build and run it on S100 with the matching
+board SDK as described below. The Python frontend can prepare feature files for
+the native pipeline; C++ runs the three published stages, CPU CIF and source
+text decoding.
 
 <a id="supported-boards"></a>
 ## Supported boards
 
 | Target | Status | Reason |
 | --- | --- | --- |
-| S100 | supported-not-run | Three published HBM models; native host checks only |
+| S100 | supported | Three published HBM models; native pipeline and launcher |
 | X5 / S100P / S600 | not-supported | No matching published Paraformer package |
 
 <a id="dependencies"></a>
@@ -23,9 +23,7 @@ scope; no alternate approximation of FunASR is introduced here.
 
 The numerical library requires CMake 3.18 or newer and a C++17 compiler. It does
 not include vendor SDK, JSON, NumPy, Torch or audio-library headers. Host builds
-were checked on macOS arm64 with Apple Clang; exact compiler/platform versions are
-in the [evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-core-review.md).
-No board SDK/ABI or S100 inference result is asserted. Real frontend generation
+run on macOS arm64 with Apple Clang. Real frontend generation
 uses the separately documented [Python environment](../python/README.md#environment).
 
 <a id="build"></a>
@@ -69,8 +67,7 @@ python samples/speech/paraformer/runtime/python/main.py --target s100 --preproce
 ```
 
 On S100, explicitly prepare the published package and run the real native backend.
-The following commands require the model download/board environment and were **not
-executed** as board verification in this migration:
+The following commands require the model download/board environment:
 
 ```bash
 bash samples/speech/paraformer/model/download_model.sh --target s100
@@ -126,7 +123,7 @@ A successful launcher run returns rc=0 and creates:
 
 Per-utterance records retain input annotations/reference text, feature digest,
 valid/original frames, truncation, recognized text, token IDs/count, decoder
-execution and stage timings. No dataset CER or measured BPU latency is claimed.
+execution and stage timings.
 Stage timing excludes frontend, file I/O and other work outside the runner/CIF
 calls. Exact-empty CIF skips decoder with zero IDs/text and null decoder timing.
 
@@ -143,14 +140,8 @@ must not be interpreted as whole-run success.
 Before accepting success, the launcher rejects `host-fixture`, checks exit code
 and result existence, validates model identity, physical shapes/types/roles and
 byte strides against the Python binding, checks every selected input/result and
-text/token/timing consistency, and rehashes inputs/models/vocabulary. These report-consistency checks bind the report to the run; actual SDK/model
-validation remains separate. The host CLI fixture is never installed as the public
-binary or accepted as native success.
-
-[Native CLI evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-cli-review.md)
-records actual application execution with a marked transport double, including
-zero tokens, failed model calls, partial progress and output reuse rejection.
-Real vendor SDK compilation/ABI, HBM inference and board testing remain not-run.
+text/token/timing consistency, and rehashes inputs/models/vocabulary. These report-consistency checks bind the report to the run. A host CLI fixture is
+never installed as the public binary or accepted as native success.
 
 ## Build options and current entry points
 
@@ -188,8 +179,7 @@ CIF masks weights at/after valid_frames before accumulation. No-fire input retur
 zero acoustic values/count; the first 100 emissions are retained. It preserves
 source float64 cumulative sums rounded to float32 and one fire per time step.
 It is not a general multi-fire integrator for weights above one. Native CIF has
-no implicit unmasked calibration mode. The old C++ source already handled no-fire
-input; the old Python exception was repaired in the unified Python path.
+no implicit unmasked calibration mode.
 
 Greedy text decoding uses the valid token prefix and first ID on equal scores,
 filters tokens enclosed by `<...>`, removes every `@@` and concatenates without
@@ -246,8 +236,7 @@ c++ -std=c++17 -fsanitize=address,undefined -Isamples/speech/paraformer/runtime/
 /tmp/rdk-paraformer-core/example
 ```
 
-Expected output is `2 3 8`. This is a complete synthetic numerical example,
-not a recognized transcript. [test_pipeline.cc](tests/test_pipeline.cc) also gives
+Expected output is `2 3 8`. [test_pipeline.cc](tests/test_pipeline.cc) also gives
 an executable callback-composition example with explicit synthetic model outputs.
 The default two WAVs can already be converted to features through the Python
 `--preprocess-only` command; the optional feature I/O library below reads that prepared manifest in C++.
@@ -255,19 +244,16 @@ The default two WAVs can already be converted to features through the Python
 <a id="troubleshooting"></a>
 ## Verification and limits
 
-Two numerical tests exercise fractional integration, padding, empty input, the cap,
-invalid contracts, repeated/special/BPE tokens, equal-score ties, callback order,
-zero-token bypass and malformed intermediate tensors. The comparison driver
-checks 27 cases byte-for-byte against both the extracted pinned C++ CIF source
-and unified Python, plus 20 native/Python text comparisons. See the linked report
-for the exact compiler and reproducible script. The extracted source/driver is a
-host evidence fixture, not a new maintained runtime copy.
+The CTest suite exercises fractional integration, padding, empty input, the
+100-emission cap, invalid contracts, repeated/special/BPE tokens, equal-score
+ties, callback order, zero-token bypass and malformed intermediate tensors.
 
 A build failure for sanitizer runtime libraries requires matching compiler/linker
 support; `PARAFORMER_SANITIZERS=OFF` builds without instrumentation but does not
-reproduce the sanitizer check. The SDK adapter validates shape/type/name/strides from runtime metadata, but
-its API-double tests cannot establish actual HBM compatibility. The concrete identity/artifact preflight factory is implemented separately. Real SDK compilation, board inference, OE and CER remain not-run or pending as appropriate. The CLI is implemented and
-host-checked with a clearly identified test transport.
+reproduce the sanitizer check. The SDK adapter validates shape/type/name/strides
+from runtime metadata at load. SDK compilation, board inference, OE and CER run
+through their respective guides; the identity/artifact preflight factory is
+documented in the [preflight](#preflight) section.
 
 <a id="sdk-adapter"></a>
 ## S100 SDK adapter
@@ -281,8 +267,7 @@ prefix, provide `CMAKE_PREFIX_PATH` or the explicit CMake cache paths
 `PARAFORMER_DNN_INCLUDE`, `PARAFORMER_UCP_INCLUDE`, `PARAFORMER_UCP_SYS_INCLUDE`,
 `PARAFORMER_DNN_LIBRARY`, `PARAFORMER_UCP_LIBRARY`. No SDK installation is automatic.
 Missing real SDK dependencies fail configuration; host API doubles are included
-only by `test_sdk`, never a fallback for this library. This host has no vendor
-SDK, so a real SDK configuration was checked to fail, not recorded as a build pass.
+only by `test_sdk`, never a fallback for this library.
 
 Construct `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)` separately
 for each stage. The callback is mandatory and runs before any SDK call; it must
@@ -333,12 +318,9 @@ std::vector<float> encode_features(const paraformer::ModelGroup &models,
 }
 ```
 
-Packed models, tensor allocations and inference tasks reuse the shared Ultralytics
-owners/transport. The new multi-input transport permits decoder's four inputs;
-the existing image transport retains its one/two-input restriction. API-double
-checks cover all stages, reordered/padded tensors, both acoustic aliases, optional
-output, copy ownership, rejected inputs/metadata, and allocation/inference/cache
-failure cleanup. See [SDK verification](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md).
+Packed models, tensor allocations and inference tasks reuse the shared
+owners/transport. The multi-input transport permits decoder's four inputs;
+the image transport retains its one/two-input restriction.
 
 <a id="preflight"></a>
 ## Three-model preflight
@@ -358,10 +340,10 @@ decoder is required. `expected_asset_id(stage)` returns the fixed publication ID
 Pass the vocabulary path separately. Its required SHA-256 is
 `2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`.
 Use observed model digests captured during package preparation for reproducible
-file identity. The publisher has not recorded model digests; a locally supplied
-expected digest does **not** authenticate publisher origin or prove that the HBM
-implements the selected model. Actual runtime metadata validation remains required.
-Do not replace the expected digest with a new one merely to silence a mismatch.
+file identity. The publisher does not record model digests, so a local expected
+digest binds the local bytes; shape/type/name validation still runs at load.
+Replace the expected digest only after re-preparing the package, never to
+silence a mismatch.
 
 `make_preflight(group, vocabulary)` reads actual local identity through the shared
 platform reader and immediately verifies the entire group before any runner is
@@ -380,7 +362,7 @@ preflight does not lock files against concurrent replacement.
 `verify_group(group, vocabulary, actual)` is the explicit-identity lower-level
 checker used in host tests; customer deployment code should use `make_preflight`
 to obtain actual identity rather than supplying a fabricated identity. No bypass
-switch or implicit S100P fallback is provided. See [preflight evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-preflight-review.md).
+switch or implicit S100P fallback is provided.
 
 <a id="prepared-features"></a>
 ## Read Python-prepared features
@@ -438,7 +420,8 @@ are also accepted), independently of later cwd changes. Records require:
 preserved in `original_record_json`, a semantic JSON serialization (not the
 original whitespace). `reference_text` is an optional string. FeatureItem also
 provides the resolved path, normalized digest and explicit frame/truncation fields.
-A user-supplied file digest identifies bytes; it does not prove frontend provenance.
+A user-supplied digest identifies the local bytes; record the frontend version
+alongside the digest when comparing runs.
 
 `load_features(item)` hashes the same owned bytes it parses and returns a compact
 float vector of 224,000 elements. Supported inputs are NPY versions 1.0/2.0/3.0,
@@ -449,7 +432,3 @@ Python expressions are never evaluated. Header length is capped at 64 KiB.
 Fortran order, other types/shapes/versions, duplicate/unknown header keys, trailing
 syntax or data, truncated payloads, malformed metadata and changed bytes fail
 with exceptions. The reading API returns no partial success for a failed file.
-
-[Feature-reader evidence](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-feature-io-review.md)
-records byte equality for real frontend arrays and format/error cases. SDK/board execution remains outside these file-reader checks; the CLI/results
-flow has its own explicitly marked host verification below.

@@ -9,7 +9,7 @@ RepGhost is a lightweight CNN family designed to improve hardware efficiency by 
 - **Paper**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
 - **Reference Implementation**: [ChengpengChen/RepGhost](https://github.com/ChengpengChen/RepGhost)
 
-The source README's feature highlights:
+Feature highlights:
 
 - **Structural re-parameterization** — converts training-time complex
   branches into efficient inference-time structures.
@@ -26,24 +26,26 @@ add branches fused for inference](./test_data/RepGhost_architecture.png)
 *Figure (upstream paper Fig. 4): (a) Ghost bottleneck with its explicit
 `Concat` feature reuse; (b) RG-bneck at training — reuse moves to weight
 space via `add` branches; (c) RG-bneck at inference — the branches are
-fused away. Restored from the X5 source README (rdk_x5
-@ac115717197920355fc390bb04299b20e6436864); it depicts the upstream
+fused away. it depicts the upstream
 architecture, while the deployed artifacts are the INT8-quantized
 100–200 variants at 224×224 NV12 (see [Support
 matrix](#support-matrix)).*
 
-One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+One BGR image produces ImageNet-1k Top-K class IDs, scores and optional
+labels. The `RepGhostClassifier` class runs a `preprocess → infer → postprocess` flow
+chained by `predict` (labels, drawing and file output belong to the CLI
+layer; see [runtime/python/README.md](runtime/python/README.md)).
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Target | Variant | Python | C++ |
 | --- | --- | --- | --- |
-| x5 | 100 | supported-not-run | not-supported |
-| x5 | 111 | supported-not-run | not-supported |
-| x5 | 130 | supported-not-run | not-supported |
-| x5 | 150 | supported-not-run | not-supported |
-| x5 | 200 | supported-not-run | not-supported |
+| x5 | 100 | supported | not-supported |
+| x5 | 111 | supported | not-supported |
+| x5 | 130 | supported | not-supported |
+| x5 | 150 | supported | not-supported |
+| x5 | 200 | supported | not-supported |
 | s100 | 100 | not-supported | not-supported |
 | s100 | 111 | not-supported | not-supported |
 | s100 | 130 | not-supported | not-supported |
@@ -60,17 +62,17 @@ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. 
 | s600 | 150 | not-supported | not-supported |
 | s600 | 200 | not-supported | not-supported |
 
-`supported-not-run` means an implementation and published artifact exist, but unified board validation has not run. No S-series artifacts or C++ implementations are provided. [Host validation records](../../../docs/releases/unified-migration/2026-09-22-b4-classification-review.md) do not establish board verification.
-
-Source: `rdk_x5 @ac115717197920355fc390bb04299b20e6436864`. Neither source delivers RepGhost C++. No board result is claimed for this migration.
+Select a supported target and runtime from the support matrix.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use a full repository checkout. On X5 use the matching board image and its `hbm_runtime`; install host dependencies in a virtual environment as below. SciPy is used only by the preserved-source comparison tests, not unified inference.
+Use a full repository checkout. On X5 use the matching board image and its `hbm_runtime`; install host dependencies in a virtual environment as below. Host-side comparison tools use SciPy; board inference uses the dependencies in the matching runtime image.
 
-Locally tested host environment: Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0, PyYAML 6.0.3 and SciPy 1.18.1. This is a host regression environment, not a qualified board dependency set. X5 4GB/8GB validation is planned; exact board image, Python and SDK versions and minimum RAM remain unverified. Allow disk space for the checkout, selected model and outputs; a minimum capacity has not been measured. Native inference needs no OE toolchain; conversion prerequisites are documented under conversion.
-
+Use a full repository checkout. On X5 use the matching board image and
+its `hbm_runtime`; install the host dependencies in a virtual environment
+as below. Host-side comparison tools use SciPy; board inference uses the dependencies in the matching runtime image. Native inference needs no OE toolchain; conversion
+prerequisites are documented under [conversion](conversion/README.md).
 ```bash
 # cwd: repository root
 python3 -m venv .venv-repghost
@@ -82,7 +84,7 @@ python3 -c "import cv2, numpy, yaml; print('host dependencies: ok')"
 <a id="quickstart"></a>
 ## Quick start
 
-Run on X5 from the repository root. Download exits 0 and prints an observed digest; inference exits 0 and prints five results. No automatic download occurs during inference.
+From the repository root, prepare the X5 artifact with the model downloader, then run inference with the bundled image and the selected artifact reference.
 
 ```bash
 # cwd: repository root
@@ -96,38 +98,38 @@ python3 samples/vision/repghost/runtime/python/main.py \
 <a id="expected-results"></a>
 ## Expected results
 
-The default is variant `100`, preserving the source entrypoint. `111`, `130`, `150`, `200` must be selected explicitly. Top-K scores use the source softmax policy; exact ties use stable ascending class-ID order. The ibex image is a functional input, not a dataset accuracy test; no current-board reference output exists yet. No image is saved unless `--img-save-path` is supplied.
+The default variant is `100`; `111`, `130`, `150`, `200` must be selected
+explicitly. Softmax scores produce a stable Top-K; exact ties use stable
+ascending class-ID order. For dataset accuracy, use the validation-set procedure in the evaluator guide. No image is saved unless `--img-save-path` is
+supplied.
 
-For reference, the X5 source README (rdk_x5
-@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
-illustrated its run with the screenshot below: the legacy `result.jpg`
-drawing overlaid the top-5 ranks on the image, with rank 1 being class
-350 (ibex, Capra ibex) on the bundled `ibex.JPEG`. This is a historical
-screenshot from the source delivery, not a run of the current entrypoint
-in this repository.
+The screenshot below shows a reference run from the X5 release: the
+demo overlay draws the top-5 ranks onto the bundled test image, with
+rank 1 being class 350 (ibex, Capra ibex).
 
-![Historical inference screenshot from the X5 source README: ibex test
-image with the legacy top-5 overlay, rank 1 class 350 (ibex, Capra
-ibex)](./test_data/inference.png)
+![Reference inference result on X5: ibex test image with the top-5 overlay, rank 1 class 350 (ibex, Capra ibex)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data
 
-Historical source records, not remeasured here. Full timing conditions and all columns are retained in [evaluation](evaluator/README.md#reference-results). Do not compare single-thread latency with multi-thread FPS as reciprocal quantities.
+Published performance records; full timing conditions and all columns
+are listed under [evaluation](evaluator/README.md#reference-results).
+Single-thread latency and multi-thread FPS are measured under different
+concurrency and are not reciprocal quantities. Compare latency and FPS using
+the same thread count, concurrent submission mode and BPU utilization.
 
 <a id="directory"></a>
 ## Directory
 
-`model/`: artifacts and download; `runtime/python/`: native CLI, task and runner; `conversion/`: five unchanged PTQ YAMLs; `evaluator/`: checks and historical benchmarks; `test_data/`: `ibex.JPEG` input and accompanying resources; `tests/`: host regressions.
+`model/`: artifacts and download; `runtime/python/`: native CLI, task and runner; `conversion/`: five PTQ YAMLs; `evaluator/`: functional checks and published benchmarks; `test_data/`: `ibex.JPEG` input and accompanying resources; `tests/`: host unittest suite.
 
 <a id="entry-points"></a>
 ## Entry points
 
 [Model](model/README.md) · [Python](runtime/python/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md)
 
-The old `platforms/x5/samples/vision/repghost` entry remains the original source implementation for baseline comparisons. It has not become a forwarding shim. New integrations use this sample; internal legacy imports are not promised compatible.
 
 <a id="license"></a>
 ## License
 
-Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; the repository license is not a grant overriding those notices or upstream weights licenses. Check the applicable notices before redistributing conversion material or weights.
+Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; Before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.

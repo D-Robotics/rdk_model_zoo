@@ -12,13 +12,8 @@ Attention](https://arxiv.org/abs/2305.07027)，参考实现
 
 ## 概述
 
-统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
-也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
-核验板卡身份，懒加载 `hbm_runtime`，执行
-`pre_process → forward → post_process` 任务（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台
-分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/x5/` 下，其审计记录
-在迁移文档中，不在本 README 展开。
+本样例提供面向 X5 的 Python 运行时。`EfficientViTClassifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果（见
+[runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
 ### 算法背景
 
@@ -30,7 +25,7 @@ reshape/归一化/拷贝等数据搬移占去 Swin/DeiT 相当比例的延迟（
 （[论文](https://arxiv.org/abs/2305.07027)、
 [microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)）。
 
-源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+特性摘要：
 
 - **省内存的高效注意力**：降低限制标准 Transformer 推理效率的数据搬移开销。
 - **级联组注意力**：在控制部署成本的同时提升表征能力。
@@ -39,38 +34,27 @@ reshape/归一化/拷贝等数据搬移占去 Swin/DeiT 相当比例的延迟（
 
 ![运行时剖析](./test_data/comparison_between_transformer_and_cnn.png)
 
-*运行时剖析，恢复自 X5 源版本
-（`test_data/comparison_between_transformer_and_cnn.png`，rdk_x5
-@ac11571，sha256 `be1e2e39…`；论文图 2）：访存受限算子（红色标注）在
+*运行时剖析（论文图 2）：访存受限算子（红色标注）在
 Swin-T/DeiT-T 延迟中占比很大 — 正是 EfficientViT 要削减的开销。*
 
 ![MHSA 占比研究](./test_data/mhsa_computation.jpg)
 
-*（`test_data/mhsa_computation.jpg`，rdk_x5 @ac11571，sha256
-`4dda6352…`；论文图 3）：降尺度的 Swin-T/DeiT-T 基线在不同 MHSA 层占比
-下的 top-1 精度 — 单纯减少 MHSA 层并不能直接得到高效设计，这正是改用
-级联组注意力的动机。*
+*MHSA 占比研究（论文图 3）：降尺度的 Swin-T/DeiT-T 基线在不同 MHSA 层
+占比下的 top-1 精度 — 单纯减少 MHSA 层并不能直接得到高效设计，这正是
+改用级联组注意力的动机。*
 
 ![EfficientViT 架构](./test_data/efficientvit_msra_architecture.png)
 
-*EfficientViT 总览，恢复自 X5 源版本
-（`test_data/efficientvit_msra_architecture.png`，rdk_x5 @ac11571，
-sha256 `403d1c63…`；论文图 6）：(a) 带重叠 patch embedding 的三阶段
+*EfficientViT 总览（论文图 6）：(a) 带重叠 patch embedding 的三阶段
 网络，(b) 三明治布局块，(c) 逐头级联、拼接投影的级联组注意力。*
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持范围
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | m5 | python | supported（2026-09-21 x5-8g + x5-4g 板测通过，见下方说明） |
-| s100 / s100p / s600 | 任意 | python | not-supported（S Manifest 未发布 EfficientViT 资产；选择时显式报错，无跨平台回退） |
-
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)。统一 sample 的主机测试（26
-项）全部通过。板端冒烟（2026-09-21；同板、同制品字节、同输入图，旧
-wrapper 对照统一入口）：x5-8g/x5-4g m5 Top-5 ids 全等（最大分差
-≤1.9e-9）；`run.sh` CLI 双板 rc=0。raw tensor 等价、数据集精度与延迟
-不在覆盖范围；已发布基准表仍为源分支记录。证据：[B2 板测](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json)。
+| x5 | m5 | python | supported |
+| s100 / s100p / s600 | 任意 | python | not-supported（按支持矩阵选择目标与变体） |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -111,24 +95,21 @@ python3 samples/vision/efficientvit/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-缺省变体（未指定时）为 `m5`——唯一已发布变体，保持源入口的默认模型。
+缺省变体（未指定时）为 `m5`——唯一已发布变体。
 完整命令见 [runtime/python/README_cn.md](runtime/python/README_cn.md)。
 
 <a id="expected-results"></a>
 ## 预期结果
 
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
-指定 `--img-save-path`，不写任何输出文件（源入口总会写
-`test_data/result.jpg`——该副作用已移除）。使用随附 `hook.JPEG` 时 Top-5
-含挂钩相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部 S
-目标）会显式报错退出。
+指定 `--img-save-path`，不写任何输出文件。使用随附 `hook.JPEG` 时 Top-5
+含挂钩相关 ImageNet 类别。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
 <a id="performance"></a>
 ## 性能数据
 
-X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓库重测
-（源说明：Float Top-1 为量化前 ONNX 结果，Quant Top-1 为部署模型结果；
-源表未声明延迟的线程条件）：
+RDK X5 上的已发布数值（X5 发布 x5-v1.1.3；Float Top-1 为量化前 ONNX 结果，Quant Top-1 为部署模型结果；
+新延迟对照请记录线程数与并发设置）：
 
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -136,17 +117,15 @@ X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓�
 
 ![推理结果](./test_data/inference.png)
 
-*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
-sha256 `2a23e138…`）：随仓 [hook.JPEG](test_data/hook.JPEG) 的 Rank-1
-为 `hook`，其后依次为 crane、chain、seashore、dock。由源版本在其自身
-运行入口记录 — 不是本仓库的新运行。*
+*X5 发布的参考推理结果：随仓 [hook.JPEG](test_data/hook.JPEG) 的
+Rank-1 为 `hook`，其后依次为 crane、chain、seashore、dock。*
 
 <a id="directory"></a>
 ## 目录职责
 
 - [model/](model/README_cn.md) — Manifest 驱动的制品下载，不检入二进制
 - [runtime/python/](runtime/python/README_cn.md) — 统一 Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — X5 参考 PTQ 配置（含已披露缺口）
+- [conversion/](conversion/README_cn.md) — X5 PTQ 配置及模型所需准备步骤
 - [evaluator/](evaluator/README_cn.md) — 发布的基准记录与功能检查
 - `test_data/` — 随附测试图（[hook.JPEG](test_data/hook.JPEG) 及参考插图）
 - `tests/` — 主机 unittest 套件
@@ -165,5 +144,5 @@ sha256 `2a23e138…`）：随仓 [hook.JPEG](test_data/hook.JPEG) 的 Rank-1
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为上游 MSRA
 EfficientViT 发行版
 （[microsoft/Cream](https://github.com/microsoft/Cream/tree/main/EfficientViT)）；
-模型/权重许可由上游发行版 govern。已发布制品遵循平台发布 Manifest；
-Manifest 不含独立许可字段，本文件不主张额外许可。
+模型/权重许可由上游发行版约束。已发布制品遵循平台发布 Manifest；
+已发布制品按平台发布 Manifest 提供。

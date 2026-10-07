@@ -31,11 +31,11 @@ Common requirements: Python 3.10+, NumPy, Pillow. PyTorch/ONNX backends addition
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| --model | required | .pth / .onnx / .bin |
+| --model | required |.pth /.onnx /.bin |
 | --manifest | required | image TAB mask absolute path pairs |
 | --report | required | new JSON path; existing file rejected |
 | --backend | auto | suffix detection or pytorch/onnx/x5 |
-| --backbone | None | required for .pth or custom-named .bin |
+| --backbone | None | required for.pth or custom-named.bin |
 | --limit | None | first N manifest entries; positive |
 | --progress-every | 50 | progress interval |
 | --min-miou | 0.0 | write report and return 2 if below threshold |
@@ -102,9 +102,9 @@ A new JSON stores backend, model/manifest hashes, sample count and input_contrac
 <a id="reference-results"></a>
 ## Reference results
 
-The [sample README](../README.md) retains five-backbone training/PTQ tables and the 1449-image ResNet18 three-backend record. These retain their original checkpoint/artifact conditions. This round did not remeasure mIoU, BPU latency or FPS; synthetic host tests do not replace that evidence.
+The [sample README](../README.md) carries five-backbone training/PTQ tables and the 1449-image ResNet18 three-backend record, each bound to its original checkpoint/artifact conditions. Synthetic host tests do not replace those measurements.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-Prepare full datasets and checkpoint/ONNX/BIN beforehand. Full dataset evaluation and board execution are not-run. Runtime timing is not a pure BPU benchmark supplied by this evaluator. Strict PyTorch checkpoint loading and single-input/output ONNX constraints remain; arbitrary architectures or S-family assets are not supported.
+Prepare full datasets and checkpoint/ONNX/BIN beforehand. Runtime timing is not a pure BPU benchmark supplied by this evaluator. Strict PyTorch checkpoint loading and single-input/output ONNX constraints remain; arbitrary architectures or S-family assets are not supported.

@@ -58,4 +58,4 @@ Dry-run 只解析选择，不打开模型。实际加载检查物理身份、发
 | S100P | `5829a1a318116e2eba5c3ba313841fbd064fe2d48fe3cd37eb1ec7d9a0ffa8fa` |
 | S600 | `78605b5aaa573fbaa2bf4788c6c8922bcab39d90c195e264aa3a8d3a78321c53` |
 
-下载和真实运行加载均验证这些摘要。源记录采用 OpenExplorer v3.7.0、INT16 优先/max PTQ、GridSample INT8 例外及全 BPU 落位。这些历史转换声明不能证明当前板端兼容或物理张量类型，加载时仍验证真实 IO 与量化信息。模型二进制不提交到 Git。本次主机迁移未下载或加载任一 HBM。
+下载和运行加载均校验上述摘要。编译条件为 OpenExplorer v3.7.0、INT16 优先/max PTQ、GridSample INT8 例外及全 BPU 落位；推理前通过 SDK 检查物理 IO 类型与量化元数据。模型二进制不提交到 Git。

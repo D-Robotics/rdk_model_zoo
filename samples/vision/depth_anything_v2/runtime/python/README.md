@@ -6,10 +6,10 @@
 ## Environment
 
 Use compatible S100 `hbm_runtime`, Python, NumPy, OpenCV and PyYAML. Listing and
-dry-run work on a host without the board SDK. The source wrapper installed
-NumPy1.26.4, OpenCV4.11.0.86 and Torch2.3.1 automatically; these are historical
-pins, not a compatibility claim for this migration. No automatic installation
-remains. Torch was used only for resizing and is no longer required.
+dry-run work on a host without the board SDK. The source delivery used
+NumPy 1.26.4, OpenCV 4.11.0.86 and Torch 2.3.1 (installed by its own wrapper);
+this runtime installs nothing automatically. Torch was used by the source only
+for resizing and is no longer required.
 See [model preparation](../../model/README.md).
 
 <a id="usage"></a>
@@ -116,11 +116,7 @@ matching context with every frame; the task stores no last-image dimensions.
 Runner injection is for host tests, not evidence of hardware execution. Shared
 runner concurrency is not guaranteed by this API.
 
-The source's `DepthAnythingV2Config`/`DepthAnythingV2` returned display uint8 and
-exposed scheduling and `__call__` on the task. The new explicit API separates the
-runner and returns float depth. To obtain the old display representation call
-`visualization.normalize_depth(result.depth_native)` or `colorize_depth(...)`.
-The archived source remains available; silent old-API compatibility is not claimed.
+The API returns float depth. For a uint8 display, call `visualization.normalize_depth(result.depth_native)` or `colorize_depth(...)`. Keep the frame’s `ImageContext` with its result and synchronize access to any shared runner.
 
 <a id="stage-io"></a>
 ## Stage contracts
@@ -143,9 +139,10 @@ statistics on uint8; this order is preserved.
 Letterbox uses floor-rounded dimensions, INTER_LINEAR and fill127; gray padding
 normalizes to zero. Zero-sized scaled dimensions fail explicitly. Postprocess
 crops optional padding and restores with OpenCV INTER_LINEAR. The default stretch
-uses the same half-pixel bilinear geometry as source Torch `align_corners=False`,
-but rounding/float accumulation can differ: no bit-exact claim is made. Host
-analytic affine-plane tests check geometry; actual HBM/Torch parity is not run.
+uses the same half-pixel bilinear geometry as the source Torch
+`align_corners=False` resize, but rounding/float accumulation can differ: no
+bit-exact equality is claimed. Host analytic affine-plane tests check the
+geometry.
 
 Metadata must expose exactly one model/input/output with the declared shapes and
 float32 types. Internal int16 quantization is not an IO type declaration. Invalid
@@ -163,6 +160,6 @@ an incompatible output to make validation pass.
   quantization prose cannot justify accepting an integer public output.
 - **Different colors:** compare float arrays and preprocessing modes first;
   per-image display normalization hides scale/offset differences.
-- **Constant map:** zero-gray rendering is defined, but investigate input/model
-  behavior before claiming accuracy. No dataset acceptance is inferred.
+- **Constant map:** zero-gray rendering is defined behavior; a constant
+  prediction itself indicates an input/model problem to investigate.
 - **Existing output:** choose fresh paths; do not mix partial/stale results.

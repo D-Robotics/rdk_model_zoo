@@ -23,9 +23,8 @@ without it. Host-side test dependencies are listed in the sample's
 <a id="usage"></a>
 ## Usage
 
-cwd: repository root. Default command (zero arguments beyond the mode
-flags is not executable without a board and artifact, so the minimal
-SDK-free invocation is the listing mode):
+Run from the repository root. To inspect manifest-backed model references
+without loading the board SDK, use listing mode:
 
 ```bash
 # success: prints all published references, exit 0, no SDK loaded
@@ -70,9 +69,6 @@ loading, or download.
 | `--list-models` | flag | false | list manifest-backed references without board access |
 | `--dry-run` | flag | false | resolve/check a selection without loading a model or SDK |
 
-Defaults above are machine-checked against `build_parser()` by the Q3
-checker.
-
 <a id="results"></a>
 ## Results
 
@@ -82,12 +78,11 @@ annotated image only when `--img-save-path` is given. X5 receives the packed
 NV12 buffer as the canonical flat 1-D uint8 array of `H*W*3/2` bytes
 (224x224 -> 75,264 bytes; same bytes as the former `(1,336,224,1)` view);
 S100/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8 arrays.
-Both audited source wrappers apply softmax to the returned score vector; the
-canonical contract records this as `legacy_softmax` over an
-`unverified_score_vector` and does not claim a new output semantic. Output
-shapes follow the rank rule: any singleton-batch/spatial spelling that
-squeezes to `(1000,)` binds (the published artifacts declare the `raw_f32`
-transform; quantized artifacts would require a declared `dequant` contract).
+The classifier applies softmax to the returned score vector before selecting
+the stable descending Top-K. Published artifacts declare `raw_f32` output;
+custom quantized artifacts must declare the appropriate `dequant` transform
+in their binding contract. Output shapes follow the rank rule: any
+singleton-batch/spatial spelling that squeezes to `(1000,)` binds.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -112,8 +107,8 @@ print(result.class_ids, result.scores, result.labels)
 `predict` accepts a local image path or a BGR `uint8` NumPy array and never
 modifies the array in place. The three stages can also be driven explicitly:
 `prepared = model.preprocess(image)`, `outputs = model.infer(prepared)`,
-`result = model.postprocess(outputs)` — `predict` chains exactly these
-steps (verified by the entry behavior tests). The established
+`result = model.postprocess(outputs)` — `predict` chains these three
+steps. The established
 `pre_process` / `forward` / `post_process` spellings remain thin aliases, and
 the shared `ClassificationTask` flow stays importable from
 [`classification.py`](classification.py).
@@ -134,7 +129,8 @@ selection = custom_selection(
     input_height=224, input_width=224, class_count=4,
 )
 model = ResNetClassifier(selection, top_k=2, labels=["cat", "dog", "bus", "ship"])
-result = model.predict(image_or_path)
+image_path = "samples/vision/resnet/test_data/white_wolf.JPEG"  # replace with your image path
+result = model.predict(image_path)
 ```
 
 Without `labels`, results keep the raw class IDs — ImageNet names are never
@@ -156,11 +152,8 @@ class count fails with a concrete error instead of mislabeling results.
 
 | Symptom | Check |
 | --- | --- |
-| `Cannot identify this board` | Run with an explicit target for dry-run, then execute only on that matching board; an explicit target is not hardware evidence. |
+| `Cannot identify this board` | Set an explicit target for `--dry-run`; run inference on the matching board. |
 | `model_path requires --asset-id` | Copy the exact qualified reference from `--list-models`; do not use a bare filename. |
-| `No published ... asset` for S100P | There is no ResNet18 S100P row in the manifest; use S100/S600 artifacts on their matching boards. |
+| `No published... asset` for S100P | There is no ResNet18 S100P row in the manifest; use S100/S600 artifacts on their matching boards. |
 | input shape or dtype mismatch | Confirm the artifact reference and runtime metadata; do not swap packed X5 and split S artifacts. |
 | output differs from a legacy run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |
-
-Host checks (repository root):
-`python3 -m unittest discover -s samples/vision/resnet/tests -v`.

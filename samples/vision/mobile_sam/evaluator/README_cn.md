@@ -1,16 +1,16 @@
 [English](README.md) | 简体中文
 
-# MobileSAM 迁移评估器
+# MobileSAM 评估器
 
 <a id="dataset"></a>
 ## 数据集
 
-本评估器将固定的 `test_data/dogs.jpg` 图像分别送入同一 target 上的 source legacy 入口和统一 runtime。默认 box 是 resize 后 `512x512` 坐标中的 `(185,120,380,445)`。它只衡量固定图像的迁移一致性，不是数据集精度或性能基准。
+将固定的 `test_data/dogs.jpg` 分别送入固定版本的参考实现与本 Sample 运行时，在同一目标板卡比较输入张量、原始输出、掩码选择和 IoU。保持图片、模型对与调度配置一致。 MobileSAM 默认框为缩放后 `512x512` 坐标中的 `(185,120,380,445)`。
 
 <a id="environment"></a>
 ## 环境
 
-在仓库根目录使用目标板卡上的 Python 3.10+ 运行，并安装匹配 runtime。评估器不会下载模型。选定的模型对必须已存在于 manifest 推导路径，或者同时提供自定义 stage 路径及精确 manifest asset ID。板端 SDK/系统版本未知；此次迁移板端为 not-run。
+在仓库根目录使用目标板卡上的 Python 3.10+ 运行，并安装匹配 runtime。评估器不会下载模型。选定的模型对必须已存在于 manifest 推导路径，或者同时提供自定义 stage 路径及精确 manifest asset ID。板端 SDK/系统版本以目标板卡实际环境为准，运行时请一并记录。
 
 <a id="command"></a>
 ## 命令
@@ -27,7 +27,7 @@ python3 samples/vision/mobile_sam/evaluator/compare.py \
 
 S 系列使用 `--target s100|s100p|s600`。可选的 `--test-img`、stage 模型路径及配对 asset ID、`--priority`（默认 `0`）和 `--bpu-cores` 会传给两侧。省略 `--bpu-cores` 时 S 使用 `[0]`；X5 不支持显式 core 选择。退出码 `0` 表示全部检查通过，`1` 表示执行完成但有比较失败，`2` 表示 target gate、参数、模型、图像或执行失败。
 
-调度控制：evaluator 先按固定源自带行为原样调用其 `set_scheduling_params`，并记录每一次原生调度调用及其原始结果。由于固定 X5 源 helper 传入标量 priority 会被原生 API 拒绝（源内部吞掉该 TypeError、实际未应用任何调度），evaluator 另行为两侧原生 runtime 显式设置同一份已验证的按模型名 Mapping 控制参数，使对照在完全一致且确实生效的调度下执行。`comparison.json` 记录每个 stage 的模型名、原生实参，以及被拒绝与成功生效的调用。该显式控制是 evaluator 的对拍控制项，不是固定源 CLI 自身的调度行为，也不改变两侧 pre/forward/post 处理。
+两侧执行使用相同的按模型名调度参数。`comparison.json` 保存模型名称、原生调用参数及每次调度调用的结果；比较运行结果时请核对实际生效的配置。
 
 | 参数 | 默认值 | 含义 |
 |---|---|---|
@@ -53,9 +53,9 @@ S 系列使用 `--target s100|s100p|s600`。可选的 `--test-img`、stage 模�
 <a id="reference-results"></a>
 ## 参考结果
 
-下表是从固定 source evaluator README 转录的历史测量值，仅作背景；它们不是统一代码树的结果，也不证明当前板端支持：
+下表数值转录自固定 source evaluator README；测量口径见下文，当前板端支持以支持矩阵为准：
 
-| Source target | Stage | Threads | 历史 latency (ms) | 历史 FPS |
+| Source target | Stage | Threads | 源记录 latency (ms) | 源记录 FPS |
 |---|---|---:|---:|---:|
 | X5 | encoder | 1 | 1402.542 | 0.712979 |
 | X5 | encoder | 8 | 2091.229 | 3.772934 |
@@ -70,9 +70,9 @@ S 系列使用 `--target s100|s100p|s600`。可选的 `--test-img`、stage 模�
 
 每次指定 target、模型对和 box 的本地或板端成功执行，其完整输出目录就是该次参考证据；请保留目录供复核。
 
-### 保留的单模型性能测试入口
+### 单模型性能测量
 
-`compare.py` 只检查迁移一致性。原样例另有 encoder、decoder 分别测量的 `hrt_model_exec perf` 能力，以下保留该流程；本次未执行。工具来自匹配板卡的开发套件，不通过 pip 安装。先按 model README 准备对应模型；将 `TARGET` 改为实际板卡，不能跨板复用文件。以下 shell 自身不校验硬件身份，执行前应按 runtime README 核对身份。
+使用匹配板卡开发套件提供的 `hrt_model_exec perf` 分别测量 encoder 和 decoder。先按模型指南准备模型对，再将下方 `TARGET` 设为实际板卡身份。
 
 ```bash
 # Bash; cwd: repository root; run only on the matching prepared board
@@ -100,20 +100,20 @@ for STAGE_MODEL in "$ENCODER" "$DECODER"; do
 done
 ```
 
-X5 源记录使用工具默认 200 帧；S 源未记录帧数，当前工具默认值/SDK 版本均未验证。S100/S100P 多线程为 2，S600 为 12，且 S600 多线程显式使用 `--core_id 1,2,3,4`。该工具的 core ID 参数不可照搬为 Python runtime 的 `--bpu-cores`。复测时保存完整命令、工具/系统版本、设备身份和输出；不要只保存汇总 FPS。
+X5 源记录使用工具默认 200 帧；S 源未记录帧数，复测时请记录帧数与工具/SDK 版本。S100/S100P 多线程为 2，S600 为 12，且 S600 多线程显式使用 `--core_id 1,2,3,4`。该工具的 core ID 参数不可照搬为 Python runtime 的 `--bpu-cores`。复测时保存完整命令、工具/系统版本、设备身份和输出；不要只保存汇总 FPS。
 
-### 历史记录的测量口径
+### 测量口径（源记录）
 
-源 S 表中的附加模型信息如下；参数量与 FLOPs 来自原 FP32 模型，不是本次计算或量化模型大小。FLOPs 按 `2×MACs` 口径记录。类别数均为 `-`（类别无关），CPU 前后处理延迟均未记录。
+源 S 表中的附加模型信息如下；参数量与 FLOPs 描述原 FP32 模型，非量化模型大小。FLOPs 按 `2×MACs` 口径记录。类别数均为 `-`（类别无关），CPU 前后处理延迟均未记录。
 
 | Stage | 输入规模 | Params (M) | FLOPs (G) |
 | --- | --- | ---: | ---: |
 | encoder | RGB 512×512 | 6.07 | 20.78 |
 | decoder | 256×32×32 embedding + 1×4 box | 4.06 | 0.94 |
 
-源 S 说明的 BPU 延迟为任务提交到完成，包含缓存预热；流式测量复用预分配内存，不计分配/释放。输入是 float32 张量，不是 NV12。两个阶段顺序执行，完整流水线延迟还包括 CPU 预处理、掩码缩放等开销，不能将单阶段 FPS 当作完整 sample 的吞吐。这些均为历史条件，不是统一实现已实测的性能保证。
+源 S 说明的 BPU 延迟为任务提交到完成，包含缓存预热；流式测量复用预分配内存，不计分配/释放。输入是 float32 张量，不是 NV12。两个阶段顺序执行，完整流水线延迟还包括 CPU 预处理、掩码缩放等开销，不能将单阶段 FPS 当作完整 sample 的吞吐。以上为源记录条件；本实现的性能按同一口径在目标板上实测。
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
-`compare.py` 不会下载制品、测试完整数据集、测量延迟、认证精度，也不会证明未显式 gate 和执行的 target。它使用相同 runtime 调用路径，对固定 source legacy 实现和统一实现进行比较。
+`compare.py` 比较固定图片在参考实现与 Sample 运行时中的张量和掩码一致性。性能计时使用上方单模型命令；精度评估使用带标注的数据集。

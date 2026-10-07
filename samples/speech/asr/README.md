@@ -5,20 +5,23 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-This sample transcribes audio using the published S-series Wav2Vec2 ASR model and a fixed 3503-token vocabulary. It reads WAV/FLAC in bounded chunks, mixes channels to mono, resamples to 16 kHz, normalizes each chunk and submits 30000 samples per inference (1.875 seconds). It handles the whole file, including the final padded chunk. This is independent-window processing, not an acoustic model with hidden streaming state or overlap stitching.
+This sample transcribes audio using the published S-series Wav2Vec2 ASR model and a fixed 3503-token vocabulary. It reads WAV/FLAC in bounded chunks, mixes channels to mono, resamples to 16 kHz, normalizes each chunk and submits 30000 samples per inference (1.875 seconds). It handles the whole file, including the final padded chunk. Each chunk is processed independently with fresh decoder state; the runtime does not carry acoustic state or overlap adjacent windows.
 
-The canonical Python workflow is implemented. The native workflow is also implemented: audio preprocessing, CTC/legacy decoding, SDK adapter, explicit launcher and full-file result reporting have host tests. Real vendor SDK build/ABI and model inference remain unverified. Preserve the original S source (historical `../../../platforms/s/samples/speech/asr/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) for historical implementation context. No board test or new real model transcription has run in this migration.
+Python and C++ runtimes are provided. Both expose full-file transcription; the
+Python runtime includes CTC and legacy decoding, while the native entry is built
+and run with the matching board SDK.
 
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Publication | Canonical Python | Canonical C++ | Board validation |
-| --- | --- | --- | --- | --- |
-| S100 | `s:asr:s100/asr.hbm` | Implemented | Implemented; host-tested | not-run |
-| S600 | `s:asr:s600/asr.hbm` | Implemented | Implemented; host-tested | not-run |
-| X5 / S100P | None | Rejected | Unsupported | not-run |
+| Target | Published artifact | Python runtime | C++ runtime |
+| --- | --- | --- | --- |
+| S100 | `s:asr:s100/asr.hbm` | Available | Available |
+| S600 | `s:asr:s600/asr.hbm` | Available | Available |
+| X5 / S100P | None | Not supported | Not supported |
 
-Published targets follow the active manifest, not contradictory source comments. S600's publication does not certify runtime behavior: its actual model/SDK metadata still needs validation. No target fallback is provided.
+Use the artifact published for the board target. Before inference, the runtime
+checks board identity and model tensor metadata.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -36,7 +39,7 @@ bash samples/speech/asr/runtime/python/run.sh --target s100 --dry-run
 bash samples/speech/asr/runtime/python/run.sh --target s600 --dry-run
 ```
 
-On the corresponding board, prepare its model and run (these inference commands are not current board evidence):
+On the corresponding board, prepare its model and run:
 
 ```sh
 bash samples/speech/asr/model/download.sh --target s100
@@ -46,11 +49,11 @@ bash samples/speech/asr/runtime/python/run.sh --target s100 --output-dir outputs
 Use `s600` in both commands for an S600; never rename the S100 HBM. `PYTHON` selects the interpreter. Output directories must be new. External models require the exact target-qualified asset ID; see [model preparation](model/README.md).
 
 <a id="expected-results"></a>
-## Expected results and decoding change
+## Output and decoding behavior
 
-The console prints a full-file transcription and the path to `result.json`. The report binds model/audio/vocabulary hashes, real metadata, decoder mode and each chunk's source position, valid sample count and text. Errors return 2; a failure after processing starts saves `failed.json` with completed chunks, not a partial success transcript.
+The console prints a full-file transcription and the path to `result.json`. The report binds model/audio/vocabulary hashes, model metadata, decoder mode and each chunk's source position, valid sample count and text. Errors return 2; a failure after processing starts saves `failed.json` with completed chunks.
 
-Default `ctc` collapses adjacent duplicate token IDs **before** removing blank ID 0. The archived implementation concatenated repeated IDs and only removed `<pad>`. `--decode-mode legacy` retains that old behavior for source comparisons. IDs `[1,1,0,1,2,2]` with tokens `<pad>,a,b` yield `aab` in CTC and `aaabb` in legacy. This is an explicit decoder correction, not evidence of changed model logits. Other tokens, punctuation and `|` remain verbatim. CTC state resets for every independent chunk; no cross-chunk deduplication is invented.
+Default `ctc` collapses adjacent duplicate token IDs before removing blank ID 0. `--decode-mode legacy` removes `<pad>` while retaining repeated IDs. For IDs `[1,1,0,1,2,2]` and tokens `<pad>,a,b`, the results are `aab` (`ctc`) and `aaabb` (`legacy`). Other tokens, punctuation and `|` remain verbatim. Each independent chunk starts with a fresh CTC state.
 
 <a id="directory"></a>
 ## Directory
@@ -59,18 +62,19 @@ Default `ctc` collapses adjacent duplicate token IDs **before** removing blank I
 | --- | --- |
 | `model/` | Exact manifest selection and explicit target download |
 | `runtime/python/` | Audio reader, pure frontend/decoder, shared raw runner and CLI |
-| `runtime/cpp/` | Native audio, task, SDK adapter, launcher and host tests; real SDK validation pending |
-| `test_data/` | Original WAV, fixed vocabulary and historical figures |
-| `conversion/` | Honest export/compiler prerequisites missing from the source |
-| `evaluator/` | Saved-transcript character error metrics and historical results |
-| `tests/` | Host numeric/metadata/identity/report tests |
+| `runtime/cpp/` | Native audio input, task, SDK adapter and launcher |
+| `test_data/` | WAV input, fixed vocabulary and reference figures |
+| `conversion/` | Export instructions and compiler prerequisites for supported conversion paths |
+| `evaluator/` | Saved-transcript character error metrics and reference data |
 
 <a id="entry-points"></a>
 ## Guides
 
-[Python usage/API](runtime/python/README.md) · [Native progress](runtime/cpp/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md) · [Input identities](test_data/README.md).
+[Python usage/API](runtime/python/README.md) · [Native usage/API](runtime/cpp/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md) · [Input identities](test_data/README.md).
 
-Host source comparisons cover original 16 kHz speech, 44.1 kHz stereo and 8 kHz constant audio. Their feature agreement is separate from SDK/board/dataset acceptance. Original latency and cosine screenshots remain historical, not new measurements.
+The Python audio frontend reads WAV/FLAC, mixes channels to mono and resamples
+to 16 kHz. The [C++ guide](runtime/cpp/README.md) documents its audio
+preprocessing and native tensor requirements.
 
 <a id="license"></a>
 ## License

@@ -4,16 +4,19 @@
 
 本目录统一 X5 Mapper 与 S 系列 `hb_compile` 入口，同时保留各自的数据格式。
 流程包括 ONNX 导出、确定性校准数据、解析后的编译配置、日志和制品摘要。
-本轮已验证主机准备逻辑；**尚未执行真实 Torch 导出、OpenExplorer 编译或板测**。
+Torch 导出与 OpenExplorer 编译在对应主机环境中执行；板端验证由 runtime sample 完成。
 
 <a id="source-model"></a>
 ## 源模型与计算图边界
 
 请提供兼容 Ultralytics `Depth` 头的已训练
-`yolo26{n,s,m,l,x}-depth.pt`。工具不附带或自动下载权重。
+`yolo26{n,s,m,l,x}-depth.pt`（[Depth 任务](https://docs.ultralytics.com/tasks/depth/)、
+[训练](https://docs.ultralytics.com/modes/train/)、
+[快速开始](https://docs.ultralytics.com/quickstart/)；上游仓库
+<https://github.com/ultralytics/ultralytics.git>）。工具不附带或自动下载权重。
 源分支记录 `ultralytics==8.4.105`，X5 另记录 `torch==1.13.0`；原始依赖分别保留在
-`requirements-x5-source.txt` 与 `requirements-s-source.txt`。这些历史版本不代表本轮已验证
-重新安装成功，也不代表支持任意 Python 版本。
+`requirements-x5-source.txt` 与 `requirements-s-source.txt`。这些版本描述源环境；
+新导出时应记录实际使用的版本。
 
 | 目标与变体 | ONNX 输出 | 运行时前处理 | CPU 解码 |
 |---|---|---|---|
@@ -38,9 +41,14 @@ OpenExplorer 1.2.8 / Mapper 1.24.3、O3 latency 优化、尾部卷积 int16 输�
 S 仅记录镜像名称 `ai_toolchain_ubuntu_22_s100_s600_gpu`，没有固定镜像摘要及编译器版本。
 新一轮转换应记录实际工具版本。
 
-源 X5 离线镜像地址为
-`https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz`。
-取得并加载镜像后，原容器启动方式如下：
+工具链入口：
+
+- RDK X5 OpenExplorer / 算法工具链文档：<https://developer.d-robotics.cc/rdk_doc/Advanced_development/toolchain_development/overview>
+- OE 工具链下载与手册：<https://toolchain.d-robotics.cc/>
+
+X5 离线镜像地址为
+`https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz`，
+取得并加载镜像后启动容器：
 
 ```bash
 # 从仓库根目录执行；将 /path/to/work 换成外部工作目录。
@@ -49,7 +57,7 @@ docker run -it --rm --network host --shm-size=15g \
   openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
-本轮没有重新验证镜像可用性、安装及兼容性。请在隔离的导出环境中使用源依赖记录。
+请在隔离的导出环境中使用源依赖记录。
 本目录 `requirements.txt` 只列主机校准与配置依赖；工具不会隐式安装软件。
 导出器的 `--help` 不依赖 Torch 或 Ultralytics。
 
@@ -63,7 +71,7 @@ docker run -it --rm --network host --shm-size=15g \
 | S600 | nash-p | 同上 | 同上 |
 
 `compile.py` 读取对应模板，在外部目录生成 `config.yaml`，写入 ONNX、校准及工作目录的
-绝对路径，不再假定模板中的历史相对文件名恰好等于导出结果。
+绝对路径，不再假定模板中的源相对文件名恰好等于导出结果。
 
 <a id="export"></a>
 ## 导出
@@ -81,7 +89,7 @@ python export.py --target s100 --variant l \
 
 默认 opset 11，生成 `yolo26n-depth_op11_log.onnx` 或
 `yolo26l-depth_op11_lite.onnx`、权重副本及 `export-report.json`。
-输入尺寸固定为 768。可以修改 `--opset`，但只有源默认值有历史依据。
+输入尺寸固定为 768。可以修改 `--opset`，但只有源默认值有记录依据。
 S 可通过 `--boundary` 显式导出其他实验边界；X5 没有 lite 源配方，因此拒绝该选项。
 
 <a id="calibration"></a>
@@ -154,13 +162,13 @@ hrt_model_exec model_info --model_file /work/depth/compile_x5_n/artifacts/yolo26
 ```
 
 第二条需要匹配的目标环境。编译器估计、单图 cosine、数据集精度与实测延迟是不同指标。
-离线深度评估位于 `../evaluator/`。重新编译的模型不会继承已发布制品的 SHA-256 或历史性能证据。
+离线深度评估位于 `../evaluator/`。重新编译的模型不会继承已发布制品的 SHA-256 或已发布性能证据。
 
 <a id="artifacts"></a>
 ## 输出制品
 
-- `config.yaml`：对应源配方及本次实际输入路径。
-- `preparation.json`：ONNX、校准清单摘要、身份信息和初始 not-run 状态。
+- `config.yaml`：对应源配方及该次实际输入路径。
+- `preparation.json`：ONNX、校准清单摘要、身份信息和运行状态。
 - `reports/`：真实命令标准输出与错误输出；失败日志也保留。
 - `working/`：编译中间文件。
 - `artifacts/`：最终 BIN/HBM；X5 另复制量化 ONNX。
@@ -171,19 +179,17 @@ hrt_model_exec model_info --model_file /work/depth/compile_x5_n/artifacts/yolo26
 <a id="known-gaps"></a>
 ## 已知缺口与源证据
 
-本轮未运行 Torch 导出、两套 OE、已下载模型或 SUNRGBD 评估。
 源记录缺少权重摘要、S 镜像/编译器精确版本以及 S HBM 发布方摘要。
 导出器依赖预期的 Depth 模块，找不到唯一一个对应头时显式报错。
 
-源 S 实验记录显示 NV12 l/x 存在截断，lite n/s/m 的 cosine 较低，所测 int16 调整也未改善。
-这些记录用于解释混合发布方案，不是本轮验证结果。
-源文档“全部达到 0.999”的说法与表中 0.9984 冲突，详见
-[源审计](../../../../docs/releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md)。
-不得通过删除表格或降低门槛掩盖矛盾。
+源 S 实验记录显示 NV12 l/x 存在截断，lite n/s/m 的 cosine 较低，所测 int16 调整也未改善；
+这些记录解释了混合发布方案。
+源文档“全部达到 0.999”的说法与表中 0.9984 冲突；两种数值均按各自的记录条件
+作为参考。
 
 源可选调优记录中的具体对照为：NV12 l/x 约 17% 像素饱和，cosine 为
 0.9938/0.9944；S100 lite n/s/m 为 0.9903/0.9854/0.9529。
-max/0.9999 校准将 lite n 提高到 0.9975，仍未达到原门槛。
+max/0.9999 校准将 lite n 提高到 0.9975，未达到源记录门槛。
 所述 S100 尾部卷积 int16 测试为 0.985449；全节点 int16 将模型约 13 MB 增至 25 MB、
 约 5.8 ms 增至 23.0 ms，cosine 反而降至 0.982804。
 这些是复现证据不完整的源观察。新实验应固定 ONNX、校准集、图像、板卡与前处理，

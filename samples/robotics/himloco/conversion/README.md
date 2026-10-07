@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## Source model
 
-Use the fused Go2 estimator/actor TorchScript `policy.pt` from [himloco_lab](https://github.com/IsaacZH/himloco_lab). Supply your training checkpoint and rollout; independently trained weights are not the same published artifact. Scripts and recipes are inherited from pinned X5 commit `ac115717197920355fc390bb04299b20e6436864`. This migration reorganizes the documentation without rerunning quantization. See [model identity](../model/README.md) for the published BIN.
+Use the fused Go2 estimator/actor TorchScript `policy.pt` from [himloco_lab](https://github.com/IsaacZH/himloco_lab). Supply your training checkpoint and rollout; independently trained weights are not the same published artifact. The scripts and recipes below are the source release's workflow. See [model identity](../model/README.md) for the published BIN.
 
 This directory exports a fused HIMLoco TorchScript policy to static ONNX and
 compiles it into an RDK X5 Bayes-e `.bin` model.
@@ -151,7 +151,7 @@ compile_mix_o3/
 <a id="validation"></a>
 ## Validation Results
 
-The source MIX/O3 build recorded the following (not rerun in this migration):
+The source MIX/O3 build recorded the following:
 
 | Metric | Result |
 | --- | ---: |
@@ -179,9 +179,7 @@ The compile directory contains `artifacts/himloco_go2_bayese_1x270.bin` for X5 a
 <a id="known-gaps"></a>
 ## Boundaries
 
-Training weights and a full rollout are not bundled. The source recipe is preserved; export, calibration, compilation and board testing were not rerun and are not prerequisites for this documentation migration.
-
-
+Training weights and a full rollout are not bundled. The source recipe is preserved; run export, calibration, compilation and board testing as documented when regenerating the artifact.
 
 - Use representative rollout states; random Gaussian calibration is not a
   release-quality substitute.

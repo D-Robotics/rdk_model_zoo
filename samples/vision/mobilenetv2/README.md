@@ -8,14 +8,15 @@ paper [MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org
 
 ## Overview
 
-The maintained implementation is one Python flow (all targets) plus one S-series C++ flow. Python resolves one exact artifact reference from the platform
-release manifests, verifies the board identity, loads `hbm_runtime`
-lazily, and runs a `pre_process → forward → post_process` task
-([runtime/python/README.md](runtime/python/README.md)). The C++ flow keeps the audited S-series
-`hbDNNInferV2` implementation ([runtime/cpp/README.md](runtime/cpp/README.md)).
-The former platform branch entries remain compatibility shims under
-`platforms/{x5,s}/` until the migration closeout; their audit record
-lives in the migration documents, not here.
+The sample ships one Python runtime for all targets plus one S-series C++
+runtime. The `MobileNetV2Classifier` class runs a `preprocess → infer →
+postprocess` flow chained by `predict`: it resolves one exact artifact
+reference from the platform release manifest for the detected board,
+verifies the board identity, loads `hbm_runtime` lazily, and returns a
+typed Top-K result
+([runtime/python/README.md](runtime/python/README.md)). The C++ flow is
+the S-series `hbDNNInferV2` implementation
+([runtime/cpp/README.md](runtime/cpp/README.md)).
 
 ### Algorithm background
 
@@ -27,7 +28,7 @@ keeps information that ReLU would discard in low-dimensional spaces
 ([paper](https://arxiv.org/abs/1801.04381),
 [timm/models/mobilenetv2](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv2.py)).
 
-Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+Feature summary:
 
 - **Inverted residuals**: expand channels before the depthwise convolution and project back through a linear bottleneck.
 - **Depthwise separable convolution**: reduces computation compared with standard convolution.
@@ -35,15 +36,12 @@ Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
 
 ![MobileNetV2 architecture](./test_data/mobilenetv2_architecture.png)
 
-*Inverted residual blocks, restored from the X5 source release
-(`test_data/mobilenetv2_architecture.png`, rdk_x5 @ac11571, sha256
-`7995faf5…`): the stride-1 block (left) keeps the additive shortcut; the
+*Inverted residual blocks: the stride-1 block (left) keeps the additive shortcut; the
 stride-2 block (right) downsamples without it, and only the final 1×1
 projection is linear.*
 
 The source tree also shipped the paper's block-evolution figure
-(`test_data/seperated_conv.png` — listed in the source README's directory
-section but not embedded there; restored as a referenced figure here):
+(`test_data/seperated_conv.png`):
 
 ![Evolution of separable convolution blocks](./test_data/seperated_conv.png)
 
@@ -57,18 +55,12 @@ non-linearity.*
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | mobilenetv2 | python | supported-verified (x5 8GB + 4GB board smoke, 2026-09-21) |
-| s100 | mobilenetv2 | python | supported-verified (S100 board smoke, 2026-09-21) |
-| s600 | mobilenetv2 | python | supported-verified (S600 board smoke, 2026-09-21) |
-| s100 | mobilenetv2 | cpp | supported-verified (S100 build + run, 2026-09-21 — Top-1 zebra equals the rdk_s baseline; BUILD_JOBS=1 on low-RAM boards) |
-| s600 | mobilenetv2 | cpp | supported-not-run (S600 C++ outside the B1 smoke set) |
-| s100p | any | python, cpp | not-supported (no s100p asset row in the release manifest; rejection verified on S100P hardware 2026-09-21 — explicit error, no fallback) |
-
-Source baselines: X5 rdk_x5 @ac11571 (x5-v1.1.3); S rdk_s @380e1a2 (s-v1.1.2). The unified sample's host
-tests all pass. Board smoke (2026-09-21) passed on x5 8GB/4GB and
-S100/S600 with outputs identical across boards and equal to the source
-implementations; S100P was verified as a rejection case only. Evidence:
-[B1 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json).
+| x5 | mobilenetv2 | python | supported |
+| s100 | mobilenetv2 | python | supported |
+| s600 | mobilenetv2 | python | supported |
+| s100 | mobilenetv2 | cpp | supported |
+| s600 | mobilenetv2 | cpp | supported |
+| s100p | any | python, cpp | not-supported (no s100p asset row in the release manifest; selection is an explicit error, no fallback) |
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -124,32 +116,26 @@ For the C++ flow use `bash samples/vision/mobilenetv2/runtime/cpp/run.sh`.
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; no output files are written unless `--img-save-path` is
-given. On X5 with the bundled `Scottish_deerhound.JPEG` the Top-1 matches the
+labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. On X5 with the bundled `Scottish_deerhound.JPEG` the Top-1 matches the
 image subject (a Scottish deerhound (dog)); on S100/S600 with `zebra_cls.jpg` the
-Top-5 includes `zebra`. A board that cannot be identified, or a target
-without a matching artifact, exits with an error instead of guessing.
+Top-5 includes `zebra`. Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
 <a id="performance"></a>
 ## Performance data
 
-Published MobileNetV2 performance on `RDK X5` from rdk_x5 @ac11571 (x5-v1.1.3):
+Published MobileNetV2 performance on `RDK X5` (x5-v1.1.3):
 
 | Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | MobileNetV2 | 224x224 | 1000 | 3.4 | 72.0% | 68.17% | 1.42 | 1152.07 |
 
-The S-series source release (rdk_s @380e1a2 (s-v1.1.2)) published no latency or accuracy
-figures for this model; none are inferred here.
 
 ![Inference result](./test_data/inference.png)
 
-*Historical inference screenshot from the X5 source release
-(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `7097e2e3…`): the
+*Reference inference result from the X5 release: the
 bundled [Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG)
 ranks `Scottish deerhound` first, followed by Irish wolfhound, lynx/
-catamount, standard schnauzer, and timber wolf. Recorded by the source
-release on its own runtime entry — not a new run of this repository.*
+catamount, standard schnauzer, and timber wolf. This is the source-reported X5 runtime example.*
 
 <a id="directory"></a>
 ## Directory

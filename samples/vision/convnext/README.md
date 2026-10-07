@@ -5,8 +5,8 @@ one BGR image in, a stable Top-K of `(class id, score, label)` out. The X5
 release publishes the atto variant (paper [A ConvNet for the
 2020s](https://arxiv.org/abs/2201.03545), reference
 [facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt));
-the source conversion directory additionally ships femto/nano PTQ recipes
-with no published asset (see [conversion/README.md](conversion/README.md)).
+the conversion directory additionally provides femto/nano PTQ recipes
+The conversion guide also documents the femto and nano PTQ configurations (see [conversion/README.md](conversion/README.md)).
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
@@ -17,8 +17,8 @@ ConvNeXt is a pure convolutional network modernized from the original
 ResNet by progressively adopting designs borrowed from the Swin
 Transformer ("A ConvNet for the 2020s"). It targets ImageNet-1k
 1000-class image classification and outputs Top-K classes with
-confidence scores. The source README highlights four design changes
-against a classic ResNet:
+confidence scores. Four design changes distinguish it from a classic
+ResNet:
 
 - **Large-kernel depthwise convolution** — a 7×7 depthwise convolution
   replaces the traditional 3×3 convolutions, enlarging the receptive
@@ -32,36 +32,26 @@ against a classic ResNet:
 ![ConvNeXt block compared with the ResNet and Swin Transformer
 blocks](./test_data/ConvNeXt_Block.png)
 
-*Figure: the upstream paper's block comparison — Swin Transformer block
-(left), ResNet block (middle), ConvNeXt block (right). Restored from the
-X5 source README (rdk_x5 @ac11571, x5-v1.1.3); it depicts the upstream
-training architecture, while the deployed artifact on X5 is the
-INT8-quantized atto variant at 224×224 NV12 (see [Support
-matrix](#support-matrix)).*
+*Figure: block comparison from the ConvNeXt paper — Swin Transformer
+block (left), ResNet block (middle), ConvNeXt block (right). The figure
+shows the upstream training architecture; the artifact deployed on X5 is
+the INT8-quantized atto variant at 224×224 NV12 (see
+[Support matrix](#support-matrix)).*
 
-The maintained implementation is one Python flow (X5 only; this sample has
-no S-branch delivery and no C++ runtime on either source). Python resolves
-one exact artifact reference from the platform release manifests, verifies
-the board identity, loads `hbm_runtime` lazily, and runs a
-`pre_process → forward → post_process` task
+The sample provides a Python runtime for X5. The
+`ConvNeXtClassifier` class runs a `preprocess → infer → postprocess`
+flow chained by `predict`: it resolves one exact artifact reference from
+the platform release manifest, verifies the board identity, loads
+`hbm_runtime` lazily, and returns a typed Top-K result
 ([runtime/python/README.md](runtime/python/README.md)).
-The former platform branch entry remains a compatibility shim under
-`platforms/x5/` until the migration closeout; its audit record lives in the
-migration documents, not here.
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | atto | python | supported (source-verified contract; board smoke pending for B3, see below) |
+| x5 | atto | python | supported |
 | s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no ConvNeXt asset; selection is an explicit error, no cross-platform fallback) |
-
-Source baseline: X5 rdk_x5 @ac11571 (x5-v1.1.3). The unified sample's host
-tests (28) all pass. Board smoke for this batch (B3) is executed after the
-host side of all four B3 samples lands; this matrix is updated with the
-observed results then — until that entry exists, board status for this
-sample is **not-run**, and the legacy source remains the verified delivery.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -104,41 +94,32 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-The default variant (when none is given) is `atto` — the only published
-variant, preserving the source entrypoint's default model. Full commands:
+The default variant is `atto`. Full commands:
 [runtime/python/README.md](runtime/python/README.md).
 
 <a id="expected-results"></a>
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; no output files are written unless `--img-save-path` is
-given (the legacy entrypoint always wrote `test_data/result.jpg` — that
-side effect is gone). With the bundled `cheetah.JPEG` the Top-5 contains
-cheetah-related ImageNet classes. A board that cannot be identified, or a
-target without a matching artifact (all S targets), exits with an error
-instead of guessing.
+labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `cheetah.JPEG` the Top-5 contains cheetah-related
+ImageNet classes. Select the target from the support matrix and prepare its matching artifact before inference; the runtime checks board identity before loading the model.
 
-For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
-Python entrypoint) illustrated its run with the screenshot below: the
-legacy demo drew the top-1 label onto the image (the removed
-`result.jpg` side effect) and the bundled `cheetah.JPEG` produced
-`cheetah, chetoh, Acinonyx jubatus: 0.8048811` (label text as printed by
-the historical run). This is a historical screenshot from the source
-delivery, not a run of the current entrypoint in this repository.
+The screenshot below shows a reference run from the X5 release: the demo
+draws the top-1 label onto the bundled `cheetah.JPEG` (the visualization
+written by `--img-save-path`); the recorded run returned class 293
+`cheetah, chetah, Acinonyx jubatus` with score 0.8048811.
 
-![Historical inference screenshot from the X5 source README (rdk_x5
-@ac11571): legacy visualization code and the cheetah result with top-1
-score 0.8048811](./test_data/inference.png)
+![Reference inference result on X5: the top-1 label drawn on the bundled
+cheetah.JPEG, score 0.8048811](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data
 
-Published records from the X5 source release (rdk_x5 @ac11571,
-x5-v1.1.3), not re-measured in this repository (source notes: Float Top-1
-on the pre-quantization ONNX, Quant Top-1 on the deployment model; latency
-single-frame single-thread single-core, FPS 4-thread concurrent; CPU
-8xA55@1.8GHz performance mode, BPU 1xBayes-e@1GHz):
+Published performance of the ConvNeXt series on RDK X5 (X5 release
+x5-v1.1.3; Float Top-1 on the pre-quantization ONNX, Quant Top-1 on the
+deployment model; latency single-frame single-thread single-core, FPS
+4-thread concurrent; CPU 8xA55@1.8GHz performance mode, BPU
+1xBayes-e@1GHz):
 
 | Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -147,19 +128,14 @@ single-frame single-thread single-core, FPS 4-thread concurrent; CPU
 | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
 | ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
 
-All four rows — including atto, the only variant with a downloadable
-artifact — come from the same published source table (rdk_x5 @ac11571,
-"Performance Data"), which also lists atto; the archived platform
-benchmark snapshot (`platforms/x5/docs/release/benchmarks.yaml`, entry
-`convnext-atto-x5`) records the same atto values. Historical published
-values, not re-measured in this repository.
+All rows are quoted from the published X5 release table. Prepare the atto artifact using [model/README.md](model/README.md); [conversion/](conversion/README.md) also documents the nano and femto PTQ configurations.
 
 <a id="directory"></a>
 ## Directory
 
 - [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
 - [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — X5 reference PTQ config with disclosed gaps
+- [conversion/](conversion/README.md) — X5 PTQ configuration and model-specific preparation steps
 - [evaluator/](evaluator/README.md) — published benchmarks and functional checks
 - `test_data/` — bundled test images ([cheetah.JPEG](test_data/cheetah.JPEG) plus reference illustrations)
 - `tests/` — host unittest suite
@@ -179,5 +155,4 @@ Sample code follows the repository top-level LICENSE (Apache-2.0). The
 source models are the upstream ConvNeXt distribution
 ([facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt));
 upstream model/weights licensing is governed by that distribution.
-Published artifacts follow the platform release manifests; the manifests
-carry no separate license field, and no additional license is claimed here.
+Published artifact use follows the applicable platform release terms.

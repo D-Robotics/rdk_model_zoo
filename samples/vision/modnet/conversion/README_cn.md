@@ -3,7 +3,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源文档指向官方 [MODNet 工程](https://github.com/ZHKKKe/MODNet) 和论文，但固定源没有锁定 checkpoint revision，也没有仓库内 ONNX exporter。源 README 提到 `onnx_export/` 和 `ptq_yamls/`，但审计文件中不存在这些路径；本迁移不复制也不虚构它们。
+源文档指向官方 [MODNet 工程](https://github.com/ZHKKKe/MODNet) 和论文，但没有锁定 checkpoint revision，也没有仓库内 ONNX exporter。源 README 提到 `onnx_export/` 和 `ptq_yamls/`，但这些路径未随附，此处不复制也不虚构。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
@@ -13,12 +13,12 @@
 <a id="export"></a>
 ## 导出
 
-源没有 `onnx_export` 脚本，也没有固定 checkpoint/export 配置。用户必须自行提供输入为 float32 RGB NCHW `(1,3,512,512)`、输出为 float32 matte `(1,1,512,512)` 的 ONNX 图。本迁移没有执行或重建缺失流程。
+没有 `onnx_export` 脚本，也没有固定 checkpoint/export 配置。用户必须自行提供输入为 float32 RGB NCHW `(1,3,512,512)`、输出为 float32 matte `(1,1,512,512)` 的 ONNX 图。
 
 <a id="calibration"></a>
 ## 校准
 
-审计源树没有 PTQ YAML 或校准生成器。`test_data/person.jpg` 是推理 fixture，不是代表性校准集；本轮没有生成校准数据。
+没有 PTQ YAML 或校准生成器。`test_data/person.jpg` 是推理 fixture，不是代表性校准集。
 
 <a id="compile"></a>
 ## 编译
@@ -28,7 +28,7 @@
 <a id="validation"></a>
 ## 转换后验证
 
-外部模型和配置准备完成后，才可在目标工具链中使用 `hb_perf`、`hrt_model_exec` 并将输入/输出 metadata 与 runtime README 对照。本轮没有运行导出、PTQ、编译或板测。
+外部模型和配置准备完成后，才可在目标工具链中使用 `hb_perf`、`hrt_model_exec` 并将输入/输出 metadata 与 runtime README 对照。
 
 <a id="artifacts"></a>
 ## 产物
@@ -38,6 +38,6 @@
 <a id="known-gaps"></a>
 ## 缺失项
 
-- 源 README 提到的 `onnx_export/`、`ptq_yamls/` 不在固定源 inventory 中。
+- 源 README 提到的 `onnx_export/`、`ptq_yamls/` 未随附。
 - checkpoint 版本、导出参数、校准集、PTQ 设置和编译输出命名未知。
-- manifest 没有 URL 或发布者 SHA-256；转换和板端验证为 `not-run`。
+- manifest 没有 URL 或发布者 SHA-256。

@@ -36,8 +36,9 @@ mapping. It must not be replaced with COCO label names.
 
 The default model path is `model/yolo_world.bin`; explicit `--model-path` needs
 `--asset-id x5:yoloworld:yolo_world.bin`. The compiled artifact is X5 `.bin`.
-The manifest publisher hash is unknown, so no checksum is claimed here. The
-companion JSON is UTF-8 JSON and has no publisher digest in the manifest.
+The manifest publisher hash is unknown (`null`); the observed SHA-256 from the
+board comparison records is listed below. The companion JSON is UTF-8 JSON and
+has no publisher digest in the manifest.
 
 ## Entry points
 
@@ -47,4 +48,4 @@ explicit preparation entry points. None is invoked by the runtime.
 <a id="formats-checksums"></a>
 ## Formats & Checksums
 
-The artifact format is `.bin`; the manifest records `sha256: null (unknown)` and no publisher digest is claimed. Both 2026-09-24 board comparisons (X5 8GB and X5 4GB) observed SHA-256 `bc8fd742319c26fb550123a4a1433c9e7bd6e0ccb6a17866d3aedb96472f6239` ([8GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [4GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)); an observed digest identifies the bytes used in those runs, not publisher authentication.
+The artifact format is `.bin`; the manifest records `sha256: null (unknown)`. The SHA-256 observed for the published file is `bc8fd742319c26fb550123a4a1433c9e7bd6e0ccb6a17866d3aedb96472f6239`; use it to identify the bytes across hosts, not as publisher authentication.

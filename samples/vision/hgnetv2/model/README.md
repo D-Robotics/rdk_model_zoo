@@ -3,7 +3,7 @@
 <a id="artifacts"></a>
 ## Artifacts
 
-Exact X5 release assets; each file is a single-stage classifier. No S asset is published.
+This directory lists the X5 release assets for the single-stage classifier. Choose a target and variant from the sample support matrix.
 
 | Variant | Filename | Target | Format | Source |
 | --- | --- | --- | --- | --- |
@@ -38,4 +38,4 @@ Files land at `samples/vision/hgnetv2/model/<filename>`. The default runtime sel
 <a id="formats-checksums"></a>
 ## Formats and checksums
 
-For every file above: `format: bin`, `sha256: null (unknown)` in `docs/release/x5/models.yaml`. The downloader prints the digest of received bytes; this records local identity and does not independently authenticate the publisher.
+For every file above: `format: bin`, `sha256: null (unknown)` in `docs/release/x5/models.yaml`. The downloader prints the computed digest after transfer; the manifest SHA-256 is `null (unknown)`.

@@ -1,8 +1,5 @@
 [English](./README.md) | 简体中文
 
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
-
 # COCO 数据集资源
 
 **COCO（Common Objects in Context）** 是计算机视觉领域最常用的公开数据集之一，
@@ -66,8 +63,8 @@ S 系列用 `test_data/kite.jpg`）。它们支持无数据集下载的离线运
 ## 完整 COCO 下载脚本
 
 [download_full_coco.sh](download_full_coco.sh) 下载并解压官方 COCO 2017 图像与
-标注。以下内容按仓库中脚本现状描述；撰写本指南时未修改、未执行该脚本，也没有
-提交任何下载数据。
+标注。以下按仓库中脚本现状描述；运行前自行确认目标路径与磁盘容量，下载的
+数据不入库。
 
 脚本行为（读自脚本本身）：
 
@@ -78,8 +75,8 @@ S 系列用 `test_data/kite.jpg`）。它们支持无数据集下载的离线运
   目录里执行，例如 `datasets/coco/`。脚本入仓时没有可执行位，请通过 `bash` 调用：
 
   ```bash
-  # 工作目录：datasets/coco（任何目录均可；输出落在 ./coco_full）
-  bash download_full_coco.sh
+  # 工作目录：/data/coco
+  bash /path/to/rdk_model_zoo/datasets/coco/download_full_coco.sh
   ```
 
 - 在 `coco_full/` 内用 `unzip -q` 逐个解压，然后删除三个 `.zip`。依赖 `bash`、
@@ -103,18 +100,8 @@ S 系列用 `test_data/kite.jpg`）。它们支持无数据集下载的离线运
 - 不下载 `test2017`。主要成本是带宽；官方源较慢时可修改脚本 URL 指向镜像，
   使用前请自行核验镜像完整性。
 
-下载数据绝不能提交，并注意 ignore 规则的实际覆盖范围：`.gitignore` 排除的是直接的
-`datasets/coco/val2017/*` 与 `datasets/coco/annotations/*` 布局（手动下载约定），
-**并不**覆盖本脚本的 `coco_full/` 输出——例如
-`datasets/coco/coco_full/train2017/example.jpg` 不会被忽略。因此推荐在**仓库外**的
-工作目录运行（例如在 `/data/coco` 下执行
-`bash <repo>/datasets/coco/download_full_coco.sh`），数据就不会落进工作树。如果确实
-要在 `datasets/coco/` 内运行，请先添加本地排除——不要写字面的 `.git/info/exclude`
-路径（托管 worktree 的 `.git` 是**文件**，且本指南示例工作目录是 `datasets/coco`）；
-请从任意目录解析真实路径：
-`echo "datasets/coco/coco_full/" >> "$(git rev-parse --git-path info/exclude)"`
-——或在任何提交前把数据移出仓库。本指南只描述脚本，不修改脚本、受跟踪的
-`.gitignore` 或任何 exclude 文件。
+下载数据应存放在仓库外。脚本把 `coco_full/` 写入当前工作目录；上例从 `/data/coco`
+运行。
 
 <a id="usage"></a>
 ## 这些资源被谁使用
@@ -136,7 +123,4 @@ DOTA 旋转框评估见 [dotav1](../dotav1/README_cn.md)；当前 OBB 评估器�
 - 图像来自 Flickr，各自遵循其使用条款；标注以 Creative Commons Attribution 4.0
   发布。再分发或发布前请在官网确认最新条款。
 
-来源说明：本指南在 X5 交付分支（`ac11571`）随仓中文 COCO README 基础上扩充——
-原有简介、文件清单、下载脚本说明与官网链接均保留，并对不准确的表述做了修正。
-未改动的归档副本位于 `platforms/x5/datasets/coco/` 与
-`platforms/s/datasets/coco/`。
+数据集和标注来源：[COCO](https://cocodataset.org/)。下载脚本准备 COCO 2017 train/val 图像及标注；随仓显示标签采用模型连续的 80 类输出顺序。

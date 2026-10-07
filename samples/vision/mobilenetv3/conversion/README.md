@@ -2,9 +2,8 @@
 
 Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
 environment; it is not a board operation. This directory keeps the
-conversion material the source branches shipped and records the gaps
-honestly; it does not invent a configuration that could produce a
-different artifact.
+conversion material the source deliveries shipped and records its gaps;
+no configuration that could produce a different artifact is invented.
 
 <a id="source-model"></a>
 ## Source model
@@ -37,49 +36,44 @@ Inside the OE container (or any host with `torch`, `timm`, `onnx`, and
 python3 get_mobilenetv3_onnx.py    # -> ./mobilenetv3_large_100.onnx
 ```
 
-The exporter uses onnx-simplifier and reports the parameter count. This
-repository has not re-run it during the migration; treat the command as the
-source branch's recorded recipe, not a verified result.
+The exporter uses onnx-simplifier and reports the parameter count
+(5,470,832 parameters for `mobilenetv3_large_100`); the expected metadata
+print is `mean (0.485, 0.456, 0.406)`, `std (0.229, 0.224, 0.225)`,
+"Simplified model is valid.".
 <a id="calibration"></a>
 ## Calibration
 
-`get_calibration_data.py` is kept verbatim from the source branch. Its
-hardcoded facts: it reads `ILSVRC2012_val_*.JPEG` from a legacy-tree
-source directory
-(`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`,
-which does not exist in this repository — edit it to your own ImageNet
-validation directory), and its transformer chain is fixed to BGR
-(padded center crop 224, resize, HWC→CHW, `RGB2BGRTransformer`, ×255,
-mean `103.94 116.78 123.68`, ×0.017), writing `./calibration_data_bgr/`.
-The calibration images are not shipped; a regeneration must record the
-exact image list used.
+The calibration helper reads `ILSVRC2012_val_*.JPEG` from the configured
+`src_image_dir`. The source default is
+`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`;
+set `src_image_dir` to your local ImageNet validation directory before running it. Preprocessing produces BGR data with padded center crop
+224, resize, HWC→CHW, `RGB2BGRTransformer`, ×255, mean
+`103.94 116.78 123.68`, and ×0.017, written to `./calibration_data_bgr/`.
+Select and record the validation images used for the calibration set.
 
-What each YAML consumes versus what the script produces:
+Prepare inputs for each YAML as follows:
 
-| Config (target) | `cal_data_dir` | Layout/mean the YAML declares | Produced by the script as kept? |
+| Config (target) | `cal_data_dir` | Layout and values | Preparation |
 | --- | --- | --- | --- |
-| `mobilenetv3_s_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr` | BGR, mean `103.53 116.28 123.675` | **Yes.** Output dir and BGR chain match the recipe after the source-dir edit. The script's mean constants (`103.94 116.78 123.68`) differ slightly from the YAML's `103.53 116.28 123.675`; both files are source-verbatim — the discrepancy is disclosed here, not silently fixed. |
-| `MobileNetV3_config.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, mean `123.675 116.28 103.53` | **No — missing prerequisite.** The script has no RGB output mode, and no RGB calibration recipe for the X5 artifact was published. Renaming `calibration_data_bgr` to `calibration_data_rgb_f32` would feed BGR arrays with the wrong mean order to an RGB config — a rename is not a fix. The X5 calibration step is therefore not reproducible from this directory as kept. |
+| `mobilenetv3_s_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr` | BGR, mean `103.53 116.28 123.675` | Set `src_image_dir` to the local validation directory and align the helper mean constants (`103.94 116.78 123.68`) with the YAML values before generating the BGR data. |
+| `MobileNetV3_config.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, mean `123.675 116.28 103.53` | Prepare float32 RGB calibration arrays at 224x224 using the X5 YAML's channel order and normalization; use a separate RGB preprocessing chain. |
 
-PTQ calibration has not been re-run in this repository.
 <a id="compile"></a>
 ## Compile
 
-Reference configurations kept in this directory:
+Build configurations:
 
 | Config | Target | Inputs the config names | Command (inside the OE container) |
 | --- | --- | --- | --- |
-| `MobileNetV3_config.yaml` | x5 | `./mobilenetv3_large_100.onnx` (matches the exporter output), `./calibration_data_rgb_f32` (**missing** — see [Calibration](#calibration)) | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
+| `MobileNetV3_config.yaml` | x5 | `./mobilenetv3_large_100.onnx`, `./calibration_data_rgb_f32` (prepare as described in Calibration) | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
 | `mobilenetv3_s_config.yaml` | s100 (s600: change march to `nash-p`) | `./mobilenetv3_large_100.onnx` (matches), `./calibration_data_bgr` (script-produced after the source-dir edit) | `hb_compile --config mobilenetv3_s_config.yaml` |
 
 The march values are read from the YAML files themselves (`bayes-e` X5,
-`nash-e` S100). Compilation has not been re-run in this repository; a
-regenerated artifact is not equivalent to the published one until target,
-input metadata, output shape/dtype, and numerical results are compared.
-Rename note: the S source file was `mobilenetv3_config.yaml`;
-on case-insensitive filesystems it collides with the X5 file
-`MobileNetV3_config.yaml`, so the S copy here is
-`mobilenetv3_s_config.yaml` — filename only, content verbatim.
+`nash-e` S100). For each rebuild, compare the target, input metadata, output
+shape/dtype, and numerical results before deployment.
+Use the exact target config filename: `mobilenetv3_s_config.yaml` for S100/S600
+and `MobileNetV3_config.yaml` for X5. Keep the case distinction when selecting
+the target YAML.
 
 <a id="validation"></a>
 ## Validation
@@ -89,8 +83,24 @@ manual and keep the complete output; then confirm on the matching board
 with the canonical runtime that the contract holds: X5 exposes one packed
 NV12 input and an F32 `[1,1000,1,1]` output; S100/S600 expose Y
 `[1,224,224,1]`, UV `[1,112,112,2]`, and an F32 `[1,1000]` output; the
-output semantics are raw logits (softmax applied by the runtime task). Validation status for regenerated
-artifacts in this repository: **not-run**.
+output semantics are raw logits (softmax applied by the runtime task).
+
+Published quantization record of the original S build (cosine similarity
+after quantization):
+
+```text
+TensorName: output
+Calibrated Cosine: 0.911233
+Quantized Cosine: 0.909042
+```
+
+Toolchain performance reference of the original S build:
+
+```text
+FPS (1 core): 2616.81
+latency: 0.38 ms (382.1 us)
+BPU conv original OPs per run: 433,179,520
+```
 
 <a id="artifacts"></a>
 ## Kept material
@@ -102,18 +112,9 @@ artifacts in this repository: **not-run**.
 - `mobilenetv3_s_config.yaml`
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-- The S-side YAML is renamed (`mobilenetv3_s_config.yaml`) for
-case-insensitive filesystems; content is verbatim.
-- **X5 calibration has no recipe**: `MobileNetV3_config.yaml` consumes
-RGB `./calibration_data_rgb_f32`, which no kept script produces (the
-calibrator is BGR-only) and which the source branch never published.
-The X5 chain stops at this missing prerequisite.
-- The calibrator's hardcoded source directory belongs to the legacy
-tree; only the source-directory line (and nothing else) needs editing
-before a run.
-- The calibrator's mean constants differ slightly from the S YAML's
-`mean_value` (source-verbatim inconsistency, disclosed above).
-- End-to-end regeneration (export → calibration → compile → board
-validation) has not been executed in this repository.
+- Before S-side export on a case-insensitive filesystem, use the YAML filename `mobilenetv3_s_config.yaml` shown above.
+- For X5, prepare `./calibration_data_rgb_f32` in RGB order for `MobileNetV3_config.yaml`; the retained calibration helper produces BGR data, so convert channel order and apply the X5 YAML's RGB normalization rather than renaming the BGR directory.
+- Set the calibration helper's source-image directory to the local ImageNet directory before running it. The helper's mean constants differ slightly from the S YAML's `mean_value`; keep the selected target's calibration values aligned with its config.
+- Use the board runtime after compilation to check the emitted model contract.

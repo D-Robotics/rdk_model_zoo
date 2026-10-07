@@ -36,9 +36,9 @@ For --output outputs/pp_liteseg/eval.png, writes that three-panel image plus eva
 <a id="reference-results"></a>
 ## Reference results
 
-Source README expected ≈95 FPS and ≈10.5 ms at 1024×512 single-core but did not supply a reproducible measurement record. Retained as an unverified source expectation, not an acceptance threshold or a new result. Host source-parity and fixture checks do not prove inference accuracy. This migration has no board, OE or dataset result. See the [source audit](../../../../docs/releases/unified-migration/evidence/2026-09-26-b8-ppliteseg-audit.json).
+The source README records ≈95 FPS and ≈10.5 ms at 1024×512 single-core without a reproducible measurement protocol; treat it as a source expectation and set thresholds from your own measurements. Host parity and fixture checks do not measure inference accuracy. Board, OE and dataset results are recorded when produced.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-Board testing is not-run because the board environment is unavailable. S100/S100P/S600 and C++ are not supported by this sample. A locally compiled model must satisfy the same tensor contract; the declared asset-id and unknown publisher SHA are not provenance proof. For real performance commands and graph comparison prerequisites, use the [conversion validation section](../conversion/README.md#validation).
+Board execution requires an RDK X5 environment. S100/S100P/S600 and C++ are not supported by this sample. A locally compiled model must satisfy the same tensor contract; the declared asset-id and unknown publisher SHA are not provenance proof. For real performance commands and graph comparison prerequisites, use the [conversion validation section](../conversion/README.md#validation).

@@ -11,12 +11,12 @@ ByteTrack 使用 S manifest 中的 YOLOv5x detector HBM，没有独立神经网�
 | S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 | S600 | `s:bytetrack:s600/yolov5x_672x672_nv12.hbm` | `s600/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-tracker 代码和 CPU 依赖是独立 runtime 输入。发布校验值未知。S100P 行不代表正向可用：2026-09-24 记录中的下载器对其 URL 返回 HTTP 404（[负例证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-s100p-negative/bytetrack-asset-download-404.json)）；因此该轮没有成功的 S100P 下载或正向推理记录。
+tracker 代码和 CPU 依赖是独立 runtime 输入。发布校验值未知。S100P URL 曾被观测到返回 HTTP 404；若下载失败，请手动获取 HBM 并放到上面的路径。
 
 <a id="preparation"></a>
 ## 准备步骤
 
-在仓库根目录选择 target，于允许联网的环境显式运行下载器。2026-09-24 S100/S600 轮次对照的是同一 manifest 身份的 HBM 制品，但保留的准备记录是通过 YOLOv5 sample 的下载器取到 `samples/vision/yolov5/model/` 的（[准备记录](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)）；这条文档化路径本身并未被执行，本工作树也不做新的下载：
+在仓库根目录选择 target，于允许联网的环境显式运行下载器：
 
 ```bash
 python3 -m samples.vision.bytetrack.model.download \
@@ -41,7 +41,7 @@ python3 -m samples.vision.bytetrack.model.download \
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-三个制品都是 672x672、split-NV12 YOLOv5x 的 `.hbm`。manifest URL 和 `sha256: null (unknown)` 是权威事实；本地观测 digest 不代表发布者认证。
+三个制品都是 672x672、split-NV12 YOLOv5x 的 `.hbm`。manifest URL 和 `sha256: null (unknown)` 为权威记录；本地观测 digest 用于跨主机识别同一份字节，发布者认证以发布摘要为准。
 
 <a id="license"></a>
 ## 许可

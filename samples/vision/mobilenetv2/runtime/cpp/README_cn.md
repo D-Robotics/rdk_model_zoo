@@ -3,9 +3,8 @@ English | [简体中文](./README_cn.md)
 # MobileNetV2 图像分类（C++，S 系列）
 
 本 C++ 流程在 S 系列 BPU 上运行量化 MobileNetV2 HBM 模型，打印 Top-K
-类别标签与置信度。这是保留自 rdk_s @380e1a2 的经审计 S 系列
-`hbDNNInferV2` 实现（`src/` 与 `inc/` 原样保留）；X5 源分支只交付了
-Python，因此本流程显式声明为 S 系列范围。
+类别标签与置信度。它是 S 系列 `hbDNNInferV2` 实现（`src/` 与 `inc/`
+原样保留）；X5 交付线只提供 Python，因此本流程的适用范围为 S 系列。
 
 <a id="supported-boards"></a>
 ## 适用板卡
@@ -15,8 +14,8 @@ Python，因此本流程显式声明为 S 系列范围。
 流程一致（`samples/_shared/platforms.py`，登记于
 `docs/release/platforms.json`）。S100P 以其两种登记形式被拒绝（soc_name
 `s100p`；或 soc_name `s100` 且 board_type `s100p`/`rdk s100p`），未知或
-不可读的身份文件按未知板卡拒绝——均显式报错，绝不静默回退 s100 制品
-（旧源启动器会回退）。`SOC_NAME_FILE`/`BOARD_TYPE_FILE` 供主机 fixture
+不可读的身份文件按未知板卡拒绝——均显式报错，绝不静默回退 s100 制品。
+`SOC_NAME_FILE`/`BOARD_TYPE_FILE` 供主机 fixture
 测试（`tests/test_cpp_launcher_identity.py`）覆盖身份来源；板卡上不要
 设置。
 
@@ -42,9 +41,8 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 ```
 
 `CMakeLists.txt` 在配置期经 `/sys/class/boardinfo/soc_name` 探测 SoC 并
-定义 `SOC_S100`/`SOC_S600`；该文件保持源分支原样。小内存板（2026-09-21
-在 S100 实测）满并行编译可能被 OOM 杀死——请改用 `make -j1` 或
-`BUILD_JOBS=1 bash run.sh`。
+定义 `SOC_S100`/`SOC_S600`；该文件保持原样。小内存板满并行编译可能被
+OOM 杀死——请改用 `make -j1` 或 `BUILD_JOBS=1 bash run.sh`。
 
 <a id="run"></a>
 ## 运行
@@ -78,7 +76,7 @@ bash samples/vision/mobilenetv2/runtime/cpp/run.sh
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-`mobilenetv2::init()` 加载模型、分配张量并读取布局 metadata；
+`mobilenetv2::init` 加载模型、分配张量并读取布局 metadata；
 `pre_process`、`infer`、`post_process` 为以引用传张量的自由函数（声明见
 `inc/mobilenetv2.hpp`）。源码内为 Doxygen 注释；仓库级 API 参考的构建
 方式见 `docs/source_reference/README.md`。
@@ -98,11 +96,5 @@ TOP-4: label=tiger cat, prob=0.000722661
 TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
 ```
 
-正确的统一运行应在分数噪声内复现该排序。B1 板端运行（2026-09-21）已在
-S100 以 BUILD_JOBS=1 构建本流程并复现基线 TOP-1（label=zebra）；B1-R2
-启动器整改后在同一板卡带身份 gate 复测再次复现（TOP-1 zebra，
-prob=9.30961，rc=0），并在 S100P 实板上验证两种登记身份形式（含
-`RDK S100P` 大小写形态）均显式拒绝、s100 对照例放行 gate 并停在模型
-准备提示——见 B1 board-smoke evidence 的 `r2_launcher_board_recheck`
-节。S600 C++ 构建保持 not-run（不在 B1 冒烟集内）。分数全零或 NaN 说明
-制品/输入配对错误，不是调参问题。
+正确的运行应在分数噪声内复现该排序；使用随附 zebra 图片时 TOP-1 为
+`zebra`。分数全零或 NaN 说明制品/输入配对错误，不是调参问题。

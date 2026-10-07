@@ -4,20 +4,20 @@
 
 ## Dataset
 
-- Dataset: COCO validation is the historical source reference; the fixed source does not include its version, annotations, or preparation script.
+- Dataset: COCO validation is the source reference; no version, annotations, or preparation script is included.
 - Smoke input: `samples/vision/fcos/test_data/bus.jpg` is one bundled BGR image, not a COCO evaluation set.
 
 <a id="environment"></a>
 ## Environment
 
 - Execution target: an identified RDK X5 board with `hbm_runtime` and one exact manifest artifact.
-- Host dependencies: Python 3.10+, NumPy, OpenCV, PyYAML, and SciPy from `requirements-host.txt`; SciPy is imported by the fixed source postprocess helper. Host tests use an injected runtime and never load the board SDK.
-- The evaluator runs the fixed source wrapper from `platforms/x5/samples/vision/fcos/runtime/python/fcos_det.py` and the unified FCOS task on the same image, artifact, thresholds, and direct-resize geometry.
+- Host dependencies: Python 3.10+, NumPy, OpenCV, PyYAML, and SciPy from `requirements-host.txt`; SciPy is imported by the source postprocess helper. Host tests use an injected runtime and never load the board SDK.
+- The evaluator runs the pinned original X5 wrapper (loaded from Git history) and this sample's FCOS task on the same image, artifact, thresholds, and direct-resize geometry.
 
 <a id="command"></a>
 ## Evaluation Command
 
-The command below creates one new evidence directory and runs the source/unified comparison. It does not download anything. The model must already be present, and the target gate must identify the local board as X5.
+The command below creates one new evidence directory and runs the two-implementation comparison. It does not download anything. The model must already be present, and the target gate must identify the local board as X5.
 
 ```bash
 # cwd: repository root; prepare the exact artifact before this step
@@ -30,7 +30,7 @@ python3 samples/vision/fcos/evaluator/compare.py \
   --output-dir "$EVIDENCE"
 ```
 
-The evaluator uses the source default direct resize (`--resize-type 0`). Letterbox inverse geometry is implemented and regression-tested by the runtime task, but the fixed source decoder restores coordinates by direct ratios and therefore is not an evaluator comparison mode.
+The evaluator uses the source default direct resize (`--resize-type 0`). Letterbox inverse geometry is available in the runtime, but the decoder restores coordinates by direct ratios and therefore letterbox is not an evaluator comparison mode.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -40,13 +40,13 @@ The evaluator uses the source default direct resize (`--resize-type 0`). Letterb
 | `--model-path` | path | `None` | External file, only with the exact asset ID |
 | `--test-img` | path | bundled `bus.jpg` | BGR input image |
 | `--output-dir` | path | required | Must not already exist; all evidence is written here |
-| `--resize-type` | int | `0` | Fixed source direct-resize comparison mode |
+| `--resize-type` | int | `0` | Source direct-resize comparison mode |
 | `--conf-thres` | float | `0.5` | Source FCOS confidence threshold |
 | `--iou-thres` | float | `0.6` | OpenCV NMS IoU threshold |
 | `--priority` | int | `0` | Runtime scheduling priority |
 | `--bpu-cores` | int list | `[0]` | Runtime BPU cores |
 
-Return codes are `0` for an exact source/unified match, `1` when both executions complete but any check differs, and `2` for target, input, model, SDK, or evidence-capture failure. A mismatch is never converted to success.
+Return codes are `0` for an exact two-implementation match, `1` when both executions complete but any check differs, and `2` for target, input, model, SDK, or evidence-capture failure. A mismatch is never converted to success.
 
 <a id="metrics"></a>
 ## Metrics
@@ -71,23 +71,22 @@ source/metadata.json  source/result.json  source/inputs/*.npy  source/raw/*.npy
 unified/metadata.json unified/result.json unified/inputs/*.npy unified/raw/*.npy
 ```
 
-`comparison.json` records model, input, source/unified code, metadata JSON, and every saved array SHA-256. It also records board identity, exact command arguments, current working directory, UTC start/end, and the evaluator return code. The raw directories contain five classification, five box, and five center-ness arrays for each side.
+`comparison.json` records model, input, both sides' code, metadata JSON, and every saved array SHA-256. It also records board identity, exact command arguments, current working directory, UTC start/end, and the evaluator return code. The raw directories contain five classification, five box, and five center-ness arrays for each side.
 
 <a id="reference-results"></a>
 ## Reference Results
 
 | Metric | Reference | Conditions | Source |
 | --- | --- | --- | --- |
-| B0/B2/B3 throughput and post-process time | Historical only: B0 323.0 FPS/9 ms, B2 70.9 FPS/16 ms, B3 38.7 FPS/20 ms | Fixed source benchmark conditions; not this host or board run | Fixed source README and evaluator README |
-| Board source/unified parity, B0/B2/B3 | rc=0, all checks true on one X5 8GB and one X5 4GB each (2026-09-24) | `bus.jpg`, direct resize, `conf=0.5`, `IoU=0.6`, unified side at board-test commit `73a6de1` | [X5 variant evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/), [8GB B0 recheck](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/) |
-| Host/source numeric agreement | Host synthetic quantized and evaluator-seam tests | No model or board; see current host evidence | [B7 host evidence](../../../../docs/releases/unified-migration/evidence/2026-09-23-b7-fcos-host.json) |
-| COCO mAP | not-run | Source supplies no dataset harness or annotations | not-run |
+| B0/B2/B3 throughput and post-process time | B0 323.0 FPS/9 ms, B2 70.9 FPS/16 ms, B3 38.7 FPS/20 ms | Source benchmark conditions | Source README and evaluator README |
+| Board implementation parity, B0/B2/B3 | Run the comparator on a prepared X5; both implementations must agree within the declared tolerances | `bus.jpg`, direct resize, `conf=0.5`, `IoU=0.6` | This evaluator |
+| COCO mAP | no dataset harness included | Source supplies no dataset harness or annotations | — |
 
-The board logs print an HBRT-library/model-build minor-version mismatch warning when loading these artifacts; the warning is preserved verbatim in the evidence and all checks in the recorded comparisons passed.
+The board logs print an HBRT-library/model-build minor-version mismatch warning when loading these artifacts; the warning does not affect the comparison result.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-- The evaluator does not download models, prepare COCO, or measure performance, and never claims board success automatically. Board parity evidence exists for the three variants on one X5 8GB and one X5 4GB (2026-09-24, reference results above); any other board, image, or threshold combination still requires running this command to produce its own evidence.
+- The evaluator does not download models, prepare COCO, or measure performance. Any board, image, or threshold combination other than the recorded runs requires running this command to produce its own evidence.
 - The publisher SHA-256 values for the three manifest rows are unknown, so observed local hashes identify the captured files but do not establish publisher origin.
-- Historical screenshots and FPS values are not current measurements.
+- The throughput values and screenshots are source records, not new measurements.

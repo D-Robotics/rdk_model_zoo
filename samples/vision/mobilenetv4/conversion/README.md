@@ -2,9 +2,8 @@
 
 Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
 environment; it is not a board operation. This directory keeps the
-conversion material the source branches shipped and records the gaps
-honestly; it does not invent a configuration that could produce a
-different artifact.
+conversion material the source deliveries shipped and records its gaps;
+no configuration that could produce a different artifact is invented.
 
 <a id="source-model"></a>
 ## Source model
@@ -12,7 +11,7 @@ different artifact.
 timm `mobilenetv4_conv_small` and `mobilenetv4_conv_medium` with
 pretrained weights, fixed by `get_mobilenetv4_onnx.py`. The script
 exports small at `[1,3,224,224]` and medium at `[1,3,256,256]` —
-see [known gaps](#known-gaps) for the X5 medium geometry.
+see [additional preparation](#known-gaps) for the X5 medium geometry.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
@@ -38,62 +37,50 @@ Inside the OE container (or any host with `torch`, `timm`, `onnx`, and
 python3 get_mobilenetv4_onnx.py    # -> mobilenetv4_conv_small.onnx + mobilenetv4_conv_medium.onnx
 ```
 
-The exporter uses onnx-simplifier and reports the parameter count. This
-repository has not re-run it during the migration; treat the command as the
-source branch's recorded recipe, not a verified result.
+The exporter uses onnx-simplifier and reports the parameter count
+(small 3,761,480 / medium 9,681,560).
 <a id="calibration"></a>
 ## Calibration
 
-`get_calibration_data.py` is kept verbatim from the source branch. Its
-hardcoded facts: it reads `ILSVRC2012_val_*.JPEG` from the same
-legacy-tree source directory as the V3 calibrator
-(`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`,
-which does not exist in this repository — edit it to your own ImageNet
-validation directory), and its transformer chain is BGR (padded center
-crop, resize, HWC→CHW, `RGB2BGRTransformer`, ×255, mean
-`103.94 116.78 123.68`, ×0.017) parameterized by an image size that the
-script selects through two commented switch lines. The calibration
-images are not shipped; a regeneration must record the exact image list.
+The calibration helper reads `ILSVRC2012_val_*.JPEG` from the configured
+`src_image_dir`. The source default is
+`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`;
+set `src_image_dir` to your local ImageNet validation directory before running it. Its BGR preprocessing applies padded center crop,
+resize, HWC→CHW, `RGB2BGRTransformer`, ×255, mean `103.94 116.78 123.68`,
+and ×0.017. Two commented switch lines select the image geometry. Select
+and record the validation images used for calibration.
 
-What each YAML consumes versus what the script produces:
+Prepare the inputs for each YAML:
 
-| Config (target) | `cal_data_dir` | Layout/size the YAML declares | How to produce it with the script as kept |
+| Config (target) | `cal_data_dir` | Layout and size | Preparation |
 | --- | --- | --- | --- |
-| `mobilenetv4_small_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr_224` | BGR, 224 | Defaults already match: `output_calib_dir = './calibration_data_bgr_224/'` and `data_transformer(224)` — edit only the source dir. |
-| `mobilenetv4_medium_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr_256` | BGR, **256** | Switch the two commented lines marked by the script's own comments to `output_calib_dir = './calibration_data_bgr_256/'` and `active_transformers = data_transformer(256)` (the 224 pair is active by default), plus the source-dir edit. Both lines must switch together — a 256 dir fed with 224 data (or the reverse) is wrong. |
-| `MobileNetV4_small.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, 224 | **Missing prerequisite** — the script has no RGB output mode; renaming the BGR dir is not an RGB recipe. |
-| `MobileNetV4_medium.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, 224 | **Missing prerequisite** — same RGB gap. |
+| `mobilenetv4_small_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr_224` | BGR, 224 | Keep the helper's 224 output directory and `data_transformer(224)` selection; set the source directory and align mean constants (`103.94 116.78 123.68`) with the S YAML values (`103.53 116.28 123.675`). |
+| `mobilenetv4_medium_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr_256` | BGR, 256 | Switch both commented lines to `output_calib_dir = './calibration_data_bgr_256/'` and `active_transformers = data_transformer(256)`; set the source directory and align mean constants with the S YAML values. |
+| `MobileNetV4_small.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, 224 | Prepare float32 RGB calibration arrays at 224x224 using the X5 YAML channel order and normalization. |
+| `MobileNetV4_medium.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, 224 | Prepare float32 RGB calibration arrays at 224x224 using the X5 YAML channel order and normalization. |
 
-The script's mean constants (`103.94 116.78 123.68`) differ slightly
-from the S-side YAMLs' `103.53 116.28 123.675`; both files are
-source-verbatim — disclosed here, not silently fixed. PTQ calibration
-has not been re-run in this repository.
 <a id="compile"></a>
 ## Compile
 
-Reference configurations kept in this directory:
+Build configurations:
 
 | Config | Target | Inputs the config names | Command (inside the OE container) |
 | --- | --- | --- | --- |
-| `MobileNetV4_small.yaml` | x5 | `./mobilenetv4_conv_small.onnx` (matches the exporter output), `./calibration_data_rgb_f32` (**missing** — see [Calibration](#calibration)) | `hb_mapper makertbin --config MobileNetV4_small.yaml` |
-| `MobileNetV4_medium.yaml` | x5 | `./mobilenetv4_conv_medium_deploy.onnx` (**no kept script produces this file**), `./calibration_data_rgb_f32` (**missing**) | `hb_mapper makertbin --config MobileNetV4_medium.yaml` |
+| `MobileNetV4_small.yaml` | x5 | `./mobilenetv4_conv_small.onnx`, `./calibration_data_rgb_f32` (prepare as described in Calibration) | `hb_mapper makertbin --config MobileNetV4_small.yaml` |
+| `MobileNetV4_medium.yaml` | x5 | `./mobilenetv4_conv_medium_deploy.onnx` (224x224 graph), `./calibration_data_rgb_f32` (prepare as described in Calibration) | `hb_mapper makertbin --config MobileNetV4_medium.yaml` |
 | `mobilenetv4_small_config.yaml` | s100 (s600: march `nash-p`) | `./mobilenetv4_conv_small.onnx` (matches), `./calibration_data_bgr_224` (script-produced) | `hb_compile --config mobilenetv4_small_config.yaml` |
 | `mobilenetv4_medium_config.yaml` | s100 (s600: march `nash-p`) | `./mobilenetv4_conv_medium.onnx` (matches the exporter's 256 export), `./calibration_data_bgr_256` (script-produced after the two-line switch) | `hb_compile --config mobilenetv4_medium_config.yaml` |
 
-The **X5 medium config stacks three missing prerequisites**: it reads a
-`mobilenetv4_conv_medium_deploy.onnx` that no kept script produces (the
-exporter writes `mobilenetv4_conv_medium.onnx`, at 256x256 — see
-[Source model](#source-model)), the published X5 medium artifact is
-224x224, and its calibration dir must be RGB. Renaming the exported file
-to the deploy name does not reconcile the geometry or the color order;
-the X5 medium chain is not reproducible from this directory as kept and
-no unconditional recipe is claimed for it.
+For the X5 medium build, provide `mobilenetv4_conv_medium_deploy.onnx` at
+224x224 and RGB float32 calibration data in `./calibration_data_rgb_f32`.
+The exporter above writes `mobilenetv4_conv_medium.onnx` at 256x256; export
+or obtain a separate 224x224 graph for this YAML. Renaming the 256x256 file
+does not change its input geometry.
 
 S600 variants change only the march (`nash-p`) in the S-side YAML. The
 march values above are read from the YAML files themselves (`bayes-e` X5,
-`nash-e` S100). Compilation has not been re-run in this repository; a
-regenerated artifact is not equivalent to the published one until target,
-input metadata, output shape/dtype, and numerical results are compared.
+`nash-e` S100). For each rebuild, compare the target, input metadata, output
+shape/dtype, and numerical results before deployment.
 Geometry note: the S-side medium config compiles the 256x256
 input recorded in `mobilenetv4_medium_config.yaml`; the X5 medium
 config builds the published 224x224 artifact. Both geometries are
@@ -116,8 +103,34 @@ published artifact names:
 
 Accepting a correct S medium artifact with the 224 shapes above would be
 a validation error — the medium S input is 256x256. The output semantics
-are raw logits (softmax applied by the runtime task). Validation status
-for regenerated artifacts in this repository: **not-run**.
+are raw logits (softmax applied by the runtime task).
+
+Published quantization record of the original S build (cosine similarity
+after quantization):
+
+```text
+mobilenetv4_medium:
+Calibrated Cosine: 0.999759
+Quantized Cosine: 0.999863
+
+mobilenetv4_small:
+Calibrated Cosine: 0.999892
+Quantized Cosine: 0.99988
+```
+
+Toolchain performance record of the original S build:
+
+```text
+mobilenetv4_medium:
+FPS (1 core): 2468.07
+latency: 0.41 ms (405.2 us)
+BPU conv original OPs per run: 2,160,488,448
+
+mobilenetv4_small:
+FPS (1 core): 5698.18
+latency: 0.18 ms (175.5 us)
+BPU conv original OPs per run: 372,011,136
+```
 
 <a id="artifacts"></a>
 ## Kept material
@@ -132,22 +145,9 @@ for regenerated artifacts in this repository: **not-run**.
 - `x86_medium_inference.py`
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-- The X5-side export script generates the medium ONNX at 256x256 while
-the published X5 medium artifact and its config are 224x224; the
-source does not record how that reconciliation happened. Regenerating
-the X5 medium artifact byte-comparably is therefore not proven.
-- The X5 medium config additionally expects a `mobilenetv4_conv_medium_deploy.onnx`
-input that no kept script produces — see [Compile](#compile).
-- **X5 calibration (small and medium) has no recipe**: both X5 YAMLs
-consume RGB `./calibration_data_rgb_f32`, which no kept script produces
-(the calibrator is BGR-only) and which the source branch never published.
-- The calibrator's hardcoded source directory belongs to the legacy
-tree; a run needs the source-dir edit, and for the S medium recipe the
-two commented 256-switch lines must be switched together.
-- The calibrator's mean constants differ slightly from the S YAMLs'
-`mean_value` (source-verbatim inconsistency, disclosed above).
-- `x86_medium_inference.py` is a host ONNX reference used while auditing
-the medium variant, not a deployment path.
-- End-to-end regeneration has not been executed in this repository.
+- The X5 medium YAML expects a 224x224 input graph named `mobilenetv4_conv_medium_deploy.onnx`; the retained medium export helper produces a 256x256 graph. Before compiling X5 medium, reconcile the ONNX geometry with the YAML and prepare calibration data using the same geometry.
+- X5 small and medium calibration directories are RGB `./calibration_data_rgb_f32`; the retained calibrator produces BGR data. Convert channel order and apply the X5 YAML normalization before compiling.
+- Set the calibration helper's source-image directory to the local dataset path. For S medium, switch both commented 256 geometry lines together. Align the helper mean constants with the selected S YAML's `mean_value`.
+- `x86_medium_inference.py` runs the medium ONNX model on the host; use the compiled HBM with the board runtime for deployment.

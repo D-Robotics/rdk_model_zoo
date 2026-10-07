@@ -3,7 +3,7 @@
 <a id="source-model"></a>
 ## Source model
 
-ByteTrack itself is post-processing. The only neural artifact is the upstream YOLOv5x detector HBM, with three target-specific manifest rows. The fixed S source does not provide a separate tracker export or checkpoint.
+ByteTrack itself is post-processing. The only neural artifact is the upstream YOLOv5x detector HBM, with three target-specific manifest rows. No separate tracker export or checkpoint exists.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
@@ -13,7 +13,7 @@ S100 uses the `s100/yolov5x_672x672_nv12.hbm` Nash-e row, S100P uses its own `s1
 <a id="export"></a>
 ## Export
 
-There is no ByteTrack export: the tracker has no neural graph. To rebuild the detector, use the upstream YOLOv5 source/export procedure and produce a 672x672 detector with split Y/UV inputs and three output heads. The fixed source supplies no pinned checkpoint/export script; no export was run.
+There is no ByteTrack export: the tracker has no neural graph. To rebuild the detector, use the upstream YOLOv5 source/export procedure and produce a 672x672 detector with split Y/UV inputs and three output heads. No pinned checkpoint or export script is included.
 
 <a id="calibration"></a>
 ## Calibration
@@ -23,12 +23,12 @@ Calibration belongs to the upstream detector conversion. No calibration director
 <a id="compile"></a>
 ## Compile
 
-After an external ONNX/checkpoint, target-specific YAML, and calibration set exist, run the selected OE compiler commands supplied by that environment. No exact source command/config is available for S in this fixed tree, so a generic `hb_mapper` line would not be a reproducible recipe and is intentionally omitted. The result must bind the three target-relative HBM asset IDs and S split-NV12 metadata.
+After an external ONNX/checkpoint, target-specific YAML, and calibration set exist, run the OE compiler commands supplied by that environment. No exact source command or config is available, so no generic command is presented as a reproducible recipe. The result must bind the three target-relative HBM asset IDs and S split-NV12 metadata.
 
 <a id="validation"></a>
 ## Post-conversion validation
 
-Validate detector metadata with the S YOLOv5 runtime, then run the tracker on a prepared video. Compare complete detector tensors and track IDs using `evaluator/compare.py`. No export or compile was run in this migration, so no locally converted artifact exists to validate. The published HBM rows and the first 30 frames of the public video were exercised on S100/S600 boards in the 2026-09-24 comparisons (see the [evaluator README](../evaluator/README.md)); that history neither validates a local conversion nor extends beyond those recorded frames.
+Validate detector metadata with the S YOLOv5 runtime, then run the tracker on a prepared video. Compare complete detector tensors and track IDs using `evaluator/compare.py`.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -36,8 +36,8 @@ Validate detector metadata with the S YOLOv5 runtime, then run the tracker on a 
 The three external outputs are the manifest HBM rows in `model/README.md`; ByteTrack adds no compiled tracker artifact. `TRACKER_SOURCE_MAP.json` records source tracker file hashes and the one relative-import adaptation.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
 - No S export script, checkpoint pin, YAML, calibration producer, or compiler log is present.
-- The source video is absent and has only an explicit archive URL in the customer docs.
-- Conversion (export/compile) is `not-run` and no locally converted artifact exists; the published HBM rows carry historical 2026-09-24 board comparison records (see the [evaluator README](../evaluator/README.md)), which do not validate any local conversion. All publisher SHA-256 values are unknown.
+- The test video is not bundled; it is fetched from the archive URL given in the sample README.
+- No locally converted artifact is produced in this repository; use the published HBM rows. All publisher SHA-256 values are unknown.

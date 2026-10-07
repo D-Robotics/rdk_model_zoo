@@ -1,20 +1,10 @@
 # EfficientFormerV2 evaluation
-
-Evaluation has two separate purposes: confirm that one board executes the
-selected artifact with the expected tensor contract, and measure accuracy
-or latency with a stated dataset and toolchain. This directory documents
-both; it contains no accuracy harness of its own (see
-[boundaries](#boundaries)).
+Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-
-Not applicable for the current scope: this sample performs functional
-checks (bundled test images) and does not run a dataset-level accuracy
-evaluation. A dataset-based evaluation would require ImageNet validation
-data (ILSVRC2012 val, 50,000 images) prepared separately by the user; no
-dataset download or preparation script is provided.
+The functional check uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
 
 <a id="environment"></a>
 ## Environment
@@ -48,12 +38,11 @@ python3 samples/vision/efficientformerv2/runtime/python/main.py \
   --top-k 5
 ```
 
-For a same-board before/after comparison, run the legacy platform
-entrypoint (`platforms/x5/samples/vision/efficientformerv2/runtime/python/main.py`)
-with the same image, model bytes, labels, resize type, and Top-K, and
-compare class IDs and Top-K scores before label formatting (identical IDs; scores judged within a stated tolerance — the recorded 2026-09-21 smoke used abs diff < 1e-5; raw-tensor equality was not asserted). The output
-should be finite, non-zero, and stable across repeated runs with the same
-input.
+For a same-board comparison between runs, keep the compared run fixed —
+same image, model bytes, labels, resize type, and Top-K — and compare
+class IDs and Top-K scores before label formatting; expect identical IDs
+and scores within 1e-5. The output should be finite, non-zero, and stable
+across repeated runs with the same input.
 
 <a id="metrics"></a>
 ## Metrics
@@ -61,9 +50,9 @@ input.
 | Metric | Definition | Conditions |
 | --- | --- | --- |
 | contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
-| Top-K agreement | identical post-softmax Top-K class IDs between canonical and legacy runs; scores within tolerance (2026-09-21 smoke: max abs diff <=2.4e-7 overall, s0/s2 <=4.7e-10); the s1 exact tie on both boards adjudicated with top-8 per-ID evidence (equal scores within each implementation, cross diff 1.4e-9) | same board, same artifact bytes, image, resize type, Top-K |
-| Top-1 accuracy | fraction of argmax-correct predictions | ImageNet val — not evaluated in this sample |
-| latency / FPS | inference timing | not evaluated in this sample; historical figures below carry unstated conditions |
+| Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
+| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the functional check |
+| latency / FPS | inference timing on the matching board | compare with the published figures under [Reference results](#reference-results), measured under the conditions stated there |
 
 <a id="outputs"></a>
 ## Outputs
@@ -77,14 +66,7 @@ output, image path, resize type, and command line.
 <a id="reference-results"></a>
 ## Reference results
 
-| Item | Value | Source |
-| --- | --- | --- |
-| host tests | 26 OK (2026-09-21, author self-check) | migration evidence |
-| board comparison (canonical vs legacy) | passed (2026-09-21: x5-8g/x5-4g s0/s2 top-5 ids exactly equal; s1 exact tie adjudicated on both boards, not an inference defect; run.sh rc=0) | [B2 board evidence](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
-| dataset accuracy / latency | not-run in this sample | — |
-
-Published historical figures from the X5 source release (rdk_x5 @ac11571,
-x5-v1.1.3; source notes: Float Top-1 on the pre-quantization ONNX, Quant
+Figures published in the X5 release (x5-v1.1.3; Float Top-1 on the pre-quantization ONNX, Quant
 Top-1 on the deployment model, latency single-frame single-thread
 single-core, FPS multi-threaded; CPU 8xA55@1.8GHz performance mode, BPU
 1xBayes-e@1GHz):
@@ -95,15 +77,10 @@ single-core, FPS multi-threaded; CPU 8xA55@1.8GHz performance mode, BPU
 | EfficientFormerV2-S1 | 224x224 | 6.1 | 77.25% | 68.75% | 4.24 | 14.35 | 275.95 |
 | EfficientFormerV2-S0 | 224x224 | 3.5 | 74.25% | 68.50% | 5.79 | 19.96 | 198.45 |
 
-The quantized Top-1 values sit well below their float values for every
-variant (77.50→70.75, 77.25→68.75, 74.25→68.50); this is recorded as
-published, not re-measured or explained here.
+In the published record the quantized Top-1 values sit well below their
+float values for every variant (77.50→70.75, 77.25→68.75, 74.25→68.50).
 
 <a id="boundaries"></a>
-## Boundaries
+## Dataset-level evaluation
 
-No dataset-level accuracy or latency harness ships with this sample: the
-checked-in material covers host contract tests and functional board
-checks only. Host test success never certifies a board. A board that is
-unreachable or an artifact that is unavailable makes the corresponding
-item `not-run`, not failed-and-forgotten.
+For dataset Top-1 accuracy, pass each validation image to the runtime entry through `--test-img`, compare the returned Top-1 class ID with that image’s ground-truth model index, and divide correct predictions by the number of labeled images evaluated. Keep the artifact, resize mode, Top-K, board image and scheduling settings fixed when comparing runs. For latency or FPS, time the inference stage on the matching board and record the thread count and operating mode alongside the result.

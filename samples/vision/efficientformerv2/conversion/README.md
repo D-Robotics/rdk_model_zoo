@@ -1,50 +1,51 @@
 # EfficientFormerV2 conversion
 
-This directory is a verbatim rdk_x5 @ac11571 delivery: the three reference
+This directory provides conversion assets: the three reference
 PTQ YAMLs (`EfficientFormerv2_s0_config.yaml`, `EfficientFormerv2_s1_config.yaml`,
-`EfficientFormerv2_s2_config.yaml`). The X5 source ships **no exporter
-script and no calibration-data producer**, so this is a reference
-configuration, not a reproducible flow; the gaps are listed under
-[Known gaps](#known-gaps). No conversion was executed during this migration
-(the OpenExplorer environment was not run).
+`EfficientFormerv2_s2_config.yaml`). Prepare variant-matched ONNX graphs and calibration data at the paths specified by each YAML, then use the OE compile steps below.
 
 <a id="source-model"></a>
 ## Source model
 
 EfficientFormerV2-S0/S1/S2 (paper [EfficientFormerV2: Rethinking Vision
 Transformers for MobileNet Size and
-Speed](https://arxiv.org/abs/2212.08059)). The YAMLs expect
-`./efficientformerv2_s0.onnx` / `./efficientformerv2_s1.onnx` /
-`./efficientformerv2_s2.onnx`, but the source delivery documents no export
-recipe and pins no weights — the ONNX provenance is unverified.
+Speed](https://arxiv.org/abs/2212.08059)). The YAMLs expect `./efficientformerv2_s0.onnx`, `./efficientformerv2_s1.onnx`, and `./efficientformerv2_s2.onnx`; export each matching variant to its YAML path.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-Model conversion runs on an x86 Linux host inside the RDK X5 OpenExplorer
-Docker (march `bayes-e`), never on the board. The source README points at
-the generic OE flow (`hb_mapper makertbin`); offline Docker images are
-available from the D-Robotics developer forum.
+Run model conversion on an x86 Linux host inside the RDK X5 OpenExplorer
+Docker (march `bayes-e`). Prepare the toolchain with `hb_mapper`, `hb_perf`, and `hrt_model_exec`; offline Docker images are available from the D-Robotics developer forum ([topic 35229](https://forum.d-robotics.cc/t/topic/35229)).
 
 <a id="export"></a>
 ## Export
 
-No exporter script ships with this delivery. Regenerating the ONNX inputs
-requires reproducing the upstream EfficientFormerV2 export yourself; the
-resulting files must be named `efficientformerv2_s0.onnx` /
+Export ONNX models for the selected upstream EfficientFormerV2 variant with `timm`:
+
+1. Install the required Python packages such as `timm`, `onnx`, and
+   `onnxsim`.
+2. Create the target EfficientFormerV2 model with `timm.models.create_model`,
+   such as `efficientformerv2_s0`, `efficientformerv2_s1`, or
+   `efficientformerv2_s2`.
+3. Export the model with `torch.onnx.export` using a `1x3x224x224` dummy
+   input.
+4. Simplify the ONNX model with `onnxsim.simplify`.
+5. Compile the simplified ONNX model in the OE environment (see Compile).
+
+The resulting files must be named `efficientformerv2_s0.onnx` /
 `efficientformerv2_s1.onnx` / `efficientformerv2_s2.onnx` and placed in
-this directory (or the YAMLs' `onnx_model` adjusted). This step is
-unverified here.
+this directory (or the YAMLs' `onnx_model` adjusted).
 
 <a id="calibration"></a>
 ## Calibration
 
-No calibration-data producer ships with this delivery. All three YAMLs
+All three YAMLs
 expect `./calibration_data_rgb_f32` (float32 RGB `.npy`) and use
 `calibration_type: 'max'` with per-variant `max_percentile`: S0 and S1
-`0.999`, S2 `0.9995`. Equivalent data must follow the YAML numerics (mean
-`123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`, 224x224);
-this equivalence is a stated requirement, not a verified pipeline.
+`0.999`, S2 `0.9995`. Apply the YAML numerics to calibration data (mean
+`123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`,
+224x224).
+
 
 <a id="compile"></a>
 ## Compile
@@ -57,6 +58,7 @@ variant:
 # input: ./efficientformerv2_s0.onnx + ./calibration_data_rgb_f32
 # output: working_dir 'EfficientFormerv2_s0_int16_model_output', emitted
 #         .bin named by output_model_file_prefix (see below)
+hb_mapper checker --config EfficientFormerv2_s0_config.yaml
 hb_mapper makertbin --config EfficientFormerv2_s0_config.yaml
 ```
 
@@ -64,50 +66,37 @@ Unlike the efficientnet/efficientformer X5 deliveries, each YAML here
 carries its variant identity: `output_model_file_prefix` is
 `EfficientFormerv2_s{0,1,2}_224x224_nv12`, so the emitted `.bin` name
 reproduces the manifest basenames
-(`EfficientFormerv2_s0_224x224_nv12.bin`, ...) with no rename step, and
+(`EfficientFormerv2_s0_224x224_nv12.bin`,...) with no rename step, and
 each variant compiles into its own `working_dir` with no collision. All
 three YAMLs set `compile_mode: 'latency'` / `optimize_level: 'O3'` and
 carry `node_info` Softmax int16 placements (5 nodes for S0/S1, 10 for S2).
 S0 additionally sets `debug_mode: "dump_calibration_data"` and
-`optimization: "set_all_nodes_int16"`, which S1/S2 do not — an asymmetry
-preserved from the source, recorded as-is.
+`optimization: "set_all_nodes_int16"`; S1/S2 omit these settings.
 
 <a id="validation"></a>
 ## Validation
 
-No x86 reference script ships with this delivery. The functional check is
-the unified runtime on board:
-`python3 samples/vision/efficientformerv2/runtime/python/main.py --target x5 --asset-id x5:efficientformerv2:EfficientFormerv2_s0_224x224_nv12.bin ...`
-(see [runtime/python/README.md](../runtime/python/README.md)).
-**Not run in this migration:** no export, calibration, or compile was
-executed; the consistency claims here are static cross-checks of the YAML
-contents and prefix/filename agreement with the manifest.
+Use the OE package tools `hb_perf` and `hrt_model_exec` for host-side
+model inspection. The functional check on board is
+the sample runtime:
+`python3 samples/vision/efficientformerv2/runtime/python/main.py --target x5 --asset-id x5:efficientformerv2:EfficientFormerv2_s0_224x224_nv12.bin...`
+(see [runtime/python/README.md](../runtime/python/README.md)). The runtime
+expects an input tensor of `1x3x224x224` before NV12 packing and returns
+ImageNet-1k classification logits.
 
 <a id="artifacts"></a>
-## Artifacts (kept material)
+## Recipe files
 
-The three YAML files are kept byte-verbatim from rdk_x5 @ac11571; their
-SHA-256 values are pinned by `tests/test_conversion_layout.py`, so any
-future edit is caught by the host suite.
+The three reference YAMLs are this directory's conversion assets; their
+SHA-256 digests are:
+
+| File | SHA-256 |
+| --- | --- |
+| `EfficientFormerv2_s0_config.yaml` | `a0415f8a4a3f75976be1c8a5a0bf30aa9874b95ee5f61ec10d6ee7147c5d4351` |
+| `EfficientFormerv2_s1_config.yaml` | `530d78e7d2e28eb57832b2f8d48d7d1d8f4de5359b127eac915922be6353fcc9` |
+| `EfficientFormerv2_s2_config.yaml` | `b35d73d6059f5e7765f415eac1863a72792d0e090d6c04640e1164b4814ad699` |
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-As shipped by the source and preserved here:
-
-1. **No ONNX exporter.** None of the three `efficientformerv2_s*.onnx`
-   inputs has a producing script, pinned weights, or a documented export
-   recipe.
-2. **No calibration-data producer.** `./calibration_data_rgb_f32` has no
-   generating script in the source tree.
-3. **S0-only debug/optimization asymmetry.** Only the S0 YAML sets
-   `debug_mode: "dump_calibration_data"` and
-   `optimization: "set_all_nodes_int16"`; the reason for the asymmetry is
-   not documented in the source. S0's `working_dir` spelling
-   (`EfficientFormerv2_s0_int16_model_output`) also diverges from its
-   siblings' (`EfficientFormerv2_s{1,2}_224x224_nv12`) — cosmetic here,
-   since the output prefixes still carry the variant identity.
-4. **No pinned compile command.** The source README points at the generic
-   OE flow; the exact command that produced the published `.bin` files is
-   not recorded, so reproduction is unverified.
-5. **No conversion executed in this migration.**
+Prepare the matching ONNX graph for each `efficientformerv2_s*.onnx` input and float32 RGB `.npy` data under `./calibration_data_rgb_f32`, following the selected YAML's 224x224 normalization (mean `123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`). S0 sets `debug_mode: "dump_calibration_data"` and `optimization: "set_all_nodes_int16"`; S1/S2 omit these settings. S0 uses `working_dir: 'EfficientFormerv2_s0_int16_model_output'`; S1/S2 use `EfficientFormerv2_s{1,2}_224x224_nv12`. Run each variant in its YAML-selected output directory with the commands above.

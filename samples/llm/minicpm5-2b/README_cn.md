@@ -1,4 +1,4 @@
-> 迁移状态：进行中。以下历史板测、精度和 SDK 发布计划来自固定 S 源提交 `380e1a2`，不是本轮测试或最新发布状态。本轮覆盖主机侧启动编排与原生核心重构（含主机 SDK 替身测试）；量化方案保留、不重新验证，板测未运行。
+> 下文的板测结果、精度与 SDK 发布说明为源 S 发布的记录。板端运行按各运行时命令执行；量化方案见转换指南。
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -12,22 +12,21 @@
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | SDK / 原生入口 | 源精度结论 | 本轮板测 |
-| --- | --- | --- | --- |
-| S100 / S100P | 1.0.0 / legacy | PPL +27.83%，未达到 ≤3% | 未运行 |
-| S600 | 2.0 beta SDK / cpp | PPL +1.60%，源记录达标 | 未运行 |
-| X5 | 无对应实现/资产 | 不适用 | 不适用 |
+| 目标 | SDK / 原生入口 | 源精度结论 |
+| --- | --- | --- |
+| S100 / S100P | 1.0.0 / legacy | PPL +27.83%，未达到 ≤3% |
+| S600 | 2.0 beta SDK / cpp | PPL +1.60%，源记录达标 |
+| X5 | 无对应实现/资产 | 不适用 |
 
 ## S100 / S100P 支持
 
-S100（Nash-e）与 S100P（Nash-m）使用独立的 OELLM 1.0.0 W8 模型包和 [legacy C++ 入口](runtime/legacy/README_cn.md)。两板均完成 140 × 2048-token 全量 WikiText2 TEST：PPL 17.91995，相对浮点上升 27.83%，未达到 ≤3% 精度目标。可复现入口见 [全量评估](evaluator/legacy/README_cn.md)。此前已通过中英文单轮生成和正常 EOS 验证。短请求 decode 约 12.1 / 13.0 token/s。内存配置、下载和命令见该入口；转换见 [legacy 转换](conversion/legacy/README_cn.md)。下文原有的 PPL、多轮和稳定性数据仅属于 S600。
-
+S100（Nash-e）与 S100P（Nash-m）使用独立的 OELLM 1.0.0 W8 模型包和 [legacy C++ 入口](runtime/legacy/README_cn.md)。两板均完成 140 × 2048-token 全量 WikiText2 TEST：PPL 17.91995，相对浮点上升 27.83%，未达到 ≤3% 精度目标。可复现入口见 [全量评估](evaluator/legacy/README_cn.md)。两板均有中英文单轮生成与正常 EOS 的记录。短请求 decode 约 12.1 / 13.0 token/s。内存配置、下载和命令见该入口；转换见 [legacy 转换](conversion/legacy/README_cn.md)。下文原有的 PPL、多轮和稳定性数据仅属于 S600。
 
 ## S600 模型与支持范围
 
 MiniCPM5-2B 使用 Llama 架构，包含 42 层、2048 隐藏维度、16 个 query head 和 2 个 KV head。本产物采用 256-token prefill chunk、4096-token KV cache 和四个 Nash-p 核，使用关闭 thinking 的贪心生成，支持中英文文本及同一会话中的后续一轮提问。
 
-本次交付在 **S600、RDK OS V5.1.0** 上验证。模型不能直接用于 S100/S100P。原始模型的更长上下文能力不适用于本次 4096-token 编译配置。图片输入、工具执行和服务端 API 不属于本示例范围。
+运行平台为 **S600**，记录环境为 RDK OS V5.1.0 与 OELLM 2.0.4 runtime。模型不能直接用于 S100/S100P。原始模型的更长上下文能力不适用于本次 4096-token 编译配置。图片输入、工具执行和服务端 API 不属于本示例范围。
 
 <a id="prerequisites"></a>
 ## 前置条件
@@ -65,9 +64,9 @@ bash run.sh -- --prompt="What is the capital of France? Answer with the city nam
 
 最终 HBM 相对浮点 PPL 上升 1.60%，覆盖全部 286580 个下一 token 预测目标。板端 NumPy 评估与 SDK/PyTorch RPC 路径在 5 个样本上的 PPL 相差 0.0055%，并非逐位一致。
 
-生成验证包括新增 6 条提示词的文本和 token 与浮点参考一致、中英文两轮对话、填充后 2048/3840 token 输入的信息检索，以及 50 次重复请求。该重复请求场景的平均 decode 速度为 53.25 token/s，平均首 token 延迟为 147.86 ms。这些是特定工作负载的数据，不代表并发或长时间稳定性保证；runtime 的 prefill token 数包含 chunk 填充。
+生成验证包括新增 6 条提示词的文本和 token 与浮点参考一致、中英文两轮对话、填充后 2048/3840 token 输入的信息检索，以及 50 次重复请求。该重复请求场景的平均 decode 速度为 53.25 token/s，平均首 token 延迟为 147.86 ms。这些是特定工作负载下的数据，不含并发或长时间稳定性保证；runtime 的 prefill token 数包含 chunk 填充。
 
-原始浮点模型对一条中文 `1+1` 提示词回答错误，并在要求裸 JSON 时添加 Markdown 围栏。量化模型保留了这些表现，本示例不承诺严格 JSON 格式或普遍的事实正确性。
+原始浮点模型对一条中文 `1+1` 提示词回答错误，并在要求裸 JSON 时添加 Markdown 围栏；量化模型保留了这些表现。格式敏感的应用请自行校验输出。
 
 <a id="directory"></a>
 ## 目录结构

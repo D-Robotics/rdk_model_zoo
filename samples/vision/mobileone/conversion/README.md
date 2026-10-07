@@ -3,12 +3,12 @@
 <a id="source-model"></a>
 ## Source model
 
-The source references apple/ml-mobileone, loading an unfused checkpoint such as mobileone_s0_unfused.pth.tar and applying `reparameterize_model(model)` before ONNX export/simplification. No executable export script, upstream revision, package versions or checkpoint digest is included.
+Use the upstream apple/ml-mobileone flow: load the matching unfused checkpoint (for example `mobileone_s0_unfused.pth.tar`), apply `reparameterize_model(model)`, then export and simplify ONNX. Record the selected upstream revision, package versions and checkpoint digest for each build.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-5 unchanged YAMLs from rdk_x5 @ac11571, X5 march `bayes-e`; no S recipe. OE version is not pinned by the source; record the actual rebuild environment.
+5 unchanged YAMLs X5 march `bayes-e`;  OE version is not pinned by the source; record the actual rebuild environment.
 
 | Config | ONNX input path | Working directory | Compiled basename |
 | --- | --- | --- | --- |
@@ -18,12 +18,17 @@ The source references apple/ml-mobileone, loading an unfused checkpoint such as 
 | `MobileOne_S3_config.yaml` | `./mobileone_s3.onnx` | `MobileOne_224x224_nv12_int8` | `MobileOne_224x224_nv12.bin` |
 | `MobileOne_S4_config.yaml` | `./mobileone_s4.onnx` | `MobileOne_224x224_nv12_int8` | `MobileOne_224x224_nv12.bin` |
 
+
+Toolchain resources:
+
+- [OE Docker environment](https://forum.d-robotics.cc/t/topic/35229)
+
 <a id="export"></a>
 ## ONNX export
 
-The source references apple/ml-mobileone, loading an unfused checkpoint such as mobileone_s0_unfused.pth.tar and applying `reparameterize_model(model)` before ONNX export/simplification. No executable export script, upstream revision, package versions or checkpoint digest is included.
+Use the upstream apple/ml-mobileone flow: load the matching unfused checkpoint (for example `mobileone_s0_unfused.pth.tar`), apply `reparameterize_model(model)`, then export and simplify ONNX. Record the selected upstream revision, package versions and checkpoint digest for each build.
 
-There is no executable, verified export command in this sample. Prepare the matching graph at the table path, nominal RGB NCHW 1×3×224×224 input and ImageNet-1k output. YAML input_shape/input_name are empty: dimensions and names come from the graph and must be checked.
+Export the matching graph to the table path with nominal RGB/NCHW 1×3×224×224 input and ImageNet-1k output. YAML `input_shape` and `input_name` are empty, so inspect the graph for its actual dimensions and names.
 
 <a id="calibration"></a>
 ## Calibration
@@ -33,7 +38,8 @@ All YAMLs require `./calibration_data_rgb_f32` (float32, calibration default), R
 <a id="compile"></a>
 ## Compile
 
-Conditional commands in OE, after the missing graph and calibration prerequisites are supplied. Not run in this migration.
+In the OE environment, after the ONNX graph and calibration data
+prerequisites are supplied:
 
 ```bash
 # cwd: repository root, then conversion directory
@@ -47,7 +53,8 @@ Expected output for this config: `MobileOne_224x224_nv12_int8/MobileOne_224x224_
 <a id="validation"></a>
 ## Post-conversion validation
 
-Status: not-run. Verify packed NV12 geometry 224×224 and an F32 score output squeezing to (1000,) before inference. Example for the first variant:
+Before inference, verify the packed NV12 geometry 224×224 and an F32
+score output squeezing to (1000,). Example for the first variant:
 
 ```bash
 # cwd: repository root on X5
@@ -57,7 +64,7 @@ python3 samples/vision/mobileone/runtime/python/main.py --target x5 \
   --test-img samples/vision/mobileone/test_data/tiger_beetle.JPEG
 ```
 
-The qualified reference selects a contract; it does not certify that new bytes equal published bytes. Record the new hash and graph provenance, compare source/unified raw outputs, and evaluate accuracy before delivery.
+Use the qualified reference that matches the artifact and target. Record the build hash and graph provenance, compare source and unified raw outputs, and evaluate accuracy before delivery.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -65,6 +72,6 @@ The qualified reference selects a contract; it does not certify that new bytes e
 Compiled paths are listed above. Published files and per-variant targets are listed in [model preparation](../model/README.md#artifacts); downloads land in the sample model directory. Preserve variant and provenance when moving a verified build; renaming alone is not a repair.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-Missing pinned framework/OE/weights, runnable export, calibration preparation and conversion/board accuracy evidence. YAML files and original notices are preserved byte-for-byte. Published artifact download is available; end-to-end conversion reproducibility is not claimed.
+For a MobileOne rebuild, load the matching unfused checkpoint (for example `mobileone_s0_unfused.pth.tar`), apply `reparameterize_model(model)`, and export/simplify an RGB/NCHW 1×3×224×224 graph at the path in the selected YAML. Prepare float32 RGB calibration data at `./calibration_data_rgb_f32` using the YAML mean `123.675/116.28/103.53`, scale `0.01712475/0.017507/0.01742919`, and `default` calibration. Use the X5 `bayes-e` configurations and record the actual framework and OE versions when building.

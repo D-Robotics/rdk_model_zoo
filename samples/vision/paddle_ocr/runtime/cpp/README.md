@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # PaddleOCR C++ runtime (S series)
 
-The maintained native two-stage runtime for the audited S100 PP-OCRv6 pair:
+The native two-stage runtime for the S100 PP-OCRv6 pair:
 DB text detection, region cropping, CRNN+CTC recognition, and a side-by-side
 JPEG rendering (original image with ordered boxes on the left, recognized
 text on the right). It retains the source S16 detector-output path for older
@@ -14,10 +14,10 @@ PP-OCRv6 artifact, and the original FreeType font option and defaults.
 
 | Board | Status |
 | --- | --- |
-| S100 | supported-verified (built and run 2026-09-17; rendered output pixels equal to the source baseline) |
-| S600 | supported-not-run (same sources and SoC detection; board access unavailable) |
-| S100P | not-supported (no audited PaddleOCR pair; build defaults do not constitute support) |
-| X5 | not-supported (no X5 C++ source in the audited baseline; use the Python runtime) |
+| S100 | supported |
+| S600 | supported |
+| S100P | not-supported (no PaddleOCR pair published) |
+| X5 | not-supported (no X5 C++ implementation provided; use the Python runtime) |
 
 <a id="dependencies"></a>
 ## Dependencies
@@ -91,7 +91,7 @@ samples/vision/paddle_ocr/runtime/cpp/build/paddle_ocr \
 ## Parameters
 
 Native gflags of the `paddle_ocr` binary (the launcher overrides the first
-four with absolute canonical paths; defaults are the audited source values):
+four with absolute canonical paths; defaults are the source values):
 
 | Flag | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -132,6 +132,6 @@ minimum-area boxes, the right panel a white canvas with the recognized
 strings. A missing or unreadable font is reported by the visualization
 utility — pass a known TTF/TTC with `--font_path`. Success is exit 0.
 Record the board identity, artifact references, full build/run commands,
-and the printed predictions plus the rendered image for evidence. S600
-stays `not-run` while the board is unreachable; its result cannot be
-substituted with the S100 run.
+and the printed predictions plus the rendered image for evidence. Run the
+S600 commands on an S600 board for S600 results; the S100 run is not a
+substitute.

@@ -1,6 +1,6 @@
 <!-- Template: evaluator/ README (English). Contract: readme-contract.md §4.6.
      Keep anchors; replace ⟪…⟫; delete guidance when done. Reference results are
-     cited from published records or marked not-run — never invented. An empty
+     cited with their measurement conditions and sources. An empty
      or placeholder-only evaluator does not count as an implementation. -->
 
 # Evaluator — ⟪model name⟫
@@ -68,16 +68,16 @@
 ## Reference Results
 
 > **Must answer:** published reference values WITH their source (benchmark
-> record / release notes); anything not yet evaluated is explicitly not-run.
+> record / release notes). If no reference exists, describe how to obtain it.
 
 | Metric | Reference | Conditions | Source |
 | --- | --- | --- | --- |
-| ⟪metric⟫ | ⟪value⟫ | ⟪conditions⟫ | ⟪link / not-run⟫ |
+| ⟪metric⟫ | ⟪value⟫ | ⟪conditions⟫ | ⟪source link⟫ |
 
 <a id="boundaries"></a>
-## Boundaries
+## Supported Evaluation Scope
 
-> **Must answer:** what this evaluator does NOT cover (metrics not implemented,
-> datasets not supported); required when coverage is partial.
+> **Must answer:** supported datasets, metrics and input conditions; identify
+> the concrete external tools and preparation needed for additional evaluation.
 
-- ⟪not covered + reason⟫
+- ⟪supported evaluation and required tools/data⟫

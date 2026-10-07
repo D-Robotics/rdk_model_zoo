@@ -56,7 +56,7 @@ python3 samples/vision/hgnetv2/runtime/python/main.py
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | ImageNet 标签，每行一项 |
 | `--top-k` | int | 5 | 输出结果数 |
 | `--topk` | int | 5 | top-k 的旧拼写 |
-| `--resize-type` | int | null | 0 直接缩放，1 线性 letterbox；省略沿用源默认 1 |
+| `--resize-type` | int | null | 0 直接缩放，1 线性 letterbox；省略时默认 1 |
 | `--priority` | int | 0 | 运行调度优先级 0–255 |
 | `--bpu-cores` | int list | [0] | 运行使用的 BPU 核编号 |
 | `--img-save-path` | string | null | 可选标注输出路径 |
@@ -71,8 +71,8 @@ python3 samples/vision/hgnetv2/runtime/python/main.py
 <a id="integration-example"></a>
 ## 集成示例
 
-cwd：仓库根目录，先准备制品。API 不下载模型。本例省略可选标签，因此
-标签值为类别 ID 字符串。
+cwd：仓库根目录。构造分类器前，先用下载器准备制品。本例省略可选标签，
+因此标签值为类别 ID 字符串。
 
 ```python
 from samples.vision.hgnetv2.runtime.python.classify import HGNetV2Classifier
@@ -104,4 +104,4 @@ print(result.class_ids, result.scores, result.labels)
 <a id="troubleshooting"></a>
 ## 排障
 
-缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：留存实际 metadata 并核对制品身份，不能绕过绑定强行运行。
+缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：核对制品引用、目标与张量 metadata 是否符合样例契约。

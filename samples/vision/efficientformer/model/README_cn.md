@@ -33,10 +33,7 @@ Python 形式等价：
 `python3 samples/vision/efficientformer/model/download.py --target x5 --variant l1`。
 下载器经同目录临时文件写入，核对内容长度与 Manifest 记录的发布方
 SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留文件供排查）。
-当前各行没有发布方 SHA-256，下载器打印实测摘要作为本地证据并声明来源
-未经独立证明。下载是显式动作，绝不发生在推理过程中。源 `download.sh`
-用 `wget` 拉取两个文件且不做任何校验；该路径已被本 Manifest 驱动下载
-取代。
+当前各行没有发布方 SHA-256，下载器打印实测摘要作为本地证据。下载是显式动作，绝不发生在推理过程中。
 
 <a id="accompanying-files"></a>
 ## 随伴文件

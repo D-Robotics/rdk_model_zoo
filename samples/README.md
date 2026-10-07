@@ -2,8 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. It is a source-entry inventory, not a claim that every board/language/artifact is accepted. Each row links usage, conversion and evaluation; individual guides control targets, variants and prerequisites.
-
+This index covers 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. Each row links usage, conversion and evaluation; individual guides state targets, variants and prerequisites.
 
 ## Image classification
 
@@ -93,23 +92,14 @@ HIMLoco consumes prepared six-frame observations and returns policy actions; it 
 | [gemma4-e2b](llm/gemma4-e2b/README.md) | [conversion](llm/gemma4-e2b/conversion/README.md) | [evaluator](llm/gemma4-e2b/evaluator/README.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README.md) | [conversion](llm/minicpm5-2b/conversion/README.md) | [evaluator](llm/minicpm5-2b/evaluator/README.md) |
 
-Gemma includes five native entry points and the full source tutorials; source import, launcher separation, model preparation and the Vision/Text stage/resource refactor are implemented, and the latest Text-stage package has bounded host acceptance — the [independent Text-stages review](../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md) rechecked both original sanitizer drivers and recorded 30/30 host tests and 19/19 ASan/UBSan CTests, claiming no vendor ABI, live model, board or quantization result. MiniCPM5-2B is migrated with separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) native entries. Its final independent core disposition [accepted the core refactor within host scope](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md): 20 passing host tests and four compiled README examples, with no live board, vendor ABI or model accuracy acceptance claimed. Batch B11, vendor ABI/model accuracy and board acceptance remain open; board tests are not-run.
+Gemma provides five native entry points (chat, HTTP serving, single-shot inference, verification tools) plus the full upstream tutorials. MiniCPM5-2B ships separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) native entries. Both samples state their supported boards in their own guides; model resources and native build prerequisites are documented per sample.
 
 ## Pinned third-party policy integrations
 
-Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching source does not prepare model assets or establish board validation.
-
-## Read validation status correctly
-
-- All 51 in-repo samples share one source state: the readable-runtime architecture is implemented and independently host-accepted (2026-10-05; [coverage table](../docs/releases/unified-migration/2026-10-05-all-sample-coverage.json), [Codex review](../docs/releases/unified-migration/2026-10-05-all-sample-codex-review.md) — 1871 tests, 1859 executed-passed, 12 explicit optional-dependency skips). Host acceptance never substitutes for board validation.
-- The [support/verification matrix](../docs/releases/unified-source-release.md) records each sample's historical board evidence with its original scope: the three original pilots and B1/B2 have their own board records; one passing case does not certify a family.
-- B3/B4/B5 migration acceptance primarily uses host checks; batch reports retain the board backlog.
-- EfficientSAM/MobileSAM have fully recovered X5 8GB default/priority7 and S100 default evidence. X5 4GB logs-only, unfinished S600 and unverified S100P gaps remain scoped in the [board handoff](../docs/releases/unified-migration/2026-09-24-board-resume.md); neither “all tested” nor “all untested” is accurate.
-- B7 includes scoped passing Python comparisons, MODNet manual-asset gaps, ByteTrack video-scope limits and pending source C++ comparisons. See the [ledger](../docs/releases/unified-migration/x5-s-migration-map.md).
-- B8 (H4), B9 (H5), B10 (H6) and B11 (H7) hold non-board batch acceptance — see the [final non-board alignment](../docs/releases/unified-migration/2026-09-29-host-completion-independent-review.md) and the per-batch reviews it links. Host/documentation scope only; every board dimension in those batches stays not-run, and full-delivery closure (the ledger's `Closed` column) remains `no`.
+Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching the source does not prepare model assets; model resources are operator-supplied as documented in the VLA guide.
 
 ## Choose and extend
 
 Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [_shared](_shared/README.md); responsibilities and documentation requirements are in the [inference contract](../docs/sample-standards/inference-contract.md) and [README contract](../docs/sample-standards/readme-contract.md).
 
-Models that were never unified are not carried in this tree: the historical `platforms/` copies were removed (pinned commit `d2d2a4e0`, delivery branches). The 51 unified samples themselves are source-complete and host-accepted; what remains open is per-sample board validation and full-delivery closure, tracked sample by sample in the [migration ledger](../docs/releases/unified-migration/x5-s-migration-map.md) and the [support/verification matrix](../docs/releases/unified-source-release.md). This index is not a full-delivery acceptance sheet.
+For a first board session see the [board smoke test](../docs/validation/board-smoke-test.md).

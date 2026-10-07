@@ -35,7 +35,7 @@ Success returns 0, validation/load errors return 2. run.sh forwards these same a
 | `--model-path` | Path | `None` | default model/ BIN; external path requires asset-id |
 | `--test-img` | Path | `samples/vision/pp_liteseg/test_data/street.png` | sample-relative absolute default |
 | `--output` | Path | `outputs/pp_liteseg/result.jpg` | three-panel image |
-| `--mask-save-path` | Path | `outputs/pp_liteseg/labels.npy` | int32 class-ID array; .npy required |
+| `--mask-save-path` | Path | `outputs/pp_liteseg/labels.npy` | int32 class-ID array;.npy required |
 | `--report-path` | Path | `outputs/pp_liteseg/result.json` | JSON evidence |
 | `--alpha` | float | `0.55` | overlay weight in [0,1] |
 | `--input-width` | int | `1024` | fixed compiled width |
@@ -73,7 +73,7 @@ mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 1024), int32
 ```
 
-The task contains only stage logic. Binding owns artifact/tensor contracts, the shared runner owns SDK loading/scheduling, and visualization.py owns rendering. Scheduling uses runner.set_scheduling_params; SDK concurrency is not assumed. The archived PPLiteSeg/PPLiteSegConfig API remains in the source snapshot.
+The task contains only stage logic. Binding owns artifact/tensor contracts, the shared runner owns SDK loading/scheduling, and visualization.py owns rendering. Scheduling uses runner.set_scheduling_params; SDK concurrency is not assumed. Use the task class and `predict` API shown above.
 
 <a id="stage-io"></a>
 ## Stage IO

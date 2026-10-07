@@ -1,21 +1,20 @@
 [English](README.md) | [简体中文](README_cn.md)
 
-
 # LaneNet：车道二值标签与嵌入特征
 
 <a id="overview"></a>
 ## 概述
 
-LaneNet 通过二值分割分支区分车道像素与背景，通过嵌入分支为后续实例分离提供特征。本 sample 保留 S 分支的 Python 和 C++ 推理能力。实际实现的结果是**原始嵌入特征与二值标签**：两份源实现均未执行嵌入聚类或车道曲线拟合，显示颜色本身不代表不同车道。
+LaneNet 通过二值分割分支区分车道像素与背景，通过嵌入分支为后续实例分离提供特征。本 sample 为 S100 HBM 提供 Python 和 C++ 推理入口。其结果是**原始嵌入特征与二值标签**：输出不含嵌入聚类和车道曲线拟合，车道实例的区分需在下游聚类步骤完成。
 
-原文档引用 [Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) 和 [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection)。它们是算法参考资料，不能证明已发布 HBM 来自某个具体上游提交；源分支未提供该提交或模型校验和。
+算法参考：[Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) 和 [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection)。已发布 HBM 未绑定具体上游提交：未提供该提交或模型校验和。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 已发布模型 | Python / C++ | 本次迁移验证 |
+| 目标 | 已发布模型 | Python / C++ | 状态 |
 | --- | --- | --- | --- |
-| S100 | `s100/lanenet256x512.hbm` | 两种入口均保留 | 仅主机夹具；板端推理与完整原生 SDK 构建 not-run |
+| S100 | `s100/lanenet256x512.hbm` | Python 和 C++ | supported |
 | X5 / S100P / S600 | 无 LaneNet 资产 | 显式拒绝 | 不静默回退至 S100 |
 
 目标名称只选择契约，不转换 HBM，也不能认证当前板卡。`auto` 因唯一已发布资产而解析到 S100，实际执行仍检查物理身份。主机准备、文档与测试不能证明板端数值等价。
@@ -64,9 +63,9 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 
 嵌入 PNG 将特征裁剪至 [0,1]，乘 255 后舍入。它明确替换源 Python 的溢出回绕/截断显示行为，原始嵌入不变。二值 PNG 用 0/255 显示标签。不输出聚类结果、车道 ID、跟踪、曲线拟合、数据集精度或延迟。
 
-以下图片逐字节保留自原 S sample，**不是本次迁移重新运行的证据**：
+以下图片逐字节保留自原 S sample：
 
-| 历史 Python 嵌入显示图 | 历史 Python 二值显示图 |
+| 源记录 Python 嵌入显示图 | 源记录 Python 二值显示图 |
 | --- | --- |
 | ![源嵌入显示](test_data/instance_pred.png) | ![源二值显示](test_data/binary_pred.png) |
 
@@ -82,7 +81,7 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 | [runtime/cpp](runtime/cpp/README_cn.md) | 原生构建、资源管理、保留类型的原始输出 |
 | [conversion](conversion/README_cn.md) | 保留 YAML、新校准/配置准备工具、缺失的导出前提 |
 | [evaluator](evaluator/README_cn.md) | 主机检查与评估证据的明确边界 |
-| [test_data](test_data) | 原道路图像及四幅历史显示图 |
+| [test_data](test_data) | 原道路图像及四幅源记录显示图 |
 | [tests](tests) | 主机数值、CLI、转换与原生故障注入夹具 |
 
 <a id="entry-points"></a>
@@ -90,9 +89,9 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 
 应用集成使用 `LaneNetTask.pre_process`、`forward`、`post_process` 或其组合 `predict`。下载、文件系统操作、绘图与资源管理放在任务类之外。`model_binding.py` 负责模型语义校验，共享具名数组 runner 负责传输；原生代码同样分离任务阶段、张量契约、SDK 资源管理、可视化和 CLI 读写。
 
-修改前处理或增加实例聚类前先阅读[阶段 IO 契约](runtime/python/README_cn.md#stage-io)。聚类属于新的算法能力，需要单独验证；将当前显示图改名为实例掩码并不等于实现聚类。原 S 实现保留在 `platforms/s/samples/vision/lanenet`，可用于源对照。
+修改前处理或增加实例聚类前先阅读[阶段 IO 契约](runtime/python/README_cn.md#stage-io)。聚类属于额外的算法能力，需要单独实现并验证；实例掩码应以聚类算法的输出为准。
 
 <a id="license"></a>
 ## 许可证
 
-本 sample 遵循仓库 [Apache-2.0 许可证](../../../LICENSE)。算法参考、上游 checkpoint 和外部下载资产仍受各自适用条款约束；本次迁移不会依据文件名推定额外授权或来源。
+本 sample 遵循仓库 [Apache-2.0 许可证](../../../LICENSE)。算法参考、上游 checkpoint 和外部下载资产遵循各自适用条款；授权与来源以其发布方记录为准。

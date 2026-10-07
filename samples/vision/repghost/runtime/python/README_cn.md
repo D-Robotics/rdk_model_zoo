@@ -50,13 +50,13 @@ python3 samples/vision/repghost/runtime/python/main.py
 | --- | --- | --- | --- |
 | `--target` | choice | auto | auto/x5/s100/s100p/s600；必须匹配实际板卡，发布支持范围见根支持矩阵 |
 | `--asset-id` | string | null | 精确的发布清单制品引用 |
-| `--variant` | choice | null | 100/111/130/150/200；省略时选择 100 |
+| `--variant` | choice | null | `100`、`111`、`130`、`150` 或 `200`；省略时为 `100`，用 `--list-models` 查看已发布目标组合 |
 | `--model-path` | string | null | 已有模型路径，需配合 asset-id；省略时由清单解析 |
 | `--test-img` | string | samples/vision/repghost/test_data/ibex.JPEG | BGR 图像路径 |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | ImageNet 标签，每行一项 |
 | `--top-k` | int | 5 | 输出结果数 |
 | `--topk` | int | 5 | top-k 的旧拼写 |
-| `--resize-type` | int | null | 0 直接缩放，1 线性 letterbox；省略沿用源默认 1 |
+| `--resize-type` | int | null | 0 直接缩放，1 线性 letterbox；省略时默认 1 |
 | `--priority` | int | 0 | 运行调度优先级 0–255 |
 | `--bpu-cores` | int list | [0] | 运行使用的 BPU 核编号 |
 | `--img-save-path` | string | null | 可选标注输出路径 |
@@ -66,13 +66,13 @@ python3 samples/vision/repghost/runtime/python/main.py
 <a id="results"></a>
 ## 结果
 
-打印 Top-K 类别 ID/分数/标签；`ClassificationResult` 包含 int64 ID、float32 分数和标签 tuple。未指定 `--img-save-path` 不写文件。源声明为 logits 加 softmax，实际板端 metadata 待复验。完全平局使用 ID 升序，可能不同于旧 NumPy 的平局排序。
+打印 Top-K 类别 ID/分数/标签；`ClassificationResult` 包含 int64 ID、float32 分数和标签 tuple。未指定 `--img-save-path` 不写文件。分数语义为 raw logits 加 softmax；完全平局使用 ID 升序稳定排序。
 
 <a id="integration-example"></a>
 ## 集成示例
 
-cwd：仓库根目录，先准备制品。API 不下载模型。本例省略可选标签，因此
-标签值为类别 ID 字符串。
+cwd：仓库根目录。构造分类器前，先用下载器准备制品。本例省略可选标签，
+因此标签值为类别 ID 字符串。
 
 ```python
 from samples.vision.repghost.runtime.python.classify import RepGhostClassifier
@@ -104,4 +104,4 @@ print(result.class_ids, result.scores, result.labels)
 <a id="troubleshooting"></a>
 ## 排障
 
-缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：留存实际 metadata 并核对制品身份，不能绕过绑定强行运行。
+缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：核对制品引用、目标与张量 metadata 是否符合样例契约。

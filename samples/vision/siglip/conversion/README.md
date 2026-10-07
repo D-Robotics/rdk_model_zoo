@@ -10,7 +10,7 @@ The published artifacts are SigLIP vision encoders derived from Google-origin Hu
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
 
-The fixed source identifies Nash BPU deployment but does not record an OE release, compiler build, `march` command, or per-target configuration file. The supported mapping is S100 → Nash-E and S100P → Nash-M; the same eight publication assets are referenced under `s100/`.
+The source identifies Nash BPU deployment but records no OE release, compiler build, `march` command, or per-target configuration file. General OE resources: [OE environment documentation](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview) and [toolchain download](https://toolchain.d-robotics.cc/). The supported mapping is S100 → Nash-E and S100P → Nash-M; the same eight publication assets are referenced under `s100/`.
 
 | Target | march | OE version | Config |
 | --- | --- | --- | --- |
@@ -30,15 +30,22 @@ No calibration dataset, sample count, quantization configuration, calibration sc
 <a id="compile"></a>
 ## Compile
 
-No reproducible compile command, compiler version, calibration parameters, or naming recipe is published. The result is a set of precompiled `.hbm` files listed in [`../model/README.md`](../model/README.md). Generic `hrt_model_exec` inspection commands are not presented as a conversion recipe or validation result.
+No reproducible compile command, compiler version, calibration parameters, or naming recipe is published. The result is a set of precompiled `.hbm` files listed in [`../model/README.md`](../model/README.md).
 
 <a id="validation"></a>
 ## Post-Conversion Validation
 
-No newly converted artifact was produced or run in this migration. The historical evaluator tables are preserved as reference records, not evidence for a fresh conversion. A future validation must bind both packed submodels, check `_input_0` metadata and the selected `_output_0` shape/dtype, then run the board smoke path in [`../runtime/python/README.md`](../runtime/python/README.md) on both S100 and S100P.
+Each published HBM packs two fixed submodels — `pooler_output` (global image embedding) and `last_hidden_state` (patch-level features) — each exposing `_output_0`. The source inspects a downloaded artifact on the board by checking the model info and measuring both submodels separately with single-threaded `perf`:
 
-- Smoke status: not-run.
-- Board status: not-run; no board, SDK, or download was used here.
+```bash
+# cwd: repository root, on the board, after downloading the artifact
+hrt_model_exec model_info --model_file samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm
+hrt_model_exec perf --thread_num 1 --model_name pooler_output --model_file samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm
+hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm
+```
+
+Apply the same three commands to the other seven artifacts by replacing the file name. The source-recorded evaluator tables are preserved as reference records; validate a fresh conversion with the runs below. A validation must bind both packed submodels, check `_input_0` metadata and the selected `_output_0` shape/dtype, then run the board smoke path in [`../runtime/python/README.md`](../runtime/python/README.md) on both S100 and S100P.
+
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -60,7 +67,7 @@ No newly converted artifact was produced or run in this migration. The historica
 - Exact source checkpoint/version and export script are missing.
 - OE version, compiler build, `march` configuration, calibration dataset/configuration, and compile command are missing.
 - Weight/export license metadata and artifact hashes are missing (`sha256: null (unknown)` in the model README).
-- Conversion and post-conversion board validation are not-run. The reproducible boundary is selection, input/output contract documentation, and use of already published HBM assets; this directory cannot recreate the HBM files.
+- The reproducible boundary is selection, input/output contract documentation, and use of already published HBM assets; this directory cannot recreate the HBM files.
 
 ## License
 

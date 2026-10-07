@@ -13,7 +13,6 @@ Authoritative source: [S manifest](../../../../docs/release/s/models.yaml), samp
 - `int8`: [download](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int8.hbm)
 - `int16`: [download](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int16.hbm)
 
-
 <a id="preparation"></a>
 ## Preparation
 
@@ -28,7 +27,7 @@ Defaults: target s100, variant int8. download.sh accepts positional target/varia
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-`../test_data/cifar10_classes.names` is an integer-keyed Python dictionary literal, parsed safely with literal_eval. Ten labels map IDs 0–9. `airplane_0000.png` is the default functional image. Neither is downloaded during inference.
+`../test_data/cifar10_classes.names` is an integer-keyed Python dictionary literal, parsed safely with literal_eval. Ten labels map IDs 0–9. `airplane_0000.png` is the default functional image. Use the files from their sample paths when running inference.
 
 <a id="local-paths"></a>
 ## Local paths
@@ -42,4 +41,4 @@ python3 samples/vision/vit/runtime/python/main.py --dry-run --target s100 --asse
 <a id="formats-checksums"></a>
 ## Formats and checksums
 
-Both artifacts: `sha256: null (unknown)` in the manifest. The downloader prints an observed SHA-256; this records local bytes, not independent publisher verification. It preserves existing files under the shared downloader policy. Runtime rejects incompatible tensor metadata before inference.
+Both artifacts use `sha256: null (unknown)` in the manifest. The downloader prints the computed digest after transfer. Runtime checks tensor metadata against the selected artifact before inference.

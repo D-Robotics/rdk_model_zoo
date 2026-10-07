@@ -1,12 +1,10 @@
 # RepViT evaluation
-
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-
-Functional input: bundled `test_data/yurt.JPEG`. No dataset-level evaluator is delivered by the source; ImageNet validation data and its preparation are not included. One image cannot prove ImageNet accuracy.
+The functional check uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
 
 <a id="environment"></a>
 ## Environment
@@ -21,7 +19,7 @@ Host: sample requirements (SciPy for source comparison). Board: matching X5 runt
 python3 -m unittest discover -s samples/vision/repvit/tests -v
 ```
 
-Functional board run (duration not measured):
+Functional board check on the matching board:
 
 ```bash
 # cwd: repository root
@@ -32,66 +30,34 @@ python3 samples/vision/repvit/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-Repeat for each published variant and both X5 board memory configurations. Use the preserved source task API below for a same-process comparison. Keep model bytes, image, resize, Top-K and scheduling identical. The original CLI also remains available, but its formatted score output is less precise than the raw arrays saved here.
-
-```bash
-# cwd: repository root on X5, prepare variant m0_9 first
-PYTHONPATH="$PWD:$PWD/platforms/x5/samples/vision/repvit/runtime/python" python3 - <<'PYTHON'
-import cv2
-import numpy as np
-from repvit import RepViT, RepViTConfig
-from samples.vision.repvit.runtime.python.model_binding import resolve_selection
-from samples.vision.repvit.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.repvit.runtime.python.classification import ClassificationTask
-
-model_path = "samples/vision/repvit/model/RepViT_m0_9_224x224_nv12.bin"
-image = cv2.imread("samples/vision/repvit/test_data/yurt.JPEG")
-if image is None:
-    raise FileNotFoundError("yurt.JPEG")
-legacy = RepViT(RepViTConfig(model_path, resize_type=1, topk=5))
-legacy.set_scheduling_params(priority=0, bpu_cores=[0])
-old_outputs = legacy.forward(legacy.pre_process(image))
-old_ids, old_scores, _ = legacy.post_process(old_outputs)
-selection = resolve_selection("x5", variant="m0_9")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = ClassificationTask(runner, binding, top_k=5, resize_type=1)
-new_outputs = task.forward(task.pre_process(image).tensors)
-result = task.post_process(new_outputs)
-# Preserve full vectors in a new output directory; do not overwrite old evidence.
-from pathlib import Path
-from datetime import datetime, timezone
-out = Path("outputs") / ("repvit-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
-out.mkdir(parents=True, exist_ok=False)
-np.save(out / "legacy.npy", old_outputs[legacy.output_names[0]])
-np.save(out / "unified.npy", new_outputs[binding.output_name])
-print("legacy", old_ids.tolist(), old_scores.tolist())
-print("unified", result.class_ids.tolist(), result.scores.tolist())
-print("raw outputs:", out)
-np.testing.assert_array_equal(result.class_ids, old_ids)
-np.testing.assert_allclose(result.scores, old_scores, rtol=0, atol=1e-5)
-PYTHON
-```
-
-This is an unexecuted board comparison recipe, not a receipt. A tie assertion failure requires inspecting per-ID scores rather than relaxing tolerances. Record the identities described under Outputs alongside these arrays.
+Repeat for each published variant on the matching board. For a same-board
+comparison between runs, keep model bytes, image, resize type, Top-K and
+scheduling parameters identical and compare class IDs and raw scores before
+label formatting; expect identical IDs and scores within 1e-5. When a
+Top-K boundary is an exact tie, compare per-ID scores instead of relaxing
+the tolerance.
 
 <a id="metrics"></a>
 ## Metrics
 
-Host preprocessing: exact bytes for three deterministic image shapes, both resize modes. Host score comparison: same synthetic F32 outputs, exact Top-K IDs and absolute score difference ≤1e-7. Proposed board criterion: identical IDs and abs(score difference)<1e-5; exact ties require per-ID evidence, not silent acceptance. Dataset accuracy and timing are not measured.
+| Metric | Definition | Conditions |
+| --- | --- | --- |
+| contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | prepared artifact on a matching X5 board |
+| Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
+| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the functional check |
+| latency / FPS | inference timing on the matching board | compare with the published figures under [Reference results](#reference-results), measured under the conditions stated there |
 
 <a id="outputs"></a>
 ## Outputs
 
-Host tests print unittest output; board CLI prints results and optionally a visualization. For board evidence record code SHA/deployed file hashes, board identity/SDK, exact argv/cwd, UTC times, return code, full stdout/stderr, artifact/image/labels hashes, metadata and raw outputs.
+Repeat the functional check on the matching board and compare with the published figures under [Reference results](#reference-results), using the measurement conditions stated there.
 
 <a id="reference-results"></a>
 ## Reference results
 
-Migration board comparison, dataset accuracy and timing: **not-run**. Historical table copied from the source evaluator at `rdk_x5 @ac115717197920355fc390bb04299b20e6436864`.
+The table below is from the published source evaluator.
 
-Source conditions: X5 CPU 8×A55@1.8GHz performance mode, BPU Bayes-e@1GHz. Float Top-1 is pre-quantization ONNX; Quant Top-1 is deployment. Single-thread latency is one frame/one BPU core; multi-thread latency and FPS use concurrent submissions. The source does not fix dataset subset, warm-up or repetition counts, so reproducibility remains incomplete.
+Source conditions: X5 CPU 8×A55@1.8GHz performance mode, BPU Bayes-e@1GHz. Float Top-1 is pre-quantization ONNX; Quant Top-1 is deployment. Single-thread latency is one frame/one BPU core; multi-thread latency and FPS use concurrent submissions. For a new comparison, use the same dataset subset and record warm-up, repetition count, board mode and concurrency settings.
 
 | Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread Latency (ms) | Multi-thread Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -100,6 +66,6 @@ Source conditions: X5 CPU 8×A55@1.8GHz performance mode, BPU Bayes-e@1GHz. Floa
 | RepViT-m0.9 | 224x224 | 5.1 | 76.32% | 75.75% | 1.65 | 4.37 | 902.69 |
 
 <a id="boundaries"></a>
-## Boundaries
+## Dataset-level evaluation
 
-Host tests neither execute the BPU nor certify compiler-generated artifacts. OE export/quantization, dataset accuracy, latency and stability remain untested. Published benchmark values are not new measurements.
+For dataset Top-1 accuracy, pass each validation image to the runtime entry through `--test-img`, compare the returned Top-1 class ID with that image’s ground-truth model index, and divide correct predictions by the number of labeled images evaluated. Keep the artifact, resize mode, Top-K, board image and scheduling settings fixed when comparing runs. For latency or FPS, time the inference stage on the matching board and record the thread count and operating mode alongside the result.

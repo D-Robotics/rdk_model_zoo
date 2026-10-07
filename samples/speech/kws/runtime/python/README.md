@@ -7,7 +7,7 @@ English | [简体中文](README_cn.md)
 
 Run commands from the repository root. The task needs Python 3.10+, NumPy, PyYAML, SoundFile, PaddlePaddle, PaddleAudio and S100's BSP-provided `hbm_runtime`. Help/list/dry-run only need the lightweight selection layer with PyYAML and NumPy for option checks. No import loads a board SDK before actual execution.
 
-Actual CPU frontend verification used Python 3.13, PaddlePaddle 3.3.1 and PaddleAudio 1.0.2. The three frontend cases matched the original PaddleAudio computation exactly; these versions are host observations, not a new S100 compatibility guarantee. Prepare a compatible board environment explicitly. An example isolated host setup (not required for metadata-only commands) is:
+Install the frontend dependencies in an isolated Python environment. An example setup is:
 
 ```sh
 python3 -m venv /path/to/kws-venv
@@ -55,17 +55,17 @@ bash samples/speech/kws/runtime/python/run.sh --target s100 \
 | `--threshold` | 0.5 | Finite [0,1], decision uses score >= threshold |
 | `--list-models` / `--dry-run` | false | Mutually exclusive read-only modes |
 
-The four frontend options remain visible for source CLI discoverability, but this single publication accepts only its fixed defaults. Changing Mel bins/window semantics does not create a compatible model. A different export requires its own explicit artifact/feature contract. This is a deliberate rejection of formerly unchecked source overrides. Scheduling is applied through the shared runner; unsupported SDK scheduling fails rather than silently discarding settings.
+The frontend options `--audio-maxlen`, `--frame-shift`, `--frame-length` and `--n-mels` must retain these published values for this model. Changing the window or feature dimensions requires a model exported for the new feature contract. Scheduling is applied through the shared runner; unsupported SDK scheduling fails.
 
 <a id="results"></a>
 ## Results
 
-The CLI writes and prints `result.json`: score/decision, threshold rule, selected identity, actual metadata, model/audio SHA-256 and source/used/padded/truncated sample counts. A returned score is a Python float probability, not a time interval or transcript. The report does not establish publisher authentication when its `publisher_sha256` is null. Directory reuse is rejected. A preprocessing, metadata or probability-contract error exits 2; no report is written for a failed prediction.
+The CLI writes and prints `result.json`: score/decision, threshold rule, selected identity, actual metadata, model/audio SHA-256 and source/used/padded/truncated sample counts. A returned score is a Python float probability, not a time interval or transcript. The report copies the manifest's `publisher_sha256` value, which may be null. Directory reuse is rejected. A preprocessing, metadata or probability-contract error exits 2; failed predictions do not write a result report.
 
 <a id="integration-example"></a>
 ## Reusable API
 
-On S100 with prepared model and frontend dependencies, this complete example reads the bundled audio, explicitly loads the runner, then calls all three stages. Host verification executes it with an explicit fake SDK transport and real frontend; no board outcome is implied.
+On S100 with a prepared model and frontend dependencies, this example reads the bundled audio, loads the runner and calls all three stages.
 
 ```python
 from samples.speech.kws.runtime.python.model_binding import resolve_selection, SAMPLE_DIR

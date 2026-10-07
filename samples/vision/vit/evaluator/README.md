@@ -1,17 +1,17 @@
 # ViT evaluation
-
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-
-Ten bundled CIFAR-10 images (one per class) support functional checks, not full-dataset accuracy. A full CIFAR-10 evaluation set is not included, and no dataset accuracy evaluator is shipped by this source. The historical subset/version/protocol is not fully recorded; do not treat the ten images as that benchmark.
+The functional check uses the ten bundled CIFAR-10 images, one per class. Dataset-level accuracy uses the complete CIFAR-10 test set. Prepare each test image with its ground-truth class index (0–9) and compare it with the runtime’s Top-1 class ID; the bundled examples provide one image for each class.
 
 <a id="environment"></a>
 ## Environment
 
-[Runtime prerequisites](../runtime/python/README.md#environment). Host tests use an injected runner and real preserved preprocessing helpers. Board comparison needs S100 and both original/unified runtime dependencies; no OE required.
+[Runtime prerequisites](../runtime/python/README.md#environment). The
+functional board check needs an S100 board with `hbm_runtime` and the
+prepared artifact; no OE environment is required for evaluation.
 
 <a id="command"></a>
 ## Commands
@@ -21,74 +21,57 @@ Ten bundled CIFAR-10 images (one per class) support functional checks, not full-
 python3 -m unittest discover -s samples/vision/vit/tests -v
 ```
 
-Board recipe below has not run. Prepare the model, then compare on the same board/input/artifact. Repeat with int16 and all ten bundled images; duration unmeasured.
+Prepare the model, then run the functional check on the matching board;
+repeat with the int16 artifact and the other bundled images for broader
+functional coverage:
 
 ```bash
 # cwd: repository root
 bash samples/vision/vit/model/download.sh s100 int8
+python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 \
+  --test-img samples/vision/vit/test_data/airplane_0000.png \
+  --label-file samples/vision/vit/test_data/cifar10_classes.names --top-k 5
 ```
 
-```bash
-# cwd: repository root on S100; download int8 first
-PYTHONPATH="$PWD:$PWD/platforms/s:$PWD/platforms/s/samples/vision/vit/runtime/python" python3 - <<'PYTHON'
-from pathlib import Path
-from datetime import datetime, timezone
-import cv2
-import numpy as np
-from vit import ViT, ViTConfig
-from samples.vision.vit.runtime.python.model_binding import resolve_selection
-from samples.vision.vit.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.vit.runtime.python.classification import ClassificationTask
-variant = "int8"  # repeat with int16 after preparing its artifact
-selection = resolve_selection("s100", variant=variant)
-image = cv2.imread("samples/vision/vit/test_data/airplane_0000.png")
-if image is None:
-    raise FileNotFoundError("airplane_0000.png")
-legacy = ViT(ViTConfig(str(selection.model_path), resize_type=0))
-legacy.set_scheduling_params(priority=0, bpu_cores=[0])
-old_raw = legacy.forward(legacy.pre_process(image))
-old_top = legacy.post_process(old_raw, topk=5)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = ClassificationTask(runner, binding, top_k=5)
-new_raw = task.forward(task.pre_process(image))
-result = task.post_process(new_raw)
-out = Path("outputs") / ("vit-" + variant + "-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
-out.mkdir(parents=True, exist_ok=False)
-np.save(out / "legacy.npy", old_raw[legacy.model_name][legacy.output_names[0]])
-np.save(out / "unified.npy", new_raw[binding.output_name])
-print("legacy", old_top)
-print("unified", result.class_ids.tolist(), result.scores.tolist())
-print("raw outputs:", out)
-np.testing.assert_array_equal(result.class_ids, [i for i, _ in old_top])
-np.testing.assert_allclose(result.scores, [s for _, s in old_top], rtol=0, atol=1e-5)
-PYTHON
-```
+For a same-board comparison between runs, keep the artifact bytes, image,
+resize type and Top-K identical and compare class IDs and raw scores before
+label formatting; expect identical IDs and scores within 1e-5. When a
+Top-K boundary is an exact tie, compare per-ID scores instead of relaxing
+the tolerance.
 
 <a id="metrics"></a>
 ## Metrics
 
-Host NV12 planes are byte-identical to source for two resize modes and three image shapes. Synthetic F32 logits give identical Top-5 IDs and scores within 1e-7. Proposed board criterion: identical IDs, absolute score error ≤1e-5; exact ties require per-ID evidence, no automatic relaxation. Top-1/Top-5 dataset accuracy measures whether the GT is among the selected classes; no new dataset result.
+| Metric | Definition | Conditions |
+| --- | --- | --- |
+| contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | prepared artifact on a matching S100 board |
+| Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
+| Top-1 / Top-5 accuracy | whether the ground-truth class is the rank-1 / among the K selected classes | measured over the user-prepared CIFAR-10 test set |
+| latency / FPS | inference timing on the matching board | measure with the runtime entry on the matching board |
 
 <a id="outputs"></a>
 ## Outputs
 
-Tests print unittest results. Board recipe writes complete legacy.npy/unified.npy into a new outputs/vit-<variant>-<UTC> directory and prints both Top-K results. Separately retain board image/SDK identity, exact argv/cwd/UTC/rc/full stdout+stderr, code/deployed-file/model/image/labels digests and runtime metadata.
+Tests print unittest results. The functional board check prints the Top-K
+(class ids, scores, labels) on stdout and optionally writes an annotated
+image with `--img-save-path`. When recording a run, save the board
+identity, model reference, command line, raw F32 score tensor and Top-K
+output alongside the image path and resize type.
 
 <a id="reference-results"></a>
 ## Reference results
 
-Source: `rdk_s @380e1a2bf42041af54be6f34935e50197cfadff9`, `samples/vision/vit/evaluator/README.md`.
+Published in the original ViT evaluator record (CIFAR-10):
 
 | Model | Top-1 | Top-5 |
 | --- | --- | --- |
 | ONNX | 74.54% | 98.36% |
 | HBM | 72.62% | 98.03% |
 
-Source states PTQ with 50 calibration images, no QAT. It does not separate int8 and int16 results or provide a complete benchmark receipt; values are historical, not measured here. Unified board and dataset results: not-run.
+The published record states PTQ with 50 calibration images, no QAT; the
+int8 and int16 results are not separated in the record.
 
 <a id="boundaries"></a>
-## Boundaries
+## Dataset-level evaluation
 
-No dedicated dataset evaluator or latency benchmark is included. Host regressions cannot certify BPU behavior, current model bytes, int8/int16 accuracy or OE reproducibility. Raw output rejection is deliberate until an artifact-specific quantization contract is evidenced.
+For dataset Top-1 accuracy, pass each validation image to the runtime entry through `--test-img`, compare the returned Top-1 class ID with that image’s ground-truth model index, and divide correct predictions by the number of labeled images evaluated. Keep the artifact, resize mode, Top-K, board image and scheduling settings fixed when comparing runs. For latency or FPS, time the inference stage on the matching board and record the thread count and operating mode alongside the result.

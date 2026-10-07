@@ -15,12 +15,12 @@ Published target files are S100 and S600 only. Platform profiles identify nash-e
 <a id="export"></a>
 ## Export
 
-No executable export recipe exists in the pinned source. Required before adding one: licensed trained checkpoint, exact architecture/revision, export dependencies, tensor names and validated static graph. Do not treat a downloaded HBM as an ONNX export input.
+No executable export recipe exists. Required before adding one: licensed trained checkpoint, exact architecture/revision, export dependencies, tensor names and validated static graph. Do not treat a downloaded HBM as an ONNX export input.
 
 <a id="calibration"></a>
 ## Calibration
 
-No calibration dataset, normalization policy, preprocessing recipe or quantization configuration is supplied. Runtime BGR→NV12 input handling does not establish the training normalization. The two supplied pictures are not a representative calibration set.
+No calibration dataset, normalization policy, preprocessing recipe or quantization configuration is supplied. Runtime BGR→NV12 input handling is separate from the training normalization; confirm the normalization behind your artifacts. The two supplied pictures are not a representative calibration set.
 
 <a id="compile"></a>
 ## Compile
@@ -30,14 +30,14 @@ No model compilation command is provided because required source inputs/configur
 <a id="validation"></a>
 ## Validation
 
-Future converted models must demonstrate target identity, Y [1,1024,2048,1]/UV [1,512,1024,2] uint8, NHWC [1,H,W,19] int32 or F32 scores and correct quantization descriptors. Match preprocessing and compare decoded masks against a trusted reference on real inputs; exact host fixtures alone are insufficient. No ONNX/BPU numerical comparison has been run here.
+Future converted models must demonstrate target identity, Y [1,1024,2048,1]/UV [1,512,1024,2] uint8, NHWC [1,H,W,19] int32 or F32 scores and correct quantization descriptors. Match preprocessing and compare decoded masks against a trusted reference on real inputs; exact host fixtures alone are insufficient. ONNX/BPU numerical comparison runs with the validation steps on the board.
 
 <a id="artifacts"></a>
 ## Artifacts
 
-Current deliverables are the two externally downloaded HBM files, with unknown publisher SHA-256, and runtime outputs. No ONNX, checkpoint, compiler logs or calibration data are claimed. Preserve all such provenance if a real conversion workflow is later introduced.
+Current deliverables are the two externally downloaded HBM files, with unknown publisher SHA-256, and runtime outputs; no ONNX, checkpoint, compiler logs or calibration data is bundled. Record those provenance materials when a real conversion workflow is introduced.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-Missing: exact checkpoint/architecture, export script/dependencies, calibration and normalization, OE version/target configs, compiled-model correspondence and real validation. These are source gaps, recorded explicitly rather than filled with generic toolchain commands. Board validation remains not-run.
+Missing: exact checkpoint/architecture, export script/dependencies, calibration and normalization, OE version/target configs, compiled-model correspondence and real validation. These gaps are recorded explicitly rather than filled with generic toolchain commands.

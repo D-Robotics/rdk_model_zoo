@@ -65,7 +65,7 @@ S600 换用 `s600/` 引用与路径。`--dry-run --target x5` 不接触板卡、
 | `--test-img` | string | samples/vision/efficientnet/test_data/Scottish_deerhound.JPEG | BGR 输入图像 |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | 每行一个类别的 ImageNet 标签 |
 | `--top-k` | int | 5 | 打印的结果数量 |
-| `--topk` | int | 5 | `--top-k` 的旧拼写 |
+| `--topk` | int | 5 | `--top-k` 的兼容拼写 |
 | `--resize-type` | int | null | `0` 直接拉伸或 `1` letterbox（BGR 127 填充）；默认跟随所绑定的源 |
 | `--priority` | int | 0 | 运行时调度优先级（0-255） |
 | `--bpu-cores` | int 列表 | [0] | 运行时 BPU 核编号 |
@@ -73,7 +73,7 @@ S600 换用 `s600/` 引用与路径。`--dry-run --target x5` 不接触板卡、
 | `--list-models` | flag | false | 无需板卡列出 Manifest 支持的引用 |
 | `--dry-run` | flag | false | 不加载模型与 SDK 解析/检查一个选择 |
 
-上表默认值由 Q3 检查器对照 `build_parser()` 机器校验。
+上表默认值即 [`cli.py`](cli.py) 中 `build_parser` 定义的值。
 
 <a id="results"></a>
 ## 结果
@@ -114,8 +114,7 @@ print(result.class_ids, result.scores, result.labels)
 `predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，且绝不原地修改
 数组。三个阶段也可以显式驱动：`prepared = model.preprocess(source)`、
 `outputs = model.infer(prepared)`、`result = model.postprocess(outputs)`
-——`predict` 恰好串联这些步骤（由入口行为测试验证）。既有的
-`pre_process` / `forward` / `post_process` 拼写保持为薄别名，共享的
+——`predict` 恰好串联这些步骤。共享的
 `ClassificationTask` 流程仍可从 [`classification.py`](classification.py)
 导入。
 
@@ -134,11 +133,10 @@ print(result.class_ids, result.scores, result.labels)
 
 | 现象 | 检查 |
 | --- | --- |
-| `Cannot identify this board` | 先用显式 target 做 dry-run，然后只在匹配的板卡上执行；显式 target 不是硬件证据。 |
+| `Cannot identify this board` | 按支持矩阵选择目标，并在匹配的板卡上运行推理。 |
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用；不要使用裸文件名。 |
-| S100P 报 `No published ... asset` | Manifest 没有 s100p 资产行；请在匹配板卡上使用 S100/S600 制品（源 S 包装器的静默回退到 lite0 S100 构建已改为显式报错）。 |
 | 输入形状或 dtype 不匹配 | 核对制品引用与运行时 metadata；lite1 制品声明 240x240，会拒绝 224 的 metadata 而不是暗中缩放。 |
-| 输出与旧实现不同 | 先固定同一制品、图像、resize 模式、Top-K 并对比原始输出，再考虑分数语义。 |
+| 输出与参考运行不同 | 先固定同一制品、图像、resize 模式、Top-K 并对比原始输出，再考虑分数语义。 |
 
 主机检查（仓库根目录）：
 `python3 -m unittest discover -s samples/vision/efficientnet/tests -v`。

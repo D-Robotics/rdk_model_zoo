@@ -38,10 +38,11 @@ SHA-256 时校验，原子落盘且不覆盖已有文件（校验失败时保留
 <a id="accompanying-files"></a>
 ## 伴随文件
 
-分类器运行还需要逐行一个类别的 ImageNet 标签文件：
-`datasets/imagenet/imagenet_classes.names`（X5 与 S 系列共用）。该文件在
-仓库内，无需下载。`test_data/` 内源分支带来的标签副本仅为遗留物，canonical
-路径以根目录 `datasets/` 为准。
+分类器运行使用 ImageNet 标签文件
+`datasets/imagenet/imagenet_classes.names`（X5 与 S 系列共用）；运行时
+`--label-file` 的默认值即该路径，文件在仓库内，无需下载。`test_data/`
+内的 `imagenet1000_labels.txt` 为逐行一类的标签文件，需要时经
+`--label-file` 显式指定。
 
 <a id="local-paths"></a>
 ## 本地路径

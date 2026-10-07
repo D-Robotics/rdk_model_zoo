@@ -48,16 +48,17 @@ Python 形式等价：
 省略 `--variant` 的行为一致；显式 `--variant` 恒为精确选择。
 下载器经同目录临时文件写入，核对内容长度与 Manifest 记录的发布方
 SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留文件供排查）。
-当前各行没有发布方 SHA-256，下载器打印实测摘要作为本地证据并声明来源
-未经独立证明。下载是显式动作，绝不发生在推理过程中。
+当前各行没有发布方 SHA-256，下载器打印实测摘要作为本地证据。下载是显式动作，绝不发生在推理过程中。
 
 <a id="accompanying-files"></a>
 ## 随伴文件
 
-分类运行还需要每行一个类别的 ImageNet 标签文件：
-`datasets/imagenet/imagenet_classes.names`（X5 与 S 共用）。该文件已检入
-仓库，无需下载。`test_data/` 内的标签副本是源分支遗留；规范路径是根
-`datasets/` 下的那份。
+分类运行使用 ImageNet 标签文件
+`datasets/imagenet/imagenet_classes.names`（X5 与 S 共用）；运行时
+`--label-file` 的默认值即该路径，文件已检入仓库，无需下载。`test_data/`
+内的 `imagenet_classes.names`、`imagenet1000_labels.txt` 与
+`imagenet_1k.json` 是 ImageNet-1k 标签的其它格式，需要时经 `--label-file`
+显式指定。
 
 <a id="local-paths"></a>
 ## 本地路径

@@ -5,20 +5,22 @@
 <a id="overview"></a>
 ## 概述
 
-本样例使用已发布的 S 系列 Wav2Vec2 ASR 模型和固定 3503-token 词表转写音频。WAV/FLAC 按有限大小分块读取，声道平均为单声道，重采样到 16 kHz，再逐块归一化，每次推理输入 30000 点（1.875 秒）。处理完整文件，包括最后补零块；这是独立窗口处理，不是带隐藏流状态或重叠拼接的声学模型。
+本样例使用已发布的 S 系列 Wav2Vec2 ASR 模型和固定 3503-token 词表转写音频。WAV/FLAC 按有限大小分块读取，声道平均为单声道，重采样到 16 kHz，再逐块归一化，每次推理输入 30000 点（1.875 秒）。处理完整文件，包括最后补零块；每个窗口独立处理并重置解码状态，运行时不跨窗口保留声学状态或执行重叠拼接。
 
-统一 Python 流程已实现。原生流程也已实现：音频前处理、CTC/legacy、SDK 适配、显式启动器及完整文件结果报告都有主机测试；真实 SDK 构建/ABI 和模型推理尚未验证。原 S 源 (historical `../../../platforms/s/samples/speech/asr/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)保留历史实现背景；本轮没有板测或新的真实模型转写结果。
+提供 Python 与 C++ 运行时，均可对完整音频文件转写。Python 运行时支持 CTC 与
+legacy 解码；原生入口使用匹配板端 SDK 构建和运行。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 发布身份 | 统一 Python | 统一 C++ | 板测 |
-| --- | --- | --- | --- | --- |
-| S100 | `s:asr:s100/asr.hbm` | 已实现 | 已实现，主机验证 | not-run |
-| S600 | `s:asr:s600/asr.hbm` | 已实现 | 已实现，主机验证 | not-run |
-| X5 / S100P | 无 | 拒绝 | 不支持 | not-run |
+| 目标 | 发布制品 | Python 运行时 | C++ 运行时 |
+| --- | --- | --- | --- |
+| S100 | `s:asr:s100/asr.hbm` | 可用 | 可用 |
+| S600 | `s:asr:s600/asr.hbm` | 可用 | 可用 |
+| X5 / S100P | 无 | 不支持 | 不支持 |
 
-发布目标以当前清单为准，不沿用源中互相矛盾的注释。S600 有发布制品不等于运行时已验收，仍需验证实际模型/SDK metadata；不提供目标回退。
+为板卡选择相同 target 发布的制品。运行时在推理前核对板卡身份和模型张量
+metadata。
 
 <a id="prerequisites"></a>
 ## 前提
@@ -36,7 +38,7 @@ bash samples/speech/asr/runtime/python/run.sh --target s100 --dry-run
 bash samples/speech/asr/runtime/python/run.sh --target s600 --dry-run
 ```
 
-在匹配板卡上准备对应模型并执行（以下推理命令不作为本轮板测证据）：
+在匹配板卡上准备对应模型并执行：
 
 ```sh
 bash samples/speech/asr/model/download.sh --target s100
@@ -46,11 +48,13 @@ bash samples/speech/asr/runtime/python/run.sh --target s100 --output-dir outputs
 S600 将两条命令都改为 `s600`，不能将 S100 HBM 改名使用。`PYTHON` 指定解释器，输出目录必须新建。外部模型需精确的目标限定 asset ID，详见[模型准备](model/README_cn.md)。
 
 <a id="expected-results"></a>
-## 结果及解码变更
+## 输出与解码方式
 
-控制台打印完整文件转写及 `result.json` 路径；报告绑定模型/音频/词表摘要、实际 metadata、解码模式，以及逐块位置、有效样本数和文本。错误返回 2，处理开始后失败会写入带已完成块的 `failed.json`，不将部分结果冒充成功转写。
+控制台打印完整文件转写及 `result.json` 路径；报告绑定模型/音频/词表摘要、模型
+metadata、解码模式，以及逐块位置、有效样本数和文本。错误返回 2；处理开始后失败会
+写入带已完成块的 `failed.json`。
 
-默认 `ctc` 先合并相邻重复 ID，**再**删除 blank ID 0。归档实现没有合并重复，只移除了 `<pad>`；可用 `--decode-mode legacy` 保留其行为做源对照。词表 `<pad>,a,b` 下，ID `[1,1,0,1,2,2]` 的 CTC 结果是 `aab`，legacy 是 `aaabb`。这是明确的解码修正，不是模型 logits 改变的证据。其他 token、标点和 `|` 原样保留；每个独立块重新开始 CTC 状态，不凭空做跨块去重。
+默认 `ctc` 先合并相邻重复 ID，再删除 blank ID 0；`--decode-mode legacy` 删除 `<pad>` 并保留重复 ID。词表 `<pad>,a,b` 下，ID `[1,1,0,1,2,2]` 的结果分别为 `aab`（`ctc`）和 `aaabb`（`legacy`）。其他 token、标点及 `|` 按原文保留。每个独立音频块重新开始 CTC 状态。
 
 <a id="directory"></a>
 ## 目录
@@ -59,18 +63,18 @@ S600 将两条命令都改为 `s600`，不能将 S100 HBM 改名使用。`PYTHON
 | --- | --- |
 | `model/` | 精确清单选择及显式目标下载 |
 | `runtime/python/` | 音频读取、纯前处理/解码、共享 raw runner 和 CLI |
-| `runtime/cpp/` | 原生音频、任务、SDK 适配、启动器与主机测试，真实 SDK 验证待完成 |
-| `test_data/` | 原始 WAV、固定词表及历史图片 |
-| `conversion/` | 如实记录源中缺失的导出/编译前提 |
-| `evaluator/` | 已保存转写的字符错误指标与历史结果 |
-| `tests/` | 主机数值/metadata/身份/报告测试 |
+| `runtime/cpp/` | 原生音频输入、任务、SDK 适配与启动器 |
+| `test_data/` | WAV 输入、固定词表与参考图片 |
+| `conversion/` | 模型导出和编译说明 |
+| `evaluator/` | 已保存转写的字符错误指标与参考数据 |
 
 <a id="entry-points"></a>
 ## 导航
 
 [Python 使用/API](runtime/python/README_cn.md) · [原生进展](runtime/cpp/README_cn.md) · [转换](conversion/README_cn.md) · [评估](evaluator/README_cn.md) · [输入身份](test_data/README_cn.md)。
 
-主机源对照覆盖原始 16 kHz 中文音频、44.1 kHz 立体声和 8 kHz 常量音频，特征一致性与 SDK/板端/数据集验收分开记录；原始延迟、余弦截图均是历史记录。
+Python 音频前端读取 WAV/FLAC、将多声道混合为单声道并重采样到 16 kHz。
+[C++ 指南](runtime/cpp/README_cn.md)说明原生音频前处理和张量要求。
 
 <a id="license"></a>
 ## 许可

@@ -81,7 +81,7 @@ print(explicit_matte.shape, composed_result.shape)
 - `preprocess(image)` 校验 BGR HWC，执行 BGR→RGB、`(pixel-127.5)/127.5`、长边 512 resize 和居中 zero padding，返回含 `tensors, context` 的 `PreparedInput`。
 - `infer(tensors)` 校验绑定 tensor，返回 owned raw float32 `(1,1,512,512)` matte。
 - `postprocess(raw, context)` 将源 `[0,1]` matte 转 uint8、去 padding 并恢复原图几何。
-- `predict(image)` 串联三个阶段；geometry 放在本次调用的冻结 context 中，不放入可变 task 字段。
+- `predict(image)` 串联三个阶段；geometry 放在该次调用的冻结 context 中，不放入可变 task 字段。
 - 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>

@@ -36,7 +36,7 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 # expect: /tmp/dinov2-model/nash-p/dinov2_vits14_224_int16_nashp.hbm
 ```
 
-`download_model.sh` is a compatibility entry point with the same required target argument. The manifest SHA-256 values are unknown; the downloader prints an observed digest and says it cannot independently verify origin. I/O, selection, or download errors exit 2. This migration did not download an artifact.
+`download_model.sh` accepts the same required target argument. With a null manifest SHA-256, the downloader records an observed digest for byte-identity checks. I/O, selection and download errors return 2.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files

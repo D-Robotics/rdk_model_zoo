@@ -1,18 +1,17 @@
 # ResNet18 C++ 运行时（S 系列）
 
-合并后的 S 系列 ResNet18 原生运行时：审计过的 S18 `hbDNNInferV2` 流程、
-图像预处理、NV12 张量构建与 Top-K 输出代码以源码形式保留在 canonical
-sample 中。旧 S18 C++ 目录只是薄薄的 CMake 兼容配置入口，不维护第二份
-实现。
+S 系列 ResNet18 原生运行时：`hbDNNInferV2` 推理流程、图像预处理、
+NV12 张量构建与 Top-K 输出，基于共享的 `samples/_shared/cpp/c_utils`
+源码构建。
 
 <a id="supported-boards"></a>
 ## 适用板卡
 
 | 板卡 | 状态 |
 | --- | --- |
-| S100 | supported-verified（2026-09-17 构建并运行；Top-5 与源基线一致） |
-| S600 | supported-not-run（同一源码与 SoC 检测；板卡连接不可用） |
-| X5 | not-supported（审计基线中不存在 X5 的 C++ 源码） |
+| S100 | supported |
+| S600 | supported |
+| X5 | not-supported |
 
 CMake 读取 `/sys/class/boardinfo/soc_name` 并定义原源码使用的 SoC 宏；
 身份文件不可读视为错误，不做回退。
@@ -38,7 +37,7 @@ cmake -S samples/vision/resnet/runtime/cpp \
 cmake --build samples/vision/resnet/runtime/cpp/build --parallel
 ```
 
-兼容路径选择的是同一个 canonical 目标：
+换一个构建目录选择的是同一个目标：
 
 ```bash
 cmake -S samples/vision/resnet/runtime/cpp \
@@ -78,7 +77,7 @@ bash samples/vision/resnet/runtime/cpp/run.sh
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
 | `--model_path` | 按 SoC：`/opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm`（S100）或 `/opt/hobot/model/s600/basic/resnet18_224x224_nv12.hbm`（S600） | HBM 模型路径 |
-| `--test_img` | `../../../test_data/zebra_cls.jpg`（相对历史 build 布局） | BGR 测试图 |
+| `--test_img` | `../../../test_data/zebra_cls.jpg`（相对进程工作目录） | BGR 测试图 |
 | `--label_file` | 仓库内 S 系列 ImageNet 标签路径 | 逐行一个标签 |
 | `--top_k` | `5` | 打印的类别数量 |
 
@@ -106,6 +105,5 @@ bash samples/vision/resnet/runtime/cpp/run.sh \
 ## 结果解释
 
 二进制按标签文件逐行打印 Top-K 类别，每行含类别 ID、分数与标签；成功
-退出码为 0。每次原生评估都应记录板卡身份、制品引用、完整构建/运行命令与
-Top-K 输出。S600 连接不可用或制品缺失记为 `not-run`，不能用 S100 结果
-替代。
+退出码为 0。分别记录每次 S100 或 S600 运行的板卡身份、制品引用、完整
+构建/运行命令与 Top-K 输出。

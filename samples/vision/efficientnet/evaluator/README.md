@@ -1,22 +1,10 @@
 # EfficientNet evaluation
-
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
-
-Evaluation has two separate purposes: confirm that one board executes the
-selected artifact with the expected tensor contract, and measure accuracy
-or latency with a stated dataset and toolchain. This directory documents
-both; it contains no accuracy harness of its own (see
-[boundaries](#boundaries)).
+Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-
-Not applicable for the current scope: this sample performs functional
-checks (bundled test images) and does not run a dataset-level accuracy
-evaluation. A dataset-based evaluation would require ImageNet validation
-data (ILSVRC2012 val, 50,000 images) prepared separately by the user; no
-dataset download or preparation script is provided.
+The functional check uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
 
 <a id="environment"></a>
 ## Environment
@@ -54,15 +42,12 @@ python3 samples/vision/efficientnet/runtime/python/main.py \
 On S100/S600 substitute the `s:` reference and the `s100/`/`s600/`
 artifact path (for example lite1 at 240x240:
 `s:efficientnet:s100/efficientnet_lite1_240x240_nv12.hbm`); the labels
-file is shared. For a same-board before/after comparison, run the legacy
-platform entrypoint
-(`platforms/x5/samples/vision/efficientnet/runtime/python/main.py` or
-`platforms/s/samples/vision/efficientnet/runtime/python/main.py`) with
-the same image, model bytes, labels, resize type, and Top-K, and compare
-class IDs and Top-K scores before label formatting (identical IDs; scores judged within a stated tolerance — the recorded 2026-09-21 smoke used abs diff < 1e-5; raw-tensor equality was not asserted). Comparing X5 against S
-is not a substitute for a same-board before/after comparison. The output
-should be finite, non-zero, and stable across repeated runs with the same
-input.
+file is shared. For a same-board comparison between runs, keep the compared
+run fixed — same image, model bytes, labels, resize type, and Top-K — and
+compare class IDs and Top-K scores before label formatting; expect
+identical IDs and scores within 1e-5. Comparing X5 against S results is
+not a same-board comparison. The output should be finite, non-zero, and
+stable across repeated runs with the same input.
 
 <a id="metrics"></a>
 ## Metrics
@@ -70,9 +55,9 @@ input.
 | Metric | Definition | Conditions |
 | --- | --- | --- |
 | contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
-| Top-K agreement | identical post-softmax Top-K class IDs between canonical and legacy runs; scores within tolerance (2026-09-21 smoke: max abs diff <=1.2e-7 against the 1e-5 bar) | same board, same artifact bytes, image, resize type, Top-K |
-| Top-1 accuracy | fraction of argmax-correct predictions | ImageNet val — not evaluated in this sample |
-| latency / FPS | inference timing | not evaluated in this sample; historical figures below carry unstated conditions |
+| Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
+| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the functional check |
+| latency / FPS | inference timing on the matching board | compare with the published figures under [Reference results](#reference-results), measured under the conditions stated there |
 
 <a id="outputs"></a>
 ## Outputs
@@ -86,15 +71,9 @@ output, image path, resize type, and command line.
 <a id="reference-results"></a>
 ## Reference results
 
-| Item | Value | Source |
-| --- | --- | --- |
-| host tests | 28 OK (2026-09-21; 25 at batch completion, +3 B2-R1 remediation regression tests, author self-check) | migration evidence |
-| board comparison (canonical vs legacy) | passed (2026-09-21: x5-8g/x5-4g b2/b3/b4 and s100/s600 lite0..lite4 top-5 ids exactly equal, max abs diff <=1.2e-7; run.sh rc=0 on all four boards; omitted-variant default entry re-verified on s100/s600 after B2-R1; s100p explicit rejection) | [B2 board evidence](../../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json) |
-| dataset accuracy / latency | not-run in this sample | — |
+Published performance records.
 
-Published historical figures, not re-measured in this repository.
-
-X5 source release (rdk_x5 @ac11571, x5-v1.1.3; source notes: Float Top-1
+X5 source release (x5-v1.1.3; Float Top-1
 on the pre-quantization ONNX, Quant Top-1 on the deployment model,
 latency single-frame single-thread single-core, FPS multi-threaded;
 CPU 8xA55@1.8GHz performance mode, BPU 1xBayes-e@1GHz):
@@ -105,7 +84,7 @@ CPU 8xA55@1.8GHz performance mode, BPU 1xBayes-e@1GHz):
 | EfficientNet-B3 | 224x224 | 12.19 | 76.22% | 74.05% | 3.96 | 12.76 | 310.30 |
 | EfficientNet-B2 | 224x224 | 9.07 | 76.50% | 73.25% | 3.31 | 10.51 | 376.77 |
 
-S source release (rdk_s @380e1a2, s-v1.1.2; conditions unstated beyond
+S source release (s-v1.1.2; conditions unstated beyond
 the table):
 
 | Variant | Single-thread latency | Single-thread FPS | Multi-thread latency | Multi-thread FPS |
@@ -117,10 +96,6 @@ the table):
 | Lite4 | 0.915 ms | 1064.339 | 1.979 ms | 1487.055 |
 
 <a id="boundaries"></a>
-## Boundaries
+## Dataset-level evaluation
 
-No dataset-level accuracy or latency harness ships with this sample: the
-checked-in material covers host contract tests and functional board
-checks only. Host test success never certifies a board. A board that is
-unreachable or an artifact that is unavailable makes the corresponding
-item `not-run`, not failed-and-forgotten.
+For dataset Top-1 accuracy, pass each validation image to the runtime entry through `--test-img`, compare the returned Top-1 class ID with that image’s ground-truth model index, and divide correct predictions by the number of labeled images evaluated. Keep the artifact, resize mode, Top-K, board image and scheduling settings fixed when comparing runs. For latency or FPS, time the inference stage on the matching board and record the thread count and operating mode alongside the result.

@@ -12,7 +12,7 @@ math and lazy runner.
 
 Use X5 with its matching `hbm_runtime`, NumPy, OpenCV and PyYAML. Host imports/help/list/dry-run need no board SDK. Host test dependencies: `samples/vision/repvgg/requirements-host.txt`.
 
-[Full prerequisites and tested host versions](../../README.md#prerequisites). Board image and SDK versions remain to be qualified.
+[Full prerequisites and tested host versions](../../README.md#prerequisites). For board inference, use the matching board image with `hbm_runtime`.
 
 <a id="usage"></a>
 ## Usage
@@ -56,7 +56,7 @@ python3 samples/vision/repvgg/runtime/python/main.py
 | `--test-img` | string | samples/vision/repvgg/test_data/gooze.JPEG | BGR input image |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
-| `--topk` | int | 5 | legacy spelling of `--top-k` |
+| `--topk` | int | 5 | compatibility spelling of `--top-k` |
 | `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source (1) |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
@@ -67,13 +67,13 @@ python3 samples/vision/repvgg/runtime/python/main.py
 <a id="results"></a>
 ## Results
 
-Prints Top-K class ID/score/label; `ClassificationResult` carries int64 IDs, float32 scores and a label tuple. No file is written without `--img-save-path`. Source-declared score semantics are logits plus softmax; actual board metadata remains to be verified. Equal scores use ascending ID order; this can differ from legacy NumPy tie ordering.
+Prints Top-K class ID/score/label; `ClassificationResult` carries int64 IDs, float32 scores and a label tuple. Pass `--img-save-path` to save a visualization; otherwise the runtime prints results to stdout. Score semantics are raw logits plus softmax; equal scores use ascending
+ID order.
 
 <a id="integration-example"></a>
 ## Integration example
 
-cwd: repository root, artifact prepared first. The API never downloads.
-Labels are optional and omitted here, so their values are class ID strings.
+cwd: repository root. Prepare the artifact with the downloader before constructing the classifier. Labels are optional and omitted here, so their values are class ID strings.
 
 ```python
 from samples.vision.repvgg.runtime.python.classify import RepVGGClassifier
@@ -85,9 +85,7 @@ result = model.predict("samples/vision/repvgg/test_data/gooze.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-`predict` accepts a local image path or a BGR `uint8` array and never
-modifies the array in place. The established `pre_process` / `forward` /
-`post_process` spellings remain thin aliases, and the shared
+`predict` accepts a local image path or BGR `uint8` array; the input array remains unchanged. The shared
 `ClassificationTask` flow stays importable from
 [`classification.py`](classification.py).
 
@@ -106,4 +104,4 @@ Default preprocessing is linear letterbox with BGR 127 padding. Classification p
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
-Missing model: prepare it explicitly. `model_path requires --asset-id`: supply the exact qualified reference. Unknown board or target mismatch: use `--dry-run --target x5` on a host, and execute only on matching X5 hardware. S selection: no published asset. Tensor mismatch: retain the actual metadata and check artifact identity; never bypass the binding to force execution.
+Prepare the target-specific artifact with the model downloader. When using `--model-path`, pass its exact qualified reference with `--asset-id`. Select a target listed in the support matrix and check that artifact metadata matches the sample tensor contract before inference.

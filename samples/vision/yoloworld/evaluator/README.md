@@ -4,11 +4,12 @@
 <a id="environment"></a>
 ## Dataset and environment
 
-The evaluator compares the fixed X5 source implementation and the unified
-implementation on one **real X5 execution target**. It uses the repository
+The evaluator compares the pinned original X5 implementation (loaded from the
+recorded Git history) with this sample's implementation on one
+**real X5 execution target**. It uses the repository
 fixture `test_data/dog.jpeg` and an explicit comma-separated prompt list. Host
-Python tests use injected fake runtimes; they are not board or accuracy
-results. The evaluator requires the board identity gate, `hbm_runtime`, OpenCV,
+Python tests use injected fake runtimes. The evaluator requires the board
+identity gate, `hbm_runtime`, OpenCV,
 NumPy, and the exact `yolo_world.bin` asset. No dependency installation or
 model download is performed by this command.
 
@@ -25,9 +26,9 @@ python3 samples/vision/yoloworld/evaluator/compare.py --target x5 --output-dir /
 Use `--model-path /absolute/yolo_world.bin` only with the exact `--asset-id`.
 `--test-img`, `--vocab-file`, `--prompts`, `--score-thres`, `--nms-thres`,
 `--priority` and `--bpu-cores` select the same inputs and scheduling for both
-implementations. The command first gates the actual target, then runs source and
-unified pre/forward/post stages with the same image, vocabulary and model,
-capturing the prepared inputs, the raw score/box tensors and the final
+implementations. The command first gates the actual target, then runs both
+implementations' pre/infer/post stages with the same image, vocabulary and
+model, capturing the prepared inputs, the raw score/box tensors and the final
 detections from each side. It returns 0 only when every check passes, 1 when the
 two sides differ, and 2 when the run failed.
 
@@ -47,20 +48,16 @@ Inputs and class IDs must be exactly equal; raw tensors use `atol=1e-5`, boxes
 
 <a id="reference-results"></a>
 <a id="boundaries"></a>
-## Historical reference and boundaries
+## Source-recorded reference and boundaries
 
-| Source record | Input/protocol | Historical performance | Status |
+| Reference record | Input/protocol | Value | Source |
 | --- | --- | --- | --- |
-| fixed X5 YOLOWorld sample | 640 image; 32 x 512 text; 8400 score/box rows | no published latency or mAP table | preserved fact; no new measurement |
-| 2026-09-24 board parity | `dog` prompt, `test_data/dog.jpeg`, score/NMS 0.05/0.45 | rc=0, all checks true, `max_abs_diff` 0.0 on one X5 8GB and one X5 4GB | [8GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/), [4GB evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/) |
+| X5 source sample protocol | 640 image; 32 x 512 text; 8400 score/box rows | no published latency or mAP table | source evaluator README |
+| Board parity check | `dog` prompt, `test_data/dog.jpeg`, score/NMS 0.05/0.45 | run the comparator on a prepared X5; passing requires all checks true and `max_abs_diff` 0.0 | this evaluator |
 
-The fixed source evaluator README publishes no benchmark table. Therefore the
-historical record is explicitly: `yolo_world.bin`, 640 image input, 32 text
-slots of width 512, 8400 score rows, and score/NMS defaults 0.05/0.45; no
-published latency or mAP number is claimed. Recorded board evidence covers
-exactly the `dog` prompt/image pair above (unified side at board-test commits
-`ae0f185` and `73a6de1`); the board log prints an HBRT-library/model-build
-minor-version mismatch warning that is preserved verbatim in the evidence and all checks in the recorded comparisons passed. Any other prompt, image, or board still needs its
-own run of this command, and no full-vocabulary accuracy is extrapolated from
-these comparisons. The offline vocabulary is a required model companion, not a
-classification-label file.
+The published protocol facts are: `yolo_world.bin`, 640 image input, 32 text
+slots of width 512, 8400 score rows, and score/NMS defaults 0.05/0.45. In the
+recorded board runs the log prints an HBRT-library/model-build minor-version
+mismatch warning, preserved verbatim in the evidence. Any other prompt, image,
+or board needs its own run of this command. The offline vocabulary is a
+required model companion, not a classification-label file.

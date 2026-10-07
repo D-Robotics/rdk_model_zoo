@@ -7,11 +7,11 @@ PTQ quantization and HBM compilation run on a **development PC**, not on the boa
 <a id="source-model"></a>
 ## Source model and recipe
 
-This directory preserves the Gemma4-E2B conversion recipe from pinned S source `380e1a2`: original weights,
+This directory carries the Gemma4-E2B conversion recipe from the source S release: original weights,
 Gemma4 leap_llm adaptation, Vision/Text calibration, PTQ compilation and verification tools.
 The model source is `google/gemma-4-e2b`; follow full tutorial §3.4 for weight acquisition and access requirements.
 Commands here start in `samples/llm/gemma4-e2b` (sample root) unless a code block changes directory explicitly.
-This migration reorganizes the tutorial without rerunning its quantization workflow.
+The quantization workflow is the tutorial's own; run it in the OE environment when preparing artifacts.
 
 <a id="toolchain-targets"></a>
 ## Requirements
@@ -86,7 +86,7 @@ directory must match `images_coco_manifest.json`. Text compilation uses the
 existing text calibration corpus and does not generate replacement prompts.
 
 The released Text HBM is compiled with `CHUNK_SIZE=256` and
-`CACHE_LEN=4096`. This deliverable does not include an 8K/16K HBM. The
+`CACHE_LEN=4096`; no 8K/16K HBM is published. The
 interactive `main` binary uses all KV capacity left after the prompt when
 `--max_tokens=0` (the default), so no HBM rebuild is needed to maximize the
 current 4096-token budget.
@@ -97,7 +97,7 @@ settings before rebuilding the board runtime.
 
 ## Full Tutorial
 
-The full tutorial preserves the source workflow. For board startup/build instructions, use the current [C++ README](../runtime/cpp/README.md#build), which separates preparation, build and run. The quantization recipe itself is unchanged.
+The full tutorial walks through the quantization workflow step by step. For board startup/build instructions, use the current [C++ README](../runtime/cpp/README.md#build), which separates preparation, build and run.
 
 See the step-by-step guide with pitfalls and solutions:
 
@@ -108,7 +108,7 @@ See the step-by-step guide with pitfalls and solutions:
 ## Verification workflow
 
 The [evaluator guide](../evaluator/README.md) preserves PC BC/float comparison and board golden-input alignment commands.
-The full tutorial explains accuracy observations and troubleshooting. These are workflows for users, not new migration test claims.
+The full tutorial explains accuracy observations and troubleshooting; those workflows are executed by the user in the OE environment.
 
 <a id="artifacts"></a>
 ## Produced artifacts
@@ -123,6 +123,5 @@ A `.bc` is a PC verification artifact, not a board HBM.
 ## Usage boundaries
 
 The original prerequisites remain: weights, SDK and text calibration corpus must be prepared; Vision uses real images with a manifest.
-Conversion support does not imply a public HBM exists for that target (S100 still requires supplied artifacts).
-Documentation acceptance does not require repeating quantization. This migration publishes no new models,
-expands no context size and makes no new board-test claim. Original tutorials, scripts and historical illustrations remain available.
+S100P and S600 publish HBMs; on S100, supply the HBM artifacts yourself (see [model](../model/README.md)).
+The recipe produces the documented 4096-token Vision/Text HBMs. For other context sizes, recompile with matching `CACHE_LEN` and synchronize `kChunkSize`/`kCacheLen` before rebuilding the runtime; see [Compilation](../runtime/cpp/README.md#build).

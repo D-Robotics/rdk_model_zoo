@@ -80,7 +80,7 @@ The source inventory and release manifest record all publisher hashes as unknown
 | `s100/bpu-siglip-so400m-patch14-384.hbm` | HBM | `sha256: null (unknown)` | `docs/release/s/models.yaml` |
 | `s100/bpu-siglip-so400m-patch16-256-i18n.hbm` | HBM | `sha256: null (unknown)` | `docs/release/s/models.yaml` |
 
-Release URLs are the exact `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-<variant>.hbm` entries in that manifest. Formal download was not executed for this migration.
+Release URLs are the exact `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-<variant>.hbm` entries in that manifest.
 
 ## License
 

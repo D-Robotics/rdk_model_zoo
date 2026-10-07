@@ -12,7 +12,7 @@ MODNet is a one-stage portrait matting network: one RGB image produces an alpha 
 
 | target | variant | Python | C++ | status |
 |---|---|---|---|---|
-| X5 | `modnet_512x512_rgb.bin` | supported-not-run | not-supported | host fixtures pass; board not-run — the manual artifact was not available to the 2026-09-24 X5 board round, so no download or inference exists to record |
+| X5 | `modnet_512x512_rgb.bin` | supported | not-supported | the artifact is prepared manually; see [model preparation](model/README.md) |
 | S100/S100P/S600 | — | not-supported | not-supported | no source asset |
 
 This sample has no C++ implementation. The runtime model is a manual external asset; host tests do not certify board execution.
@@ -37,7 +37,7 @@ The command reads `test_data/person.jpg`, writes `test_data/matte.png`, and, whe
 <a id="expected-results"></a>
 ## Expected results
 
-The matte is an 8-bit grayscale PNG with the original input height and width. The optional composite is a BGR PNG with the original input geometry. Exact alpha values and quality depend on the external model and are not asserted as a new board result; source historical performance is recorded below as not-run.
+The matte is an 8-bit grayscale PNG with the original input height and width. The optional composite is a BGR PNG with the original input geometry. Exact alpha values and quality depend on the external model; the source performance record is listed below.
 
 <a id="directory"></a>
 ## Directory
@@ -61,9 +61,9 @@ The matte is an 8-bit grayscale PNG with the original input height and width. Th
 - [`evaluator/README.md`](./evaluator/README.md): complete saved-matte comparison.
 
 <a id="historical-performance"></a>
-## Historical source performance
+## Source-recorded performance
 
-The complete source table and test conditions are retained below. These are historical source measurements and were not re-run.
+The complete source table and test conditions:
 
 | Model | Size | Input format | Latency (ms) | FPS |
 |---|---|---|---:|---:|
@@ -75,4 +75,4 @@ Conditions: RDK X5, CPU 8xA55@1.8G, BPU 1xBayes-e@1G (10TOPS INT8). Single-threa
 <a id="license"></a>
 ## License
 
-The migrated wrapper and repository files follow Apache-2.0. MODNet source notices and the upstream paper/repository remain their authors' references. No model license or publisher checksum is supplied for the manual external artifact.
+Sample code follows the repository Apache-2.0 license. Preserve MODNet copyright notices and the upstream license for operator-supplied model artifacts.

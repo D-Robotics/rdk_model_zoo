@@ -11,13 +11,13 @@ inference/composite fixture pair, not an accuracy dataset.
 <a id="environment"></a>
 ## Environment
 
-`compare.py` runs both implementations itself on the board: the fixed source
-wrapper from `platforms/x5/samples/vision/modnet/runtime/python` and the unified
+`compare.py` runs both implementations itself on the board: the pinned original
+wrapper (loaded from Git history) and this sample's
 task from `samples/vision/modnet/runtime/python`. It needs the X5 runtime
 (imported lazily after the identity gate), the manually prepared
 `modnet_512x512_rgb.bin` and a BGR image. It does not import the SDK on the host
 and does not download anything. The complete source performance table and
-conditions are preserved below as historical, not-run data.
+conditions follow.
 
 | Model | Size | Input format | Latency (ms) | FPS |
 |---|---|---|---:|---:|
@@ -69,9 +69,8 @@ artifact and is never used as the matte comparison tensor.
 <a id="reference-results"></a>
 ## Reference results
 
-Historical source reference is the table above. This migration ran no board
-comparison, so source/unified board and accuracy evaluation are `not-run`; the
-sample remains `closed=no` and the host fixtures prove only the evidence schema.
+Source reference is the table above; no board comparison against it is bundled
+here.
 
 <a id="boundaries"></a>
 ## Boundaries

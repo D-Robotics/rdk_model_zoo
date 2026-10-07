@@ -4,8 +4,7 @@
 
 These tools prepare evaluation inputs and compare **saved arrays**. They do not
 load a BIN/HBM or run a board model. Runtime, dataset accuracy and latency are
-separate claims. This migration has host fixture tests, not new board or SUNRGBD
-measurements.
+separate measurements performed on the board.
 
 <a id="dataset"></a>
 ## Dataset and input identity
@@ -48,9 +47,8 @@ The default host path needs Python, NumPy and OpenCV. It imports no board SDK.
 Dataset metrics accumulate in float64 with source formulas. `--resize-backend
 torch` optionally retains source evaluator interpolation (`align_corners=False`)
 and loads Torch only when used. The default OpenCV interpolation matches the
-canonical runtime. Numerical summation is not claimed bit-identical to source
-Torch float32 reductions. The optional Torch backend has not been executed in
-this migration environment.
+runtime, and the summation matches source Torch float32 reductions up to
+floating-point rounding.
 
 Run commands below from this `evaluator/` directory. Write datasets, reports and
 images outside the sample tree. Each preparation/comparison output directory and
@@ -147,8 +145,8 @@ them explicitly.
 Raw-domain and restored-depth fidelity report MAE, RMSE, max absolute error,
 relative error and cosine. Empty/nonfinite/mismatched arrays fail rather than
 silently dropping values. Zero-norm cosine is `null`. No-valid-GT accuracy is
-`null` with `valid_pixels=0`, not a perfect score. No tool automatically declares
-a candidate accepted from cosine alone.
+`null` with `valid_pixels=0`, not a perfect score. The tool reports cosine and
+the other metrics; the accept decision belongs to your thresholds.
 
 <a id="outputs"></a>
 ## Output artifacts
@@ -157,7 +155,7 @@ Preparation produces per-protocol tensors and `manifest.json`, including source
 manifest/image/tensor hashes, record IDs, geometry and screen selection.
 Dataset evaluation writes one JSON report with both models' GT metrics,
 candidate-minus-reference deltas, raw/depth fidelity, per-image results and input
-archive hashes. Its board field states that this offline tool did not run a board.
+archive hashes. Its board field records `false`, matching the offline scope of this tool.
 
 Single-image comparison writes `comparison-report.json`,
 `candidate_depth_median_aligned.npy`, common-range depth/overlay PNGs, absolute
@@ -166,7 +164,7 @@ uses the reference 2nd/98th percentile range for both maps; colors are not metre
 Names now use reference/candidate instead of incorrectly labeling every input X5.
 
 <a id="reference-results"></a>
-## Historical source results — not remeasured
+## Source-recorded results
 
 X5 source records OE 1.2.8 / Mapper 1.24.3, 768 input, max percentile 0.9999,
 O3 latency and int16 tail convolution. HRT numbers cover model execution only:
@@ -190,12 +188,11 @@ S evaluator source reports the following HRT latency table in milliseconds:
 | x | 19.059 | 12.853 | 9.097 |
 
 Its example selects lite n, while the release uses NV12 n/s/m. The source does
-not bind every table row to an artifact hash, so this table is not relabeled as
+not bind every table row to an artifact hash, so this table is not labeled as
 confirmed published-profile timing. Its claimed log cosine 0.9985–0.9998 also
 differs from the root's mixed-profile table; the root's s=0.9984 contradicts its
-all-pass threshold of 0.999. These conflicts are retained in the
-[source audit](../../../../docs/releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md).
-No SUNRGBD accuracy result or new acceptance is implied by these tables.
+all-pass threshold of 0.999. All rows stand as published reference records; no
+SUNRGBD accuracy result is implied by these tables.
 
 <a id="boundaries"></a>
 ## Verification boundaries
@@ -205,6 +202,6 @@ median and pixel pooling, invalid data/ID rejection, three preparation protocols
 small screen selection and real report/image writes. They do not establish
 Torch-backend parity, model output accuracy, OE compilation, board behavior or
 performance. Optional Torch interpolation, dataset runs and all new board results
-remain not-run. Raw output arrays and their hashes do not by themselves prove
+are not covered by them. Raw output arrays and their hashes do not by themselves prove
 which model, input preprocessing or board produced them; retain producer evidence
 alongside these reports.

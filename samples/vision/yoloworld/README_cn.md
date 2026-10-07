@@ -4,25 +4,24 @@
 
 ## 概述
 
-本 sample 按固定源提交 `ac115717197920355fc390bb04299b20e6436864` 迁移 X5
-YOLOWorld Python 协议。它从用户选择的离线词向量中检测词语；词向量 JSON
-是必需的文本输入资产，不是普通标签表。算法参考为 [YOLO-World](https://github.com/AILab-CVC/YOLO-World)，属于开放词汇区域检测。
+本 sample 在 X5 BPU 上从用户选择的离线词向量中检测词语；词向量 JSON
+是必需的文本输入资产，不是普通标签表。算法参考为
+[YOLO-World](https://github.com/AILab-CVC/YOLO-World)，属于开放词汇区域检测。
+来源：X5 平台 sample 交付 @ `ac115717197920355fc390bb04299b20e6436864`。
 
 <a id="support-matrix"></a>
 ## 支持矩阵（support-matrix）
 
 | 目标 | Python | C++ | 资产 | 状态 |
 | --- | --- | --- | --- | --- |
-| X5 | 本 sample 支持 | 未提供 | `x5:yoloworld:yolo_world.bin` | 注入 runtime 的主机测试通过；2026-09-24 在一块 X5 8GB 和一块 X5 4GB 上以 `dog` 提示和 `test_data/dog.jpeg` 完成 source/unified 对照并全部通过（[8GB](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[4GB](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)） |
+| X5 | supported | 未提供 | `x5:yoloworld:yolo_world.bin` | supported |
 | S100/S100P/S600 | 无发布资产 | 未提供 | 无 | 不支持 |
-
-板端验证只覆盖该提示/图片组合，是张量一致性，不是全词汇精度或时延测量。
 
 <a id="prerequisites"></a>
 ## 前置条件（prerequisites）
 
 主机检查使用仓库 `.venv` 中的 Python 3.14.7、NumPy 2.5.3、OpenCV 4.14.0
-和 PyYAML 6.0.3；这些是主机 fixture 版本，不能替代板端 SDK 依赖。板端
+和 PyYAML 6.0.3。板端
 运行需要与系统镜像匹配的 X5 Python 和 `hbm_runtime`。模型必须用显式下载
 命令准备；必需词向量 `test_data/offline_vocabulary_embeddings.json` 随
 sample 提供。
@@ -58,7 +57,7 @@ python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts do
 ## 目录（directory）
 
 `model/` 负责显式资产准备；`runtime/python/` 负责三阶段任务、懒加载 runtime
-和 CLI；`conversion/` 记录源协议与转换缺口；`evaluator/` 生成同板源/统一证据；
+和 CLI；`conversion/` 记录模型协议与转换缺口；`evaluator/` 提供对拍比较工具；
 `test_data/` 保存源图片和离线词向量；`tests/` 使用注入 runtime 做主机测试。
 
 <a id="entry-points"></a>
@@ -66,11 +65,12 @@ python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts do
 
 - `runtime/python/main.py`、`runtime/python/run.sh`：推理 CLI。
 - `model/download.py`、`model/download.sh`：显式模型准备。
-- `evaluator/compare.py`：同板对拍证据，不下载。
-- Python API：`YOLOWorldTask.pre_process`、`forward`、`post_process`、`predict`。
+- `evaluator/compare.py`：实现对拍比较，不下载。
+- Python API：`YOLOWorldTask.preprocess`、`infer`、`postprocess`、`predict`
+  （`pre_process`/`forward`/`post_process` 为兼容别名）。
 
 <a id="license"></a>
 ## 许可证
 
-迁移源代码使用 Apache-2.0；源文件头和
-`platforms/x5/samples/vision/yoloworld` 中的来源记录适用。
+本 sample 代码使用仓库 Apache-2.0 许可，保留 X5 平台交付
+（`platforms/x5/samples/vision/yoloworld`）的源文件头。

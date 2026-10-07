@@ -11,7 +11,7 @@
 
 [发布清单](../../../../docs/release/s/models.yaml)提供
 [HBM 下载地址](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/PointNet/pointnet.hbm)。
-没有发布本例的 X5、S100P 或 S600 制品。该模型只分割椅子部件，算法的其他能力不等于已提供变体。
+发布制品仅覆盖 S100；X5、S100P、S600 暂无对应制品。该模型分割椅子部件；其他类别与任务需另行训练并提供新制品。
 
 <a id="preparation"></a>
 ## 准备步骤
@@ -49,4 +49,4 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --asset-id 
 格式 `.hbm`；发布清单 `sha256: null (unknown)`。下载器输出的是观测 SHA-256，
 用于追踪，不能当作发布方校验值。加载要求单模型、float32 `(1,3,N)` 输入、`(1,N,4)` 输出。
 输出 dtype 取自 metadata 并校验；整数 logits 必须有有效 SCALE 参数。
-这些检查不能替代待补板测，也不证明任意 HBM 均兼容。
+这些检查用于选择与摘要校验；板端执行与 HBM 兼容性以实际加载为准。

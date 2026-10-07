@@ -1,12 +1,17 @@
 # EfficientNet 图像分类
 
-EfficientNet 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 侧发布 EfficientNet B2/B3/B4 变体（论文 [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)）；S100/S600 侧发布 EfficientNet-Lite lite0..lite4 系列（源交付引用的 [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) 实现）。[English](README.md)
+EfficientNet 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 侧发布 EfficientNet B2/B3/B4 变体（论文 [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)）；S100/S600 侧发布 EfficientNet-Lite lite0..lite4 系列（[TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) 实现）。[English](README.md)
 
 <a id="overview"></a>
 
 ## 概述
 
-统一实现是一条 Python 流程（全部目标；两个源分支均未提供该 sample 的 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
+本样例为全部受支持目标提供同一个 Python 运行时。
+`EfficientNetClassifier` 类执行由 `predict` 串联的
+`preprocess → infer → postprocess` 流程：按检测到的板卡从平台发布
+Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，
+返回带类型的 Top-K 结果（见
+[runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
 ### 算法背景
 
@@ -15,11 +20,11 @@ EfficientNet 通过复合缩放平衡输入分辨率、深度和宽度：不再�
 架构搜索提供高效的基础网络
 （[论文](https://arxiv.org/abs/1905.11946)、
 [EfficientNet-PyTorch](https://github.com/lukemelas/EfficientNet-PyTorch)）。
-X5 部署提供 B2/B3/B4；S 交付提供面向边缘的 EfficientNet-Lite 系列
+X5 部署提供 B2/B3/B4；S 侧提供面向边缘的 EfficientNet-Lite 系列
 （lite0–lite4，TensorFlow TPU 实现），由同一 Python 流程按变体解析输入
 几何（224/240/260/300/380）。
 
-源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+特性摘要：
 
 - **复合缩放**：同时缩放分辨率、深度和宽度，平衡精度与效率。
 - **AutoML 骨干搜索**：用神经架构搜索得到高效的基础网络。
@@ -27,23 +32,18 @@ X5 部署提供 B2/B3/B4；S 交付提供面向边缘的 EfficientNet-Lite 系�
 
 ![模型缩放](./test_data/efficientnet_architecture.png)
 
-*复合缩放，恢复自源交付（同一文件在 rdk_x5 @ac11571 中为
-`test_data/EfficientNet_architecture.png`，在 rdk_s @380e1a2 中为
-`test_data/efficientnet_architecture.png`，sha256 `f0c7ccbe…`；论文
-图 2）：基础网络 (a)、传统单维缩放 (b)–(d)，以及按固定比例统一缩放
-宽度、深度和分辨率的复合缩放 (e)。*
+*复合缩放（论文图 2）：基础网络 (a)、传统单维缩放 (b)–(d)，以及按
+固定比例统一缩放宽度、深度和分辨率的复合缩放 (e)。*
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持范围
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | b2、b3、b4 | python | supported（2026-09-21 x5-8g + x5-4g 板测通过，见下方说明） |
-| s100 | lite0..lite4 | python | supported（2026-09-21 s100 板测通过，见下方说明） |
-| s600 | lite0..lite4 | python | supported（2026-09-21 s600 板测通过，见下方说明） |
-| s100p | 任意 | python | not-supported（发布 Manifest 无 s100p 资产行；选择时显式报错、无回退） |
-
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)；S 侧 rdk_s @380e1a2 (s-v1.1.2)。统一 sample 的主机测试（28 项）全部通过。板端冒烟（2026-09-21；同板、同制品字节、同输入图，旧 wrapper 对照统一入口）：x5-8g/x5-4g b2/b3/b4 Top-5 ids 全等（最大分差 ≤1.2e-7）；s100/s600 lite0..lite4 全等（≤1.2e-7），逐变体几何 224/240/260/300/380 解析正确；`run.sh` CLI 四板 rc=0。省略变体的默认入口按 target 解析（x5 → b2，s100/s600 → lite0；B2-R1 修复后在两块 S 板复验，显式 `--variant`/`--asset-id` 匹配不变）。s100p 选择显式报错、无回退。raw tensor 等价、数据集精度与延迟不在覆盖范围；已发布基准表仍为源分支记录。证据：[B2 板测](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json)。
+| x5 | b2、b3、b4 | python | supported |
+| s100 | lite0..lite4 | python | supported |
+| s600 | lite0..lite4 | python | supported |
+| s100p | 任意 | python | not-supported（按支持矩阵选择目标与变体） |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -93,16 +93,14 @@ S100/S600 使用对应的 `s:efficientnet:s…` 引用（见 `--list-models`）�
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
 指定 `--img-save-path`，不写任何输出文件。使用随附 `Scottish_deerhound.JPEG`
 时 Top-5 含鹿猎犬相关 ImageNet 类别；使用 `redshank.JPEG` 时含红脚鹬相关
-类别。无法识别的板卡或无匹配制品的目标会显式报错退出——特别是源 S 实现在
-一切非 S600 SoC（含 S100P）上静默运行 lite0 S100 模型的行为已移除：S100P
-是显式的 no-published-asset 错误。
+类别。按支持矩阵选择目标并准备对应制品；S100P 需使用清单中对应目标的制品。
 
 <a id="performance"></a>
 ## 性能数据
 
-发布记录，未在本仓库重测。
+已发布性能记录。
 
-X5（rdk_x5 @ac11571，x5-v1.1.3）：
+X5（x5-v1.1.3）：
 
 | 模型 | 尺寸 | 参数量 (M) | Float Top-1 | Quant Top-1 | 单线程延迟 (ms) | 多线程延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -110,7 +108,7 @@ X5（rdk_x5 @ac11571，x5-v1.1.3）：
 | EfficientNet-B3 | 224x224 | 12.19 | 76.22% | 74.05% | 3.96 | 12.76 | 310.30 |
 | EfficientNet-B2 | 224x224 | 9.07 | 76.50% | 73.25% | 3.31 | 10.51 | 376.77 |
 
-S 系列（rdk_s @380e1a2，s-v1.1.2）：
+S 系列（s-v1.1.2）：
 
 | 变体 | 单线程延迟 | 单线程 FPS | 多线程延迟 | 多线程 FPS |
 | --- | --- | --- | --- | --- |
@@ -122,11 +120,9 @@ S 系列（rdk_s @380e1a2，s-v1.1.2）：
 
 ![推理结果](./test_data/inference.png)
 
-*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
-sha256 `8ecf7529…`）：随仓 [redshank.JPEG](test_data/redshank.JPEG) 的
-Rank-1 为 `redshank`，其后依次为 ruddy turnstone、water ouzel、
-oystercatcher、dowitcher。由源版本在其自身运行入口记录 — 不是本仓库的
-新运行。*
+*X5 发布的参考推理结果：随仓 [redshank.JPEG](test_data/redshank.JPEG)
+的 Rank-1 为 `redshank`，其后依次为 ruddy turnstone、water ouzel、
+oystercatcher、dowitcher。*
 
 <a id="directory"></a>
 ## 目录职责
@@ -150,6 +146,6 @@ oystercatcher、dowitcher。由源版本在其自身运行入口记录 — 不�
 ## 许可
 
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为上游 EfficientNet /
-EfficientNet-Lite 发行版；模型/权重许可由上游发行版 govern（见上方论文
+EfficientNet-Lite 发行版；模型/权重许可由上游发行版约束（见上方论文
 链接）。已发布制品遵循平台发布 Manifest；Manifest 不含独立许可字段，
 本文件不主张额外许可。

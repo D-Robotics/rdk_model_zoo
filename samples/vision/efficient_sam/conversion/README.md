@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # EfficientSAM conversion
 
-This directory records the source conversion capability for the EfficientSAM ViT-Tiny encoder and fixed two-positive-point decoder. The unified scripts select X5 or RDK-S with `--target`; the conversion flow has not been run in this migration.
+This directory provides the conversion scripts for the EfficientSAM ViT-Tiny encoder and fixed two-positive-point decoder. The scripts select X5 or RDK-S with `--target`.
 
 <a id="source-model"></a>
 ## Source model
@@ -14,7 +14,7 @@ The decoder bakes two positive points `(248, 210)` and `(302, 315)` into ONNX. I
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-Run conversion on an x86 host in the toolchain matching the target. These commands are documented source commands and were not run here.
+Run conversion on an x86 Linux host inside the toolchain matching the target; do not install the compiler toolchain on the board.
 
 | Target | march/config directory | source toolchain | quantizer |
 |---|---|---|---|
@@ -23,9 +23,29 @@ Run conversion on an x86 host in the toolchain matching the target. These comman
 | `s100p` | `configs/s100p/` | OE S-series 3.7.0 environment | `hb_compile` / `nash-m` |
 | `s600` | `configs/s600/` | OE S-series 3.7.0 environment | `hb_compile` / `nash-p` |
 
+Toolchain documentation and download:
+
+- OE online documentation: <https://developer.d-robotics.cc/oe_s_doc/index.html>
+- RDK S100 toolchain documentation: <https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100>
+- RDK S600 toolchain documentation: <https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600>
+
+For the S targets, obtain the OpenExplore CPU Docker image (shared across S100/S100P/S600), load it, and start the container with the repository mounted:
+
+```bash
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe/3.7.0/ai_toolchain_ubuntu_22_s100_s600_cpu_v3.7.0.tar
+sudo docker load -i ai_toolchain_ubuntu_22_s100_s600_cpu_v3.7.0.tar
+sudo docker images
+
+sudo docker run -it --rm --network host --shm-size=15g \
+  -v "$(pwd)":/workspace --workdir /workspace \
+  <docker-image-name> /bin/bash
+```
+
+Alternatively, pull the image online: `docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`. If the download URL expires, check the latest link on the OE online documentation.
+
 The active published model manifest is `docs/release/x5/models.yaml` or `docs/release/s/models.yaml`; all published model SHA fields are `null` (unknown). S has separate encoder and decoder YAML files for all three marches. X5 has two bayes-e YAML files.
 
-Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. The fixed sources do not pin their package versions or the upstream repository revision; this remains a reproducibility prerequisite, not a tested environment specification. Check these imports inside the chosen export environment, separate from board inference:
+Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. The fixed sources do not pin their package versions or the upstream repository revision; recording those versions is a reproducibility prerequisite. Check these imports inside the chosen export environment, separate from board inference:
 
 ```bash
 # cwd: this conversion directory, inside the chosen host export environment
@@ -38,11 +58,12 @@ python3 -c "import torch, onnx, onnxruntime, numpy, cv2; print(torch.__version__
 Set the working directory to `samples/vision/efficient_sam/conversion`. For X5, prepare the upstream tree and default checkpoint with the source helper; the X5 upstream builder reads only `<repo>/weights/efficient_sam_vitt.pt`, and the exporter rejects a different `--checkpoint` path. For S, the fixed source has no download helper, so place the upstream checkout and checkpoint manually at the paths below.
 
 ```bash
-# X5 only; source helper, not run in this migration
+# X5 only; source helper
 python3 scripts/download_assets.py --target x5 --workspace ./workspace
 
-# S targets: manually provide ./workspace/EfficientSAM and
-# ./workspace/EfficientSAM/weights/efficient_sam_vitt.pt.
+# S targets: manual acquisition, e.g.
+# git clone https://github.com/yformer/EfficientSAM.git ./workspace/EfficientSAM
+# then place the checkpoint at ./workspace/EfficientSAM/weights/efficient_sam_vitt.pt
 ```
 
 The X5 helper first tries `git clone`; if that fails it downloads the upstream `main` source ZIP and safely extracts only the `EfficientSAM-main/` tree in a private staging directory before moving it into the workspace. It then downloads `efficient_sam_vitt.pt` when the existing file is absent or smaller than 10,000,000 bytes. These are explicit user-invoked actions; the upstream `main` ZIP is not a pinned source revision. The S source has no equivalent helper and therefore has no automatic source or checkpoint download path.
@@ -63,12 +84,12 @@ python3 scripts/export_decoder_onnx.py \
   --output ./efficient_sam_vitt_decoder_fixedprompt_512_op11.onnx
 ```
 
-For S100/S100P/S600, use `--target s100`, `--target s100p`, or `--target s600`; use `efficient_sam_vitt_encoder_512_op11.onnx` and `efficient_sam_vitt_decoder_512_op11.onnx` as the two output names. Success is an `Exported ... (N bytes)` line and two ONNX files in this conversion directory. The exporter uses opset 11 and fixed size 512 unless overridden.
+For S100/S100P/S600, use `--target s100`, `--target s100p`, or `--target s600`; use `efficient_sam_vitt_encoder_512_op11.onnx` and `efficient_sam_vitt_decoder_512_op11.onnx` as the two output names. Success is an `Exported... (N bytes)` line and two ONNX files in this conversion directory. The exporter uses opset 11 and fixed size 512 unless overridden.
 
 <a id="calibration"></a>
 ## Calibration
 
-Calibration must use real RGB photographs. The encoder tensors are float32 RGB CHW with `/255`; the source producer requires at least 20 output files. It repeats source paths when fewer files are available, so that count does not establish 20 independent representative images. The decoder calibration must start from a real float32 encoder embedding of exactly `(1,256,32,32)`, produced either by the exported float ONNX encoder or by the compiled encoder route. The fixed prompt is already in the decoder, so no decoder prompt tensor is generated.
+Calibration must use real RGB photographs. The encoder tensors are float32 RGB CHW with `/255`; the source producer requires at least 20 output files. When fewer files are available it repeats source paths, so provide at least 20 distinct representative images for full coverage. The decoder calibration must start from a real float32 encoder embedding of exactly `(1,256,32,32)`, produced either by the exported float ONNX encoder or by the compiled encoder route. The fixed prompt is already in the decoder, so no decoder prompt tensor is generated.
 
 ```bash
 # X5: cwd samples/vision/efficient_sam/conversion
@@ -96,9 +117,9 @@ python3 scripts/prepare_efficient_decoder_calibration.py --target s100 \
   --embedding ./encoder_embedding.bin --out ./decoder_calibration --num 30
 ```
 
-This writes `./calibration_data/batched_images/*.npy` and `./decoder_calibration/image_embeddings/*.npy`, matching the S YAMLs. The dump helper runs the exported float ONNX encoder with the source RGB `/255` transform; it requires host `onnxruntime` and was not run here. No host or board inference was run in this migration.
+This writes `./calibration_data/batched_images/*.npy` and `./decoder_calibration/image_embeddings/*.npy`, matching the S YAMLs. The dump helper runs the exported float ONNX encoder with the source RGB `/255` transform; it requires host `onnxruntime` (`pip install onnxruntime`).
 
-The dump example uses the committed `../test_data/dogs.jpg` after ONNX export, so its input exists. Replace it with a representative calibration photograph for actual quantization. The helper was derived from the S source and can consume either target's float encoder ONNX with the same tensor protocol; this migration only exercised an injected ORT fixture. The `calibration_images/` set is user-supplied, not bundled. Scaling one embedding preserves the source demonstration recipe; it does not establish a representative calibration dataset. Only size 512 is covered by the committed configurations and runtime; changing exporter `--size` also requires corresponding new configurations and runtime bindings.
+The dump example uses the committed `../test_data/dogs.jpg` after ONNX export, so its input exists. Replace it with a representative calibration photograph for actual quantization. The helper can consume either target's float encoder ONNX with the same tensor protocol. The `calibration_images/` set is user-supplied, not bundled. Scaling one embedding preserves the source demonstration recipe; build the real calibration set from representative photographs. Only size 512 is covered by the committed configurations and runtime; changing exporter `--size` also requires corresponding new configurations and runtime bindings.
 
 <a id="compile"></a>
 ## Compile
@@ -157,9 +178,18 @@ These input fields are copied from each compilation config, not observed SDK met
 <a id="validation"></a>
 ## Post-conversion validation
 
-No export, calibration, compile, or board validation was run in this migration: status is `not-run`. The source historical X5 quantization records are preserved in [`QUANTIZATION_STATUS.md`](./QUANTIZATION_STATUS.md) and [`VALIDATION.md`](./VALIDATION.md), including encoder cosine `0.968013` and decoder cosines `low_res_masks=0.965641`, `iou_predictions=0.997313`. These are source historical values, not a new result. S source evaluator material is performance-only and has no dataset-level accuracy harness.
+Inspect the compiled models and confirm the runtime works:
 
-Before claiming a compiled artifact usable, inspect the actual SDK metadata for every target/march and verify input names, ranks, shapes, native dtypes, output names, ranks, shapes, and native dtypes. The source does not provide compiled HBM metadata; runtime float casts cannot establish native dtype.
+```bash
+# cwd: this conversion directory, on the matching target board
+hrt_model_exec model_info --model_file bpu_model_output_encoder_nashe/efficient_sam_vitt_encoder_512x512_nashe.hbm
+hrt_model_exec perf --model_file bpu_model_output_encoder_nashe/efficient_sam_vitt_encoder_512x512_nashe.hbm --thread_num 1
+hrt_model_exec perf --model_file bpu_model_output_decoder_nashe/efficient_sam_vitt_decoder_512_nashe.hbm --thread_num 1
+```
+
+The source X5 quantization records are preserved in [`QUANTIZATION_STATUS.md`](./QUANTIZATION_STATUS.md) and [`VALIDATION.md`](./VALIDATION.md), including encoder cosine `0.968013` and decoder cosines `low_res_masks=0.965641`, `iou_predictions=0.997313`. These are source record values. S source evaluator material is performance-only and has no dataset-level accuracy harness.
+
+Before using a compiled artifact, inspect the actual SDK metadata for every target/march and verify input names, ranks, shapes, native dtypes, output names, ranks, shapes, and native dtypes. The source does not provide compiled HBM metadata; runtime float casts cannot establish native dtype.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -171,18 +201,24 @@ Before claiming a compiled artifact usable, inspect the actual SDK metadata for 
 | S100P | `nash-m/efficient_sam_vitt_encoder_512x512_nashm.hbm` | `nash-m/efficient_sam_vitt_decoder_512_nashm.hbm` | `../model/nash-m/` |
 | S600 | `nash-p/efficient_sam_vitt_encoder_512x512_nashp.hbm` | `nash-p/efficient_sam_vitt_decoder_512_nashp.hbm` | `../model/nash-p/` |
 
-The conversion output prefixes and runtime filenames are recorded in the target YAMLs and active manifests. Generated ONNX, calibration tensors, quantization metadata, and compiled models are not checked in here.
+The conversion output prefixes and runtime filenames are recorded in the target YAMLs and active manifests. After compilation, copy the emitted models to the model directory so the runtime finds them directly, e.g. for S100:
+
+```bash
+cp bpu_model_output_encoder_nashe/efficient_sam_vitt_encoder_512x512_nashe.hbm ../model/nash-e/
+cp bpu_model_output_decoder_nashe/efficient_sam_vitt_decoder_512_nashe.hbm ../model/nash-e/
+```
+
+Generated ONNX, calibration tensors, quantization metadata, and compiled models are not checked in here.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
 - The upstream checkpoint has no pinned source version or digest in the fixed source.
 - The X5 upstream builder reads only `<repo>/weights/efficient_sam_vitt.pt`; a different checkpoint path is rejected explicitly. S uses its explicit `--checkpoint` path.
 - The S source has no `download_assets.py`; source acquisition is a manual prerequisite.
-- X5 and S use different upstream builder APIs and different quantizer/config layouts; the unified scripts branch explicitly instead of pretending the recipes are byte-identical.
+- X5 and S use different upstream builder APIs and different quantizer/config layouts; the scripts branch explicitly on `--target` for the two recipes.
 - Compiled artifact native dtype and S output spatial metadata remain unknown until binding reads real SDK metadata.
-- Conversion, model download, and board validation are not-run in this migration.
 
 ## Provenance
 
-The merge and source SHA-256 mapping are recorded in [`SOURCE_MAP.json`](./SOURCE_MAP.json). Source code and documentation retain the upstream Apache-2.0 provenance where present and the repository license applies to the unified wrapper code.
+The merge and source SHA-256 mapping are recorded in [`SOURCE_MAP.json`](./SOURCE_MAP.json). Source code and documentation retain the upstream Apache-2.0 provenance where present and the repository license applies to the wrapper code.

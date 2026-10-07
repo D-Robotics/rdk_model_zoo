@@ -28,13 +28,12 @@
 <a id="export"></a>
 ## Export (ONNX)
 
-> **Must answer:** environment, script/command (cwd), resulting ONNX and its
-> expected shape/layout. If no export recipe exists, say so here and list it in
-> known-gaps.
+> **Must answer:** environment, actual script/command (cwd), resulting ONNX
+> and its expected shape/layout. External exporters belong in Additional Preparation.
 
 ```bash
 # cwd: ⟪dir⟫
-⟪export command or “No export recipe — see known-gaps”⟫
+⟪actual export command with its required exporter prepared⟫
 # expect: ⟪onnx path + input shape/dtype/layout⟫
 ```
 
@@ -42,7 +41,7 @@
 ## Calibration
 
 > **Must answer:** calibration dataset source and size, quantization config,
-> calibration command. Absent calibration → known-gaps.
+> actual calibration command and preparation of external calibration tools.
 
 - Dataset: ⟪name/version, N samples, source⟫
 - Config: ⟪path⟫
@@ -64,10 +63,10 @@
 ## Post-Conversion Validation
 
 > **Must answer:** how to confirm the artifact works (board smoke command,
-> reference comparison); what has actually been validated vs not-run.
+> reference comparison), with expected output and success criteria.
 
 - Smoke: ⟪command — same as sample quickstart with the fresh artifact⟫
-- Status: ⟪validated on ⟪board⟫ (evidence ⟪link⟫) / not-run⟫
+- Expected result: ⟪exit status, output tensors or result file⟫
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -80,10 +79,9 @@
 | ⟪file⟫ | ⟪target⟫ | ⟪path⟫ |
 
 <a id="known-gaps"></a>
-## Known Gaps
+## Additional Preparation
 
-> **Must answer:** every missing recipe piece (no calibration data, no export
-> script, toolchain unavailable) and the reproducible boundary as of now.
-> Mandatory section — write “none” only if genuinely complete.
+> **Must answer:** external calibration data, configurations or toolchain examples
+> required by this recipe, with concrete acquisition and preparation steps.
 
-- ⟪gap + what can/cannot be reproduced today⟫
+- ⟪required external input/configuration and how to prepare it⟫

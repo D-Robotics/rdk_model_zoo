@@ -1,4 +1,4 @@
-> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration and the native core refactor with host-side SDK-double tests; quantization recipes are preserved without rerunning, and board tests are not-run.
+> Board results, accuracy figures and SDK release notes below are records from the source S release; board runs follow the commands in this guide.
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -56,7 +56,7 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 
 `inc/minicpm5.hpp` defines Config, Result, the generation-stage functions and the sequential MiniCPM5 wrapper; `src/minicpm5.cc` implements the stages; `src/runtime_config.cc` owns model-file validation, the OELLM JSON settings and the temporary configuration file; `src/main.cc` handles gflags and RESULT output. No generated text is executed as code.
 
-The public stage functions are `pre_process` (builds and validates one OELLM request; no SDK calls), `infer` (one synchronous runtime call plus a response-shape check) and `post_process` (extracts text, tokens and status, then reads and validates request metrics); `Generate` chains them. Tokenization and template rendering stay inside the runtime because the SDK exposes no tokenization API, so no public tokenization stage is invented. Configuration and file IO live in `src/runtime_config.cc`, outside the inference-stage file; the temporary runtime JSON is owned by an RAII guard and removed on success, SDK error return and exception paths alike.
+The public stage functions are `pre_process` (builds and validates one OELLM request; no SDK calls), `infer` (one synchronous runtime call plus a response-shape check) and `post_process` (extracts text, tokens and status, then reads and validates request metrics); `Generate` chains them. Tokenization and template rendering stay inside the runtime; the SDK exposes no tokenization API. Configuration and file IO live in `src/runtime_config.cc`, outside the inference-stage file; the temporary runtime JSON is owned by an RAII guard and removed on success, SDK error return and exception paths alike.
 
 `MiniCPM5(Config)` owns one runtime/conversation. `Generate(prompt, new_chat=true)` starts a new conversation; pass `false` for a follow-up. Calls on one instance are sequential; the returned value owns text/token data. `validate_metrics` rejects non-finite or negative measurements with a message naming the metric and never coerces them to zero, so a RESULT line only contains valid measurements; zero `decode_tps` remains valid for one-token length-limited requests.
 

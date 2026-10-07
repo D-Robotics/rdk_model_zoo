@@ -50,12 +50,10 @@ the existing file intact. A later failure can leave earlier complete files in th
 output directory; inspect the error, retain any user files, and resume after
 correcting the failing input. Do not treat a partially prepared package as ready.
 
-The script prints each observed digest and a final success line only after all
-six entries are processed. A successful download is not SDK compatibility or
-inference validation. The active manifest has no publisher hashes for the HBM
-files; their observed digests do not independently authenticate origin. A vocabulary
-that differs from this migration's observed fixed package is rejected, but that
-local pin does not become a publisher-provided hash.
+The script prints each observed digest and a final success line after all
+six entries are processed. The active manifest carries no publisher hashes for
+the HBM files; the printed digests bind the downloaded bytes. A vocabulary
+that differs from the recorded fixed package is rejected.
 
 <a id="accompanying-files"></a>
 ## Accompanying files
@@ -91,7 +89,9 @@ model directory to the C++ launcher, as documented in the respective runtime gui
 - Downloaded `tokens.json`: `2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`
 
 The source frontend uses 16 kHz, 80 mel bands, 25 ms windows, 10 ms shifts,
-LFR stacking 7 with step 6, and at most 400 frames of width 560. Its real CPU frontend has passed seven source comparisons; see the Python guide. The pipeline's zero context bias preserves
+LFR stacking 7 with step 6, and at most 400 frames of width 560. The real CPU
+frontend feature preparation is described in the Python guide.
+The pipeline's zero context bias preserves
 the source deployment; it does not implement user-supplied contextual hotwords.
 See [physical tensor contracts](../runtime/python/README.md) for the three models.
 INT16 names describe the compiled model recipe, not permission to guess I/O dtype.
@@ -100,13 +100,3 @@ The three `.hbm` files are compiled S100 artifacts: publisher SHA-256 is
 `null (unknown)` for each. `tokens.json` is UTF-8 JSON; `am.mvn` is text CMVN;
 `paraformer_config.yaml` is YAML. The hashes above identify the locally pinned
 auxiliary bytes, not a claim of publisher-issued signatures.
-
-## Current validation
-
-Host tests exercise real preparation logic with substituted HTTP response bytes,
-checking all six files, rerun reuse, protected-file rejection and write-free preview.
-Synthetic model bytes in those tests are not real HBM assets. The actual published
-vocabulary was downloaded and its 8,404 unique tokens validated. Neither the full
-HBM package download nor real SDK inference was executed in this step. Source
-auxiliary bytes, preview commands and help are checked separately in the
-[binding/package evidence](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-binding-review.md).

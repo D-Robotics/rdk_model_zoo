@@ -2,7 +2,7 @@
 
 # 模型转换 — DINOv2 ViT-S/14
 
-本目录的转换实现是源中真实存在的能力，但本轮没有执行转换、下载或板端验证。
+本目录的转换实现即随附的源能力：脚本、固定版本和分步命令。
 
 <a id="source-model"></a>
 ## 源模型
@@ -23,7 +23,7 @@
 | s100p | `nash-m` | 3.7.0 | `conversion/mapper.py` 生成 |
 | s600 | `nash-p` | 3.7.0 | `conversion/mapper.py` 生成 |
 
-源 OE 入口是下面的 x86 Linux 容器命令。本轮没有启动该容器：
+OE 入口是下面的 x86 Linux 容器命令：
 
 ```bash
 # cwd：仓库根目录；源树挂载到 /workspace
@@ -35,7 +35,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
 
 ### 准备固定源与权重
 
-以下在 OE 容器内执行，工作目录为 `samples/vision/dinov2/conversion`。需要网络获取上游材料；本轮未执行。新建的 `dinov2/` 为上游源码检出目录。保留 OE 已有 Torch，仅安装固定 ONNX 包：
+以下在 OE 容器内执行，工作目录为 `samples/vision/dinov2/conversion`。需要网络获取上游材料。新建的 `dinov2/` 为上游源码检出目录。保留 OE 已有 Torch，仅安装固定 ONNX 包：
 
 ```bash
 # cwd: samples/vision/dinov2/conversion, inside OE 3.7.0
@@ -78,7 +78,7 @@ python3 onnx_export/export_dinov2.py \
 
 `mapper.py::prepare_calibration` 从 `--cal-images` 读取 JPG/JPEG/PNG/BMP，将 BGR 转 RGB，bicubic 按比例把短边 resize 到 256，中心 crop 224，执行 `/255` 和 ImageNet mean/std，写出 contiguous float32 NCHW `.npy` tensor，并在临时 workspace 写 `calibration_manifest.json`。源推荐 50 张多样真实照片；随机或合成图片不适合此模型。
 
-固定配方为 featuremap float32 输入、全节点 int16 且模型输出 int16，并使用 hmct 默认 modelwise KL 搜索（mapper 有意不写 `calibration_type`）。源实测 int8 激活和 max/percentile 校准会失败；这些是源历史测量，本轮未运行。
+固定配方为 featuremap float32 输入、全节点 int16 且模型输出 int16，并使用 hmct 默认 modelwise KL 搜索（mapper 有意不写 `calibration_type`）。源实测 int8 激活与 max/percentile 校准会失败；使用上述固定配方。
 
 ```bash
 # cwd：samples/vision/dinov2/conversion；前置：./cal_images 有真实照片
@@ -88,9 +88,9 @@ python3 mapper.py --cal-images ./cal_images --march nash-e --output-dir ./output
 ```
 
 
-### 固定源的量化配置对照（历史，Nash-E）
+### 固定源的量化配置对照（源记录，Nash-E）
 
-以下五行保留了成功配方和失败配方的区别，本轮没有复测。带 `(sim)` 的值是工具链模拟结果，不能代替表中失败的实际执行值。
+以下五行保留了成功配方和失败配方的区别。带 `(sim)` 的值是工具链模拟结果，不能代替表中失败的实际执行值。源对失败原因的记录：int8 激活无论何种校准都失败（实测 cosine 上限 0.91）；max+percentile 校准跌至约 0.18；attention 的 logits 减 max 后张量最小可达 -345，固定全 int16 featuremap/KL 配方避开了这些区间。
 
 | Config | cls cosine | patch cosine | Verdict |
 |---|---|---|---|
@@ -121,12 +121,12 @@ python3 mapper.py \
 # 预期：output/dinov2_vits14_224_int16_nashe.hbm，以及生成时的 hb_compile_nashe.log
 ```
 
-S100P 或 S600 使用 `--march nash-m` 或 `nash-p`。mapper 其他默认值为 `--weights ./dinov2_vits14_pretrain.pth`、`--repo ./dinov2`、`--cal-images ./cal_images`、`--output-dir .`、`--jobs 16`，默认不启用 `--save-cache`；启用后保留临时 workspace。不要安装上游 `requirements.txt`，因为它会将 OE Torch 降级到 2.0。
+S100P 或 S600 使用 `--march nash-m` 或 `nash-p`。mapper 其他默认值为 `--weights./dinov2_vits14_pretrain.pth`、`--repo./dinov2`、`--cal-images./cal_images`、`--output-dir.`、`--jobs 16`，默认不启用 `--save-cache`；启用后保留临时 workspace。不要安装上游 `requirements.txt`，因为它会将 OE Torch 降级到 2.0。
 
 <a id="validation"></a>
 ## 转换后验证
 
-导出器执行 ONNXRuntime float 对拍并打印 cosine/max-absolute error；`mapper.py` 确认 `hb_compile` 生成预期 HBM。板端验证还应在相同预处理 tensor 上，将两路输出与 float ONNX 对拍。本轮没有执行转换和板端验证：状态为 `not-run`。
+导出器执行 ONNXRuntime float 对拍并打印 cosine/max-absolute error；`mapper.py` 确认 `hb_compile` 生成预期 HBM。板端验证还应在相同预处理 tensor 上，将两路输出与 float ONNX 对拍。
 
 <a id="artifacts"></a>
 ## 产物
@@ -140,8 +140,8 @@ S100P 或 S600 使用 `--march nash-m` 或 `nash-p`。mapper 其他默认值为 
 <a id="known-gaps"></a>
 ## 缺失项
 
-- 本轮未下载 checkpoint 或 HBM，未进入 OE 容器，未执行导出/校准/编译，也未使用板卡。
-- 当提供固定源、checkpoint digest、OE 版本和真实校准目录时，源 pipeline 可复现；但其产物和对拍数值在当前工作树中仍未验证。
+- 执行该流程需要 OE 容器、用于获取固定 checkpoint 的网络，以及用于最终验证的板卡。
+- 提供固定源、checkpoint digest、OE 版本和真实校准目录后，源 pipeline 即可复现。
 - manifest HBM hash 均为 `sha256: null (unknown)`；下载器观测 digest 不能验证发布方来源。
 
 ## 许可

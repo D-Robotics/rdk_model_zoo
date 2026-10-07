@@ -10,7 +10,7 @@ Tools and workflows to verify quantized accuracy and on-board tensor alignment.
 PC comparisons use the conversion tutorial's COCO image, text verification prompts, original float weights and matching-target BC.
 Board golden verification needs five files under `$GEMMA4_HOME/golden_mask_kv/<prompt_id>/prefill_chunk_0/`:
 `input_ids.int64.bin`, `position_ids.int32.bin`, `inputs_embeds.f32.bin`, `full_mask.f32.bin` and `sliding_mask.f32.bin`.
-This internal golden dataset is not included in the public model archive. The four demo images are qualitative examples, not an accuracy dataset.
+This internal golden dataset is not included in the public model archive. The four demo images are qualitative examples for the smoke test.
 
 <a id="environment"></a>
 ## Environment
@@ -81,35 +81,33 @@ export GEMMA4_HOME=~/gemma4_e2b
 # What do you see?
 ```
 
-> **Note:** The primary chat entry was renamed to `main` (Model Zoo convention). `./gemma4_chat` no longer exists.
-
 See [QUANTIZATION_TUTORIAL.md §9.4](../conversion/QUANTIZATION_TUTORIAL.md) for expected output.
 
 <a id="metrics"></a>
 ## Metric definitions
 
-The PC text quick check records per-prompt logits cosine and `mean_cosine`; a normal exit is not a fixed accuracy-threshold pass.
-The golden verifier checks prefill input construction only: exact integer input_ids/position_ids,
-inputs_embeds maximum absolute error ≤1e-3, and zero maximum error for full_mask/sliding_mask.
-Printed cosine is not the pass criterion. This does not measure model-output accuracy or complete generated-answer quality.
+The PC text quick check records per-prompt logits cosine and `mean_cosine`.
+The golden verifier checks prefill construction: exact integer `input_ids` and
+`position_ids`, `inputs_embeds` maximum absolute error ≤1e-3, and zero maximum
+error for `full_mask` and `sliding_mask`. Use the PC BC comparison over your
+prompt set to measure dataset-level accuracy.
 
 <a id="outputs"></a>
 ## Outputs and interpretation
 
 PC text results go to `conversion/output/e2b_text_verify_quick_<target>.json`, containing `results` and `mean_cosine`.
 Golden verification prints per-input OK/FAIL, errors and final `ALL PASSED`/`SOME FAILED`; success returns 0, mismatches or exceptions return 1.
-Missing golden files are errors, not skipped passes. Interactive examples stream answers to the terminal and do not produce accuracy reports.
+Prepare all five golden tensors before running the golden verifier. Interactive examples stream answers to the terminal.
 
 <a id="reference-results"></a>
 ## Historical references
 
 The source README and full tutorial retain the S100P demonstrations, approximately 6.9 tok/s text screenshot and S600 source regression notes.
-They come from pinned S source `380e1a2`, not new migration measurements. The documented golden expected output is not a new test record either.
-Current host checks cover launcher orchestration only; board execution is not-run.
+They are records from the S source release; the documented golden expected output likewise comes from that record.
+Board comparisons run through the runtime commands above.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-PC and board verification commands are retained so users can reuse the original workflow. This migration does not rerun quantization,
-BC accuracy or board workflows, nor require those runs for README acceptance.
-Demo images, equal golden inputs and throughput screenshots do not establish dataset-level task accuracy.
+Run the PC BC comparison over your prompt set for dataset-level accuracy, and
+use the board golden command to compare target-side tensor construction.

@@ -124,10 +124,10 @@ The established legacy spellings `pre_process`, `forward` and `post_process` rem
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `Model not found: ...; prepare it explicitly with model/download.sh.` | HBM is absent at the resolved path. | Prepare the exact variant under `model/`, or pass its exact `--asset-id` with `--model-path`. |
+| `Model not found:...; prepare it explicitly with model/download.sh.` | HBM is absent at the resolved path. | Prepare the exact variant under `model/`, or pass its exact `--asset-id` with `--model-path`. |
 | `No published SigLIP support for x5/s600` | The selected target is outside the S100/S100P publication. | Use an S100 or S100P board/target. |
 | `Host dry-run requires --target s100 or --target s100p` | Host dry-run cannot infer a board from `auto`. | Pass an explicit `--target`. |
-| `image-size must be ...` | Explicit size disagrees with the fixed variant geometry. | Omit `--image-size` or use the variant's size. |
+| `image-size must be...` | Explicit size disagrees with the fixed variant geometry. | Omit `--image-size` or use the variant's size. |
 | `SigLIP output shape/dtype differs from bound metadata.` | Artifact metadata does not match the selected submodel contract. | Inspect the exact HBM and select the matching asset; do not reshape or cast the output. |
 
 ## License

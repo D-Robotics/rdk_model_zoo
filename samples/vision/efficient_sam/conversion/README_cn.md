@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # EfficientSAM 转换
 
-本目录记录 EfficientSAM ViT-Tiny 图像编码器和固定双正点解码器的转换能力。统一脚本通过 `--target` 选择 X5 或 RDK-S；本次迁移没有运行转换流程。
+本目录提供 EfficientSAM ViT-Tiny 图像编码器和固定双正点解码器的转换脚本。脚本通过 `--target` 选择 X5 或 RDK-S。
 
 <a id="source-model"></a>
 ## 源模型
@@ -14,7 +14,7 @@ English | [简体中文](./README_cn.md)
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-应在 x86 主机的对应工具链环境中运行。以下是源转换命令，本次迁移没有执行。
+在 x86 Linux 主机的对应工具链环境中运行转换；不要在板卡上安装编译工具链。
 
 | 目标 | march/配置目录 | 源工具链 | 量化器 |
 |---|---|---|---|
@@ -22,6 +22,26 @@ English | [简体中文](./README_cn.md)
 | `s100` | `configs/s100/` | OE S 系列 3.7.0 | `hb_compile` / `nash-e` |
 | `s100p` | `configs/s100p/` | OE S 系列 3.7.0 | `hb_compile` / `nash-m` |
 | `s600` | `configs/s600/` | OE S 系列 3.7.0 | `hb_compile` / `nash-p` |
+
+工具链文档与下载：
+
+- OE 在线文档：<https://developer.d-robotics.cc/oe_s_doc/index.html>
+- RDK S100 工具链文档：<https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=4.0.5&p=RDK+S100>
+- RDK S600 工具链文档：<https://developer.d-robotics.cc/rdk_s_doc/Advanced_development/toolchain_development/algorithm_toolchain/overview?v=5.1.0&p=RDK+S600>
+
+S 目标使用 S100/S100P/S600 共享的 OpenExplore CPU Docker 镜像，下载并加载后，挂载仓库启动容器：
+
+```bash
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe/3.7.0/ai_toolchain_ubuntu_22_s100_s600_cpu_v3.7.0.tar
+sudo docker load -i ai_toolchain_ubuntu_22_s100_s600_cpu_v3.7.0.tar
+sudo docker images
+
+sudo docker run -it --rm --network host --shm-size=15g \
+  -v "$(pwd)":/workspace --workdir /workspace \
+  <docker-image-name> /bin/bash
+```
+
+也可以在线拉取镜像：`docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`。下载链接失效时，请在 OE 在线文档查看最新地址。
 
 有效制品清单是 `docs/release/x5/models.yaml` 或 `docs/release/s/models.yaml`；其中发布模型的 SHA 字段均为 `null`（未知）。S 为三个 march 分别提供编码器和解码器 YAML，X5 提供两份 bayes-e YAML。
 
@@ -38,12 +58,12 @@ python3 -c "import torch, onnx, onnxruntime, numpy, cv2; print(torch.__version__
 先进入 `samples/vision/efficient_sam/conversion`。X5 使用源 helper 准备上游树和默认 checkpoint；X5 上游 builder 只读取 `<repo>/weights/efficient_sam_vitt.pt`，传入不同的 `--checkpoint` 会被 exporter 显式拒绝。固定源没有 S 目标的下载 helper，因此 S 目标必须由使用者手工放置上游 checkout 和 checkpoint。
 
 ```bash
-# 仅 X5；本迁移未执行
+# 仅 X5；源 helper
 python3 scripts/download_assets.py --target x5 --workspace ./workspace
 
-# S 目标：手工准备以下路径
-# ./workspace/EfficientSAM
-# ./workspace/EfficientSAM/weights/efficient_sam_vitt.pt
+# S 目标：手工获取，例如
+# git clone https://github.com/yformer/EfficientSAM.git ./workspace/EfficientSAM
+# 然后放置 checkpoint 到 ./workspace/EfficientSAM/weights/efficient_sam_vitt.pt
 ```
 
 X5 helper 会先尝试 `git clone`；失败后下载上游 `main` 源 ZIP，并在私有暂存目录中只安全解压 `EfficientSAM-main/` 树，再移动到 workspace。随后在已有 `efficient_sam_vitt.pt` 不存在或小于 10,000,000 字节时下载 checkpoint。这些动作都必须由用户显式调用；上游 `main` ZIP 不是固定源版本。S 源没有等价 helper，因此没有自动获取源代码或 checkpoint 的路径。
@@ -66,7 +86,7 @@ S100、S100P、S600 分别将 `--target` 改为对应值，输出名使用 `effi
 <a id="calibration"></a>
 ## 校准
 
-编码器校准必须使用真实 RGB 图片，输入为 `/255` 后的 float32 RGB CHW `(1,3,512,512)`；源 producer 要求至少 20 个输出文件。图片不足时 producer 会重复源路径补足，这不代表有 20 张独立代表性图片，因此校准集仍需单独审计。解码器校准必须从真实的 `(1,256,32,32)` float32 encoder embedding 开始，该 embedding 由浮点 ONNX 编码器或已编译编码器路径产生。固定 prompt 已在 decoder 内，不生成额外 prompt 张量。
+编码器校准必须使用真实 RGB 图片，输入为 `/255` 后的 float32 RGB CHW `(1,3,512,512)`；源 producer 要求至少 20 个输出文件。图片不足时 producer 会重复源路径补足；准备至少 20 张互不相同的代表性图片，才能满足独立代表性要求。解码器校准必须从真实的 `(1,256,32,32)` float32 encoder embedding 开始，该 embedding 由浮点 ONNX 编码器或已编译编码器路径产生。固定 prompt 已在 decoder 内，不生成额外 prompt 张量。
 
 ```bash
 python3 scripts/prepare_calibration.py --target x5 \
@@ -91,9 +111,9 @@ python3 scripts/prepare_efficient_decoder_calibration.py --target s100 \
   --embedding ./encoder_embedding.bin --out ./decoder_calibration --num 30
 ```
 
-这会生成匹配 S YAML 的 `./calibration_data/batched_images/*.npy` 和 `./decoder_calibration/image_embeddings/*.npy`。dump helper 运行导出的浮点 ONNX 编码器并使用源 RGB `/255` 变换；它需要主机 `onnxruntime`，本次没有运行。此次迁移没有在主机或板端推理生成 embedding。
+这会生成匹配 S YAML 的 `./calibration_data/batched_images/*.npy` 和 `./decoder_calibration/image_embeddings/*.npy`。dump helper 运行导出的浮点 ONNX 编码器并使用源 RGB `/255` 变换；它需要主机 `onnxruntime`（`pip install onnxruntime`）。
 
-dump 示例在 ONNX 导出后使用已提交的 `../test_data/dogs.jpg`，输入文件可直接定位；实际量化应换成有代表性的校准图片。该 helper 源自 S 分支，按同一 tensor 协议可读取两类目标的浮点 encoder ONNX，本轮仅执行注入 ORT 的 fixture。`calibration_images/` 数据集由用户准备，仓库不提供。单份 embedding 缩放只保留源演示配方，不等同于代表性校准数据集。提交配置与 runtime 仅覆盖 size 512；改变导出 `--size` 还需要对应的新配置与 runtime binding。
+dump 示例在 ONNX 导出后使用已提交的 `../test_data/dogs.jpg`，输入文件可直接定位；实际量化应换成有代表性的校准图片。该 helper 源自 S 分支，按同一 tensor 协议可读取两类目标的浮点 encoder ONNX。`calibration_images/` 数据集由用户准备，仓库不提供。单份 embedding 缩放只保留源演示配方，不等同于代表性校准数据集。提交配置与 runtime 仅覆盖 size 512；改变导出 `--size` 还需要对应的新配置与 runtime binding。
 
 <a id="compile"></a>
 ## 编译
@@ -149,9 +169,18 @@ python3 scripts/quantize.py --target s600
 <a id="validation"></a>
 ## 转换后验证
 
-本次迁移没有运行导出、校准、编译或板测，状态为 `not-run`。源历史 X5 量化记录保留在 [`QUANTIZATION_STATUS.md`](./QUANTIZATION_STATUS.md) 和 [`VALIDATION.md`](./VALIDATION.md)：编码器 cosine `0.968013`，decoder 的 `low_res_masks=0.965641`、`iou_predictions=0.997313`。这些是源历史值，不是本轮结果。S 源 evaluator 只有性能材料，没有数据集精度 harness。
+检查编译产物并确认 runtime 可用：
 
-声称制品可用前，必须读取每个目标真实 SDK metadata，核对输入/输出名称、rank、shape 和 native dtype。源中没有编译 HBM metadata，运行时转换 float 不能证明 native dtype。
+```bash
+# cwd：本 conversion 目录；在对应目标板卡上执行
+hrt_model_exec model_info --model_file bpu_model_output_encoder_nashe/efficient_sam_vitt_encoder_512x512_nashe.hbm
+hrt_model_exec perf --model_file bpu_model_output_encoder_nashe/efficient_sam_vitt_encoder_512x512_nashe.hbm --thread_num 1
+hrt_model_exec perf --model_file bpu_model_output_decoder_nashe/efficient_sam_vitt_decoder_512_nashe.hbm --thread_num 1
+```
+
+源 X5 量化记录保留在 [`QUANTIZATION_STATUS.md`](./QUANTIZATION_STATUS.md) 和 [`VALIDATION.md`](./VALIDATION.md)：编码器 cosine `0.968013`，decoder 的 `low_res_masks=0.965641`、`iou_predictions=0.997313`。这些是源记录值。S 源 evaluator 只有性能材料，没有数据集精度 harness。
+
+使用编译制品前，必须读取每个目标真实 SDK metadata，核对输入/输出名称、rank、shape 和 native dtype。源中没有编译 HBM metadata，运行时转换 float 不能证明 native dtype。
 
 <a id="artifacts"></a>
 ## 制品
@@ -171,10 +200,9 @@ python3 scripts/quantize.py --target s600
 - 上游 checkpoint 没有固定源版本或 digest。
 - X5 上游 builder 只读取 `<repo>/weights/efficient_sam_vitt.pt`；不同 checkpoint 路径会被显式拒绝，S 则使用显式 `--checkpoint`。
 - S 源没有 `download_assets.py`，源获取是手工前置条件。
-- X5 与 S 的上游 builder API、量化器和配置布局不同；统一脚本显式分支，没有把它们伪装成字节相同的配方。
+- X5 与 S 的上游 builder API、量化器和配置布局不同；脚本按 `--target` 显式分支执行两套配方。
 - 编译制品的 native dtype 以及 S 的输出空间 metadata，须等 binding 读取真实 SDK metadata 后确认。
-- 本次迁移未执行转换、模型下载或板端验证。
 
 ## 来源
 
-合并关系与 source SHA-256 映射记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有源 Apache-2.0 标识的代码和文档保留其来源信息，统一 wrapper 遵循仓库许可证。
+合并关系与 source SHA-256 映射记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有源 Apache-2.0 标识的代码和文档保留其来源信息，wrapper 遵循仓库许可证。

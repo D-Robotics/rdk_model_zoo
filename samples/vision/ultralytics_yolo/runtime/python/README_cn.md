@@ -2,12 +2,12 @@
 
 [English](README.md)
 
-这是共用 Ultralytics YOLO Sample 的板端入口。`main.py` 保持轻量入口：
+这是共用 Ultralytics YOLO Sample 的板端入口。`main.py` 是轻量入口：
 解析参数、解析执行计划、构造所选任务模型、调用 `predict`、展示结果；
 选项声明与 model-free 的列表/dry-run/下载准备及结果展示在 `yolo_cli.py`。
 各任务的可读流程在各自任务模块中——DFL 检测在 [`detect.py`](detect.py)
 （`YoloDetect`：初始化、`preprocess`、`infer`、`postprocess`、`predict` 同文件
-可见；历史 `yolo_detect` 导入路径是同一实现的再导出）。入口通过 RDK 系统
+可见；`yolo_detect` 导入路径是同一实现的再导出）。入口通过 RDK 系统
 镜像提供的 `hbm_runtime` 加载 X5 的 `.bin` 或 S100/S100P/S600 的 `.hbm`，把一张
 BGR 图片准备为目标板的 NV12 输入，执行任务解码；detect/seg/pose/obb 保存绘制结果，cls 打印 Top-K。脚本不会
 安装 Python 依赖。导出和编译请看 [`conversion/README_cn.md`](../../conversion/README_cn.md)。
@@ -20,7 +20,7 @@ BGR 图片准备为目标板的 NV12 输入，执行任务解码；detect/seg/po
 读取模型元数据并检查 batch、尺寸、类型和输出协议；文件名后缀不能代替
 元数据检查。
 
-缺少默认模型时，历史入口会在板端下载默认模型；显式传入 `--model-path`
+缺少默认模型时，入口会在板端下载默认模型；显式传入 `--model-path`
 时绝不下载。主机上想只检查路径而不加载 `hbm_runtime`，可传显式
 `--platform` 后使用 `--dry-run` 或 `--list-models`；`--download` 只准备
 Manifest 制品然后退出。
@@ -82,8 +82,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
 常见任务名是 `detect`、`seg`、`pose`、`cls`、`obb`，但需以所选家族是否
 发布该任务为准。YOLOv8/YOLO11 检测使用三层 DFL logits（`reg=16`）；
 YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解码器。
-不能把 YOLO26 制品交给 DFL 解码器，也不能根据输出序号猜协议。当前代表
-性板卡证据覆盖 YOLOv8n、YOLO26n 检测，不代表所有尺寸或任务。
+不能把 YOLO26 制品交给 DFL 解码器，也不能根据输出序号猜协议。
 
 已注册的模型系列与解码协议：
 
@@ -139,7 +138,7 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 <a id="results"></a>
 ## 输出结果
 
-退出码 0 表示命令完成；空检测列表仍可能是有效结果，不等于模型失败。detect/seg/pose/obb 输出由 `--img-save-path` 指定，CLI 会创建父目录并打印 `[Saved]`；已有同名结果会被覆盖。cls 只打印分类，不写结果图。阶段接口不负责绘制或保存。
+退出码 0 表示命令完成；空检测列表仍可能是有效结果，并非模型失败。detect/seg/pose/obb 输出由 `--img-save-path` 指定，CLI 会创建父目录并打印 `[Saved]`；已有同名结果会被覆盖。cls 只打印分类，不写结果图。阶段接口不负责绘制或保存。
 
 | 任务 | `predict` 返回值 | 坐标与含义 |
 |---|---|---|
@@ -149,12 +148,12 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 | cls | `(class_id, probability)` 列表 | Softmax 后按分数排序的 Top-K，不是原始 logits |
 | obb | 字典列表：`rrect`、`score`、`id` | `rrect=(cx,cy,w,h,angle)`；尺寸/中心在原图坐标中，角度为弧度 |
 
-单图绘制不是数据集精度或性能验证，完整评估见 [evaluator](../../evaluator/README_cn.md)。本地文件选择与发布范围见 [model](../../model/README_cn.md)。
+数据集精度与性能测量见 [evaluator](../../evaluator/README_cn.md)。本地文件选择与发布范围见 [model](../../model/README_cn.md)。
 
 <a id="integration-example"></a>
 ## 库接口
 
-可读的 DFL 检测流程在 `detect.py`（`YoloDetect`）；历史 `yolo_detect`
+可读的 DFL 检测流程在 `detect.py`（`YoloDetect`）；`yolo_detect`
 导入路径再导出同一批类。`predict` 接受本地图片路径或 BGR `uint8` 数组，
 且不会原地修改数组。在匹配的 S600 板卡上从仓库根目录执行下例，并先将
 模型路径替换为本地 YOLO11 检测制品：
@@ -195,15 +194,16 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
 `YoloDetect` 支持注入 runner，便于主机测试或接入其他运行时加载器。runner
 负责模型执行；图像几何、协议绑定、DFL 解码、按类别 NMS 和坐标还原由共用
 任务实现负责。`pre_process` / `forward` / `post_process` 是可读阶段方法的
-薄别名（同一实现）。`YOLO26Detect` 共用图片准备和 runner 流程，但使用经过审查
-的直接 LTRB 解码。历史 X5/S 模块保留旧类名和 tuple 形状并转发到维护入口。
+薄别名（同一实现）。`YOLO26Detect` 共用图片准备和 runner 流程，但使用
+直接 LTRB 解码。`yolo_detect` 导入路径再导出同一批类，`legacy.py` 提供
+`pre_process_with_transform` 并返回 `(tensors, transform)` 元组；两者都委托到同一套阶段实现。
 
 <a id="stage-io"></a>
 ## 代码流程
 
 `YoloDetect`（`detect.py`）和 `YOLO26Detect` 直接串联三个阶段，不保存“上一张图片”的 context。
 准备 B 不会覆盖 A 的几何信息；分别保留 prepared，并使用其对应 transform。SDK 调用仍需
-由调用方串行安排；逐调用 context 不代表 SDK 推理线程安全。
+由调用方串行安排；逐调用 context 不提供 SDK 推理的线程安全保证。
 所有任务类 —— 检测、分类、分割、姿态、OBB，DFL 与 YOLO26 两族 —— 的阶段
 统一命名为 `preprocess` / `infer` / `postprocess`，
 `pre_process` / `forward` / `post_process` 为薄别名（每个阶段只有一个实现，
@@ -211,14 +211,14 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
 
 - `preprocess(图片或路径, image_format="BGR")`（别名 `pre_process`）要求非空 uint8 H×W×3 BGR 或可读的本地图片路径，返回 `PreparedDetection.tensors` 和冻结的 `.transform`。后者包含原图/模型/实际缩放尺寸、整数 padding 与横纵缩放比例。X5 张量为 packed NV12；S 为 Y `(1,H,W,1)` 和 UV `(1,H/2,W/2,2)`，H/W 来自模型 metadata。
 - `infer(prepared)`（别名 `forward`）只调用一次 runner，返回以角色名索引的 `RawOutputs`。绑定的 runner 校验物理 shape、dtype 和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK dtype，借用 SDK 缓冲区；须先完成后处理再发起下一次 SDK 调用，或主动复制需要长期保留的原始数组。
-- `postprocess(raw, transform=prepared.transform)`（别名 `post_process`）进行 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。所有维护的检测、DFL 分割/姿态绑定均要求模型直接提供浮点输出；整数或 SCALE metadata 在加载时拒绝，后处理不执行手动反量化。
+- `postprocess(raw, transform=prepared.transform)`（别名 `post_process`）进行 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。检测与 DFL 分割/姿态绑定均要求模型直接提供浮点输出；整数或 SCALE metadata 在加载时拒绝，后处理不执行手动反量化。
 - `predict(图片或路径)` 串联这些方法并返回自有结果数组。注入 runner 返回普通语义映射时，数值须已是浮点；物理浮点输出使用绑定后的 raw 容器。
 
 可执行兼容方式：prepared 仍支持 `[model_name]` 映射访问，`infer`/`forward(prepared)` 会取出
-`.tensors`；`legacy.py` 中的 `pre_process_with_transform` 仍返回旧 `(tensors, transform)`
+`.tensors`；`legacy.py` 中的 `pre_process_with_transform` 返回 `(tensors, transform)`
 元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
-时必须一致。原 `last_transform`/`last_image_transform` 属性已移除，请保留 prepared。
-DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下文；原生实现与板端验证单独记录。
+时必须一致。逐图几何保存在 prepared 对象上，没有实例级的 last-transform 属性。
+DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下文。
 
 ```text
 main.py
@@ -231,9 +231,9 @@ main.py
   -> DetectionResult -> yolo_cli.present_result -> --img-save-path
 ```
 
-`model_binding.py` 按审查过的形状/类型契约识别输出角色，编译器枚举名称
+`model_binding.py` 按既定形状/类型契约识别输出角色，编译器枚举名称
 只是物理名称。`geometry.py` 记录实际整数缩放和 padding，使框还原使用
-同一个变换。有限检测协议和旧新符号对应见
+同一个变换。检测张量协议见
 [`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md)。
 
 <a id="segmentation-api"></a>
@@ -282,7 +282,7 @@ uint8 H×W×3；`postprocess`（别名 `post_process`）接收 `prepared.transfo
 有限输出协议为 stride 8/16/32 的 NHWC 类别 logits `(1,H/s,W/s,C)`、DFL 框
 logits `(1,H/s,W/s,64)`、系数 `(1,H/s,W/s,32)`，以及 stride-4 原型
 `(1,H/4,W/4,32)` 或 `(1,32,H/4,W/4)`；要求发布模型所用的方形输入。
-按 shape 或显式审查的 `DFLSegmentationContract(output_roles=...)` 绑定角色，
+按 shape 或显式声明的 `DFLSegmentationContract(output_roles=...)` 绑定角色，
 不依赖输出枚举顺序。缺失、错误或歧义 metadata、非有限张量、所有整数输出
 均拒绝；模型须直接提供浮点张量，后处理只转换 NCHW 原型布局，不做反量化。
 注入的普通角色映射须已是有限浮点 NHWC 数组。
@@ -292,14 +292,14 @@ logits `(1,H/s,W/s,64)`、系数 `(1,H/s,W/s,32)`，以及 stride-4 原型
 uint8 **ROI mask**，不是全图 mask。值为 0/1，每个 mask 高宽为
 `max(int(y2)-int(y1),0)` × `max(int(x2)-int(x1),0)`。空结果保留数组维度/类型，
 `masks=[]`；退化 ROI 保留每个为零的轴，不人为补成 1 像素，始终与对应框配对。
-保留源代码的系数/原型点积阈值 `>0.5`、Lanczos 缩放及可选 5×5 开运算
-（`do_morph=True`），不据此声明等同于上游 Ultralytics 全图 mask 评测。
+解码使用系数/原型点积阈值 `>0.5`、Lanczos 缩放及可选 5×5 开运算
+（`do_morph=True`）。返回的 mask 是逐框 ROI；上游 Ultralytics 的全图 mask
+评测是另一种口径。
 可选开运算结束后，将 Lanczos 过冲统一转回 0/1，保持前景范围不变。
 置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]` 内有限值。
 
 坐标还原使用实际整数缩放/padding；原型切片先裁至可见图片内容，避免负坐标从另一侧索引，也排除
-letterbox padding。主机夹具覆盖上述边界修正；重复 S 分支的量化对照属于已退役的历史证据。
-这些证据不能证明板端精度、真实 SDK 兼容性、延迟或数据集指标；相应验证仍 not-run。
+letterbox padding。板端精度、SDK 兼容性、延迟与数据集指标需按评估指南另行测量。
 
 <a id="pose-api"></a>
 ## DFL 姿态库接口
@@ -348,10 +348,8 @@ print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
 稳定 sigmoid；已经是概率，不要再次 sigmoid，也不要按 logits 的零阈值判断可见性。
 示例的 0.5 只用于调用方可见性筛选，不改变返回的坐标或删掉关键点。
 
-X5 旧类名适配器仍返回 `(boxes, scores, keypoints)`，最后一项为 `(N,17,3)`
-x/y/概率。S 独立 YOLO11Pose 的 logits 返回接口已取消收编，不提供额外兼容模式。
-主机测试对照固定 X5 源码的四组尺寸/缩放案例，并覆盖交错 context、NMS 配对、
-空结果、极端 logits 和缓冲区复用；这些均不是板测或数据集精度验证。
+X5 兼容适配器返回 `(boxes, scores, keypoints)`，最后一项为 `(N,17,3)`
+x/y/概率。不提供独立的 S YOLO11Pose logits 返回接口。
 
 <a id="classification-api"></a>
 ## 分类阶段接口
@@ -390,24 +388,24 @@ print(ranked)
 完成后处理，或显式复制需要保存的 raw 数组。必须恰好有一个输出：1000 类向量及可选
 单例维度，例如 `(1,1000)`、`(1,1000,1,1)`；多维输出的首维 batch 必须为 1。
 额外输出、空间特征图、批输入、缺失
-shape/dtype metadata、整数输出和 SCALE 描述均拒绝。这项更严格的 SDK 边界尚未板测。
+shape/dtype metadata、整数输出和 SCALE 描述均拒绝。
 
-`postprocess`（别名 `post_process`）执行一次 SciPy Softmax 和源代码的 NumPy 降序排序，返回独立的
-Python `(int 类别 ID, float 概率)` 列表。精确平局沿用原排序行为，不新增确定性规则。
-Top-K 必须是正整数（不能是布尔值），超过类别数则返回全部类别。零、负数和非整数
-现在明确报错，不再接受 Python 切片的隐含行为。阶段内部不加载标签、不绘图、不写文件；
+`postprocess`（别名 `post_process`）执行一次 SciPy Softmax 和 NumPy 降序排序，返回独立的
+Python `(int 类别 ID, float 概率)` 列表。精确平局保持 NumPy 排序顺序。
+Top-K 必须是正整数（不能是布尔值），超过类别数则返回全部类别；零、负数和非整数
+值会报错。阶段内部不加载标签、不绘图、不写文件；
 CLI 负责加载 ImageNet 标签并打印结果。
 
 库接口所有系列/目标默认拉伸（`resize_type=0`）；CLI 对 X5 YOLOv8/11 分类显式
 选择 letterbox，对 S 选择拉伸，YOLO26 全目标拉伸。比较库和 CLI 时须统一该参数。
-主机测试实际执行固定 X5/S 源代码的前后处理，并使用合成输入对照，不代表数据集精度。
+数据集精度按评估指南测量。
 
 <a id="v10-api"></a>
 ## S 系列 YOLOv10 不执行 NMS
 
 S 系列 YOLOv10 复用 DFL 检测器的三阶段，绑定契约固定 `nms="none"`。
-CLI 对 S100/S100P/S600 的 v10 选择该适配器；X5 v10 保留源代码的 DFL + NMS 路径。
-不能因为模型都叫 YOLOv10，就用 S 适配器替换 X5 的分派逻辑。
+CLI 对 S100/S100P/S600 的 v10 选择该 `nms='none'` 适配器；X5 v10 走 DFL 解码加
+按类别 NMS 的路径。两个分派按平台选择，互不通用。
 
 在匹配的 S600 板卡上，先按[模型准备](../../model/README_cn.md)获取制品，
 替换下例绝对路径，再从仓库根目录运行：
@@ -451,9 +449,8 @@ transform、拥有独立存储的 `(boxes, scores, class_ids)` 结果与共用�
 `score_thres` 使用共用检测器的有限 `[0,1]` 范围：零保留所有有限 logits 的 anchor，
 一不保留任何 anchor。
 
-与旧 S 代码相比，坐标还原使用实际取整后的缩放宽高及 padding，而非理想浮点比例。
-非正方形图片发生取整时，框坐标可能因此修正；测试区分了这一有意修改与无取整情形下
-的源代码等价结果。本次没有新增板端、真实 SDK、性能或数据集验证。
+坐标还原使用实际取整后的缩放宽高及 padding，而非理想浮点比例。
+非正方形图片发生取整时，框坐标按修正后的真实几何输出。
 
 <a id="yolo26-pose-api"></a>
 ## YOLO26 姿态阶段接口
@@ -502,14 +499,13 @@ raw 引用 SDK 缓冲区，下一次推理前完成后处理，或复制要保�
 五个返回值的形状/类型/存储所有权与 DFL 姿态相同：float32 `(N,4)` 框、float32
 `(N,)` 检测概率、int64 `(N,)` 类别、float32 `(N,17,2)` 点坐标、float32 `(N,17,1)`
 点概率。空结果保持维度。可见性只执行一次稳定 sigmoid；NMS 对框和骨架使用相同索引。
-坐标按实际取整缩放/padding 还原并裁到原图范围。X5 旧适配器仍返回含整数框的
-`{box, score, kpts}` 字典列表；S 旧适配器仍返回四元组，关键点合并为 `(N,17,3)`。
+坐标按实际取整缩放/padding 还原并裁到原图范围。X5 兼容适配器返回含整数框的
+`{box, score, kpts}` 字典列表；S 兼容适配器返回四元组，关键点合并为 `(N,17,3)`。
 
-库的 NMS 默认仍为 0.65；CLI 的 X5 默认 0.70、S 默认 0.45，本例显式对齐 S CLI。
-置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。旧 S helper 会把置信度静默夹到
-`[1e-6,1-1e-6]`，现在严格使用传入的有效阈值。该修改、实际取整几何和极端 logits
-的稳定 sigmoid 均为有意修正，不声称所有输入逐位等价。主机测试实际运行两侧固定源
-解码器及 X5 兼容适配器；真实 SDK、板端推理和数据集指标在此仍未验证。
+库的 NMS 默认为 0.65；CLI 的 X5 默认 0.70、S 默认 0.45，本例显式对齐 S CLI。
+置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。置信度阈值严格按传入值使用；
+配合实际取整几何和极端 logits 的稳定 sigmoid，存在取整的输入按修正后的
+几何输出坐标。板端推理与数据集指标按评估指南测量。
 
 <a id="yolo26-segmentation-api"></a>
 ## YOLO26 分割阶段接口
@@ -562,23 +558,20 @@ raw 引用 SDK 缓冲区，下一次推理前完成后处理或复制 raw。结�
 `(N,4)` 框、float32 `(N,)` 分数、int64 `(N,)` 类别和**布尔** ROI mask 列表。
 对已裁到原图的每个框取 `x1,y1,x2,y2 = box.astype(int)`，即可把对应 mask 放到
 原图大小空白数组的 `[y1:y2,x1:x2]`。退化 ROI 为 `(0,0)`；无检测结果保持
-`(0,4)/(0,)/(0,)/[]`。X5 旧适配器仍返回布尔 `(N,H,W)` 整图 mask，并新增显式
-transform 支持；S 旧接口返回 ROI mask。统一入口在所有目标上均返回 ROI。
+`(0,4)/(0,)/(0,)/[]`。`YOLO26Seg.predict` 的结果在每个目标上均为 ROI mask；X5 兼容适配器
+返回布尔 `(N,H,W)` 全图 mask 堆叠，S 兼容适配器返回逐框 ROI mask。
 
-置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。库 NMS 默认仍为 0.65；CLI 显式
-传 X5 0.70 或 S 0.45。共用解码器不再静默夹紧有效置信度阈值，并在 sigmoid 前从
-logits 选类别，避免大 logits 饱和导致类别改变；mask 使用稳定 sigmoid 和实际取整
-几何。原 X5 源代码把原型比例写死为 640，且缩放 mask 时未去除 letterbox padding；
-此前统一路径已采用 S 侧修正，本次继续保留。测试明确展示源差异，不声称所有 X5 mask
-完全相同。源代码对照、边界/NMS/空结果夹具和 README 示例均为主机验证，不代表真实
-SDK、板端或数据集验收。
+置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。库 NMS 默认值为 0.65；CLI
+传入 X5 0.70 或 S 0.45。解码器使用指定的有效置信度阈值，在 sigmoid 前从
+logits 选择类别；mask 使用稳定 sigmoid，依据实际取整后的缩放尺寸及 padding
+还原到原图。数据集精度测量见[评估指南](../../evaluator/README_cn.md)。
 
 <a id="yolo26-obb-stages"></a>
 ## YOLO26 旋转框三阶段
 
 在 S600 板上从仓库根目录运行，先按[模型准备](../../model/README_cn.md)获取
 OBB 制品并替换本地路径。随附 bus 图片仅演示 API 调用，不是航拍目标基准图，
-也不代表应该检测到某个目标。
+也没有预期必须检出的目标。
 
 ```python
 from pathlib import Path
@@ -622,7 +615,7 @@ for record in records:
 SCALE 量化描述、错误形状/类型及非有限值。LTRB 距离取绝对值。
 `angle_sign` 乘到角度上；`angle_offset` 使用**度**，转换后相加。
 默认 `regularize=True`，宽小于高时交换宽高并将角度加 π/2。
-维护中的导出器已经输出弧度，不再使用旧 S 独立代码的 sigmoid 角度解码。
+导出器输出弧度角度。
 
 | 行为 | X5 | S100 / S100P / S600 |
 | --- | --- | --- |
@@ -631,20 +624,18 @@ SCALE 量化描述、错误形状/类型及非有限值。LTRB 距离取绝对�
 | 还原后的中心及宽高 | 分别裁剪到原图宽高范围 | 不裁剪 |
 
 库默认置信度 0.25、NMS 0.2、letterbox 缩放。置信度必须为 `(0,1)` 内有限值，
-NMS 为 `[0,1]` 内有限值，角度参数必须有限。OpenCV 求交异常现在向调用者报告，
-不再静默当成零重叠。逆变换使用实际整数填充和逐轴缩放，修正取整后的 letterbox
-坐标；保留原接口逐轴缩放宽高、保持角度的方式。因此 X/Y 比例不同时返回的是
+NMS 为 `[0,1]` 内有限值，角度参数必须有限。OpenCV 求交异常会向调用者报告，
+不会静默当成零重叠。逆变换使用实际整数填充和逐轴缩放，修正取整后的 letterbox
+坐标；宽高逐轴缩放、角度保持不变。因此 X/Y 比例不同时返回的是
 **近似旋转矩形**，不是精确变换后的多边形。
 
-主机测试对照重构前统一代码的平台策略和不产生缩放取整误差的几何，并单独验证
-整数几何修正。这些测试及示例的模拟运行时执行不代表真实 SDK、板端推理或
-DOTA 数据集精度已经验证。
+使用上述任务模型类和张量契约。核对 OBB 几何时，保持输入尺寸、缩放策略和模型顺序 DOTA 标签与推理配置一致。
 
 <a id="troubleshooting"></a>
 ## 故障排查
 
 * **无法导入 `hbm_runtime`：** 使用匹配的 RDK 板端系统镜像并检查 Python
-  模块路径。主机 OpenExplore 工具链不等于板端运行时。
+  模块路径。主机 OpenExplore 工具链并非板端运行时。
 * **板卡未知或目标不匹配：** 在板端省略 `--platform`，或传入真实目标；
   参数不能覆盖未知硬件身份。
 * **找不到模型：** 用 `--list-models` 查看精确 Manifest 引用，用
@@ -661,5 +652,4 @@ DOTA 数据集精度已经验证。
 完整参数请执行 `python samples/vision/ultralytics_yolo/runtime/python/main.py --help`。`--help`、`--dry-run`、
 `--list-models`、`--download` 是不执行板端推理的路径。
 
-
-维护入口已取消重复的 S 独立版本，见 [范围与输出要求](../../model/README_cn.md#maintained-scope)。
+模型清单不包含重复的 S 独立版本，见 [范围与输出要求](../../model/README_cn.md#maintained-scope)。

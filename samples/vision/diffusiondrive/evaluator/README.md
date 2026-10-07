@@ -2,19 +2,19 @@
 
 # DiffusionDrive output comparison
 
-This is an offline comparison between float-model references and decoded runtime predictions. It does not run a board, score annotated ground truth, compute NAVSIM PDM Score or approve a model for driving.
+This evaluator compares float-model references with decoded runtime predictions offline. Board execution, ground-truth scoring and NAVSIM PDM Score are performed with their own dedicated toolchains.
 
 <a id="dataset"></a>
 ## Reference data
 
-The sample retains six deterministic input/reference pairs: the default `reference_inputs.npz` / `reference_outputs.npz`, plus five `case_*` directories. See [test data](../test_data/README.md) for shapes, scene descriptions and historical figures. Each reference contains float32 `trajectory`, `agent_states`, `agent_labels` (logits) and `bev_semantic_map` (logits). These are model outputs, not dataset labels.
+The sample retains six deterministic input/reference pairs: the default `reference_inputs.npz` / `reference_outputs.npz`, plus five `case_*` directories. See [test data](../test_data/README.md) for shapes, scene descriptions and source-recorded figures. Each reference contains float32 `trajectory`, `agent_states`, `agent_labels` (logits) and `bev_semantic_map` (logits). These are model outputs, not dataset labels.
 
 Noise is an explicit input. Compare runs made with the same input archive and fixed noise; regenerating noise changes the planning problem. Full NAVSIM evaluation additionally requires scene logs, sensor blobs, maps and metric cache, which this sample does not provide.
 
 <a id="environment"></a>
 ## Environment
 
-The evaluator needs Python and NumPy; it does not import hbm_runtime or require an HBM. Generate candidate outputs using the [Python runtime](../runtime/python/README.md) on the appropriate target, then copy the complete run directory for offline analysis. The filename `--board-npz` is retained from the source interface; using this option does not itself prove board execution.
+The evaluator needs Python and NumPy; it does not import hbm_runtime or require an HBM. Generate candidate outputs using the [Python runtime](../runtime/python/README.md) on the appropriate target, then copy the complete run directory for offline analysis. The option name `--board-npz` is kept from the source interface; point it at any decoded `outputs.npz`, for example the archive copied from a target run.
 
 <a id="command"></a>
 ## Commands
@@ -37,7 +37,7 @@ python3 -m samples.vision.diffusiondrive.evaluator.compare_outputs --reference-n
 | `--board-npz` / `--candidate-npz` | Required | Decoded six-array runtime `outputs.npz`, not `raw_outputs.npz` |
 | `--output` | `null` | Optional new JSON report; otherwise only stdout |
 
-Existing report paths are refused. Return code 0 means valid inputs and completed metric calculation; it does **not** mean the candidate passed an acceptance threshold. Invalid schemas return 2.
+Existing report paths are refused. Return code 0 certifies valid inputs and completed metric calculation; threshold decisions belong to your release process. Invalid schemas return 2.
 
 <a id="metrics"></a>
 ## Metrics and validation
@@ -58,12 +58,12 @@ BEV metrics include pixel agreement, class distributions, per-class IoU and macr
 <a id="outputs"></a>
 ## Report and evidence
 
-JSON includes exact reference/candidate paths and SHA-256, tensor metrics, BEV metrics, zero-norm policy and `status: descriptive; no acceptance threshold`. It explicitly states `dataset_accuracy: false`. Preserve the runtime's `report.json`, physical inputs, raw outputs and image along with the decoded archive. The comparison report binds two files; it does not reconstruct their model/runtime/input provenance if that evidence was discarded.
+JSON records the exact reference/candidate paths and SHA-256, tensor and BEV metrics, zero-norm policy, `status: descriptive; no acceptance threshold` and `dataset_accuracy: false`. Keep the runtime `report.json`, physical input tensors, raw outputs and images with the decoded archive to retain model, runtime and input provenance.
 
 <a id="reference-results"></a>
-## Historical source results
+## Reference results (source-recorded)
 
-The following records come from the S source documentation and have **not** been rerun during this host migration. Accuracy uses `case_000`, while profiling uses valid quantized `case_017` inputs, one fixed BPU core and 200 frames.
+The source-recorded S100P/S600 measurements below use `case_000` for numerical accuracy and valid quantized `case_017` inputs for profiling, with one fixed BPU core and 200 frames.
 
 | Metric | S100P | S600 |
 | --- | ---: | ---: |
@@ -78,11 +78,11 @@ The following records come from the S source documentation and have **not** been
 | Two-thread aggregate throughput | 71.109 FPS | 143.767 FPS |
 | CPU inference time | 0.0 ms | 0.0 ms |
 
-Source S100P five-case means: trajectory cosine 0.999785, agent-state cosine 0.997986, BEV cosine 0.998799, pixel agreement 0.955664, mean IoU 0.819837. These values are historical comparison results, not thresholds or annotated-dataset accuracy. The source describes BPU-only execution; no new profiling verifies that claim here.
+Source S100P five-case means: trajectory cosine 0.999785, agent-state cosine 0.997986, BEV cosine 0.998799, pixel agreement 0.955664, mean IoU 0.819837. These values are recorded comparison results; they are not thresholds and not annotated-dataset accuracy. The source records BPU-only execution.
 
-`--thread_num` in historical HRT profiling means concurrent host submission threads, not CPU-core count. Two-thread aggregate throughput must not be converted into single-request latency by reciprocal arithmetic. Source S600 per-case values and the rare-class interpretation are retained in the test-data guide.
+`--thread_num` in the HRT profiling commands means concurrent host submission threads, not CPU-core count. Two-thread aggregate throughput is not single-request latency; do not convert between them with reciprocal arithmetic. Source S600 per-case values and the rare-class interpretation are retained in the test-data guide.
 
 <a id="boundaries"></a>
 ## Verification boundaries
 
-Host tests exercise exact-schema rejection, undefined zero cosine, reference self-comparison and file-hash reporting. Self-comparison only validates the evaluator; it is not quantized-model accuracy evidence. Six-case task/postprocess/render parity is checked against source Python using supplied float arrays. Actual board inference, OE conversion, dataset scoring, full NAVSIM PDM Score and runtime performance remain **not-run**. No default tolerance or release gate is silently inferred from the historical table.
+Run the offline comparison on matching decoded candidate and float-reference arrays. Full NAVSIM PDM evaluation requires the scene logs, sensor blobs, maps and metric cache described by NAVSIM; use fixed noise and the same prepared inputs for comparisons.

@@ -5,7 +5,7 @@
 
 使用目标板兼容的 Python、`hbm_runtime`、NumPy、OpenCV 和 PyYAML。
 仅真正推理时才加载 SDK。主机无需 SDK 即可列出制品、执行 `--dry-run`；
-这些操作不会下载模型，也不证明模型能在板上运行。
+这些操作不下载模型；能否在板上运行以实际加载为准。
 参阅[模型准备](../../model/README_cn.md)和[样例概览](../../README_cn.md)。
 
 <a id="usage"></a>
@@ -59,12 +59,12 @@ asset ID 可以推导其他变体。target、variant、asset ID 冲突会报错�
 成功时写入 `log_depth.npy`（192×192 float32）、`depth_native.npy`
 （原图高×宽 float32）、`depth.png`、`overlay.png` 和 `report.json`。
 Lite 模型另写 `raw_logit.npy`（192×192 float32）。深度为相对量，不是米。
-颜色沿用源实现的 2%/98% 分位范围和反向 TURBO，不代表精度指标。
+颜色沿用源实现的 2%/98% 分位范围和反向 TURBO，仅用于可视化；精度以数值指标为准。
 
 报告记录模型/图片摘要、模型选择、运行时元数据和 forward 耗时。耗时包含 runner
 校验与复制，不是纯 BPU 延迟，也不包含前后处理。未知运行时版本如实记为
 `unknown`。主机测试使用受控运行时替身；板端精度、真实 SDK 执行及数据集指标
-仍为 `not-run`。历史数字见[评测说明](../../evaluator/README_cn.md)。
+见[评测说明](../../evaluator/README_cn.md)中的源记录数字。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -91,7 +91,7 @@ print(details.warmup, details.latency_ms)
 
 `PreparedInput` 携带张量和不可变的单次调用几何上下文。`DepthResult` 携带
 `log_depth`、`depth_native`、可选 `raw_logit` 和对应上下文。
-`DepthPredictionDetails`（通过 `return_details=True` 显式开启）将结果与本次调用的
+`DepthPredictionDetails`（通过 `return_details=True` 显式开启）将结果与单次调用的
 prepared 输入、原始输出、warmup 次数和单次前向延时打包返回（延时含传输校验与
 输出拷贝，不含预处理/后处理）；默认 `predict` 仍返回普通 `DepthResult`，task
 不保存上一帧图像、输出或计时。
@@ -99,7 +99,7 @@ prepared 输入、原始输出、warmup 次数和单次前向延时打包返回�
 上下文，task 不保存“上一帧变换”。注入 runner 是主机测试接口，不是板测证明。
 CLI 单独设置调度参数；应用可在支持时调用
 `runner.set_scheduling_params(priority=0, bpu_cores=[0])`。
-归档源 API 及其内嵌计时改为三个阶段和 `predict`；计时、图片 IO、渲染归调用方。
+`predict` 串联三个阶段；计时、图片 IO 与渲染由调用方处理。
 
 <a id="stage-io"></a>
 ## 阶段契约
@@ -109,7 +109,7 @@ CLI 单独设置调度参数；应用可在支持时调用
 | `preprocess(image)` | 非空 BGR uint8 HWC → `PreparedInput` |
 | `infer(tensors)` | 按名称传入物理张量 → 未解码的单个 float32 SDK 输出 |
 | `postprocess(raw, context)` | 已绑定输出及匹配几何 → 拥有独立存储的相对深度数组 |
-| `predict(image)` | 顺序执行上述三个阶段一次；`warmup`/`return_details=True` 增加不计时预热前向并返回本次调用的 prepared/raw 数据、warmup 次数与单次前向延时 |
+| `predict(image)` | 顺序执行上述三个阶段一次；`warmup`/`return_details=True` 增加不计时预热前向并返回单次调用的 prepared/raw 数据、warmup 次数与单次前向延时 |
 
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
@@ -121,13 +121,13 @@ X5 全部变体及 S 的 `n/s/m` 使用 768×768 INTER_LINEAR letterbox，填充
 S 的 `l/x` 使用 INTER_LINEAR 直接拉伸、BGR→RGB、`/255`，得到 float32 NCHW
 `[1,3,768,768]`。输出是原始 logits：截断到 `[-4,5]`，乘 scale 1，加 bias
 `-0.2498779296875`（`l`）或 `-0.316650390625`（`x`），再 exp 并直接恢复尺寸。
-exp 和尺寸恢复在 CPU 执行。源文字声称它们在图内，与其导出/运行代码矛盾；
-根 README 链接的源审计记录了此问题。
+exp 和尺寸恢复在 CPU 执行；源文字称其在图内，但其自身的导出/运行代码在 CPU 执行——实际图边界以制品 metadata 为准。
+根 README 记录了此差异。
 
 元数据必须描述一个模型、一个输入和一个 float32 输出，输出形状为
 `[1,192,192,1]` 或 `[1,1,192,192]`。形状/类型错误、NaN/Inf、上下文不匹配、
-exp 溢出均报错。不要对已校准的 log depth 再套 lite 校准。task 隔离几何状态
-不等于 SDK runner 线程安全；除非 SDK 明确支持，否则共享 runner 的调用应串行。
+exp 溢出均报错。不要对已校准的 log depth 再套 lite 校准。task 隔离的是几何状态；
+SDK runner 的线程安全性以 SDK 说明为准，共享 runner 时请串行调用。
 
 <a id="troubleshooting"></a>
 ## 排查
@@ -137,5 +137,5 @@ exp 溢出均报错。不要对已校准的 log depth 再套 lite 校准。task 
 - **摘要不符：** 重新获取精确发布制品。主动转换应使用显式转换模式，不能把损坏下载
   改标为自转换来绕过检查。
 - **元数据不符：** 检查输入输出契约，改文件名不能修复布局或 raw/log 边界。
-- **输出已存在：** 换新目录，防止残留文件混入本次结果。
+- **输出已存在：** 换新目录，防止残留文件混入该次结果。
 - **图片无效/溢出：** 提供非空可解码 BGR 图片，并检查模型输出；无效值不会被静默裁剪。

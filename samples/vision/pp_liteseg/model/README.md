@@ -9,7 +9,7 @@ English | [简体中文](README_cn.md)
 | --- | --- | --- |
 | x5 | `pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin` | BIN, STDC1 Cityscapes inference |
 
-Exact asset-id: `x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`. Source: X5 model manifest (historical `../../../../platforms/x5/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md). No S-series assets or alternate variants are published.
+Exact asset-id: `x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`. Source: X5 model manifest. No S-series assets or alternate variants are published.
 
 <a id="preparation"></a>
 ## Preparation
@@ -24,7 +24,7 @@ If downloading fails, obtain the same file from the [published URL](https://arch
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-No external label file is needed: visualization.py contains the fixed Cityscapes 19-class names and palette. The two images in ../test_data are examples, not an accuracy dataset.
+No external label file is needed: visualization.py contains the fixed Cityscapes 19-class names and palette. The two images in../test_data are examples, not an accuracy dataset.
 
 <a id="local-paths"></a>
 ## Local paths

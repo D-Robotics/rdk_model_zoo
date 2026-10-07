@@ -18,13 +18,23 @@ source 文档描述了将 PyTorch `torchvision.models.video.r3d_18` 动作分类
 
 source 记录使用 RDK S 算法工具链 OpenExplorer 3.5.0 和 S100 目标。记录显示工具链支持 `Conv3D`，但不支持原始 3D `GlobalAveragePooling` 路径；因此将该 pooling 路径替换为等价的 2D `ReduceMean` 后再编译 HBM。
 
-当前 manifest 只发布 `s100/r3d_18.hbm`，不宣称 S100P、S600 或 x5 转换目标。
+当前 manifest 只发布 `s100/r3d_18.hbm`，不提供 S100P、S600 或 x5 转换目标。
 
-source 提到 x86 Linux OE Docker 环境。下面只保留历史环境提示，不把它描述为可复现的完整转换配方：
+模型转换在 x86 Linux 主机上的 RDK S100 OpenExplore 环境中执行，不在板卡上运行：
+
+- OE Docker 文档：<https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>
+- OE 工具链下载：<https://toolchain.d-robotics.cc/>
+
+从 OE Docker 文档下载 RDK S100/S100P 的 OpenExplore CPU Docker 镜像，然后加载镜像文件：
 
 ```bash
 sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
 sudo docker images
+```
+
+启动容器，挂载仓库并分配足够的共享内存用于编译：
+
+```bash
 sudo docker run -it --rm --network host --shm-size=15g \
   -v "$(pwd)":/workspace --workdir /workspace \
   <docker-image-name> /bin/bash
@@ -33,12 +43,12 @@ sudo docker run -it --rm --network host --shm-size=15g \
 <a id="export"></a>
 ## 导出
 
-source README 描述了 ONNX 导出的概念，但没有可执行导出脚本、Python 环境锁定、checkpoint 路径或可核对产物的命令。本迁移不杜撰这些内容，因此导出阶段**无法从仓库内容复现**，列为已知缺口。
+source README 描述了 ONNX 导出的概念，但没有可执行导出脚本、Python 环境锁定、checkpoint 路径或可核对产物的命令。因此导出阶段**无法从仓库内容复现**，列为已知缺口。
 
 <a id="calibration"></a>
 ## 校准
 
-没有校准数据集、样本数量、量化配置、校准命令或生成的校准制品。source 历史记录称多数算子相似度大于 0.99、最终量化相似度约为 0.99；这里仅保留 source 文字，不作为当前测量结果。
+没有校准数据集、样本数量、量化配置、校准命令或生成的校准制品。source 转换记录称多数算子相似度大于 0.99、最终量化相似度约为 0.99。
 
 <a id="compile"></a>
 ## 编译
@@ -61,15 +71,15 @@ bash samples/vision/3dresnet/model/download.sh s100
 ```bash
 # cwd：仓库根目录
 .venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# 预期：全部发现的测试通过，OK；不会执行 HBM 或板卡推理
+# 预期：全部发现的测试通过，OK（主机 fixture；无需板卡）
 ```
 
-S100 HBM smoke execution 和输出对照为 **not-run**。主机测试不证明转换精度、板卡兼容性或性能。
+在板端执行已下载制品时，使用 [Python runtime](../runtime/python/README_cn.md) 在 S100 板卡上运行；主机测试只覆盖预处理和 Top-K 解码行为。
 
 <a id="artifacts"></a>
 ## 产物
 
-| 产物 | Target | 准备后路径 | 状态 |
+| 产物 | Target | 准备后路径 | 可用性 |
 | --- | --- | --- | --- |
 | `r3d_18.hbm` | S100 | `model/s100/r3d_18.hbm` | 已发布/可下载；转换配方缺失 |
 
@@ -83,7 +93,6 @@ S100 HBM smoke execution 和输出对照为 **not-run**。主机测试不证明�
 - 没有 OE 编译 YAML、mapper 或产物生成命令。
 - 没有可复现的转换输出 hash；当前 HBM manifest SHA 为 `null`。
 - 没有 S100P、S600 或 x5 制品。
-- 本迁移没有板端验证。
 
 以下四张 source 转换截图继续保留：
 

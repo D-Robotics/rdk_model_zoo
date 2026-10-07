@@ -12,7 +12,7 @@ the SHA-256 helper and identity matching functions are header-only.
 | `rdk::sha256_hex(data, size)` | SHA-256 of exactly `size` readable bytes; lowercase 64-character digest; input is borrowed only during the call |
 | `rdk::sha256_file(path)` | Stream a regular file in 64 KiB blocks; empty string means open/read/type failure; an empty regular file has a valid nonempty digest |
 | `rdk::identify_target(NativeIdentity)` | Match observed strings; returns `x5`, `s100`, `s100p`, `s600`, or empty when unknown |
-| `rdk::read_native_identity()` | Read fixed local sysfs/device-tree files into owned strings; no SSH, networking, environment or CLI identity override |
+| `rdk::read_native_identity` | Read fixed local sysfs/device-tree files into owned strings; no SSH, networking, environment or CLI identity override |
 
 Identity matching follows [platforms.json](../../../docs/release/platforms.json)
 and the shared [Python implementation](../platforms.py). A nonempty SoC name

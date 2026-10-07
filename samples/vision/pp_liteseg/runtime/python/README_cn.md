@@ -35,7 +35,7 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --target x5 --test-img 
 | `--model-path` | Path | `None` | 默认 model/ 下 BIN，外部路径须提供 asset-id |
 | `--test-img` | Path | `samples/vision/pp_liteseg/test_data/street.png` | 按示例位置解析的绝对默认路径 |
 | `--output` | Path | `outputs/pp_liteseg/result.jpg` | 三面板图像 |
-| `--mask-save-path` | Path | `outputs/pp_liteseg/labels.npy` | int32 类别数组，必须使用 .npy 扩展名 |
+| `--mask-save-path` | Path | `outputs/pp_liteseg/labels.npy` | int32 类别数组，必须使用.npy 扩展名 |
 | `--report-path` | Path | `outputs/pp_liteseg/result.json` | JSON 记录 |
 | `--alpha` | float | `0.55` | 叠加权重，范围 [0,1] |
 | `--input-width` | int | `1024` | 固定编译宽度 |

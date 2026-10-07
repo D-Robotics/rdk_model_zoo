@@ -7,10 +7,10 @@ PTQ 量化与 HBM 编译在**开发 PC**上完成，不在板端执行。
 <a id="source-model"></a>
 ## 源模型与配方
 
-本目录保留固定 S 源提交 `380e1a2` 的 Gemma4-E2B 转换方案：原始权重、Gemma4 的 leap_llm 适配、
+本目录保留 S 源发布的 Gemma4-E2B 转换方案：原始权重、Gemma4 的 leap_llm 适配、
 Vision/Text 校准、PTQ 编译和验证工具。模型来源为 `google/gemma-4-e2b`；获取权重与访问条件按完整教程 §3.4 执行。
 本文命令从 `samples/llm/gemma4-e2b`（sample 根目录）运行，除非代码块显式切换目录。
-本次迁移仅优化教程组织，不重新执行量化方案。
+量化方案即教程自身流程；准备制品时在 OE 环境中执行。
 
 <a id="toolchain-targets"></a>
 ## 环境要求
@@ -82,8 +82,8 @@ TARGET_SOC=s600 bash conversion/scripts/compile/run_text_compile.sh
 Vision 脚本会校验 `images_coco_manifest.json`，拒绝合成图或未登记图片；Text
 编译沿用已有文本校准语料，不会自行生成替代 prompt。
 
-当前发布的 Text HBM 使用 `CHUNK_SIZE=256`、`CACHE_LEN=4096` 编译，本次
-交付不包含 8K/16K HBM。交互入口 `main` 的 `--max_tokens=0`（默认值）会
+当前发布的 Text HBM 使用 `CHUNK_SIZE=256`、`CACHE_LEN=4096` 编译，未发布
+8K/16K HBM。交互入口 `main` 的 `--max_tokens=0`（默认值）会
 自动使用 prompt 之后剩余的全部 KV 容量，因此无需重新编译 HBM，即可用满
 现有 4096-token 预算。
 
@@ -93,7 +93,7 @@ Vision 脚本会校验 `images_coco_manifest.json`，拒绝合成图或未登记
 
 ## 完整教程
 
-完整教程保留源流程；其中板端自动构建/启动描述以当前 [C++ README](../runtime/cpp/README_cn.md#build) 的显式准备、构建、运行步骤为准。量化配方本身不变。
+完整教程逐步讲解量化全流程；板端构建/启动步骤以当前 [C++ README](../runtime/cpp/README_cn.md#build) 的显式准备、构建、运行说明为准。
 
 含踩坑记录的逐步指南：
 
@@ -104,7 +104,7 @@ Vision 脚本会校验 `images_coco_manifest.json`，拒绝合成图或未登记
 ## 验证流程导航
 
 [评测说明](../evaluator/README_cn.md) 保留 PC 的 BC/浮点对照和板端 golden 输入对齐命令。
-完整教程说明精度观察和排查流程；这些是供使用者执行的方案，不是本次迁移的实测声明。
+完整教程说明精度观察和排查流程；这些方案由使用者在 OE 环境中执行。
 
 <a id="artifacts"></a>
 ## 输出制品
@@ -118,5 +118,4 @@ Vision 和 Text 分别输出到 `conversion/output/gemma4_e2b_vision_<target>/` 
 ## 使用边界
 
 配方原有前提不变：权重、SDK 与文本校准语料需提前准备；Vision 使用带清单的真实图像。
-转换支持某个目标不等于该目标存在公开 HBM（S100 仍需自备）。本次文档重构不以重新量化作为验收条件，
-也没有重新发布模型、扩大上下文规格或新增板测结论。源教程、脚本与历史示意图继续保留。
+该配方生成文档说明的 4096-token Vision/Text HBM。其他上下文长度需要使用匹配的 `CACHE_LEN` 重新编译，并在重建运行时前同步 `kChunkSize`/`kCacheLen`；详见[编译](../runtime/cpp/README_cn.md#build)。

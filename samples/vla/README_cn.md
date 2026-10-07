@@ -14,7 +14,6 @@
 
 `pi0/` 是第二个集成入口的名称，其仓库也包含 S600 ACT；只初始化 `act/` 不会获得 S600 ACT。
 
-
 ## 初始化准确源码
 
 在 Model Zoo 仓库根目录运行：
@@ -46,13 +45,9 @@ git submodule status -- samples/vla/act samples/vla/pi0
 - 初始化后可在本地阅读[上游 ACT README](act/README_CN.md) 与
   [S600 工具 README](pi0/README_CN.md)，完整代码、演示图和工作流文档均保留。
 
-本轮核对了提交、源码可获取性、文档路径与清单注册，未执行板端推理或机器人控制。
-上游历史测量保留原口径，未重跑量化方案。第三方仓库保留自身完整结构，不以不完整的
-Model Zoo 运行包装层替代。集成检查命令为
-`python -m unittest discover -s samples/_shared/tests -p test_vla_integration.py`。
+指南提供离线板端推理流程。实机控制按上游指南操作，并使用使用者提供的硬件和校准数据。
 
 ## 许可与修改
 
 两个固定版本均包含 Apache-2.0 [许可](act/LICENSE)，权重、数据集、厂商 SDK 和机器人硬件
-保留各自条款。修改子模块需要明确的新上游提交及父仓库 pin 更新。旧
-旧 `platforms/s/samples/vla/` 路径已随历史目录移除（固定提交 `d2d2a4e0`）；请初始化并使用上述统一路径。
+保留各自条款。更新子模块时需选择明确的上游提交并更新父仓库 pin。

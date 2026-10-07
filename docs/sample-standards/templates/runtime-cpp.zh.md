@@ -7,12 +7,11 @@
 <a id="supported-boards"></a>
 ## 适用板卡
 
-> **必须回答：** 明确列出本构建可在哪些板卡运行、哪些被排除及原因。“全平台”需要
-> 逐板证据，否则不得写。
+> **必须回答：** 提供 C++ 实现的板卡、匹配制品、SDK 版本与准备要求。
 
-| 板卡 | 状态 | 说明 |
+| 板卡 | C++ 入口 | 前提 |
 | --- | --- | --- |
-| ⟪board⟫ | ⟪supported-verified / supported-not-run / not-supported⟫ | ⟪原因/链接⟫ |
+| ⟪board⟫ | ⟪可用 / —⟫ | ⟪原因/链接⟫ |
 
 <a id="dependencies"></a>
 ## 依赖

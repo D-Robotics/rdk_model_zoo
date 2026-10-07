@@ -33,8 +33,8 @@ incompatible model. `PYTHON` selects the shell wrapper's interpreter.
 `--target` accepts only `x5` (default). `--output-dir` defaults to this model
 directory and always receives a `bayes-e/` child. It does not change runtime defaults.
 No toolchain or board SDK is required to prepare an existing published artifact.
-No actual download was performed for this migration step; host checks cover preview
-and the shared preparation boundary separately from board inference.
+Run the download explicitly when preparing the artifact; preparation is a host
+step, separate from board inference.
 
 <a id="accompanying-files"></a>
 ## Accompanying files

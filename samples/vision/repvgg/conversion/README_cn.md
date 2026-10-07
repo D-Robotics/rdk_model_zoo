@@ -3,12 +3,12 @@
 <a id="source-model"></a>
 ## 源模型
 
-源说明采用官方 RepVGG 训练权重，示例为 `create_RepVGG_B1g2(deploy=False)`，经 `repvgg_model_convert()` 后导出 ONNX。没有提供可执行导出脚本、源码修订、PyTorch 版本或权重摘要。训练形式权重必须先完成重参数化才能用于部署编译。
+按官方 RepVGG 流程加载训练权重，以 `create_RepVGG_B1g2(deploy=False)` 创建模型，并在 ONNX 导出前运行 `repvgg_model_convert`。构建时记录源码修订、PyTorch 版本与权重摘要。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-固定源 rdk_x5 @ac11571 的 6 份原样 YAML，X5 march 为 `bayes-e`，无 S 配方。源未固定 OE 版本，重建时须记录实际环境。
+6 份 YAML 面向 X5 `march: bayes-e`。构建时记录使用的 OE 版本。
 
 | Config | ONNX input path | Working directory | Compiled basename |
 | --- | --- | --- | --- |
@@ -19,10 +19,15 @@
 | `RepVGG_B1g2_config.yaml` | `./RepVGG-B1g2.onnx` | `RepVGG-B1g2_224x224_nv12` | `RepVGG-B1g2_224x224_nv12.bin` |
 | `RepVGG_B1g4_config.yaml` | `./RepVGG-B1g4.onnx` | `RepVGG-B1g4_224x224_nv12` | `RepVGG-B1g4_224x224_nv12.bin` |
 
+
+工具链资源:
+
+- [OE Docker environment](https://forum.d-robotics.cc/t/topic/35229)
+
 <a id="export"></a>
 ## ONNX 导出
 
-源说明采用官方 RepVGG 训练权重，示例为 `create_RepVGG_B1g2(deploy=False)`，经 `repvgg_model_convert()` 后导出 ONNX。没有提供可执行导出脚本、源码修订、PyTorch 版本或权重摘要。训练形式权重必须先完成重参数化才能用于部署编译。
+按官方 RepVGG 流程加载训练权重，以 `create_RepVGG_B1g2(deploy=False)` 创建模型，并在 ONNX 导出前运行 `repvgg_model_convert`。构建时记录源码修订、PyTorch 版本与权重摘要。
 
 本 sample 没有可执行且已验证的导出命令。须在上表路径准备匹配图，名义输入 RGB NCHW 1×3×224×224、输出 ImageNet-1k。YAML input_shape/input_name 为空，维度与名称从图读取，必须核对。
 
@@ -34,7 +39,7 @@
 <a id="compile"></a>
 ## 编译
 
-补齐缺失图与校准前提后，才可在 OE 中执行以下条件命令。本次迁移未运行。
+在 OE 环境内、补齐 ONNX 图与校准数据前提后执行：
 
 ```bash
 # cwd: repository root, then conversion directory
@@ -48,7 +53,8 @@ hb_mapper makertbin --model-type onnx --config RepVGG_A0_config.yaml
 <a id="validation"></a>
 ## 转换后验证
 
-状态 not-run。推理前核对 packed NV12 几何 224×224、squeeze 后为 (1000,) 的 F32 分数输出。首个变体示例：
+推理前核对 packed NV12 几何 224×224、squeeze 后为 (1000,) 的 F32
+分数输出。首个变体示例：
 
 ```bash
 # cwd: repository root on X5
@@ -66,6 +72,6 @@ python3 samples/vision/repvgg/runtime/python/main.py --target x5 \
 编译路径见上表，逐变体发布文件与目标见[模型准备](../model/README_cn.md#artifacts)，下载落在 sample model 目录。移动已验证构建时保留变体与来源，改名本身不是修复。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
-缺少固定框架/OE/权重、可执行导出、校准准备及转换/板端精度证据。YAML 与原许可声明逐字节保留。可使用发布制品下载，不声明端到端转换可复现。
+加载匹配的 RepVGG 训练权重，以 `deploy=False` 创建所选模型，并在 ONNX 导出前运行 `repvgg_model_convert`。将模型图导出至所选 YAML 路径，输入 RGB/NCHW 1×3×224×224、输出 ImageNet-1k；编译前检查输入名称与形状。按 mean `123.675/116.28/103.53` 和 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32` float32 RGB 数据。各 YAML 使用变体专属目录；部署文件按 Manifest 文件名保存。

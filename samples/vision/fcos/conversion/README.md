@@ -17,7 +17,7 @@
 | x5 / B2 768 | bayes-e | not recorded in source | no YAML in source |
 | x5 / B3 896 | bayes-e | not recorded in source | no YAML in source |
 
-The three PNG files in this directory are copied source `hb_perf` snapshots; they are evidence of historical documentation, not conversion output from this checkout. Each graph records the deployed dataflow of one published variant: the packed NV12 input is converted by a BPU `NV12TOYUV444` node into `YUV444, NHWC, INT8`, executes as `torch-jit-export_subgraph_0` on BPU, and emits fifteen INT32 outputs — five stride levels × three branches (80-channel classification scores, 4-channel box regression, 1-channel center-ness). This is the source output protocol: 5 classification, 5 box-regression, and 5 center-ness outputs, which the Python runtime reorders by their fixed tensor shapes before decoding; decode semantics are documented in the [runtime guide](../runtime/python/README.md).
+The three PNG files in this directory are copied source `hb_perf` snapshots documenting each published variant's deployed dataflow; the conversion output of this checkout is produced by the commands above. Each graph records the deployed dataflow of one published variant: the packed NV12 input is converted by a BPU `NV12TOYUV444` node into `YUV444, NHWC, INT8`, executes as `torch-jit-export_subgraph_0` on BPU, and emits fifteen INT32 outputs — five stride levels × three branches (80-channel classification scores, 4-channel box regression, 1-channel center-ness). This is the source output protocol: 5 classification, 5 box-regression, and 5 center-ness outputs, which the Python runtime reorders by their fixed tensor shapes before decoding; decode semantics are documented in the [runtime guide](../runtime/python/README.md).
 
 Reference graphs (verbatim source snapshots, not produced by this checkout):
 
@@ -46,8 +46,8 @@ rebuilding any artifact.
 ## Calibration
 
 - Dataset: not recorded; no calibration files or count are present.
-- Config: no FCOS YAML is present in the source tree.
-- Command: no reproducible calibration command exists in the fixed source.
+- Config: no FCOS YAML is present.
+- Command: no reproducible calibration command exists.
 
 <a id="compile"></a>
 ## Compile
@@ -59,7 +59,7 @@ No verified compile command is available. The source's `hb_mapper makertbin --mo
 <a id="validation"></a>
 ## Post-Conversion Validation
 
-On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --model_file <exact-file>` and run the runtime README command. Save the command output, raw fifteen tensor metadata, and result JSON under one UTC evidence directory. Conversion itself is not-run (no recipe exists, see known gaps); the published artifacts have been executed on X5 8GB/4GB boards by the [evaluator comparisons](../evaluator/README.md#reference-results), which cover runtime parity but not `hrt_model_exec` inspection or conversion reproducibility.
+On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --model_file <exact-file>` and run the runtime README command. Save the command output, raw fifteen tensor metadata, and result JSON under one UTC evidence directory. The [evaluator](../evaluator/README.md#reference-results) additionally provides recorded board parity runs of the published artifacts.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -75,4 +75,4 @@ On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --
 
 - No checkpoint, ONNX export, calibration data, quantization YAML, toolchain version, or reproducible source compile pipeline is present.
 - Manifest publisher hashes are unknown. The three source screenshots cannot establish tensor values or numerical equivalence.
-- Rebuilding is therefore outside the verified boundary; what is reproducible here is the runtime protocol, the host fixture, and same-board parity of the published artifacts (2026-09-24 evidence linked from the sample README).
+- Rebuilding the artifacts from this repository is therefore not possible; what is reproducible here is the runtime protocol, the host fixture, and the recorded board parity of the published artifacts (evidence linked from the sample README).

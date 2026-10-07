@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源模型为 OpenBMB/MiniCPM5-2B，固定 revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`（Apache-2.0）。保留原始权重/config/tokenizer，外部适配器负责 SDK 接入。以下为源配方整理，本轮不执行下载、校准、编译或精度验证。所有代码块依次在同一 shell 环境使用，除非另有目录说明。
+源模型为 OpenBMB/MiniCPM5-2B，固定 revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`（Apache-2.0）。保留原始权重/config/tokenizer，外部适配器负责 SDK 接入。以下为源配方整理。所有代码块依次在同一 shell 环境使用，除非另有目录说明。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
@@ -28,7 +28,7 @@ export PYTHONNOUSERSITE=1
 export PYTHONPATH="$PWD:$PWD/llm_compression/lightcompress${PYTHONPATH:+:$PYTHONPATH}"
 ```
 
-按包内环境文档第7节进行完整验证，覆盖 torch 实际运算、plugins、compiler、hbm-infer 和 CUDA 实际计算，不能只检查 import。若有 .skillshare，按包内说明安装CLI（本次0.20.21），补充尚不存在的 claude/cursor/opencode target，再执行 skillshare sync 和 skillshare status；量化优先使用包内 drobotics skills。保持 deps_version.conf 不变，切换镜像不能改变固定依赖版本。
+按包内环境文档第7节进行完整验证，覆盖 torch 实际运算、plugins、compiler、hbm-infer 和 CUDA 实际计算，不能只检查 import。若有.skillshare，按包内说明安装CLI（本次0.20.21），补充尚不存在的 claude/cursor/opencode target，再执行 skillshare sync 和 skillshare status；量化优先使用包内 drobotics skills。保持 deps_version.conf 不变，切换镜像不能改变固定依赖版本。
 
 已验证版本：torch2.8.0+cu128，horizon-plugin-pytorch3.3.5+cu128.torch280，profiler3.3.5，HBDK4 compiler/march4.11.7a2.dev202607040356+dcaae33.develop，hbm-infer3.15.3。校准使用CUDA；编译是CPU任务，入口会在编译阶段隐藏CUDA。编译中间文件可能超过数十GB，应在SDK安装空间之外预留足够磁盘。
 
@@ -68,7 +68,7 @@ python "$SAMPLE/conversion/main.py" compile --config_path "$WORK/output/s600.yam
 <a id="validation"></a>
 ## 验证与参考结果
 
-前文已给出浮点和假量化 torch_eval 命令；完整 HBM 评估入口与原始记录见 [evaluator](../evaluator/README_cn.md)。需要分别报告数学一致性、完整性与相对 PPL，不用单段检查替代 140 段全量结果。本轮按源配方整理，不执行这些命令。
+前文已给出浮点和假量化 torch_eval 命令；完整 HBM 评估入口与原始记录见 [evaluator](../evaluator/README_cn.md)。需要分别报告数学一致性、完整性与相对 PPL，不用单段检查替代 140 段全量结果。
 
 <a id="artifacts"></a>
 ## 部署文件打包
@@ -91,4 +91,4 @@ TRAIN 和 TEST 分开下载并固定校验和。TRAIN 仅因SDK按 test-*.parque
 
 独立的 SDK 1.0.0 / leap_llm 编译流程见 [legacy 转换说明](legacy/README_cn.md)。上文 2.0 配置仅用于 S600。
 
-预编译资产仍按 [model](../model/README_cn.md) 的固定摘要选用；重新编译的产物不能借用历史板测结果。S100/S100P 的完整精度结论为未达到 ≤3% 相对 PPL 目标，不能用 S600 数字代替。配方未重跑不作为本轮文档迁移阻塞项。
+预编译资产按 [model](../model/README_cn.md) 的固定摘要选用。S100/S100P 的完整精度结论为未达到 ≤3% 相对 PPL 目标，不能用 S600 数字代替。公开指标只对应提供的归档；重建制品按本页配方执行并重新评估后再部署。

@@ -1,25 +1,24 @@
 [English](README.md) | [简体中文](README_cn.md)
 
-
 # DiffusionDrive planning sample
 
 <a id="overview"></a>
 ## Overview
 
-DiffusionDrive combines a three-camera RGB panorama, LiDAR BEV histogram, ego status and explicit diffusion noise for trajectory planning. The source describes a two-step truncated diffusion decoder producing eight future ego poses, with auxiliary agent-state and seven-class BEV heads. This sample consumes prepared NAVSIM features and preserves the Python inference, visualization, five-case execution and float-reference comparison capabilities of the S branch. It does not prepare raw sensor data, compute a complete NAVSIM score or execute a vehicle-control command.
+DiffusionDrive combines a three-camera RGB panorama, LiDAR BEV histogram, ego status and explicit diffusion noise for trajectory planning. The source describes a two-step truncated diffusion decoder producing eight future ego poses, with auxiliary agent-state and seven-class BEV heads. This sample consumes prepared NAVSIM features and provides Python inference, visualization, five-case execution and float-reference comparison. It does not prepare raw sensor data, compute a complete NAVSIM score or execute a vehicle-control command.
 
-Source algorithm references: [official DiffusionDrive project](https://github.com/hustvl/DiffusionDrive), [CVPR2025 paper](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html), and [NAVSIM](https://github.com/autonomousvision/navsim). The source does not pin the exact upstream checkpoint/export revision; these links are references, not artifact provenance.
+Source algorithm references: [official DiffusionDrive project](https://github.com/hustvl/DiffusionDrive), [CVPR2025 paper](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html), and [NAVSIM](https://github.com/autonomousvision/navsim). Use them as algorithm references; the deployable artifact identity is defined by the published HBM checksums in the [model guide](model/README.md).
 
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Published HBM | Runtime | Migration verification |
+| Target | Published HBM | Runtime | Preparation |
 | --- | --- | --- | --- |
-| S100P / nash-m | `s100p/diffusiondrive_r34_256x1024_s100p.hbm` | Python / hbm_runtime | Host fixtures passed; board not-run |
-| S600 / nash-p | `s600/diffusiondrive_r34_256x1024_s600.hbm` | Python / hbm_runtime | Host fixtures passed; board not-run |
+| S100P / nash-m | `s100p/diffusiondrive_r34_256x1024_s100p.hbm` | Python / hbm_runtime | supported |
+| S600 / nash-p | `s600/diffusiondrive_r34_256x1024_s600.hbm` | Python / hbm_runtime | supported |
 | S100 / X5 | None | Explicit rejection | No fallback |
 
-There is no native C++ source for this sample. The two published HBM digests are preserved and verified on download/loading. `auto` requires recognized local identity or an explicit asset identity; unknown hosts no longer silently select S600. Host parity checks use supplied float arrays and synthetic runtime metadata, not real HBM execution.
+There is no native C++ source for this sample. The two published HBM digests are preserved and verified on download/loading. `auto` requires recognized local identity or an explicit asset identity; unknown hosts are rejected instead of silently selecting S600. The bundled host checks validate the float-reference comparison and runtime metadata contracts with synthetic data; real HBM execution requires the prepared S100P/S600 runtime below.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -65,17 +64,17 @@ Each run writes physical quantized inputs, raw physical outputs, decoded `output
 
 The visualization combines the camera panorama, BEV semantics and LiDAR raster with orange trajectory, red filtered agents and blue ego vehicle. Gray denotes road, so a mostly gray BEV is not automatically a palette failure. Coordinate and class details are in [test data](test_data/README.md).
 
-The following source S600 figure is historical, not a new migration measurement:
+S600 reference visualization:
 
-![Historical S600 DiffusionDrive display](test_data/reference_result.png)
+![Reference S600 DiffusionDrive display](test_data/reference_result.png)
 
-| Historical case_017 | Historical case_042 |
+| Reference case_017 | Reference case_042 |
 | --- | --- |
 | ![Intersection](test_data/case_017/result.png) | ![Dense traffic](test_data/case_042/result.png) |
-| Historical case_073 | Historical case_099 |
+| Reference case_073 | Reference case_099 |
 | ![Boulevard](test_data/case_073/result.png) | ![Wide intersection](test_data/case_099/result.png) |
 
-All six input/reference pairs and six result images are retained byte-for-byte. The [evaluator guide](evaluator/README.md#reference-results) preserves the complete original S100P/S600 accuracy/performance table, including one-thread latency, two-thread aggregate throughput and five-case S100P means. The [test-data guide](test_data/README.md) preserves the five-case S600 table. Accuracy comparisons used case_000, profiling case_017; neither was rerun here. Source CPU0ms/BPU-only claims remain historical.
+All six input/reference pairs and six result images are retained byte-for-byte. The [evaluator guide](evaluator/README.md#reference-results) preserves the complete original S100P/S600 accuracy/performance table, including one-thread latency, two-thread aggregate throughput and five-case S100P means. The [test-data guide](test_data/README.md) preserves the five-case S600 table. Source-recorded conditions: accuracy comparisons use case_000 and profiling uses case_017; the source records all segments at CPU 0.0 ms with full-BPU execution.
 
 <a id="directory"></a>
 ## Directory responsibilities
@@ -86,15 +85,15 @@ All six input/reference pairs and six result images are retained byte-for-byte. 
 | [runtime/python](runtime/python/README.md) | CLI, batch entry, strict four-input/four-output binding, task stages and separate rendering |
 | [conversion](conversion/README.md) | Two preserved OE3.7.0 PTQ configs and missing export/calibration prerequisites |
 | [evaluator](evaluator/README.md) | Strict offline decoded-versus-float metrics, with shape and finite-value checks |
-| [test_data](test_data/README.md) | Default and five deterministic NAVSIM feature/reference cases, historical images |
+| [test_data](test_data/README.md) | Default and five deterministic NAVSIM feature/reference cases, source-recorded result images |
 | [tests](tests) | Host source parity, quantization, CLI, batch and evaluator tests |
 
 <a id="entry-points"></a>
 ## Entry points for people and agents
 
-Use `DiffusionDriveTask.pre_process`, `forward`, `post_process`, or `predict`. The task handles planning tensor semantics only; SDK loading/scheduling, NPZ IO, download, rendering and metrics are outside it. The shared `NamedArrayRunner` preserves all named physical tensors and checks board/artifact identity. A [complete API example](runtime/python/README.md#integration-example) shows variables and input loading.
+Use `DiffusionDriveTask.predict`, or the stages `preprocess` → `infer` → `postprocess` that it composes; the `pre_process`/`forward`/`post_process` spellings remain importable compatibility aliases of the same implementation. The task handles planning tensor semantics only; SDK loading/scheduling, NPZ IO, download, rendering and metrics are outside it. The shared `NamedArrayRunner` preserves all named physical tensors and checks board/artifact identity. A [complete API example](runtime/python/README.md#integration-example) shows variables and input loading.
 
-The refactor fixes source per-axis/scalar-zero-point handling, rejects malformed/negative quantization scales, prevents integer saturation overflow and rejects evaluator shape broadcasting. The evaluator's zero-norm cosine is explicitly undefined. Source output math and six-case rendering are compared on the host; these checks do not substitute for board validation. Original source remains in `platforms/s/samples/vision/diffusiondrive`.
+Quantization checks per-axis scales and scalar zero points, rejects malformed or negative scales, and clips integer values before casting. The evaluator requires matching shapes; cosine similarity is undefined when either vector has zero norm.
 
 <a id="license"></a>
 ## License

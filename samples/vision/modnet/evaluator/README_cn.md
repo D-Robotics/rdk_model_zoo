@@ -10,11 +10,10 @@
 <a id="environment"></a>
 ## 环境
 
-`compare.py` 在板端自行运行两边：`platforms/x5/samples/vision/modnet/runtime/python`
-的固定源 wrapper 与 `samples/vision/modnet/runtime/python` 的统一任务。它需要 X5
+`compare.py` 在板端自行运行两边：锁定的原始 wrapper（从 Git 历史加载）与本 sample
+`samples/vision/modnet/runtime/python` 的任务。它需要 X5
 runtime（在身份 gate 之后惰性导入）、手工准备的 `modnet_512x512_rgb.bin` 与一张
-BGR 图像。主机上不导入 SDK，也不下载任何内容。下表和条件完整保留源历史数据，
-本轮未复测。
+BGR 图像。主机上不导入 SDK，也不下载任何内容。源性能数据表及条件如下。
 
 | 模型 | 尺寸 | 输入格式 | 延迟 (ms) | FPS |
 |---|---|---|---:|---:|
@@ -59,11 +58,10 @@ matte，并报告每个张量的 shape/dtype/finite 检查与 `max_abs_diff`。�
 <a id="reference-results"></a>
 ## 参考结果
 
-源历史参考见上表。本轮未运行板端对照，因此源/统一板端和精度评估为 `not-run`，
-sample 仍为 `closed=no`；主机 fixture 只证明证据结构。
+源参考见上表；此处不附带针对它的板端对照结果。
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
 评估器自行运行两边，绝不用人工提供的 matte 文件替代真实推理。它不是人像数据集
 评估器，不虚构质量标签，不下载手工资产，也不会把主机 fixture 结果升级为板端验证。

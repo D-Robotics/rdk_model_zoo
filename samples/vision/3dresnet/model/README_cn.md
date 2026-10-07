@@ -22,7 +22,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 # 预期：samples/vision/3dresnet/model/s100/r3d_18.hbm
 ```
 
-下载器从共享 S manifest 解析 `s:3dresnet:s100/r3d_18.hbm`，并使用共享的原子下载/校验 helper。当前 manifest 没有 publisher SHA-256，因此会报告观测摘要，但不能独立证明来源。已有文件会先校验，不会静默覆盖。`download_model.sh` 是委托到同一显式命令的兼容入口。runtime 不会自动下载模型。
+下载器从共享 S manifest 解析 `s:3dresnet:s100/r3d_18.hbm`，并使用共享的原子下载/校验 helper。当前 manifest 没有 publisher SHA-256，因此下载器会报告观测摘要，但无法对照已发布数值校验。已有文件会先校验，不会静默覆盖。`download_model.sh` 是委托到同一显式命令的兼容入口。runtime 不会自动下载模型。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -30,7 +30,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 | 文件 | 用于 | 作用 |
 | --- | --- | --- |
 | `../test_data/video0.npy` | runtime smoke test | 已归一化的 RGB float32 片段，shape `(1,3,16,112,112)` |
-| `../test_data/kinetics_classnames.json` | CLI 标签展示 | 400 条 source `name → id` 映射，读取后按 source 去除引号并反转为 `id → name` |
+| `../test_data/kinetics_classnames.json` | CLI 标签展示 | 400 条 `name → id` 映射，读取后反转为 `id → name`（名称中内嵌的引号字符会被去除） |
 
 `../test_data/readme_img/` 下的截图只用于文档证据。
 
@@ -52,4 +52,4 @@ samples/vision/3dresnet/model/s100/r3d_18.hbm
 | --- | --- | --- |
 | `s100/r3d_18.hbm` | HBM | `sha256: null (unknown)` |
 
-`null` 来自当前 manifest；没有猜测或从其他制品复制校验值。
+`null` 与当前 manifest 一致；没有猜测或从其他制品复制校验值。

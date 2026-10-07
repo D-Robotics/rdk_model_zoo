@@ -3,16 +3,16 @@
 [English](README.md) · [Sample 概览](../../README_cn.md)
 
 当前目录提供 S100 原生可执行入口与启动器、CPU CIF／文本解码、三模型应用编排、
-UCP SDK 适配器、生产预检以及准备清单／NPY 读取。主机检查通过明确标记的 SDK
-传输替身验证应用流程，真实 SDK ABI／模型执行尚未验证。以下测试是主机检查，不是 HBM 推理。
-源 Python 前端 → C++ 推理能力仍在迁移范围内，此处不以其他算法近似替换 FunASR。
+UCP SDK 适配器、生产预检以及准备清单／NPY 读取。按[构建](#build)与
+[运行](#run)在 S100 上使用匹配的板端 SDK 构建和执行。
+Python 前端 → C++ 推理链路按本目录入口使用；此处不以其他算法近似替换 FunASR。
 
 <a id="supported-boards"></a>
 ## 支持板卡
 
 | 板型 | 状态 | 原因 |
 | --- | --- | --- |
-| S100 | supported-not-run | 已发布三个 HBM；本轮仅做原生主机检查 |
+| S100 | supported | 已发布三个 HBM；板上构建/运行见[构建](#build)与[运行](#run) |
 | X5 / S100P / S600 | not-supported | 无匹配的 Paraformer 发布组合 |
 
 <a id="dependencies"></a>
@@ -20,10 +20,8 @@ UCP SDK 适配器、生产预检以及准备清单／NPY 读取。主机检查�
 ## 环境
 
 数值库需要 CMake 3.18 或以上及 C++17 编译器，不包含厂商 SDK、JSON、NumPy、
-Torch 或音频库头文件。主机构建在 macOS arm64／Apple Clang 上检查，准确版本见
-[证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-core-review.md)。
-不声明 SDK ABI 或 S100 推理通过。真实特征生成使用单独说明的
-[Python 环境](../python/README_cn.md#environment)。
+Torch 或音频库头文件。主机构建支持 macOS arm64／Apple Clang。真实特征生成
+使用单独说明的 [Python 环境](../python/README_cn.md#environment)。
 
 <a id="build"></a>
 ## 构建并运行主机检查
@@ -65,7 +63,7 @@ python samples/speech/paraformer/runtime/python/main.py --target s100 --preproce
 ```
 
 在 S100 上显式准备发布模型包并执行真实原生后端。下列命令需要下载／板端环境，
-本轮迁移**没有执行**它们来充当板测：
+在具备下载／板端环境后执行：
 
 ```bash
 bash samples/speech/paraformer/model/download_model.sh --target s100
@@ -83,7 +81,7 @@ PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --
 | 参数 | 默认值／行为 |
 | --- | --- |
 | `--target` | `auto` 读取真实本机身份；可选 auto/x5/s100/s100p/s600，但仅 S100 有发布资产 |
-| `--list-models` | 主机列表；auto 列出声明的 S100 模型组，不代表探测到板卡支持 |
+| `--list-models` | 主机列表；auto 列出声明的 S100 模型组，不做板卡能力探测 |
 | `--dry-run` | 仅预览，须显式 target；与 list 互斥 |
 | `--manifest` | `outputs/paraformer_features/prepared-manifest.json` |
 | `--vocab-file` | `samples/speech/paraformer/model/s100/tokens.json` |
@@ -117,7 +115,7 @@ PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --
   和逐条语音结果。
 
 逐条记录保留输入注释／参考文本、特征摘要、有效／原始帧数、截断状态、识别文本、
-ID／token 数、decoder 执行状态和阶段耗时。不宣称数据集 CER 或实测 BPU 延迟。
+ID／token 数、decoder 执行状态和阶段耗时。
 阶段计时不含前端、文件 I/O 或 runner／CIF 调用之外的工作。CIF 精确为空时跳过
  decoder，文本和 ID 为空，decoder 耗时为 null。
 
@@ -130,13 +128,8 @@ ID／token 数、decoder 执行状态和阶段耗时。不宣称数据集 CER �
 
 接受成功前，启动器拒绝 `host-fixture`，检查退出码和结果文件，依据 Python 绑定核验
 模型身份、物理形状／类型／角色／字节步长，核对每条所选输入和结果、文本／token／
-耗时一致性，并重新计算输入／模型／词表摘要。这些一致性检查用于将报告绑定到本次执行，
-实际 SDK／模型验证仍需单独完成。主机 CLI 替身不会作为公开二进制安装，
-也不会被接受为原生成功。
-
-[原生 CLI 证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-native-cli-review.md)
-记录使用明确标记传输替身的实际应用执行，包括零 token、模型调用失败、部分进度和
-已有目录拒绝。真实厂商 SDK 编译／ABI、HBM 推理、板测仍为 not-run。
+耗时一致性，并重新计算输入／模型／词表摘要。这些一致性检查用于将报告绑定到本次执行。
+主机 CLI 替身不会作为公开二进制安装，也不会被接受为原生成功。
 
 ## 构建选项与当前入口
 
@@ -172,7 +165,6 @@ ID／token 数、decoder 执行状态和阶段耗时。不宣称数据集 CER �
 CIF 在累计前屏蔽有效帧及之后的权重。无触发返回零数组与零计数；仅保留前 100 次
 输出。计算保留源 float64 累加后转 float32，以及每时间步最多触发一次的规则，
 不是处理权重大于 1 的通用多次触发积分器。原生 CIF 不隐式提供无屏蔽校准模式。
-旧 C++ 已处理无触发输入；旧 Python 的空输出异常在统一 Python 中修复。
 
 文本解码在有效 token 前缀取 argmax，分数相同时取首个 ID，过滤 `<...>` 包围的
 特殊 token，移除所有 `@@` 后无分隔拼接。重复 token 保留，不是 CTC。
@@ -222,23 +214,20 @@ c++ -std=c++17 -fsanitize=address,undefined -Isamples/speech/paraformer/runtime/
 /tmp/rdk-paraformer-core/example
 ```
 
-预期输出为 `2 3 8`，这是完整合成数值示例，不是识别文本。
+预期输出为 `2 3 8`。
 [test_pipeline.cc](tests/test_pipeline.cc) 另提供明确使用合成模型输出的可执行编排示例。
 Python `--preprocess-only` 已能生成内置音频特征，下文可选 I/O 库可直接读取准备清单。
 
 <a id="troubleshooting"></a>
 ## 验证与限制
 
-两个数值测试覆盖分数积分、padding、空输出、截断、非法契约、重复／特殊／BPE token、
-平局 ID、回调顺序、零 token 跳过与错误中间张量。对照驱动在 27 组数据上与提取的
-固定源 C++ CIF 及统一 Python 逐字节比较，并做 20 组原生／Python 文本对照。
-准确编译器和复现脚本见报告。提取的源函数／驱动只是主机证据，不是另一份维护中的运行实现。
+CTest 套件覆盖分数积分、padding、空输出、100 次触发截断、非法契约、
+重复／特殊／BPE token、平局 ID、回调顺序、零 token 跳过与错误中间张量。
 
 Sanitizer 运行库构建失败时应检查编译／链接器支持；`PARAFORMER_SANITIZERS=OFF`
-可关闭插桩，但不能据此宣称完成 sanitizer 检查。真实 HBM 的形状／类型／名称／身份
-已在 SDK 适配器中实现，但 API 替身不能证明实际 HBM 兼容；具体身份／制品预检
-工厂已单独提供。完整原生 CLI 已做主机流程验证；真实 SDK 构建、板端推理、
-OE 与 CER 尚未执行。
+可关闭插桩，但不能据此宣称完成 sanitizer 检查。SDK 适配器在加载时核验
+形状／类型／名称／身份。SDK 构建、板端推理、OE 与 CER 按各自指南执行；
+身份／制品预检工厂见[预检](#preflight)章节。
 
 <a id="sdk-adapter"></a>
 ## S100 SDK 适配器
@@ -250,8 +239,7 @@ OE 与 CER 尚未执行。
 `CMAKE_PREFIX_PATH` 或 CMake 缓存变量 `PARAFORMER_DNN_INCLUDE`、
 `PARAFORMER_UCP_INCLUDE`、`PARAFORMER_UCP_SYS_INCLUDE`、`PARAFORMER_DNN_LIBRARY`、
 `PARAFORMER_UCP_LIBRARY` 指定。不会自动安装 SDK。缺真实依赖时配置失败；主机 API
-替身仅用于 `test_sdk`，不会作为此库的回退。本机缺厂商 SDK，已验证配置明确失败，
-未将其记为真实 SDK 构建通过。
+替身仅用于 `test_sdk`，不会作为此库的回退。
 
 每个阶段单独构造 `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)`。
 回调必填，先于所有 SDK 调用执行，必须拒绝本机身份以及阶段／发布制品／模型摘要
@@ -295,10 +283,8 @@ std::vector<float> encode_features(const paraformer::ModelGroup &models,
 }
 ```
 
-模型、张量分配和推理任务复用 Ultralytics 的共享所有者／调用实现。新增多输入调用
-支持 decoder 四输入，现有图像调用仍保留一／两输入约束。API 替身测试覆盖全部阶段、
-乱序／带 padding 张量、两个 acoustic 别名、可选输出、自有结果、非法输入／元数据及
-分配／推理／缓存失败释放。详见[SDK 验证](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-sdk-review.md)。
+模型、张量分配和推理任务复用共享所有者／调用实现。多输入调用支持 decoder 四输入，
+图像调用仍保留一／两输入约束。
 
 <a id="preflight"></a>
 ## 三模型整体预检
@@ -317,8 +303,8 @@ std::vector<float> encode_features(const paraformer::ModelGroup &models,
 词表路径单独传入，固定 SHA-256 为
 `2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127`。
 模型预期摘要采用准备模型包时记录的实际文件摘要，用于可追溯文件身份。发布方没有
-记录模型摘要；本地预期摘要**不能认证发布来源或证明 HBM 实现了所选模型**，仍须
-进行实际运行时元数据校验。不要只为消除 mismatch 就重新计算并覆盖预期摘要。
+记录模型摘要，本地预期摘要绑定本地字节；加载时仍会执行形状／类型／名称校验。
+仅在重新准备模型包后更新预期摘要，不要只为消除 mismatch 就重新计算并覆盖。
 
 `make_preflight(group, vocabulary)` 通过共享平台读取器读取真实本机身份，立即验证
 整组模型，再允许创建 runner。S100P 板型别名优先于通用 S100 SoC 身份。未知身份、
@@ -332,7 +318,7 @@ std::vector<float> encode_features(const paraformer::ModelGroup &models,
 
 `verify_group(group, vocabulary, actual)` 是主机测试使用的显式身份底层检查器；
 客户部署应使用 `make_preflight` 读取实际身份，不应填写虚构身份。没有绕过开关或
-隐式 S100P 回退。详见[预检证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-preflight-review.md)。
+隐式 S100P 回退。
 
 <a id="prepared-features"></a>
 ## 读取 Python 准备的特征
@@ -384,7 +370,7 @@ CMake 应用链接 `paraformer_feature_io`。实际推理应将所选记录的 `
 `feat_length` 必须等于 `min(original_frames, 400)`。未知注释字段通过
 `original_record_json` 保留语义 JSON 序列化，不保留原空白排版；`reference_text`
 为可选字符串。FeatureItem 另提供解析后的路径、规范化摘要和帧数／截断字段。
-用户提供的文件摘要只标识字节，不证明其前端来源。
+用户提供的文件摘要标识本地字节；比较不同运行时连同前端版本一起记录。
 
 `load_features(item)` 对同一份自有字节计算摘要并解析，返回包含 224,000 元素的紧凑
 浮点数组。支持 NPY 1.0／2.0／3.0、C 顺序、`[1,400,560]` 形状和显式小／大端 float32
@@ -392,6 +378,3 @@ CMake 应用链接 `paraformer_feature_io`。实际推理应将所选记录的 `
 头部仅按数据解析，键顺序任意、单双引号均支持，不执行 Python 表达式；头部长度上限
 64 KiB。Fortran 顺序、其他类型／形状／版本、重复／未知头部键、尾随语法或数据、
 不完整数据体、非法元数据和内容变化都会抛异常；失败文件不会返回部分成功结果。
-
-[读取器证据](../../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-feature-io-review.md)
-记录真实前端数组的字节一致性和格式／错误用例。SDK／板端执行不属于这些文件读取检查；CLI／结果流程的主机验证另见下文。

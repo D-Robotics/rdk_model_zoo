@@ -4,7 +4,7 @@ English | [简体中文](README_cn.md)
 
 <a id="environment"></a>
 ## Environment
-Python 3.10+, NumPy, PyYAML, SciPy and SoundFile (with libsndfile). S100/S600 inference additionally requires the matching board-image `hbm_runtime`; no minimum BSP version has been established by this migration. Host contract tests do not certify a BSP. [Prepare the model](../../model/README.md) explicitly. No dependency installation or model download happens during inference.
+Python 3.10+, NumPy, PyYAML, SciPy and SoundFile (with libsndfile). S100/S600 inference requires the matching board image and its `hbm_runtime`. [Prepare the model](../../model/README.md) before running inference. The runtime does not install dependencies or download models.
 
 <a id="usage"></a>
 ## Usage
@@ -14,7 +14,7 @@ Run from the repository root. The default command detects the board, selects its
 python3 samples/speech/asr/runtime/python/main.py
 python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode legacy --output-dir outputs/asr-legacy
 ```
-Success is exit 0 and `status: completed` in `result.json`. Help, `--list-models`, and explicit-target `--dry-run` work without the board SDK; dry-run is not model validation.
+The command returns 0 and records `status: completed` in `result.json` when processing succeeds. Help, `--list-models`, and explicit-target `--dry-run` work without the board SDK; dry-run resolves target and artifact selection without running inference.
 
 <a id="parameters"></a>
 ## Parameters
@@ -37,11 +37,11 @@ The audio/vocabulary defaults resolve relative to this sample, independent of th
 
 <a id="results"></a>
 ## Results
-`result.json` records target, asset ID, locally observed model/audio/vocabulary SHA-256, publisher digest if available, observed tensor metadata, frontend/config and decoder mode. Each `chunks` item includes index, source-frame offset/count/rate, valid resampled sample count and text. `text` concatenates chunk text without inserted separators. Scores and timestamps are not produced. A failure after output-directory creation writes `failed.json` with completed chunks and an error; it is not a successful transcript. Earlier failures only print an error. If storage also prevents writing the failure report, stderr preserves both errors and the command still returns 2. Errors return 2.
+`result.json` records target, asset ID, locally observed model/audio/vocabulary SHA-256, publisher digest if available, observed tensor metadata, frontend/config and decoder mode. Each `chunks` item includes index, source-frame offset/count/rate, valid resampled sample count and text. `text` concatenates chunk text without inserted separators. Scores and timestamps are not produced. A failure after output-directory creation writes `failed.json` with completed chunks and error details; earlier failures print an error. If the failure report cannot be written, stderr includes both the inference error and the report-write error. Errors return 2.
 
 <a id="integration-example"></a>
 ## Integration example
-From the repository root on S100, after the explicit model download. The bundled audio and vocabulary are included. Use s600 in the selection for S600. This example performs real inference when used on a board; host verification substitutes only the SDK transport.
+From the repository root on S100, after preparing the model. The bundled audio and vocabulary are included. Use `s600` in the selection for S600.
 ```python
 from samples.speech.asr.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
 from samples.speech.asr.runtime.python.model_runner import RuntimeModelRunner
@@ -67,11 +67,11 @@ print("".join(texts))
 - `preprocess(waveform, sample_rate)` accepts finite float waveform `[frames]` or `[frames,channels]`, bounded by `ceil(30000 × source_rate / 16000)`. It averages channels, uses SciPy Fourier resampling, normalizes by `sqrt(var + 1e-5)` before zero padding, and returns `PreparedChunk.tensor` as owned float32 `[1,30000]` plus geometry.
 - `infer({input_name: tensor})` calls the runner once. The runner validates names/shapes/dtypes and returns independently owned raw output. No decoder or activation runs here.
 - `postprocess(raw)` checks observed `[1,T,3503]` metadata, takes argmax and returns text. FLOAT32 output is decoded directly as before; declared integer SCALE output is dequantized through the shared quantization helper at float64 comparison precision, so distinct raw integers stay ordered through argmax — float32 would round adjacent magnitudes such as `2**24` and `2**24 + 1` into an artificial tie. No softmax is required for argmax.
-- `predict(waveform, sample_rate, *, return_details=False)` composes the three stages for one chunk and returns the decoded text by default. With `return_details=True` it returns a `ChunkPrediction(text, prepared)` carrying the same text plus this call's prepared chunk (owned tensor, valid sample count, source geometry), so streaming callers record per-chunk evidence from the single execution `predict` performs — exactly one runner call per request either way, and no per-call state is retained on the model. The CLI uses this form for its per-chunk report records. File reading, vocabulary loading and saving belong to the caller, not ASR.
+- `predict(waveform, sample_rate, *, return_details=False)` composes the three stages for one chunk and returns decoded text by default. With `return_details=True` it returns `ChunkPrediction(text, prepared)`, which also carries the prepared chunk (owned tensor, valid sample count, source geometry). Each call makes one runner request and keeps no per-call state on the model. The CLI uses this form for per-chunk report records. File reading, vocabulary loading and saving belong to the caller, not `ASR`.
 
-The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
+The established `pre_process`, `forward`, and `post_process` names remain importable aliases of `preprocess`, `infer`, and `postprocess`.
 
-CTC collapses adjacent equal IDs before removing blank 0; legacy only removes blank. Blank separates repeated tokens: `[5,5,0,5]` becomes `AA` under CTC and `AAA` under legacy. Only exactly equal scores tie, and ties go to the lowest ID: float32 output compares in float32, while integer SCALE output compares at float64 so distinct raw integers cannot round into an artificial tie. All nonblank vocabulary strings, including `|` and special tokens, are retained literally. No state or duplicate suppression crosses chunk boundaries. Final padding still produces a full logit sequence; the model has no verified valid-output-length contract, so all frames are decoded. Independent windows can split words; this is not overlap-aware streaming. Python Fourier and the historical C++ sinc resampler are different algorithms.
+CTC collapses adjacent equal IDs before removing blank 0; legacy only removes blank. Blank separates repeated tokens: `[5,5,0,5]` becomes `AA` under CTC and `AAA` under legacy. Only exactly equal scores tie, and ties go to the lowest ID: float32 output compares in float32, while integer SCALE output compares at float64 so distinct raw integers cannot round into an artificial tie. All nonblank vocabulary strings, including `|` and special tokens, are retained literally. No state or duplicate suppression crosses chunk boundaries. Final padding still produces a full logit sequence, and all output frames are decoded because model metadata supplies no valid-frame count. Independent windows can split words; chunking does not add overlap-aware stitching. Python uses Fourier resampling, while the C++ runtime uses sinc resampling.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
@@ -83,5 +83,3 @@ CTC collapses adjacent equal IDs before removing blank 0; legacy only removes bl
 | `Output directory must be new` | Choose another output directory; retain earlier evidence. |
 | `ASR input must be float32 [1,30000] for the fixed frontend` | Verify the artifact and actual SDK metadata, not just its filename. |
 | `Audio file changed during streaming` | Keep the input immutable and rerun to a new directory. |
-
-[Host evidence](../../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-core/) covers frontend and fixture transport. Board inference remains not-run.

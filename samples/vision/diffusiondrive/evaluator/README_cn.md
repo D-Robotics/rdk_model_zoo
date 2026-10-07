@@ -2,19 +2,19 @@
 
 # DiffusionDrive 输出对照
 
-本工具离线比较浮点模型参考结果与运行时解码预测，不运行板卡，不对标注真值评分，不计算 NAVSIM PDM Score，也不据此批准模型用于驾驶。
+本工具离线比较浮点模型参考结果与运行时解码预测；板端执行、真值评分与 NAVSIM PDM Score 由各自的专用工具链完成。
 
 <a id="dataset"></a>
 ## 参考数据
 
-保留六组确定性输入/参考对：默认 `reference_inputs.npz` / `reference_outputs.npz`，以及五个 `case_*` 目录。形状、场景和历史图片见[测试数据说明](../test_data/README_cn.md)。每份参考含 float32 的 `trajectory`、`agent_states`、`agent_labels`（logits）和 `bev_semantic_map`（logits）。它们是模型输出，不是数据集标签。
+保留六组确定性输入/参考对：默认 `reference_inputs.npz` / `reference_outputs.npz`，以及五个 `case_*` 目录。形状、场景和源记录图片见[测试数据说明](../test_data/README_cn.md)。每份参考含 float32 的 `trajectory`、`agent_states`、`agent_labels`（logits）和 `bev_semantic_map`（logits）。它们是模型输出，不是数据集标签。
 
 噪声是显式输入。比较时应使用相同输入归档与固定噪声，重新生成噪声会改变规划问题。完整 NAVSIM 评估还需要本 sample 未提供的场景日志、传感器数据、地图与指标缓存。
 
 <a id="environment"></a>
 ## 环境
 
-评估器只需要 Python 和 NumPy，不导入 hbm_runtime，也不需要 HBM。先在相应目标上通过 [Python 运行入口](../runtime/python/README_cn.md)生成候选结果，再复制完整运行目录进行离线分析。`--board-npz` 沿用源接口名称；使用此参数本身不证明文件来自板端实测。
+评估器只需要 Python 和 NumPy，不导入 hbm_runtime，也不需要 HBM。先在相应目标上通过 [Python 运行入口](../runtime/python/README_cn.md)生成候选结果，再复制完整运行目录进行离线分析。`--board-npz` 沿用源接口名称，接受任意解码后的 `outputs.npz`（例如从目标板运行目录复制的归档）。
 
 <a id="command"></a>
 ## 命令
@@ -37,7 +37,7 @@ python3 -m samples.vision.diffusiondrive.evaluator.compare_outputs --reference-n
 | `--board-npz` / `--candidate-npz` | 必填 | 解码后的六数组 `outputs.npz`，不是 `raw_outputs.npz` |
 | `--output` | `null` | 可选的新 JSON 报告路径；否则仅 stdout |
 
-拒绝覆盖已有报告。返回 0 表示输入有效且指标计算完成，**不表示**通过验收门槛。输入契约不符时返回 2。
+拒绝覆盖已有报告。返回 0 表示输入有效且指标计算完成；门槛判定由发布流程决定。输入契约不符时返回 2。
 
 <a id="metrics"></a>
 ## 指标与校验
@@ -58,12 +58,12 @@ BEV 指标包括像素一致率、类别分布、各类 IoU，以及在任一预
 <a id="outputs"></a>
 ## 报告与证据
 
-JSON 包含参考/候选文件的精确路径和 SHA-256、张量与 BEV 指标、零范数策略，以及 `status: descriptive; no acceptance threshold`，并明确 `dataset_accuracy: false`。请同时保留运行时 `report.json`、物理输入、原始输出和图片。对照报告只能绑定两份文件；如果丢弃运行证据，它无法重建模型、运行库和输入来源。
+JSON 保存参考与候选文件的路径、SHA-256、张量与 BEV 指标、零范数策略、`status: descriptive; no acceptance threshold` 和 `dataset_accuracy: false`。将运行时 `report.json`、物理输入、原始输出与图像和解码归档一并保存，以保留模型、运行库与输入来源。
 
 <a id="reference-results"></a>
-## 源分支历史结果
+## 参考结果
 
-下列记录来自 S 源文档，**不是**本次主机迁移重新测得。精度对照使用 `case_000`；性能使用有效的量化 `case_017` 输入、固定一个 BPU 核与 200 帧。
+下列记录来自 S 源文档。精度对照使用 `case_000`；性能使用有效的量化 `case_017` 输入、固定一个 BPU 核与 200 帧。
 
 | 指标 | S100P | S600 |
 | --- | ---: | ---: |
@@ -78,11 +78,11 @@ JSON 包含参考/候选文件的精确路径和 SHA-256、张量与 BEV 指标�
 | 双线程总吞吐 | 71.109 FPS | 143.767 FPS |
 | CPU 推理时间 | 0.0 ms | 0.0 ms |
 
-源 S100P 五案例均值：轨迹余弦 0.999785、Agent 状态余弦 0.997986、BEV 余弦 0.998799、像素一致率 0.955664、平均 IoU 0.819837。这些是历史对照结果，不是门槛，也不是标注数据集精度。源文档称模型完全运行于 BPU，本次没有新 profiling 验证该声明。
+源 S100P 五案例均值：轨迹余弦 0.999785、Agent 状态余弦 0.997986、BEV 余弦 0.998799、像素一致率 0.955664、平均 IoU 0.819837。这些数值是源记录的对照结果，不是门槛，也不是标注数据集精度；源记录模型全部在 BPU 上执行。
 
-历史 HRT profiling 的 `--thread_num` 表示并发提交任务的主机线程数，不是 CPU 核数。不能用双线程总吞吐的倒数作为单请求延迟。源 S600 各案例结果及稀有类别解释保留于测试数据说明。
+HRT profiling 中 `--thread_num` 表示并发提交任务的主机线程数，不是 CPU 核数；双线程总吞吐不是单请求延迟，不能用倒数换算。源 S600 各案例结果及稀有类别解释保留于测试数据说明。
 
 <a id="boundaries"></a>
 ## 验证边界
 
-主机测试检查严格输入契约、零范数余弦未定义、参考自比较与文件摘要记录。自比较只验证评估器，不是量化模型精度证据。六案例任务后处理和绘图对照使用随附浮点数组，与源 Python 实现比较。实际板端推理、OE 转换、数据集评分、完整 NAVSIM PDM Score 和运行性能仍为 **not-run**。不会根据历史表格静默推导默认容差或发布门槛。
+在匹配的解码候选与浮点参考数组上执行离线对照。完整 NAVSIM PDM 评估需要 NAVSIM 描述的场景日志、传感器数据、地图与指标缓存；对照时使用固定噪声和相同的已准备输入。

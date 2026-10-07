@@ -37,4 +37,4 @@ The default is resolved relative to the sample, independent of the caller's work
 
 HBM is an S100 compiled runtime file, not ONNX or a Paddle checkpoint. Input is finite float32 `[1,373,80]`, derived from 60000 mono samples at 16 kHz. Output must have batch one, positive static dimensions and finite data. Output shape is read from SDK metadata rather than guessed from a historical console score. Float32 probabilities are used directly; integer outputs require valid SCALE metadata and shared dequantization before max reduction. Values outside [0,1] are rejected; no extra sigmoid or implicit clipping is used.
 
-There has been no new board metadata capture or model execution. The [conversion guide](../conversion/README.md) explains the unavailable reproducible export path. Preserve the downloaded file's digest with any future board evidence.
+Keep the downloaded file's SHA-256 with each run report to identify the exact model bytes used.

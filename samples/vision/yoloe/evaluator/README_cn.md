@@ -2,12 +2,12 @@
 
 [English](README.md) | 简体中文
 
-使用与[运行时](../runtime/python/README_cn.md)相同的后处理评估本地浮点输出模型。ONNX 后端在 CPU 执行；板端后端需要匹配的 SDK 和另行准备的浮点 BIN/HBM。本目录不下载模型/数据集，不编译模型，也不自动复现历史 BPU 性能。
+使用与[运行时](../runtime/python/README_cn.md)相同的后处理评估本地浮点输出模型。ONNX 后端在 CPU 执行；板端后端需要匹配的 SDK 和另行准备的浮点 BIN/HBM。本目录不下载模型/数据集，也不编译模型；已记录的 BPU 性能见参考记录一节。
 
 <a id="dataset"></a>
 ## 数据集与类别映射
 
-使用独立验证集，格式为包含 `images`、`categories`、`annotations` 的 COCO 实例标注。图片需要整数 `id`、相对路径 `file_name`、`width`、`height`；类别需要整数 `id` 和 `name`。框/掩码计分需要有效的实例框、分割标注、面积和 crowd 标记。只导出预测时，可以提供 annotations 为空的图片/类别清单。数据准备参考统一的 [COCO](../../../../datasets/coco/README_cn.md) 指南，X5/S 平台快照（X5 COCO (historical `../../../../platforms/x5/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S COCO (historical `../../../../platforms/s/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)）保留作溯源；数据集不随本仓库提供。
+使用独立验证集，格式为包含 `images`、`categories`、`annotations` 的 COCO 实例标注。图片需要整数 `id`、相对路径 `file_name`、`width`、`height`；类别需要整数 `id` 和 `name`。框/掩码计分需要有效的实例框、分割标注、面积和 crowd 标记。只导出预测时，可以提供 annotations 为空的图片/类别清单。数据准备参考统一的 [COCO](../../../../datasets/coco/README_cn.md) 指南；数据集不随本仓库提供。
 
 PF 类别 ID **不是 COCO category ID**。必须提供经过检查的映射，以固定 [4585 类词表](../test_data/classes.names)为依据，同时核对源/目标名称。[mapping.example.json](mapping.example.json) 演示 person（PF 2163 → COCO 1）和 chair（PF 821 → COCO 62）；它只有两个类别，**不是完整 COCO-80 映射**。请按自己的标注类别扩展或替换：
 
@@ -38,7 +38,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py --help
 
 依赖包含 ONNX/ONNX Runtime、NumPy、OpenCV、SciPy、PyYAML 和 pycocotools；只有[权重导出](../conversion/README_cn.md)需要 PyTorch。板端沿用运行时前提和系统镜像提供的 `hbm_runtime`，另安装 `pycocotools`。仅导出预测也需要它完成 RLE 编码。帮助命令无需这些第三方包或板端 SDK。
 
-主机 ONNX 后端使用 `CPUExecutionProvider`，显式关闭图优化，与导出检查一致。输入为 float RGB NCHW，**不模拟 NV12 往返、量化或 BPU 执行**。主机上的 `--target` 选择源前后处理协议，不表示当前电脑就是该板卡。板端后端会检查真实硬件身份、模型 SHA-256 和十个 float32 输出角色；原始发布的 S 量化模型仍不能用于浮点入口。
+主机 ONNX 后端使用 `CPUExecutionProvider`，显式关闭图优化，与导出检查一致。输入为 float RGB NCHW，**不模拟 NV12 往返、量化或 BPU 执行**。主机上的 `--target` 选择按目标区分的前后处理协议，不表示当前电脑就是该板卡。板端后端会检查真实硬件身份、模型 SHA-256 和十个 float32 输出角色；已发布的 S 量化模型不能用于浮点入口。
 
 <a id="command"></a>
 ## 命令
@@ -58,7 +58,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
   --output-dir /work/evaluation-26n
 ```
 
-只导出预测、不声明精度时，增加 `--predictions-only` 并使用新输出目录；仍需要 COCO 格式图片/类别清单，但可以没有真值。流程检查可加 `--limit 1`，正式验证目标 split 时移除限制。子集或只导出预测成功，不能当作完整数据集精度。
+只导出预测、不计分时，增加 `--predictions-only` 并使用新输出目录；仍需要 COCO 格式图片/类别清单，但可以没有真值。流程检查可加 `--limit 1`，正式验证目标 split 时移除限制。子集或只导出预测的结果仅覆盖所选范围；完整数据集精度在完整 split 上运行取得。
 
 板端评估仅在准备好兼容浮点制品、进入匹配板端环境后运行：
 
@@ -90,7 +90,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
 | `--multi-label` | false | E26 每个 anchor 可保留多个类别；E11 拒绝此选项 |
 | `--threads` | 2 | ONNX CPU 线程；板端路线拒绝非默认值 |
 
-阈值影响精确率和召回率。默认值与演示 CLI 对齐，不代表已经验收的低阈值 COCO 精度配方，修改后必须保留记录。E11 使用类别内 NMS；E26 使用 Top-K、无 NMS。X5 E11 输出整图掩码，S E11/E26 输出 ROI 掩码；所有路线共用运行时解码，不维护另一套评估算法。
+阈值影响精确率和召回率。默认值与演示 CLI 对齐；调整阈值后请记录所用值与数据集。E11 使用类别内 NMS；E26 使用 Top-K、无 NMS。X5 E11 输出整图掩码，S E11/E26 输出 ROI 掩码；所有路线共用运行时解码，不维护另一套评估算法。
 
 <a id="metrics"></a>
 ## 指标与可比性
@@ -118,14 +118,14 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
 | `metrics.log` | 请求计分时的完整 COCO 输出 |
 | `*-predictions.partial.json` | 图片中途失败时显式保存的部分预测，不当作完整运行计分 |
 
-状态为 `predictions-only`、`evaluated` 或 `failed`；`metric_scope` 区分全部标注图片、选中子集和未请求指标。引用数字前检查已处理/选中数量及未映射预测。完成指标计算不会自动建立应用场景的精度验收阈值。
+状态为 `predictions-only`、`evaluated` 或 `failed`；`metric_scope` 区分全部标注图片、选中子集和未请求指标。引用数字前检查已处理/选中数量及未映射预测。应用场景的精度阈值由发布流程确定。
 
 <a id="reference-results"></a>
-## 历史参考与本轮验证
+## 参考记录
 
-下表是**源分支原始 Runtime-only 测量**，不是统一浮点路线的新结果：
+下表为发布量化制品的 Runtime-only 参考测量；本地编译的浮点模型在各自编译后另行测量：
 
-| 源模型 | 板卡 | Runtime 延迟 / FPS | P50 / P95 |
+| 发布模型 | 板卡 | Runtime 延迟 / FPS | P50 / P95 |
 | --- | --- | --- | --- |
 | E11s | X5 | 146.16 ms / 6.84 | 144.72 / 152.73 ms |
 | E11m | X5 | 177.14 ms / 5.65 | 176.17 / 182.54 ms |
@@ -136,16 +136,16 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
 | E26l | S100 | 13.417 ms / 74.18 | 未发布 |
 | E26x | S100 | 22.013 ms / 45.31 | 未发布 |
 
-X5 条件：RDK X5 V1.0、OS 3.4.1-rp1.0.2、libdnn 1.24.5/HBRT 3.15.55、1000 MHz、单线程/core_id=1（BPU core 0）、固定 NV12，三轮、每轮 10 帧 warmup 加 200 帧计时。11s 双线程因 ION 分配错误失败，详见 X5 完整源记录 (historical `../../../../platforms/x5/samples/vision/yoloe/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。
+X5 条件：RDK X5 V1.0、OS 3.4.1-rp1.0.2、libdnn 1.24.5/HBRT 3.15.55、1000 MHz、单线程/core_id=1（BPU core 0）、固定 NV12，三轮、每轮 10 帧 warmup 加 200 帧计时。11s 双线程测试因 ION 分配错误失败。
 
-S100 条件：V1P0、OS 4.0.5-Beta、UCP 3.13.6/HBRT 4.7.5、OE 3.7.0 INT8 KL、2026-09-08、200 帧/warmup、thread_num=1/core_id=0。S100P 未测性能。S26 源记录 (historical `../../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)另有原 n 模型在 S100P 的单图 Python/C++ 掩码逐像素对照，不能替代本轮代码、其他尺寸或数据集 mAP。S11 源评估目录 (historical `../../../../platforms/s/samples/vision/yoloe11_seg/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)原本为空占位，没有可迁移的已验收指标。
+S100 参考条件：V1P0、OS 4.0.5-Beta、UCP 3.13.6/HBRT 4.7.5、OE 3.7.0 INT8 KL、2026-09-08、200 帧/warmup、`thread_num=1/core_id=0`。
 
-本轮真实 ONNX 预测使用随附图片和显式生成的 PF 类别清单，**没有真值**，不是 COCO AP 测量。近期导出所用 E26 PT 文件与归档发布 sidecar 的文件哈希不同；这本身不证明参数张量变化，但不能声称复现同一原始权重基线。尤其不能把浮点检测数写成复现 INT8 数量，也不能把差异仅归因于量化。完整证据见[评估实现记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-evaluation-review.md)。
+predictions-only 模式为指定图片与类别清单导出检测和掩码。计算 COCO AP 时，提供实例真值及明确的 PF 到数据集类别映射。各模型路线分别记录权重和制品摘要。
 
 <a id="boundaries"></a>
-## 边界与检查
+## 适用范围与检查
 
-本轮未执行真实板端/SDK/OE 评估、独立验证集 mAP 或新性能测试。板端后端已经实现，但硬件未验证。CPU RGB 评估不包含 NV12 转换影响；固定词表、映射与模型字节必须配套，编辑词表不会获得新类别。
+真实板端/SDK/OE 评估、独立验证集 mAP 与性能测试在各自环境中执行。CPU RGB 评估不包含 NV12 转换影响；固定词表、映射与模型字节必须配套，编辑词表不会获得新类别。
 
 ```bash
 # cwd: repository root; evaluator host dependencies installed
@@ -153,4 +153,4 @@ python3 -m unittest discover -s samples/vision/yoloe/evaluator/tests
 python3 -m unittest discover -s samples/vision/yoloe/tests
 ```
 
-测试覆盖已知合成掩码的真实 COCO 计分、空预测、显式映射、严格图片/掩码几何、缺文件时部分失败记录、predictions-only 边界。合成样例满分只验证计分器，不是 YOLOE 模型精度。源运行契约测试保留在归档中，统一运行时测试覆盖共用阶段。原生 C++ 运行时已提供实现，其主机运行时范围已获独立评审（[评审记录](../../../../docs/releases/unified-migration/2026-09-28-yoloe-independent-review.md)）；真实 SDK／板端执行仍为 not-run，全分支独立验收仍未关闭。
+测试套件覆盖合成掩码的 COCO 计分、空预测、显式类别映射、图像与掩码几何，以及部分失败记录。模型 AP 使用带标注的独立验证图片评测，并记录数据划分、权重、编译模型与类别映射。

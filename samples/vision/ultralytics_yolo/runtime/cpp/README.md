@@ -3,9 +3,9 @@
 [简体中文](README_cn.md) · [Python](../python/README.md)
 
 <a id="supported-boards"></a>
-## Implementation scope and board status
+## Supported protocols
 
-The current sources implement packed NV12 `.bin` input for X5 and split Y/UV `.hbm` input for S100/S100P/S600, selecting protocols from model metadata. C++ is no longer X5-only code. Implementation and board verification are separate: no board build, run or benchmark was performed in this round. Treat this implementation scope as supported-not-run; Python evidence cannot certify C++.
+The C++ entries select protocols from model metadata: packed NV12 `.bin` input for X5 and split Y/UV `.hbm` input for S100/S100P/S600. Build and run each task on its target board using the sections below.
 
 | Program | Implemented protocol | Limits |
 |---|---|---|
@@ -14,12 +14,12 @@ The current sources implement packed NV12 `.bin` input for X5 and split Y/UV `.h
 | segment | DFL/LTRB boxes and mask coefficients/prototypes | Functional reference, no benchmark CLI |
 | classify | One unquantized FLOAT32 vector of 1000 logits | Stride-aware Top-5, no result image |
 
-No C++ OBB entry is supplied. This does not claim the Python S YOLOv10 NMS-free semantics are covered by C++. Custom class/model layouts require checking hardcoded labels and dimensions in the sources; a matching extension is insufficient. Use the Python entry above for the complete task interface.
+Custom class/model layouts must match the labels and dimensions expected by the selected C++ task. Use the linked Python entry for the YOLOv10 NMS-free task interface.
 
 <a id="dependencies"></a>
 ## Dependencies
 
-The commands below require CMake/CTest ≥3.20 (including `ctest --test-dir`). Board builds require a C++11 compiler, OpenCV development files and the matching board DNN SDK. CMake first checks `/usr/include/dnn/hb_dnn.h` and `/usr/lib`; otherwise it uses `/usr/include/hobot`, `/usr/include/hobot/dnn`, `/usr/hobot/include`, `/usr/hobot/lib` and links `hbucp`. These come from the matching board image/SDK, not the host OE model compiler. The sources do not certify every SDK version.
+Board builds require CMake/CTest ≥3.20 (including `ctest --test-dir`), a C++11 compiler, OpenCV development files and the matching board DNN SDK. CMake first checks `/usr/include/dnn/hb_dnn.h` and `/usr/lib`; otherwise it uses `/usr/include/hobot`, `/usr/include/hobot/dnn`, `/usr/hobot/include`, `/usr/hobot/lib` and links `hbucp`. These files come from the matching board image/SDK; use the SDK version supplied for the target image.
 
 <a id="build"></a>
 ## Build
@@ -111,16 +111,11 @@ No manual dequantization is performed.
 Model and output owners release acquired resources on early returns and C++
 exceptions. Allocation and output-cache invalidation failures stop decoding.
 Malformed descriptors/nonfinite logits produce a nonzero exit with a diagnostic.
-These host checks cover descriptor arithmetic and ownership with test doubles;
-actual SDK ABI, allocation/cache calls and inference remain unverified.
 
-Preprocessing still uses the source C++ **letterbox with gray 127 padding**.
-The C++ program does not infer a YOLO family from an artifact name and does not
-expose a resize flag. Python YOLO26 classification defaults to stretch, as does
-Python classification on S. Therefore this C++ default must not be presented as
-an equivalent Python accuracy baseline. Change `PREPROCESS_TYPE` to `RESIZE_TYPE`
-and rebuild if the selected model's evaluation recipe requires stretch; record
-that choice with any results. No new accuracy measurement is supplied here.
+Classification preprocessing uses **letterbox with gray 127 padding** in C++;
+Python classification on S and Python YOLO26 uses stretch. To use stretch in C++,
+set `PREPROCESS_TYPE` to `RESIZE_TYPE` and rebuild. The program selects the task
+from its executable and model metadata.
 
 <a id="pose-segment-output-contract"></a>
 ## Pose and segmentation output contract
@@ -142,18 +137,16 @@ cache errors abort; acquired output/model resources release on all exit paths.
 DFL and direct-distance math now use `common/decode.h` rather than private copies.
 The existing keypoint equations, NMS and rendering policies remain unchanged.
 
-These programs are functional references with narrower behavior than Python:
-both discard boxes crossing the model-input boundary. Segment uses class-agnostic
-NMS and renders a **model-input-sized** three-panel image (detections, colored mask,
-combined), with total width `3 * input_width`; it does not return Python's
-original-image ROI masks. Pose renders on the original image using its source
-resize/padding arithmetic. Do not infer Python parity or dataset accuracy from
-the shared transport. A failed image save now produces a nonzero exit.
+Both programs discard boxes crossing the model-input boundary. Segment uses
+class-agnostic NMS and renders a **model-input-sized** three-panel image
+(detections, colored mask, combined), with total width `3 * input_width`. Pose
+renders on the original image using its resize/padding arithmetic. A failed image
+save produces a nonzero exit.
 
 <a id="results-interpretation"></a>
 ## Results and verification
 
-Boxes, masks and keypoints are drawn into result images; classification prints classes and probabilities. Check successful process exit plus the actual new output and its content; an old file at the same path is not evidence of success. Interpret IDs in the source's built-in class order. One image does not establish dataset accuracy.
+Boxes, masks and keypoints are drawn into result images; classification prints classes and probabilities. Check the process return code and inspect the output image. Interpret IDs in the source's built-in class order. Dataset scoring is described in the evaluator guide.
 
 Bounded detection benchmark:
 
@@ -167,18 +160,6 @@ Bounded detection benchmark:
 ```
 Timing starts with an in-memory BGR image and ends with restored detections: resize/letterbox, NV12 conversion, copy/cache operations, BPU and decode/NMS are included; model load, file I/O, drawing and saving are excluded. Set `--pipeline-streams 2` for two complete pipelines. Throughput is total completed frames over shared wall time; latency is per request. OpenCV thread count is independent of stream count, with no CPU-affinity restriction. Keep C++/Python, runtime-only/end-to-end and single/multistream measurements separate.
 
-The host suite contains six pure-helper tests (decode, head probing, NV12 geometry,
-benchmark bookkeeping, classification and task output binding), plus four
-classification/task descriptor-resource tests and two input/task lifecycle tests
-against narrow X5/UCP doubles (12 tests total). The two input/task tests instrument
-production code with AddressSanitizer and UndefinedBehaviorSanitizer. None uses a real board SDK:
-
-```bash
-cmake -S samples/vision/ultralytics_yolo/runtime/cpp/test -B /tmp/ultralytics-cpp-host
-cmake --build /tmp/ultralytics-cpp-host
-ctest --test-dir /tmp/ultralytics-cpp-host --output-on-failure
-```
-
 The common input owner validates metadata before allocating. Packed X5 NV12
 accepts RGB-shaped NCHW/NHWC descriptors only when the physical shape is compact;
 padded packed storage is explicitly rejected. Split Y/UV accepts exact batch-one
@@ -191,16 +172,11 @@ different plan fail; partial allocation releases all acquired buffers.
 
 Synchronous inference requires a non-null task handle, releases returned tasks
 on creation/submission/wait failures and preserves the first error code. UCP
-submission selects `HB_UCP_BPU_CORE_ANY`. These checks do not certify a particular
-SDK ABI or board execution; [host regression evidence](../../../../../docs/releases/unified-migration/2026-09-28-yolo-native-io-review.md)
-includes the original task-release and dynamic-capacity failures.
+submission selects `HB_UCP_BPU_CORE_ANY`. Build on the target with matching DNN/UCP
+SDK headers and libraries. If model binding rejects an artifact, check its target,
+task, layout, dtype and output head against the selected program.
 
-Missing OpenCV development files or DNN/UCP headers/libraries cause build failures; check the target SDK rather than copying another platform's libraries. For protocol rejection inspect model target, task, layout, dtype and head. Passing host helper tests does not prove all four board executables build/run or establish new performance measurements.
-
-The shared `OutputTensorOwner` also handles SDK allocation errors that still
-return a nonnull address: the acquired buffer is retained for cleanup. A
-success status with a null address is rejected. X5/UCP host resource tests
-cover both cases; real SDK failure behavior remains unverified.
+The shared `OutputTensorOwner` retains an acquired buffer for cleanup when an SDK allocation returns an error with a non-null address, and rejects success with a null address.
 
 The shared `common/dnn_io.h` also exposes `infer_tensors_sync` for callers such as
 Paraformer with more than two already validated input tensors. It performs only

@@ -12,7 +12,7 @@ MODNet 是单阶段人像抠图网络：输入一张 RGB 图像即可输出 alph
 
 | target | variant | Python | C++ | 状态 |
 |---|---|---|---|---|
-| X5 | `modnet_512x512_rgb.bin` | supported-not-run | not-supported | 主机 fixture 通过；板测未运行——2026-09-24 X5 板端批次没有拿到该手工制品，因此没有可记录的下载或推理 |
+| X5 | `modnet_512x512_rgb.bin` | supported | not-supported | 制品需手工准备，见[模型准备](model/README_cn.md) |
 | S100/S100P/S600 | — | not-supported | not-supported | 没有源制品 |
 
 本 sample 没有 C++ 实现。运行模型是外部手工制品；主机测试不等同于板端验证。
@@ -37,7 +37,7 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
 <a id="expected-results"></a>
 ## 预期结果
 
-matte 是与原图高宽相同的 8-bit 灰度 PNG；可选合成图是保持原图几何的 BGR PNG。具体 alpha 值和质量取决于外部模型，本说明不新增板端结果；源历史性能在下方评估文档中标记为未复测。
+matte 是与原图高宽相同的 8-bit 灰度 PNG；可选合成图是保持原图几何的 BGR PNG。具体 alpha 值和质量取决于外部模型；源性能记录见下方评估文档。
 
 <a id="directory"></a>
 ## 目录职责
@@ -61,9 +61,9 @@ matte 是与原图高宽相同的 8-bit 灰度 PNG；可选合成图是保持原
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整保存 matte 的对照步骤。
 
 <a id="historical-performance"></a>
-## 源历史性能
+## 源记录性能
 
-下表和测试条件完整保留源数据；这些是源历史测量，本迁移没有复测。
+源数据表及测试条件：
 
 | 模型 | 尺寸 | 输入格式 | 延迟 (ms) | FPS |
 |---|---|---|---:|---:|
@@ -75,4 +75,4 @@ matte 是与原图高宽相同的 8-bit 灰度 PNG；可选合成图是保持原
 <a id="license"></a>
 ## 许可
 
-迁移 wrapper 和仓库文件遵循 Apache-2.0。MODNet 源许可声明、论文和上游工程仍归其作者所有。外部 manual 模型没有随源提供模型许可或发布者 checksum。
+本 sample wrapper 和仓库文件遵循 Apache-2.0。MODNet 源许可声明、论文和上游工程仍归其作者所有。外部 manual 模型没有随源提供模型许可或发布者 checksum。

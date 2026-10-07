@@ -5,7 +5,7 @@ English | [简体中文](./README_cn.md)
 <a id="environment"></a>
 ## Environment
 
-- Board execution: RDK S100 with the matching `hbm_runtime` Python environment; exact board image/runtime versions were not recorded and board execution is not-run.
+- Board execution: RDK S100 with the matching `hbm_runtime` Python environment; choose the image and runtime version for your deployment.
 - Host verification: repository `.venv` with Python 3.14.7, `numpy`, and `PyYAML` (`requirements-host.txt` lists the host dependencies).
 - The runtime accepts a prepared NumPy clip. It does not import a video decoder, read video frames, resize images, or normalize pixels.
 - SDK-free operations are `--help`, `--list-models`, and explicit `--dry-run`; they do not construct `hbm_runtime`.
@@ -35,7 +35,7 @@ bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 ```bash
 # cwd: repository root
 .venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# expect: all discovered tests OK; this does not prove board execution
+# expect: all discovered tests OK (host fixtures; board not required)
 ```
 
 <a id="parameters"></a>
@@ -72,18 +72,18 @@ Successful CLI execution prints one JSON object to stdout:
 }
 ```
 
-`predictions` contains exactly `--top-k` entries sorted by source-compatible softmax probability. `class_id` is an integer in `[0,399]`; `score` is the float32 softmax value; `label` is the source JSON name with literal double quotes removed. No output file is written by the CLI.
+`predictions` contains exactly `--top-k` entries sorted by descending softmax probability. `class_id` is an integer in `[0,399]`; `score` is the float32 softmax value; `label` is the JSON mapping name with embedded double quotes removed. No output file is written by the CLI.
 
 The entry is split for readability: `main.py` resolves the selection, constructs
 `VideoClassificationTask`, calls `predict` once and prints the JSON report;
 option declarations, the `--list-models`/`--dry-run` modes and the report
-assembly live in `cli.py`. The classification algorithm itself is unchanged and
-lives only in `classification.py`.
+assembly live in `cli.py`. The classification algorithm itself lives in
+`classification.py`.
 
 <a id="integration-example"></a>
 ## Integration Example
 
-The directory name `3dresnet` cannot appear in a `from ... import ...` statement. Run this example from the repository root and use `importlib.import_module` with the full package names; no runtime-directory `sys.path` injection is needed:
+The directory name `3dresnet` cannot appear in a `from... import...` statement. Run this example from the repository root and use `importlib.import_module` with the full package names; no runtime-directory `sys.path` injection is needed:
 
 ```python
 import importlib
@@ -136,7 +136,7 @@ The input clip is already RGB and normalized. The task performs no image or vide
 ## Troubleshooting
 
 - **Model path rejected:** provide the exact asset ID with an external path: `s:3dresnet:s100/r3d_18.hbm`.
-- **Board identity rejected:** explicit `--target s100` selects the publication row but does not provide hardware evidence; execution still requires detected S100 identity.
+- **Board identity rejected:** explicit `--target s100` selects the publication row; execution additionally requires detected S100 board identity.
 - **Model missing:** run `bash samples/vision/3dresnet/model/download.sh s100` from the repository root.
 - **Clip shape rejected:** use the prepared `.npy` clip with exact shape `(1,3,16,112,112)`; this runtime does not reshape or decode video.
 - **Tensor name mismatch:** the binding reads the unique runtime names. It rejects missing, extra, or reordered tensors rather than inventing `input` or `output` names.

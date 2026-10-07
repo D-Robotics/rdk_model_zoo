@@ -3,7 +3,7 @@
 <a id="environment"></a>
 ## 环境
 
-在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3 和 NumPy。runtime 只有在选择、模型文件和板卡检查通过后才导入板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。编译模型必须暴露一个 float32 输入 `(1,3,24,94)` 和一个 float32 logits 输出，输出按 runtime metadata 原样绑定：发布版 `lpr.bin` 报告 `(1,68,18,1)`——实测板端协议，并经一块 X5 8GB 与一块 X5 4GB 的 source/unified 对照确认一致（2026-09-24）；3D `(1,68,18)` 仅作为旧 host/API 兼容契约保留（面向既有 host 测试与注入 runner），未观察到报告该布局的已发布 SDK 制品。不接受任何其它秩或轴顺序——绑定不做 reshape 或轴重排。
+在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3 和 NumPy。runtime 只有在选择、模型文件和板卡检查通过后才导入板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。编译模型必须暴露一个 float32 输入 `(1,3,24,94)` 和一个 float32 logits 输出，输出按 runtime metadata 原样绑定：发布版 `lpr.bin` 报告 `(1,68,18,1)`，即板端实际协议布局；3D `(1,68,18)` 仅作为旧 host/API 兼容契约保留（面向既有 host 测试与注入 runner），未观察到报告该布局的已发布 SDK 制品。不接受任何其它秩或轴顺序——绑定不做 reshape 或轴重排。
 
 <a id="usage"></a>
 ## 使用
@@ -70,7 +70,7 @@ print(plate)
 - `preprocess(test_bin)` 精确读取 `1*3*24*94` 个 float32 值，返回含 `tensors, context` 的 `PreparedInput`，只有一个 NCHW tensor，不做图像变换。
 - `infer(tensors)` 校验绑定的名称、shape、dtype，调用选定模型并返回 owned raw float32 数组，shape 为绑定的完整 native shape——发布版 `lpr.bin` 为 `(1,68,18,1)`；每次调用都必须与绑定 shape 严格一致。
 - `postprocess(raw)` 只移除绑定 native logits 的单元素轴（绝不 reshape 或重排轴），然后执行源 CTC 风格解码并返回 `str`。
-- `predict(test_bin)` 串联三个阶段；context 是本次输入路径，不写入可被下一次调用覆盖的 task 字段。
+- `predict(test_bin)` 串联三个阶段；context 是该次输入路径，不写入可被下一次调用覆盖的 task 字段。
 - 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 <a id="troubleshooting"></a>

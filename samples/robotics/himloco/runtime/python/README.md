@@ -2,19 +2,17 @@
 
 [中文](README_cn.md)
 
-The unified Python entry now provides exact X5 model selection, lazy SDK transport,
-source-indexed input checks, warmup, owned action dumps and failure reports. Host
-integration tests use an explicit SDK double; real board execution remains not-run.
-The entry (`main.py`) visibly runs the offline loop: it obtains the bound
-`HimLocoTask` through `application.load_task`, executes the explicitly requested
-warmup predictions, calls `task.predict(observation)` once per input and records
-each action dump via `application.record_sample`; the evidence discipline
+The Python entry provides exact X5 model selection, lazy SDK transport,
+source-indexed input checks, warmup, owned action dumps and failure reports;
+board execution follows the quickstart.
+The entry (`main.py`) runs the offline loop: it obtains the bound
+`HimLocoTask` through `application.load_task`, executes the requested warmup
+predictions, calls `task.predict(observation)` once per input and records
+each action dump via `application.record_sample`; report handling
 (target/asset gating, report reservation, digest re-verification, latency summary,
 failure records) lives in `application.py` helpers (`prepare`, `load_task`,
 `record_sample`, `complete`), whose single-call composition `application.execute`
-remains the compatibility API.
-The source runtime guide (historical `../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
-retains historical board evidence, not a new unified-runtime validation claim.
+is the compatibility API.
 
 <a id="environment"></a>
 ## Environment
@@ -148,16 +146,7 @@ joint velocities (12, source scale 0.05), and previous actions (12). The current
 observation comes first, followed by five earlier observations. This task does not
 apply those scales again, accumulate history or choose a joint ordering.
 
-`preprocess` packs and owns features; `infer` performs one raw model call;
-`postprocess` validates and owns raw actions; `predict` composes these methods.
-The established `pre_process`, `forward`, and `post_process` names remain
-importable thin aliases of `preprocess`, `infer`, and `postprocess` — one
-implementation, two names.
-Source preprocessing was compared against all 21 archived observation files with
-manifest digest checks. Postprocessing uses synthetic action outputs for numerical
-comparison. No board/model accuracy, control stability or robot motion was tested.
-The original source's mutable last-latency field and potentially aliased outputs
-are replaced by per-call records and independent result storage.
+`preprocess` owns the packed features; `infer` executes one model call; `postprocess` validates and owns the action array; `predict` composes the three stages. `pre_process`, `forward` and `post_process` delegate to the same stage implementations. Results and timing records belong to each call.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
@@ -168,4 +157,3 @@ bound model interface; the core will not silently cast an incompatible model's
 output. Latency attached to a hand-built `RawOutputs` must be finite and nonnegative.
 See the [C++ guide](../cpp/README.md) for native execution and the
 [evaluator guide](../../evaluator/README.md) for action-dump comparisons.
-Host tests do not establish SDK/board compatibility.

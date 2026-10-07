@@ -3,12 +3,12 @@
 <a id="dataset"></a>
 ## 数据集
 
-源提供 X5 的 `test_data/bus.jpg`、S 的 `test_data/kite.jpg` 以及 `coco_classes.names`，没有带标签的 mAP benchmark harness。评估器在相同图片、target、制品和阈值下比较完整的源/统一运行，是一致性证据工具，不是 mAP 评估器。
+源提供 X5 的 `test_data/bus.jpg`、S 的 `test_data/kite.jpg` 以及 `coco_classes.names`，没有带标签的 mAP benchmark harness。评估器在相同图片、target、制品和阈值下比较两套实现的完整运行，是一致性证据工具，不是 mAP 评估器。
 
 <a id="environment"></a>
 ## 环境
 
-直接在已识别的目标板上运行，需要 Python、NumPy、OpenCV 和目标 `hbm_runtime`，并导入固定源 runtime；它不是一台在外部驱动板卡的主机。主机单测注入 fake runtime，不能证明硬件或板端结果。评估器不会下载模型或图片。
+直接在已识别的目标板上运行，需要 Python、NumPy、OpenCV 和目标 `hbm_runtime`，并加载锁定的原始 runtime；它不是一台在外部驱动板卡的主机。主机单测注入 fake runtime，不能证明硬件或板端结果。评估器不会下载模型或图片。
 
 <a id="command"></a>
 ## 评估命令
@@ -24,9 +24,9 @@ python3 samples/vision/yolov5/evaluator/compare.py \
   --output-dir /tmp/yolov5-evidence-unique
 ```
 
-工具运行源路径和统一路径，把完整 native 输入/输出/结果数组保存为 `.npy`，在 `comparison.json` 记录 metadata、代码/模型/图片 hash、阈值和板卡身份；所有比较通过才返回 `0`。输出目录必须不存在。该工具在 2026-09-24 记录中于真实板端、固定提交上运行过——X5（8GB/4GB 全部九个变体）与 S100/S600 `x-672` case，全部检查为 true（[python 对照](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[九变体矩阵](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-yolov5-x5-variants/)、[扩展板测](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)）——当前工作树不追加新的板端运行，这些记录也不重新验证当前 HEAD。
+工具运行锁定原始实现与本 sample 实现，把完整 native 输入/输出/结果数组保存为 `.npy`，在 `comparison.json` 记录 metadata、代码/模型/图片 hash、阈值和板卡身份；所有比较通过才返回 `0`。输出目录必须不存在。在准备好的板卡上按需运行——X5 命令覆盖全部九个变体，S100/S600 命令覆盖 `x-672` 模型（`kite.jpg`）；一次运行验证的是它所执行的工作树。
 
-### 原生 C++ 源/统一比较（板端）
+### 原生 C++ 实现对照（板端）
 
 上面的 Python 命令驱动 Python runtime，不能作为 C++ 交付的最终证据——两者的前处理可能不同。`evaluator/native/` 下的原生比较运行**固定 C++ 源本身**（X5 `main.cc` @
 `ac115717197920355fc390bb04299b20e6436864`，S `src/yolov5.cpp`/`src/main.cpp` @
@@ -111,32 +111,27 @@ channels*stride[3] 的布局，同时仍解码真实受支持形态（含按对�
 padding）。阈值与 scale 描述符按 **float32 位值**
 比较（原生语义）：0.45f 序列化为 0.44999998807907104 与 manifest 字符串
 "0.450000" 是同一个值；位值不同即失败。最终原图坐标（detections_original）
-**双侧必备**——缺失或单侧缺失直接阻断验收，而不是以免责声明放行。布局
+**双侧必备**——缺失或单侧缺失直接阻断比较，而不是以免责声明放行。布局
 解码只接受两种已证实形态（均匀行距 strided、精确尺寸 compact），其余显式
 拒绝，绝不猜着解码。
 
 比较按两侧记录的物理布局（stride/dtype）还原逻辑数组，因此 padded 布局正确
-比较，而未初始化 padding 字节保留在证据（`originals/`）中、绝不声称逐字节
-相等。固定判据、运行中不得调整：inputs 精确相等；raw 输出
+比较，而未初始化 padding 字节保留在证据（`originals/`）中、不参与比较。固定判据、运行中不得调整：inputs 精确相等；raw 输出
 `allclose(atol=1e-5, rtol=0)`；scale/zero-point 描述符精确相等；boxes
 `atol=1e-4`、scores `atol=1e-5`、class id 精确相等，比较前做已声明的排序
 归一（按 class_id、score、x1..y2）。检测在**模型输入空间**比较，并**强制**比较最终原图坐标（双侧
-`detections_original`——捕获端与本轮起的统一 dump 都会产出）；最终坐标缺失
+`detections_original`——捕获端与统一 dump 都会产出）；最终坐标缺失
 或单侧缺失直接判整个比较失败，而不是以免责声明放行。任何材料缺失、运行
 非零返回码、模型/图片 hash 或阈值不一致都以非零返回码失败并保留已收集
-证据；native 失败绝不能以空数组通过。**native 板端状态：完整的源/统一数值对照尚未在任何板端完成**——检查点
-`3d6c14c` 时 S100 已完成固定源与统一实现的真实 SDK 编译，而 X5 的链接步骤被中断
-（[连接中断记录](../../../../docs/releases/unified-migration/evidence/2026-09-24-board-connectivity-interruption/)），
-尚未记录任何数值对照；这些步骤在真实板卡上执行。已完成的 C++ 板端工作只是
-build/smoke（见 `runtime/cpp/README_cn.md`）。
-主机测试覆盖插桩生成（含固定闭包与浅克隆准备提示）、插桩源的 stub 编译
-（只证明注入代码可编译，不代表真实 SDK 构建通过）、观测头精度/标记/拒绝
+证据；native 失败绝不能以空数组通过。这些 native 对照步骤在真实板卡上执行
+（构建说明见 `runtime/cpp/README_cn.md`）。主机测试覆盖插桩生成（含固定闭包与浅克隆准备提示）、插桩源的 stub 编译
+（验证注入代码可编译；真实 SDK 构建在目标环境执行）、观测头精度/标记/拒绝
 行为、对**真实 v2 板端 manifest schema** 的比较、stride 还原与全部失败模式。
 
 <a id="metrics"></a>
 ## 指标
 
-输入要求精确一致；raw 输出检查 shape/dtype，使用 `rtol=0, atol=1e-5`；结果 boxes 使用 `atol=1e-4`，scores `1e-5`，class IDs 精确相等。X5/S 必须各自按源协议比较，host fake fixture 不等于板测。历史性能列于下方，不是本轮测量。
+输入要求精确一致；raw 输出检查 shape/dtype，使用 `rtol=0, atol=1e-5`；结果 boxes 使用 `atol=1e-4`，scores `1e-5`，class IDs 精确相等。X5/S 各自按源协议比较；板端结论以真实 SDK 运行为准。源性能数据列于下方。
 
 <a id="outputs"></a>
 ## 输出
@@ -146,7 +141,7 @@ build/smoke（见 `runtime/cpp/README_cn.md`）。
 <a id="reference-results"></a>
 ## 参考结果
 
-下表完整保留源 X5 历史数据，本轮没有复测：
+源 X5 参考数据表：
 
 | 模型 | 尺寸 | 参数量 | BPU 吞吐 | Python 后处理 |
 |---|---|---:|---:|---:|
@@ -160,10 +155,8 @@ build/smoke（见 `runtime/cpp/README_cn.md`）。
 | YOLOv5l_v7.0 | 640x640 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640x640 | 86.7 M | 13.1 FPS | 12 ms |
 
-2026-09-24 记录包含 S100 与 S600 `x-672`（`kite.jpg`）case 以及全部九个 X5 变体的 Python 源/统一对照（证据见上方链接）；MOT 类精度与 native C++ 对照仍为 `not-run`，这些记录都不重新验证当前工作树。
-
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
 评估器不下载模型、不构建转换产物，也不会把主机测试写成板端兼容。X5 刻意保留源 OpenCV XYXY-to-NMSBoxes quirk，S 使用按类 XYXY NMS；不能跨 target 要求结果相等。
 

@@ -1,8 +1,5 @@
 English | [简体中文](./README_cn.md)
 
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
-
-
 # COCO Dataset Resources
 
 **COCO (Common Objects in Context)** is one of the most widely used public
@@ -74,9 +71,7 @@ contains. Never write `coco_classes.names` line numbers into COCO JSON as
 ## Full COCO download script
 
 [download_full_coco.sh](download_full_coco.sh) fetches and unpacks the official
-COCO 2017 images and annotations. The following describes the script as it is
-checked in; it has not been modified or executed while writing this guide, and
-no downloaded dataset is committed.
+COCO 2017 images and annotations.
 
 Behavior, read from the script:
 
@@ -90,8 +85,8 @@ Behavior, read from the script:
   executable bit, so invoke it through `bash`:
 
   ```bash
-  # cwd: datasets/coco (any directory works; output lands in ./coco_full)
-  bash download_full_coco.sh
+  # cwd: /data/coco
+  bash /path/to/rdk_model_zoo/datasets/coco/download_full_coco.sh
   ```
 
 - Extracts each archive with `unzip -q` inside `coco_full/`, then deletes the
@@ -117,20 +112,9 @@ Behavior, read from the script:
   source is slow, the script may be pointed at a mirror by editing the URLs —
   verify any mirror's integrity yourself before use.
 
-Downloaded data must never be committed, and note what the ignore rules
-actually cover: `.gitignore` excludes the direct `datasets/coco/val2017/*` and
-`datasets/coco/annotations/*` layout (a manual-download convention), but it
-does **not** cover this script's `coco_full/` output — for example
-`datasets/coco/coco_full/train2017/example.jpg` is not ignored. The recommended
-invocation is therefore from a working directory **outside the checkout** (for
-example run `bash <repo>/datasets/coco/download_full_coco.sh` from `/data/coco`),
-so nothing lands in the tree. If you run it inside `datasets/coco/`, add a
-local exclusion first — do not write a literal `.git/info/exclude` path (a
-managed worktree has a `.git` **file**, and the example cwd here is
-`datasets/coco`); resolve the real path from any directory instead:
-`echo "datasets/coco/coco_full/" >> "$(git rev-parse --git-path info/exclude)"`
-— or move the data out before any commit. This guide documents the script
-without modifying it, the tracked `.gitignore`, or any exclude file.
+Keep downloaded data outside the repository. The script's `coco_full/` output
+is relative to the current working directory; the command above runs it from
+`/data/coco`.
 
 <a id="usage"></a>
 ## Where these resources are used
@@ -154,8 +138,4 @@ over DOTA.
   annotations are published under Creative Commons Attribution 4.0. Confirm
   current terms on the official site before redistribution or publication.
 
-Inherited source: this guide expands the Chinese COCO README carried by the X5
-delivery branch (`ac11571`) — original intro, file inventory, download-script
-guidance and official-site links are retained and corrected where they were
-imprecise. The archived untouched copies remain under
-`platforms/x5/datasets/coco/` and `platforms/s/datasets/coco/`.
+Dataset and annotation source: [COCO](https://cocodataset.org/). The download script prepares COCO 2017 train/val images and annotations; the bundled display labels use the model’s contiguous 80-class order.

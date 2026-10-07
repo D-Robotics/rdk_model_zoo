@@ -37,7 +37,7 @@ run.sh sets cwd to the repository root and forwards arguments. It does not insta
 | `--model-path` | Path | `None` | default model/<target>/ HBM; external copy requires asset-id |
 | `--test-img` | Path | `samples/vision/unetmobilenet/test_data/segmentation.png` | sample-relative absolute default |
 | `--img-save-path` | Path | `result.jpg` | original-resolution overlay |
-| `--mask-save-path` | Path | `unetmobilenet_mask.npy` | original-resolution int32 labels; .npy required |
+| `--mask-save-path` | Path | `unetmobilenet_mask.npy` | original-resolution int32 labels;.npy required |
 | `--report-path` | Path | `unetmobilenet_report.json` | JSON report |
 | `--alpha-f` | float | `0.75` | ORIGINAL image weight in [0,1] |
 | `--priority` | int | `0` | source priority, 0..255 |
@@ -75,7 +75,7 @@ mask_again = task.predict(image)
 overlay = render_overlay(image, mask, alpha_f=0.75)
 print(mask.shape, mask.dtype)  # original image height/width, int32
 ```
-Unlike the archived UnetMobileNet.predict API, task.predict returns class IDs; call render_overlay explicitly. Runner owns SDK lifetime and scheduling, binding owns exact artifact/metadata contracts. No shared mutable “last image size” is stored on the task; retain each PreparedInput context. SDK concurrency is not guaranteed.
+`task.predict` returns class IDs; call `render_overlay` to create a display image. Runner owns SDK lifetime and scheduling, binding owns exact artifact/metadata contracts. No shared mutable “last image size” is stored on the task; retain each PreparedInput context. SDK concurrency is not guaranteed.
 
 <a id="stage-io"></a>
 ## Stage IO

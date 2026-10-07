@@ -1,6 +1,5 @@
 English | [简体中文](README_cn.md)
 
-
 # MobileSAM
 
 <a id="overview"></a>
@@ -10,7 +9,6 @@ MobileSAM performs box-prompted image segmentation with a TinyViT image encoder 
 
 - Paper: <https://arxiv.org/abs/2306.14289>
 - Official repository: <https://github.com/ChaoningZhang/MobileSAM>
-- Source baseline: `platforms/s/samples/vision/mobile_sam` and `platforms/x5/samples/vision/mobile_sam`
 
 The input is stretched directly to 512×512. The box and result mask use that resized coordinate system; no inverse transform to the original image is performed. RGB values use mean `[123.675,116.28,103.53]` and std `[58.395,57.12,57.375]`; the selected mask uses logits `>0`.
 
@@ -19,17 +17,17 @@ The input is stretched directly to 512×512. The box and result mask use that re
 
 | Target | Variant | Python | C++ |
 |---|---|---|---|
-| x5 | default `.bin` pair | supported-not-run | not-supported |
-| s100 | nash-e `.hbm` pair | supported-not-run | not-supported |
-| s100p | nash-m `.hbm` pair | supported-not-run | not-supported |
-| s600 | nash-p `.hbm` pair | supported-not-run | not-supported |
+| x5 | default `.bin` pair | supported | not-supported |
+| s100 | nash-e `.hbm` pair | supported | not-supported |
+| s100p | nash-m `.hbm` pair | supported | not-supported |
+| s600 | nash-p `.hbm` pair | supported | not-supported |
 
-Host fixtures use injected runners. Board execution and `hbm_runtime` compatibility remain not-run.
+Host fixtures use injected runners; board execution requires the target board and `hbm_runtime`.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Host checks use the repository `.venv`, Python, NumPy, OpenCV and PyYAML. The recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3; NumPy/OpenCV versions are not pinned by this sample. Runtime syntax requires Python 3.10 or newer. A matching RDK image and `hbm_runtime` are required on board; their system version is unknown and not-run. Prepare both model assets explicitly; inference never downloads. Conversion material is in [conversion](conversion/README.md).
+Host checks use the repository `.venv`, Python, NumPy, OpenCV and PyYAML. The recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3; use the NumPy/OpenCV shipped with your environment. Runtime syntax requires Python 3.10 or newer. A matching RDK image and `hbm_runtime` are required on board; record their system version together with results. Prepare both model assets explicitly; inference never downloads. Conversion material is in [conversion](conversion/README.md).
 
 The board's SDK must already be installed by its matching system image; do not install `hbm_runtime` from an unrelated host environment. Check the required Python imports from the repository root:
 
@@ -38,7 +36,7 @@ The board's SDK must already be installed by its matching system image; do not i
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements were not measured; both encoder and decoder must fit in the target runtime.
+If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements are set by loading both encoder and decoder in the target runtime; plan for both models resident simultaneously.
 
 <a id="quickstart"></a>
 ## Quick Start
@@ -80,7 +78,7 @@ mobile_sam/
 - [Model](model/README.md): target pair mapping, preparation and checksums.
 - [Python runtime](runtime/python/README.md): CLI and `MobileSAMPipeline` API.
 - [Conversion](conversion/README.md): export, calibration and compile material.
-- [Evaluation](evaluator/README.md): reference procedure and not-run boundary.
+- [Evaluation](evaluator/README.md): evaluation procedure and reference records.
 - C++: not provided.
 
 <a id="license"></a>

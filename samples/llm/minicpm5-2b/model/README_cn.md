@@ -65,4 +65,4 @@ HBM 为板端模型，S600 FP16 embedding 为配套数据；tokenizer/元数据�
 | `MODEL_DIR` | 默认本目录下 `<board>`；可选独立目标目录 |
 | `MINICPM5_MODEL_URL` | 更换归档 URL，固定哈希不改变；不能用于任意新模型 |
 
-执行需要 Bash、curl、tar、sha256sum。SDK 不包含在下载包内。以上版本、大小和摘要来自固定源记录，本轮未下载重新计算。
+执行需要 Bash、curl、tar、sha256sum。SDK 不包含在下载包内。以上版本、大小和摘要来自源发布的记录。

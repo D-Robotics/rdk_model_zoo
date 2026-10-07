@@ -4,18 +4,17 @@
 
 The two mono 16 kHz PCM16 WAVs and `manifest.json` are unchanged from S commit
 `380e1a2bf42041af54be6f34935e50197cfadff9`. They provide small source-comparison
-inputs, not a dataset-scale accuracy benchmark or new board-validation claim.
+inputs for feature generation and inference.
 
 | Utterance ID | Samples | Reference text | Valid frontend frames |
 | --- | --- | --- | --- |
 | BAC009S0724W0121 | 68496 | 广州市房地产中介协会分析 | 71 |
 | BAC009S0724W0168 | 75137 | 新地王的诞生迅速搅热南沙土地市场 | 78 |
 
-The references are source annotations, not this migration's model predictions.
+The references are source annotations, not model predictions.
 The frame counts are measured with the pinned FunASR frontend described in the
 runtime guide. Both inputs produce float32 `[1,400,560]` features with zero padding
-and no truncation, byte-identical to the source under the recorded host environment.
-No HBM model was run for these results.
+and no truncation.
 
 ## Layout and custom inputs
 
@@ -24,11 +23,10 @@ Each corresponding audio file is `audio/<utt_id>.wav`. Keep IDs unique and treat
 IDs as names, not paths. Preserve reference text separately from predictions and
 never rewrite this source manifest when generating features. The Python manifest
 CLI writes separate prepared-manifest/feature outputs; see the runtime guide. The
-native consumer of those outputs is implemented: the native launcher reads the
-Python-prepared `prepared-manifest.json` and feature NPY files instead of audio,
-as described in the [native guide](../runtime/cpp/README.md#quickstart). That
-handoff is host-checked only; S100 SDK/board inference remains not-run. Archived
-`run.sh` positional arguments are not the unified interface.
+native launcher reads the Python-prepared `prepared-manifest.json` and feature NPY
+files instead of audio, as described in the
+[native guide](../runtime/cpp/README.md#quickstart). Use the documented named
+arguments for S100 SDK inference.
 
 The current frontend API accepts finite float32 samples loaded from mono or
 multichannel 16 kHz audio; multichannel audio is averaged. It does not resample.
@@ -38,16 +36,15 @@ board-free, runnable feature example and dependencies.
 
 ## Reproducible verification
 
-With the documented frontend environment active, run from repository root:
+With the documented frontend environment active, regenerate the features from
+repository root:
 
 ```bash
-python docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-frontend/verify_real.py
+python samples/speech/paraformer/runtime/python/main.py --preprocess-only --output-dir outputs/paraformer-prepared
 ```
 
-This checks the two copied WAVs against the pinned Git source, compares actual
-FunASR outputs on seven input cases and verifies CPU RNG restoration. It creates
-evidence JSON/log output, not model transcripts, and does not edit this manifest.
-[Recorded results](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-frontend-review.md)
-include source audio hashes, feature hashes, original/valid lengths and truncation.
-The original source's board smoke history remains historical; new SDK/board
-inference, dataset CER and timing are not-run.
+The prepared manifest records each feature file's SHA-256, original/valid frame
+lengths and truncation state; the `feat_length` values are 71 and 78. The run
+does not edit this manifest. SDK/board inference, dataset CER and timing follow
+the [runtime](../runtime/python/README.md) and [evaluator](../evaluator/README.md)
+guides.

@@ -1,12 +1,11 @@
 # HGNetV2 evaluation
-
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
+This guide covers a one-image functional check and dataset-level Top-K evaluation on X5. The dataset command reads image paths and per-image ground-truth class indices from a CSV.
 
 <a id="dataset"></a>
 
 ## Dataset
 
-Use a separately obtained ImageNet-1k validation set (normally 50,000 images); no dataset or download is bundled. The evaluator recursively scans JPEG/PNG files and matches CSV paths relative to --image-path, preserving subdirectories. Prepare CSV with UTF-8 header image:file,category and zero-based labels 0–999. Example layout:
+For ImageNet-1k dataset evaluation, prepare the validation JPEGs and a UTF-8 CSV with the header `image:file,category`. Each row pairs a path relative to `--image-path` with that image’s ground-truth model class index (0–999). The evaluator recursively scans JPEG/PNG files and preserves subdirectories when matching paths. Example layout:
 
 ```text
 /data/imagenet-val/n01440764/example.JPEG
@@ -30,7 +29,7 @@ eval.py reuses the unified HGNetV2 ClassificationTask and RuntimeModelRunner on 
 python3 -m unittest discover -s samples/vision/hgnetv2/tests -v
 ```
 
-Functional board run (duration not measured):
+Functional board run:
 
 ```bash
 # cwd: repository root
@@ -41,51 +40,14 @@ python3 samples/vision/hgnetv2/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-Repeat for each published variant and both X5 board memory configurations. Use the preserved source task API below for a same-process comparison. Keep model bytes, image, resize, Top-K and scheduling identical. The original CLI also remains available, but its formatted score output is less precise than the raw arrays saved here.
+Repeat for each published variant on the matching board. For a same-board
+comparison between runs, keep model bytes, image, resize type, Top-K and
+scheduling parameters identical and compare class IDs and raw scores before
+label formatting; expect identical IDs and scores within 1e-5. When a
+Top-K boundary is an exact tie, compare per-ID scores instead of relaxing
+the tolerance.
 
-```bash
-# cwd: repository root on X5, prepare variant b0 first
-PYTHONPATH="$PWD:$PWD/platforms/x5/samples/vision/hgnetv2/runtime/python" python3 - <<'PYTHON'
-import cv2
-import numpy as np
-from hgnetv2 import HGNetV2, HGNetV2Config
-from samples.vision.hgnetv2.runtime.python.model_binding import resolve_selection
-from samples.vision.hgnetv2.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.hgnetv2.runtime.python.classification import ClassificationTask
-
-model_path = "samples/vision/hgnetv2/model/hgnetv2_b0_224x224_nv12.bin"
-image = cv2.imread("samples/vision/hgnetv2/test_data/sandbar.JPEG")
-if image is None:
-    raise FileNotFoundError("sandbar.JPEG")
-legacy = HGNetV2(HGNetV2Config(model_path, resize_type=1, topk=5))
-legacy.set_scheduling_params(priority=0, bpu_cores=[0])
-old_outputs = legacy.forward(legacy.pre_process(image))
-old_ids, old_scores, _ = legacy.post_process(old_outputs)
-selection = resolve_selection("x5", variant="b0")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = ClassificationTask(runner, binding, top_k=5, resize_type=1)
-new_outputs = task.forward(task.pre_process(image).tensors)
-result = task.post_process(new_outputs)
-# Preserve full vectors in a new output directory; do not overwrite old evidence.
-from pathlib import Path
-from datetime import datetime, timezone
-out = Path("outputs") / ("hgnetv2-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
-out.mkdir(parents=True, exist_ok=False)
-np.save(out / "legacy.npy", old_outputs[legacy.output_names[0]])
-np.save(out / "unified.npy", new_outputs[binding.output_name])
-print("legacy", old_ids.tolist(), old_scores.tolist())
-print("unified", result.class_ids.tolist(), result.scores.tolist())
-print("raw outputs:", out)
-np.testing.assert_array_equal(result.class_ids, old_ids)
-np.testing.assert_allclose(result.scores, old_scores, rtol=0, atol=1e-5)
-PYTHON
-```
-
-This is an unexecuted board comparison recipe, not a receipt. A tie assertion failure requires inspecting per-ID scores rather than relaxing tolerances. Record the identities described under Outputs alongside these arrays.
-
-Dataset evaluation (cwd: repository root on X5). Download b0 first, replace data paths with your actual set. Duration depends on image count and is not measured here. Success returns 0 and writes the JSON; errors/no successful inference return 2. Unlabelled images can yield a partial report with exit 0, so check coverage fields.
+Dataset evaluation (cwd: repository root on X5). Prepare the validation images and CSV, then run the command below. Runtime depends on image count. The command writes the JSON report; review its coverage counts together with the accuracy fields.
 
 ```bash
 bash samples/vision/hgnetv2/model/download.sh x5 b0
@@ -115,19 +77,32 @@ python3 samples/vision/hgnetv2/evaluator/eval.py \
 <a id="metrics"></a>
 ## Metrics
 
-Top-1 = correct rank-1 / successful_inferences; Top-K = truth found in the K predictions / successful_inferences. The denominator preserves the source behavior, so missing/failed images must be considered alongside these rates. top5_acc is retained only when K=5; topk_acc is always the correctly named metric. FPS measures image reads plus preprocessing/inference/postprocessing in the loop, excludes model load/CSV/directory scan and includes no warm-up. It is not the source table’s multi-thread throughput. For fixed-image migration comparison, use identical IDs and absolute score difference <1e-5; exact ties need per-ID evidence.
+Top-1 = correct rank-1 / successful_inferences; Top-K = truth found in
+the K predictions / successful_inferences. The denominators count only
+successful inferences, so read the missing/failed counters alongside these
+rates. `top5_acc` is written only when K=5; `topk_acc` is the correctly
+named metric for every K. FPS measures image reads plus
+preprocessing/inference/postprocessing in the loop, excludes model load
+and CSV/directory scanning, and includes no warm-up — it is not the
+multi-thread throughput of the published table. For fixed-image
+comparisons use identical IDs and absolute score difference <1e-5; exact
+ties need per-ID evidence.
 
 <a id="outputs"></a>
 ## Outputs
 
-Writes --json-save-path and prints the report. Fields include status (complete/partial/no-results), scanned/matched/unmatched/failed/successful counts, per-image errors, accuracy_denominator, top1_acc/topk_acc (null if no successful inference), optional top5_acc, elapsed_seconds/fps, asset_id/target/model, data paths and configuration. Complete means only all scanned images were evaluated; it does not certify a full 50,000-image dataset. Preserve stdout/stderr, code/deployed hashes, SDK/board identity and dataset/model hashes separately for reproducible evidence.
+Writes `--json-save-path` and prints the report. Fields include status (complete/partial/no-results), scanned/matched/unmatched/failed/successful counts, per-image errors, accuracy_denominator, top1_acc/topk_acc (null if no successful inference), optional top5_acc, elapsed_seconds/fps, asset_id/target/model, data paths and configuration. For a full ImageNet validation run, set `--limit 0` and check that 50,000 images are scanned, matched and successful, with zero unmatched or failed images. Keep the JSON report with the model and dataset identity used for the run.
 
 <a id="reference-results"></a>
 ## Reference results
 
-Migration board comparison, dataset accuracy and timing: **not-run**. Historical table copied from the source evaluator at `rdk_x5 @ac115717197920355fc390bb04299b20e6436864`.
+Figures published in the X5 release (x5-v1.1.3).
 
-Source conditions: X5 CPU 8×A55@1.8GHz performance mode, BPU Bayes-e@1GHz. Float Top-1 is pre-quantization ONNX; Quant Top-1 is deployment. Single-thread latency is one frame/one BPU core; multi-thread latency and FPS use concurrent submissions. The source does not fix dataset subset, warm-up or repetition counts, so reproducibility remains incomplete.
+Conditions: X5 CPU 8×A55@1.8GHz performance mode, BPU Bayes-e@1GHz. Float
+Top-1 is pre-quantization ONNX; Quant Top-1 is deployment. Single-thread
+latency is one frame/one BPU core; multi-thread latency and FPS use
+concurrent submissions. For new comparisons, use the same dataset subset and
+record warm-up, repetition count, board mode and concurrency settings.
 
 | Model | Input Size | Params (M) | Float Top-1 | Quantized Top-1 | Single‑thread Latency (ms) | Multi‑thread Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -138,6 +113,6 @@ Source conditions: X5 CPU 8×A55@1.8GHz performance mode, BPU Bayes-e@1GHz. Floa
 | HGNetv2_b4 | 224x224 | 19.8 | 83.694 | 81.93 | 5.29 | 12.32 | 241.94 |
 
 <a id="boundaries"></a>
-## Boundaries
+## Dataset-level evaluation
 
-The migrated evaluator has host tests only; no dataset or board evaluation was run. It does not compute ONNX accuracy, calibration quality, single-core latency or multi-thread throughput. Source CLI names remain where practical; external --model-path now requires --asset-id, invalid CSV is rejected instead of silently skipped, failures return nonzero, and topk_acc replaces the misleading top5 name for K other than 5.
+Use the dataset command with `--limit 0` and all 50,000 validation image paths to evaluate the complete split. Review `scanned`, `matched`, `unmatched`, `failed`, and `successful` counts with the Top-K rates; a full-set run has 50,000 successful, labeled images. Pair an external `--model-path` with its exact `--asset-id`, provide valid CSV categories, and select the result field for the requested K (`top5_acc` for K=5, `topk_acc` for other values).

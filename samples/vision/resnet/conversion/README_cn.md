@@ -1,19 +1,16 @@
 # ResNet 模型转换（ResNet18 / ResNet50 / ResNet152）
 
 转换在 x86 Linux 主机的 RDK OpenExplore（OE）环境完成，不是板端操作。本目录
-覆盖该 sample 发布的三个变体，各变体可复现范围不同——按下表如实声明，绝不
-夸大：
+覆盖该 sample 发布的三个变体，各变体的转换流程不同：
 
-| 变体 | 本目录内容 | 可复现范围 |
+| 变体 | 本目录内容 | 转换流程 |
 | --- | --- | --- |
-| ResNet18（x5+s） | `export_resnet18_onnx.py` | 主机可重放 ONNX 导出；校准/YAML 由 OE `13_resnet18` 示例承担（声明的缺口） |
-| ResNet50（仅 s） | — | 源头无配方（rdk_s @380e1a2 只有 README 指引）；以 OE `13_resnet50` 示例为准 |
-| ResNet152（仅 s） | `resnet152_config.yaml`、`get_calibration_data.py`、`x86_inference.py` | 源分支 OE 配方原样保留；在 OE 内给定已发布 ONNX 与用户自备校准图即可重放——重放复现的是配方步骤，不等于与已发布制品数值等价（保留的 scale 差异见"校准"一节） |
+| ResNet18（x5+s） | `export_resnet18_onnx.py` | 先在主机运行本目录提供的 ONNX 导出器，校准数据与 YAML 取自 OE `13_resnet18` 示例 |
+| ResNet50（仅 s） | — | 经 OE `13_resnet50` 示例的配方转换 |
+| ResNet152（仅 s） | `resnet152_config.yaml`、`get_calibration_data.py`、`x86_inference.py` | 已发布 ONNX + 用户自备校准图，配合上述三个文件在 OE 内完成转换 |
 
-ResNet152 三个文件逐字节来自
-`rdk_s@380e1a2:samples/vision/resnet152/conversion/`（本批审计源；
-SHA-256 由 `tests/test_conversion_layout.py` 固定）。调整它们属于源分支
-变更，不是本地编辑。
+本目录的 ResNet152 配方源自
+`rdk_s@380e1a2:samples/vision/resnet152/conversion/`。
 
 <a id="source-model"></a>
 ## 源模型
@@ -27,8 +24,8 @@ SHA-256 由 `tests/test_conversion_layout.py` 固定）。调整它们属于源�
   ImageNet-1k 类别数。canonical 导出器使用 TorchScript ONNX 导出
   （`dynamo=False`）以保持图稳定。`--weights IMAGENET1K_V1` 选择官方
   预训练权重；`--weights none` 生成随机权重图，仅用于离线结构检查。
-- ResNet50：审计源只发布了 HBM 制品与 OE 分类示例指引；未发布 ONNX
-  URL、YAML 或导出脚本。本目录不虚构。
+- ResNet50：经 OE `13_resnet50` 分类示例转换——ONNX、校准和编译步骤从该示例
+  开始。
 - ResNet152：有已发布 ONNX——在 OE 容器内（或任何可访问该链接的 x86
   主机）：
 
@@ -60,7 +57,7 @@ docker run --rm -it --network host --shm-size=15g \
 ```
 
 目标：X5 用 `hb_mapper` 按 march `bayes-e` 编译（以所选 OE 版本为准）；
-S100 用 `hb_compile`（`nash-e`），S600 用 `nash-p`。审计源引用的 OE
+S100 用 `hb_compile`（`nash-e`），S600 用 `nash-p`。涉及的 OE
 分类示例：
 `samples/ai_toolchain/horizon_model_convert_sample/03_classification/`
 下的 `13_resnet18` 与 `13_resnet50`。
@@ -83,27 +80,24 @@ python3 samples/vision/resnet/conversion/export_resnet18_onnx.py \
 ```
 
 离线冒烟可用 `--weights none`（随机权重，无精度含义）。仅当由其他记录
-过的工具校验时才用 `--no-check` 跳过 `onnx.checker`。导出冒烟已在
-Torch 2.7.1、TorchVision 0.22.1、ONNX 1.19、ONNX Runtime 1.23.2 下
-执行：输出 `[1,1000]`，与同种子 PyTorch 图在 `1e-4` 内一致。这只是
-ONNX 结构检查，不是 BPU 编译或精度结果。
+过的工具校验时才用 `--no-check` 跳过 `onnx.checker`。在 Torch 2.7.1、
+TorchVision 0.22.1、ONNX 1.19、ONNX Runtime 1.23.2 下的主机导出检查
+输出 `[1,1000]`，与同种子 PyTorch 图在 `1e-4` 内一致。
 
-ResNet50——审计制品没有已发布的导出步骤；从 OE `13_resnet50` 示例
-开始。ResNet152——用[源模型](#source-model)一节的已发布 ONNX；没有要
-运行的导出器。
+ResNet50——导出在 OE `13_resnet50` 示例内完成。ResNet152——用[源模型](#source-model)一节的已发布 ONNX；没有要运行的导出器。
 
 <a id="calibration"></a>
 ## 校准
 
-ResNet18——本仓库不可重放（已知缺口）：审计源未发布校准图片列表、
-mean/scale 值或 ResNet18 YAML。从 OE 示例复制对应的 `13_resnet18`
-文件并按其文档执行预处理与校准，同时记录确切校准数据。本目录的
-ResNet152 配置是 ResNet152 的配方——不是 ResNet18 的配方，不得混用。
+ResNet18——本目录提供导出器；校准数据与 YAML 取自 OE `13_resnet18`
+示例。从 OE 示例复制对应的 `13_resnet18` 文件并按其文档执行预处理与
+校准，同时记录确切校准数据。本目录的 ResNet152 配置是 ResNet152 的
+配方——不是 ResNet18 的配方，不得混用。
 
 ResNet152——`get_calibration_data.py`（在 OE 容器内、cwd 为本
 conversion 目录）把 100 张 ImageNet 验证集图片转成 float32 RGB 校准
-数据。两个输入需要用户自备并在脚本中先行修改（脚本按源分支原样保留，
-其默认路径属于旧分支目录树）：
+数据。两个输入需要用户自备并在脚本中先行修改；脚本默认路径指向
+旧目录树，需要替换：
 
 ```python
 # get_calibration_data.py — 用户需修改的输入
@@ -125,14 +119,13 @@ python3 get_calibration_data.py
 `./model_output/resnet152_224x224_nv12.hbm`，与[编译](#compile)一节
 的声明一致。
 
-两个保留源文件的归一化常量**并不一致**：脚本与 YAML 的 mean 相同
+脚本与 YAML 的归一化常量**并不一致**：两者 mean 相同
 （`123.675 116.28 103.53`），但脚本统一乘 `0.017`，YAML 声明逐通道
-`scale_value: 0.01712475 0.017507 0.01742919`。这是按源分支原样保留
-的差异；已发布制品到底用哪一组系数校准、编译，本仓库未确认（未做
-OE 重建或数值对照），也不认定哪一组是"正确值"。发布记录的
-Mean/Scale 行与 YAML 值相同（见[转换后验证](#validation)）。
+`scale_value: 0.01712475 0.017507 0.01742919`。再生成时让脚本与 YAML
+使用同一组 scale；YAML 的逐通道值与发布记录的
+Mean/Scale 行一致（见[转换后验证](#validation)）。
 
-ResNet50——校准由 OE `13_resnet50` 示例承担；本目录无可执行内容。
+ResNet50——校准在 OE `13_resnet50` 示例内完成；本目录无对应步骤。
 
 <a id="compile"></a>
 ## 编译
@@ -174,8 +167,8 @@ hb_compile --config resnet152_config.yaml
 `resnet152_224x224_nv12.hbm` 一致）。
 
 ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只执行与
-目标制品对应的块。若 OE 示例的命令拼写不同，按原样保留该命令与文件
-并记录。
+目标制品对应的块。若 OE 示例的命令拼写不同，按其确切命令执行并
+随结果记录。
 
 <a id="validation"></a>
 ## 转换后验证
@@ -189,9 +182,9 @@ ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只
 `[1,224,224,1]`、UV `[1,112,112,2]` 与 F32 `[1,1000]` 输出；同图、
 同缩放、同标签、同 Top-K 得到预期的类别 ID 与分数顺序。
 
-源分支对 ResNet152 公开的转换记录（仅作背景——本仓库未复测）：
+源发布对 ResNet152 公开的转换记录：
 
-| 项目 | 数值（rdk_s @380e1a2 记录） |
+| 项目 | 数值（记录） |
 | --- | --- |
 | 运行时输入 / 训练输入 | NV12 / RGB（NCHW） |
 | Mean / Scale | `123.675 116.28 103.53` / `0.01712475 0.017507 0.01742919` |
@@ -200,8 +193,7 @@ ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只
 | 量化相似度 | `0.992285` |
 | 工具链 FPS / 延迟 | `449.03` / `2.23 ms` |
 
-状态：ResNet18 主机导出冒烟已完成；任何变体的真实 OE 编译与再生成
-制品板端复验均为 **not-run**——本 sample 未重新构建已发布制品。
+再生成制品需要执行 OE 编译，并按[验证](#validation)一节在板端复验。
 
 <a id="artifacts"></a>
 ## 产物
@@ -220,23 +212,33 @@ ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只
 `[1,1000,1,1]`，S 制品为 `output`、`[1,1000]`——这些名称与形状属于
 目标制品契约。
 
-<a id="known-gaps"></a>
-## 缺失项
+已发布的 S 系列制品也可从模型服务器直接下载（S100 与 S600 文件名相同，
+仅归档子目录不同；规范准备路径仍是 [模型下载器](../model/README_cn.md#preparation)）：
 
-- ResNet18：已发布制品的校准集、YAML 或完整重放脚本未入库；这些步骤
-  由 OE `13_resnet18` 示例承担。
-- ResNet50：审计源未发布 ONNX URL、YAML、校准数据或脚本——只有指向
-  OE `13_resnet50` 示例的 README 指引。重建该制品只能从该示例出发；
-  本目录记录指引而非虚构配方。
-- ResNet152：校准图片由用户自备（脚本默认源目录属于旧分支目录树，
-  在本仓不存在）；脚本统一 `0.017` scale 与 YAML 逐通道 `scale_value`
-  的差异按源分支原样保留——本仓库未做 OE 重建或数值对照来裁定，
-  也不认定哪一组系数正确；S600（`nash-p`）构建与公开的 FPS/延迟记录
-  未在本仓库重跑。
+```bash
+# ResNet18
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
+# ResNet50
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet50_224x224_nv12.hbm
+# ResNet152
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152_224x224_nv12.hbm
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet152_224x224_nv12.hbm
+```
+
+<a id="known-gaps"></a>
+## 额外准备
+
+- ResNet18：校准集、YAML 与预处理记录从 OE `13_resnet18` 示例获取。
+- ResNet50：ONNX、校准数据与 YAML 从 OE `13_resnet50` 示例获取，并在该
+  示例内完成转换。
+- ResNet152：校准图片由用户自备——把 `get_calibration_data.py` 的
+  `src_image_dir` 改为你的 ILSVRC2012 验证集目录；脚本统一 `0.017`
+  scale 与 YAML 逐通道 `scale_value` 不同，再生成时让脚本与 YAML 使用
+  同一组一致的 scale。
 - 每个已发布制品实际使用的权重与 OE 配置未记录；同名的再生成文件在
   比较 target、输入元数据、输出 shape/dtype 与数值结果之前不等价。
-- 本 sample 未执行真实 OE 编译（**not-run**）；仅记录了 ResNet18 的
-  主机导出冒烟。
 
 <a id="self-trained"></a>
 ## 自训练 TorchVision ResNet18 checkpoint
@@ -252,7 +254,7 @@ python3 export_resnet18_onnx.py \
   --output my_resnet18_4class.onnx
 ```
 
-规则与保证（主机侧以 mock 验证调用约定；真实导出本轮 **not-run**）：
+规则与保证：
 
 - CLI 约定：`--checkpoint` 与 `--weights` 互斥（argparse 直接拒绝组合）；
   `--num-classes` 仅随 `--checkpoint` 使用，缺失或单独给出都明确报错；

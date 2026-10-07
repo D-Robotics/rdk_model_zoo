@@ -8,7 +8,7 @@
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-五份原样源 YAML 均面向 X5 `march: bayes-e`。源未指定 OE 版本，重建时必须记录实际版本。没有 S 配方。
+五份原样源 YAML 均面向 X5 `march: bayes-e`。构建时记录使用的 OE 版本。
 
 | Variant | Config | Required ONNX | Published filename |
 | --- | --- | --- | --- |
@@ -17,6 +17,11 @@
 | `130` | `RepGhost_130.yaml` | `./repghostnet_130.onnx` | `RepGhost_130_224x224_nv12.bin` |
 | `150` | `RepGhost_150.yaml` | `./repghostnet_150.onnx` | `RepGhost_150_224x224_nv12.bin` |
 | `200` | `RepGhost_200.yaml` | `./repghostnet_200.onnx` | `RepGhost_200_224x224_nv12.bin` |
+
+
+工具链资源:
+
+- [OE Docker environment](https://forum.d-robotics.cc/t/topic/35229)
 
 <a id="export"></a>
 ## ONNX 导出
@@ -31,7 +36,8 @@
 <a id="compile"></a>
 ## 编译
 
-仅在 OE 环境、补齐 ONNX 与 RGB float32 校准数据后可执行以下条件命令。本次迁移未执行；cwd 为本 conversion 目录。以 100 为例：
+在 OE 环境内、补齐 ONNX 与 RGB float32 校准数据后执行（cwd 为本
+conversion 目录）。以 100 为例：
 
 ```bash
 cd samples/vision/repghost/conversion
@@ -44,7 +50,7 @@ hb_mapper makertbin --model-type onnx --config RepGhost_100.yaml
 <a id="validation"></a>
 ## 转换后验证
 
-板端验证 not-run。先核对 224 几何、packed NV12、squeeze 后 (1000,) 的单 F32 输出及分数语义，随后可用准确引用与独立路径运行重建 100 制品：
+先核对 224 几何、packed NV12、squeeze 后 (1000,) 的单 F32 输出及分数语义，随后可用准确引用与独立路径运行重建 100 制品：
 
 ```bash
 # cwd: repository root on X5
@@ -62,6 +68,6 @@ python3 samples/vision/repghost/runtime/python/main.py --target x5 \
 逐变体发布文件名见上表，下载落在 `samples/vision/repghost/model/`。编译在工作目录生成共同基名；移动已验证构建时须保留变体身份，单纯改名不能证明图等价或精度一致。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
-缺少：固定框架/OE 版本、权重修订/哈希、可运行导出、校准数据选择/数量/准备及转换和板端精度证据。五份 YAML 与源许可声明逐字节保留。当前可用发布模型下载路线，不声明端到端转换可复现。
+每个变体选择对应的 PyTorch/timm 权重并记录其修订与摘要。在对应 YAML 旁导出 RGB/NCHW 模型图；由于 `input_shape` 和 `input_name` 为空，应检查实际输入输出 metadata。按 float32 RGB、`cal_data_type: float32`、`calibration: default`、mean `123.675/116.28/103.53` 与 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32`。每份 YAML 都写入 `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`，各变体应使用独立工作区构建。

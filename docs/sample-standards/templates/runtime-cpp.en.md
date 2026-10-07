@@ -8,13 +8,12 @@
 <a id="supported-boards"></a>
 ## Supported Boards
 
-> **Must answer:** exactly which boards this build runs on and which are
-> excluded, with reasons. “All platforms” requires per-board evidence — do not
-> write it otherwise.
+> **Must answer:** the boards with a C++ implementation, their matching
+> artifacts, SDK versions and preparation requirements.
 
-| Board | Status | Note |
+| Board | C++ entry | Requirements |
 | --- | --- | --- |
-| ⟪board⟫ | ⟪supported-verified / supported-not-run / not-supported⟫ | ⟪reason/link⟫ |
+| ⟪board⟫ | ⟪available / —⟫ | ⟪reason/link⟫ |
 
 <a id="dependencies"></a>
 ## Dependencies

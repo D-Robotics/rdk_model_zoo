@@ -3,12 +3,12 @@
 <a id="source-model"></a>
 ## Source model
 
-The source describes PyTorch/timm RepGhost variants but fixes no timm/torch version, weight revision or weights digest. No weights or executable ONNX export script are delivered. Correspondence with the published binaries has not been rebuilt.
+Use the matching PyTorch/timm RepGhost checkpoint and record its version, revision and digest before exporting each variant.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-Five unchanged source YAMLs target X5 `march: bayes-e`. The OE version is unspecified in the source and must be recorded when rebuilding. No S recipe exists.
+Five unchanged source YAMLs target X5 `march: bayes-e`. The OE version is unspecified in the source and must be recorded when rebuilding.
 
 | Variant | Config | Required ONNX | Published filename |
 | --- | --- | --- | --- |
@@ -17,6 +17,11 @@ Five unchanged source YAMLs target X5 `march: bayes-e`. The OE version is unspec
 | `130` | `RepGhost_130.yaml` | `./repghostnet_130.onnx` | `RepGhost_130_224x224_nv12.bin` |
 | `150` | `RepGhost_150.yaml` | `./repghostnet_150.onnx` | `RepGhost_150_224x224_nv12.bin` |
 | `200` | `RepGhost_200.yaml` | `./repghostnet_200.onnx` | `RepGhost_200_224x224_nv12.bin` |
+
+
+Toolchain resources:
+
+- [OE Docker environment](https://forum.d-robotics.cc/t/topic/35229)
 
 <a id="export"></a>
 ## ONNX export
@@ -31,7 +36,8 @@ All configs use `./calibration_data_rgb_f32`, `cal_data_type: float32`, calibrat
 <a id="compile"></a>
 ## Compile
 
-Conditional commands only, inside an OE environment after the missing ONNX and RGB float32 calibration data are prepared. Not executed during migration. cwd is this conversion directory. Example for 100:
+In the OE environment, after the ONNX graph and RGB float32 calibration
+data are prepared (cwd is this conversion directory). Example for 100:
 
 ```bash
 cd samples/vision/repghost/conversion
@@ -44,7 +50,7 @@ Every config writes working_dir `RepGhost_224x224_nv12` with output prefix `RepG
 <a id="validation"></a>
 ## Post-conversion validation
 
-Board validation is not-run. Only after verifying 224 geometry, packed NV12, one F32 output squeezing to (1000,), and score semantics, run a rebuilt 100 artifact with the exact reference plus its separate path:
+Only after verifying 224 geometry, packed NV12, one F32 output squeezing to (1000,), and score semantics, run a rebuilt 100 artifact with the exact reference plus its separate path:
 
 ```bash
 # cwd: repository root on X5
@@ -54,7 +60,7 @@ python3 samples/vision/repghost/runtime/python/main.py --target x5 \
   --test-img samples/vision/repghost/test_data/ibex.JPEG
 ```
 
-The reference selects the contract, not a claim that rebuilt bytes equal published bytes. Save the rebuilt digest and provenance separately, compare against the source and evaluate quantization accuracy before release.
+Use the matching reference and target for each artifact. Save the build digest and provenance, compare source and rebuilt outputs, and evaluate quantization accuracy before release.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -62,6 +68,6 @@ The reference selects the contract, not a claim that rebuilt bytes equal publish
 The per-variant published filenames are listed above and downloaded under `samples/vision/repghost/model/`. Compilation produces a common basename in its working directory. Preserve the selected variant identity when moving a verified build; renaming alone establishes neither graph equivalence nor accuracy.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-Missing: pinned framework/OE versions, weight revision/hash, runnable export, calibration selection/count/preparation, and conversion/board accuracy evidence. Five YAMLs and source notices are preserved byte-for-byte. Today the published model download route is available; a reproducible end-to-end conversion is not claimed.
+For each variant, select the matching PyTorch/timm checkpoint and record its revision and digest. Export a graph beside the corresponding YAML with RGB/NCHW input; inspect its actual input and output metadata because `input_shape` and `input_name` are empty. Prepare `./calibration_data_rgb_f32` with float32 RGB values, `cal_data_type: float32`, `calibration: default`, mean `123.675/116.28/103.53`, and scale `0.01712475/0.017507/0.01742919`. Build variants in separate workspaces because each YAML writes `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`.

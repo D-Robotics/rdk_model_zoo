@@ -5,9 +5,9 @@
 <a id="environment"></a>
 ## 环境
 
-实际推理需要 S100P 或 S600、匹配的 `hbm_runtime`、Python、NumPy 和 OpenCV。两个目标使用独立发布模型，不存在 S100/X5 资产。[显式下载器](../../model/README_cn.md)负责准备并校验 HBM；推理不安装依赖、不下载模型。本次迁移未运行真实 SDK/板卡，主机测试显式注入运行夹具。
+实际推理需要 S100P 或 S600、匹配的 `hbm_runtime`、Python、NumPy 和 OpenCV。两个目标使用独立发布模型，不存在 S100/X5 资产。[显式下载器](../../model/README_cn.md)负责准备并校验 HBM；推理不安装依赖、不下载模型。
 
-以下命令均从仓库根目录执行，Shell 包装入口也会切换到该目录。源任务类混合 SDK 资源管理、量化和绘图；新任务使用共享具名数组 runner 传输，将数据 IO、变换和可视化分别放入独立模块。
+以下命令均从仓库根目录执行，Shell 包装入口也会切换到该目录。任务类只处理规划张量语义；SDK 传输由共享具名数组 runner 完成，数据 IO、变换与可视化分别在独立模块。
 
 <a id="usage"></a>
 ## 单案例与批量运行
@@ -31,7 +31,7 @@ bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100
 bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases
 ```
 
-批量 dry-run 校验全部五份输入并打印命令，不执行 SDK、不创建输出。实际运行复用单案例 CLI，与源实现一样每案例加载一次模型，在首个非零返回处停止，`batch-report.json` 保留已完成返回码、剩余案例及可用报告摘要。部分完成不等于五例通过。批量输出改用 `--output`，替代源包装入口的位置参数。
+批量 dry-run 校验全部五份输入并打印命令，不执行 SDK、不创建输出。实际运行复用单案例 CLI，每案例加载一次模型，在首个非零返回处停止，`batch-report.json` 保留已完成返回码、剩余案例及可用报告摘要；各案例的完成状态以其返回码为准。批量输出通过 `--output` 指定。
 
 <a id="parameters"></a>
 ## 参数
@@ -55,7 +55,7 @@ bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100
 
 检查模式互斥。批量入口复用目标/资产/模型/阈值/调度/检查参数，另有 `--cases-root`（默认 `samples/vision/diffusiondrive/test_data`）与 `--output`（默认 `outputs/diffusiondrive_cases`）。它没有单案例 `--input-npz` 或额外输出文件参数。案例顺序为000、017、042、073、099。
 
-输出目录及额外路径必须不存在。额外目标须互不相同，不得覆盖正式数组、图片或报告。保留源图片别名与 `--platform`，原输出文件默认位置改为每次运行独立目录；移除环境目标覆盖及隐式下载。直接 Python 命令的相对路径按当前工作目录解析。
+输出目录及额外路径必须不存在。额外目标须互不相同，不得覆盖正式数组、图片或报告。图片别名与 `--platform` 为受支持的选项。每次运行默认写入各自新建的输出目录；目标显式指定，不使用环境变量覆盖，也不隐式下载。直接 Python 命令的相对路径按当前工作目录解析。
 
 <a id="results"></a>
 ## 保存的结果
@@ -70,7 +70,7 @@ bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100
 
 解码数组：float32 轨迹 `[1,8,3]`、Agent 状态 `[1,30,5]`、概率 `[1,30]`、BEV logits `[1,7,128,256]`；bool Agent 掩码 `[1,30]`；uint8 BEV 标签 `[1,128,256]`。运行库提供版本时记录，否则为 `unknown`。UTC 字段界定工作时间，不是延迟基准。不预热、不重新生成噪声、不执行控制。
 
-额外解码归档为字节副本；额外图片单独编码，JPEG 有损，不要求与 PNG 像素一致。写入失败可能留下不完整目录，使用前检查返回码与报告。返回 0 表示处理/输出完成，不代表驾驶质量。[离线评估器](../../evaluator/README_cn.md)读取解码 `outputs.npz`，不读取原始张量。
+额外解码归档为字节副本；额外图片单独编码，JPEG 有损，与 PNG 之间的比较以数组为准。写入失败可能留下不完整目录，使用前检查返回码与报告。返回 0 表示处理与输出完成；驾驶质量评估在 NAVSIM 评测流程中进行。[离线评估器](../../evaluator/README_cn.md)读取解码 `outputs.npz`，不读取原始张量。
 
 <a id="integration-example"></a>
 ## 应用集成
@@ -92,12 +92,12 @@ task = DiffusionDriveTask(runner, binding, agent_score_threshold=0.5)
 result = task.predict(features)
 assert result["trajectory"].shape == (1, 8, 3)
 assert result["bev_labels"].shape == (1, 128, 256)
-# 同时保留本次调用的物理输入与原始输出（归档契约）时：
+# 同时保留单次调用的物理输入与原始输出（归档契约）时：
 details = task.predict(features, return_details=True)
 assert set(details.physical) == set(features) and set(details.raw) == set(details.result) | {"agent_labels"}
 ```
 
-`DiffusionDriveDetails`（通过 `return_details=True` 显式开启）将解码结果与本次
+`DiffusionDriveDetails`（通过 `return_details=True` 显式开启）将解码结果与单次
 调用的物理输入、原始输出打包返回，归档 `physical_inputs.npz`/`raw_outputs.npz`
 无需二次推理；默认 `predict` 仍只返回解码映射，task 不保存上一次输出。
 结果独立持有数组，使用任务时须保持 SDK runner 存活；未建立同步机制前不应并发共享。任务不再持有 SDK，也不提供 `__call__` 别名，请使用 `predict`。它不接受原始相机/LiDAR 传感器数据替代准备后的特征张量。
@@ -110,7 +110,7 @@ assert set(details.physical) == set(features) and set(details.raw) == set(detail
 | `preprocess` | 精确四份有限 float32 逻辑数组 | 按绑定类型/量化生成的平坦名称→物理数组映射 |
 | `infer` | 物理映射 | 独立原始具名输出，不做语义解码 |
 | `postprocess` | 精确匹配元数据的四份原始数组 | 独立解码六数组结果 |
-| `predict` | 逻辑特征 | 组合上述三阶段；`return_details=True` 额外返回本次调用的物理输入与原始输出 |
+| `predict` | 逻辑特征 | 组合上述三阶段；`return_details=True` 额外返回单次调用的物理输入与原始输出 |
 
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
@@ -118,7 +118,7 @@ assert set(details.physical) == set(features) and set(details.raw) == set(detail
 
 物理类型可为 int8/uint8/int16/uint16/int32/uint32/float16/float32，须通过真实元数据和变换校验。整数要求显式正且有限的 SCALE 描述，输入 scale 只能是逐张量。浮点空量化信息表示类型转换/直通，NONE 描述允许值为零的零点占位；非空浮点 SCALE 保持源仿射行为。输出支持逐轴 scale，长度须匹配轴；单个零点广播到全部通道，修正源 reshape 错误。整数零点须为范围内整数。绑定保留变换值快照，不深拷贝 SDK 描述对象。
 
-输入量化保留源 float32 `rint(x/scale + zero)`；最终整数转换前用 float64 边界裁剪，避免 int32/uint32 上界回绕。缺少整数 scale、元数据错误、非有限输入/结果均失败。输出先反量化，再执行源 sigmoid（logits 裁剪 [-60,60]）、Agent 阈值和通道轴 BEV argmax。不插入未说明的传感器归一化、随机噪声或新规划算法。本次主机迁移尚未观察真实 HBM 元数据。
+输入量化保留源 float32 `rint(x/scale + zero)`；最终整数转换前用 float64 边界裁剪，避免 int32/uint32 上界回绕。缺少整数 scale、元数据错误、非有限输入/结果均失败。输出先反量化，再执行源 sigmoid（logits 裁剪 [-60,60]）、Agent 阈值和通道轴 BEV argmax。不插入未说明的传感器归一化、随机噪声或新规划算法。真实 HBM 元数据在板端加载时校验。
 
 <a id="troubleshooting"></a>
 ## 排障
@@ -130,4 +130,4 @@ assert set(details.physical) == set(features) and set(details.raw) == set(detail
 - BEV 近乎全灰：灰色表示道路，先检查 logits/标签与参考指标，不能直接判定色表错误。
 - 批量失败：检查各例报告与 `remaining_cases`，修正原因后使用新目录重跑。
 
-主机测试将六份浮点案例与真实源后处理/绘图逐项对照，覆盖量化边界，并用注入 SDK 运行真实 CLI。它们不证明物理 HBM 兼容、板端相等、NAVSIM 精度或性能。历史表格和验证边界见评估说明。
+参考数值与验证边界见[评估说明](../../evaluator/README_cn.md)。

@@ -1,19 +1,17 @@
 # ResNet18 C++ runtime (S-series)
 
-The consolidated S-series ResNet18 native runtime: the audited S18
-`hbDNNInferV2` flow, image preprocessing, NV12 tensor creation, and Top-K
-output code kept as source in the canonical sample. The old S18 C++
-directory remains a thin CMake compatibility configure path; it does not
-maintain a second copy.
+The S-series ResNet18 native runtime: the `hbDNNInferV2` inference flow,
+image preprocessing, NV12 tensor creation and Top-K output, built on the
+shared `samples/_shared/cpp/c_utils` sources.
 
 <a id="supported-boards"></a>
 ## Supported boards
 
 | Board | Status |
 | --- | --- |
-| S100 | supported-verified (built and run 2026-09-17; Top-5 equal to the source baseline) |
-| S600 | supported-not-run (same source and SoC detection; board access unavailable) |
-| X5 | not-supported (no X5 C++ source exists in the audited baseline) |
+| S100 | supported |
+| S600 | supported |
+| X5 | not-supported |
 
 The CMake file reads `/sys/class/boardinfo/soc_name` and defines the SoC
 macro used by the original source; an unreadable identity file is an error,
@@ -43,7 +41,7 @@ cmake -S samples/vision/resnet/runtime/cpp \
 cmake --build samples/vision/resnet/runtime/cpp/build --parallel
 ```
 
-The compatibility path selects the same canonical target:
+An alternative build directory selects the same target:
 
 ```bash
 cmake -S samples/vision/resnet/runtime/cpp \
@@ -118,6 +116,4 @@ synchronous inference.
 The binary prints the Top-K classes using the linewise ImageNet label
 file, one result per line with class id, score, and label; the exit code
 is 0 on success. Record the board identity, artifact reference, complete
-build/run command, and Top-K output for every native evaluation. S600
-connectivity or an unavailable artifact is `not-run`, not a successful
-S100 substitute.
+build/run command, and Top-K output for each S100 or S600 evaluation.

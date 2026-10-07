@@ -10,14 +10,14 @@ YOLOv5 是单阶段 anchor 检测器：CSPDarknet backbone 加 FPN+PAN 特征融
 <a id="support-matrix"></a>
 ## 支持与验证矩阵
 
-| target | variant | Python | C++ | 状态 |
+| 目标 | 变体 | Python | C++ | 说明 |
 |---|---|---|---|---|
-| X5 | n-v7.0、s/m/l/x-v2.0、s/m/l/x-v7.0 | supported-verified | supported-not-run | Python：九个变体全部在 8GB+4GB 源/统一对照。C++：无数值对照；smoke 记录仅覆盖 `s-v2.0` 默认——见表下说明 |
-| S100 | x-672 | supported-verified | supported-not-run | Python：`x-672` `kite.jpg` 对照。C++：无数值对照；有 `x-672` 构建/smoke 记录——见表下说明 |
-| S100P | — | not-supported | not-supported | manifest 没有 YOLOv5 制品；仅有拒绝路径记录 |
-| S600 | x-672 | supported-verified | supported-not-run | Python：`x-672` `kite.jpg` 对照。C++：无数值对照；有 `x-672` 构建/smoke 记录——见表下说明 |
+| X5 | n-v7.0、s/m/l/x-v2.0、s/m/l/x-v7.0 | 支持 | 支持 | Python 覆盖全部九个变体；C++ 构建运行见 `runtime/cpp/` |
+| S100 | x-672 | 支持 | 支持 | Python 使用 `kite.jpg`；C++ 见 `runtime/cpp/` |
+| S100P | — | 不支持 | 不支持 | manifest 无 YOLOv5 制品；显式拒绝 |
+| S600 | x-672 | 支持 | 支持 | Python 使用 `kite.jpg`；C++ 见 `runtime/cpp/` |
 
-`supported-verified`（Python）表示 2026-09-24 记录的同板源/统一对照（板测固定提交 `ae0f185`/`4d45f9a`），归档于 [python 对照](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[X5 九变体矩阵](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-yolov5-x5-variants/)与[扩展板测](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)证据：X5 覆盖一个 8GB 和一个 4GB 板上的全部九个发布变体（`bus.jpg`），S100/S600 覆盖 `x-672` `kite.jpg` case。它们只验证这些制品/图片 case，不是 COCO 精度结论，而且属于历史记录——本工作树不对当前 HEAD 追加任何新的板端验证。C++ 列为 `supported-not-run`：尚未在任何板端记录源/统一数值对照。另有 2026-09-24 真实板端的编译+推理 smoke 记录，但只覆盖 C++ 默认变体——X5 8GB/4GB 上的 `s-v2.0` 制品、以及 S100（首轮编译失败修复后）和 S600 的 `x-672` 制品，dump 已归档（[首轮](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-board-initial/)、[第二轮](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-native-round2/)、[X5 4GB/S600](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)）；smoke 不构成任何变体的数值验证，不延伸到其余 X5 C++ 变体，也不得出任何精度或性能结论。S100P 的拒绝路径记录（[负例证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-s100p-negative/)）不是正向支持。
+Python 和 C++ 入口使用上表的目标制品。运行前准备所选变体与匹配板端 SDK；X5 使用 `bus.jpg`，S100/S600 的 672×672 模型使用 `kite.jpg`。数据集计分见[评估指南](evaluator/README_cn.md)。
 
 Python X5 使用单个 packed NV12 输入且默认直接拉伸；S Python 使用拆分的 Y/UV 输入且默认 letterbox。C++ 有独立源默认值，详见 `runtime/cpp/`。
 
@@ -29,7 +29,7 @@ Python X5 使用单个 packed NV12 输入且默认直接拉伸；S Python 使用
 <a id="quickstart"></a>
 ## 快速体验
 
-在仓库根目录显式准备制品，再运行 Python 检测器。下面使用 X5 `n-v7.0`——2026-09-24 X5 8GB/4GB 记录中的默认制品/图片 case，当时由同一个下载器准备制品并完成完整源/统一对照（[扩展板测证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)）；下面这组 argv 本身不是当时的板端命令，本工作树也不做新的下载或板端运行：
+在仓库根目录显式准备制品，再运行 Python 检测器。下面使用 X5 `n-v7.0` 及其默认检查图片：
 
 ```bash
 python3 -m samples.vision.yolov5.model.download \
@@ -72,9 +72,9 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整 raw 数组源/统一对照。
 
 <a id="historical-performance"></a>
-## 源历史性能
+## 源记录性能
 
-下表完整保留源 X5 参考数据；这些是历史测量，本轮没有复测：
+源 X5 参考数据表：
 
 | 模型 | 尺寸 | 参数量 | BPU 吞吐 | Python 后处理 |
 |---|---|---:|---:|---:|
@@ -91,4 +91,4 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 <a id="license"></a>
 ## 许可
 
-仓库 wrapper 和源 sample 文档遵循 Apache-2.0。上游 YOLOv5 工程及下载权重遵循各自许可和来源；manifest `sha256: null (unknown)` 不代表认证。
+仓库 wrapper 和源 sample 文档遵循 Apache-2.0。上游 YOLOv5 工程及下载权重遵循各自许可和来源；manifest 记录为 `sha256: null (unknown)`，发布者认证以发布摘要为准。

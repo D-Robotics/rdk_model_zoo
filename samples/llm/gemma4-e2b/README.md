@@ -18,7 +18,7 @@ Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-R
 
 > Supported platforms: **RDK S100P / S600**. Both use the same C++ runtime, but each board requires HBM files compiled for its SoC.
 
-> Migration status: source import, launcher separation, model preparation and the Vision/Text stage/resource refactoring are implemented, with bounded host acceptance — the latest Text-stage package passed independent recheck of 30/30 host tests and 19/19 ASan/UBSan CTests ([independent review](../../../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md)). Screenshots and board performance below are historical evidence from pinned S source `380e1a2`, not new migration board tests; no vendor ABI, live model, board or quantization result is claimed, and aggregate B11 acceptance stays open.
+> Screenshots and board performance figures below are records from the source S release.
 
 ---
 
@@ -53,11 +53,11 @@ Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT
 | --- | --- | --- |
 | RDK S100P | ✅ | Primary target (`nash-m`, `core_num=1`) |
 | RDK S600 | ✅ | `nash-p`; matching public S600 HBMs, with Vision and Text loaded once at startup and kept resident |
-| RDK S100 | ⚠️ | SoC runtime branch retained, but board validation is not complete |
+| RDK S100 | ⚠️ | SoC branch included; S100 HBMs are not published — supply them via `GEMMA4_MODEL_BASE_URL` (see [model preparation](model/README.md)); performance figures below were recorded on S600 |
 
-On-board regression for this update was run only on RDK S600. S100/S100P
-coverage is limited to shared-source target-matrix and compatibility checks;
-no S100 board connection is required or claimed.
+S100 uses its SoC branch; supply matching S100 HBMs through `GEMMA4_MODEL_BASE_URL`
+(see [model preparation](model/README.md)). The performance figures are S600
+source-release records.
 
 ---
 
@@ -72,7 +72,7 @@ See [model preparation](model/README.md) for sizes and source-recorded checksums
 <a id="quickstart"></a>
 ## Quick Start
 
-Install the [C++ prerequisites](runtime/cpp/README.md#prerequisites) first. From the repository root, for S600:
+Install the [C++ prerequisites](runtime/cpp/README.md#dependencies) first. From the repository root, for S600:
 
 ```bash
 cd samples/llm/gemma4-e2b
@@ -87,7 +87,7 @@ cd runtime/cpp
 ./run.sh --target s600 main --max_tokens=512
 ```
 
-Model download, dependency preparation, build and execution are separate steps. `run.sh` uses Python 3 for target detection and process launch; tokenization and inference remain C++. Launch never installs dependencies, downloads models or builds automatically. On a host, `./run.sh --target s600 --dry-run` previews the command without proving artifact compatibility.
+Model download, dependency preparation, build and execution are separate steps. `run.sh` uses Python 3 for target detection and process launch; tokenization and inference remain C++. Launch never installs dependencies, downloads models or builds automatically. On a host, `./run.sh --target s600 --dry-run` prints the launch command without executing it.
 
 Example session:
 

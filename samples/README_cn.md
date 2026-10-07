@@ -2,8 +2,7 @@
 
 [English](README.md)
 
-当前索引覆盖 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。它是源码入口清单，不是所有板卡/语言/资产均已验收的声明。每行提供运行总览、转换和评估入口；目标/变体与缺失前提以各 Sample 为准。
-
+当前索引覆盖 51 个统一 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。每行提供运行总览、转换和评估入口；各 Sample 说明自己的目标、变体和前置条件。
 
 ## 图像分类
 
@@ -93,23 +92,14 @@ HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制
 | [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
 
-Gemma 已迁入五个原生入口与完整源教程；源内容迁入、启动流程拆分、模型准备与 Vision/Text 阶段及资源重构已实现，最新 Text 阶段包获得有边界的主机验收：[Text 阶段独立评审](../docs/releases/unified-migration/2026-09-28-gemma-text-stages-independent-review.md) 复核两个原始 ASan/UBSan 驱动并记录 30/30 项主机测试与 19/19 项 ASan/UBSan CTest 通过，不声明厂商 ABI、实机模型、板端或量化结果。MiniCPM5-2B 已迁入 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口。其[最终独立核心处置](../docs/releases/unified-migration/2026-09-28-minicpm-core-independent-review.md)已在主机范围内接受核心重构：20 项主机测试通过、四段 README 示例编译通过；不声明实板、厂商 ABI 或模型精度验收。B11 批次、厂商 ABI/模型精度与板端验收仍未关闭；板测未运行。
+Gemma 提供五个原生入口（对话、HTTP 服务、单次推理、验证工具）及完整上游教程。MiniCPM5-2B 提供 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口。两个样例支持的板卡见各自指南；模型资源与原生构建前提按样例文档准备。
 
 ## 固定第三方策略集成
 
-ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护。参阅 [VLA 总览](vla/README_cn.md)、[ACT 板型选择](vla/guides/act_cn.md)、[Pi0 离线与实机边界](vla/guides/pi0_cn.md)。源码获取不等于模型已准备或板端验证通过。
-
-## 如何解读验证状态
-
-- 51 个本仓样例共享同一源码状态：可读 Runtime 架构已实现并通过独立主机验收（2026-10-05；[覆盖表](../docs/releases/unified-migration/2026-10-05-all-sample-coverage.json)、[Codex 验收](../docs/releases/unified-migration/2026-10-05-all-sample-codex-review.md)——1871 项测试，1859 项执行通过，12 项显式可选依赖跳过）。主机验收不替代板端验证。
-- [支持/验证矩阵](../docs/releases/unified-source-release.md) 按原始范围记录每个样例的历史板测证据：原三个试点及 B1/B2 有各自的实板记录；不要将一例通过推广为整个系列。
-- B3/B4/B5 的主要迁移验收基于主机，待板测范围见各批报告。
-- EfficientSAM/MobileSAM 已有 X5 8GB 默认/priority7 和 S100 默认等完整回收证据；X5 4GB 仅日志、S600 未完成、S100P 未验证等缺口按 [板端交接记录](../docs/releases/unified-migration/2026-09-24-board-resume.md) 保留，不能笼统标为全部已测或全部未测。
-- B7 包含已验证的部分 Python 对照，也有 MODNet manual 资产缺口、ByteTrack 视频范围限制和 C++ 源对照待补；完整状态见 [台账](../docs/releases/unified-migration/x5-s-migration-map.md)。
-- B8（H4）、B9（H5）、B10（H6）、B11（H7）已获得非板端批次验收——见[非板端最终对齐](../docs/releases/unified-migration/2026-09-29-host-completion-independent-review.md)及其链接的各批复核。仅限主机/文档范围；各批的板端维度保持未运行，台账 `Closed` 列的完整交付口径仍为 `no`。
+ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护。参阅 [VLA 总览](vla/README_cn.md)、[ACT 板型选择](vla/guides/act_cn.md)、[Pi0 离线与实机边界](vla/guides/pi0_cn.md)。获取源码不会自动准备模型；模型资源按 VLA 指南由使用者准备。
 
 ## 选择与扩展
 
 先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [_shared](_shared/README.md)，代码职责与文档要求见 [推理契约](../docs/sample-standards/inference-contract.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
 
-从未统一的模型不再随本树携带：历史 `platforms/` 副本已移除（固定提交 `d2d2a4e0`，交付分支可访问）。51 个已统一样例本身的源码迁移与主机验收已完成；仍未关闭的是逐样例板端验证与完整交付口径，按样例记录于[迁移台账](../docs/releases/unified-migration/x5-s-migration-map.md)与[支持/验证矩阵](../docs/releases/unified-source-release.md)。不能把本索引当作完整交付签收表。
+首次板端操作见[板端冒烟测试](../docs/validation/board-smoke-test.md)。

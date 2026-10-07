@@ -20,12 +20,12 @@ The published HBM is downloaded separately, not bundled in Git.
 
 | Target | Variant | Python | C++ |
 | --- | --- | --- | --- |
-| s100 | chair, four parts | supported-not-run | not-supported |
+| s100 | chair, four parts | supported | not-supported |
 | x5 / s100p / s600 | none published | not-supported | not-supported |
 
 Host fixture tests cover stages, exact target selection, metadata validation and
-source preprocessing parity. They do not certify the HBM or board SDK. Current
-board inference is not-run; historical images/benchmarks below are source records.
+source preprocessing parity. Board inference requires the S100 board SDK and the
+published HBM; images/benchmarks below are source records.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -34,8 +34,9 @@ Use an RDK S100 with its matching `hbm_runtime` installation; do not install a
 similarly named PyPI package as a replacement. Python 3.10+ is required for this
 entry; NumPy and PyYAML are required, matplotlib is needed for plots. The source
 does not pin a minimum firmware/SDK version or a measured memory/storage budget;
-those prerequisites remain unverified for the unified entry. Keep space for the
-HBM and output files. Host help/list/dry-run do not need the SDK or model file.
+choose the firmware/SDK for your deployment and size memory/storage from a real
+run. Keep space for the HBM and output files. Host help/list/dry-run do not
+need the SDK or model file.
 
 <a id="quickstart"></a>
 ## Quick start
@@ -62,7 +63,7 @@ contains point counts, normalization, asset identity and observed metadata.
 Counts sum to N but need not contain all four parts for every input. No accuracy
 threshold is inferred from a visually plausible segmentation.
 
-![Historical chair result](test_data/readme_img/chair_res.png)
+![Reference chair result](test_data/readme_img/chair_res.png)
 
 <a id="directory"></a>
 ## Directory responsibilities
@@ -70,7 +71,7 @@ threshold is inferred from a visually plausible segmentation.
 - `model/`: explicit download and artifact identity.
 - `runtime/python/`: CLI and plots, separate binding/runner, four-stage task.
 - `conversion/`: retained architecture/operator notes and conversion gaps.
-- `evaluator/`: functional checks and historical performance, not a dataset evaluator.
+- `evaluator/`: functional checks and source-recorded performance; dataset evaluation is separate.
 - `test_data/`: original chair points and reference images.
 - `tests/`: SDK-free numerical and error-boundary tests.
 

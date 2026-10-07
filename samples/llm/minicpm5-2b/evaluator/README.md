@@ -5,7 +5,7 @@
 <a id="dataset"></a>
 ## Dataset
 
-WikiText2 TEST is separate from calibration TRAIN; the pinned checkpoint/tokenizer and TEST digests follow the source records. A full run uses 140 × 2048-token segments; a one-segment wiring check is not a full evaluation. Results below are pinned S source records; no evaluation or board test was rerun this round.
+WikiText2 TEST is separate from calibration TRAIN; the pinned checkpoint/tokenizer and TEST digests follow the source records. A full run uses 140 × 2048-token segments; a one-segment wiring check is not a full evaluation. Results below are records from the source S release.
 
 <a id="environment"></a>
 ## Environment
@@ -45,9 +45,9 @@ The generated bundle contains SDK-owned protocol/RPC files copied from the insta
 <a id="reference-results"></a>
 ## Historical reference results
 
-Final PPL **14.242767676160279**, compared with float 14.0184 and fake-quant 14.2687; relative increase **1.60052%**, elapsed **913.192 seconds**. Partial JSON is updated per segment and is not complete before 140 segments and the completion marker. The validator checks mathematical consistency, completeness and the 3% relative-PPL target; it does not independently prove which model was executed.
+Final PPL **14.242767676160279**, compared with float 14.0184 and fake-quant 14.2687; relative increase **1.60052%**, elapsed **913.192 seconds**. Partial JSON is updated per segment and is not complete before 140 segments and the completion marker. The validator checks mathematical consistency, completeness and the 3% relative-PPL target; the HBM SHA-256 below ties the record to its artifact.
 
-The local evaluator uses NumPy float32 log-softmax and float64 loss sums to avoid transferring full logits/KV over the network. First-five-segment PPL: SDK/PyTorch RPC 15.047808, local NumPy 15.048632, a 0.0055% difference. The delivery wrapper reproduces first-segment NLL 4907.887529. That wiring check does not replace the full run.
+The local evaluator uses NumPy float32 log-softmax and float64 loss sums to avoid transferring full logits/KV over the network. First-five-segment PPL: SDK/PyTorch RPC 15.047808, local NumPy 15.048632, a 0.0055% difference. The wrapper reproduces the first-segment NLL 4907.887529 as a wiring check; the full result requires all 140 segments.
 
 HBM SHA256: `7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`.
 
@@ -68,12 +68,12 @@ Use the separate [legacy evaluator](legacy/README.md), with SDK 1.0.0, UCP/DNN 3
 | [S100 PPL](results/s100-wikitext2-full.json) / [generation](results/s100-generation-full.json) | 17.91995 | 1129.83 | 2/6 | 50/50 |
 | [S100P PPL](results/s100p-wikitext2-full.json) / [generation](results/s100p-generation-full.json) | 17.91995 | 882.44 | 2/6 | 50/50 |
 
-Both pass the English/Chinese two-turn conversation and retrieval from approximately 2000/3750 raw-token prompts. Each board completes all 60 requests with normal end events and successful SDK return/destruction codes. Four reference texts differ: translation is incorrect, the code response is incomplete, and JSON/list formatting differs. These are not six passing generation comparisons. The SDK exposes text but no output token IDs.
+Both pass the English/Chinese two-turn conversation and retrieval from approximately 2000/3750 raw-token prompts. Each board completes all 60 requests with normal end events and successful SDK return/destruction codes. Four of the six reference texts differ — translation is incorrect, the code response is incomplete, and JSON/list formatting differs — hence the 2/6 matches in the table. The SDK exposes text but no output token IDs.
 
-The 50-request mean end-to-end times are 671.37 ms (S100) and 543.22 ms (S100P), excluding model loading. These are wall times, not TTFT. Earlier short-request runtime logs reported approximately 12.1/13.0 decode tokens/s; zero callback performance fields are not measurements. Tools, thinking, multimodal, concurrency and long-duration soak coverage are not claimed.
+The 50-request mean end-to-end times are 671.37 ms (S100) and 543.22 ms (S100P), excluding model loading. These are wall times, not TTFT. Earlier short-request runtime logs reported approximately 12.1/13.0 decode tokens/s; zero callback performance fields are not measurements. Tools, thinking, multimodal, concurrency and long-duration soak are outside this evaluation's coverage; validate them separately for your deployment.
 
-[First-segment diagnostic](results/legacy-first-segment-diagnostic.json): HF float32 PPL 10.75668, legacy adapter float32 10.75612, actual HBM 14.01536. All eight masks exactly match SDK calibration helpers. The prepared input digest is shared with S600; both executed HBM digests were checked. This narrows further investigation to the quantized execution path but does not identify a specific quantization operation. The packaged evaluator independently reproduces first-segment NLL 5404.3955137729645 on both boards. S600's results above are historical and were not rerun for this addition.
+[First-segment diagnostic](results/legacy-first-segment-diagnostic.json): HF float32 PPL 10.75668, legacy adapter float32 10.75612, actual HBM 14.01536. All eight masks exactly match SDK calibration helpers. The prepared input digest is shared with S600; both executed HBM digests were checked. The packaged evaluator independently reproduces first-segment NLL 5404.3955137729645 on both boards; the S600 figures above come from the source release record.
 <a id="boundaries"></a>
-## Acceptance and boundaries
+## Boundaries
 
-Report completeness, numerical consistency, accuracy threshold, reference text matching and throughput separately. S100/S100P completed full PPL evaluation but failed accuracy; their 2/6 reference text matches are not six passing cases. S600 token equality belongs to its own HBM. Record SDK/runtime and hardware versions alongside results. No concurrency, soak, tools, thinking or multimodal coverage is claimed, and this round’s host documentation checks are not board validation.
+Report completeness, numerical consistency, accuracy threshold, reference text matching and throughput separately. S100/S100P completed full PPL evaluation but did not meet the accuracy target; their generation comparison shows 2/6 exact text matches. S600 token equality belongs to its own HBM. Record SDK/runtime and hardware versions alongside results. Concurrency, soak, tools, thinking and multimodal coverage are outside this evaluation; run board validation through the board commands.

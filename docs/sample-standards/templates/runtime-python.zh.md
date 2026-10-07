@@ -12,7 +12,7 @@
 
 - 板卡：⟪targets⟫，系统镜像 ≥ ⟪版本⟫
 - Python：⟪版本⟫；依赖：⟪清单或无⟫
-- `hbm_runtime` 由板端镜像提供——本 runtime 不在开发机上运行。
+- 在目标板卡上使用系统镜像提供的 `hbm_runtime` 执行推理。
 
 <a id="usage"></a>
 ## 使用
@@ -67,14 +67,14 @@ print(⟪result 字段⟫)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-> **必须回答：** 本 sample 的 pre_process / forward / post_process 契约摘要，
+> **必须回答：** 本 sample 的 preprocess / infer / postprocess 契约摘要，
 > 与 docstring 一致（见 inference-contract）。多阶段 pipeline（如 OCR det→rec）
 > 每阶段一小节，另加 pipeline.predict 编排说明。
 
-- `pre_process`：⟪Input⟫ → ⟪Tensors + Context⟫（⟪shape/dtype/布局⟫）
-- `forward`：⟪tensor dict⟫ → ⟪RawOutputs⟫（⟪输出名/shape/量化语义——raw logit
+- `preprocess`：⟪Input⟫ → ⟪Tensors + Context⟫（⟪shape/dtype/布局⟫）
+- `infer`：⟪tensor dict⟫ → ⟪RawOutputs⟫（⟪输出名/shape/量化语义——raw logit
   还是反量化后值⟫）
-- `post_process`：⟪RawOutputs + Context⟫ → ⟪Result⟫（⟪结果类型/字段⟫）
+- `postprocess`：⟪RawOutputs + Context⟫ → ⟪Result⟫（⟪结果类型/字段⟫）
 - ⟪多阶段 sample 的 pipeline.predict 编排⟫
 
 <a id="troubleshooting"></a>

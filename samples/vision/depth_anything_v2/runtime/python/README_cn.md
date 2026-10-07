@@ -6,8 +6,8 @@
 ## 环境
 
 需要兼容 S100 的 `hbm_runtime`、Python、NumPy、OpenCV、PyYAML。列出和 dry-run
-可在无板端 SDK 的主机执行。源包装脚本自动安装 NumPy1.26.4、OpenCV4.11.0.86、
-Torch2.3.1；这些是历史固定版本，不代表本轮兼容声明。当前无自动安装，源仅用于
+可在无板端 SDK 的主机执行。源环境记录为 NumPy 1.26.4、OpenCV 4.11.0.86、
+Torch 2.3.1（由其自带脚本安装）；本 runtime 不做任何自动安装。源中仅用于
 尺寸恢复的 Torch 依赖已移除。参见[模型准备](../../model/README_cn.md)。
 
 <a id="usage"></a>
@@ -100,16 +100,13 @@ print(details.raw.shape, details.result.depth_native.shape)
 
 `PreparedInput` 携带按名称组织的物理张量和不可变 `ImageContext`。
 `DepthResult` 包含独立存储的浮点 `depth_native` 与其上下文。
-`DepthPredictionDetails`（通过 `return_details=True` 显式开启）把常规结果与本次
+`DepthPredictionDetails`（通过 `return_details=True` 显式开启）把常规结果与单次
 调用的 prepared 输入和原始输出打包返回，归档无需二次推理；默认 `predict` 仍返回
 普通 `DepthResult`，task 不保存上一帧图像或输出。每帧保持匹配上下文，
-task 不保存上一帧尺寸。注入 runner 用于主机测试，不证明硬件执行；API 不保证共享
+task 不保存上一帧尺寸。注入 runner 供主机测试使用，硬件执行使用板端 runner；API 不保证共享
 runner 并发安全。
 
-源 `DepthAnythingV2Config`/`DepthAnythingV2` 返回显示 uint8，task 还提供调度和
-`__call__`。新 API 明确分离 runner，返回浮点深度。需要旧显示形式时调用
-`visualization.normalize_depth(result.depth_native)` 或 `colorize_depth(...)`。
-归档源仍可使用，不声称新接口静默兼容旧 API。
+API 返回浮点深度。显示 uint8 图像时，调用 `visualization.normalize_depth(result.depth_native)` 或 `colorize_depth(...)`。每帧结果须保留对应 `ImageContext`，共享 runner 时须同步访问。
 
 <a id="stage-io"></a>
 ## 阶段契约
@@ -119,7 +116,7 @@ runner 并发安全。
 | `preprocess` | 非空 BGR uint8 HWC → 含 float32 `[1,3,518,686]` 的 `PreparedInput` |
 | `infer` | 命名输入映射 → 独立原始 float32 `[1,518,686]`，不做激活 |
 | `postprocess` | 原始张量 + 匹配上下文 → 原图尺寸浮点 `DepthResult` |
-| `predict` | 三阶段执行一次；`return_details=True` 额外返回本次调用的 prepared 输入与原始输出；无计时、渲染、IO |
+| `predict` | 三阶段执行一次；`return_details=True` 额外返回单次调用的 prepared 输入与原始输出；无计时、渲染、IO |
 
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
@@ -131,8 +128,7 @@ runner 并发安全。
 Letterbox 使用向下取整尺寸、INTER_LINEAR、127填充，灰色填充归一化为零；缩放边
 变成零会显式拒绝。后处理裁去可选填充，用 OpenCV INTER_LINEAR 恢复原图。默认
 拉伸恢复与源 Torch `align_corners=False` 具有相同半像素线性几何，但舍入/浮点
-累积可能不同，不声称逐位相等。主机解析仿射平面测试检查几何，实际 HBM/Torch
-一致性未测。
+累积可能不同，与 Torch 在浮点舍入内一致。主机解析仿射平面测试检查几何。
 
 元数据必须恰好包含一个模型/输入/输出，形状和 float32 类型符合声明。图内 int16
 量化不是 IO 类型声明。形状/类型错误、非有限值或几何上下文不匹配会报错；不要对
@@ -146,5 +142,5 @@ Letterbox 使用向下取整尺寸、INTER_LINEAR、127填充，灰色填充归�
 - **SDK/模型缺失：** 显式准备匹配运行时和模型；主机 dry-run 不是推理测试。
 - **元数据不符：** 检查实际制品/运行时版本，不能根据图内量化文字放行整数输出。
 - **颜色不同：** 先比较浮点数组和前处理模式，逐图显示归一化会隐藏尺度/偏移差异。
-- **恒定图：** 零灰度是明确行为，但声称准确前需调查输入/模型；不推导数据集验收。
-- **输出已存在：** 换新路径，不混入部分写入或历史结果。
+- **恒定图：** 零灰度是明确行为；判断其是否准确需检查输入/模型，数据集精度另行评测。
+- **输出已存在：** 换新路径，不混入部分写入或既有结果。

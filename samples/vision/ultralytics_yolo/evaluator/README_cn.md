@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集准备
 
-准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；X5/S 平台快照保留作溯源（X5 COCO (historical `../../../../platforms/x5/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S COCO (historical `../../../../platforms/s/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、X5 ImageNet (historical `../../../../platforms/x5/datasets/imagenet/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S ImageNet (historical `../../../../platforms/s/datasets/imagenet/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)）。数据集不随仓库分发，使用时遵守各自许可。
+准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；X5/S 平台快照保留作溯源（X5 COCO、S COCO、X5 ImageNet、S ImageNet）。数据集不随仓库分发，使用时遵守各自许可。
 
 以下示例约定本地目录如下；请将`/data`、`/models`替换为实际准备路径：
 
@@ -93,7 +93,7 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_yolo_obb.py \
   --json-save-path /tmp/yolo-obb.json
 ```
 
-输出旋转矩形和多边形坐标，**不计算DOTA AP**。`--label-path`仅兼容旧命令，不参与评分。除非经过审查的自定义输出协议要求，否则保留默认角度符号和偏移。
+输出旋转矩形和多边形坐标，**不计算DOTA AP**。`--label-path`仅兼容旧命令，不参与评分。除非自定义输出协议明确要求，否则保留默认角度符号和偏移。
 
 ### 批量评估
 
@@ -128,9 +128,9 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_batch.py \
 <a id="metrics"></a>
 ## 指标与比较条件
 
-COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所选图像ID。分类top1/top5为处理过且有标签图像的正确比例，不是百分数。OBB JSON是中间预测，不是精度指标。运行墙钟时间包含Python与数据处理，不等于BPU推理延迟。
+COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所选图像ID。分类top1/top5为处理过且有标签图像的正确比例，不是百分数。OBB JSON是中间预测，不是精度指标。运行墙钟时间包含Python与数据处理，并非BPU推理延迟。
 
-记录源码提交、目标/系统/SDK、制品摘要、数据集/划分、实际处理数量、resize策略和阈值后再比较结果。这些条件改变时，不能直接对比历史表。固定图片源/统一一致性验证也不等于数据集精度测量。
+记录源码提交、目标/系统/SDK、制品摘要、数据集/划分、实际处理数量、resize策略和阈值后再比较结果。这些条件改变时，不能直接对比历史表。固定图片源/统一一致性验证也不构成数据集精度测量。
 
 <a id="outputs"></a>
 ## 输出与成功判断
@@ -142,9 +142,9 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 <a id="reference-results"></a>
 ## 参考结果与验证范围
 
-源分支完整基准表在仓库内保留：X5评估与基准 (historical `../../../../platforms/x5/samples/vision/ultralytics_yolo/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S评估与基准 (historical `../../../../platforms/s/samples/vision/ultralytics_yolo/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、X5 YOLO26 (historical `../../../../platforms/x5/samples/vision/ultralytics_yolo26/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)、S YOLO26 (historical `../../../../platforms/s/samples/vision/ultralytics_yolo26/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。制品和历史测量事实见[X5清单](../../../../docs/release/x5/)及[S清单](../../../../docs/release/s/)。
+制品清单与参考测量见 [X5 发布数据](../../../../docs/release/x5/)及 [S 发布数据](../../../../docs/release/s/)。
 
-这些是历史发布记录，不是当前统一代码的新测量。[sample说明](../README_cn.md)列出YOLOv8n/YOLO26n检测代表制品的板端对照范围。本次非板端工作没有新执行全数据集精度、延迟或板测。
+制品与基准数据见 [X5 benchmark 清单](../../../../docs/release/x5/benchmarks.yaml)及 [S benchmark 清单](../../../../docs/release/s/benchmarks.yaml)；[sample说明](../README_cn.md)列出 YOLOv8n/YOLO26n 检测对照及目标条件。
 
 ## 故障排查与代码入口
 
@@ -159,6 +159,6 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 <a id="boundaries"></a>
 ## 能力边界
 
-这些脚本不验证模型转换正确性、不支持任意自定义类别顺序，也不测量完整应用性能。分类会按上述规则跳过不可读或无标签图像，必须报告实际处理数量。OBB需另行使用DOTA评分器。发布基准与既有固定图板测属于各自源码版本的参考，不能作为当前所有任务和尺寸的验收。本次未执行的新板测及全数据集测量仍为待办。
+这些脚本不验证模型转换正确性、不支持任意自定义类别顺序，也不测量完整应用性能。分类会按上述规则跳过不可读或无标签图像，必须报告实际处理数量。OBB需另行使用DOTA评分器。发布基准与既有固定图板测属于各自源码版本的参考，仅覆盖其记录的任务与尺寸；新板测及全数据集测量按本指南命令执行。
 
 DFL 姿态接口返回关键点概率。当前 COCO JSON 序列化保留历史规则：概率 >0 时 v=1，否则为 0；这不是 0.5 可见性筛选，不会删除低置信度点。绘制阈值与评测序列化是不同操作。

@@ -6,7 +6,7 @@
 ## 环境
 
 Python 3.10+、NumPy、PyYAML；默认绘图另需 matplotlib。真实推理需要 RDK S100 SDK 的
-`hbm_runtime`。原资料未固定最低 SDK/固件版本，兼容板端安装仍属于待板测确认的前提，
+`hbm_runtime`。原资料未固定最低 SDK/固件版本，请在目标板确认安装，
 不能据此宣称一个新版本范围已验证。
 
 ```bash
@@ -84,7 +84,7 @@ print(details.prepared.tensors["point"].shape, details.prepared.context.radius)
 ```
 
 主机可用注入 runner 和经过校验的 metadata fixture 测试前后处理。
-`PointNetPredictionDetails`（通过 `return_details=True` 显式开启）将标签与本次调用的
+`PointNetPredictionDetails`（通过 `return_details=True` 显式开启）将标签与单次调用的
 prepared 记录（精确的 `(1,3,N)` 归一化张量加冻结的质心/半径上下文）打包返回，绘图与
 归档无需二次执行；默认 `predict` 仍返回普通标签数组，task 不保存上一次点云。
 真实 runner 懒加载，
@@ -98,7 +98,7 @@ prepared 记录（精确的 `(1,3,N)` 归一化张量加冻结的质心/半径�
 | preprocess | 有限实数 ndarray `(N,3)` XYZ | 自有连续 float32 `(1,3,N)`；减去质心，再除最大欧氏半径 |
 | infer | 使用绑定输入名的张量映射 | 从 runtime 取得自有 raw `(1,N,4)` logits，不做 argmax/反量化/IO |
 | postprocess | 与绑定 shape/dtype 一致的 raw 张量 | int32 `(N,)` 标签；整数以 float64 做 SCALE 解码后再 argmax，float32 不变 |
-| predict | 原始 `(N,3)` 坐标 | 串联同样阶段和标签结果；`return_details=True` 额外返回本次调用的 prepared 记录 |
+| predict | 原始 `(N,3)` 坐标 | 串联同样阶段和标签结果；`return_details=True` 额外返回单次调用的 prepared 记录 |
 
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 

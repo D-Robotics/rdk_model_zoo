@@ -5,19 +5,19 @@ English | [简体中文](README_cn.md)
 <a id="dataset"></a>
 ## Dataset
 
-The supplied clip is one positive “hey snips” example, not a labeled evaluation set. Prepare held-out positive and negative clips with stable IDs and the same mono 16 kHz frontend/window policy. A long recording must be split explicitly; record that policy with the dataset. Do not tune and report a threshold on the same split without disclosing it.
+The supplied clip is one positive “hey snips” example. Prepare held-out positive and negative clips with stable IDs and the same mono 16 kHz frontend/window policy. Split long recordings explicitly and record the policy with the dataset.
 
-The offline evaluator consumes saved probabilities, not audio or HBM files. Input JSON schema is `rdk-model-zoo/kws-predictions/v1`, with a `provenance` object containing nonempty `dataset`, `model`, `split` descriptions, and `records` containing unique `id`, integer `label` 0/1 and finite `score` in [0,1]. Include model/input digests and frontend versions in provenance when collecting real predictions. Provenance is retained, not independently authenticated by the scorer.
+The evaluator consumes saved probabilities. Input JSON schema is `rdk-model-zoo/kws-predictions/v1`, with a `provenance` object containing nonempty `dataset`, `model`, `split` descriptions, and `records` containing unique `id`, integer `label` 0/1 and finite `score` in [0,1]. Include model/input digests and frontend versions in provenance when collecting predictions.
 
 <a id="environment"></a>
 ## Environment
 
-Python 3.10+ standard library suffices for scoring. No SDK, audio library or NumPy is required. Inference dependencies and metadata gates belong to the [runtime](../runtime/python/README.md). This separation allows host scoring of evidence collected elsewhere without silently running a model.
+Python 3.10+ standard library suffices for scoring. No SDK, audio library or NumPy is required. Inference dependencies and metadata gates are listed in the [runtime guide](../runtime/python/README.md).
 
 <a id="command"></a>
 ## Commands
 
-The following host example deliberately writes synthetic scores, demonstrates the schema and reports only arithmetic correctness. It does not measure the published model. Use a new temporary directory:
+This example creates two records to show the input schema. Use a new temporary directory:
 
 ```bash
 KWS_EVAL_DIR=$(mktemp -d)
@@ -34,26 +34,26 @@ For measured predictions replace the input file and provenance with actual captu
 <a id="metrics"></a>
 ## Metrics
 
-Predicted positive means score >= threshold. The report includes TP/TN/FP/FN, accuracy, precision, recall, F1, false accept rate `FP/(FP+TN)` and false reject rate `FN/(FN+TP)`. Undefined denominators produce JSON null, never an invented perfect score. Rates are per supplied clip/window, **not false accepts per hour**. This evaluator does not compute event timing or an ROC curve.
+Predicted positive means score >= threshold. The report includes TP/TN/FP/FN, accuracy, precision, recall, F1, false accept rate `FP/(FP+TN)` and false reject rate `FN/(FN+TP)`. Undefined denominators produce JSON null. Rates are per supplied clip/window; event rates per hour require event timestamps and aggregation, which the input schema does not carry. The evaluator does not compute an ROC curve.
 
 <a id="outputs"></a>
 ## Outputs
 
-`metrics.json` uses `rdk-model-zoo/kws-metrics/v1`, preserving provenance and SHA-256 of the exact prediction file. `inference_executed=false` and `provenance_independently_verified=false` make its boundary explicit. The documentation fixture has two correct decisions; it is not a dataset accuracy result. Keep the source prediction file alongside the report.
+`metrics.json` uses `rdk-model-zoo/kws-metrics/v1`, preserving provenance and SHA-256 of the exact prediction file. Its schema records `inference_executed=false` and `provenance_independently_verified=false`. The example records produce two correct decisions. Keep the prediction file alongside the report.
 
 <a id="reference-results"></a>
 ## Source reference results
 
-The archived S evaluator (historical `../../../../platforms/s/samples/speech/kws/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) records:
+S100 reference measurements:
 
-| Scope | Source value | Current status |
-| --- | --- | --- |
-| S100 `hrt_model_exec perf`, 100 frames | Average latency 1.176 ms; 830.875 FPS | Historical only, not rerun |
-| Bundled “hey snips” audio | Approximately 0.985 confidence | Historical functional example, not rerun |
+| Scope | Source value |
+| --- | --- |
+| S100 `hrt_model_exec perf`, 100 frames | Average latency 1.176 ms; 830.875 FPS |
+| Bundled “hey snips” audio | Approximately 0.985 confidence |
 
-The source performance command was `hrt_model_exec perf --model_file /root/kws/kws.hbm --frame_count 100`. It measures runtime performance, not the full audio/file/frontend workflow. Do not derive a new FPS from the reported latency or assert identical measurement scopes. Current host evidence covers feature parity, contracts and metric arithmetic; no new real HBM scores are available.
+The source performance command was `hrt_model_exec perf --model_file /root/kws/kws.hbm --frame_count 100`. It measures HBM execution for 100 frames; audio loading and feature extraction are outside that command.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-No dataset precision/recall, threshold calibration, board latency, streaming event accuracy or S100P/S600 behavior has been established in this migration. Historical values are not acceptance of the refactored code. A future board comparison must bind exact code, SDK, model/input digests, frontend versions, commands and complete outputs.
+These metrics describe clip/window decisions. Event rate per hour requires event timestamps and aggregation; board latency is recorded by the S100 runtime workflow. Record the code revision, target, SDK, model/input digests and frontend version with each prediction set.

@@ -15,12 +15,11 @@ evidence that it matches `depth_any.hbm`.
 ## Toolchain and targets
 
 The source names S100 OpenExplore on an x86 Linux host and int16 quantization.
-It does not pin the Docker image/package/compiler versions. Its references are
+It does not pin the Docker image/package/compiler versions. Reference entries:
 [OE environment](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
-and [toolchain manual](https://toolchain.d-robotics.cc/). These are source resource
-links, not a version lock or a procedure executed here. Only the S100 artifact is
-published in the manifest; S100P support in source prose has no separate asset or
-compatibility evidence. Do not relabel that artifact for S100P/S600.
+and [toolchain manual](https://toolchain.d-robotics.cc/). Only the S100 artifact is
+published in the manifest; the source documentation names S100P but the manifest
+carries no separate asset. Do not relabel the S100 artifact for S100P/S600.
 
 <a id="export"></a>
 ## Recorded ONNX boundary
@@ -56,19 +55,18 @@ file digests. An example command with invented defaults would conceal these gaps
 this directory intentionally contains documentation rather than such a command.
 
 <a id="validation"></a>
-## Validation and historical similarity
+## Validation and source-recorded similarity
 
-The source reports most operator similarities above .99 and final quantization
-similarity about .999; the statistic, dataset and reproducible raw logs are not
-supplied. This is not dataset depth accuracy or a newly measured result.
+The source reports most operator similarities above.99 and final quantization
+similarity about.999; the statistic, dataset and reproducible raw logs are not
+supplied. This is a quantization similarity record, not a dataset depth accuracy.
 
 ![Source quantization record](../test_data/readme_img/image-4.png)
 
 A real reproduction needs matching float/quantized inputs, raw output shape and
 values, explicit relative-depth metrics and software/artifact identity. Compare
 float arrays before per-image display normalization. Internal int16 quantization
-cannot be used to infer the exposed output dtype. No export, compilation or
-converted-model validation has been run in this migration.
+cannot be used to infer the exposed output dtype.
 
 <a id="artifacts"></a>
 ## Artifact
@@ -80,10 +78,10 @@ Generated models must be bound to their actual metadata; identical filenames do
 not establish compatible normalization, layout or depth semantics.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
 Missing: checkpoint/encoder identity, upstream revision, export code/options,
 ONNX checksum, calibration dataset/transform, compiler image/version, compile
-configuration, raw similarity logs and real board validation. These are actionable
-inputs to collect for a future recipe, not work claimed complete by the current
-host migration. No C++ conversion path or extra target is invented.
+configuration, raw similarity logs and real board validation. Collecting these
+inputs is the prerequisite for a reproducible recipe. No C++ conversion path or
+extra target is provided.

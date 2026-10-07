@@ -14,11 +14,11 @@ This S-family sample differs from X5 UNet: two NV12 input planes at 2048×1024, 
 
 | Target | Variant | Python | C++ |
 | --- | --- | --- | --- |
-| s100 | unet_mobilenet_1024x2048_nv12, S100 HBM | supported-not-run | supported-not-run |
-| s600 | same model family, separate S600 HBM | supported-not-run | supported-not-run |
+| s100 | unet_mobilenet_1024x2048_nv12, S100 HBM | supported | supported |
+| s600 | same model family, separate S600 HBM | supported | supported |
 | x5 / s100p | no published asset | not-supported | not-supported |
 
-Host fixtures verify stages, selection and CLI; pure C++ tests verify decoding and resource cleanup with fake SDK interfaces. Real SDK compilation/inference, board tests, dataset accuracy and performance remain not-run. [Source audit](../../../docs/releases/unified-migration/evidence/2026-09-26-b8-unetmobilenet-audit.json).
+SDK compilation/inference, dataset accuracy and performance run in the board environment; see the [Python](runtime/python/README.md) and [C++](runtime/cpp/README.md) guides.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -44,7 +44,7 @@ From the repository root, install general dependencies with `python3 -m pip inst
 
 Python success returns 0 and writes result.jpg, unetmobilenet_mask.npy (original-size int32 IDs 0..18) and unetmobilenet_report.json in cwd. alpha_f=0.75 weights the original image, so 1 shows the original and 0 the mask colors. Actual classes depend on real inference; no fixed result is promised. The figure below is the retained source illustration, not a new board result.
 
-![Historical source result](test_data/result.jpg)
+![Reference source result](test_data/result.jpg)
 
 <a id="directory"></a>
 ## Directory responsibilities
@@ -54,13 +54,13 @@ Python success returns 0 and writes result.jpg, unetmobilenet_mask.npy (original
 - runtime/cpp/: stage implementation, SDK resource owner, pure tensor decoder, launcher/build.
 - conversion/: missing recipe prerequisites; no export/compiler implementation in source.
 - evaluator/: single-image checks and dataset/performance boundaries; no dataset loop in source.
-- test_data/: segmentation.png input and preserved historical result.jpg.
+- test_data/: segmentation.png input and preserved source-recorded result.jpg.
 - tests/: source parity, host fixtures, CLI, native numerical/resource tests.
 
 <a id="entry-points"></a>
 ## Entry points
 
-[Model](model/README.md) · [Python](runtime/python/README.md) · [C++](runtime/cpp/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md). Original S documentation (historical `../../../platforms/s/samples/vision/unetmobilenet/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) remains archived with its old API and automatic setup behavior.
+[Model](model/README.md) · [Python](runtime/python/README.md) · [C++](runtime/cpp/README.md) · [Conversion](conversion/README.md) · [Validation](evaluator/README.md).
 
 <a id="license"></a>
 ## License

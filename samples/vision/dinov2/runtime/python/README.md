@@ -5,7 +5,7 @@ English | [简体中文](./README_cn.md)
 <a id="environment"></a>
 ## Environment
 
-- Board targets: RDK S100 (`nash-e`), S100P (`nash-m`), and S600 (`nash-p`), with a board image providing `hbm_runtime`. Board image and firmware versions were not verified in this migration.
+- Board targets: RDK S100 (`nash-e`), S100P (`nash-m`), and S600 (`nash-p`), with a board image providing `hbm_runtime`; use the image/firmware shipped with your board and record its version with results.
 - Host contract checks: Python 3.14.7 with `numpy`, `opencv-python`, and `PyYAML` from `../../requirements-host.txt`. Host `--help`, `--list-models`, and explicit-target `--dry-run` do not import or load the SDK.
 - The runtime uses one target-specific HBM with both `cls_feat` and `patch_feat` outputs. Runtime instances and the installed SDK are not declared thread-safe.
 
@@ -30,7 +30,7 @@ python3 samples/vision/dinov2/runtime/python/main.py \
 # success: exit code 0, JSON summary with shape [1,256,384], and /tmp/dinov2-patch.npy; no extension is appended
 ```
 
-`run.sh` accepts the historical positional output (`cls_feat` or `patch_feat`) followed by named options and does not download. `--list-models` and explicit-target `--dry-run` work without SDK loading; host dry-run with `--target auto` exits 2.
+`run.sh` accepts the source positional output (`cls_feat` or `patch_feat`) followed by named options and does not download. `--list-models` and explicit-target `--dry-run` work without SDK loading; host dry-run with `--target auto` exits 2.
 
 <a id="parameters"></a>
 ## Parameters
@@ -117,11 +117,11 @@ The established `pre_process`, `forward`, and `post_process` names remain import
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `Model not found: ...; prepare it explicitly with model/download.sh.` | Target-specific HBM is absent. | Run `model/download.py --target ...` or pass an exact asset ID and model path. |
+| `Model not found:...; prepare it explicitly with model/download.sh.` | Target-specific HBM is absent. | Run `model/download.py --target...` or pass an exact asset ID and model path. |
 | `No published DINOv2 support for x5` | Target is outside the three published S targets. | Use `s100`, `s100p`, or `s600`. |
 | `Host dry-run requires --target s100, s100p, or s600` | Host cannot infer a board for dry-run. | Supply an explicit target. |
 | `An external model-path requires the exact manifest asset-id.` | A custom path was supplied without publication identity. | Add the matching `--asset-id`. |
-| `DINOv2 ... differs from bound metadata` | HBM input/output metadata does not match the fixed contract. | Use the exact target artifact; do not reshape or cast tensors. |
+| `DINOv2... differs from bound metadata` | HBM input/output metadata does not match the fixed contract. | Use the exact target artifact; do not reshape or cast tensors. |
 
 ## License
 

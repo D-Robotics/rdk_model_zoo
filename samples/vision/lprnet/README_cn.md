@@ -5,17 +5,17 @@
 <a id="overview"></a>
 ## 算法与来源
 
-LPRNet 将车牌裁剪后的 tensor 直接识别为字符序列，不包含独立字符检测器。本迁移保留源 X5 协议：读取预打包 `float32` 文件并 reshape 为 `1x3x24x94`，不虚构图像解码、resize 或归一化。源论文为 [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447)。
+LPRNet 将车牌裁剪后的 tensor 直接识别为字符序列，不包含独立字符检测器。runtime 读取预打包 `float32` 文件并 reshape 为 `1x3x24x94`，不做图像解码、resize 或归一化。源论文为 [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447)。
 
 <a id="support-matrix"></a>
 ## 支持与验证矩阵
 
-| target | variant | Python | C++ | 状态 |
+| 目标 | 变体 | Python | C++ | 说明 |
 |---|---|---|---|---|
-| X5 | `lpr.bin` | supported-verified | not-supported | 主机 fixture 通过；2026-09-24 在一块 X5 8GB 和一块 X5 4GB 上以内置 `test_input.dat` 完成 source/unified 对照并全部通过（[8GB 复验](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/)、[4GB 运行](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)） |
-| S100/S100P/S600 | — | not-supported | not-supported | 没有源模型资产 |
+| X5 | `lpr.bin` | 支持 | 不支持 | 用内置 `test_input.dat` 验证 |
+| S100/S100P/S600 | — | 不支持 | 不支持 | 无发布制品 |
 
-本 sample 没有 C++ 实现。主机测试不等同于板端验证；上表板端状态来自已记录的 X5 对照，验证的是 native `(1,68,18,1)` logits 在单个输入上的一致性，不是车牌识别精度。
+本 sample 没有 C++ 实现。主机测试不等同于板端验证；板端验证用内置 `test_input.dat` 运行并检查两套实现的 native `(1,68,18,1)` logits 一致性——这是单输入的实现一致性检查，不是车牌识别精度。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -63,9 +63,9 @@ python3 -m samples.vision.lprnet.runtime.python.main --target x5
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整 raw/text 对照步骤。
 
 <a id="historical-performance"></a>
-## 源历史性能
+## 源记录性能
 
-下表完整保留源 benchmark 行；这是源历史数据，本迁移没有复测。
+源 benchmark 记录：
 
 | 模型 | 测试帧数 | FPS | 平均延迟 | BPU 使用率 | ION 内存 |
 |---|---:|---:|---:|---:|---:|

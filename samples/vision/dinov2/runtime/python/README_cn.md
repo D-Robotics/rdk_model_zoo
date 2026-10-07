@@ -30,7 +30,7 @@ python3 samples/vision/dinov2/runtime/python/main.py \
 # 成功：退出码 0，JSON shape 为 [1,256,384]，生成 /tmp/dinov2-patch.npy；不追加扩展名
 ```
 
-`run.sh` 接收历史位置输出参数（`cls_feat` 或 `patch_feat`），后面可接命名参数，不会下载。`--list-models` 和显式 target 的 `--dry-run` 不加载 SDK；主机使用 `--target auto` 做 dry-run 会退出 2。
+`run.sh` 接收源位置输出参数（`cls_feat` 或 `patch_feat`），后面可接命名参数，不会下载。`--list-models` 和显式 target 的 `--dry-run` 不加载 SDK；主机使用 `--target auto` 做 dry-run 会退出 2。
 
 <a id="parameters"></a>
 ## 参数
@@ -115,11 +115,11 @@ print({"output": output, "shape": composed_result.shape,
 
 | 现象 | 原因 | 处置 |
 | --- | --- | --- |
-| `Model not found: ...; prepare it explicitly with model/download.sh.` | 缺少目标对应 HBM。 | 执行 `model/download.py --target ...`，或传入精确 asset ID 和模型路径。 |
+| `Model not found:...; prepare it explicitly with model/download.sh.` | 缺少目标对应 HBM。 | 执行 `model/download.py --target...`，或传入精确 asset ID 和模型路径。 |
 | `No published DINOv2 support for x5` | target 超出三个 S 系列发布范围。 | 使用 `s100`、`s100p` 或 `s600`。 |
 | `Host dry-run requires --target s100, s100p, or s600` | 主机无法为 dry-run 推断板卡。 | 显式传入 target。 |
 | `An external model-path requires the exact manifest asset-id.` | 传入自定义路径但没有发布身份。 | 添加匹配的 `--asset-id`。 |
-| `DINOv2 ... differs from bound metadata` | HBM I/O metadata 不符合固定契约。 | 使用准确的目标制品；不要 reshape 或 cast tensor。 |
+| `DINOv2... differs from bound metadata` | HBM I/O metadata 不符合固定契约。 | 使用准确的目标制品；不要 reshape 或 cast tensor。 |
 
 ## 许可
 

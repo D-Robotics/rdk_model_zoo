@@ -10,7 +10,7 @@ HuggingFace tokenizers C++ binding + sentencepiece, used for native C++
 tokenization at inference time (native inference needs no Python; the launcher uses Python 3).
 
 **Not vendored in git.** The source is downloaded by explicitly running
-`install_tokenizers_cpp.sh`, which fetches a pinned commit from
+`install_tokenizers_cpp.sh`, which fetches the recorded upstream revision from
 [mlc-ai/tokenizers-cpp](https://github.com/mlc-ai/tokenizers-cpp).
 
 Neither `runtime/cpp/run.sh` nor CMake runs the installer. Prepare explicitly from the sample root:
@@ -48,11 +48,9 @@ and relocate your own work before retrying. A failed clone removes only its own
 temporary directory. The installer does not overwrite or reset an existing tree.
 
 Configure proxies through `HTTP_PROXY`/`HTTPS_PROXY`. Success prints
-`tokenizers-cpp ready` or `already prepared` with the full commit; it confirms
-source preparation, not native build or inference success. Building the Rust
+`tokenizers-cpp ready` or `already prepared` with the full commit and confirms
+source preparation; the native build follows in the next step. Building the Rust
 binding can still contact package registries unless dependencies are cached.
-Dependency download availability and real compilation were not exercised by the
-host installer tests, which use a local Git fixture and fake Rust version output.
 
 Next, from the sample root, run `bash runtime/cpp/run.sh --target s600 --build`;
 see [build and run](../runtime/cpp/README.md#build). Dependency and submodule licenses remain in their downloaded source trees.

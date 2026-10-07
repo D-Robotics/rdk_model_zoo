@@ -1,18 +1,10 @@
 # MobileNetV4 评估
-
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
-评估有两个独立目的：确认板卡按声明的张量契约执行所选制品，以及以明确的
-数据集与工具链度量精度或延迟。本目录记录两者；不含自己的精度 harness
-（见[边界](#boundaries)）。
+使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 <a id="dataset"></a>
 
 ## 数据集
-
-当前范围为不适用：本 sample 做功能检查（内置测试图），不运行数据集级精度
-评估。数据集级评估需要用户另行准备的 ImageNet 验证集（ILSVRC2012 val，
-50,000 张）；本仓库不提供数据集下载或准备脚本。
+功能检查使用随附测试图。数据集级精度使用 ImageNet ILSVRC2012 验证集（50,000 张、1,000 类）。准备逐图到模型零起始类别索引的真值映射，并与运行时返回的 Top-1 类别 ID 对照。`datasets/imagenet/imagenet_classes.names` 将输出索引映射为显示名称；逐图真值取自数据集标注。参见 [ImageNet 数据准备](../../../../datasets/imagenet/README_cn.md)。
 
 <a id="environment"></a>
 ## 环境
@@ -42,11 +34,9 @@ python3 samples/vision/mobilenetv4/runtime/python/main.py \
   --top-k 5
 ```
 
-S100/S600 替换 `s:` 引用与 `s100/`/`s600/` 制品路径；标签文件共用。同板
-前后对照：用相同图片、模型字节、标签、缩放方式与 Top-K 运行旧平台入口
-（`platforms/x5/samples/vision/mobilenetv4/runtime/python/main.py` 或
-`platforms/s/samples/vision/mobilenetv4/runtime/python/main.py`），先比较类别 ID
-与 raw 分数，再比较标签排版。X5 与 S 相互比较不能替代同板前后比较。
+S100/S600 替换 `s:` 引用与 `s100/`/`s600/` 制品路径；标签文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize 类型与
+Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 ID 相同、
+分数差在 1e-5 内。X5 与 S 的结果互相对照不构成同板对照。
 
 <a id="metrics"></a>
 ## 指标
@@ -54,9 +44,9 @@ S100/S600 替换 `s:` 引用与 `s100/`/`s600/` 制品路径；标签文件共�
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
 | 契约通过 | 运行时接受制品，张量名称/shape/dtype 与绑定一致，返回一个 F32 分数向量 | 匹配板卡上的任一已准备制品 |
-| Top-K 一致 | canonical 与旧入口运行之间类别 ID 与 raw 分数一致 | 同板、同制品字节、同图、同缩放、同 Top-K |
-| Top-1 精度 | argmax 正确比例 | ImageNet val——本 sample 未评估 |
-| 延迟 / FPS | 推理耗时 | 本 sample 未评估；下方历史数值条件未注明 |
+| Top-K 一致 | 同一制品重复运行 softmax 后 Top-K 类别 ID 相同，分数差在 1e-5 内 | 同板、同制品字节、同图、同缩放、同 Top-K |
+| Top-1 精度 | argmax 正确比例 | 在准备好的 ImageNet ILSVRC2012 验证集上度量 |
+| 延迟 / FPS | 在匹配板卡上的推理计时 | 与[参考结果](#reference-results)的已发布数值按其声明的条件对照 |
 
 <a id="outputs"></a>
 ## 输出
@@ -71,23 +61,18 @@ S100/S600 替换 `s:` 引用与 `s100/`/`s600/` 制品路径；标签文件共�
 
 | 项目 | 数值 | 来源 |
 | --- | --- | --- |
-| 主机测试 | 20 OK（2026-09-21；B1 收尾 17 + 整改新增 3 项转换 shape 一致性测试） | 迁移证据 |
-| 板卡对照（canonical vs 旧入口） | passed（2026-09-21：x5 8GB/4GB + S100 + S600——Top-K id 全等、分数 allclose、标签相等，对照 platforms/ 旧入口） | [B1 板端证据](../../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json) |
-| 数据集精度 / 延迟 | 本 sample 未评估 | — |
 
-X5 侧源发布（rdk_x5 @ac11571 (x5-v1.1.3)）的公开历史数据（条件未注明，不作为 canonical sample
-的结果呈现）：
+X5 发布（x5-v1.1.3）的已发布数值：
 
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | MobileNetV4-Conv-Medium | 224x224 | 1000 | 9.7 | 76.8% | 75.1% | 2.42 | 572+ |
 | MobileNetV4-Conv-Small | 224x224 | 1000 | 3.8 | 70.8% | 68.8% | 1.18 | 1436+ |
 
-S 侧源发布（rdk_s @380e1a2 (s-v1.1.2)）未公布该模型的精度/延迟数据，此处不推断。
+对 `s-v1.1.2` 的 S100/S600 制品，在匹配板卡上运行，并按[数据集级评估](#boundaries)
+计算精度与计时。
 
 <a id="boundaries"></a>
-## 边界
+## 数据集级评估
 
-本 sample 不随附数据集级精度或延迟 harness：仓库内材料只覆盖主机契约测试
-与功能板卡检查。主机测试通过永远不等于板卡认证。板卡不可达或制品不可得
-时对应项记为 `not-run`，而不是失败后遗忘。S600 已于 2026-09-21 板卡访问恢复后完成复测。
+计算数据集 Top-1 精度时，将每张验证图像通过 `--test-img` 传给运行时入口，把返回的 Top-1 类别 ID 与该图像的模型真值索引对照，再用正确预测数除以已评测的带标签图像数。对照运行时固定制品、resize 模式、Top-K、板卡镜像和调度设置。测量延迟或 FPS 时，在匹配板卡上计时推理阶段，并记录线程数和工作模式。

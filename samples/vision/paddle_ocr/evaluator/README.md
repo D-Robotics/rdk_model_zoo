@@ -17,8 +17,8 @@ and ground truth for the same images. Each input may be one JSON object, a
 JSON array, or JSONL with one object per image; `image` is the preferred
 identifier (`image_id` and `id` are accepted aliases; the line/index is
 used when none is present). Every record must contain aligned `boxes` and
-`texts` lists; a box is a polygon `[[x, y], ...]`, and one extra OpenCV
-contour nesting level (`[[[x, y], ...]]`) is accepted.
+`texts` lists; a box is a polygon `[[x, y],...]`, and one extra OpenCV
+contour nesting level (`[[[x, y],...]]`) is accepted.
 
 Ground-truth example:
 
@@ -79,12 +79,13 @@ both input record files and the report as evaluation evidence.
 <a id="reference-results"></a>
 ## Reference results
 
-| Item | Value | Source |
-| --- | --- | --- |
-| host tests | 43 OK (2026-09-21, host suite) | migration evidence |
-| board comparison | canonical == legacy pipelines on both X5 boards and S100 (default and aspect-ratio paths, byte-exact stage/input/output checks, legacy wrappers included) | integration review 2026-09-17 |
-| S100 C++ | rendered output pixels equal to the source baseline | integration review 2026-09-17 |
-| dataset accuracy / latency | not-run in this sample | — |
+The Python default and aspect-ratio pipelines (including the compatibility
+wrappers) run on X5 and S100 and are compared through their stage tensors,
+decoded into polygon boxes and recognized text; the S100 C++ build renders
+the recognized results onto the output image.
+Per-platform detector/recognizer latency and FPS are measured with the
+`hrt_model_exec perf` commands for the det/rec artifacts in the
+[conversion guide](../conversion/README.md).
 
 A same-board before/after comparison uses the same image, artifact bytes,
 dictionary, and threshold on both the legacy entrypoint and the canonical
@@ -100,4 +101,4 @@ the bundled demonstration images into an accuracy claim. It performs no
 inference and validates no artifacts — runtime/board fidelity evidence is
 kept separately (see the table above). Recognition quality on a real
 corpus requires a labeled corpus and a target-specific run, both supplied
-by the user; until then those numbers stay `not-run`.
+by the user when those runs are performed.

@@ -5,39 +5,39 @@ English | [简体中文](README_cn.md)
 <a id="source-model"></a>
 ## Source model
 
-The source identifies an MDTC keyword model from the PaddlePaddle/PaddleAudio ecosystem, but includes no training checkpoint, export script or checkpoint digest. Its conversion page (historical `../../../../platforms/s/samples/speech/kws/conversion/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) was a placeholder. This directory makes the missing prerequisites explicit; it is not a conversion recipe.
+The pinned S100 source describes an MDTC keyword model from the PaddlePaddle/PaddleAudio ecosystem. Its training checkpoint and export script are not included. For inference with the published model, follow the [model guide](../model/README.md).
 
 <a id="toolchain-targets"></a>
 ## Toolchain and target
 
-Only the compiled S100 HBM is published. No validated compiler version, model compiler configuration or adaptation for X5/S100P/S600 is recorded here. Runtime frontend versions do not establish compiler compatibility. Use the [published model](../model/README.md) for the existing runtime; do not substitute a compiler command copied from an image sample.
+The published deployment is an S100 HBM. A conversion workflow needs the target's compiler environment and configuration; runtime frontend dependencies do not select or configure that toolchain. X5, S100P and S600 have no published KWS deployment.
 
 <a id="export"></a>
 ## Export prerequisite
 
-A reproducible export first needs the exact trained wake-word checkpoint and architecture, preprocessing definitions, export tool versions and resulting graph I/O. Record weight and graph SHA-256, input/output names, shapes and probability semantics. Preserve the final activation if the exported output is already a probability; the canonical runtime does not add sigmoid.
+Export a model from its trained wake-word checkpoint and architecture, using the matching preprocessing definitions and export tools. Record weight and graph SHA-256, input/output names, shapes and probability semantics. Preserve the final activation when the graph already returns probabilities; the runtime does not add sigmoid.
 
 <a id="calibration"></a>
 ## Calibration prerequisite
 
-Representative positive/negative recordings and a permitted, separate calibration split are not supplied. The single bundled “hey snips” clip is not sufficient calibration or accuracy evidence. Match mono 16 kHz PCM scaling, 60000-sample truncation/padding and the fixed 80-bin fbank contract; record randomization, source IDs, frontend versions and feature hashes.
+Prepare representative positive/negative recordings on a permitted calibration split. The bundled “hey snips” clip is a demonstration input. Match mono 16 kHz PCM scaling, 60000-sample truncation/padding and the fixed 80-bin fbank contract; record source IDs, frontend versions and feature hashes.
 
 <a id="compile"></a>
 ## Compilation prerequisite
 
-No executable compiler command is supplied because the necessary graph, toolchain version, target configuration and calibration set are absent. A future S100 recipe must specify the target, feature input layout, quantization precision and final output semantics, then retain compiler logs and output digest. Never rename another target's HBM or publish an unverified hash.
+For S100 compilation, specify the target, feature input layout, quantization precision and final output semantics; retain compiler logs and output digest with the resulting HBM. Keep the artifact identity tied to S100.
 
 <a id="validation"></a>
 ## Validation plan
 
-Validate the floating graph against its source on held-out positive/negative data, then compare compiled model metadata and scores against that graph. Keep score tolerances, threshold decisions, false accepts/rejects and latency separate. Host PaddleAudio parity only validates feature computation; it proves neither export correctness nor board behavior.
+Compare the floating graph with its source on held-out positive/negative data, then compare compiled model metadata and scores with the floating graph. Report score tolerances, threshold decisions, false accepts/rejects and latency separately.
 
 <a id="artifacts"></a>
-## Expected future deliverables
+## Conversion outputs
 
-A complete recipe must provide weight/source identities, export command, graph contract, calibration manifest and features, effective compiler configuration/logs, compiled digest and independent floating/compiled comparison report. None is claimed completed by this document. Existing HBM download and source performance remain available through the sample's model/evaluator guides.
+Record weight/source identities, export command, graph contract, calibration manifest and features, compiler configuration/logs, compiled digest and floating/compiled comparison results. The published HBM download and source performance are documented in the [model](../model/README.md) and [evaluator](../evaluator/README.md) guides.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Published runtime artifact
 
-Checkpoint/export/calibration/compiler inputs are missing from the pinned source, and no new OE compile or board result exists. The canonical sample preserves this boundary instead of inventing reproducibility. Supply those actual inputs before attempting a new conversion; the present runtime remains usable with the published artifact subject to its SDK checks.
+Use the published S100 HBM with the matching board SDK by following the [runtime guide](../runtime/python/README.md). A new conversion starts from the trained checkpoint, graph and calibration data described above.

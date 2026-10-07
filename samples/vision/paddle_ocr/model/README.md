@@ -1,7 +1,5 @@
 # PaddleOCR model preparation
 
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
-
 <a id="artifacts"></a>
 
 ## Artifacts
@@ -19,8 +17,8 @@ interchangeable across pairs:
 
 The rows live in the platform release manifests
 (`platforms/x5/docs/release/models.yaml` and
-`platforms/s/docs/release/models.yaml` during the migration window). There
-is no audited S100P or S600 PaddleOCR row, so no artifact is claimed for
+`platforms/s/docs/release/models.yaml`). There
+is no S100P or S600 PaddleOCR row, so no artifact is claimed for
 those targets.
 
 <a id="preparation"></a>
@@ -59,9 +57,9 @@ contract:
 | S100 | PP-OCRv6 UTF-8 dictionary | [`test_data/s100/ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt) | 18,708 lines; blank prepended and one trailing space appended at load → 18,710 classes |
 
 `--vocabulary-path` may substitute the S100 dictionary only when the file's
-SHA-256 matches the audited digest below; any other content is rejected.
+SHA-256 matches the recorded digest below; any other content is rejected.
 The S-series C++ runtime additionally uses a TrueType font for result
-rendering; it is carried from the audited source delivery at
+rendering; it is carried from the source delivery at
 `samples/vision/paddle_ocr/test_data/FangSong.ttf` and is
 selectable with the C++ `--font_path` flag.
 
@@ -90,7 +88,7 @@ selectable with the C++ `--font_path` flag.
 | `en_PP-OCRv3_rec_48x320_rgb.bin` | null | no publisher digest recorded |
 | `PP-OCRv6_det_infer-deploy_640x640_nv12.hbm` | null | no publisher digest recorded |
 | `PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` | null | no publisher digest recorded |
-| `test_data/s100/ppocrv6_dict.txt` | `b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d` | audited, enforced for `--vocabulary-path` replacements |
+| `test_data/s100/ppocrv6_dict.txt` | `b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d` | recorded, enforced for `--vocabulary-path` replacements |
 
 Unknown digests stay `null` rather than being copied or guessed; record the
 observed digest printed by `--prepare` in your own evidence when a board run

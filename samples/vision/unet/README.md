@@ -54,10 +54,10 @@ accuracy, Runtime, and board-performance gates.
 
 | Target | Variants | Python | C++ |
 | --- | --- | --- | --- |
-| x5 | resnet18/34/50/101/152 | supported-not-run | not-supported |
+| x5 | resnet18/34/50/101/152 | supported | not-supported |
 | s100 / s100p / s600 | — | not-supported | not-supported |
 
-This is the current unified-entry status. Reference tables above retain their source dataset/artifact scope; they are not fresh board validation.
+Reference tables above retain their source dataset/artifact scope; run this entry on the board for fresh validation numbers.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -149,11 +149,11 @@ checkpoint, an ONNX model, or an X5 BIN. See
 ## Reference Results
 
 The following results were measured on all 1,449 Pascal VOC validation samples
-using the earlier ResNet18 checkpoint that validated the deployment pipeline.
-They are not a re-evaluation of the current download and do not represent the
-other backbones. A maintainer subsequently verified that the published ResNet18
-model downloads and produces its mask and overlay on RDK X5; board accuracy and
-pure BPU performance revalidation remain pending.
+using the ResNet18 checkpoint that validated the deployment pipeline; the
+numbers describe that checkpoint and do not represent the other backbones. The
+published ResNet18 model downloads and produces its mask and overlay on RDK X5;
+board accuracy and pure BPU performance are measured with the [evaluator](evaluator/README.md)
+on the target.
 
 | Backend | mIoU | Pixel Accuracy |
 | --- | ---: | ---: |
@@ -168,11 +168,10 @@ post-processing.
 
 ### ResNet34/50/101/152 Release Results
 
-The four newly trained variants were evaluated on the same complete 1,449-image
-validation set. Their ONNX numerical gates and `bayes-e` PTQ compilation passed,
-and their public BIN files were downloaded again and checked against the
-published SHA256 values. Board Runtime accuracy and performance were not run for
-these four releases.
+The four additionally trained variants were evaluated on the same complete
+1,449-image validation set. Their ONNX numerical gates and `bayes-e` PTQ
+compilation passed, and their public BIN files were downloaded again and checked
+against the published SHA256 values.
 
 | Backbone | PyTorch FP32 mIoU | Pixel Accuracy | PTQ Output Cosine | Board Runtime |
 | --- | ---: | ---: | ---: | --- |

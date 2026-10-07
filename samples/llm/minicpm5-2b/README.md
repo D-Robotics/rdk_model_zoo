@@ -1,4 +1,4 @@
-> Migration status: in progress. Board results, accuracy and SDK release forecasts below are historical records from pinned S source `380e1a2`, not new tests or current release status. This round covers host launch orchestration and the native core refactor with host-side SDK-double tests; quantization recipes are preserved without rerunning, and board tests are not-run.
+> Board results, accuracy figures and SDK release notes below are records from the source S release. Board runs follow each runtime's commands; the quantization recipes are in the conversion guide.
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -12,22 +12,21 @@ This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | SDK / native backend | Source accuracy result | New board tests |
-| --- | --- | --- | --- |
-| S100 / S100P | 1.0.0 / legacy | PPL +27.83%, fails ≤3% | not-run |
-| S600 | 2.0 beta SDK / cpp | PPL +1.60%, source target met | not-run |
-| X5 | No matching backend/artifact | not applicable | not applicable |
+| Target | SDK / native backend | Source accuracy result |
+| --- | --- | --- |
+| S100 / S100P | 1.0.0 / legacy | PPL +27.83%, fails ≤3% |
+| S600 | 2.0 beta SDK / cpp | PPL +1.60%, source target met |
+| X5 | No matching backend/artifact | not applicable |
 
 ## S100 / S100P support
 
-S100 (Nash-e) and S100P (Nash-m) use separate OELLM 1.0.0 W8 artifacts and the [legacy C++ entry point](runtime/legacy/README.md). Both completed full 140 × 2048-token WikiText2 TEST evaluation: PPL 17.91995, a 27.83% relative increase over float, failing the ≤3% accuracy target. See [full evaluation](evaluator/legacy/README.md) for reproduction. Earlier single-turn Chinese/English generation and normal EOS checks passed. Short-request decode is approximately 12.1 / 13.0 tokens/s. Follow that entry point for memory configuration, downloads and commands; see [legacy conversion](conversion/legacy/README.md). The existing PPL, multi-turn and stability results below apply only to S600.
-
+S100 (Nash-e) and S100P (Nash-m) use separate OELLM 1.0.0 W8 artifacts and the [legacy C++ entry point](runtime/legacy/README.md). Both completed full 140 × 2048-token WikiText2 TEST evaluation: PPL 17.91995, a 27.83% relative increase over float, failing the ≤3% accuracy target. See [full evaluation](evaluator/legacy/README.md) for reproduction. Single-turn Chinese/English generation and normal EOS checks are recorded for both boards. Short-request decode is approximately 12.1 / 13.0 tokens/s. Follow that entry point for memory configuration, downloads and commands; see [legacy conversion](conversion/legacy/README.md). The existing PPL, multi-turn and stability results below apply only to S600.
 
 ## S600 model and supported scope
 
 MiniCPM5-2B uses a Llama architecture with 42 layers, hidden size 2048, 16 query heads and 2 KV heads. This artifact uses a 256-token prefill chunk, a 4096-token KV cache and four Nash-p cores. Generation is greedy with thinking disabled. It supports Chinese/English text and a follow-up prompt in the same conversation.
 
-This delivery is verified on **S600** with RDK OS V5.1.0. The artifact is not interchangeable with S100/S100P models. The original model's longer context limit does not apply to this compiled 4096-token configuration. Image input, tool execution and a serving API are outside this sample's scope.
+Runs on **S600**; the recorded environment is RDK OS V5.1.0 with the OELLM 2.0.4 runtime. The artifact is not interchangeable with S100/S100P models. The original model's longer context limit does not apply to this compiled 4096-token configuration. Image input, tool execution and a serving API are outside this sample's scope.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -67,7 +66,7 @@ The final HBM increases PPL by 1.60% relative to the floating-point reference. A
 
 Observed generation tests include six additional prompts matching reference text and tokens, two-turn English/Chinese conversation, retrieval from inputs padded to 2048 and 3840 tokens, and 50 repeated requests. The latter averaged 53.25 decode tokens/s and 147.86 ms time to first token for the recorded short prompt. These are workload-specific measurements, not concurrency or long-duration stability guarantees. Runtime prefill token counts are padded to chunk boundaries.
 
-The reference model itself answered one Chinese `1+1` prompt incorrectly and added Markdown fences when asked for bare JSON. Quantization preserved those responses; this sample does not promise strict JSON formatting or universal factual correctness.
+The reference model itself answered one Chinese `1+1` prompt incorrectly and added Markdown fences when asked for bare JSON; the quantized model preserves these responses. Check formatting-sensitive outputs in your own application.
 
 <a id="directory"></a>
 ## Directory layout

@@ -10,7 +10,7 @@ Recipe inherited from X5 ac11571: PaddleSeg PP-LiteSeg-STDC1, config `configs/pp
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-X5 only, march bayes-e; no S-series recipe. The source names PaddlePaddle 3.0.0 (Python 3.8–3.10 suggested there) and OE 1.2.8. Export package compatibility must be resolved for the selected PaddleSeg revision; paddle2onnx/onnx/onnxsim versions were not pinned. The script no longer installs packages implicitly. Commands below retain the source setup detail but have not been executed in this host migration.
+X5 only, march bayes-e; no S-series recipe. The source names PaddlePaddle 3.0.0 (Python 3.8–3.10 suggested there) and OE 1.2.8. Export package compatibility must be resolved for the selected PaddleSeg revision; paddle2onnx/onnx/onnxsim versions were not pinned. The script no longer installs packages implicitly. Use the setup commands below for the selected PaddleSeg revision.
 
 ```bash
 # Export environment, separate from the board SDK environment
@@ -28,7 +28,7 @@ hb_mapper --version
 hb_perf --version
 ```
 
-Optional source packages: [OE SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/horizon_x5_open_explorer_v1.2.8-py310_20240926.tar.gz), [Chinese manual](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-cn.zip), [English manual](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-en.zip). Archive URLs are source references, not newly verified downloads.
+Optional source packages: [OE SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/horizon_x5_open_explorer_v1.2.8-py310_20240926.tar.gz), [Chinese manual](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-cn.zip), [English manual](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/x5_doc-v1.2.8-py310-en.zip). Use the matching OE 1.2.8 package and manual.
 
 <a id="export"></a>
 ## Export
@@ -73,7 +73,7 @@ Run direct commands OR build_bin.sh, not both for a normal build. Read checker l
 <a id="validation"></a>
 ## Validation
 
-Host tests cover calibration bytes/naming and shell failure paths using fake tools; real export/compiler/performance runs remain not-run. Inspect runtime metadata and compare exact per-pixel class IDs for matched inputs. The source logit-cosine threshold ≥0.95 is meaningful only if both comparison graphs expose matching pre-argmax logits; it cannot be applied to integer class IDs. Dataset mIoU requires labeled validation data and an implemented dataset runner, which this sample does not ship.
+Host tests cover calibration bytes/naming and shell failure paths using fake tools. Inspect runtime metadata and compare exact per-pixel class IDs for matched inputs. The source logit-cosine threshold ≥0.95 is meaningful only if both comparison graphs expose matching pre-argmax logits; it cannot be applied to integer class IDs. Dataset mIoU requires labeled validation data and an implemented dataset runner, which this sample does not ship.
 
 ```bash
 # cwd: sample directory inside OE; source expected compiler output location
@@ -86,9 +86,9 @@ hrt_model_exec perf --model_file model/pp_liteseg_stdc1_cityscapes_1024x512_nv12
 <a id="artifacts"></a>
 ## Artifacts
 
-Expected sequence: trained .pdparams → inference model.json/model.pdiparams → original/simplified ONNX → OE logs and *_output BIN → local validation report. Preserve checkpoint and PaddleSeg revision, environment versions, calibration manifest, model hashes and logs alongside a locally compiled model. Do not overwrite the published model merely because the filename matches. Custom files may use explicit runtime asset-id to request the same tensor contract, but the unknown publisher digest cannot authenticate them.
+Expected sequence: trained.pdparams → inference model.json/model.pdiparams → original/simplified ONNX → OE logs and *_output BIN → local validation report. Preserve checkpoint and PaddleSeg revision, environment versions, calibration manifest, model hashes and logs alongside a locally compiled model. Do not overwrite the published model merely because the filename matches. Custom files may use explicit runtime asset-id to request the same tensor contract, but the unknown publisher digest cannot authenticate them.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-No pinned checkpoint/PaddleSeg/export-package combination; no observed exported graph or compiler artifact; no verification of actual output metadata, numerical accuracy or performance. Source expectations of ≈95 FPS / ≈10.5 ms are not measurements from this migration. Unsupported graph operators require inspection, not blindly deleting argmax, because the runtime boundary is already a class map. Changing calibration_type to mix or using more representative data is an experiment requiring revalidation, not a guaranteed repair.
+No pinned checkpoint/PaddleSeg/export-package combination; no exported graph or compiler artifact is included; output metadata, numerical accuracy and performance are not verified here. The source documentation's expectation of ≈95 FPS / ≈10.5 ms is not a measured value in this repository. Unsupported graph operators require inspection, not blindly deleting argmax, because the runtime boundary is already a class map. Changing calibration_type to mix or using more representative data is an experiment requiring revalidation, not a guaranteed repair.

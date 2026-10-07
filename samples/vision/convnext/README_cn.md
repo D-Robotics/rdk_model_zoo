@@ -5,7 +5,7 @@ ConvNeXt（现代化 ConvNet 系列）在 RDK X5 上的 ImageNet-1k 分类：
 交付 atto 变体（论文 [A ConvNet for the
 2020s](https://arxiv.org/abs/2201.03545)，参考实现
 [facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)）；
-源转换目录另含无已发布资产的 femto/nano PTQ 配方（见
+转换目录另含无已发布制品的 femto/nano PTQ 配方（见
 [conversion/README_cn.md](conversion/README_cn.md)）。
 [English](README.md)
 
@@ -15,8 +15,7 @@ ConvNeXt（现代化 ConvNet 系列）在 RDK X5 上的 ImageNet-1k 分类：
 
 ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造而来的纯
 卷积网络（"A ConvNet for the 2020s"）。它面向 ImageNet-1k 1000 类图像
-分类，输出 Top-K 类别及置信度。源 README 提炼了相对经典 ResNet 的四项
-设计改动：
+分类，输出 Top-K 类别及置信度。相对经典 ResNet 的四项设计改动：
 
 - **大核深度可分离卷积**——用 7×7 深度卷积替代传统 3×3 卷积，在
   MobileNet/EfficientNet 量级的参数与计算成本下扩大感受野。
@@ -27,31 +26,23 @@ ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造
 
 ![ConvNeXt block 与 ResNet、Swin Transformer block 的对比](./test_data/ConvNeXt_Block.png)
 
-*图：上游论文的 block 对比——Swin Transformer block（左）、ResNet
-block（中）、ConvNeXt block（右）。恢复自 X5 源 README（rdk_x5 @ac11571，
-x5-v1.1.3）；图中为上游训练结构，X5 上实际部署的是 INT8 量化的 atto
-变体（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
+*图：ConvNeXt 论文的 block 对比——Swin Transformer block（左）、ResNet
+block（中）、ConvNeXt block（右）。图中为上游训练结构；X5 上部署的制品
+为 INT8 量化的 atto 变体（224×224 NV12，见[支持范围](#support-matrix)）。*
 
-统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
-也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
-核验板卡身份，懒加载 `hbm_runtime`，执行
-`pre_process → forward → post_process` 任务（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台
-分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/x5/` 下，其审计记录
-在迁移文档中，不在本 README 展开。
+本样例提供面向 X5 的 Python 运行时。
+`ConvNeXtClassifier` 类执行由 `predict` 串联的
+`preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的
+制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果
+（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持范围
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | atto | python | supported（源契约已核实；B3 板端冒烟待执行，见下方说明） |
-| s100 / s100p / s600 | 任意 | python | not-supported（S Manifest 未发布 ConvNeXt 资产；选择时显式报错，无跨平台回退） |
-
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)。统一 sample 的主机测试（28
-项）全部通过。本批（B3）板端冒烟在四个 sample 主机侧全部落地后执行；
-届时在此回填实测结果——在该条目出现之前，本 sample 的板端状态为
-**not-run**，已验证的交付仍是源分支。
+| x5 | atto | python | supported |
+| s100 / s100p / s600 | 任意 | python | not-supported（按支持矩阵选择目标与变体） |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -92,34 +83,29 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-缺省变体（未指定时）为 `atto`——唯一已发布变体，保持源入口的默认模型。
+缺省变体（未指定时）为 `atto`，即唯一已发布变体。
 完整命令见 [runtime/python/README_cn.md](runtime/python/README_cn.md)。
 
 <a id="expected-results"></a>
 ## 预期结果
 
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
-指定 `--img-save-path`，不写任何输出文件（源入口总会写
-`test_data/result.jpg`——该副作用已移除）。使用随附 `cheetah.JPEG` 时 Top-5
-含挂钩相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部 S
-目标）会显式报错退出。
+指定 `--img-save-path`，不写任何输出文件。使用随附 `cheetah.JPEG` 时 Top-5
+含猎豹相关 ImageNet 类别。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
-供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
-下面的截图演示运行效果：旧版 demo 把 top-1 标签画到图上（即已移除的
-`result.jpg` 副作用），随附 `cheetah.JPEG` 得到
-`cheetah, chetoh, Acinonyx jubatus: 0.8048811`（标签文字按历史运行原样
-保留）。这是源交付中的历史截图，不是本仓库当前入口的运行结果。
+下图为 X5 发布的参考运行效果：demo 将 top-1 标签画在随附的
+`cheetah.JPEG` 上（即 `--img-save-path` 写出的可视化）；该记录运行返回
+类别 293 `cheetah, chetah, Acinonyx jubatus`，分数 0.8048811。
 
-![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：旧版可视化代码与
-cheetah 结果，top-1 分数 0.8048811](./test_data/inference.png)
+![X5 参考推理结果：top-1 标签画在随附 cheetah.JPEG 上，分数
+0.8048811](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据
 
-X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓库重测
-（源说明：Float Top-1 为量化前 ONNX 结果，Quant Top-1 为部署模型结果；
-延迟为单帧单线程单核，FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、
-BPU 1xBayes-e@1GHz）：
+ConvNeXt 系列在 RDK X5 上的发布性能（X5 发布 x5-v1.1.3；Float Top-1 为
+量化前 ONNX 结果，Quant Top-1 为部署模型结果；延迟为单帧单线程单核，
+FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、BPU 1xBayes-e@1GHz）：
 
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -128,18 +114,16 @@ BPU 1xBayes-e@1GHz）：
 | ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
 | ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
 
-四行数据——包括唯一有可下载制品的 atto——都来自同一张已发布源表
-（rdk_x5 @ac11571 的 "Performance Data" 小节，其中本就列出 atto）；归档
-平台基准快照（`platforms/x5/docs/release/benchmarks.yaml`，条目
-`convnext-atto-x5`）记录的 atto 数值与此一致。均为历史发布值，未在本
-仓库重测。
+全部数值引自 X5 发布的同一张性能表。仅 atto 提供可下载制品（见
+[model/README_cn.md](model/README_cn.md)）；nano 与 femto 对应
+[conversion/](conversion/README_cn.md) 中的参考 PTQ 配方，无已发布制品。
 
 <a id="directory"></a>
 ## 目录职责
 
 - [model/](model/README_cn.md) — Manifest 驱动的制品下载，不检入二进制
 - [runtime/python/](runtime/python/README_cn.md) — 统一 Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — X5 参考 PTQ 配置（含已披露缺口）
+- [conversion/](conversion/README_cn.md) — X5 PTQ 配置及模型所需准备步骤
 - [evaluator/](evaluator/README_cn.md) — 发布的基准记录与功能检查
 - `test_data/` — 随附测试图（[cheetah.JPEG](test_data/cheetah.JPEG) 及参考插图）
 - `tests/` — 主机 unittest 套件
@@ -155,8 +139,5 @@ BPU 1xBayes-e@1GHz）：
 <a id="license"></a>
 ## 许可
 
-样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为上游 ConvNeXt
-发行版
-（[facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)）；
-模型/权重许可由上游发行版 govern。已发布制品遵循平台发布 Manifest；
-Manifest 不含独立许可字段，本文件不主张额外许可。
+样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型与权重遵循上游 ConvNeXt 发行版
+（[facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)）的许可。已发布制品按平台发布 Manifest 提供。

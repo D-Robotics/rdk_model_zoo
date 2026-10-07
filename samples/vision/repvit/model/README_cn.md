@@ -3,7 +3,7 @@
 <a id="artifacts"></a>
 ## 制品
 
-以下为 X5 发布清单的准确制品，每个文件为单阶段分类模型。未发布 S 制品。
+此处列出 X5 发布清单中的单阶段分类制品；目标与变体选择见根支持矩阵。
 
 | Variant | Filename | Target | Format | Source |
 | --- | --- | --- | --- | --- |
@@ -36,4 +36,4 @@ CLI 读取 `datasets/imagenet/imagenet_classes.names` 标签与默认 `test_data
 <a id="formats-checksums"></a>
 ## 格式与校验
 
-上述每个文件在 `docs/release/x5/models.yaml` 中均为 `format: bin`、`sha256: null (unknown)`。下载器打印收到字节的摘要，仅记录本地身份，不等于独立验证发布者。
+上述每个文件在 `docs/release/x5/models.yaml` 中均为 `format: bin`、`sha256: null (unknown)`。下载器打印收到字节的摘要，用于本地身份核对。

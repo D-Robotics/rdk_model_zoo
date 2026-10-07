@@ -30,7 +30,7 @@ All five backbones share onnx_export/model. Source attribution, pinned reference
 <a id="toolchain-targets"></a>
 ## Toolchain
 
-Target: X5 / bayes-e. The source does not pin an OE Docker version. Use x86 Linux with hb_mapper and hb_model_info; mapper records actual versions. Export additionally needs PyTorch, ONNX, ONNX Runtime and NumPy; the calibration example needs Pillow and mapper needs PyYAML. OE was not installed/executed this round, and untested version combinations are not certified.
+Target: X5 / bayes-e. No OE Docker version is pinned. Use x86 Linux with hb_mapper and hb_model_info; mapper records actual versions. Export additionally needs PyTorch, ONNX, ONNX Runtime and NumPy; the calibration example needs Pillow and mapper needs PyYAML.
 
 <a id="export"></a>
 ## 1. Export ONNX
@@ -121,7 +121,7 @@ Default export compares PyTorch/ORT on deterministic input. skip-runtime-check i
 python3 samples/vision/unet/evaluator/eval_unet.py --backend x5 --backbone resnet18 --model /output/unet_resnet18_x5_run_001/artifacts/unet_resnet18_voc_512x512_nv12.bin --manifest /data/unet/val.tsv --report /reports/unet_custom_x5.json --min-miou 0.50
 ```
 
-Use the actual BIN path recorded in run-receipt.json; replace --model above with that receipt path. Current unified-entry board tests, full export, compilation and dataset evaluation are not-run.
+Use the actual BIN path recorded in run-receipt.json; replace --model above with that receipt path.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -129,6 +129,6 @@ Use the actual BIN path recorded in run-receipt.json; replace --model above with
 Outputs retain ONNX/report, resolved YAML, calibration manifest, checker/build/model-info logs, artifacts/hashes and run-receipt.json. See the [model table](../model/README.md#artifacts) for the five published BINs and hashes; do not assign their hashes to recompiles.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-Supply trained checkpoints, full VOC and a representative calibration subset. Source OE image/framework versions are not pinned. This round validates host logic, entrypoints and documentation, not conversion/accuracy. Taking the first 100 files demonstrates format preparation, not calibration representativeness; choose a subset suitable for deployment data.
+Supply trained checkpoints, full VOC and a representative calibration subset; OE image/framework versions are not pinned. Taking the first 100 files demonstrates format preparation, not calibration representativeness; choose a subset suitable for deployment data.

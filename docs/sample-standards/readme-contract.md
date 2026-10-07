@@ -4,6 +4,15 @@
 > sample 文档。旧交付分支（rdk_x5 / rdk_s / rdk_x3）的存量 README 不追溯适用本契约；
 > 其修订以各自 ref 的规范为准。
 
+## 交付文档口径（2026-10-07）
+
+README 直接介绍当前交付物的用途、适用板卡、模型准备、编译、运行、输入输出和开发接口。
+迁移经过、审计过程、测试是否执行、评审结论和发布提升状态放在独立维护记录中，不写入 README。
+技术前提以具体操作表达：给出所需 SDK、工具链、校准数据、模型配置和真实可用的入口。
+原有编译指南的步骤、命令、参数、版本、配置值、链接和图示须完整保留；目录调整时同步更新路径。
+英文和中文遵循同一口径。下文的固定锚点继续有效；`known-gaps` 可显示为“补充准备”，
+`boundaries` 可显示为“适用范围”，标题无需沿用历史命名。
+
 ## 1. 目的与适用范围
 
 本契约定义每个 sample 各级 README **必须回答的问题**与**可验证的验收要求**。根规范
@@ -61,9 +70,9 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | ID | 章节 | 必答问题 | 证据/适用条件 |
 | --- | --- | --- | --- |
 | `overview` | 算法与来源 | 这个模型做什么？算法一句话概述；官方论文/仓库/来源链接；在本仓的定位 | 官方链接可直接核对 |
-| `support-matrix` | 支持与实测矩阵 | 哪些 target（x5/s100/s100p/s600）× 哪些 variant × 哪些语言（python/cpp）**支持**；其中哪些**实际验证过**、哪些 not-run；cpp 缺席时此处显式留空 | 矩阵单元格三态：supported-verified / supported-not-run / not-supported；验证状态链接证据 |
+| `support-matrix` | 支持矩阵 | 哪些 target（x5/s100/s100p/s600）× variant × 语言（python/cpp）提供实现和对应制品 | 列明可用组合及具体前提；测试状态另记 |
 | `prerequisites` | 环境前提 | 需要什么板卡/系统镜像/工具链版本；python 依赖；磁盘与内存约束 | 版本号具体，不写“最新版” |
-| `quickstart` | 快速体验 | **一条**从模型准备到看到结果的完整路径：每条命令给出 cwd、前置文件来源、参数、输出与成功判断 | 命令可逐条复制执行；模型准备显式（`model/download.sh --target …`），不依赖隐式自动下载 |
+| `quickstart` | 快速体验 | **一条**从模型准备到看到结果的完整路径：每条命令给出 cwd、前置文件来源、参数、输出与成功判断 | 命令可逐条复制执行；使用实际脚本和目标选择参数显式准备模型 |
 | `expected-results` | 预期结果 | 正常运行后应看到什么（Top-5 列表示例、检测框数量级、输出文件路径与命名） | 与 test_data 的真实输出一致；不虚构精度数字 |
 | `directory` | 目录职责 | 子目录树 + 每项一句话职责 | 与实际目录一致（Q3 校验本地路径） |
 | `entry-points` | 入口索引 | model/runtime/conversion/evaluator 各入口链接与一句话说明 | 链接有效；缺项写明理由 |
@@ -74,7 +83,7 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | ID | 章节 | 必答问题 | 证据/适用条件 |
 | --- | --- | --- | --- |
 | `artifacts` | 制品清单 | 每个制品文件 ↔ target/stage 对应表（哪个文件用于哪个 `--target`、哪个 pipeline 阶段）；制品来源（下载/手动准备/manual） | 与 manifest 行一致；来源为 manual 时写明获取途径 |
-| `preparation` | 准备步骤 | 下载命令（含 `--target` 与 cwd）或手动准备步骤；失败时的替代途径 | 下载脚本存在且参数一致；hash 校验行为说明 |
+| `preparation` | 准备步骤 | 下载命令（含实际目标选择参数与 cwd）或手动准备步骤；失败时的替代途径 | 下载脚本存在且参数一致；hash 校验行为说明 |
 | `accompanying-files` | 伴随文件 | 词典/labels/mvn/config 等非模型制品的作用与必需性 | 每个文件一句话职责 |
 | `local-paths` | 本地路径 | 准备完成后文件应位于何处；runtime 默认参数指向哪里 | 路径与 runtime 默认值一致（Q3 校验） |
 | `formats-checksums` | 格式与校验值 | 每个制品的格式（.bin/.hbm/onnx 等）与已知 SHA-256；**未知校验值写 `sha256: null (unknown)`，禁止伪造或跨制品复制** | 校验值来源（发布记录）；null 时注明 |
@@ -87,15 +96,15 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | `usage` | 使用 | cwd；默认命令（零额外参数）与自定义命令各一条；成功判断标准（退出码/输出） | 命令与 `main.py` 实际行为一致 |
 | `parameters` | 参数 | 全部 CLI 参数表：名称/类型/默认值/说明；**默认值必须与 parser 实际值一致**（Q3 从 `build_parser` 核对） | 无遗漏；kebab-case 命名 |
 | `results` | 结果 | 输出字段/文件的位置、格式与含义；坐标/类别/置信度语义 | 字段名与代码返回一致 |
-| `integration-example` | 集成示例 | **完整可运行**的 Python 片段：输入与配置变量全部定义、无未定义引用；演示 pre/forward/post 或 predict | 由 sample tests 在 fixture 中验证（Q2）；不得含未定义变量 |
-| `stage-io` | 三阶段 I/O | `pre_process` 输入→输出、`forward` 张量契约、`post_process` 输出的类型与 shape 约定（与 inference-contract 一致的摘要） | 与 docstring 一致 |
+| `integration-example` | 集成示例 | **完整可运行**的 Python 片段：输入与配置变量全部定义、无未定义引用；优先演示具名模型类的 `predict`，按需要补充三阶段调用 | 由 sample tests 在 fixture 中验证（Q2）；不得含未定义变量 |
+| `stage-io` | 三阶段 I/O | `preprocess` 输入→输出、`infer` 张量契约、`postprocess` 输出的类型与 shape 约定（与 inference-contract 一致的摘要） | 与 docstring 一致 |
 | `troubleshooting` | 故障排查 | 常见错误（模型缺失/target 不匹配/输入尺寸）与处置 | 只列真实会踩坑的点 |
 
 ### 4.4 runtime/cpp（`templates/runtime-cpp.{en,zh}.md`）
 
 | ID | 章节 | 必答问题 | 证据/适用条件 |
 | --- | --- | --- | --- |
-| `supported-boards` | 适用板卡 | 明确列出可用板卡与不可用板卡及原因 | 不写“全平台”除非逐板验证 |
+| `supported-boards` | 适用板卡 | 列出提供 C++ 实现的板卡、匹配制品和 SDK 要求 | 按实际组合描述；额外模型准备步骤具体可操作 |
 | `dependencies` | 依赖 | 交叉编译/板端依赖（库、头文件路径、CMake 版本） | 版本具体 |
 | `build` | 构建 | 完整构建命令序列（cwd、CMake 配置、make）；SoC 宏检测说明 | 命令完整可复制 |
 | `run` | 运行 | cwd、默认与自定义运行命令、必需前置（模型路径） | 与 gflags 默认值一致 |
@@ -112,9 +121,9 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | `export` | 导出 | ONNX 导出步骤（环境、脚本、命令、产物） | 缺配方 → 移入 `known-gaps` |
 | `calibration` | 校准 | 校准数据来源与数量、量化配置、校准脚本命令 | 数据集来源明确 |
 | `compile` | 编译 | 生成 .bin/.hbm 的完整命令与产物命名约定 | 命令可复制 |
-| `validation` | 转换后验证 | 如何确认制品可用（板端冒烟、输出对比）；当前已验证/未验证 | 未验证写 not-run |
+| `validation` | 检查编译产物 | 模型信息查看命令、板端运行命令和输出检查方法 | 给出可操作的步骤和预期输出；执行结果另记 |
 | `artifacts` | 产物 | 产物清单与 target 对应、落盘路径 | 与 model/artifacts 一致 |
-| `known-gaps` | 缺失项 | 缺哪段配方（如无校准数据、无导出脚本）时**必须**列出；说明当前可复现的边界 | 禁止用通用命令伪装已验证流程 |
+| `known-gaps` | 补充准备 | 需要用户准备的校准数据、外部配置或工具链示例，逐项给出获取及使用步骤 | 使用真实存在的脚本、配置和入口 |
 
 ### 4.6 evaluator（`templates/evaluator.{en,zh}.md`）
 
@@ -125,8 +134,8 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | `command` | 评估命令 | cwd、完整命令、参数表（默认值与代码一致）、预期耗时 | 可复制执行 |
 | `metrics` | 指标 | 每个指标的定义与测试条件（topk、IoU 阈值、数据子集） | 条件完整，结果才可比 |
 | `outputs` | 输出 | 输出文件位置与格式 | — |
-| `reference-results` | 参考结果 | 已发布的参考值及其来源（benchmark 记录）；**未运行写 not-run，不虚构** | 来源链接 |
-| `boundaries` | 边界 | 没有评估实现或仅部分指标可评时，明确说明覆盖范围 | 空目录/占位文档不算实现 |
+| `reference-results` | 参考结果 | 已发布的参考值、模型/板卡/数据集条件及来源 | 只列有来源的数值；没有参考数值时给出结果获取步骤 |
+| `boundaries` | 适用范围 | 列出实现支持的数据集、指标和输入条件；外部评估工具给出具体入口 | 与实际脚本或可执行程序对应 |
 
 ## 5. 统一内容纪律（全层级适用）
 
@@ -137,15 +146,15 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
    未定义变量当示例。
 3. **禁止转嫁**：“同其他模型/参考原分支/见迁移记录”不能替代关键步骤；迁移历史、
    canonical/wrapper 审计说明放 `docs/releases/unified-migration/`，客户 README 只保留
-   必要兼容说明。
-4. **禁止伪装**：不得以通用命令模板伪装已验证的转换/评估流程；能力缺失时如实写限制，
-   不用空目录或占位文档充数。
+   用户需要的实际调用接口与准备条件。
+4. **操作真实**：转换与评估步骤使用实际脚本、配置和参数；外部工具、权重及校准数据给出
+   具体获取和准备步骤，不用不存在的脚本或虚构产物充数。
 5. **hash 纪律**：未知校验值一律 `sha256: null (unknown)`，禁止猜测、禁止从同模型其他
    制品复制。
 6. **API 摘要**：公开 API 的 shape、dtype、布局、值域、坐标约定及异常在 docstring 中
    精确说明（见 inference-contract），README 给可理解的摘要与使用例，两者不得矛盾。
-7. **实测声明**：`support-matrix` 的 verified/not-run 区分是硬性要求；host 测试通过
-   不等于板端验证，不得混写。
+7. **支持与测试记录**：README 的支持矩阵描述当前实现、制品和适用条件。实际主机或板端
+   测试记录包含提交、模型、环境、输入和结果，放在独立验证文档中；README 不写测试状态或验收说明。
 
 ## 6. 与旧规范（rdk_x5 `docs/Model_Zoo_Repository_Guidelines.md`）的冲突记录
 
@@ -156,7 +165,7 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | C1 | sample 根 QuickStart 以 run.sh“自动下载模型/自动构建/自动运行”为默认叙事 | develop 采用**显式模型准备**（`model/download.sh --target`）＋分步命令；run.sh 若存在可作为快捷方式并列给出，但 quickstart 必须先给显式路径 |
 | C2 | `model/README.md` 仅要求“写清楚模型下载方式” | 扩展为 §4.2 五章节：制品对应、伴随文件、本地路径、格式与校验值 |
 | C3 | conversion/evaluator README “暂无统一规范” | 本契约 §4.5/§4.6 给出完整契约；缺配方必须显式列 `known-gaps` |
-| C4 | sample 根无支持矩阵要求；runtime 章节默认“同时提供 C++ / Python” | 强制 `support-matrix`（target×variant×语言，三态）；语言覆盖按实际声明，缺 cpp 不得声称双语言 |
+| C4 | sample 根无支持矩阵要求；runtime 章节默认“同时提供 C++ / Python” | 强制 `support-matrix`（target×variant×语言的可用组合）；语言覆盖按实际声明 |
 | C5 | runtime README “默认值必须与代码一致”（仅人工约束） | 保留并升级为 Q3 自动核对（parser `build_parser` 提取） |
 | C6 | 代码文档指向 `docs/source_reference/` | develop 上该目录在 Phase 1（A6）前不存在；引用必须以实际存在路径为准，模板不预设该链接 |
 | C7 | 顶层 README 规范描述 rdk_x5 目录树（docs/manifests 等） | develop 布局以本契约与根规范 develop 版为准；A6 合并时按 develop 布局改写目录章节 |

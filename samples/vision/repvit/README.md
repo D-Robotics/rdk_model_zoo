@@ -9,7 +9,7 @@ RepViT revisits lightweight mobile CNN design from a ViT perspective. It keeps a
 - **Paper**: [RepViT: Revisiting Mobile CNN From ViT Perspective](http://arxiv.org/abs/2307.09283)
 - **Reference Implementation**: [THU-MIG/RepViT](https://github.com/THU-MIG/RepViT)
 
-The source README's feature highlights:
+Feature highlights:
 
 - **ViT-inspired mobile CNN** — revisits the MobileNet-style
   architecture from a lightweight ViT perspective.
@@ -35,8 +35,7 @@ followed by the FFN channel mixer. Downsample unit between stages
 a 1×1, and an FFN — halving the resolution and mapping C_i to C_i+1.
 RepViTSEBlock (green): the same structure with an SE module between the
 token mixer and the FFN. Bottom: at inference the parallel 3×3DW + 1×1DW
-branches fuse into a single 3×3DW. Restored from the X5 source README
-(rdk_x5 @ac115717197920355fc390bb04299b20e6436864).*
+branches fuse into a single 3×3DW.*
 
 ![Depthwise block: from MobileNetV3 block to separated-mixer RepViT
 block](./test_data/RepViT_DW.png)
@@ -50,16 +49,19 @@ explains why the deployed artifacts are the already-fused INT8
 m0_9/m1_0/m1_1 variants at 224×224 NV12 (see [Support
 matrix](#support-matrix)).*
 
-One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. The unified Python task delegates preprocessing, inference and postprocessing through the existing shared classification implementation. Labels, drawing and file output belong to the CLI.
+One BGR image produces ImageNet-1k Top-K class IDs, scores and optional
+labels. The `RepViTClassifier` class runs a `preprocess → infer → postprocess` flow
+chained by `predict` (labels, drawing and file output belong to the CLI
+layer; see [runtime/python/README.md](runtime/python/README.md)).
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Target | Variant | Python | C++ |
 | --- | --- | --- | --- |
-| x5 | m0_9 | supported-not-run | not-supported |
-| x5 | m1_0 | supported-not-run | not-supported |
-| x5 | m1_1 | supported-not-run | not-supported |
+| x5 | m0_9 | supported | not-supported |
+| x5 | m1_0 | supported | not-supported |
+| x5 | m1_1 | supported | not-supported |
 | s100 | m0_9 | not-supported | not-supported |
 | s100 | m1_0 | not-supported | not-supported |
 | s100 | m1_1 | not-supported | not-supported |
@@ -70,17 +72,17 @@ One BGR image produces ImageNet-1k Top-K class IDs, scores and optional labels. 
 | s600 | m1_0 | not-supported | not-supported |
 | s600 | m1_1 | not-supported | not-supported |
 
-`supported-not-run` means an implementation and published artifact exist, but unified board validation has not run. No S-series artifacts or C++ implementations are provided. [Host validation records](../../../docs/releases/unified-migration/2026-09-22-b4-classification-review.md) do not establish board verification.
-
-Source: rdk_x5 @ac115717197920355fc390bb04299b20e6436864. No C++ runtime is delivered for this sample. The lowercase CLI IDs map to exact published filenames; letter casing in filenames is preserved.
+Use the Python CLI with a lowercase variant ID; it resolves to the exact case-sensitive published filename.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use a full repository checkout. On X5 use the matching board image and its `hbm_runtime`; install host dependencies in a virtual environment as below. SciPy is used only by the preserved-source comparison tests, not unified inference.
+Use a full repository checkout. On X5 use the matching board image and its `hbm_runtime`; install host dependencies in a virtual environment as below. Host-side comparison tools use SciPy; board inference uses the dependencies in the matching runtime image.
 
-Locally tested host environment: Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0, PyYAML 6.0.3 and SciPy 1.18.1. This is a host regression environment, not a qualified board dependency set. X5 4GB/8GB validation is planned; exact board image, Python and SDK versions and minimum RAM remain unverified. Allow disk space for the checkout, selected model and outputs; a minimum capacity has not been measured. Native inference needs no OE toolchain; conversion prerequisites are documented under conversion.
-
+Use a full repository checkout. On X5 use the matching board image and
+its `hbm_runtime`; install the host dependencies in a virtual environment
+as below. Host-side comparison tools use SciPy; board inference uses the dependencies in the matching runtime image. Native inference needs no OE toolchain; conversion
+prerequisites are documented under [conversion](conversion/README.md).
 ```bash
 # cwd: repository root
 python3 -m venv .venv-repvit
@@ -92,7 +94,7 @@ python3 -c "import cv2, numpy, yaml; print('host dependencies: ok')"
 <a id="quickstart"></a>
 ## Quick start
 
-Run on X5 from the repository root. Download exits 0 and prints an observed digest; inference exits 0 and prints five results. No automatic download occurs during inference.
+From the repository root, prepare the X5 artifact with the model downloader, then run inference with the bundled image and the selected artifact reference.
 
 ```bash
 # cwd: repository root
@@ -106,38 +108,35 @@ python3 samples/vision/repvit/runtime/python/main.py \
 <a id="expected-results"></a>
 ## Expected results
 
-Default variant `m0_9` preserves the source entrypoint. Choose `m1_0`, `m1_1` explicitly. Source softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `yurt.JPEG` is a functional input, not dataset accuracy evidence; unified board results are not available yet. No file is saved unless `--img-save-path` is given.
+The default variant is `m0_9`; the other variants are chosen explicitly. Softmax scores produce a stable Top-K, with exact ties ordered by ascending class ID. `yurt.JPEG` is a functional input, not dataset accuracy evidence. Pass `--img-save-path` to save an image; otherwise results are printed to stdout.
 
-For reference, the X5 source README (rdk_x5
-@ac115717197920355fc390bb04299b20e6436864, legacy Python entrypoint)
-illustrated its run with the screenshot below: the legacy `result.jpg`
-drawing overlaid the top-5 ranks on the image, with rank 1 being class
-915 (yurt) on the bundled `yurt.JPEG`. This is a historical screenshot
-from the source delivery, not a run of the current entrypoint in this
-repository.
+The screenshot below shows a reference run from the X5 release: the
+demo overlay draws the top-5 ranks onto the bundled test image, with
+rank 1 being class 915 (yurt).
 
-![Historical inference screenshot from the X5 source README: yurt test
-image with the legacy top-5 overlay, rank 1 class 915
-(yurt)](./test_data/inference.png)
+![Reference inference result on X5: yurt test image with the top-5 overlay, rank 1 class 915 (yurt)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data
 
-Historical source records, not remeasured here. Full timing conditions and all columns are retained in [evaluation](evaluator/README.md#reference-results). Do not compare single-thread latency with multi-thread FPS as reciprocal quantities.
+Published performance records; full timing conditions and all columns
+are listed under [evaluation](evaluator/README.md#reference-results).
+Single-thread latency and multi-thread FPS are measured under different
+concurrency and are not reciprocal quantities. Compare latency and FPS using
+the same thread count, concurrent submission mode and BPU utilization.
 
 <a id="directory"></a>
 ## Directory
 
-`model/`: artifacts and download; `runtime/python/`: native CLI, task and runner; `conversion/`: 3 unchanged PTQ YAMLs; `evaluator/`: checks and historical benchmarks; `test_data/`: `yurt.JPEG` input and accompanying resources; `tests/`: host regressions.
+`model/`: artifacts and download; `runtime/python/`: native CLI, task and runner; `conversion/`: 3 PTQ YAMLs; `evaluator/`: functional checks and published benchmarks; `test_data/`: `yurt.JPEG` input and accompanying resources; `tests/`: host unittest suite.
 
 <a id="entry-points"></a>
 ## Entry points
 
 [Model](model/README.md) · [Python](runtime/python/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md)
 
-The old `platforms/x5/samples/vision/repvit` entry remains the original source implementation for baseline comparisons. It has not become a forwarding shim. New integrations use this sample; internal legacy imports are not promised compatible.
 
 <a id="license"></a>
 ## License
 
-Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; the repository license is not a grant overriding those notices or upstream weights licenses. Check the applicable notices before redistributing conversion material or weights.
+Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; Before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.

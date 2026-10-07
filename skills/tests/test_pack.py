@@ -61,13 +61,14 @@ class PackTests(unittest.TestCase):
             'rdk-model-zoo-release':'1.0.1',
         })
         readme=(ROOT/'README.md').read_text(encoding='utf-8')
-        self.assertIn('Pack 候选版本为 1.1.0',readme)
-        # The entry advanced 1.1.1 -> 1.1.2 for the H8-SKILL-R1 discovery fix;
-        # the other 1.1.1 members keep their level.
-        self.assertIn('入口 `rdk-model-zoo` 的 Skill 版本为 1.1.2',readme)
-        self.assertIn('`rdk-model-zoo-repo/develop/validate/review` 为 1.1.1',readme)
+        # The README documents versions as a factual table; the documented
+        # values must match the manifest exactly, with no member missing.
+        documented=dict(re.findall(r'^\|\s*([^|]+?)\s*\|\s*([0-9]+\.[0-9]+\.[0-9]+)\s*\|\s*$',readme,re.M))
+        self.assertEqual(documented.get('Pack'),manifest['version'])
+        for row in manifest['skills']:
+            self.assertEqual(documented.get(row['name']),row['version'],row['name'])
+        self.assertEqual(set(documented),{'Pack'}|{row['name'] for row in manifest['skills']})
         self.assertNotIn('Pack 1.1.0 已发布',readme)
-        self.assertIn('上游 `rdk_x5` 已发布 Pack 1.0.1',readme)
         changelog=(ROOT/'CHANGELOG.md').read_text(encoding='utf-8')
         self.assertIn('## Unreleased — candidate Pack 1.1.0',changelog)
         self.assertNotIn('## Pack 1.1.0',changelog)

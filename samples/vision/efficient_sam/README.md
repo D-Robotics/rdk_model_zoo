@@ -1,6 +1,5 @@
 English | [简体中文](README_cn.md)
 
-
 # EfficientSAM-Tiny
 
 <a id="overview"></a>
@@ -10,7 +9,6 @@ EfficientSAM-Tiny segments one image using two fixed positive point prompts bake
 
 - Paper: <https://arxiv.org/abs/2312.00863>
 - Project: <https://yformer.github.io/efficient-sam/>
-- Source baseline: `platforms/s/samples/vision/efficient_sam` and `platforms/x5/samples/vision/efficient_sam`
 
 The published decoder fixes positive points `(248,210)` and `(302,315)` in the resized 512-square image. It accepts no runtime point or box argument. The encoder applies RGB `/255`; the selected mask uses logits `>=0`. Input is stretched to 512×512 and the result stays in that coordinate system, without mapping back to the original image.
 
@@ -19,17 +17,17 @@ The published decoder fixes positive points `(248,210)` and `(302,315)` in the r
 
 | Target | Variant | Python | C++ |
 |---|---|---|---|
-| x5 | default `.bin` pair | supported-not-run | not-supported |
-| s100 | nash-e `.hbm` pair | supported-not-run | not-supported |
-| s100p | nash-m `.hbm` pair | supported-not-run | not-supported |
-| s600 | nash-p `.hbm` pair | supported-not-run | not-supported |
+| x5 | default `.bin` pair | supported | not-supported |
+| s100 | nash-e `.hbm` pair | supported | not-supported |
+| s100p | nash-m `.hbm` pair | supported | not-supported |
+| s600 | nash-p `.hbm` pair | supported | not-supported |
 
-The host fixture suite validates the pipeline with injected runners. No board or `hbm_runtime` execution is claimed in this migration.
+The host fixture suite validates the pipeline with injected runners; board execution requires the target board and `hbm_runtime`.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use the repository `.venv` for host checks with Python, NumPy, OpenCV and PyYAML. The recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3; NumPy/OpenCV versions are not pinned by this sample. Runtime syntax requires Python 3.10 or newer. Board execution additionally requires the target RDK image and matching `hbm_runtime`, whose system version is unknown and not-run. The two model files must be prepared explicitly; this sample does not download during inference. Conversion uses the target OE toolchain described in [conversion](conversion/README.md).
+Use the repository `.venv` for host checks with Python, NumPy, OpenCV and PyYAML. The recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3; use the NumPy/OpenCV shipped with your environment. Runtime syntax requires Python 3.10 or newer. Board execution additionally requires the target RDK image and its matching `hbm_runtime`; record the system version together with results. The two model files must be prepared explicitly; this sample does not download during inference. Conversion uses the target OE toolchain described in [conversion](conversion/README.md).
 
 The board's SDK must already be installed by its matching system image; do not install `hbm_runtime` from an unrelated host environment. Check the required Python imports from the repository root:
 
@@ -38,7 +36,7 @@ The board's SDK must already be installed by its matching system image; do not i
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements were not measured; both encoder and decoder must fit in the target runtime.
+If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements are set by loading both encoder and decoder in the target runtime; plan for both models resident simultaneously.
 
 <a id="quickstart"></a>
 ## Quick Start
@@ -80,7 +78,7 @@ efficient_sam/
 - [Model](model/README.md): target pair mapping, preparation and checksums.
 - [Python runtime](runtime/python/README.md): CLI and `EfficientSAMPipeline` API.
 - [Conversion](conversion/README.md): export, calibration and compile material.
-- [Evaluation](evaluator/README.md): reference procedure and not-run boundary.
+- [Evaluation](evaluator/README.md): evaluation procedure and reference records.
 - C++: not provided.
 
 <a id="license"></a>

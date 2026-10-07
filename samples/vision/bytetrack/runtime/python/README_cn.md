@@ -18,7 +18,7 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
   --output samples/vision/bytetrack/test_data/result_unified.mp4
 ```
 
-成功会写出非空视频，打印 `Saved <N> tracked frames ...` 并退出 `0`。加 `--records ...jsonl` 保存每帧 track；`--max-frames` 限制 smoke，`0` 表示全部视频。
+成功会写出非空视频，打印 `Saved <N> tracked frames...` 并退出 `0`。加 `--records...jsonl` 保存每帧 track；`--max-frames` 限制 smoke，`0` 表示全部视频。
 
 <a id="parameters"></a>
 ## 参数
@@ -28,7 +28,7 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
 | `--target` | choice | `auto` | `auto`、`x5`、`s100`、`s100p`、`s600`；只有三个 S target 可解析 |
 | `--asset-id` | string | `null` | 精确 detector identity |
 | `--model-path` | path | `null` | 已存在 HBM；必须带 asset ID |
-| `--input` | path | `samples/vision/bytetrack/test_data/track_test.mp4` | 用户准备的视频；源树没有该文件 |
+| `--input` | path | `samples/vision/bytetrack/test_data/track_test.mp4` | 用户准备的视频；仓库不随附该文件 |
 | `--output` | path | `samples/vision/bytetrack/test_data/result_unified.mp4` | 输出视频 |
 | `--records` | path | `null` | 可选 JSONL 帧记录 |
 | `--score-thres` | float | `0.25` | detector 置信度 |
@@ -37,7 +37,7 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
 | `--track-buffer` | int | `60` | 丢失帧缓存 |
 | `--match-thresh` | float | `0.8` | 首次关联阈值 |
 | `--frame-rate` | int | `30` | tracker 帧率缩放 |
-| `--mot20` | flag | `false` | 源 matching 模式 |
+| `--mot20` | flag | `false` | MOT20 matching 模式（纯 1 − IoU 代价，不与分数融合） |
 | `--priority` | int | `0` | 调度优先级 |
 | `--bpu-cores` | int list | `[0]` | BPU 核编号 |
 | `--max-frames` | int | `0` | 0 表示全部帧 |
@@ -94,7 +94,7 @@ print(explicit_result, composed_result)
 - `preprocess(frame)`（别名 `pre_process`）委托 detector，返回 tensor 和不可变几何 context。
 - `infer(tensors)`（别名 `forward`）委托 native detector 推理，不推进 tracker 状态。
 - `postprocess(outputs, context)`（别名 `post_process`）解码 detector、过滤 person、丢弃无效 clip 框、更新 tracker 一次，返回 `tuple[Track,...]`。
-- `predict(frame)` 组合一个有序帧；`reset()` 建立 `frame_index == 0` 的新流，但保留进程级 ID 单调性。
+- `predict(frame)` 组合一个有序帧；`reset` 建立 `frame_index == 0` 的新流，但保留进程级 ID 单调性。
 
 <a id="troubleshooting"></a>
 ## 故障排查
@@ -102,5 +102,5 @@ print(explicit_result, composed_result)
 - 缺视频会显式报错，先准备 `track_test.mp4`；不会自动下载。
 - 自定义 HBM 缺少精确限定 asset ID 会被拒绝。
 - `auto` 使用 `--dry-run` 会被拒绝，执行 target 必须明确。
-- Letterbox padding 可能把源框 clip 成零面积；统一代码会丢弃，而 evaluator 会把源 NaN 记录为失败证据。
+- Letterbox padding 可能把框 clip 成零面积；task 会丢弃该框，evaluator 会把任何非有限记录记为失败 capture。
 - 不要在独立视频或多线程间共享同一 task；tracker 状态刻意不是线程安全的。

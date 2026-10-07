@@ -5,12 +5,12 @@
 <a id="supported-boards"></a>
 ## 适用板卡
 
-S100/S600 各有独立发布 HBM，Python/C++ 使用相同的精确目标选择。X5/S100P 无制品并明确拒绝。原生二进制嵌入显式构建目标，并独立检查本地 S 身份，包括 s100 + board_type s100p/RDK S100P 的细分。主机测试不构成真实 SDK 编译或板测证据。
+S100/S600 各有独立发布 HBM，Python/C++ 使用相同的精确目标选择。X5/S100P 无制品并明确拒绝。原生二进制嵌入显式构建目标，并独立检查本地 S 身份，包括 s100 + board_type s100p/RDK S100P 的细分。
 
 <a id="dependencies"></a>
 ## 依赖
 
-需要 C++17 编译器、CMake 3.16+、OpenCV core/imgproc/imgcodecs 开发库，以及匹配的板端 DNN/UCP SDK。头文件沿用 S 源布局：/usr/hobot/include、/usr/include/hobot、/usr/include/hobot/dnn；库位于 /usr/hobot/lib。本示例不再依赖 gflags/fmt。启动器使用 Python 3.10+ 与 PyYAML 解析选择。源未钉住 S SDK 版本，本轮真实 SDK 构建为 not-run。
+需要 C++17 编译器、CMake 3.16+、OpenCV core/imgproc/imgcodecs 开发库，以及匹配的板端 DNN/UCP SDK。头文件沿用 S 源布局：/usr/hobot/include、/usr/include/hobot、/usr/include/hobot/dnn；库位于 /usr/hobot/lib。本示例不再依赖 gflags/fmt。启动器使用 Python 3.10+ 与 PyYAML 解析选择。源未钉住 S SDK 版本。
 
 <a id="build"></a>
 ## 构建
@@ -49,7 +49,7 @@ bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s600 --alpha-f 0.5
 | `--model-path` | `None` | 启动器解析 model/<target>/ 下 HBM；二进制须提供路径 |
 | `--test-img` | `samples/vision/unetmobilenet/test_data/segmentation.png` | 启动器默认值；二进制须提供路径 |
 | `--img-save-path` | `result.jpg` | 原图尺寸叠加图 |
-| `--mask-save-path` | `unetmobilenet_mask.png` | 无损 uint8 类别 0..18，须使用 .png |
+| `--mask-save-path` | `unetmobilenet_mask.png` | 无损 uint8 类别 0..18，须使用.png |
 | `--report-path` | `unetmobilenet_cpp_report.json` | JSON 报告 |
 | `--alpha-f` | `0.75` | 原图权重，范围 [0,1] |
 | `--priority` | `0` | 调度优先级 0..255 |
@@ -59,14 +59,14 @@ bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s600 --alpha-f 0.5
 | `--list-models` | `false` | 启动器仅列出清单 |
 | `--dry-run` | `false` | 启动器打印解析命令，不构建／加载 SDK；与 list-models 互斥 |
 
-原生 CLI 还接受历史下划线拼法（--model_path、--test_img、--alpha_f）；启动器仅接受 kebab-case。Python 源默认 bpu-cores [0]，C++ 源使用任意核心，此默认差异保留。--help/-h 打印帮助。输出路径相对于 cwd，已有文件会替换。
+原生 CLI 还接受源下划线拼法（--model_path、--test_img、--alpha_f）；启动器仅接受 kebab-case。Python 源默认 bpu-cores [0]，C++ 源使用任意核心，此默认差异保留。--help/-h 打印帮助。输出路径相对于 cwd，已有文件会替换。
 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
 ModelRunner 管理 packed/model 句柄、两块输入和一块输出缓冲。构造时先校验目标、数量、形状、stride、容量与分数量化，再分配。析构仅释放已取得的资源；每次 forward 的任务 guard 在 submit/wait/cache 失败时释放任务。runner 不可复制且非线程安全，多线程使用独立实例。可选显式 execution gate 是主机测试入口，不作为 CLI 身份绕过开关。
 
-UnetMobileNetTask 接收 RawRunner 回调。pre_process(image) 返回独立 Y/UV Mat 与本次 ImageContext；forward(prepared) 原样返回拥有独立内存的 RawScores 字节与元数据；post_process(raw, context) 返回原图尺寸 CV_32S ID；predict 组合三阶段。main.cpp 展示完整连接方式。绘图位于 visualization.cpp，资源代码位于 model_runner.cpp，stride／仿射解码位于 tensor_contract.cpp；任务类不负责显示或文件读写。
+UnetMobileNetTask 接收 RawRunner 回调。pre_process(image) 返回独立 Y/UV Mat 与该次 ImageContext；forward(prepared) 原样返回拥有独立内存的 RawScores 字节与元数据；post_process(raw, context) 返回原图尺寸 CV_32S ID；predict 组合三阶段。main.cpp 展示完整连接方式。绘图位于 visualization.cpp，资源代码位于 model_runner.cpp，stride／仿射解码位于 tensor_contract.cpp；任务类不负责显示或文件读写。
 
 <a id="results-interpretation"></a>
 ## 结果解释

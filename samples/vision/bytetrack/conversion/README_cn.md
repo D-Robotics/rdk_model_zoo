@@ -3,7 +3,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-ByteTrack 本身是后处理，唯一神经制品是上游 YOLOv5x HBM，manifest 有三个 target-specific 行。固定 S 源没有独立 tracker 导出或 checkpoint。
+ByteTrack 本身是后处理，唯一神经制品是上游 YOLOv5x HBM，manifest 有三个 target-specific 行。没有独立 tracker 导出或 checkpoint。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
@@ -13,7 +13,7 @@ S100 对应 `s100/yolov5x_672x672_nv12.hbm` Nash-e，S100P 对应自己的 `s100
 <a id="export"></a>
 ## 导出
 
-ByteTrack 没有导出步骤，因为 tracker 没有神经图。重建 detector 需按上游 YOLOv5 源流程，得到 672x672、split Y/UV 输入和三个输出 head 的 detector。固定源没有锁定 checkpoint/exporter，本轮没有导出。
+ByteTrack 没有导出步骤，因为 tracker 没有神经图。重建 detector 需按上游 YOLOv5 源流程，得到 672x672、split Y/UV 输入和三个输出 head 的 detector。固定源没有锁定 checkpoint/exporter。
 
 <a id="calibration"></a>
 ## 校准
@@ -23,12 +23,12 @@ ByteTrack 没有导出步骤，因为 tracker 没有神经图。重建 detector 
 <a id="compile"></a>
 ## 编译
 
-只有在准备好外部 ONNX/checkpoint、target-specific YAML 和校准集后，才能使用该环境提供的 OE 命令。固定 S 源没有可核对的完整命令/config，因此不写通用 `hb_mapper` 假装可复现。产物必须绑定三个 target-relative HBM asset ID 和 S split-NV12 metadata。
+只有在准备好外部 ONNX/checkpoint、target-specific YAML 和校准集后，才能使用该环境提供的 OE 命令。没有可核对的完整源命令/config，因此不以通用 `hb_mapper` 命令充当可复现配方。产物必须绑定三个 target-relative HBM asset ID 和 S split-NV12 metadata。
 
 <a id="validation"></a>
 ## 转换后验证
 
-先用 S YOLOv5 runtime 检查 detector metadata，再对准备好的视频运行 tracker。用 `evaluator/compare.py` 比较完整 detector tensor 和 track ID。本迁移没有运行导出或编译，因此不存在待验证的本地转换产物。发布的 HBM 行与公开视频的前 30 帧在 2026-09-24 对照中于 S100/S600 板端实际运行过（见[评估器说明](../evaluator/README_cn.md)）；该历史既不验证本地转换，也不超出这些已记录帧的范围。
+先用 S YOLOv5 runtime 检查 detector metadata，再对准备好的视频运行 tracker。用 `evaluator/compare.py` 比较完整 detector tensor 和 track ID。
 
 <a id="artifacts"></a>
 ## 产物
@@ -39,5 +39,5 @@ ByteTrack 没有导出步骤，因为 tracker 没有神经图。重建 detector 
 ## 缺失项
 
 - 没有 S 导出脚本、checkpoint pin、YAML、校准生成器或编译日志。
-- 源视频缺失，客户文档只保留显式 archive URL。
-- 转换（导出/编译）为 `not-run`，不存在本地转换产物；发布的 HBM 行有 2026-09-24 的历史板端对照记录（见[评估器说明](../evaluator/README_cn.md)），这不构成对任何本地转换的验证。发布 SHA-256 均未知。
+- 测试视频未随附，需按 sample README 中的 archive URL 自行获取。
+- 仓库内不产出本地转换产物；使用已发布的 HBM 行。发布 SHA-256 均未知。

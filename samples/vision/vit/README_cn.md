@@ -16,21 +16,21 @@ ViT 把图像分块组织为序列，通过自注意力完成分类。本 sample
 | --- | --- | --- | --- |
 | x5 | int8 | not-supported | not-supported |
 | x5 | int16 | not-supported | not-supported |
-| s100 | int8 | supported-not-run | not-supported |
-| s100 | int16 | supported-not-run | not-supported |
+| s100 | int8 | supported | not-supported |
+| s100 | int16 | supported | not-supported |
 | s100p | int8 | not-supported | not-supported |
 | s100p | int16 | not-supported | not-supported |
 | s600 | int8 | not-supported | not-supported |
 | s600 | int16 | not-supported | not-supported |
 
-两变体已实现，板测 not-run；没有 C++ 实现，其他目标没有发布制品。[主机证据与限制](../../../docs/releases/unified-migration/2026-09-22-b5-vision-review.md)。
-
-Source: `rdk_s @380e1a2bf42041af54be6f34935e50197cfadff9`.
+使用支持矩阵所列的 S100 `int8` 或 `int16` 制品运行 Python 分类器。
 
 <a id="prerequisites"></a>
 ## 前提
 
-需要完整仓库。本地主机实测 Python 3.14.7、NumPy 2.5.3、OpenCV 4.14.0、PyYAML 6.0.3。S100 推理需要板端提供的 `hbm_runtime`；板端镜像/SDK/Python 准确版本及最低内存、磁盘容量尚待实测。磁盘需容纳仓库、所选 HBM 和输出。只有重新转换需要 OE。
+需要完整仓库。S100 推理需要板端镜像提供的 `hbm_runtime`；主机侧依赖
+按下方 `requirements-host.txt` 安装。磁盘需容纳仓库、所选 HBM 和输出。
+只有重新转换需要 OE 工具链。
 
 ```bash
 # cwd: repository root
@@ -53,12 +53,15 @@ python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 -
 <a id="expected-results"></a>
 ## 预期结果
 
-源记录描述 `airplane_0000.png` 的 Top-5 包含 airplane，本轮未复验，不虚构具体分数。默认 int8、resize=0、Top-K=5。分数是十个 logits 的 softmax；完全平局按 ID 升序。仅 `--img-save-path` 写标注图片。
+使用随附 `airplane_0000.png` 时，Top-5 包含 airplane。默认 int8、
+resize=0、Top-K=5。分数是十个 logits 的 softmax；完全平局按 ID 升序。
+仅 `--img-save-path` 写标注图片。
 
 <a id="performance"></a>
 ## 性能数据
 
-历史 CIFAR-10 精度保留在 evaluator；没有重测延迟、吞吐或数据集精度。
+已发布的 CIFAR-10 精度记录见[评估](evaluator/README_cn.md#reference-results)；
+
 
 <a id="directory"></a>
 ## 目录
@@ -66,10 +69,10 @@ python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 -
 ```text
 model/          # HBM download and artifact references
 runtime/python/ # CLI, binding, runner and shared classification API
-conversion/     # original YAML and historical hb_compile.log
-evaluator/      # comparison instructions and historical accuracy
-test_data/      # 10 CIFAR images, class dictionary and original illustrations
-tests/          # SDK-free host/source regressions
+conversion/     # 原始 PTQ YAML 与原始编译日志
+evaluator/      # 评估说明与已发布精度记录
+test_data/      # 10 张 CIFAR 图片、类别字典与原始插图
+tests/          # 无 SDK 主机 unittest 套件
 ```
 
 <a id="entry-points"></a>
@@ -77,7 +80,11 @@ tests/          # SDK-free host/source regressions
 
 [Model](model/README_cn.md) · [Python runtime](runtime/python/README_cn.md) · [Conversion](conversion/README_cn.md) · [Evaluation](evaluator/README_cn.md)
 
-原始入口仍保留。新集成使用可读的 `ViTClassifier`（[classify.py](runtime/python/classify.py)；共享 `ClassificationTask` 流程仍可从 [classification.py](runtime/python/classification.py) 导入）；`--model-variant` 保留为 `--variant` 别名，本地 run.sh 接受原位置参数 int8/int16。
+新集成使用 `ViTClassifier` 类（[classify.py](runtime/python/classify.py)；
+共享 `ClassificationTask` 流程仍可从
+[classification.py](runtime/python/classification.py) 导入）；
+`--model-variant` 保留为 `--variant` 别名，本地 run.sh 接受位置参数
+int8/int16。
 
 <a id="license"></a>
 ## 许可

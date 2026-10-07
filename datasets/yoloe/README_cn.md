@@ -1,7 +1,5 @@
 [English](./README.md) | 简体中文
 
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
 # YOLOE 数据集资源
 
 本目录存放 [YOLOE sample](../../samples/vision/yoloe/README_cn.md) 使用的固定
@@ -19,9 +17,7 @@ prompt-free（PF）类别词表。这里**没有图片，也没有数据集下�
 它与规范副本 `samples/vision/yoloe/test_data/classes.names` **逐字节一致**
 （SHA-256
 `1a6c943dd251993770e7cf6fed23a38b7ac068f4c8fbc7a0db85cbe0fe5221b3`），后者是
-sample 转换和运行时强制校验的哈希绑定基准。同一内容也存在于交付分支源码中：
-`samples/vision/yoloe11_seg/conversion/thu_yoloe_prompt_free_names.list` 与
-`samples/vision/yoloe26_seg/test_data/coco_extended.names`（S pin `380e1a2`）。
+sample 转换和运行时校验的哈希基准。
 
 <a id="usage"></a>
 ## 使用方式
@@ -56,11 +52,7 @@ Ultralytics 80 类 COCO 输出顺序。文件中实测的位置示例：索引 2
 <a id="provenance"></a>
 ## 来源与生成
 
-原 X5 README 写明该文件由转换期的
-`conversion/onnx_export/export_yoloe11seg_bpu.py` 生成。该路径存在于 X5 交付
-分支，现归档于
-`platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py` (historical `../../platforms/x5/samples/vision/yoloe/conversion/onnx_export/export_yoloe11seg_bpu.py` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)；
-它**不在统一目录中**。当前规范流程是：
+PF 导出和转换准备流程生成并核对词表：
 
 - [conversion/export.py](../../samples/vision/yoloe/conversion/README_cn.md)
   导出本地 PF checkpoint，生成 `yoloe_<variant>_seg_pf.onnx`，并在旁边写一份

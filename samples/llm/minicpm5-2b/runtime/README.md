@@ -5,7 +5,7 @@
 The Python 3 standard-library launcher selects the native SDK backend. Tokenization,
 model execution and generation remain in C++. S100/S100P use [legacy OELLM 1.0.0](legacy/README.md);
 S600 uses the [OELLM 2.0 backend](cpp/README.md). Shared filenames do not make SDKs or
-artifacts interchangeable. These version names describe the pinned source release.
+artifacts interchangeable; the version names follow the source releases.
 
 ## Prepare, build, run
 
@@ -21,8 +21,9 @@ python3 runtime/launcher.py --target s600 -- --prompt 'What is the capital of Fr
 ```
 
 For S100/S100P, change both explicit target selections and use their OELLM 1.0.0
-SDK. No launcher action installs packages, downloads models or runs quantization.
-`--build` does not run inference. Normal execution never builds a missing binary.
+SDK. Prepare the SDK and models before using the launcher.
+`--build` builds the target executable. Run inference with a separate launcher
+command after that executable is present.
 Use separate model/build directories for each target. Native arguments follow `--`.
 
 ## Host preview
@@ -35,8 +36,8 @@ python3 samples/llm/minicpm5-2b/runtime/launcher.py --target s600 --build --dry-
 Preview emits JSON describing the SDK family, paths, command and timeout, without
 executing subprocesses, reading models, creating files or requiring SDK installation.
 A missing runtime root appears as `null` / `<set-runtime-root>`. Real build/run checks
-board identity first and rejects a mismatched or unrecognized host; preview is not
-proof of runtime compatibility. This migration has not run board tests.
+board identity first and rejects a mismatched or unrecognized host; run the
+build/run commands on the board for actual execution.
 
 ## Options and environment
 
@@ -62,10 +63,3 @@ The launcher prefixes SDK `lib` to `LD_LIBRARY_PATH`; S600 sets L2M to `6:6:6:6`
 Native exit codes propagate; orchestration errors return 2 and legacy timeout 124.
 The source model preparation command verifies pinned archive/manifest hashes;
 launch itself does not repeat that verification. See [model guide](../model/README.md).
-
-## Migration boundary
-
-The native inference implementation and full README contract are still being
-refactored. Source quantization/evaluator files and historical precision failures
-remain available unchanged; a green launcher test does not close those migration
-tasks or turn historical board results into new evidence.

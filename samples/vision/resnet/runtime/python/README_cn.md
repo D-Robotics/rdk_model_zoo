@@ -18,8 +18,7 @@ OpenCV-Python；读取 Manifest 需要 PyYAML。`hbm_runtime` 仅存在于板端
 <a id="usage"></a>
 ## 使用
 
-cwd：仓库根目录。默认命令（无板卡与制品时零参数不可执行，最小 SDK-free
-调用是列出示例模式）：
+从仓库根目录运行。使用列表模式查看 Manifest 中的模型引用，无需加载板端 SDK：
 
 ```bash
 # 成功判据：打印全部已发布引用，退出码 0，不加载 SDK
@@ -63,8 +62,6 @@ S100/S600 替换为 `s:resnet18:<target>/...` 引用与 `s100/`/`s600/` 制品�
 | `--list-models` | flag | false | 无板卡访问列出 Manifest 支持的引用 |
 | `--dry-run` | flag | false | 不加载模型或 SDK，仅解析/检查选择 |
 
-上表默认值由 Q3 检查器对照 `build_parser()` 机器核对。
-
 <a id="results"></a>
 ## 结果
 
@@ -73,11 +70,10 @@ S100/S600 替换为 `s:resnet18:<target>/...` 引用与 `s100/`/`s600/` 制品�
 `--img-save-path` 时写标注图。X5 以 canonical 的扁平 1-D uint8 数组接收
 packed NV12 缓冲（`H*W*3/2` 字节；224x224 即 75,264 字节，与旧
 `(1,336,224,1)` 视图字节相同）；S100/S600 接收 Y `(1,224,224,1)` 与 UV
-`(1,112,112,2)` uint8 数组。审计的两个源 wrapper 都对返回分数向量做
-softmax；canonical 契约将其记录为 `unverified_score_vector` 上的
-`legacy_softmax`，不宣称新的输出语义。输出形状按 rank 规则校验：凡可
-squeeze 成 `(1000,)` 的单批次/单空间维拼写均可绑定（已发布制品声明
-`raw_f32` 变换；量化制品需声明 `dequant` 契约）。
+`(1,112,112,2)` uint8 数组。分类器对返回的分数向量执行 softmax，再按
+稳定降序选择 Top-K。已发布制品声明 `raw_f32` 输出；自定义量化制品须在
+绑定契约中声明相应的 `dequant` 变换。输出形状按 rank 规则校验：凡可
+squeeze 成 `(1000,)` 的单批次/单空间维拼写均可绑定。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -102,8 +98,8 @@ print(result.class_ids, result.scores, result.labels)
 `predict` 接受本地图片路径或 BGR `uint8` NumPy 数组，且不会原地修改
 数组。三阶段也可显式驱动：`prepared = model.preprocess(image)`、
 `outputs = model.infer(prepared)`、
-`result = model.postprocess(outputs)` —— `predict` 恰好串联这三步（由
-入口行为测试验证）。既有的 `pre_process` / `forward` / `post_process`
+`result = model.postprocess(outputs)` —— `predict` 串联这三步。既有的
+`pre_process` / `forward` / `post_process`
 拼写保留为薄别名，共享的 `ClassificationTask` 流程仍可从
 [`classification.py`](classification.py) 导入。
 
@@ -122,7 +118,8 @@ selection = custom_selection(
     input_height=224, input_width=224, class_count=4,
 )
 model = ResNetClassifier(selection, top_k=2, labels=["cat", "dog", "bus", "ship"])
-result = model.predict(image_or_path)
+image_path = "samples/vision/resnet/test_data/white_wolf.JPEG"  # 替换为你的图像路径
+result = model.predict(image_path)
 ```
 
 不传 `labels` 时结果保留原始类别 ID——自定义类别数不会默认套用
@@ -143,9 +140,9 @@ ImageNet 名称。标签数量与类别数不一致时给出具体报错，而�
 
 | 现象 | 检查 |
 | --- | --- |
-| `Cannot identify this board` | dry-run 可用显式目标；真实执行只能在对应板卡上进行，显式目标本身不是硬件证据。 |
+| `Cannot identify this board` | dry-run 可用显式目标；真实执行在对应板卡上进行。 |
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用，不要只传文件名。 |
-| S100P 报 `No published ... asset` | Manifest 没有 ResNet18 S100P 行，只能在与板卡匹配的 S100/S600 制品上运行。 |
+| S100P 报 `No published... asset` | Manifest 没有 ResNet18 S100P 行，只能在与板卡匹配的 S100/S600 制品上运行。 |
 | 输入形状或类型不匹配 | 确认制品引用与运行时元数据，不要交叉使用 X5 packed 与 S split 制品。 |
 | 输出与旧运行不同 | 先比较相同制品、图片、缩放模式、Top-K 与 raw output，再改变 score 语义。 |
 

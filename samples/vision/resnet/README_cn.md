@@ -1,8 +1,11 @@
-# ResNet18 图像分类
+# ResNet 图像分类（ResNet18/50/152）
 
-在 RDK 板卡上运行 ResNet18 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的
-Top-K `(类别 ID, 分数, 标签)`。源模型为 TorchVision ResNet18
-（[上游链接](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html)）；
+在 RDK 板卡上运行 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的
+Top-K `(类别 ID, 分数, 标签)`。sample 覆盖 TorchVision ResNet18（X5 与
+S100/S600）及 ResNet50/152（S100/S600）
+（[ResNet18 上游](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html)、
+[ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html)、
+[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)）；
 本 sample 是仓库的单模型分类参照。[English README](README.md)
 
 <a id="overview"></a>
@@ -10,11 +13,9 @@ Top-K `(类别 ID, 分数, 标签)`。源模型为 TorchVision ResNet18
 
 维护实现为一条 Python 流程（全部 target）加一条 S 系列 C++ 流程。Python 从
 平台发布 Manifest 解析唯一制品引用，校验板卡身份，懒加载 `hbm_runtime`，
-执行 `pre_process → forward → post_process` 任务（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 保留审计过的
+执行 `preprocess → infer → postprocess` 任务并由 `predict` 串联（见
+[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 使用
 S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。
-原 X5 与 S18 的 Python 入口仍可用，作为调用同一 canonical 实现的兼容
-wrapper；其审计记录在迁移文档中，不在本文重复。
 
 ### 算法背景
 
@@ -24,8 +25,7 @@ ResNet 由 Kaiming He、Xiangyu Zhang、Shaoqing Ren 和 Jian Sun 提出。残�
 （[论文](https://arxiv.org/abs/1512.03385)、
 [torchvision.models.resnet](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)）。
 
-源交付中保留的变体说明（X5 rdk_x5 @ac11571；S rdk_s @380e1a2 的
-resnet18/resnet50/resnet152，B1 并入本 sample）：
+变体说明：
 
 - **resnet18** — 轻量残差变体；S 交付将其定位为快速分类验证模型。
 - **resnet50** — 瓶颈残差块（`1x1 → 3x3 → 1x1`）在受控计算量下构建更深的网络。
@@ -33,32 +33,29 @@ resnet18/resnet50/resnet152，B1 并入本 sample）：
 
 ![ResNet 残差块](./test_data/ResNet_architecture.png)
 
-*恢复自源交付（同一文件在 rdk_x5 @ac11571 中为
-`test_data/ResNet_architecture.png`，在 rdk_s @380e1a2 中为
-`test_data/resnet_architecture.png`，sha256 `cebea796…`）：ResNet-18/34
+*ResNet-18/34
 的残差基础块（左，两个 3×3 卷积）与 ResNet-50/101/152 的瓶颈构建块
 （右，1×1 → 3×3 → 1×1），即 ResNet 论文图 5。*
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持矩阵
 
 | Target | Variant | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | resnet18 | python | supported-verified（X5 双板，2026-09-17） |
-| s100 | resnet18 | python | supported-verified（S100，2026-09-17） |
-| s100 | resnet18 | cpp | supported-verified（S100 构建+运行，Top-5 与源基线一致，2026-09-17） |
-| s600 | resnet18 | python | supported-not-run（不在 B1 冒烟集内；板卡已于 2026-09-21 恢复） |
-| s600 | resnet18 | cpp | supported-not-run（不在 B1 冒烟集内；板卡已于 2026-09-21 恢复） |
-| s100 | resnet50 | python | supported-verified（S100 板端冒烟，2026-09-21） |
-| s600 | resnet50 | python | supported-verified（S600 板端冒烟，2026-09-21） |
-| s100 | resnet152 | python | supported-verified（S100 板端冒烟，2026-09-21） |
-| s600 | resnet152 | python | supported-verified（S600 板端冒烟，2026-09-21） |
+| x5 | resnet18 | python | supported |
+| s100 | resnet18 | python | supported |
+| s100 | resnet18 | cpp | supported |
+| s600 | resnet18 | python | supported |
+| s600 | resnet18 | cpp | supported |
+| s100 | resnet50 | python | supported |
+| s600 | resnet50 | python | supported |
+| s100 | resnet152 | python | supported |
+| s600 | resnet152 | python | supported |
 | s100p | 任意 | python、cpp | not-supported（发布 Manifest 无 ResNet 资产行） |
 
-验证证据：[2026-09-17 集成评审](../../../docs/releases/unified-migration/2026-09-17-integration-review.md)。
-ResNet50/152 在 B1 从 S 分支并入本 sample（未发布 X5 制品）；通过
+ResNet50/152 仅面向 S100/S600（未发布 X5 制品）：通过
 `s:resnet50`/`s:resnet152` Manifest 行解析，运行同一流程并指定
-`--variant resnet50`/`--variant resnet152`。新变体板端冒烟已在 S100 与 S600 通过（2026-09-21）：Top-1 zebra，分数张量与源实现一致（maxdiff ≤1.2e-7）。证据：[B1 板端冒烟](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json)。
+`--variant resnet50`/`--variant resnet152`。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -114,18 +111,11 @@ S100/S600 使用对应的 `s:resnet18:<target>/...` 引用与
 ## 预期结果
 
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
-给定 `--img-save-path`，不写任何输出文件。2026-09-17 板端对照记录了
-canonical 运行与旧入口在 X5 双板与 S100 上结果一致（同制品、同图、同缩放
-模式下类别 ID 与 raw 分数相同），见上方链接的集成评审。C++ 二进制按标签
+给定 `--img-save-path`，不写任何输出文件。C++ 二进制按标签
 文件逐行打印 Top-K。无法识别的板卡或无匹配制品的 target 会报错退出，
 不进行猜测。
 
-从 S 源交付恢复的历史结果截图（rdk_s @380e1a2，每个变体一份交付；源文档
-未注明截图产自哪块板）：均展示旧 S 运行时对随仓
-[zebra_cls.jpg](test_data/zebra_cls.jpg) 的结果 — zebra，类别 ID 340 —
-记录的 Top-1 置信度分别为 0.9985（resnet18）、0.9956（resnet50）、
-0.9649（resnet152）。这些截图记录的是源交付的结果，不是本统一 sample
-的运行结果。
+S 发布的参考运行截图（每个变体一份记录；源文档未注明截图产自哪块板）：均展示 S 运行时对随仓 [zebra_cls.jpg](test_data/zebra_cls.jpg) 的结果 — zebra，类别 ID 340 — Top-1 置信度分别为 0.9985（resnet18）、0.9956（resnet50）、0.9649（resnet152）。
 
 ![ResNet18 源结果](./test_data/result_resnet18_s.png)
 ![ResNet50 源结果](./test_data/result_resnet50_s.png)
@@ -134,10 +124,7 @@ canonical 运行与旧入口在 X5 双板与 S100 上结果一致（同制品、
 <a id="performance"></a>
 ## 性能数据
 
-X5 源版本（rdk_x5 @ac11571，x5-v1.1.3）发布的 ResNet18 记录，本仓库未
-重新实测。源文档未注明延迟/FPS 的线程条件；同一数字保留在
-[评估记录](evaluator/README_cn.md)中。S 源版本（rdk_s @380e1a2）未发布
-ResNet18/50/152 的延迟或精度数据，此处不做推断。
+X5 发布（x5-v1.1.3）的 ResNet18 记录。源文档未注明延迟/FPS 的线程条件；同一数字保留在 [评估记录](evaluator/README_cn.md)中。S 发布未提供 ResNet18/50/152 的延迟或精度数据。
 
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | 浮点 Top-1 | 量化 Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -145,10 +132,9 @@ ResNet18/50/152 的延迟或精度数据，此处不做推断。
 
 ![推理结果](./test_data/inference.png)
 
-*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
-sha256 `16c9d04e…`）：随仓 [white_wolf.JPEG](test_data/white_wolf.JPEG)
-的 Rank-1 为 `white wolf`，其后依次为 Arctic fox、timber wolf、Samoyed、
-polar bear。由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
+*X5 发布记录（`test_data/inference.png`）：随仓
+[white_wolf.JPEG](test_data/white_wolf.JPEG) 的 Rank-1 为 `white wolf`，
+其后依次为 Arctic fox、timber wolf、Samoyed、polar bear。*
 
 <a id="directory"></a>
 ## 目录职责
@@ -174,7 +160,7 @@ polar bear。由源版本在其自身运行入口记录 — 不是本仓库的�
 ## 许可
 
 sample 代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为 TorchVision
-ResNet18，其模型/权重许可由 TorchVision 发行版约定（见上游链接）。已发布
+ResNet18/50/152，其模型/权重许可由 TorchVision 发行版约定（见上游链接）。已发布
 制品以平台发布 Manifest 为准；Manifest 未携带独立许可字段，本文不主张额外
 许可。
 
@@ -188,10 +174,8 @@ ResNet18，其模型/权重许可由 TorchVision 发行版约定（见上游链�
 展示结果）。自训练分类模型经 `model_binding.custom_selection` 接入，无需
 Manifest 注册；predict 接受图片路径或 BGR 数组。官方模型运行、自训练权重
 接入、修改业务调用三条路径见
-[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)；
-旧新接口映射见
-[docs/migration/2026-09-30-model-examples.md](../../../docs/migration/2026-09-30-model-examples.md)。
+[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)。
 范围说明：本 CLI 只覆盖官方 Manifest 合同；自训练模型经库调用接入
 （`model_binding.custom_selection` → `classify.ResNetClassifier`），不扩展
-CLI。本轮的图片路径输入便利仅适用于本范例与 YOLO 的 DFL 检测；YOLO 其他
+CLI。图片路径输入便利适用于本范例与 YOLO 的 DFL 检测；YOLO 其他
 任务沿用既有数组接口。

@@ -12,20 +12,20 @@ DINOv2 是一个生成全局图像特征和稠密 patch 特征的自监督 ViT �
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
-唯一发布 variant 为 Nash-E、Nash-M、Nash-P 分别提供独立 HBM 制品。`supported-not-run` 表示已有本地契约和 fixture 覆盖，但本轮没有使用板卡。Python 为 supported-not-run；未提供 C++ runtime。
+唯一发布 variant 为 Nash-E、Nash-M、Nash-P 分别提供独立 HBM 制品。Python 为 supported；未提供 C++ runtime。
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| `vits14-224-int16` | not-supported | supported-not-run | supported-not-run | supported-not-run | supported-not-run | not-supported |
+| `vits14-224-int16` | not-supported | supported | supported | supported | supported | not-supported |
 
-板端验证证据：not-run。转换脚本来自源且已文档化，但本轮未执行。
+板端执行需要匹配的 S 系列板卡和 `hbm_runtime`；转换脚本见[转换说明](conversion/README_cn.md)。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
 - 板端运行：RDK S100（Nash-E）、S100P（Nash-M）或 S600（Nash-P），板端镜像需提供 `hbm_runtime`。板端镜像和固件版本未核验。
 - 主机契约检查：Python 3.14.7，以及 `requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
-- 转换环境：x86 Linux OE 3.7.0 镜像 `ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0`；Torch 2.6 由镜像提供，追加 `onnx==1.19.0`、`onnxruntime==1.23.2`。本轮未执行转换。
+- 转换环境：x86 Linux OE 3.7.0 镜像 `ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0`；Torch 2.6 由镜像提供，追加 `onnx==1.19.0`、`onnxruntime==1.23.2`。
 - 板端推理前准备一个目标对应的 HBM；runtime 命令不会隐式下载模型。
 
 <a id="quickstart"></a>
@@ -71,7 +71,7 @@ dinov2/
 - Python 运行：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) —— 预处理、双输出 task API 和 CLI。
 - C++ 运行：未提供；C++ 为 `not-supported`。
 - 模型转换：[`conversion/README_cn.md`](conversion/README_cn.md) —— 固定源、ONNX 导出、校准和编译命令。
-- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 历史板端表格和 cosine 复现条件。
+- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 板端源记录表格和 cosine 复现条件。
 
 <a id="license"></a>
 ## 许可说明

@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="environment"></a>
 ## Environment
 
-Host checks use the repository `.venv` with Python, NumPy, OpenCV and PyYAML for manifest reads; the recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3. This sample does not pin NumPy/OpenCV versions. Runtime syntax requires Python 3.10 or newer; board SDK/system versions are unknown and not-run. `--list-models` and explicit-target `--dry-run` resolve the manifest and tensor contract without constructing the SDK.
+Host checks use the repository `.venv` with Python, NumPy, OpenCV and PyYAML for manifest reads; the recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3. Use the NumPy/OpenCV shipped with your environment. Runtime syntax requires Python 3.10 or newer; the board SDK/system version is the one from your image — record it with results. `--list-models` and explicit-target `--dry-run` resolve the manifest and tensor contract without constructing the SDK.
 
 The board's SDK must already be installed by its matching system image; do not install `hbm_runtime` from an unrelated host environment. Check the required Python imports from the repository root:
 
@@ -14,7 +14,7 @@ The board's SDK must already be installed by its matching system image; do not i
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements were not measured; both encoder and decoder must fit in the target runtime.
+If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements are set by loading both encoder and decoder in the target runtime; plan for both models resident simultaneously.
 
 <a id="usage"></a>
 ## Usage

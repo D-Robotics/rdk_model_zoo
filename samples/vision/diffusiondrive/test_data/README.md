@@ -1,9 +1,8 @@
 [English](README.md) | [简体中文](README_cn.md)
 
-
 # DiffusionDrive deterministic examples
 
-This directory retains the source's six input/reference pairs and six historical result images byte-for-byte. Historical pictures were described by the source as S600 results; they are not newly generated migration or board-validation evidence. The original documentation is archived under `platforms/s/samples/vision/diffusiondrive/test_data`.
+This directory provides six prepared input/reference pairs and six S600 reference visualizations. Each NPZ input contains camera, LiDAR, status and diffusion-noise features.
 
 ## Input contract
 
@@ -14,11 +13,11 @@ This directory retains the source's six input/reference pairs and six historical
 | `status` | `[1,8]` | float32 | Prepared ego status and driving command |
 | `noise` | `[1,20,8,2]` | float32 | Fixed truncated-diffusion noise |
 
-These are logical float features, not physical quantized HBM buffers. The sample quantizes them using actual runtime metadata; it does not reconstruct NAVSIM features from raw sensors. The original dataset sample IDs, preparation script and full sensor sources are not included. Do not guess status component meanings beyond the supplied source description. Keep noise unchanged for a deterministic comparison; fixed input does not itself prove deterministic behavior on every SDK.
+These are logical float features, not physical quantized HBM buffers. The sample quantizes them using actual runtime metadata; it does not reconstruct NAVSIM features from raw sensors. The original dataset sample IDs, preparation script and full sensor sources are not included. Do not guess status component meanings beyond the supplied source description. Keep noise unchanged for a deterministic comparison; per-SDK determinism is confirmed by running on that SDK.
 
 ## Files and reference outputs
 
-The default pair is `reference_inputs.npz` and `reference_outputs.npz`; `reference_result.png` is the historical display. Each case directory contains `inputs.npz`, `reference_outputs.npz` and `result.png`.
+The default pair is `reference_inputs.npz` and `reference_outputs.npz`; `reference_result.png` is the source-recorded display. Each case directory contains `inputs.npz`, `reference_outputs.npz` and `result.png`.
 
 | Float reference tensor | Shape | Meaning |
 | --- | --- | --- |
@@ -31,7 +30,7 @@ The source identifies these as PyTorch float outputs, not annotation truth. Sour
 
 ## Five source cases
 
-All numbers below are retained historical S600 records, not host-migration measurements.
+All numbers below are retained S600 source records.
 
 | Case | Scene | Predicted agents | BEV pixel agreement | BEV mean IoU |
 | --- | --- | ---: | ---: | ---: |
@@ -45,11 +44,11 @@ Mean IoU includes classes present in either prediction. A small number of class-
 
 | case_017 | case_042 |
 | --- | --- |
-| ![Historical intersection result](case_017/result.png) | ![Historical dense traffic result](case_042/result.png) |
+| ![Reference intersection result](case_017/result.png) | ![Reference dense traffic result](case_042/result.png) |
 | case_073 | case_099 |
-| ![Historical boulevard result](case_073/result.png) | ![Historical wide intersection result](case_099/result.png) |
+| ![Reference boulevard result](case_073/result.png) | ![Reference wide intersection result](case_099/result.png) |
 
-[Default historical result](reference_result.png) and [case_000 historical result](case_000/result.png) are also retained.
+[Default result](reference_result.png) and [case_000 result](case_000/result.png) from the source record are also retained.
 
 ## Running examples
 

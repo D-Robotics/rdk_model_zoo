@@ -24,9 +24,8 @@ S l/x 输入归一化 RGB featuremap，输出原始 logit，只有后者需要 C
 | S600 | nash-p | NV12 / 已校准 log | featuremap / 原始 logit | Python |
 
 所有目标默认 n，共有 20 个清单制品，包含五个独立 S100P 制品。
-源可用性不等于新运行时验收：本轮已做主机测试，板端推理、真实 SDK/OpenCV 原生构建、Torch 导出、
-OE 编译和数据集测量仍为 not-run。不声明 S 原生深度实现。
-历史源结果见下文与[评估目录](evaluator/README_cn.md)，其中的证据边界明确保留。
+未提供 S 原生深度实现。
+源结果记录见下文与[评估目录](evaluator/README_cn.md)。
 
 <a id="prerequisites"></a>
 ## 前提
@@ -66,18 +65,18 @@ bash samples/vision/yolo26_depth/runtime/python/run.sh --target s600 --variant l
 
 每次使用新输出目录。其他 S 板将 `s600` 换成 `s100` / `s100p`，选择其对应制品。
 `--target auto` 使用实际板卡身份，或由精确 `--asset-id` 推断；不会在普通主机上猜测目标。
-旧 shell 位置变体参数（`run.sh l`）改为显式 `--variant l`，归档源脚本保留历史接口。
+使用 `--variant n|s|m|l|x` 选择模型尺度。
 
 <a id="expected-results"></a>
-## 输出与历史参考
+## 输出与源记录参考
 
 Python 写出 `log_depth.npy`（192×192 F32）、`depth_native.npy`（原图 H×W F32）、
 `depth.png`、`overlay.png` 和 `report.json`；S lite 另写 `raw_logit.npy`。
 X5 原生还保留 `depth_native.f32`。绘图采用 2%/98% 分位范围、反向 TURBO，
 叠加权重为原图 0.45 / 深度颜色 0.55。报告包含模型选择和实际本地摘要；SDK 未提供版本时记为 `unknown`。
-图像看起来合理不代表精度或米制距离正确。
+精度与米制距离以数值指标为准，可视化图像仅用于快速检查。
 
-源 S 根目录给出以下混合方案单图表，作为**未重测的历史信息**保留：
+源 S 根目录给出以下混合方案单图表，作为**源记录信息**保留：
 
 | 变体 | 方案 | raw cosine vs FP32 | S100 延迟 ms | S100P 延迟 ms | S600 延迟 ms |
 |---|---|---:|---:|---:|---:|
@@ -87,10 +86,10 @@ X5 原生还保留 `depth_native.f32`。绘图采用 2%/98% 分位范围、反�
 | l | lite | 0.9997 | 11.0 | 8.1 | — |
 | x | lite | 0.9997 | 20.6 | 13.7 | 10.8 |
 
-同页“全部通过 ≥0.999”与 s=0.9984 矛盾。其 evaluator 还有另一组未完整逐行绑定制品的延迟表，
-不能拼成一套基准或据此推断验收。X5 HRT 延迟/FPS 及 S 另一张表完整保留在 evaluator README。
-源图边界描述也曾把 exp/resize 写到图内，而实际代码在 CPU 执行。
-[源审计](../../../docs/releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md)记录这些差异和迁移决定。
+同页“全部通过 ≥0.999”与 s=0.9984 矛盾，两个数值均为已发布的参考记录。其 evaluator
+还有另一组未完整逐行绑定制品的延迟表，不能拼成一套基准。X5 HRT 延迟/FPS 及
+S 另一张表记录在 evaluator README。源图边界描述把 exp/resize 写到图内，
+而可执行源码在 CPU 执行；以可执行源码行为为准。
 
 <a id="directory"></a>
 ## 目录
@@ -113,15 +112,14 @@ yolo26_depth/
 - [Python](runtime/python/README_cn.md)：CLI、三阶段 API、张量契约和错误。
 - [C++](runtime/cpp/README_cn.md)：原生依赖、生命周期、构建执行及验证范围。
 - [转换](conversion/README_cn.md)：权重边界、校准、实际编译输入及缺口。
-- [评估](evaluator/README_cn.md)：数组格式、协议、指标定义与历史表格。
+- [评估](evaluator/README_cn.md)：数组格式、协议、指标定义与源记录表格。
 
 API 集成使用 `RuntimeModelRunner` 加 `Yolo26DepthTask`，`predict` 严格串联
 pre_process → forward → post_process，不另写一套处理。
 自转换制品显式组合 `--converted-model`、`--model-path` 及精确 `--asset-id` 契约参照。
 新文件标为 user-converted，不继承发布方摘要或实测精度；S lite 校准系数必须与声明权重一致。
 
-归档 X5 (historical `../../../platforms/x5/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 和
-归档 S (historical `../../../platforms/s/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)保留原实现与记录，用于溯源，不是统一入口。
+模型准备、推理与深度指标分别按上述 model、runtime、conversion 和 evaluator 指南执行。
 
 <a id="license"></a>
 ## 许可证

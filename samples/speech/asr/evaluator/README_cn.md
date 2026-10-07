@@ -4,16 +4,16 @@
 
 <a id="dataset"></a>
 ## 数据集
-本评测器只给已保存的参考文本/预测文本配对计分。仓库未提供标注语料，本轮没有测量数据集精度。每条语音使用唯一 ID，保留数据集版本、划分、许可及模型/解码来源。运行时分块报告不是标注数据集；应先将完整转录与独立参考文本对齐，再生成下列输入。
+本评测器根据已保存的参考文本/预测文本配对计算字符错误率。每条语音使用唯一 ID，并保留数据集版本、划分、许可、模型与解码元数据。对分块运行结果，先合并为完整转录并与独立参考文本配对，再添加记录。
 
 <a id="environment"></a>
 ## 环境
-仅需 Python 3.10+ 标准库，无需板卡、SDK、NumPy 或下载模型。评测器不推理；输入来源说明会保留，但不会被独立认证。
+仅需 Python 3.10+ 标准库。评测器读取转录 JSON 并写入指标，不运行模型推理；输入的来源对象会复制到结果报告。
 
 <a id="command"></a>
 ## 命令
 ```bash
-# cwd: repository root; synthetic example, not model predictions
+# 从仓库根目录运行；示例输入含两条转录记录。
 asr_eval_dir=$(mktemp -d)
 cat > "$asr_eval_dir/transcripts.json" <<'JSON'
 {
@@ -36,18 +36,18 @@ CER 为全部语音的 `(替换 + 删除 + 插入) / 参考字符总数`，不�
 
 <a id="outputs"></a>
 ## 输出
-独占创建的 JSON 使用 `rdk-model-zoo/asr-metrics/v1`，包含 `count`、`reference_characters`、`exact_matches`、`cer`、汇总 `errors`、逐条 `utterances`、归一化政策、输入 SHA-256 与原样 provenance。`inference_executed`、`provenance_independently_verified` 均为 false。退出 0 只代表计分完成，不代表识别质量通过；输入错误或输出已存在返回 2。
+独占创建的 JSON 使用 `rdk-model-zoo/asr-metrics/v1`，包含 `count`、`reference_characters`、`exact_matches`、`cer`、汇总 `errors`、逐条 `utterances`、归一化政策、输入 SHA-256 与原文 provenance。schema 字段 `inference_executed=false` 和 `provenance_independently_verified=false`。退出 0 表示输入已计分且报告已写入；输入错误或输出已存在返回 2。
 
 <a id="reference-results"></a>
 ## 参考结果
-S 源分支记录 S100 命令 `hrt_model_exec perf --model_file asr.hbm --frame_count 100`：100 帧、平均延迟 34.426 ms、29.008 FPS。这是历史模型执行性能，不是迁移后的端到端音频延迟、S600 性能或本轮复测。源资料未完整记录 SDK/工具链/模型摘要。
+S 源记录了 S100 命令 `hrt_model_exec perf --model_file asr.hbm --frame_count 100`：模型执行 100 帧，平均延迟 34.426 ms，29.008 FPS。这些数值描述模型执行，不是端到端音频延迟。
 
-![历史性能](../test_data/readme_img/perf.jpg)
-![历史转录](../test_data/readme_img/print.jpg)
-![历史量化比较](../test_data/readme_img/acc.jpg)
+![参考性能](../test_data/readme_img/perf.jpg)
+![参考转录](../test_data/readme_img/print.jpg)
+![参考量化比较](../test_data/readme_img/acc.jpg)
 
-精度插图是历史量化比较，不是语料 CER。源文档的“前三秒”已纠正：统一入口处理完整 4.59 秒录音，共三个独立窗口。[迁移证据](../../../../docs/releases/unified-migration/evidence/2026-09-28-b10-asr-core/)记录主机测试与前端数值比较；不能从 SDK 替身输出推断真实转录结果。
+图示分别展示模型执行性能、转写示例和量化对照。随仓 4.59 秒 WAV 按三个独立窗口处理。计算语料 CER 时，按上述格式将完整转写与独立的逐条参考文本对应。
 
 <a id="boundaries"></a>
-## 边界
-CTC 和 legacy 对相同 logits 也可能得到不同文本，必须分开报告。分块、重采样和末块补零同样影响转录。离线计分不能证明运行时正确、量化等价、无真实预测时的模型精度或延迟。板端/模型执行、OE 转换及语料评测均未执行。
+## 适用范围
+CTC 和 legacy 对相同 logits 的解码结果不同，应分别报告。分块、重采样和末块补零都会影响转录。比较系统时使用完整转录与对应参考文本，并记录目标、模型、解码方式、数据集划分和运行时配置。

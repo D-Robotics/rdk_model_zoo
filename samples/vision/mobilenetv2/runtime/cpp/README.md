@@ -2,34 +2,24 @@ English | [简体中文](./README_cn.md)
 
 # MobileNetV2 image classification (C++, S-series)
 
-This C++ flow runs the quantised MobileNetV2 HBM model on the S-series
-BPU and prints Top-K class labels with confidence scores. It is the
-audited S-series `hbDNNInferV2` implementation kept from rdk_s @380e1a2
-(`src/` and `inc/` are verbatim); the X5 source branch delivered Python
-only, so this flow declares S-series scope explicitly.
+This C++ flow runs the quantised MobileNetV2 HBM model on an S100 or S600
+BPU and prints Top-K class labels with confidence scores. It uses the
+`hbDNNInferV2` API; the Python runtime provides the X5 path.
 
 <a id="supported-boards"></a>
 ## Supported boards
 
-S100 and S600 only. The launcher reads the board identity once from
-`/sys/class/boardinfo/soc_name` plus the `board_type` variant from
-`/sys/class/boardinfo/board_type` — the same registered identity forms
-as the Python flow (`samples/_shared/platforms.py`, registered in
-`docs/release/platforms.json`). S100P is rejected in both of its
-registered forms (soc_name `s100p`, or soc_name `s100` with board_type
-`s100p`/`rdk s100p`), and unknown or unreadable identity files are
-rejected as unknown boards — all with an explicit error, never a silent
-fallback to the s100 artifact (the legacy source launcher did fall
-back). `SOC_NAME_FILE`/`BOARD_TYPE_FILE` override the two identity
-sources for the host fixture tests (`tests/test_cpp_launcher_identity.py`);
-leave them unset on a board.
+On S100 and S600, the launcher reads `/sys/class/boardinfo/soc_name` and
+`/sys/class/boardinfo/board_type` to select the matching runtime path. The
+registered identity names are listed in `docs/release/platforms.json`.
+`SOC_NAME_FILE` and `BOARD_TYPE_FILE` select alternate identity files for
+local runs; on a board, use the system identity files.
 
 <a id="dependencies"></a>
 ## Dependencies
 
 CMake, a C++17 compiler, OpenCV development packages, `libgflags-dev`,
-and the Horizon DNN headers/libraries of the board image. Install them
-explicitly (the launcher never invokes apt):
+and the Horizon DNN headers/libraries of the board image. Install the required compiler and board SDK development packages before building:
 
 ```bash
 # cwd: on the board — success: apt reports the packages installed
@@ -47,10 +37,8 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 ```
 
 `CMakeLists.txt` detects the SoC at configure time via
-`/sys/class/boardinfo/soc_name` and defines `SOC_S100`/`SOC_S600`; it
-stays verbatim from the source branch. On small-RAM boards (observed on
-S100, 2026-09-21) full-parallel compiles can be OOM-killed — build with
-`make -j1` or `BUILD_JOBS=1 bash run.sh` there.
+`/sys/class/boardinfo/soc_name` and defines `SOC_S100`/`SOC_S600`. On
+small-RAM boards, build with `make -j1` or `BUILD_JOBS=1 bash run.sh`.
 
 <a id="run"></a>
 ## Run
@@ -66,9 +54,7 @@ bash samples/vision/mobilenetv2/runtime/cpp/run.sh
 The launcher builds into `runtime/cpp/build/` and executes the binary
 with the prepared model, `test_data/zebra_cls.jpg`, and
 `test_data/imagenet1000_labels.txt`. Environment overrides: `MODEL_PATH`,
-`TEST_IMAGE`, `LABEL_FILE`, `TOP_K`, `BUILD_DIR`, `BUILD_JOBS`. It never
-downloads a model: a missing artifact is an explicit error naming the
-download command.
+`TEST_IMAGE`, `LABEL_FILE`, `TOP_K`, `BUILD_DIR`, `BUILD_JOBS`. Prepare the model artifact with the command in [model/README.md](../../model/README.md) before running the launcher.
 
 <a id="parameters"></a>
 ## Parameters
@@ -87,7 +73,7 @@ used only if you pass it yourself.
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`mobilenetv2::init()` loads the model, allocates tensors, and reads the
+`mobilenetv2::init` loads the model, allocates tensors, and reads the
 layout metadata; `pre_process`, `infer`, and `post_process` are free
 functions passing tensors by reference (declaration in
 `inc/mobilenetv2.hpp`). Doxygen comments live in the source; the
@@ -109,15 +95,6 @@ TOP-4: label=tiger cat, prob=0.000722661
 TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
 ```
 
-A correct unified run reproduces this ordering within score noise. The
-B1 board run (2026-09-21) built this flow on S100 with BUILD_JOBS=1 and
-reproduced the baseline's TOP-1 (label=zebra); after the B1-R2 launcher
-rework the same board reproduced it again with the identity gate active
-(TOP-1 zebra, prob=9.30961, rc=0), and on S100P hardware both
-registered S100P identity forms (plus the `RDK S100P` casing) were
-rejected with the explicit error while an s100 control passed the gate
-and stopped at the model-preparation hint — see the
-`r2_launcher_board_recheck` section of the B1 board-smoke evidence. The
-S600 C++ build stays not-run (outside the B1 smoke set). Scores that are
-all zero or NaN indicate a wrong artifact/input pairing, not a tuning
-problem.
+A correct run reproduces this ordering within score noise; with the
+bundled zebra image the TOP-1 is `zebra`. Scores that are all zero or NaN
+indicate a wrong artifact/input pairing, not a tuning problem.

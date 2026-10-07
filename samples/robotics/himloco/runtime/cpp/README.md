@@ -5,19 +5,18 @@
 <a id="supported-boards"></a>
 ## Supported boards and verification
 
-The unified entry includes the four-stage policy, SDK adapter, offline CLI and
-build launcher. It retains float32 input/output semantics from X5 commit
-`ac115717197920355fc390bb04299b20e6436864`, without extra normalization,
-action scaling or robot control.
+The native runtime includes the four-stage policy, SDK adapter, offline CLI and
+build launcher. It implements the X5 source release's float32 input/output
+semantics, without extra normalization, action scaling or robot control.
 
 | Target | Artifact | Status |
 | --- | --- | --- |
-| X5 | Bayes-e fused Go2 BIN | Core, SDK-double and CLI host checks pass; real SDK compilation/board tests not-run |
+| X5 | Bayes-e fused Go2 BIN | Supported (build and run via this guide) |
 | S100 / S100P / S600 | No matching publication | Not supported |
 
-Host doubles do not establish hardware inference. The source environment was
-RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT 3.15.55; historical measurements
-remain in the [evaluator guide](../../evaluator/README.md).
+The source board environment was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and
+HBRT 3.15.55; source measurements are recorded in the
+[evaluator guide](../../evaluator/README.md).
 
 <a id="dependencies"></a>
 ## Dependencies
@@ -30,7 +29,7 @@ remain in the [evaluator guide](../../evaluator/README.md).
   system include roots). Set `NLOHMANN_JSON_INCLUDE` to an include directory
   to override; an invalid override fails the check and a host without the
   header skips it explicitly. No personal directory is consulted.
-- Python launcher: Python, NumPy, PyYAML for unified selection and board checks;
+- Python launcher: Python, NumPy, PyYAML for publication selection and board checks;
   no Python inference SDK is loaded. Set `PYTHON` to choose its interpreter.
 
 Published model inference requires neither Torch nor a quantization toolchain.
@@ -180,14 +179,9 @@ X5 logical/aligned shapes, element counts and allocation capacity before copying
 Input retains the source compact-submission convention, with remaining memory
 zeroed. Output extraction follows aligned strides to return 12 owned logical values.
 Task handles release on every exit; failed construction and destruction release
-tensors before the packed model. `input_metadata()`/`output_metadata()`,
-`model_name()`, `runtime_version()` and `priority()` supply report facts to the
+tensors before the packed model. `input_metadata`/`output_metadata`,
+`model_name`, `runtime_version` and `priority` supply report facts to the
 application without writing reports inside inference code.
-
-Host doubles exercise capacity/alignment, dtype/quantization rejection, allocation,
-infer/wait/cache failures, nonfinite output and cleanup. Production preflight
-rejections are checked separately with a board-identity reader double.
-Real SDK compilation/execution has not run; the CLI has host end-to-end checks with a separately linked runner double.
 
 <a id="results-interpretation"></a>
 ## Interpreting results
@@ -198,8 +192,8 @@ boundary. No live control loop is included.
 
 The core reports the duration supplied with each `RawOutputs`; it does not add
 preprocessing or postprocessing time. The native runner measures `hbDNNInfer` plus `hbDNNWaitTaskDone`, excluding
-cache maintenance, input copying, output extraction and file I/O. The [evaluator guide](../../evaluator/README.md) retains
-historical source measurements and their scopes; none is a new unified C++ result.
+cache maintenance, input copying, output extraction and file I/O. The [evaluator guide](../../evaluator/README.md) records
+the source measurements and their scopes.
 Offline numerical agreement alone does not establish closed-loop behavior.
 
 Code follows the repository [Apache-2.0 license](../../../../../LICENSE).

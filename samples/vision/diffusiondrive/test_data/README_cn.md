@@ -1,9 +1,8 @@
 [English](README.md) | [简体中文](README_cn.md)
 
-
 # DiffusionDrive 确定性示例
 
-本目录逐字节保留源分支六组输入/参考对及六幅历史结果图。源文档将图片描述为 S600 结果；它们不是本次迁移新生成的图片或板端验证证据。原说明保留于 `platforms/s/samples/vision/diffusiondrive/test_data`。
+本目录提供六组准备好的输入与参考输出，以及六张 S600 参考效果图。每份输入 NPZ 包含相机、LiDAR、状态与扩散噪声特征。
 
 ## 输入契约
 
@@ -14,11 +13,11 @@
 | `status` | `[1,8]` | float32 | 已准备的自车状态与驾驶指令 |
 | `noise` | `[1,20,8,2]` | float32 | 固定截断扩散噪声 |
 
-它们是逻辑浮点特征，不是 HBM 物理量化缓冲区。Sample 按实际运行元数据量化，不从原始传感器重建 NAVSIM 特征。未提供原始数据集样本 ID、准备脚本或完整传感器来源，不应超出源描述猜测 status 各分量含义。确定性对照应保持噪声不变；固定输入本身不能证明每个 SDK 上的运行都确定。
+它们是逻辑浮点特征，不是 HBM 物理量化缓冲区。Sample 按实际运行元数据量化，不从原始传感器重建 NAVSIM 特征。未提供原始数据集样本 ID、准备脚本或完整传感器来源，不应超出源描述猜测 status 各分量含义。确定性对照应保持噪声不变；特定 SDK 上的确定性以该环境的实际运行结果为准。
 
 ## 文件与参考输出
 
-默认数据为 `reference_inputs.npz`、`reference_outputs.npz`，`reference_result.png` 为历史显示图。每个案例目录包含 `inputs.npz`、`reference_outputs.npz`、`result.png`。
+默认数据为 `reference_inputs.npz`、`reference_outputs.npz`，`reference_result.png` 为源记录显示图。每个案例目录包含 `inputs.npz`、`reference_outputs.npz`、`result.png`。
 
 | 浮点参考张量 | 形状 | 含义 |
 | --- | --- | --- |
@@ -27,11 +26,11 @@
 | `agent_labels` | `[1,30]` | Agent logits，不是概率 |
 | `bev_semantic_map` | `[1,7,128,256]` | 七类 BEV logits，不是标签 |
 
-源文档称其为 PyTorch 浮点输出，不是标注真值。源元数据与已知 HBM 摘要不能固定完整的上游 checkpoint/导出历史。随附数组均为有限 float32，运行结果另有原始与解码两种契约。
+源记录它们为 PyTorch 浮点输出，不是标注真值；上游 checkpoint/导出修订未随附发布。随附数组均为有限 float32，运行结果另有原始与解码两种契约。
 
 ## 五个源案例
 
-下表数值均保留自历史 S600 记录，不是本次主机迁移测量。
+下表数值均保留自 S600 源记录。
 
 | 案例 | 场景 | 预测 Agent 数 | BEV 像素一致率 | BEV 平均 IoU |
 | --- | --- | ---: | ---: | ---: |
@@ -45,11 +44,11 @@
 
 | case_017 | case_042 |
 | --- | --- |
-| ![历史路口结果](case_017/result.png) | ![历史密集交通结果](case_042/result.png) |
+| ![参考路口结果](case_017/result.png) | ![参考密集交通结果](case_042/result.png) |
 | case_073 | case_099 |
-| ![历史大道结果](case_073/result.png) | ![历史宽阔路口结果](case_099/result.png) |
+| ![参考大道结果](case_073/result.png) | ![参考宽阔路口结果](case_099/result.png) |
 
-另保留[默认历史结果](reference_result.png)和 [case_000 历史结果](case_000/result.png)。
+另保留[默认源记录结果](reference_result.png)和 [case_000 源记录结果](case_000/result.png)。
 
 ## 运行示例
 
@@ -75,4 +74,4 @@ bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s600
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 含义 | 背景 | 道路 | 人行道 | 中心线 | 静态物体 | 车辆 | 行人 |
 
-道路为灰色；近乎全灰的 BEV 图可能表示道路预测占绝大多数，不代表缺失色表。图片用于可视化，不能替代原始数组对照。DiffusionDrive/NAVSIM 资产仍受其原始条款约束，本目录不提供完整的已授权评估数据集。
+道路为灰色；近乎全灰的 BEV 图通常表示道路预测占绝大多数。图片用于可视化，数值对照请使用原始数组。DiffusionDrive/NAVSIM 资产受其原始条款约束；完整的已授权评估数据集需按其条款另行获取。

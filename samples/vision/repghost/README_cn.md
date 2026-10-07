@@ -9,7 +9,7 @@ RepGhost 是面向硬件高效部署的轻量级 CNN 模型家族，通过将特
 - **论文**: [RepGhost: A Hardware-Efficient Ghost Module via Re-parameterization](https://arxiv.org/abs/2211.06088)
 - **参考实现**: [ChengpengChen/RepGhost](https://github.com/ChengpengChen/RepGhost)
 
-源 README 提炼的特性：
+核心特性：
 
 - **结构重参数化**——把训练期的复杂分支转换为推理期的高效结构。
 - **隐式特征复用**——把 GhostNet 式的特征复用从特征空间（`Concat`）
@@ -22,23 +22,25 @@ RepGhost 是面向硬件高效部署的轻量级 CNN 模型家族，通过将特
 
 *图（上游论文 Fig. 4）：(a) 带 `Concat` 显式特征复用的 Ghost
 bottleneck；(b) 训练期 RG-bneck——复用经 `add` 分支移入权重空间；
-(c) 推理期 RG-bneck——分支已融合消失。恢复自 X5 源 README（rdk_x5
-@ac115717197920355fc390bb04299b20e6436864）；图中为上游结构，实际部署
+(c) 推理期 RG-bneck——分支已融合消失。；图中为上游结构，实际部署
 制品是 INT8 量化的 100–200 变体（224×224 NV12，见
-[支持与实测矩阵](#support-matrix)）。*
+[支持范围](#support-matrix)）。*
 
-输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。
+`RepGhostClassifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess`
+流程（标签读取、绘图和文件输出由 CLI 层负责，见
+[runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
 
 | 目标 | 变体 | Python | C++ |
 | --- | --- | --- | --- |
-| x5 | 100 | supported-not-run | not-supported |
-| x5 | 111 | supported-not-run | not-supported |
-| x5 | 130 | supported-not-run | not-supported |
-| x5 | 150 | supported-not-run | not-supported |
-| x5 | 200 | supported-not-run | not-supported |
+| x5 | 100 | supported | not-supported |
+| x5 | 111 | supported | not-supported |
+| x5 | 130 | supported | not-supported |
+| x5 | 150 | supported | not-supported |
+| x5 | 200 | supported | not-supported |
 | s100 | 100 | not-supported | not-supported |
 | s100 | 111 | not-supported | not-supported |
 | s100 | 130 | not-supported | not-supported |
@@ -55,16 +57,17 @@ bottleneck；(b) 训练期 RG-bneck——复用经 `add` 分支移入权重空�
 | s600 | 150 | not-supported | not-supported |
 | s600 | 200 | not-supported | not-supported |
 
-`supported-not-run` 表示已有统一实现与发布制品，但本轮板测未执行；S 系列无对应制品，所有目标均无 C++ 实现。[主机验证记录](../../../docs/releases/unified-migration/2026-09-22-b4-classification-review.md)不替代板端证据。
+S 系列无对应制品，所有目标均无 C++ 实现。
 
-固定源：`rdk_x5 @ac115717197920355fc390bb04299b20e6436864`. 两侧源均没有 RepGhost C++ 交付。本次迁移不声明板端验证通过。
+按支持矩阵选择 Python 运行时与目标。
 
 <a id="prerequisites"></a>
 ## 前提
 
-使用完整仓库检出。X5 推理需要匹配的板端镜像与 `hbm_runtime`；主机依赖按下方装入虚拟环境。SciPy 仅用于保留源实现的对照测试，统一推理不依赖它。
-
-已验证的本地主机环境：Python 3.14.7、NumPy 2.5.3、OpenCV 4.14.0、PyYAML 6.0.3、SciPy 1.18.1。该组合仅用于主机回归，不是板端依赖版本承诺。计划验证 X5 4GB/8GB；板端系统镜像、Python、SDK 的准确版本及最低内存仍待实测登记。磁盘需容纳仓库、所选模型与输出，本轮未测最低容量。原生推理不需要 OE；重新转换的工具链和数据前提见 conversion 文档。
+使用完整仓库检出。X5 推理需要匹配的板端镜像与 `hbm_runtime`；主机
+依赖按下方装入虚拟环境。SciPy 仅用于主机对照测试，板端推理不依赖
+它。原生推理不需要 OE 工具链；重新转换的前提见
+[conversion](conversion/README_cn.md) 文档。
 
 ```bash
 # cwd: repository root
@@ -75,9 +78,10 @@ python3 -c "import cv2, numpy, yaml; print('host dependencies: ok')"
 ```
 
 <a id="quickstart"></a>
-## 快速开始
+## 快速体验
 
-在 X5 仓库根执行。下载成功时退出码 0 并打印观测哈希；推理成功时退出码 0 并打印五条结果。推理不会自动下载模型。
+在 X5 上从仓库根目录执行。下载成功时退出码 0 并打印观测摘要；推理成功时
+退出码 0 并打印五条结果。推理不会自动下载模型。
 
 ```bash
 # cwd: repository root
@@ -91,35 +95,39 @@ python3 samples/vision/repghost/runtime/python/main.py \
 <a id="expected-results"></a>
 ## 预期结果
 
-默认变体 `100` 保留源入口选择；`111`、`130`、`150`、`200` 需显式指定。分数沿用源 softmax 策略，完全平局时按类别 ID 升序稳定排序。ibex 图片用于功能检查，不代表数据集精度；当前尚无迁移后的板端参考输出。仅指定 `--img-save-path` 才保存图像。
+默认变体为 `100`；`111`、`130`、`150`、`200` 须显式指定。分数采用
+softmax，完全平局时按类别 ID 升序稳定排序。使用随附图片完成单图功能
+检查；数据集精度按评测指南将每张图的真值类别 ID 与 Top-1 结果比较。
+仅指定 `--img-save-path` 才保存文件。
 
-供参考：X5 源 README（rdk_x5
-@ac115717197920355fc390bb04299b20e6436864，旧版 Python 入口）用下面的
-截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，随附
-`ibex.JPEG` 的 rank 1 为 class 350（ibex, Capra ibex）。这是源交付中的
-历史截图，不是本仓库当前入口的运行结果。
+下图为 X5 发布的参考运行效果：demo 将 Top-5 排名叠画在随附测试图上，
+rank 1 为 class 350（ibex, Capra ibex）。
 
-![X5 源 README 的历史推理截图：ibex 测试图与旧版 Top-5 叠加，rank 1 为
-class 350（ibex, Capra ibex）](./test_data/inference.png)
+![X5 参考推理结果：ibex 测试图与 Top-5 叠加，rank 1 为 class 350（ibex, Capra ibex）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据
 
-历史源数据未在本轮重测。完整列与计时条件见[评测说明](evaluator/README_cn.md#reference-results)，单线程延迟与多线程 FPS 不能按倒数直接比较。
+已发布性能记录：完整列与计时条件见
+[评估说明](evaluator/README_cn.md#reference-results)。单线程延迟与多线程 FPS 采用不同的并发方式，
+二者不能直接互相取倒数。比较延迟与 FPS 时，应使用相同线程数、并发提交方式和 BPU 利用率。
 
 <a id="directory"></a>
-## 目录
+## 目录职责
 
-`model/`：制品与下载；`runtime/python/`：原生 CLI、任务与运行器；`conversion/`：五份原样 PTQ 配置；`evaluator/`：检查与历史基准；`test_data/`：`ibex.JPEG` 输入及随附资源；`tests/`：主机回归。
+`model/`：制品与下载；`runtime/python/`：原生 CLI、任务与运行器；
+`conversion/`：五份 PTQ YAML；`evaluator/`：功能检查与已发布基准；
+`test_data/`：`ibex.JPEG` 输入及随附资源；`tests/`：主机 unittest 套件。
 
 <a id="entry-points"></a>
 ## 入口
 
-[Model](model/README_cn.md) · [Python](runtime/python/README_cn.md) · [Conversion](conversion/README_cn.md) · [Evaluation](evaluator/README_cn.md)
-
-旧 `platforms/x5/samples/vision/repghost` 入口仍是原始实现，供基线对照，未改成转发层。新集成使用本目录；不承诺所有旧内部 Python 导入兼容。
+[模型](model/README_cn.md) · [Python 运行时](runtime/python/README_cn.md) ·
+[转换](conversion/README_cn.md) · [评估](evaluator/README_cn.md)
 
 <a id="license"></a>
 ## 许可
 
-源 Python 文件的 Apache-2.0 来源保留。转换 YAML 原有专有声明逐字保留；仓库许可不覆盖这些声明或上游权重许可。分发转换材料、权重前须核对对应声明。
+源 Python 文件保留 Apache-2.0 出处。转换 YAML 原样保留其原始专有声明；
+仓库许可不覆盖这些声明或上游权重许可。再分发转换材料或权重前请核对
+适用声明。

@@ -24,7 +24,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
   --test-img samples/vision/yolov5/test_data/kite.jpg
 ```
 
-`bash samples/vision/yolov5/runtime/python/run.sh ...` 等价。S 命令需要准备模型并在可识别 S100 板端执行。上面的 X5 示例就是 2026-09-24 真实板测记录（X5 8GB/4GB）中的默认 case，等价的 S100 `x-672` `kite.jpg` 运行也在真实 S100 上执行过（见 [python 对照](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)与[扩展板测](../../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-expanded-boards/)证据）；本工作树不做新的板端运行。
+`bash samples/vision/yolov5/runtime/python/run.sh...` 等价。S 命令需要准备模型并在可识别 S100 板端执行。两个示例都可在准备好的板卡上按原样运行。
 
 <a id="parameters"></a>
 ## 参数
@@ -54,7 +54,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 <a id="results"></a>
 ## 结果
 
-CLI 打印 `boxes`、`scores`、`class_ids`，并保存到 `--img-save-path`。`YOLOv5Task.infer`（别名 `forward`）原样返回 native 输出，不做反量化或 reshape；`postprocess`（别名 `post_process`）在需要时按 S metadata 反量化，然后完成 sigmoid/anchor 解码、阈值和 NMS、几何逆变换。X5 刻意保留源把 XYXY 传给 OpenCV `NMSBoxes`（其 Rect 解释为 XYWH）的历史 quirk；S 使用按类 XYXY NMS，这是目标协议差异。
+CLI 打印 `boxes`、`scores`、`class_ids`，并保存到 `--img-save-path`。`YOLOv5Task.infer`（别名 `forward`）原样返回 native 输出，不做反量化或 reshape；`postprocess`（别名 `post_process`）在需要时按 S metadata 反量化，然后完成 sigmoid/anchor 解码、阈值和 NMS、几何逆变换。X5 刻意保留源把 XYXY 传给 OpenCV `NMSBoxes`（其 Rect 解释为 XYWH）的 quirk；S 使用按类 XYXY NMS，这是目标协议差异。
 
 <a id="integration-example"></a>
 ## 集成示例

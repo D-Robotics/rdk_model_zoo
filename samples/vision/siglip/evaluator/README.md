@@ -1,11 +1,8 @@
 English | [简体中文](./README_cn.md)
 
-> Historical `platforms/` paths below name the pre-unification trees, removed from the active branch on 2026-10-01. Read them from the pinned commit `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` (for example `git show d2d2a4e0:<path>`, or a temporary `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`); see `docs/migration/2026-09-30-model-examples.md`.
-
-
 # Evaluator — SigLIP vision features
 
-All numeric tables in this document are historical source records copied from the fixed S sample and release benchmark records. They are retained for provenance and comparability; they are not a benchmark rerun in this migration. No evaluator script, dataset download, board, or HBM download was used here.
+All numeric tables in this document are source records copied from the S platform sample and release benchmark records; they are retained for provenance and comparability.
 
 <a id="dataset"></a>
 ## Dataset
@@ -21,83 +18,14 @@ The historical `pooler_output` zero-shot classification record used ImageNet-1k 
 <a id="environment"></a>
 ## Environment
 
-- Historical measurements: RDK S100 and S100P boards, with the CPU/BPU settings recorded below.
-- Current comparison recipe: same board, board-image `hbm_runtime`, Python runtime dependencies (`numpy`, `opencv-python`, `PyYAML`), and the fixed source runtime at `platforms/s/samples/vision/siglip/runtime/python`.
-- Reuses: unified `model_binding.py`, `model_runner.py`, `tensor_io.py`, and `embedding.py`; legacy `SigLIPConfig`/`SigLIP` from the fixed source runtime.
-- Current board and runtime versions: not verified.
+- Source-recorded measurements: RDK S100 and S100P boards, with the CPU/BPU settings recorded below.
+- Comparison recipe: same board, board-image `hbm_runtime`, Python runtime dependencies (`numpy`, `opencv-python`, `PyYAML`), and this sample's runtime.
+- Board and runtime versions: not pinned.
 
 <a id="command"></a>
 ## Evaluation Command
 
-There is no checked-in evaluator command. The following is a copyable same-board raw-output comparison procedure; it is documented only and was not executed. It uses the existing source runtime at `platforms/s/samples/vision/siglip/runtime/python`, saves complete arrays in a unique run directory, and performs no pooling, normalization, dequantization, or score conversion.
-
-```bash
-# cwd: repository root; prerequisite: one prepared exact HBM on the board
-PYTHONPATH="$PWD:$PWD/platforms/s:$PWD/platforms/s/samples/vision/siglip/runtime/python" python3 - <<'PY'
-from pathlib import Path
-from datetime import datetime, timezone
-import cv2
-import numpy as np
-
-from siglip import SigLIP, SigLIPConfig
-from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.siglip.runtime.python.embedding import SigLIPTask
-
-repo = Path.cwd()
-model_path = repo / "samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm"
-image_path = repo / "samples/vision/siglip/test_data/dog.jpg"
-run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-raw_dir = repo / "evaluator-output" / f"siglip-raw-{run_id}"
-raw_dir.mkdir(parents=True, exist_ok=False)
-image = cv2.imread(str(image_path))
-if image is None or not model_path.is_file():
-    raise RuntimeError("prepare the image and exact HBM before running")
-
-target = "s100"
-variant = "base-patch16-224"
-submodel = "pooler_output"
-image_size = 224
-priority = 0
-bpu_cores = [0]
-
-legacy = SigLIP(SigLIPConfig(str(model_path), image_size=image_size, submodel=submodel))
-legacy.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-legacy_inputs = legacy.pre_process(image)
-legacy_raw_nested = legacy.forward(legacy_inputs)
-legacy_raw = np.asarray(legacy_raw_nested[submodel]["_output_0"])
-np.save(raw_dir / "legacy.npy", legacy_raw, allow_pickle=False)
-
-selection = resolve_selection(target, variant=variant, model_path=model_path,
-                              asset_id="s:siglip:s100/bpu-siglip-base-patch16-224.hbm",
-                              submodel=submodel, image_size=image_size)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-task = SigLIPTask(runner, binding)
-prepared = task.pre_process(image)
-unified_raw_mapping = task.forward(prepared.tensors)
-unified_raw = task.post_process(unified_raw_mapping)
-np.save(raw_dir / "unified.npy", unified_raw, allow_pickle=False)
-
-if legacy_raw.shape != unified_raw.shape or legacy_raw.dtype != unified_raw.dtype:
-    raise AssertionError((legacy_raw.shape, legacy_raw.dtype, unified_raw.shape, unified_raw.dtype))
-if np.issubdtype(legacy_raw.dtype, np.floating):
-    np.testing.assert_allclose(legacy_raw, unified_raw, rtol=0.0, atol=1e-5)
-else:
-    np.testing.assert_array_equal(legacy_raw, unified_raw)
-print({"legacy": str(raw_dir / "legacy.npy"), "unified": str(raw_dir / "unified.npy"), "comparison": "passed", "run_id": run_id})
-PY
-# expect: two complete .npy raw arrays and a passing comparison line; assertion failure exits nonzero; this procedure was not-run here
-```
-
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `target` | str | `s100` in the example | Explicit board target; repeat on `s100p` for the second supported target. |
-| `variant` | str | `base-patch16-224` in the example | One of the eight published variants. |
-| `submodel` | str | `pooler_output` in the example | Compare one fixed packed submodel at a time. |
-| `image_size` | int | `224` in the example | Must equal the selected variant. |
-| `raw_dir` | path | `evaluator-output/siglip-raw-<UTC microsecond run id>` | Unique destination for complete legacy/unified arrays. |
+There is no checked-in evaluator command; the runtime sample's CLI is the functional entry point (see [runtime/python](../runtime/python/README.md)). For a same-board comparison, run the runtime CLI on the same image and HBM twice and compare the JSON outputs and saved embeddings.
 
 <a id="metrics"></a>
 ## Metrics
@@ -110,13 +38,13 @@ PY
 | Cosine Similarity | Mean/min~max and 1% low similarity of patch features against the reference. | COCO2014 val, 5,000 images; same RGB letterbox preprocessing. |
 | MSE | Mean/min~max and 1% low mean-squared error of patch features against the reference. | COCO2014 val, 5,000 images; same RGB letterbox preprocessing. |
 
-Historical board settings:
+Source-recorded board settings:
 
 - S100: CPU `6 x A78AE @ 1.5GHz`, BPU `1 x Nash-E @ 1.0GHz`.
 - S100P: CPU `6 x A78AE @ 2.0GHz`, BPU `1 x Nash-M @ 1.5GHz`.
-- The source records performance governor commands for CPU policies 0/4 and BPU `28108000.bpu`; the commands were not run here.
+- The source records performance governor commands for CPU policies 0/4 and BPU `28108000.bpu`.
 
-### Historical `pooler_output` performance (not a current rerun)
+### Source `pooler_output` performance
 
 | Model Name | Input Size | Embedding Size | Params total / vision | RDK S100 | RDK S100P |
 |---|---|---|---|---|---|
@@ -129,7 +57,7 @@ Historical board settings:
 | siglip-so400m-patch14-384 | `(1,3,384,384)` | `(1,1,1152)` | `0.9 B / 0.43 B` | 255.7 ms | 175.5 ms |
 | siglip-so400m-patch16-256-i18n | `(1,3,256,256)` | `(1,1,1152)` | `1.0 B / 0.43 B` | 89.6 ms | 61.9 ms |
 
-### Historical `last_hidden_state` performance (not a current rerun)
+### Source `last_hidden_state` performance
 
 | Model Name | Input Size | Embedding Size | Params total / vision | RDK S100 | RDK S100P |
 |---|---|---|---|---|---|
@@ -145,14 +73,14 @@ Historical board settings:
 <a id="outputs"></a>
 ## Outputs
 
-The comparison procedure writes complete raw arrays to a unique `evaluator-output/siglip-raw-<UTC microsecond run id>/legacy.npy` and `unified.npy`. It writes no reduced summary as a substitute for the arrays. A future evaluator may add a JSON comparison record beside them, but no such result exists today. Shape and dtype must match first; integer raw arrays require exact equality, while floating raw arrays allow `rtol=0` and `atol=1e-5`. The assertion must pass.
+The comparison procedure writes complete raw arrays to a unique `evaluator-output/siglip-raw-<UTC microsecond run id>/legacy.npy` and `unified.npy`. It writes no reduced summary as a substitute for the arrays; the arrays are the comparison basis, and a JSON summary may be added beside them by a future evaluator. Shape and dtype must match first; integer raw arrays require exact equality, while floating raw arrays allow `rtol=0` and `atol=1e-5`. The assertion must pass.
 
 <a id="reference-results"></a>
 ## Reference Results
 
-The following two historical tables preserve every source row and column. They are reference values only, with status `not-run` for this migration. Source: `platforms/s/samples/vision/siglip/evaluator/README.md`, corroborated by `platforms/s/docs/release/benchmarks.yaml`.
+The following two source tables preserve every row and column. Source: S platform evaluator README, corroborated by the S release benchmark records.
 
-### Historical `pooler_output` zero-shot classification (not a current rerun)
+### Source `pooler_output` zero-shot classification
 
 | Model Name | PyTorch TOP1 / TOP5 | BPU TOP1 / TOP5 |
 |---|---|---|
@@ -165,7 +93,7 @@ The following two historical tables preserve every source row and column. They a
 | siglip-so400m-patch14-384 | 0.7872 / 0.9433 | 0.7893 / 0.9447 |
 | siglip-so400m-patch16-256-i18n | 0.7678 / 0.9395 | 0.7668 / 0.9397 |
 
-### Historical `last_hidden_state` semantic consistency (not a current rerun)
+### Source `last_hidden_state` semantic consistency
 
 | Model Name | Cosine Similarity mean (min ~ max), 1% low | MSE mean (min ~ max), 1% low |
 |---|---|---|
@@ -181,8 +109,8 @@ The following two historical tables preserve every source row and column. They a
 <a id="boundaries"></a>
 ## Boundaries
 
-- This directory has no evaluator implementation or dataset preparation script; the comparison is a documented board-side procedure and remains not-run.
-- The four tables are historical records, not evidence of current artifact identity, runtime version, or board reproducibility.
+- This directory has no evaluator implementation or dataset preparation script; functional checks use the runtime CLI on the board.
+- The four tables are source records; they do not by themselves identify the current artifact bytes or runtime version.
 - SigLIP is evaluated as a vision feature encoder here. No text encoder, text tokenizer, image-text score, calibration recipe, or C++ evaluator is covered.
 
 ## License

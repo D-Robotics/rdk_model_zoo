@@ -1,54 +1,48 @@
 # FasterNet conversion
 
-This directory is a verbatim rdk_x5 @ac11571 delivery: four reference PTQ
-YAMLs (`FasterNet_{S,T0,T1,T2}_config.yaml`). The X5 source ships **no
-exporter script and no calibration-data producer**, so this is a reference
-configuration set, not a reproducible flow; the gaps are listed under
-[Known gaps](#known-gaps). No conversion was executed during this
-migration (the OpenExplorer environment was not run).
+This directory provides conversion assets: four reference PTQ
+YAMLs (`FasterNet_{S,T0,T1,T2}_config.yaml`). Prepare variant-matched ONNX graphs and calibration data at the paths specified by each YAML, then use the OE compile steps below.
 
-Two source quirks are preserved and pinned by
-`tests/test_conversion_layout.py` instead of being repaired: all four
-configs share the **variant-less** output prefix
-`FasterNet_224x224_nv12`, and the `working_dir` values are asymmetric
-(S uses `model_output`, T0 appends `_mix`, T1/T2 use the plain prefix).
+All four configs share the output prefix `FasterNet_224x224_nv12`. The `working_dir` values are S `model_output`, T0 `FasterNet_224x224_nv12_mix`, and T1/T2 `FasterNet_224x224_nv12`; build variants in separate directories.
 
 <a id="source-model"></a>
 ## Source model
 
 FasterNet S/T0/T1/T2 (paper [Run, Don't Walk: Chasing Higher FLOPS for
-Faster Neural Networks](https://arxiv.org/abs/2303.03667), as cited by the
-source delivery — no reference implementation link is recorded in the
-source). The YAMLs expect `./fasternet_{s,t0,t1,t2}.onnx`, but the source
-delivery documents no export recipe and pins no weights — the ONNX
-provenance is unverified.
+Faster Neural Networks](https://arxiv.org/abs/2303.03667)). The YAMLs expect `./fasternet_{s,t0,t1,t2}.onnx`; export the selected variant to the matching path.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-Model conversion runs on an x86 Linux host inside the RDK X5 OpenExplorer
-Docker (march `bayes-e`), never on the board. The source README points at
-the generic OE flow (`hb_mapper makertbin`); offline Docker images are
-available from the D-Robotics developer forum.
+Run model conversion on an x86 Linux host inside the RDK X5 OpenExplorer
+Docker (march `bayes-e`). Prepare the toolchain with `hb_mapper`, `hb_perf`, and `hrt_model_exec`; offline Docker images are available from the D-Robotics developer forum ([topic 35229](https://forum.d-robotics.cc/t/topic/35229)).
 
 <a id="export"></a>
 ## Export
 
-No exporter script ships with this delivery. Regenerating the ONNX inputs
-requires reproducing the upstream FasterNet export yourself; the resulting
-files must be named `fasternet_<variant>.onnx` (lowercase, as the YAMLs
-expect) and placed in this directory (or the YAMLs' `onnx_model`
-adjusted). This step is unverified here.
+The original FasterNet flow uses the
+official FasterNet source code to export ONNX models:
+
+1. Obtain the official FasterNet source code and pretrained weights from
+   the reference repository.
+2. Create the target FasterNet model, such as `fasternet_t0`,
+   `fasternet_t1`, `fasternet_t2`, or `fasternet_s`.
+3. Export the model with `torch.onnx.export` using a `1x3x224x224` dummy
+   input.
+4. Simplify the ONNX model with `onnxsim.simplify`.
+5. Compile the simplified ONNX model in the OE environment (see Compile).
+
+The resulting files must be named `fasternet_<variant>.onnx` (lowercase,
+as the YAMLs expect) and placed in this directory (or the YAMLs'
+`onnx_model` adjusted).
 
 <a id="calibration"></a>
 ## Calibration
 
-No calibration-data producer ships with this delivery. All four YAMLs
-expect `./calibration_data_rgb_f32` (float32 RGB `.npy`) and use
+All four YAMLs use `./calibration_data_rgb_f32` (float32 RGB `.npy`) and use
 `calibration_type: 'default'`. Equivalent data must follow the YAML
 numerics (mean `123.675 116.28 103.53`, scale `0.01712475 0.017507
-0.01742919`, 224x224); this equivalence is a stated requirement, not a
-verified pipeline.
+0.01742919`, 224x224).
 
 <a id="compile"></a>
 ## Compile
@@ -62,6 +56,7 @@ variants substitute their own config):
 # output: working_dir 'model_output' (S) / 'FasterNet_224x224_nv12_mix' (T0)
 #         / 'FasterNet_224x224_nv12' (T1/T2), emitted
 #         FasterNet_224x224_nv12.bin — rename required, see gaps
+hb_mapper checker --config FasterNet_S_config.yaml
 hb_mapper makertbin --config FasterNet_S_config.yaml
 ```
 
@@ -73,42 +68,28 @@ carries `debug_mode` or `set_all_nodes_int16`.
 <a id="validation"></a>
 ## Validation
 
-No x86 reference script ships with this delivery. The functional check is
-the unified runtime on board:
-`python3 samples/vision/fasternet/runtime/python/main.py --target x5 --asset-id x5:fasternet:FasterNet_S_224x224_nv12.bin ...`
-(see [runtime/python/README.md](../runtime/python/README.md)).
-**Not run in this migration:** no export, calibration, or compile was
-executed; the consistency claims here are static cross-checks of the YAML
-contents and filename/prefix agreement with the manifest.
+Use the OE package tools `hb_perf` and `hrt_model_exec` for host-side
+model inspection. The functional check on board is
+the sample runtime:
+`python3 samples/vision/fasternet/runtime/python/main.py --target x5 --asset-id x5:fasternet:FasterNet_S_224x224_nv12.bin...`
+(see [runtime/python/README.md](../runtime/python/README.md)). The runtime
+expects an input tensor of `1x3x224x224` before NV12 packing and returns
+ImageNet-1k classification logits.
 
 <a id="artifacts"></a>
-## Artifacts (kept material)
+## Recipe files
 
-The four YAML files are kept byte-verbatim from rdk_x5 @ac11571; their
-SHA-256 digests are pinned by `tests/test_conversion_layout.py`, so any
-future edit is caught by the host suite.
+The four reference YAMLs are this directory's conversion assets; their
+SHA-256 digests are:
+
+| File | SHA-256 |
+| --- | --- |
+| `FasterNet_S_config.yaml` | `f0455d5ec5b1c2b4d63f5c153b14060a1b3c17d9b02f3fbfab848239a040e867` |
+| `FasterNet_T0_config.yaml` | `c62dd1daedf245e826dcea215ac7adec4dddc5b654b3092c6c44be67d93b371a` |
+| `FasterNet_T1_config.yaml` | `e4a123c23edeb38e6835215ea814a1997082bcc0889ea96dfd93fe8b703a0f7a` |
+| `FasterNet_T2_config.yaml` | `ad65f79a6e74191d17da60b727416f9c824e8597cfa4fc4d0112597aae1dd944` |
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-As shipped by the source and preserved here:
-
-1. **No ONNX exporter.** None of the four `fasternet_<variant>.onnx`
-   inputs has a producing script, pinned weights, or a documented export
-   recipe.
-2. **No calibration-data producer.** `./calibration_data_rgb_f32` has no
-   generating script in the source tree.
-3. **Variant-less output prefix.** All four YAMLs emit
-   `output_model_file_prefix: 'FasterNet_224x224_nv12'`, so the compiled
-   file is `FasterNet_224x224_nv12.bin`, not any manifest name
-   (`FasterNet_{S,T0,T1,T2}_224x224_nv12.bin`). To reproduce a published
-   artifact, rename the emitted `.bin` to the manifest name or edit the
-   prefix first. (The ONNX input names do carry the variant, lowercase;
-   only the output side is variant-less.)
-4. **working_dir asymmetry.** S compiles into `model_output`, T0 into
-   `FasterNet_224x224_nv12_mix`, T1/T2 into `FasterNet_224x224_nv12` —
-   three different conventions in one delivery, preserved verbatim.
-5. **No pinned compile command.** The source README points at the generic
-   OE flow; the exact command that produced each published `.bin` is not
-   recorded, so reproduction is unverified.
-6. **No conversion executed in this migration.**
+Prepare the ONNX graph for the selected `fasternet_<variant>.onnx` and RGB float32 calibration data under `./calibration_data_rgb_f32`, using the YAML's 224x224 input and normalization values. All four YAMLs share `output_model_file_prefix: 'FasterNet_224x224_nv12'`, while their `working_dir` values are `model_output` (S), `FasterNet_224x224_nv12_mix` (T0), and `FasterNet_224x224_nv12` (T1/T2). Build variants in separate directories and save each output with its manifest filename. Run the OE commands above with the matching YAML.

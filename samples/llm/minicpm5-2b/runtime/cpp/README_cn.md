@@ -1,4 +1,4 @@
-> 迁移状态：进行中。以下历史板测、精度和 SDK 发布计划来自固定 S 源提交 `380e1a2`，不是本轮测试或最新发布状态。本轮覆盖主机侧启动编排与原生核心重构（含主机 SDK 替身测试）；量化方案保留、不重新验证，板测未运行。
+> 下文的板测结果、精度与 SDK 发布说明为 S 源发布的记录；板端运行按本指南命令执行。
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -56,7 +56,7 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 
 inc/minicpm5.hpp 定义 Config、Result、生成阶段函数和顺序调用的模型类；src/minicpm5.cc 实现各阶段；src/runtime_config.cc 负责模型文件校验、OELLM JSON 配置与临时配置文件；src/main.cc 负责 gflags 参数及 RESULT 输出。生成的代码文本不会被执行。
 
-公开阶段函数为 `pre_process`（构建并校验一个 OELLM 请求，不调用 SDK）、`infer`（一次同步推理调用加响应形态校验）与 `post_process`（提取文本、token 和状态，并读取与校验请求指标）；`Generate` 按此串联。分词与模板渲染保留在 runtime 内部——SDK 未暴露分词接口，因此不虚构公开分词阶段。配置与文件 IO 位于 `src/runtime_config.cc`，不在推理阶段文件内；临时 runtime JSON 由 RAII 守护持有，在成功、SDK 错误返回和异常路径上都会删除。
+公开阶段函数为 `pre_process`（构建并校验一个 OELLM 请求，不调用 SDK）、`infer`（一次同步推理调用加响应形态校验）与 `post_process`（提取文本、token 和状态，并读取与校验请求指标）；`Generate` 按此串联。分词与模板渲染保留在 runtime 内部；SDK 未暴露分词接口。配置与文件 IO 位于 `src/runtime_config.cc`，不在推理阶段文件内；临时 runtime JSON 由 RAII 守护持有，在成功、SDK 错误返回和异常路径上都会删除。
 
 `MiniCPM5(Config)` 持有一个 runtime/会话，`Generate(prompt, new_chat=true)` 开始新会话，后续轮传 `false`。同一实例顺序调用，返回值拥有文本/token 数据。`validate_metrics` 按指标名称拒绝非有限或负数的测量值，绝不将其改写为 0，因此 RESULT 行只包含有效测量值；只生成一个 token 的长度限制请求允许 decode_tps 为 0。
 

@@ -6,7 +6,8 @@ MobileNetV4 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，
 
 ## 概述
 
-统一实现是一条 Python 流程（全部目标）。Python 从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，执行 `pre_process → forward → post_process` 任务（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/{x5,s}/` 下，其审计记录在迁移文档中，不在本 README 展开。
+本样例为全部目标提供同一个 Python 运行时。
+`MobileNetV4Classifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess` 流程：按检测到的板卡从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
 ### 算法背景
 
@@ -17,7 +18,7 @@ ConvNeXt 风格块、FFN 风格块或 ExtraDW 变体；移动端多查询注意�
 （[论文](https://arxiv.org/abs/2404.10518)、
 [timm/models/MobileNetV4.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/MobileNetV4.py)）。
 
-源版本特性摘要（rdk_x5 @ac11571，x5-v1.1.3）：
+特性摘要：
 
 - **Universal Inverted Bottleneck**：统一 inverted bottleneck、ConvNeXt 风格模块、FFN 风格模块和 ExtraDW 变体。
 - **Mobile Multi-Query Attention**：面向移动端加速器优化的注意力结构。
@@ -25,28 +26,23 @@ ConvNeXt 风格块、FFN 风格块或 ExtraDW 变体；移动端多查询注意�
 
 ![MobileNetV4 UIB 块](./test_data/MobileNetV4_architecture.png)
 
-*Universal Inverted Bottleneck 块，恢复自 X5 源版本
-（`test_data/MobileNetV4_architecture.png`，rdk_x5 @ac11571，sha256
-`944a191d…`；论文图 4）：带两个可选 depthwise 层的 UIB 块、其
+*Universal Inverted Bottleneck 块（论文图 4）：带两个可选 depthwise
+层的 UIB 块、其
 Extra-DW / Inverted Bottleneck / ConvNeXt / FFN 实例化，以及替代的
 fused IB。*
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持范围
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | small | python | supported-verified（x5 8GB + 4GB 板端冒烟，2026-09-21） |
-| x5 | medium | python | supported-verified（x5 8GB + 4GB 板端冒烟，2026-09-21） |
-| s100 | small | python | supported-verified（S100 板端冒烟，2026-09-21） |
-| s100 | medium | python | supported-verified（S100 板端冒烟，2026-09-21） |
-| s600 | medium | python | supported-verified（S600 板端冒烟，2026-09-21） |
-| s600 | small | python | supported-verified（S600 板端冒烟，2026-09-21） |
-| s100p | 任意 | python、cpp | not-supported（发布 Manifest 无 s100p 资产行；2026-09-21 在 S100P 实板验证为拒绝负例——显式报错、无回退） |
-
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)；S 侧 rdk_s @380e1a2 (s-v1.1.2)。统一 sample 的主机测试全部通过。板端冒烟（2026-09-21）在 x5 8GB/4GB 与 S100/S600
-全部通过，各板输出一致且与源实现等价（medium S 制品按其发布的 256x256 几何运行）；
-S100P 仅作为拒绝负例验证。证据：[B1 板端冒烟](../../../docs/releases/unified-migration/evidence/2026-09-21-b1-board-smoke-evidence.json)。
+| x5 | small | python | supported |
+| x5 | medium | python | supported |
+| s100 | small | python | supported |
+| s100 | medium | python | supported |
+| s600 | medium | python | supported |
+| s600 | small | python | supported |
+| s100p | 任意 | python、cpp | not-supported（按支持矩阵选择目标与变体） |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -97,28 +93,26 @@ S100/S600 换用对应的 `s:` 引用（见 `--list-models`）与根目录
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非给出
 `--img-save-path`，否则不写任何输出文件。X5 上使用内置测试图
 `great_grey_owl.JPEG` 时，Top-1 应与图像主体（一只灰林鸮）一致；
-S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。无法识别的板卡或
-无对应制品的目标会以错误退出，不做猜测。
+S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
 <a id="performance"></a>
 ## 性能数据
 
-下表为 rdk_x5 @ac11571 (x5-v1.1.3) 发布的 MobileNetV4 在 `RDK X5` 上的公开数据：
+下表为 (x5-v1.1.3) 发布的 MobileNetV4 在 `RDK X5` 上的公开数据：
 
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | MobileNetV4-Conv-Medium | 224x224 | 1000 | 9.7 | 76.8% | 75.1% | 2.42 | 572+ |
 | MobileNetV4-Conv-Small | 224x224 | 1000 | 3.8 | 70.8% | 68.8% | 1.18 | 1436+ |
 
-S 侧源发布（rdk_s @380e1a2 (s-v1.1.2)）未公布该模型的延迟/精度数据，此处不推断、不补造。
+
 
 ![推理结果](./test_data/inference.png)
 
-*X5 源版本的历史推理截图（rdk_x5 @ac11571，`test_data/inference.png`，
-sha256 `64930905…`）：随仓
+*X5 发布的参考推理结果：随仓
 [great_grey_owl.JPEG](test_data/great_grey_owl.JPEG) 的 Rank-1 为
 `great grey owl`，其后依次为 ruffed grouse、partridge、meerkat、
-prairie chicken。由源版本在其自身运行入口记录 — 不是本仓库的新运行。*
+prairie chicken。*
 
 <a id="directory"></a>
 ## 目录职责
@@ -143,4 +137,4 @@ prairie chicken。由源版本在其自身运行入口记录 — 不是本仓库
 
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为 MobileNetV4 上游发布；
 模型/权重许可以上游分发为准（见上方参考实现链接）。发布制品遵循平台发布
-Manifest；Manifest 未携带独立许可字段，此处不追加声明。
+Manifest 中的模型文件按各自上游许可使用；再分发前请核对其适用条款。

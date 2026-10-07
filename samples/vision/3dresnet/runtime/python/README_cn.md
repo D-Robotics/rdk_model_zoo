@@ -5,7 +5,7 @@
 <a id="environment"></a>
 ## 环境
 
-- 板端执行：RDK S100 和匹配的 `hbm_runtime` Python 环境；source 没有记录板端镜像/runtime 版本，板端状态为 not-run。
+- 板端执行：RDK S100 和匹配的 `hbm_runtime` Python 环境；镜像与 runtime 版本由部署环境选择。
 - 主机验证：仓库 `.venv`、Python 3.14.7、`numpy` 和 `PyYAML`（`requirements-host.txt` 列出主机依赖）。
 - runtime 接收已经准备好的 NumPy 片段，不导入视频解码器，不读取视频帧，不做 resize，也不做像素归一化。
 - `--help`、`--list-models` 和显式 `--dry-run` 不需要 SDK，不会构造 `hbm_runtime`。
@@ -35,7 +35,7 @@ bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 ```bash
 # cwd：仓库根目录
 .venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# 预期：全部发现的测试通过，OK；这不等于板端验证
+# 预期：全部发现的测试通过，OK（主机 fixture；无需板卡）
 ```
 
 <a id="parameters"></a>
@@ -47,7 +47,7 @@ bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 | `--asset-id` | string | `null` | 精确 manifest reference；外部 `--model-path` 必须提供 |
 | `--model-path` | path | `null` | 外部 HBM 路径；省略时使用选中制品的 sample 默认路径 |
 | `--test-clip` | path | `samples/vision/3dresnet/test_data/video0.npy` | 准备好的 `.npy` 输入 |
-| `--label-file` | path | `samples/vision/3dresnet/test_data/kinetics_classnames.json` | 400 条 source 标签映射 |
+| `--label-file` | path | `samples/vision/3dresnet/test_data/kinetics_classnames.json` | 400 条标签映射 |
 | `--top-k` | integer | `5` | 返回数量，范围 1 到 400 |
 | `--priority` | integer | `0` | runtime 调度优先级，范围 0 到 255 |
 | `--bpu-cores` | 一个或多个 integer | `[0]` | 非负 BPU core 编号 |
@@ -72,16 +72,16 @@ CLI 成功时向 stdout 输出一个 JSON 对象：
 }
 ```
 
-`predictions` 恰好包含 `--top-k` 条按 source 兼容 softmax 概率降序排列的结果。`class_id` 在 `[0,399]`；`score` 是 float32 softmax 值；`label` 是去除字面双引号后的 source JSON 名称。CLI 不写输出文件。
+`predictions` 恰好包含 `--top-k` 条按 softmax 概率降序排列的结果。`class_id` 在 `[0,399]`；`score` 是 float32 softmax 值；`label` 是去除内嵌双引号后的 JSON 映射名称。CLI 不写输出文件。
 
 入口按可读性拆分：`main.py` 解析选择、构造 `VideoClassificationTask`、调用一次
 `predict` 并输出 JSON 报告；参数声明、`--list-models`/`--dry-run` 模式与报告组装在
-`cli.py`。分类算法本身不变，只存在于 `classification.py`。
+`cli.py`。分类算法本身位于 `classification.py`。
 
 <a id="integration-example"></a>
 ## 集成示例
 
-目录名 `3dresnet` 不能出现在 `from ... import ...` 语句中。请从仓库根目录运行下面示例，使用完整 package name 的 `importlib.import_module`，不需要注入 runtime 目录到 `sys.path`：
+目录名 `3dresnet` 不能出现在 `from... import...` 语句中。请从仓库根目录运行下面示例，使用完整 package name 的 `importlib.import_module`，不需要注入 runtime 目录到 `sys.path`：
 
 ```python
 import importlib
@@ -134,7 +134,7 @@ assert explicit_result.labels == composed_result.labels
 ## 故障排查
 
 - **模型路径被拒绝：** 外部路径必须提供精确 asset ID：`s:3dresnet:s100/r3d_18.hbm`。
-- **板卡身份被拒绝：** `--target s100` 只选择发布制品，不构成硬件证据；执行仍需检测到 S100。
+- **板卡身份被拒绝：** `--target s100` 选择发布制品；执行还需要检测到 S100 板卡身份。
 - **模型缺失：** 在仓库根目录执行 `bash samples/vision/3dresnet/model/download.sh s100`。
 - **片段 shape 错误：** 使用精确 shape `(1,3,16,112,112)` 的准备好的 `.npy`，runtime 不 reshape 或解码视频。
 - **tensor name 不匹配：** binding 读取 runtime 的唯一实际名称；缺少、多余或重排 tensor 都会拒绝，不会编造 `input` 或 `output` 名称。

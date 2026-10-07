@@ -44,7 +44,7 @@ python3 samples/vision/unet/runtime/python/main.py --dry-run --target x5 --varia
 | `--dry-run` | flag | `false` | 仅解析，不加载/下载模型 |
 | `--list-models` | flag | `false` | 只读清单，与 dry-run 互斥 |
 
-`--help` / `-h` 输出帮助。相对输出路径基于 cwd；同名结果会被替换。Dry-run 成功不证明文件、实际 metadata 或 SDK 已通过校验。
+`--help` / `-h` 输出帮助。相对输出路径基于 cwd；同名结果会被替换。Dry-run 只做选择解析；文件、实际 metadata 与 SDK 校验在加载时进行。
 
 <a id="results"></a>
 ## 结果

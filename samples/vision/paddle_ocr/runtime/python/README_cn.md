@@ -73,7 +73,7 @@ python3 samples/vision/paddle_ocr/runtime/python/main.py \
 | `--rec-asset-id` | string | null | 同一模型对的识别器完整引用 |
 | `--det-model-path` | string | null | 已存在的本地检测器制品；绝不隐式下载；缺省时按 `model/<filename>` 查找 |
 | `--rec-model-path` | string | null | 已存在的本地识别器制品；须与检测器路径成对提供 |
-| `--vocabulary-path` | string | null | 可选的 S100 词典替换；仅在命中审计摘要时接受 |
+| `--vocabulary-path` | string | null | 可选的 S100 词典替换；仅在命中记录摘要时接受 |
 | `--test-img` | string | null | BGR 输入图像；缺省时使用所解析模型对的测试图 |
 | `--output-format` | choice | text | `text` 或 `json` 结果渲染 |
 | `--json-output` | string | null | 同时把 JSON 推理结果写入该路径 |
@@ -85,7 +85,7 @@ python3 samples/vision/paddle_ocr/runtime/python/main.py \
 | `--prepare` | flag | false | 显式取回所选清单资产到本地路径 |
 
 `--list-models`、`--dry-run`、`--prepare` 互斥。上表默认值由 Q3 检查器
-对照 `build_parser()` 机器校验。
+对照 `build_parser` 机器校验。
 
 <a id="results"></a>
 ## 结果
@@ -96,7 +96,7 @@ python3 samples/vision/paddle_ocr/runtime/python/main.py \
 `--json-output` 把同一对象写入文件。框与文本保持检测器顺序；返回数组
 归结果所有；检测器输出为空时跳过识别。模型输出语义保持观测到的
 score-map/CTC 策略——不插入未经验证的激活。`s100p` 与 `s600` 没有
-经审计的 PaddleOCR 模型对，在模型对解析处即被拒绝。
+已记录的 PaddleOCR 模型对，在模型对解析处即被拒绝。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -154,7 +154,7 @@ target），识别阶段失败归识别器——pipeline 不混淆两者。零�
 <a id="troubleshooting"></a>
 ## 故障排查
 
-- **无审计模型对/混用引用：**运行 `--list-models`；从同一行取两条
+- **无记录模型对/混用引用：**运行 `--list-models`；从同一行取两条
   引用及该模型对的词典。
 - **模型文件不存在：**运行 `--prepare` 或复制既有制品后显式传入两个
   路径；推理路径绝不联网取回。

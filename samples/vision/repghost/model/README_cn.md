@@ -38,4 +38,4 @@ CLI 读取 `datasets/imagenet/imagenet_classes.names` 标签与默认 `test_data
 <a id="formats-checksums"></a>
 ## 格式与校验
 
-上述每个文件在 `docs/release/x5/models.yaml` 中均为 `format: bin`、`sha256: null (unknown)`。下载器打印收到字节的摘要，仅记录本地身份，不等于独立验证发布者。
+上述每个文件在 `docs/release/x5/models.yaml` 中均为 `format: bin`、`sha256: null (unknown)`。下载器打印收到字节的摘要，用于本地身份核对。

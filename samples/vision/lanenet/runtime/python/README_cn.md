@@ -65,7 +65,7 @@ python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s
 
 不能直接把 NPZ 键当作语义名称，应使用报告中的映射。任务未消费的其他实际输出也保留原始值。源文案提到的第三个输出没有名称，本实现不虚构其身份。
 
-显示时将嵌入裁剪至 [0,1]，乘 255，按最近值、半数取偶舍入，并保留通道顺序。源 Python 直接相乘后转 uint8，导致截断或越界回绕；该显示变更不影响 `embedding.npy`。二值标签超出 0/1 时拒绝处理，不将其画成看似合理的掩码。结果保持 256×512，不插值回原图、不拟合车道。
+显示时将嵌入渲染为彩色图：裁剪至 [0,1]，乘 255，按最近值、半数取偶舍入，并保留通道顺序；`embedding.npy` 不受影响。二值标签超出 0/1 时拒绝处理，不将其画成看似合理的掩码。结果保持 256×512，不插值回原图、不拟合车道。
 
 <a id="integration-example"></a>
 ## 应用集成
@@ -94,7 +94,7 @@ details = task.predict(image, return_details=True)
 assert set(details.raw) == set(binding.metadata.output_names)
 ```
 
-`LanePredictionDetails`（通过 `return_details=True` 显式开启）将常规结果与本次
+`LanePredictionDetails`（通过 `return_details=True` 显式开启）将常规结果与单次
 调用的 prepared 输入、原始输出打包返回，归档原始张量无需二次推理；默认
 `predict` 仍返回普通 `LaneResult`，task 不保存上一次输出。
 绘图与文件读写放在应用层。未建立应用层同步策略前，不应在并发调用间共享可变 SDK runner。
@@ -107,7 +107,7 @@ assert set(details.raw) == set(binding.metadata.output_names)
 | `preprocess` | 非空三通道 BGR uint8 HWC | 从绑定输入名到连续 float32 NCHW `[1,3,256,512]` 的映射 |
 | `infer` | 预处理映射 | 从运行库存储复制出的全部实际具名原始数组 |
 | `postprocess` | 与元数据匹配的原始映射 | `LaneResult`：CHW 浮点嵌入和 HW uint8 二值标签 |
-| `predict` | BGR 图像 | 组合上述三阶段；`return_details=True` 额外返回本次调用的 prepared 输入与原始输出 |
+| `predict` | BGR 图像 | 组合上述三阶段；`return_details=True` 额外返回单次调用的 prepared 输入与原始输出 |
 
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
@@ -119,9 +119,9 @@ assert set(details.raw) == set(binding.metadata.output_names)
 ## 排障与验证边界
 
 - 模型缺失：按模型说明显式准备；`--dry-run` 不验证文件内容。
-- 身份拒绝：确认物理板卡，S100P/S600 不等于 S100。
+- 身份拒绝：确认物理板卡为 S100；S100P/S600 需各自的制品与绑定。
 - 元数据不符：保留实际名称/形状/类型；未确认语义时不能通过改名绕过检查。
 - 图像无效或输出路径已存在：使用可解码图像与新目录。部分 IO 失败可能留下不完整目录，复用结果前先检查错误。
-- 颜色不符合预期：单独检查原始嵌入，本实现没有实例聚类。
+- 颜色不符合预期：单独检查原始嵌入；彩色渲染是语义车道分割视图，不含实例 ID。
 
-主机测试覆盖源前处理、绑定、原始数据所有权、标签、显示，以及使用伪 SDK 的真实 CLI。板端推理、真实 SDK 兼容性、数据集精度和延迟仍为 **not-run**。声明精度或等价前请阅读[评估边界](../../evaluator/README_cn.md)。
+主机测试覆盖源前处理、绑定、原始数据所有权、标签、显示，以及使用伪 SDK 的真实 CLI；板端推理需要 S100 板端 SDK。声明精度或等价前请阅读[评估边界](../../evaluator/README_cn.md)。

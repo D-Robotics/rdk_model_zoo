@@ -10,7 +10,7 @@ observation first, followed by five previous observations. There is no header.
 The manifest records source indices 0–20 from `rollout_evaluation.pt` (1504 samples),
 source digest `49f5459a5ff4d8003d9ee9d95c1104d158688017408a74bcd1506ff171cc01ab`,
 and per-file digests. The original rollout is not bundled here; its provenance is
-inherited from the source record, not independently regenerated in this migration.
+inherited from the source record.
 These are held-out offline runtime inputs, not a representative calibration set.
 
 The Python CLI sorts numeric filenames, rejects duplicate indices and validates

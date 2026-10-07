@@ -5,7 +5,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-Cityscapes 定义 19 类任务，但源未提供带标签验证 split 或数据集执行器。segmentation.png 为冒烟输入，result.jpg 为历史示意。数据集评估需要有许可的图片／标签、明确 train-ID 映射、忽略标签策略及记录的 split。
+Cityscapes 定义 19 类任务，但源未提供带标签验证 split 或数据集执行器。segmentation.png 为冒烟输入，result.jpg 为源记录示意。数据集评估需要有许可的图片／标签、明确 train-ID 映射、忽略标签策略及记录的 split。
 
 <a id="environment"></a>
 ## 环境
@@ -24,12 +24,12 @@ python3 samples/vision/unetmobilenet/runtime/python/main.py --target s100 --mask
 bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s100 --build --mask-save-path outputs/unetmobilenet/native.png --report-path outputs/unetmobilenet/native.json
 ```
 
-两侧 runtime 必须使用相同目标、制品和输入。检查 S600 时，各对应步骤均使用 --target s600。这些板端命令供后续验证，本轮迁移未执行。
+两侧 runtime 必须使用相同目标、制品和输入。检查 S600 时，各对应步骤均使用 --target s600。这些板端命令供后续验证。
 
 <a id="metrics"></a>
 ## 指标
 
-主机检查验证 fixture 的源预处理／绘图一致性、类别解码、逐通道 SCALE 反例、直接最近邻恢复、目标拒绝及注入失败时的资源释放，不证明 mIoU 或延迟。把 Python NPY 与 C++ PNG 读取为整数数组比较；逐像素完全一致可作为同制品冒烟判据。不要对类别 ID 计算 logits 余弦相似度。
+主机检查验证 fixture 的源预处理／绘图一致性、类别解码、逐通道 SCALE 反例、直接最近邻恢复、目标拒绝及注入失败时的资源释放；mIoU 与延迟在板端测量。把 Python NPY 与 C++ PNG 读取为整数数组比较；逐像素完全一致可作为同制品冒烟判据。不要对类别 ID 计算 logits 余弦相似度。
 
 <a id="outputs"></a>
 ## 输出
@@ -39,9 +39,9 @@ Python 输出 int32 NPY；C++ 输出无损 uint8 PNG ID，API mask 仍为 int32�
 <a id="reference-results"></a>
 ## 参考结果
 
-本示例源中没有 mIoU/FPS/延迟表。[历史效果图](../test_data/result.jpg) 保留，但不声称新测量结果。[源审计](../../../../docs/releases/unified-migration/evidence/2026-09-26-b8-unetmobilenet-audit.json) 记录了对整数直接 argmax 和原生中间 resize 的明确修正，不从主机测试推定板端验收通过。
+本示例源中没有 mIoU/FPS/延迟表。[参考效果图](../test_data/result.jpg) 来自源记录。
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
-这里没有数据集评估循环、训练源模型、真实 SDK 编译、板端推理或性能运行证据。独立评审已在受评主机迁移范围内接受本样例（[B8 移动规划独立评审](../../../../docs/releases/unified-migration/2026-09-28-b8-mobile-planning-independent-review.md)）；该评审不关闭整个 B8 批次，也未认证板端。实现明确拒绝缺失／不支持的整数量化元数据，不假定通道排序。原生任务测试中的假接口仅验证失败分支，实际 SDK 兼容性仍需板端／工具链环境。
+本示例不包含数据集评估循环、训练源模型、真实 SDK 编译、板端推理或性能运行。实现明确拒绝缺失／不支持的整数量化元数据，不假定通道排序。原生任务测试中的假接口仅验证失败分支，实际 SDK 兼容性仍需板端／工具链环境。

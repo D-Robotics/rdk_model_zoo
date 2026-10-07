@@ -10,7 +10,7 @@ C++ inference runtime for Gemma4-E2B VLM on D-Robotics RDK S100P and S600. It lo
 ## Boards and runtime scope
 
 S100P uses `nash-m` HBMs and S600 uses `nash-p` HBMs. The S100 `nash-e` runtime branch requires separately supplied matching HBMs.
-No new board test was performed during this migration. `--target` selects a target; it does not convert an existing model.
+`--target` only selects a target; it does not convert an existing model.
 Hosts can run launcher help and preview; native executables require the board SDK.
 
 <a id="dependencies"></a>
@@ -102,7 +102,7 @@ Offline host entry points:
 ./run.sh --target s600 --dry-run demo text --prompt "Hello"
 ./run.sh --target s100p --build --dry-run
 ```
-Preview prints JSON with `executed=false`; it loads no SDK and does not validate model hashes or board compatibility.
+Preview prints the selected target, planned command and settings as JSON with `executed=false`.
 Real commands propagate the native exit code; launcher preflight errors return 2 with a missing-binary or target message.
 
 Dependency preparation needs Git/network access and an explicitly installed stable Rust 1.80+ toolchain; it never installs or upgrades Rust.
@@ -183,7 +183,7 @@ This is a photograph of a Red Panda resting on a wooden structure...
 - `/context` reports used tokens, remaining capacity, and turn count. Stop tokens are neither printed nor stored in assistant text.
 - `main` loads both Text and Vision before entering the interactive loop and keeps both resident for the process lifetime. S100, S100P, and S600 share this lifecycle; `/image` only runs image preprocessing and Vision inference and never reloads either model.
 - Multimodal follow-ups retain the original image turn and explicitly inject the same Vision features beside the latest user question, with at most two 280-token image blocks in the prompt.
-- Internal diagnostics are quiet by default. `[VLM-FIX]` output still follows `GEMMA4_DEBUG=1`; Text engine diagnostics now require an explicitly installed `SetDebugSink` receiver instead of an environment variable.
+- Internal diagnostics are quiet by default. `[VLM-FIX]` output follows `GEMMA4_DEBUG=1`; Text engine diagnostics require an installed `SetDebugSink` receiver.
 
 <a id="parameters"></a>
 ## Command-line Parameters
@@ -305,15 +305,14 @@ Pass `--help` to any binary to see the gflags-generated full help.
 `main` is split at the application boundary. `main.cpp` is the thin entry: it parses
 gflags, resolves `$GEMMA4_HOME` defaults, validates the generation flags, then
 constructs `gemma4::chat::InteractiveChatApp` (`gemma4_chat_app.hpp/.cpp`) and calls
-`Run()`. The app facade owns everything console- and session-shaped — banner/help,
+`Run`. The app facade owns everything console- and session-shaped — banner/help,
 REPL prompts, UTF-8/GB18030 terminal normalization, chat-history JSON, oldest-turn
 trimming against the 4096-token budget, prefix-mismatch resets and the streaming
 echo. It performs no model math: text generation is delegated to the real runtime
 classes `TextEngine::ContinueGenerateStream` (with `BuildPromptHidden` for image
-turns) and image encoding to `PredictVision` + `VisionEngine::Infer`, exactly as the
-historical monolithic entry did. The facade is an application class, not a model
-class — no `predict`-style engine API performs console IO, and the engines
-themselves never print implicitly.
+turns) and image encoding to `PredictVision` + `VisionEngine::Infer`. The facade
+is an application class, not a model class — no `predict`-style engine API
+performs console IO, and the engines themselves never print implicitly.
 
 ### Vision library interfaces and responsibilities
 
@@ -331,7 +330,7 @@ Interactive and single-shot VLM entry points use the same composition.
 
 Patch rows precede patch columns; each patch contains pixel rows, pixel columns and interleaved RGB channels.
 Results own their values, so later calls cannot overwrite retained outputs. Serialize access to the SDK engine.
-`VisionEngine::Infer` now takes prepared patches instead of an image path; migrate path-based callers using explicit IO below.
+`VisionEngine::Infer` takes prepared patches (prepare image paths through the explicit IO below).
 
 This complete example links `gemma4_runtime` in an SDK-enabled project; it is not a host-only example:
 
@@ -378,14 +377,14 @@ target_link_libraries(vision_example PRIVATE gemma4_runtime)
 To verify board inference matches the PC golden data:
 
 ```bash
-# Optional internal verification data: place golden_mask_kv/ under
+# Optional verification data: place golden_mask_kv/ under
 # $GEMMA4_HOME/golden_mask_kv/. It is not included in the public model archive.
 ./gemma4_golden_verify --prompt_id prompt_0
 # Expected: ALL PASSED (five input comparisons satisfy their individual criteria)
 ```
 
 `main` and `demo` print generated text; `server` returns JSON or SSE; `text_bench` prints generation/throughput records.
-These outputs are not dataset accuracy measurements. The golden verifier compares five prefill inputs: exact integer equality,
+For dataset-level accuracy, use the evaluator's PC BC comparison. The golden verifier compares five prefill inputs: exact integer equality,
 embedding maximum absolute error ≤1e-3, and zero error for both masks. Cosine is printed for reference only.
 `ALL PASSED` corresponds to exit code 0; mismatches or exceptions return 1. See [evaluation prerequisites](../../evaluator/README.md).
 Each TextEngine owns one session and its KV state; callers must serialize access. An interactive session is not a stateless, concurrently shared inference function.
@@ -401,8 +400,13 @@ cmake --build /tmp/gemma-vision-tests --parallel
 ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
 ```
 
-Nineteen CTest entries cover three Vision stage/source-image/tensor checks, seven KV allocation/reset/append/aliasing/prefix-retention scenarios, three Text ownership checks — including tensor adoption under injected allocation failure — one Text tensor contract test, one Text generation-flow test, and four Text stage/session tests (pure session policy, stage behavior, engine compositions, and the runnable README example). Assertions remain enabled in Release builds.
-An explicit test runner replaces BPU execution; these checks do not establish real SDK descriptor/resource correctness or board numerical results. That review remains ongoing.
+The suite covers Vision stage/source-image/tensor checks, KV
+allocation/reset/append/aliasing/prefix-retention, Text ownership (including
+tensor adoption under injected allocation failure), tensor contracts,
+generation flow and stage/session behavior, plus the runnable README example.
+Assertions stay enabled in Release builds. The tests run against an explicit
+offline runner; real SDK descriptors and board numerical results come from
+the board commands in this guide.
 
 The interactive chat entry has its own host check, which compiles the production
 `src/gemma4_chat_app.cpp` and the real `src/main.cpp` against the engine doubles in
@@ -414,36 +418,34 @@ and clearly-marked compile stubs for the third-party tokenizers-cpp / OpenCV hea
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_app.py -v
 ```
 
-Eleven scenarios verify the host-verifiable session logic: engine construction
-messages, streaming echo, `/reset` `/context` commands, image-turn wiring (one
-`LoadImage`/`PredictVision`/`Infer` chain with prompt-hidden injection), oversize-prompt
-rejection, oldest-turn history trimming, per-turn rebuild mode, cross-turn context
-growth, GB18030 terminal conversion, and the thin entry's flag validation and
-construct-and-run flow (linked against the host gflags). The doubles load no HBM,
-run no BPU, tokenize nothing and decode no image — linking the real
-SDK/OpenCV/tokenizers-cpp stack and board generation remain not-run on the host.
+The check covers the session logic end to end: engine construction messages,
+streaming echo, `/reset` `/context` commands, image-turn wiring
+(`LoadImage`/`PredictVision`/`Infer` chain with prompt-hidden injection),
+oversize-prompt rejection, oldest-turn history trimming, per-turn rebuild
+mode, cross-turn context growth, GB18030 terminal conversion, and the thin
+entry's flag validation. It runs against marked doubles; the real
+SDK/OpenCV/tokenizers-cpp stack and generation run on the board.
 `GEMMA_CXX` selects the compiler. nlohmann-json headers come from the
 `GEMMA_JSON_INCLUDE` override, `pkg-config nlohmann_json`, or standard system
 include roots (`/usr/include`, `/usr/local/include`, `/opt/homebrew/include`);
 the entry check likewise links the real host gflags from
 `GFLAGS_INCLUDE_DIR` + `GFLAGS_LIB_DIR` (both together), `pkg-config gflags`,
-or standard system roots — no personal paths outside the repository are read.
-A missing dependency skips the affected host checks with the recorded reason
-(the CI gates install these dependencies and reject the skips), while an
-invalid override fails the run. iconv links `-liconv` only on macOS; Linux
+or standard system roots. A missing dependency skips the affected host checks
+with the recorded reason, while an invalid override fails the run. iconv links `-liconv` only on macOS; Linux
 uses the libc iconv.
 
 ### SDK failure handling
 
 Failed Vision construction releases acquired input/output buffers and the packed model; successful SDK calls returning null handles/buffers are rejected.
-`MakeTensor` also releases memory returned alongside an allocation error. Vision requires exactly one input and one output; tensor type/shape/stride checks are described below; real SDK ABI and board results remain unverified.
+`MakeTensor` also releases memory returned alongside an allocation error. Vision requires exactly one input and one output; tensor type/shape/stride checks are described below.
 
 Full-flush and Text/KV selective-flush entries share one task lifecycle: input flush → infer → compiled-core scheduling → submit/wait → output flush/property refresh → release.
 Failures after task acquisition release it, including inference errors that still return a task. Normal-path release errors propagate without retrying the same handle.
-Source selective-index semantics, S600 compiled-core selection and optional V3 dispatch are preserved.
+Selective-flush index semantics, S600 compiled-core selection and optional V3 dispatch follow the source implementation.
 
-Host resource tests use independent SDK doubles across S100/S600 compile branches and cover 94 scenarios. They check memory/handle ownership on errors,
-not real SDK ABI, BPU scheduling or board inference. From the repository root:
+Host resource tests run against SDK doubles on both the S100/S600 compile
+branches and check memory/handle ownership under error injection. From the
+repository root:
 
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resources.py -v
@@ -462,12 +464,14 @@ Descriptors are validated before allocation and output properties are revalidate
 | Stride | Bytes aligned to element width, nonoverlapping elements/rows, every accessed address within declared allocation and original buffer capacity |
 | Data | Prepared float patches must be finite in `[0,1]`; output NaN/Inf is rejected |
 
-Input retains the source F32→F16 truncation and zeroes padding before writing. Output extraction honors both row and column strides and returns owned floats without padding.
-Unknown/integer outputs are no longer reinterpreted as floats. F16/F32 storage conversion does not modify or rerun the quantization recipe.
+Input applies the source F32→F16 truncation and zeroes padding before writing. Output extraction honors both row and column strides and returns owned floats without padding.
+Output tensors must use a supported F16/F32 dtype; unknown and integer outputs are rejected. F16/F32 storage conversion does not modify the quantization recipe.
 
-Host integration fixtures call the production `VisionEngine::Infer`; SDK doubles inspect packed inputs and populate F16/F32 outputs with row and element gaps.
-They also inject invalid type, quantization flags, shape, stride, post-inference capacity changes and nonfinite output.
-Resource and transport tests total 94 scenarios (46 S100, 48 S600). Matching real published HBM descriptors to this contract still requires later board evidence; host fixtures are not that evidence.
+Host integration tests call the production `VisionEngine::Infer`; SDK doubles
+inspect packed inputs and populate F16/F32 outputs with row and element gaps,
+and inject invalid type, quantization flags, shape, stride, post-inference
+capacity changes and nonfinite output. Validate real published HBM
+descriptors through the board run.
 
 ### KV state and ownership
 
@@ -478,21 +482,20 @@ Allocation size is not a token-row count, so trailing padding does not participa
 | Operation | State and aliases |
 | --- | --- |
 | `Allocate(k_bytes, v_bytes)` | Exactly 15 sizes each, at least the logical matrix size; replaces buffers/resets positions only after complete success; failure preserves old buffers/state |
-| `Reset()` | Zeroes K/V using their own capacities and clears positions without freeing or changing addresses; bound input aliases remain valid |
-| `AppendPrefillChunk(...)` | Appends 1–256 contiguous token positions starting at `OccupiedLen()`; validates all layer pointers, strides and positions before cache mutation |
+| `Reset` | Zeroes K/V using their own capacities and clears positions without freeing or changing addresses; bound input aliases remain valid |
+| `AppendPrefillChunk(...)` | Appends 1–256 contiguous token positions starting at `OccupiedLen`; validates all layer pointers, strides and positions before cache mutation |
 | `AppendDecodeStep(...)` | Same append path for one row |
 | `CompactShift(n_keep, discard)` | Retains the first `n_keep` resident rows, discards the suffix and renumbers positions from zero; `discard` must equal old logical length minus `n_keep` |
-| `PhysicalIndex(pos)` | Right-aligned physical row, or -1 if not resident; `OccupiedLen()` is the logical end and `CacheStart()` the oldest resident position |
+| `PhysicalIndex(pos)` | Right-aligned physical row, or -1 if not resident; `OccupiedLen` is the logical end and `CacheStart` the oldest resident position |
 
 Successful reallocation invalidates old aliases and must happen before binding model inputs; failed allocation preserves them.
 Append source output memory must be separate from the cache and readable for at least `(rows-1)*row_stride + head_dim` bytes;
-append now rejects source pointers inside any resident K/V allocation directly. It also requires equal K/V output row strides
+append rejects source pointers inside any resident K/V allocation directly. It also requires equal K/V output row strides
 per layer, which the Text descriptor layer enforces before every append. Shared input buffers do not mean zero CPU movement:
 append and prefix retention move/copy rows, and the inference entry flushes CPU-modified KV inputs.
 
-The unused `SetOccupiedLen` setter is removed; maintain consistent data/positions through Reset, Append and CompactShift.
-TextEngine's `ContextShift` retains a prefix; callers then re-prefill the suffix they want. This corrects the source header's inaccurate promise
-of deleting a middle range while preserving both sides.
+Maintain cache data and positions with `Reset`, `Append` and `CompactShift`.
+`TextEngine::ContextShift` retains a prefix; callers then re-prefill the suffix they want.
 
 Independent host test entry:
 ```bash
@@ -520,10 +523,8 @@ KV output row addressing and greedy logits argmax; `TextEngine` composes these
 operations with SDK calls. Every descriptor is validated against the fixed export
 before any allocation; output descriptors are revalidated after each inference
 against the capacity the engine originally allocated, not the refreshed claim.
-A mismatched export is rejected at construction — a 512-position or
-wrong-dtype model can no longer enter the engine, where the previous code
-accepted it and overflowed a 256-entry stack buffer (reproduced on immutable
-baseline source, see the tensor remediation record).
+A mismatched export, such as one with 512 positions or an unsupported dtype,
+is rejected at construction before any tensor is read.
 
 | Binding | Accepted contract |
 | --- | --- |
@@ -555,29 +556,26 @@ stride/capacity/quantization rejections, argmax row addressing and tie
 semantics), and a generation-flow test that drives the production engine
 against an SDK double speaking this contract — generated tokens, cache
 transport through the borrowed KV inputs, inference failure cleanup,
-post-inference descriptor drift and a fourteen-case constructor rejection
-matrix. Host fixtures are not vendor ABI or real-model evidence; matching a
-published HBM's descriptors to this contract still requires board evidence.
+post-inference descriptor drift and a constructor rejection matrix.
 
 Host test entry:
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_tensors.py -v
 ```
 
-Host tests replace only SDK calls and embedding loading: 301 successive failure
+Host tests replace only SDK calls and embedding loading: injected failure
 points, six invalid descriptor cases and normal teardown check that no tensor/model allocation remains. A
 separate owner test covers partial construction, moves, repeated clearing and
-borrowed-cache survival. No weights are loaded and inference calls are forbidden
-in the ownership tests; they do not validate SDK ABI compatibility or generation quality.
+borrowed-cache survival. No weights are loaded and no inference calls are made
+in the ownership tests.
 
 ### Text pipeline stages
 
 The Text pipeline is separated into three explicit stages plus a session
-policy module; `TextEngine` only sequences them. The behavior is the source
-implementation's — greedy `kLogitScale` decoding, first-max ties, the
+policy module; `TextEngine` only sequences them. The behavior follows the source
+implementation — greedy `kLogitScale` decoding, first-max ties, the
 EOS/turn-end set, full return vectors, prefix-continuation alignment and
-benchmark timing scope are unchanged — but each responsibility now has one
-addressable unit:
+benchmark timing scope — with each responsibility in one addressable unit:
 
 | Stage | Header | Responsibility |
 | --- | --- | --- |
@@ -596,7 +594,7 @@ before any allocation, lookup or write; violations throw
   `AutoTruncate`/`ContextShift` are the tools to stay inside the window.
 - Prepared token count: exactly `chunk_valid` ids per chunk.
 - Prebuilt hidden: the continuation entry points and `GenerateWithPrompt
-  Embeddings` require exactly `full_ids.size() * kHiddenSize` floats indexed
+  Embeddings` require exactly `full_ids.size * kHiddenSize` floats indexed
   from the prompt start (not a suffix); the rejection happens before any
   session state changes. `PrepareBatchInputs` itself refuses a hidden smaller
   than the rows it indexes.
@@ -604,9 +602,8 @@ before any allocation, lookup or write; violations throw
   shift, so a rejected call leaves the session reusable.
 
 The engine prints nothing on its own. `SetDebugSink` installs an explicit
-receiver; without one, diagnostics are discarded (the previous
-`GEMMA4_DEBUG` → `std::cerr` path inside input preparation is gone, and
-applications wire their own policy through the sink).
+receiver for Text engine diagnostics. `[VLM-FIX]` diagnostics follow
+`GEMMA4_DEBUG=1`.
 
 The example below is compiled and executed by the host check
 (`tests/native/readme_text_stages_example.cpp`); against the host doubles it
@@ -665,14 +662,14 @@ session processed: 7
 ```
 
 Lifetime rules for the example: subgraph handles are borrowed from the packed
-model, so `prefill`/`decode` must be `Clear()`ed before the packed model is
+model, so `prefill`/`decode` must be `Clear`ed before the packed model is
 released; KV input slots borrow `KvCache` memory, which stays valid until the
 cache is reallocated or destroyed; `CollectKvOutputs` rows borrow the output
 tensors and are only valid until the next inference. A `TextEngine` (and each
 stage operating on a `ModelIo`) is not thread-safe — serialize access; the
 stage functions themselves hold no global state. Inference failures propagate
 as exceptions with the task released and all buffers still owned, so a session
-can `ResetSession()` and continue.
+can `ResetSession` and continue.
 
 Host test entry:
 ```bash

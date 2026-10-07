@@ -15,6 +15,8 @@ Rules (IDs are decoupled from section IDs; see readme-contract §8):
   R-README-SECTIONS   fixed anchor IDs present, unique, in template order
   R-README-LINKS      relative links/images resolve to existing files and
                       intra-document fragments resolve to explicit anchors
+                      (rendered prose only — fenced code blocks are not
+                      scanned; their content is verbatim, not links)
   R-CLI-DEFAULTS      README parameter tables match the real parser
   R-I18N-PARAMS       en/zh parameter tables agree with each other
   R-STAGE-PURITY      stage functions (canonical preprocess/infer/postprocess
@@ -82,6 +84,13 @@ ANCHOR_RE = re.compile(r"""<a\s+id=["']([a-z0-9-]+)["']\s*/?>""")
 LINK_RE = re.compile(r"""(!?)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)""")
 OPTION_RE = re.compile(r"--[a-z0-9][a-z0-9-]*")
 SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
+
+# Fenced code blocks (CommonMark): an opening fence is 0-3 spaces of
+# indentation followed by 3+ backticks or tildes (backtick fences may not
+# carry a backtick in the info string); a closing fence repeats the same
+# character at least as long, with nothing but spaces after it.
+FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+FENCE_CLOSE_RE = re.compile(r"^ {0,3}(`+|~+)[ \t]*$")
 
 # Stage functions whose bodies are purity-checked (inference-contract §1/§3).
 # The 2026-10-05 readable-runtime rollout made preprocess/infer/postprocess
@@ -278,12 +287,56 @@ def check_sections(report: SampleReport, readme: Path,
     return bool(anchors)
 
 
+def mask_fenced_code(text: str) -> str:
+    """Blank fenced code blocks, preserving every offset and newline.
+
+    Rendered Markdown shows fenced content verbatim, so link-shaped source
+    snippets inside fences — e.g. YOLOv5's ``[i](x[i])`` indexing — are not
+    hyperlinks.  Each masked character becomes a space and line breaks stay
+    in place, so positions (and therefore reported line numbers) computed
+    from the result match the original text exactly.  Marker character and
+    length follow CommonMark: a fence closes only on the same character at
+    least as long as its opening marker, with no info string after it, so
+    shorter or opposite-character fences inside stay content.  An
+    unterminated fence extends to the end of the text.
+    """
+
+    masked = list(text)
+    open_char: Optional[str] = None
+    open_length = 0
+    offset = 0
+    while offset < len(text):
+        end = text.find("\n", offset)
+        if end < 0:
+            end = len(text)
+        line = text[offset:end]
+        if open_char is None:
+            match = FENCE_OPEN_RE.match(line)
+            if match is not None and (match.group(1)[0] == "~"
+                                      or "`" not in match.group(2)):
+                open_char = match.group(1)[0]
+                open_length = len(match.group(1))
+        else:
+            match = FENCE_CLOSE_RE.match(line)
+            if match is not None and match.group(1)[0] == open_char \
+                    and len(match.group(1)) >= open_length:
+                open_char = None
+        if open_char is not None:
+            masked[offset:end] = " " * (end - offset)
+        offset = end + 1
+    return "".join(masked)
+
+
 def check_links(report: SampleReport, readme: Path,
                 anchor_ids: set[str]) -> None:
-    """R-README-LINKS: local targets and fragments must resolve."""
+    """R-README-LINKS: local targets and fragments must resolve.
+
+    Only rendered prose is scanned: fenced code blocks are blanked first,
+    so verbatim source like ``[i](x[i])`` is never mistaken for a link.
+    """
 
     text = readme.read_text(encoding="utf-8")
-    for match in LINK_RE.finditer(text):
+    for match in LINK_RE.finditer(mask_fenced_code(text)):
         target = unquote(match.group(2)).strip()
         line = text.count("\n", 0, match.start()) + 1
         if SCHEME_RE.match(target) or target.startswith("//"):

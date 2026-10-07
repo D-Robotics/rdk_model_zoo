@@ -1,4 +1,4 @@
-> 迁移状态：进行中。以下历史板测、精度和 SDK 发布计划来自固定 S 源提交 `380e1a2`，不是本轮测试或最新发布状态。本轮覆盖主机侧启动编排与原生核心重构（含主机 SDK 替身测试）；量化方案保留、不重新验证，板测未运行。
+> 下文的板测结果、精度与 SDK 发布说明为 S 源发布的记录；板端运行按本指南命令执行。
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -18,7 +18,7 @@ ion=ion_reserved_size=0xf0000000
 ion=ion_carveout_size=0xf0000000
 ```
 
-即 CMA 1 GiB、reserved/carveout 各 3.75 GiB。修改前备份原配置，结合板卡实际容量确认；**脚本不会自动修改启动配置或重启**。该配置下本次 S100 的 Linux 内存约 2.8 GiB，S100P 约 14 GiB，不代表所有硬件版本容量。S100 请关闭非必要应用，不能只根据 `free` 判断 BPU 连续内存是否足够。下载与解压需约 6 GB 可用存储。
+即 CMA 1 GiB、reserved/carveout 各 3.75 GiB。修改前备份原配置，结合板卡实际容量确认；**脚本不会自动修改启动配置或重启**。该配置下 S100 的 Linux 内存约 2.8 GiB，S100P 约 14 GiB，具体以硬件版本实际容量为准。S100 请关闭非必要应用，不能只根据 `free` 判断 BPU 连续内存是否足够。下载与解压需约 6 GB 可用存储。
 
 ## 一键运行
 
@@ -55,7 +55,7 @@ export LD_LIBRARY_PATH="$OELLM_SDK_ROOT/oellm_runtime/lib${LD_LIBRARY_PATH:+:$LD
 timeout 120 ./build/main --model-path ../../model/s100/minicpm5-2b_ctx4096_s100.hbm   --tokenizer-path ../../model/s100/tokenizer   --template-path ../../model/s100/tokenizer/simple-chat.jinja --prompt 'What is the capital of France?'
 ```
 
-`inc/minicpm5.hpp` 保存配置、`prepare_request`（前处理）与 `RequestOutcome` 状态记录；`src/chat_template.cc` 在推理文件之外加载并检查对话模板大小；`src/minicpm5.cc` 管理 SDK 初始化、经注入 sink 的流式回调与单次请求的释放；`src/main.cc` 解析参数、注入 stdout sink、输出 RESULT 行并映射 `RequestOutcome::exit_code()`。推理文件自身不做任何控制台输出。SDK 承担分词、模板渲染、BPU 推理和采样，无需复制通用视觉处理工具。每个实例只服务一次请求：`predict()` 之后再次 `init()` 会被拒绝，新请求请创建新实例或新进程。流式 token 在 SDK 运行期间送达 sink；随后的 RESULT 行携带与原先一致的状态值。
+`inc/minicpm5.hpp` 保存配置、`prepare_request`（前处理）与 `RequestOutcome` 状态记录；`src/chat_template.cc` 在推理文件之外加载并检查对话模板大小；`src/minicpm5.cc` 管理 SDK 初始化、经注入 sink 的流式回调与单次请求的释放；`src/main.cc` 解析参数、注入 stdout sink、输出 RESULT 行并映射 `RequestOutcome::exit_code`。推理文件自身不做任何控制台输出。SDK 承担分词、模板渲染、BPU 推理和采样。每个实例只服务一次请求：`predict` 之后再次 `init` 会被拒绝，新请求请创建新实例或新进程。流式 token 在 SDK 运行期间送达 sink；随后的 RESULT 行携带与原先一致的状态值。
 
 完整的原生库使用示例（自包含程序）——可直接复制、对照 SDK 头文件编译并运行：
 
@@ -86,6 +86,6 @@ int main() {
 
 ## 已知边界
 
-编译 chunk=256、cache=4096；输入和输出共享上下文。此旧接口未提供本示例可用的输出 token 上限，因此提供进程超时。独立的 [全量评估入口](../../evaluator/legacy/README_cn.md)覆盖 PPL、双轮、长输入与 50 次连续请求；当前 PPL 与参考文本匹配未达到验收目标，详见 [结果](../../evaluator/README_cn.md)。本 CLI 仍为单请求入口。未验证工具调用、多模态或长时间稳定性。
+编译 chunk=256、cache=4096；输入和输出共享上下文。此旧接口未提供本示例可用的输出 token 上限，因此提供进程超时。独立的 [全量评估入口](../../evaluator/legacy/README_cn.md)覆盖 PPL、双轮、长输入与 50 次连续请求；当前 PPL 与参考文本匹配未达到 ≤3% 精度目标，详见 [结果](../../evaluator/README_cn.md)。本 CLI 为单请求入口；工具调用、多模态输入与长时间稳定性不在其范围内。
 
 旧 tokenizer 需要字符串形式 BPE merges 和简化的非思考模板；部署主 EOS 为已有 `<|im_end|>`（130073）。转换脚本不改原始 checkpoint。单请求使用 SDK 示例约定的 request_id=0。

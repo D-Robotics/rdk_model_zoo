@@ -14,30 +14,30 @@ ByteTrack 是有状态多目标跟踪器，通过高分和低分检测框关联�
 - 第二次关联：未匹配轨迹与低置信度检测框按 IoU 匹配；
 - 新轨迹只从未匹配的高分检测框初始化。
 
-固定 S 源 README 携带的检测示例（`test_data/readme_img/image1.png`，S pin `380e1a2`，sha256 `fdab9b40…`）是同一街区三帧的横向条带：彩色框带逐检测置信度（如左帧 0.94/0.92/0.83，中帧红三角旁低至 0.43），三角标记（左右帧为黄色、中间帧为红色）标注一名被跟随的行人。低分恢复的含义由下方三行图说明：该图以 `test_data/readme_img/image.png`（sha256 `032728fb…`）随固定源树携带，但未嵌入 pinned 源 README；其可见图注与论文动机示例一致——(a) detection boxes，其中被跟踪的较小行人分数为 t1 0.8、t2 0.4、t3 0.1（0.9 框属于另一名较高的前景行人）；(b) tracklets by associating high score detection boxes；(c) tracklets by associating every detection box，该行人的低分检测（虚线框，标注 0.4 与 0.1）被重新关联。
+下面的检测示例是同一街区三帧的横向条带：彩色框带逐检测置信度（如左帧 0.94/0.92/0.83，中帧红三角旁低至 0.43），三角标记（左右帧为黄色、中间帧为红色）标注一名被跟随的行人。三行图说明低分恢复的含义，与论文动机示例一致——(a) detection boxes，其中被跟踪的较小行人分数为 t1 0.8、t2 0.4、t3 0.1（0.9 框属于另一名较高的前景行人）；(b) tracklets by associating high score detection boxes；(c) tracklets by associating every detection box，该行人的低分检测（虚线框，标注 0.4 与 0.1）被重新关联。
 
-![ByteTrack detection example strip embedded by the source README](test_data/readme_img/image1.png)
+![ByteTrack 检测示例条带](test_data/readme_img/image1.png)
 
-![Three-row (a)/(b)/(c) association illustration bundled in the source tree, not embedded by the source README](test_data/readme_img/image.png)
+![(a)/(b)/(c) 三行关联示意](test_data/readme_img/image.png)
 
 <a id="support-matrix"></a>
-## 支持与验证矩阵
+## 支持矩阵
 
-| target | variant | Python | C++ | 状态 |
+| 目标 | 变体 | Python | C++ | 说明 |
 |---|---|---|---|---|
-| S100 | YOLOv5x 672 | supported-verified | not-supported | 2026-09-24 板测记录：四帧合成检查 + 真实视频前 30 帧对照 |
-| S100P | YOLOv5x 672 | supported-not-run | not-supported | manifest 有该行，但发布 S100P URL 在 2026-09-24 记录中返回 HTTP 404；该轮没有成功的下载或 S100P 正向推理记录 |
-| S600 | YOLOv5x 672 | supported-verified | not-supported | 2026-09-24 板测记录：真实视频前 30 帧对照 |
-| X5 | — | not-supported | not-supported | 没有 ByteTrack 制品 |
+| S100 | YOLOv5x 672 | 支持 | 不支持 | |
+| S100P | YOLOv5x 672 | 支持 | 不支持 | 见下方下载说明 |
+| S600 | YOLOv5x 672 | 支持 | 不支持 | |
+| X5 | — | 不支持 | 不支持 | 无 ByteTrack 制品 |
 
-`supported-verified` 表示板测固定提交上记录的同板源/统一 tracker 对照——S100 的四帧合成视频（bus.jpg 平移 0/2/4/6 像素），以及 S100/S600 使用公开 `track_test.mp4` 的前 30 帧（[四帧证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-s100/)、[真实视频证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)）。它们只覆盖这些帧和制品——不是 MOT 数据集精度，也不是整段视频——并且是历史记录：本工作树不追加新的板端运行，也不复跑任何 case。S100P 不是正向支持：记录中的下载器对其发布资产 URL 返回 HTTP 404（[负例证据](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-s100p-negative/bytetrack-asset-download-404.json)），因此该轮没有成功的 S100P 下载或正向推理记录。
+S100P 的 manifest 行存在，但其发布下载 URL 曾被观测到返回 HTTP 404；若下载失败，请手动获取 YOLOv5x HBM 并放到 `--list-models` 显示的路径。
 
-tracker 有状态：同一个 `ByteTrackTask` 必须按顺序处理帧。`reset()` 清除流历史和 frame index，但故意不把进程级 track ID 计数器归零。
+tracker 有状态：同一个 `ByteTrackTask` 必须按顺序处理帧。`reset` 清除流历史和 frame index，但故意不把进程级 track ID 计数器归零。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-主机 tracker 检查需要 Python、NumPy、SciPy、OpenCV、`lap==0.5.12` 和 `cython-bbox==0.1.5`。板端还需要目标 `hbm_runtime` 和精确 HBM。源视频不在 `test_data`，需显式从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 准备。2026-09-24 板测轮次为 S100/S600 对照的正是这批已记录资源——manifest 的 YOLOv5x HBM 与该视频（SHA 见链接证据）——但取回用的是它们自己的命令（见快速体验）；本工作树不做新的下载。
+主机 tracker 检查需要 Python、NumPy、SciPy、OpenCV、`lap==0.5.12` 和 `cython-bbox==0.1.5`。板端还需要目标 `hbm_runtime` 和精确 HBM。测试视频未随 `test_data` 提供，需显式从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 准备。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -57,14 +57,14 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
   --records samples/vision/bytetrack/test_data/result_unified.jsonl
 ```
 
-这两条命令是针对 2026-09-24 S100/S600 轮次所对照的同一批已记录资源——manifest 的 YOLOv5x HBM 与公开 `track_test.mp4`（记录 SHA `4bbe5bf1…`）——的文档化显式准备路径。保留的准备记录使用的是各自的取回方式——`curl --fail --location --retry 2` 下载到临时目录（S100 板缺 `curl`，改用 Python 标准库下载），对照复用准备在 `samples/vision/yolov5/model/` 下的 YOLOv5x HBM——因此这两条 argv 本身并未被执行（[准备记录](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)）。本工作树不做新的准备。成功推理会写出可解码 MP4 和可选逐帧 JSONL，打印帧数并退出 `0`。`run.sh` 不会安装或下载。
+公开 `track_test.mp4` 的记录 SHA-256 为 `4bbe5bf11fe8967b28a900fd2add4949aba89b62076eaa03d0c55cdf7dd41397`；需要校验完整性时执行 `sha256sum track_test.mp4`（macOS：`shasum -a 256 track_test.mp4`）。成功推理会写出可解码 MP4 和可选逐帧 JSONL，打印帧数并退出 `0`。`run.sh` 不会安装或下载。
 
 <a id="expected-results"></a>
 ## 预期结果
 
-每帧输出零个或多个 person track，字段为 `track_id`、原图 `tlbr`、score 和 frame index，并写出指定视频。空检测仍推进 `frame_index` 并更新 tracker。若框完全落在 letterbox padding，clip 后可能出现零面积，源 XYAH 初始化会产生 NaN；统一 task 在更新前剔除宽或高不正的 person 框。evaluator 遇到源 NaN 会记录 error 并失败，不把它当成相等。
+每帧输出零个或多个 person track，字段为 `track_id`、原图 `tlbr`、score 和 frame index，并写出指定视频。空检测仍推进 `frame_index` 并更新 tracker。若框完全落在 letterbox padding，clip 后可能出现零面积，XYAH 初始化会产生 NaN；task 在更新前剔除宽或高不正的 person 框。
 
-适用条件与调参（沿用源结果判读建议，并已对照本 sample 的 tracker 代码核实）。`--score-thres`（默认 `0.25`）在 tracker 之前过滤检测框：检出框过少时调低它——调低 `--track-thresh` 找不回被 detector 丢弃的框。`--track-thresh`（`0.3`）只划分 tracker 输入：高于它的框进入第一次关联，(0.1, `track-thresh`) 区间的框与仍在跟踪的目标进行第二次关联，新轨迹只从得分不低于 `track_thresh + 0.1` 的第一次关联框初始化。若 track ID 频繁切换，可考虑调大 `--match-thresh`（`0.8`，第一次关联接受的最大代价——1 − IoU，默认模式与检测分数融合，`--mot20` 时不融合；越大允许越不相似的匹配）或加长 `--track-buffer`（`60`，丢失轨迹窗口，按 `frame_rate / 30` 缩放）。这些是调参方向，不是重新标定的阈值。当前流程只跟踪 COCO `person`；多类别跟踪需要每类一个 tracker 或扩展 tracker 使其感知类别（见 [evaluator 说明](evaluator/README_cn.md)）。
+适用条件与调参。`--score-thres`（默认 `0.25`）在 tracker 之前过滤检测框：检出框过少时调低它——调低 `--track-thresh` 找不回被 detector 丢弃的框。`--track-thresh`（`0.3`）只划分 tracker 输入：高于它的框进入第一次关联，(0.1, `track-thresh`) 区间的框与仍在跟踪的目标进行第二次关联，新轨迹只从得分不低于 `track_thresh + 0.1` 的第一次关联框初始化。若 track ID 频繁切换，可考虑调大 `--match-thresh`（`0.8`，第一次关联接受的最大代价——1 − IoU，默认模式与检测分数融合，`--mot20` 时不融合；越大允许越不相似的匹配）或加长 `--track-buffer`（`60`，丢失轨迹窗口，按 `frame_rate / 30` 缩放）。这些是调参方向，不是重新标定的阈值。当前流程只跟踪 COCO `person`；多类别跟踪需要每类一个 tracker 或扩展 tracker 使其感知类别（见 [evaluator 说明](evaluator/README_cn.md)）。
 
 <a id="directory"></a>
 ## 目录职责
@@ -85,14 +85,14 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
 - [`model/README_cn.md`](./model/README_cn.md)：三个 target 的 HBM 和显式准备。
 - [`runtime/python/README_cn.md`](./runtime/python/README_cn.md)：有状态 Task API 与完整 CLI。
 - [`conversion/README_cn.md`](./conversion/README_cn.md)：仅 detector 的转换边界。
-- [`evaluator/README_cn.md`](./evaluator/README_cn.md)：新进程源/统一证据和严格 ID 比较。
+- [`evaluator/README_cn.md`](./evaluator/README_cn.md)：评测命令、输出与对照说明。
 
 <a id="historical-performance"></a>
-## 源历史性能
+## 源性能参考
 
-源记录 RDK S100 tracker update 约 `2.37 ms`。论文报告 V100 GPU 上 `80.3 MOTA`、`77.3 IDF1`、约 `30 FPS`。这些是历史参考，不是本迁移的板端测量。
+源记录 RDK S100 tracker update 约 `2.37 ms`。论文报告 V100 GPU 上 `80.3 MOTA`、`77.3 IDF1`、约 `30 FPS`。
 
 <a id="license"></a>
 ## 许可
 
-仓库 wrapper 遵循 Apache-2.0。固定源 inventory 没有独立 tracker LICENSE；其来源和 `TRACKER_SOURCE_MAP.json` 均保留。上游 ByteTrack 与模型权重遵循各自许可。
+仓库 wrapper 遵循 Apache-2.0。随附 tracker 源码树没有单独的 license 文件；其来源记录在 `TRACKER_SOURCE_MAP.json`。上游 ByteTrack 与模型权重遵循各自许可。

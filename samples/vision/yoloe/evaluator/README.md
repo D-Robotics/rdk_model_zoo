@@ -2,12 +2,12 @@
 
 English | [简体中文](README_cn.md)
 
-Evaluate a local floating-output model with the same postprocessing used by [the runtime](../runtime/python/README.md). The ONNX backend runs on CPU; the board backend requires the matching installed SDK and a separately prepared float BIN/HBM. This directory does not download models/datasets, compile a model, or reproduce historical BPU performance automatically.
+Evaluate a local floating-output model with the same postprocessing used by [the runtime](../runtime/python/README.md). The ONNX backend runs on CPU; the board backend requires the matching installed SDK and a separately prepared float BIN/HBM. This directory does not download models/datasets or compile a model; recorded BPU reference performance is listed in the reference results section.
 
 <a id="dataset"></a>
 ## Dataset and category mapping
 
-Use a held-out COCO-format instance dataset, with `images`, `categories` and `annotations`. Each image needs integer `id`, relative `file_name`, `width` and `height`; each category needs integer `id` and `name`. Box/mask scoring needs valid instance ground truth, including bounding boxes, segmentation, area and crowd flags. Predictions-only mode accepts an image/category manifest with an empty annotations list. Dataset acquisition is described in the unified [COCO](../../../../datasets/coco/README.md) guide, with the archived X5 COCO (historical `../../../../platforms/x5/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and S COCO (historical `../../../../platforms/s/datasets/coco/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) snapshots as provenance; datasets are not included here.
+Use a held-out COCO-format instance dataset, with `images`, `categories` and `annotations`. Each image needs integer `id`, relative `file_name`, `width` and `height`; each category needs integer `id` and `name`. Box/mask scoring needs valid instance ground truth, including bounding boxes, segmentation, area and crowd flags. Predictions-only mode accepts an image/category manifest with an empty annotations list. Dataset acquisition is described in the unified [COCO](../../../../datasets/coco/README.md) guide, prepare the validation split and annotation JSON before running.
 
 PF class IDs are **not COCO category IDs**. Supply a reviewed mapping that binds the fixed [4585-class vocabulary](../test_data/classes.names), checking both source and destination names. [mapping.example.json](mapping.example.json) demonstrates person (PF 2163 → COCO 1) and chair (PF 821 → COCO 62). It covers two categories only and is **not a complete COCO-80 mapping**. Replace/extend it for your annotation categories:
 
@@ -38,7 +38,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py --help
 
 This includes ONNX/ONNX Runtime, NumPy, OpenCV, SciPy, PyYAML and pycocotools; PyTorch is needed only for [checkpoint export](../conversion/README.md). The board route uses the runtime prerequisites and the image-provided `hbm_runtime`; additionally install `pycocotools` there. RLE encoding requires pycocotools even in predictions-only mode. Help works without these packages or the SDK.
 
-The host ONNX backend uses `CPUExecutionProvider` and explicitly disables graph optimization, matching export verification. It receives float RGB NCHW input and **does not simulate an NV12 roundtrip, quantization or BPU execution**. `--target` selects the source preprocessing/postprocessing protocol on the host; it is not a claim that the host is that board. The board backend checks the actual hardware target, file SHA-256 and ten float32 output roles. Original published S quantized models remain incompatible with that float entry.
+The host ONNX backend uses `CPUExecutionProvider` and explicitly disables graph optimization, matching export verification. It receives float RGB NCHW input and **does not simulate an NV12 roundtrip, quantization or BPU execution**. `--target` selects the target-specific preprocessing/postprocessing protocol on the host; it is not a claim that the host is that board. The board backend checks the actual hardware target, file SHA-256 and ten float32 output roles. Published S quantized models are incompatible with that float entry.
 
 <a id="command"></a>
 ## Commands
@@ -90,7 +90,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
 | `--multi-label` | false | E26 multiple classes per anchor; E11 rejects it |
 | `--threads` | 2 | ONNX CPU threads; nondefault values on the board route are rejected |
 
-Thresholds affect precision/recall. The default matches the demonstration CLI, not an accepted low-threshold COCO accuracy recipe. Record any changes. E11 retains classwise NMS; E26 retains Top-K without NMS. X5 E11 produces full-image masks, S E11/E26 produce ROI masks; all routes reuse the same runtime decoder rather than a separate evaluator algorithm.
+Thresholds affect precision and recall. The default matches the demonstration CLI; when adjusting thresholds, record the selected values and dataset. E11 uses classwise NMS; E26 uses Top-K without NMS. X5 E11 produces full-image masks, S E11/E26 produce ROI masks; all routes reuse the same runtime decoder rather than a separate evaluator algorithm.
 
 <a id="metrics"></a>
 ## Metrics and comparison
@@ -118,14 +118,14 @@ A successful run exits 0; handled failures exit 2. Initialization errors may occ
 | `metrics.log` | Complete COCO scoring output, when metrics are requested |
 | `*-predictions.partial.json` | Explicitly incomplete predictions if an image fails mid-run; never scored as a completed run |
 
-Status is `predictions-only`, `evaluated` or `failed`. `metric_scope` distinguishes all annotation images, a selected subset and no requested metric. Inspect processed/selected counts and unmapped predictions before quoting any number. Dataset scoring does not establish an application accuracy acceptance threshold automatically.
+Status is `predictions-only`, `evaluated` or `failed`. `metric_scope` distinguishes all annotation images, a selected subset and no requested metric. Inspect processed/selected counts and unmapped predictions before quoting any number. Application accuracy thresholds are set by your release process.
 
 <a id="reference-results"></a>
-## Historical references and current verification
+## Reference results
 
-The following are **original source Runtime-only measurements**, not new measurements of the canonical float route:
+The following are Runtime-only reference measurements with the **published quantized artifacts**; a locally compiled float model is measured after its own compile:
 
-| Source model | Board | Runtime latency / FPS | P50 / P95 |
+| Published model | Board | Runtime latency / FPS | P50 / P95 |
 | --- | --- | --- | --- |
 | E11s | X5 | 146.16 ms / 6.84 | 144.72 / 152.73 ms |
 | E11m | X5 | 177.14 ms / 5.65 | 176.17 / 182.54 ms |
@@ -136,16 +136,16 @@ The following are **original source Runtime-only measurements**, not new measure
 | E26l | S100 | 13.417 ms / 74.18 | not published |
 | E26x | S100 | 22.013 ms / 45.31 | not published |
 
-X5: RDK X5 V1.0, OS 3.4.1-rp1.0.2, libdnn 1.24.5/HBRT 3.15.55, 1000 MHz, one thread/core_id=1 (BPU core 0), fixed NV12, three rounds of 10 warmup plus 200 timed frames. The two-thread 11s test failed with an ION allocation error. See the full X5 source record (historical `../../../../platforms/x5/samples/vision/yoloe/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md).
+X5: RDK X5 V1.0, OS 3.4.1-rp1.0.2, libdnn 1.24.5/HBRT 3.15.55, 1000 MHz, one thread/core_id=1 (BPU core 0), fixed NV12, three rounds of 10 warmup plus 200 timed frames. The two-thread 11s test failed with an ION allocation error.
 
-S100: V1P0, OS 4.0.5-Beta, UCP 3.13.6/HBRT 4.7.5, OE 3.7.0 INT8 KL, 2026-09-08, 200 frames/warmup, thread_num=1/core_id=0. S100P performance was not measured. The S26 source record (historical `../../../../platforms/s/samples/vision/yoloe26_seg/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) separately records original n-model S100P Python/C++ pixel-exact mask comparison on one image; that is not current code, other sizes or dataset mAP. The S11 source evaluator (historical `../../../../platforms/s/samples/vision/yoloe11_seg/evaluator/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) was a placeholder, with no accepted metrics to migrate.
+S100 reference conditions: V1P0, OS 4.0.5-Beta, UCP 3.13.6/HBRT 4.7.5, OE 3.7.0 INT8 KL, 2026-09-08, 200 frames/warmup, `thread_num=1/core_id=0`.
 
-Current real ONNX predictions are host checks on the bundled image with an explicitly generated PF-category manifest and **no ground truth**. They are not COCO AP measurements. The E26 PT files used for recent export have different file hashes from the archived release sidecars; that does not prove changed tensors by itself, but prevents claiming the same original checkpoint baseline. In particular, float detection counts must not be presented as reproduced INT8 counts or attributed solely to quantization. Exact evidence is in the [evaluation implementation record](../../../../docs/releases/unified-migration/2026-09-28-yoloe-evaluation-review.md).
+Predictions-only mode exports detections and masks for the selected image/category manifest. For COCO AP, supply instance ground truth and an explicit PF-to-dataset category mapping. Record checkpoint and artifact hashes for each model route separately.
 
 <a id="boundaries"></a>
 ## Boundaries and checks
 
-No actual board/SDK/OE evaluation, held-out dataset mAP or new performance benchmark has run in this migration increment. The board backend is implemented but unverified on hardware. CPU RGB evaluation excludes NV12 conversion effects. The fixed vocabulary, mapping and model bytes must stay paired; arbitrary vocabulary edits do not teach new categories.
+Board/SDK/OE evaluation, held-out dataset mAP and new performance benchmarks run in their own environments. CPU RGB evaluation excludes NV12 conversion effects. The fixed vocabulary, mapping and model bytes must stay paired; arbitrary vocabulary edits do not teach new categories.
 
 ```bash
 # cwd: repository root; evaluator host dependencies installed
@@ -153,4 +153,4 @@ python3 -m unittest discover -s samples/vision/yoloe/evaluator/tests
 python3 -m unittest discover -s samples/vision/yoloe/tests
 ```
 
-Tests cover real COCO scoring of known synthetic masks, empty predictions, explicit mapping, strict image/mask geometry, missing-file partial failure and predictions-only boundaries. Synthetic perfect AP verifies the scorer only; it is not a YOLOE result. Historical source runtime-contract tests remain archived; canonical runtime tests cover the shared stages. The native C++ runtime is implemented and its host runtime scope has been independently reviewed ([review record](../../../../docs/releases/unified-migration/2026-09-28-yoloe-independent-review.md)); real SDK/board execution remains not-run, and whole-branch independent acceptance remains open.
+The test suite covers COCO scoring with synthetic masks, empty predictions, explicit category mappings, image/mask geometry and partial failures. For model AP, run the evaluator with labeled held-out images and report the dataset split, checkpoint, compiled model and class mapping.

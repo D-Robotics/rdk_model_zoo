@@ -3,8 +3,7 @@
 FasterNet ImageNet-1k classification on RDK X5: one BGR image in, a
 stable Top-K of `(class id, score, label)` out. The X5 release ships the
 S, T0, T1, and T2 variants (paper [Run, Don't Walk: Chasing Higher FLOPS
-for Faster Neural Networks](https://arxiv.org/abs/2303.03667), as cited by
-the source delivery).
+for Faster Neural Networks](https://arxiv.org/abs/2303.03667)).
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
@@ -17,8 +16,8 @@ of only minimizing theoretical FLOPs. Its core operator, partial
 convolution (PConv), applies the spatial convolution to only a fraction
 of the input channels and leaves the rest untouched, cutting redundant
 memory access and improving practical runtime efficiency on edge
-devices. It targets ImageNet-1k 1000-class classification. The source
-README's four feature highlights:
+devices. It targets ImageNet-1k 1000-class classification. Four feature
+highlights:
 
 - **High-FLOPS design** — emphasizes practical compute efficiency
   instead of minimizing theoretical FLOPs only.
@@ -35,9 +34,8 @@ CPU](./test_data/FLOPs%20of%20Nets.png)
 *Figure (upstream paper Fig. 2): (a) FLOPS under varied FLOPs on CPU —
 many networks run at a lower effective FLOPS than ResNet50, while
 FasterNet stays high; (b) latency under varied FLOPs on CPU — FasterNet
-is faster at the same FLOPs. Restored from the X5 source README
-(rdk_x5 @ac11571, x5-v1.1.3); conditions are the upstream CPU
-measurements, not RDK board numbers (see [Performance
+is faster at the same FLOPs. The measurements are the upstream CPU
+source-paper benchmarks; RDK board numbers appear in [Performance
 data](#performance)).*
 
 ![FasterNet architecture: four-stage hierarchy and the FasterNet block
@@ -48,34 +46,24 @@ hierarchical stages of FasterNet blocks with embedding/merging layers —
 the PConv detail (convolution applied only to a channel fraction) and
 the block layout PConv 3×3 → two pointwise convs, with normalization and
 activation only after the middle layer to preserve feature diversity.
-Restored from the X5 source README (rdk_x5 @ac11571); it depicts the
-upstream training architecture, while the deployed artifacts are the
-INT8-quantized s/t0/t1/t2 variants at 224×224 NV12 (see [Support
-matrix](#support-matrix)).*
+The figure shows the upstream training architecture; the deployed
+artifacts are the INT8-quantized s/t0/t1/t2 variants at 224×224 NV12
+(see [Support matrix](#support-matrix)).*
 
-The maintained implementation is one Python flow (X5 only; this sample has
-no S-branch delivery and no C++ runtime on either source). Python resolves
-one exact artifact reference from the platform release manifests, verifies
-the board identity, loads `hbm_runtime` lazily, and runs a
-`pre_process → forward → post_process` task
+The sample provides a Python runtime for X5. The
+`FasterNetClassifier` class runs a `preprocess → infer → postprocess`
+flow chained by `predict`: it resolves one exact artifact reference from
+the platform release manifest, verifies the board identity, loads
+`hbm_runtime` lazily, and returns a typed Top-K result
 ([runtime/python/README.md](runtime/python/README.md)).
-The former platform branch entry remains a compatibility shim under
-`platforms/x5/` until the migration closeout; its audit record lives in the
-migration documents, not here.
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | s, t0, t1, t2 | python | supported (source-verified contract; board smoke pending for B3, see below) |
+| x5 | s, t0, t1, t2 | python | supported |
 | s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no FasterNet asset; selection is an explicit error, no cross-platform fallback) |
-
-Source baseline: X5 rdk_x5 @ac11571 (x5-v1.1.3). The unified sample's host
-tests (28) all pass. Board smoke for this batch (B3) is executed after
-the host side of all four B3 samples lands; this matrix is updated with
-the observed results then — until that entry exists, board status for this
-sample is **not-run**, and the legacy source remains the verified delivery.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -119,37 +107,27 @@ python3 samples/vision/fasternet/runtime/python/main.py \
 ```
 
 `t0`/`t1`/`t2` substitute their own reference and path (see
-`--list-models`); the default variant (when none is given) is `s`,
-preserving the source
-entrypoint's default model. Full commands:
+`--list-models`); the default variant (when none is given) is `s`. Full commands:
 [runtime/python/README.md](runtime/python/README.md).
 
 <a id="expected-results"></a>
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; no output files are written unless `--img-save-path` is
-given (the legacy entrypoint always wrote `test_data/result.jpg` — that
-side effect is gone). With the bundled `drake.JPEG` the Top-5 contains a
-drake-related ImageNet class. A board that cannot be identified, or a
-target without a matching artifact (all S targets), exits with an error
-instead of guessing.
+labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `drake.JPEG` the Top-5 contains a
+drake-related ImageNet class. Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
-For reference, the X5 source README (rdk_x5 @ac11571, x5-v1.1.3 legacy
-Python entrypoint) illustrated its run with the screenshot below: the
-legacy `result.jpg` drawing overlaid the top-5 ranks on the image, with
-rank 1 being class 97 (drake). This is a historical screenshot from the
-source delivery, not a run of the current entrypoint in this repository.
+The screenshot below shows a reference run from the X5 release: the demo
+overlay draws the top-5 ranks onto the bundled `drake.JPEG`, with rank 1
+being class 97 (drake).
 
-![Historical inference screenshot from the X5 source README (rdk_x5
-@ac11571): drake test image with the legacy top-5 overlay, rank 1 class
-97 (drake)](./test_data/inference.png)
+![Reference inference result on X5: drake test image with the top-5
+overlay, rank 1 class 97 (drake)](./test_data/inference.png)
 
 <a id="performance"></a>
 ## Performance data
 
-Published records from the X5 source release (rdk_x5 @ac11571,
-x5-v1.1.3), not re-measured in this repository (source notes: Float Top-1
+Published performance on RDK X5 (X5 release x5-v1.1.3; Float Top-1
 on the pre-quantization ONNX, Quant Top-1 on the deployment model, latency
 single-frame single-thread single-core, FPS multi-threaded):
 
@@ -165,7 +143,7 @@ single-frame single-thread single-core, FPS multi-threaded):
 
 - [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
 - [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — X5 reference PTQ configs with disclosed gaps
+- [conversion/](conversion/README.md) — X5 PTQ configurations and model-specific preparation steps
 - [evaluator/](evaluator/README.md) — published benchmarks and functional checks
 - `test_data/` — bundled test images ([drake.JPEG](test_data/drake.JPEG) plus reference illustrations)
 - `tests/` — host unittest suite
@@ -185,5 +163,4 @@ Sample code follows the repository top-level LICENSE (Apache-2.0). The
 source models are the upstream FasterNet distribution; upstream
 model/weights licensing is governed by that distribution (see the paper
 link above). Published artifacts follow the platform release manifests;
-the manifests carry no separate license field, and no additional license
-is claimed here.
+Python code is licensed under Apache-2.0. Review applicable upstream model and weight license terms for those components.

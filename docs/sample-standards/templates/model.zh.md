@@ -17,13 +17,13 @@
 <a id="preparation"></a>
 ## 准备步骤
 
-> **必须回答：** 确切命令（cwd、`--target`）或手动步骤；hash 不匹配时的行为；
+> **必须回答：** 确切命令（cwd、实际的目标选择参数）或手动步骤；hash 不匹配时的行为；
 > 主途径失败时的替代途径。
 
 ```bash
 # cwd：仓库根目录
-bash samples/⟪domain⟫/⟪name⟫/model/download.sh --target ⟪target⟫
-# 预期：上表文件落在 model/ 下，sha256 与 manifest 校验通过
+⟪使用本 Sample 实际参数的模型准备命令⟫
+# 预期：上表文件落在 model/ 下；manifest 提供校验值时进行校验
 ```
 
 ⟪仅手动准备的制品：获取渠道（内部档案/供应商门户）、所需版本、放置位置。⟫

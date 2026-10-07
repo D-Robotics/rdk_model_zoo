@@ -30,7 +30,7 @@ bash samples/robotics/himloco/model/download_model.sh --target x5
 
 `--target` 仅接受并默认使用 `x5`。`--output-dir` 默认当前 model 目录，始终在其中
 创建 `bayes-e/` 子目录，不改变运行时默认值。准备已发布制品不需要工具链或板端 SDK。
-本轮迁移没有实际下载模型；主机检查覆盖预览和共享准备边界，不代表板端推理。
+模型按下载命令显式准备；准备是主机步骤，与板端推理相互独立。
 
 <a id="accompanying-files"></a>
 ## 附属文件

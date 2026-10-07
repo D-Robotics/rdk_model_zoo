@@ -18,7 +18,7 @@ conversion/
 
 `onnx_export/model` 是训练、评测和导出共同使用的唯一 PyTorch 模型源码。
 `ptq_yamls` 为每个 backbone 保存一份经过审阅的 `bayes-e` 模板；`mapper.py`
-把模板绑定到本次 ONNX、校准集和全新输出目录，再执行 checker、makertbin 与
+把模板绑定到该次 ONNX、校准集和全新输出目录，再执行 checker、makertbin 与
 `hb_model_info`。
 
 <a id="source-model"></a>
@@ -29,7 +29,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链
 
-目标为 X5 / bayes-e。源未固定 OE Docker 版本；需 x86 Linux 的 hb_mapper、hb_model_info，mapper 会记录实际版本。导出环境另需 PyTorch、ONNX、ONNX Runtime、NumPy；校准示例需 Pillow；mapper 需 PyYAML。本轮未安装/执行 OE，也未声明任一未实测组合可复现。
+目标为 X5 / bayes-e。未固定 OE Docker 版本；需 x86 Linux 的 hb_mapper、hb_model_info，mapper 会记录实际版本。导出环境另需 PyTorch、ONNX、ONNX Runtime、NumPy；校准示例需 Pillow；mapper 需 PyYAML。
 
 <a id="export"></a>
 ## 1. 导出 ONNX
@@ -116,7 +116,7 @@ python3 mapper.py \
 python3 samples/vision/unet/evaluator/eval_unet.py --backend x5 --backbone resnet18 --model /output/unet_resnet18_x5_run_001/artifacts/unet_resnet18_voc_512x512_nv12.bin --manifest /data/unet/val.tsv --report /reports/unet_custom_x5.json --min-miou 0.50
 ```
 
-编译输出文件位置以实际 run-receipt.json 为准，上方 --model 需替换为 receipt 记录的 BIN。当前统一入口板测、完整导出、编译和数据集评估均 not-run。
+编译输出文件位置以实际 run-receipt.json 为准，上方 --model 需替换为 receipt 记录的 BIN。
 
 <a id="artifacts"></a>
 ## 制品
@@ -126,4 +126,4 @@ python3 samples/vision/unet/evaluator/eval_unet.py --backend x5 --backbone resne
 <a id="known-gaps"></a>
 ## 缺失前提
 
-训练 checkpoint、完整 VOC 及代表性校准子集需自行准备；源没有固定 OE 镜像/框架版本。本轮只校验主机逻辑、入口与文档，未补造转换或精度证据。上面的取前 100 张是格式准备示例，不保证校准代表性，正式量化需选择适合数据分布的子集。
+训练 checkpoint、完整 VOC 及代表性校准子集需自行准备；OE 镜像/框架版本未固定。上面的取前 100 张是格式准备示例，不保证校准代表性，正式量化需选择适合数据分布的子集。

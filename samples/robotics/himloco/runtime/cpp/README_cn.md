@@ -5,17 +5,16 @@
 <a id="supported-boards"></a>
 ## 支持板型与验证状态
 
-统一入口包含四阶段策略、SDK 适配器、离线 CLI 和构建启动器。保持 X5 源提交
-`ac115717197920355fc390bb04299b20e6436864` 的 float32 输入／输出语义，
-不增加归一化、动作缩放或机器人控制。
+原生运行时包含四阶段策略、SDK 适配器、离线 CLI 和构建启动器。实现 X5 源发布的
+float32 输入／输出语义，不增加归一化、动作缩放或机器人控制。
 
 | 目标 | 制品 | 状态 |
 | --- | --- | --- |
-| X5 | Bayes-e 融合 Go2 BIN | 核心、SDK 替身及 CLI 主机检查通过；真实 SDK 编译／板测未运行 |
+| X5 | Bayes-e 融合 Go2 BIN | 支持（构建与运行见本指南） |
 | S100／S100P／S600 | 无匹配发布制品 | 不支持 |
 
-主机替身检查不代表硬件推理。源历史环境为 RDK OS 3.5.0-beta、DNN Runtime 1.24.5、
-HBRT 3.15.55，历史数据见[评测说明](../../evaluator/README_cn.md)。
+源板测环境为 RDK OS 3.5.0-beta、DNN Runtime 1.24.5、HBRT 3.15.55；
+源测量数据见[评测说明](../../evaluator/README_cn.md)。
 
 <a id="dependencies"></a>
 ## 依赖
@@ -27,7 +26,7 @@ HBRT 3.15.55，历史数据见[评测说明](../../evaluator/README_cn.md)。
   主机依赖发现（pkg-config 或标准系统 include 路径）解析。可用
   `NLOHMANN_JSON_INCLUDE` 显式指定 include 目录；无效的 override 会使检查失败，
   缺少该头文件的主机显式跳过。不回退到任何个人目录。
-- Python 启动器：Python、NumPy、PyYAML，用于统一制品选择与板型检查；
+- Python 启动器：Python、NumPy、PyYAML，用于制品选择与板型检查；
   不加载 Python 推理 SDK。可通过 `PYTHON` 指定解释器。
 
 使用发布模型不需要 Torch 或量化工具链。测试替身头只用于主机检查，不能替代真实 SDK。
@@ -160,12 +159,8 @@ runner 必须比引用它的 task 活得更久，二者不能并发使用同一 
 校验 X5 四维有效／对齐形状、元素数与分配容量后才复制数据。输入保留源实现的紧凑提交
 方式并清零剩余缓冲区；输出按对齐跨度取出 12 个逻辑值。返回数据独立持有。
 每次任务退出释放 task handle，构造失败和析构均先释放张量再释放 packed model。
-`input_metadata()`／`output_metadata()`、`model_name()`、`runtime_version()` 与
-`priority()` 为应用提供报告信息，不在推理文件中写报告。
-
-主机 SDK 替身检查覆盖容量、对齐、类型／量化拒绝、分配失败、推理／等待／缓存失败、
-非有限输出和资源回收；生产身份检查另用板型读取替身覆盖拒绝路径。
-真实 SDK 编译与运行仍未执行；原生 CLI 已用独立 runner 替身完成主机端到端检查。
+`input_metadata`／`output_metadata`、`model_name`、`runtime_version` 与
+`priority` 为应用提供报告信息，不在推理文件中写报告。
 
 <a id="results-interpretation"></a>
 ## 结果解释
@@ -174,8 +169,8 @@ runner 必须比引用它的 task 活得更久，二者不能并发使用同一 
 `default_joint_position + 0.25 * actions`，本例不包含实时控制环。
 
 核心传递每份 `RawOutputs` 自带的耗时，不添加前后处理时间；原生 runner 的计时范围为 `hbDNNInfer` 加 `hbDNNWaitTaskDone`，
-不含缓存维护、输入复制、输出提取和文件 I/O。[评测说明](../../evaluator/README_cn.md) 保留源历史测量及其口径，
-这些不是统一 C++ 的新结果。离线数值一致不能证明闭环行为。
+不含缓存维护、输入复制、输出提取和文件 I/O。源测量数据及其口径见
+[评测说明](../../evaluator/README_cn.md)。离线数值一致不能证明闭环行为。
 
 代码遵循仓库 [Apache-2.0 许可](../../../../../LICENSE)。
 

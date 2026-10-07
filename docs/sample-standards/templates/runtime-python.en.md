@@ -14,8 +14,7 @@
 
 - Board: ⟪targets⟫ with system image ≥ ⟪version⟫
 - Python: ⟪version⟫; dependencies: ⟪list or none⟫
-- `hbm_runtime` is provided by the board image only — this runtime does not run
-  on a dev machine.
+- Run inference on the target board with the image-provided `hbm_runtime`.
 
 <a id="usage"></a>
 ## Usage
@@ -74,15 +73,15 @@ print(⟪result field⟫)
 <a id="stage-io"></a>
 ## Three-Stage I/O
 
-> **Must answer:** the pre_process / forward / post_process contract of this
+> **Must answer:** the preprocess / infer / postprocess contract of this
 > sample as a readable summary consistent with the docstrings (see
 > inference-contract). Multi-stage pipelines (e.g. OCR det→rec) get one
 > subsection per stage plus the pipeline.predict composition.
 
-- `pre_process`: ⟪Input⟫ → ⟪Tensors + Context⟫ (⟪shapes/dtypes/layout⟫)
-- `forward`: ⟪tensor dict⟫ → ⟪RawOutputs⟫ (⟪output names/shapes/quantization
+- `preprocess`: ⟪Input⟫ → ⟪Tensors + Context⟫ (⟪shapes/dtypes/layout⟫)
+- `infer`: ⟪tensor dict⟫ → ⟪RawOutputs⟫ (⟪output names/shapes/quantization
   semantics — raw logits vs dequantized⟫)
-- `post_process`: ⟪RawOutputs + Context⟫ → ⟪Result⟫ (⟪result type/fields⟫)
+- `postprocess`: ⟪RawOutputs + Context⟫ → ⟪Result⟫ (⟪result type/fields⟫)
 - ⟪pipeline.predict composition for multi-stage samples⟫
 
 <a id="troubleshooting"></a>

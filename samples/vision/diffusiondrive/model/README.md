@@ -58,4 +58,4 @@ Dry-run resolves selection without opening the model. Actual loading checks phys
 | S100P | `5829a1a318116e2eba5c3ba313841fbd064fe2d48fe3cd37eb1ec7d9a0ffa8fa` |
 | S600 | `78605b5aaa573fbaa2bf4788c6c8922bcab39d90c195e264aa3a8d3a78321c53` |
 
-Downloads and real runtime loading verify these digests. The source records OpenExplorer v3.7.0, INT16-first/max PTQ, a GridSample INT8 exception and BPU-only placement. These historical conversion claims do not establish current board compatibility or physical tensor types; loading validates actual IO and quantization. Model binaries are not committed to Git. This host migration has not downloaded or loaded either HBM.
+Download and runtime loading check the listed digests. Compilation uses OpenExplorer v3.7.0, INT16-first/max PTQ and an INT8 GridSample operator; inspect physical I/O dtype and quantization metadata through the SDK before inference.

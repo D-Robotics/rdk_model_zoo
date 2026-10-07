@@ -16,17 +16,17 @@
 - 本仓分类：`samples/⟪domain⟫/⟪name⟫`
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持矩阵
 
-> **必须回答：** 哪些 target × variant × 语言**支持**，其中哪些**实际上板验证过**。
-> 单元格只有三态：`supported-verified` / `supported-not-run` / `not-supported`。
+> **必须回答：** 提供哪些 target × variant × 语言组合、对应制品及所需 SDK 或模型配置。
+> 测试执行记录放在独立验证文档中。
 > 缺 C++ 必须在此可见——未提供 cpp 时任何位置不得声称双语言支持。
 
-| Variant | x5 | s100 | s100p | s600 | Python | C++ |
-| --- | --- | --- | --- | --- | --- | --- |
-| ⟪variant⟫ | ⟪状态⟫ | ⟪状态⟫ | ⟪状态⟫ | ⟪状态⟫ | ⟪有/无⟫ | ⟪有/无⟫ |
+| Target | Variant | 语言 | 制品及环境要求 |
+| --- | --- | --- | --- |
+| ⟪x5 / s100 / s100p / s600⟫ | ⟪variant⟫ | ⟪Python / C++⟫ | ⟪实际制品和 SDK⟫ |
 
-板端验证证据：⟪链接 evidence/批次评审，或写 “not-run”⟫。
+⟪需要额外模型制品或 SDK 的组合，在此写明具体前提。⟫
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -42,16 +42,15 @@
 ## 快速体验
 
 > **必须回答：** **一条**从模型准备到看到结果的完整路径。每条命令给出 cwd、前置文件
-> 来源、参数、输出与成功判断。模型准备必须显式（`model/download.sh --target …`），
-> 不依赖隐式自动下载。
+> 来源、参数、输出与成功判断。使用实际脚本和目标选择参数显式准备模型。
 
 ```bash
 # cwd：仓库根目录
-bash samples/⟪domain⟫/⟪name⟫/model/download.sh --target ⟪target⟫
-# 预期：制品位于 ⟪path⟫（下载日志打印 sha256 校验结果）
+⟪使用实际脚本和支持的参数准备模型⟫
+# 预期：制品位于 ⟪path⟫；根据下载器实际行为注明校验结果或本地 SHA-256
 
 # cwd：仓库根目录
-python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py --target ⟪target⟫ ⟪input⟫
+python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py ⟪实际目标选择参数⟫ ⟪input⟫
 # 预期：⟪可观察的成功判据，如打印 Top-5 / 生成结果文件 ⟪path⟫⟫
 ```
 

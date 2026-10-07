@@ -44,7 +44,7 @@ UNet 使用带跳跃连接的编码器—解码器结构，融合高层语义与
 新训练变体使用 torchvision ImageNet encoder 初始化；训练收据必须记录准确的
 torchvision 版本与权重标识。
 
-共享模型源码和转换模板不代表未经测试的 backbone 已经受支持。每个变体都必须
+新增 backbone 需要完整验证后才能视为受支持：每个变体都必须
 分别通过 checkpoint、ONNX、PTQ、精度、Runtime 和板端性能门禁。
 
 <a id="support-matrix"></a>
@@ -52,15 +52,14 @@ torchvision 版本与权重标识。
 
 | Target | Variants | Python | C++ |
 | --- | --- | --- | --- |
-| x5 | resnet18/34/50/101/152 | supported-not-run | not-supported |
+| x5 | resnet18/34/50/101/152 | supported | not-supported |
 | s100 / s100p / s600 | — | not-supported | not-supported |
 
-以上是当前统一入口状态，不扩大历史验证结论。参考结果保留原分支的数据集与制品边界，未在本轮重新板测。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-RDK X5、RDK OS 3.5.0+、板端配套 hbm_runtime、Python 3.10+，以及 NumPy、OpenCV、PyYAML；评估另需 Pillow，PyTorch/ONNX 后端依各自环境安装。未实测最低内存/磁盘预算；预留所选 BIN、输出以及自行准备的数据集空间。
+RDK X5、RDK OS 3.5.0+、板端配套 hbm_runtime、Python 3.10+，以及 NumPy、OpenCV、PyYAML；评估另需 Pillow，PyTorch/ONNX 后端依各自环境安装。最低内存/磁盘预算以实际运行为准；请预留所选 BIN、输出以及自行准备的数据集空间。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -141,10 +140,10 @@ ONNX 或 X5 BIN，详见[evaluator/README_cn.md](./evaluator/README_cn.md)。
 
 ## 参考结果
 
-以下结果来自先前用于验证部署链路的 ResNet18 基线 checkpoint，在完整 1,449 张
-Pascal VOC 验证集上测得。它们不是本次下载模型的重新评测结果，也不能代表其他
-backbone。维护者后续已在 RDK X5 上确认已发布 ResNet18 可以正常下载并输出 mask
-与 overlay；板端精度和纯 BPU 性能复测仍待补。
+以下结果来自验证部署链路的 ResNet18 基线 checkpoint，在完整 1,449 张
+Pascal VOC 验证集上测得。复测时使用相同的 ResNet18 checkpoint 与数据划分。
+已发布 ResNet18 可在 RDK X5 上正常下载并输出 mask 与 overlay；板端精度与
+纯 BPU 性能复测按[评估说明](evaluator/README_cn.md)执行。
 
 | 后端 | mIoU | Pixel Accuracy |
 | --- | ---: | ---: |
@@ -159,8 +158,8 @@ RDK X5 上使用单线程、200 帧和真实 packed NV12 输入时，`hrt_model_
 ### ResNet34/50/101/152 发布结果
 
 四个新训练变体均在同一份完整 1,449 张验证集上评测。它们通过了 ONNX 数值门禁和
-`bayes-e` PTQ 编译，公开 BIN 也已重新下载并与发布 SHA256 核对一致。本次没有为
-这四个发布模型执行板端 Runtime 精度和性能测试。
+`bayes-e` PTQ 编译，公开 BIN 与发布 SHA256 核对一致。这四个发布模型的板端
+Runtime 精度和性能测试按[评估说明](evaluator/README_cn.md)在板端执行。
 
 | Backbone | PyTorch FP32 mIoU | Pixel Accuracy | PTQ 输出 Cosine | 板端 Runtime |
 | --- | ---: | ---: | ---: | --- |

@@ -11,7 +11,7 @@ SDK 资源管理与前处理、forward、后处理、predict 分离。
 
 | 目标 | 变体 | 原生状态 |
 |---|---|---|
-| X5 | n/s/m/l/x，已校准 log-depth / NV12 | 已实现；纯主机与模拟 SDK 测试通过；真实 SDK 构建和板端推理 not-run |
+| X5 | n/s/m/l/x，已校准 log-depth / NV12 | 已实现 |
 | S100/S100P/S600 | 请使用 Python 运行时 | 源分支无对应原生深度实现；本程序显式拒绝 S 目标 |
 
 身份规则与仓库注册表一致：优先 boardinfo `x5`；缺失时查 socinfo `x5u/x5h/x5m`；
@@ -24,7 +24,7 @@ SDK 资源管理与前处理、forward、后处理、predict 分离。
 
 需要匹配的 X5 Linux SDK，包含 `dnn/hb_dnn.h`、`dnn/hb_sys.h`、`libdnn`，
 以及 C++17 编译器、CMake ≥3.16、OpenCV core/imgproc/imgcodecs、pthread、rt、dl。
-源实现使用系统 DNN/OpenCV；本轮尚未使用真实 SDK 编译链接。
+源实现使用系统 DNN/OpenCV；真实 SDK 编译链接在目标环境完成。
 测试用模拟头文件不进入正式构建的 include 路径。
 
 启动器和下载工具还需要 Python 与 PyYAML 来读取共享清单，不依赖 `hbm_runtime`；
@@ -51,7 +51,7 @@ cmake --build samples/vision/yolo26_depth/runtime/cpp/build/x5 --parallel 2
 ```
 
 可通过 CMake 缓存变量 `DNN_INCLUDE_DIR`、`DNN_LIBRARY` 指定显式准备的 SDK。
-单独编译成功不等于板端行为或运行时兼容性已验证。
+编译成功后，请在目标板端完成运行与兼容性验证。
 
 <a id="run"></a>
 ## 运行或只查看解析结果
@@ -138,7 +138,7 @@ SDK 输出必须是 F32/NONE、NHWC 或 NCHW 单通道 192 方形。
 
 SDK owner 在正常和异常路径释放 packed model、已分配内存及每次任务句柄。
 绘图位于 `image_io.cpp`，CLI/计时和序列化位于 `main.cpp`/`cli_io.cpp`。
-旧组合类 `Yolo26Depth::Infer` API 改为 runner 加 task；归档源代码仍保留旧 API。
+runner 管理 SDK 会话；task 实现前处理、推理与后处理。
 
 <a id="results-interpretation"></a>
 ## 输出与验证边界
@@ -155,9 +155,9 @@ SDK owner 在正常和异常路径释放 packed model、已分配内存及每次
 原生报告摘要及发布/自转换来源；已创建输出目录时另保存原生 stdout/stderr。
 早期失败可能仅有 stderr，部分输出目录不表示成功。
 
-计时包含一次完整 forward 的内存复制、缓存操作、SDK 调用及原始输出复制，
-不能当作源 HRT 的纯 BPU 延迟。深度是相对值，颜色不是米；图像看起来合理也不等于精度通过。
+计时包含一次完整 forward 的内存复制、缓存操作、SDK 调用及原始输出复制；
+与源 HRT 的纯 BPU 延迟比较时请注意口径差异。深度为相对值，颜色不表示米制距离；精度以数值指标为准。
 
 主机测试编译纯几何、张量、CLI、序列化代码，并使用刻意精简的模拟 SDK 头编译真实 owner。
 覆盖十三个 SDK 调用失败点、原始输出独立所有权、错误 metadata、padding/stride、身份优先级，
-以及 NumPy 读取原生文件。**真实 SDK/OpenCV 构建、完整原生图像链路、板端推理和性能均为 not-run。**
+以及 NumPy 读取原生文件。**真实 SDK/OpenCV 构建、完整原生图像链路、板端推理和性能在目标环境中执行。**

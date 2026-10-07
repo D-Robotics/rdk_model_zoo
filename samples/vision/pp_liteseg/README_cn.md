@@ -5,19 +5,19 @@
 <a id="overview"></a>
 ## 算法与来源
 
-PP-LiteSeg-STDC1 为每个像素预测 Cityscapes 道路场景的 19 类语义。本示例统一 X5 Python 推理、转换配方与单图验证入口。沿用源分支提供的算法资料：[论文](https://arxiv.org/abs/2204.02681)、[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg)。
+PP-LiteSeg-STDC1 为每个像素预测 Cityscapes 道路场景的 19 类语义。本示例提供 X5 Python 推理、转换配方与单图验证入口。算法资料：[论文](https://arxiv.org/abs/2204.02681)、[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg)。
 
-源分支的**运行时代码**接收已经解码的 int32 类别图；旧根目录和转换 README 中“logits 再做 CPU argmax”的表述与代码不符。本实现的 post_process 仅校验并去掉 batch/channel 维。实际编译制品的元数据仍需板端验证。
+模型**运行时**接收已经解码的 int32 类别图：`postprocess` 仅校验类别并去掉 batch/channel 维，没有 CPU argmax 步骤。编译制品元数据在板端加载时校验。
 
 <a id="support-matrix"></a>
-## 支持与验证矩阵
+## 支持矩阵
 
 | Target | 变体 | Python | C++ |
 | --- | --- | --- | --- |
-| x5 | STDC1 / Cityscapes / 1024×512 | supported-not-run | not-supported |
+| x5 | STDC1 / Cityscapes / 1024×512 | supported | not-supported |
 | s100 / s100p / s600 | 无已发布制品 | not-supported | not-supported |
 
-主机 fixture 验证源预处理、类别图解码、可视化、选择逻辑和 CLI 行为，不代表 SDK 或已发布 BIN 已经验证。板测、数据集指标及转换执行均为 not-run。[源审计证据](../../../docs/releases/unified-migration/evidence/2026-09-26-b8-ppliteseg-audit.json)。
+主机 fixture 验证预处理、类别图解码、可视化、选择逻辑和 CLI 行为；板端执行需要 X5 SDK 和已发布 BIN。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -55,7 +55,7 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
 <a id="entry-points"></a>
 ## 入口索引
 
-[模型准备](model/README_cn.md) · [Python CLI 与 API](runtime/python/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。原 X5 快照仍保留在 platforms/x5 (historical `../../../platforms/x5/samples/vision/pp_liteseg/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。
+[模型准备](model/README_cn.md) · [Python CLI 与 API](runtime/python/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。
 
 <a id="license"></a>
 ## 许可

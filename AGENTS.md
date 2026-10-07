@@ -26,6 +26,16 @@ remain historical material, not a new adaptation target.
   toolchains or remote hosts for that purpose. Missing such runs is not a delivery
   blocker. Preserve source attribution and existing evidence; ordinary host tests
   for code refactoring remain in scope. See the current host-completion plan.
+- Current README policy (2026-10-07): write directly for the delivered product.
+  Keep full original compilation instructions, dependencies, commands, arguments,
+  configuration values, links and illustrations; update relocated paths. Do not
+  put migration narration, defensive scope explanations, test-execution status
+  or review/acceptance commentary in README. Document actual supported board,
+  model, language and SDK combinations as concrete usage requirements. Detailed
+  source/history and verification records belong in separate maintenance docs.
+  Follow the current [README contract](docs/sample-standards/readme-contract.md)
+  and bilingual templates. Real board checks are deferred to the user's board
+  environment; do not rerun export/compiler recipes for this documentation work.
 - Start with the relevant Sample README, its source and existing platform
   Guidelines. The active Spec controls conflicts during this migration.
 - Use [the execution plan](docs/superpowers/plans/2026-09-16-x5-s-execution.md)

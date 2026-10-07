@@ -9,7 +9,7 @@
 | --- | --- | --- |
 | x5 | `pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin` | BIN，STDC1 Cityscapes 推理 |
 
-精确 asset-id：`x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`。来源：X5 模型清单 (historical `../../../../platforms/x5/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。没有已发布的 S 系列制品或其他变体。
+精确 asset-id：`x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`。来源：X5 模型清单。没有已发布的 S 系列制品或其他变体。
 
 <a id="preparation"></a>
 ## 准备步骤
@@ -34,4 +34,4 @@ bash samples/vision/pp_liteseg/model/download.sh --target x5
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-`sha256: null (unknown)`。发布清单没有可信摘要；下载时打印的实测摘要可追踪本地副本，但不能独立证明发布者身份。运行时校验文件存在与张量元数据；精确 asset-id 声明请求的契约，不代表自定义文件的来源已经认证。该 BIN 用于 X5，不能与 Nash HBM 互换。
+`sha256: null (unknown)`。发布清单暂无发布摘要；下载时打印的实测摘要用于跨主机追踪本地副本，发布者认证以发布摘要为准。运行时校验文件存在与张量元数据；精确 asset-id 声明请求的契约，自定义文件需自行记录来源。该 BIN 用于 X5，不能与 Nash HBM 互换。

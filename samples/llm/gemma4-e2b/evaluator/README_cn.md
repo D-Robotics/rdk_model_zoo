@@ -10,7 +10,7 @@
 PC 对照使用转换教程中的 COCO 图像、文本验证 prompt、原始浮点权重及同目标 BC。
 板端 golden 校验使用 `$GEMMA4_HOME/golden_mask_kv/<prompt_id>/prefill_chunk_0/` 下五份文件：
 `input_ids.int64.bin`、`position_ids.int32.bin`、`inputs_embeds.f32.bin`、`full_mask.f32.bin`、`sliding_mask.f32.bin`。
-这套内部 golden 数据不随公开模型归档提供。四张示例图片只能用于定性演示，不能替代数据集精度测试。
+这套内部 golden 数据不随公开模型归档提供。四张示例图片用于冒烟测试的定性演示。
 
 <a id="environment"></a>
 ## 环境
@@ -79,33 +79,31 @@ export GEMMA4_HOME=~/gemma4_e2b
 # 你看到什么？
 ```
 
-> **说明：** 主对话入口已按 Model Zoo 规范改名为 `main`，`./gemma4_chat` 不再存在。
-
 预期结果见 [QUANTIZATION_TUTORIAL_zh.md §9.4](../conversion/QUANTIZATION_TUTORIAL_zh.md)。
 
 <a id="metrics"></a>
 ## 指标口径
 
-PC Text 快检记录每条 prompt 的 logits cosine 及 `mean_cosine`，不能将正常退出直接解释为通过固定精度阈值。
-Golden 校验器只比较 prefill 的输入构造：input_ids/position_ids 要求整数全等，inputs_embeds 最大绝对误差 ≤1e-3，
-full_mask/sliding_mask 最大绝对误差为 0；打印的 cosine 不作为通过条件。这不代表模型输出精度或整段生成质量。
+PC Text 快检记录每条 prompt 的 logits cosine 和 `mean_cosine`。
+Golden 校验器检查 prefill 构造：`input_ids`/`position_ids` 整数全等，
+`inputs_embeds` 最大绝对误差 ≤1e-3，`full_mask`/`sliding_mask` 最大误差为 0。
+使用 PC BC 对比在自己的 prompt 集上测量数据集准确率。
 
 <a id="outputs"></a>
 ## 输出与判读
 
 PC Text 结果为 `conversion/output/e2b_text_verify_quick_<target>.json`，含 `results` 与 `mean_cosine`。
 Golden 结果逐项打印 OK/FAIL、误差及最终 `ALL PASSED`/`SOME FAILED`；全部通过返回 0，不匹配或异常返回 1。
-缺 golden 数据会报文件错误，不能按跳过视为通过。交互示例将回答流式写到终端，不自动生成准确率报告。
+运行 golden 校验前请准备五份输入张量。交互示例将回答流式写到终端。
 
 <a id="reference-results"></a>
 ## 历史参考
 
 源 README 与完整教程保留 S100P 演示、约 6.9 tok/s 文本截图和 S600 源回归说明。
-这些来自固定 S 源提交 `380e1a2`，不是本次迁移重新测得的数值；golden 文档中的预期输出也不是新增测试记录。
-本轮主机检查仅覆盖启动编排，板端执行为 not-run。
+这些数值与 golden 文档中的预期输出均来自 S 源发布的记录。
+板端对比按上述运行时命令进行。
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
-保留 PC 与板端验证命令是为了使用者复用原流程。本次迁移不重新执行量化、BC 精度或板端流程，
-也不要求这些实跑作为 README 验收条件。没有完整数据集结果时，不由演示图片、golden 输入全等或吞吐截图推导任务精度。
+使用 PC BC 对比在自己的 prompt 集上测量数据集准确率，并用板端 golden 命令对比目标端张量构造。

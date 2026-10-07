@@ -5,12 +5,12 @@ English | [简体中文](README_cn.md)
 <a id="supported-boards"></a>
 ## Supported boards
 
-S100/S600 have distinct published HBM files; Python and C++ use the same exact target-scoped selection. X5/S100P have no asset and fail. Native binaries embed the explicit build target and independently check local S identity, including s100 + board_type s100p/RDK S100P refinement. Host tests are not real SDK build or board evidence.
+S100/S600 have distinct published HBM files; Python and C++ use the same exact target-scoped selection. X5/S100P have no asset and fail. Native binaries embed the explicit build target and independently check local S identity, including s100 + board_type s100p/RDK S100P refinement.
 
 <a id="dependencies"></a>
 ## Dependencies
 
-C++17 compiler, CMake 3.16+, OpenCV core/imgproc/imgcodecs development libraries, and the matching board DNN/UCP SDK. Include roots follow the source S layout: /usr/hobot/include, /usr/include/hobot and /usr/include/hobot/dnn; libraries under /usr/hobot/lib. gflags/fmt are no longer required by this sample. Launcher uses Python 3.10+ and PyYAML for selection. No S SDK version is pinned by the source; full SDK build remains not-run here.
+C++17 compiler, CMake 3.16+, OpenCV core/imgproc/imgcodecs development libraries, and the matching board DNN/UCP SDK. Include roots follow the source S layout: /usr/hobot/include, /usr/include/hobot and /usr/include/hobot/dnn; libraries under /usr/hobot/lib. gflags/fmt are no longer required by this sample. Launcher uses Python 3.10+ and PyYAML for selection. Use the S SDK provided by your board image; perform the full SDK build in that environment.
 
 <a id="build"></a>
 ## Build
@@ -49,7 +49,7 @@ After an explicit build and preparation, run.sh with no arguments works on the m
 | `--model-path` | `None` | launcher resolves model/<target>/ HBM; native binary requires path |
 | `--test-img` | `samples/vision/unetmobilenet/test_data/segmentation.png` | launcher default; native binary requires path |
 | `--img-save-path` | `result.jpg` | original-resolution overlay |
-| `--mask-save-path` | `unetmobilenet_mask.png` | lossless uint8 class IDs 0..18; .png required |
+| `--mask-save-path` | `unetmobilenet_mask.png` | lossless uint8 class IDs 0..18;.png required |
 | `--report-path` | `unetmobilenet_cpp_report.json` | JSON report |
 | `--alpha-f` | `0.75` | original image weight in [0,1] |
 | `--priority` | `0` | scheduler priority 0..255 |
@@ -59,7 +59,7 @@ After an explicit build and preparation, run.sh with no arguments works on the m
 | `--list-models` | `false` | launcher manifest listing only |
 | `--dry-run` | `false` | launcher prints resolved command; no build/SDK; exclusive with list-models |
 
-Native CLI additionally accepts historical underscore spellings (--model_path, --test_img, --alpha_f); the launcher uses kebab-case only. Python source defaults to bpu-cores [0], while C++ source used any core; that deliberate default distinction is preserved. --help/-h prints help. Output paths use cwd and existing files are replaced.
+Native CLI additionally accepts the source underscore spellings (--model_path, --test_img, --alpha_f); the launcher uses kebab-case only. Python source defaults to bpu-cores [0], while C++ source used any core; that deliberate default distinction is preserved. --help/-h prints help. Output paths use cwd and existing files are replaced.
 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle

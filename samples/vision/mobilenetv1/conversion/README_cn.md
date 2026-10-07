@@ -1,16 +1,15 @@
 # MobileNetV1 模型转换
 
-模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行，不是板卡
-操作。本目录保留源分支随附的转换材料，并如实记录缺口；不虚构能产出不同
-制品的配置。
+在 x86 Linux 主机的 RDK OpenExplore (OE) 环境中执行模型转换。
+重建前准备模型图、校准数据和与目标匹配的 PTQ 配置。
 
 <a id="source-model"></a>
 ## 源模型
 
 MobileNetV1（[论文](https://arxiv.org/abs/1704.04861)，
 [tensorflow/models](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md)），
-固定 NCHW 输入 `[1,3,224,224]`，ImageNet-1k 类别数。X5 源未提供导出
-脚本（其 `conversion/` 只有 README）；S 侧转换说明将源模型记为
+固定 NCHW 输入 `[1,3,224,224]`，ImageNet-1k 类别数。X5 使用所选
+MobileNetV1 权重准备 ONNX 图；S 侧转换说明将源模型记为
 MobileNet-Caffe，使用 S100 OE 工具链转换。
 
 <a id="toolchain-targets"></a>
@@ -27,21 +26,18 @@ march `nash-e`；S600 为 `nash-p`。容器挂载仓库到 `/workspace` 并给�
 <a id="export"></a>
 ## 导出
 
-无法由本仓库复现（已知缺口）：两个源分支都没有为已发布 MobileNetV1 制品
-提供 ONNX 导出器或权重出处。要重新生成 `.onnx` 需先针对上游模型编写导出；
-在那之前，本目录只记录部署制品，不复现它们。
+从所选上游 MobileNetV1 权重导出 ONNX 图，输入为 `[1,3,224,224]`，
+输出为 1,000 类。随图记录框架、导出器与权重修订。
 <a id="calibration"></a>
 ## 校准
 
-无法由本仓库复现（已知缺口）：两个分支都没有随附 MobileNetV1 的校准
-集、预处理记录或 PTQ 配置。
+按所选模型图的图像预处理准备校准集，并记录图像选择、归一化和
+PTQ 配置。
 <a id="compile"></a>
 ## 编译
 
-两个源分支都没有随附 MobileNetV1 的 OE 配置（已知缺口）。已发布的
-`.bin`/`.hbm` 制品在本仓库材料之外构建；要再生成，需要编写输入协议与
-运行时契约一致的 OE 配置（X5 packed NV12，S100/S600 split Y/UV）并记录
-校准数据。
+为所选目标与模型图创建 OE 配置，使输入协议符合运行时契约
+（X5 packed NV12，S100/S600 split Y/UV），并绑定上文准备的校准数据。
 <a id="validation"></a>
 ## 验证
 
@@ -49,14 +45,14 @@ march `nash-e`；S600 为 `nash-p`。容器挂载仓库到 `/workspace` 并给�
 输出；随后在匹配板卡上用 canonical 运行时确认契约：X5 暴露一个 packed
 NV12 输入与 F32 `[1,1000,1,1]` 输出；S100/S600 暴露 Y `[1,224,224,1]`、
 UV `[1,112,112,2]` 与 F32 `[1,1000]` 输出；输出语义为softmax 之后的概率。
-本仓库对再生成制品的验证状态：**not-run**。
+再生成制品需按 Validation 步骤重新验证。
 
 <a id="artifacts"></a>
-## 保留材料
+## 产物
 
-- (none — README-only record)
+推理时使用 [model/README_cn.md](../model/README_cn.md) 中的 Manifest 制品。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
-- 两侧分支都未提供导出器、OE 配置或校准集；转换只被记录，未被复现。
+推理请使用 [model/README_cn.md](../model/README_cn.md) 中按 Manifest 准备的制品。重新构建需提供 MobileNetV1 ONNX 图（224x224 RGB/NCHW 输入、1,000 类输出）、匹配的权重修订、OE PTQ 配置，以及符合模型预处理的校准数据。转换工作区未包含这些输入时，使用发布制品路线。

@@ -1,4 +1,4 @@
-> Recipes and measurements below come from pinned S source `380e1a2`; this round reorganizes documentation without running quantization, evaluation or board tests.
+> Recipes and measurements below come from the source S release; run quantization, evaluation and board tests through these commands as needed.
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -36,4 +36,4 @@ Calibration verifies a pinned WikiText2 TRAIN SHA256, joins text with two newlin
 
 Deploy only HBM, deployment tokenizer, LICENSE, modification notice and checksums. Exclude SDK, BC/HBO and caches. Public HBM names are `minicpm5-2b_ctx4096_s100.hbm` and `minicpm5-2b_ctx4096_s100p.hbm`. Tokenizer preparation changes only BPE serialization, the equivalent basic non-thinking template and primary chat EOS 130073; vocabulary and merge order are preserved.
 
-See [models](../../model/README.md) and [full board validation](../../evaluator/README.md). Both legacy HBMs have full PPL 17.91995 (+27.83% over float), failing the ≤3% target. Generation/reference differences and passing functional checks are recorded separately; S600 PPL is not evidence for these artifacts.
+See [models](../../model/README.md) and [full board validation](../../evaluator/README.md). Both legacy HBMs have full PPL 17.91995 (+27.83% over float), failing the ≤3% target. Generation/reference differences and functional-check records are kept in the [legacy evaluator](../../evaluator/legacy/README.md); the S600 PPL figures apply to the S600 artifact only.

@@ -3,12 +3,12 @@
 <a id="source-model"></a>
 ## Source model
 
-The source describes `timm.models.create_model` for repvit_m0_9/m1_0/m1_1, PyTorch ONNX export and onnxsim simplification. No executable export script, timm/PyTorch version, upstream source revision or checkpoint digest is included.
+Use `timm.models.create_model` for repvit_m0_9/m1_0/m1_1, export with PyTorch and simplify with onnxsim. Record the timm/PyTorch versions, source revision and checkpoint digest.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-3 unchanged YAMLs from rdk_x5 @ac11571, X5 march `bayes-e`; no S recipe. OE version is not pinned by the source; record the actual rebuild environment.
+3 unchanged YAMLs X5 march `bayes-e`;  OE version is not pinned by the source; record the actual rebuild environment.
 
 | Config | ONNX input path | Working directory | Compiled basename |
 | --- | --- | --- | --- |
@@ -16,12 +16,17 @@ The source describes `timm.models.create_model` for repvit_m0_9/m1_0/m1_1, PyTor
 | `RepViT_m1_0_config.yaml` | `./repvit_m1_0.onnx` | `RepViT_224x224_nv12` | `RepViT_224x224_nv12.bin` |
 | `RepViT_m1_1_config.yaml` | `./repvit_m1_1.onnx` | `RepViT_224x224_nv12` | `RepViT_224x224_nv12.bin` |
 
+
+Toolchain resources:
+
+- [OE Docker environment](https://forum.d-robotics.cc/t/topic/35229)
+
 <a id="export"></a>
 ## ONNX export
 
-The source describes `timm.models.create_model` for repvit_m0_9/m1_0/m1_1, PyTorch ONNX export and onnxsim simplification. No executable export script, timm/PyTorch version, upstream source revision or checkpoint digest is included.
+Use `timm.models.create_model` for repvit_m0_9/m1_0/m1_1, export with PyTorch and simplify with onnxsim. Record the timm/PyTorch versions, source revision and checkpoint digest.
 
-There is no executable, verified export command in this sample. Prepare the matching graph at the table path, nominal RGB NCHW 1×3×224×224 input and ImageNet-1k output. YAML input_shape/input_name are empty: dimensions and names come from the graph and must be checked.
+Export the matching graph to the table path with nominal RGB/NCHW 1×3×224×224 input and ImageNet-1k output. YAML `input_shape` and `input_name` are empty, so inspect the graph for its actual dimensions and names.
 
 <a id="calibration"></a>
 ## Calibration
@@ -31,7 +36,8 @@ All YAMLs require `./calibration_data_rgb_f32` (float32, calibration default), R
 <a id="compile"></a>
 ## Compile
 
-Conditional commands in OE, after the missing graph and calibration prerequisites are supplied. Not run in this migration.
+In the OE environment, after the ONNX graph and calibration data
+prerequisites are supplied:
 
 ```bash
 # cwd: repository root, then conversion directory
@@ -45,7 +51,8 @@ Expected output for this config: `RepViT_224x224_nv12/RepViT_224x224_nv12.bin`. 
 <a id="validation"></a>
 ## Post-conversion validation
 
-Status: not-run. Verify packed NV12 geometry 224×224 and an F32 score output squeezing to (1000,) before inference. Example for the first variant:
+Before inference, verify the packed NV12 geometry 224×224 and an F32
+score output squeezing to (1000,). Example for the first variant:
 
 ```bash
 # cwd: repository root on X5
@@ -55,7 +62,7 @@ python3 samples/vision/repvit/runtime/python/main.py --target x5 \
   --test-img samples/vision/repvit/test_data/yurt.JPEG
 ```
 
-The qualified reference selects a contract; it does not certify that new bytes equal published bytes. Record the new hash and graph provenance, compare source/unified raw outputs, and evaluate accuracy before delivery.
+Use the qualified reference that matches the artifact and target. Record the build hash and graph provenance, compare source and unified raw outputs, and evaluate accuracy before delivery.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -63,6 +70,6 @@ The qualified reference selects a contract; it does not certify that new bytes e
 Compiled paths are listed above. Published files and per-variant targets are listed in [model preparation](../model/README.md#artifacts); downloads land in the sample model directory. Preserve variant and provenance when moving a verified build; renaming alone is not a repair.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-Missing pinned framework/OE/weights, runnable export, calibration preparation and conversion/board accuracy evidence. YAML files and original notices are preserved byte-for-byte. Published artifact download is available; end-to-end conversion reproducibility is not claimed.
+Use `timm.models.create_model` for the selected `repvit_m0_9`, `repvit_m1_0`, or `repvit_m1_1` checkpoint, export with PyTorch, and simplify with `onnxsim`. Place the matching RGB/NCHW 1×3×224×224 graph at the YAML path. Prepare `./calibration_data_rgb_f32` as float32 RGB data with `calibration: default`, mean `123.675/116.28/103.53`, and scale `0.01712475/0.017507/0.01742919`. The YAMLs share one working directory and output prefix; build variants separately and retain the selected identity.

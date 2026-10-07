@@ -22,7 +22,7 @@ bash third_party/install_tokenizers_cpp.sh
 
 准备源码需要 Git、外网访问，以及显式安装的稳定版 Rust 1.80+ 工具链
 （`rustc`、`cargo` 位于 PATH 或 `$HOME/.cargo/bin`）。脚本只检查前置条件，不安装或升级 Rust。
-`--dry-run` 打印固定源码与目标目录，不联网、不创建文件，也不要求已有编译工具；`--help` 打印用法。
+`--dry-run` 打印锁定的源码提交与目标目录，不联网、不创建文件，也不要求已有编译工具；`--help` 打印用法。
 
 Rust 缺失或过旧时，请先自行准备工具链。已有 rustup 时，可显式执行
 `rustup toolchain install stable --profile minimal` 和 `rustup default stable`，
@@ -42,9 +42,8 @@ Rust 缺失或过旧时，请先自行准备工具链。已有 rustup 时，可�
 克隆失败只清理本次创建的临时目录，不覆盖或重置已有源码。
 
 代理可通过 `HTTP_PROXY`/`HTTPS_PROXY` 配置。成功输出 `tokenizers-cpp ready` 或
-`already prepared` 及完整提交号，仅表示源码准备完成，不代表原生构建或推理通过。
+`already prepared` 及完整提交号，表示源码准备完成；原生构建在下一步进行。
 编译 Rust binding 时仍可能访问包仓库，离线编译需要提前缓存依赖。
-安装器主机测试使用本地 Git 夹具与假的 Rust 版本输出，不代表实际下载源可用性或真实编译验证。
 
 后续从 sample 根目录执行 `bash runtime/cpp/run.sh --target s600 --build`；详见
 [构建与运行](../runtime/cpp/README_cn.md#build)。依赖及其子模块各自的许可保留在下载的源码中。

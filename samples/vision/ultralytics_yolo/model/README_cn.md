@@ -24,7 +24,7 @@
 | `yolo12` | detect | n/s/m/l/x |
 | `yolov13` | detect | n/s/l/x；仅 X5 |
 
-有发布制品不代表所有组合均完成板测。不能用另一目标的模型替代。统一 X5 完整列表共 92 个制品，其中 YOLO26 为 25 个；历史 X5 通用下载包装器仍保留原来的 67 个。
+按清单选择精确的目标、系列、任务和尺度，并使用为该目标编译的制品。
 
 <a id="preparation"></a>
 ## 准备模型
@@ -74,7 +74,7 @@ bash samples/vision/ultralytics_yolo/model/fulldownload.sh \
 <a id="accompanying-files"></a>
 ## 输入、标签与后续步骤
 
-[测试数据目录](../test_data) 包含检测/分割/姿态使用的 `bus.jpg`、分类使用的 `zebra_cls.jpg`、COCO/ImageNet/DOTA 类别名称和历史结果图。标签用于解释输出，不是模型权重；自定义模型须使用匹配的类别顺序。历史示意图不证明本次运行成功。
+[测试数据目录](../test_data) 包含检测/分割/姿态使用的 `bus.jpg`、分类使用的 `zebra_cls.jpg`、COCO/ImageNet/DOTA 类别名称和结果示意图。标签用于解释输出；自定义模型须使用匹配的类别顺序。
 
 后续见 [Python 推理](../runtime/python/README_cn.md)、[C++ 可用范围](../runtime/cpp/README_cn.md)、[模型转换](../conversion/README_cn.md) 和 [数据集评估](../evaluator/README_cn.md)。ONNX 和训练权重不能直接替代板端二进制，源模型与工具链要求见转换说明。
 
@@ -90,28 +90,19 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
 ```
 此例解析到 `/tmp/rdk-models/nash-p/` 下。去掉 `--dry-run` 下载，再把编译文件复制到匹配的板卡，运行时通过 `--model-path` 传入完整路径。显式运行路径不会被自动替换或下载。下载目标已存在时，下载器校验文件且不覆盖；不需要或损坏的文件请先移到其他位置再重试。
 
-历史平台下载包装器仍写入原模型目录。统一运行入口使用本 Sample 的 model 目录，复用旧下载请传 `--model-path`。把 `.bin` 改名为 `.hbm` 或修改 nash-e/m/p 名称不能改变硬件目标。
+模型存放在默认目录之外时，运行入口通过 `--model-path` 接收完整路径。制品扩展名和 nash-e/m/p 目录须匹配目标。
 
 <a id="formats-checksums"></a>
 ## 格式与完整性
 
-X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。非分类文件名使用 640×640。YOLO26 分类文件名在全部目标上使用 224×224，S600 分类标识同样使用 224×224。S100/S100P v8/v11 分类清单 ID 保留 640×640 兼容名称，下载 URL 则使用 224×224。2026-09-26 只读 HEAD 核对发现全部 20 对地址均可访问，长度与 ETag 相同；这不是完整字节的密码学比较，也不能证明张量尺寸。实际输入几何由运行元数据决定，文件名标记不是形状覆盖。既有限定 ID 与本地路径继续保留。
+X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。非分类文件名使用 640×640。YOLO26 分类文件名在全部目标上使用 224×224，S600 分类标识同样使用 224×224。S100/S100P v8/v11 分类清单 ID 保留 640×640 兼容名称，下载 URL 则使用 224×224。实际输入几何由运行元数据决定，文件名标记不是形状覆盖。
 
-下载器拒绝空文件；清单提供发布方 SHA-256 时会校验。部分制品没有发布方哈希，此时本地摘要只能标识字节，**不能证明官方来源**。dry-run 只查看路径是否存在，`present` 不代表完整性已验证。下载使用临时 `.part` 文件，校验成功后才安装最终文件。超时、HTTP 错误或 URL 不可用属于准备失败，不能据此换用另一制品。
-
+下载器拒绝空文件；清单提供发布方 SHA-256 时会校验。本地摘要用于标识下载字节。`--dry-run` 报告路径是否存在，不下载或读取文件内容。下载使用临时 `.part` 文件，校验成功后才安装最终文件。超时、HTTP 错误或 URL 不可用会返回准备错误。
 
 <a id="maintained-scope"></a>
-## 维护范围与浮点输出
+## 运行输出要求
 
-常规 YOLO 检测、分割、姿态统一使用 Ultralytics YOLO / YOLO26 制品；YOLOv5s
-保留在独立 YOLOv5 sample。重复的 S `yolo11`、`yolo11_pose`、`yolo11_seg` 和
-`yolov13_imoonlab` 不再维护或登记到活动清单，不再提供独立下载/运行入口。
-YOLOE、YOLO-World 和 YOLO26 Depth 的独立能力继续保留。历史源码、发布记录和
-旧评审仍可追溯，但不代表当前支持。X5 原 Ultralytics `yolov13` 保留；S 无此系列。
-
-选择模型时使用本页正常的 family/task/size 下载命令。运行入口 `--asset-id` 只接受
-Ultralytics YOLO/YOLO26 的登记身份；下载器不提供独立样例 `--asset-id` 分支。
-检测、DFL 分割/姿态要求模型直接提供有限浮点输出，量化 metadata 为 NONE 或不存在。
-不会在 Python 后处理中手动反量化整数张量，也不会把整数强制转成浮点冒充正确结果。
-不兼容输出应更换为匹配的 Ultralytics 浮点输出制品；实际 shape/dtype 仍以加载时
-metadata 为准，不能仅靠文件名判断。板端兼容性须由后续板测验证。
+运行入口 `--asset-id` 接受已登记的 Ultralytics YOLO/YOLO26 身份；使用上文的
+family/task/size 命令准备模型。检测、DFL 分割/姿态使用有限浮点输出，量化
+metadata 为 NONE 或不存在。Python 后处理消费运行时提供的浮点输出。选择输出类型
+匹配的制品；运行时在加载时核对张量 shape 和 dtype，并按目标选择对应制品。

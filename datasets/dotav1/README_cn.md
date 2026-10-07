@@ -1,8 +1,5 @@
 [English](./README.md) | 简体中文
 
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
-
 # DOTA-v1.0 数据集资源
 
 **DOTA-v1.0** 是面向旋转框目标检测的大规模航拍图像基准：2,806 张大尺寸航拍图，
@@ -49,25 +46,17 @@ soccer-ball-field, roundabout, harbor, swimming-pool, helicopter
 | `samples/vision/ultralytics_yolo/test_data/ultralytics_dota_classes.names` | Ultralytics DOTA 模型输出顺序（如 `ship` = 1、`storage-tank` = 2，从 0 开始） | Ultralytics OBB 头的模型输出列命名 |
 
 两套顺序只有索引 0（`plane`）相同，其余 14 个位置都不同：用其中一套去命名按另一套
-排列的输出或转换，会把这些类别静默错位。对转换成数字 ID 的 DOTA 数据集评分时，
-ID 映射由该转换定义——必须显式要求提供，不能假定与本仓库任一本地顺序一致。当前
-OBB 路径也只输出预测：[Ultralytics YOLO OBB 评估器](../../samples/vision/ultralytics_yolo/evaluator/README_cn.md)
-导出旋转矩形/多边形，明确**不计算 DOTA AP**；其 `--label-path` 参数仅为兼容旧
-命令保留，不参与评分。本仓库没有实现 DOTA 评分器；不得把 OBB 预测导出当作
-精度结果。
+排列的输出或转换，会把类别错位。对转换成数字 ID 的 DOTA 数据集评分时，ID 映射由该
+转换定义；请在转换时记录对应关系。[Ultralytics YOLO OBB 评估器](../../samples/vision/ultralytics_yolo/evaluator/README_cn.md)
+导出旋转矩形/多边形，不计算 DOTA AP。它的 `--label-path` 参数只为旧命令兼容保留，
+不参与评分。预测导出即评测接口：DOTA AP 由外部 DOTA 评分器基于导出的预测计算，导出文件本身不是精度结果。
 
 <a id="usage"></a>
 ## 这些资源被谁使用
 
-当前统一 `samples/` 代码没有任何脚本读取本目录。历史使用方保留为归档溯源：
+可使用 `asset/P0009.png`、`asset/P0014.png`、`asset/P0035.png` 作为 OBB 示例输入。[Ultralytics YOLO sample](../../samples/vision/ultralytics_yolo/README_cn.md) 使用 `test_data/ultralytics_dota_classes.names` 标识模型输出列。
 
-- X5 交付分支的 `ultralytics_yolo26` sample 曾用 `asset/P0009.png` 作 OBB 测试图、
-  `dota_classes.names` 作标签文件——见归档的
-  X5 YOLO26 运行指南 (historical `../../platforms/x5/samples/vision/ultralytics_yolo26/runtime/python/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
-  与评估指南 (historical `../../platforms/x5/samples/vision/ultralytics_yolo26/evaluator/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。
-- 当前 [Ultralytics YOLO sample](../../samples/vision/ultralytics_yolo/README_cn.md)
-  使用自带的 `test_data/ultralytics_dota_classes.names`（模型顺序）和随仓 OBB
-  测试图；上述归档文件保持冻结参考。
+Ultralytics OBB 使用 Sample 内的模型顺序标签文件；转换后的评估数据集须提供转换过程使用的类别映射。
 
 三张 `asset/` 图块仅作直观参考和离线实验片段——不是可用的评估子集。
 
@@ -77,6 +66,4 @@ OBB 路径也只输出预测：[Ultralytics YOLO OBB 评估器](../../samples/vi
 - 官方页面：<https://captain-whu.github.io/DOTA/dataset.html>
   （下载申请、数据划分与条款均在此发布）
 
-来源说明：X5（`ac11571`）与 S（`380e1a2`）交付分支仅有裸链接 README；本指南补充
-实测文件清单和顺序警示。归档副本位于 `platforms/x5/datasets/dotav1/` 与
-`platforms/s/datasets/dotav1/`。
+数据集与标注规范：[DOTA-v1.0](https://captain-whu.github.io/DOTA/dataset.html)。转换标注进行评估时，请明确保存类别名称与索引的映射。

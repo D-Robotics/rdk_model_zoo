@@ -22,7 +22,7 @@ Exact manifest URLs:
 <a id="preparation"></a>
 ## Preparation
 
-Run from the repository root. The target is a named argument and only `x5` is accepted; no variant argument exists. The downloader does not run implicitly from `runtime/python/run.sh`.
+Run from the repository root. The target is a named argument and only `x5` is accepted; no variant argument exists. Run the downloader explicitly — `runtime/python/run.sh` never triggers it implicitly.
 
 ```bash
 # cwd: repository root; source: exact URLs above
@@ -34,7 +34,7 @@ bash samples/vision/clip/model/download.sh --target x5 --output-dir /tmp/clip-mo
 # expect: /tmp/clip-model/img_encoder.bin and /tmp/clip-model/text_encoder.onnx
 ```
 
-The manifest records both SHA-256 values as unknown. The downloader prints observed digests and reports that they do not independently verify publisher origin. I/O or selection errors exit 2. This migration did not download either file.
+The manifest records both SHA-256 values as unknown. The downloader prints observed digests and reports that they cannot be verified against a published value. I/O or selection errors exit 2.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files
@@ -63,4 +63,4 @@ The manifest records both SHA-256 values as unknown. The downloader prints obser
 
 ## License
 
-Preparation code follows the repository [LICENSE](../../../../LICENSE), Apache-2.0. The source model assets retain the publication's provenance and license metadata; no additional license is invented here.
+Preparation code follows the repository [LICENSE](../../../../LICENSE), Apache-2.0. The model assets retain the publication's provenance and license metadata; no additional license is asserted here.

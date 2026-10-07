@@ -1,7 +1,6 @@
 - [BATCH MAPPER CN](#batch-mapper-cn)
 - [BATCH MAPPER EN](#batch-mapper-en)
 
-
 # BATCH MAPPER CN
 
 Batch Mapper用于将某一个目录下的onnx模型批量的按照某一个yaml配置进行编译，batch会帮你完成以下步骤：
@@ -35,8 +34,6 @@ tmux attach -t batch_mapper
 # 关闭tmux会话
 tmux kill-session -t batch_mapper
 ```
-
-
 
 # BATCH MAPPER EN
 

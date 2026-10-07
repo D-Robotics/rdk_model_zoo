@@ -37,4 +37,4 @@ bash samples/speech/kws/model/download.sh --target s100
 
 HBM 是 S100 已编译运行文件，不是 ONNX 或 Paddle 权重。输入为有限 float32 `[1,373,80]`，来自 16 kHz 下 60000 个单声道采样点。输出要求 batch=1、静态正维度且值有限；输出形状读取实际 SDK metadata，不从历史控制台分数猜测。Float32 概率直接使用；整数输出必须有有效 SCALE 描述符，经共享反量化后取最大值。超出 [0,1] 的结果直接拒绝，不再次 sigmoid 或静默裁剪。
 
-本轮没有新的板端 metadata 或模型执行证据。[转换说明](../conversion/README_cn.md)记录可复现导出路径的缺失情况。后续板测应同时保留下载文件摘要。
+每次运行都应保留下载文件的 SHA-256，以标识实际使用的模型字节。

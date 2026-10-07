@@ -5,9 +5,9 @@
 <a id="environment"></a>
 ## Environment
 
-Real inference requires S100P or S600 with its matching `hbm_runtime`, Python, NumPy and OpenCV. The two targets use distinct published models; no S100/X5 asset exists. The [explicit downloader](../../model/README.md) prepares and verifies the selected HBM. Inference never installs dependencies or downloads a model. No real SDK/board run was performed during this migration; host tests inject a runtime fixture.
+Run inference on S100P or S600 with the target’s `hbm_runtime`, Python, NumPy and OpenCV. Prepare the target-specific HBM through the [model downloader](../../model/README.md).
 
-All commands below run from the repository root. Shell wrappers also change to that root. The original task combined SDK ownership, quantization and rendering; the new task delegates SDK transport to the shared named-array runner and keeps data IO, transforms and visualization in separate modules.
+All commands below run from the repository root. Shell wrappers also change to that root. The task class handles planning tensor semantics only; SDK transport is delegated to the shared named-array runner, with data IO, transforms and visualization in separate modules.
 
 <a id="usage"></a>
 ## Single-case and batch usage
@@ -55,7 +55,7 @@ Single-case parser defaults are listed literally; resolved paths are explained s
 
 Inspection modes are mutually exclusive. Batch uses the same target/asset/model/threshold/scheduling/inspection flags, plus `--cases-root` (default `samples/vision/diffusiondrive/test_data`) and `--output` (default `outputs/diffusiondrive_cases`). It has no per-case `--input-npz` or extra output-file options. Case order is 000,017,042,073,099.
 
-Output directories and extra paths must be new. Extra destinations must be distinct and cannot replace canonical arrays, image or report. The image alias and `--platform` are retained from source. Original file-output defaults are replaced by a per-run directory; environment target overrides and implicit downloads are removed. Relative direct-Python paths are relative to the current working directory.
+Output directories and extra paths must be new. Extra destinations must be distinct and cannot replace canonical arrays, image or report. The image alias and `--platform` are supported options. By default each run writes to its own new output directory; the target is selected explicitly, without environment-variable overrides or implicit downloads. Relative direct-Python paths are relative to the current working directory.
 
 <a id="results"></a>
 ## Saved results
@@ -119,7 +119,7 @@ Logical input shapes: camera `[1,3,256,1024]`, lidar `[1,1,256,256]`, status `[1
 
 Physical types may be int8/uint8/int16/uint16/int32/uint32/float16/float32, subject to actual metadata and transform validation. Integer tensors require explicit positive finite SCALE descriptors; input scales must be per-tensor. Empty quantization on floating tensors means casting/pass-through; NONE descriptors may contain zero-valued zero-point placeholders. Nonempty floating SCALE descriptors follow the source affine behavior. Output scales may be per-axis with a matching axis length; scalar zero points broadcast across channels, correcting a source reshape error. Integer zero points must be integral and in range. Binding snapshots transform values without copying SDK descriptor objects.
 
-Input quantization preserves source float32 `rint(x/scale + zero)`; integer clipping uses float64 bounds before the final cast to avoid an int32/uint32 upper-bound wrap. Missing integer scales, malformed metadata and nonfinite inputs/results fail. Output dequantization precedes source sigmoid (logits clipped to [-60,60]), agent threshold and channel-axis BEV argmax. No undocumented sensor normalization, randomized noise or new planning algorithm is inserted. Actual HBM metadata is still unobserved in this host migration.
+Input quantization preserves source float32 `rint(x/scale + zero)`; integer clipping uses float64 bounds before the final cast to avoid an int32/uint32 upper-bound wrap. Missing integer scales, malformed metadata and nonfinite inputs/results fail. Output dequantization precedes source sigmoid (logits clipped to [-60,60]), agent threshold and channel-axis BEV argmax. No undocumented sensor normalization, randomized noise or new planning algorithm is inserted. Inspect the HBM’s actual SDK metadata against the declared tensor contract when loading.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
@@ -131,4 +131,4 @@ Input quantization preserves source float32 `rint(x/scale + zero)`; integer clip
 - Almost-gray BEV: gray is road; inspect logits/labels and reference metrics before assuming a palette bug.
 - Batch failure: consult per-case reports and `remaining_cases`; rerun into a new directory after correcting the cause.
 
-Host tests compare all six supplied float cases against actual source postprocessing and rendering, test quantization edge cases and run the real CLI with an injected SDK. They do not prove physical HBM compatibility, board equality, NAVSIM accuracy or performance. Historical tables and validation limits are in the evaluator guide.
+Reference values and validation boundaries are in the [evaluator guide](../../evaluator/README.md).

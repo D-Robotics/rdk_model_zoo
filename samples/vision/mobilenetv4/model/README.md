@@ -1,7 +1,6 @@
 # MobileNetV4 model artifacts
 
-The model directory contains no checked-in binaries; artifacts are fetched
-explicitly from the platform release manifests by the canonical downloader.
+Prepare the model artifact with the canonical downloader, which resolves its URL and format from the platform release manifest.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -18,9 +17,7 @@ explicitly from the platform release manifests by the canonical downloader.
 Each reference is an exact row of `docs/release/x5/models.yaml` or
 `docs/release/s/models.yaml`; the manifest is the authority for URL and
 format. X5 consumes one packed NV12 tensor; S100/S600 consume separate Y
-and UV tensors — a bare filename cannot select the protocol, so the runtime
-always pairs `--model-path` with the exact reference. S100P has no asset
-row and cannot be satisfied by reusing the S100 file.
+and UV tensors — the runtime pairs `--model-path` with the exact target reference so the input protocol matches the artifact.
 
 <a id="preparation"></a>
 ## Preparation
@@ -37,22 +34,16 @@ bash samples/vision/mobilenetv4/model/download.sh s100 medium
 
 The Python form is equivalent:
 `python3 samples/vision/mobilenetv4/model/download.py --target s100 --variant small`.
-The downloader writes through a same-directory temporary file, checks the
-content length and the recorded publisher SHA-256 when present, and installs
-atomically without overwriting an existing file (a failed verification
-preserves the file for investigation). The current rows carry no publisher
-SHA-256, so the downloader prints the observed digest as local evidence and
-states that origin is unproven. Downloading is explicit and never happens
-during inference.
+The downloader checks content length and any manifest SHA-256, then installs the artifact atomically without overwriting an existing file. It prints the computed digest after transfer; the manifest SHA-256 is `null (unknown)` for these rows. Run the downloader before inference to place the selected artifact under this directory.
 
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-The classifier additionally needs a one-label-per-line ImageNet class file
-at run time: `datasets/imagenet/imagenet_classes.names` (shared by X5 and
-S runs). It is checked into the repository; no download is required. The
-label copies inside `test_data/` are source-branch leftovers; the canonical
-path is the root `datasets/` one.
+Classification runs use the shared ImageNet class file
+`datasets/imagenet/imagenet_classes.names` (X5 and S series alike); it is
+the runtime `--label-file` default and is committed to the repository, so no
+download is needed. The `imagenet_classes.names` under `test_data/` matches
+that file byte for byte and can be selected explicitly via `--label-file`.
 
 <a id="local-paths"></a>
 ## Local paths
@@ -75,6 +66,4 @@ locations.
 | `s100/mobilenetv4_medium_256x256_nv12.hbm` | nash `.hbm`, split Y/UV input (256x256), F32 `[1,1000]` logits output | null (unknown) |
 | `s600/mobilenetv4_medium_256x256_nv12.hbm` | nash `.hbm`, split Y/UV input (256x256), F32 `[1,1000]` logits output | null (unknown) |
 
-The manifests record no publisher SHA-256 for these rows; unknown values
-stay `null (unknown)` and are never copied across artifacts. The downloader
-prints the observed digest on every download for local evidence.
+The manifest SHA-256 fields are `null (unknown)`. The downloader prints each artifact's computed digest after transfer; keep it with that artifact identity.

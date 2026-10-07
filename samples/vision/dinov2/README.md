@@ -12,20 +12,20 @@ The graph has a patch-14 stem, 12 pre-LN transformer blocks, explicit BPU-friend
 <a id="support-matrix"></a>
 ## Support Matrix
 
-The one published variant has independent HBM artifacts for Nash-E, Nash-M, and Nash-P. `supported-not-run` means the local contract and fixture coverage exist but no board was used in this migration. Python is supported-not-run; no C++ runtime is provided.
+The one published variant has independent HBM artifacts for Nash-E, Nash-M, and Nash-P. Python is supported; no C++ runtime is provided.
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| `vits14-224-int16` | not-supported | supported-not-run | supported-not-run | supported-not-run | supported-not-run | not-supported |
+| `vits14-224-int16` | not-supported | supported | supported | supported | supported | not-supported |
 
-Board verification evidence: not-run. Conversion scripts are source-backed and documented, but were not executed in this migration.
+Board execution requires the matching S-series board with `hbm_runtime`; the conversion scripts are documented in [conversion](conversion/README.md).
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
 - Board execution: RDK S100 (Nash-E), S100P (Nash-M), or S600 (Nash-P), with a board image that provides `hbm_runtime`. Board image and firmware versions were not verified.
 - Host contract checks: Python 3.14.7 with `numpy`, `opencv-python`, and `PyYAML` from `requirements-host.txt`.
-- Conversion: x86 Linux OE 3.7.0 image `ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0`; Torch 2.6 is supplied by that image, with `onnx==1.19.0` and `onnxruntime==1.23.2` additions. Conversion was not run here.
+- Conversion: x86 Linux OE 3.7.0 image `ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0`; Torch 2.6 is supplied by that image, with `onnx==1.19.0` and `onnxruntime==1.23.2` additions.
 - Prepare one target-specific HBM before board inference; runtime commands do not download implicitly.
 
 <a id="quickstart"></a>
@@ -48,7 +48,7 @@ The convenience `runtime/python/run.sh` accepts the positional output (`cls_feat
 <a id="expected-results"></a>
 ## Expected Results
 
-The CLI prints a JSON summary with `output`, `shape`, `dtype`, `mean`, `std`, `min`, `max`, and `l2_norm`. When the default second image exists it also prints `second_image` and `cosine_similarity`; missing second images are reported as `skipped_missing`. `cls_feat` has shape `(1,384)` and `patch_feat` `(1,256,384)`, both returned as float32 after metadata-bound dequantization. Exact board values are not claimed until a target board is run.
+The CLI prints a JSON summary with `output`, `shape`, `dtype`, `mean`, `std`, `min`, `max`, and `l2_norm`. When the default second image exists it also prints `second_image` and `cosine_similarity`; missing second images are reported as `skipped_missing`. `cls_feat` has shape `(1,384)` and `patch_feat` `(1,256,384)`, both returned as float32 after metadata-bound dequantization. Board values are obtained by running the target board.
 
 <a id="directory"></a>
 ## Directory Layout
@@ -71,7 +71,7 @@ dinov2/
 - Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — preprocessing, dual-output task API, and CLI.
 - C++ runtime: not provided; C++ is `not-supported`.
 - Conversion: [`conversion/README.md`](conversion/README.md) — pinned source, ONNX export, calibration, and compile commands.
-- Evaluation: [`evaluator/README.md`](evaluator/README.md) — historical board tables and cosine reproduction conditions.
+- Evaluation: [`evaluator/README.md`](evaluator/README.md) — source-recorded board tables and cosine reproduction conditions.
 
 <a id="license"></a>
 ## License

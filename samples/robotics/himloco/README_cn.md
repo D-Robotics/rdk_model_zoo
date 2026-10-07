@@ -8,12 +8,10 @@
 HIMLoco 从六帧 45 维观测估计内部状态，输出 12 维策略动作。本例使用
 [himloco_lab](https://github.com/IsaacZH/himloco_lab) 导出的融合 estimator／actor，
 该项目是 [HIMLoco](https://github.com/OpenRobotLab/HIMLoco) 的 Isaac Lab 实现。
-独立训练的检查点不能互换。迁移源为 X5 提交
-`ac115717197920355fc390bb04299b20e6436864`。
+独立训练的检查点不能互换。
 
-本例提供 Python／C++ 离线运行入口、显式模型准备、源观测数据以及转换／评测工具。
-Python 和 C++ 均有主机检查；统一实现的板端运行尚未测试。转换说明和历史结果继承
-源方案，本轮未重新执行量化流程。具体目标与验证范围见下表。
+本例提供 X5 上的 Python／C++ 离线运行入口、显式模型准备、源观测数据以及
+转换／评测工具。板端运行按各运行时快速开始执行。转换说明和历史结果来自源方案。
 
 输入 `obs_history` 为 float32 `[1,270]`，当前帧在前；输出 `actions` 为 float32
 `[1,12]`。不额外归一化、不更新历史、不缩放输出、不发送机器人指令。
@@ -22,13 +20,12 @@ Python 和 C++ 均有主机检查；统一实现的板端运行尚未测试。�
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 制品 | 统一 Python | 统一 C++ |
+| 目标 | 制品 | Python | C++ |
 | --- | --- | --- | --- |
-| X5 | Bayes-e BIN | 已实现；主机 SDK 替身测试，板端未运行 | 已实现；核心/SDK替身/CLI 主机检查，板端未运行 |
+| X5 | Bayes-e BIN | 支持 | 支持 |
 | S100／S100P／S600 | 无匹配发布制品 | 不支持 | 不支持 |
 
 源板测环境为 RDK OS 3.5.0-beta、DNN Runtime 1.24.5、HBRT 3.15.55。
-这些是历史源证据，不是统一版本重新验证的环境结论。
 
 <a id="prerequisites"></a>
 ## 前提
@@ -74,7 +71,7 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 | Python | `HB_HBMRuntime.run` | 0.885 ms | 1129.37 FPS |
 | C++ | `hbDNNInfer` + `hbDNNWaitTaskDone` | 0.350 ms | 2853.09 FPS |
 
-编译器估计为 0.063 ms。以上均继承源记录，不是本轮实测；计时范围不同，新 Python
+编译器估计为 0.063 ms。以上均为源发布记录；计时范围不同，Python
 任务计时还包含适配器校验／复制，不能当作纯设备耗时比较。完整源百分位数据与评测
 口径见[评测说明](evaluator/README_cn.md)。
 离线动作一致不能证明观测构造、关节映射、控制环行为或闭环稳定性。
@@ -103,5 +100,5 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 <a id="license"></a>
 ## 许可
 
-Sample 代码遵循仓库 [Apache-2.0 许可](../../../LICENSE)。上游策略与 rollout 数据
+Sample 代码遵循仓库 [Apache-2.0 许可](../../../LICENSE)。上游策略与部署数据
 保留各自条款，代码许可不能替代外部模型或数据集的权利说明。

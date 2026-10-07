@@ -1,4 +1,4 @@
-> Recipes and measurements below come from pinned S source `380e1a2`; this round reorganizes documentation without running quantization, evaluation or board tests.
+> Recipes and measurements below come from the source S release; run quantization, evaluation and board tests through these commands as needed.
 
 [English](README.md) | [简体中文](README_cn.md)
 
@@ -57,12 +57,13 @@ chunk boundaries. Quantized logits are converted with HBM scales and zero points
 raw K/V caches retain their individual integer types and validated matching scales.
 The legacy cache rolls on axis 0. Loss uses float32 log-sum-exp and float64 sums.
 
-The acceptance harness uses the same greedy parameters and non-thinking template
+The comparison harness uses the same greedy parameters and non-thinking template
 as the legacy demo, while keeping one SDK handle for conversation and repeat tests.
 It compares six HF reference texts, a bilingual two-turn conversation, retrieval
 from approximately 2000/3750 raw-token prompts, and 50 fresh requests. It records
 every comparison, SDK return status, normal-end/error events, and wall time.
 The SDK does not expose generated token IDs, so these are text comparisons, not
 S600-style token-ID equality checks. Zero callback performance fields are not
-reported as measured TTFT or decode throughput. This is not a concurrency or
-long-duration soak test. Tools, thinking and multimodal requests are not covered.
+reported as measured TTFT or decode throughput. Concurrency and long-duration
+soak, tools, thinking and multimodal requests are outside this evaluation's
+coverage; validate them separately for your deployment.

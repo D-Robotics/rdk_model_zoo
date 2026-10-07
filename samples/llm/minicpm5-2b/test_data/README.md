@@ -2,10 +2,10 @@
 
 [简体中文](README_cn.md) | **English**
 
-These prompts and measurements come from pinned S source `380e1a2`; none were regenerated or board-tested this round.
+These prompts and measurements come from the source S release.
 
 `legacy-prompts.json` supplies SDK 1.0.0 single/two-turn generation cases.
 
-`prompts.json` contains six deterministic acceptance prompts. `generation-reference.json` records official HF greedy text/token IDs and observed S600 outputs. EOS is removed from the reference token list because OELLM returns generated content tokens separately. All six comparisons passed. This set supplements full WikiText2 PPL; it is not a general language-capability benchmark. JSON and Python answers retain Markdown fences produced by the original model.
+`prompts.json` contains six deterministic comparison prompts. `generation-reference.json` records official HF greedy text/token IDs and observed S600 outputs. EOS is removed from the reference token list because OELLM returns generated content tokens separately. This set is a deterministic generation check that supplements the full WikiText2 PPL evaluation. JSON and Python answers retain Markdown fences produced by the original model; do not rewrite them into a bare format the model did not produce.
 
-`legacy-long-prompts.json` reproduces the approximately 2000/3750-token retrieval checks for SDK 1.0.0. Legacy generation evidence is recorded separately under `evaluator/results/s100-generation-full.json` and `s100p-generation-full.json`: only 2/6 reference texts match. The six passing comparisons above belong to S600.
+`legacy-long-prompts.json` reproduces the approximately 2000/3750-token retrieval checks for SDK 1.0.0. Legacy generation evidence is recorded separately under `evaluator/results/s100-generation-full.json` and `s100p-generation-full.json`: only 2/6 reference texts match. The legacy SDK does not expose generated token IDs, so these are text comparisons. The six comparison cases above are S600 references.

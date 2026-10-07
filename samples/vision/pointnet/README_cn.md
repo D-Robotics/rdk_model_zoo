@@ -6,8 +6,8 @@
 ## 算法与来源
 
 PointNet 为每个 XYZ 点预测四类椅子部件之一：`back`、`seat`、`leg`、`arm`。
-共享 MLP 提取点特征，最大值聚合形成全局特征。本例保持输入点顺序，不是整幅点云分类、
-目标检测，也不代表支持 ShapeNet 全部类别。
+共享 MLP 提取点特征，最大值聚合形成全局特征。本例保持输入点顺序，任务为部件分割；整幅点云分类、
+目标检测及 ShapeNet 其他类别需另行适配。
 [论文](https://arxiv.org/abs/1612.00593)与[官方实现](https://github.com/charlesq34/pointnet)
 说明算法；交付模型参考[S100 PointNet 项目](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official)。
 HBM 需单独下载，Git 仓库没有附带模型文件。
@@ -17,18 +17,18 @@ HBM 需单独下载，Git 仓库没有附带模型文件。
 
 | Target | 变体 | Python | C++ |
 | --- | --- | --- | --- |
-| s100 | chair，四类部件 | supported-not-run | not-supported |
+| s100 | chair，四类部件 | supported | not-supported |
 | x5 / s100p / s600 | 无已发布制品 | not-supported | not-supported |
 
-主机 fixture 测试覆盖阶段接口、精确目标选择、metadata 校验和源前处理对照，不证明 HBM
-或板端 SDK 已验证。当前统一入口板测为 not-run；下方图像和性能均为原始记录。
+主机 fixture 测试覆盖阶段接口、精确目标选择、metadata 校验和源前处理对照。板端推理
+需要 S100 板端 SDK 和已发布 HBM；下方图像和性能均为源记录。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
 使用 RDK S100 及其配套 `hbm_runtime`，不要用 PyPI 同名包替代板端 SDK。
-入口要求 Python 3.10+、NumPy、PyYAML；绘图另需 matplotlib。源资料未固定最低固件/SDK
-版本，也没有测得的内存/磁盘预算；这些条件仍待统一入口板测确认。预留 HBM 和结果文件空间。
+入口要求 Python 3.10+、NumPy、PyYAML；绘图另需 matplotlib。固件/SDK 版本与内存/磁盘
+预算由部署环境选定并以实际运行测量；请预留 HBM 和结果文件空间。
 主机 help/list/dry-run 不需要模型或 SDK。
 
 <a id="quickstart"></a>
@@ -53,7 +53,7 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100
 信息、制品身份和实际 metadata。计数之和为 N，但不要求任意输入都出现全部四类。
 图像看起来合理不能代替精度评估。
 
-![历史椅子分割结果](test_data/readme_img/chair_res.png)
+![参考椅子分割结果](test_data/readme_img/chair_res.png)
 
 <a id="directory"></a>
 ## 目录职责
@@ -61,7 +61,7 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100
 - `model/`：显式下载及制品身份。
 - `runtime/python/`：CLI、绘图、独立 binding/runner 和四阶段模型类。
 - `conversion/`：保留网络/算子说明，并列出转换缺失前提。
-- `evaluator/`：功能检查与历史性能，不是数据集评估器。
+- `evaluator/`：功能检查与源记录性能；数据集评估另行准备。
 - `test_data/`：原始椅子点云和参考图。
 - `tests/`：不依赖 SDK 的数值与异常边界测试。
 

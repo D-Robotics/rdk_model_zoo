@@ -5,7 +5,7 @@
 <a id="environment"></a>
 ## 环境
 
-S100/S600 上的 Python 3.10+ 及匹配的板端 hbm_runtime。源环境使用 NumPy 1.26.4/OpenCV 4.11.0.86；统一代码还通过 PyYAML 读取清单，不再需要源工具模块的 SciPy 导入。通用依赖命令为 `python3 -m pip install numpy opencv-python PyYAML`。源未钉住 S OS/SDK 最低版本，本轮未验证真实兼容性。help/list/dry-run 不加载 SDK。
+S100/S600 上的 Python 3.10+ 及匹配的板端 hbm_runtime。源环境使用 NumPy 1.26.4/OpenCV 4.11.0.86；统一代码还通过 PyYAML 读取清单，不再需要源工具模块的 SciPy 导入。通用依赖命令为 `python3 -m pip install numpy opencv-python PyYAML`。源未钉住 S OS/SDK 最低版本。help/list/dry-run 不加载 SDK。
 
 <a id="usage"></a>
 ## 使用
@@ -37,7 +37,7 @@ run.sh 将 cwd 设为仓库根并转发参数，不安装／下载。成功返�
 | `--model-path` | Path | `None` | 默认 model/<target>/ 下 HBM；外部副本须提供 asset-id |
 | `--test-img` | Path | `samples/vision/unetmobilenet/test_data/segmentation.png` | 按示例位置解析的绝对默认路径 |
 | `--img-save-path` | Path | `result.jpg` | 原图尺寸叠加图 |
-| `--mask-save-path` | Path | `unetmobilenet_mask.npy` | 原图尺寸 int32 标签，须使用 .npy |
+| `--mask-save-path` | Path | `unetmobilenet_mask.npy` | 原图尺寸 int32 标签，须使用.npy |
 | `--report-path` | Path | `unetmobilenet_report.json` | JSON 报告 |
 | `--alpha-f` | float | `0.75` | 原图权重，范围 [0,1] |
 | `--priority` | int | `0` | 沿用源默认优先级，范围 0..255 |
@@ -75,7 +75,7 @@ mask_again = task.predict(image)
 overlay = render_overlay(image, mask, alpha_f=0.75)
 print(mask.shape, mask.dtype)  # original image height/width, int32
 ```
-与归档 UnetMobileNet.predict API 不同，task.predict 返回类别 ID，须显式调用 render_overlay。runner 管理 SDK 生命周期和调度，binding 管理制品／元数据契约。任务不缓存共享的“上次图片尺寸”，请保留每次 PreparedInput 的 context；不保证 SDK 并发安全。
+`task.predict` 返回类别 ID；调用 `render_overlay` 创建显示图。runner 管理 SDK 生命周期和调度，binding 管理制品／元数据契约。任务不缓存共享的“上次图片尺寸”，请保留每次 PreparedInput 的 context；不保证 SDK 并发安全。
 
 <a id="stage-io"></a>
 ## 阶段 I/O

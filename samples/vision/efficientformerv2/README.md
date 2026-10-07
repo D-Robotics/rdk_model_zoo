@@ -11,15 +11,12 @@ Speed](https://arxiv.org/abs/2212.08059)).
 
 ## Overview
 
-The maintained implementation is one Python flow (X5 only; this sample has
-no S-branch delivery and no C++ runtime on either source). Python resolves
-one exact artifact reference from the platform release manifests, verifies
-the board identity, loads `hbm_runtime` lazily, and runs a
-`pre_process → forward → post_process` task
+The sample provides a Python runtime for X5. The
+`EfficientFormerV2Classifier` class runs a `preprocess → infer →
+postprocess` flow chained by `predict`: it resolves one exact artifact
+reference from the platform release manifest, verifies the board identity,
+loads `hbm_runtime` lazily, and returns a typed Top-K result
 ([runtime/python/README.md](runtime/python/README.md)).
-The former platform branch entry remains a compatibility shim under
-`platforms/x5/` until the migration closeout; its audit record lives in the
-migration documents, not here.
 
 ### Algorithm background
 
@@ -33,7 +30,7 @@ keeping MobileNet-level size and speed
 ([paper](https://arxiv.org/abs/2212.08059),
 [snap-research/EfficientFormer](https://github.com/snap-research/EfficientFormer)).
 
-Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
+Feature summary:
 
 - **Mobile-oriented backbone**: hybrid backbone for efficient image classification on edge devices.
 - **Joint search strategy**: latency and parameter count optimized together when selecting architectures.
@@ -42,32 +39,17 @@ Source-release feature summary (rdk_x5 @ac11571, x5-v1.1.3):
 
 ![EfficientFormerV2 architecture](./test_data/EfficientFormerV2_architecture.png)
 
-*Network architectures, restored from the X5 source release
-(`test_data/EfficientFormerV2_architecture.png`, rdk_x5 @ac11571, sha256
-`0a3fd26e…`; Figure 2 of the paper): (a) the EfficientFormer baseline
-network, (b) unified FFN, (c) improved MHSA, (d)(e) attention on higher
-resolution, and (f) attention downsampling.*
+*Network architectures (Figure 2 of the paper): (a) the EfficientFormer
+baseline network, (b) unified FFN, (c) improved MHSA, (d)(e) attention on
+higher resolution, and (f) attention downsampling.*
 
 <a id="support-matrix"></a>
 ## Support matrix
 
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
-| x5 | s0, s1, s2 | python | supported (board smoke passed 2026-09-21 on x5-8g + x5-4g, see below) |
+| x5 | s0, s1, s2 | python | supported |
 | s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no EfficientFormerV2 asset; selection is an explicit error, no cross-platform fallback) |
-
-Source baseline: X5 rdk_x5 @ac11571 (x5-v1.1.3). The unified sample's host
-tests (26) all pass. Board smoke (2026-09-21; same board, same artifact
-bytes, same input image, legacy wrapper vs unified entry): on x5-8g and
-x5-4g, s0 and s2 return exactly equal top-5 ids (max abs score diff
-<=4.7e-10); s1 is an exact tie on both boards — classes 794/851 carry
-exactly equal scores within each implementation (gap 0.0 per side) while
-the cross-implementation per-id diff is 1.4e-9, so the differing rank-5
-pick is softmax rounding plus sort-order noise on a model-level tie, not a
-behavioral difference (adjudicated with recorded top-8 per-ID evidence).
-The `run.sh` CLI (s0) exited 0 on both boards. Raw-tensor equality,
-dataset accuracy, and latency are not covered; the published benchmark
-tables remain source records. Evidence: [B2 board smoke](../../../docs/releases/unified-migration/evidence/2026-09-21-b2-board-smoke-evidence.json).
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -111,26 +93,20 @@ python3 samples/vision/efficientformerv2/runtime/python/main.py \
 ```
 
 `s1`/`s2` substitute their own references and paths (see `--list-models`);
-the default variant (when none is given) is `s0`, preserving the source
-entrypoint's default model. Full commands:
+the default variant (when none is given) is `s0`. Full commands:
 [runtime/python/README.md](runtime/python/README.md).
 
 <a id="expected-results"></a>
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; no output files are written unless `--img-save-path` is
-given (the legacy entrypoint always wrote `test_data/result.jpg` — that
-side effect is gone). With the bundled `goldfish.JPEG` the Top-5 contains a
-goldfish-related ImageNet class. A board that cannot be identified, or a
-target without a matching artifact (all S targets), exits with an error
-instead of guessing.
+labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `goldfish.JPEG` the Top-5 contains a
+goldfish-related ImageNet class. Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
 <a id="performance"></a>
 ## Performance data
 
-Published records from the X5 source release (rdk_x5 @ac11571,
-x5-v1.1.3), not re-measured in this repository (source notes: Float Top-1
+Published performance on RDK X5 (X5 release x5-v1.1.3; Float Top-1
 on the pre-quantization ONNX, Quant Top-1 on the deployment model, latency
 single-frame single-thread single-core, FPS multi-threaded):
 
@@ -142,19 +118,16 @@ single-frame single-thread single-core, FPS multi-threaded):
 
 ![Inference result](./test_data/inference.png)
 
-*Historical inference screenshot from the X5 source release
-(rdk_x5 @ac11571, `test_data/inference.png`, sha256 `907925ac…`): the
-bundled [goldfish.JPEG](test_data/goldfish.JPEG) ranks `goldfish` first,
-followed by tench, axolotl, rock beauty, and coral reef. Recorded by the
-source release on its own runtime entry — not a new run of this
-repository.*
+*Reference inference result from the X5 release: the bundled
+[goldfish.JPEG](test_data/goldfish.JPEG) ranks `goldfish` first, followed
+by tench, axolotl, rock beauty, and coral reef.*
 
 <a id="directory"></a>
 ## Directory
 
 - [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
 - [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — X5 reference PTQ configs with disclosed gaps
+- [conversion/](conversion/README.md) — X5 PTQ configurations and model-specific preparation steps
 - [evaluator/](evaluator/README.md) — published benchmarks and functional checks
 - `test_data/` — bundled test images ([goldfish.JPEG](test_data/goldfish.JPEG) plus reference illustrations)
 - `tests/` — host unittest suite
@@ -174,5 +147,4 @@ Sample code follows the repository top-level LICENSE (Apache-2.0). The
 source models are the upstream EfficientFormerV2 distribution
 ([snap-research/EfficientFormer](https://github.com/snap-research/EfficientFormer));
 upstream model/weights licensing is governed by that distribution.
-Published artifacts follow the platform release manifests; the manifests
-carry no separate license field, and no additional license is claimed here.
+Published artifact use follows the applicable platform release terms.

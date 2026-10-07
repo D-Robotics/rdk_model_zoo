@@ -2,19 +2,19 @@
 
 English | [简体中文](README_cn.md)
 
-Run E11/E26 prompt-free instance segmentation through `run.sh`, or embed the C++ three-stage library. The launcher selects an exact model, checks the local board and file identity, optionally builds the native executable, and retains logs and image/mask results. **The implementation has host verification only: real SDK compilation and board inference remain not-run.** See the [Python runtime](../python/README.md) for the other canonical entry and its different X5 mask protocol.
+Run E11/E26 prompt-free instance segmentation through `run.sh`, or embed the C++ three-stage library. The launcher selects an exact model, checks the local board and file identity, optionally builds the native executable, and retains logs and image/mask results. Real SDK compilation and board inference follow the build/run sections below. See the [Python runtime](../python/README.md) for the Python entry and its different X5 mask protocol.
 
 <a id="supported-boards"></a>
-## Target scope
+## Supported boards
 
-| Target | Variants / default | Model requirement | Current validation |
+| Target | Variants / default | Model requirement | Support |
 | --- | --- | --- | --- |
-| X5 | 11s/m/l; default 11s | Published floating-output BIN, matching X5 SDK | Host only; SDK/board not-run |
-| S100 | 11s, 26n/s/m/l/x; default 11s | Locally converted floating-output HBM with explicit SHA-256 | Host only; compatible HBM/SDK/board not verified |
-| S100P | 26n/s/m/l/x; default 26n | Locally converted floating-output HBM with explicit SHA-256 | Host only; compatible HBM/SDK/board not verified |
-| S600 | None | No published route; explicitly rejected | Unsupported |
+| X5 | 11s/m/l; default 11s | Published floating-output BIN, matching X5 SDK | supported |
+| S100 | 11s, 26n/s/m/l/x; default 11s | Locally converted floating-output HBM with explicit SHA-256 | supported |
+| S100P | 26n/s/m/l/x; default 26n | Locally converted floating-output HBM with explicit SHA-256 | supported |
+| S600 | None | No published route; explicitly rejected | not-supported |
 
-The 14 publication identities describe model selection, **not 14 runnable native artifacts**. Published S files have quantized outputs and are rejected by this entry. Use the [conversion workflow](../../conversion/README.md) to prepare floating outputs; renaming a quantized file does not change its contract. Source S E11 (historical `../../../../../platforms/s/samples/vision/yoloe11_seg/runtime/cpp/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and S E26 (historical `../../../../../platforms/s/samples/vision/yoloe26_seg/runtime/cpp/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) programs remain historical references, with their original capabilities and measurements.
+The 14 publication identities describe model selection, **not 14 runnable native artifacts**. Published S files have quantized outputs and are rejected by this entry. Use the [conversion workflow](../../conversion/README.md) to prepare floating outputs; renaming a quantized file does not change its contract.
 
 ## Select, build and run
 
@@ -28,9 +28,9 @@ bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s --dry-run
 bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n --dry-run
 ```
 
-A dry-run requires an explicit target. Its `executed`, `downloaded` and `runtime_metadata_verified` fields stay false. S publications report that a local floating-output conversion is required; dry-run success is not permission to execute that quantized file.
+A dry-run requires an explicit target. Its `executed`, `downloaded` and `runtime_metadata_verified` fields stay false. S publications report that a local floating-output conversion is required before execution.
 
-On an X5 with its matching SDK and C++ dependencies, explicitly download the model, then build and run. These board commands were **not executed** in this host-only migration:
+On an X5 with its matching SDK and C++ dependencies, explicitly download the model, then build and run. Run the following commands on that board:
 
 ```sh
 python3 samples/vision/yoloe/model/download.py --target x5 --variant 11s
@@ -38,7 +38,7 @@ bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s \
   --build --output outputs/yoloe_cpp_x5_11s_run1
 ```
 
-For S, first complete and retain the conversion evidence. Supply the expected digest from that evidence, not a digest invented to bypass validation. Replace both placeholders below with the actual artifact path and its 64 hexadecimal SHA-256 digits:
+For S, first run the conversion workflow and take the expected digest from its recorded evidence. Replace both placeholders below with the actual artifact path and its 64 hexadecimal SHA-256 digits:
 
 ```sh
 bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
@@ -47,7 +47,7 @@ bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
   --build --output outputs/yoloe_cpp_s100p_26n_run1
 ```
 
-The SHA binds local bytes; it does not prove conversion provenance or SDK compatibility. All ten output tensors must still pass runtime metadata checks. No compatible S floating-output HBM is supplied here. The launcher never downloads implicitly and has no hardware-identity override or silent target fallback.
+The SHA binds the local bytes for selection. All ten output tensors must still pass runtime metadata checks, and conversion provenance/SDK compatibility is established by those checks plus a board run. Prepare S floating-output HBMs yourself via [conversion](../../conversion/README.md). The launcher never downloads implicitly and has no hardware-identity override or silent target fallback.
 
 `--build` configures Release mode and creates `runtime/cpp/build/<target>/yoloe_demo`; without it, the existing executable at that path is used. Use `--binary /absolute/path/yoloe_demo` for a separately built executable; it cannot be combined with `--build`. To configure SDK discovery explicitly on a matching SDK installation:
 
@@ -67,7 +67,7 @@ For UCP, also provide `YOLOE_UCP_LIBRARY` when discovery cannot find the matchin
 | --- | --- |
 | `--target` | `auto`; detected local board for execution, explicit target required for dry-run |
 | `--variant`, `--asset-id` | Target defaults above; an asset ID is the exact active manifest reference, conflicting choices fail |
-| `--model-path` | Selected model's canonical path; override for an existing file |
+| `--model-path` | Selected model's default path; override for an existing file |
 | `--local-float-sha256` | Custom floating-output digest; requires `--model-path` |
 | `--test-img` | Sample `test_data/office_desk.jpg`; decoded as BGR |
 | `--label-file` | Sample `test_data/classes.names`; fixed ordered 4585 labels, exact digest required |
@@ -128,7 +128,7 @@ The native report is written last. A zero exit without a valid identity-matched 
 | `tests/test_e26_decode.cc` | Candidate ordering, single/multi-label selection, thresholds and invalid outputs |
 | `tests/decode_probe.cc` | Host-only utility for comparison with saved raw float tensors; not an inference application |
 
-Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requires unquantized FLOAT32, batch-one NHWC, valid physical row/cell strides and a sufficient allocation. `copy_float_output` removes physical padding and rejects nonfinite values. `bind_heads` only identifies logical roles; shape matching by itself does not prove dtype, memory safety, model family or vocabulary identity.
+Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requires unquantized FLOAT32, batch-one NHWC, valid physical row/cell strides and a sufficient allocation, and `copy_float_output` removes physical padding and rejects nonfinite values. `bind_heads` binds the ten logical output roles by unique shape; dtype, stride and allocation requirements are enforced by these helpers, and model-family and vocabulary identity by the explicit selection rules below.
 
 | Role | Shape at stride 8 / 16 / 32 |
 | --- | --- |
@@ -138,14 +138,14 @@ Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requir
 | Mask coefficients | Same spatial shapes, 32 channels |
 | Prototype | One `[1,160,160,32]` tensor |
 
-The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. SDK ownership now reuses Ultralytics `PackedModelOwner`, `Nv12Input` and `TaskOutputs`; semantic YOLOE roles are validated before allocation. Quantized outputs are rejected, not manually dequantized. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; no compatible S float HBM has been compiled or verified in this migration.
+The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. SDK ownership reuses Ultralytics `PackedModelOwner`, `Nv12Input` and `TaskOutputs`; semantic YOLOE roles are validated before allocation. Quantized outputs are rejected, not manually dequantized. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; prepare the matching float-output S HBM before native execution.
 
 <a id="dependencies"></a>
 ## Dependencies
 
 Prerequisites: a C++17 compiler and the repository checkout. The four geometry/candidate tests do not need OpenCV or a board SDK. The image/mask and stage tests need OpenCV C++ core/imgproc/imgcodecs development libraries. The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment. From the repository root:
 
-On macOS, sanitizer builds of the OpenCV-enabled test project (`YOLOE_TEST_OPENCV=ON` with `YOLOE_SANITIZERS=ON`) additionally resolve the real TBB that OpenCV was built against through CMake's standard TBB CONFIG package and link it directly to the OpenCV-linked test executables. Under ASan, an executable that loads libtbb only transitively through `libopencv_core` aborts at process exit in `tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce`; a minimal empty `main` linked against OpenCV core alone reproduces the crash. The direct TBB reference keeps ASan+UBSan enabled; if CMake cannot discover the package, point `CMAKE_PREFIX_PATH` at the prefix that installed TBB. Linux and OpenCV-off builds take no such branch and need no TBB. This notes host sanitizer behavior only; no board verification is implied.
+On macOS, sanitizer builds of the OpenCV-enabled test project (`YOLOE_TEST_OPENCV=ON` with `YOLOE_SANITIZERS=ON`) additionally resolve the real TBB that OpenCV was built against through CMake's standard TBB CONFIG package and link it directly to the OpenCV-linked test executables. Under ASan, an executable that loads libtbb only transitively through `libopencv_core` aborts at process exit in `tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce`; a minimal empty `main` linked against OpenCV core alone reproduces the crash. The direct TBB reference keeps ASan+UBSan enabled; if CMake cannot discover the package, point `CMAKE_PREFIX_PATH` at the prefix that installed TBB. Linux and OpenCV-off builds take no such branch and need no TBB. This behavior applies to host sanitizer builds; board builds are unaffected.
 
 <a id="build"></a>
 ## Build host tests
@@ -204,7 +204,7 @@ The output is `libyoloe_core.a`, not a board executable. For a normal embedding 
 /tmp/yoloe-native-tests/geometry
 ```
 
-Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands compile actual C++ math and float-memory utilities; they do not establish SDK ABI compatibility.
+Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands verify the C++ math and float-memory utilities; SDK ABI compatibility is verified by the board build below.
 
 For the CMake build, run all eleven checks with failure output:
 
@@ -223,26 +223,26 @@ ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
 
 `decode_e11` accepts the same semantic arrangement with 64 box channels. It reuses Ultralytics' numerically stabilized 16-bin DFL expectation and sigmoid. Defaults are score 0.25 and classwise NMS IoU 0.7; score must be in `(0,1)`, NMS in `[0,1]`. It keeps one class per anchor and applies no E26 candidate cap. Coefficients travel with each candidate through NMS.
 
-The original native E11 boundaries are retained: score **greater than or equal to** the threshold is accepted; a same-class box is suppressed only when IoU is **greater than** the NMS threshold. Python's existing NMS also suppresses equality, so exact-boundary equivalence is not claimed. Native output is ordered by ascending class, then descending score; exact score ties prefer the original scale/anchor index. This makes source unordered-map/OpenMP merging deterministic, but does not reproduce its unspecified tie order or NumPy's tie ordering. Finite tensor values and exact lengths are validated before decoding, including the prototype not yet consumed by candidate math.
+The original native E11 boundaries are retained: score **greater than or equal to** the threshold is accepted; a same-class box is suppressed only when IoU is **greater than** the NMS threshold. Python's existing NMS also suppresses equality, so outputs can differ exactly at the IoU boundary. Native output is ordered by ascending class, then descending score; exact score ties prefer the original scale/anchor index. This makes source unordered-map/OpenMP merging deterministic, but does not reproduce its unspecified tie order or NumPy's tie ordering. Finite tensor values and exact lengths are validated before decoding, including the prototype not yet consumed by candidate math.
 
 `decode_e26` accepts ten finite compact float vectors in semantic order: class/box/coefficients for each stride, then prototype. Every vector length is checked before reading. Defaults are score threshold 0.25, maximum 300 candidates and one class per anchor. The valid threshold range is `(0,1)` and the candidate cap is `1..8400`.
 
 Selection preserves the source static Top-K contract. Exact ties prefer lower scale, anchor, then class; multi-label expansion breaks ties by the selected anchor rank and class. The raw threshold comparison is strict. Boxes are decoded in the 640×640 model canvas, scores use sigmoid, and mask coefficients remain aligned. No IoU NMS, geometry restoration, mask generation or dequantization occurs in this module. Nonfinite decoded boxes are rejected, including finite input distances that overflow during scaling. Multi-label expansion currently uses memory proportional to the selected anchor count times 4585 classes; large caps are materially more expensive than the default.
 
-`prepare_bgr` returns owned 640×640 BGR pixels and explicit geometry. E11 letterbox truncates resized dimensions and pads with 127; its optional stretch uses nearest-neighbor. E26 letterbox uses ties-to-even rounding and padding 114, rejecting stretch. Both letterbox paths use linear interpolation and clamp tiny resized dimensions to at least one pixel. Inverse boxes use actual horizontal/vertical scales, correcting the archived native ideal-gain reconstruction on rounded dimensions.
+`prepare_bgr` returns owned 640×640 BGR pixels and explicit geometry. E11 letterbox truncates resized dimensions and pads with 127; its optional stretch uses nearest-neighbor. E26 letterbox uses ties-to-even rounding and padding 114, rejecting stretch. Both letterbox paths use linear interpolation and clamp tiny resized dimensions to at least one pixel. Inverse boxes use actual horizontal/vertical scales, using the actual resized dimensions.
 
 `restore_e26_masks` combines prototype logits and coefficients, checks finite sums, linearly resizes logits to 640×640, thresholds at zero and crops in model coordinates, removes the recorded padding, uses nearest-neighbor to restore source dimensions, then copies the clipped integer-truncated ROI. It returns owning float boxes and `CV_8UC1` masks with values 0/1, preserving empty/degenerate instance slots. Reversed/nonfinite boxes, malformed geometry, wrong prototype length, nonfinite coefficients/prototypes or arithmetic overflow fail. It has no sigmoid, NMS, morphology or dequantization.
 
-`restore_e11_masks` implements the S11 ROI protocol: clip the model box to actual image content, truncate its bounds at prototype scale, combine raw prototype values and coefficients, threshold strictly above 0.5, resize the binary crop with Lanczos4, and optionally apply a 5×5 rectangular opening (`do_morph=false` by default for the library). Final positive values are normalized to 1 because Lanczos can overshoot uint8 binary data to 2. Empty boxes retain exact zero-sized axes. These last two corrections also apply to the shared Python DFL ROI helper; normal foreground support is unchanged. This is distinct from X5 Python's full-image probability-mask path. [E11 mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-masks-review.md) compares both morphology settings with identical real native candidate inputs.
+`restore_e11_masks` implements the S11 ROI protocol: clip the model box to actual image content, truncate its bounds at prototype scale, combine raw prototype values and coefficients, threshold strictly above 0.5, resize the binary crop with Lanczos4, and optionally apply a 5×5 rectangular opening (`do_morph=false` by default for the library). Final positive values are normalized to 1 because Lanczos can overshoot uint8 binary data to 2. Empty boxes retain exact zero-sized axes. These last two corrections also apply to the shared Python DFL ROI helper; normal foreground support is unchanged. This is distinct from X5 Python's full-image probability-mask path. Toggling `do_morph` compares both morphology settings on identical native candidate inputs.
 
 <a id="interface-lifecycle"></a>
 ## Interface and lifetime
 
-`YOLOE` exclusively owns a `std::unique_ptr<Runner>`. Construction validates configuration and backend protocol; invalid construction releases the supplied backend. The backend must return ten independently owned compact semantic FLOAT32 vectors. It must perform hardware/artifact identity and SDK metadata validation before exposing inference; the base interface itself is not proof of a real SDK implementation. `SdkRunner` implements the low-level SDK boundary described below. Test runners remain explicit host fixtures.
+`YOLOE` exclusively owns a `std::unique_ptr<Runner>`. Construction validates configuration and backend protocol; invalid construction releases the supplied backend. The backend must return ten independently owned compact semantic FLOAT32 vectors. It must perform hardware/artifact identity and SDK metadata validation before exposing inference; the base interface carries none of that validation itself. `SdkRunner` implements the low-level SDK boundary described below. Test runners remain explicit host fixtures.
 
 `pre_process` returns an owned compact Y plane (409600 bytes) and interleaved UV plane (204800 bytes), plus actual geometry. `infer` invokes the runner exactly once and returns owned raw outputs carrying that geometry. `post_process` returns aligned `Instance` values with box/score/label/ROI mask. Prepared/raw batches from another task are rejected, including another task with the same protocol; do not cache a last-image geometry yourself. Raw outputs remain valid across subsequent calls, and result masks do not borrow SDK buffers. Use one task per inference thread; concurrent backend use is not guaranteed.
 
-The following function is compiled in host verification. The application must supply an actual matching backend; it does not download or synthesize a model:
+The following function shows the embedding API; the application supplies the matching backend:
 
 ```cpp
 #include "yoloe.h"
@@ -280,7 +280,7 @@ publication or custom float SHA-256, and vocabulary/conversion provenance. It
 runs before any SDK call; throwing stops construction. The adapter's shape,
 target/variant and stack checks cannot prove those identities. A no-op callback
 is used only by host fixtures and is not a valid production policy. The built-in `make_preflight(expected_model_sha256, label_path)` supplies local
-board and byte verification. The canonical launcher selects the publication or
+board and byte verification. The launcher selects the publication or
 custom float file before invoking the executable with its verified digest.
 
 `make_preflight` reads real local sysfs/device-tree using shared target rules.
@@ -293,7 +293,7 @@ is exposed. For custom conversion, a matching digest proves bytes, not compiler
 provenance; the caller must retain conversion evidence. No compatible S float
 HBM is supplied by this API.
 
-The second complete API example compiles in host verification. Its caller
+The second complete API example shows the preflight-gated SDK path. Its caller
 supplies the selected model's expected digest and the vocabulary path:
 
 ```cpp
@@ -312,8 +312,7 @@ yoloe::Result process_sdk_image(const cv::Mat& image, yoloe::SdkModel model,
 }
 ```
 
-To build the SDK library on a matching board SDK installation (not executed in
-this host-only round):
+To build the SDK library on a matching board SDK installation:
 
 ```sh
 cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-lib \
@@ -339,14 +338,10 @@ errors, semantic output order and independence across inference calls. These
 use narrow API doubles, not vendor SDK headers/libraries.
 
 <a id="results-interpretation"></a>
-## Verification boundaries
+## Deployment and result usage
 
-[Native preflight evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-preflight-review.md) covers registry parity, model/vocabulary rejection and shared streaming hashes.
+Build the native entry against the selected board SDK and OpenCV, prepare a float-output model with the [conversion guide](../../conversion/README.md), then run the documented launcher with the matching profile and the fixed 4585-entry class vocabulary.
 
-[SDK adapter evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-sdk-runner-review.md) records resource/metadata tests and their host-only limits.
+Each run records its full evidence: `result/report.json` (schema `rdk-model-zoo/yoloe-native-run/v1`) lists the aligned instances — zero-based class IDs, fixed labels, scores, original-image `[x1,y1,x2,y2]` boxes and ROI mask paths — while `launch-report.json` retains the selected publication, expected/observed digests, exact argv/cwd and exit codes. `annotated.png` is a presentation overlay; use the stored masks and report fields for downstream processing.
 
-[Stage/NV12 evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-stages-review.md) covers actual byte comparisons, ownership/error paths and compiled API examples; it does not certify a board backend.
-
-[Implementation evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-kernels-review.md) records the earlier E26 checks. The [E11 extension evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-e11-review.md) records all three native tests, E26 regression and real E11 s/m/l ONNX comparisons. The E26n candidate comparison covers both single- and multi-label decoding against Python. [Geometry/mask evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-cpp-masks-review.md) separately records actual OpenCV compilation and full ROI pixel comparison. Labels/order are compared exactly; boxes, scores and coefficients use stated numerical tolerances. Masks are not compared by this candidate-only test.
-
-The canonical selection/CLI/output implementation is present. [Native entry evidence](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-native-cli-review.md) separates real OpenCV host execution, Python process-policy tests and SDK API doubles. An independent review has accepted this host runtime composition and entrypoint scope ([review record](../../../../../docs/releases/unified-migration/2026-09-28-yoloe-independent-review.md)). Board inference, real SDK compilation, OE-produced floating S artifacts and native dataset accuracy remain not-run; that review does not close conversion/evaluator acceptance, full repository integration or the complete B9 migration.
+All native masks use ROI layout on every target, including X5; Python X5 uses full-image probability masks, so adapt the protocol before mixing evaluation inputs. Stored PNG masks use 0/255 and in-memory masks 0/1. Dataset-level accuracy comes from the [evaluator](../../evaluator/README.md) workflows.

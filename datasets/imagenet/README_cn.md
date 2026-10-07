@@ -1,14 +1,10 @@
 [English](./README.md) | 简体中文
 
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
-
 # ImageNet 数据集资源
 
-**ImageNet ILSVRC-2012（ImageNet-1k）** 是标准的图像分类基准：1,000 个类别，
-约 128 万张训练图和 5 万张验证图。本仓库所有分类 sample 的精度都以该类别集为
-基准。本目录只随附标签文件和一张示例图片；数据集本身**不随仓提供**，必须按官方
-条款手动获取（验证集需要注册）。
+**ImageNet ILSVRC-2012（ImageNet-1k）** 是图像分类数据集：1,000 个类别，约 128
+万张训练图和 5 万张验证图。分类 sample 使用该类别顺序。本目录随附标签文件和一张
+示例图片；数据集需按官方条款另行获取（验证集需要注册）。
 
 <a id="files"></a>
 ## 随仓文件
@@ -49,12 +45,10 @@ imagenet/
 
 ### asset/zebra_cls.jpg
 
-随仓的斑马照片，用作离线检查的冒烟输入——它**不是**精度结论，也不保证任何模型
-都能正确分类。它与 `samples/vision/resnet/test_data/zebra_cls.jpg` 和
+随仓的斑马示例图片对应 ImageNet 类别索引 340（`zebra`）。它与
+`samples/vision/resnet/test_data/zebra_cls.jpg` 和
 `samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg` 逐字节一致。各 sample
-指南为其已验证模型分别记录了期望类别（例如 MobileNetV3 的 S100/S600 记录期望
-Top-5 包含 `zebra`）；检查你的模型时，请与本标签文件的索引 340（`zebra`）及该模型
-自身记录的证据对照。
+指南说明支持的模型输入和标签文件用法。
 
 <a id="usage"></a>
 ## 这些资源被谁使用
@@ -91,6 +85,4 @@ datasets/imagenet/val_images/   # .gitignore 已排除该路径
 <a id="provenance"></a>
 ## 来源
 
-X5 交付分支（`ac11571`）与 S 交付分支（`380e1a2`）携带的是同一对仅含参考链接的
-README；本指南补充了实测文件清单、加载器行为和使用方映射。归档副本位于
-`platforms/x5/datasets/imagenet/` 与 `platforms/s/datasets/imagenet/`。
+数据来源：[ImageNet](https://image-net.org/)。`imagenet_classes.names` 将模型输出索引映射为显示名称。数据集计分还需每张图片对应的真实类别索引，顺序须与模型的 0–999 类别一致。

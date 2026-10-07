@@ -46,7 +46,7 @@ bash samples/vision/siglip/model/download.sh s100p so400m-patch14-384
 # 预期：samples/vision/siglip/model/s100/bpu-siglip-so400m-patch14-384.hbm
 ```
 
-manifest 没有发布方 SHA-256。下载器会打印观测摘要，并明确说明无法校验来源。I/O、选择或下载错误退出 2。主途径不可用时，可将发布 URL 的精确 HBM 手动放到上述路径，并在 runtime 中同时传入精确 `--asset-id s:siglip:s100/bpu-siglip-<variant>.hbm` 与 `--model-path <path>`；手动来源仍未验证。
+manifest 没有发布方 SHA-256。下载器会打印观测摘要，并明确说明当前无法进行发布方校验。I/O、选择或下载错误退出 2。主途径不可用时，可将发布 URL 的精确 HBM 手动放到上述路径，并在 runtime 中同时传入精确 `--asset-id s:siglip:s100/bpu-siglip-<variant>.hbm` 与 `--model-path <path>`；手动来源仍未验证。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -80,7 +80,7 @@ manifest 没有发布方 SHA-256。下载器会打印观测摘要，并明确说
 | `s100/bpu-siglip-so400m-patch14-384.hbm` | HBM | `sha256: null (unknown)` | `docs/release/s/models.yaml` |
 | `s100/bpu-siglip-so400m-patch16-256-i18n.hbm` | HBM | `sha256: null (unknown)` | `docs/release/s/models.yaml` |
 
-发布 URL 是该 manifest 中的精确 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-<variant>.hbm` 条目。本轮迁移未执行正式下载。
+发布 URL 是该 manifest 中的精确 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-<variant>.hbm` 条目。
 
 ## 许可
 

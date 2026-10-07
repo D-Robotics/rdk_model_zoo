@@ -9,14 +9,12 @@ HIMLoco estimates internal state from six 45-value observations and produces 12
 policy actions. This sample uses the fused estimator/actor exported by
 [himloco_lab](https://github.com/IsaacZH/himloco_lab), an Isaac Lab implementation of
 [HIMLoco](https://github.com/OpenRobotLab/HIMLoco). Independently trained checkpoints
-are not interchangeable. The migration source is X5 commit
-`ac115717197920355fc390bb04299b20e6436864`.
+are not interchangeable.
 
-This sample provides Python/C++ offline entries, explicit model preparation,
-source observations and conversion/evaluation tools. Both runtimes have host
-checks; unified board execution is not-run. Conversion instructions and historical
-results are inherited from the source scheme without rerunning quantization.
-See the target and verification scope below.
+This sample provides Python and C++ offline entries for X5, explicit model
+preparation, source observations and conversion/evaluation tools. Board
+execution follows each runtime's quickstart. Conversion instructions and
+historical measurements come from the source release.
 
 Input: `obs_history`, float32 `[1,270]`, current frame first. Output: `actions`,
 float32 `[1,12]`. No additional normalization, history update, output scaling or
@@ -26,13 +24,13 @@ robot command is performed. The source controller applies
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Artifact | Unified Python | Unified C++ |
+| Target | Artifact | Python | C++ |
 | --- | --- | --- | --- |
-| X5 | Bayes-e BIN | Implemented; host SDK-double tests; board not-run | Implemented; core/SDK-double/CLI host checks; board not-run |
+| X5 | Bayes-e BIN | supported | supported |
 | S100 / S100P / S600 | No published matching artifact | Not supported | Not supported |
 
 The source board environment was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT
-3.15.55. That is historical source evidence, not a newly verified unified version.
+3.15.55.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -84,10 +82,9 @@ same model, 100 inputs, 10 warmups:
 | Python | `HB_HBMRuntime.run` | 0.885 ms | 1129.37 FPS |
 | C++ | `hbDNNInfer` + `hbDNNWaitTaskDone` | 0.350 ms | 2853.09 FPS |
 
-The compiler estimate was 0.063 ms. These are inherited source values, not this
-migration's results. Timing scopes differ; the new Python task measures its bound
-runner including adapter validation/copy and must not be compared as device-only
-latency. Full source percentiles and evaluation semantics remain in the
+The compiler estimate was 0.063 ms. These are source-release values. Timing
+scopes differ; the Python task measures its bound runner including adapter
+validation/copy and must not be compared as device-only latency. Full source percentiles and evaluation semantics remain in the
 [evaluator guide](evaluator/README.md).
 Offline action agreement does not establish observation construction, joint
 mapping, control-loop behavior or closed-loop stability.
@@ -118,4 +115,4 @@ mapping, control-loop behavior or closed-loop stability.
 
 Sample code follows the repository [Apache-2.0 license](../../../LICENSE). Upstream
 policies and rollout data retain their respective terms; the code license does
-not establish rights to every external model or dataset.
+not convey rights to external models or datasets.

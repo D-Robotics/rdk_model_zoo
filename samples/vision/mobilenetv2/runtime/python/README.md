@@ -7,17 +7,16 @@ classification flow lives in [`classify.py`](classify.py):
 `predict` in one readable file. It resolves one exact model reference
 from the release manifests, checks the detected board, loads
 `hbm_runtime` lazily through the shared SDK session, and executes one
-classification flow. Model preparation is explicit; this runtime never
-downloads or installs packages.
+classification flow. Prepare the target artifact with the model downloader before running inference. The runtime resolves the selected manifest reference and loads the matching board SDK.
 
 <a id="environment"></a>
 ## Environment
 
 Run on the target board's Python environment with the matching
 `hbm_runtime`, NumPy, and OpenCV-Python; PyYAML is needed for manifest
-reading. `hbm_runtime` exists only in board images and is imported lazily —
-`--help`, `--list-models`, `--dry-run`, and the host unittest suite run
-without it. Host-side test dependencies are listed in the sample's
+reading. `hbm_runtime` is supplied by the board image and is imported lazily.
+`--help`, `--list-models`, and `--dry-run` inspect the selection without
+executing a model. Host-side test dependencies are listed in the sample's
 `requirements-host.txt`.
 
 <a id="usage"></a>
@@ -61,7 +60,7 @@ model loading, or download.
 | `--test-img` | string | samples/vision/mobilenetv2/test_data/Scottish_deerhound.JPEG | BGR input image |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
-| `--topk` | int | 5 | legacy spelling of `--top-k` |
+| `--topk` | int | 5 | compatibility spelling of `--top-k` |
 | `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
@@ -69,8 +68,7 @@ model loading, or download.
 | `--list-models` | flag | false | list manifest-backed references without board access |
 | `--dry-run` | flag | false | resolve/check a selection without loading a model or SDK |
 
-Defaults above are machine-checked against `build_parser()` by the Q3
-checker.
+Defaults above are the values defined in `build_parser` ([cli.py](cli.py)).
 
 <a id="results"></a>
 ## Results
@@ -109,13 +107,10 @@ result = model.predict("samples/vision/mobilenetv2/test_data/Scottish_deerhound.
 print(result.class_ids, result.scores, result.labels)
 ```
 
-`predict` accepts a local image path or a BGR `uint8` NumPy array and never
-modifies the array in place. The three stages can also be driven explicitly:
+`predict` accepts a local image path or BGR `uint8` NumPy array; the input array remains unchanged. The three stages can also be driven explicitly:
 `prepared = model.preprocess(source)`, `outputs = model.infer(prepared)`,
 `result = model.postprocess(outputs)` — `predict` chains exactly these
-steps (verified by the entry behavior tests). The established
-`pre_process` / `forward` / `post_process` spellings remain thin aliases,
-and the shared `ClassificationTask` flow stays importable from
+steps. The shared `ClassificationTask` flow stays importable from
 [`classification.py`](classification.py).
 
 <a id="stage-io"></a>
@@ -133,11 +128,10 @@ and the shared `ClassificationTask` flow stays importable from
 
 | Symptom | Check |
 | --- | --- |
-| `Cannot identify this board` | Run with an explicit target for dry-run, then execute only on that matching board; an explicit target is not hardware evidence. |
-| `model_path requires --asset-id` | Copy the exact qualified reference from `--list-models`; do not use a bare filename. |
-| `No published ... asset` for S100P | There is no s100p asset row in the manifest; use S100/S600 artifacts on their matching boards. |
-| input shape or dtype mismatch | Confirm the artifact reference and runtime metadata; do not swap packed X5 and split S artifacts. |
-| output differs from a legacy run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |
+| `Cannot identify this board` | Select a target supported by the sample and run inference on the matching board. |
+| `model_path requires --asset-id` | Pass the exact qualified reference from `--list-models` with `--asset-id`. |
+| input shape or dtype mismatch | Check that the artifact reference and target use the expected packed X5 or split S tensor layout. |
+| output differs from a reference run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |
 
 Host checks (repository root):
 `python3 -m unittest discover -s samples/vision/mobilenetv2/tests -v`.

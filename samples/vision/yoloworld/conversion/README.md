@@ -3,10 +3,10 @@
 <a id="source-model"></a>
 ## Source model
 
-The fixed X5 source provides the compiled `yolo_world.bin` protocol and the
+The X5 source delivery provides the compiled `yolo_world.bin` protocol and the
 offline embedding JSON, but no checkpoint, export script, calibration set,
 Bayes-E YAML, or reproducible compiler recipe. The copied
-`source/yoloworld_det.py` is retained only as provenance for the runtime math;
+`source/yoloworld_det.py` documents the runtime math provenance;
 it is not a conversion tool.
 
 <a id="toolchain-targets"></a>
@@ -15,8 +15,10 @@ it is not a conversion tool.
 
 Target is RDK X5, input 640, image F32 NCHW plus text F32[1,32,512,1], and two
 F32 output tensors. Rebuilding requires the source model/checkpoint and the
-matching OpenExplorer package. Neither is published in this repository, so an
-export command is intentionally not invented.
+matching OpenExplorer package; the offline OE Docker image is discussed on the
+D-Robotics developer forum at <https://forum.d-robotics.cc/t/topic/35229>.
+Neither checkpoint nor exporter is published in this repository, so no export
+command is given.
 
 <a id="calibration"></a>
 <a id="compile"></a>
@@ -33,13 +35,13 @@ calibration data and SHA-256 before claiming parity.
 ## Validation and artifacts
 
 Validate observed metadata against the two inputs and `classes_score` /
-`bboxes` shapes before use. Run `evaluator/compare.py` on X5 for source/unified
-raw and result parity. The only conversion artifact currently published is the
-manifest model; the offline vocabulary is a separate required input.
+`bboxes` shapes before use. Run `evaluator/compare.py` on X5 for
+raw and result parity against the source implementation. The only published
+conversion artifact is the manifest model; the offline vocabulary is a separate
+required input.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
 Checkpoint, export, calibration, compiler logs and publisher model hash are
-unknown. Conversion status is therefore `not reproducible from this tree`; no
-board conversion or accuracy result is claimed.
+unknown; the conversion is therefore not reproducible from this repository.

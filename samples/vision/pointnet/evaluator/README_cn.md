@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# PointNet 验证与历史结果
+# PointNet 验证与源记录结果
 
 <a id="dataset"></a>
 ## 输入数据
@@ -29,12 +29,12 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot -
 Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（默认 false）、
 `--output-dir outputs/pointnet-check`（默认 outputs/pointnet）。输入默认交付椅子点云；
 其余参数见[完整运行时表](../runtime/python/README_cn.md#parameters)。主机测试使用小 fixture；
-本轮未测板端耗时。
+板端耗时在板端实测。
 
 <a id="metrics"></a>
 ## 指标解释
 
-功能运行应得到 N 个 0..3 标签，计数之和为 N。可通过下方历史图对照点云区域。
+功能运行应得到 N 个 0..3 标签，计数之和为 N。可通过下方源记录图对照点云区域。
 每份点云必须出现四种颜色不是通用成功条件，也不是精度指标。新入口的数据集 mIoU、
 逐部件 IoU 和吞吐均未测。源记录的 trans/pred 没有明确指标定义，不能称作 mIoU。
 
@@ -48,7 +48,7 @@ Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（�
 ![源分割图](../test_data/readme_img/chair_res.png)
 
 <a id="reference-results"></a>
-## 历史参考结果
+## 源记录参考结果
 
 原 S 分支 evaluator 记录以下 `hrt_model_exec` 数值，但未注明延迟单位、完整调用命令、SDK
 版本或制品 digest。下表原样保留，不能当作当前统一入口的测量结果。
@@ -61,11 +61,10 @@ Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（�
 | 8 | 100 | 839.86 | 8.35 | 910.84 |
 
 原转换记录另有 int16 “trans > 0.9999”和“pred > 0.98”，见[保留截图与限制](../conversion/README_cn.md#calibration)。
-统一入口板测状态：**not-run**。主机检查见上方命令，fixture 通过不等于硬件验收。
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
-此处没有带标签数据集评估器、BPU benchmark 封装或本轮板端数值对照。复现历史性能需要补齐
+本目录未捆绑带标签数据集评估器或 BPU benchmark 封装；复现源记录性能需要补齐
 制品/环境/命令身份。S100P/S600 无已发布 PointNet 制品，不能静默映射至 S100。
 代码遵循 [Apache-2.0](../../../../LICENSE)。

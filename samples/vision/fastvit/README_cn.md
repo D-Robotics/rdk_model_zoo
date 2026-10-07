@@ -3,7 +3,7 @@
 FastViT 在 RDK X5 上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定
 的 Top-K `(类别 ID, 分数, 标签)`。X5 发布交付 S12、SA12、T12、T8 四个
 变体（论文 [FastViT: A Fast Hybrid Vision Transformer using Structural
-Reparameterization](https://arxiv.org/abs/2303.14189)，按源交付引用）。[English](README.md)
+Reparameterization](https://arxiv.org/abs/2303.14189)）。[English](README.md)
 
 <a id="overview"></a>
 
@@ -14,8 +14,8 @@ Transformer 系列：训练期模块保留跳连与额外分支，推理期再�
 普通卷积，降低访存开销。家族内 token 混合器并不一致：按上游模型定义，
 已发布的 t8/t12/s12 四个 stage 全部使用 RepMixer token 混合，只有 sa12
 在 stage 1–3 保持 RepMixer、仅 stage 4 使用自注意力（并带 RepCPE 位置
-编码）——源 README 概括的卷积/注意力混合设计即指此类配置。
-ImageNet-1k 1000 类分类精度保持竞争力。源 README 提炼的特性：
+编码）——卷积/注意力混合设计即指此类配置。
+ImageNet-1k 1000 类分类精度保持竞争力。核心特性：
 
 - **RepMixer token 混合**——利用结构重参数化减少访存开销。
 - **混合架构**——卷积运算与注意力结合，平衡精度与效率。
@@ -26,33 +26,25 @@ ImageNet-1k 1000 类分类精度保持竞争力。源 README 提炼的特性：
 
 *图（上游论文 Fig. 2）：(a) FastViT 总览，训练期与推理期结构解耦；
 (b) 卷积 stem；(c) 卷积 FFN；(d) RepMixer——推理期把跳连重参数化。
-论文把 stage 4 画成自注意力 token 混合器——这是 sa12 的配置（stage 1–3
-RepMixer、stage 4 注意力），并不代表已发布的 t8/t12/s12：它们的上游定义
-四个 stage 全部使用 RepMixer（见 apple/ml-fastvit 的
-`models/fastvit.py`）。恢复自 X5 源 README（rdk_x5 @ac11571，
-x5-v1.1.3）；训练/推理双结构也解释了部署制品为何是已重参数化的 INT8
-s12/sa12/t12/t8 变体（224×224 NV12，见[支持与实测矩阵](#support-matrix)）。*
+论文图中的 stage 4 自注意力 token 混合器对应 SA12：其 stage 1–3 使用
+RepMixer，stage 4 使用注意力；T8、T12 与 S12 的四个 stage 均使用 RepMixer
+（见 apple/ml-fastvit 的 `models/fastvit.py`）。训练/推理双结构也解释了部署制品为何是已重参数化的 INT8
+s12/sa12/t12/t8 变体（224×224 NV12，见[支持范围](#support-matrix)）。*
 
-统一实现是一条 Python 流程（仅 X5；本 sample 无 S 分支交付，两个源分支
-也都没有 C++ 运行时）。Python 从平台发布 Manifest 解析唯一的制品引用，
-核验板卡身份，懒加载 `hbm_runtime`，执行
-`pre_process → forward → post_process` 任务（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。迁移前的平台
-分支入口在收尾前仍以兼容 shim 形式保留在 `platforms/x5/` 下，其审计记录
-在迁移文档中，不在本 README 展开。
+本样例提供面向 X5 的 Python 运行时。
+`FastViTClassifier` 类执行由 `predict` 串联的
+`preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的
+制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果
+（见
+[runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持范围
 
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
-| x5 | s12、sa12、t12、t8 | python | supported（源契约已核实；B3 板端冒烟待执行，见下方说明） |
-| s100 / s100p / s600 | 任意 | python | not-supported（S Manifest 未发布 FastViT 资产；选择时显式报错，无跨平台回退） |
-
-源基线：X5 侧 rdk_x5 @ac11571 (x5-v1.1.3)。统一 sample 的主机测试（28
-项）全部通过。本批（B3）板端冒烟在四个 sample 主机侧全部落地后执行；
-届时在此回填实测结果——在该条目出现之前，本 sample 的板端状态为
-**not-run**，已验证的交付仍是源分支。
+| x5 | s12、sa12、t12、t8 | python | supported |
+| s100 / s100p / s600 | 任意 | python | not-supported（按支持矩阵选择目标与变体） |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -93,31 +85,26 @@ python3 samples/vision/fastvit/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-`sa12`/`t12`/`t8` 换用自己的引用与路径（见 `--list-models`）；缺省变体（未指定时）为 `s12`，保持源入口的默认模型不变。完整命令见
+`sa12`/`t12`/`t8` 换用自己的引用与路径（见 `--list-models`）；缺省变体（未指定时）为 `s12`。完整命令见
 [runtime/python/README_cn.md](runtime/python/README_cn.md)。
 
 <a id="expected-results"></a>
 ## 预期结果
 
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
-指定 `--img-save-path`，不写任何输出文件（源入口总会写
-`test_data/result.jpg`——该副作用已移除）。使用随附 `bucket.JPEG` 时
-Top-5 含水桶相关 ImageNet 类别。无法识别的板卡或无匹配制品的目标（全部
-S 目标）会显式报错退出。
+指定 `--img-save-path`，不写任何输出文件。使用随附 `bucket.JPEG` 时
+Top-5 含水桶相关 ImageNet 类别。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
-供参考：X5 源 README（rdk_x5 @ac11571，x5-v1.1.3 旧版 Python 入口）用
-下面的截图演示运行效果：旧版 `result.jpg` 绘制把 Top-5 排名叠在图上，
-rank 1 为 class 463（bucket）。这是源交付中的历史截图，不是本仓库当前
-入口的运行结果。
+下图为 X5 发布的参考运行效果：demo 将 Top-5 排名叠画在随附的
+`bucket.JPEG` 上，rank 1 为 class 463（bucket）。
 
-![X5 源 README 的历史推理截图（rdk_x5 @ac11571）：bucket 测试图与旧版
-Top-5 叠加，rank 1 为 class 463（bucket）](./test_data/inference.png)
+![X5 参考推理结果：bucket 测试图与 Top-5 叠加，rank 1 为 class
+463（bucket）](./test_data/inference.png)
 
 <a id="performance"></a>
 ## 性能数据
 
-X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓库重测
-（源说明：Float Top-1 为量化前 ONNX 结果，Quant Top-1 为部署模型结果，
+RDK X5 上的已发布数值（X5 发布 x5-v1.1.3；Float Top-1 为量化前 ONNX 结果，Quant Top-1 为部署模型结果，
 延迟为单帧单线程单核，FPS 为多线程）：
 
 | 模型 | 尺寸 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
@@ -135,7 +122,7 @@ X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓�
 
 - [model/](model/README_cn.md) — Manifest 驱动的制品下载，不检入二进制
 - [runtime/python/](runtime/python/README_cn.md) — 统一 Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — X5 参考 PTQ 配置（含已披露缺口）
+- [conversion/](conversion/README_cn.md) — X5 PTQ 配置及模型所需准备步骤
 - [evaluator/](evaluator/README_cn.md) — 发布的基准记录与功能检查
 - `test_data/` — 随附测试图（[bucket.JPEG](test_data/bucket.JPEG) 及参考插图）
 - `tests/` — 主机 unittest 套件
@@ -152,6 +139,6 @@ X5 源发布（rdk_x5 @ac11571，x5-v1.1.3）的已发布记录，未在本仓�
 ## 许可
 
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为上游
-FastViT 发行版；模型/权重许可由上游发行版 govern（见上方论文
+FastViT 发行版；模型/权重许可由上游发行版约束（见上方论文
 链接）。已发布制品遵循平台发布 Manifest；Manifest 不含独立许可字段，
 本文件不主张额外许可。

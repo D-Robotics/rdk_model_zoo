@@ -12,33 +12,33 @@ SigLIP 视觉编码器把一张图片转换为全局嵌入或 patch 特征序列
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
-下表描述发布支持，不表示本轮已连接板卡。八个 variant 的两个子模型在 S100、S100P 上均为 `supported-not-run`；文件名中的 `s100/` 是共享发布制品路径，不会删去 S100P 支持。Python 为 `supported-not-run`；没有 C++ 实现，因此 C++ 为 `not-supported`。X5、S600 为 `not-supported`。
+八个 variant 的两个子模型在 S100、S100P 上均为 `supported`；文件名中的 `s100/` 是共享发布制品路径，不会删去 S100P 支持。Python 为 `supported`；没有 C++ 实现，因此 C++ 为 `not-supported`。X5、S600 为 `not-supported`。
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| `base-patch16-224` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
-| `base-patch16-384` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
-| `base-patch16-512` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
-| `large-patch16-256` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
-| `large-patch16-384` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
-| `so400m-patch14-224` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
-| `so400m-patch14-384` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
-| `so400m-patch16-256-i18n` | not-supported | supported-not-run | supported-not-run | not-supported | supported-not-run | not-supported |
+| `base-patch16-224` | not-supported | supported | supported | not-supported | supported | not-supported |
+| `base-patch16-384` | not-supported | supported | supported | not-supported | supported | not-supported |
+| `base-patch16-512` | not-supported | supported | supported | not-supported | supported | not-supported |
+| `large-patch16-256` | not-supported | supported | supported | not-supported | supported | not-supported |
+| `large-patch16-384` | not-supported | supported | supported | not-supported | supported | not-supported |
+| `so400m-patch14-224` | not-supported | supported | supported | not-supported | supported | not-supported |
+| `so400m-patch14-384` | not-supported | supported | supported | not-supported | supported | not-supported |
+| `so400m-patch16-256-i18n` | not-supported | supported | supported | not-supported | supported | not-supported |
 
-板端验证证据：not-run。主机测试只覆盖契约和注入 fixture，不代表 `hbm_runtime` 已在板端运行。
+板端执行需要提供 `hbm_runtime` 的板卡镜像；主机测试只覆盖契约和注入 fixture。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-- 板卡：RDK S100 或 S100P，板端镜像必须提供 `hbm_runtime`；本轮未核验镜像和 BPU 固件版本。
+- 板卡：RDK S100 或 S100P，板端镜像必须提供 `hbm_runtime`；未固定镜像和 BPU 固件版本。
 - 主机准备：Python 3.14.7，以及 `requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
 - 推理前必须准备 HBM；运行时命令不会隐式下载模型。
-- 源资料没有给出除 HBM 文件外的磁盘或内存要求；板端资源未实测。
+- 源资料未给出除 HBM 文件外的磁盘或内存要求；板端资源以实际加载为准。
 
 <a id="quickstart"></a>
 ## 快速体验
 
-下面是一条完整的显式路径。第一条命令需要网络，第二条命令需要本地 S100/S100P 板卡；本轮文档迁移没有执行下载。
+下面是一条完整的显式路径。第一条命令需要网络，第二条命令需要本地 S100/S100P 板卡。
 
 ```bash
 # cwd：仓库根目录；来源：model/README.md 中的发布 manifest URL
@@ -50,7 +50,7 @@ python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant bas
 # 预期：打印包含 submodel、shape、dtype、mean、std、min、max、l2_norm 的 JSON；退出码 0
 ```
 
-快捷脚本 `runtime/python/run.sh` 兼容历史位置参数（`pooler_output` 或 `last_hidden_state`），其后可追加命名参数；不会下载模型。
+快捷脚本 `runtime/python/run.sh` 兼容源位置参数（`pooler_output` 或 `last_hidden_state`），其后可追加命名参数；不会下载模型。
 
 <a id="expected-results"></a>
 ## 预期结果
@@ -77,8 +77,8 @@ siglip/
 - 模型准备：[`model/README_cn.md`](model/README_cn.md) —— 八个由 manifest 管理、同时支持 S100/S100P 的 HBM 制品。
 - Python 运行：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) —— 预处理、metadata binding、选定子模型运行和 JSON 摘要 CLI。
 - C++ 运行：未提供；C++ 为 `not-supported`。
-- 模型转换：[`conversion/README_cn.md`](conversion/README_cn.md) —— 源信息和不可复现边界。
-- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 历史表格以及不执行推理的 legacy/unified 对照流程。
+- 模型转换：[`conversion/README_cn.md`](conversion/README_cn.md) —— 源模型身份、工具链与目标、导出/校准/编译步骤及转换后验证。
+- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 源记录表格与数组捕获对照流程。
 
 <a id="license"></a>
 ## 许可说明

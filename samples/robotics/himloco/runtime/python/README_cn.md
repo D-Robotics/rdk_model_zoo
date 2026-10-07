@@ -2,16 +2,14 @@
 
 [English](README.md)
 
-统一 Python 入口已提供准确的 X5 模型选择、懒加载 SDK、源索引输入校验、预热、
-独立动作导出和失败报告。主机集成测试使用明确的 SDK 替身，真实板端执行仍未运行。
-入口（`main.py`）显式运行离线循环：经 `application.load_task` 取得绑定的
-`HimLocoTask`，执行显式要求的预热预测，逐输入调用一次 `task.predict(observation)`
-并通过 `application.record_sample` 记录每个动作导出；证据纪律（目标/制品校验、
+Python 入口提供准确的 X5 模型选择、懒加载 SDK、源索引输入校验、预热、
+独立动作导出和失败报告；板端执行按快速开始进行。
+入口（`main.py`）运行离线循环：经 `application.load_task` 取得绑定的
+`HimLocoTask`，执行所要求的预热预测，逐输入调用一次 `task.predict(observation)`
+并通过 `application.record_sample` 记录每个动作导出；报告处理（目标/制品校验、
 报告文件预留、摘要复验、延迟汇总、失败记录）位于 `application.py` 的
 `prepare`/`load_task`/`record_sample`/`complete` 助手，其单调用组合
-`application.execute` 保留为兼容 API。
-源运行时说明 (historical `../../../../../platforms/x5/samples/robotics/himloco/runtime/python/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
-保留历史板测证据，不代表统一入口重新完成板测。
+`application.execute` 为兼容 API。
 
 <a id="environment"></a>
 ## 环境
@@ -130,13 +128,7 @@ PYCODE
 相对关节位置（12）、相对关节速度（12，源缩放 0.05）、上次动作（12）。
 当前帧在前，之后是五帧历史。核心不会重复执行缩放、积累历史或选择关节顺序。
 
-`preprocess` 打包并独立持有特征，`infer` 只调用一次模型，`postprocess`
-校验并独立持有动作，`predict` 串联三步。既有 `pre_process`、`forward`、
-`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——
-同一实现，两个名称。已使用源清单摘要核对全部 21 个归档观测文件，
-前处理与源实现一致；后处理仅以模拟动作输出对照。未测试板端／模型精度、控制稳定性
-或机器人运动。源实现可变的“上次耗时”字段和可能共享缓冲区的结果，改为每次调用
-独立的记录与结果存储。
+`preprocess` 独立持有打包特征，`infer` 调用一次模型，`postprocess` 校验并独立持有动作数组，`predict` 串联三步。`pre_process`、`forward`、`post_process` 委托给相同的阶段实现。结果与计时记录按每次调用独立保存。
 
 <a id="troubleshooting"></a>
 ## 故障处理
@@ -144,4 +136,4 @@ PYCODE
 观测数量不符时，应按训练策略构建完整历史，不盲目补零或截断。输出名称／形状／类型
 不符时，应核对所绑定模型的接口，核心不会静默强转不兼容模型的输出。
 手动构造 `RawOutputs` 时，耗时须为有限非负数。原生运行见 [C++ 说明](../cpp/README_cn.md)，
-动作文件对照见[评测说明](../../evaluator/README_cn.md)。主机测试不代表 SDK／板端兼容性验证。
+动作文件对照见[评测说明](../../evaluator/README_cn.md)。

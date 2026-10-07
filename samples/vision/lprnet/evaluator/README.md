@@ -6,19 +6,19 @@
 
 There is no source accuracy dataset or label file. The reproducible input is the
 bundled `../test_data/test_input.dat` (float32 `1x3x24x94`), the same pre-packed
-tensor the fixed source reads; `../test_data/example.jpg` is only a visual
+tensor the source runtime reads; `../test_data/example.jpg` is only a visual
 reference. This is a single input fixture, not a license-plate accuracy
 benchmark.
 
 <a id="environment"></a>
 ## Environment
 
-`compare.py` runs both implementations itself on the board: the fixed source
-wrapper from `platforms/x5/samples/vision/lprnet/runtime/python` and the unified
+`compare.py` runs both implementations itself on the board: the pinned original
+wrapper (loaded from Git history) and this sample's
 task from `samples/vision/lprnet/runtime/python`. It requires the X5 runtime
 (imported lazily after the identity gate) and a prepared `lpr.bin` plus the
 `.dat` input. It does not import the SDK on the host and does not download
-anything. Historical source performance is preserved below and was not re-run.
+anything. The source performance record follows.
 
 | Model | Test frames | FPS | Average latency | BPU usage | ION memory |
 |---|---:|---:|---:|---:|---:|
@@ -62,24 +62,20 @@ manifest with `error`, `return_code: 2` and `passed: false`.
 <a id="reference-results"></a>
 ## Reference results
 
-The historical source reference is the `lpr.bin` row above (100 frames); it is
-not a retest. Board comparisons (2026-09-24): same-board source/unified runs
-passed on one X5 8GB and one X5 4GB with the bundled `test_input.dat` — both
-rc=0 with every check true and `max_abs_diff` 0.0 for the input tensor, the raw
-`(1,68,18,1)` logits, and the decoded plate (evidence: [8GB
-recheck](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/),
-[4GB
-run](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)).
-The board log prints an HBRT-library/model-build minor-version mismatch warning
-when loading `lpr.bin`; it is preserved verbatim in the evidence and all checks in the recorded comparisons passed. These runs are numerical parity for one input on the unified
-side at board-test commit `73a6de1`, not an accuracy benchmark.
+The source reference is the `lpr.bin` row above (100 frames). Board comparison
+procedure: run the two implementations on the same X5 with the bundled
+`test_input.dat`; passing requires every check true and `max_abs_diff` 0.0 for
+the input tensor, the raw `(1,68,18,1)` logits, and the decoded plate. The
+board log prints an HBRT-library/model-build minor-version mismatch warning
+when loading `lpr.bin`; the warning does not affect the comparison. The result
+is numerical parity for one input, not an accuracy benchmark.
 
 <a id="boundaries"></a>
 ## Boundaries
 
 The evaluator runs both sides itself and never substitutes a hand-supplied file
 for a real inference. It does not download models, prepare an accuracy dataset,
-or measure performance. Same-board runs are recorded for one X5 8GB and one X5
-4GB with the bundled input (2026-09-24, reference results above); any other
-board or input still requires its own run, and no license-plate accuracy claim
+or measure performance. Recorded runs cover one X5 8GB and one X5
+4GB with the bundled input (reference results above); any other
+board or input requires its own run, and no license-plate accuracy claim
 is made from these comparisons.

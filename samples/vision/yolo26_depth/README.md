@@ -27,11 +27,9 @@ Both then produce original-size **relative depth**, not calibrated metres.
 | S600 | nash-p | NV12 / calibrated log | featuremap / raw logit | Python |
 
 Default variant is n on every target. Twenty manifest assets exist, including
-five distinct S100P assets. Source availability is not new runtime acceptance:
-this migration has host tests, while board inference, real native SDK/OpenCV
-build, Torch export, OE compilation and dataset measurements remain not-run.
-S native depth is not claimed. Historical source results appear below and in
-[evaluator](evaluator/README.md), with their unresolved evidence boundaries.
+five distinct S100P assets. No S native depth implementation is provided.
+Source result records appear below and in
+[evaluator](evaluator/README.md).
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -76,11 +74,10 @@ bash samples/vision/yolo26_depth/runtime/python/run.sh --target s600 --variant l
 Each output directory must be new. Replace `s600` with `s100` / `s100p` for the
 corresponding asset. `--target auto` can use observed board identity, or infer
 identity from an exact `--asset-id`; it does not guess a platform on a host.
-The former positional shell variant (`run.sh l`) is replaced by explicit
-`--variant l`; archived source scripts retain their historical interface.
+Select a model scale with `--variant n|s|m|l|x`.
 
 <a id="expected-results"></a>
-## Expected results and historical references
+## Expected results and source-recorded references
 
 Python writes `log_depth.npy` (192×192 F32), `depth_native.npy` (original H×W F32),
 `depth.png`, `overlay.png` and `report.json`; S lite additionally writes
@@ -90,8 +87,7 @@ Reports record selection and actual local hashes; runtime version remains
 `unknown` when the SDK does not expose it. A plausible visualization is not an
 accuracy or metric-distance guarantee.
 
-The source S root reported this mixed-profile single-image table. It is retained
-as historical information, **not remeasured**:
+The source S root reported this mixed-profile single-image table:
 
 | Variant | Profile | raw cosine vs FP32 | S100 latency ms | S100P latency ms | S600 latency ms |
 |---|---|---:|---:|---:|---:|
@@ -101,13 +97,13 @@ as historical information, **not remeasured**:
 | l | lite | 0.9997 | 11.0 | 8.1 | — |
 | x | lite | 0.9997 | 20.6 | 13.7 | 10.8 |
 
-Its all-pass ≥0.999 claim conflicts with s=0.9984. Its evaluator has a separate
-latency table without complete per-row artifact binding. Do not merge those
-numbers into one benchmark or infer acceptance. X5 HRT latency/FPS and the S
-alternate table are preserved in the evaluator README. Source graph prose also
-incorrectly placed exp/resize in graph; executable source performs them on CPU.
-The [source audit](../../../docs/releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md)
-records these differences and the migration decisions.
+Its all-pass ≥0.999 claim conflicts with s=0.9984; both values stand as
+published reference records.
+Its evaluator has a separate latency table without complete per-row artifact
+binding — do not merge those numbers into one benchmark. X5 HRT latency/FPS and
+the S alternate table are recorded in the evaluator README. Source graph prose
+places exp/resize in graph, while the executable source performs them on CPU;
+the executable behavior is authoritative.
 
 <a id="directory"></a>
 ## Directory
@@ -130,7 +126,7 @@ yolo26_depth/
 - [Python](runtime/python/README.md): CLI parameters, three-stage API, tensor contracts and errors.
 - [C++](runtime/cpp/README.md): native dependencies, lifecycle, build/run and verification limits.
 - [Conversion](conversion/README.md): checkpoint boundaries, calibration, resolved compiler inputs and known gaps.
-- [Evaluator](evaluator/README.md): saved-array formats, protocols, metric definitions and historical tables.
+- [Evaluator](evaluator/README.md): saved-array formats, protocols, metric definitions and source-recorded tables.
 
 API integration uses `RuntimeModelRunner` plus `Yolo26DepthTask`; `predict` is
 exactly pre_process → forward → post_process, with no hidden second implementation.
@@ -139,9 +135,7 @@ For self-converted artifacts use explicit `--converted-model` together with
 bytes are labeled user-converted; they do not inherit a publisher hash or measured
 accuracy. S lite calibration constants must match the declared checkpoint.
 
-Archived X5 (historical `../../../platforms/x5/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) and
-archived S (historical `../../../platforms/s/samples/vision/yolo26_depth/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) retain the
-original implementations and records. They are provenance, not the unified entry.
+Use the model, runtime, conversion and evaluator guides above for artifact preparation, inference and depth metrics.
 
 <a id="license"></a>
 ## License

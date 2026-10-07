@@ -5,17 +5,17 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Algorithm and source
 
-LPRNet recognizes a cropped license-plate tensor as a character sequence without a separate character detector. This migration preserves the source X5 protocol: a pre-packed `float32` file is reshaped to `1x3x24x94`; it does not invent image decoding, resize, or normalization. The source paper is [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447).
+LPRNet recognizes a cropped license-plate tensor as a character sequence without a separate character detector. The runtime consumes a pre-packed `float32` file reshaped to `1x3x24x94`; it performs no image decoding, resize, or normalization. The source paper is [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447).
 
 <a id="support-matrix"></a>
 ## Support and verification matrix
 
-| target | variant | Python | C++ | status |
+| target | variant | Python | C++ | note |
 |---|---|---|---|---|
-| X5 | `lpr.bin` | supported-verified | not-supported | host fixtures pass; 2026-09-24 source/unified comparisons passed on one X5 8GB and one X5 4GB with the bundled `test_input.dat` ([8GB recheck](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-binding-recheck/), [4GB run](../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/)) |
-| S100/S100P/S600 | — | not-supported | not-supported | no source asset |
+| X5 | `lpr.bin` | supported | not-supported | verify with the bundled `test_input.dat` |
+| S100/S100P/S600 | — | not-supported | not-supported | no published asset |
 
-This sample has no C++ implementation. Host tests do not certify board execution; the board status above comes from the recorded X5 comparisons, which verify native `(1,68,18,1)` logits parity for one input, not license-plate accuracy.
+This sample has no C++ implementation. Host tests do not certify board execution; on-board verification runs the bundled `test_input.dat` and checks native `(1,68,18,1)` logits parity between the two implementations — an implementation-consistency check for one input, not license-plate accuracy.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -63,9 +63,9 @@ Successful inference exits with code `0` and prints a JSON object containing `ta
 - [`evaluator/README.md`](./evaluator/README.md): exact raw/text comparison procedure.
 
 <a id="historical-performance"></a>
-## Historical source performance
+## Source performance record
 
-The complete source benchmark row is retained below. It is historical source data and was not re-run in this migration.
+The complete source benchmark row:
 
 | Model | Test frames | FPS | Average latency | BPU usage | ION memory |
 |---|---:|---:|---:|---:|---:|

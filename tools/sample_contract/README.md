@@ -1,9 +1,9 @@
-# sample-contract checker (Phase 0.5, Q3)
+# sample-contract checker
 
-Static contract checker for the unified samples layout.  It executes the
+Static contract checker for the unified samples layout. It executes the
 machine-decidable rules of `docs/sample-standards/readme-contract.md` and
 `docs/sample-standards/inference-contract.md`; everything not decidable
-statically goes to semantic review (Q4) — a skipped check is reported as a
+statically goes to semantic review — a skipped check is reported as a
 skip and never counts as a pass.
 
 ## What it checks
@@ -11,9 +11,9 @@ skip and never counts as a pass.
 | Rule | Scope |
 | --- | --- |
 | `R-README-PAIR` | every existing level ships both `README.md` and `README_cn.md` |
-| `R-README-SECTIONS` | fixed anchor IDs (derived live from the Q1 templates) are present, unique, and in template order |
+| `R-README-SECTIONS` | fixed anchor IDs (derived live from the templates) are present, unique, and in template order |
 | `R-README-LINKS` | relative links/images resolve to existing files; intra-document fragments resolve to explicit anchors; external URLs are out of scope (no network) |
-| `R-CLI-DEFAULTS` | runtime/python parameter tables match the real `build_parser()` defaults, per language |
+| `R-CLI-DEFAULTS` | runtime/python parameter tables match the real `build_parser` defaults, per language |
 | `R-I18N-PARAMS` | the en/zh parameter tables agree with each other (option set and defaults) |
 | `R-STAGE-PURITY` | AST scan: stage functions — canonical `preprocess`/`infer`/`postprocess`/`predict` plus the legacy `pre_process`/`forward`/`post_process` spellings, with the matching `preprocess_*`/`infer_*`/`postprocess_*`/`forward_*`/`pre_process_*`/`post_process_*`/`run_*` prefixes — contain no download, file-write/save, subprocess, or destructive calls. `main.py` and `legacy.py` are policy-skipped with a recorded reason; module-level helpers in `cli.py`/`yolo_cli.py` (e.g. a `run_prepare` that downloads on explicit request) are the CLI application boundary and are recorded as skips, while stage-named methods inside those files stay checked |
 
@@ -23,7 +23,7 @@ skip and never counts as a pass.
 # one sample
 python3 tools/sample_contract/check.py --sample samples/vision/resnet
 
-# CI scope: resolved from the migration progress region
+# CI scope: every sample row listed in the progress map
 python3 tools/sample_contract/check.py --scope migration --report out.json
 
 # never execute sample code (CLI-default checks then record skips)
@@ -38,66 +38,49 @@ Skips (missing `main.py`, import failure, static mode, policy-skipped files,
 CLI-boundary module-level helpers in `cli.py`/`yolo_cli.py`) are always
 printed and included in the JSON report.
 
-### Stage-name scope (2026-10-05)
+### Stage-name scope
 
-The readable-runtime rollout made `preprocess`/`infer`/`postprocess` the
+The sample architecture uses `preprocess`/`infer`/`postprocess` as the
 primary stage spellings with `pre_process`/`forward`/`post_process` kept as
 thin compatibility aliases of the same bodies, so the purity scan covers both
-spellings — an alias must not become the place where a download or file write
-hides. The CLI-boundary exemption is deliberately narrow: only module-level
-functions in the sample-local `cli.py`/`yolo_cli.py` files, only when their
-names are stage-shaped, always recorded as a named skip. It never applies to
-class methods (those are model logic wherever they live), to other files, or
-to whole directories.
+spellings, and a download or file write belongs in neither. The CLI-boundary
+exemption covers only module-level functions in the sample-local
+`cli.py`/`yolo_cli.py` files with stage-shaped names, always recorded as a
+named skip; class methods, other files and whole directories stay checked.
 
 ## Canonical default-value forms
 
 The README `Default` column and the parser are compared after
 canonicalization: `None` → `null` (README may write `null`/`none`), booleans
 → `true`/`false`, lists → JSON form (`[0]`, `[0, 1]`), scalars → literal,
-absolute paths under the repository → repo-relative posix form.  Backticks
+absolute paths under the repository → repo-relative posix form. Backticks
 and surrounding quotes in README cells are stripped.
 
-## Migration scope semantics
+## Check scope
 
-`--scope migration` parses the current-round progress region of
-`docs/releases/unified-migration/x5-s-migration-map.md` and includes every
-row whose **Refactor** column is `in-progress` or `done` (parenthetical
-annotations are ignored).  The historical P0 `S/F/H` columns are never read
-for scope decisions.  Rows that qualify but have no resolvable
-`samples/<domain>/<name>` directory raise an `R-SCOPE` violation, so ledger
-hygiene is enforced by CI.
+`--scope migration` reads the progress region of
+`docs/releases/unified-migration/x5-s-migration-map.md` and checks every
+sample whose **Refactor** column is `in-progress` or `done` (parenthetical
+annotations are ignored). A selected row without a resolvable
+`samples/<domain>/<name>` directory raises an `R-SCOPE` violation, keeping
+the map and the sample tree in sync.
 
 ## Exemptions
 
 `--exemptions file.json` accepts reviewed exceptions of the form
-`{"rule", "path", "line", "reason"}`; `reason` is mandatory.  An optional
-`"message"` field pins the entry to one exact finding message — required
-for baselining rules that report several findings at the same line
-(`R-README-SECTIONS` reports every missing anchor at line 0; without the
-message pin, fixing one anchor and breaking another would stay green).
-An exemption that matches no finding is itself a violation (`R-EXEMPTION`),
-so stale entries fail CI instead of rotting.  Broad directory exemptions
-are not supported by design (plan Q3); each entry must name one finding
-location.
-
-### Historical README baseline — retired
-
-The B1-R6 Ultralytics baseline originally allowed 84 exact section findings.
-All model/runtime/conversion/evaluator/sample README sections were restored
-and checked against their entry points on 2026-09-26. The baseline JSON and
-workflow `--exemptions` flag have been deleted; migration CI now runs without
-exemptions. See the [closure record](../../docs/releases/unified-migration/2026-09-26-yolo-readme-debt-closure.md).
-
-Generic exact-message exemption parsing and unused-entry rejection remain
-covered by fixture tests; this does not mean any current migration exemption
-is active. B9 model-family consolidation and YOLOE work remain separate from
-README debt closure.
+`{"rule", "path", "line", "reason"}`; `reason` is mandatory. An optional
+`"message"` field pins the entry to one exact finding message — use it for
+rules that report several findings at one line (`R-README-SECTIONS` reports
+every missing anchor at line 0). Each entry names one finding location;
+directory-wide entries are rejected. An exemption with no matching finding
+fails with `R-EXEMPTION`, so remove the entry in the same change that
+removes the finding. The schema and matching behavior are covered by the
+fixture tests under `tests/`.
 
 ## Boundaries
 
 The checker reads files and — in import mode — imports trusted repository
-`main.py` modules to call `build_parser()`.  It never downloads, never loads
-a board SDK, and never executes README code blocks.  Prose quality,
-duplicate `predict` logic, board behavior, and conversion correctness stay
-with semantic review (Q4) and board smoke.
+`main.py` modules to call `build_parser`. It never downloads, never loads
+a board SDK, and never executes README code blocks. Prose quality,
+duplicate `predict` logic, board behavior, and conversion correctness are
+covered by semantic review and board smoke testing, not by this checker.

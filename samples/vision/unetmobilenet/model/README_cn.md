@@ -10,7 +10,7 @@
 | s100 | s100/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm |
 | s600 | s600/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s600/unet_mobilenet_1024x2048_nv12.hbm |
 
-两者均为 HBM 部署制品。发布清单 (historical `../../../../platforms/s/docs/release/models.yaml` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)。同名不代表模型字节可以互换，没有发布的 S100P/X5 制品。
+两者均为发布清单中的 HBM 部署制品，文件名相同但字节互不通用；请按 target 对应取用。S100P/X5 暂无发布制品。
 
 <a id="preparation"></a>
 ## 准备步骤
@@ -26,7 +26,7 @@ bash samples/vision/unetmobilenet/model/download.sh --target s600
 <a id="accompanying-files"></a>
 ## 伴随文件
 
-无需外部类别文件；固定的 19 类 ID 使用源 rdk_colors 显示。segmentation.png 是示例输入，result.jpg 是历史输出，都不构成带标签验证集。
+无需外部类别文件；固定的 19 类 ID 使用源 rdk_colors 显示。segmentation.png 是示例输入，result.jpg 是源记录输出，都不构成带标签验证集。
 
 <a id="local-paths"></a>
 ## 本地路径

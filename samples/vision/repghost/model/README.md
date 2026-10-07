@@ -38,4 +38,4 @@ Files land at `samples/vision/repghost/model/<filename>`. The default runtime se
 <a id="formats-checksums"></a>
 ## Formats and checksums
 
-For every file above: `format: bin`, `sha256: null (unknown)` in `docs/release/x5/models.yaml`. The downloader prints the digest of received bytes; this records local identity and does not independently authenticate the publisher.
+For every file above: `format: bin`, `sha256: null (unknown)` in `docs/release/x5/models.yaml`. The downloader prints the computed digest after transfer; the manifest SHA-256 is `null (unknown)`.

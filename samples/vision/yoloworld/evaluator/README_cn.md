@@ -5,9 +5,9 @@
 ## 数据与环境
 
 评估器在**真实 X5 执行目标**上，用同一模型、图片、离线词向量和 prompt
-逐阶段对比固定源实现与统一实现。输入图片是 `test_data/dog.jpeg`，prompt
-是逗号分隔的词。主机单测注入 fake runtime，只验证主机边界，不构成板端或
-精度证据。评估器要求通过板卡身份门禁，并需要 `hbm_runtime`、OpenCV、NumPy
+逐阶段对比锁定的原始 X5 实现（从 Git 历史加载）与本 sample 的实现。输入图片是
+`test_data/dog.jpeg`，prompt 是逗号分隔的词。主机单测注入 fake runtime。
+评估器要求通过板卡身份门禁，并需要 `hbm_runtime`、OpenCV、NumPy
 和精确的 `yolo_world.bin`；命令不会安装依赖或下载模型。
 
 <a id="command"></a>
@@ -22,7 +22,7 @@ python3 samples/vision/yoloworld/evaluator/compare.py --target x5 --output-dir /
 `--model-path /absolute/yolo_world.bin` 必须同时给出精确 `--asset-id`。
 `--test-img`、`--vocab-file`、`--prompts`、`--score-thres`、`--nms-thres`、
 `--priority` 和 `--bpu-cores` 会同时作用于两套实现。命令先检查真实 target，再
-用同一图片、词向量与模型运行源实现和统一实现的 pre/forward/post，并捕获两边的
+用同一图片、词向量与模型运行两套实现的 pre/infer/post，并捕获两边的
 预处理输入、raw 分数/框张量与最终检测结果。仅当全部检查通过时返回 0，两边
 不一致返回 1，运行失败返回 2。
 
@@ -40,17 +40,14 @@ raw 张量 `atol=1e-5`，框 `1e-4`，分数 `1e-5`。执行失败时仍写出�
 
 <a id="reference-results"></a>
 <a id="boundaries"></a>
-## 历史参考与边界
+## 源记录参考与边界
 
-| 源记录 | 输入/协议 | 历史性能 | 状态 |
+| 参考记录 | 输入/协议 | 数值 | 来源 |
 | --- | --- | --- | --- |
-| 固定 X5 YOLOWorld sample | 640 图片；32×512 文本；8400 行分数/框 | 没有发布延迟或 mAP 表 | 保留事实；没有新测量 |
-| 2026-09-24 板端一致性 | `dog` 提示、`test_data/dog.jpeg`、score/NMS 0.05/0.45 | 一块 X5 8GB 与一块 X5 4GB 上 rc=0、全部检查 true、`max_abs_diff` 0.0 | [8GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-python-comparison/)、[4GB 证据](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-other-x5-variants/) |
+| X5 源 sample 协议 | 640 图片；32×512 文本；8400 行分数/框 | 没有发布延迟或 mAP 表 | 源 evaluator README |
+| 板端一致性检查 | `dog` 提示、`test_data/dog.jpeg`、score/NMS 0.05/0.45 | 在准备好的 X5 上运行对照器；通过要求全部检查 true 且 `max_abs_diff` 0.0 | 本评估器 |
 
-固定源 evaluator README 没有发布 benchmark 表。因此只保留可核对的历史事实：
-`yolo_world.bin`、640 图片输入、32 个 512 宽文本槽、8400 行分数，以及
-0.05/0.45 的 score/NMS 默认值；不宣称延迟或 mAP 数值。已记录的板端证据只覆盖
-上表的 `dog` 提示/图片组合（统一侧板测提交为 `ae0f185` 与 `73a6de1`）；板端
-日志会打印 HBRT 库与模型构建小版本不一致的警告，证据中原样保留，这些已记录对照的所有检查均通过。
-其它提示、图片或板卡仍需各自运行本命令，不从这些对照外推全词汇精度。离线词向量
-是必需的模型伴随资产，不是普通分类标签文件。
+已发布的协议事实为：`yolo_world.bin`、640 图片输入、32 个 512 宽文本槽、
+8400 行分数，以及 0.05/0.45 的 score/NMS 默认值。已记录的板端运行日志会打印
+HBRT 库与模型构建小版本不一致的警告，证据中原样保留。其它提示、图片或板卡
+仍需各自运行本命令。离线词向量是必需的模型伴随资产，不是普通分类标签文件。

@@ -11,12 +11,12 @@ ByteTrack uses the YOLOv5x detector HBM listed by the S manifest. It does not ha
 | S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 | S600 | `s:bytetrack:s600/yolov5x_672x672_nv12.hbm` | `s600/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-The tracker code and CPU dependencies are separate runtime inputs. Publisher checksums are unknown. The S100P row is not positive availability: the recorded 2026-09-24 downloader attempt for its URL returned HTTP 404 ([negative evidence](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-s100p-negative/bytetrack-asset-download-404.json)); the cited round therefore has no successful S100P download or positive inference record.
+The tracker code and CPU dependencies are separate runtime inputs. Publisher checksums are unknown. The S100P URL has been observed to return HTTP 404; if the download fails, obtain the HBM manually and place it at the path above.
 
 <a id="preparation"></a>
 ## Preparation
 
-From the repository root, choose one target and run the explicit downloader in an environment with network access. The 2026-09-24 S100/S600 rounds compared HBM assets of this exact manifest identity, but the retained preparation records obtained them through the YOLOv5 sample downloader into `samples/vision/yolov5/model/` ([preparation records](../../../../docs/releases/unified-migration/evidence/2026-09-24-b7-bytetrack-realvideo30/)); this documented route was not itself executed, and this tree performs no new download:
+From the repository root, choose one target and run the explicit downloader in an environment with network access:
 
 ```bash
 python3 -m samples.vision.bytetrack.model.download \

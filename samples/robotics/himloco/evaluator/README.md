@@ -5,7 +5,8 @@
 This directory compares the fused floating-point formats and validates X5
 policy outputs against a held-out native rollout.
 
-Scripts and historical data are inherited from X5 commit `ac115717197920355fc390bb04299b20e6436864`; evaluation and quantization recipes were not rerun in this migration.
+Scripts and historical data come from the X5 source release; evaluation and
+quantization recipes are the commands below.
 
 <a id="dataset"></a>
 ## Data Contract
@@ -116,7 +117,7 @@ cosine, and equivalent joint-target errors using the `0.25` rad action scale.
 <a id="reference-results"></a>
 ## RDK X5 Performance Data
 
-The following is historical source evidence, not a new unified-runtime measurement. The same MIX model was run with 100 inputs and 10 warm-up calls:
+The following are source-release measurements, taken with the same MIX model, 100 inputs and 10 warm-up calls:
 
 | Runtime | Timing scope | Min | Mean | P50 | P95 | Max | Sequential FPS |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -128,7 +129,7 @@ The timing scopes differ and exclude file I/O. Use `hrt_model_exec perf` for a
 standardized pure-model benchmark before publishing a formal performance claim.
 
 <a id="boundaries"></a>
-## Boundaries and source acceptance workflow
+## Boundaries and validation workflow
 
 ```text
 JIT versus ONNX

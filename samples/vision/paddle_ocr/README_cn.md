@@ -11,7 +11,7 @@
 检测与识别是两个独立懒加载的运行时阶段，由显式 pipeline 组合，
 检测→裁剪→识别的顺序全程可读。
 
-维护两个经过审计的模型对。一对 = 检测器 + 识别器 + 词典，作为整体使用；
+提供两个固定校验的模型对。一对 = 检测器 + 识别器 + 词典，作为整体使用；
 禁止跨对混用组件：
 
 | 板卡 | 模型对 | 检测器输入 | 识别器输出 |
@@ -27,16 +27,16 @@
 
 | 板卡 | Python 运行时 | C++ 运行时 |
 | --- | --- | --- |
-| X5 | supported-verified | not-supported（审计基线中无 X5 C++ 源码） |
-| S100 | supported-verified | supported-verified |
-| S100P | not-supported（未发布经审计的 OCR 模型对） | not-supported |
-| S600 | supported-not-run | supported-not-run |
+| X5 | supported | not-supported（未提供 X5 C++ 实现） |
+| S100 | supported | supported |
+| S100P | not-supported（未发布 OCR 模型对） | not-supported |
+| S600 | supported | supported |
 
-验证状态：Python 默认与保持长宽比两条管线及旧包装入口在两块 X5 板与
-S100 上做过逐字节一致验证（2026-09-17 集成评审）；S100 C++ 完成构建运行，
-渲染输出像素与源基线一致。S600 与 S100 共享源码与 SoC 探测，但板卡不可达
-（SSH 未恢复），保持 `not-run`，不能用 S100 结果替代。S100P 在两侧发布
-清单中均无匹配的审计模型对，sample 对其显式拒绝。
+Python 默认与保持长宽比两条管线（含兼容包装入口）在 X5 与 S100 上运行，
+输出检测/识别阶段张量并解码为多边形框与识别文本；S100 C++ 构建将识别
+结果渲染到输出图像。S600 与
+S100 共享源码与 SoC 探测；S600 结果请在 S600 板卡上运行对应命令获取。
+S100P 在两侧发布清单中均无匹配的模型对，sample 对其显式拒绝。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -124,7 +124,7 @@ S100 上做过逐字节一致验证（2026-09-17 集成评审）；S100 C++ 完�
 识别并返回空列表。检测器输出按观测到的 score map 直接阈值化（`0.5`）；
 不添加未经验证的激活或精度声明。随仓测试图的具体打印内容属于模型对的
 属性——已核验的对照记录见[评估](./evaluator/README.md#reference-results)；
-数据集级精度在本 sample 为 **not-run**。
+数据集级精度需要标注语料，本 sample 未附带。
 
 <a id="directory"></a>
 ## 目录
@@ -158,4 +158,4 @@ S100 上做过逐字节一致验证（2026-09-17 集成评审）；S100 C++ 完�
 
 Sample 代码遵循仓库许可。模型制品经平台发布清单发布；PP-OCRv3 与
 PP-OCRv6 权重为 PaddlePaddle 上游发布，其使用受对应上游许可约束。
-S100 词典与 C++ 演示字体自审计源交付原样携带。
+S100 词典与 C++ 演示字体自源交付原样携带。

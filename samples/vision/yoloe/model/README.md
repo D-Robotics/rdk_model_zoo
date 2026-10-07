@@ -3,7 +3,7 @@
 <a id="artifacts"></a>
 ## Artifacts
 
-These are the 14 original published artifacts. S rows are source publication facts, not runnable float-entry claims. No floating S replacement is published here.
+These are the 14 original published artifacts. S rows describe the published quantized-output models; for float-output inference on S, prepare a local float model via [conversion](../conversion/README.md) (no float S HBM is published).
 
 | Asset ID | Target | Variant | Output route |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ These are the 14 original published artifacts. S rows are source publication fac
 bash samples/vision/yoloe/model/download.sh --target x5 --variant 11s
 ```
 
-Download or checksum failure exits nonzero; an existing mismatched file is not overwritten. For an offline copy of the original artifact, supply exact `--asset-id` and `--model-path`. S originals may be downloaded explicitly for historical comparison, but cannot run through this float entry.
+Download or checksum failure exits nonzero; an existing mismatched file is not overwritten. For an offline copy of the original artifact, supply exact `--asset-id` and `--model-path`. S originals may be downloaded explicitly for quantized-output use and source comparison, but cannot run through this float entry.
 
 ```bash
 # cwd: repository root; original quantized publication only
@@ -47,7 +47,7 @@ Required vocabulary: [classes.names](../test_data/classes.names), 4585 ordered e
 
 Defaults are `model/<target>/<manifest filename>`; S26 keeps the `nash-e/` or `nash-m/` subdirectory. `--output-dir` appends the manifest filename directly. Runtime `--model-path=null` derives this path. Defaults: X5/S100 11s, S100P 26n; an exact asset ID selects its variant when variant is omitted.
 
-A separately converted float HBM requires both `--model-path` and `--local-float-sha256`. That digest identifies local bytes; `source_asset_id` identifies protocol provenance, not equality with the published HBM. Loading still checks target and all ten NHWC float32 outputs. A matching hash does not establish accuracy or hardware compatibility.
+A separately converted float HBM requires both `--model-path` and `--local-float-sha256`: the digest identifies the exact local bytes for selection, and `source_asset_id` records the protocol provenance of the conversion. Loading then verifies the target and all ten NHWC float32 output roles, and target compatibility is confirmed by those checks together with a board run.
 
 Use the [conversion preparation guide](../conversion/README.md) for ONNX checks, target-specific calibration and optional compilation. Generated `_float` names express intent; `compiled_unverified` is not a verified runtime artifact.
 

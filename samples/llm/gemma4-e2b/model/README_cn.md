@@ -6,7 +6,7 @@
 ## 发布组合
 
 S100P（`nash-m`）与 S600（`nash-p`）各有 Vision/Text HBM，S100（`nash-e`）没有默认公共 HBM。
-目录结构和文件名相同不代表制品可跨目标使用。当前下载脚本检查文件是否非空后复用，并不自动校验已有文件的目标或 SHA-256。
+目录结构和文件名相同不意味着制品可跨目标使用。当前下载脚本检查文件是否非空后复用，并不自动校验已有文件的目标或 SHA-256。
 
 <a id="preparation"></a>
 ## 显式准备
@@ -83,8 +83,8 @@ sha256sum "$GEMMA4_HOME"/model/*.hbm
 # S600 Text:    aab1831b1ea2b86763d5457890d89c55b684e4ba4834c1e008c668813d1cf646
 ```
 
-以上四个 HBM 哈希保留自 S 源提交 `380e1a2` 的 README；本次迁移没有下载模型重新计算。
-活动发布清单目前仍使用 `sha256: null`，不能据此声称下载器已执行哈希校验。HBM 是板端模型，
+以上四个 HBM 哈希保留自 S 源发布的 README。
+活动发布清单目前对这些文件记录 `sha256: null`；下载器会打印观测到的摘要，使用者可将其与上面的发布摘要比较。HBM 是板端模型，
 `tok_embeddings.bin` 是配套 embedding 数据，不是 X5 推理 BIN。下载使用 `.part` 临时文件并在完成后改名；
 已有非空文件会跳过下载。`GEMMA4_MODEL_BASE_URL`、`GEMMA4_COMMON_MODEL_BASE_URL`、`GEMMA4_TOKENIZER_BASE_URL`
-可显式替换三个来源。下载过程本身不会运行量化。
+可显式替换三个来源。模型转换/量化流程见[转换指南](../conversion/README.md)。

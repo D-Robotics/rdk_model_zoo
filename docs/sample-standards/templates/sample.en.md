@@ -20,16 +20,15 @@
 <a id="support-matrix"></a>
 ## Support Matrix
 
-> **Must answer:** which targets × variants × languages are **supported**, and of
-> those, which are **actually verified** on board. Three cell states only:
-> `supported-verified`, `supported-not-run`, `not-supported`. Missing C++ must be
-> visible here — never claim dual-language support elsewhere when it is absent.
+> **Must answer:** available targets × variants × languages, their artifacts
+> and any required SDK or model configuration. Keep test execution records in
+> a separate validation document.
 
-| Variant | x5 | s100 | s100p | s600 | Python | C++ |
-| --- | --- | --- | --- | --- | --- | --- |
-| ⟪variant⟫ | ⟪state⟫ | ⟪state⟫ | ⟪state⟫ | ⟪state⟫ | ⟪yes/no⟫ | ⟪yes/no⟫ |
+| Target | Variant | Language | Artifact and environment |
+| --- | --- | --- | --- |
+| ⟪x5 / s100 / s100p / s600⟫ | ⟪variant⟫ | ⟪Python / C++⟫ | ⟪actual artifact and SDK⟫ |
 
-Board-verification evidence: ⟪link to evidence/batch review, or “not-run”⟫.
+⟪State the required model artifact or SDK for any conditional combination.⟫
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -47,16 +46,16 @@ Board-verification evidence: ⟪link to evidence/batch review, or “not-run”�
 
 > **Must answer:** ONE complete path from model preparation to a visible result.
 > Every command states its cwd, where prerequisite files come from, parameters,
-> output, and how success is judged. Model preparation is explicit
-> (`model/download.sh --target …`); do not rely on implicit auto-download.
+> output, and how success is judged. Prepare models explicitly using the actual
+> script and target-selection arguments.
 
 ```bash
 # cwd: repository root
-bash samples/⟪domain⟫/⟪name⟫/model/download.sh --target ⟪target⟫
-# expect: artifact at ⟪path⟫ (download log prints sha256 verification)
+⟪actual model-preparation command with its supported arguments⟫
+# expect: artifact at ⟪path⟫; state the downloader's checksum result or local SHA-256
 
 # cwd: repository root
-python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py --target ⟪target⟫ ⟪input⟫
+python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py ⟪actual target-selection arguments⟫ ⟪input⟫
 # expect: ⟪observable success criterion, e.g. Top-5 list printed / result file path⟫
 ```
 

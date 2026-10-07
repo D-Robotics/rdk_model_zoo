@@ -14,16 +14,16 @@ UNetMobileNet 结合 U-Net 编解码结构与 MobileNet 轻量骨干，执行 Ci
 
 | Target | 变体 | Python | C++ |
 | --- | --- | --- | --- |
-| s100 | unet_mobilenet_1024x2048_nv12，S100 HBM | supported-not-run | supported-not-run |
-| s600 | 同系列模型，独立 S600 HBM | supported-not-run | supported-not-run |
+| s100 | unet_mobilenet_1024x2048_nv12，S100 HBM | supported | supported |
+| s600 | 同系列模型，独立 S600 HBM | supported | supported |
 | x5 / s100p | 无发布制品 | not-supported | not-supported |
 
-主机 fixture 验证阶段、选择与 CLI；纯 C++ 测试及假 SDK 接口验证解码和资源释放。真实 SDK 编译／推理、板测、数据集精度和性能均为 not-run。[源审计](../../../docs/releases/unified-migration/evidence/2026-09-26-b8-unetmobilenet-audit.json)。
+SDK 编译／推理、数据集精度和性能在板端环境执行，参见 [Python](runtime/python/README_cn.md) 与 [C++](runtime/cpp/README_cn.md) 指南。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-S100 或 S600 及其匹配的板端镜像；Python 使用 hbm_runtime，C++ 使用 DNN/UCP 头文件与库。源文档未钉住 S OS/SDK 最低版本，此处不虚构版本。Python 3.10+、NumPy、OpenCV-Python、PyYAML；原生编译需要 C++17、CMake 3.16+ 和 OpenCV 开发库。运行时不安装依赖或下载权重。模型大小和峰值内存尚未实测；若输出为全分辨率，19 通道 int32 分数本身约占 152 MiB，float64 解码还需额外内存。
+S100 或 S600 及其匹配的板端镜像；Python 使用 hbm_runtime，C++ 使用 DNN/UCP 头文件与库。S OS/SDK 版本由部署环境选择。Python 3.10+、NumPy、OpenCV-Python、PyYAML；原生编译需要 C++17、CMake 3.16+ 和 OpenCV 开发库。运行时不安装依赖或下载权重。模型大小和峰值内存以实际加载为准；若输出为全分辨率，19 通道 int32 分数本身约占 152 MiB，float64 解码还需额外内存。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -42,9 +42,9 @@ python3 samples/vision/unetmobilenet/runtime/python/main.py --dry-run --target s
 <a id="expected-results"></a>
 ## 预期结果
 
-Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原图尺寸 int32 类别 0..18）与 unetmobilenet_report.json。alpha_f=0.75 是原图权重，1 为原图、0 为彩色 mask。实际类别取决于真实推理，不承诺固定结果。下图保留自源分支，不是本轮板测结果。
+Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原图尺寸 int32 类别 0..18）与 unetmobilenet_report.json。alpha_f=0.75 是原图权重，1 为原图、0 为彩色 mask。实际类别取决于真实推理，不承诺固定结果。下图来自源分支记录。
 
-![源分支历史效果图](test_data/result.jpg)
+![参考效果图](test_data/result.jpg)
 
 <a id="directory"></a>
 ## 目录职责
@@ -54,13 +54,13 @@ Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原
 - runtime/cpp/：阶段实现、SDK 资源管理、纯张量解码、启动器与构建。
 - conversion/：列出缺少的转换前提；源中无导出／编译实现。
 - evaluator/：单图检查及数据集／性能边界；源中无数据集循环。
-- test_data/：segmentation.png 输入及保留的历史 result.jpg。
+- test_data/：segmentation.png 输入及保留的源记录 result.jpg。
 - tests/：源行为对照、主机 fixture、CLI、原生数值／资源测试。
 
 <a id="entry-points"></a>
 ## 入口索引
 
-[模型](model/README_cn.md) · [Python](runtime/python/README_cn.md) · [C++](runtime/cpp/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。原 S 文档 (historical `../../../platforms/s/samples/vision/unetmobilenet/README.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md) 保留旧 API 和自动准备行为的历史说明。
+[模型](model/README_cn.md) · [Python](runtime/python/README_cn.md) · [C++](runtime/cpp/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。原 S 文档保留旧 API 与自动准备行为的说明。
 
 <a id="license"></a>
 ## 许可

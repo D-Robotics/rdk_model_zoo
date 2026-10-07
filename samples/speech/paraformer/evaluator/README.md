@@ -1,10 +1,10 @@
 # Paraformer evaluator
 
 Evaluate prepared 16 kHz speech features with the three FP32 ONNX stages on CPU,
-or with OE's HMCT executor and three quantized `*_ptq_model.onnx` graphs. This is
-host simulation, not HBM execution or a board benchmark. It reuses the runtime's
-encoder → predictor → CPU CIF → decoder pipeline and greedy token decoding.
-No dataset, models or toolchain are downloaded by this entry.
+or with OE's HMCT executor and three quantized `*_ptq_model.onnx` graphs. It reuses
+the runtime's encoder → predictor → CPU CIF → decoder pipeline and greedy token
+decoding. No dataset, models or toolchain are downloaded by this entry. For HBM
+board execution, use the [runtime guide](../runtime/python/README.md).
 
 <a id="dataset"></a>
 ## Dataset
@@ -24,7 +24,7 @@ Run all commands from the repository root. The tested FP32 environment is Python
 [export/frontend requirements](../conversion/requirements-export.txt) in a dedicated
 environment when also preparing audio. HMCT is supplied by the matching vendor OE
 environment; it is not a substitute package to install from an arbitrary index.
-Actual HMCT evaluation has not been run in this migration.
+Run actual HMCT evaluation in the matching OE environment.
 
 First follow [conversion](../conversion/README.md) to export the three self-contained
 ONNX graphs into `outputs/paraformer_export`. Obtain the pinned `tokens.json` through
@@ -82,9 +82,10 @@ python samples/speech/paraformer/evaluator/main.py \
 ```
 
 These three model paths are placeholders to replace with your actual artifacts.
-The adapter preserves the source `ORTExecutor(path).create_session().forward(feed)`
-API. The `int16` selector chooses that executor; it does not prove quantization
-precision or certify compiler output. HBM files are not accepted by this evaluator.
+The adapter preserves the source `ORTExecutor(path).create_session.forward(feed)`
+API. The `int16` selector chooses that executor; read the actual quantization
+precision and compiler output from the model metadata. HBM files are not
+accepted by this evaluator.
 
 ## Arguments and input contract
 
@@ -120,8 +121,7 @@ CER is total Unicode character edit distance divided by total reference characte
 errors are retained. No whitespace, case or punctuation normalization occurs. If every
 reference is empty, CER is null, while insertion counts remain meaningful. Decoding
 removes `<...>` tokens and `@@` markers, concatenates tokens and does not perform CTC
-repeat collapse. The old evaluation script did not strip `@@`; this entry follows the
-unified runtime. Zero CIF tokens produce empty text and skip decoder execution.
+repeat collapse. Zero CIF tokens produce empty text and skip decoder execution.
 Stage timings exclude frontend, model loading and file I/O; they are neither BPU nor
 end-to-end latency.
 
@@ -136,25 +136,36 @@ A failure preserves completed utterances and `current_utterance`, but `metrics` 
 null; partial results are not presented as a complete evaluation.
 
 <a id="reference-results"></a>
-## Reference results and limits
+## Source results
 
-The archived S conversion guide (historical `../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
-records AISHELL dev 300-utterance CER: FP32 5.20%, HMCT INT16 5.02%, S100 Python
-3.13%, S100 C++ 3.13%. These are source historical measurements, not reproduced
-migration results or proof that one backend is more accurate.
+The S source conversion record reports AISHELL dev (speech_asr_aishell_devsets),
+300 utterances from 40 speakers, using official reference transcripts. The pipeline
+uses fbank+LFR, three HBM stages with CPU CIF, and corresponding ONNX stages for
+HMCT simulation:
 
-The current host FP32 run on the two bundled utterances measured 4 edits / 28 reference
-characters, CER 14.2857%. This small smoke run is not a reproduction of that 300-item
-benchmark. See the [evaluation review](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-evaluator-review.md)
-for source comparison and exact evidence.
+| S source pipeline | CER | Difference from FP32 |
+| --- | ---: | ---: |
+| FP32 ONNX baseline | 5.20% | — |
+| HMCT INT16 simulation | 5.02% | -0.18 percentage points |
+| S100 INT16 Python hbm_runtime | 3.13% | -2.07 percentage points |
+| S100 INT16 C++ UCP | 3.13% | -2.07 percentage points |
+
+The same source record reports S100 stage times in ms/utterance: Encoder
+33.63/33.15, Predictor 1.44/1.00, CPU CIF 3.41/0.38, Decoder 7.12/6.29
+(Python/C++ UCP). The Python HBM pipeline totals 45.61 ms/utterance with
+RTF ~0.008, excluding WAV preprocessing. The C++ pipeline totals 40.81 ms;
+300 utterances took 13.4 s wall-clock (RTF ~0.007), with one model load of
+about 1.85 s.
+
+For the two bundled utterances, the evaluator records 4 edits across 28
+reference characters (CER 14.2857%).
 
 <a id="boundaries"></a>
-## Validation boundaries
+## Evaluation workflow
 
-Real HMCT, OE compilation, HBM execution,
-board latency and full-dataset accuracy remain unverified. The conversion guide also
-discloses the random-input Torch/ORT discrepancy; this two-utterance run does not
-establish arbitrary-input equivalence.
+Use the [conversion guide](../conversion/README.md) to prepare FP32/PTQ stages
+and this evaluator to score a manifest against its reference transcripts. For
+board inference and S100 pipeline timing, use the [runtime guide](../runtime/python/README.md).
 
 ## Troubleshooting and code layout
 

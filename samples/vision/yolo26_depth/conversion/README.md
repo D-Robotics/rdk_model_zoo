@@ -5,18 +5,22 @@
 This directory combines the X5 Mapper and S-series `hb_compile` recipes while
 keeping their input representations separate. It prepares ONNX, deterministic
 calibration tensors, resolved compiler configurations, logs and artifact hashes.
-Host preparation has tests; actual Torch export, OpenExplorer compilation and
-board validation have **not** been run during this migration.
+Torch export and OpenExplorer compilation run in their corresponding host
+environments; the board is validated by the runtime samples.
 
 <a id="source-model"></a>
 ## Source model and graph boundary
 
 Supply a trained `yolo26{n,s,m,l,x}-depth.pt` checkpoint compatible with the
-Ultralytics `Depth` head. No checkpoint is bundled or downloaded by these tools.
+Ultralytics `Depth` head ([Depth task](https://docs.ultralytics.com/tasks/depth/),
+[training](https://docs.ultralytics.com/modes/train/),
+[quick start](https://docs.ultralytics.com/quickstart/); upstream repository
+<https://github.com/ultralytics/ultralytics.git>). No checkpoint is bundled or
+downloaded by these tools.
 The source branches pin `ultralytics==8.4.105`; X5 also records `torch==1.13.0`.
 Their requirements are preserved in `requirements-x5-source.txt` and
-`requirements-s-source.txt`. These historical pins are not a claim that a new
-installation or arbitrary Python version has been verified.
+`requirements-s-source.txt`. These pins describe the source environments; record
+the versions actually used in a new export.
 
 | Target / variants | ONNX output | Runtime preparation | CPU decode |
 |---|---|---|---|
@@ -41,11 +45,16 @@ Run conversion on an x86 Linux host in the corresponding OE environment.
 The source X5 record is OpenExplorer 1.2.8 / Mapper 1.24.3, O3 latency and an
 int16 tail-convolution output. The S record names
 `ai_toolchain_ubuntu_22_s100_s600_gpu` but does not pin an image digest or compiler
-version. Record the actual tool versions in any new conversion evidence.
+version. Record the actual tool versions in any conversion evidence.
 
-The source X5 image URL is
-`https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz`.
-After obtaining and loading that image, the original container setup was:
+Toolchain entry points:
+
+- RDK X5 OpenExplorer / algorithm toolchain documentation: <https://developer.d-robotics.cc/rdk_doc/Advanced_development/toolchain_development/overview>
+- OE toolchain download and manuals: <https://toolchain.d-robotics.cc/>
+
+Obtain the X5 image from
+`https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz`,
+then start the container:
 
 ```bash
 # From repository root; replace /path/to/work with an external working directory.
@@ -54,7 +63,6 @@ docker run -it --rm --network host --shm-size=15g \
   openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
 
-Image availability, installation and compatibility are not reverified here.
 Use an isolated export environment for the source requirements; `requirements.txt`
 in this directory contains only host calibration/configuration dependencies.
 Nothing installs dependencies implicitly. Python `--help` on the exporter does
@@ -91,7 +99,7 @@ python export.py --target s100 --variant l \
 With default opset 11 these produce `yolo26n-depth_op11_log.onnx` or
 `yolo26l-depth_op11_lite.onnx`, the copied checkpoint and `export-report.json`.
 Geometry is fixed at 768; `--opset` is configurable but only the source default
-has historical provenance. `--boundary` can explicitly select an alternate S
+has recorded provenance. `--boundary` can explicitly select an alternate S
 export for experiments. X5 lite is refused because it has no source recipe.
 
 <a id="calibration"></a>
@@ -174,13 +182,13 @@ hrt_model_exec model_info --model_file /work/depth/compile_x5_n/artifacts/yolo26
 The second command requires the matching target environment. Do not equate
 compiler estimates, one image's cosine, dataset accuracy and measured latency.
 Offline depth evaluation belongs in `../evaluator/`. Recompiled artifacts do not
-inherit a published artifact's SHA-256 or its historical performance evidence.
+inherit a published artifact's SHA-256 or its published performance evidence.
 
 <a id="artifacts"></a>
 ## Output artifacts
 
 - `config.yaml`: resolved exact source recipe and external input paths.
-- `preparation.json`: ONNX/calibration hashes, identity and initially not-run status.
+- `preparation.json`: ONNX/calibration hashes, identity and run status.
 - `reports/`: real command stdout/stderr, kept even when a compiler fails.
 - `working/`: compiler intermediates.
 - `artifacts/`: final BIN/HBM; X5 also copies quantized ONNX.
@@ -190,19 +198,17 @@ Failed compilation has no successful final report. Partial work remains availabl
 for diagnosis; start another attempt in a new output directory.
 
 <a id="known-gaps"></a>
-## Known gaps and source evidence
+## Additional preparation and source evidence
 
-The migration has not executed Torch export, either OE toolchain, a downloaded
-model or SUNRGBD evaluation. Checkpoint hashes, S image/compiler versions and
+Checkpoint hashes, S image/compiler versions and
 publisher hashes for S HBMs remain absent from the source record. The exporter
 requires the expected Depth module and fails if it cannot patch exactly one head.
 
-Historical S experiments reported clipping for NV12 l/x, weaker cosine for lite
-n/s/m, and no benefit from the tested int16 changes. Those observations explain
-the mixed release but are not new validation. The source's “all variants pass
-0.999” claim conflicts with its 0.9984 table entry; see the
-[source audit](../../../../docs/releases/unified-migration/2026-09-26-b8-yolo26-depth-source-review.md).
-Do not conceal that conflict by dropping the table or lowering its threshold.
+Source S experiments reported clipping for NV12 l/x, weaker cosine for lite
+n/s/m, and no benefit from the tested int16 changes; those observations explain
+the mixed release. The source's “all variants pass
+0.999” claim conflicts with its 0.9984 table entry; both the claim and the
+table stand as published reference records.
 
 The original optional tuning record gives these concrete comparison points:
 NV12 l/x had about 17% saturated pixels and cosine 0.9938/0.9944; lite n/s/m

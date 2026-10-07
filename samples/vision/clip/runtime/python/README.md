@@ -5,9 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="environment"></a>
 ## Environment
 
-- Execution target: RDK X5 with `hbm_runtime` for the image encoder and `onnxruntime` with `CPUExecutionProvider` for the text encoder. Board image and firmware versions were not verified.
-- Host checks: Python 3.14.7, NumPy, OpenCV, PyYAML, `ftfy==6.3.1`, and `regex==2026.9.10`. Host tests inject both runtimes and do not require ONNX Runtime.
-- Runtime assets: `bpe_simple_vocab_16e6.txt.gz` is loaded by `PromptTokenizer`; the image and text model files are prepared separately. The source BPE cleaning and token IDs are retained.
+- Execution target: RDK X5 with `hbm_runtime` for the image encoder and `onnxruntime` with `CPUExecutionProvider` for the text encoder; choose the board image and firmware for your deployment.
+- Python dependencies: Python 3.10+, NumPy, OpenCV, PyYAML, `ftfy==6.3.1`, and `regex==2026.9.10`. Host tests inject both runtimes and do not require ONNX Runtime.
+- Runtime assets: `bpe_simple_vocab_16e6.txt.gz` is loaded by `PromptTokenizer`; the image and text model files are prepared separately. BPE cleaning rules and token IDs follow the original vocabulary.
 
 <a id="usage"></a>
 ## Usage
@@ -64,7 +64,7 @@ The CLI JSON contains `target`, `prompts`, `scores`, `order`, and `image_saved`.
 <a id="integration-example"></a>
 ## Integration Example
 
-Prerequisite: prepare the X5 pair and run on an X5 board. The source BPE vocabulary is loaded from the local bundled path. This example defines all paths, IDs, inputs, `CLIPTask(runner, binding, PromptTokenizer())`, `explicit_result`, and `composed_result`, then compares every `MatchResult` field.
+Prerequisite: prepare the X5 pair and run on an X5 board. The BPE vocabulary is loaded from the local bundled path. This example defines all paths, IDs, inputs, `CLIPTask(runner, binding, PromptTokenizer)`, `explicit_result`, and `composed_result`, then compares every `MatchResult` field.
 
 ```python
 from pathlib import Path
@@ -127,13 +127,13 @@ The established legacy spellings `pre_process`, `forward` and `post_process` rem
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `Model not found: ...; prepare the pair with model/download.sh.` | One encoder asset is missing. | Run the explicit pair download or provide both exact asset IDs with paths. |
+| `Model not found:...; prepare the pair with model/download.sh.` | One encoder asset is missing. | Run the explicit pair download or provide both exact asset IDs with paths. |
 | `No published CLIP encoder pair for s100` | Only X5 has a manifest pair. | Use an X5 target. |
 | `External img_encoder.bin path requires its exact asset-id.` | Custom image path has no identity. | Add `--image-asset-id x5:clip:img_encoder.bin`. |
 | `External text_encoder.onnx path requires its exact asset-id.` | Custom text path has no identity. | Add `--text-asset-id x5:clip:text_encoder.onnx`. |
 | `Input text is too long for context length 77` | Source BPE tokens exceed the fixed context and truncation is disabled. | Shorten the prompt; the CLI uses the source non-truncating behavior. |
-| `CLIP text ... metadata` | ONNX input/output names, dtype, or widths are incompatible. | Use the published text asset and inspect dynamic metadata; input is I32 `[N,77]`, output F32 `[N,512]`. |
+| `CLIP text... metadata` | ONNX input/output names, dtype, or widths are incompatible. | Use the published text asset and inspect dynamic metadata; input is I32 `[N,77]`, output F32 `[N,512]`. |
 
 ## License
 
-Runtime code follows the repository [LICENSE](../../../../../LICENSE), Apache-2.0. The source BPE vocabulary and model assets retain their published provenance.
+Runtime code follows the repository [LICENSE](../../../../../LICENSE), Apache-2.0. The BPE vocabulary and model assets retain their published provenance.

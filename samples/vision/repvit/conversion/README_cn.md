@@ -3,12 +3,12 @@
 <a id="source-model"></a>
 ## 源模型
 
-源说明使用 `timm.models.create_model` 构造 repvit_m0_9/m1_0/m1_1，经 PyTorch 导出及 onnxsim 简化。没有提供可执行导出脚本、timm/PyTorch 版本、上游源码修订或权重摘要。
+使用 `timm.models.create_model` 构造 repvit_m0_9/m1_0/m1_1，通过 PyTorch 导出并使用 onnxsim 简化。构建时记录 timm/PyTorch 版本、上游源码修订与权重摘要。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-固定源 rdk_x5 @ac11571 的 3 份原样 YAML，X5 march 为 `bayes-e`，无 S 配方。源未固定 OE 版本，重建时须记录实际环境。
+3 份 YAML 面向 X5 `march: bayes-e`。构建时记录使用的 OE 版本。
 
 | Config | ONNX input path | Working directory | Compiled basename |
 | --- | --- | --- | --- |
@@ -16,10 +16,15 @@
 | `RepViT_m1_0_config.yaml` | `./repvit_m1_0.onnx` | `RepViT_224x224_nv12` | `RepViT_224x224_nv12.bin` |
 | `RepViT_m1_1_config.yaml` | `./repvit_m1_1.onnx` | `RepViT_224x224_nv12` | `RepViT_224x224_nv12.bin` |
 
+
+工具链资源:
+
+- [OE Docker environment](https://forum.d-robotics.cc/t/topic/35229)
+
 <a id="export"></a>
 ## ONNX 导出
 
-源说明使用 `timm.models.create_model` 构造 repvit_m0_9/m1_0/m1_1，经 PyTorch 导出及 onnxsim 简化。没有提供可执行导出脚本、timm/PyTorch 版本、上游源码修订或权重摘要。
+使用 `timm.models.create_model` 构造 repvit_m0_9/m1_0/m1_1，通过 PyTorch 导出并使用 onnxsim 简化。构建时记录 timm/PyTorch 版本、上游源码修订与权重摘要。
 
 本 sample 没有可执行且已验证的导出命令。须在上表路径准备匹配图，名义输入 RGB NCHW 1×3×224×224、输出 ImageNet-1k。YAML input_shape/input_name 为空，维度与名称从图读取，必须核对。
 
@@ -31,7 +36,7 @@
 <a id="compile"></a>
 ## 编译
 
-补齐缺失图与校准前提后，才可在 OE 中执行以下条件命令。本次迁移未运行。
+在 OE 环境内、补齐 ONNX 图与校准数据前提后执行：
 
 ```bash
 # cwd: repository root, then conversion directory
@@ -45,7 +50,8 @@ hb_mapper makertbin --model-type onnx --config RepViT_m0_9_config.yaml
 <a id="validation"></a>
 ## 转换后验证
 
-状态 not-run。推理前核对 packed NV12 几何 224×224、squeeze 后为 (1000,) 的 F32 分数输出。首个变体示例：
+推理前核对 packed NV12 几何 224×224、squeeze 后为 (1000,) 的 F32
+分数输出。首个变体示例：
 
 ```bash
 # cwd: repository root on X5
@@ -63,6 +69,6 @@ python3 samples/vision/repvit/runtime/python/main.py --target x5 \
 编译路径见上表，逐变体发布文件与目标见[模型准备](../model/README_cn.md#artifacts)，下载落在 sample model 目录。移动已验证构建时保留变体与来源，改名本身不是修复。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
-缺少固定框架/OE/权重、可执行导出、校准准备及转换/板端精度证据。YAML 与原许可声明逐字节保留。可使用发布制品下载，不声明端到端转换可复现。
+使用 `timm.models.create_model` 构造所选 `repvit_m0_9`、`repvit_m1_0` 或 `repvit_m1_1` 权重，通过 PyTorch 导出并使用 `onnxsim` 简化。将匹配的 RGB/NCHW 1×3×224×224 模型图放到 YAML 路径。按 `calibration: default`、mean `123.675/116.28/103.53` 与 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32` float32 RGB 数据。各 YAML 共用工作目录与输出前缀；分别构建变体并保留其身份。

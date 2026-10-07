@@ -3,6 +3,7 @@
 """Execute customer API snippets and verify source-pinned conversion commands."""
 import ast
 import contextlib
+import importlib.util
 import io
 from pathlib import Path
 import re
@@ -12,6 +13,16 @@ from unittest.mock import patch
 import numpy as np
 from test_dinov2 import FakeRuntime, ROOT, SAMPLE
 from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+
+
+def comparison_fixture():
+    """Load the test-only parity recipe removed from the customer-facing README."""
+    path = Path(__file__).resolve().parent / 'fixtures/migration_comparison.py'
+    spec = importlib.util.spec_from_file_location('migration_comparison_dinov2', path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class ReadmeTests(unittest.TestCase):
@@ -70,7 +81,12 @@ class ReadmeTests(unittest.TestCase):
             self.assertGreaterEqual(len(arguments), 2)
             self.assertEqual(set(arguments), {digest})
 
-    def test_documented_board_comparison_with_host_runtime_fixtures(self):
+    def test_migration_comparison_fixture_parity_with_host_runtime_fixtures(self):
+        """Test-only source-parity check, not documented usage: execute the
+        legacy/unified comparison recipe preserved verbatim in
+        tests/fixtures/migration_comparison.py (the heredoc the customer-facing
+        evaluator rewrite removed) under fake SDK modules and a temporary
+        repository."""
         import json
         import shutil
         import sys
@@ -80,10 +96,11 @@ class ReadmeTests(unittest.TestCase):
         original_resolve = model_binding.resolve_selection
         original_runner = model_runner.RuntimeModelRunner
         legacy_module = load_legacy_source()
-        for filename, mismatch in [('README.md',False),('README_cn.md',True)]:
-            text=(SAMPLE/'evaluator'/filename).read_text()
-            snippets=re.findall(r"python3 - <<'PY'\n(.*?)\nPY\n",text,re.S)
-            self.assertEqual(len(snippets),1)
+        fixture = comparison_fixture()
+        for variant, mismatch in [('README_MD',False),('README_CN_MD',True)]:
+            snippet = getattr(fixture, variant)
+            self.assertTrue(snippet.strip(), variant)
+            filename = f'fixtures/migration_comparison.py:{variant}'
             with tempfile.TemporaryDirectory() as directory:
                 root=Path(directory)
                 image=root/'samples/vision/dinov2/test_data/dog.jpg'
@@ -100,9 +117,9 @@ class ReadmeTests(unittest.TestCase):
                 with patch.object(Path,'cwd',return_value=root), patch.dict(sys.modules,{'dinov2':legacy_module}), patch.object(legacy_module.hbm_runtime,'HB_HBMRuntime',return_value=old), patch.object(model_binding,'resolve_selection',selection), patch.object(model_runner,'RuntimeModelRunner',lambda chosen:original_runner(chosen,runtime=unified)), patch('samples._shared.platforms.require_execution_target',return_value='s100'),contextlib.redirect_stdout(io.StringIO()):
                     if mismatch:
                         with self.assertRaisesRegex(AssertionError,'migration parity failed'):
-                            exec(compile(snippets[0],filename,'exec'),{})
+                            exec(compile(snippet,filename,'exec'),{})
                     else:
-                        exec(compile(snippets[0],filename,'exec'),{})
+                        exec(compile(snippet,filename,'exec'),{})
                 reports=list((root/'evaluator-output').glob('*/comparison.json'))
                 self.assertEqual(len(reports),1)
                 report=json.loads(reports[0].read_text())

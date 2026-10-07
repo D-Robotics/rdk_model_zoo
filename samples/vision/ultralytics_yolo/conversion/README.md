@@ -4,15 +4,16 @@
 
 This directory turns a float Ultralytics checkpoint into the ONNX graph and
 then into the target BPU artifact used by the shared Python sample. Export and
-compilation run on a host; they are not board runtime operations. The shortest
-supported scope for this migration is representative YOLOv8/YOLO11 DFL
-detection and YOLO26 direct-LTRB detection. Existing classification, segmentation, pose and OBB export entries are also listed below. Having an exporter is not evidence that every task has completed end-to-end conversion validation.
+compilation run on a host; they are not board runtime operations. Export covers
+YOLOv8/YOLO11 DFL detection and YOLO26 direct-LTRB detection; classification,
+segmentation, pose and OBB export entries are also listed below. An exporter
+entry documents the recipe — record each produced artifact's own validation.
 
 <a id="source-model"></a>
 
 ## Source model and reproducibility
 
-Input is a local Ultralytics PyTorch `.pt` checkpoint matching the selected task. `/models/*.pt` paths below must be prepared by the user; these weights are not bundled. Record the checkpoint SHA-256, training/export package versions, classes and input geometry. This repository does not pin one Ultralytics/PyTorch/ONNX version combination or publisher digest for every checkpoint family. Preserve training configuration and class order for custom weights. A compiled file in the [published model inventory](../model/README.md) does not prove that a similarly named `.pt` is its exact source checkpoint.
+Input is a local Ultralytics PyTorch `.pt` checkpoint matching the selected task. `/models/*.pt` paths below are prepared by the operator; custom weights are not bundled. Record the checkpoint SHA-256, training/export package versions, classes, input geometry and training configuration. The [published model inventory](../model/README.md) lists compiled `.bin`/`.hbm` runtime artifacts separately from conversion checkpoints.
 
 <a id="toolchain-targets"></a>
 ## Prepare the two host environments
@@ -21,12 +22,16 @@ Use an Ultralytics training/export environment for the first step. It must
 already contain the `ultralytics` package, PyTorch, and the ONNX export
 dependencies appropriate for the checkpoint. Pass a local checkpoint path and
 verify it before invoking the script. The script calls `ultralytics.YOLO`
-directly; Ultralytics can download a known bare model name, so a bare name is
-not evidence that a local checkpoint was used. This repository does not claim
-or record such an implicit download. Run the exporter with an existing
-absolute `.pt` path when reproducibility matters.
+directly; a known bare model name may resolve to an online checkpoint. Pass an
+existing absolute `.pt` path to select the local checkpoint used for export.
 
-Use the matching D-Robotics OpenExplore environment for the second step:
+Use the matching D-Robotics OpenExplore environment for the second step.
+For the training/export environment, Ubuntu 22.04 with Python 3.10 is
+recommended (a CUDA-capable GPU for training; verify with
+`torch.cuda.is_available()`). Source `.pt` weights should be trained with the
+`ultralytics/ultralytics` repository, or use officially released Ultralytics
+pretrained weights; no program changes are required during training, and the
+model `forward` method must not be modified. Per-target compiler entry:
 
 | Target | Compiler check | Artifact | Calibration file | Input convention in the compiler config |
 | --- | --- | --- | --- | --- |
@@ -41,7 +46,22 @@ JPG, JPEG, or PNG files. It does not silently install a missing dependency.
 The compiler environment and the board runtime image are separate; do not
 copy `hb_mapper` or `hb_compile` installation steps into a board setup.
 
-For X5, the repository's previously documented OE 1.2.8 CPU image can be
+For X5, the mapper is also installable as a pip package (hb_mapper is
+expected to be 1.24.3 or newer):
+
+```bash
+conda create -n rdk_env python=3.10 -y
+conda activate rdk_env
+pip install rdkx5-yolo-mapper
+hb_mapper --version
+# If PyPI is slow, use a mirror:
+pip install rdkx5-yolo-mapper -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+```
+
+If a download is interrupted and leaves an incomplete package, retry the
+install.
+
+For X5, the OE 1.2.8 CPU image can be
 loaded and started on an x86 Linux host as follows. Use the D-Robotics image
 and tag supplied with your release if they differ from this example; the
 source download is the [X5 toolchain package](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_cpu_v1.2.8.tar.gz).
@@ -54,6 +74,20 @@ docker run -it --rm --network host --shm-size=15g \
   -v "$(pwd)":/workspace --workdir /workspace \
   openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8 /bin/bash
 ```
+
+The CPU image covers model conversion; the GPU image from the same OE 1.2.8
+release is optional for extended environments with GPU dependencies:
+
+```bash
+wget https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/oe_x5/1.2.8/docker_openexplorer_ubuntu_20_x5_gpu_v1.2.8.tar.gz
+docker load -i docker_openexplorer_ubuntu_20_x5_gpu_v1.2.8.tar.gz
+```
+
+Offline
+images are also available from the D-Robotics developer community:
+<https://forum.d-robotics.cc/t/topic/35229>. Verify a fresh Docker install
+with `docker --version` and `docker run hello-world` (install:
+[Docker documentation](https://docs.docker.com/engine/install/)).
 
 For S, select the image matching S100/S100P or S600 from the [RDK S OE
 toolchain documentation](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
@@ -77,10 +111,21 @@ inside that container from `/workspace`.
 <a id="export"></a>
 ## Export the ONNX graph
 
+Set up the Ultralytics training/export environment first: clone
+[ultralytics/ultralytics](https://github.com/ultralytics/ultralytics.git) and
+follow the official [Quick Start](https://docs.ultralytics.com/quickstart/)
+and [training](https://docs.ultralytics.com/modes/train/) documentation
+(see [Docker install](https://docs.docker.com/engine/install/) for a
+containerized setup). Officially released pretrained weights can be fetched
+directly, e.g.
+`wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt`.
+For host pip installs, the
+[Aliyun PyPI mirror](https://mirrors.aliyun.com/pypi/simple/) is available.
+
 For a generic Ultralytics detector, choose the target so the shared exporter
-uses the target's reviewed opset default. X5 uses opset 11; the S targets use
-opset 19. The `--opset` spelling and the historical `--optse` spelling are
-equivalent and an explicit value wins.
+uses the target's opset default. X5 uses opset 11; the S targets use
+opset 19. The `--opset` and `--optse` spellings are equivalent and an
+explicit value wins.
 
 ```bash
 # YOLOv8/YOLO11-style DFL detector for X5.
@@ -116,10 +161,10 @@ python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
 
 For direct use, the equivalent script is
 `yolo26/export_yolo26_detect_bpu.py` with `--weights`, `--output`, `--imgsz`,
-`--platform`, `--opset`, `--simplify`, and optional `--require-local`. A failed exporter returns an error;
-it does not leave a claimed artifact path in the documentation.
+`--platform`, `--opset`, `--simplify`, and optional `--require-local`. A failed
+exporter returns an error.
 
-Run all Python examples from the repository root. The generic exporter patches the head type found in the checkpoint; `--task` does not turn detection weights into classification/segmentation weights. YOLO26 dispatches through `--family yolo26 --task ...` to dedicated scripts, with default image size 224 for cls and 640 for other tasks. These are existing export recipes, not claims of export execution in this round:
+Run all Python examples from the repository root. The generic exporter patches the head type found in the checkpoint; `--task` does not turn detection weights into classification/segmentation weights. YOLO26 dispatches through `--family yolo26 --task...` to dedicated scripts, with default image size 224 for cls and 640 for other tasks. Export recipes:
 
 ```bash
 python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
@@ -136,21 +181,17 @@ python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
   --pt /models/yolo26n-obb.pt --imgsz 640 --output /models/yolo26n_obb_bpu.onnx
 ```
 
-YOLO26 cls/seg/pose/obb exporters do not currently accept `--require-local`. Check that the absolute checkpoint paths exist before running; do not pass that flag to these four scripts.
+YOLO26 cls/seg/pose/obb exporters do not accept `--require-local`. Check that the absolute checkpoint paths exist before running; do not pass that flag to these four scripts.
 
 Pass the generated ONNX to the mapper below, adding `--family yolo26` for YOLO26. Expected input is static batch-one float32 NCHW. Detection DFL and direct-LTRB outputs are not interchangeable; segmentation includes mask coefficients/prototypes, pose keypoints, OBB angles, and classification logits with runtime Softmax. Check each exporter's output description and runtime binding rather than inferring compatibility from tensor count alone.
 
 <a id="dataflow"></a>
 ## DFL-family dataflow: graph outputs and runtime decode
 
-The source conversion guides (X5: rdk_x5 @ac11571; S: rdk_s
-@380e1a2bf42041af54be6f34935e50197cfadff9 — the revisions byte-identical to
-the archived `platforms/x5` and `platforms/s` copies) explain the DFL-family
-deployment pipeline with the illustrations below, kept here as source
-material. They describe the DFL detection protocol
-(YOLOv5u/v8/v9/v10/11/12/13) and its segmentation/pose extensions. YOLO26
-detection has no diagram here; its protocol difference is scoped at the end of
-this section.
+The illustrations below explain the DFL-family deployment pipeline. They
+describe the DFL detection protocol (YOLOv5u/v8/v9/v10/11/12/13) and its
+segmentation/pose extensions. YOLO26 detection has no diagram here; its
+protocol difference is scoped at the end of this section.
 
 ### Object detection (DFL)
 
@@ -253,24 +294,21 @@ $$x_2 = (x+0.5+r)\times{Stride(i)},\quad y_2 = (y+0.5+b)\times{Stride(i)}$$
 
 The final detection results are the class (id), score, and position (xyxy).
 
-**Where these stages run in this sample.** The diagram is the source guides'
-data-flow view of the DFL pipeline. In this repository the exported graph
-stops at the per-stride messages drawn at the top of the figure — NHWC
-classification logits (`1×80×80×80` at stride 8, `1×40×40×80` at 16,
-`1×20×20×80` at 32 for an 80-class model; a custom class count changes the
-80) and DFL box logits (`...×64`) — and the maintained runtime performs the
-equivalents of the ReduceMax / threshold-filter / gather / ArgMax, DFL
-SoftMax-plus-expected-bin, and dist2bbox stages, followed by class-wise NMS
-where the selected binding requires one, in its Python post-processing
-(`decode_dfl` in `runtime/python/decode.py`; protocol in
+**Where these stages run in this sample.** The exported graph stops at the
+per-stride messages drawn at the top of the figure — NHWC classification
+logits (`1×80×80×80` at stride 8, `1×40×40×80` at 16, `1×20×20×80` at 32
+for an 80-class model; a custom class count changes the 80) and DFL box
+logits (`...×64`) — and the runtime performs the ReduceMax /
+threshold-filter / gather / ArgMax, DFL SoftMax-plus-expected-bin, and
+dist2bbox stages, followed by class-wise NMS where the selected binding
+requires one, in its Python post-processing (`decode_dfl` in
+`runtime/python/decode.py`; protocol in
 [`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)). The S-series YOLOv10
-binding is the maintained NMS-free exception: it reuses the same decode
-stages with `nms='none'` fixed (see the [runtime
-README](../runtime/python/README.md)). The runtime
-consumes already-dequantized floating outputs: integer tensors or SCALE
-quantization metadata fail at binding, and no manual output dequantization is
-implemented. Historical wording such as "after dequantization" therefore
-describes what the runtime SDK already provides, not a step to hand-write.
+binding is the NMS-free exception: it reuses the same decode stages with
+`nms='none'` fixed (see the [runtime
+README](../runtime/python/README.md)). The runtime consumes
+already-dequantized floating outputs: integer tensors or SCALE quantization
+metadata fail at binding, and no manual output dequantization step exists.
 
 ### Instance segmentation (DFL families)
 
@@ -283,20 +321,16 @@ which are linearly combined with the prototype branch output (a weighted
 sum, drawn as MatMul; prototypes are `1×160×160×32`, i.e. stride 4) to
 generate the instance masks. The ReduceMax, Threshold(TopK), GatherElements,
 DFL, and Decode optimizations of the detection branch therefore still apply.
-The maintained runtime performs the same coefficient–prototype combination
+The runtime performs the same coefficient–prototype combination
 in post-processing on floating heads (`segmentation_decode`).
 
 ### Pose estimation (DFL families)
 
 ![](./imgs/ultralytics_yolo_pose_dataflow.png)
 
-> **Historical-figure correction (labels in the image are stale).** The
-> preserved source diagram labels the pose message `×57` per grid cell and
-> keeps 80 class channels, while also reshaping to 3×17. Today's maintained
-> binding is different: one class channel (single-class person pose models)
-> and `3 × 17 = 51` keypoint channels per cell for the 17 COCO keypoints.
-> The diagram is retained unmodified as source material; read its pose/class
-> channel labels as historical, not as the current contract.
+> **Pose head channels.** The pose head exports one class channel
+> (single-class person models) and `3 × 17 = 51` keypoint channels per grid
+> cell for the 17 COCO keypoints.
 
 Ultralytics YOLO Pose keypoints are based on the object detection result.
 The COCO keypoint definitions:
@@ -325,8 +359,8 @@ COCO_keypoint_indexes = {
 
 The object detection part of the Pose model is the same as the Detect model,
 and the pose head adds one per-cell feature map. Under the published
-17-keypoint COCO contract, the maintained binding requires one class channel
-plus `3 × 17 = 51` keypoint channels per cell: each keypoint has an x/y
+17-keypoint COCO contract, the binding requires one class channel plus
+`3 × 17 = 51` keypoint channels per cell: each keypoint has an x/y
 coordinate relative to that feature level's downsampling factor, plus a
 visibility score (`pose_decode.py` binds `cls` with 1 channel and `kpts`
 with `3 × nkpt`; the published binding fixes `nkpt = 17`, and changing the
@@ -339,7 +373,7 @@ with `inverse_boxes`, then restores original-image geometry from the
 model-input letterbox, and Sigmoid converts the keypoint visibility logits
 into scores (`pose_decode.py`). For comparison, the YOLO26 direct-LTRB pose
 branch uses `(raw_xy + anchor) × stride`, without the DFL ×2 form. The
-maintained runtime decodes these heads in post-processing (`pose_decode`).
+runtime decodes these heads in post-processing (`pose_decode`).
 
 ### YOLO26 direct-LTRB difference
 
@@ -369,8 +403,8 @@ NV12 packing still follows the selected board input binding.
 <a id="compile"></a>
 ## Compile
 
-Run the canonical dispatcher from the repository root (or use the historical
-platform wrapper, which supplies the same platform argument):
+Run the dispatcher from the repository root (the platform wrapper entry
+supplies the same platform argument):
 
 ```bash
 # X5 -> hb_mapper makertbin, bayes-e, .bin
@@ -416,18 +450,32 @@ and the corresponding `.hbm` name for the other Nash targets. A successful
 compile does not bypass runtime input/output binding; the board still checks
 the artifact metadata and the DFL or direct-LTRB contract before inference.
 
+Quick artifact inspection without running the full runtime:
+
+```bash
+# X5 (in the OE environment)
+hb_model_info yolo11n_bayese_640x640_nv12.bin
+# S-series (on the board)
+hrt_model_exec model_info --model_file yolo11n_detect_nashm_640x640_nv12.hbm
+hrt_model_exec perf --model_file yolo11n_detect_nashm_640x640_nv12.hbm --thread_num 1
+```
+
+If copied files have unexpected ownership on
+the host, check file owners or run `sudo chown -R`; use optimization level
+`O0`, `O1` or `O2` — `O3` is not supported on Nash.
+
 The generic exporter and YOLO26 detection exporter accept `--require-local` when the checkpoint must already exist; without it the
 script preserves Ultralytics' ability to resolve a known bare model name.
 
-The generic and YOLO26 mapper paths now call the same
+The generic and YOLO26 mapper paths call the same
 `conversion/workflow.py` functions. `mapper_x5.py` and `yolo26/mapper_x5.py`
 select the X5 profile. `mapper_s.py` and `yolo26/mapper_s.py` select the Nash
 profile and retain `--march`. The workflow still keeps the target protocol
 differences in the generated YAML:
 
 * X5 invokes `hb_mapper makertbin --config config.yaml --model-type onnx`,
-  uses `bayes-e`, raw RGB/NCHW calibration, and adds the historical Softmax
-  int8 optimization (plus `set_all_nodes_int16` for `--quantized int16`).
+  uses `bayes-e`, raw RGB/NCHW calibration, and adds the Softmax int8
+  optimization (plus `set_all_nodes_int16` for `--quantized int16`).
 * S invokes `hb_compile --config config.yaml`, uses the requested Nash march,
   normalized NumPy calibration, and adds `input_no_padding` and
   `output_no_padding`. `--quantized int16` adds the S `quant_config` model
@@ -461,7 +509,7 @@ directory, and `bpu_model_output/` under the reported unique workspace child.
 
 ## Code flow and compatibility symbols
 
-The maintained path is intentionally small:
+The conversion code path is intentionally small:
 
 ```text
 export_monkey_patch.py
@@ -475,21 +523,15 @@ mapper.py -> mapper_x5.py / mapper_s.py
              -> prepare_calibration -> render_config -> compiler -> artifact/log move
 ```
 
-The historical platform paths under `platforms/x5/...` and `platforms/s/...`
-remain thin forwarding entries. Their old class names and command defaults
-are kept for callers; they do not contain another calibration or compiler
-implementation. The mapper dispatcher continues to accept the existing
-`--family` values so older segmentation/pose/classification commands are not
-redirected to the detector protocol.
+The mapper dispatcher accepts the published `--family` values for detection,
+segmentation, pose, classification and OBB, and selects each task's workflow.
 
-YOLOv8/YOLO11 detection uses the reviewed three-level DFL output contract.
+YOLOv8/YOLO11 detection uses the three-level DFL output contract.
 YOLO26 detection uses direct LTRB and is not interchangeable with DFL. Export
-and compile success alone does not prove that a custom graph has the runtime
-contract; runtime binding checks input/output shapes and dtypes before board
-inference. See [`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md) for the
-finite runtime detection protocol and
-[`CONVERSION_CONTRACT.md`](CONVERSION_CONTRACT.md) for the old-to-new
-conversion symbol map and target adapter boundary.
+and compile the custom graph, then run the runtime binding check to inspect its
+input/output shapes and dtypes before board inference. See
+[`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md) for the runtime detection
+protocol.
 
 ## Troubleshooting
 
@@ -511,16 +553,11 @@ conversion symbol map and target adapter boundary.
   `config.yaml`, calibration files, and compiler log. A failed workspace is
   retained by default for this purpose.
 
-This checkout has host tests for planning, configuration, entry points, and
-runtime contracts. Real ONNX export and OpenExplore compilation are not
-executed in this local merge; board validation records refer to the runtime
-artifacts listed by the release evidence, not to an unrun local conversion.
-
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-- No real training environment, checkpoint export or OpenExplore compilation was exercised in this round. Historical board tests of published artifacts do not validate a fresh conversion.
-- No pinned calibration image set/dataset version or complete source-checkpoint hash set is bundled. The 20–50 image guidance is a script recommendation, not a reproduced experiment. Defaults are `--cal-sample true --cal-sample-num 20`; `--cal-sample false` uses the whole eligible image pool. Save selected filenames and digests for reproducibility.
+- Each produced artifact requires its own binding check, matching-board smoke run and applicable dataset/reference comparisons; published-artifact board records do not transfer to a fresh conversion.
+- No pinned calibration image set/dataset version or complete source-checkpoint hash set is bundled. The 20–50 image guidance is a script recommendation. Defaults are `--cal-sample true --cal-sample-num 20`; `--cal-sample false` uses the whole eligible image pool. Save selected filenames and digests for reproducibility.
 - `--quantized` defaults to int8, with int16 available; `--jobs` defaults to 16 and `--save-cache` to false. Inspect target-specific optimization choices using `mapper.py --platform x5 --toolchain-help` or the appropriate S target. Dispatch selection does not establish compiler compatibility.
-- Container links are retained source-branch environment examples, not a verified latest-version recommendation or coverage of every target. Record the actual image identity and version output.
-- Fresh artifacts require binding checks, a matching-board smoke run and applicable dataset/reference comparisons before being called validated. New conversion board validation remains not-run.
+- The container images linked in this guide are the documented environment examples for the targets they cover; select an image matching your target's toolchain requirements and record the actual image identity and version output.
+- Validate fresh artifacts with the binding check, a matching-board smoke run and applicable dataset/reference comparisons (see [Validation](#validation)).

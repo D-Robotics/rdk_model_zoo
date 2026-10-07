@@ -2,10 +2,11 @@
 
 [English](README.md) · [Sample 入口](../README_cn.md) · [Python 运行](../runtime/python/README_cn.md)
 
-本目录现在能从固定 FunASR 架构的真实权重直接导出 encoder、predictor、decoder，
-固定部署形状并与 Torch 做数值检查。CIF 继续使用共享 CPU 实现。
-**真实音频校准和显式 OE 编译编排已实现。** 专用 [evaluator](../evaluator/README_cn.md) 已实现，实际 OE/HMCT/SDK/板端验证
-仍待完成；FP32 导出通过不能证明 HBM 或板端行为。
+本目录从固定 FunASR 架构的真实权重直接导出 encoder、predictor、decoder，
+固定部署形状并与 Torch 做数值检查，准备真实音频校准并编排显式 OE 编译。
+CIF 继续使用共享 CPU 实现。HMCT/OE 编译在 OE 工具链环境中按[编译](#compile)
+执行；编译产物按[验证](#validation)与 [evaluator](../evaluator/README_cn.md)
+在板端核验。
 
 <a id="source-model"></a>
 ## 源模型
@@ -13,13 +14,12 @@
 源模型是 `iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404`。
 S 源实现将其拆成 encoder、predictor、decoder，CPU CIF 连接 predictor 和
  decoder。已有发布制品的准备方式见[模型说明](../model/README_cn.md)。
-转换自己的权重是另一项操作；这里的图变换不会下载权重、生成 HBM，
-也不构成对已有发布制品的认证。
+转换自己的权重是另一项操作；这里的图变换不会下载权重，也不生成 HBM。
 
 <a id="toolchain-targets"></a>
 ## 导出环境与快速开始
 
-使用独立的 Python 3.12 环境。本次实际验证的组合是 Torch/torchaudio 2.6.0、
+使用独立的 Python 3.12 环境。推荐依赖版本组合为 Torch/torchaudio 2.6.0、
 FunASR 1.3.14、NumPy 1.26.4、ONNX 1.17.0、ONNX Runtime 1.20.1、
 protobuf 4.23.0、ModelScope 1.40.1。导出仅用 CPU，不需要板端 SDK、
 ONNX Simplifier 或 OE。架构和前处理配套文件固定；本地 `model.pt` 必须严格
@@ -37,10 +37,10 @@ python samples/speech/paraformer/conversion/export.py --help
 <a id="export"></a>
 ## 权重导出 ONNX
 
-若尚无源权重，请先显式下载。`model.pt` 约 913 MB，另有元数据；
+若尚无源权重，请先显式下载（模型主页：[iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404](https://modelscope.cn/models/iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404)）。`model.pt` 约 913 MB，另有元数据；
 还需为原始及变换后的 ONNX 图预留空间。以下示例只写入
 `models/paraformer-source`。下载的是 hub 的 `master`，导出报告记录实际
-本地文件摘要，**不把可变分支名当作不可变的发布权重版本**。
+本地文件摘要。
 
 ```python
 from modelscope import snapshot_download
@@ -77,11 +77,11 @@ python samples/speech/paraformer/conversion/export.py \
 `outputs/paraformer-features`。只要 `--feature` 指向某次准备输出中的
 `feats/<utt_id>.npy`，使用哪个输出目录都可以。特征路径必须已经存在，它不是 WAV；
 文件必须是有限值 float32 `[1,400,560]` 数组。导出检查使用不按有效帧屏蔽的 CIF
-来验证模型边界，不使用单条音频的有效帧长度，也不计算 CER。
+来验证模型边界，不使用单条音频的有效帧长度。
 
 | 参数 | 含义 |
 | --- | --- |
-| `--model-dir` | 必填，本地目录须包含 `model.pt`、`config.yaml`、`tokens.json`、`am.mvn`；不会隐式下载。后三个配套文件必须匹配固定源摘要。 |
+| `--model-dir` | 必填，本地目录须包含 `model.pt`、`config.yaml`、`tokens.json`、`am.mvn`；不会隐式下载。后三个配套文件必须匹配已发布源摘要。 |
 | `--output-dir` | 必填且必须不存在；不覆盖源权重或已有导出。 |
 | `--feature` | 可重复指定的准备后 NPY；可省略，但零/随机特征和 decoder count=0、1、17、100 的检查仍执行。 |
 | `--threads` | 正整数 CPU 线程数，默认 4。 |
@@ -99,8 +99,16 @@ python samples/speech/paraformer/conversion/export.py \
 <a id="calibration"></a>
 ## 准备真实校准数据与编译配置
 
-导出后，生成新的独立工作目录。下面使用两条自带 WAV 验证操作流程，
-**不构成代表性校准集或精度验收**：
+导出后，生成新的独立工作目录。下面以两条自带 WAV 演示操作流程；
+实际量化应提供代表性校准集。
+
+校准数据必须来自真实音频分布。源发布的两条量化失败记录可作对照：
+用 `np.random.randn` 随机数据校准时，INT16 pipeline CER = 100%
+（decoder 全部 argmax 到 `</s>`，FP16 输出全 NaN），根因是随机分布与
+encoder 实际输出范围（约 [-0.4, 0.3]）错位；encoder padding 未按
+`alphas[:, real_T:] = 0` 屏蔽时，FP32 pipeline CER 从 ~5% 升至 44.4%
+（前 N 字正确、其后为垃圾字符），根因是 padding 区产生虚假 CIF fire。
+两处的修复都已内建：校准取自 50 条真实音频，运行时 CIF 按有效帧屏蔽：
 
 ```bash
 python samples/speech/paraformer/conversion/prepare.py \
@@ -113,12 +121,11 @@ python samples/speech/paraformer/conversion/prepare.py \
 实际转换应提供能代表业务分布的 16 kHz WAV 集合。递归查找小写 `*.wav`，
 排序后取前 N 条，默认 50，对齐源配方的参考数量；不足时如实记录。
 50 条本身也不能证明覆盖充分。空集合、采样率不符、音频损坏或阶段输出不合规
-都会使本轮失败，不静默跳过选中的文件，不隐式重采样，也不生成随机校准数据。
+都会使该步骤失败，不静默跳过选中的文件，不隐式重采样，也不生成随机校准数据。
 
-统一前端执行多声道平均、fbank/LFR/CMVN，CPU 种子固定为 191009，再填充或
+共享前端执行多声道平均、fbank/LFR/CMVN，CPU 种子固定为 191009，再填充或
 截断至 400 帧；直接复用运行时前端，不为取特征而构造整套 AutoModel。
-源校准脚本依赖的全局随机状态不是可复现契约；当前种子、依赖和输入摘要
-写入报告，每条记录保留原始/有效帧数与截断状态。
+每次运行把种子、依赖和输入摘要写入报告，每条记录保留原始/有效帧数与截断状态。
 
 encoder、predictor 由 CPU ONNX Runtime 实际执行，之后调用同一 CPU CIF，
 显式传 **`real_T=None`**，保留源校准不按有效帧屏蔽的分布。运行时推理才使用
@@ -160,11 +167,22 @@ encoder、predictor 由 CPU ONNX Runtime 实际执行，之后调用同一 CPU C
 
 配方只支持 **S100 / nash-e**，保留源 max 校准、内部 INT16、NCHW featuremap、
 O2 latency 优化、单 BPU 核和关闭编译缓存的设置。token 数输入保持 int32。
-内部 INT16 不等于最终物理 I/O 精度保证，运行前仍需通过 SDK 核验真实 HBM 签名。
+内部 INT16 不构成最终物理 I/O 精度保证，运行前仍需通过 SDK 核验真实 HBM 签名。
 
-应使用匹配的、已安装 `hb_compile` 的 S OE 工具链。源记录为
-`ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`、hbdk4 4.7.5；此处未验证镜像仓库
-及可用性，不虚构拉取地址。FP32 导出环境本身不提供 OE 编译器。在 OE 环境中也须能访问本仓库，
+应使用匹配的、已安装 `hb_compile` 的 S OE 工具链。源配方使用的镜像是
+`ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`（hbdk4 4.7.5），原始获取与启动命令：
+
+```bash
+docker pull ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+docker run --rm -it \
+    -u $(id -u):$(id -g) \
+    --entrypoint /bin/bash \
+    -v /path/to/workspace:/workspace \
+    -w /workspace \
+    ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+```
+
+FP32 导出环境本身不提供 OE 编译器。在 OE 环境中也须能访问本仓库，
 从仓库根目录运行入口，并安装 NumPy、PyYAML；编译步骤不导入 Torch。
 
 ```bash
@@ -177,7 +195,7 @@ python samples/speech/paraformer/conversion/compile.py \
 `--workspace` 和**新的** `--output-dir` 必填；`--compiler` 默认 `hb_compile`，
 也可指定可执行文件。工作目录路径不能含 OE 校准目录分隔符 `;`。
 先把整个准备目录移动或挂载到工具链环境。入口核验全部快照/配置/NPY 摘要，
-拒绝额外加入的校准文件，再生成本轮绝对路径配置，保持原准备目录不变。
+拒绝额外加入的校准文件，再生成该次运行的绝对路径配置，保持原准备目录不变。
 逐阶段执行 `hb_compile -c <stage.yaml>`，全部结束后再次核验准备目录。
 
 每阶段记录精确 argv/cwd、UTC 时间、配置摘要、完整且分开的 stdout/stderr
@@ -189,14 +207,35 @@ HBM，均判失败并停止后续阶段。`compile-report.json` 保留此前完�
 ## 验证转换结果
 
 导出必须完成数值与接口检查，校准准备必须通过快照与数组检查，编译必须保留成功的
-逐阶段日志与产物。这些检查各自独立：非空 HBM 不代表模型输出验证通过。
+逐阶段日志与产物。这些检查各自独立：非空 HBM 本身不构成模型输出验证。
 通过[主机评测](../evaluator/README_cn.md)获取 FP32/PTQ 图的逐条转写与 CER；
 具备 S100 环境后，再单独核验 HBM。
+
+板端可用自带命令直接测每段 HBM 的单核纯 BPU 延迟：
+
+```bash
+hrt_model_exec perf --model_file encoder_int16.hbm  --thread_num 1 --frame_count 200
+hrt_model_exec perf --model_file predictor_int16.hbm --thread_num 1 --frame_count 500
+hrt_model_exec perf --model_file decoder_int16.hbm  --thread_num 1 --frame_count 200
+```
+
+本配方的源发布记录（S100，单 BPU 核）：
+
+| 项 | Encoder | Predictor | Decoder |
+| --- | --- | --- | --- |
+| HBM 大小 | 211.5 MB | ~4 MB | 73.5 MB |
+| 静态延迟（编译器） | 32.52 ms（FPS 30.75） | ~0.35 ms | 5.77 ms（FPS 173） |
+| 板端 `hrt_model_exec perf` | 33.11 ms（FPS 30.18） | 0.67 ms | 6.12 ms（FPS 162.8） |
+| 内存 | 静态 211 MB、动态 3.6 MB、DDR 499 MB | — | DDR 127 MB |
+
+Encoder 编译时间约 55 分钟（`jobs=32`）。S100 单核 BPU 已饱和；
+`--thread_num 8` 只是并发排队，单帧延迟不变。板端 `hbm_runtime` 的
+Python 接口手册见 [S Python API 指南](https://developer.d-robotics.cc/rdk_s_doc/Algorithm_Application/python-api)。
 
 <a id="artifacts"></a>
 ## 生成产物
 
-相对于本轮编译目录的预期输出：
+相对于编译目录的预期输出：
 
 | 阶段 | HBM | 可选量化 ONNX，供后续评估 |
 | --- | --- | --- |
@@ -204,11 +243,9 @@ HBM，均判失败并停止后续阶段。`compile-report.json` 保留此前完�
 | predictor | `predictor/predictor_int16.hbm` | `predictor/predictor_int16_ptq_model.onnx` |
 | decoder | `decoder/decoder_int16.hbm` | `decoder/decoder_int16_ptq_model.onnx` |
 
-即使三个非空 HBM 都生成且退出码为零，也只记 **`compiled_unverified`**，
-不是板端/SDK/精度验收。不会自动发布、改名成官方资产或拷入运行时模型目录。
-本机没有 OE，仅做了编排夹具测试及真实的“编译器缺失”拒绝检查。
-校准准备不保证量化质量；没有 PTQ ONNX 时明确记录缺失，不伪造文件。
-详见[校准与编译准备证据](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-calibration-review.md)。
+即使三个非空 HBM 都生成且退出码为零，编译报告仍记 **`compiled_unverified`**，
+直到[验证](#validation)中的板端/SDK 检查通过。不会自动发布、改名成官方资产
+或拷入运行时模型目录。没有 PTQ ONNX 时在报告中明确记录缺失。
 
 ## 固定部署语义
 
@@ -219,11 +256,9 @@ encoder 始终处理 400 帧，推理时真实音频长度由 CPU CIF 应用。p
 生成的内部张量编号后缀。
 
 decoder 编排参考 FunASR，并保留 [MIT 许可](LICENSE-FunASR)。固定宽度 mask
-直接表达既有部署契约，代替旧流程按一次输入探测后固化 Range 的方式。
-上游通用 decoder 直接接受**未填充** token 序列时，短序列结果不能简单视为
-数值等价；此项比较失败已保留。部署对照采用未修改的上游 decoder 导出器，
-再执行历史源固定 100 宽度的 Range 处理。不能由这些导出检查推断原始变长
-模型的精度或 HBM 的精度。
+直接表达部署契约。上游通用 decoder 直接接受**未填充** token 序列时，
+短序列结果不能视为数值等价。部署对照采用未修改的上游 decoder 导出器，
+再执行固定 100 宽度的 Range 处理。
 
 ## 图测试
 
@@ -231,10 +266,14 @@ decoder 编排参考 FunASR，并保留 [MIT 许可](LICENSE-FunASR)。固定宽
 python -m unittest discover -s samples/speech/paraformer/tests -v
 ```
 
-此前独立图工具还在 Python 3.14.7、NumPy 2.5.3、ONNX 1.23.0、
-ORT 1.30.0 上测试过；这不代表 FunASR 导出兼容该环境。
-可选依赖缺失时部分测试会跳过，请使用上述完整导出环境并核对实际执行数量，
-不要把 skip 当作验证通过。
+请在上述导出环境中运行；可选依赖缺失时部分测试会跳过，请核对实际执行数量。
+
+<a id="cif-shape-workaround"></a>
+## CIF 形状兼容写法
+
+HBDK4 4.7.5 转换 CIF 时，`remains.unsqueeze(-1)` 可能触发 `type_inf`
+异常。将末维表达式改为 `remains.reshape(-1, 1)`，导出器会生成输出秩明确的
+ONNX Reshape，供编译器处理。
 
 ## 已提供的变换
 
@@ -293,43 +332,12 @@ print("Gather-only rewrite validated; input model preserved")
 再保存为新文件；不要覆盖源模型。动态索引的 Cast 还需要模型契约提供范围依据，
 几个测试输入通过不足以证明这一点。API 不自动替调用者作出这两个判断。
 
-## 源流程与剩余迁移边界
-
-S 源提交 `380e1a2bf42041af54be6f34935e50197cfadff9` 的
-完整原始中文说明 (historical `../../../../platforms/s/samples/speech/paraformer/conversion/README_cn.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
-作为历史资料保留。各步骤当前边界如下：
-
-| 源步骤 | 用途 | 统一实现状态 |
-| --- | --- | --- |
-| `01_reexport_fixed_shape.py` | 导出固定形状模型 | 由 `export.py` 直接导出三个阶段替代；不生成整套 CIF 图、不使用全局补丁或覆盖源输出。 |
-| `02_extract_decoder.py`、`07_extract_predictor.py`、`08_extract_encoder.py` | 依赖内部名称切出三个阶段 | 由显式 Torch 阶段边界替代，保持部署名称和形状。 |
-| `03_convert_gather_int64_to_int32.py` 至 `06_shape_freeze.py` | 处理 Gather、依赖顺序、Range 和轴 | 共享工具已接入真实权重导出。不调用简化器，故不接受未经核验的简化器结果。 |
-| `09_gen_calib_features.py` | 从代表性真实音频生成特征 | 已由 `prepare.py` 接入统一、确定性前端。 |
-| `10_gen_real_calib.py`、`cif_numpy.py` | 运行阶段模型，生成 predictor/decoder 校准数据 | 已实现真实 encoder/predictor 执行及共享不屏蔽 CIF（`real_T=None`），区别于运行时有效帧屏蔽。 |
-| 三份 `*_int16.yaml` | 为 `nash-e` 编译三个阶段 | 已按源参数生成路径一致的配置并提供显式 OE 调用；真实编译/SDK 验证未执行。 |
-| `11_eval_pipeline.py` | 比较三阶段语音流程 | [专用 evaluator](../evaluator/README_cn.md)：真实 FP32 smoke 对照；保留 HMCT 适配，实际 HMCT 未执行。 |
-
-源配方采用 max 校准、内部 INT16、O2 latency 优化及单 BPU 核。
-这些配置不能确定最终物理输入输出类型，也不能证明新 HBM 的运行兼容性；
-运行时仍须核验真实阶段签名。源脚本的 `out/` 默认路径与 YAML 相对根目录
-的路径存在不一致，直接照搬执行不能当作已验证的端到端流程。
-源性能数字只保留历史意义，本次图测试不证明 CER、延迟或数据集精度。
-
 <a id="known-gaps"></a>
-## 当前验证范围
+## 已知缺口
 
-十项图测试覆盖共享 Gather 常量、常量溢出和求值规模限制、动态 Cast 显式启用、
-中间张量命名唯一性、依赖排序、残缺图拒绝、静态/动态 Range，以及不同秩
-消费者共享负轴的处理。数值对照实际使用 ONNX Runtime 运行原图和新图，
-要求输出类型和值一致。
-
-真实权重阶段导出及两条完整示例流程单独验证；OE 编译、SDK 执行、板测和数据集 CER
-仍未验证。详见[主机证据记录](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-graph-ops-review.md)。
-
-真实权重结果、初次失败和复现方式见[导出记录](../../../../docs/releases/unified-migration/2026-09-28-b10-paraformer-export-review.md)。
-
-16 项导出检查使用真实 encoder 生成的 context（零/随机特征及两条真实音频特征）。
-另用任意随机隐藏向量做压力检查时，Torch/ORT 差异明显扩大，**不满足**导出容差。
-相同 ORT 设置下，旧、新固定宽度 ONNX 图在这些压力用例中一致；这证明源部署
-行为得到保留，不代表全输入域 Torch/ONNX 等价。两条示例转录与参考文本也存在
-识别错误，不声明数据集 CER 或精度提升。
+- HMCT/OE 编译在 OE 工具链环境中按[编译](#compile)执行；生成的 HBM 在
+  [验证](#validation)中的板端/SDK 检查通过前保持 `compiled_unverified` 状态。
+- 数值导出检查使用真实 encoder 生成的 context（零/随机特征及两条真实音频特征）。
+  任意随机隐藏向量会产生明显更大的 Torch/ONNX Runtime 差异，不满足导出容差；
+  检查定义在真实特征 context 上。
+- 两条语音的校准准备只是流程示例；实际量化应提供代表性的 16 kHz WAV 集合。

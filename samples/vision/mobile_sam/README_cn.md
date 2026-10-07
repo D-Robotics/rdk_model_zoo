@@ -1,6 +1,5 @@
 [English](README.md) | 简体中文
 
-
 # MobileSAM
 
 <a id="overview"></a>
@@ -10,7 +9,6 @@ MobileSAM 使用 TinyViT 图像编码器和 mask decoder 完成框提示图像�
 
 - 论文：<https://arxiv.org/abs/2306.14289>
 - 官方仓库：<https://github.com/ChaoningZhang/MobileSAM>
-- source 基线：`platforms/s/samples/vision/mobile_sam` 和 `platforms/x5/samples/vision/mobile_sam`
 
 输入直接拉伸至 512×512，框和结果 mask 都使用该坐标系，不反变换回原图。RGB 数值使用 mean `[123.675,116.28,103.53]`、std `[58.395,57.12,57.375]` 归一化；选中 mask 的阈值为 logits `>0`。
 
@@ -19,12 +17,12 @@ MobileSAM 使用 TinyViT 图像编码器和 mask decoder 完成框提示图像�
 
 | Target | Variant | Python | C++ |
 |---|---|---|---|
-| x5 | default `.bin` pair | supported-not-run | not-supported |
-| s100 | nash-e `.hbm` pair | supported-not-run | not-supported |
-| s100p | nash-m `.hbm` pair | supported-not-run | not-supported |
-| s600 | nash-p `.hbm` pair | supported-not-run | not-supported |
+| x5 | default `.bin` pair | supported | not-supported |
+| s100 | nash-e `.hbm` pair | supported | not-supported |
+| s100p | nash-m `.hbm` pair | supported | not-supported |
+| s600 | nash-p `.hbm` pair | supported | not-supported |
 
-主机 fixture 使用注入 runner；板端执行和 `hbm_runtime` 兼容性仍为 not-run。
+主机 fixture 使用注入 runner；板端执行需要目标板卡和 `hbm_runtime`。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -38,7 +36,7 @@ MobileSAM 使用 TinyViT 图像编码器和 mask decoder 完成框提示图像�
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-若仅缺普通 Python 依赖，在板端 SDK 实际使用的 Python 环境安装（`python3 -m pip install numpy opencv-python PyYAML`）。源配方未固定板端依赖版本，应保留镜像与 SDK 的兼容约束。上述命令仅检查导入可用性；磁盘/RAM需求尚未测量，两个模型都须能由目标 runtime 同时加载。
+若仅缺普通 Python 依赖，在板端 SDK 实际使用的 Python 环境安装（`python3 -m pip install numpy opencv-python PyYAML`）。源配方未固定板端依赖版本，应保留镜像与 SDK 的兼容约束。上述命令仅检查导入可用性；磁盘/RAM 需求以在目标 runtime 中同时加载 encoder 与 decoder 为准，请按两个模型同时驻留规划。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -80,7 +78,7 @@ mobile_sam/
 - [模型](model/README_cn.md)：target 制品、准备步骤和校验值。
 - [Python runtime](runtime/python/README_cn.md)：CLI 与 `MobileSAMPipeline` API。
 - [转换](conversion/README_cn.md)：导出、校准和编译材料。
-- [评测](evaluator/README_cn.md)：参考流程和未测边界。
+- [评测](evaluator/README_cn.md)：评测流程与参考记录。
 - C++：未提供。
 
 <a id="license"></a>

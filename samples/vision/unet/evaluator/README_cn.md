@@ -28,11 +28,11 @@ VOC 调色板 mask 必须按类别索引读取，评测前不能转换为灰度�
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| --model | required | .pth / .onnx / .bin |
+| --model | required |.pth /.onnx /.bin |
 | --manifest | required | image TAB mask absolute path pairs |
 | --report | required | new JSON path; existing file rejected |
 | --backend | auto | suffix detection or pytorch/onnx/x5 |
-| --backbone | None | required for .pth or custom-named .bin |
+| --backbone | None | required for.pth or custom-named.bin |
 | --limit | None | first N manifest entries; positive |
 | --progress-every | 50 | progress interval |
 | --min-miou | 0.0 | write report and return 2 if below threshold |
@@ -98,9 +98,9 @@ mIoU 对 union>0 的类别平均；像素准确率为非 ignore 像素中预测�
 <a id="reference-results"></a>
 ## 参考结果
 
-保留的五骨干训练/PTQ 表及 ResNet18 三后端 1449 张记录见[样例根文档](../README_cn.md)。它们绑定原分支的 checkpoint/制品条件；本轮没有重新测量 mIoU、BPU 延迟或 FPS。主机合成数据测试不替代这些证据。
+五骨干训练/PTQ 表及 ResNet18 三后端 1449 张记录见[样例根文档](../README_cn.md)，各数值绑定其原始 checkpoint/制品条件。主机合成数据测试不替代这些测量。
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
-完整数据集、checkpoint、ONNX、BIN 需事先准备。当前未执行完整数据集评估或板测；运行时耗时不是本评估器提供的纯 BPU benchmark。源代码保留 PyTorch 严格权重加载和 ONNX 单输入/输出限制，不宣称任意新架构或 S 系列资产兼容。
+完整数据集、checkpoint、ONNX、BIN 需事先准备。运行时耗时不是本评估器提供的纯 BPU benchmark。源代码保留 PyTorch 严格权重加载和 ONNX 单输入/输出限制，不宣称任意新架构或 S 系列资产兼容。

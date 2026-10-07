@@ -15,7 +15,7 @@ English | [简体中文](README_cn.md)
 <a id="preparation"></a>
 ## Preparation
 
-From the repository root, run the explicit target command using the board Python environment. It downloads both manifest assets into `samples/vision/efficient_sam/model/` (X5) or its `nash-e/`, `nash-m/`, `nash-p/` subdirectory (S) and reports observed digests. It requires network access and does not run during inference.
+From the repository root, run the explicit target command using the board Python environment. It downloads both manifest assets into `samples/vision/efficient_sam/model/` (X5) or its `nash-e/`, `nash-m/`, `nash-p/` subdirectory (S) and reports observed digests. It requires network access and runs as an explicit preparation step before inference.
 
 ```bash
 python3 samples/vision/efficient_sam/model/download.py --target s100

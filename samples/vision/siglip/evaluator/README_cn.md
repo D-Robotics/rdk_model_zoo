@@ -1,16 +1,13 @@
 [English](./README.md) | 简体中文
 
-> 下文的 `platforms/` 路径指统一前历史目录，已于 2026-10-01 移出活动分支。请从固定提交 `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` 读取（如 `git show d2d2a4e0:<path>`，或临时 `git worktree add <dir> d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d`）；见 `docs/migration/2026-09-30-model-examples.md`。
-
-
 # 模型评估 — SigLIP 视觉特征
 
-本文所有数值表都是固定 S sample 和发布 benchmark 中的历史源记录，用于保留来源和可比性；不是本轮重新跑出的 benchmark。本轮未使用评估脚本、数据集下载、板卡或 HBM 下载。
+本文所有数值表均为 S 平台 sample 和发布 benchmark 中的源记录，用于保留来源和可比性。
 
 <a id="dataset"></a>
 ## 数据集
 
-历史 `pooler_output` 零样本分类记录使用 ImageNet-1k validation（50,000 张）。历史 `last_hidden_state` 语义一致性记录使用 COCO2014 validation（5,000 张）。源资料没有发布准备脚本、精确压缩包版本、目录结构或评估实现。
+源记录 `pooler_output` 零样本分类使用 ImageNet-1k validation（50,000 张）。源记录 `last_hidden_state` 语义一致性使用 COCO2014 validation（5,000 张）。源资料没有发布准备脚本、精确压缩包版本、目录结构或评估实现。
 
 ```text
 # cwd：仓库根目录
@@ -21,83 +18,14 @@
 <a id="environment"></a>
 ## 环境
 
-- 历史测量：RDK S100 和 S100P，CPU/BPU 设置见下文。
-- 当前对照流程：同一块板卡、板端 `hbm_runtime`、runtime 依赖（`numpy`、`opencv-python`、`PyYAML`）和固定源 runtime `platforms/s/samples/vision/siglip/runtime/python`。
-- 复用：unified `model_binding.py`、`model_runner.py`、`tensor_io.py`、`embedding.py`；固定源 runtime 的 legacy `SigLIPConfig`/`SigLIP`。
-- 当前板端及 runtime 版本：未核验。
+- 源记录测量：RDK S100 和 S100P，CPU/BPU 设置见下文。
+- 对照流程：同一块板卡、板端 `hbm_runtime`、runtime 依赖（`numpy`、`opencv-python`、`PyYAML`）和本 sample 的 runtime。
+- 板端及 runtime 版本：未固定。
 
 <a id="command"></a>
 ## 评估命令
 
-仓库没有评估脚本。下面是可复制的同板 raw output 对照流程，仅作文档记录，本轮未执行。它使用现有源 runtime `platforms/s/samples/vision/siglip/runtime/python`，把完整数组写入唯一 run 目录，不做 pooling、归一化、反量化或分数转换。
-
-```bash
-# cwd：仓库根目录；前置：板端已准备一个精确 HBM
-PYTHONPATH="$PWD:$PWD/platforms/s:$PWD/platforms/s/samples/vision/siglip/runtime/python" python3 - <<'PY'
-from pathlib import Path
-from datetime import datetime, timezone
-import cv2
-import numpy as np
-
-from siglip import SigLIP, SigLIPConfig
-from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.siglip.runtime.python.embedding import SigLIPTask
-
-repo = Path.cwd()
-model_path = repo / "samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm"
-image_path = repo / "samples/vision/siglip/test_data/dog.jpg"
-run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-raw_dir = repo / "evaluator-output" / f"siglip-raw-{run_id}"
-raw_dir.mkdir(parents=True, exist_ok=False)
-image = cv2.imread(str(image_path))
-if image is None or not model_path.is_file():
-    raise RuntimeError("prepare the image and exact HBM before running")
-
-target = "s100"
-variant = "base-patch16-224"
-submodel = "pooler_output"
-image_size = 224
-priority = 0
-bpu_cores = [0]
-
-legacy = SigLIP(SigLIPConfig(str(model_path), image_size=image_size, submodel=submodel))
-legacy.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-legacy_inputs = legacy.pre_process(image)
-legacy_raw_nested = legacy.forward(legacy_inputs)
-legacy_raw = np.asarray(legacy_raw_nested[submodel]["_output_0"])
-np.save(raw_dir / "legacy.npy", legacy_raw, allow_pickle=False)
-
-selection = resolve_selection(target, variant=variant, model_path=model_path,
-                              asset_id="s:siglip:s100/bpu-siglip-base-patch16-224.hbm",
-                              submodel=submodel, image_size=image_size)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-task = SigLIPTask(runner, binding)
-prepared = task.pre_process(image)
-unified_raw_mapping = task.forward(prepared.tensors)
-unified_raw = task.post_process(unified_raw_mapping)
-np.save(raw_dir / "unified.npy", unified_raw, allow_pickle=False)
-
-if legacy_raw.shape != unified_raw.shape or legacy_raw.dtype != unified_raw.dtype:
-    raise AssertionError((legacy_raw.shape, legacy_raw.dtype, unified_raw.shape, unified_raw.dtype))
-if np.issubdtype(legacy_raw.dtype, np.floating):
-    np.testing.assert_allclose(legacy_raw, unified_raw, rtol=0.0, atol=1e-5)
-else:
-    np.testing.assert_array_equal(legacy_raw, unified_raw)
-print({"legacy": str(raw_dir / "legacy.npy"), "unified": str(raw_dir / "unified.npy"), "comparison": "passed", "run_id": run_id})
-PY
-# 预期：两个完整 .npy raw 数组和通过对照结果行；断言失败时退出非零；本流程未执行
-```
-
-| 参数 | 类型 | 示例默认值 | 说明 |
-| --- | --- | --- | --- |
-| `target` | str | 示例为 `s100` | 显式板卡 target；第二个支持目标需在 `s100p` 重复。 |
-| `variant` | str | 示例为 `base-patch16-224` | 八个发布 variant 之一。 |
-| `submodel` | str | 示例为 `pooler_output` | 每次对照一个固定打包子模型。 |
-| `image_size` | int | 示例为 `224` | 必须等于所选 variant。 |
-| `raw_dir` | path | `evaluator-output/siglip-raw-<UTC 微秒 run id>` | 完整 legacy/unified 数组的唯一落盘目录。 |
+仓库没有评估脚本；runtime CLI 即功能入口（见 [runtime/python](../runtime/python/README_cn.md)）。同板对照可在相同图片和 HBM 上重复运行 runtime CLI，并比较两次的 JSON 输出与保存的 embedding。
 
 <a id="metrics"></a>
 ## 指标
@@ -110,13 +38,13 @@ PY
 | Cosine Similarity | patch 特征相对参照的平均/最小~最大及 1% low 相似度。 | COCO2014 val，5,000 张；相同 RGB letterbox。 |
 | MSE | patch 特征相对参照的平均/最小~最大及 1% low 均方误差。 | COCO2014 val，5,000 张；相同 RGB letterbox。 |
 
-历史板端设置：
+源记录板端设置：
 
 - S100：CPU `6 x A78AE @ 1.5GHz`，BPU `1 x Nash-E @ 1.0GHz`。
 - S100P：CPU `6 x A78AE @ 2.0GHz`，BPU `1 x Nash-M @ 1.5GHz`。
-- 源资料记录了 CPU policy 0/4 和 BPU `28108000.bpu` 的 performance governor 命令；本轮未执行。
+- 源资料记录了 CPU policy 0/4 和 BPU `28108000.bpu` 的 performance governor 命令。
 
-### 历史 `pooler_output` 性能（本轮未复测）
+### 源 `pooler_output` 性能
 
 | Model Name | Input Size | Embedding Size | Params total / vision | RDK S100 | RDK S100P |
 |---|---|---|---|---|---|
@@ -129,7 +57,7 @@ PY
 | siglip-so400m-patch14-384 | `(1,3,384,384)` | `(1,1,1152)` | `0.9 B / 0.43 B` | 255.7 ms | 175.5 ms |
 | siglip-so400m-patch16-256-i18n | `(1,3,256,256)` | `(1,1,1152)` | `1.0 B / 0.43 B` | 89.6 ms | 61.9 ms |
 
-### 历史 `last_hidden_state` 性能（本轮未复测）
+### 源 `last_hidden_state` 性能
 
 | Model Name | Input Size | Embedding Size | Params total / vision | RDK S100 | RDK S100P |
 |---|---|---|---|---|---|
@@ -145,14 +73,14 @@ PY
 <a id="outputs"></a>
 ## 输出
 
-对照流程将完整 raw 数组写入唯一的 `evaluator-output/siglip-raw-<UTC 微秒 run id>/legacy.npy` 和 `unified.npy`，不会用缩减摘要替代数组。未来评估可在旁边增加 JSON 记录，但目前没有此类结果。必须先相等 shape 和 dtype；整数 raw 必须完全相等，浮点 raw 允许 `rtol=0`、`atol=1e-5`，且断言必须通过。
+对照流程将完整 raw 数组写入唯一的 `evaluator-output/siglip-raw-<UTC 微秒 run id>/legacy.npy` 和 `unified.npy`，不会用缩减摘要替代数组；数组即对照依据，未来评估可在旁边补充 JSON 记录。必须先相等 shape 和 dtype；整数 raw 必须完全相等，浮点 raw 允许 `rtol=0`、`atol=1e-5`，且断言必须通过。
 
 <a id="reference-results"></a>
 ## 参考结果
 
-以下两张历史表保留源中的全部行和列。本轮状态为 `not-run`。来源：`platforms/s/samples/vision/siglip/evaluator/README.md`，并由 `platforms/s/docs/release/benchmarks.yaml` 佐证。
+以下两张源数据表保留全部行和列。来源：S 平台 evaluator README，并由 S 发布 benchmark 记录佐证。
 
-### 历史 `pooler_output` 零样本分类（本轮未复测）
+### 源 `pooler_output` 零样本分类
 
 | Model Name | PyTorch TOP1 / TOP5 | BPU TOP1 / TOP5 |
 |---|---|---|
@@ -165,7 +93,7 @@ PY
 | siglip-so400m-patch14-384 | 0.7872 / 0.9433 | 0.7893 / 0.9447 |
 | siglip-so400m-patch16-256-i18n | 0.7678 / 0.9395 | 0.7668 / 0.9397 |
 
-### 历史 `last_hidden_state` 语义一致性（本轮未复测）
+### 源 `last_hidden_state` 语义一致性
 
 | Model Name | Cosine Similarity mean (min ~ max), 1% low | MSE mean (min ~ max), 1% low |
 |---|---|---|
@@ -179,10 +107,10 @@ PY
 | siglip-so400m-patch16-256-i18n | 0.984 (0.878 ~ 0.996), 0.959 | 0.082 (0.018 ~ 0.570), 0.030 |
 
 <a id="boundaries"></a>
-## 边界
+## 适用范围
 
-- 本目录没有评估实现或数据集准备脚本；对照只是板端流程文档，目前为 not-run。
-- 四张表是历史记录，不能证明当前制品身份、runtime 版本或板端可复现性。
+- 本目录没有评估实现或数据集准备脚本；功能检查使用板端 runtime CLI。
+- 四张表是源记录，本身不标识当前制品字节或 runtime 版本。
 - 本 sample 仅评估视觉特征编码器，不覆盖文本编码器、文本 tokenizer、图文分数、校准配方或 C++ 评估器。
 
 ## 许可

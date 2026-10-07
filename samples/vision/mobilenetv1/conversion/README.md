@@ -1,20 +1,18 @@
 # MobileNetV1 model conversion
 
-Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
-environment; it is not a board operation. This directory keeps the
-conversion material the source branches shipped and records the gaps
-honestly; it does not invent a configuration that could produce a
-different artifact.
+Run conversion on an x86 Linux host in the RDK OpenExplore (OE)
+environment. The steps below identify the graph, calibration data, and
+target-specific PTQ configuration to prepare before rebuilding.
 
 <a id="source-model"></a>
 ## Source model
 
 MobileNetV1 ([paper](https://arxiv.org/abs/1704.04861),
 [tensorflow/models](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md)),
-fixed NCHW input `[1,3,224,224]`, ImageNet-1k class count. The X5
-source shipped no export script (its `conversion/` was README-only);
-the S conversion notes identify the MobileNet-Caffe source model
-converted with the S100 OE toolchain.
+fixed NCHW input `[1,3,224,224]`, ImageNet-1k class count. For X5,
+prepare an ONNX graph from the selected MobileNetV1 checkpoint. The S
+conversion notes identify the MobileNet-Caffe source model converted with
+the S100 OE toolchain.
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
@@ -31,25 +29,20 @@ Targets: X5 compiles with `hb_mapper` using march `bayes-e`; S100 uses
 <a id="export"></a>
 ## Export
 
-Not reproducible from this repository (known gap): neither source branch
-shipped an ONNX exporter or weight provenance for the published MobileNetV1
-artifacts. Regenerating the `.onnx` means authoring the export against the
-upstream model first; until that exists, this directory documents the
-deployment artifacts without reproducing them.
+Export an ONNX graph from the selected upstream MobileNetV1 checkpoint
+with input `[1,3,224,224]` and 1,000-class output. Record the framework,
+exporter, and checkpoint revision with the graph.
 <a id="calibration"></a>
 ## Calibration
 
-Not reproducible from this repository (known gap): no calibration set,
-preprocessing record, or PTQ configuration shipped for MobileNetV1 on
-either branch.
+Prepare a calibration set using the selected graph's image preprocessing,
+and record the image selection, normalization, and PTQ configuration.
 <a id="compile"></a>
 ## Compile
 
-No OE configuration shipped for MobileNetV1 on either source branch (known
-gap). The published `.bin`/`.hbm` artifacts were built outside this
-repository's material; regenerating them means authoring an OE
-configuration whose input protocol matches the runtime contract (packed
-NV12 on X5, split Y/UV on S100/S600) and recording the calibration data.
+Create an OE configuration for the selected target and graph. Match its
+input protocol to the runtime contract (packed NV12 on X5, split Y/UV on
+S100/S600), and bind the calibration data prepared above.
 <a id="validation"></a>
 ## Validation
 
@@ -58,16 +51,14 @@ manual and keep the complete output; then confirm on the matching board
 with the canonical runtime that the contract holds: X5 exposes one packed
 NV12 input and an F32 `[1,1000,1,1]` output; S100/S600 expose Y
 `[1,224,224,1]`, UV `[1,112,112,2]`, and an F32 `[1,1000]` output; the
-output semantics are post-softmax probabilities. Validation status for regenerated
-artifacts in this repository: **not-run**.
+output semantics are post-softmax probabilities.
 
 <a id="artifacts"></a>
-## Kept material
+## Artifacts
 
-- (none — README-only record)
+For inference, use the manifest-backed artifacts in [model/README.md](../model/README.md).
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
-- No exporter, OE configuration, or calibration set shipped on either
-branch; the conversion is documented, not reproduced.
+For inference, use the manifest-backed artifacts in [model/README.md](../model/README.md). A rebuild requires a MobileNetV1 ONNX graph with the 224x224 RGB/NCHW input and 1,000-class output, a matching weight revision, an OE PTQ configuration, and calibration data using the graph's preprocessing. Use the release artifact route when those inputs are not part of your conversion workspace.

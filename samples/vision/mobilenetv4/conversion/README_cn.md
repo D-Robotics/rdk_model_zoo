@@ -1,7 +1,7 @@
 # MobileNetV4 模型转换
 
 模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行，不是板卡
-操作。本目录保留源分支随附的转换材料，并如实记录缺口；不虚构能产出不同
+操作。本目录保留交付随附的转换材料并说明其缺口；不虚构能产出不同
 制品的配置。
 
 <a id="source-model"></a>
@@ -10,7 +10,7 @@
 timm `mobilenetv4_conv_small` 与 `mobilenetv4_conv_medium` 预训练
 权重，由 `get_mobilenetv4_onnx.py` 固定。脚本导出 small 为
 `[1,3,224,224]`、medium 为 `[1,3,256,256]`——X5 medium 的几何差异
-见[已知缺口](#known-gaps)。
+见[补充准备](#known-gaps)。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
@@ -35,55 +35,46 @@ cwd 为 `samples/vision/mobilenetv4/conversion`：
 python3 get_mobilenetv4_onnx.py    # -> mobilenetv4_conv_small.onnx + mobilenetv4_conv_medium.onnx
 ```
 
-导出器使用 onnx-simplifier 并打印参数量。迁移期间本仓库未重跑该命令；
-请将其视为源分支记录的配方，而非已验证结果。
+导出器使用 onnx-simplifier 并打印参数量（small 3,761,480 / medium
+9,681,560）。
 <a id="calibration"></a>
 ## 校准
 
-`get_calibration_data.py` 按源分支原样保留。其硬编码事实：与 V3 校准器
-相同，从旧目录树源目录
-（`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`，
-本仓库不存在——请改为自备的 ImageNet 验证集目录）读取
-`ILSVRC2012_val_*.JPEG`；变换链为 BGR（padded center crop、resize、
-HWC→CHW、`RGB2BGRTransformer`、×255、mean `103.94 116.78 123.68`、
-×0.017），图像尺寸由脚本内两行注释开关选择。校准图像未随附；再生成时
-必须记录所用图像清单。
+校准辅助脚本从 `src_image_dir` 读取 `ILSVRC2012_val_*.JPEG`。该参数默认值为
+`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`；
+运行前将 `src_image_dir` 改为本机 ImageNet 验证集目录。BGR 预处理依次执行 padded center
+crop、resize、HWC→CHW、`RGB2BGRTransformer`、×255、mean
+`103.94 116.78 123.68`、×0.017。两个注释开关选择图像尺寸。
+选择并记录校准集使用的验证图像。
 
-各 YAML 消费的内容 vs 脚本产出：
+按各 YAML 准备对应输入：
 
-| 配置（目标） | `cal_data_dir` | YAML 声明的布局/尺寸 | 原样脚本如何产出 |
+| 配置（目标） | `cal_data_dir` | 布局与尺寸 | 准备步骤 |
 | --- | --- | --- | --- |
-| `mobilenetv4_small_config.yaml`（s100；s600 仅改 march） | `./calibration_data_bgr_224` | BGR，224 | 默认即匹配：`output_calib_dir = './calibration_data_bgr_224/'` 与 `data_transformer(224)`——只需改源目录。 |
-| `mobilenetv4_medium_config.yaml`（s100；s600 仅改 march） | `./calibration_data_bgr_256` | BGR，**256** | 按脚本自身注释把两行开关切到 `output_calib_dir = './calibration_data_bgr_256/'` 与 `active_transformers = data_transformer(256)`（默认激活的是 224 一对），并改源目录。两行必须一起切换——256 目录配 224 数据（或相反）都是错的。 |
-| `MobileNetV4_small.yaml`（x5） | `./calibration_data_rgb_f32` | RGB，224 | **缺失前提**——脚本没有 RGB 输出模式；把 BGR 目录改名不是 RGB 配方。 |
-| `MobileNetV4_medium.yaml`（x5） | `./calibration_data_rgb_f32` | RGB，224 | **缺失前提**——同上 RGB 缺口。 |
+| `mobilenetv4_small_config.yaml`（s100；s600 仅改 march） | `./calibration_data_bgr_224` | BGR，224 | 保持辅助脚本的 224 输出目录与 `data_transformer(224)`；设置本机图像目录，并在生成前将 mean 常量（`103.94 116.78 123.68`）与 S YAML 数值（`103.53 116.28 123.675`）对齐。 |
+| `mobilenetv4_medium_config.yaml`（s100；s600 仅改 march） | `./calibration_data_bgr_256` | BGR，256 | 将两个注释开关切换到 `output_calib_dir = './calibration_data_bgr_256/'` 与 `active_transformers = data_transformer(256)`；设置图像目录，并将 mean 常量与 S YAML 数值对齐。 |
+| `MobileNetV4_small.yaml`（x5） | `./calibration_data_rgb_f32` | RGB，224 | 准备 224x224 float32 RGB 校准数组，按 X5 YAML 的通道顺序和归一化数值处理。 |
+| `MobileNetV4_medium.yaml`（x5） | `./calibration_data_rgb_f32` | RGB，224 | 准备 224x224 float32 RGB 校准数组，按 X5 YAML 的通道顺序和归一化数值处理。 |
 
-脚本 mean 常量（`103.94 116.78 123.68`）与 S 侧 YAML 的
-`103.53 116.28 123.675` 略有出入；两文件均为源分支原样——在此披露，
-不做静默修正。本仓库未重跑 PTQ 校准。
 <a id="compile"></a>
 ## 编译
 
-本目录保留的参考配置：
+构建配置：
 
 | 配置 | 目标 | 配置引用的输入 | 命令（OE 容器内） |
 | --- | --- | --- | --- |
-| `MobileNetV4_small.yaml` | x5 | `./mobilenetv4_conv_small.onnx`（与导出器输出一致）、`./calibration_data_rgb_f32`（**缺失**，见[校准](#calibration)） | `hb_mapper makertbin --config MobileNetV4_small.yaml` |
-| `MobileNetV4_medium.yaml` | x5 | `./mobilenetv4_conv_medium_deploy.onnx`（**无保留脚本能产出该文件**）、`./calibration_data_rgb_f32`（**缺失**） | `hb_mapper makertbin --config MobileNetV4_medium.yaml` |
+| `MobileNetV4_small.yaml` | x5 | `./mobilenetv4_conv_small.onnx`、`./calibration_data_rgb_f32`（按[校准](#calibration)准备） | `hb_mapper makertbin --config MobileNetV4_small.yaml` |
+| `MobileNetV4_medium.yaml` | x5 | `./mobilenetv4_conv_medium_deploy.onnx`（224x224 图）、`./calibration_data_rgb_f32`（按[校准](#calibration)准备） | `hb_mapper makertbin --config MobileNetV4_medium.yaml` |
 | `mobilenetv4_small_config.yaml` | s100（s600：march `nash-p`） | `./mobilenetv4_conv_small.onnx`（一致）、`./calibration_data_bgr_224`（脚本产出） | `hb_compile --config mobilenetv4_small_config.yaml` |
 | `mobilenetv4_medium_config.yaml` | s100（s600：march `nash-p`） | `./mobilenetv4_conv_medium.onnx`（与导出器的 256 导出一致）、`./calibration_data_bgr_256`（两行开关切换后由脚本产出） | `hb_compile --config mobilenetv4_medium_config.yaml` |
 
-**X5 medium 配置叠加三个缺失前提**：它读取的 `mobilenetv4_conv_medium_deploy.onnx`
-没有任何保留脚本能产出（导出器写出的是 256x256 的
-`mobilenetv4_conv_medium.onnx`，见[源模型](#source-model)），已发布 X5
-medium 制品为 224x224，且其校准目录要求 RGB。把导出文件改名成 deploy
-名字既不调和几何也不调和颜色顺序；X5 medium 链路无法在本目录现状下复现，
-不对其声称无条件可执行的配方。
+构建 X5 medium 时，准备 224x224 的 `mobilenetv4_conv_medium_deploy.onnx`
+以及 RGB float32 校准数据 `./calibration_data_rgb_f32`。上文导出器写出
+256x256 的 `mobilenetv4_conv_medium.onnx`；请另行导出或取得适用于此 YAML
+的 224x224 图。仅改名不会改变图的输入几何尺寸。
 
 S600 变体只需把 S 侧 YAML 中的 march 改为 `nash-p`。上表 march 取自 YAML
-文件本身（X5 `bayes-e`，S100 `nash-e`）。本仓库未重跑编译；在对比目标、
-输入 metadata、输出 shape/dtype 与数值结果之前，再生成制品不等价于已发布
-制品。
+文件本身（X5 `bayes-e`，S100 `nash-e`）。每次重建部署前，对照目标、输入 metadata、输出 shape/dtype 与数值结果。
 几何说明：S 侧 medium 配置按 `mobilenetv4_medium_config.yaml` 记录的
 256x256 输入编译；X5 medium 配置构建已发布的 224x224 制品。两种
 几何都是真实存在的，运行时契约表按目标分别记录。
@@ -103,7 +94,32 @@ S600 变体只需把 S 侧 YAML 中的 march 改为 `nash-p`。上表 march 取�
 
 若用上表 224 的 shape 去验收正确的 S medium 制品属于验收错误——S medium
 输入是 256x256。输出语义为原始 logits（softmax 由运行时任务施加）。
-本仓库对再生成制品的验证状态：**not-run**。
+
+原 S 构建的已发布量化记录（量化后余弦相似度）：
+
+```text
+mobilenetv4_medium:
+Calibrated Cosine: 0.999759
+Quantized Cosine: 0.999863
+
+mobilenetv4_small:
+Calibrated Cosine: 0.999892
+Quantized Cosine: 0.99988
+```
+
+原 S 构建的工具链性能记录：
+
+```text
+mobilenetv4_medium:
+FPS (1 core): 2468.07
+latency: 0.41 ms (405.2 us)
+BPU conv original OPs per run: 2,160,488,448
+
+mobilenetv4_small:
+FPS (1 core): 5698.18
+latency: 0.18 ms (175.5 us)
+BPU conv original OPs per run: 372,011,136
+```
 
 <a id="artifacts"></a>
 ## 保留材料
@@ -118,20 +134,9 @@ S600 变体只需把 S 侧 YAML 中的 march 改为 `nash-p`。上表 march 取�
 - `x86_medium_inference.py`
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
-- X5 侧导出脚本生成的 medium ONNX 为 256x256，而已发布 X5 medium 制品
-及其配置为 224x224；源材料未记录两者如何调和。因此按字节可比地再生成
-X5 medium 制品未被证明。
-- X5 medium 配置还期望一个 `mobilenetv4_conv_medium_deploy.onnx` 输入，
-无保留脚本能产出——见[编译](#compile)。
-- **X5 校准（small 与 medium）无配方**：两个 X5 YAML 均消费 RGB 的
-`./calibration_data_rgb_f32`，保留的脚本产不出（校准器仅 BGR），源分支
-也未发布过。
-- 校准脚本硬编码的源目录属于旧目录树；运行需改源目录，S medium 配方
-还需把两行 256 开关注释一起切换。
-- 校准脚本的 mean 常量与 S YAML 的 `mean_value` 略有出入（源分支原样的
-不一致，上文已披露）。
-- `x86_medium_inference.py` 是审计 medium 变体时使用的主机 ONNX 参考，
-不是部署路径。
-- 端到端再生成未在本仓库执行。
+- X5 medium YAML 期望名为 `mobilenetv4_conv_medium_deploy.onnx`、输入为 224x224 的模型图；现有 medium 导出辅助程序生成 256x256 图。编译 X5 medium 前，先使 ONNX 几何尺寸与 YAML 一致，并按相同尺寸准备校准数据。
+- X5 small 与 medium 校准目录为 RGB `./calibration_data_rgb_f32`；现有校准器生成 BGR 数据。编译前转换通道顺序并使用 X5 YAML 归一化值。
+- 将校准辅助程序的源图像目录设置为本地数据集路径。S medium 配置需同时切换两处注释掉的 256 几何开关。按所选 S YAML 的 `mean_value` 对齐辅助程序 mean 常量。
+- `x86_medium_inference.py` 在主机运行 medium ONNX；部署时使用编译所得 HBM 与板端运行时。

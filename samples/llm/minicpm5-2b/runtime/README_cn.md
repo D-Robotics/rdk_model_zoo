@@ -4,7 +4,7 @@
 
 启动器只依赖 Python 3 标准库，用于选择原生 SDK 实现；分词、模型执行与生成仍在 C++。
 S100/S100P 使用 [OELLM 1.0.0 legacy](legacy/README_cn.md)，S600 使用
-[OELLM 2.0 实现](cpp/README_cn.md)。上述版本属于固定源记录；文件名相同不代表 SDK 或模型可互换。
+[OELLM 2.0 实现](cpp/README_cn.md)。文件名相同不意味着 SDK 或模型可互换；版本名沿用源发布。
 
 ## 显式准备、构建、运行
 
@@ -19,8 +19,8 @@ python3 runtime/launcher.py --target s600 --build
 python3 runtime/launcher.py --target s600 -- --prompt 'What is the capital of France?'
 ```
 
-S100/S100P 请同时更改两个目标选择，并使用其 OELLM 1.0.0 SDK。启动器不安装软件包、不下载模型、不执行量化。
-`--build` 只构建，不运行推理；普通运行不会自动编译缺失的程序。各目标使用独立模型/构建目录，原生参数放在 `--` 后。
+S100/S100P 请同时更改两个目标选择，并使用其 OELLM 1.0.0 SDK。使用启动器前先准备 SDK 与模型。
+`--build` 构建目标程序。程序就绪后，使用单独的启动命令运行推理。各目标使用独立模型/构建目录，原生参数放在 `--` 后。
 
 ## 无板主机预览
 
@@ -30,8 +30,8 @@ python3 samples/llm/minicpm5-2b/runtime/launcher.py --target s600 --build --dry-
 ```
 
 输出 JSON 包含 SDK 分支、路径、命令与超时，不执行子进程、不读模型、不创建文件，也不要求安装 SDK。
-未设置 runtime 路径时显示 `null` / `<set-runtime-root>`。真正构建/运行先检查板型，拒绝不匹配或无法识别的主机。
-预览不证明运行兼容；本轮迁移未运行板测。
+未设置 runtime 路径时显示 `null` / `<set-runtime-root>`。真正构建/运行先检查板型，拒绝不匹配或无法识别的主机；
+实际构建/运行命令在板端执行。
 
 ## 参数与环境
 
@@ -54,8 +54,3 @@ legacy 为 `--model-path`、`--tokenizer-path`、`--template-path`、`--prompt`�
 启动器把 SDK `lib` 加到 `LD_LIBRARY_PATH` 首部；S600 设置 L2M 为 `6:6:6:6`。
 原生退出码直接传回，编排错误返回 2，legacy 超时返回 124。
 源模型准备命令校验固定归档/清单哈希，启动时不重复校验，详见[模型说明](../model/README_cn.md)。
-
-## 迁移边界
-
-原生推理核心与完整 README 契约仍在重构。源量化/评估文件与历史精度未达标结论保留，不重新运行量化。
-启动器主机测试通过不代表这些迁移项完成，也不把历史板测升级成本轮证据。
