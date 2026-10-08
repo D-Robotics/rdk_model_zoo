@@ -11,14 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Run ResNeXtClassifier preprocessing, board inference, and Top-K decoding.
-
-Shared utilities provide image reading, labels, tensor preparation, and SDK calls.
-"""
+"""ResNeXt model: load, preprocess, infer, postprocess, and predict."""
 
 from __future__ import annotations
 
-from samples.vision.resnext.runtime.python.model_binding import BINDING_TABLE
 
 from pathlib import Path
 from utils.py_utils.image import read_bgr_image
@@ -35,7 +31,6 @@ from utils.py_utils.classification import (
 from utils.py_utils.cls_binding import (
     SCORE_POLICIES,
     MetadataMismatchError,
-    ModelSelection,
 )
 from utils.py_utils.quantization import apply_output_transform
 from utils.py_utils.tensor_io import PreparedInput, prepare_nv12
@@ -44,80 +39,70 @@ from utils.py_utils.model_runner import RuntimeModelRunner
 
 
 class ResNeXtClassifier:
-    """ResNeXt image classifier with the full pipeline readable in one place.
-
-    The object loads the model once and reuses it across ``predict`` calls.
-    Each call carries its own resize/letterbox context on the prepared
-    input, so consecutive images of different sizes never reuse a stale
-    transform.  Prediction itself prints nothing, draws nothing and writes
-    no files; presentation belongs to the caller.
+    """ResNeXt image classifier.
 
     Args:
-        selection: The resolved model selection (a manifest-published
-            reference; a ``model_path`` override requires the exact
-            qualified asset id).
-        top_k: Number of results to decode (default 5).
-        labels: Optional class names — a sequence of exactly
-            ``class_count`` names, or a mapping of class index to name.
-            Without labels the result keeps the raw class IDs.
-        resize_type: 0 stretch or 1 letterbox; ``None`` (default) follows
-            the bound source contract.
-        runner: Optional injected runner (host-test seam).  Production
-            callers leave it unset and get the shared runner backed by the
-            shared SDK session.
+        model_path: Compiled model path; see __init__ for tensor and target options.
 
     Attributes:
-        selection (ModelSelection): Selected model path, target, and contract.
-        runner (RuntimeModelRunner): Loaded shared runtime used by infer.
-        binding (ModelBinding): Validated tensor names and input/output metadata.
-        labels (Mapping[int, str] | Sequence[str] | None): Optional class names.
-        top_k (int): Number of ranked classes per image.
-        resize_type (int | None): Explicit resize policy or the contract default.
+        runner: Shared classification Runtime adapter.
+        binding: Input and output metadata validated when the model loads.
+        top_k: Number of ranked classes returned by predict.
     """
 
     def __init__(
-        self,
-        selection: ModelSelection,
-        *,
-        top_k: int = 5,
-        labels: Optional[Mapping[int, str] | Sequence[str]] = None,
-        resize_type: Optional[int] = None,
-        runner: Optional[RuntimeModelRunner] = None,
+        self, model_path: str | Path, *, target: str,
+        input_size: tuple[int, int] = (224, 224), class_count: int = 1000,
+        top_k: int = 5, labels: Mapping[int, str] | Sequence[str] | None = None,
+        resize_type: int | None = None, resize_interpolation: str | None = None,
+        score_policy: str = "softmax", output_transform: str = "raw_f32",
+        runner: RuntimeModelRunner | None = None,
     ) -> None:
-        """Load the selected model and configure its classification stages.
+        """Load the compiled model and validate its classification settings.
 
         Args:
-            selection: Published model path, concrete target, and input/output contract
-                returned by this sample's resolve_selection.
-            top_k: Number of ranked classes in [1, class_count]; defaults to 5.
-            labels: Optional full class-name sequence or sparse integer/name mapping.
+            model_path: Local compiled model path; leading ~ is expanded.
+            target: Artifact target: x5, s100, s100p, or s600. Must match the board.
+            input_size: Positive, even (height, width) in pixels; defaults to (224, 224).
+            class_count: Positive output class count; defaults to 1000.
+            top_k: Number of results in [1, class_count]; defaults to 5.
+            labels: Full class-name sequence, sparse index/name mapping, or None.
                 Missing names are rendered as class IDs.
-            resize_type: 0 stretches; 1 applies letterbox; None uses the model contract.
-            runner: Optional injected runner; otherwise use the shared runtime with
-                this sample's binding table.
+            resize_type: 0 stretches; 1 preserves aspect ratio with letterbox padding.
+                None follows an injected binding or uses 1 for a local model.
+            resize_interpolation: Direct-resize interpolation; None uses linear on
+                X5 and nearest on S. Letterbox uses linear interpolation.
+            score_policy: softmax or legacy_softmax normalizes scores; none preserves
+                values. Defaults to softmax.
+            output_transform: raw_f32 passes through float32 output; dequant applies
+                SDK quantization metadata before scoring.
+            runner: Optional injected runner. Its loaded binding supplies the model
+                contract instead of model_path, target, and tensor settings.
 
         Returns:
             None.
 
         Raises:
-            ValueError: Top-K, labels, or execution target is invalid.
-            TypeError: Labels are not a supported sequence or mapping.
-            BindingError: Model metadata violates the selected contract.
-            RuntimeError: The SDK cannot load the model.
+            ValueError: Class count, Top-K, labels, or local model settings are invalid.
+            TypeError: Labels are neither a mapping nor a class-name sequence.
+            FileNotFoundError: The local model file does not exist.
+            BindingError: Runtime metadata or the selected target violates the contract.
+            RuntimeError: Board identity, SDK availability, or model loading fails.
         """
-        self.selection = selection
-        self.runner = runner if runner is not None else RuntimeModelRunner(selection, table=BINDING_TABLE)
-        # Loading validates the board identity (via the shared SDK session),
-        # imports the SDK, constructs the model and binds its actual tensor
-        # metadata against the selection contract.
+        from utils.py_utils.model_runner import RuntimeModelRunner
+
+        self.resize_type = resize_type
+        self.runner = runner if runner is not None else RuntimeModelRunner.from_file(
+            model_path, target=target, input_size=input_size, class_count=class_count,
+            resize_type=1 if resize_type is None else resize_type,
+            resize_interpolation=resize_interpolation or ("linear" if target == "x5" else "nearest"),
+            score_policy=score_policy, output_transform=output_transform)
         self.binding = self.runner.load()
         class_count = self.binding.contract.class_count
-        if top_k <= 0 or top_k > class_count:
-            raise ValueError(
-                f"top_k must be between 1 and {class_count}, got {top_k}.")
-        self.top_k = int(top_k)
+        if not 1 <= top_k <= class_count:
+            raise ValueError(f"top_k must be between 1 and {class_count}, got {top_k}.")
         self.labels = validate_labels(labels, class_count)
-        self.resize_type = resize_type
+        self.top_k = int(top_k)
 
 
     def preprocess(self, source: "str | Path | np.ndarray") -> PreparedInput:

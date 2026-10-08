@@ -27,7 +27,7 @@ class EntryTests(unittest.TestCase):
                 self.assertIn('variant: m0_9', run.stdout)
 
     def test_default_and_all_published_variants(self):
-        from samples.vision.repvit.runtime.python.model_binding import resolve_selection, list_available_assets
+        from samples.vision.repvit.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(resolve_selection('x5').variant, 'm0_9')
         self.assertEqual({r.filename for r in list_available_assets()}, set(FILENAMES.values()))
         for v in VARIANTS:
@@ -36,7 +36,7 @@ class EntryTests(unittest.TestCase):
             self.assertEqual((selected.contract.input_height, selected.contract.input_width), (224,224))
 
     def test_rejects_unpublished_target_and_mismatched_identity(self):
-        from samples.vision.repvit.runtime.python.model_binding import resolve_selection, BindingError
+        from samples.vision.repvit.runtime.python.cli import resolve_selection, BindingError
         for target in ('s100','s100p','s600'):
             with self.assertRaises(BindingError):
                 resolve_selection(target)
@@ -95,7 +95,7 @@ class SourceComparisonTests(unittest.TestCase):
         cls.source.input_h=224;cls.source.input_w=224;cls.source.labels={}
 
     def task(self, variant=None):
-        from samples.vision.repvit.runtime.python.model_binding import bind_model,resolve_selection
+        from samples.vision.repvit.runtime.python.cli import bind_model,resolve_selection
         from utils.py_utils.classification import ClassificationTask
         selection = resolve_selection('x5', variant=variant)
         height, width = selection.contract.input_height, selection.contract.input_width
@@ -162,7 +162,7 @@ class SourceComparisonTests(unittest.TestCase):
             self.assertEqual((SAMPLE/'conversion'/recipe.name).read_bytes(), recipe.read_bytes())
 
     def test_rejects_incompatible_metadata(self):
-        from samples.vision.repvit.runtime.python.model_binding import bind_model, resolve_selection, MetadataMismatchError
+        from samples.vision.repvit.runtime.python.cli import bind_model, resolve_selection, MetadataMismatchError
         for dtype, size in [('I8',224),('F32',256)]:
             metadata={'model_name':'fixture','input_names':['data'],'input_shapes':{'data':(1,3,size,size)},'input_dtypes':{'data':'U8'},'output_names':['prob'],'output_shapes':{'prob':(1,1000)},'output_dtypes':{'prob':dtype}}
             with self.assertRaises(MetadataMismatchError):

@@ -8,7 +8,7 @@ the per-variant contract (L1/L3 are both 224).
 
 from __future__ import annotations
 
-from samples.vision.efficientformerv2.runtime.python.model_binding import RuntimeMetadata
+from samples.vision.efficientformerv2.runtime.python.cli import RuntimeMetadata
 
 
 def runtime_metadata(

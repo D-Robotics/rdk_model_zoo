@@ -108,7 +108,7 @@ class RecipeConsistencyTests(unittest.TestCase):
                 self.assertIn(f"working_dir: '{working_dir}'", text)
 
     def test_published_binding_matches_the_recipe_set(self):
-        from samples.vision.fasternet.runtime.python.model_binding import (
+        from samples.vision.fasternet.runtime.python.cli import (
             BINDING_TABLE,
             list_available_assets,
         )

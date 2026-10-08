@@ -16,7 +16,7 @@ class PolicyTests(unittest.TestCase):
             ClassificationTask,
             topk_from_scores,
         )
-        from samples.vision.mobilenetv1.runtime.python.model_binding import (
+        from samples.vision.mobilenetv1.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )
@@ -64,7 +64,7 @@ class PolicyTests(unittest.TestCase):
 
     def test_injected_runner_flows_split_input_through_task(self):
         from utils.py_utils.classification import ClassificationTask
-        from samples.vision.mobilenetv1.runtime.python.model_binding import (
+        from samples.vision.mobilenetv1.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )
@@ -89,7 +89,7 @@ class PolicyTests(unittest.TestCase):
 
     def test_packed_input_uses_canonical_flat_buffer(self):
         from utils.py_utils.classification import ClassificationTask
-        from samples.vision.mobilenetv1.runtime.python.model_binding import (
+        from samples.vision.mobilenetv1.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )

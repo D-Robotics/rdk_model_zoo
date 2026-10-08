@@ -179,6 +179,8 @@ class B3CompareProtocolTests(unittest.TestCase):
 
         for sample in sorted(_DEFAULT_ASSET):
             with self.subTest(sample=sample), tempfile.TemporaryDirectory() as td:
+                existing_utils = {name: module for name, module in sys.modules.items()
+                                  if name == "utils" or name.startswith("utils.")}
                 rc, err, harness = self._run_sample(Path(td), sample)
                 self.assertEqual(rc, 0, err or harness.evidence().get("error"))
                 stored = harness.evidence()
@@ -248,10 +250,14 @@ class B3CompareProtocolTests(unittest.TestCase):
                     self.assertIsNotNone(resolved["observed_sha256"])
                     self.assertIsNotNone(resolved["pin_sha256"])
                     self.assertTrue(resolved["matches_pin"])
-                # Isolated install: no utils.* module leaks into sys.modules.
-                self.assertFalse(
-                    [name for name in sys.modules if name == "utils" or name.startswith("utils.")]
-                )
+                # Live Runtime now uses utils too. Retain its existing modules;
+                # no temporary historical dependency may replace or leak into it.
+                for name, module in existing_utils.items():
+                    self.assertIs(sys.modules.get(name), module, name)
+                for name, module in sys.modules.items():
+                    if name == "utils" or name.startswith("utils."):
+                        self.assertNotIn("platforms/x5/", str(getattr(module, "__file__", "")), name)
+                        self.assertNotIn("platforms/x5/", str(getattr(module, "__path__", "")), name)
                 self.assertIn("legacy", stored["metadata"])
                 self.assertIn("unified", stored["metadata"])
                 self.assertEqual(stored["artifacts"]["model"]["publisher_sha256"], None)

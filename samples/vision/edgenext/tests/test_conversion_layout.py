@@ -102,7 +102,7 @@ class RecipeConsistencyTests(unittest.TestCase):
     def test_published_binding_matches_the_recipe_set(self):
         """The four recipe variants are exactly the four published assets."""
 
-        from samples.vision.edgenext.runtime.python.model_binding import (
+        from samples.vision.edgenext.runtime.python.cli import (
             BINDING_TABLE,
             list_available_assets,
         )

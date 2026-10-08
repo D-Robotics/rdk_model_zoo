@@ -29,7 +29,7 @@ from samples.vision.efficientformerv2.runtime.python.cli import (  # noqa: E402
     run_list_models,
     save_result_image,
 )
-from samples.vision.efficientformerv2.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.efficientformerv2.runtime.python.cli import (  # noqa: E402
     BindingError,
     resolve_selection,
 )
@@ -79,11 +79,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         # after the selection, file, and board checks above have passed.
         from samples.vision.efficientformerv2.runtime.python.classify import EfficientFormerV2Classifier
 
+        contract = selection.contract
         model = EfficientFormerV2Classifier(
-            selection,
-            top_k=args.top_k,
+            selection.model_path, target=selection.target,
+            input_size=(contract.input_height, contract.input_width),
+            class_count=contract.class_count, top_k=args.top_k,
             labels=default_labels(args.label_file),
-            resize_type=args.resize_type,
+            resize_type=contract.resize_type if args.resize_type is None else args.resize_type,
+            resize_interpolation=contract.resize_interpolation,
+            score_policy=contract.output_score_policy,
+            output_transform=contract.output_transform,
         )
         model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
 

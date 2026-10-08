@@ -979,7 +979,7 @@ def run_comparison(
         labels = labels_mod.load_labels(Path(label_path))
         runner = runner_mod.RuntimeModelRunner(
             selection, runtime_factory=recording_factory("unified"),
-            table=_import_sample_module(sample, "model_binding").BINDING_TABLE
+            table=_import_sample_module(sample, "cli").BINDING_TABLE
         )
         binding = runner.load()
         runner.set_scheduling_params(priority=priority, bpu_cores=cores)
@@ -1116,7 +1116,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        binding_mod = _import_sample_module(args.sample, "model_binding")
+        binding_mod = _import_sample_module(args.sample, "cli")
         selection = binding_mod.resolve_selection(
             args.target,
             asset_id=args.asset_id,

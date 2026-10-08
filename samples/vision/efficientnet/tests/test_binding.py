@@ -8,7 +8,7 @@ import unittest
 
 class BindingTableTests(unittest.TestCase):
     def _table(self):
-        from samples.vision.efficientnet.runtime.python.model_binding import BINDING_TABLE
+        from samples.vision.efficientnet.runtime.python.cli import BINDING_TABLE
 
         return BINDING_TABLE
 
@@ -36,7 +36,7 @@ class BindingTableTests(unittest.TestCase):
         the per-SoC lite0 model.  A global b2 default made every S board fail
         with "no published asset" when the variant was omitted."""
 
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             BindingError,
             resolve_selection,
         )
@@ -90,7 +90,7 @@ class BindingTableTests(unittest.TestCase):
         self.assertIn("No published sample asset matches target='s100p'", str(ctx.exception))
 
     def test_published_listing_matches_table_and_profiles(self):
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             PLATFORMS,
             list_available_assets,
         )
@@ -121,7 +121,7 @@ class BindingTableTests(unittest.TestCase):
             )
 
     def test_s100p_publishes_nothing_and_rejects_selection(self):
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             BindingError,
             list_available_assets,
             resolve_selection,
@@ -136,7 +136,7 @@ class BindingTableTests(unittest.TestCase):
         treating every S artifact as 224 was the exact mistake B1-R4 fixed
         for mobilenetv4 medium, so each combination is pinned here."""
 
-        from samples.vision.efficientnet.runtime.python.model_binding import resolve_selection
+        from samples.vision.efficientnet.runtime.python.cli import resolve_selection
 
         expected = {
             ('b2', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
@@ -173,7 +173,7 @@ class BindingTableTests(unittest.TestCase):
             self.assertEqual(contract.input_protocol, expected_protocol)
 
     def test_bind_model_accepts_source_metadata_shapes(self):
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )
@@ -196,7 +196,7 @@ class BindingTableTests(unittest.TestCase):
                 self.assertEqual(len(binding.input_names), 2)
 
     def test_bind_model_rejects_wrong_geometry(self):
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             MetadataMismatchError,
             bind_model,
             resolve_selection,
@@ -217,7 +217,7 @@ class BindingTableTests(unittest.TestCase):
         # ship F32 outputs that still carry a compiler quant descriptor.  The
         # raw_f32 contract gates on dtype, snapshots the descriptor, and
         # never applies it - legacy consumers ignored it too.
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )
@@ -239,7 +239,7 @@ class BindingTableTests(unittest.TestCase):
             self.assertIn(binding.output_name, binding.output_quants)
 
     def test_bind_model_rejects_quantized_output_dtype_for_raw_f32(self):
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             MetadataMismatchError,
             bind_model,
             resolve_selection,

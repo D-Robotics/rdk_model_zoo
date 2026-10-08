@@ -8,7 +8,7 @@ the per-variant contract (the single published atto variant is 224).
 
 from __future__ import annotations
 
-from samples.vision.convnext.runtime.python.model_binding import RuntimeMetadata
+from samples.vision.convnext.runtime.python.cli import RuntimeMetadata
 
 
 def runtime_metadata(

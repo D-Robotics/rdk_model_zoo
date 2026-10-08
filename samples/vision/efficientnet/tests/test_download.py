@@ -81,7 +81,7 @@ class DownloadTargetReferenceTests(unittest.TestCase):
         """The downloader's per-target defaults must not drift from the binding
         table's declared defaults (single source of truth for the contract)."""
 
-        from samples.vision.efficientnet.runtime.python.model_binding import (
+        from samples.vision.efficientnet.runtime.python.cli import (
             BINDING_TABLE,
         )
 

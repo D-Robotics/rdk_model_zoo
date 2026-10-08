@@ -128,9 +128,9 @@ class BrokenLinkTests(unittest.TestCase):
         findings = findings_for(report, CHECK.RULE_LINKS)
         self.assertEqual(len(findings), 3)
         by_line = {f.line: f.message for f in findings}
-        self.assertIn("model/README.md", by_line[27])
-        self.assertIn("test_data/missing.png", by_line[28])
-        self.assertIn("#no-such-anchor", by_line[30])
+        self.assertIn("model/README.md", by_line[36])
+        self.assertIn("test_data/missing.png", by_line[37])
+        self.assertIn("#no-such-anchor", by_line[39])
 
     def test_external_links_are_out_of_scope(self):
         _, output = run_fixture("bad_links")
@@ -454,7 +454,7 @@ class ExemptionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             exempt = Path(tmp) / "exemptions.json"
             exempt.write_text(json.dumps({"exemptions": [{
-                "rule": CHECK.RULE_LINKS, "path": target, "line": 27,
+                "rule": CHECK.RULE_LINKS, "path": target, "line": 36,
                 "reason": "fixture link intentionally absent (test)",
             }]}), encoding="utf-8")
             code, output = run_fixture("bad_links", "--exemptions",

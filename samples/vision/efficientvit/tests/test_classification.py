@@ -16,7 +16,7 @@ class PolicyTests(unittest.TestCase):
         from utils.py_utils.classification import (
             ClassificationTask,
         )
-        from samples.vision.efficientvit.runtime.python.model_binding import (
+        from samples.vision.efficientvit.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )
@@ -42,7 +42,7 @@ class PolicyTests(unittest.TestCase):
 
     def test_packed_input_uses_canonical_flat_buffer(self):
         from utils.py_utils.classification import ClassificationTask
-        from samples.vision.efficientvit.runtime.python.model_binding import (
+        from samples.vision.efficientvit.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )

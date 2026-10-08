@@ -17,14 +17,11 @@ from pathlib import Path
 
 from utils.py_utils.assets import _ROOT, _models
 
-BINDING_MARKER = "runtime/python/model_binding.py"
-TASK_MODEL_MODULES = ("samples/vision/resnet/runtime/python/classify.py",)
-
-
 def _unified_samples() -> list[str]:
-    bindings = list(_ROOT.glob(f"samples/*/*/{BINDING_MARKER}"))
-    bindings.extend(_ROOT / model for model in TASK_MODEL_MODULES if (_ROOT / model).is_file())
-    return sorted({binding.parents[2].relative_to(_ROOT).as_posix() for binding in bindings})
+    """Find first-party Python entries independently of private module layout."""
+    return sorted(main.parents[2].relative_to(_ROOT).as_posix()
+                  for main in _ROOT.glob("samples/*/*/runtime/python/main.py")
+                  if main.parents[3].name != "vla")
 
 
 def _manifest_rows() -> list[tuple[str, dict]]:
@@ -50,14 +47,16 @@ class ManifestCoverageTests(unittest.TestCase):
             )
         return indexed
 
-    def test_the_marker_glob_still_finds_the_pilots_and_b1(self):
+    def test_entries_include_models_without_private_binding_modules(self):
         self.assertIn("samples/vision/resnet", self.samples)
-        # Guards the degenerate case where a broken glob makes both coverage
-        # assertions below pass vacuously.
+        self.assertIn("samples/vision/convnext", self.samples)
+        self.assertIn("samples/speech/paraformer", self.samples)
+        self.assertIn("samples/robotics/himloco", self.samples)
+        # A private helper's removal must not silently remove coverage.
         self.assertGreaterEqual(
             len(self.samples),
-            7,
-            f"expected pilots + B1 samples, marker found only {self.samples}",
+            49,
+            f"expected all current Python Samples, found only {self.samples}",
         )
 
     def test_every_unified_sample_has_exact_manifest_rows(self):

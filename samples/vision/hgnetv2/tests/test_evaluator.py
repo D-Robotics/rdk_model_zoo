@@ -63,7 +63,7 @@ class EvaluatorTests(unittest.TestCase):
     def test_main_writes_metrics_using_the_real_task_with_injected_runtime(self):
         from unittest.mock import patch
         from samples.vision.hgnetv2.evaluator.eval import main
-        from samples.vision.hgnetv2.runtime.python.model_binding import bind_model
+        from samples.vision.hgnetv2.runtime.python.cli import bind_model
         from utils.py_utils import model_runner
         import contextlib
         import io

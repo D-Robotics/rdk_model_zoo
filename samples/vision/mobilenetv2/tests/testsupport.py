@@ -7,7 +7,7 @@ artifacts' real names are read from the board at run time.
 
 from __future__ import annotations
 
-from samples.vision.mobilenetv2.runtime.python.model_binding import RuntimeMetadata
+from samples.vision.mobilenetv2.runtime.python.cli import RuntimeMetadata
 
 
 def runtime_metadata(protocol: str, wrong_geometry: bool = False, output_dtype: str = "F32", quant_descriptor: bool = False) -> RuntimeMetadata:

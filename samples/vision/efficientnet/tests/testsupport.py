@@ -9,7 +9,7 @@ the per-variant contract (X5 B2/B3/B4 are 224; S lite0..lite4 are
 
 from __future__ import annotations
 
-from samples.vision.efficientnet.runtime.python.model_binding import RuntimeMetadata
+from samples.vision.efficientnet.runtime.python.cli import RuntimeMetadata
 
 
 def runtime_metadata(

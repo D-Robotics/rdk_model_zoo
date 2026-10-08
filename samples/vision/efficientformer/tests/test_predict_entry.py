@@ -12,7 +12,7 @@ fixtures; no board SDK is loaded and no board inference is claimed.
 
 from __future__ import annotations
 
-from samples.vision.efficientformer.runtime.python.model_binding import BINDING_TABLE
+from samples.vision.efficientformer.runtime.python.cli import BINDING_TABLE
 
 from pathlib import Path
 import unittest
@@ -20,7 +20,7 @@ from unittest import mock
 
 import numpy as np
 
-from samples.vision.efficientformer.runtime.python.model_binding import (
+from samples.vision.efficientformer.runtime.python.cli import (
     BindingError,
     RuntimeMetadata,
     resolve_selection,
@@ -107,7 +107,7 @@ def _classifier(target, score_sequence, calls, **kwargs):
     selection = resolve_selection(target)
     runner = RuntimeModelRunner(
         selection, runtime=_fake_runtime(selection, score_sequence, calls), table=BINDING_TABLE)
-    return EfficientFormerClassifier(selection, runner=runner, **kwargs)
+    return EfficientFormerClassifier(selection.model_path, runner=runner, **kwargs, target=selection.target)
 
 
 def _class_count(target):
@@ -271,7 +271,7 @@ class ClassifierFlowTests(unittest.TestCase):
         )
 
         runner = RuntimeModelRunner(selection, runtime=_WrongRuntime(), table=BINDING_TABLE)
-        model = EfficientFormerClassifier(selection, runner=runner)
+        model = EfficientFormerClassifier(selection.model_path, runner=runner, target=selection.target)
 
         with self.assertRaises(BindingError):
             model.predict(np.full((20, 20, 3), 60, dtype=np.uint8))

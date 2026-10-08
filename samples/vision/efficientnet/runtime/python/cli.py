@@ -1,12 +1,175 @@
-"""Command-line surface for the EfficientNet sample.
-
-Option declarations, the model-free listing/dry-run modes, and result
-presentation live here so ``main.py`` can stay a thin, readable entry:
-parse arguments, construct the model, call ``predict``, show the result.
-Nothing in this module classifies images or loads a board SDK.
-"""
+"""Select EfficientNet models, parse CLI options, and present results."""
 
 from __future__ import annotations
+
+from pathlib import Path
+from typing import Any, Mapping, Optional
+
+from utils.py_utils import cls_binding
+from utils.py_utils.cls_binding import (  # noqa: F401 - re-exported surface
+    OUTPUT_TRANSFORMS,
+    AssetRecord,
+    BindingError,
+    ClassificationContract,
+    KNOWN_OUTPUT_SEMANTICS,
+    ManifestAssetError,
+    ModelBinding,
+    ModelSelection,
+    RuntimeMetadata,
+    SCORE_POLICIES,
+    SUPPORTED_TARGETS as _SHARED_TARGETS,
+    SampleBindingTable,
+    UnsupportedAssetError,
+    VariantFacts,
+    contract_input_is_packed,
+    normalise_score_vector,
+    score_vector_shape,
+)
+from utils.py_utils.cls_binding import MetadataMismatchError  # noqa: F401
+from utils.py_utils.platform_profile import (
+    PlatformProfile,
+    UnsupportedProfileError,
+    classification_profiles,
+    resolve_profile,
+)
+
+
+#: Targets the shared classification machinery can address.
+SUPPORTED_TARGETS = _SHARED_TARGETS
+#: EfficientNet variants published across the manifests (X5 B-series, S lite-series).
+SUPPORTED_VARIANTS = ('b2', 'b3', 'b4', 'lite0', 'lite1', 'lite2', 'lite3', 'lite4')
+_SAMPLE_DIR = Path(__file__).resolve().parents[2]
+
+#: Platform deployment profiles for this sample (H5).  X5 publishes flat
+#: ``.bin`` artifacts; S100/S600 publish ``.hbm`` artifacts under the shared
+#: ``EfficientNet`` archive directory; S100P publishes none (the legacy S
+#: download script silently fell back to the S100 build, which this sample
+#: rejects).  No C++ runtime exists on any target for this sample.
+PLATFORMS = classification_profiles(url_prefix_s="rdk_s100/EfficientNet")
+
+
+def _x5_224_facts() -> VariantFacts:
+    return VariantFacts(
+        input_height=224,
+        input_width=224,
+        output_semantics="source_declared_logits",
+        output_score_policy="softmax",
+        resize_type=1,  # letterbox (source default)
+        resize_interpolation="linear",
+        letterbox_interpolation="linear",
+    )
+
+
+def _s_facts(size: int) -> VariantFacts:
+    return VariantFacts(
+        input_height=size,
+        input_width=size,
+        output_semantics="source_declared_logits",
+        output_score_policy="softmax",
+        resize_type=1,  # letterbox (source default)
+        resize_interpolation="nearest",
+        letterbox_interpolation="linear",
+    )
+
+
+#: Per-variant S geometry (manifest filenames and lite*_config.yaml prefixes
+#: agree on 224/240/260/300/380); X5 variants are all 224.
+_FACTS = {
+    ('b2', 'x5'): _x5_224_facts(),
+    ('b3', 'x5'): _x5_224_facts(),
+    ('b4', 'x5'): _x5_224_facts(),
+    ('lite0', 's100'): _s_facts(224),
+    ('lite0', 's600'): _s_facts(224),
+    ('lite1', 's100'): _s_facts(240),
+    ('lite1', 's600'): _s_facts(240),
+    ('lite2', 's100'): _s_facts(260),
+    ('lite2', 's600'): _s_facts(260),
+    ('lite3', 's100'): _s_facts(300),
+    ('lite3', 's600'): _s_facts(300),
+    ('lite4', 's100'): _s_facts(380),
+    ('lite4', 's600'): _s_facts(380),
+}
+
+BINDING_TABLE = SampleBindingTable(
+    sample_dir=_SAMPLE_DIR,
+    manifest_rows=(
+        ('x5', 'efficientnet'),
+        ('s', 'efficientnet'),
+    ),
+    filename_variants={
+        'EfficientNet_B2_224x224_nv12.bin': 'b2',
+        'EfficientNet_B3_224x224_nv12.bin': 'b3',
+        'EfficientNet_B4_224x224_nv12.bin': 'b4',
+        's100/efficientnet_lite0_224x224_nv12.hbm': 'lite0',
+        's100/efficientnet_lite1_240x240_nv12.hbm': 'lite1',
+        's100/efficientnet_lite2_260x260_nv12.hbm': 'lite2',
+        's100/efficientnet_lite3_300x300_nv12.hbm': 'lite3',
+        's100/efficientnet_lite4_380x380_nv12.hbm': 'lite4',
+        's600/efficientnet_lite0_224x224_nv12.hbm': 'lite0',
+        's600/efficientnet_lite1_240x240_nv12.hbm': 'lite1',
+        's600/efficientnet_lite2_260x260_nv12.hbm': 'lite2',
+        's600/efficientnet_lite3_300x300_nv12.hbm': 'lite3',
+        's600/efficientnet_lite4_380x380_nv12.hbm': 'lite4',
+    },
+    default_variant={
+        # Per-target defaults preserve both source entrypoint defaults: the
+        # X5 main.py DEFAULT_MODEL_PATH is EfficientNet_B2_224x224_nv12.bin
+        # and the S wrapper defaults to the per-SoC lite0 model.  s100p is
+        # absent on purpose — no published asset, so an omitted variant fails
+        # with the standard explicit error instead of borrowing lite0.
+        'x5': 'b2',
+        's100': 'lite0',
+        's600': 'lite0',
+    },
+    facts=_FACTS,
+)
+
+
+def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
+    """Return the finite sample assets read from the existing manifests.
+
+    ``target=None`` or ``target="auto"`` is intentionally host-independent so
+    the listing command can run on a workstation.  ``s100p`` returns no rows:
+    no EfficientNet asset for that target is present in the source manifest.
+    """
+
+    return cls_binding.list_assets(BINDING_TABLE, target)
+
+
+def resolve_selection(
+    target: str = "auto",
+    *,
+    asset_id: Optional[str] = None,
+    variant: Optional[str] = None,
+    model_path: Optional[str | Path] = None,
+    soc_name: Optional[str] = None,
+    board_type: Optional[str] = None,
+) -> ModelSelection:
+    """Resolve one published EfficientNet asset and its source-proven contract.
+
+    ``model_path`` is accepted only with an exact qualified manifest reference.
+    """
+
+    return cls_binding.resolve_selection(
+        BINDING_TABLE,
+        target,
+        asset_id=asset_id,
+        variant=variant,
+        model_path=model_path,
+        soc_name=soc_name,
+        board_type=board_type,
+    )
+
+
+def bind_model(
+    selection: ModelSelection, metadata: RuntimeMetadata | Mapping[str, Any]
+) -> ModelBinding:
+    """Validate actual runtime metadata against the EfficientNet contract table."""
+
+    return cls_binding.bind_model(BINDING_TABLE, selection, metadata)
+
+
+
 
 import argparse
 from pathlib import Path
@@ -14,14 +177,6 @@ from utils.py_utils.image import read_bgr_image
 import sys
 
 from utils.py_utils.labels import load_labels as _load_labels
-from samples.vision.efficientnet.runtime.python.model_binding import (
-    SUPPORTED_TARGETS,
-    SUPPORTED_VARIANTS,
-    AssetRecord,
-    ModelSelection,
-    list_available_assets,
-    resolve_selection,
-)
 
 _ROOT = Path(__file__).resolve().parents[5]
 _SAMPLE_DIR = _ROOT / "samples" / "vision" / "efficientnet"
@@ -117,8 +272,6 @@ def build_parser() -> argparse.ArgumentParser:
 def run_list_models(target: str) -> int:
     """Print the manifest-backed references for ``target`` (model-free)."""
 
-    from samples.vision.efficientnet.runtime.python.model_binding import BindingError
-
     try:
         records = list_available_assets(target)
     except BindingError as exc:
@@ -136,8 +289,6 @@ def run_list_models(target: str) -> int:
 
 def run_dry_run(args: argparse.Namespace) -> int:
     """Print a concrete contract without detecting hardware or loading SDK."""
-
-    from samples.vision.efficientnet.runtime.python.model_binding import BindingError
 
     try:
         if args.target == "auto":

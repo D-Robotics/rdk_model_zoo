@@ -8,7 +8,7 @@ import unittest
 
 class BindingTableTests(unittest.TestCase):
     def _table(self):
-        from samples.vision.efficientformerv2.runtime.python.model_binding import BINDING_TABLE
+        from samples.vision.efficientformerv2.runtime.python.cli import BINDING_TABLE
 
         return BINDING_TABLE
 
@@ -24,7 +24,7 @@ class BindingTableTests(unittest.TestCase):
         self.assertIn(table.default_variant, ('s0', 's1', 's2'))
 
     def test_published_listing_matches_table_and_profiles(self):
-        from samples.vision.efficientformerv2.runtime.python.model_binding import (
+        from samples.vision.efficientformerv2.runtime.python.cli import (
             PLATFORMS,
             list_available_assets,
         )
@@ -60,7 +60,7 @@ class BindingTableTests(unittest.TestCase):
         )
 
     def test_s_targets_publish_nothing_and_reject_selection(self):
-        from samples.vision.efficientformerv2.runtime.python.model_binding import (
+        from samples.vision.efficientformerv2.runtime.python.cli import (
             BindingError,
             list_available_assets,
             resolve_selection,
@@ -79,7 +79,7 @@ class BindingTableTests(unittest.TestCase):
         self.assertEqual(table.default_variant, "s0")
 
     def test_per_variant_geometry_matches_source_facts(self):
-        from samples.vision.efficientformerv2.runtime.python.model_binding import resolve_selection
+        from samples.vision.efficientformerv2.runtime.python.cli import resolve_selection
 
         expected = {
             ('s0', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
@@ -105,7 +105,7 @@ class BindingTableTests(unittest.TestCase):
             self.assertEqual(contract.input_protocol, "packed_nv12")
 
     def test_bind_model_accepts_source_metadata_shapes(self):
-        from samples.vision.efficientformerv2.runtime.python.model_binding import (
+        from samples.vision.efficientformerv2.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )
@@ -117,7 +117,7 @@ class BindingTableTests(unittest.TestCase):
             self.assertEqual(len(binding.input_names), 1)
 
     def test_bind_model_rejects_wrong_geometry(self):
-        from samples.vision.efficientformerv2.runtime.python.model_binding import (
+        from samples.vision.efficientformerv2.runtime.python.cli import (
             MetadataMismatchError,
             bind_model,
             resolve_selection,
@@ -133,7 +133,7 @@ class BindingTableTests(unittest.TestCase):
         # ship F32 outputs that still carry a compiler quant descriptor.  The
         # raw_f32 contract gates on dtype, snapshots the descriptor, and
         # never applies it - legacy consumers ignored it too.
-        from samples.vision.efficientformerv2.runtime.python.model_binding import (
+        from samples.vision.efficientformerv2.runtime.python.cli import (
             bind_model,
             resolve_selection,
         )
@@ -146,7 +146,7 @@ class BindingTableTests(unittest.TestCase):
             self.assertIn(binding.output_name, binding.output_quants)
 
     def test_bind_model_rejects_quantized_output_dtype_for_raw_f32(self):
-        from samples.vision.efficientformerv2.runtime.python.model_binding import (
+        from samples.vision.efficientformerv2.runtime.python.cli import (
             MetadataMismatchError,
             bind_model,
             resolve_selection,

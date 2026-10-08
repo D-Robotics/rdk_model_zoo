@@ -8,7 +8,7 @@ the per-variant contract (the single published m5 variant is 224).
 
 from __future__ import annotations
 
-from samples.vision.efficientvit.runtime.python.model_binding import RuntimeMetadata
+from samples.vision.efficientvit.runtime.python.cli import RuntimeMetadata
 
 
 def runtime_metadata(

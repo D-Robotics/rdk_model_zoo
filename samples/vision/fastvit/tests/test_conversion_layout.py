@@ -110,7 +110,7 @@ class RecipeConsistencyTests(unittest.TestCase):
                 self.assertTrue(basename.startswith(f"FastViT_{variant}_"))
 
     def test_published_binding_matches_the_recipe_set(self):
-        from samples.vision.fastvit.runtime.python.model_binding import (
+        from samples.vision.fastvit.runtime.python.cli import (
             BINDING_TABLE,
             list_available_assets,
         )

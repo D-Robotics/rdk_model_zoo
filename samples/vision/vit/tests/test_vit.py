@@ -34,7 +34,7 @@ class EntryTests(unittest.TestCase):
                 self.assertIn('variant: '+args[-1],p.stdout)
 
     def test_published_set_defaults_and_input_contract(self):
-        from samples.vision.vit.runtime.python.model_binding import list_available_assets,resolve_selection
+        from samples.vision.vit.runtime.python.cli import list_available_assets,resolve_selection
         self.assertEqual({a.asset_id for a in list_available_assets()},
             {f's:vit:s100/vit_cifar10_batch1_{v}.hbm' for v in VARIANTS})
         self.assertEqual(resolve_selection('s100').variant,'int8')
@@ -45,7 +45,7 @@ class EntryTests(unittest.TestCase):
             self.assertEqual(c.output_score_policy,'softmax')
 
     def test_unpublished_targets_identity_and_override_rejected(self):
-        from samples.vision.vit.runtime.python.model_binding import resolve_selection,BindingError
+        from samples.vision.vit.runtime.python.cli import resolve_selection,BindingError
         for t in ('x5','s100p','s600'):
             with self.assertRaises(BindingError):resolve_selection(t)
         with self.assertRaises(BindingError):resolve_selection('auto',soc_name='s100',board_type='s100p')
@@ -101,7 +101,7 @@ class SourceTests(unittest.TestCase):
         cls.old.input_h=224;cls.old.input_w=224
 
     def task(self,variant='int8'):
-        from samples.vision.vit.runtime.python.model_binding import bind_model,resolve_selection
+        from samples.vision.vit.runtime.python.cli import bind_model,resolve_selection
         from utils.py_utils.classification import ClassificationTask
         binding=bind_model(resolve_selection('s100',variant=variant),metadata())
         raw={'output':np.array([[-2.1,0.3,2.2,-1.9,5.1,3.1,1.5,-0.2,0.1,0.8]],dtype=np.float32)}
@@ -141,7 +141,7 @@ class SourceTests(unittest.TestCase):
             np.testing.assert_array_equal(direct.scores,staged.scores)
 
     def test_rejects_imagenet_geometry_quantized_raw_and_invalid_topk(self):
-        from samples.vision.vit.runtime.python.model_binding import bind_model,resolve_selection,MetadataMismatchError
+        from samples.vision.vit.runtime.python.cli import bind_model,resolve_selection,MetadataMismatchError
         from utils.py_utils.classification import ClassificationTask
         for bad in (metadata(classes=1000),metadata(size=256),metadata(dtype='I8')):
             with self.assertRaises(MetadataMismatchError):bind_model(resolve_selection('s100'),bad)

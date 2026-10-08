@@ -1,3 +1,5 @@
+"""Select RepViT models, parse CLI options, and present results."""
+
 # Copyright (c) 2026 D-Robotics Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,15 +13,127 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Command-line surface for the RepViT sample.
 
-Option declarations, the model-free listing/dry-run modes, and result
-presentation live here so ``main.py`` can stay a thin, readable entry:
-parse arguments, construct the model, call ``predict``, show the result.
-Nothing in this module classifies images or loads a board SDK.
-"""
 
 from __future__ import annotations
+
+from pathlib import Path
+from typing import Any, Mapping, Optional
+
+from utils.py_utils import cls_binding
+from utils.py_utils.cls_binding import (  # noqa: F401 - re-exported surface
+    OUTPUT_TRANSFORMS,
+    AssetRecord,
+    BindingError,
+    ClassificationContract,
+    KNOWN_OUTPUT_SEMANTICS,
+    ManifestAssetError,
+    ModelBinding,
+    ModelSelection,
+    RuntimeMetadata,
+    SCORE_POLICIES,
+    SUPPORTED_TARGETS as _SHARED_TARGETS,
+    SampleBindingTable,
+    UnsupportedAssetError,
+    VariantFacts,
+    contract_input_is_packed,
+    normalise_score_vector,
+    score_vector_shape,
+)
+from utils.py_utils.cls_binding import MetadataMismatchError  # noqa: F401
+from utils.py_utils.platform_profile import (
+    PlatformProfile,
+    UnsupportedProfileError,
+    classification_profiles,
+    resolve_profile,
+)
+
+
+#: Targets the shared classification machinery can address.
+SUPPORTED_TARGETS = _SHARED_TARGETS
+#: Published variants; filenames preserve release case.
+SUPPORTED_VARIANTS = ('m0_9', 'm1_0', 'm1_1')
+_SAMPLE_DIR = Path(__file__).resolve().parents[2]
+# Identity profiles do not create assets for the unpublished S targets.
+PLATFORMS = classification_profiles(url_prefix_s="rdk_s100/RepViT")
+BINDING_TABLE = SampleBindingTable(
+    sample_dir=_SAMPLE_DIR,
+    manifest_rows=(("x5", "repvit"),),
+    filename_variants={
+        'RepViT_m0_9_224x224_nv12.bin': 'm0_9',
+        'RepViT_m1_0_224x224_nv12.bin': 'm1_0',
+        'RepViT_m1_1_224x224_nv12.bin': 'm1_1',
+    },
+    default_variant='m0_9',
+    facts={(v,"x5"): VariantFacts(
+        input_height=224, input_width=224,
+        output_semantics="source_declared_logits", output_score_policy="softmax",
+        resize_type=1, resize_interpolation="linear", letterbox_interpolation="linear",
+    ) for v in SUPPORTED_VARIANTS},
+)
+
+
+def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
+    """Return the finite sample assets read from the existing manifests.
+
+    ``target=None`` or ``target="auto"`` is intentionally host-independent so
+    the listing command can run on a workstation.  Every S target (S100,
+    S100P, S600) returns no rows: no RepViT asset for those targets
+    is present in the source manifest.
+    """
+
+    return cls_binding.list_assets(BINDING_TABLE, target)
+
+
+def resolve_selection(
+    target: str = "auto",
+    *,
+    asset_id: Optional[str] = None,
+    variant: Optional[str] = None,
+    model_path: Optional[str | Path] = None,
+    soc_name: Optional[str] = None,
+    board_type: Optional[str] = None,
+) -> ModelSelection:
+    """Resolve one published RepViT asset and its source-proven contract.
+
+    ``model_path`` is accepted only with an exact qualified manifest reference.
+    """
+
+    return cls_binding.resolve_selection(
+        BINDING_TABLE,
+        target,
+        asset_id=asset_id,
+        variant=variant,
+        model_path=model_path,
+        soc_name=soc_name,
+        board_type=board_type,
+    )
+
+
+def bind_model(
+    selection: ModelSelection, metadata: RuntimeMetadata | Mapping[str, Any]
+) -> ModelBinding:
+    """Validate actual runtime metadata against the RepViT contract table."""
+
+    return cls_binding.bind_model(BINDING_TABLE, selection, metadata)
+
+
+
+
+# Copyright (c) 2026 D-Robotics Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 import argparse
 from pathlib import Path
@@ -27,14 +141,6 @@ from utils.py_utils.image import read_bgr_image
 import sys
 
 from utils.py_utils.labels import load_labels as _load_labels
-from samples.vision.repvit.runtime.python.model_binding import (
-    SUPPORTED_TARGETS,
-    SUPPORTED_VARIANTS,
-    AssetRecord,
-    ModelSelection,
-    list_available_assets,
-    resolve_selection,
-)
 
 _ROOT = Path(__file__).resolve().parents[5]
 _SAMPLE_DIR = _ROOT / "samples" / "vision" / "repvit"
@@ -130,8 +236,6 @@ def build_parser() -> argparse.ArgumentParser:
 def run_list_models(target: str) -> int:
     """Print the manifest-backed references for ``target`` (model-free)."""
 
-    from samples.vision.repvit.runtime.python.model_binding import BindingError
-
     try:
         records = list_available_assets(target)
     except BindingError as exc:
@@ -149,8 +253,6 @@ def run_list_models(target: str) -> int:
 
 def run_dry_run(args: argparse.Namespace) -> int:
     """Print a concrete contract without detecting hardware or loading SDK."""
-
-    from samples.vision.repvit.runtime.python.model_binding import BindingError
 
     try:
         if args.target == "auto":

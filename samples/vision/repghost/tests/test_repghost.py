@@ -26,7 +26,7 @@ class EntryTests(unittest.TestCase):
                 self.assertIn('variant: 100', run.stdout)
 
     def test_default_and_all_published_variants(self):
-        from samples.vision.repghost.runtime.python.model_binding import resolve_selection, list_available_assets
+        from samples.vision.repghost.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(resolve_selection('x5').variant, '100')
         self.assertEqual({r.filename for r in list_available_assets()}, {f'RepGhost_{v}_224x224_nv12.bin' for v in VARIANTS})
         for v in VARIANTS:
@@ -35,7 +35,7 @@ class EntryTests(unittest.TestCase):
             self.assertEqual((selected.contract.input_height, selected.contract.input_width), (224,224))
 
     def test_rejects_unpublished_target_and_mismatched_identity(self):
-        from samples.vision.repghost.runtime.python.model_binding import resolve_selection, BindingError
+        from samples.vision.repghost.runtime.python.cli import resolve_selection, BindingError
         for target in ('s100','s100p','s600'):
             with self.assertRaises(BindingError):
                 resolve_selection(target)
@@ -72,7 +72,7 @@ class SourceComparisonTests(unittest.TestCase):
         cls.source.input_h=224;cls.source.input_w=224;cls.source.labels={}
 
     def task(self, variant=None):
-        from samples.vision.repghost.runtime.python.model_binding import bind_model,resolve_selection
+        from samples.vision.repghost.runtime.python.cli import bind_model,resolve_selection
         from utils.py_utils.classification import ClassificationTask
         selection = resolve_selection('x5', variant=variant)
         height, width = selection.contract.input_height, selection.contract.input_width

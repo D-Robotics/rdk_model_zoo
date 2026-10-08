@@ -114,7 +114,7 @@ class RecipeConsistencyTests(unittest.TestCase):
         nano exist as conversion recipes with no published asset — the
         runtime binding must not grow variants for them."""
 
-        from samples.vision.convnext.runtime.python.model_binding import (
+        from samples.vision.convnext.runtime.python.cli import (
             BINDING_TABLE,
             list_available_assets,
         )

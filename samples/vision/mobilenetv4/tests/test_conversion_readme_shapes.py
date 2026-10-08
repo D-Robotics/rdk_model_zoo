@@ -35,7 +35,7 @@ X5_ROW = re.compile(
 
 class ConversionReadmeShapeTests(unittest.TestCase):
     def _binding_facts(self):
-        from samples.vision.mobilenetv4.runtime.python.model_binding import (
+        from samples.vision.mobilenetv4.runtime.python.cli import (
             BINDING_TABLE,
         )
 
