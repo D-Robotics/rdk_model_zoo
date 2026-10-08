@@ -115,10 +115,10 @@ develop 当前目录组织如下（仅用于说明各目录职责，实际内容
 ├── samples/                               # 统一 sample（迁移目标形态）
 │   ├── vision/…                           # 每样本：model/ runtime/ conversion/ evaluator/ test_data/ tests/
 │   └── robotics/                          # 机器人 sample（himloco 随 B10 迁入）
-├── tools/                                 # catalog-publisher、sample_contract 等工具
 ├── utils/                                 # SDK、平台身份、资产、张量与图像公共能力
 │   ├── c_utils/                           # C/C++ 公共工具（含 inc/model_types.hpp 任务结果结构体）
-│   └── py_utils/                          # Python 公共工具
+│   ├── py_utils/                          # Python 公共工具
+│   └── tools/                             # 编译、评测、目录发布与仓库检查工具
 └── skills/                                # Skills 源树（A3 落位；rdk_x5 维护线，独立版本线）
 ```
 
@@ -1155,7 +1155,7 @@ while (reader.next(chunk)) {
             - 指定参数运行 ；
             - 明确输出产物与路径（如 build/result.jpg）；
     7. 代码文档
-        - 此处不写细节，指引用户去`docs/source_reference`目录查阅，如：- 阅读[源码文档说明](../source_reference/README.md)，根据说明查看源码参考文档；
+        - 此处不写细节，指引用户去`docs/source_reference`目录查阅，如：- 阅读[源码文档说明](source_reference/README.md)，根据说明查看源码参考文档；
 
     8. 注意事项（可选）
         - 仅列真实会踩坑的点（如模型路径、运行权限、输出位置）；
