@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # EfficientViT 图像分类
 
 EfficientViT 是采用高效注意力模块的图像分类网络。
@@ -5,8 +7,6 @@ EfficientViT 是采用高效注意力模块的图像分类网络。
 来源：[EfficientViT: Memory Efficient Vision Transformer
 with Cascaded Group
 Attention](https://arxiv.org/abs/2305.07027) · [microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

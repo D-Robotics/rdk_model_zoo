@@ -1,6 +1,8 @@
+[English](README.md) | 简体中文
+
 # Paraformer 模型包
 
-[English](README.md) · [Python 集成](../runtime/python/README_cn.md)
+[Python 集成](../runtime/python/README_cn.md)
 
 活动 [S 清单](../../../../docs/release/s/models.yaml) 发布一个包含六个文件的 S100
 模型包。本目录提供显式准备入口，推理不自动下载。当前没有 X5、S100P 或 S600

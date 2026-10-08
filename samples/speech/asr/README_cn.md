@@ -1,6 +1,6 @@
-# ASR — chunked speech recognition
-
 [English](README.md) | 简体中文
+
+# ASR — chunked speech recognition
 
 <a id="overview"></a>
 ## 概述

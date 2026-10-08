@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # ResNet Python 运行时
 
 <a id="overview"></a>

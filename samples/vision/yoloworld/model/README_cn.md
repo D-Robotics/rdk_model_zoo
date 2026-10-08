@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # YOLOWorld 模型资产
 
 <a id="artifacts"></a>

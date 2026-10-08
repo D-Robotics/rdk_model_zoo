@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # RepGhost image classification
 
 RepGhost uses structural reparameterization to replace explicit feature concatenation in a lightweight CNN.

@@ -1,6 +1,6 @@
-# KWS model artifacts
-
 English | [简体中文](README_cn.md)
+
+# KWS model artifacts
 
 <a id="artifacts"></a>
 ## Published artifact

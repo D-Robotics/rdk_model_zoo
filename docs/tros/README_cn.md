@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # TROS
 
 RDK 板端样例使用匹配系统镜像提供的运行环境与 `hbm_runtime`。模型命令、目标支持、

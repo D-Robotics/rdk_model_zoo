@@ -1,10 +1,10 @@
+[English](README.md) | 简体中文
+
 # MobileNetV3 图像分类
 
 MobileNetV3 将倒残差模块与通道注意力结合，用于移动端图像分类。
 
 来源：[timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py) · [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

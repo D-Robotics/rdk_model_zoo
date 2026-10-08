@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # third_party
 
-[简体中文](./README_cn.md) | **English**
 
 This directory holds third-party dependencies used by the Gemma4-E2B sample.
 

@@ -1,6 +1,8 @@
-# RDK Model Zoo
+![RDK Model Zoo](docs/assets/model_zoo_logo.jpg)
 
-[English](README.md)
+[English](README.md) | 简体中文
+
+# ⭐️ 点个Star不迷路, 感谢您的关注 ⭐️
 
 RDK Model Zoo 提供在地瓜机器人 RDK 板卡上运行的视觉、语音和大模型示例，包含模型下载、转换、推理与评估程序。源码版本为 2.0.0，见根目录 `VERSION`。
 

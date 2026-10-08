@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ResNeXt image classification
 
 ResNeXt extends ResNet with grouped convolution and parallel residual transformations.

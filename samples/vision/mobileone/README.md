@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # MobileOne image classification
 
 MobileOne folds training branches into a simple convolutional network for inference.

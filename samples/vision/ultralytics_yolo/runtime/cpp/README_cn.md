@@ -1,6 +1,8 @@
+[English](README.md) | 简体中文
+
 # Ultralytics YOLO C++ 运行
 
-[English](README.md) · [Python](../python/README_cn.md)
+[Python](../python/README_cn.md)
 
 <a id="overview"></a>
 ## C++ 推理

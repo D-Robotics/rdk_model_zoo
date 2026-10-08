@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文
+[English](README.md) | 简体中文
 
 # R3D-18 转换说明
 

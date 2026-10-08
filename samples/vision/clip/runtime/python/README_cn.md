@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文
+[English](README.md) | 简体中文
 
 # Python 运行 — CLIP 图文匹配
 

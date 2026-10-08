@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Choose a sample by task
 
-[简体中文](README_cn.md)
 
 Find models, conversion instructions and evaluation programs by task. There are 51 samples: 45 vision, three speech, one robotics policy and two language-model examples.
 

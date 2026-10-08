@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # RepViT 图像分类
 
 RepViT 将 ViT 模块的设计应用于移动端卷积分类网络。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

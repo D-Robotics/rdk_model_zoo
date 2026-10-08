@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ResNet evaluation (ResNet18/50/152)
 
 Use the bundled image for a functional board check. For dataset accuracy, prepare the matching labeled validation split and aggregate predictions using the metric definitions below. Reference tables list published measurements and their operating conditions.

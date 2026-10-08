@@ -1,6 +1,6 @@
-# HIMLoco 融合 Go2 策略
+[English](README.md) | 简体中文
 
-[English](README.md)
+# HIMLoco 融合 Go2 策略
 
 <a id="overview"></a>
 ## 概述

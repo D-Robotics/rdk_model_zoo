@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EdgeNeXt conversion
 
 This directory provides conversion assets: four reference PTQ
@@ -5,7 +7,6 @@ YAMLs (`EdgeNeXt_{base,small,x_small,xx_small}_config.yaml`). Prepare variant-ma
 
 For each variant, use the matching YAML, which names its ONNX input and
 variant-specific output prefix.
-
 
 <a id="source-model"></a>
 ## Source model

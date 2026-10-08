@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # YOLOWorld 评估器
 
 <a id="dataset"></a>

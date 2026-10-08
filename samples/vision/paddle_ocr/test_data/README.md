@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Test data provenance
 
 The pilot copies only the fixtures needed for its default X5 and S100 Python

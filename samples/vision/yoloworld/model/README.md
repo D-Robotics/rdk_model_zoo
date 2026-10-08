@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # YOLOWorld model assets
 
 <a id="artifacts"></a>

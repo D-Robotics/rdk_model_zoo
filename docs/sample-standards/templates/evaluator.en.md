@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 <!-- Template: evaluator/ README (English). Contract: readme-contract.md §4.6.
      Keep anchors; replace ⟪…⟫; delete guidance when done. Reference results are
      cited with their measurement conditions and sources. An empty

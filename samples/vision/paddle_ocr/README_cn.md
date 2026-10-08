@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文
+[English](README.md) | 简体中文
 
 # PaddleOCR 两阶段文字检测与识别
 

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # RepVGG image classification
 
 RepVGG folds training branches into a stack of 3×3 convolutions for inference.

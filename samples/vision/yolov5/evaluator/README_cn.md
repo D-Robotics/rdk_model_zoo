@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # YOLOv5 评估器
 
 <a id="dataset"></a>
@@ -215,8 +217,6 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 | YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 22.7 ms / 44.0 FPS (1 thread  ) <br/> 35.3 ms / 56.6 FPS (2 threads) | 2.3 ms |
 | YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 41.6 ms / 24.0 FPS (1 thread  ) <br/> 73.1 ms / 27.3 FPS (2 threads) | 2.3 ms |
 | YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 69.7 ms / 14.4 FPS (1 thread  ) <br/> 129.0 ms / 15.5 FPS (2 threads) | 2.3 ms |
-
-
 
 <a id="boundaries"></a>
 ## 适用范围

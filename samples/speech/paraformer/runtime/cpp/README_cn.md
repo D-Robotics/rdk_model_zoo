@@ -1,6 +1,8 @@
+[English](README.md) | 简体中文
+
 # Paraformer 原生推理
 
-[English](README.md) · [Sample 概览](../../README_cn.md)
+[Sample 概览](../../README_cn.md)
 
 当前目录提供 S100 原生可执行入口与启动器、CPU CIF／文本解码、三模型应用编排、
 UCP SDK 适配器、生产预检以及准备清单／NPY 读取。按[构建](#build)与

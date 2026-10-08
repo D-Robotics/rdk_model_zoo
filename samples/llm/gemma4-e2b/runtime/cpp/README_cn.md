@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # C++ Runtime
 
-**中文** | [English](./README.md)
 
 RDK S100P / S600 板端 Gemma4-E2B VLM 推理 C++ runtime，加载与对应 SoC 匹配的预编译 HBM 模型，在 BPU 上运行实时视觉语言推理。
 

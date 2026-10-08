@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文
+[English](README.md) | 简体中文
 
 # 模型评估 — DINOv2 ViT-S/14
 

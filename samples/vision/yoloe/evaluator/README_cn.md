@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # YOLOE PF 评估
 
-[English](README.md) | 简体中文
 
 使用与[运行时](../runtime/python/README_cn.md)相同的后处理评估本地浮点输出模型。ONNX 后端在 CPU 执行；板端后端需要匹配的 SDK 和另行准备的浮点 BIN/HBM。本目录不下载模型/数据集，也不编译模型；已记录的 BPU 性能见参考记录一节。
 
@@ -170,8 +171,6 @@ predictions-only 模式为指定图片与类别清单导出检测和掩码。计
 | Model | Size (pixels) | Number of Classes | Parameters(M)/FLOPs(B) | BPU Latency/BPU Throughput (threads) | Post-processing Time<br/>(Python) |
 |---------|---------|-------|---------|---------|----------|
 | YOLOE-11S-Seg | 640×640 | 4585 | 13.69 M | 142.9 ms / 7.0 FPS (1 thread  ) <br/> 149.5 ms / 13.3 FPS (2 threads) <br/> 167.4 ms / 17.8 FPS (3 threads)  | 300 ms |
-
-
 
 <a id="boundaries"></a>
 ## 适用范围与检查

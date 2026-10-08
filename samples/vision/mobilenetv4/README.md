@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # MobileNetV4 image classification
 
 MobileNetV4 is a family of image classifiers built around universal inverted bottlenecks.

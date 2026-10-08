@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # 按任务选择 Sample
 
-[English](README.md)
 
 按任务查找模型、转换方法和评估程序。共 51 个 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型示例。
 

@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # Python 推理公共函数
 
-[English](README.md)
 
 本目录为 Model Zoo Sample 提供板端 SDK 调用、图像与张量处理、标签读取及可视化函数。模型专有的预处理和后处理由各 Sample 实现。
 

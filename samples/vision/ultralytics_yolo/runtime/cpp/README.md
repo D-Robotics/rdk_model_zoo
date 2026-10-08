@@ -1,6 +1,8 @@
+English | [简体中文](README_cn.md)
+
 # Ultralytics YOLO C++ runtime
 
-[简体中文](README_cn.md) · [Python](../python/README.md)
+[Python](../python/README.md)
 
 <a id="overview"></a>
 ## C++ inference

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EfficientFormerV2 image classification
 
 EfficientFormerV2 combines convolution and attention for mobile image classification.

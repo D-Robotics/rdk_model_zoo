@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ResNet model conversion (ResNet18 / ResNet50 / ResNet152)
 
 Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)

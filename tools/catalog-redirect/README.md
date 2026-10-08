@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Catalog redirect artifact (local only, not deployed)
 
 `https://d-robotics.github.io/rdk_model_zoo/` was the published dashboard URL. It is a single-page application, so every link it ever handed out is a query string on that one path — `?model=…`, `?task=…`, `?benchmark=performance`, and combinations of them. Those links exist in shared chats, issue trackers, and release notes and cannot be recalled.

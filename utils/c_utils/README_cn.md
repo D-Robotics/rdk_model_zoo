@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # C++ 推理公共函数
 
-[English](README.md)
 
 本目录为原生 Model Zoo Sample 提供图像与张量处理、结果绘制、板卡识别和文件哈希计算。
 

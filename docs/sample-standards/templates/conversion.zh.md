@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 <!-- 模板：conversion/ README（中文）。契约：readme-contract.md §4.5。
      保持锚点；替换 ⟪…⟫；完成后删除引导。缺失的配方环节必须列入 known-gaps——
      禁止用通用命令骨架伪装已验证的转换流程。 -->

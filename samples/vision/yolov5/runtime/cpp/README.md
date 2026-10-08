@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # YOLOv5 native C++ runtime
 
 This directory is the native C++ counterpart of the unified YOLOv5 sample. It

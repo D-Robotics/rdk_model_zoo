@@ -35,7 +35,6 @@ pointnet/
 | s100 | chair，四类部件 | supported | not-supported |
 | x5 / s100p / s600 | 无已发布制品 | not-supported | not-supported |
 
-
 <a id="prerequisites"></a>
 ## 环境前提
 

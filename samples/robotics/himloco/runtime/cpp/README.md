@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # HIMLoco C++ runtime
 
 [中文](README_cn.md)

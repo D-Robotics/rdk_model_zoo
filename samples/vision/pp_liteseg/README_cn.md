@@ -32,7 +32,6 @@ pp_liteseg/
 | x5 | STDC1 / Cityscapes / 1024×512 | supported | not-supported |
 | s100 / s100p / s600 | 无已发布制品 | not-supported | not-supported |
 
-
 <a id="prerequisites"></a>
 ## 环境前提
 

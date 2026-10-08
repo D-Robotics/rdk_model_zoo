@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # MobileOne 图像分类
 
 MobileOne 将训练分支融合为简洁的卷积网络，用于推理。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

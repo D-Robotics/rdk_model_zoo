@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # MobileNetV1 模型转换
 
 在 x86 Linux 主机的 RDK OpenExplore (OE) 环境中执行模型转换。

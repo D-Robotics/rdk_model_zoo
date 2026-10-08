@@ -1,6 +1,6 @@
-# YOLO26 Depth Python runtime
-
 English | [简体中文](README_cn.md)
+
+# YOLO26 Depth Python runtime
 
 <a id="overview"></a>
 ## Python inference

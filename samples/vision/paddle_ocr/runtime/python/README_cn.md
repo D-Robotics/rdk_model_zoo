@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # PaddleOCR Python 运行时
 
 <a id="overview"></a>

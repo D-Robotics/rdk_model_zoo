@@ -35,7 +35,6 @@ published HBM; images/benchmarks below are source records.
 | s100 | chair, four parts | supported | not-supported |
 | x5 / s100p / s600 | none published | not-supported | not-supported |
 
-
 <a id="prerequisites"></a>
 ## Prerequisites
 

@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # 生成参考数据
 
-**简体中文** | [English](README.md)
 
 本目录包含文本生成提示词与参考结果。
 

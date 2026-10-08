@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Shared runtime utilities
 
-[简体中文](README_cn.md)
 
 These helpers provide SDK sessions, model metadata, image and tensor processing, labels, and result rendering for Model Zoo samples. Conversion scripts also reuse numerical and image-processing functions.
 

@@ -1,4 +1,4 @@
-English | [简体中文](./README_cn.md)
+English | [简体中文](README_cn.md)
 
 # PaddleOCR two-stage text detection and recognition
 

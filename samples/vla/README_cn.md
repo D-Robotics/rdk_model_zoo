@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # VLA 与机械臂策略集成
 
-[English](README.md)
 
 本目录以 Git 子模块保留完整上游仓库。先选择策略及对应板型／版本，再准备环境。
 它们与离线 [HIMLoco 足式策略](../robotics/himloco/README_cn.md) 独立。

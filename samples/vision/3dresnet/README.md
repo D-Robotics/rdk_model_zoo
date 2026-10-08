@@ -1,4 +1,4 @@
-English | [简体中文](./README_cn.md)
+English | [简体中文](README_cn.md)
 
 # 3D ResNet-18 (R3D-18) Video Action Classification
 

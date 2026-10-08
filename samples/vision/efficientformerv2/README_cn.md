@@ -1,11 +1,11 @@
+[English](README.md) | 简体中文
+
 # EfficientFormerV2 图像分类
 
 EfficientFormerV2 结合卷积与注意力，用于移动端图像分类。
 
 来源：[EfficientFormerV2: Rethinking Vision Transformers for MobileNet
 Size and Speed](https://arxiv.org/abs/2212.08059)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

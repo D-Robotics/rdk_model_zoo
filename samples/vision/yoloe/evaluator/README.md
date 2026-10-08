@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # YOLOE PF evaluation
 
-English | [简体中文](README_cn.md)
 
 Evaluate a local floating-output model with the same postprocessing used by [the runtime](../runtime/python/README.md). The ONNX backend runs on CPU; the board backend requires the matching installed SDK and a separately prepared float BIN/HBM. This directory does not download models/datasets or compile a model; recorded BPU reference performance is listed in the reference results section.
 
@@ -170,8 +171,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | Model | Size (pixels) | Number of Classes | Parameters(M)/FLOPs(B) | BPU Latency/BPU Throughput (threads) | Post-processing Time<br/>(Python) |
 |---------|---------|-------|---------|---------|----------|
 | YOLOE-11S-Seg | 640×640 | 4585 | 13.69 M | 142.9 ms / 7.0 FPS (1 thread  ) <br/> 149.5 ms / 13.3 FPS (2 threads) <br/> 167.4 ms / 17.8 FPS (3 threads)  | 300 ms |
-
-
 
 <a id="boundaries"></a>
 ## Boundaries and checks

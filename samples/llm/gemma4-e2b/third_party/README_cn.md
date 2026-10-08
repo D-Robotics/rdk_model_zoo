@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # 第三方依赖
 
-**简体中文** | [English](./README.md)
 
 本目录用于存放 Gemma4-E2B 示例所依赖的第三方源码。
 

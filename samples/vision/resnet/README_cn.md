@@ -1,10 +1,10 @@
+[English](README.md) | 简体中文
+
 # ResNet 图像分类（ResNet18/50/152）
 
 ResNet 通过残差连接训练深层图像分类网络。
 
 来源：[ResNet18 上游](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html) · [ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html) · [ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)
-
-[English README](README.md)
 
 <a id="overview"></a>
 ## 概述

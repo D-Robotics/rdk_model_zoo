@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # RepGhost 图像分类
 
 RepGhost 通过结构重参数化减少轻量 CNN 中显式特征拼接的开销。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

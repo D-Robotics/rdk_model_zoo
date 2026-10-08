@@ -1,6 +1,8 @@
+English | [简体中文](README_cn.md)
+
 # Paraformer model package
 
-[简体中文](README_cn.md) · [Python integration](../runtime/python/README.md)
+[Python integration](../runtime/python/README.md)
 
 The active [S manifest](../../../../docs/release/s/models.yaml) publishes a six-file
 S100 package. This directory provides explicit preparation; inference never

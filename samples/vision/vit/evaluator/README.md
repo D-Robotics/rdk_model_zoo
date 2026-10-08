@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ViT evaluation
 Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 

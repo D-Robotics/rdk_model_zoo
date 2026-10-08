@@ -1,10 +1,10 @@
+[English](README.md) | 简体中文
+
 # MobileNetV2 图像分类
 
 MobileNetV2 使用倒残差模块和线性瓶颈完成轻量图像分类。
 
 来源：[timm/models/mobilenetv2](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv2.py) · [MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org/abs/1801.04381)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

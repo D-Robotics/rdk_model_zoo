@@ -1,10 +1,10 @@
+[English](README.md) | 简体中文
+
 # EfficientNet 图像分类
 
 EfficientNet 通过联合调整网络深度、宽度和输入分辨率完成图像分类。
 
 来源：[EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946) · [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

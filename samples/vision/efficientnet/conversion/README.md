@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EfficientNet conversion
 
 Use the S recipe below with its exporter scripts, calibration script, and

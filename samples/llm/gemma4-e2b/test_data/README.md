@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Example inputs and demonstrations
 
-[简体中文](README_cn.md) | **English**
 
 This directory provides four input images and four example result images.
 It contains no models, calibration dataset or golden tensors.

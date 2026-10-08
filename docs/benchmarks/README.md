@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Model performance data
 
-[简体中文](README_cn.md)
 
 ### Image classification
 #### RDK X5 & RDK X5 Module

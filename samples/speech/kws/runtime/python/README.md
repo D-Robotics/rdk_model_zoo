@@ -1,6 +1,6 @@
-# KWS Python runtime
-
 English | [简体中文](README_cn.md)
+
+# KWS Python runtime
 
 <a id="overview"></a>
 ## Python inference

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ConvNeXt conversion
 
 This directory provides the conversion assets for rebuilding the RDK X5

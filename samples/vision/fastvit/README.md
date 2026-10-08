@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # FastViT image classification
 
 FastViT combines convolution and attention with structural reparameterization for image classification.

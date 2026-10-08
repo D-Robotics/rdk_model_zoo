@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # sample-contract checker
 
 Static contract checker for the unified samples layout. It executes the

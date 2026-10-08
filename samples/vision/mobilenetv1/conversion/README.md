@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # MobileNetV1 model conversion
 
 Run conversion on an x86 Linux host in the RDK OpenExplore (OE)

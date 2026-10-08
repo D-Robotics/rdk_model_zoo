@@ -1,11 +1,11 @@
+[English](README.md) | 简体中文
+
 # FasterNet 图像分类
 
 FasterNet 使用部分卷积减少图像分类中的计算和访存开销。
 
 来源：[Run, Don't Walk: Chasing Higher FLOPS for Faster Neural
 Networks](https://arxiv.org/abs/2303.03667)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

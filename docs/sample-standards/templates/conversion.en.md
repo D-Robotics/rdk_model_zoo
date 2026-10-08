@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 <!-- Template: conversion/ README (English). Contract: readme-contract.md §4.5.
      Keep anchors; replace ⟪…⟫; delete guidance when done. Missing recipe steps
      MUST be listed under known-gaps — a generic command skeleton must never be

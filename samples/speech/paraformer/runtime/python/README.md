@@ -1,6 +1,6 @@
-# Paraformer Python pipeline and CPU bridge
-
 English | [简体中文](README_cn.md)
+
+# Paraformer Python pipeline and CPU bridge
 
 <a id="overview"></a>
 ## Python inference

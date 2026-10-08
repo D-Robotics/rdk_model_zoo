@@ -1,6 +1,6 @@
-# YOLOv5 Python runtime
-
 English | [简体中文](README_cn.md)
+
+# YOLOv5 Python runtime
 
 <a id="overview"></a>
 ## Python inference

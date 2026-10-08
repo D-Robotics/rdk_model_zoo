@@ -55,6 +55,7 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 
 ## 2. 双语配对规则
 
+- 非仓库根目录的 README 第一行固定为语言切换栏：英文使用 `English | [简体中文](README_cn.md)`，中文使用 `[English](README.md) | 简体中文`；空一行后写正文标题。
 - 每个层级的 `README.md`（英文）与 `README_cn.md`（中文）**成对存在**，覆盖相同的
   固定章节 ID 集合；英文/中文标题文字可以不同，**章节 ID 必须一致**（见 §3）。
 - CLI 命令、参数名、默认值、支持矩阵（target×variant×语言）、结果与限制在两种语言中

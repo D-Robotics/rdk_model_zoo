@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 <!-- 模板：sample 根 README（中文）。契约：docs/sample-standards/readme-contract.md §4.1。
      规则：所有 <a id="…"></a> 锚点保持原样；替换 ⟪…⟫ 占位符；完成后删除引导块引用；
      章节只能按契约 §1 的 not-applicable 理由删除。必须与英文 README.md 成对。 -->

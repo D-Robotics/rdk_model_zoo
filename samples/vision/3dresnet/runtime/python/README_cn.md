@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文
+[English](README.md) | 简体中文
 
 # Python Runtime — R3D-18
 
@@ -49,8 +49,6 @@ python3 samples/vision/3dresnet/runtime/python/main.py \
 # cwd：samples/vision/3dresnet/runtime/python
 bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 ```
-
-
 
 <a id="parameters"></a>
 ## 参数

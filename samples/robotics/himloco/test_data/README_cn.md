@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # HIMLoco 离线观测
 
-[English](README.md)
 
 
 ## 目录结构

@@ -1,4 +1,4 @@
-English | [简体中文](./README_cn.md)
+English | [简体中文](README_cn.md)
 
 # Evaluator — DINOv2 ViT-S/14
 

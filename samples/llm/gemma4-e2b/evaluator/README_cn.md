@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # 精度验证
 
-**简体中文** | [English](./README.md)
 
 用于验证量化精度和板端 tensor 对齐的工具与流程。
 

@@ -1,4 +1,4 @@
-[English](README.md) | [简体中文](README_cn.md)
+[English](README.md) | 简体中文
 
 # 原生核心主机测试
 

@@ -1,4 +1,4 @@
-English | [简体中文](./README_cn.md)
+English | [简体中文](README_cn.md)
 
 # Python Runtime — R3D-18
 

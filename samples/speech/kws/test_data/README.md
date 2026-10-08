@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # KWS test audio
 
-English | [简体中文](README_cn.md)
 
 
 ## Directory structure

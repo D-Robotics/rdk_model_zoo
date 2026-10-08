@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # EdgeNeXt 图像分类
 
 EdgeNeXt 将卷积与注意力结合，用于轻量图像分类。
@@ -5,8 +7,6 @@ EdgeNeXt 将卷积与注意力结合，用于轻量图像分类。
 来源：[EdgeNeXt: Efficiently Amalgamated
 CNN-Transformer Architecture for Mobile Vision
 Applications](https://arxiv.org/abs/2206.10589) · [mmaaz60/EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

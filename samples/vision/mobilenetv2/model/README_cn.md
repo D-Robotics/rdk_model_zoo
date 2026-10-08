@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # MobileNetV2 模型制品
 
 model 目录不提交任何二进制；制品由 下载器按平台发布 Manifest

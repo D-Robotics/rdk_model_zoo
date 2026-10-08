@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ResNet model artifacts
 
 The model directory contains no checked-in binaries; artifacts are fetched

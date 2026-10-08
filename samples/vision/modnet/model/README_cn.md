@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # MODNet 模型
 
 <a id="artifacts"></a>

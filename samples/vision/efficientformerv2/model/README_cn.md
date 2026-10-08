@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # EfficientFormerV2 模型制品
 
 model 目录不检入任何二进制；制品由规范化下载器按平台发布 Manifest

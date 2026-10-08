@@ -1,4 +1,4 @@
-[English](README.md) | [简体中文](README_cn.md)
+English | [简体中文](README_cn.md)
 
 <a id="overview"></a>
 # MiniCPM5-2B on RDK S100 / S100P / S600

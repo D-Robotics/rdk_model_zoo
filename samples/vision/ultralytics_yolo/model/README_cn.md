@@ -1,6 +1,8 @@
+[English](README.md) | 简体中文
+
 # Ultralytics YOLO 模型制品
 
-[English](README.md) · [Sample](../README_cn.md) · [Python 运行](../runtime/python/README_cn.md)
+[Sample](../README_cn.md) · [Python 运行](../runtime/python/README_cn.md)
 
 <a id="artifacts"></a>
 ## 已发布制品

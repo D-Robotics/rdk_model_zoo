@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # Batch Perf
 
 本工具用于对指定目录下所有以 `.bin` 结尾的模型文件批量执行 `perf` 测试。

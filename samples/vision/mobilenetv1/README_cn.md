@@ -1,10 +1,10 @@
+[English](README.md) | 简体中文
+
 # MobileNetV1 图像分类
 
 MobileNetV1 使用深度可分离卷积完成轻量图像分类。
 
 来源：[tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md) · [MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

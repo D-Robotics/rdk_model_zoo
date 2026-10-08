@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ByteTrack Python runtime
 
 <a id="overview"></a>

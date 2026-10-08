@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # GoogLeNet image classification
 
 GoogLeNet uses Inception blocks to extract features at several spatial scales.

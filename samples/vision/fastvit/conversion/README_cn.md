@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # FastViT 转换
 
 本目录提供四份参考 PTQ YAML

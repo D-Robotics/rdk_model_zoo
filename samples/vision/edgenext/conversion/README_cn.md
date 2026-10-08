@@ -1,10 +1,11 @@
+[English](README.md) | 简体中文
+
 # EdgeNeXt 转换
 
 本目录提供四份参考 PTQ YAML
 （`EdgeNeXt_{base,small,x_small,xx_small}_config.yaml`）。按所选变体准备
 YAML 指定的 ONNX 图与校准数据，再使用对应配置编译；每份 YAML 都指定
 该变体的 ONNX 输入名和输出前缀。
-
 
 <a id="source-model"></a>
 ## 源模型

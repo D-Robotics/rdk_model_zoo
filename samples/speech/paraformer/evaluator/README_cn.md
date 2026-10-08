@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # Paraformer 评测
 
 使用 CPU 上的三个 FP32 ONNX 模型，或 OE 环境的 HMCT executor 与三个量化
@@ -200,7 +202,6 @@ hrt_model_exec perf --model_file samples/speech/paraformer/model/s100/paraformer
 | Decoder | INT16 all | 73.5 MB | 6.12 ms | 7.12 ms | 6.29 ms |
 | **端到端** | — | **~289 MB** | ~41 ms | **45.61 ms** | **40.81 ms** |
 | **CER** | — | — | — | **3.13%** | **3.13%** |
-
 
 <a id="boundaries"></a>
 ## 评测流程

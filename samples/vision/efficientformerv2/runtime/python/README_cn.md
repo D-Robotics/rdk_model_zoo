@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # EfficientFormerV2 Python 运行时
 
 <a id="overview"></a>

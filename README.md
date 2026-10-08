@@ -1,6 +1,8 @@
-# RDK Model Zoo
+![RDK Model Zoo](docs/assets/model_zoo_logo.jpg)
 
-[简体中文](README_cn.md)
+English | [简体中文](README_cn.md)
+
+# ⭐️ Give a Star for Guidance, Thanks for Your Attention ⭐️
 
 RDK Model Zoo contains vision, speech and language-model examples for D-Robotics RDK boards, with programs for model download, conversion, inference and evaluation. The source version is 2.0.0; see `VERSION` at the repository root.
 

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # LPRNet Python runtime
 
 <a id="overview"></a>

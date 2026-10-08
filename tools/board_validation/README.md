@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Classification board-comparison tool
 
 `b3_classification_compare.py` compares the fixed reference and Sample implementation for 13 X5 classifier variants: ConvNeXt atto; EdgeNeXt base/small/x_small/xx_small; FasterNet s/t0/t1/t2; FastViT s12/sa12/t12/t8. Run one sample, board and variant per invocation on X5 8GB or 4GB.

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # VLA and manipulation-policy integrations
 
 [中文](README_cn.md)

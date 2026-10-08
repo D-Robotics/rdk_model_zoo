@@ -1,6 +1,6 @@
-# Paraformer 语音识别
+[English](README.md) | 简体中文
 
-[English](README.md)
+# Paraformer 语音识别
 
 <a id="overview"></a>
 ## 概览

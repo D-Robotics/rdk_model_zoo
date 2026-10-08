@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # PaddleOCR model preparation
 
 <a id="artifacts"></a>

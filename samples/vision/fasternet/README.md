@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # FasterNet image classification
 
 FasterNet uses partial convolution to reduce computation and memory access in image classification.

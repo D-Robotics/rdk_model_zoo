@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # HGNetV2 图像分类
 
 HGNetV2 是用于图像分类的卷积骨干网络。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

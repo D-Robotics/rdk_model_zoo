@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # RepViT image classification
 
 RepViT brings ViT block design to a mobile convolutional classifier.

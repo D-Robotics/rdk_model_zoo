@@ -1,6 +1,6 @@
-# KWS — MDTC keyword spotting
-
 English | [简体中文](README_cn.md)
+
+# KWS — MDTC keyword spotting
 
 <a id="overview"></a>
 ## Overview

@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # ASR bundled data
 
-[English](README.md) | 简体中文
 
 
 ## 目录结构

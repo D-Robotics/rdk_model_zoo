@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # ConvNeXt 转换
 
 本目录提供重建 ConvNeXt 样例 RDK X5 部署模型的转换资产：三份参考

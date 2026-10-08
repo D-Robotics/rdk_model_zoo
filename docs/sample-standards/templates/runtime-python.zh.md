@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 <!-- 模板：runtime/python README（中文）。契约：readme-contract.md §4.3。
      保持锚点；替换 ⟪…⟫；完成后删除引导。参数默认值与 build_parser 机器核对；
      集成示例必须原样可运行（由 sample tests 按 inference-contract 验证）。 -->

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ResNet18 C++ runtime (S-series)
 
 The S-series ResNet18 native runtime: the `hbDNNInferV2` inference flow,

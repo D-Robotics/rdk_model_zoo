@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # MiniCPM 原生启动编排
 
-**简体中文** | [English](README.md)
 
 启动器只依赖 Python 3 标准库，用于选择原生 SDK 实现；分词、模型执行与生成仍在 C++。
 S100/S100P 使用 [OELLM 1.0.0](legacy/README_cn.md)，S600 使用

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EfficientViT conversion
 
 This directory provides conversion assets: the single reference

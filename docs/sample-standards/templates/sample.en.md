@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 <!-- Template: sample root README (English). Contract: docs/sample-standards/readme-contract.md §4.1.
      Rules: keep every <a id="…"></a> anchor exactly as given; replace ⟪…⟫ placeholders;
      delete guidance blockquotes when done; a section may only be dropped with a

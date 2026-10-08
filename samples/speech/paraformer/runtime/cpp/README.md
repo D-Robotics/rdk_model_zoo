@@ -1,6 +1,8 @@
+English | [简体中文](README_cn.md)
+
 # Paraformer native inference
 
-[简体中文](README_cn.md) · [Sample overview](../../README.md)
+[Sample overview](../../README.md)
 
 This directory provides the native S100 executable and launcher, CPU CIF/text
 kernels, three-model application composition, UCP SDK adapter, production preflight

@@ -1,4 +1,4 @@
-[English](./README.md) | 简体中文
+[English](README.md) | 简体中文
 
 # 3D ResNet-18（R3D-18）视频动作分类
 

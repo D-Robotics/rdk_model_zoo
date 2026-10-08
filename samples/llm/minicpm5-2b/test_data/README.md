@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Generation reference data
 
-[简体中文](README_cn.md) | **English**
 
 These prompts and measurements come from the source S release.
 

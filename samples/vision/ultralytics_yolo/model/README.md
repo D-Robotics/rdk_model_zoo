@@ -1,6 +1,8 @@
+English | [简体中文](README_cn.md)
+
 # Ultralytics YOLO model assets
 
-[简体中文](README_cn.md) · [Sample](../README.md) · [Python runtime](../runtime/python/README.md)
+[Sample](../README.md) · [Python runtime](../runtime/python/README.md)
 
 <a id="artifacts"></a>
 ## Published artifacts

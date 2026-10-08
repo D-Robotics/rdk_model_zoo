@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # ResNet 模型转换（ResNet18 / ResNet50 / ResNet152）
 
 转换在 x86 Linux 主机的 RDK OpenExplore（OE）环境完成，不是板端操作。本目录

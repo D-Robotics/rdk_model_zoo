@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # ResNeXt 图像分类
 
 ResNeXt 在 ResNet 的基础上采用组卷积与并行残差变换。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

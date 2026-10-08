@@ -1,6 +1,6 @@
-# KWS evaluation
-
 English | [简体中文](README_cn.md)
+
+# KWS evaluation
 
 <a id="dataset"></a>
 ## Dataset

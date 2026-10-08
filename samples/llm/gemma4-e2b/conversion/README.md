@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Model Conversion (PC-side)
 
-[简体中文](./README_cn.md) | **English**
 
 PTQ quantization and HBM compilation run on a **development PC**, not on the board.
 

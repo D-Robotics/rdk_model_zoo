@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 <!-- Template: runtime/cpp README (English). Contract: readme-contract.md §4.4.
      Keep anchors; replace ⟪…⟫; delete guidance when done. This README exists
      only where a C++ implementation exists — its absence must never be papered

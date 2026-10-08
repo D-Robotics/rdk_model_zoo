@@ -1,6 +1,8 @@
+[English](README.md) | 简体中文
+
 # Paraformer 输入音频
 
-[English](README.md) · [前端说明](../runtime/python/README_cn.md)
+[前端说明](../runtime/python/README_cn.md)
 
 两条单声道 16 kHz PCM16 WAV 与 `manifest.json` 逐字节保留 S 发布的
 原始内容，作为特征生成与推理的小规模源对照输入。

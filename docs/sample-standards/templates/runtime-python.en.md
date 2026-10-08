@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 <!-- Template: runtime/python README (English). Contract: readme-contract.md §4.3.
      Keep anchors; replace ⟪…⟫; delete guidance when done. Parameter defaults are
      machine-checked against build_parser; the integration example must run as-is

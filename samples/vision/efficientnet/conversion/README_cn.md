@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # EfficientNet 转换
 
 S 配方可直接使用下文的导出脚本、校准脚本与逐变体 YAML。

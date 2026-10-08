@@ -1,11 +1,11 @@
+[English](README.md) | 简体中文
+
 # EfficientFormer 图像分类
 
 EfficientFormer 是面向移动端推理的视觉 Transformer。
 
 来源：[EfficientFormer: Vision Transformers at MobileNet
 Speed](https://arxiv.org/abs/2206.01191)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

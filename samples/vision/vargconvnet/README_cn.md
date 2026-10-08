@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # VargConvNet 图像分类
 
 VargConvNet 是轻量卷积图像分类网络。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Catalog data publisher
 
 This module belongs to `rdk_model_zoo`. It is the sole generator of the dashboard data consumed by `model_zoo_doc/catalog`.

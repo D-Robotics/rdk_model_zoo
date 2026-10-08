@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # ASR bundled data
 
-English | [简体中文](README_cn.md)
 
 
 ## Directory structure

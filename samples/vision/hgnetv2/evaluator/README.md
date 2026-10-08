@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # HGNetV2 evaluation
 This guide covers a one-image functional check and dataset-level Top-K evaluation on X5. The dataset command reads image paths and per-image ground-truth class indices from a CSV.
 

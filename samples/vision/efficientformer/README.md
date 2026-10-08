@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EfficientFormer image classification
 
 EfficientFormer is a vision Transformer designed for mobile inference.

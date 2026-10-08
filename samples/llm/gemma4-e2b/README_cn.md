@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # Gemma4-E2B VLM 模型说明
 
-**简体中文** | [English](./README.md)
 
 <p align="center">
   <img src="./test_data/results/image.jpg" alt="Gemma4-E2B on RDK S100P" width="960">

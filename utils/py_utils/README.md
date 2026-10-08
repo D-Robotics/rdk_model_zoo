@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Python runtime utilities
 
-[简体中文](README_cn.md)
 
 Model Zoo samples share these functions for board SDK execution, image and tensor processing, labels, and visualization. Each sample defines its model-specific preprocessing and postprocessing.
 

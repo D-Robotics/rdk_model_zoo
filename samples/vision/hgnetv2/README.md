@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # HGNetV2 image classification
 
 HGNetV2 is a convolutional backbone for image classification.

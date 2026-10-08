@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Paraformer conversion
 
 [中文](README_cn.md) · [Sample](../README.md) · [Python runtime](../runtime/python/README.md)
@@ -343,7 +345,6 @@ Configuration: S100 `nash-e`, all-node INT16, max calibration, `O2`, latency mod
 | DDR usage | 127 MB |
 | Inputs | 4: encoder_out, token_num, bias_embed, pre_acoustic_embeds |
 | Outputs | `logits [1, 100, 8404]` |
-
 
 <a id="artifacts"></a>
 ## Produced artifacts

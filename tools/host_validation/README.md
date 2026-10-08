@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Host validation runner
 
 `run.py` executes the repository's host validation sections and writes a JSON

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # TROS
 
 RDK board samples use the runtime and `hbm_runtime` supplied by the matching

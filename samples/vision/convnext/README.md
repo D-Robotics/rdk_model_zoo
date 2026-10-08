@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ConvNeXt image classification
 
 ConvNeXt is a convolutional classifier built with large depthwise kernels and Transformer-style blocks.

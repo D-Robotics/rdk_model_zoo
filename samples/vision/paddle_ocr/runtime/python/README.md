@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # PaddleOCR Python runtime
 
 <a id="overview"></a>
@@ -110,7 +112,6 @@ identified — it never guesses from a filename.
 | `--prepare` | flag | false | explicitly fetch the selected manifest assets into local paths |
 
 `--list-models`, `--dry-run`, and `--prepare` are mutually exclusive modes.
-
 
 <a id="results"></a>
 ## Results

@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # FCOS 评估器
 
 <a id="dataset"></a>
@@ -112,7 +114,6 @@ unified/metadata.json unified/result.json unified/inputs/*.npy unified/raw/*.npy
 | 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间(Python) |
 |---------|---------|-------|---------|---------|----------|
 | fcos | 512×512 | 80 | - | 173.9 FPS | 5 ms |
-
 
 <a id="boundaries"></a>
 ## 适用范围

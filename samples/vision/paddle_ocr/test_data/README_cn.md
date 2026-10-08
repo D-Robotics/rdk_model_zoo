@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # 测试数据来源
 
 本试点只复制 X5 和 S100 Python 对照所需的默认 fixture，文件内容与已有平台

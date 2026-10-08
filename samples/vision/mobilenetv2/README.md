@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # MobileNetV2 image classification
 
 MobileNetV2 uses inverted residual blocks and linear bottlenecks for lightweight image classification.

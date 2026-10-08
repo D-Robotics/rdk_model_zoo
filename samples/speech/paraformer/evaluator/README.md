@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Paraformer evaluator
 
 Evaluate prepared 16 kHz speech features with the three FP32 ONNX stages on CPU,
@@ -222,7 +224,6 @@ The summary uses 300 AISHELL dev utterances from 40 speakers. Resident Python an
 | Decoder | INT16 all | 73.5 MB | 6.12 ms | 7.12 ms | 6.29 ms |
 | **Pipeline total** | — | **~289 MB** | ~41 ms | **45.61 ms** | **40.81 ms** |
 | **CER** | — | — | — | **3.13%** | **3.13%** |
-
 
 <a id="boundaries"></a>
 ## Evaluation workflow

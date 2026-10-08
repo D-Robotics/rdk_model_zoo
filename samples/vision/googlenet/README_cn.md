@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # GoogLeNet 图像分类
 
 GoogLeNet 通过 Inception 模块提取不同空间尺度的图像特征。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

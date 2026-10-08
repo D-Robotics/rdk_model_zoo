@@ -1,6 +1,8 @@
+English | [简体中文](README_cn.md)
+
 # Paraformer input audio
 
-[简体中文](README_cn.md) · [Frontend guide](../runtime/python/README.md)
+[Frontend guide](../runtime/python/README.md)
 
 The two mono 16 kHz PCM16 WAVs and `manifest.json` are unchanged from S commit
 `380e1a2bf42041af54be6f34935e50197cfadff9`. They provide small source-comparison

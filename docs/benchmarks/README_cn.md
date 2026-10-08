@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # 模型性能数据
 
-[English](README.md)
 
 ### 图像分类
 #### RDK X5 & RDK X5 Module

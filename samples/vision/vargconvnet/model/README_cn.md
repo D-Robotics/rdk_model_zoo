@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # VargConvNet 模型制品
 
 <a id="artifacts"></a>

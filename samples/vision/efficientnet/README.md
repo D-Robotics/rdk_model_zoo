@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EfficientNet image classification
 
 EfficientNet scales network depth, width, and image resolution together for image classification.

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EdgeNeXt model artifacts
 
 Prepare the model artifact with the downloader, which resolves its URL and format from the platform release manifest.

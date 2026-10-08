@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Ultralytics YOLO evaluation
 
-English | [简体中文](README_cn.md)
 
 Evaluate a compiled model using the same task implementations as [the Python runtime](../runtime/python/README.md). Detection, instance segmentation and pose use COCO metrics; classification uses ImageNet Top-1/Top-5. YOLO26 OBB exports predictions only. This directory does not download models or datasets, compile models, or measure BPU-only latency.
 

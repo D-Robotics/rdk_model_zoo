@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # GoogLeNet conversion
 
 <a id="source-model"></a>

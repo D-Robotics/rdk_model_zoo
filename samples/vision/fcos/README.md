@@ -1,6 +1,6 @@
-# FCOS Object Detection
-
 English | [简体中文](README_cn.md)
+
+# FCOS Object Detection
 
 <a id="overview"></a>
 ## Overview

@@ -71,7 +71,6 @@ Python CLI 自动加载这些表。`main.py` 对 detect/seg/pose 默认使用 `c
 - OBB 绘图打印数字 ID；分类打印 `Unknown(<id>)`。
 - detect/seg 渲染图片时直接按索引取标签表，因此会在写出结果图之前以 `IndexError` 中止。
 
-
 <a id="inputs"></a>
 ## 使用随仓与自定义图片
 

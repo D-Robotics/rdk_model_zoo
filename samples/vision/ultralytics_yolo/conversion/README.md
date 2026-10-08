@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Ultralytics YOLO conversion
 
-[简体中文](README_cn.md)
 
 This directory turns a float Ultralytics checkpoint into the ONNX graph and
 then into the target BPU artifact used by the shared Python sample. Export and

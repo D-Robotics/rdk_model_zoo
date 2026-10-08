@@ -1,6 +1,6 @@
-# Ultralytics YOLO — RDK X5 / S
+[English](README.md) | 简体中文
 
-[English](README.md)
+# Ultralytics YOLO — RDK X5 / S
 
 <a id="overview"></a>
 

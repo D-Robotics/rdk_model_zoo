@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # C++ runtime utilities
 
-[简体中文](README_cn.md)
 
 These helpers provide image and tensor processing, result rendering, board identification and file hashing for native Model Zoo samples.
 

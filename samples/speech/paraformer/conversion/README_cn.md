@@ -1,6 +1,8 @@
+[English](README.md) | 简体中文
+
 # Paraformer 模型转换
 
-[English](README.md) · [Sample 入口](../README_cn.md) · [Python 运行](../runtime/python/README_cn.md)
+[Sample 入口](../README_cn.md) · [Python 运行](../runtime/python/README_cn.md)
 
 本目录从固定 FunASR 架构的真实权重直接导出 encoder、predictor、decoder，
 固定部署形状并与 Torch 做数值检查，准备真实音频校准并编排显式 OE 编译。
@@ -310,7 +312,6 @@ Python 接口手册见 [S Python API 指南](https://developer.d-robotics.cc/rdk
 | DDR 占用 | 127 MB |
 | 输入 | 4 个：encoder_out, token_num, bias_embed, pre_acoustic_embeds |
 | 输出 | `logits [1, 100, 8404]` |
-
 
 <a id="artifacts"></a>
 ## 生成产物

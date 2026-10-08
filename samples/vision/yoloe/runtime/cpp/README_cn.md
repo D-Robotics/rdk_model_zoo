@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # YOLOE C++ Runtime
 
-[English](README.md) | 简体中文
 
 使用 `run.sh` 执行 E11/E26 无提示实例分割，或将 C++ 三阶段库嵌入应用。启动器精确选择模型，核验本机和文件身份，按显式要求构建原生程序，并保留日志、图片和掩码结果。真实 SDK 编译与板端推理按下文构建/运行说明执行。Python 入口见 [Python runtime](../python/README_cn.md)，注意其 X5 掩码协议不同。
 

@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # 模型转换（PC 端）
 
-**简体中文** | [English](./README.md)
 
 PTQ 量化与 HBM 编译在**开发 PC**上完成，不在板端执行。
 

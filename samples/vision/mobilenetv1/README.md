@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # MobileNetV1 image classification
 
 MobileNetV1 uses depthwise separable convolution for lightweight image classification.

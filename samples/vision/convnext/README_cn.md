@@ -1,11 +1,11 @@
+[English](README.md) | 简体中文
+
 # ConvNeXt 图像分类
 
 ConvNeXt 是采用大核深度卷积和 Transformer 风格模块的图像分类网络。
 
 来源：[A ConvNet for the
 2020s](https://arxiv.org/abs/2201.03545) · [facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # Evaluator — FCOS
 
 <a id="dataset"></a>
@@ -113,8 +115,6 @@ Object Detection (COCO)
 | Model | size (pixels) | number of classes | BPU latency /BPU throughput (threads) | post-processing time (Python) |
 |---------|---------|-------|------------------------|--------------------|
 | fcos | 512×512 | 80 |  13.1 ms / 76.5 FPS (1 thread) <br/> 13.6 ms / 146.6 FPS (2 threads) <br/> 17.2 ms / 173.9 FPS (3 threads) | 5 ms |
-
-
 
 <a id="boundaries"></a>
 ## Boundaries

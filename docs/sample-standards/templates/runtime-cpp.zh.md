@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 <!-- 模板：runtime/cpp README（中文）。契约：readme-contract.md §4.4。
      保持锚点；替换 ⟪…⟫；完成后删除引导。本 README 只在存在 C++ 实现时存在——
      缺席时不得在其他层级声称双语言支持。 -->

@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # HGNetV2 model artifacts
 
 <a id="artifacts"></a>

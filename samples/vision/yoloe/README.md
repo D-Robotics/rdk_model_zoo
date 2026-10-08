@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # YOLOE PF instance segmentation
 
 <a id="overview"></a>

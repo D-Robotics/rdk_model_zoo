@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # MobileNetV4 模型转换
 
 模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行，不是板卡

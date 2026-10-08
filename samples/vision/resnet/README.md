@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ResNet image classification (ResNet18/50/152)
 
 ResNet uses residual connections to train deep image classifiers.

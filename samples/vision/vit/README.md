@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ViT CIFAR-10 classification
 
 ViT classifies images with self-attention over a sequence of image patches.

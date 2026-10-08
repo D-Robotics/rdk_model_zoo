@@ -1,6 +1,6 @@
-# 模型下载
+[English](README.md) | 简体中文
 
-**简体中文** | [English](./README.md)
+# 模型下载
 
 <a id="artifacts"></a>
 ## 发布组合

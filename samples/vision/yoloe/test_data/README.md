@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # YOLOE test data
 
 `office_desk.jpg` is the example image. `classes.names` supplies the 4585-class prompt-free vocabulary, with SHA-256 `1a6c943dd251993770e7cf6fed23a38b7ac068f4c8fbc7a0db85cbe0fe5221b3`. Use labeled evaluation images for mAP and representative deployment images for calibration.

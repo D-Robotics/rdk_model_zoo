@@ -1,6 +1,6 @@
-# Paraformer Python 流程与 CPU 中间处理
-
 [English](README.md) | 简体中文
+
+# Paraformer Python 流程与 CPU 中间处理
 
 <a id="overview"></a>
 ## Python 推理

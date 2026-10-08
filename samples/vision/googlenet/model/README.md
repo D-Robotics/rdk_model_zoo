@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # GoogLeNet model artifacts
 
 <a id="artifacts"></a>

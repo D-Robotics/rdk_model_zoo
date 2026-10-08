@@ -1,11 +1,11 @@
+[English](README.md) | 简体中文
+
 # FastViT 图像分类
 
 FastViT 结合卷积、注意力与结构重参数化，用于图像分类。
 
 来源：[FastViT: A Fast Hybrid Vision Transformer using Structural
 Reparameterization](https://arxiv.org/abs/2303.14189)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

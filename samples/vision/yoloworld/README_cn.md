@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # YOLOWorld X5 开放词汇检测
 
 <a id="overview"></a>

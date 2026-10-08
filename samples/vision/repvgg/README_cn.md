@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # RepVGG 图像分类
 
 RepVGG 将训练分支融合为由 3×3 卷积组成的推理网络。
-
-[English README](README.md)
 
 <a id="overview"></a>
 

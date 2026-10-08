@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 <!-- Template: model/ README (English). Contract: readme-contract.md §4.2.
      Keep anchors; replace ⟪…⟫; delete guidance when done. sha256 discipline:
      unknown values stay `sha256: null (unknown)` — never guessed or copied. -->

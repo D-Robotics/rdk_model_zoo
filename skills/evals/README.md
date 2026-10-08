@@ -1,23 +1,33 @@
-# Agent 行为评测
+English | [简体中文](README_cn.md)
 
-七个 Model Zoo Skills 共定义 75 条核心行为用例，分别保存在各 Skill 的
-`evals/tasks.yaml`。用例记录输入、fixture 和预期路由或行为；评测结果与逐条
-证据见[行为报告](REPORT.md)。归档校验值见
-[SHA256 文件](codex-evidence-2026-09-17.sha256)。
+# Agent behavior evaluation
 
-## 评测记录
+The seven Model Zoo Skills define 75 core behavior cases in their respective
+`evals/tasks.yaml` files. Each case records the input, fixture and expected routing
+or behavior. Results and evidence for individual cases are available in the
+[behavior report](REPORT.md). Archive checksums are available in the
+[SHA256 file](codex-evidence-2026-09-17.sha256).
 
-每条结果记录 `run_id`、`case_id`、评测变体（`baseline`、`agents-only`、`full`）、
-Agent/模型/版本、fixture 摘要、实际主 Skill、工具轨迹和产物路径、断言状态及
-reviewer。断言状态使用 `pass`、`fail`、`fixture-invalid`、`not-run`；无法执行的
-断言保留原因。负向路由中的 `expect.skill: none` 表示该 Skill 不作为主 Skill。
+## Evaluation records
 
-评测使用固定目标仓库、提交和输入条件，并记录 Agent 配置、可用工具及会话上下文。
-每种变体使用独立会话；合成情境使用独立临时 fixture。评审依据实际工具调用、文件
-变化、日志和最终产物逐项核对预期行为。
+Each result records `run_id`, `case_id`, evaluation variant (`baseline`,
+`agents-only`, `full`), Agent/model/version, fixture summary, actual primary Skill,
+tool trace and artifact paths, assertion status and reviewer. Assertion statuses
+are `pass`, `fail`, `fixture-invalid` and `not-run`; assertions that cannot run retain
+the reason. In negative routing cases, `expect.skill: none` means that the Skill
+is not used as the primary Skill.
 
-## 当前报告
+Evaluations use fixed target repositories, commits and input conditions, recording
+the Agent configuration, available tools and session context. Each variant uses
+an independent session; synthetic scenarios use separate temporary fixtures.
+Review checks expected behavior case by case against actual tool calls, file
+changes, logs and final artifacts.
 
-[行为报告](REPORT.md)记录 75 条核心用例的执行情况、对照结果、评分状态和已知限制。
-它也链接到包含输入、提交身份、工具事件、文件变化和评分记录的归档。修改 Skill 后，
-按受影响用例及相关负向路由场景开展新的 Agent 评测，并在对应报告中记录结果。
+## Current report
+
+The [behavior report](REPORT.md) records execution of the 75 core cases,
+comparison results, scoring status and known limitations. It also links to an
+archive containing inputs, commit identities, tool events, file changes and
+scoring records. After modifying a Skill, run new Agent evaluations for affected
+cases and related negative routing scenarios, and record the results in the
+corresponding report.

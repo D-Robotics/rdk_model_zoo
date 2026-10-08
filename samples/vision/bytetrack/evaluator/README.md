@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # ByteTrack evaluator
 
 <a id="dataset"></a>

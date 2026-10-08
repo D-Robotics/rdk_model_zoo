@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # FastViT conversion
 
 This directory provides conversion assets: four reference PTQ

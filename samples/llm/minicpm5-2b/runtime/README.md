@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # MiniCPM native launch orchestration
 
-[简体中文](README_cn.md) | **English**
 
 The Python 3 standard-library launcher selects the native SDK backend. Tokenization,
 model execution and generation remain in C++. S100/S100P use [OELLM 1.0.0](legacy/README.md);

@@ -1,6 +1,6 @@
-# HIMLoco 模型包
+[English](README.md) | 简体中文
 
-[English](README.md)
+# HIMLoco 模型包
 
 <a id="artifacts"></a>
 ## 制品

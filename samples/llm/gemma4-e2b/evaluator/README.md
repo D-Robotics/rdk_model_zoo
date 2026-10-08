@@ -1,6 +1,7 @@
+English | [简体中文](README_cn.md)
+
 # Evaluator
 
-[简体中文](./README_cn.md) | **English**
 
 Tools and workflows to verify quantized accuracy and on-board tensor alignment.
 

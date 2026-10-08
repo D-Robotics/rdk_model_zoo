@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 <!-- 模板：model/ README（中文）。契约：readme-contract.md §4.2。
      保持锚点；替换 ⟪…⟫；完成后删除引导。sha256 纪律：未知值写
      `sha256: null (unknown)`——禁止猜测或从其他制品复制。 -->

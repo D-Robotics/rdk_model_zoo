@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EfficientFormer conversion
 
 This directory provides conversion assets: the two reference

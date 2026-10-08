@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # VargConvNet image classification
 
 VargConvNet is a lightweight convolutional image classifier.

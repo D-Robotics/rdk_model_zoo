@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # MobileNetV4 model conversion
 
 Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)

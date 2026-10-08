@@ -1,6 +1,7 @@
+[English](README.md) | 简体中文
+
 # Ultralytics YOLO 模型评估
 
-[English](README.md) | 简体中文
 
 评估器复用[Python运行时](../runtime/python/README.md)的任务实现。检测、实例分割、姿态估计使用COCO指标；分类使用ImageNet Top-1/Top-5；YOLO26旋转框只导出预测。本目录不下载模型或数据集、不编译模型，也不测量纯BPU延迟。
 

@@ -1,8 +1,8 @@
+[English](README.md) | 简体中文
+
 # ViT CIFAR-10 图像分类
 
 ViT 将图像块组织为序列，通过自注意力完成分类。
-
-[English README](README.md)
 
 <a id="overview"></a>
 ## 概述

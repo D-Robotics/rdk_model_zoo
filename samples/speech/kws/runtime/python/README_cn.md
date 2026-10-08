@@ -1,6 +1,6 @@
-# KWS Python runtime
-
 [English](README.md) | 简体中文
+
+# KWS Python runtime
 
 <a id="overview"></a>
 ## Python 推理

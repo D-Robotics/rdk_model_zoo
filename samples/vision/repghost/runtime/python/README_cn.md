@@ -1,3 +1,5 @@
+[English](README.md) | 简体中文
+
 # RepGhost Python 运行
 
 <a id="overview"></a>

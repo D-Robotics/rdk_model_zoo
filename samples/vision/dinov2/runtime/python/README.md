@@ -1,4 +1,4 @@
-English | [简体中文](./README_cn.md)
+English | [简体中文](README_cn.md)
 
 # Python Runtime — DINOv2 vision features
 
@@ -126,7 +126,6 @@ print({"output": output, "shape": composed_result.shape,
 - `infer`: input mapping → raw mapping containing exactly `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`. The runner validates names, shape, and native metadata dtype and returns raw values unchanged.
 - `postprocess`: raw dual-output mapping → the selected output as an owned float32 ndarray. Float32 output stays raw; integer output uses only its bound quantization metadata for dequantization. No softmax or L2 normalization is applied.
 - `predict(image)` composes the three stages for the task's selected output. It does not download, write files, or evaluate.
-
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

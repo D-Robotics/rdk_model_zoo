@@ -1,4 +1,4 @@
-[English](README.md) | [简体中文](README_cn.md)
+[English](README.md) | 简体中文
 
 # LaneNet 评估边界
 
@@ -49,8 +49,6 @@ python3 -m samples.vision.lanenet.runtime.python.main --target s100 --output out
 ## 参考结果
 
 已发布的 HRT 参考测量使用 200 帧：模型延迟 14.245 ms、69.894 FPS，对应板卡镜像、运行库/工具链版本及制品摘要未注明。Python/C++ 端到端延迟需在目标环境测量，并随结果记录这些条件。模型准备见[转换说明](../conversion/README_cn.md)。
-
-
 
 <a id="boundaries"></a>
 ## 适用范围

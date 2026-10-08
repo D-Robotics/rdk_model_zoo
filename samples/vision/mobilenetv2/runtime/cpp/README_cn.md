@@ -1,4 +1,4 @@
-English | [简体中文](./README_cn.md)
+[English](README.md) | 简体中文
 
 # MobileNetV2 图像分类（C++，S 系列）
 

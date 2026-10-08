@@ -1,10 +1,10 @@
+[English](README.md) | 简体中文
+
 # MobileNetV4 图像分类
 
 MobileNetV4 是采用通用倒瓶颈模块的图像分类模型系列。
 
 来源：[timm/models/MobileNetV4.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/MobileNetV4.py) · [MobileNetV4 -- Universal Models for the Mobile Ecosystem](https://arxiv.org/abs/2404.10518)
-
-[English README](README.md)
 
 <a id="overview"></a>
 

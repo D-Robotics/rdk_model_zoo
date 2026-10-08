@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EfficientViT image classification
 
 EfficientViT is an image classifier with efficient attention blocks.

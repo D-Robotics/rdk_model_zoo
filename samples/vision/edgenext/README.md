@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # EdgeNeXt image classification
 
 EdgeNeXt combines convolution and attention in a compact image classifier.
