@@ -22,7 +22,7 @@ utils/
 ├── py_utils/               # 跨模型复用的 Python Runtime 和工具
 └── c_utils/                # 跨模型复用的 C/C++ 能力
 
-scripts/tools/              # 可独立执行的维护程序
+utils/tools/              # 可独立执行的维护程序
 ```
 
 模型文件按职责命名，例如 `classify.py`、`detect.py`、`segment.py`、`matching.py`、`policy.py`。普通单任务 Sample 默认采用三个 Python 文件。多任务或多模型组合按实际算法划分，不按每个函数拆文件。

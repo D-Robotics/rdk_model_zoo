@@ -31,16 +31,16 @@ jobs:
       - name: Install host-side parser import dependencies
         run: >
           python -m pip install
-          -r scripts/tools/host_validation/requirements.txt
+          -r utils/tools/host_validation/requirements.txt
       - name: Checker unit tests (fixtures first)
-        run: python -m unittest discover -s scripts/tools/sample_contract/tests -v
+        run: python -m unittest discover -s utils/tools/sample_contract/tests -v
       - name: Check migration scope
         # All migrated README contracts are enforced without a debt baseline.
         # The report is written under $RUNNER_TEMP, never into the checkout.
         env:
           CONTRACT_REPORT: ${{ runner.temp }}/sample-contract-report.json
         run: >
-          python scripts/tools/sample_contract/check.py
+          python utils/tools/sample_contract/check.py
           --scope migration
           --parser-mode import
           --report "$CONTRACT_REPORT"

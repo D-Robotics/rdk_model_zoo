@@ -345,7 +345,7 @@ the SHA-256 records alongside. Pass criteria here are inference success,
 expected visual/textual output and repeatability; report the recorded
 per-case exit codes and outputs.
 
-`scripts/tools/board_validation/b3_classification_compare.py` is a separate,
+`utils/tools/board_validation/b3_classification_compare.py` is a separate,
 scope-fixed comparator for four classifier samples (13 X5 variants:
 convnext/edgenext/fasternet/fastvit) — it covers neither ResNet, YOLO nor
 the full sample set.

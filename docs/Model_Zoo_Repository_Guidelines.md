@@ -27,7 +27,7 @@
 | 架构决策 | [`docs/adr/`](adr/) | ADR-0001 源仓/文档站分离、ADR-0002 过渡兼容、ADR-0006 统一版本线等 |
 | Skills | [`skills/README.md`](../skills/README.md) | Skills 维护源、许可证与独立安装资源（见下节） |
 
-自动检查（Q3，`scripts/tools/sample_contract/`）执行 README 契约中可机器判定的规则；不可机器
+自动检查（Q3，`utils/tools/sample_contract/`）执行 README 契约中可机器判定的规则；不可机器
 判定的交语义评审，不报告自动通过。
 
 ### Skills 维护源与目标上下文

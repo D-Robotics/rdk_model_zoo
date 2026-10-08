@@ -30,18 +30,18 @@ jobs:
           # package.json engines: >=22.12 <23
           node-version: "22.12"
           cache: npm
-          cache-dependency-path: scripts/tools/catalog-publisher/package-lock.json
+          cache-dependency-path: utils/tools/catalog-publisher/package-lock.json
       - name: Install dependencies
         run: npm ci
-        working-directory: scripts/tools/catalog-publisher
+        working-directory: utils/tools/catalog-publisher
       - name: Validate sources, test, and build the catalog package
         run: npm run check
-        working-directory: scripts/tools/catalog-publisher
+        working-directory: utils/tools/catalog-publisher
       - name: Report the pinned catalog identity
         run: |
           node --input-type=module -e '
             import { readFileSync } from "node:fs";
-            const meta = JSON.parse(readFileSync("scripts/tools/catalog-publisher/dist/catalog.meta.json", "utf8"));
+            const meta = JSON.parse(readFileSync("utils/tools/catalog-publisher/dist/catalog.meta.json", "utf8"));
             console.log(`catalog_version: ${meta.catalog_version}`);
             console.log(`payload: ${meta.payload} (${meta.bytes} bytes, sha256 ${meta.sha256})`);
             console.log(`platform tags: ${JSON.stringify(meta.platform_tags)}`);
@@ -52,7 +52,7 @@ jobs:
         with:
           name: model-catalog-data
           path: |
-            scripts/tools/catalog-publisher/dist/catalog.json
-            scripts/tools/catalog-publisher/dist/catalog.meta.json
+            utils/tools/catalog-publisher/dist/catalog.json
+            utils/tools/catalog-publisher/dist/catalog.meta.json
           if-no-files-found: error
           retention-days: 90

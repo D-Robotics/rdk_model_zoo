@@ -276,7 +276,7 @@ The [sample guide](../README.md) describes the YOLOv8n and YOLO26n detection com
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
 
-python3 /path/to/rdk_model_zoo/scripts/tools/batch_perf/batch_perf.py --max 3 --file source/reference_hbm_models/
+python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --file source/reference_hbm_models/
 ```
 
 3. The test boards were in their optimal state.

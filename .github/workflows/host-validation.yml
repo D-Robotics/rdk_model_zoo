@@ -6,7 +6,7 @@ name: host-validation
 # — gitlinks stay uninitialized and upstream ACT/Pi0 code is never run,
 # board_validation, the contract checker's own tests, skills), the static
 # sample contract, the host-safe native CTest projects and the catalog
-# check — one run of scripts/tools/host_validation/run.py per matrix leg.
+# check — one run of utils/tools/host_validation/run.py per matrix leg.
 #
 # Equivalent gates for develop/main pushes and pull requests: no path
 # filters, no migration-state scope decisions, reports uploaded even on
@@ -75,20 +75,20 @@ jobs:
           brew install cmake pkg-config opencv gflags nlohmann-json \
             libsndfile libsamplerate
       - name: Install core Python host dependencies
-        run: python -m pip install -r scripts/tools/host_validation/requirements.txt
+        run: python -m pip install -r utils/tools/host_validation/requirements.txt
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
-          # scripts/tools/catalog-publisher engines: >=22.12 <23
+          # utils/tools/catalog-publisher engines: >=22.12 <23
           node-version: "22.12"
       - name: Install catalog dependencies
         run: npm ci
-        working-directory: scripts/tools/catalog-publisher
+        working-directory: utils/tools/catalog-publisher
       - name: Run host validation
         env:
           HOST_VALIDATION_OUTPUT: ${{ runner.temp }}/host-validation-report
         run: >
-          python scripts/tools/host_validation/run.py
+          python utils/tools/host_validation/run.py
           --repo "$GITHUB_WORKSPACE"
           --report "$HOST_VALIDATION_OUTPUT/report.json"
       - name: Upload host validation report
