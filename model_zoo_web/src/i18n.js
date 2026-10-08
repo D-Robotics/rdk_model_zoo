@@ -97,12 +97,18 @@
     'Language / 语言': 'Language',
     '获取模型': 'Get model',
     '选择芯片': 'Select chip',
-    '选择模型类型': 'Select model type',
-    '下载文件': 'Download file',
-    '复制 SHA256': 'Copy SHA256',
+    '选择尺寸': 'Select size',
+    '快速上手': 'Quick start',
+    '完整说明': 'Full guide',
+    '下载模型': 'Download model',
+    '运行推理': 'Run inference',
+    '复制命令': 'Copy command',
     '请手动复制': 'Copy manually',
     '已复制': 'Copied',
-    '复制': 'Copy',
+    '延迟': 'Latency',
+    '文件大小': 'File size',
+    '选择模型类型': 'Select model type',
+    '下载文件': 'Download file',
     '关闭': 'Close',
     '取消': 'Cancel',
     '模型仓库': 'Model repository',
@@ -239,6 +245,7 @@
       .replace(/^共 (\d+) 个模型$/, (_, count) => `${count} ${count === '1' ? 'model' : 'models'}`)
       .replace(/^已选 (\d+) 项$/, (_, count) => `${count} selected`)
       .replace(/^已显示 (\d+) \/ (\d+) 个模型$/, (_, shown, total) => `${shown} of ${total} models shown`)
+      .replace(/^(\d+) 个尺寸$/, (_, count) => `${count} ${count === '1' ? 'size' : 'sizes'}`)
       .replace(/^(\d+) 个文件$/, (_, count) => `${count} ${count === '1' ? 'file' : 'files'}`)
       .replace(/^(\d+) 个算子$/, (_, count) => `${count} ${count === '1' ? 'op' : 'ops'}`)
       .replace(/^(\d+) 个报告$/, (_, count) => `${count} ${count === '1' ? 'report' : 'reports'}`)

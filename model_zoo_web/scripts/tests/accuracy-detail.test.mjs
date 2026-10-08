@@ -166,7 +166,8 @@ test('candidate detail keeps the model repository link and download without an u
   const html = renderDetail(model);
 
   assert.match(html, /data-open-download/);
-  assert.match(html, /id="downloads"/);
+  // Files are offered through the get-model picker rather than a separate list.
+  assert.match(html, /<dialog class="mz-download-dialog mz-store"/);
   assert.ok(html.includes(`href="${model.source}" target="_blank" rel="noopener">模型仓库`));
   assert.doesNotMatch(html, /上游权重|huggingface\.co/);
   assert.ok(html.includes(model.assets[0].filename));

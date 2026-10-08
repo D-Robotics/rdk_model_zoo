@@ -40,6 +40,7 @@ const sourceFiles = [
   'ask-ai.css',
   'ask-ai.js',
   'product-ui.css',
+  'refresh.css',
   'i18n.js',
   'facets.js',
   'model-properties.js',
