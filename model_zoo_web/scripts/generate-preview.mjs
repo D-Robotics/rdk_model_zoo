@@ -10,6 +10,7 @@ import {
   comparableAccuracyRecords,
 } from './accuracy-metrics.mjs';
 import { selectTechnicalPassedEntries } from './technical-passed-selection.mjs';
+import { stampAssetVersions } from './asset-versions.mjs';
 import { loadVerifiedPreviewDownloads, previewDownloadAssets } from './preview-downloads.mjs';
 import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
 
@@ -316,8 +317,9 @@ const taskMetadata = {
 const safeId = (...parts) => parts.join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
 const displayNames = (family, size, task) => {
   const familyName = family.replace(/^yolo/i, 'YOLO');
-  // Acronym tasks keep their capitals: "YOLO26 OBB", not "YOLO26 Obb".
-  const taskName = { detect: 'Detect', obb: 'OBB' }[task] || task[0].toUpperCase() + task.slice(1);
+  // Spell tasks the way Ultralytics names them ("YOLO26 Classify",
+  // "YOLO26 Segment") and keep acronyms whole: "YOLO26 OBB", not "Obb".
+  const taskName = { detect: 'Detect', cls: 'Classify', seg: 'Segment', obb: 'OBB' }[task] || task[0].toUpperCase() + task.slice(1);
   return {
     model: `${familyName} ${taskName}`,
     variant: `${familyName}${size} ${taskName}`,
@@ -670,5 +672,6 @@ await writeFile(
   `${JSON.stringify({ reports: reportEntries.map(entry => ({ id: entry.id, kind: entry.kind })) }, null, 2)}\n`,
   'utf8',
 );
+await stampAssetVersions(outputRoot);
 
 console.log(`Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length} ${candidatePreview ? 'candidate' : 'released'} model entries.`);

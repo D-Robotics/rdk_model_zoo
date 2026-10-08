@@ -406,15 +406,10 @@ Cls、Seg、Pose、OBB 有同一评测集上的 Float ONNX 与板端结果，预
 
 冻结候选快照中的四张 WebP 是 AI 生成的任务示意图，`release/assets/yolo26-task-banners.json` 保留原生成 prompt 和文件摘要。当前网页通过独立的 `release/assets/yolo26-real-task-banners.json` 使用清洁底图上的真实 YOLO26x 浮点推理标注：Cls 展示实际分类概率，Seg 展示实际掩码与轮廓，Pose 展示实际关键点与骨架，OBB 展示实际旋转框。`scripts/task-banner-assets.mjs` 核对权重摘要与 catalog，以及底图、原始预测、推理记录和封面摘要；不修改冻结快照。中英文描述由 `release/presentation-overrides.json` 提供。
 
-刷新候选快照后，混合预览构建必须显式指定不可变快照、权威审计和评审矩阵路径：
+刷新候选快照：
 
 ```bash
 python3 model_zoo_web/scripts/stage_yolo26_task_b8.py
-npm --prefix model_zoo_web run build:mixed-technical-preview -- \
-  --snapshot-dir SNAPSHOT_ID \
-  --audit-path /absolute/path/to/authoritative-audit.json \
-  --review-path /absolute/path/to/review-matrix.json \
-  --expected-selected-count N
 ```
 
-构建先写入 `model_zoo_web/.dist-candidates-passed-next/` 并验证；只有显式执行 promote 才替换 `dist-candidates-passed/`。正常 `build:preview` 与 `build:release` 仍读取活动 catalog 和正式 `release/inputs.json`。
+混合预览的一键构建入口（原 `build:mixed-technical-preview`）未随仓库提交，已从 `package.json` 移除；补回脚本前，需分别运行 `scripts/merge_technical_passed_preview.mjs`、`scripts/validate_technical_passed_preview.mjs` 与 `scripts/promote_technical_passed_preview.mjs`，并显式指定不可变快照、权威审计和评审矩阵路径。构建先写入 `model_zoo_web/.dist-candidates-passed-next/` 并验证；只有显式执行 promote 才替换 `dist-candidates-passed/`。正常 `build:preview` 与 `build:release` 仍读取活动 catalog 和正式 `release/inputs.json`。

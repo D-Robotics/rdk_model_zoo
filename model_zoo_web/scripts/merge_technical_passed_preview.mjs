@@ -6,6 +6,7 @@ import { runInNewContext } from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { loadVerifiedPreviewDownloads, previewDownloadAssets } from './preview-downloads.mjs';
 import { loadVerifiedRebuildSelection } from './yolo26-repaired-selection.mjs';
+import { stampAssetVersions } from './asset-versions.mjs';
 
 const args = process.argv.slice(2);
 let rebuildSelectionDir = null;
@@ -282,5 +283,6 @@ await writeFile(resolve(outputRoot, 'reports/reports-data.js'),
   `window.OE_REPORTS = ${JSON.stringify(combinedReports, null, 2)};\n`, 'utf8');
 await writeFile(resolve(outputRoot, 'reports/inventory.json'),
   `${JSON.stringify({ reports: combinedReports.map(entry => ({ id: entry.id, kind: entry.kind })) }, null, 2)}\n`, 'utf8');
+await stampAssetVersions(outputRoot);
 
 console.log(`Merged ${activeModels.length} published Detect entries, ${candidateModels.length} technical candidates, and ${rebuildModels.length} rebuilt releases into the isolated preview build.`);

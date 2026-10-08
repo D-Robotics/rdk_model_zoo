@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -145,6 +146,30 @@ if (!preview) {
   assert.doesNotMatch(appSource, /href="reports\.html"/);
 }
 assert.doesNotMatch(detailSource, /external\(['"]reports\.html['"]/);
+
+// Every local script and stylesheet carries a version derived from the
+// built file's content (stamped by scripts/asset-versions.mjs).
+for (const page of ['index.html', 'reports.html']) {
+  const html = fs.readFileSync(path.join(root, page), 'utf8');
+  for (const [, asset, version] of html.matchAll(/(?:href|src)="((?!https?:|\/\/)[^"?#]+\.(?:css|js))(?:\?v=([^"]*))?"/g)) {
+    const digest = crypto.createHash('sha256').update(fs.readFileSync(path.join(root, asset))).digest('hex').slice(0, 10);
+    assert.equal(version, digest, `${page}: ${asset} must carry its content version ?v=${digest}`);
+  }
+}
+
+// Catalog labels come from data, not from the page templates, so a new task
+// can ship without an English string. Check them against the dictionary.
+const i18nContext = { window: {} };
+vm.createContext(i18nContext);
+vm.runInContext(fs.readFileSync(path.join(root, 'i18n.js'), 'utf8'), i18nContext);
+vm.runInContext(fs.readFileSync(path.join(root, 'facets.js'), 'utf8'), i18nContext);
+const { english } = i18nContext.window.HubI18n;
+const catalogLabels = new Set([
+  ...i18nContext.window.CatalogFacets.groups.flatMap(group => [group.label, ...group.tasks.map(([, label]) => label)]),
+  ...data.models.map(model => model.task),
+]);
+const untranslated = [...catalogLabels].filter(label => /[\u4e00-\u9fff]/.test(label) && /[\u4e00-\u9fff]/.test(english(label)));
+assert.deepEqual(untranslated, [], `i18n.js is missing English labels: ${untranslated.join(', ')}`);
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(webRoot, 'package.json'), 'utf8'));
 assert.equal(packageJson.dependencies, undefined);

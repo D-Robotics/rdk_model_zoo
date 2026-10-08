@@ -53,7 +53,7 @@
 
   const languageSwitch = '<div class="language-switch" role="group" aria-label="Language / 语言"><button type="button" data-language="en" lang="en" aria-label="English">EN</button><button type="button" data-language="zh" lang="zh-CN" aria-label="简体中文">中文</button></div>';
   const header = `<header class="header"><a href="#" class="brand"><img src="assets/rdk-brand/logo.png" alt="D-Robotics"><span class="brand-separator"></span><span>RDK <b>Model Zoo</b></span></a><div class="header-actions"><nav aria-label="主导航"><button type="button" class="header-action ask-nav-button" data-ask-open aria-controls="ask-ai-panel" aria-expanded="false"><span class="header-action-icon" style="--header-icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>Ask AI</button><a class="header-action" href="${esc(repositoryUrl)}" target="_blank" rel="noopener"><span class="header-action-icon" style="--header-icon:url('assets/icons/external-link.svg')" aria-hidden="true"></span>GitHub</a></nav>${languageSwitch}</div></header>`;
-  const footer = '<footer><div class="footer-inner"><span>© 2026 D-Robotics <span class="muted">/ Model Zoo</span></span></div></footer>';
+  const footer = `<footer><div class="footer-inner"><span>© ${new Date().getFullYear()} D-Robotics <span class="muted">/ Model Zoo</span></span></div></footer>`;
   const search = '<label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" placeholder="搜索模型" aria-label="搜索模型"></label>';
   const taskFilters = `<div id="filters" class="task-domains">${facets.groups.map(group => `<div class="task-domain" data-domain="${group.id}"><div class="domain-heading"><button type="button" class="domain-label" data-task-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" data-active="false"><span class="domain-symbol domain-symbol-${group.id}" aria-hidden="true"></span><span>${group.label}</span></button><button type="button" class="domain-toggle" data-toggle-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" aria-label="${group.label}子类"></button></div><div class="task-children" id="tasks-${group.id}" hidden>${group.tasks.map(([id, label]) => `<button type="button" class="task-option" data-task-id="${id}" aria-pressed="false"><span>${label}</span><span class="selection-mark" aria-hidden="true"></span></button>`).join('')}</div></div>`).join('')}</div>`;
   const platformFilters = `<fieldset class="sidebar-group"><legend>硬件平台</legend><div id="platform-filters">${platforms.map(platform => {
@@ -122,7 +122,9 @@
     // instead of searching for the literal phrase.
     const terms = query.split(/\s+/).filter(Boolean);
     const items = platformItems.filter(group => {
-      const searchable = [group.name, ...group.members.map(member => member.variantName), group.task, group.description, group.descriptionEn, ...group.members.flatMap(member => facets.searchTerms(member)), ...group.platforms.map(platform => `RDK ${platform}`)].join(' ').toLowerCase();
+      // The catalog ID keeps the short Ultralytics task names (cls, seg), so
+      // they still match after the display names spelled them out.
+      const searchable = [group.name, group.entry.catalogId, ...group.members.map(member => member.variantName), group.task, group.description, group.descriptionEn, ...group.members.flatMap(member => facets.searchTerms(member)), ...group.platforms.map(platform => `RDK ${platform}`)].join(' ').toLowerCase();
       return groupMatchesTask(group) && terms.every(term => searchable.includes(term));
     });
     filteredItems = items;
@@ -142,7 +144,43 @@
     $('reset').disabled = filterCount === 0;
     syncTaskSelection();
     syncLoadMore();
+    syncUrl();
     window.HubI18n?.apply();
+  }
+
+  // Catalog filters live in the hash as "#?platform=S600&domain=vision&task=pose-estimation&q=…"
+  // so a filtered list can be shared and survives a reload. "#model/<id>"
+  // stays the detail route.
+  function filterHash() {
+    const params = new URLSearchParams();
+    const chosen = platforms.filter(platform => selectedPlatforms.has(platform));
+    if (chosen.length) params.set('platform', chosen.join(','));
+    if (state.domain) params.set('domain', state.domain);
+    if (state.useCase) params.set('task', state.useCase);
+    if (state.query.trim()) params.set('q', state.query.trim());
+    const query = params.toString();
+    return query ? `#?${query}` : '';
+  }
+
+  const isCatalogHash = hash => hash === '' || hash === '#' || hash.startsWith('#?');
+
+  function syncUrl() {
+    if ($('catalog').hidden || !isCatalogHash(location.hash)) return;
+    const hash = filterHash();
+    if (hash !== location.hash) history.replaceState(history.state, '', `${location.pathname}${location.search}${hash}`);
+  }
+
+  function applyFilterHash(hash) {
+    const params = new URLSearchParams(hash.replace(/^#\??/, ''));
+    selectedPlatforms.clear();
+    for (const platform of (params.get('platform') || '').toUpperCase().split(',')) {
+      if (platforms.includes(platform)) selectedPlatforms.add(platform);
+    }
+    const group = facets.groups.find(candidate => candidate.id === params.get('domain'));
+    state.domain = group ? group.id : null;
+    state.useCase = group?.tasks.some(([id]) => id === params.get('task')) ? params.get('task') : null;
+    state.query = params.get('q') || '';
+    $('search').value = state.query;
   }
 
   function loadNextBatch() {
@@ -217,10 +255,20 @@
       window.ModelDetail.destroy();
       $('detail').hidden = true;
       $('catalog').hidden = false;
+      document.title = 'RDK Model Zoo';
+      // A filter link opened in place (pasted or edited by hand) replaces
+      // the current filters; any other catalog hash keeps them.
+      if (location.hash.startsWith('#?') && location.hash !== filterHash()) {
+        applyFilterHash(location.hash);
+        render();
+        return;
+      }
+      syncUrl();
       // Return to the card the reader left from, not the top of the list.
       if (fromDetail) window.scrollTo(0, state.scroll);
       return;
     }
+    document.title = `${model.variantName || model.name} · RDK ${model.releasePlatform || modelPlatforms(model)[0] || ''} · RDK Model Zoo`;
     if (!$('catalog').hidden) state.scroll = window.scrollY;
     // Switching platforms stays in place: only entering from the catalog
     // scrolls to the top of the detail page.
@@ -234,6 +282,7 @@
   }
 
   window.addEventListener('hashchange', route);
+  if (location.hash.startsWith('#?')) applyFilterHash(location.hash);
   render();
   route();
 })();

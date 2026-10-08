@@ -1,6 +1,7 @@
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stampAssetVersions } from './asset-versions.mjs';
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
@@ -64,5 +65,6 @@ await writeFile(
   `${JSON.stringify({ schemaVersion: 1, reports: [] }, null, 2)}\n`,
   'utf8',
 );
+await stampAssetVersions(outputRoot);
 
 console.log('Built the Model Zoo shell with 0 models and 0 OE reports.');
