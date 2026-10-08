@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 from samples.speech.paraformer.conversion import export
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 

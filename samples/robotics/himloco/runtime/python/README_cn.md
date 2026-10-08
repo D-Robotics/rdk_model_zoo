@@ -11,6 +11,27 @@ Python 入口提供准确的 X5 模型选择、懒加载 SDK、源索引输入�
 `prepare`/`load_task`/`record_sample`/`complete` 助手，其单调用组合
 `application.execute` 为兼容 API。
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── application.py  # Python 脚本
+├── input_io.py  # Python 脚本
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── policy.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="environment"></a>
 ## 环境
 

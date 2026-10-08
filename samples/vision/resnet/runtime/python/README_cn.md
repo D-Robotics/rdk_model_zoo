@@ -1,35 +1,64 @@
-# ResNet18 Python 运行时
+# ResNet Python 运行时
 
-`main.py` 是 canonical 的用户命令：解析参数、构造模型、调用 `predict`、
-展示结果。完整分类流程在 [`classify.py`](classify.py) 中：
-`ResNetClassifier` 用一个可读文件展示初始化、`preprocess`、`infer`、
-`postprocess` 与 `predict`。它从发布 Manifest 解析唯一模型引用（或显式
-自定义契约），校验检测到的板卡，经共享 SDK 会话懒加载 `hbm_runtime`，
-执行一次分类流程。模型准备是显式操作；本运行时不下载、不安装任何包。
+[`main.py`](main.py) 提供命令行，构造分类器、调用 `predict()` 并展示结果。
+[`classify.py`](classify.py) 包含 `ResNetClassifier` 的模型初始化和前处理、推理、后处理。
+[`cli.py`](cli.py) 集中管理参数、发布模型选择和结果展示。
+图片读取、标签校验及 Runtime 加载由 `utils/py_utils/` 提供。
+
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── classify.py  # 分类前处理、推理与后处理
+├── cli.py  # 参数与结果展示
+├── main.py  # 命令行入口
+└── run.sh  # 运行示例
+```
 
 <a id="environment"></a>
 ## 环境
 
-在目标板卡的 Python 环境运行，需要与板卡匹配的 `hbm_runtime`、NumPy 和
-OpenCV-Python；读取 Manifest 需要 PyYAML。`hbm_runtime` 仅存在于板端镜像
-且为懒加载——`--help`、`--list-models`、`--dry-run` 与主机 unittest 均不
-需要它。主机测试依赖见 sample 的 `requirements-host.txt`。
+目标板卡需要匹配的 `hbm_runtime`、NumPy、OpenCV-Python 和 PyYAML。
+
+| 板卡 | 发布模型 | 输入 |
+| --- | --- | --- |
+| RDK X5 | ResNet18 | packed NV12 |
+| RDK S100 | ResNet18、ResNet50、ResNet152 | split NV12 |
+| RDK S600 | ResNet18、ResNet50、ResNet152 | split NV12 |
+
+模型准备见 [模型文件](../../model/README_cn.md)，ONNX 导出和编译见
+[模型转换](../../conversion/README_cn.md)。
 
 <a id="usage"></a>
 ## 使用
 
-从仓库根目录运行。使用列表模式查看 Manifest 中的模型引用，无需加载板端 SDK：
+从仓库根目录执行。查看可用模型和目标配置：
 
 ```bash
-# 成功判据：打印全部已发布引用，退出码 0，不加载 SDK
 python3 samples/vision/resnet/runtime/python/main.py --list-models --target auto
+python3 samples/vision/resnet/runtime/python/main.py --dry-run --target x5
 ```
 
-在已准备制品的 X5 板上的完整运行：
+列表和 dry-run 可在开发机运行，不加载板卡 SDK。准备模型后，在板卡上运行：
 
 ```bash
-# 前置：bash samples/vision/resnet/model/download.sh x5
-# 成功判据：退出码 0 且打印 Top-5 列表
+python3 samples/vision/resnet/runtime/python/main.py --target x5
+python3 samples/vision/resnet/runtime/python/main.py --target s100 --variant resnet50
+python3 samples/vision/resnet/runtime/python/main.py --target s600 --variant resnet152
+```
+
+`--target auto` 根据本机硬件选择板卡，默认模型是 ResNet18。
+显式 `--target` 必须与实际板卡匹配。指定模型路径、图片和标签：
+
+```bash
 python3 samples/vision/resnet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \
@@ -38,10 +67,6 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-S100/S600 替换为 `s:resnet18:<target>/...` 引用与 `s100/`/`s600/` 制品路径；
-标签文件两侧共用。`--dry-run --target x5` 在无板卡访问、无模型
-加载、无下载的情况下解析选择。
-
 <a id="parameters"></a>
 ## 参数
 
@@ -49,13 +74,13 @@ S100/S600 替换为 `s:resnet18:<target>/...` 引用与 `s100/`/`s600/` 制品�
 | --- | --- | --- | --- |
 | `--target` | choice | auto | 执行目标：`auto`、`x5`、`s100`、`s100p`、`s600`；执行目标必须与检测到的硬件匹配 |
 | `--asset-id` | string | null | Manifest 中完整的 `group:sample:filename` 引用 |
-| `--variant` | choice | null | 模型变体（`resnet18` 全目标；`resnet50`/`resnet152` 仅 s100/s600） |
+| `--variant` | choice | null | 模型变体（`resnet18` 支持 x5/s100/s600；`resnet50`/`resnet152` 仅 s100/s600） |
 | `--model-path` | string | null | 已存在的 `.bin`/`.hbm`；必须与 `--asset-id` 配对；缺省时按所解析引用的 `model/` 位置查找 |
 | `--test-img` | string | samples/vision/resnet/test_data/white_wolf.JPEG | BGR 输入图像 |
-| `--label-file` | string | null | 逐行一个类别的标签文件；默认：1000 类模型用内置 ImageNet 标签，自定义类别数保留原始类别 ID |
+| `--label-file` | string | null | 逐行一个类别的标签文件；默认使用内置 ImageNet 标签 |
 | `--top-k` | int | 5 | 打印的结果数量 |
-| `--topk` | int | 5 | `--top-k` 的旧拼写 |
-| `--resize-type` | int | null | `0` 直接拉伸或 `1` letterbox（BGR 127 填充）；默认跟随绑定源 |
+| `--topk` | int | 5 | `--top-k` 的别名 |
+| `--resize-type` | int | null | `0` 直接拉伸或 `1` letterbox（BGR 127 填充）；默认使用模型配置 |
 | `--priority` | int | 0 | 运行时调度优先级（0-255） |
 | `--bpu-cores` | int 列表 | [0] | 运行时 BPU 核索引 |
 | `--img-save-path` | string | null | 可选的标注结果图输出路径 |
@@ -65,86 +90,76 @@ S100/S600 替换为 `s:resnet18:<target>/...` 引用与 `s100/`/`s600/` 制品�
 <a id="results"></a>
 ## 结果
 
-命令打印稳定的 Top-K：类别 ID、分数与标签
-（`ClassificationResult(class_ids, scores, labels)`）；仅当给定
-`--img-save-path` 时写标注图。X5 以 canonical 的扁平 1-D uint8 数组接收
-packed NV12 缓冲（`H*W*3/2` 字节；224x224 即 75,264 字节，与旧
-`(1,336,224,1)` 视图字节相同）；S100/S600 接收 Y `(1,224,224,1)` 与 UV
-`(1,112,112,2)` uint8 数组。分类器对返回的分数向量执行 softmax，再按
-稳定降序选择 Top-K。已发布制品声明 `raw_f32` 输出；自定义量化制品须在
-绑定契约中声明相应的 `dequant` 变换。输出形状按 rank 规则校验：凡可
-squeeze 成 `(1000,)` 的单批次/单空间维拼写均可绑定。
+命令输出 Top-K 类别 ID、标签和分数。添加 `--img-save-path result.jpg`
+保存标注图片。库接口返回 `ClassificationResult(class_ids, scores, labels)`。
+
+发布模型输入尺寸为 224×224，默认 letterbox，填充值为 BGR 127。
+X5 输入是 75,264 字节的一维 uint8 NV12 数组；S100/S600 输入为
+Y `(1,224,224,1)` 和 UV `(1,112,112,2)` 两个 uint8 数组。
+发布模型输出为 F32 分数向量，经过 softmax 后按稳定降序取 Top-K。
 
 <a id="integration-example"></a>
 ## 集成示例
 
-前置条件：制品已准备（见 [model/README_cn.md](../../model/README_cn.md)），
-OpenCV-Python 可导入。示例内所有输入变量均有定义：
+在目标板卡上导入分类器，实例可重复使用：
 
 ```python
 from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-from samples.vision.resnet.runtime.python.model_binding import resolve_selection
 
-selection = resolve_selection(
-    "x5",
-    asset_id="x5:resnet:resnet18_224x224_nv12.bin",
-    model_path="samples/vision/resnet/model/resnet18_224x224_nv12.bin",
+model = ResNetClassifier(
+    "samples/vision/resnet/model/resnet18_224x224_nv12.bin",
+    target="x5", top_k=5,
 )
-model = ResNetClassifier(selection, top_k=5)
 result = model.predict("samples/vision/resnet/test_data/white_wolf.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-`predict` 接受本地图片路径或 BGR `uint8` NumPy 数组，且不会原地修改
-数组。三阶段也可显式驱动：`prepared = model.preprocess(image)`、
-`outputs = model.infer(prepared)`、
-`result = model.postprocess(outputs)` —— `predict` 串联这三步。既有的
-`pre_process` / `forward` / `post_process`
-拼写保留为薄别名，共享的 `ClassificationTask` 流程仍可从
-[`classification.py`](classification.py) 导入。
+命令行用 `--target s100 --variant resnet50` 选择 S100 的 ResNet50；
+库接口直接传对应的 `.hbm` 路径和 `target="s100"`。
+`predict` 接受图片路径或 BGR uint8 NumPy 数组。标签可通过 `labels` 传入；
+未传标签时 `result.labels` 是类别 ID 字符串。预测不修改输入数组。
 
 <a id="custom-model"></a>
-## 自定义（自训练）模型
+## 自训练模型
 
-本地编译的分类模型无需 Manifest 注册。声明制品构建时的契约即可；
-绑定仍会对照该声明校验实际运行时张量名、形状、类型与类别数：
+使用编译产物对应的板卡、输入尺寸和类别数构造分类器：
 
 ```python
 from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-from samples.vision.resnet.runtime.python.model_binding import custom_selection
 
-selection = custom_selection(
-    "mymodels/my_resnet_4class.bin", "x5",
-    input_height=224, input_width=224, class_count=4,
+model = ResNetClassifier(
+    "mymodels/my_resnet_4class.bin", target="x5",
+    input_size=(224, 224), class_count=4, top_k=2,
+    labels=["cat", "dog", "bus", "ship"],
 )
-model = ResNetClassifier(selection, top_k=2, labels=["cat", "dog", "bus", "ship"])
-image_path = "samples/vision/resnet/test_data/white_wolf.JPEG"  # 替换为你的图像路径
-result = model.predict(image_path)
+result = model.predict("samples/vision/resnet/test_data/white_wolf.JPEG")
+print(result.class_ids, result.scores, result.labels)
 ```
 
-不传 `labels` 时结果保留原始类别 ID——自定义类别数不会默认套用
-ImageNet 名称。标签数量与类别数不一致时给出具体报错，而不是错误标注。
+`ResNetClassifier` 默认按 F32 输出执行 softmax。输出已经是概率时可设
+`score_policy="none"`；量化输出设置对应的 `output_transform="dequant"`。
+运行时依据声明校验实际张量的形状、类型和类别数。标签序列长度应与类别数一致。
 
 <a id="stage-io"></a>
-## 三阶段 I/O
+## 三阶段接口
 
-| 阶段 | 输入 | 输出 |
+| 方法 | 输入 | 输出 |
 | --- | --- | --- |
-| `preprocess`（`pre_process`） | 图片路径或一张 BGR `uint8` 数组（任意尺寸） | `PreparedInput.tensors`（按 target 成形的 NV12 张量）+ `PreparedInput.transform`（本次调用冻结的缩放上下文） |
-| `infer`（`forward`） | `PreparedInput` | 原始 `{'prob': ndarray}`（X5，F32 `[1,1000,1,1]`）或 `{'output': ndarray}`（S，F32 `[1,1000]`）——与 runner 输出逐位一致，无解码 |
-| `postprocess`（`post_process`） | 原始输出（无 context：分类不消费几何信息） | `ClassificationResult(class_ids, scores, labels)`，`legacy_softmax` 后稳定降序 Top-K |
-| `predict` | 图片路径或 BGR `uint8` 数组 | 串联三阶段，返回同一 `ClassificationResult` |
+| `preprocess` | 图片路径或 BGR uint8 数组 | `PreparedInput`：NV12 张量与本次图片缩放信息 |
+| `infer` | `PreparedInput` | 原始输出张量字典 |
+| `postprocess` | 原始输出张量字典 | Top-K `ClassificationResult` |
+| `predict` | 图片路径或 BGR uint8 数组 | 顺序执行三阶段，返回 `ClassificationResult` |
+
+`infer` 经共享 `RuntimeModelRunner` 调用 `hbm_runtime`；模型加载和板卡识别
+由共享 `RuntimeSession` 完成。应用需要控制中间数据时可直接调用三个阶段。
 
 <a id="troubleshooting"></a>
 ## 故障排查
 
-| 现象 | 检查 |
+| 现象 | 处理 |
 | --- | --- |
-| `Cannot identify this board` | dry-run 可用显式目标；真实执行在对应板卡上进行。 |
-| `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用，不要只传文件名。 |
-| S100P 报 `No published... asset` | Manifest 没有 ResNet18 S100P 行，只能在与板卡匹配的 S100/S600 制品上运行。 |
-| 输入形状或类型不匹配 | 确认制品引用与运行时元数据，不要交叉使用 X5 packed 与 S split 制品。 |
-| 输出与旧运行不同 | 先比较相同制品、图片、缩放模式、Top-K 与 raw output，再改变 score 语义。 |
-
-主机检查（仓库根目录）：
-`python3 -m unittest discover -s samples/vision/resnet/tests -v`。
+| `Cannot identify this board` | 在支持的板卡上执行推理；开发机查看配置使用 `--dry-run --target x5`。 |
+| `model file not found` | 按模型文件文档准备对应制品，或指定 `--asset-id` 和 `--model-path`。 |
+| `model_path requires --asset-id` | 从 `--list-models` 复制完整模型引用。 |
+| S100P 提示没有发布模型 | 当前发布模型支持 X5、S100、S600；S100P 自训练模型使用 `ResNetClassifier` 指定契约。 |
+| 输入或输出形状、类型不匹配 | 核对编译目标、输入协议、输出类别数与选择的模型配置。 |

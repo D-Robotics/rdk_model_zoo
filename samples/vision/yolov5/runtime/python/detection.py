@@ -3,7 +3,7 @@
 """YOLOv5's pure image → native tensors → owned detections pipeline."""
 from dataclasses import dataclass
 import numpy as np
-from samples._shared.quantization import apply_output_transform
+from utils.py_utils.quantization import apply_output_transform
 from .model_binding import ANCHORS, STRIDES, validate_tensors
 from .tensor_io import DetectionContext, prepare_image
 from . import decode

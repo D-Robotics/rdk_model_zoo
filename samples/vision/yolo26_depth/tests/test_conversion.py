@@ -18,7 +18,7 @@ from samples.vision.yolo26_depth.conversion import prepare_calibration as cal
 from samples.vision.yolo26_depth.conversion import compile as compiler
 from samples.vision.yolo26_depth.conversion import export
 from test_depth import ROOT
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
 class ConversionTests(unittest.TestCase):

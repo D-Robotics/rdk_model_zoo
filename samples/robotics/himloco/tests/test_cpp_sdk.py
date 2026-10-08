@@ -11,7 +11,7 @@ import yaml
 SAMPLE = Path(__file__).resolve().parents[1]
 ROOT = SAMPLE.parents[2]
 CPP = SAMPLE / "runtime/cpp"
-SHARED = ROOT / "samples/_shared/cpp"
+SHARED = ROOT / "utils/c_utils"
 
 
 class NativeSdkTests(unittest.TestCase):

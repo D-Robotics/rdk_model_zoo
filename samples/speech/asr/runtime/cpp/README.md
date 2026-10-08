@@ -2,6 +2,26 @@
 
 English | [简体中文](README_cn.md)
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── tests/  # Automated tests
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── launcher.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards
 The native workflow supports S100 and S600, fixed-vocabulary ASR and complete-file chunk processing. X5/S100P have no ASR publication and are rejected. The SDK adapter and launcher use the matching board SDK and model artifacts.

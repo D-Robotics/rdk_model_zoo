@@ -15,7 +15,7 @@ import argparse
 import json
 from pathlib import Path
 
-from samples._shared.runtime_meta import metadata_evidence
+from utils.py_utils.runtime_meta import metadata_evidence
 from samples.speech.asr.runtime.python.asr import ChunkPrediction
 from samples.speech.asr.runtime.python.audio_io import AudioChunk
 from samples.speech.asr.runtime.python.model_binding import (

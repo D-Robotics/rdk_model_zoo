@@ -20,6 +20,22 @@ The detection example below is a horizontal strip of three street frames: colore
 
 ![Three-row (a)/(b)/(c) association illustration](test_data/readme_img/image.png)
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+bytetrack/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -66,19 +82,6 @@ Each processed frame yields zero or more person tracks with `track_id`, original
 
 Applicability and tuning. `--score-thres` (default `0.25`) filters detector boxes before the tracker: lower it when too few boxes are detected — lowering `--track-thresh` cannot restore detector-discarded boxes. `--track-thresh` (`0.3`) partitions tracker input only: scores above it enter first association, scores in (0.1, `track-thresh`) enter second association with still-tracked targets, and new tracks start only from first-association boxes scoring at least `track_thresh + 0.1`. If track IDs switch frequently, a larger `--match-thresh` (`0.8`, the maximum accepted association cost — 1 − IoU, fused with detection score in the default mode, plain 1 − IoU with `--mot20`; larger accepts less-similar matches) or a longer `--track-buffer` (`60`, lost-track window scaled by `frame_rate / 30`) can help. These are tuning directions, not recalibrated thresholds. The pipeline tracks only COCO `person`; multi-class tracking needs one tracker per class or a class-aware tracker extension (see the [evaluator notes](evaluator/README.md)).
 
-<a id="directory"></a>
-## Directory
-
-```text
-.
-├── model/                 # explicit S HBM preparation
-├── runtime/python/        # detector binding, tracker state, CLI, source map
-├── conversion/            # detector conversion boundary and OE resources
-├── evaluator/             # fresh-process full capture/comparison
-├── test_data/              # images, labels, reference GIFs; video is external
-└── tests/                 # CPU tracker, source comparison, CLI and evidence fixtures
-```
-
 <a id="entry-points"></a>
 ## Entry points
 
@@ -95,4 +98,4 @@ The source record reports tracker update time of about `2.37 ms` on RDK S100. Th
 <a id="license"></a>
 ## License
 
-Repository wrappers follow Apache-2.0. The bundled tracker source tree ships no separate license file; its provenance is recorded in `TRACKER_SOURCE_MAP.json`. Upstream ByteTrack and any model weights keep their own licenses.
+Repository helpers follow Apache-2.0. The bundled tracker source tree ships no separate license file; its provenance is recorded in `TRACKER_SOURCE_MAP.json`. Upstream ByteTrack and any model weights keep their own licenses.

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
+
 import unittest
 
 import cv2
@@ -10,7 +12,7 @@ import numpy as np
 
 class TensorIoTests(unittest.TestCase):
     def test_letterbox_records_integer_geometry_and_padding(self):
-        from samples.vision.resnet.runtime.python.tensor_io import resize_bgr
+        from utils.py_utils.tensor_io import resize_bgr
 
         image = np.zeros((100, 200, 3), dtype=np.uint8)
         _, transform = resize_bgr(
@@ -34,7 +36,7 @@ class TensorIoTests(unittest.TestCase):
         self.assertAlmostEqual(transform.scale_y, 1.12, places=8)
 
     def test_letterbox_matches_legacy_helper_default_linear_resize(self):
-        from samples.vision.resnet.runtime.python.tensor_io import resize_bgr
+        from utils.py_utils.tensor_io import resize_bgr
 
         # Textured, non-square input catches interpolation and integer-rounding
         # changes that a constant image would hide.
@@ -65,10 +67,7 @@ class TensorIoTests(unittest.TestCase):
         np.testing.assert_array_equal(actual, expected)
 
     def test_packed_nv12_is_y_then_interleaved_uv(self):
-        from samples.vision.resnet.runtime.python.tensor_io import (
-            bgr_to_nv12_planes,
-            pack_nv12_single,
-        )
+        from utils.py_utils.tensor_io import bgr_to_nv12_planes, pack_nv12_single
 
         image = np.full((4, 4, 3), 128, dtype=np.uint8)
         y, uv = bgr_to_nv12_planes(image)
@@ -94,10 +93,7 @@ class TensorIoTests(unittest.TestCase):
         )
 
     def test_as_packed_and_as_split_round_trip(self):
-        from samples.vision.resnet.runtime.python.tensor_io import (
-            as_packed,
-            as_split,
-        )
+        from utils.py_utils.tensor_io import as_packed, as_split
 
         y = np.arange(16, dtype=np.uint8).reshape(1, 4, 4, 1)
         uv = np.arange(8, dtype=np.uint8).reshape(1, 2, 2, 2)
@@ -112,16 +108,12 @@ class TensorIoTests(unittest.TestCase):
         np.testing.assert_array_equal(split_uv, uv)
 
     def test_validate_input_tensors_accepts_only_flat_packed_layout(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
-        from samples.vision.resnet.runtime.python.tensor_io import (
-            validate_input_tensors,
-        )
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
+        from utils.py_utils.tensor_io import validate_input_tensors
         from testsupport import runtime_metadata
 
-        binding = bind_model(resolve_selection("x5"), runtime_metadata("x5"))
+        binding = bind_model(BINDING_TABLE, resolve_selection("x5"), runtime_metadata("x5"))
         flat = np.zeros(224 * 336, dtype=np.uint8)
         validate_input_tensors(binding, {binding.input_names[0]: flat})
 
@@ -138,7 +130,7 @@ class TensorIoTests(unittest.TestCase):
     def test_bundled_white_wolf_keeps_legacy_letterbox_pixels(self):
         from pathlib import Path
 
-        from samples.vision.resnet.runtime.python.tensor_io import resize_bgr
+        from utils.py_utils.tensor_io import resize_bgr
 
         image = cv2.imread(
             str(Path(__file__).parents[1] / "test_data" / "white_wolf.JPEG"),
@@ -163,7 +155,7 @@ class TensorIoTests(unittest.TestCase):
         np.testing.assert_array_equal(actual, expected)
 
     def test_nv12_rejects_odd_target_geometry(self):
-        from samples.vision.resnet.runtime.python.tensor_io import resize_bgr
+        from utils.py_utils.tensor_io import resize_bgr
 
         with self.assertRaises(ValueError):
             resize_bgr(np.zeros((4, 4, 3), dtype=np.uint8), 223, 224)

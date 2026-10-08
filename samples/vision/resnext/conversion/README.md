@@ -5,6 +5,16 @@
 
 ResNeXt source references timm resnext50_32x4d and ONNX simplification, without executable export, pinned package/weight versions or checksums.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── ResNeXt50_32x4d_config.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

@@ -1,6 +1,18 @@
 # YOLOWorld evaluator
 
 <a id="dataset"></a>
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── compare.py  # Python script
+└── source_reference.py  # Python script
+```
+
 <a id="environment"></a>
 ## Dataset and environment
 
@@ -33,10 +45,11 @@ detections from each side. It returns 0 only when every check passes, 1 when the
 two sides differ, and 2 when the run failed.
 
 <a id="metrics"></a>
+
 <a id="outputs"></a>
 ## Metrics and outputs
 
-This is a tensor parity evaluator, not a dataset mAP or performance benchmark.
+This evaluator compares raw tensors and decoded results on the same input.
 It writes `comparison.json` plus one `.npy` per recorded input, raw output and
 result array. The manifest binds the run to `target`, `asset_id`, model, image,
 vocabulary and code SHA-256 digests, the observed runtime metadata for both
@@ -47,6 +60,7 @@ Inputs and class IDs must be exactly equal; raw tensors use `atol=1e-5`, boxes
 `return_code: 2` and `passed: false`. No output is overwritten.
 
 <a id="reference-results"></a>
+
 <a id="boundaries"></a>
 ## Source-recorded reference and boundaries
 

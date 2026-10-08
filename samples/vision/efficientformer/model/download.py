@@ -2,7 +2,7 @@
 
 The script deliberately contains only stable target/variant-to-reference
 mappings. URL, format, and optional publisher hash facts are read from the
-platform manifest by ``samples._shared.assets``. It is safe to import this
+platform manifest by ``utils.py_utils.assets``. It is safe to import this
 module on a host without the board SDK; network access occurs only when
 ``download_target`` is called.
 """
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from samples._shared.assets import download_asset, resolve_asset
+from utils.py_utils.assets import download_asset, resolve_asset
 
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent

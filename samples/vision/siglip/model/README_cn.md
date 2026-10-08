@@ -31,10 +31,21 @@ manifest 中的精确 URL：
 | `so400m-patch14-384` | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch14-384.hbm> |
 | `so400m-patch16-256-i18n` | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch16-256-i18n.hbm> |
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 
-以下命令均从仓库根目录运行。运行时不会隐式下载模型。脚本支持 `--target s100|s100p`、`--variant`、`--output-dir`；shell wrapper 按位置接收 target、variant。
+以下命令均从仓库根目录运行。运行时不会隐式下载模型。脚本支持 `--target s100|s100p`、`--variant`、`--output-dir`；shell 脚本 按位置接收 target、variant。
 
 ```bash
 # cwd：仓库根目录；来源：docs/release/s/models.yaml 中记录的精确 URL
@@ -46,7 +57,7 @@ bash samples/vision/siglip/model/download.sh s100p so400m-patch14-384
 # 预期：samples/vision/siglip/model/s100/bpu-siglip-so400m-patch14-384.hbm
 ```
 
-manifest 没有发布方 SHA-256。下载器会打印观测摘要，并明确说明当前无法进行发布方校验。I/O、选择或下载错误退出 2。主途径不可用时，可将发布 URL 的精确 HBM 手动放到上述路径，并在 runtime 中同时传入精确 `--asset-id s:siglip:s100/bpu-siglip-<variant>.hbm` 与 `--model-path <path>`；手动来源仍未验证。
+manifest 没有发布方 SHA-256。下载器会打印观测摘要，并明确说明当前无法进行发布方校验。I/O、选择或下载错误退出 2。主途径不可用时，可将发布 URL 的精确 HBM 手动放到上述路径，并在 runtime 中同时传入精确 `--asset-id s:siglip:s100/bpu-siglip-<variant>.hbm` 与 `--model-path <path>`。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -54,7 +65,7 @@ manifest 没有发布方 SHA-256。下载器会打印观测摘要，并明确说
 | 文件 | 作用 | 必需 |
 | --- | --- | --- |
 | `download.py` | 解析 manifest 身份并下载一个 HBM。 | 已有制品时否；脚本准备时是。 |
-| `download.sh` | `download.py` 的位置参数兼容 wrapper。 | 否。 |
+| `download.sh` | `download.py` 的位置参数兼容 脚本。 | 否。 |
 | `../test_data/dog.jpg` | runtime 冒烟输入，不属于 HBM。 | 仅运行 sample CLI 时需要。 |
 
 <a id="local-paths"></a>

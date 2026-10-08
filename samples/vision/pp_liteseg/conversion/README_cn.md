@@ -7,6 +7,19 @@
 
 配方继承自 X5 ac11571：PaddleSeg PP-LiteSeg-STDC1，配置 `configs/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k.yml`，静态 NCHW RGB `(1,3,512,1024)`。从 [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg) 或自己的训练取得兼容权重。仓库未随附 checkpoint，也未钉住 PaddleSeg 精确版本；导出前须记录二者。该配方不构成发布 BIN 可逐字节复现的证明。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── onnx_export/  # onnx_export 相关文件
+├── ptq_yamls/  # ptq_yamls 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── build_bin.sh  # Shell 脚本
+└── prepare_calibration.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

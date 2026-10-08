@@ -11,6 +11,19 @@ All four configs share the output prefix `FasterNet_224x224_nv12`. The `working_
 FasterNet S/T0/T1/T2 (paper [Run, Don't Walk: Chasing Higher FLOPS for
 Faster Neural Networks](https://arxiv.org/abs/2303.03667)). The YAMLs expect `./fasternet_{s,t0,t1,t2}.onnx`; export the selected variant to the matching path.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── FasterNet_S_config.yaml  # Configuration
+├── FasterNet_T0_config.yaml  # Configuration
+├── FasterNet_T1_config.yaml  # Configuration
+├── FasterNet_T2_config.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

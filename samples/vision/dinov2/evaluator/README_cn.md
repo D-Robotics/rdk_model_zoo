@@ -16,6 +16,15 @@ samples/vision/dinov2/test_data/bus.jpg
 # 板端 benchmark 输入：与 runtime 契约相同的预处理 float32 tensor
 ```
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

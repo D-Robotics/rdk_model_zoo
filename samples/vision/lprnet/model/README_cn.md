@@ -9,6 +9,18 @@
 
 S100/S100P/S600 manifest 没有 LPRNet 制品。随源提供的 `test_data/test_input.dat` 是输入制品，不是模型。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 

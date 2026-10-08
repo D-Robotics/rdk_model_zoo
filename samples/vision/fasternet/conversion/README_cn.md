@@ -16,6 +16,19 @@ FasterNet S/T0/T1/T2（论文 [Run, Don't Walk: Chasing Higher FLOPS for
 Faster Neural Networks](https://arxiv.org/abs/2303.03667)）。各 YAML 要求
 `./fasternet_{s,t0,t1,t2}.onnx`；导出时使用匹配的模型权重，并将图保存至对应 YAML 路径。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── FasterNet_S_config.yaml  # 配置
+├── FasterNet_T0_config.yaml  # 配置
+├── FasterNet_T1_config.yaml  # 配置
+├── FasterNet_T2_config.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -75,7 +88,6 @@ T0 配置通过 `node_info` 将节点以 int16 I/O 摆上 BPU（2 处 partial-co
 （见 [runtime/python/README_cn.md](../runtime/python/README_cn.md)）。
 运行时期望的输入张量为 NV12 打包前的 `1x3x224x224`，输出为
 ImageNet-1k 分类 logits。
-
 
 <a id="artifacts"></a>
 ## 配方文件

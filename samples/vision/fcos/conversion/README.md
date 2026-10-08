@@ -8,6 +8,15 @@
 - Weights: source snapshot `platforms/x5` at `ac115717197920355fc390bb04299b20e6436864`.
 - Correspondence: the three released artifacts are 512, 768, and 896 FCOS variants. The source README and screenshots do not identify a checkpoint release or training commit.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
 

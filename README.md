@@ -124,7 +124,7 @@ and YOLO detection ([detect.py](samples/vision/ultralytics_yolo/runtime/python/d
 as the reference implementations. The two `samples/llm` samples provide
 native generate/stream/reset C++ interfaces. `conversion/` and
 `evaluator/` each have actionable guides; shared mechanisms live under
-[samples/_shared](samples/_shared/README.md).
+[utils/py_utils](utils/py_utils/README.md).
 
 Read [AGENTS.md](AGENTS.md), the [inference
 contract](docs/sample-standards/inference-contract.md) and the [README

@@ -3,8 +3,8 @@
 """Lazy BPU image + CPU ONNX text adapter; returns unmodified raw features."""
 from typing import Mapping
 import numpy as np
-from samples._shared.model_runner import _default_runtime_factory
-from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.model_runner import _default_runtime_factory
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 from samples.vision.clip.runtime.python.model_binding import bind_model
 
 
@@ -36,7 +36,7 @@ class RuntimeModelRunner:
             return self.binding
         if ((self.image_runtime is None and self.image_factory is None) or
                 (self.text_session is None and self.text_factory is None)):
-            from samples._shared.platforms import require_execution_target
+            from utils.py_utils.platforms import require_execution_target
             require_execution_target(self.selection.target)
         try:
             if self.image_runtime is None:

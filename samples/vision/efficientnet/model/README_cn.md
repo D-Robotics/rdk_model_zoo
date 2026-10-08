@@ -29,6 +29,18 @@ S100/S600 消费分离的 Y 与 UV 张量——裸文件名无法表达协议，
 （224/240/260/300/380），由变体而非默认尺寸决定。S100P 没有资产行，
 也不能用 S100 文件替代。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备
 

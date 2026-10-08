@@ -51,6 +51,18 @@ The 270-value input contains the current observation followed by five previous
 observations. Clipping, scaling, joint order, and history order must match the
 training policy boundary exactly.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── export_onnx.py  # Python script
+├── mapper.py  # Python script
+└── prepare_calibration.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Environments
 
@@ -179,7 +191,7 @@ The compile directory contains `artifacts/himloco_go2_bayese_1x270.bin` for X5 a
 <a id="known-gaps"></a>
 ## Boundaries
 
-Training weights and a full rollout are not bundled. The source recipe is preserved; run export, calibration, compilation and board testing as documented when regenerating the artifact.
+Training weights and a full rollout are not bundled. Follow the export, calibration, compilation, and runtime steps below.
 
 - Use representative rollout states; random Gaussian calibration is not a
   release-quality substitute.

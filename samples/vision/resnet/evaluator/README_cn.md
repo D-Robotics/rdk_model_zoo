@@ -11,6 +11,15 @@
 ImageNet 验证集（50,000 张，ILSVRC2012 val）；数据集由用户自备（本目录
 不附带下载脚本）。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

@@ -46,6 +46,24 @@ Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器�
 
 ---
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+gemma4-e2b/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── third_party/  # third_party 相关文件
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
+---
+
 <a id="support-matrix"></a>
 ## 平台兼容性
 
@@ -120,36 +138,6 @@ gemma4> /quit
 ![VLM 演示](./test_data/results/test1.jpg)
 
 *S100P 板端 VLM 对话：图片 + 中文提问 → BPU 流式回复。*
-
----
-
-<a id="directory"></a>
-## 目录结构
-
-```bash
-samples/llm/gemma4-e2b/
-├── README.md / README_cn.md     示例总览（本文件）
-├── model/                       预编译 HBM 下载
-│   ├── download_model.sh
-│   └── README.md
-├── conversion/                  PC 端 PTQ 量化编译和完整量化教程
-│   ├── QUANTIZATION_TUTORIAL.md
-│   ├── QUANTIZATION_TUTORIAL_zh.md
-│   ├── leap_llm_gemma4/
-│   ├── scripts/
-│   └── README.md
-├── runtime/
-│   └── cpp/                     ★ 板端 C++ 推理（main）
-│       ├── run.sh
-│       └── README.md
-├── evaluator/                   精度 / golden 验证
-│   └── README.md
-├── test_data/                   VLM 测试图片和结果截图
-│   └── results/
-└── third_party/                 tokenizers-cpp（显式准备）
-    ├── install_tokenizers_cpp.sh
-    └── README.md
-```
 
 ---
 

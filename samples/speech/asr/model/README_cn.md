@@ -13,6 +13,17 @@
 URL 来自[当前 S 清单](../../../../docs/release/s/models.yaml)，清单没有发布方 SHA-256
 字段。X5/S100P 没有制品。本地 SHA-256 摘要用于识别下载后的字节。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 显式下载
 

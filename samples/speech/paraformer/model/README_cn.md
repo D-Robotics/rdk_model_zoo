@@ -18,6 +18,18 @@
 | `am.mvn` | 前端 CMVN 统计量 | 仓库内固定 S 源文件 |
 | `paraformer_config.yaml` | 源前端／模型配置 | 仓库内固定 S 源文件 |
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download_model.sh  # Shell 脚本
+└── paraformer_config.yaml  # 配置
+```
+
 <a id="preparation"></a>
 ## 预览与准备
 

@@ -21,6 +21,18 @@ active manifest 发布 9 个 X5 制品和 2 个 S 制品。下表的 `{size}` �
 
 S100P 没有 YOLOv5 制品。所有 manifest 发布校验值均为 `sha256: null (unknown)`。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 

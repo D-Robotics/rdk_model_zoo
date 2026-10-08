@@ -14,6 +14,23 @@ Source attribution:
 - Paper: [YOLOE: Real-Time Seeing Anything](https://arxiv.org/pdf/2503.07465v1); official repo: [um-assn/yoloe](https://github.com/um-assn/yoloe) (X5 source)
 - Base detector lineage: [ultralytics/ultralytics](https://github.com/ultralytics/ultralytics) (S11 source)
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+yoloe/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
+Checkpoint export, conversion preparation and evaluation workflows are documented below. Float export checks cover graph structure; compiler and board runs follow the [conversion guide](conversion/README.md).
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -88,23 +105,6 @@ Result illustration published with the S100 quantized YOLOE-11s PF HBM over the 
 Example published with the S26 source delivery: recorded outputs of the published S100 quantized YOLOE-26n PF model over the bundled `office_desk.jpg`, with labels exported in PF checkpoint class-ID order, as stated by the source caption.
 
 Both figures show source-published quantized S results over the bundled image; expected outputs of the float route come from running this sample, and accuracy metrics come from the [evaluator](evaluator/README.md).
-
-<a id="directory"></a>
-## Directory Layout
-
-```text
-yoloe/
-├── model/             # explicit published-artifact preparation
-├── conversion/        # ONNX checks, calibration, target YAML and optional compile
-├── evaluator/         # explicit category mapping, COCO metrics and prediction export
-├── runtime/python/    # CLI, binding, raw runner and three-stage task
-├── runtime/cpp/       # reusable three-stage C++ library, SDK adapter, CLI, E11/E26 decoding
-├── test_data/         # source image, fixed vocabulary, source-recorded figures
-├── tests/             # host fixtures, source comparisons and README execution
-└── README.md
-```
-
-Checkpoint export, conversion preparation and evaluation workflows are documented below. Float export checks cover graph structure; compiler and board runs follow the [conversion guide](conversion/README.md).
 
 <a id="entry-points"></a>
 ## Entry Points

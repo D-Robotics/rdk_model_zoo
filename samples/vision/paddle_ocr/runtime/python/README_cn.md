@@ -1,11 +1,35 @@
 # PaddleOCR Python 运行时
 
-`main.py` 是 X5 PP-OCRv3 与 S100 PP-OCRv6 模型对的 canonical 入口，保持
+`main.py` 是 X5 PP-OCRv3 与 S100 PP-OCRv6 模型对的 入口，保持
 薄入口形态：解析参数、执行 model-free 的 list/dry-run/prepare 模式、解析
 完整引用的检测器/识别器对、对照实际硬件校验执行目标、构造 `OCRPipeline`
 并调用 `predict`、输出有序的框与文本。参数声明、model-free 模式、显式
 `--prepare` 取模与结果渲染位于 [cli.py](cli.py)；检测 → 裁剪 → 识别的编排
 位于 [pipeline.py](pipeline.py)，每个阶段各有公开三步接口。
+
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── cli.py  # 参数与结果展示
+├── decode.py  # Python 脚本
+├── geometry.py  # Python 脚本
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── pipeline.py  # Python 脚本
+├── run.sh  # 运行示例
+└── tensor_io.py  # Python 脚本
+```
 
 <a id="environment"></a>
 ## 环境

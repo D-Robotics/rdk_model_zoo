@@ -13,6 +13,15 @@ AbsRel, RMSE or threshold accuracy; color-image similarity is not a substitute.
 
 ![Source input](../test_data/furseal.jpg)
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -34,7 +43,7 @@ hrt_ucp_monitor
 Run from repository root after explicit model preparation. Changing the thread
 count requires a separately identified run.
 
-For correctness, run the canonical entry on the same input and keep
+For correctness, run the entry on the same input and keep
 `raw_depth.npy`, `depth_native.npy`, `report.json` and the reference's corresponding
 raw array and provenance. Compare identical preprocessing/resize modes before
 visualization; letterbox mode crops the padding before restoring the original
@@ -63,7 +72,7 @@ board runtime.
 Keep input/model hashes, concrete board identity, runtime/firmware version,
 preprocessing mode, raw tensor metadata, full argv and stdout/stderr for each
 measurement. Preserve unnormalized float arrays and any ground-truth IDs/protocol.
-The canonical CLI reports metadata and hashes but deliberately does not measure
+The CLI reports metadata and hashes but deliberately does not measure
 latency. Source HRT timing, end-to-end application timing and display IO must be
 reported separately. Observed hashes do not fill the missing publisher digest.
 

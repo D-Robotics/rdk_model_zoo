@@ -13,6 +13,18 @@ This directory lists the X5 release assets for the single-stage classifier. Choo
 | `s3` | `MobileOne_S3_224x224_nv12.bin` | x5 | bin | download |
 | `s4` | `MobileOne_S4_224x224_nv12.bin` | x5 | bin | download |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

@@ -1,5 +1,27 @@
 # ByteTrack Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── tracker_backend/  # Files for tracker_backend
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── TRACKER_SOURCE_MAP.json  # Structured data
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+├── tracking.py  # Python script
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

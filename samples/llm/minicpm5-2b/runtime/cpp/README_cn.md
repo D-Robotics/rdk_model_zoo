@@ -4,6 +4,24 @@
 
 # C++ 运行说明
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 支持范围
 
@@ -79,6 +97,7 @@ int main() {
 ```
 
 `pre_process` 是公开函数，因此其参数约束在函数内部强制执行：空 prompt 或超出 1–4096 的 `max_new_tokens` 对所有调用方直接抛错，与构造函数在加载模型前的校验相互独立。runtime 负责分词、BPU 执行与解码；生成的代码文本不会被执行。
+
 <a id="results-interpretation"></a>
 ## 结果解释
 

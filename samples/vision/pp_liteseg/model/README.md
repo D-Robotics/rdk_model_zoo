@@ -11,6 +11,17 @@ English | [简体中文](README_cn.md)
 
 Exact asset-id: `x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`. Source: X5 model manifest. No S-series assets or alternate variants are published.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

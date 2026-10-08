@@ -12,12 +12,12 @@ import unittest
 import numpy as np
 import yaml
 
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.speech.paraformer.conversion.calibration import CALIBRATION
 from samples.speech.paraformer.conversion.configuration import STAGES, make_config
 from samples.speech.paraformer.conversion.compile import main, compile_workspace
 from samples.speech.paraformer.conversion.workspace import verify_prepared
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 

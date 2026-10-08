@@ -49,7 +49,7 @@ def normalize_dtype(value: Any) -> Optional[np.dtype]:
         return None
     if isinstance(value, np.dtype):
         return value
-    from samples._shared.runtime_meta import canonicalise_dtype
+    from utils.py_utils.runtime_meta import canonicalise_dtype
     canonical = canonicalise_dtype(value)
     if canonical in {"float16", "float32", "float64", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32"}:
         return np.dtype(canonical)

@@ -15,6 +15,11 @@
 - Weights: ⟪release tag or commit⟫ from ⟪source⟫
 - Correspondence: ⟪e.g. official yolov8n.pt ⟪ver⟫⟫
 
+<a id="directory"></a>
+## Directory structure
+
+⟪List the actual files and their roles.⟫
+
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
 

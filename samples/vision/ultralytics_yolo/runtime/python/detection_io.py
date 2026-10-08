@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Tuple
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils import (
+from utils.py_utils import (
     preprocess as pre_utils,
 )
 from samples.vision.ultralytics_yolo.runtime.python.geometry import (

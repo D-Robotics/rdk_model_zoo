@@ -7,6 +7,21 @@
 
 WikiText2 TEST is separate from calibration TRAIN; the pinned checkpoint/tokenizer and TEST digests follow the source records. A full run uses 140 × 2048-token segments; a one-segment wiring check is not a full evaluation. Results below are records from the source S release.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── legacy/  # Files for legacy
+├── results/  # Files for results
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── main.py  # Command-line entry
+├── prepare.py  # Python script
+├── run.sh  # Run the sample
+└── validate_result.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -47,7 +62,7 @@ The generated bundle contains SDK-owned protocol/RPC files copied from the insta
 
 Final PPL **14.242767676160279**, compared with float 14.0184 and fake-quant 14.2687; relative increase **1.60052%**, elapsed **913.192 seconds**. Partial JSON is updated per segment and is not complete before 140 segments and the completion marker. The validator checks mathematical consistency, completeness and the 3% relative-PPL target; the HBM SHA-256 below ties the record to its artifact.
 
-The local evaluator uses NumPy float32 log-softmax and float64 loss sums to avoid transferring full logits/KV over the network. First-five-segment PPL: SDK/PyTorch RPC 15.047808, local NumPy 15.048632, a 0.0055% difference. The wrapper reproduces the first-segment NLL 4907.887529 as a wiring check; the full result requires all 140 segments.
+The local evaluator uses NumPy float32 log-softmax and float64 loss sums to avoid transferring full logits/KV over the network. First-five-segment PPL: SDK/PyTorch RPC 15.047808, local NumPy 15.048632, a 0.0055% difference. The helper reproduces the first-segment NLL 4907.887529 as a wiring check; the full result requires all 140 segments.
 
 HBM SHA256: `7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`.
 
@@ -73,6 +88,7 @@ Both pass the English/Chinese two-turn conversation and retrieval from approxima
 The 50-request mean end-to-end times are 671.37 ms (S100) and 543.22 ms (S100P), excluding model loading. These are wall times, not TTFT. Earlier short-request runtime logs reported approximately 12.1/13.0 decode tokens/s; zero callback performance fields are not measurements. Tools, thinking, multimodal, concurrency and long-duration soak are outside this evaluation's coverage; validate them separately for your deployment.
 
 [First-segment diagnostic](results/legacy-first-segment-diagnostic.json): HF float32 PPL 10.75668, legacy adapter float32 10.75612, actual HBM 14.01536. All eight masks exactly match SDK calibration helpers. The prepared input digest is shared with S600; both executed HBM digests were checked. The packaged evaluator independently reproduces first-segment NLL 5404.3955137729645 on both boards; the S600 figures above come from the source release record.
+
 <a id="boundaries"></a>
 ## Boundaries
 

@@ -23,7 +23,7 @@ boxes to the original image, and :meth:`predict` chains the three steps.
 
 The reusable pieces stay shared: DFL decoding lives in ``decode.py``,
 box geometry in ``geometry.py``, tensor contracts in ``model_binding.py``
-and the NV12 transport in ``detection_io.py``/``rdk_yolo_utils``.  The
+and the NV12 transport in ``detection_io.py``/``utils.py_utils``.  The
 other protocols keep their own task classes — ``yolo26_det.py`` (direct
 LTRB), ``yolo_v10detect.py`` (NMS-free S YOLOv10) and the cls/seg/pose/
 obb task modules; they are deliberately not folded into this class.
@@ -76,7 +76,7 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _size_from_runner,
     _transform_for_postprocess,
 )
-from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils import (
+from utils.py_utils import (
     preprocess as pre_utils,
 )
 from samples.vision.ultralytics_yolo.runtime.python.legacy import (
@@ -314,7 +314,7 @@ def _read_source_image(source: "str | Path | np.ndarray") -> np.ndarray:
     if isinstance(source, np.ndarray):
         return source
     if isinstance(source, (str, Path)):
-        from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils import (
+        from utils.py_utils import (
             file_io,
         )
 

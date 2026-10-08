@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import cv2
 import numpy as np
 
-from samples._shared.image import bgr_to_nv12_planes
+from utils.py_utils.image import bgr_to_nv12_planes
 
 
 @dataclass(frozen=True)

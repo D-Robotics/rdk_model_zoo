@@ -9,6 +9,15 @@
 
 内置的 [lane.jpg](../test_data/lane.jpg) 用作演示输入，四幅显示 PNG 用作可视化示例。数据集评估需准备标注图片，并记录训练/验证划分、标注转换、数据集校验和、许可、前处理和车道实例匹配规则。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

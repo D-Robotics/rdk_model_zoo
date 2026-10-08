@@ -19,8 +19,8 @@ from time import perf_counter
 
 import numpy as np
 
-from samples._shared.assets import sha256_file
-from samples._shared.runtime_meta import metadata_evidence
+from utils.py_utils.assets import sha256_file
+from utils.py_utils.runtime_meta import metadata_evidence
 from samples.speech.paraformer.runtime.python import input_io
 from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary
 from samples.speech.paraformer.runtime.python.model_binding import VOCABULARY_DIGEST
@@ -260,7 +260,7 @@ def execute(args, selections):
     from samples.speech.paraformer.runtime.python.runtime import load_runtime
 
     if not args.preprocess_only:
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selections[0].target)
     preparation = prepare(args, selections)

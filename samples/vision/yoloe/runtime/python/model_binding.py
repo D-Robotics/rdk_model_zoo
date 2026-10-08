@@ -5,8 +5,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 import re
-from samples._shared.assets import Asset, list_assets
-from samples._shared.platforms import resolve_target
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
 from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     DFLSegmentationContract,
     LTRBSegmentationContract,

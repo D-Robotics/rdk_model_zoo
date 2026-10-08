@@ -2,6 +2,28 @@ English | [简体中文](./README_cn.md)
 
 # Python Runtime — R3D-18
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── classification.py  # Python script
+├── cli.py  # Arguments and result presentation
+├── labels.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+└── tensor_io.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -125,7 +147,7 @@ assert explicit_result.labels == composed_result.labels
 | --- | --- |
 | `preprocess(clip)` | Input NumPy numeric clip of exact shape `(1,3,16,112,112)`; returns `PreparedInput.tensors` under the runtime-reported input name, contiguous float32 with the same values after casting, plus a per-call `VideoContext`. |
 | `infer(tensors)` | Validates one actual input name, five-dimensional shape, F32 finite values, and one actual runtime output name; returns raw F32 scores without softmax or file I/O. |
-| `postprocess(outputs)` | Validates the actual output name, bound 400-score shape, F32 dtype, and finite values; delegates softmax/Top-K to `samples._shared.classification.topk_from_scores`. |
+| `postprocess(outputs)` | Validates the actual output name, bound 400-score shape, F32 dtype, and finite values; delegates softmax/Top-K to `utils.py_utils.classification.topk_from_scores`. |
 | `predict(clip)` | Runs `preprocess` → `infer` → `postprocess` in order and returns a `ClassificationResult`; it does not keep context in task state. |
 
 The established `pre_process(clip)`, `forward(tensors)`, and `post_process(outputs)` names remain importable thin aliases of the three stages above — one implementation, two names.

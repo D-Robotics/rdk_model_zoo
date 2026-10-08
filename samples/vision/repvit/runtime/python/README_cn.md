@@ -6,6 +6,27 @@
 `postprocess` 与 `predict`，复用共享的 NV12 打包、Top-K 数学与懒加载
 runner。
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── classify.py  # 分类前处理、推理与后处理
+├── cli.py  # 参数与结果展示
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -55,7 +76,7 @@ python3 samples/vision/repvit/runtime/python/main.py
 | `--test-img` | string | samples/vision/repvit/test_data/yurt.JPEG | BGR 图像路径 |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | ImageNet 标签，每行一项 |
 | `--top-k` | int | 5 | 输出结果数 |
-| `--topk` | int | 5 | top-k 的旧拼写 |
+| `--topk` | int | 5 | top-k 的别名 |
 | `--resize-type` | int | null | 0 直接缩放，1 线性 letterbox；省略时默认 1 |
 | `--priority` | int | 0 | 运行调度优先级 0–255 |
 | `--bpu-cores` | int list | [0] | 运行使用的 BPU 核编号 |
@@ -87,7 +108,7 @@ print(result.class_ids, result.scores, result.labels)
 `predict` 接受本地图像路径或 BGR `uint8` 数组，且绝不原地修改数组。
 既有的 `pre_process` / `forward` / `post_process` 拼写保持为薄别名，
 共享的 `ClassificationTask` 流程仍可从
-[`classification.py`](classification.py) 导入。
+[`classification.py`](../../../../../utils/py_utils/classification.py) 导入。
 
 <a id="stage-io"></a>
 ## 阶段输入输出

@@ -54,7 +54,7 @@ if(ASR_SANITIZERS AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 endif()
 add_test(NAME asr_sdk_fixture COMMAND test_sdk)
 
-get_filename_component(ASR_SHARED_CPP "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../_shared/cpp" ABSOLUTE)
+get_filename_component(ASR_SHARED_CPP "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../utils/c_utils" ABSOLUTE)
 add_executable(test_preflight test_preflight.cc ../src/preflight.cc "${ASR_SHARED_CPP}/platform_identity.cc")
 target_include_directories(test_preflight PRIVATE ../inc "${ASR_SHARED_CPP}")
 target_compile_options(test_preflight PRIVATE -Wall -Wextra -Werror -UNDEBUG)

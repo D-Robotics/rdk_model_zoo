@@ -19,6 +19,17 @@ manifest 精确 URL：
 | `x5:clip:img_encoder.bin` | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/img_encoder.bin> |
 | `x5:clip:text_encoder.onnx` | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/text_encoder.onnx> |
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 
@@ -42,7 +53,7 @@ manifest 将两个 SHA-256 均记录为未知。下载器打印观测 digest，�
 | 文件 | 作用 | 必需 |
 | --- | --- | --- |
 | `download.py` | 下载两个精确 manifest 制品。 | 脚本准备时是；两个文件都存在时否。 |
-| `download.sh` | `download.py` 的命名参数 wrapper。 | 否。 |
+| `download.sh` | `download.py` 的命名参数 脚本。 | 否。 |
 | `../runtime/python/bpe_simple_vocab_16e6.txt.gz` | 文本 tokenizer 使用的源 BPE 词表。 | 文本编码时是。 |
 
 <a id="local-paths"></a>

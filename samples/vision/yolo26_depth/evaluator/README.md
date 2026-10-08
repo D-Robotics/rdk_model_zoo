@@ -40,6 +40,19 @@ Normalization and model input adaptation must match the producer of saved
 outputs. Do not compare arrays generated with different protocols merely because
 their shapes agree.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── eval_numeric.py  # Python script
+├── eval_sunrgbd.py  # Python script
+├── metrics.py  # Python script
+└── prepare_sunrgbd.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -197,7 +210,7 @@ SUNRGBD accuracy result is implied by these tables.
 <a id="boundaries"></a>
 ## Verification boundaries
 
-Host fixtures cover correct raw/log decoding, canonical runtime parity, lower
+Host fixtures cover correct raw/log decoding, runtime parity, lower
 median and pixel pooling, invalid data/ID rejection, three preparation protocols,
 small screen selection and real report/image writes. They do not establish
 Torch-backend parity, model output accuracy, OE compilation, board behavior or

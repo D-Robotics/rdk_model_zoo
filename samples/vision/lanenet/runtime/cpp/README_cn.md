@@ -4,6 +4,25 @@
 
 本入口基于 DNN/UCP 实现，图像前处理、推理、结果解析、可视化和文件读写各为独立步骤。输出为嵌入特征图与车道二值标签，**不执行**实例聚类或曲线拟合。
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── launcher.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 支持的板卡
 

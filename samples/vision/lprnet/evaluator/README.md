@@ -10,11 +10,22 @@ tensor the source runtime reads; `../test_data/example.jpg` is only a visual
 reference. This is a single input fixture, not a license-plate accuracy
 benchmark.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── compare.py  # Python script
+└── source_reference.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
 `compare.py` runs both implementations itself on the board: the pinned original
-wrapper (loaded from Git history) and this sample's
+helper (loaded from Git history) and this sample's
 task from `samples/vision/lprnet/runtime/python`. It requires the X5 runtime
 (imported lazily after the identity gate) and a prepared `lpr.bin` plus the
 `.dat` input. It does not import the SDK on the host and does not download

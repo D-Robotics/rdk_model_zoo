@@ -46,6 +46,24 @@ Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT
 
 ---
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+gemma4-e2b/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── third_party/  # Files for third_party
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
+---
+
 <a id="support-matrix"></a>
 ## Platform Compatibility
 
@@ -126,36 +144,6 @@ see [conversion/README.md](./conversion/README.md) and the full guide:
 ![VLM demo](./test_data/results/test1.jpg)
 
 *VLM chat on S100P: image + Chinese prompt → streamed BPU reply.*
-
----
-
-<a id="directory"></a>
-## Directory Structure
-
-```bash
-samples/llm/gemma4-e2b/
-├── README.md / README_cn.md     Sample overview (this file)
-├── model/                       Pre-compiled HBM download
-│   ├── download_model.sh
-│   └── README.md
-├── conversion/                  PC-side PTQ compile and quantization tutorial
-│   ├── QUANTIZATION_TUTORIAL.md
-│   ├── QUANTIZATION_TUTORIAL_zh.md
-│   ├── leap_llm_gemma4/
-│   ├── scripts/
-│   └── README.md
-├── runtime/
-│   └── cpp/                     ★ Board-side C++ inference (main)
-│       ├── run.sh
-│       └── README.md
-├── evaluator/                   Accuracy / golden verification
-│   └── README.md
-├── test_data/                   VLM test images and result screenshots
-│   └── results/
-└── third_party/                 tokenizers-cpp (explicit preparation)
-    ├── install_tokenizers_cpp.sh
-    └── README.md
-```
 
 ---
 

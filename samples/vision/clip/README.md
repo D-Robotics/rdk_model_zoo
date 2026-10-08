@@ -9,6 +9,22 @@ CLIP maps an image and candidate texts into a shared 512-dimensional space and r
 
 The `CLIPTask` has three stages: `preprocess` converts one BGR image and prompt list into image/tokens tensors, `infer` runs both encoders and returns raw features, and `postprocess` computes cosine scores and descending order. `predict` chains the three stages; visualization remains a separate helper.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+clip/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -48,19 +64,6 @@ The default visualization path is the tracked `test_data/inference.png` and is o
 ## Expected Results
 
 The CLI prints `target`, `prompts`, `scores`, `order`, and `image_saved`. `scores` are cosine similarities in prompt order; `order` contains descending prompt indices. The visualization writes each prompt and score onto a copy of the input image. The expected qualitative result for `dog.jpg` is a higher score for `a dog` than for `a diagram` (source validation expectation); no numeric benchmark is published.
-
-<a id="directory"></a>
-## Directory Layout
-
-```text
-clip/
-├── conversion/             # image/text protocol and conversion boundary
-├── evaluator/              # validation conditions; no published benchmark
-├── model/                  # paired manifest-backed model preparation
-├── runtime/python/         # BPE, preprocessing, dual encoder runner, task, CLI, drawing
-├── test_data/              # dog.jpg and inference.png
-└── README.md               # this guide
-```
 
 <a id="entry-points"></a>
 ## Entry Points

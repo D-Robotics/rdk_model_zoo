@@ -7,9 +7,9 @@ import numpy as np
 from samples.vision.yoloworld.runtime.python.model_binding import resolve_selection, bind_model
 from samples.vision.yoloworld.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask
-from samples._shared.runtime_meta import RuntimeMetadata
+from utils.py_utils.runtime_meta import RuntimeMetadata
 from unittest.mock import patch
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 SAMPLE=Path(__file__).resolve().parents[1]
 
 class FakeRuntime:
@@ -122,7 +122,7 @@ class YOLOWorldTests(unittest.TestCase):
             bind_model(forged, RuntimeMetadata.from_runtime(FakeRuntime()))
 
     def test_runner_rejects_non_finite_outputs(self):
-        from samples._shared.runtime_meta import MetadataMismatchError
+        from utils.py_utils.runtime_meta import MetadataMismatchError
         runtime = FakeRuntime()
         runtime.scores[0, 0, 0] = np.nan
         runner = RuntimeModelRunner(resolve_selection('x5'), runtime=runtime)
@@ -138,12 +138,12 @@ class YOLOWorldTests(unittest.TestCase):
         # The gate import is function-local, so patch the shared function itself.
         import samples.vision.yoloworld.runtime.python.model_runner as runner_mod
         sel = resolve_selection('x5')
-        with patch('samples._shared.platforms.require_execution_target',
+        with patch('utils.py_utils.platforms.require_execution_target',
                    side_effect=ValueError('no board identity')) as shared_gate:
             with self.assertRaises(ValueError):
                 runner_mod.RuntimeModelRunner(sel).load()
             shared_gate.assert_called_once_with('x5')
-        with patch('samples._shared.platforms.require_execution_target',
+        with patch('utils.py_utils.platforms.require_execution_target',
                    side_effect=AssertionError('injected factory is the host seam')):
             runner = runner_mod.RuntimeModelRunner(sel, runtime_factory=lambda path: FakeRuntime())
             self.assertIsNotNone(runner.load())

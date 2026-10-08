@@ -7,6 +7,27 @@ UCP SDK 适配器、生产预检以及准备清单／NPY 读取。按[构建](#b
 [运行](#run)在 S100 上使用匹配的板端 SDK 构建和执行。
 Python 前端 → C++ 推理链路按本目录入口使用；此处不以其他算法近似替换 FunASR。
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── tests/  # 自动化测试
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── launcher.py  # Python 脚本
+├── native_report.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 支持板卡
 
@@ -16,6 +37,7 @@ Python 前端 → C++ 推理链路按本目录入口使用；此处不以其他�
 | X5 / S100P / S600 | not-supported | 无匹配的 Paraformer 发布组合 |
 
 <a id="dependencies"></a>
+
 <a id="environment"></a>
 ## 环境
 
@@ -40,6 +62,7 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 `paraformer_contract` 库，测试可执行文件不是推理 CLI。
 
 <a id="run"></a>
+
 <a id="quickstart"></a>
 ## 运行原生 Sample
 
@@ -148,6 +171,7 @@ ID／token 数、decoder 执行状态和阶段耗时。
 关闭浮点收缩。
 
 <a id="interface-lifecycle"></a>
+
 <a id="stage-io"></a>
 ## 数值与阶段契约
 
@@ -178,6 +202,7 @@ CIF 在累计前屏蔽有效帧及之后的权重。无触发返回零数组与�
 数值库不加载模型、不选板型、不读写文件、不设置调度，也不编译假 SDK 回退。
 
 <a id="results-interpretation"></a>
+
 <a id="results"></a>
 ## 返回值与计时
 

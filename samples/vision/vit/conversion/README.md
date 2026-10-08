@@ -5,6 +5,16 @@
 
 Source describes PyTorch CIFAR-10 training and `vit_cifar10_batch1.onnx`, referring to [ViT_PyTorch](https://github.com/xiongqi123123/ViT_PyTorch.git). No fixed weight revision or export script is delivered. The YAML and compiler log describe the S100 build settings and output.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── config_vit_nv12.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

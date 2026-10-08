@@ -21,6 +21,16 @@ IoU。每次运行都会把模型和 manifest 哈希写入新的 JSON 报告。
 
 VOC 调色板 mask 必须按类别索引读取，评测前不能转换为灰度图。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── eval_unet.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

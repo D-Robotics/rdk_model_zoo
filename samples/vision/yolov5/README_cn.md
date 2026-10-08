@@ -7,6 +7,21 @@
 
 YOLOv5 是单阶段 anchor 检测器：CSPDarknet backbone 加 FPN+PAN 特征融合，三个特征尺度（stride 8/16/32）的检测头输出 COCO 风格的框、置信度和类别。`n/s/m/l/x` 规格在速度与精度间取舍。源工程为 [ultralytics/yolov5](https://github.com/ultralytics/yolov5)；本 sample 保留 X5 与 S 两套不同的输入协议。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+yolov5/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持与验证矩阵
 
@@ -48,20 +63,6 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 
 成功的 Python 运行打印 `boxes`、`scores`、`class_ids` 三个 JSON 数组，并保存带框图片。boxes 是原图 XYXY，scores 在 `[0,1]`，class IDs 是 COCO 类别编号。X5 逆变换后框会截断为整数；S 保留浮点坐标。无检测时形状为 `(0,4)`、`(0,)`、`(0,)`。具体数量由模型和输入决定，本说明不编造。
 
-<a id="directory"></a>
-## 目录职责
-
-```text
-.
-├── model/                 # 显式 manifest 制品准备
-├── runtime/python/        # binding、NV12 I/O、task、runner、CLI、可视化
-├── runtime/cpp/           # 目标相关 C++ 实现与 README
-├── conversion/            # 源 YAML 与导出/编译限制
-├── evaluator/             # 同板源/统一证据对照器
-├── test_data/             # bus/kite、标签和历史结果制品
-└── tests/                 # 主机数值、metadata、CLI、评估 fixture
-```
-
 <a id="entry-points"></a>
 ## 入口索引
 
@@ -91,4 +92,4 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 <a id="license"></a>
 ## 许可
 
-仓库 wrapper 和源 sample 文档遵循 Apache-2.0。上游 YOLOv5 工程及下载权重遵循各自许可和来源；manifest 记录为 `sha256: null (unknown)`，发布者认证以发布摘要为准。
+仓库 脚本 和源 sample 文档遵循 Apache-2.0。上游 YOLOv5 工程及下载权重遵循各自许可和来源；manifest 记录为 `sha256: null (unknown)`，发布者认证以发布摘要为准。

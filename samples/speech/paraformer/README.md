@@ -20,6 +20,21 @@ real CPU preprocessing, three-stage FP32 export, real-audio calibration,
 explicit OE compilation orchestration and a host evaluator. OE/HMCT
 compilation runs in the OE environment per the conversion guide.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+paraformer/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -87,7 +102,7 @@ The downloader prints paths and observed hashes and never overwrites existing
 files. HBM publisher hashes are absent from the manifest; local hashes bind bytes
 without independently authenticating origin. Inference validates local board
 identity, declared assets and physical tensor contracts. It never auto-downloads.
-The optional `runtime/python/run.sh` wrapper forwards the same flags and uses
+The optional `runtime/python/run.sh` helper forwards the same flags and uses
 `PYTHON` if set; it does not install dependencies.
 
 <a id="expected-results"></a>
@@ -108,21 +123,6 @@ missing input, incompatible files and target mismatch are errors, not skipped ca
 
 The [evaluator](evaluator/README.md) covers the CER definition, run records and
 the historical dataset metrics.
-
-<a id="directory"></a>
-## Directory layout
-
-```text
-paraformer/
-├── model/           # explicit six-file preparation, CMVN/config and model guide
-├── runtime/python/  # CLI/I/O, real frontend, three raw runners, CPU CIF and text
-├── runtime/cpp/     # native application, SDK adapter and prepared-feature input
-├── conversion/      # FP32 export, real calibration and explicit OE orchestration
-├── evaluator/       # CPU FP32/HMCT adapters, strict features and CER reporting
-├── test_data/       # unchanged source WAVs and reference manifest
-├── tests/           # host behavior and SDK-boundary tests
-└── README.md        # overview, complete commands and limits
-```
 
 <a id="entry-points"></a>
 ## Entry points

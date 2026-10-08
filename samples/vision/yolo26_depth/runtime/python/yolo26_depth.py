@@ -14,7 +14,7 @@ from typing import Mapping
 import cv2
 import numpy as np
 
-from samples._shared.image import bgr_to_nv12_planes
+from utils.py_utils.image import bgr_to_nv12_planes
 from samples.vision.yolo26_depth.runtime.python.tensor_io import restore_log_depth
 from samples.vision.yolo26_depth.runtime.python.geometry import (
     ImageContext,

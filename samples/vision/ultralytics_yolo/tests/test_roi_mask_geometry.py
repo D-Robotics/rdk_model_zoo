@@ -3,7 +3,7 @@
 import unittest
 import numpy as np
 import cv2
-from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils.postprocess import (
+from utils.py_utils.postprocess import (
     resize_masks_to_boxes,
 )
 

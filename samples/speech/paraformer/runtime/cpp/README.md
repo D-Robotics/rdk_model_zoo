@@ -9,6 +9,27 @@ board SDK as described below. The Python frontend can prepare feature files for
 the native pipeline; C++ runs the three published stages, CPU CIF and source
 text decoding.
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── tests/  # Automated tests
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── launcher.py  # Python script
+├── native_report.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards
 
@@ -18,6 +39,7 @@ text decoding.
 | X5 / S100P / S600 | not-supported | No matching published Paraformer package |
 
 <a id="dependencies"></a>
+
 <a id="environment"></a>
 ## Environment
 
@@ -43,6 +65,7 @@ this command. Release tests retain assertions. The production artifact is the
 static `paraformer_contract` library; test executables are not an inference CLI.
 
 <a id="run"></a>
+
 <a id="quickstart"></a>
 ## Run the native sample
 
@@ -86,7 +109,7 @@ output directory per run. Prefix selection uses `--max-utts 1`; zero means all.
 | Option | Default / behavior |
 | --- | --- |
 | `--target` | `auto` reads actual local identity; choices auto/x5/s100/s100p/s600, only S100 has published assets |
-| `--list-models` | Host-only list; auto lists the declared S100 set, not detected support |
+| `--list-models` | List model artifacts; auto lists the declared S100 set, all listed S100 artifacts |
 | `--dry-run` | Preview only; requires explicit target; mutually exclusive with list |
 | `--manifest` | `outputs/paraformer_features/prepared-manifest.json` |
 | `--vocab-file` | `samples/speech/paraformer/model/s100/tokens.json` |
@@ -161,6 +184,7 @@ fast-math: float32 operation order is part of source parity. Clang/GNU builds
 explicitly disable floating-point contraction for the library.
 
 <a id="interface-lifecycle"></a>
+
 <a id="stage-io"></a>
 ## Numerical and stage contracts
 
@@ -197,6 +221,7 @@ access if they are not thread-safe. The numerical library does not load models, 
 boards, perform file I/O, set scheduling or compile a fake SDK fallback.
 
 <a id="results-interpretation"></a>
+
 <a id="results"></a>
 ## Results and timings
 

@@ -15,6 +15,11 @@
 - 官方来源：⟪论文/仓库链接⟫
 - 本仓分类：`samples/⟪domain⟫/⟪name⟫`
 
+<a id="directory"></a>
+## 目录结构
+
+⟪列出当前目录的实际文件及用途。⟫
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -63,21 +68,6 @@ python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py ⟪实际目标�
 > 命名。禁止虚构精度数字。
 
 ⟪如 test_data/⟪image⟫ 的 Top-5 = […]；结果图写入 ⟪path⟫⟫
-
-<a id="directory"></a>
-## 目录职责
-
-> **必须回答：** 每项一句话职责；与实际目录一致（本地路径会被机器校验）。
-
-```text
-⟪name⟫/
-├── conversion/    # 模型转换（ONNX → BPU 制品，按 target）
-├── model/         # 制品下载/准备与制品 README
-├── runtime/       # python/（及提供时的 cpp/）推理实现
-├── evaluator/     # 精度/性能评估
-├── test_data/     # 示例输入与预期参照
-└── README.md      # 本文件
-```
 
 <a id="entry-points"></a>
 ## 入口索引

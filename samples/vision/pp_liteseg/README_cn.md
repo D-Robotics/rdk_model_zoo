@@ -9,6 +9,21 @@ PP-LiteSeg-STDC1 为每个像素预测 Cityscapes 道路场景的 19 类语义�
 
 模型**运行时**接收已经解码的 int32 类别图：`postprocess` 仅校验类别并去掉 batch/channel 维，没有 CPU argmax 步骤。编译制品元数据在板端加载时校验。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+pp_liteseg/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -41,16 +56,6 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
 ## 预期结果
 
 成功时返回 0，输出 `outputs/pp_liteseg/result.jpg`（3078×548，原图／叠加／分割三面板），同目录的 `labels.npy`（512×1024 int32，类别 0..18）和 `result.json`。JSON/stdout 记录实际类别名和运行时元数据。未完成真实推理前，不承诺 street 图片的具体类别列表或精度。错误返回 2。mask 坐标对应拉伸后的模型输入，不是原图尺寸。
-
-<a id="directory"></a>
-## 目录职责
-
-- `model/`：显式准备发布制品，仓库不内置权重。
-- `runtime/python/`：四阶段任务、绑定、SDK runner、CLI 与可视化。
-- `conversion/`：PaddleSeg 导出、原始校准数据、OE YAML 和编译脚本。
-- `evaluator/`：单图兼容入口与验证范围。
-- `test_data/`：源文件 `street.png` 与 `test.jpg`；旧文档中的 `street.jpg` 不存在。
-- `tests/`：主机 fixture 与源行为对照。
 
 <a id="entry-points"></a>
 ## 入口索引

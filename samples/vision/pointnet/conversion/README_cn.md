@@ -12,6 +12,15 @@ PointNet 通过共享 MLP、最大值聚合和局部/全局特征拼接预测逐
 ![网络结构](../test_data/readme_img/image-1.png)
 ![分割网络](../test_data/readme_img/image.png)
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

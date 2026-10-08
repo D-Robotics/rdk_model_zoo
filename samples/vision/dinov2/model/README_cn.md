@@ -21,6 +21,18 @@ manifest 精确 URL：
 | s100p | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/dinov2/nash-m/dinov2_vits14_224_int16_nashm.hbm> |
 | s600 | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/dinov2/nash-p/dinov2_vits14_224_int16_nashp.hbm> |
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 
@@ -36,7 +48,7 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 # 预期：/tmp/dinov2-model/nash-p/dinov2_vits14_224_int16_nashp.hbm
 ```
 
-`download_model.sh` 是位置兼容入口，使用同样的必需 target 参数。manifest 的 SHA-256 均未知；下载器会打印观测 digest，并说明无法独立验证来源。I/O、选择或下载错误退出 2。
+`download_model.sh` 是位置快捷入口，使用同样的必需 target 参数。manifest 的 SHA-256 均未知；下载器会打印观测 digest，并说明无法独立验证来源。I/O、选择或下载错误退出 2。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -44,8 +56,8 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 | 文件 | 作用 | 必需 |
 | --- | --- | --- |
 | `download.py` | 解析一个精确 manifest 制品并下载。 | 脚本准备时是；已有 HBM 时否。 |
-| `download.sh` | 显式 target/output-dir shell wrapper。 | 否。 |
-| `download_model.sh` | 委托 `download.sh` 的源兼容 wrapper。 | 否。 |
+| `download.sh` | 显式 target/output-dir shell 脚本。 | 否。 |
+| `download_model.sh` | 委托 `download.sh` 的 脚本。 | 否。 |
 | `../test_data/dog.jpg`、`../test_data/bus.jpg` | 特征和 cosine 冒烟输入。 | 仅 demo 需要。 |
 
 <a id="local-paths"></a>

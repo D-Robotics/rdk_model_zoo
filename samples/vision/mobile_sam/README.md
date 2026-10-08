@@ -12,6 +12,21 @@ MobileSAM performs box-prompted image segmentation with a TinyViT image encoder 
 
 The input is stretched directly to 512×512. The box and result mask use that resized coordinate system; no inverse transform to the original image is performed. RGB values use mean `[123.675,116.28,103.53]` and std `[58.395,57.12,57.375]`; the selected mask uses logits `>0`.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+mobile_sam/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -57,20 +72,6 @@ python3 samples/vision/mobile_sam/runtime/python/main.py --target s100 --box 185
 ## Expected Results
 
 The default image is `test_data/dogs.jpg`. A successful run writes a `512x512` overlay and binary mask. IoU and mask index are model outputs; `mobile_sam_binary_mask.png` is the preserved source reference.
-
-<a id="directory"></a>
-## Directory
-
-```text
-mobile_sam/
-├── model/                 # manifest-backed encoder/decoder preparation
-├── runtime/python/        # binding, runner, pipeline, CLI, visualization
-├── test_data/             # dogs image and preserved source mask
-├── conversion/            # source conversion material
-├── evaluator/             # evaluation procedure and limits
-├── README.md              # English overview
-└── README_cn.md           # Chinese overview
-```
 
 <a id="entry-points"></a>
 ## Entry Points

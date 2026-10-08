@@ -11,6 +11,17 @@ EfficientFormer-L1 and EfficientFormer-L3 (paper [EfficientFormer: Vision
 Transformers at MobileNet
 Speed](https://arxiv.org/abs/2206.01191)). The YAMLs expect `./efficientformer_l1.onnx` and `./efficientformer_l3.onnx`; export the matching model variant to its YAML path.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── EfficientFormer_l1_config.yaml  # Configuration
+├── EfficientFormer_l3_config.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

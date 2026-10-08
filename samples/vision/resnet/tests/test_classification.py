@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
+
 import unittest
 
 import numpy as np
@@ -9,9 +11,7 @@ import numpy as np
 
 class ClassificationTests(unittest.TestCase):
     def test_fixed_logits_return_descending_top_k_probabilities(self):
-        from samples.vision.resnet.runtime.python.classification import (
-            topk_from_logits,
-        )
+        from utils.py_utils.classification import topk_from_logits
 
         result = topk_from_logits(np.array([0.0, 2.0, -1.0, 1.0], dtype=np.float32), 3)
 
@@ -20,7 +20,7 @@ class ClassificationTests(unittest.TestCase):
         self.assertAlmostEqual(float(result.scores.sum()), 0.9679414, places=5)
 
     def test_invalid_logits_and_top_k_fail_loudly(self):
-        from samples.vision.resnet.runtime.python.classification import topk_from_logits
+        from utils.py_utils.classification import topk_from_logits
 
         with self.assertRaises(ValueError):
             topk_from_logits(np.array([[1.0, np.nan]], dtype=np.float32), 1)
@@ -30,12 +30,13 @@ class ClassificationTests(unittest.TestCase):
             topk_from_logits(np.ones((2, 2), dtype=np.float32), 1)
 
     def test_injected_runner_keeps_one_task_flow_for_packed_input(self):
-        from samples.vision.resnet.runtime.python.classification import ClassificationTask
-        from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+        from utils.py_utils.classification import ClassificationTask
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
         from testsupport import runtime_metadata
 
         selection = resolve_selection("x5")
-        binding = bind_model(selection, runtime_metadata("x5"))
+        binding = bind_model(BINDING_TABLE, selection, runtime_metadata("x5"))
         observed = {}
 
         logits = np.full((1, 1000), -10.0, dtype=np.float32)
@@ -53,11 +54,12 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(tuple(observed[binding.input_names[0]].shape), (224 * 336,))
 
     def test_injected_runner_rejects_wrong_output_shape(self):
-        from samples.vision.resnet.runtime.python.classification import ClassificationTask
-        from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+        from utils.py_utils.classification import ClassificationTask
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
         from testsupport import runtime_metadata
 
-        binding = bind_model(resolve_selection("x5"), runtime_metadata("x5"))
+        binding = bind_model(BINDING_TABLE, resolve_selection("x5"), runtime_metadata("x5"))
         wrong = np.zeros((1, 5), dtype=np.float32)
         with self.assertRaises(ValueError):
             ClassificationTask(
@@ -65,11 +67,12 @@ class ClassificationTests(unittest.TestCase):
             ).predict(np.zeros((20, 20, 3), dtype=np.uint8))
 
     def test_injected_runner_rejects_wrong_class_count_and_dtype(self):
-        from samples.vision.resnet.runtime.python.classification import ClassificationTask
-        from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+        from utils.py_utils.classification import ClassificationTask
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
         from testsupport import runtime_metadata
 
-        binding = bind_model(resolve_selection("x5"), runtime_metadata("x5"))
+        binding = bind_model(BINDING_TABLE, resolve_selection("x5"), runtime_metadata("x5"))
         wrong = np.zeros((1, 1001, 1, 1), dtype=np.float32)
         with self.assertRaises(ValueError):
             ClassificationTask(
@@ -89,8 +92,9 @@ class ClassificationTests(unittest.TestCase):
         # evidence; the published ResNet artifacts declare raw_f32.
         import dataclasses
 
-        from samples.vision.resnet.runtime.python.classification import ClassificationTask
-        from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+        from utils.py_utils.classification import ClassificationTask
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
         from testsupport import runtime_metadata
 
         class _QuantInfo:
@@ -126,7 +130,7 @@ class ClassificationTests(unittest.TestCase):
                 "output_quants": {facts.output_names[0]: descriptor},
             }
         )
-        binding = bind_model(dequant_selection, facts)
+        binding = bind_model(BINDING_TABLE, dequant_selection, facts)
 
         import numpy as np
 
@@ -140,12 +144,13 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(result.class_ids.tolist(), [7])
 
     def test_split_input_keeps_y_and_uv_as_separate_tensors(self):
-        from samples.vision.resnet.runtime.python.classification import ClassificationTask
-        from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+        from utils.py_utils.classification import ClassificationTask
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
         from testsupport import runtime_metadata
 
         selection = resolve_selection("s100")
-        binding = bind_model(selection, runtime_metadata("s"))
+        binding = bind_model(BINDING_TABLE, selection, runtime_metadata("s"))
         observed = {}
 
         logits = np.zeros((1, 1000), dtype=np.float32)
@@ -161,12 +166,13 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(tuple(observed[binding.uv_input_name].shape), (1, 112, 112, 2))
 
     def test_non_image_input_is_rejected_before_runner(self):
-        from samples.vision.resnet.runtime.python.classification import ClassificationTask
-        from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+        from utils.py_utils.classification import ClassificationTask
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
         from testsupport import runtime_metadata
 
         selection = resolve_selection("x5")
-        binding = bind_model(selection, runtime_metadata("x5"))
+        binding = bind_model(BINDING_TABLE, selection, runtime_metadata("x5"))
 
         with self.assertRaises(ValueError):
             ClassificationTask(lambda _: {}, binding).predict(np.zeros((224, 224), dtype=np.uint8))

@@ -9,6 +9,17 @@ The supplied clip is one positive “hey snips” example. Prepare held-out posi
 
 The evaluator consumes saved probabilities. Input JSON schema is `rdk-model-zoo/kws-predictions/v1`, with a `provenance` object containing nonempty `dataset`, `model`, `split` descriptions, and `records` containing unique `id`, integer `label` 0/1 and finite `score` in [0,1]. Include model/input digests and frontend versions in provenance when collecting predictions.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── evaluate.py  # Python script
+└── metrics.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

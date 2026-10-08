@@ -11,6 +11,20 @@
 
 The exact references are `x5:fcos:<filename>`. No model binary is committed in this sample.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+├── download_model.sh  # Shell command
+└── fulldownload.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 
@@ -29,7 +43,7 @@ bash samples/vision/fcos/model/download_model.sh --target x5 --variant efficient
 
 The downloader delegates to the manifest URL and hash fields. The current rows have `sha256: null (unknown)`, so an observed local digest does not establish publisher origin. A missing URL or a non-matching recorded hash fails before installation.
 
-The shell wrappers resolve `download.py` beside themselves and call the board image's `python3`; they do not depend on a repository-local host `.venv`. `download_model.sh` is the compatibility entrypoint registered in `docs/release/x5/models.yaml`.
+The shell helpers resolve `download.py` beside themselves and call the board image's `python3`; they do not depend on a repository-local host `.venv`. `download_model.sh` is the download entrypoint registered in `docs/release/x5/models.yaml`.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files

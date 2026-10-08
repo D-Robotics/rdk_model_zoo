@@ -17,6 +17,23 @@ detect/seg/pose/obb. Classification prints Top-K instead. The script does not
 install Python packages. Export and compiler steps belong in
 [`conversion/README.md`](../../conversion/README.md).
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── detect.py  # Detection preprocessing, inference, and postprocessing
+├── main.py  # Command-line entry
+└── run.sh  # Run the sample
+```
+
 <a id="environment"></a>
 ## Board preparation
 

@@ -19,8 +19,24 @@
 | RDK X5 | PP-OCRv3 英文 | 单个 packed NV12 张量（640×640） | F32 `[1,40,97,1]`：固定 96 字符字母表加 blank |
 | RDK S100 | PP-OCRv6 | split NV12 `x_y`（640×640）+ `x_uv`（320×320） | F32 `[1,40,18710]`：随仓 UTF-8 词典加 blank 与末尾空格 |
 
-旧 X5/S Python 入口与旧 S C++ 源码均转发到本 canonical 实现；它们仍是
-可用的兼容入口，本 sample 不维护第二套实现。
+旧 X5/S Python 入口与旧 S C++ 源码均转发到本 实现；它们仍是
+可用的快捷入口，本 sample 不维护第二套实现。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+paddle_ocr/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── __init__.py  # Python 脚本
+```
 
 <a id="support-matrix"></a>
 ## 支持矩阵
@@ -125,19 +141,6 @@ S100P 在两侧发布清单中均无匹配的模型对，sample 对其显式拒�
 不添加未经验证的激活或精度声明。随仓测试图的具体打印内容属于模型对的
 属性——已核验的对照记录见[评估](./evaluator/README.md#reference-results)；
 数据集级精度需要标注语料，本 sample 未附带。
-
-<a id="directory"></a>
-## 目录
-
-| 路径 | 职责 |
-| --- | --- |
-| `model/` | 制品引用与显式准备流程 |
-| `runtime/python/` | canonical 两阶段 Python 运行时（上表全部目标） |
-| `runtime/cpp/` | S 系列原生运行时（DB + CRNN/CTC + FreeType 渲染） |
-| `conversion/` | 按 target 分开的导出/校准/编译配方 |
-| `evaluator/` | 基于记录的检测/识别一致性评估器 |
-| `test_data/` | 随仓测试材料：X5 图像、S100 图像与 PP-OCRv6 词典 |
-| `tests/` | 主机契约测试（43 例） |
 
 <a id="entry-points"></a>
 ## 入口

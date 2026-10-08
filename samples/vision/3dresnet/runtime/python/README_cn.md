@@ -2,6 +2,28 @@
 
 # Python Runtime — R3D-18
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── classification.py  # Python 脚本
+├── cli.py  # 参数与结果展示
+├── labels.py  # Python 脚本
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── run.sh  # 运行示例
+└── tensor_io.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -123,7 +145,7 @@ assert explicit_result.labels == composed_result.labels
 | --- | --- |
 | `preprocess(clip)` | 输入精确 shape `(1,3,16,112,112)` 的 NumPy numeric clip；返回使用 runtime 实际 input name 的 `PreparedInput.tensors`，值 cast 为 contiguous float32，并返回本调用的 `VideoContext`。 |
 | `infer(tensors)` | 校验实际 input name、五维 shape、F32 finite 值和唯一实际 output name；返回 raw F32 score，不做 softmax 或文件 I/O。 |
-| `postprocess(outputs)` | 校验实际 output name、400-score shape、F32 和 finite；委托 `samples._shared.classification.topk_from_scores` 执行 softmax/Top-K。 |
+| `postprocess(outputs)` | 校验实际 output name、400-score shape、F32 和 finite；委托 `utils.py_utils.classification.topk_from_scores` 执行 softmax/Top-K。 |
 | `predict(clip)` | 按顺序串联 `preprocess` → `infer` → `postprocess` 并返回 `ClassificationResult`；不把 context 存入 task 状态。 |
 
 既有的 `pre_process(clip)`、`forward(tensors)`、`post_process(outputs)` 名称保留为上述三个阶段的薄别名——同一实现，两个名字。

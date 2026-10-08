@@ -9,6 +9,21 @@ UNetMobileNet combines a U-Net encoder/decoder with a lightweight MobileNet back
 
 This S-family sample differs from X5 UNet: two NV12 input planes at 2048×1024, INTER_AREA stretch, 19 classes, original-resolution output. Both Python and C++ separate preprocessing, raw forward and mask decoding; rendering lives outside predict.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+unetmobilenet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support and validation
 
@@ -45,17 +60,6 @@ From the repository root, install general dependencies with `python3 -m pip inst
 Python success returns 0 and writes result.jpg, unetmobilenet_mask.npy (original-size int32 IDs 0..18) and unetmobilenet_report.json in cwd. alpha_f=0.75 weights the original image, so 1 shows the original and 0 the mask colors. Actual classes depend on real inference; no fixed result is promised. The figure below is the retained source illustration, not a new board result.
 
 ![Reference source result](test_data/result.jpg)
-
-<a id="directory"></a>
-## Directory responsibilities
-
-- model/: explicit target-scoped download into s100/ or s600/.
-- runtime/python/: task stages, binding, shared runner adapter, CLI and visualization.
-- runtime/cpp/: stage implementation, SDK resource owner, pure tensor decoder, launcher/build.
-- conversion/: missing recipe prerequisites; no export/compiler implementation in source.
-- evaluator/: single-image checks and dataset/performance boundaries; no dataset loop in source.
-- test_data/: segmentation.png input and preserved source-recorded result.jpg.
-- tests/: source parity, host fixtures, CLI, native numerical/resource tests.
 
 <a id="entry-points"></a>
 ## Entry points

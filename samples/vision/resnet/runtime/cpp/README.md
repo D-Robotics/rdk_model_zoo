@@ -2,7 +2,25 @@
 
 The S-series ResNet18 native runtime: the `hbDNNInferV2` inference flow,
 image preprocessing, NV12 tensor creation and Top-K output, built on the
-shared `samples/_shared/cpp/c_utils` sources.
+shared `utils/c_utils` sources.
+
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── run.sh  # Run the sample
+```
 
 <a id="supported-boards"></a>
 ## Supported boards
@@ -24,8 +42,7 @@ On the board image: CMake and a C++17 compiler; OpenCV development
 headers/libraries; `gflags` and `fmt` development libraries; Horizon DNN
 headers under `/usr/hobot/include` and libraries under `/usr/hobot/lib`
 (`hbDNN`, `hbucp`). The source utility implementations come from the
-existing `samples/_shared/cpp/c_utils` files referenced by the canonical
-CMake target. The launcher does not install system packages, modify the
+existing `utils/c_utils` files referenced by the CMake target. The launcher does not install system packages, modify the
 SDK, or download a model.
 
 <a id="build"></a>
@@ -106,7 +123,7 @@ tensor metadata, converts the BGR image through the model's preprocessing
 tensors, decodes the F32 output with the Top-K postprocess, prints the
 configured Top-K classes, and releases the DNN resources at scope exit.
 The heavy work happens after construction, not in the constructor; the
-utility implementations are the existing `samples/_shared/cpp/c_utils`
+utility implementations are the existing `utils/c_utils`
 sources. There is no background thread; the process performs one
 synchronous inference.
 

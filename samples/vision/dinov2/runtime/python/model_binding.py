@@ -13,10 +13,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from samples._shared.assets import Asset, list_assets
-from samples._shared.platforms import resolve_target
-from samples._shared.quantization import validate_output_transform
-from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError, canonicalise_dtype
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+from utils.py_utils.quantization import validate_output_transform
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError, canonicalise_dtype
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 SUPPORTED_TARGETS = ("s100", "s100p", "s600")

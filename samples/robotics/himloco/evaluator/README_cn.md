@@ -19,7 +19,20 @@
 ```
 
 `obs_history` 应在完成部署等价的裁剪、缩放、关节排序和历史堆叠后采集。记录动作必须是
-尚未缩放的策略输出。
+未缩放的策略输出。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── compare_action_dumps.py  # Python 脚本
+├── compare_jit_onnx.py  # Python 脚本
+├── metrics.py  # Python 脚本
+└── prepare_runtime_inputs.py  # Python 脚本
+```
 
 <a id="environment"></a>
 ## 文件
@@ -121,7 +134,7 @@ python3 samples/robotics/himloco/evaluator/compare_action_dumps.py \
 纯模型测试。
 
 <a id="boundaries"></a>
-## 使用边界与源验收流程
+## 评估方式
 
 ```text
 JIT 与 ONNX

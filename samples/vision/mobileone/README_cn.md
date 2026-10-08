@@ -32,6 +32,22 @@ MobileOne 是面向低时延边缘部署的轻量级 CNN 骨干网络。模型�
 流程（标签读取、绘图和文件输出由 CLI 层负责，见
 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+mobileone/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -112,13 +128,6 @@ rank 1 为 class 300（tiger beetle）。
 已发布性能记录：完整列与计时条件见
 [评估说明](evaluator/README_cn.md#reference-results)。单线程延迟与多线程 FPS 采用不同的并发方式，
 二者不能直接互相取倒数。比较延迟与 FPS 时，应使用相同线程数、并发提交方式和 BPU 利用率。
-
-<a id="directory"></a>
-## 目录职责
-
-`model/`：制品与下载；`runtime/python/`：原生 CLI、任务与运行器；
-`conversion/`：五份 PTQ YAML；`evaluator/`：功能检查与已发布基准；
-`test_data/`：`tiger_beetle.JPEG` 输入及随附资源；`tests/`：主机 unittest 套件。
 
 <a id="entry-points"></a>
 ## 入口

@@ -7,6 +7,15 @@
 
 发布制品对由 X5 BPU 图像 encoder（`img_encoder.bin`）和 CPU ONNX 文本 encoder（`text_encoder.onnx`）组成。未随附上游 checkpoint 版本、导出脚本、转换 YAML 或校准数据集；原始 CLIP BPE 词表和模型协议保持不变。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

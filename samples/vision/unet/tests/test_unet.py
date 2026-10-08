@@ -9,7 +9,7 @@ import types
 import unittest
 import cv2
 import numpy as np
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -166,7 +166,7 @@ class EvaluatorTests(unittest.TestCase):
                 raw=np.zeros((1,21,512,512),np.float32);raw[:,7]=2
                 return {'unet':{'logits':raw}}
         with patch.object(ev,'require_x5_runtime_environment',return_value='fixture'), \
-             patch('samples._shared.platforms.require_execution_target'), \
+             patch('utils.py_utils.platforms.require_execution_target'), \
              patch.dict(sys.modules,{'hbm_runtime':types.SimpleNamespace(HB_HBMRuntime=lambda path:Fake())}):
             run, info=ev.make_x5_runner(Path('/tmp/unet_resnet34_voc_512x512_nv12.bin'))
             pred=ev.prediction_from_output(run(np.zeros((512,512,3),np.uint8)))

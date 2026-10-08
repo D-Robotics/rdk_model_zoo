@@ -84,7 +84,7 @@ class BindingTableTests(unittest.TestCase):
 
         import dataclasses
 
-        from samples._shared.cls_binding import BindingError, resolve_selection
+        from utils.py_utils.cls_binding import BindingError, resolve_selection
         from samples.vision.convnext.runtime.python.model_binding import (
             BINDING_TABLE,
         )

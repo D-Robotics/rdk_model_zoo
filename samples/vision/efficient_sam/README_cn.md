@@ -12,6 +12,21 @@ EfficientSAM-Tiny 使用 ViT-Tiny 图像编码器和固定提示解码器完成�
 
 发布解码器固定使用缩放后 512 方形图像中的正点 `(248,210)`、`(302,315)`，不接收运行时点或框参数。编码器采用 RGB `/255`，选中 mask 的阈值为 logits `>=0`。输入直接拉伸至 512×512，结果保留在该坐标系，不反变换回原图。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+efficient_sam/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -57,20 +72,6 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 ## 预期结果
 
 默认输入是 `test_data/dogs.jpg`。成功运行会生成 overlay 图和 `512x512` 二值 mask；IoU 和 mask index 取决于实际模型执行。提交的 `efficient_sam_binary_mask.png` 是 source 参考，不是新的板端结果。
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-efficient_sam/
-├── model/                 # manifest 驱动的 encoder/decoder 准备
-├── runtime/python/        # binding、runner、pipeline、CLI、可视化
-├── test_data/             # dogs 图像和保留的 source mask
-├── conversion/            # source 转换材料
-├── evaluator/             # 评测流程与边界
-├── README.md              # 英文总览
-└── README_cn.md           # 中文总览
-```
 
 <a id="entry-points"></a>
 ## 入口索引

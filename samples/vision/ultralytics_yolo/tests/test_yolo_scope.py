@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime/python"))
 from dataclasses import replace
-from samples._shared.assets import resolve_asset
+from utils.py_utils.assets import resolve_asset
 from test_detection_binding import _metadata, _contract
 from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     ModelSelection,

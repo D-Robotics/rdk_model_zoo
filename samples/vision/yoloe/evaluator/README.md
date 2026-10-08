@@ -21,9 +21,26 @@ PF class IDs are **not COCO category IDs**. Supply a reviewed mapping that binds
 }
 ```
 
-Every annotation category must be covered; partial category scoring is not silently enabled. PF IDs must be unique, but multiple explicitly named PF classes may map to one dataset category. Such predictions are preserved separately: no additional NMS is applied after mapping. Unmapped PF predictions are excluded from the dataset results and counted in the report. Exact name checks prevent numeric-label drift; they do not prove that a user-chosen semantic mapping is correct.
+Every annotation category must be covered; partial category scoring is not silently enabled. PF IDs must be unique, but multiple explicitly named PF classes may map to one dataset category. Such predictions are preserved separately: no additional NMS is applied after mapping. Unmapped PF predictions are excluded from the dataset results and counted in the report. Choose dataset mappings by class meaning and verify the category names.
 
 Images are processed by sorted numeric image ID. `--limit 0` selects all; a positive value selects the first N and labels the metrics as a subset. Duplicate JSON keys/IDs/image paths, paths outside `--image-dir`, unreadable images and annotation/image dimension differences fail. The evaluator does not skip difficult or invalid images. Use a fresh output directory on every run.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── backends.py  # Python script
+├── dataset.py  # Python script
+├── engine.py  # Python script
+├── evaluate.py  # Python script
+├── mapping.example.json  # Structured data
+├── requirements-host.txt  # Source or data file
+└── results.py  # Python script
+```
 
 <a id="environment"></a>
 ## Environment

@@ -92,7 +92,7 @@ class MainLoopTests(unittest.TestCase):
             args = add_model_paths(inference_args(root, audio), root)
             stream = io.StringIO()
             with patch(
-                "samples._shared.platforms.require_execution_target",
+                "utils.py_utils.platforms.require_execution_target",
                 return_value=None,
             ), patch(
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",
@@ -134,7 +134,7 @@ class MainLoopTests(unittest.TestCase):
             audio.write_bytes(b"fixture audio read by injected loader")
             args = add_model_paths(inference_args(root, audio), root)
             with patch(
-                "samples._shared.platforms.require_execution_target",
+                "utils.py_utils.platforms.require_execution_target",
                 return_value=None,
             ), patch(
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",

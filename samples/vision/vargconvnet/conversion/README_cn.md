@@ -3,8 +3,17 @@
 <a id="source-model"></a>
 ## 源模型
 
-推理时使用模型指南提供的已发布 X5 部署 bin 与 wrapper。重新构建需先
+推理时使用模型指南提供的已发布 X5 部署 bin 与 脚本。重新构建需先
 准备 ONNX 图、权重修订、框架版本及 PTQ YAML。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
@@ -19,7 +28,7 @@
 <a id="export"></a>
 ## ONNX 导出
 
-导出的 ONNX 图需满足 wrapper 的运行时 I/O 契约：NV12 打包前为
+导出的 ONNX 图需满足 脚本 的运行时 I/O 契约：NV12 打包前为
 RGB/NCHW 224×224，输出为 1000 类分数。
 
 <a id="calibration"></a>
@@ -52,4 +61,4 @@ python3 samples/vision/vargconvnet/runtime/python/main.py --target x5 --variant 
 <a id="known-gaps"></a>
 ## 补充准备
 
-推理时按 [model/README_cn.md](../model/README_cn.md) 准备已发布 X5 制品。构建替代模型需提供符合 wrapper 契约的 ONNX 图（名义 RGB/NCHW 224×224 输入、1,000 类分类分数）、匹配的 PTQ 配置，以及按模型归一化处理的校准数据。使用 X5 OE 工具链，并通过样例运行时检查编译结果。
+推理时按 [model/README_cn.md](../model/README_cn.md) 准备已发布 X5 制品。构建替代模型需提供符合 脚本 契约的 ONNX 图（名义 RGB/NCHW 224×224 输入、1,000 类分类分数）、匹配的 PTQ 配置，以及按模型归一化处理的校准数据。使用 X5 OE 工具链，并通过样例运行时检查编译结果。

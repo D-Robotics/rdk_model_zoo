@@ -11,6 +11,18 @@
 
 本 sample 只有一个已发布制品；没有 x5、S100P、S600、ONNX、checkpoint 或校准制品。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 
@@ -22,7 +34,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 # 预期：samples/vision/3dresnet/model/s100/r3d_18.hbm
 ```
 
-下载器从共享 S manifest 解析 `s:3dresnet:s100/r3d_18.hbm`，并使用共享的原子下载/校验 helper。当前 manifest 没有 publisher SHA-256，因此下载器会报告观测摘要，但无法对照已发布数值校验。已有文件会先校验，不会静默覆盖。`download_model.sh` 是委托到同一显式命令的兼容入口。runtime 不会自动下载模型。
+下载器从共享 S manifest 解析 `s:3dresnet:s100/r3d_18.hbm`，并使用共享的原子下载/校验 helper。当前 manifest 没有 publisher SHA-256，因此下载器会报告观测摘要，但无法对照已发布数值校验。已有文件会先校验，不会静默覆盖。`download_model.sh` 是委托到同一显式命令的快捷入口。runtime 不会自动下载模型。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

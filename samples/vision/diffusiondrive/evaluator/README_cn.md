@@ -11,6 +11,16 @@
 
 噪声是显式输入。比较时应使用相同输入归档与固定噪声，重新生成噪声会改变规划问题。完整 NAVSIM 评估还需要本 sample 未提供的场景日志、传感器数据、地图与指标缓存。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── compare_outputs.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

@@ -8,6 +8,16 @@
 S100P（`nash-m`）与 S600（`nash-p`）各有 Vision/Text HBM，S100（`nash-e`）没有默认公共 HBM。
 目录结构和文件名相同不意味着制品可跨目标使用。当前下载脚本检查文件是否非空后复用，并不自动校验已有文件的目标或 SHA-256。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 显式准备
 

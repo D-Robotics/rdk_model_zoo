@@ -57,6 +57,22 @@ the platform release manifest, verifies the board identity, loads
 `hbm_runtime` lazily, and returns a typed Top-K result
 ([runtime/python/README.md](runtime/python/README.md)).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+fasternet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -137,16 +153,6 @@ single-frame single-thread single-core, FPS multi-threaded):
 | FasterNet-T2 | 224x224 | 15.0 | 76.50% | 76.05% | 3.39 | 342.48 |
 | FasterNet-T1 | 224x224 | 7.6 | 74.29% | 71.25% | 1.96 | 708.40 |
 | FasterNet-T0 | 224x224 | 3.9 | 71.75% | 68.50% | 1.41 | 1135.13 |
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — X5 PTQ configurations and model-specific preparation steps
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([drake.JPEG](test_data/drake.JPEG) plus reference illustrations)
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

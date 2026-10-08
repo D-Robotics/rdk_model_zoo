@@ -11,6 +11,17 @@ X5 源转换 Ultralytics YOLOv5 `v2.0` 与 `v7.0` 分支模型及匹配的预训
 
 上游 commit 未锁定，本 sample 也不附带 exporter 脚本或 checkpoint；下文的分支/权重配对和检测头修改即源流程。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── yolov5_detect_bayese_640x640_nchw.yaml  # 配置
+└── yolov5_detect_bayese_640x640_nv12.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 
 ## 工具链与目标

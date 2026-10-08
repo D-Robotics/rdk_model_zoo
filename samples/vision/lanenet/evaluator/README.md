@@ -9,6 +9,15 @@ This sample provides reproducible host contract checks for evaluation. Dataset e
 
 Use the bundled [lane.jpg](../test_data/lane.jpg) as the demonstration input and the four display PNGs as visualization examples. For dataset evaluation, prepare labeled images and record the train/validation split, annotation conversion, dataset checksum, license, preprocessing and lane-instance matching rules.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 

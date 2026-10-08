@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """ASR binding over the shared raw single-array transport."""
 
-from samples._shared.single_array_runner import SingleArrayRunner
-from samples._shared.platforms import require_execution_target
+from utils.py_utils.single_array_runner import SingleArrayRunner
+from utils.py_utils.platforms import require_execution_target
 from samples.speech.asr.runtime.python.model_binding import bind_model
 
 

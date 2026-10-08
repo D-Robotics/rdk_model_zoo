@@ -11,6 +11,18 @@ English | [简体中文](./README_cn.md)
 
 The sample has one published artifact. There are no x5, S100P, S600, ONNX, checkpoint, or calibration artifacts in this directory.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 
@@ -22,7 +34,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 # expect: samples/vision/3dresnet/model/s100/r3d_18.hbm
 ```
 
-The downloader resolves `s:3dresnet:s100/r3d_18.hbm` from the shared S manifest and uses the shared atomic download/verification helper. The manifest records no publisher SHA-256, so the downloader reports the observed digest after download but cannot verify it against a published value. Existing files are verified and are not silently overwritten. `download_model.sh` is a compatibility delegate to the same explicit command. Runtime execution never downloads a model automatically.
+The downloader resolves `s:3dresnet:s100/r3d_18.hbm` from the shared S manifest and uses the shared atomic download/verification helper. The manifest records no publisher SHA-256, so the downloader reports the observed digest after download but cannot verify it against a published value. Existing files are verified and are not silently overwritten. `download_model.sh` is a launcher to the same explicit command. Runtime execution never downloads a model automatically.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files

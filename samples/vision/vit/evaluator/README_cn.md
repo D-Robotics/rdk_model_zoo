@@ -6,6 +6,15 @@
 ## 数据集
 功能检查使用随附的十张 CIFAR-10 图片，每类一张。数据集级精度使用完整 CIFAR-10 测试集。为每张测试图准备其真值类别索引（0–9），并与运行时返回的 Top-1 类别 ID 对照；随附示例覆盖每个类别一张图片。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

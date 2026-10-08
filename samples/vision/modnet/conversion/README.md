@@ -3,7 +3,16 @@
 <a id="source-model"></a>
 ## Source model
 
-The source identifies the official [MODNet repository](https://github.com/ZHKKKe/MODNet) and paper, but it does not pin a checkpoint revision or provide an ONNX exporter. The source README mentions `onnx_export/` and `ptq_yamls/`, yet those paths are absent from the audited files; they are not copied or invented here.
+Use the [MODNet repository](https://github.com/ZHKKKe/MODNet) to obtain a trained checkpoint and export ONNX. Prepare an ONNX model with the input/output contract below, then quantize and compile it with the target toolchain.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets

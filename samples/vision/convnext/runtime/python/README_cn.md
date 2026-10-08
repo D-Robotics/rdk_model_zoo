@@ -7,6 +7,27 @@
 被检测的板卡，经共享 SDK 会话懒加载 `hbm_runtime`，执行一次分类流程。
 模型准备是显式动作；本运行时绝不下载模型或安装软件包。
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── classify.py  # 分类前处理、推理与后处理
+├── cli.py  # 参数与结果展示
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -102,7 +123,7 @@ print(result.class_ids, result.scores, result.labels)
 数组。三个阶段也可以显式驱动：`prepared = model.preprocess(source)`、
 `outputs = model.infer(prepared)`、`result = model.postprocess(outputs)`
 ——`predict` 恰好串联这些步骤。共享的
-`ClassificationTask` 流程仍可从 [`classification.py`](classification.py)
+`ClassificationTask` 流程仍可从 [`classification.py`](../../../../../utils/py_utils/classification.py)
 导入。
 
 <a id="stage-io"></a>

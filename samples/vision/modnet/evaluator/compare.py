@@ -27,10 +27,10 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from samples._shared.assets import verify_asset_file  # noqa: E402
-from samples._shared.platforms import require_execution_target  # noqa: E402
-from samples._shared.legacy_platforms import pinned_name  # noqa: E402
-from samples._shared.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
+from utils.py_utils.assets import verify_asset_file  # noqa: E402
+from utils.py_utils.platforms import require_execution_target  # noqa: E402
+from utils.py_utils.legacy_platforms import pinned_name  # noqa: E402
+from utils.py_utils.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
 from samples.vision.modnet.runtime.python.modnet import MODNetTask  # noqa: E402
 from samples.vision.modnet.runtime.python.model_binding import (  # noqa: E402
     SAMPLE_DIR,
@@ -130,7 +130,7 @@ def run_comparison(selection, image, image_path, output_dir, *, priority=0, bpu_
         code = list((SAMPLE_DIR / "runtime" / "python").glob("*.py"))
         code += list((SAMPLE_DIR / "evaluator").glob("*.py"))
         code += list(source_paths("x5"))
-        code += [ROOT / "samples" / "_shared" / name
+        code += [ROOT / "utils" / "py_utils" / name
                  for name in ("assets.py", "platforms.py", "runtime_meta.py")]
         summary["code_sha256"] = {
             (str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else pinned_name(path)): _hash(path)
@@ -138,7 +138,7 @@ def run_comparison(selection, image, image_path, output_dir, *, priority=0, bpu_
         }
 
         if runtime_factory is None:
-            from samples._shared.model_runner import _default_runtime_factory
+            from utils.py_utils.model_runner import _default_runtime_factory
 
             runtime_factory = _default_runtime_factory()
 

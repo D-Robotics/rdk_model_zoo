@@ -13,7 +13,7 @@ class PolicyTests(unittest.TestCase):
         graph output as logits and softmaxes it (scipy.special.softmax), so
         the task applies the numerically stable softmax before Top-K."""
 
-        from samples.vision.edgenext.runtime.python.classification import (
+        from utils.py_utils.classification import (
             ClassificationTask,
         )
         from samples.vision.edgenext.runtime.python.model_binding import (
@@ -41,7 +41,7 @@ class PolicyTests(unittest.TestCase):
         )
 
     def test_packed_input_uses_canonical_flat_buffer(self):
-        from samples.vision.edgenext.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         from samples.vision.edgenext.runtime.python.model_binding import (
             bind_model,
             resolve_selection,

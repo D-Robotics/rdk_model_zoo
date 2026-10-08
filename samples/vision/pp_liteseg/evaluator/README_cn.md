@@ -7,6 +7,16 @@
 
 随附 street.png/test.jpg 仅支持单图检查。Cityscapes 是类别词表，仓库未内置验证集或数据集评估循环。计算 mIoU 时须取得适用的标注 split，记录标签 ID 映射／忽略规则，并在完全相同的样本上评估浮点和编译模型。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── infer_board.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

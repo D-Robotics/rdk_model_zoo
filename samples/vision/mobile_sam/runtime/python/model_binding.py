@@ -4,8 +4,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
-from samples._shared import sam_binding as _shared
-from samples._shared.runtime_meta import RuntimeMetadata
+from utils.py_utils import sam_binding as _shared
+from utils.py_utils.runtime_meta import RuntimeMetadata
 
 SAMPLE = "mobile_sam"
 SAMPLE_DIR = Path(__file__).resolve().parents[2]

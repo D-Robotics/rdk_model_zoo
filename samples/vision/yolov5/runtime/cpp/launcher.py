@@ -98,9 +98,9 @@ def main(argv=None) -> int:
             return 0
         if not selection.model_path.is_file():
             raise FileNotFoundError(f"Resolved model path does not exist: {selection.model_path}")
-        from samples._shared.assets import verify_asset_file
+        from utils.py_utils.assets import verify_asset_file
         verify_asset_file(selection.asset, selection.model_path)
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
         require_execution_target(selection.target)
         binary = args.binary or (CPP / "build" / selection.target / "yolov5_cpp")
         if not binary.is_file():

@@ -5,6 +5,17 @@
 
 The sample bundles still images and reference GIF/PNG files but no `track_test.mp4` and no MOT ground-truth directory. Prepare the video explicitly from `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` (recorded SHA-256 `4bbe5bf11fe8967b28a900fd2add4949aba89b62076eaa03d0c55cdf7dd41397`; verify with `sha256sum track_test.mp4`, or `shasum -a 256 track_test.mp4` on macOS). The comparator checks two complete tracker captures against each other; it does not compute MOTA/IDF1 from labeled data.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── capture.py  # Python script
+└── compare.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

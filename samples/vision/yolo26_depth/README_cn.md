@@ -13,6 +13,21 @@ X5 C++、显式模型准备、两套转换工具链及离线评估。
 S l/x 输入归一化 RGB featuremap，输出原始 logit，只有后者需要 CPU clip/scale/bias。
 两者最终都输出原图尺寸的**相对深度**，不是经过校准的米制距离。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+yolo26_depth/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -90,20 +105,6 @@ X5 原生还保留 `depth_native.f32`。绘图采用 2%/98% 分位范围、反�
 还有另一组未完整逐行绑定制品的延迟表，不能拼成一套基准。X5 HRT 延迟/FPS 及
 S 另一张表记录在 evaluator README。源图边界描述把 exp/resize 写到图内，
 而可执行源码在 CPU 执行；以可执行源码行为为准。
-
-<a id="directory"></a>
-## 目录
-
-```text
-yolo26_depth/
-├── model/                 # 基于清单的显式下载
-├── runtime/python/        # 阶段、逐次上下文、绑定、懒加载 runner、CLI、绘图
-├── runtime/cpp/           # X5 阶段 API、SDK owner、张量/IO、启动器
-├── conversion/            # 导出、校准、29 份源 YAML、X5/S 编译
-├── evaluator/             # 三种输入准备协议、离线指标和比较
-├── test_data/bus.jpg      # 逐字节保留的源图像
-└── tests/                 # 主机测试与原生纯逻辑/模拟 SDK 检查
-```
 
 <a id="entry-points"></a>
 ## 各入口与集成

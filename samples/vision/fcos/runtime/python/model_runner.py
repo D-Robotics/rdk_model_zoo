@@ -9,7 +9,7 @@ from typing import Any, Callable, Mapping
 
 import numpy as np
 
-from samples._shared.runtime_meta import RuntimeMetadata
+from utils.py_utils.runtime_meta import RuntimeMetadata
 from .model_binding import BindingError, ModelBinding, ModelSelection, bind_model
 
 
@@ -38,8 +38,8 @@ class RuntimeModelRunner:
             return self.binding  # type: ignore[return-value]
         if self._runtime is None:
             if self._factory is None:
-                from samples._shared.platforms import require_execution_target
-                from samples._shared.assets import resolve_asset, verify_asset_file
+                from utils.py_utils.platforms import require_execution_target
+                from utils.py_utils.assets import resolve_asset, verify_asset_file
 
                 require_execution_target(self.selection.target)
                 verify_asset_file(resolve_asset(self.selection.asset_id), self.selection.model_path)

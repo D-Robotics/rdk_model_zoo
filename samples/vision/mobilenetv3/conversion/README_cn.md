@@ -11,6 +11,20 @@ timm `mobilenetv3_large_100` 预训练权重（MobileNetV3-Large），由
 `get_mobilenetv3_onnx.py` 固定；两个平台均为 NCHW 输入
 `[1,3,224,224]`。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── MobileNetV3_config.yaml  # 配置
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── get_calibration_data.py  # Python 脚本
+├── get_mobilenetv3_onnx.py  # Python 脚本
+├── mobilenetv3_s_config.yaml  # 配置
+└── timm2onnx_local.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -37,6 +51,7 @@ python3 get_mobilenetv3_onnx.py    # -> ./mobilenetv3_large_100.onnx
 导出器使用 onnx-simplifier 并打印参数量（`mobilenetv3_large_100` 为
 5,470,832）；预期 metadata 输出为 `mean (0.485, 0.456, 0.406)`、
 `std (0.229, 0.224, 0.225)`、"Simplified model is valid."。
+
 <a id="calibration"></a>
 ## 校准
 
@@ -74,7 +89,7 @@ shape/dtype 与数值结果之后，才能把再生成制品视为与已发布�
 ## 验证
 
 对再生成制品，按 OE 手册执行 `hb_perf` 与 `hrt_model_exec` 并保留完整
-输出；随后在匹配板卡上用 canonical 运行时确认契约：X5 暴露一个 packed
+输出；随后在匹配板卡上用 运行时确认契约：X5 暴露一个 packed
 NV12 输入与 F32 `[1,1000,1,1]` 输出；S100/S600 暴露 Y `[1,224,224,1]`、
 UV `[1,112,112,2]` 与 F32 `[1,1000]` 输出；输出语义为原始 logits
 （softmax 由运行时任务施加）。

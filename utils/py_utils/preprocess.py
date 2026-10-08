@@ -54,26 +54,9 @@ def bgr_to_nv12_planes(image: np.ndarray) -> tuple:
             - y: Y plane with shape `(1, H, W, 1)`.
             - uv: UV plane with shape `(1, H/2, W/2, 2)`.
     """
-    height, width = image.shape[:2]
-    area = height * width
+    from utils.py_utils.image import bgr_to_nv12_planes as convert
 
-    # Convert to planar YUV I420 format
-    yuv420p = cv2.cvtColor(image, cv2.COLOR_BGR2YUV_I420)
-    yuv420p = yuv420p.reshape((area * 3 // 2,))
-
-    # Extract Y, U, V planes
-    y = yuv420p[:area].reshape((height, width))
-    u = yuv420p[area:area + area // 4].reshape((height // 2, width // 2))
-    v = yuv420p[area + area // 4:].reshape((height // 2, width // 2))
-
-    # Interleave U and V to form UV plane
-    uv = np.stack((u, v), axis=-1)
-
-    # Add batch and channel dimensions
-    y = y[np.newaxis, :, :, np.newaxis]
-    uv = uv[np.newaxis, :, :, :]
-
-    return y, uv
+    return convert(image)
 
 
 def resized_image(img: np.ndarray, input_W: int, input_H: int,

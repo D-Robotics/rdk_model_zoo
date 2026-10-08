@@ -2,6 +2,33 @@
 
 [English](README.md)
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── tests/  # 自动化测试
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── application.cc  # 源码或数据文件
+├── cli_io.cc  # 源码或数据文件
+├── cli_io.hpp  # 源码或数据文件
+├── launcher.py  # Python 脚本
+├── main.cc  # 源码或数据文件
+├── model_preflight.cc  # 源码或数据文件
+├── policy.cc  # 源码或数据文件
+├── policy.hpp  # 源码或数据文件
+├── run.sh  # 运行示例
+├── sdk_runner.cc  # 源码或数据文件
+└── sdk_runner.hpp  # 源码或数据文件
+```
+
 <a id="supported-boards"></a>
 ## 支持板型与验证状态
 

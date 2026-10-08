@@ -37,6 +37,22 @@ ResNet 由 Kaiming He、Xiangyu Zhang、Shaoqing Ren 和 Jian Sun 提出。残�
 的残差基础块（左，两个 3×3 卷积）与 ResNet-50/101/152 的瓶颈构建块
 （右，1×1 → 3×3 → 1×1），即 ResNet 论文图 5。*
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+resnet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -136,17 +152,6 @@ X5 发布（x5-v1.1.3）的 ResNet18 记录。源文档未注明延迟/FPS 的�
 [white_wolf.JPEG](test_data/white_wolf.JPEG) 的 Rank-1 为 `white wolf`，
 其后依次为 Arctic fox、timber wolf、Samoyed、polar bear。*
 
-<a id="directory"></a>
-## 目录职责
-
-- [model/](model/README_cn.md) — Manifest 驱动的制品下载，不提交二进制
-- [runtime/python/](runtime/python/README_cn.md) — canonical Python 入口与任务模块
-- [runtime/cpp/](runtime/cpp/README_cn.md) — S 系列 C++ 源码、CMake、启动脚本
-- [conversion/](conversion/README_cn.md) — ONNX 导出与 OE 转换记录
-- [evaluator/](evaluator/README_cn.md) — 主机检查与功能性板端检查
-- `test_data/` — 随仓测试图（[white_wolf.JPEG](test_data/white_wolf.JPEG)、[zebra_cls.jpg](test_data/zebra_cls.jpg)）
-- `tests/` — 主机 unittest 套件
-
 <a id="entry-points"></a>
 ## 入口索引
 
@@ -167,15 +172,11 @@ ResNet18/50/152，其模型/权重许可由 TorchVision 发行版约定（见上
 <a id="readable-example"></a>
 ## 可读范例与自定义模型
 
-本 sample 是两个可读模型范例之一：完整分类流程（初始化、`preprocess`、
-`infer`、`postprocess`、`predict`）在
-[`runtime/python/classify.py`](runtime/python/classify.py) 中可见；
-`main.py` 保持薄入口（解析参数、构造 `ResNetClassifier`、调用 `predict`、
-展示结果）。自训练分类模型经 `model_binding.custom_selection` 接入，无需
-Manifest 注册；predict 接受图片路径或 BGR 数组。官方模型运行、自训练权重
-接入、修改业务调用三条路径见
-[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)。
-范围说明：本 CLI 只覆盖官方 Manifest 合同；自训练模型经库调用接入
-（`model_binding.custom_selection` → `classify.ResNetClassifier`），不扩展
-CLI。图片路径输入便利适用于本范例与 YOLO 的 DFL 检测；YOLO 其他
-任务沿用既有数组接口。
+[`runtime/python/main.py`](runtime/python/main.py) 负责解析参数、构造
+`ResNetClassifier`、调用 `predict` 和展示结果。
+[`runtime/python/classify.py`](runtime/python/classify.py) 包含模型加载、
+`preprocess`、`infer`、`postprocess` 和 `predict`。
+
+库接口接受图片路径或 BGR 数组。自训练分类模型通过同一文件的
+构造函数传入编译产物的路径、板卡、输入尺寸、类别数和输出策略。
+完整用法见 [Python 运行时](runtime/python/README_cn.md)。

@@ -16,6 +16,21 @@ letterboxed NV12 and return calibrated log-depth; S l/x accept normalized RGB
 featuremaps and return raw logits. Only the latter need CPU clip/scale/bias.
 Both then produce original-size **relative depth**, not calibrated metres.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+yolo26_depth/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -104,20 +119,6 @@ binding — do not merge those numbers into one benchmark. X5 HRT latency/FPS an
 the S alternate table are recorded in the evaluator README. Source graph prose
 places exp/resize in graph, while the executable source performs them on CPU;
 the executable behavior is authoritative.
-
-<a id="directory"></a>
-## Directory
-
-```text
-yolo26_depth/
-├── model/                 # manifest-backed explicit download
-├── runtime/python/        # stages, immutable context, binding, lazy runner, CLI, rendering
-├── runtime/cpp/           # X5 stage API, SDK owner, tensor/IO helpers, launcher
-├── conversion/            # export, calibration, 29 source YAMLs, X5/S compile
-├── evaluator/             # three preparation protocols, offline metrics and comparisons
-├── test_data/bus.jpg      # source image, preserved byte-for-byte
-└── tests/                 # host fixtures and native pure/fake-SDK checks
-```
 
 <a id="entry-points"></a>
 ## Entry points and integration

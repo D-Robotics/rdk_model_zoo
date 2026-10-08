@@ -2,12 +2,34 @@
 
 # Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── depth_anything_v2.py  # Python script
+├── geometry.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
 Use compatible S100 `hbm_runtime`, Python, NumPy, OpenCV and PyYAML. Listing and
 dry-run work on a host without the board SDK. The source delivery used
-NumPy 1.26.4, OpenCV 4.11.0.86 and Torch 2.3.1 (installed by its own wrapper);
+NumPy 1.26.4, OpenCV 4.11.0.86 and Torch 2.3.1 (installed by its own helper);
 this runtime installs nothing automatically. Torch was used by the source only
 for resizing and is no longer required.
 See [model preparation](../../model/README.md).
@@ -27,10 +49,10 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 ```
 
 Only the last two commands prepare/run a model. Real execution requires S100.
-The shell wrapper changes to repository root; direct Python calls resolve user
+The shell helper changes to repository root; direct Python calls resolve user
 paths from current directory. Default image/model paths are sample-relative.
 Output directory and any optional image path must not already exist. The optional
-color image may not replace any of the five canonical output files.
+color image may not replace any of the five output files.
 
 Optional source letterbox capability is exposed explicitly:
 

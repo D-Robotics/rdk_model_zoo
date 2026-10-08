@@ -8,6 +8,24 @@ S100 PP-OCRv6 模型对的原生两阶段运行时：DB 文字
 S16 检测器输出路径与随仓 PP-OCRv6 制品使用的 F32 路径，以及原有
 FreeType 字体选项与默认值。
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 适用板卡
 
@@ -58,7 +76,7 @@ cmake --build samples/vision/paddle_ocr/runtime/cpp/build --parallel
 bash samples/vision/paddle_ocr/runtime/cpp/run.sh
 ```
 
-启动脚本解析 canonical 测试图、词典与字体的绝对路径，用户参数转发在
+启动脚本解析 测试图、词典与字体的绝对路径，用户参数转发在
 其后，显式参数优先生效：
 
 ```bash
@@ -85,7 +103,7 @@ samples/vision/paddle_ocr/runtime/cpp/build/paddle_ocr \
 <a id="parameters"></a>
 ## 参数
 
-`paddle_ocr` 二进制的原生 gflags（启动脚本会用 canonical 绝对路径
+`paddle_ocr` 二进制的原生 gflags（启动脚本会用 绝对路径
 覆盖前四项；默认值为源值）：
 
 | 参数 | 类型 | 默认值 | 说明 |

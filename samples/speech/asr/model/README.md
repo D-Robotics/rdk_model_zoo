@@ -14,6 +14,17 @@ Both URLs come from the [active S manifest](../../../../docs/release/s/models.ya
 which has no publisher SHA-256 field. There is no X5/S100P artifact. A local
 SHA-256 digest identifies the downloaded bytes.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Explicit download
 

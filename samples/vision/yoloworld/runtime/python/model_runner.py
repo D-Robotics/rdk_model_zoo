@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Callable
 import numpy as np
-from samples._shared.model_runner import _default_runtime_factory
-from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.model_runner import _default_runtime_factory
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 from samples.vision.yoloworld.runtime.python.model_binding import ModelBinding, ModelSelection, bind_model
 
 class RuntimeModelRunner:
@@ -28,8 +28,8 @@ class RuntimeModelRunner:
             # Real execution path: identity and publication gates run before the
             # SDK factory is constructed.  An injected factory is the documented
             # host seam and the only way to skip them.
-            from samples._shared.platforms import require_execution_target
-            from samples._shared.assets import verify_asset_file
+            from utils.py_utils.platforms import require_execution_target
+            from utils.py_utils.assets import verify_asset_file
             require_execution_target(self.selection.target)
             verify_asset_file(self.selection.asset, self.selection.model_path)
         try:

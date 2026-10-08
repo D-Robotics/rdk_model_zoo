@@ -25,6 +25,19 @@ Capture `obs_history` after deployment-equivalent clipping, scaling, joint
 ordering, and history stacking. Recorded actions must be the unscaled policy
 output.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── compare_action_dumps.py  # Python script
+├── compare_jit_onnx.py  # Python script
+├── metrics.py  # Python script
+└── prepare_runtime_inputs.py  # Python script
+```
+
 <a id="environment"></a>
 ## Files
 

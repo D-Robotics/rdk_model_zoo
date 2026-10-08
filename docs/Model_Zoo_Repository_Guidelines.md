@@ -1226,7 +1226,7 @@ add_definitions(-DSOC_${SOC_NAME_UPPER})
 
 #### python
 
-develop 上平台身份由 `samples/_shared/platforms.py` 统一解析：按板卡事实
+develop 上平台身份由 `utils/py_utils/platforms.py` 统一解析：按板卡事实
 （`/sys/class/boardinfo/soc_name` → socinfo → device-tree）识别，S100P 用 board_type
 细分；**无法识别时显式报错，不提供默认回退**。sample 通过
 `--target auto|x5|s100|s100p|s600` 选择硬件，`auto` 同样只做板卡事实识别，不猜测。
@@ -1244,7 +1244,7 @@ develop 上平台身份由 `samples/_shared/platforms.py` 统一解析：按板�
                         help="""Path to BPU Quantized *.hbm Model.""")
 ```
 
-统一架构下模型路径经资产绑定（`samples/_shared/assets.py`，清单驱动）解析，
+统一架构下模型路径经资产绑定（`utils/py_utils/assets.py`，清单驱动）解析，
 `--target` 决定绑定契约；上述动态构造仅示意平台相关参数不硬编码的原则。
 
 

@@ -5,6 +5,20 @@
 
 Use the matching PyTorch/timm RepGhost checkpoint and record its version, revision and digest before exporting each variant.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── RepGhost_100.yaml  # Configuration
+├── RepGhost_111.yaml  # Configuration
+├── RepGhost_130.yaml  # Configuration
+├── RepGhost_150.yaml  # Configuration
+└── RepGhost_200.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

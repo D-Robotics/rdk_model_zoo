@@ -11,6 +11,18 @@ The upstream source is [ChaoningZhang/MobileSAM](https://github.com/ChaoningZhan
 
 Preprocessing is RGB resize to 512×512 followed by ImageNet normalization in channel order: mean `[123.675,116.28,103.53]`, standard deviation `[58.395,57.12,57.375]`. The source default box is `[185,120,380,445]` in the 512-pixel coordinate system. The decoder box remains a runtime input; it is not baked into the ONNX graph.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── configs/  # Files for configs
+├── scripts/  # Files for scripts
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── SOURCE_MAP.json  # Structured data
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -207,4 +219,4 @@ Generated ONNX, calibration tensors, quantizer metadata, and compiled models rem
 
 ## Provenance
 
-The source-to-unified mapping and SHA-256 records are in [`SOURCE_MAP.json`](./SOURCE_MAP.json). Existing Apache-2.0 source notices remain represented by the source-derived files; wrapper code follows the repository license.
+The source-to-unified mapping and SHA-256 records are in [`SOURCE_MAP.json`](./SOURCE_MAP.json). Existing Apache-2.0 source notices remain represented by the source-derived files; helper code follows the repository license.

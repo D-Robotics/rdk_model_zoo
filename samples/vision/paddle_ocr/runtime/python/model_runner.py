@@ -108,7 +108,7 @@ class RuntimeStageRunner:
         # about the current machine.  Production construction checks the exact
         # execution target immediately before importing/constructing the SDK.
         if self._runtime is None and self._runtime_factory is None:
-            from samples._shared.platforms import require_execution_target
+            from utils.py_utils.platforms import require_execution_target
 
             require_execution_target(self.pair.target)
 

@@ -1,5 +1,21 @@
 # Python 运行（fixture）
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── main.py  # 命令行入口
+└── task.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

@@ -36,7 +36,22 @@ from samples.vision.fastvit.runtime.python.model_binding import (  # noqa: E402
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the requested mode and return zero on success, two on user error."""
+    """Run the requested FastViT command and return its exit status.
+
+    Args:
+        argv: Optional command-line argument sequence, excluding the program name.
+            None reads sys.argv through argparse.
+
+    Returns:
+        int: 0 for success; 2 for a reported selection, IO, or runtime error.
+
+    Raises:
+        SystemExit: argparse handles --help or rejects invalid arguments.
+
+    Notes:
+        List and dry-run modes do not load a model. Inference prints Top-K
+        results and writes an annotated image only when --img-save-path is set.
+    """
 
     args = build_parser().parse_args(argv)
     if args.list_models:
@@ -56,7 +71,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         # A path existing on disk is not execution authorization.  Require the
         # exact detected board before touching hbm_runtime.
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
 

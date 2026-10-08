@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from samples._shared.assets import download_asset, list_assets, sha256_file
+from utils.py_utils.assets import download_asset, list_assets, sha256_file
 from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary
 from samples.speech.paraformer.runtime.python.model_binding import (
     resolve_selections,

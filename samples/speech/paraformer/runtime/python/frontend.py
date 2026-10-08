@@ -7,7 +7,7 @@ from threading import RLock
 
 import numpy as np
 
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.speech.paraformer.runtime.python.model_binding import LOCAL_DIGESTS
 
 _RNG_LOCK = RLock()

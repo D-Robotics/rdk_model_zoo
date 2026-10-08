@@ -6,6 +6,15 @@
 
 ## 交付文档口径（2026-10-07）
 
+### 阅读顺序（2026-10-08）
+
+以 [Sample 交付规范](sample-delivery.md) 为当前统一框架：模型介绍与来源在前，
+当前目录结构其次，使用方法随后。Sample 根的 `directory` 紧随 `overview`；
+conversion 的 `directory` 紧随 `source-model`；model 的 `directory` 紧随 `artifacts`；
+evaluator 的 `directory` 紧随 `dataset`。Python/C++ runtime 以 `overview`、`directory`
+开头，再分别进入环境/板卡、构建和运行说明。各层级的中英文模板同步采用此顺序。
+下方内容表仍列必答内容，章节呈现顺序以本段和模板为准。
+
 README 直接介绍当前交付物的用途、适用板卡、模型准备、编译、运行、输入输出和开发接口。
 迁移经过、审计过程、测试是否执行、评审结论和发布提升状态放在独立维护记录中，不写入 README。
 技术前提以具体操作表达：给出所需 SDK、工具链、校准数据、模型配置和真实可用的入口。
@@ -57,8 +66,8 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 ## Quick Start                   <!-- 英文版 -->
 ```
 
-模板（`docs/sample-standards/templates/`）给出各级的全部固定 ID；新增章节追加在尾部，
-不得插入中间或复用既有 ID。删除某章节必须给出 not-applicable 理由（§1）。
+模板（`docs/sample-standards/templates/`）给出各级的全部固定 ID；章节按上述阅读顺序排列，
+新增专题放在对应使用步骤之后，不复用既有 ID。删除某章节必须满足适用性要求（§1）。
 
 ## 4. 各级内容契约
 

@@ -12,6 +12,23 @@ timm `mobilenetv4_conv_small` 与 `mobilenetv4_conv_medium` 预训练
 `[1,3,224,224]`、medium 为 `[1,3,256,256]`——X5 medium 的几何差异
 见[补充准备](#known-gaps)。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── MobileNetV4_medium.yaml  # 配置
+├── MobileNetV4_small.yaml  # 配置
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── get_calibration_data.py  # Python 脚本
+├── get_mobilenetv4_onnx.py  # Python 脚本
+├── mobilenetv4_medium_config.yaml  # 配置
+├── mobilenetv4_small_config.yaml  # 配置
+├── timm2onnx_local.py  # Python 脚本
+└── x86_medium_inference.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -37,6 +54,7 @@ python3 get_mobilenetv4_onnx.py    # -> mobilenetv4_conv_small.onnx + mobilenetv
 
 导出器使用 onnx-simplifier 并打印参数量（small 3,761,480 / medium
 9,681,560）。
+
 <a id="calibration"></a>
 ## 校准
 
@@ -83,7 +101,7 @@ S600 变体只需把 S 侧 YAML 中的 march 改为 `nash-p`。上表 march 取�
 ## 验证
 
 对再生成制品，按 OE 手册执行 `hb_perf` 与 `hrt_model_exec` 并保留完整
-输出；随后在匹配板卡上用 canonical 运行时确认契约。输入 shape 按
+输出；随后在匹配板卡上用 运行时确认契约。输入 shape 按
 目标×变体给出——与运行时契约表及已发布制品文件名一致：
 
 | 目标 / 变体 | metadata 暴露的输入 | 输出 |
@@ -92,8 +110,7 @@ S600 变体只需把 S 侧 YAML 中的 march 改为 `nash-p`。上表 march 取�
 | s100/s600，small | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`mobilenetv4_small_224x224_nv12.hbm`） | F32 `[1,1000]` |
 | s100/s600，medium | **Y `[1,256,256,1]`、UV `[1,128,128,2]`**（`mobilenetv4_medium_256x256_nv12.hbm`） | F32 `[1,1000]` |
 
-若用上表 224 的 shape 去验收正确的 S medium 制品属于验收错误——S medium
-输入是 256x256。输出语义为原始 logits（softmax 由运行时任务施加）。
+S medium 使用 256x256 输入。输出为原始 logits，由运行时任务施加 softmax。
 
 原 S 构建的已发布量化记录（量化后余弦相似度）：
 

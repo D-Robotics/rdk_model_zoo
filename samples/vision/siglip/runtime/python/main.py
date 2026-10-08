@@ -44,7 +44,7 @@ def main(argv=None) -> int:
             model_path=args.model_path, submodel=args.submodel, image_size=args.image_size)
         if args.dry_run:
             return run_dry_run(selection)
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
         require_execution_target(selection.target)
         if not selection.model_path.is_file():
             raise FileNotFoundError(f'Model not found: {selection.model_path}; prepare it explicitly with model/download.sh.')

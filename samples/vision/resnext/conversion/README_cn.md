@@ -5,6 +5,16 @@
 
 ResNeXt 源引用 timm resnext50_32x4d 与 ONNX 简化，但没有可执行导出、固定包/权重版本或摘要。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── ResNeXt50_32x4d_config.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

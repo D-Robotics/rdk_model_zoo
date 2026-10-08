@@ -1,7 +1,7 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Lazy YOLOv5 SDK adapter; both fixed source platforms use named containers."""
-from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
 from .model_binding import bind_model, validate_tensors
 
 
@@ -18,11 +18,11 @@ class RuntimeModelRunner:
         """Return the exact binding; mismatch fails before any inference."""
         if self.binding is not None:return self.binding
         if self._factory is None:
-            from samples._shared.platforms import require_execution_target
-            from samples._shared.assets import verify_asset_file
+            from utils.py_utils.platforms import require_execution_target
+            from utils.py_utils.assets import verify_asset_file
             require_execution_target(self.selection.target)
             verify_asset_file(self.selection.asset,self.selection.model_path)
-            from samples._shared.model_runner import _default_runtime_factory
+            from utils.py_utils.model_runner import _default_runtime_factory
             factory=_default_runtime_factory()
         else:factory=self._factory
         runtime=factory(str(self.selection.model_path))

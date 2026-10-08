@@ -4,7 +4,7 @@
 
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils import (
+from utils.py_utils import (
     postprocess as post,
 )
 from samples.vision.ultralytics_yolo.runtime.python.geometry import inverse_boxes

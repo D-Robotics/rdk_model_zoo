@@ -31,6 +31,18 @@ S100 识别器组合，也不能互相替换词典。S100 YAML 也可以把 `mar
   [`test_data/s100/ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt)
   （加 blank 与末尾空格）解码。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── s100/  # s100 相关文件
+├── scripts/  # scripts 相关文件
+├── x5/  # x5 相关文件
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

@@ -7,6 +7,21 @@ English | [简体中文](./README_cn.md)
 
 LPRNet recognizes a cropped license-plate tensor as a character sequence without a separate character detector. The runtime consumes a pre-packed `float32` file reshaped to `1x3x24x94`; it performs no image decoding, resize, or normalization. The source paper is [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+lprnet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support and verification matrix
 
@@ -40,19 +55,6 @@ The first command writes `model/lpr.bin` and reports the observed hash; the mani
 ## Expected results
 
 Successful inference exits with code `0` and prints a JSON object containing `target`, the qualified `asset_id`, and a decoded `plate` string. The exact plate is model/input dependent and is not fabricated here; `test_data/example.jpg` is only the visual reference shipped by the source, while `test_input.dat` is the actual runtime input.
-
-<a id="directory"></a>
-## Directory
-
-```text
-.
-├── model/                 # explicit model preparation and model notes
-├── runtime/python/        # binding, lazy runner, task, CLI, and run.sh
-├── conversion/            # source conversion facts and unavailable recipe
-├── evaluator/             # self-contained raw/text comparison utility
-├── test_data/              # source test_input.dat and example.jpg
-└── tests/                 # host CTC, metadata, task, and CLI fixtures
-```
 
 <a id="entry-points"></a>
 ## Entry points

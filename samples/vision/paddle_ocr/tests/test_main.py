@@ -61,7 +61,7 @@ class MainTests(unittest.TestCase):
 
         args = cli.build_parser().parse_args(["--target", "auto"])
         with patch(
-            "samples._shared.platforms.resolve_target", return_value="x5"
+            "utils.py_utils.platforms.resolve_target", return_value="x5"
         ) as resolve_target:
             pair = cli.resolve_pair_from_args(args, for_execution=True)
         self.assertEqual(pair.target, "x5")

@@ -19,7 +19,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / "samples/vision/3dresnet"
@@ -323,7 +323,7 @@ class LabelsAndCLITests(unittest.TestCase):
 
         runtime = FakeRuntime()
         real_runner = model_runner.RuntimeModelRunner
-        with tempfile.TemporaryDirectory() as temp, patch("samples._shared.platforms.detect_target", return_value="s100"), patch.object(
+        with tempfile.TemporaryDirectory() as temp, patch("utils.py_utils.platforms.detect_target", return_value="s100"), patch.object(
             model_runner, "RuntimeModelRunner", lambda selection: real_runner(selection, runtime=runtime)
         ):
             model_path = Path(temp) / "r3d_18.hbm"
@@ -348,7 +348,7 @@ class LabelsAndCLITests(unittest.TestCase):
         main = local_module("main")
         model_runner = local_module("model_runner")
 
-        with patch("samples._shared.platforms.detect_target", return_value=None), patch.object(
+        with patch("utils.py_utils.platforms.detect_target", return_value=None), patch.object(
             model_runner, "RuntimeModelRunner", side_effect=AssertionError("runner must not construct")
         ):
             self.assertEqual(main.main([

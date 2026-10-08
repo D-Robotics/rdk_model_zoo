@@ -9,6 +9,21 @@ DiffusionDrive combines a three-camera RGB panorama, LiDAR BEV histogram, ego st
 
 Source algorithm references: [official DiffusionDrive project](https://github.com/hustvl/DiffusionDrive), [CVPR2025 paper](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html), and [NAVSIM](https://github.com/autonomousvision/navsim). Use them as algorithm references; the deployable artifact identity is defined by the published HBM checksums in the [model guide](model/README.md).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+diffusiondrive/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -23,7 +38,7 @@ There is no native C++ source for this sample. The two published HBM digests are
 <a id="prerequisites"></a>
 ## Prerequisites
 
-For real inference prepare the matching S100P/S600 runtime with `hbm_runtime`, Python, NumPy and OpenCV, and explicitly download the target model. The [model guide](model/README.md) documents paths and checksums. Host inspection and offline comparison do not need the SDK. Neither runtime wrapper installs dependencies or downloads models.
+For real inference prepare the matching S100P/S600 runtime with `hbm_runtime`, Python, NumPy and OpenCV, and explicitly download the target model. The [model guide](model/README.md) documents paths and checksums. Host inspection and offline comparison do not need the SDK. Prepare dependencies and model files with the commands below.
 
 The supplied NPZ inputs already contain camera/LiDAR/status/noise features. Do not substitute raw sensor images or point clouds; no raw NAVSIM feature builder is bundled. Conversion is optional for published artifacts and has missing export/calibration prerequisites described in [conversion](conversion/README.md).
 
@@ -49,7 +64,7 @@ On a prepared S600, run the default case with a new directory:
 bash samples/vision/diffusiondrive/runtime/python/run.sh --target s600 --output outputs/diffusiondrive
 ```
 
-Run all five source cases, or add `--dry-run` for host-only command/input inspection:
+Run all five source cases, or add `--dry-run` for command/input inspection:
 
 ```bash
 bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
@@ -76,22 +91,10 @@ S600 reference visualization:
 
 All six input/reference pairs and six result images are retained byte-for-byte. The [evaluator guide](evaluator/README.md#reference-results) preserves the complete original S100P/S600 accuracy/performance table, including one-thread latency, two-thread aggregate throughput and five-case S100P means. The [test-data guide](test_data/README.md) preserves the five-case S600 table. Source-recorded conditions: accuracy comparisons use case_000 and profiling uses case_017; the source records all segments at CPU 0.0 ms with full-BPU execution.
 
-<a id="directory"></a>
-## Directory responsibilities
-
-| Directory | Content |
-| --- | --- |
-| [model](model/README.md) | Exact target assets, SHA256SUMS, explicit downloads |
-| [runtime/python](runtime/python/README.md) | CLI, batch entry, strict four-input/four-output binding, task stages and separate rendering |
-| [conversion](conversion/README.md) | Two preserved OE3.7.0 PTQ configs and missing export/calibration prerequisites |
-| [evaluator](evaluator/README.md) | Strict offline decoded-versus-float metrics, with shape and finite-value checks |
-| [test_data](test_data/README.md) | Default and five deterministic NAVSIM feature/reference cases, source-recorded result images |
-| [tests](tests) | Host source parity, quantization, CLI, batch and evaluator tests |
-
 <a id="entry-points"></a>
 ## Entry points for people and agents
 
-Use `DiffusionDriveTask.predict`, or the stages `preprocess` → `infer` → `postprocess` that it composes; the `pre_process`/`forward`/`post_process` spellings remain importable compatibility aliases of the same implementation. The task handles planning tensor semantics only; SDK loading/scheduling, NPZ IO, download, rendering and metrics are outside it. The shared `NamedArrayRunner` preserves all named physical tensors and checks board/artifact identity. A [complete API example](runtime/python/README.md#integration-example) shows variables and input loading.
+Use `DiffusionDriveTask.predict`, or the stages `preprocess` → `infer` → `postprocess` that it composes; the `pre_process`/`forward`/`post_process` spellings remain importable aliases of the same implementation. The task handles planning tensor semantics only; SDK loading/scheduling, NPZ IO, download, rendering and metrics are outside it. The shared `NamedArrayRunner` preserves all named physical tensors and checks board/artifact identity. A [complete API example](runtime/python/README.md#integration-example) shows variables and input loading.
 
 Quantization checks per-axis scales and scalar zero points, rejects malformed or negative scales, and clips integer values before casting. The evaluator requires matching shapes; cosine similarity is undefined when either vector has zero norm.
 

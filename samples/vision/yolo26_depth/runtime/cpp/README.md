@@ -7,6 +7,25 @@ separate from the task's preprocessing, forward, postprocessing and predict API.
 The source's native capability and positional command form are retained; output
 arrays now also have NumPy headers for direct offline evaluation.
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── launcher.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards and validation
 
@@ -174,7 +193,7 @@ failure output may exist only on stderr; a partial directory is not success.
 
 Timing covers one complete forward including buffer copies, cache operations,
 SDK calls and raw output copying. It is not source HRT BPU-only timing. Depth is
-relative, colors are not metres, and a plausible image is not an accuracy test.
+relative, colors are not metres, and depth quality is evaluated with the dataset metrics.
 
 Host tests compile pure geometry/tensor/CLI/serialization code and the real owner
 against intentionally minimal fake SDK headers. They exercise thirteen injected

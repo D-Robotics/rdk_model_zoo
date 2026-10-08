@@ -12,6 +12,21 @@ PointNet 为每个 XYZ 点预测四类椅子部件之一：`back`、`seat`、`le
 说明算法；交付模型参考[S100 PointNet 项目](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official)。
 HBM 需单独下载，Git 仓库没有附带模型文件。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+pointnet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -54,16 +69,6 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100
 图像看起来合理不能代替精度评估。
 
 ![参考椅子分割结果](test_data/readme_img/chair_res.png)
-
-<a id="directory"></a>
-## 目录职责
-
-- `model/`：显式下载及制品身份。
-- `runtime/python/`：CLI、绘图、独立 binding/runner 和四阶段模型类。
-- `conversion/`：保留网络/算子说明，并列出转换缺失前提。
-- `evaluator/`：功能检查与源记录性能；数据集评估另行准备。
-- `test_data/`：原始椅子点云和参考图。
-- `tests/`：不依赖 SDK 的数值与异常边界测试。
 
 <a id="entry-points"></a>
 ## 入口索引

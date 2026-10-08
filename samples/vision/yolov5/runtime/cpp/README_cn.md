@@ -8,6 +8,25 @@ dump，并交给独立的 OpenCV 可视化模块渲染。发布事实由 `launch
 `samples.vision.yolov5.runtime.python.model_binding` 解析；原生二进制不会根据
 文件名猜测布局。
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── include/  # include 相关文件
+├── src/  # src 相关文件
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── launcher.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 支持板卡
 
@@ -140,7 +159,7 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
   `--score-thres`，每类上限 `top_k = 300`。S 保留源 `nms_bboxes` 行为：等于
   `--score-thres` 保留，且无每类上限。
 - **预处理。** 两个原生 adapter 均使用 letterbox；统一 Python 路径默认 stretch。
-  这是有意的源兼容选择，并不表示两者数值完全一致。
+  这是有意的选择，并不表示两者数值完全一致。
 - **调度。** 固定 S 源把 `priority` 强制写 0；统一 S adapter 应用调用方的
   `--priority`/`--bpu-core`，使文档参数真实生效。`--bpu-core` 是核**索引**
   （`-1` = 任意，`0..3`），并显式转换为 SDK 的 backend 位掩码

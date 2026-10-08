@@ -114,7 +114,7 @@ class ModelRunner:
             # cannot load a board model on an unknown or mismatched host by
             # bypassing that entrypoint, then imports the SDK and constructs
             # the model.
-            from samples._shared.runtime import RuntimeSession
+            from utils.py_utils.runtime import RuntimeSession
 
             requested = selection.target
             if requested is None:

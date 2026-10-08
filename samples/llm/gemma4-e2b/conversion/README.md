@@ -13,6 +13,19 @@ The model source is `google/gemma-4-e2b`; follow full tutorial §3.4 for weight 
 Commands here start in `samples/llm/gemma4-e2b` (sample root) unless a code block changes directory explicitly.
 The quantization workflow is the tutorial's own; run it in the OE environment when preparing artifacts.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── leap_llm_gemma4/  # Files for leap_llm_gemma4
+├── scripts/  # Files for scripts
+├── QUANTIZATION_TUTORIAL.md  # Documentation
+├── QUANTIZATION_TUTORIAL_zh.md  # Documentation
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Requirements
 
@@ -26,7 +39,7 @@ The quantization workflow is the tutorial's own; run it in the OE environment wh
 ## Target SoCs
 
 The same conversion entry points support all three RDK S targets. `TARGET_SOC`
-defaults to `s100p` for backward compatibility.
+defaults to `s100p` by default.
 
 | `TARGET_SOC` | HBDK march | Vision cores | Text prefill / decode cores |
 | --- | --- | ---: | ---: |

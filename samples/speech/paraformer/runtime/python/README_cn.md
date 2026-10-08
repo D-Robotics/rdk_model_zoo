@@ -15,6 +15,33 @@ Python 流水线组合 CPU 音频前端、CIF（连续积分触发）桥接、�
 结果/失败记录。`application.run`/`application.execute` 保留为同一助手的兼容
 组合。
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── application.py  # Python 脚本
+├── cif.py  # Python 脚本
+├── cli.py  # 参数与结果展示
+├── decoding.py  # Python 脚本
+├── frontend.py  # Python 脚本
+├── input_io.py  # Python 脚本
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── pipeline.py  # Python 脚本
+├── requirements-frontend.txt  # 源码或数据文件
+├── run.sh  # 运行示例
+├── runtime.py  # Python 脚本
+└── stages.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ### 显式安装依赖
 
@@ -142,7 +169,7 @@ argparse 提供 `-h`／`--help`。三个模式参数互斥。清单必须非空�
   `frontend_ms` 不含文件加载，各阶段计时也不是完整端到端延迟。
 - 输出目录创建后失败会写 `failed.json`，包含当前语音、此前已完成条目、错误类型／
   消息与已采集身份。前置检查可能在创建目录前失败，只输出 stderr；磁盘满或不可写
-  导致失败记录也无法保存时，会同时报告这项错误，不保证凭空生成证据。
+  导致失败记录无法保存时，请修复输出目录权限或磁盘空间后重试。
 
 `inference_attempted` 表示进入过推理流程；`inference_executed` 在预处理时为 false，
 成功获得推理结果后为 true，首轮尝试失败、无法确认执行完成时为 null。如果此前已有
@@ -151,7 +178,7 @@ argparse 提供 `-h`／`--help`。三个模式参数互斥。清单必须非空�
 
 成功完成前复核音频、清单、CMVN、词表和模型字节未变化。已有输出目录拒绝使用；
 中断运行可能保留部分特征，不能当作已完成。请选择全新输出路径，保留原证据。
-机器读取应使用 `result.json`；FunASR 可能在 stdout 输出依赖提示，stdout 不保证纯 JSON。
+程序集成请读取 `result.json`；stdout 包含运行提示和结果摘要。
 
 <a id="integration-example"></a>
 ### 可执行的合成流程示例
@@ -290,7 +317,7 @@ print(result.text, prepared.truncated)
 调度可选。`priority` 为 0–255 整数，`bpu_cores` 为非空的非负整数序列；
 实际硬件／核心组合由 SDK 判断。参数以模型名为键传递给**全部三个模型**。
 任一 SDK 缺少 setter 时，在调用任何 setter 前拒绝。非法值由共享 runner 拒绝；
-SDK 执行错误直接上抛，若前面的模型已接受设置，不保证回滚。两个参数均省略时
+调度设置逐模型生效；发生 SDK 错误后请重新设置各模型的调度参数。两个参数均省略时
 不调用 SDK setter。
 
 ## 真实 CPU 音频前端
@@ -343,7 +370,7 @@ fbank。输入为已加载的有限 float32 数组 `[samples]` 或 `[samples,cha
 
 [stages.py](stages.py) 提供 `pipeline.encoder_stage`、`predictor_stage` 和
 `decoder_stage`，每个阶段均有规范拼写 `preprocess`、`infer`、`postprocess`；
-既有 `pre_process`、`forward`、`post_process` 保留为同一实现的兼容别名。
+
 前处理返回 `PreparedInput.tensors`，数组具有独立存储；decoder 还将本次 token
 数量保存在整数 `PreparedInput.context` 中，后处理必须传入同一调用的 context。
 阶段对象不保存会被后一次调用覆盖的上下文。encoder 后处理返回独立 context 数组，

@@ -13,7 +13,7 @@ import re
 import unittest
 from pathlib import Path
 
-from samples._shared.assets import _ROOT, list_assets
+from utils.py_utils.assets import _ROOT, list_assets
 
 CONVERSION_DIR = (
     _ROOT / "samples" / "vision" / "resnet" / "conversion"

@@ -49,6 +49,18 @@ last_action(12)
 270 维输入由当前观测和前 5 帧观测组成。裁剪、缩放、关节顺序和历史顺序必须与训练
 策略输入边界完全一致。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── export_onnx.py  # Python 脚本
+├── mapper.py  # Python 脚本
+└── prepare_calibration.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 环境
 

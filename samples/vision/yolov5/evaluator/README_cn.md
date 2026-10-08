@@ -5,6 +5,18 @@
 
 源提供 X5 的 `test_data/bus.jpg`、S 的 `test_data/kite.jpg` 以及 `coco_classes.names`，没有带标签的 mAP benchmark harness。评估器在相同图片、target、制品和阈值下比较两套实现的完整运行，是一致性证据工具，不是 mAP 评估器。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── native/  # native 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── compare.py  # Python 脚本
+└── source_reference.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -97,7 +109,7 @@ python3 samples/vision/yolov5/evaluator/native/compare_native.py \
 cwd、UTC、binary/model/image 运行前后 hash 一致；统一侧记录与 manifest
 binary hash 绑定）与观测头捕获时 hash、被背书二进制、统一 manifest 自带
 hash 与逐 payload digest 的一致性。板卡身份采用仓库**精确别名注册表**
-（docs/release/platforms.json，与 samples/_shared/platforms.py 同一契约）：
+（docs/release/platforms.json，与 utils/py_utils/platforms.py 同一契约）：
 S100P 与 s100 是不同 target，S100Whatever 等未知字符串不构成身份，X5 板经
 socinfo 名（X5U/X5H/X5M）解析。插桩 audit 校验失败时 run_capture.py **根本
 不运行**源二进制——先中止并持久化失败记录；audit 校验按完整协议执行
@@ -160,4 +172,4 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 
 评估器不下载模型、不构建转换产物，也不会把主机测试写成板端兼容。X5 刻意保留源 OpenCV XYXY-to-NMSBoxes quirk，S 使用按类 XYXY NMS；不能跨 target 要求结果相等。
 
-源端 runner 将运行前实际校验的审计字节归档为 `instrumentation-audit.json`，并在运行记录保存 `audit_file`、`audit_sha256`。副本在子进程结束后写入，以满足观测头要求输出目录初始为空的约束。请保留完整源捕获目录和统一入口进程记录目录：审计缺失或内容变化、统一入口 stdout/stderr 缺失均会拒绝比较；成功输出的 `originals/` 包含审计与双方日志。旧捕获若没有审计绑定，不能通过该检查；仅有校验通过布尔值不能代替被校验的文档。
+源端 runner 将运行前实际校验的审计字节归档为 `instrumentation-audit.json`，并在运行记录保存 `audit_file`、`audit_sha256`。副本在子进程结束后写入，以满足观测头要求输出目录初始为空的约束。请保留完整源捕获目录和统一入口进程记录目录：审计缺失或内容变化、统一入口 stdout/stderr 缺失均会拒绝比较；成功输出的 `originals/` 包含审计与双方日志。

@@ -22,6 +22,18 @@ These are the 14 original published artifacts. S rows describe the published qua
 | `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | quantized / float conversion pending |
 | `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | quantized / float conversion pending |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── vocabulary.py  # Python script
+```
+
 <a id="preparation"></a>
 ## Preparation
 

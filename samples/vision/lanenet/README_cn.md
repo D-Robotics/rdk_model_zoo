@@ -9,6 +9,21 @@ LaneNet 通过二值分割分支区分车道像素与背景，通过嵌入分支
 
 算法参考：[Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) 和 [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection)。已发布 HBM 未绑定具体上游提交：未提供该提交或模型校验和。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+lanenet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -70,19 +85,6 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 | ![源嵌入显示](test_data/instance_pred.png) | ![源二值显示](test_data/binary_pred.png) |
 
 另保留[源原生嵌入显示图](test_data/cpp_instance_pred.png)和[原生二值显示图](test_data/cpp_binary_pred.png)。显示差异本身不能证明原始数值不同，也不能证明已分离出不同车道实例。
-
-<a id="directory"></a>
-## 目录职责
-
-| 路径 | 职责 |
-| --- | --- |
-| [model](model/README_cn.md) | 精确资产身份、显式下载与校验和边界 |
-| [runtime/python](runtime/python/README_cn.md) | Python 命令行、三阶段 API、具名原始输出 |
-| [runtime/cpp](runtime/cpp/README_cn.md) | 原生构建、资源管理、保留类型的原始输出 |
-| [conversion](conversion/README_cn.md) | 保留 YAML、新校准/配置准备工具、缺失的导出前提 |
-| [evaluator](evaluator/README_cn.md) | 主机检查与评估证据的明确边界 |
-| [test_data](test_data) | 原道路图像及四幅源记录显示图 |
-| [tests](tests) | 主机数值、CLI、转换与原生故障注入夹具 |
 
 <a id="entry-points"></a>
 ## 用户与 Agent 的入口

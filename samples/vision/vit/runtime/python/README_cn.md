@@ -6,6 +6,27 @@
 `postprocess` 与 `predict`，复用共享的 NV12 打包、Top-K 数学与懒加载
 runner。
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── classify.py  # 分类前处理、推理与后处理
+├── cli.py  # 参数与结果展示
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -72,7 +93,7 @@ runner 验证同一管线。
 from pathlib import Path
 from samples.vision.vit.runtime.python.classify import ViTClassifier
 from samples.vision.vit.runtime.python.model_binding import resolve_selection
-from samples.vision.vit.runtime.python.labels import load_labels
+from utils.py_utils.labels import load_labels
 
 selection = resolve_selection("s100", variant="int8")
 labels = load_labels(Path("samples/vision/vit/test_data/cifar10_classes.names"))
@@ -84,7 +105,7 @@ print(result.class_ids, result.scores, result.labels)
 
 `predict` 接受本地图像路径或 BGR `uint8` 数组。阶段也可显式驱动
 （`preprocess`/`infer`/`postprocess`）；既有拼写为薄别名，共享的
-`ClassificationTask` 仍可从 [`classification.py`](classification.py) 导入。
+`ClassificationTask` 仍可从 [`classification.py`](../../../../../utils/py_utils/classification.py) 导入。
 
 <a id="stage-io"></a>
 ## 三阶段 I/O

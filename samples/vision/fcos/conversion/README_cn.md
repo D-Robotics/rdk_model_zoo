@@ -8,6 +8,15 @@
 - 权重：`platforms/x5` 固定快照 `ac115717197920355fc390bb04299b20e6436864`。
 - 对应关系：三个发布制品分别为 512、768、896 FCOS 变体；源 README 和截图没有给出 checkpoint 发布版或训练 commit。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

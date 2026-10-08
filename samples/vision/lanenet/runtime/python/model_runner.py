@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """LaneNet physical input declaration over the shared lazy array transport."""
 
-from samples._shared.platforms import require_execution_target
-from samples._shared.single_array_runner import (
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.single_array_runner import (
     NamedArrayRunner,
     RuntimeUnavailableError,
 )

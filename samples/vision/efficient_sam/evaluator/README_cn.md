@@ -7,6 +7,16 @@
 
 将固定的 `test_data/dogs.jpg` 分别送入固定版本的参考实现与本 Sample 运行时，在同一目标板卡比较输入张量、原始输出、掩码选择和 IoU。保持图片、模型对与调度配置一致。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── compare.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

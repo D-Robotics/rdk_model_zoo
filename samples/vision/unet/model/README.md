@@ -17,6 +17,17 @@ them in this directory.
 | ResNet101 | `unet_resnet101_voc_512x512_nv12.bin` | Published | `04031417d3d4098bceac0bb1b731a7aed099dca5c8ee0cd30527c2f6494c7215` |
 | ResNet152 | `unet_resnet152_voc_512x512_nv12.bin` | Published | `990855473e5411c2996bd7f161591dc7ba479402bcfe40c36d3fd2b10edbb32a` |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Download
 

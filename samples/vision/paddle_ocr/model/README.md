@@ -21,6 +21,15 @@ The rows live in the platform release manifests
 is no S100P or S600 PaddleOCR row, so no artifact is claimed for
 those targets.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="preparation"></a>
 ## Preparation
 

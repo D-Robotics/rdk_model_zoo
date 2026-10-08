@@ -36,6 +36,22 @@ squeeze-and-excite applied on the residual path — after the NL depthwise
 expanded channels, and the gated result passes through the final NL 1×1
 projection (the non-linearity is chosen per layer).*
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+mobilenetv3/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -114,16 +130,6 @@ Published MobileNetV3 performance on `RDK X5` (x5-v1.1.3):
 *Reference inference result from the X5 release: the
 bundled [kit_fox.JPEG](test_data/kit_fox.JPEG) ranks `kit fox` first,
 followed by red fox, grey fox, lion, and lynx/catamount.*
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — conversion record and reference configurations
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([kit_fox.JPEG](test_data/kit_fox.JPEG), [zebra_cls.jpg](test_data/zebra_cls.jpg))
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

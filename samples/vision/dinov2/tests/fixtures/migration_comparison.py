@@ -23,7 +23,7 @@ from dinov2 import Dinov2, Dinov2Config
 from samples.vision.dinov2.runtime.python.model_binding import resolve_selection
 from samples.vision.dinov2.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.dinov2.runtime.python.embedding import DINOv2Task
-from samples._shared.platforms import require_execution_target
+from utils.py_utils.platforms import require_execution_target
 
 def sha256(path):
     digest = hashlib.sha256()
@@ -74,7 +74,7 @@ for name in ('cls_feat', 'patch_feat'):
     records[name] = {'raw_protocol_equal': same_protocol, 'raw_equal': bool(raw_ok),
                      'result_equal': bool(result_ok), 'shape': list(b.shape), 'raw_dtype': str(b.dtype)}
     passed = passed and raw_ok and result_ok
-code_paths = [p for base in ('samples/vision/dinov2/runtime/python', 'samples/_shared',
+code_paths = [p for base in ('samples/vision/dinov2/runtime/python', 'utils/py_utils',
                              'platforms/s/samples/vision/dinov2/runtime/python', 'platforms/s/utils/py_utils')
               for p in (repo / base).glob('*.py')]
 report = {'started_utc': started.isoformat(), 'ended_utc': datetime.now(timezone.utc).isoformat(),

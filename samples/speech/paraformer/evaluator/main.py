@@ -12,8 +12,8 @@ import sys
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from samples._shared.assets import sha256_file
-from samples._shared.text_metrics import score_transcripts
+from utils.py_utils.assets import sha256_file
+from utils.py_utils.text_metrics import score_transcripts
 from samples.speech.paraformer.evaluator.inputs import read_manifest, load_feature
 from samples.speech.paraformer.evaluator.backends import Stage, tensor_names
 from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary

@@ -52,13 +52,13 @@ def main(argv=None) -> int:
 
         # A real execution must prove the exact detected board before any SDK
         # import; the stage runners repeat this check immediately before load.
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
 
         # Imported inside real execution: OpenCV and hbm_runtime load only
         # after the selection and board checks above have passed.
-        from samples.vision.efficient_sam.runtime.python.model_runner import RuntimeModelRunner
+        from utils.py_utils.sam_runner import RuntimeModelRunner
         from samples.vision.efficient_sam.runtime.python.pipeline import EfficientSAMPipeline
 
         image = read_bgr_image(args.test_img)

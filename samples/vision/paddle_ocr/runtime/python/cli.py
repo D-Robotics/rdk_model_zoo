@@ -141,7 +141,7 @@ def resolve_pair_from_args(
         # The library resolver stays host-independent and requires explicit
         # qualified refs for auto.  The native execution entrypoint may first
         # identify this board, then select that target's default audited pair.
-        from samples._shared.platforms import resolve_target
+        from utils.py_utils.platforms import resolve_target
 
         target = resolve_target("auto")
     return resolve_pair(
@@ -205,7 +205,7 @@ def run_prepare(args: argparse.Namespace) -> int:
     if args.det_asset_id is None or args.rec_asset_id is None:
         raise BindingError("--prepare requires both --det-asset-id and --rec-asset-id.")
     pair = resolve_pair_from_args(args)
-    from samples._shared.assets import download_asset, resolve_asset
+    from utils.py_utils.assets import download_asset, resolve_asset
 
     destinations = [
         Path(args.det_model_path).expanduser()

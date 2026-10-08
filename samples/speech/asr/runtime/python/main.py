@@ -49,10 +49,10 @@ def main(argv=None):
             raise ValueError("Invalid scheduling parameters")
         if args.dry_run:
             return run_dry_run(selection, args.decode_mode)
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
-        from samples._shared.assets import sha256_file
+        from utils.py_utils.assets import sha256_file
         from samples.speech.asr.runtime.python.audio_io import read_chunks
         from samples.speech.asr.runtime.python.asr import ASR
         from samples.speech.asr.runtime.python.model_runner import RuntimeModelRunner

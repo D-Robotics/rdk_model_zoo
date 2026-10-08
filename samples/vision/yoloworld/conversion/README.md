@@ -9,7 +9,18 @@ Bayes-E YAML, or reproducible compiler recipe. The copied
 `source/yoloworld_det.py` documents the runtime math provenance;
 it is not a conversion tool.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── source/  # Files for source
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
+
 <a id="export"></a>
 ## Toolchain targets and export
 
@@ -21,6 +32,7 @@ Neither checkpoint nor exporter is published in this repository, so no export
 command is given.
 
 <a id="calibration"></a>
+
 <a id="compile"></a>
 ## Calibration and compile
 
@@ -31,6 +43,7 @@ checkpoint identity, vocabulary generation, input names/shapes, output names,
 calibration data and SHA-256 before claiming parity.
 
 <a id="validation"></a>
+
 <a id="artifacts"></a>
 ## Validation and artifacts
 

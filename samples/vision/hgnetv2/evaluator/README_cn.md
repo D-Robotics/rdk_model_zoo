@@ -16,6 +16,16 @@ n01440764/example.JPEG,0
 
 示例必须换成真实数据标签。CSV 缺字段、非法或冲突类别会报错，路径反斜杠转换为斜杠。CSV 中未出现的图片计为未匹配，不从目录名猜标签。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── eval.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

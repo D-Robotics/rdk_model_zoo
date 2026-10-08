@@ -21,6 +21,21 @@ References: [project](https://depth-anything.github.io/),
 [paper](https://arxiv.org/abs/2406.19675),
 [upstream repository](https://github.com/DepthAnything/Depth-Anything-V2).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+depth_anything_v2/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -61,7 +76,7 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
   --output outputs/depth-anything-s100
 ```
 
-The wrapper resolves relative user paths from repository root. The output
+The helper resolves relative user paths from repository root. The output
 directory must not exist. Default input is the bundled `furseal.jpg`. Optional
 `--img-save-path result.jpg` adds a source-style color image; it must also be new.
 `auto` selects the sole S100 asset, but execution still verifies the local board.
@@ -85,18 +100,6 @@ the original docstring). Default resize is nearest-neighbor stretch. Optional
 letterbox uses linear resize/fill-127 and crops the padding before restoring
 the result. The task returns float depth; the uint8 display API is a separate
 visualization step.
-
-<a id="directory"></a>
-## Directory
-
-| Directory | Responsibility |
-| --- | --- |
-| [model](model/README.md) | Exact asset, explicit download, paths and unknown hash |
-| [runtime/python](runtime/python/README.md) | Stages, SDK runner, CLI, rendering and provenance |
-| [conversion](conversion/README.md) | Source ONNX/quantization facts and missing recipe prerequisites |
-| [evaluator](evaluator/README.md) | Source performance record and result interpretation |
-| test_data | Original furseal image and source explanatory/result figures |
-| tests | Host fixtures |
 
 <a id="entry-points"></a>
 ## Entry points

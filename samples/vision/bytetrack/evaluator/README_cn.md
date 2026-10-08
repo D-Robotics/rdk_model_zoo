@@ -5,6 +5,17 @@
 
 sample 随附静态图和参考 GIF/PNG，但没有 `track_test.mp4` 或 MOT ground-truth 目录。需从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ByteTrack/track_test.mp4` 显式准备（记录 SHA-256 为 `4bbe5bf11fe8967b28a900fd2add4949aba89b62076eaa03d0c55cdf7dd41397`，可用 `sha256sum track_test.mp4` 校验，macOS 为 `shasum -a 256 track_test.mp4`）。评估器比较两次完整的 tracker capture，不计算带标签数据集的 MOTA/IDF1。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── capture.py  # Python 脚本
+└── compare.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

@@ -2,6 +2,27 @@ English | [简体中文](./README_cn.md)
 
 # Python Runtime — SigLIP vision features
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── embedding.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+└── tensor_io.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -117,7 +138,7 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 - `postprocess`: raw output → owned ndarray with metadata-bound shape/dtype; it rejects wrong shape/dtype and NaN/Inf. This vision feature task consumes no geometry context.
 - `predict(image)` composes exactly preprocess → infer → postprocess. It does not download, save, activate, normalize, or evaluate results.
 
-The established legacy spellings `pre_process`, `forward` and `post_process` remain as thin compatibility aliases of the canonical methods above — one implementation, no second pipeline. The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, image reading, the summary and the optional NumPy save, while `main.py` parses, resolves, constructs `SigLIPTask` and calls `predict`.
+The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, image reading, the summary and the optional NumPy save, while `main.py` parses, resolves, constructs `SigLIPTask` and calls `predict`.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

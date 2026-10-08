@@ -9,6 +9,18 @@
 | --- | --- | --- | --- | --- |
 | `vargconvnet` | `vargconvnet_224x224_nv12.bin` | x5 | bin | download |
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备
 

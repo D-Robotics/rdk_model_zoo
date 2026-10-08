@@ -16,6 +16,16 @@ n01440764/example.JPEG,0
 
 Replace the example with real dataset labels. Missing, invalid or conflicting CSV categories are errors; backslashes in paths are normalized to slashes. Labels absent from the CSV are counted as unmatched, not inferred from directory names.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── eval.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

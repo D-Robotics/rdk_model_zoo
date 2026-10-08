@@ -12,6 +12,19 @@ FastViT S12/SA12/T12/T8 (paper [FastViT: A Fast Hybrid Vision Transformer
 using Structural
 Reparameterization](https://arxiv.org/abs/2303.14189)). The YAMLs consume ONNX graphs from the shared `01_common` model zoo; place the selected FastViT variant at the configured path or update `onnx_model`.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── FastViT_S12_config.yaml  # Configuration
+├── FastViT_SA12_config.yaml  # Configuration
+├── FastViT_T12_config.yaml  # Configuration
+├── FastViT_T8_config.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

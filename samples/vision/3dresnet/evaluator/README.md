@@ -9,6 +9,15 @@ The supplied functional input is the preprocessed `test_data/video0.npy` clip, s
 
 This directory does not contain the full Kinetics-400 dataset, a video decoder, frame extraction code, or a dataset download command. The clip's original acquisition and preprocessing command are not recorded.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 

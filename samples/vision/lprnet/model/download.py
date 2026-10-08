@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from samples._shared.assets import download_asset, resolve_asset
+from utils.py_utils.assets import download_asset, resolve_asset
 
 
 ASSET_ID = "x5:lprnet:lpr.bin"

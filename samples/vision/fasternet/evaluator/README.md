@@ -6,6 +6,15 @@ Use the bundled image for a single-image classification check. For dataset accur
 ## Dataset
 The functional check uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -73,7 +82,6 @@ single-core, FPS multi-threaded; CPU 8xA55@1.8GHz performance mode, BPU
 | FasterNet-T2 | 224x224 | 15.0 | 76.50% | 76.05% | 3.39 | 342.48 |
 | FasterNet-T1 | 224x224 | 7.6 | 74.29% | 71.25% | 1.96 | 708.40 |
 | FasterNet-T0 | 224x224 | 3.9 | 71.75% | 68.50% | 1.41 | 1135.13 |
-
 
 <a id="boundaries"></a>
 ## Dataset-level evaluation

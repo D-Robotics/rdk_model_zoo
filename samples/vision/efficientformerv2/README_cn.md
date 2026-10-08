@@ -38,6 +38,22 @@ EfficientFormerV2 以 MobileNet 的尺寸和速度重新审视视觉 Transformer
 基线网络，(b) 统一 FFN，(c) 改进的 MHSA，(d)(e) 更高分辨率上的注意力，
 (f) 注意力下采样。*
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+efficientformerv2/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持范围
 
@@ -113,16 +129,6 @@ RDK X5 上的已发布数值（X5 发布 x5-v1.1.3；Float Top-1 为量化前 ON
 *X5 发布的参考推理结果：随仓 [goldfish.JPEG](test_data/goldfish.JPEG) 的
 Rank-1 为 `goldfish`，其后依次为 tench、axolotl、rock beauty、
 coral reef。*
-
-<a id="directory"></a>
-## 目录职责
-
-- [model/](model/README_cn.md) — Manifest 驱动的制品下载，不检入二进制
-- [runtime/python/](runtime/python/README_cn.md) — 统一 Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — X5 PTQ 配置及模型所需准备步骤
-- [evaluator/](evaluator/README_cn.md) — 发布的基准记录与功能检查
-- `test_data/` — 随附测试图（[goldfish.JPEG](test_data/goldfish.JPEG) 及参考插图）
-- `tests/` — 主机 unittest 套件
 
 <a id="entry-points"></a>
 ## 入口

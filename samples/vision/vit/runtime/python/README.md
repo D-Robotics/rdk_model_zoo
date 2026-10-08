@@ -1,11 +1,32 @@
 # ViT Python runtime
 
-`main.py` is the canonical user-facing command: it parses arguments,
+`main.py` is the user-facing command: it parses arguments,
 constructs the model, calls `predict`, and shows the result. The complete
 classification flow lives in [`classify.py`](classify.py):
 `ViTClassifier` shows initialization, `preprocess`, `infer`, `postprocess` and
 `predict` in one readable file, reusing the shared NV12 packing, Top-K
 math and lazy runner.
+
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── classify.py  # Classification preprocessing, inference, and postprocessing
+├── cli.py  # Arguments and result presentation
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+└── run.sh  # Run the sample
+```
 
 <a id="environment"></a>
 ## Environment
@@ -29,7 +50,7 @@ python3 samples/vision/vit/runtime/python/main.py
 python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 --test-img samples/vision/vit/test_data/airplane_0000.png --label-file samples/vision/vit/test_data/cifar10_classes.names --top-k 5
 ```
 
-Host-only inspection:
+Inspect the command:
 
 ```bash
 python3 samples/vision/vit/runtime/python/main.py --list-models
@@ -73,7 +94,7 @@ The same pipeline is exercised with an injected host runner in tests.
 from pathlib import Path
 from samples.vision.vit.runtime.python.classify import ViTClassifier
 from samples.vision.vit.runtime.python.model_binding import resolve_selection
-from samples.vision.vit.runtime.python.labels import load_labels
+from utils.py_utils.labels import load_labels
 
 selection = resolve_selection("s100", variant="int8")
 labels = load_labels(Path("samples/vision/vit/test_data/cifar10_classes.names"))
@@ -87,7 +108,7 @@ print(result.class_ids, result.scores, result.labels)
 can also be driven explicitly (`preprocess`/`infer`/`postprocess`); the
 established `pre_process`/`forward`/`post_process` spellings are thin
 aliases, and the shared `ClassificationTask` stays importable from
-[`classification.py`](classification.py).
+[`classification.py`](../../../../../utils/py_utils/classification.py).
 
 <a id="stage-io"></a>
 ## Stage I/O

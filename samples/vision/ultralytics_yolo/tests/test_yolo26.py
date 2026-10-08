@@ -103,12 +103,12 @@ class Yolo26Contracts(unittest.TestCase):
                 with self.subTest(task=task):
                     args=main.build_parser().parse_args(['--family','yolo26','--task',task,'--platform','x5','--img-save-path',str(Path(directory)/(task+'.jpg'))])
                     model=MagicMock();model.predict.return_value=result;model.contract.classes=len(['test'])
-                    with patch('yolo_dispatch.create_runtime_model',return_value=model),patch('rdk_yolo_utils.file_io.load_image',return_value=np.zeros((32,32,3),np.uint8)),patch('rdk_yolo_utils.inspect.print_model_info'):
+                    with patch('yolo_dispatch.create_runtime_model',return_value=model),patch('utils.py_utils.file_io.load_image',return_value=np.zeros((32,32,3),np.uint8)),patch('utils.py_utils.inspect.print_model_info'):
                         main.run_inference(resolve_platform('x5'),args,['test'])
                     if task!='cls':self.assertTrue(Path(args.img_save_path).is_file())
 
     def test_mask_inverse_letterbox_at_non640_size(self):
-        from rdk_yolo_utils.postprocess import process_mask
+        from utils.py_utils.postprocess import process_mask
         proto=np.full((32,16,16),10,np.float32)
         coefficients=np.ones((1,32),np.float32)
         # 64x32 original image occupies y=16:48 in a 64-square letterbox.
@@ -189,7 +189,7 @@ class Yolo26Contracts(unittest.TestCase):
             self.assertEqual(load_labels(types.SimpleNamespace(label_file=str(path)), 'obb'), ['custom-object'])
 
     def test_seg_mask_alignment_for_portrait_and_landscape(self):
-        from rdk_yolo_utils.postprocess import process_mask
+        from utils.py_utils.postprocess import process_mask
         proto = np.full((32, 16, 16), 10, np.float32)
         coefficients = np.ones((1, 32), np.float32)
         for shape in ((64, 32), (32, 64)):

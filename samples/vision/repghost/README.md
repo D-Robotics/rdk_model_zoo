@@ -36,6 +36,22 @@ labels. The `RepGhostClassifier` class runs a `preprocess → infer → postproc
 chained by `predict` (labels, drawing and file output belong to the CLI
 layer; see [runtime/python/README.md](runtime/python/README.md)).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+repghost/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -118,16 +134,10 @@ Single-thread latency and multi-thread FPS are measured under different
 concurrency and are not reciprocal quantities. Compare latency and FPS using
 the same thread count, concurrent submission mode and BPU utilization.
 
-<a id="directory"></a>
-## Directory
-
-`model/`: artifacts and download; `runtime/python/`: native CLI, task and runner; `conversion/`: five PTQ YAMLs; `evaluator/`: functional checks and published benchmarks; `test_data/`: `ibex.JPEG` input and accompanying resources; `tests/`: host unittest suite.
-
 <a id="entry-points"></a>
 ## Entry points
 
 [Model](model/README.md) · [Python](runtime/python/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md)
-
 
 <a id="license"></a>
 ## License

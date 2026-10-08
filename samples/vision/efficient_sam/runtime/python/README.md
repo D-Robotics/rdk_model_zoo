@@ -2,6 +2,26 @@ English | [简体中文](README_cn.md)
 
 # EfficientSAM Python Runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── pipeline.py  # Python script
+├── run.sh  # Run the sample
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -79,7 +99,7 @@ import cv2
 
 root = Path.cwd()
 binding = importlib.import_module("samples.vision.efficient_sam.runtime.python.model_binding")
-runner_type = importlib.import_module("samples.vision.efficient_sam.runtime.python.model_runner").RuntimeModelRunner
+runner_type = importlib.import_module("utils.py_utils.sam_runner").RuntimeModelRunner
 pipeline_type = importlib.import_module("samples.vision.efficient_sam.runtime.python.pipeline").EfficientSAMPipeline
 selection = binding.resolve_selection("s100")
 runner = runner_type(selection)
@@ -96,7 +116,7 @@ assert result["mask"].shape == (512, 512)
 <a id="stage-io"></a>
 ## Encoder and decoder stage I/O
 
-Each stage has its own three methods, exposed with the canonical spellings `preprocess`/`infer`/`postprocess` on the local `EfficientSAMEncoder`/`EfficientSAMDecoder` views in [pipeline.py](pipeline.py) — the inherited shared spellings `pre_process`/`forward`/`post_process` remain as compatibility aliases of the same single implementation. Encoder `preprocess` validates BGR HWC input and returns a contiguous RGB NCHW float32 tensor plus immutable per-call geometry context; encoder `infer` sends that tensor and preserves the metadata-validated native embedding; encoder `postprocess` owns a float32 copy of the embedding. Decoder `preprocess` owns the embedding and fixed prompt context; decoder `infer` sends the decoder tensor and preserves native `low_res_masks`/`iou_predictions`; decoder `postprocess` casts accepted native numeric arrays to owned float32, selects the greatest IoU, resizes raw logits to `512x512`, and thresholds at `>=0`. `predict` composes `encoder.preprocess → encoder.infer → encoder.postprocess → decoder.preprocess → decoder.infer → decoder.postprocess` (also readable as `encode_image` followed by `decode_masks`), attributing failures to the failing stage via `StageError` before any successor runs. No implicit dequantization occurs. Encoder/decoder names and S decoder dimensions come from runtime metadata; S masks are `[1,3,H,W]` with positive observed `H/W`, and IoU is `[1,3]` or `[1,3,1,1]`.
+Each stage has its own three methods, exposed with the spellings `preprocess`/`infer`/`postprocess` on the local `EfficientSAMEncoder`/`EfficientSAMDecoder` views in [pipeline.py](pipeline.py). Encoder `preprocess` validates BGR HWC input and returns a contiguous RGB NCHW float32 tensor plus immutable per-call geometry context; encoder `infer` sends that tensor and preserves the metadata-validated native embedding; encoder `postprocess` owns a float32 copy of the embedding. Decoder `preprocess` owns the embedding and fixed prompt context; decoder `infer` sends the decoder tensor and preserves native `low_res_masks`/`iou_predictions`; decoder `postprocess` casts accepted native numeric arrays to owned float32, selects the greatest IoU, resizes raw logits to `512x512`, and thresholds at `>=0`. `predict` composes `encoder.preprocess → encoder.infer → encoder.postprocess → decoder.preprocess → decoder.infer → decoder.postprocess` (also readable as `encode_image` followed by `decode_masks`), attributing failures to the failing stage via `StageError` before any successor runs. No implicit dequantization occurs. Encoder/decoder names and S decoder dimensions come from runtime metadata; S masks are `[1,3,H,W]` with positive observed `H/W`, and IoU is `[1,3]` or `[1,3,1,1]`.
 
 | Bound output | X5 | S100 / S100P / S600 |
 | --- | --- | --- |
@@ -104,7 +124,7 @@ Each stage has its own three methods, exposed with the canonical spellings `prep
 | Decoder masks | `[1,3,128,128]` | `[1,3,H,W]`; positive H/W read from actual metadata |
 | Decoder IoU | `[1,3,1,1]` | `[1,3]` or `[1,3,1,1]`, as observed |
 
-Accepted native output dtypes are `float16`, `float32`, `int8`, `uint8`, `int16`, `int32`; each array must exactly match its observed metadata. Their presence in this compatibility rule is not evidence of the published models' actual native dtype. The source float32 cast is preserved without dequantization. IoU is the model's predicted mask-quality score, not a ground-truth dataset measurement. Result fields are `mask` (owned bool `[512,512]`), `iou` (float), `mask_index` (integer 0–2), and `low_res_masks` (owned float32 `[1,3,H,W]`). PNG files encode false/true as 0/255. Instances are not advertised as SDK-thread-safe.
+Accepted native output dtypes are `float16`, `float32`, `int8`, `uint8`, `int16`, `int32`; each array must exactly match its observed metadata. The source float32 cast is preserved without dequantization. IoU is the model's predicted mask-quality score, not a ground-truth dataset measurement. Result fields are `mask` (owned bool `[512,512]`), `iou` (float), `mask_index` (integer 0–2), and `low_res_masks` (owned float32 `[1,3,H,W]`). PNG files encode false/true as 0/255. Use a separate model instance for each concurrent worker.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

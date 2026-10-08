@@ -14,9 +14,9 @@ import numpy as np
 
 from samples.vision.mobile_sam.runtime.python.main import build_parser
 from samples.vision.mobile_sam.model.download import build_parser as build_download_parser
-from samples._shared.sam_evaluator import build_parser as build_evaluator_parser
-from samples._shared.runtime_meta import RuntimeMetadata
-from samples._shared.sam_binding import bind_model
+from utils.py_utils.sam_evaluator import build_parser as build_evaluator_parser
+from utils.py_utils.runtime_meta import RuntimeMetadata
+from utils.py_utils.sam_binding import bind_model
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -28,9 +28,9 @@ class ReadmeContractTests(unittest.TestCase):
     def test_bilingual_anchor_sets_and_links(self):
         expected = {
             "README.md": {"overview", "support-matrix", "prerequisites", "quickstart", "expected-results", "directory", "entry-points", "license"},
-            "model/README.md": {"artifacts", "preparation", "accompanying-files", "local-paths", "formats-checksums"},
-            "runtime/python/README.md": {"environment", "usage", "parameters", "results", "integration-example", "stage-io", "troubleshooting"},
-            "evaluator/README.md": {"dataset", "environment", "command", "metrics", "outputs", "reference-results", "boundaries"},
+            "model/README.md": {"directory", "artifacts", "preparation", "accompanying-files", "local-paths", "formats-checksums"},
+            "runtime/python/README.md": {"overview", "directory", "environment", "usage", "parameters", "results", "integration-example", "stage-io", "troubleshooting"},
+            "evaluator/README.md": {"directory", "dataset", "environment", "command", "metrics", "outputs", "reference-results", "boundaries"},
         }
         for english in DOCS:
             for language in (english, english.with_name("README_cn.md")):
@@ -61,7 +61,7 @@ class ReadmeContractTests(unittest.TestCase):
                         evaluator_parser.parse_args(argv[2:])
 
     def test_runtime_api_examples_compile_and_use_qualified_modules(self):
-        runner_module = __import__("samples.vision.mobile_sam.runtime.python.model_runner", fromlist=["RuntimeModelRunner"])
+        runner_module = __import__("utils.py_utils.sam_runner", fromlist=["RuntimeModelRunner"])
 
         class Stage:
             def __init__(self, output):

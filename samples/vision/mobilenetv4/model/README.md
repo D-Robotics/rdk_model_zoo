@@ -1,6 +1,6 @@
 # MobileNetV4 model artifacts
 
-Prepare the model artifact with the canonical downloader, which resolves its URL and format from the platform release manifest.
+Prepare the model artifact with the downloader, which resolves its URL and format from the platform release manifest.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -18,6 +18,18 @@ Each reference is an exact row of `docs/release/x5/models.yaml` or
 `docs/release/s/models.yaml`; the manifest is the authority for URL and
 format. X5 consumes one packed NV12 tensor; S100/S600 consume separate Y
 and UV tensors — the runtime pairs `--model-path` with the exact target reference so the input protocol matches the artifact.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
 
 <a id="preparation"></a>
 ## Preparation

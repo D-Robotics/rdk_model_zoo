@@ -6,7 +6,7 @@
 
 | 文件 | 用途与适用目标 |
 | --- | --- |
-| `prompts.json` | 六条确定性验收提示词 |
+| `prompts.json` | 六条示例提示词 |
 | `generation-reference.json` | 官方 HF greedy 文本/token IDs 与源 S600 输出的参考记录 |
 | `legacy-prompts.json` | SDK 1.0.0 的单轮/双轮生成用例 |
 | `legacy-long-prompts.json` | SDK 1.0.0 约 2000/3750 token 的信息检索提示词 |

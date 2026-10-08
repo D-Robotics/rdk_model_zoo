@@ -11,6 +11,21 @@ Python and C++ runtimes are provided. Both expose full-file transcription; the
 Python runtime includes CTC and legacy decoding, while the native entry is built
 and run with the matching board SDK.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+asr/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -54,18 +69,6 @@ Use `s600` in both commands for an S600; never rename the S100 HBM. `PYTHON` sel
 The console prints a full-file transcription and the path to `result.json`. The report binds model/audio/vocabulary hashes, model metadata, decoder mode and each chunk's source position, valid sample count and text. Errors return 2; a failure after processing starts saves `failed.json` with completed chunks.
 
 Default `ctc` collapses adjacent duplicate token IDs before removing blank ID 0. `--decode-mode legacy` removes `<pad>` while retaining repeated IDs. For IDs `[1,1,0,1,2,2]` and tokens `<pad>,a,b`, the results are `aab` (`ctc`) and `aaabb` (`legacy`). Other tokens, punctuation and `|` remain verbatim. Each independent chunk starts with a fresh CTC state.
-
-<a id="directory"></a>
-## Directory
-
-| Location | Responsibility |
-| --- | --- |
-| `model/` | Exact manifest selection and explicit target download |
-| `runtime/python/` | Audio reader, pure frontend/decoder, shared raw runner and CLI |
-| `runtime/cpp/` | Native audio input, task, SDK adapter and launcher |
-| `test_data/` | WAV input, fixed vocabulary and reference figures |
-| `conversion/` | Export instructions and compiler prerequisites for supported conversion paths |
-| `evaluator/` | Saved-transcript character error metrics and reference data |
 
 <a id="entry-points"></a>
 ## Guides

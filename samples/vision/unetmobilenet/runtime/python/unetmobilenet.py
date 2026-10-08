@@ -12,8 +12,8 @@ from typing import Mapping
 import cv2
 import numpy as np
 
-from samples._shared.image import bgr_to_nv12_planes
-from samples._shared.quantization import dequantize_tensor
+from utils.py_utils.image import bgr_to_nv12_planes
+from utils.py_utils.quantization import dequantize_tensor
 from samples.vision.unetmobilenet.runtime.python.model_binding import ModelBinding
 
 

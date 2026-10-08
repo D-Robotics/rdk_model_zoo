@@ -16,6 +16,18 @@ audio directory must contain `<utt_id>.wav`. Use the preparation command below t
 produce validated feature files and retain its truncation report. No dataset split
 or text normalization is selected implicitly.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── backends.py  # Python script
+├── inputs.py  # Python script
+└── main.py  # Command-line entry
+```
+
 <a id="environment"></a>
 ## Environment and preparation
 

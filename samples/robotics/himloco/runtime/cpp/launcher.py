@@ -15,8 +15,8 @@ from samples.robotics.himloco.runtime.python.model_binding import (
     resolve_selection,
     SAMPLE_DIR,
 )
-from samples._shared.assets import verify_asset_file
-from samples._shared.platforms import require_execution_target
+from utils.py_utils.assets import verify_asset_file
+from utils.py_utils.platforms import require_execution_target
 
 
 def build_parser():

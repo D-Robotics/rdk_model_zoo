@@ -7,6 +7,21 @@ English | [简体中文](./README_cn.md)
 
 MODNet is a one-stage portrait matting network: one RGB image produces an alpha matte without a trimap. The source is [ZHKKKe/MODNet](https://github.com/ZHKKKe/MODNet) and the paper is [Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961). This sample preserves source letterbox-style geometry, RGB normalization, uint8 matte output, and optional background compositing.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+modnet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support and verification matrix
 
@@ -38,19 +53,6 @@ The command reads `test_data/person.jpg`, writes `test_data/matte.png`, and, whe
 ## Expected results
 
 The matte is an 8-bit grayscale PNG with the original input height and width. The optional composite is a BGR PNG with the original input geometry. Exact alpha values and quality depend on the external model; the source performance record is listed below.
-
-<a id="directory"></a>
-## Directory
-
-```text
-.
-├── model/                 # manual asset identity and preparation notes
-├── runtime/python/        # binding, lazy runner, task, CLI, and run.sh
-├── conversion/            # source facts and missing export/PTQ materials
-├── evaluator/             # self-contained matte comparison utility
-├── test_data/              # source person.jpg and bg.jpg
-└── tests/                 # host metadata, geometry, raw, and CLI fixtures
-```
 
 <a id="entry-points"></a>
 ## Entry points

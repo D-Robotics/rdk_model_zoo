@@ -14,6 +14,23 @@ YOLOE 在本 sample 中提供固定 4585 类词表的 Prompt-Free（PF）实例�
 - 论文：[YOLOE: Real-Time Seeing Anything](https://arxiv.org/pdf/2503.07465v1)；官方仓库：[um-assn/yoloe](https://github.com/um-assn/yoloe)（X5 源）
 - 基础检测器谱系：[ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)（S11 源）
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+yoloe/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
+权重导出、转换准备和评估流程见下方文档。浮点导出检查覆盖图结构；编译与板端运行见[转换指南](conversion/README_cn.md)。
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -88,23 +105,6 @@ X5 为源单线程 libdnn Runtime 记录。S100 为源 2026-09-08、200 帧、wa
 S26 源交付发布的示例：已发布 S100 量化 YOLOE-26n PF 模型在随附 `office_desk.jpg` 上的实测输出，标签按 PF 检查点类别 ID 顺序导出，与源图注一致。
 
 两图均为源发布的量化 S 结果（基于随附图片）；浮点路线的预期输出来自实际运行本 sample，精度指标来自[评估器](evaluator/README_cn.md)。
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-yoloe/
-├── model/             # explicit published-artifact preparation
-├── conversion/        # ONNX checks, calibration, target YAML and optional compile
-├── evaluator/         # explicit category mapping, COCO metrics and prediction export
-├── runtime/python/    # CLI, binding, raw runner and three-stage task
-├── runtime/cpp/       # reusable three-stage C++ library, SDK adapter, CLI, E11/E26 decoding
-├── test_data/         # source image, fixed vocabulary, source-recorded figures
-├── tests/             # host fixtures, source comparisons and README execution
-└── README.md
-```
-
-权重导出、转换准备和评估流程见下方文档。浮点导出检查覆盖图结构；编译与板端运行见[转换指南](conversion/README_cn.md)。
 
 <a id="entry-points"></a>
 ## 入口

@@ -4,7 +4,7 @@
 
 import argparse
 from pathlib import Path
-from samples._shared.assets import download_asset
+from utils.py_utils.assets import download_asset
 from samples.vision.depth_anything_v2.runtime.python.model_binding import (
     ASSET_ID,
     resolve_selection,

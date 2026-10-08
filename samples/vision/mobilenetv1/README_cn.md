@@ -27,6 +27,22 @@ pointwise 投影（[论文](https://arxiv.org/abs/1704.04861)、
 *深度可分离卷积：每个输入通道使用各自的 D_K×D_K
 depthwise 核滤波，随后的 1×1 pointwise 卷积整合各通道结果。*
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+mobilenetv1/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持范围
 
@@ -98,22 +114,11 @@ S100/S600 上使用 `zebra_cls.jpg` 时，Top-5 应包含 `zebra`。按支持矩
 | MobileNetV1 | 224x224 | 1000 | 4.2 | 71.7% | 65.4% | 0.58 | 2800+ |
 
 
-
 ![推理结果](./test_data/inference.png)
 
 *X5 发布的参考推理结果：随仓 [bulbul.JPEG](test_data/bulbul.JPEG) 的
 Rank-1 为 `bulbul`，其后依次为 junco/snowbird、robin、chickadee、
 water ouzel。*
-
-<a id="directory"></a>
-## 目录职责
-
-- [model/](model/README_cn.md) — Manifest 驱动的制品下载，不提交二进制
-- [runtime/python/](runtime/python/README_cn.md) — canonical Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — 转换记录与参考配置
-- [evaluator/](evaluator/README_cn.md) — 公开基准与功能检查
-- `test_data/` — 内置测试图（[bulbul.JPEG](test_data/bulbul.JPEG)、[zebra_cls.jpg](test_data/zebra_cls.jpg)）
-- `tests/` — 主机 unittest 套件
 
 <a id="entry-points"></a>
 ## 入口

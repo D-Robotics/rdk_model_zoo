@@ -24,10 +24,20 @@ one tab:
 VOC palette masks are read as class indices; they must not be converted to
 grayscale before evaluation.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── eval_unet.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
-Common requirements: Python 3.10+, NumPy, Pillow. PyTorch/ONNX backends additionally need torch/onnxruntime respectively. X5 also needs OpenCV, PyYAML, matching SDK and verifies actual X5 identity/OS; it reuses the canonical runtime stages. Floating backends preserve source float-input rules.
+Common requirements: Python 3.10+, NumPy, Pillow. PyTorch/ONNX backends additionally need torch/onnxruntime respectively. X5 also needs OpenCV, PyYAML, matching SDK and verifies actual X5 identity/OS; it reuses the runtime stages. Floating backends preserve source float-input rules.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
@@ -107,4 +117,4 @@ The [sample README](../README.md) carries five-backbone training/PTQ tables and 
 <a id="boundaries"></a>
 ## Boundaries
 
-Prepare full datasets and checkpoint/ONNX/BIN beforehand. Runtime timing is not a pure BPU benchmark supplied by this evaluator. Strict PyTorch checkpoint loading and single-input/output ONNX constraints remain; arbitrary architectures or S-family assets are not supported.
+Prepare full datasets and checkpoint/ONNX/BIN beforehand. Runtime timing is including preprocessing and postprocessing supplied by this evaluator. Strict PyTorch checkpoint loading and single-input/output ONNX constraints remain; arbitrary architectures or S-family assets are not supported.

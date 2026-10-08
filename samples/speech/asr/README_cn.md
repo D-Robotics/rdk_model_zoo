@@ -10,6 +10,21 @@
 提供 Python 与 C++ 运行时，均可对完整音频文件转写。Python 运行时支持 CTC 与
 legacy 解码；原生入口使用匹配板端 SDK 构建和运行。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+asr/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -55,18 +70,6 @@ metadata、解码模式，以及逐块位置、有效样本数和文本。错误
 写入带已完成块的 `failed.json`。
 
 默认 `ctc` 先合并相邻重复 ID，再删除 blank ID 0；`--decode-mode legacy` 删除 `<pad>` 并保留重复 ID。词表 `<pad>,a,b` 下，ID `[1,1,0,1,2,2]` 的结果分别为 `aab`（`ctc`）和 `aaabb`（`legacy`）。其他 token、标点及 `|` 按原文保留。每个独立音频块重新开始 CTC 状态。
-
-<a id="directory"></a>
-## 目录
-
-| 位置 | 职责 |
-| --- | --- |
-| `model/` | 精确清单选择及显式目标下载 |
-| `runtime/python/` | 音频读取、纯前处理/解码、共享 raw runner 和 CLI |
-| `runtime/cpp/` | 原生音频输入、任务、SDK 适配与启动器 |
-| `test_data/` | WAV 输入、固定词表与参考图片 |
-| `conversion/` | 模型导出和编译说明 |
-| `evaluator/` | 已保存转写的字符错误指标与参考数据 |
 
 <a id="entry-points"></a>
 ## 导航

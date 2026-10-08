@@ -13,6 +13,18 @@ All five files are single-stage classifiers in the X5 release manifest. S target
 | `150` | `RepGhost_150_224x224_nv12.bin` | x5 | bin | download |
 | `200` | `RepGhost_200_224x224_nv12.bin` | x5 | bin | download |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

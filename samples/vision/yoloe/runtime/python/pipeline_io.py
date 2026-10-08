@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from samples.vision.yoloe.runtime.python.config import validate_config
 from typing import Any
 import numpy as np
-from samples._shared.image import bgr_to_nv12_planes
-from samples._shared.yoloe26_geometry import letterbox, PFGeometry
+from utils.py_utils.image import bgr_to_nv12_planes
+from utils.py_utils.yoloe26_geometry import letterbox, PFGeometry
 from samples.vision.ultralytics_yolo.runtime.python.geometry import (
     resize_with_transform,
     ImageTransform,

@@ -1,5 +1,10 @@
 # 可读模型范例架构（ResNet / Ultralytics YOLO → 全 51 本仓样例）
 
+ResNet 现采用 [Python Runtime 编写规范](../sample-standards/python-runtime.md)：
+main.py 负责参数传递和调用，classify.py 保留模型阶段，cli.py 聚合命令配置和展示；
+通用图片读取、标签校验和 Runtime 位于 utils/py_utils。文件按职责划分，不限制数量。
+
+
 日期：2026-10-01 两个范例；2026-10-05 扩展至全部本仓样例；2026-10-06 交付状态更新。
 状态：51 个本仓样例已完成可读 Runtime 重构并合入 Develop，实施提交
 `545a3b5874ae723663d2c817ae9ef964bc495746` 通过完整干净克隆与实际跨平台 CI。
@@ -27,7 +32,7 @@ main.py（薄入口：解析参数 → 构造模型 → predict → 展示）
   → 模型类（classify.py 的 ResNetClassifier / detect.py 的 YoloDetect）
       preprocess → infer → postprocess，predict 显式串联三步
   → 样例 runner（RuntimeModelRunner / ModelRunner：绑定与张量校验）
-  → 薄 SDK 会话 samples/_shared/runtime.py:RuntimeSession
+  → 薄 SDK 会话 utils/py_utils/runtime.py:RuntimeSession
       （目标身份检查 → 懒导入 hbm_runtime → 构造模型实例）
   → hbm_runtime（板端 SDK，非本仓代码）
 ```
@@ -42,7 +47,7 @@ main.py（薄入口：解析参数 → 构造模型 → predict → 展示）
   `postprocess`、`predict`。既有的 `pre_process` / `forward` / `post_process`
   名称是同一实现的薄别名，不维护第二份实现。复杂算法（NV12 打包、DFL/LTRB
   解码、NMS、量化变换）继续留在共享模块，不为了"文件完整"复制。
-- **公共 Runtime 无模型算法**：`samples/_shared/runtime.py` 只承接 SDK 导入、
+- **公共 Runtime 无模型算法**：`utils/py_utils/runtime.py` 只承接 SDK 导入、
   模型实例创建与按目标身份检查；输入输出沿用 SDK 原生映射，不猜测模型名或
   输出语义。接受的实现边界（2026-10-01 验收确认）：会话的 `run(inputs)` 是
   可选的原生映射透传；集成的 runner 复用会话的加载/身份边界后，直接在同一
@@ -101,8 +106,8 @@ python3 samples/vision/ultralytics_yolo/runtime/python/main.py \
 
 ### 3.2 接入自训练模型
 
-- **ResNet**：本地编译制品用 `model_binding.custom_selection(model_path,
-  target, input_height=, input_width=, class_count=, …)` 声明契约，无需官方
+- **ResNet**：本地编译制品用 `classify.ResNetClassifier(model_path,
+  target=target, input_size=(224, 224), class_count=..., …)` 声明契约，无需官方
   Manifest 注册；绑定仍校验实际张量名/形状/类型与声明的类别数。标签可选：
   不给标签时结果保留类别 ID；序列长度必须等于类别数，否则明确报错。示例见
   [runtime/python/README.md 的 Custom models 节](../../samples/vision/resnet/runtime/python/README.md#custom-model)。

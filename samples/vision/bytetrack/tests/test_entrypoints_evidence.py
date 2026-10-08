@@ -7,7 +7,7 @@ from samples.vision.bytetrack.runtime.python.model_binding import resolve_select
 from samples.vision.bytetrack.evaluator.capture import capture_frames
 from samples.vision.bytetrack.evaluator.compare import compare_captures
 from samples.vision.yolov5.tests.test_yolov5 import FakeRuntime
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 ROOT=Path(__file__).resolve().parents[4]
 
 

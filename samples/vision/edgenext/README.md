@@ -40,6 +40,22 @@ INT8-quantized base/small/x_small/xx_small variants at 224×224 NV12 (see
 The sample provides a Python runtime for X5. The `EdgeNeXtClassifier` class runs a `preprocess → infer → postprocess` flow chained by `predict`: it resolves one exact artifact reference from the platform release manifest, verifies the board identity, loads `hbm_runtime` lazily, and returns a typed Top-K result
 ([runtime/python/README.md](runtime/python/README.md)).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+edgenext/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -121,16 +137,6 @@ single-frame single-thread single-core, FPS multi-threaded):
 | EdgeNeXt-small | 224x224 | 5.59 | 76.50% | 71.75% | 4.41 | 226.15 |
 | EdgeNeXt-x-small | 224x224 | 2.34 | 71.75% | 66.25% | 2.88 | 345.73 |
 | EdgeNeXt-xx-small | 224x224 | 1.33 | 69.50% | 64.25% | 2.47 | 403.49 |
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — X5 PTQ configurations and model-specific preparation steps
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([Zebra.jpg](test_data/Zebra.jpg) plus reference illustrations)
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

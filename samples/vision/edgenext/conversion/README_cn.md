@@ -16,6 +16,19 @@ Applications](https://arxiv.org/abs/2206.10589)，参考实现
 `./edgenext_{base,small,x_small,xx_small}.onnx`；按所选变体导出匹配
 模型，并记录所用权重修订。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── EdgeNeXt_base_config.yaml  # 配置
+├── EdgeNeXt_small_config.yaml  # 配置
+├── EdgeNeXt_x_small_config.yaml  # 配置
+├── EdgeNeXt_xx_small_config.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

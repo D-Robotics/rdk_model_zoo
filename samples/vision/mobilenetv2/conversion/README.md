@@ -22,6 +22,16 @@ The repository provides the quantization YAML
 (`mobilenetv2_config.yaml`) and bundled test image; use the YAML paths as
 configured.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── mobilenetv2_config.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

@@ -4,8 +4,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from samples._shared.assets import Asset, list_assets
-from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 STAGES = ("encoder", "predictor", "decoder")
@@ -68,7 +68,7 @@ class Binding:
 def resolve_selections(target="auto", *, model_paths=None, asset_ids=None):
     """Select all three models; alternate paths require all three asset IDs."""
     if target == "auto":
-        from samples._shared.platforms import detect_target
+        from utils.py_utils.platforms import detect_target
 
         target = detect_target()
     if target != "s100":

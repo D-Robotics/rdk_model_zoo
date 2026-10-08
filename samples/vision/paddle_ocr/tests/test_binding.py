@@ -253,7 +253,7 @@ class BindingTests(unittest.TestCase):
                         bind_stage(pair, stage, metadata)
 
     def test_multi_model_runtime_requires_explicit_model_selection(self):
-        from samples._shared.runtime_meta import (
+        from utils.py_utils.runtime_meta import (
             MetadataMismatchError as SharedMetadataMismatchError,
         )
         from samples.vision.paddle_ocr.runtime.python.model_binding import (

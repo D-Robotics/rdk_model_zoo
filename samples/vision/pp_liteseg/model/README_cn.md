@@ -11,6 +11,17 @@
 
 精确 asset-id：`x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin`。来源：X5 模型清单。没有已发布的 S 系列制品或其他变体。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 

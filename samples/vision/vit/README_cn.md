@@ -9,6 +9,22 @@ ViT 把图像分块组织为序列，通过自注意力完成分类。本 sample
 
 ![ViT](test_data/readme_img/vitnet.png)
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+vit/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -62,19 +78,6 @@ resize=0、Top-K=5。分数是十个 logits 的 softmax；完全平局按 ID 升
 
 已发布的 CIFAR-10 精度记录见[评估](evaluator/README_cn.md#reference-results)；
 
-
-<a id="directory"></a>
-## 目录
-
-```text
-model/          # HBM download and artifact references
-runtime/python/ # CLI, binding, runner and shared classification API
-conversion/     # 原始 PTQ YAML 与原始编译日志
-evaluator/      # 评估说明与已发布精度记录
-test_data/      # 10 张 CIFAR 图片、类别字典与原始插图
-tests/          # 无 SDK 主机 unittest 套件
-```
-
 <a id="entry-points"></a>
 ## 入口
 
@@ -82,7 +85,7 @@ tests/          # 无 SDK 主机 unittest 套件
 
 新集成使用 `ViTClassifier` 类（[classify.py](runtime/python/classify.py)；
 共享 `ClassificationTask` 流程仍可从
-[classification.py](runtime/python/classification.py) 导入）；
+[classification.py](../../../utils/py_utils/classification.py) 导入）；
 `--model-variant` 保留为 `--variant` 别名，本地 run.sh 接受位置参数
 int8/int16。
 

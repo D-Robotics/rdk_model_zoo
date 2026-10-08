@@ -198,8 +198,8 @@ def make_x5_runner(model_path: Path, backbone: str | None = None):
     root = Path(__file__).resolve().parents[4]
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
-    from samples._shared.platforms import require_execution_target
-    from samples._shared.runtime_meta import metadata_evidence
+    from utils.py_utils.platforms import require_execution_target
+    from utils.py_utils.runtime_meta import metadata_evidence
     from samples.vision.unet.runtime.python.model_binding import resolve_selection
     from samples.vision.unet.runtime.python.model_runner import RuntimeModelRunner
     from samples.vision.unet.runtime.python.unet import UNetTask

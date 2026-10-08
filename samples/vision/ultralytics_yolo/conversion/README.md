@@ -15,6 +15,25 @@ entry documents the recipe — record each produced artifact's own validation.
 
 Input is a local Ultralytics PyTorch `.pt` checkpoint matching the selected task. `/models/*.pt` paths below are prepared by the operator; custom weights are not bundled. Record the checkpoint SHA-256, training/export package versions, classes, input geometry and training configuration. The [published model inventory](../model/README.md) lists compiled `.bin`/`.hbm` runtime artifacts separately from conversion checkpoints.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── imgs/  # Files for imgs
+├── yolo26/  # Files for yolo26
+├── CONVERSION_CONTRACT.md  # Documentation
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── config_x5.yaml  # Configuration
+├── export_monkey_patch.py  # Python script
+├── mapper.py  # Python script
+├── mapper_s.py  # Python script
+├── mapper_x5.py  # Python script
+├── requirements.txt  # Source or data file
+└── workflow.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Prepare the two host environments
 
@@ -368,7 +387,7 @@ shape declaration alone does not produce a supported variant). After the
 detection branch selects a cell, the DFL decode computes each keypoint's
 model-input position as `(raw_xy × 2 + anchor − 0.5) × stride`, where
 `anchor` is the cell's half-integer center (`decode_kpts` in
-`runtime/python/rdk_yolo_utils/postprocess.py`); `inverse_points`, together
+`runtime/python/utils.py_utils/postprocess.py`); `inverse_points`, together
 with `inverse_boxes`, then restores original-image geometry from the
 model-input letterbox, and Sigmoid converts the keypoint visibility logits
 into scores (`pose_decode.py`). For comparison, the YOLO26 direct-LTRB pose
@@ -403,7 +422,7 @@ NV12 packing still follows the selected board input binding.
 <a id="compile"></a>
 ## Compile
 
-Run the dispatcher from the repository root (the platform wrapper entry
+Run the dispatcher from the repository root (the platform helper entry
 supplies the same platform argument):
 
 ```bash
@@ -507,7 +526,7 @@ successful X5 run can leave `hb_mapper_makertbin.log`; an S run can leave
 `hb_compile.log`. With `--save-cache`, inspect `config.yaml`, the calibration
 directory, and `bpu_model_output/` under the reported unique workspace child.
 
-## Code flow and compatibility symbols
+## Conversion scripts and APIs
 
 The conversion code path is intentionally small:
 
@@ -558,6 +577,6 @@ protocol.
 
 - Each produced artifact requires its own binding check, matching-board smoke run and applicable dataset/reference comparisons; published-artifact board records do not transfer to a fresh conversion.
 - No pinned calibration image set/dataset version or complete source-checkpoint hash set is bundled. The 20–50 image guidance is a script recommendation. Defaults are `--cal-sample true --cal-sample-num 20`; `--cal-sample false` uses the whole eligible image pool. Save selected filenames and digests for reproducibility.
-- `--quantized` defaults to int8, with int16 available; `--jobs` defaults to 16 and `--save-cache` to false. Inspect target-specific optimization choices using `mapper.py --platform x5 --toolchain-help` or the appropriate S target. Dispatch selection does not establish compiler compatibility.
+- `--quantized` defaults to int8, with int16 available; `--jobs` defaults to 16 and `--save-cache` to false. Inspect target-specific optimization choices using `mapper.py --platform x5 --toolchain-help` or the appropriate S target. Use the compiler version specified for the selected target.
 - The container images linked in this guide are the documented environment examples for the targets they cover; select an image matching your target's toolchain requirements and record the actual image identity and version output.
 - Validate fresh artifacts with the binding check, a matching-board smoke run and applicable dataset/reference comparisons (see [Validation](#validation)).

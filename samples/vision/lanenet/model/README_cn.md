@@ -11,6 +11,18 @@
 
 实际下载 URL 与资产身份以 [S 发布清单](../../../../docs/release/s/models.yaml)为准。这是唯一已发布的 LaneNet 资产。S100P、S600、X5 在此均无对应资产；重命名或移动 S100 HBM 不会增加平台支持。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 显式准备
 

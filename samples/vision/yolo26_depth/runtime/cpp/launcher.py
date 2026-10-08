@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[5]
 CPP = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from samples._shared.assets import sha256_file, verify_asset_file
-from samples._shared.platforms import require_execution_target
+from utils.py_utils.assets import sha256_file, verify_asset_file
+from utils.py_utils.platforms import require_execution_target
 from samples.vision.yolo26_depth.runtime.python.model_binding import (
     SAMPLE_DIR,
     TARGETS,

@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.speech.paraformer.conversion.calibration import CALIBRATION, checked_tensor
 from samples.speech.paraformer.conversion.configuration import STAGES, make_config
 from samples.speech.paraformer.runtime.python.model_binding import LOCAL_DIGESTS

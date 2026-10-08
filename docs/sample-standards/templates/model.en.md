@@ -15,6 +15,11 @@
 | --- | --- | --- | --- | --- |
 | ⟪file⟫ | ⟪.bin/.hbm/…⟫ | ⟪x5 / s100 / …⟫ | ⟪single / det / rec / …⟫ | ⟪download \| manual \| conversion⟫ |
 
+<a id="directory"></a>
+## Directory structure
+
+⟪List the actual files and their roles.⟫
+
 <a id="preparation"></a>
 ## Preparation
 

@@ -11,7 +11,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.vision.diffusiondrive.runtime.python.data_io import load_npz
 from samples.vision.diffusiondrive.runtime.python.model_binding import OUTPUT_SHAPES
 

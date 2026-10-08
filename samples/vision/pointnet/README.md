@@ -15,6 +15,21 @@ architecture; the delivered model's reference is
 [the S100 PointNet project](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official).
 The published HBM is downloaded separately, not bundled in Git.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+pointnet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support and validation
 
@@ -64,16 +79,6 @@ Counts sum to N but need not contain all four parts for every input. No accuracy
 threshold is inferred from a visually plausible segmentation.
 
 ![Reference chair result](test_data/readme_img/chair_res.png)
-
-<a id="directory"></a>
-## Directory responsibilities
-
-- `model/`: explicit download and artifact identity.
-- `runtime/python/`: CLI and plots, separate binding/runner, four-stage task.
-- `conversion/`: retained architecture/operator notes and conversion gaps.
-- `evaluator/`: functional checks and source-recorded performance; dataset evaluation is separate.
-- `test_data/`: original chair points and reference images.
-- `tests/`: SDK-free numerical and error-boundary tests.
 
 <a id="entry-points"></a>
 ## Entry points

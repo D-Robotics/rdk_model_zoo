@@ -13,6 +13,17 @@ Authoritative source: [S manifest](../../../../docs/release/s/models.yaml), samp
 - `int8`: [download](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int8.hbm)
 - `int16`: [download](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int16.hbm)
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

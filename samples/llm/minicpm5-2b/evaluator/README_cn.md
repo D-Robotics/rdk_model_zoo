@@ -7,6 +7,21 @@
 
 WikiText2 TEST 与校准 TRAIN 分开；固定 checkpoint/tokenizer 和 TEST 摘要沿用源记录。完整口径为 140 × 2048-token 片段，不能把一段接线检查当成全量评估。下文结果均来自固定 S 源记录。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── legacy/  # legacy 相关文件
+├── results/  # results 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── main.py  # 命令行入口
+├── prepare.py  # Python 脚本
+├── run.sh  # 运行示例
+└── validate_result.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -73,6 +88,7 @@ HBM SHA256：`7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`�
 50 次请求平均端到端耗时为 S100 671.37 ms、S100P 543.22 ms，不含模型加载；这是墙钟时间，不是 TTFT。此前短请求日志 decode 约 12.1/13.0 token/s，不把全零回调字段当成性能测量。工具调用、思考、多模态、并发与长时间压力不在本评估范围内，部署前请另行验证。
 
 [首片段诊断](results/legacy-first-segment-diagnostic.json)：HF float32 PPL 10.75668，legacy 适配器 float32 10.75612，实际 HBM 14.01536。全部八个掩码与 SDK 校准辅助函数逐项一致；输入哈希与 S600 相同，也核验了实际执行的两份 HBM 哈希。评估脚本在两板分别复现首段 NLL 5404.3955137729645。上文 S600 结果沿用源发布记录。
+
 <a id="boundaries"></a>
 ## 判据与边界
 

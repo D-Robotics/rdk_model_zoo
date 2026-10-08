@@ -6,8 +6,8 @@ from pathlib import Path
 from hashlib import sha256
 import cv2
 import numpy as np
-from samples._shared.assets import sha256_file
-from samples._shared.yoloe26_geometry import prepare_rgb
+from utils.py_utils.assets import sha256_file
+from utils.py_utils.yoloe26_geometry import prepare_rgb
 from samples.vision.ultralytics_yolo.runtime.python.geometry import (
     resize_with_transform,
 )

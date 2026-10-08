@@ -14,6 +14,24 @@ R3D-18 将预处理后的 16 帧视频片段分类为 Kinetics-400 的 400 个�
 
 输入不是视频文件。`test_data/video0.npy` 是已经准备好的 `(1, 3, 16, 112, 112)` 片段；视频解码、抽帧、缩放和归一化不属于本 sample。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+3dresnet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
+本 sample 没有转换脚本、C++ runtime 或视频解码器。
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -78,23 +96,6 @@ bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 ```
 
 score 数值取决于编译产物，上面的数字仅示意字段结构。实际列表包含 `--top-k` 条结果；label 从 `test_data` 中的 400 条 Kinetics 映射读取（加载时会去掉原始标签名称中内嵌的引号字符）。
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-3dresnet/
-├── conversion/                 # 转换说明和保留的 source 截图
-├── model/                      # 显式、manifest 驱动的 HBM 准备
-├── runtime/python/             # binding、懒加载 runner、task、labels、CLI、run.sh
-├── evaluator/                  # source 功能/性能记录与边界
-├── test_data/                  # 预处理片段、400 条标签和 source 截图
-├── requirements-host.txt       # 主机测试依赖
-├── README.md                   # 英文说明
-└── README_cn.md                # 本文档
-```
-
-本 sample 没有转换脚本、C++ runtime 或视频解码器。
 
 <a id="entry-points"></a>
 ## 入口索引

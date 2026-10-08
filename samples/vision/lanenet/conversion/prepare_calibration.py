@@ -10,7 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 import cv2
 import numpy as np
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.vision.lanenet.runtime.python.image_preprocess import image_to_tensor
 
 PROTOCOL = "lanenet-rgb-area-imagenet-f32-nchw-v1"

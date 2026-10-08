@@ -27,8 +27,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
-from samples._shared import cls_binding
-from samples._shared.cls_binding import (  # noqa: F401 - re-exported surface
+from utils.py_utils import cls_binding
+from utils.py_utils.cls_binding import (  # noqa: F401 - re-exported surface
     OUTPUT_TRANSFORMS,
     AssetRecord,
     BindingError,
@@ -47,8 +47,8 @@ from samples._shared.cls_binding import (  # noqa: F401 - re-exported surface
     normalise_score_vector,
     score_vector_shape,
 )
-from samples._shared.cls_binding import MetadataMismatchError  # noqa: F401
-from samples._shared.platform_profile import (
+from utils.py_utils.cls_binding import MetadataMismatchError  # noqa: F401
+from utils.py_utils.platform_profile import (
     PlatformProfile,
     UnsupportedProfileError,
     classification_profiles,

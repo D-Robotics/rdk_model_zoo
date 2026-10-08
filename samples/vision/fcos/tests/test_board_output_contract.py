@@ -170,7 +170,7 @@ class ShuffledDictAcceptanceTests(unittest.TestCase):
         compare = importlib.import_module(COMPARE)
         fcos_mod = importlib.import_module(TASK)
         binding_mod = importlib.import_module(BINDING)
-        from samples._shared.runtime_meta import RuntimeMetadata
+        from utils.py_utils.runtime_meta import RuntimeMetadata
 
         metadata = metadata_for()
         raw = fixture_outputs()

@@ -23,11 +23,21 @@ JSONL；`image` 为首选标识（接受 `image_id` 与 `id` 别名；都没有�
 {"image":"street-001.jpg","boxes":[[[20,30],[180,30],[180,70],[20,70]]],"texts":["RDK"]}
 ```
 
-canonical Python 的 JSON 结果加上 `image` 字段即为预测对象，或按每行
+Python 的 JSON 结果加上 `image` 字段即为预测对象，或按每行
 一图组成 JSONL：
 
 ```json
 {"image":"street-001.jpg","target":"s100","boxes":[[[21,31],[179,31],[179,69],[21,69]]],"texts":["RDK"]}
+```
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── evaluate.py  # Python 脚本
 ```
 
 <a id="environment"></a>
@@ -80,8 +90,8 @@ Python 默认与保持长宽比两条管线（含兼容包装入口）在 X5 与
 检测/识别延迟与 FPS 用[转换说明](../conversion/README_cn.md)中针对
 det/rec 制品的 `hrt_model_exec perf` 命令测量。
 
-同板前后对照使用相同图像、制品字节、词典与阈值，分别在兼容入口与
-canonical 入口运行，先比较多边形框与解码字符串再谈渲染；各维度的
+同板前后对照使用相同图像、制品字节、词典与阈值，分别在快捷入口与
+入口运行，先比较多边形框与解码字符串再谈渲染；各维度的
 数值容差即阶段 I/O 契约的容差（相同输入下的框坐标应完全相等）。
 
 <a id="boundaries"></a>

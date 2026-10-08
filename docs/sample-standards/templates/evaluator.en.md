@@ -20,6 +20,11 @@
 # expect: ⟪layout⟫
 ```
 
+<a id="directory"></a>
+## Directory structure
+
+⟪List the actual files and their roles.⟫
+
 <a id="environment"></a>
 ## Environment
 

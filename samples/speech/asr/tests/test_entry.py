@@ -135,7 +135,7 @@ class EntryLoopTests(unittest.TestCase):
                 "--output-dir", str(root / "out"),
             ]
             with patch(
-                "samples._shared.platforms.require_execution_target",
+                "utils.py_utils.platforms.require_execution_target",
                 return_value="s100",
             ), patch.object(
                 model_runner, "RuntimeModelRunner", return_value=runner

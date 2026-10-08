@@ -3,7 +3,7 @@
 """Convert physical output to existing model probabilities and reduce by max."""
 
 import numpy as np
-from samples._shared.quantization import apply_output_transform
+from utils.py_utils.quantization import apply_output_transform
 
 
 def keyword_score(raw, binding):

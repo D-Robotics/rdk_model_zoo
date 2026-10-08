@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/resnext'
@@ -96,7 +96,7 @@ class SourceComparisonTests(unittest.TestCase):
 
     def task(self, variant=None):
         from samples.vision.resnext.runtime.python.model_binding import bind_model,resolve_selection
-        from samples.vision.resnext.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         selection = resolve_selection('x5', variant=variant)
         height, width = selection.contract.input_height, selection.contract.input_width
         class_count = selection.contract.class_count

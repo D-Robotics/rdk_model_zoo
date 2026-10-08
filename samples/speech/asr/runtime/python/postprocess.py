@@ -3,7 +3,7 @@
 """Physical output validation/conversion followed by explicitly selected decoding."""
 
 import numpy as np
-from samples._shared.quantization import apply_output_transform, dequantize_tensor
+from utils.py_utils.quantization import apply_output_transform, dequantize_tensor
 from samples.speech.asr.runtime.python.decoding import (
     decode_exact_logits,
     decode_logits,

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Lazy raw transport using shared board/hash gates and scheduling support."""
 
-from samples._shared.single_array_runner import NamedArrayRunner
+from utils.py_utils.single_array_runner import NamedArrayRunner
 from samples.robotics.himloco.runtime.python.model_binding import (
     bind_model,
     validate_selection,

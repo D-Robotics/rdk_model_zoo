@@ -7,6 +7,15 @@
 （`googlenet_224x224_nv12.bin`）。重新构建时先准备匹配的 ONNX 图、
 权重修订与 PTQ YAML。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -19,7 +28,7 @@ X5 构建模型。先准备 ONNX 图与 PTQ 配置，再使用 OE 包提供的
 <a id="export"></a>
 ## ONNX 导出
 
-导出的 GoogLeNet ONNX 图需满足 wrapper 的运行时契约：NV12 打包前的
+导出的 GoogLeNet ONNX 图需满足 脚本 的运行时契约：NV12 打包前的
 RGB/NCHW 224×224 输入，以及 1000 类分数输出。
 
 <a id="calibration"></a>

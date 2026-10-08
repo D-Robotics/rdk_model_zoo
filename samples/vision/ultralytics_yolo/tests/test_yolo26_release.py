@@ -13,7 +13,7 @@ ROOT = SAMPLE.parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SAMPLE / 'runtime/python'))
 
-from samples._shared import assets
+from utils.py_utils import assets
 from yolo_assets import manifest_asset, model_url
 from yolo_platform import resolve_platform
 import yolo_download

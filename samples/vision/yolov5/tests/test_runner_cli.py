@@ -10,8 +10,8 @@ ROOT=Path(__file__).resolve().parents[4]
 
 class RunnerCLITests(unittest.TestCase):
     def test_identity_before_sdk_import(self):
-        with patch('samples._shared.platforms.require_execution_target',side_effect=ValueError('Target mismatch')) as gate:
-            with patch('samples._shared.model_runner._default_runtime_factory') as factory:
+        with patch('utils.py_utils.platforms.require_execution_target',side_effect=ValueError('Target mismatch')) as gate:
+            with patch('utils.py_utils.model_runner._default_runtime_factory') as factory:
                 with self.assertRaisesRegex(ValueError,'Target mismatch'):RuntimeModelRunner(resolve_selection('s100')).load()
                 gate.assert_called_once_with('s100');factory.assert_not_called()
 

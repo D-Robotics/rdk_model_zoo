@@ -6,6 +6,26 @@ C++ inference runtime for Gemma4-E2B VLM on D-Robotics RDK S100P and S600. It lo
 
 > Part of [Gemma4-E2B sample](../../README.md). Full upstream project: [gemma4-e2b-rdk-s100p](https://github.com/shockley6668/gemma4-e2b-rdk-s100p).
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── build.sh  # Shell command
+├── launcher.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Boards and runtime scope
 
@@ -332,7 +352,7 @@ Patch rows precede patch columns; each patch contains pixel rows, pixel columns 
 Results own their values, so later calls cannot overwrite retained outputs. Serialize access to the SDK engine.
 `VisionEngine::Infer` takes prepared patches (prepare image paths through the explicit IO below).
 
-This complete example links `gemma4_runtime` in an SDK-enabled project; it is not a host-only example:
+This complete example links `gemma4_runtime` in an SDK-enabled project:
 
 ```cpp
 #include <iostream>

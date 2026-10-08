@@ -243,7 +243,7 @@ def main() -> int:
               f"downloaded. Nothing was downloaded.")
         return 0
 
-    from samples._shared.assets import download_asset
+    from utils.py_utils.assets import download_asset
     try:
         for name, path, asset in targets:
             print(f"[Prepare] {name}")

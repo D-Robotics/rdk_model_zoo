@@ -7,6 +7,23 @@
 
 源模型为 OpenBMB/MiniCPM5-2B，固定 revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`（Apache-2.0）。保留原始权重/config/tokenizer，外部适配器负责 SDK 接入。以下为源配方整理。所有代码块依次在同一 shell 环境使用，除非另有目录说明。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── legacy/  # legacy 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── adapter.py  # Python 脚本
+├── create_config.py  # Python 脚本
+├── download_data.sh  # Shell 脚本
+├── main.py  # 命令行入口
+├── package_s600.py  # Python 脚本
+├── prepare_tokenizer.py  # Python 脚本
+└── s600.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

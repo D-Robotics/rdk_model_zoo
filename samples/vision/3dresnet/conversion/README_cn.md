@@ -13,6 +13,15 @@ source 文档描述了将 PyTorch `torchvision.models.video.r3d_18` 动作分类
 
 ![R3D-18 ONNX graph](../test_data/readme_img/r3d_18_orig.png)
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

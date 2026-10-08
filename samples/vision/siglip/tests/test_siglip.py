@@ -9,7 +9,7 @@ import types
 import unittest
 from unittest.mock import patch
 import numpy as np
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT=Path(__file__).resolve().parents[4]
 SAMPLE=ROOT/'samples/vision/siglip'
@@ -212,7 +212,7 @@ class RunnerEntryTests(unittest.TestCase):
     def test_execution_gate_precedes_default_runtime_factory(self):
         from samples.vision.siglip.runtime.python.model_binding import resolve_selection
         from samples.vision.siglip.runtime.python import model_runner
-        with patch('samples._shared.platforms.detect_target',return_value='s600'),patch.object(model_runner,'_default_runtime_factory') as factory:
+        with patch('utils.py_utils.platforms.detect_target',return_value='s600'),patch.object(model_runner,'_default_runtime_factory') as factory:
             runner=model_runner.RuntimeModelRunner(resolve_selection('s100'))
             with self.assertRaises(ValueError):runner.load()
             factory.assert_not_called()
@@ -234,7 +234,7 @@ class RunnerEntryTests(unittest.TestCase):
             output=Path(d)/'results/feature-no-extension'
             runtime=FakeRuntime('so400m-patch14-384')
             text=io.StringIO()
-            with patch('samples._shared.platforms.detect_target',return_value='s100p'), patch.object(model_runner,'RuntimeModelRunner',lambda selection:real_runner(selection,runtime=runtime)),contextlib.redirect_stdout(text):
+            with patch('utils.py_utils.platforms.detect_target',return_value='s100p'), patch.object(model_runner,'RuntimeModelRunner',lambda selection:real_runner(selection,runtime=runtime)),contextlib.redirect_stdout(text):
                 rc=main.main(['--target','s100p','--asset-id','s:siglip:s100/bpu-siglip-so400m-patch14-384.hbm','--model-path',str(model),'--submodel','last_hidden_state','--output-file',str(output)])
             self.assertEqual(rc,0)
             result=np.load(output,allow_pickle=False)
@@ -250,7 +250,7 @@ class RunnerEntryTests(unittest.TestCase):
         from samples.vision.siglip.runtime.python import main
         from samples.vision.siglip.runtime.python import embedding
         for argv,board in ((['--target','s100'],'s100p'),(['--target','s100','--image-size','384'],'s100'),(['--dry-run'],'s100')):
-            with patch('samples._shared.platforms.detect_target',return_value=board),patch.object(
+            with patch('utils.py_utils.platforms.detect_target',return_value=board),patch.object(
                 embedding,'SigLIPTask',side_effect=AssertionError('must not construct')) as task,contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(main.main(argv),2)
                 task.assert_not_called()

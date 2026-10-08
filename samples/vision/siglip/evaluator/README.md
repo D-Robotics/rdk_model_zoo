@@ -15,6 +15,15 @@ The historical `pooler_output` zero-shot classification record used ImageNet-1k 
 # expected source-owned layouts: ImageNet-1k val and COCO2014 val, as supplied by the evaluator owner
 ```
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 

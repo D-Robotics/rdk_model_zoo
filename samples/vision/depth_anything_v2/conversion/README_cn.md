@@ -9,6 +9,15 @@
 权重摘要、导出脚本、ONNX 摘要或上游版本。复现已发布 HBM 前需取得这些输入；
 随便选择同名 V2 权重不能证明与 `depth_any.hbm` 匹配。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

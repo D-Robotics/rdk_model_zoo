@@ -1,7 +1,7 @@
 # ResNet model artifacts
 
 The model directory contains no checked-in binaries; artifacts are fetched
-explicitly from the platform release manifests by the canonical downloader.
+explicitly from the platform release manifests by the downloader.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -22,6 +22,18 @@ URL and format. X5 consumes one packed NV12 tensor; S100/S600 consume
 separate Y and UV tensors — a bare filename cannot select the protocol, so
 the runtime always pairs `--model-path` with the exact reference.
 S100P has no ResNet row and cannot be satisfied by reusing the S100 file.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
 
 <a id="preparation"></a>
 ## Preparation
@@ -58,7 +70,7 @@ checked into the repository; no download is required.
 After preparation, artifacts live at `model/resnet18_224x224_nv12.bin`
 (x5), `model/s100/resnet18_224x224_nv12.hbm` (s100), and
 `model/s600/resnet18_224x224_nv12.hbm` (s600) relative to the sample root;
-the canonical `--model-path` default examples in
+the `--model-path` default examples in
 [runtime/python/README.md](../runtime/python/README.md) point at these
 locations. The C++ launcher defaults to `model/s100` as well.
 

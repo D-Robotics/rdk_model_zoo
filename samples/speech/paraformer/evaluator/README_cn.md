@@ -14,6 +14,18 @@
 音频目录中对应文件为 `<utt_id>.wav`。使用下方准备命令生成经检查的特征并保留
 截断记录。本入口不隐式选择数据集划分或文本归一化规则。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── backends.py  # Python 脚本
+├── inputs.py  # Python 脚本
+└── main.py  # 命令行入口
+```
+
 <a id="environment"></a>
 ## 环境与准备
 

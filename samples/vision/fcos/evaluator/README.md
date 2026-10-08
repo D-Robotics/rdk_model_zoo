@@ -7,12 +7,22 @@
 - Dataset: COCO validation is the source reference; no version, annotations, or preparation script is included.
 - Smoke input: `samples/vision/fcos/test_data/bus.jpg` is one bundled BGR image, not a COCO evaluation set.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── compare.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
 - Execution target: an identified RDK X5 board with `hbm_runtime` and one exact manifest artifact.
 - Host dependencies: Python 3.10+, NumPy, OpenCV, PyYAML, and SciPy from `requirements-host.txt`; SciPy is imported by the source postprocess helper. Host tests use an injected runtime and never load the board SDK.
-- The evaluator runs the pinned original X5 wrapper (loaded from Git history) and this sample's FCOS task on the same image, artifact, thresholds, and direct-resize geometry.
+- The evaluator runs the pinned original X5 helper (loaded from Git history) and this sample's FCOS task on the same image, artifact, thresholds, and direct-resize geometry.
 
 <a id="command"></a>
 ## Evaluation Command

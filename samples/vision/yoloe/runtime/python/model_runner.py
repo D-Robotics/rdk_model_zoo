@@ -4,7 +4,7 @@
 
 from collections.abc import Mapping
 import numpy as np
-from samples._shared.assets import verify_asset_file, sha256_file
+from utils.py_utils.assets import verify_asset_file, sha256_file
 from samples.vision.ultralytics_yolo.runtime.python.model_runner import (
     ModelRunner,
     build_runner as common_runner,
@@ -20,7 +20,7 @@ def build_runner(selection, *, runtime_loader=None):
             raise ValueError(
                 "Published S YOLOE outputs are quantized; prepare and identify a local float model. See conversion/README.md."
             )
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
         if selection.local_float:

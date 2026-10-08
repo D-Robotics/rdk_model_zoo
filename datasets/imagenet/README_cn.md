@@ -33,7 +33,7 @@ imagenet/
 ```
 
 它**不是**每行一个名称的列表，尽管运行时加载器也兼容那种格式。
-`samples/_shared/labels.py::load_labels`（各分类 sample 经此复用；旧版
+`utils/py_utils/labels.py::load_labels`（各分类 sample 经此复用；旧版
 `utils/py_utils/file_io.py::load_labels` 行为一致）检测开头的 `{` 并用
 `ast.literal_eval` 解析为 `{索引: 名称}`；每行一个的显示名文本同样可用。每个值是
 逗号分隔的多个同义英文短语——**仅作显示名**：它们不是 WordNet synset ID

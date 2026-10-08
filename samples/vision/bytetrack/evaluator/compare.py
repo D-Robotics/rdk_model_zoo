@@ -5,7 +5,7 @@ from datetime import datetime,timezone
 import numpy as np
 ROOT=Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-from samples._shared.platforms import require_execution_target
+from utils.py_utils.platforms import require_execution_target
 from samples.vision.bytetrack.runtime.python.model_binding import resolve_selection
 from samples.vision.yolov5.evaluator.compare import _hash
 

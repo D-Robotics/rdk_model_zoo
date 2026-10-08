@@ -10,7 +10,7 @@ from typing import Any, Callable, Mapping
 import cv2
 import numpy as np
 
-from samples._shared.quantization import apply_output_transform
+from utils.py_utils.quantization import apply_output_transform
 from .tensor_io import ImageContext, PreparedInput, prepare
 
 

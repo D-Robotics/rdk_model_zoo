@@ -11,6 +11,17 @@
 
 下载 URL 由[当前清单](../../../../docs/release/s/models.yaml)提供。S100P/S600/X5 无 KWS 发布制品，改名或强行更改板卡别名不能创建适配。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 显式准备
 

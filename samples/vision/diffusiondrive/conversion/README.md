@@ -11,6 +11,16 @@ The source refers to the official [DiffusionDrive project](https://github.com/hu
 
 For inference with the published assets, use [model preparation](../model/README.md). Published HBM checksums authenticate those published files; an independently exported model needs its own digest record.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── configs/  # Files for configs
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

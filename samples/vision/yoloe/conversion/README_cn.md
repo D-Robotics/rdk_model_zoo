@@ -7,6 +7,24 @@
 
 三条路线（X5 E11、S E11、S E26）的配方均在下文提供。统一准备入口不请求 `remove_node_type`/`remove_node_name`，以此保留浮点输出节点。已发布 S 制品输出为量化数据，与本地重新生成的浮点模型分开保存。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── calibration.py  # Python 脚本
+├── configuration.py  # Python 脚本
+├── contract.py  # Python 脚本
+├── export.py  # Python 脚本
+├── export_heads.py  # Python 脚本
+├── prepare.py  # Python 脚本
+├── requirements-export.txt  # 源码或数据文件
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

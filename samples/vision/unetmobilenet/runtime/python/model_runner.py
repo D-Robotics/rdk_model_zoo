@@ -1,8 +1,8 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Lazy SDK transport; one raw score array from two physical NV12 planes."""
-from samples._shared.platforms import require_execution_target
-from samples._shared.single_array_runner import SingleArrayRunner
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.single_array_runner import SingleArrayRunner
 from samples.vision.unetmobilenet.runtime.python.model_binding import bind_model
 
 

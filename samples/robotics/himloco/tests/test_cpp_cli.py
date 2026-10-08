@@ -63,7 +63,7 @@ class NativeCliTests(unittest.TestCase):
                 "-I",
                 str(CPP),
                 "-I",
-                str(ROOT / "samples/_shared/cpp"),
+                str(ROOT / "utils/c_utils"),
                 "-I",
                 str(include),
             ]

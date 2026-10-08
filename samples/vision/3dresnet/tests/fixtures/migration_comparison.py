@@ -28,7 +28,7 @@ model_path = repo / "samples/vision/3dresnet/model/s100/r3d_18.hbm"
 clip_path = repo / "samples/vision/3dresnet/test_data/video0.npy"
 
 # This is the only board gate. It must precede both the legacy import and SDK use.
-platforms = importlib.import_module("samples._shared.platforms")
+platforms = importlib.import_module("utils.py_utils.platforms")
 platforms.require_execution_target(target)
 if not model_path.is_file():
     raise FileNotFoundError(model_path)
@@ -131,7 +131,7 @@ model_path = repo / "samples/vision/3dresnet/model/s100/r3d_18.hbm"
 clip_path = repo / "samples/vision/3dresnet/test_data/video0.npy"
 
 # 这是唯一的板卡门禁，必须先于 source 导入和 SDK 使用。
-platforms = importlib.import_module("samples._shared.platforms")
+platforms = importlib.import_module("utils.py_utils.platforms")
 platforms.require_execution_target(target)
 if not model_path.is_file():
     raise FileNotFoundError(model_path)

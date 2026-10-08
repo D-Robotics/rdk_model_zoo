@@ -1,5 +1,30 @@
 # YOLOE Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── config.py  # Python script
+├── decode.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── pipeline_io.py  # Python script
+├── postprocess.py  # Python script
+├── run.sh  # Run the sample
+├── visualization.py  # Python script
+└── yoloe.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 import numpy as np
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SOURCE = legacy_path("s/samples/speech/paraformer/conversion/cif_numpy.py")

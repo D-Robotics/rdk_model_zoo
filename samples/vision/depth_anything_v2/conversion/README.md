@@ -11,6 +11,15 @@ exported ONNX checksum or upstream revision. Obtain these before attempting to
 reproduce the published HBM. Choosing any similarly named V2 checkpoint is not
 evidence that it matches `depth_any.hbm`.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

@@ -45,7 +45,7 @@ def main(argv=None) -> int:
         selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path)
         if args.dry_run:
             return run_dry_run(selection)
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
         if not selection.model_path.is_file():

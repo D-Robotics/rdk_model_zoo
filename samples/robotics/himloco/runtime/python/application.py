@@ -17,8 +17,8 @@ from pathlib import Path
 import platform
 import sys
 import numpy as np
-from samples._shared.assets import sha256_file, verify_asset_file
-from samples._shared.runtime_meta import metadata_evidence
+from utils.py_utils.assets import sha256_file, verify_asset_file
+from utils.py_utils.runtime_meta import metadata_evidence
 from samples.robotics.himloco.runtime.python.input_io import (
     discover_inputs,
     load_observation,
@@ -86,7 +86,7 @@ def prepare(args, selection) -> PreparedRun:
     report file is opened exclusively and stays open until
     :meth:`PreparedRun.close`.
     """
-    from samples._shared.platforms import require_execution_target
+    from utils.py_utils.platforms import require_execution_target
 
     require_execution_target(selection.target)
     model_digest = verify_asset_file(selection.asset, selection.model_path)

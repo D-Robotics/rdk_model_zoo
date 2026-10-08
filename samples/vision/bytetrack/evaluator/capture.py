@@ -6,10 +6,10 @@ import numpy as np
 import cv2
 ROOT=Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-from samples._shared.platforms import require_execution_target
-from samples._shared.runtime_meta import RuntimeMetadata,metadata_evidence
-from samples._shared.assets import verify_asset_file
-from samples._shared.legacy_platforms import legacy_tree, pinned_name
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.runtime_meta import RuntimeMetadata,metadata_evidence
+from utils.py_utils.assets import verify_asset_file
+from utils.py_utils.legacy_platforms import legacy_tree, pinned_name
 from samples.vision.bytetrack.runtime.python.model_binding import SAMPLE_DIR,resolve_selection
 from samples.vision.yolov5.evaluator.compare import _hash,_json
 from samples.vision.yolov5.evaluator.source_reference import load_legacy,source_paths
@@ -62,12 +62,12 @@ def capture_frames(selection,frames,output_dir,*,side,video_path,runtime_factory
         verify_asset_file(selection.asset,selection.model_path)
         for package in ('scipy','lap','cython-bbox'):summary['versions'][package]=importlib.metadata.version(package)
         source=legacy_tree('s/samples/vision/bytetrack')
-        code=list((SAMPLE_DIR/'runtime/python').rglob('*.py'))+list((SAMPLE_DIR/'evaluator').glob('*.py'))+list((SAMPLE_DIR.parent/'yolov5/runtime/python').glob('*.py'))+list((SAMPLE_DIR.parent/'yolov5/evaluator').glob('*.py'))+list(source_paths('s100'))+list((source/'runtime/python').glob('*.py'))+list((source/'3rdparty/tracker').glob('*.py'))+[ROOT/'samples/_shared'/n for n in ('assets.py','platforms.py','runtime_meta.py','quantization.py','image.py')]
+        code=list((SAMPLE_DIR/'runtime/python').rglob('*.py'))+list((SAMPLE_DIR/'evaluator').glob('*.py'))+list((SAMPLE_DIR.parent/'yolov5/runtime/python').glob('*.py'))+list((SAMPLE_DIR.parent/'yolov5/evaluator').glob('*.py'))+list(source_paths('s100'))+list((source/'runtime/python').glob('*.py'))+list((source/'3rdparty/tracker').glob('*.py'))+[ROOT/'utils/py_utils'/n for n in ('assets.py','platforms.py','runtime_meta.py','quantization.py','image.py')]
         # Historical files materialize from the pinned commit; record them
         # under their platforms/ tree names so evidence stays comparable.
         summary['code_sha256']={ (str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else pinned_name(p)):_hash(p) for p in code}
         if runtime_factory is None:
-            from samples._shared.model_runner import _default_runtime_factory
+            from utils.py_utils.model_runner import _default_runtime_factory
             runtime_factory=_default_runtime_factory()
         def factory(path):
             # Projected without copying SDK quant descriptors (asdict deepcopies and the board QuantParams refuses it).

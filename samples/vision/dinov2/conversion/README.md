@@ -12,6 +12,17 @@ The conversion implementation in this directory is the shipped source capability
 - Checkpoint: `dinov2_vits14_pretrain.pth`, SHA-256 `b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9`.
 - The exporter verifies the full checkpoint digest before `torch.load`; an HTTPS checkpoint is streamed to a temporary file and removed after verification/loading.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── onnx_export/  # Files for onnx_export
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── mapper.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
 

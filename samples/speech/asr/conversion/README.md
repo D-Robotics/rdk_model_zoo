@@ -6,6 +6,15 @@ English | [简体中文](README_cn.md)
 ## Source model
 The sample runs a Wav2Vec2 ASR model. The published S100/S600 HBM artifacts and the fixed vocabulary are available through the [model guide](../model/README.md). This directory ships no checkpoint-to-HBM script: bring a Wav2Vec2 checkpoint, an exporter and the per-target OE configuration as external inputs, and record the checkpoint URL/revision, architecture and training configuration.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 The active manifest publishes separate S100 and S600 HBM files. Use the OE/compiler release and target configuration matching each artifact, and record the versions used. Do not treat S100P as S100, or rename one HBM to target another board.

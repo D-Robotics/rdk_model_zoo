@@ -13,6 +13,16 @@ Size: 2457817532 bytes.
 
 [Download model](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz)
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 显式准备
 
@@ -54,6 +64,7 @@ model/<board>/
   MODEL_INFO.json
   SHA256SUMS
 ```
+
 <a id="formats-checksums"></a>
 ## 格式、校验与覆盖参数
 

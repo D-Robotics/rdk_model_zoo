@@ -18,6 +18,16 @@ MobileNetV2（[论文](https://arxiv.org/abs/1801.04381)，
 仓库侧携带量化 YAML（`mobilenetv2_config.yaml`）与测试图，相关引用按
 原样使用。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── mobilenetv2_config.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

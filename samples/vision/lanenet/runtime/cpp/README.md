@@ -4,6 +4,25 @@
 
 This entry is a DNN/UCP implementation with image preparation, inference, result decoding, visualization and file IO as separate steps. It produces an embedding map and binary lane labels. It does **not** cluster embeddings into lane instances or fit curves.
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── launcher.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards
 
@@ -74,7 +93,7 @@ These defaults belong to the Python launcher, also used by `run.sh`:
 | `--list-models` | `false` | List published manifest identity without execution |
 | `--dry-run` | `false` | Print resolved command without execution |
 
-Additional image paths must be new, distinct and must not overwrite result files or launch logs. Relative paths passed to the launcher are resolved before it starts the binary from the repository root. The shell wrapper first changes to the repository root.
+Additional image paths must be new, distinct and must not overwrite result files or launch logs. Relative paths passed to the launcher are resolved before it starts the binary from the repository root. The shell helper first changes to the repository root.
 
 The direct binary requires `--model-path` and `--test-img`. Its `--target` and `--output` defaults are `s100` and `outputs/lanenet_cpp`; extra image paths are empty by default. It accepts the original underscore aliases (`--model_path`, `--test_img`, `--instance_save_path`, `--binary_save_path`) and `--key=value`. It has no manifest selection, automatic build, download or digest recording; use the launcher for run provenance. UCP scheduling uses the default priority and the ANY core.
 

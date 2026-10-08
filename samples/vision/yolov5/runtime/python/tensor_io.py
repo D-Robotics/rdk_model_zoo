@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 import cv2
 import numpy as np
-from samples._shared.image import bgr_to_nv12_planes
+from utils.py_utils.image import bgr_to_nv12_planes
 
 def resized_image(img: np.ndarray, input_W: int, input_H: int,
                   resize_type: int = 1,

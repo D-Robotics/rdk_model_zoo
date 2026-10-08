@@ -15,9 +15,9 @@ import unittest
 
 import numpy as np
 
-from samples._shared.runtime_meta import RuntimeMetadata
-from samples._shared.sam_binding import bind_model, resolve_selection
-from samples._shared.sam_stages import StageError
+from utils.py_utils.runtime_meta import RuntimeMetadata
+from utils.py_utils.sam_binding import bind_model, resolve_selection
+from utils.py_utils.sam_stages import StageError
 
 
 def make_binding(target: str = "s100"):

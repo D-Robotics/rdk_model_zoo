@@ -5,6 +5,15 @@
 
 ByteTrack itself is post-processing. The only neural artifact is the upstream YOLOv5x detector HBM, with three target-specific manifest rows. No separate tracker export or checkpoint exists.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

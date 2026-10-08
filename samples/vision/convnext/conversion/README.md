@@ -16,6 +16,18 @@ YAMLs' `onnx_model` entries do **not** line up with their own variant names
 (see gap 1); verify the ONNX provenance of every config before compiling,
 with the current file values listed in [Additional preparation](#known-gaps).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── ConvNeXt_atto.yaml  # Configuration
+├── ConvNeXt_femto.yaml  # Configuration
+├── ConvNeXt_nano.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -36,7 +48,6 @@ cross-swapped** files — the atto config consumes
 `../../../01_common/model_zoo/mapper/classification/ConvNeXt/convnext_atto.onnx`
 (a path outside this sample), and the nano config points at
 `./convnext_pico.onnx` (a size not otherwise present in this directory).
-
 
 <a id="calibration"></a>
 ## Calibration

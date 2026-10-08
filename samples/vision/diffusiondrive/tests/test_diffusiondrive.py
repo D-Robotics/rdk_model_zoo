@@ -19,7 +19,7 @@ from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
 )
 from samples.vision.diffusiondrive.runtime.python.quantization import quantize, decode
 
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 SOURCE = legacy_tree("s/samples/vision/diffusiondrive")
 
 
@@ -214,7 +214,7 @@ class DiffusionTests(unittest.TestCase):
             "samples.vision.diffusiondrive.runtime.python.model_runner.require_execution_target",
             side_effect=ValueError("wrong board"),
         ) as gate, patch(
-            "samples._shared.single_array_runner._default_runtime_factory"
+            "utils.py_utils.single_array_runner._default_runtime_factory"
         ) as factory:
             with self.assertRaises(ValueError):
                 RuntimeModelRunner(resolve_selection("s100p")).load()

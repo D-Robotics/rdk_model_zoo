@@ -7,6 +7,16 @@
 [ViT_PyTorch](https://github.com/xiongqi123123/ViT_PyTorch.git)。未交付
 固定权重版本或导出脚本。原 YAML 与 hb_compile.log 逐字节保留。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── config_vit_nv12.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

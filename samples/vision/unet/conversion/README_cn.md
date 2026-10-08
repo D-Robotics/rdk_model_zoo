@@ -26,6 +26,18 @@ conversion/
 
 五个骨干共用本地 onnx_export/model 架构；来源、固定参考 commit 和 MIT 许可见[根 README](../README_cn.md#license)。需要与所选骨干匹配的训练 checkpoint，本仓不下载或捏造它。严格载入失败不能用 strict=False 绕过。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── onnx_export/  # onnx_export 相关文件
+├── ptq_yamls/  # ptq_yamls 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── mapper.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链
 
@@ -126,4 +138,4 @@ python3 samples/vision/unet/evaluator/eval_unet.py --backend x5 --backbone resne
 <a id="known-gaps"></a>
 ## 缺失前提
 
-训练 checkpoint、完整 VOC 及代表性校准子集需自行准备；OE 镜像/框架版本未固定。上面的取前 100 张是格式准备示例，不保证校准代表性，正式量化需选择适合数据分布的子集。
+准备训练 checkpoint、完整 VOC 数据集及具有代表性的校准子集，并使用匹配的 OE 镜像与框架版本。上面的前 100 张图像用于演示文件准备方式；正式量化请按实际输入分布选择校准图像。

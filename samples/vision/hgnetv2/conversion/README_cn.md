@@ -17,6 +17,21 @@ Hugging Face 下载权重；推理本身不执行任何导出。
 | b3 | `hgnetv2_b3.ssld_stage2_ft_in1k` | `hgnetv2_b3_224x224_nv12.bin` |
 | b4 | `hgnetv2_b4.ssld_stage2_ft_in1k` | `hgnetv2_b4_224x224_nv12.bin` |
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── onnx_export/  # onnx_export 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── hgnetv2_b0.yaml  # 配置
+├── hgnetv2_b1.yaml  # 配置
+├── hgnetv2_b2.yaml  # 配置
+├── hgnetv2_b3.yaml  # 配置
+└── hgnetv2_b4.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

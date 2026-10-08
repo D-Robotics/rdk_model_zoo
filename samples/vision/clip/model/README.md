@@ -19,6 +19,17 @@ Exact manifest URLs:
 | `x5:clip:img_encoder.bin` | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/img_encoder.bin> |
 | `x5:clip:text_encoder.onnx` | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/text_encoder.onnx> |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Preparation
 
@@ -42,7 +53,7 @@ The manifest records both SHA-256 values as unknown. The downloader prints obser
 | File | Role | Required |
 | --- | --- | --- |
 | `download.py` | Downloads both exact manifest assets. | Yes for scripted preparation; no when both files already exist. |
-| `download.sh` | Named-argument wrapper for `download.py`. | No. |
+| `download.sh` | Named-argument helper for `download.py`. | No. |
 | `../runtime/python/bpe_simple_vocab_16e6.txt.gz` | Source BPE vocabulary used by the text tokenizer. | Yes for text encoding. |
 
 <a id="local-paths"></a>

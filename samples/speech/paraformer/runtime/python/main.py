@@ -46,7 +46,7 @@ def main(argv=None):
         from samples.speech.paraformer.runtime.python import application
 
         if not args.preprocess_only:
-            from samples._shared.platforms import require_execution_target
+            from utils.py_utils.platforms import require_execution_target
 
             require_execution_target(selections[0].target)
         preparation = application.prepare(args, selections)

@@ -6,8 +6,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 import re
 import numpy as np
-from samples._shared.assets import sha256_file
-from samples._shared.yoloe26_geometry import letterbox
+from utils.py_utils.assets import sha256_file
+from utils.py_utils.yoloe26_geometry import letterbox
 from samples.vision.ultralytics_yolo.runtime.python.geometry import (
     resize_with_transform,
 )

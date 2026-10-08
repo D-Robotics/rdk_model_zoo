@@ -9,7 +9,7 @@ Reference closure verification compares the entry module and imported `utils.py_
 ## Minimal dependencies
 
 - On the **board**: the matching `hbm_runtime` Python environment (Python 3.10
-  compatible — hashing reuses `samples/_shared/assets.py::sha256_file`),
+  compatible — hashing reuses `utils/py_utils/assets.py::sha256_file`),
   plus numpy, OpenCV and scipy (the fixed source imports
   `scipy.special.softmax`), and the full repository checkout deployed on the
   board. Run from the repository root.
@@ -61,7 +61,7 @@ successful run) inside the new `--output-dir`:
   publisher-vs-observed SHA-256 (`verify_asset_file`; publisher hashes are
   `null` in the manifests and stay `null`), image and label observed SHA-256.
 - execution: per-side SDK metadata via
-  `samples/_shared/runtime_meta.py::metadata_evidence` (never `asdict` — board
+  `utils/py_utils/runtime_meta.py::metadata_evidence` (never `asdict` — board
   `QuantParams` refuses copying), all pre inputs / raw outputs / Top-K and
   top-8 evidence arrays with shape/dtype/SHA-256, and the real exception and
   return code when anything fails.

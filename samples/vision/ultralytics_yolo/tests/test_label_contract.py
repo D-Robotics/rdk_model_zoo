@@ -96,7 +96,7 @@ class ClsPresentationTests(unittest.TestCase):
     def test_cls_presentation_uses_passed_labels_and_never_rereads_defaults(self):
         from unittest import mock
 
-        with mock.patch("rdk_yolo_utils.file_io.load_labels",
+        with mock.patch("utils.py_utils.file_io.load_labels",
                         side_effect=AssertionError("default label re-read")):
             output = self._present(["a", "b", "c", "d"], [(3, 0.9), (0, 0.1)])
         self.assertIn("d", output)
@@ -105,7 +105,7 @@ class ClsPresentationTests(unittest.TestCase):
     def test_cls_presentation_without_labels_falls_back_to_class_ids(self):
         from unittest import mock
 
-        with mock.patch("rdk_yolo_utils.file_io.load_labels",
+        with mock.patch("utils.py_utils.file_io.load_labels",
                         side_effect=AssertionError("default label re-read")):
             output = self._present([], [(3, 0.9)])
         self.assertIn("3", output)

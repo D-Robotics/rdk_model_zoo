@@ -9,7 +9,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0,str(ROOT))
-from samples._shared.assets import download_asset
+from utils.py_utils.assets import download_asset
 from samples.vision.siglip.runtime.python.model_binding import DEFAULT_VARIANT, VARIANTS, SUPPORTED_TARGETS, resolve_selection
 
 DEFAULT_OUTPUT_DIR=Path(__file__).resolve().parent

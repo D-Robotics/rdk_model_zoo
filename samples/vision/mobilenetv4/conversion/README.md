@@ -13,6 +13,23 @@ pretrained weights, fixed by `get_mobilenetv4_onnx.py`. The script
 exports small at `[1,3,224,224]` and medium at `[1,3,256,256]` —
 see [additional preparation](#known-gaps) for the X5 medium geometry.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── MobileNetV4_medium.yaml  # Configuration
+├── MobileNetV4_small.yaml  # Configuration
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── get_calibration_data.py  # Python script
+├── get_mobilenetv4_onnx.py  # Python script
+├── mobilenetv4_medium_config.yaml  # Configuration
+├── mobilenetv4_small_config.yaml  # Configuration
+├── timm2onnx_local.py  # Python script
+└── x86_medium_inference.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -39,6 +56,7 @@ python3 get_mobilenetv4_onnx.py    # -> mobilenetv4_conv_small.onnx + mobilenetv
 
 The exporter uses onnx-simplifier and reports the parameter count
 (small 3,761,480 / medium 9,681,560).
+
 <a id="calibration"></a>
 ## Calibration
 
@@ -91,7 +109,7 @@ real and the runtime contract table records them per target.
 
 For a regenerated artifact, run `hb_perf` and `hrt_model_exec` per the OE
 manual and keep the complete output; then confirm on the matching board
-with the canonical runtime that the contract holds. Input shapes are
+with the runtime that the contract holds. Input shapes are
 per target×variant — they mirror the runtime contract table and the
 published artifact names:
 

@@ -7,6 +7,15 @@
 
 fixture 概述。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+bad_links/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -28,11 +37,6 @@ fixture 概述。
 ## 预期结果
 
 打印列表。
-
-<a id="directory"></a>
-## 目录职责
-
-- `README_cn.md` — 本文件
 
 <a id="entry-points"></a>
 ## 入口索引

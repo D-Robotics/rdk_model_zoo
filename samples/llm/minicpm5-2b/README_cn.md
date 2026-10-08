@@ -7,7 +7,22 @@
 
 本示例使用 S600 BPU 和 OELLM Runtime 运行 OpenBMB MiniCPM5-2B 文本生成，提供 C++ 命令行程序、带 SHA256 校验的模型下载、转换说明和完整 WikiText2 测评记录。
 
-> S600 当前对应 OELLM 2.0 内测 SDK，尚未公开，正式版计划于 2026 年 10 月中旬发布。公开 S600 1.0.5 与当前 HBM 的直接运行未通过验证，不能替代 2.0；S100/S100P 使用下方独立的公开 1.0.0 SDK 流程。
+> S600 使用 OELLM 2.0 SDK；S100/S100P 使用下方 OELLM 1.0.0 SDK 流程。请准备与所选模型匹配的 SDK。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+minicpm5-2b/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
 
 <a id="support-matrix"></a>
 ## 支持矩阵
@@ -68,19 +83,6 @@ bash run.sh -- --prompt="What is the capital of France? Answer with the city nam
 
 原始浮点模型对一条中文 `1+1` 提示词回答错误，并在要求裸 JSON 时添加 Markdown 围栏；量化模型保留了这些表现。格式敏感的应用请自行校验输出。
 
-<a id="directory"></a>
-## 目录结构
-
-```text
-conversion/     主机适配代码与量化、编译说明
-evaluator/      S600 PPL 评估与测评证据
-evaluator/legacy/ S100/S100P 全量 PPL 与生成验证
-model/          模型下载及校验
-runtime/cpp/    S600 的 CMake 工程和 run.sh
-runtime/legacy/ S100/S100P 的 CMake 工程和 run.sh
-test_data/      生成提示词与实际参考结果
-```
-
 <a id="entry-points"></a>
 ## 入口与下一步
 
@@ -93,6 +95,7 @@ test_data/      生成提示词与实际参考结果
 | 转换配方 | [conversion](conversion/README_cn.md) |
 | 评估与历史证据 | [evaluator](evaluator/README_cn.md) |
 | 提示词与参考输出 | [test_data](test_data/README_cn.md) |
+
 <a id="license"></a>
 ## 许可与来源
 

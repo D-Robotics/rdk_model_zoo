@@ -6,6 +6,25 @@
 SDK 资源管理与前处理、forward、后处理、predict 分离。
 保留源原生推理能力及三个位置参数入口，并新增带 NumPy 文件头的数组，方便离线评估。
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── launcher.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 板卡支持与验证状态
 
@@ -99,7 +118,7 @@ samples/vision/yolo26_depth/runtime/cpp/build/x5/yolo26_depth \
 | 二进制 | `--model-path` / `--model`、`--test-img` / `--input` | 显式模型与图像，不隐式选择模型 |
 | 二进制 | `--help` | 不加载模型，只显示用法 |
 
-源 X5 C++ 使用 SDK 默认调度，本实现不新增未经验证的核选择或优先级参数。
+X5 C++ 使用 SDK 默认调度。
 非法选项、输入或目标返回退出码 2。
 
 <a id="interface-lifecycle"></a>

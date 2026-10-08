@@ -10,6 +10,22 @@ This sample provides object detection, instance segmentation, pose estimation, c
 
 Python binds inputs by target and selects task protocols by family, sharing preparation, rendering and evaluation. YOLOv5, YOLOE and yolo26_depth use separate sample interfaces.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+ultralytics_yolo/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── DETECTION_CONTRACT.md  # Documentation
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support and validation
 
@@ -58,7 +74,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
   --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
   --img-save-path /tmp/yolov8n-x5.jpg
 ```
-For other targets use matching preparation arguments and paths from [model instructions](model/README.md). Explicit `--model-path` never downloads; when omitted, the compatibility entry downloads missing default assets. Specify `--family` for custom filenames. `--target` aliases `--platform`; actual inference rejects unknown boards and target mismatches.
+For other targets use matching preparation arguments and paths from [model instructions](model/README.md). Explicit `--model-path` never downloads; when omitted, the entry downloads missing default assets. Specify `--family` for custom filenames. `--target` aliases `--platform`; actual inference rejects unknown boards and target mismatches.
 
 Without a board, inspect selections without downloading or inference:
 
@@ -71,6 +87,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
   --target x5 --task detect \
   --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
 ```
+
 <a id="expected-results"></a>
 ## Expected results
 
@@ -86,19 +103,6 @@ YOLO26 detection visualization with class IDs and scores:
 
 ![Reference S YOLO26 delivery detection illustration](test_data/result_detect_yolo26.jpg)
 
-<a id="directory"></a>
-## Directory responsibilities
-
-```text
-ultralytics_yolo/
-├── model/          # published asset preparation
-├── runtime/python/ # shared task APIs and CLI
-├── runtime/cpp/    # detect/classify/pose/segment reference programs
-├── conversion/    # export, calibration and X5/S compiler adapters
-├── evaluator/     # dataset evaluation and batch CLI
-├── test_data/     # input images, labels and example visualizations
-└── tests/         # host regression checks
-```
 <a id="entry-points"></a>
 ## Usage and source entry points
 

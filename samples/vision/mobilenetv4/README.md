@@ -34,6 +34,22 @@ block with two optional
 depthwise layers, its Extra-DW / Inverted Bottleneck / ConvNeXt / FFN
 instantiations, and the alternative fused IB.*
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+mobilenetv4/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -117,16 +133,6 @@ Published MobileNetV4 performance on `RDK X5` (x5-v1.1.3):
 bundled [great_grey_owl.JPEG](test_data/great_grey_owl.JPEG) ranks
 `great grey owl` first, followed by ruffed grouse, partridge, meerkat,
 and prairie chicken. This is the source-reported X5 runtime example.*
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — conversion record and reference configurations
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([great_grey_owl.JPEG](test_data/great_grey_owl.JPEG), [zebra_cls.jpg](test_data/zebra_cls.jpg))
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

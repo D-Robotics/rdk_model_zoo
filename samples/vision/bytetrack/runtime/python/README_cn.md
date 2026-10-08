@@ -1,5 +1,27 @@
 # ByteTrack Python 运行时
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── tracker_backend/  # tracker_backend 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── TRACKER_SOURCE_MAP.json  # 结构化数据
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── run.sh  # 运行示例
+├── tracking.py  # Python 脚本
+└── visualization.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

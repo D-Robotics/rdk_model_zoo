@@ -2,6 +2,26 @@ English | [简体中文](README_cn.md)
 
 # UNet Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+├── unet.py  # Python script
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -49,7 +69,7 @@ python3 samples/vision/unet/runtime/python/main.py --dry-run --target x5 --varia
 <a id="results"></a>
 ## Results
 
-The mask is fixed 512×512 uint8, VOC IDs 0..20. Overlay uses the same size and alpha-blends resized input with the VOC palette; original-size restoration is not automatic. JSON includes target, variant, asset_id, runtime_version, model_path, image_path, metadata, mask_shape, classes_present, elapsed_ms and output paths. Timing covers all three stages, not a pure BPU benchmark.
+The mask is fixed 512×512 uint8, VOC IDs 0..20. Overlay uses the same size and alpha-blends resized input with the VOC palette; original-size restoration is not automatic. JSON includes target, variant, asset_id, runtime_version, model_path, image_path, metadata, mask_shape, classes_present, elapsed_ms and output paths. Timing covers all three stages, including preprocessing and postprocessing.
 
 <a id="integration-example"></a>
 ## Integration

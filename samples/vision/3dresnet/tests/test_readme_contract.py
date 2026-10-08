@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import shlex
 import unittest
-from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path  # noqa: E402
 from unittest.mock import patch
 import numpy as np
 from test_3dresnet import SAMPLE, FakeRuntime, local_module
@@ -150,7 +150,7 @@ class ReadmeTests(unittest.TestCase):
                 from test_3dresnet import load_legacy_source
                 load_legacy_source()
                 out=repo/'evaluator-output/fixture-run';out.mkdir(parents=True)
-                with patch.dict(os.environ,{'OUT_DIR':str(out)}),patch.object(Path,'cwd',return_value=repo),patch.dict(sys.modules,{'hbm_runtime':sdk}),patch.object(runner_mod,'RuntimeModelRunner',lambda selection:original(selection,runtime=unified_runtime)),patch('samples._shared.platforms.require_execution_target',return_value='s100'),contextlib.redirect_stdout(io.StringIO()):
+                with patch.dict(os.environ,{'OUT_DIR':str(out)}),patch.object(Path,'cwd',return_value=repo),patch.dict(sys.modules,{'hbm_runtime':sdk}),patch.object(runner_mod,'RuntimeModelRunner',lambda selection:original(selection,runtime=unified_runtime)),patch('utils.py_utils.platforms.require_execution_target',return_value='s100'),contextlib.redirect_stdout(io.StringIO()):
                     try:
                         if tied:
                             with self.assertRaisesRegex(AssertionError,'No automatic tie exemption'):

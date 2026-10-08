@@ -23,9 +23,10 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from utils.py_utils.image import read_bgr_image
 import sys
 
-from samples.vision.googlenet.runtime.python.labels import load_labels as _load_labels
+from utils.py_utils.labels import load_labels as _load_labels
 from samples.vision.googlenet.runtime.python.model_binding import (
     SUPPORTED_TARGETS,
     SUPPORTED_VARIANTS,
@@ -222,16 +223,6 @@ def default_labels(label_file: str):
     return _load_labels(Path(label_file).expanduser())
 
 
-def read_bgr_image(path: "str | Path"):
-    """Read one BGR image; failures name the exact path."""
-
-    import cv2
-
-    resolved = Path(path).expanduser()
-    image = cv2.imread(str(resolved), cv2.IMREAD_COLOR)
-    if image is None:
-        raise FileNotFoundError(f"image not found or unreadable: {resolved}")
-    return image
 
 
 def print_classification_result(result, selection: ModelSelection, *,

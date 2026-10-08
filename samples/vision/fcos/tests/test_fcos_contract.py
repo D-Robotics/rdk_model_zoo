@@ -36,7 +36,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[4]
-from samples._shared.tests.legacy_platforms import legacy_path  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path  # noqa: E402
 SAMPLE = ROOT / "samples" / "vision" / "fcos"
 SOURCE = legacy_path("x5/samples/vision/fcos/runtime/python/fcos_det.py")
 
@@ -276,7 +276,7 @@ class FcosContractTests(unittest.TestCase):
     def test_non_scale_outputs_pass_through_in_both_helpers(self):
         # The other half of the dequant contract: a descriptor that is not SCALE
         # is identity, so an artifact that really is raw float is not rescaled.
-        from samples._shared.quantization import dequantize_tensor as unified
+        from utils.py_utils.quantization import dequantize_tensor as unified
         _source_class()
         from utils.py_utils.postprocess import dequantize_tensor as source
 
@@ -335,7 +335,7 @@ class FcosContractTests(unittest.TestCase):
         from samples.vision.fcos.evaluator.compare import run_comparison
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
         from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
-        from samples._shared.runtime_meta import RuntimeMetadata
+        from utils.py_utils.runtime_meta import RuntimeMetadata
 
         metadata = metadata_for("efficientnetb0")
         base_raw = fixture_outputs()
@@ -439,7 +439,7 @@ class FcosContractTests(unittest.TestCase):
         from samples.vision.fcos.evaluator.compare import run_comparison
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
         from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
-        from samples._shared.runtime_meta import RuntimeMetadata
+        from utils.py_utils.runtime_meta import RuntimeMetadata
 
         metadata = metadata_for("efficientnetb0")
         metadata["output_quants"] = {
@@ -540,7 +540,7 @@ class FcosContractTests(unittest.TestCase):
         from samples.vision.fcos.runtime.python import model_runner
 
         runner = model_runner.RuntimeModelRunner(resolve_selection("x5"))
-        with patch("samples._shared.platforms.require_execution_target", side_effect=ValueError("identity")), patch.object(model_runner, "_default_runtime_factory") as factory:
+        with patch("utils.py_utils.platforms.require_execution_target", side_effect=ValueError("identity")), patch.object(model_runner, "_default_runtime_factory") as factory:
             with self.assertRaisesRegex(ValueError, "identity"):
                 runner.load()
             factory.assert_not_called()
@@ -550,7 +550,7 @@ class FcosContractTests(unittest.TestCase):
         from samples.vision.fcos.runtime.python import model_runner
 
         runner = model_runner.RuntimeModelRunner(resolve_selection("x5"))
-        with patch("samples._shared.platforms.require_execution_target", return_value="x5"), patch.object(model_runner, "_default_runtime_factory") as factory:
+        with patch("utils.py_utils.platforms.require_execution_target", return_value="x5"), patch.object(model_runner, "_default_runtime_factory") as factory:
             with self.assertRaises(ValueError):
                 runner.load()
             factory.assert_not_called()

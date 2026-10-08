@@ -17,6 +17,33 @@ every input digest and writing the result/failure records.
 `application.run`/`application.execute` remain compatibility compositions
 of the same helpers.
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── application.py  # Python script
+├── cif.py  # Python script
+├── cli.py  # Arguments and result presentation
+├── decoding.py  # Python script
+├── frontend.py  # Python script
+├── input_io.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── pipeline.py  # Python script
+├── requirements-frontend.txt  # Source or data file
+├── run.sh  # Run the sample
+├── runtime.py  # Python script
+└── stages.py  # Python script
+```
+
 <a id="environment"></a>
 ### Install dependencies explicitly
 
@@ -383,9 +410,9 @@ not a model `forward` containing CPU processing between several SDK executions.
 | Decoder | context, acoustic, count, zero float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
 
 [stages.py](stages.py) exposes `pipeline.encoder_stage`, `predictor_stage` and
-`decoder_stage`, each with the canonical `preprocess`, `infer`, `postprocess`
+`decoder_stage`, each with the `preprocess`, `infer`, `postprocess`
 spellings; the established `pre_process`, `forward`, `post_process` names remain
-as compatibility aliases of the same single implementation. Preprocessing
+as aliases of the same single implementation. Preprocessing
 returns `PreparedInput.tensors` with owned physical arrays. Decoder preparation
 also snapshots the integer token count in `PreparedInput.context`; pass that same
 context to decoder postprocessing. No per-call context is stored on a stage.

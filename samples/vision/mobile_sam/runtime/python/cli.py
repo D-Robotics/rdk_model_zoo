@@ -15,7 +15,7 @@ import argparse
 import json
 from pathlib import Path
 
-from samples._shared.sam_tensor_io import validate_box
+from utils.py_utils.sam_tensor_io import validate_box
 from samples.vision.mobile_sam.runtime.python.model_binding import (
     SAMPLE_DIR,
     list_available_assets,

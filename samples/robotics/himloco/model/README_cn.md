@@ -13,6 +13,17 @@ URL 与摘要以[活动 X5 清单](../../../../docs/release/x5/models.yaml)为�
 S100／S100P／S600 没有匹配发布组合。此模型已经融合，不能将单独 encoder 或 policy
 改名后替代。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备
 

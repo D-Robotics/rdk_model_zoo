@@ -12,7 +12,7 @@ import platform
 from importlib.metadata import version, PackageNotFoundError
 import cv2
 import numpy as np
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.vision.yoloe.evaluator.results import (
     serialize_predictions,
     score_predictions,

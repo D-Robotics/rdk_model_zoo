@@ -1,6 +1,6 @@
 # PaddleOCR Python runtime
 
-`main.py` is the canonical entrypoint for the X5 PP-OCRv3 and S100 PP-OCRv6
+`main.py` is the entrypoint for the X5 PP-OCRv3 and S100 PP-OCRv6
 pairs. It stays a thin entry: parse the arguments, run the model-free
 listing/dry-run/prepare modes, resolve a qualified detector/recognizer pair,
 check the execution target against detected hardware, construct
@@ -9,6 +9,30 @@ declarations, the model-free modes, the explicit `--prepare` fetch and result
 rendering live in [cli.py](cli.py); the detection → crop → recognition
 composition lives in [pipeline.py](pipeline.py) with each stage's three
 public steps.
+
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── cli.py  # Arguments and result presentation
+├── decode.py  # Python script
+├── geometry.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── pipeline.py  # Python script
+├── run.sh  # Run the sample
+└── tensor_io.py  # Python script
+```
 
 <a id="environment"></a>
 ## Environment

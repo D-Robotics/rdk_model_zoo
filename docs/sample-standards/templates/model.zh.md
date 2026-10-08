@@ -14,6 +14,11 @@
 | --- | --- | --- | --- | --- |
 | ⟪file⟫ | ⟪.bin/.hbm/…⟫ | ⟪x5 / s100 / …⟫ | ⟪single / det / rec / …⟫ | ⟪download \| manual \| conversion⟫ |
 
+<a id="directory"></a>
+## 目录结构
+
+⟪列出当前目录的实际文件及用途。⟫
+
 <a id="preparation"></a>
 ## 准备步骤
 

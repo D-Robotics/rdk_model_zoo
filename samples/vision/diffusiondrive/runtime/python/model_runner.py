@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Four-input named transport reusing common identity/hash/SDK ownership."""
 
-from samples._shared.single_array_runner import (
+from utils.py_utils.single_array_runner import (
     NamedArrayRunner,
     RuntimeUnavailableError,
 )
-from samples._shared.platforms import require_execution_target
+from utils.py_utils.platforms import require_execution_target
 from samples.vision.diffusiondrive.runtime.python.model_binding import bind_model
 
 

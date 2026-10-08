@@ -1,5 +1,25 @@
 # YOLOWorld Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+├── visualization.py  # Python script
+└── yoloworld.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -59,6 +79,7 @@ last prompt fills remaining text slots. No label-file fallback exists.
 | `--dry-run` | flag | `false` | Print protocol without board/SDK. |
 
 <a id="results"></a>
+
 <a id="integration-example"></a>
 ## Results and integration example
 

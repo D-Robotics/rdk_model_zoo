@@ -14,6 +14,27 @@ failure records) lives in `application.py` helpers (`prepare`, `load_task`,
 `record_sample`, `complete`), whose single-call composition `application.execute`
 is the compatibility API.
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── application.py  # Python script
+├── input_io.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── policy.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="environment"></a>
 ## Environment
 

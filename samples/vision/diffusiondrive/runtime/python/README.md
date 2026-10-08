@@ -2,12 +2,37 @@
 
 # DiffusionDrive Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── data_io.py  # Python script
+├── diffusiondrive.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── quantization.py  # Python script
+├── run.sh  # Run the sample
+├── run_all_cases.sh  # Shell command
+├── run_cases.py  # Python script
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
 Run inference on S100P or S600 with the target’s `hbm_runtime`, Python, NumPy and OpenCV. Prepare the target-specific HBM through the [model downloader](../../model/README.md).
 
-All commands below run from the repository root. Shell wrappers also change to that root. The task class handles planning tensor semantics only; SDK transport is delegated to the shared named-array runner, with data IO, transforms and visualization in separate modules.
+All commands below run from the repository root. Shell helpers also change to that root. The task class handles planning tensor semantics only; SDK transport is delegated to the shared named-array runner, with data IO, transforms and visualization in separate modules.
 
 <a id="usage"></a>
 ## Single-case and batch usage
@@ -31,7 +56,7 @@ bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100
 bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases
 ```
 
-Batch dry-run validates all five input NPZ files and prints commands without SDK execution or output creation. Execution uses the same single-case CLI, loads the model per case as the source did, stops at the first nonzero return, and writes `batch-report.json` with completed return codes, remaining cases and available report digests. A partially completed batch is not five passes. Batch output uses `--output`; the source wrapper's positional output argument is replaced.
+Batch dry-run validates all five input NPZ files and prints commands without SDK execution or output creation. Execution uses the same single-case CLI, loads the model per case as the source did, stops at the first nonzero return, and writes `batch-report.json` with completed return codes, remaining cases and available report digests. Set the batch output directory with `--output`.
 
 <a id="parameters"></a>
 ## Parameters
@@ -44,8 +69,8 @@ Single-case parser defaults are listed literally; resolved paths are explained s
 | `--asset-id` | `null` | Inferred target asset; can identify target under auto |
 | `--model-path` | `null` | Resolves target HBM under sample model directory; external path requires asset ID |
 | `--input-npz` | `samples/vision/diffusiondrive/test_data/reference_inputs.npz` | Exact four logical feature arrays |
-| `--output` | `outputs/diffusiondrive` | New canonical result directory |
-| `--output-npz` | `null` | Optional extra copy of decoded outputs; canonical archive is always retained |
+| `--output` | `outputs/diffusiondrive` | New result directory |
+| `--output-npz` | `null` | Optional extra copy of decoded outputs; archive is always retained |
 | `--img-save-path` / `--output-image` | `null` | Optional extra PNG/JPEG/BMP, encoded according to extension |
 | `--agent-score-thres` | `0.5` | Finite [0,1], source sigmoid probability comparison is >= |
 | `--priority` | `0` | Integer SDK priority in 0..255 |
@@ -55,7 +80,7 @@ Single-case parser defaults are listed literally; resolved paths are explained s
 
 Inspection modes are mutually exclusive. Batch uses the same target/asset/model/threshold/scheduling/inspection flags, plus `--cases-root` (default `samples/vision/diffusiondrive/test_data`) and `--output` (default `outputs/diffusiondrive_cases`). It has no per-case `--input-npz` or extra output-file options. Case order is 000,017,042,073,099.
 
-Output directories and extra paths must be new. Extra destinations must be distinct and cannot replace canonical arrays, image or report. The image alias and `--platform` are supported options. By default each run writes to its own new output directory; the target is selected explicitly, without environment-variable overrides or implicit downloads. Relative direct-Python paths are relative to the current working directory.
+Output directories and extra paths must be new. Extra destinations must be distinct and cannot replace arrays, image or report. The image alias and `--platform` are supported options. By default each run writes to its own new output directory; the target is selected explicitly, without environment-variable overrides or implicit downloads. Relative direct-Python paths are relative to the current working directory.
 
 <a id="results"></a>
 ## Saved results

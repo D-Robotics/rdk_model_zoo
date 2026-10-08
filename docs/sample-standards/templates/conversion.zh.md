@@ -13,6 +13,11 @@
 - 权重：⟪发布 tag 或 commit⟫，来源 ⟪source⟫
 - 对应关系：⟪如官方 yolov8n.pt ⟪ver⟫⟫
 
+<a id="directory"></a>
+## 目录结构
+
+⟪列出当前目录的实际文件及用途。⟫
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

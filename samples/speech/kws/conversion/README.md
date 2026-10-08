@@ -7,6 +7,15 @@ English | [简体中文](README_cn.md)
 
 The pinned S100 source describes an MDTC keyword model from the PaddlePaddle/PaddleAudio ecosystem. Its training checkpoint and export script are not included. For inference with the published model, follow the [model guide](../model/README.md).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and target
 

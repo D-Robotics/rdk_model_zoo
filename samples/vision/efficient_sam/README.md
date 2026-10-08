@@ -12,6 +12,21 @@ EfficientSAM-Tiny segments one image using two fixed positive point prompts bake
 
 The published decoder fixes positive points `(248,210)` and `(302,315)` in the resized 512-square image. It accepts no runtime point or box argument. The encoder applies RGB `/255`; the selected mask uses logits `>=0`. Input is stretched to 512×512 and the result stays in that coordinate system, without mapping back to the original image.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+efficient_sam/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -57,20 +72,6 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 ## Expected Results
 
 The default input is `test_data/dogs.jpg`. A successful run writes an overlay image and a binary `512x512` mask. The numeric IoU and selected mask index depend on the actual model execution; the committed `efficient_sam_binary_mask.png` is a source reference, not a new board result.
-
-<a id="directory"></a>
-## Directory
-
-```text
-efficient_sam/
-├── model/                 # manifest-backed encoder/decoder preparation
-├── runtime/python/        # binding, runner, pipeline entrypoint, CLI, visualization
-├── test_data/             # dogs image and preserved source mask
-├── conversion/            # source conversion material
-├── evaluator/             # evaluation procedure and limits
-├── README.md              # English overview
-└── README_cn.md           # Chinese overview
-```
 
 <a id="entry-points"></a>
 ## Entry Points

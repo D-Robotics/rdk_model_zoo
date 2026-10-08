@@ -5,6 +5,21 @@
 
 按官方 RepVGG 流程加载训练权重，以 `create_RepVGG_B1g2(deploy=False)` 创建模型，并在 ONNX 导出前运行 `repvgg_model_convert`。构建时记录源码修订、PyTorch 版本与权重摘要。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── RepVGG_A0_config.yaml  # 配置
+├── RepVGG_A1_config.yaml  # 配置
+├── RepVGG_A2_config.yaml  # 配置
+├── RepVGG_B0_config.yaml  # 配置
+├── RepVGG_B1g2_config.yaml  # 配置
+└── RepVGG_B1g4_config.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

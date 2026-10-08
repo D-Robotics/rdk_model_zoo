@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 
-from samples._shared.assets import download_asset
+from utils.py_utils.assets import download_asset
 from samples.vision.unetmobilenet.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
 
 

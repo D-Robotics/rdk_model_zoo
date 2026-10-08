@@ -9,6 +9,16 @@ S100P (`nash-m`) and S600 (`nash-p`) each have Vision/Text HBMs; S100 (`nash-e`)
 Identical filenames and layout do not imply cross-target compatibility. The current download script reuses nonempty files;
 it does not automatically verify the target or SHA-256 of existing files.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Explicit preparation
 

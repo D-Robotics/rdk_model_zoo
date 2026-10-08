@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from typing import Mapping
 import cv2
 import numpy as np
-from samples._shared.image import bgr_to_nv12_planes
-from samples._shared.quantization import apply_output_transform
+from utils.py_utils.image import bgr_to_nv12_planes
+from utils.py_utils.quantization import apply_output_transform
 from samples.vision.unet.runtime.python.model_binding import ModelBinding
 
 

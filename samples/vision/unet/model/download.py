@@ -3,7 +3,7 @@
 """Manifest-backed download of one or more UNet X5 variants."""
 import argparse
 from pathlib import Path
-from samples._shared.assets import download_asset
+from utils.py_utils.assets import download_asset
 from samples.vision.unet.runtime.python.model_binding import VARIANTS, resolve_selection
 
 

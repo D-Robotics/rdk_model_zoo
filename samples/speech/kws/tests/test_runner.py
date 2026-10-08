@@ -53,7 +53,7 @@ class RunnerTests(unittest.TestCase):
             "samples.speech.kws.runtime.python.model_runner.require_execution_target",
             side_effect=ValueError("Target mismatch"),
         ), patch(
-            "samples._shared.single_array_runner._default_runtime_factory"
+            "utils.py_utils.single_array_runner._default_runtime_factory"
         ) as factory:
             runner = RuntimeModelRunner(resolve_selection("s100"))
             with self.assertRaises(ValueError):
@@ -86,7 +86,7 @@ class RunnerTests(unittest.TestCase):
                 str(folder / "output"),
             ]
             with patch(
-                "samples._shared.platforms.require_execution_target",
+                "utils.py_utils.platforms.require_execution_target",
                 return_value="s100",
             ), patch.object(
                 model_runner, "RuntimeModelRunner", return_value=runner
@@ -103,7 +103,7 @@ class RunnerTests(unittest.TestCase):
             self.assertTrue(report["detected"])
             self.assertIsNone(report["publisher_sha256"])
             with patch(
-                "samples._shared.platforms.require_execution_target",
+                "utils.py_utils.platforms.require_execution_target",
                 return_value="s100",
             ), patch.object(
                 audio_io, "load_audio", return_value=(np.ones(40000, np.float32), 16000)

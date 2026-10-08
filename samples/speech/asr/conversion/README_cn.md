@@ -6,6 +6,15 @@
 ## 源模型
 本 sample 使用 Wav2Vec2 ASR 模型。已发布的 S100/S600 HBM 与固定词表可通过[模型文档](../model/README_cn.md)获取。本目录不提供 checkpoint→HBM 脚本：请以外部输入方式准备 Wav2Vec2 checkpoint、导出器和各目标的 OE 配置，并记录 checkpoint 链接/版本、结构与训练配置。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 活动清单分别发布 S100 和 S600 HBM。使用与各制品匹配的 OE/编译器版本和目标配置，并记录所用版本。不能将 S100P 当成 S100，也不能通过改 HBM 文件名适配其他板卡。

@@ -18,6 +18,18 @@
 pandas 和 matplotlib；导出时记录实际安装版本。校准与配置准备工具使用 Python、
 NumPy、OpenCV、PyYAML。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── compile.py  # Python 脚本
+├── config.yaml  # 配置
+└── prepare_calibration.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

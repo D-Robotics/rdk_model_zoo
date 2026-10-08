@@ -21,6 +21,21 @@ float32 `[1,12]`. No additional normalization, history update, output scaling or
 robot command is performed. The source controller applies
 `default_joint_position + 0.25 * actions` outside this model boundary.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+himloco/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -39,7 +54,7 @@ Host preview and core tests require Python, NumPy and PyYAML. Real inference
 requires an X5 with its matching BSP `hbm_runtime` and the exact published BIN.
 Do not install the unrelated PyPI package with the same name. Conversion tools,
 Torch and a training environment are not required to use the published model.
-All commands below run from repository root. Set `PYTHON` for shell wrappers when
+All commands below run from repository root. Set `PYTHON` for shell helpers when
 using a virtual environment.
 
 <a id="quickstart"></a>
@@ -88,17 +103,6 @@ validation/copy and must not be compared as device-only latency. Full source per
 [evaluator guide](evaluator/README.md).
 Offline action agreement does not establish observation construction, joint
 mapping, control-loop behavior or closed-loop stability.
-
-<a id="directory"></a>
-## Directory layout
-
-- `model/`: explicit acquisition of the hash-pinned X5 BIN.
-- `runtime/python/`: CLI/application, input provenance, binding/shared runner and pure policy stages.
-- `test_data/`: 21 unchanged observation files and their source manifest.
-- `tests/`: core, metadata and CLI checks with explicit model/SDK fixtures.
-- `conversion/`: source fused export, calibration and Mapper recipe with bilingual guides.
-- `evaluator/`: format/action comparisons, input preparation and historical measurements.
-- `runtime/cpp/`: pure policy, SDK adapter, native CLI and build launcher.
 
 <a id="entry-points"></a>
 ## Entry points

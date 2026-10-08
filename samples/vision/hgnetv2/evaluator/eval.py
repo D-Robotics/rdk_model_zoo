@@ -9,6 +9,7 @@ not manufacture zero accuracy. Model loading remains behind the CLI boundary.
 """
 from __future__ import annotations
 
+
 import argparse
 import csv
 from datetime import datetime, timezone
@@ -165,13 +166,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             images = images[:args.limit]
         if not any(relative in labels for relative, _ in images):
             raise ValueError("no scanned image matches the CSV relative paths")
-        from samples.vision.hgnetv2.runtime.python.model_binding import resolve_selection
-        from samples.vision.hgnetv2.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.hgnetv2.runtime.python.classification import ClassificationTask
-        from samples.vision.hgnetv2.runtime.python.labels import load_labels
+        from samples.vision.hgnetv2.runtime.python.model_binding import resolve_selection, BINDING_TABLE
+        from utils.py_utils.model_runner import RuntimeModelRunner
+        from utils.py_utils.classification import ClassificationTask
+        from utils.py_utils.labels import load_labels
         selection = resolve_selection(args.target, variant=args.variant,
                                       asset_id=args.asset_id, model_path=args.model_path)
-        runner = RuntimeModelRunner(selection)
+        runner = RuntimeModelRunner(selection, table=BINDING_TABLE)
         binding = runner.load()
         runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         task = ClassificationTask(runner, binding, top_k=args.top_k,

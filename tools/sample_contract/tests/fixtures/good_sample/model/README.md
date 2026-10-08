@@ -8,6 +8,16 @@
 | `fixture1_224x224_nv12.bin` | x5 | single | download |
 | `fixture1_224x224_nv12.hbm` | s100 | single | download |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

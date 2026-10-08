@@ -16,6 +16,31 @@ then compile with the corresponding X5 YAML.
   with `create_model → torch.onnx.export → onnxsim.simplify`, and record
   the checkpoint revision used for the ONNX graph.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── EfficientNet_B2_config.yaml  # Configuration
+├── EfficientNet_B3_config.yaml  # Configuration
+├── EfficientNet_B4_config.yaml  # Configuration
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── efficientnet_lite0_config.yaml  # Configuration
+├── efficientnet_lite1_config.yaml  # Configuration
+├── efficientnet_lite2_config.yaml  # Configuration
+├── efficientnet_lite3_config.yaml  # Configuration
+├── efficientnet_lite4_config.yaml  # Configuration
+├── get_calibration_data.py  # Python script
+├── get_efficientnet_lite0_onnx.py  # Python script
+├── get_efficientnet_lite1_onnx.py  # Python script
+├── get_efficientnet_lite2_onnx.py  # Python script
+├── get_efficientnet_lite3_onnx.py  # Python script
+├── get_efficientnet_lite4_onnx.py  # Python script
+├── timm2onnx_local.py  # Python script
+└── x86_inference.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

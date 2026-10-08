@@ -11,7 +11,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from samples._shared.text_metrics import score_transcripts
+from utils.py_utils.text_metrics import score_transcripts
 
 
 def main(argv=None):

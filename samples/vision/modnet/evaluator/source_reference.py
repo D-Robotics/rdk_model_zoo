@@ -8,7 +8,7 @@ import types
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-from samples._shared.legacy_platforms import legacy_path
+from utils.py_utils.legacy_platforms import legacy_path
 
 
 def source_paths(target: str = "x5") -> tuple[Path, ...]:

@@ -37,7 +37,10 @@ Notes:
 
 import cv2
 import numpy as np
-from hbm_runtime import QuantParams
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from hbm_runtime import QuantParams
 from scipy.special import softmax
 from .nn_math import sigmoid
 
@@ -94,7 +97,7 @@ def recover_to_original_size(img: np.ndarray,
     return img_resized
 
 
-def dequantize_tensor(q_tensor: np.ndarray, quant_info: QuantParams) -> np.ndarray:
+def dequantize_tensor(q_tensor: np.ndarray, quant_info: "QuantParams") -> np.ndarray:
     """Dequantize a quantized tensor to floating-point values.
 
     This function converts a quantized tensor (e.g., int8 or uint8) into
@@ -673,11 +676,16 @@ def resize_masks_to_boxes(masks: list[np.ndarray],
     """
     resized_masks = []
     for mask, (x1, y1, x2, y2) in zip(masks, boxes):
-        x1, y1 = max(int(x1), 0), max(int(y1), 0)
-        x2, y2 = min(int(x2), img_w), min(int(y2), img_h)
+        x1, y1 = min(max(int(x1), 0), img_w), min(max(int(y1), 0), img_h)
+        x2, y2 = min(max(int(x2), 0), img_w), min(max(int(y2), 0), img_h)
 
-        target_w = max(x2 - x1, 1)
-        target_h = max(y2 - y1, 1)
+        target_w = max(x2 - x1, 0)
+        target_h = max(y2 - y1, 0)
+        # A clipped zero-area box has no pixels. Preserve each zero-sized axis
+        # instead of inventing a 1-pixel mask that violates the ROI contract.
+        if target_w == 0 or target_h == 0:
+            resized_masks.append(np.zeros((target_h, target_w), dtype=np.uint8))
+            continue
 
         if mask is None or getattr(mask, "size", 0) == 0:
             resized_masks.append(np.zeros((target_h, target_w), dtype=np.uint8))
@@ -688,7 +696,9 @@ def resize_masks_to_boxes(masks: list[np.ndarray],
         if do_morph and resized.size > 0:
             resized = cv2.morphologyEx(resized, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
 
-        resized_masks.append(resized)
+        # Lanczos can overshoot binary uint8 data to 2. Preserve its foreground
+        # support while returning the declared 0/1 instance-mask representation.
+        resized_masks.append((resized > 0).astype(np.uint8))
 
     return resized_masks
 def scale_keypoints_to_original_image(kpts_xy: np.ndarray,

@@ -36,7 +36,7 @@ English names; the file has no trailing newline. Excerpt:
 ```
 
 This is **not** a one-name-per-line list, although the runtime loader accepts
-that format too. `samples/_shared/labels.py::load_labels` (re-exported by each
+that format too. `utils/py_utils/labels.py::load_labels` (re-exported by each
 classification sample, and mirrored by the legacy
 `utils/py_utils/file_io.py::load_labels`) detects the leading `{` and parses it
 with `ast.literal_eval` into `{index: name}`; one-label-per-line display-name

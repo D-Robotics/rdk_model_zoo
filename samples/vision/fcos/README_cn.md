@@ -11,6 +11,23 @@ FCOS 是单阶段、无 anchor 的检测器，在五个特征层上预测类别�
 - 本仓位置：`samples/vision/fcos` 的 X5 Python sample。
 - 模型协议：packed NV12 输入、80 类、5 个分类输出、5 个框回归输出和 5 个 center-ness 输出。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+fcos/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -56,20 +73,6 @@ python3 samples/vision/fcos/runtime/python/main.py \
 源记录给出 B0/B2/B3 BPU 吞吐 323.0/70.9/38.7 FPS、Python 后处理 9/16/20 ms（源测量条件）。
 
 ![源记录 FCOS 演示图](test_data/demo_rdkx5_fcos_detect.jpg)
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-fcos/
-├── conversion/    # 源转换说明与 hb_perf 截图
-├── evaluator/     # 板端/源对照及证据流程
-├── model/         # 显式 manifest 制品下载器
-├── runtime/python/# binding、runner、tensor IO、四阶段任务和 CLI
-├── test_data/     # 源 bus 输入和历史演示图
-├── tests/         # 主机契约与源数值回归测试
-└── README*.md     # 中英文 sample 文档
-```
 
 <a id="entry-points"></a>
 ## 入口索引

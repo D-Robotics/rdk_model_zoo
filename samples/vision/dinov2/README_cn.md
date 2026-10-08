@@ -9,6 +9,22 @@ DINOv2 是一个生成全局图像特征和稠密 patch 特征的自监督 ViT �
 
 模型图包含 patch-14 stem、12 个 pre-LN transformer block、显式的 BPU 友好 attention 和最终归一化特征接口。sample 提供 `cls_feat` `(1,384)` 全局特征和 `patch_feat` `(1,256,384)` patch 特征。运行时依据绑定 metadata 将整数输出反量化为 owned float32 数组，不执行 softmax 或 L2 归一化。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+dinov2/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -43,26 +59,12 @@ python3 samples/vision/dinov2/runtime/python/main.py --target s100 --output cls_
 # 预期：打印 cls_feat JSON 摘要及第二张图 cosine_similarity；退出码 0
 ```
 
-快捷脚本 `runtime/python/run.sh` 接收位置输出参数（`cls_feat` 或 `patch_feat`），后面可接命名参数；不会下载模型。兼容入口 `model/download_model.sh` 委托给显式 target 脚本，并要求 `s100`、`s100p` 或 `s600`。
+快捷脚本 `runtime/python/run.sh` 接收位置输出参数（`cls_feat` 或 `patch_feat`），后面可接命名参数；不会下载模型。快捷入口 `model/download_model.sh` 委托给显式 target 脚本，并要求 `s100`、`s100p` 或 `s600`。
 
 <a id="expected-results"></a>
 ## 预期结果
 
 CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm` 的 JSON 摘要。默认第二张图存在时，还打印 `second_image` 和 `cosine_similarity`；缺失时报告 `skipped_missing`。`cls_feat` shape 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，均由 metadata 绑定的反量化后以 float32 返回。目标板实际运行前不声明具体数值。
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-dinov2/
-├── conversion/             # 固定 ONNX 导出、校准和 hb_compile 配方
-│   └── onnx_export/        # 源模型导出和图重写
-├── evaluator/              # 历史性能和 cosine 记录
-├── model/                  # 基于 manifest 的目标 HBM 准备
-├── runtime/python/         # binding、runner、特征 task、tensor I/O 和 CLI
-├── test_data/              # dog.jpg、bus.jpg 输入
-└── README.md               # 英文说明
-```
 
 <a id="entry-points"></a>
 ## 入口索引

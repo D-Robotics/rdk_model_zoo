@@ -7,6 +7,18 @@
 
 仅用于检查器测试的 fixture 分类器；来源为本仓库测试夹具，无外部上游。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+good_sample/
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -40,13 +52,6 @@ python3 samples/tools/fixture/good_sample/runtime/python/main.py \
 ## 预期结果
 
 运行打印 fixture top-5 列表并退出 0；runtime 自身不写任何输出文件。
-
-<a id="directory"></a>
-## 目录职责
-
-- `model/` — 制品准备（[README](README.md#overview) 之外的中文说明见 [model/README_cn.md](model/README_cn.md)）
-- `runtime/python/` — Python 入口（[runtime/python/README_cn.md](runtime/python/README_cn.md)）
-- `test_data/` — 随仓输入（[input.jpg](test_data/input.jpg)）
 
 <a id="entry-points"></a>
 ## 入口索引

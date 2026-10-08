@@ -11,6 +11,20 @@ English | [简体中文](./README_cn.md)
 
 解码器导出时将两个正点 `(248, 210)`、`(302, 315)` 固定进 ONNX，不接收运行时 prompt。编码器契约为 `batched_images` `(1,3,512,512)`、float32、RGB NCHW，输出 `image_embeddings` `(1,256,32,32)`、float32。解码器读取该 embedding，输出 `low_res_masks` 与 `iou_predictions`。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── configs/  # configs 相关文件
+├── scripts/  # scripts 相关文件
+├── QUANTIZATION_STATUS.md  # 说明文档
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── SOURCE_MAP.json  # 结构化数据
+└── VALIDATION.md  # 说明文档
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -205,4 +219,4 @@ hrt_model_exec perf --model_file bpu_model_output_decoder_nashe/efficient_sam_vi
 
 ## 来源
 
-合并关系与 source SHA-256 映射记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有源 Apache-2.0 标识的代码和文档保留其来源信息，wrapper 遵循仓库许可证。
+上游代码保留 Apache-2.0 归属声明，本仓转换脚本遵循仓库许可证。

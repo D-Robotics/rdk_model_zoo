@@ -34,6 +34,22 @@ INT8 量化的 base/small/x_small/xx_small 变体（224×224 NV12，见
 本样例提供面向 X5 的 Python 运行时。`EdgeNeXtClassifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果（见
 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+edgenext/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持范围
 
@@ -109,16 +125,6 @@ RDK X5 上的已发布数值（X5 发布 x5-v1.1.3；Float Top-1 为量化前 ON
 | EdgeNeXt-small | 224x224 | 5.59 | 76.50% | 71.75% | 4.41 | 226.15 |
 | EdgeNeXt-x-small | 224x224 | 2.34 | 71.75% | 66.25% | 2.88 | 345.73 |
 | EdgeNeXt-xx-small | 224x224 | 1.33 | 69.50% | 64.25% | 2.47 | 403.49 |
-
-<a id="directory"></a>
-## 目录职责
-
-- [model/](model/README_cn.md) — Manifest 驱动的制品下载，不检入二进制
-- [runtime/python/](runtime/python/README_cn.md) — 统一 Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — X5 PTQ 配置及模型所需准备步骤
-- [evaluator/](evaluator/README_cn.md) — 发布的基准记录与功能检查
-- `test_data/` — 随附测试图（[Zebra.jpg](test_data/Zebra.jpg) 及参考插图）
-- `tests/` — 主机 unittest 套件
 
 <a id="entry-points"></a>
 ## 入口

@@ -17,7 +17,7 @@ Ultralytics `Depth` head ([Depth task](https://docs.ultralytics.com/tasks/depth/
 [quick start](https://docs.ultralytics.com/quickstart/); upstream repository
 <https://github.com/ultralytics/ultralytics.git>). No checkpoint is bundled or
 downloaded by these tools.
-The source branches pin `ultralytics==8.4.105`; X5 also records `torch==1.13.0`.
+The required versions are `ultralytics==8.4.105`; X5 also records `torch==1.13.0`.
 Their requirements are preserved in `requirements-x5-source.txt` and
 `requirements-s-source.txt`. These pins describe the source environments; record
 the versions actually used in a new export.
@@ -37,6 +37,24 @@ Export reports record checkpoint calibration. The published S l/x runtime uses
 `(cal_a, cal_b)=(1,-0.2498779296875)` / `(1,-0.316650390625)`; retrained weights
 with different coefficients need a corresponding explicit runtime binding.
 These maps are relative depth, not independently calibrated distances in metres.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── ptq_yamls/  # Files for ptq_yamls
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── compile.py  # Python script
+├── export.py  # Python script
+├── extract_sunrgbd_subset.py  # Python script
+├── mapper.py  # Python script
+├── prepare_calibration.py  # Python script
+├── requirements-s-source.txt  # Source or data file
+├── requirements-x5-source.txt  # Source or data file
+└── requirements.txt  # Source or data file
+```
 
 <a id="toolchain-targets"></a>
 ## Toolchains and target recipes
@@ -157,7 +175,7 @@ For S l/x select the matching variant, lite ONNX and lite manifest. Use
 is shared across those marches. `--experimental-lite` selects retained S n/s/m
 lite recipes; it does not turn them into published runtime profiles.
 
-The wrapper checks all tensor digests, shape/dtype/range and directory contents
+The helper checks all tensor digests, shape/dtype/range and directory contents
 before writing a config. X5 runs checker, makertbin and model-info; S runs
 `hb_compile`. Both require the expected compiled file to exist even when the
 compiler returned zero. X5 also preserves quantized ONNX and compiler cosine,

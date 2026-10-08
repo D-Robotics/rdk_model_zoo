@@ -5,9 +5,9 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from samples._shared.assets import Asset, list_assets
-from samples._shared.platforms import resolve_target
-from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 TARGETS = ("x5", "s100", "s100p", "s600")

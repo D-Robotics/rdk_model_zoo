@@ -7,6 +7,8 @@ execution evidence.
 
 from __future__ import annotations
 
+from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
+
 import unittest
 
 
@@ -30,7 +32,7 @@ class _QuantInfo:
 def _metadata(*, protocol: str = "x5", output_shape=None,
               output_dtype: str = "float32", output_semantics: str | None = None,
               output_quants: dict | None = None):
-    from samples.vision.resnet.runtime.python.model_binding import RuntimeMetadata
+    from utils.py_utils.cls_binding import RuntimeMetadata
 
     if protocol == "x5":
         inputs = {"data": (1, 3, 224, 224)}
@@ -68,13 +70,11 @@ def _metadata(*, protocol: str = "x5", output_shape=None,
 
 class BindingTests(unittest.TestCase):
     def test_x5_asset_binds_to_packed_nv12_and_unverified_scores(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         selection = resolve_selection("x5")
-        binding = bind_model(selection, _metadata(protocol="x5"))
+        binding = bind_model(BINDING_TABLE, selection, _metadata(protocol="x5"))
 
         self.assertEqual(binding.contract.input_protocol, "packed_nv12")
         self.assertEqual(binding.input_names, ("data",))
@@ -83,10 +83,8 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(binding.contract.output_score_policy, "legacy_softmax")
 
     def test_x5_accepts_runtime_nv12_dtype_token(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         metadata = _metadata(protocol="x5")
         metadata = metadata.from_mapping(
@@ -100,15 +98,12 @@ class BindingTests(unittest.TestCase):
                 "output_dtypes": metadata.output_dtypes,
             }
         )
-        binding = bind_model(resolve_selection("x5"), metadata)
+        binding = bind_model(BINDING_TABLE, resolve_selection("x5"), metadata)
         self.assertEqual(binding.input_names, ("data",))
 
     def test_direct_runtime_metadata_defaults_are_safe_mappings(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            RuntimeMetadata,
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import RuntimeMetadata, bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         metadata = RuntimeMetadata(
             model_name="resnet18_224x224_nv12",
@@ -119,15 +114,11 @@ class BindingTests(unittest.TestCase):
             input_dtypes={"data": "nv12"},
             output_dtypes={"prob": "float32"},
         )
-        self.assertEqual(bind_model(resolve_selection("x5"), metadata).output_name, "prob")
+        self.assertEqual(bind_model(BINDING_TABLE, resolve_selection("x5"), metadata).output_name, "prob")
 
     def test_missing_runtime_dtypes_are_rejected(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            MetadataMismatchError,
-            RuntimeMetadata,
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import MetadataMismatchError, RuntimeMetadata, bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         metadata = RuntimeMetadata.from_mapping(
             {
@@ -139,27 +130,23 @@ class BindingTests(unittest.TestCase):
             }
         )
         with self.assertRaises(MetadataMismatchError):
-            bind_model(resolve_selection("x5"), metadata)
+            bind_model(BINDING_TABLE, resolve_selection("x5"), metadata)
 
     def test_s100_and_s600_assets_bind_to_split_nv12(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         for target in ("s100", "s600"):
             with self.subTest(target=target):
                 selection = resolve_selection(target)
-                binding = bind_model(selection, _metadata(protocol="s"))
+                binding = bind_model(BINDING_TABLE, selection, _metadata(protocol="s"))
                 self.assertEqual(binding.contract.input_protocol, "split_nv12")
                 self.assertEqual(binding.y_input_name, "input_y")
                 self.assertEqual(binding.uv_input_name, "input_uv")
 
     def test_unpublished_target_and_unknown_asset_are_rejected(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            UnsupportedAssetError,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import UnsupportedAssetError
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         with self.assertRaises(UnsupportedAssetError):
             resolve_selection("s100p", asset_id="resnet18")
@@ -167,64 +154,51 @@ class BindingTests(unittest.TestCase):
             resolve_selection("x5", asset_id="made-up-resnet")
 
     def test_wrong_output_shape_or_semantics_is_rejected(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            MetadataMismatchError,
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import MetadataMismatchError, bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         selection = resolve_selection("x5")
         with self.assertRaises(MetadataMismatchError):
-            bind_model(selection, _metadata(output_shape=(1, 999)))
+            bind_model(BINDING_TABLE, selection, _metadata(output_shape=(1, 999)))
         with self.assertRaises(MetadataMismatchError):
-            bind_model(selection, _metadata(output_semantics="not-a-score-vector"))
+            bind_model(BINDING_TABLE, selection, _metadata(output_semantics="not-a-score-vector"))
 
     def test_integer_output_without_declared_scale_is_rejected(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            MetadataMismatchError,
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import MetadataMismatchError, bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         selection = resolve_selection("x5")
         with self.assertRaises(MetadataMismatchError):
-            bind_model(selection, _metadata(output_dtype="int8"))
+            bind_model(BINDING_TABLE, selection, _metadata(output_dtype="int8"))
 
     def test_explicit_custom_path_requires_a_known_contract(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            UnsupportedAssetError,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import UnsupportedAssetError
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         with self.assertRaises(UnsupportedAssetError):
             resolve_selection("x5", model_path="custom.bin")
 
     def test_output_rank_rule_accepts_all_singleton_spellings(self):
         # H4: X5 (1,1000,1,1), S (1,1000) and a bare vector are one contract.
-        from samples.vision.resnet.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         selection = resolve_selection("x5")
         for shape in ((1, 1000, 1, 1), (1, 1000), (1000,), (1, 1, 1000)):
             with self.subTest(shape=shape):
-                binding = bind_model(selection, _metadata(output_shape=shape))
+                binding = bind_model(BINDING_TABLE, selection, _metadata(output_shape=shape))
                 self.assertEqual(binding.output_shape, shape)
                 self.assertEqual(binding.output_transform, "raw_f32")
 
     def test_output_rank_rule_rejects_ambiguous_layouts(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            MetadataMismatchError,
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import MetadataMismatchError, bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         selection = resolve_selection("x5")
         for shape in ((1, 999), (2, 1000), (1, 500, 2), (), (1,)):
             with self.subTest(shape=shape):
                 with self.assertRaises(MetadataMismatchError):
-                    bind_model(selection, _metadata(output_shape=shape))
+                    bind_model(BINDING_TABLE, selection, _metadata(output_shape=shape))
 
     def test_declared_raw_f32_keeps_vestigial_quant_descriptor(self):
         # Contract refinement driven by board evidence (X5 smoke, 2026-09-21):
@@ -232,14 +206,12 @@ class BindingTests(unittest.TestCase):
         # compiler quant descriptor.  The raw_f32 contract gates on dtype (see
         # the int8 rejection test above), snapshots the descriptor for the
         # record, and never applies it — legacy consumers ignored it too.
-        from samples.vision.resnet.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         selection = resolve_selection("x5")
         descriptor = _QuantInfo(scale=0.5, zero_point=3)
-        binding = bind_model(
+        binding = bind_model(BINDING_TABLE,
             selection,
             _metadata(output_quants={"prob": descriptor}),
         )
@@ -253,10 +225,8 @@ class BindingTests(unittest.TestCase):
         # is exercised with a replaced contract and a synthetic fixture.
         import dataclasses
 
-        from samples.vision.resnet.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import bind_model
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         selection = resolve_selection("x5")
         dequant_selection = dataclasses.replace(
@@ -266,7 +236,7 @@ class BindingTests(unittest.TestCase):
             ),
         )
         descriptor = _QuantInfo(scale=0.25, zero_point=2)
-        binding = bind_model(
+        binding = bind_model(BINDING_TABLE,
             dequant_selection,
             _metadata(output_dtype="int8", output_quants={"prob": descriptor}),
         )
@@ -274,12 +244,10 @@ class BindingTests(unittest.TestCase):
         self.assertIs(binding.output_quants["prob"], descriptor)
 
         # The declared dequant contract still requires a descriptor.
-        from samples.vision.resnet.runtime.python.model_binding import (
-            MetadataMismatchError,
-        )
+        from utils.py_utils.cls_binding import MetadataMismatchError
 
         with self.assertRaises(MetadataMismatchError):
-            bind_model(dequant_selection, _metadata(output_dtype="int8"))
+            bind_model(BINDING_TABLE, dequant_selection, _metadata(output_dtype="int8"))
 
 
 if __name__ == "__main__":

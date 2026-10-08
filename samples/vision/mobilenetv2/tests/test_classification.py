@@ -12,7 +12,7 @@ class PolicyTests(unittest.TestCase):
         """v1/v2 policy 'none': the task must not renormalise the graph's
         post-softmax probabilities."""
 
-        from samples.vision.mobilenetv2.runtime.python.classification import (
+        from utils.py_utils.classification import (
             ClassificationTask,
             topk_from_scores,
         )
@@ -53,7 +53,7 @@ class PolicyTests(unittest.TestCase):
             )
 
     def test_topk_from_scores_softmax_false_preserves_raw_values(self):
-        from samples.vision.mobilenetv2.runtime.python.classification import topk_from_scores
+        from utils.py_utils.classification import topk_from_scores
 
         raw = np.array([0.5, 0.2, 0.3], dtype=np.float32)
         result = topk_from_scores(raw, 3, softmax=False)
@@ -63,7 +63,7 @@ class PolicyTests(unittest.TestCase):
         )
 
     def test_injected_runner_flows_split_input_through_task(self):
-        from samples.vision.mobilenetv2.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         from samples.vision.mobilenetv2.runtime.python.model_binding import (
             bind_model,
             resolve_selection,
@@ -88,7 +88,7 @@ class PolicyTests(unittest.TestCase):
         self.assertIn(binding.uv_input_name, observed)
 
     def test_packed_input_uses_canonical_flat_buffer(self):
-        from samples.vision.mobilenetv2.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         from samples.vision.mobilenetv2.runtime.python.model_binding import (
             bind_model,
             resolve_selection,

@@ -144,7 +144,7 @@ class ThinEntryTests(unittest.TestCase):
                     f"--{selected.stage}-asset-id", selected.asset.reference,
                 ]
             stream = io.StringIO()
-            with patch("samples._shared.platforms.require_execution_target",
+            with patch("utils.py_utils.platforms.require_execution_target",
                        return_value=None), patch(
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",
                 return_value=frontend), patch(

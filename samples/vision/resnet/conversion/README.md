@@ -10,9 +10,6 @@ variants this sample ships, each with its own conversion workflow:
 | ResNet50 (s only) | — | converted with the OE `13_resnet50` recipe |
 | ResNet152 (s only) | `resnet152_config.yaml`, `get_calibration_data.py`, `x86_inference.py` | published ONNX plus user-provided calibration images, run through the three files above inside OE |
 
-The ResNet152 recipe in this directory originates from
-`rdk_s@380e1a2:samples/vision/resnet152/conversion/`.
-
 <a id="source-model"></a>
 ## Source model
 
@@ -22,7 +19,7 @@ classifiers: [ResNet18](https://pytorch.org/vision/main/models/generated/torchvi
 [ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html).
 
 - ResNet18: exported locally with fixed NCHW input `[1,3,224,224]`,
-  output name `output`, ImageNet-1k classes. The canonical exporter uses
+  output name `output`, ImageNet-1k classes. The exporter uses
   the TorchScript ONNX exporter (`dynamo=False`) for graph stability.
   `--weights IMAGENET1K_V1` selects the official pretrained weights;
   `--weights none` produces a random-weight graph for offline structure
@@ -35,6 +32,19 @@ classifiers: [ResNet18](https://pytorch.org/vision/main/models/generated/torchvi
 ```bash
 # cwd: this conversion directory — output: ./resnet152.onnx
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152.onnx
+```
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── export_resnet18_onnx.py  # Python script
+├── get_calibration_data.py  # Python script
+├── resnet152_config.yaml  # Configuration
+└── x86_inference.py  # Python script
 ```
 
 <a id="toolchain-targets"></a>
@@ -194,7 +204,7 @@ generated artifact and record their complete output. For ResNet152,
 `x86_inference.py` (run inside the OE container) compares ONNX / HBIR
 (`.bc`) / HBM outputs on x86 with the same padded-crop preprocessing.
 
-Then confirm on the matching board with the canonical runtime: X5
+Then confirm on the matching board with the runtime: X5
 metadata exposes one packed NV12 input and an F32 `[1,1000,1,1]` output
 named `prob`; S100/S600 expose Y `[1,224,224,1]`, UV `[1,112,112,2]`,
 and an F32 `[1,1000]` output; the same image, resize type, label file,
@@ -235,7 +245,7 @@ artifact contract.
 Published S-series artifacts can also be fetched directly from the model
 server (S100 and S600 share the filename; only the archive sub-directory
 differs — the manifest-driven [model downloader](../model/README.md#preparation)
-remains the canonical preparation path):
+remains the preparation path):
 
 ```bash
 # ResNet18
@@ -310,8 +320,8 @@ Rules and guarantees:
   `hb_mapper` → `.bin`, S100/S600 `hb_compile` → `.hbm`); no published
   artifact recipe is implied for self-trained outputs.
 - Runtime contract: load the compiled artifact with
-  `model_binding.custom_selection(model_path, target,
-  input_height=224, input_width=224, class_count=<num-classes>)` and
+  `classify.ResNetClassifier(model_path, target=target,
+  input_size=(224, 224), class_count=<num-classes>)` and
   optional labels (see the [custom models
   section](../runtime/python/README.md#custom-model)); the binding
   validates the actual output width against `class_count`.

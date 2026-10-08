@@ -7,6 +7,15 @@ English | [简体中文](./README_cn.md)
 
 The published pair has an X5 BPU image encoder (`img_encoder.bin`) and a CPU ONNX text encoder (`text_encoder.onnx`). No upstream checkpoint version, export script, conversion YAML, or calibration dataset is included. The original CLIP BPE vocabulary and model protocol are preserved.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
 

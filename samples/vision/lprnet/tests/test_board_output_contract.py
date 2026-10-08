@@ -31,7 +31,7 @@ BINDING = "samples.vision.lprnet.runtime.python.model_binding"
 RUNNER = "samples.vision.lprnet.runtime.python.model_runner"
 TASK = "samples.vision.lprnet.runtime.python.lprnet"
 MAIN = "samples.vision.lprnet.runtime.python.main"
-RUNTIME_META = "samples._shared.runtime_meta"
+RUNTIME_META = "utils.py_utils.runtime_meta"
 
 BOARD_OUTPUT_SHAPE = (1, 68, 18, 1)
 LEGACY_API_OUTPUT_SHAPE = (1, 68, 18)

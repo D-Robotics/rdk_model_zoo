@@ -16,6 +16,15 @@ samples/vision/dinov2/test_data/bus.jpg
 # board benchmark inputs: same preprocessed float32 tensors as the runtime contract
 ```
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -65,7 +74,7 @@ For accuracy, run the exported float ONNX with ONNXRuntime on the same preproces
 | Quantized cosine | Cosine between quantized output and float ONNX output for each output. | PTQ report, Nash-E; `cls_feat` and `patch_feat` measured separately. |
 | Board cosine range | Min/max cosine range over board executions against float ONNX references. | Same input preprocessing; S100, S100P, S600 separately; source board record. |
 
-The canonical preprocessing is OpenCV BGR→RGB, bicubic short-side resize to 256, center crop 224, `/255`, ImageNet mean/std, and contiguous float32 NCHW. Outputs are compared before any softmax or L2 operation.
+The preprocessing is OpenCV BGR→RGB, bicubic short-side resize to 256, center crop 224, `/255`, ImageNet mean/std, and contiguous float32 NCHW. Outputs are compared before any softmax or L2 operation.
 
 <a id="outputs"></a>
 ## Outputs

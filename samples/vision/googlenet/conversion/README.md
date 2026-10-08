@@ -8,6 +8,15 @@ For inference, prepare the published X5 deployment binary
 replacement, first prepare a matching ONNX graph, checkpoint revision,
 and PTQ YAML.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -21,7 +30,7 @@ Docker images are available from the D-Robotics developer forum
 <a id="export"></a>
 ## ONNX export
 
-Export a GoogLeNet ONNX graph with the wrapper's runtime contract:
+Export a GoogLeNet ONNX graph with the helper's runtime contract:
 RGB/NCHW input at 224×224 before NV12 packing and 1000 classification
 scores as output.
 

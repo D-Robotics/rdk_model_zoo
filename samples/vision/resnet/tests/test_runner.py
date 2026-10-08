@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
+
 import unittest
 
 import numpy as np
@@ -31,13 +33,25 @@ class _FakeRuntime:
 
 
 class RunnerTests(unittest.TestCase):
+    def test_published_model_cannot_skip_catalog_validation(self):
+        from utils.py_utils.cls_binding import bind_model, UnsupportedAssetError
+        from utils.py_utils.model_runner import RuntimeModelRunner
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
+        from testsupport import runtime_metadata
+
+        selection = resolve_selection("x5")
+        with self.assertRaisesRegex(UnsupportedAssetError, "binding table"):
+            bind_model(None, selection, runtime_metadata("x5"))
+        with self.assertRaisesRegex(ValueError, "binding table"):
+            RuntimeModelRunner(selection, runtime=_FakeRuntime()).load()
+
     def test_injected_runtime_loads_without_board_sdk_or_hardware(self):
-        from samples.vision.resnet.runtime.python.model_binding import resolve_selection
-        from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
+        from utils.py_utils.model_runner import RuntimeModelRunner
 
         fake = _FakeRuntime()
         selection = resolve_selection("x5")
-        runner = RuntimeModelRunner(selection, runtime=fake)
+        runner = RuntimeModelRunner(selection, table=BINDING_TABLE, runtime=fake)
         binding = runner.load()
 
         output = runner(
@@ -47,8 +61,8 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(fake.calls[0][binding.model_name][binding.input_names[0]].dtype, np.uint8)
 
     def test_runtime_factory_is_called_only_on_load(self):
-        from samples.vision.resnet.runtime.python.model_binding import resolve_selection
-        from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
+        from utils.py_utils.model_runner import RuntimeModelRunner
 
         created = []
 
@@ -57,7 +71,7 @@ class RunnerTests(unittest.TestCase):
             return _FakeRuntime()
 
         selection = resolve_selection("x5")
-        runner = RuntimeModelRunner(selection, runtime_factory=factory)
+        runner = RuntimeModelRunner(selection, table=BINDING_TABLE, runtime_factory=factory)
         self.assertEqual(created, [])
         runner.load()
         self.assertEqual(created, [str(selection.model_path)])

@@ -53,7 +53,7 @@ if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
     raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
-from samples._shared.platforms import resolve_target, require_execution_target
+from utils.py_utils.platforms import resolve_target, require_execution_target
 
 from yolo_assets import UnsupportedAssetError  # noqa: E402
 from yolo_platform import resolve_platform  # noqa: E402
@@ -126,7 +126,7 @@ def main() -> int:
 
         # The readable flow itself: construct the dispatched task model,
         # run one prediction, present the result.
-        from rdk_yolo_utils import file_io, inspect as inspect_utils
+        from utils.py_utils import file_io, inspect as inspect_utils
         from yolo_dispatch import create_runtime_model
 
         model = create_runtime_model(profile, args)
@@ -151,7 +151,7 @@ def run_inference(profile, args, labels) -> None:
     inline (update the two together); the task-renderer tests patch the
     same helper seams both paths use.
     """
-    from rdk_yolo_utils import file_io, inspect as inspect_utils
+    from utils.py_utils import file_io, inspect as inspect_utils
     from yolo_dispatch import create_runtime_model
 
     model = create_runtime_model(profile, args)

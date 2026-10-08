@@ -2,6 +2,26 @@
 
 [English](README.md) | 简体中文
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── tests/  # 自动化测试
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── launcher.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 支持范围
 原生流程支持 S100/S600、固定词表 ASR 与完整文件分块处理。X5/S100P 无对应发布制品，运行时会拒绝这些目标。SDK 适配和启动器使用匹配的板端 SDK 与模型制品。

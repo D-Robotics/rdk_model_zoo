@@ -21,6 +21,25 @@ are described in [model preparation](../model/README.md). Converting your own
 weights is a separate operation; graph transformations do not download weights
 or produce HBM files.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── calibration.py  # Python script
+├── compile.py  # Python script
+├── configuration.py  # Python script
+├── export.py  # Python script
+├── graph_ops.py  # Python script
+├── onnx_stage.py  # Python script
+├── prepare.py  # Python script
+├── requirements-export.txt  # Source or data file
+├── torch_stages.py  # Python script
+└── workspace.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Export environment and quickstart
 
@@ -167,7 +186,7 @@ contains `source/{encoder,predictor,decoder}.onnx`, the original export report a
 CMVN snapshot, `configs/{encoder,predictor,decoder}.yaml`, and `preparation.json`.
 The report binds each source/derived array to hashes, shape, dtype and value range.
 Config model/calibration paths are relative to this workspace, so run an original
-config from its workspace root; the compile wrapper below remaps paths explicitly.
+config from its workspace root; the compile helper below remaps paths explicitly.
 
 | Preparation argument | Default / behavior |
 | --- | --- |
@@ -182,7 +201,7 @@ config from its workspace root; the compile wrapper below remaps paths explicitl
 `status: prepared` means calibration/config creation only. Later preparation
 failure leaves `status: preparation_failed`, the current audio, completed records
 and partial files. Exit code is 2; partial workspaces cannot be compiled by the
-wrapper. Missing required dependencies/preconditions can fail before output exists.
+helper. Missing required dependencies/preconditions can fail before output exists.
 
 <a id="compile"></a>
 ## Explicit S100 / nash-e compilation
@@ -208,7 +227,7 @@ docker run --rm -it \
 ```
 
 The FP32 export Python environment alone does not provide the compiler. Run
-the wrapper from an available repository checkout inside the OE environment,
+the helper from an available repository checkout inside the OE environment,
 with NumPy and PyYAML installed; this compilation step does not import Torch.
 
 ```bash
@@ -222,7 +241,7 @@ python samples/speech/paraformer/conversion/compile.py \
 `hb_compile` and may name an explicit executable. The workspace path cannot
 contain `;`, which is the OE calibration-directory separator. Move/mount the
 complete preparation workspace into the toolchain environment before compiling.
-The wrapper checks every snapshot/config/NPY digest and rejects added calibration
+The helper checks every snapshot/config/NPY digest and rejects added calibration
 files, then writes per-run absolute-path configs without changing the prepared
 workspace. It invokes `hb_compile -c <stage.yaml>` sequentially and rechecks the
 preparation after compilation.

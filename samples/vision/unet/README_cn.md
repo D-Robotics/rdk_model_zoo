@@ -47,6 +47,24 @@ torchvision 版本与权重标识。
 新增 backbone 需要完整验证后才能视为受支持：每个变体都必须
 分别通过 checkpoint、ONNX、PTQ、精度、Runtime 和板端性能门禁。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+unet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
+训练工具与生成的中间产物维护在本示例之外。仓库不提交 checkpoint、ONNX、
+校准数据、编译后的 BIN 或完整评测数据集；预编译 BIN 通过 `model/` 中的脚本下载。
+
 <a id="support-matrix"></a>
 ## 支持与验证
 
@@ -54,7 +72,6 @@ torchvision 版本与权重标识。
 | --- | --- | --- | --- |
 | x5 | resnet18/34/50/101/152 | supported | not-supported |
 | s100 / s100p / s600 | — | not-supported | not-supported |
-
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -78,48 +95,6 @@ python3 samples/vision/unet/runtime/python/main.py --target x5 --variant resnet1
 ## 预期结果
 
 掩码是固定 512×512 uint8 类别 ID 0..20，不自动恢复原图尺寸；叠加图也在模型分辨率。JSON 包含制品身份、实际 metadata、出现类别、输出路径和包括前后处理的耗时。该耗时不是纯 BPU 延迟。
-
-<a id="directory"></a>
-## 目录结构（Directory Structure）
-
-```text
-unet/
-├── conversion/                         # checkpoint 到 X5 的转换流程
-│   ├── mapper.py                       # 带门禁的 checker/makertbin 入口
-│   ├── onnx_export/
-│   │   ├── export_unet.py              # 严格加载与 ONNX 导出入口
-│   │   └── model/                      # 共享 UNet ResNet 模型定义
-│   ├── ptq_yamls/                      # 每个 backbone 一份 bayes-e 模板
-│   ├── README.md
-│   └── README_cn.md
-├── evaluator/                          # PyTorch/ONNX/X5 统一精度入口
-│   ├── eval_unet.py
-│   ├── README.md
-│   └── README_cn.md
-├── model/                              # 预编译 X5 模型与下载说明
-│   ├── download.sh               # 按 backbone 下载模型
-│   ├── README.md
-│   └── README_cn.md
-├── runtime/
-│   └── python/                         # RDK X5 hbm_runtime 示例
-│       ├── unet.py                     # UNetTask 四阶段推理
-│       ├── model_binding.py            # 制品与张量契约
-│       ├── model_runner.py             # 懒加载 SDK 与原始张量校验
-│       ├── visualization.py            # 独立 VOC 调色板
-│       ├── main.py                     # 命令行推理入口
-│       ├── run.sh                      # 一键运行脚本
-│       ├── README.md
-│       └── README_cn.md
-├── test_data/                          # 默认 Pascal VOC 测试图片
-│   ├── 2007_000033.jpg
-│   ├── README.md
-│   └── README_cn.md
-├── README.md
-└── README_cn.md
-```
-
-训练工具与生成的中间产物维护在本示例之外。仓库不提交 checkpoint、ONNX、
-校准数据、编译后的 BIN 或完整评测数据集；预编译 BIN 通过 `model/` 中的脚本下载。
 
 <a id="entry-points"></a>
 ## 模型转换（Model Conversion）

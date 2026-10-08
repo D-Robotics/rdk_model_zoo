@@ -10,6 +10,15 @@ split. There is no dataset downloader, label array, split version or dataset-wid
 accuracy evaluator in the source. Use the delivered file unchanged for the
 functional smoke command; prepare external labeled data separately for real metrics.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -75,7 +84,7 @@ see the [preserved screenshot and limitations](../conversion/README.md#calibrati
 <a id="boundaries"></a>
 ## Boundaries
 
-No labeled dataset evaluator or BPU benchmark wrapper is bundled; reproducing
+No labeled dataset evaluator or BPU benchmark helper is bundled; reproducing
 the source-recorded performance requires the artifact, environment and command
 identity listed above. S100P/S600 have no published
 PointNet asset and are not silently mapped to S100. Code follows

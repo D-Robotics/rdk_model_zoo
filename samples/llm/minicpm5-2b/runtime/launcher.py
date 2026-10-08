@@ -13,7 +13,7 @@ import sys
 RUNTIME = Path(__file__).resolve().parent
 SAMPLE = RUNTIME.parent
 sys.path.insert(0, str(SAMPLE.parents[2]))
-from samples._shared.platforms import require_execution_target, resolve_target
+from utils.py_utils.platforms import require_execution_target, resolve_target
 
 
 def main(argv=None):

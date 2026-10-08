@@ -33,6 +33,24 @@ log 边界止于 clip 与 scale/bias；**exp 和最终尺寸还原在 CPU 上执
 若重新训练的权重采用其他参数，需要显式更新对应运行时绑定。
 结果是相对深度，不能直接声明为经过独立校准的米制距离。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── ptq_yamls/  # ptq_yamls 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── compile.py  # Python 脚本
+├── export.py  # Python 脚本
+├── extract_sunrgbd_subset.py  # Python 脚本
+├── mapper.py  # Python 脚本
+├── prepare_calibration.py  # Python 脚本
+├── requirements-s-source.txt  # 源码或数据文件
+├── requirements-x5-source.txt  # 源码或数据文件
+└── requirements.txt  # 源码或数据文件
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标配置
 
@@ -110,7 +128,7 @@ python prepare_calibration.py --target s100 --variant l \
 
 X5 生成 RGB CHW uint8 `.bin`，由 Mapper 执行 `/255`；S 保留源流程，生成已 `/255` 的
 RGB float32 NCHW `.npy`。S NV12 与 lite 分别采用 letterbox 和直接拉伸。
-直接 RGB 校准与 NV12 色度采样后重建的 RGB 不保证逐字节相等。
+校准预处理应与目标模型的 RGB 或 NV12 输入路径一致。
 
 每个数据目录旁生成同名 `.json` 和 `.md`，例如 `cal_s_nv12.json`。
 可用 `--manifest`、`--report` 指定位置，但必须是校准目录之外的两个不同文件。

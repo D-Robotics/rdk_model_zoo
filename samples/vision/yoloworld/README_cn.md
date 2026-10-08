@@ -9,6 +9,21 @@
 [YOLO-World](https://github.com/AILab-CVC/YOLO-World)，属于开放词汇区域检测。
 来源：X5 平台 sample 交付 @ `ac115717197920355fc390bb04299b20e6436864`。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+yoloworld/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵（support-matrix）
 
@@ -52,13 +67,6 @@ python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts do
 由 post-process 消费且不做数值转换。后处理为每行选择最高文本槽、score 阈值 `0.05`、
 按类别 NMS `0.45`、坐标还原，结果为 `boxes[N,4]`、`scores[N]` 和词汇
 `class_ids[N]`。
-
-<a id="directory"></a>
-## 目录（directory）
-
-`model/` 负责显式资产准备；`runtime/python/` 负责三阶段任务、懒加载 runtime
-和 CLI；`conversion/` 记录模型协议与转换缺口；`evaluator/` 提供对拍比较工具；
-`test_data/` 保存源图片和离线词向量；`tests/` 使用注入 runtime 做主机测试。
 
 <a id="entry-points"></a>
 ## 入口（entry-points）

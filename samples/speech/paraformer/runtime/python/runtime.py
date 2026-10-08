@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from samples._shared.single_array_runner import NamedArrayRunner
+from utils.py_utils.single_array_runner import NamedArrayRunner
 from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary
 from samples.speech.paraformer.runtime.python.model_binding import (
     STAGES,

@@ -1,6 +1,6 @@
 # EfficientNet model artifacts
 
-Prepare the model artifact with the canonical downloader, which resolves its URL and format from the platform release manifest.
+Prepare the model artifact with the downloader, which resolves its URL and format from the platform release manifest.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -28,6 +28,18 @@ and UV tensors — a bare filename cannot select the protocol, so the runtime
 always pairs `--model-path` with the exact reference. The lite series has
 **per-variant geometry** (224/240/260/300/380); the variant, not a default
 size, selects it. Select the manifest reference that matches the target and variant.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
 
 <a id="preparation"></a>
 ## Preparation

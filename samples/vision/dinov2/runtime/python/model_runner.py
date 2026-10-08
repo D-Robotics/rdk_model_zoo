@@ -8,8 +8,8 @@ from typing import Any, Mapping
 
 import numpy as np
 
-from samples._shared.model_runner import _default_runtime_factory
-from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.model_runner import _default_runtime_factory
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 from samples.vision.dinov2.runtime.python.model_binding import ModelBinding, ModelSelection, bind_model
 
 
@@ -39,7 +39,7 @@ class RuntimeModelRunner:
         if self.loaded:
             return self.binding  # type: ignore[return-value]
         if self._runtime is None and self._factory is None:
-            from samples._shared.platforms import require_execution_target
+            from utils.py_utils.platforms import require_execution_target
 
             require_execution_target(self.selection.target)
         try:

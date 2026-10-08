@@ -9,6 +9,15 @@ design (no network access).
 
 Fixture overview.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+bad_links/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -33,11 +42,6 @@ is not checked. The [valid fragment](#overview) resolves. The
 ## Expected results
 
 Prints a list.
-
-<a id="directory"></a>
-## Directory
-
-- `README.md` — this file
 
 <a id="entry-points"></a>
 ## Entry points

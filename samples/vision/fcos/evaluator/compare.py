@@ -25,7 +25,7 @@ import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
-from samples._shared.legacy_platforms import legacy_path, pinned_name  # noqa: E402
+from utils.py_utils.legacy_platforms import legacy_path, pinned_name  # noqa: E402
 SAMPLE_DIR = ROOT / "samples" / "vision" / "fcos"
 SOURCE_FILE = legacy_path("x5/samples/vision/fcos/runtime/python/fcos_det.py")
 SOURCE_REF = "ac115717197920355fc390bb04299b20e6436864"
@@ -33,8 +33,8 @@ _FIXED_SOURCE_MODULES: dict[str, types.ModuleType] = {}
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from samples._shared.platforms import require_execution_target  # noqa: E402
-from samples._shared.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
+from utils.py_utils.platforms import require_execution_target  # noqa: E402
+from utils.py_utils.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
 from samples.vision.fcos.runtime.python.fcos import FCOSTask  # noqa: E402
 from samples.vision.fcos.runtime.python.model_binding import (  # noqa: E402
     ModelSelection,
@@ -321,7 +321,7 @@ def run_comparison(
             legacy_path("x5/utils/py_utils/postprocess.py"),
             Path(__file__),
             *sorted((SAMPLE_DIR / "runtime" / "python").glob("*.py")),
-            *(ROOT / "samples" / "_shared" / name for name in ("assets.py", "platforms.py", "runtime_meta.py", "quantization.py", "image.py")),
+            *(ROOT / "utils" / "py_utils" / name for name in ("assets.py", "platforms.py", "runtime_meta.py", "quantization.py", "image.py")),
         ]
         summary["hashes"]["code_sha256"] = {
             (str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else pinned_name(path)):

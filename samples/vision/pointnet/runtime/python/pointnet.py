@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from typing import Mapping
 import numpy as np
-from samples._shared.quantization import dequantize_tensor
+from utils.py_utils.quantization import dequantize_tensor
 from samples.vision.pointnet.runtime.python.model_binding import ModelBinding
 
 

@@ -9,6 +9,18 @@
 
 The S100/S100P/S600 manifests contain no LPRNet asset. The bundled `test_data/test_input.dat` is an input artifact, not a model.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

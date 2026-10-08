@@ -359,7 +359,7 @@ def manifest_asset(profile: PlatformProfile, family: str, task: str,
     Filenames remain compatibility selections; URLs and publisher hashes have
     one authority in the existing platform manifest.
     """
-    from samples._shared.assets import resolve_asset
+    from utils.py_utils.assets import resolve_asset
     filename = model_filename(profile, family, task, size)
     if profile.model_subdir:
         filename = profile.model_subdir + '/' + filename

@@ -15,6 +15,31 @@ X5 B2/B3/B4 需先准备匹配的 ONNX 图与[补充准备](#known-gaps)
   `create_model → torch.onnx.export → onnxsim.simplify` 导出所选变体，
   并记录 ONNX 图使用的权重修订。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── EfficientNet_B2_config.yaml  # 配置
+├── EfficientNet_B3_config.yaml  # 配置
+├── EfficientNet_B4_config.yaml  # 配置
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── efficientnet_lite0_config.yaml  # 配置
+├── efficientnet_lite1_config.yaml  # 配置
+├── efficientnet_lite2_config.yaml  # 配置
+├── efficientnet_lite3_config.yaml  # 配置
+├── efficientnet_lite4_config.yaml  # 配置
+├── get_calibration_data.py  # Python 脚本
+├── get_efficientnet_lite0_onnx.py  # Python 脚本
+├── get_efficientnet_lite1_onnx.py  # Python 脚本
+├── get_efficientnet_lite2_onnx.py  # Python 脚本
+├── get_efficientnet_lite3_onnx.py  # Python 脚本
+├── get_efficientnet_lite4_onnx.py  # Python 脚本
+├── timm2onnx_local.py  # Python 脚本
+└── x86_inference.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

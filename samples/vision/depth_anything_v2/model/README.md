@@ -15,6 +15,18 @@ but the manifest carries no separate S100P asset. S100P, S600 and
 X5 are refused, even if an external path is supplied. `auto` selects the sole
 S100 contract; real execution still checks local identity before SDK loading.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Explicit preparation
 
@@ -43,7 +55,7 @@ A similarly named upstream checkpoint is not guaranteed to match this artifact.
 ## Paths and external copies
 
 Default runtime model paths are resolved relative to this directory, independent
-of current directory. The shell wrappers first change to repository root, which
+of current directory. The shell helpers first change to repository root, which
 is the base for user-provided relative paths. Direct Python invocation instead
 uses the caller's current directory for user paths.
 

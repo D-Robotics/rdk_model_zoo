@@ -9,6 +9,21 @@ UNetMobileNet 结合 U-Net 编解码结构与 MobileNet 轻量骨干，执行 Ci
 
 本 S 系列示例与 X5 UNet 不同：2048×1024 两平面 NV12 输入、INTER_AREA 拉伸、19 类、原图尺寸输出。Python/C++ 均分离前处理、原始 forward 和 mask 解码；绘图位于 predict 之外。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+unetmobilenet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持与验证
 
@@ -45,17 +60,6 @@ python3 samples/vision/unetmobilenet/runtime/python/main.py --dry-run --target s
 Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原图尺寸 int32 类别 0..18）与 unetmobilenet_report.json。alpha_f=0.75 是原图权重，1 为原图、0 为彩色 mask。实际类别取决于真实推理，不承诺固定结果。下图来自源分支记录。
 
 ![参考效果图](test_data/result.jpg)
-
-<a id="directory"></a>
-## 目录职责
-
-- model/：按目标显式下载到 s100/ 或 s600/。
-- runtime/python/：阶段任务、绑定、共享 runner 适配、CLI 与绘图。
-- runtime/cpp/：阶段实现、SDK 资源管理、纯张量解码、启动器与构建。
-- conversion/：列出缺少的转换前提；源中无导出／编译实现。
-- evaluator/：单图检查及数据集／性能边界；源中无数据集循环。
-- test_data/：segmentation.png 输入及保留的源记录 result.jpg。
-- tests/：源行为对照、主机 fixture、CLI、原生数值／资源测试。
 
 <a id="entry-points"></a>
 ## 入口索引

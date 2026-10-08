@@ -11,6 +11,20 @@
 
 精确引用为 `x5:fcos:<filename>`。本 sample 不提交模型二进制。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+├── download_model.sh  # Shell 脚本
+└── fulldownload.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 
@@ -29,7 +43,7 @@ bash samples/vision/fcos/model/download_model.sh --target x5 --variant efficient
 
 下载器使用 manifest 的 URL 和 hash。当前三行均为 `sha256: null (unknown)`，本地观察到的摘要不能证明发布来源；缺 URL 或已记录 hash 不匹配时会在安装前失败。
 
-Shell wrapper 会从自身目录定位 `download.py`，调用板端镜像提供的 `python3`，不依赖仓库内主机 `.venv`。`download_model.sh` 是 `docs/release/x5/models.yaml` 登记的兼容入口。
+Shell 脚本 会从自身目录定位 `download.py`，调用板端镜像提供的 `python3`，不依赖仓库内主机 `.venv`。`download_model.sh` 是 `docs/release/x5/models.yaml` 登记的快捷入口。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

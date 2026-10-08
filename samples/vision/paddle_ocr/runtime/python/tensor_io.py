@@ -87,7 +87,7 @@ def _bgr_to_nv12_planes(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     height, width = image.shape[:2]
     if height % 2 or width % 2:
         raise ValueError("NV12 preparation requires even image dimensions.")
-    from samples._shared.image import bgr_to_nv12_planes as convert
+    from utils.py_utils.image import bgr_to_nv12_planes as convert
 
     return convert(image)
 

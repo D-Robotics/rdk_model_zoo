@@ -9,6 +9,21 @@ DiffusionDrive 组合三相机 RGB 全景、LiDAR BEV 直方图、自车状态�
 
 源算法参考：[官方 DiffusionDrive 项目](https://github.com/hustvl/DiffusionDrive)、[CVPR2025 论文](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html)、[NAVSIM](https://github.com/autonomousvision/navsim)。这些链接用于了解算法；可部署资产的身份由[模型说明](model/README_cn.md)中的发布 HBM 校验和定义。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+diffusiondrive/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -76,22 +91,10 @@ S600 参考可视化（源记录）：
 
 六组输入/参考和六张结果图均逐字节保留。[评估说明](evaluator/README_cn.md#reference-results)完整保留原 S100P/S600 精度/性能表，含单线程延迟、双线程总吞吐和 S100P 五案例均值；[测试数据说明](test_data/README_cn.md)保留 S600 五案例表。源记录条件：数值对照使用 case_000，profiling 使用 case_017；源记录所有分段 CPU 0.0 ms、全部 BPU 执行。
 
-<a id="directory"></a>
-## 目录职责
-
-| 目录 | 内容 |
-| --- | --- |
-| [model](model/README_cn.md) | 精确目标资产、SHA256SUMS、显式下载 |
-| [runtime/python](runtime/python/README_cn.md) | CLI、批量入口、严格四输入/四输出绑定、任务阶段与独立绘图 |
-| [conversion](conversion/README_cn.md) | 两份保留的 OE3.7.0 PTQ 配置及缺失导出/校准前提 |
-| [evaluator](evaluator/README_cn.md) | 严格离线解码/浮点对照，含形状与有限值检查 |
-| [test_data](test_data/README_cn.md) | 默认与五个确定性 NAVSIM 特征/参考案例、源记录结果图 |
-| [tests](tests) | 主机源对照、量化、CLI、批量和评估测试 |
-
 <a id="entry-points"></a>
 ## 人与 Agent 的入口
 
-使用 `DiffusionDriveTask.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段；`pre_process`/`forward`/`post_process` 拼写保留为同一实现的兼容别名。任务类只处理规划张量语义；SDK 加载/调度、NPZ 读写、下载、绘图和指标均在其外。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
+使用 `DiffusionDriveTask.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段。任务类只处理规划张量语义；SDK 加载/调度、NPZ 读写、下载、绘图和指标均在其外。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
 
 量化处理核对逐轴 scale 与标量零点，拒绝畸形或负 scale，并在整数转换前完成裁剪。评估器要求形状一致；任一向量范数为零时，余弦相似度为未定义。
 

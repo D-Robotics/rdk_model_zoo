@@ -11,6 +11,18 @@
 
 The authoritative URL and asset identity come from [the S release manifest](../../../../docs/release/s/models.yaml). This is the only published LaneNet artifact. S100P, S600 and X5 have no asset here; renaming or moving the S100 HBM does not add support.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Explicit preparation
 
@@ -20,7 +32,7 @@ Run from the repository root:
 bash samples/vision/lanenet/model/download.sh --target s100
 ```
 
-The compatibility wrapper `download_model.sh` delegates to the same downloader. Downloads are never triggered by inference. To choose a different storage root:
+The compatibility helper `download_model.sh` delegates to the same downloader. Downloads are never triggered by inference. To choose a different storage root:
 
 ```bash
 python3 -m samples.vision.lanenet.model.download --target s100 --output-dir /data/lanenet-models

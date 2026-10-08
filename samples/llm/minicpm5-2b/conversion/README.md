@@ -7,6 +7,23 @@
 
 Source model: OpenBMB/MiniCPM5-2B, pinned revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a` (Apache-2.0). Keep original weights/config/tokenizer; the external adapter integrates the SDK. The recipes below are the source release's workflow, reorganized for this layout. Use code blocks sequentially in the same shell unless another directory is stated.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── legacy/  # Files for legacy
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── adapter.py  # Python script
+├── create_config.py  # Python script
+├── download_data.sh  # Shell command
+├── main.py  # Command-line entry
+├── package_s600.py  # Python script
+├── prepare_tokenizer.py  # Python script
+└── s600.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

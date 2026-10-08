@@ -5,6 +5,18 @@
 
 使用 `timm.models.create_model` 构造 repvit_m0_9/m1_0/m1_1，通过 PyTorch 导出并使用 onnxsim 简化。构建时记录 timm/PyTorch 版本、上游源码修订与权重摘要。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── RepViT_m0_9_config.yaml  # 配置
+├── RepViT_m1_0_config.yaml  # 配置
+└── RepViT_m1_1_config.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

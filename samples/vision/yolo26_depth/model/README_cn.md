@@ -35,6 +35,18 @@ S100P 有独立 nash-m 制品，不会隐式复用 nash-e。
 S 清单为准。
 下方 list 命令打印精确 ID 和 URL。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 显式准备
 

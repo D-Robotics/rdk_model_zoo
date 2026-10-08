@@ -12,6 +12,25 @@ YOLOv8/YOLO11 的 DFL 检测和 YOLO26 的直接 LTRB 检测；下文同时列�
 
 输入为与所选任务匹配的本地 Ultralytics PyTorch `.pt` 权重。`/models/*.pt` 是操作者预先准备的路径，仓库不附带自定义权重。导出时记录权重 SHA-256、训练/导出环境版本、类别、输入尺寸和训练配置。[模型清单](../model/README_cn.md)列出的 `.bin/.hbm` 是运行制品，与转换输入权重分开。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── imgs/  # imgs 相关文件
+├── yolo26/  # yolo26 相关文件
+├── CONVERSION_CONTRACT.md  # 说明文档
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── config_x5.yaml  # 配置
+├── export_monkey_patch.py  # Python 脚本
+├── mapper.py  # Python 脚本
+├── mapper_s.py  # Python 脚本
+├── mapper_x5.py  # Python 脚本
+├── requirements.txt  # 源码或数据文件
+└── workflow.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 准备两个主机环境
 
@@ -329,7 +348,7 @@ Grid Cell 提供 1 个类别通道加 `3 × 17 = 51` 个关键点通道：每个
 形状声明不构成受支持的变体）。检测分支确定某个 Grid Cell 合格后，DFL 解码
 按 `(raw_xy × 2 + anchor − 0.5) × stride` 计算关键点在模型输入坐标系中的
 位置，其中 `anchor` 是该 Grid Cell 的半整数中心（`runtime/python/
-rdk_yolo_utils/postprocess.py` 的 `decode_kpts`）；随后 `inverse_points`
+utils.py_utils/postprocess.py` 的 `decode_kpts`）；随后 `inverse_points`
 连同 `inverse_boxes` 把模型输入的 letterbox 几何还原回原图，Sigmoid 把
 关键点可见性 logits 转成 score（`pose_decode.py`）。作为对照，YOLO26
 直接 LTRB pose 分支使用 `(raw_xy + anchor) × stride`，没有 DFL 的 ×2

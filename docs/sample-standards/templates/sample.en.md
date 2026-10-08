@@ -17,6 +17,11 @@
 - Official source: ⟪paper/repo URL⟫
 - Category in this repo: `samples/⟪domain⟫/⟪name⟫`
 
+<a id="directory"></a>
+## Directory structure
+
+⟪List the actual files and their roles.⟫
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -68,22 +73,6 @@ python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py ⟪actual target-
 > test_data, output file paths and naming. Never invent accuracy numbers.
 
 ⟪e.g. Top-5 = […] on test_data/⟪image⟫; result image written to ⟪path⟫⟫
-
-<a id="directory"></a>
-## Directory Layout
-
-> **Must answer:** one-line responsibility per entry; must match the actual tree
-> (local paths are machine-checked).
-
-```text
-⟪name⟫/
-├── conversion/    # ⟹ ONNX → BPU artifact recipes (per-target)
-├── model/         # ⟹ artifact download/preparation + artifact README
-├── runtime/       # ⟹ python/ (and cpp/ where provided) inference implementations
-├── evaluator/     # ⟹ accuracy/performance evaluation
-├── test_data/     # ⟹ sample inputs and expected references
-└── README.md      # ⟹ this file
-```
 
 <a id="entry-points"></a>
 ## Entry Points

@@ -2,12 +2,35 @@
 
 # LaneNet Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── image_preprocess.py  # Python script
+├── lanenet.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+├── tensor_io.py  # Python script
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
-Real inference requires S100, its matching `hbm_runtime` Python runtime, NumPy and OpenCV. Host inspection (`--list-models`, `--dry-run`) does not import the board SDK or download a model. Host tests use explicitly injected SDK fixtures; they do not establish a supported board image or SDK version. The actual runtime version is recorded when available, otherwise `unknown`.
+Run on S100 with its matching `hbm_runtime`, NumPy, and OpenCV. Use `--list-models` to list models and `--dry-run` to inspect a selection. The result records the runtime version when the SDK exposes it.
 
-Prepare the HBM with [the explicit model downloader](../../model/README.md). The runtime does not install dependencies. Run all commands below from the repository root; the shell wrapper also changes to that root.
+Prepare the HBM with [the explicit model downloader](../../model/README.md). The runtime does not install dependencies. Run all commands below from the repository root; the shell helper also changes to that root.
 
 <a id="usage"></a>
 ## Usage
@@ -49,7 +72,7 @@ The model path requires an explicit asset ID. This declares the intended contrac
 | `--list-models` | `false` | List manifest records without execution |
 | `--dry-run` | `false` | Print selected identity/path without execution |
 
-The two inspection modes are mutually exclusive. Additional display files must be new and distinct and cannot overwrite canonical results. No implicit warmup or timing is performed. Source Python scheduling (priority 0, core 0) is retained; native scheduling uses the source UCP defaults instead.
+The two inspection modes are mutually exclusive. Additional display files must be new and distinct and cannot overwrite results. No implicit warmup or timing is performed. Source Python scheduling (priority 0, core 0) is retained; native scheduling uses the source UCP defaults instead.
 
 <a id="results"></a>
 ## Results

@@ -5,6 +5,15 @@
 
 The source delivery provides the X5 deployment artifact and protocol notes, but no in-repository ONNX export script, checkpoint, calibration set, or PTQ YAML. The source conversion README uses an external OE package and a user-supplied `your_lprnet_config.yaml`; that placeholder is not a reproducible file in this repository.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

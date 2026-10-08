@@ -7,7 +7,18 @@ X5 源交付提供已编译 `yolo_world.bin` 协议和离线词向量 JSON，但
 导出脚本、校准集、Bayes-E YAML 或可复现编译配方。复制的
 `source/yoloworld_det.py` 记录 runtime 数学的来源，不是转换工具。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── source/  # source 相关文件
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
+
 <a id="export"></a>
 ## 工具链目标与导出
 
@@ -17,6 +28,7 @@ F32 张量。重新构建需要源模型/权重和匹配的 OpenExplorer 包；O
 这些内容，因此不提供导出命令。
 
 <a id="calibration"></a>
+
 <a id="compile"></a>
 ## 校准与编译
 
@@ -25,6 +37,7 @@ INT8 scale。未来转换记录必须在声称一致前记录 exporter/OE 版本
 身份、词表生成方式、输入输出名称/形状、校准数据和 SHA-256。
 
 <a id="validation"></a>
+
 <a id="artifacts"></a>
 ## 验证与产物
 

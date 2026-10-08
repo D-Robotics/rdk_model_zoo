@@ -14,7 +14,7 @@ import sys
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.speech.paraformer.runtime.python.input_io import write_json
 from samples.speech.paraformer.conversion.calibration import (
     CALIBRATION,

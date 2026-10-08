@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from samples._shared.assets import Asset, list_assets
-from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 
 
 class BindingError(ValueError):

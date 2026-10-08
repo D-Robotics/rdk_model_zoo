@@ -6,6 +6,16 @@ English | [简体中文](README_cn.md)
 ## Dataset
 This evaluator computes character error rate from saved reference/hypothesis pairs. Use unique utterance IDs and preserve the dataset version, split, license, model and decoder metadata. For chunked runtime output, assemble each full transcript and pair it with its independent reference before adding the record.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── evaluate.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 Python 3.10+ standard library only. The evaluator reads transcript JSON and writes metrics without model inference; the supplied provenance object is copied to the report.

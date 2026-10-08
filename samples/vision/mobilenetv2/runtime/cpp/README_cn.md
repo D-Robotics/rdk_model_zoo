@@ -6,12 +6,30 @@ English | [简体中文](./README_cn.md)
 类别标签与置信度。它是 S 系列 `hbDNNInferV2` 实现（`src/` 与 `inc/`
 原样保留）；X5 交付线只提供 Python，因此本流程的适用范围为 S 系列。
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 适用板卡
 
 仅 S100 与 S600。启动器一次性读取 `/sys/class/boardinfo/soc_name` 与
 `/sys/class/boardinfo/board_type`（`board_type` 变体），身份判定与 Python
-流程一致（`samples/_shared/platforms.py`，登记于
+流程一致（`utils/py_utils/platforms.py`，登记于
 `docs/release/platforms.json`）。S100P 以其两种登记形式被拒绝（soc_name
 `s100p`；或 soc_name `s100` 且 board_type `s100p`/`rdk s100p`），未知或
 不可读的身份文件按未知板卡拒绝——均显式报错，绝不静默回退 s100 制品。

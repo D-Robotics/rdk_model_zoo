@@ -11,6 +11,16 @@ The sample retains six deterministic input/reference pairs: the default `referen
 
 Noise is an explicit input. Compare runs made with the same input archive and fixed noise; regenerating noise changes the planning problem. Full NAVSIM evaluation additionally requires scene logs, sensor blobs, maps and metric cache, which this sample does not provide.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── compare_outputs.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

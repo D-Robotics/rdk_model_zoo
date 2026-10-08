@@ -1,5 +1,25 @@
 # YOLOWorld Python runtime
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── run.sh  # 运行示例
+├── visualization.py  # Python 脚本
+└── yoloworld.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -56,6 +76,7 @@ sample 的 `test_data`。prompt 属于每次调用自己的 context，最多接�
 | `--dry-run` | flag | `false` | Print protocol without board/SDK. |
 
 <a id="results"></a>
+
 <a id="integration-example"></a>
 ## 结果与集成示例
 

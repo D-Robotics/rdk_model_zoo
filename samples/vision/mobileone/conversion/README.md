@@ -5,6 +5,20 @@
 
 Use the upstream apple/ml-mobileone flow: load the matching unfused checkpoint (for example `mobileone_s0_unfused.pth.tar`), apply `reparameterize_model(model)`, then export and simplify ONNX. Record the selected upstream revision, package versions and checkpoint digest for each build.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── MobileOne_S0_config.yaml  # Configuration
+├── MobileOne_S1_config.yaml  # Configuration
+├── MobileOne_S2_config.yaml  # Configuration
+├── MobileOne_S3_config.yaml  # Configuration
+├── MobileOne_S4_config.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

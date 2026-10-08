@@ -66,18 +66,18 @@ if str(_ROOT) not in sys.path:
     # the supported full-checkout entry; keep the adjustment at this boundary.
     sys.path.insert(0, str(_ROOT))
 
-from samples._shared.assets import (  # noqa: E402
+from utils.py_utils.assets import (  # noqa: E402
     resolve_asset,
     sha256_file,
     verify_asset_file,
 )
-from samples._shared.platforms import require_execution_target  # noqa: E402
-from samples._shared.legacy_platforms import (  # noqa: E402
+from utils.py_utils.platforms import require_execution_target  # noqa: E402
+from utils.py_utils.legacy_platforms import (  # noqa: E402
     legacy_path,
     legacy_tree,
     pinned_name,
 )
-from samples._shared.runtime_meta import (  # noqa: E402
+from utils.py_utils.runtime_meta import (  # noqa: E402
     RuntimeMetadata,
     metadata_evidence,
 )
@@ -191,7 +191,7 @@ def _meminfo_total_kb() -> Optional[int]:
 def _board_identity(resolved: str) -> Mapping[str, Any]:
     """Record only public board identity files, leaving absent facts null."""
 
-    from samples._shared.platforms import (
+    from utils.py_utils.platforms import (
         BOARD_TYPE_PATH,
         DEVICE_TREE_MODEL_PATH,
         SOCINFO_NAME_PATH,
@@ -892,7 +892,7 @@ def run_comparison(
         summary["labels"]["sha256"] = _digest(label_path)
 
         if runtime_factory is None:
-            from samples._shared.model_runner import _default_runtime_factory
+            from utils.py_utils.model_runner import _default_runtime_factory
 
             runtime_factory = _default_runtime_factory()
             sdk = sys.modules.get("hbm_runtime")
@@ -973,12 +973,13 @@ def run_comparison(
             "scores": np.asarray(legacy_evidence[1]),
         }
 
-        runner_mod = _import_sample_module(sample, "model_runner")
-        classification_mod = _import_sample_module(sample, "classification")
-        labels_mod = _import_sample_module(sample, "labels")
+        runner_mod = importlib.import_module("utils.py_utils.model_runner")
+        classification_mod = importlib.import_module("utils.py_utils.classification")
+        labels_mod = importlib.import_module("utils.py_utils.labels")
         labels = labels_mod.load_labels(Path(label_path))
         runner = runner_mod.RuntimeModelRunner(
-            selection, runtime_factory=recording_factory("unified")
+            selection, runtime_factory=recording_factory("unified"),
+            table=_import_sample_module(sample, "model_binding").BINDING_TABLE
         )
         binding = runner.load()
         runner.set_scheduling_params(priority=priority, bpu_cores=cores)
@@ -1021,7 +1022,7 @@ def run_comparison(
             for name in ("utils.py_utils.file_io", "utils.py_utils.preprocess")
             if (file := getattr(loaded_deps.get(name), "__file__", None))
         ]
-        code_paths += [_ROOT / "samples" / "_shared" / name for name in _SHARED_CODE]
+        code_paths += [_ROOT / "utils" / "py_utils" / name for name in _SHARED_CODE]
         code_paths += sorted(
             (_ROOT / "samples" / "vision" / sample / "runtime" / "python").glob("*.py")
         )

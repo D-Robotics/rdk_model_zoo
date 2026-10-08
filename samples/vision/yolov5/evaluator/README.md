@@ -5,6 +5,18 @@
 
 The source supplies `test_data/bus.jpg` for X5 and `test_data/kite.jpg` for S, plus `coco_classes.names`; there is no labeled benchmark harness in this sample. The evaluator compares one complete two-implementation run on the same image, target, artifact, and thresholds. It is a consistency evidence tool, not an mAP evaluator.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── native/  # Files for native
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── compare.py  # Python script
+└── source_reference.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -111,7 +123,7 @@ record bound to the manifest binary hash) against the observer's
 capture-time hashes, the attested binaries and the unified manifest's own
 hashes and payload digests before any numerical stage. Board identity uses
 the repository's EXACT alias registry (docs/release/platforms.json, the same
-contract as samples/_shared/platforms.py): S100P is a distinct target from
+contract as utils/py_utils/platforms.py): S100P is a distinct target from
 s100, unknown strings such as S100Whatever are not identity, and X5 boards
 resolve through their socinfo names (X5U/X5H/X5M). A failed instrumentation
 audit never runs the source binary at all — run_capture.py aborts first and
@@ -188,6 +200,6 @@ The complete source X5 reference table:
 <a id="boundaries"></a>
 ## Boundaries
 
-This evaluator does not download models, build conversion artifacts, or claim board compatibility from host tests. X5 source intentionally uses its OpenCV XYXY-to-NMSBoxes quirk while S uses class-wise XYXY NMS; cross-target equality is not a valid assertion.
+Prepare the model and input images before comparison. X5 uses OpenCV XYXY-to-NMSBoxes; S uses class-wise XYXY NMS. Compare each target with its matching reference implementation.
 
-The source runner archives the exact pre-execution audit bytes as `instrumentation-audit.json` with `audit_file` and `audit_sha256` in the run record. It writes the copy after the child finishes to preserve the observer's empty-directory requirement. Keep the whole source capture and unified process-record directories: comparison rejects a missing or changed audit and missing unified stdout/stderr, and includes the audit plus both sides' logs under `originals/` in its output. Older captures lacking the audit binding are insufficient for this gate; a boolean verification summary cannot replace the audited document.
+The source runner archives the exact pre-execution audit bytes as `instrumentation-audit.json` with `audit_file` and `audit_sha256` in the run record. It writes the copy after the child finishes to preserve the observer's empty-directory requirement. Keep the whole source capture and unified process-record directories: comparison rejects a missing or changed audit and missing unified stdout/stderr, and includes the audit plus both sides' logs under `originals/` in its output. 

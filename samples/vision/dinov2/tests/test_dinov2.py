@@ -22,7 +22,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / "samples/vision/dinov2"
@@ -234,7 +234,7 @@ class TaskTests(unittest.TestCase):
         actual_cls = task.post_process(task.forward(task.pre_process(np.zeros((224, 224, 3), np.uint8)).tensors))
         np.testing.assert_array_equal(actual_cls, expected_cls)
 
-        from samples._shared.quantization import dequantize_tensor
+        from utils.py_utils.quantization import dequantize_tensor
 
         q = np.array([[1, 2], [10, 20]], dtype=np.int16)
         info = QuantInfo([0.5, 1.5], [3, 5], axis=1)
@@ -405,7 +405,7 @@ class RunnerAndCLITests(unittest.TestCase):
 
         runtime = FakeRuntime("F32")
         real_runner = model_runner.RuntimeModelRunner
-        with patch("samples._shared.platforms.detect_target", return_value="s100"), patch.object(
+        with patch("utils.py_utils.platforms.detect_target", return_value="s100"), patch.object(
             model_runner, "RuntimeModelRunner", lambda selection: RuntimeModelRunnerFixture(selection, runtime, real_runner)
         ):
             with tempfile.TemporaryDirectory() as temp:
@@ -437,7 +437,7 @@ class RunnerAndCLITests(unittest.TestCase):
     def test_cli_rejects_unknown_identity_before_runner(self):
         from samples.vision.dinov2.runtime.python import main, model_runner
 
-        with patch("samples._shared.platforms.detect_target", return_value=None), patch.object(
+        with patch("utils.py_utils.platforms.detect_target", return_value=None), patch.object(
             model_runner, "RuntimeModelRunner", side_effect=AssertionError("runner must not be constructed")
         ):
             code = main.main([

@@ -26,6 +26,17 @@
 
 按清单选择精确的目标、系列、任务和尺度，并使用为该目标编译的制品。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download_model.sh  # Shell 脚本
+└── fulldownload.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备模型
 

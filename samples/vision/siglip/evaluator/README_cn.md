@@ -15,6 +15,15 @@
 # 预期源数据布局：由评估负责人提供的 ImageNet-1k val 和 COCO2014 val
 ```
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

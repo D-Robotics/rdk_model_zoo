@@ -12,7 +12,7 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 
-from samples._shared.runtime_meta import MetadataMismatchError
+from utils.py_utils.runtime_meta import MetadataMismatchError
 from samples.vision.yolo26_depth.runtime.python.model_binding import (
     resolve_selection,
     list_available_assets,
@@ -21,7 +21,7 @@ from samples.vision.yolo26_depth.runtime.python.model_binding import (
 from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 from samples.vision.yolo26_depth.runtime.python.visualization import colorize_depth
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 

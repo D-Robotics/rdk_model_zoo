@@ -7,6 +7,15 @@
 
 已发布制品是基于 Google 来源 HuggingFace 权重的 SigLIP 视觉编码器。源 README 和发布 manifest 没有记录精确上游权重版本、commit、导出版本或制品级许可证。模型家族论文见 [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343)。本 sample 提供可部署 HBM 引用，不提供源 checkpoint 或可复现导出器。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -45,7 +54,6 @@ hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file s
 ```
 
 对其余七个制品替换文件名，执行相同的三条命令。源记录评测表保留为参考记录；新转换以下述运行验证。验证应绑定打包的两个子模型，检查 `_input_0` metadata 及所选 `_output_0` shape/dtype，然后在 S100、S100P 上分别运行 [`../runtime/python/README_cn.md`](../runtime/python/README_cn.md) 的板端冒烟路径。
-
 
 <a id="artifacts"></a>
 ## 产物

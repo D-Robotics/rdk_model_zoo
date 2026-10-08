@@ -26,7 +26,7 @@ class ReadmeTests(unittest.TestCase):
         required=('support-matrix','prerequisites','quickstart','expected-results','directory','entry-points')
         for path in files:
             text=path.read_text(encoding='utf-8').replace('\\\n',' ')
-            self.assertTrue(all(re.search(r'^#+ .*'+re.escape(x),text,re.M|re.I) for x in required if path.parent==SAMPLE),path)
+            self.assertTrue(all(re.search(r'<a id="'+re.escape(x)+r'"></a>',text) for x in required if path.parent==SAMPLE),path)
             for target in re.findall(r'\]\(([^)]+)\)',text):
                 if '://' not in target: self.assertTrue((path.parent/target.split('#')[0]).exists(),(path,target))
             for line in text.splitlines():

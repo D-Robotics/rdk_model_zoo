@@ -11,6 +11,16 @@
 
 使用已发布资产推理时，直接按[模型准备](../model/README_cn.md)操作，无需自行转换。发布 HBM 的校验和认证这些发布文件；独立导出的模型需记录自己的摘要。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── configs/  # configs 相关文件
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

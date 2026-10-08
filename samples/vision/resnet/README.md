@@ -41,6 +41,22 @@ Variant notes:
 convolutions) and the bottleneck building block of ResNet-50/101/152
 (right, 1×1 → 3×3 → 1×1), Figure 5 of the ResNet paper.*
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+resnet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -147,17 +163,6 @@ the latency/FPS threading conditions; the same figure is preserved in the
 [white_wolf.JPEG](test_data/white_wolf.JPEG) ranks `white wolf` first,
 followed by Arctic fox, timber wolf, Samoyed, and polar bear.*
 
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [runtime/cpp/](runtime/cpp/README.md) — S-series C++ source, CMake, launcher
-- [conversion/](conversion/README.md) — ONNX export and OE conversion record
-- [evaluator/](evaluator/README.md) — host checks and functional board checks
-- `test_data/` — bundled test images ([white_wolf.JPEG](test_data/white_wolf.JPEG), [zebra_cls.jpg](test_data/zebra_cls.jpg))
-- `tests/` — host unittest suite
-
 <a id="entry-points"></a>
 ## Entry points
 
@@ -180,18 +185,11 @@ carry no separate license field, and no additional license is claimed here.
 <a id="readable-example"></a>
 ## Readable example and custom models
 
-This sample is one of the two readable model examples: the complete
-classification flow (initialization, `preprocess`, `infer`, `postprocess`,
-`predict`) is visible in
-[`runtime/python/classify.py`](runtime/python/classify.py); `main.py` stays a
-thin entry (parse arguments, construct `ResNetClassifier`, call `predict`,
-show the result). Self-trained classifiers connect through
-`model_binding.custom_selection` without manifest registration, and predict
-accepts an image path or BGR array. Three usage paths (official model,
-self-trained weights, modified business calls) are described in
-[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md).
-Scope notes: this CLI covers the official manifest contracts; self-trained
-models connect through the library call (`model_binding.custom_selection` →
-`classify.ResNetClassifier`) instead of CLI flags. The image-path input
-convenience applies to this example and the YOLO DFL detector only;
-other YOLO tasks keep their array interfaces.
+[`runtime/python/main.py`](runtime/python/main.py) parses arguments, constructs
+`ResNetClassifier`, calls `predict`, and displays results.
+[`runtime/python/classify.py`](runtime/python/classify.py) contains model loading, `preprocess`, `infer`, `postprocess`, and `predict`.
+
+The library accepts image paths or BGR arrays. For self-trained classifiers,
+pass the compiled artifact path, board, input dimensions, class count, and
+output policy to the constructor. See the
+[Python runtime](runtime/python/README.md) for complete usage.

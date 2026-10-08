@@ -35,6 +35,19 @@
 这些 RGB 二进制是准备好的模型输入，**不是运行时打包 NV12**。
 归一化和模型输入适配必须与输出数组的生产过程一致，不能因为形状相同就比较不同协议生成的数组。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── eval_numeric.py  # Python 脚本
+├── eval_sunrgbd.py  # Python 脚本
+├── metrics.py  # Python 脚本
+└── prepare_sunrgbd.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

@@ -2,6 +2,26 @@
 
 [简体中文](README_cn.md) · [Python](../python/README.md)
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── classify/  # Files for classify
+├── common/  # Files for common
+├── detect/  # Files for detect
+├── pose/  # Files for pose
+├── segment/  # Files for segment
+├── test/  # Files for test
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="supported-boards"></a>
 ## Supported protocols
 
@@ -33,6 +53,7 @@ for task in detect classify pose segment; do
   cmake --build "/tmp/ultralytics-cpp-$task" -j2
 done
 ```
+
 <a id="run"></a>
 ## Run
 
@@ -55,6 +76,7 @@ For the other tasks, first prepare the corresponding artifact using [model instr
 /tmp/ultralytics-cpp-segment/ultralytics_yolo_segment \
   /models/segmentation.bin samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-segment.jpg
 ```
+
 <a id="parameters"></a>
 ## Parameters
 

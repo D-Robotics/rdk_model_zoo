@@ -2,6 +2,26 @@
 
 # UNetMobileNet Python 运行时
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── run.sh  # 运行示例
+├── unetmobilenet.py  # Python 脚本
+└── visualization.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -75,7 +95,7 @@ mask_again = task.predict(image)
 overlay = render_overlay(image, mask, alpha_f=0.75)
 print(mask.shape, mask.dtype)  # original image height/width, int32
 ```
-`task.predict` 返回类别 ID；调用 `render_overlay` 创建显示图。runner 管理 SDK 生命周期和调度，binding 管理制品／元数据契约。任务不缓存共享的“上次图片尺寸”，请保留每次 PreparedInput 的 context；不保证 SDK 并发安全。
+`task.predict` 返回类别 ID；调用 `render_overlay` 创建显示图。runner 管理 SDK 生命周期和调度，binding 管理制品／元数据契约。任务不缓存共享的“上次图片尺寸”，请保留每次 PreparedInput 的 context；并发调用请分别创建模型实例。
 
 <a id="stage-io"></a>
 ## 阶段 I/O

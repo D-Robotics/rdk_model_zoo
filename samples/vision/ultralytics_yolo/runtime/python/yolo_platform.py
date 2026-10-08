@@ -230,7 +230,7 @@ def detect_host_platform() -> Optional[str]:
         A canonical platform name, or `None` when no supported board is
         detected. An unknown SoC returns `None` and never a fallback.
     """
-    from samples._shared.platforms import detect_target
+    from utils.py_utils.platforms import detect_target
     return detect_target()
 
 
@@ -246,7 +246,7 @@ def match_platform(soc_name: str, board_type: Optional[str] = None) -> Optional[
     Returns:
         A canonical platform name, or `None` when the SoC is not supported.
     """
-    from samples._shared.platforms import match_target
+    from utils.py_utils.platforms import match_target
     return match_target(soc_name, board_type)
 
 

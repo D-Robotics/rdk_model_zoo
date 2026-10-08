@@ -18,6 +18,18 @@ model 目录不检入任何二进制；制品由规范化下载器按平台发�
 S600 的选择是显式的 no-published-asset 错误，也不得在 S 板卡上复用 X5
 文件。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备
 

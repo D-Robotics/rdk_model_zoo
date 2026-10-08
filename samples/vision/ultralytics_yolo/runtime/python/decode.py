@@ -191,7 +191,7 @@ def _apply_nms(boxes: np.ndarray,
                nms_thres: Optional[float]) -> np.ndarray:
     if nms_mode == "none":
         return np.arange(len(boxes), dtype=np.int64)
-    from samples.vision.ultralytics_yolo.runtime.python.rdk_yolo_utils.postprocess import NMS
+    from utils.py_utils.postprocess import NMS
     nms_ids = np.zeros_like(class_ids) if nms_mode == "agnostic" else class_ids
     return np.asarray(NMS(boxes, scores, nms_ids, float(nms_thres)), dtype=np.int64)
 

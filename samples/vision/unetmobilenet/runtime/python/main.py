@@ -55,7 +55,7 @@ def main(argv=None):
             return 0
         import cv2
         import numpy as np
-        from samples._shared.runtime_meta import metadata_evidence
+        from utils.py_utils.runtime_meta import metadata_evidence
         from samples.vision.unetmobilenet.runtime.python.model_runner import RuntimeModelRunner
         from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetTask
         from samples.vision.unetmobilenet.runtime.python.visualization import render_overlay

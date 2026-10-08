@@ -1,5 +1,26 @@
 # Python Runtime — FCOS
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── fcos.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+└── tensor_io.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -62,7 +83,7 @@ import numpy as np
 from samples.vision.fcos.runtime.python.fcos import FCOSTask
 from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
 from samples.vision.fcos.runtime.python.model_runner import RuntimeModelRunner
-from samples._shared.runtime_meta import RuntimeMetadata
+from utils.py_utils.runtime_meta import RuntimeMetadata
 
 selection = resolve_selection("x5", asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin")
 runner = RuntimeModelRunner(selection)

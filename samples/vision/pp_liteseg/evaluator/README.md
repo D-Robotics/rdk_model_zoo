@@ -7,6 +7,16 @@ English | [简体中文](README_cn.md)
 
 Delivered street.png/test.jpg support single-image inspection only. Cityscapes is the class vocabulary; no licensed validation set or dataset-level evaluation loop is bundled. For mIoU, obtain the appropriate labeled split, record label-ID mapping/ignore rules and evaluate float and compiled models on exactly the same samples.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── infer_board.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -21,7 +31,7 @@ bash samples/vision/pp_liteseg/model/download.sh --target x5
 python3 samples/vision/pp_liteseg/evaluator/infer_board.py --model samples/vision/pp_liteseg/model/pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin --image samples/vision/pp_liteseg/test_data/street.png --output outputs/pp_liteseg/eval.png --alpha 0.55
 ```
 
-Compatibility options: --model and --image are required; --output defaults to result.jpg, --alpha to 0.55. All inference delegates to the canonical runtime. Success returns 0; runtime errors propagate 2. The source entry’s image/model arguments are retained without a second implementation.
+Compatibility options: --model and --image are required; --output defaults to result.jpg, --alpha to 0.55. All inference delegates to the runtime. Success returns 0; runtime errors propagate 2. The source entry’s image/model arguments are retained without a second implementation.
 
 <a id="metrics"></a>
 ## Metrics

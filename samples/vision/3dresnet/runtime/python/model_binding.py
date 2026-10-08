@@ -8,10 +8,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from samples._shared.assets import Asset, list_assets
-from samples._shared.cls_binding import score_vector_shape
-from samples._shared.platforms import resolve_target
-from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata, canonicalise_dtype
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.cls_binding import score_vector_shape
+from utils.py_utils.platforms import resolve_target
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata, canonicalise_dtype
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 SUPPORTED_TARGETS = ("s100",)

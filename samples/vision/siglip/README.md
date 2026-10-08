@@ -9,6 +9,22 @@ SigLIP is a vision encoder that turns one image into a global embedding or a seq
 
 The eight published variants are packed HBM artifacts. Every artifact contains two fixed submodels, `pooler_output` and `last_hidden_state`, with the same image input and selected-output execution.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+siglip/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -56,20 +72,6 @@ The convenience `runtime/python/run.sh` accepts the source positional submodel (
 ## Expected Results
 
 The CLI prints one JSON statistics object for the selected raw feature tensor. Its `shape` is bound from HBM metadata: `pooler_output` is `(1,D)` or `(1,1,D)`, and `last_hidden_state` is `(1,N,D)`. `D` and `N` are listed in the runtime README. The native output dtype is preserved; the runtime does not dequantize, apply softmax, normalize, squeeze, or otherwise alter the feature values. Exact values come from running the artifact on a board.
-
-<a id="directory"></a>
-## Directory Layout
-
-```text
-siglip/
-├── conversion/    # limits and missing pieces of the HBM conversion recipe
-├── evaluator/     # historical performance/accuracy tables and comparison recipe
-├── model/         # manifest-backed HBM preparation scripts
-├── runtime/python/ # Python binding, runner, task, and CLI
-├── test_data/     # dog.jpg fixture
-├── README.md      # this document
-└── README_cn.md   # Chinese counterpart
-```
 
 <a id="entry-points"></a>
 ## Entry Points

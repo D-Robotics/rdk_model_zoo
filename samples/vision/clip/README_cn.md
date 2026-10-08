@@ -9,6 +9,22 @@ CLIP 将图像和候选文本映射到共享的 512 维空间，并用 cosine si
 
 `CLIPTask` 分三个阶段：`preprocess` 将一张 BGR 图片和 prompt 列表转换为图像/token tensor，`infer` 运行两个 encoder 并返回原始特征，`postprocess` 计算 cosine 分数及降序排列；`predict` 串联三个阶段。绘图由独立 helper 负责。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+clip/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -48,19 +64,6 @@ python3 samples/vision/clip/runtime/python/main.py --target x5
 ## 预期结果
 
 CLI 打印 `target`、`prompts`、`scores`、`order`、`image_saved`。`scores` 按 prompt 原顺序保存 cosine similarity，`order` 是降序 prompt 索引。绘图会将每个 prompt 和分数写入输入图片的副本。`dog.jpg` 的定性预期是 `a dog` 的分数高于 `a diagram`（源验证预期）；没有公开数值 benchmark。
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-clip/
-├── conversion/             # 图像/文本协议与转换边界
-├── evaluator/              # 验证条件；没有公开 benchmark
-├── model/                  # 基于 manifest 的双模型准备
-├── runtime/python/         # BPE、预处理、双 encoder runner、task、CLI、绘图
-├── test_data/              # dog.jpg 和 inference.png
-└── README.md               # 英文说明
-```
 
 <a id="entry-points"></a>
 ## 入口索引

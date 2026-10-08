@@ -7,6 +7,15 @@
 
 S 源提供预编译 HBM 和架构介绍，但没有训练框架版本、checkpoint、精确训练仓库或导出代码。U-Net/MobileNet 论文描述模型家族，不能据此还原本部署权重。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

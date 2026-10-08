@@ -6,6 +6,15 @@ Use the bundled image for a single-image classification check. For dataset accur
 ## Dataset
 The functional check uses the ten bundled CIFAR-10 images, one per class. Dataset-level accuracy uses the complete CIFAR-10 test set. Prepare each test image with its ground-truth class index (0–9) and compare it with the runtime’s Top-1 class ID; the bundled examples provide one image for each class.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 

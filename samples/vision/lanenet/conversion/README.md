@@ -3,7 +3,7 @@
 # LaneNet conversion
 
 This directory provides compiler YAML, calibration preparation and a compilation
-wrapper. Prepare the matching model/export code described below to generate ONNX;
+helper. Prepare the matching model/export code described below to generate ONNX;
 the calibration and compilation commands then consume that ONNX.
 
 <a id="source-model"></a>
@@ -20,13 +20,25 @@ Export dependencies are Python≥3.6, Torch≥1.2, torchvision≥0.4.0, NumPy≥
 OpenCV, pandas and matplotlib. Record the exact installed versions for your
 export. Calibration/configuration tools use Python, NumPy, OpenCV and PyYAML.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── compile.py  # Python script
+├── config.yaml  # Configuration
+└── prepare_calibration.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and target
 
 `config.yaml` declares **nash-e/S100**, latency mode, O2 and
 `set_all_nodes_int16`. Choose the matching OE Docker/compiler environment using [OE environment](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
 and [toolchain manual](https://toolchain.d-robotics.cc/). Prepare the matching x86
-Linux toolchain explicitly. The wrapper never installs it.
+Linux toolchain explicitly. The helper never installs it.
 
 The published model targets S100. For S100P/S600, prepare a graph, march/configuration
 and runtime binding for that target. Inspect the compiled public embedding/binary
@@ -41,7 +53,7 @@ ImageNet mean/std. Runtime consumes named float32 `instance_seg_logits` and int6
 tensors with their actual names, shapes and types.
 
 The YAML references `../log/best_model.onnx`, `../cal_data` and output prefix
-`lanenet256x512_nv12`; its runtime/train inputs are **featuremap NCHW**. The wrapper
+`lanenet256x512_nv12`; its runtime/train inputs are **featuremap NCHW**. The helper
 writes a separate config with absolute caller paths and prefix `lanenet256x512`.
 Prepare-only checks the ONNX file and calibration identities; inspect graph and
 output semantics during model validation.
@@ -93,7 +105,7 @@ python -m samples.vision.lanenet.conversion.compile \
   --output /work/lanenet/compiled
 ```
 
-The wrapper checks declared/actual calibration shapes, float32 values, normalized
+The helper checks declared/actual calibration shapes, float32 values, normalized
 range, digests, unique entries and an exact data-directory file set. It uses the YAML
 march/quantization/compiler settings and invokes `hb_compile -c` on the
 generated config. It captures stdout/stderr and rejects nonzero exit or a missing/

@@ -12,6 +12,18 @@ ConvNeXt（论文 [A ConvNet for the 2020s](https://arxiv.org/abs/2201.03545)，
 参考实现 [facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)）。
 atto/femto/nano 尺寸来自官方 ConvNeXt 尺寸阶梯。编译前检查所选 YAML 的 `onnx_model` 与模型变体是否一致；当前文件值列在[补充准备](#known-gaps)。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── ConvNeXt_atto.yaml  # 配置
+├── ConvNeXt_femto.yaml  # 配置
+├── ConvNeXt_nano.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

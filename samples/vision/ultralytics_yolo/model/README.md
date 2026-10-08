@@ -26,6 +26,17 @@ These scripts prepare compiled models for inference; they do not export or compi
 
 Choose the exact target, family, task and scale from the published inventory; use an artifact compiled for that target.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download_model.sh  # Shell command
+└── fulldownload.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Prepare a model
 

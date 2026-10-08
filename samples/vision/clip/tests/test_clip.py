@@ -15,7 +15,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/clip'
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 LEGACY = legacy_tree('x5/samples/vision/clip/runtime/python')
 
 
@@ -130,7 +130,7 @@ class ClipTests(unittest.TestCase):
     def test_execution_identity_gate_precedes_default_sdk_factories(self):
         from samples.vision.clip.runtime.python.model_binding import resolve_selection
         from samples.vision.clip.runtime.python.model_runner import RuntimeModelRunner
-        with patch('samples._shared.platforms.require_execution_target',side_effect=ValueError('wrong board')) as gate:
+        with patch('utils.py_utils.platforms.require_execution_target',side_effect=ValueError('wrong board')) as gate:
             with self.assertRaisesRegex(ValueError,'wrong board'):RuntimeModelRunner(resolve_selection('x5')).load()
             gate.assert_called_once_with('x5')
 

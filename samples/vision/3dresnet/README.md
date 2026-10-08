@@ -14,6 +14,24 @@ R3D-18 classifies a preprocessed 16-frame video clip into one of the 400 Kinetic
 
 The input is not a video file. `test_data/video0.npy` is the prepared `(1, 3, 16, 112, 112)` clip. Frame decoding, sampling, resizing, and normalization are outside this sample.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+3dresnet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
+There are no conversion scripts, C++ runtime files, or video decoder in this sample.
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -78,23 +96,6 @@ The default clip is `test_data/video0.npy`; the source sample reports its Top-1 
 ```
 
 Score values depend on the compiled artifact; the numbers above illustrate the schema. The actual list contains `--top-k` entries, and labels come from the 400-entry Kinetics mapping in `test_data` (the loader strips the quote characters embedded in the original label names).
-
-<a id="directory"></a>
-## Directory Layout
-
-```text
-3dresnet/
-├── conversion/                 # conversion notes and preserved source screenshots
-├── model/                      # explicit manifest-backed HBM preparation
-├── runtime/python/             # binding, lazy runner, task, labels, CLI, and run.sh
-├── evaluator/                  # source functional/performance record and boundaries
-├── test_data/                  # prepared clip, 400 labels, and source screenshots
-├── requirements-host.txt       # host test dependencies
-├── README.md                   # this document
-└── README_cn.md                # Chinese counterpart
-```
-
-There are no conversion scripts, C++ runtime files, or video decoder in this sample.
 
 <a id="entry-points"></a>
 ## Entry Points

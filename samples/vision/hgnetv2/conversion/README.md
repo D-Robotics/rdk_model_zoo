@@ -18,6 +18,21 @@ itself never runs an export.
 | b3 | `hgnetv2_b3.ssld_stage2_ft_in1k` | `hgnetv2_b3_224x224_nv12.bin` |
 | b4 | `hgnetv2_b4.ssld_stage2_ft_in1k` | `hgnetv2_b4_224x224_nv12.bin` |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── onnx_export/  # Files for onnx_export
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── hgnetv2_b0.yaml  # Configuration
+├── hgnetv2_b1.yaml  # Configuration
+├── hgnetv2_b2.yaml  # Configuration
+├── hgnetv2_b3.yaml  # Configuration
+└── hgnetv2_b4.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

@@ -9,6 +9,18 @@ for `tools/sample_contract/check.py`.
 Fixture classifier used only by the checker test-suite. Source: this
 repository's test fixtures; there is no external upstream.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+good_sample/
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -43,13 +55,6 @@ Success is a zero exit code and a printed top-5 list.
 
 The run prints the fixture top-5 list and exits 0; no output files are
 written by the runtime itself.
-
-<a id="directory"></a>
-## Directory
-
-- `model/` — artifact preparation ([README](model/README.md))
-- `runtime/python/` — Python entrypoint ([README](runtime/python/README.md))
-- `test_data/` — bundled input ([input.jpg](test_data/input.jpg))
 
 <a id="entry-points"></a>
 ## Entry points

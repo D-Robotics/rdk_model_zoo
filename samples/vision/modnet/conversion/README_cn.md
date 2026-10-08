@@ -5,6 +5,15 @@
 
 源文档指向官方 [MODNet 工程](https://github.com/ZHKKKe/MODNet) 和论文，但没有锁定 checkpoint revision，也没有仓库内 ONNX exporter。源 README 提到 `onnx_export/` 和 `ptq_yamls/`，但这些路径未随附，此处不复制也不虚构。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

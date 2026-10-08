@@ -1,5 +1,21 @@
 # Python runtime (fixture)
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── main.py  # Command-line entry
+└── task.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

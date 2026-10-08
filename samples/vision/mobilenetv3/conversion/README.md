@@ -12,6 +12,20 @@ timm `mobilenetv3_large_100` with pretrained weights (MobileNetV3-Large),
 fixed by `get_mobilenetv3_onnx.py`; NCHW input `[1,3,224,224]` on
 both platforms.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── MobileNetV3_config.yaml  # Configuration
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── get_calibration_data.py  # Python script
+├── get_mobilenetv3_onnx.py  # Python script
+├── mobilenetv3_s_config.yaml  # Configuration
+└── timm2onnx_local.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -40,6 +54,7 @@ The exporter uses onnx-simplifier and reports the parameter count
 (5,470,832 parameters for `mobilenetv3_large_100`); the expected metadata
 print is `mean (0.485, 0.456, 0.406)`, `std (0.229, 0.224, 0.225)`,
 "Simplified model is valid.".
+
 <a id="calibration"></a>
 ## Calibration
 
@@ -80,7 +95,7 @@ the target YAML.
 
 For a regenerated artifact, run `hb_perf` and `hrt_model_exec` per the OE
 manual and keep the complete output; then confirm on the matching board
-with the canonical runtime that the contract holds: X5 exposes one packed
+with the runtime that the contract holds: X5 exposes one packed
 NV12 input and an F32 `[1,1000,1,1]` output; S100/S600 expose Y
 `[1,224,224,1]`, UV `[1,112,112,2]`, and an F32 `[1,1000]` output; the
 output semantics are raw logits (softmax applied by the runtime task).

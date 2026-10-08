@@ -11,7 +11,7 @@ import sys
 
 CPP = Path(__file__).resolve().parent
 sys.path.insert(0, str(CPP.parents[4]))
-from samples._shared.platforms import require_execution_target, resolve_target
+from utils.py_utils.platforms import require_execution_target, resolve_target
 
 APPS = {
     "main": "main",

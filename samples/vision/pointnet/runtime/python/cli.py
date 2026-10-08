@@ -56,7 +56,7 @@ def save_pointnet_evidence(out: Path, *, selection, binding, input_path, details
                            no_plot: bool) -> None:
     """Write labels, optional views and the normalization-context report."""
     import numpy as np
-    from samples._shared.runtime_meta import metadata_evidence
+    from utils.py_utils.runtime_meta import metadata_evidence
 
     labels = details.labels
     prepared = details.prepared

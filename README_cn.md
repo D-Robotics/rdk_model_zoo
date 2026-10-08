@@ -79,7 +79,7 @@ utils/                    # 兼容工具
 tools/                    # 目录、契约检查与验证工具
 ```
 
-每个 Python Runtime 都是同一形态：`main.py` 是薄入口——解析参数、构造模型类、调用 `predict`、展示结果；模型类在单一可读文件内实现 `preprocess → infer → postprocess` 主线，由 `predict` 串联；样例本地 CLI 辅助模块（`cli.py`、`yolo_cli.py`）承担参数、清单、dry-run 与文件 IO；runner/binding 隔离 SDK 会话与张量契约。该模式见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。两个 `samples/llm` 样例提供原生 generate/stream/reset C++ 接口。`conversion/`、`evaluator/` 各自保存可操作说明；共享机制见 [samples/_shared](samples/_shared/README.md)（英文）。
+每个 Python Runtime 都是同一形态：`main.py` 是薄入口——解析参数、构造模型类、调用 `predict`、展示结果；模型类在单一可读文件内实现 `preprocess → infer → postprocess` 主线，由 `predict` 串联；样例本地 CLI 辅助模块（`cli.py`、`yolo_cli.py`）承担参数、清单、dry-run 与文件 IO；runner/binding 隔离 SDK 会话与张量契约。该模式见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。两个 `samples/llm` 样例提供原生 generate/stream/reset C++ 接口。`conversion/`、`evaluator/` 各自保存可操作说明；共享机制见 [utils/py_utils](utils/py_utils/README.md)（英文）。
 
 开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令。
 

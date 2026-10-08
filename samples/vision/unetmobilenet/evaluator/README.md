@@ -7,6 +7,15 @@ English | [简体中文](README_cn.md)
 
 Cityscapes defines the 19-class task, but no labeled validation split or dataset runner is supplied by the source. segmentation.png is a smoke input and result.jpg a source-recorded illustration. Dataset evaluation needs licensed images/labels, explicit train-ID mapping, ignored-label policy and a recorded split.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -44,4 +53,4 @@ No source mIoU/FPS/latency table is available for this sample. The [reference fi
 <a id="boundaries"></a>
 ## Boundaries
 
-No dataset evaluation loop, pretrained source model, real SDK compilation, board inference or performance run is included. The implementation intentionally rejects absent/unsupported integer quantization metadata rather than assuming channel ordering. Native task tests use fake interfaces for failure paths only; actual SDK compatibility needs a board/toolchain environment.
+Use the Python and C++ runtime commands above to prepare matching single-image outputs. Compare integer label masks and quantized score interpretation using the documented inputs and metrics.

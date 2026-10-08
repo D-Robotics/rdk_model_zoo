@@ -1,8 +1,8 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 """PointNet physical input declaration over the shared lazy array transport."""
-from samples._shared.platforms import require_execution_target
-from samples._shared.single_array_runner import SingleArrayRunner, RuntimeUnavailableError
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.single_array_runner import SingleArrayRunner, RuntimeUnavailableError
 from samples.vision.pointnet.runtime.python.model_binding import bind_model
 
 

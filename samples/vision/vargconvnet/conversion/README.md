@@ -5,6 +5,15 @@
 
 The published X5 binary is the inference artifact. A replacement build starts from an ONNX graph, matching weight revision, framework environment and PTQ YAML.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -18,7 +27,7 @@ Toolchain resources:
 <a id="export"></a>
 ## ONNX export
 
-The wrapper expects nominal RGB/NCHW 224×224 input before NV12 packing and returns 1,000 classification scores. Export a matching graph with this I/O contract.
+The helper expects nominal RGB/NCHW 224×224 input before NV12 packing and returns 1,000 classification scores. Export a matching graph with this I/O contract.
 
 <a id="calibration"></a>
 ## Calibration
@@ -49,4 +58,4 @@ Published artifacts and landing paths: [model preparation](../model/README.md#ar
 <a id="known-gaps"></a>
 ## Additional preparation
 
-For inference, prepare the published X5 artifact through [model/README.md](../model/README.md). A replacement build requires an ONNX graph matching the wrapper's nominal RGB/NCHW 224×224 input and 1,000 classification scores, a matching PTQ configuration, and calibration data following that graph's normalization. Use the X5 OE toolchain and validate the compiled model through the sample runtime.
+For inference, prepare the published X5 artifact through [model/README.md](../model/README.md). A replacement build requires an ONNX graph matching the helper's nominal RGB/NCHW 224×224 input and 1,000 classification scores, a matching PTQ configuration, and calibration data following that graph's normalization. Use the X5 OE toolchain and validate the compiled model through the sample runtime.

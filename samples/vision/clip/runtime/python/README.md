@@ -2,6 +2,30 @@ English | [简体中文](./README_cn.md)
 
 # Python Runtime — CLIP image-text matching
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── main.py  # Command-line entry
+├── matching.py  # Python script
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+├── simple_tokenizer.py  # Python script
+├── tensor_io.py  # Python script
+├── tokenization.py  # Python script
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -120,7 +144,7 @@ print({"scores": composed_result.scores.tolist(),
 - `postprocess`: raw features → `MatchResult(scores, order)`. It computes cosine similarity and descending `argsort`; no softmax or feature L2 mutation is returned.
 - `predict(image, texts)` composes exactly the three stages. Vocabulary loading/initialization, visualization, and file writing stay outside the task; preprocess delegates token encoding to the injected tokenizer.
 
-The established legacy spellings `pre_process`, `forward` and `post_process` remain as thin compatibility aliases of the canonical methods above — one implementation, no second pipeline. The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, prompt parsing and presentation, while `main.py` parses, resolves, constructs `CLIPTask` and calls `predict`.
+The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, prompt parsing and presentation, while `main.py` parses, resolves, constructs `CLIPTask` and calls `predict`.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

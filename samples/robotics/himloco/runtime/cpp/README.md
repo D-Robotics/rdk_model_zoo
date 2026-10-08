@@ -2,6 +2,33 @@
 
 [中文](README_cn.md)
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── tests/  # Automated tests
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── application.cc  # Source or data file
+├── cli_io.cc  # Source or data file
+├── cli_io.hpp  # Source or data file
+├── launcher.py  # Python script
+├── main.cc  # Source or data file
+├── model_preflight.cc  # Source or data file
+├── policy.cc  # Source or data file
+├── policy.hpp  # Source or data file
+├── run.sh  # Run the sample
+├── sdk_runner.cc  # Source or data file
+└── sdk_runner.hpp  # Source or data file
+```
+
 <a id="supported-boards"></a>
 ## Supported boards and verification
 

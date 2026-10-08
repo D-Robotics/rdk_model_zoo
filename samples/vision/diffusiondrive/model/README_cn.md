@@ -12,6 +12,18 @@
 
 `s:diffusiondrive:` 后的部分为相对本目录的路径。相机分辨率为256×1024，图还接收 LiDAR、自车状态和扩散噪声。不存在 S100/X5 资产，S100P/S600 文件也不能互换。URL 与校验和以 [S 发布清单](../../../../docs/release/s/models.yaml)为准。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 显式准备
 

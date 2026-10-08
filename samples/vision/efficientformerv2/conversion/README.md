@@ -11,6 +11,18 @@ EfficientFormerV2-S0/S1/S2 (paper [EfficientFormerV2: Rethinking Vision
 Transformers for MobileNet Size and
 Speed](https://arxiv.org/abs/2212.08059)). The YAMLs expect `./efficientformerv2_s0.onnx`, `./efficientformerv2_s1.onnx`, and `./efficientformerv2_s2.onnx`; export each matching variant to its YAML path.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── EfficientFormerv2_s0_config.yaml  # Configuration
+├── EfficientFormerv2_s1_config.yaml  # Configuration
+├── EfficientFormerv2_s2_config.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -45,7 +57,6 @@ expect `./calibration_data_rgb_f32` (float32 RGB `.npy`) and use
 `0.999`, S2 `0.9995`. Apply the YAML numerics to calibration data (mean
 `123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`,
 224x224).
-
 
 <a id="compile"></a>
 ## Compile

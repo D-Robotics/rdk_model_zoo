@@ -84,7 +84,7 @@ class EntryLoopTests(unittest.TestCase):
             args, model = self.prepared_args(root, warmup="2")
             runtime, calls = fake_runtime()
             with patch(
-                "samples._shared.platforms.require_execution_target"
+                "utils.py_utils.platforms.require_execution_target"
             ), patch.object(
                 application,
                 "verify_asset_file",
@@ -136,7 +136,7 @@ class HelperTests(unittest.TestCase):
         selection = replace(
             resolve_selection("x5"), model_path=model, explicit_model_path=True
         )
-        with patch("samples._shared.platforms.require_execution_target"), patch.object(
+        with patch("utils.py_utils.platforms.require_execution_target"), patch.object(
             application,
             "verify_asset_file",
             return_value=hashlib.sha256(model.read_bytes()).hexdigest(),

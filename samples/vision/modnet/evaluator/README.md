@@ -8,11 +8,22 @@ No source matting benchmark dataset or ground-truth alpha masks are included.
 `../test_data/person.jpg` and `../test_data/bg.jpg` are one
 inference/composite fixture pair, not an accuracy dataset.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── compare.py  # Python script
+└── source_reference.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
 `compare.py` runs both implementations itself on the board: the pinned original
-wrapper (loaded from Git history) and this sample's
+helper (loaded from Git history) and this sample's
 task from `samples/vision/modnet/runtime/python`. It needs the X5 runtime
 (imported lazily after the identity gate), the manually prepared
 `modnet_512x512_rgb.bin` and a BGR image. It does not import the SDK on the host

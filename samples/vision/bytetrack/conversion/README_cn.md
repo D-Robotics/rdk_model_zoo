@@ -5,6 +5,15 @@
 
 ByteTrack 本身是后处理，唯一神经制品是上游 YOLOv5x HBM，manifest 有三个 target-specific 行。没有独立 tracker 导出或 checkpoint。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

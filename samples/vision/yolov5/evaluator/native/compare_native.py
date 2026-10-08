@@ -72,7 +72,7 @@ KNOWN_DTYPES = {"uint8", "int32", "float32"}
 DTYPES = {"uint8": np.uint8, "int32": np.int32, "float32": np.float32}
 # Exact board-identity aliases from the repository registry
 # (docs/release/platforms.json, schema 1) — the same contract
-# samples/_shared/platforms.py::match_target applies. Prefix matching is
+# utils/py_utils/platforms.py::match_target applies. Prefix matching is
 # NOT identity: S100P is a distinct target from s100 and unknown strings
 # never pass.
 TARGET_ALIASES = {

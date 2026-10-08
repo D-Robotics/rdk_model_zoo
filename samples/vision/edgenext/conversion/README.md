@@ -15,6 +15,19 @@ Amalgamated CNN-Transformer Architecture for Mobile Vision
 Applications](https://arxiv.org/abs/2206.10589), reference implementation
 [mmaaz60/EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)). The YAMLs expect `./edgenext_{base,small,x_small,xx_small}.onnx`; export the selected model variant to the corresponding path.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── EdgeNeXt_base_config.yaml  # Configuration
+├── EdgeNeXt_small_config.yaml  # Configuration
+├── EdgeNeXt_x_small_config.yaml  # Configuration
+├── EdgeNeXt_xx_small_config.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
@@ -77,7 +90,6 @@ ImageNet-1k classification logits.
 
 <a id="artifacts"></a>
 ## Artifacts (kept material)
-
 
 <a id="known-gaps"></a>
 ## Additional preparation

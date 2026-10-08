@@ -37,6 +37,18 @@ and S manifest. The list command
 below prints exact asset IDs and URLs. A declaration of availability in a source
 manifest is not a new download or inference verification.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Explicit preparation
 

@@ -12,6 +12,19 @@ Vision/Text 校准、PTQ 编译和验证工具。模型来源为 `google/gemma-4
 本文命令从 `samples/llm/gemma4-e2b`（sample 根目录）运行，除非代码块显式切换目录。
 量化方案即教程自身流程；准备制品时在 OE 环境中执行。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── leap_llm_gemma4/  # leap_llm_gemma4 相关文件
+├── scripts/  # scripts 相关文件
+├── QUANTIZATION_TUTORIAL.md  # 说明文档
+├── QUANTIZATION_TUTORIAL_zh.md  # 说明文档
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 环境要求
 

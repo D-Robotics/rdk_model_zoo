@@ -56,7 +56,7 @@ class RuntimeTests(unittest.TestCase):
             "samples.speech.asr.runtime.python.model_runner.require_execution_target",
             side_effect=ValueError("Target mismatch"),
         ), patch(
-            "samples._shared.single_array_runner._default_runtime_factory"
+            "utils.py_utils.single_array_runner._default_runtime_factory"
         ) as factory:
             with self.assertRaises(ValueError):
                 RuntimeModelRunner(resolve_selection("s100")).load()
@@ -97,7 +97,7 @@ class RuntimeTests(unittest.TestCase):
                     str(root / "out"),
                 ]
                 with patch(
-                    "samples._shared.platforms.require_execution_target",
+                    "utils.py_utils.platforms.require_execution_target",
                     return_value="s100",
                 ), patch.object(
                     model_runner, "RuntimeModelRunner", return_value=runner
@@ -138,7 +138,7 @@ class RuntimeTests(unittest.TestCase):
 
             errors = io.StringIO()
             with patch(
-                "samples._shared.platforms.require_execution_target",
+                "utils.py_utils.platforms.require_execution_target",
                 return_value="s100",
             ), patch.object(
                 model_runner, "RuntimeModelRunner", return_value=runner

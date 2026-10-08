@@ -3,7 +3,7 @@
 """Static ONNX/vocabulary checks before any calibration output or compiler call."""
 
 from pathlib import Path
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.vision.yoloe.model.vocabulary import LABELS_SHA256
 
 

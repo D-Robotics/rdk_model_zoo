@@ -14,6 +14,15 @@ concatenation for per-point labels. The delivered task has four chair parts.
 ![Architecture](../test_data/readme_img/image-1.png)
 ![Segmentation network](../test_data/readme_img/image.png)
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and target
 
@@ -22,7 +31,7 @@ concatenation for per-point labels. The delivered task has four chair parts.
 | s100 | not pinned in source recipe | absent |
 
 Conversion belongs on an x86 Linux host with a compatible OpenExplore environment,
-not inside the board inference wrapper. [OE resources](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
+not inside the board inference helper. [OE resources](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)
 and the [toolchain manual](https://toolchain.d-robotics.cc/) provide environment
 references; they do not fill the sample-specific missing recipe.
 

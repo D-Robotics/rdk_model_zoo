@@ -32,6 +32,22 @@ Feature summary:
 kernel; the following 1×1 pointwise convolution mixes the per-channel
 results.*
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+mobilenetv1/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -110,16 +126,6 @@ Published MobileNetV1 performance on `RDK X5` (x5-v1.1.3):
 *Reference inference result from the X5 release: the
 bundled [bulbul.JPEG](test_data/bulbul.JPEG) ranks `bulbul` first,
 followed by junco/snowbird, robin, chickadee, and water ouzel. This is the source-reported X5 runtime example.*
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — conversion record and reference configurations
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([bulbul.JPEG](test_data/bulbul.JPEG), [zebra_cls.jpg](test_data/zebra_cls.jpg))
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

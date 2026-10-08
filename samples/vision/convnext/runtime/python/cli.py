@@ -12,7 +12,7 @@ import argparse
 from pathlib import Path
 import sys
 
-from samples.vision.convnext.runtime.python.labels import load_labels as _load_labels
+from utils.py_utils.labels import load_labels as _load_labels
 from samples.vision.convnext.runtime.python.model_binding import (
     SUPPORTED_TARGETS,
     SUPPORTED_VARIANTS,

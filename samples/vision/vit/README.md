@@ -9,6 +9,22 @@ ViT treats image patches as a sequence and uses self-attention for classificatio
 
 ![ViT](test_data/readme_img/vitnet.png)
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+vit/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -66,18 +82,6 @@ Published CIFAR-10 accuracy records are listed under
 [evaluation](evaluator/README.md#reference-results); latency and
 throughput are not published for this model.
 
-<a id="directory"></a>
-## Directory
-
-```text
-model/          # HBM download and artifact references
-runtime/python/ # CLI, binding, runner and shared classification API
-conversion/     # original PTQ YAML and the original compile log
-evaluator/      # evaluation instructions and published accuracy records
-test_data/      # 10 CIFAR images, class dictionary and original illustrations
-tests/          # SDK-free host unittest suite
-```
-
 <a id="entry-points"></a>
 ## Entry points
 
@@ -87,7 +91,7 @@ tests/          # SDK-free host unittest suite
 New integrations use the `ViTClassifier` class
 ([classify.py](runtime/python/classify.py); the shared `ClassificationTask`
 flow stays importable from
-[classification.py](runtime/python/classification.py)); `--model-variant`
+[classification.py](../../../utils/py_utils/classification.py)); `--model-variant`
 remains an alias for `--variant`, and the local `run.sh` accepts positional
 int8/int16.
 

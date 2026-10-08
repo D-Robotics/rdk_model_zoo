@@ -7,6 +7,21 @@ English | [简体中文](./README_cn.md)
 
 YOLOv5 is a one-stage, anchor-based object detector: a CSPDarknet backbone with FPN+PAN feature fusion feeds detection heads on three feature-map scales (strides 8/16/32), which return COCO-style boxes, scores, and class IDs. The `n/s/m/l/x` scale variants trade speed against accuracy. The source resource is [ultralytics/yolov5](https://github.com/ultralytics/yolov5); this sample keeps the source X5 and S tensor protocols as separate target contracts.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+yolov5/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support and verification matrix
 
@@ -48,20 +63,6 @@ The first command writes `samples/vision/yolov5/model/yolov5n_tag_v7.0_detect_64
 
 A successful Python run returns JSON arrays `boxes`, `scores`, and `class_ids`, then a saved annotated image. Boxes are original-image XYXY coordinates, scores are `[0,1]`, and class IDs are COCO indices. X5 boxes are integer-truncated after inverse resize; S boxes retain subpixel float coordinates. Empty detections use shapes `(0,4)`, `(0,)`, and `(0,)`. Exact object counts are model/input dependent and are not invented here.
 
-<a id="directory"></a>
-## Directory
-
-```text
-.
-├── model/                 # explicit manifest artifact preparation
-├── runtime/python/        # binding, NV12 I/O, task, runner, CLI, visualization
-├── runtime/cpp/           # target-specific C++ implementation and README pair
-├── conversion/            # source YAMLs and export/PTQ limits
-├── evaluator/             # same-board source/unified evidence comparator
-├── test_data/             # bus/kite images, labels, historical result assets
-└── tests/                 # host numerical, metadata, CLI, and evaluator fixtures
-```
-
 <a id="entry-points"></a>
 ## Entry points
 
@@ -91,4 +92,4 @@ The source X5 reference table:
 <a id="license"></a>
 ## License
 
-Repository wrapper code and source sample documentation follow Apache-2.0. The upstream YOLOv5 project and any downloaded weights retain their own license and provenance; a manifest `sha256: null (unknown)` is not authentication.
+Repository helper code and source sample documentation follow Apache-2.0. The upstream YOLOv5 project and any downloaded weights retain their own license and provenance; a manifest `sha256: null (unknown)` is not authentication.

@@ -19,6 +19,15 @@
 `platforms/s/docs/release/models.yaml`）。S100P 与 S600 没有对应的
 PaddleOCR 行，因此不对这两个目标声明任何制品。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="preparation"></a>
 ## 准备
 

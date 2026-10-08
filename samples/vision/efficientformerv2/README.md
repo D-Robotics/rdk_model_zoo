@@ -43,6 +43,22 @@ Feature summary:
 baseline network, (b) unified FFN, (c) improved MHSA, (d)(e) attention on
 higher resolution, and (f) attention downsampling.*
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+efficientformerv2/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -121,16 +137,6 @@ single-frame single-thread single-core, FPS multi-threaded):
 *Reference inference result from the X5 release: the bundled
 [goldfish.JPEG](test_data/goldfish.JPEG) ranks `goldfish` first, followed
 by tench, axolotl, rock beauty, and coral reef.*
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — X5 PTQ configurations and model-specific preparation steps
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([goldfish.JPEG](test_data/goldfish.JPEG) plus reference illustrations)
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

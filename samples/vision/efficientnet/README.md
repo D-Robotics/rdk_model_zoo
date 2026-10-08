@@ -45,6 +45,22 @@ conventional single-dimension scaling (b)–(d), and the compound scaling
 (e) that uniformly scales width, depth, and resolution with a fixed
 ratio.*
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+efficientnet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -141,16 +157,6 @@ S-series (s-v1.1.2):
 *Reference inference result from the X5 release: the bundled
 [redshank.JPEG](test_data/redshank.JPEG) ranks `redshank` first, followed
 by ruddy turnstone, water ouzel, oystercatcher, and dowitcher.*
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — full S-side lite recipe + X5-side reference PTQ configs
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG), [redshank.JPEG](test_data/redshank.JPEG), [zebra_cls.jpg](test_data/zebra_cls.jpg))
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

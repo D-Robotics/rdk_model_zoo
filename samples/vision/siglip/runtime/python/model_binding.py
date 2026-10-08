@@ -11,9 +11,9 @@ shape: the source neither dequantizes nor activates SigLIP outputs.
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Any
-from samples._shared.assets import Asset, list_assets
-from samples._shared.platforms import resolve_target
-from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
 
 SUBMODELS = ('pooler_output', 'last_hidden_state')
 SUPPORTED_TARGETS = ('s100', 's100p')

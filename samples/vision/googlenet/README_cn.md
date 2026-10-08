@@ -31,6 +31,22 @@ GoogLeNet 是基于 Inception 模块的图像分类网络，在 2014 年 ImageNe
 `preprocess → infer → postprocess` 流程（标签读取、绘图和文件输出由
 CLI 层负责，见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+googlenet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -91,14 +107,6 @@ rank 1 为 class 14（indigo bunting）](./test_data/inference.png)
 已发布性能记录：完整列与计时条件见
 [评测说明](evaluator/README_cn.md#reference-results)。单线程延迟与多线程 FPS 采用不同的并发方式，
 二者不能直接互相取倒数。比较延迟与 FPS 时，应使用相同线程数、并发提交方式和 BPU 利用率。
-
-<a id="directory"></a>
-## 目录
-
-`model/`：制品与下载；`runtime/python/`：原生 CLI、任务与运行器；
-`conversion/`：不含 PTQ 配置（边界在该文档说明）；`evaluator/`：功能
-检查与已发布基准；`test_data/`：`indigo_bunting.JPEG` 输入及随附资源；
-`tests/`：主机 unittest 套件。
 
 <a id="entry-points"></a>
 ## 入口

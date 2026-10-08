@@ -77,7 +77,7 @@ def main(argv=None) -> int:
             return 0
         if not selection.model_path.is_file():
             raise FileNotFoundError(f"model file not found: {selection.model_path}")
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
         require_execution_target(selection.target)
         runner_module = importlib.import_module("samples.vision.fcos.runtime.python.model_runner")
         task_module = importlib.import_module("samples.vision.fcos.runtime.python.fcos")

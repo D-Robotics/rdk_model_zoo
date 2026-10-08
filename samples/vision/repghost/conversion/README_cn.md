@@ -5,6 +5,20 @@
 
 源说明基于 PyTorch/timm RepGhost 变体，但未固定 timm/torch 版本、权重修订或权重摘要。未交付权重与可执行 ONNX 导出脚本；未重建验证与发布 bin 的对应关系。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── RepGhost_100.yaml  # 配置
+├── RepGhost_111.yaml  # 配置
+├── RepGhost_130.yaml  # 配置
+├── RepGhost_150.yaml  # 配置
+└── RepGhost_200.yaml  # 配置
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

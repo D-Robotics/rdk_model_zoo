@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/vit'
@@ -55,7 +55,7 @@ class EntryTests(unittest.TestCase):
     def test_execution_target_mismatch_stops_before_runtime(self):
         from samples.vision.vit.runtime.python import main
         sys.modules.pop('samples.vision.vit.runtime.python.classify', None)
-        with patch('samples._shared.platforms.detect_target',return_value='s100p'), patch.object(Path,'is_file',return_value=True), contextlib.redirect_stderr(io.StringIO()):
+        with patch('utils.py_utils.platforms.detect_target',return_value='s100p'), patch.object(Path,'is_file',return_value=True), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main.main(['--target','s100']),2)
             # The thin entry stops at the board check before constructing the
             # model: the readable classifier module is never imported (the
@@ -80,7 +80,7 @@ class EntryTests(unittest.TestCase):
         p=build_parser();a=p.parse_args(['--model-variant','int16'])
         self.assertEqual(a.variant,'int16')
         self.assertEqual(Path(a.test_img).name,'airplane_0000.png')
-        from samples.vision.vit.runtime.python.labels import load_labels
+        from utils.py_utils.labels import load_labels
         self.assertEqual(list(load_labels(Path(a.label_file)).values()),['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck'])
 
 
@@ -102,7 +102,7 @@ class SourceTests(unittest.TestCase):
 
     def task(self,variant='int8'):
         from samples.vision.vit.runtime.python.model_binding import bind_model,resolve_selection
-        from samples.vision.vit.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         binding=bind_model(resolve_selection('s100',variant=variant),metadata())
         raw={'output':np.array([[-2.1,0.3,2.2,-1.9,5.1,3.1,1.5,-0.2,0.1,0.8]],dtype=np.float32)}
         return ClassificationTask(lambda _:raw,binding),raw
@@ -142,7 +142,7 @@ class SourceTests(unittest.TestCase):
 
     def test_rejects_imagenet_geometry_quantized_raw_and_invalid_topk(self):
         from samples.vision.vit.runtime.python.model_binding import bind_model,resolve_selection,MetadataMismatchError
-        from samples.vision.vit.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         for bad in (metadata(classes=1000),metadata(size=256),metadata(dtype='I8')):
             with self.assertRaises(MetadataMismatchError):bind_model(resolve_selection('s100'),bad)
         task,_=self.task()
@@ -151,7 +151,7 @@ class SourceTests(unittest.TestCase):
 
     def test_readme_integration_executes_with_real_binding_and_host_runner(self):
         import re
-        from samples.vision.vit.runtime.python import model_runner
+        from utils.py_utils import model_runner
         task,raw=self.task()
         class HostRunner:
             def __init__(self,selection):

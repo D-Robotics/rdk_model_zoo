@@ -11,6 +11,23 @@ FCOS is a one-stage, anchor-free detector that predicts class scores, left/top/r
 - Repository location: the X5 Python sample at `samples/vision/fcos`.
 - Model protocol: packed NV12 input, 80 classes, five classification heads, five box heads, and five center-ness heads.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+fcos/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -56,20 +73,6 @@ The runtime prints JSON with `asset_id`, `boxes`, `scores`, `class_ids`, and `re
 The source records list B0/B2/B3 BPU throughput of 323.0/70.9/38.7 FPS and Python post-process times of 9/16/20 ms under the source measurement conditions.
 
 ![FCOS demonstration image from the source record](test_data/demo_rdkx5_fcos_detect.jpg)
-
-<a id="directory"></a>
-## Directory Layout
-
-```text
-fcos/
-├── conversion/    # source conversion notes and hb_perf screenshots
-├── evaluator/     # reproducible board/source comparison procedure
-├── model/         # explicit manifest-backed artifact downloader
-├── runtime/python/# binding, runner, tensor IO, FCOS stages, and CLI
-├── test_data/     # source bus image and historical demonstration image
-├── tests/         # host contract and source numerical regression tests
-└── README*.md     # bilingual sample guide
-```
 
 <a id="entry-points"></a>
 ## Entry Points

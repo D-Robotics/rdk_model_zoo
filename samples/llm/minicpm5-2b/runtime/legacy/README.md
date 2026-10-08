@@ -34,7 +34,7 @@ BOARD=s100p bash run.sh --build
 BOARD=s100p bash run.sh -- --prompt '请用一句话介绍你自己。'
 ```
 
-Preparation verifies/downloads models; `--build` only builds; ordinary launch only runs the existing binary. `BOARD` is required for this wrapper. The shared launcher checks the actual target before build or execution. See [launcher options](../README.md).
+Preparation verifies/downloads models; `--build` only builds; ordinary launch only runs the existing binary. `BOARD` is required for this helper. The shared launcher checks the actual target before build or execution. See [launcher options](../README.md).
 
 | Option | Meaning |
 |---|---|

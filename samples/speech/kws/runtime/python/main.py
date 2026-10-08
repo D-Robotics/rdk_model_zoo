@@ -95,14 +95,14 @@ def main(argv=None):
                 )
             )
             return 0
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
         from samples.speech.kws.runtime.python.audio_io import load_audio
         from samples.speech.kws.runtime.python.model_runner import RuntimeModelRunner
         from samples.speech.kws.runtime.python.kws import KWS
-        from samples._shared.assets import sha256_file
-        from samples._shared.runtime_meta import metadata_evidence
+        from utils.py_utils.assets import sha256_file
+        from utils.py_utils.runtime_meta import metadata_evidence
         from dataclasses import asdict
 
         audio, rate = load_audio(args.audio_file)

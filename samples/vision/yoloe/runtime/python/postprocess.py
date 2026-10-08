@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """One postprocessing implementation shared by board inference and float evaluation."""
 
-from samples._shared.yoloe26_decode import decode_candidates, restore_masks
+from utils.py_utils.yoloe26_decode import decode_candidates, restore_masks
 from samples.vision.ultralytics_yolo.runtime.python.segmentation_decode import (
     decode_segmentation,
 )

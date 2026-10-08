@@ -16,6 +16,15 @@ samples/vision/clip/runtime/python/bpe_simple_vocab_16e6.txt.gz
 # prompts：a diagram,a dog
 ```
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -43,7 +52,7 @@ python3 samples/vision/clip/runtime/python/main.py \
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
 | Cosine similarity | 每个文本特征与图像特征点积除以两者 L2 范数及 `1e-12` 稳定项。 | 一张图、N 个 prompt、float32 特征；分数保持 prompt 顺序。 |
-| Rank order | 对 cosine 分数执行降序 `argsort`。 | NumPy argsort 次序，不保证不同版本下精确平局的排序次序。 |
+| Rank order | 对 cosine 分数执行降序 `argsort`。 | 使用当前 NumPy 版本的 argsort 平局排序规则。 |
 
 本 sample 没有发布延迟、top-k、检索或分类指标。
 

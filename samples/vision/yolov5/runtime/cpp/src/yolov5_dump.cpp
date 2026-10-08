@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "yolov5_dump.hpp"
-#include "../../../../../_shared/cpp/sha256.h"
+#include "../../../../../../utils/c_utils/sha256.h"
 
 #include <array>
 #include <cstdint>

@@ -7,6 +7,15 @@ English | [简体中文](./README_cn.md)
 
 The published artifacts are SigLIP vision encoders derived from Google-origin HuggingFace weights. The source README and release manifest do not identify an exact upstream weight version, commit, export version, or per-artifact license. The official model-family context is [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343). This sample contains deployable HBM references, not a source checkpoint or a reproducible exporter.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
 
@@ -45,7 +54,6 @@ hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file s
 ```
 
 Apply the same three commands to the other seven artifacts by replacing the file name. The source-recorded evaluator tables are preserved as reference records; validate a fresh conversion with the runs below. A validation must bind both packed submodels, check `_input_0` metadata and the selected `_output_0` shape/dtype, then run the board smoke path in [`../runtime/python/README.md`](../runtime/python/README.md) on both S100 and S100P.
-
 
 <a id="artifacts"></a>
 ## Artifacts

@@ -5,6 +5,15 @@
 
 源交付提供 X5 部署制品和协议说明，但没有仓库内 ONNX 导出脚本、checkpoint、校准集或 PTQ YAML。源 conversion README 使用外部 OE 包和用户提供的 `your_lprnet_config.yaml`；该占位文件不在本仓库，不能视为可复现配方。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

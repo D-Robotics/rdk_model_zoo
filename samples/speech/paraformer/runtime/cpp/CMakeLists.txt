@@ -51,7 +51,7 @@ if(PARAFORMER_BUILD_TESTS)
   add_test(NAME paraformer_sdk_fixture COMMAND test_sdk)
 endif()
 
-get_filename_component(PARAFORMER_SHARED_CPP "${CMAKE_CURRENT_SOURCE_DIR}/../../../../_shared/cpp" ABSOLUTE)
+get_filename_component(PARAFORMER_SHARED_CPP "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../utils/c_utils" ABSOLUTE)
 add_library(paraformer_preflight STATIC src/preflight.cc "${PARAFORMER_SHARED_CPP}/platform_identity.cc")
 target_include_directories(paraformer_preflight PUBLIC inc "${PARAFORMER_SHARED_CPP}")
 target_link_libraries(paraformer_preflight PUBLIC paraformer_contract)

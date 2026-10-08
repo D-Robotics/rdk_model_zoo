@@ -6,10 +6,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 import numpy as np
-from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
 from samples.vision.yolov5.runtime.python.model_binding import resolve_selection, bind_model, list_available_assets
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
-from samples._shared.tests.legacy_platforms import legacy_module_namespace, legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_module_namespace, legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 

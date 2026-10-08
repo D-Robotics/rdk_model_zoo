@@ -7,6 +7,15 @@
 
 固定的 S100 源描述了 PaddlePaddle/PaddleAudio 体系的 MDTC 关键词模型，其中未包含训练权重和导出脚本。使用已发布模型推理时，按[模型说明](../model/README_cn.md)准备。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

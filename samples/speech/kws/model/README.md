@@ -11,6 +11,17 @@ English | [简体中文](README_cn.md)
 
 The authoritative [active manifest](../../../../docs/release/s/models.yaml) supplies the download URL. S100P/S600/X5 have no KWS publication; editing a filename or forcing a board alias does not create one.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Explicit preparation
 
@@ -30,7 +41,7 @@ The fixed 80-bin PaddleAudio feature protocol and “hey snips” semantics belo
 <a id="local-paths"></a>
 ## Existing file
 
-The default is resolved relative to the sample, independent of the caller's working directory. To use an existing file, pass both `--model-path` and `--asset-id s:kws:s100/kws.hbm` to the [runtime](../runtime/python/README.md). This declares the expected publication; a checksum-free path alone cannot prove provenance. Runtime checks actual board identity before SDK loading and checks exactly one model/input/output after loading.
+The default is resolved relative to the sample, independent of the caller's working directory. To use an existing file, pass both `--model-path` and `--asset-id s:kws:s100/kws.hbm` to the [runtime](../runtime/python/README.md). Use the published model URL and checksum when available. Runtime checks actual board identity before SDK loading and checks exactly one model/input/output after loading.
 
 <a id="formats-checksums"></a>
 ## Format and runtime contract

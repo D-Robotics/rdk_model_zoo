@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from samples._shared import platforms
+from utils.py_utils import platforms
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -23,7 +23,7 @@ class NativePreflightTests(unittest.TestCase):
         cls.probe = cls.directory / "identity_probe"
         subprocess.run([
             compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror",
-            "-I", str(ROOT / "samples/_shared/cpp"),
+            "-I", str(ROOT / "utils/c_utils"),
             str(ROOT / "samples/vision/yoloe/runtime/cpp/tests/identity_probe.cc"),
             "-o", str(cls.probe),
         ], check=True, capture_output=True, text=True)

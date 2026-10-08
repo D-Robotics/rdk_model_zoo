@@ -68,7 +68,7 @@ class CliTests(unittest.TestCase):
         return runtime, calls
 
     def run_fake(self, args, selection, runtime):
-        with patch("samples._shared.platforms.require_execution_target"), patch.object(
+        with patch("utils.py_utils.platforms.require_execution_target"), patch.object(
             application,
             "verify_asset_file",
             return_value=hashlib.sha256(selection.model_path.read_bytes()).hexdigest(),

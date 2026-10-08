@@ -51,7 +51,7 @@ def main(argv=None):
                               'outputs':['float32[1,8400,32] class scores','float32[1,8400,4] boxes'],
                               'prompts':prompts, 'score_thres':args.score_thres, 'nms_thres':args.nms_thres}, indent=2))
             return 0
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
         require_execution_target(selection.target)
         if not selection.model_path.is_file(): raise FileNotFoundError(f'Model not found: {selection.model_path}; run model/download.sh explicitly.')
         import cv2

@@ -1,9 +1,34 @@
 # YOLOE Python 运行时
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── cli.py  # 参数与结果展示
+├── config.py  # Python 脚本
+├── decode.py  # Python 脚本
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── pipeline_io.py  # Python 脚本
+├── postprocess.py  # Python 脚本
+├── run.sh  # 运行示例
+├── visualization.py  # Python 脚本
+└── yoloe.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
-Python 3.10+，NumPy/OpenCV/SciPy/PyYAML；只有实际模型执行才导入板端 `hbm_runtime`。系统版本与未经验证事项见 [主说明](../../README_cn.md#prerequisites)。S 公开量化模型不能直接运行。
+Python 3.10+，NumPy/OpenCV/SciPy/PyYAML；只有实际模型执行才导入板端 `hbm_runtime`。系统环境要求见 [主说明](../../README_cn.md#prerequisites)。S 公开量化模型不能直接运行。
 
 <a id="usage"></a>
 ## 使用

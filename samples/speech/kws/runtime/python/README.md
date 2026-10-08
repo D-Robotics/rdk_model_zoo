@@ -2,6 +2,28 @@
 
 English | [简体中文](README_cn.md)
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── audio_io.py  # Python script
+├── frontend.py  # Python script
+├── kws.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── postprocess.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="environment"></a>
 ## Environment
 

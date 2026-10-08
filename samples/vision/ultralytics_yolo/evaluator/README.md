@@ -25,6 +25,22 @@ COCO val2017 contains 5,000 images; instance annotations serve detection/segment
 
 ImageNet named labels use `<relative-image-path> <zero-based-class-index>` per line. Alternatively, `--label-file` lists synset IDs in model-class order and filenames must contain the corresponding `n########` identifier. Supply exactly one label source. For the original X5 one-label-per-line validation list, use `--val-format ordered --val-txt FILE --label-offset -1`; the list must match sorted image filenames. Do not apply that offset to already zero-based labels.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── eval_batch.py  # Python script
+├── eval_common.py  # Python script
+├── eval_yolo_cls.py  # Python script
+├── eval_yolo_det.py  # Python script
+├── eval_yolo_obb.py  # Python script
+├── eval_yolo_pose.py  # Python script
+└── eval_yolo_seg.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -114,7 +130,7 @@ Review the printed selections and confirm interactively; `--yes` skips that prom
 | `--family` | recognized filename | Explicitly set for custom names; selects the task protocol |
 | `--model-path`, `--image-dir` | required | Compiled model and validation images |
 | `--annotation` | absent | COCO annotation file; absent means predictions only |
-| `--conf-thres` | wrapper default, normally 0.25 | Detection/segmentation/pose/OBB score threshold |
+| `--conf-thres` | helper default, normally 0.25 | Detection/segmentation/pose/OBB score threshold |
 | `--nms-thres` | 0.70 on all targets | Evaluator IoU threshold; S runtime CLI instead defaults to 0.45 |
 | `--limit` | 0 | All images, or the first N selected images |
 | `--json-save-path` | `results_TASK.json` | Output file relative to caller cwd; create parent directory first |
@@ -159,6 +175,6 @@ The [sample guide](../README.md) describes the YOLOv8n and YOLO26n detection com
 <a id="boundaries"></a>
 ## Boundaries
 
-These evaluators do not verify model conversion, do not validate arbitrary custom class orders, and do not measure end-to-end application performance. Classification skips unreadable/unlabeled images as described above; report the actual processed count. OBB export needs a separate DOTA scorer. Published benchmark rows and prior fixed-image board comparisons are references with their own revisions and do not extend to every current task/scale. New board and full-dataset runs are performed per this guide.
+For classification, report the number of readable, labeled images actually processed. For OBB, export detections and run the DOTA scorer separately. Record the model, target, dataset, and metric settings alongside each result.
 
 DFL pose returns point probabilities. COCO JSON serialization preserves the historical rule v=1 for probability >0, otherwise 0; this is not a 0.5 visibility filter and does not remove low-confidence points. Drawing thresholds and evaluation serialization are separate operations.

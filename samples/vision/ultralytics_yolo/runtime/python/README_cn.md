@@ -12,6 +12,23 @@
 BGR 图片准备为目标板的 NV12 输入，执行任务解码；detect/seg/pose/obb 保存绘制结果，cls 打印 Top-K。脚本不会
 安装 Python 依赖。导出和编译请看 [`conversion/README_cn.md`](../../conversion/README_cn.md)。
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── detect.py  # 检测前处理、推理与后处理
+├── main.py  # 命令行入口
+└── run.sh  # 运行示例
+```
+
 <a id="environment"></a>
 ## 板端准备
 

@@ -6,12 +6,28 @@
 
 VargConvNet is a lightweight convolutional classification model used for ImageNet-1k image classification on edge devices. The RDK X5 sample provides a prebuilt packed-NV12 `.bin` model and a Python runtime based on `hbm_runtime`.
 
-The delivered model wrapper defines the runtime input and output contract; see the conversion guide before preparing replacement model files.
+The delivered model helper defines the runtime input and output contract; see the conversion guide before preparing replacement model files.
 
 One BGR image produces ImageNet-1k Top-K class IDs, scores and optional
 labels. The `VargConvNetClassifier` class runs a `preprocess → infer → postprocess` flow
 chained by `predict` (labels, drawing and file output belong to the CLI
 layer; see [runtime/python/README.md](runtime/python/README.md)).
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+vargconvnet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
 
 <a id="support-matrix"></a>
 ## Support matrix
@@ -73,16 +89,10 @@ rank 1 being class 37 (box turtle, box tortoise) with score 0.8582.
 Measure dataset accuracy and latency using the procedure under
 [evaluation](evaluator/README.md#reference-results).
 
-<a id="directory"></a>
-## Directory
-
-`model/`: artifacts and download; `runtime/python/`: native CLI, task and runner; `conversion/`: no PTQ YAML is included (boundaries documented there); `evaluator/`: functional checks and published benchmarks; `test_data/`: `box_turtle.JPEG` input and accompanying resources; `tests/`: host unittest suite.
-
 <a id="entry-points"></a>
 ## Entry points
 
 [Model](model/README.md) · [Python](runtime/python/README.md) · [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md)
-
 
 <a id="license"></a>
 ## License

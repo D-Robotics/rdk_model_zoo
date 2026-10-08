@@ -7,6 +7,16 @@ English | [简体中文](README_cn.md)
 
 Compare the fixed `test_data/dogs.jpg` input through the pinned reference implementation and this Sample runtime on the same target. Keep the image, model pair and scheduling identical; the report checks input tensors, raw outputs, mask selection and IoU.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── compare.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

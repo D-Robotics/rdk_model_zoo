@@ -7,7 +7,7 @@ from pathlib import Path
 from types import ModuleType, SimpleNamespace
 import sys
 import unittest
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 from unittest.mock import patch
 import numpy as np
 from test_runtime import fake_runtime, ROOT

@@ -19,7 +19,7 @@ python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]
 
 | 部分 | 内容 |
 | --- | --- |
-| Python 套件 | 所有第一方 `unittest` 目录：`samples/` 下全部 Sample 的 `tests/`（覆盖全部 51 个原生 Sample，含嵌套的 `samples/vision/yoloe/conversion/tests` 与 `evaluator/tests`）、`samples/_shared/tests`（含 `test_vla_integration.py`——父仓库 gitlink/固定提交完整性检查，无需初始化子模块即可运行，绝不执行上游 ACT/Pi0 代码）、`tools/board_validation/tests`、`tools/sample_contract/tests`、`skills/tests` 以及本目录自身的测试 |
+| Python 套件 | 所有第一方 `unittest` 目录：`samples/` 下全部 Sample 的 `tests/`（覆盖全部 51 个原生 Sample，含嵌套的 `samples/vision/yoloe/conversion/tests` 与 `evaluator/tests`）、`utils/py_utils/tests`（含 `test_vla_integration.py`——父仓库 gitlink/固定提交完整性检查，无需初始化子模块即可运行，绝不执行上游 ACT/Pi0 代码）、`tools/board_validation/tests`、`tools/sample_contract/tests`、`skills/tests` 以及本目录自身的测试 |
 | Sample 覆盖核对 | 发现结果与已接受的 51 行 Sample 清单（`docs/releases/unified-migration/2026-10-05-all-sample-coverage.json`）交叉核对——清单是**必需凭据**：清单所列 Sample 或其 `tests/` 目录从源码树中被删除、清单之外多出 Sample、或清单缺失/不可解析/rows 为空/存在畸形或重复行，均以显式结构化原因判失败（清单行被校验并上报，绝不静默过滤掉；强制范围跟随已评审的清单，执行器中不硬编码任何 Sample 数量） |
 | 原生前置检查 | C++17 编译器、cmake/ctest、git、`native_dependencies.py` 的可移植解析（nlohmann-json、gflags、iconv）——均为声明必需；缺失即失败，不允许隐藏原生覆盖。libsndfile/libsamplerate 一并探测并记录（它们是默认开启的 ASR CTest 开关的门禁） |
 | 静态契约 | `tools/sample_contract/check.py --scope migration --parser-mode import`，检查报告一并保留 |
@@ -40,7 +40,7 @@ python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]
 起始快照之后、结束快照之前——顺序调整绝不弱化内容门禁；`tools/catalog-publisher`
 内的 `npm ci` 仍是维护者前置条件：执行器从不安装任何东西。
 
-运行还会校验源码树自身声明的历史 Git 对象（`samples/_shared/legacy_platforms.py`、
+运行还会校验源码树自身声明的历史 Git 对象（`utils/py_utils/legacy_platforms.py`、
 Gemma 原生 CMake 固定提交、catalog 提交来源）：缺失固定提交即为显式失败，
 并给出对应的 `git fetch` 命令——绝不静默跳过读取固定来源的套件。因此完整的
 clone 历史是前置条件。

@@ -12,6 +12,16 @@ Attention](https://arxiv.org/abs/2305.07027), reference implementation
 [microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)).
 The YAML expects the EfficientViT-MSRA m5 ONNX graph at `./efficientvit_m5.onnx`.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── EfficientViT_MSRA_m5_config.yaml  # Configuration
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

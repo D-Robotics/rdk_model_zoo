@@ -7,6 +7,21 @@
 
 LPRNet 将车牌裁剪后的 tensor 直接识别为字符序列，不包含独立字符检测器。runtime 读取预打包 `float32` 文件并 reshape 为 `1x3x24x94`，不做图像解码、resize 或归一化。源论文为 [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447)。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+lprnet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持与验证矩阵
 
@@ -40,19 +55,6 @@ python3 -m samples.vision.lprnet.runtime.python.main --target x5
 ## 预期结果
 
 成功推理退出码为 `0`，打印含 `target`、完整 `asset_id` 和解码后 `plate` 的 JSON。具体车牌由模型和输入决定，本说明不编造结果；`test_data/example.jpg` 只是源提供的可视参考，实际 runtime 输入是 `test_input.dat`。
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-.
-├── model/                 # 显式模型准备和制品说明
-├── runtime/python/        # binding、懒加载 runner、task、CLI、run.sh
-├── conversion/            # 源转换事实与缺失配方说明
-├── evaluator/             # 自包含 raw/text 对照工具
-├── test_data/              # 源 test_input.dat 和 example.jpg
-└── tests/                 # 主机 CTC、metadata、task、CLI fixture
-```
 
 <a id="entry-points"></a>
 ## 入口索引

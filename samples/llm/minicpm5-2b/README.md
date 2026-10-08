@@ -9,6 +9,21 @@ This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and
 
 > S600 currently requires the internal OELLM 2.0 beta SDK; its public release is planned for mid-October 2026. Public S600 SDK 1.0.5 did not pass direct inference with this HBM and cannot substitute for 2.0. S100/S100P use the separate public 1.0.0 workflow below.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+minicpm5-2b/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -68,19 +83,6 @@ Observed generation tests include six additional prompts matching reference text
 
 The reference model itself answered one Chinese `1+1` prompt incorrectly and added Markdown fences when asked for bare JSON; the quantized model preserves these responses. Check formatting-sensitive outputs in your own application.
 
-<a id="directory"></a>
-## Directory layout
-
-```text
-conversion/     Host adapter and quantization/compilation instructions
-evaluator/      S600 PPL evaluator and recorded evidence
-evaluator/legacy/ S100/S100P full PPL and generation checks
-model/          Verified model download
-runtime/cpp/    S600 CMake project and run.sh
-runtime/legacy/ S100/S100P CMake project and run.sh
-test_data/      Generation prompts and observed reference results
-```
-
 <a id="entry-points"></a>
 ## Entry points and next steps
 
@@ -93,6 +95,7 @@ test_data/      Generation prompts and observed reference results
 | Conversion recipes | [conversion](conversion/README.md) |
 | Evaluation and historical evidence | [evaluator](evaluator/README.md) |
 | Prompts and reference outputs | [test_data](test_data/README.md) |
+
 <a id="license"></a>
 ## License and attribution
 

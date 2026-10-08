@@ -25,6 +25,22 @@ COCO val2017含5,000张图像。检测/分割使用instances标注，姿态使�
 
 ImageNet的named格式每行是`<相对图像路径> <从0开始的类别索引>`。也可以用`--label-file`按模型类别顺序列出synset ID，此时文件名应包含对应`n########`标识。两种标签来源必须且只能选择一种。原X5每行一个标签的验证列表使用`--val-format ordered --val-txt FILE --label-offset -1`，标签行顺序必须对应排序后的图像文件名。已从0编号的标签不要再减1。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── eval_batch.py  # Python 脚本
+├── eval_common.py  # Python 脚本
+├── eval_yolo_cls.py  # Python 脚本
+├── eval_yolo_det.py  # Python 脚本
+├── eval_yolo_obb.py  # Python 脚本
+├── eval_yolo_pose.py  # Python 脚本
+└── eval_yolo_seg.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -106,7 +122,7 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_batch.py \
   --annotation /data/coco/annotations/instances_val2017.json --suffix val2017
 ```
 
-批量命令打印选择结果后交互确认；`--yes`跳过确认。JSON写在各模型旁边。完整验证集可能耗时数小时，取决于板型、模型和存储，不保证固定时长。先用`--limit 10`检查流程，再取消限制跑全量；子集结果必须标注为子集。
+批量命令打印选择结果后交互确认；`--yes`跳过确认。JSON写在各模型旁边。完整验证集可能耗时数小时，取决于板型、模型和存储，。先用`--limit 10`检查流程，再取消限制跑全量；子集结果必须标注为子集。
 
 | 参数 | 默认值 | 含义 |
 | --- | --- | --- |

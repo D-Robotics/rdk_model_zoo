@@ -157,7 +157,7 @@ class _Harness:
     def run(self, **overrides):
         with patch.object(tool, "require_execution_target", return_value="x5"), \
                 patch(
-                    "samples._shared.model_runner._default_runtime_factory",
+                    "utils.py_utils.model_runner._default_runtime_factory",
                     return_value=self.create,
                 ), contextlib.redirect_stderr(io.StringIO()) as err, \
                 contextlib.redirect_stdout(io.StringIO()) as out:
@@ -524,6 +524,7 @@ class B3CompareFailureTests(unittest.TestCase):
         with patch.dict(sys.modules):
             import utils.py_utils.file_io
             import utils.py_utils.preprocess
+            import utils.py_utils.visualize
             saved = {name: sys.modules[name] for name in tool._LEGACY_DEP_MODULES}
             sdk = types.ModuleType("hbm_runtime")
             sdk.HB_HBMRuntime = object()

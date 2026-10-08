@@ -13,6 +13,17 @@
 [HBM 下载地址](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/PointNet/pointnet.hbm)。
 发布制品仅覆盖 S100；X5、S100P、S600 暂无对应制品。该模型分割椅子部件；其他类别与任务需另行训练并提供新制品。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 

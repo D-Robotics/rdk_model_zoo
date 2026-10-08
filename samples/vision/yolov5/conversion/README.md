@@ -11,6 +11,17 @@ The X5 source converts Ultralytics YOLOv5 `v2.0` and `v7.0` branch models with m
 
 No upstream commit is pinned and no exporter script or checkpoint ships with this sample; the branch/weight pairing and the detection-head edit below are the source procedure.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── yolov5_detect_bayese_640x640_nchw.yaml  # Configuration
+└── yolov5_detect_bayese_640x640_nv12.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 
 ## Toolchain and targets

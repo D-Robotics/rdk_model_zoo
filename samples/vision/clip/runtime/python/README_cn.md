@@ -2,6 +2,30 @@
 
 # Python 运行 — CLIP 图文匹配
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── cli.py  # 参数与结果展示
+├── main.py  # 命令行入口
+├── matching.py  # Python 脚本
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── run.sh  # 运行示例
+├── simple_tokenizer.py  # Python 脚本
+├── tensor_io.py  # Python 脚本
+├── tokenization.py  # Python 脚本
+└── visualization.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -120,7 +144,7 @@ print({"scores": composed_result.scores.tolist(),
 - `postprocess`：原始特征 → `MatchResult(scores, order)`。计算 cosine similarity 和降序 `argsort`，不返回 softmax 或特征 L2 变换。
 - `predict(image, texts)` 严格串联三阶段。词表读取与初始化、绘图和文件写入在 task 外部；preprocess 委托注入的 tokenizer 编码。
 
-既有旧拼写 `pre_process`、`forward`、`post_process` 保留为上述规范方法的薄兼容别名——同一实现，不存在第二套流程。CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、prompt 解析与结果展示，`main.py` 负责解析、解析模型对、构造 `CLIPTask` 并调用 `predict`。
+CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、prompt 解析与结果展示，`main.py` 负责解析、解析模型对、构造 `CLIPTask` 并调用 `predict`。
 
 <a id="troubleshooting"></a>
 ## 故障排查

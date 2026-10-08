@@ -8,10 +8,21 @@
 `1x3x24x94`），即源 runtime 读取的同一个预打包张量；`../test_data/example.jpg` 只是
 视觉参考。它是单个输入 fixture，不是车牌精度基准集。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── compare.py  # Python 脚本
+└── source_reference.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
-`compare.py` 在板端自行运行两边：锁定的原始 wrapper（从 Git 历史加载）与本 sample
+`compare.py` 在板端自行运行两边：锁定的原始 脚本（从 Git 历史加载）与本 sample
 `samples/vision/lprnet/runtime/python` 的任务。它需要 X5
 runtime（在身份 gate 之后惰性导入）、已准备的 `lpr.bin` 与 `.dat` 输入。主机上
 不导入 SDK，也不下载任何内容。源记录性能保留如下。

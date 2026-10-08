@@ -12,6 +12,18 @@ English | [简体中文](README_cn.md)
 
 Both are HBM deployment artifacts listed by the release manifest. The identical basenames do not mean interchangeable model bytes. No S100P/X5 artifact is published.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 
@@ -21,7 +33,7 @@ bash samples/vision/unetmobilenet/model/download.sh --target s100
 bash samples/vision/unetmobilenet/model/download.sh --target s600
 ```
 
-`download_model.sh` forwards the same arguments for compatibility. Failed downloads can be retried or fetched manually from [S100](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm) / [S600](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm) into the corresponding subdirectory. Preparation never proves local hardware identity.
+`download_model.sh` forwards the same arguments with the same options. Failed downloads can be retried or fetched manually from [S100](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm) / [S600](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm) into the corresponding subdirectory. 
 
 <a id="accompanying-files"></a>
 ## Accompanying files
@@ -36,4 +48,4 @@ Runtime defaults resolve from the sample directory, not cwd: model/<target>/unet
 <a id="formats-checksums"></a>
 ## Formats and checksums
 
-Both HBM rows have `sha256: null (unknown)`. The downloader prints observed SHA-256 for tracking copies, not independent authentication. Runtime metadata guards prevent wrong shapes/dtypes, but cannot prove a custom file is the publisher artifact. Preserve custom-file provenance and never rename an S100 artifact to imply S600 support.
+Both HBM rows have `sha256: null (unknown)`. The downloader prints the local SHA-256. Select the artifact published for the target board.

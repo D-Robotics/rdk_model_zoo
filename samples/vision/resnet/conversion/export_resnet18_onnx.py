@@ -62,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Class count of the self-trained checkpoint (required with "
             "--checkpoint; >= 2). Determines the ONNX output width and "
-            "the runtime custom_selection class_count."
+            "the runtime ResNetClassifier class_count."
         ),
     )
     parser.add_argument(
@@ -175,7 +175,7 @@ def export_resnet18(
           f"torchvision {torchvision.__version__}")
     if checkpoint is not None:
         print(
-            "  runtime contract: custom_selection(..., class_count="
+            "  runtime contract: ResNetClassifier(model_path, target=target, class_count="
             f"{class_count}) with the compiled artifact; record this stack "
             "in your training provenance.")
     return destination

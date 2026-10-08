@@ -3,9 +3,27 @@
 <a id="source-model"></a>
 ## Source Model
 
-This directory prepares calibration data and an auditable, target-specific OE configuration from a **local, already exported** YOLOE PF ONNX model. It does not download checkpoints. Version 11 exposes DFL16 heads; version 26 exposes direct LTRB heads. Both use the fixed 4585-class vocabulary, three strides (8/16/32), 32 mask coefficients and a prototype tensor. Text/visual-prompt models are incompatible.
+This directory prepares calibration data and a target-specific OE configuration from a **local, already exported** YOLOE PF ONNX model. It does not download checkpoints. Version 11 exposes DFL16 heads; version 26 exposes direct LTRB heads. Both use the fixed 4585-class vocabulary, three strides (8/16/32), 32 mask coefficients and a prototype tensor. Text/visual-prompt models are incompatible.
 
-Recipes for the three routes — X5 E11, S E11 and S E26 — are provided below. The canonical preparation retains floating output nodes by omitting `remove_node_type`/`remove_node_name` requests. The published S artifacts have quantized outputs and stay separate from a newly converted float model.
+Recipes for the three routes — X5 E11, S E11 and S E26 — are provided below. The preparation retains floating output nodes by omitting `remove_node_type`/`remove_node_name` requests. The published S artifacts have quantized outputs and stay separate from a newly converted float model.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── calibration.py  # Python script
+├── configuration.py  # Python script
+├── contract.py  # Python script
+├── export.py  # Python script
+├── export_heads.py  # Python script
+├── prepare.py  # Python script
+├── requirements-export.txt  # Source or data file
+└── requirements-host.txt  # Source or data file
+```
 
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
@@ -34,7 +52,7 @@ These dependencies cover graph inspection, image preparation and YAML only. They
 <a id="export"></a>
 ## Export
 
-The canonical [export.py](export.py) loads an existing local PF checkpoint, verifies its head family, size and ordered vocabulary, and writes a fresh export directory.
+The [export.py](export.py) loads an existing local PF checkpoint, verifies its head family, size and ordered vocabulary, and writes a fresh export directory.
 
 To obtain weights: clone the upstream YOLOE repository (<https://github.com/um-assn/yoloe.git>) with `pip install -r requirements.txt && pip install ultralytics`, and download the PF weights from the Ultralytics assets release, e.g. `wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yoloe-11s-seg-pf.pt` (replace `11s` with `11m`/`11l` for the other E11 sizes). The S E11 quantized route additionally uses the Model Zoo exporter <https://github.com/D-Robotics/rdk_model_zoo/blob/main/demos/Seg/YOLOE-11-Seg-Prompt-Free/YOLOE-11-Seg-Prompt-Free_YUV420SP/cauchy_yoloe11segPF_export.py>, which performs the equivalent module replacements without retraining.
 
@@ -128,7 +146,7 @@ docker run --rm -it --shm-size=2g \
 | Padding | pyramid input | input/output no-padding | input no-padding, output padding permitted |
 | Output-removal requests | none | none | none |
 
-The X5 int16 attention override is added only for actual ONNX nodes: `/model.10/m/m.0/attn/Softmax` for all E11 sizes and additionally `/model.10/m/m.1/attn/Softmax` for 11l. Each missing expected node is named in a `source attention node absent:...` warning. Do not silently rename a different node into that override. The S E11 quantized recipe `config_ultralytics_YOLOE_Seg_YUV420SP_NV12.yaml` uses NV12 runtime input with `scale_value 0.003921568627451`, default calibration with a softmax-int8 `quant_config`, latency/O2, `jobs: 15`, `advice: 1`, and input/output no-padding; its active `remove_node_name` list uses the v8 head numbering (`/model.23/...`) while YOLOE-11 heads live under `/model.22/...`, so those removal names do not match an 11-series graph. The canonical float route omits removal entirely. [S model modification rules](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify) explain how those options remove boundary operators. Omission expresses float-output intent; final compiler metadata must still verify it.
+The X5 int16 attention override is added only for actual ONNX nodes: `/model.10/m/m.0/attn/Softmax` for all E11 sizes and additionally `/model.10/m/m.1/attn/Softmax` for 11l. Each missing expected node is named in a `source attention node absent:...` warning. Do not silently rename a different node into that override. The S E11 quantized recipe `config_ultralytics_YOLOE_Seg_YUV420SP_NV12.yaml` uses NV12 runtime input with `scale_value 0.003921568627451`, default calibration with a softmax-int8 `quant_config`, latency/O2, `jobs: 15`, `advice: 1`, and input/output no-padding; its active `remove_node_name` list uses the v8 head numbering (`/model.23/...`) while YOLOE-11 heads live under `/model.22/...`, so those removal names do not match an 11-series graph. The float route omits removal entirely. [S model modification rules](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify) explain how those options remove boundary operators. Omission expresses float-output intent; final compiler metadata must still verify it.
 
 <a id="validation"></a>
 ## Validation
@@ -142,7 +160,7 @@ hb_perf samples/vision/yoloe/model/x5/yoloe_11s_seg_pf_bayese_640x640_nv12.bin
 hrt_model_exec model_info --model_file samples/vision/yoloe/model/x5/yoloe_11s_seg_pf_bayese_640x640_nv12.bin
 ```
 
-Inspect the compiled model metadata and compare all ten outputs against the float model on representative inputs. The canonical runtime additionally checks target, NV12 input and ten NHWC float32 output roles. Integer output, wrong dimensions or an incompatible target fail; no manual dequantization is inserted into postprocessing. Use the artifact digest from `conversion.json` to identify an explicitly selected local file:
+Inspect the compiled model metadata and compare all ten outputs against the float model on representative inputs. The runtime additionally checks target, NV12 input and ten NHWC float32 output roles. Integer output, wrong dimensions or an incompatible target fail; no manual dequantization is inserted into postprocessing. Use the artifact digest from `conversion.json` to identify an explicitly selected local file:
 
 ```bash
 # cwd: repository root on the matching board; replace the path and digest
@@ -170,6 +188,6 @@ Expected output is `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen
 <a id="known-gaps"></a>
 ## Preparation requirements
 
-Float S HBMs come from the local route above; no float S HBM is published, and the published quantized S artifacts are distinct inputs. Export comparisons run on unoptimized ONNX Runtime CPU; validate optimized-engine behavior, broader inputs and X5 11m/11l compilation with your own runs. Graph/interface validation does not detect an incorrectly labelled checkpoint size or changed label semantics; the exporter checks and evaluator cover those. SDK build and board execution for the [C++ runtime](../runtime/cpp/README.md) follow its guide. The [canonical evaluator](../evaluator/README.md) provides explicit dataset mapping and scoring.
+Float S HBMs come from the local route above; no float S HBM is published, and the published quantized S artifacts are distinct inputs. Export comparisons run on unoptimized ONNX Runtime CPU; validate optimized-engine behavior, broader inputs and X5 11m/11l compilation with your own runs. Graph/interface validation does not detect an incorrectly labelled checkpoint size or changed label semantics; the exporter checks and evaluator cover those. SDK build and board execution for the [C++ runtime](../runtime/cpp/README.md) follow its guide. The [evaluator](../evaluator/README.md) provides explicit dataset mapping and scoring.
 
 Record the local checkpoint SHA-256, exported ONNX SHA-256 and resulting HBM SHA-256 with each conversion. Keep original quantized-output and float-output routes as distinct artifact records.

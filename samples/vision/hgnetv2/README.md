@@ -30,6 +30,22 @@ postprocess` flow chained by `predict` (labels, drawing and file output
 belong to the CLI layer; see
 [runtime/python/README.md](runtime/python/README.md)).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+hgnetv2/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -112,15 +128,6 @@ are listed under [evaluation](evaluator/README.md#reference-results).
 Single-thread latency and multi-thread FPS are measured under different
 concurrency and are not reciprocal quantities. Compare latency and FPS using
 the same thread count, concurrent submission mode and BPU utilization.
-
-<a id="directory"></a>
-## Directory
-
-`model/`: artifacts and download; `runtime/python/`: native CLI, task and
-runner; `conversion/`: five PTQ YAMLs plus per-variant ONNX export scripts;
-`evaluator/`: CSV-based evaluation and published benchmarks; `test_data/`:
-`sandbar.JPEG` input and accompanying resources; `tests/`: host unittest
-suite.
 
 <a id="entry-points"></a>
 ## Entry points

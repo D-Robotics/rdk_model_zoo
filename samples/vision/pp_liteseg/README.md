@@ -9,6 +9,21 @@ PP-LiteSeg-STDC1 predicts the 19 Cityscapes road-scene classes for every pixel. 
 
 The model **runtime** consumes an already-decoded int32 class map: `postprocess` only validates the classes and removes batch/channel dimensions; there is no CPU argmax step. Compiled artifact metadata is checked at load on the board.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+pp_liteseg/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -35,22 +50,12 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py
 python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
 ```
 
-Install general Python dependencies with `python3 -m pip install numpy opencv-python PyYAML`. Inference never downloads implicitly; run.sh is an argument-forwarding wrapper.
+Install general Python dependencies with `python3 -m pip install numpy opencv-python PyYAML`. Inference never downloads implicitly; run.sh is an argument-forwarding helper.
 
 <a id="expected-results"></a>
 ## Expected results
 
 Success returns 0 and writes `outputs/pp_liteseg/result.jpg` (3078×548, Original / Overlay / Segmentation), `labels.npy` (512×1024 int32 IDs 0..18) and `result.json` in the same directory. JSON/stdout report actual class names and runtime metadata. No class list or accuracy is promised for the supplied street image without real inference. Errors return 2. Mask coordinates refer to the stretched model input, not original image dimensions.
-
-<a id="directory"></a>
-## Directory responsibilities
-
-- `model/`: explicit published-asset preparation; weights are not bundled.
-- `runtime/python/`: four-stage task, binding, SDK runner, CLI and visualization.
-- `conversion/`: PaddleSeg export, raw calibration preparation and OE YAML/build.
-- `evaluator/`: single-image compatibility CLI and validation boundaries.
-- `test_data/`: source `street.png` and `test.jpg`; the old `street.jpg` path was absent.
-- `tests/`: host fixtures and source-parity checks.
 
 <a id="entry-points"></a>
 ## Entry points

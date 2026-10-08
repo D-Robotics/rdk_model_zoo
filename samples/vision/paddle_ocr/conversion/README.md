@@ -32,6 +32,18 @@ artifacts must be prepared through this compile route before use.
   [`test_data/s100/ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt)
   (plus blank and trailing space).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── s100/  # Files for s100
+├── scripts/  # Files for scripts
+├── x5/  # Files for x5
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

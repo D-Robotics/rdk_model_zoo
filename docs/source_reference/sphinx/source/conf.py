@@ -22,6 +22,11 @@ extensions = [
 
 autoapi_type = "python"
 
+# Include constructor Args/Raises beside the class summary and attributes.
+autoapi_python_class_content = "both"
+# Render Google Attributes as fields, not duplicate AutoAPI object definitions.
+napoleon_use_ivar = True
+
 # 让 autosummary 自动生成页面
 autosummary_generate = True
 

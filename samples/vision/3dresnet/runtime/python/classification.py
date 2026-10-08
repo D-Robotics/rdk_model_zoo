@@ -8,7 +8,7 @@ from typing import Any, Mapping, Optional, Sequence
 
 import numpy as np
 
-from samples._shared.classification import ClassificationResult, topk_from_scores
+from utils.py_utils.classification import ClassificationResult, topk_from_scores
 from .model_binding import CLASS_COUNT, ModelBinding
 from .tensor_io import PreparedInput, prepare_clip
 

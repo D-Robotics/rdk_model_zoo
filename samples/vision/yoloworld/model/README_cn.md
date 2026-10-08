@@ -8,6 +8,18 @@
 `sha256: null`。发布者摘要未知；本地观察摘要不能证明来源。离线词向量伴随
 文件是 `test_data/offline_vocabulary_embeddings.json`，不是清单模型资产。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备
 
@@ -27,6 +39,7 @@ SHA-256，并明确发布者摘要未知。`runtime/python/main.py` 不会自动
 F32 宽度 512 向量；它提供文本嵌入和 ID 映射，不能用 COCO 标签名替换。
 
 <a id="local-paths"></a>
+
 <a id="formats-checksums"></a>
 ## 本地路径、格式与摘要
 

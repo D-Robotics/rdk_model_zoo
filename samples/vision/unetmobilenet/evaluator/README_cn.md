@@ -7,6 +7,15 @@
 
 Cityscapes 定义 19 类任务，但源未提供带标签验证 split 或数据集执行器。segmentation.png 为冒烟输入，result.jpg 为源记录示意。数据集评估需要有许可的图片／标签、明确 train-ID 映射、忽略标签策略及记录的 split。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

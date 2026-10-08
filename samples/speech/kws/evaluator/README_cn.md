@@ -9,6 +9,17 @@
 
 评估器读取已保存的概率。输入 JSON schema 为 `rdk-model-zoo/kws-predictions/v1`；`provenance` 包含非空 `dataset`、`model`、`split` 描述，`records` 含唯一 `id`、整数 `label` 0/1 和有限 [0,1] `score`。采集预测时，在 provenance 中补充模型/输入摘要和前端版本。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── evaluate.py  # Python 脚本
+└── metrics.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

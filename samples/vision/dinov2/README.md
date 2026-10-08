@@ -9,6 +9,22 @@ DINOv2 is a self-supervised ViT encoder that produces a global image feature and
 
 The graph has a patch-14 stem, 12 pre-LN transformer blocks, explicit BPU-friendly attention, and a final normalized feature interface. The sample exposes `cls_feat` `(1,384)` for global embedding and `patch_feat` `(1,256,384)` for per-patch features. Runtime post-processing dequantizes integer outputs using the bound metadata into owned float32 arrays; it does not apply softmax or L2 normalization.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+dinov2/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support Matrix
 
@@ -49,20 +65,6 @@ The convenience `runtime/python/run.sh` accepts the positional output (`cls_feat
 ## Expected Results
 
 The CLI prints a JSON summary with `output`, `shape`, `dtype`, `mean`, `std`, `min`, `max`, and `l2_norm`. When the default second image exists it also prints `second_image` and `cosine_similarity`; missing second images are reported as `skipped_missing`. `cls_feat` has shape `(1,384)` and `patch_feat` `(1,256,384)`, both returned as float32 after metadata-bound dequantization. Board values are obtained by running the target board.
-
-<a id="directory"></a>
-## Directory Layout
-
-```text
-dinov2/
-├── conversion/             # pinned ONNX export, calibration, and hb_compile recipe
-│   └── onnx_export/        # source-model export and graph rewrites
-├── evaluator/              # historical performance and cosine records
-├── model/                  # manifest-backed target-specific HBM preparation
-├── runtime/python/         # binding, runner, feature task, tensor I/O, and CLI
-├── test_data/              # dog.jpg and bus.jpg inputs
-└── README.md               # this guide
-```
 
 <a id="entry-points"></a>
 ## Entry Points

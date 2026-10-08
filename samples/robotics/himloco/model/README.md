@@ -13,6 +13,17 @@ The [active X5 manifest](../../../../docs/release/x5/models.yaml) is authoritati
 for the URL and hash. S100/S100P/S600 have no matching publication. The model is
 already fused; a separate encoder or policy model cannot replace it by renaming.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 
@@ -28,7 +39,7 @@ or writing files. The second command explicitly prepares the model. Existing fil
 are checked and never overwritten. New downloads use a temporary file, check the
 published digest and install atomically. A mismatch returns 2 and cannot leave a
 new complete-looking BIN. Correct the input/path before retrying; do not rename an
-incompatible model. `PYTHON` selects the shell wrapper's interpreter.
+incompatible model. `PYTHON` selects the shell helper's interpreter.
 
 `--target` accepts only `x5` (default). `--output-dir` defaults to this model
 directory and always receives a `bayes-e/` child. It does not change runtime defaults.

@@ -16,6 +16,15 @@ samples/vision/clip/runtime/python/bpe_simple_vocab_16e6.txt.gz
 # prompts: a diagram,a dog
 ```
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 

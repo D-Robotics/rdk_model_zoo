@@ -14,6 +14,16 @@ Attention](https://arxiv.org/abs/2305.07027)，参考实现
 [microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)）。
 YAML 期望 `./efficientvit_m5.onnx`；导出时将匹配的 m5 模型图保存至此路径。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── EfficientViT_MSRA_m5_config.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

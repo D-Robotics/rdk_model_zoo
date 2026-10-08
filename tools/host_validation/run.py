@@ -155,6 +155,7 @@ _SAMPLE_ID_RE = re.compile(
 
 #: Tool and skills suites outside ``samples/``.
 EXTRA_SUITE_DIRS = (
+    "utils/py_utils/tests",
     "tools/board_validation/tests",
     "tools/sample_contract/tests",
     "skills/tests",
@@ -288,7 +289,7 @@ CTEST_STAGE_TIMEOUTS = {"configure": 900, "build": 3600,
 #: clone that lacks one gets an explicit failure naming the fetch command —
 #: never a silent skip of the suites that read pinned sources.
 PIN_SOURCES = (
-    ("samples/_shared/legacy_platforms.py",
+    ("utils/py_utils/legacy_platforms.py",
      re.compile(r'^PIN\s*=\s*"([0-9a-f]{40})"', re.M)),
     ("samples/llm/gemma4-e2b/tests/native/CMakeLists.txt",
      re.compile(r'set\s*\(\s*GEMMA_PLATFORMS_PIN\s+"([0-9a-f]{40})"')),

@@ -13,6 +13,21 @@ The published S100 asset implements MDTC (Multi-Scale Dynamic Temporal Convoluti
 
 The deployment pipeline cuts mono 16 kHz float32 audio to 60000 samples (3.75 seconds; shorter clips are zero-padded). PaddleAudio fbank uses 25 ms frames, 10 ms shift and 80 mel bins to produce `[1, 373, 80]`; the BPU model returns keyword probabilities, and post-processing takes their maximum without adding sigmoid. The application decision is `score >= threshold` (default `0.5`). Set the threshold for the intended application using labeled positive and negative clips. The task composes preprocess → infer → postprocess through predict; audio files, SDK transport, feature extraction and scoring have separate modules.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+kws/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -45,7 +60,7 @@ bash samples/speech/kws/model/download.sh --target s100
 bash samples/speech/kws/runtime/python/run.sh --target s100 --output-dir outputs/kws-run1
 ```
 
-Each result directory must be new. `PYTHON=/path/to/python` selects the wrapper interpreter. For an existing external model use its exact publication identity:
+Each result directory must be new. `PYTHON=/path/to/python` selects the helper interpreter. For an existing external model use its exact publication identity:
 
 ```sh
 bash samples/speech/kws/runtime/python/run.sh --target s100 \
@@ -57,17 +72,6 @@ bash samples/speech/kws/runtime/python/run.sh --target s100 \
 ## Expected results
 
 Success exits 0 and writes `result.json`: score, threshold, `detected`, actual SDK metadata, input/model digests and audio padding/truncation counts. Detection uses `score >= threshold` (default 0.5). The source S100 record for the bundled “hey snips” clip is approximately 0.985. Failures exit 2.
-
-<a id="directory"></a>
-## Directory
-
-| Location | Purpose |
-| --- | --- |
-| `model/` | Explicit manifest-backed download and artifact identity |
-| `runtime/python/` | Pure task stages, frontend, audio I/O, shared SDK runner and CLI |
-| `test_data/` | Original 2.5-second mono clip and hash/source explanation |
-| `conversion/` | Conversion prerequisites and what the source release provides |
-| `evaluator/` | Offline labeled-score metrics and preserved historical performance |
 
 <a id="entry-points"></a>
 ## Guides

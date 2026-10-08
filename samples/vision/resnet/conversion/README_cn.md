@@ -9,9 +9,6 @@
 | ResNet50（仅 s） | — | 经 OE `13_resnet50` 示例的配方转换 |
 | ResNet152（仅 s） | `resnet152_config.yaml`、`get_calibration_data.py`、`x86_inference.py` | 已发布 ONNX + 用户自备校准图，配合上述三个文件在 OE 内完成转换 |
 
-本目录的 ResNet152 配方源自
-`rdk_s@380e1a2:samples/vision/resnet152/conversion/`。
-
 <a id="source-model"></a>
 ## 源模型
 
@@ -21,7 +18,7 @@
 [ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)。
 
 - ResNet18：本地导出，固定 NCHW 输入 `[1,3,224,224]`、输出名 `output`、
-  ImageNet-1k 类别数。canonical 导出器使用 TorchScript ONNX 导出
+  ImageNet-1k 类别数。导出器使用 TorchScript ONNX 导出
   （`dynamo=False`）以保持图稳定。`--weights IMAGENET1K_V1` 选择官方
   预训练权重；`--weights none` 生成随机权重图，仅用于离线结构检查。
 - ResNet50：经 OE `13_resnet50` 分类示例转换——ONNX、校准和编译步骤从该示例
@@ -32,6 +29,19 @@
 ```bash
 # cwd：本 conversion 目录 — 输出：./resnet152.onnx
 wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152.onnx
+```
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── export_resnet18_onnx.py  # Python 脚本
+├── get_calibration_data.py  # Python 脚本
+├── resnet152_config.yaml  # 配置
+└── x86_inference.py  # Python 脚本
 ```
 
 <a id="toolchain-targets"></a>
@@ -177,7 +187,7 @@ ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只
 输出。ResNet152 可用 `x86_inference.py`（OE 容器内执行）在 x86 上以
 相同的 padded-crop 预处理对照 ONNX / HBIR（`.bc`）/ HBM 输出。
 
-再在匹配板卡上用 canonical 运行时确认：X5 元数据为单一 packed NV12
+再在匹配板卡上用 运行时确认：X5 元数据为单一 packed NV12
 输入加名为 `prob` 的 F32 `[1,1000,1,1]` 输出；S100/S600 为 Y
 `[1,224,224,1]`、UV `[1,112,112,2]` 与 F32 `[1,1000]` 输出；同图、
 同缩放、同标签、同 Top-K 得到预期的类别 ID 与分数顺序。
@@ -274,8 +284,8 @@ python3 export_resnet18_onnx.py \
 - 产物用 [工具链与目标](#toolchain-targets) 下的既有 OE 配置编译（X5
   `hb_mapper` → `.bin`，S100/S600 `hb_compile` → `.hbm`）；不暗示任何
   已发布制品配方适用于自训练输出。
-- 运行时合同：用 `model_binding.custom_selection(model_path, target,
-  input_height=224, input_width=224, class_count=<num-classes>)` 加载
+- 运行时合同：用 `classify.ResNetClassifier(model_path, target=target,
+  input_size=(224, 224), class_count=<num-classes>)` 加载
   编译产物，标签可选（见 [自定义模型
   章节](../runtime/python/README_cn.md#custom-model)）；绑定会把实际输出
   宽度与 `class_count` 核对。

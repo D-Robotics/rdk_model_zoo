@@ -43,7 +43,7 @@ def main(argv=None):
                                       text_model_path=args.text_model_path)
         if args.dry_run:
             return run_dry_run(selection)
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
         require_execution_target(selection.target)
         for path in (selection.image_model_path, selection.text_model_path):
             if not path.is_file():

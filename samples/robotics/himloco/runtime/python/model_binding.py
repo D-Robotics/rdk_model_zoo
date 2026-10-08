@@ -4,8 +4,8 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from samples._shared.assets import Asset, list_assets
-from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 ASSET_ID = "x5:himloco:himloco_go2_bayese_1x270.bin"
@@ -34,7 +34,7 @@ class ModelBinding:
 def resolve_selection(target="auto", *, model_path=None, asset_id=None):
     """Resolve exact X5 asset; alternate paths require its explicit asset identity."""
     if target == "auto":
-        from samples._shared.platforms import detect_target
+        from utils.py_utils.platforms import detect_target
 
         target = detect_target()
     if target != "x5":

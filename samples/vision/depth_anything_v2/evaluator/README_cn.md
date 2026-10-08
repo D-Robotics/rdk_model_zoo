@@ -11,6 +11,15 @@ RMSE、阈值精度前需取得这些输入，彩图相似不能替代这些指�
 
 ![源输入](../test_data/furseal.jpg)
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

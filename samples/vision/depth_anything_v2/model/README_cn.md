@@ -14,6 +14,18 @@
 显式拒绝，传入外部路径也不例外。`auto` 选择唯一 S100 契约，真实执行仍在加载
 SDK 前检查本机身份。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 显式准备
 

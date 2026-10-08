@@ -49,6 +49,26 @@ Sharing architecture code and conversion templates does not make an untested
 backbone supported. Each variant must independently pass checkpoint, ONNX, PTQ,
 accuracy, Runtime, and board-performance gates.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+unet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
+Training utilities and generated intermediate artifacts are maintained outside
+this sample. The repository does not commit checkpoints, ONNX files,
+calibration data, compiled BIN files, or evaluation datasets; prebuilt BINs are
+downloaded with the script in `model/`.
+
 <a id="support-matrix"></a>
 ## Support and validation
 
@@ -81,50 +101,6 @@ Exit 0 and inspect `unet_mask.png`, `unet_result.png`, and `unet_runtime_report.
 ## Expected results
 
 The mask is fixed 512×512 uint8 class IDs 0..20, without automatic original-size restoration. Overlay uses model resolution too. JSON contains artifact identity, observed metadata, present classes, output paths and timing including preprocessing/postprocessing; it is not pure BPU latency.
-
-<a id="directory"></a>
-## Directory Structure
-
-```text
-unet/
-├── conversion/                         # Checkpoint-to-X5 conversion
-│   ├── mapper.py                       # Guarded checker and makertbin entry
-│   ├── onnx_export/
-│   │   ├── export_unet.py              # Strict checkpoint and ONNX exporter
-│   │   └── model/                      # Shared UNet ResNet architecture
-│   ├── ptq_yamls/                      # One bayes-e template per backbone
-│   ├── README.md
-│   └── README_cn.md
-├── evaluator/                          # Unified PyTorch/ONNX/X5 accuracy entry
-│   ├── eval_unet.py
-│   ├── README.md
-│   └── README_cn.md
-├── model/                              # Prebuilt X5 models and downloads
-│   ├── download.sh               # Download models by backbone
-│   ├── README.md
-│   └── README_cn.md
-├── runtime/
-│   └── python/                         # RDK X5 hbm_runtime sample
-│       ├── unet.py                     # UNetTask four-stage inference
-│       ├── model_binding.py            # Artifact and tensor contracts
-│       ├── model_runner.py             # Lazy SDK and raw tensor validation
-│       ├── visualization.py            # Separate VOC palette
-│       ├── main.py                     # Command-line inference entry
-│       ├── run.sh                      # One-command launcher
-│       ├── README.md
-│       └── README_cn.md
-├── test_data/                          # Default Pascal VOC test image
-│   ├── 2007_000033.jpg
-│   ├── README.md
-│   └── README_cn.md
-├── README.md
-└── README_cn.md
-```
-
-Training utilities and generated intermediate artifacts are maintained outside
-this sample. The repository does not commit checkpoints, ONNX files,
-calibration data, compiled BIN files, or evaluation datasets; prebuilt BINs are
-downloaded with the script in `model/`.
 
 <a id="entry-points"></a>
 ## Model Conversion

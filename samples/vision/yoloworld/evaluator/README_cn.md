@@ -1,6 +1,18 @@
 # YOLOWorld 评估器
 
 <a id="dataset"></a>
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── compare.py  # Python 脚本
+└── source_reference.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 数据与环境
 
@@ -27,6 +39,7 @@ python3 samples/vision/yoloworld/evaluator/compare.py --target x5 --output-dir /
 不一致返回 1，运行失败返回 2。
 
 <a id="metrics"></a>
+
 <a id="outputs"></a>
 ## 指标与输出
 
@@ -39,6 +52,7 @@ raw 张量 `atol=1e-5`，框 `1e-4`，分数 `1e-5`。执行失败时仍写出�
 `return_code: 2`、`passed: false` 的 manifest，任何输出目录都不会覆盖。
 
 <a id="reference-results"></a>
+
 <a id="boundaries"></a>
 ## 源记录参考与边界
 

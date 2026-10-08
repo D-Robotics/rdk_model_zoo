@@ -1,5 +1,25 @@
 # LPRNet Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── lprnet.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+└── tensor_io.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
@@ -14,7 +34,7 @@ From the repository root, with `model/lpr.bin` prepared explicitly:
 python3 -m samples.vision.lprnet.runtime.python.main --target x5
 ```
 
-Success is exit code `0` and one JSON line with `plate`. The zero-argument input default is the absolute sample path `samples/vision/lprnet/test_data/test_input.dat`. `bash samples/vision/lprnet/runtime/python/run.sh --target x5` is an equivalent wrapper.
+Success is exit code `0` and one JSON line with `plate`. The zero-argument input default is the absolute sample path `samples/vision/lprnet/test_data/test_input.dat`. `bash samples/vision/lprnet/runtime/python/run.sh --target x5` is an equivalent helper.
 
 <a id="parameters"></a>
 ## Parameters

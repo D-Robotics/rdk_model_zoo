@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
+from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
+
 import unittest
 
 import numpy as np
 
 
 def _make_task(target: str, logits: np.ndarray):
-    from samples.vision.resnet.runtime.python.classification import ClassificationTask
-    from samples.vision.resnet.runtime.python.model_binding import bind_model, resolve_selection
+    from utils.py_utils.classification import ClassificationTask
+    from utils.py_utils.cls_binding import bind_model
+    from samples.vision.resnet.runtime.python.cli import resolve_selection
     from testsupport import runtime_metadata
 
-    binding = bind_model(resolve_selection(target), runtime_metadata(target))
+    binding = bind_model(BINDING_TABLE, resolve_selection(target), runtime_metadata(target))
     calls: list[dict] = []
 
     def runner(inputs):

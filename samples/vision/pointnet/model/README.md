@@ -14,6 +14,17 @@ The [release manifest](../../../../docs/release/s/models.yaml) provides
 No X5, S100P or S600 asset is published for this sample. It is a chair-only part
 segmenter; the architecture's broader capabilities are not extra variants.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+└── download.sh  # Model preparation command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

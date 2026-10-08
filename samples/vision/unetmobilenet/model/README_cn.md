@@ -12,6 +12,18 @@
 
 两者均为发布清单中的 HBM 部署制品，文件名相同但字节互不通用；请按 target 对应取用。S100P/X5 暂无发布制品。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 
@@ -21,7 +33,7 @@ bash samples/vision/unetmobilenet/model/download.sh --target s100
 bash samples/vision/unetmobilenet/model/download.sh --target s600
 ```
 
-`download_model.sh` 为兼容入口，转发相同参数。下载失败可重试，或从 [S100](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm)／[S600](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm) 手动获取并放入对应子目录。准备成功不证明本机硬件身份。
+`download_model.sh` 为快捷入口，转发相同参数。下载失败可重试，或从 [S100](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm)／[S600](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm) 手动获取并放入对应子目录。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

@@ -12,7 +12,7 @@ import numpy as np
 import cv2
 from samples.vision.yoloe.conversion.prepare import prepare_conversion
 from samples.vision.yoloe.conversion.calibration import calibration_tensor
-from samples._shared.yoloe26_geometry import prepare_rgb
+from utils.py_utils.yoloe26_geometry import prepare_rgb
 from samples.vision.ultralytics_yolo.runtime.python.geometry import (
     resize_with_transform,
 )

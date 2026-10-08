@@ -97,7 +97,7 @@ class RuntimeTests(unittest.TestCase):
 
     def test_published_quantized_route_fails_before_sdk(self):
         s = resolve_selection("s100")
-        with patch("samples._shared.platforms.require_execution_target") as gate:
+        with patch("utils.py_utils.platforms.require_execution_target") as gate:
             with self.assertRaisesRegex(ValueError, "quantized"):
                 build_runner(s)
             gate.assert_not_called()
@@ -240,7 +240,7 @@ class BoundaryTests(unittest.TestCase):
             path = Path(tmp) / "model.hbm"
             path.write_bytes(b"not a real model")
             s = resolve_selection("s100", model_path=path, local_float_sha256="0" * 64)
-            with patch("samples._shared.platforms.require_execution_target"), patch(
+            with patch("utils.py_utils.platforms.require_execution_target"), patch(
                 "samples.vision.yoloe.runtime.python.model_runner.common_runner"
             ) as load:
                 with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):

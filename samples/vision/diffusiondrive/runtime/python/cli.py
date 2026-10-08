@@ -148,8 +148,8 @@ def save_planning_evidence(
     import cv2
     import numpy as np
 
-    from samples._shared.assets import sha256_file
-    from samples._shared.runtime_meta import metadata_evidence
+    from utils.py_utils.assets import sha256_file
+    from utils.py_utils.runtime_meta import metadata_evidence
     from samples.vision.diffusiondrive.runtime.python.visualization import (
         render_result,
     )

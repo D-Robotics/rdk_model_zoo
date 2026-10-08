@@ -2,7 +2,7 @@
 from pathlib import Path
 import importlib.util,sys,types
 ROOT=Path(__file__).resolve().parents[4]
-from samples._shared.legacy_platforms import legacy_module_namespace, legacy_path
+from utils.py_utils.legacy_platforms import legacy_module_namespace, legacy_path
 
 
 def source_paths(target):

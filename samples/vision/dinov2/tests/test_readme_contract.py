@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 import numpy as np
 from test_dinov2 import FakeRuntime, ROOT, SAMPLE
-from samples._shared.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
+from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
 def comparison_fixture():
@@ -114,7 +114,7 @@ class ReadmeTests(unittest.TestCase):
                     kwargs.setdefault('model_path',model)
                     kwargs.setdefault('asset_id','s:dinov2:nash-e/dinov2_vits14_224_int16_nashe.hbm')
                     return original_resolve(*args,**kwargs)
-                with patch.object(Path,'cwd',return_value=root), patch.dict(sys.modules,{'dinov2':legacy_module}), patch.object(legacy_module.hbm_runtime,'HB_HBMRuntime',return_value=old), patch.object(model_binding,'resolve_selection',selection), patch.object(model_runner,'RuntimeModelRunner',lambda chosen:original_runner(chosen,runtime=unified)), patch('samples._shared.platforms.require_execution_target',return_value='s100'),contextlib.redirect_stdout(io.StringIO()):
+                with patch.object(Path,'cwd',return_value=root), patch.dict(sys.modules,{'dinov2':legacy_module}), patch.object(legacy_module.hbm_runtime,'HB_HBMRuntime',return_value=old), patch.object(model_binding,'resolve_selection',selection), patch.object(model_runner,'RuntimeModelRunner',lambda chosen:original_runner(chosen,runtime=unified)), patch('utils.py_utils.platforms.require_execution_target',return_value='s100'),contextlib.redirect_stdout(io.StringIO()):
                     if mismatch:
                         with self.assertRaisesRegex(AssertionError,'migration parity failed'):
                             exec(compile(snippet,filename,'exec'),{})

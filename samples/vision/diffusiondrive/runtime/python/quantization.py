@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 from types import SimpleNamespace
 import numpy as np
-from samples._shared.quantization import validate_scale_quantization, dequantize_tensor
+from utils.py_utils.quantization import validate_scale_quantization, dequantize_tensor
 
 DTYPES = frozenset(
     ("int8", "uint8", "int16", "uint16", "int32", "uint32", "float16", "float32")

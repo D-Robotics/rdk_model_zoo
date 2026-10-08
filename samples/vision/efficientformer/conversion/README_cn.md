@@ -12,6 +12,17 @@ Vision Transformers at MobileNet
 Speed](https://arxiv.org/abs/2206.01191)）。YAML 期望
 `./efficientformer_l1.onnx` / `./efficientformer_l3.onnx`；导出时按模型变体准备匹配权重，并将图保存至对应 YAML 路径。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── EfficientFormer_l1_config.yaml  # 配置
+├── EfficientFormer_l3_config.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

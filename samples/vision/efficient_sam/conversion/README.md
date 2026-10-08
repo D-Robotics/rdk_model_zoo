@@ -7,9 +7,23 @@ This directory provides the conversion scripts for the EfficientSAM ViT-Tiny enc
 <a id="source-model"></a>
 ## Source model
 
-The upstream source is [yformer/EfficientSAM](https://github.com/yformer/EfficientSAM), using the source checkpoint `weights/efficient_sam_vitt.pt`. The fixed source does not provide a checkpoint version or SHA-256. X5 and S export wrappers differ because the source branches expose different EfficientSAM builder APIs; `scripts/export_encoder_onnx.py` and `scripts/export_decoder_onnx.py` retain those branches behind `--target`.
+The upstream project is [yformer/EfficientSAM](https://github.com/yformer/EfficientSAM). Prepare checkpoint `weights/efficient_sam_vitt.pt`; select the X5 or S builder through `--target` in `scripts/export_encoder_onnx.py` and `scripts/export_decoder_onnx.py`.
 
 The decoder bakes two positive points `(248, 210)` and `(302, 315)` into ONNX. It has no runtime prompt tensor. The encoder contract is `batched_images` `(1,3,512,512)` float32 RGB NCHW → `image_embeddings` `(1,256,32,32)` float32. The decoder consumes that embedding and emits `low_res_masks` plus `iou_predictions`.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── configs/  # Files for configs
+├── scripts/  # Files for scripts
+├── QUANTIZATION_STATUS.md  # Documentation
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── SOURCE_MAP.json  # Structured data
+└── VALIDATION.md  # Documentation
+```
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
@@ -221,4 +235,4 @@ Generated ONNX, calibration tensors, quantization metadata, and compiled models 
 
 ## Provenance
 
-The merge and source SHA-256 mapping are recorded in [`SOURCE_MAP.json`](./SOURCE_MAP.json). Source code and documentation retain the upstream Apache-2.0 provenance where present and the repository license applies to the wrapper code.
+Upstream code retains its Apache-2.0 notices; the repository license applies to the conversion scripts.

@@ -1,11 +1,32 @@
 # HGNetV2 Python runtime
 
-`main.py` is the canonical user-facing command: it parses arguments,
+`main.py` is the user-facing command: it parses arguments,
 constructs the model, calls `predict`, and shows the result. The complete
 classification flow lives in [`classify.py`](classify.py):
 `HGNetV2Classifier` shows initialization, `preprocess`, `infer`, `postprocess` and
 `predict` in one readable file, reusing the shared NV12 packing, Top-K
 math and lazy runner.
+
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── classify.py  # Classification preprocessing, inference, and postprocessing
+├── cli.py  # Arguments and result presentation
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+└── run.sh  # Run the sample
+```
 
 <a id="environment"></a>
 ## Environment
@@ -56,7 +77,7 @@ python3 samples/vision/hgnetv2/runtime/python/main.py
 | `--test-img` | string | samples/vision/hgnetv2/test_data/sandbar.JPEG | BGR input image |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
-| `--topk` | int | 5 | compatibility spelling of `--top-k` |
+| `--topk` | int | 5 | alias of `--top-k` |
 | `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source (1) |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
@@ -89,7 +110,7 @@ print(result.class_ids, result.scores, result.labels)
 
 `predict` accepts a local image path or BGR `uint8` array; the input array remains unchanged. The shared
 `ClassificationTask` flow stays importable from
-[`classification.py`](classification.py).
+[`classification.py`](../../../../../utils/py_utils/classification.py).
 
 <a id="stage-io"></a>
 ## Stage I/O

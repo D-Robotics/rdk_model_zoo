@@ -5,6 +5,20 @@
 
 使用 apple/ml-mobileone 上游流程：加载匹配的未融合权重，执行 `reparameterize_model(model)`，再导出并简化 ONNX。构建时记录上游修订、包版本与权重摘要。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── MobileOne_S0_config.yaml  # 配置
+├── MobileOne_S1_config.yaml  # 配置
+├── MobileOne_S2_config.yaml  # 配置
+├── MobileOne_S3_config.yaml  # 配置
+├── MobileOne_S4_config.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

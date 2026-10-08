@@ -4,6 +4,27 @@
 
 使用 `run.sh` 执行 E11/E26 无提示实例分割，或将 C++ 三阶段库嵌入应用。启动器精确选择模型，核验本机和文件身份，按显式要求构建原生程序，并保留日志、图片和掩码结果。真实 SDK 编译与板端推理按下文构建/运行说明执行。Python 入口见 [Python runtime](../python/README_cn.md)，注意其 X5 掩码协议不同。
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── common/  # common 相关文件
+├── inc/  # inc 相关文件
+├── src/  # src 相关文件
+├── tests/  # 自动化测试
+├── CMakeLists.txt  # 源码或数据文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── launcher.py  # Python 脚本
+└── run.sh  # 运行示例
+```
+
 <a id="supported-boards"></a>
 ## 支持的板卡
 
@@ -138,7 +159,7 @@ outputs/yoloe_cpp_x5_11s_run1/
 | 掩码系数 | 相同空间形状，32 通道 |
 | Prototype | 单个 `[1,160,160,32]` 张量 |
 
-调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。SDK 管理已复用 Ultralytics 的 `PackedModelOwner`、`Nv12Input` 和 `TaskOutputs`；YOLOE 语义角色在分配前校验，量化输出直接拒绝，不在后处理手动反量化。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；尚未发布兼容的 S 浮点 HBM。
+调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。SDK 管理已复用 Ultralytics 的 `PackedModelOwner`、`Nv12Input` 和 `TaskOutputs`；YOLOE 语义角色在分配前校验，量化输出直接拒绝，不在后处理手动反量化。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；S 浮点 HBM 按转换说明生成。
 
 <a id="dependencies"></a>
 ## 依赖

@@ -27,7 +27,7 @@ class EvaluatorTests(unittest.TestCase):
 
     def test_evaluation_denominator_and_partial_coverage(self):
         from samples.vision.hgnetv2.evaluator.eval import evaluate_images, collect_images_with_relative_paths
-        from samples._shared.classification import ClassificationResult
+        from utils.py_utils.classification import ClassificationResult
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);(root/'nested').mkdir()
             for name in ('a.jpg','b.jpg','unmatched.jpg'):
@@ -64,13 +64,13 @@ class EvaluatorTests(unittest.TestCase):
         from unittest.mock import patch
         from samples.vision.hgnetv2.evaluator.eval import main
         from samples.vision.hgnetv2.runtime.python.model_binding import bind_model
-        from samples.vision.hgnetv2.runtime.python import model_runner
+        from utils.py_utils import model_runner
         import contextlib
         import io
         import json
 
         class HostRunner:
-            def __init__(self, selection):
+            def __init__(self, selection, *, table):
                 self.selection = selection
             def load(self):
                 return bind_model(self.selection, {'model_name':'host',

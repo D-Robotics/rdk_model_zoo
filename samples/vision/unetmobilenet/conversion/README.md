@@ -7,6 +7,15 @@ English | [简体中文](README_cn.md)
 
 The S source ships precompiled HBM and an architectural description, but no training framework version, checkpoint, exact training repository or export code. U-Net/MobileNet papers explain the family; they do not reconstruct this deployed weight file.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

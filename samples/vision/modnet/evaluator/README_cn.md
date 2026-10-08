@@ -7,10 +7,21 @@
 源没有抠图 benchmark 数据集或 ground-truth alpha mask。`../test_data/person.jpg` 和
 `../test_data/bg.jpg` 是一组推理/合成 fixture，不是精度数据集。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── compare.py  # Python 脚本
+└── source_reference.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
-`compare.py` 在板端自行运行两边：锁定的原始 wrapper（从 Git 历史加载）与本 sample
+`compare.py` 在板端自行运行两边：锁定的原始 脚本（从 Git 历史加载）与本 sample
 `samples/vision/modnet/runtime/python` 的任务。它需要 X5
 runtime（在身份 gate 之后惰性导入）、手工准备的 `modnet_512x512_rgb.bin` 与一张
 BGR 图像。主机上不导入 SDK，也不下载任何内容。源性能数据表及条件如下。

@@ -6,12 +6,28 @@
 
 VargConvNet 是面向边缘设备的轻量级卷积分类模型，用于 ImageNet-1k 图像分类。RDK X5 sample 提供 packed-NV12 `.bin` 模型和基于 `hbm_runtime` 的 Python 运行时。
 
-运行时 wrapper 定义图像输入与 1,000 类分类分数输出；替换模型文件时按 conversion guide 核对 I/O。
+运行时 脚本 定义图像输入与 1,000 类分类分数输出；替换模型文件时按 conversion guide 核对 I/O。
 
 输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。
 `VargConvNetClassifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess`
 流程（标签读取、绘图和文件输出由 CLI 层负责，见
 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+vargconvnet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
 
 <a id="support-matrix"></a>
 ## 支持矩阵
@@ -75,13 +91,6 @@ tortoise），分数 0.8582](./test_data/inference.png)
 ## 性能数据
 
 数据集精度与延迟的测量流程见[评估说明](evaluator/README_cn.md#reference-results)。
-
-<a id="directory"></a>
-## 目录职责
-
-`model/`：制品与下载；`runtime/python/`：原生 CLI、任务与运行器；
-`conversion/`：不含 PTQ YAML（边界在该文档说明）；`evaluator/`：功能检查与已发布基准；
-`test_data/`：`box_turtle.JPEG` 输入及随附资源；`tests/`：主机 unittest 套件。
 
 <a id="entry-points"></a>
 ## 入口

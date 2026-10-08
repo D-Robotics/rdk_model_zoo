@@ -2,6 +2,26 @@
 
 # PP-LiteSeg Python 运行时
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── pp_liteseg.py  # Python 脚本
+├── run.sh  # 运行示例
+└── visualization.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -73,7 +93,7 @@ mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 1024), int32
 ```
 
-任务类只负责阶段逻辑；binding 负责制品与张量契约，共享 runner 负责 SDK 加载和调度，visualization.py 负责绘图。调度调用 runner.set_scheduling_params，不保证 SDK 并发安全。旧 PPLiteSeg/PPLiteSegConfig API 保留于源快照。
+任务类只负责阶段逻辑；binding 负责制品与张量契约，共享 runner 负责 SDK 加载和调度，visualization.py 负责绘图。调度调用 runner.set_scheduling_params，并发调用请分别创建模型实例。旧 PPLiteSeg/PPLiteSegConfig API 保留于源快照。
 
 <a id="stage-io"></a>
 ## 阶段 I/O

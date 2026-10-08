@@ -50,6 +50,22 @@ separable block (b), a separable block with linear bottleneck (c), and a
 bottleneck with expansion layer (d); hatched layers carry no
 non-linearity.*
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+mobilenetv2/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -136,17 +152,6 @@ Published MobileNetV2 performance on `RDK X5` (x5-v1.1.3):
 bundled [Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG)
 ranks `Scottish deerhound` first, followed by Irish wolfhound, lynx/
 catamount, standard schnauzer, and timber wolf. This is the source-reported X5 runtime example.*
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [runtime/cpp/](runtime/cpp/README.md) — S-series C++ source, CMake, launcher
-- [conversion/](conversion/README.md) — conversion record and reference configurations
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG), [zebra_cls.jpg](test_data/zebra_cls.jpg))
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

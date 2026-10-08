@@ -25,6 +25,23 @@ PF 类别 ID **不是 COCO category ID**。必须提供经过检查的映射，�
 
 按数字图片 ID 排序执行。`--limit 0` 表示全部，正整数表示前 N 张并将指标标记为子集。重复 JSON key、重复 ID/图片路径、越出 `--image-dir` 的路径、不可读图片和标注尺寸不符都会失败；不跳过困难或无效图片。每次运行使用新的输出目录。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── backends.py  # Python 脚本
+├── dataset.py  # Python 脚本
+├── engine.py  # Python 脚本
+├── evaluate.py  # Python 脚本
+├── mapping.example.json  # 结构化数据
+├── requirements-host.txt  # 源码或数据文件
+└── results.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

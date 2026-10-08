@@ -16,6 +16,18 @@ Speed](https://arxiv.org/abs/2212.08059)）。三份 YAML 期望
 `./efficientformerv2_s2.onnx`，但没有记录导出配方，也未固定权重
 ——ONNX 出处未经验证。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── EfficientFormerv2_s0_config.yaml  # 配置
+├── EfficientFormerv2_s1_config.yaml  # 配置
+├── EfficientFormerv2_s2_config.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

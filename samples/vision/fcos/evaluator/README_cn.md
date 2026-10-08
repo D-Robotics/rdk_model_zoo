@@ -7,12 +7,22 @@
 - 数据集：以 COCO validation 为源参考；未随附版本、标注或准备脚本。
 - 冒烟输入：`samples/vision/fcos/test_data/bus.jpg` 是一张随 sample 提供的 BGR 图片，不是 COCO 评测集。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── compare.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
 - 执行目标：已识别的 RDK X5 板卡、`hbm_runtime` 和一个精确 manifest 制品。
 - 主机依赖：`requirements-host.txt` 中的 Python 3.10+、NumPy、OpenCV、PyYAML、SciPy；源 postprocess helper 会导入 SciPy。主机测试注入 fake runtime，不加载板端 SDK。
-- 评估器执行锁定的原始 X5 wrapper（从 Git 历史加载），并在相同图片、制品、阈值和 direct resize 几何下执行本 sample 的 FCOS task。
+- 评估器执行锁定的原始 X5 脚本（从 Git 历史加载），并在相同图片、制品、阈值和 direct resize 几何下执行本 sample 的 FCOS task。
 
 <a id="command"></a>
 ## 评估命令

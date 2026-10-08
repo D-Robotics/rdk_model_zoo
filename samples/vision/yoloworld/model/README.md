@@ -9,6 +9,18 @@ archive, and `sha256: null`. A null publisher digest is unknown; a local
 observed digest does not certify origin. The offline vocabulary companion is
 `test_data/offline_vocabulary_embeddings.json`, not a manifest model asset.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 
@@ -42,7 +54,7 @@ has no publisher digest in the manifest.
 
 ## Entry points
 
-`download.py`, `download.sh`, and compatibility alias `download_model.sh` are
+`download.py`, `download.sh`, and alias `download_model.sh` are
 explicit preparation entry points. None is invoked by the runtime.
 
 <a id="formats-checksums"></a>

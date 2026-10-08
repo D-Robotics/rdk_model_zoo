@@ -81,7 +81,7 @@ class ThinEntryTests(unittest.TestCase):
             imodel.write_bytes(b'host-only fixture')
             tmodel.write_bytes(b'host-only fixture')
             stream = io.StringIO()
-            with patch('samples._shared.platforms.detect_target', return_value='x5'), \
+            with patch('utils.py_utils.platforms.detect_target', return_value='x5'), \
                  patch.object(model_runner, 'RuntimeModelRunner',
                               lambda selection: original(selection, image_runtime=image_runtime,
                                                          text_session=text_session)), \

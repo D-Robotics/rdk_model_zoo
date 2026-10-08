@@ -5,12 +5,25 @@ English | [简体中文](README_cn.md)
 <a id="source-model"></a>
 ## Source model
 
-Recipe inherited from X5 ac11571: PaddleSeg PP-LiteSeg-STDC1, config `configs/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k.yml`, static NCHW RGB `(1,3,512,1024)`. Obtain a compatible trained checkpoint from [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg) or your own training. Neither checkpoint bytes nor an exact PaddleSeg revision is bundled or pinned. Record both before export; this recipe is not evidence that the published BIN can be reproduced byte-for-byte.
+Use PaddleSeg PP-LiteSeg-STDC1 with config `configs/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k.yml` and static RGB NCHW input `(1,3,512,1024)`. Obtain a trained checkpoint from [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg) or your own training, and record the selected repository revision and checkpoint before export.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── onnx_export/  # Files for onnx_export
+├── ptq_yamls/  # Files for ptq_yamls
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── build_bin.sh  # Shell command
+└── prepare_calibration.py  # Python script
+```
 
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-X5 only, march bayes-e; no S-series recipe. The source names PaddlePaddle 3.0.0 (Python 3.8–3.10 suggested there) and OE 1.2.8. Export package compatibility must be resolved for the selected PaddleSeg revision; paddle2onnx/onnx/onnxsim versions were not pinned. The script no longer installs packages implicitly. Use the setup commands below for the selected PaddleSeg revision.
+Use the X5 `bayes-e` toolchain: PaddlePaddle 3.0.0, Python 3.8–3.10, and OE 1.2.8. Install paddle2onnx, onnx, and onnxsim versions compatible with the selected PaddleSeg revision using the commands below.
 
 ```bash
 # Export environment, separate from the board SDK environment
@@ -41,7 +54,7 @@ PADDLESEG_DIR=/data/PaddleSeg CHECKPOINT=/data/checkpoints/pp_liteseg_stdc1_city
 
 The checkpoint path is resolved before entering PaddleSeg; CONFIG is relative to that external checkout unless absolute. EXPORT_DIR and ONNX_DIR are absolute above to avoid cwd ambiguity. tools/export.py produces model.json/model.pdiparams as assumed by the source Paddle 3 recipe, then paddle2onnx uses opset 11 and onnxsim fixes the shape. Confirm actual filenames with your chosen version. Missing checkpoint/config fails before export. Expected ONNX: `onnx/pp_liteseg_stdc1_cityscapes_1024x512_sim.onnx`.
 
-Inspect output names, shape and type before compilation. The canonical runtime requires `(1,512,1024,1)` int32 class IDs. The external export recipe has not been proved to produce this deployment boundary. A logits output needs an explicitly validated graph adaptation or a separately supported runtime contract; renaming the file or applying argmax twice is not a fix.
+Inspect output names, shape and type before compilation. The runtime requires `(1,512,1024,1)` int32 class IDs. The external export recipe has not been proved to produce this deployment boundary. A logits output needs an explicitly validated graph adaptation or a separately supported runtime contract; renaming the file or applying argmax twice is not a fix.
 
 <a id="calibration"></a>
 ## Calibration

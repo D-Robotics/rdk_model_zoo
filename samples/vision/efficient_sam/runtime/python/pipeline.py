@@ -7,8 +7,8 @@ This file shows the sample's real two-model composition: the encoder turns
 one image into an image embedding, the decoder turns that embedding into
 mask candidates, and :meth:`EfficientSAMPipeline.predict` chains the two
 stages with per-stage error attribution.  The SAM math itself stays in the
-shared implementations — tensor preparation in ``samples/_shared/sam_tensor_io.py``
-and metadata validation in ``samples/_shared/sam_binding.py`` — so nothing
+shared implementations — tensor preparation in ``utils/py_utils/sam_tensor_io.py``
+and metadata validation in ``utils/py_utils/sam_binding.py`` — so nothing
 here reimplements normalization, box validation or mask resizing.
 
 The decoder of the published EfficientSAM artifacts uses the prompt that
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from samples._shared.sam_stages import DecoderStage, EncoderStage, SAMPipeline, StageError
+from utils.py_utils.sam_stages import DecoderStage, EncoderStage, SAMPipeline, StageError
 
 
 class EfficientSAMEncoder(EncoderStage):

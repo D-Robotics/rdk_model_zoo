@@ -5,6 +5,21 @@
 
 Use the official RepVGG flow: create the selected model with `create_RepVGG_B1g2(deploy=False)`, run `repvgg_model_convert`, then export ONNX. Record the source revision, PyTorch version and checkpoint digest.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── RepVGG_A0_config.yaml  # Configuration
+├── RepVGG_A1_config.yaml  # Configuration
+├── RepVGG_A2_config.yaml  # Configuration
+├── RepVGG_B0_config.yaml  # Configuration
+├── RepVGG_B1g2_config.yaml  # Configuration
+└── RepVGG_B1g4_config.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

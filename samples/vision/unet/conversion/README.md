@@ -27,6 +27,18 @@ calibration set, and new output directory before it runs checker, makertbin, and
 
 All five backbones share onnx_export/model. Source attribution, pinned reference commit and MIT terms are in the [sample README](../README.md#license). Supply a checkpoint trained for the chosen backbone; this repository does not download or fabricate it. Do not bypass failed strict loading with strict=False.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── onnx_export/  # Files for onnx_export
+├── ptq_yamls/  # Files for ptq_yamls
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── mapper.py  # Python script
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain
 

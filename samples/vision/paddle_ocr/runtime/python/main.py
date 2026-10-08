@@ -79,7 +79,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         # A real execution must prove the exact detected board before importing
         # hbm_runtime.  The stage runners repeat this check immediately before load.
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(pair.target)
 

@@ -12,7 +12,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from samples._shared.assets import sha256_file
+from utils.py_utils.assets import sha256_file
 from samples.vision.yoloe.model.vocabulary import LABELS_SHA256
 
 VARIANTS = ("11s", "11m", "11l", "26n", "26s", "26m", "26l", "26x")
@@ -43,7 +43,7 @@ def export_checkpoint(*, weights, variant, output_dir, test_image=None, threads=
     )
     from samples.vision.yoloe.conversion.contract import inspect_graph
     from samples.vision.yoloe.conversion.calibration import calibration_tensor
-    from samples._shared.yoloe26_geometry import prepare_rgb
+    from utils.py_utils.yoloe26_geometry import prepare_rgb
 
     if ultralytics.__version__ != "8.4.127":
         raise ValueError("Use the pinned export environment: ultralytics==8.4.127.")

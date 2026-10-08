@@ -12,6 +12,17 @@
 - Checkpoint：`dinov2_vits14_pretrain.pth`，SHA-256 为 `b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9`。
 - 导出器在 `torch.load` 前校验完整 checkpoint digest；HTTPS checkpoint 会流式写入临时文件，校验/加载后删除。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── onnx_export/  # onnx_export 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── mapper.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 

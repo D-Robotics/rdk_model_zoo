@@ -21,6 +21,18 @@ Exact manifest URLs:
 | s100p | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/dinov2/nash-m/dinov2_vits14_224_int16_nashm.hbm> |
 | s600 | <https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/dinov2/nash-p/dinov2_vits14_224_int16_nashp.hbm> |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 
@@ -44,8 +56,8 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 | File | Role | Required |
 | --- | --- | --- |
 | `download.py` | Resolves one exact manifest asset and downloads it. | Yes for scripted preparation; no when an HBM is already present. |
-| `download.sh` | Explicit target/output-dir shell wrapper. | No. |
-| `download_model.sh` | Source-compatible wrapper delegating to `download.sh`. | No. |
+| `download.sh` | Explicit target/output-dir shell helper. | No. |
+| `download_model.sh` | Launcher delegating to `download.sh`. | No. |
 | `../test_data/dog.jpg`, `../test_data/bus.jpg` | CLI inputs for feature and cosine smoke checks. | Only for the demo. |
 
 <a id="local-paths"></a>

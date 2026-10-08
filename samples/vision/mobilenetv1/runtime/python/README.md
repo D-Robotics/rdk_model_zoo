@@ -1,6 +1,6 @@
 # MobileNetV1 Python runtime
 
-`main.py` is the canonical user-facing command: it parses arguments,
+`main.py` is the user-facing command: it parses arguments,
 constructs the model, calls `predict`, and shows the result. The complete
 classification flow lives in [`classify.py`](classify.py):
 `MobileNetV1Classifier` shows initialization, `preprocess`, `infer`, `postprocess` and
@@ -8,6 +8,27 @@ classification flow lives in [`classify.py`](classify.py):
 from the release manifests, checks the detected board, loads
 `hbm_runtime` lazily through the shared SDK session, and executes one
 classification flow. Prepare the target artifact with the model downloader before running inference. The runtime resolves the selected manifest reference and loads the matching board SDK.
+
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── __init__.py  # Python script
+├── classify.py  # Classification preprocessing, inference, and postprocessing
+├── cli.py  # Arguments and result presentation
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+└── run.sh  # Run the sample
+```
 
 <a id="environment"></a>
 ## Environment
@@ -60,7 +81,7 @@ model loading, or download.
 | `--test-img` | string | samples/vision/mobilenetv1/test_data/bulbul.JPEG | BGR input image |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
-| `--topk` | int | 5 | compatibility spelling of `--top-k` |
+| `--topk` | int | 5 | alias of `--top-k` |
 | `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
@@ -76,7 +97,7 @@ Defaults above are the values defined in `build_parser` ([cli.py](cli.py)).
 The command prints the stable Top-K as class IDs, scores, and labels
 (`ClassificationResult(class_ids, scores, labels)`), and writes an
 annotated image only when `--img-save-path` is given. X5 receives the packed
-NV12 buffer as the canonical flat 1-D uint8 array of `H*W*3/2` bytes
+NV12 buffer as the flat 1-D uint8 array of `H*W*3/2` bytes
 (224x224 -> 75,264 bytes; same bytes as the former `(1,336,224,1)` view);
 S100/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8
 arrays.
@@ -111,7 +132,7 @@ print(result.class_ids, result.scores, result.labels)
 `prepared = model.preprocess(source)`, `outputs = model.infer(prepared)`,
 `result = model.postprocess(outputs)` — `predict` chains exactly these
 steps. The shared `ClassificationTask` flow stays importable from
-[`classification.py`](classification.py).
+[`classification.py`](../../../../../utils/py_utils/classification.py).
 
 <a id="stage-io"></a>
 ## Stage I/O

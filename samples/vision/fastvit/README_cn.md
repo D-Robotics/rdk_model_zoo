@@ -38,6 +38,22 @@ s12/sa12/t12/t8 变体（224×224 NV12，见[支持范围](#support-matrix)）�
 （见
 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+fastvit/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持范围
 
@@ -116,16 +132,6 @@ RDK X5 上的已发布数值（X5 发布 x5-v1.1.3；Float Top-1 为量化前 ON
 
 已发布参数量 (M) 列与上游论文的模型尺寸并非全部吻合；按发布原样
 记录。
-
-<a id="directory"></a>
-## 目录职责
-
-- [model/](model/README_cn.md) — Manifest 驱动的制品下载，不检入二进制
-- [runtime/python/](runtime/python/README_cn.md) — 统一 Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — X5 PTQ 配置及模型所需准备步骤
-- [evaluator/](evaluator/README_cn.md) — 发布的基准记录与功能检查
-- `test_data/` — 随附测试图（[bucket.JPEG](test_data/bucket.JPEG) 及参考插图）
-- `tests/` — 主机 unittest 套件
 
 <a id="entry-points"></a>
 ## 入口

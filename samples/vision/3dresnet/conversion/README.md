@@ -13,6 +13,15 @@ The original graph screenshot is retained:
 
 ![R3D-18 ONNX graph](../test_data/readme_img/r3d_18_orig.png)
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and Targets
 

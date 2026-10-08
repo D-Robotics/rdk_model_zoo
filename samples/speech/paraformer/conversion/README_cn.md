@@ -16,6 +16,25 @@ S 源实现将其拆成 encoder、predictor、decoder，CPU CIF 连接 predictor
  decoder。已有发布制品的准备方式见[模型说明](../model/README_cn.md)。
 转换自己的权重是另一项操作；这里的图变换不会下载权重，也不生成 HBM。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── calibration.py  # Python 脚本
+├── compile.py  # Python 脚本
+├── configuration.py  # Python 脚本
+├── export.py  # Python 脚本
+├── graph_ops.py  # Python 脚本
+├── onnx_stage.py  # Python 脚本
+├── prepare.py  # Python 脚本
+├── requirements-export.txt  # 源码或数据文件
+├── torch_stages.py  # Python 脚本
+└── workspace.py  # Python 脚本
+```
+
 <a id="toolchain-targets"></a>
 ## 导出环境与快速开始
 

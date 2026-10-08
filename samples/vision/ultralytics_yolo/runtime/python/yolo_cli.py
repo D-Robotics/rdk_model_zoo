@@ -20,7 +20,7 @@ can stay a thin, readable entry: parse arguments, resolve the plan,
 construct the selected task model, call ``predict``, present the result.
 
 This module keeps the sample's established flat imports (``yolo_assets``,
-``yolo_dispatch``, ``rdk_yolo_utils``); ``main.py`` owns the sys.path setup
+``yolo_dispatch``, ``utils.py_utils``); ``main.py`` owns the sys.path setup
 that makes them importable, exactly as before the split.
 """
 
@@ -204,7 +204,7 @@ def print_model_listing(profile: PlatformProfile) -> None:
 
 def select_manifest_reference(profile: PlatformProfile, args) -> None:
     """Resolve an official reference using the sample's finite task/size policy."""
-    from samples._shared.assets import resolve_asset
+    from utils.py_utils.assets import resolve_asset
     try:
         record = resolve_asset(args.asset_id)
     except ValueError as exc:
@@ -323,7 +323,7 @@ def ensure_model(plan: dict) -> None:
     """
     from pathlib import Path
 
-    from samples._shared.assets import resolve_asset, verify_asset_file, download_asset
+    from utils.py_utils.assets import resolve_asset, verify_asset_file, download_asset
     asset = resolve_asset(plan['asset_reference']) if plan.get('asset_reference') else None
     if plan['present']:
         if asset is not None:
@@ -355,7 +355,7 @@ def load_labels(args, task: str, *, custom_model: bool = False) -> list:
     Raises:
         FileNotFoundError: If an explicit `--label-file` does not exist.
     """
-    from rdk_yolo_utils import file_io  # noqa: PLC0415 - keeps imports lazy
+    from utils.py_utils import file_io  # noqa: PLC0415 - keeps imports lazy
 
     if args.label_file:
         if not os.path.exists(args.label_file):
@@ -408,7 +408,7 @@ def _load_explicit_label_file(path: str) -> list:
     sequences stay meaningful; sparse mappings fail with a clear error
     instead of silently renumbering classes.
     """
-    from rdk_yolo_utils import file_io  # noqa: PLC0415 - keeps imports lazy
+    from utils.py_utils import file_io  # noqa: PLC0415 - keeps imports lazy
 
     mapping = file_io.load_labels(path)
     if not mapping:
@@ -462,7 +462,7 @@ def present_result(args, image, result, labels: list) -> None:
     """
     import cv2
 
-    from rdk_yolo_utils import file_io, visualize
+    from utils.py_utils import file_io, visualize
 
     result_img = None
     render_labels = _render_labels(labels)

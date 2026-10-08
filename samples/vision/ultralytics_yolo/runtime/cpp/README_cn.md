@@ -2,6 +2,26 @@
 
 [English](README.md) · [Python](../python/README_cn.md)
 
+<a id="overview"></a>
+## C++ 推理
+
+本目录提供C++ 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+cpp/
+├── classify/  # classify 相关文件
+├── common/  # common 相关文件
+├── detect/  # detect 相关文件
+├── pose/  # pose 相关文件
+├── segment/  # segment 相关文件
+├── test/  # test 相关文件
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="supported-boards"></a>
 ## 实现范围与板卡状态
 
@@ -33,6 +53,7 @@ for task in detect classify pose segment; do
   cmake --build "/tmp/ultralytics-cpp-$task" -j2
 done
 ```
+
 <a id="run"></a>
 ## 运行
 
@@ -55,6 +76,7 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
 /tmp/ultralytics-cpp-segment/ultralytics_yolo_segment \
   /models/segmentation.bin samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-segment.jpg
 ```
+
 <a id="parameters"></a>
 ## 参数
 

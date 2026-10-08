@@ -3,7 +3,7 @@
 """Explicit manifest-backed PointNet download; inference never downloads."""
 import argparse
 from pathlib import Path
-from samples._shared.assets import download_asset
+from utils.py_utils.assets import download_asset
 from samples.vision.pointnet.runtime.python.model_binding import ASSET_ID, resolve_selection
 
 

@@ -5,6 +5,9 @@ from types import ModuleType, SimpleNamespace
 from unittest.mock import patch
 import hashlib
 import importlib.util
+import utils.py_utils as common_utils
+import utils.py_utils.preprocess as common_preprocess
+import utils.py_utils.postprocess as common_postprocess
 import json
 import sys
 import unittest
@@ -28,7 +31,10 @@ def previous(model):
     module = importlib.util.module_from_spec(spec)
     runtime_path = str(FIXTURE.parents[2] / "runtime/python")
     with patch.object(sys, "path", [runtime_path, *sys.path]), patch.dict(
-        sys.modules, {"yolo26_common": stub, spec.name: module}
+        sys.modules, {"yolo26_common": stub, spec.name: module,
+                      "rdk_yolo_utils": common_utils,
+                      "rdk_yolo_utils.preprocess": common_preprocess,
+                      "rdk_yolo_utils.postprocess": common_postprocess}
     ):
         spec.loader.exec_module(module)
     old = object.__new__(module.YOLO26OBB)

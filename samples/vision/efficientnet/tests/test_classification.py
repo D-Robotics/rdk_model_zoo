@@ -14,7 +14,7 @@ class PolicyTests(unittest.TestCase):
         stable softmax inside get_topk_predictions), so the task applies the
         numerically stable softmax before Top-K."""
 
-        from samples.vision.efficientnet.runtime.python.classification import (
+        from utils.py_utils.classification import (
             ClassificationTask,
         )
         from samples.vision.efficientnet.runtime.python.model_binding import (
@@ -42,7 +42,7 @@ class PolicyTests(unittest.TestCase):
         )
 
     def test_injected_runner_flows_split_input_through_task_at_variant_geometry(self):
-        from samples.vision.efficientnet.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         from samples.vision.efficientnet.runtime.python.model_binding import (
             bind_model,
             resolve_selection,
@@ -75,7 +75,7 @@ class PolicyTests(unittest.TestCase):
         )
 
     def test_packed_input_uses_canonical_flat_buffer(self):
-        from samples.vision.efficientnet.runtime.python.classification import ClassificationTask
+        from utils.py_utils.classification import ClassificationTask
         from samples.vision.efficientnet.runtime.python.model_binding import (
             bind_model,
             resolve_selection,

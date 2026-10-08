@@ -27,8 +27,8 @@ from typing import Any, Mapping
 
 import numpy as np
 
-from samples._shared.assets import Asset, list_assets
-from samples._shared.runtime_meta import RuntimeMetadata, canonicalise_dtype
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.runtime_meta import RuntimeMetadata, canonicalise_dtype
 
 SAMPLE = "fcos"
 SAMPLE_DIR = Path(__file__).resolve().parents[2]

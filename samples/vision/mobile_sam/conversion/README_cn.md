@@ -11,6 +11,18 @@ English | [简体中文](./README_cn.md)
 
 预处理为 RGB 缩放到 512×512，再按通道应用 ImageNet 归一化：mean `[123.675,116.28,103.53]`，std `[58.395,57.12,57.375]`。源默认 box 是 512 像素坐标中的 `[185,120,380,445]`。box 是运行时输入，没有固定到 ONNX 图中。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── configs/  # configs 相关文件
+├── scripts/  # scripts 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── SOURCE_MAP.json  # 结构化数据
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -207,4 +219,4 @@ python3 scripts/quantize.py --target s600
 
 ## 来源
 
-源文件到统一文件的映射及 SHA-256 记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有 Apache-2.0 标识的源文件保留其来源信息，wrapper 遵循仓库许可证。
+源文件到统一文件的映射及 SHA-256 记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有 Apache-2.0 标识的源文件保留其来源信息，脚本 遵循仓库许可证。

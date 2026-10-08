@@ -122,7 +122,7 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "new"
             with patch(
-                "samples._shared.platforms.require_execution_target",
+                "utils.py_utils.platforms.require_execution_target",
                 side_effect=ValueError("Target mismatch"),
             ), patch(
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",
@@ -217,7 +217,7 @@ class CliTests(unittest.TestCase):
                     selected.asset.reference,
                 ]
             with patch(
-                "samples._shared.platforms.require_execution_target", return_value=None
+                "utils.py_utils.platforms.require_execution_target", return_value=None
             ), patch(
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",
                 Frontend,

@@ -18,6 +18,21 @@ V2 方法使用合成标注训练图、扩大教师模型、利用伪标注真�
 [论文](https://arxiv.org/abs/2406.19675)、
 [上游仓库](https://github.com/DepthAnything/Depth-Anything-V2)。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+depth_anything_v2/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -76,18 +91,6 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 前处理为**逐像素 RGB z-score**（不是原始注释中提到的 ImageNet 常量）。默认使用
 最近邻拉伸。可选 letterbox 使用线性插值/127 填充，并在恢复尺寸前先裁去填充。
 task 返回浮点深度；uint8 显示 API 属于单独的可视化步骤。
-
-<a id="directory"></a>
-## 目录
-
-| 目录 | 职责 |
-| --- | --- |
-| [model](model/README_cn.md) | 精确制品、显式下载、路径和未知摘要 |
-| [runtime/python](runtime/python/README_cn.md) | 阶段、SDK runner、CLI、渲染、来源记录 |
-| [conversion](conversion/README_cn.md) | 源 ONNX/量化事实及缺失转换前提 |
-| [evaluator](evaluator/README_cn.md) | 源性能记录与结果解释 |
-| test_data | 原始 furseal 图片与源说明/结果图 |
-| tests | 主机 fixture |
 
 <a id="entry-points"></a>
 ## 入口

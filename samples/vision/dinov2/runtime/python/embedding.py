@@ -8,7 +8,7 @@ from typing import Mapping
 
 import numpy as np
 
-from samples._shared.quantization import apply_output_transform
+from utils.py_utils.quantization import apply_output_transform
 from samples.vision.dinov2.runtime.python.model_binding import (
     ModelBinding,
     OUTPUTS,

@@ -20,6 +20,22 @@ ByteTrack 是有状态多目标跟踪器，通过高分和低分检测框关联�
 
 ![(a)/(b)/(c) 三行关联示意](test_data/readme_img/image.png)
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+bytetrack/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -66,19 +82,6 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
 
 适用条件与调参。`--score-thres`（默认 `0.25`）在 tracker 之前过滤检测框：检出框过少时调低它——调低 `--track-thresh` 找不回被 detector 丢弃的框。`--track-thresh`（`0.3`）只划分 tracker 输入：高于它的框进入第一次关联，(0.1, `track-thresh`) 区间的框与仍在跟踪的目标进行第二次关联，新轨迹只从得分不低于 `track_thresh + 0.1` 的第一次关联框初始化。若 track ID 频繁切换，可考虑调大 `--match-thresh`（`0.8`，第一次关联接受的最大代价——1 − IoU，默认模式与检测分数融合，`--mot20` 时不融合；越大允许越不相似的匹配）或加长 `--track-buffer`（`60`，丢失轨迹窗口，按 `frame_rate / 30` 缩放）。这些是调参方向，不是重新标定的阈值。当前流程只跟踪 COCO `person`；多类别跟踪需要每类一个 tracker 或扩展 tracker 使其感知类别（见 [evaluator 说明](evaluator/README_cn.md)）。
 
-<a id="directory"></a>
-## 目录职责
-
-```text
-.
-├── model/                 # 显式 S HBM 准备
-├── runtime/python/        # detector binding、tracker 状态、CLI、source map
-├── conversion/            # 仅 detector 的转换边界和 OE 资源
-├── evaluator/             # 新进程完整捕获/对照
-├── test_data/              # 图片、标签、参考 GIF；视频需外部准备
-└── tests/                 # CPU tracker、源对照、CLI、证据 fixture
-```
-
 <a id="entry-points"></a>
 ## 入口索引
 
@@ -95,4 +98,4 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
 <a id="license"></a>
 ## 许可
 
-仓库 wrapper 遵循 Apache-2.0。随附 tracker 源码树没有单独的 license 文件；其来源记录在 `TRACKER_SOURCE_MAP.json`。上游 ByteTrack 与模型权重遵循各自许可。
+仓库 脚本 遵循 Apache-2.0。随附 tracker 源码树没有单独的 license 文件；其来源记录在 `TRACKER_SOURCE_MAP.json`。上游 ByteTrack 与模型权重遵循各自许可。

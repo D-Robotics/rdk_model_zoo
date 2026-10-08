@@ -9,8 +9,8 @@ one box prompt into mask candidates, and
 :meth:`MobileSAMPipeline.predict` chains the two stages with per-stage
 error attribution.  The SAM math itself stays in the shared
 implementations — tensor preparation (including the box validation and the
-per-target box shape) in ``samples/_shared/sam_tensor_io.py`` and metadata
-validation in ``samples/_shared/sam_binding.py`` — so nothing here
+per-target box shape) in ``utils/py_utils/sam_tensor_io.py`` and metadata
+validation in ``utils/py_utils/sam_binding.py`` — so nothing here
 reimplements normalization, prompt encoding or mask resizing.
 
 The published MobileSAM decoder accepts one box prompt per call in resized
@@ -22,8 +22,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from samples._shared.sam_stages import DecoderStage, EncoderStage, SAMPipeline, StageError
-from samples._shared.sam_tensor_io import DEFAULT_BOX
+from utils.py_utils.sam_stages import DecoderStage, EncoderStage, SAMPipeline, StageError
+from utils.py_utils.sam_tensor_io import DEFAULT_BOX
 
 
 class MobileSAMEncoder(EncoderStage):

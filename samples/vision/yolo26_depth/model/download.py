@@ -5,7 +5,7 @@
 import argparse
 from pathlib import Path
 import sys
-from samples._shared.assets import download_asset
+from utils.py_utils.assets import download_asset
 from samples.vision.yolo26_depth.runtime.python.model_binding import (
     TARGETS,
     VARIANTS,

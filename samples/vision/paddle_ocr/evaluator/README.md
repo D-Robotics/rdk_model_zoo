@@ -26,11 +26,21 @@ Ground-truth example:
 {"image":"street-001.jpg","boxes":[[[20,30],[180,30],[180,70],[20,70]]],"texts":["RDK"]}
 ```
 
-A canonical Python JSON result becomes a prediction object after adding an
+A Python JSON result becomes a prediction object after adding an
 `image` field, or JSONL with one image per line:
 
 ```json
 {"image":"street-001.jpg","target":"s100","boxes":[[[21,31],[179,31],[179,69],[21,69]]],"texts":["RDK"]}
+```
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── evaluate.py  # Python script
 ```
 
 <a id="environment"></a>
@@ -80,7 +90,7 @@ both input record files and the report as evaluation evidence.
 ## Reference results
 
 The Python default and aspect-ratio pipelines (including the compatibility
-wrappers) run on X5 and S100 and are compared through their stage tensors,
+helpers) run on X5 and S100 and are compared through their stage tensors,
 decoded into polygon boxes and recognized text; the S100 C++ build renders
 the recognized results onto the output image.
 Per-platform detector/recognizer latency and FPS are measured with the
@@ -88,8 +98,7 @@ Per-platform detector/recognizer latency and FPS are measured with the
 [conversion guide](../conversion/README.md).
 
 A same-board before/after comparison uses the same image, artifact bytes,
-dictionary, and threshold on both the legacy entrypoint and the canonical
-one, then compares polygon boxes and decoded strings before any rendering;
+dictionary, and threshold on both the legacy entrypoint and the one, then compares polygon boxes and decoded strings before any rendering;
 numeric tolerances for each dimension are those of the stage-I/O contract
 (box coordinates from identical inputs are expected to be exactly equal).
 

@@ -2,6 +2,26 @@ English | [简体中文](README_cn.md)
 
 # UNetMobileNet C++ runtime
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── tests/  # Automated tests
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── launcher.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards
 
@@ -64,11 +84,11 @@ Native CLI additionally accepts the source underscore spellings (--model_path, -
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-ModelRunner owns packed/model handles, two input buffers and one output buffer. Constructor validates target, counts, shapes, strides, capacity and score quantization before allocation. Destruction frees only acquired resources; the per-forward task guard releases tasks on submit/wait/cache errors. The runner is noncopyable and not thread-safe; use separate instances per thread. Its optional explicit execution gate is a host-test seam, never a CLI identity bypass.
+ModelRunner owns packed/model handles, two input buffers and one output buffer. Constructor validates target, counts, shapes, strides, capacity and score quantization before allocation. Destruction frees only acquired resources; the per-forward task guard releases tasks on submit/wait/cache errors. The runner is noncopyable and not thread-safe; use separate instances per thread. 
 
 UnetMobileNetTask accepts a RawRunner callback. pre_process(image) returns owned Y/UV Mats and per-call ImageContext; forward(prepared) returns owned RawScores with padded bytes/metadata unchanged; post_process(raw, context) returns original-resolution CV_32S IDs; predict composes those stages. main.cpp shows complete wiring. Rendering is in visualization.cpp, resource code in model_runner.cpp, and stride/affine decoding in tensor_contract.cpp. No display or file IO belongs in the task.
 
 <a id="results-interpretation"></a>
 ## Results
 
-Success returns 0, errors 2. result.jpg is the source-color overlay; the PNG mask contains uint8 IDs, while the API mask remains int32. Compare PNG values with Python NPY labels after reading both as integer arrays. JSON/stdout records target, asset_id, model_path, input_path, publisher_sha256, runtime_version (unknown when not queried), mask_shape, score_shape, score_dtype, scaled, alpha_f, priority, bpu_core and output paths. This is a single-image result, not a performance or dataset benchmark. Direct nearest restoration matches canonical Python; source C++ previously resized through model input size, which can differ for non-divisor output dimensions.
+Success returns 0, errors 2. result.jpg is the source-color overlay; the PNG mask contains uint8 IDs, while the API mask remains int32. Compare PNG values with Python NPY labels after reading both as integer arrays. JSON/stdout records target, asset_id, model_path, input_path, publisher_sha256, runtime_version (unknown when not queried), mask_shape, score_shape, score_dtype, scaled, alpha_f, priority, bpu_core and output paths. Both language implementations restore masks with nearest-neighbor interpolation.

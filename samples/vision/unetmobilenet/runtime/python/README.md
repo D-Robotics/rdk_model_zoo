@@ -2,10 +2,30 @@ English | [简体中文](README_cn.md)
 
 # UNetMobileNet Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── run.sh  # Run the sample
+├── unetmobilenet.py  # Python script
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 
-Python 3.10+ on S100/S600 with the matching board hbm_runtime. The source used NumPy 1.26.4/OpenCV 4.11.0.86; the canonical code additionally reads manifests with PyYAML and does not need source utility SciPy imports. Install general packages with `python3 -m pip install numpy opencv-python PyYAML`. No minimum S OS/SDK version was pinned in source; actual compatibility remains unverified here. Help/list/dry-run do not load SDK.
+Use Python 3.10+ on S100/S600 with the matching `hbm_runtime`, NumPy 1.26.4, OpenCV 4.11.0.86, and PyYAML. Install the Python packages with `python3 -m pip install numpy==1.26.4 opencv-python==4.11.0.86 PyYAML`. Use `--help`, `--list-models`, and `--dry-run` to inspect command options and model selections.
 
 <a id="usage"></a>
 ## Usage

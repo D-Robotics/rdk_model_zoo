@@ -4,6 +4,27 @@ English | [简体中文](README_cn.md)
 
 Run E11/E26 prompt-free instance segmentation through `run.sh`, or embed the C++ three-stage library. The launcher selects an exact model, checks the local board and file identity, optionally builds the native executable, and retains logs and image/mask results. Real SDK compilation and board inference follow the build/run sections below. See the [Python runtime](../python/README.md) for the Python entry and its different X5 mask protocol.
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── common/  # Files for common
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── tests/  # Automated tests
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── launcher.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards
 

@@ -13,6 +13,17 @@
 - `int8`: [download](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int8.hbm)
 - `int16`: [download](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int16.hbm)
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备
 

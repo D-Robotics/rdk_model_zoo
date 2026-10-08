@@ -10,6 +10,25 @@ separate OpenCV visualizer. Publication facts are resolved by `launcher.py`
 through `samples.vision.yolov5.runtime.python.model_binding`; the native binary
 never guesses a layout from a file name.
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── include/  # Files for include
+├── src/  # Files for src
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── launcher.py  # Python script
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards
 

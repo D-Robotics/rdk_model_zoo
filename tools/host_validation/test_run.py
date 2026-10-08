@@ -241,7 +241,7 @@ def _green_layout(repo: Path) -> None:
     # Shared suite now includes the VLA integration guard: it verifies the
     # parent repository's declared pins and never executes upstream code.
     _write(
-        repo / "samples/_shared/tests/test_shared.py",
+        repo / "utils/py_utils/tests/test_shared.py",
         """
         import unittest
 
@@ -251,7 +251,7 @@ def _green_layout(repo: Path) -> None:
         """,
     )
     _write(
-        repo / "samples/_shared/tests/test_vla_integration.py",
+        repo / "utils/py_utils/tests/test_vla_integration.py",
         """
         import unittest
 
@@ -422,6 +422,8 @@ def _cwd_probe_layout(repo: Path) -> None:
                 self.assertTrue(True)
         """,
     )
+    _write(repo / "utils/py_utils/tests/test_shared.py",
+           "import unittest\nclass SharedTests(unittest.TestCase):\n    def test_common(self): self.assertTrue(True)\n")
     _write_inventory(repo, ("vision/alpha", "vision/cwdprobe"))
     _contract_stub(repo)
 
@@ -670,7 +672,7 @@ class GreenRepositoryTests(RunnerFixtureTestCase):
 
         # The VLA parent-repo guard executed with the rest of the shared
         # suite: both test files ran and nothing is excluded anymore.
-        suite = self.suite_by_dir(data, "samples/_shared/tests")
+        suite = self.suite_by_dir(data, "utils/py_utils/tests")
         self.assertEqual(suite["tests"], 2)
         self.assertEqual(suite["status"], "passed")
         self.assertNotIn("excluded_files", data["python_suites"])
@@ -747,10 +749,10 @@ class RequestedRepoCwdTests(RunnerFixtureTestCase):
         self.assertEqual(data["overall"]["status"], "passed")
         self.assertEqual(data["overall"]["reasons"], [])
         # Exact executed counts: every discovered fixture suite ran.
-        self.assertEqual(data["python_suites"]["discovered"], 6)
-        self.assertEqual(data["python_suites"]["selected"], 6)
+        self.assertEqual(data["python_suites"]["discovered"], 7)
+        self.assertEqual(data["python_suites"]["selected"], 7)
         self.assertEqual(data["python_suites"]["totals"],
-                         {"tests": 8, "failures": 0, "errors": 0,
+                         {"tests": 9, "failures": 0, "errors": 0,
                           "skipped": 0, "optional_missing_modules": 0})
         probe = self.suite_by_dir(data, "samples/vision/cwdprobe/tests")
         self.assertEqual(probe["status"], "passed")
@@ -1028,7 +1030,7 @@ class FailureModeTests(RunnerFixtureTestCase):
         def layout(repo: Path) -> None:
             _green_layout(repo)
             _write(
-                repo / "samples/_shared/legacy_platforms.py",
+                repo / "utils/py_utils/legacy_platforms.py",
                 f'PIN = "{ABSENT_PIN}"\n',
             )
         repo = _init_repo(self.tmp / "pin-missing", layout)
@@ -1057,7 +1059,7 @@ class FailureModeTests(RunnerFixtureTestCase):
             capture_output=True, text=True, check=True).stdout.strip()
         # Declare the pre-edit commit as the pin, then move HEAD forward so
         # the pin only resolves through Git history, not the worktree.
-        _write(repo / "samples/_shared/legacy_platforms.py",
+        _write(repo / "utils/py_utils/legacy_platforms.py",
                f'PIN = "{head}"\n')
         _write(repo / "marker.txt", "x")
         _git(repo, "add", "-A")
@@ -2902,7 +2904,7 @@ class RealRepositoryTests(unittest.TestCase):
         # The VLA parent-repo guard now runs with the shared suite: no
         # exclusions remain (upstream gitlinks are never initialized).
         shared = next(s for s in result["python_suites"]
-                      if s["dir"] == "samples/_shared/tests")
+                      if s["dir"] == "utils/py_utils/tests")
         self.assertNotIn("excluded_files", shared)
         # Native-only directories are recorded, not treated as Python suites.
         self.assertIn("samples/vision/yoloe/runtime/cpp/tests",

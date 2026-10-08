@@ -17,6 +17,21 @@ HIMLoco 从六帧 45 维观测估计内部状态，输出 12 维策略动作。�
 `[1,12]`。不额外归一化、不更新历史、不缩放输出、不发送机器人指令。
 源控制器在模型边界之外应用 `default_joint_position + 0.25 * actions`。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+himloco/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -75,17 +90,6 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 任务计时还包含适配器校验／复制，不能当作纯设备耗时比较。完整源百分位数据与评测
 口径见[评测说明](evaluator/README_cn.md)。
 离线动作一致不能证明观测构造、关节映射、控制环行为或闭环稳定性。
-
-<a id="directory"></a>
-## 目录
-
-- `model/`：显式获取固定摘要的 X5 BIN。
-- `runtime/python/`：CLI／应用、输入来源、绑定／共享 runner 与纯策略阶段。
-- `test_data/`：21 个原样观测文件和源清单。
-- `tests/`：核心、元数据和 CLI 检查，明确使用模型／SDK 夹具。
-- `conversion/`：原融合导出、校准和 Mapper 方案及双语说明。
-- `evaluator/`：浮点格式／动作对照、输入准备与历史测量。
-- `runtime/cpp/`：纯策略阶段、SDK 适配器、原生 CLI 及构建启动器。
 
 <a id="entry-points"></a>
 ## 入口

@@ -13,6 +13,18 @@ ByteTrack 使用 S manifest 中的 YOLOv5x detector HBM，没有独立神经网�
 
 tracker 代码和 CPU 依赖是独立 runtime 输入。发布校验值未知。S100P URL 曾被观测到返回 HTTP 404；若下载失败，请手动获取 HBM 并放到上面的路径。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── download.py  # 准备模型文件
+├── download.sh  # 模型准备命令
+└── download_model.sh  # Shell 脚本
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 

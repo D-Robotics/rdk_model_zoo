@@ -16,6 +16,19 @@ using Structural
 Reparameterization](https://arxiv.org/abs/2303.14189)）。各 YAML 从共享 `01_common` 模型库消费 ONNX
 （见缺口 1），未记录导出配方、未固定权重——ONNX 来源未核实。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+conversion/
+├── FastViT_S12_config.yaml  # 配置
+├── FastViT_SA12_config.yaml  # 配置
+├── FastViT_T12_config.yaml  # 配置
+├── FastViT_T8_config.yaml  # 配置
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
@@ -73,7 +86,6 @@ hb_mapper makertbin --config FastViT_S12_config.yaml
 （见 [runtime/python/README_cn.md](../runtime/python/README_cn.md)）。
 运行时期望的输入张量为 NV12 打包前的 `1x3x224x224`，输出为
 ImageNet-1k 分类 logits。
-
 
 <a id="artifacts"></a>
 ## 配方文件

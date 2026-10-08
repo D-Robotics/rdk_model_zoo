@@ -5,6 +5,18 @@
 
 Use `timm.models.create_model` for repvit_m0_9/m1_0/m1_1, export with PyTorch and simplify with onnxsim. Record the timm/PyTorch versions, source revision and checkpoint digest.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+conversion/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── RepViT_m0_9_config.yaml  # Configuration
+├── RepViT_m1_0_config.yaml  # Configuration
+└── RepViT_m1_1_config.yaml  # Configuration
+```
+
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 

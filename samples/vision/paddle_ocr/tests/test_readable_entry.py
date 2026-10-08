@@ -58,7 +58,7 @@ class ReadableEntryTests(unittest.TestCase):
         image = np.zeros((32, 48, 3), dtype=np.uint8)
         stream = io.StringIO()
         with tempfile.TemporaryDirectory() as directory, patch(
-            "samples._shared.platforms.require_execution_target", return_value=None
+            "utils.py_utils.platforms.require_execution_target", return_value=None
         ), patch.object(
             model_runner,
             "create_stage_runners",

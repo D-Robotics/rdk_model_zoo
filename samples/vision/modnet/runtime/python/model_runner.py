@@ -10,9 +10,9 @@ from typing import Any, Callable, Mapping
 
 import numpy as np
 
-from samples._shared.runtime_meta import MetadataMismatchError, RuntimeMetadata
-from samples._shared.assets import verify_asset_file
-from samples._shared.platforms import require_execution_target
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.assets import verify_asset_file
+from utils.py_utils.platforms import require_execution_target
 from samples.vision.modnet.runtime.python.model_binding import ModelBinding, ModelSelection, bind_model
 
 

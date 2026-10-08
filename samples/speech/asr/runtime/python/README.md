@@ -2,6 +2,31 @@
 
 English | [简体中文](README_cn.md)
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── asr.py  # Python script
+├── audio_io.py  # Python script
+├── cli.py  # Arguments and result presentation
+├── decoding.py  # Python script
+├── frontend.py  # Python script
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── postprocess.py  # Python script
+├── run.sh  # Run the sample
+└── vocabulary.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 Python 3.10+, NumPy, PyYAML, SciPy and SoundFile (with libsndfile). S100/S600 inference requires the matching board image and its `hbm_runtime`. [Prepare the model](../../model/README.md) before running inference. The runtime does not install dependencies or download models.

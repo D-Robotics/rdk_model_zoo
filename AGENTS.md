@@ -62,7 +62,7 @@ remain historical material, not a new adaptation target.
   `preprocess`/`infer`/`postprocess`/`predict` chain is real in one file —
   `pre_process`/`forward`/`post_process` stay compatibility delegates —
   local `cli.py` helpers, and the thin SDK session in
-  `samples/_shared/runtime.py`) is described in
+  `utils/py_utils/runtime.py`) is described in
   [docs/architecture/model-examples.md](docs/architecture/model-examples.md);
   ResNet `classify.py` and YOLO `detect.py` are the reference
   implementations. Since 2026-10-05 the pattern covers all 51 in-repo
@@ -85,7 +85,7 @@ remain historical material, not a new adaptation target.
   (supplied by the 2026-10-05 host-validation work; if it is absent from this
   checkout, that work has not landed here yet — use the per-suite commands
   below and say so). It runs every applicable Python suite (all 51 sample
-  `tests/` directories, nested conversion/evaluator suites, `samples/_shared`
+  `tests/` directories, nested conversion/evaluator suites, `utils/py_utils`
   including the safe parent-repository VLA gitlink integrity test; ACT/Pi0 upstream code is excluded), the affected tool/Skills tests, the
   static contract checker, applicable native CTest and the catalog check, and
   writes a structured report bound to the actual commands, counts, skip
@@ -93,7 +93,7 @@ remain historical material, not a new adaptation target.
   independent verification, not with this file. Individual suites still run
   directly, e.g. `python -m unittest discover -s samples/vision/resnet/tests`;
   the shared modules are
-  `python -m unittest discover -s samples/_shared/tests` (VLA:
+  `python -m unittest discover -s utils/py_utils/tests` (VLA:
   `-p test_vla_integration.py`). Static contract:
   `python3 tools/sample_contract/check.py --scope migration`. Catalog:
   `npm --prefix tools/catalog-publisher run check`. YOLO's existing catalog
@@ -108,6 +108,21 @@ remain historical material, not a new adaptation target.
 - VLA ACT/Pi0 are pinned upstream Git submodule integrations, documented in
   [samples/vla/README.md](samples/vla/README.md). Preserve their exact commits
   and layouts. Verify parent integration with
-  `python -m unittest discover -s samples/_shared/tests -p test_vla_integration.py`;
+  `python -m unittest discover -s utils/py_utils/tests -p test_vla_integration.py`;
   native sample README anchor rules do not require modifying upstream gitlinks.
   Board/control and model availability remain separate from source integration.
+
+- ResNet runtime responsibilities (2026-10-08): follow
+  [Python runtime standard](docs/sample-standards/python-runtime.md).
+  The latest user clarification removes the two-file limit. main.py is a short
+  entry, classify.py owns the model stages, and cli.py groups CLI preparation
+  and presentation. Reuse utils/py_utils for runtime, image IO and label
+  validation; split other models by task when useful, not by individual function.
+
+- Python comments (2026-10-08): follow the Google-style module/class/function
+  requirements in docs/Model_Zoo_Repository_Guidelines.md, including Args,
+  Returns, relevant Raises, key Attributes, and English inline comments.
+  The proposed common-library destination is root utils/; see
+  docs/superpowers/plans/2026-10-08-common-utilities-consolidation.md.
+  The current ResNet pilot still imports utils/py_utils; the repository-wide
+  import/build migration is not implemented by this pilot's comment changes.

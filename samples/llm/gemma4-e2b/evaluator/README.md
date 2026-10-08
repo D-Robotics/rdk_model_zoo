@@ -12,6 +12,15 @@ Board golden verification needs five files under `$GEMMA4_HOME/golden_mask_kv/<p
 `input_ids.int64.bin`, `position_ids.int32.bin`, `inputs_embeds.f32.bin`, `full_mask.f32.bin` and `sliding_mask.f32.bin`.
 This internal golden dataset is not included in the public model archive. The four demo images are qualitative examples for the smoke test.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 

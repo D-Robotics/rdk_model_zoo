@@ -4,7 +4,7 @@ The launcher resolves board identity from sysfs files; its
 SOC_NAME_FILE/BOARD_TYPE_FILE overrides let these tests point it at
 fixture files, so the S100P rejection matrix is provable on a host with
 no board attached. The expected semantics mirror
-samples/_shared/platforms.py:match_target — soc_name=s100 subdivides on
+utils/py_utils/platforms.py:match_target — soc_name=s100 subdivides on
 board_type (s100p / "rdk s100p" → S100P), while soc_name=s600 ignores
 board_type entirely.
 """

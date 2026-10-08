@@ -9,6 +9,15 @@
 
 本目录没有完整 Kinetics-400 数据集、视频解码器、抽帧代码或数据集下载命令。该片段原始获取和预处理命令未记录。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

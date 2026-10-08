@@ -12,7 +12,7 @@ ENTRY = Path(__file__).resolve().parents[1] / 'runtime/python/main.py'
 
 class ExecutionTargetTests(unittest.TestCase):
     def test_url_comes_from_manifest_not_filename_formula(self):
-        from samples._shared import assets
+        from utils.py_utils import assets
         sys.path.insert(0, str(ENTRY.parent))
         from yolo_assets import model_url
         from yolo_platform import resolve_platform
@@ -50,7 +50,7 @@ class ExecutionTargetTests(unittest.TestCase):
         entry = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(entry)
         with patch.object(sys, 'argv', [str(ENTRY), '--platform', 'x5']):
-            with patch('samples._shared.platforms.detect_target', return_value=None):
+            with patch('utils.py_utils.platforms.detect_target', return_value=None):
                 with patch.object(entry, 'ensure_model', side_effect=AssertionError('download before identity')):
                     self.assertEqual(entry.main(), 2)
 

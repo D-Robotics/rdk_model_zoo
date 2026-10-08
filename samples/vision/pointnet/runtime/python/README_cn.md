@@ -2,6 +2,27 @@
 
 # PointNet Python 运行时
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── cli.py  # 参数与结果展示
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── pointnet.py  # Python 脚本
+├── run.sh  # 运行示例
+└── visualization.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 

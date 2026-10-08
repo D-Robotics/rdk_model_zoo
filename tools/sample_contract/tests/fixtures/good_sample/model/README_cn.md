@@ -8,6 +8,16 @@
 | `fixture1_224x224_nv12.bin` | x5 | 单阶段 | 下载 |
 | `fixture1_224x224_nv12.hbm` | s100 | 单阶段 | 下载 |
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── download.sh  # 模型准备命令
+```
+
 <a id="preparation"></a>
 ## 准备步骤
 

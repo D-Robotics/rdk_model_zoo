@@ -27,10 +27,10 @@ import hashlib
 from pathlib import Path
 from typing import Any, Literal, Mapping, Optional, Sequence
 
-from samples._shared.runtime_meta import (
+from utils.py_utils.runtime_meta import (
     MetadataMismatchError as _SharedMetadataMismatchError,
 )
-from samples._shared.runtime_meta import RuntimeMetadata, canonicalise_dtype
+from utils.py_utils.runtime_meta import RuntimeMetadata, canonicalise_dtype
 
 
 SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
@@ -584,7 +584,7 @@ def _manifest_records() -> tuple[tuple[str, str], ...]:
     """Return ``(qualified_reference, filename)`` from the shared reader."""
 
     try:
-        from samples._shared.assets import list_assets
+        from utils.py_utils.assets import list_assets
     except ImportError as exc:  # pragma: no cover - checkout-integrity guard
         raise BindingError("The shared manifest asset resolver is required.") from exc
 

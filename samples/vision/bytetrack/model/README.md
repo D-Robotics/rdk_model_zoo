@@ -13,6 +13,18 @@ ByteTrack uses the YOLOv5x detector HBM listed by the S manifest. It does not ha
 
 The tracker code and CPU dependencies are separate runtime inputs. Publisher checksums are unknown. The S100P URL has been observed to return HTTP 404; if the download fails, obtain the HBM manually and place it at the path above.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Preparation
 

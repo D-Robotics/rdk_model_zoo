@@ -2,6 +2,27 @@ English | [简体中文](README_cn.md)
 
 # PointNet Python runtime
 
+<a id="overview"></a>
+## Python inference
+
+Use this directory for python inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+python/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── cli.py  # Arguments and result presentation
+├── main.py  # Command-line entry
+├── model_binding.py  # Python script
+├── model_runner.py  # Python script
+├── pointnet.py  # Python script
+├── run.sh  # Run the sample
+└── visualization.py  # Python script
+```
+
 <a id="environment"></a>
 ## Environment
 

@@ -18,6 +18,18 @@ silently downloads it. X5, S100P and S600 have no published Paraformer set here.
 | `am.mvn` | frontend CMVN statistics | bundled pinned S source |
 | `paraformer_config.yaml` | source frontend/model configuration | bundled pinned S source |
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download_model.sh  # Shell command
+└── paraformer_config.yaml  # Configuration
+```
+
 <a id="preparation"></a>
 ## Preview and prepare
 
@@ -39,7 +51,7 @@ The default output root is this directory, so all six files are placed in
 `model/s100/`. `--output-dir /path/to/package` instead writes under
 `/path/to/package/s100/`. `--target` accepts only `s100` and defaults to it;
 `--dry-run` prints exactly six lines and creates nothing. Set `PYTHON` to an
-interpreter path when using the shell wrapper, or directly run `download.py` with
+interpreter path when using the shell helper, or directly run `download.py` with
 your chosen Python. `--help` works without SDK or model files.
 
 Existing files are never overwritten. Remote files use temporary downloads and

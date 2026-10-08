@@ -12,6 +12,18 @@
 
 After `s:diffusiondrive:`, the remainder is the relative path under this directory. Camera resolution is 256×1024; the graph also consumes LiDAR, ego status and diffusion noise. There is no S100/X5 artifact or interchangeable S100P/S600 file. The [S release manifest](../../../../docs/release/s/models.yaml) controls URLs and checksums.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+model/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── download.py  # Prepare model files
+├── download.sh  # Model preparation command
+└── download_model.sh  # Shell command
+```
+
 <a id="preparation"></a>
 ## Explicit preparation
 
@@ -22,7 +34,7 @@ bash samples/vision/diffusiondrive/model/download.sh --target s100p
 bash samples/vision/diffusiondrive/model/download.sh --target s600
 ```
 
-`download_model.sh` forwards the same flags for compatibility. Unlike the source wrapper, downloading requires an explicit target and is never triggered by inference. `CHIP`, `RDK_SOC` and `MODEL_PATH` environment overrides are not artifact selection contracts in the new entry. To use another storage root:
+`download_model.sh` accepts the same flags as `download.py`. Select the target with `--target`. To use another storage root:
 
 ```bash
 python3 -m samples.vision.diffusiondrive.model.download --target s600 --output-dir /data/diffusiondrive-models

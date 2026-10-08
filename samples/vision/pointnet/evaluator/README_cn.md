@@ -8,6 +8,15 @@
 `../test_data/chair.pts` 是交付的一份 XYZ 点云，不是带标签评估子集。源中没有数据集下载器、
 标签数组、split 版本或全数据集精度评估器。功能 smoke 使用未修改的交付文件；真实指标需另行准备带标签数据。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

@@ -63,7 +63,7 @@ for any task.
 80 non-empty lines, one display name per line; line N names model output index
 N−1 (zero-based). The order is the standard Ultralytics COCO-80 output order
 (index 0 `person` … index 79 `toothbrush`). Six entries use historical
-VOC-style spellings instead of canonical COCO names — index 3 `motorbike`,
+VOC-style spellings instead of COCO names — index 3 `motorbike`,
 4 `aeroplane`, 57 `sofa`, 58 `pottedplant`, 60 `diningtable`, 62 `tvmonitor` —
 see the [COCO dataset guide](../../../../datasets/coco/README.md). Both
 spellings name the same output columns; do not renumber the file.
@@ -193,7 +193,7 @@ The C++ reference programs accept the same images as positional arguments
 (their [guide](../runtime/cpp/README.md) pairs them with
 `test_data/bus.jpg` and `test_data/zebra_cls.jpg`), but they do **not** read
 the `.names` files in this directory: detect/segment compile an 80-entry COCO
-name array with canonical spellings (`motorcycle`, `airplane`, `couch`,
+name array with spellings (`motorcycle`, `airplane`, `couch`,
 `potted plant`, `dining table`, `tv` — six entries differ from this
 directory's VOC-style synonyms, same order), pose compiles 17 COCO keypoint
 names, and classification compiles the 1000-entry ImageNet order in

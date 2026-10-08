@@ -9,6 +9,22 @@ SigLIP 视觉编码器把一张图片转换为全局嵌入或 patch 特征序列
 
 八个已发布 variant 均为打包 HBM 制品。每个制品包含固定的 `pooler_output` 和 `last_hidden_state` 两个子模型，使用同一图像输入，并且每次只执行所选子模型。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+siglip/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
@@ -56,20 +72,6 @@ python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant bas
 ## 预期结果
 
 CLI 为所选原始特征 tensor 打印一个 JSON 统计对象。`shape` 来自 HBM metadata：`pooler_output` 为 `(1,D)` 或 `(1,1,D)`，`last_hidden_state` 为 `(1,N,D)`；`D`、`N` 见 runtime README。保留制品原生 dtype；运行时不会反量化、softmax、归一化、squeeze 或其他数值变换。板端运行制品前，不声明具体数值。
-
-<a id="directory"></a>
-## 目录职责
-
-```text
-siglip/
-├── conversion/     # HBM 转换配方边界与缺失项
-├── evaluator/      # 历史性能/精度表及对照流程
-├── model/          # 基于 manifest 的 HBM 准备脚本
-├── runtime/python/ # Python binding、runner、task 和 CLI
-├── test_data/      # dog.jpg fixture
-├── README.md       # 英文说明
-└── README_cn.md    # 本文件
-```
 
 <a id="entry-points"></a>
 ## 入口索引

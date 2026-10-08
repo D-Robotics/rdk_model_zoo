@@ -11,6 +11,8 @@ host fixtures; no board SDK is loaded and no board inference is claimed.
 
 from __future__ import annotations
 
+from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
+
 import tempfile
 import unittest
 from pathlib import Path
@@ -55,39 +57,19 @@ def _score_vector(peak: int, size: int = 1000) -> np.ndarray:
 
 def _official_classifier(protocol: str, score_sequence, calls: list, **kwargs):
     from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-    from samples.vision.resnet.runtime.python.model_binding import resolve_selection
-    from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
+    from samples.vision.resnet.runtime.python.cli import resolve_selection
+    from utils.py_utils.model_runner import RuntimeModelRunner
 
     selection = resolve_selection(protocol)
     runner = RuntimeModelRunner(
-        selection, runtime=_fake_runtime(protocol, score_sequence, calls))
-    return ResNetClassifier(selection, runner=runner, **kwargs)
+        selection, table=BINDING_TABLE, runtime=_fake_runtime(protocol, score_sequence, calls))
+    return ResNetClassifier(selection.model_path, target=protocol, runner=runner, **kwargs)
 
 
 def _custom_classifier(class_count: int, scores: np.ndarray, calls: list, **kwargs):
     from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-    from samples.vision.resnet.runtime.python.model_binding import custom_selection
-    from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
-    from samples.vision.resnet.runtime.python.model_binding import RuntimeMetadata
-
-    selection = custom_selection(
-        "/tmp/custom_resnet.bin",
-        "x5",
-        input_height=64,
-        input_width=64,
-        class_count=class_count,
-    )
-    metadata = RuntimeMetadata.from_mapping(
-        {
-            "model_name": "custom_resnet",
-            "input_names": ["data"],
-            "input_shapes": {"data": (1, 3, 64, 64)},
-            "input_dtypes": {"data": "U8"},
-            "output_names": ["scores"],
-            "output_shapes": {"scores": (1, class_count)},
-            "output_dtypes": {"scores": "F32"},
-        }
-    )
+    from utils.py_utils.model_runner import RuntimeModelRunner
+    from unittest.mock import patch
 
     class _Runtime:
         def __init__(self):
@@ -103,8 +85,14 @@ def _custom_classifier(class_count: int, scores: np.ndarray, calls: list, **kwar
             calls.append(payload)
             return {"custom_resnet": {"scores": scores}}
 
-    runner = RuntimeModelRunner(selection, runtime=_Runtime())
-    return ResNetClassifier(selection, runner=runner, **kwargs), selection
+    with patch("utils.py_utils.runtime._default_runtime_factory", return_value=lambda path: _Runtime()), \
+            patch("utils.py_utils.platforms.require_execution_target"):
+        # The constructor checks a real path before loading the injected SDK.
+        with tempfile.NamedTemporaryFile(suffix=".bin") as artifact:
+            model = ResNetClassifier(artifact.name, target="x5", input_size=(64, 64),
+                                     class_count=class_count, **kwargs)
+    return model, model.binding.selection
+
 
 
 class ResNetClassifierFlowTests(unittest.TestCase):
@@ -217,6 +205,24 @@ class ResNetClassifierSourceTests(unittest.TestCase):
 
 
 class ResNetClassifierCustomModelTests(unittest.TestCase):
+    def test_explicit_probability_output_is_not_softmaxed(self):
+        scores = np.array([[0.1, 0.6, 0.2, 0.1]], dtype=np.float32)
+        model, _ = _custom_classifier(4, scores, [], top_k=2, score_policy="none")
+        result = model.predict(np.zeros((32, 48, 3), dtype=np.uint8))
+        self.assertEqual(result.class_ids.tolist(), [1, 2])
+        np.testing.assert_array_equal(result.scores, scores[0, [1, 2]])
+
+    def test_invalid_model_parameters_fail_before_runtime_loading(self):
+        from unittest.mock import patch
+        from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+
+        for options in ({"input_size": (63, 64)}, {"class_count": 0},
+                        {"resize_type": 2}, {"score_policy": "guess"}):
+            with self.subTest(options=options), patch("utils.py_utils.runtime._default_runtime_factory") as sdk:
+                with self.assertRaises(ValueError):
+                    ResNetClassifier("unused.bin", target="x5", **options)
+                sdk.assert_not_called()
+
     def test_custom_class_count_returns_ids_without_official_labels(self):
         calls: list = []
         scores = np.zeros((1, 4), dtype=np.float32)
@@ -244,15 +250,8 @@ class ResNetClassifierCustomModelTests(unittest.TestCase):
         self.assertIn("4", message)
 
     def test_custom_output_shape_mismatch_still_fails_binding(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            RuntimeMetadata,
-            bind_model,
-            custom_selection,
-        )
-
-        selection = custom_selection(
-            "/tmp/custom_resnet.bin", "x5",
-            input_height=64, input_width=64, class_count=4)
+        from utils.py_utils.cls_binding import RuntimeMetadata, bind_model
+        _, selection = _custom_classifier(4, np.zeros((1, 4), dtype=np.float32), [], top_k=2)
         wrong = RuntimeMetadata.from_mapping(
             {
                 "model_name": "custom_resnet",
@@ -268,14 +267,12 @@ class ResNetClassifierCustomModelTests(unittest.TestCase):
         # The declared 4-class contract still validates the actual tensor:
         # a 1000-class output is a mismatch, not a silent reinterpretation.
         with self.assertRaises(Exception) as raised:
-            bind_model(selection, wrong)
+            bind_model(BINDING_TABLE, selection, wrong)
         self.assertIn("1000", str(raised.exception))
 
     def test_official_path_still_requires_asset_id_for_model_path(self):
-        from samples.vision.resnet.runtime.python.model_binding import (
-            UnsupportedAssetError,
-            resolve_selection,
-        )
+        from utils.py_utils.cls_binding import UnsupportedAssetError
+        from samples.vision.resnet.runtime.python.cli import resolve_selection
 
         with self.assertRaises(UnsupportedAssetError):
             resolve_selection("x5", model_path="/tmp/lookalike_resnet18.bin")

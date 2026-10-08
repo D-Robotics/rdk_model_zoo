@@ -10,6 +10,21 @@ normal label list. YOLOWorld is an open-vocabulary region detector; the upstream
 algorithm reference is [YOLO-World](https://github.com/AILab-CVC/YOLO-World).
 Source: X5 platform sample delivery at `ac115717197920355fc390bb04299b20e6436864`.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+yoloworld/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support-matrix
 
@@ -55,15 +70,6 @@ which the runner preserves and post-process consumes without numeric conversion.
 uses score threshold `0.05`, class-wise NMS `0.45`, scales coordinates back, and
 returns `boxes[N,4]`, `scores[N]`, and vocabulary `class_ids[N]`.
 
-<a id="directory"></a>
-## Directory
-
-`model/` handles explicit asset preparation. `runtime/python/` owns the
-three-stage task, lazy runtime and CLI. `conversion/` records the model protocol
-and conversion gaps. `evaluator/` provides the parity comparison tool.
-`test_data/` contains the source image and offline vocabulary. `tests/` is
-host-only and uses injected runtime fixtures.
-
 <a id="entry-points"></a>
 ## Entry-points
 
@@ -71,7 +77,7 @@ host-only and uses injected runtime fixtures.
 - `model/download.py` and `model/download.sh`: explicit model preparation.
 - `evaluator/compare.py`: implementation parity comparison; it never downloads.
 - Python API: `YOLOWorldTask.preprocess`, `infer`, `postprocess`, `predict`
-  (`pre_process`/`forward`/`post_process` are compatibility aliases).
+  (`pre_process`/`forward`/`post_process` are aliases).
 
 <a id="license"></a>
 ## License

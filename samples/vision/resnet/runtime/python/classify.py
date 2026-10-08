@@ -1,231 +1,257 @@
+"""Run ResNet image preprocessing, board inference, and Top-K decoding.
+
+Use ResNetClassifier.predict with an image path or a BGR array. Shared helpers
+provide image IO, tensor conversion, label validation, and SDK execution.
+"""
+
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""The readable ResNet classification model.
-
-:class:`ResNetClassifier` shows one complete classification pipeline in a
-single file: construction resolves and loads the model through the sample
-runner, :meth:`preprocess` turns one BGR image into the bound NV12 input
-tensors, :meth:`infer` executes exactly one model call, :meth:`postprocess`
-decodes the score vector into Top-K results, and :meth:`predict` chains the
-three steps.  The reusable pieces stay shared: NV12 packing lives in
-``samples/_shared/tensor_io.py``, the stable Top-K math in
-``samples/_shared/classification.py``, and model loading/identity checks in
-the sample runner (backed by the thin SDK session
-``samples/_shared/runtime.py``).
-
-Selection: use :func:`samples.vision.resnet.runtime.python.model_binding.resolve_selection`
-for a manifest-published model, or
-:func:`samples.vision.resnet.runtime.python.model_binding.custom_selection`
-for a self-trained model with its own class count and labels — custom models
-never require official asset registration.
-
-Minimal library use::
-
-    from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-    from samples.vision.resnet.runtime.python.model_binding import resolve_selection
-
-    model = ResNetClassifier(resolve_selection("auto"),
-                             labels=my_labels)      # labels optional
-    result = model.predict("image.jpg")            # path or BGR ndarray
-    print(result.class_ids, result.scores, result.labels)
-"""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Mapping, Optional, Sequence
+from typing import TYPE_CHECKING, Mapping, Sequence
 
-import numpy as np
+from utils.py_utils.cls_binding import MetadataMismatchError, SCORE_POLICIES
+from utils.py_utils.image import read_bgr_image
+from utils.py_utils.labels import validate_labels
+from utils.py_utils.quantization import apply_output_transform
 
-from samples._shared.classification import (
-    ClassificationResult,
-    extract_score_tensor,
-    topk_from_scores,
-)
-from samples._shared.cls_binding import (
-    SCORE_POLICIES,
-    ModelSelection,
-)
-from samples._shared.quantization import apply_output_transform
-from samples._shared.tensor_io import PreparedInput, prepare_nv12
-
-from samples.vision.resnet.runtime.python.model_runner import RuntimeModelRunner
+if TYPE_CHECKING:
+    import numpy as np
+    from utils.py_utils.classification import ClassificationResult
+    from utils.py_utils.model_runner import RuntimeModelRunner
+    from utils.py_utils.tensor_io import PreparedInput
 
 
 class ResNetClassifier:
-    """ResNet image classifier with the full pipeline readable in one place.
+    """Classify one image with a compiled ResNet model.
 
-    The object loads the model once and reuses it across ``predict`` calls.
-    Each call carries its own resize/letterbox context on the prepared
-    input, so consecutive images of different sizes never reuse a stale
-    transform.  Prediction itself prints nothing, draws nothing and writes
-    no files; presentation belongs to the caller.
+    The constructor accepts a local artifact and its input/output settings; see
+    __init__ for parameter definitions. Construction loads the model immediately.
 
-    Args:
-        selection: The resolved model selection (official manifest row or
-            an explicit custom contract).
-        top_k: Number of results to decode (default 5).
-        labels: Optional class names — a sequence of exactly
-            ``class_count`` names, or a mapping of class index to name.
-            Without labels the result keeps the raw class IDs; ImageNet
-            labels are never assumed for a custom class count.
-        resize_type: 0 stretch or 1 letterbox; ``None`` (default) follows
-            the bound source contract.
-        runner: Optional injected runner (host-test seam).  Production
-            callers leave it unset and get the sample runner backed by the
-            shared SDK session.
+    Attributes:
+        runner (RuntimeModelRunner): Loaded runner used by infer.
+        binding (ModelBinding): Validated tensor names, shapes, and output policy.
+        labels (Mapping[int, str] | Sequence[str] | None): Optional class names.
+        top_k (int): Number of ranked classes returned per image.
+        resize_type (int): Stretch (0) or letterbox (1) preprocessing.
+
+    Notes:
+        Reuse an instance for sequential images. Concurrent SDK execution on the
+        same instance is not guaranteed to be safe.
     """
 
     def __init__(
-        self,
-        selection: ModelSelection,
-        *,
-        top_k: int = 5,
-        labels: Optional[Mapping[int, str] | Sequence[str]] = None,
-        resize_type: Optional[int] = None,
-        runner: Optional[RuntimeModelRunner] = None,
+        self, model_path: str | Path, *, target: str,
+        input_size: tuple[int, int] = (224, 224), class_count: int = 1000,
+        top_k: int = 5, labels: Mapping[int, str] | Sequence[str] | None = None,
+        resize_type: int = 1, resize_interpolation: str | None = None,
+        score_policy: str = "softmax", output_transform: str = "raw_f32",
+        runner: RuntimeModelRunner | None = None,
     ) -> None:
-        self.selection = selection
-        self.runner = runner if runner is not None else RuntimeModelRunner(selection)
-        # Loading validates the board identity (via the shared SDK session),
-        # imports the SDK, constructs the model and binds its actual tensor
-        # metadata against the selection contract.
-        self.binding = self.runner.load()
-        class_count = self.binding.contract.class_count
-        if top_k <= 0 or top_k > class_count:
-            raise ValueError(
-                f"top_k must be between 1 and {class_count}, got {top_k}.")
-        self.top_k = int(top_k)
-        self.labels = _checked_labels(labels, class_count)
-        self.resize_type = resize_type
+        """Load the compiled model and validate its classification settings.
 
-    # ------------------------------------------------------------------
-    # The three pipeline stages, each public and usable on its own.
-    # ------------------------------------------------------------------
+        Args:
+            model_path: Local compiled model path; leading ~ is expanded.
+            target: Artifact target: x5, s100, s100p, or s600. Must match the board.
+            input_size: Positive, even (height, width) in pixels; defaults to (224, 224).
+            class_count: Positive output class count; defaults to 1000.
+            top_k: Number of results in [1, class_count]; defaults to 5.
+            labels: Full class-name sequence, sparse index/name mapping, or None.
+                Missing names are rendered as class IDs.
+            resize_type: 0 stretches; 1 preserves aspect ratio with letterbox padding.
+            resize_interpolation: Direct-resize interpolation; None uses linear on
+                X5 and nearest on S. Letterbox uses linear interpolation.
+            score_policy: softmax or legacy_softmax normalizes scores; none preserves
+                values. Defaults to softmax.
+            output_transform: raw_f32 passes through float32 output; dequant applies
+                SDK quantization metadata before scoring.
+            runner: Optional injected runner. Its loaded binding supplies the model
+                contract instead of model_path, target, and tensor settings.
 
-    def preprocess(self, source: "str | Path | np.ndarray") -> PreparedInput:
-        """Read one image (path or BGR array) and pack the bound NV12 tensors.
+        Returns:
+            None.
 
-        The input array is never modified in place; the returned
-        :class:`PreparedInput` carries this call's resize/letterbox
-        geometry on ``.transform``.
+        Raises:
+            ValueError: Class count, Top-K, labels, or local model settings are invalid.
+            TypeError: Labels are neither a mapping nor a class-name sequence.
+            FileNotFoundError: The local model file does not exist.
+            BindingError: Runtime metadata or the selected target violates the contract.
+            RuntimeError: Board identity, SDK availability, or model loading fails.
         """
+        from utils.py_utils.model_runner import RuntimeModelRunner
 
-        image = _read_source_image(source)
+        if class_count <= 0 or not 1 <= top_k <= class_count:
+            raise ValueError(f"top_k must be between 1 and {class_count}, got {top_k}.")
+        self.labels = validate_labels(labels, class_count)
+        self.top_k, self.resize_type = int(top_k), resize_type
+        self.runner = runner if runner is not None else RuntimeModelRunner.from_file(
+            model_path, target=target, input_size=input_size, class_count=class_count,
+            resize_type=resize_type,
+            resize_interpolation=resize_interpolation or ("linear" if target == "x5" else "nearest"),
+            score_policy=score_policy, output_transform=output_transform)
+        self.binding = self.runner.load()
+
+    def preprocess(self, source: str | Path | np.ndarray) -> PreparedInput:
+        """Prepare one image as the model's physical NV12 input tensors.
+
+        Args:
+            source: Image path or uint8 BGR array shaped (H, W, 3), with values
+                in [0, 255] and positive dimensions. The array is not modified.
+
+        Returns:
+            PreparedInput: Tensor-name mapping of contiguous uint8 NV12 bytes,
+            plus this call's resize/padding transform. At model size (h, w), X5
+            uses one flat (h*w*3//2,) tensor; S uses Y (1, h, w, 1) and
+            UV (1, h//2, w//2, 2). Byte values lie in [0, 255].
+
+        Raises:
+            TypeError: Source is neither a path nor a NumPy array.
+            FileNotFoundError: The image cannot be read.
+            ValueError: Image shape/dtype, resize options, or tensor binding is invalid.
+        """
+        import numpy as np
+        from utils.py_utils.tensor_io import prepare_nv12
+
+        image = read_bgr_image(source) if isinstance(source, (str, Path)) else source
+        if not isinstance(image, np.ndarray):
+            raise TypeError("source must be an image path or a BGR NumPy array.")
         return prepare_nv12(image, self.binding, resize_type=self.resize_type)
 
     def infer(self, prepared: PreparedInput) -> object:
-        """Execute exactly one model call on the prepared NV12 tensors."""
+        """Execute one inference call with the prepared physical tensors.
 
+        Args:
+            prepared: PreparedInput returned by preprocess for this model.
+
+        Returns:
+            Mapping[str, np.ndarray]: Raw tensors keyed by bound output name.
+            The score tensor squeezes to (class_count,); raw_f32 uses float32,
+            while dequant keeps the SDK's raw dtype. Values are not activated here.
+
+        Raises:
+            ValueError: Input names, shapes, dtype, or contiguity violate the binding.
+            MetadataMismatchError: Output structure, shape, or dtype is invalid.
+            RuntimeError: SDK execution fails.
+        """
         return self.runner(prepared.tensors)
 
     def postprocess(self, outputs: object) -> ClassificationResult:
-        """Apply the declared output transform and decode the Top-K results."""
+        """Transform model scores and select the highest-ranked classes.
+
+        Args:
+            outputs: Raw output mapping returned by infer. The bound score tensor
+                must squeeze to (class_count,); raw_f32 requires float32.
+
+        Returns:
+            ClassificationResult: class_ids is int64 (top_k,), scores is float32
+            (top_k,), and labels is a tuple of top_k strings. Scores descend;
+            ties prefer lower class IDs. Softmax policies produce values in [0, 1];
+            none preserves unnormalized values. Arrays are owned by the result.
+
+        Raises:
+            MetadataMismatchError: Output container, shape, dtype, or policy is invalid.
+            OutputTransformError: Output data or quantization metadata is invalid.
+            ValueError: Scores are nonnumeric, nonfinite, or cannot be ranked.
+
+        Notes:
+            Classification does not consume image coordinates, so no resize context
+            is required. Top-K probabilities alone need not sum to one.
+        """
+        from utils.py_utils.classification import extract_score_tensor, topk_from_scores
 
         raw = extract_score_tensor(outputs, self.binding)
         values = apply_output_transform(
             self.binding.contract.output_transform,
-            {self.binding.output_name: raw},
-            self.binding.output_quants,
-        )
-        scores = values[self.binding.output_name]
+            {self.binding.output_name: raw}, self.binding.output_quants)
         policy = self.binding.contract.output_score_policy
         if policy not in SCORE_POLICIES:
-            from samples._shared.cls_binding import MetadataMismatchError
-
-            raise MetadataMismatchError(
-                f"Unsupported classification output score policy {policy!r}.")
+            raise MetadataMismatchError(f"Unsupported classification output score policy {policy!r}.")
         return topk_from_scores(
-            scores, self.top_k, self.labels, softmax=policy != "none")
+            values[self.binding.output_name], self.top_k, self.labels, softmax=policy != "none")
 
-    def predict(self, source: "str | Path | np.ndarray") -> ClassificationResult:
-        """Run the full pipeline for one image path or BGR array."""
+    def predict(self, source: str | Path | np.ndarray) -> ClassificationResult:
+        """Run preprocessing, inference, and postprocessing for one image.
 
+        Args:
+            source: Image path or uint8 BGR array shaped (H, W, 3), values [0, 255].
+
+        Returns:
+            ClassificationResult: Ranked int64 class_ids and float32 scores of
+            shape (top_k,), with a matching label tuple; see postprocess for scoring.
+
+        Raises:
+            FileNotFoundError: The input image cannot be read.
+            TypeError: The input type is unsupported.
+            ValueError: Image data, tensors, or classification scores are invalid.
+            BindingError: Model outputs violate the declared contract.
+            RuntimeError: SDK execution fails.
+
+        Notes:
+            Propagates stage errors. Does not print, save, or download results.
+        """
         prepared = self.preprocess(source)
         outputs = self.infer(prepared)
         return self.postprocess(outputs)
 
-    # ------------------------------------------------------------------
-    # Compatibility surface: the established stage names stay thin
-    # aliases of the implementations above (no second implementation).
-    # ------------------------------------------------------------------
+    def set_scheduling_params(self, *, priority=None, bpu_cores=None) -> None:
+        """Apply scheduling options to the loaded board runtime.
 
-    def pre_process(self, source: "str | Path | np.ndarray") -> PreparedInput:
-        """Compatibility alias for :meth:`preprocess`."""
+        Args:
+            priority: Optional integer in [0, 255]; None leaves it unchanged.
+            bpu_cores: Optional list of nonnegative BPU core indexes. The SDK
+                determines which indexes are supported on the selected board.
 
-        return self.preprocess(source)
+        Returns:
+            None.
 
-    def forward(self, prepared: PreparedInput) -> object:
-        """Compatibility alias for :meth:`infer`."""
-
-        return self.infer(prepared)
-
-    def post_process(self, outputs: object) -> ClassificationResult:
-        """Compatibility alias for :meth:`postprocess`."""
-
-        return self.postprocess(outputs)
-
-    def __call__(self, source: "str | Path | np.ndarray") -> ClassificationResult:
-        return self.predict(source)
-
-    def set_scheduling_params(self, *, priority: Optional[int] = None,
-                              bpu_cores: Optional[list[int]] = None) -> None:
-        """Forward explicit runtime scheduling options to the runner."""
-
+        Raises:
+            ValueError: Priority or a core index is out of range.
+            RuntimeError: The SDK cannot apply the scheduling options.
+        """
         self.runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
+    def pre_process(self, source):
+        """Delegate to preprocess with the same input and error contract.
 
-def _read_source_image(source: "str | Path | np.ndarray") -> np.ndarray:
-    """Accept one local image path or an in-memory BGR array.
+        Args:
+            source: Input accepted by preprocess; see that method for shape and dtype.
 
-    Path read failures name the exact path.  Arrays pass through
-    unchanged (never modified in place); their shape/dtype validation
-    happens in the shared preprocessing.
-    """
+        Returns:
+            PreparedInput: NV12 tensors and the per-call image transform.
+        """
+        return self.preprocess(source)
 
-    if isinstance(source, np.ndarray):
-        return source
-    if isinstance(source, (str, Path)):
-        path = Path(source).expanduser()
-        image = _imread_color(str(path))
-        if image is None:
-            raise FileNotFoundError(f"image not found or unreadable: {path}")
-        return image
-    raise TypeError(
-        "source must be an image path or a BGR NumPy array, got "
-        f"{type(source).__name__}.")
+    def forward(self, prepared):
+        """Delegate to infer with the same input and error contract.
 
+        Args:
+            prepared: Input accepted by infer; see that method for shape and dtype.
 
-def _imread_color(path: str) -> Optional[np.ndarray]:
-    """Read one BGR image; OpenCV stays a lazy, execution-time import."""
+        Returns:
+            Mapping[str, np.ndarray]: Raw bound output tensors.
+        """
+        return self.infer(prepared)
 
-    import cv2
+    def post_process(self, outputs):
+        """Delegate to postprocess with the same input and error contract.
 
-    return cv2.imread(path, cv2.IMREAD_COLOR)
+        Args:
+            outputs: Input accepted by postprocess; see that method for shape and dtype.
 
+        Returns:
+            ClassificationResult: Ranked class IDs, scores, and labels.
+        """
+        return self.postprocess(outputs)
 
-def _checked_labels(
-    labels: Optional[Mapping[int, str] | Sequence[str]], class_count: int
-) -> Optional[Mapping[int, str] | Sequence[str]]:
-    """Reject labels that cannot address the bound class count."""
+    def __call__(self, source):
+        """Delegate to predict with the same input and error contract.
 
-    if labels is None:
-        return None
-    if isinstance(labels, Mapping):
-        for key in labels:
-            if not isinstance(key, (int, np.integer)) or not 0 <= int(key) < class_count:
-                raise ValueError(
-                    f"Label key {key!r} is not a valid class index for the bound "
-                    f"{class_count}-class output.")
-        return labels
-    if isinstance(labels, Sequence) and not isinstance(labels, (str, bytes)):
-        if len(labels) != class_count:
-            raise ValueError(
-                f"{len(labels)} labels do not match the bound {class_count}-class "
-                "output; labels must cover every class exactly.")
-        return labels
-    raise TypeError(
-        "labels must be a mapping of class index to name, or a sequence of names.")
+        Args:
+            source: Input accepted by predict; see that method for shape and dtype.
 
-
-__all__ = ["ResNetClassifier"]
+        Returns:
+            ClassificationResult: Ranked class IDs, scores, and labels.
+        """
+        return self.predict(source)

@@ -4,9 +4,9 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from samples._shared.assets import Asset, list_assets
-from samples._shared.runtime_meta import RuntimeMetadata, MetadataMismatchError
-from samples._shared.quantization import validate_scale_quantization
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
+from utils.py_utils.quantization import validate_scale_quantization
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 TARGETS = ("s100", "s600")
@@ -46,7 +46,7 @@ def list_available_assets(target="auto"):
 
 def resolve_selection(target="auto", *, asset_id=None, model_path=None):
     if target == "auto":
-        from samples._shared.platforms import detect_target
+        from utils.py_utils.platforms import detect_target
 
         target = detect_target()
     if target not in TARGETS:

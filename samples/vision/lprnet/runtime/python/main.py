@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
         selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path)
         if not selection.model_path.is_file():
             raise FileNotFoundError(f"model file not found: {selection.model_path}")
-        from samples._shared.platforms import require_execution_target
+        from utils.py_utils.platforms import require_execution_target
         require_execution_target(selection.target)
         runner = RuntimeModelRunner(selection)
         binding = runner.load()

@@ -45,6 +45,22 @@ the platform release manifest, verifies the board identity, loads
 `hbm_runtime` lazily, and returns a typed Top-K result
 ([runtime/python/README.md](runtime/python/README.md)).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+convnext/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── requirements-host.txt  # Source or data file
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -129,16 +145,6 @@ deployment model; latency single-frame single-thread single-core, FPS
 | ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
 
 All rows are quoted from the published X5 release table. Prepare the atto artifact using [model/README.md](model/README.md); [conversion/](conversion/README.md) also documents the nano and femto PTQ configurations.
-
-<a id="directory"></a>
-## Directory
-
-- [model/](model/README.md) — manifest-driven artifact download, no checked-in binaries
-- [runtime/python/](runtime/python/README.md) — canonical Python entrypoint and task modules
-- [conversion/](conversion/README.md) — X5 PTQ configuration and model-specific preparation steps
-- [evaluator/](evaluator/README.md) — published benchmarks and functional checks
-- `test_data/` — bundled test images ([cheetah.JPEG](test_data/cheetah.JPEG) plus reference illustrations)
-- `tests/` — host unittest suite
 
 <a id="entry-points"></a>
 ## Entry points

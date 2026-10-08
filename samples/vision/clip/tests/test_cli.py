@@ -25,7 +25,7 @@ class EntryTests(unittest.TestCase):
             tmodel.write_bytes(b'host-only fixture')
             output = base/'nested/scores.png'
             stream = io.StringIO()
-            with patch('samples._shared.platforms.detect_target', return_value='x5'), patch.object(model_runner, 'RuntimeModelRunner', lambda selection: original(selection, image_runtime=image, text_session=text)), contextlib.redirect_stdout(stream):
+            with patch('utils.py_utils.platforms.detect_target', return_value='x5'), patch.object(model_runner, 'RuntimeModelRunner', lambda selection: original(selection, image_runtime=image, text_session=text)), contextlib.redirect_stdout(stream):
                 rc = main.main(['--target','x5','--image-asset-id','x5:clip:img_encoder.bin',
                                 '--text-asset-id','x5:clip:text_encoder.onnx',
                                 '--image-model-path',str(imodel),'--text-model-path',str(tmodel),
@@ -44,7 +44,7 @@ class EntryTests(unittest.TestCase):
     def test_wrong_board_refuses_before_pipeline(self):
         from samples.vision.clip.runtime.python import main
         from samples.vision.clip.runtime.python import matching
-        with patch('samples._shared.platforms.detect_target', return_value='s100'), patch.object(
+        with patch('utils.py_utils.platforms.detect_target', return_value='s100'), patch.object(
             matching, 'CLIPTask', side_effect=AssertionError('must not construct')
         ) as task, contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main.main(['--target','x5']), 2)

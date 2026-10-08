@@ -1,6 +1,6 @@
 # ResNet 模型制品
 
-model 目录不提交任何二进制；制品由 canonical 下载器按平台发布 Manifest
+model 目录不提交任何二进制；制品由 下载器按平台发布 Manifest
 显式获取。
 
 <a id="artifacts"></a>
@@ -21,6 +21,18 @@ model 目录不提交任何二进制；制品由 canonical 下载器按平台发
 权威。X5 消费一个 packed NV12 张量；S100/S600 消费分离的 Y 与 UV 张量——
 仅凭文件名无法确定协议，因此 runtime 始终将 `--model-path` 与完整引用
 配对。S100P 没有 ResNet 行，复用 S100 文件不能使其有效。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+model/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── __init__.py  # Python 脚本
+├── download.py  # 准备模型文件
+└── download.sh  # 模型准备命令
+```
 
 <a id="preparation"></a>
 ## 准备步骤

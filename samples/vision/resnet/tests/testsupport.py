@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from samples.vision.resnet.runtime.python.model_binding import RuntimeMetadata
+from utils.py_utils.cls_binding import RuntimeMetadata
 
 
 def runtime_metadata(protocol: str) -> RuntimeMetadata:

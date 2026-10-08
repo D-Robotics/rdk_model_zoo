@@ -9,6 +9,21 @@ LaneNet uses a binary segmentation branch to distinguish lane pixels from backgr
 
 Algorithm references: [Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) and [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection). The published HBM is not tied to a specific upstream commit: no revision or model checksum is supplied.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+lanenet/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -17,14 +32,14 @@ Algorithm references: [Towards End-to-End Lane Detection: an Instance Segmentati
 | S100 | `s100/lanenet256x512.hbm` | Python and C++ | supported |
 | X5 / S100P / S600 | None for LaneNet | Explicit rejection | No silent S100 fallback |
 
-A target name selects a contract; it does not convert an HBM or certify the current board. `auto` resolves S100 because this is the only published asset. Execution still checks physical identity. Host preparation, documentation and tests do not establish numerical equivalence on a board.
+Select `s100` for the published HBM. `auto` selects that artifact; execution requires an S100 board with the matching SDK.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
 Use a matching S100 runtime and a prepared HBM for real inference. Python needs NumPy, OpenCV and the board's `hbm_runtime` runtime; C++ needs matching DNN/UCP development headers/libraries, CMake, a C++17 compiler and OpenCV development libraries. See the [Python environment](runtime/python/README.md#environment) and [native dependencies](runtime/cpp/README.md#dependencies).
 
-Downloads and native builds are explicit. Runtime wrappers do not install packages or fetch assets. Conversion is optional for the published model; the source export code is incomplete, as described in [conversion](conversion/README.md).
+Downloads and native builds are explicit. Runtime helpers do not install packages or fetch assets. Conversion is optional for the published model; the source export code is incomplete, as described in [conversion](conversion/README.md).
 
 <a id="quickstart"></a>
 ## Quickstart
@@ -70,19 +85,6 @@ These figures come byte-for-byte from the original S sample record:
 | ![Source embedding display](test_data/instance_pred.png) | ![Source binary display](test_data/binary_pred.png) |
 
 [Source native embedding display](test_data/cpp_instance_pred.png) and [native binary display](test_data/cpp_binary_pred.png) are also retained. Display differences do not by themselves establish raw numerical differences or distinct lane instances.
-
-<a id="directory"></a>
-## Directory
-
-| Path | Responsibility |
-| --- | --- |
-| [model](model/README.md) | Exact published asset, explicit download and checksum boundary |
-| [runtime/python](runtime/python/README.md) | Python CLI, three-stage API, named raw outputs |
-| [runtime/cpp](runtime/cpp/README.md) | Native build, resource ownership, typed raw outputs |
-| [conversion](conversion/README.md) | Preserved YAML, new calibration/config preparation, missing export prerequisites |
-| [evaluator](evaluator/README.md) | Host checks and explicit limits of evaluation evidence |
-| [test_data](test_data) | Original road image and four source-recorded displays |
-| [tests](tests) | Host numerical, CLI, conversion and native failure-injection fixtures |
 
 <a id="entry-points"></a>
 ## Entry points for users and agents

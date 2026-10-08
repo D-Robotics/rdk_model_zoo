@@ -35,6 +35,22 @@ X5 部署提供 B2/B3/B4；S 侧提供面向边缘的 EfficientNet-Lite 系列
 *复合缩放（论文图 2）：基础网络 (a)、传统单维缩放 (b)–(d)，以及按
 固定比例统一缩放宽度、深度和分辨率的复合缩放 (e)。*
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+efficientnet/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── requirements-host.txt  # 源码或数据文件
+```
+
 <a id="support-matrix"></a>
 ## 支持范围
 
@@ -123,16 +139,6 @@ S 系列（s-v1.1.2）：
 *X5 发布的参考推理结果：随仓 [redshank.JPEG](test_data/redshank.JPEG)
 的 Rank-1 为 `redshank`，其后依次为 ruddy turnstone、water ouzel、
 oystercatcher、dowitcher。*
-
-<a id="directory"></a>
-## 目录职责
-
-- [model/](model/README_cn.md) — Manifest 驱动的制品下载，不检入二进制
-- [runtime/python/](runtime/python/README_cn.md) — 统一 Python 入口与任务模块
-- [conversion/](conversion/README_cn.md) — S 侧 lite 全套配方 + X5 侧参考 PTQ 配置
-- [evaluator/](evaluator/README_cn.md) — 发布的基准记录与功能检查
-- `test_data/` — 随附测试图（[Scottish_deerhound.JPEG](test_data/Scottish_deerhound.JPEG)、[redshank.JPEG](test_data/redshank.JPEG)、[zebra_cls.jpg](test_data/zebra_cls.jpg)）
-- `tests/` — 主机 unittest 套件
 
 <a id="entry-points"></a>
 ## 入口

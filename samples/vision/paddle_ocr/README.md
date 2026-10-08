@@ -24,6 +24,22 @@ dictionary as a unit; never mix components across pairs:
 The former X5 and S Python entrypoints and the S C++ sources forward to this
 implementation as compatibility shims; no second implementation is maintained.
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+paddle_ocr/
+├── conversion/  # Export and quantization configuration
+├── evaluator/  # Evaluation commands and metrics
+├── model/  # Model files and download scripts
+├── runtime/  # Python and native inference implementations
+├── test_data/  # Example inputs
+├── tests/  # Automated tests
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── __init__.py  # Python script
+```
+
 <a id="support-matrix"></a>
 ## Support matrix
 
@@ -35,7 +51,7 @@ implementation as compatibility shims; no second implementation is maintained.
 | S600 | supported | supported |
 
 The Python default and aspect-ratio pipelines (including the compatibility
-wrappers) run on X5 and S100 and emit the detector/recognizer stage tensors,
+helpers) run on X5 and S100 and emit the detector/recognizer stage tensors,
 decoded into polygon boxes and recognized text; the S100 C++ build renders
 the recognized results onto the output image. S600
 shares source and SoC detection with S100; run the S600 commands on an S600
@@ -130,23 +146,10 @@ JSON output contains `target`, `image_shape`, `detector_asset`,
 Boxes and texts keep detector order; arrays in the result are owned by the
 result. An empty detector output skips recognition and returns empty lists.
 The detector output is treated as the observed score map and thresholded
-directly (`0.5`); no unverified activation or accuracy claim is added. What
+directly (`0.5`); What
 the bundled fixtures print exactly is a property of the artifact pair — see
 [evaluation](./evaluator/README.md#reference-results) for the verified
 comparison record; dataset-level accuracy requires a labeled corpus and is not bundled.
-
-<a id="directory"></a>
-## Directory
-
-| Path | Responsibility |
-| --- | --- |
-| `model/` | artifact references and the explicit preparation procedure |
-| `runtime/python/` | canonical two-stage Python runtime (all targets above) |
-| `runtime/cpp/` | S-series native runtime (DB + CRNN/CTC + FreeType rendering) |
-| `conversion/` | target-separated export/calibration/compile recipes |
-| `evaluator/` | record-based detection/recognition agreement evaluator |
-| `test_data/` | bundled fixtures: X5 image, S100 image + PP-OCRv6 dictionary |
-| `tests/` | host contract tests (43 cases) |
 
 <a id="entry-points"></a>
 ## Entry points

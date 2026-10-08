@@ -10,6 +10,22 @@
 
 Python 按目标绑定输入、按模型系列选择任务协议，下载、绘图和评估共用。独立 YOLOv5、YOLOE 和 yolo26_depth 使用各自的模型与运行契约。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+ultralytics_yolo/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── DETECTION_CONTRACT.md  # 说明文档
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -71,6 +87,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
   --target x5 --task detect \
   --asset-id x5:ultralytics_yolo:yolov8n_detect_bayese_640x640_nv12.bin --dry-run
 ```
+
 <a id="expected-results"></a>
 ## 预期结果
 
@@ -86,19 +103,6 @@ YOLO26 检测效果示例（类别 ID 与分数）：
 
 ![Reference S YOLO26 delivery detection illustration](test_data/result_detect_yolo26.jpg)
 
-<a id="directory"></a>
-## 目录职责
-
-```text
-ultralytics_yolo/
-├── model/          # published asset preparation
-├── runtime/python/ # shared task APIs and CLI
-├── runtime/cpp/    # detect/classify/pose/segment reference programs
-├── conversion/    # export, calibration and X5/S compiler adapters
-├── evaluator/     # dataset evaluation and batch CLI
-├── test_data/     # input images, labels and example visualizations
-└── tests/         # host regression checks
-```
 <a id="entry-points"></a>
 ## 操作与源码入口
 

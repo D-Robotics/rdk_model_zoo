@@ -9,7 +9,7 @@ import unittest
 
 import numpy as np
 
-from samples._shared.runtime_meta import RuntimeMetadata
+from utils.py_utils.runtime_meta import RuntimeMetadata
 
 
 def metadata(stage):

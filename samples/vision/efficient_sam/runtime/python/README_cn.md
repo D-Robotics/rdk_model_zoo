@@ -2,6 +2,26 @@
 
 # EfficientSAM Python Runtime
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── cli.py  # 参数与结果展示
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── pipeline.py  # Python 脚本
+├── run.sh  # 运行示例
+└── visualization.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -79,7 +99,7 @@ import cv2
 
 root = Path.cwd()
 binding = importlib.import_module("samples.vision.efficient_sam.runtime.python.model_binding")
-runner_type = importlib.import_module("samples.vision.efficient_sam.runtime.python.model_runner").RuntimeModelRunner
+runner_type = importlib.import_module("utils.py_utils.sam_runner").RuntimeModelRunner
 pipeline_type = importlib.import_module("samples.vision.efficient_sam.runtime.python.pipeline").EfficientSAMPipeline
 selection = binding.resolve_selection("s100")
 runner = runner_type(selection)
@@ -96,7 +116,7 @@ assert result["mask"].shape == (512, 512)
 <a id="stage-io"></a>
 ## 编码与解码阶段 I/O
 
-每个 stage 都有独立的三个方法，以 [pipeline.py](pipeline.py) 中本地 `EfficientSAMEncoder`/`EfficientSAMDecoder` 视图的规范拼写 `preprocess`/`infer`/`postprocess` 暴露——继承的共享拼写 `pre_process`/`forward`/`post_process` 保留为同一实现的兼容别名。encoder `preprocess` 校验 BGR HWC 输入并返回 contiguous RGB NCHW float32 tensor 和不可变的本次几何 context；encoder `infer` 发送该 tensor 并保留经 metadata 校验的 native embedding；encoder `postprocess` 负责独立持有的 float32 embedding。decoder `preprocess` 负责独立持有 embedding 和固定 prompt context；decoder `infer` 发送 decoder tensor 并保留 native `low_res_masks`/`iou_predictions`；decoder `postprocess` 将已接受的 native 数值数组 cast 为独立 float32，选择 IoU 最大者，将 raw logits resize 到 `512x512` 后以 `>=0` 阈值化。`predict` 按 `encoder.preprocess → encoder.infer → encoder.postprocess → decoder.preprocess → decoder.infer → decoder.postprocess` 串联（等价于先 `encode_image` 再 `decode_masks`），失败经由 `StageError` 归属到出错 stage，且不会执行后续 stage。不会隐式 dequantize。encoder/decoder 名称和 S decoder 尺寸来自 runtime metadata；S mask 为 `[1,3,H,W]` 且观察到的 `H/W` 为正，IoU 为 `[1,3]` 或 `[1,3,1,1]`。
+每个 stage 都有独立的三个方法，以 [pipeline.py](pipeline.py) 中本地 `EfficientSAMEncoder`/`EfficientSAMDecoder` 视图的规范拼写 `preprocess`/`infer`/`postprocess` 暴露。encoder `preprocess` 校验 BGR HWC 输入并返回 contiguous RGB NCHW float32 tensor 和不可变的本次几何 context；encoder `infer` 发送该 tensor 并保留经 metadata 校验的 native embedding；encoder `postprocess` 负责独立持有的 float32 embedding。decoder `preprocess` 负责独立持有 embedding 和固定 prompt context；decoder `infer` 发送 decoder tensor 并保留 native `low_res_masks`/`iou_predictions`；decoder `postprocess` 将已接受的 native 数值数组 cast 为独立 float32，选择 IoU 最大者，将 raw logits resize 到 `512x512` 后以 `>=0` 阈值化。`predict` 按 `encoder.preprocess → encoder.infer → encoder.postprocess → decoder.preprocess → decoder.infer → decoder.postprocess` 串联（等价于先 `encode_image` 再 `decode_masks`），失败经由 `StageError` 归属到出错 stage，且不会执行后续 stage。不会隐式 dequantize。encoder/decoder 名称和 S decoder 尺寸来自 runtime metadata；S mask 为 `[1,3,H,W]` 且观察到的 `H/W` 为正，IoU 为 `[1,3]` 或 `[1,3,1,1]`。
 
 | 绑定输出 | X5 | S100 / S100P / S600 |
 | --- | --- | --- |

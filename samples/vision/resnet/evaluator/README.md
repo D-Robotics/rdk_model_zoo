@@ -11,6 +11,15 @@ evaluation, prepare ImageNet validation data (50,000 images, ILSVRC2012
 val) following [datasets/imagenet](../../../../datasets/imagenet/README.md);
 the dataset is user-supplied (no download script ships here).
 
+<a id="directory"></a>
+## Directory structure
+
+```text
+evaluator/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 <a id="environment"></a>
 ## Environment
 

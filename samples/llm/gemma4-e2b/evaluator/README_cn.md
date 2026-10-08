@@ -12,6 +12,15 @@ PC 对照使用转换教程中的 COCO 图像、文本验证 prompt、原始浮�
 `input_ids.int64.bin`、`position_ids.int32.bin`、`inputs_embeds.f32.bin`、`full_mask.f32.bin`、`sliding_mask.f32.bin`。
 这套内部 golden 数据不随公开模型归档提供。四张示例图片用于冒烟测试的定性演示。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+evaluator/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="environment"></a>
 ## 环境
 

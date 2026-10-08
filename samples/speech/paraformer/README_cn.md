@@ -16,6 +16,21 @@ CPU CIF（连续积分触发）和 decoder。部署使用三份独立发布的 S
 三阶段 FP32 导出、真实音频校准、显式 OE 编排命令和主机评测；OE/HMCT 编译在
 OE 环境中按转换指南执行。
 
+<a id="directory"></a>
+## 目录结构
+
+```text
+paraformer/
+├── conversion/  # 导出与量化配置
+├── evaluator/  # 评估程序与指标
+├── model/  # 模型文件与下载脚本
+├── runtime/  # 推理程序
+├── test_data/  # 示例输入
+├── tests/  # 自动化测试
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 <a id="support-matrix"></a>
 ## 支持矩阵
 
@@ -91,21 +106,6 @@ CIF 无 token 时返回空文本并标明跳过 decoder。输出目录创建后�
 包含部分结果的 `failed.json`；缺输入、不兼容文件和板型不符均报错，不跳过。
 
 [评测说明](evaluator/README_cn.md) 提供 CER 定义、运行记录和历史数据集指标。
-
-<a id="directory"></a>
-## 目录结构
-
-```text
-paraformer/
-├── model/           # 显式六文件准备、CMVN/配置与模型说明
-├── runtime/python/  # CLI/I/O、真实前端、三个原始 runner、CPU CIF 与文本
-├── runtime/cpp/     # 原生应用、SDK 适配与准备后特征输入
-├── conversion/      # FP32 导出、真实校准和显式 OE 编排
-├── evaluator/       # CPU FP32/HMCT 适配、严格特征校验及 CER 报告
-├── test_data/       # 原样保留的源 WAV 与参考清单
-├── tests/           # 主机行为和 SDK 边界测试
-└── README.md        # 概览、完整命令与限制
-```
 
 <a id="entry-points"></a>
 ## 各入口

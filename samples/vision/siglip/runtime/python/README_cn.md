@@ -2,6 +2,27 @@
 
 # Python 运行 — SigLIP 视觉特征
 
+<a id="overview"></a>
+## Python 推理
+
+本目录提供Python 推理所需的程序与操作说明。
+
+<a id="directory"></a>
+## 目录结构
+
+```text
+python/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── cli.py  # 参数与结果展示
+├── embedding.py  # Python 脚本
+├── main.py  # 命令行入口
+├── model_binding.py  # Python 脚本
+├── model_runner.py  # Python 脚本
+├── run.sh  # 运行示例
+└── tensor_io.py  # Python 脚本
+```
+
 <a id="environment"></a>
 ## 环境
 
@@ -117,7 +138,7 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 - `postprocess`：原始输出 → metadata 绑定 shape/dtype 的 owned ndarray；错误 shape/dtype 和 NaN/Inf 会报错。本视觉特征任务不消费几何 context。
 - `predict(image)` 严格串联 preprocess → infer → postprocess；不下载、保存、激活、归一化或评估结果。
 
-既有旧拼写 `pre_process`、`forward`、`post_process` 保留为上述规范方法的薄兼容别名——同一实现，不存在第二套流程。CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、图像读取、摘要与可选 NumPy 保存，`main.py` 负责解析、解析模型、构造 `SigLIPTask` 并调用 `predict`。
+CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、图像读取、摘要与可选 NumPy 保存，`main.py` 负责解析、解析模型、构造 `SigLIPTask` 并调用 `predict`。
 
 <a id="troubleshooting"></a>
 ## 故障排查

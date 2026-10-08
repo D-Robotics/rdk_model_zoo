@@ -9,6 +9,24 @@ text on the right). It retains the source S16 detector-output path for older
 compatible artifacts alongside the F32 path used by the checked-in
 PP-OCRv6 artifact, and the original FreeType font option and defaults.
 
+<a id="overview"></a>
+## C++ inference
+
+Use this directory for c++ inference.
+
+<a id="directory"></a>
+## Directory structure
+
+```text
+cpp/
+├── inc/  # Files for inc
+├── src/  # Files for src
+├── CMakeLists.txt  # Source or data file
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── run.sh  # Run the sample
+```
+
 <a id="supported-boards"></a>
 ## Supported boards
 
@@ -62,7 +80,7 @@ prediction line per crop plus the rendered JPEG; success: exit 0):
 bash samples/vision/paddle_ocr/runtime/cpp/run.sh
 ```
 
-The launcher resolves absolute paths to the canonical fixture, dictionary,
+The launcher resolves absolute paths to the fixture, dictionary,
 and font, then forwards any user flags after them, so an explicit flag takes
 precedence:
 
@@ -91,7 +109,7 @@ samples/vision/paddle_ocr/runtime/cpp/build/paddle_ocr \
 ## Parameters
 
 Native gflags of the `paddle_ocr` binary (the launcher overrides the first
-four with absolute canonical paths; defaults are the source values):
+four with absolute paths; defaults are the source values):
 
 | Flag | Type | Default | Description |
 | --- | --- | --- | --- |
