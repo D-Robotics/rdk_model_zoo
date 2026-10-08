@@ -46,18 +46,24 @@
   // the headline accuracy and the file size — as value-over-label cells.
   function choiceStats(model, data) {
     const latency = singleStream(model, 'latency');
-    const metric = (model.benchmark?.accuracy || []).find(record => record.model_stage)?.metric;
+    // Segmentation is judged by its masks; other tasks have one headline metric.
+    const staged = (model.benchmark?.accuracy || []).filter(record => record.model_stage).map(record => record.metric);
+    const metric = staged.find(id => id.startsWith('mask-')) || staged[0];
     const accuracy = metric ? stagedAccuracy(model, metric) : null;
     const label = metric ? metricName(metric, data) : null;
     const name = typeof label === 'string' ? { zh: label, en: label } : label;
+    // The column shows the metric itself ("mAP50–95", "Top-1"), which reads
+    // the same in both languages; the task is in the dialog title. Mask AP
+    // keeps its qualifier so it is not mistaken for box AP.
+    const metricToken = name?.zh.match(/m?AP\d+(?:–\d+)?|Top-\d+/)?.[0];
+    const caption = !name ? '' : metricToken && !metric.startsWith('mask-')
+      ? `<span data-no-i18n>${esc(metricToken)}</span>`
+      : `<span data-i18n-zh="${esc(name.zh)}" data-i18n-en="${esc(name.en || name.zh)}">${esc(name.zh)}</span>`;
     const size = byteSize(model.assets?.[0]?.sizeBytes);
     const cell = (value, unit, caption) => `<span class="mz-store-stat"><b>${esc(value)}<small>${esc(unit)}</small></b>${caption}</span>`;
     const cells = [
       latency ? cell(amount(latency), latency.unit || 'ms', '<span>延迟</span>') : '',
-      // The column keeps only the metric ("检测 mAP50–95" → "mAP50–95"); the
-      // task is already in the dialog title, and the short name reads the same
-      // in both languages.
-      accuracy && name ? cell(amount(accuracy, true), '%', `<span data-no-i18n>${esc(name.zh.replace(/^\S+\s+(?=\S)/, ''))}</span>`) : '',
+      accuracy && caption ? cell(amount(accuracy, true), '%', caption) : '',
       size ? cell(...size.split(' '), '<span>文件大小</span>') : '',
     ].join('');
     return cells ? `<span class="mz-store-stats">${cells}</span>` : '';
