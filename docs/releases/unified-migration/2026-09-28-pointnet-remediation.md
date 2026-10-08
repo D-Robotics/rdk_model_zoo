@@ -15,7 +15,7 @@ GitHub 同步。
 - 全程**未 commit / 未 push / 未 merge**；作者改动仅限
   `samples/vision/pointnet/runtime/python/visualization.py` 与
   `samples/vision/pointnet/tests/test_pointnet.py` 两个文件，外加本记录与
-  [evidence](../../../evidence/2026-09-28-pointnet-remediation/verification.json)
+  `git show 182b506f697ea3f994e2a8fb78ba23d4241db670:evidence/2026-09-28-pointnet-remediation/verification.json`
   新目录。
 - **Board = not-run**：本任务不连板卡、不下载模型、不装 OE；板端与渲染效果均不在
   主机整改证据范围内。

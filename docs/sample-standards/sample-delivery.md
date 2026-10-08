@@ -52,7 +52,7 @@
 utils/
 ├── py_utils/       # Python 公共能力与测试
 └── c_utils/        # C/C++ 公共能力
-tools/             # 独立维护程序
+scripts/tools/     # 独立维护程序
 samples/<领域>/<模型>/
 ├── model/
 ├── conversion/

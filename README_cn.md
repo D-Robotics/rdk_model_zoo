@@ -16,7 +16,7 @@ docs/architecture/        # 可读 Runtime 架构
 docs/validation/          # 板端冒烟测试清单
 datasets/                 # 数据集入口
 utils/                    # Python/C++ 公共函数
-tools/                    # 目录、契约检查与验证工具
+scripts/tools/            # 目录、契约检查与验证工具
 ```
 
 ## 按任务开始
@@ -101,12 +101,12 @@ python3 samples/vision/ultralytics_yolo/runtime/python/main.py \
 
 ## 模型目录数据（维护者）
 
-`tools/catalog-publisher` 校验各平台清单并生成派生数据包。使用其 package.json 要求的 Node 22.12+、低于 23。从仓库根目录执行：
+`scripts/tools/catalog-publisher` 校验各平台清单并生成派生数据包。使用其 package.json 要求的 Node 22.12+、低于 23。从仓库根目录执行：
 
 ```bash
-npm --prefix tools/catalog-publisher ci
-npm --prefix tools/catalog-publisher run check
-npm --prefix tools/catalog-publisher run catalog:build
+npm --prefix scripts/tools/catalog-publisher ci
+npm --prefix scripts/tools/catalog-publisher run check
+npm --prefix scripts/tools/catalog-publisher run catalog:build
 ```
 
 ## 社区、贡献与许可

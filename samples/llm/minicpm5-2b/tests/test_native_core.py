@@ -17,7 +17,7 @@ SAMPLE = TESTS.parent
 REPO = SAMPLE.parents[2]
 NATIVE = TESTS / "native"
 CXX = os.environ.get("MINICPM_CXX", "c++")
-HOST_VALIDATION = REPO / "tools" / "host_validation"
+HOST_VALIDATION = REPO / "scripts" / "tools" / "host_validation"
 if str(HOST_VALIDATION) not in sys.path:
     sys.path.insert(0, str(HOST_VALIDATION))
 

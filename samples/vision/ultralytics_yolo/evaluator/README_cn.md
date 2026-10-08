@@ -276,7 +276,7 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
 
-python3 ../../tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin_models/
+python3 /path/to/rdk_model_zoo/scripts/tools/batch_perf/batch_perf.py --max 3 --file source/reference_bin_models/
 ```
 3. 测试板卡为最佳状态.
  - RDK X5 状态: CPU为8 × A55 @ 1.5GHz, 全核心Performance调度, BPU为1 × Bayes-e @ 1.0GHz, 10 TOPS @ int8.

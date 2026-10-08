@@ -49,7 +49,7 @@ remain historical material, not a new adaptation target.
   `d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d` and the delivery branches. The
   catalog's X3 source independently reads commit
   `6fcef2b87c12435e11fbd7327ea70d4efd917b1c` (commit mode in
-  `tools/catalog-publisher/sources.json`); its worktree sources resolve
+  `scripts/tools/catalog-publisher/sources.json`); its worktree sources resolve
   `link_ref: "HEAD"` to the exact build commit, so generated links are
   immutable. Concrete target identity aliases
   live in `docs/release/platforms.json`; identity alone does not certify any
@@ -81,7 +81,7 @@ remain historical material, not a new adaptation target.
   both stage-name spellings; module-level helpers in `cli.py`/`yolo_cli.py`
   are the recorded CLI application boundary.
 - Host checks — the maintainer entry is
-  `python tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]`
+  `python scripts/tools/host_validation/run.py --repo PATH --report PATH [--python PYTHON]`
   (supplied by the 2026-10-05 host-validation work; if it is absent from this
   checkout, that work has not landed here yet — use the per-suite commands
   below and say so). It runs every applicable Python suite (all 51 sample
@@ -95,10 +95,10 @@ remain historical material, not a new adaptation target.
   the shared modules are
   `python -m unittest discover -s utils/py_utils/tests` (VLA:
   `-p test_vla_integration.py`). Static contract:
-  `python3 tools/sample_contract/check.py --scope migration`. Catalog:
-  `npm --prefix tools/catalog-publisher run check`. YOLO's existing catalog
+  `python3 scripts/tools/sample_contract/check.py --scope migration`. Catalog:
+  `npm --prefix scripts/tools/catalog-publisher run check`. YOLO's existing catalog
   comparison additionally requires a generated catalog from
-  `npm --prefix tools/catalog-publisher run build`.
+  `npm --prefix scripts/tools/catalog-publisher run build`.
 - Report host tests, board tests, artifact availability, and migration status
   separately. No board or no result means `not-run`, not passed. Preserve
   historical reports, source/version pairs, licenses and gitlinks.

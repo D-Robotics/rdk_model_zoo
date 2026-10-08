@@ -35,7 +35,7 @@ README 直接介绍当前交付物的用途、适用板卡、模型准备、编�
 
 本契约定义每个 sample 各级 README **必须回答的问题**与**可验证的验收要求**。根规范
 （`docs/Model_Zoo_Repository_Guidelines.md`）链接本契约，不在别处重复维护同一要求；
-Q3 检查器（`tools/sample_contract/check.py`）按本契约的固定章节 ID 与规则执行自动检查；
+Q3 检查器（`scripts/tools/sample_contract/check.py`）按本契约的固定章节 ID 与规则执行自动检查；
 Skills（develop/review/validate）按本契约引导流程。三层各司其职：规范定义事实与要求，
 模板承载内容结构，检查器执行可机器判定的规则。
 

@@ -89,7 +89,7 @@ root 编写的 Python 实现已通过 **15 + 11 = 26 项**定向测试，并由�
 
 ### YOLOWorld
 
-初版十份 README、代码与 10 项作者测试已落地，但整改尚未闭环。初版 evidence 位于根目录 [evidence/2026-09-23-b7-yoloworld-host.json](../../../evidence/2026-09-23-b7-yoloworld-host.json)，与其他批次路径不一致；后续若迁移需同步所有引用。
+初版十份 README、代码与 10 项作者测试已落地，但整改尚未闭环。初版 evidence 位于根目录 `git show 182b506f697ea3f994e2a8fb78ba23d4241db670:evidence/2026-09-23-b7-yoloworld-host.json`，与其他批次路径不一致；后续若迁移需同步所有引用。
 
 待修：runner verify_asset_file；direct binding publication/metadata 校验和输出形状锁定；finite 边界；vocabulary 从调用方 ndarray 做只读快照。evaluator 目前缺 native inputs、完整部署 hash/metadata/UTC/argv/cwd/失败 JSON，源 helper 导入依赖环境；改为可执行完整对照并加真实源函数+fake SDK 正反 fixture。保持 32-slot prompt、最后一个 prompt 填槽、空/溢出 prompt 拒绝与 per-call scale/ID context。
 

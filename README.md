@@ -16,7 +16,7 @@ docs/architecture/        # readable runtime architecture
 docs/validation/          # board smoke-test checklist
 datasets/                 # dataset entry points
 utils/                    # shared Python/C++ runtime utilities
-tools/                    # catalog, contract checks and validation tooling
+scripts/tools/            # catalog, contract checks and validation tooling
 ```
 
 ## Start by task
@@ -134,14 +134,14 @@ Each sample's `conversion/` guide covers model export and compilation; `evaluato
 
 ## Catalog data (maintainers)
 
-`tools/catalog-publisher` validates platform manifests and produces
+`scripts/tools/catalog-publisher` validates platform manifests and produces
 derived data. Use Node 22.12+ and below 23 as required by package.json.
 From the repository root:
 
 ```bash
-npm --prefix tools/catalog-publisher ci
-npm --prefix tools/catalog-publisher run check
-npm --prefix tools/catalog-publisher run catalog:build
+npm --prefix scripts/tools/catalog-publisher ci
+npm --prefix scripts/tools/catalog-publisher run check
+npm --prefix scripts/tools/catalog-publisher run catalog:build
 ```
 
 Generated `dist/catalog.meta.json` binds `catalog.json` by SHA-256; CI

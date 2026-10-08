@@ -29,4 +29,4 @@ native/
 python3 -m unittest discover -s samples/llm/minicpm5-2b/tests -p test_native_core.py -v
 ```
 
-环境变量覆盖：`MINICPM_CXX` 指定编译器；`MINICPM_JSON_INCLUDE` 指向 `nlohmann` 头文件目录。未设置覆盖时，由 `tools/host_validation/native_dependencies.py` 依次通过 `pkg-config nlohmann_json` 或标准系统包含根（`/usr/include`、`/usr/local/include`、`/opt/homebrew/include`）发现头文件，不读取仓库外个人路径。无头文件的机器仅跳过依赖 JSON 的 S600 驱动（记录原因，且两个覆盖全部驱动的辅助检查跳过而不是部分执行）；无效覆盖则直接失败。
+环境变量覆盖：`MINICPM_CXX` 指定编译器；`MINICPM_JSON_INCLUDE` 指向 `nlohmann` 头文件目录。未设置覆盖时，由 `scripts/tools/host_validation/native_dependencies.py` 依次通过 `pkg-config nlohmann_json` 或标准系统包含根（`/usr/include`、`/usr/local/include`、`/opt/homebrew/include`）发现头文件，不读取仓库外个人路径。无头文件的机器仅跳过依赖 JSON 的 S600 驱动（记录原因，且两个覆盖全部驱动的辅助检查跳过而不是部分执行）；无效覆盖则直接失败。

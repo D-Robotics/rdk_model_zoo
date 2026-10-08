@@ -139,7 +139,7 @@ class Yolo26Contracts(unittest.TestCase):
     def test_all_100_assets_match_catalog(self):
         from yolo_assets import model_url
         from yolo_platform import resolve_platform
-        data=json.loads((R/'tools/catalog-publisher/dist/catalog.json').read_text(encoding='utf-8'))
+        data=json.loads((R/'scripts/tools/catalog-publisher/dist/catalog.json').read_text(encoding='utf-8'))
         published={a['url'] for m in data['models'] for a in m.get('assets',[]) if a.get('url')}
         urls=set()
         for platform in ('x5','s100','s100p','s600'):

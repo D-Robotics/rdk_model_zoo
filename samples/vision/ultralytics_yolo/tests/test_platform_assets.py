@@ -35,7 +35,7 @@ class PlatformAcceptance(unittest.TestCase):
     def test_all_advertised_assets_exist_in_manifest_snapshot(self):
         from yolo_platform import resolve_platform
         from yolo_assets import family_registry,model_url,UnsupportedAssetError
-        data=json.loads((ROOT/'tools/catalog-publisher/dist/catalog.json').read_text(encoding='utf-8'))
+        data=json.loads((ROOT/'scripts/tools/catalog-publisher/dist/catalog.json').read_text(encoding='utf-8'))
         urls={a['url'] for m in data['models'] for a in m.get('assets',[]) if a.get('url')}
         for key in ['x5','s100','s100p','s600']:
             profile=resolve_platform(key)

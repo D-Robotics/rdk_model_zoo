@@ -29,7 +29,7 @@ CPP = SAMPLE / "runtime/cpp"
 NATIVE = SAMPLE / "tests/native"
 REPO = SAMPLE.parents[2]
 CXX = os.environ.get("GEMMA_CXX", "c++")
-HOST_VALIDATION = REPO / "tools" / "host_validation"
+HOST_VALIDATION = REPO / "scripts" / "tools" / "host_validation"
 if str(HOST_VALIDATION) not in sys.path:
     sys.path.insert(0, str(HOST_VALIDATION))
 
@@ -45,7 +45,7 @@ def resolve_json_include():
     """nlohmann include dir: ``GEMMA_JSON_INCLUDE`` override or discovery.
 
     Standard discovery (pkg-config / system include roots) lives in
-    ``tools/host_validation/native_dependencies.py``; a machine without any
+    ``scripts/tools/host_validation/native_dependencies.py``; a machine without any
     nlohmann headers skips these host checks explicitly, while an invalid
     override fails the run.
     """

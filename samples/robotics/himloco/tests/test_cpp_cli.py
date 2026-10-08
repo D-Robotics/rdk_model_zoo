@@ -13,7 +13,7 @@ import numpy as np
 SAMPLE = Path(__file__).resolve().parents[1]
 ROOT = SAMPLE.parents[2]
 CPP = SAMPLE / "runtime/cpp"
-HOST_VALIDATION = ROOT / "tools" / "host_validation"
+HOST_VALIDATION = ROOT / "scripts" / "tools" / "host_validation"
 if str(HOST_VALIDATION) not in sys.path:
     sys.path.insert(0, str(HOST_VALIDATION))
 
@@ -30,7 +30,7 @@ def resolve_json_include(environ=None, **discovery):
     """nlohmann include dir: ``NLOHMANN_JSON_INCLUDE`` override or discovery.
 
     Standard discovery (pkg-config / system include roots) lives in
-    ``tools/host_validation/native_dependencies.py``. An invalid override
+    ``scripts/tools/host_validation/native_dependencies.py``. An invalid override
     fails the run; a host without any nlohmann headers skips these checks
     explicitly. There is no fallback to a personal directory.
     """
