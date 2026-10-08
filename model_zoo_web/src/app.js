@@ -118,9 +118,12 @@
     listObserver?.disconnect();
     const platformItems = groups.filter(group => !selectedPlatforms.size || group.platforms.some(platform => selectedPlatforms.has(platform)));
     const query = state.query.toLowerCase().trim();
+    // Every whitespace-separated term must match, so "S600 pose" narrows
+    // instead of searching for the literal phrase.
+    const terms = query.split(/\s+/).filter(Boolean);
     const items = platformItems.filter(group => {
-      const searchable = [group.name, ...group.members.map(member => member.variantName), group.task, group.description, ...group.members.flatMap(member => facets.searchTerms(member)), ...group.platforms].join(' ').toLowerCase();
-      return groupMatchesTask(group) && searchable.includes(query);
+      const searchable = [group.name, ...group.members.map(member => member.variantName), group.task, group.description, group.descriptionEn, ...group.members.flatMap(member => facets.searchTerms(member)), ...group.platforms.map(platform => `RDK ${platform}`)].join(' ').toLowerCase();
+      return groupMatchesTask(group) && terms.every(term => searchable.includes(term));
     });
     filteredItems = items;
     $('result-count').textContent = `共 ${items.length} 个模型`;
@@ -210,12 +213,15 @@
     const match = location.hash.match(/^#model\/([^/]+)/);
     const model = match && models.find(candidate => candidate.id === decodeURIComponent(match[1]));
     if (!model) {
+      const fromDetail = !$('detail').hidden;
       window.ModelDetail.destroy();
       $('detail').hidden = true;
       $('catalog').hidden = false;
+      // Return to the card the reader left from, not the top of the list.
+      if (fromDetail) window.scrollTo(0, state.scroll);
       return;
     }
-    state.scroll = window.scrollY;
+    if (!$('catalog').hidden) state.scroll = window.scrollY;
     // Switching platforms stays in place: only entering from the catalog
     // scrolls to the top of the detail page.
     const keepScroll = $('detail').hidden ? 0 : window.scrollY;

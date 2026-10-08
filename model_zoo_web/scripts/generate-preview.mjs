@@ -316,7 +316,8 @@ const taskMetadata = {
 const safeId = (...parts) => parts.join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
 const displayNames = (family, size, task) => {
   const familyName = family.replace(/^yolo/i, 'YOLO');
-  const taskName = task === 'detect' ? 'Detect' : task[0].toUpperCase() + task.slice(1);
+  // Acronym tasks keep their capitals: "YOLO26 OBB", not "YOLO26 Obb".
+  const taskName = { detect: 'Detect', obb: 'OBB' }[task] || task[0].toUpperCase() + task.slice(1);
   return {
     model: `${familyName} ${taskName}`,
     variant: `${familyName}${size} ${taskName}`,
