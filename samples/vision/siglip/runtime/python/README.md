@@ -5,7 +5,7 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Extract image embeddings from a selected SigLIP submodel.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,19 +14,16 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments and result presentation
-├── embedding.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── run.sh  # Run the sample
-└── tensor_io.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── embedding.py  # Model initialization and inference stages
+├── main.py  # CLI entry: construct model and call predict
+└── run.sh  # Run the sample
 ```
 
 <a id="environment"></a>
 ## Environment
 
-- Execution target: RDK S100 (Nash-E) or S100P (Nash-M), with a board image that provides `hbm_runtime`. Board image and firmware versions were not verified; host execution uses injected fixtures only.
+- Execution target: RDK S100 (Nash-E) or S100P (Nash-M), with a board image that provides `hbm_runtime`. Use the Python environment supplied with that board image.
 - Host preparation: Python 3.14.7, `numpy`, `opencv-python`, and `PyYAML` from `../../requirements-host.txt` for contract tests and selection utilities.
 - `hbm_runtime` is board-image-only. `--help`, `--list-models`, and explicit-target `--dry-run` intentionally work without importing the SDK or loading a model.
 
@@ -94,16 +91,15 @@ The CLI prints JSON fields `submodel`, `shape`, `dtype`, `mean`, `std`, `min`, `
 <a id="integration-example"></a>
 ## Integration Example
 
-Prerequisite: place `bpu-siglip-base-patch16-224.hbm` at the default model path using [`model/README.md`](../../model/README.md), and run this snippet on an S100/S100P board. It defines the repository path, image path, target, variant, submodel, scheduling values, selection, runner, binding, tensors, raw output, and both explicit and composed calls.
+Prerequisite: place `bpu-siglip-base-patch16-224.hbm` at the default model path using [`model/README.md`](../../model/README.md), and run this snippet on an S100/S100P board. It defines the repository path, image path, target, variant, submodel, scheduling values, selection, model, tensors, raw output, and both explicit and composed calls.
 
 ```python
 from pathlib import Path
 import cv2
 import numpy as np
 
-from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.siglip.runtime.python.embedding import SigLIPTask
+from samples.vision.siglip.runtime.python.cli import resolve_selection
+from samples.vision.siglip.runtime.python.embedding import SigLIPEmbedder
 
 repo = Path.cwd()
 image_path = repo / "samples/vision/siglip/test_data/dog.jpg"
@@ -117,10 +113,8 @@ submodel = "pooler_output"
 priority = 0
 bpu_cores = [0]
 selection = resolve_selection(target, variant=variant, submodel=submodel)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-task = SigLIPTask(runner, binding)
+task = SigLIPEmbedder(selection)
+task.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
 prepared = task.preprocess(image)
 raw_outputs = task.infer(prepared.tensors)
@@ -134,11 +128,11 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 ## Three-Stage I/O
 
 - `preprocess`: BGR `uint8` `H×W×3` → `PreparedInput`; its `_input_0` is owned contiguous RGB `float32` `(1,3,size,size)` in `[-1,1]`, and `context` stores original/resized shapes plus `(top,bottom,left,right)` padding.
-- `infer`: `{"_input_0": tensor}` → raw `{"_output_0": ndarray}` for the selected packed submodel. `model_runner` validates metadata and containers but preserves native numeric dtype and values.
+- `infer`: `{"_input_0": tensor}` → raw `{"_output_0": ndarray}` for the selected packed submodel. The model validates metadata and containers but preserves native numeric dtype and values.
 - `postprocess`: raw output → owned ndarray with metadata-bound shape/dtype; it rejects wrong shape/dtype and NaN/Inf. This vision feature task consumes no geometry context.
 - `predict(image)` composes exactly preprocess → infer → postprocess. It does not download, save, activate, normalize, or evaluate results.
 
-The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, image reading, the summary and the optional NumPy save, while `main.py` parses, resolves, constructs `SigLIPTask` and calls `predict`.
+The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, image reading, the summary and the optional NumPy save, while `main.py` parses, resolves, constructs `SigLIPEmbedder` and calls `predict`.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

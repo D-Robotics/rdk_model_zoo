@@ -186,7 +186,7 @@ encoder、predictor 由 CPU ONNX Runtime 实际执行，之后调用同一 CPU C
 
 配方只支持 **S100 / nash-e**，保留源 max 校准、内部 INT16、NCHW featuremap、
 O2 latency 优化、单 BPU 核和关闭编译缓存的设置。token 数输入保持 int32。
-内部 INT16 不构成最终物理 I/O 精度保证，运行前仍需通过 SDK 核验真实 HBM 签名。
+内部计算采用 INT16，物理输入输出类型通过 SDK 读取 HBM 元数据确认。
 
 应使用匹配的、已安装 `hb_compile` 的 S OE 工具链。源配方使用的镜像是
 `ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`（hbdk4 4.7.5），原始获取与启动命令：
@@ -226,7 +226,7 @@ HBM，均判失败并停止后续阶段。`compile-report.json` 保留此前完�
 ## 验证转换结果
 
 导出必须完成数值与接口检查，校准准备必须通过快照与数组检查，编译必须保留成功的
-逐阶段日志与产物。这些检查各自独立：非空 HBM 本身不构成模型输出验证。
+逐阶段日志与产物。编译完成后，按下方流程比较模型输出。
 通过[主机评测](../evaluator/README_cn.md)获取 FP32/PTQ 图的逐条转写与 CER；
 具备 S100 环境后，再单独核验 HBM。
 

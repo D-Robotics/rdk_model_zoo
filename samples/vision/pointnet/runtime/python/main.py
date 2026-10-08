@@ -22,7 +22,7 @@ from samples.vision.pointnet.runtime.python.cli import (
     run_list_models,
     save_pointnet_evidence,
 )
-from samples.vision.pointnet.runtime.python.model_binding import resolve_selection
+from samples.vision.pointnet.runtime.python.cli import resolve_selection
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -36,18 +36,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.dry_run:
             return run_dry_run(selection)
         import numpy as np
-        from samples.vision.pointnet.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
 
         input_path = args.test_pts.expanduser()
         points = np.loadtxt(input_path, dtype=np.float32, ndmin=2)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        task = PointNetTask(runner, binding)
-        details = task.predict(points, return_details=True)
+        model = PointNetSegmenter(selection)
+        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+        details = model.predict(points, return_details=True)
         save_pointnet_evidence(args.output_dir.expanduser(),
-                               selection=selection, binding=binding,
+                               selection=selection, binding=model.binding,
                                input_path=args.test_pts, details=details,
                                no_plot=args.no_plot)
         return 0

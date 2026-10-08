@@ -35,7 +35,7 @@ bash samples/vision/pp_liteseg/model/download.sh --target x5
 <a id="accompanying-files"></a>
 ## 伴随文件
 
-无需外部标签文件：visualization.py 内置 Cityscapes 19 类名称和调色板。../test_data 中的两张图片用于示例，不构成精度评估数据集。
+cli.py 内置 Cityscapes 19 类名称和调色板，无需外部标签文件。../test_data 中的两张图片用于运行示例，精度评估请准备 Cityscapes 标注数据。
 
 <a id="local-paths"></a>
 ## 本地路径

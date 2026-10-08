@@ -1,26 +1,25 @@
 # YOLO26 Depth Python 推理
 
+[English](README.md) | 简体中文
+
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+运行 YOLO26 单目相对深度估计。`Yolo26DepthTask.predict` 返回校准后的对数深度及还原至输入图像尺寸的深度图。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── geometry.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-├── tensor_io.py  # Python 脚本
-├── visualization.py  # Python 脚本
-└── yolo26_depth.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果展示
+├── geometry.py  # 图像几何与坐标变换
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── model_runner.py  # Runtime 加载与原始张量执行
+├── run.sh  # 定位 Python 入口并转发参数
+├── tensor_io.py  # 模型阶段与预测
+└── yolo26_depth.py  # 模型阶段与预测
 ```
 
 <a id="environment"></a>
@@ -86,7 +85,7 @@ Lite 模型另写 `raw_logit.npy`（192×192 float32）。深度为相对量，�
 
 报告记录模型/图片摘要、模型选择、运行时元数据和 forward 耗时。耗时包含 runner
 校验与复制，不是纯 BPU 延迟，也不包含前后处理。未知运行时版本如实记为
-`unknown`。主机测试使用受控运行时替身；板端精度、真实 SDK 执行及数据集指标
+`unknown`。参考深度指标
 见[评测说明](../../evaluator/README_cn.md)中的源记录数字。
 
 <a id="integration-example"></a>
@@ -97,13 +96,10 @@ Lite 模型另写 `raw_logit.npy`（192×192 float32）。深度为相对量，�
 ```python
 import cv2
 from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection
-from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 
 selection = resolve_selection("x5", variant="n")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-task = Yolo26DepthTask(runner, binding)
+task = Yolo26DepthTask(selection)
 image = cv2.imread("samples/vision/yolo26_depth/test_data/bus.jpg")
 result = task.predict(image)
 print(result.depth_native.shape)
@@ -119,9 +115,9 @@ prepared 输入、原始输出、warmup 次数和单次前向延时打包返回�
 输出拷贝，不含预处理/后处理）；默认 `predict` 仍返回普通 `DepthResult`，task
 不保存上一帧图像、输出或计时。
 每帧必须保留匹配的
-上下文，task 不保存“上一帧变换”。注入 runner 是主机测试接口，不是板测证明。
+上下文，task 不保存“上一帧变换”。
 CLI 单独设置调度参数；应用可在支持时调用
-`runner.set_scheduling_params(priority=0, bpu_cores=[0])`。
+`task.set_scheduling_params(priority=0, bpu_cores=[0])`。
 `predict` 串联三个阶段；计时、图片 IO 与渲染由调用方处理。
 
 <a id="stage-io"></a>
@@ -155,7 +151,7 @@ SDK runner 的线程安全性以 SDK 说明为准，共享 runner 时请串行�
 <a id="troubleshooting"></a>
 ## 排查
 
-- **板身份未知/不匹配：** 在所选支持目标上运行。dry-run 仅检查选择，不能证明兼容。
+- **板身份未知/不匹配：** 在所选支持目标上运行。dry-run 用于检查模型选择。
 - **SDK 缺失：** 按平台说明安装匹配运行时；只有 NumPy/OpenCV 无法执行模型。
 - **摘要不符：** 重新获取精确发布制品。主动转换应使用显式转换模式，不能把损坏下载
   改标为自转换来绕过检查。

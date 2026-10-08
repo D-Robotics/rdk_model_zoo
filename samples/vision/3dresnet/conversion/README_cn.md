@@ -75,15 +75,9 @@ bash samples/vision/3dresnet/model/download.sh s100
 <a id="validation"></a>
 ## 转换后验证
 
-统一主机验证使用 fixture tests，检查 source 预处理和 source `visualize.get_topk_predictions` 数值行为：
 
-```bash
-# cwd：仓库根目录
-.venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# 预期：全部发现的测试通过，OK（主机 fixture；无需板卡）
-```
 
-在板端执行已下载制品时，使用 [Python runtime](../runtime/python/README_cn.md) 在 S100 板卡上运行；主机测试只覆盖预处理和 Top-K 解码行为。
+在板端执行已下载制品时，使用 [Python runtime](../runtime/python/README_cn.md) 在 S100 板卡上运行。
 
 <a id="artifacts"></a>
 ## 产物
@@ -95,7 +89,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 没有提供 ONNX、checkpoint、校准或 compiler workspace 制品。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
 - 没有可执行 ONNX 导出脚本或固定 source checkpoint。
 - 没有校准数据集、样本数量、量化 YAML 或校准命令。

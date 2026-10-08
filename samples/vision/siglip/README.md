@@ -41,7 +41,7 @@ All eight variants and both submodels are `supported` on S100 and S100P; the HBM
 | `so400m-patch14-384` | not-supported | supported | supported | not-supported | supported | not-supported |
 | `so400m-patch16-256-i18n` | not-supported | supported | supported | not-supported | supported | not-supported |
 
-Board execution requires a board image with `hbm_runtime`; host tests cover contracts and injected fixtures only.
+Board execution requires a board image with `hbm_runtime`.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -85,4 +85,4 @@ The CLI prints one JSON statistics object for the selected raw feature tensor. I
 <a id="license"></a>
 ## License
 
-Sample code is Apache-2.0 under the repository [LICENSE](../../../LICENSE). The manifest points to precompiled Google-origin SigLIP artifacts; their individual weight/export license and version were not recorded in the source release, so no additional model license is asserted here. Preserve the source contributor attribution: Cauchy @吴超.
+Sample code is Apache-2.0 under the repository [LICENSE](../../../LICENSE). The manifest points to precompiled Google-origin SigLIP artifacts; their individual weight/export license and version were not recorded in the source release, so refer to the accompanying model license. Preserve the source contributor attribution: Cauchy @吴超.

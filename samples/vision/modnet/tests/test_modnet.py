@@ -94,9 +94,8 @@ class MODNetTests(unittest.TestCase):
             sys.modules.pop("legacy_modnet", None)
 
     def test_binding_accepts_metadata_and_rejects_shape_or_dtype(self):
-        binding = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_binding"
-        )
+        binding = importlib.import_module("samples.vision.modnet.runtime.python.cli")
+        runtime = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
         selection = binding.resolve_selection("x5")
         good = {
             "model_names": ("modnet",),
@@ -108,31 +107,25 @@ class MODNetTests(unittest.TestCase):
             "output_shapes": {"matte": (1, 1, 512, 512)},
             "output_dtypes": {"matte": "float32"},
         }
-        self.assertEqual(binding.bind_model(selection, good).output_name, "matte")
+        self.assertEqual(runtime.bind_model(selection, good).output_name, "matte")
         for field, value in (
             ("input_shapes", {"input": (1, 3, 256, 256)}),
             ("output_dtypes", {"matte": "int8"}),
         ):
             bad = dict(good)
             bad[field] = value
-            with self.assertRaises(binding.MetadataMismatchError):
-                binding.bind_model(selection, bad)
+            with self.assertRaises(runtime.MetadataMismatchError):
+                runtime.bind_model(selection, bad)
 
     def test_geometry_context_is_per_call_for_a_b_a(self):
-        runtime_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_runner"
-        )
-        task_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.modnet"
-        )
-        binding_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_binding"
-        )
+        runtime_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        task_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        binding_mod = importlib.import_module("samples.vision.modnet.runtime.python.cli")
         selection = binding_mod.resolve_selection("x5")
         matte = np.ones((1, 1, 512, 512), dtype=np.float32)
-        runner = runtime_mod.RuntimeModelRunner(selection, runtime=FakeRuntime(matte))
+        runner = runtime_mod.create_runner(selection, runtime=FakeRuntime(matte))
         binding = runner.load()
-        task = task_mod.MODNetTask(runner, binding)
+        task = task_mod.MODNetMatting(selection, runner=runner)
         image_a = np.zeros((80, 160, 3), dtype=np.uint8)
         image_b = np.zeros((240, 100, 3), dtype=np.uint8)
         prepared_a1 = task.pre_process(image_a)
@@ -145,19 +138,13 @@ class MODNetTests(unittest.TestCase):
         self.assertEqual(task.post_process(matte, prepared_a2.context).shape, image_a.shape[:2])
 
     def test_task_uses_source_normalization_and_owned_raw_result(self):
-        runtime_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_runner"
-        )
-        task_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.modnet"
-        )
-        binding_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_binding"
-        )
+        runtime_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        task_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        binding_mod = importlib.import_module("samples.vision.modnet.runtime.python.cli")
         selection = binding_mod.resolve_selection("x5")
         raw = np.zeros((1, 1, 512, 512), dtype=np.float32)
-        runner = runtime_mod.RuntimeModelRunner(selection, runtime=FakeRuntime(raw))
-        task = task_mod.MODNetTask(runner, runner.load())
+        runner = runtime_mod.create_runner(selection, runtime=FakeRuntime(raw))
+        task = task_mod.MODNetMatting(selection, runner=runner)
         image = np.array([[[0, 10, 20]]], dtype=np.uint8)
         prepared = task.pre_process(image)
         self.assertEqual(prepared.tensors["input"].dtype, np.float32)
@@ -169,15 +156,14 @@ class MODNetTests(unittest.TestCase):
         self.assertTrue(np.array_equal(result, raw))
 
     def test_manual_external_model_requires_exact_asset_id(self):
-        binding = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_binding"
-        )
+        binding = importlib.import_module("samples.vision.modnet.runtime.python.cli")
         with self.assertRaises(binding.BindingError):
             binding.resolve_selection("x5", model_path="/tmp/modnet.bin")
 
     def test_cli_list_and_dry_run_do_not_construct_runtime(self):
         main = importlib.import_module("samples.vision.modnet.runtime.python.main")
-        with patch.object(main, "RuntimeModelRunner", side_effect=AssertionError):
+        task_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        with patch.object(task_mod, "MODNetMatting", side_effect=AssertionError):
             self.assertEqual(main.main(["--list-models"]), 0)
             self.assertEqual(main.main(["--dry-run", "--target", "x5"]), 0)
 
@@ -199,22 +185,18 @@ class MODNetTests(unittest.TestCase):
         self.assertEqual(module.main(["--target", "x5", "--asset-id", module.ASSET_ID]), 2)
 
     def test_real_path_gates_before_sdk_and_the_seam_skips_the_gate(self):
-        runner_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_runner"
-        )
-        binding = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_binding"
-        )
+        runner_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        binding = importlib.import_module("samples.vision.modnet.runtime.python.cli")
         selection = binding.resolve_selection("x5")
         with patch.object(runner_mod, "require_execution_target",
                           side_effect=ValueError("no board identity")) as gate:
             with self.assertRaises(ValueError):
-                runner_mod.RuntimeModelRunner(selection).load()
+                runner_mod.create_runner(selection).load()
             gate.assert_called_once_with("x5")
         matte = np.zeros((1, 1, 512, 512), dtype=np.float32)
         with patch.object(runner_mod, "require_execution_target",
                           side_effect=AssertionError("injected factory is the host seam")):
-            runner = runner_mod.RuntimeModelRunner(
+            runner = runner_mod.create_runner(
                 selection, runtime_factory=lambda path: FakeRuntime(matte)
             )
             self.assertIsNotNone(runner.load())
@@ -224,20 +206,14 @@ class ReadableInterfaceTests(unittest.TestCase):
     """The canonical preprocess/infer/postprocess names drive predict."""
 
     def task(self):
-        runtime_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_runner"
-        )
-        task_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.modnet"
-        )
-        binding_mod = importlib.import_module(
-            "samples.vision.modnet.runtime.python.model_binding"
-        )
+        runtime_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        task_mod = importlib.import_module("samples.vision.modnet.runtime.python.modnet")
+        binding_mod = importlib.import_module("samples.vision.modnet.runtime.python.cli")
         selection = binding_mod.resolve_selection("x5")
         matte = np.linspace(0.0, 1.0, 512 * 512, dtype=np.float32).reshape(1, 1, 512, 512)
         runtime = FakeRuntime(matte)
-        runner = runtime_mod.RuntimeModelRunner(selection, runtime=runtime)
-        return task_mod.MODNetTask(runner, runner.load()), runtime
+        runner = runtime_mod.create_runner(selection, runtime=runtime)
+        return task_mod.MODNetMatting(selection, runner=runner), runtime
 
     def test_canonical_stages_exist_and_legacy_names_delegate(self):
         task, runtime = self.task()
@@ -307,11 +283,38 @@ class ReadableInterfaceTests(unittest.TestCase):
         self.assertEqual(len(runtime.calls), 4)
 
 
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``modnet.py`` owns the named
+    model class that loads via the shared transport; the per-sample
+    ``model_binding``/``model_runner`` forwarding modules are gone.
+    """
+
+    def test_matting_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.modnet.runtime.python.cli import resolve_selection
+        from samples.vision.modnet.runtime.python.modnet import MODNetMatting, create_runner
+        matte = np.zeros((1, 1, 512, 512), np.float32)
+        selection = resolve_selection("x5")
+        model = MODNetMatting(selection, runner=create_runner(selection, runtime=FakeRuntime(matte)))
+        out = model.predict(np.zeros((13, 29, 3), np.uint8))
+        self.assertEqual(out.shape, (13, 29))
+        self.assertEqual(out.dtype, np.uint8)
+        prepared = model.preprocess(np.zeros((13, 29, 3), np.uint8))
+        manual = model.postprocess(model.infer(prepared.tensors), prepared.context)
+        np.testing.assert_array_equal(out, manual)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = Path(__file__).resolve().parents[1] / "runtime" / "python"
+        for name in ("model_binding.py", "model_runner.py"):
+            self.assertFalse((base / name).exists(), name)
+
+
 class MODNetEvaluatorTests(unittest.TestCase):
     """The evaluator must run both sides itself, not compare hand-made mattes."""
 
     def _fixtures(self, temp):
-        binding = importlib.import_module("samples.vision.modnet.runtime.python.model_binding")
+        binding = importlib.import_module("samples.vision.modnet.runtime.python.cli")
         model = Path(temp) / "modnet.bin"
         model.write_bytes(b"fixture-modnet-model")
         selection = binding.resolve_selection(

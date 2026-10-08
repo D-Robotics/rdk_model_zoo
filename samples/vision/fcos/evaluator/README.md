@@ -21,7 +21,7 @@ evaluator/
 ## Environment
 
 - Execution target: an identified RDK X5 board with `hbm_runtime` and one exact manifest artifact.
-- Host dependencies: Python 3.10+, NumPy, OpenCV, PyYAML, and SciPy from `requirements-host.txt`; SciPy is imported by the source postprocess helper. Host tests use an injected runtime and never load the board SDK.
+- Host dependencies: Python 3.10+, NumPy, OpenCV, PyYAML, and SciPy from `requirements-host.txt`; SciPy is imported by the source postprocess helper.
 - The evaluator runs the pinned original X5 helper (loaded from Git history) and this sample's FCOS task on the same image, artifact, thresholds, and direct-resize geometry.
 
 <a id="command"></a>

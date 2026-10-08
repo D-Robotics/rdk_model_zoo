@@ -9,6 +9,19 @@ I/O, source structure, conversion and evaluation. Model inference runs
 with Python and the board SDK alone. Source version: 2.0.0
 (`VERSION` at the repository root).
 
+## Directory structure
+
+```text
+samples/                  # task implementations and guides
+docs/release/             # artifact/benchmark facts and target identity
+docs/sample-standards/    # README and inference contracts
+docs/architecture/        # readable runtime architecture
+docs/validation/          # board smoke-test checklist
+datasets/                 # dataset entry points
+utils/                    # shared Python/C++ runtime utilities
+tools/                    # catalog, contract checks and validation tooling
+```
+
 ## Start by task
 
 The [sample index](samples/README.md) lists 51 samples: 45 vision, three
@@ -100,25 +113,16 @@ for a board test checklist see the
 
 ## Read and extend the code
 
-```text
-samples/                  # task implementations and guides
-docs/release/             # artifact/benchmark facts and target identity
-docs/sample-standards/    # README and inference contracts
-docs/architecture/        # readable runtime architecture
-docs/validation/          # board smoke-test checklist
-datasets/                 # dataset entry points
-utils/                    # compatibility utilities
-tools/                    # catalog, contract checks and validation tooling
-```
 
 Every Python runtime follows one shape: `main.py` stays a thin entry —
 parse arguments, construct the model class, call `predict`, show the
 result; the model class implements the `preprocess → infer → postprocess`
 chain in one readable file, assembled by `predict`; sample-local CLI
 helper modules (`cli.py`, `yolo_cli.py`) own argument, listing, dry-run
-and file-IO work; runner/binding modules isolate the SDK session and
-tensor contracts. The pattern is described in
-[docs/architecture/model-examples.md](docs/architecture/model-examples.md),
+and result presentation. Ordinary single-task samples use these three Python
+files. Model construction loads the shared Runtime; additional modules hold
+complete algorithms or model-specific tensor contracts. The pattern is described in
+[Runtime code standard](docs/sample-standards/runtime-code.md),
 with ResNet ([classify.py](samples/vision/resnet/runtime/python/classify.py))
 and YOLO detection ([detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py))
 as the reference implementations. The two `samples/llm` samples provide

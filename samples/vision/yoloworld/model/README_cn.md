@@ -51,5 +51,5 @@ F32 宽度 512 向量；它提供文本嵌入和 ID 映射，不能用 COCO 标�
 
 ## 入口
 
-`download.py`、`download.sh` 和兼容别名 `download_model.sh` 是显式准备入口；
+`download.py`、`download.sh` 和别名 `download_model.sh` 是显式准备入口；
 runtime 不会调用它们。

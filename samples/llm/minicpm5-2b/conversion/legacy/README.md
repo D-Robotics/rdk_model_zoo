@@ -6,11 +6,24 @@
 
 Use D-Robotics LLM S100 **1.0.0 SDK**, Python 3.10 and leap_llm. This is separate from the parent S600 OELLM 2.0/lightcompress workflow. Obtain the [SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_SDK.tar.gz) and [manual](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_Doc.zip). Install requirements/compiler/leap_llm according to the bundled manual; do not edit version configuration or mix 2.0 wheels.
 
+## Directory structure
+
+```text
+legacy/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── legacy_adapter.py  # Python script
+├── main.py  # Command-line entry
+├── prepare_calibration.py  # Python script
+├── prepare_tokenizer.py  # Python script
+└── retarget.py  # Python script
+```
+
 ## Adapter
 
 Source: [openbmb/MiniCPM5-2B](https://huggingface.co/openbmb/MiniCPM5-2B), revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`. Keep its original config, tokenizer and safetensors. It is a bias-free Llama model with 42 layers, hidden size 2048, 16 Q heads, 2 KV heads, head dimension 128, RoPE theta 5000000 and vocabulary 130560.
 
-`legacy_adapter.py` reuses the SDK DeepSeek Llama-compatible implementation, removes Q/K/V biases, strictly loads all original weights and enables preserve_precision/W8. It does not convert the architecture into DeepSeek. `main.py` registers an external adapter with the SDK calibration/export/compile CLI without modifying the SDK. The verified shape is chunk256/cache4096; other shapes require compilation and validation.
+`legacy_adapter.py` reuses the SDK DeepSeek Llama-compatible implementation, removes Q/K/V biases, strictly loads all original weights and enables preserve_precision/W8. `main.py` registers an external adapter with the SDK calibration/export/compile CLI without modifying the SDK. Published artifacts use chunk256/cache4096; compile and evaluate a new artifact when changing these dimensions.
 
 ## Reproduce
 
@@ -36,4 +49,4 @@ Calibration verifies a pinned WikiText2 TRAIN SHA256, joins text with two newlin
 
 Deploy only HBM, deployment tokenizer, LICENSE, modification notice and checksums. Exclude SDK, BC/HBO and caches. Public HBM names are `minicpm5-2b_ctx4096_s100.hbm` and `minicpm5-2b_ctx4096_s100p.hbm`. Tokenizer preparation changes only BPE serialization, the equivalent basic non-thinking template and primary chat EOS 130073; vocabulary and merge order are preserved.
 
-See [models](../../model/README.md) and [full board validation](../../evaluator/README.md). Both legacy HBMs have full PPL 17.91995 (+27.83% over float), failing the ≤3% target. Generation/reference differences and functional-check records are kept in the [legacy evaluator](../../evaluator/legacy/README.md); the S600 PPL figures apply to the S600 artifact only.
+See [models](../../model/README.md) and [full board validation](../../evaluator/README.md). Both legacy HBMs have full PPL 17.91995 (+27.83% over float), failing the ≤3% target. Generation/reference differences and functional-check records are kept in the [OELLM 1.0.0 evaluator](../../evaluator/legacy/README.md); the S600 PPL figures apply to the S600 artifact only.

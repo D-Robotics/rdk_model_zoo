@@ -68,10 +68,20 @@ class EfficientSAMPipeline(SAMPipeline):
     and ``predict`` shows the composition.  Errors are attributed with the
     shared :class:`StageError` so callers can tell encoder from decoder
     failures; the failing stage's successor is never executed.
+
+    Attributes:
+        runner: Owner of the loaded encoder and decoder SDK runtimes.
+        binding: Validated model-pair metadata and artifact selection.
+        encoder: Public image-embedding stage.
+        decoder: Public mask-decoding stage.
     """
 
     def __init__(self, runner, binding):
         """Bind only an ``efficient_sam`` model pair.
+
+        Args:
+            runner: Loaded encoder/decoder runtime pair.
+            binding: Validated model-pair metadata for this sample.
 
         Raises:
             ValueError: if the supplied model binding belongs to another
@@ -79,10 +89,54 @@ class EfficientSAMPipeline(SAMPipeline):
         """
         if getattr(getattr(binding, "selection", None), "sample", None) != "efficient_sam":
             raise ValueError("EfficientSAMPipeline requires an efficient_sam model binding")
+        self.runner = runner
+        self.binding = binding
         super().__init__(runner, binding)
         # Canonical-name views over the same shared stage implementations.
         self.encoder = EfficientSAMEncoder(runner.encoder, binding.encoder)
         self.decoder = EfficientSAMDecoder(runner.decoder, binding.decoder)
+
+    @classmethod
+    def from_models(cls, selection, *, runtime_factory=None):
+        """Load and bind the encoder/decoder pair and construct the pipeline.
+
+        Args:
+            selection: Resolved efficient_sam artifact paths and target from cli.
+            runtime_factory: Optional SDK-compatible factory for injected runtimes.
+                None uses the board SDK after checking the executing board.
+
+        Returns:
+            EfficientSAMPipeline: Pipeline owning both loaded models and metadata.
+
+        Raises:
+            ValueError: The selection belongs to another sample or board.
+            RuntimeError: SDK loading or model initialization fails.
+            MetadataMismatchError: Encoder/decoder tensors violate the contract.
+        """
+        if getattr(selection, "sample", None) != "efficient_sam":
+            raise ValueError("EfficientSAMPipeline requires an efficient_sam model selection")
+        from utils.py_utils.sam_runner import RuntimeModelRunner
+
+        runner = RuntimeModelRunner(selection, runtime_factory=runtime_factory)
+        binding = runner.load()
+        return cls(runner, binding)
+
+    def set_scheduling_params(self, *, priority=None, bpu_cores=None):
+        """Apply scheduling settings to the encoder and decoder models.
+
+        Args:
+            priority: Native scheduling priority in 0..255, or None to retain it.
+            bpu_cores: Nonempty list of nonnegative S-series core indexes.
+                Use None on X5, which does not expose core selection here.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: The scheduling arguments are invalid for the target.
+            RuntimeError: Either SDK stage rejects the scheduling request.
+        """
+        self.runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
     def encode_image(self, image):
         """Run the encoder's three public steps and return the embedding."""

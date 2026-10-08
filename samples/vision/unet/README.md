@@ -45,9 +45,7 @@ SHA256 `556a74b8379c40cbc76af7a1faab84d1316f02b7d93290b5f1f724ff922faacb`.
 Generated variants use torchvision ImageNet encoder initialization; training
 receipts must record the exact torchvision version and weight identifier.
 
-Sharing architecture code and conversion templates does not make an untested
-backbone supported. Each variant must independently pass checkpoint, ONNX, PTQ,
-accuracy, Runtime, and board-performance gates.
+Use the target-specific artifacts listed in the support matrix and the matching conversion configuration.
 
 <a id="directory"></a>
 ## Directory structure

@@ -254,7 +254,7 @@ class BoundaryTests(unittest.TestCase):
             load_inputs,
             save_result,
         )
-        from samples.vision.yoloe.runtime.python.pipeline_io import Result
+        from samples.vision.yoloe.runtime.python.yoloe import Result
 
         sample = ROOT / "samples/vision/yoloe"
         image, labels = load_inputs(

@@ -12,7 +12,7 @@
 
 ```text
 conversion/
-├── legacy/  # legacy 相关文件
+├── legacy/  # OELLM 1.0.0 流程
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── adapter.py  # Python 脚本
@@ -106,6 +106,6 @@ TRAIN 和 TEST 分开下载并固定校验和。TRAIN 仅因SDK按 test-*.parque
 
 ## S100 / S100P
 
-独立的 SDK 1.0.0 / leap_llm 编译流程见 [legacy 转换说明](legacy/README_cn.md)。上文 2.0 配置仅用于 S600。
+独立的 SDK 1.0.0 / leap_llm 编译流程见 [OELLM 1.0.0 转换说明](legacy/README_cn.md)。上文 2.0 配置仅用于 S600。
 
 预编译资产按 [model](../model/README_cn.md) 的固定摘要选用。S100/S100P 的完整精度结论为未达到 ≤3% 相对 PPL 目标，不能用 S600 数字代替。公开指标只对应提供的归档；重建制品按本页配方执行并重新评估后再部署。

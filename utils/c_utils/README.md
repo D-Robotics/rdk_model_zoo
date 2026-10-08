@@ -1,35 +1,32 @@
-# Utils Module (C/C++)
-本模块提供一组 面向开发者的通用工具函数，用于模型推理流程中常见的 文件读写、预处理、后处理、数学计算与可视化 等操作，便于在不同模型 Sample 中复用。
+# C++ runtime utilities
 
-## 目录结构与文件职责
-### 子目录说明
+[简体中文](README_cn.md)
+
+These helpers provide image and tensor processing, result rendering, board identification and file hashing for native Model Zoo samples.
+
+## Directory structure
+
 ```text
-c_utils
-├── inc/    # 头文件（接口声明与函数注释）
-└── src/    # 源文件（函数实现）
+c_utils/
+├── inc/                   # Public headers
+├── src/                   # Implementations
+├── platform_identity.h    # Board identity types and target resolution
+├── platform_identity.cc   # Read board identity
+└── sha256.h               # SHA-256 helper
 ```
 
-- inc/
+| Header / source | Purpose |
+| --- | --- |
+| `file_io.hpp` / `.cpp` | Images and labels |
+| `model_types.hpp` | Classification, detection and keypoint types |
+| `nn_math.hpp` / `.cpp` | Sigmoid, Softmax and normalization |
+| `preprocess.hpp` / `.cpp` | Resize, letterbox, color conversion and tensor preparation |
+| `postprocess.hpp` / `.cpp` | Top-K, dequantization, decoding, NMS and coordinate mapping |
+| `visualize.hpp` / `.cpp` | Classification, boxes, masks, keypoints and text |
+| `runtime.hpp` | HB-DNN and HB-UCP return-code handling |
 
-    对外暴露的接口声明；
+## Usage
 
-- src/
+Build from a sample's `runtime/cpp` directory with its documented CMake command. Its CMakeLists selects the required headers and implementation files from this directory and links the target SDK and OpenCV libraries. See the [ResNet C++ guide](../../samples/vision/resnet/runtime/cpp/README.md) and [YOLO C++ guide](../../samples/vision/ultralytics_yolo/runtime/cpp/README.md) for target-specific configuration.
 
-    对应接口的具体实现，所有函数的功能、参数与返回值说明均在此处以注释形式给出。
-
-### 文件职责说明
-| 文件名                     | 说明        | 包含内容                                                  |
-| ----------------------- | --------- | ----------------------------------------------------- |
-| `file_io.hpp /.cpp`     | 文件与资源读写工具 | 图像加载、标签文件读取等                                          |
-| `model_types.hpp`       | 公共数据结构定义 | `Classification` / `Detection` / `Keypoint` 等模型相关基础类型 |
-| `nn_math.hpp /.cpp`     | 数学与数值计算工具 | sigmoid/softmax、数值归一化等通用数学计算                     |
-| `preprocess.hpp /.cpp` | 推理前数据预处理 | resize/letterbox、颜色空间转换、tensor 写入与输入输出 tensor 内存准备    |
-| `postprocess.hpp /.cpp` | 推理后结果处理   | Top-K、反量化、解码、过滤、NMS、坐标映射等                             |
-| `visualize.hpp /.cpp`   | 可视化工具     | 分类结果打印、检测框/分割/关键点绘制、文本/多边形渲染等                         |
-| `runtime.hpp`           | 运行时辅助宏    | HB-DNN / HB-UCP API 调用检查宏（统一错误打印与返回码处理）               |
-
-## 函数索引（快速查找）
-本节用于帮助开发者快速定位所需功能所在的文件。
-
-- 阅读[源码文档说明](../../docs/source_reference/README.md)，根据说明查看源码参考文档；
-- 在文档中根据目录结构，找到想查阅的文件，即可查看函数列表及接口说明；
+Include headers from `inc/` for image and result processing. Include `platform_identity.h` and compile `platform_identity.cc` when the application needs `rdk::read_native_identity()` and `rdk::identify_target()`. Include `sha256.h` for file hashes. Function signatures and tensor descriptions are documented in the [source reference](../../docs/source_reference/README.md).

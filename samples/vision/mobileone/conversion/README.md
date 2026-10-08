@@ -83,7 +83,7 @@ Use the qualified reference that matches the artifact and target. Record the bui
 <a id="artifacts"></a>
 ## Artifacts
 
-Compiled paths are listed above. Published files and per-variant targets are listed in [model preparation](../model/README.md#artifacts); downloads land in the sample model directory. Preserve variant and provenance when moving a verified build; renaming alone is not a repair.
+Compiled paths are listed above. Published files and per-variant targets are listed in [model preparation](../model/README.md#artifacts); downloads land in the sample model directory. Store each compiled model with its variant name and compilation configuration.
 
 <a id="known-gaps"></a>
 ## Additional preparation

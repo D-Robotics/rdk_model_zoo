@@ -67,7 +67,7 @@ on the same board and evaluate CIFAR-10 accuracy.
 <a id="artifacts"></a>
 ## Artifacts
 
-One YAML produces an unsuffixed HBM. Published int8/int16 artifacts are separate entries in [model](../model/README.md). The provided recipe does not establish how each was built; renaming its output is not proof of an int16 build.
+The YAML in this directory produces an HBM without a precision suffix. Published int8/int16 models are listed in [model](../model/README.md); configure the corresponding quantization precision in the toolchain when building a model at a specified precision.
 
 <a id="known-gaps"></a>
 ## Additional preparation

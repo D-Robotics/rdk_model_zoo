@@ -74,7 +74,7 @@ samples/⟪domain⟫/⟪name⟫/test_data/⟪image⟫⟫
 ```python
 import ⟪module⟫
 
-⟪binding = … (concrete construction with real paths)⟫
+⟪model_path and model parameters (concrete local files and values)⟫
 model = ⟪Model⟫(⟪args⟫)
 result = model.predict(⟪defined input⟫)
 print(⟪result field⟫)

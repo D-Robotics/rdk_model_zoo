@@ -122,7 +122,9 @@ remain historical material, not a new adaptation target.
 - Python comments (2026-10-08): follow the Google-style module/class/function
   requirements in docs/Model_Zoo_Repository_Guidelines.md, including Args,
   Returns, relevant Raises, key Attributes, and English inline comments.
-  The proposed common-library destination is root utils/; see
+  Shared Python/C++ capabilities live in root utils/; see
   docs/superpowers/plans/2026-10-08-common-utilities-consolidation.md.
-  The current ResNet pilot still imports utils/py_utils; the repository-wide
-  import/build migration is not implemented by this pilot's comment changes.
+  Current Runtime code requirements are defined in
+  [Sample Runtime code](docs/sample-standards/runtime-code.md): ordinary
+  single-task samples use main.py, cli.py and one model class file. Model
+  construction owns Runtime loading; meaningful algorithm modules may remain.

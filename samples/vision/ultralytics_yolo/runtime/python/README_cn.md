@@ -1,32 +1,45 @@
 # Python 运行时
 
-[English](README.md)
-
-这是共用 Ultralytics YOLO Sample 的板端入口。`main.py` 是轻量入口：
-解析参数、解析执行计划、构造所选任务模型、调用 `predict`、展示结果；
-选项声明与 model-free 的列表/dry-run/下载准备及结果展示在 `yolo_cli.py`。
-各任务的可读流程在各自任务模块中——DFL 检测在 [`detect.py`](detect.py)
-（`YoloDetect`：初始化、`preprocess`、`infer`、`postprocess`、`predict` 同文件
-可见；`yolo_detect` 导入路径是同一实现的再导出）。入口通过 RDK 系统
-镜像提供的 `hbm_runtime` 加载 X5 的 `.bin` 或 S100/S100P/S600 的 `.hbm`，把一张
-BGR 图片准备为目标板的 NV12 输入，执行任务解码；detect/seg/pose/obb 保存绘制结果，cls 打印 Top-K。脚本不会
-安装 Python 依赖。导出和编译请看 [`conversion/README_cn.md`](../../conversion/README_cn.md)。
+[English](README.md) | 简体中文
 
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+运行 Ultralytics 检测、分割、姿态、分类与旋转框模型。`main.py` 取得模型类与配置，显式构造 `Model(config)` 并调用 `predict`；各任务文件包含对应的前处理、推理与解码。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── detect.py  # 检测前处理、推理与后处理
-├── main.py  # 命令行入口
-└── run.sh  # 运行示例
+├── classification_decode.py  # 模型阶段与预测
+├── decode.py  # 任务输出解码
+├── detect.py  # 模型阶段与预测
+├── detection_io.py  # 模型阶段与预测
+├── geometry.py  # 图像几何与坐标变换
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── model_runner.py  # Runtime 加载与原始张量执行
+├── obb_decode.py  # 模型阶段与预测
+├── pose_decode.py  # 模型阶段与预测
+├── run.sh  # 定位 Python 入口并转发参数
+├── segmentation_decode.py  # 模型阶段与预测
+├── tensor_io.py  # 模型阶段与预测
+├── yolo26_det.py  # 模型阶段与预测
+├── yolo26_obb.py  # 模型阶段与预测
+├── yolo26_pose.py  # 模型阶段与预测
+├── yolo26_seg.py  # 模型阶段与预测
+├── yolo_assets.py  # 模型阶段与预测
+├── yolo_cli.py  # 参数、模型选择与结果展示
+├── yolo_cls.py  # 模型阶段与预测
+├── yolo_dispatch.py  # 模型阶段与预测
+├── yolo_download.py  # 模型阶段与预测
+├── yolo_input.py  # 模型阶段与预测
+├── yolo_platform.py  # 模型阶段与预测
+├── yolo_pose.py  # 模型阶段与预测
+├── yolo_runtime.py  # 模型阶段与预测
+├── yolo_seg.py  # 模型阶段与预测
+└── yolo_v10detect.py  # 模型阶段与预测
 ```
 
 <a id="environment"></a>
@@ -150,7 +163,7 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 | `--dry-run` | flag | `false` | 只解析选择，不下载、不推理。 |
 | `--download` | flag | `false` | 准备所选发布模型后退出，不推理。 |
 
-非分类任务默认 letterbox。分类中，YOLO26 全目标默认拉伸；其他系列 X5 默认 letterbox，S 默认拉伸。输入尺寸与类别数须匹配模型；`--reg`、`--strides`、`--mc` 等不是强行兼容其他模型的开关。YOLO26 非分类任务拒绝偏离 16/17/32 的 DFL/关键点/mask 覆盖参数。YOLOv13 仅在 X5 发布。
+非分类任务默认 letterbox。分类中，YOLO26 全目标默认拉伸；其他系列 X5 默认 letterbox，S 默认拉伸。输入尺寸、类别数及 `--reg`、`--strides`、`--mc` 须与模型输出协议一致。YOLO26 非分类任务拒绝偏离 16/17/32 的 DFL/关键点/mask 覆盖参数。YOLOv13 仅在 X5 发布。
 
 <a id="results"></a>
 ## 输出结果
@@ -170,8 +183,7 @@ YOLO26 检测使用 stride 8/16/32 的直接 LTRB，因此有独立绑定和解�
 <a id="integration-example"></a>
 ## 库接口
 
-可读的 DFL 检测流程在 `detect.py`（`YoloDetect`）；`yolo_detect`
-导入路径再导出同一批类。`predict` 接受本地图片路径或 BGR `uint8` 数组，
+DFL 检测流程在 `detect.py`（`YoloDetect`）。`predict` 接受本地图片路径或 BGR `uint8` 数组，
 且不会原地修改数组。在匹配的 S600 板卡上从仓库根目录执行下例，并先将
 模型路径替换为本地 YOLO11 检测制品：
 
@@ -208,12 +220,10 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
     np.testing.assert_allclose(staged, predicted)
 ```
 
-`YoloDetect` 支持注入 runner，便于主机测试或接入其他运行时加载器。runner
+`YoloDetect` 支持注入 runner，用于接入其他运行时加载器。runner
 负责模型执行；图像几何、协议绑定、DFL 解码、按类别 NMS 和坐标还原由共用
 任务实现负责。`pre_process` / `forward` / `post_process` 是可读阶段方法的
-薄别名（同一实现）。`YOLO26Detect` 共用图片准备和 runner 流程，但使用
-直接 LTRB 解码。`yolo_detect` 导入路径再导出同一批类，`legacy.py` 提供
-`pre_process_with_transform` 并返回 `(tensors, transform)` 元组；两者都委托到同一套阶段实现。
+薄别名（同一实现）。`YOLO26Detect` 共用图片准备与 Runtime 流程，使用直接 LTRB 解码。
 
 <a id="stage-io"></a>
 ## 代码流程
@@ -231,9 +241,8 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
 - `postprocess(raw, transform=prepared.transform)`（别名 `post_process`）进行 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。检测与 DFL 分割/姿态绑定均要求模型直接提供浮点输出；整数或 SCALE metadata 在加载时拒绝，后处理不执行手动反量化。
 - `predict(图片或路径)` 串联这些方法并返回自有结果数组。注入 runner 返回普通语义映射时，数值须已是浮点；物理浮点输出使用绑定后的 raw 容器。
 
-可执行兼容方式：prepared 仍支持 `[model_name]` 映射访问，`infer`/`forward(prepared)` 会取出
-`.tensors`；`legacy.py` 中的 `pre_process_with_transform` 返回 `(tensors, transform)`
-元组。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
+prepared 支持 `[model_name]` 映射访问，`infer`/`forward(prepared)` 会取出
+`.tensors`。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
 时必须一致。逐图几何保存在 prepared 对象上，没有实例级的 last-transform 属性。
 DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下文。
 
@@ -241,7 +250,7 @@ DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下�
 main.py
   -> resolve_target / 平台 Manifest 选择（yolo_cli 负责列表、dry-run、
      下载准备与结果展示）
-  -> yolo_dispatch.get_task_types / create_runtime_model
+  -> yolo_dispatch.prepare_runtime_model -> Model(config) -> model.predict(image)
   -> ModelRunner + ModelBinding（输入/输出契约，共享 SDK 会话）
   -> geometry.resize_with_transform + NV12 输入绑定
   -> YoloDetect 或 YOLO26Detect 解码 + NMS
@@ -293,7 +302,7 @@ print(boxes.shape, scores.shape, ids.shape, [mask.shape for mask in masks])
 `YoloSeg(config, runner=...)` 支持注入 runner。工厂读取实际输入/输出 metadata，
 在加载真实 SDK 前核对目标身份；推理不下载模型。`preprocess`（别名 `pre_process`）
 接收非空 BGR
-uint8 H×W×3；`postprocess`（别名 `post_process`）接收 `prepared.transform`，也兼容旧的
+uint8 H×W×3；`postprocess`（别名 `post_process`）接收 `prepared.transform`，也支持显式传入的
 `(原宽, 原高)` 参数。缺失或冲突的几何会报错，不保存上一张图片的状态。
 
 有限输出协议为 stride 8/16/32 的 NHWC 类别 logits `(1,H/s,W/s,C)`、DFL 框
@@ -365,7 +374,7 @@ print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
 稳定 sigmoid；已经是概率，不要再次 sigmoid，也不要按 logits 的零阈值判断可见性。
 示例的 0.5 只用于调用方可见性筛选，不改变返回的坐标或删掉关键点。
 
-X5 兼容适配器返回 `(boxes, scores, keypoints)`，最后一项为 `(N,17,3)`
+X5 适配器返回 `(boxes, scores, keypoints)`，最后一项为 `(N,17,3)`
 x/y/概率。不提供独立的 S YOLO11Pose logits 返回接口。
 
 <a id="classification-api"></a>
@@ -374,7 +383,7 @@ x/y/概率。不提供独立的 S YOLO11Pose logits 返回接口。
 YOLOv8、YOLO11 和 YOLO26 共用分类流程。在匹配的 S600 板卡上，从仓库根目录运行
 下例；先按[模型准备](../../model/README_cn.md)获取制品，并替换绝对路径。
 输入尺寸以 SDK metadata 为准，文件名不能证明是 224 还是 640。尤其 S100/S100P
-旧制品 ID 中的 `640` 对应下载 URL 中的 `224`，保留发布身份并读取实际 metadata。
+制品 ID 中的 `640` 对应下载 URL 中的 `224`，保留发布身份并读取实际 metadata。
 
 ```python
 from pathlib import Path
@@ -456,13 +465,12 @@ print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
 六个物理浮点 NHWC 输出按形状绑定为 stride 8/16/32 的分类及 16-bin DFL 框角色，
 不按 SDK 枚举顺序猜测含义。模型输入必须为正方形。raw 缓冲区生命周期、显式逐图
 transform、拥有独立存储的 `(boxes, scores, class_ids)` 结果与共用检测接口一致。
-`pre_process` / `forward` / `post_process` 别名仍可用；
-`post_process(raw, 原图宽, 原图高)` 显式重建几何，`pre_process` 返回兼容映射访问的
+`pre_process` / `forward` / `post_process` 别名可用；
+`post_process(raw, 原图宽, 原图高)` 显式重建几何，`pre_process` 返回支持映射访问的
 `PreparedDetection` 对象。
 
 所有达到置信度阈值的 anchor 都保留，包括重叠框。输出按 stride、再按网格遍历顺序
-排列，每个 anchor 选一个最高分类。没有 NMS、分数排序或 Top-K 截断，也不保证框
-不会重叠。NMS 阈值在此不起作用；传入启用 NMS 的绑定契约会明确拒绝。
+排列，每个 anchor 选一个最高分类。输出保持 anchor 顺序并包含重叠框，不执行 NMS、分数排序或 Top-K 截断。NMS 阈值在此不起作用；传入启用 NMS 的绑定契约会明确拒绝。
 `score_thres` 使用共用检测器的有限 `[0,1]` 范围：零保留所有有限 logits 的 anchor，
 一不保留任何 anchor。
 
@@ -509,15 +517,15 @@ print(boxes.shape, keypoint_xy.shape, visibility.shape)
 输入须为非空 BGR uint8 H×W×3。输出须为已反量化的浮点 NHWC，具有完整 shape/dtype
 metadata 且不带 SCALE 量化描述。整数、非有限值、DFL 绑定或角色歧义会明确拒绝。
 raw 引用 SDK 缓冲区，下一次推理前完成后处理，或复制要保留的 raw 数组。
-`preprocess` 返回兼容映射访问的 `PreparedDetection`；`pre_process`/`forward`/
+`preprocess` 返回支持映射访问的 `PreparedDetection`；`pre_process`/`forward`/
 `post_process` 别名及后处理显式传原图宽高仍可用，
 不依赖最近一次图片的缓存状态。
 
 五个返回值的形状/类型/存储所有权与 DFL 姿态相同：float32 `(N,4)` 框、float32
 `(N,)` 检测概率、int64 `(N,)` 类别、float32 `(N,17,2)` 点坐标、float32 `(N,17,1)`
 点概率。空结果保持维度。可见性只执行一次稳定 sigmoid；NMS 对框和骨架使用相同索引。
-坐标按实际取整缩放/padding 还原并裁到原图范围。X5 兼容适配器返回含整数框的
-`{box, score, kpts}` 字典列表；S 兼容适配器返回四元组，关键点合并为 `(N,17,3)`。
+坐标按实际取整缩放/padding 还原并裁到原图范围。X5 适配器返回含整数框的
+`{box, score, kpts}` 字典列表；S 适配器返回四元组，关键点合并为 `(N,17,3)`。
 
 库的 NMS 默认为 0.65；CLI 的 X5 默认 0.70、S 默认 0.45，本例显式对齐 S CLI。
 置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。置信度阈值严格按传入值使用；
@@ -575,8 +583,8 @@ raw 引用 SDK 缓冲区，下一次推理前完成后处理或复制 raw。结�
 `(N,4)` 框、float32 `(N,)` 分数、int64 `(N,)` 类别和**布尔** ROI mask 列表。
 对已裁到原图的每个框取 `x1,y1,x2,y2 = box.astype(int)`，即可把对应 mask 放到
 原图大小空白数组的 `[y1:y2,x1:x2]`。退化 ROI 为 `(0,0)`；无检测结果保持
-`(0,4)/(0,)/(0,)/[]`。`YOLO26Seg.predict` 的结果在每个目标上均为 ROI mask；X5 兼容适配器
-返回布尔 `(N,H,W)` 全图 mask 堆叠，S 兼容适配器返回逐框 ROI mask。
+`(0,4)/(0,)/(0,)/[]`。`YOLO26Seg.predict` 的结果在每个目标上均为 ROI mask；X5 适配器
+返回布尔 `(N,H,W)` 全图 mask 堆叠，S 适配器返回逐框 ROI mask。
 
 置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。库 NMS 默认值为 0.65；CLI
 传入 X5 0.70 或 S 0.45。解码器使用指定的有效置信度阈值，在 sigmoid 前从

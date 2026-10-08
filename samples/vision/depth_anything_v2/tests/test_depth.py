@@ -8,18 +8,33 @@ import unittest
 from unittest.mock import patch
 import cv2
 import numpy as np
-from samples.vision.depth_anything_v2.runtime.python.model_binding import (
+from samples.vision.depth_anything_v2.runtime.python.cli import (
     resolve_selection,
-    bind_model,
     list_available_assets,
 )
-from samples.vision.depth_anything_v2.runtime.python.model_runner import (
-    RuntimeModelRunner,
-)
 from samples.vision.depth_anything_v2.runtime.python.depth_anything_v2 import (
-    DepthAnythingV2Task,
+    DepthEstimator,
     DepthResult,
+    bind_model,
+    create_runner,
 )
+
+
+class StubRunner:
+    """Host seam: callable transport with a prebuilt binding and call count."""
+
+    def __init__(self, binding, raw=None, copy=False):
+        self.binding, self._raw, self._copy = binding, raw, copy
+        self.calls = 0
+
+    def load(self):
+        return self.binding
+
+    def __call__(self, tensors):
+        self.calls += 1
+        if self._raw is None:
+            return tensors
+        return self._raw.copy() if self._copy else self._raw
 from samples.vision.depth_anything_v2.runtime.python.visualization import (
     normalize_depth,
 )
@@ -42,7 +57,8 @@ def metadata():
 
 def task(raw=None, mode=0):
     binding = bind_model(resolve_selection("s100"), metadata())
-    return DepthAnythingV2Task(lambda tensors: raw.copy(), binding, resize_type=mode)
+    return DepthEstimator(resolve_selection("s100"), resize_type=mode,
+                          runner=StubRunner(binding, raw, copy=True))
 
 
 class DepthTests(unittest.TestCase):
@@ -109,9 +125,9 @@ class DepthTests(unittest.TestCase):
             **{k: v for k, v in m.items() if k != "model_name"},
             run=lambda data: {"depth": {"pred": raw}}
         )
-        runner = RuntimeModelRunner(resolve_selection("s100"), runtime=runtime)
+        runner = create_runner(resolve_selection("s100"), runtime=runtime)
         b = runner.load()
-        t = DepthAnythingV2Task(runner, b)
+        t = DepthEstimator(runner.selection, runner=runner)
         p = t.pre_process(np.zeros((2, 3, 3), np.uint8))
         result = t.forward(p.tensors)
         np.testing.assert_array_equal(result, raw)
@@ -176,7 +192,7 @@ class DepthTests(unittest.TestCase):
         c = next(
             n
             for n in tree.body
-            if isinstance(n, ast.ClassDef) and n.name == "DepthAnythingV2Task"
+            if isinstance(n, ast.ClassDef) and n.name == "DepthEstimator"
         )
         self.assertEqual(
             {n.name for n in c.body if isinstance(n, ast.FunctionDef)},
@@ -184,6 +200,7 @@ class DepthTests(unittest.TestCase):
                 "__init__",
                 "preprocess",
                 "infer",
+                "set_scheduling_params",
                 "postprocess",
                 "predict",
                 "pre_process",
@@ -194,11 +211,11 @@ class DepthTests(unittest.TestCase):
 
     def test_real_gate_before_sdk(self):
         with patch(
-            "samples.vision.depth_anything_v2.runtime.python.model_runner.require_execution_target",
+            "samples.vision.depth_anything_v2.runtime.python.depth_anything_v2.require_execution_target",
             side_effect=ValueError("wrong board"),
         ):
             with self.assertRaisesRegex(ValueError, "wrong board"):
-                RuntimeModelRunner(resolve_selection("s100")).load()
+                create_runner(resolve_selection("s100")).load()
 
 
 class ReadableInterfaceTests(unittest.TestCase):
@@ -222,14 +239,9 @@ class ReadableInterfaceTests(unittest.TestCase):
 
     def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
         raw = np.zeros((1, 518, 686), np.float32)
-        calls = []
-
-        def runner(tensors):
-            calls.append(tensors)
-            return raw.copy()
-
         binding = bind_model(resolve_selection("s100"), metadata())
-        t = DepthAnythingV2Task(runner, binding)
+        stub = StubRunner(binding, raw, copy=True)
+        t = DepthEstimator(resolve_selection("s100"), runner=stub)
         routed = []
         for canonical in ("preprocess", "infer", "postprocess"):
             original = getattr(t, canonical)
@@ -241,7 +253,7 @@ class ReadableInterfaceTests(unittest.TestCase):
             setattr(t, canonical, spy)
         result = t.predict(np.zeros((13, 17, 3), np.uint8))
         self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(stub.calls, 1)
         self.assertEqual(result.depth_native.shape, (13, 17))
 
     def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
@@ -272,21 +284,16 @@ class PredictionDetailsTests(unittest.TestCase):
     """Opt-in ``return_details`` archives this call's raw tensor in one pass."""
 
     def detailed_task(self):
-        calls = []
         raw = np.arange(518 * 686, dtype=np.float32).reshape(1, 518, 686)
-
-        def runner(tensors):
-            calls.append(tensors)
-            return raw.copy()
-
         binding = bind_model(resolve_selection("s100"), metadata())
-        return DepthAnythingV2Task(runner, binding), calls
+        stub = StubRunner(binding, raw, copy=True)
+        return DepthEstimator(resolve_selection("s100"), runner=stub), stub
 
     def test_default_predict_still_returns_the_plain_result(self):
         t, calls = self.detailed_task()
         result = t.predict(np.zeros((13, 17, 3), np.uint8))
         self.assertIsInstance(result, DepthResult)
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls.calls, 1)
 
     def test_details_equal_explicit_stages_with_one_runner_call(self):
         t, calls = self.detailed_task()
@@ -294,13 +301,13 @@ class PredictionDetailsTests(unittest.TestCase):
         prepared = t.preprocess(image)
         raw = t.infer(prepared.tensors)
         expected = t.postprocess(raw, prepared.context)
-        before = len(calls)
+        before = calls.calls
         details = t.predict(image, return_details=True)
         np.testing.assert_array_equal(details.result.depth_native, expected.depth_native)
         np.testing.assert_array_equal(details.raw, raw)
         np.testing.assert_array_equal(details.prepared.tensors["image"], prepared.tensors["image"])
         self.assertEqual(vars(details.prepared.context), vars(prepared.context))
-        self.assertEqual(len(calls) - before, 1)
+        self.assertEqual(calls.calls - before, 1)
 
     def test_details_are_per_call_and_leave_no_state(self):
         t, _ = self.detailed_task()
@@ -315,3 +322,37 @@ class PredictionDetailsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``depth_anything_v2.py``
+    owns the named model class that loads via the shared transport; the
+    per-sample ``model_binding``/``model_runner`` forwarding modules are
+    gone. ``geometry.py`` stays: the per-frame resize/letterbox algorithm.
+    """
+
+    def test_estimator_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.depth_anything_v2.runtime.python.cli import resolve_selection as rs
+        from samples.vision.depth_anything_v2.runtime.python.depth_anything_v2 import (
+            DepthEstimator, create_runner,
+        )
+        raw = np.full((1, 518, 686), 2.5, np.float32)
+        m = metadata()
+        runtime = SimpleNamespace(
+            **{k: v for k, v in m.items() if k != "model_name"},
+            run=lambda data: {"depth": {"pred": raw}},
+        )
+        selection = rs("s100")
+        model = DepthEstimator(selection, runner=create_runner(selection, runtime=runtime))
+        result = model.predict(np.zeros((7, 11, 3), np.uint8))
+        self.assertEqual(result.depth_native.shape, (7, 11))
+        prepared = model.preprocess(np.zeros((7, 11, 3), np.uint8))
+        manual = model.postprocess(model.infer(prepared.tensors), prepared.context)
+        np.testing.assert_allclose(result.depth_native, manual.depth_native)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = ROOT / "samples/vision/depth_anything_v2/runtime/python"
+        for name in ("model_binding.py", "model_runner.py"):
+            self.assertFalse((base / name).exists(), name)

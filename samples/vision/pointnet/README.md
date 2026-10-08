@@ -30,6 +30,9 @@ pointnet/
 └── README_cn.md  # Chinese instructions
 ```
 
+ Board inference requires the S100 board SDK and the
+published HBM; images/benchmarks below are source records.
+
 <a id="support-matrix"></a>
 ## Support and validation
 
@@ -38,9 +41,6 @@ pointnet/
 | s100 | chair, four parts | supported | not-supported |
 | x5 / s100p / s600 | none published | not-supported | not-supported |
 
-Host fixture tests cover stages, exact target selection, metadata validation and
-source preprocessing parity. Board inference requires the S100 board SDK and the
-published HBM; images/benchmarks below are source records.
 
 <a id="prerequisites"></a>
 ## Prerequisites

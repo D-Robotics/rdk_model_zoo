@@ -116,7 +116,7 @@ The record reports identical values from an independent export and a different 5
 | RDK S600 | 0.9988 - 0.9989 | 0.9975 - 0.9986 |
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 - This directory has no standalone evaluator implementation; reproduction uses `hrt_model_exec`, ONNXRuntime, `hbm_runtime`, and the runtime CLI.
 - All reference values are recorded benchmarks; run the performance commands above for current-board measurements.

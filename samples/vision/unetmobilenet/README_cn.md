@@ -64,9 +64,9 @@ Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原
 <a id="entry-points"></a>
 ## 入口索引
 
-[模型](model/README_cn.md) · [Python](runtime/python/README_cn.md) · [C++](runtime/cpp/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。原 S 文档保留旧 API 与自动准备行为的说明。
+[模型](model/README_cn.md) · [Python](runtime/python/README_cn.md) · [C++](runtime/cpp/README_cn.md) · [转换](conversion/README_cn.md) · [验证](evaluator/README_cn.md)。
 
 <a id="license"></a>
 ## 许可
 
-代码遵循仓库 [LICENSE](../../../LICENSE)，保留源版权声明。发布清单不构成训练权重或 Cityscapes 数据的再分发授权，须另行核对上游许可。
+代码遵循仓库 [LICENSE](../../../LICENSE)，保留源版权声明。训练权重与 Cityscapes 数据遵循各自上游许可。

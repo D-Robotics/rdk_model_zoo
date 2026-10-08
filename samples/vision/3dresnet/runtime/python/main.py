@@ -1,13 +1,14 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""SDK-free CLI and board entrypoint for the R3D-18 sample.
+"""People and Agent entrypoint for the R3D-18 video classification sample.
 
-Option declarations, the model-free listing/dry-run modes and the JSON report
-assembly live in ``cli.py``.  This entry stays focused on the execution path:
-resolve the selection, load the clip and labels, construct
-``VideoClassificationTask`` and call ``predict`` once.
+This file stays deliberately small: parse the arguments, resolve the model,
+construct the classifier, call ``predict``, present results. Option
+declarations, model-free listing/dry-run, and report assembly live in
+``cli.py``; the classification flow lives in ``classification.py``.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -27,12 +28,25 @@ parse_args = _cli.parse_args  # re-exported: existing callers import it from mai
 report = _cli.report
 run_dry_run = _cli.run_dry_run
 run_list_models = _cli.run_list_models
-resolve_selection = importlib.import_module(
-    "samples.vision.3dresnet.runtime.python.model_binding"
-).resolve_selection
+resolve_selection = _cli.resolve_selection
 
 
 def main(argv=None) -> int:
+    """Run the requested R3D-18 command and return its exit status.
+
+    Args:
+        argv: Optional command-line argument sequence, excluding the program
+            name. None reads sys.argv through argparse.
+
+    Returns:
+        int: 0 for success; 2 for a reported selection, IO, or runtime error.
+
+    Raises:
+        SystemExit: argparse handles --help or rejects invalid arguments.
+
+    Notes:
+        List and dry-run modes do not load a model or the SDK.
+    """
     args = parse_args(argv)
     try:
         if args.list_models:
@@ -55,21 +69,13 @@ def main(argv=None) -> int:
         labels_module = importlib.import_module(
             "samples.vision.3dresnet.runtime.python.labels"
         )
-        runner_module = importlib.import_module(
-            "samples.vision.3dresnet.runtime.python.model_runner"
-        )
-        VideoClassificationTask = classification.VideoClassificationTask
-        load_labels = labels_module.load_labels
-        RuntimeModelRunner = runner_module.RuntimeModelRunner
 
         clip_path = Path(args.test_clip).expanduser()
         clip = np.load(clip_path, allow_pickle=False)
-        labels = load_labels(args.label_file)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        task = VideoClassificationTask(runner, binding, top_k=args.top_k, labels=labels)
-        result = task.predict(clip)
+        labels = labels_module.load_labels(args.label_file)
+        model = classification.R3D18Classifier(selection, top_k=args.top_k, labels=labels)
+        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+        result = model.predict(clip)
         print(json.dumps(report(result, labels, selection, clip_path), indent=2, ensure_ascii=False, allow_nan=False))
         return 0
     except (ImportError, OSError, ValueError, RuntimeError) as exc:

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 from samples.vision.lanenet.runtime.python import main
-from samples.vision.lanenet.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.lanenet.runtime.python.lanenet import create_runner
 from test_lanenet import metadata, raw_outputs
 
 
@@ -43,8 +43,8 @@ class CliTests(unittest.TestCase):
                 set_scheduling_params=lambda **kw: schedule.append(kw)
             )
             with patch(
-                "samples.vision.lanenet.runtime.python.main.RuntimeModelRunner",
-                side_effect=lambda s: RuntimeModelRunner(s, runtime=runtime),
+                "samples.vision.lanenet.runtime.python.lanenet.create_runner",
+                side_effect=lambda s, **kw: create_runner(s, runtime=runtime),
             ), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(
                     main.main(
@@ -95,7 +95,7 @@ class CliTests(unittest.TestCase):
                 ],
             ):
                 with patch(
-                    "samples.vision.lanenet.runtime.python.main.RuntimeModelRunner"
+                    "samples.vision.lanenet.runtime.python.lanenet.create_runner"
                 ) as factory, contextlib.redirect_stderr(io.StringIO()):
                     self.assertEqual(main.main(["--output", str(out), *args]), 2)
                     factory.assert_not_called()

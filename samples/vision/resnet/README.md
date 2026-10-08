@@ -5,20 +5,11 @@ of `(class id, score, label)` out. The sample covers TorchVision ResNet18
 on X5 plus S100/S600, and ResNet50/152 on S100/S600
 ([ResNet18 upstream](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html),
 [ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html),
-[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html));
-it is the repository's single-model classification reference.
+[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)).
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
 ## Overview
-
-The maintained implementation is one Python flow (all targets) plus one
-S-series C++ flow. Python resolves one exact artifact reference from the
-platform release manifests, verifies the board identity, loads `hbm_runtime`
-lazily, and runs a `preprocess → infer → postprocess` task assembled by
-`predict` ([runtime/python/README.md](runtime/python/README.md)). The C++
-flow uses the S-series `hbDNNInferV2` implementation
-([runtime/cpp/README.md](runtime/cpp/README.md)).
 
 ### Algorithm background
 
@@ -40,6 +31,14 @@ Variant notes:
 *The residual building block of ResNet-18/34 (left, two 3×3
 convolutions) and the bottleneck building block of ResNet-50/101/152
 (right, 1×1 → 3×3 → 1×1), Figure 5 of the ResNet paper.*
+
+The sample provides one Python flow (all targets) plus one
+S-series C++ flow. Python resolves one exact artifact reference from the
+platform release manifests, verifies the board identity, loads `hbm_runtime`
+lazily, and runs a `preprocess → infer → postprocess` task assembled by
+`predict` ([runtime/python/README.md](runtime/python/README.md)). The C++
+flow uses the S-series `hbDNNInferV2` implementation
+([runtime/cpp/README.md](runtime/cpp/README.md)).
 
 <a id="directory"></a>
 ## Directory structure

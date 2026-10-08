@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 import numpy as np
 from samples.speech.kws.runtime.python.model_binding import resolve_selection
-from samples.speech.kws.runtime.python.model_runner import RuntimeModelRunner
+from samples.speech.kws.runtime.python.kws import RuntimeModelRunner
 from samples.speech.kws.runtime.python.main import main
 
 
@@ -50,7 +50,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_board_gate_precedes_sdk_factory(self):
         with patch(
-            "samples.speech.kws.runtime.python.model_runner.require_execution_target",
+            "samples.speech.kws.runtime.python.kws.require_execution_target",
             side_effect=ValueError("Target mismatch"),
         ), patch(
             "utils.py_utils.single_array_runner._default_runtime_factory"
@@ -61,7 +61,7 @@ class RunnerTests(unittest.TestCase):
         factory.assert_not_called()
 
     def test_main_end_to_end_report_with_explicit_test_doubles(self):
-        from samples.speech.kws.runtime.python import model_runner, audio_io, frontend
+        from samples.speech.kws.runtime.python import audio_io, frontend, kws as kws_module
 
         with tempfile.TemporaryDirectory() as temp:
             folder = Path(temp)
@@ -89,7 +89,7 @@ class RunnerTests(unittest.TestCase):
                 "utils.py_utils.platforms.require_execution_target",
                 return_value="s100",
             ), patch.object(
-                model_runner, "RuntimeModelRunner", return_value=runner
+                kws_module, "RuntimeModelRunner", return_value=runner
             ), patch.object(
                 audio_io, "load_audio", return_value=(np.ones(40000, np.float32), 16000)
             ), patch.object(

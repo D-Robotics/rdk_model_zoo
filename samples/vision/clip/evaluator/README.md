@@ -28,8 +28,7 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-- Target: RDK X5; image encoder through board `hbm_runtime`, text encoder through CPU `onnxruntime`.
-- Host tests: Python 3.14.7, NumPy, OpenCV, `ftfy==6.3.1`, and `regex==2026.9.10`; injected runtime fixtures avoid an ONNX Runtime requirement on the host.
+- Target: RDK X5; image encoder through board `hbm_runtime`, text encoder through CPU `onnxruntime`.14.7, NumPy, OpenCV, `ftfy==6.3.1`, and `regex==2026.9.10`; injected runtime fixtures avoid an ONNX Runtime requirement on the host.
 
 <a id="command"></a>
 ## Evaluation Command
@@ -71,7 +70,7 @@ There is no published numeric benchmark table. The validation expectation is qua
 | Dog prompt ranking | `a dog` ranks above `a diagram` | X5 pair, bundled BPE, `dog.jpg`, cosine ranking | X5 platform source evaluator README |
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 - No standalone dataset evaluator or published benchmark is provided.
 - The text encoder is CPU ONNX and requires ONNX Runtime on the board.

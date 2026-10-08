@@ -21,9 +21,6 @@ dictionary as a unit; never mix components across pairs:
 | RDK X5 | PP-OCRv3 English | one packed NV12 tensor (640×640) | F32 `[1,40,97,1]`: fixed 96-character alphabet plus blank |
 | RDK S100 | PP-OCRv6 | split NV12 `x_y` (640×640) + `x_uv` (320×320) | F32 `[1,40,18710]`: checked-in UTF-8 dictionary plus blank and trailing space |
 
-The former X5 and S Python entrypoints and the S C++ sources forward to this
-implementation as compatibility shims; no second implementation is maintained.
-
 <a id="directory"></a>
 ## Directory structure
 
@@ -50,7 +47,7 @@ paddle_ocr/
 | S100P | not-supported (no OCR pair published) | not-supported |
 | S600 | supported | supported |
 
-The Python default and aspect-ratio pipelines (including the compatibility
+The Python default and aspect-ratio pipelines (including the command-line
 helpers) run on X5 and S100 and emit the detector/recognizer stage tensors,
 decoded into polygon boxes and recognized text; the S100 C++ build renders
 the recognized results onto the output image. S600
@@ -120,12 +117,6 @@ manifest, so the sample rejects it.
      --rec-model-path /opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
      --test-img samples/vision/paddle_ocr/test_data/s100/gt_2322.jpg \
      --output-format json
-   ```
-
-5. Host contract tests (no board needed; success: all OK, exit 0):
-
-   ```bash
-   python3 -m unittest discover -s samples/vision/paddle_ocr/tests -v
    ```
 
 <a id="expected-results"></a>

@@ -1,14 +1,46 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Offline HIMLoco policy stages; no robot control, SDK loading or file handling."""
+"""Offline HIMLoco policy stages and raw runner construction.
+
+No robot control, SDK loading or file handling happens here: the board SDK
+stays a lazy import inside the shared transport, and this module only
+validates the fixed policy tensors, calls the runner and returns owned
+actions. The model-owned loader :meth:`HimLocoTask.from_model` keeps runner
+construction, load and binding inside the model class so callers never
+assemble runners themselves. Offline policy inference only — never
+actuators.
+"""
 
 from collections.abc import Mapping
 from dataclasses import dataclass
 from time import perf_counter
+import sys
 import numpy as np
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.single_array_runner import NamedArrayRunner
+from samples.robotics.himloco.runtime.python.model_binding import (
+    bind_model,
+    validate_selection,
+)
 
 INPUT_NAME = "obs_history"
 OUTPUT_NAME = "actions"
+
+
+class RuntimeModelRunner(NamedArrayRunner):
+    """Lazy raw transport using shared board/hash gates and scheduling support."""
+
+    def __init__(self, selection, *, runtime_factory=None, runtime=None):
+        validate_selection(selection)
+        super().__init__(
+            selection,
+            binding_loader=bind_model,
+            physical_input=lambda binding: ((1, 270), "float32"),
+            task_name="HIMLoco",
+            runtime_factory=runtime_factory,
+            runtime=runtime,
+            execution_target_gate=require_execution_target,
+        )
 
 
 @dataclass(frozen=True)
@@ -61,6 +93,68 @@ class HimLocoTask:
         if not callable(runner):
             raise TypeError("runner must be callable")
         self.runner = runner
+
+    @classmethod
+    def from_model(cls, selection, *, runtime=None, runtime_factory=None):
+        """Construct the loaded policy task for one resolved selection.
+
+        The model class owns the low-level assembly: it creates the raw
+        runner, loads and binds the model (running the board/asset gates
+        unless a ``runtime`` or ``runtime_factory`` host seam is supplied)
+        and returns a task whose ``predict`` is ready to call.
+
+        Args:
+            selection: ModelSelection from ``resolve_selection``; its target
+                must match the executing board on real execution.
+            runtime: Optional injected SDK runtime (host-test seam).
+            runtime_factory: Optional SDK factory callable (host-test seam).
+
+        Returns:
+            HimLocoTask: Loaded task constructed with the pure injected
+            constructor; ``metadata``/``runtime_module_source`` expose the
+            bound SDK evidence for reports.
+
+        Raises:
+            ValueError: Board identity or publication checks fail, or the
+                selection differs from the declared X5 publication.
+            MetadataMismatchError: SDK metadata differs from the policy
+                contract.
+            RuntimeError: The board SDK is unavailable or loading fails.
+        """
+        runner = RuntimeModelRunner(
+            selection, runtime=runtime, runtime_factory=runtime_factory
+        )
+        runner.load()
+        return cls(runner)
+
+    @property
+    def metadata(self):
+        """Bound SDK metadata of the loaded model (evidence for reports)."""
+        return self.runner.binding.metadata
+
+    @property
+    def runtime_module_source(self):
+        """File (or synthesizing module) of the loaded board SDK runtime."""
+        sdk_module = sys.modules.get("hbm_runtime")
+        return str(
+            getattr(sdk_module, "__file__", type(self.runner.runtime).__module__)
+        )
+
+    def set_scheduling_params(self, *, priority=None, bpu_cores=None) -> None:
+        """Apply scheduling options to the loaded board runtime.
+
+        Args:
+            priority: Optional integer in [0, 255]; None leaves it unchanged.
+            bpu_cores: Optional list of nonnegative BPU core indexes.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: Priority or a core index is out of range.
+            RuntimeError: The SDK cannot apply the scheduling options.
+        """
+        self.runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
     # ------------------------------------------------------------------
     # The three pipeline stages, each public and usable on its own.

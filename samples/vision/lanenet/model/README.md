@@ -32,7 +32,7 @@ Run from the repository root:
 bash samples/vision/lanenet/model/download.sh --target s100
 ```
 
-The compatibility helper `download_model.sh` delegates to the same downloader. Downloads are never triggered by inference. To choose a different storage root:
+The helper `download_model.sh` delegates to the same downloader. Downloads are never triggered by inference. To choose a different storage root:
 
 ```bash
 python3 -m samples.vision.lanenet.model.download --target s100 --output-dir /data/lanenet-models

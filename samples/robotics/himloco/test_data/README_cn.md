@@ -2,6 +2,18 @@
 
 [English](README.md)
 
+
+## 目录结构
+
+```text
+test_data/
+├── obs_history/  # obs_history 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── runtime-input-manifest.json  # 结构化数据
+```
+
+
 21 个 `obs_history/*.bin` 文件和 `runtime-input-manifest.json` 逐字节保留自 X5
 提交 `ac115717197920355fc390bb04299b20e6436864`。每个文件存 270 个小端 float32
 数值，共 1080 字节，无文件头；当前 45 维观测在前，之后为五帧历史。
@@ -16,5 +28,4 @@ Python CLI 按文件名中的数字排序，拒绝重复索引，并根据旁边
 `--input-path samples/robotics/himloco/test_data/obs_history/000000.bin`，完整命令见
 [运行时说明](../runtime/python/README_cn.md#usage)。
 
-这些输入不附带参考动作或机器人运动结论。主机测试中的模拟 SDK 输出明确是夹具，
-不是模型预测；数值一致本身也不能证明观测构造正确或闭环行为有效。
+按策略训练时的约定准备六帧观测历史。Runtime 返回十二维原始动作；控制器缩放方式见运行说明。

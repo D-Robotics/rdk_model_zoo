@@ -1,45 +1,29 @@
 # Paraformer Python 流程与 CPU 中间处理
 
-[English](README.md)
-
-Python 流水线组合 CPU 音频前端、CIF（连续积分触发）桥接、三模型阶段、SDK 适配器和张量绑定。使用已准备的模型包在 S100 上执行推理。[C++ 桥接](../cpp/README_cn.md#quickstart)通过原生入口读取 Python 准备的特征。
-
-先看 [CLI 用法](#usage)、[全部参数](#parameters) 和 [结果文件](#results)；后续章节解释数值与 API 契约。
-入口为薄 `main.py`：[cli.py](cli.py) 承载参数声明、参数校验与 model-free 的
-列表/预览渲染；`main.py` 负责板卡校验、经 `application.prepare` 收集输入证据、
-显式构造 `ParaformerFrontend` 与三模型 runtime bundle，并在入口内逐语句运行
-循环——每语句一次
-`bundle.pipeline.predict(features.tensor, features.valid_frames)`，语句间的
-准备/记录由 `application` 的 `prepare_utterance`/`mark_attempted`/
-`record_prediction`/`save_features` 助手完成，`complete` 复验全部输入摘要并写
-结果/失败记录。`application.run`/`application.execute` 保留为同一助手的兼容
-组合。
+[English](README.md) | 简体中文
 
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+在 S100 上通过音频前端、encoder、predictor、CPU CIF 与 decoder 转写中文音频。`ParaformerPipeline.from_models` 加载三个模型。`main.py` 准备各条语句并逐条调用 `model.predict`；`cli.py` 管理参数与结果文件。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── application.py  # Python 脚本
-├── cif.py  # Python 脚本
-├── cli.py  # 参数与结果展示
-├── decoding.py  # Python 脚本
-├── frontend.py  # Python 脚本
-├── input_io.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── pipeline.py  # Python 脚本
-├── requirements-frontend.txt  # 源码或数据文件
-├── run.sh  # 运行示例
-├── runtime.py  # Python 脚本
-└── stages.py  # Python 脚本
+├── cif.py  # 连续积分触发算法
+├── cli.py  # 参数、模型选择与结果展示
+├── decoding.py  # 词元解码
+├── frontend.py  # 音频特征准备
+├── input_io.py  # 输入文件与数据记录
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── pipeline.py  # Encoder、predictor、CIF 与 decoder 流水线
+├── requirements-frontend.txt  # 音频前端依赖
+├── run.sh  # 定位 Python 入口并转发参数
+├── runtime.py  # 模型阶段的 Runtime 构造
+└── stages.py  # 模型阶段接口
 ```
 
 <a id="environment"></a>
@@ -52,7 +36,7 @@ python3.12 -m venv .venv-paraformer
 .venv-paraformer/bin/python -m pip install -r samples/speech/paraformer/runtime/python/requirements-frontend.txt
 ```
 
-已验证环境为 macOS arm64／Python 3.12，Torch、torchaudio 2.6.0，FunASR 1.3.14，
+前端环境使用 Python 3.12，Torch、torchaudio 2.6.0，FunASR 1.3.14，
 NumPy 1.26.4，SoundFile 0.14.0，protobuf 4.23.0。依赖文件保留源直接版本约束；
 它不是板端锁定文件。Linux 源脚本通过官方 CPU wheel
 索引安装 Torch／torchaudio，需匹配 CPU 架构和 Python 版本。这个前端环境不提供
@@ -285,32 +269,31 @@ Decoder 若暴露可选的 `token_num` 透传输出，它必须是 int32 `[1]`�
 其他张量均为 float32。若实际编译接口不同，应核定并显式适配，不能悄悄转换类型。
 
 [runtime.py](runtime.py) 创建三个共享 `NamedArrayRunner`。
-`load_runtime` 在创建任何 SDK 对象之前校验完整组合。正常路径中，每个 runner
+`ParaformerPipeline.from_models` 在创建任何 SDK 对象之前校验完整组合。正常路径中，每个 runner
 先核对本机板型和本地模型文件，再导入／创建 `hbm_runtime`，然后绑定实际元数据。
-仅测试通过显式 `runtime_factory` 注入 SDK 替身并跳过真实板型／文件门禁；
-这个接口不能作为客户部署模式。
+
 
 ### 板端集成 API
 
-下面是集成示意。需要 S100、匹配的 `hbm_runtime`、
+从仓库根目录运行下例。需要 S100、匹配的 `hbm_runtime`、
 三个本地模型、准确词表与匹配前端生成的特征（见下文）；完整 CLI 见下文。
 
 ```python
 import json
 from pathlib import Path
 from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
-from samples.speech.paraformer.runtime.python.runtime import load_runtime
+from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline
 
 # Board-only integration: the model package must already be prepared.
 import soundfile as sf
 from samples.speech.paraformer.runtime.python.frontend import ParaformerFrontend
 vocabulary = json.loads(Path("samples/speech/paraformer/model/s100/tokens.json").read_text())
-bundle = load_runtime(resolve_selections("s100"), vocabulary)
-bundle.set_scheduling_params(priority=7, bpu_cores=[0])
+model = ParaformerPipeline.from_models(resolve_selections("s100"), vocabulary)
+model.set_scheduling_params(priority=7, bpu_cores=[0])
 sample = Path("samples/speech/paraformer")
 waveform, rate = sf.read(sample / "test_data/audio/BAC009S0724W0121.wav", dtype="float32")
 prepared = ParaformerFrontend(sample / "model/am.mvn").pre_process(waveform, rate)
-result = bundle.pipeline.predict(prepared.tensor, prepared.valid_frames)
+result = model.predict(prepared.tensor, prepared.valid_frames)
 print(result.text, prepared.truncated)
 ```
 
@@ -343,7 +326,7 @@ fbank。输入为已加载的有限 float32 数组 `[samples]` 或 `[samples,cha
 | `truncated` | 原帧数超过 400 时为 true |
 | `sample_count` | 提取特征前的单声道样本数 |
 
-将 `prepared.tensor` 与 `prepared.valid_frames` 传给 `bundle.pipeline.predict`。
+将 `prepared.tensor` 与 `prepared.valid_frames` 传给 `model.predict`。
 保留源行为的前 400 帧，但显式报告原长度与截断；这**不是**长音频分块。
 30 秒用例产生 500 个 LFR 帧，保留前 400 帧并标记截断。调用方必须展示这个标记，
 不能把结果描述成整段完整转写。
@@ -404,7 +387,7 @@ encoder／predictor 后处理不会执行下一个模型。CPU CIF 在 pipeline 
 阶段失败通过 `StageError` 保留原始异常链，不生成成功结果。
 
 计时分别覆盖三次 runner 调用与 CPU CIF，不包括前端、加载、调用之外的校验／复制、
-文本解码及文件 I/O；它们的总和不构成端到端延迟。SDK 与板端性能需单独测量。
+文本解码及文件 I/O；端到端延迟需覆盖完整调用；SDK 执行耗时单独测量。
 
 ## 在流程中的位置
 

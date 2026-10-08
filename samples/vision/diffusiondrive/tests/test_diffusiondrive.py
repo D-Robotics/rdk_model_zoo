@@ -8,15 +8,26 @@ import sys
 import unittest
 from unittest.mock import patch
 import numpy as np
-from samples.vision.diffusiondrive.runtime.python.model_binding import (
-    bind_model,
-    resolve_selection,
+from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection
+from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
+    DiffusionDrivePlanner,
     INPUT_SHAPES,
     OUTPUT_SHAPES,
+    bind_model,
 )
-from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
-    DiffusionDriveTask,
-)
+
+
+class StubRunner:
+    """Host seam: callable transport with a prebuilt binding."""
+
+    def __init__(self, binding, raw=None):
+        self.binding, self._raw = binding, raw
+
+    def load(self):
+        return self.binding
+
+    def __call__(self, tensors):
+        return self._raw
 from samples.vision.diffusiondrive.runtime.python.quantization import quantize, decode
 
 from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
@@ -61,7 +72,7 @@ class DiffusionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 resolve_selection(target)
         with patch(
-            "samples.vision.diffusiondrive.runtime.python.model_binding.resolve_target",
+            "samples.vision.diffusiondrive.runtime.python.cli.resolve_target",
             side_effect=ValueError("unknown"),
         ):
             with self.assertRaises(ValueError):
@@ -77,7 +88,7 @@ class DiffusionTests(unittest.TestCase):
         features = arrays("reference_inputs.npz")
         raw = arrays("reference_outputs.npz")
         binding = bind_model(resolve_selection("s600"), metadata())
-        task = DiffusionDriveTask(lambda x: raw, binding)
+        task = DiffusionDrivePlanner(resolve_selection("s100p"), runner=StubRunner(binding, raw))
         prepared = task.pre_process(features)
         for name in features:
             np.testing.assert_array_equal(prepared[name], features[name])
@@ -99,7 +110,7 @@ class DiffusionTests(unittest.TestCase):
         m = metadata(True)
         binding = bind_model(resolve_selection("s100p"), m)
         features = arrays("reference_inputs.npz")
-        actual = DiffusionDriveTask(lambda _: None, binding).pre_process(features)
+        actual = DiffusionDrivePlanner(resolve_selection("s100p"), runner=StubRunner(binding)).pre_process(features)
         for name, value in features.items():
             expected = np.clip(
                 np.rint(value / float(np.float32(0.02))), -32768, 32767
@@ -146,7 +157,7 @@ class DiffusionTests(unittest.TestCase):
 
     def test_features_and_outputs_fail_before_plausible_result(self):
         b = bind_model(resolve_selection("s600"), metadata())
-        task = DiffusionDriveTask(lambda _: None, b)
+        task = DiffusionDrivePlanner(resolve_selection("s100p"), runner=StubRunner(b))
         f = arrays("reference_inputs.npz")
         for invalid in (
             {**f, "extra": np.zeros(1)},
@@ -161,7 +172,7 @@ class DiffusionTests(unittest.TestCase):
             task.post_process(raw)
         for threshold in (-0.1, 1.1, float("nan")):
             with self.assertRaises(ValueError):
-                DiffusionDriveTask(lambda _: None, b, threshold)
+                DiffusionDrivePlanner(resolve_selection('s600'), agent_score_threshold=threshold, runner=StubRunner(b))
 
     def test_integer_saturation_does_not_wrap_at_uint32_boundary(self):
         from samples.vision.diffusiondrive.runtime.python.quantization import transform
@@ -174,8 +185,8 @@ class DiffusionTests(unittest.TestCase):
         np.testing.assert_array_equal(actual, np.array([[0, 2**32 - 1]], np.uint32))
 
     def test_real_named_runner_preserves_four_inputs_raw_outputs_and_scheduling(self):
-        from samples.vision.diffusiondrive.runtime.python.model_runner import (
-            RuntimeModelRunner,
+        from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
+            create_runner,
         )
 
         m = metadata(True)
@@ -188,10 +199,10 @@ class DiffusionTests(unittest.TestCase):
             run=lambda values: (seen.append(values) or {"plan": raw}),
             set_scheduling_params=lambda **kw: schedules.append(kw)
         )
-        runner = RuntimeModelRunner(resolve_selection("s600"), runtime=runtime)
+        runner = create_runner(resolve_selection("s600"), runtime=runtime)
         binding = runner.load()
         runner.set_scheduling_params(priority=0, bpu_cores=[0])
-        task = DiffusionDriveTask(runner, binding)
+        task = DiffusionDrivePlanner(runner.selection, runner=runner)
         result = task.predict(features)
         self.assertEqual(set(seen[0]["plan"]), set(INPUT_SHAPES))
         self.assertTrue(all(a.dtype == np.int16 for a in seen[0]["plan"].values()))
@@ -206,18 +217,18 @@ class DiffusionTests(unittest.TestCase):
         self.assertAlmostEqual(binding.input_transforms["status"].scale[0], 0.02)
 
     def test_real_path_gates_identity_before_sdk_construction(self):
-        from samples.vision.diffusiondrive.runtime.python.model_runner import (
-            RuntimeModelRunner,
+        from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
+            create_runner,
         )
 
         with patch(
-            "samples.vision.diffusiondrive.runtime.python.model_runner.require_execution_target",
+            "samples.vision.diffusiondrive.runtime.python.diffusiondrive.require_execution_target",
             side_effect=ValueError("wrong board"),
         ) as gate, patch(
             "utils.py_utils.single_array_runner._default_runtime_factory"
         ) as factory:
             with self.assertRaises(ValueError):
-                RuntimeModelRunner(resolve_selection("s100p")).load()
+                create_runner(resolve_selection("s100p")).load()
             gate.assert_called_once_with("s100p")
             factory.assert_not_called()
 
@@ -269,7 +280,7 @@ class DiffusionTests(unittest.TestCase):
             }
         )
         binding = bind_model(resolve_selection("s600"), metadata())
-        task = DiffusionDriveTask(lambda _: None, binding)
+        task = DiffusionDrivePlanner(resolve_selection("s600"), runner=StubRunner(binding))
         cases = [("reference_inputs.npz", "reference_outputs.npz")] + [
             (
                 str(p.relative_to(SOURCE / "test_data") / "inputs.npz"),
@@ -307,7 +318,7 @@ class DiffusionTests(unittest.TestCase):
         binding = bind_model(resolve_selection("s600"), m)
         features = arrays("reference_inputs.npz")
         raw = arrays("reference_outputs.npz")
-        task = DiffusionDriveTask(lambda _: raw, binding)
+        task = DiffusionDrivePlanner(resolve_selection("s600"), runner=StubRunner(binding, raw))
         for name, value in task.pre_process(features).items():
             np.testing.assert_array_equal(value, features[name])
         np.testing.assert_array_equal(
@@ -320,7 +331,7 @@ class DiffusionTests(unittest.TestCase):
         cls = next(
             n
             for n in tree.body
-            if isinstance(n, ast.ClassDef) and n.name == "DiffusionDriveTask"
+            if isinstance(n, ast.ClassDef) and n.name == "DiffusionDrivePlanner"
         )
         self.assertEqual(
             {n.name for n in cls.body if isinstance(n, ast.FunctionDef)},
@@ -333,6 +344,7 @@ class DiffusionTests(unittest.TestCase):
                 "pre_process",
                 "forward",
                 "post_process",
+                "set_scheduling_params",
             },
         )
 
@@ -344,7 +356,7 @@ class ReadableInterfaceTests(unittest.TestCase):
         features = arrays("reference_inputs.npz")
         raw = arrays("reference_outputs.npz")
         binding = bind_model(resolve_selection("s600"), metadata())
-        return DiffusionDriveTask(lambda x: raw, binding), features, raw
+        return DiffusionDrivePlanner(resolve_selection("s600"), runner=StubRunner(binding, raw)), features, raw
 
     def test_canonical_stages_exist_and_legacy_names_delegate(self):
         task, features, raw = self.task()
@@ -364,15 +376,20 @@ class ReadableInterfaceTests(unittest.TestCase):
             )
 
     def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
-        calls = []
         raw = arrays("reference_outputs.npz")
-
-        def runner(values):
-            calls.append(values)
-            return raw
-
         binding = bind_model(resolve_selection("s600"), metadata())
-        task = DiffusionDriveTask(runner, binding)
+
+        class CountingRunner(StubRunner):
+            def __init__(self, binding, raw):
+                super().__init__(binding, raw)
+                self.calls = []
+
+            def __call__(self, tensors):
+                self.calls.append(tensors)
+                return self._raw
+
+        counting = CountingRunner(binding, raw)
+        task = DiffusionDrivePlanner(resolve_selection("s600"), runner=counting)
         routed = []
         for canonical in ("preprocess", "infer", "postprocess"):
             original = getattr(task, canonical)
@@ -384,7 +401,7 @@ class ReadableInterfaceTests(unittest.TestCase):
             setattr(task, canonical, spy)
         result = task.predict(arrays("reference_inputs.npz"))
         self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(counting.calls), 1)
         self.assertIn("trajectory", result)
 
     def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
@@ -422,7 +439,17 @@ class PredictionDetailsTests(unittest.TestCase):
             return {name: value.copy() for name, value in raw.items()}
 
         binding = bind_model(resolve_selection("s600"), metadata())
-        return DiffusionDriveTask(runner, binding), calls
+
+        class RecordingRunner(StubRunner):
+            def __init__(self, binding, raw):
+                super().__init__(binding, raw)
+                self.recorders = calls
+
+            def __call__(self, tensors):
+                self.recorders.append(tensors)
+                return {name: value.copy() for name, value in self._raw.items()}
+
+        return DiffusionDrivePlanner(resolve_selection("s600"), runner=RecordingRunner(binding, raw)), calls
 
     def test_default_predict_still_returns_the_plain_decoded_result(self):
         task, calls = self.detailed_task()
@@ -455,3 +482,44 @@ class PredictionDetailsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``diffusiondrive.py`` owns
+    the named model class, the planning binding, and the shared transport
+    wiring; the per-sample ``model_binding``/``model_runner`` forwarding
+    modules are gone. ``quantization.py`` (tensor transforms), ``data_io.py``
+    (npz feature IO), ``run_cases.py`` (case evidence runner) and
+    ``visualization.py`` stay: each carries an independent responsibility.
+    """
+
+    def test_planner_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection as rs
+        from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
+            DiffusionDrivePlanner, create_runner,
+        )
+
+        class FakeBoard:
+            def __init__(self):
+                self.__dict__.update({k: v for k, v in metadata().items() if k != "model_name"})
+
+            def run(self, inputs):
+                return {"plan": {n: np.zeros(OUTPUT_SHAPES[n], np.float32)
+                                 for n in OUTPUT_SHAPES}}
+
+        selection = rs("s100p")
+        model = DiffusionDrivePlanner(selection, runner=create_runner(selection, runtime=FakeBoard()))
+        features = arrays("reference_inputs.npz")
+        result = model.predict(features)
+        self.assertIn("trajectory", result)
+        prepared = model.preprocess(features)
+        manual = model.postprocess(model.infer(prepared))
+        for key in result:
+            np.testing.assert_array_equal(result[key], manual[key])
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = Path(__file__).resolve().parents[1] / "runtime/python"
+        for name in ("model_binding.py", "model_runner.py"):
+            self.assertFalse((base / name).exists(), name)

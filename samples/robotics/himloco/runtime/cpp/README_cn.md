@@ -132,7 +132,7 @@ bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 \
 | `--list-models` | `false` | 仅启动器，列出唯一发布制品 |
 | `--help` | `false` | 显示用法 |
 
-`--model_path`、`--input_path`、`--output_dir` 保留为旧参数别名；
+`--model_path`、`--input_path`、`--output_dir` 作为参数别名；
 原生解析器接受 `--key value` 和 `--key=value`，拒绝重复及未知参数。
 使用启动器时，自定义相对路径仍相对调用者当前工作目录。
 

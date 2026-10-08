@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 DINOv2 提取图片的分类或 patch 特征。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,20 +14,17 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── embedding.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-└── tensor_io.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── embedding.py  # 模型初始化与推理阶段
+├── main.py  # 命令行入口：构造模型并调用 predict
+└── run.sh  # 运行示例
 ```
 
 <a id="environment"></a>
 ## 环境
 
-- 板端目标：RDK S100（`nash-e`）、S100P（`nash-m`）、S600（`nash-p`），板端镜像需提供 `hbm_runtime`。板端镜像和固件版本未核验。
-- 主机契约检查：Python 3.14.7，以及 `../../requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。主机 `--help`、`--list-models` 和显式 target 的 `--dry-run` 不导入或加载 SDK。
+- 板端目标：RDK S100（`nash-e`）、S100P（`nash-m`）、S600（`nash-p`），板端镜像需提供 `hbm_runtime`。
+- Python 环境需要 NumPy、OpenCV 和 PyYAML；查看参数和模型列表无需板端 SDK。
 - runtime 使用一个包含 `cls_feat`、`patch_feat` 的目标 HBM。未声明 runtime 实例和 SDK 线程安全。
 
 <a id="usage"></a>
@@ -77,23 +74,22 @@ python3 samples/vision/dinov2/runtime/python/main.py \
 
 CLI 打印 JSON 字段 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm`。使用第二张图时还打印 `second_image`、`cosine_similarity`；文件缺失时状态为 `skipped_missing`。`cls_feat` 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，结果均为 owned float32。整数 HBM 输出依据 output quantization metadata 反量化；不执行 softmax、L2 归一化、patch pooling 或其他特征变换。
 
-入口按可读性拆分：`main.py` 解析选择、构造 `DINOv2Task`、逐图调用 `predict` 并输出
+入口按可读性拆分：`main.py` 解析选择、构造 `DINOv2Embedder`、逐图调用 `predict` 并输出
 JSON 摘要；参数声明、`--list-models`/`--dry-run` 模式、特征摘要/余弦相似度辅助与可选
 张量导出在 `cli.py`。嵌入算法本身不变，只存在于 `embedding.py`。
 
 <a id="integration-example"></a>
 ## 集成示例
 
-前置：按 [`../../model/README_cn.md`](../../model/README_cn.md) 准备 S100 制品，并在 S100 板端运行。使用其他板卡时将 `target = "s100"` 改为 `"s100p"` 或 `"s600"`，selection 会解析对应的独立 manifest HBM。示例定义全部路径、输入、target、asset identity、调度值、runner、binding、task、`explicit_result`、`composed_result`。`DINOv2Task.postprocess` 返回所选 ndarray；将 `output="patch_feat"` 运行同一片段即可对照另一个 output key。
+前置：按 [`../../model/README_cn.md`](../../model/README_cn.md) 准备 S100 制品，并在 S100 板端运行。使用其他板卡时将 `target = "s100"` 改为 `"s100p"` 或 `"s600"`，selection 会解析对应的独立 manifest HBM。示例定义全部路径、输入、target、asset identity、调度值、模型、`explicit_result`、`composed_result`。`DINOv2Embedder.postprocess` 返回所选 ndarray；将 `output="patch_feat"` 运行同一片段即可对照另一个 output key。
 
 ```python
 from pathlib import Path
 import cv2
 import numpy as np
 
-from samples.vision.dinov2.runtime.python.embedding import DINOv2Task
-from samples.vision.dinov2.runtime.python.model_binding import resolve_selection
-from samples.vision.dinov2.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.dinov2.runtime.python.embedding import DINOv2Embedder
+from samples.vision.dinov2.runtime.python.cli import resolve_selection
 
 repo = Path.cwd()
 image_path = repo / "samples/vision/dinov2/test_data/dog.jpg"
@@ -107,11 +103,9 @@ model_path = None
 priority = 0
 bpu_cores = [0]
 selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 output = "cls_feat"
-task = DINOv2Task(runner, binding, output)
+task = DINOv2Embedder(selection, output=output)
+task.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 prepared = task.preprocess(image)
 raw_outputs = task.infer(prepared.tensors)
 explicit_result = task.postprocess(raw_outputs)

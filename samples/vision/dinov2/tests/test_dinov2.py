@@ -129,7 +129,7 @@ def legacy_wrapper(module, output="cls_feat"):
 
 class BindingTests(unittest.TestCase):
     def test_three_exact_target_assets_and_no_unknown_fallback(self):
-        from samples.vision.dinov2.runtime.python.model_binding import (
+        from samples.vision.dinov2.runtime.python.cli import (
             list_available_assets,
             resolve_selection,
         )
@@ -152,7 +152,7 @@ class BindingTests(unittest.TestCase):
             resolve_selection("auto")
 
     def test_external_model_path_requires_exact_asset_id(self):
-        from samples.vision.dinov2.runtime.python.model_binding import resolve_selection
+        from samples.vision.dinov2.runtime.python.cli import resolve_selection
 
         with self.assertRaises(ValueError):
             resolve_selection("s100", model_path="/tmp/custom.hbm")
@@ -164,10 +164,8 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(selection.model_path, Path("/tmp/custom.hbm"))
 
     def test_binding_requires_two_outputs_and_declares_per_output_transform(self):
-        from samples.vision.dinov2.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from samples.vision.dinov2.runtime.python.cli import resolve_selection
+        from samples.vision.dinov2.runtime.python.embedding import bind_model
 
         selection = resolve_selection("s100")
         binding = bind_model(selection, metadata("I16"))
@@ -182,19 +180,13 @@ class BindingTests(unittest.TestCase):
 
 class TaskTests(unittest.TestCase):
     def task(self, dtype="I16", target="s100", output="cls_feat"):
-        from samples.vision.dinov2.runtime.python.embedding import DINOv2Task
-        from samples.vision.dinov2.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
-        from samples.vision.dinov2.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.dinov2.runtime.python.cli import resolve_selection
+        from samples.vision.dinov2.runtime.python.embedding import DINOv2Embedder, RuntimeModelRunner
 
         runtime = FakeRuntime(dtype)
         selection = resolve_selection(target)
-        binding = bind_model(selection, metadata(dtype))
         runner = RuntimeModelRunner(selection, runtime=runtime)
-        runner.binding = binding
-        return DINOv2Task(runner, binding, output), runtime
+        return DINOv2Embedder(selection, output=output, runner=runner), runtime
 
     def test_preprocess_matches_legacy_source_and_context_is_per_call(self):
         legacy = load_legacy_source()
@@ -257,19 +249,17 @@ class TaskTests(unittest.TestCase):
         np.testing.assert_array_equal(actual_patch, expected_patch)
 
     def test_all_targets_and_outputs_bind_both_raw_dtypes(self):
-        from samples.vision.dinov2.runtime.python.model_binding import bind_model, resolve_selection
-        from samples.vision.dinov2.runtime.python.embedding import DINOv2Task
-        from samples.vision.dinov2.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.dinov2.runtime.python.cli import resolve_selection
+        from samples.vision.dinov2.runtime.python.embedding import DINOv2Embedder, RuntimeModelRunner, bind_model
 
         for target in ("s100", "s100p", "s600"):
             for dtype in ("I16", "F32"):
                 for output, shape in (("cls_feat", (1, 384)), ("patch_feat", (1, 256, 384))):
                     runtime = FakeRuntime(dtype)
                     selection = resolve_selection(target)
-                    binding = bind_model(selection, metadata(dtype))
                     runner = RuntimeModelRunner(selection, runtime=runtime)
-                    runner.binding = binding
-                    result = DINOv2Task(runner, binding, output).predict(
+                    runner.binding = bind_model(selection, metadata(dtype))
+                    result = DINOv2Embedder(selection, output=output, runner=runner).predict(
                         np.zeros((224, 224, 3), dtype=np.uint8)
                     )
                     self.assertEqual(result.shape, shape)
@@ -372,8 +362,8 @@ class ReadableInterfaceTests(unittest.TestCase):
 
 class RunnerAndCLITests(unittest.TestCase):
     def test_runner_metadata_and_scheduling_are_real_fixture_pipeline(self):
-        from samples.vision.dinov2.runtime.python.model_binding import resolve_selection
-        from samples.vision.dinov2.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.dinov2.runtime.python.cli import resolve_selection
+        from samples.vision.dinov2.runtime.python.embedding import RuntimeModelRunner
 
         runtime = FakeRuntime("I16")
         runner = RuntimeModelRunner(resolve_selection("s100"), runtime=runtime)
@@ -401,12 +391,13 @@ class RunnerAndCLITests(unittest.TestCase):
         self.assertEqual(proc.returncode, 2)
 
     def test_cli_runs_fixture_pipeline_writes_exact_output_and_cosine(self):
-        from samples.vision.dinov2.runtime.python import main, model_runner
+        from samples.vision.dinov2.runtime.python import main
+        from samples.vision.dinov2.runtime.python import embedding
 
         runtime = FakeRuntime("F32")
-        real_runner = model_runner.RuntimeModelRunner
+        real_runner = embedding.RuntimeModelRunner
         with patch("utils.py_utils.platforms.detect_target", return_value="s100"), patch.object(
-            model_runner, "RuntimeModelRunner", lambda selection: RuntimeModelRunnerFixture(selection, runtime, real_runner)
+            embedding, "RuntimeModelRunner", lambda selection: RuntimeModelRunnerFixture(selection, runtime, real_runner)
         ):
             with tempfile.TemporaryDirectory() as temp:
                 temp_path = Path(temp)
@@ -435,10 +426,11 @@ class RunnerAndCLITests(unittest.TestCase):
                 self.assertIn("cosine_similarity", summary)
 
     def test_cli_rejects_unknown_identity_before_runner(self):
-        from samples.vision.dinov2.runtime.python import main, model_runner
+        from samples.vision.dinov2.runtime.python import main
+        from samples.vision.dinov2.runtime.python import embedding
 
         with patch("utils.py_utils.platforms.detect_target", return_value=None), patch.object(
-            model_runner, "RuntimeModelRunner", side_effect=AssertionError("runner must not be constructed")
+            embedding, "RuntimeModelRunner", side_effect=AssertionError("runner must not be constructed")
         ):
             code = main.main([
                 "--target", "s100",
@@ -486,3 +478,31 @@ class RuntimeModelRunnerFixture:
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``embedding.py`` owns the
+    named model class, the sample runner, and image preparation; the
+    per-sample ``model_binding``/``model_runner``/``tensor_io`` forwarding
+    modules are gone.
+    """
+
+    def test_embedder_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.dinov2.runtime.python.cli import resolve_selection
+        from samples.vision.dinov2.runtime.python.embedding import DINOv2Embedder, RuntimeModelRunner
+
+        runtime = FakeRuntime("F32")
+        selection = resolve_selection("s100")
+        model = DINOv2Embedder(selection, runner=RuntimeModelRunner(selection, runtime=runtime))
+        feature = model.predict(np.zeros((31, 47, 3), np.uint8))
+        self.assertEqual(feature.shape, (1, 384))
+        prepared = model.preprocess(np.zeros((31, 47, 3), np.uint8))
+        manual = model.postprocess(model.infer(prepared.tensors))
+        np.testing.assert_allclose(feature, manual)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = ROOT / "samples/vision/dinov2/runtime/python"
+        for name in ("model_binding.py", "model_runner.py", "tensor_io.py"):
+            self.assertFalse((base / name).exists(), name)

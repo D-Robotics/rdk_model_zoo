@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from utils.py_utils.assets import download_asset
-from samples.vision.dinov2.runtime.python.model_binding import SUPPORTED_TARGETS, resolve_selection
+from samples.vision.dinov2.runtime.python.cli import SUPPORTED_TARGETS, resolve_selection
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
 

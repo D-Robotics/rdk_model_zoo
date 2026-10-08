@@ -12,7 +12,6 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
-import numpy as np
 
 from utils.py_utils.assets import Asset, list_assets
 from utils.py_utils.platforms import resolve_target
@@ -27,6 +26,7 @@ _NATIVE_OUTPUT_DTYPES = frozenset(('float16', 'float32', 'int8', 'uint8', 'int16
 
 def _freeze(value):
     """Detach nested metadata containers from mutable SDK-owned mappings."""
+    import numpy as np
     if isinstance(value, Mapping):
         return MappingProxyType({key: _freeze(item) for key, item in value.items()})
     if isinstance(value, (list, tuple)):
@@ -209,6 +209,8 @@ def validate_tensors(binding, tensors, *, outputs=False):
     No cast, reshape, activation, dequantization or writable-buffer copy occurs.
     Stage post_process owns numeric transformation and result ownership.
     """
+    import numpy as np
+
     meta = binding.metadata
     names = meta.output_names if outputs else meta.input_names
     shapes = meta.output_shapes if outputs else meta.input_shapes

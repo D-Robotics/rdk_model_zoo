@@ -1,16 +1,12 @@
 # HGNetV2 Python runtime
 
-`main.py` is the user-facing command: it parses arguments,
-constructs the model, calls `predict`, and shows the result. The complete
-classification flow lives in [`classify.py`](classify.py):
-`HGNetV2Classifier` shows initialization, `preprocess`, `infer`, `postprocess` and
-`predict` in one readable file, reusing the shared NV12 packing, Top-K
-math and lazy runner.
-
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+[`main.py`](main.py) parses arguments, constructs `HGNetV2Classifier`, calls `predict`, and displays results.
+[`classify.py`](classify.py) contains model initialization, preprocessing, inference, and postprocessing.
+[`cli.py`](cli.py) groups command options, published model selection, and result presentation.
+Image reading, label validation, and SDK sessions use `utils/py_utils/`.
 
 <a id="directory"></a>
 ## Directory structure
@@ -19,12 +15,9 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── __init__.py  # Python script
 ├── classify.py  # Classification preprocessing, inference, and postprocessing
 ├── cli.py  # Arguments and result presentation
 ├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
 └── run.sh  # Run the sample
 ```
 
@@ -33,7 +26,7 @@ python/
 
 Use X5 with its matching `hbm_runtime`, NumPy, OpenCV and PyYAML. Host imports/help/list/dry-run need no board SDK. Host test dependencies: `samples/vision/hgnetv2/requirements-host.txt`.
 
-[Full prerequisites and tested host versions](../../README.md#prerequisites). For board inference, use the matching board image with `hbm_runtime`.
+[Environment requirements](../../README.md#prerequisites). For board inference, use the matching board image with `hbm_runtime`.
 
 <a id="usage"></a>
 ## Usage
@@ -78,7 +71,7 @@ python3 samples/vision/hgnetv2/runtime/python/main.py
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
 | `--topk` | int | 5 | alias of `--top-k` |
-| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source (1) |
+| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the model configuration (1) |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
 | `--img-save-path` | string | null | optional annotated output image path |
@@ -100,17 +93,24 @@ cwd: repository root. Prepare the artifact with the downloader before constructi
 
 ```python
 from samples.vision.hgnetv2.runtime.python.classify import HGNetV2Classifier
-from samples.vision.hgnetv2.runtime.python.model_binding import resolve_selection
+from samples.vision.hgnetv2.runtime.python.cli import resolve_selection
 
 selection = resolve_selection("x5", variant="b0")
-model = HGNetV2Classifier(selection, top_k=5)
+contract = selection.contract
+model = HGNetV2Classifier(
+    selection.model_path, target=selection.target,
+    input_size=(contract.input_height, contract.input_width),
+    class_count=contract.class_count, top_k=5,
+    resize_type=contract.resize_type,
+    resize_interpolation=contract.resize_interpolation,
+    score_policy=contract.output_score_policy,
+    output_transform=contract.output_transform,
+)
 result = model.predict("samples/vision/hgnetv2/test_data/sandbar.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-`predict` accepts a local image path or BGR `uint8` array; the input array remains unchanged. The shared
-`ClassificationTask` flow stays importable from
-[`classification.py`](../../../../../utils/py_utils/classification.py).
+`predict` accepts a local image path or BGR `uint8` array; the input array remains unchanged.
 
 <a id="stage-io"></a>
 ## Stage I/O

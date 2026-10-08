@@ -6,7 +6,8 @@ This file stays deliberately small: parse the arguments, handle the
 model-free listing/dry-run modes, gate the board, construct the chunk model,
 call ``predict`` once per chunk, save the report. Option declarations, the
 model-free rendering and the report records live in ``cli.py``; the readable
-preprocess → infer → postprocess chain lives in ``asr.py``.
+preprocess → infer → postprocess chain and the raw runner construction live
+in ``asr.py``.
 """
 
 import json
@@ -55,7 +56,6 @@ def main(argv=None):
         from utils.py_utils.assets import sha256_file
         from samples.speech.asr.runtime.python.audio_io import read_chunks
         from samples.speech.asr.runtime.python.asr import ASR
-        from samples.speech.asr.runtime.python.model_runner import RuntimeModelRunner
         from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
 
         vocabulary = load_vocabulary(args.vocab_file)
@@ -64,14 +64,14 @@ def main(argv=None):
         destination = args.output_dir.expanduser()
         if destination.exists() or destination.is_symlink():
             raise ValueError("Output directory must be new")
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        task = ASR(runner, binding, vocabulary, config, decode_mode=args.decode_mode)
+        task = ASR.from_model(
+            selection, vocabulary, config, decode_mode=args.decode_mode
+        )
+        task.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         report = build_report(
             selection,
             config,
-            binding,
+            task,
             decode_mode=args.decode_mode,
             audio_sha256=audio_sha,
             model_sha256=sha256_file(selection.model_path),

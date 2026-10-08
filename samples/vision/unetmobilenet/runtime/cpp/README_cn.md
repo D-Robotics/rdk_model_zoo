@@ -84,7 +84,7 @@ bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s600 --alpha-f 0.5
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-ModelRunner 管理 packed/model 句柄、两块输入和一块输出缓冲。构造时先校验目标、数量、形状、stride、容量与分数量化，再分配。析构仅释放已取得的资源；每次 forward 的任务 guard 在 submit/wait/cache 失败时释放任务。runner 不可复制且非线程安全，多线程使用独立实例。可选显式 execution gate 是主机测试入口，不作为 CLI 身份绕过开关。
+ModelRunner 管理 packed/model 句柄、两块输入和一块输出缓冲。构造时先校验目标、数量、形状、stride、容量与分数量化，再分配。析构仅释放已取得的资源；每次 forward 的任务 guard 在 submit/wait/cache 失败时释放任务。runner 不可复制且非线程安全，多线程使用独立实例。
 
 UnetMobileNetTask 接收 RawRunner 回调。pre_process(image) 返回独立 Y/UV Mat 与该次 ImageContext；forward(prepared) 原样返回拥有独立内存的 RawScores 字节与元数据；post_process(raw, context) 返回原图尺寸 CV_32S ID；predict 组合三阶段。main.cpp 展示完整连接方式。绘图位于 visualization.cpp，资源代码位于 model_runner.cpp，stride／仿射解码位于 tensor_contract.cpp；任务类不负责显示或文件读写。
 

@@ -6,14 +6,15 @@ from types import SimpleNamespace
 from unittest.mock import patch
 import numpy as np
 from samples.vision.diffusiondrive.runtime.python import main
-from samples.vision.diffusiondrive.runtime.python.model_binding import resolve_selection
-from samples.vision.diffusiondrive.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection
+from samples.vision.diffusiondrive.runtime.python.diffusiondrive import create_runner
 from test_diffusiondrive import metadata, arrays, SOURCE
 
 
 class CliTests(unittest.TestCase):
     def test_inspection_and_invalid_target_do_not_load_runtime(self):
-        with patch.object(main, "RuntimeModelRunner") as runner:
+        from samples.vision.diffusiondrive.runtime.python import diffusiondrive as task_module
+        with patch.object(task_module, "create_runner") as runner:
             for args in (["--list-models"], ["--target", "s600", "--dry-run"]):
                 with contextlib.redirect_stdout(io.StringIO()) as out:
                     self.assertEqual(main.main(args), 0)
@@ -40,10 +41,9 @@ class CliTests(unittest.TestCase):
                 run=lambda data: {"plan": raw},
                 set_scheduling_params=lambda **kw: schedules.append(kw)
             )
-            with patch.object(
-                main,
-                "RuntimeModelRunner",
-                side_effect=lambda s: RuntimeModelRunner(s, runtime=runtime),
+            with patch(
+                "samples.vision.diffusiondrive.runtime.python.diffusiondrive.create_runner",
+                side_effect=lambda s, **kw: create_runner(s, runtime=runtime),
             ), contextlib.redirect_stdout(io.StringIO()):
                 rc = main.main(
                     [
@@ -91,8 +91,9 @@ class CliTests(unittest.TestCase):
             features = arrays("reference_inputs.npz")
             features["status"] = np.zeros((8,), np.float32)
             np.savez(p / "bad.npz", **features)
+            from samples.vision.diffusiondrive.runtime.python import diffusiondrive as task_module
             with patch.object(
-                main, "RuntimeModelRunner"
+                task_module, "create_runner"
             ) as runner, contextlib.redirect_stderr(io.StringIO()):
                 for args in (
                     ["--input-npz", str(p / "bad.npz")],

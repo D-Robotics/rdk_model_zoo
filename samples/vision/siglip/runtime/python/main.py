@@ -26,7 +26,7 @@ from samples.vision.siglip.runtime.python.cli import (  # noqa: E402
     save_feature_tensor,
     summarize_result,
 )
-from samples.vision.siglip.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.siglip.runtime.python.cli import (  # noqa: E402
     list_available_assets,  # noqa: F401 - import path kept for existing callers
     resolve_selection,
 )
@@ -51,14 +51,12 @@ def main(argv=None) -> int:
 
         # Imported inside real execution: OpenCV and hbm_runtime load only
         # after the selection, file, and board checks above have passed.
-        from samples.vision.siglip.runtime.python.embedding import SigLIPTask
-        from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.siglip.runtime.python.embedding import SigLIPEmbedder
 
         image = read_bgr_image(args.test_img)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        result = SigLIPTask(runner, binding).predict(image)
+        model = SigLIPEmbedder(selection)
+        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+        result = model.predict(image)
         print_summary(summarize_result(result, selection.submodel))
         if args.output_file is not None:
             save_feature_tensor(args.output_file, result)

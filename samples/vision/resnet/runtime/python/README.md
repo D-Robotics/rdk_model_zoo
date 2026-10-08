@@ -1,15 +1,12 @@
 # ResNet Python runtime
 
-[`main.py`](main.py) provides the command line: construct the classifier,
-call `predict()`, and display the results. [`classify.py`](classify.py) contains
-`ResNetClassifier` initialization, preprocessing, inference, and postprocessing.
-[`cli.py`](cli.py) groups command options, published model selection, and presentation.
-`utils/py_utils/` provides image reading, label validation, and Runtime loading.
-
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+[`main.py`](main.py) parses arguments, constructs `ResNetClassifier`, calls `predict`, and displays results.
+[`classify.py`](classify.py) contains model initialization, preprocessing, inference, and postprocessing.
+[`cli.py`](cli.py) groups command options, published model selection, and result presentation.
+Image reading, label validation, and SDK sessions use `utils/py_utils/`.
 
 <a id="directory"></a>
 ## Directory structure

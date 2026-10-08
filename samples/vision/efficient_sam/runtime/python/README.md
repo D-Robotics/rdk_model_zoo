@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run the EfficientSAM encoder and decoder to generate an image segmentation mask.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,18 +14,16 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments and result presentation
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── pipeline.py  # Python script
-├── run.sh  # Run the sample
-└── visualization.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── main.py  # CLI entry: construct model and call predict
+├── pipeline.py  # Model initialization and inference stages
+└── run.sh  # Run the sample
 ```
 
 <a id="environment"></a>
 ## Environment
 
-Host checks use repository `.venv` with Python, NumPy, OpenCV and PyYAML for manifest reads; the recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3. Use the NumPy/OpenCV shipped with your environment. Runtime syntax requires Python 3.10 or newer; the board SDK/system version is the one from your image — record it with results. The CLI's `--help`, `--list-models` and explicit-target `--dry-run` paths do not construct the SDK.
+Use Python 3.10+, NumPy, OpenCV and PyYAML in the target RDK image’s `hbm_runtime` environment. Prepare both encoder and decoder model files before inference. See the conversion guide for the target OE toolchain.
 
 The board's SDK must already be installed by its matching system image; do not install `hbm_runtime` from an unrelated host environment. Check the required Python imports from the repository root:
 
@@ -34,7 +32,7 @@ The board's SDK must already be installed by its matching system image; do not i
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements are set by loading both encoder and decoder in the target runtime; plan for both models resident simultaneously.
+Install Python dependencies in the board SDK environment (`python3 -m pip install numpy opencv-python PyYAML`). Reserve memory for both encoder and decoder to remain loaded simultaneously.
 
 <a id="usage"></a>
 ## Usage
@@ -93,19 +91,16 @@ The CLI prints target, encoder/decoder asset IDs, input path, output mask path, 
 The following complete example assumes the S100 pair has already been prepared and runs on a board with `hbm_runtime`:
 
 ```python
-import importlib
 from pathlib import Path
 import cv2
 
 root = Path.cwd()
-binding = importlib.import_module("samples.vision.efficient_sam.runtime.python.model_binding")
-runner_type = importlib.import_module("utils.py_utils.sam_runner").RuntimeModelRunner
-pipeline_type = importlib.import_module("samples.vision.efficient_sam.runtime.python.pipeline").EfficientSAMPipeline
-selection = binding.resolve_selection("s100")
-runner = runner_type(selection)
-bound = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-pipeline = pipeline_type(runner, bound)
+from samples.vision.efficient_sam.runtime.python.cli import resolve_selection
+from samples.vision.efficient_sam.runtime.python.pipeline import EfficientSAMPipeline
+
+selection = resolve_selection("s100")
+pipeline = EfficientSAMPipeline.from_models(selection)
+pipeline.set_scheduling_params(priority=0, bpu_cores=[0])
 image = cv2.imread(str(root / "samples/vision/efficient_sam/test_data/dogs.jpg"), cv2.IMREAD_COLOR)
 if image is None:
     raise FileNotFoundError("test_data/dogs.jpg")

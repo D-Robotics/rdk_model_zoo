@@ -2,7 +2,7 @@
 
 This file stays deliberately small: parse the arguments, handle the
 model-free listing/dry-run modes, resolve the selection, construct the
-encoder/decoder runners and the pipeline, call ``predict`` with the box
+model pipeline, call ``predict`` with the box
 prompt, show the result.  Option declarations (including the box parser),
 the model-free modes, image reading and the overlay/mask writes live in
 ``cli.py``; the encoder → decoder composition lives in ``pipeline.py``.
@@ -26,7 +26,7 @@ from samples.vision.mobile_sam.runtime.python.cli import (  # noqa: E402
     save_outputs,
     selection_report,
 )
-from samples.vision.mobile_sam.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.mobile_sam.runtime.python.cli import (  # noqa: E402
     list_available_assets,  # noqa: F401 - import path kept for existing callers
     resolve_selection,
 )
@@ -60,16 +60,13 @@ def main(argv=None) -> int:
 
         # Imported inside real execution: OpenCV and hbm_runtime load only
         # after the selection and board checks above have passed.
-        from utils.py_utils.sam_runner import RuntimeModelRunner
         from samples.vision.mobile_sam.runtime.python.pipeline import MobileSAMPipeline
 
         image = read_bgr_image(args.test_img)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
+        pipeline = MobileSAMPipeline.from_models(selection)
         cores = args.bpu_cores if args.bpu_cores is not None else (
             [0] if selection.target in ("s100", "s100p", "s600") else None)
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=cores)
-        pipeline = MobileSAMPipeline(runner, binding)
+        pipeline.set_scheduling_params(priority=args.priority, bpu_cores=cores)
         result = pipeline.predict(image, box=args.box)
         save_outputs(result, image, args.img_save_path, args.mask_save_path)
         print_report({**selection_report(selection), "image": str(Path(args.test_img).expanduser()),

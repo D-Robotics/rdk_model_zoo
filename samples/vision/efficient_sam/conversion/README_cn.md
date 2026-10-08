@@ -59,7 +59,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
 
 有效制品清单是 `docs/release/x5/models.yaml` 或 `docs/release/s/models.yaml`；其中发布模型的 SHA 字段均为 `null`（未知）。S 为三个 march 分别提供编码器和解码器 YAML，X5 提供两份 bayes-e YAML。
 
-导出与浮点 embedding 生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。固定源没有锁定这些包的版本或上游仓库 revision，这仍是复现前提，不是经过验证的环境规格。在选定导出环境中检查导入，与板端推理环境分开：
+导出与浮点 embedding 生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。随导出模型记录所选框架版本和上游仓库版本。在导出环境检查导入：
 
 ```bash
 # cwd: 本 conversion 目录；在选定主机导出环境中执行
@@ -209,7 +209,7 @@ hrt_model_exec perf --model_file bpu_model_output_decoder_nashe/efficient_sam_vi
 目标 YAML 和 active manifest 是输出前缀及运行时文件名的依据。ONNX、校准 tensor、量化 metadata 和编译模型不会提交在此目录。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
 - 上游 checkpoint 没有固定源版本或 digest。
 - X5 上游 builder 只读取 `<repo>/weights/efficient_sam_vitt.pt`；不同 checkpoint 路径会被显式拒绝，S 则使用显式 `--checkpoint`。

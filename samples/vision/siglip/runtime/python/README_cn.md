@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用选定的 SigLIP 子模型提取图片特征。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,19 +14,16 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── embedding.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-└── tensor_io.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── embedding.py  # 模型初始化与推理阶段
+├── main.py  # 命令行入口：构造模型并调用 predict
+└── run.sh  # 运行示例
 ```
 
 <a id="environment"></a>
 ## 环境
 
-- 运行目标：RDK S100（Nash-E）或 S100P（Nash-M），板端镜像需提供 `hbm_runtime`。板端镜像和固件版本未核验；主机仅使用注入 fixture 做契约测试。
+- 运行目标：RDK S100（Nash-E）或 S100P（Nash-M），板端镜像需提供 `hbm_runtime`。使用板端镜像提供的 Python 环境。
 - 主机准备：Python 3.14.7，以及 `../../requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
 - `hbm_runtime` 只存在于板端镜像。`--help`、`--list-models` 和显式 target 的 `--dry-run` 有意不导入 SDK、不加载模型。
 
@@ -101,9 +98,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.siglip.runtime.python.embedding import SigLIPTask
+from samples.vision.siglip.runtime.python.cli import resolve_selection
+from samples.vision.siglip.runtime.python.embedding import SigLIPEmbedder
 
 repo = Path.cwd()
 image_path = repo / "samples/vision/siglip/test_data/dog.jpg"
@@ -117,10 +113,8 @@ submodel = "pooler_output"
 priority = 0
 bpu_cores = [0]
 selection = resolve_selection(target, variant=variant, submodel=submodel)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-task = SigLIPTask(runner, binding)
+task = SigLIPEmbedder(selection)
+task.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
 prepared = task.preprocess(image)
 raw_outputs = task.infer(prepared.tensors)
@@ -134,11 +128,11 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 ## 三阶段 I/O
 
 - `preprocess`：BGR `uint8` `H×W×3` → `PreparedInput`；`_input_0` 是 owned contiguous RGB `float32` `(1,3,size,size)`，范围 `[-1,1]`，`context` 保存原图/缩放尺寸及 `(top,bottom,left,right)` padding。
-- `infer`：`{"_input_0": tensor}` → 所选打包子模型的原始 `{"_output_0": ndarray}`。`model_runner` 校验 metadata 和容器，但保留原生数值 dtype 和值。
+- `infer`：`{"_input_0": tensor}` → 所选打包子模型的原始 `{"_output_0": ndarray}`。模型校验 metadata 和容器，但保留原生数值 dtype 和值。
 - `postprocess`：原始输出 → metadata 绑定 shape/dtype 的 owned ndarray；错误 shape/dtype 和 NaN/Inf 会报错。本视觉特征任务不消费几何 context。
 - `predict(image)` 严格串联 preprocess → infer → postprocess；不下载、保存、激活、归一化或评估结果。
 
-CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、图像读取、摘要与可选 NumPy 保存，`main.py` 负责解析、解析模型、构造 `SigLIPTask` 并调用 `predict`。
+CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、图像读取、摘要与可选 NumPy 保存，`main.py` 负责解析、解析模型、构造 `SigLIPEmbedder` 并调用 `predict`。
 
 <a id="troubleshooting"></a>
 ## 故障排查

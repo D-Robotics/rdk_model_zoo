@@ -2,6 +2,16 @@
 
 English | [简体中文](README_cn.md)
 
+
+## Directory structure
+
+```text
+test_data/
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
+
 `sample.wav` is copied byte-for-byte from the pinned S source (`380e1a2bf42041af54be6f34935e50197cfadff9`). It is the source's “hey snips” demonstration recording: mono PCM16, 16000 Hz, 40000 frames, 2.5 seconds.
 
 SHA-256: `eb39ea9bff0e37e262ee3735eba4111a52bb53a84bb776d28a43d7cea6b88cad`.

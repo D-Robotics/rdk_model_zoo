@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 PP-LiteSeg 生成 Cityscapes 19 类分割图。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,13 +14,13 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── pp_liteseg.py  # Python 脚本
-├── run.sh  # 运行示例
-└── visualization.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── pp_liteseg.py  # 模型初始化与推理阶段
+└── run.sh  # 运行示例
 ```
+
+`main.py` 构造模型并调用 `predict`；`cli.py` 负责参数、模型选择及图片/报告保存；任务文件包含模型阶段，通用图片读取调用 `utils.py_utils.image.read_bgr_image`。
 
 <a id="environment"></a>
 ## 环境
@@ -78,14 +78,12 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --target x5 --test-img 
 ```python
 # cwd: repository root; on X5 after explicit model preparation
 import cv2
-from samples.vision.pp_liteseg.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.pp_liteseg.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegTask
+from samples.vision.pp_liteseg.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegSegmenter
 
 image = cv2.imread(str(SAMPLE_DIR / "test_data/street.png"))
-runner = RuntimeModelRunner(resolve_selection("x5"))
-binding = runner.load()
-task = PPLiteSegTask(runner, binding)
+selection = resolve_selection("x5")
+task = PPLiteSegSegmenter(selection)
 prepared = task.preprocess(image)
 raw = task.infer(prepared.tensors)
 mask = task.postprocess(raw)
@@ -93,7 +91,7 @@ mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 1024), int32
 ```
 
-任务类只负责阶段逻辑；binding 负责制品与张量契约，共享 runner 负责 SDK 加载和调度，visualization.py 负责绘图。调度调用 runner.set_scheduling_params，并发调用请分别创建模型实例。旧 PPLiteSeg/PPLiteSegConfig API 保留于源快照。
+模型类初始化 Runtime，并实现预处理、推理、后处理和 `predict`。并发处理时为每个工作线程创建独立模型实例。
 
 <a id="stage-io"></a>
 ## 阶段 I/O

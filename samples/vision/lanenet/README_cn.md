@@ -32,7 +32,7 @@ lanenet/
 | S100 | `s100/lanenet256x512.hbm` | Python 和 C++ | supported |
 | X5 / S100P / S600 | 无 LaneNet 资产 | 显式拒绝 | 不静默回退至 S100 |
 
-目标名称只选择契约，不转换 HBM，也不能认证当前板卡。`auto` 因唯一已发布资产而解析到 S100，实际执行仍检查物理身份。主机准备、文档与测试不能证明板端数值等价。
+使用 S100 对应的发布 HBM。`auto` 选择 S100；实际推理检查当前板卡身份。
 
 <a id="prerequisites"></a>
 ## 前置条件
@@ -89,7 +89,7 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 <a id="entry-points"></a>
 ## 用户与 Agent 的入口
 
-应用集成使用 `LaneNetTask.pre_process`、`forward`、`post_process` 或其组合 `predict`。下载、文件系统操作、绘图与资源管理放在任务类之外。`model_binding.py` 负责模型语义校验，共享具名数组 runner 负责传输；原生代码同样分离任务阶段、张量契约、SDK 资源管理、可视化和 CLI 读写。
+应用集成使用 `LaneNetSegmenter.pre_process`、`forward`、`post_process` 或其组合 `predict`。下载、文件系统操作、绘图与资源管理放在任务类之外。`model_binding.py` 负责模型语义校验，共享具名数组 runner 负责传输；原生代码同样分离任务阶段、张量契约、SDK 资源管理、可视化和 CLI 读写。
 
 修改前处理或增加实例聚类前先阅读[阶段 IO 契约](runtime/python/README_cn.md#stage-io)。聚类属于额外的算法能力，需要单独实现并验证；实例掩码应以聚类算法的输出为准。
 

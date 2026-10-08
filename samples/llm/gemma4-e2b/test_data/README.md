@@ -11,6 +11,15 @@ It contains no models, calibration dataset or golden tensors.
 | `results/image.jpg` | Source project demonstration image |
 | `results/test1.jpg`, `test2.jpg`, `test3.jpg` | Example runtime session screenshots illustrating demo runs |
 
+## Directory structure
+
+```text
+test_data/
+├── results/  # Files for results
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 ## Use
 
 After [model preparation](../model/README.md) and [native build](../runtime/cpp/README.md#build), start from the repository root:

@@ -13,12 +13,20 @@ from test_siglip import FACTS, FakeRuntime, meta
 
 
 def task(variant='base-patch16-224', sub='pooler_output', dtype='F32'):
-    from samples.vision.siglip.runtime.python.embedding import SigLIPTask
-    from samples.vision.siglip.runtime.python.model_binding import bind_model, resolve_selection
+    from samples.vision.siglip.runtime.python.cli import resolve_selection
+    from samples.vision.siglip.runtime.python.embedding import SigLIPEmbedder, bind_model
+
+    class StubRunner:
+        def __init__(self, binding, raw):
+            self.binding, self.raw = binding, raw
+        def load(self):
+            return self.binding
+        def __call__(self, tensors):
+            return self.raw
 
     runtime = FakeRuntime(variant, dtype)
     binding = bind_model(resolve_selection('s100', variant=variant, submodel=sub), meta(variant, sub, dtype))
-    return SigLIPTask(lambda inputs: runtime.raw[sub], binding), runtime.raw[sub]
+    return SigLIPEmbedder(resolve_selection('s100', variant=variant, submodel=sub), runner=StubRunner(binding, runtime.raw[sub])), runtime.raw[sub]
 
 
 class CanonicalStageTests(unittest.TestCase):

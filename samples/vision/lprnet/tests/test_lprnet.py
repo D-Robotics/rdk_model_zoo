@@ -101,9 +101,8 @@ class LPRNetTests(unittest.TestCase):
         self.assertEqual(decode(logits), "京A7")
 
     def test_binding_accepts_source_metadata_and_rejects_shape_or_dtype(self):
-        binding = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_binding"
-        )
+        binding = importlib.import_module("samples.vision.lprnet.runtime.python.cli")
+        lprnet = importlib.import_module("samples.vision.lprnet.runtime.python.lprnet")
         selection = binding.resolve_selection("x5")
         good = {
             "model_names": ("lpr",),
@@ -115,35 +114,32 @@ class LPRNetTests(unittest.TestCase):
             "output_shapes": {"output": (1, 68, 18)},
             "output_dtypes": {"output": "float32"},
         }
-        self.assertEqual(binding.bind_model(selection, good).input_name, "input")
+        self.assertEqual(lprnet.bind_model(selection, good).input_name, "input")
         for field, value in (
             ("input_shapes", {"input": (1, 3, 24, 95)}),
             ("output_dtypes", {"output": "int8"}),
         ):
             bad = dict(good)
             bad[field] = value
-            with self.assertRaises(binding.MetadataMismatchError):
-                binding.bind_model(selection, bad)
+            with self.assertRaises(lprnet.MetadataMismatchError):
+                lprnet.bind_model(selection, bad)
 
     def test_task_preserves_raw_logits_and_predict_matches_explicit_stages(self):
-        runtime_mod = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_runner"
-        )
         task_mod = importlib.import_module(
             "samples.vision.lprnet.runtime.python.lprnet"
         )
         binding_mod = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_binding"
+            "samples.vision.lprnet.runtime.python.cli"
         )
         selection = binding_mod.resolve_selection("x5")
         output = np.full((1, 68, 18), -4.0, dtype=np.float32)
         output[:, 0, 0] = 4.0
         fake = FakeRuntime(output)
-        runner = runtime_mod.RuntimeModelRunner(
+        runner = task_mod.RuntimeModelRunner(
             selection, runtime=fake
         )
         runner.load()
-        task = task_mod.LPRNetTask(runner, runner.binding)
+        task = task_mod.LPRNetRecognizer(selection, runner=runner)
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "input.dat"
             source = np.arange(1 * 3 * 24 * 94, dtype=np.float32).reshape(1, 3, 24, 94)
@@ -157,17 +153,17 @@ class LPRNetTests(unittest.TestCase):
 
     def test_external_model_path_requires_exact_asset_id(self):
         binding = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_binding"
+            "samples.vision.lprnet.runtime.python.cli"
         )
         with self.assertRaises(binding.BindingError):
             binding.resolve_selection("x5", model_path="/tmp/lpr.bin")
 
     def test_real_path_gates_before_sdk_and_the_seam_skips_the_gate(self):
         runner_mod = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_runner"
+            "samples.vision.lprnet.runtime.python.lprnet"
         )
         binding = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_binding"
+            "samples.vision.lprnet.runtime.python.cli"
         )
         selection = binding.resolve_selection("x5")
         with patch.object(runner_mod, "require_execution_target",
@@ -185,7 +181,8 @@ class LPRNetTests(unittest.TestCase):
 
     def test_cli_list_and_dry_run_do_not_construct_runtime(self):
         main = importlib.import_module("samples.vision.lprnet.runtime.python.main")
-        with patch.object(main, "RuntimeModelRunner", side_effect=AssertionError):
+        lprnet_mod = importlib.import_module("samples.vision.lprnet.runtime.python.lprnet")
+        with patch.object(lprnet_mod, "RuntimeModelRunner", side_effect=AssertionError):
             self.assertEqual(main.main(["--list-models"]), 0)
             self.assertEqual(main.main(["--dry-run", "--target", "x5"]), 0)
 
@@ -214,22 +211,19 @@ class ReadableInterfaceTests(unittest.TestCase):
     """The canonical preprocess/infer/postprocess names drive predict."""
 
     def task(self):
-        runtime_mod = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_runner"
-        )
         task_mod = importlib.import_module(
             "samples.vision.lprnet.runtime.python.lprnet"
         )
         binding_mod = importlib.import_module(
-            "samples.vision.lprnet.runtime.python.model_binding"
+            "samples.vision.lprnet.runtime.python.cli"
         )
         output = np.full((1, 68, 18), -4.0, dtype=np.float32)
         output[:, 0, 0] = 4.0
         fake = FakeRuntime(output)
         selection = binding_mod.resolve_selection("x5")
-        runner = runtime_mod.RuntimeModelRunner(selection, runtime=fake)
+        runner = task_mod.RuntimeModelRunner(selection, runtime=fake)
         runner.load()
-        return task_mod.LPRNetTask(runner, runner.binding), fake
+        return task_mod.LPRNetRecognizer(selection, runner=runner), fake
 
     def test_canonical_stages_exist_and_legacy_names_delegate(self):
         task, fake = self.task()
@@ -302,7 +296,7 @@ class LPRNetEvaluatorTests(unittest.TestCase):
     """The evaluator must run both sides itself, not compare hand-made files."""
 
     def _fixtures(self, temp):
-        binding = importlib.import_module("samples.vision.lprnet.runtime.python.model_binding")
+        binding = importlib.import_module("samples.vision.lprnet.runtime.python.cli")
         model = Path(temp) / "lpr.bin"
         model.write_bytes(b"fixture-lpr-model")
         selection = binding.resolve_selection("x5", asset_id="x5:lprnet:lpr.bin", model_path=str(model))
@@ -430,3 +424,34 @@ class LPRNetEvaluatorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``lprnet.py`` owns the named
+    model class, the sample runner, and the prepacked-input reader; the
+    per-sample ``model_binding``/``model_runner``/``tensor_io`` forwarding
+    modules are gone.
+    """
+
+    def test_recognizer_constructs_from_selection_and_runs_stages(self):
+        lprnet_mod = importlib.import_module("samples.vision.lprnet.runtime.python.lprnet")
+        cli_mod = importlib.import_module("samples.vision.lprnet.runtime.python.cli")
+        output = np.full((1, 68, 18), -4.0, dtype=np.float32)
+        output[:, 0, 0] = 4.0
+        selection = cli_mod.resolve_selection("x5")
+        model = lprnet_mod.LPRNetRecognizer(
+            selection, runner=lprnet_mod.RuntimeModelRunner(selection, runtime=FakeRuntime(output)))
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "input.dat"
+            np.arange(1 * 3 * 24 * 94, dtype=np.float32).reshape(1, 3, 24, 94).tofile(path)
+            plate = model.predict(path)
+            self.assertIsInstance(plate, str)
+            prepared = model.preprocess(path)
+            self.assertEqual(model.postprocess(model.infer(prepared.tensors)), plate)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = ROOT / "samples/vision/lprnet/runtime/python"
+        for name in ("model_binding.py", "model_runner.py", "tensor_io.py"):
+            self.assertFalse((base / name).exists(), name)

@@ -7,13 +7,28 @@ import unittest
 from unittest.mock import patch
 import cv2
 import numpy as np
-from samples.vision.lanenet.runtime.python.model_binding import (
-    bind_model,
+from samples.vision.lanenet.runtime.python.cli import (
     resolve_selection,
     list_available_assets,
 )
-from samples.vision.lanenet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.lanenet.runtime.python.lanenet import LaneNetTask
+from samples.vision.lanenet.runtime.python.lanenet import (
+    LaneNetSegmenter,
+    bind_model,
+    create_runner,
+)
+
+
+class StubRunner:
+    """Host seam: callable transport with a prebuilt binding."""
+
+    def __init__(self, binding, raw=None):
+        self.binding, self._raw = binding, raw
+
+    def load(self):
+        return self.binding
+
+    def __call__(self, tensors):
+        return self._raw
 from samples.vision.lanenet.runtime.python.visualization import (
     embedding_image,
     binary_image,
@@ -54,7 +69,8 @@ def raw_outputs(extra=False):
 class LaneTests(unittest.TestCase):
     def task(self, extra=False):
         binding = bind_model(resolve_selection("s100"), metadata(extra))
-        return LaneNetTask(lambda inputs: raw_outputs(extra), binding)
+        return LaneNetSegmenter(resolve_selection("s100"),
+                                runner=StubRunner(binding, raw_outputs(extra)))
 
     def test_explicit_download_uses_exact_manifest_and_target_subdirectory(self):
         import contextlib
@@ -177,8 +193,8 @@ class LaneTests(unittest.TestCase):
             **{k: v for k, v in m.items() if k != "model_name"},
             run=lambda inputs: {"lane": raw}
         )
-        runner = RuntimeModelRunner(resolve_selection("s100"), runtime=runtime)
-        t = LaneNetTask(runner, runner.load())
+        runner = create_runner(resolve_selection("s100"), runtime=runtime)
+        t = LaneNetSegmenter(runner.selection, runner=runner)
         result = t.forward(t.pre_process(np.zeros((8, 9, 3), np.uint8)))
         self.assertEqual(set(result), set(raw))
         self.assertEqual(result["binary_seg_pred"].dtype, np.int64)
@@ -191,7 +207,7 @@ class LaneTests(unittest.TestCase):
         c = next(
             n
             for n in tree.body
-            if isinstance(n, ast.ClassDef) and n.name == "LaneNetTask"
+            if isinstance(n, ast.ClassDef) and n.name == "LaneNetSegmenter"
         )
         self.assertEqual(
             {n.name for n in c.body if isinstance(n, ast.FunctionDef)},
@@ -204,14 +220,16 @@ class LaneTests(unittest.TestCase):
                 "pre_process",
                 "forward",
                 "post_process",
+                "set_scheduling_params",
+                "__call__",
             },
         )
         with patch(
-            "samples.vision.lanenet.runtime.python.model_runner.require_execution_target",
+            "samples.vision.lanenet.runtime.python.lanenet.require_execution_target",
             side_effect=ValueError("wrong board"),
         ):
             with self.assertRaisesRegex(ValueError, "wrong board"):
-                RuntimeModelRunner(resolve_selection("s100")).load()
+                create_runner(resolve_selection("s100")).load()
 
 
 class ReadableInterfaceTests(unittest.TestCase):
@@ -219,7 +237,7 @@ class ReadableInterfaceTests(unittest.TestCase):
 
     def test_canonical_stages_exist_and_legacy_names_delegate(self):
         binding = bind_model(resolve_selection("s100"), metadata())
-        t = LaneNetTask(lambda inputs: raw_outputs(), binding)
+        t = LaneNetSegmenter(resolve_selection("s100"), runner=StubRunner(binding, raw_outputs()))
         image = np.zeros((37, 71, 3), np.uint8)
         for name in ("preprocess", "infer", "postprocess", "predict"):
             self.assertTrue(callable(getattr(t, name, None)), name)
@@ -237,15 +255,9 @@ class ReadableInterfaceTests(unittest.TestCase):
         np.testing.assert_array_equal(result_new.binary, result_old.binary)
 
     def test_predict_routes_through_canonical_stages_with_single_runner_call(self):
-        calls = []
         raw = raw_outputs()
-
-        def runner(tensors):
-            calls.append(tensors)
-            return raw
-
         binding = bind_model(resolve_selection("s100"), metadata())
-        t = LaneNetTask(runner, binding)
+        t = LaneNetSegmenter(resolve_selection("s100"), runner=StubRunner(binding, raw))
         routed = []
         for canonical in ("preprocess", "infer", "postprocess"):
             original = getattr(t, canonical)
@@ -257,12 +269,11 @@ class ReadableInterfaceTests(unittest.TestCase):
             setattr(t, canonical, spy)
         result = t.predict(np.zeros((37, 71, 3), np.uint8))
         self.assertEqual(routed, ["preprocess", "infer", "postprocess"])
-        self.assertEqual(len(calls), 1)
         self.assertEqual(result.binary.shape, (256, 512))
 
     def test_legacy_stage_names_route_through_the_same_canonical_stages(self):
         binding = bind_model(resolve_selection("s100"), metadata())
-        t = LaneNetTask(lambda inputs: raw_outputs(), binding)
+        t = LaneNetSegmenter(resolve_selection("s100"), runner=StubRunner(binding, raw_outputs()))
         routed = []
         for canonical in ("preprocess", "infer", "postprocess"):
             original = getattr(t, canonical)
@@ -278,7 +289,7 @@ class ReadableInterfaceTests(unittest.TestCase):
 
     def test_predict_equals_canonical_manual_composition(self):
         binding = bind_model(resolve_selection("s100"), metadata())
-        t = LaneNetTask(lambda inputs: raw_outputs(), binding)
+        t = LaneNetSegmenter(resolve_selection("s100"), runner=StubRunner(binding, raw_outputs()))
         for image in (np.zeros((37, 71, 3), np.uint8), np.zeros((8, 9, 3), np.uint8)):
             manual = t.postprocess(t.infer(t.preprocess(image)))
             result = t.predict(image)
@@ -290,28 +301,32 @@ class PredictionDetailsTests(unittest.TestCase):
     """Opt-in ``return_details`` archives raw outputs in one pass."""
 
     def detailed_task(self):
-        calls = []
 
-        def runner(tensors):
-            calls.append(tensors)
-            return raw_outputs()
+        class RecordingRunner(StubRunner):
+            def __init__(self, binding):
+                super().__init__(binding, raw_outputs())
+                self.call_count = 0
 
-        binding = bind_model(resolve_selection("s100"), metadata())
-        return LaneNetTask(runner, binding), calls
+            def __call__(self, tensors):
+                self.call_count += 1
+                return raw_outputs()
+
+        stub = RecordingRunner(bind_model(resolve_selection("s100"), metadata()))
+        return LaneNetSegmenter(resolve_selection("s100"), runner=stub), stub
 
     def test_default_predict_still_returns_the_plain_lane_result(self):
-        t, calls = self.detailed_task()
+        t, recorder = self.detailed_task()
         result = t.predict(np.zeros((37, 71, 3), np.uint8))
         self.assertEqual(result.binary.shape, (256, 512))
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(recorder.call_count, 1)
 
     def test_details_equal_explicit_stages_with_one_runner_call(self):
-        t, calls = self.detailed_task()
+        t, recorder = self.detailed_task()
         image = np.zeros((37, 71, 3), np.uint8)
         prepared = t.preprocess(image)
         raw = t.infer(prepared)
         expected = t.postprocess(raw)
-        before = len(calls)
+        before = recorder.call_count
         details = t.predict(image, return_details=True)
         np.testing.assert_array_equal(details.result.embedding, expected.embedding)
         np.testing.assert_array_equal(details.result.binary, expected.binary)
@@ -321,7 +336,7 @@ class PredictionDetailsTests(unittest.TestCase):
         np.testing.assert_array_equal(
             details.prepared["input"], prepared["input"]
         )
-        self.assertEqual(len(calls) - before, 1)
+        self.assertEqual(recorder.call_count - before, 1)
         # Details describe only their own call; a second image keeps its own raw.
         second = t.predict(np.zeros((8, 9, 3), np.uint8), return_details=True)
         self.assertEqual(details.result.embedding.shape, (3, 256, 512))
@@ -331,3 +346,38 @@ class PredictionDetailsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``lanenet.py`` owns the
+    named model class that loads via the shared transport; the per-sample
+    ``model_binding``/``model_runner``/``tensor_io`` forwarding modules are
+    gone. ``image_preprocess.py`` stays: source input arithmetic shared with
+    the conversion calibration script.
+    """
+
+    def test_segmenter_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.lanenet.runtime.python.cli import resolve_selection as rs
+        from samples.vision.lanenet.runtime.python.lanenet import LaneNetSegmenter, create_runner
+
+        class FakeBoard:
+            def __init__(self):
+                self.__dict__.update(metadata())
+
+            def run(self, inputs):
+                return {"lane": raw_outputs()}
+
+        runtime = FakeBoard()
+        selection = rs("s100")
+        model = LaneNetSegmenter(selection, runner=create_runner(selection, runtime=runtime))
+        result = model.predict(np.zeros((31, 47, 3), np.uint8))
+        self.assertEqual(result.binary.shape, (256, 512))
+        manual = model.postprocess(model.infer(model.preprocess(np.zeros((31, 47, 3), np.uint8))))
+        np.testing.assert_array_equal(result.binary, manual.binary)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = Path(__file__).resolve().parents[1] / "runtime/python"
+        for name in ("model_binding.py", "model_runner.py", "tensor_io.py"):
+            self.assertFalse((base / name).exists(), name)

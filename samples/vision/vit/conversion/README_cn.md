@@ -65,7 +65,7 @@ F32。重新生成后需核对实际 metadata，再做同板数值对照和 CIFA
 <a id="artifacts"></a>
 ## 产物
 
-唯一 YAML 产生不带量化后缀的 HBM；发布 int8/int16 是 [model](../model/README_cn.md) 的独立制品。该配方不能证明二者各自构建过程，改名不构成 int16 构建证据。
+本目录 YAML 产生不带量化后缀的 HBM。发布 int8/int16 模型见 [model](../model/README_cn.md)；生成指定精度模型时，需在工具链中配置对应量化精度。
 
 <a id="known-gaps"></a>
 ## 补充准备

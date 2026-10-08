@@ -23,7 +23,7 @@ from samples.vision.ultralytics_yolo.runtime.python.tensor_io import (
     InputBinding,
     normalize_dtype,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect,
     YoloDetectConfig,
 )

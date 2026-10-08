@@ -1,9 +1,9 @@
-"""Entry readability: main drives task.predict through application helpers.
+"""Entry readability: main constructs the task and drives predict visibly.
 
-``main`` keeps the visible loop — warmup, one ``HimLocoTask.predict`` per
-observation, action-dump recording — while ``application`` exposes the same
-prepare/load/record/complete helpers its compatibility ``execute`` uses, so
-there is one implementation of the evidence discipline.
+``main`` keeps the visible construction (raw runner, load, scheduling,
+``HimLocoTask``) and loop — warmup, one ``HimLocoTask.predict`` per
+observation, action-dump recording — while ``cli`` owns the single
+implementation of the evidence discipline helpers the entry calls.
 """
 
 import contextlib
@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 
-from samples.robotics.himloco.runtime.python import application, main
+from samples.robotics.himloco.runtime.python import cli, main, policy
 from samples.robotics.himloco.runtime.python.model_binding import (
     resolve_selection,
     SAMPLE_DIR,
@@ -55,47 +55,46 @@ def fake_runtime(fail_at=None):
 
 
 class EntryLoopTests(unittest.TestCase):
-    def prepared_args(self, root, warmup="0"):
-        args = main.build_parser().parse_args(
-            [
-                "--target", "x5",
-                "--input-path", str(SAMPLE_DIR / "test_data/obs_history"),
-                "--output-dir", str(root / "out"),
-                "--warmup", warmup,
-            ]
-        )
-        model = root / "fixture.bin"
-        model.write_bytes(b"synthetic model, never a real BIN")
-        return args, model
-
     @staticmethod
     def runner_side_effect(runtime):
-        from samples.robotics.himloco.runtime.python.model_runner import (
+        from samples.robotics.himloco.runtime.python.policy import (
             RuntimeModelRunner,
         )
 
-        return lambda selected: RuntimeModelRunner(
+        return lambda selected, **kwargs: RuntimeModelRunner(
             selected, runtime_factory=lambda path: runtime
         )
 
-    def test_main_executes_visible_predict_loop_without_execute(self):
+    def test_main_constructs_task_and_drives_visible_predict_loop(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            args, model = self.prepared_args(root, warmup="2")
+            model = root / "fixture.bin"
+            model.write_bytes(b"synthetic model, never a real BIN")
             runtime, calls = fake_runtime()
+            # main constructs through HimLocoTask.from_model (imported from
+            # policy at call time), so spy on the model-owned loader.
+            original = policy.HimLocoTask.from_model
+            constructed = []
+
+            def spy_from_model(selection, **kwargs):
+                constructed.append(selection)
+                return original(selection, **kwargs)
+
             with patch(
                 "utils.py_utils.platforms.require_execution_target"
             ), patch.object(
-                application,
+                cli,
                 "verify_asset_file",
                 return_value=hashlib.sha256(model.read_bytes()).hexdigest(),
             ), patch.object(
-                application,
+                policy.HimLocoTask,
+                "from_model",
+                side_effect=spy_from_model,
+            ), patch.object(
+                policy,
                 "RuntimeModelRunner",
                 side_effect=self.runner_side_effect(runtime),
-            ), patch.object(
-                application, "execute", MagicMock()
-            ) as execute_mock, contextlib.redirect_stdout(
+            ), contextlib.redirect_stdout(
                 io.StringIO()
             ):
                 rc = main.main(
@@ -109,14 +108,17 @@ class EntryLoopTests(unittest.TestCase):
                     ]
                 )
             self.assertEqual(rc, 0)
-            execute_mock.assert_not_called()
+            self.assertEqual(len(constructed), 1)
             # 21 observations plus the two explicitly requested warmup runs.
             self.assertEqual(len(calls), 23)
-            report = json.loads((args.output_dir / "report.json").read_text())
+            report = json.loads((root / "out" / "report.json").read_text())
             self.assertEqual(report["status"], "completed")
             self.assertEqual(report["sample_count"], 21)
             self.assertEqual(report["warmup_completed"], 2)
-            self.assertEqual(len(list(args.output_dir.glob("*.bin"))), 21)
+            self.assertEqual(len(list((root / "out").glob("*.bin"))), 21)
+            # Runtime evidence recorded from the visible construction.
+            self.assertIn("runtime", report)
+            self.assertIn("runtime_module_source", report)
 
 
 class HelperTests(unittest.TestCase):
@@ -137,11 +139,11 @@ class HelperTests(unittest.TestCase):
             resolve_selection("x5"), model_path=model, explicit_model_path=True
         )
         with patch("utils.py_utils.platforms.require_execution_target"), patch.object(
-            application,
+            cli,
             "verify_asset_file",
             return_value=hashlib.sha256(model.read_bytes()).hexdigest(),
         ):
-            run = application.prepare(args, selection)
+            run = cli.prepare(args, selection)
         self.addCleanup(run.close)
         return run, selection
 
@@ -160,20 +162,6 @@ class HelperTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "new"):
                 self.prepared_run(Path(temp))
 
-    def test_load_task_returns_bound_task_and_records_runtime(self):
-        with tempfile.TemporaryDirectory() as temp:
-            run, _ = self.prepared_run(Path(temp))
-            runtime, _ = fake_runtime()
-            with patch.object(
-                application,
-                "RuntimeModelRunner",
-                side_effect=EntryLoopTests.runner_side_effect(runtime),
-            ):
-                task = application.load_task(run)
-            self.assertIsInstance(task, HimLocoTask)
-            self.assertIn("runtime", run.report)
-            self.assertIn("runtime_module_source", run.report)
-
     def test_record_sample_writes_dump_and_evidence(self):
         with tempfile.TemporaryDirectory() as temp:
             run, _ = self.prepared_run(Path(temp))
@@ -182,7 +170,7 @@ class HelperTests(unittest.TestCase):
             result = HimLocoTask(lambda feed: {
                 "actions": np.arange(12, dtype=np.float32).reshape(1, 12)
             }).predict(np.zeros((1, 270), np.float32))
-            destination = application.record_sample(run, record, result, digest)
+            destination = cli.record_sample(run, record, result, digest)
             self.assertTrue(destination.is_file())
             self.assertEqual(destination.name, "000000.bin")
             entry = run.report["records"][0]
@@ -202,12 +190,12 @@ class HelperTests(unittest.TestCase):
                 "actions": np.arange(12, dtype=np.float32).reshape(1, 12)
             }).predict(np.zeros((1, 270), np.float32))
             with self.assertRaisesRegex(ValueError, "conflicts"):
-                application.record_sample(run, record, result, "0" * 64)
+                cli.record_sample(run, record, result, "0" * 64)
 
     def test_complete_summarizes_and_marks_completed(self):
         with tempfile.TemporaryDirectory() as temp:
             run, _ = self.prepared_run(Path(temp))
-            application.complete(run, [1.0, 2.0, 3.0])
+            cli.complete(run, [1.0, 2.0, 3.0])
             self.assertEqual(run.report["status"], "completed")
             self.assertIsNone(run.report["current_source_index"])
             self.assertEqual(

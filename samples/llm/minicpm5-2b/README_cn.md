@@ -35,7 +35,7 @@ minicpm5-2b/
 
 ## S100 / S100P 支持
 
-S100（Nash-e）与 S100P（Nash-m）使用独立的 OELLM 1.0.0 W8 模型包和 [legacy C++ 入口](runtime/legacy/README_cn.md)。两板均完成 140 × 2048-token 全量 WikiText2 TEST：PPL 17.91995，相对浮点上升 27.83%，未达到 ≤3% 精度目标。可复现入口见 [全量评估](evaluator/legacy/README_cn.md)。两板均有中英文单轮生成与正常 EOS 的记录。短请求 decode 约 12.1 / 13.0 token/s。内存配置、下载和命令见该入口；转换见 [legacy 转换](conversion/legacy/README_cn.md)。下文原有的 PPL、多轮和稳定性数据仅属于 S600。
+S100（Nash-e）与 S100P（Nash-m）使用独立的 OELLM 1.0.0 W8 模型包和 [OELLM 1.0.0 C++ 入口](runtime/legacy/README_cn.md)。两板均完成 140 × 2048-token 全量 WikiText2 TEST：PPL 17.91995，相对浮点上升 27.83%，未达到 ≤3% 精度目标。可复现入口见 [全量评估](evaluator/legacy/README_cn.md)。两板均有中英文单轮生成与正常 EOS 的记录。短请求 decode 约 12.1 / 13.0 token/s。内存配置、下载和命令见该入口；转换见 [OELLM 1.0.0 转换](conversion/legacy/README_cn.md)。下文原有的 PPL、多轮和稳定性数据仅属于 S600。
 
 ## S600 模型与支持范围
 

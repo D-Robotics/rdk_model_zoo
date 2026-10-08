@@ -39,8 +39,8 @@ dinov2/
 <a id="prerequisites"></a>
 ## 环境前提
 
-- 板端运行：RDK S100（Nash-E）、S100P（Nash-M）或 S600（Nash-P），板端镜像需提供 `hbm_runtime`。板端镜像和固件版本未核验。
-- 主机契约检查：Python 3.14.7，以及 `requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
+- 板端运行：RDK S100（Nash-E）、S100P（Nash-M）或 S600（Nash-P），板端镜像需提供 `hbm_runtime`。
+- Python 环境需要 NumPy、OpenCV 和 PyYAML；查看参数和模型列表无需板端 SDK。
 - 转换环境：x86 Linux OE 3.7.0 镜像 `ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0`；Torch 2.6 由镜像提供，追加 `onnx==1.19.0`、`onnxruntime==1.23.2`。
 - 板端推理前准备一个目标对应的 HBM；runtime 命令不会隐式下载模型。
 

@@ -64,9 +64,43 @@ class Yolo26DepthTask:
     aliases of those implementations.
     """
 
-    def __init__(self, runner, binding):
+    def __init__(self, selection=None, *, runner=None, binding=None, runtime_factory=None):
+        """Load the selected artifact and bind it, or accept an injected runner.
+
+        Args:
+            selection: ModelSelection from ``model_binding.resolve_selection``;
+                construction loads the artifact through the shared SDK adapter
+                (board identity and artifact bytes verified before the SDK is
+                imported) and binds its tensor contract.
+            runner: Already-constructed runner (host-test seam).
+            binding: Explicit binding for a callable-only runner; defaults to
+                the runner's own loaded binding.
+            runtime_factory: Optional SDK factory injection for host fixtures.
+
+        Raises:
+            TypeError: When neither a ModelSelection nor a runner is given.
+            ValueError: When an injected runner carries no binding.
+        """
+        if runner is None and binding is None:
+            from samples.vision.yolo26_depth.runtime.python.model_binding import ModelSelection
+            from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
+            if not isinstance(selection, ModelSelection):
+                raise TypeError("Pass a ModelSelection from resolve_selection, or inject runner=/binding=.")
+            if runtime_factory is None:
+                runner = RuntimeModelRunner(selection)
+            else:
+                runner = RuntimeModelRunner(selection, runtime_factory=runtime_factory)
+            binding = runner.load()
+        elif runner is not None and binding is None:
+            binding = getattr(runner, "binding", None)
+            if binding is None:
+                raise ValueError("An injected runner must supply its binding.")
         self.runner = runner
         self.binding = binding
+
+    def set_scheduling_params(self, *, priority=None, bpu_cores=None):
+        """Apply explicit scheduling values to the loaded board runtime."""
+        self.runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
     # ------------------------------------------------------------------
     # The three pipeline stages, each public and usable on its own.

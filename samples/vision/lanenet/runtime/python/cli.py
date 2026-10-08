@@ -13,10 +13,106 @@ import json
 from pathlib import Path
 import sys
 
-from samples.vision.lanenet.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    list_available_assets,
-)
+from dataclasses import dataclass
+from typing import Optional
+
+from utils.py_utils.assets import Asset, list_assets
+
+
+class BindingError(ValueError):
+    """A LaneNet selection or metadata contract violation."""
+
+
+SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+ASSET_ID = "s:lanenet:s100/lanenet256x512.hbm"
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    """One published manifest asset and its selected local path.
+
+    Attributes:
+        target: Concrete execution target (``s100`` for LaneNet).
+        asset: Manifest asset record backing the selection.
+        model_path: Local compiled model path.
+        explicit_model_path: Whether the caller supplied the path explicitly.
+    """
+
+    target: str
+    asset: Asset
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def _asset() -> Asset:
+    rows = list_assets("s", "lanenet")
+    if len(rows) != 1 or rows[0].reference != ASSET_ID:
+        raise BindingError(f"Expected one manifest asset {ASSET_ID!r}.")
+    return rows[0]
+
+
+def list_available_assets(target: Optional[str] = None) -> tuple:
+    """List the published S100 asset without board or SDK access.
+
+    Args:
+        target: Concrete target filter; other targets publish nothing.
+
+    Returns:
+        tuple[Asset, ...]: Published assets in manifest order.
+
+    Raises:
+        BindingError: The target is unknown.
+    """
+    if target in (None, "auto", "s100"):
+        return (_asset(),)
+    if target in SUPPORTED_TARGETS:
+        return ()
+    raise BindingError(f"Unknown target {target!r}.")
+
+
+def resolve_selection(
+    target: str = "auto",
+    *,
+    asset_id: Optional[str] = None,
+    model_path: "str | Path | None" = None,
+) -> ModelSelection:
+    """Resolve LaneNet's exact published asset identity without loading it.
+
+    Args:
+        target: ``auto``/``s100``; other targets publish nothing.
+        asset_id: Qualified manifest reference; a ``model_path`` override
+            requires the exact reference.
+        model_path: Optional explicit local path for the selected asset.
+
+    Returns:
+        ModelSelection: Concrete target, manifest asset, and local path.
+
+    Raises:
+        BindingError: The target, asset, or path combination is invalid.
+    """
+    key = (target or "auto").lower()
+    if key == "auto":
+        key = "s100"
+    if key != "s100":
+        raise BindingError("LaneNet is published only for target s100.")
+    asset = _asset()
+    if asset_id is not None and asset_id != asset.reference:
+        raise BindingError(f"Expected asset-id {asset.reference}, got {asset_id!r}.")
+    if model_path is not None and asset_id is None:
+        raise BindingError(
+            "An external model path requires --asset-id s:lanenet:s100/lanenet256x512.hbm."
+        )
+    return ModelSelection(
+        target=key,
+        asset=asset,
+        model_path=(
+            Path(model_path).expanduser()
+            if model_path
+            else SAMPLE_DIR / "model" / asset.filename
+        ),
+        explicit_model_path=model_path is not None,
+    )
 
 #: Canonical files every run writes into its fresh output directory.
 CANONICAL_OUTPUTS = (

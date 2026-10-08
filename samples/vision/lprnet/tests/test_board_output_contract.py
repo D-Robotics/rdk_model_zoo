@@ -27,8 +27,8 @@ from unittest import mock
 import numpy as np
 
 
-BINDING = "samples.vision.lprnet.runtime.python.model_binding"
-RUNNER = "samples.vision.lprnet.runtime.python.model_runner"
+BINDING = "samples.vision.lprnet.runtime.python.cli"
+RUNNER = "samples.vision.lprnet.runtime.python.lprnet"
 TASK = "samples.vision.lprnet.runtime.python.lprnet"
 MAIN = "samples.vision.lprnet.runtime.python.main"
 RUNTIME_META = "utils.py_utils.runtime_meta"
@@ -102,7 +102,8 @@ def _metadata(output_names, output_shapes):
 class BoardOutputBindingTests(unittest.TestCase):
     def test_binding_records_full_native_shape_of_released_artifact(self):
         binding_mod = importlib.import_module(BINDING)
-        binding = binding_mod.bind_model(
+        bind_source = importlib.import_module(RUNNER)
+        binding = bind_source.bind_model(
             binding_mod.resolve_selection("x5"),
             _metadata(("output",), {"output": BOARD_OUTPUT_SHAPE}),
         )
@@ -110,7 +111,8 @@ class BoardOutputBindingTests(unittest.TestCase):
 
     def test_legacy_api_3d_contract_binds_as_reported(self):
         binding_mod = importlib.import_module(BINDING)
-        binding = binding_mod.bind_model(
+        bind_source = importlib.import_module(RUNNER)
+        binding = bind_source.bind_model(
             binding_mod.resolve_selection("x5"),
             _metadata(("output",), {"output": LEGACY_API_OUTPUT_SHAPE}),
         )
@@ -118,6 +120,7 @@ class BoardOutputBindingTests(unittest.TestCase):
 
     def test_binding_rejects_wrong_rank_and_axis_orders(self):
         binding_mod = importlib.import_module(BINDING)
+        bind_source = importlib.import_module(RUNNER)
         selection = binding_mod.resolve_selection("x5")
         for shape in (
             (1, 18, 68, 1),  # swapped classes/timesteps
@@ -126,15 +129,16 @@ class BoardOutputBindingTests(unittest.TestCase):
             (1, 1, 68, 18),  # singleton axis is not trailing
         ):
             with self.subTest(shape=shape):
-                with self.assertRaises(binding_mod.MetadataMismatchError):
-                    binding_mod.bind_model(
+                with self.assertRaises(bind_source.MetadataMismatchError):
+                    bind_source.bind_model(
                         selection, _metadata(("output",), {"output": shape})
                     )
 
     def test_binding_rejects_second_output_tensor(self):
         binding_mod = importlib.import_module(BINDING)
-        with self.assertRaises(binding_mod.MetadataMismatchError):
-            binding_mod.bind_model(
+        bind_source = importlib.import_module(RUNNER)
+        with self.assertRaises(bind_source.MetadataMismatchError):
+            bind_source.bind_model(
                 binding_mod.resolve_selection("x5"),
                 _metadata(("output", "aux"), {"output": BOARD_OUTPUT_SHAPE, "aux": (1, 4)}),
             )
@@ -143,6 +147,7 @@ class BoardOutputBindingTests(unittest.TestCase):
 class BoardOutputTaskTests(unittest.TestCase):
     def _task(self, output_shape, run_shape=None):
         binding_mod = importlib.import_module(BINDING)
+        bind_source = importlib.import_module(RUNNER)
         runner_mod = importlib.import_module(RUNNER)
         task_mod = importlib.import_module(TASK)
         runner = runner_mod.RuntimeModelRunner(
@@ -150,7 +155,9 @@ class BoardOutputTaskTests(unittest.TestCase):
             runtime=make_runtime(output_shape, run_shape)(),
         )
         binding = runner.load()
-        return task_mod.LPRNetTask(runner, binding)
+        selection = getattr(runner, "selection", None) or importlib.import_module(
+            "samples.vision.lprnet.runtime.python.cli").resolve_selection("x5")
+        return task_mod.LPRNetRecognizer(selection, runner=runner)
 
     def _input_dat(self):
         if not hasattr(self, "_dat"):
@@ -207,7 +214,7 @@ class BoardOutputTaskTests(unittest.TestCase):
 
     def test_dry_run_describes_released_native_protocol(self):
         main = importlib.import_module(MAIN)
-        with mock.patch.object(main, "RuntimeModelRunner", side_effect=AssertionError):
+        with mock.patch.object(importlib.import_module(RUNNER), "RuntimeModelRunner", side_effect=AssertionError):
             buffer = io.StringIO()
             with contextlib.redirect_stdout(buffer):
                 self.assertEqual(main.main(["--dry-run", "--target", "x5"]), 0)

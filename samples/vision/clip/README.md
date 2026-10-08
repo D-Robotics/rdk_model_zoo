@@ -7,7 +7,7 @@ English | [简体中文](./README_cn.md)
 
 CLIP maps an image and candidate texts into a shared 512-dimensional space and ranks the texts by cosine similarity. The image encoder is an X5 BPU `.bin` model and the text encoder is a CPU ONNX model; the BPE vocabulary ships as `runtime/python/bpe_simple_vocab_16e6.txt.gz`. Source: X5 platform sample delivery at `ac115717197920355fc390bb04299b20e6436864`.
 
-The `CLIPTask` has three stages: `preprocess` converts one BGR image and prompt list into image/tokens tensors, `infer` runs both encoders and returns raw features, and `postprocess` computes cosine scores and descending order. `predict` chains the three stages; visualization remains a separate helper.
+The `CLIPMatcher` has three stages: `preprocess` converts one BGR image and prompt list into image/tokens tensors, `infer` runs both encoders and returns raw features, and `postprocess` computes cosine scores and descending order. `predict` chains the three stages; visualization remains a separate helper.
 
 <a id="directory"></a>
 ## Directory structure
@@ -34,13 +34,12 @@ The only published pair is for RDK X5. No S100, S100P, or S600 CLIP pair is pres
 | --- | --- | --- | --- | --- | --- | --- |
 | `clip-image-text-pair` | supported | not-supported | not-supported | not-supported | supported | not-supported |
 
-Board execution requires an X5 board with `hbm_runtime` and `onnxruntime`; host tests use injected image/ONNX fixtures and do not execute the BPU model.
+Board execution requires an X5 board with `hbm_runtime` and `onnxruntime`; prepare both image and text models before running inference.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
 - Board: RDK X5 image providing `hbm_runtime` for the image encoder and `onnxruntime` for the CPU text encoder. No specific image or firmware version is pinned.
-- Host checks: Python 3.14.7 with `numpy`, `opencv-python`, `PyYAML`, `ftfy==6.3.1`, and `regex==2026.9.10`; host tests do not require ONNX Runtime.
 - Board inference additionally requires `onnxruntime`, the two model assets, and the bundled BPE vocabulary.
 
 <a id="quickstart"></a>
@@ -77,4 +76,4 @@ The CLI prints `target`, `prompts`, `scores`, `order`, and `image_saved`. `score
 <a id="license"></a>
 ## License
 
-Sample code follows the repository [LICENSE](../../../LICENSE), Apache-2.0. The CLIP model assets retain the licenses and provenance recorded by the X5 publication; no additional model license is asserted here. Contributor attribution from the X5 source delivery is preserved.
+Sample code follows the repository [LICENSE](../../../LICENSE), Apache-2.0. The CLIP model assets retain the licenses and provenance recorded by the X5 publication; refer to the accompanying model license. Contributor attribution from the X5 source delivery is preserved.

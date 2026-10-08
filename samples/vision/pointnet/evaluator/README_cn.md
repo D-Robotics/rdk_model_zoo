@@ -20,16 +20,11 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-主机测试依赖 NumPy、PyYAML；板端 smoke 另需配套 S100 HBM/SDK，绘图可选 matplotlib。
-测试使用与 CLI 相同的 PointNet 阶段和 binding。本目录保存记录，不另写推理实现。
+在 RDK S100 的配套 HBM/SDK 环境运行。需要 Python 3.10+、NumPy、PyYAML；绘图另需 matplotlib。
 
 <a id="command"></a>
 ## 命令
 
-```bash
-# cwd: repository root; host numerical/contract checks, no SDK
-python3 -m unittest discover -s samples/vision/pointnet/tests
-```
 ```bash
 # cwd: repository root; on S100 with the published HBM already prepared
 python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot --output-dir outputs/pointnet-check
@@ -37,15 +32,13 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot -
 
 Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（默认 false）、
 `--output-dir outputs/pointnet-check`（默认 outputs/pointnet）。输入默认交付椅子点云；
-其余参数见[完整运行时表](../runtime/python/README_cn.md#parameters)。主机测试使用小 fixture；
-板端耗时在板端实测。
+其余参数见[完整运行时表](../runtime/python/README_cn.md#parameters)。
 
 <a id="metrics"></a>
 ## 指标解释
 
 功能运行应得到 N 个 0..3 标签，计数之和为 N。可通过下方源记录图对照点云区域。
-每份点云必须出现四种颜色不是通用成功条件，也不是精度指标。新入口的数据集 mIoU、
-逐部件 IoU 和吞吐均未测。源记录的 trans/pred 没有明确指标定义，不能称作 mIoU。
+每份点云必须出现四种颜色不是通用成功条件，也不是精度指标。数据集 mIoU 和逐部件 IoU 需要点级真值标签。源记录的 trans/pred 没有明确指标定义，不能称作 mIoU。
 
 <a id="outputs"></a>
 ## 输出

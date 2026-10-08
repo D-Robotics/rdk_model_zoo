@@ -22,13 +22,28 @@ def metadata(layout='nchw', dtype='float32', quant=None):
 
 
 def task(layout='nchw', dtype='float32', quant=None):
-    from samples.vision.unet.runtime.python.model_binding import resolve_selection,bind_model
-    from samples.vision.unet.runtime.python.unet import UNetTask
-    binding=bind_model(resolve_selection('x5'),metadata(layout,dtype,quant))
-    raw=np.zeros(binding.metadata.output_shapes['logits'],dtype=dtype)
-    if layout=='nchw': raw[:,3]=5
-    else: raw[:,:,:,3]=5
-    return UNetTask(lambda x:raw,binding),raw
+    from samples.vision.unet.runtime.python.cli import resolve_selection
+    from samples.vision.unet.runtime.python.unet import UNetSegmenter, bind_model
+
+    class StubRunner:
+        """Host seam: callable transport with a prebuilt binding."""
+
+        def __init__(self, binding, raw):
+            self.binding, self.raw = binding, raw
+
+        def load(self):
+            return self.binding
+
+        def __call__(self, tensors):
+            return self.raw
+
+    binding = bind_model(resolve_selection('x5'), metadata(layout, dtype, quant))
+    raw = np.zeros(binding.metadata.output_shapes['logits'], dtype=dtype)
+    if layout == 'nchw':
+        raw[:, 3] = 5
+    else:
+        raw[:, :, :, 3] = 5
+    return UNetSegmenter(resolve_selection('x5'), runner=StubRunner(binding, raw)), raw
 
 
 class UNetTests(unittest.TestCase):
@@ -82,7 +97,7 @@ class UNetTests(unittest.TestCase):
             with self.assertRaises(ValueError):t.post_process(value)
 
     def test_all_five_assets_and_variant_mismatch(self):
-        from samples.vision.unet.runtime.python.model_binding import resolve_selection,list_available_assets
+        from samples.vision.unet.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(len(list_available_assets()),5)
         for variant in ['resnet18','resnet34','resnet50','resnet101','resnet152']:
             s=resolve_selection('x5',variant=variant)
@@ -94,7 +109,8 @@ class UNetTests(unittest.TestCase):
             with self.assertRaises(ValueError):resolve_selection(target)
 
     def test_binding_rejects_wrong_geometry_and_dtype(self):
-        from samples.vision.unet.runtime.python.model_binding import resolve_selection,bind_model
+        from samples.vision.unet.runtime.python.cli import resolve_selection
+        from samples.vision.unet.runtime.python.unet import bind_model
         for key,val in [('input_shapes',{'images':(1,3,256,256)}),('output_shapes',{'logits':(1,19,512,512)}),('output_dtypes',{'logits':'int16'}),('input_dtypes',{'images':'float32'})]:
             m=metadata();m[key]=val
             with self.assertRaises(ValueError):bind_model(resolve_selection(),m)
@@ -157,7 +173,7 @@ class EvaluatorTests(unittest.TestCase):
     def test_x5_evaluator_delegates_task_and_keeps_external_model_boundary(self):
         from unittest.mock import patch
         from samples.vision.unet.evaluator import eval_unet as ev
-        from samples.vision.unet.runtime.python.model_runner import RuntimeModelRunner as Real
+        from samples.vision.unet.runtime.python.unet import create_runner as Real
         class Fake:
             version='fixture'
             def __init__(self): self.__dict__.update(metadata())
@@ -218,14 +234,14 @@ class SourceAndDocsTests(unittest.TestCase):
     def test_runtime_readme_examples_with_real_runner_fixture(self):
         import re
         from unittest.mock import patch
-        from samples.vision.unet.runtime.python import model_runner
+        from samples.vision.unet.runtime.python import unet as unet_module
         class Fake:
             def __init__(self):self.__dict__.update(metadata())
             def run(self,inputs):
                 raw=np.zeros((1,21,512,512),np.float32);raw[:,4]=1
                 return {'unet':{'logits':raw}}
-        real=model_runner.RuntimeModelRunner
-        with patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda s:real(s,runtime=Fake())):
+        real=unet_module.create_runner
+        with patch.object(unet_module,'create_runner',side_effect=lambda s,**kw:real(s,runtime=Fake())):
             for filename in ['README.md','README_cn.md']:
                 text=(ROOT/'samples/vision/unet/runtime/python'/filename).read_text()
                 code=re.findall(r'```python\n(.*?)```',text,re.S)[0]
@@ -233,13 +249,13 @@ class SourceAndDocsTests(unittest.TestCase):
                 np.testing.assert_array_equal(context['mask'],context['mask_again'])
 
     def test_runner_rejects_input_and_owns_output(self):
-        from samples.vision.unet.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.unet.runtime.python.model_binding import resolve_selection
+        from samples.vision.unet.runtime.python.cli import resolve_selection
+        from samples.vision.unet.runtime.python.unet import create_runner
         raw=np.zeros((1,21,512,512),np.float32)
         class Fake:
             def __init__(self):self.__dict__.update(metadata());self.calls=0
             def run(self,inputs):self.calls+=1;return {'unet':{'logits':raw}}
-        fake=Fake();runner=RuntimeModelRunner(resolve_selection(),runtime=fake)
+        fake=Fake();runner=create_runner(resolve_selection(),runtime=fake)
         out=runner({'images':np.zeros((1,768,512,1),np.uint8)})
         raw[:]=7
         self.assertTrue(np.all(out==0))
@@ -248,10 +264,10 @@ class SourceAndDocsTests(unittest.TestCase):
 
     def test_board_gate_precedes_sdk(self):
         from unittest.mock import patch
-        from samples.vision.unet.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.unet.runtime.python.model_binding import resolve_selection
-        with patch('samples.vision.unet.runtime.python.model_runner.require_execution_target',side_effect=ValueError('wrong-board')):
-            with self.assertRaisesRegex(ValueError,'wrong-board'):RuntimeModelRunner(resolve_selection()).load()
+        from samples.vision.unet.runtime.python.cli import resolve_selection
+        from samples.vision.unet.runtime.python import unet as unet_module
+        with patch.object(unet_module,'require_execution_target',side_effect=ValueError('wrong-board')):
+            with self.assertRaisesRegex(ValueError,'wrong-board'):unet_module.create_runner(resolve_selection()).load()
 
 
 class ConversionPreparationTests(unittest.TestCase):
@@ -284,16 +300,16 @@ class CLIResultTests(unittest.TestCase):
     def test_cli_preserves_runtime_version_and_writes_class_mask(self):
         import tempfile,json,contextlib,io
         from unittest.mock import patch
-        from samples.vision.unet.runtime.python import main,model_runner
+        from samples.vision.unet.runtime.python import main, unet as unet_module
         class Fake:
             version='unet-sdk-fixture'
             def __init__(self):self.__dict__.update(metadata())
             def run(self,inputs):
                 raw=np.zeros((1,21,512,512),np.float32);raw[:,6]=1
                 return {'unet':{'logits':raw}}
-        real=model_runner.RuntimeModelRunner
+        real=unet_module.create_runner
         with tempfile.TemporaryDirectory() as temp, \
-             patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda s:real(s,runtime=Fake())), \
+             patch.object(unet_module,'create_runner',side_effect=lambda s,**kw:real(s,runtime=Fake())), \
              contextlib.redirect_stdout(io.StringIO()):
             folder=Path(temp)
             rc=main.main(['--mask-save-path',str(folder/'mask.png'),'--img-save-path',str(folder/'overlay.png'),'--report-path',str(folder/'report.json')])
@@ -302,6 +318,51 @@ class CLIResultTests(unittest.TestCase):
             self.assertEqual(report['runtime_version'],'unet-sdk-fixture')
             mask=cv2.imread(str(folder/'mask.png'),cv2.IMREAD_UNCHANGED)
             self.assertEqual(mask.shape,(512,512));self.assertTrue(np.all(mask==6))
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``unet.py`` owns the named
+    model class that loads via the shared transport; the per-sample
+    ``model_binding``/``model_runner`` forwarding modules are gone.
+    """
+
+    def _model(self):
+        from samples.vision.unet.runtime.python.cli import resolve_selection
+        from samples.vision.unet.runtime.python.unet import UNetSegmenter, create_runner
+
+        class FakeSDK:
+            def __init__(self):
+                self.__dict__.update(metadata())
+
+            def run(self, inputs):
+                raw = np.zeros((1, 21, 512, 512), np.float32)
+                raw[:, 8] = 1
+                return {'unet': {'logits': raw}}
+
+        selection = resolve_selection('x5')
+        return UNetSegmenter(selection,
+                             runner=create_runner(selection, runtime=FakeSDK()))
+
+    def test_segmenter_constructs_from_selection_and_runs_stages(self):
+        model = self._model()
+        mask = model.predict(np.zeros((7, 19, 3), np.uint8))
+        self.assertEqual(mask.shape, (512, 512))
+        self.assertEqual(mask.dtype, np.uint8)
+        self.assertTrue(np.all(mask == 8))
+        manual = model.postprocess(model.infer(model.preprocess(np.zeros((7, 19, 3), np.uint8)).tensors))
+        np.testing.assert_array_equal(mask, manual)
+
+    def test_set_scheduling_params_reaches_runner(self):
+        model = self._model()
+        with self.assertRaises(ValueError):
+            model.set_scheduling_params(priority=999)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = ROOT / 'samples/vision/unet/runtime/python'
+        for name in ('model_binding.py', 'model_runner.py'):
+            self.assertFalse((base / name).exists(), name)
 
 
 class DownloadTests(unittest.TestCase):

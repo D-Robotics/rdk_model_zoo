@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+运行 LaneNet，返回道路图片的车道嵌入特征和二值分割图。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,21 +14,18 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── image_preprocess.py  # Python 脚本
-├── lanenet.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── image_preprocess.py  # 模型初始化与推理阶段
+├── lanenet.py  # 模型初始化与推理阶段
+├── main.py  # 命令行入口：构造模型并调用 predict
 ├── run.sh  # 运行示例
-├── tensor_io.py  # Python 脚本
-└── visualization.py  # Python 脚本
+└── visualization.py  # 结果渲染与图片保存
 ```
 
 <a id="environment"></a>
 ## 环境
 
-实际推理需要 S100、匹配的 `hbm_runtime` Python 运行库、NumPy 和 OpenCV。主机检查入口（`--list-models`、`--dry-run`）不导入板端 SDK、不下载模型。主机测试显式注入 SDK 夹具，不能证明某个板卡镜像或 SDK 版本受支持。运行时版本可获取时写入报告，否则记为 `unknown`。
+实际推理需要 S100、匹配的 `hbm_runtime` Python 运行库、NumPy 和 OpenCV。主机检查入口（`--list-models`、`--dry-run`）不导入板端 SDK、不下载模型。运行时版本可获取时写入报告，否则记为 `unknown`。
 
 通过[显式模型下载器](../../model/README_cn.md)准备 HBM。运行入口不安装依赖。以下命令均从仓库根目录执行；Shell 包装入口也会切换到该目录。
 
@@ -97,15 +94,12 @@ python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s
 
 ```python
 import cv2
-from samples.vision.lanenet.runtime.python.model_binding import resolve_selection
-from samples.vision.lanenet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.lanenet.runtime.python.lanenet import LaneNetTask
+from samples.vision.lanenet.runtime.python.cli import resolve_selection
+from samples.vision.lanenet.runtime.python.lanenet import LaneNetSegmenter
 
 selection = resolve_selection("s100")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = LaneNetTask(runner, binding)
+task = LaneNetSegmenter(selection)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
 image = cv2.imread("samples/vision/lanenet/test_data/lane.jpg", cv2.IMREAD_COLOR)
 if image is None:
     raise ValueError("Cannot decode input image")
@@ -114,7 +108,7 @@ assert result.embedding.shape == (3, 256, 512)
 assert result.binary.shape == (256, 512)
 # 同时保留本次调用的原始具名输出（raw_outputs.npz 契约）时：
 details = task.predict(image, return_details=True)
-assert set(details.raw) == set(binding.metadata.output_names)
+assert set(details.raw) == set(task.binding.metadata.output_names)
 ```
 
 `LanePredictionDetails`（通过 `return_details=True` 显式开启）将常规结果与单次
@@ -139,12 +133,10 @@ assert set(details.raw) == set(binding.metadata.output_names)
 绑定要求单模型、单 float32 `[1,3,256,512]` 输入、float32 `[1,3,256,512]` 的 `instance_seg_logits`，以及 int64 `[1,1,256,512]` 或 `[1,256,512]` 的 `binary_seg_pred`。检查名称、维数、类型、有限值与全部声明的输出形状。辅助输出允许 float16/float32/int8/uint8/int16/int32/int64，形状须固定且各维为正。原始数值保留，任务返回所选结果的独立副本。Python 辅助类型范围比当前原生实现宽（原生无 float16），跨语言比较前必须检查真实元数据。
 
 <a id="troubleshooting"></a>
-## 排障与验证边界
+## 排障
 
 - 模型缺失：按模型说明显式准备；`--dry-run` 不验证文件内容。
 - 身份拒绝：确认物理板卡为 S100；S100P/S600 需各自的制品与绑定。
 - 元数据不符：保留实际名称/形状/类型；未确认语义时不能通过改名绕过检查。
 - 图像无效或输出路径已存在：使用可解码图像与新目录。部分 IO 失败可能留下不完整目录，复用结果前先检查错误。
-- 颜色不符合预期：单独检查原始嵌入；彩色渲染是语义车道分割视图，不含实例 ID。
-
-主机测试覆盖源前处理、绑定、原始数据所有权、标签、显示，以及使用伪 SDK 的真实 CLI；板端推理需要 S100 板端 SDK。声明精度或等价前请阅读[评估边界](../../evaluator/README_cn.md)。
+- 颜色不符合预期：单独检查原始嵌入；彩色渲染是语义车道分割视图，不含实例 ID。声明精度或等价前请阅读[评估边界](../../evaluator/README_cn.md)。

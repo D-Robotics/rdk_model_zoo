@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run the prepared camera, LiDAR, status and noise tensors through DiffusionDrive and decode planning outputs.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,17 +14,15 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments and result presentation
-├── data_io.py  # Python script
-├── diffusiondrive.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── quantization.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── data_io.py  # NPZ input loading and validation
+├── diffusiondrive.py  # Model initialization and inference stages
+├── main.py  # CLI entry: construct model and call predict
+├── quantization.py  # Quantization and dequantization
 ├── run.sh  # Run the sample
 ├── run_all_cases.sh  # Shell command
-├── run_cases.py  # Python script
-└── visualization.py  # Python script
+├── run_cases.py  # Model initialization and inference stages
+└── visualization.py  # Result rendering and image output
 ```
 
 <a id="environment"></a>
@@ -103,17 +101,14 @@ Optional decoded archives are byte copies. Optional images are separately encode
 From the repository root on a prepared S600, this executes the same task path without writing or rendering:
 
 ```python
-from samples.vision.diffusiondrive.runtime.python.model_binding import resolve_selection
-from samples.vision.diffusiondrive.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection
 from samples.vision.diffusiondrive.runtime.python.data_io import load_features
-from samples.vision.diffusiondrive.runtime.python.diffusiondrive import DiffusionDriveTask
+from samples.vision.diffusiondrive.runtime.python.diffusiondrive import DiffusionDrivePlanner
 
 selection = resolve_selection("s600")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
 features = load_features("samples/vision/diffusiondrive/test_data/reference_inputs.npz")
-task = DiffusionDriveTask(runner, binding, agent_score_threshold=0.5)
+task = DiffusionDrivePlanner(selection, agent_score_threshold=0.5)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
 result = task.predict(features)
 assert result["trajectory"].shape == (1, 8, 3)
 assert result["bev_labels"].shape == (1, 128, 256)
@@ -126,7 +121,7 @@ assert set(details.physical) == set(features) and set(details.raw) == set(detail
 result with this call's physical inputs and raw outputs, so archiving
 `physical_inputs.npz`/`raw_outputs.npz` needs no second inference; the default
 `predict` return stays the decoded mapping alone and the task never retains a
-last output. Results own their arrays. Keep the SDK runner alive while using the task; do not share it across concurrent calls without synchronization. The task no longer owns the SDK or supplies a `__call__` alias; use `predict`. It does not accept raw camera/LiDAR sensors in place of prepared feature tensors.
+last output. Results own their arrays. The model owns the runtime; use a separate model instance for each concurrent worker. It does not accept raw camera/LiDAR sensors in place of prepared feature tensors.
 
 <a id="stage-io"></a>
 ## Stage IO and quantization
@@ -138,13 +133,12 @@ last output. Results own their arrays. Keep the SDK runner alive while using the
 | `postprocess` | Exact four raw arrays matching metadata | Owned decoded six-array result |
 | `predict` | Logical features | Composition of the three stages; `return_details=True` additionally returns this call's physical inputs and raw outputs |
 
-The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 Logical input shapes: camera `[1,3,256,1024]`, lidar `[1,1,256,256]`, status `[1,8]`, noise `[1,20,8,2]`. Source output names/shapes: trajectory `[1,8,3]`, agent_states `[1,30,5]`, agent_labels `[1,30]`, bev_semantic_map `[1,7,128,256]`. Binding requires exactly one model and exact name sets; name order is irrelevant.
 
 Physical types may be int8/uint8/int16/uint16/int32/uint32/float16/float32, subject to actual metadata and transform validation. Integer tensors require explicit positive finite SCALE descriptors; input scales must be per-tensor. Empty quantization on floating tensors means casting/pass-through; NONE descriptors may contain zero-valued zero-point placeholders. Nonempty floating SCALE descriptors follow the source affine behavior. Output scales may be per-axis with a matching axis length; scalar zero points broadcast across channels, correcting a source reshape error. Integer zero points must be integral and in range. Binding snapshots transform values without copying SDK descriptor objects.
 
-Input quantization preserves source float32 `rint(x/scale + zero)`; integer clipping uses float64 bounds before the final cast to avoid an int32/uint32 upper-bound wrap. Missing integer scales, malformed metadata and nonfinite inputs/results fail. Output dequantization precedes source sigmoid (logits clipped to [-60,60]), agent threshold and channel-axis BEV argmax. No undocumented sensor normalization, randomized noise or new planning algorithm is inserted. Inspect the HBM’s actual SDK metadata against the declared tensor contract when loading.
+Input quantization preserves source float32 `rint(x/scale + zero)`; integer clipping uses float64 bounds before the final cast to avoid an int32/uint32 upper-bound wrap. Missing integer scales, malformed metadata and nonfinite inputs/results fail. Output dequantization precedes source sigmoid (logits clipped to [-60,60]), agent threshold and channel-axis BEV argmax. Inspect the HBM’s actual SDK metadata against the declared tensor contract when loading.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

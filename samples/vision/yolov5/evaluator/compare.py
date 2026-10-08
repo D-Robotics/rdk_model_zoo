@@ -85,7 +85,7 @@ def run_comparison(selection,image,image_path,output_dir,*,resize_type=None,scor
         else:boxes,scores,ids=expected
         records['legacy']['result']=dict(boxes=boxes,scores=scores,class_ids=ids)
         runner=RuntimeModelRunner(selection,runtime_factory=factory('unified'));binding=runner.load();runner.set_scheduling_params(priority=priority,bpu_cores=cores)
-        result=YOLOv5Task(runner,binding,score_thres=score_thres,nms_thres=nms_thres).predict(image,resize_type=resize)
+        result=YOLOv5Task(runner=runner,binding=binding,score_thres=score_thres,nms_thres=nms_thres).predict(image,resize_type=resize)
         records['unified']['result']=dict(boxes=result.boxes,scores=result.scores,class_ids=result.class_ids)
         checks={};maxdiff={}
         for category in ('inputs','outputs','result'):

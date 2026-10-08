@@ -30,7 +30,7 @@ modnet/
 | X5 | `modnet_512x512_rgb.bin` | supported | not-supported | 制品需手工准备，见[模型准备](model/README_cn.md) |
 | S100/S100P/S600 | — | not-supported | not-supported | 没有源制品 |
 
-本 sample 没有 C++ 实现。运行模型是外部手工制品；主机测试不等同于板端验证。
+本 sample 没有 C++ 实现。
 
 <a id="prerequisites"></a>
 ## 环境前提

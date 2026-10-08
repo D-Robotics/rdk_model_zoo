@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Generate a 21-class VOC segmentation mask with the selected U-Net backbone.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,13 +14,13 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── main.py  # CLI entry: construct model and call predict
 ├── run.sh  # Run the sample
-├── unet.py  # Python script
-└── visualization.py  # Python script
+└── unet.py  # Model initialization and inference stages
 ```
+
+`main.py` constructs the model and calls `predict`; `cli.py` handles options, model selection, and image/report output. The task file owns model stages and image loading uses `utils.py_utils.image.read_bgr_image`.
 
 <a id="environment"></a>
 ## Environment
@@ -64,7 +64,7 @@ python3 samples/vision/unet/runtime/python/main.py --dry-run --target x5 --varia
 | `--dry-run` | flag | `false` | resolve only, no model load/download |
 | `--list-models` | flag | `false` | manifest rows only; exclusive with dry-run |
 
-`--help` / `-h` prints help. Relative output paths use cwd; existing results are replaced. Dry-run success does not certify files, actual metadata or the SDK.
+`--help` / `-h` prints help. Relative output paths use cwd; existing results are replaced. `--dry-run` prints the selected model paths and CLI configuration.
 
 <a id="results"></a>
 ## Results
@@ -77,28 +77,26 @@ The mask is fixed 512×512 uint8, VOC IDs 0..20. Overlay uses the same size and 
 ```python
 # cwd: repository root; on X5 after explicit model preparation
 import cv2
-from samples.vision.unet.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.unet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.unet.runtime.python.unet import UNetTask
+from samples.vision.unet.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.unet.runtime.python.unet import UNetSegmenter
 
 image = cv2.imread(str(SAMPLE_DIR / "test_data/2007_000033.jpg"))
-runner = RuntimeModelRunner(resolve_selection("x5", variant="resnet18"))
-binding = runner.load()
-task = UNetTask(runner, binding)
+selection = resolve_selection("x5", variant="resnet18")
+task = UNetSegmenter(selection)
 prepared = task.preprocess(image)
 raw = task.infer(prepared.tensors)
 mask = task.postprocess(raw)
 mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 512), uint8
 ```
-The task owns stages; binding owns artifact/tensor contracts, runner lazily loads the SDK, and visualization.py owns coloring. Use runner.set_scheduling_params for scheduling; SDK concurrency is not guaranteed. The old UNetConfig/UNet API stays in the source snapshot; the unified API uses explicit selection/binding.
+The model initializes the runtime and implements preprocessing, inference, postprocessing and `predict`. Use a separate model instance for each concurrent worker.
 
 <a id="stage-io"></a>
 ## 阶段 I/O / Stage IO
 
 Preprocess accepts nonempty BGR uint8 HWC, stretches with INTER_LINEAR to 512×512, then creates contiguous packed NV12 uint8 `(1,768,512,1)`. Metadata may describe logical NCHW `(1,3,512,512)`, NHWC `(1,512,512,3)` or physical packed shape, with NV12 dtype. Each call returns independent frozen original-size context.
 
-infer only returns runner-validated raw logits, with no dequantization or argmax. postprocess accepts `(1,21,512,512)` or `(1,512,512,21)`. Integer outputs require valid SCALE parameters; float32 is not dequantized again even with a vestigial descriptor. Class argmax breaks ties by lowest ID. Model-resolution output needs no context restoration; no softmax, automatic resize-back or file IO occurs. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
+infer only returns runner-validated raw logits, with no dequantization or argmax. postprocess accepts `(1,21,512,512)` or `(1,512,512,21)`. Integer outputs require valid SCALE parameters; float32 is not dequantized again even with a vestigial descriptor. Class argmax breaks ties by lowest ID. Model-resolution output needs no context restoration; no softmax, automatic resize-back or file IO occurs.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

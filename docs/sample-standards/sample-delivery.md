@@ -40,8 +40,8 @@
 
 - `main.py` 负责参数传递、显式构造模型、调用 `predict` 和展示结果。
 - `classify.py`、`detect.py`、`segment.py` 等模型/任务文件包含初始化、preprocess、infer、postprocess、predict 的真实流程。
-- 参数与展示较多时可设置 `cli.py`；模型特有解码复杂时可增加有明确职责的文件。
-- 不限制文件数量；删除只转发公共 import 的 Sample 文件，不逐函数拆文件。
+- 普通单任务 Sample 默认使用 `main.py`、`cli.py`、模型类三个 Python 文件；模型特有解码复杂时可增加有明确职责的文件。
+- 按 [Runtime 代码规范](runtime-code.md) 组织文件；删除只转发公共 import 的 Sample 文件，不逐函数拆文件。
 - SDK 封装、读取 BGR 图、标签校验、通用张量和数学函数直接复用 `utils/py_utils`。
 - 板卡和模型选择显式传递，实际 SDK 执行核查板卡身份；前后处理遵守各制品的输入输出契约。
 - Google-style docstring 按 `Model_Zoo_Repository_Guidelines.md` 编写；参数、返回值、异常及张量语义与实现一致，行内注释使用英文。

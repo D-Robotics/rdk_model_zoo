@@ -1,24 +1,23 @@
 # Python Runtime — FCOS
 
+English | [简体中文](README_cn.md)
+
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run FCOS object detection on X5 using EfficientNet B0, B2 or B3 models. `FCOSTask.predict` returns original-image boxes, confidence scores and class IDs.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── __init__.py  # Python script
-├── fcos.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── run.sh  # Run the sample
-└── tensor_io.py  # Python script
+├── cli.py  # Arguments, model selection and result presentation
+├── fcos.py  # Model stages and prediction
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── model_runner.py  # Runtime loading and raw tensor execution
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
 <a id="environment"></a>
@@ -81,14 +80,10 @@ Prerequisite: prepare the exact B0 artifact with `model/download.sh`; `bus.jpg` 
 import cv2
 import numpy as np
 from samples.vision.fcos.runtime.python.fcos import FCOSTask
-from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
-from samples.vision.fcos.runtime.python.model_runner import RuntimeModelRunner
-from utils.py_utils.runtime_meta import RuntimeMetadata
+from samples.vision.fcos.runtime.python.model_binding import resolve_selection
 
 selection = resolve_selection("x5", asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()  # board image only; host tests inject a runtime
-task = FCOSTask(runner, binding)
+task = FCOSTask(selection)
 image = cv2.imread("samples/vision/fcos/test_data/bus.jpg", cv2.IMREAD_COLOR)
 result = task.predict(np.asarray(image))
 print(result.boxes, result.scores, result.class_ids)

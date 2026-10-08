@@ -67,7 +67,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --li
 | `--all` | All published assets, optionally restricted by family; task and size do not filter this mode. |
 | `--dry-run` | Plan only; no download or model loading. |
 
-Specify a task when selecting a family that does not publish the platform's whole default task set. Unsupported combinations fail instead of selecting a nearby model. The legacy positional form is still accepted; named options take precedence:
+Specify a task when selecting a family that does not publish the platform's whole default task set. Unsupported combinations fail instead of selecting a nearby model. The positional form is also accepted; named options take precedence:
 
 ```bash
 bash samples/vision/ultralytics_yolo/model/download_model.sh s600 yolov8 cls n --dry-run
@@ -106,7 +106,7 @@ For a model stored outside the default directory, pass its full path to runtime 
 <a id="formats-checksums"></a>
 ## Formats and integrity
 
-X5 uses a packed NV12 input; S uses separate Y/UV inputs. Non-classification filenames use 640×640. YOLO26 classification filenames use 224×224 on all targets; S600 classification identifiers also use 224×224. S100/S100P v8/v11 classification manifest IDs retain 640×640 compatibility names, while their download URLs use 224×224. Runtime metadata determines actual input geometry; filename tokens are not shape overrides.
+X5 uses a packed NV12 input; S uses separate Y/UV inputs. Non-classification filenames use 640×640. YOLO26 classification filenames use 224×224 on all targets; S600 classification identifiers also use 224×224. S100/S100P v8/v11 classification manifest IDs retain 640×640 identifiers, while their download URLs use 224×224. Runtime metadata determines actual input geometry; filename tokens are not shape overrides.
 
 The downloader rejects empty files and verifies publisher SHA-256 values when recorded. A locally observed digest identifies the downloaded bytes. `--dry-run` reports path presence; it does not download or inspect file contents. Downloads use a temporary `.part` file and install the final file only after successful validation. A timeout, HTTP error or unavailable URL returns a preparation error.
 

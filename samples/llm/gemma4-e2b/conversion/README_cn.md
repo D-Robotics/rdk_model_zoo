@@ -37,7 +37,7 @@ conversion/
 
 ## 目标 SoC
 
-同一套转换入口支持三种 RDK S 平台。为了兼容原 S100P 样例，`TARGET_SOC`
+同一套转换入口支持三种 RDK S 平台。`TARGET_SOC`
 默认值为 `s100p`。
 
 | `TARGET_SOC` | HBDK march | Vision 核数 | Text prefill / decode 核数 |

@@ -2,6 +2,17 @@
 
 English | [简体中文](README_cn.md)
 
+
+## Directory structure
+
+```text
+test_data/
+├── readme_img/  # Files for readme_img
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── vocab.json  # Structured data
+```
+
 ## Recording
 `chi_sound.wav` contains mono PCM16, 16000 Hz, 73440 frames (4.59 seconds). The runtime processes all three windows: 30000, 30000 and 13440 valid target samples; the last is padded to 30000.
 

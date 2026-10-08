@@ -25,12 +25,10 @@ from samples.vision.depth_anything_v2.runtime.python.cli import (
     save_depth_evidence,
     validate_output_paths,
 )
-from samples.vision.depth_anything_v2.runtime.python.model_binding import (
+from samples.vision.depth_anything_v2.runtime.python.cli import (
     resolve_selection,
 )
-from samples.vision.depth_anything_v2.runtime.python.model_runner import (
-    RuntimeModelRunner,
-)
+
 
 
 def main(argv=None):
@@ -50,21 +48,22 @@ def main(argv=None):
         validate_output_paths(output, extra)
         image_path = args.test_img.expanduser()
         image = read_bgr_image(image_path)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+
+        # Real execution starts here: construction gates board identity and
+        # the publication hash before the SDK import.
         from samples.vision.depth_anything_v2.runtime.python.depth_anything_v2 import (
-            DepthAnythingV2Task,
+            DepthEstimator,
         )
 
-        task = DepthAnythingV2Task(runner, binding, resize_type=args.resize_type)
+        task = DepthEstimator(selection, resize_type=args.resize_type)
+        task.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         details = task.predict(image, return_details=True)
         save_depth_evidence(
             output,
             extra,
             selection=selection,
-            runner=runner,
-            binding=binding,
+            runner=task.runner,
+            binding=task.binding,
             args=args,
             image_path=image_path,
             details=details,

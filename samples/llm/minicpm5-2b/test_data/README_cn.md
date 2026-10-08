@@ -4,6 +4,18 @@
 
 本目录为 S 源发布的提示词与历史参考记录。
 
+## 目录结构
+
+```text
+test_data/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── generation-reference.json  # 结构化数据
+├── legacy-long-prompts.json  # 结构化数据
+├── legacy-prompts.json  # 结构化数据
+└── prompts.json  # 结构化数据
+```
+
 | 文件 | 用途与适用目标 |
 | --- | --- |
 | `prompts.json` | 六条示例提示词 |

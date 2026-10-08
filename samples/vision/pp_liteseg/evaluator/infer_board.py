@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from samples.vision.pp_liteseg.runtime.python.main import main as runtime_main
-from samples.vision.pp_liteseg.runtime.python.model_binding import ASSET_ID
+from samples.vision.pp_liteseg.runtime.python.cli import ASSET_ID
 
 
 def build_parser():

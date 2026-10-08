@@ -10,6 +10,18 @@ and reference result illustrations.
 3. **Reference illustrations** — `result_detect*.jpg` and four `ultralytics_YOLO_*_demo` captures showing each task's result format.
 
 <a id="files"></a>
+
+## Directory structure
+
+```text
+test_data/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── coco_classes.names  # Source or data file
+├── imagenet_classes.names  # Source or data file
+└── ultralytics_dota_classes.names  # Source or data file
+```
+
 ## Files and byte identities
 
 | File | Role | Pixels | SHA-256 |

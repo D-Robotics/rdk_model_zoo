@@ -2,7 +2,7 @@
 
 # LaneNet 评估边界
 
-本 sample 提供可复现的主机契约检查。数据集评估、实例聚类与精度结果需按下文准备标注数据集并定义匹配规则。
+本目录说明 LaneNet 输出对照和性能测量方法。数据集评估需准备标注图片并定义车道实例匹配规则。
 
 <a id="dataset"></a>
 ## 数据集
@@ -21,25 +21,24 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-主机检查需要 Python、NumPy、OpenCV、PyYAML 和 C++17 编译器。原生单测使用伪头文件编译独立辅助模块及真实资源管理器，不需要板卡、HBM、OE 或厂商库。完整原生 SDK/OpenCV 编译在目标环境中执行。实际推理环境参见 [Python](../runtime/python/README_cn.md) 或 [C++](../runtime/cpp/README_cn.md)。
+使用配套 S100 HBM、板端 SDK、Python、NumPy、OpenCV 和 PyYAML。C++ 比较需按 [C++ 说明](../runtime/cpp/README_cn.md) 构建原生程序。
 
 <a id="command"></a>
 ## 命令
 
-从仓库根目录执行：
+在 S100 上准备模型后，从仓库根目录运行：
 
 ```bash
-python3 -m unittest discover -s samples/vision/lanenet/tests
+bash samples/vision/lanenet/model/download.sh --target s100
+python3 -m samples.vision.lanenet.runtime.python.main --target s100 --output outputs/lanenet-eval
 ```
 
-该命令只执行主机夹具，不下载资产、不连接板卡。原生测试会使用本地 C++ 编译器构建并运行临时主机可执行文件。后续在 S100 准备原始结果时，使用上述运行文档中的命令，为每种实现选择新的结果目录。
+输出目录必须是新目录。运行成功返回 0，并写入原始张量和报告。
 
 <a id="metrics"></a>
-## 检查内容
+## 指标
 
-主机测试检查前处理算术、元数据拒绝、保留精确类型的原始输出、结果独立所有权、二值 0/1 约束、显示舍入、输出路径冲突拒绝和转换准备。原生夹具还检查含填充的字节步长、溢出、角色歧义、超过 2^53 的 int64 序列化，以及注入失败后的资源释放。这些是实现契约，不是车道检测指标。
-
-板端对照需记录模型/图像精确摘要、板卡/运行库版本、完整输出元数据及原始数组。嵌入数值使用有依据并明确声明的容差，标签精确比较，显示图另行比较。Python 按名称、原生按形状/类型绑定，首先应确认实际角色对应关系。
+相同模型和图片下，数值比较嵌入张量，声明所用容差；精确比较二值标签，单独比较可视化。数据集评估须先定义聚类、曲线拟合和车道实例匹配规则，再使用带标注数据评分。
 
 <a id="outputs"></a>
 ## 输出与证据
@@ -51,7 +50,7 @@ python3 -m unittest discover -s samples/vision/lanenet/tests
 
 已发布的 HRT 参考测量使用 200 帧：模型延迟 14.245 ms、69.894 FPS，对应板卡镜像、运行库/工具链版本及制品摘要未注明。Python/C++ 端到端延迟需在目标环境测量，并随结果记录这些条件。模型准备见[转换说明](../conversion/README_cn.md)。
 
-sample 测试套件共 22 项，包括三项原生辅助/资源/序列化夹具和四项原生启动器测试，覆盖主机开发检查。使用上述命令执行开发检查；推理、原生 SDK 构建、OE 编译、数据集评估及性能测量分别在匹配环境中进行。
+
 
 <a id="boundaries"></a>
 ## 适用范围

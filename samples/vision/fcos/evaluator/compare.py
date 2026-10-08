@@ -210,7 +210,7 @@ def _run_unified(
     runner = RuntimeModelRunner(selection, runtime=runtime)
     binding = runner.load()
     runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-    task = FCOSTask(runner, binding, conf_thres=conf_thres, iou_thres=iou_thres, resize_type=resize_type)
+    task = FCOSTask(runner=runner, binding=binding, conf_thres=conf_thres, iou_thres=iou_thres, resize_type=resize_type)
     prepared = task.pre_process(image)
     outputs = task.forward(prepared)
     result = task.post_process(outputs, prepared.context)

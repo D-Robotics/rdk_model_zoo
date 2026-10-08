@@ -146,7 +146,7 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_batch.py \
 
 COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所选图像ID。分类top1/top5为处理过且有标签图像的正确比例，不是百分数。OBB JSON是中间预测，不是精度指标。运行墙钟时间包含Python与数据处理，并非BPU推理延迟。
 
-记录源码提交、目标/系统/SDK、制品摘要、数据集/划分、实际处理数量、resize策略和阈值后再比较结果。这些条件改变时，不能直接对比历史表。固定图片源/统一一致性验证也不构成数据集精度测量。
+记录源码提交、目标/系统/SDK、制品摘要、数据集/划分、实际处理数量、resize策略和阈值后再比较结果。这些条件改变时，不能直接对比历史表。数据集精度使用对应数据集评估命令计算。
 
 <a id="outputs"></a>
 ## 输出与成功判断

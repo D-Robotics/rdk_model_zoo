@@ -1,35 +1,23 @@
 # HIMLoco Python 策略阶段
 
-[English](README.md)
-
-Python 入口提供准确的 X5 模型选择、懒加载 SDK、源索引输入校验、预热、
-独立动作导出和失败报告；板端执行按快速开始进行。
-入口（`main.py`）运行离线循环：经 `application.load_task` 取得绑定的
-`HimLocoTask`，执行所要求的预热预测，逐输入调用一次 `task.predict(observation)`
-并通过 `application.record_sample` 记录每个动作导出；报告处理（目标/制品校验、
-报告文件预留、摘要复验、延迟汇总、失败记录）位于 `application.py` 的
-`prepare`/`load_task`/`record_sample`/`complete` 助手，其单调用组合
-`application.execute` 为兼容 API。
+[English](README.md) | 简体中文
 
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+在 X5 上使用六帧观测历史离线运行 HIMLoco 策略。`HimLocoTask.from_model` 加载 Runtime；`predict` 返回十二维原始策略动作。`cli.py` 读取输入并保存动作文件与报告。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── application.py  # Python 脚本
-├── input_io.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── policy.py  # Python 脚本
-└── run.sh  # 运行示例
+├── cli.py  # 参数、模型选择与结果展示
+├── input_io.py  # 输入文件与数据记录
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── policy.py  # 模型阶段与预测
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
 <a id="environment"></a>
@@ -42,10 +30,7 @@ python/
 <a id="usage"></a>
 ## 使用方式
 
-构造 `HimLocoTask(runner)`，runner 接收物理映射
-`{"obs_history": float32[1,270]}`，返回 `{"actions": float32[1,12]}`。
-SDK 适配器负责目标板、制品身份和实际模型元数据。核心不下载模型、不打开设备。
-一般调用 `predict(observation)`，也可按下方示例分别执行三个阶段。
+准备模型后，通过 `HimLocoTask.from_model(selection)` 初始化 Runtime。模型输入为 `{"obs_history": float32[1,270]}`，输出为 `{"actions": float32[1,12]}`。一般调用 `predict(observation)`，也可按下方示例分别执行三个阶段。
 
 ```bash
 # Repository root; these commands do not load SDKs or download.
@@ -116,31 +101,30 @@ CLI 成功返回 0，生成按源索引命名的 `000000.bin` 等小端 float32 
 字节。不生成文本转写，也不执行控制器动作。
 
 <a id="integration-example"></a>
-## 可执行集成示例
+## 集成示例
 
-```bash
-python - <<'PYCODE'
+先准备 X5 模型，从仓库根目录执行。示例读取第一份观测历史，返回形状为 `(1,12)` 的策略动作。
+
+```python
+from pathlib import Path
 import numpy as np
+from samples.robotics.himloco.runtime.python.model_binding import resolve_selection
 from samples.robotics.himloco.runtime.python.policy import HimLocoTask
 
-def fixture_runner(tensors):
-    assert tensors["obs_history"].shape == (1, 270)
-    return {"actions": np.arange(12, dtype=np.float32).reshape(1, 12)}
+selection = resolve_selection("x5")
+task = HimLocoTask.from_model(selection)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
+input_dir = Path("samples/robotics/himloco/test_data/obs_history")
+input_path = min(input_dir.glob("*.bin"), key=lambda path: int(path.stem))
+observation = np.fromfile(input_path, dtype="<f4").reshape(6, 45)
+result = task.predict(observation)
+print(result.actions.shape, result.actions.tolist())
 
-task = HimLocoTask(fixture_runner)
-observation = np.zeros((6, 45), dtype=np.float32)
+# Optional access to intermediate stages.
 prepared = task.preprocess(observation)
 raw = task.infer(prepared.tensors)
-explicit = task.postprocess(raw)
-result = task.predict(observation)
-np.testing.assert_array_equal(explicit.actions, result.actions)
-print(result.actions.shape, result.actions.tolist())
-PYCODE
+staged_result = task.postprocess(raw)
 ```
-
-预期输出形状 `(1, 12)`，动作值为 0 到 11。这些来自测试夹具，而非学习策略。
-核心不保存历史或每次调用的上下文，调用者须提供全部六帧观测。若 SDK runner 使用
-共享缓冲区，应串行调用；结果独立存储不表示设备运行时具备线程安全性。
 
 <a id="stage-io"></a>
 ## 阶段语义与源对齐

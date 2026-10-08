@@ -139,8 +139,8 @@ class ShuffledDictAcceptanceTests(unittest.TestCase):
         fcos_mod = importlib.import_module(TASK)
         binding = self._binding()
         raw = fixture_outputs()
-        ordered_task = fcos_mod.FCOSTask(lambda tensors: raw, binding)
-        shuffled_task = fcos_mod.FCOSTask(lambda tensors: shuffled(raw), binding)
+        ordered_task = fcos_mod.FCOSTask(runner=lambda tensors: raw, binding=binding)
+        shuffled_task = fcos_mod.FCOSTask(runner=lambda tensors: shuffled(raw), binding=binding)
         image = np.zeros((300, 500, 3), dtype=np.uint8)
         from_ordered = ordered_task.predict(image)
         from_shuffled = shuffled_task.predict(image)
@@ -183,7 +183,7 @@ class ShuffledDictAcceptanceTests(unittest.TestCase):
 
         def legacy_side(selection, image, **kwargs):
             binding = binding_mod.bind_model(selection, metadata)
-            task = fcos_mod.FCOSTask(lambda tensors: raw, binding)
+            task = fcos_mod.FCOSTask(runner=lambda tensors: raw, binding=binding)
             prepared = task.pre_process(image)
             return {
                 "metadata": RuntimeMetadata.from_mapping(metadata),
@@ -286,7 +286,7 @@ class StrictSemanticsTests(unittest.TestCase):
         raw = fixture_outputs()
         incomplete = dict(raw)
         del incomplete["center_128"]
-        task = fcos_mod.FCOSTask(lambda tensors: incomplete, self.binding)
+        task = fcos_mod.FCOSTask(runner=lambda tensors: incomplete, binding=self.binding)
         with self.assertRaises(self.binding_mod.BindingError):
             task.predict(np.zeros((64, 96, 3), dtype=np.uint8))
 

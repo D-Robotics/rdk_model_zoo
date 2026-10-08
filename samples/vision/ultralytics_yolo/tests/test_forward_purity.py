@@ -16,7 +16,7 @@ from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     bind_model,
 )
 from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect,
     YoloDetectConfig,
 )

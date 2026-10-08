@@ -2,17 +2,13 @@ English | [简体中文](./README_cn.md)
 
 # PaddleOCR C++ runtime (S series)
 
-The native two-stage runtime for the S100 PP-OCRv6 pair:
-DB text detection, region cropping, CRNN+CTC recognition, and a side-by-side
-JPEG rendering (original image with ordered boxes on the left, recognized
-text on the right). It retains the source S16 detector-output path for older
-compatible artifacts alongside the F32 path used by the checked-in
-PP-OCRv6 artifact, and the original FreeType font option and defaults.
-
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+The native two-stage runtime for the S100 PP-OCRv6 pair:
+DB text detection, region cropping, CRNN+CTC recognition, and a side-by-side
+JPEG rendering (original image with ordered boxes on the left, recognized
+text on the right). The detector supports S16 and F32 outputs; the bundled PP-OCRv6 artifact uses F32. Configure rendering with the FreeType font option.
 
 <a id="directory"></a>
 ## Directory structure

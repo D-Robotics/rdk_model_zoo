@@ -30,7 +30,7 @@ modnet/
 | X5 | `modnet_512x512_rgb.bin` | supported | not-supported | the artifact is prepared manually; see [model preparation](model/README.md) |
 | S100/S100P/S600 | — | not-supported | not-supported | no source asset |
 
-This sample has no C++ implementation. The runtime model is a manual external asset; host tests do not certify board execution.
+Runtime language: Python. Prepare the external model manually before inference.
 
 <a id="prerequisites"></a>
 ## Prerequisites

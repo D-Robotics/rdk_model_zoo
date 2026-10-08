@@ -50,7 +50,6 @@ Board execution requires an S100 board with the `hbm_runtime` Python package. Th
 ## Prerequisites
 
 - Board: RDK S100 with an S-series system image providing the `hbm_runtime` Python package; choose the image and runtime version for your deployment.
-- Host checks: repository `.venv` with Python 3.14.7, `numpy`, and `PyYAML`; run the commands in [Python runtime](runtime/python/README.md).
 - Conversion: OpenExplorer 3.5.0 on an x86 Linux host (see [conversion](conversion/README.md)). No complete export, calibration, or compile recipe is included.
 - Storage: enough space for the downloaded HBM and the supplied 2.4 MB `video0.npy`.
 
@@ -104,7 +103,7 @@ Score values depend on the compiled artifact; the numbers above illustrate the s
 - Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — CLI and four-stage `VideoClassificationTask` API.
 - Conversion: [`conversion/README.md`](conversion/README.md) — source conversion notes, screenshots, and missing-recipe boundaries.
 - Evaluation: [`evaluator/README.md`](evaluator/README.md) — functional reference and the published performance record.
-- C++ runtime: not provided; therefore no C++ support is claimed.
+- Runtime language: Python.
 
 <a id="license"></a>
 ## License

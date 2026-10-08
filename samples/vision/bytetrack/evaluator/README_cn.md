@@ -19,7 +19,7 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-真实 capture 需要已识别的 S 板卡、准备好的 HBM/视频、`hbm_runtime`、OpenCV、NumPy、SciPy、`lap==0.5.12` 和 `cython-bbox==0.1.5`。`compare.py` 为两侧分别启动新进程，使进程级 ID 从相同起点开始。主机测试使用 fake detector runtime 和真实 CPU tracker 依赖。
+真实 capture 需要已识别的 S 板卡、准备好的 HBM/视频、`hbm_runtime`、OpenCV、NumPy、SciPy、`lap==0.5.12` 和 `cython-bbox==0.1.5`。`compare.py` 为两侧分别启动新进程，使进程级 ID 从相同起点开始。
 
 <a id="command"></a>
 ## 评估命令

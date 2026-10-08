@@ -39,7 +39,7 @@ Board execution requires the matching S-series board with `hbm_runtime`; the con
 <a id="prerequisites"></a>
 ## Prerequisites
 
-- Board execution: RDK S100 (Nash-E), S100P (Nash-M), or S600 (Nash-P), with a board image that provides `hbm_runtime`. Board image and firmware versions were not verified.
+- Board execution: RDK S100 (Nash-E), S100P (Nash-M), or S600 (Nash-P), with a board image that provides `hbm_runtime`. Use the Python environment supplied with that board image.
 - Host contract checks: Python 3.14.7 with `numpy`, `opencv-python`, and `PyYAML` from `requirements-host.txt`.
 - Conversion: x86 Linux OE 3.7.0 image `ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0`; Torch 2.6 is supplied by that image, with `onnx==1.19.0` and `onnxruntime==1.23.2` additions.
 - Prepare one target-specific HBM before board inference; runtime commands do not download implicitly.

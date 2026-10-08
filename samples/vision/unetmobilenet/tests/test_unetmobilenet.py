@@ -25,20 +25,34 @@ def metadata(dtype='int32', quant=None):
 
 
 def make_task(raw=None, quant=None, dtype='int32'):
-    from samples.vision.unetmobilenet.runtime.python.model_binding import bind_model, resolve_selection
-    from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetTask
+    from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection
+    from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetSegmenter, bind_model
+
+    class StubRunner:
+        """Host seam: callable transport with a prebuilt binding."""
+
+        def __init__(self, binding, raw):
+            self.binding, self.raw = binding, raw
+
+        def load(self):
+            return self.binding
+
+        def __call__(self, tensors):
+            return self.raw
+
     binding = bind_model(resolve_selection('s100'), metadata(dtype, quant))
     if raw is None:
         raw = np.zeros((1, 3, 5, 19), dtype=dtype)
         for y in range(3):
             for x in range(5):
                 raw[0, y, x, (y*5+x)%19] = 7
-    return UnetMobileNetTask(lambda tensors: raw, binding), raw
+    return UnetMobileNetSegmenter(resolve_selection('s100'),
+                                  runner=StubRunner(binding, raw)), raw
 
 
 class BindingTests(unittest.TestCase):
     def test_target_assets_and_paths_are_separate(self):
-        from samples.vision.unetmobilenet.runtime.python.model_binding import resolve_selection
+        from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection
         for target in ['s100', 's600']:
             selection = resolve_selection(target)
             self.assertEqual(selection.asset.filename, f'{target}/unet_mobilenet_1024x2048_nv12.hbm')
@@ -52,7 +66,7 @@ class BindingTests(unittest.TestCase):
             resolve_selection('s100', model_path='/tmp/unknown.hbm')
 
     def test_auto_uses_board_or_explicit_asset_never_s100_fallback(self):
-        from samples.vision.unetmobilenet.runtime.python import model_binding as binding
+        from samples.vision.unetmobilenet.runtime.python import cli as binding
         with patch.object(binding, 'resolve_target', return_value='s600'):
             self.assertEqual(binding.resolve_selection().target, 's600')
         with patch.object(binding, 'resolve_target', side_effect=ValueError('unknown-board')):
@@ -62,7 +76,8 @@ class BindingTests(unittest.TestCase):
             self.assertEqual(binding.resolve_selection(asset_id=asset).target, 's600')
 
     def test_invalid_split_layout_and_output_contract_rejected(self):
-        from samples.vision.unetmobilenet.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection
+        from samples.vision.unetmobilenet.runtime.python.unetmobilenet import bind_model
         cases = [
             ('input_shapes', {'y': (1, 512, 1024, 1), 'uv': (1, 256, 512, 2)}),
             ('input_dtypes', {'y': 'float32', 'uv': 'uint8'}),
@@ -212,10 +227,10 @@ class RuntimeAndCLITests(unittest.TestCase):
 
     def test_split_runner_and_cli_write_original_resolution(self):
         import contextlib,io,json,tempfile
-        from samples.vision.unetmobilenet.runtime.python import main,model_runner
-        real = model_runner.RuntimeModelRunner
+        from samples.vision.unetmobilenet.runtime.python import main, unetmobilenet as task_module
+        real = task_module.create_runner
         with tempfile.TemporaryDirectory() as temp, \
-             patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda s:real(s,runtime=self.fake())), \
+             patch.object(task_module,'create_runner',side_effect=lambda s,**kw:real(s,runtime=self.fake())), \
              contextlib.redirect_stdout(io.StringIO()):
             folder=Path(temp)
             image=np.full((9,17,3),31,np.uint8);cv2.imwrite(str(folder/'input.png'),image)
@@ -232,14 +247,14 @@ class RuntimeAndCLITests(unittest.TestCase):
 
     def test_alpha_weights_original_and_source_palette_is_preserved(self):
         import importlib.util
-        from samples.vision.unetmobilenet.runtime.python.visualization import render_overlay,PALETTE_BGR
+        from samples.vision.unetmobilenet.runtime.python.cli import render_overlay,PALETTE_BGR
         spec=importlib.util.spec_from_file_location('source_vis',legacy_path('s/utils/py_utils/visualize.py'))
         source=importlib.util.module_from_spec(spec);spec.loader.exec_module(source)
-        np.testing.assert_array_equal(PALETTE_BGR,np.asarray(source.rdk_colors,np.uint8))
+        np.testing.assert_array_equal(np.asarray(PALETTE_BGR, np.uint8),np.asarray(source.rdk_colors,np.uint8))
         image=np.full((3,7,3),83,np.uint8);labels=np.full((3,7),5,np.int32)
         np.testing.assert_array_equal(render_overlay(image,labels,alpha_f=1),image)
-        np.testing.assert_array_equal(render_overlay(image,labels,alpha_f=0),PALETTE_BGR[labels])
-        np.testing.assert_array_equal(render_overlay(image,labels),cv2.addWeighted(image,.75,PALETTE_BGR[labels],.25,0))
+        np.testing.assert_array_equal(render_overlay(image,labels,alpha_f=0),np.asarray(PALETTE_BGR, np.uint8)[labels])
+        np.testing.assert_array_equal(render_overlay(image,labels),cv2.addWeighted(image,.75,np.asarray(PALETTE_BGR, np.uint8)[labels],.25,0))
 
     def test_host_inspection_and_s100p_rejection(self):
         import subprocess,sys
@@ -250,10 +265,10 @@ class RuntimeAndCLITests(unittest.TestCase):
             self.assertEqual(result.returncode,rc,result.stderr)
 
     def test_real_loading_checks_identity_before_sdk(self):
-        from samples.vision.unetmobilenet.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.unetmobilenet.runtime.python.model_binding import resolve_selection
-        with patch('samples.vision.unetmobilenet.runtime.python.model_runner.require_execution_target',side_effect=ValueError('wrong-board')):
-            with self.assertRaisesRegex(ValueError,'wrong-board'):RuntimeModelRunner(resolve_selection('s100')).load()
+        from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection
+        from samples.vision.unetmobilenet.runtime.python import unetmobilenet as task_module
+        with patch.object(task_module,'require_execution_target',side_effect=ValueError('wrong-board')):
+            with self.assertRaisesRegex(ValueError,'wrong-board'):task_module.create_runner(resolve_selection('s100')).load()
 
     def test_each_download_keeps_target_subdirectory(self):
         from samples.vision.unetmobilenet.model import download
@@ -298,9 +313,9 @@ class NativeBoundaryTests(unittest.TestCase):
 class DocumentationAndResourceTests(unittest.TestCase):
     def test_runtime_readme_examples_use_real_runner_with_fixture(self):
         import re
-        from samples.vision.unetmobilenet.runtime.python import model_runner
-        real=model_runner.RuntimeModelRunner
-        with patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda s:real(s,runtime=RuntimeAndCLITests().fake())):
+        from samples.vision.unetmobilenet.runtime.python import unetmobilenet as task_module
+        real=task_module.create_runner
+        with patch.object(task_module,'create_runner',side_effect=lambda s,**kw:real(s,runtime=RuntimeAndCLITests().fake())):
             for name in ['README.md','README_cn.md']:
                 text=(ROOT/'samples/vision/unetmobilenet/runtime/python'/name).read_text()
                 snippet=re.findall(r'```python\n(.*?)```',text,re.S)[0]
@@ -322,7 +337,48 @@ class DocumentationAndResourceTests(unittest.TestCase):
             self.assertEqual(result.returncode,0,result.stderr)
 
     def test_missing_integer_zero_point_field_is_rejected_during_binding(self):
-        from samples.vision.unetmobilenet.runtime.python.model_binding import bind_model,resolve_selection
+        from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection
+        from samples.vision.unetmobilenet.runtime.python.unetmobilenet import bind_model
         quant=SimpleNamespace(quant_type=SimpleNamespace(name='SCALE'),scale=np.array([1.]),axis=3)
         with self.assertRaisesRegex(ValueError,'zero_point'):
             bind_model(resolve_selection('s100'),metadata(quant=quant))
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``unetmobilenet.py`` owns the
+    named model class that loads via the shared transport; the per-sample
+    ``model_binding``/``model_runner`` forwarding modules are gone.
+    """
+
+    def _model(self):
+        from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection
+        from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetSegmenter, create_runner
+        runtime = SimpleNamespace(**metadata(), version='host-fixture')
+        raw = np.zeros((1, 3, 5, 19), np.int32)
+        raw[:, :, :, 4] = 9
+        runtime.run = lambda tensors: {'unet': {'scores': raw}}
+        selection = resolve_selection('s100')
+        return UnetMobileNetSegmenter(
+            selection, runner=create_runner(selection, runtime=runtime))
+
+    def test_segmenter_constructs_from_selection_and_runs_stages(self):
+        model = self._model()
+        mask = model.predict(np.zeros((7, 13, 3), np.uint8))
+        self.assertEqual(mask.shape, (7, 13))
+        self.assertEqual(mask.dtype, np.int32)
+        self.assertTrue(np.all(mask == 4))
+        prepared = model.preprocess(np.zeros((7, 13, 3), np.uint8))
+        manual = model.postprocess(model.infer(prepared.tensors), prepared.context)
+        np.testing.assert_array_equal(mask, manual)
+
+    def test_set_scheduling_params_reaches_runner(self):
+        model = self._model()
+        with self.assertRaises(ValueError):
+            model.set_scheduling_params(bpu_cores=[])
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = ROOT / 'samples/vision/unetmobilenet/runtime/python'
+        for name in ('model_binding.py', 'model_runner.py'):
+            self.assertFalse((base / name).exists(), name)

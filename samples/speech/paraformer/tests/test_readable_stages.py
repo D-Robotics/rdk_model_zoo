@@ -4,8 +4,8 @@ The readable-runtime design requires the stage classes to expose the
 canonical ``preprocess``/``infer``/``postprocess`` spellings (legacy names
 stay compatible, error attribution keeps its established wording), the
 entry to parse through a local ``cli`` module, and ``main`` to construct
-the frontend/runtime bundle visibly before ``application.run`` drives
-``pipeline.predict`` per utterance.
+the frontend/runtime bundle visibly and drive ``pipeline.predict`` per
+utterance itself.
 """
 
 import contextlib
@@ -114,7 +114,7 @@ class ThinEntryTests(unittest.TestCase):
             decoder_executed=True))
         bundle = SimpleNamespace(
             runners=(SimpleNamespace(binding=SimpleNamespace(metadata={})),),
-            pipeline=SimpleNamespace(predict=predict),
+            predict=predict,
             set_scheduling_params=lambda **kwargs: None)
         frontend = SimpleNamespace(
             pre_process=lambda audio, rate: SimpleNamespace(
@@ -148,7 +148,7 @@ class ThinEntryTests(unittest.TestCase):
                        return_value=None), patch(
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",
                 return_value=frontend), patch(
-                "samples.speech.paraformer.runtime.python.runtime.load_runtime",
+                "samples.speech.paraformer.runtime.python.pipeline.ParaformerPipeline.from_models",
                 return_value=bundle) as load, patch(
                 "samples.speech.paraformer.runtime.python.input_io.read_audio",
                 return_value=(np.zeros(16000, np.float32), 16000)), contextlib.redirect_stdout(stream):

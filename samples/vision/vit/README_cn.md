@@ -83,9 +83,7 @@ resize=0、Top-K=5。分数是十个 logits 的 softmax；完全平局按 ID 升
 
 [Model](model/README_cn.md) · [Python runtime](runtime/python/README_cn.md) · [Conversion](conversion/README_cn.md) · [Evaluation](evaluator/README_cn.md)
 
-新集成使用 `ViTClassifier` 类（[classify.py](runtime/python/classify.py)；
-共享 `ClassificationTask` 流程仍可从
-[classification.py](../../../utils/py_utils/classification.py) 导入）；
+使用 [classify.py](runtime/python/classify.py) 中的 `ViTClassifier` 类；
 `--model-variant` 保留为 `--variant` 别名，本地 run.sh 接受位置参数
 int8/int16。
 

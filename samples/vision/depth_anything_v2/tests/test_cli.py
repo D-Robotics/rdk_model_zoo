@@ -12,8 +12,8 @@ import cv2
 import numpy as np
 from samples.vision.depth_anything_v2.runtime.python import main
 from samples.vision.depth_anything_v2.model import download
-from samples.vision.depth_anything_v2.runtime.python.model_runner import (
-    RuntimeModelRunner,
+from samples.vision.depth_anything_v2.runtime.python.depth_anything_v2 import (
+    create_runner,
 )
 from test_depth import metadata
 
@@ -49,8 +49,8 @@ class CliTests(unittest.TestCase):
                 set_scheduling_params=lambda **kw: schedule.append(kw)
             )
             with patch(
-                "samples.vision.depth_anything_v2.runtime.python.main.RuntimeModelRunner",
-                side_effect=lambda s: RuntimeModelRunner(s, runtime=runtime),
+                "samples.vision.depth_anything_v2.runtime.python.depth_anything_v2.create_runner",
+                side_effect=lambda s, **kw: create_runner(s, runtime=runtime),
             ), contextlib.redirect_stdout(io.StringIO()):
                 rc = main.main(
                     [
@@ -94,7 +94,7 @@ class CliTests(unittest.TestCase):
                 "report.json",
             ):
                 with patch(
-                    "samples.vision.depth_anything_v2.runtime.python.main.RuntimeModelRunner"
+                    "samples.vision.depth_anything_v2.runtime.python.depth_anything_v2.create_runner"
                 ) as runner, contextlib.redirect_stderr(io.StringIO()):
                     self.assertEqual(
                         main.main(

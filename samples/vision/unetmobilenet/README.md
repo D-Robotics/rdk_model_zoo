@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-UNetMobileNet combines a U-Net encoder/decoder with a lightweight MobileNet backbone for Cityscapes 19-class segmentation. Preserved algorithm references: [U-Net paper](https://arxiv.org/abs/1505.04597), [MobileNet paper](https://arxiv.org/abs/1704.04861), [Cityscapes](https://www.cityscapes-dataset.com/). The source does not identify an exact training repository/checkpoint release.
+UNetMobileNet combines a U-Net encoder/decoder with a lightweight MobileNet backbone for Cityscapes 19-class segmentation. Algorithm references: [U-Net paper](https://arxiv.org/abs/1505.04597), [MobileNet paper](https://arxiv.org/abs/1704.04861), [Cityscapes](https://www.cityscapes-dataset.com/). The source does not identify an exact training repository/checkpoint release.
 
 This S-family sample differs from X5 UNet: two NV12 input planes at 2048×1024, INTER_AREA stretch, 19 classes, original-resolution output. Both Python and C++ separate preprocessing, raw forward and mask decoding; rendering lives outside predict.
 

@@ -120,7 +120,7 @@ See the step-by-step guide with pitfalls and solutions:
 <a id="validation"></a>
 ## Verification workflow
 
-The [evaluator guide](../evaluator/README.md) preserves PC BC/float comparison and board golden-input alignment commands.
+The [evaluator guide](../evaluator/README.md) provides PC BC/float comparison and board golden-input alignment commands.
 The full tutorial explains accuracy observations and troubleshooting; those workflows are executed by the user in the OE environment.
 
 <a id="artifacts"></a>

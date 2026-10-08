@@ -1,13 +1,13 @@
 """Behavioral tests for the readable YOLO detection entry (detect.py).
 
-These tests pin the user-facing contract of the relocated ``YoloDetect``:
-the old ``yolo_detect`` import surface yields the same implementation,
-``predict`` accepts image paths and BGR arrays with per-call geometry,
-consecutive different-size images never reuse a stale transform, one
-``predict`` is exactly one model call, wrong class channels and protocol
-mismatches fail with specific errors, and task dispatch still selects the
-protocol-specific classes. All runners are injected host fixtures; no
-board SDK is loaded and no board inference is claimed.
+These tests pin the user-facing contract of ``YoloDetect``: the ``detect``
+module keeps its public import surface, ``predict`` accepts image paths and
+BGR arrays with per-call geometry, consecutive different-size images never
+reuse a stale transform, one ``predict`` is exactly one model call, wrong
+class channels and protocol mismatches fail with specific errors, and task
+dispatch still selects the protocol-specific classes. All runners are
+injected host fixtures; no board SDK is loaded and no board inference is
+claimed.
 """
 
 from pathlib import Path
@@ -27,7 +27,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detect import (  # noqa: E40
     YoloDetect,
     YoloDetectConfig,
 )
-import samples.vision.ultralytics_yolo.runtime.python.yolo_detect as legacy_module  # noqa: E402
 
 _BUS = Path(__file__).resolve().parents[1] / "test_data" / "bus.jpg"
 
@@ -41,13 +40,15 @@ def _task(**config_kwargs):
 
 
 class YoloDetectImportSurfaceTests(unittest.TestCase):
-    def test_old_import_path_is_the_same_implementation(self):
-        self.assertIs(legacy_module.YoloDetect, YoloDetect)
-        self.assertIs(legacy_module.YoloDetectConfig, YoloDetectConfig)
+    def test_detect_module_keeps_its_public_import_surface(self):
+        import samples.vision.ultralytics_yolo.runtime.python.detect as detect_module
+
+        self.assertIs(detect_module.YoloDetect, YoloDetect)
+        self.assertIs(detect_module.YoloDetectConfig, YoloDetectConfig)
         from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
             DetectionResult,
         )
-        self.assertIs(legacy_module.DetectionResult, DetectionResult)
+        self.assertIs(detect_module.DetectionResult, DetectionResult)
 
     def test_stage_aliases_delegate_to_the_new_methods(self):
         task, _ = _task()
@@ -210,18 +211,17 @@ class YoloDispatchTests(unittest.TestCase):
         from yolo_dispatch import get_task_types
 
         dfl_cls, _ = get_task_types(resolve_platform("x5"), "yolo11", "detect")
-        # The flat 'yolo_detect' dispatch import resolves through the
-        # compatibility shim to the readable detect.YoloDetect class.
+        # Dispatch imports the readable detect.YoloDetect class directly.
         self.assertIs(dfl_cls, YoloDetect)
 
         ltrb_cls, _ = get_task_types(resolve_platform("s100"), "yolo26", "detect")
         self.assertIs(
             ltrb_cls,
-            getattr(importlib.import_module("yolo26_det"), "YOLO26Detect"))
+            getattr(importlib.import_module("samples.vision.ultralytics_yolo.runtime.python.yolo26_det"), "YOLO26Detect"))
 
         nms_free_cls, _ = get_task_types(resolve_platform("s100"), "yolov10", "detect")
         v10_cls = getattr(
-            importlib.import_module("yolo_v10detect"), "YoloV10Detect")
+            importlib.import_module("samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect"), "YoloV10Detect")
         self.assertIs(nms_free_cls, v10_cls)
         # The NMS-free adapter reuses the readable DFL implementation.
         self.assertTrue(issubclass(nms_free_cls, YoloDetect))

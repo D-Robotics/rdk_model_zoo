@@ -1,11 +1,119 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Chair part segmentation: raw points → normalized tensors → raw logits → IDs."""
+"""PointNet chair part segmentation: load, preprocess, infer, postprocess, predict.
+
+``PointNetSegmenter`` owns the fixed per-point contract end to end:
+construction loads the model through the shared lazy transport, and each
+``predict`` call runs preprocess -> infer -> postprocess visible in this
+file. Catalog selection and evidence writing live in ``cli.py``; plotting
+lives in ``visualization.py``.
+"""
 from dataclasses import dataclass
-from typing import Mapping
+from pathlib import Path
+from typing import Any, Mapping
 import numpy as np
-from utils.py_utils.quantization import dequantize_tensor
-from samples.vision.pointnet.runtime.python.model_binding import ModelBinding
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.quantization import dequantize_tensor, validate_scale_quantization
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.single_array_runner import SingleArrayRunner
+from samples.vision.pointnet.runtime.python.cli import ModelSelection
+
+
+@dataclass(frozen=True)
+class ModelBinding:
+    """Validated PointNet tensor protocol; N comes from fixed artifact metadata.
+
+    Attributes:
+        selection: The manifest-backed selection this binding was built from.
+        metadata: Board-observed model metadata validated against the contract.
+        input_name: Bound normalized-points F32 input tensor name.
+        output_name: Bound per-point logits output tensor name.
+    """
+
+    selection: ModelSelection
+    metadata: RuntimeMetadata
+    input_name: str
+    output_name: str
+
+    @property
+    def model_name(self) -> str:
+        """Return the single submodel name declared by the artifact."""
+        return self.metadata.model_name
+
+
+def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[str, Any]) -> ModelBinding:
+    """Validate the fixed source PointNet tensor protocol.
+
+    Args:
+        selection: Manifest-backed selection whose asset and path must match.
+        metadata: Board-observed metadata mapping or ``RuntimeMetadata``.
+
+    Returns:
+        ModelBinding: Validated tensor names for the (1,3,N) F32 contract.
+
+    Raises:
+        BindingError: The selection does not match the exact manifest asset.
+        MetadataMismatchError: Model, tensor, geometry, or dtype contract fails.
+    """
+    from samples.vision.pointnet.runtime.python.cli import BindingError, resolve_selection
+
+    # Re-resolve caller-created selections: identity and path stay inseparable.
+    resolved = resolve_selection(
+        selection.target,
+        asset_id=selection.asset.reference,
+        model_path=selection.model_path if selection.explicit_model_path else None,
+    )
+    if (
+        selection.target != resolved.target
+        or selection.asset != resolved.asset
+        or Path(selection.model_path) != Path(resolved.model_path)
+        or selection.explicit_model_path != resolved.explicit_model_path
+    ):
+        raise BindingError("ModelSelection does not match the exact manifest asset and path.")
+
+    meta = metadata if isinstance(metadata, RuntimeMetadata) else RuntimeMetadata.from_mapping(metadata)
+    if meta.model_names != (meta.model_name,):
+        raise MetadataMismatchError("PointNet artifact must expose exactly one model.")
+    if len(meta.input_names) != 1 or len(meta.output_names) != 1:
+        raise MetadataMismatchError("PointNet requires exactly one input and one output.")
+    input_name, output_name = meta.input_names[0], meta.output_names[0]
+    shape = meta.input_shapes.get(input_name, ())
+    if len(shape) != 3 or shape[:2] != (1, 3) or type(shape[2]) is not int or shape[2] <= 0:
+        raise MetadataMismatchError("PointNet input must have fixed shape (1,3,N), N > 0.")
+    if meta.input_dtypes.get(input_name) != "float32":
+        raise MetadataMismatchError("PointNet input must be float32.")
+    if meta.output_shapes.get(output_name) != (1, shape[2], 4):
+        raise MetadataMismatchError("PointNet output must be (1,N,4), matching the input point count.")
+    dtype = meta.output_dtypes.get(output_name)
+    if dtype not in ("float32", "int8", "uint8", "int16", "int32"):
+        raise MetadataMismatchError(f"Unsupported PointNet output dtype {dtype!r}.")
+    if dtype != "float32":
+        validate_scale_quantization(meta.output_quants.get(output_name), (1, shape[2], 4))
+    return ModelBinding(selection, meta, input_name, output_name)
+
+
+def create_runner(selection: ModelSelection, *, runtime_factory=None, runtime=None) -> SingleArrayRunner:
+    """Construct the lazy PointNet transport for a resolved selection.
+
+    Args:
+        selection: Manifest-backed selection carrying target, asset, and path.
+        runtime_factory: Optional model-path-to-SDK-object factory (host seam).
+        runtime: Optional prebuilt SDK object; overrides the factory.
+
+    Returns:
+        SingleArrayRunner: Lazy runner bound to the normalized-points F32
+        physical input contract; loading gates board identity and the
+        published file hash.
+    """
+    return SingleArrayRunner(
+        selection,
+        binding_loader=bind_model,
+        physical_input=lambda binding: (binding.metadata.input_shapes[binding.input_name], "float32"),
+        task_name="PointNet",
+        runtime_factory=runtime_factory,
+        runtime=runtime,
+        execution_target_gate=require_execution_target,
+    )
 
 
 @dataclass(frozen=True)
@@ -36,16 +144,36 @@ class PointNetPredictionDetails:
     prepared: PreparedInput
 
 
-class PointNetTask:
-    """Four-stage PointNet API; no file IO, plotting, downloads or mutable context.
+class PointNetSegmenter:
+    """Segment one chair point cloud into 4 parts with a compiled PointNet.
 
     ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
     established ``pre_process``/``forward``/``post_process`` names stay thin
-    aliases of those implementations.
+    aliases of those implementations. No file IO, plotting, downloads or
+    mutable context happens here.
+
+    Attributes:
+        runner (SingleArrayRunner): Lazy shared transport used by infer.
+        binding (ModelBinding): Validated tensor names and runtime metadata.
     """
-    def __init__(self, runner, binding: ModelBinding):
-        self.runner = runner
-        self.binding = binding
+    def __init__(self, selection: ModelSelection, *, runner=None):
+        """Load the compiled model and validate its tensor protocol.
+
+        Args:
+            selection: Manifest-backed selection from ``cli.resolve_selection``.
+            runner: Optional injected transport (host-test seam); defaults to
+                the shared lazy runner with the published-file hash gate.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: The selection or its local file is invalid.
+            MetadataMismatchError: Runtime metadata violates the contract.
+            RuntimeError: Board identity or SDK loading fails.
+        """
+        self.runner = runner if runner is not None else create_runner(selection)
+        self.binding = self.runner.load()
 
     # ------------------------------------------------------------------
     # The three pipeline stages, each public and usable on its own.
@@ -124,6 +252,22 @@ class PointNetTask:
     # Compatibility surface: the established stage names stay thin aliases
     # of the implementations above (no second implementation).
     # ------------------------------------------------------------------
+
+    def set_scheduling_params(self, *, priority=None, bpu_cores=None) -> None:
+        """Apply scheduling options to the loaded board runtime.
+
+        Args:
+            priority: Optional integer in [0, 255]; None leaves it unchanged.
+            bpu_cores: Optional non-empty list of nonnegative BPU core indexes.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: Priority or a core index is out of range.
+            RuntimeError: The SDK cannot apply the scheduling options.
+        """
+        self.runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
     def pre_process(self, points: np.ndarray) -> PreparedInput:
         """Compatibility alias for :meth:`preprocess`."""

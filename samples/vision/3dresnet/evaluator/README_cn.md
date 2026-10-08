@@ -21,20 +21,13 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-- 主机检查：Python 3.10+，需 NumPy 和 PyYAML（可使用仓库 `.venv`）；fixture tests 不需要 HBM 或板卡。
 - 板端功能检查：RDK S100、匹配的 `hbm_runtime`、准备好的 `model/s100/r3d_18.hbm` 和可识别的 S100 身份。
 - 下面的性能表为发布记录，由 `hrt_model_exec` 测得；其完整命令、镜像、runtime 版本与 raw 输出未随附，复测时请记录这些条件。
 
 <a id="command"></a>
 ## 评测命令
 
-主机契约检查：
 
-```bash
-# cwd：仓库根目录
-.venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# 预期：全部发现的测试通过，OK（主机 fixture）
-```
 
 S100 功能 smoke 命令：
 
@@ -73,7 +66,7 @@ python3 samples/vision/3dresnet/runtime/python/main.py \
 <a id="outputs"></a>
 ## 输出
 
-功能命令将 JSON 报告写到 stdout，不创建结果文件。每条 prediction 包含 `class_id`、`score` 和 `label`；CLI 不保存 raw model output。主机测试输出是 unittest 日志。以下截图展示射箭帧和 Top-5 结果：
+功能命令将 JSON 报告写到 stdout，不创建结果文件。每条 prediction 包含 `class_id`、`score` 和 `label`；CLI 不保存 raw model output。以下截图展示射箭帧和 Top-5 结果：
 
 ![Archery frame](../test_data/readme_img/image-4.png)
 ![Top-5 result](../test_data/readme_img/image-5.png)
@@ -92,7 +85,6 @@ python3 samples/vision/3dresnet/runtime/python/main.py \
 
 - 本 sample 没有完整数据集 evaluator 实现；评测即上面的单片段功能命令。
 - 没有完整 source `hrt_model_exec` 命令，因此仅凭仓库内容无法复现该性能记录。
-- 主机测试覆盖预处理、finite/shape/dtype 防护、动态 tensor 名、softmax/Top-K 解码、labels、CLI gate 和 mock download 委托；不执行板端 HBM 推理。
 
 同一记录的附加性能指标截图：
 

@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 from utils.py_utils.assets import download_asset
-from samples.vision.pointnet.runtime.python.model_binding import ASSET_ID, resolve_selection
+from samples.vision.pointnet.runtime.python.cli import ASSET_ID, resolve_selection
 
 
 def main(argv=None):

@@ -29,12 +29,11 @@ if str(ROOT) not in sys.path:
 from utils.py_utils.assets import verify_asset_file  # noqa: E402
 from utils.py_utils.platforms import require_execution_target  # noqa: E402
 from utils.py_utils.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
-from samples.vision.lprnet.runtime.python.lprnet import LPRNetTask  # noqa: E402
-from samples.vision.lprnet.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.lprnet.runtime.python.cli import (  # noqa: E402
     SAMPLE_DIR,
     resolve_selection,
 )
-from samples.vision.lprnet.runtime.python.model_runner import RuntimeModelRunner  # noqa: E402
+from samples.vision.lprnet.runtime.python.lprnet import LPRNetRecognizer, RuntimeModelRunner  # noqa: E402
 from utils.py_utils.legacy_platforms import pinned_name  # noqa: E402
 from samples.vision.lprnet.evaluator.source_reference import (  # noqa: E402
     load_legacy,
@@ -173,7 +172,7 @@ def run_comparison(selection, input_path, output_dir, *, priority=0, bpu_cores=N
         runner = RuntimeModelRunner(selection, runtime_factory=factory("unified"))
         binding = runner.load()
         runner.set_scheduling_params(priority=priority, bpu_cores=cores)
-        plate = LPRNetTask(runner, binding).predict(input_path)
+        plate = LPRNetRecognizer(selection, runner=runner).predict(input_path)
         records["unified"]["result"] = {"plate": _plate_codes(plate)}
 
         checks = {}

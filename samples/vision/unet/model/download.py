@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 from utils.py_utils.assets import download_asset
-from samples.vision.unet.runtime.python.model_binding import VARIANTS, resolve_selection
+from samples.vision.unet.runtime.python.cli import VARIANTS, resolve_selection
 
 
 def main(argv=None):

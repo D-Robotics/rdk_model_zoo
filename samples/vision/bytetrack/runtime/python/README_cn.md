@@ -3,7 +3,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 YOLOv5 检测行人，通过 ByteTrack 在有序视频帧之间关联目标。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,12 +14,10 @@ python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── TRACKER_SOURCE_MAP.json  # 结构化数据
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
+├── cli.py  # 参数、检测模型选择与结果预览
+├── main.py  # 命令行入口：构造模型并调用 predict
 ├── run.sh  # 运行示例
-├── tracking.py  # Python 脚本
-└── visualization.py  # Python 脚本
+└── tracking.py  # 模型初始化与推理阶段
 ```
 
 <a id="environment"></a>
@@ -82,20 +80,17 @@ CLI 写出带 person track 的 MP4，并可写 JSONL：`{frame, tracks:[{track_i
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.bytetrack.runtime.python.model_binding import resolve_selection
-from samples.vision.bytetrack.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
+from samples.vision.bytetrack.runtime.python.cli import resolve_selection
 from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask, TrackingConfig
 
 target = "s100"
 asset_id = "s:bytetrack:s100/yolov5x_672x672_nv12.hbm"
 model_path = Path("samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm")
 selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-detector = YOLOv5Task(runner, binding, score_thres=0.25, nms_thres=0.45)
-task = ByteTrackTask(detector, config=TrackingConfig())
+task = ByteTrackTask.from_model(
+    selection, config=TrackingConfig(), score_thres=0.25, nms_thres=0.45
+)
+task.detector.set_scheduling_params(priority=0, bpu_cores=[0])
 frame_path = Path("samples/vision/bytetrack/test_data/bus.jpg")
 frame = cv2.imread(str(frame_path), cv2.IMREAD_COLOR)
 if frame is None:

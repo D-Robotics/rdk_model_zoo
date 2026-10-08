@@ -24,8 +24,7 @@ from samples.vision.lanenet.runtime.python.cli import (
     save_lane_evidence,
     validate_display_destinations,
 )
-from samples.vision.lanenet.runtime.python.model_binding import resolve_selection
-from samples.vision.lanenet.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.lanenet.runtime.python.cli import resolve_selection
 
 
 def main(argv=None):
@@ -52,19 +51,20 @@ def main(argv=None):
         validate_display_destinations(output, extras)
         image_path = args.test_img.expanduser()
         image = read_bgr_image(image_path)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        from samples.vision.lanenet.runtime.python.lanenet import LaneNetTask
 
-        task = LaneNetTask(runner, binding)
+        # Real execution starts here: construction gates board identity and
+        # the publication hash before the SDK import.
+        from samples.vision.lanenet.runtime.python.lanenet import LaneNetSegmenter
+
+        task = LaneNetSegmenter(selection)
+        task.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         details = task.predict(image, return_details=True)
         save_lane_evidence(
             output,
             extras,
             selection=selection,
-            runner=runner,
-            binding=binding,
+            runner=task.runner,
+            binding=task.binding,
             args=args,
             image_path=image_path,
             image=image,

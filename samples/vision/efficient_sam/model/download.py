@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import download_asset  # noqa: E402
 
-binding = importlib.import_module("samples.vision.efficient_sam.runtime.python.model_binding")
+binding = importlib.import_module("samples.vision.efficient_sam.runtime.python.cli")
 
 
 def build_parser() -> argparse.ArgumentParser:

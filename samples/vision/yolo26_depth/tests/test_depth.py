@@ -20,7 +20,7 @@ from samples.vision.yolo26_depth.runtime.python.model_binding import (
 )
 from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
-from samples.vision.yolo26_depth.runtime.python.visualization import colorize_depth
+from samples.vision.yolo26_depth.runtime.python.cli import colorize_depth
 from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -63,7 +63,7 @@ class DepthTests(unittest.TestCase):
     def task(self, target="x5", variant="n", runner=None):
         selection = resolve_selection(target, variant=variant)
         binding = bind_model(selection, metadata(selection.profile == "lite"))
-        return Yolo26DepthTask(runner or (lambda tensors: self.raw.copy()), binding)
+        return Yolo26DepthTask(runner=runner or (lambda tensors: self.raw.copy()), binding=binding)
 
     def test_twenty_assets_default_and_profile_identity(self):
         self.assertEqual(len(list_available_assets()), 20)
@@ -160,7 +160,7 @@ class DepthTests(unittest.TestCase):
         m = metadata()
         m["output_shapes"] = {"output0": [1, 1, 192, 192]}
         binding = bind_model(resolve_selection("x5"), m)
-        nchw = Yolo26DepthTask(lambda tensors: raw.reshape(1, 1, 192, 192), binding)
+        nchw = Yolo26DepthTask(runner=lambda tensors: raw.reshape(1, 1, 192, 192), binding=binding)
         a, b = task.predict(self.image), nchw.predict(self.image)
         np.testing.assert_array_equal(a.log_depth, b.log_depth)
         np.testing.assert_array_equal(a.depth_native, b.depth_native)
@@ -232,6 +232,7 @@ class DepthTests(unittest.TestCase):
             {n.name for n in node.body if isinstance(n, ast.FunctionDef)},
             {
                 "__init__",
+                "set_scheduling_params",
                 "preprocess",
                 "infer",
                 "postprocess",
@@ -255,7 +256,7 @@ class DepthTests(unittest.TestCase):
         runner = RuntimeModelRunner(selection, runtime=runtime)
         self.assertFalse(runner.loaded)
         binding = runner.load()
-        task = Yolo26DepthTask(runner, binding)
+        task = Yolo26DepthTask(runner=runner, binding=binding)
         p = task.pre_process(self.image)
         raw = task.forward(p.tensors)
         self.assertEqual(set(calls[0]["depth"]), {"images"})
@@ -291,7 +292,7 @@ class ReadableInterfaceTests(unittest.TestCase):
     def task(self, target="x5", variant="n", runner=None):
         selection = resolve_selection(target, variant=variant)
         binding = bind_model(selection, metadata(selection.profile == "lite"))
-        return Yolo26DepthTask(runner or (lambda tensors: self.raw.copy()), binding)
+        return Yolo26DepthTask(runner=runner or (lambda tensors: self.raw.copy()), binding=binding)
 
     def test_canonical_stages_exist_and_legacy_names_delegate(self):
         task = self.task()
@@ -370,7 +371,7 @@ class PredictionDetailsTests(unittest.TestCase):
     def task(self, runner=None, target="x5", variant="n"):
         selection = resolve_selection(target, variant=variant)
         binding = bind_model(selection, metadata(selection.profile == "lite"))
-        return Yolo26DepthTask(runner or (lambda tensors: self.raw.copy()), binding)
+        return Yolo26DepthTask(runner=runner or (lambda tensors: self.raw.copy()), binding=binding)
 
     def test_default_predict_still_returns_plain_result_with_one_call(self):
         calls = []

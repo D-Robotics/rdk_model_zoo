@@ -33,7 +33,7 @@ diffusiondrive/
 | S600 / nash-p | `s600/diffusiondrive_r34_256x1024_s600.hbm` | Python / hbm_runtime | supported |
 | S100 / X5 | None | Explicit rejection | No fallback |
 
-There is no native C++ source for this sample. The two published HBM digests are preserved and verified on download/loading. `auto` requires recognized local identity or an explicit asset identity; unknown hosts are rejected instead of silently selecting S600. The bundled host checks validate the float-reference comparison and runtime metadata contracts with synthetic data; real HBM execution requires the prepared S100P/S600 runtime below.
+Runtime language: Python. Use the published S100P or S600 HBM and the matching board SDK. Downloading and loading check the published HBM digest; select the target explicitly when preparing models on a host.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -94,11 +94,11 @@ All six input/reference pairs and six result images are retained byte-for-byte. 
 <a id="entry-points"></a>
 ## Entry points for people and agents
 
-Use `DiffusionDriveTask.predict`, or the stages `preprocess` → `infer` → `postprocess` that it composes; the `pre_process`/`forward`/`post_process` spellings remain importable aliases of the same implementation. The task handles planning tensor semantics only; SDK loading/scheduling, NPZ IO, download, rendering and metrics are outside it. The shared `NamedArrayRunner` preserves all named physical tensors and checks board/artifact identity. A [complete API example](runtime/python/README.md#integration-example) shows variables and input loading.
+Use `DiffusionDrivePlanner.predict`, or the stages `preprocess` → `infer` → `postprocess` that it composes; the `pre_process`/`forward`/`post_process` spellings remain importable aliases of the same implementation. The task handles planning tensor semantics only; SDK loading/scheduling, NPZ IO, download, rendering and metrics are outside it. The shared `NamedArrayRunner` preserves all named physical tensors and checks board/artifact identity. A [complete API example](runtime/python/README.md#integration-example) shows variables and input loading.
 
 Quantization checks per-axis scales and scalar zero points, rejects malformed or negative scales, and clips integer values before casting. The evaluator requires matching shapes; cosine similarity is undefined when either vector has zero norm.
 
 <a id="license"></a>
 ## License
 
-Sample code follows the repository [Apache-2.0 license](../../../LICENSE). DiffusionDrive and NAVSIM assets remain subject to their own original terms. The included examples do not constitute a complete licensed NAVSIM dataset or a certified driving system.
+Sample code follows the repository [Apache-2.0 license](../../../LICENSE). DiffusionDrive and NAVSIM assets remain subject to their own original terms. Obtain complete datasets using the NAVSIM data preparation procedure and license.

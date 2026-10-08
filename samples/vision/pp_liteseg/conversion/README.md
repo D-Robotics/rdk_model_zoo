@@ -67,7 +67,7 @@ cd samples/vision/pp_liteseg/conversion
 python3 prepare_calibration.py --src /data/cityscapes/calibration_images --out calibration_data_rgb_f32_1024x512 --width 1024 --height 512 --num 50 --seed 0
 ```
 
-Each tensor is 6,291,456 bytes. --num defaults to 50, --seed to 0; sorted recursive jpg/jpeg/png/bmp inputs are sampled deterministically without replacement when needed. Unique filenames preserve colliding basenames. Existing output directory or sibling manifest is rejected; choose a new directory for another run. Unreadable selected images fail rather than silently reducing the dataset. The sibling `calibration_data_rgb_f32_1024x512.manifest.json` records shape, seed and input/output hashes; only raw tensors enter the compiler directory. This validates data preparation, not calibration quality.
+Each tensor is 6,291,456 bytes. --num defaults to 50, --seed to 0; sorted recursive jpg/jpeg/png/bmp inputs are sampled deterministically without replacement when needed. Unique filenames preserve colliding basenames. Existing output directory or sibling manifest is rejected; choose a new directory for another run. Unreadable selected images fail rather than silently reducing the dataset. The sibling `calibration_data_rgb_f32_1024x512.manifest.json` records shape, seed and input/output hashes; only raw tensors enter the compiler directory. Select calibration images representative of the deployment inputs.
 
 <a id="compile"></a>
 ## Compile
@@ -81,12 +81,10 @@ hb_mapper makertbin --config ptq_yamls/pp_liteseg_stdc1_cityscapes_1024x512_nv12
 bash build_bin.sh
 ```
 
-Run direct commands OR build_bin.sh, not both for a normal build. Read checker logs before accepting unsupported operators. The YAML retains source-relative ONNX/calibration paths, output prefix and working_dir. The script expects the output under ptq_yamls/..._output; confirm OE path resolution in your actual container. Missing expected BIN now fails even if makertbin returned zero. CAL_SRC optionally prepares data first, and therefore requires a fresh calibration directory. If overriding MODEL or CONFIG, keep the YAML ONNX/calibration paths consistent: MODEL alone only changes the checker input.
-
-<a id="validation"></a>
+Run direct commands OR build_bin.sh, not both for a normal build. Read checker logs before accepting unsupported operators. The YAML retains source-relative ONNX/calibration paths, output prefix and working_dir. The script expects the output under ptq_yamls/..._output; confirm OE path resolution in your actual container. Missing expected BIN now fails even if makertbin returned zero. CAL_SRC optionally prepares data first, and therefore requires a fresh calibration directory. If overriding MODEL or CONFIG, keep the YAML ONNX/calibration paths consistent: MODEL alone only changes the checker input. <a id="validation"></a>
 ## Validation
 
-Host tests cover calibration bytes/naming and shell failure paths using fake tools. Inspect runtime metadata and compare exact per-pixel class IDs for matched inputs. The source logit-cosine threshold ≥0.95 is meaningful only if both comparison graphs expose matching pre-argmax logits; it cannot be applied to integer class IDs. Dataset mIoU requires labeled validation data and an implemented dataset runner, which this sample does not ship.
+Inspect runtime metadata and compare exact per-pixel class IDs for matched inputs. The source logit-cosine threshold ≥0.95 is meaningful only if both comparison graphs expose matching pre-argmax logits; it cannot be applied to integer class IDs. Dataset mIoU requires labeled validation data and an implemented dataset runner, which this sample does not ship.
 
 ```bash
 # cwd: sample directory inside OE; source expected compiler output location
@@ -104,4 +102,4 @@ Expected sequence: trained.pdparams → inference model.json/model.pdiparams →
 <a id="known-gaps"></a>
 ## Additional preparation
 
-No pinned checkpoint/PaddleSeg/export-package combination; no exported graph or compiler artifact is included; output metadata, numerical accuracy and performance are not verified here. The source documentation's expectation of ≈95 FPS / ≈10.5 ms is not a measured value in this repository. Unsupported graph operators require inspection, not blindly deleting argmax, because the runtime boundary is already a class map. Changing calibration_type to mix or using more representative data is an experiment requiring revalidation, not a guaranteed repair.
+Prepare the checkpoint, PaddleSeg and export packages, then record their versions with the exported graph and compiled artifact. The source documentation's expectation of ≈95 FPS / ≈10.5 ms is not a measured value in this repository. Unsupported graph operators require inspection, not blindly deleting argmax, because the runtime boundary is already a class map. Changing calibration_type to mix or using more representative data is an experiment requiring revalidation, not a guaranteed repair.

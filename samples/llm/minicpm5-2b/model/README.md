@@ -46,7 +46,7 @@ BOARD=s100 bash download_model.sh
 BOARD=s100p bash download_model.sh
 ```
 
-Each target has its own HBM and tokenizer, extracted to `model/s100` or `model/s100p`. Use the [legacy runtime](../runtime/legacy/README.md), not the S600 2.0 entry point. SDK files are excluded. The script pins archive and manifest SHA256 hashes and verifies every extracted file.
+Each target has its own HBM and tokenizer, extracted to `model/s100` or `model/s100p`. Use the [OELLM 1.0.0 runtime](../runtime/legacy/README.md), not the S600 2.0 entry point. SDK files are excluded. The script pins archive and manifest SHA256 hashes and verifies every extracted file.
 
 - [S100 archive](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/minicpm5-2b_s100_oellm1_w8_ctx4096_20260909.tar.gz): 2275420219 bytes; SHA256 `dc130ae21dc1f1cc266c526e090b03b4d3be4af8cf4157c4b5841b7f47ab818d`.
 

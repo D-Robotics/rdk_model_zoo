@@ -37,12 +37,12 @@ efficient_sam/
 | s100p | nash-m `.hbm` pair | supported | not-supported |
 | s600 | nash-p `.hbm` pair | supported | not-supported |
 
-The host fixture suite validates the pipeline with injected runners; board execution requires the target board and `hbm_runtime`.
+Board inference requires the selected target board and its `hbm_runtime`.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use the repository `.venv` for host checks with Python, NumPy, OpenCV and PyYAML. The recorded host fixture is Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3; use the NumPy/OpenCV shipped with your environment. Runtime syntax requires Python 3.10 or newer. Board execution additionally requires the target RDK image and its matching `hbm_runtime`; record the system version together with results. The two model files must be prepared explicitly; this sample does not download during inference. Conversion uses the target OE toolchain described in [conversion](conversion/README.md).
+Use Python 3.10+, NumPy, OpenCV and PyYAML in the target RDK image’s `hbm_runtime` environment. Prepare both encoder and decoder model files before inference. See the conversion guide for the target OE toolchain.
 
 The board's SDK must already be installed by its matching system image; do not install `hbm_runtime` from an unrelated host environment. Check the required Python imports from the repository root:
 
@@ -51,7 +51,7 @@ The board's SDK must already be installed by its matching system image; do not i
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-If only the ordinary Python dependencies are missing, install them in the Python environment used by that board's SDK (`python3 -m pip install numpy opencv-python PyYAML`). The source does not pin their board versions; preserve the image's SDK compatibility constraints. The command above checks import availability only. Disk/RAM requirements are set by loading both encoder and decoder in the target runtime; plan for both models resident simultaneously.
+Install Python dependencies in the board SDK environment (`python3 -m pip install numpy opencv-python PyYAML`). Reserve memory for both encoder and decoder to remain loaded simultaneously.
 
 <a id="quickstart"></a>
 ## Quick Start

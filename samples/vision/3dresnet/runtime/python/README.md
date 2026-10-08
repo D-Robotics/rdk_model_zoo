@@ -5,7 +5,7 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Classify prepared RGB video clips with R3D-18 and return Kinetics-400 Top-K predictions.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,21 +14,17 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── classification.py  # Python script
-├── cli.py  # Arguments and result presentation
-├── labels.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── run.sh  # Run the sample
-└── tensor_io.py  # Python script
+├── classification.py  # Model initialization and inference stages
+├── cli.py  # Arguments, model selection and result output
+├── labels.py  # Action-class label loading
+├── main.py  # CLI entry: construct model and call predict
+└── run.sh  # Run the sample
 ```
 
 <a id="environment"></a>
 ## Environment
 
 - Board execution: RDK S100 with the matching `hbm_runtime` Python environment; choose the image and runtime version for your deployment.
-- Host verification: repository `.venv` with Python 3.14.7, `numpy`, and `PyYAML` (`requirements-host.txt` lists the host dependencies).
 - The runtime accepts a prepared NumPy clip. It does not import a video decoder, read video frames, resize images, or normalize pixels.
 - SDK-free operations are `--help`, `--list-models`, and explicit `--dry-run`; they do not construct `hbm_runtime`.
 
@@ -52,13 +48,7 @@ The same command from the runtime directory is:
 bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 ```
 
-`run.sh` is only a CLI delegate. It does not download the model. The host fixture pipeline is verified with:
-
-```bash
-# cwd: repository root
-.venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# expect: all discovered tests OK (host fixtures; board not required)
-```
+`run.sh` forwards the same CLI arguments.
 
 <a id="parameters"></a>
 ## Parameters
@@ -97,7 +87,7 @@ Successful CLI execution prints one JSON object to stdout:
 `predictions` contains exactly `--top-k` entries sorted by descending softmax probability. `class_id` is an integer in `[0,399]`; `score` is the float32 softmax value; `label` is the JSON mapping name with embedded double quotes removed. No output file is written by the CLI.
 
 The entry is split for readability: `main.py` resolves the selection, constructs
-`VideoClassificationTask`, calls `predict` once and prints the JSON report;
+`R3D18Classifier`, calls `predict` once and prints the JSON report;
 option declarations, the `--list-models`/`--dry-run` modes and the report
 assembly live in `cli.py`. The classification algorithm itself lives in
 `classification.py`.
@@ -115,8 +105,7 @@ from pathlib import Path
 import numpy as np
 
 repo = Path.cwd()
-binding_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.model_binding")
-runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.model_runner")
+binding_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
 
@@ -125,10 +114,8 @@ selection = binding_mod.resolve_selection(
     asset_id="s:3dresnet:s100/r3d_18.hbm",
     model_path=repo / "samples/vision/3dresnet/model/s100/r3d_18.hbm",
 )
-runner = runner_mod.RuntimeModelRunner(selection)
-binding = runner.load()
 labels = labels_mod.load_labels(repo / "samples/vision/3dresnet/test_data/kinetics_classnames.json")
-task = task_mod.VideoClassificationTask(runner, binding, top_k=5, labels=labels)
+task = task_mod.R3D18Classifier(selection, top_k=5, labels=labels)
 clip = np.load(repo / "samples/vision/3dresnet/test_data/video0.npy", allow_pickle=False)
 
 prepared = task.preprocess(clip)
@@ -150,7 +137,6 @@ assert explicit_result.labels == composed_result.labels
 | `postprocess(outputs)` | Validates the actual output name, bound 400-score shape, F32 dtype, and finite values; delegates softmax/Top-K to `utils.py_utils.classification.topk_from_scores`. |
 | `predict(clip)` | Runs `preprocess` → `infer` → `postprocess` in order and returns a `ClassificationResult`; it does not keep context in task state. |
 
-The established `pre_process(clip)`, `forward(tensors)`, and `post_process(outputs)` names remain importable thin aliases of the three stages above — one implementation, two names.
 
 The input clip is already RGB and normalized. The task performs no image or video decoding, resizing, or normalization.
 

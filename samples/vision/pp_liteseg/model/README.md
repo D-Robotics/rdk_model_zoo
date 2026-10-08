@@ -35,7 +35,7 @@ If downloading fails, obtain the same file from the [published URL](https://arch
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-No external label file is needed: visualization.py contains the fixed Cityscapes 19-class names and palette. The two images in../test_data are examples, not an accuracy dataset.
+No external label file is needed: cli.py contains the fixed Cityscapes 19-class names and palette. The two images in../test_data are examples, not an accuracy dataset.
 
 <a id="local-paths"></a>
 ## Local paths

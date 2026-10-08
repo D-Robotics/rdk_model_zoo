@@ -7,7 +7,7 @@ from types import MappingProxyType
 from typing import Mapping, Sequence
 import cv2
 import numpy as np
-from samples.vision.yoloworld.runtime.python.model_binding import ModelBinding
+from samples.vision.yoloworld.runtime.python.model_binding import ModelBinding, ModelSelection
 
 @dataclass(frozen=True)
 class DetectionContext:
@@ -30,12 +30,19 @@ class DetectionResult:
     prompts: tuple[str, ...]
 
 class YOLOWorldTask:
-    """Open-vocabulary detection with no mutable prompt/geometry state."""
-    def __init__(self, runner, binding: ModelBinding, vocabulary: Mapping[str, Sequence[float]],
-                 *, score_thres: float = 0.05, nms_thres: float = 0.45):
+    """Open-vocabulary detection from its published selection.
+
+    Construction with a ModelSelection loads the artifact through the
+    shared SDK adapter (board identity and artifact bytes verified before
+    the SDK is imported) and binds the tensor contract. Host fixtures
+    inject an already-constructed runner or a runtime_factory instead.
+    No mutable prompt/geometry state is kept between calls.
+    """
+    def __init__(self, selection, vocabulary: Mapping[str, Sequence[float]],
+                 *, score_thres: float = 0.05, nms_thres: float = 0.45,
+                 runner=None, runtime_factory=None):
         if not vocabulary:
             raise ValueError("Offline vocabulary must not be empty.")
-        self.runner, self.binding = runner, binding
         # Own a read-only snapshot: a caller that mutates its own embedding array
         # afterwards must not be able to change what later calls send.
         snapshot: dict[str, np.ndarray] = {}
@@ -50,6 +57,21 @@ class YOLOWorldTask:
         self.score_thres, self.nms_thres = float(score_thres), float(nms_thres)
         if not 0 <= self.score_thres <= 1 or not 0 <= self.nms_thres <= 1:
             raise ValueError("score_thres and nms_thres must be in [0,1].")
+        if runner is None:
+            from samples.vision.yoloworld.runtime.python.model_runner import RuntimeModelRunner
+            if not isinstance(selection, ModelSelection):
+                raise TypeError("Pass a ModelSelection from resolve_selection, or inject runner=/runtime_factory=.")
+            if runtime_factory is None:
+                runner = RuntimeModelRunner(selection)
+            else:
+                runner = RuntimeModelRunner(selection, runtime_factory=runtime_factory)
+        self.runner = runner
+        self.binding: ModelBinding = runner.load()
+
+    def set_scheduling_params(self, *, priority: int | None = None,
+                              bpu_cores: list[int] | None = None) -> None:
+        """Apply explicit scheduling values to the loaded board runtime."""
+        self.runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
     def _prompts(self, prompts: Sequence[str]) -> tuple[tuple[str, ...], tuple[int, ...], np.ndarray]:
         if isinstance(prompts, str):

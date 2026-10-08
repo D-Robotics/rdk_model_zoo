@@ -4,6 +4,15 @@
 
 This directory holds third-party dependencies used by the Gemma4-E2B sample.
 
+## Directory structure
+
+```text
+third_party/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── install_tokenizers_cpp.sh  # Shell command
+```
+
 ## tokenizers-cpp
 
 HuggingFace tokenizers C++ binding + sentencepiece, used for native C++

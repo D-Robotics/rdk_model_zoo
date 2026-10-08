@@ -67,7 +67,7 @@ class YOLOv5Tests(unittest.TestCase):
         runtime=FakeRuntime('s100','int8')
         for name in runtime.facts['output_names']:
             runtime.facts['output_quants'][name].scale=np.linspace(.08,.12,255,dtype=np.float32)
-        task=YOLOv5Task(lambda _:runtime.outputs,bind_model(resolve_selection('s100'),RuntimeMetadata.from_mapping(runtime.facts)))
+        task=YOLOv5Task(runner=lambda _:runtime.outputs,binding=bind_model(resolve_selection('s100'),RuntimeMetadata.from_mapping(runtime.facts)))
         old=legacy('s100',runtime)
         image=np.zeros((149,97,3),np.uint8)
         expected=old.predict(image)
@@ -79,7 +79,7 @@ class YOLOv5Tests(unittest.TestCase):
         np.testing.assert_array_equal(task.predict(image).boxes,result.boxes)
 
     def test_invalid_context_and_multimodel_metadata_rejected(self):
-        from samples.vision.yolov5.runtime.python.tensor_io import DetectionContext
+        from samples.vision.yolov5.runtime.python.detection import DetectionContext
         for args in [((0,1),640,0),([10,20],640,0),((1,2),639,0),((1,2),640,2)]:
             with self.assertRaises(ValueError):DetectionContext(*args)
         meta=facts('x5');meta['model_names']=('detector','other')
@@ -87,7 +87,7 @@ class YOLOv5Tests(unittest.TestCase):
 
     def make_task(self,target='x5',dtype='float32'):
         runtime=FakeRuntime(target,dtype); b=bind_model(resolve_selection(target),RuntimeMetadata.from_mapping(runtime.facts))
-        return YOLOv5Task(lambda tensors:runtime.outputs,b),runtime,b
+        return YOLOv5Task(runner=lambda tensors:runtime.outputs,binding=b),runtime,b
 
     def test_all_source_assets_and_defaults(self):
         self.assertEqual(len(list_available_assets('x5')),9)

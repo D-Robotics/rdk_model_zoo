@@ -154,8 +154,16 @@ class SourceTests(unittest.TestCase):
         from utils.py_utils import model_runner
         task,raw=self.task()
         class HostRunner:
-            def __init__(self,selection):
-                if selection.variant != 'int8':raise AssertionError(selection)
+            @classmethod
+            def from_file(cls, model_path, **kwargs):
+                expected = dict(target='s100', input_size=(224, 224), class_count=10,
+                                resize_type=0, resize_interpolation='nearest',
+                                score_policy='softmax', output_transform='raw_f32')
+                if kwargs != expected:
+                    raise AssertionError(kwargs)
+                if Path(model_path).suffix != '.hbm':
+                    raise AssertionError(model_path)
+                return cls()
             def load(self):return task.binding
             def set_scheduling_params(self,**kwargs):
                 if kwargs != {'priority':0,'bpu_cores':[0]}:raise AssertionError(kwargs)

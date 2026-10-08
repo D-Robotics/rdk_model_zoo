@@ -1,16 +1,12 @@
 # EfficientFormer Python 运行时
 
-`main.py` 是面向用户的规范化入口：解析参数、构造模型、调用 `predict`、
-展示结果。完整的分类流程在 [`classify.py`](classify.py) 中：
-`EfficientFormerClassifier` 在一个可读文件里展示初始化、`preprocess`、`infer`、
-`postprocess` 与 `predict`。它从发布 Manifest 解析唯一的模型引用，核对
-被检测的板卡，经共享 SDK 会话懒加载 `hbm_runtime`，执行一次分类流程。
-模型准备是显式动作；本运行时绝不下载模型或安装软件包。
-
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+[`main.py`](main.py) 解析参数，显式构造 `EfficientFormerClassifier`，调用 `predict` 并展示结果。
+[`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
+[`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
+图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -19,12 +15,9 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── __init__.py  # Python 脚本
 ├── classify.py  # 分类前处理、推理与后处理
 ├── cli.py  # 参数与结果展示
 ├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
 └── run.sh  # 运行示例
 ```
 
@@ -106,24 +99,31 @@ OpenCV-Python 可导入。示例中每个输入变量都有定义：
 
 ```python
 from samples.vision.efficientformer.runtime.python.classify import EfficientFormerClassifier
-from samples.vision.efficientformer.runtime.python.model_binding import resolve_selection
+from samples.vision.efficientformer.runtime.python.cli import resolve_selection
 
 selection = resolve_selection(
     "x5",
     asset_id="x5:efficientformer:EfficientFormer_l1_224x224_nv12.bin",
     model_path="samples/vision/efficientformer/model/EfficientFormer_l1_224x224_nv12.bin",
 )
-model = EfficientFormerClassifier(selection, top_k=5)
+contract = selection.contract
+model = EfficientFormerClassifier(
+    selection.model_path, target=selection.target,
+    input_size=(contract.input_height, contract.input_width),
+    class_count=contract.class_count, top_k=5,
+    resize_type=contract.resize_type,
+    resize_interpolation=contract.resize_interpolation,
+    score_policy=contract.output_score_policy,
+    output_transform=contract.output_transform,
+)
 result = model.predict("samples/vision/efficientformer/test_data/bittern.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-`predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，且绝不原地修改
+`predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，不会原地修改
 数组。三个阶段也可以显式驱动：`prepared = model.preprocess(source)`、
 `outputs = model.infer(prepared)`、`result = model.postprocess(outputs)`
-——`predict` 恰好串联这些步骤。共享的
-`ClassificationTask` 流程仍可从 [`classification.py`](../../../../../utils/py_utils/classification.py)
-导入。
+——`predict` 恰好串联这些步骤。
 
 <a id="stage-io"></a>
 ## 阶段 I/O
@@ -144,6 +144,3 @@ print(result.class_ids, result.scores, result.labels)
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用；不要使用裸文件名。 |
 | 输入形状或 dtype 不匹配 | 核对制品引用与运行时 metadata；不得跨平台复用 X5 制品。 |
 | 输出与旧实现不同 | 先固定同一制品、图像、resize 模式、Top-K 并对比原始输出，再考虑分数语义。 |
-
-主机检查（仓库根目录）：
-`python3 -m unittest discover -s samples/vision/efficientformer/tests -v`。

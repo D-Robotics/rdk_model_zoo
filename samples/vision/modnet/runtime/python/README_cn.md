@@ -3,7 +3,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 MODNet 生成人像 alpha matte，通过 CLI 保存结果或合成背景。
 
 <a id="directory"></a>
 ## 目录结构
@@ -12,12 +12,10 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── modnet.py  # Python 脚本
-├── run.sh  # 运行示例
-└── visualization.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── modnet.py  # 模型初始化与推理阶段
+└── run.sh  # 运行示例
 ```
 
 <a id="environment"></a>
@@ -60,7 +58,7 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
 <a id="results"></a>
 ## 结果
 
-`MODNetTask.postprocess` 返回原图几何的 owned uint8 灰度 matte。可选合成使用源线性 alpha 公式并写出 BGR 图像。raw forward 结果保持 float32 `[0,1]`，runner 不保存也不再归一化。
+`MODNetMatting.postprocess` 返回原图几何的 owned uint8 灰度 matte。可选合成使用源线性 alpha 公式并写出 BGR 图像。raw forward 结果保持 float32 `[0,1]`，runner 不保存也不再归一化。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -71,10 +69,9 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.modnet.runtime.python.model_binding import resolve_selection
-from samples.vision.modnet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.modnet.runtime.python.modnet import MODNetTask
-from samples.vision.modnet.runtime.python.visualization import composite
+from samples.vision.modnet.runtime.python.cli import resolve_selection
+from samples.vision.modnet.runtime.python.modnet import MODNetMatting
+from samples.vision.modnet.runtime.python.cli import composite
 
 target = "x5"
 asset_id = "x5:modnet:modnet_512x512_rgb.bin"
@@ -82,10 +79,7 @@ model_path = Path("samples/vision/modnet/model/modnet_512x512_rgb.bin")
 image_path = Path("samples/vision/modnet/test_data/person.jpg")
 background_path = Path("samples/vision/modnet/test_data/bg.jpg")
 selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = MODNetTask(runner, binding)
+task = MODNetMatting(selection)
 image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
 prepared = task.preprocess(image)
 raw_matte = task.infer(prepared.tensors)

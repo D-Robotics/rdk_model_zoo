@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Segment raw XYZ chair point clouds into four part classes with PointNet.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,25 +14,21 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments and result presentation
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── pointnet.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── main.py  # CLI entry: construct model and call predict
+├── pointnet.py  # Model initialization and inference stages
 ├── run.sh  # Run the sample
-└── visualization.py  # Python script
+└── visualization.py  # Result rendering and image output
 ```
 
 <a id="environment"></a>
 ## Environment
 
 Python 3.10+, NumPy, PyYAML; matplotlib only for default plots. Actual inference
-requires the RDK S100 SDK's `hbm_runtime`. No minimum SDK/firmware version was
-pinned in the source, so a compatible board installation is still a board-test
-prerequisite, not a newly certified version range.
+requires the RDK S100 SDK's `hbm_runtime` in the Python environment supplied by the board image.
 
 ```bash
-# cwd: repository root; host checks or board Python environment
+# cwd: repository root; board Python environment
 python3 -m pip install numpy PyYAML matplotlib
 python3 samples/vision/pointnet/runtime/python/main.py --help
 ```
@@ -85,20 +81,17 @@ choose a separate output directory for each retained experiment.
 <a id="integration-example"></a>
 ## Library integration
 
-The API accepts raw coordinates, unlike the old source `predict` which expected
-already normalized points. Do not normalize separately or use a file path as the
+The API accepts raw coordinates and normalizes them in `preprocess`. Do not normalize separately or use a file path as the
 business input. Loading/plotting belong to the caller.
 ```python
 # cwd: repository root; execute on S100 after model preparation
 import numpy as np
-from samples.vision.pointnet.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.pointnet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+from samples.vision.pointnet.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
 
 points = np.loadtxt(SAMPLE_DIR / "test_data/chair.pts", dtype=np.float32)
-runner = RuntimeModelRunner(resolve_selection("s100"))
-binding = runner.load()
-task = PointNetTask(runner, binding)
+selection = resolve_selection("s100")
+task = PointNetSegmenter(selection)
 prepared = task.preprocess(points)
 raw = task.infer(prepared.tensors)
 labels = task.postprocess(raw)
@@ -110,8 +103,7 @@ details = task.predict(points, return_details=True)
 print(details.prepared.tensors["point"].shape, details.prepared.context.radius)
 ```
 
-`preprocess` and `postprocess` can be tested on a host with an injected runner
-and a validated metadata fixture. `PointNetPredictionDetails` (opt-in via
+`PointNetPredictionDetails` (opt-in via
 `return_details=True`) bundles the labels with this call's prepared record —
 the exact normalized `(1,3,N)` tensor plus the frozen centroid/radius context —
 so plotting and archiving need no second pass; the default `predict` return
@@ -130,14 +122,13 @@ SDK execution guarantee is made.
 | postprocess | raw tensor with bound shape/dtype | int32 `(N,)` IDs; integer SCALE decoding in float64 before argmax, float32 unchanged |
 | predict | raw `(N,3)` points | same stages and labels; `return_details=True` additionally returns this call's prepared record |
 
-The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 N comes from compiled metadata and must match exactly; no resampling/padding.
 Frozen `prepared.context` stores centroid/radius/count per call and cannot be
 overwritten by a later call. Postprocess does not consume it because point order
 is unchanged. Integer outputs are affine-decoded in float64 so distinct int8
 through int32 raw values keep their ordering for argmax; float32 decoding would
-round large integers into artificial ties (independent review POINTNET-R2). Only
+round large integers into artificial ties. Only
 exactly equal decoded scores tie, choosing the lowest ID. Integer outputs require
 finite positive SCALE metadata; missing/invalid metadata is rejected instead of
 guessing.

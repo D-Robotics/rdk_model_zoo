@@ -31,7 +31,7 @@ bash samples/vision/pp_liteseg/model/download.sh --target x5
 python3 samples/vision/pp_liteseg/evaluator/infer_board.py --model samples/vision/pp_liteseg/model/pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin --image samples/vision/pp_liteseg/test_data/street.png --output outputs/pp_liteseg/eval.png --alpha 0.55
 ```
 
-Compatibility options: --model and --image are required; --output defaults to result.jpg, --alpha to 0.55. All inference delegates to the runtime. Success returns 0; runtime errors propagate 2. The source entry’s image/model arguments are retained without a second implementation.
+Options: --model and --image are required; --output defaults to result.jpg, --alpha to 0.55. All inference delegates to the runtime. Success returns 0; runtime errors propagate 2.
 
 <a id="metrics"></a>
 ## Metrics
@@ -46,9 +46,9 @@ For --output outputs/pp_liteseg/eval.png, writes that three-panel image plus eva
 <a id="reference-results"></a>
 ## Reference results
 
-The source README records ≈95 FPS and ≈10.5 ms at 1024×512 single-core without a reproducible measurement protocol; treat it as a source expectation and set thresholds from your own measurements. Host parity and fixture checks do not measure inference accuracy. Board, OE and dataset results are recorded when produced.
+The source README records ≈95 FPS and ≈10.5 ms at 1024×512 single-core without a reproducible measurement protocol; treat it as a source expectation and set thresholds from your own measurements. Board, OE and dataset results are recorded when produced.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 Board execution requires an RDK X5 environment. S100/S100P/S600 and C++ are not supported by this sample. A locally compiled model must satisfy the same tensor contract; the declared asset-id and unknown publisher SHA are not provenance proof. For real performance commands and graph comparison prerequisites, use the [conversion validation section](../conversion/README.md#validation).

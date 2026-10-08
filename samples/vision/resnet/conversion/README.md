@@ -299,10 +299,8 @@ Rules and guarantees:
   applies unchanged.
 - Architecture: TorchVision `resnet18` only. The classifier head is
   rebuilt as `nn.Linear(512, num_classes)` and the checkpoint must load
-  with `strict=True` — a checkpoint from any other ResNet variant or a
-  mismatched class count fails instead of exporting a partly random
-  graph. No compatibility with arbitrary ResNet structures or custom
-  output heads is claimed.
+  with `strict=True`. Use a ResNet18 checkpoint whose classifier head
+  has the requested class count.
 - `--num-classes` (>= 2) sets the ONNX `output` width; the exporter
   prints the torch/torchvision versions of the exporting environment —
   record them with your training provenance.

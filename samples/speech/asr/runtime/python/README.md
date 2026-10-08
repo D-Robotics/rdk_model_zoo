@@ -5,31 +5,33 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Transcribe audio on S100/S600 in independent fixed-length windows. `ASR.from_model` loads the selected model; `predict` prepares one waveform chunk, runs inference and decodes its text.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── asr.py  # Python script
-├── audio_io.py  # Python script
-├── cli.py  # Arguments and result presentation
-├── decoding.py  # Python script
-├── frontend.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── postprocess.py  # Python script
-├── run.sh  # Run the sample
-└── vocabulary.py  # Python script
+├── asr.py  # Model stages and prediction
+├── audio_io.py  # Audio file reading
+├── cli.py  # Arguments, model selection and result presentation
+├── decoding.py  # Token decoding
+├── frontend.py  # Audio feature preparation
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── run.sh  # Locate the Python entry and forward arguments
+└── vocabulary.py  # Vocabulary loading and validation
 ```
 
 <a id="environment"></a>
 ## Environment
 Python 3.10+, NumPy, PyYAML, SciPy and SoundFile (with libsndfile). S100/S600 inference requires the matching board image and its `hbm_runtime`. [Prepare the model](../../model/README.md) before running inference. The runtime does not install dependencies or download models.
+
+From the repository root, install the Python dependencies; use the board image’s version of `hbm_runtime`.
+
+```bash
+python3 -m pip install numpy PyYAML scipy soundfile
+```
 
 <a id="usage"></a>
 ## Usage
@@ -52,7 +54,7 @@ The command returns 0 and records `status: completed` in `result.json` when proc
 | `--vocab-file` | Path | `samples/speech/asr/test_data/vocab.json` | Hash-pinned vocabulary / 固定哈希词表 |
 | `--audio-maxlen` | int | `30000` | Fixed compiled length / 编译固定长度 |
 | `--new-rate` | int | `16000` | Fixed sample rate / 固定采样率 |
-| `--decode-mode` | str | `ctc` | ctc or legacy / CTC 或源实现兼容模式 |
+| `--decode-mode` | str | `ctc` | ctc or legacy / CTC 或逐帧解码模式 |
 | `--priority` | int | `0` | Scheduling priority 0–255 / 调度优先级 |
 | `--bpu-cores` | int list | `[0]` | Nonnegative core IDs / 非负核心编号 |
 | `--output-dir` | Path | `outputs/asr` | Must be new / 必须为新目录 |
@@ -69,16 +71,13 @@ The audio/vocabulary defaults resolve relative to this sample, independent of th
 From the repository root on S100, after preparing the model. The bundled audio and vocabulary are included. Use `s600` in the selection for S600.
 ```python
 from samples.speech.asr.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.speech.asr.runtime.python.model_runner import RuntimeModelRunner
 from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
 from samples.speech.asr.runtime.python.audio_io import read_chunks
 from samples.speech.asr.runtime.python.asr import ASR
 
 selection = resolve_selection("s100")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = ASR(runner, binding, load_vocabulary(SAMPLE_DIR / "test_data/vocab.json"))
+task = ASR.from_model(selection, load_vocabulary(SAMPLE_DIR / "test_data/vocab.json"))
+task.set_scheduling_params(priority=0, bpu_cores=[0])
 texts = []
 for chunk in read_chunks(SAMPLE_DIR / "test_data/chi_sound.wav", task.config):
     prediction = task.predict(

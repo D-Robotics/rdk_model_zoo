@@ -5,23 +5,20 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Detect the wake word on S100. `KWS.from_model` initializes the runtime; `predict` computes fbank features, runs the model and returns a probability score.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── audio_io.py  # Python script
-├── frontend.py  # Python script
-├── kws.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── postprocess.py  # Python script
-└── run.sh  # Run the sample
+├── audio_io.py  # Audio file reading
+├── cli.py  # Arguments, model selection and result presentation
+├── frontend.py  # Audio feature preparation
+├── kws.py  # Model stages and prediction
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
 <a id="environment"></a>
@@ -91,19 +88,15 @@ On S100 with a prepared model and frontend dependencies, this example reads the 
 
 ```python
 from samples.speech.kws.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.speech.kws.runtime.python.model_runner import RuntimeModelRunner
 from samples.speech.kws.runtime.python.audio_io import load_audio
 from samples.speech.kws.runtime.python.kws import KWS
 selection = resolve_selection("s100")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
 audio, sample_rate = load_audio(SAMPLE_DIR / "test_data/sample.wav")
-task = KWS(runner, binding)
-tensors = task.preprocess(audio, sample_rate)
-raw = task.infer(tensors)
-score = task.postprocess(raw)
+task = KWS.from_model(selection)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
+score = task.predict(audio, sample_rate)
 print(score)
-# task.predict(audio, sample_rate) composes the same three calls.
+# Explicit stages are available when intermediate tensors are needed.
 ```
 
 <a id="stage-io"></a>
@@ -113,7 +106,7 @@ print(score)
 
 `infer` performs one shared runner call and returns raw output; it has no sigmoid, dequantization, file access or reduction. The runner validates names/shapes/dtypes/finite values and copies SDK output so it survives later calls. `postprocess` validates the bound output, applies shared SCALE conversion only to integer data, requires probabilities in [0,1] and returns their maximum. Float output is not transformed even if metadata carries a vestigial quant descriptor. No additional sigmoid is applied.
 
-`predict` composes the stages and caches no last-image/audio state. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names. One instance is intended for serial use; SDK concurrency is not promised. Pure frontend and scoring helpers are in `frontend.py` and `postprocess.py`; `audio_io.py` owns files, `main.py` owns reports, and `model_runner.py` delegates SDK/scheduling to shared infrastructure.
+`predict` composes the stages and caches no last-image/audio state. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names. One instance is intended for serial use; SDK concurrency is not promised. `frontend.py` prepares features; `kws.py` owns scoring and runtime initialization; `audio_io.py` reads files and `cli.py` writes reports.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

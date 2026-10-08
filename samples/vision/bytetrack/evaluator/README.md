@@ -19,7 +19,7 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-A real capture requires a recognized S target board, prepared HBM/video, `hbm_runtime`, OpenCV, NumPy, SciPy, `lap==0.5.12`, and `cython-bbox==0.1.5`. `compare.py` launches each side in a fresh subprocess so process-global track IDs start consistently. Host tests use a fake detector runtime plus the real CPU tracker dependencies.
+A real capture requires a recognized S target board, prepared HBM/video, `hbm_runtime`, OpenCV, NumPy, SciPy, `lap==0.5.12`, and `cython-bbox==0.1.5`. `compare.py` launches each side in a fresh subprocess so process-global track IDs start consistently.
 
 <a id="command"></a>
 ## Evaluation command
@@ -80,6 +80,6 @@ The source evaluator embedded two animated ByteTrack results on MOT17 `SDP` sequ
 For multi-class tracking, either maintain one tracker per class or extend the tracker to carry `class_id` and handle class information during association. The shipped pipeline filters to COCO `person` (class `0`) only.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 The comparator does not download models/video and does not convert models. Both sides must use the same target HBM and video. A legacy-side letterbox zero-area/NaN record is surfaced as a failed capture; the sample runtime's filtering of non-positive person boxes is documented runtime behavior.

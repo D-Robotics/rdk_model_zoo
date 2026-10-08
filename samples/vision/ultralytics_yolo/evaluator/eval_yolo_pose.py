@@ -47,7 +47,7 @@ from eval_common import (  # noqa: E402  (path is set up above)
     report_empty_predictions,
     resolve_platform_argument,
 )
-from yolo_pose import YoloPose, YoloPoseConfig  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose, YoloPoseConfig  # noqa: E402
 
 
 def flatten_keypoints(kpts_xy, kpts_score, *, yolo26_platform=None, visibility_threshold=0.5) -> list:

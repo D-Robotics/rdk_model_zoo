@@ -7,12 +7,10 @@ import cv2
 import numpy as np
 import yaml
 from samples.vision.lanenet.conversion import prepare_calibration, compile as compiler
-from samples.vision.lanenet.runtime.python.lanenet import LaneNetTask
+from samples.vision.lanenet.runtime.python.lanenet import LaneNetSegmenter
 from test_lanenet import metadata
-from samples.vision.lanenet.runtime.python.model_binding import (
-    bind_model,
-    resolve_selection,
-)
+from samples.vision.lanenet.runtime.python.cli import resolve_selection
+from samples.vision.lanenet.runtime.python.lanenet import LaneNetSegmenter as _Seg, bind_model
 
 
 class ConversionTests(unittest.TestCase):
@@ -43,8 +41,16 @@ class ConversionTests(unittest.TestCase):
             image, manifest = self.prepare(root)
             j = json.loads(manifest.read_text())
             record = j["records"][0]
-            expected = LaneNetTask(
-                None, bind_model(resolve_selection("s100"), metadata())
+            class _PreprocessOnly:
+                def __init__(self, binding):
+                    self.binding = binding
+
+                def load(self):
+                    return self.binding
+
+            expected = _Seg(
+                resolve_selection("s100"), runner=_PreprocessOnly(
+                    bind_model(resolve_selection("s100"), metadata()))
             ).pre_process(image)["input"]
             np.testing.assert_array_equal(
                 np.load(root / "cal" / record["tensor"]), expected

@@ -100,7 +100,7 @@ python3 samples/vision/lanenet/runtime/cpp/launcher.py --target s100 --asset-id 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-[LaneNetTask](inc/lanenet.hpp)仅提供 `pre_process`、`forward`、`post_process`、`predict`。调用者注入原始推理回调；[ModelRunner](inc/model_runner.hpp)持有模型、缓冲区和推理任务。捕获资源管理器的回调，其生命周期不得长于资源管理器本身。
+[LaneNetSegmenter](inc/lanenet.hpp)仅提供 `pre_process`、`forward`、`post_process`、`predict`。调用者注入原始推理回调；[ModelRunner](inc/model_runner.hpp)持有模型、缓冲区和推理任务。捕获资源管理器的回调，其生命周期不得长于资源管理器本身。
 
 | 阶段 | 输入 | 输出 / 契约 |
 | --- | --- | --- |
@@ -127,6 +127,4 @@ python3 samples/vision/lanenet/runtime/cpp/launcher.py --target s100 --asset-id 
 | `launch-report.json` | 启动命令、UTC 时间段、返回码及模型/输入/二进制/报告的实际摘要 |
 | `native.stdout.log`、`native.stderr.log` | 结果目录存在时保存的完整原生输出流 |
 
-输出图像均保持 256×512 模型网格。不恢复原始分辨率，不执行聚类、跟踪、曲线拟合、精度测量或延迟测量。嵌入显示先裁剪至 [0,1]，乘 255，再按最近值、半数取偶舍入。数值对比使用原始嵌入特征，显示图用于可视化。
-
-主机测试编译张量/NPY 辅助模块，并用可控伪 SDK 调用测试真实资源管理器，包括部分分配和任务失败；测试覆盖超过 float64 精确整数范围的 int64 值。完整原生 OpenCV/SDK 构建及板端推理需在目标环境执行。依赖缺失时检查 CMake 查找结果；身份拒绝时检查物理板卡；元数据拒绝时保留真实元数据，不通过改名或强制目标绕过检查。
+输出图像均保持 256×512 模型网格。不恢复原始分辨率，不执行聚类、跟踪、曲线拟合、精度测量或延迟测量。嵌入显示先裁剪至 [0,1]，乘 255，再按最近值、半数取偶舍入。数值对比使用原始嵌入特征，显示图用于可视化。完整原生 OpenCV/SDK 构建及板端推理需在目标环境执行。依赖缺失时检查 CMake 查找结果；身份拒绝时检查物理板卡；元数据拒绝时保留真实元数据，不通过改名或强制目标绕过检查。

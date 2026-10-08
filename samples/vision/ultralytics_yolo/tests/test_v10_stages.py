@@ -14,7 +14,7 @@ from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import (
     YoloV10Detect,
     YoloV10DetectConfig,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import YoloDetect
+from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect
 
 
 def fixture():

@@ -21,20 +21,14 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-- Host check: Python 3.10+ with NumPy and PyYAML (a repository `.venv` works); no HBM or board is needed for the fixture tests.
+- Use Python 3.10+, NumPy and PyYAML in the board SDK environment.
 - Board functional check: RDK S100 with the matching `hbm_runtime`, prepared `model/s100/r3d_18.hbm`, and recognized S100 identity.
 - The performance table below is a published record measured with `hrt_model_exec`; the exact invocation, image, runtime version and raw outputs were not included with it, so record those conditions when reproducing the benchmark.
 
 <a id="command"></a>
 ## Evaluation Commands
 
-Host contract check:
 
-```bash
-# cwd: repository root
-.venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# expect: all discovered tests OK (host fixtures)
-```
 
 S100 functional smoke command:
 
@@ -73,7 +67,7 @@ The record additionally notes approximate BPU occupancy 5.2%, ION memory 91.9 MB
 <a id="outputs"></a>
 ## Outputs
 
-The functional command writes its JSON report to stdout and does not create a result file. Each prediction contains `class_id`, `score`, and `label`; raw model output is not saved by the CLI. Host test output is the unittest log. The screenshots show the archery frame and the Top-5 display:
+The functional command writes its JSON report to stdout and does not create a result file. Each prediction contains `class_id`, `score`, and `label`; raw model output is not saved by the CLI. The screenshots show the archery frame and the Top-5 display:
 
 ![Archery frame](../test_data/readme_img/image-4.png)
 ![Top-5 result](../test_data/readme_img/image-5.png)
@@ -88,11 +82,10 @@ The functional command writes its JSON report to stdout and does not create a re
 | BPU/ION/bandwidth notes (above) | source evaluator README and screenshot |
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 - There is no full-dataset evaluator implementation in this sample; evaluation is the single-clip functional command above.
 - There is no complete source `hrt_model_exec` command, so the performance record cannot be reproduced from repository contents alone.
-- Host tests validate preprocessing, finite/shape/dtype guards, dynamic tensor names, softmax/Top-K decoding, labels, CLI gates, and mocked download delegation; they do not execute the HBM on a board.
 
 Additional-metrics screenshot from the same record:
 

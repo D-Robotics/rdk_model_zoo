@@ -1,28 +1,25 @@
 # YOLOE Python 运行时
 
+[English](README.md) | 简体中文
+
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+运行 YOLOE-11/26 无提示检测与实例分割。`YOLOE` 初始化所选模型的 Runtime，通过 `predict` 返回检测框、分数、类别 ID 与掩码。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── config.py  # Python 脚本
-├── decode.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── pipeline_io.py  # Python 脚本
-├── postprocess.py  # Python 脚本
-├── run.sh  # 运行示例
-├── visualization.py  # Python 脚本
-└── yoloe.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果展示
+├── config.py  # 模型配置
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── model_runner.py  # Runtime 加载与原始张量执行
+├── run.sh  # 定位 Python 入口并转发参数
+├── visualization.py  # 图像结果与可视化
+└── yoloe.py  # 模型阶段与预测
 ```
 
 <a id="environment"></a>
@@ -90,13 +87,11 @@ CLI 保存彩色叠加图，默认 `test_data/result.jpg`，不会保存原始�
 ```python
 # cwd: repository root; on X5 after the explicit model/download.sh step
 from samples.vision.yoloe.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.yoloe.runtime.python.model_runner import build_runner
 from samples.vision.yoloe.runtime.python.visualization import load_inputs
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE, Config
 selection = resolve_selection("x5", variant="11s")
-runner = build_runner(selection)
 image, labels = load_inputs(SAMPLE_DIR / "test_data/office_desk.jpg", SAMPLE_DIR / "test_data/classes.names")
-task = YOLOE(selection, Config(), runner=runner)
+task = YOLOE(selection, Config())
 result = task.predict(image)
 print(result.boxes.shape, result.mask_layout)
 ```

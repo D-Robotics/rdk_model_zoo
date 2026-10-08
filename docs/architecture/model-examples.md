@@ -1,8 +1,11 @@
 # 可读模型范例架构（ResNet / Ultralytics YOLO → 全 51 本仓样例）
 
-ResNet 现采用 [Python Runtime 编写规范](../sample-standards/python-runtime.md)：
-main.py 负责参数传递和调用，classify.py 保留模型阶段，cli.py 聚合命令配置和展示；
-通用图片读取、标签校验和 Runtime 位于 utils/py_utils。文件按职责划分，不限制数量。
+当前代码采用 [Sample Runtime 代码规范](../sample-standards/runtime-code.md)：
+普通单任务 Sample 使用 main.py、cli.py 和模型文件；模型类负责 Runtime 初始化和完整推理阶段，
+main.py 显式构造模型并调用 predict，cli.py 组织参数、发布模型选择和结果展示。
+通用图片读取、标签校验和 Runtime 位于 utils/py_utils。复杂算法按完整职责保留独立模块。
+
+下文保留 2026-10-06 架构记录中的接口和验收范围；当前调用接口以各 Sample README 和上述规范为准。
 
 
 日期：2026-10-01 两个范例；2026-10-05 扩展至全部本仓样例；2026-10-06 交付状态更新。

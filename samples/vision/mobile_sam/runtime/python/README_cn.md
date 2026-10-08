@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+运行 MobileSAM 编码器与方框提示解码器，生成图片分割掩码。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,18 +14,16 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── pipeline.py  # Python 脚本
-├── run.sh  # 运行示例
-└── visualization.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── pipeline.py  # 模型初始化与推理阶段
+└── run.sh  # 运行示例
 ```
 
 <a id="environment"></a>
 ## 环境
 
-主机检查使用仓库 `.venv`、Python、NumPy、OpenCV 和读取 manifest 所需的 PyYAML；记录的主机 fixture 版本为 Python 3.14.7、NumPy 2.5.3、OpenCV 4.14.0、PyYAML 6.0.3。本 sample 未固定 NumPy/OpenCV 版本。runtime 语法要求 Python 3.10 或更新版本；板端 SDK/系统版本未知且未运行。`--list-models` 和显式 target 的 `--dry-run` 只解析 manifest 与 tensor 契约，不构造 SDK。
+使用 Python 3.10+、NumPy、OpenCV 和 PyYAML，以及目标板镜像提供的 `hbm_runtime`。`--list-models` 和显式 target 的 `--dry-run` 只解析 manifest 与 tensor 契约，不构造 SDK。
 
 板端 SDK 应由匹配的系统镜像提供，不从无关主机环境安装 `hbm_runtime`。在仓库根目录检查必要依赖：
 
@@ -34,7 +32,7 @@ python/
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-若仅缺普通 Python 依赖，在板端 SDK 实际使用的 Python 环境安装（`python3 -m pip install numpy opencv-python PyYAML`）。源配方未固定板端依赖版本，应保留镜像与 SDK 的兼容约束。上述命令仅检查导入可用性；磁盘/RAM 需求以在目标 runtime 中同时加载 encoder 与 decoder 为准，请按两个模型同时驻留规划。
+在板端 SDK 使用的 Python 环境安装依赖（`python3 -m pip install numpy opencv-python PyYAML`）。为 encoder 和 decoder 同时驻留预留内存。
 
 <a id="usage"></a>
 ## 使用
@@ -94,19 +92,16 @@ CLI 以 JSON 输出 target、encoder/decoder asset ID、输入路径、mask 输�
 下面完整示例假设已准备 S100 模型对，并在安装 `hbm_runtime` 的板端执行：
 
 ```python
-import importlib
 from pathlib import Path
 import cv2
 
 root = Path.cwd()
-binding = importlib.import_module("samples.vision.mobile_sam.runtime.python.model_binding")
-runner_type = importlib.import_module("utils.py_utils.sam_runner").RuntimeModelRunner
-pipeline_type = importlib.import_module("samples.vision.mobile_sam.runtime.python.pipeline").MobileSAMPipeline
-selection = binding.resolve_selection("s100")
-runner = runner_type(selection)
-bound = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-pipeline = pipeline_type(runner, bound)
+from samples.vision.mobile_sam.runtime.python.cli import resolve_selection
+from samples.vision.mobile_sam.runtime.python.pipeline import MobileSAMPipeline
+
+selection = resolve_selection("s100")
+pipeline = MobileSAMPipeline.from_models(selection)
+pipeline.set_scheduling_params(priority=0, bpu_cores=[0])
 image = cv2.imread(str(root / "samples/vision/mobile_sam/test_data/dogs.jpg"), cv2.IMREAD_COLOR)
 if image is None:
     raise FileNotFoundError("test_data/dogs.jpg")

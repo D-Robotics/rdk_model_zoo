@@ -101,11 +101,22 @@ class Yolo26Contracts(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             for task,result in results.items():
                 with self.subTest(task=task):
-                    args=main.build_parser().parse_args(['--family','yolo26','--task',task,'--platform','x5','--img-save-path',str(Path(directory)/(task+'.jpg'))])
-                    model=MagicMock();model.predict.return_value=result;model.contract.classes=len(['test'])
-                    with patch('yolo_dispatch.create_runtime_model',return_value=model),patch('utils.py_utils.file_io.load_image',return_value=np.zeros((32,32,3),np.uint8)),patch('utils.py_utils.inspect.print_model_info'):
-                        main.run_inference(resolve_platform('x5'),args,['test'])
-                    if task!='cls':self.assertTrue(Path(args.img_save_path).is_file())
+                    labels_path=Path(directory)/(task+'.names')
+                    labels_path.write_text(''.join(f'class {i}\n' for i in range(4)))
+                    argv=['--family','yolo26','--task',task,'--platform','x5',
+                          '--label-file',str(labels_path),
+                          '--img-save-path',str(Path(directory)/(task+'.jpg'))]
+                    model=MagicMock();model.predict.return_value=result;model.contract.classes=4
+                    from yolo_dispatch import get_task_types
+                    _, Config = get_task_types(resolve_platform('x5'), 'yolo26', task)
+                    constructor = MagicMock(return_value=model)
+                    with patch('yolo_dispatch.get_task_types',return_value=(constructor, Config)),patch('main.require_execution_target'),patch('main.ensure_model'),patch('utils.py_utils.file_io.load_image',return_value=np.zeros((32,32,3),np.uint8)),patch('utils.py_utils.inspect.print_model_info'):
+                        exit_code=main.main(argv)
+                    self.assertEqual(exit_code,0)
+                    constructor.assert_called_once()
+                    model.predict.assert_called_once()
+                    self.assertIsInstance(constructor.call_args.args[0], Config)
+                    if task!='cls':self.assertTrue(Path(argv[-1]).is_file())
 
     def test_mask_inverse_letterbox_at_non640_size(self):
         from utils.py_utils.postprocess import process_mask
@@ -119,8 +130,8 @@ class Yolo26Contracts(unittest.TestCase):
     def test_dispatch_uses_ltrb_not_dfl(self):
         from yolo_dispatch import get_task_types
         from yolo_platform import resolve_platform
-        from yolo_detect import YoloDetect
-        from yolo26_det import YOLO26Detect
+        from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect
+        from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import YOLO26Detect
         profile = resolve_platform('x5')
         self.assertIs(get_task_types(profile, 'yolov8', 'detect')[0], YoloDetect)
         self.assertIs(get_task_types(profile, 'yolo26', 'detect')[0], YOLO26Detect)

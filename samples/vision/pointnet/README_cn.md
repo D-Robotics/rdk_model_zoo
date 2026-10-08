@@ -27,16 +27,17 @@ pointnet/
 └── README_cn.md  # 中文说明
 ```
 
+板端推理
+需要 S100 板端 SDK 和已发布 HBM；下方图像和性能均为源记录。
+
 <a id="support-matrix"></a>
-## 支持与实测矩阵
+## 支持矩阵
 
 | Target | 变体 | Python | C++ |
 | --- | --- | --- | --- |
 | s100 | chair，四类部件 | supported | not-supported |
 | x5 / s100p / s600 | 无已发布制品 | not-supported | not-supported |
 
-主机 fixture 测试覆盖阶段接口、精确目标选择、metadata 校验和源前处理对照。板端推理
-需要 S100 板端 SDK 和已发布 HBM；下方图像和性能均为源记录。
 
 <a id="prerequisites"></a>
 ## 环境前提

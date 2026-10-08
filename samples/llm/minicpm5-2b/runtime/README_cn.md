@@ -3,8 +3,19 @@
 **简体中文** | [English](README.md)
 
 启动器只依赖 Python 3 标准库，用于选择原生 SDK 实现；分词、模型执行与生成仍在 C++。
-S100/S100P 使用 [OELLM 1.0.0 legacy](legacy/README_cn.md)，S600 使用
-[OELLM 2.0 实现](cpp/README_cn.md)。文件名相同不意味着 SDK 或模型可互换；版本名沿用源发布。
+S100/S100P 使用 [OELLM 1.0.0](legacy/README_cn.md)，S600 使用
+[OELLM 2.0 实现](cpp/README_cn.md)。为所选板卡使用对应 SDK 和模型包。
+
+## 目录结构
+
+```text
+runtime/
+├── cpp/  # C++ 推理实现
+├── legacy/  # OELLM 1.0.0 流程
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── launcher.py  # 板卡选择、原生构建与运行
+```
 
 ## 显式准备、构建、运行
 

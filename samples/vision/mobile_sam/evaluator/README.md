@@ -124,6 +124,6 @@ The S source tables also record the following model facts. Parameter counts and 
 The S source defines BPU task latency from submission to completion, including cache warmup; streaming measurements reuse preallocated buffers and exclude allocation/deallocation. Inputs are float32 tensors, not NV12. The stages execute sequentially, and end-to-end latency also includes CPU preprocessing and mask resizing. Per-stage FPS is not whole-sample throughput. These are the source-recorded conditions; measure this implementation with the same definitions on the target board.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 `compare.py` measures fixed-image tensor and mask consistency between the pinned reference and Sample runtime. Use the per-model performance commands above for timing, and a labeled evaluation dataset for accuracy.

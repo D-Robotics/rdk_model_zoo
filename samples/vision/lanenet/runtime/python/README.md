@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run LaneNet on a road image and return lane embeddings and a binary segmentation map.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,15 +14,12 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments and result presentation
-├── image_preprocess.py  # Python script
-├── lanenet.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── image_preprocess.py  # Model initialization and inference stages
+├── lanenet.py  # Model initialization and inference stages
+├── main.py  # CLI entry: construct model and call predict
 ├── run.sh  # Run the sample
-├── tensor_io.py  # Python script
-└── visualization.py  # Python script
+└── visualization.py  # Result rendering and image output
 ```
 
 <a id="environment"></a>
@@ -97,15 +94,12 @@ Execute this from the repository root after preparing the default model on S100.
 
 ```python
 import cv2
-from samples.vision.lanenet.runtime.python.model_binding import resolve_selection
-from samples.vision.lanenet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.lanenet.runtime.python.lanenet import LaneNetTask
+from samples.vision.lanenet.runtime.python.cli import resolve_selection
+from samples.vision.lanenet.runtime.python.lanenet import LaneNetSegmenter
 
 selection = resolve_selection("s100")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = LaneNetTask(runner, binding)
+task = LaneNetSegmenter(selection)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
 image = cv2.imread("samples/vision/lanenet/test_data/lane.jpg", cv2.IMREAD_COLOR)
 if image is None:
     raise ValueError("Cannot decode input image")
@@ -114,7 +108,7 @@ assert result.embedding.shape == (3, 256, 512)
 assert result.binary.shape == (256, 512)
 # To also keep this call's raw named outputs (the raw_outputs.npz contract):
 details = task.predict(image, return_details=True)
-assert set(details.raw) == set(binding.metadata.output_names)
+assert set(details.raw) == set(task.binding.metadata.output_names)
 ```
 
 `LanePredictionDetails` (opt-in via `return_details=True`) bundles the usual
@@ -135,7 +129,6 @@ synchronization policy.
 | `postprocess` | Raw mapping matching metadata | `LaneResult`: CHW float embedding and HW uint8 binary labels |
 | `predict` | BGR image | Composition of the three stages; `return_details=True` additionally returns this call's prepared input and raw outputs |
 
-The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 Preprocessing is source-compatible: BGR→RGB, INTER_AREA stretch to width 512/height 256, /255, mean `[0.485,0.456,0.406]`, std `[0.229,0.224,0.225]`, CHW and batch. The same pure image function prepares calibration data. No letterbox, sigmoid, softmax, argmax or clustering is added.
 
@@ -148,6 +141,4 @@ Binding requires one model, one float32 `[1,3,256,512]` input, `instance_seg_log
 - Identity rejection: verify the physical board. S100P/S600 names are not interchangeable with S100.
 - Metadata mismatch: retain actual names/shapes/dtypes; do not bypass validation by renaming a tensor without establishing semantics.
 - Invalid image or existing output path: choose a decodable image and a new output directory. A partial IO failure can leave an incomplete directory; inspect the error before reusing results.
-- Unexpected colors: inspect the raw embeddings separately; the colored render is a semantic lane-segmentation view without instance IDs.
-
-Host tests cover source preprocessing, binding, raw ownership, labels, displays and the actual CLI using a fake SDK; board inference requires the S100 board SDK. See [evaluation boundaries](../../evaluator/README.md) before reporting accuracy or equivalence.
+- Unexpected colors: inspect the raw embeddings separately; the colored render is a semantic lane-segmentation view without instance IDs. See [evaluation boundaries](../../evaluator/README.md) before reporting accuracy or equivalence.

@@ -14,9 +14,9 @@
 
 ```text
 cpp/
-├── inc/  # inc 相关文件
-├── src/  # src 相关文件
-├── CMakeLists.txt  # 源码或数据文件
+├── inc/  # C++ 公开接口
+├── src/  # C++ 推理与命令行入口
+├── CMakeLists.txt  # 原生构建配置
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 └── run.sh  # 运行示例

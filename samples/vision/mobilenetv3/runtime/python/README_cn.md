@@ -1,16 +1,12 @@
 # MobileNetV3 Python 运行
 
-`main.py` 是面向用户的规范化入口：解析参数、构造模型、调用 `predict`、
-展示结果。完整的分类流程在 [`classify.py`](classify.py) 中：
-`MobileNetV3Classifier` 在一个可读文件里展示初始化、`preprocess`、`infer`、
-`postprocess` 与 `predict`。它从发布 Manifest 解析唯一的模型引用，核对
-被检测的板卡，经共享 SDK 会话懒加载 `hbm_runtime`，执行一次分类流程。
-模型准备是显式动作；本运行时绝不下载模型或安装软件包。
-
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+[`main.py`](main.py) 解析参数，显式构造 `MobileNetV3Classifier`，调用 `predict` 并展示结果。
+[`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
+[`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
+图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -19,12 +15,9 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── __init__.py  # Python 脚本
 ├── classify.py  # 分类前处理、推理与后处理
 ├── cli.py  # 参数与结果展示
 ├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
 └── run.sh  # 运行示例
 ```
 
@@ -104,24 +97,31 @@ OpenCV-Python 可导入。示例中每个输入变量都有定义：
 
 ```python
 from samples.vision.mobilenetv3.runtime.python.classify import MobileNetV3Classifier
-from samples.vision.mobilenetv3.runtime.python.model_binding import resolve_selection
+from samples.vision.mobilenetv3.runtime.python.cli import resolve_selection
 
 selection = resolve_selection(
     "x5",
     asset_id="x5:mobilenetv3:MobileNetV3_224x224_nv12.bin",
     model_path="samples/vision/mobilenetv3/model/MobileNetV3_224x224_nv12.bin",
 )
-model = MobileNetV3Classifier(selection, top_k=5)
+contract = selection.contract
+model = MobileNetV3Classifier(
+    selection.model_path, target=selection.target,
+    input_size=(contract.input_height, contract.input_width),
+    class_count=contract.class_count, top_k=5,
+    resize_type=contract.resize_type,
+    resize_interpolation=contract.resize_interpolation,
+    score_policy=contract.output_score_policy,
+    output_transform=contract.output_transform,
+)
 result = model.predict("samples/vision/mobilenetv3/test_data/kit_fox.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-`predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，且绝不原地修改
+`predict` 接受本地图像路径或 BGR `uint8` NumPy 数组，不会原地修改
 数组。三个阶段也可以显式驱动：`prepared = model.preprocess(source)`、
 `outputs = model.infer(prepared)`、`result = model.postprocess(outputs)`
-——`predict` 恰好串联这些步骤。共享的
-`ClassificationTask` 流程仍可从 [`classification.py`](../../../../../utils/py_utils/classification.py)
-导入。
+——`predict` 恰好串联这些步骤。
 
 <a id="stage-io"></a>
 ## 阶段 I/O
@@ -129,7 +129,7 @@ print(result.class_ids, result.scores, result.labels)
 | 阶段 | 输入 | 输出 |
 | --- | --- | --- |
 | `preprocess`（`pre_process`） | 图像路径或一张任意尺寸的 BGR `uint8` 图 | `PreparedInput.tensors`（目标形状的 NV12 张量）+ `PreparedInput.transform`（本次调用的冻结缩放上下文） |
-| `infer`（`forward`） | `PreparedInput` | 原始输出字典（X5 F32 `[1,1000,1,1]`；S F32 `[1,1000]`）——与 runner 输出逐位一致，无解码 |
+| `infer`（`forward`） | `PreparedInput` | 原始输出字典（X5 F32 `[1,1000,1,1]`；S F32 `[1,1000]`），保留 SDK 原始张量 |
 | `postprocess`（`post_process`） | 原始输出（分类不消耗几何上下文） | `ClassificationResult(class_ids, scores, labels)`，按声明的分数策略做稳定降序 Top-K |
 | `predict` | 图像路径或 BGR `uint8` 图 | 串联三阶段，返回同一 `ClassificationResult` |
 
@@ -142,6 +142,3 @@ print(result.class_ids, result.scores, result.labels)
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整引用；不要用裸文件名。 |
 | 输入 shape 或 dtype 不匹配 | 核对制品引用与运行时 metadata；不要互换 X5 packed 与 S split 制品。 |
 | 输出与旧实现不一致 | 先固定相同制品、图像、缩放方式、Top-K 比较 raw 输出，再考虑分数语义。 |
-
-主机检查（仓库根目录）：
-`python3 -m unittest discover -s samples/vision/mobilenetv3/tests -v`。

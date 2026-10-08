@@ -4,6 +4,15 @@
 
 本目录用于存放 Gemma4-E2B 示例所依赖的第三方源码。
 
+## 目录结构
+
+```text
+third_party/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── install_tokenizers_cpp.sh  # Shell 脚本
+```
+
 ## tokenizers-cpp
 
 HuggingFace tokenizers 的 C++ 绑定 + sentencepiece，用于推理时的原生 C++

@@ -5,7 +5,7 @@
 import argparse
 from pathlib import Path
 from utils.py_utils.assets import download_asset
-from samples.vision.diffusiondrive.runtime.python.model_binding import (
+from samples.vision.diffusiondrive.runtime.python.cli import (
     resolve_selection,
     SAMPLE_DIR,
 )

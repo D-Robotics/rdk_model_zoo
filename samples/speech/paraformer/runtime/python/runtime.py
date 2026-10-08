@@ -1,7 +1,5 @@
 """Three shared raw runners, explicit model binding and real SDK scheduling."""
 
-from dataclasses import dataclass
-
 from utils.py_utils.single_array_runner import NamedArrayRunner
 from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary
 from samples.speech.paraformer.runtime.python.model_binding import (
@@ -10,37 +8,21 @@ from samples.speech.paraformer.runtime.python.model_binding import (
     physical_inputs,
     validate_selection,
 )
-from samples.speech.paraformer.runtime.python.pipeline import (
-    ParaformerPipeline,
-    TensorNames,
-)
+def load_model_runners(selections, vocabulary, *, runtime_factory=None):
+    """Validate and load the three physical model contracts.
 
+    Args:
+        selections: Ordered encoder, predictor and decoder selections for S100.
+        vocabulary: Ordered 8404-token decoder vocabulary, validated before load.
+        runtime_factory: Optional injected SDK factory accepting a model path.
 
-@dataclass
-class RuntimeBundle:
-    runners: tuple
-    pipeline: ParaformerPipeline
+    Returns:
+        tuple: Three loaded NamedArrayRunner instances and their TensorNames.
 
-    def set_scheduling_params(self, *, priority=None, bpu_cores=None):
-        """Delegate to all models, rejecting unsupported SDK setters first."""
-        if priority is None and bpu_cores is None:
-            return
-        for runner in self.runners:
-            if not callable(getattr(runner.runtime, "set_scheduling_params", None)):
-                raise RuntimeError(
-                    "Every model runtime must expose set_scheduling_params"
-                )
-        # Shared runner validates values and uses model-keyed SDK dictionaries.
-        # If the SDK itself raises midway, propagate it; no rollback is promised.
-        for runner in self.runners:
-            runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-
-
-def load_runtime(selections, vocabulary, *, runtime_factory=None):
-    """Load exactly the three selections; injected factory is a host-test seam.
-
-    The normal path uses shared board-identity and asset-file checks before SDK
-    construction. It does not download models or infer support from a filename.
+    Raises:
+        ValueError: A selection, vocabulary or tensor contract is invalid.
+        RuntimeError: Board SDK loading fails. Normal loading checks board
+            identity and asset files before constructing the SDK.
     """
     vocabulary = validate_vocabulary(vocabulary)
     if tuple(s.stage for s in selections) != STAGES:
@@ -60,6 +42,8 @@ def load_runtime(selections, vocabulary, *, runtime_factory=None):
         for selection in selections
     )
     encoder, predictor, decoder = (runner.load() for runner in runners)
+    from samples.speech.paraformer.runtime.python.pipeline import TensorNames
+
     names = TensorNames(
         encoder_input=encoder.inputs["features"],
         encoder_output=encoder.outputs["context"],
@@ -72,4 +56,4 @@ def load_runtime(selections, vocabulary, *, runtime_factory=None):
         decoder_acoustic=decoder.inputs["acoustic"],
         decoder_logits=decoder.outputs["logits"],
     )
-    return RuntimeBundle(runners, ParaformerPipeline(*runners, names, vocabulary))
+    return runners, names

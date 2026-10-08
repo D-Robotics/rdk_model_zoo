@@ -31,8 +31,8 @@ class BoardQuantParams:
 
 def fixture():
     vocab=json.loads((SAMPLE/'test_data/offline_vocabulary_embeddings.json').read_text())
-    runtime=FakeRuntime(); sel=resolve_selection('x5'); runner=RuntimeModelRunner(sel,runtime=runtime); binding=runner.load()
-    return YOLOWorldTask(runner,binding,vocab),runtime
+    runtime=FakeRuntime(); sel=resolve_selection('x5'); runner=RuntimeModelRunner(sel,runtime=runtime)
+    return YOLOWorldTask(sel,vocab,runner=runner),runtime
 
 class YOLOWorldTests(unittest.TestCase):
     def test_asset_identity_and_metadata_binding(self):
@@ -105,7 +105,7 @@ class YOLOWorldTests(unittest.TestCase):
         supplied[key] = caller_array
         runtime = FakeRuntime()
         runner = RuntimeModelRunner(resolve_selection('x5'), runtime=runtime)
-        task = YOLOWorldTask(runner, runner.load(), supplied)
+        task = YOLOWorldTask(resolve_selection('x5'), supplied, runner=runner)
         image = np.zeros((40, 60, 3), np.uint8)
         before = task.pre_process(image, [key]).tensors[task.binding.text_input_name].copy()
         self.assertFalse(task.vocabulary[key].flags.writeable)

@@ -3,7 +3,7 @@
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Detect people with YOLOv5 and associate detections across ordered video frames with ByteTrack.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,12 +14,10 @@ python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── TRACKER_SOURCE_MAP.json  # Structured data
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
+├── cli.py  # Arguments, detector selection and preview
+├── main.py  # CLI entry: construct model and call predict
 ├── run.sh  # Run the sample
-├── tracking.py  # Python script
-└── visualization.py  # Python script
+└── tracking.py  # Model initialization and inference stages
 ```
 
 <a id="environment"></a>
@@ -82,20 +80,17 @@ After the exact HBM is prepared and the CPU dependencies are installed, this com
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.bytetrack.runtime.python.model_binding import resolve_selection
-from samples.vision.bytetrack.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
+from samples.vision.bytetrack.runtime.python.cli import resolve_selection
 from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask, TrackingConfig
 
 target = "s100"
 asset_id = "s:bytetrack:s100/yolov5x_672x672_nv12.hbm"
 model_path = Path("samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm")
 selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-detector = YOLOv5Task(runner, binding, score_thres=0.25, nms_thres=0.45)
-task = ByteTrackTask(detector, config=TrackingConfig())
+task = ByteTrackTask.from_model(
+    selection, config=TrackingConfig(), score_thres=0.25, nms_thres=0.45
+)
+task.detector.set_scheduling_params(priority=0, bpu_cores=[0])
 frame_path = Path("samples/vision/bytetrack/test_data/bus.jpg")
 frame = cv2.imread(str(frame_path), cv2.IMREAD_COLOR)
 if frame is None:

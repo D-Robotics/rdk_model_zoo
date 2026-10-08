@@ -31,7 +31,7 @@ bash samples/vision/pp_liteseg/model/download.sh --target x5
 python3 samples/vision/pp_liteseg/evaluator/infer_board.py --model samples/vision/pp_liteseg/model/pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin --image samples/vision/pp_liteseg/test_data/street.png --output outputs/pp_liteseg/eval.png --alpha 0.55
 ```
 
-兼容参数：--model、--image 必填，--output 默认 result.jpg，--alpha 默认 0.55。推理全部委托统一 runtime。成功返回 0，runtime 错误返回 2。保留源入口的图片／模型参数，不维护第二份推理实现。
+参数：--model、--image 必填，--output 默认 result.jpg，--alpha 默认 0.55。推理全部委托统一 runtime。成功返回 0，runtime 错误返回 2。
 
 <a id="metrics"></a>
 ## 指标
@@ -46,7 +46,7 @@ infer_board.py 不计算数据集分数或计时指标。其输出支持逐像�
 <a id="reference-results"></a>
 ## 参考记录
 
-源 README 写有 1024×512 单核约 95 FPS、10.5 ms 的预期，但未提供可复现测量记录；应将其视为源记录预期，阈值以自己的实测为准。主机对照和 fixture 不测量推理精度。板端、OE 和数据集结果在产生时另行记录。
+源 README 写有 1024×512 单核约 95 FPS、10.5 ms 的预期，但未提供可复现测量记录；应将其视为源记录预期，阈值以自己的实测为准。板端、OE 和数据集结果在产生时另行记录。
 
 <a id="boundaries"></a>
 ## 适用范围

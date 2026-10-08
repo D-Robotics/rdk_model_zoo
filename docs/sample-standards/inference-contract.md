@@ -95,11 +95,12 @@ helper 继续留在共享或本地模块。`main.py` 是薄入口：解析参数
 
 ## 4. 文件组织
 
-- 任务模块（如 `classify.py`、`detect.py`、`pipeline.py`）承载具名模型类与三阶段业务
-  接口；`main.py` 只做 CLI/IO/展示（薄入口，见 §1）；`cli.py` 承载参数声明与展示等
-  应用辅助；`model_binding.py` 承载张量与语义契约；`model_runner.py` 承载懒加载后端
-  调用；`tensor_io.py` 承载数值/布局变换。旧接口差异只保留在明确的兼容适配层
-  （`legacy.py` 或类内 alias），并注明可执行兼容还是仅文档兼容。
+- 文件组织遵循 [Sample Runtime 代码规范](runtime-code.md)。普通单任务 Sample 默认使用
+  `main.py`、`cli.py` 和具名模型文件；模型文件承载初始化和完整推理阶段，CLI 负责参数、
+  发布模型选择和结果交付，入口显式构造模型并调用 `predict`。
+- 模型类通过构造方法或具名类方法建立 Runtime。公共 SDK 和张量能力直接复用
+  `utils/py_utils/`；模型专有算法留在模型文件。复杂绑定、分词器、跟踪器等完整职责
+  可独立成文件，不要求每个阶段都拥有一个文件，也不增加纯转发模块。
 - 公开 API 的 shape、dtype、布局、值域、坐标约定及异常在 docstring 中精确说明；
   README 只给摘要与使用例（见 readme-contract §5.6）。
 

@@ -12,7 +12,7 @@ WikiText2 TEST is separate from calibration TRAIN; the pinned checkpoint/tokeniz
 
 ```text
 evaluator/
-├── legacy/  # Files for legacy
+├── legacy/  # OELLM 1.0.0 workflow
 ├── results/  # Files for results
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
@@ -76,7 +76,7 @@ HBM SHA256: `7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`.
 
 ## S100 / S100P full validation (2026-09-09)
 
-Use the separate [legacy evaluator](legacy/README.md), with SDK 1.0.0, UCP/DNN 3.7.3 and HBRT 4.2.11. Both board-specific HBMs completed the same 140 × 2048-token TEST stream and 286580 predictions. **Both PPL results are 17.91995474675122, a 27.83167% relative increase over float; the ≤3% accuracy target FAILS.** Completeness and numerical-consistency checks pass; the shared validator intentionally rejects the accuracy result.
+Use the separate [OELLM 1.0.0 evaluator](legacy/README.md), with SDK 1.0.0, UCP/DNN 3.7.3 and HBRT 4.2.11. Both board-specific HBMs completed the same 140 × 2048-token TEST stream and 286580 predictions. **Both PPL results are 17.91995474675122, a 27.83167% relative increase over float; the ≤3% accuracy target FAILS.** Completeness and numerical-consistency checks pass; the shared validator intentionally rejects the accuracy result.
 
 | Board | Full PPL | Evaluation seconds | Reference text matches | Repeated requests |
 |---|---:|---:|---:|---:|

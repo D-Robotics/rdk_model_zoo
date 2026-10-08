@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 from samples.vision.efficient_sam.model import download
 from samples.vision.efficient_sam.runtime.python import main
-from samples.vision.efficient_sam.runtime.python import model_binding
+from samples.vision.efficient_sam.runtime.python import cli as model_binding
 
 
 ROOT = Path(__file__).resolve().parents[4]

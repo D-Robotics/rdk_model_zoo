@@ -1,7 +1,20 @@
 # Test data provenance
 
 The pilot copies only the fixtures needed for its default X5 and S100 Python
-comparisons. The bytes are unchanged from the existing platform samples.
+comparisons.
+
+
+## Directory structure
+
+```text
+test_data/
+├── s100/  # Files for s100
+├── x5/  # Files for x5
+├── FangSong.ttf  # Font for C++ text rendering
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 
 | File | Original source | SHA-256 | License/source note |
 | --- | --- | --- | --- |

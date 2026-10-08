@@ -5,31 +5,33 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+在 S100/S600 上按独立固定长度窗口转写音频。`ASR.from_model` 加载所选模型；`predict` 准备单块波形、执行推理并解码文本。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── asr.py  # Python 脚本
-├── audio_io.py  # Python 脚本
-├── cli.py  # 参数与结果展示
-├── decoding.py  # Python 脚本
-├── frontend.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── postprocess.py  # Python 脚本
-├── run.sh  # 运行示例
-└── vocabulary.py  # Python 脚本
+├── asr.py  # 模型阶段与预测
+├── audio_io.py  # 音频文件读取
+├── cli.py  # 参数、模型选择与结果展示
+├── decoding.py  # 词元解码
+├── frontend.py  # 音频特征准备
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── run.sh  # 定位 Python 入口并转发参数
+└── vocabulary.py  # 词表加载与校验
 ```
 
 <a id="environment"></a>
 ## 环境
 Python 3.10+、NumPy、PyYAML、SciPy、SoundFile（依赖 libsndfile）。S100/S600 推理需要匹配的板端系统及其 `hbm_runtime`。运行推理前请先[准备模型](../../model/README_cn.md)；运行时不安装依赖或下载模型。
+
+从仓库根目录安装 Python 依赖；`hbm_runtime` 使用板端镜像提供的版本。
+
+```bash
+python3 -m pip install numpy PyYAML scipy soundfile
+```
 
 <a id="usage"></a>
 ## 使用
@@ -52,7 +54,7 @@ python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode le
 | `--vocab-file` | Path | `samples/speech/asr/test_data/vocab.json` | Hash-pinned vocabulary / 固定哈希词表 |
 | `--audio-maxlen` | int | `30000` | Fixed compiled length / 编译固定长度 |
 | `--new-rate` | int | `16000` | Fixed sample rate / 固定采样率 |
-| `--decode-mode` | str | `ctc` | ctc or legacy / CTC 或源实现兼容模式 |
+| `--decode-mode` | str | `ctc` | ctc or legacy / CTC 或逐帧解码模式 |
 | `--priority` | int | `0` | Scheduling priority 0–255 / 调度优先级 |
 | `--bpu-cores` | int list | `[0]` | Nonnegative core IDs / 非负核心编号 |
 | `--output-dir` | Path | `outputs/asr` | Must be new / 必须为新目录 |
@@ -69,16 +71,13 @@ python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode le
 在 S100 的仓库根目录执行，先按模型文档准备模型。录音和词表已随仓库提供；S600 将选择目标改为 `s600`。
 ```python
 from samples.speech.asr.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.speech.asr.runtime.python.model_runner import RuntimeModelRunner
 from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
 from samples.speech.asr.runtime.python.audio_io import read_chunks
 from samples.speech.asr.runtime.python.asr import ASR
 
 selection = resolve_selection("s100")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = ASR(runner, binding, load_vocabulary(SAMPLE_DIR / "test_data/vocab.json"))
+task = ASR.from_model(selection, load_vocabulary(SAMPLE_DIR / "test_data/vocab.json"))
+task.set_scheduling_params(priority=0, bpu_cores=[0])
 texts = []
 for chunk in read_chunks(SAMPLE_DIR / "test_data/chi_sound.wav", task.config):
     prediction = task.predict(
@@ -91,7 +90,7 @@ print("".join(texts))
 ## 三阶段接口
 - `preprocess(waveform, sample_rate)` 接收有限浮点 `[frames]` 或 `[frames,channels]` 波形，长度上限为 `ceil(30000 × 原采样率 / 16000)`。先均值混为单声道，使用 SciPy Fourier 重采样，以 `sqrt(var + 1e-5)` 归一化，再补零；返回自有 float32 `[1,30000]` 张量及几何信息。
 - `infer({input_name: tensor})` 只调用 runner 一次；runner 验证名称/形状/类型并返回拥有独立内存的原始输出，不做解码或激活。
-- `postprocess(raw)` 校验实测 `[1,T,3503]` 元数据，argmax 解码为字符串。FLOAT32 输出照旧直接使用；整数 SCALE 输出经共享量化模块以 float64 比较精度反量化，argmax 前不同整数的大小关系不会丢失——float32 会把 `2**24` 与 `2**24 + 1` 这类相邻整数舍入成假平局。argmax 无需 softmax。
+- `postprocess(raw)` 校验实测 `[1,T,3503]` 元数据，argmax 解码为字符串。FLOAT32 输出直接使用；整数 SCALE 输出经共享量化模块以 float64 比较精度反量化，argmax 前不同整数的大小关系不会丢失——float32 会把 `2**24` 与 `2**24 + 1` 这类相邻整数舍入成假平局。argmax 无需 softmax。
 - `predict(waveform, sample_rate, *, return_details=False)` 组合单块三阶段，默认返回解码文本。`return_details=True` 时返回 `ChunkPrediction(text, prepared)`：同一文本加上本次调用的 prepared 块（自有张量、有效采样数、源几何信息）。每次调用仅发起一次 runner 请求，模型不保留逐调用状态。CLI 使用此形式记录逐块结果。读文件、载入词表、保存结果都在调用方，不放入 `ASR` 模型类。
 
 既有 `pre_process`、`forward`、`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名称。

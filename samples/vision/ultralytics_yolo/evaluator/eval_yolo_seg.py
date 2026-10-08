@@ -49,7 +49,7 @@ from eval_common import (  # noqa: E402  (path is set up above)
     report_empty_predictions,
     resolve_platform_argument,
 )
-from yolo_seg import YoloSeg, YoloSegConfig  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import YoloSeg, YoloSegConfig  # noqa: E402
 
 
 def encode_instance_mask(mask, box, img_w: int, img_h: int) -> dict:

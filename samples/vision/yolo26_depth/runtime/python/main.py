@@ -52,17 +52,13 @@ def main(argv=None):
         output = args.output.expanduser()
         if output.exists():
             raise FileExistsError(f"Use a new output directory: {output}")
-        from samples.vision.yolo26_depth.runtime.python.model_runner import (
-            RuntimeModelRunner,
-        )
         from samples.vision.yolo26_depth.runtime.python.yolo26_depth import (
             Yolo26DepthTask,
         )
 
         image_path = args.test_img.expanduser()
         image = read_bgr_image(image_path)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
+        task = Yolo26DepthTask(selection)
         priority = (
             args.priority
             if args.priority is not None
@@ -73,16 +69,15 @@ def main(argv=None):
             if args.bpu_cores is not None
             else (None if selection.target == "x5" else [0])
         )
-        runner.set_scheduling_params(priority=priority, bpu_cores=cores)
-        task = Yolo26DepthTask(runner, binding)
+        task.set_scheduling_params(priority=priority, bpu_cores=cores)
         details = task.predict(
             image, warmup=args.warmup, return_details=True
         )
         save_depth_evidence(
             output,
             selection=selection,
-            runner=runner,
-            binding=binding,
+            runner=task.runner,
+            binding=task.binding,
             image_path=image_path,
             image=image,
             details=details,

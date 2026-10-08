@@ -10,7 +10,7 @@ from samples.speech.asr.runtime.python.model_binding import (
     resolve_selection,
     SAMPLE_DIR,
 )
-from samples.speech.asr.runtime.python.model_runner import RuntimeModelRunner
+from samples.speech.asr.runtime.python.asr import RuntimeModelRunner
 from samples.speech.asr.runtime.python.audio_io import AudioChunk
 from samples.speech.asr.runtime.python.main import main
 
@@ -53,7 +53,7 @@ class RuntimeTests(unittest.TestCase):
 
     def test_sdk_gate_and_output_ownership(self):
         with patch(
-            "samples.speech.asr.runtime.python.model_runner.require_execution_target",
+            "samples.speech.asr.runtime.python.asr.require_execution_target",
             side_effect=ValueError("Target mismatch"),
         ), patch(
             "utils.py_utils.single_array_runner._default_runtime_factory"
@@ -68,7 +68,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(float(result.max()), 1)
 
     def test_success_and_partial_failure_reports(self):
-        from samples.speech.asr.runtime.python import audio_io, model_runner
+        from samples.speech.asr.runtime.python import asr as asr_module, audio_io
 
         for fail in (False, True):
             with self.subTest(fail=fail), tempfile.TemporaryDirectory() as temp:
@@ -100,7 +100,7 @@ class RuntimeTests(unittest.TestCase):
                     "utils.py_utils.platforms.require_execution_target",
                     return_value="s100",
                 ), patch.object(
-                    model_runner, "RuntimeModelRunner", return_value=runner
+                    asr_module, "RuntimeModelRunner", return_value=runner
                 ), patch.object(
                     audio_io, "read_chunks", side_effect=chunks
                 ), contextlib.redirect_stdout(
@@ -119,7 +119,7 @@ class RuntimeTests(unittest.TestCase):
                     self.assertEqual(record["text"], "AAAA")
 
     def test_report_write_failure_returns_original_error_without_traceback(self):
-        from samples.speech.asr.runtime.python import model_runner
+        from samples.speech.asr.runtime.python import asr as asr_module
 
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -141,7 +141,7 @@ class RuntimeTests(unittest.TestCase):
                 "utils.py_utils.platforms.require_execution_target",
                 return_value="s100",
             ), patch.object(
-                model_runner, "RuntimeModelRunner", return_value=runner
+                asr_module, "RuntimeModelRunner", return_value=runner
             ), patch.object(
                 Path, "write_text", fail_reports
             ), contextlib.redirect_stderr(

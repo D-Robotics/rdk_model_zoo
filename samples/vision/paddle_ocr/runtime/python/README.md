@@ -13,7 +13,7 @@ public steps.
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Detect text regions and recognize their content with a two-stage PaddleOCR pipeline.
 
 <a id="directory"></a>
 ## Directory structure
@@ -22,16 +22,16 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── __init__.py  # Python script
-├── cli.py  # Arguments and result presentation
-├── decode.py  # Python script
-├── geometry.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── pipeline.py  # Python script
+├── __init__.py  # Model initialization and inference stages
+├── cli.py  # Arguments, model selection and result output
+├── decode.py  # Model initialization and inference stages
+├── geometry.py  # Geometry transforms and coordinate restoration
+├── main.py  # CLI entry: construct model and call predict
+├── model_binding.py  # Model initialization and inference stages
+├── model_runner.py  # Model initialization and inference stages
+├── pipeline.py  # Model initialization and inference stages
 ├── run.sh  # Run the sample
-└── tensor_io.py  # Python script
+└── tensor_io.py  # Model initialization and inference stages
 ```
 
 <a id="environment"></a>
@@ -118,8 +118,7 @@ identified — it never guesses from a filename.
 | `--prepare` | flag | false | explicitly fetch the selected manifest assets into local paths |
 
 `--list-models`, `--dry-run`, and `--prepare` are mutually exclusive modes.
-Defaults above are machine-checked against `build_parser` by the Q3
-checker.
+
 
 <a id="results"></a>
 ## Results
@@ -130,39 +129,38 @@ and aligned `boxes`/`texts` (example in the
 [sample README](../../README.md#expected-results)); `--json-output` writes
 the same object to a file. Boxes and texts keep detector order; returned
 arrays are owned by the result; an empty detector output skips recognition.
-Model output semantics remain the observed score-map/CTC policies — no
-unverified activation is inserted. `s100p` and `s600` have no
+Detection uses score-map decoding; recognition uses CTC decoding. `s100p` and `s600` have no
 PaddleOCR pair and are rejected at pair resolution.
 
 <a id="integration-example"></a>
 ## Integration example
 
-Compose the two stages directly from a full checkout (imports are absolute;
-all inputs defined; no `sys.path` changes):
+Prepare the S100 pair with the model guide, then run this example from the repository root on S100:
 
 ```python
 import cv2
 
-from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-from samples.vision.paddle_ocr.runtime.python.model_runner import create_stage_runners
+from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
 from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
 
 pair = resolve_pair(
     "s100",
     det_asset_id="s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm",
     rec_asset_id="s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm",
-    det_model_path="/opt/hobot/model/s100/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm",
-    rec_model_path="/opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm",
+    det_model_path="samples/vision/paddle_ocr/model/s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm",
+    rec_model_path="samples/vision/paddle_ocr/model/s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm",
 )
-detector, recognizer = create_stage_runners(pair, priority=0, bpu_cores=[0])
+pipeline = OCRPipeline.from_models(pair, priority=0, bpu_cores=[0])
 image = cv2.imread("samples/vision/paddle_ocr/test_data/s100/gt_2322.jpg")
-result = OCRPipeline(pair, detector, recognizer).predict(image)
+result = pipeline.predict(image)
 print(result.texts)
 ```
 
-`resolve_pair` binds exact assets and validates target/references/dictionary
-identity; `create_stage_runners` returns two lazy stage runners sharing the
-scheduling parameters; `OCRPipeline.predict(image)` chains
+`resolve_pair` selects the detector and recognizer artifacts and dictionary.
+`OCRPipeline.from_models` creates the detector and recognizer stage runners.
+Each stage loads its model, validates metadata and applies scheduling before its
+first inference. If detection returns no boxes, recognition remains unloaded.
+`OCRPipeline.predict(image)` chains
 detection → crop → recognition and returns the result object (`texts`,
 `boxes`).
 
@@ -187,8 +185,7 @@ attributed to the detector (artifact, metadata, target), a recognition-stage
 failure to the recognizer — the pipeline does not blur them. Zero detections
 is a valid outcome that skips recognition. Per-call geometry lives in the
 prepared context, never in instance fields reused across calls, so
-interleaved images of different sizes cannot contaminate each other (covered
-by host tests).
+interleaved images of different sizes cannot contaminate each other.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

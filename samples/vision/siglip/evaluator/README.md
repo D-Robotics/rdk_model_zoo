@@ -116,7 +116,7 @@ The following two source tables preserve every row and column. Source: S platfor
 | siglip-so400m-patch16-256-i18n | 0.984 (0.878 ~ 0.996), 0.959 | 0.082 (0.018 ~ 0.570), 0.030 |
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 - This directory has no evaluator implementation or dataset preparation script; functional checks use the runtime CLI on the board.
 - The four tables are source records; they do not by themselves identify the current artifact bytes or runtime version.

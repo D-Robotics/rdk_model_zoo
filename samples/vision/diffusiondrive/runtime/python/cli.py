@@ -14,10 +14,95 @@ from pathlib import Path
 import shutil
 import sys
 
-from samples.vision.diffusiondrive.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    list_available_assets,
-)
+from dataclasses import dataclass
+from pathlib import Path
+
+from utils.py_utils.assets import list_assets
+from utils.py_utils.platforms import resolve_target
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+TARGETS = ("s100p", "s600")
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    """One published manifest asset and its selected local path.
+
+    Attributes:
+        target: Concrete execution target (s100p or s600).
+        asset: Manifest asset record backing the selection.
+        model_path: Local compiled model path.
+        explicit_model_path: Whether the caller supplied the path explicitly.
+    """
+
+    target: str
+    asset: object
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def list_available_assets(target=None):
+    """List published DiffusionDrive assets for a target.
+
+    Args:
+        target: Concrete target filter; ``auto``/None lists all publications.
+
+    Returns:
+        tuple: Published assets in manifest order.
+
+    Raises:
+        ValueError: The target is unknown.
+    """
+    rows = tuple(list_assets("s", "diffusiondrive"))
+    if target in (None, "auto"):
+        return rows
+    if target not in ("x5", "s100", "s100p", "s600"):
+        raise ValueError(f"Unknown target {target}")
+    return tuple(a for a in rows if a.filename.startswith(target + "/"))
+
+
+def resolve_selection(target="auto", *, asset_id=None, model_path=None):
+    """Resolve one exact published DiffusionDrive planning asset.
+
+    Args:
+        target: ``auto`` resolves the executing board; s100p/s600 publish.
+        asset_id: Qualified manifest reference; a ``model_path`` override
+            requires the exact reference.
+        model_path: Optional explicit local path for the selected asset.
+
+    Returns:
+        ModelSelection: Concrete target, manifest asset, and local path.
+
+    Raises:
+        ValueError: The target or asset combination is invalid.
+    """
+    rows = list_available_assets()
+    if asset_id is not None:
+        rows = tuple(a for a in rows if a.reference == asset_id)
+        if len(rows) != 1:
+            raise ValueError("Unknown DiffusionDrive asset identity")
+        asset_target = rows[0].filename.split("/")[0]
+        if target == "auto":
+            target = asset_target
+    selected = resolve_target(target)
+    if selected not in TARGETS:
+        raise ValueError("DiffusionDrive assets support S100P and S600 only")
+    rows = tuple(a for a in rows if a.filename.startswith(selected + "/"))
+    if len(rows) != 1:
+        raise ValueError("Target and asset identity must match exactly")
+    if model_path is not None and asset_id is None:
+        raise ValueError("External model path requires exact --asset-id")
+    asset = rows[0]
+    return ModelSelection(
+        selected,
+        asset,
+        (
+            Path(model_path).expanduser()
+            if model_path is not None
+            else SAMPLE_DIR / "model" / asset.filename
+        ),
+        model_path is not None,
+    )
 
 #: Canonical files every run writes into its fresh output directory.
 CANONICAL_OUTPUTS = (

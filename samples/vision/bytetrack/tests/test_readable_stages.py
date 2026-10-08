@@ -11,6 +11,7 @@ inference is claimed.
 
 from unittest import mock
 import unittest
+from pathlib import Path
 import numpy as np
 
 from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask
@@ -71,3 +72,31 @@ class ByteTrackReadableStageTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``tracking.py`` owns the
+    named model class whose ``from_model`` constructs the detector and loads
+    the runtime; the per-sample ``model_binding``/``model_runner`` forwarding
+    modules are gone. ``tracker_backend/`` stays: the substantial BYTETracker
+    algorithm (Kalman filter, matching, tracker state).
+    """
+
+    def test_from_model_owns_detector_construction_and_streams(self):
+        from samples.vision.bytetrack.runtime.python.cli import resolve_selection
+        from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask
+        from samples.vision.yolov5.tests.test_yolov5 import FakeRuntime
+
+        selection = resolve_selection('s100')
+        task = ByteTrackTask.from_model(
+            selection, tracker_factory=FakeTracker,
+            runtime_factory=lambda path: FakeRuntime('s100'))
+        tracks = task.predict(np.zeros((48, 64, 3), np.uint8))
+        self.assertIsInstance(tracks, tuple)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = Path(__file__).resolve().parents[1] / 'runtime/python'
+        for name in ('model_binding.py', 'model_runner.py'):
+            self.assertFalse((base / name).exists(), name)

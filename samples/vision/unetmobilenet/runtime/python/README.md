@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Generate a Cityscapes 19-class segmentation mask with U-Net and MobileNet.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,13 +14,13 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── main.py  # CLI entry: construct model and call predict
 ├── run.sh  # Run the sample
-├── unetmobilenet.py  # Python script
-└── visualization.py  # Python script
+└── unetmobilenet.py  # Model initialization and inference stages
 ```
+
+`main.py` constructs the model and calls `predict`; `cli.py` handles options, model selection, and image/report output. The task file owns model stages and image loading uses `utils.py_utils.image.read_bgr_image`.
 
 <a id="environment"></a>
 ## Environment
@@ -78,16 +78,13 @@ The NPY mask is original-resolution int32 IDs 0..18; result.jpg blends source co
 ```python
 # cwd: repository root; on S100 after explicit model preparation
 import cv2
-from samples.vision.unetmobilenet.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.unetmobilenet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetTask
-from samples.vision.unetmobilenet.runtime.python.visualization import render_overlay
+from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetSegmenter
+from samples.vision.unetmobilenet.runtime.python.cli import render_overlay
 
 image = cv2.imread(str(SAMPLE_DIR / "test_data/segmentation.png"))
-runner = RuntimeModelRunner(resolve_selection("s100"))
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = UnetMobileNetTask(runner, binding)
+selection = resolve_selection("s100")
+task = UnetMobileNetSegmenter(selection)
 prepared = task.preprocess(image)
 raw = task.infer(prepared.tensors)
 mask = task.postprocess(raw, prepared.context)
@@ -100,7 +97,7 @@ print(mask.shape, mask.dtype)  # original image height/width, int32
 <a id="stage-io"></a>
 ## Stage IO
 
-preprocess accepts nonempty BGR uint8 HWC, stretches with INTER_AREA to 2048×1024, creates Y uint8 [1,1024,2048,1] and UV uint8 [1,512,1024,2], and freezes original geometry per call. No CPU normalization or letterbox. infer returns raw [1,H,W,19] int32/F32 unchanged. postprocess accepts bound geometry/dtype and finite values. Explicit NONE int32 scores compare without float rounding; SCALE uses validated positive scales/offsets and float64 affine decoding, fixing the source assumption that raw integer argmax always preserves order. F32 is not dequantized again. Lowest class ID wins exact ties. IDs resize directly to original dimensions with INTER_NEAREST; no coloring or file IO occurs. Missing integer quantization metadata fails explicitly. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
+preprocess accepts nonempty BGR uint8 HWC, stretches with INTER_AREA to 2048×1024, creates Y uint8 [1,1024,2048,1] and UV uint8 [1,512,1024,2], and freezes original geometry per call. No CPU normalization or letterbox. infer returns raw [1,H,W,19] int32/F32 unchanged. postprocess accepts bound geometry/dtype and finite values. Explicit NONE int32 scores compare without float rounding; SCALE uses validated positive scales/offsets and float64 affine decoding, fixing the source assumption that raw integer argmax always preserves order. F32 is not dequantized again. Lowest class ID wins exact ties. IDs resize directly to original dimensions with INTER_NEAREST; no coloring or file IO occurs. Missing integer quantization metadata fails explicitly.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

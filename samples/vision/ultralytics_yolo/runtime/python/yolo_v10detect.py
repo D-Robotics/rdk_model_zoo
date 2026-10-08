@@ -23,7 +23,7 @@ from typing import Optional, Tuple
 from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     DFLDetectionContract,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import YoloDetect
+from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect
 from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import PlatformProfile
 
 

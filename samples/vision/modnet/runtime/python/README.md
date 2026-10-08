@@ -3,7 +3,7 @@
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Estimate a portrait alpha matte with MODNet; use the CLI to save it or composite a background.
 
 <a id="directory"></a>
 ## Directory structure
@@ -12,12 +12,10 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── modnet.py  # Python script
-├── run.sh  # Run the sample
-└── visualization.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── main.py  # CLI entry: construct model and call predict
+├── modnet.py  # Model initialization and inference stages
+└── run.sh  # Run the sample
 ```
 
 <a id="environment"></a>
@@ -60,7 +58,7 @@ Success is exit code `0`, `matte_path` in the JSON, and a written uint8 matte. T
 <a id="results"></a>
 ## Results
 
-`MODNetTask.postprocess` returns an owned uint8 grayscale matte in the original image geometry. Optional compositing uses the source linear alpha formula and writes a BGR image. The raw forward result remains float32 `[0,1]` and is not saved or normalized by the runner.
+`MODNetMatting.postprocess` returns an owned uint8 grayscale matte in the original image geometry. Optional compositing uses the source linear alpha formula and writes a BGR image. The raw forward result remains float32 `[0,1]` and is not saved or normalized by the runner.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -71,10 +69,9 @@ After the manual model and local images exist, this complete example defines eve
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.modnet.runtime.python.model_binding import resolve_selection
-from samples.vision.modnet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.modnet.runtime.python.modnet import MODNetTask
-from samples.vision.modnet.runtime.python.visualization import composite
+from samples.vision.modnet.runtime.python.cli import resolve_selection
+from samples.vision.modnet.runtime.python.modnet import MODNetMatting
+from samples.vision.modnet.runtime.python.cli import composite
 
 target = "x5"
 asset_id = "x5:modnet:modnet_512x512_rgb.bin"
@@ -82,10 +79,7 @@ model_path = Path("samples/vision/modnet/model/modnet_512x512_rgb.bin")
 image_path = Path("samples/vision/modnet/test_data/person.jpg")
 background_path = Path("samples/vision/modnet/test_data/bg.jpg")
 selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = MODNetTask(runner, binding)
+task = MODNetMatting(selection)
 image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
 prepared = task.preprocess(image)
 raw_matte = task.infer(prepared.tensors)
@@ -102,7 +96,6 @@ print(explicit_matte.shape, composed_result.shape)
 - `infer(tensors)` validates the bound tensor and returns an owned raw float32 `(1,1,512,512)` matte.
 - `postprocess(raw, context)` scales the source `[0,1]` matte to uint8, removes padding, and resizes to the original geometry.
 - `predict(image)` composes all three stages; geometry lives in the current call's frozen context, not a mutable task field.
-- The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

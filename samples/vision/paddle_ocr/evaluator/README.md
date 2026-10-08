@@ -11,7 +11,7 @@ and its labels exist.
 ## Dataset
 
 Not applicable in the bundled form: the sample ships demonstration images,
-not a labeled corpus, so no dataset-level accuracy is claimed. The
+an example input set. Use labeled data for dataset accuracy evaluation. The
 evaluator consumes two user-supplied record files describing predictions
 and ground truth for the same images. Each input may be one JSON object, a
 JSON array, or JSONL with one object per image; `image` is the preferred
@@ -89,7 +89,7 @@ both input record files and the report as evaluation evidence.
 <a id="reference-results"></a>
 ## Reference results
 
-The Python default and aspect-ratio pipelines (including the compatibility
+The Python default and aspect-ratio pipelines (including the command-line
 helpers) run on X5 and S100 and are compared through their stage tensors,
 decoded into polygon boxes and recognized text; the S100 C++ build renders
 the recognized results onto the output image.
@@ -103,7 +103,7 @@ numeric tolerances for each dimension are those of the stage-I/O contract
 (box coordinates from identical inputs are expected to be exactly equal).
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 The evaluator measures the records supplied by the user; it never turns
 the bundled demonstration images into an accuracy claim. It performs no

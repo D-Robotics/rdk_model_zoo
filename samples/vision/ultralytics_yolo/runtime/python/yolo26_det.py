@@ -52,7 +52,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _size_from_runner,
     _transform_for_postprocess,
 )
-from samples.vision.ultralytics_yolo.runtime.python.legacy import pre_process_with_transform
 from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import (
     PlatformProfile,
     resolve_platform,
@@ -198,8 +197,6 @@ class YOLO26Detect:
         """Forward explicit scheduling parameters to the selected runner."""
         _set_scheduling_params(
             self.runner, self.model, self.model_name, priority, bpu_cores)
-
-    pre_process_with_transform = pre_process_with_transform
 
     def preprocess(self, img: np.ndarray, image_format: str = "BGR") -> PreparedDetection:
         """Validate BGR uint8 HxWx3 and return NV12 tensors plus frozen geometry."""

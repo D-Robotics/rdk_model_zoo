@@ -48,8 +48,8 @@ legacy_spec.loader.exec_module(legacy_mod)
 
 # Unified modules are loaded by their repository package names; no runtime-path
 # insertion or bare module import is used for the migrated implementation.
-binding = importlib.import_module("samples.vision.3dresnet.runtime.python.model_binding")
-runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.model_runner")
+binding = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
+runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
 selection = binding.resolve_selection(
@@ -62,8 +62,8 @@ runner = runner_mod.RuntimeModelRunner(selection)
 bound = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 clip = np.load(clip_path, allow_pickle=False)
-task = task_mod.VideoClassificationTask(
-    runner, bound, top_k=5,
+task = task_mod.R3D18Classifier(
+    selection, top_k=5, runner=runner,
     labels=labels_mod.load_labels(repo / "samples/vision/3dresnet/test_data/kinetics_classnames.json"))
 source_input = legacy.pre_process(clip)[legacy.model_name][legacy.input_name]
 unified_prepared = task.pre_process(clip)
@@ -151,8 +151,8 @@ legacy_spec.loader.exec_module(legacy_mod)
 
 # 统一实现使用完整 repository package 名称导入；不插入 runtime 目录，也不
 # 使用裸模块名。
-binding = importlib.import_module("samples.vision.3dresnet.runtime.python.model_binding")
-runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.model_runner")
+binding = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
+runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
 selection = binding.resolve_selection(
@@ -165,8 +165,8 @@ runner = runner_mod.RuntimeModelRunner(selection)
 bound = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 clip = np.load(clip_path, allow_pickle=False)
-task = task_mod.VideoClassificationTask(
-    runner, bound, top_k=5,
+task = task_mod.R3D18Classifier(
+    selection, top_k=5, runner=runner,
     labels=labels_mod.load_labels(repo / "samples/vision/3dresnet/test_data/kinetics_classnames.json"))
 source_input = legacy.pre_process(clip)[legacy.model_name][legacy.input_name]
 unified_prepared = task.pre_process(clip)

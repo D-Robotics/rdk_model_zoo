@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 from samples.vision.mobile_sam.model import download
 from samples.vision.mobile_sam.runtime.python import main
-from samples.vision.mobile_sam.runtime.python import model_binding
+from samples.vision.mobile_sam.runtime.python import cli as model_binding
 
 
 ROOT = Path(__file__).resolve().parents[4]

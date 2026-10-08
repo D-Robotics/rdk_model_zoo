@@ -22,23 +22,14 @@ evaluator/
 Host suite needs Python 3.10+, NumPy/OpenCV/PyYAML and a C++17 compiler for native pure/fake-interface tests. Real runtime checks require matching S100/S600 images, models and SDKs described in the runtime guides. The fake headers under native tests are deliberately not installation substitutes or real SDK compile evidence.
 
 <a id="command"></a>
-## Commands
 
-```bash
-# cwd: repository root; host regression (no model/SDK required)
-python3 -m unittest discover -s samples/vision/unetmobilenet/tests
-# On S100, after explicit preparation; single-image result, not dataset accuracy
-bash samples/vision/unetmobilenet/model/download.sh --target s100
-python3 samples/vision/unetmobilenet/runtime/python/main.py --target s100 --mask-save-path outputs/unetmobilenet/python.npy --report-path outputs/unetmobilenet/python.json
-bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s100 --build --mask-save-path outputs/unetmobilenet/native.png --report-path outputs/unetmobilenet/native.json
-```
 
 Keep both runtime commands on the same target, artifact and input. Use --target s600 for every corresponding step when checking S600.
 
 <a id="metrics"></a>
 ## Metrics
 
-Host checks establish source preprocessing/render parity for fixtures, class-ID decoding, per-channel SCALE counterexamples, direct nearest restoration, target rejection and resource cleanup on injected failures. They do not establish mIoU or latency. Compare Python NPY versus C++ PNG as integer arrays; exact per-pixel agreement is a useful same-artifact smoke criterion. Never compute logit cosine on categorical class IDs.
+Compare Python NPY and C++ PNG outputs as integer class-ID arrays using the same artifact and image. Report per-pixel agreement. Dataset mIoU requires Cityscapes ground-truth masks and the dataset evaluation protocol.
 
 <a id="outputs"></a>
 ## Outputs
@@ -51,6 +42,6 @@ Python writes int32 NPY labels; C++ writes lossless uint8 PNG IDs while its API 
 No source mIoU/FPS/latency table is available for this sample. The [reference figure](../test_data/result.jpg) comes from the source record.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 Use the Python and C++ runtime commands above to prepare matching single-image outputs. Compare integer label masks and quantized score interpretation using the documented inputs and metrics.

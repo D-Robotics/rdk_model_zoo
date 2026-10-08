@@ -51,7 +51,7 @@ def main(argv=None):
         from samples.vision.yoloe.evaluator.engine import evaluate_dataset
         from samples.vision.yoloe.runtime.python.yoloe import Config
         from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
-        from samples.vision.yoloe.runtime.python.pipeline_io import validate_config
+        from samples.vision.yoloe.runtime.python.config import validate_config
 
         selection = resolve_selection(args.target, variant=args.variant)
         cfg = Config(

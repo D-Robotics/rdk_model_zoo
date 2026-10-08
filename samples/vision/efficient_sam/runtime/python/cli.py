@@ -15,11 +15,61 @@ import argparse
 import json
 from pathlib import Path
 
-from samples.vision.efficient_sam.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    list_available_assets,
-    resolve_selection,
-)
+from utils.py_utils import sam_binding as _shared
+
+SAMPLE = "efficient_sam"
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
+
+ModelSelection = _shared.ModelSelection
+ModelBinding = _shared.ModelBinding
+
+
+def list_available_assets(target=None):
+    """Return manifest-backed encoder/decoder assets for the selected target.
+
+    Args:
+        target: Concrete target filter; ``auto``/None lists all publications.
+
+    Returns:
+        The shared catalog's exact asset rows for this sample.
+    """
+    return _shared.list_available_assets(SAMPLE, target)
+
+
+def resolve_selection(
+    target="auto",
+    *,
+    encoder_model_path=None,
+    decoder_model_path=None,
+    encoder_asset_id=None,
+    decoder_asset_id=None,
+):
+    """Resolve one exact published encoder/decoder pair.
+
+    Args:
+        target: ``auto`` resolves the executing board; concrete targets
+            filter the published pairs.
+        encoder_model_path: Optional explicit local encoder path.
+        decoder_model_path: Optional explicit local decoder path.
+        encoder_asset_id: Qualified encoder manifest reference.
+        decoder_asset_id: Qualified decoder manifest reference.
+
+    Returns:
+        ModelSelection: Concrete target and the exact asset pair with paths.
+
+    Raises:
+        ValueError: The target or asset combination is invalid.
+    """
+    return _shared.resolve_selection(
+        SAMPLE,
+        target,
+        encoder_model_path=encoder_model_path,
+        decoder_model_path=decoder_model_path,
+        encoder_asset_id=encoder_asset_id,
+        decoder_asset_id=decoder_asset_id,
+        sample_dir=SAMPLE_DIR,
+    )
 
 DEFAULT_TEST_IMAGE = SAMPLE_DIR / "test_data" / "dogs.jpg"
 DEFAULT_RESULT_IMAGE = SAMPLE_DIR / "test_data" / "efficient_sam_full_mask_result.jpg"
@@ -100,7 +150,6 @@ def save_outputs(result: dict, image, result_path: "str | Path", mask_path: "str
     import cv2
     import numpy as np
 
-    from samples.vision.efficient_sam.runtime.python.visualization import draw_mask_result
 
     overlay = draw_mask_result(image, result["mask"], result["iou"], result["mask_index"])
     result_file = Path(result_path).expanduser()
@@ -129,3 +178,26 @@ __all__ = [
     "save_outputs",
     "selection_report",
 ]
+
+
+def draw_mask_result(image: np.ndarray, mask: np.ndarray, iou: float, mask_index: int) -> np.ndarray:
+    """Return a 512x512 BGR overlay; this function does not write files."""
+
+    import cv2
+    import numpy as np
+
+    canvas = cv2.resize(image, (512, 512), interpolation=cv2.INTER_LINEAR).copy()
+    mask_bool = np.asarray(mask, dtype=bool)
+    if mask_bool.shape != (512, 512):
+        raise ValueError(f"Expected a 512x512 mask, got {mask_bool.shape}.")
+    color = np.zeros_like(canvas)
+    color[:] = (0, 180, 0)
+    blended = cv2.addWeighted(canvas, 0.45, color, 0.55, 0)
+    canvas[mask_bool] = blended[mask_bool]
+    contours, _ = cv2.findContours(mask_bool.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(canvas, contours, -1, (0, 255, 255), 2)
+    for row, line in enumerate(("EfficientSAM full mask: encoder + decoder", f"mask={mask_index}, IoU={float(iou):.4f}")):
+        y = 28 + row * 28
+        cv2.putText(canvas, line, (12, y), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (0, 0, 0), 4, cv2.LINE_AA)
+        cv2.putText(canvas, line, (12, y), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (255, 255, 255), 2, cv2.LINE_AA)
+    return canvas

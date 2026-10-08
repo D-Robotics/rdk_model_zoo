@@ -67,7 +67,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --li
 | `--all` | 全部已发布制品，可按 family 限定；此模式不按 task、size 筛选。 |
 | `--dry-run` | 仅打印计划，不下载、不加载模型。 |
 
-某系列不支持平台默认的全部任务时，请明确传入任务。不支持的组合会报错，不会换一个近似模型。仍兼容历史位置参数形式；具名选项优先：
+某系列不支持平台默认的全部任务时，请明确传入任务。不支持的组合会报错，不会换一个近似模型。支持位置参数形式；具名选项优先：
 
 ```bash
 bash samples/vision/ultralytics_yolo/model/download_model.sh s600 yolov8 cls n --dry-run
@@ -106,7 +106,7 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
 <a id="formats-checksums"></a>
 ## 格式与完整性
 
-X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。非分类文件名使用 640×640。YOLO26 分类文件名在全部目标上使用 224×224，S600 分类标识同样使用 224×224。S100/S100P v8/v11 分类清单 ID 保留 640×640 兼容名称，下载 URL 则使用 224×224。实际输入几何由运行元数据决定，文件名标记不是形状覆盖。
+X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。非分类文件名使用 640×640。YOLO26 分类文件名在全部目标上使用 224×224，S600 分类标识同样使用 224×224。S100/S100P v8/v11 分类清单 ID 保留 640×640 标识，下载 URL 则使用 224×224。实际输入几何由运行元数据决定，文件名标记不是形状覆盖。
 
 下载器拒绝空文件；清单提供发布方 SHA-256 时会校验。本地摘要用于标识下载字节。`--dry-run` 报告路径是否存在，不下载或读取文件内容。下载使用临时 `.part` 文件，校验成功后才安装最终文件。超时、HTTP 错误或 URL 不可用会返回准备错误。
 

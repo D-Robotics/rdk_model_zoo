@@ -208,13 +208,6 @@ all-pass threshold of 0.999. All rows stand as published reference records; no
 SUNRGBD accuracy result is implied by these tables.
 
 <a id="boundaries"></a>
-## Verification boundaries
+## Input requirements
 
-Host fixtures cover correct raw/log decoding, runtime parity, lower
-median and pixel pooling, invalid data/ID rejection, three preparation protocols,
-small screen selection and real report/image writes. They do not establish
-Torch-backend parity, model output accuracy, OE compilation, board behavior or
-performance. Optional Torch interpolation, dataset runs and all new board results
-are not covered by them. Raw output arrays and their hashes do not by themselves prove
-which model, input preprocessing or board produced them; retain producer evidence
-alongside these reports.
+Use the declared calibrated-log or raw-logit protocol for each model. Keep model identity, input preprocessing, board and SDK information with the report when comparing output arrays or timing.

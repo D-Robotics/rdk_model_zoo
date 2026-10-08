@@ -29,7 +29,7 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-eval.py reuses the unified HGNetV2 ClassificationTask and RuntimeModelRunner on X5. It needs the same board SDK, NumPy, OpenCV and PyYAML; no additional inference framework is used. --help and pure dataset/metric tests run on the host without SDK. SciPy is only used by source-comparison host tests.
+eval.py uses HGNetV2Classifier with the shared RuntimeModelRunner on X5. It needs the same board SDK, NumPy, OpenCV and PyYAML; no additional inference framework is used. --help and pure dataset/metric tests run on the host without SDK. SciPy is only used by source-comparison host tests.
 
 <a id="command"></a>
 ## Commands

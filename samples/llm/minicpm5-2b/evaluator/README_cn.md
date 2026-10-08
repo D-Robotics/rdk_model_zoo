@@ -12,7 +12,7 @@ WikiText2 TEST 与校准 TRAIN 分开；固定 checkpoint/tokenizer 和 TEST 摘
 
 ```text
 evaluator/
-├── legacy/  # legacy 相关文件
+├── legacy/  # OELLM 1.0.0 流程
 ├── results/  # results 相关文件
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
@@ -76,7 +76,7 @@ HBM SHA256：`7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`�
 
 ## S100 / S100P 全量验证（2026-09-09）
 
-使用独立的 [legacy 评估入口](legacy/README_cn.md)，对应 SDK 1.0.0、UCP/DNN 3.7.3、HBRT 4.2.11。两块板各自的 HBM 均完成相同的 140 × 2048-token TEST 输入与 286580 个预测目标。**两板 PPL 均为 17.91995474675122，相对浮点上升 27.83167%，未达到 ≤3% 精度目标。** 完整性与数学一致性检查通过；共用验证器会按精度阈值拒绝该结果。
+使用独立的 [OELLM 1.0.0 评估入口](legacy/README_cn.md)，对应 SDK 1.0.0、UCP/DNN 3.7.3、HBRT 4.2.11。两块板各自的 HBM 均完成相同的 140 × 2048-token TEST 输入与 286580 个预测目标。**两板 PPL 均为 17.91995474675122，相对浮点上升 27.83167%，未达到 ≤3% 精度目标。** 完整性与数学一致性检查通过；共用验证器会按精度阈值拒绝该结果。
 
 | 板卡 | 全量 PPL | 评估秒数 | 参考文本完全一致 | 连续请求 |
 |---|---:|---:|---:|---:|

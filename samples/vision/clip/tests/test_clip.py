@@ -55,19 +55,17 @@ class TextSession:
 
 
 def fixture():
-    from samples.vision.clip.runtime.python.model_binding import resolve_selection
-    from samples.vision.clip.runtime.python.model_runner import RuntimeModelRunner
-    from samples.vision.clip.runtime.python.matching import CLIPTask
+    from samples.vision.clip.runtime.python.cli import resolve_selection
+    from samples.vision.clip.runtime.python.matching import CLIPMatcher, RuntimeModelRunner
     from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
     image=ImageRuntime(); text=TextSession()
     runner=RuntimeModelRunner(resolve_selection('x5'), image_runtime=image, text_session=text)
-    binding=runner.load()
-    return CLIPTask(runner,binding,PromptTokenizer()),runner,image,text
+    return CLIPMatcher(runner.selection, tokenizer=PromptTokenizer(), runner=runner),runner,image,text
 
 
 class ClipTests(unittest.TestCase):
     def test_paired_assets_and_explicit_path_identity(self):
-        from samples.vision.clip.runtime.python.model_binding import resolve_selection,list_available_assets
+        from samples.vision.clip.runtime.python.cli import resolve_selection,list_available_assets
         self.assertEqual({a.filename for a in list_available_assets('x5')},{'img_encoder.bin','text_encoder.onnx'})
         s=resolve_selection('x5');self.assertEqual(s.image_asset.reference,'x5:clip:img_encoder.bin');self.assertEqual(s.text_asset.reference,'x5:clip:text_encoder.onnx')
         for target in ['s100','s100p','s600']:
@@ -112,8 +110,8 @@ class ClipTests(unittest.TestCase):
         task,runner,image,text=fixture()
         with self.assertRaises(ValueError):runner({'image':np.zeros((1,3,224,224),np.float32),'texts':np.zeros((2,77),np.int64)})
         self.assertEqual(image.calls,[]);self.assertEqual(text.calls,[])
-        from samples.vision.clip.runtime.python.model_binding import resolve_selection
-        from samples.vision.clip.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.clip.runtime.python.cli import resolve_selection
+        from samples.vision.clip.runtime.python.matching import RuntimeModelRunner
         bad=TextSession();bad.get_outputs=lambda:[types.SimpleNamespace(name='features',type='tensor(float)',shape=[None,768])]
         with self.assertRaises(ValueError):RuntimeModelRunner(resolve_selection('x5'),image_runtime=ImageRuntime(),text_session=bad).load()
         fixed=TextSession();fixed.batch=1
@@ -128,11 +126,42 @@ class ClipTests(unittest.TestCase):
         self.assertEqual(p.returncode,2)
 
     def test_execution_identity_gate_precedes_default_sdk_factories(self):
-        from samples.vision.clip.runtime.python.model_binding import resolve_selection
-        from samples.vision.clip.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.clip.runtime.python.cli import resolve_selection
+        from samples.vision.clip.runtime.python.matching import RuntimeModelRunner
         with patch('utils.py_utils.platforms.require_execution_target',side_effect=ValueError('wrong board')) as gate:
             with self.assertRaisesRegex(ValueError,'wrong board'):RuntimeModelRunner(resolve_selection('x5')).load()
             gate.assert_called_once_with('x5')
 
 
 if __name__=='__main__':unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``matching.py`` owns the
+    named model class, the dual-runtime runner, and multimodal input
+    preparation; the per-sample ``model_binding``/``model_runner``/
+    ``tensor_io`` forwarding modules are gone. ``tokenization.py`` and
+    ``simple_tokenizer.py`` stay: the preserved BPE tokenizer algorithm.
+    """
+
+    def test_matcher_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.clip.runtime.python.cli import resolve_selection
+        from samples.vision.clip.runtime.python.matching import CLIPMatcher, RuntimeModelRunner
+        from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+        image, text = ImageRuntime(), TextSession()
+        model = CLIPMatcher(resolve_selection('x5'), tokenizer=PromptTokenizer(),
+                            runner=RuntimeModelRunner(resolve_selection('x5'),
+                                                      image_runtime=image, text_session=text))
+        result = model.predict(np.zeros((31, 47, 3), np.uint8), ['a dog', 'a cat'])
+        self.assertEqual(result.scores.shape, (2,))
+        prepared = model.preprocess(np.zeros((31, 47, 3), np.uint8), ['a dog', 'a cat'])
+        manual = model.postprocess(model.infer(prepared.tensors))
+        np.testing.assert_allclose(result.scores, manual.scores)
+        np.testing.assert_array_equal(result.order, manual.order)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = Path(__file__).resolve().parents[1] / 'runtime/python'
+        for name in ('model_binding.py', 'model_runner.py', 'tensor_io.py'):
+            self.assertFalse((base / name).exists(), name)

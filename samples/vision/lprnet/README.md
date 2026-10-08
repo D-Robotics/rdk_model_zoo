@@ -30,7 +30,7 @@ lprnet/
 | X5 | `lpr.bin` | supported | not-supported | verify with the bundled `test_input.dat` |
 | S100/S100P/S600 | — | not-supported | not-supported | no published asset |
 
-This sample has no C++ implementation. Host tests do not certify board execution; on-board verification runs the bundled `test_input.dat` and checks native `(1,68,18,1)` logits parity between the two implementations — an implementation-consistency check for one input, not license-plate accuracy.
+This sample has no C++ implementation.dat` and checks native `(1,68,18,1)` logits parity between the two implementations — an implementation-consistency check for one input, not license-plate accuracy.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -54,13 +54,13 @@ The first command writes `model/lpr.bin` and reports the observed hash; the mani
 <a id="expected-results"></a>
 ## Expected results
 
-Successful inference exits with code `0` and prints a JSON object containing `target`, the qualified `asset_id`, and a decoded `plate` string. The exact plate is model/input dependent and is not fabricated here; `test_data/example.jpg` is only the visual reference shipped by the source, while `test_input.dat` is the actual runtime input.
+Successful inference exits with code `0` and prints a JSON object containing `target`, the qualified `asset_id`, and a decoded `plate` string. The decoded plate depends on the model and input; `test_data/example.jpg` is only the visual reference shipped by the source, while `test_input.dat` is the actual runtime input.
 
 <a id="entry-points"></a>
 ## Entry points
 
 - [`model/README.md`](./model/README.md): manifest asset, download, path, and checksum facts.
-- [`runtime/python/README.md`](./runtime/python/README.md): CLI and `LPRNetTask` API.
+- [`runtime/python/README.md`](./runtime/python/README.md): CLI and `LPRNetRecognizer` API.
 - [`conversion/README.md`](./conversion/README.md): source OE commands and missing reproducibility inputs.
 - [`evaluator/README.md`](./evaluator/README.md): exact raw/text comparison procedure.
 

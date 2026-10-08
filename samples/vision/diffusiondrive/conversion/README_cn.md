@@ -104,6 +104,6 @@ hrt_model_exec perf --model_file build/s100p/hbm/diffusiondrive_r34_256x1024_s10
 测试前检查实际名称、形状、类型、scale、zero point 和 axis。物理 HBM 元数据为权威依据，逻辑浮点参考仅用于数值对照。使用[离线评估器](../evaluator/README_cn.md)比较解码结果，同时保留原始张量与溯源记录。评估器报告描述性指标；发布门槛由你的发布流程确定。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
 Checkpoint/导出版本、改写代码、原校准集与精确 profiling 输入二进制是本配方要求使用者准备的输入。工具链可用性、完整算子落位、真实 HBM 元数据、OE 编译、板端输出对齐与性能在实际执行时验证。保留的配置与文档完整列出这些依赖，便于执行前逐项准备与检查。

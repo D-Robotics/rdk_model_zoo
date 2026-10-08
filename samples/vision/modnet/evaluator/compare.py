@@ -31,12 +31,8 @@ from utils.py_utils.assets import verify_asset_file  # noqa: E402
 from utils.py_utils.platforms import require_execution_target  # noqa: E402
 from utils.py_utils.legacy_platforms import pinned_name  # noqa: E402
 from utils.py_utils.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
-from samples.vision.modnet.runtime.python.modnet import MODNetTask  # noqa: E402
-from samples.vision.modnet.runtime.python.model_binding import (  # noqa: E402
-    SAMPLE_DIR,
-    resolve_selection,
-)
-from samples.vision.modnet.runtime.python.model_runner import RuntimeModelRunner  # noqa: E402
+from samples.vision.modnet.runtime.python.cli import SAMPLE_DIR, resolve_selection  # noqa: E402
+from samples.vision.modnet.runtime.python.modnet import MODNetMatting, create_runner  # noqa: E402
 from samples.vision.modnet.evaluator.source_reference import (  # noqa: E402
     load_legacy,
     source_paths,
@@ -172,11 +168,10 @@ def run_comparison(selection, image, image_path, output_dir, *, priority=0, bpu_
         legacy.set_scheduling_params(priority=priority, bpu_cores=cores)
         records["legacy"]["result"] = {"matte": np.asarray(legacy.predict(image)).copy()}
 
-        runner = RuntimeModelRunner(selection, runtime_factory=factory("unified"))
-        binding = runner.load()
-        runner.set_scheduling_params(priority=priority, bpu_cores=cores)
-        records["unified"]["result"] = {"matte": np.asarray(
-            MODNetTask(runner, binding).predict(image)).copy()}
+        task = MODNetMatting(selection, runner=create_runner(
+            selection, runtime_factory=factory("unified")))
+        task.set_scheduling_params(priority=priority, bpu_cores=cores)
+        records["unified"]["result"] = {"matte": np.asarray(task.predict(image)).copy()}
 
         checks = {}
         max_diff = {}

@@ -10,7 +10,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用两阶段 PaddleOCR 流水线检测文字区域并识别文本。
 
 <a id="directory"></a>
 ## 目录结构
@@ -19,16 +19,16 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── __init__.py  # Python 脚本
-├── cli.py  # 参数与结果展示
-├── decode.py  # Python 脚本
-├── geometry.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── pipeline.py  # Python 脚本
+├── __init__.py  # 模型初始化与推理阶段
+├── cli.py  # 参数、模型选择与结果交付
+├── decode.py  # 模型初始化与推理阶段
+├── geometry.py  # 几何变换与坐标恢复
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型初始化与推理阶段
+├── model_runner.py  # 模型初始化与推理阶段
+├── pipeline.py  # 模型初始化与推理阶段
 ├── run.sh  # 运行示例
-└── tensor_io.py  # Python 脚本
+└── tensor_io.py  # 模型初始化与推理阶段
 ```
 
 <a id="environment"></a>
@@ -131,25 +131,25 @@ score-map/CTC 策略——不插入未经验证的激活。`s100p` 与 `s600` �
 ```python
 import cv2
 
-from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-from samples.vision.paddle_ocr.runtime.python.model_runner import create_stage_runners
+from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
 from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
 
 pair = resolve_pair(
     "s100",
     det_asset_id="s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm",
     rec_asset_id="s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm",
-    det_model_path="/opt/hobot/model/s100/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm",
-    rec_model_path="/opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm",
+    det_model_path="samples/vision/paddle_ocr/model/s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm",
+    rec_model_path="samples/vision/paddle_ocr/model/s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm",
 )
-detector, recognizer = create_stage_runners(pair, priority=0, bpu_cores=[0])
+pipeline = OCRPipeline.from_models(pair, priority=0, bpu_cores=[0])
 image = cv2.imread("samples/vision/paddle_ocr/test_data/s100/gt_2322.jpg")
-result = OCRPipeline(pair, detector, recognizer).predict(image)
+result = pipeline.predict(image)
 print(result.texts)
 ```
 
-`resolve_pair` 绑定精确资产并校验 target/引用/词典身份；
-`create_stage_runners` 返回共享调度参数的两个懒加载阶段运行器；
+`resolve_pair` 选择检测、识别制品与词典。
+`OCRPipeline.from_models` 创建检测与识别阶段运行器。各阶段首次推理前
+加载模型、校验元数据并应用调度参数。检测结果为空时，识别模型不加载。
 `OCRPipeline.predict(image)` 串联检测 → 裁剪 → 识别并返回结果对象
 （`texts`、`boxes`）。
 
@@ -173,7 +173,7 @@ print(result.texts)
 target），识别阶段失败归识别器——pipeline 不混淆两者。零检测是合法
 结果，直接跳过识别。每次调用的几何信息保存在 prepared context 中，
 绝不放入会被下次调用覆盖的实例字段，因此不同尺寸图像交错处理不会
-互相污染（由主机测试覆盖）。
+互相污染。
 
 <a id="troubleshooting"></a>
 ## 故障排查

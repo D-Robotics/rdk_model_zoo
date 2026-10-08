@@ -27,14 +27,14 @@ def comparison_fixture():
 
 class ReadmeTests(unittest.TestCase):
     def test_runtime_api_examples_execute_real_binding_and_runner(self):
-        from samples.vision.dinov2.runtime.python import model_runner
-        original = model_runner.RuntimeModelRunner
+        from samples.vision.dinov2.runtime.python import embedding as runner_mod
+        original = runner_mod.RuntimeModelRunner
         for filename in ('README.md', 'README_cn.md'):
             snippets = re.findall(r'```python\n(.*?)```', (SAMPLE/'runtime/python'/filename).read_text(), re.S)
             self.assertEqual(len(snippets), 1, filename)
             runtime = FakeRuntime('I16')
             scope = {}
-            with patch.object(model_runner, 'RuntimeModelRunner', lambda selection: original(selection, runtime=runtime)), contextlib.redirect_stdout(io.StringIO()):
+            with patch.object(runner_mod, 'RuntimeModelRunner', lambda selection: original(selection, runtime=runtime)), contextlib.redirect_stdout(io.StringIO()):
                 exec(compile(snippets[0], filename, 'exec'), scope)
             self.assertEqual(scope['composed_result'].shape, (1, 384))
             self.assertEqual(scope['composed_result'].dtype, np.float32)
@@ -92,7 +92,8 @@ class ReadmeTests(unittest.TestCase):
         import sys
         import tempfile
         from test_dinov2 import load_legacy_source
-        from samples.vision.dinov2.runtime.python import model_binding, model_runner
+        from samples.vision.dinov2.runtime.python import cli as model_binding
+        from samples.vision.dinov2.runtime.python import embedding as model_runner
         original_resolve = model_binding.resolve_selection
         original_runner = model_runner.RuntimeModelRunner
         legacy_module = load_legacy_source()

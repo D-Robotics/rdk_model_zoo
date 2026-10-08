@@ -24,15 +24,25 @@ def metadata(n=4, dtype='float32', quant=None):
 
 
 def bound(n=4, dtype='float32', quant=None):
-    from samples.vision.pointnet.runtime.python.model_binding import bind_model, resolve_selection
+    from samples.vision.pointnet.runtime.python.cli import resolve_selection
+    from samples.vision.pointnet.runtime.python.pointnet import bind_model
     return bind_model(resolve_selection('s100'), metadata(n, dtype, quant))
 
 
 class PointNetTests(unittest.TestCase):
     def task(self, raw=None, binding=None):
-        from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
+
+        class StubRunner:
+            def __init__(self, binding, raw):
+                self.binding, self.raw = binding, raw
+            def load(self):
+                return self.binding
+            def __call__(self, tensors):
+                return self.raw
         raw = np.eye(4, dtype=np.float32)[None] if raw is None else raw
-        return PointNetTask(lambda tensors: raw, binding or bound())
+        return PointNetSegmenter(resolve_selection('s100'), runner=StubRunner(binding or bound(), raw))
 
     def points(self):
         return np.array([[0, 0, 0], [1, 0, 0], [0, 2, 0], [0, 0, 3]], np.float32)
@@ -151,12 +161,16 @@ class ReadableInterfaceTests(unittest.TestCase):
         calls = []
         raw = np.eye(4, dtype=np.float32)[None]
 
-        def runner(tensors):
-            calls.append(tensors)
-            return raw
+        class StubRunner:
+            def load(self):
+                return bound()
+            def __call__(self, tensors):
+                calls.append(tensors)
+                return raw
 
-        from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
-        task = PointNetTask(runner, bound())
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
+        task = PointNetSegmenter(resolve_selection('s100'), runner=StubRunner())
         routed = []
         for canonical in ('preprocess', 'infer', 'postprocess'):
             original = getattr(task, canonical)
@@ -201,16 +215,20 @@ class PredictionDetailsTests(unittest.TestCase):
     """Opt-in ``return_details`` keeps normalized points and context per call."""
 
     def detailed_task(self):
-        from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
 
-        calls = []
-        raw = np.eye(4, dtype=np.float32)[None]
+        class RecordingRunner:
+            def __init__(self, binding):
+                self.binding, self.calls, self.raw = binding, [], np.eye(4, dtype=np.float32)[None]
+            def load(self):
+                return self.binding
+            def __call__(self, tensors):
+                self.calls.append(tensors)
+                return self.raw.copy()
 
-        def runner(tensors):
-            calls.append(tensors)
-            return raw.copy()
-
-        return PointNetTask(runner, bound()), calls
+        runner = RecordingRunner(bound())
+        return PointNetSegmenter(resolve_selection('s100'), runner=runner), runner.calls
 
     def test_default_predict_still_returns_plain_int32_labels(self):
         task, calls = self.detailed_task()
@@ -253,26 +271,28 @@ class PredictionDetailsTests(unittest.TestCase):
 
 class BindingTests(unittest.TestCase):
     def test_exact_asset_and_default(self):
-        from samples.vision.pointnet.runtime.python.model_binding import resolve_selection
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
         s = resolve_selection()
         self.assertEqual(s.target, 's100')
         self.assertEqual(s.asset.reference, 's:pointnet:s100/pointnet.hbm')
         self.assertTrue(str(s.model_path).endswith('/samples/vision/pointnet/model/s100/pointnet.hbm'))
 
     def test_targets_and_external_identity(self):
-        from samples.vision.pointnet.runtime.python.model_binding import resolve_selection
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
         for target in ('x5', 's100p', 's600'):
             with self.assertRaises(ValueError): resolve_selection(target)
         with self.assertRaises(ValueError): resolve_selection('s100', model_path='/tmp/pointnet.hbm')
         with self.assertRaises(ValueError): resolve_selection('s100', asset_id='s:pointnet:s600/pointnet.hbm')
 
     def test_rejects_forged_selection(self):
-        from samples.vision.pointnet.runtime.python.model_binding import resolve_selection, bind_model
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import bind_model
         s = dataclasses.replace(resolve_selection(), model_path=Path('/tmp/forged.hbm'))
         with self.assertRaises(ValueError): bind_model(s, metadata())
 
     def test_bad_metadata(self):
-        from samples.vision.pointnet.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import bind_model
         for field, value in [('input_shapes', {'point': (2, 3, 4)}),
                              ('input_shapes', {'point': (1, 4, 3)}),
                              ('output_shapes', {'pred': (1, 5, 4)}),
@@ -292,13 +312,13 @@ class BindingTests(unittest.TestCase):
 
 class RunnerAndCLITests(unittest.TestCase):
     def test_runtime_output_owned_and_input_checked(self):
-        from samples.vision.pointnet.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.pointnet.runtime.python.model_binding import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import create_runner
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
         raw = np.eye(4, dtype=np.float32)[None]
         class Fake:
             def __init__(self): self.__dict__.update(metadata()); self.calls = 0
             def run(self, inputs): self.calls += 1; return {'pointnet': {'pred': raw}}
-        rt=Fake(); runner=RuntimeModelRunner(resolve_selection(), runtime=rt)
+        rt=Fake(); runner=create_runner(resolve_selection(), runtime=rt)
         result=runner({'point': np.ones((1,3,4), np.float32)})
         raw[:] = -1
         np.testing.assert_array_equal(result, np.eye(4, dtype=np.float32)[None])
@@ -307,11 +327,11 @@ class RunnerAndCLITests(unittest.TestCase):
         self.assertEqual(rt.calls, 1)
 
     def test_board_identity_checked_before_sdk(self):
-        from samples.vision.pointnet.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.pointnet.runtime.python.model_binding import resolve_selection
-        with patch('samples.vision.pointnet.runtime.python.model_runner.require_execution_target', side_effect=ValueError('mismatch')):
+        from samples.vision.pointnet.runtime.python.pointnet import create_runner
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        with patch('samples.vision.pointnet.runtime.python.pointnet.require_execution_target', side_effect=ValueError('mismatch')):
             with self.assertRaisesRegex(ValueError, 'mismatch'):
-                RuntimeModelRunner(resolve_selection()).load()
+                create_runner(resolve_selection()).load()
 
     def test_host_safe_entrypoints_and_target_rejection(self):
         main=ROOT/'samples/vision/pointnet/runtime/python/main.py'
@@ -358,7 +378,7 @@ class VisualizationDefaultPathTests(unittest.TestCase):
     def test_default_path_plots_both_views_via_real_module(self):
         import tempfile, json
         from samples.vision.pointnet.runtime.python.main import main
-        from samples.vision.pointnet.runtime.python import model_runner
+        from samples.vision.pointnet.runtime.python import pointnet as model_runner
         points, cloud = self.normalized_chair()
         n = len(points)
         expected = np.arange(n) % 4
@@ -369,10 +389,10 @@ class VisualizationDefaultPathTests(unittest.TestCase):
                 raw[0, np.arange(n), expected] = 1
                 return {'pointnet': {'pred': raw}}
             def set_scheduling_params(self, **kwargs): pass
-        real = model_runner.RuntimeModelRunner
+        real = model_runner.create_runner
         calls, doubles = self.plot_fixture()
         with (tempfile.TemporaryDirectory() as tmp,
-              patch.object(model_runner, 'RuntimeModelRunner',
+              patch.object(model_runner, 'create_runner',
                            side_effect=lambda s: real(s, runtime=Fake())),
               patch.dict(sys.modules, doubles)):
             sys.modules.pop(self.vis_name, None)
@@ -440,7 +460,7 @@ class SourceAndEntrypointTests(unittest.TestCase):
         return module
 
     def test_delivered_chair_matches_actual_source_loader_and_stages(self):
-        from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
         path = ROOT/'samples/vision/pointnet/test_data/chair.pts'
         source = self.source()
         normalized = source.PointNet.load_point_cloud(str(path))
@@ -449,14 +469,24 @@ class SourceAndEntrypointTests(unittest.TestCase):
         old.model_name='pointnet'; old.input_name='point'; old.output_name='pred'
         old.cfg=types.SimpleNamespace(num_parts=4)
         expected_tensor=old.pre_process(normalized)['pointnet']['point']
-        task=PointNetTask(lambda x: raw, bound(len(normalized)))
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
+
+        class StubRunner:
+            def __init__(self, binding, raw):
+                self.binding, self.raw = binding, raw
+            def load(self):
+                return self.binding
+            def __call__(self, tensors):
+                return self.raw
+        task=PointNetSegmenter(resolve_selection('s100'), runner=StubRunner(bound(len(normalized)), raw))
         prepared=task.pre_process(np.loadtxt(path).astype(np.float32))
         np.testing.assert_array_equal(prepared.tensors['point'], expected_tensor)
         np.testing.assert_array_equal(task.post_process(raw), old.post_process({'pointnet':{'pred':raw}}))
 
     def test_readme_api_example_executes_with_real_runner_and_sdk_fixture(self):
         import re
-        from samples.vision.pointnet.runtime.python import model_runner
+        from samples.vision.pointnet.runtime.python import pointnet as model_runner
         path=ROOT/'samples/vision/pointnet/test_data/chair.pts'
         n=len(np.loadtxt(path))
         class Fake:
@@ -465,8 +495,8 @@ class SourceAndEntrypointTests(unittest.TestCase):
                 self_shape=inputs['pointnet']['point'].shape
                 assert self_shape == (1,3,n)
                 return {'pointnet': {'pred':np.tile([0,1,2,3],(1,n,1)).astype(np.float32)}}
-        real=model_runner.RuntimeModelRunner
-        with patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda selection:real(selection,runtime=Fake())):
+        real=model_runner.create_runner
+        with patch.object(model_runner,'create_runner',side_effect=lambda selection,**kw:real(selection,runtime=Fake())):
             for doc in ['README.md','README_cn.md']:
                 text=(ROOT/'samples/vision/pointnet/runtime/python'/doc).read_text()
                 code=re.findall(r'```python\n(.*?)```',text,re.S)[0]
@@ -477,14 +507,14 @@ class SourceAndEntrypointTests(unittest.TestCase):
     def test_cli_persists_labels_and_report_with_injected_runtime(self):
         import tempfile, json
         from samples.vision.pointnet.runtime.python.main import main
-        from samples.vision.pointnet.runtime.python import model_runner
+        from samples.vision.pointnet.runtime.python import pointnet as model_runner
         n=len(np.loadtxt(ROOT/'samples/vision/pointnet/test_data/chair.pts'))
         class Fake:
             def __init__(self): self.__dict__.update(metadata(n))
             def run(self, inputs): return {'pointnet': {'pred':np.zeros((1,n,4),np.float32)}}
             def set_scheduling_params(self, **kwargs): pass
-        real=model_runner.RuntimeModelRunner
-        with tempfile.TemporaryDirectory() as tmp, patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda s:real(s,runtime=Fake())):
+        real=model_runner.create_runner
+        with tempfile.TemporaryDirectory() as tmp, patch.object(model_runner,'create_runner',side_effect=lambda s,**kw:real(s,runtime=Fake())):
             self.assertEqual(main(['--no-plot','--output-dir',tmp]),0)
             report=json.loads((Path(tmp)/'result.json').read_text())
             self.assertEqual(report['counts'],dict(back=n,seat=0,leg=0,arm=0))
@@ -502,7 +532,44 @@ class SourceAndEntrypointTests(unittest.TestCase):
     def test_inference_class_has_only_stage_methods(self):
         import ast
         tree=ast.parse((ROOT/'samples/vision/pointnet/runtime/python/pointnet.py').read_text())
-        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef) and x.name=='PointNetTask')
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef) and x.name=='PointNetSegmenter')
+        # inference-contract §1: stages + thin legacy delegates + the allowed
+        # scheduling lifecycle interface; nothing else may hide on the class.
         self.assertEqual({x.name for x in cls.body if isinstance(x,ast.FunctionDef)},
                          {'__init__','preprocess','infer','postprocess','predict',
-                          'pre_process','forward','post_process'})
+                          'pre_process','forward','post_process','set_scheduling_params'})
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``pointnet.py`` owns the
+    named model class that loads via the shared transport; the per-sample
+    ``model_binding``/``model_runner`` forwarding modules are gone.
+    """
+
+    def test_segmenter_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter, create_runner
+
+        class Fake:
+            def __init__(self):
+                self.__dict__.update(metadata(4, 'float32', None))
+            def run(self, inputs):
+                raw = np.zeros((1, 4, 4), np.float32)
+                raw[:, :, 2] = 1
+                return {'pointnet': {'pred': raw}}
+
+        selection = resolve_selection('s100')
+        model = PointNetSegmenter(selection, runner=create_runner(selection, runtime=Fake()))
+        labels = model.predict(np.array([[0, 0, 0], [1, 0, 0], [0, 2, 0], [0, 0, 3]], np.float32))
+        self.assertEqual(labels.shape, (4,))
+        self.assertTrue(np.all(labels == 2))
+        manual = model.postprocess(model.infer(model.preprocess(
+            np.array([[0, 0, 0], [1, 0, 0], [0, 2, 0], [0, 0, 3]], np.float32)).tensors))
+        np.testing.assert_array_equal(labels, manual)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = ROOT / 'samples/vision/pointnet/runtime/python'
+        for name in ('model_binding.py', 'model_runner.py'):
+            self.assertFalse((base / name).exists(), name)

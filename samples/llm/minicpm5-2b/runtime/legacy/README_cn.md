@@ -6,6 +6,18 @@
 
 本入口支持单轮、贪心、关闭思考的纯文本流式生成。`runtime/cpp` 是 S600 的 OELLM 2.0 入口；两个接口和模型包不能混用。
 
+## 目录结构
+
+```text
+legacy/
+├── inc/  # C++ 公开接口
+├── src/  # C++ 推理与命令行入口
+├── CMakeLists.txt  # 原生构建配置
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── run.sh  # 运行示例
+```
+
 ## 环境与内存
 
 板端需要 `build-essential cmake curl`，以及单独下载的 [S100 SDK 1.0.0](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_SDK.tar.gz) 中 `oellm_runtime/include/xlm.h` 和 `oellm_runtime/lib/`。已测 UCP/DNN 3.7.3、HBRT 4.2.11。不要覆盖系统库，脚本通过 `LD_LIBRARY_PATH` 选择 SDK。板端不需要安装 PyTorch 或编译器 Python 包。

@@ -21,12 +21,12 @@ class Entrypoints(unittest.TestCase):
         main_fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
         calls=[n for n in ast.walk(main_fn) if isinstance(n,ast.Call)]
         constructed=any(
-            isinstance(c.func,ast.Name) and c.func.id=='create_runtime_model'
+            isinstance(c.func,ast.Name) and c.func.id=='Model'
             for c in calls)
         predicts=[c for c in calls
                   if isinstance(c.func,ast.Attribute) and c.func.attr=='predict'
                   and isinstance(c.func.value,ast.Name) and c.func.value.id=='model']
-        self.assertTrue(constructed,'main() must construct the task model itself')
+        self.assertTrue(constructed,'main() must visibly call Model(config)')
         self.assertTrue(predicts,'main() must call model.predict itself')
     def test_help_without_board(self):
         paths=list((S/'evaluator').glob('eval_*.py'))+[S/'runtime/python/main.py',S/'runtime/python/yolo_download.py',S/'conversion/mapper.py',S/'conversion/export_monkey_patch.py']

@@ -2,6 +2,18 @@
 
 [中文](README_cn.md)
 
+
+## Directory structure
+
+```text
+test_data/
+├── obs_history/  # Files for obs_history
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── runtime-input-manifest.json  # Structured data
+```
+
+
 The 21 `obs_history/*.bin` files and `runtime-input-manifest.json` are preserved
 byte-for-byte from X5 commit `ac115717197920355fc390bb04299b20e6436864`.
 Each file stores 270 little-endian float32 values (1080 bytes), current 45-value
@@ -19,6 +31,4 @@ for inference. To run one file on X5, use `--input-path
 samples/robotics/himloco/test_data/obs_history/000000.bin`; see the
 [complete runtime commands](../runtime/python/README.md#usage).
 
-No reference action or robot-motion claim is attached to these inputs. Synthetic
-SDK outputs in host tests are explicitly fixtures, not model predictions. Numerical
-agreement alone cannot establish observation construction or closed-loop behavior.
+Construct the six-frame observation history using the policy’s training convention. The runtime returns twelve raw actions; controller scaling is described in the runtime guide.

@@ -22,18 +22,11 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-Host tests need NumPy and PyYAML. Board smoke additionally needs the matching S100
-HBM/SDK; plotting optionally needs matplotlib. Tests exercise the same PointNet
-stages and binding as the CLI. This directory contains records, not another
-inference implementation.
+Run in the RDK S100 HBM/SDK environment. Use Python 3.10+, NumPy and PyYAML; plotting additionally requires matplotlib.
 
 <a id="command"></a>
 ## Commands
 
-```bash
-# cwd: repository root; host numerical/contract checks, no SDK
-python3 -m unittest discover -s samples/vision/pointnet/tests
-```
 ```bash
 # cwd: repository root; on S100 with the published HBM already prepared
 python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot --output-dir outputs/pointnet-check
@@ -42,16 +35,14 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot -
 Smoke options: `--target s100` (parser default auto→s100), `--no-plot` (default
 false), `--output-dir outputs/pointnet-check` (default outputs/pointnet).
 Input defaults to the delivered chair; other options are in the
-[complete runtime table](../runtime/python/README.md#parameters). Host tests are
-small fixture checks; board duration is measured on the board itself.
+[complete runtime table](../runtime/python/README.md#parameters).
 
 <a id="metrics"></a>
 ## Interpretation
 
 A functional run should produce N labels in 0..3; counts sum to N. Inspect point
 regions using the source figures below. Seeing all four colors is neither a
-mandatory condition for every cloud nor an accuracy metric. Dataset mIoU, per-part
-IoU and throughput of the new entry have not been measured. The source's “trans”
+mandatory condition for every cloud nor an accuracy metric. Dataset mIoU and per-part IoU require point-level ground-truth labels. The source's “trans”
 and “pred” quantization numbers lack a named metric and cannot be called mIoU.
 
 <a id="outputs"></a>
@@ -82,7 +73,7 @@ The original conversion record also reports int16 “trans > 0.9999” and “pr
 see the [preserved screenshot and limitations](../conversion/README.md#calibration).
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 No labeled dataset evaluator or BPU benchmark helper is bundled; reproducing
 the source-recorded performance requires the artifact, environment and command

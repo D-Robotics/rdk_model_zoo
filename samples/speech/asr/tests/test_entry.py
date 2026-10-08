@@ -99,7 +99,7 @@ class PredictDetailsTests(unittest.TestCase):
 
 class EntryLoopTests(unittest.TestCase):
     def test_main_runs_one_predict_per_chunk_with_details(self):
-        from samples.speech.asr.runtime.python import audio_io, model_runner
+        from samples.speech.asr.runtime.python import audio_io
         from samples.speech.asr.runtime.python.model_binding import resolve_selection
 
         original = asr_module.ASR.predict
@@ -116,7 +116,7 @@ class EntryLoopTests(unittest.TestCase):
             selection = resolve_selection(
                 "s100", asset_id="s:asr:s100/asr.hbm", model_path=model
             )
-            runner = model_runner.RuntimeModelRunner(
+            runner = asr_module.RuntimeModelRunner(
                 selection, runtime=FakeRuntime()
             )
 
@@ -138,7 +138,7 @@ class EntryLoopTests(unittest.TestCase):
                 "utils.py_utils.platforms.require_execution_target",
                 return_value="s100",
             ), patch.object(
-                model_runner, "RuntimeModelRunner", return_value=runner
+                asr_module, "RuntimeModelRunner", return_value=runner
             ), patch.object(
                 audio_io, "read_chunks", side_effect=chunks
             ), patch.object(

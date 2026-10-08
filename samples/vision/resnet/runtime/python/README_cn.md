@@ -1,14 +1,12 @@
 # ResNet Python 运行时
 
-[`main.py`](main.py) 提供命令行，构造分类器、调用 `predict()` 并展示结果。
-[`classify.py`](classify.py) 包含 `ResNetClassifier` 的模型初始化和前处理、推理、后处理。
-[`cli.py`](cli.py) 集中管理参数、发布模型选择和结果展示。
-图片读取、标签校验及 Runtime 加载由 `utils/py_utils/` 提供。
-
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+[`main.py`](main.py) 解析参数，显式构造 `ResNetClassifier`，调用 `predict` 并展示结果。
+[`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
+[`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
+图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
 
 <a id="directory"></a>
 ## 目录结构

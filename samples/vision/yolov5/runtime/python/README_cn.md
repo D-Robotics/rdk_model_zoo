@@ -1,25 +1,24 @@
 # YOLOv5 Python 运行时
 
+[English](README.md) | 简体中文
+
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+按 X5 或 S 模型协议运行 YOLOv5 目标检测。`YOLOv5Task` 加载所选 Runtime，提供完整的前处理、推理与后处理流程。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── decode.py  # Python 脚本
-├── detection.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-├── tensor_io.py  # Python 脚本
-└── visualization.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果展示
+├── decode.py  # 任务输出解码
+├── detection.py  # 模型阶段与预测
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── model_runner.py  # Runtime 加载与原始张量执行
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
 <a id="environment"></a>
@@ -88,7 +87,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 from samples.vision.yolov5.runtime.python.model_binding import resolve_selection
-from samples.vision.yolov5.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
 
 target = "x5"
@@ -100,10 +98,8 @@ image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
 if image is None:
     raise FileNotFoundError(image_path)
 selection = resolve_selection(target, variant=variant, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = YOLOv5Task(runner, binding, score_thres=0.25, nms_thres=0.45)
+task = YOLOv5Task(selection, score_thres=0.25, nms_thres=0.45)
+task.runner.set_scheduling_params(priority=0, bpu_cores=[0])
 prepared = task.preprocess(image)
 native_outputs = task.infer(prepared.tensors)
 explicit_result = task.postprocess(native_outputs, prepared.context)

@@ -204,7 +204,7 @@ class FcosContractTests(unittest.TestCase):
             source.grids[stride] = (((np.stack((yv, xv), 2) + 0.5) * stride).reshape(-1, 2)).astype(np.float32)
         source_result = source.post_process({source.model_name: raw}, 512, 512)
 
-        task = FCOSTask(lambda tensors: raw, binding)
+        task = FCOSTask(runner=lambda tensors: raw, binding=binding)
         unified_result = task.post_process(raw, task.pre_process(np.zeros((512, 512, 3), dtype=np.uint8)).context)
         for expected, actual in zip(source_result, unified_result.as_tuple()):
             np.testing.assert_allclose(actual, expected, rtol=0, atol=0)
@@ -221,7 +221,7 @@ class FcosContractTests(unittest.TestCase):
             seen["input"] = tensors
             return raw
 
-        task = FCOSTask(runner, binding)
+        task = FCOSTask(runner=runner, binding=binding)
         image = np.zeros((300, 500, 3), dtype=np.uint8)
         prepared = task.pre_process(image)
         outputs = task.forward(prepared)
@@ -244,7 +244,7 @@ class FcosContractTests(unittest.TestCase):
         raw["cls_8"][0, 20, 20, 0] = 10
         raw["center_8"][0, 20, 20, 0] = 10
         raw["box_8"][0, 20, 20, :] = (20, 20, 20, 20)
-        task = FCOSTask(lambda tensors: raw, binding, resize_type=1)
+        task = FCOSTask(runner=lambda tensors: raw, binding=binding, resize_type=1)
         image = np.zeros((300, 500, 3), dtype=np.uint8)
         prepared = task.pre_process(image)
         result = task.post_process(raw, prepared.context)
@@ -259,7 +259,7 @@ class FcosContractTests(unittest.TestCase):
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0", dtype="float32"))
         raw = {name: value.astype(np.float32) for name, value in fixture_outputs().items()}
-        task = FCOSTask(lambda tensors: raw, binding)
+        task = FCOSTask(runner=lambda tensors: raw, binding=binding)
         result = task.predict(np.zeros((512, 512, 3), dtype=np.uint8))
         # The fixed source dequantizes float arrays too when SCALE metadata is
         # present; 10.0 with scale .1 therefore yields a logit of 1.0.
@@ -306,15 +306,15 @@ class FcosContractTests(unittest.TestCase):
         raw = fixture_outputs()
         raw["cls_8"] = raw["cls_8"].tolist()
         with self.assertRaises(ValueError):
-            FCOSTask(lambda tensors: raw, binding).predict(np.zeros((512, 512, 3), dtype=np.uint8))
+            FCOSTask(runner=lambda tensors: raw, binding=binding).predict(np.zeros((512, 512, 3), dtype=np.uint8))
 
     def test_post_process_rejects_context_with_wrong_geometry(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
         from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
-        from samples.vision.fcos.runtime.python.tensor_io import ImageContext
+        from samples.vision.fcos.runtime.python.fcos import ImageContext
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
-        task = FCOSTask(lambda tensors: fixture_outputs(), binding)
+        task = FCOSTask(runner=lambda tensors: fixture_outputs(), binding=binding)
         bad_context = ImageContext((300, 500), (256, 256), 1, (307, 512), (102, 103, 0, 0))
         with self.assertRaises(ValueError):
             task.post_process(fixture_outputs(), bad_context)
@@ -349,7 +349,7 @@ class FcosContractTests(unittest.TestCase):
 
         def legacy_factory(selection, image, **kwargs):
             binding = bind_model(selection, metadata)
-            task = FCOSTask(lambda tensors: base_raw, binding)
+            task = FCOSTask(runner=lambda tensors: base_raw, binding=binding)
             prepared = task.pre_process(image)
             return {
                 "metadata": RuntimeMetadata.from_mapping(metadata),
@@ -456,7 +456,7 @@ class FcosContractTests(unittest.TestCase):
 
         def legacy_factory(selection, image, **kwargs):
             binding = bind_model(selection, metadata)
-            task = FCOSTask(lambda tensors: base_raw, binding)
+            task = FCOSTask(runner=lambda tensors: base_raw, binding=binding)
             prepared = task.pre_process(image)
             return {
                 "metadata": RuntimeMetadata.from_mapping(metadata),
@@ -560,7 +560,7 @@ class FcosContractTests(unittest.TestCase):
         from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
-        task = FCOSTask(lambda _: fixture_outputs(), binding)
+        task = FCOSTask(runner=lambda _: fixture_outputs(), binding=binding)
         a = task.pre_process(np.zeros((17, 31, 3), dtype=np.uint8))
         b = task.pre_process(np.zeros((29, 11, 3), dtype=np.uint8))
         a2 = task.pre_process(np.zeros((17, 31, 3), dtype=np.uint8))
@@ -575,7 +575,7 @@ class FcosContractTests(unittest.TestCase):
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
         raw = fixture_outputs()
-        task = FCOSTask(lambda tensors: raw, binding, resize_type=1)
+        task = FCOSTask(runner=lambda tensors: raw, binding=binding, resize_type=1)
         image_a = np.zeros((300, 500, 3), dtype=np.uint8)
         image_b = np.full((500, 300, 3), 17, dtype=np.uint8)
         result_a = task.predict(image_a)
@@ -620,7 +620,7 @@ class ReadableInterfaceTests(unittest.TestCase):
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
         raw = fixture_outputs()
-        return FCOSTask(lambda tensors: raw, binding, **kwargs), raw
+        return FCOSTask(runner=lambda tensors: raw, binding=binding, **kwargs), raw
 
     def test_canonical_stages_exist_and_legacy_names_delegate(self):
         task, raw = self.task()

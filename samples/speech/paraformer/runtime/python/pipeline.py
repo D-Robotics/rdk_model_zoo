@@ -1,8 +1,8 @@
 """Application-level three-model composition, with an explicit CPU CIF bridge.
 
 Each injected callable performs one raw model execution with named tensors.
-SDK loading, physical metadata binding, scheduling, audio/file I/O and reporting
-belong to their respective adapters and application entry, not this module.
+The pipeline initializes the three model runtimes through its loader and owns
+scheduling. Audio/file I/O and reporting belong to the CLI and frontend modules.
 """
 
 from dataclasses import dataclass, fields
@@ -70,13 +70,24 @@ class Prediction:
 
 
 class ParaformerPipeline:
-    """Compose encoder → predictor → CPU CIF → decoder → greedy text."""
+    """Compose encoder → predictor → CPU CIF → decoder → greedy text.
+
+    Attributes:
+        runners: Ordered encoder, predictor and decoder callables. Pipelines
+            created by from_models own three loaded NamedArrayRunner instances.
+        names: Bound physical tensor names for the complete model group.
+        vocabulary: Frozen ordered decoder token strings.
+        encoder_stage: Feature-to-context stage using float32 [1,400,560] input.
+        predictor_stage: Context-to-weight/hidden stage for the CPU CIF bridge.
+        decoder_stage: Context/acoustic/count-to-token stage.
+    """
 
     def __init__(self, encoder, predictor, decoder, names, vocabulary):
         if not all(callable(runner) for runner in (encoder, predictor, decoder)):
             raise TypeError("Each model requires its own callable runner")
         if not isinstance(names, TensorNames):
             raise TypeError("Expected explicit TensorNames from model binding")
+        self.runners = (encoder, predictor, decoder)
         self.encoder = encoder
         self.predictor = predictor
         self.decoder = decoder
@@ -100,6 +111,53 @@ class ParaformerPipeline:
             names.decoder_logits,
             self.vocabulary,
         )
+
+    @classmethod
+    def from_models(cls, selections, vocabulary, *, runtime_factory=None):
+        """Load and bind the encoder, predictor and decoder for inference.
+
+        Args:
+            selections: Ordered encoder, predictor and decoder ModelSelections
+                targeting S100. Normal loading checks board and model identity.
+            vocabulary: Ordered sequence of 8404 decoder token strings.
+            runtime_factory: Optional SDK factory used for injected runtimes.
+
+        Returns:
+            ParaformerPipeline: A loaded pipeline ready for predict.
+
+        Raises:
+            ValueError: Model selections, vocabulary or physical tensor metadata
+                do not match the declared three-model contract.
+            RuntimeError: SDK construction or model loading fails.
+        """
+        from samples.speech.paraformer.runtime.python.runtime import load_model_runners
+
+        runners, names = load_model_runners(
+            selections, vocabulary, runtime_factory=runtime_factory
+        )
+        return cls(*runners, names, vocabulary)
+
+    def set_scheduling_params(self, *, priority=None, bpu_cores=None):
+        """Apply model-keyed scheduling to all three loaded runtimes.
+
+        Args:
+            priority: Optional integer SDK scheduling priority in [0,255].
+            bpu_cores: Optional list of nonnegative BPU core indexes.
+
+        Raises:
+            RuntimeError: Any runtime lacks a scheduling setter or rejects it.
+            ValueError: Scheduling values are invalid. SDK failures propagate;
+                earlier applied settings are retained if a later setter fails.
+        """
+        if priority is None and bpu_cores is None:
+            return
+        for runner in self.runners:
+            if not callable(getattr(runner.runtime, "set_scheduling_params", None)):
+                raise RuntimeError(
+                    "Every model runtime must expose set_scheduling_params"
+                )
+        for runner in self.runners:
+            runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
     def predict(self, features, feature_length):
         """Consume prepared features; report only execution/CPU bridge timings.

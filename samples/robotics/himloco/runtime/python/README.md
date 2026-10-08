@@ -1,38 +1,23 @@
 # HIMLoco Python policy stages
 
-[中文](README_cn.md)
-
-The Python entry provides exact X5 model selection, lazy SDK transport,
-source-indexed input checks, warmup, owned action dumps and failure reports;
-board execution follows the quickstart.
-The entry (`main.py`) runs the offline loop: it obtains the bound
-`HimLocoTask` through `application.load_task`, executes the requested warmup
-predictions, calls `task.predict(observation)` once per input and records
-each action dump via `application.record_sample`; report handling
-(target/asset gating, report reservation, digest re-verification, latency summary,
-failure records) lives in `application.py` helpers (`prepare`, `load_task`,
-`record_sample`, `complete`), whose single-call composition `application.execute`
-is the compatibility API.
+English | [简体中文](README_cn.md)
 
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run the HIMLoco policy offline on X5 from six frames of observation history. `HimLocoTask.from_model` loads the runtime; `predict` returns twelve raw policy actions. `cli.py` reads inputs and writes action files and reports.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── application.py  # Python script
-├── input_io.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── policy.py  # Python script
-└── run.sh  # Run the sample
+├── cli.py  # Arguments, model selection and result presentation
+├── input_io.py  # Input files and data records
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── policy.py  # Model stages and prediction
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
 <a id="environment"></a>
@@ -41,17 +26,13 @@ python/
 The core requires Python and NumPy only. It imports no board SDK, Torch, robot
 middleware or conversion toolchain. Run the commands below from repository root.
 Use the repository's host Python environment with NumPy installed. Actual X5
-inference will require the BSP-provided `hbm_runtime` matching the board libraries;
+inference requires the BSP-provided `hbm_runtime` matching the board libraries;
 the core does not install or substitute that dependency.
 
 <a id="usage"></a>
 ## Usage
 
-Construct `HimLocoTask(runner)`, where `runner` accepts the physical mapping
-`{"obs_history": float32[1,270]}` and returns `{"actions": float32[1,12]}`.
-The SDK adapter is responsible for target, asset identity and actual model metadata.
-This core never downloads a model or opens a device. Use `predict(observation)`
-for normal composition, or the three explicit methods shown below.
+Construct `HimLocoTask.from_model(selection)` after preparing the model. Its runtime accepts `{"obs_history": float32[1,270]}` and returns `{"actions": float32[1,12]}`. Use `predict(observation)` for one observation history, or call the three stages shown below.
 
 ```bash
 # Repository root; these commands do not load SDKs or download.
@@ -89,7 +70,7 @@ Use the BSP runtime, not an unrelated PyPI package named hbm_runtime.
 
 | API input | Contract |
 | --- | --- |
-| `runner` | Required callable; no default or implicit SDK construction |
+| `HimLocoTask.from_model(selection)` | Initialize the runtime from the selected model |
 | `observation` | Exactly 270 finite real numeric values, flattened in input order and converted to float32 |
 | `preprocess(...).tensors` | Owned, contiguous float32 `obs_history` `[1,270]` |
 | `infer(tensors)` | Exact named physical input; returns `RawOutputs` containing raw actions and this call's latency |
@@ -131,32 +112,30 @@ manifest provenance rather than inventing it. Files are hashed from the same byt
 used for inference. No text transcript or controller action is produced.
 
 <a id="integration-example"></a>
-## Executable integration example
+## Integration example
 
-```bash
-python - <<'PYCODE'
+After preparing the X5 model, run from the repository root. The example reads the first observation history and returns policy actions with shape `(1,12)`.
+
+```python
+from pathlib import Path
 import numpy as np
+from samples.robotics.himloco.runtime.python.model_binding import resolve_selection
 from samples.robotics.himloco.runtime.python.policy import HimLocoTask
 
-def fixture_runner(tensors):
-    assert tensors["obs_history"].shape == (1, 270)
-    return {"actions": np.arange(12, dtype=np.float32).reshape(1, 12)}
+selection = resolve_selection("x5")
+task = HimLocoTask.from_model(selection)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
+input_dir = Path("samples/robotics/himloco/test_data/obs_history")
+input_path = min(input_dir.glob("*.bin"), key=lambda path: int(path.stem))
+observation = np.fromfile(input_path, dtype="<f4").reshape(6, 45)
+result = task.predict(observation)
+print(result.actions.shape, result.actions.tolist())
 
-task = HimLocoTask(fixture_runner)
-observation = np.zeros((6, 45), dtype=np.float32)
+# Optional access to intermediate stages.
 prepared = task.preprocess(observation)
 raw = task.infer(prepared.tensors)
-explicit = task.postprocess(raw)
-result = task.predict(observation)
-np.testing.assert_array_equal(explicit.actions, result.actions)
-print(result.actions.shape, result.actions.tolist())
-PYCODE
+staged_result = task.postprocess(raw)
 ```
-
-Expected output: shape `(1, 12)` and actions 0 through 11. These values come from
-the fixture, not a learned policy. The core stores no history or per-call context;
-callers provide all six observations. Serialize access if the injected SDK runner
-uses shared buffers; owned results do not imply a thread-safe device runtime.
 
 <a id="stage-io"></a>
 ## Stage semantics and source fidelity

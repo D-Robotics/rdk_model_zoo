@@ -140,7 +140,7 @@ the exact `--asset-id`, and the file must still match the published digest.
 | `--list-models` | `false` | Launcher only, list the single publication |
 | `--help` | `false` | Show usage |
 
-Legacy aliases `--model_path`, `--input_path`, `--output_dir` are retained.
+Aliases `--model_path`, `--input_path`, `--output_dir` are retained.
 The binary accepts `--key value` and `--key=value`, rejecting duplicates and
 unknown options. Custom relative paths passed to the launcher use the caller's cwd.
 

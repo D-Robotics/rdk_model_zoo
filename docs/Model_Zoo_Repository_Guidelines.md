@@ -21,6 +21,7 @@
 | --- | --- | --- |
 | 协作约束 | [`AGENTS.md`](../AGENTS.md) | 分支纪律、权限边界（只读默认/下载/板测/发布须授权）、冲突报告 |
 | README 契约 | [`docs/sample-standards/readme-contract.md`](sample-standards/readme-contract.md) | 各级 README 必答问题、固定章节 ID、双语配对、统一内容纪律；与旧规范的冲突处置记录在其 §6 |
+| Runtime 代码规范 | [runtime-code.md](sample-standards/runtime-code.md) | 三个主要 Python 文件、模型构造、公共 Runtime 与额外文件边界 |
 | 推理契约 | [`docs/sample-standards/inference-contract.md`](sample-standards/inference-contract.md) | pre/forward/post/predict 职责边界、阶段数据流、多阶段编排、必需测试 |
 | 迁移记录 | [`docs/releases/unified-migration/`](releases/unified-migration/) | 台账、批次评审、证据；迁移历史不放客户 README |
 | 架构决策 | [`docs/adr/`](adr/) | ADR-0001 源仓/文档站分离、ADR-0002 过渡兼容、ADR-0006 统一版本线等 |
@@ -112,11 +113,10 @@ develop 当前目录组织如下（仅用于说明各目录职责，实际内容
 │   └── UCP_User_Guide.md                  # libdnn/libucp 接口指引（来源 rdk_s）
 （platforms/ 冻结快照已于 2026-10-01 移除；历史内容经固定提交 d2d2a4e0 与交付分支访问）
 ├── samples/                               # 统一 sample（迁移目标形态）
-│   ├── _shared/                           # 平台身份/资产绑定/NV12 等已证双消费者共享设施
 │   ├── vision/…                           # 每样本：model/ runtime/ conversion/ evaluator/ test_data/ tests/
 │   └── robotics/                          # 机器人 sample（himloco 随 B10 迁入）
 ├── tools/                                 # catalog-publisher、sample_contract 等工具
-├── utils/                                 # 通用工具库（A1 落位；过渡兼容层，ADR-0002）
+├── utils/                                 # SDK、平台身份、资产、张量与图像公共能力
 │   ├── c_utils/                           # C/C++ 公共工具（含 inc/model_types.hpp 任务结果结构体）
 │   └── py_utils/                          # Python 公共工具
 └── skills/                                # Skills 源树（A3 落位；rdk_x5 维护线，独立版本线）
@@ -157,7 +157,7 @@ robotics 类别收纳机器人模型示例，标准布局以 `samples/robotics/h
 #### Sample 源码命名规范
 
 在 Sample 示例中，无论采用 C/C++ 还是 Python 实现，模型相关源码文件需遵循以下统一约定：
-- 模型实现源码必须以**模型名称**作为文件名；
+- Python 模型文件按模型或任务命名，如 `classify.py`、`detect.py`、`pipeline.py`；C/C++ 文件按下方规则命名；
 - 可执行入口程序，必须统一命名为 main，用于承载示例的主推理流程；
 - 一键运行脚本必须统一命名为 run.sh，用于快速启动与验证 Sample；
 - C/C++ Sample 中，模型实现文件的 .cc 与 .hpp 文件名必须保持一致；
@@ -176,11 +176,10 @@ main.cpp
 run.sh
 ```
 
-> 迁移窗口说明：develop 统一架构下的已迁移 sample 采用模板文件集
-> （`model_binding.py` / `model_runner.py` / `tensor_io.py` / 任务模块，见
-> `docs/sample-standards/templates/`），是"模型实现以模型名命名"在统一架构下的等价
-> 组织形式；`main.py` / `main.cpp` / `run.sh` 与下节模型文件命名规则对全部 sample
-> 不变。C/C++ 侧沿用本节命名规则。
+Python Runtime 按 [Sample Runtime 代码规范](sample-standards/runtime-code.md) 组织：
+普通单任务使用 `main.py`、`cli.py` 和模型文件；复杂算法按完整职责增加文件。
+公共能力统一位于 `utils/`，不要求每个 Sample 分别创建 binding、runner、tensor-IO 文件。
+C/C++ 侧沿用本节命名规则。
 
 #### 模型文件命名规范
 

@@ -50,8 +50,8 @@ from eval_common import (  # noqa: E402  (path is set up above)
     resolve_platform_argument,
 )
 from yolo_assets import family_from_filename  # noqa: E402
-from yolo_detect import YoloDetect, YoloDetectConfig  # noqa: E402
-from yolo_v10detect import YoloV10Detect, YoloV10DetectConfig  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect, YoloDetectConfig  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import YoloV10Detect, YoloV10DetectConfig  # noqa: E402
 
 
 def build_model(args, platform):

@@ -36,7 +36,7 @@ conversion/
 ## ONNX 导出
 
 未提供 checkpoint、导出脚本或固定导出环境。原算子说明包含 Conv、BatchNorm、ReLU；
-下图来自源记录，不构成对新导出算子支持的证明。运行边界是 float32 `(1,3,N)` 输入、
+下图展示模型算子信息。运行边界是 float32 `(1,3,N)` 输入、
 `(1,N,4)` 部件 logits；N 由编译制品固定，不是运行时可随意设置的选项。
 
 ![参考 ONNX 图](../test_data/readme_img/char_static.png)
@@ -53,7 +53,7 @@ conversion/
 ## 编译
 
 当前没有可复现该 HBM 的编译配置/命令。请通过[模型准备指南](../model/README_cn.md)
-取得已发布制品，不能用任意通用编译命令冒充已验证流程。
+使用模型导出和目标工具链配套的编译配置，或按模型指南准备发布制品。
 
 <a id="validation"></a>
 ## 验证边界
@@ -74,7 +74,7 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot -
 | pointnet.hbm | s100 | `samples/vision/pointnet/model/s100/pointnet.hbm` |
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
 缺少固定训练源码/checkpoint、导出代码/环境、校准集/配置、编译器版本/march/配置、
 发布方校验值和精度对照协议。本目录保留有用的网络/算子记录，不提供端到端转换流程。

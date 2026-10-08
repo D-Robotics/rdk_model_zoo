@@ -4,6 +4,23 @@
 
 This directory provides six prepared input/reference pairs and six S600 reference visualizations. Each NPZ input contains camera, LiDAR, status and diffusion-noise features.
 
+
+## Directory structure
+
+```text
+test_data/
+├── case_000/  # Files for case_000
+├── case_017/  # Files for case_017
+├── case_042/  # Files for case_042
+├── case_073/  # Files for case_073
+├── case_099/  # Files for case_099
+├── reference_inputs.npz  # Default prepared input
+├── reference_outputs.npz  # Default float reference outputs
+├── reference_result.png  # Default reference rendering
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
 ## Input contract
 
 | Tensor | Shape | Type | Interpretation |

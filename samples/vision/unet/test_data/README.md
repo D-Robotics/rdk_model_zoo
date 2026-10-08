@@ -2,9 +2,22 @@
 
 # UNet Test Data
 
+
 `2007_000033.jpg` is the Pascal VOC 2012 validation image used by the Python
 Runtime by default. It is intended only as a smoke input for image loading,
 NV12 preprocessing, BPU inference, and result visualization.
+
+## Directory structure
+
+```text
+test_data/
+├── 2007_000033.jpg  # Default VOC sample input
+├── README.md  # English instructions
+└── README_cn.md  # Chinese instructions
+```
+
+
+
 
 - Original size: 500 × 366
 - SHA256: `23b51ccd1a19c6f1f75573b1903e19015bf98c159b03d497efa8e912f8ffbe8e`

@@ -17,7 +17,7 @@
 ``ModelRunner`` is responsible for loading one model once, reading its actual
 runtime metadata, binding that metadata, and executing it.  It deliberately
 does not know about images, confidence thresholds, NMS, or drawing.  Tests can
-inject a callable runner into :class:`yolo_detect.YoloDetect`; the board SDK is
+inject a callable runner into :class:`detect.YoloDetect`; the board SDK is
 only touched by this module's factory.
 """
 

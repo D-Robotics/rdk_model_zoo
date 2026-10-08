@@ -15,7 +15,8 @@ from test_clip import fixture, ImageRuntime, TextSession, SAMPLE
 
 class EntryTests(unittest.TestCase):
     def test_cli_runs_both_encoders_and_saves_annotation(self):
-        from samples.vision.clip.runtime.python import main, model_runner
+        from samples.vision.clip.runtime.python import main
+        from samples.vision.clip.runtime.python import matching as model_runner
         original = model_runner.RuntimeModelRunner
         image, text = ImageRuntime(), TextSession()
         with tempfile.TemporaryDirectory() as directory:
@@ -45,7 +46,7 @@ class EntryTests(unittest.TestCase):
         from samples.vision.clip.runtime.python import main
         from samples.vision.clip.runtime.python import matching
         with patch('utils.py_utils.platforms.detect_target', return_value='s100'), patch.object(
-            matching, 'CLIPTask', side_effect=AssertionError('must not construct')
+            matching, 'CLIPMatcher', side_effect=AssertionError('must not construct')
         ) as task, contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main.main(['--target','x5']), 2)
             task.assert_not_called()

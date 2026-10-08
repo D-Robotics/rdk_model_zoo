@@ -4,6 +4,23 @@
 
 本目录提供六组准备好的输入与参考输出，以及六张 S600 参考效果图。每份输入 NPZ 包含相机、LiDAR、状态与扩散噪声特征。
 
+
+## 目录结构
+
+```text
+test_data/
+├── case_000/  # case_000 相关文件
+├── case_017/  # case_017 相关文件
+├── case_042/  # case_042 相关文件
+├── case_073/  # case_073 相关文件
+├── case_099/  # case_099 相关文件
+├── reference_inputs.npz  # 默认示例输入
+├── reference_outputs.npz  # 默认浮点参考输出
+├── reference_result.png  # 默认参考渲染
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 ## 输入契约
 
 | 张量 | 形状 | 类型 | 含义 |

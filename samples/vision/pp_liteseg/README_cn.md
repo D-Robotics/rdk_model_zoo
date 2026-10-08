@@ -32,7 +32,6 @@ pp_liteseg/
 | x5 | STDC1 / Cityscapes / 1024×512 | supported | not-supported |
 | s100 / s100p / s600 | 无已发布制品 | not-supported | not-supported |
 
-主机 fixture 验证预处理、类别图解码、可视化、选择逻辑和 CLI 行为；板端执行需要 X5 SDK 和已发布 BIN。
 
 <a id="prerequisites"></a>
 ## 环境前提

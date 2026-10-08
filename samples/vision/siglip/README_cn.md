@@ -41,7 +41,7 @@ siglip/
 | `so400m-patch14-384` | not-supported | supported | supported | not-supported | supported | not-supported |
 | `so400m-patch16-256-i18n` | not-supported | supported | supported | not-supported | supported | not-supported |
 
-板端执行需要提供 `hbm_runtime` 的板卡镜像；主机测试只覆盖契约和注入 fixture。
+板端执行需要提供 `hbm_runtime` 的板卡镜像。
 
 <a id="prerequisites"></a>
 ## 环境前提

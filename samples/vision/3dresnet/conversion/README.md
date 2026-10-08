@@ -75,15 +75,9 @@ This command prepares a published artifact; it does not perform conversion.
 <a id="validation"></a>
 ## Post-conversion Validation
 
-Unified host validation is available through the fixture tests, which verify the source preprocessing and source `visualize.get_topk_predictions` numerical behavior:
 
-```bash
-# cwd: repository root
-.venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# expect: all discovered tests OK (host fixtures; no board required)
-```
 
-Board-side execution of the downloaded artifact uses the [Python runtime](../runtime/python/README.md) on an S100 board; the host tests cover preprocessing and Top-K decoding behavior only.
+Board-side execution of the downloaded artifact uses the [Python runtime](../runtime/python/README.md) on an S100 board.
 
 <a id="artifacts"></a>
 ## Artifacts

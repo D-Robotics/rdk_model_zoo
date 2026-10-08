@@ -67,7 +67,7 @@ the [conversion guide](../conversion/README.md) to build a model locally.
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-`../test_data/2007_000033.jpg` is the demo image. visualization.py deterministically builds the VOC palette; no label-file download is needed. Full VOC image/mask data, checkpoints and ONNX are not included with the BIN download.
+`../test_data/2007_000033.jpg` is the demo image. cli.py deterministically builds the VOC palette; no label-file download is needed. Full VOC image/mask data, checkpoints and ONNX are not included with the BIN download.
 
 <a id="local-paths"></a>
 ## Local paths

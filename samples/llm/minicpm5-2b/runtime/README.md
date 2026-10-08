@@ -3,9 +3,20 @@
 [简体中文](README_cn.md) | **English**
 
 The Python 3 standard-library launcher selects the native SDK backend. Tokenization,
-model execution and generation remain in C++. S100/S100P use [legacy OELLM 1.0.0](legacy/README.md);
+model execution and generation remain in C++. S100/S100P use [OELLM 1.0.0](legacy/README.md);
 S600 uses the [OELLM 2.0 backend](cpp/README.md). Shared filenames do not make SDKs or
 artifacts interchangeable; the version names follow the source releases.
+
+## Directory structure
+
+```text
+runtime/
+├── cpp/  # C++ inference implementation
+├── legacy/  # OELLM 1.0.0 workflow
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── launcher.py  # Target selection, native build, and execution
+```
 
 ## Prepare, build, run
 

@@ -14,6 +14,33 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 ROOT=Path(__file__).resolve().parents[4]
 
 
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``pp_liteseg.py`` owns the
+    named model class that loads via the shared transport; the per-sample
+    ``model_binding``/``model_runner`` forwarding modules are gone.
+    """
+
+    def test_segmenter_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.pp_liteseg.runtime.python.cli import resolve_selection
+        from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegSegmenter, create_runner
+        runtime=SimpleNamespace(**metadata(),version='host-fixture')
+        runtime.run=lambda tensors:{'pp':{'labels':np.full((1,512,1024,1),5,np.int32)}}
+        selection=resolve_selection()
+        model=PPLiteSegSegmenter(selection,runner=create_runner(selection,runtime=runtime))
+        mask=model.predict(np.zeros((9,17,3),np.uint8))
+        self.assertEqual(mask.shape,(512,1024));self.assertEqual(mask.dtype,np.int32)
+        self.assertTrue(np.all(mask==5))
+        manual=model.postprocess(model.infer(model.preprocess(np.zeros((9,17,3),np.uint8)).tensors))
+        np.testing.assert_array_equal(mask,manual)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base=ROOT/'samples/vision/pp_liteseg/runtime/python'
+        for name in ('model_binding.py','model_runner.py'):
+            self.assertFalse((base/name).exists(),name)
+
+
 def metadata():
     return dict(model_name='pp',model_names=['pp'],input_names=['images'],
                 input_shapes={'images':(1,3,512,1024)},input_dtypes={'images':'NV12'},
@@ -22,11 +49,24 @@ def metadata():
 
 
 def task(raw=None):
-    from samples.vision.pp_liteseg.runtime.python.model_binding import resolve_selection,bind_model
-    from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegTask
-    binding=bind_model(resolve_selection(),metadata())
-    raw=np.arange(512*1024,dtype=np.int32).reshape(1,512,1024,1)%19 if raw is None else raw
-    return PPLiteSegTask(lambda tensors:raw,binding),raw
+    from samples.vision.pp_liteseg.runtime.python.cli import resolve_selection
+    from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegSegmenter, bind_model
+
+    class StubRunner:
+        """Host seam: callable transport with a prebuilt binding."""
+
+        def __init__(self, binding, raw):
+            self.binding, self.raw = binding, raw
+
+        def load(self):
+            return self.binding
+
+        def __call__(self, tensors):
+            return self.raw
+
+    binding = bind_model(resolve_selection(), metadata())
+    raw = np.arange(512 * 1024, dtype=np.int32).reshape(1, 512, 1024, 1) % 19 if raw is None else raw
+    return PPLiteSegSegmenter(resolve_selection(), runner=StubRunner(binding, raw)), raw
 
 
 class StageTests(unittest.TestCase):
@@ -72,7 +112,7 @@ class StageTests(unittest.TestCase):
             with self.assertRaises(ValueError):t.post_process(raw)
 
     def test_visualization_matches_source_three_panels(self):
-        from samples.vision.pp_liteseg.runtime.python.visualization import render_result
+        from samples.vision.pp_liteseg.runtime.python.cli import render_result
         t,raw=task();image=np.full((57,91,3),93,np.uint8);labels=t.post_process(raw)
         np.testing.assert_array_equal(render_result(image,labels,alpha=0.55),self.source().visualize(image,labels))
 
@@ -133,7 +173,7 @@ class ReadableInterfaceTests(unittest.TestCase):
 
 class BindingAndCLITests(unittest.TestCase):
     def test_exact_x5_asset_and_no_s_fallback(self):
-        from samples.vision.pp_liteseg.runtime.python.model_binding import resolve_selection,ASSET_ID
+        from samples.vision.pp_liteseg.runtime.python.cli import resolve_selection,ASSET_ID
         self.assertEqual(resolve_selection().asset.reference,ASSET_ID)
         for target in ['s100','s100p','s600']:
             with self.assertRaises(ValueError):resolve_selection(target)
@@ -141,7 +181,8 @@ class BindingAndCLITests(unittest.TestCase):
         with self.assertRaises(ValueError):resolve_selection(asset_id='x5:wrong:file.bin')
 
     def test_binding_rejects_logits_or_wrong_geometry(self):
-        from samples.vision.pp_liteseg.runtime.python.model_binding import bind_model,resolve_selection
+        from samples.vision.pp_liteseg.runtime.python.cli import resolve_selection
+        from samples.vision.pp_liteseg.runtime.python.pp_liteseg import bind_model
         for key,value in [('output_shapes',{'labels':(1,19,512,1024)}),('output_dtypes',{'labels':'float32'}),
                           ('input_shapes',{'images':(1,3,512,512)}),('input_dtypes',{'images':'float32'})]:
             m=metadata();m[key]=value
@@ -216,10 +257,10 @@ class IntegrationTests(unittest.TestCase):
 
     def test_cli_writes_mask_render_and_report(self):
         import tempfile,json,contextlib,io
-        from samples.vision.pp_liteseg.runtime.python import main,model_runner
-        real=model_runner.RuntimeModelRunner
+        from samples.vision.pp_liteseg.runtime.python import main, pp_liteseg as task_module
+        real=task_module.create_runner
         with tempfile.TemporaryDirectory() as temp, \
-             patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda s:real(s,runtime=self.fake())), \
+             patch.object(task_module,'create_runner',side_effect=lambda s,**kw:real(s,runtime=self.fake())), \
              contextlib.redirect_stdout(io.StringIO()):
             p=Path(temp)
             self.assertEqual(main.main(['--output',str(p/'result.png'),'--mask-save-path',str(p/'mask.npy'),
@@ -241,9 +282,9 @@ class IntegrationTests(unittest.TestCase):
 
     def test_readme_stage_examples_with_real_runner(self):
         import re
-        from samples.vision.pp_liteseg.runtime.python import model_runner
-        real=model_runner.RuntimeModelRunner
-        with patch.object(model_runner,'RuntimeModelRunner',side_effect=lambda s:real(s,runtime=self.fake())):
+        from samples.vision.pp_liteseg.runtime.python import pp_liteseg as task_module
+        real=task_module.create_runner
+        with patch.object(task_module,'create_runner',side_effect=lambda s,**kw:real(s,runtime=self.fake())):
             for filename in ['README.md','README_cn.md']:
                 text=(ROOT/'samples/vision/pp_liteseg/runtime/python'/filename).read_text()
                 code=re.findall(r'```python\n(.*?)```',text,re.S)[0]
@@ -251,10 +292,10 @@ class IntegrationTests(unittest.TestCase):
                 np.testing.assert_array_equal(env['mask'],env['mask_again'])
 
     def test_wrong_board_rejected_before_sdk_load(self):
-        from samples.vision.pp_liteseg.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.pp_liteseg.runtime.python.model_binding import resolve_selection
-        with patch('samples.vision.pp_liteseg.runtime.python.model_runner.require_execution_target',side_effect=ValueError('wrong-board')):
-            with self.assertRaisesRegex(ValueError,'wrong-board'):RuntimeModelRunner(resolve_selection()).load()
+        from samples.vision.pp_liteseg.runtime.python.cli import resolve_selection
+        from samples.vision.pp_liteseg.runtime.python import pp_liteseg as task_module
+        with patch.object(task_module,'require_execution_target',side_effect=ValueError('wrong-board')):
+            with self.assertRaisesRegex(ValueError,'wrong-board'):task_module.create_runner(resolve_selection()).load()
 
     def test_download_exact_manifest_unknown_hash(self):
         from samples.vision.pp_liteseg.model import download

@@ -8,12 +8,10 @@ from samples.vision.diffusiondrive.evaluator.compare_outputs import (
     cosine,
     main,
 )
-from samples.vision.diffusiondrive.runtime.python.model_binding import (
-    bind_model,
-    resolve_selection,
-)
+from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection
 from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
-    DiffusionDriveTask,
+    DiffusionDrivePlanner,
+    bind_model,
 )
 from test_diffusiondrive import metadata, arrays, SOURCE
 
@@ -21,8 +19,16 @@ from test_diffusiondrive import metadata, arrays, SOURCE
 class EvaluatorTests(unittest.TestCase):
     def setUp(self):
         self.reference = arrays("reference_outputs.npz")
-        self.decoded = DiffusionDriveTask(
-            lambda _: None, bind_model(resolve_selection("s600"), metadata())
+        class _PostOnly:
+            def __init__(self, binding):
+                self.binding = binding
+
+            def load(self):
+                return self.binding
+
+        self.decoded = DiffusionDrivePlanner(
+            resolve_selection("s600"),
+            runner=_PostOnly(bind_model(resolve_selection("s600"), metadata())),
         ).post_process(self.reference)
 
     def test_reference_self_comparison_and_semantic_metrics(self):

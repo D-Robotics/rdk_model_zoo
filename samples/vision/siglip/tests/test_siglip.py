@@ -42,7 +42,7 @@ class FakeRuntime:
 
 class BindingTests(unittest.TestCase):
     def test_exact_eight_assets_and_explicit_both_target_support(self):
-        from samples.vision.siglip.runtime.python.model_binding import resolve_selection,list_available_assets
+        from samples.vision.siglip.runtime.python.cli import resolve_selection,list_available_assets
         for target in ('s100','s100p'):
             assets=list_available_assets(target)
             self.assertEqual(len(assets),8)
@@ -55,13 +55,14 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(resolve_selection('auto',soc_name='s100',board_type='s100p').target,'s100p')
 
     def test_rejects_target_override_variant_and_wrong_image_size(self):
-        from samples.vision.siglip.runtime.python.model_binding import resolve_selection
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
         for kwargs in ({'target':'x5'},{'target':'s600'},{'target':'s100','model_path':'x.hbm'},{'target':'s100','variant':'not-real'},{'target':'s100','image_size':384},{'target':'s100','submodel':'bogus'},{'target':'s100','asset_id':'s:vit:s100/vit_cifar10_batch1_int8.hbm'}):
             with self.assertRaises(ValueError):resolve_selection(**kwargs)
         with self.assertRaises(ValueError):resolve_selection('s100',variant='base-patch16-384',asset_id='s:siglip:s100/bpu-siglip-base-patch16-224.hbm')
 
     def test_bind_all_variants_submodels_and_preserve_native_output_shape(self):
-        from samples.vision.siglip.runtime.python.model_binding import resolve_selection,bind_model
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python.embedding import bind_model
         for v in FACTS:
             for s in SUBMODELS:
                 binding=bind_model(resolve_selection('s100p',variant=v,submodel=s),meta(v,s))
@@ -70,7 +71,8 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(bind_model(resolve_selection('s100'),facts).output_shape,(1,768))
 
     def test_bad_metadata_rejected_including_pooler_token_count(self):
-        from samples.vision.siglip.runtime.python.model_binding import bind_model,resolve_selection
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python.embedding import bind_model
         bad=[]
         for key,value in [('model_names',('pooler_output',)),('model_name','last_hidden_state'),('input_names',['wrong']),('input_shapes',{'_input_0':(1,3,384,384)}),('input_dtypes',{'_input_0':'U8'}),('output_shapes',{'_output_0':(1,2,768)}),('output_shapes',{'_output_0':(1,1,1152)}),('output_dtypes',{'_output_0':'unknown'})]:
             m=meta();m[key]=value;bad.append(m)
@@ -98,10 +100,18 @@ class TaskTests(unittest.TestCase):
         cls.source=mod
 
     def task(self,v='base-patch16-224',s='pooler_output',dtype='F32'):
-        from samples.vision.siglip.runtime.python.model_binding import bind_model,resolve_selection
-        from samples.vision.siglip.runtime.python.embedding import SigLIPTask
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python.embedding import SigLIPEmbedder, bind_model
+
+        class StubRunner:
+            def __init__(self, binding, raw):
+                self.binding, self.raw = binding, raw
+            def load(self):
+                return self.binding
+            def __call__(self, tensors):
+                return self.raw
         runtime=FakeRuntime(v,dtype);binding=bind_model(resolve_selection('s100',variant=v,submodel=s),meta(v,s,dtype))
-        return SigLIPTask(lambda inputs:runtime.raw[s],binding),runtime.raw[s]
+        return SigLIPEmbedder(resolve_selection('s100',variant=v,submodel=s),runner=StubRunner(binding,runtime.raw[s])),runtime.raw[s]
 
     def test_preprocess_matches_source_all_sizes_and_preserves_per_call_context(self):
         rng=np.random.default_rng(3)
@@ -158,7 +168,7 @@ class TaskTests(unittest.TestCase):
 class ReadmeTests(unittest.TestCase):
     def test_runtime_api_examples_execute_with_real_binding_and_runner(self):
         import re
-        from samples.vision.siglip.runtime.python import model_runner
+        from samples.vision.siglip.runtime.python import embedding as model_runner
         original=model_runner.RuntimeModelRunner
         for fn in ('README.md','README_cn.md'):
             text=(SAMPLE/'runtime/python'/fn).read_text()
@@ -195,8 +205,8 @@ class ReadmeTests(unittest.TestCase):
 
 class RunnerEntryTests(unittest.TestCase):
     def test_lazy_runner_explicit_submodel_metadata_and_raw_identity(self):
-        from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-        from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python.embedding import RuntimeModelRunner
         for s in SUBMODELS:
             runtime=FakeRuntime();runner=RuntimeModelRunner(resolve_selection('s100p',submodel=s),runtime=runtime)
             self.assertFalse(runner.loaded)
@@ -210,16 +220,16 @@ class RunnerEntryTests(unittest.TestCase):
             with self.assertRaises(ValueError):runner({'_input_0':np.zeros((1,3,384,384),np.float32)})
 
     def test_execution_gate_precedes_default_runtime_factory(self):
-        from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-        from samples.vision.siglip.runtime.python import model_runner
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python import embedding as model_runner
         with patch('utils.py_utils.platforms.detect_target',return_value='s600'),patch.object(model_runner,'_default_runtime_factory') as factory:
             runner=model_runner.RuntimeModelRunner(resolve_selection('s100'))
             with self.assertRaises(ValueError):runner.load()
             factory.assert_not_called()
 
     def test_both_packed_models_validated_even_when_only_one_is_selected(self):
-        from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-        from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python.embedding import RuntimeModelRunner
         r=FakeRuntime();r.input_shapes['last_hidden_state']['_input_0']=(1,3,512,512)
         runner=RuntimeModelRunner(resolve_selection('s100'),runtime=r)
         with self.assertRaises(ValueError):runner.load()
@@ -227,7 +237,8 @@ class RunnerEntryTests(unittest.TestCase):
 
     def test_cli_runs_actual_pipeline_and_saves_exact_path_native_tensor(self):
         import tempfile,json
-        from samples.vision.siglip.runtime.python import main,model_runner
+        from samples.vision.siglip.runtime.python import main
+        from samples.vision.siglip.runtime.python import embedding as model_runner
         real_runner=model_runner.RuntimeModelRunner
         with tempfile.TemporaryDirectory() as d:
             model=Path(d)/'model.hbm';model.write_bytes(b'host fixture only')
@@ -251,13 +262,13 @@ class RunnerEntryTests(unittest.TestCase):
         from samples.vision.siglip.runtime.python import embedding
         for argv,board in ((['--target','s100'],'s100p'),(['--target','s100','--image-size','384'],'s100'),(['--dry-run'],'s100')):
             with patch('utils.py_utils.platforms.detect_target',return_value=board),patch.object(
-                embedding,'SigLIPTask',side_effect=AssertionError('must not construct')) as task,contextlib.redirect_stderr(io.StringIO()):
+                embedding,'SigLIPEmbedder',side_effect=AssertionError('must not construct')) as task,contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(main.main(argv),2)
                 task.assert_not_called()
 
     def test_runner_rejects_changed_output_metadata_and_invalid_input_values(self):
-        from samples.vision.siglip.runtime.python.model_binding import resolve_selection
-        from samples.vision.siglip.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python.embedding import RuntimeModelRunner
         runtime=FakeRuntime();runner=RuntimeModelRunner(resolve_selection('s100'),runtime=runtime)
         runner.load()
         for value in (np.full((1,3,224,224),2,np.float32),np.full((1,3,224,224),np.nan,np.float32)):
@@ -272,3 +283,30 @@ class RunnerEntryTests(unittest.TestCase):
             p=subprocess.run([sys.executable,str(SAMPLE/'runtime/python/main.py'),*args],cwd='/tmp',capture_output=True,text=True)
             self.assertEqual(p.returncode,0,p.stderr)
             if '--dry-run' in args:self.assertIn('729',p.stdout)
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``embedding.py`` owns the
+    named model class, the dual-submodel runner, and image preparation; the
+    per-sample ``model_binding``/``model_runner``/``tensor_io`` forwarding
+    modules are gone.
+    """
+
+    def test_embedder_constructs_from_selection_and_runs_stages(self):
+        from samples.vision.siglip.runtime.python.cli import resolve_selection
+        from samples.vision.siglip.runtime.python.embedding import SigLIPEmbedder, RuntimeModelRunner
+        runtime = FakeRuntime('base-patch16-224', 'F32')
+        selection = resolve_selection('s100')
+        model = SigLIPEmbedder(selection, runner=RuntimeModelRunner(selection, runtime=runtime))
+        feature = model.predict(np.zeros((19, 33, 3), np.uint8))
+        self.assertEqual(feature.shape, (1, 1, 768))
+        prepared = model.preprocess(np.zeros((19, 33, 3), np.uint8))
+        manual = model.postprocess(model.infer(prepared.tensors))
+        np.testing.assert_array_equal(feature, manual)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = SAMPLE / 'runtime/python'
+        for name in ('model_binding.py', 'model_runner.py', 'tensor_io.py'):
+            self.assertFalse((base / name).exists(), name)

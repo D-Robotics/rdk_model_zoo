@@ -5,7 +5,7 @@ from dataclasses import FrozenInstanceError
 import numpy as np
 
 from test_forward_purity import fixture
-from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect,
     YoloDetectConfig,
 )
@@ -63,7 +63,9 @@ class DetectionContext(unittest.TestCase):
         for task in self.tasks():
             prepared = task.pre_process(image)
             self.assertIs(prepared["m"], prepared.tensors["m"])
-            old_tensors, old_transform = task.pre_process_with_transform(image)
+            # The former (tensors, transform) tuple surface is the prepared
+            # object's own fields; both stay stateless per call.
+            old_tensors, old_transform = prepared.tensors, prepared.transform
             self.assertEqual(old_transform, prepared.transform)
             for name, value in old_tensors["m"].items():
                 np.testing.assert_array_equal(value, prepared.tensors["m"][name])

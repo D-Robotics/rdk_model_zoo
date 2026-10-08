@@ -52,4 +52,4 @@ python3 samples/vision/vit/runtime/python/main.py --dry-run --target s100 --asse
 <a id="formats-checksums"></a>
 ## 格式与哈希
 
-两制品在 manifest 均为 `sha256: null (unknown)`。下载器打印观测 SHA-256，仅标识本地字节，不构成发布者独立验证。已有文件按共享下载策略保留；运行前拒绝不兼容张量 metadata。
+两制品在 manifest 均为 `sha256: null (unknown)`。下载器打印本地 SHA-256 并保留已有文件。加载模型时校验张量元数据。

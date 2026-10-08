@@ -53,14 +53,14 @@ sudo docker run -it --rm --network host --shm-size=15g \
 
 Alternatively, pull the image online: `docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`. If the download URL expires, check the latest link on the OE online documentation. Published asset names and SHA fields are authoritative in `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`; the source manifests mark SHA values as unknown (`null`).
 
-Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. The fixed sources do not pin their package versions or the upstream repository revision; this remains a reproducibility prerequisite, not a tested environment specification. Check these imports inside the chosen export environment, separate from board inference:
+Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. Record the selected framework and upstream repository versions with the exported model. Check these imports in the export environment:
 
 ```bash
 # cwd: this conversion directory, inside the chosen host export environment
 python3 -c "import torch, onnx, onnxruntime, numpy, cv2; print(torch.__version__, onnx.__version__, onnxruntime.__version__)"
 ```
 
-The exporter actually imports `ultralytics.models.sam.build.build_mobile_sam`; cloning the MobileSAM repository alone does not provide that package. The source's setup step is `python3 -m pip install ultralytics` in the export environment. Its version is unpinned in the source, so record the installed version and verify the `build_mobile_sam`/`set_imgsz` APIs before export. This command has not been executed here.
+The exporter actually imports `ultralytics.models.sam.build.build_mobile_sam`; cloning the MobileSAM repository alone does not provide that package. The source's setup step is `python3 -m pip install ultralytics` in the export environment. Its version is unpinned in the source, so record the installed version and verify the `build_mobile_sam`/`set_imgsz` APIs before export.
 
 <a id="export"></a>
 ## Export ONNX
@@ -195,7 +195,7 @@ These input fields are copied from each compilation config, not observed SDK met
 <a id="validation"></a>
 ## Post-conversion validation
 
-Before accepting an artifact, inspect actual SDK metadata and require matching input/output names, ranks, shapes, and native dtypes for both submodels. Confirm the decoder box input remains `(1,4)` and is in the same 512-pixel coordinate system as preprocessing. Runtime casts cannot prove native quantization metadata. The source contains no dataset-level accuracy harness; any board result must record its own image, box, model, SDK, and resource conditions.
+After conversion, inspect the SDK metadata for both submodels and check input/output names, ranks, shapes and native dtypes. The decoder box is `(1,4)` in the 512-pixel preprocessing coordinate system. Record the image, box, model, SDK and resource configuration with each run.
 
 <a id="artifacts"></a>
 ## Artifacts

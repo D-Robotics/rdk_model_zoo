@@ -31,7 +31,7 @@ GEMMA4_SOC=s600 bash download_model.sh --dry-run
 GEMMA4_SOC=s600 bash download_model.sh
 ```
 
-公开的 `rdk_s100` 模型归档包含已验证的 S100P（`nash-m`）HBM，`rdk_s600` 包含已验证的 S600（`nash-p`）HBM，脚本按显式 `GEMMA4_SOC` 选择，不根据执行下载的电脑身份推断。S100（`nash-e`）请先将匹配的两个 HBM 放到 `$GEMMA4_HOME/model`，或显式提供对应模型目录 URL：
+公开的 `rdk_s100` 模型归档包含S100P（`nash-m`）HBM，`rdk_s600` 包含S600（`nash-p`）HBM，脚本按显式 `GEMMA4_SOC` 选择，不根据执行下载的电脑身份推断。S100（`nash-e`）请先将匹配的两个 HBM 放到 `$GEMMA4_HOME/model`，或显式提供对应模型目录 URL：
 
 ```bash
 GEMMA4_HOME=~/gemma4_e2b_s100 GEMMA4_SOC=s100 GEMMA4_MODEL_BASE_URL=https://your-server/path/to/s100/model bash download_model.sh
@@ -93,7 +93,7 @@ sha256sum "$GEMMA4_HOME"/model/*.hbm
 # S600 Text:    aab1831b1ea2b86763d5457890d89c55b684e4ba4834c1e008c668813d1cf646
 ```
 
-以上四个 HBM 哈希保留自 S 源发布的 README。
+以上四个 HBM 的发布哈希来自 S 发布 README。
 活动发布清单目前对这些文件记录 `sha256: null`；下载器会打印观测到的摘要，使用者可将其与上面的发布摘要比较。HBM 是板端模型，
 `tok_embeddings.bin` 是配套 embedding 数据，不是 X5 推理 BIN。下载使用 `.part` 临时文件并在完成后改名；
 已有非空文件会跳过下载。`GEMMA4_MODEL_BASE_URL`、`GEMMA4_COMMON_MODEL_BASE_URL`、`GEMMA4_TOKENIZER_BASE_URL`

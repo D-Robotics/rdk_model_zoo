@@ -1,31 +1,29 @@
 # YOLOWorld Python runtime
 
+[English](README.md) | 简体中文
+
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用离线词表嵌入与逐图提示词运行 YOLOWorld 检测。`YOLOWorldTask` 初始化 Runtime，返回检测结果及对应提示词信息。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-├── visualization.py  # Python 脚本
-└── yoloworld.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果展示
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── model_runner.py  # Runtime 加载与原始张量执行
+├── run.sh  # 定位 Python 入口并转发参数
+└── yoloworld.py  # 模型阶段与预测
 ```
 
 <a id="environment"></a>
 ## 环境
 
-推理使用与系统 `hbm_runtime` 匹配的 X5 Python。主机 fixture 使用 `.venv`
-Python 3.14.7、NumPy 2.5.3 和 OpenCV 4.14.0；模块导入、help、list 和 dry-run
-都不会导入板端 SDK。sample 不负责安装 runtime 依赖。
+使用 X5 系统 Python 与 BSP 提供的 `hbm_runtime`，安装 NumPy、OpenCV 和 PyYAML。先按[模型准备](../../model/README_cn.md)下载模型。以下命令从仓库根目录执行。
 
 <a id="usage"></a>
 ## 用法
@@ -39,7 +37,7 @@ python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts do
 无 SDK 协议检查：
 
 ```bash
-.venv/bin/python samples/vision/yoloworld/runtime/python/main.py --dry-run --target x5 --prompts dog
+python3 samples/vision/yoloworld/runtime/python/main.py --dry-run --target x5 --prompts dog
 ```
 
 自定义路径必须给出精确身份：
@@ -83,14 +81,11 @@ sample 的 `test_data`。prompt 属于每次调用自己的 context，最多接�
 ```python
 import cv2, json
 from samples.vision.yoloworld.runtime.python.model_binding import resolve_selection
-from samples.vision.yoloworld.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask
 selection = resolve_selection('x5')
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
 with open('samples/vision/yoloworld/test_data/offline_vocabulary_embeddings.json') as f:
     vocabulary = json.load(f)
-task = YOLOWorldTask(runner, binding, vocabulary)
+task = YOLOWorldTask(selection, vocabulary)
 image = cv2.imread('samples/vision/yoloworld/test_data/dog.jpeg')
 prepared = task.preprocess(image, ['dog'])
 raw = task.infer(prepared)
@@ -99,8 +94,7 @@ composed_result = task.predict(image, ['dog'])
 ```
 
 `explicit_result` 与 `composed_result` 是 `DetectionResult`，含 `boxes[N,4]`、
-`scores[N]`、`class_ids[N]` 和 prompt 元组。示例需要 X5 和模型；主机测试
-通过注入 runtime 运行。
+`scores[N]`、`class_ids[N]` 和 prompt 元组。示例需要 X5 和已准备的模型。
 
 <a id="stage-io"></a>
 ## 阶段输入输出
@@ -120,4 +114,4 @@ runner 先校验实际 metadata，再执行且不改变原生输出；task 负�
 
 空 prompt、未知 prompt、非有限输入、错误 metadata 形状/类型、缺模型、未知
 板卡或 target 不匹配都会报错。缺模型时先运行显式模型命令。评估器要求新的
-输出目录并生成真实板端证据；主机测试不能替代它。
+输出目录保存每次结果。

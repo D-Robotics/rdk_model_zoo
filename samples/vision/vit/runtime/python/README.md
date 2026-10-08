@@ -1,16 +1,12 @@
 # ViT Python runtime
 
-`main.py` is the user-facing command: it parses arguments,
-constructs the model, calls `predict`, and shows the result. The complete
-classification flow lives in [`classify.py`](classify.py):
-`ViTClassifier` shows initialization, `preprocess`, `infer`, `postprocess` and
-`predict` in one readable file, reusing the shared NV12 packing, Top-K
-math and lazy runner.
-
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+[`main.py`](main.py) parses arguments, constructs `ViTClassifier`, calls `predict`, and displays results.
+[`classify.py`](classify.py) contains model initialization, preprocessing, inference, and postprocessing.
+[`cli.py`](cli.py) groups command options, published model selection, and result presentation.
+Image reading, label validation, and SDK sessions use `utils/py_utils/`.
 
 <a id="directory"></a>
 ## Directory structure
@@ -19,19 +15,16 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── __init__.py  # Python script
 ├── classify.py  # Classification preprocessing, inference, and postprocessing
 ├── cli.py  # Arguments and result presentation
 ├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
 └── run.sh  # Run the sample
 ```
 
 <a id="environment"></a>
 ## Environment
 
-Full checkout required. Host tested: Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0, PyYAML 6.0.3. S100 inference requires the board-provided `hbm_runtime`; use an S100 board image with its matching SDK and Python environment. Allow disk space for the checkout, selected HBM and outputs. OE is only needed for conversion.
+Use a full checkout. S100 inference requires the board-provided `hbm_runtime`; use an S100 board image with its matching SDK and Python environment. Allow disk space for the checkout, selected HBM and outputs. OE is only needed for conversion.
 
 ```bash
 # cwd: repository root
@@ -69,14 +62,14 @@ python3 samples/vision/vit/runtime/python/main.py --dry-run --target s100 --vari
 | `--test-img` | str | samples/vision/vit/test_data/airplane_0000.png | BGR image |
 | `--label-file` | str | samples/vision/vit/test_data/cifar10_classes.names | dictionary or one label per line |
 | `--top-k / --topk` | int | 5 | 1..10 |
-| `--resize-type` | choice | None | 0 direct nearest (binding default); 1 linear letterbox |
+| `--resize-type` | choice | None | 0 direct nearest (published model default); 1 linear letterbox |
 | `--priority` | int | 0 | 0..255 |
 | `--bpu-cores` | int list | [0] | board core indexes |
 | `--img-save-path` | str | None | optional annotated image |
 | `--list-models` | flag | false | lists manifest references without executing the model |
 | `--dry-run` | flag | false | selection only; no inference |
 
-Image/label defaults resolve to absolute paths inside the checkout. `None` for variant/resize means the bound source default, not a missing setting. List/dry-run are mutually exclusive.
+Image/label defaults resolve to absolute paths inside the checkout. `None` for variant/resize means the selected model configuration, not a missing setting. List/dry-run are mutually exclusive.
 
 <a id="results"></a>
 ## Results
@@ -87,33 +80,38 @@ ClassificationResult contains class_ids (integer array), scores (softmax probabi
 ## Integration example
 
 Board example, after preparing int8; imports do not download anything.
-The same pipeline is exercised with an injected host runner in tests.
 
 ```python
 # cwd: repository root on S100; prepare int8 first
 from pathlib import Path
 from samples.vision.vit.runtime.python.classify import ViTClassifier
-from samples.vision.vit.runtime.python.model_binding import resolve_selection
+from samples.vision.vit.runtime.python.cli import resolve_selection
 from utils.py_utils.labels import load_labels
 
 selection = resolve_selection("s100", variant="int8")
 labels = load_labels(Path("samples/vision/vit/test_data/cifar10_classes.names"))
-model = ViTClassifier(selection, top_k=5, labels=labels)
+contract = selection.contract
+model = ViTClassifier(
+    selection.model_path, target=selection.target,
+    input_size=(contract.input_height, contract.input_width),
+    class_count=contract.class_count, top_k=5, labels=labels,
+    resize_type=contract.resize_type,
+    resize_interpolation=contract.resize_interpolation,
+    score_policy=contract.output_score_policy,
+    output_transform=contract.output_transform,
+)
 model.set_scheduling_params(priority=0, bpu_cores=[0])
 result = model.predict("samples/vision/vit/test_data/airplane_0000.png")
 print(result.class_ids, result.scores, result.labels)
 ```
 
 `predict` accepts a local image path or a BGR `uint8` array. The stages
-can also be driven explicitly (`preprocess`/`infer`/`postprocess`); the
-established `pre_process`/`forward`/`post_process` spellings are thin
-aliases, and the shared `ClassificationTask` stays importable from
-[`classification.py`](../../../../../utils/py_utils/classification.py).
+can also be driven explicitly (`preprocess`/`infer`/`postprocess`).
 
 <a id="stage-io"></a>
 ## Stage I/O
 
-preprocess (pre_process): image path or BGR U8 H×W×3 → PreparedInput with Y U8 [1,224,224,1], UV U8 [1,112,112,2] and per-call geometry. Direct resize uses nearest; letterbox uses linear and padding 127. infer only calls the runner, preserving the raw mapping. postprocess squeezes a F32 ten-score vector, applies stable softmax and selects Top-K; without an SDK call or file output. predict composes these stages; the established pre_process/forward/post_process spellings are thin aliases. Runtime metadata validates shapes/dtypes before run; quantized raw outputs are rejected rather than silently reinterpreted.
+preprocess (pre_process): image path or BGR U8 H×W×3 → PreparedInput with Y U8 [1,224,224,1], UV U8 [1,112,112,2] and per-call geometry. Direct resize uses nearest; letterbox uses linear and padding 127. infer only calls the runner, preserving the raw mapping. postprocess squeezes a F32 ten-score vector, applies stable softmax and selects Top-K. predict composes these stages. The runtime checks tensor shapes and dtypes. Quantized outputs require output_transform="dequant" and the SDK quantization metadata.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

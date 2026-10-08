@@ -3,7 +3,6 @@
 """Stateful person tracking around the unified S YOLOv5 detector."""
 from dataclasses import dataclass
 import math
-import numpy as np
 
 
 @dataclass(frozen=True)
@@ -65,9 +64,50 @@ class ByteTrackTask:
     a backend update exception, reset before reusing the stream.
     """
     def __init__(self,detector,*,config=None,tracker_factory=None):
+        """Wrap one detector with tracker state; see the class docstring.
+
+        Args:
+            detector: Detector task exposing pre_process/forward/post_process
+                (e.g. ``YOLOv5Task``); constructed for you by ``from_model``.
+            config: Optional :class:`TrackingConfig`; source defaults apply.
+            tracker_factory: Optional tracker constructor seam (host tests).
+
+        Returns:
+            None.
+        """
         self.detector=detector;self.config=config or TrackingConfig()
         self._tracker_factory=tracker_factory or _create_tracker
         self.tracker=self._tracker_factory(self.config)
+
+    @classmethod
+    def from_model(cls,selection,*,config=None,score_thres=.25,nms_thres=.45,
+                   tracker_factory=None,runtime_factory=None):
+        """Construct the tracker from a resolved detector selection.
+
+        Builds and loads the unified S YOLOv5 detector for this ByteTrack
+        publication, then wraps it with tracker state; ``main`` uses this
+        named constructor instead of creating runners or bindings itself.
+
+        Args:
+            selection: Manifest-backed selection from ``cli.resolve_selection``.
+            config: Optional :class:`TrackingConfig`; source defaults apply.
+            score_thres: Detection confidence threshold (source default .25).
+            nms_thres: Detection NMS IoU threshold (source default .45).
+            tracker_factory: Optional tracker constructor seam (host tests).
+            runtime_factory: Optional SDK-object factory seam (host tests).
+
+        Returns:
+            ByteTrackTask: Loaded tracker ready for ordered ``predict`` calls.
+
+        Raises:
+            TypeError: The selection is not a detector ModelSelection.
+            ValueError: Configuration or local model settings are invalid.
+            RuntimeError: Board identity or SDK loading fails.
+        """
+        from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
+        detector=YOLOv5Task(selection,runtime_factory=runtime_factory,
+                            score_thres=score_thres,nms_thres=nms_thres)
+        return cls(detector,config=config,tracker_factory=tracker_factory)
 
     @property
     def frame_index(self):
@@ -87,6 +127,8 @@ class ByteTrackTask:
 
     def postprocess(self,outputs,context):
         """Decode detections, update tracker once, return tuple of owned Track snapshots."""
+        import numpy as np
+
         detections=self.detector.post_process(outputs,context)
         # Clipping a detection wholly in letterbox padding can leave zero area.
         # Kalman XYAH initialization divides by height; keep these out of state.

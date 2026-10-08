@@ -50,7 +50,7 @@ Select a published target/family/task/scale combination from the [model inventor
 | NV12 input | One packed buffer | NHWC Y + UV |
 | Python detection NMS default | 0.70 | 0.45; YOLOv10 is NMS-free |
 | Classification CLI resize | YOLO26 stretch; others letterbox | Stretch |
-| Classification filename tokens (not an input override) | YOLO26 224, others 640 | Public URLs use 224; S100/S100P v8/v11 retain 640 compatibility IDs |
+| Classification filename tokens (not an input override) | YOLO26 224, others 640 | Public URLs use 224; S100/S100P v8/v11 retain 640 identifiers |
 
 <a id="prerequisites"></a>
 ## Prerequisites

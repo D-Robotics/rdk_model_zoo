@@ -112,9 +112,9 @@ A new JSON stores backend, model/manifest hashes, sample count and input_contrac
 <a id="reference-results"></a>
 ## Reference results
 
-The [sample README](../README.md) carries five-backbone training/PTQ tables and the 1449-image ResNet18 three-backend record, each bound to its original checkpoint/artifact conditions. Synthetic host tests do not replace those measurements.
+The [sample README](../README.md) carries five-backbone training/PTQ tables and the 1449-image ResNet18 three-backend record, each bound to its original checkpoint/artifact conditions.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 Prepare full datasets and checkpoint/ONNX/BIN beforehand. Runtime timing is including preprocessing and postprocessing supplied by this evaluator. Strict PyTorch checkpoint loading and single-input/output ONNX constraints remain; arbitrary architectures or S-family assets are not supported.

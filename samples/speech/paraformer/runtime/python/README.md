@@ -1,47 +1,29 @@
 # Paraformer Python pipeline and CPU bridge
 
-[简体中文](README_cn.md)
-
-The Python pipeline combines the CPU audio frontend, continuous integrate-and-fire (CIF) bridge, three model stages, SDK adapters and tensor binding. Run inference on S100 with the prepared model package. The [C++ bridge](../cpp/README.md#quickstart) consumes Python-prepared features through its native entry.
-
-Start with [CLI usage](#usage), [all parameters](#parameters) and [results](#results); the later sections explain the numerical/API contracts.
-The entry is a thin `main.py`: [cli.py](cli.py) holds option declarations,
-argument validation and the model-free listing/dry-run rendering; `main.py`
-gates the board, collects input evidence through `application.prepare`,
-constructs the `ParaformerFrontend` and the three-model runtime bundle
-visibly, and then runs the per-utterance loop itself — one
-`bundle.pipeline.predict(features.tensor, features.valid_frames)` per
-utterance between the application's `prepare_utterance`/`mark_attempted`/
-`record_prediction`/`save_features` helpers, with `complete` re-verifying
-every input digest and writing the result/failure records.
-`application.run`/`application.execute` remain compatibility compositions
-of the same helpers.
+English | [简体中文](README_cn.md)
 
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Transcribe Mandarin audio on S100 through the audio frontend, encoder, predictor, CPU CIF and decoder. `ParaformerPipeline.from_models` loads the three models. `main.py` prepares utterances and calls `model.predict` once per utterance; `cli.py` manages arguments and result files.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── application.py  # Python script
-├── cif.py  # Python script
-├── cli.py  # Arguments and result presentation
-├── decoding.py  # Python script
-├── frontend.py  # Python script
-├── input_io.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── pipeline.py  # Python script
-├── requirements-frontend.txt  # Source or data file
-├── run.sh  # Run the sample
-├── runtime.py  # Python script
-└── stages.py  # Python script
+├── cif.py  # Continuous integrate-and-fire algorithm
+├── cli.py  # Arguments, model selection and result presentation
+├── decoding.py  # Token decoding
+├── frontend.py  # Audio feature preparation
+├── input_io.py  # Input files and data records
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── pipeline.py  # Encoder, predictor, CIF and decoder pipeline
+├── requirements-frontend.txt  # Audio frontend dependencies
+├── run.sh  # Locate the Python entry and forward arguments
+├── runtime.py  # Runtime construction for the model stages
+└── stages.py  # Model stage interfaces
 ```
 
 <a id="environment"></a>
@@ -54,7 +36,7 @@ python3.12 -m venv .venv-paraformer
 .venv-paraformer/bin/python -m pip install -r samples/speech/paraformer/runtime/python/requirements-frontend.txt
 ```
 
-The verified host is macOS arm64 / Python 3.12 with Torch and torchaudio 2.6.0,
+Use Python 3.12 with Torch and torchaudio 2.6.0,
 FunASR 1.3.14, NumPy 1.26.4, SoundFile 0.14.0 and protobuf 4.23.0. The requirements
 preserve the source's direct version constraints; they are not a board lockfile.
 On Linux, the source installs
@@ -313,15 +295,14 @@ the count uses int32, all other tensors require float32. A differing compiled
 contract must be inspected and explicitly adapted, not cast silently.
 
 [runtime.py](runtime.py) constructs three shared `NamedArrayRunner` instances.
-`load_runtime` validates the entire declared model set before creating any SDK
+`ParaformerPipeline.from_models` validates the entire declared model set before creating any SDK
 object. On the normal path each runner checks local target identity and its model
 file before importing/constructing `hbm_runtime`. It then binds observed metadata.
-Only tests use an explicit `runtime_factory` to inject SDK doubles and bypass the
-real board/file gates; this seam is not a customer deployment mode.
+
 
 ### Board integration API
 
-The following is an integration sketch. It needs
+Run this example from the repository root. It needs
 an S100, matching `hbm_runtime`, three local model files, the exact vocabulary and
 prepared frontend features from the frontend below. The complete CLI is documented below.
 
@@ -329,18 +310,18 @@ prepared frontend features from the frontend below. The complete CLI is document
 import json
 from pathlib import Path
 from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
-from samples.speech.paraformer.runtime.python.runtime import load_runtime
+from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline
 
 # Board-only integration: the model package must already be prepared.
 import soundfile as sf
 from samples.speech.paraformer.runtime.python.frontend import ParaformerFrontend
 vocabulary = json.loads(Path("samples/speech/paraformer/model/s100/tokens.json").read_text())
-bundle = load_runtime(resolve_selections("s100"), vocabulary)
-bundle.set_scheduling_params(priority=7, bpu_cores=[0])
+model = ParaformerPipeline.from_models(resolve_selections("s100"), vocabulary)
+model.set_scheduling_params(priority=7, bpu_cores=[0])
 sample = Path("samples/speech/paraformer")
 waveform, rate = sf.read(sample / "test_data/audio/BAC009S0724W0121.wav", dtype="float32")
 prepared = ParaformerFrontend(sample / "model/am.mvn").pre_process(waveform, rate)
-result = bundle.pipeline.predict(prepared.tensor, prepared.valid_frames)
+result = model.predict(prepared.tensor, prepared.valid_frames)
 print(result.text, prepared.truncated)
 ```
 
@@ -380,7 +361,7 @@ loading dependencies. `pre_process(waveform, sample_rate)` returns `PreparedFeat
 | `truncated` | true when original frame count exceeds 400 |
 | `sample_count` | mono sample count before feature extraction |
 
-Pass `prepared.tensor` and `prepared.valid_frames` to `bundle.pipeline.predict`.
+Pass `prepared.tensor` and `prepared.valid_frames` to `model.predict`.
 The source's first-400 behavior is preserved and made explicit by the other fields;
 this is **not** long-audio chunking. A 30-second fixture produces 500 LFR frames,
 uses the first 400 and reports truncation. The caller must surface that flag instead

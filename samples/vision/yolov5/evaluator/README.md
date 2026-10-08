@@ -20,7 +20,7 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-Run directly on a recognized target board with Python, NumPy, OpenCV, and the target `hbm_runtime`; the evaluator also loads the pinned original runtime from Git history. It is not a separate host that drives the board. The host unit tests inject a fake runtime. No model or image is downloaded by the evaluator.
+Run on the target board with Python, NumPy, OpenCV, and its `hbm_runtime`. Prepare the model and image before execution. The evaluator loads the reference runtime from its pinned Git revision.
 
 <a id="command"></a>
 ## Evaluation command
@@ -162,18 +162,12 @@ passing with a disclaimer. Any missing material, nonzero run, model/image
 hash or threshold mismatch fails nonzero with the gathered evidence
 preserved; a native failure can never pass as empty arrays. These native
 comparison steps execute on the real boards (build guidance:
-`runtime/cpp/README.md`). Host tests cover
-instrumentation generation (including the pinned closure and the shallow-
-clone preparation hint), stub compiles of the instrumented sources (which
-prove only that the injected glue compiles, not that a real SDK build
-passed), observer roundtrip precision/marker/refusal behaviour, comparison
-against the REAL v2 board-manifest schema, stride restoration and every
-failure mode.
+`runtime/cpp/README.md`).
 
 <a id="metrics"></a>
 ## Metrics
 
-Inputs are exact; raw output arrays use shape/dtype checks and `rtol=0, atol=1e-5`; result boxes use `atol=1e-4`, scores `1e-5`, and class IDs exact. X5 and S must be compared using their own source protocol; a host fake fixture is not a board result. The performance listed below is the source-published record with its original conditions.
+Inputs are exact; raw output arrays use shape/dtype checks and `rtol=0, atol=1e-5`; result boxes use `atol=1e-4`, scores `1e-5`, and class IDs exact. X5 and S must be compared using their own source protocol; The performance listed below is the source-published record with its original conditions.
 
 <a id="outputs"></a>
 ## Outputs
@@ -202,4 +196,4 @@ The complete source X5 reference table:
 
 Prepare the model and input images before comparison. X5 uses OpenCV XYXY-to-NMSBoxes; S uses class-wise XYXY NMS. Compare each target with its matching reference implementation.
 
-The source runner archives the exact pre-execution audit bytes as `instrumentation-audit.json` with `audit_file` and `audit_sha256` in the run record. It writes the copy after the child finishes to preserve the observer's empty-directory requirement. Keep the whole source capture and unified process-record directories: comparison rejects a missing or changed audit and missing unified stdout/stderr, and includes the audit plus both sides' logs under `originals/` in its output. 
+The source runner archives the exact pre-execution audit bytes as `instrumentation-audit.json` with `audit_file` and `audit_sha256` in the run record. It writes the copy after the child finishes to preserve the observer's empty-directory requirement. Keep the whole source capture and unified process-record directories: comparison rejects a missing or changed audit and missing unified stdout/stderr, and includes the audit plus both sides' logs under `originals/` in its output.

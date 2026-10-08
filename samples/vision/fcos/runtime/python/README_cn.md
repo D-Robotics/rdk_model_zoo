@@ -1,24 +1,23 @@
 # Python 运行时 — FCOS
 
+[English](README.md) | 简体中文
+
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+在 X5 上使用 EfficientNet B0、B2 或 B3 模型运行 FCOS 目标检测。`FCOSTask.predict` 返回原图坐标的检测框、置信度与类别 ID。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── __init__.py  # Python 脚本
-├── fcos.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-└── tensor_io.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果展示
+├── fcos.py  # 模型阶段与预测
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+├── model_runner.py  # Runtime 加载与原始张量执行
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
 <a id="environment"></a>
@@ -82,12 +81,9 @@ import cv2
 import numpy as np
 from samples.vision.fcos.runtime.python.fcos import FCOSTask
 from samples.vision.fcos.runtime.python.model_binding import resolve_selection
-from samples.vision.fcos.runtime.python.model_runner import RuntimeModelRunner
 
 selection = resolve_selection("x5", asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()  # 仅板端；主机测试注入 fake runtime
-task = FCOSTask(runner, binding)
+task = FCOSTask(selection)
 image = cv2.imread("samples/vision/fcos/test_data/bus.jpg", cv2.IMREAD_COLOR)
 result = task.predict(np.asarray(image))
 print(result.boxes, result.scores, result.class_ids)

@@ -4,6 +4,19 @@
 
 RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、后处理及应用验证示例。每个 Sample 的 README 是用户与 Agent 共同的操作入口，包含运行命令、输入输出、源码结构、转换/评估流程及使用限制。模型推理仅依赖 Python 与板端 SDK。源码版本：2.0.0（仓库根 `VERSION`）。
 
+## 目录结构
+
+```text
+samples/                  # 任务实现与指南
+docs/release/             # 制品/基准事实与目标身份
+docs/sample-standards/    # README 与推理契约
+docs/architecture/        # 可读 Runtime 架构
+docs/validation/          # 板端冒烟测试清单
+datasets/                 # 数据集入口
+utils/                    # Python/C++ 公共函数
+tools/                    # 目录、契约检查与验证工具
+```
+
 ## 按任务开始
 
 完整清单在 [Sample 索引](samples/README_cn.md)，目前包含 51 个 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型样例。每个入口说明自己的 target、变体和语言。
@@ -68,18 +81,8 @@ python3 samples/vision/ultralytics_yolo/runtime/python/main.py \
 
 ## 阅读和扩展代码
 
-```text
-samples/                  # 任务实现与指南
-docs/release/             # 制品/基准事实与目标身份
-docs/sample-standards/    # README 与推理契约
-docs/architecture/        # 可读 Runtime 架构
-docs/validation/          # 板端冒烟测试清单
-datasets/                 # 数据集入口
-utils/                    # 兼容工具
-tools/                    # 目录、契约检查与验证工具
-```
 
-每个 Python Runtime 都是同一形态：`main.py` 是薄入口——解析参数、构造模型类、调用 `predict`、展示结果；模型类在单一可读文件内实现 `preprocess → infer → postprocess` 主线，由 `predict` 串联；样例本地 CLI 辅助模块（`cli.py`、`yolo_cli.py`）承担参数、清单、dry-run 与文件 IO；runner/binding 隔离 SDK 会话与张量契约。该模式见 [docs/architecture/model-examples.md](docs/architecture/model-examples.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。两个 `samples/llm` 样例提供原生 generate/stream/reset C++ 接口。`conversion/`、`evaluator/` 各自保存可操作说明；共享机制见 [utils/py_utils](utils/py_utils/README.md)（英文）。
+每个 Python Runtime 都是同一形态：`main.py` 是薄入口——解析参数、构造模型类、调用 `predict`、展示结果；模型类在单一可读文件内实现 `preprocess → infer → postprocess` 主线，由 `predict` 串联；样例本地 CLI 辅助模块（`cli.py`、`yolo_cli.py`）承担参数、清单、dry-run 与结果展示。普通单任务 Sample 使用这三个 Python 文件；模型构造时加载公共 Runtime，额外模块承载完整算法或模型特有张量契约。具体要求见 [Runtime 代码规范](docs/sample-standards/runtime-code.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。两个 `samples/llm` 样例提供原生 generate/stream/reset C++ 接口。`conversion/`、`evaluator/` 各自保存可操作说明；共享机制见 [utils/py_utils](utils/py_utils/README.md)（英文）。
 
 开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令。
 

@@ -10,7 +10,7 @@ from utils.py_utils.platforms import require_execution_target
 from utils.py_utils.runtime_meta import RuntimeMetadata,metadata_evidence
 from utils.py_utils.assets import verify_asset_file
 from utils.py_utils.legacy_platforms import legacy_tree, pinned_name
-from samples.vision.bytetrack.runtime.python.model_binding import SAMPLE_DIR,resolve_selection
+from samples.vision.bytetrack.runtime.python.cli import SAMPLE_DIR,resolve_selection
 from samples.vision.yolov5.evaluator.compare import _hash,_json
 from samples.vision.yolov5.evaluator.source_reference import load_legacy,source_paths
 from samples.vision.yolov5.runtime.python.model_binding import ANCHORS
@@ -87,7 +87,7 @@ def capture_frames(selection,frames,output_dir,*,side,video_path,runtime_factory
             from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
             from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask
             runner=RuntimeModelRunner(selection,runtime_factory=factory);binding=runner.load();runner.set_scheduling_params(priority=priority,bpu_cores=list(bpu_cores))
-            task=ByteTrackTask(YOLOv5Task(runner,binding))
+            task=ByteTrackTask(YOLOv5Task(runner=runner,binding=binding))
         for index,frame in enumerate(frames,1):
             current=dict(frame=index,image=save_array(f'{index:05d}_image.npy',frame));summary['frames'].append(current)
             tracks=task.predict(frame)

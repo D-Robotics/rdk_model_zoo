@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Generate a 19-class Cityscapes segmentation map with PP-LiteSeg.
 
 <a id="directory"></a>
 ## Directory structure
@@ -14,13 +14,13 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── pp_liteseg.py  # Python script
-├── run.sh  # Run the sample
-└── visualization.py  # Python script
+├── cli.py  # Arguments, model selection and result output
+├── main.py  # CLI entry: construct model and call predict
+├── pp_liteseg.py  # Model initialization and inference stages
+└── run.sh  # Run the sample
 ```
+
+`main.py` constructs the model and calls `predict`; `cli.py` handles options, model selection, and image/report output. The task file owns model stages and image loading uses `utils.py_utils.image.read_bgr_image`.
 
 <a id="environment"></a>
 ## Environment
@@ -78,14 +78,12 @@ The 3078×548 image contains three 1024×512 panels, separators and a 36-pixel h
 ```python
 # cwd: repository root; on X5 after explicit model preparation
 import cv2
-from samples.vision.pp_liteseg.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.pp_liteseg.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegTask
+from samples.vision.pp_liteseg.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegSegmenter
 
 image = cv2.imread(str(SAMPLE_DIR / "test_data/street.png"))
-runner = RuntimeModelRunner(resolve_selection("x5"))
-binding = runner.load()
-task = PPLiteSegTask(runner, binding)
+selection = resolve_selection("x5")
+task = PPLiteSegSegmenter(selection)
 prepared = task.preprocess(image)
 raw = task.infer(prepared.tensors)
 mask = task.postprocess(raw)
@@ -93,12 +91,12 @@ mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 1024), int32
 ```
 
-The task contains only stage logic. Binding owns artifact/tensor contracts, the shared runner owns SDK loading/scheduling, and visualization.py owns rendering. Scheduling uses runner.set_scheduling_params; SDK concurrency is not assumed. Use the task class and `predict` API shown above.
+The model initializes the runtime and implements preprocessing, inference, postprocessing and `predict`. Use a separate model instance for each concurrent worker.
 
 <a id="stage-io"></a>
 ## Stage IO
 
-preprocess takes nonempty HWC BGR uint8, stretches to 1024×512 with INTER_LINEAR, then packs contiguous NV12 uint8 `(768,1024)`. No CPU normalization or letterbox. Returned context carries independent original dimensions; it is not mutable task state. infer returns raw int32 `(1,512,1024,1)` unchanged. postprocess requires IDs 0..18 and returns an owned int32 `(512,1024)` array. It never applies softmax, argmax, dequantization or resize-back. Binding accepts logical NV12 metadata NCHW/NHWC or physical packed shape; logits exports and wrong dtype/geometry are rejected. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
+preprocess takes nonempty HWC BGR uint8, stretches to 1024×512 with INTER_LINEAR, then packs contiguous NV12 uint8 `(768,1024)`. No CPU normalization or letterbox. Returned context carries independent original dimensions; it is not mutable task state. infer returns raw int32 `(1,512,1024,1)` unchanged. postprocess requires IDs 0..18 and returns an owned int32 `(512,1024)` array. It never applies softmax, argmax, dequantization or resize-back. Binding accepts logical NV12 metadata NCHW/NHWC or physical packed shape; logits exports and wrong dtype/geometry are rejected.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

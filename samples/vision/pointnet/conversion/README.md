@@ -61,7 +61,7 @@ so these values are not a segmentation accuracy claim.
 
 No compile configuration/command exists for reproducing this HBM. Obtain the
 published file through the [model preparation guide](../model/README.md).
-Do not substitute an arbitrary generic compiler command and call it verified.
+Use the compiler configuration supplied with your model export and target toolchain.
 
 <a id="validation"></a>
 ## Validation boundary

@@ -2,6 +2,17 @@
 
 [English](README.md) | 简体中文
 
+
+## 目录结构
+
+```text
+test_data/
+├── readme_img/  # readme_img 相关文件
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+└── vocab.json  # 结构化数据
+```
+
 ## 录音
 `chi_sound.wav` 为单声道 PCM16、16000 Hz、73440 帧，共 4.59 秒。运行时处理全部三个窗口，有效长度为 30000、30000、13440；末块补零到 30000。
 

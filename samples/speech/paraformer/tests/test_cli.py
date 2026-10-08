@@ -139,11 +139,14 @@ class CliTests(unittest.TestCase):
         from samples.speech.paraformer.runtime.python.model_binding import (
             resolve_selections,
         )
-        from samples.speech.paraformer.runtime.python import runtime
+        from samples.speech.paraformer.runtime.python import pipeline
 
-        original_loader = runtime.load_runtime
+        original_loader = pipeline.ParaformerPipeline.from_models
         root_repo = Path(__file__).resolve().parents[4]
         model_calls = []
+        loaded_stages = []
+        schedules = {}
+        model_feeds = {}
 
         def factory(path):
             stage = Path(path).stem
@@ -161,17 +164,22 @@ class CliTests(unittest.TestCase):
 
             def run(inputs):
                 model_calls.append(stage)
+                model_feeds[stage] = inputs[stage]
                 arrays = {
                     n: np.zeros(shape, dtype=meta.output_dtypes[n])
                     for n, shape in meta.output_shapes.items()
                 }
                 if stage == "predictor":
                     arrays["/predictor/Add_output_0"][0, :2] = 1
+                    arrays["/predictor/Concat_5_output_0"][0, :2] = 3
                 if stage == "decoder":
                     arrays["logits"][0, :2, 3] = 1
                     arrays["token_num"][:] = 2
                 return {stage: arrays}
 
+            loaded_stages.append(stage)
+            schedules[stage] = []
+            sdk.set_scheduling_params = lambda **kw: schedules[stage].append(kw)
             sdk.run = run
             return sdk
 
@@ -181,7 +189,7 @@ class CliTests(unittest.TestCase):
 
             def pre_process(self, audio, rate):
                 return SimpleNamespace(
-                    tensor=np.zeros((1, 400, 560), np.float32),
+                    tensor=np.full((1, 400, 560), 0.125, np.float32),
                     valid_frames=2,
                     original_frames=2,
                     truncated=False,
@@ -200,6 +208,8 @@ class CliTests(unittest.TestCase):
             args = [
                 "--target",
                 "s100",
+                "--priority", "7",
+                "--bpu-cores", "0",
                 "--audio-file",
                 str(audio),
                 "--output-dir",
@@ -224,8 +234,8 @@ class CliTests(unittest.TestCase):
             ), patch.object(
                 self.io, "read_audio", return_value=(np.zeros(1000, np.float32), 16000)
             ), patch.object(
-                runtime,
-                "load_runtime",
+                pipeline.ParaformerPipeline,
+                "from_models",
                 side_effect=lambda selections, vocabulary: original_loader(
                     selections, vocabulary, runtime_factory=factory
                 ),
@@ -235,6 +245,15 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(self.cli.main(args), 0)
             report = json.loads((out / "result.json").read_text())
             self.assertEqual(model_calls, ["encoder", "predictor", "decoder"])
+            self.assertEqual(loaded_stages, ["encoder", "predictor", "decoder"])
+            self.assertEqual(len(report["metadata"]), 3)
+            self.assertTrue(np.all(model_feeds["encoder"]["speech"] == 0.125))
+            np.testing.assert_array_equal(model_feeds["decoder"]["token_num"], [2])
+            np.testing.assert_array_equal(
+                model_feeds["decoder"]["onnx::Shape_8609"][0, :2, 0], [3, 3])
+            for stage in loaded_stages:
+                self.assertEqual(schedules[stage],
+                                 [{"priority": {stage: 7}, "bpu_cores": {stage: [0]}}])
             self.assertEqual(report["utterances"][0]["text"], "andand")
             self.assertTrue(report["inference_executed"])
             self.assertTrue(report["inference_attempted"])

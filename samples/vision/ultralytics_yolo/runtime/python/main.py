@@ -71,13 +71,17 @@ from yolo_cli import (  # noqa: E402 - import paths kept for existing callers
 )
 
 
-def main() -> int:
+def main(argv=None) -> int:
     """Run the sample: resolve the plan, construct the model, predict once.
+
+    Args:
+        argv: Optional command-line argument sequence, excluding the program
+            name. None reads sys.argv through argparse.
 
     Returns:
         A process exit status.
     """
-    args = build_parser().parse_args()
+    args = build_parser().parse_args(argv)
 
     try:
         profile = resolve_platform(resolve_target(args.platform))
@@ -127,9 +131,10 @@ def main() -> int:
         # The readable flow itself: construct the dispatched task model,
         # run one prediction, present the result.
         from utils.py_utils import file_io, inspect as inspect_utils
-        from yolo_dispatch import create_runtime_model
+        from yolo_dispatch import prepare_runtime_model
 
-        model = create_runtime_model(profile, args)
+        Model, config = prepare_runtime_model(profile, args)
+        model = Model(config)
         # Explicit labels must match the bound model's class count before
         # any inference runs (never trusting --classes-num alone).
         validate_label_count(labels, model)
@@ -142,25 +147,6 @@ def main() -> int:
     except (BoardRuntimeUnavailableError, UnsupportedAssetError, ValueError, OSError) as exc:
         print(f"[Error] {exc}", file=sys.stderr)
         return 2
-
-
-def run_inference(profile, args, labels) -> None:
-    """Compatibility entry for callers that resolved the plan themselves.
-
-    Mirrors the construct → predict → present sequence ``main()`` performs
-    inline (update the two together); the task-renderer tests patch the
-    same helper seams both paths use.
-    """
-    from utils.py_utils import file_io, inspect as inspect_utils
-    from yolo_dispatch import create_runtime_model
-
-    model = create_runtime_model(profile, args)
-    validate_label_count(labels, model)
-    model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-    inspect_utils.print_model_info(model.model)
-    image = file_io.load_image(args.test_img)
-    result = model.predict(image)
-    present_result(args, image, result, labels)
 
 
 if __name__ == "__main__":

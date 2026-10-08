@@ -3,7 +3,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 LPRNet 从已准备的 float32 输入张量解码车牌文本。
 
 <a id="directory"></a>
 ## 目录结构
@@ -12,18 +12,16 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── lprnet.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-└── tensor_io.py  # Python 脚本
+├── lprnet.py  # 模型初始化与推理阶段
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
+└── run.sh  # 运行示例
 ```
 
 <a id="environment"></a>
 ## 环境
 
-在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3 和 NumPy。runtime 只有在选择、模型文件和板卡检查通过后才导入板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。编译模型必须暴露一个 float32 输入 `(1,3,24,94)` 和一个 float32 logits 输出，输出按 runtime metadata 原样绑定：发布版 `lpr.bin` 报告 `(1,68,18,1)`，即板端实际协议布局；3D `(1,68,18)` 仅作为旧 host/API 兼容契约保留（面向既有 host 测试与注入 runner），未观察到报告该布局的已发布 SDK 制品。不接受任何其它秩或轴顺序——绑定不做 reshape 或轴重排。
+在带有 `hbm_runtime` 的 RDK X5 镜像上使用 Python 3 和 NumPy。通过 `--help`、`--list-models` 和 `--dry-run` 查看参数及模型选择。发布模型 `lpr.bin` 接收 float32 `(1,3,24,94)` 输入，输出 float32 `(1,68,18,1)` logits。任务 API 也接受 `(1,68,18)` logits，各输出必须与其声明的元数据一致。
 
 <a id="usage"></a>
 ## 使用
@@ -55,7 +53,7 @@ python3 -m samples.vision.lprnet.runtime.python.main --target x5
 <a id="results"></a>
 ## 结果
 
-CLI 打印 `target`、完整 `asset_id` 和 `plate`。`LPRNetTask.postprocess` 返回 Python `str`，先只移除绑定布局的单元素轴——发布版制品为 `(1,68,18,1)`——得到源 `(68,18)` CTC 载荷，再对 18 个时间步做 argmax、连续重复删除和 blank 索引 `67` 删除。raw logits 保持 float32，不做 softmax。
+CLI 打印 `target`、完整 `asset_id` 和 `plate`。`LPRNetRecognizer.postprocess` 返回 Python `str`，先只移除绑定布局的单元素轴——发布版制品为 `(1,68,18,1)`——得到源 `(68,18)` CTC 载荷，再对 18 个时间步做 argmax、连续重复删除和 blank 索引 `67` 删除。raw logits 保持 float32，不做 softmax。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -64,19 +62,15 @@ CLI 打印 `target`、完整 `asset_id` 和 `plate`。`LPRNetTask.postprocess` �
 
 ```python
 from pathlib import Path
-from samples.vision.lprnet.runtime.python.model_binding import resolve_selection
-from samples.vision.lprnet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.lprnet.runtime.python.lprnet import LPRNetTask
+from samples.vision.lprnet.runtime.python.cli import resolve_selection
+from samples.vision.lprnet.runtime.python.lprnet import LPRNetRecognizer
 
 target = "x5"
 asset_id = "x5:lprnet:lpr.bin"
 model_path = Path("samples/vision/lprnet/model/lpr.bin")
 test_bin = Path("samples/vision/lprnet/test_data/test_input.dat")
 selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=5, bpu_cores=[0])
-task = LPRNetTask(runner, binding)
+task = LPRNetRecognizer(selection)
 prepared = task.preprocess(test_bin)
 raw_logits = task.infer(prepared.tensors)
 plate = task.postprocess(raw_logits)

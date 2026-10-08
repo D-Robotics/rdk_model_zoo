@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 CLIP 编码图片和文本提示，比较图文特征相似度。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,23 +14,19 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── main.py  # 命令行入口
-├── matching.py  # Python 脚本
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── matching.py  # 模型初始化与推理阶段
 ├── run.sh  # 运行示例
-├── simple_tokenizer.py  # Python 脚本
-├── tensor_io.py  # Python 脚本
-├── tokenization.py  # Python 脚本
-└── visualization.py  # Python 脚本
+├── simple_tokenizer.py  # CLIP BPE 分词算法
+└── tokenization.py  # 文本分词与输入准备
 ```
 
 <a id="environment"></a>
 ## 环境
 
 - 运行目标：RDK X5，图像 encoder 使用 `hbm_runtime`，文本 encoder 使用带 `CPUExecutionProvider` 的 `onnxruntime`；板端镜像与固件版本由部署环境选择。
-- Python 依赖：Python 3.10+、NumPy、OpenCV、PyYAML、`ftfy==6.3.1`、`regex==2026.9.10`。主机测试注入两个 runtime，不需要 ONNX Runtime。
+- Python 依赖：Python 3.10+、NumPy、OpenCV、PyYAML、`ftfy==6.3.1`、`regex==2026.9.10`。
 - 运行时制品：`PromptTokenizer` 加载 `bpe_simple_vocab_16e6.txt.gz`；图像和文本模型分开准备。BPE 清洗规则和 token ID 遵循原始词表。
 
 <a id="usage"></a>
@@ -88,16 +84,15 @@ CLI JSON 包含 `target`、`prompts`、`scores`、`order`、`image_saved`。`sco
 <a id="integration-example"></a>
 ## 集成示例
 
-前置：准备 X5 制品对并在 X5 板端运行。BPE 词表从本地内置路径加载。示例定义全部路径、ID、输入、`CLIPTask(runner, binding, PromptTokenizer)`、`explicit_result`、`composed_result`，并比较 `MatchResult` 的每个字段。
+前置：准备 X5 制品对并在 X5 板端运行。BPE 词表从本地内置路径加载。示例定义全部路径、ID、输入、`CLIPMatcher(selection, tokenizer=PromptTokenizer())`、`explicit_result`、`composed_result`，并比较 `MatchResult` 的每个字段。
 
 ```python
 from pathlib import Path
 import cv2
 import numpy as np
 
-from samples.vision.clip.runtime.python.matching import CLIPTask
-from samples.vision.clip.runtime.python.model_binding import resolve_selection
-from samples.vision.clip.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.clip.runtime.python.matching import CLIPMatcher
+from samples.vision.clip.runtime.python.cli import resolve_selection
 from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
 
 repo = Path.cwd()
@@ -121,10 +116,8 @@ selection = resolve_selection(
     image_model_path=image_model_path,
     text_model_path=text_model_path,
 )
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
-task = CLIPTask(runner, binding, PromptTokenizer())
+task = CLIPMatcher(selection, tokenizer=PromptTokenizer())
+task.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
 prepared = task.preprocess(image, texts)
 raw_outputs = task.infer(prepared.tensors)
@@ -142,9 +135,9 @@ print({"scores": composed_result.scores.tolist(),
 - `preprocess`：BGR `uint8` `H×W×3` 加非空文本序列 → `PreparedInput`。图像转 RGB，将短边固定为 224、长边按比例四舍五入后进行 bicubic resize，中心 crop 224，除以 255，生成 contiguous float32 `image` `(1,3,224,224)`。不使用 CLIP mean/std。真实 BPE 词表生成 contiguous int32 `texts` `(N,77)`，包含源 SOT/EOT ID。`context` 保存几何信息和文本。
 - `infer`：语义 `image`/`texts` tensor → `image_feature` float32 `(1,512)`、`text_features` float32 `(N,512)` 原始 mapping。runner 将语义 key 适配到动态 image metadata 名称和 ONNX 文本名称；文本 metadata 必须为 I32 `[N,77]` 输入、F32 `[N,512]` 输出。
 - `postprocess`：原始特征 → `MatchResult(scores, order)`。计算 cosine similarity 和降序 `argsort`，不返回 softmax 或特征 L2 变换。
-- `predict(image, texts)` 严格串联三阶段。词表读取与初始化、绘图和文件写入在 task 外部；preprocess 委托注入的 tokenizer 编码。
+- `predict(image, texts)` 严格串联三阶段。模型初始化 tokenizer，也可通过 `tokenizer` 参数传入实例。`preprocess` 使用 tokenizer 编码文本；CLI 负责绘图和文件输出。
 
-CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、prompt 解析与结果展示，`main.py` 负责解析、解析模型对、构造 `CLIPTask` 并调用 `predict`。
+CLI 入口保持同一拆分：[cli.py](cli.py) 承载参数声明、model-free 的 `--list-models`/`--dry-run` 模式、prompt 解析与结果展示，`main.py` 负责解析、解析模型对、构造 `CLIPMatcher` 并调用 `predict`。
 
 <a id="troubleshooting"></a>
 ## 故障排查

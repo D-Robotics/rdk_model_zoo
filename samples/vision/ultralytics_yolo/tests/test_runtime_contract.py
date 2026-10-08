@@ -26,7 +26,7 @@ class RuntimeContract(unittest.TestCase):
         for platform in ('x5', 's100', 's100p', 's600'):
             profile = resolve_platform(platform)
             for module, name, count in [('yolo_cls', 'YoloCls', 1),
-                                         ('yolo_detect', 'YoloDetect', 6),
+                                         ('detect', 'YoloDetect', 6),
                                          ('yolo_seg', 'YoloSeg', 10),
                                          ('yolo_pose', 'YoloPose', 9),
                                          ('yolo_v10detect', 'YoloV10Detect', 6)]:
@@ -39,9 +39,9 @@ class RuntimeContract(unittest.TestCase):
                     runtime = types.SimpleNamespace(model_names=['m'], input_names={'m': names},
                         input_shapes={'m': shapes}, output_names={'m': [str(i) for i in range(count)]})
                     fake = types.SimpleNamespace(HB_HBMRuntime=lambda _: runtime)
-                    m = importlib.import_module(module)
+                    m = importlib.import_module('samples.vision.ultralytics_yolo.runtime.python.' + module)
                     cfg = getattr(m, name + 'Config')(model_path='stub', platform=profile)
-                    if module in ('yolo_detect', 'yolo_seg', 'yolo_pose', 'yolo_cls', 'yolo_v10detect'):
+                    if module in ('detect', 'yolo_seg', 'yolo_pose', 'yolo_cls', 'yolo_v10detect'):
                         # The new detector requires the descriptors provided
                         # by the real SDK, not the former names-only fixture.
                         runtime.input_dtypes = {'m': {n: np.dtype(np.uint8) for n in names}}

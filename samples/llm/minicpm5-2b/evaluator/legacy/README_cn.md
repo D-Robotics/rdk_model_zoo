@@ -10,6 +10,19 @@ Python 3.10、NumPy 和 `hbm_runtime`；生成验证还需要 g++ 和
 `nlohmann/json.hpp`（Ubuntu 包 `nlohmann-json3-dev`）。必须在 Python
 导入运行库前设置 SDK 库路径。同一块板上不要同时执行 PPL 与生成测试。
 
+## 目录结构
+
+```text
+legacy/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── acceptance.cc  # 源码或数据文件
+├── evaluate.py  # Python 脚本
+├── prepare.py  # Python 脚本
+├── run.sh  # 运行示例
+└── run_acceptance.sh  # Shell 脚本
+```
+
 ## 主机准备统一输入
 
 在安装了 NumPy、datasets、transformers 的环境中，使用转换说明中固定的

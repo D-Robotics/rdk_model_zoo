@@ -122,7 +122,7 @@ class BindingTests(unittest.TestCase):
 
     def test_invalid_group_is_rejected_before_any_sdk_factory_call(self):
         runtime_module = importlib.import_module(
-            "samples.speech.paraformer.runtime.python.runtime"
+            "samples.speech.paraformer.runtime.python.pipeline"
         )
         selected = list(self.binding.resolve_selections("s100"))
         selected[2] = replace(selected[2], asset=selected[0].asset)
@@ -133,7 +133,7 @@ class BindingTests(unittest.TestCase):
             raise RuntimeError("SDK factory must not run")
 
         with self.assertRaises(ValueError):
-            runtime_module.load_runtime(
+            runtime_module.ParaformerPipeline.from_models(
                 selected, [f"t{i}" for i in range(8404)], runtime_factory=factory
             )
         self.assertEqual(calls, [])
@@ -161,7 +161,7 @@ class BindingTests(unittest.TestCase):
 
     def test_shared_runners_execute_pipeline_and_delegate_all_scheduling(self):
         runtime_module = importlib.import_module(
-            "samples.speech.paraformer.runtime.python.runtime"
+            "samples.speech.paraformer.runtime.python.pipeline"
         )
         runtimes = {}
 
@@ -203,11 +203,11 @@ class BindingTests(unittest.TestCase):
 
         selected = self.binding.resolve_selections("s100")
         vocabulary = [f"token{i}" for i in range(8404)]
-        bundle = runtime_module.load_runtime(
+        bundle = runtime_module.ParaformerPipeline.from_models(
             selected, vocabulary, runtime_factory=factory
         )
         bundle.set_scheduling_params(priority=7, bpu_cores=[0])
-        result = bundle.pipeline.predict(np.zeros((1, 400, 560), np.float32), 2)
+        result = bundle.predict(np.zeros((1, 400, 560), np.float32), 2)
         self.assertEqual(result.text, "token3token3")
         for stage, runtime in runtimes.items():
             self.assertEqual(

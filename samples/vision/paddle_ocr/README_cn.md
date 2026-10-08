@@ -19,9 +19,6 @@
 | RDK X5 | PP-OCRv3 英文 | 单个 packed NV12 张量（640×640） | F32 `[1,40,97,1]`：固定 96 字符字母表加 blank |
 | RDK S100 | PP-OCRv6 | split NV12 `x_y`（640×640）+ `x_uv`（320×320） | F32 `[1,40,18710]`：随仓 UTF-8 词典加 blank 与末尾空格 |
 
-旧 X5/S Python 入口与旧 S C++ 源码均转发到本 实现；它们仍是
-可用的快捷入口，本 sample 不维护第二套实现。
-
 <a id="directory"></a>
 ## 目录结构
 
@@ -48,7 +45,7 @@ paddle_ocr/
 | S100P | not-supported（未发布 OCR 模型对） | not-supported |
 | S600 | supported | supported |
 
-Python 默认与保持长宽比两条管线（含兼容包装入口）在 X5 与 S100 上运行，
+Python 默认与保持长宽比两条管线（含下载脚本）在 X5 与 S100 上运行，
 输出检测/识别阶段张量并解码为多边形框与识别文本；S100 C++ 构建将识别
 结果渲染到输出图像。S600 与
 S100 共享源码与 SoC 探测；S600 结果请在 S600 板卡上运行对应命令获取。
@@ -113,12 +110,6 @@ S100P 在两侧发布清单中均无匹配的模型对，sample 对其显式拒�
      --rec-model-path /opt/hobot/model/s100/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
      --test-img samples/vision/paddle_ocr/test_data/s100/gt_2322.jpg \
      --output-format json
-   ```
-
-5. 主机契约测试（无需板卡；成功：全部 OK，退出码 0）：
-
-   ```bash
-   python3 -m unittest discover -s samples/vision/paddle_ocr/tests -v
    ```
 
 <a id="expected-results"></a>

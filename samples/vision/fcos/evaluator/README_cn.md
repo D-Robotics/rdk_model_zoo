@@ -21,7 +21,7 @@ evaluator/
 ## 环境
 
 - 执行目标：已识别的 RDK X5 板卡、`hbm_runtime` 和一个精确 manifest 制品。
-- 主机依赖：`requirements-host.txt` 中的 Python 3.10+、NumPy、OpenCV、PyYAML、SciPy；源 postprocess helper 会导入 SciPy。主机测试注入 fake runtime，不加载板端 SDK。
+- 主机依赖：`requirements-host.txt` 中的 Python 3.10+、NumPy、OpenCV、PyYAML、SciPy；源 postprocess helper 会导入 SciPy。
 - 评估器执行锁定的原始 X5 脚本（从 Git 历史加载），并在相同图片、制品、阈值和 direct resize 几何下执行本 sample 的 FCOS task。
 
 <a id="command"></a>

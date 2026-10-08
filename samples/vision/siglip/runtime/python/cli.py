@@ -11,12 +11,123 @@ loads a board SDK.
 from __future__ import annotations
 import argparse
 import json
+from dataclasses import dataclass
 from pathlib import Path
 import sys
+from typing import Optional
 
-from samples.vision.siglip.runtime.python.model_binding import (
-    SAMPLE_DIR, SUBMODELS, VARIANTS, list_available_assets, resolve_selection,
-)
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+
+SUBMODELS = ('pooler_output', 'last_hidden_state')
+SUPPORTED_TARGETS = ('s100', 's100p')
+DEFAULT_VARIANT = 'base-patch16-224'
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+# size, embedding dimension, patch tokens: literal source evaluator facts.
+VARIANTS = {
+    'base-patch16-224': (224, 768, 196),
+    'base-patch16-384': (384, 768, 576),
+    'base-patch16-512': (512, 768, 1024),
+    'large-patch16-256': (256, 1024, 256),
+    'large-patch16-384': (384, 1024, 576),
+    'so400m-patch14-224': (224, 1152, 256),
+    'so400m-patch14-384': (384, 1152, 729),
+    'so400m-patch16-256-i18n': (256, 1152, 256),
+}
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    """Exact asset, actual execution target and selected packed submodel.
+
+    Attributes:
+        asset: Manifest asset record backing the selection.
+        target: Concrete execution target (s100 or s100p).
+        variant: Published variant name.
+        model_path: Local compiled model path.
+        submodel: Selected packed submodel name.
+        image_size: Fixed square input size of the selected variant.
+    """
+
+    asset: Asset
+    target: str
+    variant: str
+    model_path: Path
+    submodel: str
+    image_size: int
+
+
+def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
+    """Read eight unique manifest assets; both supported targets use these files.
+
+    Args:
+        target: Concrete target filter; other known targets publish nothing.
+
+    Returns:
+        tuple[Asset, ...]: Published assets in manifest order.
+
+    Raises:
+        ValueError: The target is unknown or the publication changed.
+    """
+    if target not in (None, 'auto', *SUPPORTED_TARGETS):
+        if target not in ('x5', 's600'):
+            raise ValueError(f'Unknown target: {target}')
+        return ()
+    assets = list_assets('s', 'siglip')
+    expected = {f's100/bpu-siglip-{v}.hbm' for v in VARIANTS}
+    if {a.filename for a in assets} != expected or any(a.format != 'hbm' for a in assets):
+        raise ValueError('SigLIP publication changed; review its finite contracts first.')
+    return assets
+
+
+def resolve_selection(target: str = 'auto', *, variant: Optional[str] = None,
+                      asset_id: Optional[str] = None, model_path: Optional[str] = None,
+                      submodel: str = 'pooler_output', image_size: Optional[int] = None,
+                      soc_name: Optional[str] = None, board_type: Optional[str] = None) -> ModelSelection:
+    """Resolve source-backed S100/S100P support, never infer it from file names.
+
+    Args:
+        target: ``auto`` resolves the executing board; s100/s100p are the
+            published targets.
+        variant: Published variant; defaults to base-patch16-224.
+        asset_id: Qualified manifest reference; a ``model_path`` override
+            requires the exact reference.
+        model_path: Optional explicit local path for the selected asset.
+        submodel: Packed submodel to execute (default pooler_output).
+        image_size: Optional assertion; must equal the variant's fixed size.
+        soc_name: Optional board-identity override for ``auto`` resolution.
+        board_type: Optional board-type override for ``auto`` resolution.
+
+    Returns:
+        ModelSelection: Concrete target, variant, submodel, and local path.
+
+    Raises:
+        ValueError: The target, variant, asset, or path combination is
+            invalid.
+    """
+    target = resolve_target(target, soc_name=soc_name, board_type=board_type)
+    if target not in SUPPORTED_TARGETS:
+        raise ValueError(f'No published SigLIP support for {target}; use s100/s100p.')
+    if submodel not in SUBMODELS:
+        raise ValueError(f'Unknown SigLIP submodel: {submodel}')
+    if model_path is not None and asset_id is None:
+        raise ValueError('An external model-path requires the exact manifest asset-id.')
+    assets = list_available_assets(target)
+    if asset_id is None:
+        variant = DEFAULT_VARIANT if variant is None else variant
+        asset_id = f's:siglip:s100/bpu-siglip-{variant}.hbm'
+    matches = [a for a in assets if a.reference == asset_id]
+    if len(matches) != 1:
+        raise ValueError(f'Unknown SigLIP asset-id: {asset_id}')
+    asset = matches[0]
+    actual = next(v for v in VARIANTS if asset.filename == f's100/bpu-siglip-{v}.hbm')
+    if variant is not None and variant != actual:
+        raise ValueError(f'Variant {variant!r} does not match asset {asset.reference}.')
+    size = VARIANTS[actual][0]
+    if image_size is not None and image_size != size:
+        raise ValueError(f'image-size must be {size} for {actual}, got {image_size}.')
+    path = Path(model_path).expanduser() if model_path is not None else SAMPLE_DIR / 'model' / asset.filename
+    return ModelSelection(asset, target, actual, path, submodel, size)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -98,5 +209,7 @@ def save_feature_tensor(path: str, result) -> None:
     print(f'Feature tensor saved: {output}')
 
 
-__all__ = ['build_parser', 'read_bgr_image', 'run_dry_run', 'run_list_models',
+__all__ = ['DEFAULT_VARIANT', 'ModelSelection', 'SUBMODELS', 'SUPPORTED_TARGETS',
+           'VARIANTS', 'build_parser', 'list_available_assets', 'read_bgr_image',
+           'resolve_selection', 'run_dry_run', 'run_list_models',
            'save_feature_tensor', 'summarize_result', 'print_summary']

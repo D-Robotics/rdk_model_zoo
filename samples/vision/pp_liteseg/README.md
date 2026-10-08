@@ -32,7 +32,7 @@ pp_liteseg/
 | x5 | STDC1 / Cityscapes / 1024×512 | supported | not-supported |
 | s100 / s100p / s600 | none published | not-supported | not-supported |
 
-Host fixtures verify preprocessing, class-map decoding, rendering, selection and CLI behavior; board execution requires the X5 SDK and the published BIN.
+Board inference requires the X5 SDK and the matching published BIN.
 
 <a id="prerequisites"></a>
 ## Prerequisites

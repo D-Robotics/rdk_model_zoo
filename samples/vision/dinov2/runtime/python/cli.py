@@ -12,18 +12,119 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 import sys
 
-from samples.vision.dinov2.runtime.python.model_binding import (
-    OUTPUT_SHAPES,
-    SAMPLE_DIR,
-    SUPPORTED_TARGETS,
-    list_available_assets,
-)
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+SUPPORTED_TARGETS = ("s100", "s100p", "s600")
+MARCHES = {"s100": "nash-e", "s100p": "nash-m", "s600": "nash-p"}
+OUTPUTS = ("cls_feat", "patch_feat")
+OUTPUT_SHAPES = {
+    "cls_feat": (1, 384),
+    "patch_feat": (1, 256, 384),
+}
 
 DEFAULT_TEST_IMAGE = SAMPLE_DIR / "test_data/dog.jpg"
 DEFAULT_SECOND_IMAGE = SAMPLE_DIR / "test_data/bus.jpg"
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    """One published manifest asset and its selected local path.
+
+    Attributes:
+        asset: Manifest asset record backing the selection.
+        target: Concrete execution target (s100, s100p, or s600).
+        model_path: Local compiled model path.
+        explicit_model_path: Whether the caller supplied the path explicitly.
+    """
+
+    asset: Asset
+    target: str
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def _expected_filename(target: str) -> str:
+    march = MARCHES[target]
+    suffix = {"nash-e": "nashe", "nash-m": "nashm", "nash-p": "nashp"}[march]
+    return f"{march}/dinov2_vits14_224_int16_{suffix}.hbm"
+
+
+def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
+    """Return the three exact HBM rows from the S publication manifest.
+
+    Args:
+        target: Concrete target filter; ``auto``/None lists all publications.
+
+    Returns:
+        tuple[Asset, ...]: Published assets in manifest order.
+
+    Raises:
+        ValueError: The target is unknown or the publication changed.
+    """
+    if target not in (None, "auto", *SUPPORTED_TARGETS):
+        if target in ("x5",):
+            return ()
+        raise ValueError(f"Unknown target: {target}")
+    assets = list_assets("s", "dinov2")
+    expected = {_expected_filename(key) for key in SUPPORTED_TARGETS}
+    actual = {asset.filename for asset in assets}
+    if actual != expected or any(asset.format != "hbm" for asset in assets):
+        raise ValueError("DINOv2 publication changed; review its finite contracts first.")
+    if target in (None, "auto"):
+        return tuple(asset for asset in assets if asset.filename in expected)
+    filename = _expected_filename(target)
+    return tuple(asset for asset in assets if asset.filename == filename)
+
+
+def resolve_selection(
+    target: str = "auto",
+    *,
+    asset_id: Optional[str] = None,
+    model_path: "str | Path | None" = None,
+    soc_name: Optional[str] = None,
+    board_type: Optional[str] = None,
+) -> ModelSelection:
+    """Resolve an exact published asset without filename or target fallback.
+
+    Args:
+        target: ``auto`` resolves the executing board; s100/s100p/s600 are
+            the published targets.
+        asset_id: Qualified manifest reference; a ``model_path`` override
+            requires the exact reference.
+        model_path: Optional explicit local path for the selected asset.
+        soc_name: Optional board-identity override for ``auto`` resolution.
+        board_type: Optional board-type override for ``auto`` resolution.
+
+    Returns:
+        ModelSelection: Concrete target, manifest asset, and local path.
+
+    Raises:
+        ValueError: The target, asset, or path combination is invalid.
+    """
+    resolved = resolve_target(target, soc_name=soc_name, board_type=board_type)
+    if resolved not in SUPPORTED_TARGETS:
+        raise ValueError(f"No published DINOv2 support for {resolved}.")
+    if model_path is not None and asset_id is None:
+        raise ValueError("An external model-path requires the exact manifest asset-id.")
+
+    assets = list_available_assets(resolved)
+    if asset_id is None:
+        matches = assets
+    else:
+        matches = tuple(asset for asset in assets if asset.reference == asset_id)
+    if len(matches) != 1:
+        available = ", ".join(asset.reference for asset in assets)
+        raise ValueError(f"Unknown DINOv2 asset-id {asset_id!r}; available: {available}")
+    asset = matches[0]
+    path = Path(model_path).expanduser() if model_path is not None else SAMPLE_DIR / "model" / asset.filename
+    return ModelSelection(asset, resolved, path, model_path is not None)
 
 
 def build_parser() -> argparse.ArgumentParser:

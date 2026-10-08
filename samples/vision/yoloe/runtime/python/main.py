@@ -4,9 +4,9 @@
 
 Option declarations, the model-free listing/dry-run modes and the result
 report live in ``cli.py``.  This entry stays focused on the execution path:
-resolve the selection, build the config, construct ``YOLOE`` with its runner
-and call ``predict`` once; rendering the annotated image is a separate
-visualization step.
+resolve the selection, build the config, construct ``YOLOE`` (it loads the
+selected artifact itself) and call ``predict`` once; rendering the
+annotated image is a separate visualization step.
 """
 
 from pathlib import Path
@@ -41,8 +41,7 @@ def main(argv=None):
             model_path=args.model_path,
             local_float_sha256=args.local_float_sha256,
         )
-        from samples.vision.yoloe.runtime.python.yoloe import YOLOE, Config
-        from samples.vision.yoloe.runtime.python.pipeline_io import validate_config
+        from samples.vision.yoloe.runtime.python.config import Config, validate_config
 
         config = Config(
             args.score_thres,
@@ -58,16 +57,15 @@ def main(argv=None):
         validate_scheduling(args)
         if args.dry_run:
             return run_dry_run(selection, config)
-        from samples.vision.yoloe.runtime.python.model_runner import build_runner
+        from samples.vision.yoloe.runtime.python.yoloe import YOLOE
         from samples.vision.yoloe.runtime.python.visualization import (
             load_inputs,
             save_result,
         )
 
-        runner = build_runner(selection)
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         image, labels = load_inputs(args.test_img, args.label_file)
-        model = YOLOE(selection, config, runner=runner)
+        model = YOLOE(selection, config)
+        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         result = model.predict(image)
         save_result(
             args.img_save_path, image, result, labels, contours=not args.no_contour

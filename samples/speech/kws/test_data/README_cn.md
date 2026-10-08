@@ -2,6 +2,16 @@
 
 [English](README.md) | 简体中文
 
+
+## 目录结构
+
+```text
+test_data/
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
+
 `sample.wav` 从固定 S 源 `380e1a2bf42041af54be6f34935e50197cfadff9` 逐字节复制。它是源中的“hey snips”演示录音：单声道 PCM16、16000 Hz、40000 帧、2.5 秒。
 
 SHA-256：`eb39ea9bff0e37e262ee3735eba4111a52bb53a84bb776d28a43d7cea6b88cad`。

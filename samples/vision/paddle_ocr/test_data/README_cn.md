@@ -3,6 +3,19 @@
 本试点只复制 X5 和 S100 Python 对照所需的默认 fixture，文件内容与已有平台
 样例保持一致：
 
+
+## 目录结构
+
+```text
+test_data/
+├── s100/  # s100 相关文件
+├── x5/  # x5 相关文件
+├── FangSong.ttf  # C++ 文本渲染字体
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
+
 | 文件 | 原始来源 | SHA-256 | 许可说明 |
 | --- | --- | --- | --- |
 | `x5/paddleocr_test.jpg` | `platforms/x5/samples/vision/paddleocr/test_data/paddleocr_test.jpg` | `5b4a7fb523c7c459c8d3cec67480c1872cd7b3674b34505467420561ad8c577e` | 见 X5 Apache-2.0 license |

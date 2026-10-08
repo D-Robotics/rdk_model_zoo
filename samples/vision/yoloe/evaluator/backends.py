@@ -16,8 +16,8 @@ from samples.vision.yoloe.runtime.python.model_binding import (
     resolve_selection,
     runtime_selection,
 )
-from samples.vision.yoloe.runtime.python.pipeline_io import validate_config
-from samples.vision.yoloe.runtime.python.postprocess import decode_result
+from samples.vision.yoloe.runtime.python.config import validate_config
+from samples.vision.yoloe.runtime.python.yoloe import decode_result
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE
 
 NAMES = Path(__file__).resolve().parents[1] / "test_data/classes.names"

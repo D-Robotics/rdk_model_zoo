@@ -3,7 +3,7 @@
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Decode license plate text from the prepared LPRNet float32 input tensor.
 
 <a id="directory"></a>
 ## Directory structure
@@ -12,18 +12,16 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── lprnet.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── run.sh  # Run the sample
-└── tensor_io.py  # Python script
+├── lprnet.py  # Model initialization and inference stages
+├── cli.py  # Arguments, model selection and result output
+├── main.py  # CLI entry: construct model and call predict
+└── run.sh  # Run the sample
 ```
 
 <a id="environment"></a>
 ## Environment
 
-Use Python 3 and NumPy on an RDK X5 image with `hbm_runtime` available. The runtime imports the board SDK only after selection, model-file, and board checks. `--help`, `--list-models`, and `--dry-run` are SDK-free. The compiled model must expose one float32 input `(1,3,24,94)` and one float32 logits output bound exactly as its metadata reports it: the released `lpr.bin` reports `(1,68,18,1)` — the actual board protocol layout; the 3D `(1,68,18)` layout is kept only as the old host/API compatibility contract (existing host tests and injected runners), and no published SDK artifact has been observed with it. No other rank or axis order is accepted — the binding never reshapes or permutes.
+Use Python 3 and NumPy on an RDK X5 image with `hbm_runtime`. Use `--help`, `--list-models` and `--dry-run` to inspect command options and selections. The published `lpr.bin` takes float32 `(1,3,24,94)` input and returns float32 `(1,68,18,1)` logits. The task API also accepts `(1,68,18)` logits; each output must match its declared metadata.
 
 <a id="usage"></a>
 ## Usage
@@ -55,7 +53,7 @@ Success is exit code `0` and one JSON line with `plate`. The zero-argument input
 <a id="results"></a>
 ## Results
 
-The CLI prints `target`, qualified `asset_id`, and `plate`. `LPRNetTask.postprocess` returns a Python `str`; it first drops only the bound layout's singleton axes — `(1,68,18,1)` for the released artifact — to the source `(68,18)` CTC payload, then applies argmax over 18 time steps, consecutive duplicate removal, and blank index `67` removal. Raw logits remain float32 and are not softmaxed.
+The CLI prints `target`, qualified `asset_id`, and `plate`. `LPRNetRecognizer.postprocess` returns a Python `str`; it first drops only the bound layout's singleton axes — `(1,68,18,1)` for the released artifact — to the source `(68,18)` CTC payload, then applies argmax over 18 time steps, consecutive duplicate removal, and blank index `67` removal. Raw logits remain float32 and are not softmaxed.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -64,19 +62,15 @@ The following is complete after the model file and bundled input exist; it defin
 
 ```python
 from pathlib import Path
-from samples.vision.lprnet.runtime.python.model_binding import resolve_selection
-from samples.vision.lprnet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.lprnet.runtime.python.lprnet import LPRNetTask
+from samples.vision.lprnet.runtime.python.cli import resolve_selection
+from samples.vision.lprnet.runtime.python.lprnet import LPRNetRecognizer
 
 target = "x5"
 asset_id = "x5:lprnet:lpr.bin"
 model_path = Path("samples/vision/lprnet/model/lpr.bin")
 test_bin = Path("samples/vision/lprnet/test_data/test_input.dat")
 selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=5, bpu_cores=[0])
-task = LPRNetTask(runner, binding)
+task = LPRNetRecognizer(selection)
 prepared = task.preprocess(test_bin)
 raw_logits = task.infer(prepared.tensors)
 plate = task.postprocess(raw_logits)
@@ -91,7 +85,6 @@ print(plate)
 - `infer(tensors)` validates the bound name/shape/dtype, calls the selected model, and returns an owned raw float32 array in the bound native shape — `(1,68,18,1)` for the released `lpr.bin`; every call must match the bound shape exactly.
 - `postprocess(raw)` removes only singleton axes of the bound native logits (never a reshape or axis reorder) and applies the source CTC-style decode, returning `str`.
 - `predict(test_bin)` serially composes all three stages; the context is the input path and is not stored as mutable task state.
-- The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

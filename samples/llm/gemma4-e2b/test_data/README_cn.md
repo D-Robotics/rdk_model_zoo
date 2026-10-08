@@ -10,6 +10,15 @@
 | `results/image.jpg` | 源项目展示图 |
 | `results/test1.jpg`、`test2.jpg`、`test3.jpg` | 运行会话示例截图，用于演示运行效果 |
 
+## 目录结构
+
+```text
+test_data/
+├── results/  # results 相关文件
+├── README.md  # 英文说明
+└── README_cn.md  # 中文说明
+```
+
 ## 使用
 
 完成 [模型准备](../model/README_cn.md) 和 [原生构建](../runtime/cpp/README_cn.md#build) 后，从仓库根目录运行：

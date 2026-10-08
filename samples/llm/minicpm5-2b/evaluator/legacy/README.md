@@ -11,6 +11,19 @@ and `nlohmann/json.hpp` (Ubuntu package `nlohmann-json3-dev`). Set the SDK libra
 path before Python imports the runtime. Do not run PPL and generation concurrently
 on the same board.
 
+## Directory structure
+
+```text
+legacy/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── acceptance.cc  # Source or data file
+├── evaluate.py  # Python script
+├── prepare.py  # Python script
+├── run.sh  # Run the sample
+└── run_acceptance.sh  # Shell command
+```
+
 ## Prepare the shared input on the host
 
 In an environment with NumPy, datasets and transformers, use the original pinned

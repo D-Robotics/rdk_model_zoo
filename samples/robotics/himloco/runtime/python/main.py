@@ -1,90 +1,60 @@
 """HIMLoco: published X5 model selection and source-indexed offline inference.
 
-This entry stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run modes, resolve the selection, then run the
-offline loop visibly — obtain the bound policy task through
-``application.load_task``, execute the explicitly requested warmups, call
-``task.predict`` once per observation and record each action dump through
-``application`` helpers, which also own the report/failure evidence. The
-policy's preprocess → infer → postprocess chain lives in ``policy.py``.
+This entry stays deliberately small and keeps the construction and loop
+visible: parse the arguments, handle the model-free listing/dry-run modes,
+resolve the selection, prepare the evidence-collected run, construct the
+bound policy task through ``HimLocoTask.from_model``, apply scheduling,
+record the runtime evidence, execute the explicitly requested warmups,
+call ``task.predict`` once per observation, record each action dump and
+complete the report through the ``cli`` helpers. The policy's preprocess →
+infer → postprocess chain, the raw runner construction and the model-owned
+loader live in ``policy.py``; offline policy inference only — never
+actuators.
 """
 
-import argparse
 import json
 from pathlib import Path
 import sys
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[5]))
-from samples.robotics.himloco.runtime.python.model_binding import (
-    SAMPLE_DIR,
+from samples.robotics.himloco.runtime.python.cli import (  # noqa: E402
+    build_parser,  # re-exported here: the contract checker imports it from main
+    complete,
+    normalize_args,
+    note_runtime,
+    prepare,
+    print_resolution,
+    record_sample,
+)
+from samples.robotics.himloco.runtime.python.model_binding import (  # noqa: E402
     resolve_selection,
 )
-
-
-def build_parser():
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument(
-        "--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto"
-    )
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--list-models", action="store_true")
-    mode.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--asset-id")
-    parser.add_argument("--model-path", type=Path)
-    parser.add_argument(
-        "--input-path", type=Path, default=SAMPLE_DIR / "test_data/obs_history"
-    )
-    parser.add_argument("--output-dir", type=Path, default=Path("outputs/himloco"))
-    parser.add_argument("--report", type=Path)
-    parser.add_argument("--warmup", type=int, default=10)
-    parser.add_argument("--priority", type=int)
-    parser.add_argument("--bpu-cores", type=int, nargs="+")
-    return parser
 
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
     try:
-        if args.warmup < 0:
-            raise ValueError("warmup must be nonnegative")
-        if args.priority is not None and not 0 <= args.priority <= 255:
-            raise ValueError("priority must be in [0,255]")
-        if args.bpu_cores is not None and any(c < 0 for c in args.bpu_cores):
-            raise ValueError("BPU cores must be nonnegative")
-        for key, value in vars(args).items():
-            if isinstance(value, Path):
-                setattr(args, key, value.expanduser().resolve())
-        target = "x5" if args.list_models and args.target == "auto" else args.target
-        if args.dry_run and target == "auto":
+        normalize_args(args)
+        if args.dry_run and args.target == "auto":
             raise ValueError("Host dry-run requires --target x5")
         selected = resolve_selection(
-            target, model_path=args.model_path, asset_id=args.asset_id
+            args.target, model_path=args.model_path, asset_id=args.asset_id
         )
         if args.list_models or args.dry_run:
-            print(
-                json.dumps(
-                    {
-                        "target": selected.target,
-                        "asset_id": selected.asset.reference,
-                        "model_path": str(selected.model_path),
-                        "url": selected.asset.url,
-                        "sha256": selected.asset.sha256,
-                        "input_path": str(args.input_path),
-                        "sdk_loaded": False,
-                        "downloaded": False,
-                        "metadata_verified": False,
-                    },
-                    indent=2,
-                )
-            )
-            return 0
-        from samples.robotics.himloco.runtime.python import application
+            return print_resolution(args, selected)
         from samples.robotics.himloco.runtime.python.input_io import load_observation
 
-        run = application.prepare(args, selected)
+        run = prepare(args, selected)
         try:
-            task = application.load_task(run)
+            # Visible model construction: the task owns its runner and load.
+            from samples.robotics.himloco.runtime.python.policy import HimLocoTask
+
+            task = HimLocoTask.from_model(run.selection)
+            task.set_scheduling_params(
+                priority=args.priority, bpu_cores=args.bpu_cores
+            )
+            note_runtime(run, task)
             first, _ = load_observation(run.records[0])
             for _ in range(args.warmup):
                 task.predict(first)
@@ -95,9 +65,9 @@ def main(argv=None):
                 run.persist()
                 values, digest = load_observation(record)
                 result = task.predict(values)
-                application.record_sample(run, record, result, digest)
+                record_sample(run, record, result, digest)
                 latencies.append(result.latency_ms)
-            application.complete(run, latencies)
+            complete(run, latencies)
         except Exception as error:
             run.mark_failed(error)
             raise

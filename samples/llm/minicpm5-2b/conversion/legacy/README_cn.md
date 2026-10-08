@@ -6,11 +6,24 @@
 
 本目录针对 D-Robotics LLM S100 **1.0.0 SDK**（Python 3.10、leap_llm），与上层 S600 的 OELLM 2.0/lightcompress 流程独立。下载 [SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_SDK.tar.gz) 和 [用户手册](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_Doc.zip)，严格按包内文档安装 requirements、编译器和 leap_llm，不能修改版本配置或混装 2.0 的 wheel。
 
+## 目录结构
+
+```text
+legacy/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── legacy_adapter.py  # Python 脚本
+├── main.py  # 命令行入口
+├── prepare_calibration.py  # Python 脚本
+├── prepare_tokenizer.py  # Python 脚本
+└── retarget.py  # Python 脚本
+```
+
 ## 模型与适配
 
 原始 [openbmb/MiniCPM5-2B](https://huggingface.co/openbmb/MiniCPM5-2B) revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`。保留原始 config、tokenizer 和 safetensors。模型为 bias-free Llama：42 层、hidden 2048、Q heads 16、KV heads 2、head_dim 128、RoPE theta 5000000、词表 130560。
 
-`legacy_adapter.py` 复用 SDK DeepSeek 的 Llama 兼容实现，移除 Q/K/V bias 并 strict load 全部原始权重，启用 preserve_precision 和 W8。不是把模型变成 DeepSeek。`main.py` 注册外部模型，复用原 SDK 的校准、导出、编译入口，不改 SDK 源码。已测 chunk=256/cache=4096；更改配置需重新编译和验证。
+`legacy_adapter.py` 复用 SDK DeepSeek 的 Llama 兼容实现，移除 Q/K/V bias 并 strict load 全部原始权重，启用 preserve_precision 和 W8。`main.py` 注册外部模型，复用原 SDK 的校准、导出、编译入口，不改 SDK 源码。发布制品使用 chunk=256/cache=4096；更改配置需重新编译和评估。
 
 ## 复现
 
@@ -36,4 +49,4 @@ python retarget.py   --source-hbm ./output/s100/minicpm5-2b_chunk_256_cache_4096
 
 运行文件仅需 HBM、`deployment-tokenizer/`、LICENSE、修改说明和校验清单；不分发 SDK、`.bc`、`.hbo` 或编译缓存。公开包将 HBM 重命名为 `minicpm5-2b_ctx4096_s100.hbm` / `minicpm5-2b_ctx4096_s100p.hbm`。tokenizer 准备仅转换 BPE merges 序列化、使用等价的纯文本非思考模板，并选择已有 chat EOS 130073，不改词表和合并顺序。
 
-参见 [模型下载](../../model/README_cn.md) 与 [全量板端验证](../../evaluator/README_cn.md)。两份 legacy HBM 全量 PPL 均为 17.91995，相对浮点上升 27.83%，未达到 ≤3% 目标。生成对照差异与功能测试记录见 [legacy 评估说明](../../evaluator/legacy/README_cn.md)；S600 的 PPL 数值仅对应 S600 产物。
+参见 [模型下载](../../model/README_cn.md) 与 [全量板端验证](../../evaluator/README_cn.md)。两份 legacy HBM 全量 PPL 均为 17.91995，相对浮点上升 27.83%，未达到 ≤3% 目标。生成对照差异与功能测试记录见 [OELLM 1.0.0 评估说明](../../evaluator/legacy/README_cn.md)；S600 的 PPL 数值仅对应 S600 产物。

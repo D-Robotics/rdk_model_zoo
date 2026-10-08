@@ -111,4 +111,4 @@ INT16 names describe the compiled model recipe, not permission to guess I/O dtyp
 The three `.hbm` files are compiled S100 artifacts: publisher SHA-256 is
 `null (unknown)` for each. `tokens.json` is UTF-8 JSON; `am.mvn` is text CMVN;
 `paraformer_config.yaml` is YAML. The hashes above identify the locally pinned
-auxiliary bytes, not a claim of publisher-issued signatures.
+auxiliary bytes for local file verification.

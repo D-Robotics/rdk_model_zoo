@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+将准备好的相机、LiDAR、状态与噪声张量输入 DiffusionDrive，并解码规划输出。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,17 +14,15 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── data_io.py  # Python 脚本
-├── diffusiondrive.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── quantization.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── data_io.py  # NPZ 输入读取和检查
+├── diffusiondrive.py  # 模型初始化与推理阶段
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── quantization.py  # 量化和反量化计算
 ├── run.sh  # 运行示例
 ├── run_all_cases.sh  # Shell 脚本
-├── run_cases.py  # Python 脚本
-└── visualization.py  # Python 脚本
+├── run_cases.py  # 模型初始化与推理阶段
+└── visualization.py  # 结果渲染与图片保存
 ```
 
 <a id="environment"></a>
@@ -103,17 +101,14 @@ bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100
 在准备好的 S600 上从仓库根目录执行，与 CLI 使用相同任务路径，不写文件、不绘图：
 
 ```python
-from samples.vision.diffusiondrive.runtime.python.model_binding import resolve_selection
-from samples.vision.diffusiondrive.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection
 from samples.vision.diffusiondrive.runtime.python.data_io import load_features
-from samples.vision.diffusiondrive.runtime.python.diffusiondrive import DiffusionDriveTask
+from samples.vision.diffusiondrive.runtime.python.diffusiondrive import DiffusionDrivePlanner
 
 selection = resolve_selection("s600")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
 features = load_features("samples/vision/diffusiondrive/test_data/reference_inputs.npz")
-task = DiffusionDriveTask(runner, binding, agent_score_threshold=0.5)
+task = DiffusionDrivePlanner(selection, agent_score_threshold=0.5)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
 result = task.predict(features)
 assert result["trajectory"].shape == (1, 8, 3)
 assert result["bev_labels"].shape == (1, 128, 256)
@@ -125,7 +120,7 @@ assert set(details.physical) == set(features) and set(details.raw) == set(detail
 `DiffusionDriveDetails`（通过 `return_details=True` 显式开启）将解码结果与单次
 调用的物理输入、原始输出打包返回，归档 `physical_inputs.npz`/`raw_outputs.npz`
 无需二次推理；默认 `predict` 仍只返回解码映射，task 不保存上一次输出。
-结果独立持有数组，使用任务时须保持 SDK runner 存活；未建立同步机制前不应并发共享。任务不再持有 SDK，也不提供 `__call__` 别名，请使用 `predict`。它不接受原始相机/LiDAR 传感器数据替代准备后的特征张量。
+结果独立持有数组。模型初始化 Runtime；并发处理时为每个工作线程创建独立模型实例。它不接受原始相机/LiDAR 传感器数据替代准备后的特征张量。
 
 <a id="stage-io"></a>
 ## 阶段 IO 与量化

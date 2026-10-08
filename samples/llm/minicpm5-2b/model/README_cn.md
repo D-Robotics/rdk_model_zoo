@@ -46,7 +46,7 @@ BOARD=s100 bash download_model.sh
 BOARD=s100p bash download_model.sh
 ```
 
-每个目标有独立 HBM 和 tokenizer。默认目录分别为 `model/s100`、`model/s100p`。使用 [旧版 runtime](../runtime/legacy/README_cn.md)，不能使用 S600 2.0 入口。压缩包不包含 SDK；SHA256 固定在脚本内，解压后再次逐文件校验。
+每个目标有独立 HBM 和 tokenizer。默认目录分别为 `model/s100`、`model/s100p`。使用 [OELLM 1.0.0 runtime](../runtime/legacy/README_cn.md)，不能使用 S600 2.0 入口。压缩包不包含 SDK；SHA256 固定在脚本内，解压后再次逐文件校验。
 
 - [S100 archive](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/minicpm5-2b_s100_oellm1_w8_ctx4096_20260909.tar.gz): 2275420219 bytes; SHA256 `dc130ae21dc1f1cc266c526e090b03b4d3be4af8cf4157c4b5841b7f47ab818d`.
 

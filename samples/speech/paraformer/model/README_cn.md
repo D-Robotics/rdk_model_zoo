@@ -96,4 +96,4 @@ C++ 入口读取 Python 前端生成的 NPY／清单，不重复执行音频前�
 
 三个 `.hbm` 是 S100 编译制品，各自发布方 SHA-256 均为 `null (unknown)`。
 `tokens.json` 是 UTF-8 JSON，`am.mvn` 是文本 CMVN，`paraformer_config.yaml` 是 YAML。
-上述摘要固定本地附属文件字节，不构成发布方签名。
+上述摘要用于核对本地附属文件。

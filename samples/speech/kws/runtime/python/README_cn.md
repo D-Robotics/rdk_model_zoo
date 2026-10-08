@@ -5,23 +5,20 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+在 S100 上检测唤醒词。`KWS.from_model` 初始化 Runtime；`predict` 计算 fbank 特征、运行模型并返回概率分数。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── audio_io.py  # Python 脚本
-├── frontend.py  # Python 脚本
-├── kws.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── postprocess.py  # Python 脚本
-└── run.sh  # 运行示例
+├── audio_io.py  # 音频文件读取
+├── cli.py  # 参数、模型选择与结果展示
+├── frontend.py  # 音频特征准备
+├── kws.py  # 模型阶段与预测
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── model_binding.py  # 模型选择与物理张量契约
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
 <a id="environment"></a>
@@ -91,19 +88,15 @@ S100 上准备好模型和前端依赖后，下面示例读取随附音频、加
 
 ```python
 from samples.speech.kws.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.speech.kws.runtime.python.model_runner import RuntimeModelRunner
 from samples.speech.kws.runtime.python.audio_io import load_audio
 from samples.speech.kws.runtime.python.kws import KWS
 selection = resolve_selection("s100")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
 audio, sample_rate = load_audio(SAMPLE_DIR / "test_data/sample.wav")
-task = KWS(runner, binding)
-tensors = task.preprocess(audio, sample_rate)
-raw = task.infer(tensors)
-score = task.postprocess(raw)
+task = KWS.from_model(selection)
+task.set_scheduling_params(priority=0, bpu_cores=[0])
+score = task.predict(audio, sample_rate)
 print(score)
-# task.predict(audio, sample_rate) composes the same three calls.
+# Explicit stages are available when intermediate tensors are needed.
 ```
 
 <a id="stage-io"></a>
@@ -113,7 +106,7 @@ print(score)
 
 `infer` 仅调用一次共享 runner，返回原始输出，不做 sigmoid、反量化、文件访问或最大值计算。runner 核验名称/形状/类型/有限值并复制 SDK 输出，后续调用不会覆盖旧结果。`postprocess` 核验绑定输出，仅对整数用共享 SCALE 转换，要求结果在 [0,1] 后取最大值；float 输出即使附带历史量化描述符也不再转换，不额外 sigmoid。
 
-`predict` 仅组合三阶段，不缓存上一次音频状态。既有 `pre_process`、`forward`、`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名称。实例用于串行执行，不承诺 SDK 并发安全。纯特征/评分助手位于 `frontend.py`、`postprocess.py`，文件由 `audio_io.py` 管理，报告在 `main.py`，`model_runner.py` 委托共享 SDK/调度实现。
+`predict` 仅组合三阶段，不缓存上一次音频状态。既有 `pre_process`、`forward`、`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名称。实例用于串行执行，不承诺 SDK 并发安全。`frontend.py` 准备特征；`kws.py` 负责评分与 Runtime 初始化；`audio_io.py` 读取文件，`cli.py` 保存报告。
 
 <a id="troubleshooting"></a>
 ## 排错

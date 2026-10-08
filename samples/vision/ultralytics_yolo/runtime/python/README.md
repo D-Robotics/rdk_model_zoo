@@ -1,37 +1,45 @@
 # Python runtime
 
-[简体中文](README_cn.md)
-
-This is the board-side entry point for the shared Ultralytics YOLO sample.
-`main.py` is a thin entry: it parses arguments, resolves the plan,
-constructs the selected task model, calls `predict`, and presents the result;
-option declarations and the model-free listing/dry-run/download modes live in
-`yolo_cli.py`. Each task's readable flow lives in its task module — DFL
-detection in [`detect.py`](detect.py) (`YoloDetect`: initialization,
-`preprocess`, `infer`, `postprocess`, `predict` in one file; the
-`yolo_detect` import path re-exports it). The entry loads a compiled `.bin`
-(X5) or `.hbm` (S100/S100P/S600) model through the `hbm_runtime` supplied by
-the RDK system image, prepares one BGR image as the selected target's NV12
-input, runs the task decoder, and saves a rendered result image for
-detect/seg/pose/obb. Classification prints Top-K instead. The script does not
-install Python packages. Export and compiler steps belong in
-[`conversion/README.md`](../../conversion/README.md).
+English | [简体中文](README_cn.md)
 
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run Ultralytics detection, segmentation, pose, classification and oriented-box models. `main.py` obtains the model class and configuration, constructs `Model(config)` and calls `predict`; each task module contains its preprocessing, inference and decoding.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── detect.py  # Detection preprocessing, inference, and postprocessing
-├── main.py  # Command-line entry
-└── run.sh  # Run the sample
+├── classification_decode.py  # Model stages and prediction
+├── decode.py  # Task output decoding
+├── detect.py  # Model stages and prediction
+├── detection_io.py  # Model stages and prediction
+├── geometry.py  # Image geometry and coordinate transforms
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── model_runner.py  # Runtime loading and raw tensor execution
+├── obb_decode.py  # Model stages and prediction
+├── pose_decode.py  # Model stages and prediction
+├── run.sh  # Locate the Python entry and forward arguments
+├── segmentation_decode.py  # Model stages and prediction
+├── tensor_io.py  # Model stages and prediction
+├── yolo26_det.py  # Model stages and prediction
+├── yolo26_obb.py  # Model stages and prediction
+├── yolo26_pose.py  # Model stages and prediction
+├── yolo26_seg.py  # Model stages and prediction
+├── yolo_assets.py  # Model stages and prediction
+├── yolo_cli.py  # Arguments, model selection and result presentation
+├── yolo_cls.py  # Model stages and prediction
+├── yolo_dispatch.py  # Model stages and prediction
+├── yolo_download.py  # Model stages and prediction
+├── yolo_input.py  # Model stages and prediction
+├── yolo_platform.py  # Model stages and prediction
+├── yolo_pose.py  # Model stages and prediction
+├── yolo_runtime.py  # Model stages and prediction
+├── yolo_seg.py  # Model stages and prediction
+└── yolo_v10detect.py  # Model stages and prediction
 ```
 
 <a id="environment"></a>
@@ -161,7 +169,7 @@ The Default column shows parser values. `null` means resolved later from platfor
 | `--dry-run` | flag | `false` | Resolve selection only; no download or inference. |
 | `--download` | flag | `false` | Prepare selected published model and exit without inference. |
 
-Non-classification tasks default to letterbox. YOLO26 classification defaults to stretch on every target; other classification families use letterbox on X5 and stretch on S. Geometry and class counts must match the model; `--reg`, `--strides` and `--mc` cannot force compatibility. YOLO26 non-classification tasks reject DFL/keypoint/mask overrides differing from 16/17/32. YOLOv13 is published only on X5.
+Non-classification tasks default to letterbox. YOLO26 classification defaults to stretch on every target; other classification families use letterbox on X5 and stretch on S. Set `--reg`, `--strides`, `--mc`, geometry and class count to match the model output protocol. YOLO26 non-classification tasks reject DFL/keypoint/mask overrides differing from 16/17/32. YOLOv13 is published only on X5.
 
 <a id="results"></a>
 ## Results
@@ -181,8 +189,7 @@ For dataset accuracy or performance measurement, use the [evaluator](../../evalu
 <a id="integration-example"></a>
 ## Library entry points
 
-The readable DFL detection flow lives in `detect.py` (`YoloDetect`); the
-`yolo_detect` import path re-exports the same classes.
+The DFL detection flow lives in `detect.py` (`YoloDetect`).
 `predict` accepts a local image path or a BGR `uint8` array and never
 modifies the array in place. Run this example from the repository root on
 the matching S600 board, after replacing the model path with your local
@@ -222,16 +229,12 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
     np.testing.assert_allclose(staged, predicted)
 ```
 
-`YoloDetect` accepts an injected runner for host tests and alternate runtime
+`YoloDetect` accepts an injected runner for alternate runtime
 loaders. The runner is responsible for model execution; geometry preparation,
 protocol binding, DFL decode, class-wise NMS, and coordinate restoration remain
 in the shared task implementation. `pre_process` / `forward` / `post_process`
 stay thin aliases of the readable stage methods (one implementation).
-`YOLO26Detect` uses the shared image and
-runner orchestration with its direct-LTRB decoder. The `yolo_detect` import
-path re-exports the same classes, and `legacy.py` adds
-`pre_process_with_transform`, which returns the `(tensors, transform)` tuple;
-both delegate to these same stage implementations.
+`YOLO26Detect` uses the shared image and runtime flow with direct LTRB decoding.
 
 <a id="stage-io"></a>
 ## Code flow
@@ -251,9 +254,8 @@ per stage, visible in each task module).
 - `postprocess(raw, transform=prepared.transform)` (alias `post_process`) performs sigmoid/DFL or LTRB decoding, applicable NMS and coordinate restoration. Detection and DFL segmentation/pose require already-floating outputs; integer outputs or SCALE metadata fail at load time. No manual dequantization occurs in postprocessing.
 - `predict(img_or_path)` composes those methods and returns owned result arrays. Plain semantic mappings from an injected runner must already hold floating values; use the bound raw carrier for physical floating tensors.
 
-For executable compatibility, prepared results also support `[model_name]` mapping
-access, `infer`/`forward(prepared)` unwraps `.tensors`, and `pre_process_with_transform`
-(in `legacy.py`) returns the `(tensors, transform)` tuple. Explicit
+Prepared results support `[model_name]` mapping
+access, and `infer`/`forward(prepared)` unwraps `.tensors`. Explicit
 `post_process(outputs, original_width, original_height)` reconstructs the same
 geometry without cached state. With both dimensions and a transform supplied,
 they must agree. Per-image geometry is carried on the prepared object; there
@@ -265,7 +267,7 @@ DFL pose, classification and YOLO26 OBB stages are documented below.
 main.py
   -> resolve_target / platform Manifest selection (yolo_cli for listing,
      dry-run, download preparation and presentation)
-  -> yolo_dispatch.get_task_types / create_runtime_model
+  -> yolo_dispatch.prepare_runtime_model -> Model(config) -> model.predict(image)
   -> ModelRunner + ModelBinding (input/output contract, shared SDK session)
   -> geometry.resize_with_transform + NV12 input binding
   -> YoloDetect or YOLO26Detect decoder + NMS
@@ -387,7 +389,7 @@ print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
 ```
 
 `YoloPose(config, runner=...)` accepts an injected runner. Input, raw-buffer
-lifetime and per-image transforms follow detection. Legacy
+lifetime and per-image transforms follow detection. Explicit
 `post_process(raw, original_width, original_height)` (alias of `postprocess`)
 remains supported; missing/conflicting geometry fails. The nine outputs are NHWC class logits
 `(1,H/s,W/s,1)`, DFL boxes `(1,H/s,W/s,64)` and keypoints `(1,H/s,W/s,51)`
@@ -406,7 +408,7 @@ another sigmoid or a zero-logit threshold to these probabilities. The example's
 0.5 threshold is caller-side filtering; it does not alter coordinates or remove
 points from the returned arrays.
 
-The X5 compatibility adapter returns `(boxes, scores, keypoints)` with
+The X5 adapter returns `(boxes, scores, keypoints)` with
 `(N,17,3)` x/y/probability triplets. No separate S YOLO11Pose logits interface
 is provided.
 
@@ -416,8 +418,7 @@ is provided.
 YOLOv8, YOLO11 and YOLO26 use the same classification pipeline. Run this example
 from the repository root on the matching S600 board, replacing the absolute path
 with the artifact prepared through the [model instructions](../../model/README.md).
-The SDK's metadata determines the input geometry; a filename is not evidence of
-224 or 640 pixels. In particular, S100/S100P legacy asset IDs containing `640`
+Read the input geometry from SDK metadata. In particular, S100/S100P asset IDs containing `640`
 link to URLs containing `224`; keep the published identity and inspect metadata.
 
 ```python
@@ -570,7 +571,7 @@ nonfinite values, a DFL binding or ambiguous heads are rejected. The raw carrier
 borrows SDK buffers: complete postprocessing before another inference or copy
 retained raw arrays. `preprocess` returns the mapping-compatible
 `PreparedDetection`; the `pre_process`/`forward`/`post_process` aliases and the
-legacy explicit original width/height postprocess arguments
+explicit original width/height postprocess arguments
 remain supported without cached last-image state.
 
 The five results have the same shape/dtype/ownership as the DFL pose API: float32
@@ -578,7 +579,7 @@ The five results have the same shape/dtype/ownership as the DFL pose API: float3
 float32 `(N,17,2)` points and float32 `(N,17,1)` point probabilities. Empty results
 retain these ranks. Visibility receives exactly one stable sigmoid. NMS selects
 the same indices for boxes and skeletons. Coordinates use actual integer resize/
-padding and clip to the original-image bounds. The X5 compatibility adapter
+padding and clip to the original-image bounds. The X5 adapter
 returns a list of `{box, score, kpts}` dictionaries with integer boxes; the S
 adapter returns a four-tuple with keypoints merged as `(N,17,3)`.
 
@@ -645,7 +646,7 @@ copy raw arrays. The result owns float32 `(N,4)` boxes, float32 `(N,)` scores,
 int64 `(N,)` IDs and a list of owned **boolean** ROI masks. For each clipped box,
 use `x1,y1,x2,y2 = box.astype(int)` and place its mask at `[y1:y2,x1:x2]` in a
 blank original-size image. A degenerate ROI is `(0,0)`; no detections return
-`(0,4)/(0,)/(0,)/[]`. The X5 compatibility adapter returns a boolean `(N,H,W)`
+`(0,4)/(0,)/(0,)/[]`. The X5 adapter returns a boolean `(N,H,W)`
 full-image mask stack; the S adapter returns ROI masks. `YOLO26Seg.predict` returns ROI masks for every target.
 
 Confidence must be finite in `(0,1)` and NMS in `[0,1]`. The library NMS default

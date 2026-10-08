@@ -64,7 +64,7 @@ hb_mapper checker --model-type onnx --march bayes-e --model ./RepVGG-A0.onnx
 hb_mapper makertbin --model-type onnx --config RepVGG_A0_config.yaml
 ```
 
-Expected output for this config: `RepVGG-A0_224x224_nv12/RepVGG-A0_224x224_nv12.bin`. All configs use latency/O3. Each variant has a distinct directory/prefix, using `RepVGG-A0` etc. Compiled basenames use a hyphen while the published filenames use an underscore. Every YAML also removes Quantize/Dequantize/Transpose/Cast/Reshape nodes and enables dump_calibration_data. Verify graph semantics after these transformations; filename changes do not prove equivalence.
+Expected output for this config: `RepVGG-A0_224x224_nv12/RepVGG-A0_224x224_nv12.bin`. All configs use latency/O3. Each variant has a distinct directory/prefix, using `RepVGG-A0` etc. Compiled basenames use a hyphen while the published filenames use an underscore. Every YAML also removes Quantize/Dequantize/Transpose/Cast/Reshape nodes and enables dump_calibration_data. Verify graph semantics after these transformations; compare the transformed graph outputs with the floating model.
 
 <a id="validation"></a>
 ## Post-conversion validation
@@ -85,7 +85,7 @@ Use the qualified reference that matches the artifact and target. Record the bui
 <a id="artifacts"></a>
 ## Artifacts
 
-Compiled paths are listed above. Published files and per-variant targets are listed in [model preparation](../model/README.md#artifacts); downloads land in the sample model directory. Preserve variant and provenance when moving a verified build; renaming alone is not a repair.
+Compiled paths are listed above. Published files and per-variant targets are listed in [model preparation](../model/README.md#artifacts); downloads land in the sample model directory. Store each compiled model with its variant name and compilation configuration.
 
 <a id="known-gaps"></a>
 ## Additional preparation

@@ -30,7 +30,7 @@ lprnet/
 | X5 | `lpr.bin` | 支持 | 不支持 | 用内置 `test_input.dat` 验证 |
 | S100/S100P/S600 | — | 不支持 | 不支持 | 无发布制品 |
 
-本 sample 没有 C++ 实现。主机测试不等同于板端验证；板端验证用内置 `test_input.dat` 运行并检查两套实现的 native `(1,68,18,1)` logits 一致性——这是单输入的实现一致性检查，不是车牌识别精度。
+Runtime 语言：Python。板端运行使用内置 `test_input.dat`，输出 native `(1,68,18,1)` logits。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -60,7 +60,7 @@ python3 -m samples.vision.lprnet.runtime.python.main --target x5
 ## 入口索引
 
 - [`model/README_cn.md`](./model/README_cn.md)：manifest 制品、下载、路径和校验值。
-- [`runtime/python/README_cn.md`](./runtime/python/README_cn.md)：CLI 与 `LPRNetTask` API。
+- [`runtime/python/README_cn.md`](./runtime/python/README_cn.md)：CLI 与 `LPRNetRecognizer` API。
 - [`conversion/README_cn.md`](./conversion/README_cn.md)：源 OE 命令和不可复现项。
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整 raw/text 对照步骤。
 

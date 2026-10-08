@@ -29,7 +29,7 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-eval.py 在 X5 复用统一 HGNetV2 ClassificationTask 与 RuntimeModelRunner，依赖相同板端 SDK、NumPy、OpenCV、PyYAML，无额外推理框架。--help 及纯数据/指标测试不需 SDK。SciPy 仅用于源对照主机测试。
+eval.py 在 X5 使用 HGNetV2Classifier 和共享 RuntimeModelRunner，依赖相同板端 SDK、NumPy、OpenCV、PyYAML，无额外推理框架。--help 及纯数据/指标测试不需 SDK。SciPy 仅用于源对照主机测试。
 
 <a id="command"></a>
 ## 命令

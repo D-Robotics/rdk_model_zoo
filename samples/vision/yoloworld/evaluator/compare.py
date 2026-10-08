@@ -196,9 +196,9 @@ def run_comparison(selection, image, image_path, prompts, vocabulary, vocab_path
         }
 
         runner = RuntimeModelRunner(selection, runtime_factory=factory("unified"))
-        binding = runner.load()
+        runner.load()
         runner.set_scheduling_params(priority=priority, bpu_cores=cores)
-        task = YOLOWorldTask(runner, binding, vocabulary,
+        task = YOLOWorldTask(selection, vocabulary, runner=runner,
                              score_thres=score_thres, nms_thres=nms_thres)
         unified_result = task.predict(image, prompts)
         records["unified"]["result"] = {

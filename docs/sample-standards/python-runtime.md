@@ -1,7 +1,7 @@
 # Python Runtime 编写规范
 
 目标：人和 Agent 都能顺着入口读懂模型流程，并复用稳定的公共能力。
-按职责组织文件，不规定文件数量。ResNet 先实施，多任务 YOLO 后续按任务推广。
+详细要求见 [Sample Runtime 代码规范](runtime-code.md)。普通单任务 Sample 默认采用 `main.py`、`cli.py` 和模型类三个 Python 文件；复杂算法按完整职责拆分。ResNet 展示单模型分类，YOLO 按检测、分割、姿态等任务组织。
 
 ## 职责划分
 
@@ -9,30 +9,26 @@
 | --- | --- |
 | `main.py` | 获取参数、构造模型、调用 predict、把结果交给展示函数 |
 | `classify.py` / `detect.py` / `segment.py` | 模型初始化与 preprocess、infer、postprocess、predict；保留模型特有算法和默认参数 |
-| 可选 `cli.py` | 较多的参数声明、发布模型选择、列表/dry-run、结果展示和保存 |
+| `cli.py` | 较多的参数声明、发布模型选择、列表/dry-run、结果展示和保存 |
 | `utils/py_utils/` | SDK 调用、读取图片、标签校验、通用张量转换等多个模型可复用的能力 |
 
 ResNet 的组织方式：
 
 ```text
-samples/
-├── _shared/
-│   ├── runtime.py        # SDK 会话、板卡身份校验
-│   ├── model_runner.py   # 分类 Runtime、文件加载及元数据绑定
-│   ├── image.py          # BGR 图片读取、通用像素转换
-│   ├── labels.py         # 标签读取与校验
-│   ├── tensor_io.py      # 分类输入准备
-│   └── classification.py # 分类结果和 Top-K
-└── vision/resnet/runtime/python/
-    ├── main.py
-    ├── classify.py
-    └── cli.py
+utils/py_utils/
+├── runtime.py        # SDK 会话与板卡识别
+├── model_runner.py   # 分类模型加载及元数据绑定
+├── image.py          # BGR 图片读取、通用像素转换
+├── labels.py         # 标签读取与校验
+├── tensor_io.py      # 分类输入准备
+└── classification.py # 分类结果和 Top-K
+samples/vision/resnet/runtime/python/
+├── main.py
+├── classify.py
+└── cli.py
 ```
 
-上图是本轮 ResNet 的实际目录。公共目录的目标是统一到根目录 `utils/`，
-不长期并存 `utils/py_utils/` 和另一套公共实现；全仓路径调整尚未实施。
-具体范围见[公共目录统一方案](../superpowers/plans/2026-10-08-common-utilities-consolidation.md)。
-`shell` 通常表示 Shell 脚本，不用于命名 Python 公共函数目录。
+公共函数按职责归入根目录 `utils/py_utils/`，C++ 公共函数归入 `utils/c_utils/`。
 
 YOLO 可按任务设置 detect.py、segment.py、pose.py、classify.py 等文件；
 不同任务的后处理保持可读，不为凑文件数量合在一起，也不为每个函数另建文件。
@@ -82,7 +78,7 @@ ResNet 制品目录和模型默认参数留在本地 CLI。公共模块不写入
 1. main 中能直接看到构造模型和 predict；模型文件能读到完整三阶段。
 2. 图片读取、标签检查、SDK 调用有明确公共入口，独立测试可在其他模型中复用。
 3. 保留现有 CLI、默认值、错误报告、NV12 排列、插值、输出变换和 Top-K 数值。
-4. 模型帮助、列表和 dry-run 不导入 NumPy、OpenCV 或板卡 SDK。
+4. 模型帮助、列表和 dry-run 按声明的依赖执行，不加载板卡 SDK；轻量的参数查看和模型列举不连带加载图像库。
 5. 导出/编译配方保持；运行时中英文 README 直接介绍使用方法，迁移和测试记录另存。
 6. 主机注入 Runtime 与真实板卡验证分别记录，不混称。
 

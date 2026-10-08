@@ -100,6 +100,6 @@ ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护�
 
 ## 选择与扩展
 
-先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [_shared](_shared/README.md)，代码职责与文档要求见 [推理契约](../docs/sample-standards/inference-contract.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
+先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [utils/py_utils](../utils/py_utils/README_cn.md)，代码职责与文档要求见 [推理契约](../docs/sample-standards/inference-contract.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
 
 首次板端操作见[板端冒烟测试](../docs/validation/board-smoke-test.md)。

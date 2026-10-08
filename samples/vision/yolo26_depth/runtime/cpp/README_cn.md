@@ -140,7 +140,7 @@ auto result = task.post_process(raw, prepared.context);
 ```
 
 `ModelRunner` 必须比任务回调存活更久。每次返回独立拥有的原始 F32 数组，结果也拥有各自的 OpenCV 数组。
-不要并发使用同一个 runner；并发客户需使用不同实例，这不构成 SDK 并发能力声明。
+并发处理时为每个工作线程创建独立 runner 实例。
 可选 C++ execution-gate 回调仅用于主机测试注入，不暴露为 CLI 绕过选项。
 
 | 阶段 | 契约 |
@@ -176,7 +176,3 @@ runner 管理 SDK 会话；task 实现前处理、推理与后处理。
 
 计时包含一次完整 forward 的内存复制、缓存操作、SDK 调用及原始输出复制；
 与源 HRT 的纯 BPU 延迟比较时请注意口径差异。深度为相对值，颜色不表示米制距离；精度以数值指标为准。
-
-主机测试编译纯几何、张量、CLI、序列化代码，并使用刻意精简的模拟 SDK 头编译真实 owner。
-覆盖十三个 SDK 调用失败点、原始输出独立所有权、错误 metadata、padding/stride、身份优先级，
-以及 NumPy 读取原生文件。**真实 SDK/OpenCV 构建、完整原生图像链路、板端推理和性能在目标环境中执行。**

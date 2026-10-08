@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from samples.vision.lanenet.runtime.cpp import launcher
-from samples.vision.lanenet.runtime.python.model_binding import ASSET_ID
+from samples.vision.lanenet.runtime.python.cli import ASSET_ID
 
 
 class LauncherTests(unittest.TestCase):

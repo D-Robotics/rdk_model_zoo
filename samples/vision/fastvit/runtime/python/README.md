@@ -1,18 +1,12 @@
 # FastViT Python runtime
 
-`main.py` is the user-facing command: it parses arguments,
-constructs the model, calls `predict`, and shows the result. The complete
-classification flow lives in [`classify.py`](classify.py):
-`FastViTClassifier` shows initialization, `preprocess`, `infer`, `postprocess` and
-`predict` in one readable file. It resolves one exact model reference
-from the release manifests, checks the detected board, loads
-`hbm_runtime` lazily through the shared SDK session, and executes one
-classification flow. Prepare the target artifact with the model downloader before running inference. The runtime resolves the selected manifest reference and loads the matching board SDK.
-
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+[`main.py`](main.py) parses arguments, constructs `FastViTClassifier`, calls `predict`, and displays results.
+[`classify.py`](classify.py) contains model initialization, preprocessing, inference, and postprocessing.
+[`cli.py`](cli.py) groups command options, published model selection, and result presentation.
+Image reading, label validation, and SDK sessions use `utils/py_utils/`.
 
 <a id="directory"></a>
 ## Directory structure
@@ -21,12 +15,9 @@ Use this directory for python inference.
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── __init__.py  # Python script
 ├── classify.py  # Classification preprocessing, inference, and postprocessing
 ├── cli.py  # Arguments and result presentation
 ├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
 └── run.sh  # Run the sample
 ```
 
@@ -80,7 +71,7 @@ resolves a selection without board access, model loading, or download;
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
 | `--topk` | int | 5 | alias of `--top-k` |
-| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source (1) |
+| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the model configuration (1) |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
 | `--img-save-path` | string | null | optional annotated output image path |
@@ -112,14 +103,23 @@ and OpenCV-Python importable. Every input variable is defined in the example:
 
 ```python
 from samples.vision.fastvit.runtime.python.classify import FastViTClassifier
-from samples.vision.fastvit.runtime.python.model_binding import resolve_selection
+from samples.vision.fastvit.runtime.python.cli import resolve_selection
 
 selection = resolve_selection(
     "x5",
     asset_id="x5:fastvit:FastViT_S12_224x224_nv12.bin",
     model_path="samples/vision/fastvit/model/FastViT_S12_224x224_nv12.bin",
 )
-model = FastViTClassifier(selection, top_k=5)
+contract = selection.contract
+model = FastViTClassifier(
+    selection.model_path, target=selection.target,
+    input_size=(contract.input_height, contract.input_width),
+    class_count=contract.class_count, top_k=5,
+    resize_type=contract.resize_type,
+    resize_interpolation=contract.resize_interpolation,
+    score_policy=contract.output_score_policy,
+    output_transform=contract.output_transform,
+)
 result = model.predict("samples/vision/fastvit/test_data/bucket.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
@@ -127,8 +127,7 @@ print(result.class_ids, result.scores, result.labels)
 `predict` accepts a local image path or BGR `uint8` NumPy array; the input array remains unchanged. The three stages can also be driven explicitly:
 `prepared = model.preprocess(source)`, `outputs = model.infer(prepared)`,
 `result = model.postprocess(outputs)` — `predict` chains exactly these
-steps. The shared `ClassificationTask` flow stays importable from
-[`classification.py`](../../../../../utils/py_utils/classification.py).
+steps.
 
 <a id="stage-io"></a>
 ## Stage I/O
@@ -136,7 +135,7 @@ steps. The shared `ClassificationTask` flow stays importable from
 | Stage | Input | Output |
 | --- | --- | --- |
 | `preprocess` (`pre_process`) | image path or one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context) |
-| `infer` (`forward`) | `PreparedInput` | raw output dict (X5 F32 `[1,1000,1,1]`) — bit-identical to the runner output, no decode |
+| `infer` (`forward`) | `PreparedInput` | raw output dict (X5 F32 `[1,1000,1,1]`) — raw SDK tensors before score processing |
 | `postprocess` (`post_process`) | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K under the declared score policy |
 | `predict` | image path or BGR `uint8` array | chains the three stages, same `ClassificationResult` |
 
@@ -149,6 +148,3 @@ steps. The shared `ClassificationTask` flow stays importable from
 | `model_path requires --asset-id` | Pass the exact qualified reference from `--list-models` with `--asset-id`. |
 | input shape or dtype mismatch | Check that the artifact reference, target and tensor metadata match the sample contract. |
 | output differs from a reference run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |
-
-Host checks (repository root):
-`python3 -m unittest discover -s samples/vision/fastvit/tests -v`.

@@ -53,7 +53,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
 
 也可以在线拉取镜像：`docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`。下载链接失效时，请在 OE 在线文档查看最新地址。发布资产名称及 SHA 以 `docs/release/x5/models.yaml`、`docs/release/s/models.yaml` 为准；源 manifest 中 SHA 为未知（`null`）。
 
-导出与浮点 embedding 生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。固定源没有锁定这些包的版本或上游仓库 revision，这仍是复现前提，不是经过验证的环境规格。在选定导出环境中检查导入，与板端推理环境分开：
+导出与浮点 embedding 生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。随导出模型记录所选框架版本和上游仓库版本。在导出环境检查导入：
 
 ```bash
 # cwd: 本 conversion 目录；在选定主机导出环境中执行
@@ -195,7 +195,7 @@ python3 scripts/quantize.py --target s600
 <a id="validation"></a>
 ## 转换后验证
 
-接收制品前，必须读取真实 SDK metadata，要求两个子模型的输入/输出名称、rank、shape 和 native dtype 匹配；确认 decoder box 仍是 `(1,4)`，并与 512 像素预处理坐标系一致。运行时 cast 不能证明 native 量化 metadata。源没有数据集精度 harness；板测结果需记录图片、box、模型、SDK 和资源条件。
+转换后读取两个子模型的 SDK 元数据，核对输入输出名称、秩、尺寸和数据类型。decoder box 使用 `(1,4)`，坐标与 512 像素预处理图像一致。记录运行使用的图片、box、模型、SDK 和资源配置。
 
 <a id="artifacts"></a>
 ## 制品
@@ -210,7 +210,7 @@ python3 scripts/quantize.py --target s600
 生成 ONNX、校准 tensor、量化 metadata 和编译模型保持在版本控制之外。准确文件名以 active manifest 和目标 YAML 为准。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
 - 上游源版本和 checkpoint digest 没有被固定源锁定。
 - S 没有源 `download_assets.py`，获取 checkout 和 checkpoint 是手工前置条件。

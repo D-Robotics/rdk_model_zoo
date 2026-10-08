@@ -32,7 +32,7 @@ model/
 bash samples/vision/lanenet/model/download.sh --target s100
 ```
 
-兼容包装入口 `download_model.sh` 委托同一个下载器。推理不触发下载。指定其他存储根目录：
+下载脚本 `download_model.sh` 委托同一个下载器。推理不触发下载。指定其他存储根目录：
 
 ```bash
 python3 -m samples.vision.lanenet.model.download --target s100 --output-dir /data/lanenet-models

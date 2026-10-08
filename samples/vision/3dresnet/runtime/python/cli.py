@@ -1,33 +1,119 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""R3D-18 CLI surface: option declarations and the model-free/report helpers.
+"""R3D-18 CLI options, published-model selection, listing, dry-run, and report.
 
-``main.py`` stays a thin entry that constructs the video task and calls
-``predict``; the parser, the listing/dry-run modes and the JSON report
-assembly live here.  Nothing in this module classifies clips or loads a board
-SDK.
+``main.py`` uses these helpers to parse arguments, preview a selection, and
+assemble the JSON prediction report. The classification flow itself lives in
+``classification.py``; Kinetics label decoding lives in ``labels.py``.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import dataclass
 from pathlib import Path
-import sys
+from typing import Optional
 
-from .model_binding import (
-    CLASS_COUNT,
-    INPUT_SHAPE,
-    SAMPLE_DIR,
-    SUPPORTED_TARGETS,
-    list_available_assets,
-)
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+SUPPORTED_TARGETS = ("s100",)
+ASSET_FILENAME = "s100/r3d_18.hbm"
+ASSET_ID = "s:3dresnet:s100/r3d_18.hbm"
+INPUT_SHAPE = (1, 3, 16, 112, 112)
+CLASS_COUNT = 400
 
 DEFAULT_CLIP = SAMPLE_DIR / "test_data/video0.npy"
 DEFAULT_LABELS = SAMPLE_DIR / "test_data/kinetics_classnames.json"
 
 
+@dataclass(frozen=True)
+class ModelSelection:
+    """One published manifest asset and its selected local path.
+
+    Attributes:
+        asset: Manifest asset record backing the selection.
+        target: Concrete execution target (``s100``).
+        model_path: Local compiled model path.
+        explicit_model_path: Whether the caller supplied the path explicitly.
+    """
+
+    asset: Asset
+    target: str
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def _published_asset() -> Asset:
+    assets = tuple(asset for asset in list_assets("s", "3dresnet") if asset.filename == ASSET_FILENAME)
+    if len(assets) != 1 or assets[0].format != "hbm":
+        raise ValueError("The published 3DResNet S100 HBM asset is missing or changed.")
+    return assets[0]
+
+
+def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
+    """List published R3D-18 assets for a target.
+
+    Args:
+        target: Concrete target filter; ``auto``/None resolves to S100.
+
+    Returns:
+        tuple[Asset, ...]: Published assets in manifest order.
+    """
+    if target not in (None, "auto", *SUPPORTED_TARGETS):
+        return ()
+    asset = _published_asset()
+    if target in (None, "auto", "s100"):
+        return (asset,)
+    return ()
+
+
+def resolve_selection(
+    target: str = "auto",
+    *,
+    asset_id: Optional[str] = None,
+    model_path: "str | Path | None" = None,
+    soc_name: Optional[str] = None,
+    board_type: Optional[str] = None,
+) -> ModelSelection:
+    """Resolve the published R3D-18 artifact for a command.
+
+    Args:
+        target: ``auto`` resolves the executing board; s100 is the only
+            published target.
+        asset_id: Qualified manifest reference; a ``model_path`` override
+            requires the exact reference.
+        model_path: Optional explicit local path for the selected asset.
+        soc_name: Optional board-identity override for ``auto`` resolution.
+        board_type: Optional board-type override for ``auto`` resolution.
+
+    Returns:
+        ModelSelection: Concrete target, manifest asset, and local path.
+
+    Raises:
+        ValueError: The target, asset, or path combination is invalid.
+    """
+    resolved = resolve_target(target, soc_name=soc_name, board_type=board_type)
+    if resolved not in SUPPORTED_TARGETS:
+        raise ValueError(f"No published 3DResNet support for {resolved}.")
+    if model_path is not None and asset_id is None:
+        raise ValueError("An external model-path requires the exact manifest asset-id.")
+    asset = _published_asset()
+    if asset_id is not None and asset_id != asset.reference:
+        raise ValueError(f"Unknown 3DResNet asset-id {asset_id!r}; expected {asset.reference!r}.")
+    path = Path(model_path).expanduser() if model_path is not None else SAMPLE_DIR / "model" / asset.filename
+    return ModelSelection(asset, resolved, path, model_path is not None)
+
+
 def build_parser() -> argparse.ArgumentParser:
+    """Build the R3D-18 command-line parser with source defaults.
+
+    Returns:
+        argparse.ArgumentParser: Parser for selection, input, scheduling,
+        and model-free listing/dry-run options.
+    """
     parser = argparse.ArgumentParser(description="Run 3D ResNet-18 video action classification.")
     parser.add_argument("--target", choices=("auto", *SUPPORTED_TARGETS), default="auto")
     parser.add_argument("--asset-id", default=None, help="Exact manifest asset reference.")
@@ -44,14 +130,27 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def parse_args(argv=None) -> argparse.Namespace:
-    """Parse the stable CLI contract without reading board identity."""
+    """Parse the stable CLI contract without reading board identity.
 
+    Args:
+        argv: Optional command-line argument sequence, excluding the program
+            name. None reads sys.argv through argparse.
+
+    Returns:
+        argparse.Namespace: Parsed options.
+    """
     return build_parser().parse_args(argv)
 
 
 def run_list_models(target) -> int:
-    """Print the exact manifest asset references for ``target`` (model-free)."""
+    """Print the exact manifest asset references for ``target`` (model-free).
 
+    Args:
+        target: Concrete target or ``auto``.
+
+    Returns:
+        int: 0 after printing the list.
+    """
     assets = list_available_assets(target)
     for asset in assets:
         print(asset.reference)
@@ -60,8 +159,14 @@ def run_list_models(target) -> int:
 
 
 def run_dry_run(selection) -> int:
-    """Print the resolved selection contract without loading SDK or files."""
+    """Print the resolved selection contract without loading SDK or files.
 
+    Args:
+        selection: Resolved selection to preview.
+
+    Returns:
+        int: 0 after printing the preview.
+    """
     print(json.dumps({
         "target": selection.target,
         "asset_id": selection.asset.reference,
@@ -75,8 +180,17 @@ def run_dry_run(selection) -> int:
 
 
 def report(result, labels: dict[int, str], selection, clip_path: Path) -> dict:
-    """Assemble the JSON report for one finished prediction."""
+    """Assemble the JSON report for one finished prediction.
 
+    Args:
+        result: ClassificationResult with ranked class_ids and scores.
+        labels: Class-id to name mapping; missing ids render as strings.
+        selection: Selection describing the executed artifact.
+        clip_path: Executed clip path recorded in the report.
+
+    Returns:
+        dict: JSON-serializable report payload.
+    """
     return {
         "asset_id": selection.asset.reference,
         "target": selection.target,

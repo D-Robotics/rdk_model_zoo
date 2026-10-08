@@ -79,7 +79,7 @@ Use the matching reference and target for each artifact. Save the build digest a
 <a id="artifacts"></a>
 ## Artifacts
 
-The per-variant published filenames are listed above and downloaded under `samples/vision/repghost/model/`. Compilation produces a common basename in its working directory. Preserve the selected variant identity when moving a verified build; renaming alone establishes neither graph equivalence nor accuracy.
+The per-variant published filenames are listed above and downloaded under `samples/vision/repghost/model/`. Compilation produces a common basename in its working directory. Preserve the selected variant identity when moving a verified build; record the compilation configuration and evaluation results with the model.
 
 <a id="known-gaps"></a>
 ## Additional preparation

@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from utils.py_utils.assets import download_asset  # noqa: E402
-_binding = importlib.import_module("samples.vision.3dresnet.runtime.python.model_binding")
+_binding = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 SUPPORTED_TARGETS = _binding.SUPPORTED_TARGETS
 resolve_selection = _binding.resolve_selection
 

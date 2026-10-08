@@ -39,7 +39,7 @@ cpp/
 <a id="dependencies"></a>
 ## 依赖
 
-下列命令需要 CMake/CTest ≥3.20（包括 `ctest --test-dir`）。板端构建需要C++11 编译器、OpenCV 开发文件和对应板端 DNN SDK。CMake 优先查 `/usr/include/dnn/hb_dnn.h` 和 `/usr/lib`；否则使用 `/usr/include/hobot`、`/usr/include/hobot/dnn`、`/usr/hobot/include`、`/usr/hobot/lib` 并链接 `hbucp`。这些文件由匹配的板端镜像/SDK 提供；主机 OE 编译器不能替代它们。源码没有给全部 SDK 版本作兼容承诺。
+下列命令需要 CMake/CTest ≥3.20（包括 `ctest --test-dir`）。板端构建需要C++11 编译器、OpenCV 开发文件和对应板端 DNN SDK。CMake 优先查 `/usr/include/dnn/hb_dnn.h` 和 `/usr/lib`；否则使用 `/usr/include/hobot`、`/usr/include/hobot/dnn`、`/usr/hobot/include`、`/usr/hobot/lib` 并链接 `hbucp`。这些文件由匹配的板端镜像/SDK 提供；主机 OE 编译器不能替代它们。
 
 <a id="build"></a>
 ## 构建
@@ -80,7 +80,7 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
 <a id="parameters"></a>
 ## 参数
 
-detect/pose/segment 的前三个位置参数依次为模型、图片、结果路径；classify 只使用模型和图片。pose/segment/classify 没有 Python 风格的 `--platform`、`--model-path` 或通用 `--help`，不要将选项当作位置参数传入。旧内置路径依赖历史目录，建议总是显式传文件路径。
+detect/pose/segment 的前三个位置参数依次为模型、图片、结果路径；classify 只使用模型和图片。pose/segment/classify 没有 Python 风格的 `--platform`、`--model-path` 或通用 `--help`，不要将选项当作位置参数传入。请显式传入模型、图片和结果文件路径。
 
 只有 **detect** 接受以下选项：
 
@@ -160,7 +160,7 @@ DFL 和直接距离数学复用 `common/decode.h`，不再维护私有副本；�
 <a id="results-interpretation"></a>
 ## 结果解读与验证
 
-检测框、mask 和关键点绘制到结果图，分类打印类别与概率。确认进程正常退出且输出文件实际存在、内容合理；旧的同名图片不能证明本次成功。按源码内置类别顺序解释 ID，不把单图成功当作全数据集精度。
+检测框、mask 和关键点绘制到结果图，分类打印类别与概率。确认进程正常退出且输出文件实际存在、内容合理；按源码内置类别顺序解释 ID，数据集精度按评估文档测量。
 
 有限轮次检测 benchmark：
 

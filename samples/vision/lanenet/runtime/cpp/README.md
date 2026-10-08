@@ -100,7 +100,7 @@ The direct binary requires `--model-path` and `--test-img`. Its `--target` and `
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-[LaneNetTask](inc/lanenet.hpp) exposes `pre_process`, `forward`, `post_process` and `predict`. A caller supplies a raw runner callback; [ModelRunner](inc/model_runner.hpp) owns the packed model, buffers and inference task. Keep the owner alive longer than any callback that captures it.
+[LaneNetSegmenter](inc/lanenet.hpp) exposes `pre_process`, `forward`, `post_process` and `predict`. A caller supplies a raw runner callback; [ModelRunner](inc/model_runner.hpp) owns the packed model, buffers and inference task. Keep the owner alive longer than any callback that captures it.
 
 | Stage | Input | Output / contract |
 | --- | --- | --- |
@@ -127,6 +127,4 @@ Tensor copying honors every byte stride, including width padding, and rejects ov
 | `launch-report.json` | Launcher command, UTC interval, return code and observed model/input/binary/report digests |
 | `native.stdout.log`, `native.stderr.log` | Complete captured native streams when a result directory exists |
 
-All images remain on the 256×512 model grid. No original-size restoration, clustering, tracking, curve fitting, accuracy measurement or latency measurement is performed. Embedding display clips to [0,1], multiplies by 255 and rounds ties to even. Use raw embeddings for numerical comparisons and the images for visualization.
-
-Host tests compile the tensor/NPY helpers and actual SDK owner against controlled fake SDK calls, including partial-allocation and task failures. They also verify int64 values above float64's exact integer range. Full native OpenCV/SDK builds and board inference run in the target environment. For missing dependencies inspect CMake discovery, for identity rejection check the physical board, and for metadata rejection retain the actual metadata rather than renaming tensors or forcing a target.
+All images remain on the 256×512 model grid. No original-size restoration, clustering, tracking, curve fitting, accuracy measurement or latency measurement is performed. Embedding display clips to [0,1], multiplies by 255 and rounds ties to even. Use raw embeddings for numerical comparisons and the images for visualization. They also verify int64 values above float64's exact integer range. Full native OpenCV/SDK builds and board inference run in the target environment. For missing dependencies inspect CMake discovery, for identity rejection check the physical board, and for metadata rejection retain the actual metadata rather than renaming tensors or forcing a target.

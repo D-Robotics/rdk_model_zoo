@@ -25,8 +25,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-import numpy as np
-
 from utils.py_utils.assets import Asset, list_assets
 from utils.py_utils.runtime_meta import RuntimeMetadata, canonicalise_dtype
 
@@ -136,6 +134,8 @@ class ModelBinding:
 
     def validate_inputs(self, tensors: Mapping[str, np.ndarray]) -> None:
         """Validate packed NV12 tensors without changing their identity."""
+        import numpy as np
+
         if tuple(tensors) != self.input_names:
             raise BindingError(f"Input names {tuple(tensors)!r} != {self.input_names!r}.")
         value = tensors[self.input_names[0]]
@@ -162,6 +162,8 @@ class ModelBinding:
         caller-owned and identity-stable; roles are resolved only from the
         binding's own name tuples, never by iterating the caller's dict.
         """
+        import numpy as np
+
         if not isinstance(outputs, Mapping):
             raise BindingError("Runtime output must be a name→ndarray mapping.")
         observed = set(outputs)

@@ -14,7 +14,7 @@ from test_clip import SAMPLE, ImageRuntime, TextSession
 
 class ReadmeTests(unittest.TestCase):
     def test_bilingual_api_uses_actual_binding_runner_task_and_bpe(self):
-        from samples.vision.clip.runtime.python import model_runner
+        from samples.vision.clip.runtime.python import matching as model_runner
         original = model_runner.RuntimeModelRunner
         for filename in ('README.md','README_cn.md'):
             snippets = re.findall(r'```python\n(.*?)```',(SAMPLE/'runtime/python'/filename).read_text(),re.S)

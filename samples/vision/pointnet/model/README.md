@@ -67,4 +67,4 @@ Format: `.hbm`. `sha256: null (unknown)` in the publisher manifest. The download
 prints an observed SHA-256 for tracking; that digest is not a publisher checksum.
 Loading validates one model, float32 `(1,3,N)` input and `(1,N,4)` output. Output
 dtype is verified from metadata; integer logits require valid SCALE parameters.
-These checks do not replace the pending board run or certify arbitrary HBM files.
+Load the matching S100 HBM using the Python runtime command above.

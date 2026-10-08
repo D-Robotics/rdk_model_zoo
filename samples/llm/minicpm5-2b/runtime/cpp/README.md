@@ -14,9 +14,9 @@ Use this directory for c++ inference.
 
 ```text
 cpp/
-├── inc/  # Files for inc
-├── src/  # Files for src
-├── CMakeLists.txt  # Source or data file
+├── inc/  # Public C++ interfaces
+├── src/  # C++ runtime and command-line entry
+├── CMakeLists.txt  # Native build configuration
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 └── run.sh  # Run the sample
@@ -72,7 +72,7 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`inc/minicpm5.hpp` defines Config, Result, the generation-stage functions and the sequential MiniCPM5 helper; `src/minicpm5.cc` implements the stages; `src/runtime_config.cc` owns model-file validation, the OELLM JSON settings and the temporary configuration file; `src/main.cc` handles gflags and RESULT output. 
+`inc/minicpm5.hpp` defines Config, Result, the generation-stage functions and the sequential MiniCPM5 helper; `src/minicpm5.cc` implements the stages; `src/runtime_config.cc` owns model-file validation, the OELLM JSON settings and the temporary configuration file; `src/main.cc` handles gflags and RESULT output.
 
 The public stage functions are `pre_process` (builds and validates one OELLM request; no SDK calls), `infer` (one synchronous runtime call plus a response-shape check) and `post_process` (extracts text, tokens and status, then reads and validates request metrics); `Generate` chains them. Tokenization and template rendering stay inside the runtime; the SDK exposes no tokenization API. Configuration and file IO live in `src/runtime_config.cc`, outside the inference-stage file; the temporary runtime JSON is owned by an RAII guard and removed on success, SDK error return and exception paths alike.
 

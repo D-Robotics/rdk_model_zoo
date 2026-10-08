@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用选定的 U-Net 骨干网络生成 VOC 21 类分割掩码。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,13 +14,13 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
 ├── run.sh  # 运行示例
-├── unet.py  # Python 脚本
-└── visualization.py  # Python 脚本
+└── unet.py  # 模型初始化与推理阶段
 ```
+
+`main.py` 构造模型并调用 `predict`；`cli.py` 负责参数、模型选择及图片/报告保存；任务文件包含模型阶段，通用图片读取调用 `utils.py_utils.image.read_bgr_image`。
 
 <a id="environment"></a>
 ## 环境
@@ -77,21 +77,19 @@ python3 samples/vision/unet/runtime/python/main.py --dry-run --target x5 --varia
 ```python
 # cwd: repository root; on X5 after explicit model preparation
 import cv2
-from samples.vision.unet.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.unet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.unet.runtime.python.unet import UNetTask
+from samples.vision.unet.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.unet.runtime.python.unet import UNetSegmenter
 
 image = cv2.imread(str(SAMPLE_DIR / "test_data/2007_000033.jpg"))
-runner = RuntimeModelRunner(resolve_selection("x5", variant="resnet18"))
-binding = runner.load()
-task = UNetTask(runner, binding)
+selection = resolve_selection("x5", variant="resnet18")
+task = UNetSegmenter(selection)
 prepared = task.preprocess(image)
 raw = task.infer(prepared.tensors)
 mask = task.postprocess(raw)
 mask_again = task.predict(image)
 print(mask.shape, mask.dtype)  # (512, 512), uint8
 ```
-模型类只负责阶段；binding 负责制品/张量契约，runner 懒加载 SDK，visualization.py 负责调色板。调度通过 runner.set_scheduling_params 设置，不承诺 SDK 并发安全。旧 UNetConfig/UNet 接口留在源快照；统一接口用显式 selection/binding。
+模型类初始化 Runtime，并实现预处理、推理、后处理和 `predict`。并发处理时为每个工作线程创建独立模型实例。
 
 <a id="stage-io"></a>
 ## 阶段 I/O / Stage IO

@@ -12,7 +12,7 @@ Source model: OpenBMB/MiniCPM5-2B, pinned revision `0e9c66dce9fedde5ba8663bbcdd5
 
 ```text
 conversion/
-├── legacy/  # Files for legacy
+├── legacy/  # OELLM 1.0.0 workflow
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── adapter.py  # Python script

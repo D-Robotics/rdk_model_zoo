@@ -39,7 +39,7 @@ No model compilation command is provided because required source inputs/configur
 <a id="validation"></a>
 ## Validation
 
-Future converted models must demonstrate target identity, Y [1,1024,2048,1]/UV [1,512,1024,2] uint8, NHWC [1,H,W,19] int32 or F32 scores and correct quantization descriptors. Match preprocessing and compare decoded masks against a trusted reference on real inputs; exact host fixtures alone are insufficient. ONNX/BPU numerical comparison runs with the validation steps on the board.
+Converted models must expose uint8 Y [1,1024,2048,1] and UV [1,512,1024,2] inputs, and NHWC [1,H,W,19] int32 or F32 scores with the corresponding quantization metadata. Match preprocessing and compare decoded masks with a reference on the same input. Run the ONNX/BPU comparison using the validation steps below.
 
 <a id="artifacts"></a>
 ## Artifacts

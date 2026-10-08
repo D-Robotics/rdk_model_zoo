@@ -89,7 +89,7 @@ These figures come byte-for-byte from the original S sample record:
 <a id="entry-points"></a>
 ## Entry points for users and agents
 
-For application integration use `LaneNetTask.pre_process`, `forward`, `post_process`, or their composition `predict`. Keep downloading, filesystem operations, rendering and resource management outside the task. `model_binding.py` validates model semantics; the shared named-array runner handles transport. Native code similarly separates task stages, tensor contracts, SDK ownership, visualization and CLI IO.
+For application integration use `LaneNetSegmenter.pre_process`, `forward`, `post_process`, or their composition `predict`. Keep downloading, filesystem operations, rendering and resource management outside the task. `model_binding.py` validates model semantics; the shared named-array runner handles transport. Native code similarly separates task stages, tensor contracts, SDK ownership, visualization and CLI IO.
 
 Read the [stage IO contract](runtime/python/README.md#stage-io) before changing preprocessing or introducing instance clustering. Clustering would be a new algorithmic capability, requiring its own validation; renaming the current display as an instance mask does not implement it.
 

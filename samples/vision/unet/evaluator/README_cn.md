@@ -108,9 +108,9 @@ mIoU 对 union>0 的类别平均；像素准确率为非 ignore 像素中预测�
 <a id="reference-results"></a>
 ## 参考结果
 
-五骨干训练/PTQ 表及 ResNet18 三后端 1449 张记录见[样例根文档](../README_cn.md)，各数值绑定其原始 checkpoint/制品条件。主机合成数据测试不替代这些测量。
+五骨干训练/PTQ 表及 ResNet18 三后端 1449 张记录见[样例根文档](../README_cn.md)，各数值绑定其原始 checkpoint/制品条件。
 
 <a id="boundaries"></a>
 ## 适用范围
 
-完整数据集、checkpoint、ONNX、BIN 需事先准备。运行时耗时不是本评估器提供的纯 BPU benchmark。源代码保留 PyTorch 严格权重加载和 ONNX 单输入/输出限制，不宣称任意新架构或 S 系列资产兼容。
+评估前准备完整数据集、checkpoint、ONNX 和 X5 BIN。PyTorch 使用严格权重加载，ONNX 接收单输入并返回单输出。运行时耗时包含预处理、推理和后处理。

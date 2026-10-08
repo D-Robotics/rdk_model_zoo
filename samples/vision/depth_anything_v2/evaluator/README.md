@@ -98,8 +98,6 @@ environment are unspecified in the source record.
 ![Source monitor record](../test_data/readme_img/image.png)
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
-- No dataset evaluation implementation is included; host fixtures exercise
-  contracts, geometry, constant-map handling, IO and identity refusal.
-- The source mentions S100P, but no matching artifact is published; support follows the published artifacts.
+This directory provides single-image comparisons and S100 performance commands. Dataset evaluation requires ground-truth depth, validity masks and a scale-alignment protocol. Use the published S100 artifact.

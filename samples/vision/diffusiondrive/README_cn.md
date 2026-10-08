@@ -94,11 +94,11 @@ S600 参考可视化（源记录）：
 <a id="entry-points"></a>
 ## 人与 Agent 的入口
 
-使用 `DiffusionDriveTask.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段。任务类只处理规划张量语义；SDK 加载/调度、NPZ 读写、下载、绘图和指标均在其外。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
+使用 `DiffusionDrivePlanner.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段。任务类只处理规划张量语义；SDK 加载/调度、NPZ 读写、下载、绘图和指标均在其外。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
 
 量化处理核对逐轴 scale 与标量零点，拒绝畸形或负 scale，并在整数转换前完成裁剪。评估器要求形状一致；任一向量范数为零时，余弦相似度为未定义。
 
 <a id="license"></a>
 ## 许可证
 
-Sample 代码遵循仓库 [Apache-2.0 许可证](../../../LICENSE)。DiffusionDrive 与 NAVSIM 资产仍受各自原条款约束。随附示例不构成完整的已授权 NAVSIM 数据集或认证驾驶系统。
+Sample 代码遵循仓库 [Apache-2.0 许可证](../../../LICENSE)。DiffusionDrive 与 NAVSIM 资产仍受各自原条款约束。完整数据集按 NAVSIM 的获取方式与许可准备。

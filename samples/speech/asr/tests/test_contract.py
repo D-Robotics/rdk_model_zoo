@@ -14,7 +14,7 @@ from samples.speech.asr.runtime.python.frontend import (
     prepare_chunk,
     source_chunk_size,
 )
-from samples.speech.asr.runtime.python.postprocess import transcribe
+from samples.speech.asr.runtime.python.asr import transcribe
 
 
 class DecodeTests(unittest.TestCase):

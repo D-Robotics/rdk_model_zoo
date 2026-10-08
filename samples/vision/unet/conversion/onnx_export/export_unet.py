@@ -21,7 +21,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[5]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from samples.vision.unet.runtime.python.model_binding import VARIANTS
+from samples.vision.unet.runtime.python.cli import VARIANTS
 
 INPUT_NAME = "images"
 OUTPUT_NAME = "logits"

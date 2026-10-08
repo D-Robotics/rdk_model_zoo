@@ -97,9 +97,22 @@ def run_dry_run(selection, decode_mode: str) -> int:
     return 0
 
 
-def build_report(selection, config, binding, *, decode_mode, audio_sha256,
+def build_report(selection, config, model, *, decode_mode, audio_sha256,
                  model_sha256) -> dict:
-    """Build the streaming report skeleton before any chunk is processed."""
+    """Build the streaming report skeleton before any chunk is processed.
+
+    Args:
+        selection: Resolved Selection identifying target and artifact.
+        config: Frontend Config used for every chunk.
+        model: Constructed ASR task (``ASR.from_model``); its ``metadata``
+            property supplies the bound SDK metadata evidence.
+        decode_mode: ``ctc`` or ``legacy``.
+        audio_sha256: Digest of the streamed audio file.
+        model_sha256: Digest of the compiled model file.
+
+    Returns:
+        dict: Report skeleton; chunks are appended by record_chunk.
+    """
 
     return {
         "schema": "rdk-model-zoo/asr-run/v1",
@@ -115,7 +128,7 @@ def build_report(selection, config, binding, *, decode_mode, audio_sha256,
             "audio_maxlen": config.audio_maxlen,
             "new_rate": config.new_rate,
         },
-        "metadata": metadata_evidence(binding.metadata),
+        "metadata": metadata_evidence(model.metadata),
         "chunks": [],
         "status": "running",
     }

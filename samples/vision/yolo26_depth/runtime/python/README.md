@@ -1,26 +1,25 @@
 # YOLO26 Depth Python runtime
 
+English | [简体中文](README_cn.md)
+
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run YOLO26 monocular relative-depth estimation. `Yolo26DepthTask.predict` returns calibrated log depth and a depth map restored to the input image dimensions.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments and result presentation
-├── geometry.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── run.sh  # Run the sample
-├── tensor_io.py  # Python script
-├── visualization.py  # Python script
-└── yolo26_depth.py  # Python script
+├── cli.py  # Arguments, model selection and result presentation
+├── geometry.py  # Image geometry and coordinate transforms
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── model_runner.py  # Runtime loading and raw tensor execution
+├── run.sh  # Locate the Python entry and forward arguments
+├── tensor_io.py  # Model stages and prediction
+└── yolo26_depth.py  # Model stages and prediction
 ```
 
 <a id="environment"></a>
@@ -95,8 +94,7 @@ inverted TURBO visualization and are not an accuracy metric.
 The report records model/input hashes, selection, runtime metadata and measured
 forward duration. That duration includes runner validation and copying; it is
 not isolated BPU latency and excludes preprocessing/postprocessing. Unknown
-runtime versions remain `unknown`. Host tests use controlled runtime fixtures;
-board accuracy, real SDK execution and dataset metrics are measured on the board.
+runtime versions remain `unknown`.
 Source-recorded measurements are in the [evaluator guide](../../evaluator/README.md).
 
 <a id="integration-example"></a>
@@ -108,13 +106,10 @@ files, warm up or time inference:
 ```python
 import cv2
 from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection
-from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 
 selection = resolve_selection("x5", variant="n")
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-task = Yolo26DepthTask(runner, binding)
+task = Yolo26DepthTask(selection)
 image = cv2.imread("samples/vision/yolo26_depth/test_data/bus.jpg")
 result = task.predict(image)
 print(result.depth_native.shape)
@@ -131,9 +126,9 @@ one-forward latency (transport validation and owned copy included,
 preprocessing/postprocessing excluded); the default `predict` return stays the
 plain `DepthResult` and the task never retains a last image, output or timing.
 Keep the matching context with each frame; no mutable last-frame transform is
-stored on the task. Runner injection is a host-test seam, not board validation.
+stored on the task.
 The CLI separately sets scheduling parameters; applications may call
-`runner.set_scheduling_params(priority=0, bpu_cores=[0])` where supported.
+`task.set_scheduling_params(priority=0, bpu_cores=[0])` where supported.
 `predict` composes the three stages. The caller handles timing, image I/O and rendering.
 
 <a id="stage-io"></a>
@@ -172,7 +167,7 @@ calls must be serialized unless the SDK warrants otherwise.
 ## Troubleshooting
 
 - **Unknown/mismatched board:** run on the selected supported target. Dry-run is
-  only selection inspection and cannot establish board compatibility.
+  selection inspection; run inference on the selected board.
 - **Missing SDK:** install the matching board runtime using platform guidance;
   model execution requires the board SDK in addition to NumPy/OpenCV.
 - **Digest mismatch:** obtain the exact published artifact again. A deliberate

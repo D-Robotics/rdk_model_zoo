@@ -10,7 +10,7 @@ from types import SimpleNamespace
 import cv2
 import numpy as np
 from samples.vision.yoloe.model.vocabulary import LABELS_SHA256
-from samples.vision.yoloe.runtime.python.pipeline_io import Result
+from samples.vision.yoloe.runtime.python.yoloe import Result
 from samples.vision.yoloe.evaluator.dataset import load_dataset, load_category_map
 from samples.vision.yoloe.evaluator.results import (
     serialize_predictions,

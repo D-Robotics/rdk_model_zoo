@@ -200,9 +200,8 @@ def make_x5_runner(model_path: Path, backbone: str | None = None):
         sys.path.insert(0, str(root))
     from utils.py_utils.platforms import require_execution_target
     from utils.py_utils.runtime_meta import metadata_evidence
-    from samples.vision.unet.runtime.python.model_binding import resolve_selection
-    from samples.vision.unet.runtime.python.model_runner import RuntimeModelRunner
-    from samples.vision.unet.runtime.python.unet import UNetTask
+    from samples.vision.unet.runtime.python.cli import resolve_selection
+    from samples.vision.unet.runtime.python.unet import UNetSegmenter, create_runner
     require_execution_target("x5")
     inferred = re.match(r"unet_(resnet(?:18|34|50|101|152))_", model_path.name)
     variant = backbone or (inferred.group(1) if inferred else None)
@@ -214,9 +213,8 @@ def make_x5_runner(model_path: Path, backbone: str | None = None):
     selection = resolve_selection("x5", variant=variant, asset_id=reference.asset.reference, model_path=model_path)
     from hbm_runtime import HB_HBMRuntime
     runtime = HB_HBMRuntime(str(model_path))
-    runner = RuntimeModelRunner(selection, runtime=runtime)
-    binding = runner.load()
-    task = UNetTask(runner, binding)
+    task = UNetSegmenter(selection, runner=create_runner(selection, runtime=runtime))
+    binding = task.binding
 
     def run(image: np.ndarray) -> np.ndarray:
         # load_sample provides RGB; canonical preprocessing owns BGR -> NV12.

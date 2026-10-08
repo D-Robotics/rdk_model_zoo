@@ -59,7 +59,7 @@ bash samples/vision/yolo26_depth/model/download.sh --target s100p --variant l
 ```
 
 每次下载一个制品。其他条目使用对应目标、变体或精确 `--asset-id`。
-`download_model.sh` 委托同一个统一下载器，参数也是显式旗标，不沿用旧 shell 位置参数。
+`download_model.sh` 委托同一个统一下载器，参数也是显式旗标，使用具名参数。
 下载与推理分开。
 
 <a id="accompanying-files"></a>

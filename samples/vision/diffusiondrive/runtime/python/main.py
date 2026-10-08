@@ -34,10 +34,9 @@ from samples.vision.diffusiondrive.runtime.python.data_io import (
     load_features,
     validate_destinations,
 )
-from samples.vision.diffusiondrive.runtime.python.model_binding import (
+from samples.vision.diffusiondrive.runtime.python.cli import (
     resolve_selection,
 )
-from samples.vision.diffusiondrive.runtime.python.model_runner import RuntimeModelRunner
 
 
 def main(argv=None):
@@ -63,22 +62,23 @@ def main(argv=None):
         input_path = args.input_npz.expanduser().resolve()
         features = load_features(input_path)
         started = datetime.now(timezone.utc).isoformat()
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+
+        # Real execution starts here: construction gates board identity and
+        # the publication hash before the SDK import.
         from samples.vision.diffusiondrive.runtime.python.diffusiondrive import (
-            DiffusionDriveTask,
+            DiffusionDrivePlanner,
         )
 
-        task = DiffusionDriveTask(runner, binding, args.agent_score_thres)
+        task = DiffusionDrivePlanner(selection, agent_score_threshold=args.agent_score_thres)
+        task.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         details = task.predict(features, return_details=True)
         finished = datetime.now(timezone.utc).isoformat()
         save_planning_evidence(
             output,
             extras,
             selection=selection,
-            runner=runner,
-            binding=binding,
+            runner=task.runner,
+            binding=task.binding,
             args=args,
             input_path=input_path,
             features=features,

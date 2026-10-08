@@ -79,9 +79,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
 from utils.py_utils import (
     preprocess as pre_utils,
 )
-from samples.vision.ultralytics_yolo.runtime.python.legacy import (
-    pre_process_with_transform,
-)
 
 
 @dataclass
@@ -167,8 +164,6 @@ class YoloDetect:
         """Forward explicit runtime scheduling parameters to the runner."""
         _set_scheduling_params(
             self.runner, self.model, self.model_name, priority, bpu_cores)
-
-    pre_process_with_transform = pre_process_with_transform
 
     # ------------------------------------------------------------------
     # The three pipeline stages, each public and usable on its own.

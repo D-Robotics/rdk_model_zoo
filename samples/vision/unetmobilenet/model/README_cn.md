@@ -38,14 +38,14 @@ bash samples/vision/unetmobilenet/model/download.sh --target s600
 <a id="accompanying-files"></a>
 ## 伴随文件
 
-无需外部类别文件；固定的 19 类 ID 使用源 rdk_colors 显示。segmentation.png 是示例输入，result.jpg 是源记录输出，都不构成带标签验证集。
+19 类 ID 使用内置 rdk_colors 绘制，无需外部类别文件。segmentation.png 是示例输入，result.jpg 是参考输出；数据集评估需准备带标注的 Cityscapes 数据。
 
 <a id="local-paths"></a>
 ## 本地路径
 
-运行时默认按示例位置解析 model/<target>/unet_mobilenet_1024x2048_nv12.hbm，不依赖 cwd；替代旧 /opt/hobot/model/<soc>/basic 默认值。下载器 --output-dir 修改根目录，但保留目标子目录。使用已有 /opt 副本时，同时指定 --model-path /opt/hobot/model/s100/basic/unet_mobilenet_1024x2048_nv12.hbm 与 --asset-id s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm，且目标须一致。
+运行时默认按示例位置解析 model/<target>/unet_mobilenet_1024x2048_nv12.hbm，不依赖 cwd。下载器 --output-dir 修改根目录，但保留目标子目录。使用已有 /opt 副本时，同时指定 --model-path /opt/hobot/model/s100/basic/unet_mobilenet_1024x2048_nv12.hbm 与 --asset-id s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm，且目标须一致。
 
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-两行 HBM 均为 `sha256: null (unknown)`。下载器打印实测 SHA-256 以追踪副本，不构成独立认证。运行时元数据校验可拒绝错误 shape/dtype，但无法证明自定义文件就是发布制品。请保留自定义文件来源，不能通过改名声称 S100 制品支持 S600。
+两行 HBM 均为 `sha256: null (unknown)`。下载器打印本地 SHA-256。请选择目标板卡对应的发布模型；加载时校验模型输入输出的 shape 和 dtype。

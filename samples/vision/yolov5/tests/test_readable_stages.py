@@ -30,7 +30,7 @@ def _task(target='x5'):
         calls.append(tensors)
         return runtime.outputs
 
-    return YOLOv5Task(runner, binding), calls, binding
+    return YOLOv5Task(runner=runner, binding=binding), calls, binding
 
 
 class Yolov5ReadableStageTests(unittest.TestCase):

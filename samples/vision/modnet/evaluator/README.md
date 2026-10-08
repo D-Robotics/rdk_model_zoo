@@ -84,9 +84,6 @@ Source reference is the table above; no board comparison against it is bundled
 here.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
-The evaluator runs both sides itself and never compares hand-supplied matte files
-in place of a real inference. It is not a portrait dataset evaluator, does not
-invent quality labels, does not download the manual artifact, and does not convert
-a host fixture into board verification.
+The evaluator runs both implementations on the same input using prepared models and compares matte arrays. Dataset metrics require a portrait dataset with annotations and a metric implementation.

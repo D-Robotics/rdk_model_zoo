@@ -75,7 +75,7 @@ python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts do
 - `model/download.py`、`model/download.sh`：显式模型准备。
 - `evaluator/compare.py`：实现对拍比较，不下载。
 - Python API：`YOLOWorldTask.preprocess`、`infer`、`postprocess`、`predict`
-  （`pre_process`/`forward`/`post_process` 为兼容别名）。
+  （`pre_process`/`forward`/`post_process` 为方法别名）。
 
 <a id="license"></a>
 ## 许可证

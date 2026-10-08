@@ -1,16 +1,138 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Actual source pixelwise RGB z-score → raw inference → relative float depth."""
+"""Depth Anything V2 depth estimation: load, preprocess, infer, postprocess, predict.
+
+``DepthEstimator`` owns the fixed 518x686 RGB contract end to end:
+construction loads the model through the shared lazy transport, and each
+``predict`` call runs preprocess -> infer -> postprocess visible in this
+file. Catalog selection and presentation live in ``cli.py``; per-frame
+resize/letterbox geometry lives in ``geometry.py``; rendering lives in
+``visualization.py``.
+"""
 
 from dataclasses import dataclass
-from typing import Mapping
+from pathlib import Path
+from typing import Any, Mapping
 import cv2
 import numpy as np
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
+from utils.py_utils.single_array_runner import SingleArrayRunner
+from samples.vision.depth_anything_v2.runtime.python.cli import ModelSelection
 from samples.vision.depth_anything_v2.runtime.python.geometry import (
     ImageContext,
     make_context,
     validate_context,
 )
+
+INPUT_HEIGHT = 518
+INPUT_WIDTH = 686
+
+
+@dataclass(frozen=True)
+class ModelBinding:
+    """Validated fixed RGB featuremap and relative-depth tensor protocol.
+
+    Attributes:
+        selection: The manifest-backed selection this binding was built from.
+        metadata: Board-observed model metadata validated against the contract.
+        input_name: Bound normalized RGB F32 input tensor name.
+        output_name: Bound relative-depth F32 output tensor name.
+    """
+
+    selection: ModelSelection
+    metadata: RuntimeMetadata
+    input_name: str
+    output_name: str
+
+    @property
+    def model_name(self) -> str:
+        """Return the single submodel name declared by the artifact."""
+        return self.metadata.model_name
+
+
+def bind_model(
+    selection: ModelSelection, metadata: RuntimeMetadata | Mapping[str, Any]
+) -> ModelBinding:
+    """Bind the source 518×686 RGB featuremap and relative-depth output.
+
+    Args:
+        selection: Manifest-backed selection whose asset and path must match.
+        metadata: Board-observed metadata mapping or ``RuntimeMetadata``.
+
+    Returns:
+        ModelBinding: Validated tensor names for the fixed float32 contract.
+
+    Raises:
+        BindingError: The selection differs from the exact published asset.
+        MetadataMismatchError: Tensor names, shapes, or dtypes violate the
+            contract.
+
+    Notes:
+        Internal int16 quantization in the source guide is not evidence that
+        the public output tensor is int16. Accept only the float32 source IO
+        contract.
+    """
+    from samples.vision.depth_anything_v2.runtime.python.cli import resolve_selection
+
+    expected = resolve_selection(
+        selection.target,
+        asset_id=selection.asset.reference,
+        model_path=selection.model_path if selection.explicit_model_path else None,
+    )
+    if expected != selection:
+        from samples.vision.depth_anything_v2.runtime.python.cli import BindingError
+        raise BindingError("Selection differs from the exact published asset")
+    meta = (
+        metadata
+        if isinstance(metadata, RuntimeMetadata)
+        else RuntimeMetadata.from_mapping(metadata)
+    )
+    if (
+        len(meta.model_names) != 1
+        or len(meta.input_names) != 1
+        or len(meta.output_names) != 1
+    ):
+        raise MetadataMismatchError("Expected one model, one input and one output")
+    inp, out = meta.input_names[0], meta.output_names[0]
+    if (
+        meta.input_shapes.get(inp) != (1, 3, INPUT_HEIGHT, INPUT_WIDTH)
+        or meta.input_dtypes.get(inp) != "float32"
+    ):
+        raise MetadataMismatchError("Expected float32 RGB NCHW [1,3,518,686]")
+    if (
+        meta.output_shapes.get(out) != (1, INPUT_HEIGHT, INPUT_WIDTH)
+        or meta.output_dtypes.get(out) != "float32"
+    ):
+        raise MetadataMismatchError("Expected float32 depth [1,518,686]")
+    return ModelBinding(selection, meta, inp, out)
+
+
+def create_runner(selection: ModelSelection, *, runtime_factory=None, runtime=None) -> SingleArrayRunner:
+    """Construct the lazy Depth Anything V2 transport for a resolved selection.
+
+    Args:
+        selection: Manifest-backed selection carrying target, asset, and path.
+        runtime_factory: Optional model-path-to-SDK-object factory (host seam).
+        runtime: Optional prebuilt SDK object; overrides the factory.
+
+    Returns:
+        SingleArrayRunner: Lazy runner bound to the normalized RGB F32
+        physical input contract; loading gates board identity and the
+        published file hash.
+    """
+    return SingleArrayRunner(
+        selection,
+        binding_loader=bind_model,
+        physical_input=lambda binding: (
+            binding.metadata.input_shapes[binding.input_name],
+            "float32",
+        ),
+        task_name="Depth Anything V2",
+        runtime_factory=runtime_factory,
+        runtime=runtime,
+        execution_target_gate=require_execution_target,
+    )
 
 
 @dataclass(frozen=True)
@@ -39,17 +161,40 @@ class DepthPredictionDetails:
     raw: np.ndarray
 
 
-class DepthAnythingV2Task:
-    """Actual source pixelwise RGB z-score → raw inference → relative float depth.
+class DepthEstimator:
+    """Estimate one image's relative depth with a compiled Depth Anything V2.
 
     ``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
     established ``pre_process``/``forward``/``post_process`` names stay thin
     aliases of those implementations.
+
+    Attributes:
+        runner (SingleArrayRunner): Lazy shared transport used by infer.
+        binding (ModelBinding): Validated tensor names and runtime metadata.
+        resize_type: 0 stretch (default) or 1 letterbox preprocessing.
     """
 
-    def __init__(self, runner, binding, *, resize_type=0):
+    def __init__(self, selection: ModelSelection, *, resize_type=0, runner=None):
+        """Load the compiled model and validate its tensor protocol.
+
+        Args:
+            selection: Manifest-backed selection from ``cli.resolve_selection``.
+            resize_type: 0 stretch or 1 letterbox; validated eagerly.
+            runner: Optional injected transport (host-test seam); defaults to
+                the shared lazy runner with the published-file hash gate.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: The resize_type or selection is invalid.
+            MetadataMismatchError: Runtime metadata violates the contract.
+            RuntimeError: Board identity or SDK loading fails.
+        """
         make_context(1, 1, resize_type)
-        self.runner, self.binding, self.resize_type = runner, binding, resize_type
+        self.runner = runner if runner is not None else create_runner(selection)
+        self.binding = self.runner.load()
+        self.resize_type = resize_type
 
     # ------------------------------------------------------------------
     # The three pipeline stages, each public and usable on its own.
@@ -141,6 +286,22 @@ class DepthAnythingV2Task:
         if return_details:
             return DepthPredictionDetails(result, prepared, raw)
         return result
+
+    def set_scheduling_params(self, *, priority=None, bpu_cores=None) -> None:
+        """Apply scheduling options to the loaded board runtime.
+
+        Args:
+            priority: Optional integer in [0, 255]; None leaves it unchanged.
+            bpu_cores: Optional non-empty list of nonnegative BPU core indexes.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: Priority or a core index is out of range.
+            RuntimeError: The SDK cannot apply the scheduling options.
+        """
+        self.runner.set_scheduling_params(priority=priority, bpu_cores=bpu_cores)
 
     # ------------------------------------------------------------------
     # Compatibility surface: the established stage names stay thin aliases

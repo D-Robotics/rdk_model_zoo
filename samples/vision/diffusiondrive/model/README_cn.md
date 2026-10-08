@@ -34,7 +34,7 @@ bash samples/vision/diffusiondrive/model/download.sh --target s100p
 bash samples/vision/diffusiondrive/model/download.sh --target s600
 ```
 
-`download_model.sh` 兼容包装入口转发同样参数。与源包装入口不同，下载必须显式选择目标，推理不会触发下载。新入口不以 `CHIP`、`RDK_SOC`、`MODEL_PATH` 环境覆盖作为资产选择契约。指定其他存储根目录：
+`download_model.sh` 与 `download.py` 接收相同参数，通过 `--target` 选择板卡。使用其他保存目录：
 
 ```bash
 python3 -m samples.vision.diffusiondrive.model.download --target s600 --output-dir /data/diffusiondrive-models

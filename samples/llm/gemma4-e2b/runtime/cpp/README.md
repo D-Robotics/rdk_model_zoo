@@ -16,9 +16,9 @@ Use this directory for c++ inference.
 
 ```text
 cpp/
-├── inc/  # Files for inc
-├── src/  # Files for src
-├── CMakeLists.txt  # Source or data file
+├── inc/  # Public C++ interfaces
+├── src/  # C++ runtime and command-line entry
+├── CMakeLists.txt  # Native build configuration
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── build.sh  # Shell command

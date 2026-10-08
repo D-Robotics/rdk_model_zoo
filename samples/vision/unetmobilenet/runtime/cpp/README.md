@@ -84,7 +84,7 @@ Native CLI additionally accepts the source underscore spellings (--model_path, -
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-ModelRunner owns packed/model handles, two input buffers and one output buffer. Constructor validates target, counts, shapes, strides, capacity and score quantization before allocation. Destruction frees only acquired resources; the per-forward task guard releases tasks on submit/wait/cache errors. The runner is noncopyable and not thread-safe; use separate instances per thread. 
+ModelRunner owns packed/model handles, two input buffers and one output buffer. Constructor validates target, counts, shapes, strides, capacity and score quantization before allocation. Destruction frees only acquired resources; the per-forward task guard releases tasks on submit/wait/cache errors. The runner is noncopyable and not thread-safe; use separate instances per thread.
 
 UnetMobileNetTask accepts a RawRunner callback. pre_process(image) returns owned Y/UV Mats and per-call ImageContext; forward(prepared) returns owned RawScores with padded bytes/metadata unchanged; post_process(raw, context) returns original-resolution CV_32S IDs; predict composes those stages. main.cpp shows complete wiring. Rendering is in visualization.cpp, resource code in model_runner.cpp, and stride/affine decoding in tensor_contract.cpp. No display or file IO belongs in the task.
 

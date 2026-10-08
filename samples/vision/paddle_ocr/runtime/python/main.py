@@ -85,24 +85,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         # Imported inside real execution: OpenCV and hbm_runtime load only
         # after the pair, file, and board checks above have passed.
-        from samples.vision.paddle_ocr.runtime.python.model_runner import (
-            create_stage_runners,
-        )
         from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
 
         image = read_bgr_image(
             args.test_img if args.test_img else default_image(pair.target)
         )
-        detector, recognizer = create_stage_runners(
+        result = OCRPipeline.from_models(
             pair,
+            vocabulary_path=args.vocabulary_path,
             priority=args.priority,
             bpu_cores=args.bpu_cores,
-        )
-        result = OCRPipeline(
-            pair,
-            detector,
-            recognizer,
-            vocabulary_path=args.vocabulary_path,
         ).predict(image)
         payload = result.as_dict()
         payload["image_shape"] = list(image.shape)

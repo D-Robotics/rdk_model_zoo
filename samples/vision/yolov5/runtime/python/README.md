@@ -1,25 +1,24 @@
 # YOLOv5 Python runtime
 
+English | [简体中文](README_cn.md)
+
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run YOLOv5 object detection with the X5 or S model protocol. `YOLOv5Task` loads the selected runtime and provides the complete preprocessing, inference and postprocessing chain.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── decode.py  # Python script
-├── detection.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── run.sh  # Run the sample
-├── tensor_io.py  # Python script
-└── visualization.py  # Python script
+├── cli.py  # Arguments, model selection and result presentation
+├── decode.py  # Task output decoding
+├── detection.py  # Model stages and prediction
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── model_runner.py  # Runtime loading and raw tensor execution
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
 <a id="environment"></a>
@@ -88,7 +87,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 from samples.vision.yolov5.runtime.python.model_binding import resolve_selection
-from samples.vision.yolov5.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
 
 target = "x5"
@@ -100,10 +98,8 @@ image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
 if image is None:
     raise FileNotFoundError(image_path)
 selection = resolve_selection(target, variant=variant, asset_id=asset_id, model_path=model_path)
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = YOLOv5Task(runner, binding, score_thres=0.25, nms_thres=0.45)
+task = YOLOv5Task(selection, score_thres=0.25, nms_thres=0.45)
+task.runner.set_scheduling_params(priority=0, bpu_cores=[0])
 prepared = task.preprocess(image)
 native_outputs = task.infer(prepared.tensors)
 explicit_result = task.postprocess(native_outputs, prepared.context)

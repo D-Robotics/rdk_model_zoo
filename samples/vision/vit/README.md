@@ -88,10 +88,7 @@ throughput are not published for this model.
 [Model](model/README.md) · [Python runtime](runtime/python/README.md) ·
 [Conversion](conversion/README.md) · [Evaluation](evaluator/README.md)
 
-New integrations use the `ViTClassifier` class
-([classify.py](runtime/python/classify.py); the shared `ClassificationTask`
-flow stays importable from
-[classification.py](../../../utils/py_utils/classification.py)); `--model-variant`
+Use `ViTClassifier` from [classify.py](runtime/python/classify.py); `--model-variant`
 remains an alias for `--variant`, and the local `run.sh` accepts positional
 int8/int16.
 

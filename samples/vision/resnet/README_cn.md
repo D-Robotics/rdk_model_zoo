@@ -5,17 +5,10 @@ Top-K `(类别 ID, 分数, 标签)`。sample 覆盖 TorchVision ResNet18（X5 �
 S100/S600）及 ResNet50/152（S100/S600）
 （[ResNet18 上游](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html)、
 [ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html)、
-[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)）；
-本 sample 是仓库的单模型分类参照。[English README](README.md)
+[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)）。[English README](README.md)
 
 <a id="overview"></a>
 ## 概述
-
-维护实现为一条 Python 流程（全部 target）加一条 S 系列 C++ 流程。Python 从
-平台发布 Manifest 解析唯一制品引用，校验板卡身份，懒加载 `hbm_runtime`，
-执行 `preprocess → infer → postprocess` 任务并由 `predict` 串联（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 使用
-S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。
 
 ### 算法背景
 
@@ -36,6 +29,12 @@ ResNet 由 Kaiming He、Xiangyu Zhang、Shaoqing Ren 和 Jian Sun 提出。残�
 *ResNet-18/34
 的残差基础块（左，两个 3×3 卷积）与 ResNet-50/101/152 的瓶颈构建块
 （右，1×1 → 3×3 → 1×1），即 ResNet 论文图 5。*
+
+本目录提供一条 Python 流程（全部 target）加一条 S 系列 C++ 流程。Python 从
+平台发布 Manifest 解析唯一制品引用，校验板卡身份，懒加载 `hbm_runtime`，
+执行 `preprocess → infer → postprocess` 任务并由 `predict` 串联（见
+[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 使用
+S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。
 
 <a id="directory"></a>
 ## 目录结构

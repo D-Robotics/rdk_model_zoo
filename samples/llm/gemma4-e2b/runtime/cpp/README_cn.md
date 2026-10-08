@@ -16,9 +16,9 @@ RDK S100P / S600 板端 Gemma4-E2B VLM 推理 C++ runtime，加载与对应 SoC 
 
 ```text
 cpp/
-├── inc/  # inc 相关文件
-├── src/  # src 相关文件
-├── CMakeLists.txt  # 源码或数据文件
+├── inc/  # C++ 公开接口
+├── src/  # C++ 推理与命令行入口
+├── CMakeLists.txt  # 原生构建配置
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── build.sh  # Shell 脚本

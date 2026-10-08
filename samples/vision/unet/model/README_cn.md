@@ -65,7 +65,7 @@ bash download.sh --target x5 --variant all
 <a id="accompanying-files"></a>
 ## 伴随文件
 
-`../test_data/2007_000033.jpg` 是演示图片；VOC 调色板由 visualization.py 确定性生成，不依赖另一个标签文件。完整 VOC 图像/掩码集、训练权重与 ONNX 不随预编译 BIN 下载。
+`../test_data/2007_000033.jpg` 是演示图片；VOC 调色板由 cli.py 确定性生成，不依赖另一个标签文件。完整 VOC 图像/掩码集、训练权重与 ONNX 不随预编译 BIN 下载。
 
 <a id="local-paths"></a>
 ## 本地路径

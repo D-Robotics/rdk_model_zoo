@@ -13,7 +13,7 @@ ROOT=Path(__file__).resolve().parents[4]
 
 class FakeDetector:
     def __init__(self):
-        from samples.vision.yolov5.runtime.python.tensor_io import DetectionContext,PreparedInput
+        from samples.vision.yolov5.runtime.python.detection import DetectionContext,PreparedInput
         self.prepared=lambda x:PreparedInput({'image':x},DetectionContext(x.shape[:2],672,1))
         self.result=DetectionResult(np.array([[1,2,11,22],[20,30,40,50]],np.float32),np.array([.9,.8],np.float32),np.array([0,1],np.int32))
     def pre_process(self,image):return self.prepared(image)
@@ -57,7 +57,7 @@ class TrackingTests(unittest.TestCase):
 
     def test_real_detector_binding_preserves_bytetrack_s100p_identity(self):
         runtime=FakeRuntime('s100p','int8');selection=resolve_selection('s100p',consumer='bytetrack')
-        detector=YOLOv5Task(lambda _:runtime.outputs,bind_model(selection,runtime.facts))
+        detector=YOLOv5Task(runner=lambda _:runtime.outputs,binding=bind_model(selection,runtime.facts))
         task=ByteTrackTask(detector,tracker_factory=FakeTracker);task.predict(np.zeros((97,151,3),np.uint8))
         self.assertEqual(task.frame_index,1);self.assertEqual(selection.asset.sample_id,'bytetrack')
 

@@ -24,7 +24,7 @@ from samples.vision.clip.runtime.python.cli import (  # noqa: E402
     run_list_models,
     save_annotated_image,
 )
-from samples.vision.clip.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.clip.runtime.python.cli import (  # noqa: E402
     list_available_assets,  # noqa: F401 - import path kept for existing callers
     resolve_selection,
 )
@@ -51,17 +51,13 @@ def main(argv=None):
 
         # Imported inside real execution: OpenCV, onnxruntime and hbm_runtime
         # load only after the selection, file, and board checks above passed.
-        from samples.vision.clip.runtime.python.matching import CLIPTask
-        from samples.vision.clip.runtime.python.model_runner import RuntimeModelRunner
-        from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+        from samples.vision.clip.runtime.python.matching import CLIPMatcher
 
         prompts = parse_prompts(args.texts)
         image = read_bgr_image(args.test_img)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        task = CLIPTask(runner, binding, PromptTokenizer())
-        result = task.predict(image, prompts)
+        model = CLIPMatcher(selection)
+        model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+        result = model.predict(image, prompts)
         save_annotated_image(args.img_save_path, image, prompts, result)
         print_match_result(result, selection, prompts, image_saved=args.img_save_path)
         return 0

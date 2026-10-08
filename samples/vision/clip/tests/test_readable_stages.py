@@ -72,7 +72,8 @@ class ThinEntryTests(unittest.TestCase):
         self.assertIs(main.build_parser, cli.build_parser)
 
     def test_execution_constructs_task_and_calls_predict(self):
-        from samples.vision.clip.runtime.python import main, model_runner
+        from samples.vision.clip.runtime.python import main
+        from samples.vision.clip.runtime.python import matching as model_runner
         original = model_runner.RuntimeModelRunner
         image_runtime, text_session = ImageRuntime(), TextSession()
         with tempfile.TemporaryDirectory() as directory:

@@ -99,7 +99,7 @@ def load_legacy_source():
 
 class BindingTests(unittest.TestCase):
     def test_single_s100_asset_default_and_external_path_gate(self):
-        resolve_selection = local_module("model_binding").resolve_selection
+        resolve_selection = local_module("cli").resolve_selection
 
         selection = resolve_selection("s100")
         self.assertEqual(selection.asset.filename, "s100/r3d_18.hbm")
@@ -118,8 +118,8 @@ class BindingTests(unittest.TestCase):
         )
 
     def test_binding_uses_actual_dynamic_names_and_five_dim_input(self):
-        binding_module = local_module("model_binding")
-        bind_model, resolve_selection = binding_module.bind_model, binding_module.resolve_selection
+        bind_model = local_module("classification").bind_model
+        resolve_selection = local_module("cli").resolve_selection
 
         runtime = FakeRuntime("not_input", "not_output")
         binding = bind_model(resolve_selection("s100"), metadata(runtime))
@@ -140,16 +140,13 @@ class BindingTests(unittest.TestCase):
 
 class TaskTests(unittest.TestCase):
     def make_task(self, runtime=None, **kwargs):
-        VideoClassificationTask = local_module("classification").VideoClassificationTask
-        binding_module = local_module("model_binding")
-        bind_model, resolve_selection = binding_module.bind_model, binding_module.resolve_selection
-        RuntimeModelRunner = local_module("model_runner").RuntimeModelRunner
+        classification = local_module("classification")
+        resolve_selection = local_module("cli").resolve_selection
 
         runtime = runtime or FakeRuntime()
         selection = resolve_selection("s100")
-        binding = bind_model(selection, metadata(runtime))
-        runner = RuntimeModelRunner(selection, runtime=runtime)
-        return VideoClassificationTask(runner, binding, **kwargs), runtime
+        runner = classification.RuntimeModelRunner(selection, runtime=runtime)
+        return classification.R3D18Classifier(selection, runner=runner, **kwargs), runtime
 
     def test_preprocess_matches_actual_source_and_casts_float32(self):
         legacy = load_legacy_source()._test_instance
@@ -282,8 +279,7 @@ class LabelsAndCLITests(unittest.TestCase):
     def test_clean_repo_root_importlib_loads_task_and_runner(self):
         code = (
             "import importlib; "
-            "importlib.import_module('samples.vision.3dresnet.runtime.python.classification'); "
-            "importlib.import_module('samples.vision.3dresnet.runtime.python.model_runner')"
+            "importlib.import_module('samples.vision.3dresnet.runtime.python.classification')"
         )
         environment = os.environ.copy()
         environment.pop("PYTHONPATH", None)
@@ -319,12 +315,12 @@ class LabelsAndCLITests(unittest.TestCase):
 
     def test_cli_fixture_pipeline_reads_labels_and_emits_json(self):
         main = local_module("main")
-        model_runner = local_module("model_runner")
+        classification = local_module("classification")
 
         runtime = FakeRuntime()
-        real_runner = model_runner.RuntimeModelRunner
+        real_runner = classification.RuntimeModelRunner
         with tempfile.TemporaryDirectory() as temp, patch("utils.py_utils.platforms.detect_target", return_value="s100"), patch.object(
-            model_runner, "RuntimeModelRunner", lambda selection: real_runner(selection, runtime=runtime)
+            classification, "RuntimeModelRunner", lambda selection: real_runner(selection, runtime=runtime)
         ):
             model_path = Path(temp) / "r3d_18.hbm"
             model_path.write_bytes(b"fixture")
@@ -346,10 +342,10 @@ class LabelsAndCLITests(unittest.TestCase):
 
     def test_cli_rejects_unknown_identity_before_runner(self):
         main = local_module("main")
-        model_runner = local_module("model_runner")
+        classification = local_module("classification")
 
         with patch("utils.py_utils.platforms.detect_target", return_value=None), patch.object(
-            model_runner, "RuntimeModelRunner", side_effect=AssertionError("runner must not construct")
+            classification, "RuntimeModelRunner", side_effect=AssertionError("runner must not construct")
         ):
             self.assertEqual(main.main([
                 "--target", "s100",
@@ -371,3 +367,33 @@ class LabelsAndCLITests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SimplifiedRuntimeTests(unittest.TestCase):
+    """2026-10-08 runtime simplification boundary.
+
+    Selection/catalog duties live in ``cli.py``; ``classification.py`` owns the
+    named model class plus the sample runner and clip preparation; the
+    per-sample ``model_binding``/``model_runner``/``tensor_io`` forwarding
+    modules are gone. ``labels.py`` stays: independent Kinetics-400 decoding.
+    """
+
+    def test_classifier_constructs_from_selection_and_runs_stages(self):
+        resolve_selection = local_module("cli").resolve_selection
+        classification = local_module("classification")
+        runtime = FakeRuntime()
+        selection = resolve_selection("s100")
+        model = classification.R3D18Classifier(
+            selection, top_k=3,
+            runner=classification.RuntimeModelRunner(selection, runtime=runtime))
+        result = model.predict(np.zeros((1, 3, 16, 112, 112), np.float32))
+        self.assertEqual(len(result.class_ids), 3)
+        prepared = model.preprocess(np.zeros((1, 3, 16, 112, 112), np.float32))
+        manual = model.postprocess(model.infer(prepared))
+        np.testing.assert_array_equal(result.class_ids, manual.class_ids)
+        np.testing.assert_allclose(result.scores, manual.scores)
+
+    def test_split_forwarding_modules_are_removed(self):
+        base = SAMPLE / "runtime/python"
+        for name in ("model_binding.py", "model_runner.py", "tensor_io.py"):
+            self.assertFalse((base / name).exists(), name)

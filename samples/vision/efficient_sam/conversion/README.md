@@ -59,7 +59,7 @@ Alternatively, pull the image online: `docker pull registry.d-robotics.cc/delive
 
 The active published model manifest is `docs/release/x5/models.yaml` or `docs/release/s/models.yaml`; all published model SHA fields are `null` (unknown). S has separate encoder and decoder YAML files for all three marches. X5 has two bayes-e YAML files.
 
-Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. The fixed sources do not pin their package versions or the upstream repository revision; recording those versions is a reproducibility prerequisite. Check these imports inside the chosen export environment, separate from board inference:
+Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. Record the selected framework and upstream repository versions with the exported model. Check these imports in the export environment:
 
 ```bash
 # cwd: this conversion directory, inside the chosen host export environment

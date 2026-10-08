@@ -82,7 +82,7 @@ when loading `lpr.bin`; the warning does not affect the comparison. The result
 is numerical parity for one input, not an accuracy benchmark.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 The evaluator runs both sides itself and never substitutes a hand-supplied file
 for a real inference. It does not download models, prepare an accuracy dataset,

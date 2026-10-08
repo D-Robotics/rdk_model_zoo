@@ -20,9 +20,8 @@ import json
 import cv2
 import numpy as np
 from dinov2 import Dinov2, Dinov2Config
-from samples.vision.dinov2.runtime.python.model_binding import resolve_selection
-from samples.vision.dinov2.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.dinov2.runtime.python.embedding import DINOv2Task
+from samples.vision.dinov2.runtime.python.cli import resolve_selection
+from samples.vision.dinov2.runtime.python.embedding import DINOv2Embedder, RuntimeModelRunner
 from utils.py_utils.platforms import require_execution_target
 
 def sha256(path):
@@ -50,7 +49,7 @@ binding = runner.load()
 runner.set_scheduling_params(priority=0, bpu_cores=[0])
 legacy = Dinov2(Dinov2Config(str(selection.model_path)))
 legacy.set_scheduling_params(priority=0, bpu_cores=[0])
-prepared = DINOv2Task(runner, binding).pre_process(image)
+prepared = DINOv2Embedder(selection, runner=runner).pre_process(image)
 old_inputs = legacy.pre_process(image)
 np.testing.assert_array_equal(old_inputs[legacy.model_name]['input'], prepared.tensors['input'])
 np.save(output_dir / 'input.npy', prepared.tensors['input'], allow_pickle=False)
@@ -67,7 +66,7 @@ for name in ('cls_feat', 'patch_feat'):
                                else np.allclose(a, b, rtol=0, atol=1e-5))
     legacy.cfg.output = name
     reference = legacy.post_process(old_raw)
-    candidate = DINOv2Task(runner, binding, name).post_process(new_raw)
+    candidate = DINOv2Embedder(selection, output=name, runner=runner).post_process(new_raw)
     np.save(output_dir / ('legacy-result-' + name + '.npy'), reference, allow_pickle=False)
     np.save(output_dir / ('unified-result-' + name + '.npy'), candidate, allow_pickle=False)
     result_ok = reference.shape == candidate.shape and reference.dtype == candidate.dtype and np.allclose(reference, candidate, rtol=0, atol=1e-5)

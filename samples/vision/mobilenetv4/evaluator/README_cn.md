@@ -45,7 +45,7 @@ python3 samples/vision/mobilenetv4/runtime/python/main.py \
 
 S100/S600 替换 `s:` 引用与 `s100/`/`s600/` 制品路径；标签文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize 类型与
 Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 ID 相同、
-分数差在 1e-5 内。X5 与 S 的结果互相对照不构成同板对照。
+分数差在 1e-5 内。对照双方使用相同板型。
 
 <a id="metrics"></a>
 ## 指标

@@ -42,7 +42,7 @@ class ConversionTests(unittest.TestCase):
         from test_depth import metadata
 
         task = Yolo26DepthTask(
-            None, bind_model(resolve_selection("s100", variant="l"), metadata(True))
+            binding=bind_model(resolve_selection("s100", variant="l"), metadata(True))
         )
         np.testing.assert_array_equal(lite, task.pre_process(image).tensors["images"])
         self.assertEqual(gx, gs)

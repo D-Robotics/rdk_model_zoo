@@ -6,7 +6,7 @@
 ## Published combinations
 
 S100P (`nash-m`) and S600 (`nash-p`) each have Vision/Text HBMs; S100 (`nash-e`) has no default public HBM.
-Identical filenames and layout do not imply cross-target compatibility. The current download script reuses nonempty files;
+Use the model archive for the selected target. The current download script reuses nonempty files;
 it does not automatically verify the target or SHA-256 of existing files.
 
 <a id="directory"></a>
@@ -101,7 +101,7 @@ sha256sum "$GEMMA4_HOME"/model/*.hbm
 # S600 Text:    aab1831b1ea2b86763d5457890d89c55b684e4ba4834c1e008c668813d1cf646
 ```
 
-The four HBM hashes above are preserved from the S source release's README.
+The values above are the published hashes of the four HBMs from the S release README.
 The active release manifest records `sha256: null` for these files; the downloader prints the observed digest, which you can compare with the published digests above.
 HBM files are board models; `tok_embeddings.bin` is companion embedding data, not an X5 inference BIN.
 Downloads use a `.part` file renamed on completion; existing nonempty files are skipped.

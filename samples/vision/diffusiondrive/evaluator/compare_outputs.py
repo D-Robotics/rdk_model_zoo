@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import sha256_file
 from samples.vision.diffusiondrive.runtime.python.data_io import load_npz
-from samples.vision.diffusiondrive.runtime.python.model_binding import OUTPUT_SHAPES
+from samples.vision.diffusiondrive.runtime.python.diffusiondrive import OUTPUT_SHAPES
 
 
 def cosine(lhs, rhs):

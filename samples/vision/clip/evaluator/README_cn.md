@@ -29,7 +29,6 @@ evaluator/
 ## 环境
 
 - 目标：RDK X5；图像 encoder 通过板端 `hbm_runtime`，文本 encoder 通过 CPU `onnxruntime`。
-- 主机测试：Python 3.14.7、NumPy、OpenCV、`ftfy==6.3.1`、`regex==2026.9.10`；注入 runtime fixture，不要求主机 ONNX Runtime。
 
 <a id="command"></a>
 ## 评估命令

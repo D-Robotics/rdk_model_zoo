@@ -16,6 +16,17 @@ The frame counts are measured with the pinned FunASR frontend described in the
 runtime guide. Both inputs produce float32 `[1,400,560]` features with zero padding
 and no truncation.
 
+
+## Directory structure
+
+```text
+test_data/
+├── audio/  # Files for audio
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── manifest.json  # Structured data
+```
+
 ## Layout and custom inputs
 
 `manifest.json` is a JSON list of objects containing `utt_id` and reference `text`.

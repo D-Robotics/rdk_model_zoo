@@ -80,7 +80,7 @@ For the other tasks, first prepare the corresponding artifact using [model instr
 <a id="parameters"></a>
 ## Parameters
 
-Detect/pose/segment take positional model, image and result paths; classify takes model and image only. Pose/segment/classify do not implement Python-style `--platform`, `--model-path` or general `--help`; these strings would be treated as positional paths. Legacy built-in paths depend on historical directories, so pass paths explicitly.
+Detect/pose/segment take positional model, image and result paths; classify takes model and image only. Pose/segment/classify do not implement Python-style `--platform`, `--model-path` or general `--help`; these strings would be treated as positional paths. Pass model, image and result paths explicitly.
 
 Only **detect** accepts these options:
 

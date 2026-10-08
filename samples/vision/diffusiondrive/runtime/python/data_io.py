@@ -4,7 +4,7 @@
 
 from pathlib import Path
 import numpy as np
-from samples.vision.diffusiondrive.runtime.python.model_binding import INPUT_SHAPES
+from samples.vision.diffusiondrive.runtime.python.diffusiondrive import INPUT_SHAPES
 
 
 def load_npz(path):

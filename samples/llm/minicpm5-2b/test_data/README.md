@@ -4,6 +4,18 @@
 
 These prompts and measurements come from the source S release.
 
+## Directory structure
+
+```text
+test_data/
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+├── generation-reference.json  # Structured data
+├── legacy-long-prompts.json  # Structured data
+├── legacy-prompts.json  # Structured data
+└── prompts.json  # Structured data
+```
+
 `legacy-prompts.json` supplies SDK 1.0.0 single/two-turn generation cases.
 
 `prompts.json` contains six deterministic comparison prompts. `generation-reference.json` records official HF greedy text/token IDs and observed S600 outputs. EOS is removed from the reference token list because OELLM returns generated content tokens separately. This set is a deterministic generation check that supplements the full WikiText2 PPL evaluation. JSON and Python answers retain Markdown fences produced by the original model; do not rewrite them into a bare format the model did not produce.

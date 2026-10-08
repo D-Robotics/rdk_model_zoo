@@ -87,7 +87,9 @@ class ReadmeContractTests(unittest.TestCase):
         })
 
         class FakeRunner:
-            def __init__(self, selection):
+            def __init__(self, selection, *, runtime_factory=None):
+                if runtime_factory is not None:
+                    raise AssertionError("README uses the default board runtime")
                 self.binding = bind_model(selection, encoder_meta, decoder_meta)
                 self.encoder = Stage({"image_embeddings": np.ones((1, 256, 32, 32), np.float16)})
                 self.decoder = Stage({

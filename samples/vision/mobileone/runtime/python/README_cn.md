@@ -1,15 +1,12 @@
 # MobileOne Python 运行
 
-`main.py` 是面向用户的规范化入口：解析参数、构造模型、调用 `predict`、
-展示结果。完整的分类流程在 [`classify.py`](classify.py) 中：
-`MobileOneClassifier` 在一个可读文件里展示初始化、`preprocess`、`infer`、
-`postprocess` 与 `predict`，复用共享的 NV12 打包、Top-K 数学与懒加载
-runner。
-
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+[`main.py`](main.py) 解析参数，显式构造 `MobileOneClassifier`，调用 `predict` 并展示结果。
+[`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
+[`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
+图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -18,12 +15,9 @@ runner。
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── __init__.py  # Python 脚本
 ├── classify.py  # 分类前处理、推理与后处理
 ├── cli.py  # 参数与结果展示
 ├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
 └── run.sh  # 运行示例
 ```
 
@@ -32,7 +26,7 @@ python/
 
 X5 需要匹配的 `hbm_runtime`、NumPy、OpenCV 与 PyYAML。主机导入/help/list/dry-run 无需板端 SDK。主机测试依赖见 `samples/vision/mobileone/requirements-host.txt`。
 
-[完整前提与已验证主机版本](../../README_cn.md#prerequisites)。板端镜像与 SDK 版本尚待实测登记。
+[环境要求](../../README_cn.md#prerequisites)。使用包含匹配 `hbm_runtime` 的板端镜像。
 
 <a id="usage"></a>
 ## 用法
@@ -97,18 +91,24 @@ cwd：仓库根目录。构造分类器前，先用下载器准备制品。本�
 
 ```python
 from samples.vision.mobileone.runtime.python.classify import MobileOneClassifier
-from samples.vision.mobileone.runtime.python.model_binding import resolve_selection
+from samples.vision.mobileone.runtime.python.cli import resolve_selection
 
 selection = resolve_selection("x5", variant="s0")
-model = MobileOneClassifier(selection, top_k=5)
+contract = selection.contract
+model = MobileOneClassifier(
+    selection.model_path, target=selection.target,
+    input_size=(contract.input_height, contract.input_width),
+    class_count=contract.class_count, top_k=5,
+    resize_type=contract.resize_type,
+    resize_interpolation=contract.resize_interpolation,
+    score_policy=contract.output_score_policy,
+    output_transform=contract.output_transform,
+)
 result = model.predict("samples/vision/mobileone/test_data/tiger_beetle.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-`predict` 接受本地图像路径或 BGR `uint8` 数组，且绝不原地修改数组。
-既有的 `pre_process` / `forward` / `post_process` 拼写保持为薄别名，
-共享的 `ClassificationTask` 流程仍可从
-[`classification.py`](../../../../../utils/py_utils/classification.py) 导入。
+`predict` 接受本地图像路径或 BGR `uint8` 数组，不会原地修改数组。
 
 <a id="stage-io"></a>
 ## 阶段输入输出

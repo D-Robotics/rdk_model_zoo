@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import sha256_file
 from samples.vision.diffusiondrive.runtime.python import main as single
-from samples.vision.diffusiondrive.runtime.python.model_binding import (
+from samples.vision.diffusiondrive.runtime.python.cli import (
     SAMPLE_DIR,
     resolve_selection,
 )

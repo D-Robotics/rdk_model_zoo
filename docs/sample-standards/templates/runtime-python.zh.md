@@ -68,7 +68,7 @@ samples/⟪domain⟫/⟪name⟫/test_data/⟪image⟫⟫
 ```python
 import ⟪module⟫
 
-⟪binding = …（用真实路径具体构造）⟫
+⟪模型路径与模型参数（具体的本地文件和值）⟫
 model = ⟪Model⟫(⟪args⟫)
 result = model.predict(⟪已定义输入⟫)
 print(⟪result 字段⟫)

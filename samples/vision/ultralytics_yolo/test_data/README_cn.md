@@ -9,6 +9,18 @@
 3. **参考插图**：`result_detect*.jpg` 与四张 `ultralytics_YOLO_*_demo` 截图，用于查看各任务的结果样式。
 
 <a id="files"></a>
+
+## 目录结构
+
+```text
+test_data/
+├── README.md  # 英文说明
+├── README_cn.md  # 中文说明
+├── coco_classes.names  # 源码或数据文件
+├── imagenet_classes.names  # 源码或数据文件
+└── ultralytics_dota_classes.names  # 源码或数据文件
+```
+
 ## 文件清单与逐字节标识
 
 | 文件 | 角色 | 像素 | SHA-256 |

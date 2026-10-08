@@ -13,7 +13,7 @@ from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     ModelSelection,
 )
 from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_detect import YoloDetect
+from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect
 from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _size_from_runner,
     _normalise_grids,
@@ -112,7 +112,6 @@ class YOLO26OBB:
     pre_process = YoloDetect.pre_process
     forward = YoloDetect.forward
     set_scheduling_params = YoloDetect.set_scheduling_params
-    pre_process_with_transform = YoloDetect.pre_process_with_transform
 
     def postprocess(
         self,

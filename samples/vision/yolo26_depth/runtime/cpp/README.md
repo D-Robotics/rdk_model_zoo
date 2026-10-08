@@ -108,9 +108,8 @@ samples/vision/yolo26_depth/runtime/cpp/build/x5/yolo26_depth \
 The direct binary verifies board/tensor contracts, not publisher identity.
 Use the launcher when you need manifest hash verification and `launch-report.json`.
 For a self-compiled model, combine `--converted-model`, `--model-path` and an exact
-`--asset-id` from list-models. That ID selects a **contract reference**, not a claim
-that the new bytes are the published model. It still requires X5 and the same
-calibrated-log/NV12 tensor contract.
+`--asset-id` from list-models. This selects the X5 calibrated-log/NV12 tensor
+contract for the local model.
 
 <a id="parameters"></a>
 ## Parameters
@@ -194,9 +193,3 @@ failure output may exist only on stderr; a partial directory is not success.
 Timing covers one complete forward including buffer copies, cache operations,
 SDK calls and raw output copying. It is not source HRT BPU-only timing. Depth is
 relative, colors are not metres, and depth quality is evaluated with the dataset metrics.
-
-Host tests compile pure geometry/tensor/CLI/serialization code and the real owner
-against intentionally minimal fake SDK headers. They exercise thirteen injected
-SDK failure points, owned raw output, invalid metadata, padded output strides,
-identity precedence and NumPy loading of native files. **Real SDK/OpenCV build,
-full native image pipeline, board inference and performance run on the target environment.**

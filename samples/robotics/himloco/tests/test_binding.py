@@ -10,7 +10,7 @@ from samples.robotics.himloco.runtime.python.model_binding import (
     bind_model,
     ASSET_ID,
 )
-from samples.robotics.himloco.runtime.python.model_runner import RuntimeModelRunner
+from samples.robotics.himloco.runtime.python.policy import RuntimeModelRunner
 
 
 def metadata():

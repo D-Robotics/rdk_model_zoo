@@ -50,7 +50,6 @@ R3D-18 将预处理后的 16 帧视频片段分类为 Kinetics-400 的 400 个�
 ## 环境前提
 
 - 板卡：RDK S100，使用提供 `hbm_runtime` Python 包的 S 系列系统镜像；镜像与 runtime 版本由部署环境选择。
-- 主机检查：仓库 `.venv`、Python 3.14.7、`numpy` 和 `PyYAML`；命令见 [Python runtime](runtime/python/README_cn.md)。
 - 转换：x86 Linux 主机上的 OpenExplorer 3.5.0（见[转换说明](conversion/README_cn.md)）；未包含完整的导出、校准和编译配方。
 - 磁盘：需要保存下载的 HBM 和随附的 2.4 MB `video0.npy`。
 
@@ -104,7 +103,7 @@ score 数值取决于编译产物，上面的数字仅示意字段结构。实�
 - Python runtime：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) — CLI 与四阶段 `VideoClassificationTask` API。
 - 转换：[`conversion/README_cn.md`](conversion/README_cn.md) — source 转换说明、截图及缺失配方边界。
 - 评测：[`evaluator/README_cn.md`](evaluator/README_cn.md) — 功能参考与已发布的性能记录。
-- C++ runtime：未提供，因此不宣称 C++ 支持。
+- Runtime 语言：Python。
 
 <a id="license"></a>
 ## 许可

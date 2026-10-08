@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 Depth Anything V2 从 BGR 图片估计相对深度。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,14 +14,12 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── depth_anything_v2.py  # Python 脚本
-├── geometry.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── depth_anything_v2.py  # 模型初始化与推理阶段
+├── geometry.py  # 几何变换与坐标恢复
+├── main.py  # 命令行入口：构造模型并调用 predict
 ├── run.sh  # 运行示例
-└── visualization.py  # Python 脚本
+└── visualization.py  # 结果渲染与图片保存
 ```
 
 <a id="environment"></a>
@@ -104,14 +102,11 @@ python -m samples.vision.depth_anything_v2.runtime.python.main --target s100 \
 
 ```python
 import cv2
-from samples.vision.depth_anything_v2.runtime.python.model_binding import resolve_selection
-from samples.vision.depth_anything_v2.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.depth_anything_v2.runtime.python.depth_anything_v2 import DepthAnythingV2Task
+from samples.vision.depth_anything_v2.runtime.python.cli import resolve_selection
+from samples.vision.depth_anything_v2.runtime.python.depth_anything_v2 import DepthEstimator
 
-runner = RuntimeModelRunner(resolve_selection("s100"))
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = DepthAnythingV2Task(runner, binding, resize_type=0)
+selection = resolve_selection("s100")
+task = DepthEstimator(selection, resize_type=0)
 image = cv2.imread("samples/vision/depth_anything_v2/test_data/furseal.jpg")
 result = task.predict(image)
 print(result.depth_native.shape)
@@ -125,8 +120,7 @@ print(details.raw.shape, details.result.depth_native.shape)
 `DepthPredictionDetails`（通过 `return_details=True` 显式开启）把常规结果与单次
 调用的 prepared 输入和原始输出打包返回，归档无需二次推理；默认 `predict` 仍返回
 普通 `DepthResult`，task 不保存上一帧图像或输出。每帧保持匹配上下文，
-task 不保存上一帧尺寸。注入 runner 供主机测试使用，硬件执行使用板端 runner；API 不保证共享
-runner 并发安全。
+task 按当前图片尺寸处理。并发调用使用独立模型实例。
 
 API 返回浮点深度。显示 uint8 图像时，调用 `visualization.normalize_depth(result.depth_native)` 或 `colorize_depth(...)`。每帧结果须保留对应 `ImageContext`，共享 runner 时须同步访问。
 

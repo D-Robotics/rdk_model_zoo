@@ -1,10 +1,10 @@
-"""Entry readability: main drives pipeline.predict through application helpers.
+"""Entry readability: main drives pipeline.predict through the CLI helpers.
 
 ``main`` keeps the visible per-utterance loop — frontend preparation, one
-``bundle.pipeline.predict(features, valid_frames)`` per utterance, evidence
-records — while ``application`` exposes the same helpers its compatibility
-``run``/``execute`` compositions use, so there is one implementation of the
-evidence discipline and no second inference chain.
+``bundle.predict(features, valid_frames)`` per utterance, evidence
+records — while ``cli`` owns the single implementation of the evidence
+discipline; the compatibility ``run``/``execute`` compositions are gone, so
+there is no second inference chain.
 """
 
 import contextlib
@@ -15,12 +15,12 @@ from pathlib import Path
 import tempfile
 import unittest
 from types import SimpleNamespace
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 
-from samples.speech.paraformer.runtime.python import application, input_io
-from samples.speech.paraformer.runtime.python.application import Preparation
+from samples.speech.paraformer.runtime.python import cli, input_io
+from samples.speech.paraformer.runtime.python.cli import Preparation
 
 TOKENS = (
     Path(__file__).resolve().parents[4]
@@ -75,14 +75,14 @@ def add_model_paths(args, root):
 
 
 class MainLoopTests(unittest.TestCase):
-    def test_main_drives_pipeline_predict_without_application_run(self):
+    def test_main_drives_pipeline_predict_directly(self):
         name = "samples.speech.paraformer.runtime.python.main"
         self.assertIsNotNone(importlib.util.find_spec(name))
         main = importlib.import_module(name)
         predict = Mock(return_value=fake_prediction())
         bundle = SimpleNamespace(
             runners=(SimpleNamespace(binding=SimpleNamespace(metadata={})),),
-            pipeline=SimpleNamespace(predict=predict),
+            predict=predict,
             set_scheduling_params=lambda **kwargs: None,
         )
         with tempfile.TemporaryDirectory() as directory:
@@ -98,16 +98,13 @@ class MainLoopTests(unittest.TestCase):
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",
                 return_value=fake_frontend(),
             ), patch(
-                "samples.speech.paraformer.runtime.python.runtime.load_runtime",
+                "samples.speech.paraformer.runtime.python.pipeline.ParaformerPipeline.from_models",
                 return_value=bundle,
             ), patch(
                 "samples.speech.paraformer.runtime.python.input_io.read_audio",
                 return_value=(np.zeros(16000, np.float32), 16000),
-            ), patch.object(
-                application, "run", MagicMock()
-            ) as run_mock, contextlib.redirect_stdout(stream):
+            ), contextlib.redirect_stdout(stream):
                 self.assertEqual(main.main(args), 0)
-            run_mock.assert_not_called()
             predict.assert_called_once()
             self.assertEqual(predict.call_args.args[0].shape, (1, 400, 560))
             self.assertEqual(predict.call_args.args[1], 7)
@@ -125,7 +122,7 @@ class MainLoopTests(unittest.TestCase):
         predict = Mock(side_effect=RuntimeError("fixture pipeline failure"))
         bundle = SimpleNamespace(
             runners=(SimpleNamespace(binding=SimpleNamespace(metadata={})),),
-            pipeline=SimpleNamespace(predict=predict),
+            predict=predict,
             set_scheduling_params=lambda **kwargs: None,
         )
         with tempfile.TemporaryDirectory() as directory:
@@ -140,7 +137,7 @@ class MainLoopTests(unittest.TestCase):
                 "samples.speech.paraformer.runtime.python.frontend.ParaformerFrontend",
                 return_value=fake_frontend(),
             ), patch(
-                "samples.speech.paraformer.runtime.python.runtime.load_runtime",
+                "samples.speech.paraformer.runtime.python.pipeline.ParaformerPipeline.from_models",
                 return_value=bundle,
             ), patch(
                 "samples.speech.paraformer.runtime.python.input_io.read_audio",
@@ -179,7 +176,7 @@ class HelperTests(unittest.TestCase):
 
     def test_note_runtime_records_bound_metadata(self):
         report = {}
-        application.note_runtime(report, None)
+        cli.note_runtime(report, None)
         self.assertNotIn("metadata", report)
         bundle = SimpleNamespace(
             runners=(
@@ -187,7 +184,7 @@ class HelperTests(unittest.TestCase):
                 SimpleNamespace(binding=SimpleNamespace(metadata={"model": "b"})),
             )
         )
-        application.note_runtime(report, bundle)
+        cli.note_runtime(report, bundle)
         self.assertEqual(len(report["metadata"]), 2)
 
     def test_prepare_utterance_collects_evidence_and_features(self):
@@ -199,7 +196,7 @@ class HelperTests(unittest.TestCase):
                 "read_audio",
                 return_value=(np.zeros(100, np.float32), 16000),
             ):
-                utterance = application.prepare_utterance(
+                utterance = cli.prepare_utterance(
                     args, preparation, fake_frontend(), preparation.items[0]
                 )
             self.assertEqual(utterance.key, "one")
@@ -220,26 +217,26 @@ class HelperTests(unittest.TestCase):
 
     def test_mark_attempted_flag_transitions(self):
         report = {"inference_attempted": False, "inference_executed": False}
-        application.mark_attempted(report)
+        cli.mark_attempted(report)
         self.assertTrue(report["inference_attempted"])
         self.assertIsNone(report["inference_executed"])
-        application.mark_attempted(report)
+        cli.mark_attempted(report)
         self.assertIsNone(report["inference_executed"])
         report["inference_executed"] = True
-        application.mark_attempted(report)
+        cli.mark_attempted(report)
         self.assertTrue(report["inference_executed"])
 
     def test_record_prediction_updates_record_and_report(self):
         report = {"inference_attempted": True, "inference_executed": None,
                   "utterances": []}
-        utterance = application.Utterance(
+        utterance = cli.Utterance(
             "one",
             {"utt_id": "one"},
             {"utt_id": "one"},
             SimpleNamespace(tensor=None, valid_frames=7),
             1.5,
         )
-        application.record_prediction(report, utterance, fake_prediction())
+        cli.record_prediction(report, utterance, fake_prediction())
         self.assertTrue(report["inference_executed"])
         entry = report["utterances"][0]
         self.assertEqual(entry["text"], "中")
@@ -254,7 +251,7 @@ class HelperTests(unittest.TestCase):
             args, preparation, _ = self.make_preparation(root, preprocess_only=True)
             (root / "out").mkdir()
             (root / "out" / "feats").mkdir()
-            utterance = application.Utterance(
+            utterance = cli.Utterance(
                 "one",
                 {"utt_id": "one", "text": "reference", "speaker": "test"},
                 {"utt_id": "one", "text": "reference"},
@@ -267,7 +264,7 @@ class HelperTests(unittest.TestCase):
                 0.5,
             )
             prepared_manifest = []
-            application.save_features(
+            cli.save_features(
                 args, preparation, utterance, prepared_manifest
             )
             saved = np.load(root / "out" / "feats" / "one.npy")
@@ -287,7 +284,7 @@ class HelperTests(unittest.TestCase):
             args, preparation, audio = self.make_preparation(root, preprocess_only=True)
             (root / "out").mkdir()
             preparation.report["current_utterance"] = "one"
-            report = application.complete(args, preparation, [])
+            report = cli.complete(args, preparation, [])
             self.assertEqual(report["status"], "completed")
             self.assertNotIn("current_utterance", report)
             self.assertTrue((root / "out" / "result.json").is_file())
@@ -300,29 +297,7 @@ class HelperTests(unittest.TestCase):
                 report={"status": "running", "utterances": []},
             )
             with self.assertRaisesRegex(ValueError, "changed during execution"):
-                application.complete(args, preparation2, [])
-
-    def test_run_composition_still_works_as_compatibility(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            args, preparation, _ = self.make_preparation(root)
-            (root / "out").mkdir()
-            bundle = SimpleNamespace(
-                runners=(SimpleNamespace(binding=SimpleNamespace(metadata={})),),
-                pipeline=SimpleNamespace(predict=Mock(return_value=fake_prediction())),
-            )
-            with patch.object(
-                input_io,
-                "read_audio",
-                return_value=(np.zeros(100, np.float32), 16000),
-            ):
-                report = application.run(
-                    args, None, preparation, fake_frontend(), bundle
-                )
-            self.assertEqual(report["status"], "completed")
-            bundle.pipeline.predict.assert_called_once()
-            self.assertTrue((root / "out" / "result.json").is_file())
-
+                cli.complete(args, preparation2, [])
 
 if __name__ == "__main__":
     unittest.main()

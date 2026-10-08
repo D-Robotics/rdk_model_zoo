@@ -27,7 +27,7 @@ def comparison_fixture():
 
 class ReadmeTests(unittest.TestCase):
     def test_bilingual_api_uses_qualified_imports_and_actual_pipeline(self):
-        runner_mod=local_module('model_runner')
+        runner_mod=local_module('classification')
         original=runner_mod.RuntimeModelRunner
         for filename in ('README.md','README_cn.md'):
             text=(SAMPLE/'runtime/python'/filename).read_text()
@@ -101,7 +101,7 @@ class ReadmeTests(unittest.TestCase):
         import tempfile
         import types
         from test_3dresnet import ROOT
-        runner_mod=local_module('model_runner')
+        runner_mod=local_module('classification')
         original=runner_mod.RuntimeModelRunner
         fixture=comparison_fixture()
         for variant, tied in [('README_MD',False),('README_CN_MD',True)]:

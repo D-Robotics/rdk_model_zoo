@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 U-Net 与 MobileNet 生成 Cityscapes 19 类分割掩码。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,13 +14,13 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
 ├── run.sh  # 运行示例
-├── unetmobilenet.py  # Python 脚本
-└── visualization.py  # Python 脚本
+└── unetmobilenet.py  # 模型初始化与推理阶段
 ```
+
+`main.py` 构造模型并调用 `predict`；`cli.py` 负责参数、模型选择及图片/报告保存；任务文件包含模型阶段，通用图片读取调用 `utils.py_utils.image.read_bgr_image`。
 
 <a id="environment"></a>
 ## 环境
@@ -78,16 +78,13 @@ NPY mask 为原图尺寸 int32 类别 0..18，result.jpg 在相同尺寸叠加�
 ```python
 # cwd: repository root; on S100 after explicit model preparation
 import cv2
-from samples.vision.unetmobilenet.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.unetmobilenet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetTask
-from samples.vision.unetmobilenet.runtime.python.visualization import render_overlay
+from samples.vision.unetmobilenet.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.unetmobilenet.runtime.python.unetmobilenet import UnetMobileNetSegmenter
+from samples.vision.unetmobilenet.runtime.python.cli import render_overlay
 
 image = cv2.imread(str(SAMPLE_DIR / "test_data/segmentation.png"))
-runner = RuntimeModelRunner(resolve_selection("s100"))
-binding = runner.load()
-runner.set_scheduling_params(priority=0, bpu_cores=[0])
-task = UnetMobileNetTask(runner, binding)
+selection = resolve_selection("s100")
+task = UnetMobileNetSegmenter(selection)
 prepared = task.preprocess(image)
 raw = task.infer(prepared.tensors)
 mask = task.postprocess(raw, prepared.context)

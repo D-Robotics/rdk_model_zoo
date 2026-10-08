@@ -1,28 +1,25 @@
 # YOLOE Python runtime
 
+English | [简体中文](README_cn.md)
+
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run YOLOE-11/26 prompt-free detection and instance segmentation. `YOLOE` initializes the selected runtime and returns boxes, scores, class IDs and masks through `predict`.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments and result presentation
-├── config.py  # Python script
-├── decode.py  # Python script
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── pipeline_io.py  # Python script
-├── postprocess.py  # Python script
-├── run.sh  # Run the sample
-├── visualization.py  # Python script
-└── yoloe.py  # Python script
+├── cli.py  # Arguments, model selection and result presentation
+├── config.py  # Model configuration
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── model_runner.py  # Runtime loading and raw tensor execution
+├── run.sh  # Locate the Python entry and forward arguments
+├── visualization.py  # Image results and overlays
+└── yoloe.py  # Model stages and prediction
 ```
 
 <a id="environment"></a>
@@ -90,13 +87,11 @@ Prerequisites: a Python 3.10+ environment and the 11s model explicitly prepared 
 ```python
 # cwd: repository root; on X5 after the explicit model/download.sh step
 from samples.vision.yoloe.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.yoloe.runtime.python.model_runner import build_runner
 from samples.vision.yoloe.runtime.python.visualization import load_inputs
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE, Config
 selection = resolve_selection("x5", variant="11s")
-runner = build_runner(selection)
 image, labels = load_inputs(SAMPLE_DIR / "test_data/office_desk.jpg", SAMPLE_DIR / "test_data/classes.names")
-task = YOLOE(selection, Config(), runner=runner)
+task = YOLOE(selection, Config())
 result = task.predict(image)
 print(result.boxes.shape, result.mask_layout)
 ```

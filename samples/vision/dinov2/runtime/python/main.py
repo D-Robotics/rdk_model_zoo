@@ -28,9 +28,7 @@ from samples.vision.dinov2.runtime.python.cli import (  # noqa: E402
     save_feature,
     summary,
 )
-from samples.vision.dinov2.runtime.python.model_binding import (  # noqa: E402
-    resolve_selection,
-)
+from samples.vision.dinov2.runtime.python.cli import resolve_selection  # noqa: E402
 
 
 def main(argv=None) -> int:
@@ -50,14 +48,11 @@ def main(argv=None) -> int:
         require_execution_target(selection.target)
         if not selection.model_path.is_file():
             raise FileNotFoundError(f"Model not found: {selection.model_path}; prepare it explicitly with model/download.sh.")
-        from samples.vision.dinov2.runtime.python.embedding import DINOv2Task
-        from samples.vision.dinov2.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.dinov2.runtime.python.embedding import DINOv2Embedder
 
         image = read_bgr_image(args.test_img)
-        runner = RuntimeModelRunner(selection)
-        binding = runner.load()
-        runner.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
-        task = DINOv2Task(runner, binding, args.output)
+        task = DINOv2Embedder(selection, output=args.output)
+        task.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         feature_a = task.predict(image)
         report = summary(feature_a, args.output)
 

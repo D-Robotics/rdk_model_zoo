@@ -22,16 +22,7 @@ evaluator/
 主机套件需要 Python 3.10+、NumPy/OpenCV/PyYAML，以及执行原生纯数值／假接口测试的 C++17 编译器。真实 runtime 检查需要运行时指南所列匹配 S100/S600 镜像、模型和 SDK。原生测试目录中的假头文件不能代替 SDK 安装，也不是实际 SDK 编译证据。
 
 <a id="command"></a>
-## 命令
 
-```bash
-# cwd: repository root; host regression (no model/SDK required)
-python3 -m unittest discover -s samples/vision/unetmobilenet/tests
-# On S100, after explicit preparation; single-image result, not dataset accuracy
-bash samples/vision/unetmobilenet/model/download.sh --target s100
-python3 samples/vision/unetmobilenet/runtime/python/main.py --target s100 --mask-save-path outputs/unetmobilenet/python.npy --report-path outputs/unetmobilenet/python.json
-bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s100 --build --mask-save-path outputs/unetmobilenet/native.png --report-path outputs/unetmobilenet/native.json
-```
 
 两侧 runtime 必须使用相同目标、制品和输入。检查 S600 时，各对应步骤均使用 --target s600。这些板端命令供后续验证。
 
@@ -53,4 +44,4 @@ Python 输出 int32 NPY；C++ 输出无损 uint8 PNG ID，API mask 仍为 int32�
 <a id="boundaries"></a>
 ## 适用范围
 
-本示例不包含数据集评估循环、训练源模型、真实 SDK 编译、板端推理或性能运行。实现明确拒绝缺失／不支持的整数量化元数据，不假定通道排序。原生任务测试中的假接口仅验证失败分支，实际 SDK 兼容性仍需板端／工具链环境。
+使用上述 Python 和 C++ Runtime 命令生成相同输入的单图结果，再按输入格式与指标说明比较整数类别掩码和量化输出。整数输出通过模型的 SCALE 元数据解码。

@@ -33,9 +33,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
     _size_from_runner,
     _normalise_grids,
 )
-from samples.vision.ultralytics_yolo.runtime.python.legacy import (
-    pre_process_with_transform,
-)
 from samples.vision.ultralytics_yolo.runtime.python.segmentation_decode import (
     decode_segmentation,
 )
@@ -133,8 +130,6 @@ class YoloSeg:
         _set_scheduling_params(
             self.runner, self.model, self.model_name, priority, bpu_cores
         )
-
-    pre_process_with_transform = pre_process_with_transform
 
     def preprocess(self, img, image_format="BGR") -> PreparedDetection:
         """Return owned NV12 tensors and immutable geometry for BGR uint8 HxWx3."""

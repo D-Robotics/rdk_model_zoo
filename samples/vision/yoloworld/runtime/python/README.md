@@ -1,37 +1,34 @@
 # YOLOWorld Python runtime
 
+English | [简体中文](README_cn.md)
+
 <a id="overview"></a>
 ## Python inference
 
-Use this directory for python inference.
+Run YOLOWorld detection using the bundled offline vocabulary embeddings and per-image prompts. `YOLOWorldTask` initializes the runtime and returns detections with the matching prompt context.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── main.py  # Command-line entry
-├── model_binding.py  # Python script
-├── model_runner.py  # Python script
-├── run.sh  # Run the sample
-├── visualization.py  # Python script
-└── yoloworld.py  # Python script
+├── cli.py  # Arguments, model selection and result presentation
+├── main.py  # Command-line entry: construct the model and call predict
+├── model_binding.py  # Model selection and physical tensor contracts
+├── model_runner.py  # Runtime loading and raw tensor execution
+├── run.sh  # Locate the Python entry and forward arguments
+└── yoloworld.py  # Model stages and prediction
 ```
 
 <a id="environment"></a>
 ## Environment
 
-Use the X5 system Python with matching `hbm_runtime` for inference. Host
-fixtures use `.venv` Python 3.14.7, NumPy 2.5.3 and OpenCV 4.14.0; no board SDK
-is imported by module import, help, list, or dry-run. Runtime dependencies are
-not installed by this sample.
+Use the X5 system Python and BSP-provided `hbm_runtime`, with NumPy, OpenCV and PyYAML installed. Follow [model preparation](../../model/README.md) before inference. Run the commands below from the repository root.
 
 <a id="usage"></a>
 ## Usage
 
-Default source-compatible invocation:
+Default invocation:
 
 ```bash
 python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts dog
@@ -40,7 +37,7 @@ python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts do
 SDK-free protocol inspection:
 
 ```bash
-.venv/bin/python samples/vision/yoloworld/runtime/python/main.py --dry-run --target x5 --prompts dog
+python3 samples/vision/yoloworld/runtime/python/main.py --dry-run --target x5 --prompts dog
 ```
 
 Custom paths require the exact identity:
@@ -86,14 +83,11 @@ last prompt fills remaining text slots. No label-file fallback exists.
 ```python
 import cv2, json
 from samples.vision.yoloworld.runtime.python.model_binding import resolve_selection
-from samples.vision.yoloworld.runtime.python.model_runner import RuntimeModelRunner
 from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask
 selection = resolve_selection('x5')
-runner = RuntimeModelRunner(selection)
-binding = runner.load()
 with open('samples/vision/yoloworld/test_data/offline_vocabulary_embeddings.json') as f:
     vocabulary = json.load(f)
-task = YOLOWorldTask(runner, binding, vocabulary)
+task = YOLOWorldTask(selection, vocabulary)
 image = cv2.imread('samples/vision/yoloworld/test_data/dog.jpeg')
 prepared = task.preprocess(image, ['dog'])
 raw = task.infer(prepared)
@@ -103,7 +97,7 @@ composed_result = task.predict(image, ['dog'])
 
 `explicit_result` and `composed_result` are `DetectionResult` values with
 `boxes[N,4]`, `scores[N]`, `class_ids[N]`, and the prompt tuple. The example
-requires an X5 and model; host tests inject a runtime instead.
+requires an X5 and the prepared model.
 
 <a id="stage-io"></a>
 ## Stage I/O
@@ -125,4 +119,4 @@ coordinate conversion.
 An empty prompt, unknown prompt, non-finite input, wrong metadata shape/dtype,
 missing model, unknown board, or target mismatch is an error. A missing model is
 fixed by running the explicit model command. The evaluator requires a new output
-directory and real board evidence; host tests do not substitute for it.
+directory for each run.

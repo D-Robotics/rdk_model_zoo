@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 PointNet 将原始 XYZ 椅子点云分割为四类部件。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,24 +14,21 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── cli.py  # 参数与结果展示
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── pointnet.py  # Python 脚本
+├── cli.py  # 参数、模型选择与结果交付
+├── main.py  # 命令行入口：构造模型并调用 predict
+├── pointnet.py  # 模型初始化与推理阶段
 ├── run.sh  # 运行示例
-└── visualization.py  # Python 脚本
+└── visualization.py  # 结果渲染与图片保存
 ```
 
 <a id="environment"></a>
 ## 环境
 
 Python 3.10+、NumPy、PyYAML；默认绘图另需 matplotlib。真实推理需要 RDK S100 SDK 的
-`hbm_runtime`。原资料未固定最低 SDK/固件版本，请在目标板确认安装，
-不能据此宣称一个新版本范围已验证。
+`hbm_runtime`。使用板端镜像提供的 Python 环境。
 
 ```bash
-# cwd: repository root; host checks or board Python environment
+# cwd: repository root; board Python environment
 python3 -m pip install numpy PyYAML matplotlib
 python3 samples/vision/pointnet/runtime/python/main.py --help
 ```
@@ -80,19 +77,17 @@ python3 samples/vision/pointnet/runtime/python/main.py --dry-run --target s100
 <a id="integration-example"></a>
 ## 库集成
 
-API 接收原始坐标；旧源 `predict` 接收已归一化点云。不要再次手动归一化，也不要把文件路径
-当作业务输入。读取文件和绘图由调用方负责。
+API 接收原始点坐标并在 preprocess 内归一化。使用 NumPy 点数组调用模型；通过 CLI 参数读取文件。
+
 ```python
 # cwd: repository root; execute on S100 after model preparation
 import numpy as np
-from samples.vision.pointnet.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.pointnet.runtime.python.model_runner import RuntimeModelRunner
-from samples.vision.pointnet.runtime.python.pointnet import PointNetTask
+from samples.vision.pointnet.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.pointnet.runtime.python.pointnet import PointNetSegmenter
 
 points = np.loadtxt(SAMPLE_DIR / "test_data/chair.pts", dtype=np.float32)
-runner = RuntimeModelRunner(resolve_selection("s100"))
-binding = runner.load()
-task = PointNetTask(runner, binding)
+selection = resolve_selection("s100")
+task = PointNetSegmenter(selection)
 prepared = task.preprocess(points)
 raw = task.infer(prepared.tensors)
 labels = task.postprocess(raw)
@@ -104,7 +99,6 @@ details = task.predict(points, return_details=True)
 print(details.prepared.tensors["point"].shape, details.prepared.context.radius)
 ```
 
-主机可用注入 runner 和经过校验的 metadata fixture 测试前后处理。
 `PointNetPredictionDetails`（通过 `return_details=True` 显式开启）将标签与单次调用的
 prepared 记录（精确的 `(1,3,N)` 归一化张量加冻结的质心/半径上下文）打包返回，绘图与
 归档无需二次执行；默认 `predict` 仍返回普通标签数组，task 不保存上一次点云。

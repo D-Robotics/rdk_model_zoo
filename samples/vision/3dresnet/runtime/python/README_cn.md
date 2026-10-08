@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-本目录提供Python 推理所需的程序与操作说明。
+使用 R3D-18 对已准备的 RGB 视频片段分类，返回 Kinetics-400 Top-K 结果。
 
 <a id="directory"></a>
 ## 目录结构
@@ -14,21 +14,17 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── classification.py  # Python 脚本
-├── cli.py  # 参数与结果展示
-├── labels.py  # Python 脚本
-├── main.py  # 命令行入口
-├── model_binding.py  # Python 脚本
-├── model_runner.py  # Python 脚本
-├── run.sh  # 运行示例
-└── tensor_io.py  # Python 脚本
+├── classification.py  # 模型初始化与推理阶段
+├── cli.py  # 参数、模型选择与结果交付
+├── labels.py  # 动作类别标签读取
+├── main.py  # 命令行入口：构造模型并调用 predict
+└── run.sh  # 运行示例
 ```
 
 <a id="environment"></a>
 ## 环境
 
 - 板端执行：RDK S100 和匹配的 `hbm_runtime` Python 环境；镜像与 runtime 版本由部署环境选择。
-- 主机验证：仓库 `.venv`、Python 3.14.7、`numpy` 和 `PyYAML`（`requirements-host.txt` 列出主机依赖）。
 - runtime 接收已经准备好的 NumPy 片段，不导入视频解码器，不读取视频帧，不做 resize，也不做像素归一化。
 - `--help`、`--list-models` 和显式 `--dry-run` 不需要 SDK，不会构造 `hbm_runtime`。
 
@@ -52,13 +48,7 @@ python3 samples/vision/3dresnet/runtime/python/main.py \
 bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 ```
 
-`run.sh` 只是 CLI 委托，不会下载模型。主机 fixture pipeline 的验证命令为：
 
-```bash
-# cwd：仓库根目录
-.venv/bin/python -m unittest discover -s samples/vision/3dresnet/tests -v
-# 预期：全部发现的测试通过，OK（主机 fixture；无需板卡）
-```
 
 <a id="parameters"></a>
 ## 参数
@@ -96,7 +86,7 @@ CLI 成功时向 stdout 输出一个 JSON 对象：
 
 `predictions` 恰好包含 `--top-k` 条按 softmax 概率降序排列的结果。`class_id` 在 `[0,399]`；`score` 是 float32 softmax 值；`label` 是去除内嵌双引号后的 JSON 映射名称。CLI 不写输出文件。
 
-入口按可读性拆分：`main.py` 解析选择、构造 `VideoClassificationTask`、调用一次
+入口按可读性拆分：`main.py` 解析选择、构造 `R3D18Classifier`、调用一次
 `predict` 并输出 JSON 报告；参数声明、`--list-models`/`--dry-run` 模式与报告组装在
 `cli.py`。分类算法本身位于 `classification.py`。
 
@@ -113,8 +103,7 @@ from pathlib import Path
 import numpy as np
 
 repo = Path.cwd()
-binding_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.model_binding")
-runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.model_runner")
+binding_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
 
@@ -123,10 +112,8 @@ selection = binding_mod.resolve_selection(
     asset_id="s:3dresnet:s100/r3d_18.hbm",
     model_path=repo / "samples/vision/3dresnet/model/s100/r3d_18.hbm",
 )
-runner = runner_mod.RuntimeModelRunner(selection)
-binding = runner.load()
 labels = labels_mod.load_labels(repo / "samples/vision/3dresnet/test_data/kinetics_classnames.json")
-task = task_mod.VideoClassificationTask(runner, binding, top_k=5, labels=labels)
+task = task_mod.R3D18Classifier(selection, top_k=5, labels=labels)
 clip = np.load(repo / "samples/vision/3dresnet/test_data/video0.npy", allow_pickle=False)
 
 prepared = task.preprocess(clip)

@@ -1,10 +1,13 @@
-"""Source-indexed observation files and provenance, separate from policy math."""
+"""Source-indexed observation files and provenance, separate from policy math.
+
+NumPy loads lazily inside :func:`load_observation` so importing this module
+(the manifest validation path) stays NumPy-free for host listing/dry-run.
+"""
 
 from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
-import numpy as np
 
 
 @dataclass(frozen=True)
@@ -101,6 +104,8 @@ def discover_inputs(path):
 
 
 def load_observation(record):
+    import numpy as np
+
     data = record.path.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
     if len(data) != 1080:

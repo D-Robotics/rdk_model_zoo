@@ -167,6 +167,82 @@ class OCRPipeline:
         self.min_area = float(min_area)
         self._tokens: tuple[str, ...] | None = None
 
+    @classmethod
+    def from_models(
+        cls,
+        pair: OCRPair,
+        *,
+        vocabulary_path: str | None = None,
+        threshold: float = 0.5,
+        ratio_prime: float = 2.7,
+        min_area: float = 100,
+        priority: int | None = None,
+        bpu_cores: list[int] | None = None,
+        detector_runtime_factory=None,
+        recognizer_runtime_factory=None,
+        detector_runtime=None,
+        recognizer_runtime=None,
+    ) -> "OCRPipeline":
+        """Construct the pipeline with two lazy stage runtimes.
+
+        Builds the lazy detector and recognizer runners for the pair and wraps
+        them in the readable composition, so ``main`` visibly constructs the
+        pipeline and calls ``predict`` instead of creating runners or loading
+        models itself. Runtime factories and prebuilt runtimes are the
+        documented host-test seams.
+
+        Args:
+            pair: Resolved finite detector/recognizer pair from
+                ``resolve_pair``.
+            vocabulary_path: Optional recognizer vocabulary path override.
+            threshold: Detection binarization threshold (source default 0.5).
+            ratio_prime: Unclip ratio for box expansion (source default 2.7).
+            min_area: Minimum kept contour area (source default 100).
+            priority: Optional integer in [0, 255] applied to both stages.
+            bpu_cores: Optional non-empty list of nonnegative BPU core
+                indexes applied to both stages.
+            detector_runtime_factory: Optional detector SDK-object factory.
+            recognizer_runtime_factory: Optional recognizer SDK-object factory.
+            detector_runtime: Optional prebuilt detector SDK object.
+            recognizer_runtime: Optional prebuilt recognizer SDK object.
+
+        Returns:
+            OCRPipeline: Composition ready for ordered ``predict`` calls.
+
+        Raises:
+            TypeError: An injected runner is not callable.
+            ValueError: Pipeline parameters or local model settings are
+                invalid.
+
+        Notes:
+            Each stage loads its model, validates metadata and applies scheduling
+            before its first inference call. If detection yields no crops, the
+            recognizer stays unloaded. Board or SDK failures propagate from
+            stage execution through predict.
+        """
+        from samples.vision.paddle_ocr.runtime.python.model_runner import (
+            create_stage_runners,
+        )
+
+        detector_runner, recognizer_runner = create_stage_runners(
+            pair,
+            priority=priority,
+            bpu_cores=bpu_cores,
+            detector_runtime_factory=detector_runtime_factory,
+            recognizer_runtime_factory=recognizer_runtime_factory,
+            detector_runtime=detector_runtime,
+            recognizer_runtime=recognizer_runtime,
+        )
+        return cls(
+            pair,
+            detector_runner,
+            recognizer_runner,
+            vocabulary_path=vocabulary_path,
+            threshold=threshold,
+            ratio_prime=ratio_prime,
+            min_area=min_area,
+        )
+
     def prepare_detection(self, image: np.ndarray) -> dict[str, np.ndarray]:
         """Prepare the exact target-specific detector input mapping."""
 

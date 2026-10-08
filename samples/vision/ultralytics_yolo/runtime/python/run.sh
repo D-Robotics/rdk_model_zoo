@@ -8,7 +8,7 @@
 #   bash run.sh
 #   bash run.sh detect
 #   bash run.sh seg --family yolov8 --platform s100
-#   bash run.sh cls --model-path ../../model/nash-e/yolo11n_cls_nashe_640x640_nv12.hbm
+#   bash run.sh cls --family yolo11 --platform s100
 #
 # The platform is detected from /sys/class/boardinfo unless --platform is given.
 # No Python package is installed by this script: the required packages are part
@@ -30,6 +30,5 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# main.py downloads the resolved default model when it is missing, and never
-# downloads a model that was named explicitly with --model-path.
+# Prepare the selected model explicitly before inference; main.py owns options.
 exec python3 "${MAIN_SCRIPT}" --task "${TASK}" "$@"

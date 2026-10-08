@@ -6,6 +6,18 @@
 
 This entry point streams one greedy, non-thinking text response. `runtime/cpp` uses the separate S600 OELLM 2.0 API. Do not mix their SDKs or artifacts.
 
+## Directory structure
+
+```text
+legacy/
+├── inc/  # Public C++ interfaces
+├── src/  # C++ runtime and command-line entry
+├── CMakeLists.txt  # Native build configuration
+├── README.md  # English instructions
+├── README_cn.md  # Chinese instructions
+└── run.sh  # Run the sample
+```
+
 ## Dependencies and memory
 
 Install `build-essential cmake curl` on the board. Obtain [S100 SDK 1.0.0](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_SDK.tar.gz) separately: this sample needs `oellm_runtime/include/xlm.h` and `oellm_runtime/lib/`. Tested UCP/DNN 3.7.3 and HBRT 4.2.11. Libraries are selected with `LD_LIBRARY_PATH`, without overwriting system libraries. No board-side PyTorch/compiler Python installation is required.

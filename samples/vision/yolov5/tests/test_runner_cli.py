@@ -19,7 +19,7 @@ class RunnerCLITests(unittest.TestCase):
         for target in ('x5','s100'):
             fake=FakeRuntime(target);runner=RuntimeModelRunner(resolve_selection(target),runtime_factory=lambda _:fake);binding=runner.load()
             from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
-            task=YOLOv5Task(runner,binding);prepared=task.pre_process(np.zeros((17,23,3),np.uint8));raw=task.forward(prepared.tensors)
+            task=YOLOv5Task(runner=runner,binding=binding);prepared=task.pre_process(np.zeros((17,23,3),np.uint8));raw=task.forward(prepared.tensors)
             self.assertEqual(set(fake.calls[-1]),{'detector'})
             for k in raw:self.assertIs(raw[k],fake.outputs[k])
             runner.set_scheduling_params(priority=7,bpu_cores=[0]);self.assertEqual(fake.schedule,{'priority':{'detector':7},'bpu_cores':{'detector':[0]}})
