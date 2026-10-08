@@ -112,7 +112,20 @@
     app.inert = open && overlay.matches;
   }
 
+  // The panel slides out before it hides; reopening mid-slide cancels it.
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let closing = null;
+  function cancelClosing() {
+    if (!closing) return;
+    clearTimeout(closing.timer);
+    panel.removeEventListener('transitionend', closing.finish);
+    panel.classList.remove('is-closing');
+    scrim.classList.remove('is-closing');
+    closing = null;
+  }
+
   function openPanel(modelScope = false) {
+    cancelClosing();
     previousFocus = document.activeElement;
     const requestedModel = modelScope ? routeModel() : null;
     if (requestedModel && transcript.children.length && scopedModel?.id !== requestedModel.id && !chatBusy) {
@@ -129,10 +142,23 @@
   }
 
   function closePanel() {
-    panel.hidden = true;
+    if (panel.hidden || closing) return;
     document.body.classList.remove('ask-ai-open');
     document.querySelectorAll('[data-ask-open]').forEach(button => button.setAttribute('aria-expanded', 'false'));
-    updateOverlay();
+    app.inert = false;
+    const finish = event => {
+      if (event && event.target !== panel) return;
+      cancelClosing();
+      panel.hidden = true;
+      updateOverlay();
+    };
+    if (reducedMotion.matches) finish();
+    else {
+      closing = { finish, timer: setTimeout(finish, 520) };
+      panel.addEventListener('transitionend', finish);
+      panel.classList.add('is-closing');
+      scrim.classList.add('is-closing');
+    }
     if (previousFocus?.isConnected) previousFocus.focus();
   }
 

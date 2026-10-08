@@ -67,7 +67,7 @@
 
   $('app').innerHTML = `${header}<main id="main" tabindex="-1"><div id="catalog">${catalog}</div><section id="detail" hidden></section></main>${footer}`;
 
-  function card(group) {
+  function card(group, index = 0) {
     const model = group.entry;
     const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
     const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)))
@@ -75,7 +75,7 @@
            openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0])
            || sizeRank(a.modelSize) - sizeRank(b.modelSize))[0];
     const platformOrder = [...group.platforms].sort((a, b) => openRank(a) - openRank(b));
-    return `<article class="model-card"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
+    return `<article class="model-card" style="--i:${Math.min(index, 8)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
   }
 
   function matchesTask(model) {

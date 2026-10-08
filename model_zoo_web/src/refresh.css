@@ -19,6 +19,10 @@ body.compare {
   --mz-radius: 8px;
   --mz-shadow-raised: 0 8px 24px #1d1d1f14;
   --mz-focus: 0 0 0 3px #0071e333;
+  /* Motion: settle quickly, then ease in the last few pixels. */
+  --mz-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --mz-ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --mz-ease-in: cubic-bezier(0.4, 0, 1, 1);
   --mz-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --accent: var(--mz-accent);
   --ink: var(--mz-ink);
@@ -108,6 +112,47 @@ body.compare {
 .rd-filters select:hover { border-color: var(--mz-line-hover); }
 .rd-filters input[type="search"]:focus-visible,
 .rd-filters select:focus-visible { outline: none; border-color: var(--mz-accent); box-shadow: var(--mz-focus); }
+
+/* Motion only marks a change of state: content arriving, a sheet opening,
+   a choice being pressed. Nothing moves on its own. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Catalog cards rise in, staggered, whenever the list renders. */
+  .compare .model-card { animation: mz-rise 760ms var(--mz-ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); transition: border-color 300ms var(--mz-ease-out), box-shadow 500ms var(--mz-ease-out), transform 500ms var(--mz-ease-out); }
+  .compare .model-card:hover { transform: translateY(-3px); }
+  .compare .model-card:active { transform: translateY(-1px) scale(0.99); transition-duration: 120ms; }
+  .compare .model-card .thumbnail img { transition: transform 1000ms var(--mz-ease-out); }
+  .compare .model-card:hover .thumbnail img { transform: scale(1.035); }
+  @keyframes mz-rise { from { opacity: 0; transform: translateY(16px); } }
+
+  /* Detail content fades up when a model opens. */
+  #detail:not([hidden]) > :not(dialog) { animation: mz-fade-up 680ms var(--mz-ease-out) both; }
+  #detail:not([hidden]) > :nth-child(2) { animation-delay: 70ms; }
+  #detail:not([hidden]) > :nth-child(n+3) { animation-delay: 140ms; }
+  @keyframes mz-fade-up { from { opacity: 0; transform: translateY(12px); } }
+
+  /* Pressed controls give way slightly. */
+  .compare .button, #detail .mz-store-choice, .compare .facet-option, .compare .task-option, .compare .domain-heading { transition-property: background-color, border-color, box-shadow, color, transform; transition-duration: 160ms; transition-timing-function: var(--mz-ease-out); }
+  .compare .button:active { transform: scale(0.97); }
+  #detail .mz-store-choice:active { transform: scale(0.985); }
+
+  /* Get-model sheet: scales up from slightly smaller over a fading backdrop. */
+  #detail .mz-download-dialog.mz-store[open] { transition: opacity 420ms var(--mz-ease-out), transform 680ms var(--mz-ease-sheet); }
+  #detail .mz-download-dialog.mz-store[open]::backdrop { transition: opacity 420ms var(--mz-ease-out); }
+  @starting-style {
+    #detail .mz-download-dialog.mz-store[open] { opacity: 0; transform: translateY(12px) scale(0.96); }
+    #detail .mz-download-dialog.mz-store[open]::backdrop { opacity: 0; }
+  }
+
+  /* Ask AI slides in like a sheet and slides back out before hiding. */
+  .ask-panel { transition: transform 640ms var(--mz-ease-sheet), opacity 400ms var(--mz-ease-out); }
+  .ask-panel.is-closing { transform: translateX(100%); opacity: 0.6; transition-duration: 380ms; transition-timing-function: var(--mz-ease-in); }
+  .ask-scrim { transition: opacity 420ms var(--mz-ease-out); }
+  .ask-scrim.is-closing { opacity: 0; transition-duration: 340ms; }
+  @starting-style {
+    .ask-panel { transform: translateX(100%); }
+    .ask-scrim { opacity: 0; }
+  }
+}
 
 @media (max-width: 760px) {
   .compare #catalog .catalog-layout { padding-top: 20px; }
